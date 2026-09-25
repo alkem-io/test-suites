@@ -49,11 +49,15 @@ import {
  *  * `details.role` is the KEBAB role value (`platform-audit-reader`), never
  *    the GraphQL enum key (`PLATFORM_AUDIT_READER`). The two forms are never
  *    compared to each other.
- *  * `details.rejectedRule` holds the FULL ERROR MESSAGE — the resolver
- *    passes `error.message` straight through (`platform.role.resolver
- *    .mutations.ts`'s `recordGrantRejected` call) — NOT a `ruleId`. Matched
- *    with `toContain`, never `toEqual` against a rule id. The `ruleId` lives
- *    somewhere else entirely: `errors[0].extensions.details.ruleId`.
+ *  * `details.rejectedRule` holds the RULE ID (QA C1-14 fix, 2026-09-25) —
+ *    the resolver now passes `error.details.ruleId` (falling back to
+ *    `'rule-evaluation-failed'`), the SAME stable id
+ *    `evaluateOrFail`/`ForbiddenException` already throws with, not the
+ *    free-text error message. Matched with `toBe` against the rule id
+ *    (`'self-assignment'`, `'assigner-capability'`, `'holder-kind'`, …),
+ *    never `toContain` against message text. `errors[0].extensions.details
+ *    .ruleId` is the SAME id, read off the GraphQL error instead of the
+ *    audit row.
  *
  * This file deliberately does NOT import `./fixtures` — `buildMatrixFixtures`
  * is ~35 live API writes per importing file, and every case here needs one
@@ -336,7 +340,7 @@ describe.skipIf(auditDbOptedOut)(
       // grab that was refused.
       expect(row.subjectUserId).toBe(granterId);
       expect(row.initiatorUserId).toBe(granterId);
-      expect(String(row.details?.rejectedRule)).toContain('self-assignment');
+      expect(row.details?.rejectedRule).toBe('self-assignment');
       expect(row.details?.role).toBe('platform-users-admin');
     });
 
@@ -372,9 +376,7 @@ describe.skipIf(auditDbOptedOut)(
       expect(row.outcome).toBe('role_grant_rejected');
       expect(row.category).toBe('platform_role_assignment');
       expect(row.subjectUserId).toBe(subject.id);
-      expect(String(row.details?.rejectedRule)).toContain(
-        'required to assign role'
-      );
+      expect(row.details?.rejectedRule).toBe('assigner-capability');
       expect(row.details?.role).toBe('platform-settings-admin');
 
       // ATTRIBUTION ON A REJECTED CROSS-FAMILY ATTEMPT IS `self`, NOT

@@ -1,0 +1,5 @@
+mutation adminCommunicationReconcileForumHierarchy(
+  $reconcileData: AdminCommunicationReconcileForumHierarchyInput!
+) {
+  adminCommunicationReconcileForumHierarchy(reconcileData: $reconcileData)
+}

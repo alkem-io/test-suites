@@ -9,12 +9,14 @@ import type { MatrixFixtures } from '../fixtures';
 /**
  * workspace#027-platform-role-redesign (T019c) — [US3]. FLOW 5: an
  * assignment rejected by each of the five rules writes its
- * `role_grant_rejected` audit row naming the violated rule in
- * `details.rejectedRule`, and the grant did NOT take effect (FR-018
- * outcome coverage, FR-027). Extends `assignment-rules.it-spec.ts`'s
- * error-text assertions with the RECORD half — the trail is the control,
- * so a rejection nobody can find afterwards is the same blind spot as an
- * unlogged grant.
+ * `role_grant_rejected` audit row naming the violated rule, by RULE ID
+ * (QA C1-14 fix, 2026-09-25 — `details.rejectedRule` is the stable id
+ * `evaluateOrFail` throws with, e.g. `'self-assignment'`/`'holder-kind'`,
+ * not the free-text error message this file's rejection probes assert on),
+ * and the grant did NOT take effect (FR-018 outcome coverage, FR-027).
+ * Extends `assignment-rules.it-spec.ts`'s error-text assertions with the
+ * RECORD half — the trail is the control, so a rejection nobody can find
+ * afterwards is the same blind spot as an unlogged grant.
  *
  * **The record half is not independently verifiable from this repo**: the
  * only generic audit-read surface is the MCP `audit-log-analyze` tool, with
@@ -421,6 +423,7 @@ describe('flow 5 — every rejection is distinctly attributable and takes no eff
   });
 
   // The `role_grant_rejected` RECORD for each of the five rules above
-  // (naming the violated rule in `details.rejectedRule`) is Phase-V-only —
+  // (naming the violated rule BY ID, e.g. `'holder-kind'` for rule 2, in
+  // `details.rejectedRule` — QA C1-14 fix, 2026-09-25) is Phase-V-only —
   // see this file's header and `audit-coverage.it-spec.ts`.
 });

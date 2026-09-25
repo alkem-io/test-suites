@@ -9,6 +9,7 @@ import { graphqlErrorWrapper } from '@alkemio/tests-lib/utils/graphql.wrapper';
 import type { GraphQLReturnType } from '@alkemio/tests-lib/utils/graphql.wrapper';
 import { SpaceVisibility } from '@alkemio/tests-lib/core/generated/alkemio-schema';
 import { LicensingCredentialBasedCredentialType } from '@alkemio/tests-lib/core/generated/alkemio-schema';
+import { LicensingCredentialBasedPlanType } from '@alkemio/tests-lib/core/generated/alkemio-schema';
 import { VirtualContributorWellKnown } from '@alkemio/tests-lib/core/generated/alkemio-schema';
 import { CredentialType } from '@alkemio/tests-lib/core/generated/alkemio-schema';
 import { ForumDiscussionCategory } from '@alkemio/tests-lib/core/generated/alkemio-schema';
@@ -1354,6 +1355,18 @@ export function buildSurfaceInvocations(
         token => client().adminCommunicationSyncSpaceHierarchy({}, bearer(token)),
         caller
       ),
+    // QA cross-census-1 fix (2026-09-25): workspace#061's forum-sync
+    // reconcile mutation — report-only (dryRun: true) so the ALLOW cell
+    // never applies a real convergence against shared fixture data.
+    caller =>
+      invoke(
+        token =>
+          client().adminCommunicationReconcileForumHierarchy(
+            { reconcileData: { dryRun: true } },
+            bearer(token)
+          ),
+        caller
+      ),
   ]);
 
   // ===== A12 — assign/revoke license plans (6) =====
@@ -1446,11 +1459,13 @@ export function buildSurfaceInvocations(
       ),
   ]);
 
-  // ===== A13 — define license plans + entitlement mappings (5) =====
+  // ===== A13 — define license plans + entitlement mappings (6) =====
   // `DeleteLicensePlan`/`UpdateLicensePlan` target the DISPOSABLE plan this
   // fixture set created, never `fx.licensePlanId` — a real, platform-seeded
   // plan A12's assign/revoke helpers (and every OTHER test in this repo) also
-  // read (corr-ts-7, 2026-07-29 corrective wave).
+  // read (corr-ts-7, 2026-07-29 corrective wave). `CreateLicensePlan` (QA
+  // C2-a, 2026-09-25) uses the same required-field shape fixtures.ts's own
+  // A13/A12 plan-creation calls use.
   registerRow('A13', [
     caller =>
       invoke(
@@ -1517,6 +1532,31 @@ export function buildSurfaceInvocations(
                 credentialType:
                   LicensingCredentialBasedCredentialType.SpaceLicensePlus,
                 grantedEntitlements: [],
+              },
+            },
+            bearer(token)
+          ),
+        caller
+      ),
+    caller =>
+      invoke(
+        token =>
+          client().CreateLicensePlan(
+            {
+              LicensePlan: {
+                licensingFrameworkID: fx.licensingFrameworkId,
+                name: `matrix-a13-plan-${Date.now()}`,
+                licenseCredential:
+                  LicensingCredentialBasedCredentialType.SpaceLicensePlus,
+                type: LicensingCredentialBasedPlanType.SpacePlan,
+                enabled: true,
+                isFree: true,
+                assignToNewOrganizationAccounts: false,
+                assignToNewUserAccounts: false,
+                requiresContactSupport: false,
+                requiresPaymentMethod: false,
+                sortOrder: 999,
+                trialEnabled: false,
               },
             },
             bearer(token)

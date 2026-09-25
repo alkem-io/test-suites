@@ -91,8 +91,8 @@ describe('mirror-integrity (T007a) — the mirrored census matches its own docum
     expect(LIVE_ROW_IDS).not.toContain('A18');
   });
 
-  it('the census file holds 117 entries total (113 at the corr-ts-27/spec-ts-19/qual-ts-24 re-sync against server c7610d6fa; +2 A5 MCP-key surfaces, +1 A15 category removal, A11 −1 +2 after the 2026-09-15 develop merge — every planning document that still says ~76/~80/99/102/106/113 is stale)', () => {
-    expect(ALL_ENTRIES.length).toBe(117);
+  it('the census file holds 119 entries total (117 at the corr-ts-27/spec-ts-19/qual-ts-24 re-sync against server c7610d6fa; +2 A5 MCP-key surfaces, +1 A15 category removal, A11 −1 +2 after the 2026-09-15 develop merge; +1 A13 createLicensePlan + 1 A11 adminCommunicationReconcileForumHierarchy, QA cross-census-1/C2-a fix, 2026-09-25 — every planning document that still says ~76/~80/99/102/106/113/117 is stale)', () => {
+    expect(ALL_ENTRIES.length).toBe(119);
   });
 
   it('exactly 4 entries carry {retiredIn: "B"} — A1s FR-022 credential mutations', () => {
@@ -109,9 +109,9 @@ describe('mirror-integrity (T007a) — the mirrored census matches its own docum
     }
   });
 
-  it('111 entries multiply at stage A; 113 at stage B (117 total minus the 4 non-multiplying retiredIn entries, minus A17s 2 deferred-until-B entries at stage A only)', () => {
-    expect(multiplyingAt('A').length).toBe(111);
-    expect(multiplyingAt('B').length).toBe(113);
+  it('113 entries multiply at stage A; 115 at stage B (119 total minus the 4 non-multiplying retiredIn entries, minus A17s 2 deferred-until-B entries at stage A only)', () => {
+    expect(multiplyingAt('A').length).toBe(113);
+    expect(multiplyingAt('B').length).toBe(115);
   });
 
   it('per-row surface counts match the documented census table (stage-A declared count)', () => {
@@ -126,9 +126,9 @@ describe('mirror-integrity (T007a) — the mirrored census matches its own docum
       A8: 6,
       A9: 13,
       A10: 6,
-      A11: 14,
+      A11: 15,
       A12: 6,
-      A13: 5,
+      A13: 6,
       A14: 1,
       A15: 4,
       A16: 1,

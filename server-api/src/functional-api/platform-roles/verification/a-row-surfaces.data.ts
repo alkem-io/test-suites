@@ -36,6 +36,15 @@
  * also regained `GLOBAL_SUPPORT` (corr-server-12, already reflected in
  * `server` but dropped in the SECOND re-sync above). Total entries: 106 -> 113.
  *
+ * FOURTH re-sync (QA cross-census-1/C2-a fix, 2026-09-25, against server
+ * ec4e4aef2): Slice A QA found the one real permission leak in either PR —
+ * `createLicensePlan` was still gated on the entity's own root-cascade-
+ * inheriting policy, not A13's synthetic definition policy like its five
+ * siblings — and workspace#061's forum↔matrix hierarchy sync
+ * (`adminCommunicationReconcileForumHierarchy`) had landed on `develop`
+ * ungated by this census. A13 gained the `createLicensePlan` entry (5 -> 6);
+ * A11 gained the reconcile entry (14 -> 15). Total entries: 117 -> 119.
+ *
  * T007a (research D24/D26/D27): this repo holds no independent notion of who
  * owns what — a gap found here is a `server` finding to report, never a local
  * edit to close. `AuthorizationCredential` / `AuthorizationPrivilege` are
@@ -53,7 +62,7 @@
  * Mirror everything else structurally (same ids, same order, same
  * commentary) so a diff against the server file stays a one-line check —
  * `mirror-integrity.it-spec.ts` in this directory guards the census's own
- * documented counts (107 multiplying at stage A / 113 total entries / 21 live rows) so a
+ * documented counts (113 multiplying at stage A / 119 total entries / 21 live rows) so a
  * stale local edit fails loudly even without cross-repo file access at test
  * time (this repo's worktree never reads another repo's tree at runtime).
  */
@@ -1000,7 +1009,9 @@ export const A_ROW_SURFACES: Record<ARowId, readonly SurfaceRef[]> = {
   ),
 
   // ===== A11 — operational machinery (032, pre-existing) =====
-  // Contract's "~10" corrected to 13 by grepping the tree.
+  // Contract's "~10" corrected to 15 by grepping the tree (QA cross-census-1
+  // fix, 2026-09-25, added the workspace#061 forum-sync reconcile mutation —
+  // mirrors the server census's count exactly).
   A11: (
     [
       [
@@ -1076,6 +1087,16 @@ export const A_ROW_SURFACES: Record<ARowId, readonly SurfaceRef[]> = {
         'adminCommunicationSyncSpaceHierarchy',
         'communication-admin-synthetic',
       ],
+      // QA cross-census-1 fix (2026-09-25): workspace#061's forum↔matrix
+      // hierarchy sync landed this mutation on `develop` after the census
+      // was written — same file, same `communicationGlobalAdminPolicy`
+      // (`communication-admin-synthetic`), same literal
+      // PLATFORM_OPERATIONS_ADMIN check as its siblings above.
+      [
+        'src/platform-admin/domain/communication/admin.communication.resolver.mutations.ts',
+        'adminCommunicationReconcileForumHierarchy',
+        'communication-admin-synthetic',
+      ],
     ] as const
   ).map(
     ([file, member, tree]): SurfaceRef => ({
@@ -1138,10 +1159,15 @@ export const A_ROW_SURFACES: Record<ARowId, readonly SurfaceRef[]> = {
   ],
 
   // ===== A13 — define license plans + entitlement mappings =====
-  // Contract's "~4" corrected to 5. Re-anchored via the licensing-framework
-  // `licensings` credential rule granting ordinary CRUD (not a distinctly
-  // named privilege) to `platform-settings-admin` — so the gate literally
-  // checked at each resolver is bare DELETE/UPDATE/CREATE, not
+  // Contract's "~4" corrected to 6 (QA C2-a, 2026-09-25): `createLicensePlan`
+  // was the only A13 surface still gated on the ENTITY's own
+  // (root-cascade-inheriting) `licensing.authorization` rather than the
+  // synthetic definition policy — the one real permission leak QA found in
+  // either PR, since `platform-content-full-access` reaches CREATE there via
+  // T036a's cascade. Re-anchored via the licensing-framework `licensings`
+  // credential rule granting ordinary CRUD (not a distinctly named
+  // privilege) to `platform-settings-admin` — so the gate literally checked
+  // at each resolver is bare DELETE/UPDATE/CREATE, not
   // PLATFORM_SETTINGS_ADMIN. Declared here as PLATFORM_SETTINGS_ADMIN
   // (the OWNING privilege per privilege-map.md's A13 row) since that is
   // what a reviewer means by "this row's privilege" — `reachers()` (T040d)
@@ -1174,6 +1200,11 @@ export const A_ROW_SURFACES: Record<ARowId, readonly SurfaceRef[]> = {
       [
         'src/platform/licensing/credential-based/license-policy/license.policy.resolver.mutations.ts',
         'adminLicensePolicyCreateCredentialRule',
+        AuthorizationPrivilege.Create,
+      ],
+      [
+        'src/platform/licensing/credential-based/licensing-framework/licensing.framework.resolver.mutations.ts',
+        'createLicensePlan',
         AuthorizationPrivilege.Create,
       ],
     ] as const

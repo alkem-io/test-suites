@@ -26,7 +26,7 @@ export type MakeMaybe<T, K extends keyof T> = Omit<T, K> & {
 };
 export type MakeEmpty<
   T extends { [key: string]: unknown },
-  K extends keyof T,
+  K extends keyof T
 > = { [_ in K]?: never };
 export type Incremental<T> =
   | T
@@ -1091,9 +1091,11 @@ export enum AuthorizationPrivilege {
   PlatformAuditRead = "PLATFORM_AUDIT_READ",
   PlatformContentFullAccess = "PLATFORM_CONTENT_FULL_ACCESS",
   PlatformForumManage = "PLATFORM_FORUM_MANAGE",
+  PlatformLicensingListsRead = "PLATFORM_LICENSING_LISTS_READ",
   PlatformOperationsAdmin = "PLATFORM_OPERATIONS_ADMIN",
   PlatformRoleHoldersRead = "PLATFORM_ROLE_HOLDERS_READ",
   PlatformSettingsAdmin = "PLATFORM_SETTINGS_ADMIN",
+  PlatformSupportListsRead = "PLATFORM_SUPPORT_LISTS_READ",
   PlatformSupportOrgResources = "PLATFORM_SUPPORT_ORG_RESOURCES",
   PlatformUsersAdmin = "PLATFORM_USERS_ADMIN",
   PublicShare = "PUBLIC_SHARE",
@@ -3556,6 +3558,32 @@ export type InAppNotificationPayload = {
   type: NotificationEventPayload;
 };
 
+export type InAppNotificationPayloadOrganizationAssociateActor =
+  InAppNotificationPayload & {
+    /** The user who applied, responded to an invitation, or joined. */
+    actor?: Maybe<Actor>;
+    /** The underlying application — set for the three application events. */
+    application?: Maybe<Application>;
+    /** Offered extra roles that could not be granted (set only on the accepted-invitation event). */
+    extraRolesWithheld?: Maybe<Array<RoleName>>;
+    /** The underlying invitation — set for the two response events. */
+    invitation?: Maybe<Invitation>;
+    /** The organization the actor is associated with. */
+    organization?: Maybe<Organization>;
+    /** The payload type. */
+    type: NotificationEventPayload;
+  };
+
+export type InAppNotificationPayloadOrganizationAssociateInvitation =
+  InAppNotificationPayload & {
+    /** The underlying invitation — offered role(s) and message. Null once the invitation record no longer resolves (e.g. the organization was deleted). */
+    invitation?: Maybe<Invitation>;
+    /** The organization the invitation is for. */
+    organization?: Maybe<Organization>;
+    /** The payload type. */
+    type: NotificationEventPayload;
+  };
+
 export type InAppNotificationPayloadOrganizationMessageDirect =
   InAppNotificationPayload & {
     /** The message content. */
@@ -3966,6 +3994,8 @@ export type Invitation = {
   createdDate: Scalars["DateTime"]["output"];
   /** Additional roles to assign to the Actor, in addition to the entry Role. */
   extraRoles: Array<RoleName>;
+  /** Offered extra roles that could not be granted when this invitation was accepted (organizations only, cap consumed in the meantime). Transient: set only on the object returned by the accept mutation, never persisted, and null everywhere else. */
+  extraRolesWithheld?: Maybe<Array<RoleName>>;
   /** The ID of the entity */
   id: Scalars["UUID"]["output"];
   /** Whether to also add the invited actor to the parent community. */
@@ -4863,6 +4893,12 @@ export type MeQueryResults = {
   notifications: PaginatedInAppNotifications;
   /** The total number of unread notifications for the current authenticated user across all notification types. */
   notificationsUnreadCount: Scalars["Float"]["output"];
+  /** The current authenticated user's own pending organization applications. */
+  organizationApplications: Array<OrganizationApplicationResult>;
+  /** The current authenticated user's own pending organization invitations. */
+  organizationInvitations: Array<OrganizationInvitationResult>;
+  /** The number of the current authenticated user's own pending organization invitations. */
+  organizationInvitationsCount: Scalars["Float"]["output"];
   /** The Spaces the current user is a member of as a flat list. */
   spaceMembershipsFlat: Array<CommunityMembershipResult>;
   /** The hierarchy of the Spaces the current user is a member. */
@@ -4893,6 +4929,18 @@ export type MeQueryResultsNotificationsArgs = {
   filter?: InputMaybe<NotificationEventsFilterInput>;
   first?: InputMaybe<Scalars["Int"]["input"]>;
   last?: InputMaybe<Scalars["Int"]["input"]>;
+};
+
+export type MeQueryResultsOrganizationApplicationsArgs = {
+  states?: InputMaybe<Array<Scalars["String"]["input"]>>;
+};
+
+export type MeQueryResultsOrganizationInvitationsArgs = {
+  states?: InputMaybe<Array<Scalars["String"]["input"]>>;
+};
+
+export type MeQueryResultsOrganizationInvitationsCountArgs = {
+  states?: InputMaybe<Array<Scalars["String"]["input"]>>;
 };
 
 export type MeQueryResultsSpaceMembershipsHierarchicalArgs = {
@@ -6618,6 +6666,10 @@ export type NotificationEmailAddressInput = {
 };
 
 export enum NotificationEvent {
+  OrganizationAdminAssociateApplication = "ORGANIZATION_ADMIN_ASSOCIATE_APPLICATION",
+  OrganizationAdminAssociateInvitationAccepted = "ORGANIZATION_ADMIN_ASSOCIATE_INVITATION_ACCEPTED",
+  OrganizationAdminAssociateInvitationDeclined = "ORGANIZATION_ADMIN_ASSOCIATE_INVITATION_DECLINED",
+  OrganizationAdminAssociateJoined = "ORGANIZATION_ADMIN_ASSOCIATE_JOINED",
   OrganizationAdminMentioned = "ORGANIZATION_ADMIN_MENTIONED",
   OrganizationAdminMessage = "ORGANIZATION_ADMIN_MESSAGE",
   OrganizationAdminSpaceCommunityInvitation = "ORGANIZATION_ADMIN_SPACE_COMMUNITY_INVITATION",
@@ -6660,6 +6712,9 @@ export enum NotificationEvent {
   UserEmailChangeSpaceAdminNotification = "USER_EMAIL_CHANGE_SPACE_ADMIN_NOTIFICATION",
   UserMentioned = "USER_MENTIONED",
   UserMessage = "USER_MESSAGE",
+  UserOrganizationAssociateApplicationApproved = "USER_ORGANIZATION_ASSOCIATE_APPLICATION_APPROVED",
+  UserOrganizationAssociateApplicationDeclined = "USER_ORGANIZATION_ASSOCIATE_APPLICATION_DECLINED",
+  UserOrganizationAssociateInvitation = "USER_ORGANIZATION_ASSOCIATE_INVITATION",
   UserPasswordChangeSecuritySignal = "USER_PASSWORD_CHANGE_SECURITY_SIGNAL",
   UserSignUpWelcome = "USER_SIGN_UP_WELCOME",
   UserSpaceCommunityApplicationDeclined = "USER_SPACE_COMMUNITY_APPLICATION_DECLINED",
@@ -6685,6 +6740,8 @@ export enum NotificationEventInAppState {
 }
 
 export enum NotificationEventPayload {
+  OrganizationAssociateActor = "ORGANIZATION_ASSOCIATE_ACTOR",
+  OrganizationAssociateInvitation = "ORGANIZATION_ASSOCIATE_INVITATION",
   OrganizationMessageDirect = "ORGANIZATION_MESSAGE_DIRECT",
   OrganizationMessageRoom = "ORGANIZATION_MESSAGE_ROOM",
   PlatformForumDiscussion = "PLATFORM_FORUM_DISCUSSION",
@@ -6802,6 +6859,8 @@ export type Organization = ActorFull &
     legalEntityName?: Maybe<Scalars["String"]["output"]>;
     /** Metrics about the activity within this Organization. */
     metrics?: Maybe<Array<Nvp>>;
+    /** The viewer's eligibility to apply to, or join, this organization as an associate. */
+    myAssociateEligibility: OrganizationAssociateEligibility;
     /** A name identifier of the entity, unique within a given scope. */
     nameID: Scalars["NameID"]["output"];
     /** The profile for this Actor. */
@@ -6825,6 +6884,35 @@ export type OrganizationGroupArgs = {
   ID: Scalars["UUID"]["input"];
 };
 
+export type OrganizationApplicationResult = {
+  /** The application itself */
+  application: Application;
+  /** ID for the pending organization application */
+  id: Scalars["UUID"]["output"];
+  /** The organization the application is for */
+  organization: Organization;
+};
+
+export type OrganizationAssociateEligibility = {
+  /** Whether the viewer may apply to associate with this organization right now. */
+  canApply: Scalars["Boolean"]["output"];
+  /** Whether the viewer may join this organization directly, with one click (domain match). */
+  canJoinDirectly: Scalars["Boolean"]["output"];
+  /** Why the viewer is (or is not) eligible, precedence-ordered. */
+  reason: OrganizationAssociateEligibilityReason;
+};
+
+export enum OrganizationAssociateEligibilityReason {
+  AlreadyAssociate = "ALREADY_ASSOCIATE",
+  ApplicationsNotAccepted = "APPLICATIONS_NOT_ACCEPTED",
+  ApplicationPending = "APPLICATION_PENDING",
+  ApplyNotGranted = "APPLY_NOT_GRANTED",
+  EligibleToApply = "ELIGIBLE_TO_APPLY",
+  EligibleToJoin = "ELIGIBLE_TO_JOIN",
+  InvitationPending = "INVITATION_PENDING",
+  NotAuthenticated = "NOT_AUTHENTICATED",
+}
+
 export type OrganizationAuthorizationResetInput = {
   /** The identifier of the Organization whose Authorization Policy should be reset. */
   organizationID: Scalars["UUID"]["input"];
@@ -6838,6 +6926,15 @@ export type OrganizationFilterInput = {
   website?: InputMaybe<Scalars["String"]["input"]>;
 };
 
+export type OrganizationInvitationResult = {
+  /** ID for the pending organization invitation */
+  id: Scalars["UUID"]["output"];
+  /** The invitation itself */
+  invitation: Invitation;
+  /** The organization the invitation is for */
+  organization: Organization;
+};
+
 export type OrganizationSettings = {
   /** The membership settings for this Organization. */
   membership: OrganizationSettingsMembership;
@@ -6846,6 +6943,8 @@ export type OrganizationSettings = {
 };
 
 export type OrganizationSettingsMembership = {
+  /** Allow registered users to apply to associate with this Organization. */
+  allowApplications: Scalars["Boolean"]["output"];
   /** Allow Spaces to invite this Organization to join them. */
   allowSpaceInvitations: Scalars["Boolean"]["output"];
   /** Allow Users with email addresses matching the domain of this Organization to join. */
@@ -7046,7 +7145,7 @@ export type PlatformAdminQueryResults = {
   userEmailChangeAuditEntries: UserEmailChangeAuditEntries;
   /** Retrieve all Users on the Platform. This is only available to Platform Admins. */
   users: PaginatedUsers;
-  /** The singleton virtual-assistant actor, including its current admin capability grant and ID. This is only available to Platform Admins, and is the discovery path for updateAssistantActorCapabilities. */
+  /** The singleton virtual-assistant actor, including its current admin capability grant and ID. Only available to Platform Operations Admins (and legacy holders); the discovery path for updateAssistantActorCapabilities. */
   virtualAssistant: VirtualAssistant;
   /** Retrieve all Virtual Contributors on the Platform. This is only available to Platform Admins. */
   virtualContributors: Array<VirtualContributor>;
@@ -8264,6 +8363,7 @@ export enum RoleSetInvitationResultType {
   AlreadyInvitedToPlatformAndRoleSet = "ALREADY_INVITED_TO_PLATFORM_AND_ROLE_SET",
   AlreadyInvitedToRoleSet = "ALREADY_INVITED_TO_ROLE_SET",
   AlreadyMemberOfRoleSet = "ALREADY_MEMBER_OF_ROLE_SET",
+  ExtraRoleLimitReached = "EXTRA_ROLE_LIMIT_REACHED",
   InvitationToParentNotAuthorized = "INVITATION_TO_PARENT_NOT_AUTHORIZED",
   InvitedToPlatformAndRoleSet = "INVITED_TO_PLATFORM_AND_ROLE_SET",
   InvitedToRoleSet = "INVITED_TO_ROLE_SET",
@@ -9896,6 +9996,8 @@ export type UpdateOrganizationSettingsInput = {
 };
 
 export type UpdateOrganizationSettingsMembershipInput = {
+  /** Allow registered users to apply to associate with this Organization. */
+  allowApplications?: InputMaybe<Scalars["Boolean"]["input"]>;
   /** Allow Spaces to invite this Organization to join them. */
   allowSpaceInvitations?: InputMaybe<Scalars["Boolean"]["input"]>;
   /** Allow Users with email addresses matching the domain of this Organization to join. */
@@ -10218,6 +10320,12 @@ export type UpdateUserSettingsNotificationInput = {
 };
 
 export type UpdateUserSettingsNotificationOrganizationInput = {
+  /** Receive a notification when someone applies to associate with an organisation you administer */
+  adminAssociateApplicationReceived?: InputMaybe<NotificationSettingInput>;
+  /** Receive a notification when someone responds to an invitation to associate with an organisation you administer */
+  adminAssociateInvitationResponse?: InputMaybe<NotificationSettingInput>;
+  /** Receive a notification when someone joins an organisation you administer as an associate */
+  adminAssociateJoined?: InputMaybe<NotificationSettingInput>;
   /** Receive a notification when the organization you are admin of is mentioned */
   adminMentioned?: InputMaybe<NotificationSettingInput>;
   /** Receive notification when the organization you are admin of is messaged */
@@ -10313,6 +10421,10 @@ export type UpdateUserSettingsNotificationUserInput = {
 };
 
 export type UpdateUserSettingsNotificationUserMembershipInput = {
+  /** Receive a notification when an organisation decides on my application to associate */
+  organizationAssociateApplicationDecided?: InputMaybe<NotificationSettingInput>;
+  /** Receive a notification when I am invited to associate with an organisation */
+  organizationAssociateInvitationReceived?: InputMaybe<NotificationSettingInput>;
   /** Receive a notification for community invitation */
   spaceCommunityInvitationReceived?: InputMaybe<NotificationSettingInput>;
   /** Receive a notification when I join a new community or when my application is declined */
@@ -10764,6 +10876,12 @@ export type UserSettingsNotificationChannels = {
 };
 
 export type UserSettingsNotificationOrganization = {
+  /** Receive a notification when someone applies to associate with an organisation you administer */
+  adminAssociateApplicationReceived: UserSettingsNotificationChannels;
+  /** Receive a notification when someone responds to an invitation to associate with an organisation you administer */
+  adminAssociateInvitationResponse: UserSettingsNotificationChannels;
+  /** Receive a notification when someone joins an organisation you administer as an associate */
+  adminAssociateJoined: UserSettingsNotificationChannels;
   /** Receive a notification when the organization you are admin of is mentioned */
   adminMentioned: UserSettingsNotificationChannels;
   /** Receive notification when the organization you are admin of is messaged */
@@ -10859,6 +10977,10 @@ export type UserSettingsNotificationUser = {
 };
 
 export type UserSettingsNotificationUserMembership = {
+  /** Receive a notification when an organisation decides on my application to associate */
+  organizationAssociateApplicationDecided: UserSettingsNotificationChannels;
+  /** Receive a notification when I am invited to associate with an organisation */
+  organizationAssociateInvitationReceived: UserSettingsNotificationChannels;
   /** Receive a notification when I am invited to join a Space community */
   spaceCommunityInvitationReceived: UserSettingsNotificationChannels;
   /** Receive a notification when I join a Space or when my application is declined */
@@ -11213,21 +11335,21 @@ export type ResolverFn<TResult, TParent, TContext, TArgs> = (
   parent: TParent,
   args: TArgs,
   context: TContext,
-  info: GraphQLResolveInfo,
+  info: GraphQLResolveInfo
 ) => Promise<TResult> | TResult;
 
 export type SubscriptionSubscribeFn<TResult, TParent, TContext, TArgs> = (
   parent: TParent,
   args: TArgs,
   context: TContext,
-  info: GraphQLResolveInfo,
+  info: GraphQLResolveInfo
 ) => AsyncIterable<TResult> | Promise<AsyncIterable<TResult>>;
 
 export type SubscriptionResolveFn<TResult, TParent, TContext, TArgs> = (
   parent: TParent,
   args: TArgs,
   context: TContext,
-  info: GraphQLResolveInfo,
+  info: GraphQLResolveInfo
 ) => TResult | Promise<TResult>;
 
 export interface SubscriptionSubscriberObject<
@@ -11235,7 +11357,7 @@ export interface SubscriptionSubscriberObject<
   TKey extends string,
   TParent,
   TContext,
-  TArgs,
+  TArgs
 > {
   subscribe: SubscriptionSubscribeFn<
     { [key in TKey]: TResult },
@@ -11261,7 +11383,7 @@ export type SubscriptionObject<
   TKey extends string,
   TParent,
   TContext,
-  TArgs,
+  TArgs
 > =
   | SubscriptionSubscriberObject<TResult, TKey, TParent, TContext, TArgs>
   | SubscriptionResolverObject<TResult, TParent, TContext, TArgs>;
@@ -11271,7 +11393,7 @@ export type SubscriptionResolver<
   TKey extends string,
   TParent = {},
   TContext = {},
-  TArgs = {},
+  TArgs = {}
 > =
   | ((
       ...args: any[]
@@ -11281,13 +11403,13 @@ export type SubscriptionResolver<
 export type TypeResolveFn<TTypes, TParent = {}, TContext = {}> = (
   parent: TParent,
   context: TContext,
-  info: GraphQLResolveInfo,
+  info: GraphQLResolveInfo
 ) => SchemaTypes.Maybe<TTypes> | Promise<SchemaTypes.Maybe<TTypes>>;
 
 export type IsTypeOfResolverFn<T = {}, TContext = {}> = (
   obj: T,
   context: TContext,
-  info: GraphQLResolveInfo,
+  info: GraphQLResolveInfo
 ) => boolean | Promise<boolean>;
 
 export type NextResolverFn<T> = () => Promise<T>;
@@ -11296,13 +11418,13 @@ export type DirectiveResolverFn<
   TResult = {},
   TParent = {},
   TContext = {},
-  TArgs = {},
+  TArgs = {}
 > = (
   next: NextResolverFn<TResult>,
   parent: TParent,
   args: TArgs,
   context: TContext,
-  info: GraphQLResolveInfo,
+  info: GraphQLResolveInfo
 ) => TResult | Promise<TResult>;
 
 /** Mapping of union types */
@@ -11556,6 +11678,17 @@ export type ResolversInterfaceTypes<_RefType extends Record<string, unknown>> =
           roleSet: _RefType["RoleSet"];
         });
     InAppNotificationPayload:
+      | (Omit<
+          SchemaTypes.InAppNotificationPayloadOrganizationAssociateActor,
+          "actor" | "organization"
+        > & {
+          actor?: SchemaTypes.Maybe<_RefType["Actor"]>;
+          organization?: SchemaTypes.Maybe<_RefType["Organization"]>;
+        })
+      | (Omit<
+          SchemaTypes.InAppNotificationPayloadOrganizationAssociateInvitation,
+          "organization"
+        > & { organization?: SchemaTypes.Maybe<_RefType["Organization"]> })
       | (Omit<
           SchemaTypes.InAppNotificationPayloadOrganizationMessageDirect,
           "organization"
@@ -12348,6 +12481,21 @@ export type ResolversTypes = {
   InAppNotificationPayload: ResolverTypeWrapper<
     ResolversInterfaceTypes<ResolversTypes>["InAppNotificationPayload"]
   >;
+  InAppNotificationPayloadOrganizationAssociateActor: ResolverTypeWrapper<
+    Omit<
+      SchemaTypes.InAppNotificationPayloadOrganizationAssociateActor,
+      "actor" | "organization"
+    > & {
+      actor?: SchemaTypes.Maybe<ResolversTypes["Actor"]>;
+      organization?: SchemaTypes.Maybe<ResolversTypes["Organization"]>;
+    }
+  >;
+  InAppNotificationPayloadOrganizationAssociateInvitation: ResolverTypeWrapper<
+    Omit<
+      SchemaTypes.InAppNotificationPayloadOrganizationAssociateInvitation,
+      "organization"
+    > & { organization?: SchemaTypes.Maybe<ResolversTypes["Organization"]> }
+  >;
   InAppNotificationPayloadOrganizationMessageDirect: ResolverTypeWrapper<
     Omit<
       SchemaTypes.InAppNotificationPayloadOrganizationMessageDirect,
@@ -12656,6 +12804,8 @@ export type ResolversTypes = {
       | "conversations"
       | "mySpaces"
       | "notifications"
+      | "organizationApplications"
+      | "organizationInvitations"
       | "spaceMembershipsFlat"
       | "spaceMembershipsHierarchical"
       | "user"
@@ -12667,6 +12817,12 @@ export type ResolversTypes = {
       conversations: ResolversTypes["MeConversationsResult"];
       mySpaces: Array<ResolversTypes["MySpaceResults"]>;
       notifications: ResolversTypes["PaginatedInAppNotifications"];
+      organizationApplications: Array<
+        ResolversTypes["OrganizationApplicationResult"]
+      >;
+      organizationInvitations: Array<
+        ResolversTypes["OrganizationInvitationResult"]
+      >;
       spaceMembershipsFlat: Array<ResolversTypes["CommunityMembershipResult"]>;
       spaceMembershipsHierarchical: Array<
         ResolversTypes["CommunityMembershipResult"]
@@ -12768,8 +12924,20 @@ export type ResolversTypes = {
       roleSet: ResolversTypes["RoleSet"];
     }
   >;
+  OrganizationApplicationResult: ResolverTypeWrapper<
+    Omit<SchemaTypes.OrganizationApplicationResult, "organization"> & {
+      organization: ResolversTypes["Organization"];
+    }
+  >;
+  OrganizationAssociateEligibility: ResolverTypeWrapper<SchemaTypes.OrganizationAssociateEligibility>;
+  OrganizationAssociateEligibilityReason: SchemaTypes.OrganizationAssociateEligibilityReason;
   OrganizationAuthorizationResetInput: SchemaTypes.OrganizationAuthorizationResetInput;
   OrganizationFilterInput: SchemaTypes.OrganizationFilterInput;
+  OrganizationInvitationResult: ResolverTypeWrapper<
+    Omit<SchemaTypes.OrganizationInvitationResult, "organization"> & {
+      organization: ResolversTypes["Organization"];
+    }
+  >;
   OrganizationSettings: ResolverTypeWrapper<SchemaTypes.OrganizationSettings>;
   OrganizationSettingsMembership: ResolverTypeWrapper<SchemaTypes.OrganizationSettingsMembership>;
   OrganizationSettingsPrivacy: ResolverTypeWrapper<SchemaTypes.OrganizationSettingsPrivacy>;
@@ -14017,6 +14185,19 @@ export type ResolversParentTypes = {
     triggeredBy?: SchemaTypes.Maybe<ResolversParentTypes["Actor"]>;
   };
   InAppNotificationPayload: ResolversInterfaceTypes<ResolversParentTypes>["InAppNotificationPayload"];
+  InAppNotificationPayloadOrganizationAssociateActor: Omit<
+    SchemaTypes.InAppNotificationPayloadOrganizationAssociateActor,
+    "actor" | "organization"
+  > & {
+    actor?: SchemaTypes.Maybe<ResolversParentTypes["Actor"]>;
+    organization?: SchemaTypes.Maybe<ResolversParentTypes["Organization"]>;
+  };
+  InAppNotificationPayloadOrganizationAssociateInvitation: Omit<
+    SchemaTypes.InAppNotificationPayloadOrganizationAssociateInvitation,
+    "organization"
+  > & {
+    organization?: SchemaTypes.Maybe<ResolversParentTypes["Organization"]>;
+  };
   InAppNotificationPayloadOrganizationMessageDirect: Omit<
     SchemaTypes.InAppNotificationPayloadOrganizationMessageDirect,
     "organization"
@@ -14283,6 +14464,8 @@ export type ResolversParentTypes = {
     | "conversations"
     | "mySpaces"
     | "notifications"
+    | "organizationApplications"
+    | "organizationInvitations"
     | "spaceMembershipsFlat"
     | "spaceMembershipsHierarchical"
     | "user"
@@ -14296,6 +14479,12 @@ export type ResolversParentTypes = {
     conversations: ResolversParentTypes["MeConversationsResult"];
     mySpaces: Array<ResolversParentTypes["MySpaceResults"]>;
     notifications: ResolversParentTypes["PaginatedInAppNotifications"];
+    organizationApplications: Array<
+      ResolversParentTypes["OrganizationApplicationResult"]
+    >;
+    organizationInvitations: Array<
+      ResolversParentTypes["OrganizationInvitationResult"]
+    >;
     spaceMembershipsFlat: Array<
       ResolversParentTypes["CommunityMembershipResult"]
     >;
@@ -14381,8 +14570,17 @@ export type ResolversParentTypes = {
     profile?: SchemaTypes.Maybe<ResolversParentTypes["Profile"]>;
     roleSet: ResolversParentTypes["RoleSet"];
   };
+  OrganizationApplicationResult: Omit<
+    SchemaTypes.OrganizationApplicationResult,
+    "organization"
+  > & { organization: ResolversParentTypes["Organization"] };
+  OrganizationAssociateEligibility: SchemaTypes.OrganizationAssociateEligibility;
   OrganizationAuthorizationResetInput: SchemaTypes.OrganizationAuthorizationResetInput;
   OrganizationFilterInput: SchemaTypes.OrganizationFilterInput;
+  OrganizationInvitationResult: Omit<
+    SchemaTypes.OrganizationInvitationResult,
+    "organization"
+  > & { organization: ResolversParentTypes["Organization"] };
   OrganizationSettings: SchemaTypes.OrganizationSettings;
   OrganizationSettingsMembership: SchemaTypes.OrganizationSettingsMembership;
   OrganizationSettingsPrivacy: SchemaTypes.OrganizationSettingsPrivacy;
@@ -14976,7 +15174,7 @@ export type ResolversParentTypes = {
 
 export type ApmResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["APM"] = ResolversParentTypes["APM"],
+  ParentType extends ResolversParentTypes["APM"] = ResolversParentTypes["APM"]
 > = {
   endpoint?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
   rumEnabled?: Resolver<ResolversTypes["Boolean"], ParentType, ContextType>;
@@ -14985,8 +15183,7 @@ export type ApmResolvers<
 
 export type AccountResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["Account"] =
-    ResolversParentTypes["Account"],
+  ParentType extends ResolversParentTypes["Account"] = ResolversParentTypes["Account"]
 > = {
   accountType?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["AccountType"]>,
@@ -15063,8 +15260,7 @@ export type AccountResolvers<
 
 export type AccountDeletionBlockerResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["AccountDeletionBlocker"] =
-    ResolversParentTypes["AccountDeletionBlocker"],
+  ParentType extends ResolversParentTypes["AccountDeletionBlocker"] = ResolversParentTypes["AccountDeletionBlocker"]
 > = {
   displayName?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
   kind?: Resolver<
@@ -15084,8 +15280,7 @@ export type AccountDeletionBlockerResolvers<
 
 export type AccountDeletionBlockerTotalResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["AccountDeletionBlockerTotal"] =
-    ResolversParentTypes["AccountDeletionBlockerTotal"],
+  ParentType extends ResolversParentTypes["AccountDeletionBlockerTotal"] = ResolversParentTypes["AccountDeletionBlockerTotal"]
 > = {
   kind?: Resolver<
     ResolversTypes["AccountDeletionBlockerKind"],
@@ -15098,8 +15293,7 @@ export type AccountDeletionBlockerTotalResolvers<
 
 export type AccountLicensePlanResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["AccountLicensePlan"] =
-    ResolversParentTypes["AccountLicensePlan"],
+  ParentType extends ResolversParentTypes["AccountLicensePlan"] = ResolversParentTypes["AccountLicensePlan"]
 > = {
   innovationPacks?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
   spaceFree?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
@@ -15112,8 +15306,7 @@ export type AccountLicensePlanResolvers<
 
 export type AccountSubscriptionResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["AccountSubscription"] =
-    ResolversParentTypes["AccountSubscription"],
+  ParentType extends ResolversParentTypes["AccountSubscription"] = ResolversParentTypes["AccountSubscription"]
 > = {
   expires?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["DateTime"]>,
@@ -15130,8 +15323,7 @@ export type AccountSubscriptionResolvers<
 
 export type ActivityCreatedSubscriptionResultResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["ActivityCreatedSubscriptionResult"] =
-    ResolversParentTypes["ActivityCreatedSubscriptionResult"],
+  ParentType extends ResolversParentTypes["ActivityCreatedSubscriptionResult"] = ResolversParentTypes["ActivityCreatedSubscriptionResult"]
 > = {
   activity?: Resolver<
     ResolversTypes["ActivityLogEntry"],
@@ -15143,8 +15335,7 @@ export type ActivityCreatedSubscriptionResultResolvers<
 
 export type ActivityFeedResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["ActivityFeed"] =
-    ResolversParentTypes["ActivityFeed"],
+  ParentType extends ResolversParentTypes["ActivityFeed"] = ResolversParentTypes["ActivityFeed"]
 > = {
   activityFeed?: Resolver<
     Array<ResolversTypes["ActivityLogEntry"]>,
@@ -15158,8 +15349,7 @@ export type ActivityFeedResolvers<
 
 export type ActivityLogEntryResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["ActivityLogEntry"] =
-    ResolversParentTypes["ActivityLogEntry"],
+  ParentType extends ResolversParentTypes["ActivityLogEntry"] = ResolversParentTypes["ActivityLogEntry"]
 > = {
   __resolveType: TypeResolveFn<
     | "ActivityLogEntryCalendarEventCreated"
@@ -15198,9 +15388,7 @@ export type ActivityLogEntryResolvers<
 
 export type ActivityLogEntryCalendarEventCreatedResolvers<
   ContextType = any,
-  ParentType extends
-    ResolversParentTypes["ActivityLogEntryCalendarEventCreated"] =
-    ResolversParentTypes["ActivityLogEntryCalendarEventCreated"],
+  ParentType extends ResolversParentTypes["ActivityLogEntryCalendarEventCreated"] = ResolversParentTypes["ActivityLogEntryCalendarEventCreated"]
 > = {
   calendar?: Resolver<ResolversTypes["Calendar"], ParentType, ContextType>;
   calendarEvent?: Resolver<
@@ -15230,9 +15418,7 @@ export type ActivityLogEntryCalendarEventCreatedResolvers<
 
 export type ActivityLogEntryCalloutDiscussionCommentResolvers<
   ContextType = any,
-  ParentType extends
-    ResolversParentTypes["ActivityLogEntryCalloutDiscussionComment"] =
-    ResolversParentTypes["ActivityLogEntryCalloutDiscussionComment"],
+  ParentType extends ResolversParentTypes["ActivityLogEntryCalloutDiscussionComment"] = ResolversParentTypes["ActivityLogEntryCalloutDiscussionComment"]
 > = {
   callout?: Resolver<ResolversTypes["Callout"], ParentType, ContextType>;
   child?: Resolver<ResolversTypes["Boolean"], ParentType, ContextType>;
@@ -15257,9 +15443,7 @@ export type ActivityLogEntryCalloutDiscussionCommentResolvers<
 
 export type ActivityLogEntryCalloutLinkCreatedResolvers<
   ContextType = any,
-  ParentType extends
-    ResolversParentTypes["ActivityLogEntryCalloutLinkCreated"] =
-    ResolversParentTypes["ActivityLogEntryCalloutLinkCreated"],
+  ParentType extends ResolversParentTypes["ActivityLogEntryCalloutLinkCreated"] = ResolversParentTypes["ActivityLogEntryCalloutLinkCreated"]
 > = {
   callout?: Resolver<ResolversTypes["Callout"], ParentType, ContextType>;
   child?: Resolver<ResolversTypes["Boolean"], ParentType, ContextType>;
@@ -15285,9 +15469,7 @@ export type ActivityLogEntryCalloutLinkCreatedResolvers<
 
 export type ActivityLogEntryCalloutMemoCreatedResolvers<
   ContextType = any,
-  ParentType extends
-    ResolversParentTypes["ActivityLogEntryCalloutMemoCreated"] =
-    ResolversParentTypes["ActivityLogEntryCalloutMemoCreated"],
+  ParentType extends ResolversParentTypes["ActivityLogEntryCalloutMemoCreated"] = ResolversParentTypes["ActivityLogEntryCalloutMemoCreated"]
 > = {
   callout?: Resolver<ResolversTypes["Callout"], ParentType, ContextType>;
   child?: Resolver<ResolversTypes["Boolean"], ParentType, ContextType>;
@@ -15313,9 +15495,7 @@ export type ActivityLogEntryCalloutMemoCreatedResolvers<
 
 export type ActivityLogEntryCalloutPostCommentResolvers<
   ContextType = any,
-  ParentType extends
-    ResolversParentTypes["ActivityLogEntryCalloutPostComment"] =
-    ResolversParentTypes["ActivityLogEntryCalloutPostComment"],
+  ParentType extends ResolversParentTypes["ActivityLogEntryCalloutPostComment"] = ResolversParentTypes["ActivityLogEntryCalloutPostComment"]
 > = {
   callout?: Resolver<ResolversTypes["Callout"], ParentType, ContextType>;
   child?: Resolver<ResolversTypes["Boolean"], ParentType, ContextType>;
@@ -15341,9 +15521,7 @@ export type ActivityLogEntryCalloutPostCommentResolvers<
 
 export type ActivityLogEntryCalloutPostCreatedResolvers<
   ContextType = any,
-  ParentType extends
-    ResolversParentTypes["ActivityLogEntryCalloutPostCreated"] =
-    ResolversParentTypes["ActivityLogEntryCalloutPostCreated"],
+  ParentType extends ResolversParentTypes["ActivityLogEntryCalloutPostCreated"] = ResolversParentTypes["ActivityLogEntryCalloutPostCreated"]
 > = {
   callout?: Resolver<ResolversTypes["Callout"], ParentType, ContextType>;
   child?: Resolver<ResolversTypes["Boolean"], ParentType, ContextType>;
@@ -15369,8 +15547,7 @@ export type ActivityLogEntryCalloutPostCreatedResolvers<
 
 export type ActivityLogEntryCalloutPublishedResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["ActivityLogEntryCalloutPublished"] =
-    ResolversParentTypes["ActivityLogEntryCalloutPublished"],
+  ParentType extends ResolversParentTypes["ActivityLogEntryCalloutPublished"] = ResolversParentTypes["ActivityLogEntryCalloutPublished"]
 > = {
   callout?: Resolver<ResolversTypes["Callout"], ParentType, ContextType>;
   child?: Resolver<ResolversTypes["Boolean"], ParentType, ContextType>;
@@ -15395,9 +15572,7 @@ export type ActivityLogEntryCalloutPublishedResolvers<
 
 export type ActivityLogEntryCalloutWhiteboardContentModifiedResolvers<
   ContextType = any,
-  ParentType extends
-    ResolversParentTypes["ActivityLogEntryCalloutWhiteboardContentModified"] =
-    ResolversParentTypes["ActivityLogEntryCalloutWhiteboardContentModified"],
+  ParentType extends ResolversParentTypes["ActivityLogEntryCalloutWhiteboardContentModified"] = ResolversParentTypes["ActivityLogEntryCalloutWhiteboardContentModified"]
 > = {
   callout?: Resolver<ResolversTypes["Callout"], ParentType, ContextType>;
   child?: Resolver<ResolversTypes["Boolean"], ParentType, ContextType>;
@@ -15423,9 +15598,7 @@ export type ActivityLogEntryCalloutWhiteboardContentModifiedResolvers<
 
 export type ActivityLogEntryCalloutWhiteboardCreatedResolvers<
   ContextType = any,
-  ParentType extends
-    ResolversParentTypes["ActivityLogEntryCalloutWhiteboardCreated"] =
-    ResolversParentTypes["ActivityLogEntryCalloutWhiteboardCreated"],
+  ParentType extends ResolversParentTypes["ActivityLogEntryCalloutWhiteboardCreated"] = ResolversParentTypes["ActivityLogEntryCalloutWhiteboardCreated"]
 > = {
   callout?: Resolver<ResolversTypes["Callout"], ParentType, ContextType>;
   child?: Resolver<ResolversTypes["Boolean"], ParentType, ContextType>;
@@ -15451,8 +15624,7 @@ export type ActivityLogEntryCalloutWhiteboardCreatedResolvers<
 
 export type ActivityLogEntryMemberJoinedResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["ActivityLogEntryMemberJoined"] =
-    ResolversParentTypes["ActivityLogEntryMemberJoined"],
+  ParentType extends ResolversParentTypes["ActivityLogEntryMemberJoined"] = ResolversParentTypes["ActivityLogEntryMemberJoined"]
 > = {
   actor?: Resolver<ResolversTypes["Actor"], ParentType, ContextType>;
   actorType?: Resolver<ResolversTypes["ActorType"], ParentType, ContextType>;
@@ -15479,8 +15651,7 @@ export type ActivityLogEntryMemberJoinedResolvers<
 
 export type ActivityLogEntrySubspaceCreatedResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["ActivityLogEntrySubspaceCreated"] =
-    ResolversParentTypes["ActivityLogEntrySubspaceCreated"],
+  ParentType extends ResolversParentTypes["ActivityLogEntrySubspaceCreated"] = ResolversParentTypes["ActivityLogEntrySubspaceCreated"]
 > = {
   child?: Resolver<ResolversTypes["Boolean"], ParentType, ContextType>;
   collaborationID?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
@@ -15505,8 +15676,7 @@ export type ActivityLogEntrySubspaceCreatedResolvers<
 
 export type ActivityLogEntryUpdateSentResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["ActivityLogEntryUpdateSent"] =
-    ResolversParentTypes["ActivityLogEntryUpdateSent"],
+  ParentType extends ResolversParentTypes["ActivityLogEntryUpdateSent"] = ResolversParentTypes["ActivityLogEntryUpdateSent"]
 > = {
   child?: Resolver<ResolversTypes["Boolean"], ParentType, ContextType>;
   collaborationID?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
@@ -15533,8 +15703,7 @@ export type ActivityLogEntryUpdateSentResolvers<
 
 export type ActorResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["Actor"] =
-    ResolversParentTypes["Actor"],
+  ParentType extends ResolversParentTypes["Actor"] = ResolversParentTypes["Actor"]
 > = {
   authorization?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["Authorization"]>,
@@ -15561,8 +15730,7 @@ export type ActorResolvers<
 
 export type ActorFullResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["ActorFull"] =
-    ResolversParentTypes["ActorFull"],
+  ParentType extends ResolversParentTypes["ActorFull"] = ResolversParentTypes["ActorFull"]
 > = {
   __resolveType: TypeResolveFn<
     | "Account"
@@ -15599,8 +15767,7 @@ export type ActorFullResolvers<
 
 export type ActorRolePolicyResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["ActorRolePolicy"] =
-    ResolversParentTypes["ActorRolePolicy"],
+  ParentType extends ResolversParentTypes["ActorRolePolicy"] = ResolversParentTypes["ActorRolePolicy"]
 > = {
   maximum?: Resolver<ResolversTypes["Float"], ParentType, ContextType>;
   minimum?: Resolver<ResolversTypes["Float"], ParentType, ContextType>;
@@ -15609,8 +15776,7 @@ export type ActorRolePolicyResolvers<
 
 export type ActorRolesResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["ActorRoles"] =
-    ResolversParentTypes["ActorRoles"],
+  ParentType extends ResolversParentTypes["ActorRoles"] = ResolversParentTypes["ActorRoles"]
 > = {
   applications?: Resolver<
     Array<ResolversTypes["CommunityApplicationForRoleResult"]>,
@@ -15640,8 +15806,7 @@ export type ActorRolesResolvers<
 
 export type AiPersonaResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["AiPersona"] =
-    ResolversParentTypes["AiPersona"],
+  ParentType extends ResolversParentTypes["AiPersona"] = ResolversParentTypes["AiPersona"]
 > = {
   authorization?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["Authorization"]>,
@@ -15673,8 +15838,7 @@ export type AiPersonaResolvers<
 
 export type AiServerResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["AiServer"] =
-    ResolversParentTypes["AiServer"],
+  ParentType extends ResolversParentTypes["AiServer"] = ResolversParentTypes["AiServer"]
 > = {
   aiPersona?: Resolver<
     ResolversTypes["AiPersona"],
@@ -15705,8 +15869,7 @@ export type AiServerResolvers<
 
 export type ApplicationResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["Application"] =
-    ResolversParentTypes["Application"],
+  ParentType extends ResolversParentTypes["Application"] = ResolversParentTypes["Application"]
 > = {
   actor?: Resolver<ResolversTypes["Actor"], ParentType, ContextType>;
   authorization?: Resolver<
@@ -15740,8 +15903,7 @@ export type ApplicationResolvers<
 
 export type AssistantCapabilityResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["AssistantCapability"] =
-    ResolversParentTypes["AssistantCapability"],
+  ParentType extends ResolversParentTypes["AssistantCapability"] = ResolversParentTypes["AssistantCapability"]
 > = {
   description?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
   displayName?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
@@ -15756,8 +15918,7 @@ export type AssistantCapabilityResolvers<
 
 export type AssistantCapabilityToggleResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["AssistantCapabilityToggle"] =
-    ResolversParentTypes["AssistantCapabilityToggle"],
+  ParentType extends ResolversParentTypes["AssistantCapabilityToggle"] = ResolversParentTypes["AssistantCapabilityToggle"]
 > = {
   capability?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
   enabled?: Resolver<ResolversTypes["Boolean"], ParentType, ContextType>;
@@ -15766,8 +15927,7 @@ export type AssistantCapabilityToggleResolvers<
 
 export type AuthenticationConfigResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["AuthenticationConfig"] =
-    ResolversParentTypes["AuthenticationConfig"],
+  ParentType extends ResolversParentTypes["AuthenticationConfig"] = ResolversParentTypes["AuthenticationConfig"]
 > = {
   providers?: Resolver<
     Array<ResolversTypes["AuthenticationProviderConfig"]>,
@@ -15779,8 +15939,7 @@ export type AuthenticationConfigResolvers<
 
 export type AuthenticationProviderConfigResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["AuthenticationProviderConfig"] =
-    ResolversParentTypes["AuthenticationProviderConfig"],
+  ParentType extends ResolversParentTypes["AuthenticationProviderConfig"] = ResolversParentTypes["AuthenticationProviderConfig"]
 > = {
   config?: Resolver<
     ResolversTypes["AuthenticationProviderConfigUnion"],
@@ -15796,16 +15955,14 @@ export type AuthenticationProviderConfigResolvers<
 
 export type AuthenticationProviderConfigUnionResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["AuthenticationProviderConfigUnion"] =
-    ResolversParentTypes["AuthenticationProviderConfigUnion"],
+  ParentType extends ResolversParentTypes["AuthenticationProviderConfigUnion"] = ResolversParentTypes["AuthenticationProviderConfigUnion"]
 > = {
   __resolveType: TypeResolveFn<"OryConfig", ParentType, ContextType>;
 };
 
 export type AuthorizationResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["Authorization"] =
-    ResolversParentTypes["Authorization"],
+  ParentType extends ResolversParentTypes["Authorization"] = ResolversParentTypes["Authorization"]
 > = {
   createdDate?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
   credentialRules?: Resolver<
@@ -15845,8 +16002,7 @@ export type AuthorizationResolvers<
 
 export type AuthorizationPolicyRuleCredentialResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["AuthorizationPolicyRuleCredential"] =
-    ResolversParentTypes["AuthorizationPolicyRuleCredential"],
+  ParentType extends ResolversParentTypes["AuthorizationPolicyRuleCredential"] = ResolversParentTypes["AuthorizationPolicyRuleCredential"]
 > = {
   cascade?: Resolver<ResolversTypes["Boolean"], ParentType, ContextType>;
   criterias?: Resolver<
@@ -15869,8 +16025,7 @@ export type AuthorizationPolicyRuleCredentialResolvers<
 
 export type AuthorizationPolicyRulePrivilegeResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["AuthorizationPolicyRulePrivilege"] =
-    ResolversParentTypes["AuthorizationPolicyRulePrivilege"],
+  ParentType extends ResolversParentTypes["AuthorizationPolicyRulePrivilege"] = ResolversParentTypes["AuthorizationPolicyRulePrivilege"]
 > = {
   grantedPrivileges?: Resolver<
     Array<ResolversTypes["AuthorizationPrivilege"]>,
@@ -15892,8 +16047,7 @@ export type AuthorizationPolicyRulePrivilegeResolvers<
 
 export type CalendarResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["Calendar"] =
-    ResolversParentTypes["Calendar"],
+  ParentType extends ResolversParentTypes["Calendar"] = ResolversParentTypes["Calendar"]
 > = {
   authorization?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["Authorization"]>,
@@ -15919,8 +16073,7 @@ export type CalendarResolvers<
 
 export type CalendarEventResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["CalendarEvent"] =
-    ResolversParentTypes["CalendarEvent"],
+  ParentType extends ResolversParentTypes["CalendarEvent"] = ResolversParentTypes["CalendarEvent"]
 > = {
   authorization?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["Authorization"]>,
@@ -15982,8 +16135,7 @@ export type CalendarEventResolvers<
 
 export type CalloutResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["Callout"] =
-    ResolversParentTypes["Callout"],
+  ParentType extends ResolversParentTypes["Callout"] = ResolversParentTypes["Callout"]
 > = {
   activity?: Resolver<ResolversTypes["Float"], ParentType, ContextType>;
   authorization?: Resolver<
@@ -16069,8 +16221,7 @@ export type CalloutResolvers<
 
 export type CalloutContributionResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["CalloutContribution"] =
-    ResolversParentTypes["CalloutContribution"],
+  ParentType extends ResolversParentTypes["CalloutContribution"] = ResolversParentTypes["CalloutContribution"]
 > = {
   authorization?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["Authorization"]>,
@@ -16121,8 +16272,7 @@ export type CalloutContributionResolvers<
 
 export type CalloutContributionDefaultsResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["CalloutContributionDefaults"] =
-    ResolversParentTypes["CalloutContributionDefaults"],
+  ParentType extends ResolversParentTypes["CalloutContributionDefaults"] = ResolversParentTypes["CalloutContributionDefaults"]
 > = {
   createdDate?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
   defaultDisplayName?: Resolver<
@@ -16147,8 +16297,7 @@ export type CalloutContributionDefaultsResolvers<
 
 export type CalloutContributionsCountOutputResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["CalloutContributionsCountOutput"] =
-    ResolversParentTypes["CalloutContributionsCountOutput"],
+  ParentType extends ResolversParentTypes["CalloutContributionsCountOutput"] = ResolversParentTypes["CalloutContributionsCountOutput"]
 > = {
   collaboraDocument?: Resolver<
     ResolversTypes["Float"],
@@ -16164,8 +16313,7 @@ export type CalloutContributionsCountOutputResolvers<
 
 export type CalloutContributorsMapViewResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["CalloutContributorsMapView"] =
-    ResolversParentTypes["CalloutContributorsMapView"],
+  ParentType extends ResolversParentTypes["CalloutContributorsMapView"] = ResolversParentTypes["CalloutContributorsMapView"]
 > = {
   latitude?: Resolver<ResolversTypes["Float"], ParentType, ContextType>;
   longitude?: Resolver<ResolversTypes["Float"], ParentType, ContextType>;
@@ -16175,8 +16323,7 @@ export type CalloutContributorsMapViewResolvers<
 
 export type CalloutContributorsSettingsResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["CalloutContributorsSettings"] =
-    ResolversParentTypes["CalloutContributorsSettings"],
+  ParentType extends ResolversParentTypes["CalloutContributorsSettings"] = ResolversParentTypes["CalloutContributorsSettings"]
 > = {
   contributorTypes?: Resolver<
     Array<ResolversTypes["ActorType"]>,
@@ -16203,8 +16350,7 @@ export type CalloutContributorsSettingsResolvers<
 
 export type CalloutFramingResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["CalloutFraming"] =
-    ResolversParentTypes["CalloutFraming"],
+  ParentType extends ResolversParentTypes["CalloutFraming"] = ResolversParentTypes["CalloutFraming"]
 > = {
   authorization?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["Authorization"]>,
@@ -16267,8 +16413,7 @@ export type CalloutFramingResolvers<
 
 export type CalloutPostCreatedResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["CalloutPostCreated"] =
-    ResolversParentTypes["CalloutPostCreated"],
+  ParentType extends ResolversParentTypes["CalloutPostCreated"] = ResolversParentTypes["CalloutPostCreated"]
 > = {
   calloutID?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
   contributionID?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
@@ -16279,8 +16424,7 @@ export type CalloutPostCreatedResolvers<
 
 export type CalloutReactionResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["CalloutReaction"] =
-    ResolversParentTypes["CalloutReaction"],
+  ParentType extends ResolversParentTypes["CalloutReaction"] = ResolversParentTypes["CalloutReaction"]
 > = {
   emoji?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
   id?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
@@ -16295,8 +16439,7 @@ export type CalloutReactionResolvers<
 
 export type CalloutReactionsSummaryResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["CalloutReactionsSummary"] =
-    ResolversParentTypes["CalloutReactionsSummary"],
+  ParentType extends ResolversParentTypes["CalloutReactionsSummary"] = ResolversParentTypes["CalloutReactionsSummary"]
 > = {
   allowedEmojis?: Resolver<
     Array<ResolversTypes["String"]>,
@@ -16315,8 +16458,7 @@ export type CalloutReactionsSummaryResolvers<
 
 export type CalloutSelectionSettingsResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["CalloutSelectionSettings"] =
-    ResolversParentTypes["CalloutSelectionSettings"],
+  ParentType extends ResolversParentTypes["CalloutSelectionSettings"] = ResolversParentTypes["CalloutSelectionSettings"]
 > = {
   mode?: Resolver<
     ResolversTypes["CalloutSelectionMode"],
@@ -16329,8 +16471,7 @@ export type CalloutSelectionSettingsResolvers<
 
 export type CalloutSettingsResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["CalloutSettings"] =
-    ResolversParentTypes["CalloutSettings"],
+  ParentType extends ResolversParentTypes["CalloutSettings"] = ResolversParentTypes["CalloutSettings"]
 > = {
   contribution?: Resolver<
     ResolversTypes["CalloutSettingsContribution"],
@@ -16352,8 +16493,7 @@ export type CalloutSettingsResolvers<
 
 export type CalloutSettingsContributionResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["CalloutSettingsContribution"] =
-    ResolversParentTypes["CalloutSettingsContribution"],
+  ParentType extends ResolversParentTypes["CalloutSettingsContribution"] = ResolversParentTypes["CalloutSettingsContribution"]
 > = {
   allowedTypes?: Resolver<
     Array<ResolversTypes["CalloutContributionType"]>,
@@ -16376,8 +16516,7 @@ export type CalloutSettingsContributionResolvers<
 
 export type CalloutSettingsFramingResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["CalloutSettingsFraming"] =
-    ResolversParentTypes["CalloutSettingsFraming"],
+  ParentType extends ResolversParentTypes["CalloutSettingsFraming"] = ResolversParentTypes["CalloutSettingsFraming"]
 > = {
   commentsEnabled?: Resolver<
     ResolversTypes["Boolean"],
@@ -16399,8 +16538,7 @@ export type CalloutSettingsFramingResolvers<
 
 export type CalloutsSetResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["CalloutsSet"] =
-    ResolversParentTypes["CalloutsSet"],
+  ParentType extends ResolversParentTypes["CalloutsSet"] = ResolversParentTypes["CalloutsSet"]
 > = {
   authorization?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["Authorization"]>,
@@ -16433,8 +16571,7 @@ export type CalloutsSetResolvers<
 
 export type ClassificationResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["Classification"] =
-    ResolversParentTypes["Classification"],
+  ParentType extends ResolversParentTypes["Classification"] = ResolversParentTypes["Classification"]
 > = {
   authorization?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["Authorization"]>,
@@ -16460,8 +16597,7 @@ export type ClassificationResolvers<
 
 export type ClassificationEntryResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["ClassificationEntry"] =
-    ResolversParentTypes["ClassificationEntry"],
+  ParentType extends ResolversParentTypes["ClassificationEntry"] = ResolversParentTypes["ClassificationEntry"]
 > = {
   cardinality?: Resolver<
     ResolversTypes["ClassificationCardinality"],
@@ -16494,8 +16630,7 @@ export type ClassificationEntryResolvers<
 
 export type ClassificationTemplateContentResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["ClassificationTemplateContent"] =
-    ResolversParentTypes["ClassificationTemplateContent"],
+  ParentType extends ResolversParentTypes["ClassificationTemplateContent"] = ResolversParentTypes["ClassificationTemplateContent"]
 > = {
   cardinality?: Resolver<
     ResolversTypes["ClassificationCardinality"],
@@ -16512,8 +16647,7 @@ export type ClassificationTemplateContentResolvers<
 
 export type ClassificationValueResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["ClassificationValue"] =
-    ResolversParentTypes["ClassificationValue"],
+  ParentType extends ResolversParentTypes["ClassificationValue"] = ResolversParentTypes["ClassificationValue"]
 > = {
   id?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
   label?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
@@ -16522,8 +16656,7 @@ export type ClassificationValueResolvers<
 
 export type CollaboraDocumentResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["CollaboraDocument"] =
-    ResolversParentTypes["CollaboraDocument"],
+  ParentType extends ResolversParentTypes["CollaboraDocument"] = ResolversParentTypes["CollaboraDocument"]
 > = {
   authorization?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["Authorization"]>,
@@ -16549,8 +16682,7 @@ export type CollaboraDocumentResolvers<
 
 export type CollaboraEditorUrlResultResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["CollaboraEditorUrlResult"] =
-    ResolversParentTypes["CollaboraEditorUrlResult"],
+  ParentType extends ResolversParentTypes["CollaboraEditorUrlResult"] = ResolversParentTypes["CollaboraEditorUrlResult"]
 > = {
   accessTokenTTL?: Resolver<ResolversTypes["Float"], ParentType, ContextType>;
   editorUrl?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
@@ -16559,8 +16691,7 @@ export type CollaboraEditorUrlResultResolvers<
 
 export type CollaborationResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["Collaboration"] =
-    ResolversParentTypes["Collaboration"],
+  ParentType extends ResolversParentTypes["Collaboration"] = ResolversParentTypes["Collaboration"]
 > = {
   authorization?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["Authorization"]>,
@@ -16588,8 +16719,7 @@ export type CollaborationResolvers<
 
 export type CollaborationMigrationIssueResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["CollaborationMigrationIssue"] =
-    ResolversParentTypes["CollaborationMigrationIssue"],
+  ParentType extends ResolversParentTypes["CollaborationMigrationIssue"] = ResolversParentTypes["CollaborationMigrationIssue"]
 > = {
   id?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
   reason?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
@@ -16598,8 +16728,7 @@ export type CollaborationMigrationIssueResolvers<
 
 export type CollaborationMigrationResultResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["CollaborationMigrationResult"] =
-    ResolversParentTypes["CollaborationMigrationResult"],
+  ParentType extends ResolversParentTypes["CollaborationMigrationResult"] = ResolversParentTypes["CollaborationMigrationResult"]
 > = {
   failed?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
   failedDocuments?: Resolver<
@@ -16621,8 +16750,7 @@ export type CollaborationMigrationResultResolvers<
 
 export type CommunicationResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["Communication"] =
-    ResolversParentTypes["Communication"],
+  ParentType extends ResolversParentTypes["Communication"] = ResolversParentTypes["Communication"]
 > = {
   authorization?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["Authorization"]>,
@@ -16638,9 +16766,7 @@ export type CommunicationResolvers<
 
 export type CommunicationAdminMembershipResultResolvers<
   ContextType = any,
-  ParentType extends
-    ResolversParentTypes["CommunicationAdminMembershipResult"] =
-    ResolversParentTypes["CommunicationAdminMembershipResult"],
+  ParentType extends ResolversParentTypes["CommunicationAdminMembershipResult"] = ResolversParentTypes["CommunicationAdminMembershipResult"]
 > = {
   displayName?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
   id?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
@@ -16654,9 +16780,7 @@ export type CommunicationAdminMembershipResultResolvers<
 
 export type CommunicationAdminMigrateRoomsResultResolvers<
   ContextType = any,
-  ParentType extends
-    ResolversParentTypes["CommunicationAdminMigrateRoomsResult"] =
-    ResolversParentTypes["CommunicationAdminMigrateRoomsResult"],
+  ParentType extends ResolversParentTypes["CommunicationAdminMigrateRoomsResult"] = ResolversParentTypes["CommunicationAdminMigrateRoomsResult"]
 > = {
   errors?: Resolver<Array<ResolversTypes["String"]>, ParentType, ContextType>;
   failed?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
@@ -16666,9 +16790,7 @@ export type CommunicationAdminMigrateRoomsResultResolvers<
 
 export type CommunicationAdminOrphanedUsageResultResolvers<
   ContextType = any,
-  ParentType extends
-    ResolversParentTypes["CommunicationAdminOrphanedUsageResult"] =
-    ResolversParentTypes["CommunicationAdminOrphanedUsageResult"],
+  ParentType extends ResolversParentTypes["CommunicationAdminOrphanedUsageResult"] = ResolversParentTypes["CommunicationAdminOrphanedUsageResult"]
 > = {
   rooms?: Resolver<
     Array<ResolversTypes["CommunicationAdminRoomResult"]>,
@@ -16680,9 +16802,7 @@ export type CommunicationAdminOrphanedUsageResultResolvers<
 
 export type CommunicationAdminRoomMembershipResultResolvers<
   ContextType = any,
-  ParentType extends
-    ResolversParentTypes["CommunicationAdminRoomMembershipResult"] =
-    ResolversParentTypes["CommunicationAdminRoomMembershipResult"],
+  ParentType extends ResolversParentTypes["CommunicationAdminRoomMembershipResult"] = ResolversParentTypes["CommunicationAdminRoomMembershipResult"]
 > = {
   displayName?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
   extraMembers?: Resolver<
@@ -16704,8 +16824,7 @@ export type CommunicationAdminRoomMembershipResultResolvers<
 
 export type CommunicationAdminRoomResultResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["CommunicationAdminRoomResult"] =
-    ResolversParentTypes["CommunicationAdminRoomResult"],
+  ParentType extends ResolversParentTypes["CommunicationAdminRoomResult"] = ResolversParentTypes["CommunicationAdminRoomResult"]
 > = {
   displayName?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
   id?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
@@ -16715,8 +16834,7 @@ export type CommunicationAdminRoomResultResolvers<
 
 export type CommunityResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["Community"] =
-    ResolversParentTypes["Community"],
+  ParentType extends ResolversParentTypes["Community"] = ResolversParentTypes["Community"]
 > = {
   authorization?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["Authorization"]>,
@@ -16748,8 +16866,7 @@ export type CommunityResolvers<
 
 export type CommunityApplicationForRoleResultResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["CommunityApplicationForRoleResult"] =
-    ResolversParentTypes["CommunityApplicationForRoleResult"],
+  ParentType extends ResolversParentTypes["CommunityApplicationForRoleResult"] = ResolversParentTypes["CommunityApplicationForRoleResult"]
 > = {
   communityID?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
   createdDate?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
@@ -16764,8 +16881,7 @@ export type CommunityApplicationForRoleResultResolvers<
 
 export type CommunityApplicationResultResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["CommunityApplicationResult"] =
-    ResolversParentTypes["CommunityApplicationResult"],
+  ParentType extends ResolversParentTypes["CommunityApplicationResult"] = ResolversParentTypes["CommunityApplicationResult"]
 > = {
   application?: Resolver<
     ResolversTypes["Application"],
@@ -16783,8 +16899,7 @@ export type CommunityApplicationResultResolvers<
 
 export type CommunityGuidelinesResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["CommunityGuidelines"] =
-    ResolversParentTypes["CommunityGuidelines"],
+  ParentType extends ResolversParentTypes["CommunityGuidelines"] = ResolversParentTypes["CommunityGuidelines"]
 > = {
   authorization?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["Authorization"]>,
@@ -16800,8 +16915,7 @@ export type CommunityGuidelinesResolvers<
 
 export type CommunityInvitationForRoleResultResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["CommunityInvitationForRoleResult"] =
-    ResolversParentTypes["CommunityInvitationForRoleResult"],
+  ParentType extends ResolversParentTypes["CommunityInvitationForRoleResult"] = ResolversParentTypes["CommunityInvitationForRoleResult"]
 > = {
   actorID?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
   communityID?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
@@ -16823,8 +16937,7 @@ export type CommunityInvitationForRoleResultResolvers<
 
 export type CommunityInvitationResultResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["CommunityInvitationResult"] =
-    ResolversParentTypes["CommunityInvitationResult"],
+  ParentType extends ResolversParentTypes["CommunityInvitationResult"] = ResolversParentTypes["CommunityInvitationResult"]
 > = {
   id?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
   invitation?: Resolver<ResolversTypes["Invitation"], ParentType, ContextType>;
@@ -16838,8 +16951,7 @@ export type CommunityInvitationResultResolvers<
 
 export type CommunityMembershipResultResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["CommunityMembershipResult"] =
-    ResolversParentTypes["CommunityMembershipResult"],
+  ParentType extends ResolversParentTypes["CommunityMembershipResult"] = ResolversParentTypes["CommunityMembershipResult"]
 > = {
   childMemberships?: Resolver<
     Array<ResolversTypes["CommunityMembershipResult"]>,
@@ -16853,8 +16965,7 @@ export type CommunityMembershipResultResolvers<
 
 export type ConfigResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["Config"] =
-    ResolversParentTypes["Config"],
+  ParentType extends ResolversParentTypes["Config"] = ResolversParentTypes["Config"]
 > = {
   apm?: Resolver<ResolversTypes["APM"], ParentType, ContextType>;
   authentication?: Resolver<
@@ -16891,8 +17002,7 @@ export type ConfigResolvers<
 
 export type ContributorCollectionCountsResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["ContributorCollectionCounts"] =
-    ResolversParentTypes["ContributorCollectionCounts"],
+  ParentType extends ResolversParentTypes["ContributorCollectionCounts"] = ResolversParentTypes["ContributorCollectionCounts"]
 > = {
   organizations?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
   users?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
@@ -16906,8 +17016,7 @@ export type ContributorCollectionCountsResolvers<
 
 export type ContributorCollectionItemResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["ContributorCollectionItem"] =
-    ResolversParentTypes["ContributorCollectionItem"],
+  ParentType extends ResolversParentTypes["ContributorCollectionItem"] = ResolversParentTypes["ContributorCollectionItem"]
 > = {
   avatarUrl?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["String"]>,
@@ -16937,8 +17046,7 @@ export type ContributorCollectionItemResolvers<
 
 export type ContributorLocationResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["ContributorLocation"] =
-    ResolversParentTypes["ContributorLocation"],
+  ParentType extends ResolversParentTypes["ContributorLocation"] = ResolversParentTypes["ContributorLocation"]
 > = {
   city?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["String"]>,
@@ -16970,8 +17078,7 @@ export type ContributorLocationResolvers<
 
 export type ConversationResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["Conversation"] =
-    ResolversParentTypes["Conversation"],
+  ParentType extends ResolversParentTypes["Conversation"] = ResolversParentTypes["Conversation"]
 > = {
   authorization?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["Authorization"]>,
@@ -16989,8 +17096,7 @@ export type ConversationResolvers<
 
 export type ConversationCreatedEventResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["ConversationCreatedEvent"] =
-    ResolversParentTypes["ConversationCreatedEvent"],
+  ParentType extends ResolversParentTypes["ConversationCreatedEvent"] = ResolversParentTypes["ConversationCreatedEvent"]
 > = {
   conversation?: Resolver<
     ResolversTypes["Conversation"],
@@ -17007,8 +17113,7 @@ export type ConversationCreatedEventResolvers<
 
 export type ConversationDeletedEventResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["ConversationDeletedEvent"] =
-    ResolversParentTypes["ConversationDeletedEvent"],
+  ParentType extends ResolversParentTypes["ConversationDeletedEvent"] = ResolversParentTypes["ConversationDeletedEvent"]
 > = {
   conversationID?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
@@ -17016,9 +17121,7 @@ export type ConversationDeletedEventResolvers<
 
 export type ConversationEventSubscriptionResultResolvers<
   ContextType = any,
-  ParentType extends
-    ResolversParentTypes["ConversationEventSubscriptionResult"] =
-    ResolversParentTypes["ConversationEventSubscriptionResult"],
+  ParentType extends ResolversParentTypes["ConversationEventSubscriptionResult"] = ResolversParentTypes["ConversationEventSubscriptionResult"]
 > = {
   conversationCreated?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["ConversationCreatedEvent"]>,
@@ -17070,8 +17173,7 @@ export type ConversationEventSubscriptionResultResolvers<
 
 export type ConversationMemberAddedEventResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["ConversationMemberAddedEvent"] =
-    ResolversParentTypes["ConversationMemberAddedEvent"],
+  ParentType extends ResolversParentTypes["ConversationMemberAddedEvent"] = ResolversParentTypes["ConversationMemberAddedEvent"]
 > = {
   addedMember?: Resolver<ResolversTypes["Actor"], ParentType, ContextType>;
   conversation?: Resolver<
@@ -17084,8 +17186,7 @@ export type ConversationMemberAddedEventResolvers<
 
 export type ConversationMemberRemovedEventResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["ConversationMemberRemovedEvent"] =
-    ResolversParentTypes["ConversationMemberRemovedEvent"],
+  ParentType extends ResolversParentTypes["ConversationMemberRemovedEvent"] = ResolversParentTypes["ConversationMemberRemovedEvent"]
 > = {
   conversation?: Resolver<
     ResolversTypes["Conversation"],
@@ -17098,8 +17199,7 @@ export type ConversationMemberRemovedEventResolvers<
 
 export type ConversationMessageReceivedEventResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["ConversationMessageReceivedEvent"] =
-    ResolversParentTypes["ConversationMessageReceivedEvent"],
+  ParentType extends ResolversParentTypes["ConversationMessageReceivedEvent"] = ResolversParentTypes["ConversationMessageReceivedEvent"]
 > = {
   message?: Resolver<ResolversTypes["Message"], ParentType, ContextType>;
   roomId?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
@@ -17108,8 +17208,7 @@ export type ConversationMessageReceivedEventResolvers<
 
 export type ConversationMessageRemovedEventResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["ConversationMessageRemovedEvent"] =
-    ResolversParentTypes["ConversationMessageRemovedEvent"],
+  ParentType extends ResolversParentTypes["ConversationMessageRemovedEvent"] = ResolversParentTypes["ConversationMessageRemovedEvent"]
 > = {
   messageId?: Resolver<ResolversTypes["MessageID"], ParentType, ContextType>;
   roomId?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
@@ -17118,9 +17217,7 @@ export type ConversationMessageRemovedEventResolvers<
 
 export type ConversationReadReceiptUpdatedEventResolvers<
   ContextType = any,
-  ParentType extends
-    ResolversParentTypes["ConversationReadReceiptUpdatedEvent"] =
-    ResolversParentTypes["ConversationReadReceiptUpdatedEvent"],
+  ParentType extends ResolversParentTypes["ConversationReadReceiptUpdatedEvent"] = ResolversParentTypes["ConversationReadReceiptUpdatedEvent"]
 > = {
   lastReadEventId?: Resolver<
     ResolversTypes["MessageID"],
@@ -17133,8 +17230,7 @@ export type ConversationReadReceiptUpdatedEventResolvers<
 
 export type ConversationUpdatedEventResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["ConversationUpdatedEvent"] =
-    ResolversParentTypes["ConversationUpdatedEvent"],
+  ParentType extends ResolversParentTypes["ConversationUpdatedEvent"] = ResolversParentTypes["ConversationUpdatedEvent"]
 > = {
   conversation?: Resolver<
     ResolversTypes["Conversation"],
@@ -17146,8 +17242,7 @@ export type ConversationUpdatedEventResolvers<
 
 export type CreateCalloutContributionDataResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["CreateCalloutContributionData"] =
-    ResolversParentTypes["CreateCalloutContributionData"],
+  ParentType extends ResolversParentTypes["CreateCalloutContributionData"] = ResolversParentTypes["CreateCalloutContributionData"]
 > = {
   collaboraDocument?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["CreateCollaboraDocumentData"]>,
@@ -17194,9 +17289,7 @@ export type CreateCalloutContributionDataResolvers<
 
 export type CreateCalloutContributionDefaultsDataResolvers<
   ContextType = any,
-  ParentType extends
-    ResolversParentTypes["CreateCalloutContributionDefaultsData"] =
-    ResolversParentTypes["CreateCalloutContributionDefaultsData"],
+  ParentType extends ResolversParentTypes["CreateCalloutContributionDefaultsData"] = ResolversParentTypes["CreateCalloutContributionDefaultsData"]
 > = {
   defaultDisplayName?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["String"]>,
@@ -17228,9 +17321,7 @@ export type CreateCalloutContributionDefaultsDataResolvers<
 
 export type CreateCalloutContributorsMapViewDataResolvers<
   ContextType = any,
-  ParentType extends
-    ResolversParentTypes["CreateCalloutContributorsMapViewData"] =
-    ResolversParentTypes["CreateCalloutContributorsMapViewData"],
+  ParentType extends ResolversParentTypes["CreateCalloutContributorsMapViewData"] = ResolversParentTypes["CreateCalloutContributorsMapViewData"]
 > = {
   latitude?: Resolver<ResolversTypes["Float"], ParentType, ContextType>;
   longitude?: Resolver<ResolversTypes["Float"], ParentType, ContextType>;
@@ -17240,9 +17331,7 @@ export type CreateCalloutContributorsMapViewDataResolvers<
 
 export type CreateCalloutContributorsSettingsDataResolvers<
   ContextType = any,
-  ParentType extends
-    ResolversParentTypes["CreateCalloutContributorsSettingsData"] =
-    ResolversParentTypes["CreateCalloutContributorsSettingsData"],
+  ParentType extends ResolversParentTypes["CreateCalloutContributorsSettingsData"] = ResolversParentTypes["CreateCalloutContributorsSettingsData"]
 > = {
   contributorTypes?: Resolver<
     Array<ResolversTypes["ActorType"]>,
@@ -17269,8 +17358,7 @@ export type CreateCalloutContributorsSettingsDataResolvers<
 
 export type CreateCalloutDataResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["CreateCalloutData"] =
-    ResolversParentTypes["CreateCalloutData"],
+  ParentType extends ResolversParentTypes["CreateCalloutData"] = ResolversParentTypes["CreateCalloutData"]
 > = {
   classification?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["CreateClassificationData"]>,
@@ -17322,8 +17410,7 @@ export type CreateCalloutDataResolvers<
 
 export type CreateCalloutFramingDataResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["CreateCalloutFramingData"] =
-    ResolversParentTypes["CreateCalloutFramingData"],
+  ParentType extends ResolversParentTypes["CreateCalloutFramingData"] = ResolversParentTypes["CreateCalloutFramingData"]
 > = {
   collaboraDocument?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["CreateCollaboraDocumentData"]>,
@@ -17370,9 +17457,7 @@ export type CreateCalloutFramingDataResolvers<
 
 export type CreateCalloutSelectionSettingsDataResolvers<
   ContextType = any,
-  ParentType extends
-    ResolversParentTypes["CreateCalloutSelectionSettingsData"] =
-    ResolversParentTypes["CreateCalloutSelectionSettingsData"],
+  ParentType extends ResolversParentTypes["CreateCalloutSelectionSettingsData"] = ResolversParentTypes["CreateCalloutSelectionSettingsData"]
 > = {
   mode?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["CalloutSelectionMode"]>,
@@ -17389,9 +17474,7 @@ export type CreateCalloutSelectionSettingsDataResolvers<
 
 export type CreateCalloutSettingsContributionDataResolvers<
   ContextType = any,
-  ParentType extends
-    ResolversParentTypes["CreateCalloutSettingsContributionData"] =
-    ResolversParentTypes["CreateCalloutSettingsContributionData"],
+  ParentType extends ResolversParentTypes["CreateCalloutSettingsContributionData"] = ResolversParentTypes["CreateCalloutSettingsContributionData"]
 > = {
   allowedTypes?: Resolver<
     SchemaTypes.Maybe<Array<ResolversTypes["CalloutContributionType"]>>,
@@ -17418,8 +17501,7 @@ export type CreateCalloutSettingsContributionDataResolvers<
 
 export type CreateCalloutSettingsDataResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["CreateCalloutSettingsData"] =
-    ResolversParentTypes["CreateCalloutSettingsData"],
+  ParentType extends ResolversParentTypes["CreateCalloutSettingsData"] = ResolversParentTypes["CreateCalloutSettingsData"]
 > = {
   contribution?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["CreateCalloutSettingsContributionData"]>,
@@ -17441,8 +17523,7 @@ export type CreateCalloutSettingsDataResolvers<
 
 export type CreateCalloutSettingsFramingDataResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["CreateCalloutSettingsFramingData"] =
-    ResolversParentTypes["CreateCalloutSettingsFramingData"],
+  ParentType extends ResolversParentTypes["CreateCalloutSettingsFramingData"] = ResolversParentTypes["CreateCalloutSettingsFramingData"]
 > = {
   commentsEnabled?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["Boolean"]>,
@@ -17464,8 +17545,7 @@ export type CreateCalloutSettingsFramingDataResolvers<
 
 export type CreateCalloutTaskBoardDataResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["CreateCalloutTaskBoardData"] =
-    ResolversParentTypes["CreateCalloutTaskBoardData"],
+  ParentType extends ResolversParentTypes["CreateCalloutTaskBoardData"] = ResolversParentTypes["CreateCalloutTaskBoardData"]
 > = {
   columns?: Resolver<
     SchemaTypes.Maybe<Array<ResolversTypes["String"]>>,
@@ -17477,8 +17557,7 @@ export type CreateCalloutTaskBoardDataResolvers<
 
 export type CreateCalloutsSetDataResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["CreateCalloutsSetData"] =
-    ResolversParentTypes["CreateCalloutsSetData"],
+  ParentType extends ResolversParentTypes["CreateCalloutsSetData"] = ResolversParentTypes["CreateCalloutsSetData"]
 > = {
   calloutsData?: Resolver<
     SchemaTypes.Maybe<Array<ResolversTypes["CreateCalloutData"]>>,
@@ -17490,8 +17569,7 @@ export type CreateCalloutsSetDataResolvers<
 
 export type CreateClassificationDataResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["CreateClassificationData"] =
-    ResolversParentTypes["CreateClassificationData"],
+  ParentType extends ResolversParentTypes["CreateClassificationData"] = ResolversParentTypes["CreateClassificationData"]
 > = {
   tagsets?: Resolver<
     Array<ResolversTypes["CreateTagsetData"]>,
@@ -17503,8 +17581,7 @@ export type CreateClassificationDataResolvers<
 
 export type CreateCollaboraDocumentDataResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["CreateCollaboraDocumentData"] =
-    ResolversParentTypes["CreateCollaboraDocumentData"],
+  ParentType extends ResolversParentTypes["CreateCollaboraDocumentData"] = ResolversParentTypes["CreateCollaboraDocumentData"]
 > = {
   displayName?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["String"]>,
@@ -17521,8 +17598,7 @@ export type CreateCollaboraDocumentDataResolvers<
 
 export type CreateCollaborationDataResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["CreateCollaborationData"] =
-    ResolversParentTypes["CreateCollaborationData"],
+  ParentType extends ResolversParentTypes["CreateCollaborationData"] = ResolversParentTypes["CreateCollaborationData"]
 > = {
   calloutsSetData?: Resolver<
     ResolversTypes["CreateCalloutsSetData"],
@@ -17539,8 +17615,7 @@ export type CreateCollaborationDataResolvers<
 
 export type CreateCommunityGuidelinesDataResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["CreateCommunityGuidelinesData"] =
-    ResolversParentTypes["CreateCommunityGuidelinesData"],
+  ParentType extends ResolversParentTypes["CreateCommunityGuidelinesData"] = ResolversParentTypes["CreateCommunityGuidelinesData"]
 > = {
   profile?: Resolver<
     ResolversTypes["CreateProfileData"],
@@ -17552,8 +17627,7 @@ export type CreateCommunityGuidelinesDataResolvers<
 
 export type CreateInnovationFlowDataResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["CreateInnovationFlowData"] =
-    ResolversParentTypes["CreateInnovationFlowData"],
+  ParentType extends ResolversParentTypes["CreateInnovationFlowData"] = ResolversParentTypes["CreateInnovationFlowData"]
 > = {
   profile?: Resolver<
     ResolversTypes["CreateProfileData"],
@@ -17570,8 +17644,7 @@ export type CreateInnovationFlowDataResolvers<
 
 export type CreateInnovationFlowStateDataResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["CreateInnovationFlowStateData"] =
-    ResolversParentTypes["CreateInnovationFlowStateData"],
+  ParentType extends ResolversParentTypes["CreateInnovationFlowStateData"] = ResolversParentTypes["CreateInnovationFlowStateData"]
 > = {
   description?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["Markdown"]>,
@@ -17594,9 +17667,7 @@ export type CreateInnovationFlowStateDataResolvers<
 
 export type CreateInnovationFlowStateSettingsDataResolvers<
   ContextType = any,
-  ParentType extends
-    ResolversParentTypes["CreateInnovationFlowStateSettingsData"] =
-    ResolversParentTypes["CreateInnovationFlowStateSettingsData"],
+  ParentType extends ResolversParentTypes["CreateInnovationFlowStateSettingsData"] = ResolversParentTypes["CreateInnovationFlowStateSettingsData"]
 > = {
   allowNewCallouts?: Resolver<
     ResolversTypes["Boolean"],
@@ -17628,8 +17699,7 @@ export type CreateInnovationFlowStateSettingsDataResolvers<
 
 export type CreateLinkDataResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["CreateLinkData"] =
-    ResolversParentTypes["CreateLinkData"],
+  ParentType extends ResolversParentTypes["CreateLinkData"] = ResolversParentTypes["CreateLinkData"]
 > = {
   profile?: Resolver<
     ResolversTypes["CreateProfileData"],
@@ -17646,8 +17716,7 @@ export type CreateLinkDataResolvers<
 
 export type CreateLocationDataResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["CreateLocationData"] =
-    ResolversParentTypes["CreateLocationData"],
+  ParentType extends ResolversParentTypes["CreateLocationData"] = ResolversParentTypes["CreateLocationData"]
 > = {
   addressLine1?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["String"]>,
@@ -17684,8 +17753,7 @@ export type CreateLocationDataResolvers<
 
 export type CreateMemoDataResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["CreateMemoData"] =
-    ResolversParentTypes["CreateMemoData"],
+  ParentType extends ResolversParentTypes["CreateMemoData"] = ResolversParentTypes["CreateMemoData"]
 > = {
   markdown?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["Markdown"]>,
@@ -17702,8 +17770,7 @@ export type CreateMemoDataResolvers<
 
 export type CreatePollDataResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["CreatePollData"] =
-    ResolversParentTypes["CreatePollData"],
+  ParentType extends ResolversParentTypes["CreatePollData"] = ResolversParentTypes["CreatePollData"]
 > = {
   options?: Resolver<Array<ResolversTypes["String"]>, ParentType, ContextType>;
   settings?: Resolver<
@@ -17721,8 +17788,7 @@ export type CreatePollDataResolvers<
 
 export type CreatePostDataResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["CreatePostData"] =
-    ResolversParentTypes["CreatePostData"],
+  ParentType extends ResolversParentTypes["CreatePostData"] = ResolversParentTypes["CreatePostData"]
 > = {
   tags?: Resolver<
     SchemaTypes.Maybe<Array<ResolversTypes["String"]>>,
@@ -17734,8 +17800,7 @@ export type CreatePostDataResolvers<
 
 export type CreateProfileDataResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["CreateProfileData"] =
-    ResolversParentTypes["CreateProfileData"],
+  ParentType extends ResolversParentTypes["CreateProfileData"] = ResolversParentTypes["CreateProfileData"]
 > = {
   description?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["Markdown"]>,
@@ -17778,8 +17843,7 @@ export type CreateProfileDataResolvers<
 
 export type CreateReferenceDataResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["CreateReferenceData"] =
-    ResolversParentTypes["CreateReferenceData"],
+  ParentType extends ResolversParentTypes["CreateReferenceData"] = ResolversParentTypes["CreateReferenceData"]
 > = {
   description?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["String"]>,
@@ -17797,8 +17861,7 @@ export type CreateReferenceDataResolvers<
 
 export type CreateTagsetDataResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["CreateTagsetData"] =
-    ResolversParentTypes["CreateTagsetData"],
+  ParentType extends ResolversParentTypes["CreateTagsetData"] = ResolversParentTypes["CreateTagsetData"]
 > = {
   name?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
   tags?: Resolver<
@@ -17816,8 +17879,7 @@ export type CreateTagsetDataResolvers<
 
 export type CreateVisualOnProfileDataResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["CreateVisualOnProfileData"] =
-    ResolversParentTypes["CreateVisualOnProfileData"],
+  ParentType extends ResolversParentTypes["CreateVisualOnProfileData"] = ResolversParentTypes["CreateVisualOnProfileData"]
 > = {
   name?: Resolver<ResolversTypes["VisualType"], ParentType, ContextType>;
   uri?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
@@ -17826,8 +17888,7 @@ export type CreateVisualOnProfileDataResolvers<
 
 export type CreateWhiteboardDataResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["CreateWhiteboardData"] =
-    ResolversParentTypes["CreateWhiteboardData"],
+  ParentType extends ResolversParentTypes["CreateWhiteboardData"] = ResolversParentTypes["CreateWhiteboardData"]
 > = {
   draftWhiteboardID?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["UUID"]>,
@@ -17859,9 +17920,7 @@ export type CreateWhiteboardDataResolvers<
 
 export type CreateWhiteboardPreviewSettingsDataResolvers<
   ContextType = any,
-  ParentType extends
-    ResolversParentTypes["CreateWhiteboardPreviewSettingsData"] =
-    ResolversParentTypes["CreateWhiteboardPreviewSettingsData"],
+  ParentType extends ResolversParentTypes["CreateWhiteboardPreviewSettingsData"] = ResolversParentTypes["CreateWhiteboardPreviewSettingsData"]
 > = {
   coordinates?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["WhiteboardPreviewCoordinatesData"]>,
@@ -17878,8 +17937,7 @@ export type CreateWhiteboardPreviewSettingsDataResolvers<
 
 export type CredentialResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["Credential"] =
-    ResolversParentTypes["Credential"],
+  ParentType extends ResolversParentTypes["Credential"] = ResolversParentTypes["Credential"]
 > = {
   createdDate?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
   expires?: Resolver<
@@ -17901,25 +17959,21 @@ export type CredentialResolvers<
 
 export type CredentialDefinitionResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["CredentialDefinition"] =
-    ResolversParentTypes["CredentialDefinition"],
+  ParentType extends ResolversParentTypes["CredentialDefinition"] = ResolversParentTypes["CredentialDefinition"]
 > = {
   resourceID?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
   type?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
-export interface DateTimeScalarConfig extends GraphQLScalarTypeConfig<
-  ResolversTypes["DateTime"],
-  any
-> {
+export interface DateTimeScalarConfig
+  extends GraphQLScalarTypeConfig<ResolversTypes["DateTime"], any> {
   name: "DateTime";
 }
 
 export type DirectMessageDeliveryResultResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["DirectMessageDeliveryResult"] =
-    ResolversParentTypes["DirectMessageDeliveryResult"],
+  ParentType extends ResolversParentTypes["DirectMessageDeliveryResult"] = ResolversParentTypes["DirectMessageDeliveryResult"]
 > = {
   conversationID?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["UUID"]>,
@@ -17937,8 +17991,7 @@ export type DirectMessageDeliveryResultResolvers<
 
 export type DiscussionResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["Discussion"] =
-    ResolversParentTypes["Discussion"],
+  ParentType extends ResolversParentTypes["Discussion"] = ResolversParentTypes["Discussion"]
 > = {
   authorization?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["Authorization"]>,
@@ -17976,8 +18029,7 @@ export type DiscussionResolvers<
 
 export type DiscussionDetailsResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["DiscussionDetails"] =
-    ResolversParentTypes["DiscussionDetails"],
+  ParentType extends ResolversParentTypes["DiscussionDetails"] = ResolversParentTypes["DiscussionDetails"]
 > = {
   category?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["String"]>,
@@ -17997,8 +18049,7 @@ export type DiscussionDetailsResolvers<
 
 export type DocumentResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["Document"] =
-    ResolversParentTypes["Document"],
+  ParentType extends ResolversParentTypes["Document"] = ResolversParentTypes["Document"]
 > = {
   authorization?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["Authorization"]>,
@@ -18029,8 +18080,7 @@ export type DocumentResolvers<
 
 export type EmailChangeApproverResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["EmailChangeApprover"] =
-    ResolversParentTypes["EmailChangeApprover"],
+  ParentType extends ResolversParentTypes["EmailChangeApprover"] = ResolversParentTypes["EmailChangeApprover"]
 > = {
   name?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
   organization?: Resolver<
@@ -18042,17 +18092,14 @@ export type EmailChangeApproverResolvers<
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
-export interface EmojiScalarConfig extends GraphQLScalarTypeConfig<
-  ResolversTypes["Emoji"],
-  any
-> {
+export interface EmojiScalarConfig
+  extends GraphQLScalarTypeConfig<ResolversTypes["Emoji"], any> {
   name: "Emoji";
 }
 
 export type ExternalConfigResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["ExternalConfig"] =
-    ResolversParentTypes["ExternalConfig"],
+  ParentType extends ResolversParentTypes["ExternalConfig"] = ResolversParentTypes["ExternalConfig"]
 > = {
   apiKey?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["String"]>,
@@ -18070,8 +18117,7 @@ export type ExternalConfigResolvers<
 
 export type FileStorageConfigResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["FileStorageConfig"] =
-    ResolversParentTypes["FileStorageConfig"],
+  ParentType extends ResolversParentTypes["FileStorageConfig"] = ResolversParentTypes["FileStorageConfig"]
 > = {
   maxFileSize?: Resolver<ResolversTypes["Float"], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
@@ -18079,8 +18125,7 @@ export type FileStorageConfigResolvers<
 
 export type FormResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["Form"] =
-    ResolversParentTypes["Form"],
+  ParentType extends ResolversParentTypes["Form"] = ResolversParentTypes["Form"]
 > = {
   createdDate?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
   description?: Resolver<
@@ -18100,8 +18145,7 @@ export type FormResolvers<
 
 export type FormQuestionResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["FormQuestion"] =
-    ResolversParentTypes["FormQuestion"],
+  ParentType extends ResolversParentTypes["FormQuestion"] = ResolversParentTypes["FormQuestion"]
 > = {
   explanation?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
   maxLength?: Resolver<ResolversTypes["Float"], ParentType, ContextType>;
@@ -18113,8 +18157,7 @@ export type FormQuestionResolvers<
 
 export type ForumResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["Forum"] =
-    ResolversParentTypes["Forum"],
+  ParentType extends ResolversParentTypes["Forum"] = ResolversParentTypes["Forum"]
 > = {
   authorization?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["Authorization"]>,
@@ -18152,7 +18195,7 @@ export type ForumResolvers<
 
 export type GeoResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["Geo"] = ResolversParentTypes["Geo"],
+  ParentType extends ResolversParentTypes["Geo"] = ResolversParentTypes["Geo"]
 > = {
   enabled?: Resolver<ResolversTypes["Boolean"], ParentType, ContextType>;
   endpoint?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
@@ -18161,8 +18204,7 @@ export type GeoResolvers<
 
 export type GeoLocationResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["GeoLocation"] =
-    ResolversParentTypes["GeoLocation"],
+  ParentType extends ResolversParentTypes["GeoLocation"] = ResolversParentTypes["GeoLocation"]
 > = {
   latitude?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["Float"]>,
@@ -18179,8 +18221,7 @@ export type GeoLocationResolvers<
 
 export type GroupableResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["Groupable"] =
-    ResolversParentTypes["Groupable"],
+  ParentType extends ResolversParentTypes["Groupable"] = ResolversParentTypes["Groupable"]
 > = {
   __resolveType: TypeResolveFn<
     "Community" | "Organization",
@@ -18196,8 +18237,7 @@ export type GroupableResolvers<
 
 export type ISearchCategoryResultResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["ISearchCategoryResult"] =
-    ResolversParentTypes["ISearchCategoryResult"],
+  ParentType extends ResolversParentTypes["ISearchCategoryResult"] = ResolversParentTypes["ISearchCategoryResult"]
 > = {
   cursor?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["SearchCursor"]>,
@@ -18215,8 +18255,7 @@ export type ISearchCategoryResultResolvers<
 
 export type ISearchResultsResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["ISearchResults"] =
-    ResolversParentTypes["ISearchResults"],
+  ParentType extends ResolversParentTypes["ISearchResults"] = ResolversParentTypes["ISearchResults"]
 > = {
   actorResults?: Resolver<
     ResolversTypes["ISearchCategoryResult"],
@@ -18248,8 +18287,7 @@ export type ISearchResultsResolvers<
 
 export type InAppNotificationResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["InAppNotification"] =
-    ResolversParentTypes["InAppNotification"],
+  ParentType extends ResolversParentTypes["InAppNotification"] = ResolversParentTypes["InAppNotification"]
 > = {
   category?: Resolver<
     ResolversTypes["NotificationEventCategory"],
@@ -18282,10 +18320,11 @@ export type InAppNotificationResolvers<
 
 export type InAppNotificationPayloadResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["InAppNotificationPayload"] =
-    ResolversParentTypes["InAppNotificationPayload"],
+  ParentType extends ResolversParentTypes["InAppNotificationPayload"] = ResolversParentTypes["InAppNotificationPayload"]
 > = {
   __resolveType: TypeResolveFn<
+    | "InAppNotificationPayloadOrganizationAssociateActor"
+    | "InAppNotificationPayloadOrganizationAssociateInvitation"
     | "InAppNotificationPayloadOrganizationMessageDirect"
     | "InAppNotificationPayloadOrganizationMessageRoom"
     | "InAppNotificationPayloadPlatformForumDiscussion"
@@ -18319,11 +18358,68 @@ export type InAppNotificationPayloadResolvers<
   >;
 };
 
+export type InAppNotificationPayloadOrganizationAssociateActorResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["InAppNotificationPayloadOrganizationAssociateActor"] = ResolversParentTypes["InAppNotificationPayloadOrganizationAssociateActor"]
+> = {
+  actor?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes["Actor"]>,
+    ParentType,
+    ContextType
+  >;
+  application?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes["Application"]>,
+    ParentType,
+    ContextType
+  >;
+  extraRolesWithheld?: Resolver<
+    SchemaTypes.Maybe<Array<ResolversTypes["RoleName"]>>,
+    ParentType,
+    ContextType
+  >;
+  invitation?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes["Invitation"]>,
+    ParentType,
+    ContextType
+  >;
+  organization?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes["Organization"]>,
+    ParentType,
+    ContextType
+  >;
+  type?: Resolver<
+    ResolversTypes["NotificationEventPayload"],
+    ParentType,
+    ContextType
+  >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type InAppNotificationPayloadOrganizationAssociateInvitationResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["InAppNotificationPayloadOrganizationAssociateInvitation"] = ResolversParentTypes["InAppNotificationPayloadOrganizationAssociateInvitation"]
+> = {
+  invitation?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes["Invitation"]>,
+    ParentType,
+    ContextType
+  >;
+  organization?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes["Organization"]>,
+    ParentType,
+    ContextType
+  >;
+  type?: Resolver<
+    ResolversTypes["NotificationEventPayload"],
+    ParentType,
+    ContextType
+  >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
 export type InAppNotificationPayloadOrganizationMessageDirectResolvers<
   ContextType = any,
-  ParentType extends
-    ResolversParentTypes["InAppNotificationPayloadOrganizationMessageDirect"] =
-    ResolversParentTypes["InAppNotificationPayloadOrganizationMessageDirect"],
+  ParentType extends ResolversParentTypes["InAppNotificationPayloadOrganizationMessageDirect"] = ResolversParentTypes["InAppNotificationPayloadOrganizationMessageDirect"]
 > = {
   message?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
   organization?: Resolver<
@@ -18341,9 +18437,7 @@ export type InAppNotificationPayloadOrganizationMessageDirectResolvers<
 
 export type InAppNotificationPayloadOrganizationMessageRoomResolvers<
   ContextType = any,
-  ParentType extends
-    ResolversParentTypes["InAppNotificationPayloadOrganizationMessageRoom"] =
-    ResolversParentTypes["InAppNotificationPayloadOrganizationMessageRoom"],
+  ParentType extends ResolversParentTypes["InAppNotificationPayloadOrganizationMessageRoom"] = ResolversParentTypes["InAppNotificationPayloadOrganizationMessageRoom"]
 > = {
   comment?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["String"]>,
@@ -18370,9 +18464,7 @@ export type InAppNotificationPayloadOrganizationMessageRoomResolvers<
 
 export type InAppNotificationPayloadPlatformForumDiscussionResolvers<
   ContextType = any,
-  ParentType extends
-    ResolversParentTypes["InAppNotificationPayloadPlatformForumDiscussion"] =
-    ResolversParentTypes["InAppNotificationPayloadPlatformForumDiscussion"],
+  ParentType extends ResolversParentTypes["InAppNotificationPayloadPlatformForumDiscussion"] = ResolversParentTypes["InAppNotificationPayloadPlatformForumDiscussion"]
 > = {
   comment?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["String"]>,
@@ -18394,9 +18486,7 @@ export type InAppNotificationPayloadPlatformForumDiscussionResolvers<
 
 export type InAppNotificationPayloadPlatformGlobalRoleChangeResolvers<
   ContextType = any,
-  ParentType extends
-    ResolversParentTypes["InAppNotificationPayloadPlatformGlobalRoleChange"] =
-    ResolversParentTypes["InAppNotificationPayloadPlatformGlobalRoleChange"],
+  ParentType extends ResolversParentTypes["InAppNotificationPayloadPlatformGlobalRoleChange"] = ResolversParentTypes["InAppNotificationPayloadPlatformGlobalRoleChange"]
 > = {
   role?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
   type?: Resolver<
@@ -18414,9 +18504,7 @@ export type InAppNotificationPayloadPlatformGlobalRoleChangeResolvers<
 
 export type InAppNotificationPayloadPlatformUserResolvers<
   ContextType = any,
-  ParentType extends
-    ResolversParentTypes["InAppNotificationPayloadPlatformUser"] =
-    ResolversParentTypes["InAppNotificationPayloadPlatformUser"],
+  ParentType extends ResolversParentTypes["InAppNotificationPayloadPlatformUser"] = ResolversParentTypes["InAppNotificationPayloadPlatformUser"]
 > = {
   type?: Resolver<
     ResolversTypes["NotificationEventPayload"],
@@ -18428,9 +18516,7 @@ export type InAppNotificationPayloadPlatformUserResolvers<
 
 export type InAppNotificationPayloadPlatformUserMessageRoomResolvers<
   ContextType = any,
-  ParentType extends
-    ResolversParentTypes["InAppNotificationPayloadPlatformUserMessageRoom"] =
-    ResolversParentTypes["InAppNotificationPayloadPlatformUserMessageRoom"],
+  ParentType extends ResolversParentTypes["InAppNotificationPayloadPlatformUserMessageRoom"] = ResolversParentTypes["InAppNotificationPayloadPlatformUserMessageRoom"]
 > = {
   messageDetails?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["MessageDetails"]>,
@@ -18448,9 +18534,7 @@ export type InAppNotificationPayloadPlatformUserMessageRoomResolvers<
 
 export type InAppNotificationPayloadPlatformUserProfileRemovedResolvers<
   ContextType = any,
-  ParentType extends
-    ResolversParentTypes["InAppNotificationPayloadPlatformUserProfileRemoved"] =
-    ResolversParentTypes["InAppNotificationPayloadPlatformUserProfileRemoved"],
+  ParentType extends ResolversParentTypes["InAppNotificationPayloadPlatformUserProfileRemoved"] = ResolversParentTypes["InAppNotificationPayloadPlatformUserProfileRemoved"]
 > = {
   type?: Resolver<
     ResolversTypes["NotificationEventPayload"],
@@ -18462,8 +18546,7 @@ export type InAppNotificationPayloadPlatformUserProfileRemovedResolvers<
 
 export type InAppNotificationPayloadSpaceResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["InAppNotificationPayloadSpace"] =
-    ResolversParentTypes["InAppNotificationPayloadSpace"],
+  ParentType extends ResolversParentTypes["InAppNotificationPayloadSpace"] = ResolversParentTypes["InAppNotificationPayloadSpace"]
 > = {
   space?: Resolver<ResolversTypes["Space"], ParentType, ContextType>;
   type?: Resolver<
@@ -18476,9 +18559,7 @@ export type InAppNotificationPayloadSpaceResolvers<
 
 export type InAppNotificationPayloadSpaceCollaborationCalloutResolvers<
   ContextType = any,
-  ParentType extends
-    ResolversParentTypes["InAppNotificationPayloadSpaceCollaborationCallout"] =
-    ResolversParentTypes["InAppNotificationPayloadSpaceCollaborationCallout"],
+  ParentType extends ResolversParentTypes["InAppNotificationPayloadSpaceCollaborationCallout"] = ResolversParentTypes["InAppNotificationPayloadSpaceCollaborationCallout"]
 > = {
   callout?: Resolver<ResolversTypes["Callout"], ParentType, ContextType>;
   space?: Resolver<ResolversTypes["Space"], ParentType, ContextType>;
@@ -18492,9 +18573,7 @@ export type InAppNotificationPayloadSpaceCollaborationCalloutResolvers<
 
 export type InAppNotificationPayloadSpaceCollaborationCalloutCommentResolvers<
   ContextType = any,
-  ParentType extends
-    ResolversParentTypes["InAppNotificationPayloadSpaceCollaborationCalloutComment"] =
-    ResolversParentTypes["InAppNotificationPayloadSpaceCollaborationCalloutComment"],
+  ParentType extends ResolversParentTypes["InAppNotificationPayloadSpaceCollaborationCalloutComment"] = ResolversParentTypes["InAppNotificationPayloadSpaceCollaborationCalloutComment"]
 > = {
   callout?: Resolver<ResolversTypes["Callout"], ParentType, ContextType>;
   messageDetails?: Resolver<
@@ -18513,9 +18592,7 @@ export type InAppNotificationPayloadSpaceCollaborationCalloutCommentResolvers<
 
 export type InAppNotificationPayloadSpaceCollaborationCalloutPostCommentResolvers<
   ContextType = any,
-  ParentType extends
-    ResolversParentTypes["InAppNotificationPayloadSpaceCollaborationCalloutPostComment"] =
-    ResolversParentTypes["InAppNotificationPayloadSpaceCollaborationCalloutPostComment"],
+  ParentType extends ResolversParentTypes["InAppNotificationPayloadSpaceCollaborationCalloutPostComment"] = ResolversParentTypes["InAppNotificationPayloadSpaceCollaborationCalloutPostComment"]
 > = {
   callout?: Resolver<ResolversTypes["Callout"], ParentType, ContextType>;
   messageDetails?: Resolver<
@@ -18534,9 +18611,7 @@ export type InAppNotificationPayloadSpaceCollaborationCalloutPostCommentResolver
 
 export type InAppNotificationPayloadSpaceCollaborationCalloutReactionResolvers<
   ContextType = any,
-  ParentType extends
-    ResolversParentTypes["InAppNotificationPayloadSpaceCollaborationCalloutReaction"] =
-    ResolversParentTypes["InAppNotificationPayloadSpaceCollaborationCalloutReaction"],
+  ParentType extends ResolversParentTypes["InAppNotificationPayloadSpaceCollaborationCalloutReaction"] = ResolversParentTypes["InAppNotificationPayloadSpaceCollaborationCalloutReaction"]
 > = {
   callout?: Resolver<ResolversTypes["Callout"], ParentType, ContextType>;
   emoji?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
@@ -18551,9 +18626,7 @@ export type InAppNotificationPayloadSpaceCollaborationCalloutReactionResolvers<
 
 export type InAppNotificationPayloadSpaceCollaborationPollResolvers<
   ContextType = any,
-  ParentType extends
-    ResolversParentTypes["InAppNotificationPayloadSpaceCollaborationPoll"] =
-    ResolversParentTypes["InAppNotificationPayloadSpaceCollaborationPoll"],
+  ParentType extends ResolversParentTypes["InAppNotificationPayloadSpaceCollaborationPoll"] = ResolversParentTypes["InAppNotificationPayloadSpaceCollaborationPoll"]
 > = {
   callout?: Resolver<ResolversTypes["Callout"], ParentType, ContextType>;
   poll?: Resolver<ResolversTypes["Poll"], ParentType, ContextType>;
@@ -18569,9 +18642,7 @@ export type InAppNotificationPayloadSpaceCollaborationPollResolvers<
 
 export type InAppNotificationPayloadSpaceCommunicationMessageDirectResolvers<
   ContextType = any,
-  ParentType extends
-    ResolversParentTypes["InAppNotificationPayloadSpaceCommunicationMessageDirect"] =
-    ResolversParentTypes["InAppNotificationPayloadSpaceCommunicationMessageDirect"],
+  ParentType extends ResolversParentTypes["InAppNotificationPayloadSpaceCommunicationMessageDirect"] = ResolversParentTypes["InAppNotificationPayloadSpaceCommunicationMessageDirect"]
 > = {
   message?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
   space?: Resolver<ResolversTypes["Space"], ParentType, ContextType>;
@@ -18585,9 +18656,7 @@ export type InAppNotificationPayloadSpaceCommunicationMessageDirectResolvers<
 
 export type InAppNotificationPayloadSpaceCommunicationUpdateResolvers<
   ContextType = any,
-  ParentType extends
-    ResolversParentTypes["InAppNotificationPayloadSpaceCommunicationUpdate"] =
-    ResolversParentTypes["InAppNotificationPayloadSpaceCommunicationUpdate"],
+  ParentType extends ResolversParentTypes["InAppNotificationPayloadSpaceCommunicationUpdate"] = ResolversParentTypes["InAppNotificationPayloadSpaceCommunicationUpdate"]
 > = {
   space?: Resolver<ResolversTypes["Space"], ParentType, ContextType>;
   type?: Resolver<
@@ -18601,9 +18670,7 @@ export type InAppNotificationPayloadSpaceCommunicationUpdateResolvers<
 
 export type InAppNotificationPayloadSpaceCommunityActorResolvers<
   ContextType = any,
-  ParentType extends
-    ResolversParentTypes["InAppNotificationPayloadSpaceCommunityActor"] =
-    ResolversParentTypes["InAppNotificationPayloadSpaceCommunityActor"],
+  ParentType extends ResolversParentTypes["InAppNotificationPayloadSpaceCommunityActor"] = ResolversParentTypes["InAppNotificationPayloadSpaceCommunityActor"]
 > = {
   actor?: Resolver<ResolversTypes["Actor"], ParentType, ContextType>;
   space?: Resolver<ResolversTypes["Space"], ParentType, ContextType>;
@@ -18617,9 +18684,7 @@ export type InAppNotificationPayloadSpaceCommunityActorResolvers<
 
 export type InAppNotificationPayloadSpaceCommunityApplicationResolvers<
   ContextType = any,
-  ParentType extends
-    ResolversParentTypes["InAppNotificationPayloadSpaceCommunityApplication"] =
-    ResolversParentTypes["InAppNotificationPayloadSpaceCommunityApplication"],
+  ParentType extends ResolversParentTypes["InAppNotificationPayloadSpaceCommunityApplication"] = ResolversParentTypes["InAppNotificationPayloadSpaceCommunityApplication"]
 > = {
   application?: Resolver<
     ResolversTypes["Application"],
@@ -18637,9 +18702,7 @@ export type InAppNotificationPayloadSpaceCommunityApplicationResolvers<
 
 export type InAppNotificationPayloadSpaceCommunityCalendarEventResolvers<
   ContextType = any,
-  ParentType extends
-    ResolversParentTypes["InAppNotificationPayloadSpaceCommunityCalendarEvent"] =
-    ResolversParentTypes["InAppNotificationPayloadSpaceCommunityCalendarEvent"],
+  ParentType extends ResolversParentTypes["InAppNotificationPayloadSpaceCommunityCalendarEvent"] = ResolversParentTypes["InAppNotificationPayloadSpaceCommunityCalendarEvent"]
 > = {
   calendarEvent?: Resolver<
     ResolversTypes["CalendarEvent"],
@@ -18657,9 +18720,7 @@ export type InAppNotificationPayloadSpaceCommunityCalendarEventResolvers<
 
 export type InAppNotificationPayloadSpaceCommunityCalendarEventCommentResolvers<
   ContextType = any,
-  ParentType extends
-    ResolversParentTypes["InAppNotificationPayloadSpaceCommunityCalendarEventComment"] =
-    ResolversParentTypes["InAppNotificationPayloadSpaceCommunityCalendarEventComment"],
+  ParentType extends ResolversParentTypes["InAppNotificationPayloadSpaceCommunityCalendarEventComment"] = ResolversParentTypes["InAppNotificationPayloadSpaceCommunityCalendarEventComment"]
 > = {
   calendarEvent?: Resolver<
     ResolversTypes["CalendarEvent"],
@@ -18678,9 +18739,7 @@ export type InAppNotificationPayloadSpaceCommunityCalendarEventCommentResolvers<
 
 export type InAppNotificationPayloadSpaceCommunityInvitationResolvers<
   ContextType = any,
-  ParentType extends
-    ResolversParentTypes["InAppNotificationPayloadSpaceCommunityInvitation"] =
-    ResolversParentTypes["InAppNotificationPayloadSpaceCommunityInvitation"],
+  ParentType extends ResolversParentTypes["InAppNotificationPayloadSpaceCommunityInvitation"] = ResolversParentTypes["InAppNotificationPayloadSpaceCommunityInvitation"]
 > = {
   invitation?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["Invitation"]>,
@@ -18703,9 +18762,7 @@ export type InAppNotificationPayloadSpaceCommunityInvitationResolvers<
 
 export type InAppNotificationPayloadSpaceCommunityInvitationPlatformResolvers<
   ContextType = any,
-  ParentType extends
-    ResolversParentTypes["InAppNotificationPayloadSpaceCommunityInvitationPlatform"] =
-    ResolversParentTypes["InAppNotificationPayloadSpaceCommunityInvitationPlatform"],
+  ParentType extends ResolversParentTypes["InAppNotificationPayloadSpaceCommunityInvitationPlatform"] = ResolversParentTypes["InAppNotificationPayloadSpaceCommunityInvitationPlatform"]
 > = {
   space?: Resolver<ResolversTypes["Space"], ParentType, ContextType>;
   type?: Resolver<
@@ -18718,9 +18775,7 @@ export type InAppNotificationPayloadSpaceCommunityInvitationPlatformResolvers<
 
 export type InAppNotificationPayloadUserMessageDirectResolvers<
   ContextType = any,
-  ParentType extends
-    ResolversParentTypes["InAppNotificationPayloadUserMessageDirect"] =
-    ResolversParentTypes["InAppNotificationPayloadUserMessageDirect"],
+  ParentType extends ResolversParentTypes["InAppNotificationPayloadUserMessageDirect"] = ResolversParentTypes["InAppNotificationPayloadUserMessageDirect"]
 > = {
   message?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
   type?: Resolver<
@@ -18738,9 +18793,7 @@ export type InAppNotificationPayloadUserMessageDirectResolvers<
 
 export type InAppNotificationPayloadVirtualContributorResolvers<
   ContextType = any,
-  ParentType extends
-    ResolversParentTypes["InAppNotificationPayloadVirtualContributor"] =
-    ResolversParentTypes["InAppNotificationPayloadVirtualContributor"],
+  ParentType extends ResolversParentTypes["InAppNotificationPayloadVirtualContributor"] = ResolversParentTypes["InAppNotificationPayloadVirtualContributor"]
 > = {
   actor?: Resolver<
     ResolversTypes["VirtualContributor"],
@@ -18758,8 +18811,7 @@ export type InAppNotificationPayloadVirtualContributorResolvers<
 
 export type InnovationFlowResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["InnovationFlow"] =
-    ResolversParentTypes["InnovationFlow"],
+  ParentType extends ResolversParentTypes["InnovationFlow"] = ResolversParentTypes["InnovationFlow"]
 > = {
   authorization?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["Authorization"]>,
@@ -18790,8 +18842,7 @@ export type InnovationFlowResolvers<
 
 export type InnovationFlowSettingsResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["InnovationFlowSettings"] =
-    ResolversParentTypes["InnovationFlowSettings"],
+  ParentType extends ResolversParentTypes["InnovationFlowSettings"] = ResolversParentTypes["InnovationFlowSettings"]
 > = {
   maximumNumberOfStates?: Resolver<
     ResolversTypes["Float"],
@@ -18808,8 +18859,7 @@ export type InnovationFlowSettingsResolvers<
 
 export type InnovationFlowStateResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["InnovationFlowState"] =
-    ResolversParentTypes["InnovationFlowState"],
+  ParentType extends ResolversParentTypes["InnovationFlowState"] = ResolversParentTypes["InnovationFlowState"]
 > = {
   authorization?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["Authorization"]>,
@@ -18841,8 +18891,7 @@ export type InnovationFlowStateResolvers<
 
 export type InnovationFlowStateSettingsResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["InnovationFlowStateSettings"] =
-    ResolversParentTypes["InnovationFlowStateSettings"],
+  ParentType extends ResolversParentTypes["InnovationFlowStateSettings"] = ResolversParentTypes["InnovationFlowStateSettings"]
 > = {
   allowNewCallouts?: Resolver<
     ResolversTypes["Boolean"],
@@ -18870,8 +18919,7 @@ export type InnovationFlowStateSettingsResolvers<
 
 export type InnovationHubResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["InnovationHub"] =
-    ResolversParentTypes["InnovationHub"],
+  ParentType extends ResolversParentTypes["InnovationHub"] = ResolversParentTypes["InnovationHub"]
 > = {
   account?: Resolver<ResolversTypes["Account"], ParentType, ContextType>;
   authorization?: Resolver<
@@ -18918,8 +18966,7 @@ export type InnovationHubResolvers<
 
 export type InnovationPackResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["InnovationPack"] =
-    ResolversParentTypes["InnovationPack"],
+  ParentType extends ResolversParentTypes["InnovationPack"] = ResolversParentTypes["InnovationPack"]
 > = {
   authorization?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["Authorization"]>,
@@ -18948,8 +18995,7 @@ export type InnovationPackResolvers<
 
 export type InputCreatorQueryResultsResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["InputCreatorQueryResults"] =
-    ResolversParentTypes["InputCreatorQueryResults"],
+  ParentType extends ResolversParentTypes["InputCreatorQueryResults"] = ResolversParentTypes["InputCreatorQueryResults"]
 > = {
   callout?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["CreateCalloutData"]>,
@@ -18989,8 +19035,7 @@ export type InputCreatorQueryResultsResolvers<
 
 export type InvitationResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["Invitation"] =
-    ResolversParentTypes["Invitation"],
+  ParentType extends ResolversParentTypes["Invitation"] = ResolversParentTypes["Invitation"]
 > = {
   actor?: Resolver<ResolversTypes["Actor"], ParentType, ContextType>;
   authorization?: Resolver<
@@ -19006,6 +19051,11 @@ export type InvitationResolvers<
   createdDate?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
   extraRoles?: Resolver<
     Array<ResolversTypes["RoleName"]>,
+    ParentType,
+    ContextType
+  >;
+  extraRolesWithheld?: Resolver<
+    SchemaTypes.Maybe<Array<ResolversTypes["RoleName"]>>,
     ParentType,
     ContextType
   >;
@@ -19044,8 +19094,7 @@ export type InvitationResolvers<
 
 export type KnowledgeBaseResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["KnowledgeBase"] =
-    ResolversParentTypes["KnowledgeBase"],
+  ParentType extends ResolversParentTypes["KnowledgeBase"] = ResolversParentTypes["KnowledgeBase"]
 > = {
   authorization?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["Authorization"]>,
@@ -19066,8 +19115,7 @@ export type KnowledgeBaseResolvers<
 
 export type KratosIdentityResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["KratosIdentity"] =
-    ResolversParentTypes["KratosIdentity"],
+  ParentType extends ResolversParentTypes["KratosIdentity"] = ResolversParentTypes["KratosIdentity"]
 > = {
   createdAt?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
   email?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
@@ -19093,8 +19141,7 @@ export type KratosIdentityResolvers<
 
 export type LanguageConfigResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["LanguageConfig"] =
-    ResolversParentTypes["LanguageConfig"],
+  ParentType extends ResolversParentTypes["LanguageConfig"] = ResolversParentTypes["LanguageConfig"]
 > = {
   default?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
   eligible?: Resolver<Array<ResolversTypes["String"]>, ParentType, ContextType>;
@@ -19103,8 +19150,7 @@ export type LanguageConfigResolvers<
 
 export type LatestReleaseDiscussionResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["LatestReleaseDiscussion"] =
-    ResolversParentTypes["LatestReleaseDiscussion"],
+  ParentType extends ResolversParentTypes["LatestReleaseDiscussion"] = ResolversParentTypes["LatestReleaseDiscussion"]
 > = {
   id?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
   nameID?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
@@ -19113,8 +19159,7 @@ export type LatestReleaseDiscussionResolvers<
 
 export type LibraryResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["Library"] =
-    ResolversParentTypes["Library"],
+  ParentType extends ResolversParentTypes["Library"] = ResolversParentTypes["Library"]
 > = {
   authorization?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["Authorization"]>,
@@ -19163,8 +19208,7 @@ export type LibraryResolvers<
 
 export type LicenseResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["License"] =
-    ResolversParentTypes["License"],
+  ParentType extends ResolversParentTypes["License"] = ResolversParentTypes["License"]
 > = {
   authorization?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["Authorization"]>,
@@ -19194,8 +19238,7 @@ export type LicenseResolvers<
 
 export type LicenseEntitlementResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["LicenseEntitlement"] =
-    ResolversParentTypes["LicenseEntitlement"],
+  ParentType extends ResolversParentTypes["LicenseEntitlement"] = ResolversParentTypes["LicenseEntitlement"]
 > = {
   createdDate?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
   dataType?: Resolver<
@@ -19219,8 +19262,7 @@ export type LicenseEntitlementResolvers<
 
 export type LicensePlanResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["LicensePlan"] =
-    ResolversParentTypes["LicensePlan"],
+  ParentType extends ResolversParentTypes["LicensePlan"] = ResolversParentTypes["LicensePlan"]
 > = {
   assignToNewOrganizationAccounts?: Resolver<
     ResolversTypes["Boolean"],
@@ -19270,8 +19312,7 @@ export type LicensePlanResolvers<
 
 export type LicensePolicyResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["LicensePolicy"] =
-    ResolversParentTypes["LicensePolicy"],
+  ParentType extends ResolversParentTypes["LicensePolicy"] = ResolversParentTypes["LicensePolicy"]
 > = {
   authorization?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["Authorization"]>,
@@ -19291,8 +19332,7 @@ export type LicensePolicyResolvers<
 
 export type LicensingResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["Licensing"] =
-    ResolversParentTypes["Licensing"],
+  ParentType extends ResolversParentTypes["Licensing"] = ResolversParentTypes["Licensing"]
 > = {
   authorization?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["Authorization"]>,
@@ -19313,9 +19353,7 @@ export type LicensingResolvers<
 
 export type LicensingCredentialBasedPolicyCredentialRuleResolvers<
   ContextType = any,
-  ParentType extends
-    ResolversParentTypes["LicensingCredentialBasedPolicyCredentialRule"] =
-    ResolversParentTypes["LicensingCredentialBasedPolicyCredentialRule"],
+  ParentType extends ResolversParentTypes["LicensingCredentialBasedPolicyCredentialRule"] = ResolversParentTypes["LicensingCredentialBasedPolicyCredentialRule"]
 > = {
   credentialType?: Resolver<
     ResolversTypes["LicensingCredentialBasedCredentialType"],
@@ -19338,8 +19376,7 @@ export type LicensingCredentialBasedPolicyCredentialRuleResolvers<
 
 export type LicensingGrantedEntitlementResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["LicensingGrantedEntitlement"] =
-    ResolversParentTypes["LicensingGrantedEntitlement"],
+  ParentType extends ResolversParentTypes["LicensingGrantedEntitlement"] = ResolversParentTypes["LicensingGrantedEntitlement"]
 > = {
   limit?: Resolver<ResolversTypes["Float"], ParentType, ContextType>;
   type?: Resolver<
@@ -19352,8 +19389,7 @@ export type LicensingGrantedEntitlementResolvers<
 
 export type LifecycleResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["Lifecycle"] =
-    ResolversParentTypes["Lifecycle"],
+  ParentType extends ResolversParentTypes["Lifecycle"] = ResolversParentTypes["Lifecycle"]
 > = {
   createdDate?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
   id?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
@@ -19361,17 +19397,14 @@ export type LifecycleResolvers<
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
-export interface LifecycleDefinitionScalarConfig extends GraphQLScalarTypeConfig<
-  ResolversTypes["LifecycleDefinition"],
-  any
-> {
+export interface LifecycleDefinitionScalarConfig
+  extends GraphQLScalarTypeConfig<ResolversTypes["LifecycleDefinition"], any> {
   name: "LifecycleDefinition";
 }
 
 export type LinkResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["Link"] =
-    ResolversParentTypes["Link"],
+  ParentType extends ResolversParentTypes["Link"] = ResolversParentTypes["Link"]
 > = {
   authorization?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["Authorization"]>,
@@ -19388,8 +19421,7 @@ export type LinkResolvers<
 
 export type LocationResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["Location"] =
-    ResolversParentTypes["Location"],
+  ParentType extends ResolversParentTypes["Location"] = ResolversParentTypes["Location"]
 > = {
   addressLine1?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["String"]>,
@@ -19434,8 +19466,7 @@ export type LocationResolvers<
 
 export type LookupByNameQueryResultsResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["LookupByNameQueryResults"] =
-    ResolversParentTypes["LookupByNameQueryResults"],
+  ParentType extends ResolversParentTypes["LookupByNameQueryResults"] = ResolversParentTypes["LookupByNameQueryResults"]
 > = {
   innovationHub?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["String"]>,
@@ -19499,8 +19530,7 @@ export type LookupByNameQueryResultsResolvers<
 
 export type LookupMyPrivilegesQueryResultsResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["LookupMyPrivilegesQueryResults"] =
-    ResolversParentTypes["LookupMyPrivilegesQueryResults"],
+  ParentType extends ResolversParentTypes["LookupMyPrivilegesQueryResults"] = ResolversParentTypes["LookupMyPrivilegesQueryResults"]
 > = {
   account?: Resolver<
     SchemaTypes.Maybe<Array<ResolversTypes["AuthorizationPrivilege"]>>,
@@ -19720,8 +19750,7 @@ export type LookupMyPrivilegesQueryResultsResolvers<
 
 export type LookupQueryResultsResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["LookupQueryResults"] =
-    ResolversParentTypes["LookupQueryResults"],
+  ParentType extends ResolversParentTypes["LookupQueryResults"] = ResolversParentTypes["LookupQueryResults"]
 > = {
   about?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["SpaceAbout"]>,
@@ -19962,17 +19991,14 @@ export type LookupQueryResultsResolvers<
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
-export interface MarkdownScalarConfig extends GraphQLScalarTypeConfig<
-  ResolversTypes["Markdown"],
-  any
-> {
+export interface MarkdownScalarConfig
+  extends GraphQLScalarTypeConfig<ResolversTypes["Markdown"], any> {
   name: "Markdown";
 }
 
 export type McpApiKeyResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["McpApiKey"] =
-    ResolversParentTypes["McpApiKey"],
+  ParentType extends ResolversParentTypes["McpApiKey"] = ResolversParentTypes["McpApiKey"]
 > = {
   createdDate?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
   expiresAt?: Resolver<
@@ -20003,8 +20029,7 @@ export type McpApiKeyResolvers<
 
 export type McpApiKeyMintResultResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["McpApiKeyMintResult"] =
-    ResolversParentTypes["McpApiKeyMintResult"],
+  ParentType extends ResolversParentTypes["McpApiKeyMintResult"] = ResolversParentTypes["McpApiKeyMintResult"]
 > = {
   apiKey?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
   key?: Resolver<ResolversTypes["McpApiKey"], ParentType, ContextType>;
@@ -20013,8 +20038,7 @@ export type McpApiKeyMintResultResolvers<
 
 export type MeAccountDeletionStatusResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["MeAccountDeletionStatus"] =
-    ResolversParentTypes["MeAccountDeletionStatus"],
+  ParentType extends ResolversParentTypes["MeAccountDeletionStatus"] = ResolversParentTypes["MeAccountDeletionStatus"]
 > = {
   blockers?: Resolver<
     Array<ResolversTypes["AccountDeletionBlocker"]>,
@@ -20039,8 +20063,7 @@ export type MeAccountDeletionStatusResolvers<
 
 export type MeConversationsResultResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["MeConversationsResult"] =
-    ResolversParentTypes["MeConversationsResult"],
+  ParentType extends ResolversParentTypes["MeConversationsResult"] = ResolversParentTypes["MeConversationsResult"]
 > = {
   conversations?: Resolver<
     Array<ResolversTypes["Conversation"]>,
@@ -20052,8 +20075,7 @@ export type MeConversationsResultResolvers<
 
 export type MeQueryResultsResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["MeQueryResults"] =
-    ResolversParentTypes["MeQueryResults"],
+  ParentType extends ResolversParentTypes["MeQueryResults"] = ResolversParentTypes["MeQueryResults"]
 > = {
   accountDeletion?: Resolver<
     ResolversTypes["MeAccountDeletionStatus"],
@@ -20106,6 +20128,24 @@ export type MeQueryResultsResolvers<
     ParentType,
     ContextType
   >;
+  organizationApplications?: Resolver<
+    Array<ResolversTypes["OrganizationApplicationResult"]>,
+    ParentType,
+    ContextType,
+    Partial<SchemaTypes.MeQueryResultsOrganizationApplicationsArgs>
+  >;
+  organizationInvitations?: Resolver<
+    Array<ResolversTypes["OrganizationInvitationResult"]>,
+    ParentType,
+    ContextType,
+    Partial<SchemaTypes.MeQueryResultsOrganizationInvitationsArgs>
+  >;
+  organizationInvitationsCount?: Resolver<
+    ResolversTypes["Float"],
+    ParentType,
+    ContextType,
+    Partial<SchemaTypes.MeQueryResultsOrganizationInvitationsCountArgs>
+  >;
   spaceMembershipsFlat?: Resolver<
     Array<ResolversTypes["CommunityMembershipResult"]>,
     ParentType,
@@ -20127,8 +20167,7 @@ export type MeQueryResultsResolvers<
 
 export type MediaGalleryResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["MediaGallery"] =
-    ResolversParentTypes["MediaGallery"],
+  ParentType extends ResolversParentTypes["MediaGallery"] = ResolversParentTypes["MediaGallery"]
 > = {
   authorization?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["Authorization"]>,
@@ -20154,8 +20193,7 @@ export type MediaGalleryResolvers<
 
 export type MemoResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["Memo"] =
-    ResolversParentTypes["Memo"],
+  ParentType extends ResolversParentTypes["Memo"] = ResolversParentTypes["Memo"]
 > = {
   authorization?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["Authorization"]>,
@@ -20193,8 +20231,7 @@ export type MemoResolvers<
 
 export type MemoSignatureResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["MemoSignature"] =
-    ResolversParentTypes["MemoSignature"],
+  ParentType extends ResolversParentTypes["MemoSignature"] = ResolversParentTypes["MemoSignature"]
 > = {
   actor?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["User"]>,
@@ -20219,8 +20256,7 @@ export type MemoSignatureResolvers<
 
 export type MemoSigningContinueResultResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["MemoSigningContinueResult"] =
-    ResolversParentTypes["MemoSigningContinueResult"],
+  ParentType extends ResolversParentTypes["MemoSigningContinueResult"] = ResolversParentTypes["MemoSigningContinueResult"]
 > = {
   authorizeUrl?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
@@ -20228,8 +20264,7 @@ export type MemoSigningContinueResultResolvers<
 
 export type MemoSigningPrepareResultResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["MemoSigningPrepareResult"] =
-    ResolversParentTypes["MemoSigningPrepareResult"],
+  ParentType extends ResolversParentTypes["MemoSigningPrepareResult"] = ResolversParentTypes["MemoSigningPrepareResult"]
 > = {
   attemptId?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
   previewUrl?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
@@ -20238,8 +20273,7 @@ export type MemoSigningPrepareResultResolvers<
 
 export type MessageResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["Message"] =
-    ResolversParentTypes["Message"],
+  ParentType extends ResolversParentTypes["Message"] = ResolversParentTypes["Message"]
 > = {
   id?: Resolver<ResolversTypes["MessageID"], ParentType, ContextType>;
   message?: Resolver<ResolversTypes["Markdown"], ParentType, ContextType>;
@@ -20264,8 +20298,7 @@ export type MessageResolvers<
 
 export type MessageDetailsResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["MessageDetails"] =
-    ResolversParentTypes["MessageDetails"],
+  ParentType extends ResolversParentTypes["MessageDetails"] = ResolversParentTypes["MessageDetails"]
 > = {
   message?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
   parent?: Resolver<ResolversTypes["MessageParent"], ParentType, ContextType>;
@@ -20273,17 +20306,14 @@ export type MessageDetailsResolvers<
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
-export interface MessageIdScalarConfig extends GraphQLScalarTypeConfig<
-  ResolversTypes["MessageID"],
-  any
-> {
+export interface MessageIdScalarConfig
+  extends GraphQLScalarTypeConfig<ResolversTypes["MessageID"], any> {
   name: "MessageID";
 }
 
 export type MessageParentResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["MessageParent"] =
-    ResolversParentTypes["MessageParent"],
+  ParentType extends ResolversParentTypes["MessageParent"] = ResolversParentTypes["MessageParent"]
 > = {
   displayName?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
   id?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
@@ -20293,8 +20323,7 @@ export type MessageParentResolvers<
 
 export type MessagingResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["Messaging"] =
-    ResolversParentTypes["Messaging"],
+  ParentType extends ResolversParentTypes["Messaging"] = ResolversParentTypes["Messaging"]
 > = {
   authorization?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["Authorization"]>,
@@ -20309,8 +20338,7 @@ export type MessagingResolvers<
 
 export type MetadataResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["Metadata"] =
-    ResolversParentTypes["Metadata"],
+  ParentType extends ResolversParentTypes["Metadata"] = ResolversParentTypes["Metadata"]
 > = {
   services?: Resolver<
     Array<ResolversTypes["ServiceMetadata"]>,
@@ -20322,8 +20350,7 @@ export type MetadataResolvers<
 
 export type MigrateEmbeddingsResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["MigrateEmbeddings"] =
-    ResolversParentTypes["MigrateEmbeddings"],
+  ParentType extends ResolversParentTypes["MigrateEmbeddings"] = ResolversParentTypes["MigrateEmbeddings"]
 > = {
   success?: Resolver<ResolversTypes["Boolean"], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
@@ -20331,8 +20358,7 @@ export type MigrateEmbeddingsResolvers<
 
 export type ModelCardAiEngineResultResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["ModelCardAiEngineResult"] =
-    ResolversParentTypes["ModelCardAiEngineResult"],
+  ParentType extends ResolversParentTypes["ModelCardAiEngineResult"] = ResolversParentTypes["ModelCardAiEngineResult"]
 > = {
   additionalTechnicalDetails?: Resolver<
     ResolversTypes["String"],
@@ -20366,8 +20392,7 @@ export type ModelCardAiEngineResultResolvers<
 
 export type ModelCardMonitoringResultResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["ModelCardMonitoringResult"] =
-    ResolversParentTypes["ModelCardMonitoringResult"],
+  ParentType extends ResolversParentTypes["ModelCardMonitoringResult"] = ResolversParentTypes["ModelCardMonitoringResult"]
 > = {
   isUsageMonitoredByAlkemio?: Resolver<
     ResolversTypes["Boolean"],
@@ -20379,8 +20404,7 @@ export type ModelCardMonitoringResultResolvers<
 
 export type ModelCardSpaceUsageResultResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["ModelCardSpaceUsageResult"] =
-    ResolversParentTypes["ModelCardSpaceUsageResult"],
+  ParentType extends ResolversParentTypes["ModelCardSpaceUsageResult"] = ResolversParentTypes["ModelCardSpaceUsageResult"]
 > = {
   flags?: Resolver<
     Array<ResolversTypes["VirtualContributorModelCardFlag"]>,
@@ -20397,8 +20421,7 @@ export type ModelCardSpaceUsageResultResolvers<
 
 export type MutationResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["Mutation"] =
-    ResolversParentTypes["Mutation"],
+  ParentType extends ResolversParentTypes["Mutation"] = ResolversParentTypes["Mutation"]
 > = {
   addClassificationEntryFromTemplate?: Resolver<
     ResolversTypes["ClassificationEntry"],
@@ -22249,8 +22272,7 @@ export type MutationResolvers<
 
 export type MySpaceResultsResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["MySpaceResults"] =
-    ResolversParentTypes["MySpaceResults"],
+  ParentType extends ResolversParentTypes["MySpaceResults"] = ResolversParentTypes["MySpaceResults"]
 > = {
   latestActivity?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["ActivityLogEntry"]>,
@@ -22263,7 +22285,7 @@ export type MySpaceResultsResolvers<
 
 export type NvpResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["NVP"] = ResolversParentTypes["NVP"],
+  ParentType extends ResolversParentTypes["NVP"] = ResolversParentTypes["NVP"]
 > = {
   createdDate?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
   id?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
@@ -22273,17 +22295,14 @@ export type NvpResolvers<
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
-export interface NameIdScalarConfig extends GraphQLScalarTypeConfig<
-  ResolversTypes["NameID"],
-  any
-> {
+export interface NameIdScalarConfig
+  extends GraphQLScalarTypeConfig<ResolversTypes["NameID"], any> {
   name: "NameID";
 }
 
 export type NotificationRecipientResultResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["NotificationRecipientResult"] =
-    ResolversParentTypes["NotificationRecipientResult"],
+  ParentType extends ResolversParentTypes["NotificationRecipientResult"] = ResolversParentTypes["NotificationRecipientResult"]
 > = {
   emailRecipients?: Resolver<
     Array<ResolversTypes["User"]>,
@@ -22310,8 +22329,7 @@ export type NotificationRecipientResultResolvers<
 
 export type OrganizationResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["Organization"] =
-    ResolversParentTypes["Organization"],
+  ParentType extends ResolversParentTypes["Organization"] = ResolversParentTypes["Organization"]
 > = {
   account?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["Account"]>,
@@ -22362,6 +22380,11 @@ export type OrganizationResolvers<
     ParentType,
     ContextType
   >;
+  myAssociateEligibility?: Resolver<
+    ResolversTypes["OrganizationAssociateEligibility"],
+    ParentType,
+    ContextType
+  >;
   nameID?: Resolver<ResolversTypes["NameID"], ParentType, ContextType>;
   profile?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["Profile"]>,
@@ -22394,10 +22417,59 @@ export type OrganizationResolvers<
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
+export type OrganizationApplicationResultResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["OrganizationApplicationResult"] = ResolversParentTypes["OrganizationApplicationResult"]
+> = {
+  application?: Resolver<
+    ResolversTypes["Application"],
+    ParentType,
+    ContextType
+  >;
+  id?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
+  organization?: Resolver<
+    ResolversTypes["Organization"],
+    ParentType,
+    ContextType
+  >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type OrganizationAssociateEligibilityResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["OrganizationAssociateEligibility"] = ResolversParentTypes["OrganizationAssociateEligibility"]
+> = {
+  canApply?: Resolver<ResolversTypes["Boolean"], ParentType, ContextType>;
+  canJoinDirectly?: Resolver<
+    ResolversTypes["Boolean"],
+    ParentType,
+    ContextType
+  >;
+  reason?: Resolver<
+    ResolversTypes["OrganizationAssociateEligibilityReason"],
+    ParentType,
+    ContextType
+  >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type OrganizationInvitationResultResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["OrganizationInvitationResult"] = ResolversParentTypes["OrganizationInvitationResult"]
+> = {
+  id?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
+  invitation?: Resolver<ResolversTypes["Invitation"], ParentType, ContextType>;
+  organization?: Resolver<
+    ResolversTypes["Organization"],
+    ParentType,
+    ContextType
+  >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
 export type OrganizationSettingsResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["OrganizationSettings"] =
-    ResolversParentTypes["OrganizationSettings"],
+  ParentType extends ResolversParentTypes["OrganizationSettings"] = ResolversParentTypes["OrganizationSettings"]
 > = {
   membership?: Resolver<
     ResolversTypes["OrganizationSettingsMembership"],
@@ -22414,9 +22486,13 @@ export type OrganizationSettingsResolvers<
 
 export type OrganizationSettingsMembershipResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["OrganizationSettingsMembership"] =
-    ResolversParentTypes["OrganizationSettingsMembership"],
+  ParentType extends ResolversParentTypes["OrganizationSettingsMembership"] = ResolversParentTypes["OrganizationSettingsMembership"]
 > = {
+  allowApplications?: Resolver<
+    ResolversTypes["Boolean"],
+    ParentType,
+    ContextType
+  >;
   allowSpaceInvitations?: Resolver<
     ResolversTypes["Boolean"],
     ParentType,
@@ -22432,8 +22508,7 @@ export type OrganizationSettingsMembershipResolvers<
 
 export type OrganizationSettingsPrivacyResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["OrganizationSettingsPrivacy"] =
-    ResolversParentTypes["OrganizationSettingsPrivacy"],
+  ParentType extends ResolversParentTypes["OrganizationSettingsPrivacy"] = ResolversParentTypes["OrganizationSettingsPrivacy"]
 > = {
   contributionRolesPubliclyVisible?: Resolver<
     ResolversTypes["Boolean"],
@@ -22445,8 +22520,7 @@ export type OrganizationSettingsPrivacyResolvers<
 
 export type OrganizationVerificationResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["OrganizationVerification"] =
-    ResolversParentTypes["OrganizationVerification"],
+  ParentType extends ResolversParentTypes["OrganizationVerification"] = ResolversParentTypes["OrganizationVerification"]
 > = {
   authorization?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["Authorization"]>,
@@ -22474,8 +22548,7 @@ export type OrganizationVerificationResolvers<
 
 export type OrganizationsInRolesResponseResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["OrganizationsInRolesResponse"] =
-    ResolversParentTypes["OrganizationsInRolesResponse"],
+  ParentType extends ResolversParentTypes["OrganizationsInRolesResponse"] = ResolversParentTypes["OrganizationsInRolesResponse"]
 > = {
   organizations?: Resolver<
     Array<ResolversTypes["Organization"]>,
@@ -22488,8 +22561,7 @@ export type OrganizationsInRolesResponseResolvers<
 
 export type OryConfigResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["OryConfig"] =
-    ResolversParentTypes["OryConfig"],
+  ParentType extends ResolversParentTypes["OryConfig"] = ResolversParentTypes["OryConfig"]
 > = {
   issuer?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
   kratosPublicBaseURL?: Resolver<
@@ -22502,8 +22574,7 @@ export type OryConfigResolvers<
 
 export type PageInfoResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["PageInfo"] =
-    ResolversParentTypes["PageInfo"],
+  ParentType extends ResolversParentTypes["PageInfo"] = ResolversParentTypes["PageInfo"]
 > = {
   endCursor?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["String"]>,
@@ -22526,8 +22597,7 @@ export type PageInfoResolvers<
 
 export type PaginatedInAppNotificationsResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["PaginatedInAppNotifications"] =
-    ResolversParentTypes["PaginatedInAppNotifications"],
+  ParentType extends ResolversParentTypes["PaginatedInAppNotifications"] = ResolversParentTypes["PaginatedInAppNotifications"]
 > = {
   inAppNotifications?: Resolver<
     Array<ResolversTypes["InAppNotification"]>,
@@ -22541,8 +22611,7 @@ export type PaginatedInAppNotificationsResolvers<
 
 export type PaginatedInnovationPacksResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["PaginatedInnovationPacks"] =
-    ResolversParentTypes["PaginatedInnovationPacks"],
+  ParentType extends ResolversParentTypes["PaginatedInnovationPacks"] = ResolversParentTypes["PaginatedInnovationPacks"]
 > = {
   innovationPacks?: Resolver<
     Array<ResolversTypes["InnovationPack"]>,
@@ -22556,8 +22625,7 @@ export type PaginatedInnovationPacksResolvers<
 
 export type PaginatedLibraryTemplateResultsResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["PaginatedLibraryTemplateResults"] =
-    ResolversParentTypes["PaginatedLibraryTemplateResults"],
+  ParentType extends ResolversParentTypes["PaginatedLibraryTemplateResults"] = ResolversParentTypes["PaginatedLibraryTemplateResults"]
 > = {
   pageInfo?: Resolver<ResolversTypes["PageInfo"], ParentType, ContextType>;
   templateResults?: Resolver<
@@ -22571,8 +22639,7 @@ export type PaginatedLibraryTemplateResultsResolvers<
 
 export type PaginatedOrganizationResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["PaginatedOrganization"] =
-    ResolversParentTypes["PaginatedOrganization"],
+  ParentType extends ResolversParentTypes["PaginatedOrganization"] = ResolversParentTypes["PaginatedOrganization"]
 > = {
   organization?: Resolver<
     Array<ResolversTypes["Organization"]>,
@@ -22586,8 +22653,7 @@ export type PaginatedOrganizationResolvers<
 
 export type PaginatedSpacesResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["PaginatedSpaces"] =
-    ResolversParentTypes["PaginatedSpaces"],
+  ParentType extends ResolversParentTypes["PaginatedSpaces"] = ResolversParentTypes["PaginatedSpaces"]
 > = {
   pageInfo?: Resolver<ResolversTypes["PageInfo"], ParentType, ContextType>;
   spaces?: Resolver<Array<ResolversTypes["Space"]>, ParentType, ContextType>;
@@ -22597,8 +22663,7 @@ export type PaginatedSpacesResolvers<
 
 export type PaginatedUsersResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["PaginatedUsers"] =
-    ResolversParentTypes["PaginatedUsers"],
+  ParentType extends ResolversParentTypes["PaginatedUsers"] = ResolversParentTypes["PaginatedUsers"]
 > = {
   pageInfo?: Resolver<ResolversTypes["PageInfo"], ParentType, ContextType>;
   total?: Resolver<ResolversTypes["Float"], ParentType, ContextType>;
@@ -22608,8 +22673,7 @@ export type PaginatedUsersResolvers<
 
 export type PaginatedVirtualContributorResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["PaginatedVirtualContributor"] =
-    ResolversParentTypes["PaginatedVirtualContributor"],
+  ParentType extends ResolversParentTypes["PaginatedVirtualContributor"] = ResolversParentTypes["PaginatedVirtualContributor"]
 > = {
   pageInfo?: Resolver<ResolversTypes["PageInfo"], ParentType, ContextType>;
   total?: Resolver<ResolversTypes["Float"], ParentType, ContextType>;
@@ -22623,8 +22687,7 @@ export type PaginatedVirtualContributorResolvers<
 
 export type PlatformResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["Platform"] =
-    ResolversParentTypes["Platform"],
+  ParentType extends ResolversParentTypes["Platform"] = ResolversParentTypes["Platform"]
 > = {
   authorization?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["Authorization"]>,
@@ -22690,8 +22753,7 @@ export type PlatformResolvers<
 
 export type PlatformAccessRoleResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["PlatformAccessRole"] =
-    ResolversParentTypes["PlatformAccessRole"],
+  ParentType extends ResolversParentTypes["PlatformAccessRole"] = ResolversParentTypes["PlatformAccessRole"]
 > = {
   grantedPrivileges?: Resolver<
     Array<ResolversTypes["AuthorizationPrivilege"]>,
@@ -22704,9 +22766,7 @@ export type PlatformAccessRoleResolvers<
 
 export type PlatformAdminCommunicationQueryResultsResolvers<
   ContextType = any,
-  ParentType extends
-    ResolversParentTypes["PlatformAdminCommunicationQueryResults"] =
-    ResolversParentTypes["PlatformAdminCommunicationQueryResults"],
+  ParentType extends ResolversParentTypes["PlatformAdminCommunicationQueryResults"] = ResolversParentTypes["PlatformAdminCommunicationQueryResults"]
 > = {
   adminCommunicationMembership?: Resolver<
     ResolversTypes["CommunicationAdminMembershipResult"],
@@ -22727,8 +22787,7 @@ export type PlatformAdminCommunicationQueryResultsResolvers<
 
 export type PlatformAdminIdentityQueryResultsResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["PlatformAdminIdentityQueryResults"] =
-    ResolversParentTypes["PlatformAdminIdentityQueryResults"],
+  ParentType extends ResolversParentTypes["PlatformAdminIdentityQueryResults"] = ResolversParentTypes["PlatformAdminIdentityQueryResults"]
 > = {
   identities?: Resolver<
     Array<ResolversTypes["KratosIdentity"]>,
@@ -22744,8 +22803,7 @@ export type PlatformAdminIdentityQueryResultsResolvers<
 
 export type PlatformAdminQueryResultsResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["PlatformAdminQueryResults"] =
-    ResolversParentTypes["PlatformAdminQueryResults"],
+  ParentType extends ResolversParentTypes["PlatformAdminQueryResults"] = ResolversParentTypes["PlatformAdminQueryResults"]
 > = {
   accounts?: Resolver<
     Array<ResolversTypes["Account"]>,
@@ -22831,8 +22889,7 @@ export type PlatformAdminQueryResultsResolvers<
 
 export type PlatformFeatureFlagResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["PlatformFeatureFlag"] =
-    ResolversParentTypes["PlatformFeatureFlag"],
+  ParentType extends ResolversParentTypes["PlatformFeatureFlag"] = ResolversParentTypes["PlatformFeatureFlag"]
 > = {
   enabled?: Resolver<ResolversTypes["Boolean"], ParentType, ContextType>;
   name?: Resolver<
@@ -22845,8 +22902,7 @@ export type PlatformFeatureFlagResolvers<
 
 export type PlatformIntegrationSettingsResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["PlatformIntegrationSettings"] =
-    ResolversParentTypes["PlatformIntegrationSettings"],
+  ParentType extends ResolversParentTypes["PlatformIntegrationSettings"] = ResolversParentTypes["PlatformIntegrationSettings"]
 > = {
   iframeAllowedUrls?: Resolver<
     Array<ResolversTypes["String"]>,
@@ -22863,8 +22919,7 @@ export type PlatformIntegrationSettingsResolvers<
 
 export type PlatformInvitationResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["PlatformInvitation"] =
-    ResolversParentTypes["PlatformInvitation"],
+  ParentType extends ResolversParentTypes["PlatformInvitation"] = ResolversParentTypes["PlatformInvitation"]
 > = {
   authorization?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["Authorization"]>,
@@ -22917,8 +22972,7 @@ export type PlatformInvitationResolvers<
 
 export type PlatformLocationsResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["PlatformLocations"] =
-    ResolversParentTypes["PlatformLocations"],
+  ParentType extends ResolversParentTypes["PlatformLocations"] = ResolversParentTypes["PlatformLocations"]
 > = {
   about?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
   aup?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
@@ -22954,8 +23008,7 @@ export type PlatformLocationsResolvers<
 
 export type PlatformRolesAccessResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["PlatformRolesAccess"] =
-    ResolversParentTypes["PlatformRolesAccess"],
+  ParentType extends ResolversParentTypes["PlatformRolesAccess"] = ResolversParentTypes["PlatformRolesAccess"]
 > = {
   roles?: Resolver<
     Array<ResolversTypes["PlatformAccessRole"]>,
@@ -22967,8 +23020,7 @@ export type PlatformRolesAccessResolvers<
 
 export type PlatformSettingsResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["PlatformSettings"] =
-    ResolversParentTypes["PlatformSettings"],
+  ParentType extends ResolversParentTypes["PlatformSettings"] = ResolversParentTypes["PlatformSettings"]
 > = {
   integration?: Resolver<
     ResolversTypes["PlatformIntegrationSettings"],
@@ -22980,9 +23032,7 @@ export type PlatformSettingsResolvers<
 
 export type PlatformWellKnownVirtualContributorMappingResolvers<
   ContextType = any,
-  ParentType extends
-    ResolversParentTypes["PlatformWellKnownVirtualContributorMapping"] =
-    ResolversParentTypes["PlatformWellKnownVirtualContributorMapping"],
+  ParentType extends ResolversParentTypes["PlatformWellKnownVirtualContributorMapping"] = ResolversParentTypes["PlatformWellKnownVirtualContributorMapping"]
 > = {
   virtualContributorID?: Resolver<
     ResolversTypes["UUID"],
@@ -22999,9 +23049,7 @@ export type PlatformWellKnownVirtualContributorMappingResolvers<
 
 export type PlatformWellKnownVirtualContributorsResolvers<
   ContextType = any,
-  ParentType extends
-    ResolversParentTypes["PlatformWellKnownVirtualContributors"] =
-    ResolversParentTypes["PlatformWellKnownVirtualContributors"],
+  ParentType extends ResolversParentTypes["PlatformWellKnownVirtualContributors"] = ResolversParentTypes["PlatformWellKnownVirtualContributors"]
 > = {
   mappings?: Resolver<
     Array<ResolversTypes["PlatformWellKnownVirtualContributorMapping"]>,
@@ -23013,8 +23061,7 @@ export type PlatformWellKnownVirtualContributorsResolvers<
 
 export type PollResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["Poll"] =
-    ResolversParentTypes["Poll"],
+  ParentType extends ResolversParentTypes["Poll"] = ResolversParentTypes["Poll"]
 > = {
   authorization?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["Authorization"]>,
@@ -23057,8 +23104,7 @@ export type PollResolvers<
 
 export type PollOptionResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["PollOption"] =
-    ResolversParentTypes["PollOption"],
+  ParentType extends ResolversParentTypes["PollOption"] = ResolversParentTypes["PollOption"]
 > = {
   createdDate?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
   id?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
@@ -23085,9 +23131,7 @@ export type PollOptionResolvers<
 
 export type PollOptionsChangedSubscriptionResultResolvers<
   ContextType = any,
-  ParentType extends
-    ResolversParentTypes["PollOptionsChangedSubscriptionResult"] =
-    ResolversParentTypes["PollOptionsChangedSubscriptionResult"],
+  ParentType extends ResolversParentTypes["PollOptionsChangedSubscriptionResult"] = ResolversParentTypes["PollOptionsChangedSubscriptionResult"]
 > = {
   poll?: Resolver<ResolversTypes["Poll"], ParentType, ContextType>;
   pollEventType?: Resolver<
@@ -23100,8 +23144,7 @@ export type PollOptionsChangedSubscriptionResultResolvers<
 
 export type PollSettingsResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["PollSettings"] =
-    ResolversParentTypes["PollSettings"],
+  ParentType extends ResolversParentTypes["PollSettings"] = ResolversParentTypes["PollSettings"]
 > = {
   allowContributorsAddOptions?: Resolver<
     ResolversTypes["Boolean"],
@@ -23125,8 +23168,7 @@ export type PollSettingsResolvers<
 
 export type PollSettingsDataResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["PollSettingsData"] =
-    ResolversParentTypes["PollSettingsData"],
+  ParentType extends ResolversParentTypes["PollSettingsData"] = ResolversParentTypes["PollSettingsData"]
 > = {
   allowContributorsAddOptions?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["Boolean"]>,
@@ -23158,8 +23200,7 @@ export type PollSettingsDataResolvers<
 
 export type PollVoteResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["PollVote"] =
-    ResolversParentTypes["PollVote"],
+  ParentType extends ResolversParentTypes["PollVote"] = ResolversParentTypes["PollVote"]
 > = {
   createdBy?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
   createdDate?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
@@ -23175,8 +23216,7 @@ export type PollVoteResolvers<
 
 export type PollVoteUpdatedSubscriptionResultResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["PollVoteUpdatedSubscriptionResult"] =
-    ResolversParentTypes["PollVoteUpdatedSubscriptionResult"],
+  ParentType extends ResolversParentTypes["PollVoteUpdatedSubscriptionResult"] = ResolversParentTypes["PollVoteUpdatedSubscriptionResult"]
 > = {
   poll?: Resolver<ResolversTypes["Poll"], ParentType, ContextType>;
   pollEventType?: Resolver<
@@ -23189,8 +23229,7 @@ export type PollVoteUpdatedSubscriptionResultResolvers<
 
 export type PostResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["Post"] =
-    ResolversParentTypes["Post"],
+  ParentType extends ResolversParentTypes["Post"] = ResolversParentTypes["Post"]
 > = {
   authorization?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["Authorization"]>,
@@ -23213,8 +23252,7 @@ export type PostResolvers<
 
 export type ProfileResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["Profile"] =
-    ResolversParentTypes["Profile"],
+  ParentType extends ResolversParentTypes["Profile"] = ResolversParentTypes["Profile"]
 > = {
   authorization?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["Authorization"]>,
@@ -23279,8 +23317,7 @@ export type ProfileResolvers<
 
 export type PromptGraphResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["PromptGraph"] =
-    ResolversParentTypes["PromptGraph"],
+  ParentType extends ResolversParentTypes["PromptGraph"] = ResolversParentTypes["PromptGraph"]
 > = {
   edges?: Resolver<
     SchemaTypes.Maybe<Array<ResolversTypes["PromptGraphEdge"]>>,
@@ -23312,8 +23349,7 @@ export type PromptGraphResolvers<
 
 export type PromptGraphDataPointResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["PromptGraphDataPoint"] =
-    ResolversParentTypes["PromptGraphDataPoint"],
+  ParentType extends ResolversParentTypes["PromptGraphDataPoint"] = ResolversParentTypes["PromptGraphDataPoint"]
 > = {
   description?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["String"]>,
@@ -23341,8 +23377,7 @@ export type PromptGraphDataPointResolvers<
 
 export type PromptGraphDataStructResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["PromptGraphDataStruct"] =
-    ResolversParentTypes["PromptGraphDataStruct"],
+  ParentType extends ResolversParentTypes["PromptGraphDataStruct"] = ResolversParentTypes["PromptGraphDataStruct"]
 > = {
   properties?: Resolver<
     SchemaTypes.Maybe<Array<ResolversTypes["PromptGraphDataPoint"]>>,
@@ -23364,8 +23399,7 @@ export type PromptGraphDataStructResolvers<
 
 export type PromptGraphDefinitionResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["PromptGraphDefinition"] =
-    ResolversParentTypes["PromptGraphDefinition"],
+  ParentType extends ResolversParentTypes["PromptGraphDefinition"] = ResolversParentTypes["PromptGraphDefinition"]
 > = {
   edges?: Resolver<
     SchemaTypes.Maybe<Array<ResolversTypes["PromptGraphDefinitionEdge"]>>,
@@ -23397,8 +23431,7 @@ export type PromptGraphDefinitionResolvers<
 
 export type PromptGraphDefinitionDataPointResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["PromptGraphDefinitionDataPoint"] =
-    ResolversParentTypes["PromptGraphDefinitionDataPoint"],
+  ParentType extends ResolversParentTypes["PromptGraphDefinitionDataPoint"] = ResolversParentTypes["PromptGraphDefinitionDataPoint"]
 > = {
   description?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["String"]>,
@@ -23421,8 +23454,7 @@ export type PromptGraphDefinitionDataPointResolvers<
 
 export type PromptGraphDefinitionDataStructResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["PromptGraphDefinitionDataStruct"] =
-    ResolversParentTypes["PromptGraphDefinitionDataStruct"],
+  ParentType extends ResolversParentTypes["PromptGraphDefinitionDataStruct"] = ResolversParentTypes["PromptGraphDefinitionDataStruct"]
 > = {
   properties?: Resolver<
     SchemaTypes.Maybe<Array<ResolversTypes["PromptGraphDefinitionDataPoint"]>>,
@@ -23444,8 +23476,7 @@ export type PromptGraphDefinitionDataStructResolvers<
 
 export type PromptGraphDefinitionEdgeResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["PromptGraphDefinitionEdge"] =
-    ResolversParentTypes["PromptGraphDefinitionEdge"],
+  ParentType extends ResolversParentTypes["PromptGraphDefinitionEdge"] = ResolversParentTypes["PromptGraphDefinitionEdge"]
 > = {
   from?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["String"]>,
@@ -23462,8 +23493,7 @@ export type PromptGraphDefinitionEdgeResolvers<
 
 export type PromptGraphDefinitionNodeResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["PromptGraphDefinitionNode"] =
-    ResolversParentTypes["PromptGraphDefinitionNode"],
+  ParentType extends ResolversParentTypes["PromptGraphDefinitionNode"] = ResolversParentTypes["PromptGraphDefinitionNode"]
 > = {
   input_variables?: Resolver<
     SchemaTypes.Maybe<Array<ResolversTypes["String"]>>,
@@ -23487,8 +23517,7 @@ export type PromptGraphDefinitionNodeResolvers<
 
 export type PromptGraphEdgeResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["PromptGraphEdge"] =
-    ResolversParentTypes["PromptGraphEdge"],
+  ParentType extends ResolversParentTypes["PromptGraphEdge"] = ResolversParentTypes["PromptGraphEdge"]
 > = {
   from?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["String"]>,
@@ -23505,8 +23534,7 @@ export type PromptGraphEdgeResolvers<
 
 export type PromptGraphNodeResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["PromptGraphNode"] =
-    ResolversParentTypes["PromptGraphNode"],
+  ParentType extends ResolversParentTypes["PromptGraphNode"] = ResolversParentTypes["PromptGraphNode"]
 > = {
   input_variables?: Resolver<
     SchemaTypes.Maybe<Array<ResolversTypes["String"]>>,
@@ -23530,8 +23558,7 @@ export type PromptGraphNodeResolvers<
 
 export type PruneInAppNotificationAdminResultResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["PruneInAppNotificationAdminResult"] =
-    ResolversParentTypes["PruneInAppNotificationAdminResult"],
+  ParentType extends ResolversParentTypes["PruneInAppNotificationAdminResult"] = ResolversParentTypes["PruneInAppNotificationAdminResult"]
 > = {
   removedCountExceedingUserLimit?: Resolver<
     ResolversTypes["Int"],
@@ -23548,8 +23575,7 @@ export type PruneInAppNotificationAdminResultResolvers<
 
 export type PushSubscriptionResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["PushSubscription"] =
-    ResolversParentTypes["PushSubscription"],
+  ParentType extends ResolversParentTypes["PushSubscription"] = ResolversParentTypes["PushSubscription"]
 > = {
   createdDate?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
   id?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
@@ -23573,8 +23599,7 @@ export type PushSubscriptionResolvers<
 
 export type QueryResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["Query"] =
-    ResolversParentTypes["Query"],
+  ParentType extends ResolversParentTypes["Query"] = ResolversParentTypes["Query"]
 > = {
   activityFeed?: Resolver<
     ResolversTypes["ActivityFeed"],
@@ -23811,8 +23836,7 @@ export type QueryResolvers<
 
 export type QuestionResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["Question"] =
-    ResolversParentTypes["Question"],
+  ParentType extends ResolversParentTypes["Question"] = ResolversParentTypes["Question"]
 > = {
   createdDate?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
   id?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
@@ -23824,8 +23848,7 @@ export type QuestionResolvers<
 
 export type ReactionResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["Reaction"] =
-    ResolversParentTypes["Reaction"],
+  ParentType extends ResolversParentTypes["Reaction"] = ResolversParentTypes["Reaction"]
 > = {
   emoji?: Resolver<ResolversTypes["Emoji"], ParentType, ContextType>;
   id?: Resolver<ResolversTypes["MessageID"], ParentType, ContextType>;
@@ -23840,8 +23863,7 @@ export type ReactionResolvers<
 
 export type ReferenceResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["Reference"] =
-    ResolversParentTypes["Reference"],
+  ParentType extends ResolversParentTypes["Reference"] = ResolversParentTypes["Reference"]
 > = {
   authorization?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["Authorization"]>,
@@ -23863,8 +23885,7 @@ export type ReferenceResolvers<
 
 export type RelayPaginatedSpaceResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["RelayPaginatedSpace"] =
-    ResolversParentTypes["RelayPaginatedSpace"],
+  ParentType extends ResolversParentTypes["RelayPaginatedSpace"] = ResolversParentTypes["RelayPaginatedSpace"]
 > = {
   about?: Resolver<ResolversTypes["SpaceAbout"], ParentType, ContextType>;
   account?: Resolver<ResolversTypes["Account"], ParentType, ContextType>;
@@ -23965,8 +23986,7 @@ export type RelayPaginatedSpaceResolvers<
 
 export type RelayPaginatedSpaceEdgeResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["RelayPaginatedSpaceEdge"] =
-    ResolversParentTypes["RelayPaginatedSpaceEdge"],
+  ParentType extends ResolversParentTypes["RelayPaginatedSpaceEdge"] = ResolversParentTypes["RelayPaginatedSpaceEdge"]
 > = {
   node?: Resolver<
     ResolversTypes["RelayPaginatedSpace"],
@@ -23978,8 +23998,7 @@ export type RelayPaginatedSpaceEdgeResolvers<
 
 export type RelayPaginatedSpacePageInfoResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["RelayPaginatedSpacePageInfo"] =
-    ResolversParentTypes["RelayPaginatedSpacePageInfo"],
+  ParentType extends ResolversParentTypes["RelayPaginatedSpacePageInfo"] = ResolversParentTypes["RelayPaginatedSpacePageInfo"]
 > = {
   endCursor?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["String"]>,
@@ -24002,8 +24021,7 @@ export type RelayPaginatedSpacePageInfoResolvers<
 
 export type RoleResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["Role"] =
-    ResolversParentTypes["Role"],
+  ParentType extends ResolversParentTypes["Role"] = ResolversParentTypes["Role"]
 > = {
   createdDate?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
   credential?: Resolver<
@@ -24049,8 +24067,7 @@ export type RoleResolvers<
 
 export type RoleSetResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["RoleSet"] =
-    ResolversParentTypes["RoleSet"],
+  ParentType extends ResolversParentTypes["RoleSet"] = ResolversParentTypes["RoleSet"]
 > = {
   applicationForm?: Resolver<ResolversTypes["Form"], ParentType, ContextType>;
   applications?: Resolver<
@@ -24183,8 +24200,7 @@ export type RoleSetResolvers<
 
 export type RoleSetInvitationResultResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["RoleSetInvitationResult"] =
-    ResolversParentTypes["RoleSetInvitationResult"],
+  ParentType extends ResolversParentTypes["RoleSetInvitationResult"] = ResolversParentTypes["RoleSetInvitationResult"]
 > = {
   application?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["Application"]>,
@@ -24226,8 +24242,7 @@ export type RoleSetInvitationResultResolvers<
 
 export type RolesResultResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["RolesResult"] =
-    ResolversParentTypes["RolesResult"],
+  ParentType extends ResolversParentTypes["RolesResult"] = ResolversParentTypes["RolesResult"]
 > = {
   displayName?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
   id?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
@@ -24238,8 +24253,7 @@ export type RolesResultResolvers<
 
 export type RolesResultCommunityResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["RolesResultCommunity"] =
-    ResolversParentTypes["RolesResultCommunity"],
+  ParentType extends ResolversParentTypes["RolesResultCommunity"] = ResolversParentTypes["RolesResultCommunity"]
 > = {
   displayName?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
   id?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
@@ -24251,8 +24265,7 @@ export type RolesResultCommunityResolvers<
 
 export type RolesResultOrganizationResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["RolesResultOrganization"] =
-    ResolversParentTypes["RolesResultOrganization"],
+  ParentType extends ResolversParentTypes["RolesResultOrganization"] = ResolversParentTypes["RolesResultOrganization"]
 > = {
   displayName?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
   id?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
@@ -24269,8 +24282,7 @@ export type RolesResultOrganizationResolvers<
 
 export type RolesResultSpaceResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["RolesResultSpace"] =
-    ResolversParentTypes["RolesResultSpace"],
+  ParentType extends ResolversParentTypes["RolesResultSpace"] = ResolversParentTypes["RolesResultSpace"]
 > = {
   displayName?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
   id?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
@@ -24293,8 +24305,7 @@ export type RolesResultSpaceResolvers<
 
 export type RoomResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["Room"] =
-    ResolversParentTypes["Room"],
+  ParentType extends ResolversParentTypes["Room"] = ResolversParentTypes["Room"]
 > = {
   authorization?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["Authorization"]>,
@@ -24339,8 +24350,7 @@ export type RoomResolvers<
 
 export type RoomEventSubscriptionResultResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["RoomEventSubscriptionResult"] =
-    ResolversParentTypes["RoomEventSubscriptionResult"],
+  ParentType extends ResolversParentTypes["RoomEventSubscriptionResult"] = ResolversParentTypes["RoomEventSubscriptionResult"]
 > = {
   message?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["RoomMessageEventSubscriptionResult"]>,
@@ -24361,9 +24371,7 @@ export type RoomEventSubscriptionResultResolvers<
 
 export type RoomMessageEventSubscriptionResultResolvers<
   ContextType = any,
-  ParentType extends
-    ResolversParentTypes["RoomMessageEventSubscriptionResult"] =
-    ResolversParentTypes["RoomMessageEventSubscriptionResult"],
+  ParentType extends ResolversParentTypes["RoomMessageEventSubscriptionResult"] = ResolversParentTypes["RoomMessageEventSubscriptionResult"]
 > = {
   data?: Resolver<ResolversTypes["Message"], ParentType, ContextType>;
   type?: Resolver<ResolversTypes["MutationType"], ParentType, ContextType>;
@@ -24372,9 +24380,7 @@ export type RoomMessageEventSubscriptionResultResolvers<
 
 export type RoomMessageReactionEventSubscriptionResultResolvers<
   ContextType = any,
-  ParentType extends
-    ResolversParentTypes["RoomMessageReactionEventSubscriptionResult"] =
-    ResolversParentTypes["RoomMessageReactionEventSubscriptionResult"],
+  ParentType extends ResolversParentTypes["RoomMessageReactionEventSubscriptionResult"] = ResolversParentTypes["RoomMessageReactionEventSubscriptionResult"]
 > = {
   data?: Resolver<ResolversTypes["Reaction"], ParentType, ContextType>;
   messageID?: Resolver<
@@ -24388,8 +24394,7 @@ export type RoomMessageReactionEventSubscriptionResultResolvers<
 
 export type RoomThreadUnreadCountResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["RoomThreadUnreadCount"] =
-    ResolversParentTypes["RoomThreadUnreadCount"],
+  ParentType extends ResolversParentTypes["RoomThreadUnreadCount"] = ResolversParentTypes["RoomThreadUnreadCount"]
 > = {
   count?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
   threadId?: Resolver<ResolversTypes["MessageID"], ParentType, ContextType>;
@@ -24398,8 +24403,7 @@ export type RoomThreadUnreadCountResolvers<
 
 export type RoomUnreadCountsResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["RoomUnreadCounts"] =
-    ResolversParentTypes["RoomUnreadCounts"],
+  ParentType extends ResolversParentTypes["RoomUnreadCounts"] = ResolversParentTypes["RoomUnreadCounts"]
 > = {
   roomUnreadCount?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
   threadUnreadCounts?: Resolver<
@@ -24410,17 +24414,14 @@ export type RoomUnreadCountsResolvers<
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
-export interface SearchCursorScalarConfig extends GraphQLScalarTypeConfig<
-  ResolversTypes["SearchCursor"],
-  any
-> {
+export interface SearchCursorScalarConfig
+  extends GraphQLScalarTypeConfig<ResolversTypes["SearchCursor"], any> {
   name: "SearchCursor";
 }
 
 export type SearchResultResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["SearchResult"] =
-    ResolversParentTypes["SearchResult"],
+  ParentType extends ResolversParentTypes["SearchResult"] = ResolversParentTypes["SearchResult"]
 > = {
   __resolveType: TypeResolveFn<
     | "SearchResultCallout"
@@ -24442,8 +24443,7 @@ export type SearchResultResolvers<
 
 export type SearchResultCalloutResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["SearchResultCallout"] =
-    ResolversParentTypes["SearchResultCallout"],
+  ParentType extends ResolversParentTypes["SearchResultCallout"] = ResolversParentTypes["SearchResultCallout"]
 > = {
   callout?: Resolver<ResolversTypes["Callout"], ParentType, ContextType>;
   id?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
@@ -24456,8 +24456,7 @@ export type SearchResultCalloutResolvers<
 
 export type SearchResultCollaboraDocumentResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["SearchResultCollaboraDocument"] =
-    ResolversParentTypes["SearchResultCollaboraDocument"],
+  ParentType extends ResolversParentTypes["SearchResultCollaboraDocument"] = ResolversParentTypes["SearchResultCollaboraDocument"]
 > = {
   callout?: Resolver<ResolversTypes["Callout"], ParentType, ContextType>;
   collaboraDocument?: Resolver<
@@ -24476,8 +24475,7 @@ export type SearchResultCollaboraDocumentResolvers<
 
 export type SearchResultMemoResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["SearchResultMemo"] =
-    ResolversParentTypes["SearchResultMemo"],
+  ParentType extends ResolversParentTypes["SearchResultMemo"] = ResolversParentTypes["SearchResultMemo"]
 > = {
   callout?: Resolver<ResolversTypes["Callout"], ParentType, ContextType>;
   id?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
@@ -24492,8 +24490,7 @@ export type SearchResultMemoResolvers<
 
 export type SearchResultOrganizationResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["SearchResultOrganization"] =
-    ResolversParentTypes["SearchResultOrganization"],
+  ParentType extends ResolversParentTypes["SearchResultOrganization"] = ResolversParentTypes["SearchResultOrganization"]
 > = {
   id?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
   organization?: Resolver<
@@ -24509,8 +24506,7 @@ export type SearchResultOrganizationResolvers<
 
 export type SearchResultPostResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["SearchResultPost"] =
-    ResolversParentTypes["SearchResultPost"],
+  ParentType extends ResolversParentTypes["SearchResultPost"] = ResolversParentTypes["SearchResultPost"]
 > = {
   callout?: Resolver<ResolversTypes["Callout"], ParentType, ContextType>;
   id?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
@@ -24524,8 +24520,7 @@ export type SearchResultPostResolvers<
 
 export type SearchResultSpaceResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["SearchResultSpace"] =
-    ResolversParentTypes["SearchResultSpace"],
+  ParentType extends ResolversParentTypes["SearchResultSpace"] = ResolversParentTypes["SearchResultSpace"]
 > = {
   id?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
   parentSpace?: Resolver<
@@ -24542,8 +24537,7 @@ export type SearchResultSpaceResolvers<
 
 export type SearchResultUserResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["SearchResultUser"] =
-    ResolversParentTypes["SearchResultUser"],
+  ParentType extends ResolversParentTypes["SearchResultUser"] = ResolversParentTypes["SearchResultUser"]
 > = {
   id?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
   score?: Resolver<ResolversTypes["Float"], ParentType, ContextType>;
@@ -24555,8 +24549,7 @@ export type SearchResultUserResolvers<
 
 export type SearchResultWhiteboardResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["SearchResultWhiteboard"] =
-    ResolversParentTypes["SearchResultWhiteboard"],
+  ParentType extends ResolversParentTypes["SearchResultWhiteboard"] = ResolversParentTypes["SearchResultWhiteboard"]
 > = {
   callout?: Resolver<ResolversTypes["Callout"], ParentType, ContextType>;
   id?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
@@ -24571,8 +24564,7 @@ export type SearchResultWhiteboardResolvers<
 
 export type SentryResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["Sentry"] =
-    ResolversParentTypes["Sentry"],
+  ParentType extends ResolversParentTypes["Sentry"] = ResolversParentTypes["Sentry"]
 > = {
   enabled?: Resolver<ResolversTypes["Boolean"], ParentType, ContextType>;
   endpoint?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
@@ -24583,8 +24575,7 @@ export type SentryResolvers<
 
 export type ServiceMetadataResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["ServiceMetadata"] =
-    ResolversParentTypes["ServiceMetadata"],
+  ParentType extends ResolversParentTypes["ServiceMetadata"] = ResolversParentTypes["ServiceMetadata"]
 > = {
   name?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["String"]>,
@@ -24601,8 +24592,7 @@ export type ServiceMetadataResolvers<
 
 export type SpaceResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["Space"] =
-    ResolversParentTypes["Space"],
+  ParentType extends ResolversParentTypes["Space"] = ResolversParentTypes["Space"]
 > = {
   about?: Resolver<ResolversTypes["SpaceAbout"], ParentType, ContextType>;
   account?: Resolver<ResolversTypes["Account"], ParentType, ContextType>;
@@ -24703,8 +24693,7 @@ export type SpaceResolvers<
 
 export type SpaceAboutResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["SpaceAbout"] =
-    ResolversParentTypes["SpaceAbout"],
+  ParentType extends ResolversParentTypes["SpaceAbout"] = ResolversParentTypes["SpaceAbout"]
 > = {
   authorization?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["Authorization"]>,
@@ -24760,8 +24749,7 @@ export type SpaceAboutResolvers<
 
 export type SpaceAboutMembershipResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["SpaceAboutMembership"] =
-    ResolversParentTypes["SpaceAboutMembership"],
+  ParentType extends ResolversParentTypes["SpaceAboutMembership"] = ResolversParentTypes["SpaceAboutMembership"]
 > = {
   applicationForm?: Resolver<ResolversTypes["Form"], ParentType, ContextType>;
   communityID?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
@@ -24787,8 +24775,7 @@ export type SpaceAboutMembershipResolvers<
 
 export type SpaceJoinPreviewResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["SpaceJoinPreview"] =
-    ResolversParentTypes["SpaceJoinPreview"],
+  ParentType extends ResolversParentTypes["SpaceJoinPreview"] = ResolversParentTypes["SpaceJoinPreview"]
 > = {
   displayName?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
   id?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
@@ -24798,8 +24785,7 @@ export type SpaceJoinPreviewResolvers<
 
 export type SpacePendingMembershipInfoResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["SpacePendingMembershipInfo"] =
-    ResolversParentTypes["SpacePendingMembershipInfo"],
+  ParentType extends ResolversParentTypes["SpacePendingMembershipInfo"] = ResolversParentTypes["SpacePendingMembershipInfo"]
 > = {
   about?: Resolver<ResolversTypes["SpaceAbout"], ParentType, ContextType>;
   communityGuidelines?: Resolver<
@@ -24814,8 +24800,7 @@ export type SpacePendingMembershipInfoResolvers<
 
 export type SpaceSettingsResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["SpaceSettings"] =
-    ResolversParentTypes["SpaceSettings"],
+  ParentType extends ResolversParentTypes["SpaceSettings"] = ResolversParentTypes["SpaceSettings"]
 > = {
   collaboration?: Resolver<
     ResolversTypes["SpaceSettingsCollaboration"],
@@ -24843,8 +24828,7 @@ export type SpaceSettingsResolvers<
 
 export type SpaceSettingsCollaborationResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["SpaceSettingsCollaboration"] =
-    ResolversParentTypes["SpaceSettingsCollaboration"],
+  ParentType extends ResolversParentTypes["SpaceSettingsCollaboration"] = ResolversParentTypes["SpaceSettingsCollaboration"]
 > = {
   allowEventsFromSubspaces?: Resolver<
     ResolversTypes["Boolean"],
@@ -24881,8 +24865,7 @@ export type SpaceSettingsCollaborationResolvers<
 
 export type SpaceSettingsLayoutResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["SpaceSettingsLayout"] =
-    ResolversParentTypes["SpaceSettingsLayout"],
+  ParentType extends ResolversParentTypes["SpaceSettingsLayout"] = ResolversParentTypes["SpaceSettingsLayout"]
 > = {
   calloutDescriptionDisplayMode?: Resolver<
     ResolversTypes["CalloutDescriptionDisplayMode"],
@@ -24894,8 +24877,7 @@ export type SpaceSettingsLayoutResolvers<
 
 export type SpaceSettingsMembershipResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["SpaceSettingsMembership"] =
-    ResolversParentTypes["SpaceSettingsMembership"],
+  ParentType extends ResolversParentTypes["SpaceSettingsMembership"] = ResolversParentTypes["SpaceSettingsMembership"]
 > = {
   allowSubspaceAdminsToInviteMembers?: Resolver<
     ResolversTypes["Boolean"],
@@ -24917,8 +24899,7 @@ export type SpaceSettingsMembershipResolvers<
 
 export type SpaceSettingsPrivacyResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["SpaceSettingsPrivacy"] =
-    ResolversParentTypes["SpaceSettingsPrivacy"],
+  ParentType extends ResolversParentTypes["SpaceSettingsPrivacy"] = ResolversParentTypes["SpaceSettingsPrivacy"]
 > = {
   allowPlatformSupportAsAdmin?: Resolver<
     ResolversTypes["Boolean"],
@@ -24936,8 +24917,7 @@ export type SpaceSettingsPrivacyResolvers<
 
 export type SpaceSubscriptionResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["SpaceSubscription"] =
-    ResolversParentTypes["SpaceSubscription"],
+  ParentType extends ResolversParentTypes["SpaceSubscription"] = ResolversParentTypes["SpaceSubscription"]
 > = {
   expires?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["DateTime"]>,
@@ -24954,8 +24934,7 @@ export type SpaceSubscriptionResolvers<
 
 export type StorageAggregatorResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["StorageAggregator"] =
-    ResolversParentTypes["StorageAggregator"],
+  ParentType extends ResolversParentTypes["StorageAggregator"] = ResolversParentTypes["StorageAggregator"]
 > = {
   authorization?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["Authorization"]>,
@@ -24996,8 +24975,7 @@ export type StorageAggregatorResolvers<
 
 export type StorageAggregatorParentResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["StorageAggregatorParent"] =
-    ResolversParentTypes["StorageAggregatorParent"],
+  ParentType extends ResolversParentTypes["StorageAggregatorParent"] = ResolversParentTypes["StorageAggregatorParent"]
 > = {
   displayName?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
   id?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
@@ -25012,8 +24990,7 @@ export type StorageAggregatorParentResolvers<
 
 export type StorageBucketResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["StorageBucket"] =
-    ResolversParentTypes["StorageBucket"],
+  ParentType extends ResolversParentTypes["StorageBucket"] = ResolversParentTypes["StorageBucket"]
 > = {
   allowedMimeTypes?: Resolver<
     Array<ResolversTypes["String"]>,
@@ -25052,8 +25029,7 @@ export type StorageBucketResolvers<
 
 export type StorageBucketParentResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["StorageBucketParent"] =
-    ResolversParentTypes["StorageBucketParent"],
+  ParentType extends ResolversParentTypes["StorageBucketParent"] = ResolversParentTypes["StorageBucketParent"]
 > = {
   displayName?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
   id?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
@@ -25064,8 +25040,7 @@ export type StorageBucketParentResolvers<
 
 export type StorageBucketUploadFileResultResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["StorageBucketUploadFileResult"] =
-    ResolversParentTypes["StorageBucketUploadFileResult"],
+  ParentType extends ResolversParentTypes["StorageBucketUploadFileResult"] = ResolversParentTypes["StorageBucketUploadFileResult"]
 > = {
   id?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
   url?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
@@ -25074,8 +25049,7 @@ export type StorageBucketUploadFileResultResolvers<
 
 export type StorageConfigResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["StorageConfig"] =
-    ResolversParentTypes["StorageConfig"],
+  ParentType extends ResolversParentTypes["StorageConfig"] = ResolversParentTypes["StorageConfig"]
 > = {
   file?: Resolver<ResolversTypes["FileStorageConfig"], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
@@ -25083,8 +25057,7 @@ export type StorageConfigResolvers<
 
 export type SubscriptionResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["Subscription"] =
-    ResolversParentTypes["Subscription"],
+  ParentType extends ResolversParentTypes["Subscription"] = ResolversParentTypes["Subscription"]
 > = {
   activityCreated?: SubscriptionResolver<
     ResolversTypes["ActivityCreatedSubscriptionResult"],
@@ -25167,8 +25140,7 @@ export type SubscriptionResolvers<
 
 export type SubspaceCreatedResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["SubspaceCreated"] =
-    ResolversParentTypes["SubspaceCreated"],
+  ParentType extends ResolversParentTypes["SubspaceCreated"] = ResolversParentTypes["SubspaceCreated"]
 > = {
   spaceID?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
   subspace?: Resolver<ResolversTypes["Space"], ParentType, ContextType>;
@@ -25177,8 +25149,7 @@ export type SubspaceCreatedResolvers<
 
 export type TagsetResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["Tagset"] =
-    ResolversParentTypes["Tagset"],
+  ParentType extends ResolversParentTypes["Tagset"] = ResolversParentTypes["Tagset"]
 > = {
   allowedValues?: Resolver<
     Array<ResolversTypes["String"]>,
@@ -25201,8 +25172,7 @@ export type TagsetResolvers<
 
 export type TagsetTemplateResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["TagsetTemplate"] =
-    ResolversParentTypes["TagsetTemplate"],
+  ParentType extends ResolversParentTypes["TagsetTemplate"] = ResolversParentTypes["TagsetTemplate"]
 > = {
   allowedValues?: Resolver<
     Array<ResolversTypes["String"]>,
@@ -25224,8 +25194,7 @@ export type TagsetTemplateResolvers<
 
 export type TaskResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["Task"] =
-    ResolversParentTypes["Task"],
+  ParentType extends ResolversParentTypes["Task"] = ResolversParentTypes["Task"]
 > = {
   created?: Resolver<ResolversTypes["Float"], ParentType, ContextType>;
   end?: Resolver<
@@ -25271,8 +25240,7 @@ export type TaskResolvers<
 
 export type TaskColumnCountResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["TaskColumnCount"] =
-    ResolversParentTypes["TaskColumnCount"],
+  ParentType extends ResolversParentTypes["TaskColumnCount"] = ResolversParentTypes["TaskColumnCount"]
 > = {
   column?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
   count?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
@@ -25281,8 +25249,7 @@ export type TaskColumnCountResolvers<
 
 export type TemplateResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["Template"] =
-    ResolversParentTypes["Template"],
+  ParentType extends ResolversParentTypes["Template"] = ResolversParentTypes["Template"]
 > = {
   authorization?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["Authorization"]>,
@@ -25330,8 +25297,7 @@ export type TemplateResolvers<
 
 export type TemplateContentSpaceResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["TemplateContentSpace"] =
-    ResolversParentTypes["TemplateContentSpace"],
+  ParentType extends ResolversParentTypes["TemplateContentSpace"] = ResolversParentTypes["TemplateContentSpace"]
 > = {
   about?: Resolver<ResolversTypes["SpaceAbout"], ParentType, ContextType>;
   authorization?: Resolver<
@@ -25359,8 +25325,7 @@ export type TemplateContentSpaceResolvers<
 
 export type TemplateDefaultResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["TemplateDefault"] =
-    ResolversParentTypes["TemplateDefault"],
+  ParentType extends ResolversParentTypes["TemplateDefault"] = ResolversParentTypes["TemplateDefault"]
 > = {
   allowedTemplateType?: Resolver<
     ResolversTypes["TemplateType"],
@@ -25390,8 +25355,7 @@ export type TemplateDefaultResolvers<
 
 export type TemplateResultResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["TemplateResult"] =
-    ResolversParentTypes["TemplateResult"],
+  ParentType extends ResolversParentTypes["TemplateResult"] = ResolversParentTypes["TemplateResult"]
 > = {
   innovationPack?: Resolver<
     ResolversTypes["InnovationPack"],
@@ -25404,8 +25368,7 @@ export type TemplateResultResolvers<
 
 export type TemplatesManagerResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["TemplatesManager"] =
-    ResolversParentTypes["TemplatesManager"],
+  ParentType extends ResolversParentTypes["TemplatesManager"] = ResolversParentTypes["TemplatesManager"]
 > = {
   authorization?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["Authorization"]>,
@@ -25430,8 +25393,7 @@ export type TemplatesManagerResolvers<
 
 export type TemplatesSetResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["TemplatesSet"] =
-    ResolversParentTypes["TemplatesSet"],
+  ParentType extends ResolversParentTypes["TemplatesSet"] = ResolversParentTypes["TemplatesSet"]
 > = {
   authorization?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["Authorization"]>,
@@ -25512,8 +25474,7 @@ export type TemplatesSetResolvers<
 
 export type TimelineResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["Timeline"] =
-    ResolversParentTypes["Timeline"],
+  ParentType extends ResolversParentTypes["Timeline"] = ResolversParentTypes["Timeline"]
 > = {
   authorization?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["Authorization"]>,
@@ -25527,17 +25488,14 @@ export type TimelineResolvers<
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
-export interface UuidScalarConfig extends GraphQLScalarTypeConfig<
-  ResolversTypes["UUID"],
-  any
-> {
+export interface UuidScalarConfig
+  extends GraphQLScalarTypeConfig<ResolversTypes["UUID"], any> {
   name: "UUID";
 }
 
 export type UpdateWhiteboardGuestAccessResultResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["UpdateWhiteboardGuestAccessResult"] =
-    ResolversParentTypes["UpdateWhiteboardGuestAccessResult"],
+  ParentType extends ResolversParentTypes["UpdateWhiteboardGuestAccessResult"] = ResolversParentTypes["UpdateWhiteboardGuestAccessResult"]
 > = {
   success?: Resolver<ResolversTypes["Boolean"], ParentType, ContextType>;
   whiteboard?: Resolver<
@@ -25548,17 +25506,14 @@ export type UpdateWhiteboardGuestAccessResultResolvers<
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
-export interface UploadScalarConfig extends GraphQLScalarTypeConfig<
-  ResolversTypes["Upload"],
-  any
-> {
+export interface UploadScalarConfig
+  extends GraphQLScalarTypeConfig<ResolversTypes["Upload"], any> {
   name: "Upload";
 }
 
 export type UrlResolverQueryClosestAncestorResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["UrlResolverQueryClosestAncestor"] =
-    ResolversParentTypes["UrlResolverQueryClosestAncestor"],
+  ParentType extends ResolversParentTypes["UrlResolverQueryClosestAncestor"] = ResolversParentTypes["UrlResolverQueryClosestAncestor"]
 > = {
   discussionId?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["UUID"]>,
@@ -25604,8 +25559,7 @@ export type UrlResolverQueryClosestAncestorResolvers<
 
 export type UrlResolverQueryResultCalendarResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["UrlResolverQueryResultCalendar"] =
-    ResolversParentTypes["UrlResolverQueryResultCalendar"],
+  ParentType extends ResolversParentTypes["UrlResolverQueryResultCalendar"] = ResolversParentTypes["UrlResolverQueryResultCalendar"]
 > = {
   calendarEventId?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["UUID"]>,
@@ -25618,8 +25572,7 @@ export type UrlResolverQueryResultCalendarResolvers<
 
 export type UrlResolverQueryResultCalloutsSetResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["UrlResolverQueryResultCalloutsSet"] =
-    ResolversParentTypes["UrlResolverQueryResultCalloutsSet"],
+  ParentType extends ResolversParentTypes["UrlResolverQueryResultCalloutsSet"] = ResolversParentTypes["UrlResolverQueryResultCalloutsSet"]
 > = {
   calloutId?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["UUID"]>,
@@ -25653,9 +25606,7 @@ export type UrlResolverQueryResultCalloutsSetResolvers<
 
 export type UrlResolverQueryResultCollaborationResolvers<
   ContextType = any,
-  ParentType extends
-    ResolversParentTypes["UrlResolverQueryResultCollaboration"] =
-    ResolversParentTypes["UrlResolverQueryResultCollaboration"],
+  ParentType extends ResolversParentTypes["UrlResolverQueryResultCollaboration"] = ResolversParentTypes["UrlResolverQueryResultCollaboration"]
 > = {
   calloutsSet?: Resolver<
     ResolversTypes["UrlResolverQueryResultCalloutsSet"],
@@ -25668,9 +25619,7 @@ export type UrlResolverQueryResultCollaborationResolvers<
 
 export type UrlResolverQueryResultInnovationPackResolvers<
   ContextType = any,
-  ParentType extends
-    ResolversParentTypes["UrlResolverQueryResultInnovationPack"] =
-    ResolversParentTypes["UrlResolverQueryResultInnovationPack"],
+  ParentType extends ResolversParentTypes["UrlResolverQueryResultInnovationPack"] = ResolversParentTypes["UrlResolverQueryResultInnovationPack"]
 > = {
   id?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
   templatesSet?: Resolver<
@@ -25683,8 +25632,7 @@ export type UrlResolverQueryResultInnovationPackResolvers<
 
 export type UrlResolverQueryResultSpaceResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["UrlResolverQueryResultSpace"] =
-    ResolversParentTypes["UrlResolverQueryResultSpace"],
+  ParentType extends ResolversParentTypes["UrlResolverQueryResultSpace"] = ResolversParentTypes["UrlResolverQueryResultSpace"]
 > = {
   calendar?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["UrlResolverQueryResultCalendar"]>,
@@ -25714,9 +25662,7 @@ export type UrlResolverQueryResultSpaceResolvers<
 
 export type UrlResolverQueryResultTemplatesSetResolvers<
   ContextType = any,
-  ParentType extends
-    ResolversParentTypes["UrlResolverQueryResultTemplatesSet"] =
-    ResolversParentTypes["UrlResolverQueryResultTemplatesSet"],
+  ParentType extends ResolversParentTypes["UrlResolverQueryResultTemplatesSet"] = ResolversParentTypes["UrlResolverQueryResultTemplatesSet"]
 > = {
   id?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
   templateId?: Resolver<
@@ -25729,9 +25675,7 @@ export type UrlResolverQueryResultTemplatesSetResolvers<
 
 export type UrlResolverQueryResultVirtualContributorResolvers<
   ContextType = any,
-  ParentType extends
-    ResolversParentTypes["UrlResolverQueryResultVirtualContributor"] =
-    ResolversParentTypes["UrlResolverQueryResultVirtualContributor"],
+  ParentType extends ResolversParentTypes["UrlResolverQueryResultVirtualContributor"] = ResolversParentTypes["UrlResolverQueryResultVirtualContributor"]
 > = {
   calloutsSet?: Resolver<
     ResolversTypes["UrlResolverQueryResultCalloutsSet"],
@@ -25744,8 +25688,7 @@ export type UrlResolverQueryResultVirtualContributorResolvers<
 
 export type UrlResolverQueryResultsResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["UrlResolverQueryResults"] =
-    ResolversParentTypes["UrlResolverQueryResults"],
+  ParentType extends ResolversParentTypes["UrlResolverQueryResults"] = ResolversParentTypes["UrlResolverQueryResults"]
 > = {
   closestAncestor?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["UrlResolverQueryClosestAncestor"]>,
@@ -25800,8 +25743,7 @@ export type UrlResolverQueryResultsResolvers<
 
 export type UserResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["User"] =
-    ResolversParentTypes["User"],
+  ParentType extends ResolversParentTypes["User"] = ResolversParentTypes["User"]
 > = {
   account?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["Account"]>,
@@ -25859,8 +25801,7 @@ export type UserResolvers<
 
 export type UserAuthenticationResultResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["UserAuthenticationResult"] =
-    ResolversParentTypes["UserAuthenticationResult"],
+  ParentType extends ResolversParentTypes["UserAuthenticationResult"] = ResolversParentTypes["UserAuthenticationResult"]
 > = {
   authenticatedAt?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["DateTime"]>,
@@ -25882,8 +25823,7 @@ export type UserAuthenticationResultResolvers<
 
 export type UserEmailChangeAuditEntriesResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["UserEmailChangeAuditEntries"] =
-    ResolversParentTypes["UserEmailChangeAuditEntries"],
+  ParentType extends ResolversParentTypes["UserEmailChangeAuditEntries"] = ResolversParentTypes["UserEmailChangeAuditEntries"]
 > = {
   auditEntries?: Resolver<
     Array<ResolversTypes["UserEmailChangeAuditEntry"]>,
@@ -25901,9 +25841,7 @@ export type UserEmailChangeAuditEntriesResolvers<
 
 export type UserEmailChangeAuditEntriesPageInfoResolvers<
   ContextType = any,
-  ParentType extends
-    ResolversParentTypes["UserEmailChangeAuditEntriesPageInfo"] =
-    ResolversParentTypes["UserEmailChangeAuditEntriesPageInfo"],
+  ParentType extends ResolversParentTypes["UserEmailChangeAuditEntriesPageInfo"] = ResolversParentTypes["UserEmailChangeAuditEntriesPageInfo"]
 > = {
   endCursor?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["String"]>,
@@ -25926,8 +25864,7 @@ export type UserEmailChangeAuditEntriesPageInfoResolvers<
 
 export type UserEmailChangeAuditEntryResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["UserEmailChangeAuditEntry"] =
-    ResolversParentTypes["UserEmailChangeAuditEntry"],
+  ParentType extends ResolversParentTypes["UserEmailChangeAuditEntry"] = ResolversParentTypes["UserEmailChangeAuditEntry"]
 > = {
   approver?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["EmailChangeApprover"]>,
@@ -25981,8 +25918,7 @@ export type UserEmailChangeAuditEntryResolvers<
 
 export type UserEmailChangeResultResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["UserEmailChangeResult"] =
-    ResolversParentTypes["UserEmailChangeResult"],
+  ParentType extends ResolversParentTypes["UserEmailChangeResult"] = ResolversParentTypes["UserEmailChangeResult"]
 > = {
   email?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["String"]>,
@@ -25995,8 +25931,7 @@ export type UserEmailChangeResultResolvers<
 
 export type UserGroupResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["UserGroup"] =
-    ResolversParentTypes["UserGroup"],
+  ParentType extends ResolversParentTypes["UserGroup"] = ResolversParentTypes["UserGroup"]
 > = {
   authorization?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["Authorization"]>,
@@ -26026,8 +25961,7 @@ export type UserGroupResolvers<
 
 export type UserProfileSummaryResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["UserProfileSummary"] =
-    ResolversParentTypes["UserProfileSummary"],
+  ParentType extends ResolversParentTypes["UserProfileSummary"] = ResolversParentTypes["UserProfileSummary"]
 > = {
   displayName?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
   id?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
@@ -26036,8 +25970,7 @@ export type UserProfileSummaryResolvers<
 
 export type UserSettingsResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["UserSettings"] =
-    ResolversParentTypes["UserSettings"],
+  ParentType extends ResolversParentTypes["UserSettings"] = ResolversParentTypes["UserSettings"]
 > = {
   assistant?: Resolver<
     ResolversTypes["UserSettingsAssistant"],
@@ -26093,8 +26026,7 @@ export type UserSettingsResolvers<
 
 export type UserSettingsAssistantResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["UserSettingsAssistant"] =
-    ResolversParentTypes["UserSettingsAssistant"],
+  ParentType extends ResolversParentTypes["UserSettingsAssistant"] = ResolversParentTypes["UserSettingsAssistant"]
 > = {
   enabledCapabilities?: Resolver<
     Array<ResolversTypes["AssistantCapabilityToggle"]>,
@@ -26106,8 +26038,7 @@ export type UserSettingsAssistantResolvers<
 
 export type UserSettingsCommunicationResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["UserSettingsCommunication"] =
-    ResolversParentTypes["UserSettingsCommunication"],
+  ParentType extends ResolversParentTypes["UserSettingsCommunication"] = ResolversParentTypes["UserSettingsCommunication"]
 > = {
   allowOtherUsersToContactViaEmail?: Resolver<
     ResolversTypes["Boolean"],
@@ -26124,8 +26055,7 @@ export type UserSettingsCommunicationResolvers<
 
 export type UserSettingsDashboardResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["UserSettingsDashboard"] =
-    ResolversParentTypes["UserSettingsDashboard"],
+  ParentType extends ResolversParentTypes["UserSettingsDashboard"] = ResolversParentTypes["UserSettingsDashboard"]
 > = {
   activityView?: Resolver<ResolversTypes["Boolean"], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
@@ -26133,8 +26063,7 @@ export type UserSettingsDashboardResolvers<
 
 export type UserSettingsHomeSpaceResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["UserSettingsHomeSpace"] =
-    ResolversParentTypes["UserSettingsHomeSpace"],
+  ParentType extends ResolversParentTypes["UserSettingsHomeSpace"] = ResolversParentTypes["UserSettingsHomeSpace"]
 > = {
   autoRedirect?: Resolver<ResolversTypes["Boolean"], ParentType, ContextType>;
   spaceID?: Resolver<
@@ -26147,8 +26076,7 @@ export type UserSettingsHomeSpaceResolvers<
 
 export type UserSettingsNotificationResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["UserSettingsNotification"] =
-    ResolversParentTypes["UserSettingsNotification"],
+  ParentType extends ResolversParentTypes["UserSettingsNotification"] = ResolversParentTypes["UserSettingsNotification"]
 > = {
   organization?: Resolver<
     ResolversTypes["UserSettingsNotificationOrganization"],
@@ -26185,8 +26113,7 @@ export type UserSettingsNotificationResolvers<
 
 export type UserSettingsNotificationChannelsResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["UserSettingsNotificationChannels"] =
-    ResolversParentTypes["UserSettingsNotificationChannels"],
+  ParentType extends ResolversParentTypes["UserSettingsNotificationChannels"] = ResolversParentTypes["UserSettingsNotificationChannels"]
 > = {
   email?: Resolver<ResolversTypes["Boolean"], ParentType, ContextType>;
   inApp?: Resolver<ResolversTypes["Boolean"], ParentType, ContextType>;
@@ -26196,10 +26123,23 @@ export type UserSettingsNotificationChannelsResolvers<
 
 export type UserSettingsNotificationOrganizationResolvers<
   ContextType = any,
-  ParentType extends
-    ResolversParentTypes["UserSettingsNotificationOrganization"] =
-    ResolversParentTypes["UserSettingsNotificationOrganization"],
+  ParentType extends ResolversParentTypes["UserSettingsNotificationOrganization"] = ResolversParentTypes["UserSettingsNotificationOrganization"]
 > = {
+  adminAssociateApplicationReceived?: Resolver<
+    ResolversTypes["UserSettingsNotificationChannels"],
+    ParentType,
+    ContextType
+  >;
+  adminAssociateInvitationResponse?: Resolver<
+    ResolversTypes["UserSettingsNotificationChannels"],
+    ParentType,
+    ContextType
+  >;
+  adminAssociateJoined?: Resolver<
+    ResolversTypes["UserSettingsNotificationChannels"],
+    ParentType,
+    ContextType
+  >;
   adminMentioned?: Resolver<
     ResolversTypes["UserSettingsNotificationChannels"],
     ParentType,
@@ -26220,8 +26160,7 @@ export type UserSettingsNotificationOrganizationResolvers<
 
 export type UserSettingsNotificationPlatformResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["UserSettingsNotificationPlatform"] =
-    ResolversParentTypes["UserSettingsNotificationPlatform"],
+  ParentType extends ResolversParentTypes["UserSettingsNotificationPlatform"] = ResolversParentTypes["UserSettingsNotificationPlatform"]
 > = {
   admin?: Resolver<
     ResolversTypes["UserSettingsNotificationPlatformAdmin"],
@@ -26243,9 +26182,7 @@ export type UserSettingsNotificationPlatformResolvers<
 
 export type UserSettingsNotificationPlatformAdminResolvers<
   ContextType = any,
-  ParentType extends
-    ResolversParentTypes["UserSettingsNotificationPlatformAdmin"] =
-    ResolversParentTypes["UserSettingsNotificationPlatformAdmin"],
+  ParentType extends ResolversParentTypes["UserSettingsNotificationPlatformAdmin"] = ResolversParentTypes["UserSettingsNotificationPlatformAdmin"]
 > = {
   spaceCreated?: Resolver<
     ResolversTypes["UserSettingsNotificationChannels"],
@@ -26277,8 +26214,7 @@ export type UserSettingsNotificationPlatformAdminResolvers<
 
 export type UserSettingsNotificationSoundResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["UserSettingsNotificationSound"] =
-    ResolversParentTypes["UserSettingsNotificationSound"],
+  ParentType extends ResolversParentTypes["UserSettingsNotificationSound"] = ResolversParentTypes["UserSettingsNotificationSound"]
 > = {
   chatMessage?: Resolver<ResolversTypes["Boolean"], ParentType, ContextType>;
   inAppNotification?: Resolver<
@@ -26291,8 +26227,7 @@ export type UserSettingsNotificationSoundResolvers<
 
 export type UserSettingsNotificationSpaceResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["UserSettingsNotificationSpace"] =
-    ResolversParentTypes["UserSettingsNotificationSpace"],
+  ParentType extends ResolversParentTypes["UserSettingsNotificationSpace"] = ResolversParentTypes["UserSettingsNotificationSpace"]
 > = {
   admin?: Resolver<
     ResolversTypes["UserSettingsNotificationSpaceAdmin"],
@@ -26359,9 +26294,7 @@ export type UserSettingsNotificationSpaceResolvers<
 
 export type UserSettingsNotificationSpaceAdminResolvers<
   ContextType = any,
-  ParentType extends
-    ResolversParentTypes["UserSettingsNotificationSpaceAdmin"] =
-    ResolversParentTypes["UserSettingsNotificationSpaceAdmin"],
+  ParentType extends ResolversParentTypes["UserSettingsNotificationSpaceAdmin"] = ResolversParentTypes["UserSettingsNotificationSpaceAdmin"]
 > = {
   collaborationCalloutContributionCreated?: Resolver<
     ResolversTypes["UserSettingsNotificationChannels"],
@@ -26398,8 +26331,7 @@ export type UserSettingsNotificationSpaceAdminResolvers<
 
 export type UserSettingsNotificationUserResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["UserSettingsNotificationUser"] =
-    ResolversParentTypes["UserSettingsNotificationUser"],
+  ParentType extends ResolversParentTypes["UserSettingsNotificationUser"] = ResolversParentTypes["UserSettingsNotificationUser"]
 > = {
   commentReply?: Resolver<
     ResolversTypes["UserSettingsNotificationChannels"],
@@ -26436,10 +26368,18 @@ export type UserSettingsNotificationUserResolvers<
 
 export type UserSettingsNotificationUserMembershipResolvers<
   ContextType = any,
-  ParentType extends
-    ResolversParentTypes["UserSettingsNotificationUserMembership"] =
-    ResolversParentTypes["UserSettingsNotificationUserMembership"],
+  ParentType extends ResolversParentTypes["UserSettingsNotificationUserMembership"] = ResolversParentTypes["UserSettingsNotificationUserMembership"]
 > = {
+  organizationAssociateApplicationDecided?: Resolver<
+    ResolversTypes["UserSettingsNotificationChannels"],
+    ParentType,
+    ContextType
+  >;
+  organizationAssociateInvitationReceived?: Resolver<
+    ResolversTypes["UserSettingsNotificationChannels"],
+    ParentType,
+    ContextType
+  >;
   spaceCommunityInvitationReceived?: Resolver<
     ResolversTypes["UserSettingsNotificationChannels"],
     ParentType,
@@ -26455,9 +26395,7 @@ export type UserSettingsNotificationUserMembershipResolvers<
 
 export type UserSettingsNotificationVirtualContributorResolvers<
   ContextType = any,
-  ParentType extends
-    ResolversParentTypes["UserSettingsNotificationVirtualContributor"] =
-    ResolversParentTypes["UserSettingsNotificationVirtualContributor"],
+  ParentType extends ResolversParentTypes["UserSettingsNotificationVirtualContributor"] = ResolversParentTypes["UserSettingsNotificationVirtualContributor"]
 > = {
   adminSpaceCommunityInvitation?: Resolver<
     ResolversTypes["UserSettingsNotificationChannels"],
@@ -26469,8 +26407,7 @@ export type UserSettingsNotificationVirtualContributorResolvers<
 
 export type UserSettingsPrivacyResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["UserSettingsPrivacy"] =
-    ResolversParentTypes["UserSettingsPrivacy"],
+  ParentType extends ResolversParentTypes["UserSettingsPrivacy"] = ResolversParentTypes["UserSettingsPrivacy"]
 > = {
   contributionRolesPubliclyVisible?: Resolver<
     ResolversTypes["Boolean"],
@@ -26482,8 +26419,7 @@ export type UserSettingsPrivacyResolvers<
 
 export type UsersInRolesResponseResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["UsersInRolesResponse"] =
-    ResolversParentTypes["UsersInRolesResponse"],
+  ParentType extends ResolversParentTypes["UsersInRolesResponse"] = ResolversParentTypes["UsersInRolesResponse"]
 > = {
   role?: Resolver<ResolversTypes["RoleName"], ParentType, ContextType>;
   users?: Resolver<Array<ResolversTypes["User"]>, ParentType, ContextType>;
@@ -26492,8 +26428,7 @@ export type UsersInRolesResponseResolvers<
 
 export type VcInteractionResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["VcInteraction"] =
-    ResolversParentTypes["VcInteraction"],
+  ParentType extends ResolversParentTypes["VcInteraction"] = ResolversParentTypes["VcInteraction"]
 > = {
   threadID?: Resolver<ResolversTypes["MessageID"], ParentType, ContextType>;
   virtualContributorID?: Resolver<
@@ -26506,8 +26441,7 @@ export type VcInteractionResolvers<
 
 export type VirtualAssistantResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["VirtualAssistant"] =
-    ResolversParentTypes["VirtualAssistant"],
+  ParentType extends ResolversParentTypes["VirtualAssistant"] = ResolversParentTypes["VirtualAssistant"]
 > = {
   authorization?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["Authorization"]>,
@@ -26539,8 +26473,7 @@ export type VirtualAssistantResolvers<
 
 export type VirtualContributorResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["VirtualContributor"] =
-    ResolversParentTypes["VirtualContributor"],
+  ParentType extends ResolversParentTypes["VirtualContributor"] = ResolversParentTypes["VirtualContributor"]
 > = {
   account?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["Account"]>,
@@ -26656,8 +26589,7 @@ export type VirtualContributorResolvers<
 
 export type VirtualContributorModelCardResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["VirtualContributorModelCard"] =
-    ResolversParentTypes["VirtualContributorModelCard"],
+  ParentType extends ResolversParentTypes["VirtualContributorModelCard"] = ResolversParentTypes["VirtualContributorModelCard"]
 > = {
   aiEngine?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["ModelCardAiEngineResult"]>,
@@ -26679,8 +26611,7 @@ export type VirtualContributorModelCardResolvers<
 
 export type VirtualContributorModelCardFlagResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["VirtualContributorModelCardFlag"] =
-    ResolversParentTypes["VirtualContributorModelCardFlag"],
+  ParentType extends ResolversParentTypes["VirtualContributorModelCardFlag"] = ResolversParentTypes["VirtualContributorModelCardFlag"]
 > = {
   enabled?: Resolver<ResolversTypes["Boolean"], ParentType, ContextType>;
   name?: Resolver<
@@ -26693,9 +26624,7 @@ export type VirtualContributorModelCardFlagResolvers<
 
 export type VirtualContributorPlatformSettingsResolvers<
   ContextType = any,
-  ParentType extends
-    ResolversParentTypes["VirtualContributorPlatformSettings"] =
-    ResolversParentTypes["VirtualContributorPlatformSettings"],
+  ParentType extends ResolversParentTypes["VirtualContributorPlatformSettings"] = ResolversParentTypes["VirtualContributorPlatformSettings"]
 > = {
   promptGraphEditingEnabled?: Resolver<
     ResolversTypes["Boolean"],
@@ -26707,8 +26636,7 @@ export type VirtualContributorPlatformSettingsResolvers<
 
 export type VirtualContributorSettingsResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["VirtualContributorSettings"] =
-    ResolversParentTypes["VirtualContributorSettings"],
+  ParentType extends ResolversParentTypes["VirtualContributorSettings"] = ResolversParentTypes["VirtualContributorSettings"]
 > = {
   privacy?: Resolver<
     ResolversTypes["VirtualContributorSettingsPrivacy"],
@@ -26720,8 +26648,7 @@ export type VirtualContributorSettingsResolvers<
 
 export type VirtualContributorSettingsPrivacyResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["VirtualContributorSettingsPrivacy"] =
-    ResolversParentTypes["VirtualContributorSettingsPrivacy"],
+  ParentType extends ResolversParentTypes["VirtualContributorSettingsPrivacy"] = ResolversParentTypes["VirtualContributorSettingsPrivacy"]
 > = {
   knowledgeBaseContentVisible?: Resolver<
     ResolversTypes["Boolean"],
@@ -26733,9 +26660,7 @@ export type VirtualContributorSettingsPrivacyResolvers<
 
 export type VirtualContributorUpdatedSubscriptionResultResolvers<
   ContextType = any,
-  ParentType extends
-    ResolversParentTypes["VirtualContributorUpdatedSubscriptionResult"] =
-    ResolversParentTypes["VirtualContributorUpdatedSubscriptionResult"],
+  ParentType extends ResolversParentTypes["VirtualContributorUpdatedSubscriptionResult"] = ResolversParentTypes["VirtualContributorUpdatedSubscriptionResult"]
 > = {
   virtualContributor?: Resolver<
     ResolversTypes["VirtualContributor"],
@@ -26747,9 +26672,7 @@ export type VirtualContributorUpdatedSubscriptionResultResolvers<
 
 export type VirtualContributorsInRolesResponseResolvers<
   ContextType = any,
-  ParentType extends
-    ResolversParentTypes["VirtualContributorsInRolesResponse"] =
-    ResolversParentTypes["VirtualContributorsInRolesResponse"],
+  ParentType extends ResolversParentTypes["VirtualContributorsInRolesResponse"] = ResolversParentTypes["VirtualContributorsInRolesResponse"]
 > = {
   role?: Resolver<ResolversTypes["RoleName"], ParentType, ContextType>;
   virtualContributors?: Resolver<
@@ -26762,8 +26685,7 @@ export type VirtualContributorsInRolesResponseResolvers<
 
 export type VisualResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["Visual"] =
-    ResolversParentTypes["Visual"],
+  ParentType extends ResolversParentTypes["Visual"] = ResolversParentTypes["Visual"]
 > = {
   allowedTypes?: Resolver<
     Array<ResolversTypes["String"]>,
@@ -26800,8 +26722,7 @@ export type VisualResolvers<
 
 export type VisualConstraintsResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["VisualConstraints"] =
-    ResolversParentTypes["VisualConstraints"],
+  ParentType extends ResolversParentTypes["VisualConstraints"] = ResolversParentTypes["VisualConstraints"]
 > = {
   allowedTypes?: Resolver<
     Array<ResolversTypes["String"]>,
@@ -26820,8 +26741,7 @@ export type VisualConstraintsResolvers<
 
 export type WhiteboardResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["Whiteboard"] =
-    ResolversParentTypes["Whiteboard"],
+  ParentType extends ResolversParentTypes["Whiteboard"] = ResolversParentTypes["Whiteboard"]
 > = {
   authorization?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["Authorization"]>,
@@ -26859,8 +26779,7 @@ export type WhiteboardResolvers<
 
 export type WhiteboardPreviewCoordinatesResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["WhiteboardPreviewCoordinates"] =
-    ResolversParentTypes["WhiteboardPreviewCoordinates"],
+  ParentType extends ResolversParentTypes["WhiteboardPreviewCoordinates"] = ResolversParentTypes["WhiteboardPreviewCoordinates"]
 > = {
   height?: Resolver<ResolversTypes["Float"], ParentType, ContextType>;
   width?: Resolver<ResolversTypes["Float"], ParentType, ContextType>;
@@ -26871,8 +26790,7 @@ export type WhiteboardPreviewCoordinatesResolvers<
 
 export type WhiteboardPreviewCoordinatesDataResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["WhiteboardPreviewCoordinatesData"] =
-    ResolversParentTypes["WhiteboardPreviewCoordinatesData"],
+  ParentType extends ResolversParentTypes["WhiteboardPreviewCoordinatesData"] = ResolversParentTypes["WhiteboardPreviewCoordinatesData"]
 > = {
   height?: Resolver<ResolversTypes["Float"], ParentType, ContextType>;
   width?: Resolver<ResolversTypes["Float"], ParentType, ContextType>;
@@ -26883,8 +26801,7 @@ export type WhiteboardPreviewCoordinatesDataResolvers<
 
 export type WhiteboardPreviewSettingsResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["WhiteboardPreviewSettings"] =
-    ResolversParentTypes["WhiteboardPreviewSettings"],
+  ParentType extends ResolversParentTypes["WhiteboardPreviewSettings"] = ResolversParentTypes["WhiteboardPreviewSettings"]
 > = {
   coordinates?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["WhiteboardPreviewCoordinates"]>,
@@ -27040,6 +26957,8 @@ export type Resolvers<ContextType = any> = {
   ISearchResults?: ISearchResultsResolvers<ContextType>;
   InAppNotification?: InAppNotificationResolvers<ContextType>;
   InAppNotificationPayload?: InAppNotificationPayloadResolvers<ContextType>;
+  InAppNotificationPayloadOrganizationAssociateActor?: InAppNotificationPayloadOrganizationAssociateActorResolvers<ContextType>;
+  InAppNotificationPayloadOrganizationAssociateInvitation?: InAppNotificationPayloadOrganizationAssociateInvitationResolvers<ContextType>;
   InAppNotificationPayloadOrganizationMessageDirect?: InAppNotificationPayloadOrganizationMessageDirectResolvers<ContextType>;
   InAppNotificationPayloadOrganizationMessageRoom?: InAppNotificationPayloadOrganizationMessageRoomResolvers<ContextType>;
   InAppNotificationPayloadPlatformForumDiscussion?: InAppNotificationPayloadPlatformForumDiscussionResolvers<ContextType>;
@@ -27117,6 +27036,9 @@ export type Resolvers<ContextType = any> = {
   NameID?: GraphQLScalarType;
   NotificationRecipientResult?: NotificationRecipientResultResolvers<ContextType>;
   Organization?: OrganizationResolvers<ContextType>;
+  OrganizationApplicationResult?: OrganizationApplicationResultResolvers<ContextType>;
+  OrganizationAssociateEligibility?: OrganizationAssociateEligibilityResolvers<ContextType>;
+  OrganizationInvitationResult?: OrganizationInvitationResultResolvers<ContextType>;
   OrganizationSettings?: OrganizationSettingsResolvers<ContextType>;
   OrganizationSettingsMembership?: OrganizationSettingsMembershipResolvers<ContextType>;
   OrganizationSettingsPrivacy?: OrganizationSettingsPrivacyResolvers<ContextType>;
@@ -90081,6 +90003,15 @@ export type AdminCommunicationMigrateOrphanedConversationsMutation = {
   adminCommunicationMigrateOrphanedConversations: { migrated: number };
 };
 
+export type AdminCommunicationReconcileForumHierarchyMutationVariables =
+  SchemaTypes.Exact<{
+    reconcileData: SchemaTypes.AdminCommunicationReconcileForumHierarchyInput;
+  }>;
+
+export type AdminCommunicationReconcileForumHierarchyMutation = {
+  adminCommunicationReconcileForumHierarchy: string;
+};
+
 export type AdminCommunicationRemoveOrphanedRoomMutationVariables =
   SchemaTypes.Exact<{
     orphanedRoomData: SchemaTypes.CommunicationAdminRemoveOrphanedRoomInput;
@@ -120224,6 +120155,13 @@ export const AdminCommunicationMigrateOrphanedConversationsDocument = gql`
     }
   }
 `;
+export const AdminCommunicationReconcileForumHierarchyDocument = gql`
+  mutation adminCommunicationReconcileForumHierarchy(
+    $reconcileData: AdminCommunicationReconcileForumHierarchyInput!
+  ) {
+    adminCommunicationReconcileForumHierarchy(reconcileData: $reconcileData)
+  }
+`;
 export const AdminCommunicationRemoveOrphanedRoomDocument = gql`
   mutation adminCommunicationRemoveOrphanedRoom(
     $orphanedRoomData: CommunicationAdminRemoveOrphanedRoomInput!
@@ -123330,102 +123268,102 @@ export type SdkFunctionWrapper = <T>(
   action: (requestHeaders?: Record<string, string>) => Promise<T>,
   operationName: string,
   operationType?: string,
-  variables?: any,
+  variables?: any
 ) => Promise<T>;
 
 const defaultWrapper: SdkFunctionWrapper = (
   action,
   _operationName,
   _operationType,
-  _variables,
+  _variables
 ) => action();
 const AssignLicensePlanToAccountDocumentString = print(
-  AssignLicensePlanToAccountDocument,
+  AssignLicensePlanToAccountDocument
 );
 const AssignLicensePlanToSpaceDocumentString = print(
-  AssignLicensePlanToSpaceDocument,
+  AssignLicensePlanToSpaceDocument
 );
 const RevokeLicensePlanFromAccountDocumentString = print(
-  RevokeLicensePlanFromAccountDocument,
+  RevokeLicensePlanFromAccountDocument
 );
 const RevokeLicensePlanFromSpaceDocumentString = print(
-  RevokeLicensePlanFromSpaceDocument,
+  RevokeLicensePlanFromSpaceDocument
 );
 const AssignRoleToOrganizationDocumentString = print(
-  AssignRoleToOrganizationDocument,
+  AssignRoleToOrganizationDocument
 );
 const AssignRoleToUserDocumentString = print(AssignRoleToUserDocument);
 const AssignRoleToUserExtendedDataDocumentString = print(
-  AssignRoleToUserExtendedDataDocument,
+  AssignRoleToUserExtendedDataDocument
 );
 const AssignRoleToVirtualContributorDocumentString = print(
-  AssignRoleToVirtualContributorDocument,
+  AssignRoleToVirtualContributorDocument
 );
 const ApplyForEntryRoleDocumentString = print(ApplyForEntryRoleDocument);
 const DeleteApplicationDocumentString = print(DeleteApplicationDocument);
 const DeletePlatformInvitationDocumentString = print(
-  DeletePlatformInvitationDocument,
+  DeletePlatformInvitationDocument
 );
 const DeleteInvitationDocumentString = print(DeleteInvitationDocument);
 const EventOnApplicationDocumentString = print(EventOnApplicationDocument);
 const InvitationStateEventDocumentString = print(InvitationStateEventDocument);
 const InviteForEntryRoleOnRoleSetDocumentString = print(
-  InviteForEntryRoleOnRoleSetDocument,
+  InviteForEntryRoleOnRoleSetDocument
 );
 const JoinRoleSetDocumentString = print(JoinRoleSetDocument);
 const RemoveRoleFromOrganizationDocumentString = print(
-  RemoveRoleFromOrganizationDocument,
+  RemoveRoleFromOrganizationDocument
 );
 const RemoveRoleFromUserDocumentString = print(RemoveRoleFromUserDocument);
 const RemoveRoleFromUserExtendedDataDocumentString = print(
-  RemoveRoleFromUserExtendedDataDocument,
+  RemoveRoleFromUserExtendedDataDocument
 );
 const RemoveRoleFromVirtualContributorDocumentString = print(
-  RemoveRoleFromVirtualContributorDocument,
+  RemoveRoleFromVirtualContributorDocument
 );
 const TransferInnovationHubToAccountDocumentString = print(
-  TransferInnovationHubToAccountDocument,
+  TransferInnovationHubToAccountDocument
 );
 const TransferInnovationPackToAccountDocumentString = print(
-  TransferInnovationPackToAccountDocument,
+  TransferInnovationPackToAccountDocument
 );
 const TransferSpaceToAccountDocumentString = print(
-  TransferSpaceToAccountDocument,
+  TransferSpaceToAccountDocument
 );
 const TransferVirtualContributorToAccountDocumentString = print(
-  TransferVirtualContributorToAccountDocument,
+  TransferVirtualContributorToAccountDocument
 );
 const CreateCalendarEventOnCalendarDocumentString = print(
-  CreateCalendarEventOnCalendarDocument,
+  CreateCalendarEventOnCalendarDocument
 );
 const DeleteCalendarEventDocumentString = print(DeleteCalendarEventDocument);
 const UpdateCalendarEventDocumentString = print(UpdateCalendarEventDocument);
 const CreateCalloutOnCalloutsSetDocumentString = print(
-  CreateCalloutOnCalloutsSetDocument,
+  CreateCalloutOnCalloutsSetDocument
 );
 const DeleteCalloutDocumentString = print(DeleteCalloutDocument);
 const DeletePostDocumentString = print(DeletePostDocument);
 const DeleteWhiteboardDocumentString = print(DeleteWhiteboardDocument);
 const AddReactionToCalloutDocumentString = print(AddReactionToCalloutDocument);
 const RemoveReactionFromCalloutDocumentString = print(
-  RemoveReactionFromCalloutDocument,
+  RemoveReactionFromCalloutDocument
 );
 const UpdateCalloutDocumentString = print(UpdateCalloutDocument);
 const UpdateCalloutVisibilityDocumentString = print(
-  UpdateCalloutVisibilityDocument,
+  UpdateCalloutVisibilityDocument
 );
 const CreateContributionOnCalloutDocumentString = print(
-  CreateContributionOnCalloutDocument,
+  CreateContributionOnCalloutDocument
 );
 const TransferCalloutDocumentString = print(TransferCalloutDocument);
 const UpdateCollaborationFromSpaceTemplateDocumentString = print(
-  UpdateCollaborationFromSpaceTemplateDocument,
+  UpdateCollaborationFromSpaceTemplateDocument
 );
 const AddReactionToMessageInRoomDocumentString = print(
-  AddReactionToMessageInRoomDocument,
+  AddReactionToMessageInRoomDocument
 );
 const AssignConversationMemberDocumentString = print(
-  AssignConversationMemberDocument,
+  AssignConversationMemberDocument
 );
 const CreateConversationDocumentString = print(CreateConversationDocument);
 const CreateDiscussionDocumentString = print(CreateDiscussionDocument);
@@ -123433,20 +123371,20 @@ const DeleteConversationDocumentString = print(DeleteConversationDocument);
 const DeleteDiscussionDocumentString = print(DeleteDiscussionDocument);
 const LeaveConversationDocumentString = print(LeaveConversationDocument);
 const RemoveConversationMemberDocumentString = print(
-  RemoveConversationMemberDocument,
+  RemoveConversationMemberDocument
 );
 const RemoveMessageOnRoomDocumentString = print(RemoveMessageOnRoomDocument);
 const RemoveReactionToMessageInRoomDocumentString = print(
-  RemoveReactionToMessageInRoomDocument,
+  RemoveReactionToMessageInRoomDocument
 );
 const SendMessageReplyToRoomDocumentString = print(
-  SendMessageReplyToRoomDocument,
+  SendMessageReplyToRoomDocument
 );
 const SendMessageToCommunityLeadsDocumentString = print(
-  SendMessageToCommunityLeadsDocument,
+  SendMessageToCommunityLeadsDocument
 );
 const SendMessageToOrganizationDocumentString = print(
-  SendMessageToOrganizationDocument,
+  SendMessageToOrganizationDocument
 );
 const SendMessageToRoomDocumentString = print(SendMessageToRoomDocument);
 const SendMessageToUsersDocumentString = print(SendMessageToUsersDocument);
@@ -123454,13 +123392,13 @@ const UpdateConversationDocumentString = print(UpdateConversationDocument);
 const UpdateDiscussionDocumentString = print(UpdateDiscussionDocument);
 const UpdatePostDocumentString = print(UpdatePostDocument);
 const ConvertSpaceL1ToSpaceL0DocumentString = print(
-  ConvertSpaceL1ToSpaceL0Document,
+  ConvertSpaceL1ToSpaceL0Document
 );
 const ConvertSpaceL1ToSpaceL2DocumentString = print(
-  ConvertSpaceL1ToSpaceL2Document,
+  ConvertSpaceL1ToSpaceL2Document
 );
 const ConvertSpaceL2ToSpaceL1DocumentString = print(
-  ConvertSpaceL2ToSpaceL1Document,
+  ConvertSpaceL2ToSpaceL1Document
 );
 const MoveSpaceL1ToSpaceL0DocumentString = print(MoveSpaceL1ToSpaceL0Document);
 const MoveSpaceL1ToSpaceL2DocumentString = print(MoveSpaceL1ToSpaceL2Document);
@@ -123473,262 +123411,265 @@ const CreateSubspaceDocumentString = print(CreateSubspaceDocument);
 const UpdateSubspaceDocumentString = print(UpdateSubspaceDocument);
 const UpdateSubspacePinnedDocumentString = print(UpdateSubspacePinnedDocument);
 const UpdateSubspacesSortOrderDocumentString = print(
-  UpdateSubspacesSortOrderDocument,
+  UpdateSubspacesSortOrderDocument
 );
 const CreateLicensePlanDocumentString = print(CreateLicensePlanDocument);
 const DeleteLicensePlanDocumentString = print(DeleteLicensePlanDocument);
 const UpdateLicensePlanDocumentString = print(UpdateLicensePlanDocument);
 const EventOnOrganizationVerificationDocumentString = print(
-  EventOnOrganizationVerificationDocument,
+  EventOnOrganizationVerificationDocument
 );
 const UpdateInnovationFlowCurrentStateDocumentString = print(
-  UpdateInnovationFlowCurrentStateDocument,
+  UpdateInnovationFlowCurrentStateDocument
 );
 const UpdateInnovationFlowStateDocumentString = print(
-  UpdateInnovationFlowStateDocument,
+  UpdateInnovationFlowStateDocument
 );
 const PrepareMemoSigningDocumentString = print(PrepareMemoSigningDocument);
 const CreateOrganizationDocumentString = print(CreateOrganizationDocument);
 const DeleteOrganizationDocumentString = print(DeleteOrganizationDocument);
 const UpdateOrganizationDocumentString = print(UpdateOrganizationDocument);
 const UpdateOrganizationSettingsDocumentString = print(
-  UpdateOrganizationSettingsDocument,
+  UpdateOrganizationSettingsDocument
 );
 const AddIframeAllowedUrlDocumentString = print(AddIframeAllowedUrlDocument);
 const AddNotificationEmailToBlacklistDocumentString = print(
-  AddNotificationEmailToBlacklistDocument,
+  AddNotificationEmailToBlacklistDocument
 );
 const AdminCommunicationEnsureAccessToCommunicationsDocumentString = print(
-  AdminCommunicationEnsureAccessToCommunicationsDocument,
+  AdminCommunicationEnsureAccessToCommunicationsDocument
 );
 const AdminCommunicationMigrateOrphanedConversationsDocumentString = print(
-  AdminCommunicationMigrateOrphanedConversationsDocument,
+  AdminCommunicationMigrateOrphanedConversationsDocument
+);
+const AdminCommunicationReconcileForumHierarchyDocumentString = print(
+  AdminCommunicationReconcileForumHierarchyDocument
 );
 const AdminCommunicationRemoveOrphanedRoomDocumentString = print(
-  AdminCommunicationRemoveOrphanedRoomDocument,
+  AdminCommunicationRemoveOrphanedRoomDocument
 );
 const AdminCommunicationSyncSpaceHierarchyDocumentString = print(
-  AdminCommunicationSyncSpaceHierarchyDocument,
+  AdminCommunicationSyncSpaceHierarchyDocument
 );
 const AdminCommunicationUpdateRoomStateDocumentString = print(
-  AdminCommunicationUpdateRoomStateDocument,
+  AdminCommunicationUpdateRoomStateDocument
 );
 const AdminForumRemoveDiscussionCategoryDocumentString = print(
-  AdminForumRemoveDiscussionCategoryDocument,
+  AdminForumRemoveDiscussionCategoryDocument
 );
 const AdminIdentityDeleteKratosIdentityDocumentString = print(
-  AdminIdentityDeleteKratosIdentityDocument,
+  AdminIdentityDeleteKratosIdentityDocument
 );
 const AdminInAppNotificationsPruneDocumentString = print(
-  AdminInAppNotificationsPruneDocument,
+  AdminInAppNotificationsPruneDocument
 );
 const AdminLicensePolicyCreateCredentialRuleDocumentString = print(
-  AdminLicensePolicyCreateCredentialRuleDocument,
+  AdminLicensePolicyCreateCredentialRuleDocument
 );
 const AdminLicensePolicyDeleteCredentialRuleDocumentString = print(
-  AdminLicensePolicyDeleteCredentialRuleDocument,
+  AdminLicensePolicyDeleteCredentialRuleDocument
 );
 const AdminLicensePolicyUpdateCredentialRuleDocumentString = print(
-  AdminLicensePolicyUpdateCredentialRuleDocument,
+  AdminLicensePolicyUpdateCredentialRuleDocument
 );
 const AdminRevokeMcpApiKeyDocumentString = print(AdminRevokeMcpApiKeyDocument);
 const AdminUpdateContributorAvatarsDocumentString = print(
-  AdminUpdateContributorAvatarsDocument,
+  AdminUpdateContributorAvatarsDocument
 );
 const AdminUpdateGeoLocationDataDocumentString = print(
-  AdminUpdateGeoLocationDataDocument,
+  AdminUpdateGeoLocationDataDocument
 );
 const AdminUserAccountDeleteDocumentString = print(
-  AdminUserAccountDeleteDocument,
+  AdminUserAccountDeleteDocument
 );
 const AdminUserEmailChangeDocumentString = print(AdminUserEmailChangeDocument);
 const AdminUserEmailChangeDriftResolveDocumentString = print(
-  AdminUserEmailChangeDriftResolveDocument,
+  AdminUserEmailChangeDriftResolveDocument
 );
 const AiServerAuthorizationPolicyResetDocumentString = print(
-  AiServerAuthorizationPolicyResetDocument,
+  AiServerAuthorizationPolicyResetDocument
 );
 const AssignPlatformRoleToOrganizationDocumentString = print(
-  AssignPlatformRoleToOrganizationDocument,
+  AssignPlatformRoleToOrganizationDocument
 );
 const AuthorizationPlatformRolesAccessResetDocumentString = print(
-  AuthorizationPlatformRolesAccessResetDocument,
+  AuthorizationPlatformRolesAccessResetDocument
 );
 const AuthorizationPolicyResetAllDocumentString = print(
-  AuthorizationPolicyResetAllDocument,
+  AuthorizationPolicyResetAllDocument
 );
 const AuthorizationPolicyResetOnAccountDocumentString = print(
-  AuthorizationPolicyResetOnAccountDocument,
+  AuthorizationPolicyResetOnAccountDocument
 );
 const AuthorizationPolicyResetOnOrganizationDocumentString = print(
-  AuthorizationPolicyResetOnOrganizationDocument,
+  AuthorizationPolicyResetOnOrganizationDocument
 );
 const AuthorizationPolicyResetOnPlatformDocumentString = print(
-  AuthorizationPolicyResetOnPlatformDocument,
+  AuthorizationPolicyResetOnPlatformDocument
 );
 const AuthorizationPolicyResetOnUserDocumentString = print(
-  AuthorizationPolicyResetOnUserDocument,
+  AuthorizationPolicyResetOnUserDocument
 );
 const AuthorizationPolicyResetToGlobalAdminsAccessDocumentString = print(
-  AuthorizationPolicyResetToGlobalAdminsAccessDocument,
+  AuthorizationPolicyResetToGlobalAdminsAccessDocument
 );
 const CleanupCollectionsDocumentString = print(CleanupCollectionsDocument);
 const CreateContributionOnCalloutIdDocumentString = print(
-  CreateContributionOnCalloutIdDocument,
+  CreateContributionOnCalloutIdDocument
 );
 const CreateTemplateFromContentSpaceDocumentString = print(
-  CreateTemplateFromContentSpaceDocument,
+  CreateTemplateFromContentSpaceDocument
 );
 const CreateWingbackAccountDocumentString = print(
-  CreateWingbackAccountDocument,
+  CreateWingbackAccountDocument
 );
 const DeleteContributionDocumentString = print(DeleteContributionDocument);
 const GrantCredentialToActorDocumentString = print(
-  GrantCredentialToActorDocument,
+  GrantCredentialToActorDocument
 );
 const GrantCredentialToOrganizationDocumentString = print(
-  GrantCredentialToOrganizationDocument,
+  GrantCredentialToOrganizationDocument
 );
 const GrantCredentialToUserDocumentString = print(
-  GrantCredentialToUserDocument,
+  GrantCredentialToUserDocument
 );
 const LicenseResetOnAccountDocumentString = print(
-  LicenseResetOnAccountDocument,
+  LicenseResetOnAccountDocument
 );
 const MigrateLegacyMemoContentDocumentString = print(
-  MigrateLegacyMemoContentDocument,
+  MigrateLegacyMemoContentDocument
 );
 const MigrateLegacyWhiteboardContentDocumentString = print(
-  MigrateLegacyWhiteboardContentDocument,
+  MigrateLegacyWhiteboardContentDocument
 );
 const MintMcpApiKeyDocumentString = print(MintMcpApiKeyDocument);
 const MoveContributionToCalloutDocumentString = print(
-  MoveContributionToCalloutDocument,
+  MoveContributionToCalloutDocument
 );
 const RefreshAllBodiesOfKnowledgeDocumentString = print(
-  RefreshAllBodiesOfKnowledgeDocument,
+  RefreshAllBodiesOfKnowledgeDocument
 );
 const RemoveIframeAllowedUrlDocumentString = print(
-  RemoveIframeAllowedUrlDocument,
+  RemoveIframeAllowedUrlDocument
 );
 const RemoveNotificationEmailFromBlacklistDocumentString = print(
-  RemoveNotificationEmailFromBlacklistDocument,
+  RemoveNotificationEmailFromBlacklistDocument
 );
 const RemovePlatformRoleFromOrganizationDocumentString = print(
-  RemovePlatformRoleFromOrganizationDocument,
+  RemovePlatformRoleFromOrganizationDocument
 );
 const ResetLicenseOnAccountsDocumentString = print(
-  ResetLicenseOnAccountsDocument,
+  ResetLicenseOnAccountsDocument
 );
 const RevokeCredentialFromActorDocumentString = print(
-  RevokeCredentialFromActorDocument,
+  RevokeCredentialFromActorDocument
 );
 const RevokeCredentialFromOrganizationDocumentString = print(
-  RevokeCredentialFromOrganizationDocument,
+  RevokeCredentialFromOrganizationDocument
 );
 const RevokeCredentialFromUserDocumentString = print(
-  RevokeCredentialFromUserDocument,
+  RevokeCredentialFromUserDocument
 );
 const SetPlatformWellKnownVirtualContributorDocumentString = print(
-  SetPlatformWellKnownVirtualContributorDocument,
+  SetPlatformWellKnownVirtualContributorDocument
 );
 const UpdateAssistantActorCapabilitiesDocumentString = print(
-  UpdateAssistantActorCapabilitiesDocument,
+  UpdateAssistantActorCapabilitiesDocument
 );
 const UpdateBaselineLicensePlanOnAccountDocumentString = print(
-  UpdateBaselineLicensePlanOnAccountDocument,
+  UpdateBaselineLicensePlanOnAccountDocument
 );
 const UpdateCalloutPublishInfoDocumentString = print(
-  UpdateCalloutPublishInfoDocument,
+  UpdateCalloutPublishInfoDocument
 );
 const UpdateInnovationHubDocumentString = print(UpdateInnovationHubDocument);
 const UpdateInnovationPackDocumentString = print(UpdateInnovationPackDocument);
 const UpdatePlatformSettingsDocumentString = print(
-  UpdatePlatformSettingsDocument,
+  UpdatePlatformSettingsDocument
 );
 const UpdateTemplateFromSpaceDocumentString = print(
-  UpdateTemplateFromSpaceDocument,
+  UpdateTemplateFromSpaceDocument
 );
 const AssignPlatformRoleToUserDocumentString = print(
-  AssignPlatformRoleToUserDocument,
+  AssignPlatformRoleToUserDocument
 );
 const RemovePlatformRoleFromUserDocumentString = print(
-  RemovePlatformRoleFromUserDocument,
+  RemovePlatformRoleFromUserDocument
 );
 const CreateInnovationHubDocumentString = print(CreateInnovationHubDocument);
 const CreateInnovationPackDocumentString = print(CreateInnovationPackDocument);
 const DeleteInnovationHubDocumentString = print(DeleteInnovationHubDocument);
 const DeleteInnovationPackDocumentString = print(DeleteInnovationPackDocument);
 const UpdateSpacePlatformSettingsDocumentString = print(
-  UpdateSpacePlatformSettingsDocument,
+  UpdateSpacePlatformSettingsDocument
 );
 const UpdateSpaceVisibilityPlatformSettingsDocumentString = print(
-  UpdateSpaceVisibilityPlatformSettingsDocument,
+  UpdateSpaceVisibilityPlatformSettingsDocument
 );
 const SubscribeToPushNotificationsDocumentString = print(
-  SubscribeToPushNotificationsDocument,
+  SubscribeToPushNotificationsDocument
 );
 const UnsubscribeFromPushNotificationsDocumentString = print(
-  UnsubscribeFromPushNotificationsDocument,
+  UnsubscribeFromPushNotificationsDocument
 );
 const CreateReferenceOnProfileDocumentString = print(
-  CreateReferenceOnProfileDocument,
+  CreateReferenceOnProfileDocument
 );
 const DeleteReferenceDocumentString = print(DeleteReferenceDocument);
 const AdminSearchIngestFromScratchDocumentString = print(
-  AdminSearchIngestFromScratchDocument,
+  AdminSearchIngestFromScratchDocument
 );
 const UpdateSpaceSettingsDocumentString = print(UpdateSpaceSettingsDocument);
 const CreateSpaceDocumentString = print(CreateSpaceDocument);
 const CreateTemplateDocumentString = print(CreateTemplateDocument);
 const CreateTemplateFromSpaceDocumentString = print(
-  CreateTemplateFromSpaceDocument,
+  CreateTemplateFromSpaceDocument
 );
 const CreateWhiteboardTemplateDocumentString = print(
-  CreateWhiteboardTemplateDocument,
+  CreateWhiteboardTemplateDocument
 );
 const DeleteTemplateDocumentString = print(DeleteTemplateDocument);
 const UpdatePostTemplateDocumentString = print(UpdatePostTemplateDocument);
 const UpdateSpaceTemplateDocumentString = print(UpdateSpaceTemplateDocument);
 const UpdateTemplateDocumentString = print(UpdateTemplateDocument);
 const UpdateWhiteboardTemplateDocumentString = print(
-  UpdateWhiteboardTemplateDocument,
+  UpdateWhiteboardTemplateDocument
 );
 const CreateUserDocumentString = print(CreateUserDocument);
 const DeleteUserDocumentString = print(DeleteUserDocument);
 const UpdateUserDocumentString = print(UpdateUserDocument);
 const UpdateUserSettingsDocumentString = print(UpdateUserSettingsDocument);
 const ConvertVirtualContributorToUseKnowledgeBaseDocumentString = print(
-  ConvertVirtualContributorToUseKnowledgeBaseDocument,
+  ConvertVirtualContributorToUseKnowledgeBaseDocument
 );
 const CreateVirtualContributorOnAccountDocumentString = print(
-  CreateVirtualContributorOnAccountDocument,
+  CreateVirtualContributorOnAccountDocument
 );
 const DeleteVirtualContributorOnAccountDocumentString = print(
-  DeleteVirtualContributorOnAccountDocument,
+  DeleteVirtualContributorOnAccountDocument
 );
 const UpdateVirtualContributorDocumentString = print(
-  UpdateVirtualContributorDocument,
+  UpdateVirtualContributorDocument
 );
 const UpdateVirtualContributorSettingsDocumentString = print(
-  UpdateVirtualContributorSettingsDocument,
+  UpdateVirtualContributorSettingsDocument
 );
 const RoleSetAvailableMembersDocumentString = print(
-  RoleSetAvailableMembersDocument,
+  RoleSetAvailableMembersDocument
 );
 const RoleSetApplicationsInvitationsDocumentString = print(
-  RoleSetApplicationsInvitationsDocument,
+  RoleSetApplicationsInvitationsDocument
 );
 const RoleSetMembersListDocumentString = print(RoleSetMembersListDocument);
 const RoleSetUserPrivilegesDocumentString = print(
-  RoleSetUserPrivilegesDocument,
+  RoleSetUserPrivilegesDocument
 );
 const GetSpaceInvitationsDocumentString = print(GetSpaceInvitationsDocument);
 const GetAccountMainEntitiesDocumentString = print(
-  GetAccountMainEntitiesDocument,
+  GetAccountMainEntitiesDocument
 );
 const GetActivityLogOnCollaborationDocumentString = print(
-  GetActivityLogOnCollaborationDocument,
+  GetActivityLogOnCollaborationDocument
 );
 const GetCalendarEventByIdDocumentString = print(GetCalendarEventByIdDocument);
 const GetCalendarEventsDocumentString = print(GetCalendarEventsDocument);
@@ -123737,72 +123678,72 @@ const SpaceCalloutDocumentString = print(SpaceCalloutDocument);
 const CalloutDetailsDocumentString = print(CalloutDetailsDocument);
 const CalloutStorageConfigDocumentString = print(CalloutStorageConfigDocument);
 const CalloutLinkContributionStorageConfigDocumentString = print(
-  CalloutLinkContributionStorageConfigDocument,
+  CalloutLinkContributionStorageConfigDocument
 );
 const CalloutPostStorageConfigDocumentString = print(
-  CalloutPostStorageConfigDocument,
+  CalloutPostStorageConfigDocument
 );
 const GetCalloutPostsDocumentString = print(GetCalloutPostsDocument);
 const CalloutWhiateboardStorageConfigDocumentString = print(
-  CalloutWhiateboardStorageConfigDocument,
+  CalloutWhiateboardStorageConfigDocument
 );
 const GetCalloutsOnCalloutsSetUsingClassificationDocumentString = print(
-  GetCalloutsOnCalloutsSetUsingClassificationDocument,
+  GetCalloutsOnCalloutsSetUsingClassificationDocument
 );
 const GetPostDataDocumentString = print(GetPostDataDocument);
 const WhiteboardCalloutStorageConfigDocumentString = print(
-  WhiteboardCalloutStorageConfigDocument,
+  WhiteboardCalloutStorageConfigDocument
 );
 const GetCalloutReactionsDocumentString = print(GetCalloutReactionsDocument);
 const GetCalloutReactionsSummaryDocumentString = print(
-  GetCalloutReactionsSummaryDocument,
+  GetCalloutReactionsSummaryDocument
 );
 const GetMeConversationsDocumentString = print(GetMeConversationsDocument);
 const GetPlatformDiscussionsDataDocumentString = print(
-  GetPlatformDiscussionsDataDocument,
+  GetPlatformDiscussionsDataDocument
 );
 const GetPlatformDiscussionsDataByIdDocumentString = print(
-  GetPlatformDiscussionsDataByIdDocument,
+  GetPlatformDiscussionsDataByIdDocument
 );
 const GetPlatformForumDataDocumentString = print(GetPlatformForumDataDocument);
 const GetSpaceCommunicationDocumentString = print(
-  GetSpaceCommunicationDocument,
+  GetSpaceCommunicationDocument
 );
 const CommunityApplicationsInvitationsDocumentString = print(
-  CommunityApplicationsInvitationsDocument,
+  CommunityApplicationsInvitationsDocument
 );
 const GetSpaceAvailableMembersDocumentString = print(
-  GetSpaceAvailableMembersDocument,
+  GetSpaceAvailableMembersDocument
 );
 const GetSpaceCommunityDocumentString = print(GetSpaceCommunityDocument);
 const GetSubspaceAvailableMembersDocumentString = print(
-  GetSubspaceAvailableMembersDocument,
+  GetSubspaceAvailableMembersDocument
 );
 const GetSubspaceCommunityDocumentString = print(GetSubspaceCommunityDocument);
 const PendingMembershipsSpaceDocumentString = print(
-  PendingMembershipsSpaceDocument,
+  PendingMembershipsSpaceDocument
 );
 const BannerVisualConstraintsDocumentString = print(
-  BannerVisualConstraintsDocument,
+  BannerVisualConstraintsDocument
 );
 const ConfigurationDocumentString = print(ConfigurationDocument);
 const FullConfigurationDocumentString = print(FullConfigurationDocument);
 const MyEntitlementsQueryDocumentString = print(MyEntitlementsQueryDocument);
 const OrganizationEntitlementsQueryDocumentString = print(
-  OrganizationEntitlementsQueryDocument,
+  OrganizationEntitlementsQueryDocument
 );
 const GetInnovationFlowStatesWithIdsDocumentString = print(
-  GetInnovationFlowStatesWithIdsDocument,
+  GetInnovationFlowStatesWithIdsDocument
 );
 const GetSpaceLicenseEntitlementsDocumentString = print(
-  GetSpaceLicenseEntitlementsDocument,
+  GetSpaceLicenseEntitlementsDocument
 );
 const GetSpaceLicenseSubscriptionsDocumentString = print(
-  GetSpaceLicenseSubscriptionsDocument,
+  GetSpaceLicenseSubscriptionsDocument
 );
 const LookupProfileVisualsDocumentString = print(LookupProfileVisualsDocument);
 const GetCalloutFramingMemoDocumentString = print(
-  GetCalloutFramingMemoDocument,
+  GetCalloutFramingMemoDocument
 );
 const GetOrgReferenceUriDocumentString = print(GetOrgReferenceUriDocument);
 const GetOrgVisualUriDocumentString = print(GetOrgVisualUriDocument);
@@ -123810,58 +123751,58 @@ const GetOrganizationDataDocumentString = print(GetOrganizationDataDocument);
 const GetOrganizationsDataDocumentString = print(GetOrganizationsDataDocument);
 const GetRolesOrganizationDocumentString = print(GetRolesOrganizationDocument);
 const OrganizationsPaginatedDocumentString = print(
-  OrganizationsPaginatedDocument,
+  OrganizationsPaginatedDocument
 );
 const UsersPaginatedDocumentString = print(UsersPaginatedDocument);
 const ActorsWithCredentialDocumentString = print(ActorsWithCredentialDocument);
 const LatestUserEmailChangeAuditEntryDocumentString = print(
-  LatestUserEmailChangeAuditEntryDocument,
+  LatestUserEmailChangeAuditEntryDocument
 );
 const PlatformAdminMcpApiKeysDocumentString = print(
-  PlatformAdminMcpApiKeysDocument,
+  PlatformAdminMcpApiKeysDocument
 );
 const PlatformAdminVirtualAssistantDocumentString = print(
-  PlatformAdminVirtualAssistantDocument,
+  PlatformAdminVirtualAssistantDocument
 );
 const PlatformForumDiscussionCategoriesDocumentString = print(
-  PlatformForumDiscussionCategoriesDocument,
+  PlatformForumDiscussionCategoriesDocument
 );
 const PlatformRoleSetOrganizationsInRoleDocumentString = print(
-  PlatformRoleSetOrganizationsInRoleDocument,
+  PlatformRoleSetOrganizationsInRoleDocument
 );
 const PlatformRoleSetOrganizationsInRolesDocumentString = print(
-  PlatformRoleSetOrganizationsInRolesDocument,
+  PlatformRoleSetOrganizationsInRolesDocument
 );
 const PlatformRoleSetRoleNamesDocumentString = print(
-  PlatformRoleSetRoleNamesDocument,
+  PlatformRoleSetRoleNamesDocument
 );
 const PlatformRoleSetUsersInRoleDocumentString = print(
-  PlatformRoleSetUsersInRoleDocument,
+  PlatformRoleSetUsersInRoleDocument
 );
 const PlatformRoleSetUsersInRolesDocumentString = print(
-  PlatformRoleSetUsersInRolesDocument,
+  PlatformRoleSetUsersInRolesDocument
 );
 const SpaceCollaborationReadProbeDocumentString = print(
-  SpaceCollaborationReadProbeDocument,
+  SpaceCollaborationReadProbeDocument
 );
 const SpaceReadProbeDocumentString = print(SpaceReadProbeDocument);
 const SpaceSupportAdminPrivilegeProbeDocumentString = print(
-  SpaceSupportAdminPrivilegeProbeDocument,
+  SpaceSupportAdminPrivilegeProbeDocument
 );
 const UpdateUserServiceProfileDocumentString = print(
-  UpdateUserServiceProfileDocument,
+  UpdateUserServiceProfileDocument
 );
 const UserEmailChangeAuditEntriesDocumentString = print(
-  UserEmailChangeAuditEntriesDocument,
+  UserEmailChangeAuditEntriesDocument
 );
 const UsersWithAuthorizationCredentialDocumentString = print(
-  UsersWithAuthorizationCredentialDocument,
+  UsersWithAuthorizationCredentialDocument
 );
 const GetOrgVisualUriInnovationHubDocumentString = print(
-  GetOrgVisualUriInnovationHubDocument,
+  GetOrgVisualUriInnovationHubDocument
 );
 const GetPlatformLicensePlansDocumentString = print(
-  GetPlatformLicensePlansDocument,
+  GetPlatformLicensePlansDocument
 );
 const GetProfileDocumentsDocumentString = print(GetProfileDocumentsDocument);
 const MyPushSubscriptionsDocumentString = print(MyPushSubscriptionsDocument);
@@ -123871,22 +123812,22 @@ const PrivateSpaceDataDocumentString = print(PrivateSpaceDataDocument);
 const GetSpaceDataDocumentString = print(GetSpaceDataDocument);
 const GetSpacesDataDocumentString = print(GetSpacesDataDocument);
 const GetSpacesFilteredByVisibilityWithAccessDocumentString = print(
-  GetSpacesFilteredByVisibilityWithAccessDocument,
+  GetSpacesFilteredByVisibilityWithAccessDocument
 );
 const GetSubspacePageDocumentString = print(GetSubspacePageDocument);
 const GetSpaceAboutDetailsDocumentString = print(GetSpaceAboutDetailsDocument);
 const GetSubspacesDataDocumentString = print(GetSubspacesDataDocument);
 const GetUserRolesDocumentString = print(GetUserRolesDocument);
 const GetSpaceTemplatesCountByTemplateSetIdDocumentString = print(
-  GetSpaceTemplatesCountByTemplateSetIdDocument,
+  GetSpaceTemplatesCountByTemplateSetIdDocument
 );
 const GetTemplateByIdDocumentString = print(GetTemplateByIdDocument);
 const GetWhiteboardTemplatesCountByTemplateSetIdDocumentString = print(
-  GetWhiteboardTemplatesCountByTemplateSetIdDocument,
+  GetWhiteboardTemplatesCountByTemplateSetIdDocument
 );
 const UrlResolverDocumentString = print(UrlResolverDocument);
 const GetSubspaceApplicationsDocumentString = print(
-  GetSubspaceApplicationsDocument,
+  GetSubspaceApplicationsDocument
 );
 const GetMyUserInfoDocumentString = print(GetMyUserInfoDocument);
 const GetSpaceApplicationsDocumentString = print(GetSpaceApplicationsDocument);
@@ -123896,33 +123837,33 @@ const GetUserReferenceUriDocumentString = print(GetUserReferenceUriDocument);
 const GetUsersDataDocumentString = print(GetUsersDataDocument);
 const MeQueryDocumentString = print(MeQueryDocument);
 const GetAiPersonaModelCardDocumentString = print(
-  GetAiPersonaModelCardDocument,
+  GetAiPersonaModelCardDocument
 );
 const GetVirtualContributorWithModelCardDocumentString = print(
-  GetVirtualContributorWithModelCardDocument,
+  GetVirtualContributorWithModelCardDocument
 );
 const VirtualContributorDocumentString = print(VirtualContributorDocument);
 const VirtualContributorKnowledgeBaseDocumentString = print(
-  VirtualContributorKnowledgeBaseDocument,
+  VirtualContributorKnowledgeBaseDocument
 );
 const VirtualContributorKnowledgePrivilegesDocumentString = print(
-  VirtualContributorKnowledgePrivilegesDocument,
+  VirtualContributorKnowledgePrivilegesDocument
 );
 const VirtualContributorKnowledgeStorageConfigDocumentString = print(
-  VirtualContributorKnowledgeStorageConfigDocument,
+  VirtualContributorKnowledgeStorageConfigDocument
 );
 const VirtualContributorStorageConfigDocumentString = print(
-  VirtualContributorStorageConfigDocument,
+  VirtualContributorStorageConfigDocument
 );
 const ConversationEventsDocumentString = print(ConversationEventsDocument);
 export function getSdk(
   client: GraphQLClient,
-  withWrapper: SdkFunctionWrapper = defaultWrapper,
+  withWrapper: SdkFunctionWrapper = defaultWrapper
 ) {
   return {
     AssignLicensePlanToAccount(
       variables: SchemaTypes.AssignLicensePlanToAccountMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.AssignLicensePlanToAccountMutation;
       errors?: GraphQLError[];
@@ -123935,16 +123876,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.AssignLicensePlanToAccountMutation>(
             AssignLicensePlanToAccountDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "AssignLicensePlanToAccount",
         "mutation",
-        variables,
+        variables
       );
     },
     AssignLicensePlanToSpace(
       variables: SchemaTypes.AssignLicensePlanToSpaceMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.AssignLicensePlanToSpaceMutation;
       errors?: GraphQLError[];
@@ -123957,16 +123898,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.AssignLicensePlanToSpaceMutation>(
             AssignLicensePlanToSpaceDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "AssignLicensePlanToSpace",
         "mutation",
-        variables,
+        variables
       );
     },
     RevokeLicensePlanFromAccount(
       variables: SchemaTypes.RevokeLicensePlanFromAccountMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.RevokeLicensePlanFromAccountMutation;
       errors?: GraphQLError[];
@@ -123979,16 +123920,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.RevokeLicensePlanFromAccountMutation>(
             RevokeLicensePlanFromAccountDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "RevokeLicensePlanFromAccount",
         "mutation",
-        variables,
+        variables
       );
     },
     RevokeLicensePlanFromSpace(
       variables: SchemaTypes.RevokeLicensePlanFromSpaceMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.RevokeLicensePlanFromSpaceMutation;
       errors?: GraphQLError[];
@@ -124001,16 +123942,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.RevokeLicensePlanFromSpaceMutation>(
             RevokeLicensePlanFromSpaceDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "RevokeLicensePlanFromSpace",
         "mutation",
-        variables,
+        variables
       );
     },
     AssignRoleToOrganization(
       variables: SchemaTypes.AssignRoleToOrganizationMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.AssignRoleToOrganizationMutation;
       errors?: GraphQLError[];
@@ -124023,16 +123964,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.AssignRoleToOrganizationMutation>(
             AssignRoleToOrganizationDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "AssignRoleToOrganization",
         "mutation",
-        variables,
+        variables
       );
     },
     assignRoleToUser(
       variables: SchemaTypes.AssignRoleToUserMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.AssignRoleToUserMutation;
       errors?: GraphQLError[];
@@ -124045,16 +123986,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.AssignRoleToUserMutation>(
             AssignRoleToUserDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "assignRoleToUser",
         "mutation",
-        variables,
+        variables
       );
     },
     AssignRoleToUserExtendedData(
       variables: SchemaTypes.AssignRoleToUserExtendedDataMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.AssignRoleToUserExtendedDataMutation;
       errors?: GraphQLError[];
@@ -124067,16 +124008,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.AssignRoleToUserExtendedDataMutation>(
             AssignRoleToUserExtendedDataDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "AssignRoleToUserExtendedData",
         "mutation",
-        variables,
+        variables
       );
     },
     assignRoleToVirtualContributor(
       variables: SchemaTypes.AssignRoleToVirtualContributorMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.AssignRoleToVirtualContributorMutation;
       errors?: GraphQLError[];
@@ -124089,16 +124030,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.AssignRoleToVirtualContributorMutation>(
             AssignRoleToVirtualContributorDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "assignRoleToVirtualContributor",
         "mutation",
-        variables,
+        variables
       );
     },
     applyForEntryRole(
       variables: SchemaTypes.ApplyForEntryRoleMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.ApplyForEntryRoleMutation;
       errors?: GraphQLError[];
@@ -124111,16 +124052,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.ApplyForEntryRoleMutation>(
             ApplyForEntryRoleDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "applyForEntryRole",
         "mutation",
-        variables,
+        variables
       );
     },
     deleteApplication(
       variables: SchemaTypes.DeleteApplicationMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.DeleteApplicationMutation;
       errors?: GraphQLError[];
@@ -124133,16 +124074,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.DeleteApplicationMutation>(
             DeleteApplicationDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "deleteApplication",
         "mutation",
-        variables,
+        variables
       );
     },
     DeletePlatformInvitation(
       variables: SchemaTypes.DeletePlatformInvitationMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.DeletePlatformInvitationMutation;
       errors?: GraphQLError[];
@@ -124155,16 +124096,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.DeletePlatformInvitationMutation>(
             DeletePlatformInvitationDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "DeletePlatformInvitation",
         "mutation",
-        variables,
+        variables
       );
     },
     deleteInvitation(
       variables: SchemaTypes.DeleteInvitationMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.DeleteInvitationMutation;
       errors?: GraphQLError[];
@@ -124177,16 +124118,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.DeleteInvitationMutation>(
             DeleteInvitationDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "deleteInvitation",
         "mutation",
-        variables,
+        variables
       );
     },
     eventOnApplication(
       variables: SchemaTypes.EventOnApplicationMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.EventOnApplicationMutation;
       errors?: GraphQLError[];
@@ -124199,16 +124140,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.EventOnApplicationMutation>(
             EventOnApplicationDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "eventOnApplication",
         "mutation",
-        variables,
+        variables
       );
     },
     InvitationStateEvent(
       variables: SchemaTypes.InvitationStateEventMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.InvitationStateEventMutation;
       errors?: GraphQLError[];
@@ -124221,16 +124162,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.InvitationStateEventMutation>(
             InvitationStateEventDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "InvitationStateEvent",
         "mutation",
-        variables,
+        variables
       );
     },
     InviteForEntryRoleOnRoleSet(
       variables: SchemaTypes.InviteForEntryRoleOnRoleSetMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.InviteForEntryRoleOnRoleSetMutation;
       errors?: GraphQLError[];
@@ -124243,16 +124184,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.InviteForEntryRoleOnRoleSetMutation>(
             InviteForEntryRoleOnRoleSetDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "InviteForEntryRoleOnRoleSet",
         "mutation",
-        variables,
+        variables
       );
     },
     joinRoleSet(
       variables: SchemaTypes.JoinRoleSetMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.JoinRoleSetMutation;
       errors?: GraphQLError[];
@@ -124265,16 +124206,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.JoinRoleSetMutation>(
             JoinRoleSetDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "joinRoleSet",
         "mutation",
-        variables,
+        variables
       );
     },
     RemoveRoleFromOrganization(
       variables: SchemaTypes.RemoveRoleFromOrganizationMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.RemoveRoleFromOrganizationMutation;
       errors?: GraphQLError[];
@@ -124287,16 +124228,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.RemoveRoleFromOrganizationMutation>(
             RemoveRoleFromOrganizationDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "RemoveRoleFromOrganization",
         "mutation",
-        variables,
+        variables
       );
     },
     removeRoleFromUser(
       variables: SchemaTypes.RemoveRoleFromUserMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.RemoveRoleFromUserMutation;
       errors?: GraphQLError[];
@@ -124309,16 +124250,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.RemoveRoleFromUserMutation>(
             RemoveRoleFromUserDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "removeRoleFromUser",
         "mutation",
-        variables,
+        variables
       );
     },
     RemoveRoleFromUserExtendedData(
       variables: SchemaTypes.RemoveRoleFromUserExtendedDataMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.RemoveRoleFromUserExtendedDataMutation;
       errors?: GraphQLError[];
@@ -124331,16 +124272,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.RemoveRoleFromUserExtendedDataMutation>(
             RemoveRoleFromUserExtendedDataDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "RemoveRoleFromUserExtendedData",
         "mutation",
-        variables,
+        variables
       );
     },
     RemoveRoleFromVirtualContributor(
       variables: SchemaTypes.RemoveRoleFromVirtualContributorMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.RemoveRoleFromVirtualContributorMutation;
       errors?: GraphQLError[];
@@ -124353,16 +124294,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.RemoveRoleFromVirtualContributorMutation>(
             RemoveRoleFromVirtualContributorDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "RemoveRoleFromVirtualContributor",
         "mutation",
-        variables,
+        variables
       );
     },
     transferInnovationHubToAccount(
       variables: SchemaTypes.TransferInnovationHubToAccountMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.TransferInnovationHubToAccountMutation;
       errors?: GraphQLError[];
@@ -124375,16 +124316,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.TransferInnovationHubToAccountMutation>(
             TransferInnovationHubToAccountDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "transferInnovationHubToAccount",
         "mutation",
-        variables,
+        variables
       );
     },
     TransferInnovationPackToAccount(
       variables: SchemaTypes.TransferInnovationPackToAccountMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.TransferInnovationPackToAccountMutation;
       errors?: GraphQLError[];
@@ -124397,16 +124338,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.TransferInnovationPackToAccountMutation>(
             TransferInnovationPackToAccountDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "TransferInnovationPackToAccount",
         "mutation",
-        variables,
+        variables
       );
     },
     TransferSpaceToAccount(
       variables: SchemaTypes.TransferSpaceToAccountMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.TransferSpaceToAccountMutation;
       errors?: GraphQLError[];
@@ -124419,16 +124360,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.TransferSpaceToAccountMutation>(
             TransferSpaceToAccountDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "TransferSpaceToAccount",
         "mutation",
-        variables,
+        variables
       );
     },
     TransferVirtualContributorToAccount(
       variables: SchemaTypes.TransferVirtualContributorToAccountMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.TransferVirtualContributorToAccountMutation;
       errors?: GraphQLError[];
@@ -124441,16 +124382,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.TransferVirtualContributorToAccountMutation>(
             TransferVirtualContributorToAccountDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "TransferVirtualContributorToAccount",
         "mutation",
-        variables,
+        variables
       );
     },
     CreateCalendarEventOnCalendar(
       variables: SchemaTypes.CreateCalendarEventOnCalendarMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.CreateCalendarEventOnCalendarMutation;
       errors?: GraphQLError[];
@@ -124463,16 +124404,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.CreateCalendarEventOnCalendarMutation>(
             CreateCalendarEventOnCalendarDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "CreateCalendarEventOnCalendar",
         "mutation",
-        variables,
+        variables
       );
     },
     DeleteCalendarEvent(
       variables: SchemaTypes.DeleteCalendarEventMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.DeleteCalendarEventMutation;
       errors?: GraphQLError[];
@@ -124485,16 +124426,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.DeleteCalendarEventMutation>(
             DeleteCalendarEventDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "DeleteCalendarEvent",
         "mutation",
-        variables,
+        variables
       );
     },
     UpdateCalendarEvent(
       variables: SchemaTypes.UpdateCalendarEventMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.UpdateCalendarEventMutation;
       errors?: GraphQLError[];
@@ -124507,16 +124448,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.UpdateCalendarEventMutation>(
             UpdateCalendarEventDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "UpdateCalendarEvent",
         "mutation",
-        variables,
+        variables
       );
     },
     CreateCalloutOnCalloutsSet(
       variables: SchemaTypes.CreateCalloutOnCalloutsSetMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.CreateCalloutOnCalloutsSetMutation;
       errors?: GraphQLError[];
@@ -124529,16 +124470,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.CreateCalloutOnCalloutsSetMutation>(
             CreateCalloutOnCalloutsSetDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "CreateCalloutOnCalloutsSet",
         "mutation",
-        variables,
+        variables
       );
     },
     deleteCallout(
       variables: SchemaTypes.DeleteCalloutMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.DeleteCalloutMutation;
       errors?: GraphQLError[];
@@ -124551,16 +124492,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.DeleteCalloutMutation>(
             DeleteCalloutDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "deleteCallout",
         "mutation",
-        variables,
+        variables
       );
     },
     DeletePost(
       variables: SchemaTypes.DeletePostMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.DeletePostMutation;
       errors?: GraphQLError[];
@@ -124573,16 +124514,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.DeletePostMutation>(
             DeletePostDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "DeletePost",
         "mutation",
-        variables,
+        variables
       );
     },
     DeleteWhiteboard(
       variables: SchemaTypes.DeleteWhiteboardMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.DeleteWhiteboardMutation;
       errors?: GraphQLError[];
@@ -124595,16 +124536,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.DeleteWhiteboardMutation>(
             DeleteWhiteboardDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "DeleteWhiteboard",
         "mutation",
-        variables,
+        variables
       );
     },
     AddReactionToCallout(
       variables: SchemaTypes.AddReactionToCalloutMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.AddReactionToCalloutMutation;
       errors?: GraphQLError[];
@@ -124617,16 +124558,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.AddReactionToCalloutMutation>(
             AddReactionToCalloutDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "AddReactionToCallout",
         "mutation",
-        variables,
+        variables
       );
     },
     RemoveReactionFromCallout(
       variables: SchemaTypes.RemoveReactionFromCalloutMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.RemoveReactionFromCalloutMutation;
       errors?: GraphQLError[];
@@ -124639,16 +124580,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.RemoveReactionFromCalloutMutation>(
             RemoveReactionFromCalloutDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "RemoveReactionFromCallout",
         "mutation",
-        variables,
+        variables
       );
     },
     UpdateCallout(
       variables: SchemaTypes.UpdateCalloutMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.UpdateCalloutMutation;
       errors?: GraphQLError[];
@@ -124661,16 +124602,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.UpdateCalloutMutation>(
             UpdateCalloutDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "UpdateCallout",
         "mutation",
-        variables,
+        variables
       );
     },
     UpdateCalloutVisibility(
       variables: SchemaTypes.UpdateCalloutVisibilityMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.UpdateCalloutVisibilityMutation;
       errors?: GraphQLError[];
@@ -124683,16 +124624,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.UpdateCalloutVisibilityMutation>(
             UpdateCalloutVisibilityDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "UpdateCalloutVisibility",
         "mutation",
-        variables,
+        variables
       );
     },
     CreateContributionOnCallout(
       variables: SchemaTypes.CreateContributionOnCalloutMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.CreateContributionOnCalloutMutation;
       errors?: GraphQLError[];
@@ -124705,16 +124646,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.CreateContributionOnCalloutMutation>(
             CreateContributionOnCalloutDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "CreateContributionOnCallout",
         "mutation",
-        variables,
+        variables
       );
     },
     transferCallout(
       variables: SchemaTypes.TransferCalloutMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.TransferCalloutMutation;
       errors?: GraphQLError[];
@@ -124727,16 +124668,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.TransferCalloutMutation>(
             TransferCalloutDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "transferCallout",
         "mutation",
-        variables,
+        variables
       );
     },
     UpdateCollaborationFromSpaceTemplate(
       variables: SchemaTypes.UpdateCollaborationFromSpaceTemplateMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.UpdateCollaborationFromSpaceTemplateMutation;
       errors?: GraphQLError[];
@@ -124749,16 +124690,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.UpdateCollaborationFromSpaceTemplateMutation>(
             UpdateCollaborationFromSpaceTemplateDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "UpdateCollaborationFromSpaceTemplate",
         "mutation",
-        variables,
+        variables
       );
     },
     AddReactionToMessageInRoom(
       variables: SchemaTypes.AddReactionToMessageInRoomMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.AddReactionToMessageInRoomMutation;
       errors?: GraphQLError[];
@@ -124771,16 +124712,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.AddReactionToMessageInRoomMutation>(
             AddReactionToMessageInRoomDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "AddReactionToMessageInRoom",
         "mutation",
-        variables,
+        variables
       );
     },
     AssignConversationMember(
       variables: SchemaTypes.AssignConversationMemberMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.AssignConversationMemberMutation;
       errors?: GraphQLError[];
@@ -124793,16 +124734,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.AssignConversationMemberMutation>(
             AssignConversationMemberDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "AssignConversationMember",
         "mutation",
-        variables,
+        variables
       );
     },
     CreateConversation(
       variables: SchemaTypes.CreateConversationMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.CreateConversationMutation;
       errors?: GraphQLError[];
@@ -124815,16 +124756,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.CreateConversationMutation>(
             CreateConversationDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "CreateConversation",
         "mutation",
-        variables,
+        variables
       );
     },
     CreateDiscussion(
       variables: SchemaTypes.CreateDiscussionMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.CreateDiscussionMutation;
       errors?: GraphQLError[];
@@ -124837,16 +124778,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.CreateDiscussionMutation>(
             CreateDiscussionDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "CreateDiscussion",
         "mutation",
-        variables,
+        variables
       );
     },
     DeleteConversation(
       variables: SchemaTypes.DeleteConversationMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.DeleteConversationMutation;
       errors?: GraphQLError[];
@@ -124859,16 +124800,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.DeleteConversationMutation>(
             DeleteConversationDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "DeleteConversation",
         "mutation",
-        variables,
+        variables
       );
     },
     DeleteDiscussion(
       variables: SchemaTypes.DeleteDiscussionMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.DeleteDiscussionMutation;
       errors?: GraphQLError[];
@@ -124881,16 +124822,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.DeleteDiscussionMutation>(
             DeleteDiscussionDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "DeleteDiscussion",
         "mutation",
-        variables,
+        variables
       );
     },
     LeaveConversation(
       variables: SchemaTypes.LeaveConversationMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.LeaveConversationMutation;
       errors?: GraphQLError[];
@@ -124903,16 +124844,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.LeaveConversationMutation>(
             LeaveConversationDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "LeaveConversation",
         "mutation",
-        variables,
+        variables
       );
     },
     RemoveConversationMember(
       variables: SchemaTypes.RemoveConversationMemberMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.RemoveConversationMemberMutation;
       errors?: GraphQLError[];
@@ -124925,16 +124866,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.RemoveConversationMemberMutation>(
             RemoveConversationMemberDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "RemoveConversationMember",
         "mutation",
-        variables,
+        variables
       );
     },
     RemoveMessageOnRoom(
       variables: SchemaTypes.RemoveMessageOnRoomMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.RemoveMessageOnRoomMutation;
       errors?: GraphQLError[];
@@ -124947,16 +124888,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.RemoveMessageOnRoomMutation>(
             RemoveMessageOnRoomDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "RemoveMessageOnRoom",
         "mutation",
-        variables,
+        variables
       );
     },
     RemoveReactionToMessageInRoom(
       variables: SchemaTypes.RemoveReactionToMessageInRoomMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.RemoveReactionToMessageInRoomMutation;
       errors?: GraphQLError[];
@@ -124969,16 +124910,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.RemoveReactionToMessageInRoomMutation>(
             RemoveReactionToMessageInRoomDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "RemoveReactionToMessageInRoom",
         "mutation",
-        variables,
+        variables
       );
     },
     SendMessageReplyToRoom(
       variables: SchemaTypes.SendMessageReplyToRoomMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.SendMessageReplyToRoomMutation;
       errors?: GraphQLError[];
@@ -124991,16 +124932,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.SendMessageReplyToRoomMutation>(
             SendMessageReplyToRoomDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "SendMessageReplyToRoom",
         "mutation",
-        variables,
+        variables
       );
     },
     SendMessageToCommunityLeads(
       variables: SchemaTypes.SendMessageToCommunityLeadsMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.SendMessageToCommunityLeadsMutation;
       errors?: GraphQLError[];
@@ -125013,16 +124954,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.SendMessageToCommunityLeadsMutation>(
             SendMessageToCommunityLeadsDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "SendMessageToCommunityLeads",
         "mutation",
-        variables,
+        variables
       );
     },
     SendMessageToOrganization(
       variables: SchemaTypes.SendMessageToOrganizationMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.SendMessageToOrganizationMutation;
       errors?: GraphQLError[];
@@ -125035,16 +124976,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.SendMessageToOrganizationMutation>(
             SendMessageToOrganizationDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "SendMessageToOrganization",
         "mutation",
-        variables,
+        variables
       );
     },
     SendMessageToRoom(
       variables: SchemaTypes.SendMessageToRoomMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.SendMessageToRoomMutation;
       errors?: GraphQLError[];
@@ -125057,16 +124998,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.SendMessageToRoomMutation>(
             SendMessageToRoomDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "SendMessageToRoom",
         "mutation",
-        variables,
+        variables
       );
     },
     sendMessageToUsers(
       variables: SchemaTypes.SendMessageToUsersMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.SendMessageToUsersMutation;
       errors?: GraphQLError[];
@@ -125079,16 +125020,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.SendMessageToUsersMutation>(
             SendMessageToUsersDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "sendMessageToUsers",
         "mutation",
-        variables,
+        variables
       );
     },
     UpdateConversation(
       variables: SchemaTypes.UpdateConversationMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.UpdateConversationMutation;
       errors?: GraphQLError[];
@@ -125101,16 +125042,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.UpdateConversationMutation>(
             UpdateConversationDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "UpdateConversation",
         "mutation",
-        variables,
+        variables
       );
     },
     UpdateDiscussion(
       variables: SchemaTypes.UpdateDiscussionMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.UpdateDiscussionMutation;
       errors?: GraphQLError[];
@@ -125123,16 +125064,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.UpdateDiscussionMutation>(
             UpdateDiscussionDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "UpdateDiscussion",
         "mutation",
-        variables,
+        variables
       );
     },
     UpdatePost(
       variables: SchemaTypes.UpdatePostMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.UpdatePostMutation;
       errors?: GraphQLError[];
@@ -125145,16 +125086,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.UpdatePostMutation>(
             UpdatePostDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "UpdatePost",
         "mutation",
-        variables,
+        variables
       );
     },
     ConvertSpaceL1ToSpaceL0(
       variables: SchemaTypes.ConvertSpaceL1ToSpaceL0MutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.ConvertSpaceL1ToSpaceL0Mutation;
       errors?: GraphQLError[];
@@ -125167,16 +125108,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.ConvertSpaceL1ToSpaceL0Mutation>(
             ConvertSpaceL1ToSpaceL0DocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "ConvertSpaceL1ToSpaceL0",
         "mutation",
-        variables,
+        variables
       );
     },
     ConvertSpaceL1ToSpaceL2(
       variables: SchemaTypes.ConvertSpaceL1ToSpaceL2MutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.ConvertSpaceL1ToSpaceL2Mutation;
       errors?: GraphQLError[];
@@ -125189,16 +125130,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.ConvertSpaceL1ToSpaceL2Mutation>(
             ConvertSpaceL1ToSpaceL2DocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "ConvertSpaceL1ToSpaceL2",
         "mutation",
-        variables,
+        variables
       );
     },
     ConvertSpaceL2ToSpaceL1(
       variables: SchemaTypes.ConvertSpaceL2ToSpaceL1MutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.ConvertSpaceL2ToSpaceL1Mutation;
       errors?: GraphQLError[];
@@ -125211,16 +125152,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.ConvertSpaceL2ToSpaceL1Mutation>(
             ConvertSpaceL2ToSpaceL1DocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "ConvertSpaceL2ToSpaceL1",
         "mutation",
-        variables,
+        variables
       );
     },
     MoveSpaceL1ToSpaceL0(
       variables: SchemaTypes.MoveSpaceL1ToSpaceL0MutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.MoveSpaceL1ToSpaceL0Mutation;
       errors?: GraphQLError[];
@@ -125233,16 +125174,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.MoveSpaceL1ToSpaceL0Mutation>(
             MoveSpaceL1ToSpaceL0DocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "MoveSpaceL1ToSpaceL0",
         "mutation",
-        variables,
+        variables
       );
     },
     MoveSpaceL1ToSpaceL2(
       variables: SchemaTypes.MoveSpaceL1ToSpaceL2MutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.MoveSpaceL1ToSpaceL2Mutation;
       errors?: GraphQLError[];
@@ -125255,16 +125196,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.MoveSpaceL1ToSpaceL2Mutation>(
             MoveSpaceL1ToSpaceL2DocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "MoveSpaceL1ToSpaceL2",
         "mutation",
-        variables,
+        variables
       );
     },
     MoveSpaceL2ToSpaceL1(
       variables: SchemaTypes.MoveSpaceL2ToSpaceL1MutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.MoveSpaceL2ToSpaceL1Mutation;
       errors?: GraphQLError[];
@@ -125277,16 +125218,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.MoveSpaceL2ToSpaceL1Mutation>(
             MoveSpaceL2ToSpaceL1DocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "MoveSpaceL2ToSpaceL1",
         "mutation",
-        variables,
+        variables
       );
     },
     DeleteDocument(
       variables: SchemaTypes.DeleteDocumentMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.DeleteDocumentMutation;
       errors?: GraphQLError[];
@@ -125299,16 +125240,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.DeleteDocumentMutation>(
             DeleteDocumentDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "DeleteDocument",
         "mutation",
-        variables,
+        variables
       );
     },
     CreateSpaceBasicData(
       variables: SchemaTypes.CreateSpaceBasicDataMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.CreateSpaceBasicDataMutation;
       errors?: GraphQLError[];
@@ -125321,16 +125262,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.CreateSpaceBasicDataMutation>(
             CreateSpaceBasicDataDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "CreateSpaceBasicData",
         "mutation",
-        variables,
+        variables
       );
     },
     deleteSpace(
       variables: SchemaTypes.DeleteSpaceMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.DeleteSpaceMutation;
       errors?: GraphQLError[];
@@ -125343,16 +125284,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.DeleteSpaceMutation>(
             DeleteSpaceDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "deleteSpace",
         "mutation",
-        variables,
+        variables
       );
     },
     updateSpace(
       variables: SchemaTypes.UpdateSpaceMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.UpdateSpaceMutation;
       errors?: GraphQLError[];
@@ -125365,16 +125306,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.UpdateSpaceMutation>(
             UpdateSpaceDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "updateSpace",
         "mutation",
-        variables,
+        variables
       );
     },
     CreateSubspace(
       variables: SchemaTypes.CreateSubspaceMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.CreateSubspaceMutation;
       errors?: GraphQLError[];
@@ -125387,16 +125328,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.CreateSubspaceMutation>(
             CreateSubspaceDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "CreateSubspace",
         "mutation",
-        variables,
+        variables
       );
     },
     updateSubspace(
       variables: SchemaTypes.UpdateSubspaceMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.UpdateSubspaceMutation;
       errors?: GraphQLError[];
@@ -125409,16 +125350,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.UpdateSubspaceMutation>(
             UpdateSubspaceDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "updateSubspace",
         "mutation",
-        variables,
+        variables
       );
     },
     UpdateSubspacePinned(
       variables: SchemaTypes.UpdateSubspacePinnedMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.UpdateSubspacePinnedMutation;
       errors?: GraphQLError[];
@@ -125431,16 +125372,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.UpdateSubspacePinnedMutation>(
             UpdateSubspacePinnedDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "UpdateSubspacePinned",
         "mutation",
-        variables,
+        variables
       );
     },
     UpdateSubspacesSortOrder(
       variables: SchemaTypes.UpdateSubspacesSortOrderMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.UpdateSubspacesSortOrderMutation;
       errors?: GraphQLError[];
@@ -125453,16 +125394,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.UpdateSubspacesSortOrderMutation>(
             UpdateSubspacesSortOrderDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "UpdateSubspacesSortOrder",
         "mutation",
-        variables,
+        variables
       );
     },
     CreateLicensePlan(
       variables: SchemaTypes.CreateLicensePlanMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.CreateLicensePlanMutation;
       errors?: GraphQLError[];
@@ -125475,16 +125416,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.CreateLicensePlanMutation>(
             CreateLicensePlanDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "CreateLicensePlan",
         "mutation",
-        variables,
+        variables
       );
     },
     DeleteLicensePlan(
       variables: SchemaTypes.DeleteLicensePlanMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.DeleteLicensePlanMutation;
       errors?: GraphQLError[];
@@ -125497,16 +125438,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.DeleteLicensePlanMutation>(
             DeleteLicensePlanDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "DeleteLicensePlan",
         "mutation",
-        variables,
+        variables
       );
     },
     UpdateLicensePlan(
       variables: SchemaTypes.UpdateLicensePlanMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.UpdateLicensePlanMutation;
       errors?: GraphQLError[];
@@ -125519,16 +125460,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.UpdateLicensePlanMutation>(
             UpdateLicensePlanDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "UpdateLicensePlan",
         "mutation",
-        variables,
+        variables
       );
     },
     eventOnOrganizationVerification(
       variables: SchemaTypes.EventOnOrganizationVerificationMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.EventOnOrganizationVerificationMutation;
       errors?: GraphQLError[];
@@ -125541,16 +125482,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.EventOnOrganizationVerificationMutation>(
             EventOnOrganizationVerificationDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "eventOnOrganizationVerification",
         "mutation",
-        variables,
+        variables
       );
     },
     updateInnovationFlowCurrentState(
       variables: SchemaTypes.UpdateInnovationFlowCurrentStateMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.UpdateInnovationFlowCurrentStateMutation;
       errors?: GraphQLError[];
@@ -125563,16 +125504,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.UpdateInnovationFlowCurrentStateMutation>(
             UpdateInnovationFlowCurrentStateDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "updateInnovationFlowCurrentState",
         "mutation",
-        variables,
+        variables
       );
     },
     UpdateInnovationFlowState(
       variables: SchemaTypes.UpdateInnovationFlowStateMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.UpdateInnovationFlowStateMutation;
       errors?: GraphQLError[];
@@ -125585,16 +125526,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.UpdateInnovationFlowStateMutation>(
             UpdateInnovationFlowStateDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "UpdateInnovationFlowState",
         "mutation",
-        variables,
+        variables
       );
     },
     PrepareMemoSigning(
       variables: SchemaTypes.PrepareMemoSigningMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.PrepareMemoSigningMutation;
       errors?: GraphQLError[];
@@ -125607,16 +125548,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.PrepareMemoSigningMutation>(
             PrepareMemoSigningDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "PrepareMemoSigning",
         "mutation",
-        variables,
+        variables
       );
     },
     CreateOrganization(
       variables: SchemaTypes.CreateOrganizationMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.CreateOrganizationMutation;
       errors?: GraphQLError[];
@@ -125629,16 +125570,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.CreateOrganizationMutation>(
             CreateOrganizationDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "CreateOrganization",
         "mutation",
-        variables,
+        variables
       );
     },
     deleteOrganization(
       variables: SchemaTypes.DeleteOrganizationMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.DeleteOrganizationMutation;
       errors?: GraphQLError[];
@@ -125651,16 +125592,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.DeleteOrganizationMutation>(
             DeleteOrganizationDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "deleteOrganization",
         "mutation",
-        variables,
+        variables
       );
     },
     updateOrganization(
       variables: SchemaTypes.UpdateOrganizationMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.UpdateOrganizationMutation;
       errors?: GraphQLError[];
@@ -125673,16 +125614,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.UpdateOrganizationMutation>(
             UpdateOrganizationDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "updateOrganization",
         "mutation",
-        variables,
+        variables
       );
     },
     UpdateOrganizationSettings(
       variables: SchemaTypes.UpdateOrganizationSettingsMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.UpdateOrganizationSettingsMutation;
       errors?: GraphQLError[];
@@ -125695,16 +125636,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.UpdateOrganizationSettingsMutation>(
             UpdateOrganizationSettingsDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "UpdateOrganizationSettings",
         "mutation",
-        variables,
+        variables
       );
     },
     addIframeAllowedURL(
       variables: SchemaTypes.AddIframeAllowedUrlMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.AddIframeAllowedUrlMutation;
       errors?: GraphQLError[];
@@ -125717,16 +125658,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.AddIframeAllowedUrlMutation>(
             AddIframeAllowedUrlDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "addIframeAllowedURL",
         "mutation",
-        variables,
+        variables
       );
     },
     addNotificationEmailToBlacklist(
       variables: SchemaTypes.AddNotificationEmailToBlacklistMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.AddNotificationEmailToBlacklistMutation;
       errors?: GraphQLError[];
@@ -125739,16 +125680,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.AddNotificationEmailToBlacklistMutation>(
             AddNotificationEmailToBlacklistDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "addNotificationEmailToBlacklist",
         "mutation",
-        variables,
+        variables
       );
     },
     adminCommunicationEnsureAccessToCommunications(
       variables: SchemaTypes.AdminCommunicationEnsureAccessToCommunicationsMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.AdminCommunicationEnsureAccessToCommunicationsMutation;
       errors?: GraphQLError[];
@@ -125761,16 +125702,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.AdminCommunicationEnsureAccessToCommunicationsMutation>(
             AdminCommunicationEnsureAccessToCommunicationsDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "adminCommunicationEnsureAccessToCommunications",
         "mutation",
-        variables,
+        variables
       );
     },
     adminCommunicationMigrateOrphanedConversations(
       variables?: SchemaTypes.AdminCommunicationMigrateOrphanedConversationsMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.AdminCommunicationMigrateOrphanedConversationsMutation;
       errors?: GraphQLError[];
@@ -125783,16 +125724,38 @@ export function getSdk(
           client.rawRequest<SchemaTypes.AdminCommunicationMigrateOrphanedConversationsMutation>(
             AdminCommunicationMigrateOrphanedConversationsDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "adminCommunicationMigrateOrphanedConversations",
         "mutation",
-        variables,
+        variables
+      );
+    },
+    adminCommunicationReconcileForumHierarchy(
+      variables: SchemaTypes.AdminCommunicationReconcileForumHierarchyMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.AdminCommunicationReconcileForumHierarchyMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.AdminCommunicationReconcileForumHierarchyMutation>(
+            AdminCommunicationReconcileForumHierarchyDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "adminCommunicationReconcileForumHierarchy",
+        "mutation",
+        variables
       );
     },
     adminCommunicationRemoveOrphanedRoom(
       variables: SchemaTypes.AdminCommunicationRemoveOrphanedRoomMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.AdminCommunicationRemoveOrphanedRoomMutation;
       errors?: GraphQLError[];
@@ -125805,16 +125768,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.AdminCommunicationRemoveOrphanedRoomMutation>(
             AdminCommunicationRemoveOrphanedRoomDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "adminCommunicationRemoveOrphanedRoom",
         "mutation",
-        variables,
+        variables
       );
     },
     adminCommunicationSyncSpaceHierarchy(
       variables?: SchemaTypes.AdminCommunicationSyncSpaceHierarchyMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.AdminCommunicationSyncSpaceHierarchyMutation;
       errors?: GraphQLError[];
@@ -125827,16 +125790,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.AdminCommunicationSyncSpaceHierarchyMutation>(
             AdminCommunicationSyncSpaceHierarchyDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "adminCommunicationSyncSpaceHierarchy",
         "mutation",
-        variables,
+        variables
       );
     },
     adminCommunicationUpdateRoomState(
       variables: SchemaTypes.AdminCommunicationUpdateRoomStateMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.AdminCommunicationUpdateRoomStateMutation;
       errors?: GraphQLError[];
@@ -125849,16 +125812,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.AdminCommunicationUpdateRoomStateMutation>(
             AdminCommunicationUpdateRoomStateDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "adminCommunicationUpdateRoomState",
         "mutation",
-        variables,
+        variables
       );
     },
     adminForumRemoveDiscussionCategory(
       variables: SchemaTypes.AdminForumRemoveDiscussionCategoryMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.AdminForumRemoveDiscussionCategoryMutation;
       errors?: GraphQLError[];
@@ -125871,16 +125834,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.AdminForumRemoveDiscussionCategoryMutation>(
             AdminForumRemoveDiscussionCategoryDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "adminForumRemoveDiscussionCategory",
         "mutation",
-        variables,
+        variables
       );
     },
     adminIdentityDeleteKratosIdentity(
       variables: SchemaTypes.AdminIdentityDeleteKratosIdentityMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.AdminIdentityDeleteKratosIdentityMutation;
       errors?: GraphQLError[];
@@ -125893,16 +125856,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.AdminIdentityDeleteKratosIdentityMutation>(
             AdminIdentityDeleteKratosIdentityDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "adminIdentityDeleteKratosIdentity",
         "mutation",
-        variables,
+        variables
       );
     },
     adminInAppNotificationsPrune(
       variables?: SchemaTypes.AdminInAppNotificationsPruneMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.AdminInAppNotificationsPruneMutation;
       errors?: GraphQLError[];
@@ -125915,16 +125878,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.AdminInAppNotificationsPruneMutation>(
             AdminInAppNotificationsPruneDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "adminInAppNotificationsPrune",
         "mutation",
-        variables,
+        variables
       );
     },
     adminLicensePolicyCreateCredentialRule(
       variables: SchemaTypes.AdminLicensePolicyCreateCredentialRuleMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.AdminLicensePolicyCreateCredentialRuleMutation;
       errors?: GraphQLError[];
@@ -125937,16 +125900,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.AdminLicensePolicyCreateCredentialRuleMutation>(
             AdminLicensePolicyCreateCredentialRuleDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "adminLicensePolicyCreateCredentialRule",
         "mutation",
-        variables,
+        variables
       );
     },
     adminLicensePolicyDeleteCredentialRule(
       variables: SchemaTypes.AdminLicensePolicyDeleteCredentialRuleMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.AdminLicensePolicyDeleteCredentialRuleMutation;
       errors?: GraphQLError[];
@@ -125959,16 +125922,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.AdminLicensePolicyDeleteCredentialRuleMutation>(
             AdminLicensePolicyDeleteCredentialRuleDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "adminLicensePolicyDeleteCredentialRule",
         "mutation",
-        variables,
+        variables
       );
     },
     adminLicensePolicyUpdateCredentialRule(
       variables: SchemaTypes.AdminLicensePolicyUpdateCredentialRuleMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.AdminLicensePolicyUpdateCredentialRuleMutation;
       errors?: GraphQLError[];
@@ -125981,16 +125944,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.AdminLicensePolicyUpdateCredentialRuleMutation>(
             AdminLicensePolicyUpdateCredentialRuleDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "adminLicensePolicyUpdateCredentialRule",
         "mutation",
-        variables,
+        variables
       );
     },
     adminRevokeMcpApiKey(
       variables: SchemaTypes.AdminRevokeMcpApiKeyMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.AdminRevokeMcpApiKeyMutation;
       errors?: GraphQLError[];
@@ -126003,16 +125966,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.AdminRevokeMcpApiKeyMutation>(
             AdminRevokeMcpApiKeyDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "adminRevokeMcpApiKey",
         "mutation",
-        variables,
+        variables
       );
     },
     adminUpdateContributorAvatars(
       variables: SchemaTypes.AdminUpdateContributorAvatarsMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.AdminUpdateContributorAvatarsMutation;
       errors?: GraphQLError[];
@@ -126025,16 +125988,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.AdminUpdateContributorAvatarsMutation>(
             AdminUpdateContributorAvatarsDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "adminUpdateContributorAvatars",
         "mutation",
-        variables,
+        variables
       );
     },
     adminUpdateGeoLocationData(
       variables?: SchemaTypes.AdminUpdateGeoLocationDataMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.AdminUpdateGeoLocationDataMutation;
       errors?: GraphQLError[];
@@ -126047,16 +126010,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.AdminUpdateGeoLocationDataMutation>(
             AdminUpdateGeoLocationDataDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "adminUpdateGeoLocationData",
         "mutation",
-        variables,
+        variables
       );
     },
     adminUserAccountDelete(
       variables: SchemaTypes.AdminUserAccountDeleteMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.AdminUserAccountDeleteMutation;
       errors?: GraphQLError[];
@@ -126069,16 +126032,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.AdminUserAccountDeleteMutation>(
             AdminUserAccountDeleteDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "adminUserAccountDelete",
         "mutation",
-        variables,
+        variables
       );
     },
     adminUserEmailChange(
       variables: SchemaTypes.AdminUserEmailChangeMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.AdminUserEmailChangeMutation;
       errors?: GraphQLError[];
@@ -126091,16 +126054,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.AdminUserEmailChangeMutation>(
             AdminUserEmailChangeDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "adminUserEmailChange",
         "mutation",
-        variables,
+        variables
       );
     },
     adminUserEmailChangeDriftResolve(
       variables: SchemaTypes.AdminUserEmailChangeDriftResolveMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.AdminUserEmailChangeDriftResolveMutation;
       errors?: GraphQLError[];
@@ -126113,16 +126076,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.AdminUserEmailChangeDriftResolveMutation>(
             AdminUserEmailChangeDriftResolveDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "adminUserEmailChangeDriftResolve",
         "mutation",
-        variables,
+        variables
       );
     },
     aiServerAuthorizationPolicyReset(
       variables?: SchemaTypes.AiServerAuthorizationPolicyResetMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.AiServerAuthorizationPolicyResetMutation;
       errors?: GraphQLError[];
@@ -126135,16 +126098,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.AiServerAuthorizationPolicyResetMutation>(
             AiServerAuthorizationPolicyResetDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "aiServerAuthorizationPolicyReset",
         "mutation",
-        variables,
+        variables
       );
     },
     assignPlatformRoleToOrganization(
       variables: SchemaTypes.AssignPlatformRoleToOrganizationMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.AssignPlatformRoleToOrganizationMutation;
       errors?: GraphQLError[];
@@ -126157,16 +126120,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.AssignPlatformRoleToOrganizationMutation>(
             AssignPlatformRoleToOrganizationDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "assignPlatformRoleToOrganization",
         "mutation",
-        variables,
+        variables
       );
     },
     authorizationPlatformRolesAccessReset(
       variables?: SchemaTypes.AuthorizationPlatformRolesAccessResetMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.AuthorizationPlatformRolesAccessResetMutation;
       errors?: GraphQLError[];
@@ -126179,16 +126142,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.AuthorizationPlatformRolesAccessResetMutation>(
             AuthorizationPlatformRolesAccessResetDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "authorizationPlatformRolesAccessReset",
         "mutation",
-        variables,
+        variables
       );
     },
     authorizationPolicyResetAll(
       variables?: SchemaTypes.AuthorizationPolicyResetAllMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.AuthorizationPolicyResetAllMutation;
       errors?: GraphQLError[];
@@ -126201,16 +126164,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.AuthorizationPolicyResetAllMutation>(
             AuthorizationPolicyResetAllDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "authorizationPolicyResetAll",
         "mutation",
-        variables,
+        variables
       );
     },
     authorizationPolicyResetOnAccount(
       variables: SchemaTypes.AuthorizationPolicyResetOnAccountMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.AuthorizationPolicyResetOnAccountMutation;
       errors?: GraphQLError[];
@@ -126223,16 +126186,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.AuthorizationPolicyResetOnAccountMutation>(
             AuthorizationPolicyResetOnAccountDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "authorizationPolicyResetOnAccount",
         "mutation",
-        variables,
+        variables
       );
     },
     authorizationPolicyResetOnOrganization(
       variables: SchemaTypes.AuthorizationPolicyResetOnOrganizationMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.AuthorizationPolicyResetOnOrganizationMutation;
       errors?: GraphQLError[];
@@ -126245,16 +126208,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.AuthorizationPolicyResetOnOrganizationMutation>(
             AuthorizationPolicyResetOnOrganizationDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "authorizationPolicyResetOnOrganization",
         "mutation",
-        variables,
+        variables
       );
     },
     authorizationPolicyResetOnPlatform(
       variables?: SchemaTypes.AuthorizationPolicyResetOnPlatformMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.AuthorizationPolicyResetOnPlatformMutation;
       errors?: GraphQLError[];
@@ -126267,16 +126230,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.AuthorizationPolicyResetOnPlatformMutation>(
             AuthorizationPolicyResetOnPlatformDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "authorizationPolicyResetOnPlatform",
         "mutation",
-        variables,
+        variables
       );
     },
     authorizationPolicyResetOnUser(
       variables: SchemaTypes.AuthorizationPolicyResetOnUserMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.AuthorizationPolicyResetOnUserMutation;
       errors?: GraphQLError[];
@@ -126289,16 +126252,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.AuthorizationPolicyResetOnUserMutation>(
             AuthorizationPolicyResetOnUserDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "authorizationPolicyResetOnUser",
         "mutation",
-        variables,
+        variables
       );
     },
     authorizationPolicyResetToGlobalAdminsAccess(
       variables: SchemaTypes.AuthorizationPolicyResetToGlobalAdminsAccessMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.AuthorizationPolicyResetToGlobalAdminsAccessMutation;
       errors?: GraphQLError[];
@@ -126311,16 +126274,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.AuthorizationPolicyResetToGlobalAdminsAccessMutation>(
             AuthorizationPolicyResetToGlobalAdminsAccessDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "authorizationPolicyResetToGlobalAdminsAccess",
         "mutation",
-        variables,
+        variables
       );
     },
     cleanupCollections(
       variables?: SchemaTypes.CleanupCollectionsMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.CleanupCollectionsMutation;
       errors?: GraphQLError[];
@@ -126333,16 +126296,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.CleanupCollectionsMutation>(
             CleanupCollectionsDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "cleanupCollections",
         "mutation",
-        variables,
+        variables
       );
     },
     createContributionOnCalloutId(
       variables: SchemaTypes.CreateContributionOnCalloutIdMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.CreateContributionOnCalloutIdMutation;
       errors?: GraphQLError[];
@@ -126355,16 +126318,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.CreateContributionOnCalloutIdMutation>(
             CreateContributionOnCalloutIdDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "createContributionOnCalloutId",
         "mutation",
-        variables,
+        variables
       );
     },
     createTemplateFromContentSpace(
       variables: SchemaTypes.CreateTemplateFromContentSpaceMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.CreateTemplateFromContentSpaceMutation;
       errors?: GraphQLError[];
@@ -126377,16 +126340,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.CreateTemplateFromContentSpaceMutation>(
             CreateTemplateFromContentSpaceDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "createTemplateFromContentSpace",
         "mutation",
-        variables,
+        variables
       );
     },
     createWingbackAccount(
       variables: SchemaTypes.CreateWingbackAccountMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.CreateWingbackAccountMutation;
       errors?: GraphQLError[];
@@ -126399,16 +126362,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.CreateWingbackAccountMutation>(
             CreateWingbackAccountDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "createWingbackAccount",
         "mutation",
-        variables,
+        variables
       );
     },
     deleteContribution(
       variables: SchemaTypes.DeleteContributionMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.DeleteContributionMutation;
       errors?: GraphQLError[];
@@ -126421,16 +126384,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.DeleteContributionMutation>(
             DeleteContributionDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "deleteContribution",
         "mutation",
-        variables,
+        variables
       );
     },
     grantCredentialToActor(
       variables: SchemaTypes.GrantCredentialToActorMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.GrantCredentialToActorMutation;
       errors?: GraphQLError[];
@@ -126443,16 +126406,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.GrantCredentialToActorMutation>(
             GrantCredentialToActorDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "grantCredentialToActor",
         "mutation",
-        variables,
+        variables
       );
     },
     grantCredentialToOrganization(
       variables: SchemaTypes.GrantCredentialToOrganizationMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.GrantCredentialToOrganizationMutation;
       errors?: GraphQLError[];
@@ -126465,16 +126428,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.GrantCredentialToOrganizationMutation>(
             GrantCredentialToOrganizationDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "grantCredentialToOrganization",
         "mutation",
-        variables,
+        variables
       );
     },
     grantCredentialToUser(
       variables: SchemaTypes.GrantCredentialToUserMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.GrantCredentialToUserMutation;
       errors?: GraphQLError[];
@@ -126487,16 +126450,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.GrantCredentialToUserMutation>(
             GrantCredentialToUserDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "grantCredentialToUser",
         "mutation",
-        variables,
+        variables
       );
     },
     licenseResetOnAccount(
       variables: SchemaTypes.LicenseResetOnAccountMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.LicenseResetOnAccountMutation;
       errors?: GraphQLError[];
@@ -126509,16 +126472,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.LicenseResetOnAccountMutation>(
             LicenseResetOnAccountDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "licenseResetOnAccount",
         "mutation",
-        variables,
+        variables
       );
     },
     migrateLegacyMemoContent(
       variables?: SchemaTypes.MigrateLegacyMemoContentMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.MigrateLegacyMemoContentMutation;
       errors?: GraphQLError[];
@@ -126531,16 +126494,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.MigrateLegacyMemoContentMutation>(
             MigrateLegacyMemoContentDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "migrateLegacyMemoContent",
         "mutation",
-        variables,
+        variables
       );
     },
     migrateLegacyWhiteboardContent(
       variables?: SchemaTypes.MigrateLegacyWhiteboardContentMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.MigrateLegacyWhiteboardContentMutation;
       errors?: GraphQLError[];
@@ -126553,16 +126516,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.MigrateLegacyWhiteboardContentMutation>(
             MigrateLegacyWhiteboardContentDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "migrateLegacyWhiteboardContent",
         "mutation",
-        variables,
+        variables
       );
     },
     mintMcpApiKey(
       variables: SchemaTypes.MintMcpApiKeyMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.MintMcpApiKeyMutation;
       errors?: GraphQLError[];
@@ -126575,16 +126538,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.MintMcpApiKeyMutation>(
             MintMcpApiKeyDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "mintMcpApiKey",
         "mutation",
-        variables,
+        variables
       );
     },
     moveContributionToCallout(
       variables: SchemaTypes.MoveContributionToCalloutMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.MoveContributionToCalloutMutation;
       errors?: GraphQLError[];
@@ -126597,16 +126560,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.MoveContributionToCalloutMutation>(
             MoveContributionToCalloutDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "moveContributionToCallout",
         "mutation",
-        variables,
+        variables
       );
     },
     refreshAllBodiesOfKnowledge(
       variables?: SchemaTypes.RefreshAllBodiesOfKnowledgeMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.RefreshAllBodiesOfKnowledgeMutation;
       errors?: GraphQLError[];
@@ -126619,16 +126582,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.RefreshAllBodiesOfKnowledgeMutation>(
             RefreshAllBodiesOfKnowledgeDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "refreshAllBodiesOfKnowledge",
         "mutation",
-        variables,
+        variables
       );
     },
     removeIframeAllowedURL(
       variables: SchemaTypes.RemoveIframeAllowedUrlMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.RemoveIframeAllowedUrlMutation;
       errors?: GraphQLError[];
@@ -126641,16 +126604,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.RemoveIframeAllowedUrlMutation>(
             RemoveIframeAllowedUrlDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "removeIframeAllowedURL",
         "mutation",
-        variables,
+        variables
       );
     },
     removeNotificationEmailFromBlacklist(
       variables: SchemaTypes.RemoveNotificationEmailFromBlacklistMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.RemoveNotificationEmailFromBlacklistMutation;
       errors?: GraphQLError[];
@@ -126663,16 +126626,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.RemoveNotificationEmailFromBlacklistMutation>(
             RemoveNotificationEmailFromBlacklistDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "removeNotificationEmailFromBlacklist",
         "mutation",
-        variables,
+        variables
       );
     },
     removePlatformRoleFromOrganization(
       variables: SchemaTypes.RemovePlatformRoleFromOrganizationMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.RemovePlatformRoleFromOrganizationMutation;
       errors?: GraphQLError[];
@@ -126685,16 +126648,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.RemovePlatformRoleFromOrganizationMutation>(
             RemovePlatformRoleFromOrganizationDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "removePlatformRoleFromOrganization",
         "mutation",
-        variables,
+        variables
       );
     },
     resetLicenseOnAccounts(
       variables?: SchemaTypes.ResetLicenseOnAccountsMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.ResetLicenseOnAccountsMutation;
       errors?: GraphQLError[];
@@ -126707,16 +126670,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.ResetLicenseOnAccountsMutation>(
             ResetLicenseOnAccountsDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "resetLicenseOnAccounts",
         "mutation",
-        variables,
+        variables
       );
     },
     revokeCredentialFromActor(
       variables: SchemaTypes.RevokeCredentialFromActorMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.RevokeCredentialFromActorMutation;
       errors?: GraphQLError[];
@@ -126729,16 +126692,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.RevokeCredentialFromActorMutation>(
             RevokeCredentialFromActorDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "revokeCredentialFromActor",
         "mutation",
-        variables,
+        variables
       );
     },
     revokeCredentialFromOrganization(
       variables: SchemaTypes.RevokeCredentialFromOrganizationMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.RevokeCredentialFromOrganizationMutation;
       errors?: GraphQLError[];
@@ -126751,16 +126714,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.RevokeCredentialFromOrganizationMutation>(
             RevokeCredentialFromOrganizationDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "revokeCredentialFromOrganization",
         "mutation",
-        variables,
+        variables
       );
     },
     revokeCredentialFromUser(
       variables: SchemaTypes.RevokeCredentialFromUserMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.RevokeCredentialFromUserMutation;
       errors?: GraphQLError[];
@@ -126773,16 +126736,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.RevokeCredentialFromUserMutation>(
             RevokeCredentialFromUserDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "revokeCredentialFromUser",
         "mutation",
-        variables,
+        variables
       );
     },
     setPlatformWellKnownVirtualContributor(
       variables: SchemaTypes.SetPlatformWellKnownVirtualContributorMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.SetPlatformWellKnownVirtualContributorMutation;
       errors?: GraphQLError[];
@@ -126795,16 +126758,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.SetPlatformWellKnownVirtualContributorMutation>(
             SetPlatformWellKnownVirtualContributorDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "setPlatformWellKnownVirtualContributor",
         "mutation",
-        variables,
+        variables
       );
     },
     updateAssistantActorCapabilities(
       variables: SchemaTypes.UpdateAssistantActorCapabilitiesMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.UpdateAssistantActorCapabilitiesMutation;
       errors?: GraphQLError[];
@@ -126817,16 +126780,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.UpdateAssistantActorCapabilitiesMutation>(
             UpdateAssistantActorCapabilitiesDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "updateAssistantActorCapabilities",
         "mutation",
-        variables,
+        variables
       );
     },
     updateBaselineLicensePlanOnAccount(
       variables: SchemaTypes.UpdateBaselineLicensePlanOnAccountMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.UpdateBaselineLicensePlanOnAccountMutation;
       errors?: GraphQLError[];
@@ -126839,16 +126802,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.UpdateBaselineLicensePlanOnAccountMutation>(
             UpdateBaselineLicensePlanOnAccountDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "updateBaselineLicensePlanOnAccount",
         "mutation",
-        variables,
+        variables
       );
     },
     updateCalloutPublishInfo(
       variables: SchemaTypes.UpdateCalloutPublishInfoMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.UpdateCalloutPublishInfoMutation;
       errors?: GraphQLError[];
@@ -126861,16 +126824,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.UpdateCalloutPublishInfoMutation>(
             UpdateCalloutPublishInfoDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "updateCalloutPublishInfo",
         "mutation",
-        variables,
+        variables
       );
     },
     updateInnovationHub(
       variables: SchemaTypes.UpdateInnovationHubMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.UpdateInnovationHubMutation;
       errors?: GraphQLError[];
@@ -126883,16 +126846,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.UpdateInnovationHubMutation>(
             UpdateInnovationHubDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "updateInnovationHub",
         "mutation",
-        variables,
+        variables
       );
     },
     updateInnovationPack(
       variables: SchemaTypes.UpdateInnovationPackMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.UpdateInnovationPackMutation;
       errors?: GraphQLError[];
@@ -126905,16 +126868,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.UpdateInnovationPackMutation>(
             UpdateInnovationPackDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "updateInnovationPack",
         "mutation",
-        variables,
+        variables
       );
     },
     updatePlatformSettings(
       variables: SchemaTypes.UpdatePlatformSettingsMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.UpdatePlatformSettingsMutation;
       errors?: GraphQLError[];
@@ -126927,16 +126890,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.UpdatePlatformSettingsMutation>(
             UpdatePlatformSettingsDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "updatePlatformSettings",
         "mutation",
-        variables,
+        variables
       );
     },
     updateTemplateFromSpace(
       variables: SchemaTypes.UpdateTemplateFromSpaceMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.UpdateTemplateFromSpaceMutation;
       errors?: GraphQLError[];
@@ -126949,16 +126912,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.UpdateTemplateFromSpaceMutation>(
             UpdateTemplateFromSpaceDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "updateTemplateFromSpace",
         "mutation",
-        variables,
+        variables
       );
     },
     assignPlatformRoleToUser(
       variables: SchemaTypes.AssignPlatformRoleToUserMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.AssignPlatformRoleToUserMutation;
       errors?: GraphQLError[];
@@ -126971,16 +126934,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.AssignPlatformRoleToUserMutation>(
             AssignPlatformRoleToUserDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "assignPlatformRoleToUser",
         "mutation",
-        variables,
+        variables
       );
     },
     removePlatformRoleFromUser(
       variables: SchemaTypes.RemovePlatformRoleFromUserMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.RemovePlatformRoleFromUserMutation;
       errors?: GraphQLError[];
@@ -126993,16 +126956,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.RemovePlatformRoleFromUserMutation>(
             RemovePlatformRoleFromUserDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "removePlatformRoleFromUser",
         "mutation",
-        variables,
+        variables
       );
     },
     CreateInnovationHub(
       variables: SchemaTypes.CreateInnovationHubMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.CreateInnovationHubMutation;
       errors?: GraphQLError[];
@@ -127015,16 +126978,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.CreateInnovationHubMutation>(
             CreateInnovationHubDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "CreateInnovationHub",
         "mutation",
-        variables,
+        variables
       );
     },
     createInnovationPack(
       variables: SchemaTypes.CreateInnovationPackMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.CreateInnovationPackMutation;
       errors?: GraphQLError[];
@@ -127037,16 +127000,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.CreateInnovationPackMutation>(
             CreateInnovationPackDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "createInnovationPack",
         "mutation",
-        variables,
+        variables
       );
     },
     DeleteInnovationHub(
       variables: SchemaTypes.DeleteInnovationHubMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.DeleteInnovationHubMutation;
       errors?: GraphQLError[];
@@ -127059,16 +127022,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.DeleteInnovationHubMutation>(
             DeleteInnovationHubDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "DeleteInnovationHub",
         "mutation",
-        variables,
+        variables
       );
     },
     deleteInnovationPack(
       variables: SchemaTypes.DeleteInnovationPackMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.DeleteInnovationPackMutation;
       errors?: GraphQLError[];
@@ -127081,16 +127044,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.DeleteInnovationPackMutation>(
             DeleteInnovationPackDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "deleteInnovationPack",
         "mutation",
-        variables,
+        variables
       );
     },
     UpdateSpacePlatformSettings(
       variables: SchemaTypes.UpdateSpacePlatformSettingsMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.UpdateSpacePlatformSettingsMutation;
       errors?: GraphQLError[];
@@ -127103,16 +127066,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.UpdateSpacePlatformSettingsMutation>(
             UpdateSpacePlatformSettingsDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "UpdateSpacePlatformSettings",
         "mutation",
-        variables,
+        variables
       );
     },
     UpdateSpaceVisibilityPlatformSettings(
       variables: SchemaTypes.UpdateSpaceVisibilityPlatformSettingsMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.UpdateSpaceVisibilityPlatformSettingsMutation;
       errors?: GraphQLError[];
@@ -127125,16 +127088,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.UpdateSpaceVisibilityPlatformSettingsMutation>(
             UpdateSpaceVisibilityPlatformSettingsDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "UpdateSpaceVisibilityPlatformSettings",
         "mutation",
-        variables,
+        variables
       );
     },
     SubscribeToPushNotifications(
       variables: SchemaTypes.SubscribeToPushNotificationsMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.SubscribeToPushNotificationsMutation;
       errors?: GraphQLError[];
@@ -127147,16 +127110,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.SubscribeToPushNotificationsMutation>(
             SubscribeToPushNotificationsDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "SubscribeToPushNotifications",
         "mutation",
-        variables,
+        variables
       );
     },
     UnsubscribeFromPushNotifications(
       variables: SchemaTypes.UnsubscribeFromPushNotificationsMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.UnsubscribeFromPushNotificationsMutation;
       errors?: GraphQLError[];
@@ -127169,16 +127132,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.UnsubscribeFromPushNotificationsMutation>(
             UnsubscribeFromPushNotificationsDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "UnsubscribeFromPushNotifications",
         "mutation",
-        variables,
+        variables
       );
     },
     CreateReferenceOnProfile(
       variables: SchemaTypes.CreateReferenceOnProfileMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.CreateReferenceOnProfileMutation;
       errors?: GraphQLError[];
@@ -127191,16 +127154,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.CreateReferenceOnProfileMutation>(
             CreateReferenceOnProfileDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "CreateReferenceOnProfile",
         "mutation",
-        variables,
+        variables
       );
     },
     DeleteReference(
       variables: SchemaTypes.DeleteReferenceMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.DeleteReferenceMutation;
       errors?: GraphQLError[];
@@ -127213,16 +127176,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.DeleteReferenceMutation>(
             DeleteReferenceDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "DeleteReference",
         "mutation",
-        variables,
+        variables
       );
     },
     AdminSearchIngestFromScratch(
       variables?: SchemaTypes.AdminSearchIngestFromScratchMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.AdminSearchIngestFromScratchMutation;
       errors?: GraphQLError[];
@@ -127235,16 +127198,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.AdminSearchIngestFromScratchMutation>(
             AdminSearchIngestFromScratchDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "AdminSearchIngestFromScratch",
         "mutation",
-        variables,
+        variables
       );
     },
     UpdateSpaceSettings(
       variables: SchemaTypes.UpdateSpaceSettingsMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.UpdateSpaceSettingsMutation;
       errors?: GraphQLError[];
@@ -127257,16 +127220,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.UpdateSpaceSettingsMutation>(
             UpdateSpaceSettingsDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "UpdateSpaceSettings",
         "mutation",
-        variables,
+        variables
       );
     },
     createSpace(
       variables: SchemaTypes.CreateSpaceMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.CreateSpaceMutation;
       errors?: GraphQLError[];
@@ -127279,16 +127242,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.CreateSpaceMutation>(
             CreateSpaceDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "createSpace",
         "mutation",
-        variables,
+        variables
       );
     },
     CreateTemplate(
       variables: SchemaTypes.CreateTemplateMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.CreateTemplateMutation;
       errors?: GraphQLError[];
@@ -127301,16 +127264,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.CreateTemplateMutation>(
             CreateTemplateDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "CreateTemplate",
         "mutation",
-        variables,
+        variables
       );
     },
     CreateTemplateFromSpace(
       variables: SchemaTypes.CreateTemplateFromSpaceMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.CreateTemplateFromSpaceMutation;
       errors?: GraphQLError[];
@@ -127323,16 +127286,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.CreateTemplateFromSpaceMutation>(
             CreateTemplateFromSpaceDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "CreateTemplateFromSpace",
         "mutation",
-        variables,
+        variables
       );
     },
     CreateWhiteboardTemplate(
       variables: SchemaTypes.CreateWhiteboardTemplateMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.CreateWhiteboardTemplateMutation;
       errors?: GraphQLError[];
@@ -127345,16 +127308,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.CreateWhiteboardTemplateMutation>(
             CreateWhiteboardTemplateDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "CreateWhiteboardTemplate",
         "mutation",
-        variables,
+        variables
       );
     },
     deleteTemplate(
       variables: SchemaTypes.DeleteTemplateMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.DeleteTemplateMutation;
       errors?: GraphQLError[];
@@ -127367,16 +127330,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.DeleteTemplateMutation>(
             DeleteTemplateDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "deleteTemplate",
         "mutation",
-        variables,
+        variables
       );
     },
     UpdatePostTemplate(
       variables: SchemaTypes.UpdatePostTemplateMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.UpdatePostTemplateMutation;
       errors?: GraphQLError[];
@@ -127389,16 +127352,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.UpdatePostTemplateMutation>(
             UpdatePostTemplateDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "UpdatePostTemplate",
         "mutation",
-        variables,
+        variables
       );
     },
     UpdateSpaceTemplate(
       variables: SchemaTypes.UpdateSpaceTemplateMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.UpdateSpaceTemplateMutation;
       errors?: GraphQLError[];
@@ -127411,16 +127374,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.UpdateSpaceTemplateMutation>(
             UpdateSpaceTemplateDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "UpdateSpaceTemplate",
         "mutation",
-        variables,
+        variables
       );
     },
     UpdateTemplate(
       variables: SchemaTypes.UpdateTemplateMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.UpdateTemplateMutation;
       errors?: GraphQLError[];
@@ -127433,16 +127396,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.UpdateTemplateMutation>(
             UpdateTemplateDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "UpdateTemplate",
         "mutation",
-        variables,
+        variables
       );
     },
     UpdateWhiteboardTemplate(
       variables: SchemaTypes.UpdateWhiteboardTemplateMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.UpdateWhiteboardTemplateMutation;
       errors?: GraphQLError[];
@@ -127455,16 +127418,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.UpdateWhiteboardTemplateMutation>(
             UpdateWhiteboardTemplateDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "UpdateWhiteboardTemplate",
         "mutation",
-        variables,
+        variables
       );
     },
     CreateUser(
       variables: SchemaTypes.CreateUserMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.CreateUserMutation;
       errors?: GraphQLError[];
@@ -127477,16 +127440,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.CreateUserMutation>(
             CreateUserDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "CreateUser",
         "mutation",
-        variables,
+        variables
       );
     },
     deleteUser(
       variables: SchemaTypes.DeleteUserMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.DeleteUserMutation;
       errors?: GraphQLError[];
@@ -127499,16 +127462,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.DeleteUserMutation>(
             DeleteUserDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "deleteUser",
         "mutation",
-        variables,
+        variables
       );
     },
     updateUser(
       variables: SchemaTypes.UpdateUserMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.UpdateUserMutation;
       errors?: GraphQLError[];
@@ -127521,16 +127484,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.UpdateUserMutation>(
             UpdateUserDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "updateUser",
         "mutation",
-        variables,
+        variables
       );
     },
     UpdateUserSettings(
       variables: SchemaTypes.UpdateUserSettingsMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.UpdateUserSettingsMutation;
       errors?: GraphQLError[];
@@ -127543,16 +127506,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.UpdateUserSettingsMutation>(
             UpdateUserSettingsDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "UpdateUserSettings",
         "mutation",
-        variables,
+        variables
       );
     },
     convertVirtualContributorToUseKnowledgeBase(
       variables: SchemaTypes.ConvertVirtualContributorToUseKnowledgeBaseMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.ConvertVirtualContributorToUseKnowledgeBaseMutation;
       errors?: GraphQLError[];
@@ -127565,16 +127528,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.ConvertVirtualContributorToUseKnowledgeBaseMutation>(
             ConvertVirtualContributorToUseKnowledgeBaseDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "convertVirtualContributorToUseKnowledgeBase",
         "mutation",
-        variables,
+        variables
       );
     },
     CreateVirtualContributorOnAccount(
       variables: SchemaTypes.CreateVirtualContributorOnAccountMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.CreateVirtualContributorOnAccountMutation;
       errors?: GraphQLError[];
@@ -127587,16 +127550,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.CreateVirtualContributorOnAccountMutation>(
             CreateVirtualContributorOnAccountDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "CreateVirtualContributorOnAccount",
         "mutation",
-        variables,
+        variables
       );
     },
     DeleteVirtualContributorOnAccount(
       variables: SchemaTypes.DeleteVirtualContributorOnAccountMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.DeleteVirtualContributorOnAccountMutation;
       errors?: GraphQLError[];
@@ -127609,16 +127572,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.DeleteVirtualContributorOnAccountMutation>(
             DeleteVirtualContributorOnAccountDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "DeleteVirtualContributorOnAccount",
         "mutation",
-        variables,
+        variables
       );
     },
     UpdateVirtualContributor(
       variables: SchemaTypes.UpdateVirtualContributorMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.UpdateVirtualContributorMutation;
       errors?: GraphQLError[];
@@ -127631,16 +127594,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.UpdateVirtualContributorMutation>(
             UpdateVirtualContributorDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "UpdateVirtualContributor",
         "mutation",
-        variables,
+        variables
       );
     },
     UpdateVirtualContributorSettings(
       variables: SchemaTypes.UpdateVirtualContributorSettingsMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.UpdateVirtualContributorSettingsMutation;
       errors?: GraphQLError[];
@@ -127653,16 +127616,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.UpdateVirtualContributorSettingsMutation>(
             UpdateVirtualContributorSettingsDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "UpdateVirtualContributorSettings",
         "mutation",
-        variables,
+        variables
       );
     },
     RoleSetAvailableMembers(
       variables: SchemaTypes.RoleSetAvailableMembersQueryVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.RoleSetAvailableMembersQuery;
       errors?: GraphQLError[];
@@ -127675,16 +127638,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.RoleSetAvailableMembersQuery>(
             RoleSetAvailableMembersDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "RoleSetAvailableMembers",
         "query",
-        variables,
+        variables
       );
     },
     RoleSetApplicationsInvitations(
       variables: SchemaTypes.RoleSetApplicationsInvitationsQueryVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.RoleSetApplicationsInvitationsQuery;
       errors?: GraphQLError[];
@@ -127697,16 +127660,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.RoleSetApplicationsInvitationsQuery>(
             RoleSetApplicationsInvitationsDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "RoleSetApplicationsInvitations",
         "query",
-        variables,
+        variables
       );
     },
     RoleSetMembersList(
       variables: SchemaTypes.RoleSetMembersListQueryVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.RoleSetMembersListQuery;
       errors?: GraphQLError[];
@@ -127719,16 +127682,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.RoleSetMembersListQuery>(
             RoleSetMembersListDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "RoleSetMembersList",
         "query",
-        variables,
+        variables
       );
     },
     RoleSetUserPrivileges(
       variables: SchemaTypes.RoleSetUserPrivilegesQueryVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.RoleSetUserPrivilegesQuery;
       errors?: GraphQLError[];
@@ -127741,16 +127704,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.RoleSetUserPrivilegesQuery>(
             RoleSetUserPrivilegesDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "RoleSetUserPrivileges",
         "query",
-        variables,
+        variables
       );
     },
     getSpaceInvitations(
       variables: SchemaTypes.GetSpaceInvitationsQueryVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.GetSpaceInvitationsQuery;
       errors?: GraphQLError[];
@@ -127763,16 +127726,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.GetSpaceInvitationsQuery>(
             GetSpaceInvitationsDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "getSpaceInvitations",
         "query",
-        variables,
+        variables
       );
     },
     GetAccountMainEntities(
       variables: SchemaTypes.GetAccountMainEntitiesQueryVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.GetAccountMainEntitiesQuery;
       errors?: GraphQLError[];
@@ -127785,16 +127748,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.GetAccountMainEntitiesQuery>(
             GetAccountMainEntitiesDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "GetAccountMainEntities",
         "query",
-        variables,
+        variables
       );
     },
     GetActivityLogOnCollaboration(
       variables: SchemaTypes.GetActivityLogOnCollaborationQueryVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.GetActivityLogOnCollaborationQuery;
       errors?: GraphQLError[];
@@ -127807,16 +127770,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.GetActivityLogOnCollaborationQuery>(
             GetActivityLogOnCollaborationDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "GetActivityLogOnCollaboration",
         "query",
-        variables,
+        variables
       );
     },
     GetCalendarEventById(
       variables: SchemaTypes.GetCalendarEventByIdQueryVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.GetCalendarEventByIdQuery;
       errors?: GraphQLError[];
@@ -127829,16 +127792,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.GetCalendarEventByIdQuery>(
             GetCalendarEventByIdDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "GetCalendarEventById",
         "query",
-        variables,
+        variables
       );
     },
     GetCalendarEvents(
       variables: SchemaTypes.GetCalendarEventsQueryVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.GetCalendarEventsQuery;
       errors?: GraphQLError[];
@@ -127851,16 +127814,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.GetCalendarEventsQuery>(
             GetCalendarEventsDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "GetCalendarEvents",
         "query",
-        variables,
+        variables
       );
     },
     GetSpaceCalendarId(
       variables: SchemaTypes.GetSpaceCalendarIdQueryVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.GetSpaceCalendarIdQuery;
       errors?: GraphQLError[];
@@ -127873,16 +127836,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.GetSpaceCalendarIdQuery>(
             GetSpaceCalendarIdDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "GetSpaceCalendarId",
         "query",
-        variables,
+        variables
       );
     },
     SpaceCallout(
       variables: SchemaTypes.SpaceCalloutQueryVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.SpaceCalloutQuery;
       errors?: GraphQLError[];
@@ -127895,16 +127858,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.SpaceCalloutQuery>(
             SpaceCalloutDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "SpaceCallout",
         "query",
-        variables,
+        variables
       );
     },
     CalloutDetails(
       variables: SchemaTypes.CalloutDetailsQueryVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.CalloutDetailsQuery;
       errors?: GraphQLError[];
@@ -127917,16 +127880,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.CalloutDetailsQuery>(
             CalloutDetailsDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "CalloutDetails",
         "query",
-        variables,
+        variables
       );
     },
     CalloutStorageConfig(
       variables: SchemaTypes.CalloutStorageConfigQueryVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.CalloutStorageConfigQuery;
       errors?: GraphQLError[];
@@ -127939,16 +127902,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.CalloutStorageConfigQuery>(
             CalloutStorageConfigDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "CalloutStorageConfig",
         "query",
-        variables,
+        variables
       );
     },
     CalloutLinkContributionStorageConfig(
       variables: SchemaTypes.CalloutLinkContributionStorageConfigQueryVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.CalloutLinkContributionStorageConfigQuery;
       errors?: GraphQLError[];
@@ -127961,16 +127924,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.CalloutLinkContributionStorageConfigQuery>(
             CalloutLinkContributionStorageConfigDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "CalloutLinkContributionStorageConfig",
         "query",
-        variables,
+        variables
       );
     },
     CalloutPostStorageConfig(
       variables: SchemaTypes.CalloutPostStorageConfigQueryVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.CalloutPostStorageConfigQuery;
       errors?: GraphQLError[];
@@ -127983,16 +127946,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.CalloutPostStorageConfigQuery>(
             CalloutPostStorageConfigDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "CalloutPostStorageConfig",
         "query",
-        variables,
+        variables
       );
     },
     GetCalloutPosts(
       variables: SchemaTypes.GetCalloutPostsQueryVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.GetCalloutPostsQuery;
       errors?: GraphQLError[];
@@ -128005,16 +127968,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.GetCalloutPostsQuery>(
             GetCalloutPostsDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "GetCalloutPosts",
         "query",
-        variables,
+        variables
       );
     },
     CalloutWhiateboardStorageConfig(
       variables: SchemaTypes.CalloutWhiateboardStorageConfigQueryVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.CalloutWhiateboardStorageConfigQuery;
       errors?: GraphQLError[];
@@ -128027,16 +127990,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.CalloutWhiateboardStorageConfigQuery>(
             CalloutWhiateboardStorageConfigDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "CalloutWhiateboardStorageConfig",
         "query",
-        variables,
+        variables
       );
     },
     GetCalloutsOnCalloutsSetUsingClassification(
       variables: SchemaTypes.GetCalloutsOnCalloutsSetUsingClassificationQueryVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.GetCalloutsOnCalloutsSetUsingClassificationQuery;
       errors?: GraphQLError[];
@@ -128049,16 +128012,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.GetCalloutsOnCalloutsSetUsingClassificationQuery>(
             GetCalloutsOnCalloutsSetUsingClassificationDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "GetCalloutsOnCalloutsSetUsingClassification",
         "query",
-        variables,
+        variables
       );
     },
     GetPostData(
       variables: SchemaTypes.GetPostDataQueryVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.GetPostDataQuery;
       errors?: GraphQLError[];
@@ -128071,16 +128034,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.GetPostDataQuery>(
             GetPostDataDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "GetPostData",
         "query",
-        variables,
+        variables
       );
     },
     WhiteboardCalloutStorageConfig(
       variables: SchemaTypes.WhiteboardCalloutStorageConfigQueryVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.WhiteboardCalloutStorageConfigQuery;
       errors?: GraphQLError[];
@@ -128093,16 +128056,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.WhiteboardCalloutStorageConfigQuery>(
             WhiteboardCalloutStorageConfigDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "WhiteboardCalloutStorageConfig",
         "query",
-        variables,
+        variables
       );
     },
     GetCalloutReactions(
       variables: SchemaTypes.GetCalloutReactionsQueryVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.GetCalloutReactionsQuery;
       errors?: GraphQLError[];
@@ -128115,16 +128078,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.GetCalloutReactionsQuery>(
             GetCalloutReactionsDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "GetCalloutReactions",
         "query",
-        variables,
+        variables
       );
     },
     GetCalloutReactionsSummary(
       variables: SchemaTypes.GetCalloutReactionsSummaryQueryVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.GetCalloutReactionsSummaryQuery;
       errors?: GraphQLError[];
@@ -128137,16 +128100,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.GetCalloutReactionsSummaryQuery>(
             GetCalloutReactionsSummaryDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "GetCalloutReactionsSummary",
         "query",
-        variables,
+        variables
       );
     },
     GetMeConversations(
       variables?: SchemaTypes.GetMeConversationsQueryVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.GetMeConversationsQuery;
       errors?: GraphQLError[];
@@ -128159,16 +128122,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.GetMeConversationsQuery>(
             GetMeConversationsDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "GetMeConversations",
         "query",
-        variables,
+        variables
       );
     },
     GetPlatformDiscussionsData(
       variables?: SchemaTypes.GetPlatformDiscussionsDataQueryVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.GetPlatformDiscussionsDataQuery;
       errors?: GraphQLError[];
@@ -128181,16 +128144,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.GetPlatformDiscussionsDataQuery>(
             GetPlatformDiscussionsDataDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "GetPlatformDiscussionsData",
         "query",
-        variables,
+        variables
       );
     },
     GetPlatformDiscussionsDataById(
       variables: SchemaTypes.GetPlatformDiscussionsDataByIdQueryVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.GetPlatformDiscussionsDataByIdQuery;
       errors?: GraphQLError[];
@@ -128203,16 +128166,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.GetPlatformDiscussionsDataByIdQuery>(
             GetPlatformDiscussionsDataByIdDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "GetPlatformDiscussionsDataById",
         "query",
-        variables,
+        variables
       );
     },
     GetPlatformForumData(
       variables?: SchemaTypes.GetPlatformForumDataQueryVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.GetPlatformForumDataQuery;
       errors?: GraphQLError[];
@@ -128225,16 +128188,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.GetPlatformForumDataQuery>(
             GetPlatformForumDataDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "GetPlatformForumData",
         "query",
-        variables,
+        variables
       );
     },
     GetSpaceCommunication(
       variables: SchemaTypes.GetSpaceCommunicationQueryVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.GetSpaceCommunicationQuery;
       errors?: GraphQLError[];
@@ -128247,16 +128210,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.GetSpaceCommunicationQuery>(
             GetSpaceCommunicationDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "GetSpaceCommunication",
         "query",
-        variables,
+        variables
       );
     },
     CommunityApplicationsInvitations(
       variables: SchemaTypes.CommunityApplicationsInvitationsQueryVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.CommunityApplicationsInvitationsQuery;
       errors?: GraphQLError[];
@@ -128269,16 +128232,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.CommunityApplicationsInvitationsQuery>(
             CommunityApplicationsInvitationsDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "CommunityApplicationsInvitations",
         "query",
-        variables,
+        variables
       );
     },
     GetSpaceAvailableMembers(
       variables: SchemaTypes.GetSpaceAvailableMembersQueryVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.GetSpaceAvailableMembersQuery;
       errors?: GraphQLError[];
@@ -128291,16 +128254,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.GetSpaceAvailableMembersQuery>(
             GetSpaceAvailableMembersDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "GetSpaceAvailableMembers",
         "query",
-        variables,
+        variables
       );
     },
     getSpaceCommunity(
       variables: SchemaTypes.GetSpaceCommunityQueryVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.GetSpaceCommunityQuery;
       errors?: GraphQLError[];
@@ -128313,16 +128276,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.GetSpaceCommunityQuery>(
             GetSpaceCommunityDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "getSpaceCommunity",
         "query",
-        variables,
+        variables
       );
     },
     GetSubspaceAvailableMembers(
       variables: SchemaTypes.GetSubspaceAvailableMembersQueryVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.GetSubspaceAvailableMembersQuery;
       errors?: GraphQLError[];
@@ -128335,16 +128298,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.GetSubspaceAvailableMembersQuery>(
             GetSubspaceAvailableMembersDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "GetSubspaceAvailableMembers",
         "query",
-        variables,
+        variables
       );
     },
     getSubspaceCommunity(
       variables: SchemaTypes.GetSubspaceCommunityQueryVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.GetSubspaceCommunityQuery;
       errors?: GraphQLError[];
@@ -128357,16 +128320,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.GetSubspaceCommunityQuery>(
             GetSubspaceCommunityDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "getSubspaceCommunity",
         "query",
-        variables,
+        variables
       );
     },
     PendingMembershipsSpace(
       variables: SchemaTypes.PendingMembershipsSpaceQueryVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.PendingMembershipsSpaceQuery;
       errors?: GraphQLError[];
@@ -128379,16 +128342,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.PendingMembershipsSpaceQuery>(
             PendingMembershipsSpaceDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "PendingMembershipsSpace",
         "query",
-        variables,
+        variables
       );
     },
     bannerVisualConstraints(
       variables?: SchemaTypes.BannerVisualConstraintsQueryVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.BannerVisualConstraintsQuery;
       errors?: GraphQLError[];
@@ -128401,16 +128364,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.BannerVisualConstraintsQuery>(
             BannerVisualConstraintsDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "bannerVisualConstraints",
         "query",
-        variables,
+        variables
       );
     },
     configuration(
       variables?: SchemaTypes.ConfigurationQueryVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.ConfigurationQuery;
       errors?: GraphQLError[];
@@ -128423,16 +128386,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.ConfigurationQuery>(
             ConfigurationDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "configuration",
         "query",
-        variables,
+        variables
       );
     },
     fullConfiguration(
       variables?: SchemaTypes.FullConfigurationQueryVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.FullConfigurationQuery;
       errors?: GraphQLError[];
@@ -128445,16 +128408,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.FullConfigurationQuery>(
             FullConfigurationDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "fullConfiguration",
         "query",
-        variables,
+        variables
       );
     },
     MyEntitlementsQuery(
       variables?: SchemaTypes.MyEntitlementsQueryQueryVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.MyEntitlementsQueryQuery;
       errors?: GraphQLError[];
@@ -128467,16 +128430,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.MyEntitlementsQueryQuery>(
             MyEntitlementsQueryDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "MyEntitlementsQuery",
         "query",
-        variables,
+        variables
       );
     },
     OrganizationEntitlementsQuery(
       variables: SchemaTypes.OrganizationEntitlementsQueryQueryVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.OrganizationEntitlementsQueryQuery;
       errors?: GraphQLError[];
@@ -128489,16 +128452,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.OrganizationEntitlementsQueryQuery>(
             OrganizationEntitlementsQueryDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "OrganizationEntitlementsQuery",
         "query",
-        variables,
+        variables
       );
     },
     GetInnovationFlowStatesWithIds(
       variables: SchemaTypes.GetInnovationFlowStatesWithIdsQueryVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.GetInnovationFlowStatesWithIdsQuery;
       errors?: GraphQLError[];
@@ -128511,16 +128474,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.GetInnovationFlowStatesWithIdsQuery>(
             GetInnovationFlowStatesWithIdsDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "GetInnovationFlowStatesWithIds",
         "query",
-        variables,
+        variables
       );
     },
     GetSpaceLicenseEntitlements(
       variables: SchemaTypes.GetSpaceLicenseEntitlementsQueryVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.GetSpaceLicenseEntitlementsQuery;
       errors?: GraphQLError[];
@@ -128533,16 +128496,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.GetSpaceLicenseEntitlementsQuery>(
             GetSpaceLicenseEntitlementsDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "GetSpaceLicenseEntitlements",
         "query",
-        variables,
+        variables
       );
     },
     GetSpaceLicenseSubscriptions(
       variables: SchemaTypes.GetSpaceLicenseSubscriptionsQueryVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.GetSpaceLicenseSubscriptionsQuery;
       errors?: GraphQLError[];
@@ -128555,16 +128518,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.GetSpaceLicenseSubscriptionsQuery>(
             GetSpaceLicenseSubscriptionsDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "GetSpaceLicenseSubscriptions",
         "query",
-        variables,
+        variables
       );
     },
     lookupProfileVisuals(
       variables: SchemaTypes.LookupProfileVisualsQueryVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.LookupProfileVisualsQuery;
       errors?: GraphQLError[];
@@ -128577,16 +128540,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.LookupProfileVisualsQuery>(
             LookupProfileVisualsDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "lookupProfileVisuals",
         "query",
-        variables,
+        variables
       );
     },
     GetCalloutFramingMemo(
       variables: SchemaTypes.GetCalloutFramingMemoQueryVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.GetCalloutFramingMemoQuery;
       errors?: GraphQLError[];
@@ -128599,16 +128562,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.GetCalloutFramingMemoQuery>(
             GetCalloutFramingMemoDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "GetCalloutFramingMemo",
         "query",
-        variables,
+        variables
       );
     },
     GetOrgReferenceUri(
       variables: SchemaTypes.GetOrgReferenceUriQueryVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.GetOrgReferenceUriQuery;
       errors?: GraphQLError[];
@@ -128621,16 +128584,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.GetOrgReferenceUriQuery>(
             GetOrgReferenceUriDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "GetOrgReferenceUri",
         "query",
-        variables,
+        variables
       );
     },
     GetOrgVisualUri(
       variables: SchemaTypes.GetOrgVisualUriQueryVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.GetOrgVisualUriQuery;
       errors?: GraphQLError[];
@@ -128643,16 +128606,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.GetOrgVisualUriQuery>(
             GetOrgVisualUriDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "GetOrgVisualUri",
         "query",
-        variables,
+        variables
       );
     },
     getOrganizationData(
       variables: SchemaTypes.GetOrganizationDataQueryVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.GetOrganizationDataQuery;
       errors?: GraphQLError[];
@@ -128665,16 +128628,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.GetOrganizationDataQuery>(
             GetOrganizationDataDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "getOrganizationData",
         "query",
-        variables,
+        variables
       );
     },
     getOrganizationsData(
       variables?: SchemaTypes.GetOrganizationsDataQueryVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.GetOrganizationsDataQuery;
       errors?: GraphQLError[];
@@ -128687,16 +128650,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.GetOrganizationsDataQuery>(
             GetOrganizationsDataDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "getOrganizationsData",
         "query",
-        variables,
+        variables
       );
     },
     GetRolesOrganization(
       variables: SchemaTypes.GetRolesOrganizationQueryVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.GetRolesOrganizationQuery;
       errors?: GraphQLError[];
@@ -128709,16 +128672,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.GetRolesOrganizationQuery>(
             GetRolesOrganizationDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "GetRolesOrganization",
         "query",
-        variables,
+        variables
       );
     },
     OrganizationsPaginated(
       variables?: SchemaTypes.OrganizationsPaginatedQueryVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.OrganizationsPaginatedQuery;
       errors?: GraphQLError[];
@@ -128731,16 +128694,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.OrganizationsPaginatedQuery>(
             OrganizationsPaginatedDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "OrganizationsPaginated",
         "query",
-        variables,
+        variables
       );
     },
     UsersPaginated(
       variables?: SchemaTypes.UsersPaginatedQueryVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.UsersPaginatedQuery;
       errors?: GraphQLError[];
@@ -128753,16 +128716,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.UsersPaginatedQuery>(
             UsersPaginatedDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "UsersPaginated",
         "query",
-        variables,
+        variables
       );
     },
     actorsWithCredential(
       variables: SchemaTypes.ActorsWithCredentialQueryVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.ActorsWithCredentialQuery;
       errors?: GraphQLError[];
@@ -128775,16 +128738,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.ActorsWithCredentialQuery>(
             ActorsWithCredentialDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "actorsWithCredential",
         "query",
-        variables,
+        variables
       );
     },
     latestUserEmailChangeAuditEntry(
       variables: SchemaTypes.LatestUserEmailChangeAuditEntryQueryVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.LatestUserEmailChangeAuditEntryQuery;
       errors?: GraphQLError[];
@@ -128797,16 +128760,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.LatestUserEmailChangeAuditEntryQuery>(
             LatestUserEmailChangeAuditEntryDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "latestUserEmailChangeAuditEntry",
         "query",
-        variables,
+        variables
       );
     },
     platformAdminMcpApiKeys(
       variables: SchemaTypes.PlatformAdminMcpApiKeysQueryVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.PlatformAdminMcpApiKeysQuery;
       errors?: GraphQLError[];
@@ -128819,16 +128782,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.PlatformAdminMcpApiKeysQuery>(
             PlatformAdminMcpApiKeysDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "platformAdminMcpApiKeys",
         "query",
-        variables,
+        variables
       );
     },
     platformAdminVirtualAssistant(
       variables?: SchemaTypes.PlatformAdminVirtualAssistantQueryVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.PlatformAdminVirtualAssistantQuery;
       errors?: GraphQLError[];
@@ -128841,16 +128804,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.PlatformAdminVirtualAssistantQuery>(
             PlatformAdminVirtualAssistantDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "platformAdminVirtualAssistant",
         "query",
-        variables,
+        variables
       );
     },
     platformForumDiscussionCategories(
       variables?: SchemaTypes.PlatformForumDiscussionCategoriesQueryVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.PlatformForumDiscussionCategoriesQuery;
       errors?: GraphQLError[];
@@ -128863,16 +128826,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.PlatformForumDiscussionCategoriesQuery>(
             PlatformForumDiscussionCategoriesDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "platformForumDiscussionCategories",
         "query",
-        variables,
+        variables
       );
     },
     platformRoleSetOrganizationsInRole(
       variables: SchemaTypes.PlatformRoleSetOrganizationsInRoleQueryVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.PlatformRoleSetOrganizationsInRoleQuery;
       errors?: GraphQLError[];
@@ -128885,16 +128848,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.PlatformRoleSetOrganizationsInRoleQuery>(
             PlatformRoleSetOrganizationsInRoleDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "platformRoleSetOrganizationsInRole",
         "query",
-        variables,
+        variables
       );
     },
     platformRoleSetOrganizationsInRoles(
       variables: SchemaTypes.PlatformRoleSetOrganizationsInRolesQueryVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.PlatformRoleSetOrganizationsInRolesQuery;
       errors?: GraphQLError[];
@@ -128907,16 +128870,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.PlatformRoleSetOrganizationsInRolesQuery>(
             PlatformRoleSetOrganizationsInRolesDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "platformRoleSetOrganizationsInRoles",
         "query",
-        variables,
+        variables
       );
     },
     platformRoleSetRoleNames(
       variables?: SchemaTypes.PlatformRoleSetRoleNamesQueryVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.PlatformRoleSetRoleNamesQuery;
       errors?: GraphQLError[];
@@ -128929,16 +128892,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.PlatformRoleSetRoleNamesQuery>(
             PlatformRoleSetRoleNamesDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "platformRoleSetRoleNames",
         "query",
-        variables,
+        variables
       );
     },
     platformRoleSetUsersInRole(
       variables: SchemaTypes.PlatformRoleSetUsersInRoleQueryVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.PlatformRoleSetUsersInRoleQuery;
       errors?: GraphQLError[];
@@ -128951,16 +128914,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.PlatformRoleSetUsersInRoleQuery>(
             PlatformRoleSetUsersInRoleDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "platformRoleSetUsersInRole",
         "query",
-        variables,
+        variables
       );
     },
     platformRoleSetUsersInRoles(
       variables: SchemaTypes.PlatformRoleSetUsersInRolesQueryVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.PlatformRoleSetUsersInRolesQuery;
       errors?: GraphQLError[];
@@ -128973,16 +128936,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.PlatformRoleSetUsersInRolesQuery>(
             PlatformRoleSetUsersInRolesDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "platformRoleSetUsersInRoles",
         "query",
-        variables,
+        variables
       );
     },
     spaceCollaborationReadProbe(
       variables: SchemaTypes.SpaceCollaborationReadProbeQueryVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.SpaceCollaborationReadProbeQuery;
       errors?: GraphQLError[];
@@ -128995,16 +128958,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.SpaceCollaborationReadProbeQuery>(
             SpaceCollaborationReadProbeDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "spaceCollaborationReadProbe",
         "query",
-        variables,
+        variables
       );
     },
     spaceReadProbe(
       variables: SchemaTypes.SpaceReadProbeQueryVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.SpaceReadProbeQuery;
       errors?: GraphQLError[];
@@ -129017,16 +128980,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.SpaceReadProbeQuery>(
             SpaceReadProbeDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "spaceReadProbe",
         "query",
-        variables,
+        variables
       );
     },
     spaceSupportAdminPrivilegeProbe(
       variables: SchemaTypes.SpaceSupportAdminPrivilegeProbeQueryVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.SpaceSupportAdminPrivilegeProbeQuery;
       errors?: GraphQLError[];
@@ -129039,16 +129002,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.SpaceSupportAdminPrivilegeProbeQuery>(
             SpaceSupportAdminPrivilegeProbeDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "spaceSupportAdminPrivilegeProbe",
         "query",
-        variables,
+        variables
       );
     },
     updateUserServiceProfile(
       variables: SchemaTypes.UpdateUserServiceProfileMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.UpdateUserServiceProfileMutation;
       errors?: GraphQLError[];
@@ -129061,16 +129024,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.UpdateUserServiceProfileMutation>(
             UpdateUserServiceProfileDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "updateUserServiceProfile",
         "mutation",
-        variables,
+        variables
       );
     },
     userEmailChangeAuditEntries(
       variables: SchemaTypes.UserEmailChangeAuditEntriesQueryVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.UserEmailChangeAuditEntriesQuery;
       errors?: GraphQLError[];
@@ -129083,16 +129046,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.UserEmailChangeAuditEntriesQuery>(
             UserEmailChangeAuditEntriesDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "userEmailChangeAuditEntries",
         "query",
-        variables,
+        variables
       );
     },
     usersWithAuthorizationCredential(
       variables: SchemaTypes.UsersWithAuthorizationCredentialQueryVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.UsersWithAuthorizationCredentialQuery;
       errors?: GraphQLError[];
@@ -129105,16 +129068,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.UsersWithAuthorizationCredentialQuery>(
             UsersWithAuthorizationCredentialDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "usersWithAuthorizationCredential",
         "query",
-        variables,
+        variables
       );
     },
     GetOrgVisualUriInnovationHub(
       variables: SchemaTypes.GetOrgVisualUriInnovationHubQueryVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.GetOrgVisualUriInnovationHubQuery;
       errors?: GraphQLError[];
@@ -129127,16 +129090,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.GetOrgVisualUriInnovationHubQuery>(
             GetOrgVisualUriInnovationHubDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "GetOrgVisualUriInnovationHub",
         "query",
-        variables,
+        variables
       );
     },
     GetPlatformLicensePlans(
       variables?: SchemaTypes.GetPlatformLicensePlansQueryVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.GetPlatformLicensePlansQuery;
       errors?: GraphQLError[];
@@ -129149,16 +129112,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.GetPlatformLicensePlansQuery>(
             GetPlatformLicensePlansDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "GetPlatformLicensePlans",
         "query",
-        variables,
+        variables
       );
     },
     GetProfileDocuments(
       variables: SchemaTypes.GetProfileDocumentsQueryVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.GetProfileDocumentsQuery;
       errors?: GraphQLError[];
@@ -129171,16 +129134,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.GetProfileDocumentsQuery>(
             GetProfileDocumentsDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "GetProfileDocuments",
         "query",
-        variables,
+        variables
       );
     },
     MyPushSubscriptions(
       variables?: SchemaTypes.MyPushSubscriptionsQueryVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.MyPushSubscriptionsQuery;
       errors?: GraphQLError[];
@@ -129193,16 +129156,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.MyPushSubscriptionsQuery>(
             MyPushSubscriptionsDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "MyPushSubscriptions",
         "query",
-        variables,
+        variables
       );
     },
     VapidPublicKey(
       variables?: SchemaTypes.VapidPublicKeyQueryVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.VapidPublicKeyQuery;
       errors?: GraphQLError[];
@@ -129215,16 +129178,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.VapidPublicKeyQuery>(
             VapidPublicKeyDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "VapidPublicKey",
         "query",
-        variables,
+        variables
       );
     },
     search(
       variables: SchemaTypes.SearchQueryVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.SearchQuery;
       errors?: GraphQLError[];
@@ -129237,16 +129200,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.SearchQuery>(
             SearchDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "search",
         "query",
-        variables,
+        variables
       );
     },
     PrivateSpaceData(
       variables: SchemaTypes.PrivateSpaceDataQueryVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.PrivateSpaceDataQuery;
       errors?: GraphQLError[];
@@ -129259,16 +129222,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.PrivateSpaceDataQuery>(
             PrivateSpaceDataDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "PrivateSpaceData",
         "query",
-        variables,
+        variables
       );
     },
     GetSpaceData(
       variables: SchemaTypes.GetSpaceDataQueryVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.GetSpaceDataQuery;
       errors?: GraphQLError[];
@@ -129281,16 +129244,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.GetSpaceDataQuery>(
             GetSpaceDataDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "GetSpaceData",
         "query",
-        variables,
+        variables
       );
     },
     GetSpacesData(
       variables?: SchemaTypes.GetSpacesDataQueryVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.GetSpacesDataQuery;
       errors?: GraphQLError[];
@@ -129303,16 +129266,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.GetSpacesDataQuery>(
             GetSpacesDataDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "GetSpacesData",
         "query",
-        variables,
+        variables
       );
     },
     GetSpacesFilteredByVisibilityWithAccess(
       variables?: SchemaTypes.GetSpacesFilteredByVisibilityWithAccessQueryVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.GetSpacesFilteredByVisibilityWithAccessQuery;
       errors?: GraphQLError[];
@@ -129325,16 +129288,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.GetSpacesFilteredByVisibilityWithAccessQuery>(
             GetSpacesFilteredByVisibilityWithAccessDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "GetSpacesFilteredByVisibilityWithAccess",
         "query",
-        variables,
+        variables
       );
     },
     GetSubspacePage(
       variables: SchemaTypes.GetSubspacePageQueryVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.GetSubspacePageQuery;
       errors?: GraphQLError[];
@@ -129347,16 +129310,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.GetSubspacePageQuery>(
             GetSubspacePageDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "GetSubspacePage",
         "query",
-        variables,
+        variables
       );
     },
     GetSpaceAboutDetails(
       variables: SchemaTypes.GetSpaceAboutDetailsQueryVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.GetSpaceAboutDetailsQuery;
       errors?: GraphQLError[];
@@ -129369,16 +129332,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.GetSpaceAboutDetailsQuery>(
             GetSpaceAboutDetailsDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "GetSpaceAboutDetails",
         "query",
-        variables,
+        variables
       );
     },
     GetSubspacesData(
       variables: SchemaTypes.GetSubspacesDataQueryVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.GetSubspacesDataQuery;
       errors?: GraphQLError[];
@@ -129391,16 +129354,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.GetSubspacesDataQuery>(
             GetSubspacesDataDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "GetSubspacesData",
         "query",
-        variables,
+        variables
       );
     },
     GetUserRoles(
       variables: SchemaTypes.GetUserRolesQueryVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.GetUserRolesQuery;
       errors?: GraphQLError[];
@@ -129413,16 +129376,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.GetUserRolesQuery>(
             GetUserRolesDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "GetUserRoles",
         "query",
-        variables,
+        variables
       );
     },
     GetSpaceTemplatesCountByTemplateSetId(
       variables: SchemaTypes.GetSpaceTemplatesCountByTemplateSetIdQueryVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.GetSpaceTemplatesCountByTemplateSetIdQuery;
       errors?: GraphQLError[];
@@ -129435,16 +129398,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.GetSpaceTemplatesCountByTemplateSetIdQuery>(
             GetSpaceTemplatesCountByTemplateSetIdDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "GetSpaceTemplatesCountByTemplateSetId",
         "query",
-        variables,
+        variables
       );
     },
     GetTemplateById(
       variables: SchemaTypes.GetTemplateByIdQueryVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.GetTemplateByIdQuery;
       errors?: GraphQLError[];
@@ -129457,16 +129420,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.GetTemplateByIdQuery>(
             GetTemplateByIdDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "GetTemplateById",
         "query",
-        variables,
+        variables
       );
     },
     GetWhiteboardTemplatesCountByTemplateSetId(
       variables: SchemaTypes.GetWhiteboardTemplatesCountByTemplateSetIdQueryVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.GetWhiteboardTemplatesCountByTemplateSetIdQuery;
       errors?: GraphQLError[];
@@ -129479,16 +129442,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.GetWhiteboardTemplatesCountByTemplateSetIdQuery>(
             GetWhiteboardTemplatesCountByTemplateSetIdDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "GetWhiteboardTemplatesCountByTemplateSetId",
         "query",
-        variables,
+        variables
       );
     },
     UrlResolver(
       variables: SchemaTypes.UrlResolverQueryVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.UrlResolverQuery;
       errors?: GraphQLError[];
@@ -129501,16 +129464,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.UrlResolverQuery>(
             UrlResolverDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "UrlResolver",
         "query",
-        variables,
+        variables
       );
     },
     getSubspaceApplications(
       variables: SchemaTypes.GetSubspaceApplicationsQueryVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.GetSubspaceApplicationsQuery;
       errors?: GraphQLError[];
@@ -129523,16 +129486,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.GetSubspaceApplicationsQuery>(
             GetSubspaceApplicationsDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "getSubspaceApplications",
         "query",
-        variables,
+        variables
       );
     },
     getMyUserInfo(
       variables?: SchemaTypes.GetMyUserInfoQueryVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.GetMyUserInfoQuery;
       errors?: GraphQLError[];
@@ -129545,16 +129508,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.GetMyUserInfoQuery>(
             GetMyUserInfoDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "getMyUserInfo",
         "query",
-        variables,
+        variables
       );
     },
     getSpaceApplications(
       variables: SchemaTypes.GetSpaceApplicationsQueryVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.GetSpaceApplicationsQuery;
       errors?: GraphQLError[];
@@ -129567,16 +129530,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.GetSpaceApplicationsQuery>(
             GetSpaceApplicationsDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "getSpaceApplications",
         "query",
-        variables,
+        variables
       );
     },
     GetUserByNameId(
       variables: SchemaTypes.GetUserByNameIdQueryVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.GetUserByNameIdQuery;
       errors?: GraphQLError[];
@@ -129589,16 +129552,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.GetUserByNameIdQuery>(
             GetUserByNameIdDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "GetUserByNameId",
         "query",
-        variables,
+        variables
       );
     },
     getUserData(
       variables: SchemaTypes.GetUserDataQueryVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.GetUserDataQuery;
       errors?: GraphQLError[];
@@ -129611,16 +129574,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.GetUserDataQuery>(
             GetUserDataDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "getUserData",
         "query",
-        variables,
+        variables
       );
     },
     GetUserReferenceUri(
       variables: SchemaTypes.GetUserReferenceUriQueryVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.GetUserReferenceUriQuery;
       errors?: GraphQLError[];
@@ -129633,16 +129596,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.GetUserReferenceUriQuery>(
             GetUserReferenceUriDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "GetUserReferenceUri",
         "query",
-        variables,
+        variables
       );
     },
     getUsersData(
       variables?: SchemaTypes.GetUsersDataQueryVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.GetUsersDataQuery;
       errors?: GraphQLError[];
@@ -129655,16 +129618,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.GetUsersDataQuery>(
             GetUsersDataDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "getUsersData",
         "query",
-        variables,
+        variables
       );
     },
     MeQuery(
       variables?: SchemaTypes.MeQueryQueryVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.MeQueryQuery;
       errors?: GraphQLError[];
@@ -129677,16 +129640,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.MeQueryQuery>(
             MeQueryDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "MeQuery",
         "query",
-        variables,
+        variables
       );
     },
     GetAiPersonaModelCard(
       variables: SchemaTypes.GetAiPersonaModelCardQueryVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.GetAiPersonaModelCardQuery;
       errors?: GraphQLError[];
@@ -129699,16 +129662,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.GetAiPersonaModelCardQuery>(
             GetAiPersonaModelCardDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "GetAiPersonaModelCard",
         "query",
-        variables,
+        variables
       );
     },
     GetVirtualContributorWithModelCard(
       variables: SchemaTypes.GetVirtualContributorWithModelCardQueryVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.GetVirtualContributorWithModelCardQuery;
       errors?: GraphQLError[];
@@ -129721,16 +129684,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.GetVirtualContributorWithModelCardQuery>(
             GetVirtualContributorWithModelCardDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "GetVirtualContributorWithModelCard",
         "query",
-        variables,
+        variables
       );
     },
     VirtualContributor(
       variables: SchemaTypes.VirtualContributorQueryVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.VirtualContributorQuery;
       errors?: GraphQLError[];
@@ -129743,16 +129706,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.VirtualContributorQuery>(
             VirtualContributorDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "VirtualContributor",
         "query",
-        variables,
+        variables
       );
     },
     VirtualContributorKnowledgeBase(
       variables: SchemaTypes.VirtualContributorKnowledgeBaseQueryVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.VirtualContributorKnowledgeBaseQuery;
       errors?: GraphQLError[];
@@ -129765,16 +129728,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.VirtualContributorKnowledgeBaseQuery>(
             VirtualContributorKnowledgeBaseDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "VirtualContributorKnowledgeBase",
         "query",
-        variables,
+        variables
       );
     },
     VirtualContributorKnowledgePrivileges(
       variables: SchemaTypes.VirtualContributorKnowledgePrivilegesQueryVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.VirtualContributorKnowledgePrivilegesQuery;
       errors?: GraphQLError[];
@@ -129787,16 +129750,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.VirtualContributorKnowledgePrivilegesQuery>(
             VirtualContributorKnowledgePrivilegesDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "VirtualContributorKnowledgePrivileges",
         "query",
-        variables,
+        variables
       );
     },
     VirtualContributorKnowledgeStorageConfig(
       variables: SchemaTypes.VirtualContributorKnowledgeStorageConfigQueryVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.VirtualContributorKnowledgeStorageConfigQuery;
       errors?: GraphQLError[];
@@ -129809,16 +129772,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.VirtualContributorKnowledgeStorageConfigQuery>(
             VirtualContributorKnowledgeStorageConfigDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "VirtualContributorKnowledgeStorageConfig",
         "query",
-        variables,
+        variables
       );
     },
     VirtualContributorStorageConfig(
       variables: SchemaTypes.VirtualContributorStorageConfigQueryVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.VirtualContributorStorageConfigQuery;
       errors?: GraphQLError[];
@@ -129831,16 +129794,16 @@ export function getSdk(
           client.rawRequest<SchemaTypes.VirtualContributorStorageConfigQuery>(
             VirtualContributorStorageConfigDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "VirtualContributorStorageConfig",
         "query",
-        variables,
+        variables
       );
     },
     ConversationEvents(
       variables?: SchemaTypes.ConversationEventsSubscriptionVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
+      requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
       data: SchemaTypes.ConversationEventsSubscription;
       errors?: GraphQLError[];
@@ -129853,11 +129816,11 @@ export function getSdk(
           client.rawRequest<SchemaTypes.ConversationEventsSubscription>(
             ConversationEventsDocumentString,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
+            { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "ConversationEvents",
         "subscription",
-        variables,
+        variables
       );
     },
   };
