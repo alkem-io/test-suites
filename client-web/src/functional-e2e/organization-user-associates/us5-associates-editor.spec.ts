@@ -13,8 +13,9 @@
 // Every refusal gets its own purpose-built organization so the caps never
 // interfere: one filled to six Admins, one to three Owners, one whose only
 // Owner is the row under edit. The UI actor is a fresh ASSOCIATE + ADMIN on
-// all three (an admin holds the manage standing and is never the row being
-// edited, so the self-Admin interface guard stays out of the picture).
+// all three (an admin holds the manage standing), and is never the row being
+// edited, so each refusal is read off the cap under test rather than off the
+// actor's own roles.
 //
 // The refusal copy is asserted as the English strings behind
 // `org.associates.errors.limitAdmin` / `limitOwner` / `minOwner` in
