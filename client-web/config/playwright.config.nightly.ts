@@ -293,6 +293,35 @@ export default defineConfig({
       timeout: 120_000,
       expect: { timeout: 15_000 },
     },
+    {
+      // Feature 070 (contribution notify switch) — persisted P1 acceptance
+      // walk, same forge-verify shape as 038/041: machine-generated file in
+      // tests/, self-seeding (its own org + space + response callout),
+      // torn down in afterAll. Asserts at the RabbitMQ notifications-queue
+      // publish counter rather than MailSlurper, guarded by
+      // rabbitMqManagementConfigured() (the same checkPush pattern
+      // organization-space-invitations/us2-org-admins-notified.spec.ts
+      // uses) — this workflow sets no RABBITMQ_MANAGEMENT_* env, so nightly
+      // skips the queue-counter checks and still runs the switch/UI/activity
+      // assertions.
+      name: 'Contribution notify switch',
+      // testMatch alone cannot reach outside the top-level testDir
+      // (src/functional-e2e), so the project needs its own testDir.
+      testDir: path.resolve(__dirname, '../tests'),
+      testMatch: ['contribution-notify-switch.spec.ts'],
+      timeout: 90_000,
+      expect: { timeout: 15_000 },
+      // This walk signs in through the Kratos UI, so the harness password is
+      // typed into the page. The shared `use` block above sets
+      // trace: 'on-all-retries' / video: 'retain-on-failure', and
+      // scripts/publish-report.sh pushes report attachments (including
+      // data/**) to the gh-pages branch of this PUBLIC repo — which would put
+      // that plaintext credential on the public site after any flake. Opt this
+      // project out of both artefacts. (The wider publishing channel is a
+      // pre-existing repo-level exposure tracked separately; this only stops
+      // THIS walk from adding to it.)
+      use: { trace: 'off', video: 'off' },
+    },
   ],
   // % or number of the available CPUs
   // workers: '100%',
