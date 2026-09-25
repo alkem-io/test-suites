@@ -12,6 +12,7 @@ import {
   signUpButton,
 } from '../authentication/common-authentication-page-elements';
 
+import { fillSecret } from '../helpers/login.helper';
 // Registration Page Object
 
 export const verifyRegistrationPageElements = async (page: Page) => {
@@ -63,7 +64,7 @@ export const fillUpSignUpPasswordElements = async (
   page: Page
 ) => {
   await passwordField(page).click();
-  await passwordField(page).fill(password);
+  await fillSecret(passwordField(page), password);
 };
 
 export const pressSignUpButtonRegistrationPage = async (page: Page) => {

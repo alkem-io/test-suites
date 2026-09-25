@@ -61,6 +61,19 @@ jobs:
           AUTH_TEST_HARNESS_PASSWORD: ${{ secrets.AUTH_TEST_HARNESS_PASSWORD }}
         run: pnpm --filter @alkemio/test-suite-client-web run test:nightly
 
+      # publish-report.sh strips traces and videos from the PUBLIC gh-pages
+      # copy (they carry the sign-in POST body and DOM snapshots with the
+      # harness password). The full report stays here, visible only to
+      # repository collaborators, for debugging retries.
+      - name: Keep the full report (incl. traces) as a private artifact
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-${{ github.run_id }}
+          path: client-web/playwright-report
+          retention-days: 14
+          if-no-files-found: ignore
+
       - name: Publish report to GitHub Pages
         if: ${{ always() }}
         env:

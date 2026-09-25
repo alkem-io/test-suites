@@ -27,6 +27,7 @@ import {
   logInHeaderLink,
 } from '../authentication/common-authentication-page-elements';
 
+import { fillSecret } from '../helpers/login.helper';
 export const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 export const adminEmail = process.env.AUTH_ADMIN_EMAIL || 'admin@alkem.io';
 export const defaultPassword =
@@ -59,7 +60,7 @@ export const signIn = async (
     await page.goto(`${baseUrl}/login`);
   }
   await page.getByRole('textbox', { name: 'E-Mail' }).fill(email);
-  await page.getByRole('textbox', { name: 'Password' }).fill(password);
+  await fillSecret(page.getByRole('textbox', { name: 'Password' }), password);
   await page.getByRole('button', { name: 'Sign in', exact: true }).click();
   await page.waitForURL(url => !url.pathname.startsWith('/login'), {
     timeout: 15000,
