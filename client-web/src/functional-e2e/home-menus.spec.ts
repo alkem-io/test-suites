@@ -6,6 +6,7 @@ import {
 } from '@alkemio/tests-lib';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 
+import { fillSecret } from './helpers/login.helper';
 const password = process.env.AUTH_TEST_HARNESS_PASSWORD || 'change_me';
 const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 
@@ -48,7 +49,7 @@ test.describe.skip('Home Page Menus', () => {
     await loginLink.click();
     await page.waitForURL(/.*login.*/);
     await page.getByRole('textbox', { name: 'E-Mail' }).fill('admin@alkem.io');
-    await page.getByRole('textbox', { name: 'Password' }).fill(password);
+    await fillSecret(page.getByRole('textbox', { name: 'Password' }), password);
     await page.getByRole('button', { name: 'Sign in', exact: true }).click();
     await page.waitForURL(`${baseUrl}/home`);
   });

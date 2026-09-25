@@ -11,6 +11,7 @@ import {
   signUpLink,
 } from '../authentication/common-authentication-page-elements';
 
+import { fillSecret } from '../helpers/login.helper';
 // SignIn Page Object
 
 export const verifySignInPageElements = async (page: Page) => {
@@ -51,7 +52,7 @@ export const fillUpSignInPageElements = async (
   await emailField(page).click();
   await emailField(page).fill(email);
   await passwordField(page).click();
-  await passwordField(page).fill(password);
+  await fillSecret(passwordField(page), password);
 };
 
 export const pressSignInButtonSignInPage = async (page: Page) => {
