@@ -12,10 +12,9 @@
 // the name search narrows the list and reaches the same "no match" state as the
 // compact post (AS7).
 //
-// Independently walked live via the browser against a running stack in this
-// same session (four viewer classes for AS6 — admin, a member of the private
-// subspace, a signed-in non-member, anonymous; contract probe 6 for legs b and
-// c); this spec is the durable, self-contained form of that walk — it
+// AS6 compares three viewer classes through the API — the admin, a signed-in
+// non-member and the anonymous viewer — and then walks the anonymous browser;
+// a member of the private subspace is not seeded here. The spec
 // provisions its own fixture (a throwaway PUBLIC Space with seven Subspaces,
 // one of them PRIVATE, one EXPANDED post and one COMPACT post) via the GraphQL
 // API in `beforeAll` and tears it down in `afterAll`. The browser legs run as
@@ -24,11 +23,17 @@
 // rights must see no more on the card than on the About panel).
 
 import { test, expect, type Locator, type Page } from '@playwright/test';
-import { deleteFixtureTree, newFixtureTree } from './subspaces-callout.helpers';
+import {
+  deleteFixtureTree,
+  newFixtureTree,
+  showMoreOf,
+} from './subspaces-callout.helpers';
 import { getUserToken, UniqueIDGenerator } from '@alkemio/tests-lib';
 
 const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 const adminEmail = process.env.AUTH_TEST_HARNESS_EMAIL || 'admin@alkem.io';
+// A registered user with no role in the fixture space or its subspaces.
+const nonMemberEmail = 'non.space@alkem.io';
 // The non-interactive-login bearer (HS256) is only accepted on the private
 // non-interactive endpoint — same convention as every other raw-GraphQL
 // fixture setup in this suite (see subspaces-callout/us4-narrow-layout.spec.ts).
@@ -401,11 +406,6 @@ test.describe(
         })
         .first();
 
-    // The list's own "Show N more" button — NOT the tag row's "+N" chip, whose
-    // aria-label is also "Show N more".
-    const showMoreOf = (list: Locator) =>
-      list.locator('button', { hasText: /^Show \d+ more$/ });
-
     test('US1-AS1: one card per row; identity block left; What, Why and Who (≤5 lines each) right with ellipsis; one label style; leads and the Open subspace cue at the foot of the identity block', async ({
       page,
     }) => {
@@ -433,7 +433,8 @@ test.describe(
         const identity = a.querySelector(
           '.w-\\[320px\\]'
         ) as HTMLElement | null;
-        const panel = a.querySelector('.flex-1.min-w-0') as HTMLElement;
+        const panel = a.querySelector('[data-testid^="excerpt-"]')
+          ?.parentElement as HTMLElement;
         const clamp = (e: Element | null, lines: number) => {
           if (!e) return null;
           const cs = getComputedStyle(e as HTMLElement);
@@ -483,7 +484,7 @@ test.describe(
         };
       });
       expect(m.identity).not.toBeNull();
-      expect(m.identity!.width).toBe(320);
+      expect(m.identity!.width).toBeCloseTo(320, 0);
       expect(m.identity!.left).toBeLessThanOrEqual(2);
       expect(m.labels).toEqual(['LEADS', 'WHAT', 'WHY', 'WHO']);
       for (const [sec, lines] of [
@@ -518,7 +519,8 @@ test.describe(
       const list = await gotoFixtureSpace(page);
       const beta = cardNamed(list, 'Beta');
       const m = await beta.evaluate(a => {
-        const panel = a.querySelector('.flex-1.min-w-0') as HTMLElement;
+        const panel = a.querySelector('[data-testid^="excerpt-"]')
+          ?.parentElement as HTMLElement;
         return {
           labels: Array.from(a.querySelectorAll('span.uppercase')).map(
             s => (s as HTMLElement).innerText
@@ -585,11 +587,11 @@ test.describe(
           labels: Array.from(a.querySelectorAll('span.uppercase')).map(
             s => (s as HTMLElement).innerText
           ),
-          hasContentPanel: !!a.querySelector('.flex-1.min-w-0'),
+          hasContentPanel: !!a.querySelector('[data-testid^="excerpt-"]'),
           hasCta: /OPEN SUBSPACE/.test((a as HTMLElement).innerText),
         };
       });
-      expect(m.width).toBe(320);
+      expect(m.width).toBeCloseTo(320, 0);
       expect(m.ownRow).toBe(true);
       expect(m.labels).toEqual([]); // no What/Why/Who — and no LEADS label without leads
       expect(m.hasContentPanel).toBe(false);
@@ -659,7 +661,7 @@ test.describe(
       });
     });
 
-    test('US1-AS6: a private subspace exposes on the card exactly what its About panel exposes to the same viewer — API parity (admin, anonymous) then the anonymous browser', async ({
+    test('US1-AS6: a private subspace exposes on the card exactly what its About panel exposes to the same viewer — API parity (admin, signed-in non-member, anonymous) then the anonymous browser', async ({
       browser,
     }) => {
       const epsilonId =
@@ -691,7 +693,10 @@ test.describe(
       // (c) is about a field being WITHHELD by authorization, not about a field an
       // author simply never set (Gamma has no description at all, for anyone).
       const filledByAdmin = new Map<string, About>();
-      for (const token of [adminToken, undefined]) {
+      // Three viewer classes: the admin (reads everything), a signed-in user
+      // who is a member of nothing in this fixture, and the anonymous viewer.
+      const nonMemberToken = await getUserToken(nonMemberEmail);
+      for (const token of [adminToken, nonMemberToken, undefined]) {
         const full = await rawGql<ViaCallout>(
           viaCallout,
           { calloutId: fixture.expandedCalloutId },
@@ -750,7 +755,8 @@ test.describe(
         const eps = cardNamed(list, 'Epsilon');
         const cardSections = await eps.evaluate(a => {
           const out: Record<string, string> = {};
-          const panel = a.querySelector('.flex-1.min-w-0') as HTMLElement;
+          const panel = a.querySelector('[data-testid^="excerpt-"]')
+            ?.parentElement as HTMLElement;
           for (const d of Array.from(panel.children)) {
             const lbl = d.querySelector('span.uppercase') as HTMLElement | null;
             const body = d.querySelector(

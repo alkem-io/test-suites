@@ -364,9 +364,14 @@ test.describe(
 
       const heading = page.getByText(title, { exact: true });
       await heading.waitFor({ state: 'visible', timeout: 15_000 });
-      await expect(
-        page.getByText('What', { exact: true }).first()
-      ).toBeVisible();
+      await heading.scrollIntoViewIfNeeded();
+      // Inside THIS post's list, on a named card: a "What" anywhere on the
+      // page would prove nothing about the post that was just published.
+      const adminList = subspacesListOfPost(page, title);
+      for (const name of ['Alpha', 'Beta']) {
+        const card = await findArticleByName(adminList, name);
+        await expect(card.locator(EXCERPT_SELECTOR.what)).toBeVisible();
+      }
 
       // Anonymous viewer, fresh context — no session cookie. `test` comes from
       // createPersonaTest(admin), which overrides the storageState fixture, and
@@ -380,13 +385,18 @@ test.describe(
       await anonPage.goto(`${baseUrl}/${fixture.spaceNameId}`, {
         waitUntil: 'networkidle',
       });
-      await anonPage
-        .getByText(title, { exact: true })
-        .waitFor({ state: 'visible', timeout: 15_000 });
-      await expect(
-        anonPage.getByText('What', { exact: true }).first()
-      ).toBeVisible();
-      await anonContext.close();
+      try {
+        const anonHeading = anonPage.getByText(title, { exact: true });
+        await anonHeading.waitFor({ state: 'visible', timeout: 15_000 });
+        await anonHeading.scrollIntoViewIfNeeded();
+        const anonList = subspacesListOfPost(anonPage, title);
+        for (const name of ['Alpha', 'Beta']) {
+          const card = await findArticleByName(anonList, name);
+          await expect(card.locator(EXCERPT_SELECTOR.what)).toBeVisible();
+        }
+      } finally {
+        await anonContext.close();
+      }
     });
 
     test('US2-AS3: editing an existing post shows the saved switch state and flips both directions without a full page reload', async ({
@@ -404,6 +414,14 @@ test.describe(
         (window as unknown as Record<string, string>).__US2_NO_RELOAD__ =
           'still-here';
       });
+
+      // What the reader sees, in THIS post's list: the excerpt is there while
+      // the post is expanded and gone once it is compact.
+      await page.getByText(title, { exact: true }).scrollIntoViewIfNeeded();
+      const list = subspacesListOfPost(page, title);
+      const alphaWhat = async () =>
+        (await findArticleByName(list, 'Alpha')).locator(EXCERPT_SELECTOR.what);
+      await expect(await alphaWhat()).toBeVisible();
 
       let dialog = await openEditDialog(page, title);
       const expandedSwitch = dialog.getByRole('switch', {
@@ -426,6 +444,8 @@ test.describe(
       expect(settings.lookup.callout.settings.framing.spaces?.cardVariant).toBe(
         'COMPACT'
       );
+      // Re-rendered in place as compact cards.
+      await expect(await alphaWhat()).toHaveCount(0);
 
       dialog = await openEditDialog(page, title);
       await expect(
@@ -441,6 +461,8 @@ test.describe(
       expect(settings.lookup.callout.settings.framing.spaces?.cardVariant).toBe(
         'EXPANDED'
       );
+      // ...and back to expanded cards, still without a reload.
+      await expect(await alphaWhat()).toBeVisible();
       expect(
         await page.evaluate(
           () => (window as unknown as Record<string, string>).__US2_NO_RELOAD__

@@ -24,6 +24,7 @@ import {
   readExcerptClamps,
   deleteFixtureTree,
   newFixtureTree,
+  showMoreOf,
 } from './subspaces-callout.helpers';
 import { getUserToken, UniqueIDGenerator } from '@alkemio/tests-lib';
 
@@ -58,8 +59,8 @@ async function rawGql<T>(
 const runSuffix = UniqueIDGenerator.getID();
 const POST_TITLE = 'Subspaces — expanded';
 
-// Every card's What/Why/Who is long enough to overflow its clamp (3/2/2
-// lines) at common desktop and mobile widths, mirroring the pattern used by
+// Every card's What/Why/Who is long enough to overflow its clamp (5 lines
+// each) at common desktop and mobile widths, mirroring the pattern used by
 // us3-excerpt-safety.spec.ts's Alpha fixture — so the "same clamps at phone
 // width" check has something real to clamp.
 function longText(label: string, sentences: number): string {
@@ -361,7 +362,7 @@ test.describe(
       const searchBox = page.getByPlaceholder('Search subspaces...');
       await searchBox.fill('Card'); // matches all five fixture cards by name
 
-      const showMore = page.getByRole('button', { name: /show \d+ more/i });
+      const showMore = showMoreOf(page);
       await expect(showMore).toBeVisible();
       await showMore.click();
       const showLess = page.getByRole('button', { name: /show less/i });

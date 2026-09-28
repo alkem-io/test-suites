@@ -5,8 +5,9 @@
  * Covers: EXPANDED on create, COMPACT default, partial-update independence
  * (S4 / risk R-9), variant-only writes (toggle, `spaces: null`,
  * `selection: null`, `selection: { selectedIds: null }`) preserving a stored
- * CUSTOM selection in order, and off-kind rejection (S3) for both NONE and
- * CONTRIBUTORS framing types.
+ * CUSTOM selection in order, off-kind rejection (S3) for both NONE and
+ * CONTRIBUTORS framing types, and who may change the setting (space admin
+ * yes; member and non-member refused, with the stored value untouched).
  *
  * These tests run against a live API stack. They are self-seeding: every
  * required entity (space, subspaces, callouts) is created in beforeAll/per-test and
@@ -67,10 +68,14 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await Promise.all(
-    createdCalloutIds.map(id => deleteCallout(id).catch(() => undefined))
+  // Attempt every delete, then report what stayed behind: a swallowed teardown
+  // error leaves callouts on the shared stack with nothing in the report.
+  const results = await Promise.allSettled(
+    createdCalloutIds.filter(id => id.length > 0).map(id => deleteCallout(id))
   );
   await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
+  const failures = results.filter(r => r.status === 'rejected');
+  expect(failures).toEqual([]);
 });
 
 describe('US2 — card-variant setting round-trips through the public API', () => {
@@ -317,6 +322,82 @@ describe('US2 — card-variant setting round-trips through the public API', () =
         calloutId,
         SpaceCollectionCardVariant.Compact
       );
+    });
+  });
+
+  describe('case 6 — who may change the card variant', () => {
+    // The card variant is a callout setting, so it follows the callout's own
+    // update privilege: the host space's admin may change it, a member and a
+    // non-member may not — and a refused write must leave the row untouched.
+    let calloutId = '';
+
+    beforeAll(async () => {
+      const res = await createSpacesCollectionCalloutWithVariant(
+        calloutsSetId,
+        `spaces-authz-${uniqueId}`,
+        SpaceCollectionCardVariant.Compact
+      );
+      calloutId = res?.data?.createCalloutOnCalloutsSet?.id ?? '';
+      expect(calloutId).toBeTruthy();
+      createdCalloutIds.push(calloutId);
+    });
+
+    const storedVariant = async () => {
+      const reread = await getCalloutSpacesSettings(calloutId);
+      expect(reread.error).toBeUndefined();
+      return reread?.data?.lookup?.callout?.settings?.framing?.spaces
+        ?.cardVariant;
+    };
+
+    test.each`
+      userRole
+      ${TestUser.SPACE_MEMBER}
+      ${TestUser.NON_SPACE_MEMBER}
+    `(
+      '"$userRole" is refused and the stored variant stays COMPACT',
+      async ({ userRole }) => {
+        const res = await updateCalloutSpacesSettings(
+          {
+            ID: calloutId,
+            settings: {
+              framing: {
+                spaces: { cardVariant: SpaceCollectionCardVariant.Expanded },
+              },
+            },
+          },
+          userRole
+        );
+        expect(res.error?.errors[0].code).toBe('FORBIDDEN_POLICY');
+        expect(res?.data?.updateCallout).toBeUndefined();
+        expect(await storedVariant()).toBe(SpaceCollectionCardVariant.Compact);
+      }
+    );
+
+    test('the space admin changes it and a fresh read shows EXPANDED', async () => {
+      const res = await updateCalloutSpacesSettings(
+        {
+          ID: calloutId,
+          settings: {
+            framing: {
+              spaces: { cardVariant: SpaceCollectionCardVariant.Expanded },
+            },
+          },
+        },
+        TestUser.SPACE_ADMIN
+      );
+      expect(res.error).toBeUndefined();
+      expect(await storedVariant()).toBe(SpaceCollectionCardVariant.Expanded);
+    });
+
+    test('a member can still read the variant they cannot change', async () => {
+      const reread = await getCalloutSpacesSettings(
+        calloutId,
+        TestUser.SPACE_MEMBER
+      );
+      expect(reread.error).toBeUndefined();
+      expect(
+        reread?.data?.lookup?.callout?.settings?.framing?.spaces?.cardVariant
+      ).toBe(SpaceCollectionCardVariant.Expanded);
     });
   });
 

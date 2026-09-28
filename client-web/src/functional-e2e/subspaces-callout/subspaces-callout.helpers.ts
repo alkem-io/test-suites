@@ -114,6 +114,15 @@ export async function findArticleByName(
   return article;
 }
 
+/**
+ * The list's own "Show N more" button. Matched by its visible text, never by
+ * role name: a card's tag row has a "+N" chip whose aria-label is also
+ * "Show N more", so a role locator matches both as soon as a card has tags.
+ */
+export function showMoreOf(scope: Page | Locator): Locator {
+  return scope.locator('button', { hasText: /^Show \d+ more$/ });
+}
+
 export type ClampInfo = {
   height: number;
   lineHeight: number;

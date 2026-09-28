@@ -4,8 +4,8 @@
 // link/table markdown, a 500-char unbroken token) rendered inside an
 // EXPANDED Subspaces post's card excerpt must never reach the host page — no
 // media request, no author styling, no heading/bullet/table structure, no
-// clickable link, no horizontal scroll — and the excerpt clamp (What <=3
-// lines, Why/Who <=2 lines) must hold even at the platform's maximum
+// clickable link, no horizontal scroll — and the excerpt clamp (What, Why
+// and Who <=5 lines each) must hold even at the platform's maximum
 // accepted field length while the list stays responsive to search.
 //
 // Independently walked live via the browser + GraphQL API against a running
@@ -21,6 +21,7 @@ import {
   gotoSpaceAndWaitForCards,
   deleteFixtureTree,
   newFixtureTree,
+  showMoreOf,
 } from './subspaces-callout.helpers';
 import { getUserToken, UniqueIDGenerator } from '@alkemio/tests-lib';
 
@@ -465,10 +466,21 @@ test.describe(
       );
 
       // Page stays clickable — no overlay intercepting pointer events anywhere.
-      await expect(
-        page.getByRole('link', { name: 'Alpha' }).first()
-      ).toBeVisible();
-      await page.mouse.click(5, 5);
+      // A real pointer click only lands if nothing sits on top of the target,
+      // so an overlay would fail this click rather than let it through.
+      const search = page.getByPlaceholder('Search subspaces...');
+      await search.click({ timeout: 5000 });
+      await expect(search).toBeFocused();
+      // And the topmost element in the middle of the viewport belongs to the
+      // page, not to subspace-authored content.
+      const topmost = await page.evaluate(() => {
+        const el = document.elementFromPoint(
+          window.innerWidth / 2,
+          window.innerHeight / 2
+        );
+        return el ? getComputedStyle(el).position : null;
+      });
+      expect(topmost).not.toBe('fixed');
     });
 
     test('US3-AS3: Who excerpt is one compact run — no heading size, no bullets, no table, within the 5-line clamp', async ({
@@ -506,7 +518,7 @@ test.describe(
       page,
     }) => {
       await gotoFixtureSpace(page);
-      const showMore = page.getByRole('button', { name: /show \d+ more/i });
+      const showMore = showMoreOf(page);
       await expect(showMore).toBeVisible();
       await showMore.click();
 
@@ -560,7 +572,7 @@ test.describe(
       await page.setViewportSize({ width: 1280, height: 1000 });
       await gotoFixtureSpace(page);
 
-      const showMore = page.getByRole('button', { name: /show \d+ more/i });
+      const showMore = showMoreOf(page);
       await expect(showMore).toBeVisible();
       await showMore.click();
 
@@ -584,16 +596,17 @@ test.describe(
       const measureArea = (article: Locator) =>
         article.evaluate(el => {
           const area = el.querySelector(
-            '.flex-1.min-w-0.flex.flex-col.gap-5.p-6'
-          );
+            '[data-testid^="excerpt-"]'
+          )?.parentElement;
           const rect = area ? area.getBoundingClientRect() : null;
           return rect ? rect.height : null;
         });
 
       const etaSafety = await readCardSafety(eta);
       for (const section of [etaSafety.what, etaSafety.why, etaSafety.who]) {
-        if (section)
-          expect(section.height).toBeLessThanOrEqual(section.maxAllowed);
+        // A missing section must fail here, not skip the clamp check.
+        expect(section).not.toBeNull();
+        expect(section!.height).toBeLessThanOrEqual(section!.maxAllowed);
       }
 
       const etaAreaHeight = await measureArea(eta);

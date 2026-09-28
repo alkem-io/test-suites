@@ -12,7 +12,7 @@
 
 A Subspaces post gains an **"Expanded card"** switch. When on, the post renders one card per row:
 the compact card's identity block plus the subspace's What / Why / Who as clamped markdown
-excerpts. The excerpts are authored by the *subspace's* admins but render on the *host* space's
+excerpts. The excerpts are authored by the _subspace's_ admins but render on the _host_ space's
 page, so the headline risk is cross-scope content injection (overlays, fetched images, a crash that
 takes the host page down). The setting is stored as `settings.framing.spaces.cardVariant`
 (`COMPACT` default, `EXPANDED`).
@@ -30,13 +30,13 @@ them in `afterAll`; nothing pre-existing is assumed except the `admin@alkem.io` 
 
 ## Coverage map
 
-| Area | Scenario | Spec |
-|---|---|---|
-| Setting — API round-trip | create EXPANDED; default COMPACT; partial update and `spaces: {}` keep the stored value; toggle; off-kind rejection (NONE, CONTRIBUTORS) proven by reason and by re-listing the callouts set | `server-api/.../spaces-collection/spaces-collection-card-variant.it-spec.ts` |
-| US1 — rich cards | one per row, clamps 3/2/2; partial fields; all-empty falls back to the compact card; one link per card, keyboard; 3 then "Show more"; private-subspace exposure parity (API + anonymous browser); search narrowing | `us1-expanded-cards.spec.ts` |
-| US2 — the switch | placement under Manual selection; publish on; edit both directions without reload; curated selection survives a variant flip; not offered for other attachments; legacy-shaped post reads compact and fetches no What/Who; title-only edit keeps the variant | `us2-expanded-card-switch.spec.ts` |
-| US3 — content safety | images/iframes neither render nor fetch; fixed-position HTML not interpreted; headings/lists/tables flattened within the clamp; links inert; suppressed-only field counts as empty; 500-char token wraps; maximum-length fields clamp and the page stays responsive (elapsed time attached to the report); nested-emphasis payload renders without a page error | `us3-excerpt-safety.spec.ts` |
-| US4 — narrow layout | 390 px stacks identity → excerpts → footer; arrangement follows the card's width, not the viewport (feed vs. detail dialog); resize across the threshold keeps "Show more" and search | `us4-narrow-layout.spec.ts` |
+| Area                     | Scenario                                                                                                                                                                                                                                                                                                                                                        | Spec                                                                         |
+| ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| Setting — API round-trip | who may change it (space admin yes; member and non-member refused, stored value untouched); create EXPANDED; default COMPACT; partial update and `spaces: {}` keep the stored value; toggle; off-kind rejection (NONE, CONTRIBUTORS) proven by reason and by re-listing the callouts set                                                                        | `server-api/.../spaces-collection/spaces-collection-card-variant.it-spec.ts` |
+| US1 — rich cards         | one per row, What / Why / Who clamped to 5 lines each; partial fields; all-empty falls back to the compact card; one link per card, keyboard; 3 then "Show more"; private-subspace exposure parity (API as admin, signed-in non-member and anonymous; then the anonymous browser); search narrowing                                                             | `us1-expanded-cards.spec.ts`                                                 |
+| US2 — the switch         | placement under Manual selection; publish on; edit both directions without reload, cards re-rendered in place; curated selection survives a variant flip; not offered for other attachments; legacy-shaped post reads compact and fetches no What/Who; title-only edit keeps the variant                                                                        | `us2-expanded-card-switch.spec.ts`                                           |
+| US3 — content safety     | images/iframes neither render nor fetch; fixed-position HTML not interpreted; headings/lists/tables flattened within the clamp; links inert; suppressed-only field counts as empty; 500-char token wraps; maximum-length fields clamp and the page stays responsive (elapsed time attached to the report); nested-emphasis payload renders without a page error | `us3-excerpt-safety.spec.ts`                                                 |
+| US4 — narrow layout      | 390 px stacks identity → excerpts → footer; arrangement follows the card's width, not the viewport (feed vs. detail dialog); resize across the threshold keeps "Show more" and search                                                                                                                                                                           | `us4-narrow-layout.spec.ts`                                                  |
 
 Unit-level coverage for the excerpt pipeline (length ceiling, nesting bound, linear image removal,
 footnotes and form controls, per-section error boundary) lives in client-web next to
@@ -58,10 +58,18 @@ footnotes and form controls, per-section error boundary) lives in client-web nex
 - **US2 is the only authenticated walk** and turns trace/video capture off with a file-level
   `test.use` — a retried trace would embed the admin session cookie in the published report.
 
+- **Match the list's "Show N more" by text** (`showMoreOf`): a card's tag "+N" chip carries the
+  same accessible name.
+- **Reach the What / Why / Who panel from an excerpt's test id**, not from its styling classes.
+
 ## Known gaps
 
 - US2-AS6 needs direct Postgres access to strip the stored block, so it skips wherever
   `harnessPostgresConfigured()` is false — including the nightly pipeline.
 - The walk files still duplicate their fixture plumbing (raw GraphQL client, space/subspace
   creation); only the DOM helpers and teardown are shared so far.
-- Phone *styling* fidelity (FR-028) is a designer sign-off, not an automated check.
+- A member of a private subspace is not seeded as a viewer; AS6 covers admin, signed-in
+  non-member and anonymous.
+- The identity block and its footer are still located by styling classes in US1 (`w-[320px]`,
+  `border-t`): the card exposes no test id for them yet.
+- Phone _styling_ fidelity (FR-028) is a designer sign-off, not an automated check.
