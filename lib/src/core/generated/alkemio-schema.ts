@@ -1432,6 +1432,13 @@ export type CalloutSettingsFraming = {
   contributors?: Maybe<CalloutContributorsSettings>;
   /** Manual-selection settings for collection callouts (CONTRIBUTORS or SPACES). Absent / null ⇒ AUTO (full computed set). */
   selection?: Maybe<CalloutSelectionSettings>;
+  /** Card-variant settings for a Subspaces collection callout. Present only on SPACES callouts. Absent / null ⇒ COMPACT. */
+  spaces?: Maybe<CalloutSpacesSettings>;
+};
+
+export type CalloutSpacesSettings = {
+  /** The card variant to render for each subspace: COMPACT (default) or EXPANDED. */
+  cardVariant: SpaceCollectionCardVariant;
 };
 
 export enum CalloutVisibility {
@@ -2314,6 +2321,8 @@ export type CreateCalloutSettingsFramingData = {
   contributors?: Maybe<CreateCalloutContributorsSettingsData>;
   /** Manual-selection settings for collection callouts (CONTRIBUTORS or SPACES). Provide only when framing.type ∈ {CONTRIBUTORS, SPACES}. */
   selection?: Maybe<CreateCalloutSelectionSettingsData>;
+  /** Card-variant settings. Provide only when framing.type = SPACES. */
+  spaces?: Maybe<CreateCalloutSpacesSettingsData>;
 };
 
 export type CreateCalloutSettingsFramingInput = {
@@ -2323,6 +2332,8 @@ export type CreateCalloutSettingsFramingInput = {
   contributors?: InputMaybe<CreateCalloutContributorsSettingsInput>;
   /** Manual-selection settings for collection callouts (CONTRIBUTORS or SPACES). Provide only when framing.type ∈ {CONTRIBUTORS, SPACES}. */
   selection?: InputMaybe<CreateCalloutSelectionSettingsInput>;
+  /** Card-variant settings. Provide only when framing.type = SPACES. */
+  spaces?: InputMaybe<CreateCalloutSpacesSettingsInput>;
 };
 
 export type CreateCalloutSettingsInput = {
@@ -2330,6 +2341,16 @@ export type CreateCalloutSettingsInput = {
   framing?: InputMaybe<CreateCalloutSettingsFramingInput>;
   /** Visibility of the Callout. Defaults to PUBLISHED. */
   visibility?: InputMaybe<CalloutVisibility>;
+};
+
+export type CreateCalloutSpacesSettingsData = {
+  /** The card variant (COMPACT or EXPANDED). Defaults to COMPACT when omitted. */
+  cardVariant?: Maybe<SpaceCollectionCardVariant>;
+};
+
+export type CreateCalloutSpacesSettingsInput = {
+  /** The card variant (COMPACT or EXPANDED). Defaults to COMPACT when omitted. */
+  cardVariant?: InputMaybe<SpaceCollectionCardVariant>;
 };
 
 export type CreateCalloutTaskBoardData = {
@@ -8913,6 +8934,12 @@ export type SpaceAboutMembership = {
   roleSetID: Scalars["UUID"]["output"];
 };
 
+/** The card variant of a Subspaces (SPACES) collection callout. COMPACT (default) shows the identity block only; EXPANDED adds the What/Why/Who excerpts. */
+export enum SpaceCollectionCardVariant {
+  Compact = "COMPACT",
+  Expanded = "EXPANDED",
+}
+
 export type SpaceFilterInput = {
   /** Return Spaces with a Visibility matching one of the provided types. */
   visibilities?: InputMaybe<Array<SpaceVisibility>>;
@@ -9638,6 +9665,8 @@ export type UpdateCalloutSettingsFramingInput = {
   contributors?: InputMaybe<UpdateCalloutContributorsSettingsInput>;
   /** Manual-selection settings for collection callouts (CONTRIBUTORS or SPACES). Provide only when framing.type ∈ {CONTRIBUTORS, SPACES}. */
   selection?: InputMaybe<UpdateCalloutSelectionSettingsInput>;
+  /** Card-variant settings. Provide only when framing.type = SPACES. */
+  spaces?: InputMaybe<UpdateCalloutSpacesSettingsInput>;
 };
 
 export type UpdateCalloutSettingsInput = {
@@ -9645,6 +9674,11 @@ export type UpdateCalloutSettingsInput = {
   framing?: InputMaybe<UpdateCalloutSettingsFramingInput>;
   /** Visibility of the Callout. */
   visibility?: InputMaybe<CalloutVisibility>;
+};
+
+export type UpdateCalloutSpacesSettingsInput = {
+  /** The card variant (COMPACT or EXPANDED). When omitted, the stored value is unchanged. */
+  cardVariant?: InputMaybe<SpaceCollectionCardVariant>;
 };
 
 export type UpdateCalloutVisibilityInput = {
@@ -12026,6 +12060,7 @@ export type ResolversTypes = {
   CalloutSettings: ResolverTypeWrapper<CalloutSettings>;
   CalloutSettingsContribution: ResolverTypeWrapper<CalloutSettingsContribution>;
   CalloutSettingsFraming: ResolverTypeWrapper<CalloutSettingsFraming>;
+  CalloutSpacesSettings: ResolverTypeWrapper<CalloutSpacesSettings>;
   CalloutVisibility: CalloutVisibility;
   CalloutsSet: ResolverTypeWrapper<
     Omit<CalloutsSet, "callouts"> & {
@@ -12182,6 +12217,8 @@ export type ResolversTypes = {
   CreateCalloutSettingsFramingData: ResolverTypeWrapper<CreateCalloutSettingsFramingData>;
   CreateCalloutSettingsFramingInput: CreateCalloutSettingsFramingInput;
   CreateCalloutSettingsInput: CreateCalloutSettingsInput;
+  CreateCalloutSpacesSettingsData: ResolverTypeWrapper<CreateCalloutSpacesSettingsData>;
+  CreateCalloutSpacesSettingsInput: CreateCalloutSpacesSettingsInput;
   CreateCalloutTaskBoardData: ResolverTypeWrapper<CreateCalloutTaskBoardData>;
   CreateCalloutTaskBoardInput: CreateCalloutTaskBoardInput;
   CreateCalloutsSetData: ResolverTypeWrapper<CreateCalloutsSetData>;
@@ -13125,6 +13162,7 @@ export type ResolversTypes = {
       leadUsers: Array<ResolversTypes["User"]>;
     }
   >;
+  SpaceCollectionCardVariant: SpaceCollectionCardVariant;
   SpaceFilterInput: SpaceFilterInput;
   SpaceJoinPreview: ResolverTypeWrapper<SpaceJoinPreview>;
   SpaceLevel: SpaceLevel;
@@ -13256,6 +13294,7 @@ export type ResolversTypes = {
   UpdateCalloutSettingsContributionInput: UpdateCalloutSettingsContributionInput;
   UpdateCalloutSettingsFramingInput: UpdateCalloutSettingsFramingInput;
   UpdateCalloutSettingsInput: UpdateCalloutSettingsInput;
+  UpdateCalloutSpacesSettingsInput: UpdateCalloutSpacesSettingsInput;
   UpdateCalloutVisibilityInput: UpdateCalloutVisibilityInput;
   UpdateCalloutsSortOrderInput: UpdateCalloutsSortOrderInput;
   UpdateClassificationEntryDisplayInput: UpdateClassificationEntryDisplayInput;
@@ -13691,6 +13730,7 @@ export type ResolversParentTypes = {
   CalloutSettings: CalloutSettings;
   CalloutSettingsContribution: CalloutSettingsContribution;
   CalloutSettingsFraming: CalloutSettingsFraming;
+  CalloutSpacesSettings: CalloutSpacesSettings;
   CalloutsSet: Omit<CalloutsSet, "callouts"> & {
     callouts: Array<ResolversParentTypes["Callout"]>;
   };
@@ -13833,6 +13873,8 @@ export type ResolversParentTypes = {
   CreateCalloutSettingsFramingData: CreateCalloutSettingsFramingData;
   CreateCalloutSettingsFramingInput: CreateCalloutSettingsFramingInput;
   CreateCalloutSettingsInput: CreateCalloutSettingsInput;
+  CreateCalloutSpacesSettingsData: CreateCalloutSpacesSettingsData;
+  CreateCalloutSpacesSettingsInput: CreateCalloutSpacesSettingsInput;
   CreateCalloutTaskBoardData: CreateCalloutTaskBoardData;
   CreateCalloutTaskBoardInput: CreateCalloutTaskBoardInput;
   CreateCalloutsSetData: CreateCalloutsSetData;
@@ -14760,6 +14802,7 @@ export type ResolversParentTypes = {
   UpdateCalloutSettingsContributionInput: UpdateCalloutSettingsContributionInput;
   UpdateCalloutSettingsFramingInput: UpdateCalloutSettingsFramingInput;
   UpdateCalloutSettingsInput: UpdateCalloutSettingsInput;
+  UpdateCalloutSpacesSettingsInput: UpdateCalloutSpacesSettingsInput;
   UpdateCalloutVisibilityInput: UpdateCalloutVisibilityInput;
   UpdateCalloutsSortOrderInput: UpdateCalloutsSortOrderInput;
   UpdateClassificationEntryDisplayInput: UpdateClassificationEntryDisplayInput;
@@ -16170,6 +16213,23 @@ export type CalloutSettingsFramingResolvers<
     ParentType,
     ContextType
   >;
+  spaces?: Resolver<
+    Maybe<ResolversTypes["CalloutSpacesSettings"]>,
+    ParentType,
+    ContextType
+  >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type CalloutSpacesSettingsResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["CalloutSpacesSettings"] = ResolversParentTypes["CalloutSpacesSettings"]
+> = {
+  cardVariant?: Resolver<
+    ResolversTypes["SpaceCollectionCardVariant"],
+    ParentType,
+    ContextType
+  >;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -17147,6 +17207,23 @@ export type CreateCalloutSettingsFramingDataResolvers<
   >;
   selection?: Resolver<
     Maybe<ResolversTypes["CreateCalloutSelectionSettingsData"]>,
+    ParentType,
+    ContextType
+  >;
+  spaces?: Resolver<
+    Maybe<ResolversTypes["CreateCalloutSpacesSettingsData"]>,
+    ParentType,
+    ContextType
+  >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type CreateCalloutSpacesSettingsDataResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["CreateCalloutSpacesSettingsData"] = ResolversParentTypes["CreateCalloutSpacesSettingsData"]
+> = {
+  cardVariant?: Resolver<
+    Maybe<ResolversTypes["SpaceCollectionCardVariant"]>,
     ParentType,
     ContextType
   >;
@@ -25749,6 +25826,7 @@ export type Resolvers<ContextType = any> = {
   CalloutSettings?: CalloutSettingsResolvers<ContextType>;
   CalloutSettingsContribution?: CalloutSettingsContributionResolvers<ContextType>;
   CalloutSettingsFraming?: CalloutSettingsFramingResolvers<ContextType>;
+  CalloutSpacesSettings?: CalloutSpacesSettingsResolvers<ContextType>;
   CalloutsSet?: CalloutsSetResolvers<ContextType>;
   Classification?: ClassificationResolvers<ContextType>;
   ClassificationEntry?: ClassificationEntryResolvers<ContextType>;
@@ -25796,6 +25874,7 @@ export type Resolvers<ContextType = any> = {
   CreateCalloutSettingsContributionData?: CreateCalloutSettingsContributionDataResolvers<ContextType>;
   CreateCalloutSettingsData?: CreateCalloutSettingsDataResolvers<ContextType>;
   CreateCalloutSettingsFramingData?: CreateCalloutSettingsFramingDataResolvers<ContextType>;
+  CreateCalloutSpacesSettingsData?: CreateCalloutSpacesSettingsDataResolvers<ContextType>;
   CreateCalloutTaskBoardData?: CreateCalloutTaskBoardDataResolvers<ContextType>;
   CreateCalloutsSetData?: CreateCalloutsSetDataResolvers<ContextType>;
   CreateClassificationData?: CreateClassificationDataResolvers<ContextType>;
@@ -48331,6 +48410,44 @@ export type RemoveReactionFromCalloutMutation = {
       emojis: Array<string>;
       myReactionEmoji?: string | undefined;
       allowedEmojis: Array<string>;
+    };
+  };
+};
+
+export type CreateSpacesCollectionCalloutMutationVariables = Exact<{
+  calloutData: CreateCalloutOnCalloutsSetInput;
+}>;
+
+export type CreateSpacesCollectionCalloutMutation = {
+  createCalloutOnCalloutsSet: {
+    id: string;
+    framing: { id: string; type: CalloutFramingType };
+    settings: {
+      framing: {
+        spaces?: { cardVariant: SpaceCollectionCardVariant } | undefined;
+        selection?:
+          | { mode: CalloutSelectionMode; selectedIds: Array<string> }
+          | undefined;
+      };
+    };
+  };
+};
+
+export type UpdateCalloutSpacesSettingsMutationVariables = Exact<{
+  calloutData: UpdateCalloutEntityInput;
+}>;
+
+export type UpdateCalloutSpacesSettingsMutation = {
+  updateCallout: {
+    id: string;
+    settings: {
+      framing: {
+        commentsEnabled: boolean;
+        spaces?: { cardVariant: SpaceCollectionCardVariant } | undefined;
+        selection?:
+          | { mode: CalloutSelectionMode; selectedIds: Array<string> }
+          | undefined;
+      };
     };
   };
 };
@@ -86137,6 +86254,30 @@ export type VisualFullFragment = {
   minHeight: number;
   minWidth: number;
   alternativeText?: string | undefined;
+};
+
+export type GetCalloutSpacesSettingsQueryVariables = Exact<{
+  calloutId: Scalars["UUID"]["input"];
+}>;
+
+export type GetCalloutSpacesSettingsQuery = {
+  lookup: {
+    callout?:
+      | {
+          id: string;
+          framing: { id: string; type: CalloutFramingType };
+          settings: {
+            framing: {
+              commentsEnabled: boolean;
+              spaces?: { cardVariant: SpaceCollectionCardVariant } | undefined;
+              selection?:
+                | { mode: CalloutSelectionMode; selectedIds: Array<string> }
+                | undefined;
+            };
+          };
+        }
+      | undefined;
+  };
 };
 
 export type CalloutWhiateboardStorageConfigQueryVariables = Exact<{

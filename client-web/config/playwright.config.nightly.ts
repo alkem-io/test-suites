@@ -195,6 +195,18 @@ export default defineConfig({
       expect: { timeout: 15_000 },
     },
     {
+      // Story client-web#10033 / workspace#076 (expanded subspace cards) —
+      // the four acceptance walks: rich cards, the "Expanded card" switch,
+      // excerpt safety and the narrow layout. Each file seeds its own public
+      // Space through the API and deletes it in afterAll; no dependencies.
+      // The files set their own per-test budgets (describe.configure), since
+      // their fixtures carry up to seven subspaces. US2 is the only
+      // authenticated walk and turns trace/video off at file level.
+      name: 'Subspaces callout',
+      testMatch: ['/subspaces-callout/*.spec.ts'],
+      expect: { timeout: 15_000 },
+    },
+    {
       // Story client-web#10178 (space-banner) — the default 10:1 gradient on
       // bannerless spaces/subspaces and the first-crop-opens-at-10:1 walk.
       // Self-seeding via TestScenarioFactory + its own session fixture, torn

@@ -1438,6 +1438,13 @@ export type CalloutSettingsFraming = {
   contributors?: Maybe<CalloutContributorsSettings>;
   /** Manual-selection settings for collection callouts (CONTRIBUTORS or SPACES). Absent / null ⇒ AUTO (full computed set). */
   selection?: Maybe<CalloutSelectionSettings>;
+  /** Card-variant settings for a Subspaces collection callout. Present only on SPACES callouts. Absent / null ⇒ COMPACT. */
+  spaces?: Maybe<CalloutSpacesSettings>;
+};
+
+export type CalloutSpacesSettings = {
+  /** The card variant to render for each subspace: COMPACT (default) or EXPANDED. */
+  cardVariant: SpaceCollectionCardVariant;
 };
 
 export enum CalloutVisibility {
@@ -2320,6 +2327,8 @@ export type CreateCalloutSettingsFramingData = {
   contributors?: Maybe<CreateCalloutContributorsSettingsData>;
   /** Manual-selection settings for collection callouts (CONTRIBUTORS or SPACES). Provide only when framing.type ∈ {CONTRIBUTORS, SPACES}. */
   selection?: Maybe<CreateCalloutSelectionSettingsData>;
+  /** Card-variant settings. Provide only when framing.type = SPACES. */
+  spaces?: Maybe<CreateCalloutSpacesSettingsData>;
 };
 
 export type CreateCalloutSettingsFramingInput = {
@@ -2329,6 +2338,8 @@ export type CreateCalloutSettingsFramingInput = {
   contributors?: InputMaybe<CreateCalloutContributorsSettingsInput>;
   /** Manual-selection settings for collection callouts (CONTRIBUTORS or SPACES). Provide only when framing.type ∈ {CONTRIBUTORS, SPACES}. */
   selection?: InputMaybe<CreateCalloutSelectionSettingsInput>;
+  /** Card-variant settings. Provide only when framing.type = SPACES. */
+  spaces?: InputMaybe<CreateCalloutSpacesSettingsInput>;
 };
 
 export type CreateCalloutSettingsInput = {
@@ -2336,6 +2347,16 @@ export type CreateCalloutSettingsInput = {
   framing?: InputMaybe<CreateCalloutSettingsFramingInput>;
   /** Visibility of the Callout. Defaults to PUBLISHED. */
   visibility?: InputMaybe<CalloutVisibility>;
+};
+
+export type CreateCalloutSpacesSettingsData = {
+  /** The card variant (COMPACT or EXPANDED). Defaults to COMPACT when omitted. */
+  cardVariant?: Maybe<SpaceCollectionCardVariant>;
+};
+
+export type CreateCalloutSpacesSettingsInput = {
+  /** The card variant (COMPACT or EXPANDED). Defaults to COMPACT when omitted. */
+  cardVariant?: InputMaybe<SpaceCollectionCardVariant>;
 };
 
 export type CreateCalloutTaskBoardData = {
@@ -8919,6 +8940,12 @@ export type SpaceAboutMembership = {
   roleSetID: Scalars["UUID"]["output"];
 };
 
+/** The card variant of a Subspaces (SPACES) collection callout. COMPACT (default) shows the identity block only; EXPANDED adds the What/Why/Who excerpts. */
+export enum SpaceCollectionCardVariant {
+  Compact = "COMPACT",
+  Expanded = "EXPANDED",
+}
+
 export type SpaceFilterInput = {
   /** Return Spaces with a Visibility matching one of the provided types. */
   visibilities?: InputMaybe<Array<SpaceVisibility>>;
@@ -9644,6 +9671,8 @@ export type UpdateCalloutSettingsFramingInput = {
   contributors?: InputMaybe<UpdateCalloutContributorsSettingsInput>;
   /** Manual-selection settings for collection callouts (CONTRIBUTORS or SPACES). Provide only when framing.type ∈ {CONTRIBUTORS, SPACES}. */
   selection?: InputMaybe<UpdateCalloutSelectionSettingsInput>;
+  /** Card-variant settings. Provide only when framing.type = SPACES. */
+  spaces?: InputMaybe<UpdateCalloutSpacesSettingsInput>;
 };
 
 export type UpdateCalloutSettingsInput = {
@@ -9651,6 +9680,11 @@ export type UpdateCalloutSettingsInput = {
   framing?: InputMaybe<UpdateCalloutSettingsFramingInput>;
   /** Visibility of the Callout. */
   visibility?: InputMaybe<CalloutVisibility>;
+};
+
+export type UpdateCalloutSpacesSettingsInput = {
+  /** The card variant (COMPACT or EXPANDED). When omitted, the stored value is unchanged. */
+  cardVariant?: InputMaybe<SpaceCollectionCardVariant>;
 };
 
 export type UpdateCalloutVisibilityInput = {
@@ -12053,6 +12087,7 @@ export type ResolversTypes = {
   CalloutSettings: ResolverTypeWrapper<SchemaTypes.CalloutSettings>;
   CalloutSettingsContribution: ResolverTypeWrapper<SchemaTypes.CalloutSettingsContribution>;
   CalloutSettingsFraming: ResolverTypeWrapper<SchemaTypes.CalloutSettingsFraming>;
+  CalloutSpacesSettings: ResolverTypeWrapper<SchemaTypes.CalloutSpacesSettings>;
   CalloutVisibility: SchemaTypes.CalloutVisibility;
   CalloutsSet: ResolverTypeWrapper<
     Omit<SchemaTypes.CalloutsSet, "callouts"> & {
@@ -12236,6 +12271,8 @@ export type ResolversTypes = {
   CreateCalloutSettingsFramingData: ResolverTypeWrapper<SchemaTypes.CreateCalloutSettingsFramingData>;
   CreateCalloutSettingsFramingInput: SchemaTypes.CreateCalloutSettingsFramingInput;
   CreateCalloutSettingsInput: SchemaTypes.CreateCalloutSettingsInput;
+  CreateCalloutSpacesSettingsData: ResolverTypeWrapper<SchemaTypes.CreateCalloutSpacesSettingsData>;
+  CreateCalloutSpacesSettingsInput: SchemaTypes.CreateCalloutSpacesSettingsInput;
   CreateCalloutTaskBoardData: ResolverTypeWrapper<SchemaTypes.CreateCalloutTaskBoardData>;
   CreateCalloutTaskBoardInput: SchemaTypes.CreateCalloutTaskBoardInput;
   CreateCalloutsSetData: ResolverTypeWrapper<SchemaTypes.CreateCalloutsSetData>;
@@ -13228,6 +13265,7 @@ export type ResolversTypes = {
       leadUsers: Array<ResolversTypes["User"]>;
     }
   >;
+  SpaceCollectionCardVariant: SchemaTypes.SpaceCollectionCardVariant;
   SpaceFilterInput: SchemaTypes.SpaceFilterInput;
   SpaceJoinPreview: ResolverTypeWrapper<SchemaTypes.SpaceJoinPreview>;
   SpaceLevel: SchemaTypes.SpaceLevel;
@@ -13374,6 +13412,7 @@ export type ResolversTypes = {
   UpdateCalloutSettingsContributionInput: SchemaTypes.UpdateCalloutSettingsContributionInput;
   UpdateCalloutSettingsFramingInput: SchemaTypes.UpdateCalloutSettingsFramingInput;
   UpdateCalloutSettingsInput: SchemaTypes.UpdateCalloutSettingsInput;
+  UpdateCalloutSpacesSettingsInput: SchemaTypes.UpdateCalloutSpacesSettingsInput;
   UpdateCalloutVisibilityInput: SchemaTypes.UpdateCalloutVisibilityInput;
   UpdateCalloutsSortOrderInput: SchemaTypes.UpdateCalloutsSortOrderInput;
   UpdateClassificationEntryDisplayInput: SchemaTypes.UpdateClassificationEntryDisplayInput;
@@ -13813,6 +13852,7 @@ export type ResolversParentTypes = {
   CalloutSettings: SchemaTypes.CalloutSettings;
   CalloutSettingsContribution: SchemaTypes.CalloutSettingsContribution;
   CalloutSettingsFraming: SchemaTypes.CalloutSettingsFraming;
+  CalloutSpacesSettings: SchemaTypes.CalloutSpacesSettings;
   CalloutsSet: Omit<SchemaTypes.CalloutsSet, "callouts"> & {
     callouts: Array<ResolversParentTypes["Callout"]>;
   };
@@ -13962,6 +14002,8 @@ export type ResolversParentTypes = {
   CreateCalloutSettingsFramingData: SchemaTypes.CreateCalloutSettingsFramingData;
   CreateCalloutSettingsFramingInput: SchemaTypes.CreateCalloutSettingsFramingInput;
   CreateCalloutSettingsInput: SchemaTypes.CreateCalloutSettingsInput;
+  CreateCalloutSpacesSettingsData: SchemaTypes.CreateCalloutSpacesSettingsData;
+  CreateCalloutSpacesSettingsInput: SchemaTypes.CreateCalloutSpacesSettingsInput;
   CreateCalloutTaskBoardData: SchemaTypes.CreateCalloutTaskBoardData;
   CreateCalloutTaskBoardInput: SchemaTypes.CreateCalloutTaskBoardInput;
   CreateCalloutsSetData: SchemaTypes.CreateCalloutsSetData;
@@ -14929,6 +14971,7 @@ export type ResolversParentTypes = {
   UpdateCalloutSettingsContributionInput: SchemaTypes.UpdateCalloutSettingsContributionInput;
   UpdateCalloutSettingsFramingInput: SchemaTypes.UpdateCalloutSettingsFramingInput;
   UpdateCalloutSettingsInput: SchemaTypes.UpdateCalloutSettingsInput;
+  UpdateCalloutSpacesSettingsInput: SchemaTypes.UpdateCalloutSpacesSettingsInput;
   UpdateCalloutVisibilityInput: SchemaTypes.UpdateCalloutVisibilityInput;
   UpdateCalloutsSortOrderInput: SchemaTypes.UpdateCalloutsSortOrderInput;
   UpdateClassificationEntryDisplayInput: SchemaTypes.UpdateClassificationEntryDisplayInput;
@@ -16481,6 +16524,23 @@ export type CalloutSettingsFramingResolvers<
     ParentType,
     ContextType
   >;
+  spaces?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes["CalloutSpacesSettings"]>,
+    ParentType,
+    ContextType
+  >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type CalloutSpacesSettingsResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["CalloutSpacesSettings"] = ResolversParentTypes["CalloutSpacesSettings"]
+> = {
+  cardVariant?: Resolver<
+    ResolversTypes["SpaceCollectionCardVariant"],
+    ParentType,
+    ContextType
+  >;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -17510,6 +17570,23 @@ export type CreateCalloutSettingsFramingDataResolvers<
   >;
   selection?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["CreateCalloutSelectionSettingsData"]>,
+    ParentType,
+    ContextType
+  >;
+  spaces?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes["CreateCalloutSpacesSettingsData"]>,
+    ParentType,
+    ContextType
+  >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type CreateCalloutSpacesSettingsDataResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["CreateCalloutSpacesSettingsData"] = ResolversParentTypes["CreateCalloutSpacesSettingsData"]
+> = {
+  cardVariant?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes["SpaceCollectionCardVariant"]>,
     ParentType,
     ContextType
   >;
@@ -26824,6 +26901,7 @@ export type Resolvers<ContextType = any> = {
   CalloutSettings?: CalloutSettingsResolvers<ContextType>;
   CalloutSettingsContribution?: CalloutSettingsContributionResolvers<ContextType>;
   CalloutSettingsFraming?: CalloutSettingsFramingResolvers<ContextType>;
+  CalloutSpacesSettings?: CalloutSpacesSettingsResolvers<ContextType>;
   CalloutsSet?: CalloutsSetResolvers<ContextType>;
   Classification?: ClassificationResolvers<ContextType>;
   ClassificationEntry?: ClassificationEntryResolvers<ContextType>;
@@ -26871,6 +26949,7 @@ export type Resolvers<ContextType = any> = {
   CreateCalloutSettingsContributionData?: CreateCalloutSettingsContributionDataResolvers<ContextType>;
   CreateCalloutSettingsData?: CreateCalloutSettingsDataResolvers<ContextType>;
   CreateCalloutSettingsFramingData?: CreateCalloutSettingsFramingDataResolvers<ContextType>;
+  CreateCalloutSpacesSettingsData?: CreateCalloutSpacesSettingsDataResolvers<ContextType>;
   CreateCalloutTaskBoardData?: CreateCalloutTaskBoardDataResolvers<ContextType>;
   CreateCalloutsSetData?: CreateCalloutsSetDataResolvers<ContextType>;
   CreateClassificationData?: CreateClassificationDataResolvers<ContextType>;
@@ -52583,6 +52662,54 @@ export type RemoveReactionFromCalloutMutation = {
       emojis: Array<string>;
       myReactionEmoji?: string | undefined;
       allowedEmojis: Array<string>;
+    };
+  };
+};
+
+export type CreateSpacesCollectionCalloutMutationVariables = SchemaTypes.Exact<{
+  calloutData: SchemaTypes.CreateCalloutOnCalloutsSetInput;
+}>;
+
+export type CreateSpacesCollectionCalloutMutation = {
+  createCalloutOnCalloutsSet: {
+    id: string;
+    framing: { id: string; type: SchemaTypes.CalloutFramingType };
+    settings: {
+      framing: {
+        spaces?:
+          | { cardVariant: SchemaTypes.SpaceCollectionCardVariant }
+          | undefined;
+        selection?:
+          | {
+              mode: SchemaTypes.CalloutSelectionMode;
+              selectedIds: Array<string>;
+            }
+          | undefined;
+      };
+    };
+  };
+};
+
+export type UpdateCalloutSpacesSettingsMutationVariables = SchemaTypes.Exact<{
+  calloutData: SchemaTypes.UpdateCalloutEntityInput;
+}>;
+
+export type UpdateCalloutSpacesSettingsMutation = {
+  updateCallout: {
+    id: string;
+    settings: {
+      framing: {
+        commentsEnabled: boolean;
+        spaces?:
+          | { cardVariant: SchemaTypes.SpaceCollectionCardVariant }
+          | undefined;
+        selection?:
+          | {
+              mode: SchemaTypes.CalloutSelectionMode;
+              selectedIds: Array<string>;
+            }
+          | undefined;
+      };
     };
   };
 };
@@ -94089,6 +94216,35 @@ export type VisualFullFragment = {
   alternativeText?: string | undefined;
 };
 
+export type GetCalloutSpacesSettingsQueryVariables = SchemaTypes.Exact<{
+  calloutId: SchemaTypes.Scalars["UUID"]["input"];
+}>;
+
+export type GetCalloutSpacesSettingsQuery = {
+  lookup: {
+    callout?:
+      | {
+          id: string;
+          framing: { id: string; type: SchemaTypes.CalloutFramingType };
+          settings: {
+            framing: {
+              commentsEnabled: boolean;
+              spaces?:
+                | { cardVariant: SchemaTypes.SpaceCollectionCardVariant }
+                | undefined;
+              selection?:
+                | {
+                    mode: SchemaTypes.CalloutSelectionMode;
+                    selectedIds: Array<string>;
+                  }
+                | undefined;
+            };
+          };
+        }
+      | undefined;
+  };
+};
+
 export type CalloutWhiateboardStorageConfigQueryVariables = SchemaTypes.Exact<{
   calloutId: SchemaTypes.Scalars["UUID"]["input"];
 }>;
@@ -119859,6 +120015,51 @@ export const RemoveReactionFromCalloutDocument = gql`
     }
   }
 `;
+export const CreateSpacesCollectionCalloutDocument = gql`
+  mutation CreateSpacesCollectionCallout(
+    $calloutData: CreateCalloutOnCalloutsSetInput!
+  ) {
+    createCalloutOnCalloutsSet(calloutData: $calloutData) {
+      id
+      framing {
+        id
+        type
+      }
+      settings {
+        framing {
+          spaces {
+            cardVariant
+          }
+          selection {
+            mode
+            selectedIds
+          }
+        }
+      }
+    }
+  }
+`;
+export const UpdateCalloutSpacesSettingsDocument = gql`
+  mutation UpdateCalloutSpacesSettings(
+    $calloutData: UpdateCalloutEntityInput!
+  ) {
+    updateCallout(calloutData: $calloutData) {
+      id
+      settings {
+        framing {
+          commentsEnabled
+          spaces {
+            cardVariant
+          }
+          selection {
+            mode
+            selectedIds
+          }
+        }
+      }
+    }
+  }
+`;
 export const UpdateCalloutDocument = gql`
   mutation UpdateCallout($calloutData: UpdateCalloutEntityInput!) {
     updateCallout(calloutData: $calloutData) {
@@ -121287,6 +121488,31 @@ export const GetCalloutPostsDocument = gql`
     }
   }
   ${ContributeTabPostFragmentDoc}
+`;
+export const GetCalloutSpacesSettingsDocument = gql`
+  query GetCalloutSpacesSettings($calloutId: UUID!) {
+    lookup {
+      callout(ID: $calloutId) {
+        id
+        framing {
+          id
+          type
+        }
+        settings {
+          framing {
+            commentsEnabled
+            spaces {
+              cardVariant
+            }
+            selection {
+              mode
+              selectedIds
+            }
+          }
+        }
+      }
+    }
+  }
 `;
 export const CalloutWhiateboardStorageConfigDocument = gql`
   query CalloutWhiateboardStorageConfig($calloutId: UUID!) {
@@ -123051,6 +123277,12 @@ const AddReactionToCalloutDocumentString = print(AddReactionToCalloutDocument);
 const RemoveReactionFromCalloutDocumentString = print(
   RemoveReactionFromCalloutDocument
 );
+const CreateSpacesCollectionCalloutDocumentString = print(
+  CreateSpacesCollectionCalloutDocument
+);
+const UpdateCalloutSpacesSettingsDocumentString = print(
+  UpdateCalloutSpacesSettingsDocument
+);
 const UpdateCalloutDocumentString = print(UpdateCalloutDocument);
 const UpdateCalloutVisibilityDocumentString = print(
   UpdateCalloutVisibilityDocument
@@ -123244,6 +123476,9 @@ const CalloutPostStorageConfigDocumentString = print(
   CalloutPostStorageConfigDocument
 );
 const GetCalloutPostsDocumentString = print(GetCalloutPostsDocument);
+const GetCalloutSpacesSettingsDocumentString = print(
+  GetCalloutSpacesSettingsDocument
+);
 const CalloutWhiateboardStorageConfigDocumentString = print(
   CalloutWhiateboardStorageConfigDocument
 );
@@ -124107,6 +124342,50 @@ export function getSdk(
             { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "RemoveReactionFromCallout",
+        "mutation",
+        variables
+      );
+    },
+    CreateSpacesCollectionCallout(
+      variables: SchemaTypes.CreateSpacesCollectionCalloutMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.CreateSpacesCollectionCalloutMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.CreateSpacesCollectionCalloutMutation>(
+            CreateSpacesCollectionCalloutDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "CreateSpacesCollectionCallout",
+        "mutation",
+        variables
+      );
+    },
+    UpdateCalloutSpacesSettings(
+      variables: SchemaTypes.UpdateCalloutSpacesSettingsMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.UpdateCalloutSpacesSettingsMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.UpdateCalloutSpacesSettingsMutation>(
+            UpdateCalloutSpacesSettingsDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "UpdateCalloutSpacesSettings",
         "mutation",
         variables
       );
@@ -126329,6 +126608,28 @@ export function getSdk(
             { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "GetCalloutPosts",
+        "query",
+        variables
+      );
+    },
+    GetCalloutSpacesSettings(
+      variables: SchemaTypes.GetCalloutSpacesSettingsQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.GetCalloutSpacesSettingsQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.GetCalloutSpacesSettingsQuery>(
+            GetCalloutSpacesSettingsDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "GetCalloutSpacesSettings",
         "query",
         variables
       );
