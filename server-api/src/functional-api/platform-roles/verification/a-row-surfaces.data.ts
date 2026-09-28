@@ -45,6 +45,25 @@
  * ungated by this census. A13 gained the `createLicensePlan` entry (5 -> 6);
  * A11 gained the reconcile entry (14 -> 15). Total entries: 117 -> 119.
  *
+ * FIFTH re-sync (Slice A QA review rulings, 2026-09-25, against server
+ * 1226b22e1's uncommitted ruling wave): three of the QA review's rulings
+ * land new/changed census facts (the fourth, server-C2-c, is a privilege
+ * rule threaded onto shared profile/visual/reference/storage-bucket
+ * policies — no new A-row surface, nothing to mirror here). (1)
+ * server-C1-12 (ruling (a), Platform License Manager): A12 gains the
+ * `createInnovationHub` entry — it was held ONLY by the legacy
+ * `manageGlobalRoles` rule, so Slice B would have left no role able to
+ * create a hub (6 -> 7). (2) server-C2-d (ruling (a), Platform Support): A6
+ * gains the `eventOnOrganizationVerification` entry on its own
+ * `organization-verification` tree (2 -> 3). (3) server-C1-1 (ruling (b')
+ * "mover-only reads"): A16's single READ surface gains
+ * `platform-resource-admin` as a declared `acceptedExtraReachers` entry —
+ * the mover holds READ + READ_ABOUT in every space's `platformRolesAccess`
+ * so it can resolve the space it moves, but the grant is NON-cascading (the
+ * space itself and its About card, never its content) — declared, not
+ * derived, exactly like A16's existing FR-010 entry. Total entries: 119 ->
+ * 121.
+ *
  * T007a (research D24/D26/D27): this repo holds no independent notion of who
  * owns what — a gap found here is a `server` finding to report, never a local
  * edit to close. `AuthorizationCredential` / `AuthorizationPrivilege` are
@@ -698,6 +717,32 @@ export const A_ROW_SURFACES: Record<ARowId, readonly SurfaceRef[]> = {
       ],
       legacyReachers: [GA, GS],
     },
+    // QA server-C2-d (ruling (a), 2026-09-25): approving / resetting /
+    // reopening / archiving an organization's verification is organization
+    // lifecycle — Platform Support's A6 family. The resolver gates UPDATE;
+    // MANUALLY_VERIFY / RESET / REOPEN / ARCHIVE additionally require GRANT
+    // (`organization.verification.service.lifecycle.ts`), so both are named —
+    // AND, not OR (GateExpr has no `allOf`); `anyOf` is the closest shape and
+    // does not change the derived set because both privileges resolve to the
+    // IDENTICAL credential set on this tree (the A9 transfer idiom). The
+    // verification policy is `reset()` — it inherits NO root cascade, hence
+    // its own tree. The organization's own account admin keeps READ/UPDATE
+    // (owner path, not a global credential — never modelled here).
+    // The unguarded REJECT transition (lifecycle :100) is a separate
+    // pre-existing /bugfix, deliberately not fixed here.
+    {
+      file: 'src/domain/community/organization-verification/organization.verification.resolver.mutations.ts',
+      member: 'eventOnOrganizationVerification',
+      kind: 'graphql-mutation',
+      tree: 'organization-verification',
+      gate: {
+        anyOf: [AuthorizationPrivilege.Update, AuthorizationPrivilege.Grant],
+      },
+      intendedOwners: [AuthorizationCredential.PlatformSupport],
+      // GLOBAL_COMMUNITY_READ holds CRUD+GRANT on this policy today — a READ
+      // role holding GRANT; flagged for removal at Slice B with the rest.
+      legacyReachers: [GA, GS, AuthorizationCredential.GlobalCommunityRead],
+    },
   ],
 
   // ===== A7 — edit an org-owned pack/hub + CRUD its templates =====
@@ -1147,6 +1192,21 @@ export const A_ROW_SURFACES: Record<ARowId, readonly SurfaceRef[]> = {
         legacyReachers: [GA, GLM, GPM],
       })
     ),
+    // QA server-C1-12 (ruling (a), 2026-09-25): CREATE_INNOVATION_HUB was
+    // held ONLY by the legacy manageGlobalRoles rule (GA/GLM/GS) on the
+    // account tree — no 027 role held it, so Slice B would leave nobody able
+    // to create a hub. Platform License Manager owns it (GLM's successor for
+    // spec row 8's "create space/hub/pack/VC"), via its own non-cascading
+    // account rule (`account.service.authorization.ts`).
+    {
+      file: 'src/domain/space/account/account.resolver.mutations.ts',
+      member: 'createInnovationHub',
+      kind: 'graphql-mutation',
+      tree: 'account',
+      gate: { requires: AuthorizationPrivilege.CreateInnovationHub },
+      intendedOwners: [AuthorizationCredential.PlatformLicenseManager],
+      legacyReachers: [GA, GLM, GS],
+    },
     {
       file: 'src/domain/space/account/account.resolver.mutations.ts',
       member: 'updateBaselineLicensePlanOnAccount',
@@ -1314,6 +1374,11 @@ export const A_ROW_SURFACES: Record<ARowId, readonly SurfaceRef[]> = {
           credential: AuthorizationCredential.PlatformContentFullAccess,
           reason:
             'FR-010 read-family exception — the root cascade grants READ on the space tree; A16 holds no admin-family cell so this is accepted, not a defect.',
+        },
+        {
+          credential: AuthorizationCredential.PlatformResourceAdmin,
+          reason:
+            "A9 target resolution — QA server-C1-1 ruling (b′) \"mover-only reads\": the resource mover holds READ + READ_ABOUT in every space's platformRolesAccess so it can resolve the space it moves, but its space READ is NON-cascading (space.service.authorization.ts): the space itself and its About card, never its content.",
         },
       ],
       // T070m finding: Slice A's legacy root cascade

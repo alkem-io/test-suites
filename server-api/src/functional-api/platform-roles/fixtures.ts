@@ -19,6 +19,7 @@ import {
   McpApiKeyOperation,
 } from '@alkemio/tests-lib/core/generated/alkemio-schema';
 import { createOrganization } from '@functional-api/contributor-management/organization/organization.request.params';
+import { eventOnOrganizationVerification } from '@functional-api/contributor-management/organization/organization-verification.events.request.params';
 import {
   createUser,
   deleteUser,
@@ -116,6 +117,9 @@ export interface MatrixFixtures {
    * a TemplateContentSpace id, not a Space id. */
   readonly a7TemplateContentSpaceId: string;
   readonly innovationHubId: string;
+  /** QA server-C2-c (ruling (a)) — the hub's own BANNER visual id, from the
+   * SAME creation response as `innovationHubId` (no extra round-trip). */
+  readonly innovationHubBannerVisualId: string;
   readonly virtualContributorId: string;
   /**
    * A9's `convertVirtualContributorToUseKnowledgeBase` source — a DEDICATED,
@@ -328,6 +332,22 @@ export interface MatrixFixtures {
    * organization is created fresh, never populated with a space, and
    * referenced nowhere else. */
   readonly a6DeletableOrganizationId: string;
+  /** A6's `eventOnOrganizationVerification` target (QA server-C2-d, ruling
+   * (a), 2026-09-25) — a DEDICATED organization, distinct from
+   * `a6DeletableOrganizationId`: that one is a `renewableTarget` the
+   * `deleteOrganization` ALLOW cell may delete and re-create mid-run
+   * (corr-ts-16 only orders cells WITHIN one surface, not across this row's
+   * three), which would leave this surface pointed at a stale/gone id. Never
+   * referenced by any other row. */
+  readonly a6VerifiableOrganizationId: string;
+  /** That organization's verification id, already advanced to
+   * `verificationPending` (a `VERIFICATION_REQUEST` event, fired once here
+   * as GLOBAL_ADMIN) so the row's `MANUALLY_VERIFY` cell — the one lifecycle
+   * event a Slice A `platform-support` fixture can legally fire from a
+   * fresh organization's default `notVerified` state — is a valid next
+   * event the first (and only — deny cells never reach the lifecycle
+   * service) time it runs. */
+  readonly organizationVerificationId: string;
   /** The platform's default licensing framework id (corr-ts-13) — A12's
    * `assignLicensePlanToAccount` / `revokeLicensePlanFromAccount` /
    * `revokeLicensePlanFromSpace` helpers need the FRAMEWORK id, not a PLAN
@@ -571,6 +591,26 @@ export async function buildMatrixFixtures(): Promise<MatrixFixtures> {
   );
   const a6DeletableOrganizationId = a6OrgResult.data?.createOrganization?.id ?? '';
 
+  // QA server-C2-d (ruling (a), 2026-09-25): A6's `eventOnOrganizationVerification`
+  // needs its OWN dedicated organization — see the field doc comment above
+  // for why it cannot share `a6DeletableOrganizationId`. Advanced to
+  // `verificationPending` (the one `VERIFICATION_REQUEST` event a fresh
+  // organization's default `notVerified` state accepts) so the row's
+  // `MANUALLY_VERIFY` ALLOW cell lands on a valid next event.
+  const a6VerifyOrgResult = await createOrganization(
+    `matrix-a6-verify-${runId}`,
+    `matrixa6verify${runId}`
+  );
+  const a6VerifiableOrganizationId =
+    a6VerifyOrgResult.data?.createOrganization?.id ?? '';
+  const organizationVerificationId =
+    a6VerifyOrgResult.data?.createOrganization?.verification?.id ?? '';
+  await eventOnOrganizationVerification(
+    organizationVerificationId,
+    'VERIFICATION_REQUEST',
+    TestUser.GLOBAL_ADMIN
+  );
+
   // A5's `deleteUser` disposable target — a throwaway Alkemio user (no
   // Kratos flow needed for a `createUser`-created account), never
   // referenced by any other row or file, so the one surface invocation
@@ -646,6 +686,14 @@ export async function buildMatrixFixtures(): Promise<MatrixFixtures> {
     base.organization.accountId
   );
   const innovationHubId = innovationHubResult.data?.createInnovationHub.id;
+  // QA server-C2-c (ruling (a), 2026-09-25): the hub's own BANNER visual —
+  // `createInnovationHub.graphql` already selects `profile.visuals`, so no
+  // extra round-trip. `platform-support-org-resources.it-spec.ts`'s target
+  // for asserting the threaded privilege rule (UPDATE/CREATE/FILE_UPLOAD,
+  // never DELETE) reaches the hub's profile media, not just the hub entity.
+  const innovationHubBannerVisualId =
+    innovationHubResult.data?.createInnovationHub.profile?.visuals?.[0]?.id ??
+    '';
 
   const calloutId = base.space.collaboration.calloutPostId;
 
@@ -1089,6 +1137,7 @@ export async function buildMatrixFixtures(): Promise<MatrixFixtures> {
     a7SpaceTemplateId,
     a7TemplateContentSpaceId,
     innovationHubId: innovationHubId ?? '',
+    innovationHubBannerVisualId,
     virtualContributorId: base.virtualContributors?.[0]?.id ?? '',
     a9ConvertVcSourceId:
       a9ConvertVcSourceId || (base.virtualContributors?.[0]?.id ?? ''),
@@ -1124,6 +1173,8 @@ export async function buildMatrixFixtures(): Promise<MatrixFixtures> {
     a15ConditionSpaceId,
     a16PrivateSpaceId,
     a6DeletableOrganizationId,
+    a6VerifiableOrganizationId,
+    organizationVerificationId,
     licensingFrameworkId: licensingFrameworkId ?? '',
     a9SecondSubspaceId,
     a9L1MoveTargetId,
@@ -1404,6 +1455,13 @@ export async function teardownMatrixFixtures(
     fixtures.a6DeletableOrganizationId,
     "a6DeletableOrganization (A6's disposable delete target)",
     { expectAlreadyDeleted: true }
+  );
+  // QA server-C2-d's dedicated verification target — never deleted by any
+  // cell in this row (`eventOnOrganizationVerification` only ever advances
+  // its lifecycle state), so no `expectAlreadyDeleted` here.
+  await deleteOrganizationOrReport(
+    fixtures.a6VerifiableOrganizationId,
+    "a6VerifiableOrganization (A6's dedicated eventOnOrganizationVerification target)"
   );
 
   // A8's disposable delete targets (corr-ts-1) — best-effort: the whole

@@ -90454,6 +90454,14 @@ export type UpdateTemplateFromSpaceMutation = {
   updateTemplateFromSpace: { id: string };
 };
 
+export type UpdateVisualMutationVariables = SchemaTypes.Exact<{
+  updateData: SchemaTypes.UpdateVisualInput;
+}>;
+
+export type UpdateVisualMutation = {
+  updateVisual: { id: string; uri: string };
+};
+
 export type AssignPlatformRoleToUserMutationVariables = SchemaTypes.Exact<{
   roleData: SchemaTypes.AssignPlatformRoleInput;
 }>;
@@ -100723,6 +100731,14 @@ export type ActorsWithCredentialQuery = {
     | { id: string }
     | { id: string }
   >;
+};
+
+export type CalloutReadProbeQueryVariables = SchemaTypes.Exact<{
+  calloutId: SchemaTypes.Scalars["UUID"]["input"];
+}>;
+
+export type CalloutReadProbeQuery = {
+  lookup: { callout?: { id: string } | undefined };
 };
 
 export type LatestUserEmailChangeAuditEntryQueryVariables = SchemaTypes.Exact<{
@@ -120598,6 +120614,14 @@ export const UpdateTemplateFromSpaceDocument = gql`
     }
   }
 `;
+export const UpdateVisualDocument = gql`
+  mutation updateVisual($updateData: UpdateVisualInput!) {
+    updateVisual(updateData: $updateData) {
+      id
+      uri
+    }
+  }
+`;
 export const AssignPlatformRoleToUserDocument = gql`
   mutation assignPlatformRoleToUser($roleData: AssignPlatformRoleInput!) {
     assignPlatformRoleToUser(roleData: $roleData) {
@@ -122286,6 +122310,15 @@ export const ActorsWithCredentialDocument = gql`
     }
   }
 `;
+export const CalloutReadProbeDocument = gql`
+  query calloutReadProbe($calloutId: UUID!) {
+    lookup {
+      callout(ID: $calloutId) {
+        id
+      }
+    }
+  }
+`;
 export const LatestUserEmailChangeAuditEntryDocument = gql`
   query latestUserEmailChangeAuditEntry($userID: UUID!) {
     platformAdmin {
@@ -123590,6 +123623,7 @@ const UpdatePlatformSettingsDocumentString = print(
 const UpdateTemplateFromSpaceDocumentString = print(
   UpdateTemplateFromSpaceDocument
 );
+const UpdateVisualDocumentString = print(UpdateVisualDocument);
 const AssignPlatformRoleToUserDocumentString = print(
   AssignPlatformRoleToUserDocument
 );
@@ -123755,6 +123789,7 @@ const OrganizationsPaginatedDocumentString = print(
 );
 const UsersPaginatedDocumentString = print(UsersPaginatedDocument);
 const ActorsWithCredentialDocumentString = print(ActorsWithCredentialDocument);
+const CalloutReadProbeDocumentString = print(CalloutReadProbeDocument);
 const LatestUserEmailChangeAuditEntryDocumentString = print(
   LatestUserEmailChangeAuditEntryDocument
 );
@@ -126919,6 +126954,28 @@ export function getSdk(
         variables
       );
     },
+    updateVisual(
+      variables: SchemaTypes.UpdateVisualMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.UpdateVisualMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.UpdateVisualMutation>(
+            UpdateVisualDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "updateVisual",
+        "mutation",
+        variables
+      );
+    },
     assignPlatformRoleToUser(
       variables: SchemaTypes.AssignPlatformRoleToUserMutationVariables,
       requestHeaders?: GraphQLClientRequestHeaders
@@ -128741,6 +128798,28 @@ export function getSdk(
             { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "actorsWithCredential",
+        "query",
+        variables
+      );
+    },
+    calloutReadProbe(
+      variables: SchemaTypes.CalloutReadProbeQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.CalloutReadProbeQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.CalloutReadProbeQuery>(
+            CalloutReadProbeDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "calloutReadProbe",
         "query",
         variables
       );

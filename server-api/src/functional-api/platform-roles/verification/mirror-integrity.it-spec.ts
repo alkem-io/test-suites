@@ -91,8 +91,8 @@ describe('mirror-integrity (T007a) — the mirrored census matches its own docum
     expect(LIVE_ROW_IDS).not.toContain('A18');
   });
 
-  it('the census file holds 119 entries total (117 at the corr-ts-27/spec-ts-19/qual-ts-24 re-sync against server c7610d6fa; +2 A5 MCP-key surfaces, +1 A15 category removal, A11 −1 +2 after the 2026-09-15 develop merge; +1 A13 createLicensePlan + 1 A11 adminCommunicationReconcileForumHierarchy, QA cross-census-1/C2-a fix, 2026-09-25 — every planning document that still says ~76/~80/99/102/106/113/117 is stale)', () => {
-    expect(ALL_ENTRIES.length).toBe(119);
+  it('the census file holds 121 entries total (117 at the corr-ts-27/spec-ts-19/qual-ts-24 re-sync against server c7610d6fa; +2 A5 MCP-key surfaces, +1 A15 category removal, A11 −1 +2 after the 2026-09-15 develop merge; +1 A13 createLicensePlan + 1 A11 adminCommunicationReconcileForumHierarchy, QA cross-census-1/C2-a fix, 2026-09-25 (117 -> 119); +1 A12 createInnovationHub + 1 A6 eventOnOrganizationVerification, Slice A QA review rulings server-C1-12/server-C2-d, 2026-09-25 (119 -> 121) — every planning document that still says ~76/~80/99/102/106/113/117/119 is stale)', () => {
+    expect(ALL_ENTRIES.length).toBe(121);
   });
 
   it('exactly 4 entries carry {retiredIn: "B"} — A1s FR-022 credential mutations', () => {
@@ -109,9 +109,9 @@ describe('mirror-integrity (T007a) — the mirrored census matches its own docum
     }
   });
 
-  it('113 entries multiply at stage A; 115 at stage B (119 total minus the 4 non-multiplying retiredIn entries, minus A17s 2 deferred-until-B entries at stage A only)', () => {
-    expect(multiplyingAt('A').length).toBe(113);
-    expect(multiplyingAt('B').length).toBe(115);
+  it('115 entries multiply at stage A; 117 at stage B (121 total minus the 4 non-multiplying retiredIn entries, minus A17s 2 deferred-until-B entries at stage A only)', () => {
+    expect(multiplyingAt('A').length).toBe(115);
+    expect(multiplyingAt('B').length).toBe(117);
   });
 
   it('per-row surface counts match the documented census table (stage-A declared count)', () => {
@@ -121,13 +121,13 @@ describe('mirror-integrity (T007a) — the mirrored census matches its own docum
       A3: 10,
       A4: 3,
       A5: 5,
-      A6: 2,
+      A6: 3,
       A7: 8,
       A8: 6,
       A9: 13,
       A10: 6,
       A11: 15,
-      A12: 6,
+      A12: 7,
       A13: 6,
       A14: 1,
       A15: 4,
@@ -375,5 +375,60 @@ describe('mirror-integrity (T007a) — the structural-diff guard: derived reacha
         AuthorizationCredential.GlobalAdmin
       );
     }
+  });
+
+  it('A6: eventOnOrganizationVerification reaches platform-support via the organization-verification tree-scoped grant, and global-community-read is legacy-only', () => {
+    // QA server-C2-d (ruling (a), 2026-09-25): without
+    // TREE_SCOPED_PRIVILEGE_GRANTS['organization-verification'], this bare
+    // UPDATE/GRANT `anyOf` gate would derive an EMPTY owner set — the
+    // verification policy is `reset()` and shares NO cascade with any other
+    // tree.
+    const [, , eventOnOrganizationVerification] = A_ROW_SURFACES.A6;
+    expect(eventOnOrganizationVerification).toBeDefined();
+    expect(eventOnOrganizationVerification.tree).toBe(
+      'organization-verification'
+    );
+    const reached = reachers(eventOnOrganizationVerification, stageA);
+    expect(reached).toContain(AuthorizationCredential.PlatformSupport);
+    expect(reached).toContain(AuthorizationCredential.GlobalCommunityRead);
+    // Slice B drops the legacy grant entirely — the derivation must not
+    // invent an owning-role reach for it.
+    expect(
+      reachers(eventOnOrganizationVerification, 'B')
+    ).not.toContain(AuthorizationCredential.GlobalCommunityRead);
+  });
+
+  it('A12: createInnovationHub reaches platform-license-manager at stage A, and the account admin does not inherit it', () => {
+    // QA server-C1-12 (ruling (a), 2026-09-25): CREATE_INNOVATION_HUB is a
+    // dedicated `ManagedPrivilege`, not a tree-scoped one (unlike A12's
+    // licensing-framework GRANT/A13's CRUD) — declared directly in
+    // `PRIVILEGE_GRANTS`.
+    const createInnovationHub = A_ROW_SURFACES.A12.find(
+      s => s.member === 'createInnovationHub'
+    );
+    expect(createInnovationHub).toBeDefined();
+    expect(reachers(createInnovationHub!, stageA)).toContain(
+      AuthorizationCredential.PlatformLicenseManager
+    );
+  });
+
+  it('A16: platform-resource-admin is a derived reacher at stage A (QA server-C1-1 ruling (b′) mover-only reads), never at the cost of the existing FR-010 exception', () => {
+    const [a16] = A_ROW_SURFACES.A16;
+    const reached = reachers(a16, stageA);
+    expect(reached).toEqual(
+      expect.arrayContaining([
+        AuthorizationCredential.PlatformSpacesReader,
+        AuthorizationCredential.PlatformResourceAdmin,
+        AuthorizationCredential.PlatformContentFullAccess,
+      ])
+    );
+    expect(
+      a16.acceptedExtraReachers?.map(r => r.credential)
+    ).toEqual(
+      expect.arrayContaining([
+        AuthorizationCredential.PlatformContentFullAccess,
+        AuthorizationCredential.PlatformResourceAdmin,
+      ])
+    );
   });
 });

@@ -82588,6 +82588,14 @@ export type UpdateTemplateFromSpaceMutation = {
   updateTemplateFromSpace: { id: string };
 };
 
+export type UpdateVisualMutationVariables = Exact<{
+  updateData: UpdateVisualInput;
+}>;
+
+export type UpdateVisualMutation = {
+  updateVisual: { id: string; uri: string };
+};
+
 export type AssignPlatformRoleToUserMutationVariables = Exact<{
   roleData: AssignPlatformRoleInput;
 }>;
@@ -92337,6 +92345,14 @@ export type ActorsWithCredentialQuery = {
     | { id: string }
     | { id: string }
   >;
+};
+
+export type CalloutReadProbeQueryVariables = Exact<{
+  calloutId: Scalars["UUID"]["input"];
+}>;
+
+export type CalloutReadProbeQuery = {
+  lookup: { callout?: { id: string } | undefined };
 };
 
 export type LatestUserEmailChangeAuditEntryQueryVariables = Exact<{

@@ -1,0 +1,7 @@
+query calloutReadProbe($calloutId: UUID!) {
+  lookup {
+    callout(ID: $calloutId) {
+      id
+    }
+  }
+}

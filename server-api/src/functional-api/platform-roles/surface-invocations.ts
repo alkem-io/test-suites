@@ -8,6 +8,7 @@ import { RoleName } from '@alkemio/tests-lib/core/generated/alkemio-schema';
 import { graphqlErrorWrapper } from '@alkemio/tests-lib/utils/graphql.wrapper';
 import type { GraphQLReturnType } from '@alkemio/tests-lib/utils/graphql.wrapper';
 import { SpaceVisibility } from '@alkemio/tests-lib/core/generated/alkemio-schema';
+import { InnovationHubType } from '@alkemio/tests-lib/core/generated/alkemio-schema';
 import { LicensingCredentialBasedCredentialType } from '@alkemio/tests-lib/core/generated/alkemio-schema';
 import { LicensingCredentialBasedPlanType } from '@alkemio/tests-lib/core/generated/alkemio-schema';
 import { VirtualContributorWellKnown } from '@alkemio/tests-lib/core/generated/alkemio-schema';
@@ -753,7 +754,7 @@ export function buildSurfaceInvocations(
       ),
   ]);
 
-  // ===== A6 — create / delete an organization (2) =====
+  // ===== A6 — create / delete an organization; verify one (3) =====
   registerRow('A6', [
     // Every ALLOW caller in this matrix (both `platform-support` and
     // `feature-organization-creator`, per A6's per-surface intent split)
@@ -797,6 +798,29 @@ export function buildSurfaceInvocations(
             ),
           caller
         )
+      ),
+    // QA server-C2-d (ruling (a), 2026-09-25): `fx.organizationVerificationId`
+    // is a DEDICATED verification target, never `fx.a6DeletableOrganizationId`
+    // — that one is a `renewableTarget` the row above may delete/recreate
+    // mid-run (corr-ts-16 only orders cells WITHIN one surface, not across
+    // this row's three), which would leave this surface's late-running ALLOW
+    // cell pointed at a stale/gone verification id. Fixture setup already
+    // advances it to `verificationPending` (via `VERIFICATION_REQUEST`) so
+    // `MANUALLY_VERIFY` is a valid next event the FIRST (and only — deny
+    // cells never reach the lifecycle service) time this fires.
+    caller =>
+      invoke(
+        token =>
+          client().eventOnOrganizationVerification(
+            {
+              eventData: {
+                organizationVerificationID: fx.organizationVerificationId,
+                eventName: 'MANUALLY_VERIFY',
+              },
+            },
+            bearer(token)
+          ),
+        caller
       ),
   ]);
 
@@ -1369,7 +1393,7 @@ export function buildSurfaceInvocations(
       ),
   ]);
 
-  // ===== A12 — assign/revoke license plans (6) =====
+  // ===== A12 — assign/revoke license plans; create a hub (7) =====
   registerRow('A12', [
     caller =>
       invoke(
@@ -1446,6 +1470,33 @@ export function buildSurfaceInvocations(
             },
             bearer(token)
           ),
+        caller
+      ),
+    // QA server-C1-12 (ruling (a), 2026-09-25): a fresh hub per call — a
+    // unique `nameID`/`subdomain` per invocation the same way A6's
+    // `CreateOrganization` cell mints a unique org per call, so repeated
+    // ALLOW attempts (or a re-run against a persistent environment) never
+    // collide on a duplicate nameID/subdomain.
+    caller =>
+      invoke(
+        token => {
+          const uniqueSuffix = UniqueIDGenerator.getID();
+          return client().CreateInnovationHub(
+            {
+              input: {
+                accountID: fx.organizationAccountId,
+                subdomain: `matrix-a12-${uniqueSuffix}`,
+                type: InnovationHubType.Visibility,
+                nameID: `matrixa12${uniqueSuffix}`,
+                profileData: {
+                  displayName: `matrix A12 hub ${uniqueSuffix}`,
+                },
+                spaceVisibilityFilter: SpaceVisibility.Demo,
+              },
+            },
+            bearer(token)
+          );
+        },
         caller
       ),
     caller =>

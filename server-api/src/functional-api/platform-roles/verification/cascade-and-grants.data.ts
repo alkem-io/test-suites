@@ -37,7 +37,7 @@
  * Mirror everything else structurally (same ids, same order, same
  * commentary) so a diff against the server file stays a one-line check —
  * `mirror-integrity.it-spec.ts` in this directory guards the census's own
- * documented counts (107 multiplying at stage A / 113 total entries / 21 live rows) so a
+ * documented counts (115 multiplying at stage A / 121 total entries / 21 live rows) so a
  * stale local edit fails loudly even without cross-repo file access at test
  * time (this repo's worktree never reads another repo's tree at runtime).
  */
@@ -113,6 +113,12 @@ export type TreeId =
   // flat `PRIVILEGE_GRANTS` entry for the same privilege names — split into
   // its own tree-scoped anchor.
   | 'callouts-set'
+  // QA server-C2-d (Slice A QA review ruling, 2026-09-25): the organization
+  // verification policy is `reset()` and built from its own credential rules
+  // alone (`organization.verification.service.authorization.ts`) — it
+  // inherits NEITHER the root cascade nor the organization's policy, so it
+  // cannot share the `organization` tree's cascade reach.
+  | 'organization-verification'
   // Per-resolver SYNTHETIC policies — fixed, in-memory, never persisted,
   // never reset. Named per resolver so a reviewer can find the constructor
   // that builds it.
@@ -325,6 +331,8 @@ export type ManagedPrivilege =
   | AuthorizationPrivilege.UpdateCalloutPublisher
   | AuthorizationPrivilege.AccountLicenseManage
   | AuthorizationPrivilege.CreateOrganization
+  // QA server-C1-12 (ruling (a)) — A12's `createInnovationHub`.
+  | AuthorizationPrivilege.CreateInnovationHub
   | AuthorizationPrivilege.AccessVirtualAssistant
   // --- T070m additions (reachability.spec.ts) — three purpose-built
   // privileges 032 authored (not this feature), but which gate A3/A11's
@@ -548,6 +556,19 @@ export const PRIVILEGE_GRANTS: Record<ManagedPrivilege, PrivilegeGrant> = {
       AuthorizationCredential.BetaTester,
     ],
   },
+  // --- A12 create-hub half (QA server-C1-12, ruling (a)). Platform License
+  // Manager's own non-cascading account rule; the legacy reach is the
+  // `manageGlobalRoles` account rule (GA/GLM/GS) that was its ONLY holder.
+  // The account admin never held it (unlike CREATE_SPACE/_PACK/_VIRTUAL).
+  [AuthorizationPrivilege.CreateInnovationHub]: {
+    anchor: 'account',
+    owningCredentials: [AuthorizationCredential.PlatformLicenseManager],
+    legacyCredentials: [
+      AuthorizationCredential.GlobalAdmin,
+      AuthorizationCredential.GlobalLicenseManager,
+      AuthorizationCredential.GlobalSupport,
+    ],
+  },
   // --- No A-row of its own (not one of A1-A21) — included for
   // completeness since T035 re-anchors it additively alongside
   // `ACCESS_VIRTUAL_ASSISTANT`'s pre-existing grant. Not consumed by any
@@ -596,9 +617,19 @@ export const PRIVILEGE_GRANTS: Record<ManagedPrivilege, PrivilegeGrant> = {
 
   // --- A16 (T038) — the one bare-READ exception; see the `ManagedPrivilege`
   // doc comment above.
+  // QA server-C1-1 (ruling (b′) "mover-only reads"): platform-resource-admin
+  // ALSO holds READ in every space's platformRolesAccess — A9 target
+  // resolution, on a NON-cascading rule (the space itself + its About card,
+  // never its content). A grant-set fact, so it is declared here and the
+  // derivation reports it; A16 accepts it as a declared extra reacher
+  // (`a-row-surfaces.data.ts`), not as an owner of the cross-space read
+  // family.
   [AuthorizationPrivilege.Read]: {
     anchor: 'space',
-    owningCredentials: [AuthorizationCredential.PlatformSpacesReader],
+    owningCredentials: [
+      AuthorizationCredential.PlatformSpacesReader,
+      AuthorizationCredential.PlatformResourceAdmin,
+    ],
     legacyCredentials: [AuthorizationCredential.GlobalSpacesReader],
   },
 };
@@ -696,6 +727,34 @@ export const TREE_SCOPED_PRIVILEGE_GRANTS: {
         AuthorizationCredential.GlobalSupport,
         AuthorizationCredential.GlobalLicenseManager,
         AuthorizationCredential.GlobalPlatformManager,
+      ],
+    },
+  },
+  // QA server-C2-d (ruling (a)) — A6's `eventOnOrganizationVerification`.
+  // The verification policy is `reset()` and built from its own rules alone
+  // (`organization.verification.service.authorization.ts`): Platform Support
+  // gets READ + UPDATE + GRANT (UPDATE passes the resolver, GRANT the
+  // MANUALLY_VERIFY / RESET / REOPEN / ARCHIVE lifecycle guards); the legacy
+  // `organizationGlobalAdminsAll` rule grants CRUD+GRANT to GA/GS and — a READ
+  // role holding GRANT — GLOBAL_COMMUNITY_READ, all three dropped at Slice B.
+  // Tree-scoped because UPDATE/GRANT are baseline verbs reused everywhere.
+  'organization-verification': {
+    [AuthorizationPrivilege.Update]: {
+      anchor: 'organization-verification',
+      owningCredentials: [AuthorizationCredential.PlatformSupport],
+      legacyCredentials: [
+        AuthorizationCredential.GlobalAdmin,
+        AuthorizationCredential.GlobalSupport,
+        AuthorizationCredential.GlobalCommunityRead,
+      ],
+    },
+    [AuthorizationPrivilege.Grant]: {
+      anchor: 'organization-verification',
+      owningCredentials: [AuthorizationCredential.PlatformSupport],
+      legacyCredentials: [
+        AuthorizationCredential.GlobalAdmin,
+        AuthorizationCredential.GlobalSupport,
+        AuthorizationCredential.GlobalCommunityRead,
       ],
     },
   },
