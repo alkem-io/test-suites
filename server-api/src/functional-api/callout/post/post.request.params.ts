@@ -40,6 +40,41 @@ export const createPostOnCallout = async (
   return graphqlErrorWrapper(callback, userRole);
 };
 
+// A flag-aware sibling of createPostOnCallout. createPostOnCallout above is
+// left untouched so every pre-existing caller keeps omitting the field and
+// keeps notifying today.
+export const createPostOnCalloutWithNotification = async (
+  calloutID: string,
+  profileData: {
+    displayName: string;
+    description?: string;
+  },
+  sendNotification?: boolean,
+  nameID?: string,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const graphqlClient = await getGraphqlClient();
+  const callback = (authToken: string | undefined) =>
+    graphqlClient.CreateContributionOnCallout(
+      {
+        contributionData: {
+          calloutID,
+          type: CalloutContributionType.Post,
+          post: {
+            nameID,
+            profileData,
+          },
+          sendNotification,
+        },
+      },
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+
+  return graphqlErrorWrapper(callback, userRole);
+};
+
 export const updatePost = async (
   ID: string,
   nameID: string,

@@ -36,6 +36,7 @@ import {
   provisionSubject,
   typedNameField,
 } from './delete-account.helpers';
+import { fillSecret } from '../helpers/login.helper';
 
 test.describe(
   'Delete my account, no blocking resources',
@@ -130,9 +131,10 @@ test.describe(
       await page
         .getByRole('textbox', { name: 'E-Mail *' })
         .fill(cleanSubject.email);
-      await page
-        .getByRole('textbox', { name: 'Password *' })
-        .fill(harnessPassword);
+      await fillSecret(
+        page.getByRole('textbox', { name: 'Password *' }),
+        harnessPassword
+      );
       await page.getByRole('button', { name: 'Sign in', exact: true }).click();
 
       // Kratos returns the same generic "invalid credentials" message for a

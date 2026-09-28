@@ -294,21 +294,26 @@ export default defineConfig({
       expect: { timeout: 15_000 },
     },
     {
-      // Feature 076 (expanded subspace cards) acceptance walks. Each file seeds
-      // its own Space/Subspaces + EXPANDED-variant callout via the GraphQL API
-      // in `beforeAll` and drives a full SPA read flow against it. US1/US3/US4
-      // run as anonymous browser contexts (any admin token they use comes from
-      // `getUserToken`, a Node-side API call for fixture seeding, never a
-      // browser session). US2 alone drives an authenticated admin browser
-      // context and turns trace/video capture off for itself with a file-level
-      // `test.use` — see the note at the top of that spec. The 240s project
-      // timeout covers US1's beforeAll fixture, the slowest of the four; each
-      // file's own `describe.configure({ timeout })` sets the tighter
-      // per-file bound.
-      name: 'Subspaces callout',
-      testMatch: ['/subspaces-callout/*.spec.ts'],
-      timeout: 240_000,
+      // Feature 070 (contribution notify switch) — persisted P1 acceptance
+      // walk, same forge-verify shape as 038/041: machine-generated file in
+      // tests/, self-seeding (its own org + space + response callout),
+      // torn down in afterAll. Asserts at the RabbitMQ notifications-queue
+      // publish counter rather than MailSlurper, guarded by
+      // rabbitMqManagementConfigured() (the same checkPush pattern
+      // organization-space-invitations/us2-org-admins-notified.spec.ts
+      // uses) — this workflow sets no RABBITMQ_MANAGEMENT_* env, so nightly
+      // skips the queue-counter checks and still runs the switch/UI/activity
+      // assertions.
+      name: 'Contribution notify switch',
+      // testMatch alone cannot reach outside the top-level testDir
+      // (src/functional-e2e), so the project needs its own testDir.
+      testDir: path.resolve(__dirname, '../tests'),
+      testMatch: ['contribution-notify-switch.spec.ts'],
+      timeout: 90_000,
       expect: { timeout: 15_000 },
+      // Traces/videos of this walk (which types the harness password) are
+      // stripped from the public report by scripts/publish-report.sh like
+      // every other project's, so no per-project opt-out is needed.
     },
   ],
   // % or number of the available CPUs
