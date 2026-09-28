@@ -21,6 +21,7 @@ import {
   acceptAllCookiesButton,
   logInHeaderLink,
 } from '../authentication/common-authentication-page-elements';
+import { fillSecret } from '../helpers/login.helper';
 
 const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 // Local dev: the Traefik edge on ALKEMIO_BASE_URL does not route `/rest/mcp`
@@ -57,7 +58,10 @@ const signIn = async (page: import('@playwright/test').Page) => {
     await page.goto(`${baseUrl}/login`);
   }
   await page.getByRole('textbox', { name: 'E-Mail' }).fill(adminEmail);
-  await page.getByRole('textbox', { name: 'Password' }).fill(adminPassword);
+  await fillSecret(
+    page.getByRole('textbox', { name: 'Password' }),
+    adminPassword
+  );
   await page.getByRole('button', { name: 'Sign in', exact: true }).click();
   await page.waitForURL(url => !url.pathname.startsWith('/login'), {
     timeout: 15000,

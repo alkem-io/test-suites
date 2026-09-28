@@ -1,4 +1,4 @@
-import { Locator, Page } from '@playwright/test';
+import { expect, Locator, Page } from '@playwright/test';
 import { acceptCookiesIfVisible } from './cookies.helper';
 
 const defaultPassword = process.env.AUTH_TEST_HARNESS_PASSWORD || 'change_me';
@@ -18,21 +18,42 @@ export async function fillSecret(
   locator: Locator,
   secret: string
 ): Promise<void> {
+  // Mirror the actionability checks `Locator.fill` performs — visible,
+  // enabled, editable — so a disabled field (e.g. the Kratos form while the
+  // sign-in flow is still being prepared) is waited for, not written to.
+  // `toBeEditable` also rejects anything that is not an input/textarea/
+  // contenteditable, so a locator that resolves to a wrapper fails here
+  // instead of silently setting `.value` on a <div>. Neither assertion
+  // message contains the secret.
   await locator.waitFor({ state: 'visible' });
-  await locator.evaluate((el, value) => {
-    const input = el as HTMLInputElement;
-    const setter = Object.getOwnPropertyDescriptor(
-      window.HTMLInputElement.prototype,
-      'value'
-    )?.set;
-    if (setter) {
-      setter.call(input, value);
-    } else {
-      input.value = value;
+  await expect(locator).toBeEditable({ timeout: 15_000 });
+  const outcome = await locator.evaluate((el, value) => {
+    const isInput = el instanceof HTMLInputElement;
+    const isTextArea = el instanceof HTMLTextAreaElement;
+    if (!isInput && !isTextArea) {
+      return 'not-an-input';
     }
-    input.dispatchEvent(new Event('input', { bubbles: true }));
-    input.dispatchEvent(new Event('change', { bubbles: true }));
+    const field = el as HTMLInputElement | HTMLTextAreaElement;
+    const proto = isInput
+      ? window.HTMLInputElement.prototype
+      : window.HTMLTextAreaElement.prototype;
+    const setter = Object.getOwnPropertyDescriptor(proto, 'value')?.set;
+    if (setter) {
+      setter.call(field, value);
+    } else {
+      field.value = value;
+    }
+    field.dispatchEvent(new Event('input', { bubbles: true }));
+    field.dispatchEvent(new Event('change', { bubbles: true }));
+    return field.value === value ? 'ok' : 'reset-by-page';
   }, secret);
+  if (outcome !== 'ok') {
+    // Deliberately no expected/actual values: this message lands in the
+    // published report.
+    throw new Error(
+      `fillSecret: could not set the secret (${outcome}) on ${locator}`
+    );
+  }
 }
 
 /**

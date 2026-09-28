@@ -51,6 +51,7 @@ import {
   provisionSubject,
   typedNameField,
 } from './delete-account.helpers';
+import { fillSecret } from '../helpers/login.helper';
 
 /**
  * Ages the REAL BFF session the browser is currently holding for `subject`
@@ -102,7 +103,7 @@ const completeReauthenticationPrompt = async (
   if (await emailField.isVisible().catch(() => false)) {
     await emailField.fill(subject.email);
   }
-  await passwordField.fill(harnessPassword);
+  await fillSecret(passwordField, harnessPassword);
   await page.getByRole('button', { name: 'Sign in', exact: true }).click();
 };
 

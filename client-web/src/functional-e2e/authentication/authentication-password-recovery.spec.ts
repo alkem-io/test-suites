@@ -13,6 +13,7 @@ import {
   deleteMailSlurperMails,
   getRecoveryLink,
 } from '@alkemio/tests-lib';
+import { fillSecret } from '../helpers/login.helper';
 
 const password = process.env.AUTH_TEST_HARNESS_PASSWORD || 'change_me';
 const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
@@ -60,7 +61,7 @@ const submitRecoveryAndSetPassword = async (
     page.getByRole('heading', { name: 'Set new password' })
   ).toBeVisible({ timeout: 10000 });
   await passwordField(page).click();
-  await passwordField(page).fill(newPassword);
+  await fillSecret(passwordField(page), newPassword);
   await saveButton(page).click();
 };
 
