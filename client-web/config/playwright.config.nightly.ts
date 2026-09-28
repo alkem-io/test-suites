@@ -311,16 +311,9 @@ export default defineConfig({
       testMatch: ['contribution-notify-switch.spec.ts'],
       timeout: 90_000,
       expect: { timeout: 15_000 },
-      // This walk signs in through the Kratos UI, so the harness password is
-      // typed into the page. The shared `use` block above sets
-      // trace: 'on-all-retries' / video: 'retain-on-failure', and
-      // scripts/publish-report.sh pushes report attachments (including
-      // data/**) to the gh-pages branch of this PUBLIC repo — which would put
-      // that plaintext credential on the public site after any flake. Opt this
-      // project out of both artefacts. (The wider publishing channel is a
-      // pre-existing repo-level exposure tracked separately; this only stops
-      // THIS walk from adding to it.)
-      use: { trace: 'off', video: 'off' },
+      // Traces/videos of this walk (which types the harness password) are
+      // stripped from the public report by scripts/publish-report.sh like
+      // every other project's, so no per-project opt-out is needed.
     },
   ],
   // % or number of the available CPUs

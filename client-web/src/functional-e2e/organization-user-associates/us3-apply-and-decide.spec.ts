@@ -38,6 +38,7 @@ import {
   stripAllowApplicationsSetting,
   TestUserManager,
 } from './organization-user-associates.helpers';
+import { fillSecret } from '../helpers/login.helper';
 
 baseTest.describe.configure({ mode: 'serial' });
 
@@ -423,7 +424,10 @@ baseTest.describe('US3-AS7 — an unauthenticated visitor is sent to log in and 
     const emailField = page.getByRole('textbox', { name: 'E-Mail' });
     await expect(emailField).toBeVisible({ timeout: 15_000 });
     await emailField.fill(viewerEmail);
-    await page.getByRole('textbox', { name: 'Password' }).fill(harnessPassword);
+    await fillSecret(
+      page.getByRole('textbox', { name: 'Password' }),
+      harnessPassword
+    );
     await page.getByRole('button', { name: 'Sign in', exact: true }).click();
     await page.waitForURL(new RegExp(`.*organization/${orgO.nameID}.*`), { timeout: 20_000 });
   });
