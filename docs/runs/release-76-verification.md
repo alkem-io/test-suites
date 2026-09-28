@@ -4,7 +4,7 @@
 >
 > **Source for the rows below:** [notifications#356](https://github.com/alkem-io/notifications/issues/356) (parent [server#4100](https://github.com/alkem-io/server/issues/4100)), delivered by server#6467, client-web#10272, notifications#594 and test-suites#632. Test plan: `client-web/src/functional-e2e/organization-space-invitations/organization-space-invitations-test-plan.md`.
 
-**Environment for every step:** _to fill in — environment and image versions the run was done on._ The notifications service must include notifications#594 (`0.41.0` or later).
+**Environment.** Rows 1–3 were run on **DEV** on 28.09; the image versions deployed there at the time were not recorded. Rows 4–8 are to be run on **ACC**, which delivers through a real mail client rather than MailSlurper — record the ACC image versions here when they are run. The notifications service must include notifications#594 (`0.41.0` or later); on DEV this is implied by rows 1–3 passing, since the "accepted" and "declined" emails only exist from that version.
 
 **Accounts.** 👤A = admin of Space S (L0), sends the invitations · 👤B = second admin of Space S · 👤C = admin of subspace S1 (L1 under S), not an admin of S · 👥U1, U2, U3 = registered users, not members of S. All admins on default notification settings.
 
@@ -13,6 +13,8 @@
 ---
 
 ## 0. What is left (as of 28.09)
+
+All of it is to be run on **ACC**.
 
 | Item | Procedure | Why it cannot be automated today |
 |------|-----------|----------------------------------|
@@ -32,18 +34,18 @@ Each row is a one-line summary. The numbered **procedure** below carries the exa
 
 | #  | Change | Repo | Risk | Automated? | Manual check (summary) | Validation | Result |
 |----|--------|------|------|------------|------------------------|------------|--------|
-| 1  | User **accepts** a Space invitation → every Space admin told "accepted"; generic "joined" no longer sent | server + notifications + client-web | High — "joined" suppressed and the replacement never exercised live for user invitees | Unit only; API case UO-1 planned | Bell row, link, emails, no "joined", welcome to the invitee → **P1** | 🖐 manual | ✅ 28.09 |
-| 2  | User **declines** a Space invitation → every Space admin told "declined" | server + notifications + client-web | Medium — story says "reject was not implemented", the code ships it | Unit only; API case UO-2 planned | Bell row, link, emails → **P2** | 🖐 manual | ✅ 28.09 |
-| 3  | Subspace invitation that also joins the parent Space → suppression stops at the invited Space | server | Medium — parent Space admins must still hear about a new member | Unit only; API case UO-3 planned | L1 admin gets "accepted"; L0 admins get "joined" for L0 → **P3** | 🖐 manual | ⚠️ 28.09 — pass, see note N1 |
-| 4  | Outcome **email rendering** | notifications | Low | No | Names rendered, no raw placeholders, link lands on Community settings → **P4** | 🖐 manual | ☐ |
-| 5  | **Push** for the user outcome events | server | Low — unit-pinned | Unit only | One push on accept, none for "joined" → **P5** | 🖐 manual | ☐ |
-| 6  | **Muting** the new settings row | server + client-web | Low | API for organization invitees only | Muted admin gets nothing, the other admin still does → **P6** | 🖐 manual | ☐ |
+| 1  | User **accepts** a Space invitation → every Space admin told "accepted"; generic "joined" no longer sent | server + notifications + client-web | High — "joined" suppressed and the replacement never exercised live for user invitees | API: `user-invitation-outcomes.it-spec.ts` › UO-1 (email + in-app), green on a local stack only | Bell row, link, emails, no "joined", welcome to the invitee → **P1** | 🖐 manual on DEV | ✅ 28.09 |
+| 2  | User **declines** a Space invitation → every Space admin told "declined" | server + notifications + client-web | Medium — story says "reject was not implemented", the code ships it | API: `user-invitation-outcomes.it-spec.ts` › UO-2 (email + in-app), green on a local stack only | Bell row, link, emails → **P2** | 🖐 manual on DEV | ✅ 28.09 |
+| 3  | Subspace invitation that also joins the parent Space → suppression stops at the invited Space | server | Medium — parent Space admins must still hear about a new member | API: `user-invitation-outcomes.it-spec.ts` › UO-3 (email), green on a local stack only | L1 admin gets "accepted"; L0 admins get "joined" for L0 → **P3** | 🖐 manual on DEV | ⚠️ 28.09 — pass, see note N1 |
+| 4  | Outcome **email rendering** | notifications | Low | No | Names rendered, no raw placeholders, link lands on Community settings → **P4** | 🖐 manual on ACC (real mail client) | ☐ |
+| 5  | **Push** for the user outcome events | server | Low — unit-pinned | Unit only | One push on accept, none for "joined" → **P5** | 🖐 manual on ACC | ☐ |
+| 6  | **Muting** the new settings row | server + client-web | Low | API for organization invitees only | Muted admin gets nothing, the other admin still does → **P6** | 🖐 manual on ACC | ☐ |
 | 7  | **Migration** — new row seeded from the existing new-member preference | server | Elevated — settings backfill on every user | Migration unit specs only | A user who muted "new member" before the deploy has the new row muted too → **P7** | 🖐 manual on ACC, before and after deploy | ☐ |
-| 8  | **Translated copy** for the outcome rows and the settings row | client-web | Low | No | nl, de, es, fr, bg: translated, names filled in, no keys → **P8** | 🖐 manual | ☐ |
+| 8  | **Translated copy** for the outcome rows and the settings row | client-web | Low | No | nl, de, es, fr, bg: translated, names filled in, no keys → **P8** | 🖐 manual on ACC | ☐ |
 
 **Notes from the run**
 
-- **N1 (row 3).** Observed 28.09: the admins of Space S were notified for Space S only; the notification for subspace S1 reached the subspace admin only. So L0 admins do **not** receive the L1 "accepted" notification. This was an unverified point in the test plan and is now recorded as the shipped behaviour. Not recorded: whether U3 received one welcome email or one per Space joined.
+- **N1 (row 3).** Observed 28.09 on DEV: the admins of Space S were notified for Space S only; the notification for subspace S1 reached the subspace admin only. So L0 admins do **not** receive the L1 "accepted" notification. This was an unverified point in the test plan and is now recorded as the shipped behaviour. Not recorded: whether U3 received one welcome email or one per Space joined.
 
 ---
 

@@ -5,7 +5,7 @@
 - **Workspace spec:** `specs/061-organization-space-invitations/` in `alkem-io/agents-hq` (source of truth for the US/AS ids below). It is on branch `server-4100` only and was read from there. Rulings R26/R26b/R27/R28/R33/R40 in `design/operator-rulings.md` govern the extension below.
 - **Suites:** `client-web/src/functional-e2e/organization-space-invitations/` (acceptance walks). Server-side validation-only scenarios that the unified invite dialog can never drive (an Admin role or a non-actor id offered to an organization) are covered instead by `server-api/src/functional-api/roleset/invitations/invitation-organization.it-spec.ts`. Each acceptance spec's header cross-references that file for the AS ids it defers. Notification it-specs live in `server-api/src/functional-api/notifications/space/community/`.
 
-The US1–US3 walks and the organization-invitation it-specs merged with test-suites#632. **This extension** covers two rows of notifications#356 that were never proven live: the Space-admin outcome notifications when a **user** accepts or declines a Space invitation (`SPACE_ADMIN_USER_COMMUNITY_INVITATION_ACCEPTED/_DECLINED`), and the rule that a user's invitation acceptance **no longer** also fires the generic `SPACE_ADMIN_COMMUNITY_NEW_MEMBER`. **Headline claim once built:** both are pinned at API level (email and in-app) at L0, and at the L1 ancestor boundary. Push stays unit-level. The analysis ran against `origin/develop` @ `0ca74068` (2026-09-25; `git fetch` failed in that session) and against the merged diffs server#6467, notifications#594, client-web#10272 and test-suites#632.
+The US1–US3 walks and the organization-invitation it-specs merged with test-suites#632. **This extension** covers two rows of notifications#356 that were never proven live: the Space-admin outcome notifications when a **user** accepts or declines a Space invitation (`SPACE_ADMIN_USER_COMMUNITY_INVITATION_ACCEPTED/_DECLINED`), and the rule that a user's invitation acceptance **no longer** also fires the generic `SPACE_ADMIN_COMMUNITY_NEW_MEMBER`. **Headline claim:** both are pinned at API level (email and in-app) at L0, and at the L1 ancestor boundary, by `user-invitation-outcomes.it-spec.ts`. The cases are built and green on a local stack; they have not run against a deployed environment. Push stays unit-level. The analysis ran against `origin/develop` @ `0ca74068` (2026-09-25; `git fetch` failed in that session) and against the merged diffs server#6467, notifications#594, client-web#10272 and test-suites#632.
 
 ## How to run
 
@@ -16,7 +16,7 @@ queue, all reachable from `client-web/.env` / `server-api/.env`.
 cd client-web
 UI_HEADLESS=true pnpm exec playwright test src/functional-e2e/organization-space-invitations
 
-cd server-api   # the 061 notification it-specs, incl. this extension
+cd ../server-api   # the 061 notification it-specs, incl. this extension
 pnpm exec vitest run --project notifications --fileParallelism=false \
   src/functional-api/notifications/space/community/
 ```
@@ -34,8 +34,9 @@ registered there.
 not performed against a deployed environment, so the notifications#356 cases are
 verified on a **local stack only**: server `develop` @ `f2e22077b`, notifications
 `develop` @ `a6a426d`, 3/3 green, and 30/30 green for the whole
-`notifications/space/community/` folder in one run. On Test and ACC the behaviour
-rests on the manual rows in `docs/runs/release-76-verification.md`.
+`notifications/space/community/` folder in one run. On deployed environments the
+behaviour rests on the manual rows in `docs/runs/release-76-verification.md`:
+rows 1–3 were run by hand on DEV (28.09), rows 4–8 are to be run on ACC.
 
 ## Risk (notifications#356 extension)
 
@@ -105,4 +106,4 @@ Shared fixtures (org creation, role assignment, invitation helpers, the
 
 **Open questions.** **OQ-1:** a comment on #356 (2026-08-24) says the feature is "intentionally email-only". server#4100's ACs, ruling R17 (2026-09-03) and the code all send **email, in-app and push** (`spaceAdminInvitationOutcome`), and `organization-invitations.it-spec.ts:415-418,688-696` already assert in-app rows. The code implements all three channels, and UO-1/UO-2 pin in-app, so product must confirm. **OQ-2:** #356 row 4 says user "reject was not implemented". The code emits `SPACE_ADMIN_USER_COMMUNITY_INVITATION_DECLINED` (server#6467), the notifications service has a template for it (`user.space.community.invitation.declined.js`), and client-web has copy. UO-2 pins what ships. If product rules otherwise, the expectation flips and the story text needs correcting either way.
 
-**What is proven, and what is not.** Today no live test shows that a Space admin hears anything when a *user* answers an invitation. R76's N2 "no double-send — verified" rests on the organization arm and unit mocks. Once built, UO-1 to UO-3 prove over the real queue that the user outcome events reach every admin by email and in-app, that "joined" is suppressed only on the invited Space, and that the welcome survives. Push delivery, the bell's rendering and the migration's effect on existing users' settings remain unproven by automation.
+**What is proven, and what is not.** Before this extension no system-level test showed that a Space admin hears anything when a *user* answers an invitation; R76's N2 "no double-send — verified" rested on the organization arm and unit mocks. UO-1 to UO-3 now prove, on a local stack and over the real queue, that the user outcome events reach every admin by email and in-app, that "joined" is suppressed only on the invited Space, and that the welcome survives. Push delivery, the bell's rendering and the migration's effect on existing users' settings remain unproven by automation.
