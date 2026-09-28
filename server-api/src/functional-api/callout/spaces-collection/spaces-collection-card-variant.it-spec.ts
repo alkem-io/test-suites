@@ -70,11 +70,17 @@ beforeAll(async () => {
 afterAll(async () => {
   // Attempt every delete, then report what stayed behind: a swallowed teardown
   // error leaves callouts on the shared stack with nothing in the report.
-  const results = await Promise.allSettled(
-    createdCalloutIds.filter(id => id.length > 0).map(id => deleteCallout(id))
-  );
+  // `deleteCallout` resolves with an `error` field on a GraphQL failure, so a
+  // fulfilled result is only a success when it carries none.
+  const ids = createdCalloutIds.filter(id => id.length > 0);
+  const results = await Promise.allSettled(ids.map(id => deleteCallout(id)));
   await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
-  const failures = results.filter(r => r.status === 'rejected');
+  const failures = results.flatMap((r, i) => {
+    if (r.status === 'rejected') return [`${ids[i]}: ${String(r.reason)}`];
+    if (r.value.error !== undefined)
+      return [`${ids[i]}: ${JSON.stringify(r.value.error.errors)}`];
+    return [];
+  });
   expect(failures).toEqual([]);
 });
 
