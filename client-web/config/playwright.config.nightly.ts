@@ -195,6 +195,18 @@ export default defineConfig({
       expect: { timeout: 15_000 },
     },
     {
+      // Story client-web#10033 / workspace#076 (expanded subspace cards) —
+      // the four acceptance walks: rich cards, the "Expanded card" switch,
+      // excerpt safety and the narrow layout. Each file seeds its own public
+      // Space through the API and deletes it in afterAll; no dependencies.
+      // The files set their own per-test budgets (describe.configure), since
+      // their fixtures carry up to seven subspaces. US2 is the only
+      // authenticated walk and turns trace/video off at file level.
+      name: 'Subspaces callout',
+      testMatch: ['/subspaces-callout/*.spec.ts'],
+      expect: { timeout: 15_000 },
+    },
+    {
       // Story client-web#10178 (space-banner) — the default 10:1 gradient on
       // bannerless spaces/subspaces and the first-crop-opens-at-10:1 walk.
       // Self-seeding via TestScenarioFactory + its own session fixture, torn
@@ -292,6 +304,28 @@ export default defineConfig({
       testMatch: ['/organization-user-associates/*.spec.ts'],
       timeout: 120_000,
       expect: { timeout: 15_000 },
+    },
+    {
+      // Feature 070 (contribution notify switch) — persisted P1 acceptance
+      // walk, same forge-verify shape as 038/041: machine-generated file in
+      // tests/, self-seeding (its own org + space + response callout),
+      // torn down in afterAll. Asserts at the RabbitMQ notifications-queue
+      // publish counter rather than MailSlurper, guarded by
+      // rabbitMqManagementConfigured() (the same checkPush pattern
+      // organization-space-invitations/us2-org-admins-notified.spec.ts
+      // uses) — this workflow sets no RABBITMQ_MANAGEMENT_* env, so nightly
+      // skips the queue-counter checks and still runs the switch/UI/activity
+      // assertions.
+      name: 'Contribution notify switch',
+      // testMatch alone cannot reach outside the top-level testDir
+      // (src/functional-e2e), so the project needs its own testDir.
+      testDir: path.resolve(__dirname, '../tests'),
+      testMatch: ['contribution-notify-switch.spec.ts'],
+      timeout: 90_000,
+      expect: { timeout: 15_000 },
+      // Traces/videos of this walk (which types the harness password) are
+      // stripped from the public report by scripts/publish-report.sh like
+      // every other project's, so no per-project opt-out is needed.
     },
   ],
   // % or number of the available CPUs
