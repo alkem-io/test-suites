@@ -293,6 +293,28 @@ export default defineConfig({
       timeout: 120_000,
       expect: { timeout: 15_000 },
     },
+    {
+      // Feature 070 (contribution notify switch) — persisted P1 acceptance
+      // walk, same forge-verify shape as 038/041: machine-generated file in
+      // tests/, self-seeding (its own org + space + response callout),
+      // torn down in afterAll. Asserts at the RabbitMQ notifications-queue
+      // publish counter rather than MailSlurper, guarded by
+      // rabbitMqManagementConfigured() (the same checkPush pattern
+      // organization-space-invitations/us2-org-admins-notified.spec.ts
+      // uses) — this workflow sets no RABBITMQ_MANAGEMENT_* env, so nightly
+      // skips the queue-counter checks and still runs the switch/UI/activity
+      // assertions.
+      name: 'Contribution notify switch',
+      // testMatch alone cannot reach outside the top-level testDir
+      // (src/functional-e2e), so the project needs its own testDir.
+      testDir: path.resolve(__dirname, '../tests'),
+      testMatch: ['contribution-notify-switch.spec.ts'],
+      timeout: 90_000,
+      expect: { timeout: 15_000 },
+      // Traces/videos of this walk (which types the harness password) are
+      // stripped from the public report by scripts/publish-report.sh like
+      // every other project's, so no per-project opt-out is needed.
+    },
   ],
   // % or number of the available CPUs
   // workers: '100%',

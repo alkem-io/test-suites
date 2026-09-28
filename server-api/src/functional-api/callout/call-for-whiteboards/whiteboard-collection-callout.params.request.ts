@@ -66,3 +66,34 @@ export const createWhiteboardOnCallout = async (
 
   return graphqlErrorWrapper(callback, userRole);
 };
+
+// Flag-aware sibling of createWhiteboardOnCallout (same shape as
+// createPostOnCalloutWithNotification). The legacy helper above is left
+// untouched so its callers keep omitting the field and keep notifying.
+export const createWhiteboardOnCalloutWithNotification = async (
+  calloutID: string,
+  sendNotification?: boolean,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string | undefined) =>
+    graphqlClient.CreateContributionOnCallout(
+      {
+        contributionData: {
+          calloutID,
+          type: CalloutContributionType.Whiteboard,
+          whiteboard: {
+            profile: {
+              displayName: 'notify-switch whiteboard',
+            },
+          },
+          sendNotification,
+        },
+      },
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+
+  return graphqlErrorWrapper(callback, userRole);
+};

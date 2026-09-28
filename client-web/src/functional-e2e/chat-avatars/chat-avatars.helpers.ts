@@ -29,6 +29,7 @@ import {
   registerInAlkemioOrFail,
 } from '@alkemio/tests-lib';
 
+import { fillSecret } from '../helpers/login.helper';
 export const BASE_URL = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 export const PASSWORD = process.env.AUTH_TEST_HARNESS_PASSWORD || 'ChatAvatars!Test2026';
 
@@ -144,7 +145,7 @@ async function completeSignUp(page: Page, { email, firstName, lastName }: Person
 
   await expect(page).toHaveURL(/\/registration/, { timeout: 30000 });
   await page.getByRole('checkbox').click();
-  await page.getByLabel('Password *').fill(PASSWORD);
+  await fillSecret(page.getByLabel('Password *'), PASSWORD);
   const next = page.getByRole('button', { name: 'Next', exact: true });
   await expect(next).toBeEnabled({ timeout: 15000 });
   await next.click();
@@ -172,7 +173,7 @@ async function signInThroughUi(page: Page, email: string): Promise<void> {
   await page.getByRole('link', { name: /log in/i }).click();
   await expect(page).toHaveURL(/\/login/, { timeout: 30000 });
   await page.getByLabel('E-Mail *').fill(email);
-  await page.getByLabel('Password *').fill(PASSWORD);
+  await fillSecret(page.getByLabel('Password *'), PASSWORD);
   await page.getByRole('button', { name: 'Sign in', exact: true }).click();
   await expect(page).toHaveURL(`${BASE_URL}/home`, { timeout: 40000 });
 }
