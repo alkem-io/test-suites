@@ -285,6 +285,48 @@ export const getPlatformForumDiscussionCategories = async (
   return response?.body?.data?.platform?.forum?.discussionCategories;
 };
 
+const PLATFORM_DISCUSSION_IDENTITIES_QUERY = `
+  query PlatformDiscussionIdentities {
+    platform {
+      forum {
+        discussions {
+          id
+          category
+          profile {
+            displayName
+          }
+        }
+      }
+    }
+  }
+`;
+
+// The full `GetPlatformDiscussionsData` read fails as a whole while any one
+// discussion in the forum is mid-create (no credential rules yet on
+// `comments`) or mid-delete (profile already gone). Files that keep a
+// persistent fixture look it up with this narrower read, and retry, so
+// sibling files creating and deleting discussions do not hide it.
+export const findPlatformDiscussionByTitle = async (
+  title: string,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+): Promise<{ id: string; category: string } | undefined> => {
+  const response = await graphqlRequestAuth(
+    {
+      operationName: 'PlatformDiscussionIdentities',
+      query: PLATFORM_DISCUSSION_IDENTITIES_QUERY,
+      variables: {},
+    },
+    userRole
+  );
+  const discussions: {
+    id: string;
+    category: string;
+    profile?: { displayName?: string };
+  }[] = response?.body?.data?.platform?.forum?.discussions ?? [];
+
+  return discussions.find(d => d.profile?.displayName === title);
+};
+
 const ADMIN_FORUM_REMOVE_DISCUSSION_CATEGORY_MUTATION = `
   mutation AdminForumRemoveDiscussionCategory($removeData: ForumRemoveDiscussionCategoryInput!) {
     adminForumRemoveDiscussionCategory(removeData: $removeData) {

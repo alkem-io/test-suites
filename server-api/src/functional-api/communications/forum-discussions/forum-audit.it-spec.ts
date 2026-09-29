@@ -92,8 +92,7 @@ describe('Audit rows for forum-category and reconcile operations (N-9, local Pos
         // A title-only edit (no category change) must write no new row.
         const t1 = new Date();
         await updateDiscussion(discId, TestUser.GLOBAL_ADMIN, {
-          profileData: { displayName: 'category-reorg-n9-audit' },
-          category: TIPS_AND_TRICKS,
+          profileData: { displayName: 'category-reorg-n9-audit-renamed' },
         });
         const noNewRows = await auditRowsSince('updateDiscussionCategory', t1);
         expect(

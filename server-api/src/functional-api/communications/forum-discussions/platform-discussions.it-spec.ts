@@ -1233,13 +1233,13 @@ describe('PLATFORM_OPERATIONS_ADMIN persona (N-13, local)', () => {
       const userId = me.body.data?.me.user.id;
       expect(userId).toBeDefined();
 
-      await assignPlatformRole(
-        userId!,
-        RoleName.PlatformOperationsAdmin,
-        TestUser.GLOBAL_ADMIN
-      );
-
       try {
+        await assignPlatformRole(
+          userId!,
+          RoleName.PlatformOperationsAdmin,
+          TestUser.GLOBAL_ADMIN
+        );
+
         // reconcile dry run — allowed
         const reconcileRes = await postGraphqlRaw<{
           adminCommunicationReconcileForumHierarchy: string;

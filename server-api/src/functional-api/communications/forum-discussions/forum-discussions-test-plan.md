@@ -4,7 +4,7 @@
 
 060 adds NEWSLETTER and TIPS_AND_TRICKS. It makes Releases and Newsletter admin-only, unlocks recategorisation in the edit dialog, and relabels Help as "Q&A" in the client only. It ships a migration that rewrites the active list into canonical order, a read-side drift filter, and the guarded `adminForumRemoveDiscussionCategory`. 061 adds the adapter `communication.hierarchy.set_children` primitive and the report-first `adminCommunicationReconcileForumHierarchy` (async task, Redis lease, one audit row per pass). It also stops publishing forum/category spaces to the Synapse room directory. Diffs read: server#6456/#6484/#6509, client-web#10265, matrix-adapter#71, test-suites#628, and 027's forum edits (server `df7445856`). infra-ops#2657 was withdrawn by decision D-17.
 
-**Headline:** the 060 API contract is already covered. 061 was covered only at unit level. This revision proves 061 end to end on the local stack: convergence, ghost prune, directory privacy, lease, and audit. It reads Matrix state with the dev appservice token. What stays manual is only what exists solely on a deployed environment: 3 rows.
+**Headline:** the 060 API contract is already covered. 061 was covered only at unit level. This revision proves 061 end to end on the local stack: convergence, directory privacy, lease, and audit. Ghost prune (N-15) is implemented but has not been executed, so it remains a coverage gap. It reads Matrix state with the dev appservice token. What stays manual is only what exists solely on a deployed environment: 3 rows.
 
 ## How to run
 
