@@ -1,0 +1,22 @@
+mutation createFormCalloutOnCalloutsSet(
+  $calloutData: CreateCalloutOnCalloutsSetInput!
+) {
+  createCalloutOnCalloutsSet(calloutData: $calloutData) {
+    id
+    settings {
+      visibility
+    }
+    framing {
+      id
+      type
+      profile {
+        id
+        displayName
+        url
+      }
+      form {
+        ...CalloutFormDetails
+      }
+    }
+  }
+}

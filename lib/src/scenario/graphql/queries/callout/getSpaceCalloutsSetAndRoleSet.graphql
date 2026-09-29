@@ -1,0 +1,19 @@
+query spaceCalloutsSetAndRoleSet($spaceId: UUID!) {
+  lookup {
+    space(ID: $spaceId) {
+      id
+      collaboration {
+        id
+        calloutsSet {
+          id
+        }
+      }
+      community {
+        id
+        roleSet {
+          id
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,19 @@
+fragment CalloutFormDetails on CalloutForm {
+  id
+  questions {
+    id
+    prompt
+    explanation
+    type
+    required
+    options {
+      id
+      label
+    }
+  }
+  settings {
+    visibility
+    responseMode
+    state
+  }
+}
