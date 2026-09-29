@@ -759,7 +759,52 @@ export const assertCleanupSucceeded = (
 ): void => {
   const errors = result?.error?.errors;
   if (errors) {
-    throw new Error(`${label} failed during teardown: ${JSON.stringify(errors)}`);
+    throw new Error(
+      `${label} failed during teardown: ${JSON.stringify(errors)}`
+    );
   }
 };
 
+/**
+ * Count of the caller's in-app notifications of the given event types, via
+ * `me.notifications(filter: { types })`. Generalisation of
+ * getConversationMessagingInAppNotificationsCount above (same contract: THROWS
+ * on a GraphQL error or a non-numeric total, so a swallowed contract failure
+ * can never read as "nothing was produced").
+ */
+export const getInAppNotificationsCount = async (
+  userRole: TestUser,
+  types: NotificationEvent[]
+): Promise<number> => {
+  const requestParams = {
+    operationName: 'GetMyInAppNotificationsCount',
+    query: `
+      query GetMyInAppNotificationsCount($types: [NotificationEvent!]) {
+        me {
+          notifications(filter: { types: $types }) {
+            total
+          }
+        }
+      }
+    `,
+    variables: { types },
+  };
+
+  const response = await graphqlRequestAuth(requestParams, userRole);
+  if (response.body?.errors) {
+    throw new Error(
+      `me.notifications query failed for ${userRole}: ${JSON.stringify(
+        response.body.errors
+      )}`
+    );
+  }
+  const total = response.body?.data?.me?.notifications?.total;
+  if (typeof total !== 'number') {
+    throw new Error(
+      `me.notifications returned no numeric total for ${userRole}: ${JSON.stringify(
+        response.body
+      )}`
+    );
+  }
+  return total;
+};

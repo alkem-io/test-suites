@@ -20,6 +20,7 @@ import {
 } from '@alkemio/tests-lib';
 import { acceptCookiesIfVisible } from '../helpers/cookies.helper';
 import { testConfiguration } from '@src/config/test.configuration';
+import { fillSecret } from '../helpers/login.helper';
 
 export const baseUrl = (
   process.env.ALKEMIO_BASE_URL || 'http://localhost:3000'
@@ -114,9 +115,10 @@ export const loginAsSubject = async (
   await page.getByRole('link', { name: 'Log in', exact: true }).click();
   await page.waitForURL(/.*login.*/);
   await page.getByRole('textbox', { name: 'E-Mail *' }).fill(email);
-  await page
-    .getByRole('textbox', { name: 'Password *' })
-    .fill(harnessPassword);
+  await fillSecret(
+    page.getByRole('textbox', { name: 'Password *' }),
+    harnessPassword
+  );
   await page.getByRole('button', { name: 'Sign in', exact: true }).click();
   await page.waitForURL(/.*home.*/, { timeout: 30_000 });
 };

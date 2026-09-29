@@ -34,6 +34,29 @@ module.exports = [
         },
       ],
       'no-multiple-empty-lines': 'error',
+      // Never type a password through `Locator.fill`: reporters record it as
+      // a step titled `Fill "<value>" <locator>`, and the nightly report is
+      // published to the PUBLIC gh-pages site. Use `fillSecret` from
+      // src/functional-e2e/helpers/login.helper.ts instead. The selectors
+      // catch (a) a password-ish argument (identifier, property, or template
+      // literal containing one) and (b) a password-named locator receiver.
+      'no-restricted-syntax': [
+        'error',
+        ...[
+          "CallExpression[callee.property.name='fill'][arguments.0.name=/[Pp]ass(word|wd)|PASSWORD|[Ss]ecret/]",
+          "CallExpression[callee.property.name='fill'][arguments.0.property.name=/[Pp]ass(word|wd)|PASSWORD|[Ss]ecret/]",
+          "CallExpression[callee.property.name='fill'][arguments.0.type='TemplateLiteral'] Identifier[name=/[Pp]ass(word|wd)|PASSWORD|[Ss]ecret/]",
+          "CallExpression[callee.property.name='fill'][callee.object.name=/[Pp]assword/]",
+          "CallExpression[callee.property.name='fill'][callee.object.callee.name=/[Pp]assword/]",
+          "CallExpression[callee.property.name='fill'][callee.object.callee.property.name=/^getBy/][callee.object.arguments.0.value=/[Pp]assword/]",
+          "CallExpression[callee.property.name='fill'][callee.object.callee.property.name=/^getBy/][callee.object.arguments.1.properties.0.value.value=/[Pp]assword/]",
+          "CallExpression[callee.property.name='fill'][callee.object.callee.property.name=/^getBy/][callee.object.arguments.1.properties.1.value.value=/[Pp]assword/]",
+        ].map(selector => ({
+          selector,
+          message:
+            'Do not pass a password through Locator.fill — it is published in the report step title. Use fillSecret() from helpers/login.helper.ts.',
+        })),
+      ],
     },
   },
   {

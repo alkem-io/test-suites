@@ -197,6 +197,7 @@ export default defineConfig({
           'src/functional-api/notifications/space/community/organization-invitations.it-spec.ts',
           'src/functional-api/notifications/space/community/application-approval-new-member.it-spec.ts',
           'src/functional-api/notifications/space/community/invitations.it-spec.ts',
+          'src/functional-api/notifications/space/community/user-invitation-outcomes.it-spec.ts',
           // This organization-associates notification spec, same rationale as
           // above. Its one push-emit case skips itself where the RabbitMQ
           // management API is not configured (`rabbitMqManagementConfigured`),

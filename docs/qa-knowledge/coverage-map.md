@@ -25,6 +25,24 @@ _Searched 2026-09-03, branch `qa/9528-promotion-keeps-flow-states` off
 | `moveSpaceL1ToSpaceL0`/`L1ToL2`/`L2ToL1` (cross-L0 move, distinct from convert) | Full for basic/community/rooms/applications/auto-invite/authorization scenarios | `journey/conversion/move-L1-to-*-*.it-spec.ts` — does not touch innovation-flow at all, confirmed by search |
 | Callout transfer + differing default flow state names (cross-space) | Full | `callout/transfer/transfer-callout-flow-state.it-spec.ts`, `transfer-callout-changed-flow.it-spec.ts` |
 
+## Space community notifications — invitations, joins, outcomes (061 / notifications#356)
+
+_Searched 2026-09-28, `origin/develop` @ `0ca74068` (test-suites), against server#6467, notifications#594, client-web#10272, test-suites#632. Plan: `client-web/src/functional-e2e/organization-space-invitations/organization-space-invitations-test-plan.md`._
+
+| Area | Status | Evidence |
+|---|---|---|
+| User **receives** a Space invitation (L0/L1/L2, inviter levels, muted, not-authorized-to-parent) | Full | `notifications/space/community/invitations.it-spec.ts` (8 tests, :215-448) — never accepts or rejects |
+| Direct join / admin adds user → Space admins "joined" + member welcome | Full | `notifications/space/community/join-community.it-spec.ts:202,231,260` (DIRECT origin; unaffected by the 061 suppression) |
+| Approved application keeps "joined" to co-admins (R40) | Full | `notifications/space/community/application-approval-new-member.it-spec.ts:224` |
+| Organization invited → org admins notified; org accepts/declines → Space admins told; no generic "joined" on org accept | Full | `notifications/space/community/organization-invitations.it-spec.ts` (US2 :331-594, US4 :595-…; no-joined guard :698-706) |
+| **User** accepts/declines a Space invitation → Space admins told (`SPACE_ADMIN_USER_COMMUNITY_INVITATION_*`) | **Partial** — L0 only, email + in-app, every Space admin; green on a local stack, not run against a deployed environment. Push, and the muted-setting and inviter-removed variants for user invitees, stay unit only (server `role.set.resolver.mutations.membership.spec.ts` › `user accept/decline outcome dispatch`) | `notifications/space/community/user-invitation-outcomes.it-spec.ts` › UO-1 (accept), UO-2 (decline). Absent before test-suites#646 |
+| **User** invitation accept does NOT also fire generic "joined"; ancestor Spaces still do | **Partial** — organization arm and user arm both at API level: no "joined" on the invited Space at L0 and L1, L0 ancestor admins still get "joined" on an L1 accept. Local stack only; L2 not exercised (same rule, unit-pinned in `role.set.service.spec.ts` R26 cases) | `notifications/space/community/user-invitation-outcomes.it-spec.ts` › UO-1, UO-3; `organization-invitations.it-spec.ts:698-706` |
+| Specs that accept a user invitation but assert NO notifications (safe from notification-rule changes) | n/a | `roleset/invitations/invitation-contributors.it-spec.ts:332,381,423`, `roleset/hierarchy-parity/invitation-hierarchy-parity.it-spec.ts`, `journey/conversion/move-L*-applications-invitations.it-spec.ts` |
+| Push for Space-admin invitation outcomes | Unit only | server `notification.space.adapter.spec.ts` › `excludes whoever answered … email, in-app AND push` |
+| Bell rendering of user-outcome rows | **None** — client-web #10272 unit tests name the organization events only | manual row proposed (plan M-1) |
+
+**Search again with:** `git grep -n -E "eventOnRoleSetInvitation|SpaceAdmin(User|Organization)CommunityInvitation|communityInvitationResponse|joined \\$\\{|Welcome to the Community" origin/develop -- server-api/src client-web/src`.
+
 ## How to search this area again
 
 `rg -n 'innovationFlow|minimumNumberOfStates|maximumNumberOfStates|L0_FIXED_INNOVATION|L0_MIN_INNOVATION' server-api/src/functional-api` — the conversion/callout-transfer/templates directories are the load-bearing ones; also check the server repo's own `*.spec.ts` unit suites before proposing a new system-level case, several risk-relevant assertions live there only.

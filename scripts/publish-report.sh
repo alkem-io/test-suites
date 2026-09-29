@@ -41,6 +41,44 @@ if [ ! -f "$STAGE_DIR/index.html" ]; then
   [ -n "$REPORT_HTML" ] && cp "$REPORT_HTML" "$STAGE_DIR/index.html"
 fi
 
+# ── Strip and redact credential-bearing content ─────────────────────────────
+# gh-pages is PUBLIC. Playwright traces record every network request body (the
+# Kratos sign-in POST carries the harness password in clear) and DOM snapshots
+# (the password input's value), and videos show the sign-in form — verified by
+# opening a trace of a nightly-style login. None of that may be published,
+# whichever project produced it. Screenshots stay: password inputs render
+# masked. Traces are not retained anywhere else either: on a public repository
+# a workflow artifact is downloadable by every signed-in GitHub account.
+if [ -d "$STAGE_DIR/data" ]; then
+  STRIPPED=$(find "$STAGE_DIR/data" -type f \( -name '*.zip' -o -name '*.webm' \) -print -delete | wc -l)
+  echo "Stripped $STRIPPED trace/video attachment(s) from the report before publishing"
+
+  # The failure-time `error-context.md` attachment is an ARIA snapshot, and
+  # Playwright copies `element.value` into every textbox node — password
+  # inputs included. Blank the value of every password-labelled textbox.
+  REDACTED=0
+  while IFS= read -r -d '' md; do
+    n=$(grep -cE '^[[:space:]]*- textbox "[^"]*[Pp]assword[^"]*"( \[[^]]*\])*:' "$md" || true)
+    if [ "$n" -gt 0 ]; then
+      sed -i -E 's/^([[:space:]]*- textbox "[^"]*[Pp]assword[^"]*"( \[[^]]*\])*):.*$/\1: [redacted]/' "$md"
+      REDACTED=$((REDACTED + n))
+    fi
+  done < <(find "$STAGE_DIR/data" -type f -name '*.md' -print0)
+  echo "Redacted $REDACTED password textbox value(s) in ARIA snapshot attachment(s)"
+fi
+
+# Belt and braces: when the workflow passes the harness password, scrub the
+# literal from every text file in the staged report (attachments, the HTML
+# shell, anything a future reporter adds). \Q…\E makes perl treat the secret
+# as a literal whatever characters it contains. The value is never echoed.
+if [ -n "${AUTH_TEST_HARNESS_PASSWORD:-}" ]; then
+  find "$STAGE_DIR" -type f \
+    \( -name '*.md' -o -name '*.txt' -o -name '*.html' -o -name '*.json' \
+       -o -name '*.log' -o -name '*.yaml' -o -name '*.yml' -o -name '*.xml' \) -print0 \
+    | xargs -0 -r perl -pi -e 's/\Q$ENV{AUTH_TEST_HARNESS_PASSWORD}\E/[redacted]/g'
+  echo "Scrubbed the harness password literal from text files in the staged report"
+fi
+
 # ── Run metadata ─────────────────────────────────────────────────────────────
 cat > "$STAGE_DIR/runinfo.txt" <<EOF
 Run ID: $RUN_ID
