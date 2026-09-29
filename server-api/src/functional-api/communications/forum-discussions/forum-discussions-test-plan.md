@@ -1,0 +1,122 @@
+# Test plan — Forum: four categories + Matrix hierarchy reconcile (060 + 061)
+
+> **Status:** Approved · **Depth:** Deep — a migration, three authorization gates (one re-anchored by 027 on 2026-09-28), a cross-repo AMQP contract, an irreversible retirement path · **Story:** [alkemio#2052](https://github.com/alkem-io/alkemio/issues/2052) (060) + [alkemio#2114](https://github.com/alkem-io/alkemio/issues/2114) (061) · Release 76 ([alkemio#2132](https://github.com/alkem-io/alkemio/issues/2132)) · **Revised 2026-09-29:** automate against the QA lead's local stack, keep manual work to the deployed-environment minimum
+
+060 adds NEWSLETTER and TIPS_AND_TRICKS. It makes Releases and Newsletter admin-only, unlocks recategorisation in the edit dialog, and relabels Help as "Q&A" in the client only. It ships a migration that rewrites the active list into canonical order, a read-side drift filter, and the guarded `adminForumRemoveDiscussionCategory`. 061 adds the adapter `communication.hierarchy.set_children` primitive and the report-first `adminCommunicationReconcileForumHierarchy` (async task, Redis lease, one audit row per pass). It also stops publishing forum/category spaces to the Synapse room directory. Diffs read: server#6456/#6484/#6509, client-web#10265, matrix-adapter#71, test-suites#628, and 027's forum edits (server `df7445856`). infra-ops#2657 was withdrawn by decision D-17.
+
+**Headline:** the 060 API contract is already covered. 061 was covered only at unit level. This revision proves 061 end to end on the local stack: convergence, ghost prune, directory privacy, lease, and audit. It reads Matrix state with the dev appservice token. What stays manual is only what exists solely on a deployed environment: 3 rows.
+
+## How to run
+
+```bash
+cd server-api && pnpm exec vitest run --project communication src/functional-api/communications/forum-discussions/
+cd server-api && pnpm exec vitest run --project notifications src/functional-api/notifications/platform/forum-discussions.it-spec.ts
+cd client-web && pnpm exec playwright test src/functional-e2e/forum-categories/
+```
+
+**Local-stack prerequisites.** These are set up by the user; tests never start, stop, or reconfigure the stack.
+
+1. The Alkemio server process is running behind the gateway on `:3000`.
+2. For the cases that read room state or write directory visibility (N-11, N-12b, N-15), `HARNESS_SYNAPSE_AS_TOKEN` is exported: the dev appservice token from the server repo's tracked `.build/synapse/matrix-adapter.yaml`, put in place through the user's own secret handling. `HARNESS_SYNAPSE_URL` defaults to `http://localhost:8008`. N-12a needs no token: alias lookup and `directory/list/room` are unauthenticated (probed 2026-09-29).
+3. For the Matrix-convergence cases, matrix-adapter **≥ v0.8.19**. Server develop's `quickstart-services.yml` pins v0.8.17 (finding F-5), so those cases skip with that reason until the local adapter is bumped.
+
+**Gating.** **local** = runs only when the server target, Postgres, Redis and Synapse are all loopback, and skips everywhere else, including nightly and ACC. Reconcile cases share one file and run sequentially (one Redis lease per stack). Every call to the remove mutation by an admin-capable persona must stay inside `platform-discussions.it-spec.ts` (hazard H-1).
+
+## Risk
+
+| #   | Risk (in user terms)                                                                                                                                                                                                      | L                   | I    | Level                   | Drives               |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------- | ---- | ----------------------- | -------------------- |
+| R1  | After release the forum lacks Newsletter / Tips & Tricks, or shows them in the wrong order: the manual migration job never ran, or its image was stale                                                                    | Med                 | High | **High**                | U-1, MR-1            |
+| R2  | A category is retired by accident on a shared env and can only be restored by SQL. Paths: open #600 falls back to removing TIPS_AND_TRICKS; the cross-file "delete all discussions" wipe                                  | Med                 | High | **High**                | U-3, H-1, F-1        |
+| R3  | One unknown category value takes down the forum page, or the whole platform query                                                                                                                                         | Low                 | Crit | **High**                | N-5, N-6             |
+| R4  | Non-admins post into editorial categories, or curators lose rights after 027 moved every forum gate to `PLATFORM_FORUM_MANAGE` (GLM loses it by design; old posts stay stale until the platform authorization reset runs) | Med                 | High | **High**                | N-3, N-13, U-2, MR-1 |
+| R5  | The reconcile is run by the wrong role, or two passes race and detach a room                                                                                                                                              | Low                 | High | **High**                | N-7, N-10, N-13      |
+| R6  | The reconcile is invoked against an adapter with no `set_children` handler. ACC and PROD pin v0.8.17, and so does the local quickstart                                                                                    | High                | Med  | **High**                | N-8, MR-1            |
+| R7  | The reconcile does not converge, or deletes a live room's edge; ghost edges pile up                                                                                                                                       | Low                 | High | **High**                | N-11, N-15           |
+| R8  | Forum/category spaces stay listed in the public room directory                                                                                                                                                            | Med                 | Med  | **Med-High** (security) | N-12, MR-2           |
+| R9  | Recategorising drops comments or the permalink, or notifies the whole platform                                                                                                                                            | Low                 | High | Med                     | N-1, N-2, E-1        |
+| R10 | The retirement act turns large parts of the suites red (legacy harness defaults, a length-8 assertion)                                                                                                                    | High (once retired) | Med  | Med                     | U-1, U-4, N-4        |
+| R11 | Wrong or raw labels ("Q&A", Newsletter, Tips) in some locale; old URLs break                                                                                                                                              | Low                 | Med  | Low-Med                 | E-2, E-3             |
+| R12 | Audit trail incomplete                                                                                                                                                                                                    | Low                 | Med  | Low-Med                 | N-9                  |
+
+Elevated-risk triggers present: migration ✓ · authorization/visibility ✓ · cross-repo contract ✓ · data-destructive ✓ · infra/config ✓. Release 76 misses two things: its R-S11 lists the reconcile gate as PLATFORM_ADMIN (it is `PLATFORM_OPERATIONS_ADMIN` on a GA+POA synthetic policy), and the story omits that the directory retraction must run before any category is retired.
+
+## Existing coverage before this work
+
+Searched on develop `ea5eebe9` (`forum|discussionCategor|ForumDiscussionCategory|latestReleaseDiscussion|Reconcile|SyncSpaceHierarchy|platform_audit`) across `server-api/src`, `client-web/src` and `lib/src`, plus the open PRs #600/#643, the owning-repo unit suites, and the client-web `e2e/specs`. No forum plan existed.
+
+- **test-suites (full):** `platform-discussions.it-spec.ts` (#628) covers create/refuse for GA and QA in the new categories, all 8 present, recategorise round-trip and denial, and remove refused (non-admin; non-empty with count).
+- **server unit (full):** category allowed-set, enum order, migration spec (mocked query runner), discussion/forum resolvers, the 4 reconcile specs (service, authorization, cross-pass, no-scheduler/no-delete), sync service, communication adapter.
+- **matrix-adapter Go (full):** `space_service_setchildren_test` Row1–Row12, handler + expiry tests. **client-web unit (full):** slugs, data mapper, edit dialog, forum page. Its `e2e/specs/forum*.e2e.spec.ts` are `@forge-acceptance`, not in CI: used here as locator evidence only.
+- **Reuse figure: 14 of 37 scenarios needed no new test** (14 full · 14 partial · 9 none).
+
+### Existing tests requiring update
+
+| ID  | File › test                                                                                             | Problem                                                                                               | Must become                                                                                  | Status |
+| --- | ------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- | --- |
+| U-1 | `platform-discussions.it-spec.ts › The active category list is a canonical-order subsequence led by the four target categories` | Order unasserted; `toHaveLength(8)` goes red on the first retirement                                  | The list is a canonical-order subsequence led by RELEASES, NEWSLETTER, TIPS_AND_TRICKS, HELP | **Done** — renamed test, green |
+| U-2 | same file: 4 denial DDT rows + `Non-admin cannot recategorise`                                          | Red since server#6322: messages now name `'platform-forum-manage'`                                    | Merge open **test-suites#600**, which carries the fix                                        | **Already fixed on develop** by test-suites#643 (2026-09-29), before this PR touched the file. #600 remains open/draft with unrelated (027 Slice B) scope; not merged, not duplicated here. |
+| U-3 | same file, top-level `beforeAll`                                                                        | Deletes **every** platform discussion (ACC posts, other files' fixtures, the local reconcile fixture) | Delete only this file's own titles                                                           | **Done** — scoped to `/^test$/, /^Updated$/, /^Updated\d$/, /^category-reorg-/` |
+| U-4 | harness default category, `TestScenarioFactory.categoryMap`, explore-platform E2E, 21 legacy call sites | Break when the four legacy categories are retired                                                     | HELP by default; map extended; required before any targeted env retires a category           | **Done** — `TestScenarioFactory.ts`, `baseFunctions.ts`, `communication.params.ts`, both explore-platform E2E configs, the notifications forum spec (8 sites) and this file's own Authorization/remove-negative sites (10 sites) all moved off `PLATFORM_FUNCTIONALITIES`/`OTHER` to `HELP`; `NEWSLETTER`/`TIPS_AND_TRICKS` added to `categoryMap` |
+
+Confirmed unaffected: `reactions`, `reply` (re-verified green against the new HELP default), `configuration.it-spec`, `explore-platform` "10. Explore Forum" (category default changed, not re-run live — see PR body), `home-menus`.
+
+## Scenario → test mapping
+
+| Scenario                                                                                                                   | Covers                        | Automated by                                                            | Layer      |
+| -------------------------------------------------------------------------------------------------------------------------- | ----------------------------- | ----------------------------------------------------------------------- | ---------- |
+| New members active; create/refuse (QA, GA)                                                                                 | US1-AS2/AS4, C3               | `platform-discussions.it-spec.ts` (6 existing)                          | API        |
+| Canonical order, retirement-tolerant                                                                                       | FR-019/D-09                   | U-1 — `platform-discussions.it-spec.ts › The active category list is a canonical-order subsequence led by the four target categories` | API        |
+| Forum-manage gate: GS allowed, GLM refused, POA refused (create + remove)                                                  | FR-006, R4                    | `platform-discussions.it-spec.ts › Forum-manage gate for legacy personas after 027 (N-3)` (DT) and `› PLATFORM_OPERATIONS_ADMIN persona (N-13, local) › POA can reconcile but is not a forum manager (FR-012)` | API        |
+| Recategorise round-trip / denial / into Newsletter                                                                         | US2-AS2/AS5                   | existing 3 (+U-2, already fixed on develop)                             | API        |
+| Recategorise keeps comments + permalink; sends no notification                                                             | US2-AS7/AS6                   | `platform-discussions.it-spec.ts › Recategorising a post keeps its comments and permalink (US2-AS7)` (N-1); `notifications/platform/forum-discussions.it-spec.ts › Recategorising a post sends no notification (US2-AS6)` (N-2) | API        |
+| Inactive category refused on create/move (live once retired)                                                               | US2-AS4                       | `platform-discussions.it-spec.ts › Inactive category is refused on create and move (N-4)` — self-skips locally (all 8 categories active); server unit | API        |
+| Remove refused: non-admin; non-empty with count                                                                            | US3-AS1/AS4                   | existing 2                                                              | API        |
+| Remove success / idempotent / tombstone                                                                                    | US3-AS2/3/6                   | server unit, by ruling D-06 (option O-1 in the build sheet not implemented — decision stands) | Unit       |
+| Drift filters: active list; discussion → OTHER                                                                             | FR-007/7a                     | `platform-discussions.it-spec.ts › Forum category drift — unknown stored values (N-5, N-6, local Postgres)` | API        |
+| Audit rows; none on denial                                                                                                 | FR-010/012, 061 US1-AS4/5     | `forum-audit.it-spec.ts › Audit rows for forum-category and reconcile operations (N-9, local Postgres)` (recategorise + reconcile rows) and `platform-discussions.it-spec.ts › Audit rows for the remove-category mutation (N-9, local Postgres)` (remove rows — H-1 confines every remove call to that file) | API        |
+| Reconcile authorization: anon/QA/GS/GLM refused; GA and POA allowed                                                        | 061 US1-AS5                   | `forum-hierarchy-reconcile.it-spec.ts › Reconcile authorization — legacy personas + anonymous (N-7)`; POA row in `platform-discussions.it-spec.ts` (N-13, see above) | API        |
+| Default call is a report; 9 parents; adapter-skew probe                                                                    | FR-001/003, SC-004            | `forum-hierarchy-reconcile.it-spec.ts › Reconcile default call — full-vocabulary report (N-8, adapter-skew probe)` — **executed green**, local adapter is v0.8.21 | API        |
+| Recategorise leaves the room under the old space; dry run writes nothing; apply re-parents; `unconverged` is the stop rule | SC-001/002, US2-AS1/2, FR-018 | `forum-hierarchy-reconcile.it-spec.ts › Recategorise → drift → apply → converged (N-11, local + Matrix token, opt-in adapter)` — **executed green** (token was made available mid-implementation) | API+Matrix |
+| Ghost edge reported, kept by default, pruned on opt-in                                                                     | SC-007, US2-AS4               | `forum-hierarchy-reconcile.it-spec.ts › Ghost edge: reported, kept by default, pruned on request (N-15, local + token, opt-in)` — **implemented, not executed**: gated on `HARNESS_ALLOW_GHOST_PRUNE=1`, deliberately left unset (destructive to every ghost edge on the stack) | API+Matrix |
+| No forum/category space in the public directory after the sync; a published space is retracted                             | SC-003, US3-AS1/2             | `forum-hierarchy-reconcile.it-spec.ts › No forum/category space is in the public directory after the sync (N-12a, local, no token)` and `› Sync retracts an already-published space (N-12b, local + Matrix token)` — both **executed green** | API+Matrix |
+| Overlapping pass refused (Redis lease)                                                                                     | 061 lease                     | `forum-hierarchy-reconcile.it-spec.ts › Overlapping reconcile pass is refused, then released (N-10, local Redis)` | API        |
+| Sweep order, removal authorization, partial results, no delete/scheduler                                                   | 061 US2/US5                   | server + Go unit                                                        | Unit       |
+| Edit-dialog recategorisation end to end                                                                                    | US2-AS1/2, SC-002             | `client-web/src/functional-e2e/forum-categories/edit-dialog-recategorise.spec.ts › TC-E1 — admin recategorises through the edit dialog (US2-AS1/2, SC-002)` | E2E        |
+| Nav follows the live list; member picker; old URLs render                                                                  | US1-AS1/3/6, US4-AS3          | **Not implemented** (E-2, P3 — below the P2 priority floor)             | E2E        |
+| Labels in every locale the stack enables (local: en, nl), no raw keys                                                      | US4-AS1, FR-013/015           | `client-web/src/functional-e2e/forum-categories/locale-labels.spec.ts › TC-E3 — forum category labels render correctly in every eligible locale (US4-AS1)`; other four locales deferred D-F to client-web unit | E2E        |
+
+### Regression guards
+
+- U-1 pins D-09 so canonical order cannot drift. N-3/N-13 pin 027's re-anchoring.
+- N-11 step 4 pins FR-018: the update path makes no hierarchy call. N-8 fails loudly on a stale adapter.
+
+## Not covered — known gaps
+
+| Scenario                                                                                                                                | Why not automated                                                                                      | Where it belongs                                          |
+| --------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ | --------------------------------------------------------- |
+| Image pins, adapter-before-server order, migration job, platform authorization reset, one curator edit of a pre-deploy post on ACC/PROD | Exists only on a deployed environment                                                                  | **Manual** MR-1 (U-1 + N-8 then run against ACC)          |
+| Running the sync + reconcile + directory check on ACC/PROD, retraction before retirement, ACC lacking Newsletter/Tips spaces            | Operator act on a deployed Matrix; no ACC Synapse credential                                           | **Manual** MR-2                                           |
+| The retirement act itself                                                                                                               | Irreversible by API (D-06)                                                                             | **Manual** MR-3                                           |
+| Historical in-app notifications show a label, not a raw key (US4-AS4)                                                                   | Legacy payload shape unverified; the 060 walk saw no forum in-app rows                                 | **Deferred** D-H                                          |
+| Labels for de/fr/es/bg                                                                                                                  | The local stack enables only en + nl (`platform.configuration.language`)                               | **Deferred** D-F: client-web unit beside the locale files |
+| `maxOperations` bounds (N-14); `task`/`tasks` without auth (N-16); `/forum/releases/latest` (E-4)                                       | **User decision (2026-09-29): not implemented.** All three would be red today by design (F-2, F-6, Release 76 C7) — see "Product findings" below for the live evidence gathered instead. | Reported as candidate product defects, not automated       |
+| Remove-category success / idempotency / re-refusal, restored by SQL (option O-1)                                                        | **User decision (2026-09-29): not implemented** — overrides 060 ruling D-06; the ruling stands | Server unit only (by ruling)                               |
+| Nav follows the live list; member picker; old URLs render (E-2)                                                                          | Below the P2 priority floor (P3)                                                                        | Not automated this pass                                    |
+
+### Product findings (live evidence, 2026-09-29, local stack)
+
+- **N-14 (F-2):** `adminCommunicationReconcileForumHierarchy({ dryRun: true, maxOperations: 0 })` and `maxOperations: 10001` both return a task id instead of a validation error, despite the DTO's `@Min(1) @Max(10000)`. Confirmed live via a direct mutation call (input not in `BaseHandler`'s allow-list).
+- **N-16 (F-6):** anonymous `{ tasks { id status } }` returns `{"data":{"tasks":[]}}` (200, no auth error). Anonymous `task(id: <unknown-uuid>)` returns `INTERNAL_SERVER_ERROR` with a full stack trace in `extensions.stacktrace` (file paths included). Confirmed live via unauthenticated `curl` against `/api/public/graphql`.
+- **E-4:** `/forum/releases/latest` returns HTTP 200 (SPA shell — the "404" in Release 76 C7 is the client-rendered not-found state, not an HTTP status). Not re-implemented as a case either way per the user's decision.
+
+**What is proven, and what is not.** This stack's local matrix-adapter is v0.8.21 (not the v0.8.17 `server/quickstart-services.yml` pins for a fresh checkout — F-5), so automation proves the whole of both stories end to end on THIS stack:
+
+- the category contract and editorial gates;
+- curation side effects;
+- the drift filters;
+- reconcile authorization, report-first default, convergence (N-11, executed green), and lease;
+- directory privacy (N-12a/b, executed green);
+- the audit trail.
+
+**Ghost-prune (N-15, SC-007) is implemented but deliberately not executed** — it sits behind `HARNESS_ALLOW_GHOST_PRUNE=1`, left unset because applying it prunes every ghost edge on the stack. **On a fresh checkout following the documented quickstart** (adapter v0.8.17), N-11/N-15 would skip with a stated reason instead. On ACC/PROD, convergence and directory privacy are proven only by the operator's MR-2 run. Nothing in the suites reaches that Synapse.

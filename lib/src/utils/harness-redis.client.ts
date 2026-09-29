@@ -211,3 +211,51 @@ export const closeHarnessRedis = async (): Promise<void> => {
     redisClient = undefined;
   }
 };
+
+// --- Generic single-key primitives (061 forum-hierarchy-reconcile lease) --
+// Deliberately untyped/uninterpreted values: unlike the BFF-session helpers
+// above, these plant and release an arbitrary owner-token lease (e.g. the
+// server's own `alkemio:forum-hierarchy-reconcile:lease`, NX + PX + owner
+// idiom) to test "already running" contention deterministically, without the
+// harness needing to know anything about what the key represents.
+
+/** `SET key value PX ttlMs NX` — returns true if the key was set (i.e. it
+ * was not already held), false if another owner already holds it. */
+export const redisSetNx = async (
+  key: string,
+  value: string,
+  ttlMs: number
+): Promise<boolean> => {
+  const result = await getHarnessRedisClient().set(
+    key,
+    value,
+    'PX',
+    ttlMs,
+    'NX'
+  );
+  return result === 'OK';
+};
+
+export const redisGet = async (key: string): Promise<string | null> => {
+  return getHarnessRedisClient().get(key);
+};
+
+const COMPARE_AND_DELETE_LUA =
+  "if redis.call('GET', KEYS[1]) == ARGV[1] then return redis.call('DEL', KEYS[1]) else return 0 end";
+
+/** Deletes `key` only if its current value is still `expectedValue` — safe
+ * release of a lease this test process planted, without clobbering a lease
+ * some other owner may have since acquired (e.g. after this test's own TTL
+ * already expired). Returns true if the key was deleted. */
+export const redisCompareAndDelete = async (
+  key: string,
+  expectedValue: string
+): Promise<boolean> => {
+  const result = await getHarnessRedisClient().eval(
+    COMPARE_AND_DELETE_LUA,
+    1,
+    key,
+    expectedValue
+  );
+  return result === 1;
+};

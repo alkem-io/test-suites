@@ -86,7 +86,7 @@ const scenarioConfig: TestScenarioConfig = {
   platformDiscussion: {
     title: 'Explore Test Discussion Auth',
     description: 'A test discussion for the exploration flow',
-    category: 'PLATFORM_FUNCTIONALITIES',
+    category: 'HELP',
   },
 };
 
