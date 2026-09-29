@@ -123,6 +123,60 @@ export default defineConfig({
       project('push-notifications', [
         'src/functional-api/push-notifications/**/*.it-spec.ts',
       ]),
+      // workspace#027 — platform roles: who can do what. Two SEQUENTIAL phases of
+      // one invocation (`pnpm test:platform-roles`), sharing ONE project-level
+      // globalSetup (role seeding + fixtures once per run):
+      //   1. `platform-roles`       role files + read-only specs, in parallel
+      //   2. `platform-roles-rules` rule specs — they register users and create
+      //      organizations, heavy server-side work that pushed a role-file
+      //      positive past the ~5 s request cutoff when run beside it.
+      // Deliberately NOT part of `nightly`: they need a server running 027.
+      // `platform-roles-exclusive` (platform-wide positives) is on demand only.
+      {
+        extends: true as const,
+        test: {
+          name: 'platform-roles',
+          include: [
+            'src/functional-api/platform-roles/roles/**/*.it-spec.ts',
+            'src/functional-api/platform-roles/coverage-guard.it-spec.ts',
+            'src/functional-api/platform-roles/holder-lists.it-spec.ts',
+            'src/functional-api/platform-roles/audit-trail.it-spec.ts',
+          ],
+          globalSetup: [
+            './src/functional-api/platform-roles/_support/global-setup.ts',
+          ],
+          sequence: { groupOrder: 1 },
+        },
+      },
+      {
+        extends: true as const,
+        test: {
+          name: 'platform-roles-rules',
+          include: [
+            'src/functional-api/platform-roles/rules/**/*.it-spec.ts',
+            'src/functional-api/platform-roles/role-integrity.it-spec.ts',
+            'src/functional-api/platform-roles/audit-records.it-spec.ts',
+          ],
+          globalSetup: [
+            './src/functional-api/platform-roles/_support/global-setup.ts',
+          ],
+          sequence: { groupOrder: 2 },
+        },
+      },
+      {
+        extends: true as const,
+        test: {
+          name: 'platform-roles-exclusive',
+          include: [
+            'src/functional-api/platform-roles/exclusive/**/*.it-spec.ts',
+          ],
+          globalSetup: [
+            './src/functional-api/platform-roles/_support/global-setup.ts',
+          ],
+          fileParallelism: false,
+          sequence: { groupOrder: 3 },
+        },
+      },
       project('graphql-guard', [
         'src/functional-api/graphql-guard/**/*.it-spec.ts',
       ]),

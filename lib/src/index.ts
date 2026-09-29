@@ -35,6 +35,7 @@ export * from "./config/test.configuration";
 export * from "./config/alkemio-test-config";
 export * from "./config/create-config-using-envvars";
 export * from "./config/optional-infra";
+export * from "./scenario/platform-roles/platform-role-users";
 export {
   ConversationCreationType,
   ActorType,

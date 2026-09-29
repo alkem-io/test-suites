@@ -1,0 +1,5 @@
+mutation PlatformRolesAssignLicensePlanToSpace($planData: AssignLicensePlanToSpace!) {
+  assignLicensePlanToSpace(planData: $planData) {
+    id
+  }
+}

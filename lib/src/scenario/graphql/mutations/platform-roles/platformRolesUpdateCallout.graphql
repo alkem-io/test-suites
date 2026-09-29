@@ -1,0 +1,7 @@
+# Minimal selection ON PURPOSE: the shared `UpdateCallout` document selects the
+# whole `CalloutDetails` fragment.
+mutation PlatformRolesUpdateCallout($calloutData: UpdateCalloutEntityInput!) {
+  updateCallout(calloutData: $calloutData) {
+    id
+  }
+}

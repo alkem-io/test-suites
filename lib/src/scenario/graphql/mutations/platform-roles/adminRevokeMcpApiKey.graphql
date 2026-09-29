@@ -1,0 +1,5 @@
+mutation adminRevokeMcpApiKey($revokeData: AdminRevokeMcpApiKeyInput!) {
+  adminRevokeMcpApiKey(revokeData: $revokeData) {
+    id
+  }
+}

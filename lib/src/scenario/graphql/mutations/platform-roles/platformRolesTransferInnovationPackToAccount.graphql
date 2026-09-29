@@ -1,0 +1,5 @@
+mutation PlatformRolesTransferInnovationPackToAccount($transferData: TransferAccountInnovationPackInput!) {
+  transferInnovationPackToAccount(transferData: $transferData) {
+    id
+  }
+}

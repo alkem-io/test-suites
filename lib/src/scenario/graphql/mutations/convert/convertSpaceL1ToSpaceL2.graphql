@@ -1,0 +1,7 @@
+mutation ConvertSpaceL1ToSpaceL2($convertData: ConvertSpaceL1ToSpaceL2Input!) {
+  convertSpaceL1ToSpaceL2(convertData: $convertData) {
+    id
+    nameID
+    level
+  }
+}

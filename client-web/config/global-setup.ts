@@ -23,7 +23,7 @@ dotenv.config({ path: path.resolve(__dirname, '..', '.env') });
  * always agree; deriving from `__dirname` here would point at `client-web/.auth`
  * and silently miss (leak) sessions whenever Playwright runs from another cwd.
  */
-function clearPersonaSessions() {
+export function clearPersonaSessions() {
   const authDir = path.join(process.cwd(), '.auth');
   if (!fs.existsSync(authDir)) return;
   for (const file of fs.readdirSync(authDir)) {

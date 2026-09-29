@@ -1,0 +1,6 @@
+# Minimal selection ON PURPOSE — see platformRolesCreateOrganization.graphql.
+mutation PlatformRolesAssignRoleToUser($roleData: AssignPlatformRoleInput!) {
+  assignPlatformRoleToUser(roleData: $roleData) {
+    id
+  }
+}

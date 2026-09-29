@@ -1,0 +1,5 @@
+mutation updateInnovationPack($innovationPackData: UpdateInnovationPackInput!) {
+  updateInnovationPack(innovationPackData: $innovationPackData) {
+    id
+  }
+}
