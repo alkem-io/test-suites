@@ -95047,6 +95047,28 @@ export type CalloutFormResponsesQuery = {
   };
 };
 
+export type CalloutContributionCountsQueryVariables = SchemaTypes.Exact<{
+  calloutId: SchemaTypes.Scalars["UUID"]["input"];
+}>;
+
+export type CalloutContributionCountsQuery = {
+  lookup: {
+    callout?:
+      | {
+          id: string;
+          contributions: Array<{ id: string }>;
+          contributionsCount: {
+            post: number;
+            whiteboard: number;
+            link: number;
+            memo: number;
+            collaboraDocument: number;
+          };
+        }
+      | undefined;
+  };
+};
+
 export type CalloutDetailsQueryVariables = SchemaTypes.Exact<{
   calloutId: SchemaTypes.Scalars["UUID"]["input"];
 }>;
@@ -96151,6 +96173,28 @@ export type CalloutFragment = {
   };
 };
 
+export type CalloutsSetFramingTypesQueryVariables = SchemaTypes.Exact<{
+  calloutsSetId: SchemaTypes.Scalars["UUID"]["input"];
+}>;
+
+export type CalloutsSetFramingTypesQuery = {
+  lookup: {
+    calloutsSet?:
+      | {
+          id: string;
+          callouts: Array<{
+            id: string;
+            framing: {
+              id: string;
+              type: SchemaTypes.CalloutFramingType;
+              profile: { displayName: string };
+            };
+          }>;
+        }
+      | undefined;
+  };
+};
+
 export type GetPostDataQueryVariables = SchemaTypes.Exact<{
   postId: SchemaTypes.Scalars["UUID"]["input"];
 }>;
@@ -96271,6 +96315,39 @@ export type SpaceCalloutsSetAndRoleSetQuery = {
           id: string;
           collaboration: { id: string; calloutsSet: { id: string } };
           community: { id: string; roleSet: { id: string } };
+        }
+      | undefined;
+  };
+};
+
+export type TemplateContentSpaceCalloutsQueryVariables = SchemaTypes.Exact<{
+  templateId: SchemaTypes.Scalars["UUID"]["input"];
+}>;
+
+export type TemplateContentSpaceCalloutsQuery = {
+  lookup: {
+    template?:
+      | {
+          id: string;
+          contentSpace?:
+            | {
+                id: string;
+                collaboration: {
+                  id: string;
+                  calloutsSet: {
+                    id: string;
+                    callouts: Array<{
+                      id: string;
+                      framing: {
+                        id: string;
+                        type: SchemaTypes.CalloutFramingType;
+                        profile: { displayName: string };
+                      };
+                    }>;
+                  };
+                };
+              }
+            | undefined;
         }
       | undefined;
   };
@@ -124189,6 +124266,25 @@ export const CalloutFormResponsesDocument = gql`
   }
   ${CalloutFormResponseDetailsFragmentDoc}
 `;
+export const CalloutContributionCountsDocument = gql`
+  query calloutContributionCounts($calloutId: UUID!) {
+    lookup {
+      callout(ID: $calloutId) {
+        id
+        contributions {
+          id
+        }
+        contributionsCount {
+          post
+          whiteboard
+          link
+          memo
+          collaboraDocument
+        }
+      }
+    }
+  }
+`;
 export const CalloutDetailsDocument = gql`
   query CalloutDetails($calloutId: UUID!) {
     lookup {
@@ -124378,6 +124474,25 @@ export const GetCalloutsOnCalloutsSetUsingClassificationDocument = gql`
   ${CalloutFragmentDoc}
   ${ClassificationDetailsFragmentDoc}
 `;
+export const CalloutsSetFramingTypesDocument = gql`
+  query calloutsSetFramingTypes($calloutsSetId: UUID!) {
+    lookup {
+      calloutsSet(ID: $calloutsSetId) {
+        id
+        callouts {
+          id
+          framing {
+            id
+            type
+            profile {
+              displayName
+            }
+          }
+        }
+      }
+    }
+  }
+`;
 export const GetPostDataDocument = gql`
   query GetPostData($postId: UUID!) {
     lookup {
@@ -124403,6 +124518,34 @@ export const SpaceCalloutsSetAndRoleSetDocument = gql`
           id
           roleSet {
             id
+          }
+        }
+      }
+    }
+  }
+`;
+export const TemplateContentSpaceCalloutsDocument = gql`
+  query templateContentSpaceCallouts($templateId: UUID!) {
+    lookup {
+      template(ID: $templateId) {
+        id
+        contentSpace {
+          id
+          collaboration {
+            id
+            calloutsSet {
+              id
+              callouts {
+                id
+                framing {
+                  id
+                  type
+                  profile {
+                    displayName
+                  }
+                }
+              }
+            }
           }
         }
       }
@@ -126744,6 +126887,9 @@ const GetCalendarEventsDocumentString = print(GetCalendarEventsDocument);
 const GetSpaceCalendarIdDocumentString = print(GetSpaceCalendarIdDocument);
 const SpaceCalloutDocumentString = print(SpaceCalloutDocument);
 const CalloutFormResponsesDocumentString = print(CalloutFormResponsesDocument);
+const CalloutContributionCountsDocumentString = print(
+  CalloutContributionCountsDocument
+);
 const CalloutDetailsDocumentString = print(CalloutDetailsDocument);
 const CalloutStorageConfigDocumentString = print(CalloutStorageConfigDocument);
 const CalloutFormDefinitionDocumentString = print(
@@ -126765,9 +126911,15 @@ const CalloutWhiateboardStorageConfigDocumentString = print(
 const GetCalloutsOnCalloutsSetUsingClassificationDocumentString = print(
   GetCalloutsOnCalloutsSetUsingClassificationDocument
 );
+const CalloutsSetFramingTypesDocumentString = print(
+  CalloutsSetFramingTypesDocument
+);
 const GetPostDataDocumentString = print(GetPostDataDocument);
 const SpaceCalloutsSetAndRoleSetDocumentString = print(
   SpaceCalloutsSetAndRoleSetDocument
+);
+const TemplateContentSpaceCalloutsDocumentString = print(
+  TemplateContentSpaceCalloutsDocument
 );
 const WhiteboardCalloutStorageConfigDocumentString = print(
   WhiteboardCalloutStorageConfigDocument
@@ -131834,6 +131986,28 @@ export function getSdk(
         variables
       );
     },
+    calloutContributionCounts(
+      variables: SchemaTypes.CalloutContributionCountsQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.CalloutContributionCountsQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.CalloutContributionCountsQuery>(
+            CalloutContributionCountsDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "calloutContributionCounts",
+        "query",
+        variables
+      );
+    },
     CalloutDetails(
       variables: SchemaTypes.CalloutDetailsQueryVariables,
       requestHeaders?: GraphQLClientRequestHeaders
@@ -132032,6 +132206,28 @@ export function getSdk(
         variables
       );
     },
+    calloutsSetFramingTypes(
+      variables: SchemaTypes.CalloutsSetFramingTypesQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.CalloutsSetFramingTypesQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.CalloutsSetFramingTypesQuery>(
+            CalloutsSetFramingTypesDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "calloutsSetFramingTypes",
+        "query",
+        variables
+      );
+    },
     GetPostData(
       variables: SchemaTypes.GetPostDataQueryVariables,
       requestHeaders?: GraphQLClientRequestHeaders
@@ -132072,6 +132268,28 @@ export function getSdk(
             { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "spaceCalloutsSetAndRoleSet",
+        "query",
+        variables
+      );
+    },
+    templateContentSpaceCallouts(
+      variables: SchemaTypes.TemplateContentSpaceCalloutsQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.TemplateContentSpaceCalloutsQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.TemplateContentSpaceCalloutsQuery>(
+            TemplateContentSpaceCalloutsDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "templateContentSpaceCallouts",
         "query",
         variables
       );

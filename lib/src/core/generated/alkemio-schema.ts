@@ -87013,6 +87013,28 @@ export type CalloutFormResponsesQuery = {
   };
 };
 
+export type CalloutContributionCountsQueryVariables = Exact<{
+  calloutId: Scalars["UUID"]["input"];
+}>;
+
+export type CalloutContributionCountsQuery = {
+  lookup: {
+    callout?:
+      | {
+          id: string;
+          contributions: Array<{ id: string }>;
+          contributionsCount: {
+            post: number;
+            whiteboard: number;
+            link: number;
+            memo: number;
+            collaboraDocument: number;
+          };
+        }
+      | undefined;
+  };
+};
+
 export type CalloutDetailsQueryVariables = Exact<{
   calloutId: Scalars["UUID"]["input"];
 }>;
@@ -88087,6 +88109,28 @@ export type CalloutFragment = {
   settings: { __typename: "CalloutSettings"; visibility: CalloutVisibility };
 };
 
+export type CalloutsSetFramingTypesQueryVariables = Exact<{
+  calloutsSetId: Scalars["UUID"]["input"];
+}>;
+
+export type CalloutsSetFramingTypesQuery = {
+  lookup: {
+    calloutsSet?:
+      | {
+          id: string;
+          callouts: Array<{
+            id: string;
+            framing: {
+              id: string;
+              type: CalloutFramingType;
+              profile: { displayName: string };
+            };
+          }>;
+        }
+      | undefined;
+  };
+};
+
 export type GetPostDataQueryVariables = Exact<{
   postId: Scalars["UUID"]["input"];
 }>;
@@ -88191,6 +88235,39 @@ export type SpaceCalloutsSetAndRoleSetQuery = {
           id: string;
           collaboration: { id: string; calloutsSet: { id: string } };
           community: { id: string; roleSet: { id: string } };
+        }
+      | undefined;
+  };
+};
+
+export type TemplateContentSpaceCalloutsQueryVariables = Exact<{
+  templateId: Scalars["UUID"]["input"];
+}>;
+
+export type TemplateContentSpaceCalloutsQuery = {
+  lookup: {
+    template?:
+      | {
+          id: string;
+          contentSpace?:
+            | {
+                id: string;
+                collaboration: {
+                  id: string;
+                  calloutsSet: {
+                    id: string;
+                    callouts: Array<{
+                      id: string;
+                      framing: {
+                        id: string;
+                        type: CalloutFramingType;
+                        profile: { displayName: string };
+                      };
+                    }>;
+                  };
+                };
+              }
+            | undefined;
         }
       | undefined;
   };

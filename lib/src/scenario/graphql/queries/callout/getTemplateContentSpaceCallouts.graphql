@@ -1,0 +1,26 @@
+query templateContentSpaceCallouts($templateId: UUID!) {
+  lookup {
+    template(ID: $templateId) {
+      id
+      contentSpace {
+        id
+        collaboration {
+          id
+          calloutsSet {
+            id
+            callouts {
+              id
+              framing {
+                id
+                type
+                profile {
+                  displayName
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
