@@ -21,10 +21,7 @@ import { fillSecret } from '../helpers/login.helper';
  *      the response types are reachable from no Callout / ActivityLogEntry /
  *      InAppNotification / Subscription type; only lookup.calloutFormResponses
  *      returns it, and only to permitted readers.
- *      NOTE: search is NOT exercised live here (the forge stack has no
- *      Elasticsearch); the search negative lives in
- *      server-api/src/functional-api/callout/form (never-appears it-spec). The
- *      live-socket subscription check is covered by the schema reachability
+ *      The live-socket subscription check is covered by the schema reachability
  *      assertion (subscription result types reference no response type).
  * AS7  P (member of S only, inherited contribute) submits on the Sub "Space
  *      members" Form and sees own responses only (D-4).

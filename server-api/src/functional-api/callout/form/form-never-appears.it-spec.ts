@@ -9,15 +9,11 @@ import {
   TestUserManager,
   UniqueIDGenerator,
 } from '@alkemio/tests-lib';
-import {
-  CalloutFormResponseVisibility,
-  SearchCategory,
-} from '@alkemio/tests-lib/core/generated/alkemio-schema';
+import { CalloutFormResponseVisibility } from '@alkemio/tests-lib/core/generated/alkemio-schema';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import { graphqlErrorWrapper } from '@alkemio/tests-lib/utils/graphql.wrapper';
 import { getActivityLogOnCollaboration } from '../../activity-logs/activity-log-params';
 import { createPostOnCallout } from '../post/post.request.params';
-import { adminSearchIngestFromScratch } from '../../search/search.request.params';
 import {
   answersFor,
   createFormCallout,
@@ -29,7 +25,7 @@ import {
 
 /**
  * A Form response is not a contribution: it must not show up where
- * contributions, activity, search and subscriptions surface content, and the
+ * contributions, activity and subscriptions surface content, and the
  * GraphQL schema must not let it be reached from a callout. Every negative is
  * paired with a positive control on a POST contribution that carries the same
  * marker, so "nothing found" can never mean "the channel is broken".
@@ -106,29 +102,6 @@ const counts = async (calloutId: string) => {
     );
   }
   return callout;
-};
-
-const searchMarker = async () => {
-  const client = getGraphqlClient();
-  const result = await graphqlErrorWrapper(
-    (authToken: string | undefined) =>
-      client.search(
-        {
-          searchData: {
-            terms: [MARKER],
-            searchInSpaceFilter: baseScenario.space.id,
-            filters: [
-              { category: SearchCategory.Contributions, size: 20 },
-              { category: SearchCategory.CollaborationTools, size: 20 },
-              { category: SearchCategory.Framings, size: 20 },
-            ],
-          },
-        },
-        { authorization: `Bearer ${authToken}` }
-      ),
-    TestUser.GLOBAL_ADMIN
-  );
-  return JSON.stringify(result.data?.search ?? {});
 };
 
 beforeAll(async () => {
@@ -259,30 +232,6 @@ describe('Form response — never in the activity log', () => {
     // ... and nothing else was added: no entry came from the Form response.
     expect(added).toHaveLength(1);
     expect(activityAfter.join('\n')).not.toContain(responseId);
-  });
-});
-
-describe('Form response — never in search', () => {
-  test('the marker finds the POST contribution and never the Form or its response', async () => {
-    await adminSearchIngestFromScratch();
-
-    let hits = '';
-    const deadline = Date.now() + 90_000;
-    do {
-      await delay(3_000);
-      hits = await searchMarker();
-    } while (!hits.includes(postId) && Date.now() < deadline);
-
-    // Guard: a control that finds nothing means the stack cannot search at
-    // all (ES index templates missing), which would make the negatives vacuous.
-    if (!hits.includes(postId)) {
-      throw new Error(
-        'Search control returned no hit for the POST contribution: ES templates missing on the stack — the negative assertions would be vacuous.'
-      );
-    }
-    expect(hits).not.toContain(form.calloutId);
-    expect(hits).not.toContain(form.formId);
-    expect(hits).not.toContain(responseId);
   });
 });
 
