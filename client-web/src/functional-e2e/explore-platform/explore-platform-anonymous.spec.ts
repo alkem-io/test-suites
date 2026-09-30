@@ -76,7 +76,7 @@ const scenarioConfig: TestScenarioConfig = {
   platformDiscussion: {
     title: 'Explore Test Discussion',
     description: 'A test discussion for the exploration flow',
-    category: 'PLATFORM_FUNCTIONALITIES',
+    category: 'HELP',
   },
 };
 // Serial mode to ensure clean setup/teardown
