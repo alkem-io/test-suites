@@ -506,6 +506,16 @@ describe('Form lifecycle — who may delete which response', () => {
     expect(await totalSeenByAdmin(exAdminForm)).toBe(1);
   });
 
+  test('the ex-admin creator cannot delete their Form Post, and so its responses', async () => {
+    const attempt = await deleteCallout(
+      exAdminForm.calloutId,
+      TestUser.SUBSUBSPACE_ADMIN
+    );
+
+    expect(isDenied(attempt)).toBe(true);
+    expect(await totalSeenByAdmin(exAdminForm)).toBe(1);
+  });
+
   test('the parent space admin can delete it', async () => {
     const attempt = await deleteFormResponse(responseId, TestUser.SPACE_ADMIN);
 
