@@ -1,0 +1,106 @@
+diff --git a/pkg/mailslurper/ConnectionManager.go b/pkg/mailslurper/ConnectionManager.go
+index b29066d..97a583c 100644
+--- a/pkg/mailslurper/ConnectionManager.go
++++ b/pkg/mailslurper/ConnectionManager.go
+@@ -8,6 +8,7 @@ import (
+ 	"context"
+ 	"io"
+ 	"net"
++	"sync"
+ 	"time"
+ 
+ 	"github.com/pkg/errors"
+@@ -26,6 +27,7 @@ type ConnectionManager struct {
+ 	killServerContext context.Context
+ 	logger            *logrus.Entry
+ 	mailItemChannel   chan *MailItem
++	poolMutex         sync.Mutex
+ 	serverPool        *ServerPool
+ }
+ 
+@@ -74,18 +76,44 @@ Close will close a client connection. The state of the worker
+ is only used for logging purposes
+ */
+ func (m *ConnectionManager) Close(connection net.Conn) error {
+-	if m.connectionExistsInPool(connection) {
+-		if !m.isConnectionClosed(connection) {
+-			m.logger.Infof("Closing connection %s", connection.RemoteAddr().String())
+-			return m.connectionPool[connection.RemoteAddr().String()].Connection.Close()
+-		}
++	address := connection.RemoteAddr().String()
++
++	/*
++	 * Remove the entry from the pool as well as closing the socket. The pool
++	 * is keyed by the client's "ip:port", and New() refuses any connection
++	 * whose key is already present. Without this delete every connection ever
++	 * served stayed registered for the life of the process, so a later client
++	 * connection that happened to reuse the same source port was rejected
++	 * ("Connection on 'ip:port' already exists") and its mail was lost. The
++	 * rejection rate grew with every connection served.
++	 *
++	 * A worker may signal close more than once for the same connection, so a
++	 * key that is already gone is not an error.
++	 */
++	m.poolMutex.Lock()
++	item, exists := m.connectionPool[address]
++	if exists {
++		delete(m.connectionPool, address)
++	}
++	m.poolMutex.Unlock()
+ 
++	if !exists {
+ 		return nil
+ 	}
+ 
+-	return ConnectionNotExists(connection.RemoteAddr().String())
++	if !m.isConnectionClosed(connection) {
++		m.logger.Infof("Closing connection %s", address)
++		return item.Connection.Close()
++	}
++
++	return nil
+ }
+ 
++/*
++connectionExistsInPool reports whether the connection's remote address is
++tracked. The caller must hold poolMutex: the pool is a plain map that the SMTP
++listener goroutine writes and the close goroutine now deletes from.
++*/
+ func (m *ConnectionManager) connectionExistsInPool(connection net.Conn) bool {
+ 	if _, ok := m.connectionPool[connection.RemoteAddr().String()]; ok {
+ 		return true
+@@ -118,7 +146,17 @@ func (m *ConnectionManager) New(connection net.Conn) error {
+ 	var err error
+ 	var worker *SMTPWorker
+ 
+-	if m.connectionExistsInPool(connection) {
++	/*
++	 * The lock is NOT held across NextWorker: that call can wait for a free
++	 * worker, and a worker is only freed once its connection has gone through
++	 * Close(), which needs this same lock. Only the SMTP listener goroutine
++	 * calls New(), so the same address cannot be added twice in between.
++	 */
++	m.poolMutex.Lock()
++	exists := m.connectionExistsInPool(connection)
++	m.poolMutex.Unlock()
++
++	if exists {
+ 		return ConnectionExists(connection.RemoteAddr().String())
+ 	}
+ 
+@@ -128,8 +166,13 @@ func (m *ConnectionManager) New(connection net.Conn) error {
+ 		return errors.Wrapf(err, "Error getting work in ConnectionManager")
+ 	}
+ 
+-	m.connectionPool[connection.RemoteAddr().String()] = NewConnectionPoolItem(connection, worker)
+-	go m.connectionPool[connection.RemoteAddr().String()].Worker.Work()
++	item := NewConnectionPoolItem(connection, worker)
++
++	m.poolMutex.Lock()
++	m.connectionPool[connection.RemoteAddr().String()] = item
++	m.poolMutex.Unlock()
++
++	go item.Worker.Work()
+ 
+ 	return nil
+ }

@@ -1,0 +1,21 @@
+# Swaps ONLY the MailSlurper image of the Alkemio dev stack for the patched
+# build in this directory. Nothing else about the service changes (same
+# container name, ports, network), so Kratos, the notifications service and the
+# tests need no reconfiguration.
+#
+# Use it as an extra -f on top of the server repo's compose file, e.g. from the
+# server repo root:
+#
+#   docker compose -f quickstart-services.yml \
+#     -f ../test-suites/infra/mailslurper/docker-compose.override.yml \
+#     --env-file .env.docker up -d --no-deps --build mailslurper
+#
+# `--no-deps mailslurper` recreates that one container and leaves the rest of
+# the running stack alone. Drop the override (and `up -d mailslurper` again) to
+# go back to the stock image.
+services:
+  mailslurper:
+    image: ghcr.io/alkem-io/test-suites/mailslurper:smtps-4c6aecc-p2
+    build:
+      context: .
+      dockerfile: Dockerfile
