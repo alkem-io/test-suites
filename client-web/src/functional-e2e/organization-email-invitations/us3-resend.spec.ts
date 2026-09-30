@@ -143,13 +143,16 @@ orgAdminTest.describe('US3-AS1 / US3-AS3 — Resend in the organization Associat
 
     const mails = await waitForMailsTo(orgEmail, mailsBefore + 1);
     expect(mails).toHaveLength(mailsBefore + 1);
-    const resent = mails[mails.length - 1];
-    expect(resent.subject).toEqual(organizationInvitationSubject(scenario.organization.profile.displayName));
-    const body = decodeMailBody(resent.body);
+    // MailSlurper lists newest first and the original invitation mail is in the same mailbox, so the
+    // resent mail is identified by what distinguishes it: it names the resending admin as the inviter
+    // (the original names the platform admin who created the invitation).
+    const resendingAdmin = TestUserManager.users.organizationAdmin.displayName;
+    const resent = mails.find(m => decodeMailBody(m.body).includes(resendingAdmin));
+    expect(resent, 'a mail naming the resending admin as the inviter').toBeDefined();
+    expect(resent?.subject).toEqual(organizationInvitationSubject(scenario.organization.profile.displayName));
+    const body = decodeMailBody(resent?.body);
     expect(body).toContain('Associate + Admin');
     expect(body).toContain(`US3 resend ${runSuffix}`);
-    // The resending admin is named as the inviter; the original inviter is the platform admin.
-    expect(body).toContain(TestUserManager.users.organizationAdmin.displayName);
 
     // The row is exactly what it was.
     const after = await lookupEmailInvitationRaw(orgInvitationId, globalAdminToken);
@@ -258,7 +261,8 @@ baseTest.describe('US3-AS6 — the original inviter was deleted', () => {
 
     const mails = await waitForMailsTo(inviteeEmail, mailsBefore + 1);
     expect(mails).toHaveLength(mailsBefore + 1);
-    expect(decodeMailBody(mails[mails.length - 1].body)).toContain(TestUserManager.users.organizationAdmin.displayName);
+    // Newest first: the original mail names the deleted inviter's account, the resent one names the resending admin.
+    expect(mails.some(m => decodeMailBody(m.body).includes(TestUserManager.users.organizationAdmin.displayName))).toBe(true);
 
     const after = await lookupEmailInvitationRaw(id, globalAdminToken);
     expect(after.data?.lookup.platformInvitation).toEqual(before.data?.lookup.platformInvitation);
