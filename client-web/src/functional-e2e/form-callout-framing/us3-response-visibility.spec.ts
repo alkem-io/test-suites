@@ -321,6 +321,14 @@ async function lookupAs(who: Actor | 'anonymous', formId: string) {
 
 // ---------------------------------------------------------------- UI helpers
 
+// Optional human-facing evidence: set FORGE_EVIDENCE_DIR to keep a screenshot at
+// each decisive assertion. Assertions never depend on it.
+const EVIDENCE_DIR = process.env.FORGE_EVIDENCE_DIR || '';
+async function evidence(page: Page, name: string) {
+  if (!EVIDENCE_DIR) return;
+  await page.screenshot({ path: `${EVIDENCE_DIR}/${name}.png` });
+}
+
 const sessions = new Map<Persona | 'admin', BrowserContext>();
 
 async function signIn(browser: Browser, who: Actor): Promise<Page> {
@@ -553,6 +561,7 @@ test.describe(
       await expect(
         createGroup.getByRole('radio', { name: 'Space members' })
       ).toBeEnabled();
+      await evidence(page, 'US3-AS1-create-flow-settings');
 
       // Edit flow on an existing (Admins-only, zero responses) Form.
       const settings = await openFormSettings(page, formAdmins);
@@ -563,6 +572,7 @@ test.describe(
       await expect(
         group.getByRole('radio', { name: 'Space members' })
       ).toBeEnabled();
+      await evidence(page, 'US3-AS1-edit-flow-settings');
       await page.close();
     });
 
@@ -582,6 +592,7 @@ test.describe(
       await expect(dialog.getByRole('heading', { name: 'Your responses' })).toHaveCount(0);
       await expect(dialog.getByRole('button', { name: /View responses/i })).toHaveCount(0);
       await expect(page.getByText(MARK.m1OnAdmins)).toHaveCount(0);
+      await evidence(page, 'US3-AS2-m2-form-dialog');
 
       // Feed card of the same Form: still no count / action.
       await page.goto(fixture.subUrl);
@@ -633,6 +644,7 @@ test.describe(
       await expect(anonDialog.getByRole('button', { name: 'Submit response' })).toHaveCount(0);
       await expect(anonDialog.getByRole('button', { name: /View responses/i })).toHaveCount(0);
       await expect(anon.getByText(MARK.m1OnSpace)).toHaveCount(0);
+      await evidence(anon, 'US3-AS3-anonymous');
       await anonContext.close();
 
       // Non-member (signed in).
@@ -644,6 +656,7 @@ test.describe(
       await expect(dialog.getByRole('button', { name: 'Submit response' })).toHaveCount(0);
       await expect(dialog.getByRole('button', { name: /View responses/i })).toHaveCount(0);
       await expect(page.getByText(MARK.m1OnSpace)).toHaveCount(0);
+      await evidence(page, 'US3-AS3-non-member');
       await page.close();
 
       // API: empty for anonymous, OWN scope (empty) for the non-member.
@@ -684,6 +697,7 @@ test.describe(
       await expect(
         widen.getByText('Cannot widen who can see responses once responses exist')
       ).toBeVisible();
+      await evidence(page, 'US3-AS4-widen-disabled');
       await page.close();
 
       // Space members + 1 response: narrowing to Admins only stays enabled.
@@ -694,6 +708,7 @@ test.describe(
       });
       await expect(narrowGroup.getByRole('radio', { name: 'Space members' })).toBeChecked();
       await expect(narrowGroup.getByRole('radio', { name: 'Admins only' })).toBeEnabled();
+      await evidence(narrowPage, 'US3-AS4-narrow-enabled');
       await narrowPage.close();
 
       // API agrees: widening is refused.
@@ -720,6 +735,7 @@ test.describe(
       await expect(table.getByRole('cell', { name: MARK.m1OnAdmins })).toBeVisible();
       await expect(table.getByRole('cell', { name: MARK.m2OnAdmins })).toBeVisible();
       await expect(table.getByText('Showing 2 of 2')).toBeVisible();
+      await evidence(page, 'US3-AS5-admin-view-responses');
       await page.close();
     });
 
@@ -936,6 +952,7 @@ test.describe(
       const activity = page.getByRole('dialog', { name: 'Recent Activity' });
       await expect(activity.getByText(MARK.as6PostTitle)).toBeVisible();
       await expect(page.getByText(MARK.as6Answer)).toHaveCount(0);
+      await evidence(page, 'US3-AS6-recent-activity');
       await page.close();
 
       // Only the lookup returns it, and only to permitted readers.
@@ -988,6 +1005,7 @@ test.describe(
       await expect(reopened.getByText(MARK.pOnMembers)).toBeVisible();
       await expect(page.getByText(MARK.m1OnMembers)).toHaveCount(0);
       await expect(reopened.getByRole('button', { name: /View responses/i })).toHaveCount(0);
+      await evidence(page, 'US3-AS7-p-own-responses');
       await page.close();
 
       expect(await lookupAs('p', formMembers.formId)).toMatchObject({
@@ -1039,6 +1057,7 @@ test.describe(
       await expect(dialog.getByRole('button', { name: /View responses/i })).toHaveCount(0);
       await expect(dialog.getByRole('button', { name: /^Delete/i })).toHaveCount(0);
       await expect(dialog.getByRole('button', { name: 'Withdraw' })).toHaveCount(1);
+      await evidence(page, 'US3-AS8-a2-demoted');
       await page.close();
 
       // API: OWN scope only, no moderation, delete of another's response refused.
