@@ -1149,9 +1149,10 @@ export const createPlatformDiscussion = async (
             displayName: options?.title || "Discussion",
             description: options?.description,
           },
-          category:
-            options?.category ||
-            ForumDiscussionCategory.PlatformFunctionalities,
+          // HELP is a permanent target category (060 forum reorganisation);
+          // PLATFORM_FUNCTIONALITIES is a legacy retirement candidate and
+          // must not be the harness's silent default (U-4).
+          category: options?.category || ForumDiscussionCategory.Help,
         },
       },
       {

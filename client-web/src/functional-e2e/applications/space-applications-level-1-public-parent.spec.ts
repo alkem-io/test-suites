@@ -15,6 +15,7 @@ import {
   SpacePrivacyMode,
 } from '@alkemio/client-lib';
 import { loginViaCrd } from '../helpers/login.helper';
+import { enableApplicationNotifications } from '../helpers/notification-settings.helper';
 
 const password = process.env.AUTH_TEST_HARNESS_PASSWORD || 'change_me';
 const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
@@ -60,11 +61,21 @@ test.describe('Level 1 Subspace - Applications (Public Parent Space)', () => {
   let baseScenario: OrganizationWithSpaceModel;
   let nonSpaceMemberPage: Page;
   let subspaceAdminPage: Page;
+  let restoreNotificationSettings: () => Promise<void>;
 
   test.beforeAll(async ({ browser }) => {
     globalBaseScenario =
       await TestScenarioFactory.createBaseScenario(scenarioConfig);
     baseScenario = globalBaseScenario;
+
+    // The bell-dialog assertions below need the in-app channel ON for the
+    // applicant (joined / declined) and the admin (application received).
+    // Other suites leave these personas with in-app off, so set it here and
+    // put the previous values back in afterAll.
+    restoreNotificationSettings = await enableApplicationNotifications([
+      TestUser.NON_SPACE_MEMBER,
+      TestUser.SUBSPACE_ADMIN,
+    ]);
 
     // Sign in as non-space member — NOT a member of L0.
     // Since L0 is public, they can still see its subspaces.
@@ -85,6 +96,7 @@ test.describe('Level 1 Subspace - Applications (Public Parent Space)', () => {
   });
 
   test.afterAll(async () => {
+    await restoreNotificationSettings?.();
     await TestScenarioFactory.cleanUpBaseScenario(globalBaseScenario);
     await nonSpaceMemberPage.close();
     await subspaceAdminPage.close();
