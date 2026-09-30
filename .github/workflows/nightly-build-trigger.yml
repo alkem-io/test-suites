@@ -127,6 +127,32 @@ jobs:
           echo "${{ secrets.KUBECONFIG_SECRET_HETZNER_TEST }}" > $HOME/.kube/config
           chmod 600 $HOME/.kube/config
 
+      # The stock oryd/mailslurper image loses mail at random (connection-pool
+      # leak + SQLite lock; see infra/mailslurper/README.md), which shows up as
+      # off-by-one recipient counts in the notification specs. Pin the patched
+      # build from this repo on the test cluster before the tests run. Done
+      # here rather than in dev-orchestration so the fix lives with the tests
+      # that need it; a no-op when the image is already current. If the
+      # rollout does not complete (e.g. the image cannot be pulled), roll
+      # back to whatever was running so the nightly still executes, and say so.
+      - name: Use the patched MailSlurper image on the test cluster
+        env:
+          MAILSLURPER_IMAGE: ghcr.io/alkem-io/test-suites/mailslurper:smtps-4c6aecc-p2
+        run: |
+          current=$(kubectl get deployment/mailslurper-deployment \
+            -o jsonpath='{.spec.template.spec.containers[?(@.name=="mailslurper")].image}')
+          if [ "$current" = "$MAILSLURPER_IMAGE" ]; then
+            echo "mailslurper already runs $MAILSLURPER_IMAGE"
+            exit 0
+          fi
+          echo "mailslurper runs '$current'; switching to $MAILSLURPER_IMAGE"
+          kubectl set image deployment/mailslurper-deployment "mailslurper=$MAILSLURPER_IMAGE"
+          if ! kubectl rollout status deployment/mailslurper-deployment --timeout=180s; then
+            echo "::warning::patched MailSlurper rollout failed; rolling back to '$current' — this run may lose mail"
+            kubectl rollout undo deployment/mailslurper-deployment
+            kubectl rollout status deployment/mailslurper-deployment --timeout=180s
+          fi
+
       - name: Set run folder variables
         run: |
           DATE=$(date +'%Y-%m-%d')
