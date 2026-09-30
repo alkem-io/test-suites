@@ -40,6 +40,7 @@ import {
  *
  * The Form lives in a SUBSPACE of a public space whose `allowPlatformSupportAsAdmin`
  * is off, so Global Support reads by the draft-Post rule but never moderates.
+ * A separate space with the flag on covers the positive Global Support cell.
  * Every response is written by SUBSPACE_MEMBER; the other readers are told apart
  * by what they see of that one response:
  *   ALL  -> `all.total == 1` and `canReadAll`
@@ -558,5 +559,88 @@ describe('Form responses — a private space', () => {
     );
 
     expect(responsesView(result)).toEqual(own(1));
+  });
+});
+
+describe('Form responses — a space that allows platform support as admin', () => {
+  let supportSpaceId = '';
+  let supportForm: FormCallout;
+
+  beforeAll(async () => {
+    const created = await createSpaceBasicData(
+      `form-support-${uniqueId}`,
+      `form-support-${uniqueId}`.toLowerCase().slice(0, 25),
+      baseScenario.organization.accountId
+    );
+    supportSpaceId = created.data?.createSpace.id ?? '';
+    expect(supportSpaceId).not.toBe('');
+
+    const updated = await updateSpaceSettings(supportSpaceId, {
+      privacy: {
+        mode: SpacePrivacyMode.Public,
+        allowPlatformSupportAsAdmin: true,
+      },
+    });
+    expect(updated.error).toBeUndefined();
+
+    const { calloutsSetId, roleSetId } = await getSpaceSets(supportSpaceId);
+
+    const member = await assignRoleToUser(
+      TestUserManager.users.spaceMember.id,
+      roleSetId,
+      RoleName.Member
+    );
+    expect(member.error).toBeUndefined();
+
+    supportForm = await createFormCallout(calloutsSetId, {
+      displayName: uniqueFormName(`support-${uniqueId}`),
+      settings: {
+        visibility: CalloutFormResponseVisibility.Admins,
+        responseMode: CalloutFormResponseMode.Multiple,
+      },
+    });
+    await submitAs(
+      supportForm,
+      CalloutFormResponseVisibility.Admins,
+      TestUser.SPACE_MEMBER
+    );
+  });
+
+  afterAll(async () => {
+    await deleteSpace(supportSpaceId);
+  });
+
+  test('Global Support reads every response and can moderate', async () => {
+    const result = await getFormResponses(
+      supportForm.formId,
+      TestUser.GLOBAL_SUPPORT_ADMIN
+    );
+
+    expect(responsesView(result)).toEqual(everything(0, true));
+  });
+
+  test('Global Support deletes another member’s response', async () => {
+    const responseId = await submitAs(
+      supportForm,
+      CalloutFormResponseVisibility.Admins,
+      TestUser.SPACE_MEMBER
+    );
+
+    const attempt = await deleteFormResponse(
+      responseId,
+      TestUser.GLOBAL_SUPPORT_ADMIN
+    );
+
+    expect(attempt.error).toBeUndefined();
+    expect(attempt.data?.deleteCalloutFormResponse.id).toBe(responseId);
+  });
+
+  test('control: a registered non-member still reads nothing here', async () => {
+    const result = await getFormResponses(
+      supportForm.formId,
+      TestUser.NON_SPACE_MEMBER
+    );
+
+    expect(responsesView(result)).toEqual(own(0));
   });
 });
