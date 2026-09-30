@@ -7,6 +7,7 @@ import { fillSecret } from '../helpers/login.helper';
  * AS1  single-response dialog + all-at-once table: rows per respondent, question
  *      columns (a removed question stays readable under its snapshot prompt),
  *      option labels, "No answer given", "Deleted user".
+ *      A relabelled option shows, per response, the label it was submitted with.
  * AS2  120 API-created responses load in pages of 50 and all 120 are reachable.
  * AS3  deleting a response asks for confirmation first; the row goes away; no
  *      edit affordance exists anywhere.
@@ -462,6 +463,68 @@ test.describe(
         single.getByText('Dietary needs (to be removed) (removed question)')
       ).toBeVisible();
       await expect(single.getByText('No answer given').first()).toBeVisible();
+      await page.context().close();
+    });
+
+    test('US4a-AS1 relabelled option keeps its submitted label per response', async ({
+      browser,
+    }) => {
+      const relabel = await createForm(
+        'US4a Form Relabel',
+        [
+          { prompt: 'Your name', type: 'SHORT_TEXT', required: true },
+          {
+            prompt: 'Pick one',
+            type: 'SINGLE_CHOICE',
+            options: [{ label: 'Alpha' }, { label: 'Beta' }, { label: 'Gamma' }],
+          },
+        ],
+        { responseMode: 'MULTIPLE' }
+      );
+      const [who, pick] = relabel.questions;
+      const beta = pick.options!.find(o => o.label === 'Beta')!.id;
+      const answerWith = (name: string) => [
+        { questionID: who.id, text: name },
+        { questionID: pick.id, selectedOptionIDs: [beta] },
+      ];
+      await submit('m1', relabel.formId, 'ADMINS', answerWith('Mia Before'));
+      await must(
+        await gql(
+          personaEmail.a2,
+          'mutation ($d: UpdateCalloutFormInput!) { updateCalloutForm(formData: $d) { id } }',
+          {
+            d: {
+              formID: relabel.formId,
+              questions: [
+                { id: who.id, prompt: who.prompt, type: 'SHORT_TEXT', required: true },
+                {
+                  id: pick.id,
+                  prompt: pick.prompt,
+                  type: 'SINGLE_CHOICE',
+                  required: false,
+                  options: pick.options!.map(o => ({
+                    id: o.id,
+                    label: o.id === beta ? 'Beta RENAMED' : o.label,
+                  })),
+                },
+              ],
+            },
+          }
+        ),
+        'relabel option'
+      );
+      await submit('m2', relabel.formId, 'ADMINS', answerWith('Max After'));
+
+      const page = await signIn(browser, personaEmail.a2);
+      await page.goto(relabel.url);
+      await page.getByRole('button', { name: /View responses \(2\)/ }).click();
+      const dialog = page.getByRole('dialog', { name: 'Form responses' });
+      await expect(dialog.getByRole('row')).toHaveCount(3);
+      const before = dialog.getByRole('row').filter({ hasText: 'Mia Before' });
+      const after = dialog.getByRole('row').filter({ hasText: 'Max After' });
+      await expect(before).toContainText('Beta');
+      await expect(before).not.toContainText('RENAMED');
+      await expect(after).toContainText('Beta RENAMED');
       await page.context().close();
     });
 
