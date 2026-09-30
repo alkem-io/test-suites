@@ -127,6 +127,11 @@ const writeApplicationChannels = async (
  * and `user.membership.spaceCommunityJoined` (applicant sees "Welcome to the
  * community" / "declined") — for the given personas.
  *
+ * Reads every persona's current values first, then writes; if any write
+ * fails, the values already written are rolled back before the error is
+ * rethrown, so a failed `beforeAll` cannot leave the shared personas
+ * half-modified.
+ *
  * Returns a restore function that writes the previous values back; call it
  * from `afterAll`.
  */
@@ -138,20 +143,33 @@ export const enableApplicationNotifications = async (
   const previous = await Promise.all(
     roles.map(async role => {
       const userId = TestUserManager.getUserModelByType(role).id;
-      const channels = await readApplicationChannels(userId);
-      await writeApplicationChannels(userId, {
-        communityApplicationReceived: ALL_CHANNELS_ON,
-        spaceCommunityJoined: ALL_CHANNELS_ON,
-      });
-      return { userId, channels };
+      return { userId, channels: await readApplicationChannels(userId) };
     })
   );
 
-  return async () => {
+  const restore = async () => {
     await Promise.all(
       previous.map(({ userId, channels }) =>
         writeApplicationChannels(userId, channels)
       )
     );
   };
+
+  const writes = await Promise.allSettled(
+    previous.map(({ userId }) =>
+      writeApplicationChannels(userId, {
+        communityApplicationReceived: ALL_CHANNELS_ON,
+        spaceCommunityJoined: ALL_CHANNELS_ON,
+      })
+    )
+  );
+  const failed = writes.find(
+    (w): w is PromiseRejectedResult => w.status === 'rejected'
+  );
+  if (failed) {
+    await restore();
+    throw failed.reason;
+  }
+
+  return restore;
 };
