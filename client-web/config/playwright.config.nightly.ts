@@ -306,6 +306,18 @@ export default defineConfig({
       expect: { timeout: 15_000 },
     },
     {
+      // Organization email invitations — US1/US2/US3 acceptance walks. Same
+      // shape as the organization user associates entry above: full SPA flows (invite
+      // dialog, pending tables, sign-up link) with mailbox polls and several
+      // Kratos registrations on top, so the same extra headroom; serial
+      // execution comes from this config's global `workers: 1` plus each
+      // file's own `describe.configure({ mode: 'serial' })`.
+      name: 'Organization email invitations',
+      testMatch: ['/organization-email-invitations/*.spec.ts'],
+      timeout: 180_000,
+      expect: { timeout: 15_000 },
+    },
+    {
       // Feature 070 (contribution notify switch) — persisted P1 acceptance
       // walk, same forge-verify shape as 038/041: machine-generated file in
       // tests/, self-seeding (its own org + space + response callout),

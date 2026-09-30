@@ -16,14 +16,16 @@
 // `beforeAll` cannot run twice under `fullyParallel` and the AS2→AS7 order is
 // guaranteed.
 //
-// AS3 (role-offer caps), AS4 (pre-existing state), AS6 (email invites
-// rejected) and AS8's API half are pure API acceptance walks: the dialog
-// itself already excludes an existing associate/invitee from its candidate
-// search (defence in depth proven by the server-side typed outcome, same
-// precedent as US1-AS5 in the 061 sibling file) and never offers an
-// email-paste path for organizations at all, so there is no honest UI path to
-// any of them. AS8's settings-guard half IS driven through the browser (a
-// plain associate navigating to the Associates tab).
+// AS3 (role-offer caps), AS4 (pre-existing state), AS6 (an email address
+// is accepted and becomes a platform invitation — the earlier rejection was
+// reversed by the organization email invitations feature) and AS8's API half
+// are pure API acceptance walks: the dialog itself already excludes an
+// existing associate/invitee from its candidate search (defence in depth
+// proven by the server-side typed outcome, same precedent as US1-AS5 in the
+// organization-space-invitations sibling), so there is no honest UI path to the first two. The email
+// path itself is walked in organization-email-invitations/. AS8's
+// settings-guard half IS driven through the browser (a plain associate
+// navigating to the Associates tab).
 
 import { expect, test as baseTest } from '@playwright/test';
 import {
@@ -371,22 +373,33 @@ baseTest.afterAll(async () => {
 // OrgInviteAssociatesDialogConnector.tsx and
 // client-web/src/crd/i18n/community/community.en.json) ───
 
-orgAdminNotOwnerTest.describe('US1-AS1 — the Associates-tab invite dialog offers only organization-appropriate affordances', () => {
+orgAdminNotOwnerTest.describe('US1-AS1 — the Associates-tab invite dialog offers the registered-user search, email paste and the suggested language', () => {
   orgAdminNotOwnerTest(
-    'an organization admin who is not a platform admin gets a name-only search, no email paste, no language control, a pre-filled message, and Associate locked plus Admin/Owner',
+    'an organization admin who is not a platform admin gets a name-or-email search, the suggested-language control (when the platform offers languages), a pre-filled message, and Associate locked plus Admin/Owner',
     async ({ page }) => {
       await page.goto(`${baseUrl}/organization/${orgMain.nameID}/settings/community`);
       await page.getByRole('button', { name: 'Invite', exact: true }).click();
 
       await expect(page.getByRole('dialog').getByText(`Invite associates to "${orgMain.displayName}"`)).toBeVisible();
 
-      // Name-only search — no email-paste path (organizations only invite
-      // existing Alkemio users, FR-004).
-      await expect(page.getByRole('textbox', { name: 'Search for users by name' })).toBeVisible();
-      await expect(page.getByPlaceholder(/email/i)).toHaveCount(0);
+      // Name-or-email search: registered people are searched by name, anyone
+      // else can be added by pasting their email address (organizations no longer
+      // restrict invitations to existing users).
+      await expect(page.getByRole('textbox', { name: 'Search for users by name or email' })).toBeVisible();
+      await expect(page.getByPlaceholder(/email/i)).toHaveCount(1);
+      await expect(
+        page.getByText('Search for people below or directly add their email address')
+      ).toBeVisible();
 
-      // No suggested-language control on the organization target.
-      await expect(page.getByLabel('Suggested language for invitee')).toHaveCount(0);
+      // The suggested-language control is offered whenever the platform offers
+      // any language to suggest — read from the same config the dialog reads.
+      const languageRes = await postGraphqlRaw<{
+        platform: { configuration: { language: { eligible: string[] } } };
+      }>('query { platform { configuration { language { eligible } } } }');
+      const eligibleLanguages = languageRes.body.data?.platform.configuration.language.eligible ?? [];
+      await expect(page.getByLabel('Suggested language for invitee')).toHaveCount(
+        eligibleLanguages.length > 0 ? 1 : 0
+      );
 
       // Message pre-filled with organization-specific copy.
       await expect(page.getByLabel('Invitation message')).toHaveValue(new RegExp(orgMain.displayName));
@@ -513,9 +526,10 @@ plainAssociateAS8Test.describe('US1-AS8 (UI half) — a plain associate is refus
 // None of these outcomes has an honest UI path: the invite dialog's candidate
 // search already excludes an existing associate/invited/applied user (so
 // there is no sequence of clicks that reaches "already an associate" /
-// "already invited" / "has an open application"), organizations never offer
-// an email-paste affordance at all (AS6), and a plain associate cannot even
-// reach the dialog (AS8's UI half, above). The mutation is public API and
+// "already invited" / "has an open application"), the role-offer caps and the
+// raw typed email outcome are asserted at the layer where they are reachable
+// (AS3, AS6), and a plain associate cannot even reach the dialog (AS8's UI
+// half, above). The mutation is public API and
 // must stay correct for any other caller, so each typed outcome is asserted
 // at the layer where it is actually reachable — same rationale as US1-AS5's
 // "server safety net" case in the 061 sibling file.
@@ -592,8 +606,8 @@ baseTest.describe('US1-AS4 — pre-existing state produces the typed outcome, ne
   });
 });
 
-baseTest.describe('US1-AS6 — organizations only invite existing Alkemio users', () => {
-  baseTest('an invitedUserEmails entry is rejected with a validation error and nothing is created', async () => {
+baseTest.describe('US1-AS6 — an email address on an organization role set creates a platform invitation', () => {
+  baseTest('an invitedUserEmails entry is accepted: the typed outcome is INVITED_TO_PLATFORM_AND_ROLE_SET and the row is cleaned up', async () => {
     const client = getGraphqlClient();
     const res = await graphqlErrorWrapper(
       authToken =>
@@ -601,7 +615,7 @@ baseTest.describe('US1-AS6 — organizations only invite existing Alkemio users'
           {
             roleSetId: orgMain.roleSetId,
             invitedActorIds: [],
-            invitedUserEmails: ['nobody-on-platform@example.com'],
+            invitedUserEmails: [`nobody-on-platform-${runSuffix}@example.com`],
             extraRoles: [],
             welcomeMessage: `US1 AS6 ${runSuffix}`,
           },
@@ -609,8 +623,22 @@ baseTest.describe('US1-AS6 — organizations only invite existing Alkemio users'
         ),
       TestUser.GLOBAL_ADMIN
     );
-    expect(res.error).toBeTruthy();
-    expect(JSON.stringify(res.error)).toMatch(/existing Alkemio users/i);
+    expect(res.error).toBeFalsy();
+    const outcome = res.data?.inviteForEntryRoleOnRoleSet?.[0];
+    expect(outcome?.type).toEqual(RoleSetInvitationResultType.InvitedToPlatformAndRoleSet);
+    const platformInvitationId = outcome?.platformInvitation?.id;
+    expect(platformInvitationId).toBeTruthy();
+
+    // Nothing is left behind: revoke the email invitation again.
+    const cleanup = await graphqlErrorWrapper(
+      authToken =>
+        client.DeletePlatformInvitation(
+          { invitationId: platformInvitationId! },
+          { authorization: `Bearer ${authToken}` }
+        ),
+      TestUser.GLOBAL_ADMIN
+    );
+    expect(cleanup.error).toBeFalsy();
   });
 });
 
