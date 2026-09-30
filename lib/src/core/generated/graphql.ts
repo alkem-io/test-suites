@@ -1082,6 +1082,7 @@ export enum AuthorizationPrivilege {
   PlatformAuditRead = "PLATFORM_AUDIT_READ",
   PlatformContentFullAccess = "PLATFORM_CONTENT_FULL_ACCESS",
   PlatformForumManage = "PLATFORM_FORUM_MANAGE",
+  PlatformLicensingListsRead = "PLATFORM_LICENSING_LISTS_READ",
   PlatformOperationsAdmin = "PLATFORM_OPERATIONS_ADMIN",
   PlatformRoleHoldersRead = "PLATFORM_ROLE_HOLDERS_READ",
   PlatformSettingsAdmin = "PLATFORM_SETTINGS_ADMIN",
@@ -1586,6 +1587,8 @@ export type CollaboraDocument = {
   documentType: CollaboraDocumentType;
   /** The ID of the entity */
   id: Scalars["UUID"]["output"];
+  /** An authorized, same-origin preview image endpoint for the current saved document, or null when there is no backing file to preview. NOT a bearer URL: every request against it is independently authorized against the current document READ policy. */
+  previewUrl?: Maybe<Scalars["String"]["output"]>;
   /** The Profile for this CollaboraDocument. */
   profile: Profile;
   /** The date at which the entity was last updated. */
@@ -1910,15 +1913,25 @@ export type ContributorCollectionCounts = {
 };
 
 export type ContributorCollectionItem = {
+  /** Organizations only. The count of platform-wide associates of the organization (distinct users holding its associate role) — the same number as the organization's 'associates' metric; NOT the number of members of this space. Null for Users and Virtual Contributors. */
+  associatesCount?: Maybe<Scalars["Int"]["output"]>;
   avatarUrl?: Maybe<Scalars["String"]["output"]>;
   displayName: Scalars["String"]["output"];
   id: Scalars["UUID"]["output"];
+  /** Users only. The calendar month in which the user's current membership of the space that owns this callout began ("member since"): the creation date of the member credential, truncated to the first day of the month, 00:00 UTC. Leaving and re-joining restarts it. Null for Organizations and Virtual Contributors, and for a user listed without the member role. */
+  joinedDate?: Maybe<Scalars["DateTime"]["output"]>;
   /** Location of the contributor; null for Virtual Contributors or when not readable. */
   location?: Maybe<ContributorLocation>;
   /** The role label for this contributor (lead/admin/member). */
   roleLabel?: Maybe<Scalars["String"]["output"]>;
+  /** All contributor types. The profile tagline, trimmed; null when empty. */
+  tagline?: Maybe<Scalars["String"]["output"]>;
+  /** All contributor types. The profile tagsets merged in order — Users: skills, then keywords; Organizations and Virtual Contributors: keywords, then capabilities. Blank tags removed; duplicates (ignoring case) kept once, first occurrence wins; never the default tagset. Empty list when none. Clients decide how many to show. */
+  tags?: Maybe<Array<Scalars["String"]["output"]>>;
   type: ActorType;
   url?: Maybe<Scalars["String"]["output"]>;
+  /** Organizations only. The organization's website, trimmed; null when empty or when it is not an absolute http/https URL. Null for Users and Virtual Contributors. */
+  website?: Maybe<Scalars["String"]["output"]>;
 };
 
 /** The default display mode for a contributor-collection callout framing. */
@@ -1953,6 +1966,8 @@ export type Conversation = {
   messaging: Messaging;
   /** The room for this Conversation. */
   room: Room;
+  /** The storage bucket holding this Conversation's message attachments (feature 013). READ-gated to conversation members; null for a conversation that has no bucket yet (an accepted, backfillable state). */
+  storageBucket?: Maybe<StorageBucket>;
   /** The date at which the entity was last updated. */
   updatedDate: Scalars["DateTime"]["output"];
 };
@@ -5048,6 +5063,8 @@ export type MemoSigningPrepareResult = {
 
 /** A message that was sent in a chat room */
 export type Message = {
+  /** Media attachments; unavailable documents retain their event filename without a download URL. */
+  attachments: Array<MessageAttachment>;
   /** The id for the message event. */
   id: Scalars["MessageID"]["output"];
   /** The message being sent */
@@ -5060,6 +5077,23 @@ export type Message = {
   threadID?: Maybe<Scalars["MessageID"]["output"]>;
   /** The server timestamp in UTC */
   timestamp: Scalars["Float"]["output"];
+};
+
+export type MessageAttachment = {
+  /** The filename / display name of the attachment. */
+  displayName: Scalars["String"]["output"];
+  /** The pixel height of the attachment (images only). */
+  height?: Maybe<Scalars["Int"]["output"]>;
+  /** The file-service document id of the attachment. */
+  id?: Maybe<Scalars["UUID"]["output"]>;
+  /** The MIME type of the attachment. */
+  mimeType?: Maybe<Scalars["String"]["output"]>;
+  /** The size of the attachment in bytes. */
+  size?: Maybe<Scalars["Int"]["output"]>;
+  /** The Alkemio document URL (authorized via conversation policy). */
+  url?: Maybe<Scalars["String"]["output"]>;
+  /** The pixel width of the attachment (images only). */
+  width?: Maybe<Scalars["Int"]["output"]>;
 };
 
 /** Details about a message, including the room it was sent in and the parent entity that is using the room. */
@@ -5104,21 +5138,27 @@ export type MigrateEmbeddings = {
 };
 
 export enum MimeType {
+  Aac = "AAC",
   Avif = "AVIF",
   Bmp = "BMP",
   Csv = "CSV",
   Doc = "DOC",
   Docx = "DOCX",
+  Flac = "FLAC",
   Gif = "GIF",
   Heic = "HEIC",
   Heif = "HEIF",
   Ics = "ICS",
   Jpeg = "JPEG",
   Jpg = "JPG",
+  Mp3 = "MP3",
+  Mp4 = "MP4",
   Odg = "ODG",
   Odp = "ODP",
   Ods = "ODS",
   Odt = "ODT",
+  Oga = "OGA",
+  Ogv = "OGV",
   Pdf = "PDF",
   Png = "PNG",
   Potm = "POTM",
@@ -5128,8 +5168,12 @@ export enum MimeType {
   Ppt = "PPT",
   Pptm = "PPTM",
   Pptx = "PPTX",
+  Quicktime = "QUICKTIME",
   Rtf = "RTF",
   Svg = "SVG",
+  Wav = "WAV",
+  Weba = "WEBA",
+  Webm = "WEBM",
   Webp = "WEBP",
   Xls = "XLS",
   Xlsx = "XLSX",
@@ -5540,6 +5584,8 @@ export type Mutation = {
   replaceCollaboraDocument: CollaboraDocument;
   /** Replace a Whiteboard from another Whiteboard through the live collaboration room. Content and media are copied server-side; snapshot bytes never pass through GraphQL. */
   replaceWhiteboardContentFromSource: Whiteboard;
+  /** Sends the invitation email of an open platform invitation again (Space or Organization role sets); throttled per invitation. */
+  resendPlatformInvitation: PlatformInvitation;
   /** Resets the interaction with the VC by recreating the room. */
   resetConversationVc: Conversation;
   /** Reset all license plans on Accounts */
@@ -6301,6 +6347,10 @@ export type MutationReplaceWhiteboardContentFromSourceArgs = {
   input: ReplaceWhiteboardContentFromSourceInput;
 };
 
+export type MutationResendPlatformInvitationArgs = {
+  resendData: ResendPlatformInvitationInput;
+};
+
 export type MutationResetConversationVcArgs = {
   input: ConversationVcResetInput;
 };
@@ -6687,6 +6737,7 @@ export enum NotificationEvent {
   OrganizationAdminMessage = "ORGANIZATION_ADMIN_MESSAGE",
   OrganizationAdminSpaceCommunityInvitation = "ORGANIZATION_ADMIN_SPACE_COMMUNITY_INVITATION",
   OrganizationAdminSpaceCommunityJoined = "ORGANIZATION_ADMIN_SPACE_COMMUNITY_JOINED",
+  OrganizationAssociateInvitationUserPlatform = "ORGANIZATION_ASSOCIATE_INVITATION_USER_PLATFORM",
   OrganizationMessageSender = "ORGANIZATION_MESSAGE_SENDER",
   PlatformAdminGlobalRoleChanged = "PLATFORM_ADMIN_GLOBAL_ROLE_CHANGED",
   PlatformAdminSpaceCreated = "PLATFORM_ADMIN_SPACE_CREATED",
@@ -7158,7 +7209,7 @@ export type PlatformAdminQueryResults = {
   userEmailChangeAuditEntries: UserEmailChangeAuditEntries;
   /** Retrieve all Users on the Platform. This is only available to Platform Admins. */
   users: PaginatedUsers;
-  /** The singleton virtual-assistant actor, including its current admin capability grant and ID. This is only available to Platform Admins, and is the discovery path for updateAssistantActorCapabilities. */
+  /** The singleton virtual-assistant actor, including its current admin capability grant and ID. Only available to Platform Operations Admins (and legacy holders); the discovery path for updateAssistantActorCapabilities. */
   virtualAssistant: VirtualAssistant;
   /** Retrieve all Virtual Contributors on the Platform. This is only available to Platform Admins. */
   virtualContributors: Array<VirtualContributor>;
@@ -8136,6 +8187,11 @@ export type ReplaceWhiteboardContentFromSourceInput = {
   targetWhiteboardID: Scalars["UUID"]["input"];
 };
 
+export type ResendPlatformInvitationInput = {
+  /** The open platform invitation whose email is sent again. */
+  ID: Scalars["UUID"]["input"];
+};
+
 export type RevokeAuthorizationCredentialInput = {
   /** The resource to which access is being removed. */
   resourceID: Scalars["String"]["input"];
@@ -8267,7 +8323,7 @@ export type RoleSet = {
   organizationsInRole: Array<Organization>;
   /** All organizations that have a role in this RoleSet in the specified Roles. */
   organizationsInRoles: Array<OrganizationsInRolesResponse>;
-  /** Invitations to join this RoleSet in an entry role for users not yet on the Alkemio platform. */
+  /** Open (not yet consumed) invitations to join this RoleSet in an entry role for people not yet on the Alkemio platform. */
   platformInvitations: Array<PlatformInvitation>;
   /** The Role Definitions from this RoleSet to return. */
   roleDefinition: Role;
@@ -8556,6 +8612,8 @@ export type RoomRemoveReactionToMessageInput = {
 };
 
 export type RoomSendMessageInput = {
+  /** The file-service document ids of attachments to send with the message (one per event). */
+  attachments?: InputMaybe<Array<Scalars["UUID"]["input"]>>;
   /** The message being sent */
   message: Scalars["String"]["input"];
   /** The Room the message is being sent to */
@@ -8563,6 +8621,8 @@ export type RoomSendMessageInput = {
 };
 
 export type RoomSendMessageReplyInput = {
+  /** The file-service document ids of attachments to send with the message (one per event). */
+  attachments?: InputMaybe<Array<Scalars["UUID"]["input"]>>;
   /** The message being sent */
   message: Scalars["String"]["input"];
   /** The Room the message is being sent to */
@@ -9136,6 +9196,7 @@ export type StorageAggregatorParent = {
 
 export enum StorageAggregatorType {
   Account = "ACCOUNT",
+  Conversation = "CONVERSATION",
   Organization = "ORGANIZATION",
   Platform = "PLATFORM",
   Space = "SPACE",
@@ -12231,8 +12292,9 @@ export type ResolversTypes = {
   ContributorFilterInput: SchemaTypes.ContributorFilterInput;
   ContributorLocation: ResolverTypeWrapper<SchemaTypes.ContributorLocation>;
   Conversation: ResolverTypeWrapper<
-    Omit<SchemaTypes.Conversation, "members"> & {
+    Omit<SchemaTypes.Conversation, "members" | "storageBucket"> & {
       members: Array<ResolversTypes["Actor"]>;
+      storageBucket?: SchemaTypes.Maybe<ResolversTypes["StorageBucket"]>;
     }
   >;
   ConversationCreatedEvent: ResolverTypeWrapper<
@@ -12887,6 +12949,7 @@ export type ResolversTypes = {
       sender?: SchemaTypes.Maybe<ResolversTypes["Actor"]>;
     }
   >;
+  MessageAttachment: ResolverTypeWrapper<SchemaTypes.MessageAttachment>;
   MessageDetails: ResolverTypeWrapper<SchemaTypes.MessageDetails>;
   MessageID: ResolverTypeWrapper<SchemaTypes.Scalars["MessageID"]["output"]>;
   MessageParent: ResolverTypeWrapper<SchemaTypes.MessageParent>;
@@ -13157,6 +13220,7 @@ export type ResolversTypes = {
   ReorderPollOptionsInput: SchemaTypes.ReorderPollOptionsInput;
   ReplaceCollaboraDocumentInput: SchemaTypes.ReplaceCollaboraDocumentInput;
   ReplaceWhiteboardContentFromSourceInput: SchemaTypes.ReplaceWhiteboardContentFromSourceInput;
+  ResendPlatformInvitationInput: SchemaTypes.ResendPlatformInvitationInput;
   RevokeAuthorizationCredentialInput: SchemaTypes.RevokeAuthorizationCredentialInput;
   RevokeLicensePlanFromAccount: SchemaTypes.RevokeLicensePlanFromAccount;
   RevokeLicensePlanFromSpace: SchemaTypes.RevokeLicensePlanFromSpace;
@@ -13972,8 +14036,9 @@ export type ResolversParentTypes = {
   ContributorCollectionItem: SchemaTypes.ContributorCollectionItem;
   ContributorFilterInput: SchemaTypes.ContributorFilterInput;
   ContributorLocation: SchemaTypes.ContributorLocation;
-  Conversation: Omit<SchemaTypes.Conversation, "members"> & {
+  Conversation: Omit<SchemaTypes.Conversation, "members" | "storageBucket"> & {
     members: Array<ResolversParentTypes["Actor"]>;
+    storageBucket?: SchemaTypes.Maybe<ResolversParentTypes["StorageBucket"]>;
   };
   ConversationCreatedEvent: Omit<
     SchemaTypes.ConversationCreatedEvent,
@@ -14546,6 +14611,7 @@ export type ResolversParentTypes = {
   Message: Omit<SchemaTypes.Message, "sender"> & {
     sender?: SchemaTypes.Maybe<ResolversParentTypes["Actor"]>;
   };
+  MessageAttachment: SchemaTypes.MessageAttachment;
   MessageDetails: SchemaTypes.MessageDetails;
   MessageID: SchemaTypes.Scalars["MessageID"]["output"];
   MessageParent: SchemaTypes.MessageParent;
@@ -14770,6 +14836,7 @@ export type ResolversParentTypes = {
   ReorderPollOptionsInput: SchemaTypes.ReorderPollOptionsInput;
   ReplaceCollaboraDocumentInput: SchemaTypes.ReplaceCollaboraDocumentInput;
   ReplaceWhiteboardContentFromSourceInput: SchemaTypes.ReplaceWhiteboardContentFromSourceInput;
+  ResendPlatformInvitationInput: SchemaTypes.ResendPlatformInvitationInput;
   RevokeAuthorizationCredentialInput: SchemaTypes.RevokeAuthorizationCredentialInput;
   RevokeLicensePlanFromAccount: SchemaTypes.RevokeLicensePlanFromAccount;
   RevokeLicensePlanFromSpace: SchemaTypes.RevokeLicensePlanFromSpace;
@@ -16727,6 +16794,11 @@ export type CollaboraDocumentResolvers<
     ContextType
   >;
   id?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
+  previewUrl?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes["String"]>,
+    ParentType,
+    ContextType
+  >;
   profile?: Resolver<ResolversTypes["Profile"], ParentType, ContextType>;
   updatedDate?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
@@ -17070,6 +17142,11 @@ export type ContributorCollectionItemResolvers<
   ContextType = any,
   ParentType extends ResolversParentTypes["ContributorCollectionItem"] = ResolversParentTypes["ContributorCollectionItem"]
 > = {
+  associatesCount?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes["Int"]>,
+    ParentType,
+    ContextType
+  >;
   avatarUrl?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["String"]>,
     ParentType,
@@ -17077,6 +17154,11 @@ export type ContributorCollectionItemResolvers<
   >;
   displayName?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
   id?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
+  joinedDate?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes["DateTime"]>,
+    ParentType,
+    ContextType
+  >;
   location?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["ContributorLocation"]>,
     ParentType,
@@ -17087,8 +17169,23 @@ export type ContributorCollectionItemResolvers<
     ParentType,
     ContextType
   >;
+  tagline?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes["String"]>,
+    ParentType,
+    ContextType
+  >;
+  tags?: Resolver<
+    SchemaTypes.Maybe<Array<ResolversTypes["String"]>>,
+    ParentType,
+    ContextType
+  >;
   type?: Resolver<ResolversTypes["ActorType"], ParentType, ContextType>;
   url?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes["String"]>,
+    ParentType,
+    ContextType
+  >;
+  website?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["String"]>,
     ParentType,
     ContextType
@@ -17142,6 +17239,11 @@ export type ConversationResolvers<
   members?: Resolver<Array<ResolversTypes["Actor"]>, ParentType, ContextType>;
   messaging?: Resolver<ResolversTypes["Messaging"], ParentType, ContextType>;
   room?: Resolver<ResolversTypes["Room"], ParentType, ContextType>;
+  storageBucket?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes["StorageBucket"]>,
+    ParentType,
+    ContextType
+  >;
   updatedDate?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
@@ -20344,6 +20446,11 @@ export type MessageResolvers<
   ContextType = any,
   ParentType extends ResolversParentTypes["Message"] = ResolversParentTypes["Message"]
 > = {
+  attachments?: Resolver<
+    Array<ResolversTypes["MessageAttachment"]>,
+    ParentType,
+    ContextType
+  >;
   id?: Resolver<ResolversTypes["MessageID"], ParentType, ContextType>;
   message?: Resolver<ResolversTypes["Markdown"], ParentType, ContextType>;
   reactions?: Resolver<
@@ -20362,6 +20469,44 @@ export type MessageResolvers<
     ContextType
   >;
   timestamp?: Resolver<ResolversTypes["Float"], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type MessageAttachmentResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["MessageAttachment"] = ResolversParentTypes["MessageAttachment"]
+> = {
+  displayName?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
+  height?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes["Int"]>,
+    ParentType,
+    ContextType
+  >;
+  id?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes["UUID"]>,
+    ParentType,
+    ContextType
+  >;
+  mimeType?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes["String"]>,
+    ParentType,
+    ContextType
+  >;
+  size?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes["Int"]>,
+    ParentType,
+    ContextType
+  >;
+  url?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes["String"]>,
+    ParentType,
+    ContextType
+  >;
+  width?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes["Int"]>,
+    ParentType,
+    ContextType
+  >;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -21655,6 +21800,15 @@ export type MutationResolvers<
     RequireFields<
       SchemaTypes.MutationReplaceWhiteboardContentFromSourceArgs,
       "input"
+    >
+  >;
+  resendPlatformInvitation?: Resolver<
+    ResolversTypes["PlatformInvitation"],
+    ParentType,
+    ContextType,
+    RequireFields<
+      SchemaTypes.MutationResendPlatformInvitationArgs,
+      "resendData"
     >
   >;
   resetConversationVc?: Resolver<
@@ -27092,6 +27246,7 @@ export type Resolvers<ContextType = any> = {
   MemoSigningContinueResult?: MemoSigningContinueResultResolvers<ContextType>;
   MemoSigningPrepareResult?: MemoSigningPrepareResultResolvers<ContextType>;
   Message?: MessageResolvers<ContextType>;
+  MessageAttachment?: MessageAttachmentResolvers<ContextType>;
   MessageDetails?: MessageDetailsResolvers<ContextType>;
   MessageID?: GraphQLScalarType;
   MessageParent?: MessageParentResolvers<ContextType>;
@@ -27301,6 +27456,7 @@ export type InvitationDataFragment = {
   extraRoles: Array<SchemaTypes.RoleName>;
   invitedToParent: boolean;
   welcomeMessage?: string | undefined;
+  suggestedLanguage?: string | undefined;
   lifecycle: { id: string };
   createdBy?:
     | {
@@ -27335,6 +27491,9 @@ export type PlatformInvitationDataFragment = {
   profileCreated: boolean;
   firstName?: string | undefined;
   lastName?: string | undefined;
+  roleSetExtraRoles: Array<SchemaTypes.RoleName>;
+  welcomeMessage?: string | undefined;
+  suggestedLanguage?: string | undefined;
   authorization?:
     | { myPrivileges?: Array<SchemaTypes.AuthorizationPrivilege> | undefined }
     | undefined;
@@ -50798,6 +50957,7 @@ export type InvitationStateEventMutation = {
     extraRoles: Array<SchemaTypes.RoleName>;
     invitedToParent: boolean;
     welcomeMessage?: string | undefined;
+    suggestedLanguage?: string | undefined;
     lifecycle: { id: string };
     createdBy?:
       | {
@@ -50839,6 +50999,9 @@ export type InviteForEntryRoleOnRoleSetMutationVariables = SchemaTypes.Exact<{
     SchemaTypes.Scalars["String"]["input"]
   >;
   extraRoles: Array<SchemaTypes.RoleName> | SchemaTypes.RoleName;
+  suggestedLanguage?: SchemaTypes.InputMaybe<
+    SchemaTypes.Scalars["String"]["input"]
+  >;
 }>;
 
 export type InviteForEntryRoleOnRoleSetMutation = {
@@ -50846,6 +51009,8 @@ export type InviteForEntryRoleOnRoleSetMutation = {
     __typename: "RoleSetInvitationResult";
     type: SchemaTypes.RoleSetInvitationResultType;
     notice?: SchemaTypes.RoleSetInvitationResultNotice | undefined;
+    invitedActorID?: string | undefined;
+    invitedEmail?: string | undefined;
     invitation?:
       | {
           __typename: "Invitation";
@@ -50870,6 +51035,7 @@ export type InviteForEntryRoleOnRoleSetMutation = {
           email: string;
           firstName?: string | undefined;
           lastName?: string | undefined;
+          roleSetExtraRoles: Array<SchemaTypes.RoleName>;
         }
       | undefined;
   }>;
@@ -52038,6 +52204,19 @@ export type RemoveRoleFromVirtualContributorMutation = {
   removeRoleFromVirtualContributor: {
     __typename: "VirtualContributor";
     id: string;
+  };
+};
+
+export type ResendPlatformInvitationMutationVariables = SchemaTypes.Exact<{
+  invitationId: SchemaTypes.Scalars["UUID"]["input"];
+}>;
+
+export type ResendPlatformInvitationMutation = {
+  resendPlatformInvitation: {
+    id: string;
+    email: string;
+    profileCreated: boolean;
+    roleSetExtraRoles: Array<SchemaTypes.RoleName>;
   };
 };
 
@@ -93054,6 +93233,7 @@ export type RoleSetApplicationsInvitationsQuery = {
             extraRoles: Array<SchemaTypes.RoleName>;
             invitedToParent: boolean;
             welcomeMessage?: string | undefined;
+            suggestedLanguage?: string | undefined;
             lifecycle: { id: string };
             createdBy?:
               | {
@@ -93091,6 +93271,9 @@ export type RoleSetApplicationsInvitationsQuery = {
             profileCreated: boolean;
             firstName?: string | undefined;
             lastName?: string | undefined;
+            roleSetExtraRoles: Array<SchemaTypes.RoleName>;
+            welcomeMessage?: string | undefined;
+            suggestedLanguage?: string | undefined;
             authorization?:
               | {
                   myPrivileges?:
@@ -93265,7 +93448,11 @@ export type RoleSetPendingPlatformInvitationsQuery = {
     roleSet?:
       | {
           id: string;
-          platformInvitations: Array<{ id: string; email: string }>;
+          platformInvitations: Array<{
+            id: string;
+            email: string;
+            roleSetExtraRoles: Array<SchemaTypes.RoleName>;
+          }>;
         }
       | undefined;
   };
@@ -93335,6 +93522,7 @@ export type GetSpaceInvitationsQuery = {
                 extraRoles: Array<SchemaTypes.RoleName>;
                 invitedToParent: boolean;
                 welcomeMessage?: string | undefined;
+                suggestedLanguage?: string | undefined;
                 lifecycle: { id: string };
                 createdBy?:
                   | {
@@ -93372,6 +93560,9 @@ export type GetSpaceInvitationsQuery = {
                 profileCreated: boolean;
                 firstName?: string | undefined;
                 lastName?: string | undefined;
+                roleSetExtraRoles: Array<SchemaTypes.RoleName>;
+                welcomeMessage?: string | undefined;
+                suggestedLanguage?: string | undefined;
                 authorization?:
                   | {
                       myPrivileges?:
@@ -93384,6 +93575,37 @@ export type GetSpaceInvitationsQuery = {
           };
         }
       | undefined;
+  };
+};
+
+export type LookupPlatformInvitationQueryVariables = SchemaTypes.Exact<{
+  invitationId: SchemaTypes.Scalars["UUID"]["input"];
+}>;
+
+export type LookupPlatformInvitationQuery = {
+  lookup: {
+    platformInvitation?:
+      | {
+          id: string;
+          email: string;
+          profileCreated: boolean;
+          createdDate: Date;
+          roleSetExtraRoles: Array<SchemaTypes.RoleName>;
+          welcomeMessage?: string | undefined;
+          suggestedLanguage?: string | undefined;
+        }
+      | undefined;
+  };
+};
+
+export type LookupPlatformInvitationCreatedByQueryVariables =
+  SchemaTypes.Exact<{
+    invitationId: SchemaTypes.Scalars["UUID"]["input"];
+  }>;
+
+export type LookupPlatformInvitationCreatedByQuery = {
+  lookup: {
+    platformInvitation?: { id: string; createdBy: { id: string } } | undefined;
   };
 };
 
@@ -118001,6 +118223,7 @@ export type MeQueryQuery = {
         extraRoles: Array<SchemaTypes.RoleName>;
         invitedToParent: boolean;
         welcomeMessage?: string | undefined;
+        suggestedLanguage?: string | undefined;
         spacesToJoinOnAccept?:
           | Array<{ id: string; displayName: string; url: string }>
           | undefined;
@@ -118626,6 +118849,7 @@ export const InvitationDataFragmentDoc = gql`
     extraRoles
     invitedToParent
     welcomeMessage
+    suggestedLanguage
     lifecycle {
       id
     }
@@ -118656,6 +118880,9 @@ export const PlatformInvitationDataFragmentDoc = gql`
     profileCreated
     firstName
     lastName
+    roleSetExtraRoles
+    welcomeMessage
+    suggestedLanguage
   }
 `;
 export const ReferenceDataFragmentDoc = gql`
@@ -120720,6 +120947,7 @@ export const InviteForEntryRoleOnRoleSetDocument = gql`
     $invitedUserEmails: [String!]!
     $welcomeMessage: String
     $extraRoles: [RoleName!]!
+    $suggestedLanguage: String
   ) {
     inviteForEntryRoleOnRoleSet(
       invitationData: {
@@ -120728,10 +120956,13 @@ export const InviteForEntryRoleOnRoleSetDocument = gql`
         roleSetID: $roleSetId
         welcomeMessage: $welcomeMessage
         extraRoles: $extraRoles
+        suggestedLanguage: $suggestedLanguage
       }
     ) {
       type
       notice
+      invitedActorID
+      invitedEmail
       invitation {
         id
         state
@@ -120754,6 +120985,7 @@ export const InviteForEntryRoleOnRoleSetDocument = gql`
         email
         firstName
         lastName
+        roleSetExtraRoles
         __typename
       }
       __typename
@@ -120807,6 +121039,16 @@ export const RemoveRoleFromVirtualContributorDocument = gql`
     ) {
       id
       __typename
+    }
+  }
+`;
+export const ResendPlatformInvitationDocument = gql`
+  mutation ResendPlatformInvitation($invitationId: UUID!) {
+    resendPlatformInvitation(resendData: { ID: $invitationId }) {
+      id
+      email
+      profileCreated
+      roleSetExtraRoles
     }
   }
 `;
@@ -122876,6 +123118,7 @@ export const RoleSetPendingPlatformInvitationsDocument = gql`
         platformInvitations {
           id
           email
+          roleSetExtraRoles
         }
       }
     }
@@ -122932,6 +123175,33 @@ export const GetSpaceInvitationsDocument = gql`
   }
   ${InvitationDataFragmentDoc}
   ${PlatformInvitationDataFragmentDoc}
+`;
+export const LookupPlatformInvitationDocument = gql`
+  query LookupPlatformInvitation($invitationId: UUID!) {
+    lookup {
+      platformInvitation(ID: $invitationId) {
+        id
+        email
+        profileCreated
+        createdDate
+        roleSetExtraRoles
+        welcomeMessage
+        suggestedLanguage
+      }
+    }
+  }
+`;
+export const LookupPlatformInvitationCreatedByDocument = gql`
+  query LookupPlatformInvitationCreatedBy($invitationId: UUID!) {
+    lookup {
+      platformInvitation(ID: $invitationId) {
+        id
+        createdBy {
+          id
+        }
+      }
+    }
+  }
 `;
 export const GetAccountMainEntitiesDocument = gql`
   query GetAccountMainEntities($accountId: UUID!) {
@@ -125130,6 +125400,9 @@ const RemoveRoleFromUserExtendedDataDocumentString = print(
 const RemoveRoleFromVirtualContributorDocumentString = print(
   RemoveRoleFromVirtualContributorDocument
 );
+const ResendPlatformInvitationDocumentString = print(
+  ResendPlatformInvitationDocument
+);
 const TransferInnovationHubToAccountDocumentString = print(
   TransferInnovationHubToAccountDocument
 );
@@ -125578,6 +125851,12 @@ const GetRoleSetUsersInRolesDocumentString = print(
   GetRoleSetUsersInRolesDocument
 );
 const GetSpaceInvitationsDocumentString = print(GetSpaceInvitationsDocument);
+const LookupPlatformInvitationDocumentString = print(
+  LookupPlatformInvitationDocument
+);
+const LookupPlatformInvitationCreatedByDocumentString = print(
+  LookupPlatformInvitationCreatedByDocument
+);
 const GetAccountMainEntitiesDocumentString = print(
   GetAccountMainEntitiesDocument
 );
@@ -126224,6 +126503,28 @@ export function getSdk(
             { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "RemoveRoleFromVirtualContributor",
+        "mutation",
+        variables
+      );
+    },
+    ResendPlatformInvitation(
+      variables: SchemaTypes.ResendPlatformInvitationMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.ResendPlatformInvitationMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.ResendPlatformInvitationMutation>(
+            ResendPlatformInvitationDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "ResendPlatformInvitation",
         "mutation",
         variables
       );
@@ -130426,6 +130727,50 @@ export function getSdk(
             { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "getSpaceInvitations",
+        "query",
+        variables
+      );
+    },
+    LookupPlatformInvitation(
+      variables: SchemaTypes.LookupPlatformInvitationQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.LookupPlatformInvitationQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.LookupPlatformInvitationQuery>(
+            LookupPlatformInvitationDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "LookupPlatformInvitation",
+        "query",
+        variables
+      );
+    },
+    LookupPlatformInvitationCreatedBy(
+      variables: SchemaTypes.LookupPlatformInvitationCreatedByQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.LookupPlatformInvitationCreatedByQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.LookupPlatformInvitationCreatedByQuery>(
+            LookupPlatformInvitationCreatedByDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "LookupPlatformInvitationCreatedBy",
         "query",
         variables
       );

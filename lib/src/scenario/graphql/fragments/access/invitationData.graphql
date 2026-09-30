@@ -12,6 +12,7 @@ fragment InvitationData on Invitation {
   extraRoles
   invitedToParent
   welcomeMessage
+  suggestedLanguage
   lifecycle {
     id
   }

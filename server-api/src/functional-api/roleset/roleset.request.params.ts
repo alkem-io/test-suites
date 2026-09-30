@@ -177,6 +177,46 @@ export const getRoleSetPendingPlatformInvitations = async (
   return graphqlErrorWrapper(callback, userRole);
 };
 
+// One platform invitation by id — the only read that still answers for a
+// consumed row and the one that proves an erased row is gone (the role set's
+// own list is open-only).
+export const lookupPlatformInvitation = async (
+  invitationId: string,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string | undefined) =>
+    graphqlClient.LookupPlatformInvitation(
+      { invitationId },
+      { authorization: `Bearer ${authToken}` }
+    );
+  return graphqlErrorWrapper(callback, userRole);
+};
+
+export const lookupPlatformInvitationCreatedBy = async (
+  invitationId: string,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string | undefined) =>
+    graphqlClient.LookupPlatformInvitationCreatedBy(
+      { invitationId },
+      { authorization: `Bearer ${authToken}` }
+    );
+  return graphqlErrorWrapper(callback, userRole);
+};
+
+/** True when the platform invitation no longer resolves: either the lookup
+ * refuses (entity not found) or it resolves to null. */
+export const isPlatformInvitationGone = (
+  res:
+    | {
+        data?: { lookup?: { platformInvitation?: { id: string } | null } };
+        error?: unknown;
+      }
+    | undefined
+): boolean => Boolean(res?.error) || !res?.data?.lookup?.platformInvitation;
+
 // The union list this feature ships is ASSOCIATE ∪ ADMIN ∪ OWNER, badged —
 // this is the read that proves an admin who is not an associate is still
 // visible (spec US5-AS2, D-1's discriminating gate).
@@ -246,7 +286,13 @@ export const getSingleInvitationResult = (
           type: ActorType;
         };
       };
-      platformInvitation?: { id: string };
+      invitedActorID?: string | null;
+      invitedEmail?: string | null;
+      platformInvitation?: {
+        id: string;
+        email: string;
+        roleSetExtraRoles: RoleName[];
+      };
     }
   | undefined => {
   const invitationResults =
