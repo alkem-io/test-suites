@@ -170,32 +170,36 @@ baseTest.describe('US2-AS2 → US2-AS3 — follow the link, register, find the i
     // authenticated contact, which is where the open invitation is converted.
     invitee1 = await registerUserAtAddress(invitee1Email, `New1${runSuffix}`);
 
-    // Sign in from the sign-up page — the pending return URL travels with the link.
+    // Sign in from the sign-up page — the return URL travels in a cookie set by the sign-up route,
+    // and the dashboard consumes `?dialog=invitations` as it opens the dialog, so the URL is not
+    // a stable signal: assert the dialog itself.
     await page.getByRole('link', { name: /sign in/i }).first().click();
     await fillUpSignInPageElements(invitee1Email, password, page);
     await pressSignInButtonSignInPage(page);
-    await expect(page).toHaveURL(/dialog=invitations/, { timeout: 30_000 });
 
+    // The interface language is seeded from the invitation's suggested language (Dutch here: the
+    // only eligible non-default language of the stack), so the labels below are Dutch.
     const list = page.getByRole('dialog');
-    await expect(list.getByText('Associate Invitations')).toBeVisible({ timeout: 20_000 });
-    const card = list.getByRole('button', { name: org.displayName });
-    await expect(card).toBeVisible();
-    await expect(card).toContainText('Associate + Admin');
-    await expect(card).toContainText(`Invited by ${admin.displayName}`);
+    const card = list.getByRole('button', { name: new RegExp(escapeRegExp(org.displayName)) });
+    await expect(card).toBeVisible({ timeout: 45_000 });
+    await expect(list).toContainText('Uitnodigingen als Geassocieerde');
+    await expect(card).toContainText('Geassocieerde + Beheerder');
 
     await card.click();
     const detail = page.getByRole('dialog');
-    await expect(detail).toContainText(`Invitation to associate with ${org.displayName}`, { timeout: 15_000 });
+    await expect(detail).toContainText(`Uitnodiging om te associëren met ${org.displayName}`, { timeout: 15_000 });
+    await expect(detail).toContainText('Geassocieerde + Beheerder');
+    await expect(detail).toContainText(`Uitgenodigd door ${admin.displayName}`);
     await expect(detail).toContainText(secretPhrase);
   });
 
   baseTest('US2-AS3: accepting makes the invitee an associate and an admin, and the Associates tab badges both', async () => {
     baseTest.setTimeout(180_000);
     const page = inviteePage!;
-    await page.getByRole('dialog').getByRole('button', { name: 'Accept' }).click();
+    await page.getByRole('dialog').getByRole('button', { name: /accepteren/i }).click();
 
     // Accepting returns to the list (no navigation to a Space) and the card is gone.
-    await expect(page.getByRole('dialog')).not.toContainText('Invitation to associate with', { timeout: 20_000 });
+    await expect(page.getByRole('dialog')).not.toContainText('Uitnodiging om te associëren met', { timeout: 20_000 });
 
     await expect
       .poll(async () => getUserIdsInRole(org.roleSetId, RoleName.Associate, globalAdminToken), { timeout: 20_000 })
@@ -206,8 +210,8 @@ baseTest.describe('US2-AS2 → US2-AS3 — follow the link, register, find the i
     await page.goto(`${baseUrl}/organization/${org.nameID}/settings/community`);
     const ownRow = page.getByRole('listitem').filter({ hasText: new RegExp(escapeRegExp(`New1${runSuffix}`), 'i') });
     await expect(ownRow).toBeVisible({ timeout: 20_000 });
-    await expect(ownRow.getByText('Associate', { exact: true })).toBeVisible();
-    await expect(ownRow.getByText('Admin', { exact: true })).toBeVisible();
+    await expect(ownRow.getByText('Geassocieerde', { exact: true })).toBeVisible();
+    await expect(ownRow.getByText('Beheerder', { exact: true })).toBeVisible();
   });
 });
 
