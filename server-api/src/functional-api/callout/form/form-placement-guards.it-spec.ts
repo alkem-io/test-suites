@@ -173,7 +173,17 @@ const createSubspaceWithCallouts = async (
             nameID: `form-sub-${tag}-${uniqueId}`.toLowerCase().slice(0, 25),
             spaceID: baseScenario.space.id,
             about: { profileData: { displayName, tagline: 'placement' } },
-            collaborationData: { calloutsSetData: { calloutsData } },
+            collaborationData: {
+              calloutsSetData: {
+                // A space-creation request requires every callout to carry a classification
+                // (moveCalloutsToDefaultFlowState); an empty tagset list lets the server assign
+                // the default flow state, so the request reaches the FORM placement guard.
+                calloutsData: calloutsData.map(callout => ({
+                  ...callout,
+                  classification: callout.classification ?? { tagsets: [] },
+                })),
+              },
+            },
           },
         },
         { authorization: `Bearer ${authToken}` }
