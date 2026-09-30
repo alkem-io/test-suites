@@ -32,6 +32,7 @@ import { fillSecret } from '../helpers/login.helper';
  *   KRATOS_ADMIN_URL        Kratos ADMIN base incl. /admin, e.g. http://localhost:32841/admin
  *   ALKEMIO_ADMIN_EMAIL     admin@alkem.io
  *   ALKEMIO_ADMIN_PASSWORD  the platform admin's password
+ *   ALKEMIO_ADMIN_TOKEN     (optional) a pre-minted admin bearer; skips the admin login
  */
 
 const BASE = (process.env.ALKEMIO_BASE_URL || 'http://localhost:3000').replace(
@@ -58,6 +59,11 @@ const personaEmail: Record<Persona, string> = {
 };
 
 const tokens = new Map<string, string>();
+// Optional: reuse an already-minted admin bearer so a busy login-backoff (429) on the
+// shared admin identifier cannot stall the run.
+if (process.env.ALKEMIO_ADMIN_TOKEN) {
+  tokens.set(ADMIN_EMAIL, process.env.ALKEMIO_ADMIN_TOKEN);
+}
 
 async function mintToken(userEmail: string, password: string) {
   const cached = tokens.get(userEmail);

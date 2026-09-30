@@ -106,9 +106,9 @@ const users = () => ({
 const subspaceName = () => baseScenario.subspace.about.profile.displayName;
 
 const adminSubject = (form: FormCallout) =>
-  `${subspaceName()} - New Form response to "${form.displayName}"`;
+  `${subspaceName()} - New Form response to &#34;${form.displayName}&#34;`;
 const receiptSubject = (form: FormCallout) =>
-  `${subspaceName()} - Your response to "${form.displayName}" was received`;
+  `${subspaceName()} - Your response to &#34;${form.displayName}&#34; was received`;
 
 const newForm = (tag: string, visibility = ADMINS) =>
   createFormCallout(baseScenario.subspace.collaboration.calloutsSetId, {
