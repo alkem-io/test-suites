@@ -85460,7 +85460,10 @@ export type RoleSetPendingPlatformInvitationsQuery = {
           platformInvitations: Array<{
             id: string;
             email: string;
+            profileCreated: boolean;
             roleSetExtraRoles: Array<RoleName>;
+            welcomeMessage?: string | undefined;
+            suggestedLanguage?: string | undefined;
           }>;
         }
       | undefined;

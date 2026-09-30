@@ -93451,7 +93451,10 @@ export type RoleSetPendingPlatformInvitationsQuery = {
           platformInvitations: Array<{
             id: string;
             email: string;
+            profileCreated: boolean;
             roleSetExtraRoles: Array<SchemaTypes.RoleName>;
+            welcomeMessage?: string | undefined;
+            suggestedLanguage?: string | undefined;
           }>;
         }
       | undefined;
@@ -123118,7 +123121,10 @@ export const RoleSetPendingPlatformInvitationsDocument = gql`
         platformInvitations {
           id
           email
+          profileCreated
           roleSetExtraRoles
+          welcomeMessage
+          suggestedLanguage
         }
       }
     }
