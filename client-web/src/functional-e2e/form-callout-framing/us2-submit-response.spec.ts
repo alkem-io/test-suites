@@ -327,15 +327,6 @@ const dialogOf = (page: Page) => page.getByRole('dialog');
 const submitButton = (scope: ReturnType<typeof dialogOf> | Page) =>
   scope.getByRole('button', { name: /submit response/i });
 
-/** The Form Post card in the feed (the page body outside any dialog). */
-const feedCard = (page: Page, title: string) =>
-  page
-    .getByRole('main')
-    .locator('article, section, div')
-    .filter({ has: page.getByRole('heading', { name: title, exact: true }) })
-    .filter({ has: page.getByRole('textbox').first() })
-    .last();
-
 async function fillValid(scope: ReturnType<typeof dialogOf>, name: string) {
   await scope.getByRole('textbox', { name: /What is your name/ }).fill(name);
   await scope.getByRole('radio', { name: 'Beta' }).click();
