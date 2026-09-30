@@ -628,7 +628,7 @@ describe('Resend an organization email invitation (US3)', () => {
   });
 });
 
-describe('Extra-role caps do not apply to an email invitee at invite time (R7)', () => {
+describe('Extra-role caps do not apply to an email invitee at invite time', () => {
   let capScenario: OrganizationWithSpaceModel;
   const capUsers: string[] = [];
 
