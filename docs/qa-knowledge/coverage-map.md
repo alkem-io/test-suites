@@ -43,6 +43,25 @@ _Searched 2026-09-28, `origin/develop` @ `0ca74068` (test-suites), against serve
 
 **Search again with:** `git grep -n -E "eventOnRoleSetInvitation|SpaceAdmin(User|Organization)CommunityInvitation|communityInvitationResponse|joined \\$\\{|Welcome to the Community" origin/develop -- server-api/src client-web/src`.
 
+## Platform forum — categories, retirement, Matrix hierarchy reconcile (060 / 061)
+
+_Searched 2026-09-28, develop @ `ea5eebe9`, with the open PRs test-suites#600/#643 and server develop @ `df7445856` (027 merged the same day). Plan: `server-api/src/functional-api/communications/forum-discussions/forum-discussions-test-plan.md`._
+
+| Area | Status | Evidence |
+|---|---|---|
+| Category create/refuse matrix (GA, QA), new members active, recategorise round-trip, remove refused (non-admin; non-empty with count) | Full | `communications/forum-discussions/platform-discussions.it-spec.ts` (#628) |
+| Canonical category order (D-09) | **Partial** — the live test asserts the set and length 8, not order. Order is pinned only in server `forum.discussion.category.spec.ts` | plan U-1 |
+| Forum update/delete denial messages | **Red on develop since server#6322**: the privilege is now `platform-forum-manage`. Fix is in open #600 | same file |
+| Remove-category success / idempotency / tombstone | Unit only, **by ruling** (060 D-06). Never automate it against shared envs | server `forum.service.spec.ts`, `forum.resolver.mutations.spec.ts` |
+| Read-side drift filter (active list; discussion → OTHER) | Unit only before this plan | server `forum.resolver.fields.spec.ts`, `discussion.resolver.fields.spec.ts` |
+| Forum notification silence on recategorise | **None** | — |
+| Reconcile mutation, task summary, Redis lease, audit rows | **None** in test-suites on develop. Unit + Go only. #600 adds only role-matrix dry-run ALLOW/DENY cells | server `admin.communication.forum.hierarchy.reconcile.*.spec.ts`; matrix-adapter `space_service_setchildren_test.go` |
+| Matrix hierarchy edges, room-directory visibility | **Observable on a local stack only**: directory visibility without a token, `m.space.child` with the dev appservice token (see harness.md). Unobservable on nightly/ACC | plan N-11, N-12a/b, N-15 (planned 2026-09-29) |
+| Forum category UI (nav, pickers, edit dialog) E2E | **None** in test-suites. client-web's `e2e/specs/forum{Categories,Recategorise}.e2e.spec.ts` are `@forge-acceptance` and not executed in CI | — |
+| Legacy-category dependence of the harness | PLATFORM_FUNCTIONALITIES is the harness default; OTHER is used by the remove negatives and #643's A15 fixture; `TestScenarioFactory.categoryMap` lacks NEWSLETTER/TIPS_AND_TRICKS | plan U-4 — must land before any targeted env retires a category |
+
+**Search again with:** `git grep -n -E "forum|discussionCategor|ForumDiscussionCategory|latestReleaseDiscussion|ReconcileForumHierarchy|SyncSpaceHierarchy|platform_audit" <ref> -- server-api/src client-web/src lib/src ':!lib/src/core/generated'`.
+
 ## How to search this area again
 
 `rg -n 'innovationFlow|minimumNumberOfStates|maximumNumberOfStates|L0_FIXED_INNOVATION|L0_MIN_INNOVATION' server-api/src/functional-api` — the conversion/callout-transfer/templates directories are the load-bearing ones; also check the server repo's own `*.spec.ts` unit suites before proposing a new system-level case, several risk-relevant assertions live there only.

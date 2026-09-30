@@ -53,6 +53,7 @@ The Alkemio platform provides a multi-level space hierarchy (Space → Subspace 
 - For improved performance, sign in users once in `test.beforeAll()` or `test.beforeEach()` hooks and reuse the authenticated browser page/context across multiple tests within the same describe block, rather than signing in separately for each test.
 - Tests should create the base scenario using `TestScenarioFactory.createBaseScenario()` in `test.beforeAll()` and use the returned `baseScenario` object to access dynamic space properties (e.g., `baseScenario.space.about.profile.displayName`, `baseScenario.space.nameId`) instead of hardcoded values.
 - Remember to clean up the scenario in `test.afterAll()` using `TestScenarioFactory.cleanUpBaseScenario(baseScenario)`.
+- The 2.x cases assert an in-app notification in the bell dialog. The fixed personas are shared with the server-api suite, whose notification specs leave email + in-app switched OFF, and the nightly runs server-api before Playwright on the same database. Each spec therefore turns the two settings it depends on back ON in `test.beforeAll()` (`space.admin.communityApplicationReceived` for the admin, `user.membership.spaceCommunityJoined` for the applicant) via `enableApplicationNotifications()` from `helpers/notification-settings.helper.ts`, and restores the previous values in `test.afterAll()`. Do not rely on the server defaults.
 
 ---
 

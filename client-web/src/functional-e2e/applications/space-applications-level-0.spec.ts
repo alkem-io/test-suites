@@ -13,6 +13,7 @@ import {
   SpacePrivacyMode,
 } from '@alkemio/client-lib';
 import { loginViaCrd } from '../helpers/login.helper';
+import { enableApplicationNotifications } from '../helpers/notification-settings.helper';
 
 const password = process.env.AUTH_TEST_HARNESS_PASSWORD || 'change_me';
 const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
@@ -41,6 +42,7 @@ test.describe('Level 0 Space - Applications', () => {
   let baseScenario: OrganizationWithSpaceModel;
   let nonSpaceMemberPage: Page;
   let spaceAdminPage: Page;
+  let restoreNotificationSettings: () => Promise<void>;
 
   test.beforeAll(async ({ browser }) => {
     // Scenario creation + isolated non-member login can exceed the default 30s
@@ -50,6 +52,15 @@ test.describe('Level 0 Space - Applications', () => {
     globalBaseScenario =
       await TestScenarioFactory.createBaseScenario(scenarioConfig);
     baseScenario = globalBaseScenario;
+
+    // The bell-dialog assertions below need the in-app channel ON for the
+    // applicant (joined / declined) and the admin (application received).
+    // Other suites leave these personas with in-app off, so set it here and
+    // put the previous values back in afterAll.
+    restoreNotificationSettings = await enableApplicationNotifications([
+      TestUser.NON_SPACE_MEMBER,
+      TestUser.SPACE_ADMIN,
+    ]);
 
     // Sign in as non-space member in an ISOLATED context (separate cookie jar
     // from the admin) so the two CRD sessions don't bleed into each other.
@@ -70,6 +81,7 @@ test.describe('Level 0 Space - Applications', () => {
   });
 
   test.afterAll(async () => {
+    await restoreNotificationSettings?.();
     await TestScenarioFactory.cleanUpBaseScenario(globalBaseScenario);
     await nonSpaceMemberPage.close();
     await spaceAdminPage.close();
@@ -110,7 +122,10 @@ test.describe('Level 0 Space - Applications', () => {
         // brought it back as a sidebar action for non-members. A non-member
         // landing on a public L0 dashboard must therefore see one enabled
         // Apply button again.
-        const applyButton = page.getByRole('button', { name: 'Apply', exact: true });
+        const applyButton = page.getByRole('button', {
+          name: 'Apply',
+          exact: true,
+        });
         await expect(applyButton).toBeVisible();
         await expect(applyButton).toBeEnabled();
         await expect(applyButton).toHaveCount(1);

@@ -13,11 +13,20 @@ re-derive it from scratch in a future run.
 | Migration `InnovationFlowStateBounds1To8` backfill correctness against ACC's real `settings` row shapes (incl. legacy scalar-null coercion) | client-web#9528 / server#6418 | test-suites has no DB access (GraphQL-only surface) — not a tooling gap that can clear, a standing architectural constraint | Not expected to clear; stays a release-ops SQL check, not test-suites automation | Release verification / DBA |
 | Push emit for `SPACE_ADMIN_USER_COMMUNITY_INVITATION_ACCEPTED/_DECLINED` (answerer excluded) | notifications#356 / server#4100 | `RABBITMQ_MANAGEMENT_*` is not set in the nightly workflow; the behaviour is unit-pinned in server `notification.space.adapter.spec.ts` (Low risk) | Nightly exports the RabbitMQ management env, or push regresses and the case is worth a local-only spec | test-suites |
 | Migration `1788600000000-AddSpaceAdminInvitationResponseNotificationSetting` seeds `communityInvitationResponse` from each user's existing `communityNewMember` (muted stays muted) | notifications#356 / Release 76 N2 | DB access is loopback-only; ACC/prod rows are unreachable and every persona here is post-migration | Not expected to clear. Stays a release-ops SQL check | Release verification / DBA |
+| Forum label values for locales a stack does not enable (local stack: only en + nl eligible) | alkemio#2052 | A stack renders only `platform.configuration.language.eligible`; locale file contents belong beside the files | client-web unit test asserts HELP/NEWSLETTER/TIPS values in all six JSONs | client-web |
+| Historical in-app forum notifications show a label, not a raw key (060 US4-AS4) | alkemio#2052 | Persisted forum in-app payload shape unverified; the 060 walk saw no forum in-app rows | Payload shape confirmed → local SQL-seeded bell check | test-suites |
+| Reconcile convergence / ghost-prune cases (plan N-11, N-15) **skip** on stacks built from server develop | alkemio#2114 (061) | Server `quickstart-services.yml` pins matrix-adapter v0.8.17 (no `set_children`) | Quickstart pin bumped to ≥ v0.8.19, or the local adapter image is overridden | server / QA lead |
+| Migration `1788300000000-AddForumCategoriesNewsletterTipsTricks` on real rows (incl. `FOR UPDATE` vs a live retirement) | alkemio#2052 | No DB access to ACC | Not expected to clear — release-ops check | Release verification |
 | Un-skip and re-verify `transfer-callout-template-flow.it-spec.ts`'s two `test.skip` cases ("lands on a valid destination state" / "adopts the destination default state") | pre-existing, unrelated stale-state bug per the file's own header comment | Root-cause bug not identified in this run (out of scope — different story) | Someone triages the referenced stale-state bug | whoever owns callout-transfer |
 
 ## Cleared
 
-(none yet)
+| Case | Cleared | How |
+|---|---|---|
+| Forum reconcile apply-mode convergence end to end (was: "no disposable-stack signal, Matrix invisible") | 2026-09-29, forum plan revision | Local-stack gate + the dev appservice token (env var) reading `m.space.child` state → plan N-11 / N-15 |
+| Forum/category spaces absent from the public room directory | 2026-09-29 | `GET /_matrix/client/v3/directory/list/room/{roomId}` is unauthenticated → plan N-12a (no token); N-12b seeds `public` with the token |
+| POA persona allowed to reconcile | 2026-09-29 | `registerTestUser` + `assignPlatformRole(RoleName.PlatformOperationsAdmin)` / `removePlatformRole` exist on develop → plan N-13 (local) |
+| `/forum/releases/latest`, `maxOperations` bounds | 2026-09-29 | Reclassified as expected-red product-finding cases (plan E-4, N-14), pending the user's call |
 
 ---
 
