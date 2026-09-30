@@ -85,6 +85,9 @@ export class SubscriptionClient {
                   )
               )
             );
+            // A fatal close before ConnectionAck never emits `connected`: settle the
+            // pending subscribe() instead of hanging. No-op once already resolved.
+            rej(err);
             return;
           }
           throw new Error((err as Error).message);

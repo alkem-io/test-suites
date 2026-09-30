@@ -1,4 +1,11 @@
-import { expect, type Browser, type Page, test } from '@playwright/test';
+import { randomUUID } from 'node:crypto';
+import {
+  expect,
+  type Browser,
+  type BrowserContext,
+  type Page,
+  test,
+} from '@playwright/test';
 import { fillSecret } from '../helpers/login.helper';
 
 /**
@@ -46,7 +53,10 @@ const ADMIN_PASSWORD =
   process.env.AUTH_ADMIN_PASSWORD ||
   'password';
 const GRAPHQL = `${BASE}/api/private/non-interactive/graphql`;
-const USER_PASSWORD = 'Forge080-Passw0rd!x';
+// Per-run secret for the throwaway identities this walk provisions (override with
+// FORGE_PERSONA_PASSWORD); a fixed literal would leave them loginable after the run.
+const USER_PASSWORD =
+  process.env.FORGE_PERSONA_PASSWORD || `F080-${randomUUID()}-Aa1!`;
 
 const RUN = Date.now().toString(36);
 const email = (tag: string) => `us1-${tag}-${RUN}@alkem.io`;
@@ -146,6 +156,9 @@ async function acceptCookies(page: Page) {
     .catch(() => undefined);
 }
 
+/** Contexts opened by `signIn`; closed after every test, pass or fail. */
+const openContexts: BrowserContext[] = [];
+
 async function signIn(
   browser: Browser,
   userEmail: string,
@@ -154,6 +167,7 @@ async function signIn(
   const context = await browser.newContext({
     viewport: { width: 1500, height: 1300 },
   });
+  openContexts.push(context);
   const page = await context.newPage();
   await page.goto(BASE);
   const login = page.getByRole('link', { name: 'Log in', exact: true });
@@ -214,6 +228,10 @@ test.describe(
   { tag: ['@forge-acceptance'] },
   () => {
     test.setTimeout(300_000);
+
+    test.afterEach(async () => {
+      await Promise.all(openContexts.splice(0).map(context => context.close()));
+    });
 
     test.beforeAll(async () => {
       expect(

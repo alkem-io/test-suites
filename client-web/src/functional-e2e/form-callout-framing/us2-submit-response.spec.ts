@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import { expect, type Browser, type Page, test } from '@playwright/test';
 import { fillSecret } from '../helpers/login.helper';
 import fs from 'node:fs';
@@ -51,7 +52,10 @@ const ADMIN_PASSWORD =
   'password';
 const EVIDENCE_DIR = process.env.EVIDENCE_DIR || '';
 const GRAPHQL = `${BASE}/api/private/non-interactive/graphql`;
-const USER_PASSWORD = 'Forge080-Passw0rd!x';
+// Per-run secret for the throwaway identities this walk provisions (override with
+// FORGE_PERSONA_PASSWORD); a fixed literal would leave them loginable after the run.
+const USER_PASSWORD =
+  process.env.FORGE_PERSONA_PASSWORD || `F080-${randomUUID()}-Aa1!`;
 
 const RUN = Date.now().toString(36);
 const email = (tag: string) => `us2-${tag}-${RUN}@alkem.io`;

@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import { execSync } from 'node:child_process';
 import { expect, type Browser, type Page, test } from '@playwright/test';
 import { fillSecret } from '../helpers/login.helper';
@@ -63,7 +64,10 @@ const DB_EXEC = process.env.DB_EXEC || '';
 const STOP_CMD = process.env.NOTIFICATIONS_STOP_CMD || '';
 const START_CMD = process.env.NOTIFICATIONS_START_CMD || '';
 const GRAPHQL = `${BASE}/api/private/non-interactive/graphql`;
-const USER_PASSWORD = 'Forge080-Passw0rd!x';
+// Per-run secret for the throwaway identities this walk provisions (override with
+// FORGE_PERSONA_PASSWORD); a fixed literal would leave them loginable after the run.
+const USER_PASSWORD =
+  process.env.FORGE_PERSONA_PASSWORD || `F080-${randomUUID()}-Aa1!`;
 
 const RUN = Date.now().toString(36);
 const SPACE_NAME = `US4 Space ${RUN}`;
@@ -326,6 +330,23 @@ const formInApp = async (persona: Persona, calloutId: string) =>
   (await inApp(persona)).filter(
     n => n.type === FORM_EVENT && n.payload.callout?.id === calloutId
   );
+
+/**
+ * Negative check for asynchronous channels: `read()` must equal `expected` on every
+ * sample across the settle window (RabbitMQ management stats lag by ~5s).
+ */
+async function staysAt(
+  read: () => Promise<number>,
+  expected: number,
+  windowMs = 10_000
+): Promise<void> {
+  const until = Date.now() + windowMs;
+  for (;;) {
+    expect(await read()).toBe(expected);
+    if (Date.now() >= until) return;
+    await new Promise(resolve => setTimeout(resolve, 1_000));
+  }
+}
 
 async function pushPublished(): Promise<number | undefined> {
   if (!RMQ) return undefined;
@@ -591,7 +612,6 @@ test.describe(
           { timeout: 60_000 }
         )
         .toBe(1);
-      const about = await mailsAbout(one.name);
       // The other Sub admin (the platform admin, creator of the Sub) is told; A2 is not.
       await expect
         .poll(
@@ -601,11 +621,16 @@ test.describe(
           { timeout: 60_000 }
         )
         .toBe(2);
+      // Read after the poll so a late admin mail to A2 is not missed.
+      const about = await mailsAbout(one.name);
       expect(to(about, adminSubject(one.name), personaEmail.a2)).toHaveLength(1);
-      expect((await formInApp('a2', one.calloutId)).length).toBe(inAppBefore);
-      if (pushBefore !== undefined) {
-        expect((await pushPublished())! - pushBefore).toBe(0);
-      }
+      // In-app and push are asynchronous: hold the negative checks over a settle window.
+      await Promise.all([
+        staysAt(async () => (await formInApp('a2', one.calloutId)).length, inAppBefore),
+        pushBefore !== undefined
+          ? staysAt(async () => (await pushPublished())! - pushBefore, 0)
+          : undefined,
+      ]);
     });
 
     test('US4-AS7 MULTIPLE mode: three submissions -> three admin emails', async () => {

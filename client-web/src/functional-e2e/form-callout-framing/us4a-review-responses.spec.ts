@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import { expect, type Browser, type Page, test } from '@playwright/test';
 import { fillSecret } from '../helpers/login.helper';
 
@@ -36,7 +37,10 @@ const ADMIN_PASSWORD =
   process.env.AUTH_ADMIN_PASSWORD ||
   'password';
 const GRAPHQL = `${BASE}/api/private/non-interactive/graphql`;
-const USER_PASSWORD = 'Forge080-Passw0rd!x';
+// Per-run secret for the throwaway identities this walk provisions (override with
+// FORGE_PERSONA_PASSWORD); a fixed literal would leave them loginable after the run.
+const USER_PASSWORD =
+  process.env.FORGE_PERSONA_PASSWORD || `F080-${randomUUID()}-Aa1!`;
 
 const RUN = Date.now().toString(36);
 const email = (tag: string) => `us4a-${tag}-${RUN}@alkem.io`;
@@ -575,7 +579,9 @@ test.describe(
       await expect(dialog.getByRole('row')).toHaveCount(121);
       await expect(dialog.getByRole('button', { name: 'Load more' })).toHaveCount(0);
       await expect(dialog.getByText('Attendee 120')).toBeVisible();
+      expect(pageSizes.length, 'no paginated lookup request captured').toBeGreaterThan(0);
       expect(Math.max(...pageSizes)).toBeLessThanOrEqual(50);
+      expect(pageSizes).toContain(50);
       expect(failures).toEqual([]);
       await page.context().close();
     });
