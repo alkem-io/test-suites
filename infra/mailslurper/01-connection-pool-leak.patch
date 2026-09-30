@@ -18,7 +18,7 @@ index b29066d..97a583c 100644
  	serverPool        *ServerPool
  }
  
-@@ -74,18 +76,44 @@ Close will close a client connection. The state of the worker
+@@ -74,18 +76,50 @@ Close will close a client connection. The state of the worker
  is only used for logging purposes
  */
  func (m *ConnectionManager) Close(connection net.Conn) error {
@@ -39,10 +39,16 @@ index b29066d..97a583c 100644
 +	 * rejection rate grew with every connection served.
 +	 *
 +	 * A worker may signal close more than once for the same connection, so a
-+	 * key that is already gone is not an error.
++	 * key that is already gone is not an error. And because it can do so
++	 * late, the entry under this address may by then belong to a NEW client
++	 * that reused the same ip:port: only the entry holding this very
++	 * connection is ours to remove, a replacement is left alone.
 +	 */
 +	m.poolMutex.Lock()
 +	item, exists := m.connectionPool[address]
++	if exists && item.Connection != connection {
++		exists = false
++	}
 +	if exists {
 +		delete(m.connectionPool, address)
 +	}

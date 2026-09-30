@@ -39,8 +39,11 @@ That fit the measurements: 81 rejections in 1,484 connections (79 predicted),
 only resets the counter; a single full `notifications` run makes enough
 connections to lose about 20 mails on a freshly restarted MailSlurper.
 
-The patch removes the entry on close, makes `Close()` idempotent (a worker can
-signal close more than once), and guards the map with a mutex — it is written
+The patch removes the entry on close — but only when the entry still holds
+that same connection, so a late duplicate close for an old connection cannot
+evict a new client that has since reused the address — makes `Close()`
+idempotent (a worker can signal close more than once), and guards the map with
+a mutex — it is written
 by the SMTP listener goroutine and now deleted from by the close goroutine. The
 lock is deliberately not held across `ServerPool.NextWorker`, which can wait up
 to two seconds for a free worker.
@@ -74,8 +77,16 @@ immediately.
 
 ## Using it
 
-**Local stack** — see `docker-compose.override.yml`. It swaps only the image of
-the `mailslurper` service.
+**Local stack** — build the image from this directory, then apply
+`docker-compose.override.yml` on top of the server repo's compose file; the
+override swaps only the image of the `mailslurper` service. Exact commands are
+in the override's header. (The override has no `build:` block on purpose:
+Compose resolves a relative build context against the first `-f` file, which
+is the server repo's, not this directory.)
+
+**Nightly** — `.github/workflows/nightly-build-trigger.yml` pins the published
+image on the test cluster's `mailslurper-deployment` before the suite runs, and
+rolls back with a warning if the rollout fails.
 
 **Test cluster** — the deployment lives in the private `alkem-io/dev-orchestration`
 repo, one copy per environment overlay:
