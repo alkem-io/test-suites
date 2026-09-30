@@ -156,7 +156,8 @@ beforeAll(async () => {
       query: SUBSCRIPTION,
       variables: { calloutID: form.calloutId },
     },
-    TestUser.GLOBAL_ADMIN
+    TestUser.GLOBAL_ADMIN,
+    { recordErrors: true }
   );
 
   activityBefore = await activityEntries();
@@ -286,7 +287,7 @@ describe('Form response — never in search', () => {
 });
 
 describe('Form response — never in subscriptions', () => {
-  test('calloutPostCreated fires for the POST contribution and not for the Form response', async () => {
+  test('calloutPostCreated fires for the POST contribution and is refused for the Form callout', async () => {
     const deadline = Date.now() + 20_000;
     while (
       postSubscription.getMessages().length === 0 &&
@@ -299,13 +300,19 @@ describe('Form response — never in subscriptions', () => {
     // Positive control: the POST callout's subscription received the event.
     expect(postSubscription.getMessages().length).toBeGreaterThanOrEqual(1);
     expect(JSON.stringify(postSubscription.getMessages())).toContain(postId);
-    // The Form callout's subscription received nothing (if it could be
-    // opened at all — an errored subscription also delivers nothing).
-    const formMessages =
-      formSubscription.getErrors().length === 0
-        ? formSubscription.getMessages()
-        : [];
-    expect(formMessages).toHaveLength(0);
+    // The Form callout has no POST contributions enabled, so the server refuses
+    // the subscription outright: the refusal must have been received.
+    const refusalDeadline = Date.now() + 10_000;
+    while (
+      formSubscription.getErrors().length === 0 &&
+      Date.now() < refusalDeadline
+    ) {
+      await delay(250);
+    }
+    expect(formSubscription.getErrors().length).toBeGreaterThanOrEqual(1);
+    expect(formSubscription.getErrors()[0].message).toContain(
+      'does not allow Post contributions'
+    );
   });
 });
 
