@@ -1,8 +1,4 @@
-import {
-  delay,
-  deleteMailSlurperMails,
-  getMailsData,
-} from '@alkemio/tests-lib';
+import { delay, getMailsData } from '@alkemio/tests-lib';
 import {
   MailItem,
   waitForMailsWhere,
@@ -20,33 +16,45 @@ const addressedTo = (mail: MailItem, address: string): boolean =>
   Array.isArray(mail.toAddresses) &&
   mail.toAddresses.some(to => to.toLowerCase() === address.toLowerCase());
 
+/** Identity of one mail within the inbox: MailSlurper's own id where present. */
+const mailKey = (mail: MailItem): string =>
+  String(mail.id ?? `${mail.subject}|${mail.body}`);
+
+const mailsFor = async (address: string): Promise<MailItem[]> => {
+  const [items] = (await getMailsData()) as [MailItem[], number];
+  return items.filter(m => addressedTo(m, address));
+};
+
 /**
- * Runs `action` against an emptied MailSlurper inbox and returns every mail
- * that arrived for `address`. With `expected > 0` it waits for that many (and
- * then a short settle so a surplus shows up); with `expected === 0` it holds
- * for a full quiet period so an absence cannot pass vacuously.
- *
- * The inbox is pruned FIRST, so the returned list is a delta and never mixes in
- * the mail of an earlier step.
+ * Runs `action` and returns the mail that arrived for `address` DURING it: a
+ * per-address delta (the mails to the address before the action are noted, the
+ * ones after it that were not there before are returned). Addresses are unique
+ * per run, so the shared inbox is never emptied and no other spec's mail is
+ * touched or read. With `expected > 0` it waits for that many (and then a short
+ * settle so a surplus shows up); with `expected === 0` it holds for a full quiet
+ * period so an absence cannot pass vacuously.
  */
 export const mailsToAfter = async (
   action: () => Promise<unknown>,
   address: string,
   expected: number
 ): Promise<MailItem[]> => {
-  await deleteMailSlurperMails();
+  const seen = new Set((await mailsFor(address)).map(mailKey));
+  const arrived = async () =>
+    (await mailsFor(address)).filter(m => !seen.has(mailKey(m)));
   await action();
   if (expected > 0) {
     await waitForMailsWhere(
-      items => items.filter(m => addressedTo(m, address)).length >= expected,
+      items =>
+        items.filter(m => addressedTo(m, address) && !seen.has(mailKey(m)))
+          .length >= expected,
       { timeout: 20_000 }
     );
     await delay(SETTLE_MS);
   } else {
     await delay(QUIET_PERIOD_MS);
   }
-  const [items] = (await getMailsData()) as [MailItem[], number];
-  return items.filter(m => addressedTo(m, address));
+  return arrived();
 };
 
 /** Subject and recipient of every mail, for assertion messages. */

@@ -193,8 +193,11 @@ spaceAdminTest.describe('US3-AS2 — Resend in the Space community pending table
 
     const mails = await waitForMailsTo(spaceEmail, mailsBefore + 1);
     expect(mails).toHaveLength(mailsBefore + 1);
-    // The Space template and subject — not the organization one.
-    expect(mails[mails.length - 1].subject).toEqual(`Invitation to join ${scenario.space.about.profile.displayName}`);
+    // The Space template and subject — not the organization one. The original and the resent mail share
+    // the mailbox, so every mail counted must carry the Space subject: whichever one is the resent mail,
+    // a resend on the organization template would leave a differing subject among them.
+    const spaceSubject = `Invitation to join ${scenario.space.about.profile.displayName}`;
+    expect(mails.map(m => m.subject)).toEqual(mails.map(() => spaceSubject));
 
     const after = await lookupEmailInvitationRaw(spaceInvitationId, globalAdminToken);
     expect(after.data?.lookup.platformInvitation).toEqual(before.data?.lookup.platformInvitation);

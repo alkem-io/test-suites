@@ -130,7 +130,7 @@ describe('Resend a Space email invitation', () => {
     expect(secondMails, mailSummary(secondMails)).toHaveLength(0);
   });
 
-  test('US3-AS4: a plain Space member cannot resend — authorization error, no mail', async () => {
+  test('US3-AS5: a plain Space member cannot resend — authorization error, no mail', async () => {
     const { email, platformInvitationId } = await inviteNewAddress('member');
 
     const mails = await mailsToAfter(
@@ -150,7 +150,7 @@ describe('Resend a Space email invitation', () => {
     expect(mails, mailSummary(mails)).toHaveLength(0);
   });
 
-  test('US3-AS5: once the address has registered the invitation is consumed — resend is refused (not throttled) and sends nothing', async () => {
+  test('US3-AS4: once the address has registered the invitation is consumed — resend is refused (not throttled) and sends nothing', async () => {
     const { email, platformInvitationId } = await inviteNewAddress('consumed');
     const userId = await registerVerifiedUser(
       email,

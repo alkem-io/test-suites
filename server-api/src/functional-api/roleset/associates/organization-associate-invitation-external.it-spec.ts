@@ -9,7 +9,8 @@
 // `globalSupportAdmin` = platform support (holds the invite privilege
 // everywhere). Invitees are throwaway addresses on the reserved `.test` TLD.
 //
-// Every mail assertion is a delta: the inbox is pruned first (`mailsToAfter`)
+// Every mail assertion is a per-address delta (`mailsToAfter`: the mails to the
+// address before the step are noted, the new ones returned; the inbox is never emptied)
 // and the mail the invitation itself triggered is drained before the step that
 // counts (`drainMailsTo`). The address-case probe is deliberately absent — the
 // address is matched exactly as typed (known gap, not asserted either way).
@@ -620,7 +621,13 @@ describe('Resend an organization email invitation (US3)', () => {
       before?.data?.lookup?.platformInvitation
     );
     // The recorded inviter is a bare reference that no longer resolves through
-    // the API, so it is read from the table where the harness can reach it.
+    // the API. A resend that rewrote it to the resender would resolve to that
+    // admin, so "not the resender" is checkable on any run (including remote).
+    const recordedAfter = await lookupPlatformInvitationCreatedBy(id);
+    expect(
+      recordedAfter?.data?.lookup?.platformInvitation?.createdBy?.id
+    ).not.toEqual(TestUserManager.users.organizationAdmin.id);
+    // The stronger check reads the table where the harness can reach it.
     if (harnessPostgresConfigured()) {
       const rows = await queryHarnessDb<{ createdBy: string }>(
         'SELECT "createdBy" FROM platform_invitation WHERE id = $1',

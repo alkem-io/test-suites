@@ -16,6 +16,8 @@
 import {
   getGraphqlClient,
   getUserToken,
+  harnessPostgresConfigured,
+  queryHarnessDb,
   TestScenarioFactory,
   TestUser,
   TestUserManager,
@@ -52,6 +54,7 @@ import {
   getSingleInvitationResult,
   isPlatformInvitationGone,
   lookupPlatformInvitation,
+  platformInvitationRowExists,
   usersInRoles,
 } from '../roleset.request.params';
 import { assignRoleToUser } from '../roles-request.params';
@@ -134,6 +137,16 @@ const inviteEmail = async (
   return id;
 };
 
+/** The invitation is erased: the lookup answers entity-not-found (any other
+ * error does not count), and where the harness reaches Postgres no row is left. */
+const expectInvitationErased = async (id: string) => {
+  expect(
+    isPlatformInvitationGone(await lookupPlatformInvitation(id)),
+    id
+  ).toBe(true);
+  expect(await platformInvitationRowExists(id), id).not.toEqual(true);
+};
+
 const roleHolders = async (roleSetId: string, role: RoleName) => {
   const res = await usersInRoles(roleSetId, [role], TestUser.GLOBAL_ADMIN);
   return (
@@ -211,7 +224,8 @@ describe('An open invitation wins over the domain auto-join (US2)', () => {
       orgScenario.space.community.roleSetId,
       invitedEmail,
       [RoleName.Member],
-      TestUser.GLOBAL_ADMIN
+      TestUser.GLOBAL_ADMIN,
+      suggestedLanguage
     );
     consumedInvitationIds.push(orgInvitationId, spaceInvitationId);
 
@@ -283,6 +297,11 @@ describe('An open invitation wins over the domain auto-join (US2)', () => {
     ).filter(i => i.actor.id === invitedUserId);
     expect(spaceConverted).toHaveLength(1);
     invitationIds.add(spaceConverted[0].id);
+    // Conversion carries the message and the suggested language on the Space side too.
+    expect(spaceConverted[0].welcomeMessage).toEqual(message);
+    if (suggestedLanguage) {
+      expect(spaceConverted[0].suggestedLanguage).toEqual(suggestedLanguage);
+    }
   });
 
   test('US2-AS3: accepting the converted invitation grants Associate + Admin', async () => {
@@ -320,7 +339,7 @@ describe('An open invitation wins over the domain auto-join (US2)', () => {
     ).toContain(otherId);
   });
 
-  test('US4-AS3/AS4: deleting the account erases every email-invitation record for the address, and registering the address again resurrects nothing', async () => {
+  test('US4-AS3: deleting the account erases every email-invitation record for the address, and registering the address again finds nothing', async () => {
     expect(consumedInvitationIds).toHaveLength(2);
     // Consumed, but still on record until the account goes.
     for (const id of consumedInvitationIds) {
@@ -335,10 +354,7 @@ describe('An open invitation wins over the domain auto-join (US2)', () => {
     userIds.delete(invitedUserId);
 
     for (const id of consumedInvitationIds) {
-      expect(
-        isPlatformInvitationGone(await lookupPlatformInvitation(id)),
-        id
-      ).toBe(true);
+      await expectInvitationErased(id);
     }
     expect(
       (
@@ -363,6 +379,32 @@ describe('An open invitation wins over the domain auto-join (US2)', () => {
         )
       ).toHaveLength(0);
     }
+  });
+});
+
+describe('A consumed invitation is never converted again (US4-AS4)', () => {
+  // The erasure case above cannot reach this rule: it re-registers after the rows are gone. A consumed
+  // record can only be forged by flipping the flag on an open row, which needs the harness database.
+  test.skipIf(!harnessPostgresConfigured())('registering an address whose record is already consumed creates no invitation and no membership', async () => {
+    const email = `consumed-${uniqueId}@alkemio.test`;
+    const roleSetId = orgScenario.organization.roleSetId;
+    const id = await inviteEmail(roleSetId, email, [RoleName.Admin]);
+    await queryHarnessDb(
+      'UPDATE platform_invitation SET "profileCreated" = true WHERE id = $1',
+      [id]
+    );
+
+    const userId = await register(email, 'consumed');
+
+    const pending = await getRoleSetInvitationsApplications(roleSetId);
+    expect(
+      (pending?.data?.lookup?.roleSet?.invitations ?? []).filter(
+        i => i.actor.id === userId
+      )
+    ).toHaveLength(0);
+    expect(await roleHolders(roleSetId, RoleName.Associate)).not.toContain(
+      userId
+    );
   });
 });
 
@@ -436,8 +478,6 @@ describe('Deleting an organization removes its open email invitations (US4-AS6)'
     expect(deleted?.error).toBeUndefined();
     organizationIds.delete(organization!.id);
 
-    expect(
-      isPlatformInvitationGone(await lookupPlatformInvitation(invitationId))
-    ).toBe(true);
+    await expectInvitationErased(invitationId);
   });
 });

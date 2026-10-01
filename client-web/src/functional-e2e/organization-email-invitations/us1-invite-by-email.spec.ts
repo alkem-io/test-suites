@@ -243,7 +243,8 @@ adminTest.describe('US1-AS2 → AS4 → AS7 — invite an unknown address, repea
       expect(mails).toHaveLength(1);
       expect(mails[0].subject).toEqual(organizationInvitationSubject(org.displayName));
 
-      // Nothing leaks onto any Space: the organization role set is the only list.
+      // The organization role set carries the record. That no Space lists it is structural (a platform
+      // invitation holds exactly one role set reference), so there is no Space list for a walk to read.
       expect(await openEmailAddresses(org.roleSetId, admin.token)).toContain(chainEmail);
     }
   );
@@ -260,7 +261,7 @@ adminTest.describe('US1-AS2 → AS4 → AS7 — invite an unknown address, repea
     expect(await settledMailsTo(chainEmail)).toHaveLength(1);
   });
 
-  adminTest('US1-AS7: Revoke (confirmed) removes the row; a later sign-up finds nothing; re-inviting creates a fresh row and sends a new email', async ({ page }) => {
+  adminTest('US1-AS7: Revoke (confirmed) removes the row and the record; re-inviting creates a fresh row and sends a new email', async ({ page }) => {
     adminTest.setTimeout(180_000);
     await page.goto(`${baseUrl}/organization/${org.nameID}/settings/community`);
     const row = pendingRow(page, chainEmail);
@@ -273,7 +274,10 @@ adminTest.describe('US1-AS2 → AS4 → AS7 — invite an unknown address, repea
 
     expect(await openEmailAddresses(org.roleSetId, admin.token)).not.toContain(chainEmail);
     const gone = await lookupEmailInvitationRaw(chainInvitationId, globalAdminToken);
-    expect(gone.errors.length > 0 || !gone.data?.lookup.platformInvitation).toBe(true);
+    // Gone means entity-not-found (or null data); any other error, such as an authorization refusal, is not proof.
+    if (gone.errors.length > 0) expect(errorCodeOf(gone), gone.raw).toEqual('ENTITY_NOT_FOUND');
+    else expect(gone.data?.lookup.platformInvitation).toBeFalsy();
+    // "A later sign-up finds nothing" is asserted in organization-associate-invitation-external.it-spec.ts (US1-AS7).
 
     // Re-inviting creates a fresh invitation and a fresh email.
     const mailsBefore = (await mailsTo(chainEmail)).length;

@@ -1,4 +1,9 @@
-import { getGraphqlClient, TestUser } from '@alkemio/tests-lib';
+import {
+  getGraphqlClient,
+  harnessPostgresConfigured,
+  queryHarnessDb,
+  TestUser,
+} from '@alkemio/tests-lib';
 import {
   ActorType,
   InviteForEntryRoleOnRoleSetMutation,
@@ -206,16 +211,39 @@ export const lookupPlatformInvitationCreatedBy = async (
   return graphqlErrorWrapper(callback, userRole);
 };
 
-/** True when the platform invitation no longer resolves: either the lookup
- * refuses (entity not found) or it resolves to null. */
+/** True when the platform invitation no longer resolves: the lookup answers
+ * entity-not-found, or it resolves to null. Any other error (an authorization
+ * refusal on a row that survived without its policy, a transient failure) is
+ * NOT proof the row is gone. */
 export const isPlatformInvitationGone = (
   res:
     | {
         data?: { lookup?: { platformInvitation?: { id: string } | null } };
-        error?: unknown;
+        error?: { errors: Array<Record<string, unknown>> };
       }
     | undefined
-): boolean => Boolean(res?.error) || !res?.data?.lookup?.platformInvitation;
+): boolean => {
+  if (res?.error) {
+    const first = res.error.errors?.[0] as
+      | { extensions?: { code?: string } }
+      | undefined;
+    return first?.extensions?.code === 'ENTITY_NOT_FOUND';
+  }
+  return !res?.data?.lookup?.platformInvitation;
+};
+
+/** Whether a platform_invitation row with this id exists in the harness
+ * database; undefined when the harness cannot reach Postgres (remote runs). */
+export const platformInvitationRowExists = async (
+  invitationId: string
+): Promise<boolean | undefined> => {
+  if (!harnessPostgresConfigured()) return undefined;
+  const rows = await queryHarnessDb<{ id: string }>(
+    'SELECT id FROM platform_invitation WHERE id = $1',
+    [invitationId]
+  );
+  return rows.length > 0;
+};
 
 // The union list this feature ships is ASSOCIATE ∪ ADMIN ∪ OWNER, badged —
 // this is the read that proves an admin who is not an associate is still

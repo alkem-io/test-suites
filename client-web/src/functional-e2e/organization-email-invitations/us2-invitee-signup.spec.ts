@@ -51,6 +51,8 @@ import {
 
 baseTest.describe.configure({ mode: 'serial' });
 
+const DUTCH = 'nl';
+const DUTCH_SKIP_REASON = `the stack does not list '${DUTCH}' as an eligible language, so the invitation cannot seed the Dutch interface this walk asserts`;
 const password = process.env.AUTH_TEST_HARNESS_PASSWORD || 'change_me';
 const domain = `inv081${runSuffix}.example.com`.toLowerCase();
 const secretPhrase = `secret-phrase-${runSuffix}`;
@@ -89,7 +91,9 @@ baseTest.beforeAll(async () => {
     platform: { configuration: { language: { eligible: string[]; default: string } } };
   }>('query { platform { configuration { language { eligible default } } } }');
   const config = language.body.data?.platform.configuration.language;
-  eligibleLanguage = config?.eligible.find(code => code !== config.default) ?? config?.eligible[0];
+  // The walk asserts Dutch labels, so the suggested language is pinned to Dutch when the stack offers it;
+  // otherwise no language is seeded and the Dutch-label walk (AS2/AS3) skips with a stated reason.
+  eligibleLanguage = config?.eligible.includes(DUTCH) ? DUTCH : undefined;
 
   // Both invitations are created while neither address has an account: invitee 1
   // offered Associate + Admin with markup in the message, invitee 4 offered Admin.
@@ -156,6 +160,7 @@ baseTest.describe('US2-AS1 / US2-AS7 — one dedicated email, message escaped an
 baseTest.describe('US2-AS2 → US2-AS3 — follow the link, register, find the invitation, accept it', () => {
   baseTest('US2-AS2: a logged-out invitee following the link is sent to sign-up; after registering with the invited address the pending dialog lists the organization invitation with the role, the inviter and the message', async ({ browser }) => {
     baseTest.setTimeout(240_000);
+    baseTest.skip(eligibleLanguage !== DUTCH, DUTCH_SKIP_REASON);
     expect(invitationLink).toBeTruthy();
     inviteeContext = await browser.newContext();
     inviteePage = await inviteeContext.newPage();
@@ -177,8 +182,8 @@ baseTest.describe('US2-AS2 → US2-AS3 — follow the link, register, find the i
     await fillUpSignInPageElements(invitee1Email, password, page);
     await pressSignInButtonSignInPage(page);
 
-    // The interface language is seeded from the invitation's suggested language (Dutch here: the
-    // only eligible non-default language of the stack), so the labels below are Dutch.
+    // The interface language is seeded from the invitation's suggested language (pinned to Dutch
+    // in beforeAll), so the labels below are Dutch.
     const list = page.getByRole('dialog');
     const card = list.getByRole('button', { name: new RegExp(escapeRegExp(org.displayName)) });
     await expect(card).toBeVisible({ timeout: 45_000 });
@@ -195,6 +200,7 @@ baseTest.describe('US2-AS2 → US2-AS3 — follow the link, register, find the i
 
   baseTest('US2-AS3: accepting makes the invitee an associate and an admin, and the Associates tab badges both', async () => {
     baseTest.setTimeout(180_000);
+    baseTest.skip(eligibleLanguage !== DUTCH, DUTCH_SKIP_REASON);
     const page = inviteePage!;
     await page.getByRole('dialog').getByRole('button', { name: /accepteren/i }).click();
 
