@@ -272,7 +272,11 @@ adminTest.describe('US1-AS2 → AS4 → AS7 — invite an unknown address, repea
     await page.getByRole('button', { name: 'Revoke invitation' }).click();
     await expect(pendingRow(page, chainEmail)).toHaveCount(0, { timeout: 15_000 });
 
-    expect(await openEmailAddresses(org.roleSetId, admin.token)).not.toContain(chainEmail);
+    // The row leaves the table once the delete mutation resolves; poll the
+    // server read rather than racing the refetch that follows it.
+    await expect
+      .poll(() => openEmailAddresses(org.roleSetId, admin.token), { timeout: 10_000 })
+      .not.toContain(chainEmail);
     const gone = await lookupEmailInvitationRaw(chainInvitationId, globalAdminToken);
     // Gone means entity-not-found (or null data); any other error, such as an authorization refusal, is not proof.
     if (gone.errors.length > 0) expect(errorCodeOf(gone), gone.raw).toEqual('ENTITY_NOT_FOUND');
