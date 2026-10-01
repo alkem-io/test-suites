@@ -52,7 +52,29 @@ import {
 baseTest.describe.configure({ mode: 'serial' });
 
 const DUTCH = 'nl';
-const DUTCH_SKIP_REASON = `the stack does not list '${DUTCH}' as an eligible language, so the invitation cannot seed the Dutch interface this walk asserts`;
+const DUTCH_SKIP_REASON = `the stack does not list '${DUTCH}' as an eligible language, so the invitation cannot seed the Dutch interface`;
+
+// The walk is language-agnostic: when the invitation seeds Dutch the dialog labels are Dutch, otherwise
+// the platform default (English) applies. Only the dedicated language assertion needs Dutch.
+const labelsFor = (dutch: boolean) =>
+  dutch
+    ? {
+        section: 'Uitnodigingen als Geassocieerde',
+        offeredRole: 'Geassocieerde + Beheerder',
+        detailTitle: (organization: string) => `Uitnodiging om te associëren met ${organization}`,
+        invitedBy: (name: string) => `Uitgenodigd door ${name}`,
+        associate: 'Geassocieerde',
+        admin: 'Beheerder',
+      }
+    : {
+        section: 'Associate Invitations',
+        offeredRole: 'Associate + Admin',
+        detailTitle: (organization: string) => `Invitation to associate with ${organization}`,
+        invitedBy: (name: string) => `Invited by ${name}`,
+        associate: 'Associate',
+        admin: 'Admin',
+      };
+const labels = () => labelsFor(eligibleLanguage === DUTCH);
 const password = process.env.AUTH_TEST_HARNESS_PASSWORD || 'change_me';
 const domain = `inv081${runSuffix}.example.com`.toLowerCase();
 const secretPhrase = `secret-phrase-${runSuffix}`;
@@ -91,8 +113,8 @@ baseTest.beforeAll(async () => {
     platform: { configuration: { language: { eligible: string[]; default: string } } };
   }>('query { platform { configuration { language { eligible default } } } }');
   const config = language.body.data?.platform.configuration.language;
-  // The walk asserts Dutch labels, so the suggested language is pinned to Dutch when the stack offers it;
-  // otherwise no language is seeded and the Dutch-label walk (AS2/AS3) skips with a stated reason.
+  // The suggested language is pinned to Dutch when the stack offers it, so the Dutch-language assertion
+  // can run; otherwise no language is seeded, the walk runs on English labels and only that one assertion skips.
   eligibleLanguage = config?.eligible.includes(DUTCH) ? DUTCH : undefined;
 
   // Both invitations are created while neither address has an account: invitee 1
@@ -160,7 +182,6 @@ baseTest.describe('US2-AS1 / US2-AS7 — one dedicated email, message escaped an
 baseTest.describe('US2-AS2 → US2-AS3 — follow the link, register, find the invitation, accept it', () => {
   baseTest('US2-AS2: a logged-out invitee following the link is sent to sign-up; after registering with the invited address the pending dialog lists the organization invitation with the role, the inviter and the message', async ({ browser }) => {
     baseTest.setTimeout(240_000);
-    baseTest.skip(eligibleLanguage !== DUTCH, DUTCH_SKIP_REASON);
     expect(invitationLink).toBeTruthy();
     inviteeContext = await browser.newContext();
     inviteePage = await inviteeContext.newPage();
@@ -182,30 +203,39 @@ baseTest.describe('US2-AS2 → US2-AS3 — follow the link, register, find the i
     await fillUpSignInPageElements(invitee1Email, password, page);
     await pressSignInButtonSignInPage(page);
 
-    // The interface language is seeded from the invitation's suggested language (pinned to Dutch
-    // in beforeAll), so the labels below are Dutch.
+    // The interface language is seeded from the invitation's suggested language (Dutch when the stack
+    // offers it, otherwise the platform default), so the labels follow `labels()`.
+    const text = labels();
     const list = page.getByRole('dialog');
     const card = list.getByRole('button', { name: new RegExp(escapeRegExp(org.displayName)) });
     await expect(card).toBeVisible({ timeout: 45_000 });
-    await expect(list).toContainText('Uitnodigingen als Geassocieerde');
-    await expect(card).toContainText('Geassocieerde + Beheerder');
+    await expect(list).toContainText(text.section);
+    await expect(card).toContainText(text.offeredRole);
 
     await card.click();
     const detail = page.getByRole('dialog');
-    await expect(detail).toContainText(`Uitnodiging om te associëren met ${org.displayName}`, { timeout: 15_000 });
-    await expect(detail).toContainText('Geassocieerde + Beheerder');
-    await expect(detail).toContainText(`Uitgenodigd door ${admin.displayName}`);
+    await expect(detail).toContainText(text.detailTitle(org.displayName), { timeout: 15_000 });
+    await expect(detail).toContainText(text.offeredRole);
+    await expect(detail).toContainText(text.invitedBy(admin.displayName));
     await expect(detail).toContainText(secretPhrase);
+  });
+
+  baseTest('US2-AS2: the invitation dialog opens in the invitation\'s suggested language (Dutch)', async () => {
+    baseTest.skip(eligibleLanguage !== DUTCH, DUTCH_SKIP_REASON);
+    const detail = inviteePage!.getByRole('dialog');
+    await expect(detail).toContainText(`Uitnodiging om te associëren met ${org.displayName}`);
+    await expect(detail).toContainText('Geassocieerde + Beheerder');
   });
 
   baseTest('US2-AS3: accepting makes the invitee an associate and an admin, and the Associates tab badges both', async () => {
     baseTest.setTimeout(180_000);
-    baseTest.skip(eligibleLanguage !== DUTCH, DUTCH_SKIP_REASON);
+    const text = labels();
     const page = inviteePage!;
-    await page.getByRole('dialog').getByRole('button', { name: /accepteren/i }).click();
+    // 'Accept' / 'Accepteren' — one button on the invitation dialog in either language.
+    await page.getByRole('dialog').getByRole('button', { name: /accept/i }).click();
 
     // Accepting returns to the list (no navigation to a Space) and the card is gone.
-    await expect(page.getByRole('dialog')).not.toContainText('Uitnodiging om te associëren met', { timeout: 20_000 });
+    await expect(page.getByRole('dialog')).not.toContainText(text.detailTitle(org.displayName), { timeout: 20_000 });
 
     await expect
       .poll(async () => getUserIdsInRole(org.roleSetId, RoleName.Associate, globalAdminToken), { timeout: 20_000 })
@@ -216,8 +246,8 @@ baseTest.describe('US2-AS2 → US2-AS3 — follow the link, register, find the i
     await page.goto(`${baseUrl}/organization/${org.nameID}/settings/community`);
     const ownRow = page.getByRole('listitem').filter({ hasText: new RegExp(escapeRegExp(`New1${runSuffix}`), 'i') });
     await expect(ownRow).toBeVisible({ timeout: 20_000 });
-    await expect(ownRow.getByText('Geassocieerde', { exact: true })).toBeVisible();
-    await expect(ownRow.getByText('Beheerder', { exact: true })).toBeVisible();
+    await expect(ownRow.getByText(text.associate, { exact: true })).toBeVisible();
+    await expect(ownRow.getByText(text.admin, { exact: true })).toBeVisible();
   });
 });
 

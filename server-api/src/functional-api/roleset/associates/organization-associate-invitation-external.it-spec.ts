@@ -125,7 +125,7 @@ const invite = async (
   return res;
 };
 
-const allResults = (res: Awaited<ReturnType<typeof invite>>) =>
+const allResults = (res: Awaited<ReturnType<typeof invite>> | undefined) =>
   res?.data?.inviteForEntryRoleOnRoleSet ?? [];
 
 /** The organization's open email invitations, read as an admin. */
@@ -299,11 +299,20 @@ describe('Invite an unregistered address to an organization (US1)', () => {
     );
     const newEmail = addr('new');
 
-    const res = await invite({
-      actors: [picked.id],
-      emails: [newEmail, registered.email, picked.email],
-      roles: [RoleName.Admin],
-    });
+    // P is reached by the pick AND by the typed address, yet is notified once.
+    let res: Awaited<ReturnType<typeof invite>> | undefined;
+    const pickedMails = await mailsToAfter(
+      async () => {
+        res = await invite({
+          actors: [picked.id],
+          emails: [newEmail, registered.email, picked.email],
+          roles: [RoleName.Admin],
+        });
+      },
+      picked.email,
+      1
+    );
+    expect(pickedMails, mailSummary(pickedMails)).toHaveLength(1);
     expect(res?.error).toBeUndefined();
     const results = allResults(res);
 

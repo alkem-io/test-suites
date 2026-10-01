@@ -83,7 +83,7 @@ describe('Organization email invitation — the unregistered invitee is emailed 
   test('one email on the organization template: subject names the organization only, body names the inviter, the offered role, the escaped message and the invitations link; no in-app row; resend sends exactly one more', async () => {
     const organizationName = baseScenario.organization.profile.displayName;
     const inviterName = TestUserManager.users.organizationAdmin.displayName;
-    const email = `ext-${uniqueId}@alkem.io`;
+    const email = `ext-${uniqueId}@example.com`;
     const expectedSubject = `You are invited to join ${organizationName} on Alkemio`;
 
     const adminTotalBefore = await inAppTotal(TestUser.ORGANIZATION_ADMIN);
@@ -173,7 +173,7 @@ describe('Organization email invitation — the unregistered invitee is emailed 
 
   test('the Space external invitation in the same run still uses the Space template and subject', async () => {
     const spaceName = baseScenario.space.about.profile.displayName;
-    const email = `ext-space-${uniqueId}@alkem.io`;
+    const email = `ext-space-${uniqueId}@example.com`;
 
     const mails = await mailsToAfter(
       async () => {

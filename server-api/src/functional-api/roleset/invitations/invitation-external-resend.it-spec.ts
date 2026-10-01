@@ -66,7 +66,7 @@ afterAll(async () => {
 
 /** Invites a fresh, unregistered address on the Space and tracks the row. */
 const inviteNewAddress = async (label: string) => {
-  const email = `${label}-${uniqueId}@alkem.io`;
+  const email = `${label}-${uniqueId}@example.com`;
   const res = await inviteForEntryRoleOnRoleSet(
     baseScenario.space.community.roleSetId,
     [],
