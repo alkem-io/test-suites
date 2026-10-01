@@ -561,7 +561,7 @@ describe('Resend an organization email invitation (US3)', () => {
     );
     expect(second, mailSummary(second)).toHaveLength(0);
 
-    // A different invitation has its own cooldown.
+    // A different address has its own cooldown.
     const otherEmail = addr('resend2');
     const other = getSingleInvitationResult(
       await invite({ emails: [otherEmail] })

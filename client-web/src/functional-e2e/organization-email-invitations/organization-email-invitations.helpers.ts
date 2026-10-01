@@ -57,6 +57,21 @@ export const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 export const organizationInvitationSubject = (organizationName: string) =>
   `You are invited to join ${organizationName} on Alkemio`;
 
+/** The server's default resend window (seconds). */
+export const DEFAULT_RESEND_COOLDOWN_SECONDS = 300;
+
+/**
+ * The resend cooldown the stack under test runs with. The server keeps one
+ * window per role set and address and reads it from
+ * PLATFORM_INVITATION_RESEND_COOLDOWN_SECONDS; the harness that boots the stack
+ * sets the same variable for this process so a walk can wait the window out.
+ * Falls back to the server default when unset or not a positive integer.
+ */
+export const resendCooldownSeconds = (): number => {
+  const configured = Number(process.env.PLATFORM_INVITATION_RESEND_COOLDOWN_SECONDS);
+  return Number.isInteger(configured) && configured >= 1 ? configured : DEFAULT_RESEND_COOLDOWN_SECONDS;
+};
+
 export const escapeRegExp = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 // ─── Registration ─────────────────────────────────────────────────────────

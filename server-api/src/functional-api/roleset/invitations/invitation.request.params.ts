@@ -66,8 +66,9 @@ export const deleteExternalInvitation = async (
 };
 
 // Sends the invitation email of an open platform invitation again. Gated on the
-// role set's invite privilege; throttled per invitation (error code
-// ROLESET_INVITATION_RESEND_THROTTLED).
+// role set's invite privilege; throttled per role set and address (error code
+// ROLESET_INVITATION_RESEND_THROTTLED) and drawn from the hourly email budget
+// (ROLESET_INVITATION_EMAIL_BUDGET_EXCEEDED).
 export const resendPlatformInvitation = async (
   invitationId: string,
   userRole: TestUser = TestUser.GLOBAL_ADMIN

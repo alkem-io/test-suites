@@ -13,10 +13,13 @@
 // inviter deleted) are API acceptance walks — the table never offers Resend for
 // a consumed row and a plain member cannot reach the table at all.
 //
-// The cooldown is per invitation and five minutes by default: "after the window
-// a resend succeeds again" is a server unit concern, not something a walk can
-// wait for, so it is asserted there rather than here. The independence of two
-// invitations IS asserted (AS3).
+// The cooldown belongs to the address on its role set (five minutes by
+// default), not to the invitation: revoking and re-inviting the same address does
+// not reset it (asserted in the server-api resend it-spec). The independence of
+// two addresses IS asserted here (AS3). "After the window a resend succeeds
+// again" is asserted only when the stack runs with a short window the harness
+// also exports as PLATFORM_INVITATION_RESEND_COOLDOWN_SECONDS (the stack runner
+// sets 5); with the 300 s default that case is skipped rather than waited out.
 //
 // Serial: one scenario, one MailSlurper mailbox, several Kratos registrations.
 
@@ -38,6 +41,7 @@ import {
   organizationInvitationSubject,
   recordedInviterId,
   registerUserAtAddress,
+  resendCooldownSeconds,
   resendEmailInvitationRaw,
   RoleName,
   runSuffix,
@@ -50,6 +54,11 @@ import {
 baseTest.describe.configure({ mode: 'serial' });
 
 const THROTTLED_CODE = 'ROLESET_INVITATION_RESEND_THROTTLED';
+
+// Longest window a walk is willing to sit out; the server default is far above it.
+const MAX_WAITABLE_WINDOW_SECONDS = 30;
+// Slack after the window so the marker has certainly expired.
+const WINDOW_SETTLE_MS = 3_000;
 
 const orgAdminTest = createPersonaTest(`${TestUser.ORGANIZATION_ADMIN}@alkem.io`);
 const spaceAdminTest = createPersonaTest(`${TestUser.SPACE_ADMIN}@alkem.io`);
@@ -159,7 +168,7 @@ orgAdminTest.describe('US3-AS1 / US3-AS3 — Resend in the organization Associat
     expect(after.data?.lookup.platformInvitation).toEqual(before.data?.lookup.platformInvitation);
   });
 
-  orgAdminTest('US3-AS3: a second click on the same row is refused with the readable message and sends nothing; another row is independent', async ({ page }) => {
+  orgAdminTest('US3-AS3: a second click on the same row is refused with the readable message and sends nothing; another address is independent', async ({ page }) => {
     orgAdminTest.setTimeout(150_000);
     const mailsBefore = (await mailsTo(orgEmail)).length;
 
@@ -169,11 +178,30 @@ orgAdminTest.describe('US3-AS1 / US3-AS3 — Resend in the organization Associat
     await expect(page.getByText('Already resent recently — try again in a few minutes')).toBeVisible({ timeout: 15_000 });
     expect(await settledMailsTo(orgEmail)).toHaveLength(mailsBefore);
 
-    // A different invitation has its own cooldown.
+    // A different address has its own cooldown.
     const otherBefore = (await mailsTo(orgEmail2)).length;
     await resendButton(page, orgEmail2).click();
     await expect(page.getByText('Invitation email sent again')).toBeVisible({ timeout: 15_000 });
     expect(await waitForMailsTo(orgEmail2, otherBefore + 1)).toHaveLength(otherBefore + 1);
+  });
+
+  orgAdminTest('US3-AS3: after the window the same address can be resent again', async ({ page }) => {
+    const windowSeconds = resendCooldownSeconds();
+    orgAdminTest.skip(
+      windowSeconds > MAX_WAITABLE_WINDOW_SECONDS,
+      `the resend cooldown is ${windowSeconds} s; run the stack with PLATFORM_INVITATION_RESEND_COOLDOWN_SECONDS set to ${MAX_WAITABLE_WINDOW_SECONDS} or less (the stack runner uses 5) and export the same value to this run`
+    );
+    orgAdminTest.setTimeout(150_000 + windowSeconds * 1000);
+    const mailsBefore = (await mailsTo(orgEmail)).length;
+
+    // The earlier tests claimed this address's window; let it lapse.
+    await page.waitForTimeout(windowSeconds * 1000 + WINDOW_SETTLE_MS);
+
+    await page.goto(`${baseUrl}/organization/${scenario.organization.nameId}/settings/community`);
+    await expect(pendingRow(page, orgEmail)).toBeVisible({ timeout: 20_000 });
+    await resendButton(page, orgEmail).click();
+    await expect(page.getByText('Invitation email sent again')).toBeVisible({ timeout: 15_000 });
+    expect(await waitForMailsTo(orgEmail, mailsBefore + 1)).toHaveLength(mailsBefore + 1);
   });
 });
 

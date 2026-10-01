@@ -1,9 +1,12 @@
 // Resending the invitation email of an open Space email invitation: same
-// privilege as inviting, one mail per allowed resend, a per-invitation
-// cooldown after that, and nothing at all for a consumed or unauthorized call.
+// privilege as inviting (so an admin of another role set, or no one at all,
+// is refused), one mail per allowed resend, a cooldown kept per role set and
+// address after that (revoking and re-inviting does not reset it), and nothing
+// at all for a consumed or unauthorized call.
 // The platform invitation itself is never touched by a resend.
 import {
   delay,
+  postGraphqlRaw,
   TestScenarioConfig,
   TestScenarioFactory,
   TestUser,
@@ -36,6 +39,19 @@ const uniqueId = UniqueIDGenerator.getID();
 const message = 'Hello, feel free to join our community!';
 
 let baseScenario: OrganizationWithSpaceModel;
+// A second, unrelated space whose only admin is a different persona: it holds
+// the invite privilege on its own role set and none on the first one.
+let otherScenario: OrganizationWithSpaceModel;
+const otherScenarioConfig: TestScenarioConfig = {
+  name: 'invitation-external-resend-other',
+  space: {
+    collaboration: { addTutorialCallouts: false },
+    community: {
+      admins: [TestUser.SUBSPACE_ADMIN],
+      members: [TestUser.SUBSPACE_ADMIN],
+    },
+  },
+};
 const scenarioConfig: TestScenarioConfig = {
   name: 'invitation-external-resend',
   space: {
@@ -52,6 +68,8 @@ const createdInvitationIds: string[] = [];
 
 beforeAll(async () => {
   baseScenario = await TestScenarioFactory.createBaseScenario(scenarioConfig);
+  otherScenario =
+    await TestScenarioFactory.createBaseScenario(otherScenarioConfig);
 });
 
 afterAll(async () => {
@@ -62,6 +80,7 @@ afterAll(async () => {
     await deleteUser(id).catch(() => undefined);
   }
   await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
+  await TestScenarioFactory.cleanUpBaseScenario(otherScenario);
 });
 
 /** Invites a fresh, unregistered address on the Space and tracks the row. */
@@ -143,6 +162,123 @@ describe('Resend a Space email invitation', () => {
           /Authorization: unable to grant/
         );
         expect(res?.data?.resendPlatformInvitation).toBeUndefined();
+      },
+      email,
+      0
+    );
+    expect(mails, mailSummary(mails)).toHaveLength(0);
+  });
+
+  test('US3-AS3: the cooldown belongs to the address on the role set — revoke and re-invite, then an immediate resend, is still throttled', async () => {
+    const { email, platformInvitationId } = await inviteNewAddress('reinvite');
+
+    // The first resend claims the window for this address on this role set.
+    const claimed = await mailsToAfter(
+      async () => {
+        const res = await resendPlatformInvitation(
+          platformInvitationId,
+          TestUser.SPACE_ADMIN
+        );
+        expect(res?.error).toBeUndefined();
+      },
+      email,
+      1
+    );
+    expect(claimed, mailSummary(claimed)).toHaveLength(1);
+
+    // Revoke the invitation and invite the same address again: a new
+    // invitation, and its creation mail goes out at once.
+    const revoked = await deleteExternalInvitation(
+      platformInvitationId,
+      TestUser.SPACE_ADMIN
+    );
+    expect(revoked?.error).toBeUndefined();
+    const reinvited = await inviteForEntryRoleOnRoleSet(
+      baseScenario.space.community.roleSetId,
+      [],
+      [email],
+      message,
+      [RoleName.Member],
+      TestUser.SPACE_ADMIN
+    );
+    const newInvitationId =
+      getSingleInvitationResult(reinvited)?.platformInvitation?.id ?? '';
+    expect(newInvitationId.length).toEqual(36);
+    expect(newInvitationId).not.toEqual(platformInvitationId);
+    createdInvitationIds.push(newInvitationId);
+    await drainMailsTo(email);
+
+    // Resending the new invitation immediately meets the window the first
+    // resend claimed: refused with the dedicated code, nothing sent.
+    const mails = await mailsToAfter(
+      async () => {
+        const res = await resendPlatformInvitation(
+          newInvitationId,
+          TestUser.SPACE_ADMIN
+        );
+        expect(getErrorCode(res)).toEqual(THROTTLED_CODE);
+        expect(res?.data?.resendPlatformInvitation).toBeUndefined();
+      },
+      email,
+      0
+    );
+    expect(mails, mailSummary(mails)).toHaveLength(0);
+  });
+
+  test('US3-AS5: an admin of a different space — invite privilege on another role set only — cannot resend this one: authorization error, no mail', async () => {
+    const { email, platformInvitationId } =
+      await inviteNewAddress('otheradmin');
+
+    // Sanity: that persona really is an admin elsewhere, able to invite on
+    // its own role set.
+    const own = await inviteForEntryRoleOnRoleSet(
+      otherScenario.space.community.roleSetId,
+      [],
+      [`own-${uniqueId}@example.com`],
+      message,
+      [RoleName.Member],
+      TestUser.SUBSPACE_ADMIN
+    );
+    expect(own?.error).toBeUndefined();
+    const ownInvitationId =
+      getSingleInvitationResult(own)?.platformInvitation?.id ?? '';
+    expect(ownInvitationId.length).toEqual(36);
+    createdInvitationIds.push(ownInvitationId);
+
+    const mails = await mailsToAfter(
+      async () => {
+        const res = await resendPlatformInvitation(
+          platformInvitationId,
+          TestUser.SUBSPACE_ADMIN
+        );
+        expect(res?.error?.errors?.[0]?.message).toMatch(
+          /Authorization: unable to grant/
+        );
+        expect(res?.data?.resendPlatformInvitation).toBeUndefined();
+      },
+      email,
+      0
+    );
+    expect(mails, mailSummary(mails)).toHaveLength(0);
+  });
+
+  test('US3-AS5: an anonymous caller cannot resend — authorization error, no mail', async () => {
+    const { email, platformInvitationId } = await inviteNewAddress('anon');
+
+    const mails = await mailsToAfter(
+      async () => {
+        const res = await postGraphqlRaw<{
+          resendPlatformInvitation: { id: string };
+        }>(
+          'mutation($id: UUID!) { resendPlatformInvitation(resendData: { ID: $id }) { id } }',
+          { variables: { id: platformInvitationId } }
+        );
+        expect(res.body.errors?.length, res.raw).toBeGreaterThan(0);
+        expect(res.raw).toMatch(/Authorization|authenticat|unauthori/i);
+        expect(
+          res.body.data?.resendPlatformInvitation ?? undefined
+        ).toBeUndefined();
+        expect(res.raw).not.toContain(THROTTLED_CODE);
       },
       email,
       0
