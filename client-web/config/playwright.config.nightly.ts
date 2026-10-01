@@ -223,9 +223,9 @@ export default defineConfig({
       // US1 default rendering and US2 admin configuration. Each file seeds its own Space
       // through TestScenarioFactory, opens one isolated context per persona, runs serially
       // (describe.configure) and deletes the subspace, Space and organization in afterAll.
-      // Trace/video are off at file level (admin sessions). US2-AS6 is deliberately red on
-      // alkem-io/server#6571 (QA-PF-01) and is the file's last test, so it skips nothing;
-      // with this config's retries the serial group re-runs while it stays red.
+      // Trace/video are off at file level (admin sessions). US2-AS6 is `test.skip`ped pending
+      // alkem-io/server#6571 (QA-PF-01) and stays the file's last test, so that once it is
+      // un-skipped a red run cannot skip the tests after it in serial mode.
       name: 'Sidebar widgets',
       testMatch: ['/sidebar-widgets/*.spec.ts'],
       timeout: 120_000,

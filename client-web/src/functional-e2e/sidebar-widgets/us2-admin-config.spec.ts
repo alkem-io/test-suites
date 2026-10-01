@@ -4,8 +4,8 @@
 // read the result back both through the API (persistence) and as a plain member (rendering).
 // AS5-AS7 are API-level contract checks (authorization, validation, partial update).
 // The fixture is seeded through the API (sidebar-widgets.helpers.ts).
-// AS6 is the LAST test on purpose: it is red on a confirmed product defect, and in serial
-// mode a failure would otherwise skip every test after it.
+// AS6 is the LAST test on purpose: it is `test.skip`ped until alkem-io/server#6571 ships, and
+// once un-skipped a red run would otherwise skip every test after it in serial mode.
 
 import { test, expect, type BrowserContext, type Page } from '@playwright/test';
 import { getGraphqlClient, TestUserManager } from '@alkemio/tests-lib';
