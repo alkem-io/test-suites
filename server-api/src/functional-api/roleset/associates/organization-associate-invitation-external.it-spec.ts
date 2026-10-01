@@ -306,19 +306,22 @@ describe('Invite an unregistered address to an organization (US1)', () => {
     expect(res?.error).toBeUndefined();
     const results = allResults(res);
 
-    // Exactly one outcome per distinct invitee: P is reached by pick AND by
-    // typed address and is invited once.
-    expect(results).toHaveLength(3);
+    // One outcome per chip: P is reached by pick AND by typed address, so P's
+    // typed address gets its own outcome echoing the same single invitation.
+    expect(results).toHaveLength(4);
     expect(
       results.map(r => r.type),
       JSON.stringify(results)
     ).not.toContain(RoleSetInvitationResultType.ExtraRoleLimitReached);
 
     const forPicked = results.filter(r => r.invitedActorID === picked.id);
-    expect(forPicked).toHaveLength(1);
-    expect(forPicked[0].type).toEqual(
-      RoleSetInvitationResultType.InvitedToRoleSet
-    );
+    expect(forPicked).toHaveLength(2);
+    for (const r of forPicked) {
+      expect(r.type).toEqual(RoleSetInvitationResultType.InvitedToRoleSet);
+    }
+    expect(forPicked.map(r => r.invitedEmail)).toContain(picked.email);
+    // P is invited once: both outcomes carry the same invitation.
+    expect(new Set(forPicked.map(r => r.invitation?.id)).size).toEqual(1);
 
     const forRegistered = results.filter(
       r => r.invitedActorID === registered.id
