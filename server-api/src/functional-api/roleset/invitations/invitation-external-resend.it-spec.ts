@@ -63,6 +63,13 @@ const scenarioConfig: TestScenarioConfig = {
   },
 };
 
+// The resend cooldown the stack runs with, as exported to this run (the server
+// reads the same variable; five minutes when unset).
+const configuredResendWindowMs = (): number => {
+  const configured = Number(process.env.PLATFORM_INVITATION_RESEND_COOLDOWN_SECONDS);
+  return (Number.isInteger(configured) && configured >= 1 ? configured : 300) * 1000;
+};
+
 const createdUserIds: string[] = [];
 const createdInvitationIds: string[] = [];
 
@@ -169,60 +176,81 @@ describe('Resend a Space email invitation', () => {
     expect(mails, mailSummary(mails)).toHaveLength(0);
   });
 
-  test('US3-AS3: the cooldown belongs to the address on the role set — revoke and re-invite, then an immediate resend, is still throttled', async () => {
+  test('US3-AS3: the cooldown belongs to the address on the role set — revoke and re-invite, then an immediate resend, is still throttled', async ctx => {
     const { email, platformInvitationId } = await inviteNewAddress('reinvite');
+    let newInvitationId = '';
+    let throttledAt = 0;
+    let startedAt = 0;
+    let throttledCode: string | undefined;
+    let resent: unknown;
 
-    // The first resend claims the window for this address on this role set.
-    const claimed = await mailsToAfter(
+    // The whole claim, revoke, re-invite, resend sequence runs back to back
+    // inside one mail-counting window: the cooldown may be as short as a few
+    // seconds on a stack booted for the resend-window checks, so no step waits
+    // on mail in between. Exactly two mails are expected in total — the first
+    // resend and the re-invitation's creation mail; a successful second resend
+    // would add a third.
+    const mails = await mailsToAfter(
       async () => {
-        const res = await resendPlatformInvitation(
+        // The first resend claims the window for this address on this role set.
+        startedAt = Date.now();
+        const first = await resendPlatformInvitation(
           platformInvitationId,
           TestUser.SPACE_ADMIN
         );
-        expect(res?.error).toBeUndefined();
-      },
-      email,
-      1
-    );
-    expect(claimed, mailSummary(claimed)).toHaveLength(1);
+        expect(first?.error).toBeUndefined();
 
-    // Revoke the invitation and invite the same address again: a new
-    // invitation, and its creation mail goes out at once.
-    const revoked = await deleteExternalInvitation(
-      platformInvitationId,
-      TestUser.SPACE_ADMIN
-    );
-    expect(revoked?.error).toBeUndefined();
-    const reinvited = await inviteForEntryRoleOnRoleSet(
-      baseScenario.space.community.roleSetId,
-      [],
-      [email],
-      message,
-      [RoleName.Member],
-      TestUser.SPACE_ADMIN
-    );
-    const newInvitationId =
-      getSingleInvitationResult(reinvited)?.platformInvitation?.id ?? '';
-    expect(newInvitationId.length).toEqual(36);
-    expect(newInvitationId).not.toEqual(platformInvitationId);
-    createdInvitationIds.push(newInvitationId);
-    await drainMailsTo(email);
+        // Revoke the invitation and invite the same address again: a new
+        // invitation, and its creation mail goes out at once.
+        const revoked = await deleteExternalInvitation(
+          platformInvitationId,
+          TestUser.SPACE_ADMIN
+        );
+        expect(revoked?.error).toBeUndefined();
+        const reinvited = await inviteForEntryRoleOnRoleSet(
+          baseScenario.space.community.roleSetId,
+          [],
+          [email],
+          message,
+          [RoleName.Member],
+          TestUser.SPACE_ADMIN
+        );
+        newInvitationId =
+          getSingleInvitationResult(reinvited)?.platformInvitation?.id ?? '';
+        expect(newInvitationId.length).toEqual(36);
+        expect(newInvitationId).not.toEqual(platformInvitationId);
+        createdInvitationIds.push(newInvitationId);
 
-    // Resending the new invitation immediately meets the window the first
-    // resend claimed: refused with the dedicated code, nothing sent.
-    const mails = await mailsToAfter(
-      async () => {
+        // Resending the new invitation immediately meets the window the first
+        // resend claimed.
         const res = await resendPlatformInvitation(
           newInvitationId,
           TestUser.SPACE_ADMIN
         );
-        expect(getErrorCode(res)).toEqual(THROTTLED_CODE);
-        expect(res?.data?.resendPlatformInvitation).toBeUndefined();
+        throttledAt = Date.now();
+        throttledCode = getErrorCode(res);
+        resent = res?.data?.resendPlatformInvitation;
       },
       email,
-      0
+      2
     );
-    expect(mails, mailSummary(mails)).toHaveLength(0);
+
+    // A window shorter than the steps above lapses before the second resend,
+    // which then rightly succeeds; that run cannot tell a lost cooldown from an
+    // expired one.
+    if (
+      throttledCode !== THROTTLED_CODE &&
+      throttledAt - startedAt >= configuredResendWindowMs()
+    ) {
+      ctx.skip(
+        `the resend cooldown (${configuredResendWindowMs() / 1000} s) lapsed during the revoke and re-invite steps; run with a longer PLATFORM_INVITATION_RESEND_COOLDOWN_SECONDS`
+      );
+    }
+
+    // Refused with the dedicated code, nothing sent for it.
+    expect(throttledCode).toEqual(THROTTLED_CODE);
+    expect(resent).toBeUndefined();
+    expect(mails, mailSummary(mails)).toHaveLength(2);
   });
 
   test('US3-AS5: an admin of a different space — invite privilege on another role set only — cannot resend this one: authorization error, no mail', async () => {
