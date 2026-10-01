@@ -117,7 +117,8 @@ orgAdminTest('US3-AS1: Resend A then B back-to-back dispatches both; a second Re
   }));
   console.info(`[US3-AS1] error toast element: ${JSON.stringify(toastInfo)}`);
   expect(await settledMailsTo(emailA)).toHaveLength(aAfterFirst);
+  // Entries are pushed once each response body has been read; wait for the third.
+  await expect.poll(() => graphqlResends.length, { timeout: 10_000 }).toBe(3);
   expect(graphqlResends.filter(r => r.ok)).toHaveLength(2);
-  expect(graphqlResends).toHaveLength(3);
   expect(toastInfo.ancestorTypes.join(' ') + toastInfo.cls).toMatch(/error|destructive|danger/i);
 });

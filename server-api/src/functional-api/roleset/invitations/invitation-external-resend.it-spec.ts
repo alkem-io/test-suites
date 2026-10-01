@@ -115,7 +115,14 @@ describe('Resend a Space email invitation', () => {
     const { email, platformInvitationId } = await inviteNewAddress('resend');
     const before = await lookupPlatformInvitation(platformInvitationId);
 
-    const firstMails = await mailsToAfter(
+    // Both resends run back to back inside one mail-counting window: the
+    // cooldown may be as short as a few seconds on a stack booted for the
+    // resend-window checks, so the second call must not wait on the first
+    // one's mail. The first is accepted, the immediate second is refused with
+    // the dedicated code, and exactly one mail goes out for the pair.
+    let throttledCode: string | undefined;
+    let resentAgain: unknown;
+    const mails = await mailsToAfter(
       async () => {
         const res = await resendPlatformInvitation(
           platformInvitationId,
@@ -125,35 +132,36 @@ describe('Resend a Space email invitation', () => {
         expect(res?.data?.resendPlatformInvitation.id).toEqual(
           platformInvitationId
         );
+        const again = await resendPlatformInvitation(
+          platformInvitationId,
+          TestUser.SPACE_ADMIN
+        );
+        throttledCode = getErrorCode(again);
+        resentAgain = again?.data?.resendPlatformInvitation;
       },
       email,
       1
     );
-    expect(firstMails, mailSummary(firstMails)).toHaveLength(1);
-    expect(firstMails[0].subject).toEqual(
+    expect(throttledCode).toEqual(THROTTLED_CODE);
+    expect(resentAgain).toBeUndefined();
+    expect(mails, mailSummary(mails)).toHaveLength(1);
+    expect(mails[0].subject).toEqual(
       `Invitation to join ${baseScenario.space.about.profile.displayName}`
     );
 
     // The invitation record is exactly what it was.
     const after = await lookupPlatformInvitation(platformInvitationId);
+    expect(before?.error).toBeUndefined();
+    expect(before?.data?.lookup?.platformInvitation?.id).toEqual(
+      platformInvitationId
+    );
+    expect(after?.error).toBeUndefined();
+    expect(after?.data?.lookup?.platformInvitation?.id).toEqual(
+      platformInvitationId
+    );
     expect(after?.data?.lookup?.platformInvitation).toEqual(
       before?.data?.lookup?.platformInvitation
     );
-
-    // Immediately again: refused with the dedicated code, nothing sent.
-    const secondMails = await mailsToAfter(
-      async () => {
-        const res = await resendPlatformInvitation(
-          platformInvitationId,
-          TestUser.SPACE_ADMIN
-        );
-        expect(getErrorCode(res)).toEqual(THROTTLED_CODE);
-        expect(res?.data?.resendPlatformInvitation).toBeUndefined();
-      },
-      email,
-      0
-    );
-    expect(secondMails, mailSummary(secondMails)).toHaveLength(0);
   });
 
   test('US3-AS5: a plain Space member cannot resend — authorization error, no mail', async () => {
