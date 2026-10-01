@@ -154,8 +154,12 @@ export async function seedSidebarSpace(name: string): Promise<SidebarFixture> {
     ),
     'GetSpaceCalendarId'
   );
-  const calendarID =
-    calendar.lookup.space?.collaboration.timeline.calendar.id ?? '';
+  const calendarID = calendar.lookup.space?.collaboration.timeline.calendar.id;
+  if (!calendarID) {
+    throw new Error(
+      `GetSpaceCalendarId returned no calendar for space ${scenario.space.id}`
+    );
+  }
   ok(
     await graphqlErrorWrapper(
       (t: string | undefined) =>
