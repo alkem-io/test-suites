@@ -134,12 +134,35 @@ root — look in all three before concluding an area has none.
 - **E2E auth:** the session fixture (`fixtures/authenticated-session.fixture.ts`) logs each persona
   in **once per run** and persists storage state to `.auth/`. Use it. The one area that legitimately
   does not is `messaging-notifications`, which needs brand-new accounts for settings defaults.
+- **`createAuthenticatedSessionFixture` is a module singleton.** Its context and page are
+  module-level, so two instances in one file share **one page**, and the last
+  `setupAuthentication` wins. In test-suites#615 the "admin" steps silently ran as the member.
+  For two personas in one test, open one context per persona from a stored session
+  (`ensurePersonaState` + `browser.newContext({ storageState })`), as
+  `sidebar-widgets/sidebar-widgets.helpers.ts › openPersona` does. 2026-10-01.
+- **Teardown must delete subspaces first, and must not swallow errors.** The server refuses to
+  delete an L0 Space that still has a subspace. `lib` `deleteSpace` *returns* `{ error }` rather
+  than throwing, and `TestScenarioFactory.cleanUpBaseScenario` logs and continues. A UI walk that
+  deleted only the L0 behind `.catch(() => {})` leaked a Space on every run, until the hosting
+  account showed "Capacity reached" and no Space could be created at all. Reuse
+  `subspaces-callout.helpers.ts › deleteFixtureTree` with a delete that throws on `error`.
+  2026-10-01.
 - **Positive controls.** Every "must not appear" assertion in this repo needs a paired assertion
   proving the thing exists somewhere — otherwise a misspelt fixture, a stale index, or a renamed
   operation makes the negative pass forever. This has bitten cross-Space search scoping and
   request-count assertions alike.
 
 ### Client-web / CRD locator conventions
+
+- **CRD sidebar labels and section headings are CSS `uppercase`.** `innerText` returns the
+  *rendered* text ("SPACE LEADS"), so `innerText().indexOf('Space Leads')` is -1. Assert order on
+  role/name locators via `compareDocumentPosition` (`sidebar-widgets.helpers.ts ›
+  expectInDocumentOrder`). Role and text locators match the DOM text and are unaffected.
+  2026-10-01.
+- **Space Settings > Layout columns have no accessible name.** Each column is a
+  `[data-slot="card"]` whose title is a `span[title]`, and every column's menu button is named
+  "Column actions". Scope with `locator('[data-slot="card"]').filter({ has: getByTitle(name, { exact: true }) })`.
+  2026-10-01.
 
 - The Space sidebar is `<nav aria-label="Space sidebar">`; a **sub**space sidebar is
   `<aside aria-label="SubSpace sidebar">` (role `complementary`), so one `getByRole('navigation')`
