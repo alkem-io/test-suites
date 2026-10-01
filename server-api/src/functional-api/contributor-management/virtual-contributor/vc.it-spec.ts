@@ -75,6 +75,13 @@ const scenarioConfig: TestScenarioConfig = {
         policy: CommunityMembershipPolicy.Applications,
       },
     },
+    // The last test reads the role-set's invitations AND applications as
+    // SPACE_ADMIN. Since server#6502 `RoleSet.applications` requires GRANT, so
+    // that user must really be this space's admin — it used to have no role here
+    // and only got away with it while the field was readable by anyone.
+    community: {
+      admins: [TestUser.SPACE_ADMIN],
+    },
   },
 };
 

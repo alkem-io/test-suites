@@ -175,14 +175,18 @@ describe('Application', () => {
 
   test('should remove application', async () => {
     // Arrange
+    // The pending-applications list is readable only by those who decide
+    // applications (GRANT holders), so it is counted as the platform admin,
+    // never as the applying QA_USER — a plain member's read is refused and
+    // the optional chains below would silently compare undefined to undefined.
     const applicationsBeforeCreateDelete =
       await getRoleSetInvitationsApplications(
-        baseScenario.space.community.roleSetId,
-        TestUser.QA_USER
+        baseScenario.space.community.roleSetId
       );
     const countAppBeforeCreateDelete =
       applicationsBeforeCreateDelete?.data?.lookup?.roleSet?.applications
         .length;
+    expect(countAppBeforeCreateDelete).toEqual(expect.any(Number));
     applicationData = await createApplication(
       baseScenario.space.community.roleSetId,
       TestUser.QA_USER
@@ -196,13 +200,13 @@ describe('Application', () => {
     const getApp = userAppsData?.data?.me?.communityApplications;
     const applicationsAfterCreateDelete =
       await getRoleSetInvitationsApplications(
-        baseScenario.space.community.roleSetId,
-        TestUser.QA_USER
+        baseScenario.space.community.roleSetId
       );
     const countAppAfterCreateDelete =
       applicationsAfterCreateDelete?.data?.lookup?.roleSet?.applications.length;
 
     // Assert
+    expect(countAppAfterCreateDelete).toEqual(expect.any(Number));
     expect(countAppAfterCreateDelete).toEqual(countAppBeforeCreateDelete);
     expect(getApp).not.toEqual(
       expect.arrayContaining([
@@ -274,6 +278,7 @@ describe('Application', () => {
     const countAppBeforeCreateDelete =
       applicationsBeforeCreateDelete?.data?.lookup?.roleSet?.applications
         .length;
+    expect(countAppBeforeCreateDelete).toEqual(expect.any(Number));
 
     applicationData = await createApplication(
       baseScenario.space.community.roleSetId,
@@ -293,6 +298,7 @@ describe('Application', () => {
       applicationsAfterCreateDelete?.data?.lookup?.roleSet?.applications.length;
 
     // Assert
+    expect(countAppAfterCreateDelete).toEqual(expect.any(Number));
     expect(countAppAfterCreateDelete).toEqual(countAppBeforeCreateDelete);
 
     // Fully re-register the user so subsequent tests work

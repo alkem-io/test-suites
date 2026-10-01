@@ -39,7 +39,7 @@ The Alkemio platform provides a multi-level space hierarchy (Space → Subspace 
   - Once a user is a member of a space, they can find its direct child subspaces under the `Subspaces` section in the subheader navigation on the space page.
   - **When a Level 0 space is public**, non-members can also see Level 1 subspaces and apply to them directly (see "Public Parent Space" section below).
 - **Membership is NOT Inherited**: Being a member of a space does NOT automatically make you a member of its child spaces (subspaces). Users must apply separately to each level and have their application approved by an admin for that specific space level. For example, being a member of Level 0 (Space) allows you to see Level 1 (Subspace) cards, but you still need to apply and be approved to become a member of Level 1.
-- **L0 Apply Button Location**: The Apply button for Level 0 spaces is available **only on the About page** (`/about`), NOT on the space dashboard. Non-members of a private space are redirected to `/about` automatically. On a public space, the dashboard renders without an Apply button.
+- **L0 Apply Button Location**: The About page (`/about`) always carries the Apply button for a Level 0 space. On a **public** L0 space the dashboard shows exactly one enabled Apply button to a non-member as well (per-tab sidebar widget, client-web#10194, since `0.163.0`). Non-members of a **private** space are redirected to `/about` automatically and never see the dashboard.
 - **Non-Parent-Member Subspace Applications**: When a Level 0 space is public and has `allowSubspaceAdminsToInviteMembers` enabled, users who are NOT members of the parent space can apply directly to Level 1 subspaces. The client trusts the server-granted `ROLESET_ENTRY_ROLE_APPLY` privilege instead of inferring eligibility from parent membership.
 
 ---
@@ -53,6 +53,7 @@ The Alkemio platform provides a multi-level space hierarchy (Space → Subspace 
 - For improved performance, sign in users once in `test.beforeAll()` or `test.beforeEach()` hooks and reuse the authenticated browser page/context across multiple tests within the same describe block, rather than signing in separately for each test.
 - Tests should create the base scenario using `TestScenarioFactory.createBaseScenario()` in `test.beforeAll()` and use the returned `baseScenario` object to access dynamic space properties (e.g., `baseScenario.space.about.profile.displayName`, `baseScenario.space.nameId`) instead of hardcoded values.
 - Remember to clean up the scenario in `test.afterAll()` using `TestScenarioFactory.cleanUpBaseScenario(baseScenario)`.
+- The 2.x cases assert an in-app notification in the bell dialog. The fixed personas are shared with the server-api suite, whose notification specs leave email + in-app switched OFF, and the nightly runs server-api before Playwright on the same database. Each spec therefore turns the two settings it depends on back ON in `test.beforeAll()` (`space.admin.communityApplicationReceived` for the admin, `user.membership.spaceCommunityJoined` for the applicant) via `enableApplicationNotifications()` from `helpers/notification-settings.helper.ts`, and restores the previous values in `test.afterAll()`. Do not rely on the server defaults.
 
 ---
 
@@ -60,7 +61,7 @@ The Alkemio platform provides a multi-level space hierarchy (Space → Subspace 
 
 ### 1. Space Discovery and Privacy Indicators
 
-#### 1.0 Apply Button NOT Shown on L0 Space Dashboard
+#### 1.0 Apply Button Shown to a Non-Member on a Public L0 Space Dashboard
 
 **Prerequisites:**
 
@@ -68,20 +69,23 @@ The Alkemio platform provides a multi-level space hierarchy (Space → Subspace 
 
 **Steps:**
 
-1. Navigate to Level 0 Space dashboard (use `baseScenario.space.nameId`, NOT `/about`)
-2. Verify no "Apply" button is visible on the dashboard
+1. Create a dedicated **public** Level 0 space (`publicScenario`, the shared `baseScenario` space is private and would redirect) and navigate to its dashboard (`publicScenario.space.nameId`, NOT `/about`)
+2. Verify exactly one enabled "Apply" button is visible on the dashboard (the sidebar action)
 
 **Expected Results:**
 
-- The dashboard renders (or redirects to `/about` for private spaces)
-- No Apply button is present on the dashboard page
-- Apply is only available via the About page (`/about`)
+- The dashboard renders for the non-member
+- One enabled Apply button is present, rendered by the per-tab sidebar widget
+- The About page (`/about`) keeps its own Apply button — 1.1 below still applies from there
 
 **Notes:**
 
-- Per PR #10000, the Apply button was removed from the L0 space dashboard
-- On a private space, `CrdSpaceProtectedRoutes` redirects non-members to `/about`
-- On a public space, the dashboard renders without an Apply button
+- History: PR #10000 removed the Apply button from the L0 dashboard, and this case originally
+  asserted its absence. client-web#10194 (per-tab sidebar widgets, shipped in `0.163.0`) brought it
+  back as a sidebar action for non-members, so the assertion was inverted on 10.09 during the
+  Release 75 verification. Keep this case in step with the sidebar-widget behaviour, not with #10000.
+- On a private space, `CrdSpaceProtectedRoutes` still redirects non-members to `/about`; that path
+  is not exercised here.
 
 #### 1.1 Submit Application to Level 0 Space
 

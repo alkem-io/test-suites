@@ -1,14 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import {
   deleteMailSlurperMails,
-  getMailsData,
   TestScenarioConfig,
   TestScenarioFactory,
   TestUser,
   TestUserManager,
 } from '@alkemio/tests-lib';
 
-import { delay } from '@alkemio/tests-lib';
 import {
   createWhiteboardCalloutOnCalloutsSet,
   updateCalloutVisibility,
@@ -21,7 +19,7 @@ import {
   CalloutVisibility,
 } from '@alkemio/tests-lib/core/generated/alkemio-schema';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
-import { notif } from '../../notification.helpers';
+import { notif, getMailsDataSettled } from '../../notification.helpers';
 
 let spaceWhiteboardId = '';
 let whiteboardCollectionSpaceCalloutId = '';
@@ -277,8 +275,7 @@ describe('Notifications - whiteboard', () => {
     );
     spaceWhiteboardId =
       res?.data?.createContributionOnCallout?.whiteboard?.id ?? '';
-    await delay(1000);
-    const mails = await getMailsData();
+    const mails = await getMailsDataSettled(7);
 
     expect(mails[1]).toEqual(7);
 
@@ -345,8 +342,7 @@ describe('Notifications - whiteboard', () => {
     spaceWhiteboardId =
       res?.data?.createContributionOnCallout?.whiteboard?.id ?? '';
 
-    await delay(1000);
-    const mails = await getMailsData();
+    const mails = await getMailsDataSettled(7);
 
     expect(mails[1]).toEqual(7);
 
@@ -411,8 +407,7 @@ describe('Notifications - whiteboard', () => {
     spaceWhiteboardId =
       res?.data?.createContributionOnCallout?.whiteboard?.id ?? '';
 
-    await delay(1000);
-    const mails = await getMailsData();
+    const mails = await getMailsDataSettled(7);
 
     expect(mails[1]).toEqual(7);
 
@@ -488,8 +483,7 @@ describe('Notifications - whiteboard', () => {
     spaceWhiteboardId =
       res?.data?.createContributionOnCallout?.whiteboard?.id ?? '';
 
-    await delay(1000);
-    const mails = await getMailsData();
+    const mails = await getMailsDataSettled(4);
 
     expect(mails[1]).toEqual(4);
 
@@ -580,8 +574,7 @@ describe('Notifications - whiteboard', () => {
       res?.data?.createContributionOnCallout?.whiteboard?.id ?? '';
 
     // Assert
-    await delay(1500);
-    const mails = await getMailsData();
+    const mails = await getMailsDataSettled(0);
 
     expect(mails[1]).toEqual(0);
   });

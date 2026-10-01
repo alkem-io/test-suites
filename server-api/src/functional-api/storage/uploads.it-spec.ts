@@ -97,7 +97,12 @@ describe('Upload document', () => {
   });
 
   afterAll(async () => {
-    await deleteReferenceOnProfile(refId);
+    // 'file is available after releted reference is deleted' removes the shared
+    // reference as part of its scenario and clears refId; skip the re-delete so
+    // the run log stays free of expected ENTITY_NOT_FOUND noise.
+    if (refId) {
+      await deleteReferenceOnProfile(refId);
+    }
   });
 
   describe('DDT upload all file types', () => {
@@ -327,10 +332,12 @@ describe('Upload document', () => {
     documentId = getLastPartOfUrl(documentEndPoint);
 
     await deleteReferenceOnProfile(refId);
+    refId = '';
 
     const resDelete = await deleteDocument(documentId, TestUser.GLOBAL_ADMIN);
 
     expect(resDelete?.data?.deleteDocument.id).toEqual(documentId);
+    documentId = '';
   });
 });
 
@@ -350,7 +357,7 @@ describe('Upload visual tests', () => {
 
   test('upload visual', async () => {
     const res = await uploadImageOnVisual(
-      path.join(__dirname, 'files-to-upload', '190-410.jpg'),
+      path.join(__dirname, 'files-to-upload', '200-square.jpg'),
       visualId
     );
     documentEndPoint = res.data?.uploadImageOnVisual?.uri || 'not found';
@@ -361,12 +368,12 @@ describe('Upload visual tests', () => {
 
   test('upload same visual twice', async () => {
     await uploadImageOnVisual(
-      path.join(__dirname, 'files-to-upload', '190-410.jpg'),
+      path.join(__dirname, 'files-to-upload', '200-square.jpg'),
       visualId
     );
 
     const res = await uploadImageOnVisual(
-      path.join(__dirname, 'files-to-upload', '190-410.jpg'),
+      path.join(__dirname, 'files-to-upload', '200-square.jpg'),
       visualId
     );
     documentEndPoint = res?.data?.uploadImageOnVisual?.uri || 'not found';
@@ -398,7 +405,7 @@ describe('Upload visual tests', () => {
   if (!isCI) {
     test('read uploaded visual', async () => {
       const res = await uploadImageOnVisual(
-        path.join(__dirname, 'files-to-upload', '190-410.jpg'),
+        path.join(__dirname, 'files-to-upload', '200-square.jpg'),
         visualId,
         TestUser.GLOBAL_ADMIN
       );
@@ -414,7 +421,7 @@ describe('Upload visual tests', () => {
   } else {
     test.skip('read uploaded visual', async () => {
       const res = await uploadImageOnVisual(
-        path.join(__dirname, 'files-to-upload', '190-410.jpg'),
+        path.join(__dirname, 'files-to-upload', '200-square.jpg'),
         visualId,
         TestUser.GLOBAL_ADMIN
       );

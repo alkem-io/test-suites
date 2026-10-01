@@ -13,6 +13,7 @@ import { randomBytes } from 'crypto';
 import { PostTemplateForm } from './forms/template-form.models';
 import { fillPostTemplateForm } from './forms/post-template-form';
 import { verifyPostTemplate } from './verify/post-template-verify';
+import { sectionAddNewButton } from './section-helpers';
 
 // Create the authenticated fixture with a unique storage state name for this test suite
 const { test, setupAuthentication, teardownAuthentication } =
@@ -106,7 +107,7 @@ test.describe.serial('Post Templates', () => {
     ).toBeVisible();
 
     // Open the "Add new" menu for the Post templates section (4th section)
-    await page.getByRole('button', { name: 'Add new' }).nth(3).click();
+    await sectionAddNewButton(page, /^Post templates/).click();
     await page.getByRole('menuitem', { name: 'Create new' }).click();
 
     // Wait for the Post Template creation dialog to appear

@@ -136,8 +136,15 @@ describe('Invitations', () => {
     }
     expect(invitationId.length).toEqual(36);
 
-    // Reject and Archive Space invitation
-    await eventOnRoleSetInvitation(invitationId, 'REJECT');
+    // Reject as the INVITEE: declining is the invited actor's own consent
+    // decision and requires the invite-accept privilege, which a global admin
+    // (this helper's default persona) does not hold on someone else's
+    // invitation — they can only revoke it. ARCHIVE stays on UPDATE.
+    await eventOnRoleSetInvitation(
+      invitationId,
+      'REJECT',
+      TestUser.NON_SPACE_MEMBER
+    );
     await eventOnRoleSetInvitation(invitationId, 'ARCHIVE');
 
     // Act
@@ -560,13 +567,21 @@ describe('Invitations-flows', () => {
 });
 
 describe('Invitations - Authorization', () => {
+  const invited = 'invited';
   const authErrorUpdateInvitationMessage =
     "Authorization: unable to grant 'update' privilege: event on invitation";
+  // ACCEPT and REJECT are scoped tighter than the generic UPDATE privilege:
+  // `eventOnInvitation` checks UPDATE first and then, for those two events
+  // only, ROLESET_ENTRY_ROLE_INVITE_ACCEPT — the invited actor's own consent
+  // privilege. So which message a persona sees depends on which check it fails
+  // FIRST: someone with no rights over the invitation at all still fails on
+  // 'update', while a platform or Space admin (who does hold UPDATE) now gets
+  // past that and fails on the consent privilege instead.
+  const authErrorAcceptInvitationMessage =
+    "Authorization: unable to grant 'roleset-entry-role-invite-accept' privilege";
   const authErrorCreateInvitationMessage =
     "Authorization: unable to grant 'roleset-entry-role-invite' privilege";
   const accepted = 'accepted';
-  const invited = 'invited';
-
   afterEach(async () => {
     await removeRoleFromUser(
       TestUserManager.users.nonSpaceMember.id,
@@ -578,12 +593,17 @@ describe('Invitations - Authorization', () => {
   });
   describe('DDT rights to change invitation state', () => {
     // Arrange
+    // Only the INVITEE can accept. Accepting is the invited actor's consent
+    // decision, so a global admin, platform support or the inviting Space admin
+    // — none of whom hold ROLESET_ENTRY_ROLE_INVITE_ACCEPT on someone else's
+    // invitation — can no longer do it on their behalf; they revoke instead.
+    // They previously reached the lifecycle machine, which refused the
+    // transition silently and returned the unchanged 'invited' state; they now
+    // get an explicit authorization error, which is why those three rows moved
+    // to the error table below.
     test.each`
       user                             | text
       ${TestUser.NON_SPACE_MEMBER}     | ${accepted}
-      ${TestUser.GLOBAL_ADMIN}         | ${invited}
-      ${TestUser.GLOBAL_SUPPORT_ADMIN} | ${invited}
-      ${TestUser.SPACE_ADMIN}          | ${invited}
     `(
       'User: "$user", should get: "$text" to update invitation of another user',
       async ({ user, text }) => {
@@ -614,9 +634,12 @@ describe('Invitations - Authorization', () => {
     );
 
     test.each`
-      user                     | text
-      ${TestUser.SPACE_MEMBER} | ${authErrorUpdateInvitationMessage}
-      ${TestUser.QA_USER}      | ${authErrorUpdateInvitationMessage}
+      user                             | text
+      ${TestUser.SPACE_MEMBER}         | ${authErrorUpdateInvitationMessage}
+      ${TestUser.QA_USER}              | ${authErrorAcceptInvitationMessage}
+      ${TestUser.GLOBAL_ADMIN}         | ${authErrorAcceptInvitationMessage}
+      ${TestUser.GLOBAL_SUPPORT_ADMIN} | ${authErrorAcceptInvitationMessage}
+      ${TestUser.SPACE_ADMIN}          | ${authErrorAcceptInvitationMessage}
     `(
       'User: "$user", should get Error: "$text" to update invitation of another user',
       async ({ user, text }) => {

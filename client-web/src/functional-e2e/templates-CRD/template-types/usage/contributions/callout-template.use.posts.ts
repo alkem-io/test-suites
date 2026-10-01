@@ -41,11 +41,12 @@ export const verifyCalloutContributionPosts = async (
     );
   }
 
-  // Use exact match to disambiguate from `Add link`, `Add another reference`,
-  // `Add Post` (top-level callout-creation button at the page level), etc.
+  // Exact-but-case-insensitive: CRD renamed the card button "Add post" ->
+  // "Add Post"; the anchored regex still excludes `Add link`, `Add another
+  // reference`, etc. Page-level collisions are handled by the
+  // calloutContainer scope.
   const addContributionButton = calloutContainer.getByRole('button', {
-    name: 'Add post',
-    exact: true,
+    name: /^add post$/i,
   });
 
   if (!templateData.responseOptions.adminsCanAdd) {

@@ -30,6 +30,11 @@ query lookupProfileVisuals($ID: UUID!) {
         id
         name
         uri
+        minWidth
+        minHeight
+        maxWidth
+        maxHeight
+        aspectRatio
         authorization {
           myPrivileges
         }

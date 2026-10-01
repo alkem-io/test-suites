@@ -51,7 +51,6 @@ export type Scalars = {
     input: import("graphql-upload").FileUpload;
     output: import("graphql-upload").FileUpload;
   };
-  WhiteboardContent: { input: any; output: any };
 };
 
 export type Apm = {
@@ -115,6 +114,32 @@ export type AccountInnovationPacksArgs = {
 export type AccountAuthorizationResetInput = {
   /** The identifier of the Account whose Authorization Policy should be reset. */
   accountID: Scalars["UUID"]["input"];
+};
+
+/** One item blocking a user from deleting their own account — a space, virtual contributor, innovation pack, innovation hub, or an organization the user is the sole owner of. */
+export type AccountDeletionBlocker = {
+  displayName: Scalars["String"]["output"];
+  kind: AccountDeletionBlockerKind;
+  resourceID: Scalars["UUID"]["output"];
+  /** True when the user can resolve the blocker alone, via the existing account-resources page. False for a sole-owned organization — ownership must be handed over, or support contacted. */
+  selfResolvable: Scalars["Boolean"]["output"];
+  /** Client-navigable URL of the blocking resource, when one exists. */
+  url?: Maybe<Scalars["String"]["output"]>;
+};
+
+/** The kind of resource blocking a user from deleting their own account. */
+export enum AccountDeletionBlockerKind {
+  AccountInnovationHub = "ACCOUNT_INNOVATION_HUB",
+  AccountInnovationPack = "ACCOUNT_INNOVATION_PACK",
+  AccountSpace = "ACCOUNT_SPACE",
+  AccountVirtualContributor = "ACCOUNT_VIRTUAL_CONTRIBUTOR",
+  SoleOrganizationOwner = "SOLE_ORGANIZATION_OWNER",
+}
+
+/** Accurate per-kind total, independent of whether the itemized blocker list was truncated. */
+export type AccountDeletionBlockerTotal = {
+  kind: AccountDeletionBlockerKind;
+  total: Scalars["Int"]["output"];
 };
 
 export type AccountLicensePlan = {
@@ -647,6 +672,17 @@ export type AddVisualToMediaGalleryInput = {
   visualType: VisualType;
 };
 
+export type AdminCommunicationReconcileForumHierarchyInput = {
+  /** Report-only when true (the default): compute drift and write nothing. Set false to apply the two-phase convergence. */
+  dryRun?: Scalars["Boolean"]["input"];
+  /** Cumulative adapter write budget for this invocation. When exceeded mid-pass the remaining parents are reported failed rather than attempted, and a re-invocation converges the rest. */
+  maxOperations?: Scalars["Int"]["input"];
+  /** When applying (dryRun=false), also remove extra edges whose child no longer resolves to any Alkemio room (a deleted discussion’s ghost edge). Never removes a space. */
+  pruneUnknown?: Scalars["Boolean"]["input"];
+  /** Opt-in repair of the room-side m.space.parent pointer on touched children, under its own separate and lower write budget. Off by default: the underlying operation can admin-join the bot into rooms people read. */
+  repairRoomParentPointers?: Scalars["Boolean"]["input"];
+};
+
 export type AdminRevokeMcpApiKeyInput = {
   keyID: Scalars["UUID"]["input"];
   /** Owner of the key. Required — it scopes the revoke and the audit subject. */
@@ -886,6 +922,10 @@ export enum AuthorizationCredential {
   AccountAdmin = "ACCOUNT_ADMIN",
   AssistantAccess = "ASSISTANT_ACCESS",
   BetaTester = "BETA_TESTER",
+  FeatureBetaTester = "FEATURE_BETA_TESTER",
+  FeatureOrganizationCreator = "FEATURE_ORGANIZATION_CREATOR",
+  FeatureVcCampaign = "FEATURE_VC_CAMPAIGN",
+  FeatureVirtualAssistant = "FEATURE_VIRTUAL_ASSISTANT",
   GlobalAdmin = "GLOBAL_ADMIN",
   GlobalAnonymous = "GLOBAL_ANONYMOUS",
   GlobalCommunityRead = "GLOBAL_COMMUNITY_READ",
@@ -899,7 +939,16 @@ export enum AuthorizationCredential {
   OrganizationAdmin = "ORGANIZATION_ADMIN",
   OrganizationAssociate = "ORGANIZATION_ASSOCIATE",
   OrganizationOwner = "ORGANIZATION_OWNER",
+  PlatformAuditReader = "PLATFORM_AUDIT_READER",
+  PlatformContentFullAccess = "PLATFORM_CONTENT_FULL_ACCESS",
+  PlatformLicenseManager = "PLATFORM_LICENSE_MANAGER",
   PlatformOperationsAdmin = "PLATFORM_OPERATIONS_ADMIN",
+  PlatformResourceAdmin = "PLATFORM_RESOURCE_ADMIN",
+  PlatformRolesAdmin = "PLATFORM_ROLES_ADMIN",
+  PlatformSettingsAdmin = "PLATFORM_SETTINGS_ADMIN",
+  PlatformSpacesReader = "PLATFORM_SPACES_READER",
+  PlatformSupport = "PLATFORM_SUPPORT",
+  PlatformUsersAdmin = "PLATFORM_USERS_ADMIN",
   SpaceAdmin = "SPACE_ADMIN",
   SpaceLead = "SPACE_LEAD",
   SpaceMember = "SPACE_MEMBER",
@@ -1012,6 +1061,9 @@ export enum AuthorizationPrivilege {
   CreateVirtual = "CREATE_VIRTUAL",
   CreateWhiteboard = "CREATE_WHITEBOARD",
   Delete = "DELETE",
+  DeleteOrganization = "DELETE_ORGANIZATION",
+  FeatureRoleAssign = "FEATURE_ROLE_ASSIGN",
+  FeatureRoleHoldersRead = "FEATURE_ROLE_HOLDERS_READ",
   FileDelete = "FILE_DELETE",
   FileUpload = "FILE_UPLOAD",
   Grant = "GRANT",
@@ -1021,8 +1073,15 @@ export enum AuthorizationPrivilege {
   MovePost = "MOVE_POST",
   MoveTask = "MOVE_TASK",
   PlatformAdmin = "PLATFORM_ADMIN",
+  PlatformAuditRead = "PLATFORM_AUDIT_READ",
+  PlatformContentFullAccess = "PLATFORM_CONTENT_FULL_ACCESS",
+  PlatformForumManage = "PLATFORM_FORUM_MANAGE",
   PlatformOperationsAdmin = "PLATFORM_OPERATIONS_ADMIN",
+  PlatformRoleHoldersRead = "PLATFORM_ROLE_HOLDERS_READ",
   PlatformSettingsAdmin = "PLATFORM_SETTINGS_ADMIN",
+  PlatformSupportListsRead = "PLATFORM_SUPPORT_LISTS_READ",
+  PlatformSupportOrgResources = "PLATFORM_SUPPORT_ORG_RESOURCES",
+  PlatformUsersAdmin = "PLATFORM_USERS_ADMIN",
   PublicShare = "PUBLIC_SHARE",
   Read = "READ",
   ReadAbout = "READ_ABOUT",
@@ -1041,12 +1100,14 @@ export enum AuthorizationPrivilege {
   RolesetEntryRoleInvite = "ROLESET_ENTRY_ROLE_INVITE",
   RolesetEntryRoleInviteAccept = "ROLESET_ENTRY_ROLE_INVITE_ACCEPT",
   RolesetEntryRoleJoin = "ROLESET_ENTRY_ROLE_JOIN",
+  SetServiceProfile = "SET_SERVICE_PROFILE",
   TransferResourceAccept = "TRANSFER_RESOURCE_ACCEPT",
   TransferResourceOffer = "TRANSFER_RESOURCE_OFFER",
   Update = "UPDATE",
   UpdateCalloutPublisher = "UPDATE_CALLOUT_PUBLISHER",
   UpdateContent = "UPDATE_CONTENT",
   UpdateInnovationFlow = "UPDATE_INNOVATION_FLOW",
+  UpdateNameid = "UPDATE_NAMEID",
 }
 
 export type Calendar = {
@@ -1215,8 +1276,8 @@ export type CalloutContributionDefaults = {
   postDescription?: Maybe<Scalars["Markdown"]["output"]>;
   /** The date at which the entity was last updated. */
   updatedDate: Scalars["DateTime"]["output"];
-  /** The default whiteboard content for whiteboard responses. */
-  whiteboardContent?: Maybe<Scalars["WhiteboardContent"]["output"]>;
+  /** Whether this Callout has a non-empty default for Whiteboard contributions. */
+  whiteboardContentAvailable: Scalars["Boolean"]["output"];
 };
 
 export enum CalloutContributionType {
@@ -1387,6 +1448,13 @@ export type CalloutSettingsFraming = {
   contributors?: Maybe<CalloutContributorsSettings>;
   /** Manual-selection settings for collection callouts (CONTRIBUTORS or SPACES). Absent / null ⇒ AUTO (full computed set). */
   selection?: Maybe<CalloutSelectionSettings>;
+  /** Card-variant settings for a Subspaces collection callout. Present only on SPACES callouts. Absent / null ⇒ COMPACT. */
+  spaces?: Maybe<CalloutSpacesSettings>;
+};
+
+export type CalloutSpacesSettings = {
+  /** The card variant to render for each subspace: COMPACT (default) or EXPANDED. */
+  cardVariant: SpaceCollectionCardVariant;
 };
 
 export enum CalloutVisibility {
@@ -1566,6 +1634,8 @@ export type CollaborationMigrationResult = {
   flaggedDocuments: Array<CollaborationMigrationIssue>;
   migrated: Scalars["Int"]["output"];
   total: Scalars["Int"]["output"];
+  /** Legacy Whiteboard contribution defaults without a complete owning Callout path. */
+  unattached: Scalars["Int"]["output"];
 };
 
 export type Communication = {
@@ -2051,17 +2121,27 @@ export type CreateCalloutContributionData = {
 export type CreateCalloutContributionDefaultsData = {
   /** The default title to use for new contributions. */
   defaultDisplayName?: Maybe<Scalars["String"]["output"]>;
+  /** Use a server-owned live Whiteboard contribution-default draft. Mutually exclusive with either source field. */
+  draftWhiteboardID?: Maybe<Scalars["UUID"]["output"]>;
   /** The default description to use for new Post contributions. */
   postDescription?: Maybe<Scalars["Markdown"]["output"]>;
-  whiteboardContent?: Maybe<Scalars["WhiteboardContent"]["output"]>;
+  /** Copy the internal Whiteboard contribution default from this source Callout. Mutually exclusive with sourceWhiteboardID. */
+  sourceCalloutID?: Maybe<Scalars["UUID"]["output"]>;
+  /** Seed the default from an existing Whiteboard. The server copies its content and media into the owning Callout bucket; the source id is not persisted. */
+  sourceWhiteboardID?: Maybe<Scalars["UUID"]["output"]>;
 };
 
 export type CreateCalloutContributionDefaultsInput = {
   /** The default title to use for new contributions. */
   defaultDisplayName?: InputMaybe<Scalars["String"]["input"]>;
+  /** Use a server-owned live Whiteboard contribution-default draft. Mutually exclusive with either source field. */
+  draftWhiteboardID?: InputMaybe<Scalars["UUID"]["input"]>;
   /** The default description to use for new Post contributions. */
   postDescription?: InputMaybe<Scalars["Markdown"]["input"]>;
-  whiteboardContent?: InputMaybe<Scalars["WhiteboardContent"]["input"]>;
+  /** Copy the internal Whiteboard contribution default from this source Callout. Mutually exclusive with sourceWhiteboardID. */
+  sourceCalloutID?: InputMaybe<Scalars["UUID"]["input"]>;
+  /** Seed the default from an existing Whiteboard. The server copies its content and media into the owning Callout bucket; the source id is not persisted. */
+  sourceWhiteboardID?: InputMaybe<Scalars["UUID"]["input"]>;
 };
 
 export type CreateCalloutContributionInput = {
@@ -2247,6 +2327,8 @@ export type CreateCalloutSettingsFramingData = {
   contributors?: Maybe<CreateCalloutContributorsSettingsData>;
   /** Manual-selection settings for collection callouts (CONTRIBUTORS or SPACES). Provide only when framing.type ∈ {CONTRIBUTORS, SPACES}. */
   selection?: Maybe<CreateCalloutSelectionSettingsData>;
+  /** Card-variant settings. Provide only when framing.type = SPACES. */
+  spaces?: Maybe<CreateCalloutSpacesSettingsData>;
 };
 
 export type CreateCalloutSettingsFramingInput = {
@@ -2256,6 +2338,8 @@ export type CreateCalloutSettingsFramingInput = {
   contributors?: InputMaybe<CreateCalloutContributorsSettingsInput>;
   /** Manual-selection settings for collection callouts (CONTRIBUTORS or SPACES). Provide only when framing.type ∈ {CONTRIBUTORS, SPACES}. */
   selection?: InputMaybe<CreateCalloutSelectionSettingsInput>;
+  /** Card-variant settings. Provide only when framing.type = SPACES. */
+  spaces?: InputMaybe<CreateCalloutSpacesSettingsInput>;
 };
 
 export type CreateCalloutSettingsInput = {
@@ -2263,6 +2347,16 @@ export type CreateCalloutSettingsInput = {
   framing?: InputMaybe<CreateCalloutSettingsFramingInput>;
   /** Visibility of the Callout. Defaults to PUBLISHED. */
   visibility?: InputMaybe<CalloutVisibility>;
+};
+
+export type CreateCalloutSpacesSettingsData = {
+  /** The card variant (COMPACT or EXPANDED). Defaults to COMPACT when omitted. */
+  cardVariant?: Maybe<SpaceCollectionCardVariant>;
+};
+
+export type CreateCalloutSpacesSettingsInput = {
+  /** The card variant (COMPACT or EXPANDED). Defaults to COMPACT when omitted. */
+  cardVariant?: InputMaybe<SpaceCollectionCardVariant>;
 };
 
 export type CreateCalloutTaskBoardData = {
@@ -2367,6 +2461,8 @@ export type CreateContributionOnCalloutInput = {
   link?: InputMaybe<CreateLinkInput>;
   memo?: InputMaybe<CreateMemoInput>;
   post?: InputMaybe<CreatePostInput>;
+  /** Send the space-member and space-admin contribution notifications. Defaults to true; only an explicit false suppresses. The activity log entry is written regardless. */
+  sendNotification?: InputMaybe<Scalars["Boolean"]["input"]>;
   /** The sort order to assign to this Contribution. */
   sortOrder?: InputMaybe<Scalars["Float"]["input"]>;
   /** The Tasks board column this task starts in. Only valid when the parent Callout is a Tasks board; defaults to the first column. */
@@ -2423,7 +2519,7 @@ export type CreateInnovationFlowStateSettingsData = {
   descriptionDisplayMode?: Maybe<CalloutDescriptionDisplayMode>;
   /** Optional. Whether Posts in this State show publish details in the feed. Defaults to true when omitted. */
   showPublishDetails?: Maybe<Scalars["Boolean"]["output"]>;
-  /** Optional. Ordered sidebar widgets; defaults to [INTENT, CREATE_POST, APPLICATION_BUTTON, INDEX] when omitted. */
+  /** Optional. Ordered sidebar widgets; defaults to [INTENT, CREATE_POST, APPLICATION_BUTTON, SEARCH, INDEX] when omitted. */
   sidebar?: Maybe<Array<SidebarWidget>>;
   /** Optional. Whether the phase is shown in member-facing navigation. Defaults to true when omitted. */
   visible?: Maybe<Scalars["Boolean"]["output"]>;
@@ -2436,7 +2532,7 @@ export type CreateInnovationFlowStateSettingsInput = {
   descriptionDisplayMode?: InputMaybe<CalloutDescriptionDisplayMode>;
   /** Optional. Whether Posts in this State show publish details in the feed. Defaults to true when omitted. */
   showPublishDetails?: InputMaybe<Scalars["Boolean"]["input"]>;
-  /** Optional. Ordered sidebar widgets; defaults to [INTENT, CREATE_POST, APPLICATION_BUTTON, INDEX] when omitted. */
+  /** Optional. Ordered sidebar widgets; defaults to [INTENT, CREATE_POST, APPLICATION_BUTTON, SEARCH, INDEX] when omitted. */
   sidebar?: InputMaybe<Array<SidebarWidget>>;
   /** Optional. Whether the phase is shown in member-facing navigation. Defaults to true when omitted. */
   visible?: InputMaybe<Scalars["Boolean"]["input"]>;
@@ -2861,24 +2957,38 @@ export type CreateVisualOnProfileInput = {
 };
 
 export type CreateWhiteboardData = {
-  content?: Maybe<Scalars["WhiteboardContent"]["output"]>;
+  /** Use a server-owned live Whiteboard draft as the trusted source for final materialization. Mutually exclusive with sourceWhiteboardID. */
+  draftWhiteboardID?: Maybe<Scalars["UUID"]["output"]>;
   /** A readable identifier, unique within the containing scope. */
   nameID?: Maybe<Scalars["NameID"]["output"]>;
   /** The preview settings for the whiteboard. */
   previewSettings?: Maybe<CreateWhiteboardPreviewSettingsData>;
   profile?: Maybe<CreateProfileData>;
-  /** Seed the new Whiteboard from the stored content of an existing Whiteboard (server-side copy). Mutually exclusive with `content` — supply exactly one. */
+  /** Seed the new Whiteboard from the stored content of an existing Whiteboard through a server-side authorized copy. Omission creates an empty Whiteboard. */
   sourceWhiteboardID?: Maybe<Scalars["UUID"]["output"]>;
 };
 
+export type CreateWhiteboardDraftOnCalloutsSetInput = {
+  calloutsSetID: Scalars["UUID"]["input"];
+  sourceCalloutID?: InputMaybe<Scalars["UUID"]["input"]>;
+  sourceWhiteboardID?: InputMaybe<Scalars["UUID"]["input"]>;
+};
+
+export type CreateWhiteboardDraftOnTemplatesSetInput = {
+  sourceCalloutID?: InputMaybe<Scalars["UUID"]["input"]>;
+  sourceWhiteboardID?: InputMaybe<Scalars["UUID"]["input"]>;
+  templatesSetID: Scalars["UUID"]["input"];
+};
+
 export type CreateWhiteboardInput = {
-  content?: InputMaybe<Scalars["WhiteboardContent"]["input"]>;
+  /** Use a server-owned live Whiteboard draft as the trusted source for final materialization. Mutually exclusive with sourceWhiteboardID. */
+  draftWhiteboardID?: InputMaybe<Scalars["UUID"]["input"]>;
   /** A readable identifier, unique within the containing scope. */
   nameID?: InputMaybe<Scalars["NameID"]["input"]>;
   /** The preview settings for the whiteboard. */
   previewSettings?: InputMaybe<CreateWhiteboardPreviewSettingsInput>;
   profile?: InputMaybe<CreateProfileInput>;
-  /** Seed the new Whiteboard from the stored content of an existing Whiteboard (server-side copy). Mutually exclusive with `content` — supply exactly one. */
+  /** Seed the new Whiteboard from the stored content of an existing Whiteboard through a server-side authorized copy. Omission creates an empty Whiteboard. */
   sourceWhiteboardID?: InputMaybe<Scalars["UUID"]["input"]>;
 };
 
@@ -2935,6 +3045,10 @@ export enum CredentialType {
   AccountLicensePlus = "ACCOUNT_LICENSE_PLUS",
   AssistantAccess = "ASSISTANT_ACCESS",
   BetaTester = "BETA_TESTER",
+  FeatureBetaTester = "FEATURE_BETA_TESTER",
+  FeatureOrganizationCreator = "FEATURE_ORGANIZATION_CREATOR",
+  FeatureVcCampaign = "FEATURE_VC_CAMPAIGN",
+  FeatureVirtualAssistant = "FEATURE_VIRTUAL_ASSISTANT",
   GlobalAdmin = "GLOBAL_ADMIN",
   GlobalAnonymous = "GLOBAL_ANONYMOUS",
   GlobalCommunityRead = "GLOBAL_COMMUNITY_READ",
@@ -2948,9 +3062,19 @@ export enum CredentialType {
   OrganizationAdmin = "ORGANIZATION_ADMIN",
   OrganizationAssociate = "ORGANIZATION_ASSOCIATE",
   OrganizationOwner = "ORGANIZATION_OWNER",
+  PlatformAuditReader = "PLATFORM_AUDIT_READER",
+  PlatformContentFullAccess = "PLATFORM_CONTENT_FULL_ACCESS",
+  PlatformLicenseManager = "PLATFORM_LICENSE_MANAGER",
   PlatformOperationsAdmin = "PLATFORM_OPERATIONS_ADMIN",
+  PlatformResourceAdmin = "PLATFORM_RESOURCE_ADMIN",
+  PlatformRolesAdmin = "PLATFORM_ROLES_ADMIN",
+  PlatformSettingsAdmin = "PLATFORM_SETTINGS_ADMIN",
+  PlatformSpacesReader = "PLATFORM_SPACES_READER",
+  PlatformSupport = "PLATFORM_SUPPORT",
+  PlatformUsersAdmin = "PLATFORM_USERS_ADMIN",
   SpaceAdmin = "SPACE_ADMIN",
   SpaceFeatureMemoMultiUser = "SPACE_FEATURE_MEMO_MULTI_USER",
+  SpaceFeatureMemoSigning = "SPACE_FEATURE_MEMO_SIGNING",
   SpaceFeatureOfficeDocuments = "SPACE_FEATURE_OFFICE_DOCUMENTS",
   SpaceFeatureSaveAsTemplate = "SPACE_FEATURE_SAVE_AS_TEMPLATE",
   SpaceFeatureVirtualContributors = "SPACE_FEATURE_VIRTUAL_CONTRIBUTORS",
@@ -3314,9 +3438,11 @@ export enum ForumDiscussionCategory {
   ChallengeCentric = "CHALLENGE_CENTRIC",
   CommunityBuilding = "COMMUNITY_BUILDING",
   Help = "HELP",
+  Newsletter = "NEWSLETTER",
   Other = "OTHER",
   PlatformFunctionalities = "PLATFORM_FUNCTIONALITIES",
   Releases = "RELEASES",
+  TipsAndTricks = "TIPS_AND_TRICKS",
 }
 
 export enum ForumDiscussionPrivacy {
@@ -3324,6 +3450,11 @@ export enum ForumDiscussionPrivacy {
   Author = "AUTHOR",
   Public = "PUBLIC",
 }
+
+export type ForumRemoveDiscussionCategoryInput = {
+  /** The category to remove from the platform Forum active category list. */
+  category: ForumDiscussionCategory;
+};
 
 export type Geo = {
   /** Is the geo functionality enabled. */
@@ -3434,6 +3565,32 @@ export type InAppNotificationPayload = {
   type: NotificationEventPayload;
 };
 
+export type InAppNotificationPayloadOrganizationAssociateActor =
+  InAppNotificationPayload & {
+    /** The user who applied, responded to an invitation, or joined. */
+    actor?: Maybe<Actor>;
+    /** The underlying application — set for the three application events. */
+    application?: Maybe<Application>;
+    /** Offered extra roles that could not be granted (set only on the accepted-invitation event). */
+    extraRolesWithheld?: Maybe<Array<RoleName>>;
+    /** The underlying invitation — set for the two response events. */
+    invitation?: Maybe<Invitation>;
+    /** The organization the actor is associated with. */
+    organization?: Maybe<Organization>;
+    /** The payload type. */
+    type: NotificationEventPayload;
+  };
+
+export type InAppNotificationPayloadOrganizationAssociateInvitation =
+  InAppNotificationPayload & {
+    /** The underlying invitation — offered role(s) and message. Null once the invitation record no longer resolves (e.g. the organization was deleted). */
+    invitation?: Maybe<Invitation>;
+    /** The organization the invitation is for. */
+    organization?: Maybe<Organization>;
+    /** The payload type. */
+    type: NotificationEventPayload;
+  };
+
 export type InAppNotificationPayloadOrganizationMessageDirect =
   InAppNotificationPayload & {
     /** The message content. */
@@ -3495,10 +3652,6 @@ export type InAppNotificationPayloadPlatformUserProfileRemoved =
   InAppNotificationPayload & {
     /** The payload type. */
     type: NotificationEventPayload;
-    /** The display name of the User that was removed. */
-    userDisplayName: Scalars["String"]["output"];
-    /** The email of the User that was removed. */
-    userEmail: Scalars["String"]["output"];
   };
 
 export type InAppNotificationPayloadSpace = InAppNotificationPayload & {
@@ -3632,6 +3785,10 @@ export type InAppNotificationPayloadSpaceCommunityCalendarEventComment =
 
 export type InAppNotificationPayloadSpaceCommunityInvitation =
   InAppNotificationPayload & {
+    /** The underlying invitation — role(s) offered, whether the parent Space is also joined, and the Spaces that will be joined on acceptance. */
+    invitation?: Maybe<Invitation>;
+    /** The organization the invitation is for, when the invitee is an organization. */
+    organization?: Maybe<Organization>;
     /** The Space that the invitation is for. */
     space: Space;
     /** The payload type. */
@@ -3844,6 +4001,8 @@ export type Invitation = {
   createdDate: Scalars["DateTime"]["output"];
   /** Additional roles to assign to the Actor, in addition to the entry Role. */
   extraRoles: Array<RoleName>;
+  /** Offered extra roles that could not be granted when this invitation was accepted (organizations only, cap consumed in the meantime). Transient: set only on the object returned by the accept mutation, never persisted, and null everywhere else. */
+  extraRolesWithheld?: Maybe<Array<RoleName>>;
   /** The ID of the entity */
   id: Scalars["UUID"]["output"];
   /** Whether to also add the invited actor to the parent community. */
@@ -3853,6 +4012,8 @@ export type Invitation = {
   lifecycle: Lifecycle;
   /** The next events of this Lifecycle. */
   nextEvents: Array<Scalars["String"]["output"]>;
+  /** The Spaces that will be joined if this invitation is accepted, root Space first; null when the caller may not answer this invitation on the invited Actor's behalf. */
+  spacesToJoinOnAccept?: Maybe<Array<SpaceJoinPreview>>;
   /** The current state of this Lifecycle. */
   state: Scalars["String"]["output"];
   /** Optional language the inviter expects the invitee to prefer; recorded per invitation. */
@@ -4046,6 +4207,7 @@ export enum LicenseEntitlementType {
   AccountSpacePremium = "ACCOUNT_SPACE_PREMIUM",
   AccountVirtualContributor = "ACCOUNT_VIRTUAL_CONTRIBUTOR",
   SpaceFlagMemoMultiUser = "SPACE_FLAG_MEMO_MULTI_USER",
+  SpaceFlagMemoSigning = "SPACE_FLAG_MEMO_SIGNING",
   SpaceFlagOfficeDocuments = "SPACE_FLAG_OFFICE_DOCUMENTS",
   SpaceFlagSaveAsTemplate = "SPACE_FLAG_SAVE_AS_TEMPLATE",
   SpaceFlagVirtualContributorAccess = "SPACE_FLAG_VIRTUAL_CONTRIBUTOR_ACCESS",
@@ -4128,6 +4290,7 @@ export type Licensing = {
 export enum LicensingCredentialBasedCredentialType {
   AccountLicensePlus = "ACCOUNT_LICENSE_PLUS",
   SpaceFeatureMemoMultiUser = "SPACE_FEATURE_MEMO_MULTI_USER",
+  SpaceFeatureMemoSigning = "SPACE_FEATURE_MEMO_SIGNING",
   SpaceFeatureOfficeDocuments = "SPACE_FEATURE_OFFICE_DOCUMENTS",
   SpaceFeatureSaveAsTemplate = "SPACE_FEATURE_SAVE_AS_TEMPLATE",
   SpaceFeatureVirtualContributors = "SPACE_FEATURE_VIRTUAL_CONTRIBUTORS",
@@ -4695,12 +4858,30 @@ export enum McpApiKeyStatus {
   Revoked = "REVOKED",
 }
 
+/** Self-scoped pre-flight read for account deletion: whether the calling user can delete their own account right now, and if not, exactly what blocks them. Computed by the same predicate the deleteUser mutation's self-branch guard uses, so the two can never drift. Not gated on session freshness — see sessionFresh. */
+export type MeAccountDeletionStatus = {
+  /** Itemized blockers, capped at 25. */
+  blockers: Array<AccountDeletionBlocker>;
+  /** True iff no blockers exist for the self branch. */
+  canDelete: Scalars["Boolean"]["output"];
+  /** True when the account carries a stored external billing linkage. Surfaced for transparency and captured in the audit record on deletion — never a blocker. */
+  externalSubscriptionLinked: Scalars["Boolean"]["output"];
+  /** True iff the calling session currently satisfies the privileged freshness window. Advisory for client routing; the deleteUser mutation re-enforces this authoritatively at mutation time. */
+  sessionFresh: Scalars["Boolean"]["output"];
+  /** Accurate per-kind totals, independent of truncation. */
+  totals: Array<AccountDeletionBlockerTotal>;
+  /** True when the blocker list above was truncated at the cap. */
+  truncated: Scalars["Boolean"]["output"];
+};
+
 export type MeConversationsResult = {
   /** All conversations (direct and group) for the current authenticated user. Client handles categorization by room type and member actor types. */
   conversations: Array<Conversation>;
 };
 
 export type MeQueryResults = {
+  /** Self-scoped pre-flight read for account deletion: whether the calling user can delete their own account right now, and if not, exactly what blocks them. */
+  accountDeletion: MeAccountDeletionStatus;
   /** The community applications current authenticated user can act on. */
   communityApplications: Array<CommunityApplicationResult>;
   /** The invitations the current authenticated user can act on. */
@@ -4719,6 +4900,12 @@ export type MeQueryResults = {
   notifications: PaginatedInAppNotifications;
   /** The total number of unread notifications for the current authenticated user across all notification types. */
   notificationsUnreadCount: Scalars["Float"]["output"];
+  /** The current authenticated user's own pending organization applications. */
+  organizationApplications: Array<OrganizationApplicationResult>;
+  /** The current authenticated user's own pending organization invitations. */
+  organizationInvitations: Array<OrganizationInvitationResult>;
+  /** The number of the current authenticated user's own pending organization invitations. */
+  organizationInvitationsCount: Scalars["Float"]["output"];
   /** The Spaces the current user is a member of as a flat list. */
   spaceMembershipsFlat: Array<CommunityMembershipResult>;
   /** The hierarchy of the Spaces the current user is a member. */
@@ -4749,6 +4936,18 @@ export type MeQueryResultsNotificationsArgs = {
   filter?: InputMaybe<NotificationEventsFilterInput>;
   first?: InputMaybe<Scalars["Int"]["input"]>;
   last?: InputMaybe<Scalars["Int"]["input"]>;
+};
+
+export type MeQueryResultsOrganizationApplicationsArgs = {
+  states?: InputMaybe<Array<Scalars["String"]["input"]>>;
+};
+
+export type MeQueryResultsOrganizationInvitationsArgs = {
+  states?: InputMaybe<Array<Scalars["String"]["input"]>>;
+};
+
+export type MeQueryResultsOrganizationInvitationsCountArgs = {
+  states?: InputMaybe<Array<Scalars["String"]["input"]>>;
 };
 
 export type MeQueryResultsSpaceMembershipsHierarchicalArgs = {
@@ -4790,8 +4989,55 @@ export type Memo = {
   nameID: Scalars["NameID"]["output"];
   /** The Profile for this Memo. */
   profile: Profile;
+  /** Signed copies of this Memo visible to readers of the Memo. */
+  signatures: Array<MemoSignature>;
   /** The date at which the entity was last updated. */
   updatedDate: Scalars["DateTime"]["output"];
+};
+
+export type MemoSignature = {
+  /** The Alkemio user who initiated this signed copy. */
+  actor?: Maybe<User>;
+  /** The date at which the entity was created. */
+  createdDate: Scalars["DateTime"]["output"];
+  /** The immutable PDF produced for this signed copy. */
+  document?: Maybe<Document>;
+  /** The ID of the entity */
+  id: Scalars["UUID"]["output"];
+  /** The terminal outcome of this Memo signing attempt. */
+  status: SigningAttemptStatus;
+  /** The date at which the entity was last updated. */
+  updatedDate: Scalars["DateTime"]["output"];
+};
+
+export enum MemoSignatureVerificationStatus {
+  Invalid = "INVALID",
+  Unavailable = "UNAVAILABLE",
+  Verified = "VERIFIED",
+}
+
+export type MemoSignatureVerifyInput = {
+  /** The signed Memo attempt to verify. */
+  attemptID: Scalars["UUID"]["input"];
+};
+
+export type MemoSigningContinueInput = {
+  /** The prepared signing attempt to start. */
+  attemptID: Scalars["UUID"]["input"];
+};
+
+export type MemoSigningContinueResult = {
+  authorizeUrl: Scalars["String"]["output"];
+};
+
+export type MemoSigningPrepareInput = {
+  /** The Memo to prepare for signing. */
+  memoID: Scalars["UUID"]["input"];
+};
+
+export type MemoSigningPrepareResult = {
+  attemptId: Scalars["UUID"]["output"];
+  previewUrl: Scalars["String"]["output"];
 };
 
 /** A message that was sent in a chat room */
@@ -4988,12 +5234,16 @@ export type Mutation = {
   adminCommunicationEnsureAccessToCommunications: Scalars["Boolean"]["output"];
   /** Create rooms for legacy conversations that were created without one (from lazy room creation era). */
   adminCommunicationMigrateOrphanedConversations: CommunicationAdminMigrateRoomsResult;
+  /** Reconcile the Matrix space hierarchy that mirrors the forum against the current forum/discussion state — report-first (dryRun defaults true), scoped to categories + the forum space, never a delete. Returns a task id; the pass runs asynchronously and the task completes with the summary. */
+  adminCommunicationReconcileForumHierarchy: Scalars["String"]["output"];
   /** Remove an orphaned room from messaging platform. */
   adminCommunicationRemoveOrphanedRoom: Scalars["Boolean"]["output"];
   /** Synchronize all Alkemio spaces into the Matrix space hierarchy. Idempotent — safe to call multiple times. */
   adminCommunicationSyncSpaceHierarchy: Scalars["Boolean"]["output"];
   /** Allow updating the state flags of a particular rule. */
   adminCommunicationUpdateRoomState: Scalars["Boolean"]["output"];
+  /** Removes one category from the platform Forum's active discussionCategories list. Refuses while any Discussion still carries the category. Idempotent for an already-absent category. The enum member is never removed. Requires PLATFORM_FORUM_MANAGE. Audited (PLATFORM_OPERATIONS). */
+  adminForumRemoveDiscussionCategory: Forum;
   /** Delete a Kratos identity by ID. */
   adminIdentityDeleteKratosIdentity: Scalars["Boolean"]["output"];
   /** Prunes InAppNotifications according to the platform defined criteria. The effects of the pruning are returned. */
@@ -5004,7 +5254,7 @@ export type Mutation = {
   adminLicensePolicyDeleteCredentialRule: LicensingCredentialBasedPolicyCredentialRule;
   /** Updates a CredentialRule on the LicensePolicy. */
   adminLicensePolicyUpdateCredentialRule: LicensingCredentialBasedPolicyCredentialRule;
-  /** Platform admin: revoke a named user's MCP API key. Idempotent. */
+  /** Platform Users Admin: revoke a named user's MCP API key. Idempotent. */
   adminRevokeMcpApiKey: McpApiKey;
   /** Ingests new data into Elasticsearch from scratch. This will delete all existing data and ingest new data from the source. This is an admin only operation. */
   adminSearchIngestFromScratch: Scalars["String"]["output"];
@@ -5014,9 +5264,9 @@ export type Mutation = {
   adminUpdateGeoLocationData: Scalars["Boolean"]["output"];
   /** Remove the Kratos account associated with the specified User. Note: the Users profile on the platform is not deleted. */
   adminUserAccountDelete: User;
-  /** Change a user's login email synchronously, acting as a platform administrator. The admin is responsible for verifying the subject user's identity out-of-band — the platform does NOT send a confirmation message to the new mailbox and does NOT require the new mailbox to prove ownership. Validates uniqueness, commits Kratos → Alkemio with bounded retry, invalidates the subject's existing sessions, and sends a security-signal notification to the old address. Requires PLATFORM_ADMIN. */
+  /** Change a user's login email synchronously, acting as a platform administrator. The admin is responsible for verifying the subject user's identity out-of-band — the platform does NOT send a confirmation message to the new mailbox and does NOT require the new mailbox to prove ownership. Validates uniqueness, commits Kratos → Alkemio with bounded retry, invalidates the subject's existing sessions, and sends a security-signal notification to the old address. Requires PLATFORM_USERS_ADMIN. */
   adminUserEmailChange: UserEmailChangeResult;
-  /** Reconcile an outstanding drift-detected state for a subject user by force-aligning Alkemio and Kratos to a canonical email chosen by the admin. Requires PLATFORM_ADMIN. */
+  /** Reconcile an outstanding drift-detected state for a subject user by force-aligning Alkemio and Kratos to a canonical email chosen by the admin. Requires PLATFORM_USERS_ADMIN. */
   adminUserEmailChangeDriftResolve: UserEmailChangeResult;
   /** Create a test customer on wingback. */
   adminWingbackCreateTestCustomer: Scalars["String"]["output"];
@@ -5038,6 +5288,8 @@ export type Mutation = {
   assignLicensePlanToAccount: Account;
   /** Assign the specified LicensePlan to a Space. */
   assignLicensePlanToSpace: Space;
+  /** Assigns an Organization to a role on the Platform. */
+  assignPlatformRoleToOrganization: Organization;
   /** Assigns a User to a role on the Platform. */
   assignPlatformRoleToUser: User;
   /** Assigns an Actor (User, Organization, or Virtual Contributor) to a role in the specified RoleSet. */
@@ -5068,6 +5320,8 @@ export type Mutation = {
   castPollVote: Poll;
   /** Deletes collections nameID-... */
   cleanupCollections: MigrateEmbeddings;
+  /** Starts signing the prepared Memo copy. */
+  continueMemoSigning: MemoSigningContinueResult;
   /** Move an L1 Space up in the hierarchy, to be a L0 Space. */
   convertSpaceL1ToSpaceL0: Space;
   /** Move an L1 Space down in the hierarchy within the same L0 Space, to be a L2 Space.       Restrictions: the Space L1 must remain within the same L0 Space.       Roles: all user, organization and virtual contributor role assignments are removed, with       the exception of Admin role assignments for Users. */
@@ -5122,6 +5376,10 @@ export type Mutation = {
   createUser: User;
   /** Creates a new VirtualContributor on an Account. */
   createVirtualContributor: VirtualContributor;
+  /** Materializes a server-owned live Whiteboard draft for a Callout form. Content remains on the collaboration transport; GraphQL returns identifiers only. */
+  createWhiteboardDraftOnCalloutsSet: Scalars["UUID"]["output"];
+  /** Materializes a server-owned live Whiteboard draft for a Template form. GraphQL returns identifiers only. */
+  createWhiteboardDraftOnTemplatesSet: Scalars["UUID"]["output"];
   /** Creates an account in Wingback */
   createWingbackAccount: Scalars["String"]["output"];
   /** Removes the specified Application. */
@@ -5182,6 +5440,8 @@ export type Mutation = {
   deleteVisualFromMediaGallery: Visual;
   /** Deletes the specified Whiteboard. */
   deleteWhiteboard: Whiteboard;
+  /** Idempotently discards a server-owned live Whiteboard draft through the canonical Whiteboard deletion path. */
+  deleteWhiteboardDraft: Scalars["UUID"]["output"];
   /** Re-enable a previously disabled push notification subscription for the current user. */
   enablePushSubscription: PushSubscription;
   /** Trigger an event on the Application. */
@@ -5214,7 +5474,7 @@ export type Mutation = {
   markNotificationsAsUnread: Scalars["Boolean"]["output"];
   /** Migrates all pending legacy memo content. Idempotent: repeated calls process only rows whose migrated marker is false. */
   migrateLegacyMemoContent: CollaborationMigrationResult;
-  /** Migrates all pending legacy whiteboard content. Idempotent: repeated calls process only rows whose migrated marker is false. */
+  /** Migrates pending legacy Whiteboard documents and independently normalizes every legacy Whiteboard contribution default, including defaults stored by Callout templates. Idempotent: repeated calls process only unmigrated documents and non-canonical defaults. */
   migrateLegacyWhiteboardContent: CollaborationMigrationResult;
   /** Mint a new MCP API key for the current user. Returns the plaintext exactly once. */
   mintMcpApiKey: McpApiKeyMintResult;
@@ -5228,6 +5488,8 @@ export type Mutation = {
   moveSpaceL2ToSpaceL1: Space;
   /** Moves a task to another column on its Tasks board. Authorized as MOVE_TASK on the parent Callout, so a board member can move any task. */
   moveTaskToColumn: CalloutContribution;
+  /** Prepares an exact PDF preview for signing the specified Memo. */
+  prepareMemoSigning: MemoSigningPrepareResult;
   /** Refresh the Bodies of Knowledge on All VCs */
   refreshAllBodiesOfKnowledge: Scalars["Boolean"]["output"];
   /** Triggers a request to the backing AI Service to refresh the knowledge that is available to it. */
@@ -5244,6 +5506,8 @@ export type Mutation = {
   removeMessageOnRoom: Scalars["MessageID"]["output"];
   /** Removes an email address from the platform notification blacklist */
   removeNotificationEmailFromBlacklist: Array<Scalars["String"]["output"]>;
+  /** Removes an Organization from a Role on the Platform. */
+  removePlatformRoleFromOrganization: Organization;
   /** Removes a User from a Role on the Platform. */
   removePlatformRoleFromUser: User;
   /** Remove an option from a Poll. Requires UPDATE privilege. Poll must retain at least 2 options. Votes that selected this option are deleted and affected voters are notified. */
@@ -5268,6 +5532,8 @@ export type Mutation = {
   reorderPollOptions: Poll;
   /** Replace the backing file of an existing CollaboraDocument in place, preserving its identity. Requires UPDATE on the document. The replacement must be an allowed OfficeDocs format, within the size cap, and the SAME document type as the current file. Refused while the document is being edited. */
   replaceCollaboraDocument: CollaboraDocument;
+  /** Replace a Whiteboard from another Whiteboard through the live collaboration room. Content and media are copied server-side; snapshot bytes never pass through GraphQL. */
+  replaceWhiteboardContentFromSource: Whiteboard;
   /** Resets the interaction with the VC by recreating the room. */
   resetConversationVc: Conversation;
   /** Reset all license plans on Accounts */
@@ -5476,12 +5742,20 @@ export type MutationAdminCommunicationEnsureAccessToCommunicationsArgs = {
   communicationData: CommunicationAdminEnsureAccessInput;
 };
 
+export type MutationAdminCommunicationReconcileForumHierarchyArgs = {
+  reconcileData: AdminCommunicationReconcileForumHierarchyInput;
+};
+
 export type MutationAdminCommunicationRemoveOrphanedRoomArgs = {
   orphanedRoomData: CommunicationAdminRemoveOrphanedRoomInput;
 };
 
 export type MutationAdminCommunicationUpdateRoomStateArgs = {
   roomStateData: CommunicationAdminUpdateRoomStateInput;
+};
+
+export type MutationAdminForumRemoveDiscussionCategoryArgs = {
+  removeData: ForumRemoveDiscussionCategoryInput;
 };
 
 export type MutationAdminIdentityDeleteKratosIdentityArgs = {
@@ -5552,6 +5826,10 @@ export type MutationAssignLicensePlanToSpaceArgs = {
   planData: AssignLicensePlanToSpace;
 };
 
+export type MutationAssignPlatformRoleToOrganizationArgs = {
+  roleData: AssignPlatformRoleInput;
+};
+
 export type MutationAssignPlatformRoleToUserArgs = {
   roleData: AssignPlatformRoleInput;
 };
@@ -5594,6 +5872,10 @@ export type MutationAuthorizationPolicyResetToGlobalAdminsAccessArgs = {
 
 export type MutationCastPollVoteArgs = {
   voteData: CastPollVoteInput;
+};
+
+export type MutationContinueMemoSigningArgs = {
+  signingData: MemoSigningContinueInput;
 };
 
 export type MutationConvertSpaceL1ToSpaceL0Args = {
@@ -5703,6 +5985,14 @@ export type MutationCreateUserArgs = {
 
 export type MutationCreateVirtualContributorArgs = {
   virtualContributorData: CreateVirtualContributorOnAccountInput;
+};
+
+export type MutationCreateWhiteboardDraftOnCalloutsSetArgs = {
+  draftData: CreateWhiteboardDraftOnCalloutsSetInput;
+};
+
+export type MutationCreateWhiteboardDraftOnTemplatesSetArgs = {
+  draftData: CreateWhiteboardDraftOnTemplatesSetInput;
 };
 
 export type MutationCreateWingbackAccountArgs = {
@@ -5825,6 +6115,10 @@ export type MutationDeleteWhiteboardArgs = {
   whiteboardData: DeleteWhiteboardInput;
 };
 
+export type MutationDeleteWhiteboardDraftArgs = {
+  whiteboardID: Scalars["UUID"]["input"];
+};
+
 export type MutationEnablePushSubscriptionArgs = {
   subscriptionData: UnsubscribeFromPushNotificationsInput;
 };
@@ -5912,6 +6206,10 @@ export type MutationMoveTaskToColumnArgs = {
   moveData: MoveTaskToColumnInput;
 };
 
+export type MutationPrepareMemoSigningArgs = {
+  signingData: MemoSigningPrepareInput;
+};
+
 export type MutationRefreshVirtualContributorBodyOfKnowledgeArgs = {
   refreshData: RefreshVirtualContributorBodyOfKnowledgeInput;
 };
@@ -5938,6 +6236,10 @@ export type MutationRemoveMessageOnRoomArgs = {
 
 export type MutationRemoveNotificationEmailFromBlacklistArgs = {
   input: NotificationEmailAddressInput;
+};
+
+export type MutationRemovePlatformRoleFromOrganizationArgs = {
+  roleData: RemovePlatformRoleInput;
 };
 
 export type MutationRemovePlatformRoleFromUserArgs = {
@@ -5987,6 +6289,10 @@ export type MutationReorderPollOptionsArgs = {
 export type MutationReplaceCollaboraDocumentArgs = {
   file: Scalars["Upload"]["input"];
   replaceData: ReplaceCollaboraDocumentInput;
+};
+
+export type MutationReplaceWhiteboardContentFromSourceArgs = {
+  input: ReplaceWhiteboardContentFromSourceInput;
 };
 
 export type MutationResetConversationVcArgs = {
@@ -6367,8 +6673,14 @@ export type NotificationEmailAddressInput = {
 };
 
 export enum NotificationEvent {
+  OrganizationAdminAssociateApplication = "ORGANIZATION_ADMIN_ASSOCIATE_APPLICATION",
+  OrganizationAdminAssociateInvitationAccepted = "ORGANIZATION_ADMIN_ASSOCIATE_INVITATION_ACCEPTED",
+  OrganizationAdminAssociateInvitationDeclined = "ORGANIZATION_ADMIN_ASSOCIATE_INVITATION_DECLINED",
+  OrganizationAdminAssociateJoined = "ORGANIZATION_ADMIN_ASSOCIATE_JOINED",
   OrganizationAdminMentioned = "ORGANIZATION_ADMIN_MENTIONED",
   OrganizationAdminMessage = "ORGANIZATION_ADMIN_MESSAGE",
+  OrganizationAdminSpaceCommunityInvitation = "ORGANIZATION_ADMIN_SPACE_COMMUNITY_INVITATION",
+  OrganizationAdminSpaceCommunityJoined = "ORGANIZATION_ADMIN_SPACE_COMMUNITY_JOINED",
   OrganizationMessageSender = "ORGANIZATION_MESSAGE_SENDER",
   PlatformAdminGlobalRoleChanged = "PLATFORM_ADMIN_GLOBAL_ROLE_CHANGED",
   PlatformAdminSpaceCreated = "PLATFORM_ADMIN_SPACE_CREATED",
@@ -6379,6 +6691,10 @@ export enum NotificationEvent {
   SpaceAdminCollaborationCalloutContribution = "SPACE_ADMIN_COLLABORATION_CALLOUT_CONTRIBUTION",
   SpaceAdminCommunityApplication = "SPACE_ADMIN_COMMUNITY_APPLICATION",
   SpaceAdminCommunityNewMember = "SPACE_ADMIN_COMMUNITY_NEW_MEMBER",
+  SpaceAdminOrganizationCommunityInvitationAccepted = "SPACE_ADMIN_ORGANIZATION_COMMUNITY_INVITATION_ACCEPTED",
+  SpaceAdminOrganizationCommunityInvitationDeclined = "SPACE_ADMIN_ORGANIZATION_COMMUNITY_INVITATION_DECLINED",
+  SpaceAdminUserCommunityInvitationAccepted = "SPACE_ADMIN_USER_COMMUNITY_INVITATION_ACCEPTED",
+  SpaceAdminUserCommunityInvitationDeclined = "SPACE_ADMIN_USER_COMMUNITY_INVITATION_DECLINED",
   SpaceAdminVirtualCommunityInvitationDeclined = "SPACE_ADMIN_VIRTUAL_COMMUNITY_INVITATION_DECLINED",
   SpaceCollaborationCalloutComment = "SPACE_COLLABORATION_CALLOUT_COMMENT",
   SpaceCollaborationCalloutContribution = "SPACE_COLLABORATION_CALLOUT_CONTRIBUTION",
@@ -6403,6 +6719,9 @@ export enum NotificationEvent {
   UserEmailChangeSpaceAdminNotification = "USER_EMAIL_CHANGE_SPACE_ADMIN_NOTIFICATION",
   UserMentioned = "USER_MENTIONED",
   UserMessage = "USER_MESSAGE",
+  UserOrganizationAssociateApplicationApproved = "USER_ORGANIZATION_ASSOCIATE_APPLICATION_APPROVED",
+  UserOrganizationAssociateApplicationDeclined = "USER_ORGANIZATION_ASSOCIATE_APPLICATION_DECLINED",
+  UserOrganizationAssociateInvitation = "USER_ORGANIZATION_ASSOCIATE_INVITATION",
   UserPasswordChangeSecuritySignal = "USER_PASSWORD_CHANGE_SECURITY_SIGNAL",
   UserSignUpWelcome = "USER_SIGN_UP_WELCOME",
   UserSpaceCommunityApplicationDeclined = "USER_SPACE_COMMUNITY_APPLICATION_DECLINED",
@@ -6428,6 +6747,8 @@ export enum NotificationEventInAppState {
 }
 
 export enum NotificationEventPayload {
+  OrganizationAssociateActor = "ORGANIZATION_ASSOCIATE_ACTOR",
+  OrganizationAssociateInvitation = "ORGANIZATION_ASSOCIATE_INVITATION",
   OrganizationMessageDirect = "ORGANIZATION_MESSAGE_DIRECT",
   OrganizationMessageRoom = "ORGANIZATION_MESSAGE_ROOM",
   PlatformForumDiscussion = "PLATFORM_FORUM_DISCUSSION",
@@ -6545,6 +6866,8 @@ export type Organization = ActorFull &
     legalEntityName?: Maybe<Scalars["String"]["output"]>;
     /** Metrics about the activity within this Organization. */
     metrics?: Maybe<Array<Nvp>>;
+    /** The viewer's eligibility to apply to, or join, this organization as an associate. */
+    myAssociateEligibility: OrganizationAssociateEligibility;
     /** A name identifier of the entity, unique within a given scope. */
     nameID: Scalars["NameID"]["output"];
     /** The profile for this Actor. */
@@ -6568,6 +6891,35 @@ export type OrganizationGroupArgs = {
   ID: Scalars["UUID"]["input"];
 };
 
+export type OrganizationApplicationResult = {
+  /** The application itself */
+  application: Application;
+  /** ID for the pending organization application */
+  id: Scalars["UUID"]["output"];
+  /** The organization the application is for */
+  organization: Organization;
+};
+
+export type OrganizationAssociateEligibility = {
+  /** Whether the viewer may apply to associate with this organization right now. */
+  canApply: Scalars["Boolean"]["output"];
+  /** Whether the viewer may join this organization directly, with one click (domain match). */
+  canJoinDirectly: Scalars["Boolean"]["output"];
+  /** Why the viewer is (or is not) eligible, precedence-ordered. */
+  reason: OrganizationAssociateEligibilityReason;
+};
+
+export enum OrganizationAssociateEligibilityReason {
+  AlreadyAssociate = "ALREADY_ASSOCIATE",
+  ApplicationsNotAccepted = "APPLICATIONS_NOT_ACCEPTED",
+  ApplicationPending = "APPLICATION_PENDING",
+  ApplyNotGranted = "APPLY_NOT_GRANTED",
+  EligibleToApply = "ELIGIBLE_TO_APPLY",
+  EligibleToJoin = "ELIGIBLE_TO_JOIN",
+  InvitationPending = "INVITATION_PENDING",
+  NotAuthenticated = "NOT_AUTHENTICATED",
+}
+
 export type OrganizationAuthorizationResetInput = {
   /** The identifier of the Organization whose Authorization Policy should be reset. */
   organizationID: Scalars["UUID"]["input"];
@@ -6581,6 +6933,15 @@ export type OrganizationFilterInput = {
   website?: InputMaybe<Scalars["String"]["input"]>;
 };
 
+export type OrganizationInvitationResult = {
+  /** ID for the pending organization invitation */
+  id: Scalars["UUID"]["output"];
+  /** The invitation itself */
+  invitation: Invitation;
+  /** The organization the invitation is for */
+  organization: Organization;
+};
+
 export type OrganizationSettings = {
   /** The membership settings for this Organization. */
   membership: OrganizationSettingsMembership;
@@ -6589,6 +6950,10 @@ export type OrganizationSettings = {
 };
 
 export type OrganizationSettingsMembership = {
+  /** Allow registered users to apply to associate with this Organization. */
+  allowApplications: Scalars["Boolean"]["output"];
+  /** Allow Spaces to invite this Organization to join them. */
+  allowSpaceInvitations: Scalars["Boolean"]["output"];
   /** Allow Users with email addresses matching the domain of this Organization to join. */
   allowUsersMatchingDomainToJoin: Scalars["Boolean"]["output"];
 };
@@ -6777,7 +7142,7 @@ export type PlatformAdminQueryResults = {
   innovationPacks: Array<InnovationPack>;
   /** The most recent email-change audit entry for the named subject user. Returns null if no audit entry exists. */
   latestUserEmailChangeAuditEntry?: Maybe<UserEmailChangeAuditEntry>;
-  /** MCP API keys belonging to the named user. Platform admins only. Keys bound to a system actor are never returned. */
+  /** MCP API keys belonging to the named user. Platform Users Admin only. Keys bound to a system actor are never returned. */
   mcpApiKeys: Array<McpApiKey>;
   /** Retrieve all Organizations on the Platform. This is only available to Platform Admins. */
   organizations: PaginatedOrganization;
@@ -7385,6 +7750,8 @@ export type Query = {
   rolesVirtualContributor: ActorRoles;
   /** Search the platform for terms supplied */
   search: ISearchResults;
+  /** A Memo signing attempt belonging to the current actor. */
+  signingAttempt: MemoSignature;
   /** The Spaces on this platform; If accessed through an Innovation Hub will return ONLY the Spaces defined in it. */
   spaces: Array<Space>;
   /** The Spaces on this platform */
@@ -7405,6 +7772,8 @@ export type Query = {
   usersWithAuthorizationCredential: Array<User>;
   /** Returns the VAPID public key needed by clients to subscribe to push notifications. Returns null if push notifications are not enabled on this server. */
   vapidPublicKey?: Maybe<Scalars["String"]["output"]>;
+  /** Checks the stored integrity of a signed Memo copy. */
+  verifyMemoSignature: MemoSignatureVerificationStatus;
   /** A particular VirtualContributor */
   virtualContributor: VirtualContributor;
   /** The VirtualContributors on this platform; only accessible to platform admins */
@@ -7487,6 +7856,10 @@ export type QuerySearchArgs = {
   searchData: SearchInput;
 };
 
+export type QuerySigningAttemptArgs = {
+  ID: Scalars["UUID"]["input"];
+};
+
 export type QuerySpacesArgs = {
   IDs?: InputMaybe<Array<Scalars["UUID"]["input"]>>;
   filter?: InputMaybe<SpaceFilterInput>;
@@ -7534,6 +7907,10 @@ export type QueryUsersPaginatedArgs = {
 
 export type QueryUsersWithAuthorizationCredentialArgs = {
   credentialsCriteriaData: UsersWithAuthorizationCredentialInput;
+};
+
+export type QueryVerifyMemoSignatureArgs = {
+  verificationData: MemoSignatureVerifyInput;
 };
 
 export type QueryVirtualContributorArgs = {
@@ -7746,6 +8123,13 @@ export type ReplaceCollaboraDocumentInput = {
   displayName?: InputMaybe<Scalars["String"]["input"]>;
 };
 
+export type ReplaceWhiteboardContentFromSourceInput = {
+  /** The Whiteboard whose content and media are copied into the target. */
+  sourceWhiteboardID: Scalars["UUID"]["input"];
+  /** The Whiteboard whose content is replaced. */
+  targetWhiteboardID: Scalars["UUID"]["input"];
+};
+
 export type RevokeAuthorizationCredentialInput = {
   /** The resource to which access is being removed. */
   resourceID: Scalars["String"]["input"];
@@ -7813,6 +8197,10 @@ export enum RoleName {
   Admin = "ADMIN",
   Anonymous = "ANONYMOUS",
   Associate = "ASSOCIATE",
+  FeatureBetaTester = "FEATURE_BETA_TESTER",
+  FeatureOrganizationCreator = "FEATURE_ORGANIZATION_CREATOR",
+  FeatureVcCampaign = "FEATURE_VC_CAMPAIGN",
+  FeatureVirtualAssistant = "FEATURE_VIRTUAL_ASSISTANT",
   GlobalAdmin = "GLOBAL_ADMIN",
   GlobalCommunityReader = "GLOBAL_COMMUNITY_READER",
   GlobalLicenseManager = "GLOBAL_LICENSE_MANAGER",
@@ -7825,8 +8213,17 @@ export enum RoleName {
   Member = "MEMBER",
   Owner = "OWNER",
   PlatformAssistantAccess = "PLATFORM_ASSISTANT_ACCESS",
+  PlatformAuditReader = "PLATFORM_AUDIT_READER",
   PlatformBetaTester = "PLATFORM_BETA_TESTER",
+  PlatformContentFullAccess = "PLATFORM_CONTENT_FULL_ACCESS",
+  PlatformLicenseManager = "PLATFORM_LICENSE_MANAGER",
   PlatformOperationsAdmin = "PLATFORM_OPERATIONS_ADMIN",
+  PlatformResourceAdmin = "PLATFORM_RESOURCE_ADMIN",
+  PlatformRolesAdmin = "PLATFORM_ROLES_ADMIN",
+  PlatformSettingsAdmin = "PLATFORM_SETTINGS_ADMIN",
+  PlatformSpacesReader = "PLATFORM_SPACES_READER",
+  PlatformSupport = "PLATFORM_SUPPORT",
+  PlatformUsersAdmin = "PLATFORM_USERS_ADMIN",
   PlatformVcCampaign = "PLATFORM_VC_CAMPAIGN",
   Registered = "REGISTERED",
 }
@@ -7954,18 +8351,31 @@ export type RoleSetInvitationResult = {
   /** The existing open application that blocks this invitation, when the result type is ALREADY_HAS_OPEN_APPLICATION. */
   application?: Maybe<Application>;
   invitation?: Maybe<Invitation>;
+  /** The id of the invited actor this result belongs to, when the invitee was an actor or an email that resolved to an existing user. */
+  invitedActorID?: Maybe<Scalars["UUID"]["output"]>;
+  /** The email address this result belongs to, when the invitee was submitted as an email address. */
+  invitedEmail?: Maybe<Scalars["String"]["output"]>;
+  /** An informational addendum to the result, set only alongside a successful invite outcome. */
+  notice?: Maybe<RoleSetInvitationResultNotice>;
   platformInvitation?: Maybe<PlatformInvitation>;
   type: RoleSetInvitationResultType;
 };
+
+export enum RoleSetInvitationResultNotice {
+  OrganizationHasNoAdministrators = "ORGANIZATION_HAS_NO_ADMINISTRATORS",
+}
 
 export enum RoleSetInvitationResultType {
   AlreadyHasOpenApplication = "ALREADY_HAS_OPEN_APPLICATION",
   AlreadyInvitedToPlatformAndRoleSet = "ALREADY_INVITED_TO_PLATFORM_AND_ROLE_SET",
   AlreadyInvitedToRoleSet = "ALREADY_INVITED_TO_ROLE_SET",
   AlreadyMemberOfRoleSet = "ALREADY_MEMBER_OF_ROLE_SET",
+  ExtraRoleLimitReached = "EXTRA_ROLE_LIMIT_REACHED",
   InvitationToParentNotAuthorized = "INVITATION_TO_PARENT_NOT_AUTHORIZED",
   InvitedToPlatformAndRoleSet = "INVITED_TO_PLATFORM_AND_ROLE_SET",
   InvitedToRoleSet = "INVITED_TO_ROLE_SET",
+  OrganizationLeadRoleLimitReached = "ORGANIZATION_LEAD_ROLE_LIMIT_REACHED",
+  OrganizationNotAcceptingInvitations = "ORGANIZATION_NOT_ACCEPTING_INVITATIONS",
 }
 
 export enum RoleSetRoleImplicit {
@@ -8427,9 +8837,18 @@ export enum SidebarWidget {
   Guidelines = "GUIDELINES",
   Index = "INDEX",
   Intent = "INTENT",
+  Search = "SEARCH",
   SubspaceLinks = "SUBSPACE_LINKS",
   Updates = "UPDATES",
   VirtualContributors = "VIRTUAL_CONTRIBUTORS",
+}
+
+export enum SigningAttemptStatus {
+  Cancelled = "CANCELLED",
+  Expired = "EXPIRED",
+  Failed = "FAILED",
+  Pending = "PENDING",
+  Signed = "SIGNED",
 }
 
 export type Space = ActorFull & {
@@ -8559,9 +8978,24 @@ export type SpaceAboutMembership = {
   roleSetID: Scalars["UUID"]["output"];
 };
 
+/** The card variant of a Subspaces (SPACES) collection callout. COMPACT (default) shows the identity block only; EXPANDED adds the What/Why/Who excerpts. */
+export enum SpaceCollectionCardVariant {
+  Compact = "COMPACT",
+  Expanded = "EXPANDED",
+}
+
 export type SpaceFilterInput = {
   /** Return Spaces with a Visibility matching one of the provided types. */
   visibilities?: InputMaybe<Array<SpaceVisibility>>;
+};
+
+export type SpaceJoinPreview = {
+  /** The display name of the Space that will be joined. */
+  displayName: Scalars["String"]["output"];
+  /** The ID of the Space that will be joined. */
+  id: Scalars["UUID"]["output"];
+  /** The URL of the Space that will be joined. */
+  url: Scalars["String"]["output"];
 };
 
 export enum SpaceLevel {
@@ -9186,12 +9620,18 @@ export type UpdateCalendarEventInput = {
 };
 
 export type UpdateCalloutContributionDefaultsInput = {
+  /** Remove the stored Whiteboard contribution default. Mutually exclusive with sourceWhiteboardID and sourceCalloutID. */
+  clearWhiteboardContent?: InputMaybe<Scalars["Boolean"]["input"]>;
   /** The default title to use for new contributions. */
   defaultDisplayName?: InputMaybe<Scalars["String"]["input"]>;
+  /** Replace the default from a server-owned live Whiteboard contribution-default draft. Mutually exclusive with either source field and clearWhiteboardContent. */
+  draftWhiteboardID?: InputMaybe<Scalars["UUID"]["input"]>;
   /** The default description to use for new Post contributions. */
   postDescription?: InputMaybe<Scalars["Markdown"]["input"]>;
-  /** The default description to use for new Whiteboard contributions. */
-  whiteboardContent?: InputMaybe<Scalars["WhiteboardContent"]["input"]>;
+  /** Copy the internal Whiteboard contribution default from this source Callout. Mutually exclusive with sourceWhiteboardID and clearWhiteboardContent. */
+  sourceCalloutID?: InputMaybe<Scalars["UUID"]["input"]>;
+  /** Replace the default from an existing Whiteboard. The server copies its content and media into the owning Callout bucket; the source id is not persisted. */
+  sourceWhiteboardID?: InputMaybe<Scalars["UUID"]["input"]>;
 };
 
 export type UpdateCalloutContributorsSettingsInput = {
@@ -9229,10 +9669,10 @@ export type UpdateCalloutFramingInput = {
   poll?: InputMaybe<UpdatePollInput>;
   /** The Profile of the Template. */
   profile?: InputMaybe<UpdateProfileInput>;
+  /** Replace the framing Whiteboard from another Whiteboard through a server-side authorized copy. */
+  sourceWhiteboardID?: InputMaybe<Scalars["UUID"]["input"]>;
   /** The type of additional content attached to the framing of the callout. */
   type?: InputMaybe<CalloutFramingType>;
-  /** The new content to be used. */
-  whiteboardContent?: InputMaybe<Scalars["WhiteboardContent"]["input"]>;
   /** The new preview settings for the Whiteboard. */
   whiteboardPreviewSettings?: InputMaybe<UpdateWhiteboardPreviewSettingsInput>;
 };
@@ -9269,6 +9709,8 @@ export type UpdateCalloutSettingsFramingInput = {
   contributors?: InputMaybe<UpdateCalloutContributorsSettingsInput>;
   /** Manual-selection settings for collection callouts (CONTRIBUTORS or SPACES). Provide only when framing.type ∈ {CONTRIBUTORS, SPACES}. */
   selection?: InputMaybe<UpdateCalloutSelectionSettingsInput>;
+  /** Card-variant settings. Provide only when framing.type = SPACES. */
+  spaces?: InputMaybe<UpdateCalloutSpacesSettingsInput>;
 };
 
 export type UpdateCalloutSettingsInput = {
@@ -9276,6 +9718,11 @@ export type UpdateCalloutSettingsInput = {
   framing?: InputMaybe<UpdateCalloutSettingsFramingInput>;
   /** Visibility of the Callout. */
   visibility?: InputMaybe<CalloutVisibility>;
+};
+
+export type UpdateCalloutSpacesSettingsInput = {
+  /** The card variant (COMPACT or EXPANDED). When omitted, the stored value is unchanged. */
+  cardVariant?: InputMaybe<SpaceCollectionCardVariant>;
 };
 
 export type UpdateCalloutVisibilityInput = {
@@ -9569,8 +10016,12 @@ export type UpdateOrganizationSettingsInput = {
 };
 
 export type UpdateOrganizationSettingsMembershipInput = {
+  /** Allow registered users to apply to associate with this Organization. */
+  allowApplications?: InputMaybe<Scalars["Boolean"]["input"]>;
+  /** Allow Spaces to invite this Organization to join them. */
+  allowSpaceInvitations?: InputMaybe<Scalars["Boolean"]["input"]>;
   /** Allow Users with email addresses matching the domain of this Organization to join. */
-  allowUsersMatchingDomainToJoin: Scalars["Boolean"]["input"];
+  allowUsersMatchingDomainToJoin?: InputMaybe<Scalars["Boolean"]["input"]>;
 };
 
 export type UpdateOrganizationSettingsPrivacyInput = {
@@ -9790,8 +10241,8 @@ export type UpdateTemplateInput = {
   postDefaultDescription?: InputMaybe<Scalars["Markdown"]["input"]>;
   /** The Profile of the Template. */
   profile?: InputMaybe<UpdateProfileInput>;
-  /** The new content to be used. */
-  whiteboardContent?: InputMaybe<Scalars["WhiteboardContent"]["input"]>;
+  /** Replace this Whiteboard Template from an existing Whiteboard through a server-side authorized copy. */
+  sourceWhiteboardID?: InputMaybe<Scalars["UUID"]["input"]>;
 };
 
 export type UpdateUserGroupInput = {
@@ -9889,10 +10340,18 @@ export type UpdateUserSettingsNotificationInput = {
 };
 
 export type UpdateUserSettingsNotificationOrganizationInput = {
+  /** Receive a notification when someone applies to associate with an organisation you administer */
+  adminAssociateApplicationReceived?: InputMaybe<NotificationSettingInput>;
+  /** Receive a notification when someone responds to an invitation to associate with an organisation you administer */
+  adminAssociateInvitationResponse?: InputMaybe<NotificationSettingInput>;
+  /** Receive a notification when someone joins an organisation you administer as an associate */
+  adminAssociateJoined?: InputMaybe<NotificationSettingInput>;
   /** Receive a notification when the organization you are admin of is mentioned */
   adminMentioned?: InputMaybe<NotificationSettingInput>;
   /** Receive notification when the organization you are admin of is messaged */
   adminMessageReceived?: InputMaybe<NotificationSettingInput>;
+  /** Receive a notification when an organization you administer is invited to a Space */
+  adminSpaceCommunityInvitation?: InputMaybe<NotificationSettingInput>;
 };
 
 export type UpdateUserSettingsNotificationPlatformAdminInput = {
@@ -9931,6 +10390,8 @@ export type UpdateUserSettingsNotificationSpaceAdminInput = {
   communicationMessageReceived?: InputMaybe<NotificationSettingInput>;
   /** Receive a notification when an application is received */
   communityApplicationReceived?: InputMaybe<NotificationSettingInput>;
+  /** Receive a notification when someone responds to an invitation you sent (admin) */
+  communityInvitationResponse?: InputMaybe<NotificationSettingInput>;
   /** Receive a notification when a new member joins the community (admin) */
   communityNewMember?: InputMaybe<NotificationSettingInput>;
   /** Receive a notification when the login email of an admin or lead of a Space I administer is changed (admin) */
@@ -9980,6 +10441,10 @@ export type UpdateUserSettingsNotificationUserInput = {
 };
 
 export type UpdateUserSettingsNotificationUserMembershipInput = {
+  /** Receive a notification when an organisation decides on my application to associate */
+  organizationAssociateApplicationDecided?: InputMaybe<NotificationSettingInput>;
+  /** Receive a notification when I am invited to associate with an organisation */
+  organizationAssociateInvitationReceived?: InputMaybe<NotificationSettingInput>;
   /** Receive a notification for community invitation */
   spaceCommunityInvitationReceived?: InputMaybe<NotificationSettingInput>;
   /** Receive a notification when I join a new community or when my application is declined */
@@ -10431,10 +10896,18 @@ export type UserSettingsNotificationChannels = {
 };
 
 export type UserSettingsNotificationOrganization = {
+  /** Receive a notification when someone applies to associate with an organisation you administer */
+  adminAssociateApplicationReceived: UserSettingsNotificationChannels;
+  /** Receive a notification when someone responds to an invitation to associate with an organisation you administer */
+  adminAssociateInvitationResponse: UserSettingsNotificationChannels;
+  /** Receive a notification when someone joins an organisation you administer as an associate */
+  adminAssociateJoined: UserSettingsNotificationChannels;
   /** Receive a notification when the organization you are admin of is mentioned */
   adminMentioned: UserSettingsNotificationChannels;
   /** Receive notification when the organization you are admin of is messaged */
   adminMessageReceived: UserSettingsNotificationChannels;
+  /** Receive a notification when an organization you administer is invited to a Space */
+  adminSpaceCommunityInvitation: UserSettingsNotificationChannels;
 };
 
 export type UserSettingsNotificationPlatform = {
@@ -10500,6 +10973,8 @@ export type UserSettingsNotificationSpaceAdmin = {
   communicationMessageReceived: UserSettingsNotificationChannels;
   /** Receive a notification when an application is received */
   communityApplicationReceived: UserSettingsNotificationChannels;
+  /** Receive a notification when someone responds to an invitation you sent (admin) */
+  communityInvitationResponse: UserSettingsNotificationChannels;
   /** Receive a notification when a new member joins the community (admin) */
   communityNewMember: UserSettingsNotificationChannels;
   /** Receive a notification when the login email of an admin or lead of a Space I administer is changed (admin) */
@@ -10522,6 +10997,10 @@ export type UserSettingsNotificationUser = {
 };
 
 export type UserSettingsNotificationUserMembership = {
+  /** Receive a notification when an organisation decides on my application to associate */
+  organizationAssociateApplicationDecided: UserSettingsNotificationChannels;
+  /** Receive a notification when I am invited to associate with an organisation */
+  organizationAssociateInvitationReceived: UserSettingsNotificationChannels;
   /** Receive a notification when I am invited to join a Space community */
   spaceCommunityInvitationReceived: UserSettingsNotificationChannels;
   /** Receive a notification when I join a Space or when my application is declined */
@@ -11211,6 +11690,17 @@ export type ResolversInterfaceTypes<_RefType extends Record<string, unknown>> =
         });
     InAppNotificationPayload:
       | (Omit<
+          InAppNotificationPayloadOrganizationAssociateActor,
+          "actor" | "organization"
+        > & {
+          actor?: Maybe<_RefType["Actor"]>;
+          organization?: Maybe<_RefType["Organization"]>;
+        })
+      | (Omit<
+          InAppNotificationPayloadOrganizationAssociateInvitation,
+          "organization"
+        > & { organization?: Maybe<_RefType["Organization"]> })
+      | (Omit<
           InAppNotificationPayloadOrganizationMessageDirect,
           "organization"
         > & { organization?: Maybe<_RefType["Organization"]> })
@@ -11278,7 +11768,11 @@ export type ResolversInterfaceTypes<_RefType extends Record<string, unknown>> =
           calendarEvent: _RefType["CalendarEvent"];
           space: _RefType["Space"];
         })
-      | (Omit<InAppNotificationPayloadSpaceCommunityInvitation, "space"> & {
+      | (Omit<
+          InAppNotificationPayloadSpaceCommunityInvitation,
+          "organization" | "space"
+        > & {
+          organization?: Maybe<_RefType["Organization"]>;
           space: _RefType["Space"];
         })
       | (Omit<
@@ -11348,6 +11842,9 @@ export type ResolversTypes = {
     }
   >;
   AccountAuthorizationResetInput: AccountAuthorizationResetInput;
+  AccountDeletionBlocker: ResolverTypeWrapper<AccountDeletionBlocker>;
+  AccountDeletionBlockerKind: AccountDeletionBlockerKind;
+  AccountDeletionBlockerTotal: ResolverTypeWrapper<AccountDeletionBlockerTotal>;
   AccountLicensePlan: ResolverTypeWrapper<AccountLicensePlan>;
   AccountLicenseResetInput: AccountLicenseResetInput;
   AccountSubscription: ResolverTypeWrapper<AccountSubscription>;
@@ -11506,6 +12003,7 @@ export type ResolversTypes = {
   AddPollOptionInput: AddPollOptionInput;
   AddReactionToCalloutInput: AddReactionToCalloutInput;
   AddVisualToMediaGalleryInput: AddVisualToMediaGalleryInput;
+  AdminCommunicationReconcileForumHierarchyInput: AdminCommunicationReconcileForumHierarchyInput;
   AdminRevokeMcpApiKeyInput: AdminRevokeMcpApiKeyInput;
   AdminUserEmailChangeDriftResolveInput: AdminUserEmailChangeDriftResolveInput;
   AdminUserEmailChangeInput: AdminUserEmailChangeInput;
@@ -11606,6 +12104,7 @@ export type ResolversTypes = {
   CalloutSettings: ResolverTypeWrapper<CalloutSettings>;
   CalloutSettingsContribution: ResolverTypeWrapper<CalloutSettingsContribution>;
   CalloutSettingsFraming: ResolverTypeWrapper<CalloutSettingsFraming>;
+  CalloutSpacesSettings: ResolverTypeWrapper<CalloutSpacesSettings>;
   CalloutVisibility: CalloutVisibility;
   CalloutsSet: ResolverTypeWrapper<
     Omit<CalloutsSet, "callouts"> & {
@@ -11666,11 +12165,7 @@ export type ResolversTypes = {
   >;
   CommunityInvitationForRoleResult: ResolverTypeWrapper<CommunityInvitationForRoleResult>;
   CommunityInvitationResult: ResolverTypeWrapper<
-    Omit<
-      CommunityInvitationResult,
-      "invitation" | "spacePendingMembershipInfo"
-    > & {
-      invitation: ResolversTypes["Invitation"];
+    Omit<CommunityInvitationResult, "spacePendingMembershipInfo"> & {
       spacePendingMembershipInfo: ResolversTypes["SpacePendingMembershipInfo"];
     }
   >;
@@ -11766,6 +12261,8 @@ export type ResolversTypes = {
   CreateCalloutSettingsFramingData: ResolverTypeWrapper<CreateCalloutSettingsFramingData>;
   CreateCalloutSettingsFramingInput: CreateCalloutSettingsFramingInput;
   CreateCalloutSettingsInput: CreateCalloutSettingsInput;
+  CreateCalloutSpacesSettingsData: ResolverTypeWrapper<CreateCalloutSpacesSettingsData>;
+  CreateCalloutSpacesSettingsInput: CreateCalloutSpacesSettingsInput;
   CreateCalloutTaskBoardData: ResolverTypeWrapper<CreateCalloutTaskBoardData>;
   CreateCalloutTaskBoardInput: CreateCalloutTaskBoardInput;
   CreateCalloutsSetData: ResolverTypeWrapper<CreateCalloutsSetData>;
@@ -11835,6 +12332,8 @@ export type ResolversTypes = {
   CreateVisualOnProfileData: ResolverTypeWrapper<CreateVisualOnProfileData>;
   CreateVisualOnProfileInput: CreateVisualOnProfileInput;
   CreateWhiteboardData: ResolverTypeWrapper<CreateWhiteboardData>;
+  CreateWhiteboardDraftOnCalloutsSetInput: CreateWhiteboardDraftOnCalloutsSetInput;
+  CreateWhiteboardDraftOnTemplatesSetInput: CreateWhiteboardDraftOnTemplatesSetInput;
   CreateWhiteboardInput: CreateWhiteboardInput;
   CreateWhiteboardPreviewSettingsData: ResolverTypeWrapper<CreateWhiteboardPreviewSettingsData>;
   CreateWhiteboardPreviewSettingsInput: CreateWhiteboardPreviewSettingsInput;
@@ -11904,6 +12403,7 @@ export type ResolversTypes = {
   ForumCreateDiscussionInput: ForumCreateDiscussionInput;
   ForumDiscussionCategory: ForumDiscussionCategory;
   ForumDiscussionPrivacy: ForumDiscussionPrivacy;
+  ForumRemoveDiscussionCategoryInput: ForumRemoveDiscussionCategoryInput;
   Geo: ResolverTypeWrapper<Geo>;
   GeoLocation: ResolverTypeWrapper<GeoLocation>;
   GrantAssistantActorCapabilitiesInput: GrantAssistantActorCapabilitiesInput;
@@ -11945,6 +12445,21 @@ export type ResolversTypes = {
   >;
   InAppNotificationPayload: ResolverTypeWrapper<
     ResolversInterfaceTypes<ResolversTypes>["InAppNotificationPayload"]
+  >;
+  InAppNotificationPayloadOrganizationAssociateActor: ResolverTypeWrapper<
+    Omit<
+      InAppNotificationPayloadOrganizationAssociateActor,
+      "actor" | "organization"
+    > & {
+      actor?: Maybe<ResolversTypes["Actor"]>;
+      organization?: Maybe<ResolversTypes["Organization"]>;
+    }
+  >;
+  InAppNotificationPayloadOrganizationAssociateInvitation: ResolverTypeWrapper<
+    Omit<
+      InAppNotificationPayloadOrganizationAssociateInvitation,
+      "organization"
+    > & { organization?: Maybe<ResolversTypes["Organization"]> }
   >;
   InAppNotificationPayloadOrganizationMessageDirect: ResolverTypeWrapper<
     Omit<InAppNotificationPayloadOrganizationMessageDirect, "organization"> & {
@@ -12044,7 +12559,11 @@ export type ResolversTypes = {
     }
   >;
   InAppNotificationPayloadSpaceCommunityInvitation: ResolverTypeWrapper<
-    Omit<InAppNotificationPayloadSpaceCommunityInvitation, "space"> & {
+    Omit<
+      InAppNotificationPayloadSpaceCommunityInvitation,
+      "organization" | "space"
+    > & {
+      organization?: Maybe<ResolversTypes["Organization"]>;
       space: ResolversTypes["Space"];
     }
   >;
@@ -12177,7 +12696,6 @@ export type ResolversTypes = {
       | "document"
       | "innovationHub"
       | "innovationPack"
-      | "invitation"
       | "organization"
       | "profile"
       | "roleSet"
@@ -12200,7 +12718,6 @@ export type ResolversTypes = {
       document?: Maybe<ResolversTypes["Document"]>;
       innovationHub?: Maybe<ResolversTypes["InnovationHub"]>;
       innovationPack?: Maybe<ResolversTypes["InnovationPack"]>;
-      invitation?: Maybe<ResolversTypes["Invitation"]>;
       organization?: Maybe<ResolversTypes["Organization"]>;
       profile?: Maybe<ResolversTypes["Profile"]>;
       roleSet?: Maybe<ResolversTypes["RoleSet"]>;
@@ -12217,6 +12734,7 @@ export type ResolversTypes = {
   McpApiKeyMintResult: ResolverTypeWrapper<McpApiKeyMintResult>;
   McpApiKeyOperation: McpApiKeyOperation;
   McpApiKeyStatus: McpApiKeyStatus;
+  MeAccountDeletionStatus: ResolverTypeWrapper<MeAccountDeletionStatus>;
   MeConversationsResult: ResolverTypeWrapper<
     Omit<MeConversationsResult, "conversations"> & {
       conversations: Array<ResolversTypes["Conversation"]>;
@@ -12230,6 +12748,8 @@ export type ResolversTypes = {
       | "conversations"
       | "mySpaces"
       | "notifications"
+      | "organizationApplications"
+      | "organizationInvitations"
       | "spaceMembershipsFlat"
       | "spaceMembershipsHierarchical"
       | "user"
@@ -12241,6 +12761,12 @@ export type ResolversTypes = {
       conversations: ResolversTypes["MeConversationsResult"];
       mySpaces: Array<ResolversTypes["MySpaceResults"]>;
       notifications: ResolversTypes["PaginatedInAppNotifications"];
+      organizationApplications: Array<
+        ResolversTypes["OrganizationApplicationResult"]
+      >;
+      organizationInvitations: Array<
+        ResolversTypes["OrganizationInvitationResult"]
+      >;
       spaceMembershipsFlat: Array<ResolversTypes["CommunityMembershipResult"]>;
       spaceMembershipsHierarchical: Array<
         ResolversTypes["CommunityMembershipResult"]
@@ -12259,6 +12785,18 @@ export type ResolversTypes = {
       profile: ResolversTypes["Profile"];
     }
   >;
+  MemoSignature: ResolverTypeWrapper<
+    Omit<MemoSignature, "actor" | "document"> & {
+      actor?: Maybe<ResolversTypes["User"]>;
+      document?: Maybe<ResolversTypes["Document"]>;
+    }
+  >;
+  MemoSignatureVerificationStatus: MemoSignatureVerificationStatus;
+  MemoSignatureVerifyInput: MemoSignatureVerifyInput;
+  MemoSigningContinueInput: MemoSigningContinueInput;
+  MemoSigningContinueResult: ResolverTypeWrapper<MemoSigningContinueResult>;
+  MemoSigningPrepareInput: MemoSigningPrepareInput;
+  MemoSigningPrepareResult: ResolverTypeWrapper<MemoSigningPrepareResult>;
   Message: ResolverTypeWrapper<
     Omit<Message, "sender"> & { sender?: Maybe<ResolversTypes["Actor"]> }
   >;
@@ -12328,8 +12866,20 @@ export type ResolversTypes = {
       roleSet: ResolversTypes["RoleSet"];
     }
   >;
+  OrganizationApplicationResult: ResolverTypeWrapper<
+    Omit<OrganizationApplicationResult, "organization"> & {
+      organization: ResolversTypes["Organization"];
+    }
+  >;
+  OrganizationAssociateEligibility: ResolverTypeWrapper<OrganizationAssociateEligibility>;
+  OrganizationAssociateEligibilityReason: OrganizationAssociateEligibilityReason;
   OrganizationAuthorizationResetInput: OrganizationAuthorizationResetInput;
   OrganizationFilterInput: OrganizationFilterInput;
+  OrganizationInvitationResult: ResolverTypeWrapper<
+    Omit<OrganizationInvitationResult, "organization"> & {
+      organization: ResolversTypes["Organization"];
+    }
+  >;
   OrganizationSettings: ResolverTypeWrapper<OrganizationSettings>;
   OrganizationSettingsMembership: ResolverTypeWrapper<OrganizationSettingsMembership>;
   OrganizationSettingsPrivacy: ResolverTypeWrapper<OrganizationSettingsPrivacy>;
@@ -12513,6 +13063,7 @@ export type ResolversTypes = {
   RemoveUserGroupMemberInput: RemoveUserGroupMemberInput;
   ReorderPollOptionsInput: ReorderPollOptionsInput;
   ReplaceCollaboraDocumentInput: ReplaceCollaboraDocumentInput;
+  ReplaceWhiteboardContentFromSourceInput: ReplaceWhiteboardContentFromSourceInput;
   RevokeAuthorizationCredentialInput: RevokeAuthorizationCredentialInput;
   RevokeLicensePlanFromAccount: RevokeLicensePlanFromAccount;
   RevokeLicensePlanFromSpace: RevokeLicensePlanFromSpace;
@@ -12523,12 +13074,8 @@ export type ResolversTypes = {
   RoleSet: ResolverTypeWrapper<
     Omit<
       RoleSet,
-      | "invitations"
-      | "organizationsInRole"
-      | "organizationsInRoles"
-      | "usersInRole"
+      "organizationsInRole" | "organizationsInRoles" | "usersInRole"
     > & {
-      invitations: Array<ResolversTypes["Invitation"]>;
       organizationsInRole: Array<ResolversTypes["Organization"]>;
       organizationsInRoles: Array<
         ResolversTypes["OrganizationsInRolesResponse"]
@@ -12536,11 +13083,8 @@ export type ResolversTypes = {
       usersInRole: Array<ResolversTypes["User"]>;
     }
   >;
-  RoleSetInvitationResult: ResolverTypeWrapper<
-    Omit<RoleSetInvitationResult, "invitation"> & {
-      invitation?: Maybe<ResolversTypes["Invitation"]>;
-    }
-  >;
+  RoleSetInvitationResult: ResolverTypeWrapper<RoleSetInvitationResult>;
+  RoleSetInvitationResultNotice: RoleSetInvitationResultNotice;
   RoleSetInvitationResultType: RoleSetInvitationResultType;
   RoleSetRoleImplicit: RoleSetRoleImplicit;
   RoleSetType: RoleSetType;
@@ -12621,6 +13165,7 @@ export type ResolversTypes = {
   SetDefaultCalloutTemplateOnInnovationFlowStateInput: SetDefaultCalloutTemplateOnInnovationFlowStateInput;
   SetPlatformWellKnownVirtualContributorInput: SetPlatformWellKnownVirtualContributorInput;
   SidebarWidget: SidebarWidget;
+  SigningAttemptStatus: SigningAttemptStatus;
   Space: ResolverTypeWrapper<
     Omit<
       Space,
@@ -12661,7 +13206,9 @@ export type ResolversTypes = {
       leadUsers: Array<ResolversTypes["User"]>;
     }
   >;
+  SpaceCollectionCardVariant: SpaceCollectionCardVariant;
   SpaceFilterInput: SpaceFilterInput;
+  SpaceJoinPreview: ResolverTypeWrapper<SpaceJoinPreview>;
   SpaceLevel: SpaceLevel;
   SpacePendingMembershipInfo: ResolverTypeWrapper<
     Omit<SpacePendingMembershipInfo, "about" | "communityGuidelines"> & {
@@ -12791,6 +13338,7 @@ export type ResolversTypes = {
   UpdateCalloutSettingsContributionInput: UpdateCalloutSettingsContributionInput;
   UpdateCalloutSettingsFramingInput: UpdateCalloutSettingsFramingInput;
   UpdateCalloutSettingsInput: UpdateCalloutSettingsInput;
+  UpdateCalloutSpacesSettingsInput: UpdateCalloutSpacesSettingsInput;
   UpdateCalloutVisibilityInput: UpdateCalloutVisibilityInput;
   UpdateCalloutsSortOrderInput: UpdateCalloutsSortOrderInput;
   UpdateClassificationEntryDisplayInput: UpdateClassificationEntryDisplayInput;
@@ -12995,9 +13543,6 @@ export type ResolversTypes = {
       profile: ResolversTypes["Profile"];
     }
   >;
-  WhiteboardContent: ResolverTypeWrapper<
-    Scalars["WhiteboardContent"]["output"]
-  >;
   WhiteboardPreviewCoordinates: ResolverTypeWrapper<WhiteboardPreviewCoordinates>;
   WhiteboardPreviewCoordinatesData: ResolverTypeWrapper<WhiteboardPreviewCoordinatesData>;
   WhiteboardPreviewCoordinatesInput: WhiteboardPreviewCoordinatesInput;
@@ -13029,6 +13574,8 @@ export type ResolversParentTypes = {
     spaces: Array<ResolversParentTypes["Space"]>;
   };
   AccountAuthorizationResetInput: AccountAuthorizationResetInput;
+  AccountDeletionBlocker: AccountDeletionBlocker;
+  AccountDeletionBlockerTotal: AccountDeletionBlockerTotal;
   AccountLicensePlan: AccountLicensePlan;
   AccountLicenseResetInput: AccountLicenseResetInput;
   AccountSubscription: AccountSubscription;
@@ -13153,6 +13700,7 @@ export type ResolversParentTypes = {
   AddPollOptionInput: AddPollOptionInput;
   AddReactionToCalloutInput: AddReactionToCalloutInput;
   AddVisualToMediaGalleryInput: AddVisualToMediaGalleryInput;
+  AdminCommunicationReconcileForumHierarchyInput: AdminCommunicationReconcileForumHierarchyInput;
   AdminRevokeMcpApiKeyInput: AdminRevokeMcpApiKeyInput;
   AdminUserEmailChangeDriftResolveInput: AdminUserEmailChangeDriftResolveInput;
   AdminUserEmailChangeInput: AdminUserEmailChangeInput;
@@ -13226,6 +13774,7 @@ export type ResolversParentTypes = {
   CalloutSettings: CalloutSettings;
   CalloutSettingsContribution: CalloutSettingsContribution;
   CalloutSettingsFraming: CalloutSettingsFraming;
+  CalloutSpacesSettings: CalloutSpacesSettings;
   CalloutsSet: Omit<CalloutsSet, "callouts"> & {
     callouts: Array<ResolversParentTypes["Callout"]>;
   };
@@ -13279,9 +13828,8 @@ export type ResolversParentTypes = {
   CommunityInvitationForRoleResult: CommunityInvitationForRoleResult;
   CommunityInvitationResult: Omit<
     CommunityInvitationResult,
-    "invitation" | "spacePendingMembershipInfo"
+    "spacePendingMembershipInfo"
   > & {
-    invitation: ResolversParentTypes["Invitation"];
     spacePendingMembershipInfo: ResolversParentTypes["SpacePendingMembershipInfo"];
   };
   CommunityMembershipResult: Omit<
@@ -13369,6 +13917,8 @@ export type ResolversParentTypes = {
   CreateCalloutSettingsFramingData: CreateCalloutSettingsFramingData;
   CreateCalloutSettingsFramingInput: CreateCalloutSettingsFramingInput;
   CreateCalloutSettingsInput: CreateCalloutSettingsInput;
+  CreateCalloutSpacesSettingsData: CreateCalloutSpacesSettingsData;
+  CreateCalloutSpacesSettingsInput: CreateCalloutSpacesSettingsInput;
   CreateCalloutTaskBoardData: CreateCalloutTaskBoardData;
   CreateCalloutTaskBoardInput: CreateCalloutTaskBoardInput;
   CreateCalloutsSetData: CreateCalloutsSetData;
@@ -13438,6 +13988,8 @@ export type ResolversParentTypes = {
   CreateVisualOnProfileData: CreateVisualOnProfileData;
   CreateVisualOnProfileInput: CreateVisualOnProfileInput;
   CreateWhiteboardData: CreateWhiteboardData;
+  CreateWhiteboardDraftOnCalloutsSetInput: CreateWhiteboardDraftOnCalloutsSetInput;
+  CreateWhiteboardDraftOnTemplatesSetInput: CreateWhiteboardDraftOnTemplatesSetInput;
   CreateWhiteboardInput: CreateWhiteboardInput;
   CreateWhiteboardPreviewSettingsData: CreateWhiteboardPreviewSettingsData;
   CreateWhiteboardPreviewSettingsInput: CreateWhiteboardPreviewSettingsInput;
@@ -13503,6 +14055,7 @@ export type ResolversParentTypes = {
     mentionableContributors: Array<ResolversParentTypes["ActorFull"]>;
   };
   ForumCreateDiscussionInput: ForumCreateDiscussionInput;
+  ForumRemoveDiscussionCategoryInput: ForumRemoveDiscussionCategoryInput;
   Geo: Geo;
   GeoLocation: GeoLocation;
   GrantAssistantActorCapabilitiesInput: GrantAssistantActorCapabilitiesInput;
@@ -13537,6 +14090,17 @@ export type ResolversParentTypes = {
     triggeredBy?: Maybe<ResolversParentTypes["Actor"]>;
   };
   InAppNotificationPayload: ResolversInterfaceTypes<ResolversParentTypes>["InAppNotificationPayload"];
+  InAppNotificationPayloadOrganizationAssociateActor: Omit<
+    InAppNotificationPayloadOrganizationAssociateActor,
+    "actor" | "organization"
+  > & {
+    actor?: Maybe<ResolversParentTypes["Actor"]>;
+    organization?: Maybe<ResolversParentTypes["Organization"]>;
+  };
+  InAppNotificationPayloadOrganizationAssociateInvitation: Omit<
+    InAppNotificationPayloadOrganizationAssociateInvitation,
+    "organization"
+  > & { organization?: Maybe<ResolversParentTypes["Organization"]> };
   InAppNotificationPayloadOrganizationMessageDirect: Omit<
     InAppNotificationPayloadOrganizationMessageDirect,
     "organization"
@@ -13630,8 +14194,11 @@ export type ResolversParentTypes = {
   };
   InAppNotificationPayloadSpaceCommunityInvitation: Omit<
     InAppNotificationPayloadSpaceCommunityInvitation,
-    "space"
-  > & { space: ResolversParentTypes["Space"] };
+    "organization" | "space"
+  > & {
+    organization?: Maybe<ResolversParentTypes["Organization"]>;
+    space: ResolversParentTypes["Space"];
+  };
   InAppNotificationPayloadSpaceCommunityInvitationPlatform: Omit<
     InAppNotificationPayloadSpaceCommunityInvitationPlatform,
     "space"
@@ -13739,7 +14306,6 @@ export type ResolversParentTypes = {
     | "document"
     | "innovationHub"
     | "innovationPack"
-    | "invitation"
     | "organization"
     | "profile"
     | "roleSet"
@@ -13762,7 +14328,6 @@ export type ResolversParentTypes = {
     document?: Maybe<ResolversParentTypes["Document"]>;
     innovationHub?: Maybe<ResolversParentTypes["InnovationHub"]>;
     innovationPack?: Maybe<ResolversParentTypes["InnovationPack"]>;
-    invitation?: Maybe<ResolversParentTypes["Invitation"]>;
     organization?: Maybe<ResolversParentTypes["Organization"]>;
     profile?: Maybe<ResolversParentTypes["Profile"]>;
     roleSet?: Maybe<ResolversParentTypes["RoleSet"]>;
@@ -13776,6 +14341,7 @@ export type ResolversParentTypes = {
   Markdown: Scalars["Markdown"]["output"];
   McpApiKey: McpApiKey;
   McpApiKeyMintResult: McpApiKeyMintResult;
+  MeAccountDeletionStatus: MeAccountDeletionStatus;
   MeConversationsResult: Omit<MeConversationsResult, "conversations"> & {
     conversations: Array<ResolversParentTypes["Conversation"]>;
   };
@@ -13786,6 +14352,8 @@ export type ResolversParentTypes = {
     | "conversations"
     | "mySpaces"
     | "notifications"
+    | "organizationApplications"
+    | "organizationInvitations"
     | "spaceMembershipsFlat"
     | "spaceMembershipsHierarchical"
     | "user"
@@ -13799,6 +14367,12 @@ export type ResolversParentTypes = {
     conversations: ResolversParentTypes["MeConversationsResult"];
     mySpaces: Array<ResolversParentTypes["MySpaceResults"]>;
     notifications: ResolversParentTypes["PaginatedInAppNotifications"];
+    organizationApplications: Array<
+      ResolversParentTypes["OrganizationApplicationResult"]
+    >;
+    organizationInvitations: Array<
+      ResolversParentTypes["OrganizationInvitationResult"]
+    >;
     spaceMembershipsFlat: Array<
       ResolversParentTypes["CommunityMembershipResult"]
     >;
@@ -13814,6 +14388,15 @@ export type ResolversParentTypes = {
     createdBy?: Maybe<ResolversParentTypes["User"]>;
     profile: ResolversParentTypes["Profile"];
   };
+  MemoSignature: Omit<MemoSignature, "actor" | "document"> & {
+    actor?: Maybe<ResolversParentTypes["User"]>;
+    document?: Maybe<ResolversParentTypes["Document"]>;
+  };
+  MemoSignatureVerifyInput: MemoSignatureVerifyInput;
+  MemoSigningContinueInput: MemoSigningContinueInput;
+  MemoSigningContinueResult: MemoSigningContinueResult;
+  MemoSigningPrepareInput: MemoSigningPrepareInput;
+  MemoSigningPrepareResult: MemoSigningPrepareResult;
   Message: Omit<Message, "sender"> & {
     sender?: Maybe<ResolversParentTypes["Actor"]>;
   };
@@ -13870,8 +14453,17 @@ export type ResolversParentTypes = {
     profile?: Maybe<ResolversParentTypes["Profile"]>;
     roleSet: ResolversParentTypes["RoleSet"];
   };
+  OrganizationApplicationResult: Omit<
+    OrganizationApplicationResult,
+    "organization"
+  > & { organization: ResolversParentTypes["Organization"] };
+  OrganizationAssociateEligibility: OrganizationAssociateEligibility;
   OrganizationAuthorizationResetInput: OrganizationAuthorizationResetInput;
   OrganizationFilterInput: OrganizationFilterInput;
+  OrganizationInvitationResult: Omit<
+    OrganizationInvitationResult,
+    "organization"
+  > & { organization: ResolversParentTypes["Organization"] };
   OrganizationSettings: OrganizationSettings;
   OrganizationSettingsMembership: OrganizationSettingsMembership;
   OrganizationSettingsPrivacy: OrganizationSettingsPrivacy;
@@ -14025,6 +14617,7 @@ export type ResolversParentTypes = {
   RemoveUserGroupMemberInput: RemoveUserGroupMemberInput;
   ReorderPollOptionsInput: ReorderPollOptionsInput;
   ReplaceCollaboraDocumentInput: ReplaceCollaboraDocumentInput;
+  ReplaceWhiteboardContentFromSourceInput: ReplaceWhiteboardContentFromSourceInput;
   RevokeAuthorizationCredentialInput: RevokeAuthorizationCredentialInput;
   RevokeLicensePlanFromAccount: RevokeLicensePlanFromAccount;
   RevokeLicensePlanFromSpace: RevokeLicensePlanFromSpace;
@@ -14033,21 +14626,15 @@ export type ResolversParentTypes = {
   Role: Role;
   RoleSet: Omit<
     RoleSet,
-    | "invitations"
-    | "organizationsInRole"
-    | "organizationsInRoles"
-    | "usersInRole"
+    "organizationsInRole" | "organizationsInRoles" | "usersInRole"
   > & {
-    invitations: Array<ResolversParentTypes["Invitation"]>;
     organizationsInRole: Array<ResolversParentTypes["Organization"]>;
     organizationsInRoles: Array<
       ResolversParentTypes["OrganizationsInRolesResponse"]
     >;
     usersInRole: Array<ResolversParentTypes["User"]>;
   };
-  RoleSetInvitationResult: Omit<RoleSetInvitationResult, "invitation"> & {
-    invitation?: Maybe<ResolversParentTypes["Invitation"]>;
-  };
+  RoleSetInvitationResult: RoleSetInvitationResult;
   RolesActorInput: RolesActorInput;
   RolesResult: RolesResult;
   RolesResultCommunity: RolesResultCommunity;
@@ -14148,6 +14735,7 @@ export type ResolversParentTypes = {
     leadUsers: Array<ResolversParentTypes["User"]>;
   };
   SpaceFilterInput: SpaceFilterInput;
+  SpaceJoinPreview: SpaceJoinPreview;
   SpacePendingMembershipInfo: Omit<
     SpacePendingMembershipInfo,
     "about" | "communityGuidelines"
@@ -14258,6 +14846,7 @@ export type ResolversParentTypes = {
   UpdateCalloutSettingsContributionInput: UpdateCalloutSettingsContributionInput;
   UpdateCalloutSettingsFramingInput: UpdateCalloutSettingsFramingInput;
   UpdateCalloutSettingsInput: UpdateCalloutSettingsInput;
+  UpdateCalloutSpacesSettingsInput: UpdateCalloutSpacesSettingsInput;
   UpdateCalloutVisibilityInput: UpdateCalloutVisibilityInput;
   UpdateCalloutsSortOrderInput: UpdateCalloutsSortOrderInput;
   UpdateClassificationEntryDisplayInput: UpdateClassificationEntryDisplayInput;
@@ -14437,7 +15026,6 @@ export type ResolversParentTypes = {
     createdBy?: Maybe<ResolversParentTypes["User"]>;
     profile: ResolversParentTypes["Profile"];
   };
-  WhiteboardContent: Scalars["WhiteboardContent"]["output"];
   WhiteboardPreviewCoordinates: WhiteboardPreviewCoordinates;
   WhiteboardPreviewCoordinatesData: WhiteboardPreviewCoordinatesData;
   WhiteboardPreviewCoordinatesInput: WhiteboardPreviewCoordinatesInput;
@@ -14519,6 +15107,35 @@ export type AccountResolvers<
     ParentType,
     ContextType
   >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type AccountDeletionBlockerResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["AccountDeletionBlocker"] = ResolversParentTypes["AccountDeletionBlocker"]
+> = {
+  displayName?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
+  kind?: Resolver<
+    ResolversTypes["AccountDeletionBlockerKind"],
+    ParentType,
+    ContextType
+  >;
+  resourceID?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
+  selfResolvable?: Resolver<ResolversTypes["Boolean"], ParentType, ContextType>;
+  url?: Resolver<Maybe<ResolversTypes["String"]>, ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type AccountDeletionBlockerTotalResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["AccountDeletionBlockerTotal"] = ResolversParentTypes["AccountDeletionBlockerTotal"]
+> = {
+  kind?: Resolver<
+    ResolversTypes["AccountDeletionBlockerKind"],
+    ParentType,
+    ContextType
+  >;
+  total?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -15410,8 +16027,8 @@ export type CalloutContributionDefaultsResolvers<
     ContextType
   >;
   updatedDate?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
-  whiteboardContent?: Resolver<
-    Maybe<ResolversTypes["WhiteboardContent"]>,
+  whiteboardContentAvailable?: Resolver<
+    ResolversTypes["Boolean"],
     ParentType,
     ContextType
   >;
@@ -15640,6 +16257,23 @@ export type CalloutSettingsFramingResolvers<
     ParentType,
     ContextType
   >;
+  spaces?: Resolver<
+    Maybe<ResolversTypes["CalloutSpacesSettings"]>,
+    ParentType,
+    ContextType
+  >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type CalloutSpacesSettingsResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["CalloutSpacesSettings"] = ResolversParentTypes["CalloutSpacesSettings"]
+> = {
+  cardVariant?: Resolver<
+    ResolversTypes["SpaceCollectionCardVariant"],
+    ParentType,
+    ContextType
+  >;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -15847,6 +16481,7 @@ export type CollaborationMigrationResultResolvers<
   >;
   migrated?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
   total?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
+  unattached?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -16370,13 +17005,23 @@ export type CreateCalloutContributionDefaultsDataResolvers<
     ParentType,
     ContextType
   >;
+  draftWhiteboardID?: Resolver<
+    Maybe<ResolversTypes["UUID"]>,
+    ParentType,
+    ContextType
+  >;
   postDescription?: Resolver<
     Maybe<ResolversTypes["Markdown"]>,
     ParentType,
     ContextType
   >;
-  whiteboardContent?: Resolver<
-    Maybe<ResolversTypes["WhiteboardContent"]>,
+  sourceCalloutID?: Resolver<
+    Maybe<ResolversTypes["UUID"]>,
+    ParentType,
+    ContextType
+  >;
+  sourceWhiteboardID?: Resolver<
+    Maybe<ResolversTypes["UUID"]>,
     ParentType,
     ContextType
   >;
@@ -16589,6 +17234,23 @@ export type CreateCalloutSettingsFramingDataResolvers<
   >;
   selection?: Resolver<
     Maybe<ResolversTypes["CreateCalloutSelectionSettingsData"]>,
+    ParentType,
+    ContextType
+  >;
+  spaces?: Resolver<
+    Maybe<ResolversTypes["CreateCalloutSpacesSettingsData"]>,
+    ParentType,
+    ContextType
+  >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type CreateCalloutSpacesSettingsDataResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["CreateCalloutSpacesSettingsData"] = ResolversParentTypes["CreateCalloutSpacesSettingsData"]
+> = {
+  cardVariant?: Resolver<
+    Maybe<ResolversTypes["SpaceCollectionCardVariant"]>,
     ParentType,
     ContextType
   >;
@@ -16906,8 +17568,8 @@ export type CreateWhiteboardDataResolvers<
   ContextType = any,
   ParentType extends ResolversParentTypes["CreateWhiteboardData"] = ResolversParentTypes["CreateWhiteboardData"]
 > = {
-  content?: Resolver<
-    Maybe<ResolversTypes["WhiteboardContent"]>,
+  draftWhiteboardID?: Resolver<
+    Maybe<ResolversTypes["UUID"]>,
     ParentType,
     ContextType
   >;
@@ -17299,6 +17961,8 @@ export type InAppNotificationPayloadResolvers<
   ParentType extends ResolversParentTypes["InAppNotificationPayload"] = ResolversParentTypes["InAppNotificationPayload"]
 > = {
   __resolveType: TypeResolveFn<
+    | "InAppNotificationPayloadOrganizationAssociateActor"
+    | "InAppNotificationPayloadOrganizationAssociateInvitation"
     | "InAppNotificationPayloadOrganizationMessageDirect"
     | "InAppNotificationPayloadOrganizationMessageRoom"
     | "InAppNotificationPayloadPlatformForumDiscussion"
@@ -17330,6 +17994,61 @@ export type InAppNotificationPayloadResolvers<
     ParentType,
     ContextType
   >;
+};
+
+export type InAppNotificationPayloadOrganizationAssociateActorResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["InAppNotificationPayloadOrganizationAssociateActor"] = ResolversParentTypes["InAppNotificationPayloadOrganizationAssociateActor"]
+> = {
+  actor?: Resolver<Maybe<ResolversTypes["Actor"]>, ParentType, ContextType>;
+  application?: Resolver<
+    Maybe<ResolversTypes["Application"]>,
+    ParentType,
+    ContextType
+  >;
+  extraRolesWithheld?: Resolver<
+    Maybe<Array<ResolversTypes["RoleName"]>>,
+    ParentType,
+    ContextType
+  >;
+  invitation?: Resolver<
+    Maybe<ResolversTypes["Invitation"]>,
+    ParentType,
+    ContextType
+  >;
+  organization?: Resolver<
+    Maybe<ResolversTypes["Organization"]>,
+    ParentType,
+    ContextType
+  >;
+  type?: Resolver<
+    ResolversTypes["NotificationEventPayload"],
+    ParentType,
+    ContextType
+  >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type InAppNotificationPayloadOrganizationAssociateInvitationResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["InAppNotificationPayloadOrganizationAssociateInvitation"] = ResolversParentTypes["InAppNotificationPayloadOrganizationAssociateInvitation"]
+> = {
+  invitation?: Resolver<
+    Maybe<ResolversTypes["Invitation"]>,
+    ParentType,
+    ContextType
+  >;
+  organization?: Resolver<
+    Maybe<ResolversTypes["Organization"]>,
+    ParentType,
+    ContextType
+  >;
+  type?: Resolver<
+    ResolversTypes["NotificationEventPayload"],
+    ParentType,
+    ContextType
+  >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
 export type InAppNotificationPayloadOrganizationMessageDirectResolvers<
@@ -17440,8 +18159,6 @@ export type InAppNotificationPayloadPlatformUserProfileRemovedResolvers<
     ParentType,
     ContextType
   >;
-  userDisplayName?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
-  userEmail?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -17642,6 +18359,16 @@ export type InAppNotificationPayloadSpaceCommunityInvitationResolvers<
   ContextType = any,
   ParentType extends ResolversParentTypes["InAppNotificationPayloadSpaceCommunityInvitation"] = ResolversParentTypes["InAppNotificationPayloadSpaceCommunityInvitation"]
 > = {
+  invitation?: Resolver<
+    Maybe<ResolversTypes["Invitation"]>,
+    ParentType,
+    ContextType
+  >;
+  organization?: Resolver<
+    Maybe<ResolversTypes["Organization"]>,
+    ParentType,
+    ContextType
+  >;
   space?: Resolver<ResolversTypes["Space"], ParentType, ContextType>;
   type?: Resolver<
     ResolversTypes["NotificationEventPayload"],
@@ -17934,6 +18661,11 @@ export type InvitationResolvers<
     ParentType,
     ContextType
   >;
+  extraRolesWithheld?: Resolver<
+    Maybe<Array<ResolversTypes["RoleName"]>>,
+    ParentType,
+    ContextType
+  >;
   id?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
   invitedToParent?: Resolver<
     ResolversTypes["Boolean"],
@@ -17944,6 +18676,11 @@ export type InvitationResolvers<
   lifecycle?: Resolver<ResolversTypes["Lifecycle"], ParentType, ContextType>;
   nextEvents?: Resolver<
     Array<ResolversTypes["String"]>,
+    ParentType,
+    ContextType
+  >;
+  spacesToJoinOnAccept?: Resolver<
+    Maybe<Array<ResolversTypes["SpaceJoinPreview"]>>,
     ParentType,
     ContextType
   >;
@@ -18833,6 +19570,31 @@ export type McpApiKeyMintResultResolvers<
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
+export type MeAccountDeletionStatusResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["MeAccountDeletionStatus"] = ResolversParentTypes["MeAccountDeletionStatus"]
+> = {
+  blockers?: Resolver<
+    Array<ResolversTypes["AccountDeletionBlocker"]>,
+    ParentType,
+    ContextType
+  >;
+  canDelete?: Resolver<ResolversTypes["Boolean"], ParentType, ContextType>;
+  externalSubscriptionLinked?: Resolver<
+    ResolversTypes["Boolean"],
+    ParentType,
+    ContextType
+  >;
+  sessionFresh?: Resolver<ResolversTypes["Boolean"], ParentType, ContextType>;
+  totals?: Resolver<
+    Array<ResolversTypes["AccountDeletionBlockerTotal"]>,
+    ParentType,
+    ContextType
+  >;
+  truncated?: Resolver<ResolversTypes["Boolean"], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
 export type MeConversationsResultResolvers<
   ContextType = any,
   ParentType extends ResolversParentTypes["MeConversationsResult"] = ResolversParentTypes["MeConversationsResult"]
@@ -18849,6 +19611,11 @@ export type MeQueryResultsResolvers<
   ContextType = any,
   ParentType extends ResolversParentTypes["MeQueryResults"] = ResolversParentTypes["MeQueryResults"]
 > = {
+  accountDeletion?: Resolver<
+    ResolversTypes["MeAccountDeletionStatus"],
+    ParentType,
+    ContextType
+  >;
   communityApplications?: Resolver<
     Array<ResolversTypes["CommunityApplicationResult"]>,
     ParentType,
@@ -18894,6 +19661,24 @@ export type MeQueryResultsResolvers<
     ResolversTypes["Float"],
     ParentType,
     ContextType
+  >;
+  organizationApplications?: Resolver<
+    Array<ResolversTypes["OrganizationApplicationResult"]>,
+    ParentType,
+    ContextType,
+    Partial<MeQueryResultsOrganizationApplicationsArgs>
+  >;
+  organizationInvitations?: Resolver<
+    Array<ResolversTypes["OrganizationInvitationResult"]>,
+    ParentType,
+    ContextType,
+    Partial<MeQueryResultsOrganizationInvitationsArgs>
+  >;
+  organizationInvitationsCount?: Resolver<
+    ResolversTypes["Float"],
+    ParentType,
+    ContextType,
+    Partial<MeQueryResultsOrganizationInvitationsCountArgs>
   >;
   spaceMembershipsFlat?: Resolver<
     Array<ResolversTypes["CommunityMembershipResult"]>,
@@ -18961,7 +19746,50 @@ export type MemoResolvers<
   >;
   nameID?: Resolver<ResolversTypes["NameID"], ParentType, ContextType>;
   profile?: Resolver<ResolversTypes["Profile"], ParentType, ContextType>;
+  signatures?: Resolver<
+    Array<ResolversTypes["MemoSignature"]>,
+    ParentType,
+    ContextType
+  >;
   updatedDate?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type MemoSignatureResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["MemoSignature"] = ResolversParentTypes["MemoSignature"]
+> = {
+  actor?: Resolver<Maybe<ResolversTypes["User"]>, ParentType, ContextType>;
+  createdDate?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
+  document?: Resolver<
+    Maybe<ResolversTypes["Document"]>,
+    ParentType,
+    ContextType
+  >;
+  id?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
+  status?: Resolver<
+    ResolversTypes["SigningAttemptStatus"],
+    ParentType,
+    ContextType
+  >;
+  updatedDate?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type MemoSigningContinueResultResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["MemoSigningContinueResult"] = ResolversParentTypes["MemoSigningContinueResult"]
+> = {
+  authorizeUrl?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type MemoSigningPrepareResultResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["MemoSigningPrepareResult"] = ResolversParentTypes["MemoSigningPrepareResult"]
+> = {
+  attemptId?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
+  previewUrl?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -19172,6 +20000,15 @@ export type MutationResolvers<
     ParentType,
     ContextType
   >;
+  adminCommunicationReconcileForumHierarchy?: Resolver<
+    ResolversTypes["String"],
+    ParentType,
+    ContextType,
+    RequireFields<
+      MutationAdminCommunicationReconcileForumHierarchyArgs,
+      "reconcileData"
+    >
+  >;
   adminCommunicationRemoveOrphanedRoom?: Resolver<
     ResolversTypes["Boolean"],
     ParentType,
@@ -19194,6 +20031,12 @@ export type MutationResolvers<
       MutationAdminCommunicationUpdateRoomStateArgs,
       "roomStateData"
     >
+  >;
+  adminForumRemoveDiscussionCategory?: Resolver<
+    ResolversTypes["Forum"],
+    ParentType,
+    ContextType,
+    RequireFields<MutationAdminForumRemoveDiscussionCategoryArgs, "removeData">
   >;
   adminIdentityDeleteKratosIdentity?: Resolver<
     ResolversTypes["Boolean"],
@@ -19340,6 +20183,12 @@ export type MutationResolvers<
     ContextType,
     RequireFields<MutationAssignLicensePlanToSpaceArgs, "planData">
   >;
+  assignPlatformRoleToOrganization?: Resolver<
+    ResolversTypes["Organization"],
+    ParentType,
+    ContextType,
+    RequireFields<MutationAssignPlatformRoleToOrganizationArgs, "roleData">
+  >;
   assignPlatformRoleToUser?: Resolver<
     ResolversTypes["User"],
     ParentType,
@@ -19437,6 +20286,12 @@ export type MutationResolvers<
     ResolversTypes["MigrateEmbeddings"],
     ParentType,
     ContextType
+  >;
+  continueMemoSigning?: Resolver<
+    ResolversTypes["MemoSigningContinueResult"],
+    ParentType,
+    ContextType,
+    RequireFields<MutationContinueMemoSigningArgs, "signingData">
   >;
   convertSpaceL1ToSpaceL0?: Resolver<
     ResolversTypes["Space"],
@@ -19605,6 +20460,18 @@ export type MutationResolvers<
       MutationCreateVirtualContributorArgs,
       "virtualContributorData"
     >
+  >;
+  createWhiteboardDraftOnCalloutsSet?: Resolver<
+    ResolversTypes["UUID"],
+    ParentType,
+    ContextType,
+    RequireFields<MutationCreateWhiteboardDraftOnCalloutsSetArgs, "draftData">
+  >;
+  createWhiteboardDraftOnTemplatesSet?: Resolver<
+    ResolversTypes["UUID"],
+    ParentType,
+    ContextType,
+    RequireFields<MutationCreateWhiteboardDraftOnTemplatesSetArgs, "draftData">
   >;
   createWingbackAccount?: Resolver<
     ResolversTypes["String"],
@@ -19786,6 +20653,12 @@ export type MutationResolvers<
     ContextType,
     RequireFields<MutationDeleteWhiteboardArgs, "whiteboardData">
   >;
+  deleteWhiteboardDraft?: Resolver<
+    ResolversTypes["UUID"],
+    ParentType,
+    ContextType,
+    RequireFields<MutationDeleteWhiteboardDraftArgs, "whiteboardID">
+  >;
   enablePushSubscription?: Resolver<
     ResolversTypes["PushSubscription"],
     ParentType,
@@ -19928,6 +20801,12 @@ export type MutationResolvers<
     ContextType,
     RequireFields<MutationMoveTaskToColumnArgs, "moveData">
   >;
+  prepareMemoSigning?: Resolver<
+    ResolversTypes["MemoSigningPrepareResult"],
+    ParentType,
+    ContextType,
+    RequireFields<MutationPrepareMemoSigningArgs, "signingData">
+  >;
   refreshAllBodiesOfKnowledge?: Resolver<
     ResolversTypes["Boolean"],
     ParentType,
@@ -19983,6 +20862,12 @@ export type MutationResolvers<
     ParentType,
     ContextType,
     RequireFields<MutationRemoveNotificationEmailFromBlacklistArgs, "input">
+  >;
+  removePlatformRoleFromOrganization?: Resolver<
+    ResolversTypes["Organization"],
+    ParentType,
+    ContextType,
+    RequireFields<MutationRemovePlatformRoleFromOrganizationArgs, "roleData">
   >;
   removePlatformRoleFromUser?: Resolver<
     ResolversTypes["User"],
@@ -20055,6 +20940,12 @@ export type MutationResolvers<
     ParentType,
     ContextType,
     RequireFields<MutationReplaceCollaboraDocumentArgs, "file" | "replaceData">
+  >;
+  replaceWhiteboardContentFromSource?: Resolver<
+    ResolversTypes["Whiteboard"],
+    ParentType,
+    ContextType,
+    RequireFields<MutationReplaceWhiteboardContentFromSourceArgs, "input">
   >;
   resetConversationVc?: Resolver<
     ResolversTypes["Conversation"],
@@ -20735,6 +21626,11 @@ export type OrganizationResolvers<
     ParentType,
     ContextType
   >;
+  myAssociateEligibility?: Resolver<
+    ResolversTypes["OrganizationAssociateEligibility"],
+    ParentType,
+    ContextType
+  >;
   nameID?: Resolver<ResolversTypes["NameID"], ParentType, ContextType>;
   profile?: Resolver<Maybe<ResolversTypes["Profile"]>, ParentType, ContextType>;
   roleSet?: Resolver<ResolversTypes["RoleSet"], ParentType, ContextType>;
@@ -20759,6 +21655,56 @@ export type OrganizationResolvers<
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
+export type OrganizationApplicationResultResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["OrganizationApplicationResult"] = ResolversParentTypes["OrganizationApplicationResult"]
+> = {
+  application?: Resolver<
+    ResolversTypes["Application"],
+    ParentType,
+    ContextType
+  >;
+  id?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
+  organization?: Resolver<
+    ResolversTypes["Organization"],
+    ParentType,
+    ContextType
+  >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type OrganizationAssociateEligibilityResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["OrganizationAssociateEligibility"] = ResolversParentTypes["OrganizationAssociateEligibility"]
+> = {
+  canApply?: Resolver<ResolversTypes["Boolean"], ParentType, ContextType>;
+  canJoinDirectly?: Resolver<
+    ResolversTypes["Boolean"],
+    ParentType,
+    ContextType
+  >;
+  reason?: Resolver<
+    ResolversTypes["OrganizationAssociateEligibilityReason"],
+    ParentType,
+    ContextType
+  >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type OrganizationInvitationResultResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["OrganizationInvitationResult"] = ResolversParentTypes["OrganizationInvitationResult"]
+> = {
+  id?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
+  invitation?: Resolver<ResolversTypes["Invitation"], ParentType, ContextType>;
+  organization?: Resolver<
+    ResolversTypes["Organization"],
+    ParentType,
+    ContextType
+  >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
 export type OrganizationSettingsResolvers<
   ContextType = any,
   ParentType extends ResolversParentTypes["OrganizationSettings"] = ResolversParentTypes["OrganizationSettings"]
@@ -20780,6 +21726,16 @@ export type OrganizationSettingsMembershipResolvers<
   ContextType = any,
   ParentType extends ResolversParentTypes["OrganizationSettingsMembership"] = ResolversParentTypes["OrganizationSettingsMembership"]
 > = {
+  allowApplications?: Resolver<
+    ResolversTypes["Boolean"],
+    ParentType,
+    ContextType
+  >;
+  allowSpaceInvitations?: Resolver<
+    ResolversTypes["Boolean"],
+    ParentType,
+    ContextType
+  >;
   allowUsersMatchingDomainToJoin?: Resolver<
     ResolversTypes["Boolean"],
     ParentType,
@@ -21931,6 +22887,12 @@ export type QueryResolvers<
     ContextType,
     RequireFields<QuerySearchArgs, "searchData">
   >;
+  signingAttempt?: Resolver<
+    ResolversTypes["MemoSignature"],
+    ParentType,
+    ContextType,
+    RequireFields<QuerySigningAttemptArgs, "ID">
+  >;
   spaces?: Resolver<
     Array<ResolversTypes["Space"]>,
     ParentType,
@@ -21992,6 +22954,12 @@ export type QueryResolvers<
     Maybe<ResolversTypes["String"]>,
     ParentType,
     ContextType
+  >;
+  verifyMemoSignature?: Resolver<
+    ResolversTypes["MemoSignatureVerificationStatus"],
+    ParentType,
+    ContextType,
+    RequireFields<QueryVerifyMemoSignatureArgs, "verificationData">
   >;
   virtualContributor?: Resolver<
     ResolversTypes["VirtualContributor"],
@@ -22371,6 +23339,21 @@ export type RoleSetInvitationResultResolvers<
   >;
   invitation?: Resolver<
     Maybe<ResolversTypes["Invitation"]>,
+    ParentType,
+    ContextType
+  >;
+  invitedActorID?: Resolver<
+    Maybe<ResolversTypes["UUID"]>,
+    ParentType,
+    ContextType
+  >;
+  invitedEmail?: Resolver<
+    Maybe<ResolversTypes["String"]>,
+    ParentType,
+    ContextType
+  >;
+  notice?: Resolver<
+    Maybe<ResolversTypes["RoleSetInvitationResultNotice"]>,
     ParentType,
     ContextType
   >;
@@ -22891,6 +23874,16 @@ export type SpaceAboutMembershipResolvers<
     ContextType
   >;
   roleSetID?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type SpaceJoinPreviewResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["SpaceJoinPreview"] = ResolversParentTypes["SpaceJoinPreview"]
+> = {
+  displayName?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
+  id?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
+  url?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -24148,12 +25141,32 @@ export type UserSettingsNotificationOrganizationResolvers<
   ContextType = any,
   ParentType extends ResolversParentTypes["UserSettingsNotificationOrganization"] = ResolversParentTypes["UserSettingsNotificationOrganization"]
 > = {
+  adminAssociateApplicationReceived?: Resolver<
+    ResolversTypes["UserSettingsNotificationChannels"],
+    ParentType,
+    ContextType
+  >;
+  adminAssociateInvitationResponse?: Resolver<
+    ResolversTypes["UserSettingsNotificationChannels"],
+    ParentType,
+    ContextType
+  >;
+  adminAssociateJoined?: Resolver<
+    ResolversTypes["UserSettingsNotificationChannels"],
+    ParentType,
+    ContextType
+  >;
   adminMentioned?: Resolver<
     ResolversTypes["UserSettingsNotificationChannels"],
     ParentType,
     ContextType
   >;
   adminMessageReceived?: Resolver<
+    ResolversTypes["UserSettingsNotificationChannels"],
+    ParentType,
+    ContextType
+  >;
+  adminSpaceCommunityInvitation?: Resolver<
     ResolversTypes["UserSettingsNotificationChannels"],
     ParentType,
     ContextType
@@ -24314,6 +25327,11 @@ export type UserSettingsNotificationSpaceAdminResolvers<
     ParentType,
     ContextType
   >;
+  communityInvitationResponse?: Resolver<
+    ResolversTypes["UserSettingsNotificationChannels"],
+    ParentType,
+    ContextType
+  >;
   communityNewMember?: Resolver<
     ResolversTypes["UserSettingsNotificationChannels"],
     ParentType,
@@ -24368,6 +25386,16 @@ export type UserSettingsNotificationUserMembershipResolvers<
   ContextType = any,
   ParentType extends ResolversParentTypes["UserSettingsNotificationUserMembership"] = ResolversParentTypes["UserSettingsNotificationUserMembership"]
 > = {
+  organizationAssociateApplicationDecided?: Resolver<
+    ResolversTypes["UserSettingsNotificationChannels"],
+    ParentType,
+    ContextType
+  >;
+  organizationAssociateInvitationReceived?: Resolver<
+    ResolversTypes["UserSettingsNotificationChannels"],
+    ParentType,
+    ContextType
+  >;
   spaceCommunityInvitationReceived?: Resolver<
     ResolversTypes["UserSettingsNotificationChannels"],
     ParentType,
@@ -24745,11 +25773,6 @@ export type WhiteboardResolvers<
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
-export interface WhiteboardContentScalarConfig
-  extends GraphQLScalarTypeConfig<ResolversTypes["WhiteboardContent"], any> {
-  name: "WhiteboardContent";
-}
-
 export type WhiteboardPreviewCoordinatesResolvers<
   ContextType = any,
   ParentType extends ResolversParentTypes["WhiteboardPreviewCoordinates"] = ResolversParentTypes["WhiteboardPreviewCoordinates"]
@@ -24792,6 +25815,8 @@ export type WhiteboardPreviewSettingsResolvers<
 export type Resolvers<ContextType = any> = {
   APM?: ApmResolvers<ContextType>;
   Account?: AccountResolvers<ContextType>;
+  AccountDeletionBlocker?: AccountDeletionBlockerResolvers<ContextType>;
+  AccountDeletionBlockerTotal?: AccountDeletionBlockerTotalResolvers<ContextType>;
   AccountLicensePlan?: AccountLicensePlanResolvers<ContextType>;
   AccountSubscription?: AccountSubscriptionResolvers<ContextType>;
   ActivityCreatedSubscriptionResult?: ActivityCreatedSubscriptionResultResolvers<ContextType>;
@@ -24840,6 +25865,7 @@ export type Resolvers<ContextType = any> = {
   CalloutSettings?: CalloutSettingsResolvers<ContextType>;
   CalloutSettingsContribution?: CalloutSettingsContributionResolvers<ContextType>;
   CalloutSettingsFraming?: CalloutSettingsFramingResolvers<ContextType>;
+  CalloutSpacesSettings?: CalloutSpacesSettingsResolvers<ContextType>;
   CalloutsSet?: CalloutsSetResolvers<ContextType>;
   Classification?: ClassificationResolvers<ContextType>;
   ClassificationEntry?: ClassificationEntryResolvers<ContextType>;
@@ -24887,6 +25913,7 @@ export type Resolvers<ContextType = any> = {
   CreateCalloutSettingsContributionData?: CreateCalloutSettingsContributionDataResolvers<ContextType>;
   CreateCalloutSettingsData?: CreateCalloutSettingsDataResolvers<ContextType>;
   CreateCalloutSettingsFramingData?: CreateCalloutSettingsFramingDataResolvers<ContextType>;
+  CreateCalloutSpacesSettingsData?: CreateCalloutSpacesSettingsDataResolvers<ContextType>;
   CreateCalloutTaskBoardData?: CreateCalloutTaskBoardDataResolvers<ContextType>;
   CreateCalloutsSetData?: CreateCalloutsSetDataResolvers<ContextType>;
   CreateClassificationData?: CreateClassificationDataResolvers<ContextType>;
@@ -24928,6 +25955,8 @@ export type Resolvers<ContextType = any> = {
   ISearchResults?: ISearchResultsResolvers<ContextType>;
   InAppNotification?: InAppNotificationResolvers<ContextType>;
   InAppNotificationPayload?: InAppNotificationPayloadResolvers<ContextType>;
+  InAppNotificationPayloadOrganizationAssociateActor?: InAppNotificationPayloadOrganizationAssociateActorResolvers<ContextType>;
+  InAppNotificationPayloadOrganizationAssociateInvitation?: InAppNotificationPayloadOrganizationAssociateInvitationResolvers<ContextType>;
   InAppNotificationPayloadOrganizationMessageDirect?: InAppNotificationPayloadOrganizationMessageDirectResolvers<ContextType>;
   InAppNotificationPayloadOrganizationMessageRoom?: InAppNotificationPayloadOrganizationMessageRoomResolvers<ContextType>;
   InAppNotificationPayloadPlatformForumDiscussion?: InAppNotificationPayloadPlatformForumDiscussionResolvers<ContextType>;
@@ -24981,10 +26010,14 @@ export type Resolvers<ContextType = any> = {
   Markdown?: GraphQLScalarType;
   McpApiKey?: McpApiKeyResolvers<ContextType>;
   McpApiKeyMintResult?: McpApiKeyMintResultResolvers<ContextType>;
+  MeAccountDeletionStatus?: MeAccountDeletionStatusResolvers<ContextType>;
   MeConversationsResult?: MeConversationsResultResolvers<ContextType>;
   MeQueryResults?: MeQueryResultsResolvers<ContextType>;
   MediaGallery?: MediaGalleryResolvers<ContextType>;
   Memo?: MemoResolvers<ContextType>;
+  MemoSignature?: MemoSignatureResolvers<ContextType>;
+  MemoSigningContinueResult?: MemoSigningContinueResultResolvers<ContextType>;
+  MemoSigningPrepareResult?: MemoSigningPrepareResultResolvers<ContextType>;
   Message?: MessageResolvers<ContextType>;
   MessageDetails?: MessageDetailsResolvers<ContextType>;
   MessageID?: GraphQLScalarType;
@@ -25001,6 +26034,9 @@ export type Resolvers<ContextType = any> = {
   NameID?: GraphQLScalarType;
   NotificationRecipientResult?: NotificationRecipientResultResolvers<ContextType>;
   Organization?: OrganizationResolvers<ContextType>;
+  OrganizationApplicationResult?: OrganizationApplicationResultResolvers<ContextType>;
+  OrganizationAssociateEligibility?: OrganizationAssociateEligibilityResolvers<ContextType>;
+  OrganizationInvitationResult?: OrganizationInvitationResultResolvers<ContextType>;
   OrganizationSettings?: OrganizationSettingsResolvers<ContextType>;
   OrganizationSettingsMembership?: OrganizationSettingsMembershipResolvers<ContextType>;
   OrganizationSettingsPrivacy?: OrganizationSettingsPrivacyResolvers<ContextType>;
@@ -25084,6 +26120,7 @@ export type Resolvers<ContextType = any> = {
   Space?: SpaceResolvers<ContextType>;
   SpaceAbout?: SpaceAboutResolvers<ContextType>;
   SpaceAboutMembership?: SpaceAboutMembershipResolvers<ContextType>;
+  SpaceJoinPreview?: SpaceJoinPreviewResolvers<ContextType>;
   SpacePendingMembershipInfo?: SpacePendingMembershipInfoResolvers<ContextType>;
   SpaceSettings?: SpaceSettingsResolvers<ContextType>;
   SpaceSettingsCollaboration?: SpaceSettingsCollaborationResolvers<ContextType>;
@@ -25161,7 +26198,6 @@ export type Resolvers<ContextType = any> = {
   Visual?: VisualResolvers<ContextType>;
   VisualConstraints?: VisualConstraintsResolvers<ContextType>;
   Whiteboard?: WhiteboardResolvers<ContextType>;
-  WhiteboardContent?: GraphQLScalarType;
   WhiteboardPreviewCoordinates?: WhiteboardPreviewCoordinatesResolvers<ContextType>;
   WhiteboardPreviewCoordinatesData?: WhiteboardPreviewCoordinatesDataResolvers<ContextType>;
   WhiteboardPreviewSettings?: WhiteboardPreviewSettingsResolvers<ContextType>;
@@ -25188,6 +26224,10 @@ export type InvitationDataFragment = {
   state: string;
   nextEvents: Array<string>;
   isFinalized: boolean;
+  createdDate: Date;
+  extraRoles: Array<RoleName>;
+  invitedToParent: boolean;
+  welcomeMessage?: string | undefined;
   lifecycle: { id: string };
   createdBy?:
     | {
@@ -25204,6 +26244,7 @@ export type InvitationDataFragment = {
     | undefined;
   actor: {
     id: string;
+    type: ActorType;
     profile?: { id: string; displayName: string } | undefined;
   };
   authorization?:
@@ -25560,7 +26601,11 @@ export type MembersAndLeadsDataFragment = {
     };
     settings: {
       privacy: { contributionRolesPubliclyVisible: boolean };
-      membership: { allowUsersMatchingDomainToJoin: boolean };
+      membership: {
+        allowUsersMatchingDomainToJoin: boolean;
+        allowSpaceInvitations: boolean;
+        allowApplications: boolean;
+      };
     };
     authorization?:
       | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
@@ -25768,7 +26813,11 @@ export type MembersAndLeadsDataFragment = {
     };
     settings: {
       privacy: { contributionRolesPubliclyVisible: boolean };
-      membership: { allowUsersMatchingDomainToJoin: boolean };
+      membership: {
+        allowUsersMatchingDomainToJoin: boolean;
+        allowSpaceInvitations: boolean;
+        allowApplications: boolean;
+      };
     };
     authorization?:
       | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
@@ -25976,7 +27025,11 @@ export type MembersAndLeadsDataFragment = {
     };
     settings: {
       privacy: { contributionRolesPubliclyVisible: boolean };
-      membership: { allowUsersMatchingDomainToJoin: boolean };
+      membership: {
+        allowUsersMatchingDomainToJoin: boolean;
+        allowSpaceInvitations: boolean;
+        allowApplications: boolean;
+      };
     };
     authorization?:
       | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
@@ -26743,7 +27796,7 @@ export type CalloutDetailsFragment = {
     id: string;
     defaultDisplayName?: string | undefined;
     postDescription?: any | undefined;
-    whiteboardContent?: any | undefined;
+    whiteboardContentAvailable: boolean;
   };
   contributions: Array<{
     authorization?:
@@ -28216,9 +29269,33 @@ export type CollaborationDataFragment = {
       | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
       | undefined;
     currentState?:
-      | { description?: any | undefined; displayName: string }
+      | {
+          id: string;
+          description?: any | undefined;
+          displayName: string;
+          sortOrder: number;
+          settings: {
+            allowNewCallouts: boolean;
+            descriptionDisplayMode: CalloutDescriptionDisplayMode;
+            showPublishDetails: boolean;
+            sidebar: Array<SidebarWidget>;
+            visible: boolean;
+          };
+        }
       | undefined;
-    states: Array<{ description?: any | undefined; displayName: string }>;
+    states: Array<{
+      id: string;
+      description?: any | undefined;
+      displayName: string;
+      sortOrder: number;
+      settings: {
+        allowNewCallouts: boolean;
+        descriptionDisplayMode: CalloutDescriptionDisplayMode;
+        showPublishDetails: boolean;
+        sidebar: Array<SidebarWidget>;
+        visible: boolean;
+      };
+    }>;
   };
 };
 
@@ -28337,21 +29414,6 @@ export type CommunityDataFragment = {
   }>;
   roleSet: {
     id: string;
-    applications: Array<{
-      id: string;
-      state: string;
-      nextEvents: Array<string>;
-      isFinalized: boolean;
-      lifecycle: { id: string };
-      questions: Array<{ id: string }>;
-      actor: {
-        id: string;
-        profile?: { id: string; displayName: string } | undefined;
-      };
-      authorization?:
-        | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
-        | undefined;
-    }>;
     memberUsers: Array<{
       id: string;
       nameID: string;
@@ -28725,7 +29787,11 @@ export type CommunityDataFragment = {
       };
       settings: {
         privacy: { contributionRolesPubliclyVisible: boolean };
-        membership: { allowUsersMatchingDomainToJoin: boolean };
+        membership: {
+          allowUsersMatchingDomainToJoin: boolean;
+          allowSpaceInvitations: boolean;
+          allowApplications: boolean;
+        };
       };
       authorization?:
         | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
@@ -28945,7 +30011,11 @@ export type CommunityDataFragment = {
       };
       settings: {
         privacy: { contributionRolesPubliclyVisible: boolean };
-        membership: { allowUsersMatchingDomainToJoin: boolean };
+        membership: {
+          allowUsersMatchingDomainToJoin: boolean;
+          allowSpaceInvitations: boolean;
+          allowApplications: boolean;
+        };
       };
       authorization?:
         | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
@@ -29165,7 +30235,11 @@ export type CommunityDataFragment = {
       };
       settings: {
         privacy: { contributionRolesPubliclyVisible: boolean };
-        membership: { allowUsersMatchingDomainToJoin: boolean };
+        membership: {
+          allowUsersMatchingDomainToJoin: boolean;
+          allowSpaceInvitations: boolean;
+          allowApplications: boolean;
+        };
       };
       authorization?:
         | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
@@ -29547,8 +30621,17 @@ export type MemberDataFragment = {
 };
 
 export type InnovationFlowStateDataFragment = {
+  id: string;
   description?: any | undefined;
   displayName: string;
+  sortOrder: number;
+  settings: {
+    allowNewCallouts: boolean;
+    descriptionDisplayMode: CalloutDescriptionDisplayMode;
+    showPublishDetails: boolean;
+    sidebar: Array<SidebarWidget>;
+    visible: boolean;
+  };
 };
 
 export type InnovationFlowDataFragment = {
@@ -29603,9 +30686,33 @@ export type InnovationFlowDataFragment = {
     | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
     | undefined;
   currentState?:
-    | { description?: any | undefined; displayName: string }
+    | {
+        id: string;
+        description?: any | undefined;
+        displayName: string;
+        sortOrder: number;
+        settings: {
+          allowNewCallouts: boolean;
+          descriptionDisplayMode: CalloutDescriptionDisplayMode;
+          showPublishDetails: boolean;
+          sidebar: Array<SidebarWidget>;
+          visible: boolean;
+        };
+      }
     | undefined;
-  states: Array<{ description?: any | undefined; displayName: string }>;
+  states: Array<{
+    id: string;
+    description?: any | undefined;
+    displayName: string;
+    sortOrder: number;
+    settings: {
+      allowNewCallouts: boolean;
+      descriptionDisplayMode: CalloutDescriptionDisplayMode;
+      showPublishDetails: boolean;
+      sidebar: Array<SidebarWidget>;
+      visible: boolean;
+    };
+  }>;
 };
 
 export type AssignLicensePlanToAccountMutationVariables = Exact<{
@@ -29712,7 +30819,6 @@ export type RevokeLicensePlanFromSpaceMutation = {
       name: LicensingCredentialBasedCredentialType;
     }>;
     subspaces: Array<{ id: string }>;
-    actor: { id: string };
   };
 };
 
@@ -30168,7 +31274,11 @@ export type OrganizationDataFragment = {
   };
   settings: {
     privacy: { contributionRolesPubliclyVisible: boolean };
-    membership: { allowUsersMatchingDomainToJoin: boolean };
+    membership: {
+      allowUsersMatchingDomainToJoin: boolean;
+      allowSpaceInvitations: boolean;
+      allowApplications: boolean;
+    };
   };
   authorization?:
     | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
@@ -30889,9 +31999,33 @@ export type SubspaceL1DataFragment = {
           | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
           | undefined;
         currentState?:
-          | { description?: any | undefined; displayName: string }
+          | {
+              id: string;
+              description?: any | undefined;
+              displayName: string;
+              sortOrder: number;
+              settings: {
+                allowNewCallouts: boolean;
+                descriptionDisplayMode: CalloutDescriptionDisplayMode;
+                showPublishDetails: boolean;
+                sidebar: Array<SidebarWidget>;
+                visible: boolean;
+              };
+            }
           | undefined;
-        states: Array<{ description?: any | undefined; displayName: string }>;
+        states: Array<{
+          id: string;
+          description?: any | undefined;
+          displayName: string;
+          sortOrder: number;
+          settings: {
+            allowNewCallouts: boolean;
+            descriptionDisplayMode: CalloutDescriptionDisplayMode;
+            showPublishDetails: boolean;
+            sidebar: Array<SidebarWidget>;
+            visible: boolean;
+          };
+        }>;
       };
     };
     authorization?:
@@ -31035,21 +32169,6 @@ export type SubspaceL1DataFragment = {
       }>;
       roleSet: {
         id: string;
-        applications: Array<{
-          id: string;
-          state: string;
-          nextEvents: Array<string>;
-          isFinalized: boolean;
-          lifecycle: { id: string };
-          questions: Array<{ id: string }>;
-          actor: {
-            id: string;
-            profile?: { id: string; displayName: string } | undefined;
-          };
-          authorization?:
-            | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
-            | undefined;
-        }>;
         memberUsers: Array<{
           id: string;
           nameID: string;
@@ -31434,7 +32553,11 @@ export type SubspaceL1DataFragment = {
           };
           settings: {
             privacy: { contributionRolesPubliclyVisible: boolean };
-            membership: { allowUsersMatchingDomainToJoin: boolean };
+            membership: {
+              allowUsersMatchingDomainToJoin: boolean;
+              allowSpaceInvitations: boolean;
+              allowApplications: boolean;
+            };
           };
           authorization?:
             | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
@@ -31665,7 +32788,11 @@ export type SubspaceL1DataFragment = {
           };
           settings: {
             privacy: { contributionRolesPubliclyVisible: boolean };
-            membership: { allowUsersMatchingDomainToJoin: boolean };
+            membership: {
+              allowUsersMatchingDomainToJoin: boolean;
+              allowSpaceInvitations: boolean;
+              allowApplications: boolean;
+            };
           };
           authorization?:
             | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
@@ -31896,7 +33023,11 @@ export type SubspaceL1DataFragment = {
           };
           settings: {
             privacy: { contributionRolesPubliclyVisible: boolean };
-            membership: { allowUsersMatchingDomainToJoin: boolean };
+            membership: {
+              allowUsersMatchingDomainToJoin: boolean;
+              allowSpaceInvitations: boolean;
+              allowApplications: boolean;
+            };
           };
           authorization?:
             | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
@@ -32535,9 +33666,33 @@ export type SubspaceL1DataFragment = {
         | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
         | undefined;
       currentState?:
-        | { description?: any | undefined; displayName: string }
+        | {
+            id: string;
+            description?: any | undefined;
+            displayName: string;
+            sortOrder: number;
+            settings: {
+              allowNewCallouts: boolean;
+              descriptionDisplayMode: CalloutDescriptionDisplayMode;
+              showPublishDetails: boolean;
+              sidebar: Array<SidebarWidget>;
+              visible: boolean;
+            };
+          }
         | undefined;
-      states: Array<{ description?: any | undefined; displayName: string }>;
+      states: Array<{
+        id: string;
+        description?: any | undefined;
+        displayName: string;
+        sortOrder: number;
+        settings: {
+          allowNewCallouts: boolean;
+          descriptionDisplayMode: CalloutDescriptionDisplayMode;
+          showPublishDetails: boolean;
+          sidebar: Array<SidebarWidget>;
+          visible: boolean;
+        };
+      }>;
     };
   };
   authorization?:
@@ -32673,21 +33828,6 @@ export type SubspaceL1DataFragment = {
     }>;
     roleSet: {
       id: string;
-      applications: Array<{
-        id: string;
-        state: string;
-        nextEvents: Array<string>;
-        isFinalized: boolean;
-        lifecycle: { id: string };
-        questions: Array<{ id: string }>;
-        actor: {
-          id: string;
-          profile?: { id: string; displayName: string } | undefined;
-        };
-        authorization?:
-          | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
-          | undefined;
-      }>;
       memberUsers: Array<{
         id: string;
         nameID: string;
@@ -33068,7 +34208,11 @@ export type SubspaceL1DataFragment = {
         };
         settings: {
           privacy: { contributionRolesPubliclyVisible: boolean };
-          membership: { allowUsersMatchingDomainToJoin: boolean };
+          membership: {
+            allowUsersMatchingDomainToJoin: boolean;
+            allowSpaceInvitations: boolean;
+            allowApplications: boolean;
+          };
         };
         authorization?:
           | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
@@ -33295,7 +34439,11 @@ export type SubspaceL1DataFragment = {
         };
         settings: {
           privacy: { contributionRolesPubliclyVisible: boolean };
-          membership: { allowUsersMatchingDomainToJoin: boolean };
+          membership: {
+            allowUsersMatchingDomainToJoin: boolean;
+            allowSpaceInvitations: boolean;
+            allowApplications: boolean;
+          };
         };
         authorization?:
           | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
@@ -33522,7 +34670,11 @@ export type SubspaceL1DataFragment = {
         };
         settings: {
           privacy: { contributionRolesPubliclyVisible: boolean };
-          membership: { allowUsersMatchingDomainToJoin: boolean };
+          membership: {
+            allowUsersMatchingDomainToJoin: boolean;
+            allowSpaceInvitations: boolean;
+            allowApplications: boolean;
+          };
         };
         authorization?:
           | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
@@ -34186,9 +35338,33 @@ export type SubspaceL2DataFragment = {
           | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
           | undefined;
         currentState?:
-          | { description?: any | undefined; displayName: string }
+          | {
+              id: string;
+              description?: any | undefined;
+              displayName: string;
+              sortOrder: number;
+              settings: {
+                allowNewCallouts: boolean;
+                descriptionDisplayMode: CalloutDescriptionDisplayMode;
+                showPublishDetails: boolean;
+                sidebar: Array<SidebarWidget>;
+                visible: boolean;
+              };
+            }
           | undefined;
-        states: Array<{ description?: any | undefined; displayName: string }>;
+        states: Array<{
+          id: string;
+          description?: any | undefined;
+          displayName: string;
+          sortOrder: number;
+          settings: {
+            allowNewCallouts: boolean;
+            descriptionDisplayMode: CalloutDescriptionDisplayMode;
+            showPublishDetails: boolean;
+            sidebar: Array<SidebarWidget>;
+            visible: boolean;
+          };
+        }>;
       };
     };
     authorization?:
@@ -34332,21 +35508,6 @@ export type SubspaceL2DataFragment = {
       }>;
       roleSet: {
         id: string;
-        applications: Array<{
-          id: string;
-          state: string;
-          nextEvents: Array<string>;
-          isFinalized: boolean;
-          lifecycle: { id: string };
-          questions: Array<{ id: string }>;
-          actor: {
-            id: string;
-            profile?: { id: string; displayName: string } | undefined;
-          };
-          authorization?:
-            | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
-            | undefined;
-        }>;
         memberUsers: Array<{
           id: string;
           nameID: string;
@@ -34731,7 +35892,11 @@ export type SubspaceL2DataFragment = {
           };
           settings: {
             privacy: { contributionRolesPubliclyVisible: boolean };
-            membership: { allowUsersMatchingDomainToJoin: boolean };
+            membership: {
+              allowUsersMatchingDomainToJoin: boolean;
+              allowSpaceInvitations: boolean;
+              allowApplications: boolean;
+            };
           };
           authorization?:
             | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
@@ -34962,7 +36127,11 @@ export type SubspaceL2DataFragment = {
           };
           settings: {
             privacy: { contributionRolesPubliclyVisible: boolean };
-            membership: { allowUsersMatchingDomainToJoin: boolean };
+            membership: {
+              allowUsersMatchingDomainToJoin: boolean;
+              allowSpaceInvitations: boolean;
+              allowApplications: boolean;
+            };
           };
           authorization?:
             | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
@@ -35193,7 +36362,11 @@ export type SubspaceL2DataFragment = {
           };
           settings: {
             privacy: { contributionRolesPubliclyVisible: boolean };
-            membership: { allowUsersMatchingDomainToJoin: boolean };
+            membership: {
+              allowUsersMatchingDomainToJoin: boolean;
+              allowSpaceInvitations: boolean;
+              allowApplications: boolean;
+            };
           };
           authorization?:
             | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
@@ -35832,9 +37005,33 @@ export type SubspaceL2DataFragment = {
         | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
         | undefined;
       currentState?:
-        | { description?: any | undefined; displayName: string }
+        | {
+            id: string;
+            description?: any | undefined;
+            displayName: string;
+            sortOrder: number;
+            settings: {
+              allowNewCallouts: boolean;
+              descriptionDisplayMode: CalloutDescriptionDisplayMode;
+              showPublishDetails: boolean;
+              sidebar: Array<SidebarWidget>;
+              visible: boolean;
+            };
+          }
         | undefined;
-      states: Array<{ description?: any | undefined; displayName: string }>;
+      states: Array<{
+        id: string;
+        description?: any | undefined;
+        displayName: string;
+        sortOrder: number;
+        settings: {
+          allowNewCallouts: boolean;
+          descriptionDisplayMode: CalloutDescriptionDisplayMode;
+          showPublishDetails: boolean;
+          sidebar: Array<SidebarWidget>;
+          visible: boolean;
+        };
+      }>;
     };
   };
   authorization?:
@@ -35970,21 +37167,6 @@ export type SubspaceL2DataFragment = {
     }>;
     roleSet: {
       id: string;
-      applications: Array<{
-        id: string;
-        state: string;
-        nextEvents: Array<string>;
-        isFinalized: boolean;
-        lifecycle: { id: string };
-        questions: Array<{ id: string }>;
-        actor: {
-          id: string;
-          profile?: { id: string; displayName: string } | undefined;
-        };
-        authorization?:
-          | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
-          | undefined;
-      }>;
       memberUsers: Array<{
         id: string;
         nameID: string;
@@ -36365,7 +37547,11 @@ export type SubspaceL2DataFragment = {
         };
         settings: {
           privacy: { contributionRolesPubliclyVisible: boolean };
-          membership: { allowUsersMatchingDomainToJoin: boolean };
+          membership: {
+            allowUsersMatchingDomainToJoin: boolean;
+            allowSpaceInvitations: boolean;
+            allowApplications: boolean;
+          };
         };
         authorization?:
           | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
@@ -36592,7 +37778,11 @@ export type SubspaceL2DataFragment = {
         };
         settings: {
           privacy: { contributionRolesPubliclyVisible: boolean };
-          membership: { allowUsersMatchingDomainToJoin: boolean };
+          membership: {
+            allowUsersMatchingDomainToJoin: boolean;
+            allowSpaceInvitations: boolean;
+            allowApplications: boolean;
+          };
         };
         authorization?:
           | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
@@ -36819,7 +38009,11 @@ export type SubspaceL2DataFragment = {
         };
         settings: {
           privacy: { contributionRolesPubliclyVisible: boolean };
-          membership: { allowUsersMatchingDomainToJoin: boolean };
+          membership: {
+            allowUsersMatchingDomainToJoin: boolean;
+            allowSpaceInvitations: boolean;
+            allowApplications: boolean;
+          };
         };
         authorization?:
           | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
@@ -37226,21 +38420,6 @@ export type SpaceDataFragment = {
     }>;
     roleSet: {
       id: string;
-      applications: Array<{
-        id: string;
-        state: string;
-        nextEvents: Array<string>;
-        isFinalized: boolean;
-        lifecycle: { id: string };
-        questions: Array<{ id: string }>;
-        actor: {
-          id: string;
-          profile?: { id: string; displayName: string } | undefined;
-        };
-        authorization?:
-          | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
-          | undefined;
-      }>;
       memberUsers: Array<{
         id: string;
         nameID: string;
@@ -37621,7 +38800,11 @@ export type SpaceDataFragment = {
         };
         settings: {
           privacy: { contributionRolesPubliclyVisible: boolean };
-          membership: { allowUsersMatchingDomainToJoin: boolean };
+          membership: {
+            allowUsersMatchingDomainToJoin: boolean;
+            allowSpaceInvitations: boolean;
+            allowApplications: boolean;
+          };
         };
         authorization?:
           | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
@@ -37848,7 +39031,11 @@ export type SpaceDataFragment = {
         };
         settings: {
           privacy: { contributionRolesPubliclyVisible: boolean };
-          membership: { allowUsersMatchingDomainToJoin: boolean };
+          membership: {
+            allowUsersMatchingDomainToJoin: boolean;
+            allowSpaceInvitations: boolean;
+            allowApplications: boolean;
+          };
         };
         authorization?:
           | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
@@ -38075,7 +39262,11 @@ export type SpaceDataFragment = {
         };
         settings: {
           privacy: { contributionRolesPubliclyVisible: boolean };
-          membership: { allowUsersMatchingDomainToJoin: boolean };
+          membership: {
+            allowUsersMatchingDomainToJoin: boolean;
+            allowSpaceInvitations: boolean;
+            allowApplications: boolean;
+          };
         };
         authorization?:
           | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
@@ -38653,9 +39844,33 @@ export type SpaceDataFragment = {
         | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
         | undefined;
       currentState?:
-        | { description?: any | undefined; displayName: string }
+        | {
+            id: string;
+            description?: any | undefined;
+            displayName: string;
+            sortOrder: number;
+            settings: {
+              allowNewCallouts: boolean;
+              descriptionDisplayMode: CalloutDescriptionDisplayMode;
+              showPublishDetails: boolean;
+              sidebar: Array<SidebarWidget>;
+              visible: boolean;
+            };
+          }
         | undefined;
-      states: Array<{ description?: any | undefined; displayName: string }>;
+      states: Array<{
+        id: string;
+        description?: any | undefined;
+        displayName: string;
+        sortOrder: number;
+        settings: {
+          allowNewCallouts: boolean;
+          descriptionDisplayMode: CalloutDescriptionDisplayMode;
+          showPublishDetails: boolean;
+          sidebar: Array<SidebarWidget>;
+          visible: boolean;
+        };
+      }>;
     };
   };
   subspaces: Array<{
@@ -39242,9 +40457,33 @@ export type SpaceDataFragment = {
           | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
           | undefined;
         currentState?:
-          | { description?: any | undefined; displayName: string }
+          | {
+              id: string;
+              description?: any | undefined;
+              displayName: string;
+              sortOrder: number;
+              settings: {
+                allowNewCallouts: boolean;
+                descriptionDisplayMode: CalloutDescriptionDisplayMode;
+                showPublishDetails: boolean;
+                sidebar: Array<SidebarWidget>;
+                visible: boolean;
+              };
+            }
           | undefined;
-        states: Array<{ description?: any | undefined; displayName: string }>;
+        states: Array<{
+          id: string;
+          description?: any | undefined;
+          displayName: string;
+          sortOrder: number;
+          settings: {
+            allowNewCallouts: boolean;
+            descriptionDisplayMode: CalloutDescriptionDisplayMode;
+            showPublishDetails: boolean;
+            sidebar: Array<SidebarWidget>;
+            visible: boolean;
+          };
+        }>;
       };
     };
     authorization?:
@@ -39388,21 +40627,6 @@ export type SpaceDataFragment = {
       }>;
       roleSet: {
         id: string;
-        applications: Array<{
-          id: string;
-          state: string;
-          nextEvents: Array<string>;
-          isFinalized: boolean;
-          lifecycle: { id: string };
-          questions: Array<{ id: string }>;
-          actor: {
-            id: string;
-            profile?: { id: string; displayName: string } | undefined;
-          };
-          authorization?:
-            | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
-            | undefined;
-        }>;
         memberUsers: Array<{
           id: string;
           nameID: string;
@@ -39787,7 +41011,11 @@ export type SpaceDataFragment = {
           };
           settings: {
             privacy: { contributionRolesPubliclyVisible: boolean };
-            membership: { allowUsersMatchingDomainToJoin: boolean };
+            membership: {
+              allowUsersMatchingDomainToJoin: boolean;
+              allowSpaceInvitations: boolean;
+              allowApplications: boolean;
+            };
           };
           authorization?:
             | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
@@ -40018,7 +41246,11 @@ export type SpaceDataFragment = {
           };
           settings: {
             privacy: { contributionRolesPubliclyVisible: boolean };
-            membership: { allowUsersMatchingDomainToJoin: boolean };
+            membership: {
+              allowUsersMatchingDomainToJoin: boolean;
+              allowSpaceInvitations: boolean;
+              allowApplications: boolean;
+            };
           };
           authorization?:
             | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
@@ -40249,7 +41481,11 @@ export type SpaceDataFragment = {
           };
           settings: {
             privacy: { contributionRolesPubliclyVisible: boolean };
-            membership: { allowUsersMatchingDomainToJoin: boolean };
+            membership: {
+              allowUsersMatchingDomainToJoin: boolean;
+              allowSpaceInvitations: boolean;
+              allowApplications: boolean;
+            };
           };
           authorization?:
             | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
@@ -41473,9 +42709,33 @@ export type SubspaceDataFragment = {
         | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
         | undefined;
       currentState?:
-        | { description?: any | undefined; displayName: string }
+        | {
+            id: string;
+            description?: any | undefined;
+            displayName: string;
+            sortOrder: number;
+            settings: {
+              allowNewCallouts: boolean;
+              descriptionDisplayMode: CalloutDescriptionDisplayMode;
+              showPublishDetails: boolean;
+              sidebar: Array<SidebarWidget>;
+              visible: boolean;
+            };
+          }
         | undefined;
-      states: Array<{ description?: any | undefined; displayName: string }>;
+      states: Array<{
+        id: string;
+        description?: any | undefined;
+        displayName: string;
+        sortOrder: number;
+        settings: {
+          allowNewCallouts: boolean;
+          descriptionDisplayMode: CalloutDescriptionDisplayMode;
+          showPublishDetails: boolean;
+          sidebar: Array<SidebarWidget>;
+          visible: boolean;
+        };
+      }>;
     };
   };
   authorization?:
@@ -41611,21 +42871,6 @@ export type SubspaceDataFragment = {
     }>;
     roleSet: {
       id: string;
-      applications: Array<{
-        id: string;
-        state: string;
-        nextEvents: Array<string>;
-        isFinalized: boolean;
-        lifecycle: { id: string };
-        questions: Array<{ id: string }>;
-        actor: {
-          id: string;
-          profile?: { id: string; displayName: string } | undefined;
-        };
-        authorization?:
-          | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
-          | undefined;
-      }>;
       memberUsers: Array<{
         id: string;
         nameID: string;
@@ -42006,7 +43251,11 @@ export type SubspaceDataFragment = {
         };
         settings: {
           privacy: { contributionRolesPubliclyVisible: boolean };
-          membership: { allowUsersMatchingDomainToJoin: boolean };
+          membership: {
+            allowUsersMatchingDomainToJoin: boolean;
+            allowSpaceInvitations: boolean;
+            allowApplications: boolean;
+          };
         };
         authorization?:
           | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
@@ -42233,7 +43482,11 @@ export type SubspaceDataFragment = {
         };
         settings: {
           privacy: { contributionRolesPubliclyVisible: boolean };
-          membership: { allowUsersMatchingDomainToJoin: boolean };
+          membership: {
+            allowUsersMatchingDomainToJoin: boolean;
+            allowSpaceInvitations: boolean;
+            allowApplications: boolean;
+          };
         };
         authorization?:
           | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
@@ -42460,7 +43713,11 @@ export type SubspaceDataFragment = {
         };
         settings: {
           privacy: { contributionRolesPubliclyVisible: boolean };
-          membership: { allowUsersMatchingDomainToJoin: boolean };
+          membership: {
+            allowUsersMatchingDomainToJoin: boolean;
+            allowSpaceInvitations: boolean;
+            allowApplications: boolean;
+          };
         };
         authorization?:
           | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
@@ -43838,6 +45095,30 @@ export type UserDataFragment = {
           inApp: boolean;
           push: boolean;
         };
+        adminSpaceCommunityInvitation: {
+          __typename: "UserSettingsNotificationChannels";
+          email: boolean;
+          inApp: boolean;
+          push: boolean;
+        };
+        adminAssociateInvitationResponse: {
+          __typename: "UserSettingsNotificationChannels";
+          email: boolean;
+          inApp: boolean;
+          push: boolean;
+        };
+        adminAssociateApplicationReceived: {
+          __typename: "UserSettingsNotificationChannels";
+          email: boolean;
+          inApp: boolean;
+          push: boolean;
+        };
+        adminAssociateJoined: {
+          __typename: "UserSettingsNotificationChannels";
+          email: boolean;
+          inApp: boolean;
+          push: boolean;
+        };
       };
       space: {
         __typename: "UserSettingsNotificationSpace";
@@ -43850,6 +45131,12 @@ export type UserDataFragment = {
             push: boolean;
           };
           collaborationCalloutContributionCreated: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
+          communityInvitationResponse: {
             __typename: "UserSettingsNotificationChannels";
             email: boolean;
             inApp: boolean;
@@ -43940,6 +45227,18 @@ export type UserDataFragment = {
             push: boolean;
           };
           spaceCommunityJoined: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
+          organizationAssociateInvitationReceived: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
+          organizationAssociateApplicationDecided: {
             __typename: "UserSettingsNotificationChannels";
             email: boolean;
             inApp: boolean;
@@ -44077,6 +45376,30 @@ export type UserSettingsFragmentFragment = {
         inApp: boolean;
         push: boolean;
       };
+      adminSpaceCommunityInvitation: {
+        __typename: "UserSettingsNotificationChannels";
+        email: boolean;
+        inApp: boolean;
+        push: boolean;
+      };
+      adminAssociateInvitationResponse: {
+        __typename: "UserSettingsNotificationChannels";
+        email: boolean;
+        inApp: boolean;
+        push: boolean;
+      };
+      adminAssociateApplicationReceived: {
+        __typename: "UserSettingsNotificationChannels";
+        email: boolean;
+        inApp: boolean;
+        push: boolean;
+      };
+      adminAssociateJoined: {
+        __typename: "UserSettingsNotificationChannels";
+        email: boolean;
+        inApp: boolean;
+        push: boolean;
+      };
     };
     space: {
       __typename: "UserSettingsNotificationSpace";
@@ -44089,6 +45412,12 @@ export type UserSettingsFragmentFragment = {
           push: boolean;
         };
         collaborationCalloutContributionCreated: {
+          __typename: "UserSettingsNotificationChannels";
+          email: boolean;
+          inApp: boolean;
+          push: boolean;
+        };
+        communityInvitationResponse: {
           __typename: "UserSettingsNotificationChannels";
           email: boolean;
           inApp: boolean;
@@ -44179,6 +45508,18 @@ export type UserSettingsFragmentFragment = {
           push: boolean;
         };
         spaceCommunityJoined: {
+          __typename: "UserSettingsNotificationChannels";
+          email: boolean;
+          inApp: boolean;
+          push: boolean;
+        };
+        organizationAssociateInvitationReceived: {
+          __typename: "UserSettingsNotificationChannels";
+          email: boolean;
+          inApp: boolean;
+          push: boolean;
+        };
+        organizationAssociateApplicationDecided: {
           __typename: "UserSettingsNotificationChannels";
           email: boolean;
           inApp: boolean;
@@ -44442,7 +45783,11 @@ export type AssignRoleToOrganizationMutation = {
     };
     settings: {
       privacy: { contributionRolesPubliclyVisible: boolean };
-      membership: { allowUsersMatchingDomainToJoin: boolean };
+      membership: {
+        allowUsersMatchingDomainToJoin: boolean;
+        allowSpaceInvitations: boolean;
+        allowApplications: boolean;
+      };
     };
     authorization?:
       | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
@@ -44660,6 +46005,30 @@ export type AssignRoleToUserMutation = {
             inApp: boolean;
             push: boolean;
           };
+          adminSpaceCommunityInvitation: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
+          adminAssociateInvitationResponse: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
+          adminAssociateApplicationReceived: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
+          adminAssociateJoined: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
         };
         space: {
           __typename: "UserSettingsNotificationSpace";
@@ -44672,6 +46041,12 @@ export type AssignRoleToUserMutation = {
               push: boolean;
             };
             collaborationCalloutContributionCreated: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+              push: boolean;
+            };
+            communityInvitationResponse: {
               __typename: "UserSettingsNotificationChannels";
               email: boolean;
               inApp: boolean;
@@ -44762,6 +46137,18 @@ export type AssignRoleToUserMutation = {
               push: boolean;
             };
             spaceCommunityJoined: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+              push: boolean;
+            };
+            organizationAssociateInvitationReceived: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+              push: boolean;
+            };
+            organizationAssociateApplicationDecided: {
               __typename: "UserSettingsNotificationChannels";
               email: boolean;
               inApp: boolean;
@@ -45029,6 +46416,30 @@ export type AssignRoleToUserExtendedDataMutation = {
             inApp: boolean;
             push: boolean;
           };
+          adminSpaceCommunityInvitation: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
+          adminAssociateInvitationResponse: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
+          adminAssociateApplicationReceived: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
+          adminAssociateJoined: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
         };
         space: {
           __typename: "UserSettingsNotificationSpace";
@@ -45041,6 +46452,12 @@ export type AssignRoleToUserExtendedDataMutation = {
               push: boolean;
             };
             collaborationCalloutContributionCreated: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+              push: boolean;
+            };
+            communityInvitationResponse: {
               __typename: "UserSettingsNotificationChannels";
               email: boolean;
               inApp: boolean;
@@ -45136,6 +46553,18 @@ export type AssignRoleToUserExtendedDataMutation = {
               inApp: boolean;
               push: boolean;
             };
+            organizationAssociateInvitationReceived: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+              push: boolean;
+            };
+            organizationAssociateApplicationDecided: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+              push: boolean;
+            };
           };
           mentioned: {
             __typename: "UserSettingsNotificationChannels";
@@ -45184,6 +46613,20 @@ export type AssignRoleToUserExtendedDataMutation = {
           myPrivileges?: Array<AuthorizationPrivilege> | undefined;
           credentialRules?: Array<{ name?: string | undefined }> | undefined;
         }
+      | undefined;
+  };
+};
+
+export type AssignRoleToVirtualContributorMutationVariables = Exact<{
+  roleData: AssignRoleOnRoleSetInput;
+}>;
+
+export type AssignRoleToVirtualContributorMutation = {
+  assignRoleToVirtualContributor: {
+    __typename: "VirtualContributor";
+    id: string;
+    profile?:
+      | { __typename: "Profile"; id: string; displayName: string }
       | undefined;
   };
 };
@@ -45258,10 +46701,15 @@ export type InvitationStateEventMutationVariables = Exact<{
 
 export type InvitationStateEventMutation = {
   eventOnInvitation: {
+    extraRolesWithheld?: Array<RoleName> | undefined;
     id: string;
     state: string;
     nextEvents: Array<string>;
     isFinalized: boolean;
+    createdDate: Date;
+    extraRoles: Array<RoleName>;
+    invitedToParent: boolean;
+    welcomeMessage?: string | undefined;
     lifecycle: { id: string };
     createdBy?:
       | {
@@ -45278,6 +46726,7 @@ export type InvitationStateEventMutation = {
       | undefined;
     actor: {
       id: string;
+      type: ActorType;
       profile?: { id: string; displayName: string } | undefined;
     };
     authorization?:
@@ -45300,14 +46749,18 @@ export type InviteForEntryRoleOnRoleSetMutation = {
   inviteForEntryRoleOnRoleSet: Array<{
     __typename: "RoleSetInvitationResult";
     type: RoleSetInvitationResultType;
+    notice?: RoleSetInvitationResultNotice | undefined;
     invitation?:
       | {
           __typename: "Invitation";
           id: string;
           state: string;
+          extraRoles: Array<RoleName>;
+          invitedToParent: boolean;
           actor: {
             __typename: "Actor";
             id: string;
+            type: ActorType;
             profile?:
               | { __typename: "Profile"; id: string; displayName: string }
               | undefined;
@@ -45539,7 +46992,11 @@ export type RemoveRoleFromOrganizationMutation = {
     };
     settings: {
       privacy: { contributionRolesPubliclyVisible: boolean };
-      membership: { allowUsersMatchingDomainToJoin: boolean };
+      membership: {
+        allowUsersMatchingDomainToJoin: boolean;
+        allowSpaceInvitations: boolean;
+        allowApplications: boolean;
+      };
     };
     authorization?:
       | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
@@ -45757,6 +47214,30 @@ export type RemoveRoleFromUserMutation = {
             inApp: boolean;
             push: boolean;
           };
+          adminSpaceCommunityInvitation: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
+          adminAssociateInvitationResponse: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
+          adminAssociateApplicationReceived: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
+          adminAssociateJoined: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
         };
         space: {
           __typename: "UserSettingsNotificationSpace";
@@ -45769,6 +47250,12 @@ export type RemoveRoleFromUserMutation = {
               push: boolean;
             };
             collaborationCalloutContributionCreated: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+              push: boolean;
+            };
+            communityInvitationResponse: {
               __typename: "UserSettingsNotificationChannels";
               email: boolean;
               inApp: boolean;
@@ -45859,6 +47346,18 @@ export type RemoveRoleFromUserMutation = {
               push: boolean;
             };
             spaceCommunityJoined: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+              push: boolean;
+            };
+            organizationAssociateInvitationReceived: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+              push: boolean;
+            };
+            organizationAssociateApplicationDecided: {
               __typename: "UserSettingsNotificationChannels";
               email: boolean;
               inApp: boolean;
@@ -46126,6 +47625,30 @@ export type RemoveRoleFromUserExtendedDataMutation = {
             inApp: boolean;
             push: boolean;
           };
+          adminSpaceCommunityInvitation: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
+          adminAssociateInvitationResponse: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
+          adminAssociateApplicationReceived: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
+          adminAssociateJoined: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
         };
         space: {
           __typename: "UserSettingsNotificationSpace";
@@ -46138,6 +47661,12 @@ export type RemoveRoleFromUserExtendedDataMutation = {
               push: boolean;
             };
             collaborationCalloutContributionCreated: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+              push: boolean;
+            };
+            communityInvitationResponse: {
               __typename: "UserSettingsNotificationChannels";
               email: boolean;
               inApp: boolean;
@@ -46228,6 +47757,18 @@ export type RemoveRoleFromUserExtendedDataMutation = {
               push: boolean;
             };
             spaceCommunityJoined: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+              push: boolean;
+            };
+            organizationAssociateInvitationReceived: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+              push: boolean;
+            };
+            organizationAssociateApplicationDecided: {
               __typename: "UserSettingsNotificationChannels";
               email: boolean;
               inApp: boolean;
@@ -46519,7 +48060,7 @@ export type CreateCalloutOnCalloutsSetMutation = {
       id: string;
       defaultDisplayName?: string | undefined;
       postDescription?: any | undefined;
-      whiteboardContent?: any | undefined;
+      whiteboardContentAvailable: boolean;
     };
     contributions: Array<{
       authorization?:
@@ -46912,6 +48453,44 @@ export type RemoveReactionFromCalloutMutation = {
   };
 };
 
+export type CreateSpacesCollectionCalloutMutationVariables = Exact<{
+  calloutData: CreateCalloutOnCalloutsSetInput;
+}>;
+
+export type CreateSpacesCollectionCalloutMutation = {
+  createCalloutOnCalloutsSet: {
+    id: string;
+    framing: { id: string; type: CalloutFramingType };
+    settings: {
+      framing: {
+        spaces?: { cardVariant: SpaceCollectionCardVariant } | undefined;
+        selection?:
+          | { mode: CalloutSelectionMode; selectedIds: Array<string> }
+          | undefined;
+      };
+    };
+  };
+};
+
+export type UpdateCalloutSpacesSettingsMutationVariables = Exact<{
+  calloutData: UpdateCalloutEntityInput;
+}>;
+
+export type UpdateCalloutSpacesSettingsMutation = {
+  updateCallout: {
+    id: string;
+    settings: {
+      framing: {
+        commentsEnabled: boolean;
+        spaces?: { cardVariant: SpaceCollectionCardVariant } | undefined;
+        selection?:
+          | { mode: CalloutSelectionMode; selectedIds: Array<string> }
+          | undefined;
+      };
+    };
+  };
+};
+
 export type UpdateCalloutMutationVariables = Exact<{
   calloutData: UpdateCalloutEntityInput;
 }>;
@@ -47015,7 +48594,7 @@ export type UpdateCalloutMutation = {
       id: string;
       defaultDisplayName?: string | undefined;
       postDescription?: any | undefined;
-      whiteboardContent?: any | undefined;
+      whiteboardContentAvailable: boolean;
     };
     contributions: Array<{
       authorization?:
@@ -48758,21 +50337,6 @@ export type ConvertSpaceL1ToSpaceL0Mutation = {
       }>;
       roleSet: {
         id: string;
-        applications: Array<{
-          id: string;
-          state: string;
-          nextEvents: Array<string>;
-          isFinalized: boolean;
-          lifecycle: { id: string };
-          questions: Array<{ id: string }>;
-          actor: {
-            id: string;
-            profile?: { id: string; displayName: string } | undefined;
-          };
-          authorization?:
-            | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
-            | undefined;
-        }>;
         memberUsers: Array<{
           id: string;
           nameID: string;
@@ -49157,7 +50721,11 @@ export type ConvertSpaceL1ToSpaceL0Mutation = {
           };
           settings: {
             privacy: { contributionRolesPubliclyVisible: boolean };
-            membership: { allowUsersMatchingDomainToJoin: boolean };
+            membership: {
+              allowUsersMatchingDomainToJoin: boolean;
+              allowSpaceInvitations: boolean;
+              allowApplications: boolean;
+            };
           };
           authorization?:
             | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
@@ -49388,7 +50956,11 @@ export type ConvertSpaceL1ToSpaceL0Mutation = {
           };
           settings: {
             privacy: { contributionRolesPubliclyVisible: boolean };
-            membership: { allowUsersMatchingDomainToJoin: boolean };
+            membership: {
+              allowUsersMatchingDomainToJoin: boolean;
+              allowSpaceInvitations: boolean;
+              allowApplications: boolean;
+            };
           };
           authorization?:
             | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
@@ -49619,7 +51191,11 @@ export type ConvertSpaceL1ToSpaceL0Mutation = {
           };
           settings: {
             privacy: { contributionRolesPubliclyVisible: boolean };
-            membership: { allowUsersMatchingDomainToJoin: boolean };
+            membership: {
+              allowUsersMatchingDomainToJoin: boolean;
+              allowSpaceInvitations: boolean;
+              allowApplications: boolean;
+            };
           };
           authorization?:
             | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
@@ -50219,9 +51795,33 @@ export type ConvertSpaceL1ToSpaceL0Mutation = {
           | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
           | undefined;
         currentState?:
-          | { description?: any | undefined; displayName: string }
+          | {
+              id: string;
+              description?: any | undefined;
+              displayName: string;
+              sortOrder: number;
+              settings: {
+                allowNewCallouts: boolean;
+                descriptionDisplayMode: CalloutDescriptionDisplayMode;
+                showPublishDetails: boolean;
+                sidebar: Array<SidebarWidget>;
+                visible: boolean;
+              };
+            }
           | undefined;
-        states: Array<{ description?: any | undefined; displayName: string }>;
+        states: Array<{
+          id: string;
+          description?: any | undefined;
+          displayName: string;
+          sortOrder: number;
+          settings: {
+            allowNewCallouts: boolean;
+            descriptionDisplayMode: CalloutDescriptionDisplayMode;
+            showPublishDetails: boolean;
+            sidebar: Array<SidebarWidget>;
+            visible: boolean;
+          };
+        }>;
       };
     };
     subspaces: Array<{
@@ -50824,9 +52424,33 @@ export type ConvertSpaceL1ToSpaceL0Mutation = {
             | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
             | undefined;
           currentState?:
-            | { description?: any | undefined; displayName: string }
+            | {
+                id: string;
+                description?: any | undefined;
+                displayName: string;
+                sortOrder: number;
+                settings: {
+                  allowNewCallouts: boolean;
+                  descriptionDisplayMode: CalloutDescriptionDisplayMode;
+                  showPublishDetails: boolean;
+                  sidebar: Array<SidebarWidget>;
+                  visible: boolean;
+                };
+              }
             | undefined;
-          states: Array<{ description?: any | undefined; displayName: string }>;
+          states: Array<{
+            id: string;
+            description?: any | undefined;
+            displayName: string;
+            sortOrder: number;
+            settings: {
+              allowNewCallouts: boolean;
+              descriptionDisplayMode: CalloutDescriptionDisplayMode;
+              showPublishDetails: boolean;
+              sidebar: Array<SidebarWidget>;
+              visible: boolean;
+            };
+          }>;
         };
       };
       authorization?:
@@ -50974,21 +52598,6 @@ export type ConvertSpaceL1ToSpaceL0Mutation = {
         }>;
         roleSet: {
           id: string;
-          applications: Array<{
-            id: string;
-            state: string;
-            nextEvents: Array<string>;
-            isFinalized: boolean;
-            lifecycle: { id: string };
-            questions: Array<{ id: string }>;
-            actor: {
-              id: string;
-              profile?: { id: string; displayName: string } | undefined;
-            };
-            authorization?:
-              | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
-              | undefined;
-          }>;
           memberUsers: Array<{
             id: string;
             nameID: string;
@@ -51405,7 +53014,11 @@ export type ConvertSpaceL1ToSpaceL0Mutation = {
             };
             settings: {
               privacy: { contributionRolesPubliclyVisible: boolean };
-              membership: { allowUsersMatchingDomainToJoin: boolean };
+              membership: {
+                allowUsersMatchingDomainToJoin: boolean;
+                allowSpaceInvitations: boolean;
+                allowApplications: boolean;
+              };
             };
             authorization?:
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
@@ -51647,7 +53260,11 @@ export type ConvertSpaceL1ToSpaceL0Mutation = {
             };
             settings: {
               privacy: { contributionRolesPubliclyVisible: boolean };
-              membership: { allowUsersMatchingDomainToJoin: boolean };
+              membership: {
+                allowUsersMatchingDomainToJoin: boolean;
+                allowSpaceInvitations: boolean;
+                allowApplications: boolean;
+              };
             };
             authorization?:
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
@@ -51889,7 +53506,11 @@ export type ConvertSpaceL1ToSpaceL0Mutation = {
             };
             settings: {
               privacy: { contributionRolesPubliclyVisible: boolean };
-              membership: { allowUsersMatchingDomainToJoin: boolean };
+              membership: {
+                allowUsersMatchingDomainToJoin: boolean;
+                allowSpaceInvitations: boolean;
+                allowApplications: boolean;
+              };
             };
             authorization?:
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
@@ -52568,6 +54189,14 @@ export type ConvertSpaceL1ToSpaceL0Mutation = {
   };
 };
 
+export type ConvertSpaceL1ToSpaceL2MutationVariables = Exact<{
+  convertData: ConvertSpaceL1ToSpaceL2Input;
+}>;
+
+export type ConvertSpaceL1ToSpaceL2Mutation = {
+  convertSpaceL1ToSpaceL2: { id: string; nameID: string; level: SpaceLevel };
+};
+
 export type ConvertSpaceL2ToSpaceL1MutationVariables = Exact<{
   convertData: ConvertSpaceL2ToSpaceL1Input;
 }>;
@@ -52863,21 +54492,6 @@ export type ConvertSpaceL2ToSpaceL1Mutation = {
       }>;
       roleSet: {
         id: string;
-        applications: Array<{
-          id: string;
-          state: string;
-          nextEvents: Array<string>;
-          isFinalized: boolean;
-          lifecycle: { id: string };
-          questions: Array<{ id: string }>;
-          actor: {
-            id: string;
-            profile?: { id: string; displayName: string } | undefined;
-          };
-          authorization?:
-            | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
-            | undefined;
-        }>;
         memberUsers: Array<{
           id: string;
           nameID: string;
@@ -53262,7 +54876,11 @@ export type ConvertSpaceL2ToSpaceL1Mutation = {
           };
           settings: {
             privacy: { contributionRolesPubliclyVisible: boolean };
-            membership: { allowUsersMatchingDomainToJoin: boolean };
+            membership: {
+              allowUsersMatchingDomainToJoin: boolean;
+              allowSpaceInvitations: boolean;
+              allowApplications: boolean;
+            };
           };
           authorization?:
             | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
@@ -53493,7 +55111,11 @@ export type ConvertSpaceL2ToSpaceL1Mutation = {
           };
           settings: {
             privacy: { contributionRolesPubliclyVisible: boolean };
-            membership: { allowUsersMatchingDomainToJoin: boolean };
+            membership: {
+              allowUsersMatchingDomainToJoin: boolean;
+              allowSpaceInvitations: boolean;
+              allowApplications: boolean;
+            };
           };
           authorization?:
             | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
@@ -53724,7 +55346,11 @@ export type ConvertSpaceL2ToSpaceL1Mutation = {
           };
           settings: {
             privacy: { contributionRolesPubliclyVisible: boolean };
-            membership: { allowUsersMatchingDomainToJoin: boolean };
+            membership: {
+              allowUsersMatchingDomainToJoin: boolean;
+              allowSpaceInvitations: boolean;
+              allowApplications: boolean;
+            };
           };
           authorization?:
             | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
@@ -54324,9 +55950,33 @@ export type ConvertSpaceL2ToSpaceL1Mutation = {
           | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
           | undefined;
         currentState?:
-          | { description?: any | undefined; displayName: string }
+          | {
+              id: string;
+              description?: any | undefined;
+              displayName: string;
+              sortOrder: number;
+              settings: {
+                allowNewCallouts: boolean;
+                descriptionDisplayMode: CalloutDescriptionDisplayMode;
+                showPublishDetails: boolean;
+                sidebar: Array<SidebarWidget>;
+                visible: boolean;
+              };
+            }
           | undefined;
-        states: Array<{ description?: any | undefined; displayName: string }>;
+        states: Array<{
+          id: string;
+          description?: any | undefined;
+          displayName: string;
+          sortOrder: number;
+          settings: {
+            allowNewCallouts: boolean;
+            descriptionDisplayMode: CalloutDescriptionDisplayMode;
+            showPublishDetails: boolean;
+            sidebar: Array<SidebarWidget>;
+            visible: boolean;
+          };
+        }>;
       };
     };
     subspaces: Array<{
@@ -54929,9 +56579,33 @@ export type ConvertSpaceL2ToSpaceL1Mutation = {
             | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
             | undefined;
           currentState?:
-            | { description?: any | undefined; displayName: string }
+            | {
+                id: string;
+                description?: any | undefined;
+                displayName: string;
+                sortOrder: number;
+                settings: {
+                  allowNewCallouts: boolean;
+                  descriptionDisplayMode: CalloutDescriptionDisplayMode;
+                  showPublishDetails: boolean;
+                  sidebar: Array<SidebarWidget>;
+                  visible: boolean;
+                };
+              }
             | undefined;
-          states: Array<{ description?: any | undefined; displayName: string }>;
+          states: Array<{
+            id: string;
+            description?: any | undefined;
+            displayName: string;
+            sortOrder: number;
+            settings: {
+              allowNewCallouts: boolean;
+              descriptionDisplayMode: CalloutDescriptionDisplayMode;
+              showPublishDetails: boolean;
+              sidebar: Array<SidebarWidget>;
+              visible: boolean;
+            };
+          }>;
         };
       };
       authorization?:
@@ -55079,21 +56753,6 @@ export type ConvertSpaceL2ToSpaceL1Mutation = {
         }>;
         roleSet: {
           id: string;
-          applications: Array<{
-            id: string;
-            state: string;
-            nextEvents: Array<string>;
-            isFinalized: boolean;
-            lifecycle: { id: string };
-            questions: Array<{ id: string }>;
-            actor: {
-              id: string;
-              profile?: { id: string; displayName: string } | undefined;
-            };
-            authorization?:
-              | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
-              | undefined;
-          }>;
           memberUsers: Array<{
             id: string;
             nameID: string;
@@ -55510,7 +57169,11 @@ export type ConvertSpaceL2ToSpaceL1Mutation = {
             };
             settings: {
               privacy: { contributionRolesPubliclyVisible: boolean };
-              membership: { allowUsersMatchingDomainToJoin: boolean };
+              membership: {
+                allowUsersMatchingDomainToJoin: boolean;
+                allowSpaceInvitations: boolean;
+                allowApplications: boolean;
+              };
             };
             authorization?:
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
@@ -55752,7 +57415,11 @@ export type ConvertSpaceL2ToSpaceL1Mutation = {
             };
             settings: {
               privacy: { contributionRolesPubliclyVisible: boolean };
-              membership: { allowUsersMatchingDomainToJoin: boolean };
+              membership: {
+                allowUsersMatchingDomainToJoin: boolean;
+                allowSpaceInvitations: boolean;
+                allowApplications: boolean;
+              };
             };
             authorization?:
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
@@ -55994,7 +57661,11 @@ export type ConvertSpaceL2ToSpaceL1Mutation = {
             };
             settings: {
               privacy: { contributionRolesPubliclyVisible: boolean };
-              membership: { allowUsersMatchingDomainToJoin: boolean };
+              membership: {
+                allowUsersMatchingDomainToJoin: boolean;
+                allowSpaceInvitations: boolean;
+                allowApplications: boolean;
+              };
             };
             authorization?:
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
@@ -56968,21 +58639,6 @@ export type MoveSpaceL1ToSpaceL0Mutation = {
       }>;
       roleSet: {
         id: string;
-        applications: Array<{
-          id: string;
-          state: string;
-          nextEvents: Array<string>;
-          isFinalized: boolean;
-          lifecycle: { id: string };
-          questions: Array<{ id: string }>;
-          actor: {
-            id: string;
-            profile?: { id: string; displayName: string } | undefined;
-          };
-          authorization?:
-            | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
-            | undefined;
-        }>;
         memberUsers: Array<{
           id: string;
           nameID: string;
@@ -57367,7 +59023,11 @@ export type MoveSpaceL1ToSpaceL0Mutation = {
           };
           settings: {
             privacy: { contributionRolesPubliclyVisible: boolean };
-            membership: { allowUsersMatchingDomainToJoin: boolean };
+            membership: {
+              allowUsersMatchingDomainToJoin: boolean;
+              allowSpaceInvitations: boolean;
+              allowApplications: boolean;
+            };
           };
           authorization?:
             | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
@@ -57598,7 +59258,11 @@ export type MoveSpaceL1ToSpaceL0Mutation = {
           };
           settings: {
             privacy: { contributionRolesPubliclyVisible: boolean };
-            membership: { allowUsersMatchingDomainToJoin: boolean };
+            membership: {
+              allowUsersMatchingDomainToJoin: boolean;
+              allowSpaceInvitations: boolean;
+              allowApplications: boolean;
+            };
           };
           authorization?:
             | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
@@ -57829,7 +59493,11 @@ export type MoveSpaceL1ToSpaceL0Mutation = {
           };
           settings: {
             privacy: { contributionRolesPubliclyVisible: boolean };
-            membership: { allowUsersMatchingDomainToJoin: boolean };
+            membership: {
+              allowUsersMatchingDomainToJoin: boolean;
+              allowSpaceInvitations: boolean;
+              allowApplications: boolean;
+            };
           };
           authorization?:
             | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
@@ -58429,9 +60097,33 @@ export type MoveSpaceL1ToSpaceL0Mutation = {
           | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
           | undefined;
         currentState?:
-          | { description?: any | undefined; displayName: string }
+          | {
+              id: string;
+              description?: any | undefined;
+              displayName: string;
+              sortOrder: number;
+              settings: {
+                allowNewCallouts: boolean;
+                descriptionDisplayMode: CalloutDescriptionDisplayMode;
+                showPublishDetails: boolean;
+                sidebar: Array<SidebarWidget>;
+                visible: boolean;
+              };
+            }
           | undefined;
-        states: Array<{ description?: any | undefined; displayName: string }>;
+        states: Array<{
+          id: string;
+          description?: any | undefined;
+          displayName: string;
+          sortOrder: number;
+          settings: {
+            allowNewCallouts: boolean;
+            descriptionDisplayMode: CalloutDescriptionDisplayMode;
+            showPublishDetails: boolean;
+            sidebar: Array<SidebarWidget>;
+            visible: boolean;
+          };
+        }>;
       };
     };
     subspaces: Array<{
@@ -59034,9 +60726,33 @@ export type MoveSpaceL1ToSpaceL0Mutation = {
             | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
             | undefined;
           currentState?:
-            | { description?: any | undefined; displayName: string }
+            | {
+                id: string;
+                description?: any | undefined;
+                displayName: string;
+                sortOrder: number;
+                settings: {
+                  allowNewCallouts: boolean;
+                  descriptionDisplayMode: CalloutDescriptionDisplayMode;
+                  showPublishDetails: boolean;
+                  sidebar: Array<SidebarWidget>;
+                  visible: boolean;
+                };
+              }
             | undefined;
-          states: Array<{ description?: any | undefined; displayName: string }>;
+          states: Array<{
+            id: string;
+            description?: any | undefined;
+            displayName: string;
+            sortOrder: number;
+            settings: {
+              allowNewCallouts: boolean;
+              descriptionDisplayMode: CalloutDescriptionDisplayMode;
+              showPublishDetails: boolean;
+              sidebar: Array<SidebarWidget>;
+              visible: boolean;
+            };
+          }>;
         };
       };
       authorization?:
@@ -59184,21 +60900,6 @@ export type MoveSpaceL1ToSpaceL0Mutation = {
         }>;
         roleSet: {
           id: string;
-          applications: Array<{
-            id: string;
-            state: string;
-            nextEvents: Array<string>;
-            isFinalized: boolean;
-            lifecycle: { id: string };
-            questions: Array<{ id: string }>;
-            actor: {
-              id: string;
-              profile?: { id: string; displayName: string } | undefined;
-            };
-            authorization?:
-              | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
-              | undefined;
-          }>;
           memberUsers: Array<{
             id: string;
             nameID: string;
@@ -59615,7 +61316,11 @@ export type MoveSpaceL1ToSpaceL0Mutation = {
             };
             settings: {
               privacy: { contributionRolesPubliclyVisible: boolean };
-              membership: { allowUsersMatchingDomainToJoin: boolean };
+              membership: {
+                allowUsersMatchingDomainToJoin: boolean;
+                allowSpaceInvitations: boolean;
+                allowApplications: boolean;
+              };
             };
             authorization?:
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
@@ -59857,7 +61562,11 @@ export type MoveSpaceL1ToSpaceL0Mutation = {
             };
             settings: {
               privacy: { contributionRolesPubliclyVisible: boolean };
-              membership: { allowUsersMatchingDomainToJoin: boolean };
+              membership: {
+                allowUsersMatchingDomainToJoin: boolean;
+                allowSpaceInvitations: boolean;
+                allowApplications: boolean;
+              };
             };
             authorization?:
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
@@ -60099,7 +61808,11 @@ export type MoveSpaceL1ToSpaceL0Mutation = {
             };
             settings: {
               privacy: { contributionRolesPubliclyVisible: boolean };
-              membership: { allowUsersMatchingDomainToJoin: boolean };
+              membership: {
+                allowUsersMatchingDomainToJoin: boolean;
+                allowSpaceInvitations: boolean;
+                allowApplications: boolean;
+              };
             };
             authorization?:
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
@@ -61073,21 +62786,6 @@ export type MoveSpaceL1ToSpaceL2Mutation = {
       }>;
       roleSet: {
         id: string;
-        applications: Array<{
-          id: string;
-          state: string;
-          nextEvents: Array<string>;
-          isFinalized: boolean;
-          lifecycle: { id: string };
-          questions: Array<{ id: string }>;
-          actor: {
-            id: string;
-            profile?: { id: string; displayName: string } | undefined;
-          };
-          authorization?:
-            | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
-            | undefined;
-        }>;
         memberUsers: Array<{
           id: string;
           nameID: string;
@@ -61472,7 +63170,11 @@ export type MoveSpaceL1ToSpaceL2Mutation = {
           };
           settings: {
             privacy: { contributionRolesPubliclyVisible: boolean };
-            membership: { allowUsersMatchingDomainToJoin: boolean };
+            membership: {
+              allowUsersMatchingDomainToJoin: boolean;
+              allowSpaceInvitations: boolean;
+              allowApplications: boolean;
+            };
           };
           authorization?:
             | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
@@ -61703,7 +63405,11 @@ export type MoveSpaceL1ToSpaceL2Mutation = {
           };
           settings: {
             privacy: { contributionRolesPubliclyVisible: boolean };
-            membership: { allowUsersMatchingDomainToJoin: boolean };
+            membership: {
+              allowUsersMatchingDomainToJoin: boolean;
+              allowSpaceInvitations: boolean;
+              allowApplications: boolean;
+            };
           };
           authorization?:
             | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
@@ -61934,7 +63640,11 @@ export type MoveSpaceL1ToSpaceL2Mutation = {
           };
           settings: {
             privacy: { contributionRolesPubliclyVisible: boolean };
-            membership: { allowUsersMatchingDomainToJoin: boolean };
+            membership: {
+              allowUsersMatchingDomainToJoin: boolean;
+              allowSpaceInvitations: boolean;
+              allowApplications: boolean;
+            };
           };
           authorization?:
             | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
@@ -62534,9 +64244,33 @@ export type MoveSpaceL1ToSpaceL2Mutation = {
           | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
           | undefined;
         currentState?:
-          | { description?: any | undefined; displayName: string }
+          | {
+              id: string;
+              description?: any | undefined;
+              displayName: string;
+              sortOrder: number;
+              settings: {
+                allowNewCallouts: boolean;
+                descriptionDisplayMode: CalloutDescriptionDisplayMode;
+                showPublishDetails: boolean;
+                sidebar: Array<SidebarWidget>;
+                visible: boolean;
+              };
+            }
           | undefined;
-        states: Array<{ description?: any | undefined; displayName: string }>;
+        states: Array<{
+          id: string;
+          description?: any | undefined;
+          displayName: string;
+          sortOrder: number;
+          settings: {
+            allowNewCallouts: boolean;
+            descriptionDisplayMode: CalloutDescriptionDisplayMode;
+            showPublishDetails: boolean;
+            sidebar: Array<SidebarWidget>;
+            visible: boolean;
+          };
+        }>;
       };
     };
     subspaces: Array<{
@@ -63139,9 +64873,33 @@ export type MoveSpaceL1ToSpaceL2Mutation = {
             | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
             | undefined;
           currentState?:
-            | { description?: any | undefined; displayName: string }
+            | {
+                id: string;
+                description?: any | undefined;
+                displayName: string;
+                sortOrder: number;
+                settings: {
+                  allowNewCallouts: boolean;
+                  descriptionDisplayMode: CalloutDescriptionDisplayMode;
+                  showPublishDetails: boolean;
+                  sidebar: Array<SidebarWidget>;
+                  visible: boolean;
+                };
+              }
             | undefined;
-          states: Array<{ description?: any | undefined; displayName: string }>;
+          states: Array<{
+            id: string;
+            description?: any | undefined;
+            displayName: string;
+            sortOrder: number;
+            settings: {
+              allowNewCallouts: boolean;
+              descriptionDisplayMode: CalloutDescriptionDisplayMode;
+              showPublishDetails: boolean;
+              sidebar: Array<SidebarWidget>;
+              visible: boolean;
+            };
+          }>;
         };
       };
       authorization?:
@@ -63289,21 +65047,6 @@ export type MoveSpaceL1ToSpaceL2Mutation = {
         }>;
         roleSet: {
           id: string;
-          applications: Array<{
-            id: string;
-            state: string;
-            nextEvents: Array<string>;
-            isFinalized: boolean;
-            lifecycle: { id: string };
-            questions: Array<{ id: string }>;
-            actor: {
-              id: string;
-              profile?: { id: string; displayName: string } | undefined;
-            };
-            authorization?:
-              | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
-              | undefined;
-          }>;
           memberUsers: Array<{
             id: string;
             nameID: string;
@@ -63720,7 +65463,11 @@ export type MoveSpaceL1ToSpaceL2Mutation = {
             };
             settings: {
               privacy: { contributionRolesPubliclyVisible: boolean };
-              membership: { allowUsersMatchingDomainToJoin: boolean };
+              membership: {
+                allowUsersMatchingDomainToJoin: boolean;
+                allowSpaceInvitations: boolean;
+                allowApplications: boolean;
+              };
             };
             authorization?:
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
@@ -63962,7 +65709,11 @@ export type MoveSpaceL1ToSpaceL2Mutation = {
             };
             settings: {
               privacy: { contributionRolesPubliclyVisible: boolean };
-              membership: { allowUsersMatchingDomainToJoin: boolean };
+              membership: {
+                allowUsersMatchingDomainToJoin: boolean;
+                allowSpaceInvitations: boolean;
+                allowApplications: boolean;
+              };
             };
             authorization?:
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
@@ -64204,7 +65955,11 @@ export type MoveSpaceL1ToSpaceL2Mutation = {
             };
             settings: {
               privacy: { contributionRolesPubliclyVisible: boolean };
-              membership: { allowUsersMatchingDomainToJoin: boolean };
+              membership: {
+                allowUsersMatchingDomainToJoin: boolean;
+                allowSpaceInvitations: boolean;
+                allowApplications: boolean;
+              };
             };
             authorization?:
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
@@ -65178,21 +66933,6 @@ export type MoveSpaceL2ToSpaceL1Mutation = {
       }>;
       roleSet: {
         id: string;
-        applications: Array<{
-          id: string;
-          state: string;
-          nextEvents: Array<string>;
-          isFinalized: boolean;
-          lifecycle: { id: string };
-          questions: Array<{ id: string }>;
-          actor: {
-            id: string;
-            profile?: { id: string; displayName: string } | undefined;
-          };
-          authorization?:
-            | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
-            | undefined;
-        }>;
         memberUsers: Array<{
           id: string;
           nameID: string;
@@ -65577,7 +67317,11 @@ export type MoveSpaceL2ToSpaceL1Mutation = {
           };
           settings: {
             privacy: { contributionRolesPubliclyVisible: boolean };
-            membership: { allowUsersMatchingDomainToJoin: boolean };
+            membership: {
+              allowUsersMatchingDomainToJoin: boolean;
+              allowSpaceInvitations: boolean;
+              allowApplications: boolean;
+            };
           };
           authorization?:
             | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
@@ -65808,7 +67552,11 @@ export type MoveSpaceL2ToSpaceL1Mutation = {
           };
           settings: {
             privacy: { contributionRolesPubliclyVisible: boolean };
-            membership: { allowUsersMatchingDomainToJoin: boolean };
+            membership: {
+              allowUsersMatchingDomainToJoin: boolean;
+              allowSpaceInvitations: boolean;
+              allowApplications: boolean;
+            };
           };
           authorization?:
             | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
@@ -66039,7 +67787,11 @@ export type MoveSpaceL2ToSpaceL1Mutation = {
           };
           settings: {
             privacy: { contributionRolesPubliclyVisible: boolean };
-            membership: { allowUsersMatchingDomainToJoin: boolean };
+            membership: {
+              allowUsersMatchingDomainToJoin: boolean;
+              allowSpaceInvitations: boolean;
+              allowApplications: boolean;
+            };
           };
           authorization?:
             | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
@@ -66639,9 +68391,33 @@ export type MoveSpaceL2ToSpaceL1Mutation = {
           | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
           | undefined;
         currentState?:
-          | { description?: any | undefined; displayName: string }
+          | {
+              id: string;
+              description?: any | undefined;
+              displayName: string;
+              sortOrder: number;
+              settings: {
+                allowNewCallouts: boolean;
+                descriptionDisplayMode: CalloutDescriptionDisplayMode;
+                showPublishDetails: boolean;
+                sidebar: Array<SidebarWidget>;
+                visible: boolean;
+              };
+            }
           | undefined;
-        states: Array<{ description?: any | undefined; displayName: string }>;
+        states: Array<{
+          id: string;
+          description?: any | undefined;
+          displayName: string;
+          sortOrder: number;
+          settings: {
+            allowNewCallouts: boolean;
+            descriptionDisplayMode: CalloutDescriptionDisplayMode;
+            showPublishDetails: boolean;
+            sidebar: Array<SidebarWidget>;
+            visible: boolean;
+          };
+        }>;
       };
     };
     subspaces: Array<{
@@ -67244,9 +69020,33 @@ export type MoveSpaceL2ToSpaceL1Mutation = {
             | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
             | undefined;
           currentState?:
-            | { description?: any | undefined; displayName: string }
+            | {
+                id: string;
+                description?: any | undefined;
+                displayName: string;
+                sortOrder: number;
+                settings: {
+                  allowNewCallouts: boolean;
+                  descriptionDisplayMode: CalloutDescriptionDisplayMode;
+                  showPublishDetails: boolean;
+                  sidebar: Array<SidebarWidget>;
+                  visible: boolean;
+                };
+              }
             | undefined;
-          states: Array<{ description?: any | undefined; displayName: string }>;
+          states: Array<{
+            id: string;
+            description?: any | undefined;
+            displayName: string;
+            sortOrder: number;
+            settings: {
+              allowNewCallouts: boolean;
+              descriptionDisplayMode: CalloutDescriptionDisplayMode;
+              showPublishDetails: boolean;
+              sidebar: Array<SidebarWidget>;
+              visible: boolean;
+            };
+          }>;
         };
       };
       authorization?:
@@ -67394,21 +69194,6 @@ export type MoveSpaceL2ToSpaceL1Mutation = {
         }>;
         roleSet: {
           id: string;
-          applications: Array<{
-            id: string;
-            state: string;
-            nextEvents: Array<string>;
-            isFinalized: boolean;
-            lifecycle: { id: string };
-            questions: Array<{ id: string }>;
-            actor: {
-              id: string;
-              profile?: { id: string; displayName: string } | undefined;
-            };
-            authorization?:
-              | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
-              | undefined;
-          }>;
           memberUsers: Array<{
             id: string;
             nameID: string;
@@ -67825,7 +69610,11 @@ export type MoveSpaceL2ToSpaceL1Mutation = {
             };
             settings: {
               privacy: { contributionRolesPubliclyVisible: boolean };
-              membership: { allowUsersMatchingDomainToJoin: boolean };
+              membership: {
+                allowUsersMatchingDomainToJoin: boolean;
+                allowSpaceInvitations: boolean;
+                allowApplications: boolean;
+              };
             };
             authorization?:
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
@@ -68067,7 +69856,11 @@ export type MoveSpaceL2ToSpaceL1Mutation = {
             };
             settings: {
               privacy: { contributionRolesPubliclyVisible: boolean };
-              membership: { allowUsersMatchingDomainToJoin: boolean };
+              membership: {
+                allowUsersMatchingDomainToJoin: boolean;
+                allowSpaceInvitations: boolean;
+                allowApplications: boolean;
+              };
             };
             authorization?:
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
@@ -68309,7 +70102,11 @@ export type MoveSpaceL2ToSpaceL1Mutation = {
             };
             settings: {
               privacy: { contributionRolesPubliclyVisible: boolean };
-              membership: { allowUsersMatchingDomainToJoin: boolean };
+              membership: {
+                allowUsersMatchingDomainToJoin: boolean;
+                allowSpaceInvitations: boolean;
+                allowApplications: boolean;
+              };
             };
             authorization?:
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
@@ -69301,21 +71098,6 @@ export type UpdateSpaceMutation = {
       }>;
       roleSet: {
         id: string;
-        applications: Array<{
-          id: string;
-          state: string;
-          nextEvents: Array<string>;
-          isFinalized: boolean;
-          lifecycle: { id: string };
-          questions: Array<{ id: string }>;
-          actor: {
-            id: string;
-            profile?: { id: string; displayName: string } | undefined;
-          };
-          authorization?:
-            | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
-            | undefined;
-        }>;
         memberUsers: Array<{
           id: string;
           nameID: string;
@@ -69700,7 +71482,11 @@ export type UpdateSpaceMutation = {
           };
           settings: {
             privacy: { contributionRolesPubliclyVisible: boolean };
-            membership: { allowUsersMatchingDomainToJoin: boolean };
+            membership: {
+              allowUsersMatchingDomainToJoin: boolean;
+              allowSpaceInvitations: boolean;
+              allowApplications: boolean;
+            };
           };
           authorization?:
             | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
@@ -69931,7 +71717,11 @@ export type UpdateSpaceMutation = {
           };
           settings: {
             privacy: { contributionRolesPubliclyVisible: boolean };
-            membership: { allowUsersMatchingDomainToJoin: boolean };
+            membership: {
+              allowUsersMatchingDomainToJoin: boolean;
+              allowSpaceInvitations: boolean;
+              allowApplications: boolean;
+            };
           };
           authorization?:
             | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
@@ -70162,7 +71952,11 @@ export type UpdateSpaceMutation = {
           };
           settings: {
             privacy: { contributionRolesPubliclyVisible: boolean };
-            membership: { allowUsersMatchingDomainToJoin: boolean };
+            membership: {
+              allowUsersMatchingDomainToJoin: boolean;
+              allowSpaceInvitations: boolean;
+              allowApplications: boolean;
+            };
           };
           authorization?:
             | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
@@ -70762,9 +72556,33 @@ export type UpdateSpaceMutation = {
           | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
           | undefined;
         currentState?:
-          | { description?: any | undefined; displayName: string }
+          | {
+              id: string;
+              description?: any | undefined;
+              displayName: string;
+              sortOrder: number;
+              settings: {
+                allowNewCallouts: boolean;
+                descriptionDisplayMode: CalloutDescriptionDisplayMode;
+                showPublishDetails: boolean;
+                sidebar: Array<SidebarWidget>;
+                visible: boolean;
+              };
+            }
           | undefined;
-        states: Array<{ description?: any | undefined; displayName: string }>;
+        states: Array<{
+          id: string;
+          description?: any | undefined;
+          displayName: string;
+          sortOrder: number;
+          settings: {
+            allowNewCallouts: boolean;
+            descriptionDisplayMode: CalloutDescriptionDisplayMode;
+            showPublishDetails: boolean;
+            sidebar: Array<SidebarWidget>;
+            visible: boolean;
+          };
+        }>;
       };
     };
     subspaces: Array<{
@@ -71367,9 +73185,33 @@ export type UpdateSpaceMutation = {
             | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
             | undefined;
           currentState?:
-            | { description?: any | undefined; displayName: string }
+            | {
+                id: string;
+                description?: any | undefined;
+                displayName: string;
+                sortOrder: number;
+                settings: {
+                  allowNewCallouts: boolean;
+                  descriptionDisplayMode: CalloutDescriptionDisplayMode;
+                  showPublishDetails: boolean;
+                  sidebar: Array<SidebarWidget>;
+                  visible: boolean;
+                };
+              }
             | undefined;
-          states: Array<{ description?: any | undefined; displayName: string }>;
+          states: Array<{
+            id: string;
+            description?: any | undefined;
+            displayName: string;
+            sortOrder: number;
+            settings: {
+              allowNewCallouts: boolean;
+              descriptionDisplayMode: CalloutDescriptionDisplayMode;
+              showPublishDetails: boolean;
+              sidebar: Array<SidebarWidget>;
+              visible: boolean;
+            };
+          }>;
         };
       };
       authorization?:
@@ -71517,21 +73359,6 @@ export type UpdateSpaceMutation = {
         }>;
         roleSet: {
           id: string;
-          applications: Array<{
-            id: string;
-            state: string;
-            nextEvents: Array<string>;
-            isFinalized: boolean;
-            lifecycle: { id: string };
-            questions: Array<{ id: string }>;
-            actor: {
-              id: string;
-              profile?: { id: string; displayName: string } | undefined;
-            };
-            authorization?:
-              | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
-              | undefined;
-          }>;
           memberUsers: Array<{
             id: string;
             nameID: string;
@@ -71948,7 +73775,11 @@ export type UpdateSpaceMutation = {
             };
             settings: {
               privacy: { contributionRolesPubliclyVisible: boolean };
-              membership: { allowUsersMatchingDomainToJoin: boolean };
+              membership: {
+                allowUsersMatchingDomainToJoin: boolean;
+                allowSpaceInvitations: boolean;
+                allowApplications: boolean;
+              };
             };
             authorization?:
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
@@ -72190,7 +74021,11 @@ export type UpdateSpaceMutation = {
             };
             settings: {
               privacy: { contributionRolesPubliclyVisible: boolean };
-              membership: { allowUsersMatchingDomainToJoin: boolean };
+              membership: {
+                allowUsersMatchingDomainToJoin: boolean;
+                allowSpaceInvitations: boolean;
+                allowApplications: boolean;
+              };
             };
             authorization?:
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
@@ -72432,7 +74267,11 @@ export type UpdateSpaceMutation = {
             };
             settings: {
               privacy: { contributionRolesPubliclyVisible: boolean };
-              membership: { allowUsersMatchingDomainToJoin: boolean };
+              membership: {
+                allowUsersMatchingDomainToJoin: boolean;
+                allowSpaceInvitations: boolean;
+                allowApplications: boolean;
+              };
             };
             authorization?:
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
@@ -73721,9 +75560,33 @@ export type CreateSubspaceMutation = {
             | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
             | undefined;
           currentState?:
-            | { description?: any | undefined; displayName: string }
+            | {
+                id: string;
+                description?: any | undefined;
+                displayName: string;
+                sortOrder: number;
+                settings: {
+                  allowNewCallouts: boolean;
+                  descriptionDisplayMode: CalloutDescriptionDisplayMode;
+                  showPublishDetails: boolean;
+                  sidebar: Array<SidebarWidget>;
+                  visible: boolean;
+                };
+              }
             | undefined;
-          states: Array<{ description?: any | undefined; displayName: string }>;
+          states: Array<{
+            id: string;
+            description?: any | undefined;
+            displayName: string;
+            sortOrder: number;
+            settings: {
+              allowNewCallouts: boolean;
+              descriptionDisplayMode: CalloutDescriptionDisplayMode;
+              showPublishDetails: boolean;
+              sidebar: Array<SidebarWidget>;
+              visible: boolean;
+            };
+          }>;
         };
       };
       authorization?:
@@ -73871,21 +75734,6 @@ export type CreateSubspaceMutation = {
         }>;
         roleSet: {
           id: string;
-          applications: Array<{
-            id: string;
-            state: string;
-            nextEvents: Array<string>;
-            isFinalized: boolean;
-            lifecycle: { id: string };
-            questions: Array<{ id: string }>;
-            actor: {
-              id: string;
-              profile?: { id: string; displayName: string } | undefined;
-            };
-            authorization?:
-              | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
-              | undefined;
-          }>;
           memberUsers: Array<{
             id: string;
             nameID: string;
@@ -74302,7 +76150,11 @@ export type CreateSubspaceMutation = {
             };
             settings: {
               privacy: { contributionRolesPubliclyVisible: boolean };
-              membership: { allowUsersMatchingDomainToJoin: boolean };
+              membership: {
+                allowUsersMatchingDomainToJoin: boolean;
+                allowSpaceInvitations: boolean;
+                allowApplications: boolean;
+              };
             };
             authorization?:
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
@@ -74544,7 +76396,11 @@ export type CreateSubspaceMutation = {
             };
             settings: {
               privacy: { contributionRolesPubliclyVisible: boolean };
-              membership: { allowUsersMatchingDomainToJoin: boolean };
+              membership: {
+                allowUsersMatchingDomainToJoin: boolean;
+                allowSpaceInvitations: boolean;
+                allowApplications: boolean;
+              };
             };
             authorization?:
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
@@ -74786,7 +76642,11 @@ export type CreateSubspaceMutation = {
             };
             settings: {
               privacy: { contributionRolesPubliclyVisible: boolean };
-              membership: { allowUsersMatchingDomainToJoin: boolean };
+              membership: {
+                allowUsersMatchingDomainToJoin: boolean;
+                allowSpaceInvitations: boolean;
+                allowApplications: boolean;
+              };
             };
             authorization?:
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
@@ -75443,9 +77303,33 @@ export type CreateSubspaceMutation = {
           | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
           | undefined;
         currentState?:
-          | { description?: any | undefined; displayName: string }
+          | {
+              id: string;
+              description?: any | undefined;
+              displayName: string;
+              sortOrder: number;
+              settings: {
+                allowNewCallouts: boolean;
+                descriptionDisplayMode: CalloutDescriptionDisplayMode;
+                showPublishDetails: boolean;
+                sidebar: Array<SidebarWidget>;
+                visible: boolean;
+              };
+            }
           | undefined;
-        states: Array<{ description?: any | undefined; displayName: string }>;
+        states: Array<{
+          id: string;
+          description?: any | undefined;
+          displayName: string;
+          sortOrder: number;
+          settings: {
+            allowNewCallouts: boolean;
+            descriptionDisplayMode: CalloutDescriptionDisplayMode;
+            showPublishDetails: boolean;
+            sidebar: Array<SidebarWidget>;
+            visible: boolean;
+          };
+        }>;
       };
     };
     authorization?:
@@ -75589,21 +77473,6 @@ export type CreateSubspaceMutation = {
       }>;
       roleSet: {
         id: string;
-        applications: Array<{
-          id: string;
-          state: string;
-          nextEvents: Array<string>;
-          isFinalized: boolean;
-          lifecycle: { id: string };
-          questions: Array<{ id: string }>;
-          actor: {
-            id: string;
-            profile?: { id: string; displayName: string } | undefined;
-          };
-          authorization?:
-            | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
-            | undefined;
-        }>;
         memberUsers: Array<{
           id: string;
           nameID: string;
@@ -75988,7 +77857,11 @@ export type CreateSubspaceMutation = {
           };
           settings: {
             privacy: { contributionRolesPubliclyVisible: boolean };
-            membership: { allowUsersMatchingDomainToJoin: boolean };
+            membership: {
+              allowUsersMatchingDomainToJoin: boolean;
+              allowSpaceInvitations: boolean;
+              allowApplications: boolean;
+            };
           };
           authorization?:
             | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
@@ -76219,7 +78092,11 @@ export type CreateSubspaceMutation = {
           };
           settings: {
             privacy: { contributionRolesPubliclyVisible: boolean };
-            membership: { allowUsersMatchingDomainToJoin: boolean };
+            membership: {
+              allowUsersMatchingDomainToJoin: boolean;
+              allowSpaceInvitations: boolean;
+              allowApplications: boolean;
+            };
           };
           authorization?:
             | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
@@ -76450,7 +78327,11 @@ export type CreateSubspaceMutation = {
           };
           settings: {
             privacy: { contributionRolesPubliclyVisible: boolean };
-            membership: { allowUsersMatchingDomainToJoin: boolean };
+            membership: {
+              allowUsersMatchingDomainToJoin: boolean;
+              allowSpaceInvitations: boolean;
+              allowApplications: boolean;
+            };
           };
           authorization?:
             | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
@@ -77140,9 +79021,33 @@ export type UpdateSubspaceMutation = {
             | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
             | undefined;
           currentState?:
-            | { description?: any | undefined; displayName: string }
+            | {
+                id: string;
+                description?: any | undefined;
+                displayName: string;
+                sortOrder: number;
+                settings: {
+                  allowNewCallouts: boolean;
+                  descriptionDisplayMode: CalloutDescriptionDisplayMode;
+                  showPublishDetails: boolean;
+                  sidebar: Array<SidebarWidget>;
+                  visible: boolean;
+                };
+              }
             | undefined;
-          states: Array<{ description?: any | undefined; displayName: string }>;
+          states: Array<{
+            id: string;
+            description?: any | undefined;
+            displayName: string;
+            sortOrder: number;
+            settings: {
+              allowNewCallouts: boolean;
+              descriptionDisplayMode: CalloutDescriptionDisplayMode;
+              showPublishDetails: boolean;
+              sidebar: Array<SidebarWidget>;
+              visible: boolean;
+            };
+          }>;
         };
       };
       authorization?:
@@ -77290,21 +79195,6 @@ export type UpdateSubspaceMutation = {
         }>;
         roleSet: {
           id: string;
-          applications: Array<{
-            id: string;
-            state: string;
-            nextEvents: Array<string>;
-            isFinalized: boolean;
-            lifecycle: { id: string };
-            questions: Array<{ id: string }>;
-            actor: {
-              id: string;
-              profile?: { id: string; displayName: string } | undefined;
-            };
-            authorization?:
-              | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
-              | undefined;
-          }>;
           memberUsers: Array<{
             id: string;
             nameID: string;
@@ -77721,7 +79611,11 @@ export type UpdateSubspaceMutation = {
             };
             settings: {
               privacy: { contributionRolesPubliclyVisible: boolean };
-              membership: { allowUsersMatchingDomainToJoin: boolean };
+              membership: {
+                allowUsersMatchingDomainToJoin: boolean;
+                allowSpaceInvitations: boolean;
+                allowApplications: boolean;
+              };
             };
             authorization?:
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
@@ -77963,7 +79857,11 @@ export type UpdateSubspaceMutation = {
             };
             settings: {
               privacy: { contributionRolesPubliclyVisible: boolean };
-              membership: { allowUsersMatchingDomainToJoin: boolean };
+              membership: {
+                allowUsersMatchingDomainToJoin: boolean;
+                allowSpaceInvitations: boolean;
+                allowApplications: boolean;
+              };
             };
             authorization?:
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
@@ -78205,7 +80103,11 @@ export type UpdateSubspaceMutation = {
             };
             settings: {
               privacy: { contributionRolesPubliclyVisible: boolean };
-              membership: { allowUsersMatchingDomainToJoin: boolean };
+              membership: {
+                allowUsersMatchingDomainToJoin: boolean;
+                allowSpaceInvitations: boolean;
+                allowApplications: boolean;
+              };
             };
             authorization?:
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
@@ -78862,9 +80764,33 @@ export type UpdateSubspaceMutation = {
           | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
           | undefined;
         currentState?:
-          | { description?: any | undefined; displayName: string }
+          | {
+              id: string;
+              description?: any | undefined;
+              displayName: string;
+              sortOrder: number;
+              settings: {
+                allowNewCallouts: boolean;
+                descriptionDisplayMode: CalloutDescriptionDisplayMode;
+                showPublishDetails: boolean;
+                sidebar: Array<SidebarWidget>;
+                visible: boolean;
+              };
+            }
           | undefined;
-        states: Array<{ description?: any | undefined; displayName: string }>;
+        states: Array<{
+          id: string;
+          description?: any | undefined;
+          displayName: string;
+          sortOrder: number;
+          settings: {
+            allowNewCallouts: boolean;
+            descriptionDisplayMode: CalloutDescriptionDisplayMode;
+            showPublishDetails: boolean;
+            sidebar: Array<SidebarWidget>;
+            visible: boolean;
+          };
+        }>;
       };
     };
     authorization?:
@@ -79008,21 +80934,6 @@ export type UpdateSubspaceMutation = {
       }>;
       roleSet: {
         id: string;
-        applications: Array<{
-          id: string;
-          state: string;
-          nextEvents: Array<string>;
-          isFinalized: boolean;
-          lifecycle: { id: string };
-          questions: Array<{ id: string }>;
-          actor: {
-            id: string;
-            profile?: { id: string; displayName: string } | undefined;
-          };
-          authorization?:
-            | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
-            | undefined;
-        }>;
         memberUsers: Array<{
           id: string;
           nameID: string;
@@ -79407,7 +81318,11 @@ export type UpdateSubspaceMutation = {
           };
           settings: {
             privacy: { contributionRolesPubliclyVisible: boolean };
-            membership: { allowUsersMatchingDomainToJoin: boolean };
+            membership: {
+              allowUsersMatchingDomainToJoin: boolean;
+              allowSpaceInvitations: boolean;
+              allowApplications: boolean;
+            };
           };
           authorization?:
             | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
@@ -79638,7 +81553,11 @@ export type UpdateSubspaceMutation = {
           };
           settings: {
             privacy: { contributionRolesPubliclyVisible: boolean };
-            membership: { allowUsersMatchingDomainToJoin: boolean };
+            membership: {
+              allowUsersMatchingDomainToJoin: boolean;
+              allowSpaceInvitations: boolean;
+              allowApplications: boolean;
+            };
           };
           authorization?:
             | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
@@ -79869,7 +81788,11 @@ export type UpdateSubspaceMutation = {
           };
           settings: {
             privacy: { contributionRolesPubliclyVisible: boolean };
-            membership: { allowUsersMatchingDomainToJoin: boolean };
+            membership: {
+              allowUsersMatchingDomainToJoin: boolean;
+              allowSpaceInvitations: boolean;
+              allowApplications: boolean;
+            };
           };
           authorization?:
             | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
@@ -80065,6 +81988,22 @@ export type UpdateInnovationFlowStateMutationVariables = Exact<{
 
 export type UpdateInnovationFlowStateMutation = {
   updateInnovationFlowState: { id: string; displayName: string };
+};
+
+export type PrepareMemoSigningMutationVariables = Exact<{
+  signingData: MemoSigningPrepareInput;
+}>;
+
+export type PrepareMemoSigningMutation = {
+  prepareMemoSigning: { attemptId: string; previewUrl: string };
+};
+
+export type AuthorizationPolicyResetOnOrganizationMutationVariables = Exact<{
+  organizationID: Scalars["UUID"]["input"];
+}>;
+
+export type AuthorizationPolicyResetOnOrganizationMutation = {
+  authorizationPolicyResetOnOrganization: { id: string };
 };
 
 export type CreateOrganizationMutationVariables = Exact<{
@@ -80274,7 +82213,11 @@ export type CreateOrganizationMutation = {
     };
     settings: {
       privacy: { contributionRolesPubliclyVisible: boolean };
-      membership: { allowUsersMatchingDomainToJoin: boolean };
+      membership: {
+        allowUsersMatchingDomainToJoin: boolean;
+        allowSpaceInvitations: boolean;
+        allowApplications: boolean;
+      };
     };
     authorization?:
       | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
@@ -80495,7 +82438,11 @@ export type UpdateOrganizationMutation = {
     };
     settings: {
       privacy: { contributionRolesPubliclyVisible: boolean };
-      membership: { allowUsersMatchingDomainToJoin: boolean };
+      membership: {
+        allowUsersMatchingDomainToJoin: boolean;
+        allowSpaceInvitations: boolean;
+        allowApplications: boolean;
+      };
     };
     authorization?:
       | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
@@ -80512,9 +82459,693 @@ export type UpdateOrganizationSettingsMutation = {
     id: string;
     settings: {
       privacy: { contributionRolesPubliclyVisible: boolean };
-      membership: { allowUsersMatchingDomainToJoin: boolean };
+      membership: {
+        allowUsersMatchingDomainToJoin: boolean;
+        allowSpaceInvitations: boolean;
+        allowApplications: boolean;
+      };
     };
   };
+};
+
+export type AddIframeAllowedUrlMutationVariables = Exact<{
+  whitelistedURL: Scalars["String"]["input"];
+}>;
+
+export type AddIframeAllowedUrlMutation = {
+  addIframeAllowedURL: Array<string>;
+};
+
+export type AddNotificationEmailToBlacklistMutationVariables = Exact<{
+  input: NotificationEmailAddressInput;
+}>;
+
+export type AddNotificationEmailToBlacklistMutation = {
+  addNotificationEmailToBlacklist: Array<string>;
+};
+
+export type AdminCommunicationEnsureAccessToCommunicationsMutationVariables =
+  Exact<{
+    communicationData: CommunicationAdminEnsureAccessInput;
+  }>;
+
+export type AdminCommunicationEnsureAccessToCommunicationsMutation = {
+  adminCommunicationEnsureAccessToCommunications: boolean;
+};
+
+export type AdminCommunicationMigrateOrphanedConversationsMutationVariables =
+  Exact<{ [key: string]: never }>;
+
+export type AdminCommunicationMigrateOrphanedConversationsMutation = {
+  adminCommunicationMigrateOrphanedConversations: { migrated: number };
+};
+
+export type AdminCommunicationRemoveOrphanedRoomMutationVariables = Exact<{
+  orphanedRoomData: CommunicationAdminRemoveOrphanedRoomInput;
+}>;
+
+export type AdminCommunicationRemoveOrphanedRoomMutation = {
+  adminCommunicationRemoveOrphanedRoom: boolean;
+};
+
+export type AdminCommunicationSyncSpaceHierarchyMutationVariables = Exact<{
+  [key: string]: never;
+}>;
+
+export type AdminCommunicationSyncSpaceHierarchyMutation = {
+  adminCommunicationSyncSpaceHierarchy: boolean;
+};
+
+export type AdminCommunicationUpdateRoomStateMutationVariables = Exact<{
+  roomStateData: CommunicationAdminUpdateRoomStateInput;
+}>;
+
+export type AdminCommunicationUpdateRoomStateMutation = {
+  adminCommunicationUpdateRoomState: boolean;
+};
+
+export type AdminForumRemoveDiscussionCategoryMutationVariables = Exact<{
+  removeData: ForumRemoveDiscussionCategoryInput;
+}>;
+
+export type AdminForumRemoveDiscussionCategoryMutation = {
+  adminForumRemoveDiscussionCategory: {
+    id: string;
+    discussionCategories: Array<ForumDiscussionCategory>;
+  };
+};
+
+export type AdminIdentityDeleteKratosIdentityMutationVariables = Exact<{
+  kratosIdentityId: Scalars["UUID"]["input"];
+}>;
+
+export type AdminIdentityDeleteKratosIdentityMutation = {
+  adminIdentityDeleteKratosIdentity: boolean;
+};
+
+export type AdminInAppNotificationsPruneMutationVariables = Exact<{
+  [key: string]: never;
+}>;
+
+export type AdminInAppNotificationsPruneMutation = {
+  adminInAppNotificationsPrune: { removedCountExceedingUserLimit: number };
+};
+
+export type AdminLicensePolicyCreateCredentialRuleMutationVariables = Exact<{
+  createData: CreateLicensePolicyCredentialRuleInput;
+}>;
+
+export type AdminLicensePolicyCreateCredentialRuleMutation = {
+  adminLicensePolicyCreateCredentialRule: { id: string };
+};
+
+export type AdminLicensePolicyDeleteCredentialRuleMutationVariables = Exact<{
+  deleteData: DeleteLicensePolicyCredentialRuleInput;
+}>;
+
+export type AdminLicensePolicyDeleteCredentialRuleMutation = {
+  adminLicensePolicyDeleteCredentialRule: { id: string };
+};
+
+export type AdminLicensePolicyUpdateCredentialRuleMutationVariables = Exact<{
+  updateData: UpdateLicensePolicyCredentialRuleInput;
+}>;
+
+export type AdminLicensePolicyUpdateCredentialRuleMutation = {
+  adminLicensePolicyUpdateCredentialRule: { id: string };
+};
+
+export type AdminRevokeMcpApiKeyMutationVariables = Exact<{
+  revokeData: AdminRevokeMcpApiKeyInput;
+}>;
+
+export type AdminRevokeMcpApiKeyMutation = {
+  adminRevokeMcpApiKey: { id: string };
+};
+
+export type AdminUpdateContributorAvatarsMutationVariables = Exact<{
+  profileID: Scalars["UUID"]["input"];
+}>;
+
+export type AdminUpdateContributorAvatarsMutation = {
+  adminUpdateContributorAvatars: { id: string };
+};
+
+export type AdminUpdateGeoLocationDataMutationVariables = Exact<{
+  [key: string]: never;
+}>;
+
+export type AdminUpdateGeoLocationDataMutation = {
+  adminUpdateGeoLocationData: boolean;
+};
+
+export type AdminUserAccountDeleteMutationVariables = Exact<{
+  userID: Scalars["UUID"]["input"];
+}>;
+
+export type AdminUserAccountDeleteMutation = {
+  adminUserAccountDelete: { id: string };
+};
+
+export type AdminUserEmailChangeMutationVariables = Exact<{
+  adminUserEmailChangeData: AdminUserEmailChangeInput;
+}>;
+
+export type AdminUserEmailChangeMutation = {
+  adminUserEmailChange: { success: boolean };
+};
+
+export type AdminUserEmailChangeDriftResolveMutationVariables = Exact<{
+  adminUserEmailChangeDriftResolveData: AdminUserEmailChangeDriftResolveInput;
+}>;
+
+export type AdminUserEmailChangeDriftResolveMutation = {
+  adminUserEmailChangeDriftResolve: { success: boolean };
+};
+
+export type AiServerAuthorizationPolicyResetMutationVariables = Exact<{
+  [key: string]: never;
+}>;
+
+export type AiServerAuthorizationPolicyResetMutation = {
+  aiServerAuthorizationPolicyReset: { id: string };
+};
+
+export type AssignPlatformRoleToOrganizationMutationVariables = Exact<{
+  roleData: AssignPlatformRoleInput;
+}>;
+
+export type AssignPlatformRoleToOrganizationMutation = {
+  assignPlatformRoleToOrganization: { id: string };
+};
+
+export type AuthorizationPlatformRolesAccessResetMutationVariables = Exact<{
+  [key: string]: never;
+}>;
+
+export type AuthorizationPlatformRolesAccessResetMutation = {
+  authorizationPlatformRolesAccessReset: boolean;
+};
+
+export type AuthorizationPolicyResetAllMutationVariables = Exact<{
+  [key: string]: never;
+}>;
+
+export type AuthorizationPolicyResetAllMutation = {
+  authorizationPolicyResetAll: string;
+};
+
+export type AuthorizationPolicyResetOnAccountMutationVariables = Exact<{
+  authorizationResetData: AccountAuthorizationResetInput;
+}>;
+
+export type AuthorizationPolicyResetOnAccountMutation = {
+  authorizationPolicyResetOnAccount: { id: string };
+};
+
+export type AuthorizationPolicyResetOnPlatformMutationVariables = Exact<{
+  [key: string]: never;
+}>;
+
+export type AuthorizationPolicyResetOnPlatformMutation = {
+  authorizationPolicyResetOnPlatform: { id: string };
+};
+
+export type AuthorizationPolicyResetOnUserMutationVariables = Exact<{
+  authorizationResetData: UserAuthorizationResetInput;
+}>;
+
+export type AuthorizationPolicyResetOnUserMutation = {
+  authorizationPolicyResetOnUser: { id: string };
+};
+
+export type AuthorizationPolicyResetToGlobalAdminsAccessMutationVariables =
+  Exact<{
+    authorizationID: Scalars["String"]["input"];
+  }>;
+
+export type AuthorizationPolicyResetToGlobalAdminsAccessMutation = {
+  authorizationPolicyResetToGlobalAdminsAccess: { id: string };
+};
+
+export type CleanupCollectionsMutationVariables = Exact<{
+  [key: string]: never;
+}>;
+
+export type CleanupCollectionsMutation = {
+  cleanupCollections: { success: boolean };
+};
+
+export type CreateContributionOnCalloutIdMutationVariables = Exact<{
+  contributionData: CreateContributionOnCalloutInput;
+}>;
+
+export type CreateContributionOnCalloutIdMutation = {
+  createContributionOnCallout: { id: string };
+};
+
+export type CreateTemplateFromContentSpaceMutationVariables = Exact<{
+  templateData: CreateTemplateFromContentSpaceOnTemplatesSetInput;
+}>;
+
+export type CreateTemplateFromContentSpaceMutation = {
+  createTemplateFromContentSpace: { id: string };
+};
+
+export type CreateWingbackAccountMutationVariables = Exact<{
+  accountID: Scalars["UUID"]["input"];
+}>;
+
+export type CreateWingbackAccountMutation = { createWingbackAccount: string };
+
+export type DeleteContributionMutationVariables = Exact<{
+  deleteData: DeleteContributionInput;
+}>;
+
+export type DeleteContributionMutation = { deleteContribution: { id: string } };
+
+export type GrantCredentialToActorMutationVariables = Exact<{
+  actorID: Scalars["UUID"]["input"];
+  credentialType: CredentialType;
+  resourceID?: InputMaybe<Scalars["UUID"]["input"]>;
+}>;
+
+export type GrantCredentialToActorMutation = {
+  grantCredentialToActor: { id: string };
+};
+
+export type GrantCredentialToOrganizationMutationVariables = Exact<{
+  grantCredentialData: GrantOrganizationAuthorizationCredentialInput;
+}>;
+
+export type GrantCredentialToOrganizationMutation = {
+  grantCredentialToOrganization: { id: string };
+};
+
+export type GrantCredentialToUserMutationVariables = Exact<{
+  grantCredentialData: GrantAuthorizationCredentialInput;
+}>;
+
+export type GrantCredentialToUserMutation = {
+  grantCredentialToUser: { id: string };
+};
+
+export type LicenseResetOnAccountMutationVariables = Exact<{
+  resetData: AccountLicenseResetInput;
+}>;
+
+export type LicenseResetOnAccountMutation = {
+  licenseResetOnAccount: { id: string };
+};
+
+export type MigrateLegacyMemoContentMutationVariables = Exact<{
+  [key: string]: never;
+}>;
+
+export type MigrateLegacyMemoContentMutation = {
+  migrateLegacyMemoContent: { total: number; migrated: number };
+};
+
+export type MigrateLegacyWhiteboardContentMutationVariables = Exact<{
+  [key: string]: never;
+}>;
+
+export type MigrateLegacyWhiteboardContentMutation = {
+  migrateLegacyWhiteboardContent: { total: number; migrated: number };
+};
+
+export type MintMcpApiKeyMutationVariables = Exact<{
+  mintData: MintMcpApiKeyInput;
+}>;
+
+export type MintMcpApiKeyMutation = { mintMcpApiKey: { key: { id: string } } };
+
+export type MoveContributionToCalloutMutationVariables = Exact<{
+  moveContributionData: MoveCalloutContributionInput;
+}>;
+
+export type MoveContributionToCalloutMutation = {
+  moveContributionToCallout: { id: string };
+};
+
+export type PlatformRolesAssignLicensePlanToAccountMutationVariables = Exact<{
+  planData: AssignLicensePlanToAccount;
+}>;
+
+export type PlatformRolesAssignLicensePlanToAccountMutation = {
+  assignLicensePlanToAccount: { id: string };
+};
+
+export type PlatformRolesAssignLicensePlanToSpaceMutationVariables = Exact<{
+  planData: AssignLicensePlanToSpace;
+}>;
+
+export type PlatformRolesAssignLicensePlanToSpaceMutation = {
+  assignLicensePlanToSpace: { id: string };
+};
+
+export type PlatformRolesAssignRoleToUserMutationVariables = Exact<{
+  roleData: AssignPlatformRoleInput;
+}>;
+
+export type PlatformRolesAssignRoleToUserMutation = {
+  assignPlatformRoleToUser: { id: string };
+};
+
+export type PlatformRolesConvertSpaceL1ToSpaceL0MutationVariables = Exact<{
+  convertData: ConvertSpaceL1ToSpaceL0Input;
+}>;
+
+export type PlatformRolesConvertSpaceL1ToSpaceL0Mutation = {
+  convertSpaceL1ToSpaceL0: { id: string };
+};
+
+export type PlatformRolesConvertSpaceL2ToSpaceL1MutationVariables = Exact<{
+  convertData: ConvertSpaceL2ToSpaceL1Input;
+}>;
+
+export type PlatformRolesConvertSpaceL2ToSpaceL1Mutation = {
+  convertSpaceL2ToSpaceL1: { id: string };
+};
+
+export type PlatformRolesConvertVirtualContributorToUseKnowledgeBaseMutationVariables =
+  Exact<{
+    conversionData: ConversionVcSpaceToVcKnowledgeBaseInput;
+  }>;
+
+export type PlatformRolesConvertVirtualContributorToUseKnowledgeBaseMutation = {
+  convertVirtualContributorToUseKnowledgeBase: { id: string };
+};
+
+export type PlatformRolesCreateLicensePlanMutationVariables = Exact<{
+  planData: CreateLicensePlanOnLicensingFrameworkInput;
+}>;
+
+export type PlatformRolesCreateLicensePlanMutation = {
+  createLicensePlan: { id: string };
+};
+
+export type PlatformRolesCreateOrganizationMutationVariables = Exact<{
+  organizationData: CreateOrganizationInput;
+}>;
+
+export type PlatformRolesCreateOrganizationMutation = {
+  createOrganization: { id: string };
+};
+
+export type PlatformRolesCreateTemplateMutationVariables = Exact<{
+  templateData: CreateTemplateOnTemplatesSetInput;
+}>;
+
+export type PlatformRolesCreateTemplateMutation = {
+  createTemplate: { id: string };
+};
+
+export type PlatformRolesCreateTemplateFromSpaceMutationVariables = Exact<{
+  templateData: CreateTemplateFromSpaceOnTemplatesSetInput;
+}>;
+
+export type PlatformRolesCreateTemplateFromSpaceMutation = {
+  createTemplateFromSpace: { id: string };
+};
+
+export type PlatformRolesDeleteDiscussionMutationVariables = Exact<{
+  deleteData: DeleteDiscussionInput;
+}>;
+
+export type PlatformRolesDeleteDiscussionMutation = {
+  deleteDiscussion: { id: string };
+};
+
+export type PlatformRolesDeleteLicensePlanMutationVariables = Exact<{
+  deleteData: DeleteLicensePlanInput;
+}>;
+
+export type PlatformRolesDeleteLicensePlanMutation = {
+  deleteLicensePlan: { id: string };
+};
+
+export type PlatformRolesMoveSpaceL1ToSpaceL0MutationVariables = Exact<{
+  moveData: MoveSpaceL1ToSpaceL0Input;
+}>;
+
+export type PlatformRolesMoveSpaceL1ToSpaceL0Mutation = {
+  moveSpaceL1ToSpaceL0: { id: string };
+};
+
+export type PlatformRolesMoveSpaceL1ToSpaceL2MutationVariables = Exact<{
+  moveData: MoveSpaceL1ToSpaceL2Input;
+}>;
+
+export type PlatformRolesMoveSpaceL1ToSpaceL2Mutation = {
+  moveSpaceL1ToSpaceL2: { id: string };
+};
+
+export type PlatformRolesMoveSpaceL2ToSpaceL1MutationVariables = Exact<{
+  moveData: MoveSpaceL2ToSpaceL1Input;
+}>;
+
+export type PlatformRolesMoveSpaceL2ToSpaceL1Mutation = {
+  moveSpaceL2ToSpaceL1: { id: string };
+};
+
+export type PlatformRolesRemoveRoleFromUserMutationVariables = Exact<{
+  roleData: RemovePlatformRoleInput;
+}>;
+
+export type PlatformRolesRemoveRoleFromUserMutation = {
+  removePlatformRoleFromUser: { id: string };
+};
+
+export type PlatformRolesRevokeLicensePlanFromAccountMutationVariables = Exact<{
+  planData: RevokeLicensePlanFromAccount;
+}>;
+
+export type PlatformRolesRevokeLicensePlanFromAccountMutation = {
+  revokeLicensePlanFromAccount: { id: string };
+};
+
+export type PlatformRolesRevokeLicensePlanFromSpaceMutationVariables = Exact<{
+  planData: RevokeLicensePlanFromSpace;
+}>;
+
+export type PlatformRolesRevokeLicensePlanFromSpaceMutation = {
+  revokeLicensePlanFromSpace: { id: string };
+};
+
+export type PlatformRolesTransferCalloutMutationVariables = Exact<{
+  transferData: TransferCalloutInput;
+}>;
+
+export type PlatformRolesTransferCalloutMutation = {
+  transferCallout: { id: string };
+};
+
+export type PlatformRolesTransferInnovationHubToAccountMutationVariables =
+  Exact<{
+    transferData: TransferAccountInnovationHubInput;
+  }>;
+
+export type PlatformRolesTransferInnovationHubToAccountMutation = {
+  transferInnovationHubToAccount: { id: string };
+};
+
+export type PlatformRolesTransferInnovationPackToAccountMutationVariables =
+  Exact<{
+    transferData: TransferAccountInnovationPackInput;
+  }>;
+
+export type PlatformRolesTransferInnovationPackToAccountMutation = {
+  transferInnovationPackToAccount: { id: string };
+};
+
+export type PlatformRolesTransferSpaceToAccountMutationVariables = Exact<{
+  transferData: TransferAccountSpaceInput;
+}>;
+
+export type PlatformRolesTransferSpaceToAccountMutation = {
+  transferSpaceToAccount: { id: string };
+};
+
+export type PlatformRolesTransferVirtualContributorToAccountMutationVariables =
+  Exact<{
+    transferData: TransferAccountVirtualContributorInput;
+  }>;
+
+export type PlatformRolesTransferVirtualContributorToAccountMutation = {
+  transferVirtualContributorToAccount: { id: string };
+};
+
+export type PlatformRolesUpdateCalloutMutationVariables = Exact<{
+  calloutData: UpdateCalloutEntityInput;
+}>;
+
+export type PlatformRolesUpdateCalloutMutation = {
+  updateCallout: { id: string };
+};
+
+export type PlatformRolesUpdateDiscussionMutationVariables = Exact<{
+  updateData: UpdateDiscussionInput;
+}>;
+
+export type PlatformRolesUpdateDiscussionMutation = {
+  updateDiscussion: { id: string };
+};
+
+export type PlatformRolesUpdateLicensePlanMutationVariables = Exact<{
+  updateData: UpdateLicensePlanInput;
+}>;
+
+export type PlatformRolesUpdateLicensePlanMutation = {
+  updateLicensePlan: { id: string };
+};
+
+export type PlatformRolesUpdateSpaceVisibilityMutationVariables = Exact<{
+  updateData: UpdateSpacePlatformSettingsInput;
+}>;
+
+export type PlatformRolesUpdateSpaceVisibilityMutation = {
+  updateSpacePlatformSettings: { id: string };
+};
+
+export type PlatformRolesUpdateTemplateMutationVariables = Exact<{
+  updateData: UpdateTemplateInput;
+}>;
+
+export type PlatformRolesUpdateTemplateMutation = {
+  updateTemplate: { id: string };
+};
+
+export type RefreshAllBodiesOfKnowledgeMutationVariables = Exact<{
+  [key: string]: never;
+}>;
+
+export type RefreshAllBodiesOfKnowledgeMutation = {
+  refreshAllBodiesOfKnowledge: boolean;
+};
+
+export type RemoveIframeAllowedUrlMutationVariables = Exact<{
+  whitelistedURL: Scalars["String"]["input"];
+}>;
+
+export type RemoveIframeAllowedUrlMutation = {
+  removeIframeAllowedURL: Array<string>;
+};
+
+export type RemoveNotificationEmailFromBlacklistMutationVariables = Exact<{
+  input: NotificationEmailAddressInput;
+}>;
+
+export type RemoveNotificationEmailFromBlacklistMutation = {
+  removeNotificationEmailFromBlacklist: Array<string>;
+};
+
+export type RemovePlatformRoleFromOrganizationMutationVariables = Exact<{
+  roleData: RemovePlatformRoleInput;
+}>;
+
+export type RemovePlatformRoleFromOrganizationMutation = {
+  removePlatformRoleFromOrganization: { id: string };
+};
+
+export type ResetLicenseOnAccountsMutationVariables = Exact<{
+  [key: string]: never;
+}>;
+
+export type ResetLicenseOnAccountsMutation = {
+  resetLicenseOnAccounts: boolean;
+};
+
+export type RevokeCredentialFromActorMutationVariables = Exact<{
+  actorID: Scalars["UUID"]["input"];
+  credentialType: CredentialType;
+  resourceID?: InputMaybe<Scalars["UUID"]["input"]>;
+}>;
+
+export type RevokeCredentialFromActorMutation = {
+  revokeCredentialFromActor: boolean;
+};
+
+export type RevokeCredentialFromOrganizationMutationVariables = Exact<{
+  revokeCredentialData: RevokeOrganizationAuthorizationCredentialInput;
+}>;
+
+export type RevokeCredentialFromOrganizationMutation = {
+  revokeCredentialFromOrganization: { id: string };
+};
+
+export type RevokeCredentialFromUserMutationVariables = Exact<{
+  revokeCredentialData: RevokeAuthorizationCredentialInput;
+}>;
+
+export type RevokeCredentialFromUserMutation = {
+  revokeCredentialFromUser: { id: string };
+};
+
+export type SetPlatformWellKnownVirtualContributorMutationVariables = Exact<{
+  mappingData: SetPlatformWellKnownVirtualContributorInput;
+}>;
+
+export type SetPlatformWellKnownVirtualContributorMutation = {
+  setPlatformWellKnownVirtualContributor: {
+    mappings: Array<{ wellKnown: VirtualContributorWellKnown }>;
+  };
+};
+
+export type UpdateAssistantActorCapabilitiesMutationVariables = Exact<{
+  grantData: GrantAssistantActorCapabilitiesInput;
+}>;
+
+export type UpdateAssistantActorCapabilitiesMutation = {
+  updateAssistantActorCapabilities: { id: string };
+};
+
+export type UpdateBaselineLicensePlanOnAccountMutationVariables = Exact<{
+  updateData: UpdateBaselineLicensePlanOnAccount;
+}>;
+
+export type UpdateBaselineLicensePlanOnAccountMutation = {
+  updateBaselineLicensePlanOnAccount: { id: string };
+};
+
+export type UpdateCalloutPublishInfoMutationVariables = Exact<{
+  calloutData: UpdateCalloutPublishInfoInput;
+}>;
+
+export type UpdateCalloutPublishInfoMutation = {
+  updateCalloutPublishInfo: { id: string };
+};
+
+export type UpdateInnovationHubMutationVariables = Exact<{
+  updateData: UpdateInnovationHubInput;
+}>;
+
+export type UpdateInnovationHubMutation = {
+  updateInnovationHub: { id: string };
+};
+
+export type UpdateInnovationPackMutationVariables = Exact<{
+  innovationPackData: UpdateInnovationPackInput;
+}>;
+
+export type UpdateInnovationPackMutation = {
+  updateInnovationPack: { id: string };
+};
+
+export type UpdatePlatformSettingsMutationVariables = Exact<{
+  settingsData: UpdatePlatformSettingsInput;
+}>;
+
+export type UpdatePlatformSettingsMutation = {
+  updatePlatformSettings: { integration: { iframeAllowedUrls: Array<string> } };
+};
+
+export type UpdateTemplateFromSpaceMutationVariables = Exact<{
+  updateData: UpdateTemplateFromSpaceInput;
+}>;
+
+export type UpdateTemplateFromSpaceMutation = {
+  updateTemplateFromSpace: { id: string };
 };
 
 export type AssignPlatformRoleToUserMutationVariables = Exact<{
@@ -80620,6 +83251,19 @@ export type UpdateSpacePlatformSettingsMutation = {
     __typename: "Space";
     id: string;
     nameID: string;
+    visibility: SpaceVisibility;
+  };
+};
+
+export type UpdateSpaceVisibilityPlatformSettingsMutationVariables = Exact<{
+  spaceId: Scalars["UUID"]["input"];
+  visibility: SpaceVisibility;
+}>;
+
+export type UpdateSpaceVisibilityPlatformSettingsMutation = {
+  updateSpacePlatformSettings: {
+    __typename: "Space";
+    id: string;
     visibility: SpaceVisibility;
   };
 };
@@ -81245,6 +83889,30 @@ export type CreateUserMutation = {
             inApp: boolean;
             push: boolean;
           };
+          adminSpaceCommunityInvitation: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
+          adminAssociateInvitationResponse: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
+          adminAssociateApplicationReceived: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
+          adminAssociateJoined: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
         };
         space: {
           __typename: "UserSettingsNotificationSpace";
@@ -81257,6 +83925,12 @@ export type CreateUserMutation = {
               push: boolean;
             };
             collaborationCalloutContributionCreated: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+              push: boolean;
+            };
+            communityInvitationResponse: {
               __typename: "UserSettingsNotificationChannels";
               email: boolean;
               inApp: boolean;
@@ -81347,6 +84021,18 @@ export type CreateUserMutation = {
               push: boolean;
             };
             spaceCommunityJoined: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+              push: boolean;
+            };
+            organizationAssociateInvitationReceived: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+              push: boolean;
+            };
+            organizationAssociateApplicationDecided: {
               __typename: "UserSettingsNotificationChannels";
               email: boolean;
               inApp: boolean;
@@ -81620,6 +84306,30 @@ export type UpdateUserMutation = {
             inApp: boolean;
             push: boolean;
           };
+          adminSpaceCommunityInvitation: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
+          adminAssociateInvitationResponse: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
+          adminAssociateApplicationReceived: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
+          adminAssociateJoined: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
         };
         space: {
           __typename: "UserSettingsNotificationSpace";
@@ -81632,6 +84342,12 @@ export type UpdateUserMutation = {
               push: boolean;
             };
             collaborationCalloutContributionCreated: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+              push: boolean;
+            };
+            communityInvitationResponse: {
               __typename: "UserSettingsNotificationChannels";
               email: boolean;
               inApp: boolean;
@@ -81722,6 +84438,18 @@ export type UpdateUserMutation = {
               push: boolean;
             };
             spaceCommunityJoined: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+              push: boolean;
+            };
+            organizationAssociateInvitationReceived: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+              push: boolean;
+            };
+            organizationAssociateApplicationDecided: {
               __typename: "UserSettingsNotificationChannels";
               email: boolean;
               inApp: boolean;
@@ -81856,6 +84584,30 @@ export type UpdateUserSettingsMutation = {
             inApp: boolean;
             push: boolean;
           };
+          adminSpaceCommunityInvitation: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
+          adminAssociateInvitationResponse: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
+          adminAssociateApplicationReceived: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
+          adminAssociateJoined: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
         };
         space: {
           __typename: "UserSettingsNotificationSpace";
@@ -81868,6 +84620,12 @@ export type UpdateUserSettingsMutation = {
               push: boolean;
             };
             collaborationCalloutContributionCreated: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+              push: boolean;
+            };
+            communityInvitationResponse: {
               __typename: "UserSettingsNotificationChannels";
               email: boolean;
               inApp: boolean;
@@ -81958,6 +84716,18 @@ export type UpdateUserSettingsMutation = {
               push: boolean;
             };
             spaceCommunityJoined: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+              push: boolean;
+            };
+            organizationAssociateInvitationReceived: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+              push: boolean;
+            };
+            organizationAssociateApplicationDecided: {
               __typename: "UserSettingsNotificationChannels";
               email: boolean;
               inApp: boolean;
@@ -82183,6 +84953,53 @@ export type UpdateVirtualContributorSettingsMutation = {
   };
 };
 
+export type GetOrganizationRoleSetPendingQueryVariables = Exact<{
+  roleSetId: Scalars["UUID"]["input"];
+}>;
+
+export type GetOrganizationRoleSetPendingQuery = {
+  lookup: {
+    roleSet?:
+      | {
+          id: string;
+          applications: Array<{
+            id: string;
+            state: string;
+            questions: Array<{ name: string; value: string }>;
+          }>;
+          invitations: Array<{
+            id: string;
+            state: string;
+            extraRoles: Array<RoleName>;
+          }>;
+          platformInvitations: Array<{ id: string }>;
+        }
+      | undefined;
+  };
+};
+
+export type GetRoleSetApplicationFormQueryVariables = Exact<{
+  roleSetId: Scalars["UUID"]["input"];
+}>;
+
+export type GetRoleSetApplicationFormQuery = {
+  lookup: {
+    roleSet?:
+      | {
+          id: string;
+          applicationForm: {
+            id: string;
+            questions: Array<{
+              question: string;
+              required: boolean;
+              sortOrder: number;
+            }>;
+          };
+        }
+      | undefined;
+  };
+};
+
 export type RoleSetAvailableMembersQueryVariables = Exact<{
   roleSetId: Scalars["UUID"]["input"];
   first: Scalars["Int"]["input"];
@@ -82286,6 +85103,10 @@ export type RoleSetApplicationsInvitationsQuery = {
             state: string;
             nextEvents: Array<string>;
             isFinalized: boolean;
+            createdDate: Date;
+            extraRoles: Array<RoleName>;
+            invitedToParent: boolean;
+            welcomeMessage?: string | undefined;
             lifecycle: { id: string };
             createdBy?:
               | {
@@ -82306,6 +85127,7 @@ export type RoleSetApplicationsInvitationsQuery = {
               | undefined;
             actor: {
               id: string;
+              type: ActorType;
               profile?: { id: string; displayName: string } | undefined;
             };
             authorization?:
@@ -82454,6 +85276,45 @@ export type CommunityMemberVirtualContributorFragment = {
   profile?: { id: string; displayName: string } | undefined;
 };
 
+export type RoleSetPendingApplicationsQueryVariables = Exact<{
+  roleSetId: Scalars["UUID"]["input"];
+}>;
+
+export type RoleSetPendingApplicationsQuery = {
+  lookup: {
+    roleSet?:
+      | { id: string; applications: Array<{ id: string; state: string }> }
+      | undefined;
+  };
+};
+
+export type RoleSetPendingInvitationsQueryVariables = Exact<{
+  roleSetId: Scalars["UUID"]["input"];
+}>;
+
+export type RoleSetPendingInvitationsQuery = {
+  lookup: {
+    roleSet?:
+      | { id: string; invitations: Array<{ id: string; state: string }> }
+      | undefined;
+  };
+};
+
+export type RoleSetPendingPlatformInvitationsQueryVariables = Exact<{
+  roleSetId: Scalars["UUID"]["input"];
+}>;
+
+export type RoleSetPendingPlatformInvitationsQuery = {
+  lookup: {
+    roleSet?:
+      | {
+          id: string;
+          platformInvitations: Array<{ id: string; email: string }>;
+        }
+      | undefined;
+  };
+};
+
 export type RoleSetUserPrivilegesQueryVariables = Exact<{
   roleSetId: Scalars["UUID"]["input"];
 }>;
@@ -82467,6 +85328,25 @@ export type RoleSetUserPrivilegesQuery = {
           authorization?:
             | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
             | undefined;
+        }
+      | undefined;
+  };
+};
+
+export type GetRoleSetUsersInRolesQueryVariables = Exact<{
+  roleSetId: Scalars["UUID"]["input"];
+  roles: Array<RoleName> | RoleName;
+}>;
+
+export type GetRoleSetUsersInRolesQuery = {
+  lookup: {
+    roleSet?:
+      | {
+          id: string;
+          usersInRoles: Array<{
+            role: RoleName;
+            users: Array<{ id: string; nameID: string; email: string }>;
+          }>;
         }
       | undefined;
   };
@@ -82489,6 +85369,10 @@ export type GetSpaceInvitationsQuery = {
                 state: string;
                 nextEvents: Array<string>;
                 isFinalized: boolean;
+                createdDate: Date;
+                extraRoles: Array<RoleName>;
+                invitedToParent: boolean;
+                welcomeMessage?: string | undefined;
                 lifecycle: { id: string };
                 createdBy?:
                   | {
@@ -82509,6 +85393,7 @@ export type GetSpaceInvitationsQuery = {
                   | undefined;
                 actor: {
                   id: string;
+                  type: ActorType;
                   profile?: { id: string; displayName: string } | undefined;
                 };
                 authorization?:
@@ -82844,7 +85729,7 @@ export type SpaceCalloutQuery = {
                   id: string;
                   defaultDisplayName?: string | undefined;
                   postDescription?: any | undefined;
-                  whiteboardContent?: any | undefined;
+                  whiteboardContentAvailable: boolean;
                 };
                 contributions: Array<{
                   authorization?:
@@ -83351,7 +86236,7 @@ export type CalloutDetailsQuery = {
             id: string;
             defaultDisplayName?: string | undefined;
             postDescription?: any | undefined;
-            whiteboardContent?: any | undefined;
+            whiteboardContentAvailable: boolean;
           };
           contributions: Array<{
             authorization?:
@@ -84109,6 +86994,30 @@ export type VisualFullFragment = {
   minHeight: number;
   minWidth: number;
   alternativeText?: string | undefined;
+};
+
+export type GetCalloutSpacesSettingsQueryVariables = Exact<{
+  calloutId: Scalars["UUID"]["input"];
+}>;
+
+export type GetCalloutSpacesSettingsQuery = {
+  lookup: {
+    callout?:
+      | {
+          id: string;
+          framing: { id: string; type: CalloutFramingType };
+          settings: {
+            framing: {
+              commentsEnabled: boolean;
+              spaces?: { cardVariant: SpaceCollectionCardVariant } | undefined;
+              selection?:
+                | { mode: CalloutSelectionMode; selectedIds: Array<string> }
+                | undefined;
+            };
+          };
+        }
+      | undefined;
+  };
 };
 
 export type CalloutWhiateboardStorageConfigQueryVariables = Exact<{
@@ -85267,7 +88176,11 @@ export type GetSpaceAvailableMembersQuery = {
                 };
                 settings: {
                   privacy: { contributionRolesPubliclyVisible: boolean };
-                  membership: { allowUsersMatchingDomainToJoin: boolean };
+                  membership: {
+                    allowUsersMatchingDomainToJoin: boolean;
+                    allowSpaceInvitations: boolean;
+                    allowApplications: boolean;
+                  };
                 };
                 authorization?:
                   | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
@@ -85524,7 +88437,11 @@ export type GetSpaceAvailableMembersQuery = {
                 };
                 settings: {
                   privacy: { contributionRolesPubliclyVisible: boolean };
-                  membership: { allowUsersMatchingDomainToJoin: boolean };
+                  membership: {
+                    allowUsersMatchingDomainToJoin: boolean;
+                    allowSpaceInvitations: boolean;
+                    allowApplications: boolean;
+                  };
                 };
                 authorization?:
                   | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
@@ -85781,7 +88698,11 @@ export type GetSpaceAvailableMembersQuery = {
                 };
                 settings: {
                   privacy: { contributionRolesPubliclyVisible: boolean };
-                  membership: { allowUsersMatchingDomainToJoin: boolean };
+                  membership: {
+                    allowUsersMatchingDomainToJoin: boolean;
+                    allowSpaceInvitations: boolean;
+                    allowApplications: boolean;
+                  };
                 };
                 authorization?:
                   | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
@@ -86250,7 +89171,11 @@ export type GetSpaceCommunityQuery = {
                 };
                 settings: {
                   privacy: { contributionRolesPubliclyVisible: boolean };
-                  membership: { allowUsersMatchingDomainToJoin: boolean };
+                  membership: {
+                    allowUsersMatchingDomainToJoin: boolean;
+                    allowSpaceInvitations: boolean;
+                    allowApplications: boolean;
+                  };
                 };
                 authorization?:
                   | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
@@ -86507,7 +89432,11 @@ export type GetSpaceCommunityQuery = {
                 };
                 settings: {
                   privacy: { contributionRolesPubliclyVisible: boolean };
-                  membership: { allowUsersMatchingDomainToJoin: boolean };
+                  membership: {
+                    allowUsersMatchingDomainToJoin: boolean;
+                    allowSpaceInvitations: boolean;
+                    allowApplications: boolean;
+                  };
                 };
                 authorization?:
                   | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
@@ -86764,7 +89693,11 @@ export type GetSpaceCommunityQuery = {
                 };
                 settings: {
                   privacy: { contributionRolesPubliclyVisible: boolean };
-                  membership: { allowUsersMatchingDomainToJoin: boolean };
+                  membership: {
+                    allowUsersMatchingDomainToJoin: boolean;
+                    allowSpaceInvitations: boolean;
+                    allowApplications: boolean;
+                  };
                 };
                 authorization?:
                   | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
@@ -87232,7 +90165,11 @@ export type GetSubspaceAvailableMembersQuery = {
                 };
                 settings: {
                   privacy: { contributionRolesPubliclyVisible: boolean };
-                  membership: { allowUsersMatchingDomainToJoin: boolean };
+                  membership: {
+                    allowUsersMatchingDomainToJoin: boolean;
+                    allowSpaceInvitations: boolean;
+                    allowApplications: boolean;
+                  };
                 };
                 authorization?:
                   | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
@@ -87489,7 +90426,11 @@ export type GetSubspaceAvailableMembersQuery = {
                 };
                 settings: {
                   privacy: { contributionRolesPubliclyVisible: boolean };
-                  membership: { allowUsersMatchingDomainToJoin: boolean };
+                  membership: {
+                    allowUsersMatchingDomainToJoin: boolean;
+                    allowSpaceInvitations: boolean;
+                    allowApplications: boolean;
+                  };
                 };
                 authorization?:
                   | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
@@ -87746,7 +90687,11 @@ export type GetSubspaceAvailableMembersQuery = {
                 };
                 settings: {
                   privacy: { contributionRolesPubliclyVisible: boolean };
-                  membership: { allowUsersMatchingDomainToJoin: boolean };
+                  membership: {
+                    allowUsersMatchingDomainToJoin: boolean;
+                    allowSpaceInvitations: boolean;
+                    allowApplications: boolean;
+                  };
                 };
                 authorization?:
                   | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
@@ -88214,7 +91159,11 @@ export type GetSubspaceCommunityQuery = {
                 };
                 settings: {
                   privacy: { contributionRolesPubliclyVisible: boolean };
-                  membership: { allowUsersMatchingDomainToJoin: boolean };
+                  membership: {
+                    allowUsersMatchingDomainToJoin: boolean;
+                    allowSpaceInvitations: boolean;
+                    allowApplications: boolean;
+                  };
                 };
                 authorization?:
                   | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
@@ -88471,7 +91420,11 @@ export type GetSubspaceCommunityQuery = {
                 };
                 settings: {
                   privacy: { contributionRolesPubliclyVisible: boolean };
-                  membership: { allowUsersMatchingDomainToJoin: boolean };
+                  membership: {
+                    allowUsersMatchingDomainToJoin: boolean;
+                    allowSpaceInvitations: boolean;
+                    allowApplications: boolean;
+                  };
                 };
                 authorization?:
                   | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
@@ -88728,7 +91681,11 @@ export type GetSubspaceCommunityQuery = {
                 };
                 settings: {
                   privacy: { contributionRolesPubliclyVisible: boolean };
-                  membership: { allowUsersMatchingDomainToJoin: boolean };
+                  membership: {
+                    allowUsersMatchingDomainToJoin: boolean;
+                    allowSpaceInvitations: boolean;
+                    allowApplications: boolean;
+                  };
                 };
                 authorization?:
                   | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
@@ -88772,6 +91729,27 @@ export type PendingMembershipsJourneyProfileFragment = {
   displayName: string;
   tagset?: { id: string; tags: Array<string> } | undefined;
   cardBanner?: { id: string; uri: string } | undefined;
+};
+
+export type BannerVisualConstraintsQueryVariables = Exact<{
+  [key: string]: never;
+}>;
+
+export type BannerVisualConstraintsQuery = {
+  platform: {
+    configuration: {
+      defaultVisualTypeConstraints: {
+        minWidth: number;
+        minHeight: number;
+        maxWidth: number;
+        maxHeight: number;
+        aspectRatio: number;
+        minAspectRatio: number;
+        maxAspectRatio: number;
+        allowedTypes: Array<string>;
+      };
+    };
+  };
 };
 
 export type ConfigurationQueryVariables = Exact<{ [key: string]: never }>;
@@ -88974,8 +91952,35 @@ export type GetInnovationFlowStatesWithIdsQuery = {
           collaboration: {
             innovationFlow: {
               id: string;
-              states: Array<{ id: string; displayName: string }>;
+              states: Array<{
+                id: string;
+                displayName: string;
+                sortOrder: number;
+                settings: { sidebar: Array<SidebarWidget> };
+              }>;
             };
+          };
+        }
+      | undefined;
+  };
+};
+
+export type GetSpaceLicenseEntitlementsQueryVariables = Exact<{
+  spaceID: Scalars["UUID"]["input"];
+}>;
+
+export type GetSpaceLicenseEntitlementsQuery = {
+  lookup: {
+    space?:
+      | {
+          id: string;
+          license: {
+            id: string;
+            entitlements: Array<{
+              type: LicenseEntitlementType;
+              enabled: boolean;
+              limit: number;
+            }>;
           };
         }
       | undefined;
@@ -89035,10 +92040,38 @@ export type LookupProfileVisualsQuery = {
             id: string;
             name: VisualType;
             uri: string;
+            minWidth: number;
+            minHeight: number;
+            maxWidth: number;
+            maxHeight: number;
+            aspectRatio: number;
             authorization?:
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
               | undefined;
           }>;
+        }
+      | undefined;
+  };
+};
+
+export type GetCalloutFramingMemoQueryVariables = Exact<{
+  calloutID: Scalars["UUID"]["input"];
+}>;
+
+export type GetCalloutFramingMemoQuery = {
+  lookup: {
+    callout?:
+      | {
+          id: string;
+          framing: {
+            id: string;
+            memo?:
+              | {
+                  id: string;
+                  profile: { id: string; displayName: string; url: string };
+                }
+              | undefined;
+          };
         }
       | undefined;
   };
@@ -89076,6 +92109,26 @@ export type GetOrgVisualUriQuery = {
     profile?:
       | { visuals: Array<{ id: string; name: VisualType; uri: string }> }
       | undefined;
+  };
+};
+
+export type GetOrganizationAssociateEligibilityQueryVariables = Exact<{
+  organizationId: Scalars["UUID"]["input"];
+}>;
+
+export type GetOrganizationAssociateEligibilityQuery = {
+  organization: {
+    id: string;
+    myAssociateEligibility: {
+      canApply: boolean;
+      canJoinDirectly: boolean;
+      reason: OrganizationAssociateEligibilityReason;
+    };
+    roleSet: {
+      id: string;
+      myMembershipStatus?: CommunityMembershipStatus | undefined;
+      myRolesImplicit: Array<RoleSetRoleImplicit>;
+    };
   };
 };
 
@@ -89286,7 +92339,11 @@ export type GetOrganizationDataQuery = {
     };
     settings: {
       privacy: { contributionRolesPubliclyVisible: boolean };
-      membership: { allowUsersMatchingDomainToJoin: boolean };
+      membership: {
+        allowUsersMatchingDomainToJoin: boolean;
+        allowSpaceInvitations: boolean;
+        allowApplications: boolean;
+      };
     };
     authorization?:
       | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
@@ -89501,7 +92558,11 @@ export type GetOrganizationsDataQuery = {
     };
     settings: {
       privacy: { contributionRolesPubliclyVisible: boolean };
-      membership: { allowUsersMatchingDomainToJoin: boolean };
+      membership: {
+        allowUsersMatchingDomainToJoin: boolean;
+        allowSpaceInvitations: boolean;
+        allowApplications: boolean;
+      };
     };
     authorization?:
       | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
@@ -89754,7 +92815,11 @@ export type OrganizationsPaginatedQuery = {
       };
       settings: {
         privacy: { contributionRolesPubliclyVisible: boolean };
-        membership: { allowUsersMatchingDomainToJoin: boolean };
+        membership: {
+          allowUsersMatchingDomainToJoin: boolean;
+          allowSpaceInvitations: boolean;
+          allowApplications: boolean;
+        };
       };
       authorization?:
         | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
@@ -89996,6 +93061,30 @@ export type UsersPaginatedQuery = {
               inApp: boolean;
               push: boolean;
             };
+            adminSpaceCommunityInvitation: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+              push: boolean;
+            };
+            adminAssociateInvitationResponse: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+              push: boolean;
+            };
+            adminAssociateApplicationReceived: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+              push: boolean;
+            };
+            adminAssociateJoined: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+              push: boolean;
+            };
           };
           space: {
             __typename: "UserSettingsNotificationSpace";
@@ -90008,6 +93097,12 @@ export type UsersPaginatedQuery = {
                 push: boolean;
               };
               collaborationCalloutContributionCreated: {
+                __typename: "UserSettingsNotificationChannels";
+                email: boolean;
+                inApp: boolean;
+                push: boolean;
+              };
+              communityInvitationResponse: {
                 __typename: "UserSettingsNotificationChannels";
                 email: boolean;
                 inApp: boolean;
@@ -90103,6 +93198,18 @@ export type UsersPaginatedQuery = {
                 inApp: boolean;
                 push: boolean;
               };
+              organizationAssociateInvitationReceived: {
+                __typename: "UserSettingsNotificationChannels";
+                email: boolean;
+                inApp: boolean;
+                push: boolean;
+              };
+              organizationAssociateApplicationDecided: {
+                __typename: "UserSettingsNotificationChannels";
+                email: boolean;
+                inApp: boolean;
+                push: boolean;
+              };
             };
             mentioned: {
               __typename: "UserSettingsNotificationChannels";
@@ -90160,6 +93267,187 @@ export type UsersPaginatedQuery = {
       hasPreviousPage: boolean;
     };
   };
+};
+
+export type ActorsWithCredentialQueryVariables = Exact<{
+  credentialType: CredentialType;
+  resourceID?: InputMaybe<Scalars["UUID"]["input"]>;
+}>;
+
+export type ActorsWithCredentialQuery = {
+  actorsWithCredential: Array<
+    | { id: string }
+    | { id: string }
+    | { id: string }
+    | { id: string }
+    | { id: string }
+    | { id: string }
+    | { id: string }
+  >;
+};
+
+export type LatestUserEmailChangeAuditEntryQueryVariables = Exact<{
+  userID: Scalars["UUID"]["input"];
+}>;
+
+export type LatestUserEmailChangeAuditEntryQuery = {
+  platformAdmin: {
+    latestUserEmailChangeAuditEntry?:
+      | { id: string; outcome: UserEmailChangeAuditOutcome }
+      | undefined;
+  };
+};
+
+export type PlatformAdminMcpApiKeysQueryVariables = Exact<{
+  userID: Scalars["UUID"]["input"];
+}>;
+
+export type PlatformAdminMcpApiKeysQuery = {
+  platformAdmin: { mcpApiKeys: Array<{ id: string }> };
+};
+
+export type PlatformAdminVirtualAssistantQueryVariables = Exact<{
+  [key: string]: never;
+}>;
+
+export type PlatformAdminVirtualAssistantQuery = {
+  platformAdmin: { virtualAssistant: { id: string } };
+};
+
+export type PlatformForumDiscussionCategoriesQueryVariables = Exact<{
+  [key: string]: never;
+}>;
+
+export type PlatformForumDiscussionCategoriesQuery = {
+  platform: {
+    forum: { id: string; discussionCategories: Array<ForumDiscussionCategory> };
+  };
+};
+
+export type PlatformRoleSetOrganizationsInRoleQueryVariables = Exact<{
+  role: RoleName;
+}>;
+
+export type PlatformRoleSetOrganizationsInRoleQuery = {
+  platform: { roleSet: { organizationsInRole: Array<{ id: string }> } };
+};
+
+export type PlatformRoleSetOrganizationsInRolesQueryVariables = Exact<{
+  roles: Array<RoleName> | RoleName;
+}>;
+
+export type PlatformRoleSetOrganizationsInRolesQuery = {
+  platform: {
+    roleSet: {
+      organizationsInRoles: Array<{
+        role: RoleName;
+        organizations: Array<{ id: string }>;
+      }>;
+    };
+  };
+};
+
+export type PlatformRoleSetRoleNamesQueryVariables = Exact<{
+  [key: string]: never;
+}>;
+
+export type PlatformRoleSetRoleNamesQuery = {
+  platform: { roleSet: { roleNames: Array<RoleName> } };
+};
+
+export type PlatformRoleSetUsersInRoleQueryVariables = Exact<{
+  role: RoleName;
+}>;
+
+export type PlatformRoleSetUsersInRoleQuery = {
+  platform: { roleSet: { usersInRole: Array<{ id: string }> } };
+};
+
+export type PlatformRoleSetUsersInRolesQueryVariables = Exact<{
+  roles: Array<RoleName> | RoleName;
+}>;
+
+export type PlatformRoleSetUsersInRolesQuery = {
+  platform: {
+    roleSet: {
+      usersInRoles: Array<{ role: RoleName; users: Array<{ id: string }> }>;
+    };
+  };
+};
+
+export type PlatformRolesSpaceApplicationsProbeQueryVariables = Exact<{
+  spaceId: Scalars["UUID"]["input"];
+}>;
+
+export type PlatformRolesSpaceApplicationsProbeQuery = {
+  lookup: {
+    space?:
+      | {
+          id: string;
+          community: { roleSet: { applications: Array<{ id: string }> } };
+        }
+      | undefined;
+  };
+};
+
+export type SpaceCollaborationReadProbeQueryVariables = Exact<{
+  spaceId: Scalars["UUID"]["input"];
+}>;
+
+export type SpaceCollaborationReadProbeQuery = {
+  lookup: { space?: { id: string; collaboration: { id: string } } | undefined };
+};
+
+export type SpaceReadProbeQueryVariables = Exact<{
+  spaceId: Scalars["UUID"]["input"];
+}>;
+
+export type SpaceReadProbeQuery = {
+  lookup: { space?: { id: string } | undefined };
+};
+
+export type SpaceSupportAdminPrivilegeProbeQueryVariables = Exact<{
+  spaceId: Scalars["UUID"]["input"];
+}>;
+
+export type SpaceSupportAdminPrivilegeProbeQuery = {
+  lookup: {
+    space?:
+      | {
+          id: string;
+          authorization?:
+            | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
+            | undefined;
+        }
+      | undefined;
+  };
+};
+
+export type UpdateUserServiceProfileMutationVariables = Exact<{
+  userData: UpdateUserInput;
+}>;
+
+export type UpdateUserServiceProfileMutation = { updateUser: { id: string } };
+
+export type UserEmailChangeAuditEntriesQueryVariables = Exact<{
+  userID: Scalars["UUID"]["input"];
+}>;
+
+export type UserEmailChangeAuditEntriesQuery = {
+  platformAdmin: {
+    userEmailChangeAuditEntries: {
+      total: number;
+      auditEntries: Array<{ id: string; outcome: UserEmailChangeAuditOutcome }>;
+    };
+  };
+};
+
+export type UsersWithAuthorizationCredentialQueryVariables = Exact<{
+  credentialsCriteriaData: UsersWithAuthorizationCredentialInput;
+}>;
+
+export type UsersWithAuthorizationCredentialQuery = {
+  usersWithAuthorizationCredential: Array<{ id: string }>;
 };
 
 export type GetOrgVisualUriInnovationHubQueryVariables = Exact<{
@@ -90786,21 +94074,6 @@ export type GetSpaceDataQuery = {
             }>;
             roleSet: {
               id: string;
-              applications: Array<{
-                id: string;
-                state: string;
-                nextEvents: Array<string>;
-                isFinalized: boolean;
-                lifecycle: { id: string };
-                questions: Array<{ id: string }>;
-                actor: {
-                  id: string;
-                  profile?: { id: string; displayName: string } | undefined;
-                };
-                authorization?:
-                  | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
-                  | undefined;
-              }>;
               memberUsers: Array<{
                 id: string;
                 nameID: string;
@@ -91244,7 +94517,11 @@ export type GetSpaceDataQuery = {
                 };
                 settings: {
                   privacy: { contributionRolesPubliclyVisible: boolean };
-                  membership: { allowUsersMatchingDomainToJoin: boolean };
+                  membership: {
+                    allowUsersMatchingDomainToJoin: boolean;
+                    allowSpaceInvitations: boolean;
+                    allowApplications: boolean;
+                  };
                 };
                 authorization?:
                   | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
@@ -91501,7 +94778,11 @@ export type GetSpaceDataQuery = {
                 };
                 settings: {
                   privacy: { contributionRolesPubliclyVisible: boolean };
-                  membership: { allowUsersMatchingDomainToJoin: boolean };
+                  membership: {
+                    allowUsersMatchingDomainToJoin: boolean;
+                    allowSpaceInvitations: boolean;
+                    allowApplications: boolean;
+                  };
                 };
                 authorization?:
                   | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
@@ -91758,7 +95039,11 @@ export type GetSpaceDataQuery = {
                 };
                 settings: {
                   privacy: { contributionRolesPubliclyVisible: boolean };
-                  membership: { allowUsersMatchingDomainToJoin: boolean };
+                  membership: {
+                    allowUsersMatchingDomainToJoin: boolean;
+                    allowSpaceInvitations: boolean;
+                    allowApplications: boolean;
+                  };
                 };
                 authorization?:
                   | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
@@ -92389,11 +95674,32 @@ export type GetSpaceDataQuery = {
                 | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                 | undefined;
               currentState?:
-                | { description?: any | undefined; displayName: string }
+                | {
+                    id: string;
+                    description?: any | undefined;
+                    displayName: string;
+                    sortOrder: number;
+                    settings: {
+                      allowNewCallouts: boolean;
+                      descriptionDisplayMode: CalloutDescriptionDisplayMode;
+                      showPublishDetails: boolean;
+                      sidebar: Array<SidebarWidget>;
+                      visible: boolean;
+                    };
+                  }
                 | undefined;
               states: Array<{
+                id: string;
                 description?: any | undefined;
                 displayName: string;
+                sortOrder: number;
+                settings: {
+                  allowNewCallouts: boolean;
+                  descriptionDisplayMode: CalloutDescriptionDisplayMode;
+                  showPublishDetails: boolean;
+                  sidebar: Array<SidebarWidget>;
+                  visible: boolean;
+                };
               }>;
             };
           };
@@ -93043,11 +96349,32 @@ export type GetSpaceDataQuery = {
                   | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                   | undefined;
                 currentState?:
-                  | { description?: any | undefined; displayName: string }
+                  | {
+                      id: string;
+                      description?: any | undefined;
+                      displayName: string;
+                      sortOrder: number;
+                      settings: {
+                        allowNewCallouts: boolean;
+                        descriptionDisplayMode: CalloutDescriptionDisplayMode;
+                        showPublishDetails: boolean;
+                        sidebar: Array<SidebarWidget>;
+                        visible: boolean;
+                      };
+                    }
                   | undefined;
                 states: Array<{
+                  id: string;
                   description?: any | undefined;
                   displayName: string;
+                  sortOrder: number;
+                  settings: {
+                    allowNewCallouts: boolean;
+                    descriptionDisplayMode: CalloutDescriptionDisplayMode;
+                    showPublishDetails: boolean;
+                    sidebar: Array<SidebarWidget>;
+                    visible: boolean;
+                  };
                 }>;
               };
             };
@@ -93207,25 +96534,6 @@ export type GetSpaceDataQuery = {
               }>;
               roleSet: {
                 id: string;
-                applications: Array<{
-                  id: string;
-                  state: string;
-                  nextEvents: Array<string>;
-                  isFinalized: boolean;
-                  lifecycle: { id: string };
-                  questions: Array<{ id: string }>;
-                  actor: {
-                    id: string;
-                    profile?: { id: string; displayName: string } | undefined;
-                  };
-                  authorization?:
-                    | {
-                        myPrivileges?:
-                          | Array<AuthorizationPrivilege>
-                          | undefined;
-                      }
-                    | undefined;
-                }>;
                 memberUsers: Array<{
                   id: string;
                   nameID: string;
@@ -93681,7 +96989,11 @@ export type GetSpaceDataQuery = {
                   };
                   settings: {
                     privacy: { contributionRolesPubliclyVisible: boolean };
-                    membership: { allowUsersMatchingDomainToJoin: boolean };
+                    membership: {
+                      allowUsersMatchingDomainToJoin: boolean;
+                      allowSpaceInvitations: boolean;
+                      allowApplications: boolean;
+                    };
                   };
                   authorization?:
                     | {
@@ -93942,7 +97254,11 @@ export type GetSpaceDataQuery = {
                   };
                   settings: {
                     privacy: { contributionRolesPubliclyVisible: boolean };
-                    membership: { allowUsersMatchingDomainToJoin: boolean };
+                    membership: {
+                      allowUsersMatchingDomainToJoin: boolean;
+                      allowSpaceInvitations: boolean;
+                      allowApplications: boolean;
+                    };
                   };
                   authorization?:
                     | {
@@ -94203,7 +97519,11 @@ export type GetSpaceDataQuery = {
                   };
                   settings: {
                     privacy: { contributionRolesPubliclyVisible: boolean };
-                    membership: { allowUsersMatchingDomainToJoin: boolean };
+                    membership: {
+                      allowUsersMatchingDomainToJoin: boolean;
+                      allowSpaceInvitations: boolean;
+                      allowApplications: boolean;
+                    };
                   };
                   authorization?:
                     | {
@@ -95582,11 +98902,32 @@ export type GetSubspacePageQuery = {
                   | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                   | undefined;
                 currentState?:
-                  | { description?: any | undefined; displayName: string }
+                  | {
+                      id: string;
+                      description?: any | undefined;
+                      displayName: string;
+                      sortOrder: number;
+                      settings: {
+                        allowNewCallouts: boolean;
+                        descriptionDisplayMode: CalloutDescriptionDisplayMode;
+                        showPublishDetails: boolean;
+                        sidebar: Array<SidebarWidget>;
+                        visible: boolean;
+                      };
+                    }
                   | undefined;
                 states: Array<{
+                  id: string;
                   description?: any | undefined;
                   displayName: string;
+                  sortOrder: number;
+                  settings: {
+                    allowNewCallouts: boolean;
+                    descriptionDisplayMode: CalloutDescriptionDisplayMode;
+                    showPublishDetails: boolean;
+                    sidebar: Array<SidebarWidget>;
+                    visible: boolean;
+                  };
                 }>;
               };
             };
@@ -95746,25 +99087,6 @@ export type GetSubspacePageQuery = {
               }>;
               roleSet: {
                 id: string;
-                applications: Array<{
-                  id: string;
-                  state: string;
-                  nextEvents: Array<string>;
-                  isFinalized: boolean;
-                  lifecycle: { id: string };
-                  questions: Array<{ id: string }>;
-                  actor: {
-                    id: string;
-                    profile?: { id: string; displayName: string } | undefined;
-                  };
-                  authorization?:
-                    | {
-                        myPrivileges?:
-                          | Array<AuthorizationPrivilege>
-                          | undefined;
-                      }
-                    | undefined;
-                }>;
                 memberUsers: Array<{
                   id: string;
                   nameID: string;
@@ -96220,7 +99542,11 @@ export type GetSubspacePageQuery = {
                   };
                   settings: {
                     privacy: { contributionRolesPubliclyVisible: boolean };
-                    membership: { allowUsersMatchingDomainToJoin: boolean };
+                    membership: {
+                      allowUsersMatchingDomainToJoin: boolean;
+                      allowSpaceInvitations: boolean;
+                      allowApplications: boolean;
+                    };
                   };
                   authorization?:
                     | {
@@ -96481,7 +99807,11 @@ export type GetSubspacePageQuery = {
                   };
                   settings: {
                     privacy: { contributionRolesPubliclyVisible: boolean };
-                    membership: { allowUsersMatchingDomainToJoin: boolean };
+                    membership: {
+                      allowUsersMatchingDomainToJoin: boolean;
+                      allowSpaceInvitations: boolean;
+                      allowApplications: boolean;
+                    };
                   };
                   authorization?:
                     | {
@@ -96742,7 +100072,11 @@ export type GetSubspacePageQuery = {
                   };
                   settings: {
                     privacy: { contributionRolesPubliclyVisible: boolean };
-                    membership: { allowUsersMatchingDomainToJoin: boolean };
+                    membership: {
+                      allowUsersMatchingDomainToJoin: boolean;
+                      allowSpaceInvitations: boolean;
+                      allowApplications: boolean;
+                    };
                   };
                   authorization?:
                     | {
@@ -97454,11 +100788,32 @@ export type GetSubspacePageQuery = {
                 | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                 | undefined;
               currentState?:
-                | { description?: any | undefined; displayName: string }
+                | {
+                    id: string;
+                    description?: any | undefined;
+                    displayName: string;
+                    sortOrder: number;
+                    settings: {
+                      allowNewCallouts: boolean;
+                      descriptionDisplayMode: CalloutDescriptionDisplayMode;
+                      showPublishDetails: boolean;
+                      sidebar: Array<SidebarWidget>;
+                      visible: boolean;
+                    };
+                  }
                 | undefined;
               states: Array<{
+                id: string;
                 description?: any | undefined;
                 displayName: string;
+                sortOrder: number;
+                settings: {
+                  allowNewCallouts: boolean;
+                  descriptionDisplayMode: CalloutDescriptionDisplayMode;
+                  showPublishDetails: boolean;
+                  sidebar: Array<SidebarWidget>;
+                  visible: boolean;
+                };
               }>;
             };
           };
@@ -97618,21 +100973,6 @@ export type GetSubspacePageQuery = {
             }>;
             roleSet: {
               id: string;
-              applications: Array<{
-                id: string;
-                state: string;
-                nextEvents: Array<string>;
-                isFinalized: boolean;
-                lifecycle: { id: string };
-                questions: Array<{ id: string }>;
-                actor: {
-                  id: string;
-                  profile?: { id: string; displayName: string } | undefined;
-                };
-                authorization?:
-                  | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
-                  | undefined;
-              }>;
               memberUsers: Array<{
                 id: string;
                 nameID: string;
@@ -98076,7 +101416,11 @@ export type GetSubspacePageQuery = {
                 };
                 settings: {
                   privacy: { contributionRolesPubliclyVisible: boolean };
-                  membership: { allowUsersMatchingDomainToJoin: boolean };
+                  membership: {
+                    allowUsersMatchingDomainToJoin: boolean;
+                    allowSpaceInvitations: boolean;
+                    allowApplications: boolean;
+                  };
                 };
                 authorization?:
                   | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
@@ -98333,7 +101677,11 @@ export type GetSubspacePageQuery = {
                 };
                 settings: {
                   privacy: { contributionRolesPubliclyVisible: boolean };
-                  membership: { allowUsersMatchingDomainToJoin: boolean };
+                  membership: {
+                    allowUsersMatchingDomainToJoin: boolean;
+                    allowSpaceInvitations: boolean;
+                    allowApplications: boolean;
+                  };
                 };
                 authorization?:
                   | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
@@ -98590,7 +101938,11 @@ export type GetSubspacePageQuery = {
                 };
                 settings: {
                   privacy: { contributionRolesPubliclyVisible: boolean };
-                  membership: { allowUsersMatchingDomainToJoin: boolean };
+                  membership: {
+                    allowUsersMatchingDomainToJoin: boolean;
+                    allowSpaceInvitations: boolean;
+                    allowApplications: boolean;
+                  };
                 };
                 authorization?:
                   | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
@@ -99310,11 +102662,32 @@ export type GetSpaceAboutDetailsQuery = {
                 | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                 | undefined;
               currentState?:
-                | { description?: any | undefined; displayName: string }
+                | {
+                    id: string;
+                    description?: any | undefined;
+                    displayName: string;
+                    sortOrder: number;
+                    settings: {
+                      allowNewCallouts: boolean;
+                      descriptionDisplayMode: CalloutDescriptionDisplayMode;
+                      showPublishDetails: boolean;
+                      sidebar: Array<SidebarWidget>;
+                      visible: boolean;
+                    };
+                  }
                 | undefined;
               states: Array<{
+                id: string;
                 description?: any | undefined;
                 displayName: string;
+                sortOrder: number;
+                settings: {
+                  allowNewCallouts: boolean;
+                  descriptionDisplayMode: CalloutDescriptionDisplayMode;
+                  showPublishDetails: boolean;
+                  sidebar: Array<SidebarWidget>;
+                  visible: boolean;
+                };
               }>;
             };
           };
@@ -99474,21 +102847,6 @@ export type GetSpaceAboutDetailsQuery = {
             }>;
             roleSet: {
               id: string;
-              applications: Array<{
-                id: string;
-                state: string;
-                nextEvents: Array<string>;
-                isFinalized: boolean;
-                lifecycle: { id: string };
-                questions: Array<{ id: string }>;
-                actor: {
-                  id: string;
-                  profile?: { id: string; displayName: string } | undefined;
-                };
-                authorization?:
-                  | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
-                  | undefined;
-              }>;
               memberUsers: Array<{
                 id: string;
                 nameID: string;
@@ -99932,7 +103290,11 @@ export type GetSpaceAboutDetailsQuery = {
                 };
                 settings: {
                   privacy: { contributionRolesPubliclyVisible: boolean };
-                  membership: { allowUsersMatchingDomainToJoin: boolean };
+                  membership: {
+                    allowUsersMatchingDomainToJoin: boolean;
+                    allowSpaceInvitations: boolean;
+                    allowApplications: boolean;
+                  };
                 };
                 authorization?:
                   | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
@@ -100189,7 +103551,11 @@ export type GetSpaceAboutDetailsQuery = {
                 };
                 settings: {
                   privacy: { contributionRolesPubliclyVisible: boolean };
-                  membership: { allowUsersMatchingDomainToJoin: boolean };
+                  membership: {
+                    allowUsersMatchingDomainToJoin: boolean;
+                    allowSpaceInvitations: boolean;
+                    allowApplications: boolean;
+                  };
                 };
                 authorization?:
                   | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
@@ -100446,7 +103812,11 @@ export type GetSpaceAboutDetailsQuery = {
                 };
                 settings: {
                   privacy: { contributionRolesPubliclyVisible: boolean };
-                  membership: { allowUsersMatchingDomainToJoin: boolean };
+                  membership: {
+                    allowUsersMatchingDomainToJoin: boolean;
+                    allowSpaceInvitations: boolean;
+                    allowApplications: boolean;
+                  };
                 };
                 authorization?:
                   | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
@@ -101199,11 +104569,32 @@ export type GetSubspacesDataQuery = {
                       }
                     | undefined;
                   currentState?:
-                    | { description?: any | undefined; displayName: string }
+                    | {
+                        id: string;
+                        description?: any | undefined;
+                        displayName: string;
+                        sortOrder: number;
+                        settings: {
+                          allowNewCallouts: boolean;
+                          descriptionDisplayMode: CalloutDescriptionDisplayMode;
+                          showPublishDetails: boolean;
+                          sidebar: Array<SidebarWidget>;
+                          visible: boolean;
+                        };
+                      }
                     | undefined;
                   states: Array<{
+                    id: string;
                     description?: any | undefined;
                     displayName: string;
+                    sortOrder: number;
+                    settings: {
+                      allowNewCallouts: boolean;
+                      descriptionDisplayMode: CalloutDescriptionDisplayMode;
+                      showPublishDetails: boolean;
+                      sidebar: Array<SidebarWidget>;
+                      visible: boolean;
+                    };
                   }>;
                 };
               };
@@ -101363,25 +104754,6 @@ export type GetSubspacesDataQuery = {
                 }>;
                 roleSet: {
                   id: string;
-                  applications: Array<{
-                    id: string;
-                    state: string;
-                    nextEvents: Array<string>;
-                    isFinalized: boolean;
-                    lifecycle: { id: string };
-                    questions: Array<{ id: string }>;
-                    actor: {
-                      id: string;
-                      profile?: { id: string; displayName: string } | undefined;
-                    };
-                    authorization?:
-                      | {
-                          myPrivileges?:
-                            | Array<AuthorizationPrivilege>
-                            | undefined;
-                        }
-                      | undefined;
-                  }>;
                   memberUsers: Array<{
                     id: string;
                     nameID: string;
@@ -101837,7 +105209,11 @@ export type GetSubspacesDataQuery = {
                     };
                     settings: {
                       privacy: { contributionRolesPubliclyVisible: boolean };
-                      membership: { allowUsersMatchingDomainToJoin: boolean };
+                      membership: {
+                        allowUsersMatchingDomainToJoin: boolean;
+                        allowSpaceInvitations: boolean;
+                        allowApplications: boolean;
+                      };
                     };
                     authorization?:
                       | {
@@ -102098,7 +105474,11 @@ export type GetSubspacesDataQuery = {
                     };
                     settings: {
                       privacy: { contributionRolesPubliclyVisible: boolean };
-                      membership: { allowUsersMatchingDomainToJoin: boolean };
+                      membership: {
+                        allowUsersMatchingDomainToJoin: boolean;
+                        allowSpaceInvitations: boolean;
+                        allowApplications: boolean;
+                      };
                     };
                     authorization?:
                       | {
@@ -102359,7 +105739,11 @@ export type GetSubspacesDataQuery = {
                     };
                     settings: {
                       privacy: { contributionRolesPubliclyVisible: boolean };
-                      membership: { allowUsersMatchingDomainToJoin: boolean };
+                      membership: {
+                        allowUsersMatchingDomainToJoin: boolean;
+                        allowSpaceInvitations: boolean;
+                        allowApplications: boolean;
+                      };
                     };
                     authorization?:
                       | {
@@ -103090,11 +106474,32 @@ export type GetSubspacesDataQuery = {
                   | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                   | undefined;
                 currentState?:
-                  | { description?: any | undefined; displayName: string }
+                  | {
+                      id: string;
+                      description?: any | undefined;
+                      displayName: string;
+                      sortOrder: number;
+                      settings: {
+                        allowNewCallouts: boolean;
+                        descriptionDisplayMode: CalloutDescriptionDisplayMode;
+                        showPublishDetails: boolean;
+                        sidebar: Array<SidebarWidget>;
+                        visible: boolean;
+                      };
+                    }
                   | undefined;
                 states: Array<{
+                  id: string;
                   description?: any | undefined;
                   displayName: string;
+                  sortOrder: number;
+                  settings: {
+                    allowNewCallouts: boolean;
+                    descriptionDisplayMode: CalloutDescriptionDisplayMode;
+                    showPublishDetails: boolean;
+                    sidebar: Array<SidebarWidget>;
+                    visible: boolean;
+                  };
                 }>;
               };
             };
@@ -103254,25 +106659,6 @@ export type GetSubspacesDataQuery = {
               }>;
               roleSet: {
                 id: string;
-                applications: Array<{
-                  id: string;
-                  state: string;
-                  nextEvents: Array<string>;
-                  isFinalized: boolean;
-                  lifecycle: { id: string };
-                  questions: Array<{ id: string }>;
-                  actor: {
-                    id: string;
-                    profile?: { id: string; displayName: string } | undefined;
-                  };
-                  authorization?:
-                    | {
-                        myPrivileges?:
-                          | Array<AuthorizationPrivilege>
-                          | undefined;
-                      }
-                    | undefined;
-                }>;
                 memberUsers: Array<{
                   id: string;
                   nameID: string;
@@ -103728,7 +107114,11 @@ export type GetSubspacesDataQuery = {
                   };
                   settings: {
                     privacy: { contributionRolesPubliclyVisible: boolean };
-                    membership: { allowUsersMatchingDomainToJoin: boolean };
+                    membership: {
+                      allowUsersMatchingDomainToJoin: boolean;
+                      allowSpaceInvitations: boolean;
+                      allowApplications: boolean;
+                    };
                   };
                   authorization?:
                     | {
@@ -103989,7 +107379,11 @@ export type GetSubspacesDataQuery = {
                   };
                   settings: {
                     privacy: { contributionRolesPubliclyVisible: boolean };
-                    membership: { allowUsersMatchingDomainToJoin: boolean };
+                    membership: {
+                      allowUsersMatchingDomainToJoin: boolean;
+                      allowSpaceInvitations: boolean;
+                      allowApplications: boolean;
+                    };
                   };
                   authorization?:
                     | {
@@ -104250,7 +107644,11 @@ export type GetSubspacesDataQuery = {
                   };
                   settings: {
                     privacy: { contributionRolesPubliclyVisible: boolean };
-                    membership: { allowUsersMatchingDomainToJoin: boolean };
+                    membership: {
+                      allowUsersMatchingDomainToJoin: boolean;
+                      allowSpaceInvitations: boolean;
+                      allowApplications: boolean;
+                    };
                   };
                   authorization?:
                     | {
@@ -104720,6 +108118,30 @@ export type GetUserDataQuery = {
             inApp: boolean;
             push: boolean;
           };
+          adminSpaceCommunityInvitation: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
+          adminAssociateInvitationResponse: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
+          adminAssociateApplicationReceived: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
+          adminAssociateJoined: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
         };
         space: {
           __typename: "UserSettingsNotificationSpace";
@@ -104732,6 +108154,12 @@ export type GetUserDataQuery = {
               push: boolean;
             };
             collaborationCalloutContributionCreated: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+              push: boolean;
+            };
+            communityInvitationResponse: {
               __typename: "UserSettingsNotificationChannels";
               email: boolean;
               inApp: boolean;
@@ -104827,6 +108255,18 @@ export type GetUserDataQuery = {
               inApp: boolean;
               push: boolean;
             };
+            organizationAssociateInvitationReceived: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+              push: boolean;
+            };
+            organizationAssociateApplicationDecided: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+              push: boolean;
+            };
           };
           mentioned: {
             __typename: "UserSettingsNotificationChannels";
@@ -104898,6 +108338,277 @@ export type GetUserReferenceUriQuery = {
             | undefined;
         }
       | undefined;
+  };
+};
+
+export type GetUserSettingsQueryVariables = Exact<{
+  userId: Scalars["UUID"]["input"];
+}>;
+
+export type GetUserSettingsQuery = {
+  user: {
+    id: string;
+    settings: {
+      __typename: "UserSettings";
+      id: string;
+      communication: {
+        __typename: "UserSettingsCommunication";
+        allowOtherUsersToSendMessages: boolean;
+      };
+      privacy: {
+        __typename: "UserSettingsPrivacy";
+        contributionRolesPubliclyVisible: boolean;
+      };
+      notification: {
+        __typename: "UserSettingsNotification";
+        platform: {
+          __typename: "UserSettingsNotificationPlatform";
+          admin: {
+            __typename: "UserSettingsNotificationPlatformAdmin";
+            userProfileRemoved: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+              push: boolean;
+            };
+            userProfileCreated: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+              push: boolean;
+            };
+            spaceCreated: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+              push: boolean;
+            };
+            userGlobalRoleChanged: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+              push: boolean;
+            };
+          };
+          forumDiscussionComment: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
+          forumDiscussionCreated: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
+        };
+        organization: {
+          __typename: "UserSettingsNotificationOrganization";
+          adminMentioned: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
+          adminMessageReceived: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
+          adminSpaceCommunityInvitation: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
+          adminAssociateInvitationResponse: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
+          adminAssociateApplicationReceived: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
+          adminAssociateJoined: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
+        };
+        space: {
+          __typename: "UserSettingsNotificationSpace";
+          admin: {
+            __typename: "UserSettingsNotificationSpaceAdmin";
+            communityApplicationReceived: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+              push: boolean;
+            };
+            collaborationCalloutContributionCreated: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+              push: boolean;
+            };
+            communityInvitationResponse: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+              push: boolean;
+            };
+            communityNewMember: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+              push: boolean;
+            };
+            communicationMessageReceived: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+              push: boolean;
+            };
+          };
+          collaborationCalloutContributionCreated: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
+          communicationUpdates: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
+          collaborationCalloutPublished: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
+          collaborationCalloutComment: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
+          collaborationCalloutPostContributionComment: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
+          communityCalendarEvents: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
+          collaborationPollVoteCastOnOwnPoll: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
+          collaborationPollVoteCastOnPollIVotedOn: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
+          collaborationPollModifiedOnPollIVotedOn: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
+          collaborationPollVoteAffectedByOptionChange: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
+        };
+        user: {
+          __typename: "UserSettingsNotificationUser";
+          membership: {
+            __typename: "UserSettingsNotificationUserMembership";
+            spaceCommunityInvitationReceived: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+              push: boolean;
+            };
+            spaceCommunityJoined: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+              push: boolean;
+            };
+            organizationAssociateInvitationReceived: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+              push: boolean;
+            };
+            organizationAssociateApplicationDecided: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+              push: boolean;
+            };
+          };
+          mentioned: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
+          commentReply: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
+          messageReceived: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
+          conversationMessageDirect: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
+          conversationMessageGroup: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
+        };
+        virtualContributor: {
+          __typename: "UserSettingsNotificationVirtualContributor";
+          adminSpaceCommunityInvitation: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
+        };
+      };
+    };
   };
 };
 
@@ -105109,6 +108820,30 @@ export type GetUsersDataQuery = {
             inApp: boolean;
             push: boolean;
           };
+          adminSpaceCommunityInvitation: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
+          adminAssociateInvitationResponse: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
+          adminAssociateApplicationReceived: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
+          adminAssociateJoined: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
         };
         space: {
           __typename: "UserSettingsNotificationSpace";
@@ -105121,6 +108856,12 @@ export type GetUsersDataQuery = {
               push: boolean;
             };
             collaborationCalloutContributionCreated: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+              push: boolean;
+            };
+            communityInvitationResponse: {
               __typename: "UserSettingsNotificationChannels";
               email: boolean;
               inApp: boolean;
@@ -105216,6 +108957,18 @@ export type GetUsersDataQuery = {
               inApp: boolean;
               push: boolean;
             };
+            organizationAssociateInvitationReceived: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+              push: boolean;
+            };
+            organizationAssociateApplicationDecided: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+              push: boolean;
+            };
           };
           mentioned: {
             __typename: "UserSettingsNotificationChannels";
@@ -105268,6 +109021,42 @@ export type GetUsersDataQuery = {
   }>;
 };
 
+export type MeInAppNotificationsQueryVariables = Exact<{
+  types?: InputMaybe<Array<NotificationEvent> | NotificationEvent>;
+}>;
+
+export type MeInAppNotificationsQuery = {
+  me: {
+    notifications: {
+      total: number;
+      inAppNotifications: Array<{ id: string; type: NotificationEvent }>;
+    };
+  };
+};
+
+export type MeOrganizationPendingQueryVariables = Exact<{
+  [key: string]: never;
+}>;
+
+export type MeOrganizationPendingQuery = {
+  me: {
+    communityInvitationsCount: number;
+    organizationInvitationsCount: number;
+    communityInvitations: Array<{ invitation: { id: string } }>;
+    communityApplications: Array<{ application: { id: string } }>;
+    organizationInvitations: Array<{
+      id: string;
+      invitation: { id: string; extraRoles: Array<RoleName> };
+      organization: { id: string; nameID: string };
+    }>;
+    organizationApplications: Array<{
+      id: string;
+      application: { id: string };
+      organization: { id: string; nameID: string };
+    }>;
+  };
+};
+
 export type MeQueryQueryVariables = Exact<{ [key: string]: never }>;
 
 export type MeQueryQuery = {
@@ -105296,6 +109085,13 @@ export type MeQueryQuery = {
         state: string;
         nextEvents: Array<string>;
         isFinalized: boolean;
+        createdDate: Date;
+        extraRoles: Array<RoleName>;
+        invitedToParent: boolean;
+        welcomeMessage?: string | undefined;
+        spacesToJoinOnAccept?:
+          | Array<{ id: string; displayName: string; url: string }>
+          | undefined;
         lifecycle: { id: string };
         createdBy?:
           | {
@@ -105312,6 +109108,7 @@ export type MeQueryQuery = {
           | undefined;
         actor: {
           id: string;
+          type: ActorType;
           profile?: { id: string; displayName: string } | undefined;
         };
         authorization?:

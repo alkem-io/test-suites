@@ -1,0 +1,13 @@
+# Proves that removing an associate deletes their organization in-app
+# notification rows.
+query MeInAppNotifications($types: [NotificationEvent!]) {
+  me {
+    notifications(filter: { types: $types }) {
+      total
+      inAppNotifications {
+        id
+        type
+      }
+    }
+  }
+}

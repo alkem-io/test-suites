@@ -1,4 +1,13 @@
 fragment InnovationFlowStateData on InnovationFlowState {
+  id
   description
   displayName
+  sortOrder
+  settings {
+    allowNewCallouts
+    descriptionDisplayMode
+    showPublishDetails
+    sidebar
+    visible
+  }
 }

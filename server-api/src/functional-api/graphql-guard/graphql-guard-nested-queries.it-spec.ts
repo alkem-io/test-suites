@@ -1,7 +1,7 @@
 import {
   sorted_read_readAbout_readLicense,
   sorted_read_readAbout_readLicense_notifications,
-  sorted__create_read_readAbout_update_delete_grant_createSubspace_platformAdmin_readLicense_notifications_notificationsAdmin,
+  sorted__create_read_readAbout_update_delete_grant_createSubspace_accountLicenseManage_readLicense_notifications_notificationsAdmin_globalAdmin,
   sorted__create_read_readAbout_update_delete_grant_createSubspace_readLicense_notifications_notificationsAdmin,
   TestScenarioConfig,
   TestScenarioFactory,
@@ -108,7 +108,7 @@ describe('GraphQL Guard - Nested Query Data Integrity', () => {
       expect(space).toBeDefined();
       expect(space?.id).toBe(baseScenario.space.id);
       expect(space?.authorization?.myPrivileges?.sort()).toEqual(
-        sorted__create_read_readAbout_update_delete_grant_createSubspace_platformAdmin_readLicense_notifications_notificationsAdmin
+        sorted__create_read_readAbout_update_delete_grant_createSubspace_accountLicenseManage_readLicense_notifications_notificationsAdmin_globalAdmin
       );
       expect(space?.about?.profile?.displayName).toBe(
         baseScenario.space.about.profile.displayName
@@ -125,7 +125,7 @@ describe('GraphQL Guard - Nested Query Data Integrity', () => {
       );
       expect(subspace).toBeDefined();
       expect(subspace?.authorization?.myPrivileges?.sort()).toEqual(
-        sorted__create_read_readAbout_update_delete_grant_createSubspace_platformAdmin_readLicense_notifications_notificationsAdmin
+        sorted__create_read_readAbout_update_delete_grant_createSubspace_accountLicenseManage_readLicense_notifications_notificationsAdmin_globalAdmin
       );
       expect(subspace?.about?.profile?.displayName).toBe(
         baseScenario.subspace.about.profile.displayName
@@ -151,7 +151,7 @@ describe('GraphQL Guard - Nested Query Data Integrity', () => {
         baseScenario.subspace.about.profile.displayName
       );
       expect(subspace?.authorization?.myPrivileges?.sort()).toEqual(
-        sorted__create_read_readAbout_update_delete_grant_createSubspace_platformAdmin_readLicense_notifications_notificationsAdmin
+        sorted__create_read_readAbout_update_delete_grant_createSubspace_accountLicenseManage_readLicense_notifications_notificationsAdmin_globalAdmin
       );
       expect(subspace?.community?.id).toBe(baseScenario.subspace.community.id);
       expect(subspace?.collaboration?.id).toBe(
@@ -169,7 +169,7 @@ describe('GraphQL Guard - Nested Query Data Integrity', () => {
         baseScenario.subsubspace.about.profile.displayName
       );
       expect(subsubspace?.authorization?.myPrivileges?.sort()).toEqual(
-        sorted__create_read_readAbout_update_delete_grant_createSubspace_platformAdmin_readLicense_notifications_notificationsAdmin
+        sorted__create_read_readAbout_update_delete_grant_createSubspace_accountLicenseManage_readLicense_notifications_notificationsAdmin_globalAdmin
       );
       expect(subsubspace?.community?.id).toBe(
         baseScenario.subsubspace.community.id
@@ -236,7 +236,7 @@ describe('GraphQL Guard - Nested Query Data Integrity', () => {
       expect(
         adminRes?.data?.lookup?.space?.authorization?.myPrivileges?.sort()
       ).toEqual(
-        sorted__create_read_readAbout_update_delete_grant_createSubspace_platformAdmin_readLicense_notifications_notificationsAdmin
+        sorted__create_read_readAbout_update_delete_grant_createSubspace_accountLicenseManage_readLicense_notifications_notificationsAdmin_globalAdmin
       );
 
       // Member should have read-only privileges
@@ -274,7 +274,7 @@ describe('GraphQL Guard - Nested Query Data Integrity', () => {
 
       // Global admin should have platform-admin-level privileges
       expect(globalAdminData?.authorization?.myPrivileges?.sort()).toEqual(
-        sorted__create_read_readAbout_update_delete_grant_createSubspace_platformAdmin_readLicense_notifications_notificationsAdmin
+        sorted__create_read_readAbout_update_delete_grant_createSubspace_accountLicenseManage_readLicense_notifications_notificationsAdmin_globalAdmin
       );
 
       // Both should see nested community data — concrete ID match
@@ -309,7 +309,7 @@ describe('GraphQL Guard - Nested Query Data Integrity', () => {
 
       // Space level authorization — exact privilege verification
       expect(space?.authorization?.myPrivileges?.sort()).toEqual(
-        sorted__create_read_readAbout_update_delete_grant_createSubspace_platformAdmin_readLicense_notifications_notificationsAdmin
+        sorted__create_read_readAbout_update_delete_grant_createSubspace_accountLicenseManage_readLicense_notifications_notificationsAdmin_globalAdmin
       );
 
       // Space > about — concrete ID match
@@ -332,7 +332,7 @@ describe('GraphQL Guard - Nested Query Data Integrity', () => {
 
       // Subspace authorization — exact privilege verification
       expect(subspace?.authorization?.myPrivileges?.sort()).toEqual(
-        sorted__create_read_readAbout_update_delete_grant_createSubspace_platformAdmin_readLicense_notifications_notificationsAdmin
+        sorted__create_read_readAbout_update_delete_grant_createSubspace_accountLicenseManage_readLicense_notifications_notificationsAdmin_globalAdmin
       );
 
       // Subspace > community — concrete ID match

@@ -27,10 +27,8 @@ export const createWhiteboardCollectionCallout = async (
               allowedTypes: [CalloutContributionType.Whiteboard],
             },
           },
-          contributionDefaults: {
-            whiteboardContent:
-              '{"type":"excalidraw","version":2,"source":"https://excalidraw.com","elements":[],"appState":{"gridSize":null,"viewBackgroundColor":"#ffffff"}}',
-          },
+          // Since server#6399 whiteboardContent is server-internal; an empty
+          // default whiteboard is created when no source is given.
         },
       },
       {
@@ -52,13 +50,44 @@ export const createWhiteboardOnCallout = async (
         contributionData: {
           calloutID,
           type: CalloutContributionType.Whiteboard,
+          // Since server#6399 CreateWhiteboardInput has no inline content;
+          // an empty whiteboard is created (seed via sourceWhiteboardID).
           whiteboard: {
-            content:
-              '{"type":"excalidraw","version":2,"source":"https://excalidraw.com","elements":[],"appState":{"gridSize":null,"viewBackgroundColor":"#ffffff"}}',
             profile: {
               displayName: '111',
             },
           },
+        },
+      },
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+
+  return graphqlErrorWrapper(callback, userRole);
+};
+
+// Flag-aware sibling of createWhiteboardOnCallout (same shape as
+// createPostOnCalloutWithNotification). The legacy helper above is left
+// untouched so its callers keep omitting the field and keep notifying.
+export const createWhiteboardOnCalloutWithNotification = async (
+  calloutID: string,
+  sendNotification?: boolean,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string | undefined) =>
+    graphqlClient.CreateContributionOnCallout(
+      {
+        contributionData: {
+          calloutID,
+          type: CalloutContributionType.Whiteboard,
+          whiteboard: {
+            profile: {
+              displayName: 'notify-switch whiteboard',
+            },
+          },
+          sendNotification,
         },
       },
       {

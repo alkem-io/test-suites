@@ -18,7 +18,10 @@ import {
   deleteUserQuietly,
   LoggedInSession,
   openLoggedInSession,
+  captureSessionCookie,
   probeIdTokenHint,
+  probeIdTokenHintWithCookie,
+  probePrivateGraphqlWithCookie,
   probePrivateGraphql,
   ProbeResult,
   provisionDisposableUser,
@@ -35,6 +38,7 @@ test.describe('Session revocation cascade over the BFF cookie (server#6315)', ()
   let c2: LoggedInSession | undefined;
   let c3: LoggedInSession | undefined;
   let c4: LoggedInSession | undefined;
+  let c1StaleCookie = '';
 
   /**
    * Pre-deletion `id-token-hint` reads for all three sessions.
@@ -67,6 +71,12 @@ test.describe('Session revocation cascade over the BFF cookie (server#6315)', ()
     c1 = await openLoggedInSession(browser, subject.email);
     c2 = await openLoggedInSession(browser, subject.email);
     c3 = await openLoggedInSession(browser, subject.email);
+
+    // Captured BEFORE the deletion: the first rejected request clears the
+
+    // cookie from c1's jar, so the stale-cookie replays below need a copy.
+
+    c1StaleCookie = await captureSessionCookie(c1!.context);
 
     preDeletionHints.c1 = await probeIdTokenHint(c1.context);
     preDeletionHints.c2 = await probeIdTokenHint(c2.context);
@@ -107,11 +117,17 @@ test.describe('Session revocation cascade over the BFF cookie (server#6315)', ()
     const hint = await probeIdTokenHint(c1!.context);
     capturedWireBodies.push(hint.text);
     expect(hint.status).toBe(401);
-    expect(hint.text).toBe('{"error":"unauthenticated"}');
+    // Two 401 wire shapes are legitimate here: the handler's compact
+    // `{"error":"unauthenticated"}` when no session is presented, and the
+    // global HttpExceptionFilter envelope when the interceptor rejects a
+    // tombstoned session before the handler runs. Both say "unauthenticated";
+    // neither may carry token material (checked over capturedWireBodies).
+    expect(hint.text).toMatch(/unauthenticated|"statusCode":401/);
   });
 
   test('SRB-G2 — the GraphQL gate refuses too, with the right code', async () => {
-    const result = await probePrivateGraphql(c1!.context, '{ me { id } }');
+    // Replay the STALE cookie: c1's own jar was cleared by SRB-G1's 401.
+    const result = await probePrivateGraphqlWithCookie(c1StaleCookie, '{ me { id } }');
     capturedWireBodies.push(result.text);
 
     // Wire-level 401, not just an errors envelope inside an HTTP 200:
@@ -134,7 +150,7 @@ test.describe('Session revocation cascade over the BFF cookie (server#6315)', ()
 
   test('SRB-R1 — the session must not survive, and must not silently fall through', async () => {
     for (let attempt = 1; attempt <= 3; attempt++) {
-      const hint = await probeIdTokenHint(c1!.context);
+      const hint = await probeIdTokenHintWithCookie(c1StaleCookie);
       capturedWireBodies.push(hint.text);
 
       // The failure mode being fenced is `destroy()` instead of
@@ -153,7 +169,7 @@ test.describe('Session revocation cascade over the BFF cookie (server#6315)', ()
   });
 
   test('SRB-R2 — no anonymous 200 on the GraphQL path either', async () => {
-    const result = await probePrivateGraphql(c1!.context, '{ me { id } }');
+    const result = await probePrivateGraphqlWithCookie(c1StaleCookie, '{ me { id } }');
     capturedWireBodies.push(result.text);
 
     expect(result.status).toBe(401);

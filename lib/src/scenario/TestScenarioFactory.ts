@@ -358,8 +358,8 @@ export class TestScenarioFactory {
           if ("postDefaultDescription" in t && t.postDefaultDescription) {
             templateOptions.postDefaultDescription = t.postDefaultDescription;
           }
-          if ("whiteboardContent" in t && t.whiteboardContent) {
-            templateOptions.whiteboardContent = t.whiteboardContent;
+          if ("sourceWhiteboardID" in t && t.sourceWhiteboardID) {
+            templateOptions.sourceWhiteboardID = t.sourceWhiteboardID;
           }
           // Add callout-specific fields if present
           if ("calloutFramingType" in t && t.calloutFramingType) {
@@ -536,14 +536,21 @@ export class TestScenarioFactory {
         return;
       }
 
+      // NEWSLETTER and TIPS_AND_TRICKS (060 forum category reorganisation)
+      // are not yet in the checked-in @alkemio/client-lib generated enum, but
+      // GraphQL enums travel by wire name, so a plain string cast round-trips
+      // correctly against a server that has them. See the identical pattern
+      // in `communications/forum-discussions/platform-discussions.it-spec.ts`.
       const categoryMap: Record<string, ForumDiscussionCategory> = {
         CHALLENGE_CENTRIC: ForumDiscussionCategory.ChallengeCentric,
         COMMUNITY_BUILDING: ForumDiscussionCategory.CommunityBuilding,
         HELP: ForumDiscussionCategory.Help,
+        NEWSLETTER: "NEWSLETTER" as ForumDiscussionCategory,
         OTHER: ForumDiscussionCategory.Other,
         PLATFORM_FUNCTIONALITIES:
           ForumDiscussionCategory.PlatformFunctionalities,
         RELEASES: ForumDiscussionCategory.Releases,
+        TIPS_AND_TRICKS: "TIPS_AND_TRICKS" as ForumDiscussionCategory,
       };
 
       const discussionRes = await createPlatformDiscussion(
@@ -551,9 +558,13 @@ export class TestScenarioFactory {
         {
           title: config.title,
           description: config.description,
+          // HELP is one of the four permanent target categories (060); the
+          // legacy default PLATFORM_FUNCTIONALITIES is a retirement
+          // candidate and must not be the harness's silent fallback
+          // (test-suites qa/forum-test-plan U-4).
           category: config.category
             ? categoryMap[config.category]
-            : ForumDiscussionCategory.PlatformFunctionalities,
+            : ForumDiscussionCategory.Help,
         },
         config.userRole,
       );

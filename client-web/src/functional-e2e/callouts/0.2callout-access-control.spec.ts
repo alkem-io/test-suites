@@ -9,6 +9,7 @@ import { TestUser } from '@alkemio/tests-lib/common/enums/test.user';
 import { TestScenarioConfig } from '@alkemio/tests-lib/scenario/config/test-scenario-config';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import { TestScenarioFactory } from '@alkemio/tests-lib/scenario/TestScenarioFactory';
+import { createCalloutOnCalloutsSet } from '@alkemio/tests-lib/scenario/baseFunctions';
 import { TestUserManager } from '@alkemio/tests-lib';
 import { expect } from '@playwright/test';
 import { createAuthenticatedSessionFixture } from '../fixtures/authenticated-session.fixture';
@@ -110,11 +111,37 @@ adminFixture.test.describe.serial('Callout Access Control', () => {
 });
 
 memberFixture.test.describe.serial('Callout Access Control - Member', () => {
+  // 7.2 must not depend on the callout 7.1 created through the UI: under local
+  // fullyParallel the two describes run in separate workers (separate scenario
+  // + separate module-level Date.now() name), and a Playwright retry runs in a
+  // fresh worker where the module re-evaluates, so the old name can never be
+  // found again. Seed a published callout via the API here instead; the name
+  // is assigned in beforeAll so a retry's fresh worker stays self-consistent.
+  let memberCalloutName: string;
+
   memberFixture.test.beforeAll(async ({ browser }) => {
     memberFixture.test.setTimeout(60_000);
     if (!baseScenario) {
       baseScenario =
         await TestScenarioFactory.createBaseScenario(scenarioConfig);
+    }
+    memberCalloutName = `Member Access Test ${Date.now()}`;
+    const created = await createCalloutOnCalloutsSet(
+      baseScenario.space.collaboration.calloutsSetId,
+      {
+        framing: {
+          profile: {
+            displayName: memberCalloutName,
+            description: 'Seeded for member limited-access checks',
+          },
+        },
+      }
+    );
+    const calloutId = created.data?.createCalloutOnCalloutsSet?.id;
+    if (!calloutId) {
+      throw new Error(
+        `[7.2 seed] published callout was not created: ${JSON.stringify(created.error ?? created)}`
+      );
     }
     await memberFixture.setupAuthentication(
       browser,
@@ -139,8 +166,8 @@ memberFixture.test.describe.serial('Callout Access Control - Member', () => {
     const isAddVisible = await collaborationPage.isAddCalloutVisible();
     expect(isAddVisible).toBe(false);
 
-    expect(collaborationPage.getCalloutByName(testCalloutName)).toBeDefined();
-    await collaborationPage.clickCallout(testCalloutName);
+    expect(collaborationPage.getCalloutByName(memberCalloutName)).toBeDefined();
+    await collaborationPage.clickCallout(memberCalloutName);
 
     await expect(collaborationPage.commentInput).toBeVisible();
 

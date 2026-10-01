@@ -32,7 +32,7 @@ fragment CalloutDetails on Callout {
     id
     defaultDisplayName
     postDescription
-    whiteboardContent
+    whiteboardContentAvailable
     __typename
   }
   sortOrder

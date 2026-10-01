@@ -19,10 +19,15 @@ export class CollaborationPage {
 
   // Callout creation
   get addCalloutButton() {
-    // CRD: the tab-level create trigger is exactly "Add Post" (capital P).
-    // Posts-collection callout cards also expose a contribution-level
-    // "Add post" (lowercase) button, so match exactly to avoid colliding.
-    return this.page.getByRole('button', { name: 'Add Post', exact: true });
+    // CRD renamed the card-level contribution button to "Add Post" too, so
+    // casing no longer disambiguates from the create trigger; scope to the
+    // sidebar, which holds only the tab-level trigger. The container differs
+    // by page: SpaceSidebar is a <nav aria-label="Space sidebar">, while
+    // SubspaceSidebar is an <aside aria-label="SubSpace sidebar"> (role
+    // complementary, so getByRole('navigation') cannot cover both).
+    return this.page
+      .locator('[aria-label="Space sidebar"], [aria-label="SubSpace sidebar"]')
+      .getByRole('button', { name: 'Add Post', exact: true });
   }
 
   get createCalloutButton() {

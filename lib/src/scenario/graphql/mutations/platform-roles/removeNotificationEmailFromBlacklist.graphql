@@ -1,0 +1,3 @@
+mutation removeNotificationEmailFromBlacklist($input: NotificationEmailAddressInput!) {
+  removeNotificationEmailFromBlacklist(input: $input)
+}

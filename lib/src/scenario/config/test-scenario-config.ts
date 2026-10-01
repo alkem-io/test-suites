@@ -75,14 +75,18 @@ export interface TestScenarioPlatformDiscussionConfig {
   title?: string;
   /** Optional description/markdown for the discussion */
   description?: string;
-  /** Optional category; defaults to PLATFORM_FUNCTIONALITIES */
+  /** Optional category; defaults to HELP (a permanent target category —
+   * see 060 forum reorganisation; PLATFORM_FUNCTIONALITIES is a legacy
+   * retirement candidate and must not be the harness's silent default). */
   category?:
     | "CHALLENGE_CENTRIC"
     | "COMMUNITY_BUILDING"
     | "HELP"
+    | "NEWSLETTER"
     | "OTHER"
     | "PLATFORM_FUNCTIONALITIES"
-    | "RELEASES";
+    | "RELEASES"
+    | "TIPS_AND_TRICKS";
   /** Optional user role to perform the mutation; defaults to GLOBAL_ADMIN */
   userRole?: TestUser;
 }
@@ -156,8 +160,8 @@ export interface TestScenarioInnovationPackConfig {
         tags?: string[];
         /** For TemplateType.Post */
         postDefaultDescription?: string;
-        /** For TemplateType.Whiteboard */
-        whiteboardContent?: string;
+        /** For TemplateType.Whiteboard: seed from an existing whiteboard (server#6399 removed inline content) */
+        sourceWhiteboardID?: string;
       }
     | {
         type: TemplateType.Callout;
