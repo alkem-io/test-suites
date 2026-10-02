@@ -9,6 +9,7 @@ mutation InviteForEntryRoleOnRoleSet(
   $invitedUserEmails: [String!]!
   $welcomeMessage: String
   $extraRoles: [RoleName!]!
+  $suggestedLanguage: String
 ) {
   inviteForEntryRoleOnRoleSet(
     invitationData: {
@@ -17,10 +18,13 @@ mutation InviteForEntryRoleOnRoleSet(
       roleSetID: $roleSetId
       welcomeMessage: $welcomeMessage
       extraRoles: $extraRoles
+      suggestedLanguage: $suggestedLanguage
     }
   ) {
     type
     notice
+    invitedActorID
+    invitedEmail
     invitation {
       id
       state
@@ -43,6 +47,7 @@ mutation InviteForEntryRoleOnRoleSet(
       email
       firstName
       lastName
+      roleSetExtraRoles
       __typename
     }
     __typename

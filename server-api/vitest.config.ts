@@ -206,6 +206,7 @@ export default defineConfig({
           // `harnessPostgresConfigured` — so these files run nightly minus
           // exactly the cases the remote cluster cannot serve.
           'src/functional-api/notifications/organization/associates.it-spec.ts',
+          'src/functional-api/notifications/organization/associate-email-invitation.it-spec.ts',
           'src/functional-api/contributor-management/**/*.it-spec.ts',
           'src/functional-api/callout/**/*.it-spec.ts',
           'src/functional-api/communications/**/*.it-spec.ts',

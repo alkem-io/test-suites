@@ -8,7 +8,8 @@ export const inviteForEntryRoleOnRoleSet = async (
   invitedUserEmails: string[],
   welcomeMessage: string,
   extraRoles: RoleName[],
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.GLOBAL_ADMIN,
+  suggestedLanguage?: string
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -19,6 +20,7 @@ export const inviteForEntryRoleOnRoleSet = async (
         invitedUserEmails,
         welcomeMessage,
         extraRoles,
+        suggestedLanguage,
       },
       {
         authorization: `Bearer ${authToken}`,
@@ -53,6 +55,27 @@ export const deleteExternalInvitation = async (
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
     graphqlClient.DeletePlatformInvitation(
+      {
+        invitationId,
+      },
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+  return graphqlErrorWrapper(callback, userRole);
+};
+
+// Sends the invitation email of an open platform invitation again. Gated on the
+// role set's invite privilege; throttled per role set and address (error code
+// ROLESET_INVITATION_RESEND_THROTTLED) and drawn from the hourly email budget
+// (ROLESET_INVITATION_EMAIL_BUDGET_EXCEEDED).
+export const resendPlatformInvitation = async (
+  invitationId: string,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string | undefined) =>
+    graphqlClient.ResendPlatformInvitation(
       {
         invitationId,
       },

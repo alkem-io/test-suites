@@ -3,8 +3,9 @@
 // associate (Associate | +Admin | +Owner), the invitee responds, and the
 // shared contracts this feature depends on: no inviter-role ceiling on who
 // may offer which role; an invite-time cap plus a typed accept-time
-// withheld-role notice when the cap is already full; and email invitees are
-// rejected outright for organization role sets.
+// withheld-role notice when the cap is already full; and an email address that
+// belongs to nobody yet is invited through a platform invitation (the dedicated
+// email-invitation suites cover that path in depth).
 //
 // Personas (assignRoleToUser on the organization's own role set, never a
 // Space one): `organizationAdmin` = the org's ASSOCIATE + ADMIN (factory
@@ -22,6 +23,7 @@ import {
   TestScenarioFactory,
   TestUser,
   TestUserManager,
+  UniqueIDGenerator,
 } from '@alkemio/tests-lib';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import {
@@ -29,6 +31,7 @@ import {
   RoleSetInvitationResultType,
 } from '@alkemio/tests-lib/core/generated/alkemio-schema';
 import {
+  deleteExternalInvitation,
   deleteInvitation,
   inviteForEntryRoleOnRoleSet,
 } from '../invitations/invitation.request.params';
@@ -212,19 +215,47 @@ describe('Organization associate invitations (US1)', () => {
     }
   });
 
-  test('US1-AS6: invitedUserEmails on an organization role set is rejected — existing Alkemio users only', async () => {
-    const res = await inviteForEntryRoleOnRoleSet(
-      roleSetId,
-      [],
-      ['not-yet-a-user@example.com'],
-      message,
-      [],
-      TestUser.SPACE_ADMIN
-    );
-    // A validation refusal with the product's own message — not an
-    // authorization error, not a 500.
-    expect(res?.error?.errors?.[0]?.message).toMatch(/existing Alkemio users/i);
-    expect(res?.data?.inviteForEntryRoleOnRoleSet).toBeUndefined();
+  test('US1-AS6 (081): an unknown email on an organization role set creates a platform invitation', async () => {
+    const email = `not-yet-a-user-${UniqueIDGenerator.getID()}@example.com`;
+    let platformInvitationId = '';
+    try {
+      const res = await inviteForEntryRoleOnRoleSet(
+        roleSetId,
+        [],
+        [email],
+        message,
+        [RoleName.Admin],
+        TestUser.SPACE_ADMIN // an organization ADMIN persona
+      );
+      expect(res?.error).toBeUndefined();
+      const result = getSingleInvitationResult(res);
+      expect(result?.type).toEqual(
+        RoleSetInvitationResultType.InvitedToPlatformAndRoleSet
+      );
+      expect(result?.invitedEmail).toEqual(email);
+      platformInvitationId = result?.platformInvitation?.id ?? '';
+      expect(platformInvitationId.length).toEqual(36);
+      expect(result?.platformInvitation?.roleSetExtraRoles).toEqual([
+        RoleName.Admin,
+      ]);
+
+      // The same address again is reported, never duplicated.
+      const repeat = await inviteForEntryRoleOnRoleSet(
+        roleSetId,
+        [],
+        [email],
+        message,
+        [RoleName.Admin],
+        TestUser.SPACE_ADMIN
+      );
+      expect(getSingleInvitationResult(repeat)?.type).toEqual(
+        RoleSetInvitationResultType.AlreadyInvitedToPlatformAndRoleSet
+      );
+    } finally {
+      if (platformInvitationId) {
+        await deleteExternalInvitation(platformInvitationId);
+      }
+    }
   });
 
   test('US1-AS4: already an associate / already invited / has an open application → typed outcomes, no second row', async () => {
