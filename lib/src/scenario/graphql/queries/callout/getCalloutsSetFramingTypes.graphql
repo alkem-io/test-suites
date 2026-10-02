@@ -1,0 +1,17 @@
+query calloutsSetFramingTypes($calloutsSetId: UUID!) {
+  lookup {
+    calloutsSet(ID: $calloutsSetId) {
+      id
+      callouts {
+        id
+        framing {
+          id
+          type
+          profile {
+            displayName
+          }
+        }
+      }
+    }
+  }
+}

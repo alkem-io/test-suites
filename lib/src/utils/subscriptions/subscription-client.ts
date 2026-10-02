@@ -19,12 +19,17 @@ export class SubscriptionClient {
    * @param payload Payload to send on subscription
    * @param user The user with whom the subscription will be made. This user is used for authorization
    * over the resource you are going to subscribe to so make sure this user has the sufficient privileges.
+   * @param options.recordErrors When true, an operation error the server answers the
+   * subscribe with (for example a refused subscription) is recorded and readable through
+   * `getErrors()` instead of being rethrown from the websocket handler as an uncaught exception.
+   * Use it to assert that a subscription is refused.
    * @return A promise which is resolved after the _connected_ state event is received.
    * This ensures messages are received as expected and in timely manner
    */
   public async subscribe(
     payload: SubscribePayload,
-    user: TestUser
+    user: TestUser,
+    options: { recordErrors?: boolean } = {}
   ): Promise<void> {
     // Server FR-023: subscription auth is resolved at the WebSocket HTTP upgrade
     // ONLY — `connectionParams` are deliberately ignored for credentials. So the
@@ -70,6 +75,21 @@ export class SubscriptionClient {
         },
         error: err => {
           this.terminate();
+          if (options.recordErrors) {
+            const operationErrors = Array.isArray(err) ? err : [err];
+            this.errors.push(
+              ...operationErrors.map(
+                e =>
+                  new GraphQLError(
+                    (e as { message?: string })?.message ?? 'Subscription error'
+                  )
+              )
+            );
+            // A fatal close before ConnectionAck never emits `connected`: settle the
+            // pending subscribe() instead of hanging. No-op once already resolved.
+            rej(err);
+            return;
+          }
           throw new Error((err as Error).message);
         },
         complete: () => null,

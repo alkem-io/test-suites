@@ -39,14 +39,23 @@ export type Scalars = {
   Boolean: { input: boolean; output: boolean };
   Int: { input: number; output: number };
   Float: { input: number; output: number };
+  /** A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format. */
   DateTime: { input: Date; output: Date };
+  /** An Emoji. */
   Emoji: { input: any; output: any };
+  /** A representation of a Lifecycle Definition, based on XState. It is serialized JSON. */
   LifecycleDefinition: { input: any; output: any };
+  /** A markdown string. */
   Markdown: { input: any; output: any };
+  /** An identifier that originates from the underlying messaging platform. */
   MessageID: { input: any; output: any };
+  /** A human readable identifier, 3 <= length <= 28. Used for URL paths in clients. Characters allowed: a-z,A-Z,0-9. */
   NameID: { input: string; output: string };
+  /** Cursor used for paginating search results. */
   SearchCursor: { input: any; output: any };
+  /** A uuid identifier. Length 36 characters. */
   UUID: { input: string; output: string };
+  /** The `Upload` scalar type represents a file upload. */
   Upload: {
     input: import("graphql-upload").FileUpload;
     output: import("graphql-upload").FileUpload;
@@ -1076,6 +1085,7 @@ export enum AuthorizationPrivilege {
   PlatformAuditRead = "PLATFORM_AUDIT_READ",
   PlatformContentFullAccess = "PLATFORM_CONTENT_FULL_ACCESS",
   PlatformForumManage = "PLATFORM_FORUM_MANAGE",
+  PlatformLicensingListsRead = "PLATFORM_LICENSING_LISTS_READ",
   PlatformOperationsAdmin = "PLATFORM_OPERATIONS_ADMIN",
   PlatformRoleHoldersRead = "PLATFORM_ROLE_HOLDERS_READ",
   PlatformSettingsAdmin = "PLATFORM_SETTINGS_ADMIN",
@@ -1326,6 +1336,124 @@ export enum CalloutDescriptionDisplayMode {
   Expanded = "EXPANDED",
 }
 
+export type CalloutForm = {
+  /** The date at which the entity was created. */
+  createdDate: Scalars["DateTime"]["output"];
+  /** The ID of the entity */
+  id: Scalars["UUID"]["output"];
+  /** The ordered questions of the Form. */
+  questions: Array<CalloutFormQuestion>;
+  /** The settings of the Form. */
+  settings: CalloutFormSettings;
+  /** The date at which the entity was last updated. */
+  updatedDate: Scalars["DateTime"]["output"];
+};
+
+export type CalloutFormAnswer = {
+  /** The question text as it was when the response was given (snapshot). */
+  prompt: Scalars["String"]["output"];
+  questionID: Scalars["UUID"]["output"];
+  /** The selected options of a choice question. */
+  selectedOptions?: Maybe<Array<CalloutFormAnswerOption>>;
+  /** The answer to a text question. */
+  text?: Maybe<Scalars["String"]["output"]>;
+  /** The question type as it was when the response was given (snapshot). */
+  type: CalloutFormQuestionType;
+};
+
+export type CalloutFormAnswerInput = {
+  questionID: Scalars["UUID"]["input"];
+  /** The selected option IDs of a choice question. */
+  selectedOptionIDs?: InputMaybe<Array<Scalars["UUID"]["input"]>>;
+  /** The answer to a text question. */
+  text?: InputMaybe<Scalars["String"]["input"]>;
+};
+
+export type CalloutFormAnswerOption = {
+  id: Scalars["UUID"]["output"];
+  /** The label of the option as it was when the response was given. */
+  label: Scalars["String"]["output"];
+};
+
+export type CalloutFormQuestion = {
+  /** Optional helper text shown under the question. */
+  explanation?: Maybe<Scalars["String"]["output"]>;
+  /** The ID of the question, stable across edits of the Form. */
+  id: Scalars["UUID"]["output"];
+  /** The selectable options. Present for the two choice types, absent for the text types. */
+  options?: Maybe<Array<CalloutFormQuestionOption>>;
+  /** The question text. */
+  prompt: Scalars["String"]["output"];
+  /** Whether an answer is required to submit a response. */
+  required: Scalars["Boolean"]["output"];
+  /** The answer type of the question. */
+  type: CalloutFormQuestionType;
+};
+
+export type CalloutFormQuestionOption = {
+  /** The ID of the option, stable across edits of the Form. */
+  id: Scalars["UUID"]["output"];
+  /** The label shown to the respondent. */
+  label: Scalars["String"]["output"];
+};
+
+/** The answer type of a Form question. */
+export enum CalloutFormQuestionType {
+  LongText = "LONG_TEXT",
+  MultipleChoice = "MULTIPLE_CHOICE",
+  ShortText = "SHORT_TEXT",
+  SingleChoice = "SINGLE_CHOICE",
+}
+
+export type CalloutFormResponse = {
+  /** The answers, snapshotted from the Form definition at submission. Unanswered optional questions have no entry. */
+  answers: Array<CalloutFormAnswer>;
+  /** The member who submitted the response. Null once that account has been deleted. */
+  createdBy?: Maybe<User>;
+  /** When the response was submitted. */
+  createdDate: Scalars["DateTime"]["output"];
+  id: Scalars["UUID"]["output"];
+};
+
+/** Whether a member can submit one or several responses to a Form. */
+export enum CalloutFormResponseMode {
+  Multiple = "MULTIPLE",
+  Single = "SINGLE",
+}
+
+/** Who can read all responses of a Form. ADMINS: only the space admins. MEMBERS: the members of the space as well. */
+export enum CalloutFormResponseVisibility {
+  Admins = "ADMINS",
+  Members = "MEMBERS",
+}
+
+export type CalloutFormResponses = {
+  /** The responses the viewer may read: every response when canReadAll, otherwise only their own. */
+  all: PaginatedCalloutFormResponses;
+  /** Whether the viewer can moderate the Form: edit its definition and delete any response. */
+  canModerate: Scalars["Boolean"]["output"];
+  /** Whether the viewer can read every response of the Form. */
+  canReadAll: Scalars["Boolean"]["output"];
+  formID: Scalars["UUID"]["output"];
+  /** The viewer's own responses, oldest first; at most the 50 newest. */
+  mine: Array<CalloutFormResponse>;
+};
+
+export type CalloutFormSettings = {
+  /** Whether a member can submit one or several responses. Defaults to SINGLE. */
+  responseMode: CalloutFormResponseMode;
+  /** Whether the Form accepts new responses. Defaults to OPEN. */
+  state: CalloutFormState;
+  /** Who can read all the responses. Defaults to ADMINS. */
+  visibility: CalloutFormResponseVisibility;
+};
+
+/** Whether a Form accepts new responses. */
+export enum CalloutFormState {
+  Closed = "CLOSED",
+  Open = "OPEN",
+}
+
 export type CalloutFraming = {
   /** The authorization rules for the entity */
   authorization?: Maybe<Authorization>;
@@ -1337,6 +1465,8 @@ export type CalloutFraming = {
   contributors: Array<ContributorCollectionItem>;
   /** The date at which the entity was created. */
   createdDate: Scalars["DateTime"]["output"];
+  /** The Form attached to this Callout Framing, if any. Present when framing.type = FORM. Only the definition: responses are read through lookup.calloutFormResponses. */
+  form?: Maybe<CalloutForm>;
   /** The ID of the entity */
   id: Scalars["UUID"]["output"];
   /** The Link for framing the associated Callout. */
@@ -1366,6 +1496,7 @@ export type CalloutFramingContributorsArgs = {
 export enum CalloutFramingType {
   CollaboraDocument = "COLLABORA_DOCUMENT",
   Contributors = "CONTRIBUTORS",
+  Form = "FORM",
   Link = "LINK",
   MediaGallery = "MEDIA_GALLERY",
   Memo = "MEMO",
@@ -1580,6 +1711,8 @@ export type CollaboraDocument = {
   documentType: CollaboraDocumentType;
   /** The ID of the entity */
   id: Scalars["UUID"]["output"];
+  /** An authorized, same-origin preview image endpoint for the current saved document, or null when there is no backing file to preview. NOT a bearer URL: every request against it is independently authorized against the current document READ policy. */
+  previewUrl?: Maybe<Scalars["String"]["output"]>;
   /** The Profile for this CollaboraDocument. */
   profile: Profile;
   /** The date at which the entity was last updated. */
@@ -1904,15 +2037,25 @@ export type ContributorCollectionCounts = {
 };
 
 export type ContributorCollectionItem = {
+  /** Organizations only. The count of platform-wide associates of the organization (distinct users holding its associate role) — the same number as the organization's 'associates' metric; NOT the number of members of this space. Null for Users and Virtual Contributors. */
+  associatesCount?: Maybe<Scalars["Int"]["output"]>;
   avatarUrl?: Maybe<Scalars["String"]["output"]>;
   displayName: Scalars["String"]["output"];
   id: Scalars["UUID"]["output"];
+  /** Users only. The calendar month in which the user's current membership of the space that owns this callout began ("member since"): the creation date of the member credential, truncated to the first day of the month, 00:00 UTC. Leaving and re-joining restarts it. Null for Organizations and Virtual Contributors, and for a user listed without the member role. */
+  joinedDate?: Maybe<Scalars["DateTime"]["output"]>;
   /** Location of the contributor; null for Virtual Contributors or when not readable. */
   location?: Maybe<ContributorLocation>;
   /** The role label for this contributor (lead/admin/member). */
   roleLabel?: Maybe<Scalars["String"]["output"]>;
+  /** All contributor types. The profile tagline, trimmed; null when empty. */
+  tagline?: Maybe<Scalars["String"]["output"]>;
+  /** All contributor types. The profile tagsets merged in order — Users: skills, then keywords; Organizations and Virtual Contributors: keywords, then capabilities. Blank tags removed; duplicates (ignoring case) kept once, first occurrence wins; never the default tagset. Empty list when none. Clients decide how many to show. */
+  tags?: Maybe<Array<Scalars["String"]["output"]>>;
   type: ActorType;
   url?: Maybe<Scalars["String"]["output"]>;
+  /** Organizations only. The organization's website, trimmed; null when empty or when it is not an absolute http/https URL. Null for Users and Virtual Contributors. */
+  website?: Maybe<Scalars["String"]["output"]>;
 };
 
 /** The default display mode for a contributor-collection callout framing. */
@@ -1947,6 +2090,8 @@ export type Conversation = {
   messaging: Messaging;
   /** The room for this Conversation. */
   room: Room;
+  /** The storage bucket holding this Conversation's message attachments (feature 013). READ-gated to conversation members; null for a conversation that has no bucket yet (an accepted, backfillable state). */
+  storageBucket?: Maybe<StorageBucket>;
   /** The date at which the entity was last updated. */
   updatedDate: Scalars["DateTime"]["output"];
 };
@@ -2214,9 +2359,77 @@ export type CreateCalloutData = {
   taskBoard?: Maybe<CreateCalloutTaskBoardData>;
 };
 
+export type CreateCalloutFormData = {
+  /** The ordered questions of the Form. Between 1 and 50; the count is enforced with a reason code. */
+  questions: Array<CreateCalloutFormQuestionData>;
+  /** The Form settings. Defaults: visibility ADMINS, responseMode SINGLE, state OPEN. */
+  settings?: Maybe<CreateCalloutFormSettingsData>;
+};
+
+export type CreateCalloutFormInput = {
+  /** The ordered questions of the Form. Between 1 and 50; the count is enforced with a reason code. */
+  questions: Array<CreateCalloutFormQuestionInput>;
+  /** The Form settings. Defaults: visibility ADMINS, responseMode SINGLE, state OPEN. */
+  settings?: InputMaybe<CreateCalloutFormSettingsInput>;
+};
+
+export type CreateCalloutFormQuestionData = {
+  /** Optional helper text. At most 2048 characters. */
+  explanation?: Maybe<Scalars["String"]["output"]>;
+  /** The options of a choice question (2 to 20). Must be absent for the text types. */
+  options?: Maybe<Array<CreateCalloutFormQuestionOptionData>>;
+  /** The question text. Required, at most 512 characters. */
+  prompt: Scalars["String"]["output"];
+  /** Whether an answer is required. Defaults to false. */
+  required?: Maybe<Scalars["Boolean"]["output"]>;
+  type: CalloutFormQuestionType;
+};
+
+export type CreateCalloutFormQuestionInput = {
+  /** Optional helper text. At most 2048 characters. */
+  explanation?: InputMaybe<Scalars["String"]["input"]>;
+  /** The options of a choice question (2 to 20). Must be absent for the text types. */
+  options?: InputMaybe<Array<CreateCalloutFormQuestionOptionInput>>;
+  /** The question text. Required, at most 512 characters. */
+  prompt: Scalars["String"]["input"];
+  /** Whether an answer is required. Defaults to false. */
+  required?: InputMaybe<Scalars["Boolean"]["input"]>;
+  type: CalloutFormQuestionType;
+};
+
+export type CreateCalloutFormQuestionOptionData = {
+  /** The label of the option. Unique within the question. */
+  label: Scalars["String"]["output"];
+};
+
+export type CreateCalloutFormQuestionOptionInput = {
+  /** The label of the option. Unique within the question. */
+  label: Scalars["String"]["input"];
+};
+
+export type CreateCalloutFormSettingsData = {
+  /** One or several responses per member. Defaults to SINGLE. */
+  responseMode?: Maybe<CalloutFormResponseMode>;
+  /** Whether the Form accepts responses. Defaults to OPEN. */
+  state?: Maybe<CalloutFormState>;
+  /** Who can read all the responses. Defaults to ADMINS. */
+  visibility?: Maybe<CalloutFormResponseVisibility>;
+};
+
+export type CreateCalloutFormSettingsInput = {
+  /** One or several responses per member. Defaults to SINGLE. */
+  responseMode?: InputMaybe<CalloutFormResponseMode>;
+  /** Whether the Form accepts responses. Defaults to OPEN. */
+  state?: InputMaybe<CalloutFormState>;
+  /** Who can read all the responses. Defaults to ADMINS. */
+  visibility?: InputMaybe<CalloutFormResponseVisibility>;
+};
+
 export type CreateCalloutFramingData = {
   /** Collabora document input. Required when type = COLLABORA_DOCUMENT. */
   collaboraDocument?: Maybe<CreateCollaboraDocumentData>;
+  /** Form definition to attach to this Callout Framing. Required when type = FORM; rejected for every other type. */
+  form?: Maybe<CreateCalloutFormData>;
   link?: Maybe<CreateLinkData>;
   memo?: Maybe<CreateMemoData>;
   /** Poll definition to attach to this Callout Framing. Required when type = POLL. Ignored for all other framing types. */
@@ -2231,6 +2444,8 @@ export type CreateCalloutFramingData = {
 export type CreateCalloutFramingInput = {
   /** Collabora document input. Required when type = COLLABORA_DOCUMENT. */
   collaboraDocument?: InputMaybe<CreateCollaboraDocumentInput>;
+  /** Form definition to attach to this Callout Framing. Required when type = FORM; rejected for every other type. */
+  form?: InputMaybe<CreateCalloutFormInput>;
   link?: InputMaybe<CreateLinkInput>;
   memo?: InputMaybe<CreateMemoInput>;
   /** Poll definition to attach to this Callout Framing. Required when type = POLL. Ignored for all other framing types. */
@@ -3104,6 +3319,10 @@ export type DeleteCalendarEventInput = {
   ID: Scalars["UUID"]["input"];
 };
 
+export type DeleteCalloutFormResponseInput = {
+  responseID: Scalars["UUID"]["input"];
+};
+
 export type DeleteCalloutInput = {
   ID: Scalars["UUID"]["input"];
 };
@@ -3223,6 +3442,11 @@ export type DeleteVisualFromMediaGalleryInput = {
 
 export type DeleteWhiteboardInput = {
   ID: Scalars["UUID"]["input"];
+};
+
+export type DeletedCalloutFormResponse = {
+  /** The id of the deleted Form response. */
+  id: Scalars["UUID"]["output"];
 };
 
 export type DirectMessageDeliveryResult = {
@@ -4603,6 +4827,8 @@ export type LookupQueryResults = {
   calendarEvent?: Maybe<CalendarEvent>;
   /** Lookup the specified Callout */
   callout?: Maybe<Callout>;
+  /** Lookup the responses of the specified Form, as far as the current user may read them: every response for a space admin (and for members when the Form shows responses to members), otherwise only the current user's own. Requires READ on the Post that holds the Form. This is the only way to read Form responses. */
+  calloutFormResponses: CalloutFormResponses;
   /** Lookup the specified CalloutsSet */
   calloutsSet?: Maybe<CalloutsSet>;
   /** Lookup the specified Collaboration */
@@ -4698,6 +4924,12 @@ export type LookupQueryResultsCalendarEventArgs = {
 
 export type LookupQueryResultsCalloutArgs = {
   ID: Scalars["UUID"]["input"];
+};
+
+export type LookupQueryResultsCalloutFormResponsesArgs = {
+  after?: InputMaybe<Scalars["UUID"]["input"]>;
+  first?: InputMaybe<Scalars["Int"]["input"]>;
+  formID: Scalars["UUID"]["input"];
 };
 
 export type LookupQueryResultsCalloutsSetArgs = {
@@ -5042,6 +5274,8 @@ export type MemoSigningPrepareResult = {
 
 /** A message that was sent in a chat room */
 export type Message = {
+  /** Media attachments; unavailable documents retain their event filename without a download URL. */
+  attachments: Array<MessageAttachment>;
   /** The id for the message event. */
   id: Scalars["MessageID"]["output"];
   /** The message being sent */
@@ -5054,6 +5288,23 @@ export type Message = {
   threadID?: Maybe<Scalars["MessageID"]["output"]>;
   /** The server timestamp in UTC */
   timestamp: Scalars["Float"]["output"];
+};
+
+export type MessageAttachment = {
+  /** The filename / display name of the attachment. */
+  displayName: Scalars["String"]["output"];
+  /** The pixel height of the attachment (images only). */
+  height?: Maybe<Scalars["Int"]["output"]>;
+  /** The file-service document id of the attachment. */
+  id?: Maybe<Scalars["UUID"]["output"]>;
+  /** The MIME type of the attachment. */
+  mimeType?: Maybe<Scalars["String"]["output"]>;
+  /** The size of the attachment in bytes. */
+  size?: Maybe<Scalars["Int"]["output"]>;
+  /** The Alkemio document URL (authorized via conversation policy). */
+  url?: Maybe<Scalars["String"]["output"]>;
+  /** The pixel width of the attachment (images only). */
+  width?: Maybe<Scalars["Int"]["output"]>;
 };
 
 /** Details about a message, including the room it was sent in and the parent entity that is using the room. */
@@ -5098,21 +5349,27 @@ export type MigrateEmbeddings = {
 };
 
 export enum MimeType {
+  Aac = "AAC",
   Avif = "AVIF",
   Bmp = "BMP",
   Csv = "CSV",
   Doc = "DOC",
   Docx = "DOCX",
+  Flac = "FLAC",
   Gif = "GIF",
   Heic = "HEIC",
   Heif = "HEIF",
   Ics = "ICS",
   Jpeg = "JPEG",
   Jpg = "JPG",
+  Mp3 = "MP3",
+  Mp4 = "MP4",
   Odg = "ODG",
   Odp = "ODP",
   Ods = "ODS",
   Odt = "ODT",
+  Oga = "OGA",
+  Ogv = "OGV",
   Pdf = "PDF",
   Png = "PNG",
   Potm = "POTM",
@@ -5122,8 +5379,12 @@ export enum MimeType {
   Ppt = "PPT",
   Pptm = "PPTM",
   Pptx = "PPTX",
+  Quicktime = "QUICKTIME",
   Rtf = "RTF",
   Svg = "SVG",
+  Wav = "WAV",
+  Weba = "WEBA",
+  Webm = "WEBM",
   Webp = "WEBP",
   Xls = "XLS",
   Xlsx = "XLSX",
@@ -5388,6 +5649,8 @@ export type Mutation = {
   deleteCalendarEvent: CalendarEvent;
   /** Delete a Callout. */
   deleteCallout: Callout;
+  /** Delete a Form response. The member who submitted it can always withdraw it (also on a closed Form); otherwise the privilege to create callouts on the collection the Post is in (space admin) is required. */
+  deleteCalloutFormResponse: DeletedCalloutFormResponse;
   /** Permanently removes a Classification from a Space. No template and no other Space is affected. */
   deleteClassificationEntry: ClassificationEntry;
   /** Deletes the specified CollaboraDocument. */
@@ -5566,6 +5829,8 @@ export type Mutation = {
   setDefaultCalloutTemplateOnInnovationFlowState: InnovationFlowState;
   /** Set the mapping of a well-known Virtual Contributor to a specific Virtual Contributor UUID. */
   setPlatformWellKnownVirtualContributor: PlatformWellKnownVirtualContributors;
+  /** Submit a response to a Form. Requires CONTRIBUTE on the Post. The Post must be published and the Form open; a single-response Form accepts one response per member. acknowledgedVisibility is the audience the respondent was shown. */
+  submitCalloutFormResponse: CalloutFormResponse;
   /** Subscribe the current user's device to push notifications. If the subscription endpoint already exists, it is updated. If the user has reached the maximum number of subscriptions (10), the oldest subscription is automatically replaced. */
   subscribeToPushNotifications: PushSubscription;
   /** Transfer the specified Callout from its current CalloutsSet to the target CalloutsSet. Note: this is experimental, and only for GlobalAdmins. The user that executes the transfer becomes the creator of the Callout. */
@@ -5590,6 +5855,8 @@ export type Mutation = {
   updateCalendarEvent: CalendarEvent;
   /** Update a Callout. */
   updateCallout: Callout;
+  /** Update the definition and/or the settings of a Form. Requires the privilege to create callouts on the collection the Post is in (space admin), the same as creating a Form. Serialized against submissions. */
+  updateCalloutForm: CalloutForm;
   /** Update the information describing the publishing of the specified Callout. */
   updateCalloutPublishInfo: Callout;
   /** Update the visibility of the specified Callout. */
@@ -6011,6 +6278,10 @@ export type MutationDeleteCalloutArgs = {
   deleteData: DeleteCalloutInput;
 };
 
+export type MutationDeleteCalloutFormResponseArgs = {
+  deleteData: DeleteCalloutFormResponseInput;
+};
+
 export type MutationDeleteClassificationEntryArgs = {
   classificationData: DeleteClassificationEntryInput;
 };
@@ -6357,6 +6628,10 @@ export type MutationSetPlatformWellKnownVirtualContributorArgs = {
   mappingData: SetPlatformWellKnownVirtualContributorInput;
 };
 
+export type MutationSubmitCalloutFormResponseArgs = {
+  responseData: SubmitCalloutFormResponseInput;
+};
+
 export type MutationSubscribeToPushNotificationsArgs = {
   subscriptionData: SubscribeToPushNotificationsInput;
 };
@@ -6403,6 +6678,10 @@ export type MutationUpdateCalendarEventArgs = {
 
 export type MutationUpdateCalloutArgs = {
   calloutData: UpdateCalloutEntityInput;
+};
+
+export type MutationUpdateCalloutFormArgs = {
+  formData: UpdateCalloutFormInput;
 };
 
 export type MutationUpdateCalloutPublishInfoArgs = {
@@ -6689,6 +6968,7 @@ export enum NotificationEvent {
   PlatformForumDiscussionComment = "PLATFORM_FORUM_DISCUSSION_COMMENT",
   PlatformForumDiscussionCreated = "PLATFORM_FORUM_DISCUSSION_CREATED",
   SpaceAdminCollaborationCalloutContribution = "SPACE_ADMIN_COLLABORATION_CALLOUT_CONTRIBUTION",
+  SpaceAdminCollaborationCalloutFormResponse = "SPACE_ADMIN_COLLABORATION_CALLOUT_FORM_RESPONSE",
   SpaceAdminCommunityApplication = "SPACE_ADMIN_COMMUNITY_APPLICATION",
   SpaceAdminCommunityNewMember = "SPACE_ADMIN_COMMUNITY_NEW_MEMBER",
   SpaceAdminOrganizationCommunityInvitationAccepted = "SPACE_ADMIN_ORGANIZATION_COMMUNITY_INVITATION_ACCEPTED",
@@ -6710,6 +6990,7 @@ export enum NotificationEvent {
   SpaceCommunityCalendarEventCreated = "SPACE_COMMUNITY_CALENDAR_EVENT_CREATED",
   SpaceCommunityInvitationUserPlatform = "SPACE_COMMUNITY_INVITATION_USER_PLATFORM",
   SpaceLeadCommunicationMessage = "SPACE_LEAD_COMMUNICATION_MESSAGE",
+  UserCollaborationCalloutFormResponseReceipt = "USER_COLLABORATION_CALLOUT_FORM_RESPONSE_RECEIPT",
   UserCommentReply = "USER_COMMENT_REPLY",
   UserConversationMessageDirect = "USER_CONVERSATION_MESSAGE_DIRECT",
   UserConversationMessageGroup = "USER_CONVERSATION_MESSAGE_GROUP",
@@ -7016,6 +7297,12 @@ export type PageInfo = {
   startCursor?: Maybe<Scalars["String"]["output"]>;
 };
 
+export type PaginatedCalloutFormResponses = {
+  pageInfo: PageInfo;
+  responses: Array<CalloutFormResponse>;
+  total: Scalars["Float"]["output"];
+};
+
 export type PaginatedInAppNotifications = {
   inAppNotifications: Array<InAppNotification>;
   pageInfo: PageInfo;
@@ -7152,7 +7439,7 @@ export type PlatformAdminQueryResults = {
   userEmailChangeAuditEntries: UserEmailChangeAuditEntries;
   /** Retrieve all Users on the Platform. This is only available to Platform Admins. */
   users: PaginatedUsers;
-  /** The singleton virtual-assistant actor, including its current admin capability grant and ID. This is only available to Platform Admins, and is the discovery path for updateAssistantActorCapabilities. */
+  /** The singleton virtual-assistant actor, including its current admin capability grant and ID. Only available to Platform Operations Admins (and legacy holders); the discovery path for updateAssistantActorCapabilities. */
   virtualAssistant: VirtualAssistant;
   /** Retrieve all Virtual Contributors on the Platform. This is only available to Platform Admins. */
   virtualContributors: Array<VirtualContributor>;
@@ -8550,6 +8837,8 @@ export type RoomRemoveReactionToMessageInput = {
 };
 
 export type RoomSendMessageInput = {
+  /** The file-service document ids of attachments to send with the message (one per event). */
+  attachments?: InputMaybe<Array<Scalars["UUID"]["input"]>>;
   /** The message being sent */
   message: Scalars["String"]["input"];
   /** The Room the message is being sent to */
@@ -8557,6 +8846,8 @@ export type RoomSendMessageInput = {
 };
 
 export type RoomSendMessageReplyInput = {
+  /** The file-service document ids of attachments to send with the message (one per event). */
+  attachments?: InputMaybe<Array<Scalars["UUID"]["input"]>>;
   /** The message being sent */
   message: Scalars["String"]["input"];
   /** The Room the message is being sent to */
@@ -9130,6 +9421,7 @@ export type StorageAggregatorParent = {
 
 export enum StorageAggregatorType {
   Account = "ACCOUNT",
+  Conversation = "CONVERSATION",
   Organization = "ORGANIZATION",
   Platform = "PLATFORM",
   Space = "SPACE",
@@ -9203,6 +9495,13 @@ export type StorageBucketUploadFileResult = {
 export type StorageConfig = {
   /** Config for uploading files to Alkemio. */
   file: FileStorageConfig;
+};
+
+export type SubmitCalloutFormResponseInput = {
+  /** The response visibility the respondent was shown before submitting. The submission is rejected when the Form is now visible to a wider audience. */
+  acknowledgedVisibility: CalloutFormResponseVisibility;
+  answers: Array<CalloutFormAnswerInput>;
+  formID: Scalars["UUID"]["input"];
 };
 
 export type SubscribeToPushNotificationsInput = {
@@ -9657,6 +9956,35 @@ export type UpdateCalloutEntityInput = {
   settings?: InputMaybe<UpdateCalloutSettingsInput>;
   /** The sort order to assign to this Callout. */
   sortOrder?: InputMaybe<Scalars["Float"]["input"]>;
+};
+
+export type UpdateCalloutFormInput = {
+  formID: Scalars["UUID"]["input"];
+  /** The complete ordered list of questions. Omit to leave the questions unchanged. */
+  questions?: InputMaybe<Array<UpdateCalloutFormQuestionInput>>;
+  settings?: InputMaybe<UpdateCalloutFormSettingsInput>;
+};
+
+export type UpdateCalloutFormQuestionInput = {
+  explanation?: InputMaybe<Scalars["String"]["input"]>;
+  /** The ID of an existing question. Absent for a new question; an unknown ID is rejected. */
+  id?: InputMaybe<Scalars["UUID"]["input"]>;
+  options?: InputMaybe<Array<UpdateCalloutFormQuestionOptionInput>>;
+  prompt: Scalars["String"]["input"];
+  required: Scalars["Boolean"]["input"];
+  type: CalloutFormQuestionType;
+};
+
+export type UpdateCalloutFormQuestionOptionInput = {
+  /** The ID of an existing option. Absent for a new option; an unknown ID is rejected. */
+  id?: InputMaybe<Scalars["UUID"]["input"]>;
+  label: Scalars["String"]["input"];
+};
+
+export type UpdateCalloutFormSettingsInput = {
+  responseMode?: InputMaybe<CalloutFormResponseMode>;
+  state?: InputMaybe<CalloutFormState>;
+  visibility?: InputMaybe<CalloutFormResponseVisibility>;
 };
 
 export type UpdateCalloutFramingInput = {
@@ -10386,6 +10714,8 @@ export type UpdateUserSettingsNotificationSoundInput = {
 export type UpdateUserSettingsNotificationSpaceAdminInput = {
   /** Receive a notification when a contribution is added (admin) */
   collaborationCalloutContributionCreated?: InputMaybe<NotificationSettingInput>;
+  /** Receive a notification when a Form response is submitted (admin) */
+  collaborationCalloutFormResponseReceived?: InputMaybe<NotificationSettingInput>;
   /** Receive a notification when a message is sent to a Space I lead */
   communicationMessageReceived?: InputMaybe<NotificationSettingInput>;
   /** Receive a notification when an application is received */
@@ -10969,6 +11299,8 @@ export type UserSettingsNotificationSpace = {
 export type UserSettingsNotificationSpaceAdmin = {
   /** Receive a notification when a contribution is created (admin) */
   collaborationCalloutContributionCreated: UserSettingsNotificationChannels;
+  /** Receive a notification when a Form response is submitted (admin) */
+  collaborationCalloutFormResponseReceived: UserSettingsNotificationChannels;
   /** Receive a notification when a message is sent to a Space I lead */
   communicationMessageReceived: UserSettingsNotificationChannels;
   /** Receive a notification when an application is received */
@@ -12086,6 +12418,28 @@ export type ResolversTypes = {
   CalloutContributorsMapView: ResolverTypeWrapper<CalloutContributorsMapView>;
   CalloutContributorsSettings: ResolverTypeWrapper<CalloutContributorsSettings>;
   CalloutDescriptionDisplayMode: CalloutDescriptionDisplayMode;
+  CalloutForm: ResolverTypeWrapper<CalloutForm>;
+  CalloutFormAnswer: ResolverTypeWrapper<CalloutFormAnswer>;
+  CalloutFormAnswerInput: CalloutFormAnswerInput;
+  CalloutFormAnswerOption: ResolverTypeWrapper<CalloutFormAnswerOption>;
+  CalloutFormQuestion: ResolverTypeWrapper<CalloutFormQuestion>;
+  CalloutFormQuestionOption: ResolverTypeWrapper<CalloutFormQuestionOption>;
+  CalloutFormQuestionType: CalloutFormQuestionType;
+  CalloutFormResponse: ResolverTypeWrapper<
+    Omit<CalloutFormResponse, "createdBy"> & {
+      createdBy?: Maybe<ResolversTypes["User"]>;
+    }
+  >;
+  CalloutFormResponseMode: CalloutFormResponseMode;
+  CalloutFormResponseVisibility: CalloutFormResponseVisibility;
+  CalloutFormResponses: ResolverTypeWrapper<
+    Omit<CalloutFormResponses, "all" | "mine"> & {
+      all: ResolversTypes["PaginatedCalloutFormResponses"];
+      mine: Array<ResolversTypes["CalloutFormResponse"]>;
+    }
+  >;
+  CalloutFormSettings: ResolverTypeWrapper<CalloutFormSettings>;
+  CalloutFormState: CalloutFormState;
   CalloutFraming: ResolverTypeWrapper<
     Omit<CalloutFraming, "contributorCounts" | "profile" | "subspaces"> & {
       contributorCounts: ResolversTypes["ContributorCollectionCounts"];
@@ -12190,7 +12544,10 @@ export type ResolversTypes = {
   ContributorFilterInput: ContributorFilterInput;
   ContributorLocation: ResolverTypeWrapper<ContributorLocation>;
   Conversation: ResolverTypeWrapper<
-    Omit<Conversation, "members"> & { members: Array<ResolversTypes["Actor"]> }
+    Omit<Conversation, "members" | "storageBucket"> & {
+      members: Array<ResolversTypes["Actor"]>;
+      storageBucket?: Maybe<ResolversTypes["StorageBucket"]>;
+    }
   >;
   ConversationCreatedEvent: ResolverTypeWrapper<
     Omit<ConversationCreatedEvent, "conversation"> & {
@@ -12249,6 +12606,14 @@ export type ResolversTypes = {
   CreateCalloutContributorsSettingsData: ResolverTypeWrapper<CreateCalloutContributorsSettingsData>;
   CreateCalloutContributorsSettingsInput: CreateCalloutContributorsSettingsInput;
   CreateCalloutData: ResolverTypeWrapper<CreateCalloutData>;
+  CreateCalloutFormData: ResolverTypeWrapper<CreateCalloutFormData>;
+  CreateCalloutFormInput: CreateCalloutFormInput;
+  CreateCalloutFormQuestionData: ResolverTypeWrapper<CreateCalloutFormQuestionData>;
+  CreateCalloutFormQuestionInput: CreateCalloutFormQuestionInput;
+  CreateCalloutFormQuestionOptionData: ResolverTypeWrapper<CreateCalloutFormQuestionOptionData>;
+  CreateCalloutFormQuestionOptionInput: CreateCalloutFormQuestionOptionInput;
+  CreateCalloutFormSettingsData: ResolverTypeWrapper<CreateCalloutFormSettingsData>;
+  CreateCalloutFormSettingsInput: CreateCalloutFormSettingsInput;
   CreateCalloutFramingData: ResolverTypeWrapper<CreateCalloutFramingData>;
   CreateCalloutFramingInput: CreateCalloutFramingInput;
   CreateCalloutInput: CreateCalloutInput;
@@ -12344,6 +12709,7 @@ export type ResolversTypes = {
   DeleteAiPersonaInput: DeleteAiPersonaInput;
   DeleteApplicationInput: DeleteApplicationInput;
   DeleteCalendarEventInput: DeleteCalendarEventInput;
+  DeleteCalloutFormResponseInput: DeleteCalloutFormResponseInput;
   DeleteCalloutInput: DeleteCalloutInput;
   DeleteClassificationEntryInput: DeleteClassificationEntryInput;
   DeleteCollaboraDocumentInput: DeleteCollaboraDocumentInput;
@@ -12372,6 +12738,7 @@ export type ResolversTypes = {
   DeleteVirtualContributorInput: DeleteVirtualContributorInput;
   DeleteVisualFromMediaGalleryInput: DeleteVisualFromMediaGalleryInput;
   DeleteWhiteboardInput: DeleteWhiteboardInput;
+  DeletedCalloutFormResponse: ResolverTypeWrapper<DeletedCalloutFormResponse>;
   DirectMessageDeliveryResult: ResolverTypeWrapper<DirectMessageDeliveryResult>;
   DirectMessageDeliveryStatus: DirectMessageDeliveryStatus;
   Discussion: ResolverTypeWrapper<
@@ -12689,6 +13056,7 @@ export type ResolversTypes = {
       | "calendar"
       | "calendarEvent"
       | "callout"
+      | "calloutFormResponses"
       | "collaboration"
       | "community"
       | "communityGuidelines"
@@ -12711,6 +13079,7 @@ export type ResolversTypes = {
       calendar?: Maybe<ResolversTypes["Calendar"]>;
       calendarEvent?: Maybe<ResolversTypes["CalendarEvent"]>;
       callout?: Maybe<ResolversTypes["Callout"]>;
+      calloutFormResponses: ResolversTypes["CalloutFormResponses"];
       collaboration?: Maybe<ResolversTypes["Collaboration"]>;
       community?: Maybe<ResolversTypes["Community"]>;
       communityGuidelines?: Maybe<ResolversTypes["CommunityGuidelines"]>;
@@ -12800,6 +13169,7 @@ export type ResolversTypes = {
   Message: ResolverTypeWrapper<
     Omit<Message, "sender"> & { sender?: Maybe<ResolversTypes["Actor"]> }
   >;
+  MessageAttachment: ResolverTypeWrapper<MessageAttachment>;
   MessageDetails: ResolverTypeWrapper<MessageDetails>;
   MessageID: ResolverTypeWrapper<Scalars["MessageID"]["output"]>;
   MessageParent: ResolverTypeWrapper<MessageParent>;
@@ -12893,6 +13263,11 @@ export type ResolversTypes = {
   >;
   OryConfig: ResolverTypeWrapper<OryConfig>;
   PageInfo: ResolverTypeWrapper<PageInfo>;
+  PaginatedCalloutFormResponses: ResolverTypeWrapper<
+    Omit<PaginatedCalloutFormResponses, "responses"> & {
+      responses: Array<ResolversTypes["CalloutFormResponse"]>;
+    }
+  >;
   PaginatedInAppNotifications: ResolverTypeWrapper<
     Omit<PaginatedInAppNotifications, "inAppNotifications"> & {
       inAppNotifications: Array<ResolversTypes["InAppNotification"]>;
@@ -13246,6 +13621,7 @@ export type ResolversTypes = {
   StorageBucketUploadFileResult: ResolverTypeWrapper<StorageBucketUploadFileResult>;
   StorageConfig: ResolverTypeWrapper<StorageConfig>;
   String: ResolverTypeWrapper<Scalars["String"]["output"]>;
+  SubmitCalloutFormResponseInput: SubmitCalloutFormResponseInput;
   SubscribeToPushNotificationsInput: SubscribeToPushNotificationsInput;
   Subscription: ResolverTypeWrapper<{}>;
   SubspaceCreated: ResolverTypeWrapper<
@@ -13332,6 +13708,10 @@ export type ResolversTypes = {
   UpdateCalloutContributionDefaultsInput: UpdateCalloutContributionDefaultsInput;
   UpdateCalloutContributorsSettingsInput: UpdateCalloutContributorsSettingsInput;
   UpdateCalloutEntityInput: UpdateCalloutEntityInput;
+  UpdateCalloutFormInput: UpdateCalloutFormInput;
+  UpdateCalloutFormQuestionInput: UpdateCalloutFormQuestionInput;
+  UpdateCalloutFormQuestionOptionInput: UpdateCalloutFormQuestionOptionInput;
+  UpdateCalloutFormSettingsInput: UpdateCalloutFormSettingsInput;
   UpdateCalloutFramingInput: UpdateCalloutFramingInput;
   UpdateCalloutPublishInfoInput: UpdateCalloutPublishInfoInput;
   UpdateCalloutSelectionSettingsInput: UpdateCalloutSelectionSettingsInput;
@@ -13757,6 +14137,20 @@ export type ResolversParentTypes = {
   CalloutContributionsCountOutput: CalloutContributionsCountOutput;
   CalloutContributorsMapView: CalloutContributorsMapView;
   CalloutContributorsSettings: CalloutContributorsSettings;
+  CalloutForm: CalloutForm;
+  CalloutFormAnswer: CalloutFormAnswer;
+  CalloutFormAnswerInput: CalloutFormAnswerInput;
+  CalloutFormAnswerOption: CalloutFormAnswerOption;
+  CalloutFormQuestion: CalloutFormQuestion;
+  CalloutFormQuestionOption: CalloutFormQuestionOption;
+  CalloutFormResponse: Omit<CalloutFormResponse, "createdBy"> & {
+    createdBy?: Maybe<ResolversParentTypes["User"]>;
+  };
+  CalloutFormResponses: Omit<CalloutFormResponses, "all" | "mine"> & {
+    all: ResolversParentTypes["PaginatedCalloutFormResponses"];
+    mine: Array<ResolversParentTypes["CalloutFormResponse"]>;
+  };
+  CalloutFormSettings: CalloutFormSettings;
   CalloutFraming: Omit<
     CalloutFraming,
     "contributorCounts" | "profile" | "subspaces"
@@ -13847,8 +14241,9 @@ export type ResolversParentTypes = {
   ContributorCollectionItem: ContributorCollectionItem;
   ContributorFilterInput: ContributorFilterInput;
   ContributorLocation: ContributorLocation;
-  Conversation: Omit<Conversation, "members"> & {
+  Conversation: Omit<Conversation, "members" | "storageBucket"> & {
     members: Array<ResolversParentTypes["Actor"]>;
+    storageBucket?: Maybe<ResolversParentTypes["StorageBucket"]>;
   };
   ConversationCreatedEvent: Omit<ConversationCreatedEvent, "conversation"> & {
     conversation: ResolversParentTypes["Conversation"];
@@ -13905,6 +14300,14 @@ export type ResolversParentTypes = {
   CreateCalloutContributorsSettingsData: CreateCalloutContributorsSettingsData;
   CreateCalloutContributorsSettingsInput: CreateCalloutContributorsSettingsInput;
   CreateCalloutData: CreateCalloutData;
+  CreateCalloutFormData: CreateCalloutFormData;
+  CreateCalloutFormInput: CreateCalloutFormInput;
+  CreateCalloutFormQuestionData: CreateCalloutFormQuestionData;
+  CreateCalloutFormQuestionInput: CreateCalloutFormQuestionInput;
+  CreateCalloutFormQuestionOptionData: CreateCalloutFormQuestionOptionData;
+  CreateCalloutFormQuestionOptionInput: CreateCalloutFormQuestionOptionInput;
+  CreateCalloutFormSettingsData: CreateCalloutFormSettingsData;
+  CreateCalloutFormSettingsInput: CreateCalloutFormSettingsInput;
   CreateCalloutFramingData: CreateCalloutFramingData;
   CreateCalloutFramingInput: CreateCalloutFramingInput;
   CreateCalloutInput: CreateCalloutInput;
@@ -13999,6 +14402,7 @@ export type ResolversParentTypes = {
   DeleteAiPersonaInput: DeleteAiPersonaInput;
   DeleteApplicationInput: DeleteApplicationInput;
   DeleteCalendarEventInput: DeleteCalendarEventInput;
+  DeleteCalloutFormResponseInput: DeleteCalloutFormResponseInput;
   DeleteCalloutInput: DeleteCalloutInput;
   DeleteClassificationEntryInput: DeleteClassificationEntryInput;
   DeleteCollaboraDocumentInput: DeleteCollaboraDocumentInput;
@@ -14027,6 +14431,7 @@ export type ResolversParentTypes = {
   DeleteVirtualContributorInput: DeleteVirtualContributorInput;
   DeleteVisualFromMediaGalleryInput: DeleteVisualFromMediaGalleryInput;
   DeleteWhiteboardInput: DeleteWhiteboardInput;
+  DeletedCalloutFormResponse: DeletedCalloutFormResponse;
   DirectMessageDeliveryResult: DirectMessageDeliveryResult;
   Discussion: Omit<Discussion, "profile"> & {
     profile: ResolversParentTypes["Profile"];
@@ -14299,6 +14704,7 @@ export type ResolversParentTypes = {
     | "calendar"
     | "calendarEvent"
     | "callout"
+    | "calloutFormResponses"
     | "collaboration"
     | "community"
     | "communityGuidelines"
@@ -14321,6 +14727,7 @@ export type ResolversParentTypes = {
     calendar?: Maybe<ResolversParentTypes["Calendar"]>;
     calendarEvent?: Maybe<ResolversParentTypes["CalendarEvent"]>;
     callout?: Maybe<ResolversParentTypes["Callout"]>;
+    calloutFormResponses: ResolversParentTypes["CalloutFormResponses"];
     collaboration?: Maybe<ResolversParentTypes["Collaboration"]>;
     community?: Maybe<ResolversParentTypes["Community"]>;
     communityGuidelines?: Maybe<ResolversParentTypes["CommunityGuidelines"]>;
@@ -14400,6 +14807,7 @@ export type ResolversParentTypes = {
   Message: Omit<Message, "sender"> & {
     sender?: Maybe<ResolversParentTypes["Actor"]>;
   };
+  MessageAttachment: MessageAttachment;
   MessageDetails: MessageDetails;
   MessageID: Scalars["MessageID"]["output"];
   MessageParent: MessageParent;
@@ -14475,6 +14883,10 @@ export type ResolversParentTypes = {
   > & { organizations: Array<ResolversParentTypes["Organization"]> };
   OryConfig: OryConfig;
   PageInfo: PageInfo;
+  PaginatedCalloutFormResponses: Omit<
+    PaginatedCalloutFormResponses,
+    "responses"
+  > & { responses: Array<ResolversParentTypes["CalloutFormResponse"]> };
   PaginatedInAppNotifications: Omit<
     PaginatedInAppNotifications,
     "inAppNotifications"
@@ -14768,6 +15180,7 @@ export type ResolversParentTypes = {
   StorageBucketUploadFileResult: StorageBucketUploadFileResult;
   StorageConfig: StorageConfig;
   String: Scalars["String"]["output"];
+  SubmitCalloutFormResponseInput: SubmitCalloutFormResponseInput;
   SubscribeToPushNotificationsInput: SubscribeToPushNotificationsInput;
   Subscription: {};
   SubspaceCreated: Omit<SubspaceCreated, "subspace"> & {
@@ -14840,6 +15253,10 @@ export type ResolversParentTypes = {
   UpdateCalloutContributionDefaultsInput: UpdateCalloutContributionDefaultsInput;
   UpdateCalloutContributorsSettingsInput: UpdateCalloutContributorsSettingsInput;
   UpdateCalloutEntityInput: UpdateCalloutEntityInput;
+  UpdateCalloutFormInput: UpdateCalloutFormInput;
+  UpdateCalloutFormQuestionInput: UpdateCalloutFormQuestionInput;
+  UpdateCalloutFormQuestionOptionInput: UpdateCalloutFormQuestionOptionInput;
+  UpdateCalloutFormSettingsInput: UpdateCalloutFormSettingsInput;
   UpdateCalloutFramingInput: UpdateCalloutFramingInput;
   UpdateCalloutPublishInfoInput: UpdateCalloutPublishInfoInput;
   UpdateCalloutSelectionSettingsInput: UpdateCalloutSelectionSettingsInput;
@@ -16088,6 +16505,142 @@ export type CalloutContributorsSettingsResolvers<
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
+export type CalloutFormResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["CalloutForm"] = ResolversParentTypes["CalloutForm"]
+> = {
+  createdDate?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
+  id?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
+  questions?: Resolver<
+    Array<ResolversTypes["CalloutFormQuestion"]>,
+    ParentType,
+    ContextType
+  >;
+  settings?: Resolver<
+    ResolversTypes["CalloutFormSettings"],
+    ParentType,
+    ContextType
+  >;
+  updatedDate?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type CalloutFormAnswerResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["CalloutFormAnswer"] = ResolversParentTypes["CalloutFormAnswer"]
+> = {
+  prompt?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
+  questionID?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
+  selectedOptions?: Resolver<
+    Maybe<Array<ResolversTypes["CalloutFormAnswerOption"]>>,
+    ParentType,
+    ContextType
+  >;
+  text?: Resolver<Maybe<ResolversTypes["String"]>, ParentType, ContextType>;
+  type?: Resolver<
+    ResolversTypes["CalloutFormQuestionType"],
+    ParentType,
+    ContextType
+  >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type CalloutFormAnswerOptionResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["CalloutFormAnswerOption"] = ResolversParentTypes["CalloutFormAnswerOption"]
+> = {
+  id?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
+  label?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type CalloutFormQuestionResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["CalloutFormQuestion"] = ResolversParentTypes["CalloutFormQuestion"]
+> = {
+  explanation?: Resolver<
+    Maybe<ResolversTypes["String"]>,
+    ParentType,
+    ContextType
+  >;
+  id?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
+  options?: Resolver<
+    Maybe<Array<ResolversTypes["CalloutFormQuestionOption"]>>,
+    ParentType,
+    ContextType
+  >;
+  prompt?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
+  required?: Resolver<ResolversTypes["Boolean"], ParentType, ContextType>;
+  type?: Resolver<
+    ResolversTypes["CalloutFormQuestionType"],
+    ParentType,
+    ContextType
+  >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type CalloutFormQuestionOptionResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["CalloutFormQuestionOption"] = ResolversParentTypes["CalloutFormQuestionOption"]
+> = {
+  id?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
+  label?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type CalloutFormResponseResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["CalloutFormResponse"] = ResolversParentTypes["CalloutFormResponse"]
+> = {
+  answers?: Resolver<
+    Array<ResolversTypes["CalloutFormAnswer"]>,
+    ParentType,
+    ContextType
+  >;
+  createdBy?: Resolver<Maybe<ResolversTypes["User"]>, ParentType, ContextType>;
+  createdDate?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
+  id?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type CalloutFormResponsesResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["CalloutFormResponses"] = ResolversParentTypes["CalloutFormResponses"]
+> = {
+  all?: Resolver<
+    ResolversTypes["PaginatedCalloutFormResponses"],
+    ParentType,
+    ContextType
+  >;
+  canModerate?: Resolver<ResolversTypes["Boolean"], ParentType, ContextType>;
+  canReadAll?: Resolver<ResolversTypes["Boolean"], ParentType, ContextType>;
+  formID?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
+  mine?: Resolver<
+    Array<ResolversTypes["CalloutFormResponse"]>,
+    ParentType,
+    ContextType
+  >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type CalloutFormSettingsResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["CalloutFormSettings"] = ResolversParentTypes["CalloutFormSettings"]
+> = {
+  responseMode?: Resolver<
+    ResolversTypes["CalloutFormResponseMode"],
+    ParentType,
+    ContextType
+  >;
+  state?: Resolver<ResolversTypes["CalloutFormState"], ParentType, ContextType>;
+  visibility?: Resolver<
+    ResolversTypes["CalloutFormResponseVisibility"],
+    ParentType,
+    ContextType
+  >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
 export type CalloutFramingResolvers<
   ContextType = any,
   ParentType extends ResolversParentTypes["CalloutFraming"] = ResolversParentTypes["CalloutFraming"]
@@ -16114,6 +16667,11 @@ export type CalloutFramingResolvers<
     RequireFields<CalloutFramingContributorsArgs, "type">
   >;
   createdDate?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
+  form?: Resolver<
+    Maybe<ResolversTypes["CalloutForm"]>,
+    ParentType,
+    ContextType
+  >;
   id?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
   link?: Resolver<Maybe<ResolversTypes["Link"]>, ParentType, ContextType>;
   mediaGallery?: Resolver<
@@ -16412,6 +16970,11 @@ export type CollaboraDocumentResolvers<
     ContextType
   >;
   id?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
+  previewUrl?: Resolver<
+    Maybe<ResolversTypes["String"]>,
+    ParentType,
+    ContextType
+  >;
   profile?: Resolver<ResolversTypes["Profile"], ParentType, ContextType>;
   updatedDate?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
@@ -16755,6 +17318,11 @@ export type ContributorCollectionItemResolvers<
   ContextType = any,
   ParentType extends ResolversParentTypes["ContributorCollectionItem"] = ResolversParentTypes["ContributorCollectionItem"]
 > = {
+  associatesCount?: Resolver<
+    Maybe<ResolversTypes["Int"]>,
+    ParentType,
+    ContextType
+  >;
   avatarUrl?: Resolver<
     Maybe<ResolversTypes["String"]>,
     ParentType,
@@ -16762,6 +17330,11 @@ export type ContributorCollectionItemResolvers<
   >;
   displayName?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
   id?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
+  joinedDate?: Resolver<
+    Maybe<ResolversTypes["DateTime"]>,
+    ParentType,
+    ContextType
+  >;
   location?: Resolver<
     Maybe<ResolversTypes["ContributorLocation"]>,
     ParentType,
@@ -16772,8 +17345,15 @@ export type ContributorCollectionItemResolvers<
     ParentType,
     ContextType
   >;
+  tagline?: Resolver<Maybe<ResolversTypes["String"]>, ParentType, ContextType>;
+  tags?: Resolver<
+    Maybe<Array<ResolversTypes["String"]>>,
+    ParentType,
+    ContextType
+  >;
   type?: Resolver<ResolversTypes["ActorType"], ParentType, ContextType>;
   url?: Resolver<Maybe<ResolversTypes["String"]>, ParentType, ContextType>;
+  website?: Resolver<Maybe<ResolversTypes["String"]>, ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -16807,6 +17387,11 @@ export type ConversationResolvers<
   members?: Resolver<Array<ResolversTypes["Actor"]>, ParentType, ContextType>;
   messaging?: Resolver<ResolversTypes["Messaging"], ParentType, ContextType>;
   room?: Resolver<ResolversTypes["Room"], ParentType, ContextType>;
+  storageBucket?: Resolver<
+    Maybe<ResolversTypes["StorageBucket"]>,
+    ParentType,
+    ContextType
+  >;
   updatedDate?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
@@ -17109,12 +17694,92 @@ export type CreateCalloutDataResolvers<
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
+export type CreateCalloutFormDataResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["CreateCalloutFormData"] = ResolversParentTypes["CreateCalloutFormData"]
+> = {
+  questions?: Resolver<
+    Array<ResolversTypes["CreateCalloutFormQuestionData"]>,
+    ParentType,
+    ContextType
+  >;
+  settings?: Resolver<
+    Maybe<ResolversTypes["CreateCalloutFormSettingsData"]>,
+    ParentType,
+    ContextType
+  >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type CreateCalloutFormQuestionDataResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["CreateCalloutFormQuestionData"] = ResolversParentTypes["CreateCalloutFormQuestionData"]
+> = {
+  explanation?: Resolver<
+    Maybe<ResolversTypes["String"]>,
+    ParentType,
+    ContextType
+  >;
+  options?: Resolver<
+    Maybe<Array<ResolversTypes["CreateCalloutFormQuestionOptionData"]>>,
+    ParentType,
+    ContextType
+  >;
+  prompt?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
+  required?: Resolver<
+    Maybe<ResolversTypes["Boolean"]>,
+    ParentType,
+    ContextType
+  >;
+  type?: Resolver<
+    ResolversTypes["CalloutFormQuestionType"],
+    ParentType,
+    ContextType
+  >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type CreateCalloutFormQuestionOptionDataResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["CreateCalloutFormQuestionOptionData"] = ResolversParentTypes["CreateCalloutFormQuestionOptionData"]
+> = {
+  label?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type CreateCalloutFormSettingsDataResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["CreateCalloutFormSettingsData"] = ResolversParentTypes["CreateCalloutFormSettingsData"]
+> = {
+  responseMode?: Resolver<
+    Maybe<ResolversTypes["CalloutFormResponseMode"]>,
+    ParentType,
+    ContextType
+  >;
+  state?: Resolver<
+    Maybe<ResolversTypes["CalloutFormState"]>,
+    ParentType,
+    ContextType
+  >;
+  visibility?: Resolver<
+    Maybe<ResolversTypes["CalloutFormResponseVisibility"]>,
+    ParentType,
+    ContextType
+  >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
 export type CreateCalloutFramingDataResolvers<
   ContextType = any,
   ParentType extends ResolversParentTypes["CreateCalloutFramingData"] = ResolversParentTypes["CreateCalloutFramingData"]
 > = {
   collaboraDocument?: Resolver<
     Maybe<ResolversTypes["CreateCollaboraDocumentData"]>,
+    ParentType,
+    ContextType
+  >;
+  form?: Resolver<
+    Maybe<ResolversTypes["CreateCalloutFormData"]>,
     ParentType,
     ContextType
   >;
@@ -17636,6 +18301,14 @@ export interface DateTimeScalarConfig
   extends GraphQLScalarTypeConfig<ResolversTypes["DateTime"], any> {
   name: "DateTime";
 }
+
+export type DeletedCalloutFormResponseResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["DeletedCalloutFormResponse"] = ResolversParentTypes["DeletedCalloutFormResponse"]
+> = {
+  id?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
 
 export type DirectMessageDeliveryResultResolvers<
   ContextType = any,
@@ -19337,6 +20010,12 @@ export type LookupQueryResultsResolvers<
     ContextType,
     RequireFields<LookupQueryResultsCalloutArgs, "ID">
   >;
+  calloutFormResponses?: Resolver<
+    ResolversTypes["CalloutFormResponses"],
+    ParentType,
+    ContextType,
+    RequireFields<LookupQueryResultsCalloutFormResponsesArgs, "formID">
+  >;
   calloutsSet?: Resolver<
     Maybe<ResolversTypes["CalloutsSet"]>,
     ParentType,
@@ -19797,6 +20476,11 @@ export type MessageResolvers<
   ContextType = any,
   ParentType extends ResolversParentTypes["Message"] = ResolversParentTypes["Message"]
 > = {
+  attachments?: Resolver<
+    Array<ResolversTypes["MessageAttachment"]>,
+    ParentType,
+    ContextType
+  >;
   id?: Resolver<ResolversTypes["MessageID"], ParentType, ContextType>;
   message?: Resolver<ResolversTypes["Markdown"], ParentType, ContextType>;
   reactions?: Resolver<
@@ -19811,6 +20495,20 @@ export type MessageResolvers<
     ContextType
   >;
   timestamp?: Resolver<ResolversTypes["Float"], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type MessageAttachmentResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["MessageAttachment"] = ResolversParentTypes["MessageAttachment"]
+> = {
+  displayName?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
+  height?: Resolver<Maybe<ResolversTypes["Int"]>, ParentType, ContextType>;
+  id?: Resolver<Maybe<ResolversTypes["UUID"]>, ParentType, ContextType>;
+  mimeType?: Resolver<Maybe<ResolversTypes["String"]>, ParentType, ContextType>;
+  size?: Resolver<Maybe<ResolversTypes["Int"]>, ParentType, ContextType>;
+  url?: Resolver<Maybe<ResolversTypes["String"]>, ParentType, ContextType>;
+  width?: Resolver<Maybe<ResolversTypes["Int"]>, ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -20497,6 +21195,12 @@ export type MutationResolvers<
     ContextType,
     RequireFields<MutationDeleteCalloutArgs, "deleteData">
   >;
+  deleteCalloutFormResponse?: Resolver<
+    ResolversTypes["DeletedCalloutFormResponse"],
+    ParentType,
+    ContextType,
+    RequireFields<MutationDeleteCalloutFormResponseArgs, "deleteData">
+  >;
   deleteClassificationEntry?: Resolver<
     ResolversTypes["ClassificationEntry"],
     ParentType,
@@ -21054,6 +21758,12 @@ export type MutationResolvers<
       "mappingData"
     >
   >;
+  submitCalloutFormResponse?: Resolver<
+    ResolversTypes["CalloutFormResponse"],
+    ParentType,
+    ContextType,
+    RequireFields<MutationSubmitCalloutFormResponseArgs, "responseData">
+  >;
   subscribeToPushNotifications?: Resolver<
     ResolversTypes["PushSubscription"],
     ParentType,
@@ -21134,6 +21844,12 @@ export type MutationResolvers<
     ParentType,
     ContextType,
     RequireFields<MutationUpdateCalloutArgs, "calloutData">
+  >;
+  updateCalloutForm?: Resolver<
+    ResolversTypes["CalloutForm"],
+    ParentType,
+    ContextType,
+    RequireFields<MutationUpdateCalloutFormArgs, "formData">
   >;
   updateCalloutPublishInfo?: Resolver<
     ResolversTypes["Callout"],
@@ -21830,6 +22546,20 @@ export type PageInfoResolvers<
     ParentType,
     ContextType
   >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type PaginatedCalloutFormResponsesResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["PaginatedCalloutFormResponses"] = ResolversParentTypes["PaginatedCalloutFormResponses"]
+> = {
+  pageInfo?: Resolver<ResolversTypes["PageInfo"], ParentType, ContextType>;
+  responses?: Resolver<
+    Array<ResolversTypes["CalloutFormResponse"]>,
+    ParentType,
+    ContextType
+  >;
+  total?: Resolver<ResolversTypes["Float"], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -25317,6 +26047,11 @@ export type UserSettingsNotificationSpaceAdminResolvers<
     ParentType,
     ContextType
   >;
+  collaborationCalloutFormResponseReceived?: Resolver<
+    ResolversTypes["UserSettingsNotificationChannels"],
+    ParentType,
+    ContextType
+  >;
   communicationMessageReceived?: Resolver<
     ResolversTypes["UserSettingsNotificationChannels"],
     ParentType,
@@ -25857,6 +26592,14 @@ export type Resolvers<ContextType = any> = {
   CalloutContributionsCountOutput?: CalloutContributionsCountOutputResolvers<ContextType>;
   CalloutContributorsMapView?: CalloutContributorsMapViewResolvers<ContextType>;
   CalloutContributorsSettings?: CalloutContributorsSettingsResolvers<ContextType>;
+  CalloutForm?: CalloutFormResolvers<ContextType>;
+  CalloutFormAnswer?: CalloutFormAnswerResolvers<ContextType>;
+  CalloutFormAnswerOption?: CalloutFormAnswerOptionResolvers<ContextType>;
+  CalloutFormQuestion?: CalloutFormQuestionResolvers<ContextType>;
+  CalloutFormQuestionOption?: CalloutFormQuestionOptionResolvers<ContextType>;
+  CalloutFormResponse?: CalloutFormResponseResolvers<ContextType>;
+  CalloutFormResponses?: CalloutFormResponsesResolvers<ContextType>;
+  CalloutFormSettings?: CalloutFormSettingsResolvers<ContextType>;
   CalloutFraming?: CalloutFramingResolvers<ContextType>;
   CalloutPostCreated?: CalloutPostCreatedResolvers<ContextType>;
   CalloutReaction?: CalloutReactionResolvers<ContextType>;
@@ -25908,6 +26651,10 @@ export type Resolvers<ContextType = any> = {
   CreateCalloutContributorsMapViewData?: CreateCalloutContributorsMapViewDataResolvers<ContextType>;
   CreateCalloutContributorsSettingsData?: CreateCalloutContributorsSettingsDataResolvers<ContextType>;
   CreateCalloutData?: CreateCalloutDataResolvers<ContextType>;
+  CreateCalloutFormData?: CreateCalloutFormDataResolvers<ContextType>;
+  CreateCalloutFormQuestionData?: CreateCalloutFormQuestionDataResolvers<ContextType>;
+  CreateCalloutFormQuestionOptionData?: CreateCalloutFormQuestionOptionDataResolvers<ContextType>;
+  CreateCalloutFormSettingsData?: CreateCalloutFormSettingsDataResolvers<ContextType>;
   CreateCalloutFramingData?: CreateCalloutFramingDataResolvers<ContextType>;
   CreateCalloutSelectionSettingsData?: CreateCalloutSelectionSettingsDataResolvers<ContextType>;
   CreateCalloutSettingsContributionData?: CreateCalloutSettingsContributionDataResolvers<ContextType>;
@@ -25937,6 +26684,7 @@ export type Resolvers<ContextType = any> = {
   Credential?: CredentialResolvers<ContextType>;
   CredentialDefinition?: CredentialDefinitionResolvers<ContextType>;
   DateTime?: GraphQLScalarType;
+  DeletedCalloutFormResponse?: DeletedCalloutFormResponseResolvers<ContextType>;
   DirectMessageDeliveryResult?: DirectMessageDeliveryResultResolvers<ContextType>;
   Discussion?: DiscussionResolvers<ContextType>;
   DiscussionDetails?: DiscussionDetailsResolvers<ContextType>;
@@ -26019,6 +26767,7 @@ export type Resolvers<ContextType = any> = {
   MemoSigningContinueResult?: MemoSigningContinueResultResolvers<ContextType>;
   MemoSigningPrepareResult?: MemoSigningPrepareResultResolvers<ContextType>;
   Message?: MessageResolvers<ContextType>;
+  MessageAttachment?: MessageAttachmentResolvers<ContextType>;
   MessageDetails?: MessageDetailsResolvers<ContextType>;
   MessageID?: GraphQLScalarType;
   MessageParent?: MessageParentResolvers<ContextType>;
@@ -26044,6 +26793,7 @@ export type Resolvers<ContextType = any> = {
   OrganizationsInRolesResponse?: OrganizationsInRolesResponseResolvers<ContextType>;
   OryConfig?: OryConfigResolvers<ContextType>;
   PageInfo?: PageInfoResolvers<ContextType>;
+  PaginatedCalloutFormResponses?: PaginatedCalloutFormResponsesResolvers<ContextType>;
   PaginatedInAppNotifications?: PaginatedInAppNotificationsResolvers<ContextType>;
   PaginatedInnovationPacks?: PaginatedInnovationPacksResolvers<ContextType>;
   PaginatedLibraryTemplateResults?: PaginatedLibraryTemplateResultsResolvers<ContextType>;
@@ -28117,6 +28867,36 @@ export type CalloutDetailsFragment = {
     };
     framing: { __typename: "CalloutSettingsFraming"; commentsEnabled: boolean };
   };
+};
+
+export type CalloutFormDetailsFragment = {
+  id: string;
+  questions: Array<{
+    id: string;
+    prompt: string;
+    explanation?: string | undefined;
+    type: CalloutFormQuestionType;
+    required: boolean;
+    options?: Array<{ id: string; label: string }> | undefined;
+  }>;
+  settings: {
+    visibility: CalloutFormResponseVisibility;
+    responseMode: CalloutFormResponseMode;
+    state: CalloutFormState;
+  };
+};
+
+export type CalloutFormResponseDetailsFragment = {
+  id: string;
+  createdDate: Date;
+  createdBy?: { id: string } | undefined;
+  answers: Array<{
+    questionID: string;
+    prompt: string;
+    type: CalloutFormQuestionType;
+    text?: string | undefined;
+    selectedOptions?: Array<{ id: string; label: string }> | undefined;
+  }>;
 };
 
 export type CalloutOnCollaborationWithStorageConfigFragment = {
@@ -49563,6 +50343,90 @@ export type CreateContributionOnCalloutMutation = {
           };
         }
       | undefined;
+  };
+};
+
+export type CreateFormCalloutOnCalloutsSetMutationVariables = Exact<{
+  calloutData: CreateCalloutOnCalloutsSetInput;
+}>;
+
+export type CreateFormCalloutOnCalloutsSetMutation = {
+  createCalloutOnCalloutsSet: {
+    id: string;
+    settings: { visibility: CalloutVisibility };
+    framing: {
+      id: string;
+      type: CalloutFramingType;
+      profile: { id: string; displayName: string; url: string };
+      form?:
+        | {
+            id: string;
+            questions: Array<{
+              id: string;
+              prompt: string;
+              explanation?: string | undefined;
+              type: CalloutFormQuestionType;
+              required: boolean;
+              options?: Array<{ id: string; label: string }> | undefined;
+            }>;
+            settings: {
+              visibility: CalloutFormResponseVisibility;
+              responseMode: CalloutFormResponseMode;
+              state: CalloutFormState;
+            };
+          }
+        | undefined;
+    };
+  };
+};
+
+export type DeleteCalloutFormResponseMutationVariables = Exact<{
+  deleteData: DeleteCalloutFormResponseInput;
+}>;
+
+export type DeleteCalloutFormResponseMutation = {
+  deleteCalloutFormResponse: { id: string };
+};
+
+export type SubmitCalloutFormResponseMutationVariables = Exact<{
+  responseData: SubmitCalloutFormResponseInput;
+}>;
+
+export type SubmitCalloutFormResponseMutation = {
+  submitCalloutFormResponse: {
+    id: string;
+    createdDate: Date;
+    createdBy?: { id: string } | undefined;
+    answers: Array<{
+      questionID: string;
+      prompt: string;
+      type: CalloutFormQuestionType;
+      text?: string | undefined;
+      selectedOptions?: Array<{ id: string; label: string }> | undefined;
+    }>;
+  };
+};
+
+export type UpdateCalloutFormMutationVariables = Exact<{
+  formData: UpdateCalloutFormInput;
+}>;
+
+export type UpdateCalloutFormMutation = {
+  updateCalloutForm: {
+    id: string;
+    questions: Array<{
+      id: string;
+      prompt: string;
+      explanation?: string | undefined;
+      type: CalloutFormQuestionType;
+      required: boolean;
+      options?: Array<{ id: string; label: string }> | undefined;
+    }>;
+    settings: {
+      visibility: CalloutFormResponseVisibility;
+      responseMode: CalloutFormResponseMode;
+      state: CalloutFormState;
+    };
   };
 };
 
@@ -86128,6 +86992,72 @@ export type SpaceCalloutQuery = {
   };
 };
 
+export type CalloutFormResponsesQueryVariables = Exact<{
+  formID: Scalars["UUID"]["input"];
+  first?: InputMaybe<Scalars["Int"]["input"]>;
+  after?: InputMaybe<Scalars["UUID"]["input"]>;
+}>;
+
+export type CalloutFormResponsesQuery = {
+  lookup: {
+    calloutFormResponses: {
+      formID: string;
+      canReadAll: boolean;
+      canModerate: boolean;
+      mine: Array<{
+        id: string;
+        createdDate: Date;
+        createdBy?: { id: string } | undefined;
+        answers: Array<{
+          questionID: string;
+          prompt: string;
+          type: CalloutFormQuestionType;
+          text?: string | undefined;
+          selectedOptions?: Array<{ id: string; label: string }> | undefined;
+        }>;
+      }>;
+      all: {
+        total: number;
+        pageInfo: { hasNextPage: boolean; endCursor?: string | undefined };
+        responses: Array<{
+          id: string;
+          createdDate: Date;
+          createdBy?: { id: string } | undefined;
+          answers: Array<{
+            questionID: string;
+            prompt: string;
+            type: CalloutFormQuestionType;
+            text?: string | undefined;
+            selectedOptions?: Array<{ id: string; label: string }> | undefined;
+          }>;
+        }>;
+      };
+    };
+  };
+};
+
+export type CalloutContributionCountsQueryVariables = Exact<{
+  calloutId: Scalars["UUID"]["input"];
+}>;
+
+export type CalloutContributionCountsQuery = {
+  lookup: {
+    callout?:
+      | {
+          id: string;
+          contributions: Array<{ id: string }>;
+          contributionsCount: {
+            post: number;
+            whiteboard: number;
+            link: number;
+            memo: number;
+            collaboraDocument: number;
+          };
+        }
+      | undefined;
+  };
+};
+
 export type CalloutDetailsQueryVariables = Exact<{
   calloutId: Scalars["UUID"]["input"];
 }>;
@@ -86669,6 +87599,42 @@ export type CalloutStorageConfigQuery = {
   };
 };
 
+export type CalloutFormDefinitionQueryVariables = Exact<{
+  calloutId: Scalars["UUID"]["input"];
+}>;
+
+export type CalloutFormDefinitionQuery = {
+  lookup: {
+    callout?:
+      | {
+          id: string;
+          framing: {
+            id: string;
+            type: CalloutFramingType;
+            form?:
+              | {
+                  id: string;
+                  questions: Array<{
+                    id: string;
+                    prompt: string;
+                    explanation?: string | undefined;
+                    type: CalloutFormQuestionType;
+                    required: boolean;
+                    options?: Array<{ id: string; label: string }> | undefined;
+                  }>;
+                  settings: {
+                    visibility: CalloutFormResponseVisibility;
+                    responseMode: CalloutFormResponseMode;
+                    state: CalloutFormState;
+                  };
+                }
+              | undefined;
+          };
+        }
+      | undefined;
+  };
+};
+
 export type CalloutLinkContributionStorageConfigQueryVariables = Exact<{
   calloutId: Scalars["UUID"]["input"];
 }>;
@@ -87166,6 +88132,28 @@ export type CalloutFragment = {
   settings: { __typename: "CalloutSettings"; visibility: CalloutVisibility };
 };
 
+export type CalloutsSetFramingTypesQueryVariables = Exact<{
+  calloutsSetId: Scalars["UUID"]["input"];
+}>;
+
+export type CalloutsSetFramingTypesQuery = {
+  lookup: {
+    calloutsSet?:
+      | {
+          id: string;
+          callouts: Array<{
+            id: string;
+            framing: {
+              id: string;
+              type: CalloutFramingType;
+              profile: { displayName: string };
+            };
+          }>;
+        }
+      | undefined;
+  };
+};
+
 export type GetPostDataQueryVariables = Exact<{
   postId: Scalars["UUID"]["input"];
 }>;
@@ -87254,6 +88242,55 @@ export type GetPostDataQuery = {
             }>;
           };
           createdBy?: { email: string } | undefined;
+        }
+      | undefined;
+  };
+};
+
+export type SpaceCalloutsSetAndRoleSetQueryVariables = Exact<{
+  spaceId: Scalars["UUID"]["input"];
+}>;
+
+export type SpaceCalloutsSetAndRoleSetQuery = {
+  lookup: {
+    space?:
+      | {
+          id: string;
+          collaboration: { id: string; calloutsSet: { id: string } };
+          community: { id: string; roleSet: { id: string } };
+        }
+      | undefined;
+  };
+};
+
+export type TemplateContentSpaceCalloutsQueryVariables = Exact<{
+  templateId: Scalars["UUID"]["input"];
+}>;
+
+export type TemplateContentSpaceCalloutsQuery = {
+  lookup: {
+    template?:
+      | {
+          id: string;
+          contentSpace?:
+            | {
+                id: string;
+                collaboration: {
+                  id: string;
+                  calloutsSet: {
+                    id: string;
+                    callouts: Array<{
+                      id: string;
+                      framing: {
+                        id: string;
+                        type: CalloutFramingType;
+                        profile: { displayName: string };
+                      };
+                    }>;
+                  };
+                };
+              }
+            | undefined;
         }
       | undefined;
   };
