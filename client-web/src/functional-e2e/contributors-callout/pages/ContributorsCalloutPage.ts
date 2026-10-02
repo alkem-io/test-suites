@@ -18,6 +18,16 @@ import { Page, expect, Locator } from '@playwright/test';
  * All selectors were verified against a live CRD build; see the selector
  * contract at
  * `agents-hq/specs/009-contributors-callout-ui-tests/contracts/`.
+ *
+ * Feature 077 (richer contributor cards) adds the per-card row locators
+ * below (`cardFor`, `taglineOf`, `tagsOf`, `locationOf`, `bottomLineOf`,
+ * `actionsButton`, `menuItem`, `websiteLink`) per
+ * `agents-hq/specs/077-richer-contributor-cards/contracts/crd-contributor-card.md`
+ * §5 (the accessibility contract) — `actionsButton`/`websiteLink`/`menuItem`
+ * key off documented `aria-label`s and role text; `taglineOf`/`tagsOf`/
+ * `locationOf`/`bottomLineOf` key off the CSS utility classes / lucide icon
+ * class the contract's rendering rules (§4) name, since those rows carry no
+ * accessible name of their own.
  */
 export type ContributorType = 'People' | 'Organizations' | 'Virtual Contributors';
 
@@ -27,6 +37,11 @@ const ALL_CONTRIBUTOR_TYPES: ContributorType[] = [
   'Organizations',
   'Virtual Contributors',
 ];
+
+/** Escape a string for safe interpolation into a `RegExp` source. */
+function escapeForRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
 
 export class ContributorsCalloutPage {
   constructor(
@@ -207,6 +222,13 @@ export class ContributorsCalloutPage {
   collection(title: string) {
     const card = this.calloutCard(title);
     const region = card.getByRole('region', { name: 'Contributors', exact: true });
+    // The `li` carrying a card's exact-named profile link — feature 077's
+    // per-card row locators (tagline/tags/location/bottom line) are scoped to
+    // this container.
+    const cardFor = (name: string): Locator =>
+      region
+        .locator('li')
+        .filter({ has: region.getByRole('link', { name, exact: true }) });
     return {
       card,
       region,
@@ -227,8 +249,45 @@ export class ContributorsCalloutPage {
       emptyState: (): Locator => region.getByText('No contributors to show.'),
       emptySearchState: (): Locator =>
         region.getByText('No contributors match your search.'),
+      // Exact — after feature 077 an organisation card's website control also
+      // carries the organisation's name in its accessible name, so a
+      // substring match turns ambiguous under Playwright strict mode. Post-077
+      // every card exposes exactly one profile link (contract
+      // crd-contributor-card §5 / spec D-LINK / FR-016).
       contributorCard: (name: string): Locator =>
-        region.getByRole('link', { name }),
+        region.getByRole('link', { name, exact: true }),
+      cardFor,
+      // The tagline row (contract crd-contributor-card §4.2: `line-clamp-2`).
+      // Best-effort structural locator pending confirmation against the
+      // shipped markup — the contract names this CSS utility class as the
+      // row's distinguishing marker, since neither row carries a role/label.
+      taglineOf: (name: string): Locator =>
+        cardFor(name).locator('.line-clamp-2'),
+      // The tag pills (contract §4.3: each pill carries `title={tag}`).
+      tagsOf: (name: string): Locator => cardFor(name).locator('[title]'),
+      // The location row (contract §4.4: a decorative MapPin icon + text).
+      // lucide-react renders each icon with a deterministic `lucide-<name>`
+      // class; the row is that icon's immediate parent.
+      locationOf: (name: string): Locator =>
+        cardFor(name).locator('.lucide-map-pin').locator('xpath=..'),
+      // The bottom line (contract §4.5: `mt-auto`) — "Joined this space …" for
+      // users, "N associates in this organization" for organisations.
+      bottomLineOf: (name: string): Locator =>
+        cardFor(name).locator('.mt-auto'),
+      // "…" actions control (contract §5: `aria-label = "Actions for {{name}}"`).
+      actionsButton: (name: string): Locator =>
+        region.getByRole('button', {
+          name: new RegExp(`^Actions for ${escapeForRegExp(name)}`),
+        }),
+      // A menu item by its visible label ("View Profile" / "Message").
+      menuItem: (label: string): Locator =>
+        this.page.getByRole('menuitem', { name: label }),
+      // Organisation website control (contract §5: `aria-label = "Visit the
+      // website of {{name}} (opens in a new tab)"`).
+      websiteLink: (name: string): Locator =>
+        region.getByRole('link', {
+          name: new RegExp(`^Visit the website of ${escapeForRegExp(name)}`),
+        }),
       switchType: async (type: ContributorType) => {
         const tab = card.getByRole('tab', {
           name: new RegExp(`^${type}\\s*\\d`),
