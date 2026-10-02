@@ -283,33 +283,47 @@ export async function seedClassificationsSpace(
       : {}),
   };
 
-  const ids = await gqlOk<{
-    lookup: {
-      space: {
-        templatesManager: { templatesSet: { id: string } };
-        about: { profile: { tagset: { id: string } | null } };
+  // The tree exists from here on. If the rest of the seed fails, the spec never
+  // receives the fixture and its afterAll has nothing to delete — so roll the
+  // tree back here, then surface the original failure.
+  try {
+    const ids = await gqlOk<{
+      lookup: {
+        space: {
+          templatesManager: { templatesSet: { id: string } };
+          about: { profile: { tagset: { id: string } | null } };
+        };
       };
-    };
-  }>(
-    `query ClassificationsFixtureIds($spaceId: UUID!) {
-      lookup { space(ID: $spaceId) {
-        templatesManager { templatesSet { id } }
-        about { profile { tagset { id } } }
-      } }
-    }`,
-    { spaceId: fixture.spaceId },
-    TestUser.GLOBAL_ADMIN
-  );
-  fixture.templatesSetId = ids.lookup.space.templatesManager.templatesSet.id;
-  const tagsetId = ids.lookup.space.about.profile.tagset?.id;
-  if (!tagsetId) throw new Error('seeded Space About has no default tagset');
-  await gqlOk(
-    `mutation ClassificationsFixtureTags($data: UpdateTagsetInput!) {
-      updateTagset(updateData: $data) { id }
-    }`,
-    { data: { ID: tagsetId, tags: fixture.tags } },
-    TestUser.GLOBAL_ADMIN
-  );
+    }>(
+      `query ClassificationsFixtureIds($spaceId: UUID!) {
+        lookup { space(ID: $spaceId) {
+          templatesManager { templatesSet { id } }
+          about { profile { tagset { id } } }
+        } }
+      }`,
+      { spaceId: fixture.spaceId },
+      TestUser.GLOBAL_ADMIN
+    );
+    fixture.templatesSetId = ids.lookup.space.templatesManager.templatesSet.id;
+    const tagsetId = ids.lookup.space.about.profile.tagset?.id;
+    if (!tagsetId) throw new Error('seeded Space About has no default tagset');
+    await gqlOk(
+      `mutation ClassificationsFixtureTags($data: UpdateTagsetInput!) {
+        updateTagset(updateData: $data) { id }
+      }`,
+      { data: { ID: tagsetId, tags: fixture.tags } },
+      TestUser.GLOBAL_ADMIN
+    );
+  } catch (error) {
+    try {
+      await teardownClassificationsSpace(fixture);
+    } catch (rollbackError) {
+      throw new Error(
+        `classifications seed failed: ${String(error)}\nrollback of the half-seeded tree also failed: ${String(rollbackError)}`
+      );
+    }
+    throw error;
+  }
   return fixture;
 }
 
