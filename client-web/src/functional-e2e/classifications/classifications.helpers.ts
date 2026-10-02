@@ -125,6 +125,15 @@ export async function gotoTemplatesSettings(page: Page) {
   });
 }
 
+/**
+ * The CRD forbidden page's title — what the Space settings access guard renders
+ * for an authenticated non-admin on any /settings/* tab (client-web
+ * `useSpaceSettingsAccessGuard` → `CrdForbiddenPage`, `error.en.json › forbidden.title`).
+ */
+export function forbiddenHeading(page: Page): Locator {
+  return page.getByRole('heading', { name: 'Access Restricted', exact: true });
+}
+
 /** Public About surface. Callers settle on their own anchors (or a GraphQL sink). */
 export async function gotoAboutPage(page: Page) {
   await page.goto(`${spaceUrl()}/about`);

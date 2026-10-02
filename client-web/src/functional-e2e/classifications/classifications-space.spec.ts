@@ -47,6 +47,7 @@ import {
   entryKebab,
   entryKebabDom,
   entryLabelsInOrder,
+  forbiddenHeading,
   gotoAboutPage,
   gotoSettingsAbout,
   gotoTemplatesSettings,
@@ -1004,13 +1005,17 @@ test.describe('SL-07 viewer authorization negative (UI)', () => {
         await expect
           .poll(() => sink.texts.length, { timeout: 15_000 })
           .toBeGreaterThan(0);
-        // …and settled on whichever enforcement shape rendered: a redirect away from settings,
-        // or a rendered page (heading). Never a fixed wait.
+        // …and settled on an enforcement shape that belongs to THIS surface: a redirect away
+        // from settings, the CRD forbidden page the settings access guard renders for a
+        // member, or the About settings form itself. Page chrome (any heading) is not an
+        // anchor — the absence checks below would then run against a half-hydrated page and
+        // pass for the wrong reason. Never a fixed wait.
         await expect
           .poll(
             async () =>
               !page.url().includes('/settings/about') ||
-              (await page.getByRole('heading').count()) > 0,
+              (await forbiddenHeading(page).count()) > 0 ||
+              (await classificationsSection(page).count()) > 0,
             { timeout: 20_000 }
           )
           .toBe(true);
@@ -1033,6 +1038,7 @@ test.describe('SL-07 viewer authorization negative (UI)', () => {
         await expect
           .poll(() => sink.texts.length, { timeout: 15_000 })
           .toBeGreaterThan(0);
+        // Same surface-owned anchors: redirect, forbidden page, or the templates surface.
         await expect
           .poll(
             async () =>
@@ -1040,7 +1046,7 @@ test.describe('SL-07 viewer authorization negative (UI)', () => {
               (await page
                 .getByRole('textbox', { name: 'Search templates…' })
                 .count()) > 0 ||
-              (await page.getByRole('heading').count()) > 0,
+              (await forbiddenHeading(page).count()) > 0,
             { timeout: 20_000 }
           )
           .toBe(true);
