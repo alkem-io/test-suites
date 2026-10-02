@@ -33,7 +33,7 @@ import {
 } from './space-classifications.request.params';
 
 const uniqueId = UniqueIDGenerator.getID();
-let baseScenario: OrganizationWithSpaceModel;
+let baseScenario: OrganizationWithSpaceModel | undefined;
 let spaceId = '';
 let subspaceId = '';
 let templatesSetId = '';
@@ -84,8 +84,13 @@ afterAll(async () => {
     const res = await deleteSpace(id);
     if (res.error) failures.push(`space ${id}: ${JSON.stringify(res.error)}`);
   }
-  const org = await deleteOrganization(baseScenario.organization.id);
-  if (org.error) failures.push(`organization: ${JSON.stringify(org.error)}`);
+  // beforeAll may have thrown before the scenario was assigned; a TypeError here
+  // would only mask that failure.
+  const orgId = baseScenario?.organization.id;
+  if (orgId) {
+    const org = await deleteOrganization(orgId);
+    if (org.error) failures.push(`organization: ${JSON.stringify(org.error)}`);
+  }
   if (failures.length > 0)
     throw new Error(`teardown left entities behind:\n${failures.join('\n')}`);
 });
