@@ -96,6 +96,16 @@ export const isDenied = (
   return code !== undefined && DENIED_CLASSES.has(code);
 };
 
+/**
+ * True only for an authorization-policy denial. Use it for every negative of a
+ * SIGNED-IN persona: `isDenied` also accepts UNAUTHENTICATED, so a persona
+ * whose login silently failed would pass a "cannot do X" case for the wrong
+ * reason. Keep `isDenied` for anonymous callers.
+ */
+export const isForbiddenByPolicy = (
+  result: ErrorCarrier | RawErrorCarrier | undefined
+): boolean => errorClass(result) === 'FORBIDDEN_POLICY';
+
 /** The whole error payload as text — used to assert an answer never leaks. */
 export const errorText = (
   result: ErrorCarrier | RawErrorCarrier | undefined
@@ -399,6 +409,16 @@ export const submitFormResponseAnonymous = (
         responseData: { formID, acknowledgedVisibility, answers },
       },
     }
+  );
+
+const DELETE_MUTATION = `mutation($deleteData: DeleteCalloutFormResponseInput!) {
+  deleteCalloutFormResponse(deleteData: $deleteData) { id }
+}`;
+
+export const deleteFormResponseAnonymous = (responseID: string) =>
+  postGraphqlRaw<{ deleteCalloutFormResponse: { id: string } }>(
+    DELETE_MUTATION,
+    { variables: { deleteData: { responseID } } }
   );
 
 /** The same lookup with an arbitrary bearer (e.g. a disposable user). */
