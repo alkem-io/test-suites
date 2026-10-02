@@ -22,10 +22,6 @@ export default defineConfig({
     /* workspace#027: needs a stack running the 027 server AND client — run via
        config/playwright.config.platform-roles.ts (`pnpm run test:platform-roles`). */
     '**/platform-roles/**',
-    /* workspace#024: the classifications suites mutate one shared live Space
-       and must run single-worker — config/playwright.config.classifications.ts
-       (pnpm run test:classifications). */
-    '**/classifications/**',
   ],
   /* Run tests in files in parallel */
   fullyParallel: true,
