@@ -22,6 +22,10 @@ export default defineConfig({
     /* workspace#027: needs a stack running the 027 server AND client — run via
        config/playwright.config.platform-roles.ts (`pnpm run test:platform-roles`). */
     '**/platform-roles/**',
+    /* workspace#080: the Form walks need the Kratos admin API and the platform
+       admin password — run via config/playwright.config.form-callout-framing.ts
+       (`pnpm run test:form-callout-framing`). */
+    '**/form-callout-framing/**',
   ],
   /* Run tests in files in parallel */
   fullyParallel: true,
