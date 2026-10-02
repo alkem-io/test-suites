@@ -1,21 +1,15 @@
 /**
- * SHARED console guard for BOTH 024-classifications suites (adjudicated
- * cross-cutting decision #1). Read-only code sharing — the module holds no
- * mutable state, so the suites' disjoint-mutable-state rule is untouched.
+ * Console guard shared by both 024-classifications suites.
  *
- * Ownership: the space-lifecycle implementer owns this file (like the
- * classifications playwright config); the templates-library suite IMPORTS
- * from here but never edits it.
- *
- * Contract:
- * - `attachConsoleGuard(page)` collects BOTH console.error messages AND
- *   uncaught page exceptions (`pageerror`) — an uncaught exception on a
- *   classification surface must fail the test, not pass silently.
- * - `assertConsoleClean(guard, label)` fails only on entries that reference
- *   classification surfaces or GraphQL (never a blanket "no console errors"
- *   flake factory), after filtering the shared noise allowlist and any
- *   per-test `guard.allow` additions (e.g. intentionally provoked duplicate
- *   conflicts in SL-02/SL-06).
+ * A crash tripwire, not an oracle: it pins no acceptance criterion and is not
+ * counted as coverage in the plan. It fails a walk on
+ * - any uncaught page exception (`pageerror`), and
+ * - console errors that reference classification surfaces or GraphQL,
+ *   including a failed load of the GraphQL endpoint itself (HTTP 4xx/5xx or a
+ *   network error on /graphql), which the generic asset-noise list would
+ *   otherwise swallow.
+ * Shared noise and per-test `guard.allow` additions (errors a scenario provokes
+ * on purpose) are filtered out. It is attached to every page a test opens.
  */
 
 import { expect, type Page } from '@playwright/test';
@@ -45,6 +39,10 @@ export const GUARD_NOISE: RegExp[] = [
   /React DevTools|Download the React DevTools/i,
 ];
 
+/** A failed request to the GraphQL endpoint is never asset noise. */
+const isGraphQLTransportFailure = (entry: string) =>
+  /graphql/i.test(entry) && /Failed to load resource|net::ERR_/i.test(entry);
+
 /** Only errors that reference classification surfaces or GraphQL fail a test. */
 export const GUARD_RELEVANT: RegExp[] = [/classif/i, /graphql/i, /apollo/i];
 
@@ -72,7 +70,11 @@ export function assertConsoleClean(guard: ConsoleGuard, label: string) {
         entry.startsWith('[pageerror]') ||
         GUARD_RELEVANT.some(pattern => pattern.test(entry))
     )
-    .filter(entry => !GUARD_NOISE.some(pattern => pattern.test(entry)))
+    .filter(
+      entry =>
+        isGraphQLTransportFailure(entry) ||
+        !GUARD_NOISE.some(pattern => pattern.test(entry))
+    )
     .filter(entry => !guard.allow.some(pattern => pattern.test(entry)));
   expect(
     offenders,
