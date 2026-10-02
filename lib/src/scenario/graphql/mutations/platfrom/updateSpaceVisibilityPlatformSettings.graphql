@@ -1,0 +1,12 @@
+mutation UpdateSpaceVisibilityPlatformSettings(
+  $spaceId: UUID!
+  $visibility: SpaceVisibility!
+) {
+  updateSpacePlatformSettings(
+    updateData: { spaceID: $spaceId, visibility: $visibility }
+  ) {
+    id
+    visibility
+    __typename
+  }
+}

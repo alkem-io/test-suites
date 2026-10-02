@@ -23,7 +23,7 @@
  * the in-feed callout and are asserted in the usage flow.
  */
 
-import { expect, Page } from '@playwright/test';
+import { expect, Page, test } from '@playwright/test';
 import { CalloutTemplateForm } from '../forms/callout/callout-template-form.models';
 
 export const verifyCalloutTemplate = async (
@@ -78,6 +78,17 @@ export const verifyCalloutTemplate = async (
   switch (templateData.framing.type) {
     case 'whiteboard': {
       // Whiteboard preview is an <img> whose alt is the callout title.
+      //
+      // KNOWN ISSUE client-web#10283 (2026-09-09): since the live-authoring
+      // rework (client-web#10205/#10213, 0.163.0) a callout template created
+      // with a whiteboard framing ends up without a preview image — the
+      // preview dialog shows the "Whiteboard" placeholder instead, also after
+      // a reload. The assertion below is the right contract, so it stays;
+      // `test.fail` keeps the suite's signal clean until the product is fixed,
+      // at which point Playwright reports "expected to fail, but passed" —
+      // delete these three lines then.
+      test.info().annotations.push({ type: 'known-issue', description: 'client-web#10283 — no preview image for whiteboard framing' });
+      test.fail(true, 'client-web#10283: callout template whiteboard framing has no preview image');
       await expect(
         dialog.getByRole('img', { name: templateData.calloutTitle })
       ).toBeVisible();

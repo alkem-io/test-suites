@@ -66,6 +66,10 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_REPOSITORY: ${{ github.repository }}
+          # publish-report.sh scrubs this literal from every text file in the
+          # staged report (traces/videos are deleted outright) before the
+          # push to the PUBLIC gh-pages branch. Never echoed.
+          AUTH_TEST_HARNESS_PASSWORD: ${{ secrets.AUTH_TEST_HARNESS_PASSWORD }}
         run: |
           bash scripts/publish-report.sh \
             "playwright" \

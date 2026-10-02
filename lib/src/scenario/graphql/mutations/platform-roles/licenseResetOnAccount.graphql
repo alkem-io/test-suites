@@ -1,0 +1,5 @@
+mutation licenseResetOnAccount($resetData: AccountLicenseResetInput!) {
+  licenseResetOnAccount(resetData: $resetData) {
+    id
+  }
+}

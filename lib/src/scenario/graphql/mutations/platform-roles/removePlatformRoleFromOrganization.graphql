@@ -1,0 +1,5 @@
+mutation removePlatformRoleFromOrganization($roleData: RemovePlatformRoleInput!) {
+  removePlatformRoleFromOrganization(roleData: $roleData) {
+    id
+  }
+}

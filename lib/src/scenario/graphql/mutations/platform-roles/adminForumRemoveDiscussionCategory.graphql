@@ -1,0 +1,6 @@
+mutation adminForumRemoveDiscussionCategory($removeData: ForumRemoveDiscussionCategoryInput!) {
+  adminForumRemoveDiscussionCategory(removeData: $removeData) {
+    id
+    discussionCategories
+  }
+}

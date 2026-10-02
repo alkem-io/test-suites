@@ -1,0 +1,7 @@
+mutation mintMcpApiKey($mintData: MintMcpApiKeyInput!) {
+  mintMcpApiKey(mintData: $mintData) {
+    key {
+      id
+    }
+  }
+}

@@ -1,0 +1,22 @@
+mutation CreateSpacesCollectionCallout(
+  $calloutData: CreateCalloutOnCalloutsSetInput!
+) {
+  createCalloutOnCalloutsSet(calloutData: $calloutData) {
+    id
+    framing {
+      id
+      type
+    }
+    settings {
+      framing {
+        spaces {
+          cardVariant
+        }
+        selection {
+          mode
+          selectedIds
+        }
+      }
+    }
+  }
+}

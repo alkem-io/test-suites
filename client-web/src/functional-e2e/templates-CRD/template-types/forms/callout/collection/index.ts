@@ -11,6 +11,7 @@
 import { Locator, Page, expect } from '@playwright/test';
 import { CalloutTemplateResponseCollection } from '../callout-template-form.models';
 import {
+  closeWhiteboardEditor,
   getWhiteboardEditorDialog,
   writeTextInWhiteboardDialog,
 } from '../../whiteboards/whiteboard-dialog';
@@ -112,21 +113,19 @@ export const selectAndFillCalloutCollection = async (
       await defaultsDialog
         .getByRole('textbox', { name: 'Default title' })
         .fill(collection.defaultTitle);
-      // The "Default whiteboard" section has two Edit buttons (icon-only
-      // thumbnail and labeled). The labeled one - last in DOM order - opens
-      // the Excalidraw editor. (NB: `openWhiteboardEditor` from
-      // whiteboard-dialog.ts looks for `Start drawing` / `Edit drawing`
-      // which only exist in the standalone whiteboard-template form, not
-      // here.)
-      await defaultsDialog
-        .getByRole('button', { name: 'Edit', exact: true })
-        .last()
-        .click();
+      // Since the whiteboard-draft rework (server#6399 removed
+      // `Whiteboard.content`; client-web#10205/#10213) the default whiteboard
+      // is a server-owned DRAFT that is materialised asynchronously when the
+      // defaults dialog opens. Its labelled "Edit" button (the icon-only
+      // thumbnail one comes first in DOM order) therefore appears with a delay
+      // — wait for it explicitly instead of the default 5 s expect budget.
+      const editDrawing = defaultsDialog.getByRole('button', { name: 'Edit', exact: true }).last();
+      await expect(editDrawing).toBeVisible({ timeout: 20_000 });
+      await editDrawing.click();
       const editorDialog = await getWhiteboardEditorDialog(page);
       await writeTextInWhiteboardDialog(editorDialog, collection.textInWhiteboard);
-      await editorDialog.getByRole('button', { name: 'Save' }).click();
-      await expect(editorDialog).not.toBeVisible();
-      await defaultsDialog.getByRole('button', { name: 'Save' }).click();
+      await closeWhiteboardEditor(editorDialog);
+      await defaultsDialog.getByRole('button', { name: 'Save', exact: true }).click();
       await expect(defaultsDialog).not.toBeVisible();
       return;
     }

@@ -1,7 +1,6 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+ 
 import {
   deleteMailSlurperMails,
-  getMailsData,
   TestScenarioConfig,
   TestScenarioFactory,
   TestUserManager,
@@ -19,7 +18,7 @@ import {
 } from '@functional-api/communications/communication.params';
 import { updateUserSettings } from '@functional-api/contributor-management/user/user.request.params';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
-import { notif } from '../../notification.helpers';
+import { notif, getMailsDataSettled } from '../../notification.helpers';
 
 // Notification settings for post comment events
 const postCommentNotificationSettings = {
@@ -240,13 +239,12 @@ describe('Notifications - post comments', () => {
       );
       messageId = messageRes?.data?.sendMessageToRoom.id ?? '';
 
-      await delay(1000);
-      const mails = await getMailsData();
+      const mails = await getMailsDataSettled(0);
       expect(mails[1]).toEqual(0);
     });
 
     test('HM create comment - GA(1) get notifications', async () => {
-      const spacePostSubjectText = `${baseScenario.space.about.profile.displayName} - New comment received on your Post &#34;${postDisplayName}&#34;, have a look!`;
+      const spacePostSubjectText = `${baseScenario.space.about.profile.displayName} - New comment received on the Post &#34;${postDisplayName}&#34;, have a look!`;
       // Act
       const messageRes = await sendMessageToRoom(
         postCommentsIdSpace,
@@ -255,8 +253,7 @@ describe('Notifications - post comments', () => {
       );
       messageId = messageRes?.data?.sendMessageToRoom.id ?? '';
 
-      await delay(1000);
-      const mails = await getMailsData();
+      const mails = await getMailsDataSettled(1);
 
       expect(mails[0]).toEqual(
         expect.arrayContaining([
@@ -298,14 +295,13 @@ describe('Notifications - post comments', () => {
       );
       messageId = messageRes?.data?.sendMessageToRoom.id ?? '';
 
-      await delay(1000);
-      const mails = await getMailsData();
+      const mails = await getMailsDataSettled(0);
 
       expect(mails[1]).toEqual(0);
     });
 
     test('HA create comment - HM(1) get notifications', async () => {
-      const spacePostSubjectText = `${baseScenario.space.about.profile.displayName} - New comment received on your Post &#34;${postDisplayName}&#34;, have a look!`;
+      const spacePostSubjectText = `${baseScenario.space.about.profile.displayName} - New comment received on the Post &#34;${postDisplayName}&#34;, have a look!`;
       // Act
       const messageRes = await sendMessageToRoom(
         postCommentsIdSpace,
@@ -314,8 +310,7 @@ describe('Notifications - post comments', () => {
       );
       messageId = messageRes?.data?.sendMessageToRoom.id ?? '';
 
-      await delay(1000);
-      const mails = await getMailsData();
+      const mails = await getMailsDataSettled(1);
 
       expect(mails[0]).toEqual(
         expect.arrayContaining([
@@ -357,14 +352,13 @@ describe('Notifications - post comments', () => {
       );
       messageId = messageRes?.data?.sendMessageToRoom.id ?? '';
 
-      await delay(1000);
-      const mails = await getMailsData();
+      const mails = await getMailsDataSettled(0);
 
       expect(mails[1]).toEqual(0);
     });
 
     test('CA create comment - CM(1) get notifications', async () => {
-      const subspacePostSubjectText = `${baseScenario.subspace.about.profile.displayName} - New comment received on your Post &#34;${postDisplayName}&#34;, have a look!`;
+      const subspacePostSubjectText = `${baseScenario.subspace.about.profile.displayName} - New comment received on the Post &#34;${postDisplayName}&#34;, have a look!`;
       // Act
       const messageRes = await sendMessageToRoom(
         postCommentsIdSubspace,
@@ -373,8 +367,7 @@ describe('Notifications - post comments', () => {
       );
       messageId = messageRes?.data?.sendMessageToRoom.id ?? '';
 
-      await delay(1000);
-      const mails = await getMailsData();
+      const mails = await getMailsDataSettled(1);
 
       expect(mails[0]).toEqual(
         expect.arrayContaining([
@@ -416,14 +409,13 @@ describe('Notifications - post comments', () => {
       );
       messageId = messageRes?.data?.sendMessageToRoom.id ?? '';
 
-      await delay(1000);
-      const mails = await getMailsData();
+      const mails = await getMailsDataSettled(0);
 
       expect(mails[1]).toEqual(0);
     });
 
     test('CA create comment - OM(1) get notifications', async () => {
-      const subsubspacePostSubjectText = `${baseScenario.subsubspace.about.profile.displayName} - New comment received on your Post &#34;${postDisplayName}&#34;, have a look!`;
+      const subsubspacePostSubjectText = `${baseScenario.subsubspace.about.profile.displayName} - New comment received on the Post &#34;${postDisplayName}&#34;, have a look!`;
       // Act
       const messageRes = await sendMessageToRoom(
         postCommentsIdSubsubspace,
@@ -432,8 +424,7 @@ describe('Notifications - post comments', () => {
       );
       messageId = messageRes?.data?.sendMessageToRoom.id ?? '';
 
-      await delay(1000);
-      const mails = await getMailsData();
+      const mails = await getMailsDataSettled(1);
 
       expect(mails[0]).toEqual(
         expect.arrayContaining([
@@ -469,8 +460,7 @@ describe('Notifications - post comments', () => {
     );
 
     // Assert
-    await delay(1500);
-    const mails = await getMailsData();
+    const mails = await getMailsDataSettled(0);
 
     expect(mails[1]).toEqual(0);
   });

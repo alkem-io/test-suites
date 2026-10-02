@@ -88,11 +88,16 @@ async function readSuggestedLanguage(page: Page, email: string): Promise<string 
 }
 
 async function openInviteDialog(page: Page): Promise<void> {
-  // Community tab (client-side ?tab=2 — see CrdSpaceRoutes: Community === section 2).
+  // The invite affordance moved from the space Community tab to
+  // Space Settings -> Community (CrdSpaceSettingsPage wires
+  // SpaceSettingsCommunityView's onInviteUsers -> InviteMembersDialogConnector).
+  // The community tab's old "Invite Member" button is gone; the settings
+  // button is spaceSettings:community.members.invite — "Invite" (en) /
+  // "Uitnodigen" (nl).
   const { nameId } = await resolveSpace(page);
-  await page.goto(`${BASE_URL}/${nameId}?tab=2`);
-  // crd-space:members.inviteMember — "Invite Member" (en) / "Lid uitnodigen" (nl).
-  const inviteButton = page.getByRole('button', { name: /^(Invite Member|Lid uitnodigen)$/i });
+  await page.goto(`${BASE_URL}/${nameId}/settings`);
+  await page.getByRole('tab', { name: 'Community' }).click();
+  const inviteButton = page.getByRole('button', { name: /^(Invite|Uitnodigen)$/ });
   await inviteButton.waitFor({ state: 'visible', timeout: 25_000 });
   await inviteButton.click();
   await expect(page.getByRole('dialog', { name: /Invite others to join/i })).toBeVisible({ timeout: 15_000 });

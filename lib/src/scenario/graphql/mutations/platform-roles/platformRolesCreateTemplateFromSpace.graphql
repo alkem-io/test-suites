@@ -1,0 +1,7 @@
+# Minimal selection ON PURPOSE: the shared `CreateTemplateFromSpace` document
+# selects the content space and its collaboration.
+mutation PlatformRolesCreateTemplateFromSpace($templateData: CreateTemplateFromSpaceOnTemplatesSetInput!) {
+  createTemplateFromSpace(templateData: $templateData) {
+    id
+  }
+}

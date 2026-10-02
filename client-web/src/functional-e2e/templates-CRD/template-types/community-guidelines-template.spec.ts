@@ -13,6 +13,7 @@ import { randomBytes } from 'crypto';
 import { CommunityGuidelinesTemplateForm } from './forms/template-form.models';
 import { fillCommunityGuidelinesForm } from './forms/community-guidelines-template-form';
 import { verifyCommunityGuidelinesTemplate } from './verify/community-guidelines-template-verify';
+import { sectionAddNewButton } from './section-helpers';
 
 // Create the authenticated fixture with a unique storage state name for this test suite
 const { test, setupAuthentication, teardownAuthentication } =
@@ -116,8 +117,11 @@ test.describe.serial('Community Guidelines Template', () => {
       page.getByRole('button', { name: /^Community guidelines templates/ })
     ).toBeVisible();
 
-    // Open the "Add new" menu for the Community guidelines section (5th section)
-    await page.getByRole('button', { name: 'Add new' }).nth(4).click();
+    // Open the "Add new" menu for the Community guidelines section. Scope by
+    // the section's own name instead of a positional nth(): the redesigned
+    // settings page inserted a "Classification templates" section, which
+    // silently shifted the old nth(4) onto the wrong section.
+    await sectionAddNewButton(page, /^Community guidelines templates/).click();
     await page.getByRole('menuitem', { name: 'Create new' }).click();
 
     // Wait for the Community Guidelines Template creation dialog to appear

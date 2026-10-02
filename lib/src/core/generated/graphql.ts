@@ -57,7 +57,6 @@ export type Scalars = {
     input: import("graphql-upload").FileUpload;
     output: import("graphql-upload").FileUpload;
   };
-  WhiteboardContent: { input: any; output: any };
 };
 
 export type Apm = {
@@ -121,6 +120,32 @@ export type AccountInnovationPacksArgs = {
 export type AccountAuthorizationResetInput = {
   /** The identifier of the Account whose Authorization Policy should be reset. */
   accountID: Scalars["UUID"]["input"];
+};
+
+/** One item blocking a user from deleting their own account — a space, virtual contributor, innovation pack, innovation hub, or an organization the user is the sole owner of. */
+export type AccountDeletionBlocker = {
+  displayName: Scalars["String"]["output"];
+  kind: AccountDeletionBlockerKind;
+  resourceID: Scalars["UUID"]["output"];
+  /** True when the user can resolve the blocker alone, via the existing account-resources page. False for a sole-owned organization — ownership must be handed over, or support contacted. */
+  selfResolvable: Scalars["Boolean"]["output"];
+  /** Client-navigable URL of the blocking resource, when one exists. */
+  url?: Maybe<Scalars["String"]["output"]>;
+};
+
+/** The kind of resource blocking a user from deleting their own account. */
+export enum AccountDeletionBlockerKind {
+  AccountInnovationHub = "ACCOUNT_INNOVATION_HUB",
+  AccountInnovationPack = "ACCOUNT_INNOVATION_PACK",
+  AccountSpace = "ACCOUNT_SPACE",
+  AccountVirtualContributor = "ACCOUNT_VIRTUAL_CONTRIBUTOR",
+  SoleOrganizationOwner = "SOLE_ORGANIZATION_OWNER",
+}
+
+/** Accurate per-kind total, independent of whether the itemized blocker list was truncated. */
+export type AccountDeletionBlockerTotal = {
+  kind: AccountDeletionBlockerKind;
+  total: Scalars["Int"]["output"];
 };
 
 export type AccountLicensePlan = {
@@ -653,6 +678,17 @@ export type AddVisualToMediaGalleryInput = {
   visualType: VisualType;
 };
 
+export type AdminCommunicationReconcileForumHierarchyInput = {
+  /** Report-only when true (the default): compute drift and write nothing. Set false to apply the two-phase convergence. */
+  dryRun?: Scalars["Boolean"]["input"];
+  /** Cumulative adapter write budget for this invocation. When exceeded mid-pass the remaining parents are reported failed rather than attempted, and a re-invocation converges the rest. */
+  maxOperations?: Scalars["Int"]["input"];
+  /** When applying (dryRun=false), also remove extra edges whose child no longer resolves to any Alkemio room (a deleted discussion’s ghost edge). Never removes a space. */
+  pruneUnknown?: Scalars["Boolean"]["input"];
+  /** Opt-in repair of the room-side m.space.parent pointer on touched children, under its own separate and lower write budget. Off by default: the underlying operation can admin-join the bot into rooms people read. */
+  repairRoomParentPointers?: Scalars["Boolean"]["input"];
+};
+
 export type AdminRevokeMcpApiKeyInput = {
   keyID: Scalars["UUID"]["input"];
   /** Owner of the key. Required — it scopes the revoke and the audit subject. */
@@ -892,6 +928,10 @@ export enum AuthorizationCredential {
   AccountAdmin = "ACCOUNT_ADMIN",
   AssistantAccess = "ASSISTANT_ACCESS",
   BetaTester = "BETA_TESTER",
+  FeatureBetaTester = "FEATURE_BETA_TESTER",
+  FeatureOrganizationCreator = "FEATURE_ORGANIZATION_CREATOR",
+  FeatureVcCampaign = "FEATURE_VC_CAMPAIGN",
+  FeatureVirtualAssistant = "FEATURE_VIRTUAL_ASSISTANT",
   GlobalAdmin = "GLOBAL_ADMIN",
   GlobalAnonymous = "GLOBAL_ANONYMOUS",
   GlobalCommunityRead = "GLOBAL_COMMUNITY_READ",
@@ -905,7 +945,16 @@ export enum AuthorizationCredential {
   OrganizationAdmin = "ORGANIZATION_ADMIN",
   OrganizationAssociate = "ORGANIZATION_ASSOCIATE",
   OrganizationOwner = "ORGANIZATION_OWNER",
+  PlatformAuditReader = "PLATFORM_AUDIT_READER",
+  PlatformContentFullAccess = "PLATFORM_CONTENT_FULL_ACCESS",
+  PlatformLicenseManager = "PLATFORM_LICENSE_MANAGER",
   PlatformOperationsAdmin = "PLATFORM_OPERATIONS_ADMIN",
+  PlatformResourceAdmin = "PLATFORM_RESOURCE_ADMIN",
+  PlatformRolesAdmin = "PLATFORM_ROLES_ADMIN",
+  PlatformSettingsAdmin = "PLATFORM_SETTINGS_ADMIN",
+  PlatformSpacesReader = "PLATFORM_SPACES_READER",
+  PlatformSupport = "PLATFORM_SUPPORT",
+  PlatformUsersAdmin = "PLATFORM_USERS_ADMIN",
   SpaceAdmin = "SPACE_ADMIN",
   SpaceLead = "SPACE_LEAD",
   SpaceMember = "SPACE_MEMBER",
@@ -1018,6 +1067,9 @@ export enum AuthorizationPrivilege {
   CreateVirtual = "CREATE_VIRTUAL",
   CreateWhiteboard = "CREATE_WHITEBOARD",
   Delete = "DELETE",
+  DeleteOrganization = "DELETE_ORGANIZATION",
+  FeatureRoleAssign = "FEATURE_ROLE_ASSIGN",
+  FeatureRoleHoldersRead = "FEATURE_ROLE_HOLDERS_READ",
   FileDelete = "FILE_DELETE",
   FileUpload = "FILE_UPLOAD",
   Grant = "GRANT",
@@ -1027,8 +1079,15 @@ export enum AuthorizationPrivilege {
   MovePost = "MOVE_POST",
   MoveTask = "MOVE_TASK",
   PlatformAdmin = "PLATFORM_ADMIN",
+  PlatformAuditRead = "PLATFORM_AUDIT_READ",
+  PlatformContentFullAccess = "PLATFORM_CONTENT_FULL_ACCESS",
+  PlatformForumManage = "PLATFORM_FORUM_MANAGE",
   PlatformOperationsAdmin = "PLATFORM_OPERATIONS_ADMIN",
+  PlatformRoleHoldersRead = "PLATFORM_ROLE_HOLDERS_READ",
   PlatformSettingsAdmin = "PLATFORM_SETTINGS_ADMIN",
+  PlatformSupportListsRead = "PLATFORM_SUPPORT_LISTS_READ",
+  PlatformSupportOrgResources = "PLATFORM_SUPPORT_ORG_RESOURCES",
+  PlatformUsersAdmin = "PLATFORM_USERS_ADMIN",
   PublicShare = "PUBLIC_SHARE",
   Read = "READ",
   ReadAbout = "READ_ABOUT",
@@ -1047,12 +1106,14 @@ export enum AuthorizationPrivilege {
   RolesetEntryRoleInvite = "ROLESET_ENTRY_ROLE_INVITE",
   RolesetEntryRoleInviteAccept = "ROLESET_ENTRY_ROLE_INVITE_ACCEPT",
   RolesetEntryRoleJoin = "ROLESET_ENTRY_ROLE_JOIN",
+  SetServiceProfile = "SET_SERVICE_PROFILE",
   TransferResourceAccept = "TRANSFER_RESOURCE_ACCEPT",
   TransferResourceOffer = "TRANSFER_RESOURCE_OFFER",
   Update = "UPDATE",
   UpdateCalloutPublisher = "UPDATE_CALLOUT_PUBLISHER",
   UpdateContent = "UPDATE_CONTENT",
   UpdateInnovationFlow = "UPDATE_INNOVATION_FLOW",
+  UpdateNameid = "UPDATE_NAMEID",
 }
 
 export type Calendar = {
@@ -1221,8 +1282,8 @@ export type CalloutContributionDefaults = {
   postDescription?: Maybe<Scalars["Markdown"]["output"]>;
   /** The date at which the entity was last updated. */
   updatedDate: Scalars["DateTime"]["output"];
-  /** The default whiteboard content for whiteboard responses. */
-  whiteboardContent?: Maybe<Scalars["WhiteboardContent"]["output"]>;
+  /** Whether this Callout has a non-empty default for Whiteboard contributions. */
+  whiteboardContentAvailable: Scalars["Boolean"]["output"];
 };
 
 export enum CalloutContributionType {
@@ -1393,6 +1454,13 @@ export type CalloutSettingsFraming = {
   contributors?: Maybe<CalloutContributorsSettings>;
   /** Manual-selection settings for collection callouts (CONTRIBUTORS or SPACES). Absent / null ⇒ AUTO (full computed set). */
   selection?: Maybe<CalloutSelectionSettings>;
+  /** Card-variant settings for a Subspaces collection callout. Present only on SPACES callouts. Absent / null ⇒ COMPACT. */
+  spaces?: Maybe<CalloutSpacesSettings>;
+};
+
+export type CalloutSpacesSettings = {
+  /** The card variant to render for each subspace: COMPACT (default) or EXPANDED. */
+  cardVariant: SpaceCollectionCardVariant;
 };
 
 export enum CalloutVisibility {
@@ -1572,6 +1640,8 @@ export type CollaborationMigrationResult = {
   flaggedDocuments: Array<CollaborationMigrationIssue>;
   migrated: Scalars["Int"]["output"];
   total: Scalars["Int"]["output"];
+  /** Legacy Whiteboard contribution defaults without a complete owning Callout path. */
+  unattached: Scalars["Int"]["output"];
 };
 
 export type Communication = {
@@ -2057,17 +2127,27 @@ export type CreateCalloutContributionData = {
 export type CreateCalloutContributionDefaultsData = {
   /** The default title to use for new contributions. */
   defaultDisplayName?: Maybe<Scalars["String"]["output"]>;
+  /** Use a server-owned live Whiteboard contribution-default draft. Mutually exclusive with either source field. */
+  draftWhiteboardID?: Maybe<Scalars["UUID"]["output"]>;
   /** The default description to use for new Post contributions. */
   postDescription?: Maybe<Scalars["Markdown"]["output"]>;
-  whiteboardContent?: Maybe<Scalars["WhiteboardContent"]["output"]>;
+  /** Copy the internal Whiteboard contribution default from this source Callout. Mutually exclusive with sourceWhiteboardID. */
+  sourceCalloutID?: Maybe<Scalars["UUID"]["output"]>;
+  /** Seed the default from an existing Whiteboard. The server copies its content and media into the owning Callout bucket; the source id is not persisted. */
+  sourceWhiteboardID?: Maybe<Scalars["UUID"]["output"]>;
 };
 
 export type CreateCalloutContributionDefaultsInput = {
   /** The default title to use for new contributions. */
   defaultDisplayName?: InputMaybe<Scalars["String"]["input"]>;
+  /** Use a server-owned live Whiteboard contribution-default draft. Mutually exclusive with either source field. */
+  draftWhiteboardID?: InputMaybe<Scalars["UUID"]["input"]>;
   /** The default description to use for new Post contributions. */
   postDescription?: InputMaybe<Scalars["Markdown"]["input"]>;
-  whiteboardContent?: InputMaybe<Scalars["WhiteboardContent"]["input"]>;
+  /** Copy the internal Whiteboard contribution default from this source Callout. Mutually exclusive with sourceWhiteboardID. */
+  sourceCalloutID?: InputMaybe<Scalars["UUID"]["input"]>;
+  /** Seed the default from an existing Whiteboard. The server copies its content and media into the owning Callout bucket; the source id is not persisted. */
+  sourceWhiteboardID?: InputMaybe<Scalars["UUID"]["input"]>;
 };
 
 export type CreateCalloutContributionInput = {
@@ -2253,6 +2333,8 @@ export type CreateCalloutSettingsFramingData = {
   contributors?: Maybe<CreateCalloutContributorsSettingsData>;
   /** Manual-selection settings for collection callouts (CONTRIBUTORS or SPACES). Provide only when framing.type ∈ {CONTRIBUTORS, SPACES}. */
   selection?: Maybe<CreateCalloutSelectionSettingsData>;
+  /** Card-variant settings. Provide only when framing.type = SPACES. */
+  spaces?: Maybe<CreateCalloutSpacesSettingsData>;
 };
 
 export type CreateCalloutSettingsFramingInput = {
@@ -2262,6 +2344,8 @@ export type CreateCalloutSettingsFramingInput = {
   contributors?: InputMaybe<CreateCalloutContributorsSettingsInput>;
   /** Manual-selection settings for collection callouts (CONTRIBUTORS or SPACES). Provide only when framing.type ∈ {CONTRIBUTORS, SPACES}. */
   selection?: InputMaybe<CreateCalloutSelectionSettingsInput>;
+  /** Card-variant settings. Provide only when framing.type = SPACES. */
+  spaces?: InputMaybe<CreateCalloutSpacesSettingsInput>;
 };
 
 export type CreateCalloutSettingsInput = {
@@ -2269,6 +2353,16 @@ export type CreateCalloutSettingsInput = {
   framing?: InputMaybe<CreateCalloutSettingsFramingInput>;
   /** Visibility of the Callout. Defaults to PUBLISHED. */
   visibility?: InputMaybe<CalloutVisibility>;
+};
+
+export type CreateCalloutSpacesSettingsData = {
+  /** The card variant (COMPACT or EXPANDED). Defaults to COMPACT when omitted. */
+  cardVariant?: Maybe<SpaceCollectionCardVariant>;
+};
+
+export type CreateCalloutSpacesSettingsInput = {
+  /** The card variant (COMPACT or EXPANDED). Defaults to COMPACT when omitted. */
+  cardVariant?: InputMaybe<SpaceCollectionCardVariant>;
 };
 
 export type CreateCalloutTaskBoardData = {
@@ -2373,6 +2467,8 @@ export type CreateContributionOnCalloutInput = {
   link?: InputMaybe<CreateLinkInput>;
   memo?: InputMaybe<CreateMemoInput>;
   post?: InputMaybe<CreatePostInput>;
+  /** Send the space-member and space-admin contribution notifications. Defaults to true; only an explicit false suppresses. The activity log entry is written regardless. */
+  sendNotification?: InputMaybe<Scalars["Boolean"]["input"]>;
   /** The sort order to assign to this Contribution. */
   sortOrder?: InputMaybe<Scalars["Float"]["input"]>;
   /** The Tasks board column this task starts in. Only valid when the parent Callout is a Tasks board; defaults to the first column. */
@@ -2429,7 +2525,7 @@ export type CreateInnovationFlowStateSettingsData = {
   descriptionDisplayMode?: Maybe<CalloutDescriptionDisplayMode>;
   /** Optional. Whether Posts in this State show publish details in the feed. Defaults to true when omitted. */
   showPublishDetails?: Maybe<Scalars["Boolean"]["output"]>;
-  /** Optional. Ordered sidebar widgets; defaults to [INTENT, CREATE_POST, APPLICATION_BUTTON, INDEX] when omitted. */
+  /** Optional. Ordered sidebar widgets; defaults to [INTENT, CREATE_POST, APPLICATION_BUTTON, SEARCH, INDEX] when omitted. */
   sidebar?: Maybe<Array<SidebarWidget>>;
   /** Optional. Whether the phase is shown in member-facing navigation. Defaults to true when omitted. */
   visible?: Maybe<Scalars["Boolean"]["output"]>;
@@ -2442,7 +2538,7 @@ export type CreateInnovationFlowStateSettingsInput = {
   descriptionDisplayMode?: InputMaybe<CalloutDescriptionDisplayMode>;
   /** Optional. Whether Posts in this State show publish details in the feed. Defaults to true when omitted. */
   showPublishDetails?: InputMaybe<Scalars["Boolean"]["input"]>;
-  /** Optional. Ordered sidebar widgets; defaults to [INTENT, CREATE_POST, APPLICATION_BUTTON, INDEX] when omitted. */
+  /** Optional. Ordered sidebar widgets; defaults to [INTENT, CREATE_POST, APPLICATION_BUTTON, SEARCH, INDEX] when omitted. */
   sidebar?: InputMaybe<Array<SidebarWidget>>;
   /** Optional. Whether the phase is shown in member-facing navigation. Defaults to true when omitted. */
   visible?: InputMaybe<Scalars["Boolean"]["input"]>;
@@ -2867,24 +2963,38 @@ export type CreateVisualOnProfileInput = {
 };
 
 export type CreateWhiteboardData = {
-  content?: Maybe<Scalars["WhiteboardContent"]["output"]>;
+  /** Use a server-owned live Whiteboard draft as the trusted source for final materialization. Mutually exclusive with sourceWhiteboardID. */
+  draftWhiteboardID?: Maybe<Scalars["UUID"]["output"]>;
   /** A readable identifier, unique within the containing scope. */
   nameID?: Maybe<Scalars["NameID"]["output"]>;
   /** The preview settings for the whiteboard. */
   previewSettings?: Maybe<CreateWhiteboardPreviewSettingsData>;
   profile?: Maybe<CreateProfileData>;
-  /** Seed the new Whiteboard from the stored content of an existing Whiteboard (server-side copy). Mutually exclusive with `content` — supply exactly one. */
+  /** Seed the new Whiteboard from the stored content of an existing Whiteboard through a server-side authorized copy. Omission creates an empty Whiteboard. */
   sourceWhiteboardID?: Maybe<Scalars["UUID"]["output"]>;
 };
 
+export type CreateWhiteboardDraftOnCalloutsSetInput = {
+  calloutsSetID: Scalars["UUID"]["input"];
+  sourceCalloutID?: InputMaybe<Scalars["UUID"]["input"]>;
+  sourceWhiteboardID?: InputMaybe<Scalars["UUID"]["input"]>;
+};
+
+export type CreateWhiteboardDraftOnTemplatesSetInput = {
+  sourceCalloutID?: InputMaybe<Scalars["UUID"]["input"]>;
+  sourceWhiteboardID?: InputMaybe<Scalars["UUID"]["input"]>;
+  templatesSetID: Scalars["UUID"]["input"];
+};
+
 export type CreateWhiteboardInput = {
-  content?: InputMaybe<Scalars["WhiteboardContent"]["input"]>;
+  /** Use a server-owned live Whiteboard draft as the trusted source for final materialization. Mutually exclusive with sourceWhiteboardID. */
+  draftWhiteboardID?: InputMaybe<Scalars["UUID"]["input"]>;
   /** A readable identifier, unique within the containing scope. */
   nameID?: InputMaybe<Scalars["NameID"]["input"]>;
   /** The preview settings for the whiteboard. */
   previewSettings?: InputMaybe<CreateWhiteboardPreviewSettingsInput>;
   profile?: InputMaybe<CreateProfileInput>;
-  /** Seed the new Whiteboard from the stored content of an existing Whiteboard (server-side copy). Mutually exclusive with `content` — supply exactly one. */
+  /** Seed the new Whiteboard from the stored content of an existing Whiteboard through a server-side authorized copy. Omission creates an empty Whiteboard. */
   sourceWhiteboardID?: InputMaybe<Scalars["UUID"]["input"]>;
 };
 
@@ -2941,6 +3051,10 @@ export enum CredentialType {
   AccountLicensePlus = "ACCOUNT_LICENSE_PLUS",
   AssistantAccess = "ASSISTANT_ACCESS",
   BetaTester = "BETA_TESTER",
+  FeatureBetaTester = "FEATURE_BETA_TESTER",
+  FeatureOrganizationCreator = "FEATURE_ORGANIZATION_CREATOR",
+  FeatureVcCampaign = "FEATURE_VC_CAMPAIGN",
+  FeatureVirtualAssistant = "FEATURE_VIRTUAL_ASSISTANT",
   GlobalAdmin = "GLOBAL_ADMIN",
   GlobalAnonymous = "GLOBAL_ANONYMOUS",
   GlobalCommunityRead = "GLOBAL_COMMUNITY_READ",
@@ -2954,9 +3068,19 @@ export enum CredentialType {
   OrganizationAdmin = "ORGANIZATION_ADMIN",
   OrganizationAssociate = "ORGANIZATION_ASSOCIATE",
   OrganizationOwner = "ORGANIZATION_OWNER",
+  PlatformAuditReader = "PLATFORM_AUDIT_READER",
+  PlatformContentFullAccess = "PLATFORM_CONTENT_FULL_ACCESS",
+  PlatformLicenseManager = "PLATFORM_LICENSE_MANAGER",
   PlatformOperationsAdmin = "PLATFORM_OPERATIONS_ADMIN",
+  PlatformResourceAdmin = "PLATFORM_RESOURCE_ADMIN",
+  PlatformRolesAdmin = "PLATFORM_ROLES_ADMIN",
+  PlatformSettingsAdmin = "PLATFORM_SETTINGS_ADMIN",
+  PlatformSpacesReader = "PLATFORM_SPACES_READER",
+  PlatformSupport = "PLATFORM_SUPPORT",
+  PlatformUsersAdmin = "PLATFORM_USERS_ADMIN",
   SpaceAdmin = "SPACE_ADMIN",
   SpaceFeatureMemoMultiUser = "SPACE_FEATURE_MEMO_MULTI_USER",
+  SpaceFeatureMemoSigning = "SPACE_FEATURE_MEMO_SIGNING",
   SpaceFeatureOfficeDocuments = "SPACE_FEATURE_OFFICE_DOCUMENTS",
   SpaceFeatureSaveAsTemplate = "SPACE_FEATURE_SAVE_AS_TEMPLATE",
   SpaceFeatureVirtualContributors = "SPACE_FEATURE_VIRTUAL_CONTRIBUTORS",
@@ -3320,9 +3444,11 @@ export enum ForumDiscussionCategory {
   ChallengeCentric = "CHALLENGE_CENTRIC",
   CommunityBuilding = "COMMUNITY_BUILDING",
   Help = "HELP",
+  Newsletter = "NEWSLETTER",
   Other = "OTHER",
   PlatformFunctionalities = "PLATFORM_FUNCTIONALITIES",
   Releases = "RELEASES",
+  TipsAndTricks = "TIPS_AND_TRICKS",
 }
 
 export enum ForumDiscussionPrivacy {
@@ -3330,6 +3456,11 @@ export enum ForumDiscussionPrivacy {
   Author = "AUTHOR",
   Public = "PUBLIC",
 }
+
+export type ForumRemoveDiscussionCategoryInput = {
+  /** The category to remove from the platform Forum active category list. */
+  category: ForumDiscussionCategory;
+};
 
 export type Geo = {
   /** Is the geo functionality enabled. */
@@ -3440,6 +3571,32 @@ export type InAppNotificationPayload = {
   type: NotificationEventPayload;
 };
 
+export type InAppNotificationPayloadOrganizationAssociateActor =
+  InAppNotificationPayload & {
+    /** The user who applied, responded to an invitation, or joined. */
+    actor?: Maybe<Actor>;
+    /** The underlying application — set for the three application events. */
+    application?: Maybe<Application>;
+    /** Offered extra roles that could not be granted (set only on the accepted-invitation event). */
+    extraRolesWithheld?: Maybe<Array<RoleName>>;
+    /** The underlying invitation — set for the two response events. */
+    invitation?: Maybe<Invitation>;
+    /** The organization the actor is associated with. */
+    organization?: Maybe<Organization>;
+    /** The payload type. */
+    type: NotificationEventPayload;
+  };
+
+export type InAppNotificationPayloadOrganizationAssociateInvitation =
+  InAppNotificationPayload & {
+    /** The underlying invitation — offered role(s) and message. Null once the invitation record no longer resolves (e.g. the organization was deleted). */
+    invitation?: Maybe<Invitation>;
+    /** The organization the invitation is for. */
+    organization?: Maybe<Organization>;
+    /** The payload type. */
+    type: NotificationEventPayload;
+  };
+
 export type InAppNotificationPayloadOrganizationMessageDirect =
   InAppNotificationPayload & {
     /** The message content. */
@@ -3501,10 +3658,6 @@ export type InAppNotificationPayloadPlatformUserProfileRemoved =
   InAppNotificationPayload & {
     /** The payload type. */
     type: NotificationEventPayload;
-    /** The display name of the User that was removed. */
-    userDisplayName: Scalars["String"]["output"];
-    /** The email of the User that was removed. */
-    userEmail: Scalars["String"]["output"];
   };
 
 export type InAppNotificationPayloadSpace = InAppNotificationPayload & {
@@ -3638,6 +3791,10 @@ export type InAppNotificationPayloadSpaceCommunityCalendarEventComment =
 
 export type InAppNotificationPayloadSpaceCommunityInvitation =
   InAppNotificationPayload & {
+    /** The underlying invitation — role(s) offered, whether the parent Space is also joined, and the Spaces that will be joined on acceptance. */
+    invitation?: Maybe<Invitation>;
+    /** The organization the invitation is for, when the invitee is an organization. */
+    organization?: Maybe<Organization>;
     /** The Space that the invitation is for. */
     space: Space;
     /** The payload type. */
@@ -3850,6 +4007,8 @@ export type Invitation = {
   createdDate: Scalars["DateTime"]["output"];
   /** Additional roles to assign to the Actor, in addition to the entry Role. */
   extraRoles: Array<RoleName>;
+  /** Offered extra roles that could not be granted when this invitation was accepted (organizations only, cap consumed in the meantime). Transient: set only on the object returned by the accept mutation, never persisted, and null everywhere else. */
+  extraRolesWithheld?: Maybe<Array<RoleName>>;
   /** The ID of the entity */
   id: Scalars["UUID"]["output"];
   /** Whether to also add the invited actor to the parent community. */
@@ -3859,6 +4018,8 @@ export type Invitation = {
   lifecycle: Lifecycle;
   /** The next events of this Lifecycle. */
   nextEvents: Array<Scalars["String"]["output"]>;
+  /** The Spaces that will be joined if this invitation is accepted, root Space first; null when the caller may not answer this invitation on the invited Actor's behalf. */
+  spacesToJoinOnAccept?: Maybe<Array<SpaceJoinPreview>>;
   /** The current state of this Lifecycle. */
   state: Scalars["String"]["output"];
   /** Optional language the inviter expects the invitee to prefer; recorded per invitation. */
@@ -4052,6 +4213,7 @@ export enum LicenseEntitlementType {
   AccountSpacePremium = "ACCOUNT_SPACE_PREMIUM",
   AccountVirtualContributor = "ACCOUNT_VIRTUAL_CONTRIBUTOR",
   SpaceFlagMemoMultiUser = "SPACE_FLAG_MEMO_MULTI_USER",
+  SpaceFlagMemoSigning = "SPACE_FLAG_MEMO_SIGNING",
   SpaceFlagOfficeDocuments = "SPACE_FLAG_OFFICE_DOCUMENTS",
   SpaceFlagSaveAsTemplate = "SPACE_FLAG_SAVE_AS_TEMPLATE",
   SpaceFlagVirtualContributorAccess = "SPACE_FLAG_VIRTUAL_CONTRIBUTOR_ACCESS",
@@ -4134,6 +4296,7 @@ export type Licensing = {
 export enum LicensingCredentialBasedCredentialType {
   AccountLicensePlus = "ACCOUNT_LICENSE_PLUS",
   SpaceFeatureMemoMultiUser = "SPACE_FEATURE_MEMO_MULTI_USER",
+  SpaceFeatureMemoSigning = "SPACE_FEATURE_MEMO_SIGNING",
   SpaceFeatureOfficeDocuments = "SPACE_FEATURE_OFFICE_DOCUMENTS",
   SpaceFeatureSaveAsTemplate = "SPACE_FEATURE_SAVE_AS_TEMPLATE",
   SpaceFeatureVirtualContributors = "SPACE_FEATURE_VIRTUAL_CONTRIBUTORS",
@@ -4701,12 +4864,30 @@ export enum McpApiKeyStatus {
   Revoked = "REVOKED",
 }
 
+/** Self-scoped pre-flight read for account deletion: whether the calling user can delete their own account right now, and if not, exactly what blocks them. Computed by the same predicate the deleteUser mutation's self-branch guard uses, so the two can never drift. Not gated on session freshness — see sessionFresh. */
+export type MeAccountDeletionStatus = {
+  /** Itemized blockers, capped at 25. */
+  blockers: Array<AccountDeletionBlocker>;
+  /** True iff no blockers exist for the self branch. */
+  canDelete: Scalars["Boolean"]["output"];
+  /** True when the account carries a stored external billing linkage. Surfaced for transparency and captured in the audit record on deletion — never a blocker. */
+  externalSubscriptionLinked: Scalars["Boolean"]["output"];
+  /** True iff the calling session currently satisfies the privileged freshness window. Advisory for client routing; the deleteUser mutation re-enforces this authoritatively at mutation time. */
+  sessionFresh: Scalars["Boolean"]["output"];
+  /** Accurate per-kind totals, independent of truncation. */
+  totals: Array<AccountDeletionBlockerTotal>;
+  /** True when the blocker list above was truncated at the cap. */
+  truncated: Scalars["Boolean"]["output"];
+};
+
 export type MeConversationsResult = {
   /** All conversations (direct and group) for the current authenticated user. Client handles categorization by room type and member actor types. */
   conversations: Array<Conversation>;
 };
 
 export type MeQueryResults = {
+  /** Self-scoped pre-flight read for account deletion: whether the calling user can delete their own account right now, and if not, exactly what blocks them. */
+  accountDeletion: MeAccountDeletionStatus;
   /** The community applications current authenticated user can act on. */
   communityApplications: Array<CommunityApplicationResult>;
   /** The invitations the current authenticated user can act on. */
@@ -4725,6 +4906,12 @@ export type MeQueryResults = {
   notifications: PaginatedInAppNotifications;
   /** The total number of unread notifications for the current authenticated user across all notification types. */
   notificationsUnreadCount: Scalars["Float"]["output"];
+  /** The current authenticated user's own pending organization applications. */
+  organizationApplications: Array<OrganizationApplicationResult>;
+  /** The current authenticated user's own pending organization invitations. */
+  organizationInvitations: Array<OrganizationInvitationResult>;
+  /** The number of the current authenticated user's own pending organization invitations. */
+  organizationInvitationsCount: Scalars["Float"]["output"];
   /** The Spaces the current user is a member of as a flat list. */
   spaceMembershipsFlat: Array<CommunityMembershipResult>;
   /** The hierarchy of the Spaces the current user is a member. */
@@ -4755,6 +4942,18 @@ export type MeQueryResultsNotificationsArgs = {
   filter?: InputMaybe<NotificationEventsFilterInput>;
   first?: InputMaybe<Scalars["Int"]["input"]>;
   last?: InputMaybe<Scalars["Int"]["input"]>;
+};
+
+export type MeQueryResultsOrganizationApplicationsArgs = {
+  states?: InputMaybe<Array<Scalars["String"]["input"]>>;
+};
+
+export type MeQueryResultsOrganizationInvitationsArgs = {
+  states?: InputMaybe<Array<Scalars["String"]["input"]>>;
+};
+
+export type MeQueryResultsOrganizationInvitationsCountArgs = {
+  states?: InputMaybe<Array<Scalars["String"]["input"]>>;
 };
 
 export type MeQueryResultsSpaceMembershipsHierarchicalArgs = {
@@ -4796,8 +4995,55 @@ export type Memo = {
   nameID: Scalars["NameID"]["output"];
   /** The Profile for this Memo. */
   profile: Profile;
+  /** Signed copies of this Memo visible to readers of the Memo. */
+  signatures: Array<MemoSignature>;
   /** The date at which the entity was last updated. */
   updatedDate: Scalars["DateTime"]["output"];
+};
+
+export type MemoSignature = {
+  /** The Alkemio user who initiated this signed copy. */
+  actor?: Maybe<User>;
+  /** The date at which the entity was created. */
+  createdDate: Scalars["DateTime"]["output"];
+  /** The immutable PDF produced for this signed copy. */
+  document?: Maybe<Document>;
+  /** The ID of the entity */
+  id: Scalars["UUID"]["output"];
+  /** The terminal outcome of this Memo signing attempt. */
+  status: SigningAttemptStatus;
+  /** The date at which the entity was last updated. */
+  updatedDate: Scalars["DateTime"]["output"];
+};
+
+export enum MemoSignatureVerificationStatus {
+  Invalid = "INVALID",
+  Unavailable = "UNAVAILABLE",
+  Verified = "VERIFIED",
+}
+
+export type MemoSignatureVerifyInput = {
+  /** The signed Memo attempt to verify. */
+  attemptID: Scalars["UUID"]["input"];
+};
+
+export type MemoSigningContinueInput = {
+  /** The prepared signing attempt to start. */
+  attemptID: Scalars["UUID"]["input"];
+};
+
+export type MemoSigningContinueResult = {
+  authorizeUrl: Scalars["String"]["output"];
+};
+
+export type MemoSigningPrepareInput = {
+  /** The Memo to prepare for signing. */
+  memoID: Scalars["UUID"]["input"];
+};
+
+export type MemoSigningPrepareResult = {
+  attemptId: Scalars["UUID"]["output"];
+  previewUrl: Scalars["String"]["output"];
 };
 
 /** A message that was sent in a chat room */
@@ -4994,12 +5240,16 @@ export type Mutation = {
   adminCommunicationEnsureAccessToCommunications: Scalars["Boolean"]["output"];
   /** Create rooms for legacy conversations that were created without one (from lazy room creation era). */
   adminCommunicationMigrateOrphanedConversations: CommunicationAdminMigrateRoomsResult;
+  /** Reconcile the Matrix space hierarchy that mirrors the forum against the current forum/discussion state — report-first (dryRun defaults true), scoped to categories + the forum space, never a delete. Returns a task id; the pass runs asynchronously and the task completes with the summary. */
+  adminCommunicationReconcileForumHierarchy: Scalars["String"]["output"];
   /** Remove an orphaned room from messaging platform. */
   adminCommunicationRemoveOrphanedRoom: Scalars["Boolean"]["output"];
   /** Synchronize all Alkemio spaces into the Matrix space hierarchy. Idempotent — safe to call multiple times. */
   adminCommunicationSyncSpaceHierarchy: Scalars["Boolean"]["output"];
   /** Allow updating the state flags of a particular rule. */
   adminCommunicationUpdateRoomState: Scalars["Boolean"]["output"];
+  /** Removes one category from the platform Forum's active discussionCategories list. Refuses while any Discussion still carries the category. Idempotent for an already-absent category. The enum member is never removed. Requires PLATFORM_FORUM_MANAGE. Audited (PLATFORM_OPERATIONS). */
+  adminForumRemoveDiscussionCategory: Forum;
   /** Delete a Kratos identity by ID. */
   adminIdentityDeleteKratosIdentity: Scalars["Boolean"]["output"];
   /** Prunes InAppNotifications according to the platform defined criteria. The effects of the pruning are returned. */
@@ -5010,7 +5260,7 @@ export type Mutation = {
   adminLicensePolicyDeleteCredentialRule: LicensingCredentialBasedPolicyCredentialRule;
   /** Updates a CredentialRule on the LicensePolicy. */
   adminLicensePolicyUpdateCredentialRule: LicensingCredentialBasedPolicyCredentialRule;
-  /** Platform admin: revoke a named user's MCP API key. Idempotent. */
+  /** Platform Users Admin: revoke a named user's MCP API key. Idempotent. */
   adminRevokeMcpApiKey: McpApiKey;
   /** Ingests new data into Elasticsearch from scratch. This will delete all existing data and ingest new data from the source. This is an admin only operation. */
   adminSearchIngestFromScratch: Scalars["String"]["output"];
@@ -5020,9 +5270,9 @@ export type Mutation = {
   adminUpdateGeoLocationData: Scalars["Boolean"]["output"];
   /** Remove the Kratos account associated with the specified User. Note: the Users profile on the platform is not deleted. */
   adminUserAccountDelete: User;
-  /** Change a user's login email synchronously, acting as a platform administrator. The admin is responsible for verifying the subject user's identity out-of-band — the platform does NOT send a confirmation message to the new mailbox and does NOT require the new mailbox to prove ownership. Validates uniqueness, commits Kratos → Alkemio with bounded retry, invalidates the subject's existing sessions, and sends a security-signal notification to the old address. Requires PLATFORM_ADMIN. */
+  /** Change a user's login email synchronously, acting as a platform administrator. The admin is responsible for verifying the subject user's identity out-of-band — the platform does NOT send a confirmation message to the new mailbox and does NOT require the new mailbox to prove ownership. Validates uniqueness, commits Kratos → Alkemio with bounded retry, invalidates the subject's existing sessions, and sends a security-signal notification to the old address. Requires PLATFORM_USERS_ADMIN. */
   adminUserEmailChange: UserEmailChangeResult;
-  /** Reconcile an outstanding drift-detected state for a subject user by force-aligning Alkemio and Kratos to a canonical email chosen by the admin. Requires PLATFORM_ADMIN. */
+  /** Reconcile an outstanding drift-detected state for a subject user by force-aligning Alkemio and Kratos to a canonical email chosen by the admin. Requires PLATFORM_USERS_ADMIN. */
   adminUserEmailChangeDriftResolve: UserEmailChangeResult;
   /** Create a test customer on wingback. */
   adminWingbackCreateTestCustomer: Scalars["String"]["output"];
@@ -5044,6 +5294,8 @@ export type Mutation = {
   assignLicensePlanToAccount: Account;
   /** Assign the specified LicensePlan to a Space. */
   assignLicensePlanToSpace: Space;
+  /** Assigns an Organization to a role on the Platform. */
+  assignPlatformRoleToOrganization: Organization;
   /** Assigns a User to a role on the Platform. */
   assignPlatformRoleToUser: User;
   /** Assigns an Actor (User, Organization, or Virtual Contributor) to a role in the specified RoleSet. */
@@ -5074,6 +5326,8 @@ export type Mutation = {
   castPollVote: Poll;
   /** Deletes collections nameID-... */
   cleanupCollections: MigrateEmbeddings;
+  /** Starts signing the prepared Memo copy. */
+  continueMemoSigning: MemoSigningContinueResult;
   /** Move an L1 Space up in the hierarchy, to be a L0 Space. */
   convertSpaceL1ToSpaceL0: Space;
   /** Move an L1 Space down in the hierarchy within the same L0 Space, to be a L2 Space.       Restrictions: the Space L1 must remain within the same L0 Space.       Roles: all user, organization and virtual contributor role assignments are removed, with       the exception of Admin role assignments for Users. */
@@ -5128,6 +5382,10 @@ export type Mutation = {
   createUser: User;
   /** Creates a new VirtualContributor on an Account. */
   createVirtualContributor: VirtualContributor;
+  /** Materializes a server-owned live Whiteboard draft for a Callout form. Content remains on the collaboration transport; GraphQL returns identifiers only. */
+  createWhiteboardDraftOnCalloutsSet: Scalars["UUID"]["output"];
+  /** Materializes a server-owned live Whiteboard draft for a Template form. GraphQL returns identifiers only. */
+  createWhiteboardDraftOnTemplatesSet: Scalars["UUID"]["output"];
   /** Creates an account in Wingback */
   createWingbackAccount: Scalars["String"]["output"];
   /** Removes the specified Application. */
@@ -5188,6 +5446,8 @@ export type Mutation = {
   deleteVisualFromMediaGallery: Visual;
   /** Deletes the specified Whiteboard. */
   deleteWhiteboard: Whiteboard;
+  /** Idempotently discards a server-owned live Whiteboard draft through the canonical Whiteboard deletion path. */
+  deleteWhiteboardDraft: Scalars["UUID"]["output"];
   /** Re-enable a previously disabled push notification subscription for the current user. */
   enablePushSubscription: PushSubscription;
   /** Trigger an event on the Application. */
@@ -5220,7 +5480,7 @@ export type Mutation = {
   markNotificationsAsUnread: Scalars["Boolean"]["output"];
   /** Migrates all pending legacy memo content. Idempotent: repeated calls process only rows whose migrated marker is false. */
   migrateLegacyMemoContent: CollaborationMigrationResult;
-  /** Migrates all pending legacy whiteboard content. Idempotent: repeated calls process only rows whose migrated marker is false. */
+  /** Migrates pending legacy Whiteboard documents and independently normalizes every legacy Whiteboard contribution default, including defaults stored by Callout templates. Idempotent: repeated calls process only unmigrated documents and non-canonical defaults. */
   migrateLegacyWhiteboardContent: CollaborationMigrationResult;
   /** Mint a new MCP API key for the current user. Returns the plaintext exactly once. */
   mintMcpApiKey: McpApiKeyMintResult;
@@ -5234,6 +5494,8 @@ export type Mutation = {
   moveSpaceL2ToSpaceL1: Space;
   /** Moves a task to another column on its Tasks board. Authorized as MOVE_TASK on the parent Callout, so a board member can move any task. */
   moveTaskToColumn: CalloutContribution;
+  /** Prepares an exact PDF preview for signing the specified Memo. */
+  prepareMemoSigning: MemoSigningPrepareResult;
   /** Refresh the Bodies of Knowledge on All VCs */
   refreshAllBodiesOfKnowledge: Scalars["Boolean"]["output"];
   /** Triggers a request to the backing AI Service to refresh the knowledge that is available to it. */
@@ -5250,6 +5512,8 @@ export type Mutation = {
   removeMessageOnRoom: Scalars["MessageID"]["output"];
   /** Removes an email address from the platform notification blacklist */
   removeNotificationEmailFromBlacklist: Array<Scalars["String"]["output"]>;
+  /** Removes an Organization from a Role on the Platform. */
+  removePlatformRoleFromOrganization: Organization;
   /** Removes a User from a Role on the Platform. */
   removePlatformRoleFromUser: User;
   /** Remove an option from a Poll. Requires UPDATE privilege. Poll must retain at least 2 options. Votes that selected this option are deleted and affected voters are notified. */
@@ -5274,6 +5538,8 @@ export type Mutation = {
   reorderPollOptions: Poll;
   /** Replace the backing file of an existing CollaboraDocument in place, preserving its identity. Requires UPDATE on the document. The replacement must be an allowed OfficeDocs format, within the size cap, and the SAME document type as the current file. Refused while the document is being edited. */
   replaceCollaboraDocument: CollaboraDocument;
+  /** Replace a Whiteboard from another Whiteboard through the live collaboration room. Content and media are copied server-side; snapshot bytes never pass through GraphQL. */
+  replaceWhiteboardContentFromSource: Whiteboard;
   /** Resets the interaction with the VC by recreating the room. */
   resetConversationVc: Conversation;
   /** Reset all license plans on Accounts */
@@ -5482,12 +5748,20 @@ export type MutationAdminCommunicationEnsureAccessToCommunicationsArgs = {
   communicationData: CommunicationAdminEnsureAccessInput;
 };
 
+export type MutationAdminCommunicationReconcileForumHierarchyArgs = {
+  reconcileData: AdminCommunicationReconcileForumHierarchyInput;
+};
+
 export type MutationAdminCommunicationRemoveOrphanedRoomArgs = {
   orphanedRoomData: CommunicationAdminRemoveOrphanedRoomInput;
 };
 
 export type MutationAdminCommunicationUpdateRoomStateArgs = {
   roomStateData: CommunicationAdminUpdateRoomStateInput;
+};
+
+export type MutationAdminForumRemoveDiscussionCategoryArgs = {
+  removeData: ForumRemoveDiscussionCategoryInput;
 };
 
 export type MutationAdminIdentityDeleteKratosIdentityArgs = {
@@ -5558,6 +5832,10 @@ export type MutationAssignLicensePlanToSpaceArgs = {
   planData: AssignLicensePlanToSpace;
 };
 
+export type MutationAssignPlatformRoleToOrganizationArgs = {
+  roleData: AssignPlatformRoleInput;
+};
+
 export type MutationAssignPlatformRoleToUserArgs = {
   roleData: AssignPlatformRoleInput;
 };
@@ -5600,6 +5878,10 @@ export type MutationAuthorizationPolicyResetToGlobalAdminsAccessArgs = {
 
 export type MutationCastPollVoteArgs = {
   voteData: CastPollVoteInput;
+};
+
+export type MutationContinueMemoSigningArgs = {
+  signingData: MemoSigningContinueInput;
 };
 
 export type MutationConvertSpaceL1ToSpaceL0Args = {
@@ -5709,6 +5991,14 @@ export type MutationCreateUserArgs = {
 
 export type MutationCreateVirtualContributorArgs = {
   virtualContributorData: CreateVirtualContributorOnAccountInput;
+};
+
+export type MutationCreateWhiteboardDraftOnCalloutsSetArgs = {
+  draftData: CreateWhiteboardDraftOnCalloutsSetInput;
+};
+
+export type MutationCreateWhiteboardDraftOnTemplatesSetArgs = {
+  draftData: CreateWhiteboardDraftOnTemplatesSetInput;
 };
 
 export type MutationCreateWingbackAccountArgs = {
@@ -5831,6 +6121,10 @@ export type MutationDeleteWhiteboardArgs = {
   whiteboardData: DeleteWhiteboardInput;
 };
 
+export type MutationDeleteWhiteboardDraftArgs = {
+  whiteboardID: Scalars["UUID"]["input"];
+};
+
 export type MutationEnablePushSubscriptionArgs = {
   subscriptionData: UnsubscribeFromPushNotificationsInput;
 };
@@ -5918,6 +6212,10 @@ export type MutationMoveTaskToColumnArgs = {
   moveData: MoveTaskToColumnInput;
 };
 
+export type MutationPrepareMemoSigningArgs = {
+  signingData: MemoSigningPrepareInput;
+};
+
 export type MutationRefreshVirtualContributorBodyOfKnowledgeArgs = {
   refreshData: RefreshVirtualContributorBodyOfKnowledgeInput;
 };
@@ -5944,6 +6242,10 @@ export type MutationRemoveMessageOnRoomArgs = {
 
 export type MutationRemoveNotificationEmailFromBlacklistArgs = {
   input: NotificationEmailAddressInput;
+};
+
+export type MutationRemovePlatformRoleFromOrganizationArgs = {
+  roleData: RemovePlatformRoleInput;
 };
 
 export type MutationRemovePlatformRoleFromUserArgs = {
@@ -5993,6 +6295,10 @@ export type MutationReorderPollOptionsArgs = {
 export type MutationReplaceCollaboraDocumentArgs = {
   file: Scalars["Upload"]["input"];
   replaceData: ReplaceCollaboraDocumentInput;
+};
+
+export type MutationReplaceWhiteboardContentFromSourceArgs = {
+  input: ReplaceWhiteboardContentFromSourceInput;
 };
 
 export type MutationResetConversationVcArgs = {
@@ -6373,8 +6679,14 @@ export type NotificationEmailAddressInput = {
 };
 
 export enum NotificationEvent {
+  OrganizationAdminAssociateApplication = "ORGANIZATION_ADMIN_ASSOCIATE_APPLICATION",
+  OrganizationAdminAssociateInvitationAccepted = "ORGANIZATION_ADMIN_ASSOCIATE_INVITATION_ACCEPTED",
+  OrganizationAdminAssociateInvitationDeclined = "ORGANIZATION_ADMIN_ASSOCIATE_INVITATION_DECLINED",
+  OrganizationAdminAssociateJoined = "ORGANIZATION_ADMIN_ASSOCIATE_JOINED",
   OrganizationAdminMentioned = "ORGANIZATION_ADMIN_MENTIONED",
   OrganizationAdminMessage = "ORGANIZATION_ADMIN_MESSAGE",
+  OrganizationAdminSpaceCommunityInvitation = "ORGANIZATION_ADMIN_SPACE_COMMUNITY_INVITATION",
+  OrganizationAdminSpaceCommunityJoined = "ORGANIZATION_ADMIN_SPACE_COMMUNITY_JOINED",
   OrganizationMessageSender = "ORGANIZATION_MESSAGE_SENDER",
   PlatformAdminGlobalRoleChanged = "PLATFORM_ADMIN_GLOBAL_ROLE_CHANGED",
   PlatformAdminSpaceCreated = "PLATFORM_ADMIN_SPACE_CREATED",
@@ -6385,6 +6697,10 @@ export enum NotificationEvent {
   SpaceAdminCollaborationCalloutContribution = "SPACE_ADMIN_COLLABORATION_CALLOUT_CONTRIBUTION",
   SpaceAdminCommunityApplication = "SPACE_ADMIN_COMMUNITY_APPLICATION",
   SpaceAdminCommunityNewMember = "SPACE_ADMIN_COMMUNITY_NEW_MEMBER",
+  SpaceAdminOrganizationCommunityInvitationAccepted = "SPACE_ADMIN_ORGANIZATION_COMMUNITY_INVITATION_ACCEPTED",
+  SpaceAdminOrganizationCommunityInvitationDeclined = "SPACE_ADMIN_ORGANIZATION_COMMUNITY_INVITATION_DECLINED",
+  SpaceAdminUserCommunityInvitationAccepted = "SPACE_ADMIN_USER_COMMUNITY_INVITATION_ACCEPTED",
+  SpaceAdminUserCommunityInvitationDeclined = "SPACE_ADMIN_USER_COMMUNITY_INVITATION_DECLINED",
   SpaceAdminVirtualCommunityInvitationDeclined = "SPACE_ADMIN_VIRTUAL_COMMUNITY_INVITATION_DECLINED",
   SpaceCollaborationCalloutComment = "SPACE_COLLABORATION_CALLOUT_COMMENT",
   SpaceCollaborationCalloutContribution = "SPACE_COLLABORATION_CALLOUT_CONTRIBUTION",
@@ -6409,6 +6725,9 @@ export enum NotificationEvent {
   UserEmailChangeSpaceAdminNotification = "USER_EMAIL_CHANGE_SPACE_ADMIN_NOTIFICATION",
   UserMentioned = "USER_MENTIONED",
   UserMessage = "USER_MESSAGE",
+  UserOrganizationAssociateApplicationApproved = "USER_ORGANIZATION_ASSOCIATE_APPLICATION_APPROVED",
+  UserOrganizationAssociateApplicationDeclined = "USER_ORGANIZATION_ASSOCIATE_APPLICATION_DECLINED",
+  UserOrganizationAssociateInvitation = "USER_ORGANIZATION_ASSOCIATE_INVITATION",
   UserPasswordChangeSecuritySignal = "USER_PASSWORD_CHANGE_SECURITY_SIGNAL",
   UserSignUpWelcome = "USER_SIGN_UP_WELCOME",
   UserSpaceCommunityApplicationDeclined = "USER_SPACE_COMMUNITY_APPLICATION_DECLINED",
@@ -6434,6 +6753,8 @@ export enum NotificationEventInAppState {
 }
 
 export enum NotificationEventPayload {
+  OrganizationAssociateActor = "ORGANIZATION_ASSOCIATE_ACTOR",
+  OrganizationAssociateInvitation = "ORGANIZATION_ASSOCIATE_INVITATION",
   OrganizationMessageDirect = "ORGANIZATION_MESSAGE_DIRECT",
   OrganizationMessageRoom = "ORGANIZATION_MESSAGE_ROOM",
   PlatformForumDiscussion = "PLATFORM_FORUM_DISCUSSION",
@@ -6551,6 +6872,8 @@ export type Organization = ActorFull &
     legalEntityName?: Maybe<Scalars["String"]["output"]>;
     /** Metrics about the activity within this Organization. */
     metrics?: Maybe<Array<Nvp>>;
+    /** The viewer's eligibility to apply to, or join, this organization as an associate. */
+    myAssociateEligibility: OrganizationAssociateEligibility;
     /** A name identifier of the entity, unique within a given scope. */
     nameID: Scalars["NameID"]["output"];
     /** The profile for this Actor. */
@@ -6574,6 +6897,35 @@ export type OrganizationGroupArgs = {
   ID: Scalars["UUID"]["input"];
 };
 
+export type OrganizationApplicationResult = {
+  /** The application itself */
+  application: Application;
+  /** ID for the pending organization application */
+  id: Scalars["UUID"]["output"];
+  /** The organization the application is for */
+  organization: Organization;
+};
+
+export type OrganizationAssociateEligibility = {
+  /** Whether the viewer may apply to associate with this organization right now. */
+  canApply: Scalars["Boolean"]["output"];
+  /** Whether the viewer may join this organization directly, with one click (domain match). */
+  canJoinDirectly: Scalars["Boolean"]["output"];
+  /** Why the viewer is (or is not) eligible, precedence-ordered. */
+  reason: OrganizationAssociateEligibilityReason;
+};
+
+export enum OrganizationAssociateEligibilityReason {
+  AlreadyAssociate = "ALREADY_ASSOCIATE",
+  ApplicationsNotAccepted = "APPLICATIONS_NOT_ACCEPTED",
+  ApplicationPending = "APPLICATION_PENDING",
+  ApplyNotGranted = "APPLY_NOT_GRANTED",
+  EligibleToApply = "ELIGIBLE_TO_APPLY",
+  EligibleToJoin = "ELIGIBLE_TO_JOIN",
+  InvitationPending = "INVITATION_PENDING",
+  NotAuthenticated = "NOT_AUTHENTICATED",
+}
+
 export type OrganizationAuthorizationResetInput = {
   /** The identifier of the Organization whose Authorization Policy should be reset. */
   organizationID: Scalars["UUID"]["input"];
@@ -6587,6 +6939,15 @@ export type OrganizationFilterInput = {
   website?: InputMaybe<Scalars["String"]["input"]>;
 };
 
+export type OrganizationInvitationResult = {
+  /** ID for the pending organization invitation */
+  id: Scalars["UUID"]["output"];
+  /** The invitation itself */
+  invitation: Invitation;
+  /** The organization the invitation is for */
+  organization: Organization;
+};
+
 export type OrganizationSettings = {
   /** The membership settings for this Organization. */
   membership: OrganizationSettingsMembership;
@@ -6595,6 +6956,10 @@ export type OrganizationSettings = {
 };
 
 export type OrganizationSettingsMembership = {
+  /** Allow registered users to apply to associate with this Organization. */
+  allowApplications: Scalars["Boolean"]["output"];
+  /** Allow Spaces to invite this Organization to join them. */
+  allowSpaceInvitations: Scalars["Boolean"]["output"];
   /** Allow Users with email addresses matching the domain of this Organization to join. */
   allowUsersMatchingDomainToJoin: Scalars["Boolean"]["output"];
 };
@@ -6783,7 +7148,7 @@ export type PlatformAdminQueryResults = {
   innovationPacks: Array<InnovationPack>;
   /** The most recent email-change audit entry for the named subject user. Returns null if no audit entry exists. */
   latestUserEmailChangeAuditEntry?: Maybe<UserEmailChangeAuditEntry>;
-  /** MCP API keys belonging to the named user. Platform admins only. Keys bound to a system actor are never returned. */
+  /** MCP API keys belonging to the named user. Platform Users Admin only. Keys bound to a system actor are never returned. */
   mcpApiKeys: Array<McpApiKey>;
   /** Retrieve all Organizations on the Platform. This is only available to Platform Admins. */
   organizations: PaginatedOrganization;
@@ -7391,6 +7756,8 @@ export type Query = {
   rolesVirtualContributor: ActorRoles;
   /** Search the platform for terms supplied */
   search: ISearchResults;
+  /** A Memo signing attempt belonging to the current actor. */
+  signingAttempt: MemoSignature;
   /** The Spaces on this platform; If accessed through an Innovation Hub will return ONLY the Spaces defined in it. */
   spaces: Array<Space>;
   /** The Spaces on this platform */
@@ -7411,6 +7778,8 @@ export type Query = {
   usersWithAuthorizationCredential: Array<User>;
   /** Returns the VAPID public key needed by clients to subscribe to push notifications. Returns null if push notifications are not enabled on this server. */
   vapidPublicKey?: Maybe<Scalars["String"]["output"]>;
+  /** Checks the stored integrity of a signed Memo copy. */
+  verifyMemoSignature: MemoSignatureVerificationStatus;
   /** A particular VirtualContributor */
   virtualContributor: VirtualContributor;
   /** The VirtualContributors on this platform; only accessible to platform admins */
@@ -7493,6 +7862,10 @@ export type QuerySearchArgs = {
   searchData: SearchInput;
 };
 
+export type QuerySigningAttemptArgs = {
+  ID: Scalars["UUID"]["input"];
+};
+
 export type QuerySpacesArgs = {
   IDs?: InputMaybe<Array<Scalars["UUID"]["input"]>>;
   filter?: InputMaybe<SpaceFilterInput>;
@@ -7540,6 +7913,10 @@ export type QueryUsersPaginatedArgs = {
 
 export type QueryUsersWithAuthorizationCredentialArgs = {
   credentialsCriteriaData: UsersWithAuthorizationCredentialInput;
+};
+
+export type QueryVerifyMemoSignatureArgs = {
+  verificationData: MemoSignatureVerifyInput;
 };
 
 export type QueryVirtualContributorArgs = {
@@ -7752,6 +8129,13 @@ export type ReplaceCollaboraDocumentInput = {
   displayName?: InputMaybe<Scalars["String"]["input"]>;
 };
 
+export type ReplaceWhiteboardContentFromSourceInput = {
+  /** The Whiteboard whose content and media are copied into the target. */
+  sourceWhiteboardID: Scalars["UUID"]["input"];
+  /** The Whiteboard whose content is replaced. */
+  targetWhiteboardID: Scalars["UUID"]["input"];
+};
+
 export type RevokeAuthorizationCredentialInput = {
   /** The resource to which access is being removed. */
   resourceID: Scalars["String"]["input"];
@@ -7819,6 +8203,10 @@ export enum RoleName {
   Admin = "ADMIN",
   Anonymous = "ANONYMOUS",
   Associate = "ASSOCIATE",
+  FeatureBetaTester = "FEATURE_BETA_TESTER",
+  FeatureOrganizationCreator = "FEATURE_ORGANIZATION_CREATOR",
+  FeatureVcCampaign = "FEATURE_VC_CAMPAIGN",
+  FeatureVirtualAssistant = "FEATURE_VIRTUAL_ASSISTANT",
   GlobalAdmin = "GLOBAL_ADMIN",
   GlobalCommunityReader = "GLOBAL_COMMUNITY_READER",
   GlobalLicenseManager = "GLOBAL_LICENSE_MANAGER",
@@ -7831,8 +8219,17 @@ export enum RoleName {
   Member = "MEMBER",
   Owner = "OWNER",
   PlatformAssistantAccess = "PLATFORM_ASSISTANT_ACCESS",
+  PlatformAuditReader = "PLATFORM_AUDIT_READER",
   PlatformBetaTester = "PLATFORM_BETA_TESTER",
+  PlatformContentFullAccess = "PLATFORM_CONTENT_FULL_ACCESS",
+  PlatformLicenseManager = "PLATFORM_LICENSE_MANAGER",
   PlatformOperationsAdmin = "PLATFORM_OPERATIONS_ADMIN",
+  PlatformResourceAdmin = "PLATFORM_RESOURCE_ADMIN",
+  PlatformRolesAdmin = "PLATFORM_ROLES_ADMIN",
+  PlatformSettingsAdmin = "PLATFORM_SETTINGS_ADMIN",
+  PlatformSpacesReader = "PLATFORM_SPACES_READER",
+  PlatformSupport = "PLATFORM_SUPPORT",
+  PlatformUsersAdmin = "PLATFORM_USERS_ADMIN",
   PlatformVcCampaign = "PLATFORM_VC_CAMPAIGN",
   Registered = "REGISTERED",
 }
@@ -7960,18 +8357,31 @@ export type RoleSetInvitationResult = {
   /** The existing open application that blocks this invitation, when the result type is ALREADY_HAS_OPEN_APPLICATION. */
   application?: Maybe<Application>;
   invitation?: Maybe<Invitation>;
+  /** The id of the invited actor this result belongs to, when the invitee was an actor or an email that resolved to an existing user. */
+  invitedActorID?: Maybe<Scalars["UUID"]["output"]>;
+  /** The email address this result belongs to, when the invitee was submitted as an email address. */
+  invitedEmail?: Maybe<Scalars["String"]["output"]>;
+  /** An informational addendum to the result, set only alongside a successful invite outcome. */
+  notice?: Maybe<RoleSetInvitationResultNotice>;
   platformInvitation?: Maybe<PlatformInvitation>;
   type: RoleSetInvitationResultType;
 };
+
+export enum RoleSetInvitationResultNotice {
+  OrganizationHasNoAdministrators = "ORGANIZATION_HAS_NO_ADMINISTRATORS",
+}
 
 export enum RoleSetInvitationResultType {
   AlreadyHasOpenApplication = "ALREADY_HAS_OPEN_APPLICATION",
   AlreadyInvitedToPlatformAndRoleSet = "ALREADY_INVITED_TO_PLATFORM_AND_ROLE_SET",
   AlreadyInvitedToRoleSet = "ALREADY_INVITED_TO_ROLE_SET",
   AlreadyMemberOfRoleSet = "ALREADY_MEMBER_OF_ROLE_SET",
+  ExtraRoleLimitReached = "EXTRA_ROLE_LIMIT_REACHED",
   InvitationToParentNotAuthorized = "INVITATION_TO_PARENT_NOT_AUTHORIZED",
   InvitedToPlatformAndRoleSet = "INVITED_TO_PLATFORM_AND_ROLE_SET",
   InvitedToRoleSet = "INVITED_TO_ROLE_SET",
+  OrganizationLeadRoleLimitReached = "ORGANIZATION_LEAD_ROLE_LIMIT_REACHED",
+  OrganizationNotAcceptingInvitations = "ORGANIZATION_NOT_ACCEPTING_INVITATIONS",
 }
 
 export enum RoleSetRoleImplicit {
@@ -8433,9 +8843,18 @@ export enum SidebarWidget {
   Guidelines = "GUIDELINES",
   Index = "INDEX",
   Intent = "INTENT",
+  Search = "SEARCH",
   SubspaceLinks = "SUBSPACE_LINKS",
   Updates = "UPDATES",
   VirtualContributors = "VIRTUAL_CONTRIBUTORS",
+}
+
+export enum SigningAttemptStatus {
+  Cancelled = "CANCELLED",
+  Expired = "EXPIRED",
+  Failed = "FAILED",
+  Pending = "PENDING",
+  Signed = "SIGNED",
 }
 
 export type Space = ActorFull & {
@@ -8565,9 +8984,24 @@ export type SpaceAboutMembership = {
   roleSetID: Scalars["UUID"]["output"];
 };
 
+/** The card variant of a Subspaces (SPACES) collection callout. COMPACT (default) shows the identity block only; EXPANDED adds the What/Why/Who excerpts. */
+export enum SpaceCollectionCardVariant {
+  Compact = "COMPACT",
+  Expanded = "EXPANDED",
+}
+
 export type SpaceFilterInput = {
   /** Return Spaces with a Visibility matching one of the provided types. */
   visibilities?: InputMaybe<Array<SpaceVisibility>>;
+};
+
+export type SpaceJoinPreview = {
+  /** The display name of the Space that will be joined. */
+  displayName: Scalars["String"]["output"];
+  /** The ID of the Space that will be joined. */
+  id: Scalars["UUID"]["output"];
+  /** The URL of the Space that will be joined. */
+  url: Scalars["String"]["output"];
 };
 
 export enum SpaceLevel {
@@ -9192,12 +9626,18 @@ export type UpdateCalendarEventInput = {
 };
 
 export type UpdateCalloutContributionDefaultsInput = {
+  /** Remove the stored Whiteboard contribution default. Mutually exclusive with sourceWhiteboardID and sourceCalloutID. */
+  clearWhiteboardContent?: InputMaybe<Scalars["Boolean"]["input"]>;
   /** The default title to use for new contributions. */
   defaultDisplayName?: InputMaybe<Scalars["String"]["input"]>;
+  /** Replace the default from a server-owned live Whiteboard contribution-default draft. Mutually exclusive with either source field and clearWhiteboardContent. */
+  draftWhiteboardID?: InputMaybe<Scalars["UUID"]["input"]>;
   /** The default description to use for new Post contributions. */
   postDescription?: InputMaybe<Scalars["Markdown"]["input"]>;
-  /** The default description to use for new Whiteboard contributions. */
-  whiteboardContent?: InputMaybe<Scalars["WhiteboardContent"]["input"]>;
+  /** Copy the internal Whiteboard contribution default from this source Callout. Mutually exclusive with sourceWhiteboardID and clearWhiteboardContent. */
+  sourceCalloutID?: InputMaybe<Scalars["UUID"]["input"]>;
+  /** Replace the default from an existing Whiteboard. The server copies its content and media into the owning Callout bucket; the source id is not persisted. */
+  sourceWhiteboardID?: InputMaybe<Scalars["UUID"]["input"]>;
 };
 
 export type UpdateCalloutContributorsSettingsInput = {
@@ -9235,10 +9675,10 @@ export type UpdateCalloutFramingInput = {
   poll?: InputMaybe<UpdatePollInput>;
   /** The Profile of the Template. */
   profile?: InputMaybe<UpdateProfileInput>;
+  /** Replace the framing Whiteboard from another Whiteboard through a server-side authorized copy. */
+  sourceWhiteboardID?: InputMaybe<Scalars["UUID"]["input"]>;
   /** The type of additional content attached to the framing of the callout. */
   type?: InputMaybe<CalloutFramingType>;
-  /** The new content to be used. */
-  whiteboardContent?: InputMaybe<Scalars["WhiteboardContent"]["input"]>;
   /** The new preview settings for the Whiteboard. */
   whiteboardPreviewSettings?: InputMaybe<UpdateWhiteboardPreviewSettingsInput>;
 };
@@ -9275,6 +9715,8 @@ export type UpdateCalloutSettingsFramingInput = {
   contributors?: InputMaybe<UpdateCalloutContributorsSettingsInput>;
   /** Manual-selection settings for collection callouts (CONTRIBUTORS or SPACES). Provide only when framing.type ∈ {CONTRIBUTORS, SPACES}. */
   selection?: InputMaybe<UpdateCalloutSelectionSettingsInput>;
+  /** Card-variant settings. Provide only when framing.type = SPACES. */
+  spaces?: InputMaybe<UpdateCalloutSpacesSettingsInput>;
 };
 
 export type UpdateCalloutSettingsInput = {
@@ -9282,6 +9724,11 @@ export type UpdateCalloutSettingsInput = {
   framing?: InputMaybe<UpdateCalloutSettingsFramingInput>;
   /** Visibility of the Callout. */
   visibility?: InputMaybe<CalloutVisibility>;
+};
+
+export type UpdateCalloutSpacesSettingsInput = {
+  /** The card variant (COMPACT or EXPANDED). When omitted, the stored value is unchanged. */
+  cardVariant?: InputMaybe<SpaceCollectionCardVariant>;
 };
 
 export type UpdateCalloutVisibilityInput = {
@@ -9575,8 +10022,12 @@ export type UpdateOrganizationSettingsInput = {
 };
 
 export type UpdateOrganizationSettingsMembershipInput = {
+  /** Allow registered users to apply to associate with this Organization. */
+  allowApplications?: InputMaybe<Scalars["Boolean"]["input"]>;
+  /** Allow Spaces to invite this Organization to join them. */
+  allowSpaceInvitations?: InputMaybe<Scalars["Boolean"]["input"]>;
   /** Allow Users with email addresses matching the domain of this Organization to join. */
-  allowUsersMatchingDomainToJoin: Scalars["Boolean"]["input"];
+  allowUsersMatchingDomainToJoin?: InputMaybe<Scalars["Boolean"]["input"]>;
 };
 
 export type UpdateOrganizationSettingsPrivacyInput = {
@@ -9796,8 +10247,8 @@ export type UpdateTemplateInput = {
   postDefaultDescription?: InputMaybe<Scalars["Markdown"]["input"]>;
   /** The Profile of the Template. */
   profile?: InputMaybe<UpdateProfileInput>;
-  /** The new content to be used. */
-  whiteboardContent?: InputMaybe<Scalars["WhiteboardContent"]["input"]>;
+  /** Replace this Whiteboard Template from an existing Whiteboard through a server-side authorized copy. */
+  sourceWhiteboardID?: InputMaybe<Scalars["UUID"]["input"]>;
 };
 
 export type UpdateUserGroupInput = {
@@ -9895,10 +10346,18 @@ export type UpdateUserSettingsNotificationInput = {
 };
 
 export type UpdateUserSettingsNotificationOrganizationInput = {
+  /** Receive a notification when someone applies to associate with an organisation you administer */
+  adminAssociateApplicationReceived?: InputMaybe<NotificationSettingInput>;
+  /** Receive a notification when someone responds to an invitation to associate with an organisation you administer */
+  adminAssociateInvitationResponse?: InputMaybe<NotificationSettingInput>;
+  /** Receive a notification when someone joins an organisation you administer as an associate */
+  adminAssociateJoined?: InputMaybe<NotificationSettingInput>;
   /** Receive a notification when the organization you are admin of is mentioned */
   adminMentioned?: InputMaybe<NotificationSettingInput>;
   /** Receive notification when the organization you are admin of is messaged */
   adminMessageReceived?: InputMaybe<NotificationSettingInput>;
+  /** Receive a notification when an organization you administer is invited to a Space */
+  adminSpaceCommunityInvitation?: InputMaybe<NotificationSettingInput>;
 };
 
 export type UpdateUserSettingsNotificationPlatformAdminInput = {
@@ -9937,6 +10396,8 @@ export type UpdateUserSettingsNotificationSpaceAdminInput = {
   communicationMessageReceived?: InputMaybe<NotificationSettingInput>;
   /** Receive a notification when an application is received */
   communityApplicationReceived?: InputMaybe<NotificationSettingInput>;
+  /** Receive a notification when someone responds to an invitation you sent (admin) */
+  communityInvitationResponse?: InputMaybe<NotificationSettingInput>;
   /** Receive a notification when a new member joins the community (admin) */
   communityNewMember?: InputMaybe<NotificationSettingInput>;
   /** Receive a notification when the login email of an admin or lead of a Space I administer is changed (admin) */
@@ -9986,6 +10447,10 @@ export type UpdateUserSettingsNotificationUserInput = {
 };
 
 export type UpdateUserSettingsNotificationUserMembershipInput = {
+  /** Receive a notification when an organisation decides on my application to associate */
+  organizationAssociateApplicationDecided?: InputMaybe<NotificationSettingInput>;
+  /** Receive a notification when I am invited to associate with an organisation */
+  organizationAssociateInvitationReceived?: InputMaybe<NotificationSettingInput>;
   /** Receive a notification for community invitation */
   spaceCommunityInvitationReceived?: InputMaybe<NotificationSettingInput>;
   /** Receive a notification when I join a new community or when my application is declined */
@@ -10437,10 +10902,18 @@ export type UserSettingsNotificationChannels = {
 };
 
 export type UserSettingsNotificationOrganization = {
+  /** Receive a notification when someone applies to associate with an organisation you administer */
+  adminAssociateApplicationReceived: UserSettingsNotificationChannels;
+  /** Receive a notification when someone responds to an invitation to associate with an organisation you administer */
+  adminAssociateInvitationResponse: UserSettingsNotificationChannels;
+  /** Receive a notification when someone joins an organisation you administer as an associate */
+  adminAssociateJoined: UserSettingsNotificationChannels;
   /** Receive a notification when the organization you are admin of is mentioned */
   adminMentioned: UserSettingsNotificationChannels;
   /** Receive notification when the organization you are admin of is messaged */
   adminMessageReceived: UserSettingsNotificationChannels;
+  /** Receive a notification when an organization you administer is invited to a Space */
+  adminSpaceCommunityInvitation: UserSettingsNotificationChannels;
 };
 
 export type UserSettingsNotificationPlatform = {
@@ -10506,6 +10979,8 @@ export type UserSettingsNotificationSpaceAdmin = {
   communicationMessageReceived: UserSettingsNotificationChannels;
   /** Receive a notification when an application is received */
   communityApplicationReceived: UserSettingsNotificationChannels;
+  /** Receive a notification when someone responds to an invitation you sent (admin) */
+  communityInvitationResponse: UserSettingsNotificationChannels;
   /** Receive a notification when a new member joins the community (admin) */
   communityNewMember: UserSettingsNotificationChannels;
   /** Receive a notification when the login email of an admin or lead of a Space I administer is changed (admin) */
@@ -10528,6 +11003,10 @@ export type UserSettingsNotificationUser = {
 };
 
 export type UserSettingsNotificationUserMembership = {
+  /** Receive a notification when an organisation decides on my application to associate */
+  organizationAssociateApplicationDecided: UserSettingsNotificationChannels;
+  /** Receive a notification when I am invited to associate with an organisation */
+  organizationAssociateInvitationReceived: UserSettingsNotificationChannels;
   /** Receive a notification when I am invited to join a Space community */
   spaceCommunityInvitationReceived: UserSettingsNotificationChannels;
   /** Receive a notification when I join a Space or when my application is declined */
@@ -11226,6 +11705,17 @@ export type ResolversInterfaceTypes<_RefType extends Record<string, unknown>> =
         });
     InAppNotificationPayload:
       | (Omit<
+          SchemaTypes.InAppNotificationPayloadOrganizationAssociateActor,
+          "actor" | "organization"
+        > & {
+          actor?: SchemaTypes.Maybe<_RefType["Actor"]>;
+          organization?: SchemaTypes.Maybe<_RefType["Organization"]>;
+        })
+      | (Omit<
+          SchemaTypes.InAppNotificationPayloadOrganizationAssociateInvitation,
+          "organization"
+        > & { organization?: SchemaTypes.Maybe<_RefType["Organization"]> })
+      | (Omit<
           SchemaTypes.InAppNotificationPayloadOrganizationMessageDirect,
           "organization"
         > & { organization?: SchemaTypes.Maybe<_RefType["Organization"]> })
@@ -11299,8 +11789,11 @@ export type ResolversInterfaceTypes<_RefType extends Record<string, unknown>> =
         })
       | (Omit<
           SchemaTypes.InAppNotificationPayloadSpaceCommunityInvitation,
-          "space"
-        > & { space: _RefType["Space"] })
+          "organization" | "space"
+        > & {
+          organization?: SchemaTypes.Maybe<_RefType["Organization"]>;
+          space: _RefType["Space"];
+        })
       | (Omit<
           SchemaTypes.InAppNotificationPayloadSpaceCommunityInvitationPlatform,
           "space"
@@ -11371,6 +11864,9 @@ export type ResolversTypes = {
     }
   >;
   AccountAuthorizationResetInput: SchemaTypes.AccountAuthorizationResetInput;
+  AccountDeletionBlocker: ResolverTypeWrapper<SchemaTypes.AccountDeletionBlocker>;
+  AccountDeletionBlockerKind: SchemaTypes.AccountDeletionBlockerKind;
+  AccountDeletionBlockerTotal: ResolverTypeWrapper<SchemaTypes.AccountDeletionBlockerTotal>;
   AccountLicensePlan: ResolverTypeWrapper<SchemaTypes.AccountLicensePlan>;
   AccountLicenseResetInput: SchemaTypes.AccountLicenseResetInput;
   AccountSubscription: ResolverTypeWrapper<SchemaTypes.AccountSubscription>;
@@ -11529,6 +12025,7 @@ export type ResolversTypes = {
   AddPollOptionInput: SchemaTypes.AddPollOptionInput;
   AddReactionToCalloutInput: SchemaTypes.AddReactionToCalloutInput;
   AddVisualToMediaGalleryInput: SchemaTypes.AddVisualToMediaGalleryInput;
+  AdminCommunicationReconcileForumHierarchyInput: SchemaTypes.AdminCommunicationReconcileForumHierarchyInput;
   AdminRevokeMcpApiKeyInput: SchemaTypes.AdminRevokeMcpApiKeyInput;
   AdminUserEmailChangeDriftResolveInput: SchemaTypes.AdminUserEmailChangeDriftResolveInput;
   AdminUserEmailChangeInput: SchemaTypes.AdminUserEmailChangeInput;
@@ -11634,6 +12131,7 @@ export type ResolversTypes = {
   CalloutSettings: ResolverTypeWrapper<SchemaTypes.CalloutSettings>;
   CalloutSettingsContribution: ResolverTypeWrapper<SchemaTypes.CalloutSettingsContribution>;
   CalloutSettingsFraming: ResolverTypeWrapper<SchemaTypes.CalloutSettingsFraming>;
+  CalloutSpacesSettings: ResolverTypeWrapper<SchemaTypes.CalloutSpacesSettings>;
   CalloutVisibility: SchemaTypes.CalloutVisibility;
   CalloutsSet: ResolverTypeWrapper<
     Omit<SchemaTypes.CalloutsSet, "callouts"> & {
@@ -11704,9 +12202,8 @@ export type ResolversTypes = {
   CommunityInvitationResult: ResolverTypeWrapper<
     Omit<
       SchemaTypes.CommunityInvitationResult,
-      "invitation" | "spacePendingMembershipInfo"
+      "spacePendingMembershipInfo"
     > & {
-      invitation: ResolversTypes["Invitation"];
       spacePendingMembershipInfo: ResolversTypes["SpacePendingMembershipInfo"];
     }
   >;
@@ -11818,6 +12315,8 @@ export type ResolversTypes = {
   CreateCalloutSettingsFramingData: ResolverTypeWrapper<SchemaTypes.CreateCalloutSettingsFramingData>;
   CreateCalloutSettingsFramingInput: SchemaTypes.CreateCalloutSettingsFramingInput;
   CreateCalloutSettingsInput: SchemaTypes.CreateCalloutSettingsInput;
+  CreateCalloutSpacesSettingsData: ResolverTypeWrapper<SchemaTypes.CreateCalloutSpacesSettingsData>;
+  CreateCalloutSpacesSettingsInput: SchemaTypes.CreateCalloutSpacesSettingsInput;
   CreateCalloutTaskBoardData: ResolverTypeWrapper<SchemaTypes.CreateCalloutTaskBoardData>;
   CreateCalloutTaskBoardInput: SchemaTypes.CreateCalloutTaskBoardInput;
   CreateCalloutsSetData: ResolverTypeWrapper<SchemaTypes.CreateCalloutsSetData>;
@@ -11887,6 +12386,8 @@ export type ResolversTypes = {
   CreateVisualOnProfileData: ResolverTypeWrapper<SchemaTypes.CreateVisualOnProfileData>;
   CreateVisualOnProfileInput: SchemaTypes.CreateVisualOnProfileInput;
   CreateWhiteboardData: ResolverTypeWrapper<SchemaTypes.CreateWhiteboardData>;
+  CreateWhiteboardDraftOnCalloutsSetInput: SchemaTypes.CreateWhiteboardDraftOnCalloutsSetInput;
+  CreateWhiteboardDraftOnTemplatesSetInput: SchemaTypes.CreateWhiteboardDraftOnTemplatesSetInput;
   CreateWhiteboardInput: SchemaTypes.CreateWhiteboardInput;
   CreateWhiteboardPreviewSettingsData: ResolverTypeWrapper<SchemaTypes.CreateWhiteboardPreviewSettingsData>;
   CreateWhiteboardPreviewSettingsInput: SchemaTypes.CreateWhiteboardPreviewSettingsInput;
@@ -11963,6 +12464,7 @@ export type ResolversTypes = {
   ForumCreateDiscussionInput: SchemaTypes.ForumCreateDiscussionInput;
   ForumDiscussionCategory: SchemaTypes.ForumDiscussionCategory;
   ForumDiscussionPrivacy: SchemaTypes.ForumDiscussionPrivacy;
+  ForumRemoveDiscussionCategoryInput: SchemaTypes.ForumRemoveDiscussionCategoryInput;
   Geo: ResolverTypeWrapper<SchemaTypes.Geo>;
   GeoLocation: ResolverTypeWrapper<SchemaTypes.GeoLocation>;
   GrantAssistantActorCapabilitiesInput: SchemaTypes.GrantAssistantActorCapabilitiesInput;
@@ -12007,6 +12509,21 @@ export type ResolversTypes = {
   >;
   InAppNotificationPayload: ResolverTypeWrapper<
     ResolversInterfaceTypes<ResolversTypes>["InAppNotificationPayload"]
+  >;
+  InAppNotificationPayloadOrganizationAssociateActor: ResolverTypeWrapper<
+    Omit<
+      SchemaTypes.InAppNotificationPayloadOrganizationAssociateActor,
+      "actor" | "organization"
+    > & {
+      actor?: SchemaTypes.Maybe<ResolversTypes["Actor"]>;
+      organization?: SchemaTypes.Maybe<ResolversTypes["Organization"]>;
+    }
+  >;
+  InAppNotificationPayloadOrganizationAssociateInvitation: ResolverTypeWrapper<
+    Omit<
+      SchemaTypes.InAppNotificationPayloadOrganizationAssociateInvitation,
+      "organization"
+    > & { organization?: SchemaTypes.Maybe<ResolversTypes["Organization"]> }
   >;
   InAppNotificationPayloadOrganizationMessageDirect: ResolverTypeWrapper<
     Omit<
@@ -12115,8 +12632,11 @@ export type ResolversTypes = {
   InAppNotificationPayloadSpaceCommunityInvitation: ResolverTypeWrapper<
     Omit<
       SchemaTypes.InAppNotificationPayloadSpaceCommunityInvitation,
-      "space"
-    > & { space: ResolversTypes["Space"] }
+      "organization" | "space"
+    > & {
+      organization?: SchemaTypes.Maybe<ResolversTypes["Organization"]>;
+      space: ResolversTypes["Space"];
+    }
   >;
   InAppNotificationPayloadSpaceCommunityInvitationPlatform: ResolverTypeWrapper<
     Omit<
@@ -12257,7 +12777,6 @@ export type ResolversTypes = {
       | "document"
       | "innovationHub"
       | "innovationPack"
-      | "invitation"
       | "organization"
       | "profile"
       | "roleSet"
@@ -12282,7 +12801,6 @@ export type ResolversTypes = {
       document?: SchemaTypes.Maybe<ResolversTypes["Document"]>;
       innovationHub?: SchemaTypes.Maybe<ResolversTypes["InnovationHub"]>;
       innovationPack?: SchemaTypes.Maybe<ResolversTypes["InnovationPack"]>;
-      invitation?: SchemaTypes.Maybe<ResolversTypes["Invitation"]>;
       organization?: SchemaTypes.Maybe<ResolversTypes["Organization"]>;
       profile?: SchemaTypes.Maybe<ResolversTypes["Profile"]>;
       roleSet?: SchemaTypes.Maybe<ResolversTypes["RoleSet"]>;
@@ -12301,6 +12819,7 @@ export type ResolversTypes = {
   McpApiKeyMintResult: ResolverTypeWrapper<SchemaTypes.McpApiKeyMintResult>;
   McpApiKeyOperation: SchemaTypes.McpApiKeyOperation;
   McpApiKeyStatus: SchemaTypes.McpApiKeyStatus;
+  MeAccountDeletionStatus: ResolverTypeWrapper<SchemaTypes.MeAccountDeletionStatus>;
   MeConversationsResult: ResolverTypeWrapper<
     Omit<SchemaTypes.MeConversationsResult, "conversations"> & {
       conversations: Array<ResolversTypes["Conversation"]>;
@@ -12314,6 +12833,8 @@ export type ResolversTypes = {
       | "conversations"
       | "mySpaces"
       | "notifications"
+      | "organizationApplications"
+      | "organizationInvitations"
       | "spaceMembershipsFlat"
       | "spaceMembershipsHierarchical"
       | "user"
@@ -12325,6 +12846,12 @@ export type ResolversTypes = {
       conversations: ResolversTypes["MeConversationsResult"];
       mySpaces: Array<ResolversTypes["MySpaceResults"]>;
       notifications: ResolversTypes["PaginatedInAppNotifications"];
+      organizationApplications: Array<
+        ResolversTypes["OrganizationApplicationResult"]
+      >;
+      organizationInvitations: Array<
+        ResolversTypes["OrganizationInvitationResult"]
+      >;
       spaceMembershipsFlat: Array<ResolversTypes["CommunityMembershipResult"]>;
       spaceMembershipsHierarchical: Array<
         ResolversTypes["CommunityMembershipResult"]
@@ -12343,6 +12870,18 @@ export type ResolversTypes = {
       profile: ResolversTypes["Profile"];
     }
   >;
+  MemoSignature: ResolverTypeWrapper<
+    Omit<SchemaTypes.MemoSignature, "actor" | "document"> & {
+      actor?: SchemaTypes.Maybe<ResolversTypes["User"]>;
+      document?: SchemaTypes.Maybe<ResolversTypes["Document"]>;
+    }
+  >;
+  MemoSignatureVerificationStatus: SchemaTypes.MemoSignatureVerificationStatus;
+  MemoSignatureVerifyInput: SchemaTypes.MemoSignatureVerifyInput;
+  MemoSigningContinueInput: SchemaTypes.MemoSigningContinueInput;
+  MemoSigningContinueResult: ResolverTypeWrapper<SchemaTypes.MemoSigningContinueResult>;
+  MemoSigningPrepareInput: SchemaTypes.MemoSigningPrepareInput;
+  MemoSigningPrepareResult: ResolverTypeWrapper<SchemaTypes.MemoSigningPrepareResult>;
   Message: ResolverTypeWrapper<
     Omit<SchemaTypes.Message, "sender"> & {
       sender?: SchemaTypes.Maybe<ResolversTypes["Actor"]>;
@@ -12414,8 +12953,20 @@ export type ResolversTypes = {
       roleSet: ResolversTypes["RoleSet"];
     }
   >;
+  OrganizationApplicationResult: ResolverTypeWrapper<
+    Omit<SchemaTypes.OrganizationApplicationResult, "organization"> & {
+      organization: ResolversTypes["Organization"];
+    }
+  >;
+  OrganizationAssociateEligibility: ResolverTypeWrapper<SchemaTypes.OrganizationAssociateEligibility>;
+  OrganizationAssociateEligibilityReason: SchemaTypes.OrganizationAssociateEligibilityReason;
   OrganizationAuthorizationResetInput: SchemaTypes.OrganizationAuthorizationResetInput;
   OrganizationFilterInput: SchemaTypes.OrganizationFilterInput;
+  OrganizationInvitationResult: ResolverTypeWrapper<
+    Omit<SchemaTypes.OrganizationInvitationResult, "organization"> & {
+      organization: ResolversTypes["Organization"];
+    }
+  >;
   OrganizationSettings: ResolverTypeWrapper<SchemaTypes.OrganizationSettings>;
   OrganizationSettingsMembership: ResolverTypeWrapper<SchemaTypes.OrganizationSettingsMembership>;
   OrganizationSettingsPrivacy: ResolverTypeWrapper<SchemaTypes.OrganizationSettingsPrivacy>;
@@ -12605,6 +13156,7 @@ export type ResolversTypes = {
   RemoveUserGroupMemberInput: SchemaTypes.RemoveUserGroupMemberInput;
   ReorderPollOptionsInput: SchemaTypes.ReorderPollOptionsInput;
   ReplaceCollaboraDocumentInput: SchemaTypes.ReplaceCollaboraDocumentInput;
+  ReplaceWhiteboardContentFromSourceInput: SchemaTypes.ReplaceWhiteboardContentFromSourceInput;
   RevokeAuthorizationCredentialInput: SchemaTypes.RevokeAuthorizationCredentialInput;
   RevokeLicensePlanFromAccount: SchemaTypes.RevokeLicensePlanFromAccount;
   RevokeLicensePlanFromSpace: SchemaTypes.RevokeLicensePlanFromSpace;
@@ -12615,12 +13167,8 @@ export type ResolversTypes = {
   RoleSet: ResolverTypeWrapper<
     Omit<
       SchemaTypes.RoleSet,
-      | "invitations"
-      | "organizationsInRole"
-      | "organizationsInRoles"
-      | "usersInRole"
+      "organizationsInRole" | "organizationsInRoles" | "usersInRole"
     > & {
-      invitations: Array<ResolversTypes["Invitation"]>;
       organizationsInRole: Array<ResolversTypes["Organization"]>;
       organizationsInRoles: Array<
         ResolversTypes["OrganizationsInRolesResponse"]
@@ -12628,11 +13176,8 @@ export type ResolversTypes = {
       usersInRole: Array<ResolversTypes["User"]>;
     }
   >;
-  RoleSetInvitationResult: ResolverTypeWrapper<
-    Omit<SchemaTypes.RoleSetInvitationResult, "invitation"> & {
-      invitation?: SchemaTypes.Maybe<ResolversTypes["Invitation"]>;
-    }
-  >;
+  RoleSetInvitationResult: ResolverTypeWrapper<SchemaTypes.RoleSetInvitationResult>;
+  RoleSetInvitationResultNotice: SchemaTypes.RoleSetInvitationResultNotice;
   RoleSetInvitationResultType: SchemaTypes.RoleSetInvitationResultType;
   RoleSetRoleImplicit: SchemaTypes.RoleSetRoleImplicit;
   RoleSetType: SchemaTypes.RoleSetType;
@@ -12717,6 +13262,7 @@ export type ResolversTypes = {
   SetDefaultCalloutTemplateOnInnovationFlowStateInput: SchemaTypes.SetDefaultCalloutTemplateOnInnovationFlowStateInput;
   SetPlatformWellKnownVirtualContributorInput: SchemaTypes.SetPlatformWellKnownVirtualContributorInput;
   SidebarWidget: SchemaTypes.SidebarWidget;
+  SigningAttemptStatus: SchemaTypes.SigningAttemptStatus;
   Space: ResolverTypeWrapper<
     Omit<
       SchemaTypes.Space,
@@ -12763,7 +13309,9 @@ export type ResolversTypes = {
       leadUsers: Array<ResolversTypes["User"]>;
     }
   >;
+  SpaceCollectionCardVariant: SchemaTypes.SpaceCollectionCardVariant;
   SpaceFilterInput: SchemaTypes.SpaceFilterInput;
+  SpaceJoinPreview: ResolverTypeWrapper<SchemaTypes.SpaceJoinPreview>;
   SpaceLevel: SchemaTypes.SpaceLevel;
   SpacePendingMembershipInfo: ResolverTypeWrapper<
     Omit<
@@ -12908,6 +13456,7 @@ export type ResolversTypes = {
   UpdateCalloutSettingsContributionInput: SchemaTypes.UpdateCalloutSettingsContributionInput;
   UpdateCalloutSettingsFramingInput: SchemaTypes.UpdateCalloutSettingsFramingInput;
   UpdateCalloutSettingsInput: SchemaTypes.UpdateCalloutSettingsInput;
+  UpdateCalloutSpacesSettingsInput: SchemaTypes.UpdateCalloutSpacesSettingsInput;
   UpdateCalloutVisibilityInput: SchemaTypes.UpdateCalloutVisibilityInput;
   UpdateCalloutsSortOrderInput: SchemaTypes.UpdateCalloutsSortOrderInput;
   UpdateClassificationEntryDisplayInput: SchemaTypes.UpdateClassificationEntryDisplayInput;
@@ -13112,9 +13661,6 @@ export type ResolversTypes = {
       profile: ResolversTypes["Profile"];
     }
   >;
-  WhiteboardContent: ResolverTypeWrapper<
-    SchemaTypes.Scalars["WhiteboardContent"]["output"]
-  >;
   WhiteboardPreviewCoordinates: ResolverTypeWrapper<SchemaTypes.WhiteboardPreviewCoordinates>;
   WhiteboardPreviewCoordinatesData: ResolverTypeWrapper<SchemaTypes.WhiteboardPreviewCoordinatesData>;
   WhiteboardPreviewCoordinatesInput: SchemaTypes.WhiteboardPreviewCoordinatesInput;
@@ -13146,6 +13692,8 @@ export type ResolversParentTypes = {
     spaces: Array<ResolversParentTypes["Space"]>;
   };
   AccountAuthorizationResetInput: SchemaTypes.AccountAuthorizationResetInput;
+  AccountDeletionBlocker: SchemaTypes.AccountDeletionBlocker;
+  AccountDeletionBlockerTotal: SchemaTypes.AccountDeletionBlockerTotal;
   AccountLicensePlan: SchemaTypes.AccountLicensePlan;
   AccountLicenseResetInput: SchemaTypes.AccountLicenseResetInput;
   AccountSubscription: SchemaTypes.AccountSubscription;
@@ -13270,6 +13818,7 @@ export type ResolversParentTypes = {
   AddPollOptionInput: SchemaTypes.AddPollOptionInput;
   AddReactionToCalloutInput: SchemaTypes.AddReactionToCalloutInput;
   AddVisualToMediaGalleryInput: SchemaTypes.AddVisualToMediaGalleryInput;
+  AdminCommunicationReconcileForumHierarchyInput: SchemaTypes.AdminCommunicationReconcileForumHierarchyInput;
   AdminRevokeMcpApiKeyInput: SchemaTypes.AdminRevokeMcpApiKeyInput;
   AdminUserEmailChangeDriftResolveInput: SchemaTypes.AdminUserEmailChangeDriftResolveInput;
   AdminUserEmailChangeInput: SchemaTypes.AdminUserEmailChangeInput;
@@ -13347,6 +13896,7 @@ export type ResolversParentTypes = {
   CalloutSettings: SchemaTypes.CalloutSettings;
   CalloutSettingsContribution: SchemaTypes.CalloutSettingsContribution;
   CalloutSettingsFraming: SchemaTypes.CalloutSettingsFraming;
+  CalloutSpacesSettings: SchemaTypes.CalloutSpacesSettings;
   CalloutsSet: Omit<SchemaTypes.CalloutsSet, "callouts"> & {
     callouts: Array<ResolversParentTypes["Callout"]>;
   };
@@ -13403,9 +13953,8 @@ export type ResolversParentTypes = {
   CommunityInvitationForRoleResult: SchemaTypes.CommunityInvitationForRoleResult;
   CommunityInvitationResult: Omit<
     SchemaTypes.CommunityInvitationResult,
-    "invitation" | "spacePendingMembershipInfo"
+    "spacePendingMembershipInfo"
   > & {
-    invitation: ResolversParentTypes["Invitation"];
     spacePendingMembershipInfo: ResolversParentTypes["SpacePendingMembershipInfo"];
   };
   CommunityMembershipResult: Omit<
@@ -13497,6 +14046,8 @@ export type ResolversParentTypes = {
   CreateCalloutSettingsFramingData: SchemaTypes.CreateCalloutSettingsFramingData;
   CreateCalloutSettingsFramingInput: SchemaTypes.CreateCalloutSettingsFramingInput;
   CreateCalloutSettingsInput: SchemaTypes.CreateCalloutSettingsInput;
+  CreateCalloutSpacesSettingsData: SchemaTypes.CreateCalloutSpacesSettingsData;
+  CreateCalloutSpacesSettingsInput: SchemaTypes.CreateCalloutSpacesSettingsInput;
   CreateCalloutTaskBoardData: SchemaTypes.CreateCalloutTaskBoardData;
   CreateCalloutTaskBoardInput: SchemaTypes.CreateCalloutTaskBoardInput;
   CreateCalloutsSetData: SchemaTypes.CreateCalloutsSetData;
@@ -13566,6 +14117,8 @@ export type ResolversParentTypes = {
   CreateVisualOnProfileData: SchemaTypes.CreateVisualOnProfileData;
   CreateVisualOnProfileInput: SchemaTypes.CreateVisualOnProfileInput;
   CreateWhiteboardData: SchemaTypes.CreateWhiteboardData;
+  CreateWhiteboardDraftOnCalloutsSetInput: SchemaTypes.CreateWhiteboardDraftOnCalloutsSetInput;
+  CreateWhiteboardDraftOnTemplatesSetInput: SchemaTypes.CreateWhiteboardDraftOnTemplatesSetInput;
   CreateWhiteboardInput: SchemaTypes.CreateWhiteboardInput;
   CreateWhiteboardPreviewSettingsData: SchemaTypes.CreateWhiteboardPreviewSettingsData;
   CreateWhiteboardPreviewSettingsInput: SchemaTypes.CreateWhiteboardPreviewSettingsInput;
@@ -13631,6 +14184,7 @@ export type ResolversParentTypes = {
     mentionableContributors: Array<ResolversParentTypes["ActorFull"]>;
   };
   ForumCreateDiscussionInput: SchemaTypes.ForumCreateDiscussionInput;
+  ForumRemoveDiscussionCategoryInput: SchemaTypes.ForumRemoveDiscussionCategoryInput;
   Geo: SchemaTypes.Geo;
   GeoLocation: SchemaTypes.GeoLocation;
   GrantAssistantActorCapabilitiesInput: SchemaTypes.GrantAssistantActorCapabilitiesInput;
@@ -13665,6 +14219,19 @@ export type ResolversParentTypes = {
     triggeredBy?: SchemaTypes.Maybe<ResolversParentTypes["Actor"]>;
   };
   InAppNotificationPayload: ResolversInterfaceTypes<ResolversParentTypes>["InAppNotificationPayload"];
+  InAppNotificationPayloadOrganizationAssociateActor: Omit<
+    SchemaTypes.InAppNotificationPayloadOrganizationAssociateActor,
+    "actor" | "organization"
+  > & {
+    actor?: SchemaTypes.Maybe<ResolversParentTypes["Actor"]>;
+    organization?: SchemaTypes.Maybe<ResolversParentTypes["Organization"]>;
+  };
+  InAppNotificationPayloadOrganizationAssociateInvitation: Omit<
+    SchemaTypes.InAppNotificationPayloadOrganizationAssociateInvitation,
+    "organization"
+  > & {
+    organization?: SchemaTypes.Maybe<ResolversParentTypes["Organization"]>;
+  };
   InAppNotificationPayloadOrganizationMessageDirect: Omit<
     SchemaTypes.InAppNotificationPayloadOrganizationMessageDirect,
     "organization"
@@ -13760,8 +14327,11 @@ export type ResolversParentTypes = {
   };
   InAppNotificationPayloadSpaceCommunityInvitation: Omit<
     SchemaTypes.InAppNotificationPayloadSpaceCommunityInvitation,
-    "space"
-  > & { space: ResolversParentTypes["Space"] };
+    "organization" | "space"
+  > & {
+    organization?: SchemaTypes.Maybe<ResolversParentTypes["Organization"]>;
+    space: ResolversParentTypes["Space"];
+  };
   InAppNotificationPayloadSpaceCommunityInvitationPlatform: Omit<
     SchemaTypes.InAppNotificationPayloadSpaceCommunityInvitationPlatform,
     "space"
@@ -13877,7 +14447,6 @@ export type ResolversParentTypes = {
     | "document"
     | "innovationHub"
     | "innovationPack"
-    | "invitation"
     | "organization"
     | "profile"
     | "roleSet"
@@ -13902,7 +14471,6 @@ export type ResolversParentTypes = {
     document?: SchemaTypes.Maybe<ResolversParentTypes["Document"]>;
     innovationHub?: SchemaTypes.Maybe<ResolversParentTypes["InnovationHub"]>;
     innovationPack?: SchemaTypes.Maybe<ResolversParentTypes["InnovationPack"]>;
-    invitation?: SchemaTypes.Maybe<ResolversParentTypes["Invitation"]>;
     organization?: SchemaTypes.Maybe<ResolversParentTypes["Organization"]>;
     profile?: SchemaTypes.Maybe<ResolversParentTypes["Profile"]>;
     roleSet?: SchemaTypes.Maybe<ResolversParentTypes["RoleSet"]>;
@@ -13918,6 +14486,7 @@ export type ResolversParentTypes = {
   Markdown: SchemaTypes.Scalars["Markdown"]["output"];
   McpApiKey: SchemaTypes.McpApiKey;
   McpApiKeyMintResult: SchemaTypes.McpApiKeyMintResult;
+  MeAccountDeletionStatus: SchemaTypes.MeAccountDeletionStatus;
   MeConversationsResult: Omit<
     SchemaTypes.MeConversationsResult,
     "conversations"
@@ -13929,6 +14498,8 @@ export type ResolversParentTypes = {
     | "conversations"
     | "mySpaces"
     | "notifications"
+    | "organizationApplications"
+    | "organizationInvitations"
     | "spaceMembershipsFlat"
     | "spaceMembershipsHierarchical"
     | "user"
@@ -13942,6 +14513,12 @@ export type ResolversParentTypes = {
     conversations: ResolversParentTypes["MeConversationsResult"];
     mySpaces: Array<ResolversParentTypes["MySpaceResults"]>;
     notifications: ResolversParentTypes["PaginatedInAppNotifications"];
+    organizationApplications: Array<
+      ResolversParentTypes["OrganizationApplicationResult"]
+    >;
+    organizationInvitations: Array<
+      ResolversParentTypes["OrganizationInvitationResult"]
+    >;
     spaceMembershipsFlat: Array<
       ResolversParentTypes["CommunityMembershipResult"]
     >;
@@ -13957,6 +14534,15 @@ export type ResolversParentTypes = {
     createdBy?: SchemaTypes.Maybe<ResolversParentTypes["User"]>;
     profile: ResolversParentTypes["Profile"];
   };
+  MemoSignature: Omit<SchemaTypes.MemoSignature, "actor" | "document"> & {
+    actor?: SchemaTypes.Maybe<ResolversParentTypes["User"]>;
+    document?: SchemaTypes.Maybe<ResolversParentTypes["Document"]>;
+  };
+  MemoSignatureVerifyInput: SchemaTypes.MemoSignatureVerifyInput;
+  MemoSigningContinueInput: SchemaTypes.MemoSigningContinueInput;
+  MemoSigningContinueResult: SchemaTypes.MemoSigningContinueResult;
+  MemoSigningPrepareInput: SchemaTypes.MemoSigningPrepareInput;
+  MemoSigningPrepareResult: SchemaTypes.MemoSigningPrepareResult;
   Message: Omit<SchemaTypes.Message, "sender"> & {
     sender?: SchemaTypes.Maybe<ResolversParentTypes["Actor"]>;
   };
@@ -14018,8 +14604,17 @@ export type ResolversParentTypes = {
     profile?: SchemaTypes.Maybe<ResolversParentTypes["Profile"]>;
     roleSet: ResolversParentTypes["RoleSet"];
   };
+  OrganizationApplicationResult: Omit<
+    SchemaTypes.OrganizationApplicationResult,
+    "organization"
+  > & { organization: ResolversParentTypes["Organization"] };
+  OrganizationAssociateEligibility: SchemaTypes.OrganizationAssociateEligibility;
   OrganizationAuthorizationResetInput: SchemaTypes.OrganizationAuthorizationResetInput;
   OrganizationFilterInput: SchemaTypes.OrganizationFilterInput;
+  OrganizationInvitationResult: Omit<
+    SchemaTypes.OrganizationInvitationResult,
+    "organization"
+  > & { organization: ResolversParentTypes["Organization"] };
   OrganizationSettings: SchemaTypes.OrganizationSettings;
   OrganizationSettingsMembership: SchemaTypes.OrganizationSettingsMembership;
   OrganizationSettingsPrivacy: SchemaTypes.OrganizationSettingsPrivacy;
@@ -14174,6 +14769,7 @@ export type ResolversParentTypes = {
   RemoveUserGroupMemberInput: SchemaTypes.RemoveUserGroupMemberInput;
   ReorderPollOptionsInput: SchemaTypes.ReorderPollOptionsInput;
   ReplaceCollaboraDocumentInput: SchemaTypes.ReplaceCollaboraDocumentInput;
+  ReplaceWhiteboardContentFromSourceInput: SchemaTypes.ReplaceWhiteboardContentFromSourceInput;
   RevokeAuthorizationCredentialInput: SchemaTypes.RevokeAuthorizationCredentialInput;
   RevokeLicensePlanFromAccount: SchemaTypes.RevokeLicensePlanFromAccount;
   RevokeLicensePlanFromSpace: SchemaTypes.RevokeLicensePlanFromSpace;
@@ -14182,22 +14778,15 @@ export type ResolversParentTypes = {
   Role: SchemaTypes.Role;
   RoleSet: Omit<
     SchemaTypes.RoleSet,
-    | "invitations"
-    | "organizationsInRole"
-    | "organizationsInRoles"
-    | "usersInRole"
+    "organizationsInRole" | "organizationsInRoles" | "usersInRole"
   > & {
-    invitations: Array<ResolversParentTypes["Invitation"]>;
     organizationsInRole: Array<ResolversParentTypes["Organization"]>;
     organizationsInRoles: Array<
       ResolversParentTypes["OrganizationsInRolesResponse"]
     >;
     usersInRole: Array<ResolversParentTypes["User"]>;
   };
-  RoleSetInvitationResult: Omit<
-    SchemaTypes.RoleSetInvitationResult,
-    "invitation"
-  > & { invitation?: SchemaTypes.Maybe<ResolversParentTypes["Invitation"]> };
+  RoleSetInvitationResult: SchemaTypes.RoleSetInvitationResult;
   RolesActorInput: SchemaTypes.RolesActorInput;
   RolesResult: SchemaTypes.RolesResult;
   RolesResultCommunity: SchemaTypes.RolesResultCommunity;
@@ -14308,6 +14897,7 @@ export type ResolversParentTypes = {
     leadUsers: Array<ResolversParentTypes["User"]>;
   };
   SpaceFilterInput: SchemaTypes.SpaceFilterInput;
+  SpaceJoinPreview: SchemaTypes.SpaceJoinPreview;
   SpacePendingMembershipInfo: Omit<
     SchemaTypes.SpacePendingMembershipInfo,
     "about" | "communityGuidelines"
@@ -14425,6 +15015,7 @@ export type ResolversParentTypes = {
   UpdateCalloutSettingsContributionInput: SchemaTypes.UpdateCalloutSettingsContributionInput;
   UpdateCalloutSettingsFramingInput: SchemaTypes.UpdateCalloutSettingsFramingInput;
   UpdateCalloutSettingsInput: SchemaTypes.UpdateCalloutSettingsInput;
+  UpdateCalloutSpacesSettingsInput: SchemaTypes.UpdateCalloutSpacesSettingsInput;
   UpdateCalloutVisibilityInput: SchemaTypes.UpdateCalloutVisibilityInput;
   UpdateCalloutsSortOrderInput: SchemaTypes.UpdateCalloutsSortOrderInput;
   UpdateClassificationEntryDisplayInput: SchemaTypes.UpdateClassificationEntryDisplayInput;
@@ -14610,7 +15201,6 @@ export type ResolversParentTypes = {
     createdBy?: SchemaTypes.Maybe<ResolversParentTypes["User"]>;
     profile: ResolversParentTypes["Profile"];
   };
-  WhiteboardContent: SchemaTypes.Scalars["WhiteboardContent"]["output"];
   WhiteboardPreviewCoordinates: SchemaTypes.WhiteboardPreviewCoordinates;
   WhiteboardPreviewCoordinatesData: SchemaTypes.WhiteboardPreviewCoordinatesData;
   WhiteboardPreviewCoordinatesInput: SchemaTypes.WhiteboardPreviewCoordinatesInput;
@@ -14700,6 +15290,39 @@ export type AccountResolvers<
     ParentType,
     ContextType
   >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type AccountDeletionBlockerResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["AccountDeletionBlocker"] = ResolversParentTypes["AccountDeletionBlocker"]
+> = {
+  displayName?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
+  kind?: Resolver<
+    ResolversTypes["AccountDeletionBlockerKind"],
+    ParentType,
+    ContextType
+  >;
+  resourceID?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
+  selfResolvable?: Resolver<ResolversTypes["Boolean"], ParentType, ContextType>;
+  url?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes["String"]>,
+    ParentType,
+    ContextType
+  >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type AccountDeletionBlockerTotalResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["AccountDeletionBlockerTotal"] = ResolversParentTypes["AccountDeletionBlockerTotal"]
+> = {
+  kind?: Resolver<
+    ResolversTypes["AccountDeletionBlockerKind"],
+    ParentType,
+    ContextType
+  >;
+  total?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -15699,8 +16322,8 @@ export type CalloutContributionDefaultsResolvers<
     ContextType
   >;
   updatedDate?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
-  whiteboardContent?: Resolver<
-    SchemaTypes.Maybe<ResolversTypes["WhiteboardContent"]>,
+  whiteboardContentAvailable?: Resolver<
+    ResolversTypes["Boolean"],
     ParentType,
     ContextType
   >;
@@ -15945,6 +16568,23 @@ export type CalloutSettingsFramingResolvers<
     ParentType,
     ContextType
   >;
+  spaces?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes["CalloutSpacesSettings"]>,
+    ParentType,
+    ContextType
+  >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type CalloutSpacesSettingsResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["CalloutSpacesSettings"] = ResolversParentTypes["CalloutSpacesSettings"]
+> = {
+  cardVariant?: Resolver<
+    ResolversTypes["SpaceCollectionCardVariant"],
+    ParentType,
+    ContextType
+  >;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -16156,6 +16796,7 @@ export type CollaborationMigrationResultResolvers<
   >;
   migrated?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
   total?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
+  unattached?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -16707,13 +17348,23 @@ export type CreateCalloutContributionDefaultsDataResolvers<
     ParentType,
     ContextType
   >;
+  draftWhiteboardID?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes["UUID"]>,
+    ParentType,
+    ContextType
+  >;
   postDescription?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["Markdown"]>,
     ParentType,
     ContextType
   >;
-  whiteboardContent?: Resolver<
-    SchemaTypes.Maybe<ResolversTypes["WhiteboardContent"]>,
+  sourceCalloutID?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes["UUID"]>,
+    ParentType,
+    ContextType
+  >;
+  sourceWhiteboardID?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes["UUID"]>,
     ParentType,
     ContextType
   >;
@@ -16938,6 +17589,23 @@ export type CreateCalloutSettingsFramingDataResolvers<
   >;
   selection?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["CreateCalloutSelectionSettingsData"]>,
+    ParentType,
+    ContextType
+  >;
+  spaces?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes["CreateCalloutSpacesSettingsData"]>,
+    ParentType,
+    ContextType
+  >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type CreateCalloutSpacesSettingsDataResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["CreateCalloutSpacesSettingsData"] = ResolversParentTypes["CreateCalloutSpacesSettingsData"]
+> = {
+  cardVariant?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes["SpaceCollectionCardVariant"]>,
     ParentType,
     ContextType
   >;
@@ -17291,8 +17959,8 @@ export type CreateWhiteboardDataResolvers<
   ContextType = any,
   ParentType extends ResolversParentTypes["CreateWhiteboardData"] = ResolversParentTypes["CreateWhiteboardData"]
 > = {
-  content?: Resolver<
-    SchemaTypes.Maybe<ResolversTypes["WhiteboardContent"]>,
+  draftWhiteboardID?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes["UUID"]>,
     ParentType,
     ContextType
   >;
@@ -17724,6 +18392,8 @@ export type InAppNotificationPayloadResolvers<
   ParentType extends ResolversParentTypes["InAppNotificationPayload"] = ResolversParentTypes["InAppNotificationPayload"]
 > = {
   __resolveType: TypeResolveFn<
+    | "InAppNotificationPayloadOrganizationAssociateActor"
+    | "InAppNotificationPayloadOrganizationAssociateInvitation"
     | "InAppNotificationPayloadOrganizationMessageDirect"
     | "InAppNotificationPayloadOrganizationMessageRoom"
     | "InAppNotificationPayloadPlatformForumDiscussion"
@@ -17755,6 +18425,65 @@ export type InAppNotificationPayloadResolvers<
     ParentType,
     ContextType
   >;
+};
+
+export type InAppNotificationPayloadOrganizationAssociateActorResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["InAppNotificationPayloadOrganizationAssociateActor"] = ResolversParentTypes["InAppNotificationPayloadOrganizationAssociateActor"]
+> = {
+  actor?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes["Actor"]>,
+    ParentType,
+    ContextType
+  >;
+  application?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes["Application"]>,
+    ParentType,
+    ContextType
+  >;
+  extraRolesWithheld?: Resolver<
+    SchemaTypes.Maybe<Array<ResolversTypes["RoleName"]>>,
+    ParentType,
+    ContextType
+  >;
+  invitation?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes["Invitation"]>,
+    ParentType,
+    ContextType
+  >;
+  organization?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes["Organization"]>,
+    ParentType,
+    ContextType
+  >;
+  type?: Resolver<
+    ResolversTypes["NotificationEventPayload"],
+    ParentType,
+    ContextType
+  >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type InAppNotificationPayloadOrganizationAssociateInvitationResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["InAppNotificationPayloadOrganizationAssociateInvitation"] = ResolversParentTypes["InAppNotificationPayloadOrganizationAssociateInvitation"]
+> = {
+  invitation?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes["Invitation"]>,
+    ParentType,
+    ContextType
+  >;
+  organization?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes["Organization"]>,
+    ParentType,
+    ContextType
+  >;
+  type?: Resolver<
+    ResolversTypes["NotificationEventPayload"],
+    ParentType,
+    ContextType
+  >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
 export type InAppNotificationPayloadOrganizationMessageDirectResolvers<
@@ -17881,8 +18610,6 @@ export type InAppNotificationPayloadPlatformUserProfileRemovedResolvers<
     ParentType,
     ContextType
   >;
-  userDisplayName?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
-  userEmail?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -18083,6 +18810,16 @@ export type InAppNotificationPayloadSpaceCommunityInvitationResolvers<
   ContextType = any,
   ParentType extends ResolversParentTypes["InAppNotificationPayloadSpaceCommunityInvitation"] = ResolversParentTypes["InAppNotificationPayloadSpaceCommunityInvitation"]
 > = {
+  invitation?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes["Invitation"]>,
+    ParentType,
+    ContextType
+  >;
+  organization?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes["Organization"]>,
+    ParentType,
+    ContextType
+  >;
   space?: Resolver<ResolversTypes["Space"], ParentType, ContextType>;
   type?: Resolver<
     ResolversTypes["NotificationEventPayload"],
@@ -18386,6 +19123,11 @@ export type InvitationResolvers<
     ParentType,
     ContextType
   >;
+  extraRolesWithheld?: Resolver<
+    SchemaTypes.Maybe<Array<ResolversTypes["RoleName"]>>,
+    ParentType,
+    ContextType
+  >;
   id?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
   invitedToParent?: Resolver<
     ResolversTypes["Boolean"],
@@ -18396,6 +19138,11 @@ export type InvitationResolvers<
   lifecycle?: Resolver<ResolversTypes["Lifecycle"], ParentType, ContextType>;
   nextEvents?: Resolver<
     Array<ResolversTypes["String"]>,
+    ParentType,
+    ContextType
+  >;
+  spacesToJoinOnAccept?: Resolver<
+    SchemaTypes.Maybe<Array<ResolversTypes["SpaceJoinPreview"]>>,
     ParentType,
     ContextType
   >;
@@ -19358,6 +20105,31 @@ export type McpApiKeyMintResultResolvers<
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
+export type MeAccountDeletionStatusResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["MeAccountDeletionStatus"] = ResolversParentTypes["MeAccountDeletionStatus"]
+> = {
+  blockers?: Resolver<
+    Array<ResolversTypes["AccountDeletionBlocker"]>,
+    ParentType,
+    ContextType
+  >;
+  canDelete?: Resolver<ResolversTypes["Boolean"], ParentType, ContextType>;
+  externalSubscriptionLinked?: Resolver<
+    ResolversTypes["Boolean"],
+    ParentType,
+    ContextType
+  >;
+  sessionFresh?: Resolver<ResolversTypes["Boolean"], ParentType, ContextType>;
+  totals?: Resolver<
+    Array<ResolversTypes["AccountDeletionBlockerTotal"]>,
+    ParentType,
+    ContextType
+  >;
+  truncated?: Resolver<ResolversTypes["Boolean"], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
 export type MeConversationsResultResolvers<
   ContextType = any,
   ParentType extends ResolversParentTypes["MeConversationsResult"] = ResolversParentTypes["MeConversationsResult"]
@@ -19374,6 +20146,11 @@ export type MeQueryResultsResolvers<
   ContextType = any,
   ParentType extends ResolversParentTypes["MeQueryResults"] = ResolversParentTypes["MeQueryResults"]
 > = {
+  accountDeletion?: Resolver<
+    ResolversTypes["MeAccountDeletionStatus"],
+    ParentType,
+    ContextType
+  >;
   communityApplications?: Resolver<
     Array<ResolversTypes["CommunityApplicationResult"]>,
     ParentType,
@@ -19419,6 +20196,24 @@ export type MeQueryResultsResolvers<
     ResolversTypes["Float"],
     ParentType,
     ContextType
+  >;
+  organizationApplications?: Resolver<
+    Array<ResolversTypes["OrganizationApplicationResult"]>,
+    ParentType,
+    ContextType,
+    Partial<SchemaTypes.MeQueryResultsOrganizationApplicationsArgs>
+  >;
+  organizationInvitations?: Resolver<
+    Array<ResolversTypes["OrganizationInvitationResult"]>,
+    ParentType,
+    ContextType,
+    Partial<SchemaTypes.MeQueryResultsOrganizationInvitationsArgs>
+  >;
+  organizationInvitationsCount?: Resolver<
+    ResolversTypes["Float"],
+    ParentType,
+    ContextType,
+    Partial<SchemaTypes.MeQueryResultsOrganizationInvitationsCountArgs>
   >;
   spaceMembershipsFlat?: Resolver<
     Array<ResolversTypes["CommunityMembershipResult"]>,
@@ -19494,7 +20289,54 @@ export type MemoResolvers<
   >;
   nameID?: Resolver<ResolversTypes["NameID"], ParentType, ContextType>;
   profile?: Resolver<ResolversTypes["Profile"], ParentType, ContextType>;
+  signatures?: Resolver<
+    Array<ResolversTypes["MemoSignature"]>,
+    ParentType,
+    ContextType
+  >;
   updatedDate?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type MemoSignatureResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["MemoSignature"] = ResolversParentTypes["MemoSignature"]
+> = {
+  actor?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes["User"]>,
+    ParentType,
+    ContextType
+  >;
+  createdDate?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
+  document?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes["Document"]>,
+    ParentType,
+    ContextType
+  >;
+  id?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
+  status?: Resolver<
+    ResolversTypes["SigningAttemptStatus"],
+    ParentType,
+    ContextType
+  >;
+  updatedDate?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type MemoSigningContinueResultResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["MemoSigningContinueResult"] = ResolversParentTypes["MemoSigningContinueResult"]
+> = {
+  authorizeUrl?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type MemoSigningPrepareResultResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["MemoSigningPrepareResult"] = ResolversParentTypes["MemoSigningPrepareResult"]
+> = {
+  attemptId?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
+  previewUrl?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -19715,6 +20557,15 @@ export type MutationResolvers<
     ParentType,
     ContextType
   >;
+  adminCommunicationReconcileForumHierarchy?: Resolver<
+    ResolversTypes["String"],
+    ParentType,
+    ContextType,
+    RequireFields<
+      SchemaTypes.MutationAdminCommunicationReconcileForumHierarchyArgs,
+      "reconcileData"
+    >
+  >;
   adminCommunicationRemoveOrphanedRoom?: Resolver<
     ResolversTypes["Boolean"],
     ParentType,
@@ -19736,6 +20587,15 @@ export type MutationResolvers<
     RequireFields<
       SchemaTypes.MutationAdminCommunicationUpdateRoomStateArgs,
       "roomStateData"
+    >
+  >;
+  adminForumRemoveDiscussionCategory?: Resolver<
+    ResolversTypes["Forum"],
+    ParentType,
+    ContextType,
+    RequireFields<
+      SchemaTypes.MutationAdminForumRemoveDiscussionCategoryArgs,
+      "removeData"
     >
   >;
   adminIdentityDeleteKratosIdentity?: Resolver<
@@ -19904,6 +20764,15 @@ export type MutationResolvers<
     ContextType,
     RequireFields<SchemaTypes.MutationAssignLicensePlanToSpaceArgs, "planData">
   >;
+  assignPlatformRoleToOrganization?: Resolver<
+    ResolversTypes["Organization"],
+    ParentType,
+    ContextType,
+    RequireFields<
+      SchemaTypes.MutationAssignPlatformRoleToOrganizationArgs,
+      "roleData"
+    >
+  >;
   assignPlatformRoleToUser?: Resolver<
     ResolversTypes["User"],
     ParentType,
@@ -20004,6 +20873,12 @@ export type MutationResolvers<
     ResolversTypes["MigrateEmbeddings"],
     ParentType,
     ContextType
+  >;
+  continueMemoSigning?: Resolver<
+    ResolversTypes["MemoSigningContinueResult"],
+    ParentType,
+    ContextType,
+    RequireFields<SchemaTypes.MutationContinueMemoSigningArgs, "signingData">
   >;
   convertSpaceL1ToSpaceL0?: Resolver<
     ResolversTypes["Space"],
@@ -20218,6 +21093,24 @@ export type MutationResolvers<
       "virtualContributorData"
     >
   >;
+  createWhiteboardDraftOnCalloutsSet?: Resolver<
+    ResolversTypes["UUID"],
+    ParentType,
+    ContextType,
+    RequireFields<
+      SchemaTypes.MutationCreateWhiteboardDraftOnCalloutsSetArgs,
+      "draftData"
+    >
+  >;
+  createWhiteboardDraftOnTemplatesSet?: Resolver<
+    ResolversTypes["UUID"],
+    ParentType,
+    ContextType,
+    RequireFields<
+      SchemaTypes.MutationCreateWhiteboardDraftOnTemplatesSetArgs,
+      "draftData"
+    >
+  >;
   createWingbackAccount?: Resolver<
     ResolversTypes["String"],
     ParentType,
@@ -20416,6 +21309,12 @@ export type MutationResolvers<
     ContextType,
     RequireFields<SchemaTypes.MutationDeleteWhiteboardArgs, "whiteboardData">
   >;
+  deleteWhiteboardDraft?: Resolver<
+    ResolversTypes["UUID"],
+    ParentType,
+    ContextType,
+    RequireFields<SchemaTypes.MutationDeleteWhiteboardDraftArgs, "whiteboardID">
+  >;
   enablePushSubscription?: Resolver<
     ResolversTypes["PushSubscription"],
     ParentType,
@@ -20579,6 +21478,12 @@ export type MutationResolvers<
     ContextType,
     RequireFields<SchemaTypes.MutationMoveTaskToColumnArgs, "moveData">
   >;
+  prepareMemoSigning?: Resolver<
+    ResolversTypes["MemoSigningPrepareResult"],
+    ParentType,
+    ContextType,
+    RequireFields<SchemaTypes.MutationPrepareMemoSigningArgs, "signingData">
+  >;
   refreshAllBodiesOfKnowledge?: Resolver<
     ResolversTypes["Boolean"],
     ParentType,
@@ -20642,6 +21547,15 @@ export type MutationResolvers<
     RequireFields<
       SchemaTypes.MutationRemoveNotificationEmailFromBlacklistArgs,
       "input"
+    >
+  >;
+  removePlatformRoleFromOrganization?: Resolver<
+    ResolversTypes["Organization"],
+    ParentType,
+    ContextType,
+    RequireFields<
+      SchemaTypes.MutationRemovePlatformRoleFromOrganizationArgs,
+      "roleData"
     >
   >;
   removePlatformRoleFromUser?: Resolver<
@@ -20732,6 +21646,15 @@ export type MutationResolvers<
     RequireFields<
       SchemaTypes.MutationReplaceCollaboraDocumentArgs,
       "file" | "replaceData"
+    >
+  >;
+  replaceWhiteboardContentFromSource?: Resolver<
+    ResolversTypes["Whiteboard"],
+    ParentType,
+    ContextType,
+    RequireFields<
+      SchemaTypes.MutationReplaceWhiteboardContentFromSourceArgs,
+      "input"
     >
   >;
   resetConversationVc?: Resolver<
@@ -21526,6 +22449,11 @@ export type OrganizationResolvers<
     ParentType,
     ContextType
   >;
+  myAssociateEligibility?: Resolver<
+    ResolversTypes["OrganizationAssociateEligibility"],
+    ParentType,
+    ContextType
+  >;
   nameID?: Resolver<ResolversTypes["NameID"], ParentType, ContextType>;
   profile?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["Profile"]>,
@@ -21558,6 +22486,56 @@ export type OrganizationResolvers<
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
+export type OrganizationApplicationResultResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["OrganizationApplicationResult"] = ResolversParentTypes["OrganizationApplicationResult"]
+> = {
+  application?: Resolver<
+    ResolversTypes["Application"],
+    ParentType,
+    ContextType
+  >;
+  id?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
+  organization?: Resolver<
+    ResolversTypes["Organization"],
+    ParentType,
+    ContextType
+  >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type OrganizationAssociateEligibilityResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["OrganizationAssociateEligibility"] = ResolversParentTypes["OrganizationAssociateEligibility"]
+> = {
+  canApply?: Resolver<ResolversTypes["Boolean"], ParentType, ContextType>;
+  canJoinDirectly?: Resolver<
+    ResolversTypes["Boolean"],
+    ParentType,
+    ContextType
+  >;
+  reason?: Resolver<
+    ResolversTypes["OrganizationAssociateEligibilityReason"],
+    ParentType,
+    ContextType
+  >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type OrganizationInvitationResultResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["OrganizationInvitationResult"] = ResolversParentTypes["OrganizationInvitationResult"]
+> = {
+  id?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
+  invitation?: Resolver<ResolversTypes["Invitation"], ParentType, ContextType>;
+  organization?: Resolver<
+    ResolversTypes["Organization"],
+    ParentType,
+    ContextType
+  >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
 export type OrganizationSettingsResolvers<
   ContextType = any,
   ParentType extends ResolversParentTypes["OrganizationSettings"] = ResolversParentTypes["OrganizationSettings"]
@@ -21579,6 +22557,16 @@ export type OrganizationSettingsMembershipResolvers<
   ContextType = any,
   ParentType extends ResolversParentTypes["OrganizationSettingsMembership"] = ResolversParentTypes["OrganizationSettingsMembership"]
 > = {
+  allowApplications?: Resolver<
+    ResolversTypes["Boolean"],
+    ParentType,
+    ContextType
+  >;
+  allowSpaceInvitations?: Resolver<
+    ResolversTypes["Boolean"],
+    ParentType,
+    ContextType
+  >;
   allowUsersMatchingDomainToJoin?: Resolver<
     ResolversTypes["Boolean"],
     ParentType,
@@ -22827,6 +23815,12 @@ export type QueryResolvers<
     ContextType,
     RequireFields<SchemaTypes.QuerySearchArgs, "searchData">
   >;
+  signingAttempt?: Resolver<
+    ResolversTypes["MemoSignature"],
+    ParentType,
+    ContextType,
+    RequireFields<SchemaTypes.QuerySigningAttemptArgs, "ID">
+  >;
   spaces?: Resolver<
     Array<ResolversTypes["Space"]>,
     ParentType,
@@ -22888,6 +23882,12 @@ export type QueryResolvers<
     SchemaTypes.Maybe<ResolversTypes["String"]>,
     ParentType,
     ContextType
+  >;
+  verifyMemoSignature?: Resolver<
+    ResolversTypes["MemoSignatureVerificationStatus"],
+    ParentType,
+    ContextType,
+    RequireFields<SchemaTypes.QueryVerifyMemoSignatureArgs, "verificationData">
   >;
   virtualContributor?: Resolver<
     ResolversTypes["VirtualContributor"],
@@ -23278,6 +24278,21 @@ export type RoleSetInvitationResultResolvers<
   >;
   invitation?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["Invitation"]>,
+    ParentType,
+    ContextType
+  >;
+  invitedActorID?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes["UUID"]>,
+    ParentType,
+    ContextType
+  >;
+  invitedEmail?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes["String"]>,
+    ParentType,
+    ContextType
+  >;
+  notice?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes["RoleSetInvitationResultNotice"]>,
     ParentType,
     ContextType
   >;
@@ -23824,6 +24839,16 @@ export type SpaceAboutMembershipResolvers<
     ContextType
   >;
   roleSetID?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type SpaceJoinPreviewResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["SpaceJoinPreview"] = ResolversParentTypes["SpaceJoinPreview"]
+> = {
+  displayName?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
+  id?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
+  url?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -25169,12 +26194,32 @@ export type UserSettingsNotificationOrganizationResolvers<
   ContextType = any,
   ParentType extends ResolversParentTypes["UserSettingsNotificationOrganization"] = ResolversParentTypes["UserSettingsNotificationOrganization"]
 > = {
+  adminAssociateApplicationReceived?: Resolver<
+    ResolversTypes["UserSettingsNotificationChannels"],
+    ParentType,
+    ContextType
+  >;
+  adminAssociateInvitationResponse?: Resolver<
+    ResolversTypes["UserSettingsNotificationChannels"],
+    ParentType,
+    ContextType
+  >;
+  adminAssociateJoined?: Resolver<
+    ResolversTypes["UserSettingsNotificationChannels"],
+    ParentType,
+    ContextType
+  >;
   adminMentioned?: Resolver<
     ResolversTypes["UserSettingsNotificationChannels"],
     ParentType,
     ContextType
   >;
   adminMessageReceived?: Resolver<
+    ResolversTypes["UserSettingsNotificationChannels"],
+    ParentType,
+    ContextType
+  >;
+  adminSpaceCommunityInvitation?: Resolver<
     ResolversTypes["UserSettingsNotificationChannels"],
     ParentType,
     ContextType
@@ -25335,6 +26380,11 @@ export type UserSettingsNotificationSpaceAdminResolvers<
     ParentType,
     ContextType
   >;
+  communityInvitationResponse?: Resolver<
+    ResolversTypes["UserSettingsNotificationChannels"],
+    ParentType,
+    ContextType
+  >;
   communityNewMember?: Resolver<
     ResolversTypes["UserSettingsNotificationChannels"],
     ParentType,
@@ -25389,6 +26439,16 @@ export type UserSettingsNotificationUserMembershipResolvers<
   ContextType = any,
   ParentType extends ResolversParentTypes["UserSettingsNotificationUserMembership"] = ResolversParentTypes["UserSettingsNotificationUserMembership"]
 > = {
+  organizationAssociateApplicationDecided?: Resolver<
+    ResolversTypes["UserSettingsNotificationChannels"],
+    ParentType,
+    ContextType
+  >;
+  organizationAssociateInvitationReceived?: Resolver<
+    ResolversTypes["UserSettingsNotificationChannels"],
+    ParentType,
+    ContextType
+  >;
   spaceCommunityInvitationReceived?: Resolver<
     ResolversTypes["UserSettingsNotificationChannels"],
     ParentType,
@@ -25786,11 +26846,6 @@ export type WhiteboardResolvers<
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
-export interface WhiteboardContentScalarConfig
-  extends GraphQLScalarTypeConfig<ResolversTypes["WhiteboardContent"], any> {
-  name: "WhiteboardContent";
-}
-
 export type WhiteboardPreviewCoordinatesResolvers<
   ContextType = any,
   ParentType extends ResolversParentTypes["WhiteboardPreviewCoordinates"] = ResolversParentTypes["WhiteboardPreviewCoordinates"]
@@ -25833,6 +26888,8 @@ export type WhiteboardPreviewSettingsResolvers<
 export type Resolvers<ContextType = any> = {
   APM?: ApmResolvers<ContextType>;
   Account?: AccountResolvers<ContextType>;
+  AccountDeletionBlocker?: AccountDeletionBlockerResolvers<ContextType>;
+  AccountDeletionBlockerTotal?: AccountDeletionBlockerTotalResolvers<ContextType>;
   AccountLicensePlan?: AccountLicensePlanResolvers<ContextType>;
   AccountSubscription?: AccountSubscriptionResolvers<ContextType>;
   ActivityCreatedSubscriptionResult?: ActivityCreatedSubscriptionResultResolvers<ContextType>;
@@ -25881,6 +26938,7 @@ export type Resolvers<ContextType = any> = {
   CalloutSettings?: CalloutSettingsResolvers<ContextType>;
   CalloutSettingsContribution?: CalloutSettingsContributionResolvers<ContextType>;
   CalloutSettingsFraming?: CalloutSettingsFramingResolvers<ContextType>;
+  CalloutSpacesSettings?: CalloutSpacesSettingsResolvers<ContextType>;
   CalloutsSet?: CalloutsSetResolvers<ContextType>;
   Classification?: ClassificationResolvers<ContextType>;
   ClassificationEntry?: ClassificationEntryResolvers<ContextType>;
@@ -25928,6 +26986,7 @@ export type Resolvers<ContextType = any> = {
   CreateCalloutSettingsContributionData?: CreateCalloutSettingsContributionDataResolvers<ContextType>;
   CreateCalloutSettingsData?: CreateCalloutSettingsDataResolvers<ContextType>;
   CreateCalloutSettingsFramingData?: CreateCalloutSettingsFramingDataResolvers<ContextType>;
+  CreateCalloutSpacesSettingsData?: CreateCalloutSpacesSettingsDataResolvers<ContextType>;
   CreateCalloutTaskBoardData?: CreateCalloutTaskBoardDataResolvers<ContextType>;
   CreateCalloutsSetData?: CreateCalloutsSetDataResolvers<ContextType>;
   CreateClassificationData?: CreateClassificationDataResolvers<ContextType>;
@@ -25969,6 +27028,8 @@ export type Resolvers<ContextType = any> = {
   ISearchResults?: ISearchResultsResolvers<ContextType>;
   InAppNotification?: InAppNotificationResolvers<ContextType>;
   InAppNotificationPayload?: InAppNotificationPayloadResolvers<ContextType>;
+  InAppNotificationPayloadOrganizationAssociateActor?: InAppNotificationPayloadOrganizationAssociateActorResolvers<ContextType>;
+  InAppNotificationPayloadOrganizationAssociateInvitation?: InAppNotificationPayloadOrganizationAssociateInvitationResolvers<ContextType>;
   InAppNotificationPayloadOrganizationMessageDirect?: InAppNotificationPayloadOrganizationMessageDirectResolvers<ContextType>;
   InAppNotificationPayloadOrganizationMessageRoom?: InAppNotificationPayloadOrganizationMessageRoomResolvers<ContextType>;
   InAppNotificationPayloadPlatformForumDiscussion?: InAppNotificationPayloadPlatformForumDiscussionResolvers<ContextType>;
@@ -26022,10 +27083,14 @@ export type Resolvers<ContextType = any> = {
   Markdown?: GraphQLScalarType;
   McpApiKey?: McpApiKeyResolvers<ContextType>;
   McpApiKeyMintResult?: McpApiKeyMintResultResolvers<ContextType>;
+  MeAccountDeletionStatus?: MeAccountDeletionStatusResolvers<ContextType>;
   MeConversationsResult?: MeConversationsResultResolvers<ContextType>;
   MeQueryResults?: MeQueryResultsResolvers<ContextType>;
   MediaGallery?: MediaGalleryResolvers<ContextType>;
   Memo?: MemoResolvers<ContextType>;
+  MemoSignature?: MemoSignatureResolvers<ContextType>;
+  MemoSigningContinueResult?: MemoSigningContinueResultResolvers<ContextType>;
+  MemoSigningPrepareResult?: MemoSigningPrepareResultResolvers<ContextType>;
   Message?: MessageResolvers<ContextType>;
   MessageDetails?: MessageDetailsResolvers<ContextType>;
   MessageID?: GraphQLScalarType;
@@ -26042,6 +27107,9 @@ export type Resolvers<ContextType = any> = {
   NameID?: GraphQLScalarType;
   NotificationRecipientResult?: NotificationRecipientResultResolvers<ContextType>;
   Organization?: OrganizationResolvers<ContextType>;
+  OrganizationApplicationResult?: OrganizationApplicationResultResolvers<ContextType>;
+  OrganizationAssociateEligibility?: OrganizationAssociateEligibilityResolvers<ContextType>;
+  OrganizationInvitationResult?: OrganizationInvitationResultResolvers<ContextType>;
   OrganizationSettings?: OrganizationSettingsResolvers<ContextType>;
   OrganizationSettingsMembership?: OrganizationSettingsMembershipResolvers<ContextType>;
   OrganizationSettingsPrivacy?: OrganizationSettingsPrivacyResolvers<ContextType>;
@@ -26125,6 +27193,7 @@ export type Resolvers<ContextType = any> = {
   Space?: SpaceResolvers<ContextType>;
   SpaceAbout?: SpaceAboutResolvers<ContextType>;
   SpaceAboutMembership?: SpaceAboutMembershipResolvers<ContextType>;
+  SpaceJoinPreview?: SpaceJoinPreviewResolvers<ContextType>;
   SpacePendingMembershipInfo?: SpacePendingMembershipInfoResolvers<ContextType>;
   SpaceSettings?: SpaceSettingsResolvers<ContextType>;
   SpaceSettingsCollaboration?: SpaceSettingsCollaborationResolvers<ContextType>;
@@ -26202,7 +27271,6 @@ export type Resolvers<ContextType = any> = {
   Visual?: VisualResolvers<ContextType>;
   VisualConstraints?: VisualConstraintsResolvers<ContextType>;
   Whiteboard?: WhiteboardResolvers<ContextType>;
-  WhiteboardContent?: GraphQLScalarType;
   WhiteboardPreviewCoordinates?: WhiteboardPreviewCoordinatesResolvers<ContextType>;
   WhiteboardPreviewCoordinatesData?: WhiteboardPreviewCoordinatesDataResolvers<ContextType>;
   WhiteboardPreviewSettings?: WhiteboardPreviewSettingsResolvers<ContextType>;
@@ -26229,6 +27297,10 @@ export type InvitationDataFragment = {
   state: string;
   nextEvents: Array<string>;
   isFinalized: boolean;
+  createdDate: Date;
+  extraRoles: Array<SchemaTypes.RoleName>;
+  invitedToParent: boolean;
+  welcomeMessage?: string | undefined;
   lifecycle: { id: string };
   createdBy?:
     | {
@@ -26249,6 +27321,7 @@ export type InvitationDataFragment = {
     | undefined;
   actor: {
     id: string;
+    type: SchemaTypes.ActorType;
     profile?: { id: string; displayName: string } | undefined;
   };
   authorization?:
@@ -26696,7 +27769,11 @@ export type MembersAndLeadsDataFragment = {
     };
     settings: {
       privacy: { contributionRolesPubliclyVisible: boolean };
-      membership: { allowUsersMatchingDomainToJoin: boolean };
+      membership: {
+        allowUsersMatchingDomainToJoin: boolean;
+        allowSpaceInvitations: boolean;
+        allowApplications: boolean;
+      };
     };
     authorization?:
       | { myPrivileges?: Array<SchemaTypes.AuthorizationPrivilege> | undefined }
@@ -26947,7 +28024,11 @@ export type MembersAndLeadsDataFragment = {
     };
     settings: {
       privacy: { contributionRolesPubliclyVisible: boolean };
-      membership: { allowUsersMatchingDomainToJoin: boolean };
+      membership: {
+        allowUsersMatchingDomainToJoin: boolean;
+        allowSpaceInvitations: boolean;
+        allowApplications: boolean;
+      };
     };
     authorization?:
       | { myPrivileges?: Array<SchemaTypes.AuthorizationPrivilege> | undefined }
@@ -27198,7 +28279,11 @@ export type MembersAndLeadsDataFragment = {
     };
     settings: {
       privacy: { contributionRolesPubliclyVisible: boolean };
-      membership: { allowUsersMatchingDomainToJoin: boolean };
+      membership: {
+        allowUsersMatchingDomainToJoin: boolean;
+        allowSpaceInvitations: boolean;
+        allowApplications: boolean;
+      };
     };
     authorization?:
       | { myPrivileges?: Array<SchemaTypes.AuthorizationPrivilege> | undefined }
@@ -28133,7 +29218,7 @@ export type CalloutDetailsFragment = {
     id: string;
     defaultDisplayName?: string | undefined;
     postDescription?: any | undefined;
-    whiteboardContent?: any | undefined;
+    whiteboardContentAvailable: boolean;
   };
   contributions: Array<{
     authorization?:
@@ -29860,9 +30945,33 @@ export type CollaborationDataFragment = {
       | { myPrivileges?: Array<SchemaTypes.AuthorizationPrivilege> | undefined }
       | undefined;
     currentState?:
-      | { description?: any | undefined; displayName: string }
+      | {
+          id: string;
+          description?: any | undefined;
+          displayName: string;
+          sortOrder: number;
+          settings: {
+            allowNewCallouts: boolean;
+            descriptionDisplayMode: SchemaTypes.CalloutDescriptionDisplayMode;
+            showPublishDetails: boolean;
+            sidebar: Array<SchemaTypes.SidebarWidget>;
+            visible: boolean;
+          };
+        }
       | undefined;
-    states: Array<{ description?: any | undefined; displayName: string }>;
+    states: Array<{
+      id: string;
+      description?: any | undefined;
+      displayName: string;
+      sortOrder: number;
+      settings: {
+        allowNewCallouts: boolean;
+        descriptionDisplayMode: SchemaTypes.CalloutDescriptionDisplayMode;
+        showPublishDetails: boolean;
+        sidebar: Array<SchemaTypes.SidebarWidget>;
+        visible: boolean;
+      };
+    }>;
   };
 };
 
@@ -30013,25 +31122,6 @@ export type CommunityDataFragment = {
   }>;
   roleSet: {
     id: string;
-    applications: Array<{
-      id: string;
-      state: string;
-      nextEvents: Array<string>;
-      isFinalized: boolean;
-      lifecycle: { id: string };
-      questions: Array<{ id: string }>;
-      actor: {
-        id: string;
-        profile?: { id: string; displayName: string } | undefined;
-      };
-      authorization?:
-        | {
-            myPrivileges?:
-              | Array<SchemaTypes.AuthorizationPrivilege>
-              | undefined;
-          }
-        | undefined;
-    }>;
     memberUsers: Array<{
       id: string;
       nameID: string;
@@ -30472,7 +31562,11 @@ export type CommunityDataFragment = {
       };
       settings: {
         privacy: { contributionRolesPubliclyVisible: boolean };
-        membership: { allowUsersMatchingDomainToJoin: boolean };
+        membership: {
+          allowUsersMatchingDomainToJoin: boolean;
+          allowSpaceInvitations: boolean;
+          allowApplications: boolean;
+        };
       };
       authorization?:
         | {
@@ -30727,7 +31821,11 @@ export type CommunityDataFragment = {
       };
       settings: {
         privacy: { contributionRolesPubliclyVisible: boolean };
-        membership: { allowUsersMatchingDomainToJoin: boolean };
+        membership: {
+          allowUsersMatchingDomainToJoin: boolean;
+          allowSpaceInvitations: boolean;
+          allowApplications: boolean;
+        };
       };
       authorization?:
         | {
@@ -30982,7 +32080,11 @@ export type CommunityDataFragment = {
       };
       settings: {
         privacy: { contributionRolesPubliclyVisible: boolean };
-        membership: { allowUsersMatchingDomainToJoin: boolean };
+        membership: {
+          allowUsersMatchingDomainToJoin: boolean;
+          allowSpaceInvitations: boolean;
+          allowApplications: boolean;
+        };
       };
       authorization?:
         | {
@@ -31444,8 +32546,17 @@ export type MemberDataFragment = {
 };
 
 export type InnovationFlowStateDataFragment = {
+  id: string;
   description?: any | undefined;
   displayName: string;
+  sortOrder: number;
+  settings: {
+    allowNewCallouts: boolean;
+    descriptionDisplayMode: SchemaTypes.CalloutDescriptionDisplayMode;
+    showPublishDetails: boolean;
+    sidebar: Array<SchemaTypes.SidebarWidget>;
+    visible: boolean;
+  };
 };
 
 export type InnovationFlowDataFragment = {
@@ -31518,9 +32629,33 @@ export type InnovationFlowDataFragment = {
     | { myPrivileges?: Array<SchemaTypes.AuthorizationPrivilege> | undefined }
     | undefined;
   currentState?:
-    | { description?: any | undefined; displayName: string }
+    | {
+        id: string;
+        description?: any | undefined;
+        displayName: string;
+        sortOrder: number;
+        settings: {
+          allowNewCallouts: boolean;
+          descriptionDisplayMode: SchemaTypes.CalloutDescriptionDisplayMode;
+          showPublishDetails: boolean;
+          sidebar: Array<SchemaTypes.SidebarWidget>;
+          visible: boolean;
+        };
+      }
     | undefined;
-  states: Array<{ description?: any | undefined; displayName: string }>;
+  states: Array<{
+    id: string;
+    description?: any | undefined;
+    displayName: string;
+    sortOrder: number;
+    settings: {
+      allowNewCallouts: boolean;
+      descriptionDisplayMode: SchemaTypes.CalloutDescriptionDisplayMode;
+      showPublishDetails: boolean;
+      sidebar: Array<SchemaTypes.SidebarWidget>;
+      visible: boolean;
+    };
+  }>;
 };
 
 export type AssignLicensePlanToAccountMutationVariables = SchemaTypes.Exact<{
@@ -31627,7 +32762,6 @@ export type RevokeLicensePlanFromSpaceMutation = {
       name: SchemaTypes.LicensingCredentialBasedCredentialType;
     }>;
     subspaces: Array<{ id: string }>;
-    actor: { id: string };
   };
 };
 
@@ -32155,7 +33289,11 @@ export type OrganizationDataFragment = {
   };
   settings: {
     privacy: { contributionRolesPubliclyVisible: boolean };
-    membership: { allowUsersMatchingDomainToJoin: boolean };
+    membership: {
+      allowUsersMatchingDomainToJoin: boolean;
+      allowSpaceInvitations: boolean;
+      allowApplications: boolean;
+    };
   };
   authorization?:
     | { myPrivileges?: Array<SchemaTypes.AuthorizationPrivilege> | undefined }
@@ -32977,9 +34115,33 @@ export type SubspaceL1DataFragment = {
             }
           | undefined;
         currentState?:
-          | { description?: any | undefined; displayName: string }
+          | {
+              id: string;
+              description?: any | undefined;
+              displayName: string;
+              sortOrder: number;
+              settings: {
+                allowNewCallouts: boolean;
+                descriptionDisplayMode: SchemaTypes.CalloutDescriptionDisplayMode;
+                showPublishDetails: boolean;
+                sidebar: Array<SchemaTypes.SidebarWidget>;
+                visible: boolean;
+              };
+            }
           | undefined;
-        states: Array<{ description?: any | undefined; displayName: string }>;
+        states: Array<{
+          id: string;
+          description?: any | undefined;
+          displayName: string;
+          sortOrder: number;
+          settings: {
+            allowNewCallouts: boolean;
+            descriptionDisplayMode: SchemaTypes.CalloutDescriptionDisplayMode;
+            showPublishDetails: boolean;
+            sidebar: Array<SchemaTypes.SidebarWidget>;
+            visible: boolean;
+          };
+        }>;
       };
     };
     authorization?:
@@ -33139,25 +34301,6 @@ export type SubspaceL1DataFragment = {
       }>;
       roleSet: {
         id: string;
-        applications: Array<{
-          id: string;
-          state: string;
-          nextEvents: Array<string>;
-          isFinalized: boolean;
-          lifecycle: { id: string };
-          questions: Array<{ id: string }>;
-          actor: {
-            id: string;
-            profile?: { id: string; displayName: string } | undefined;
-          };
-          authorization?:
-            | {
-                myPrivileges?:
-                  | Array<SchemaTypes.AuthorizationPrivilege>
-                  | undefined;
-              }
-            | undefined;
-        }>;
         memberUsers: Array<{
           id: string;
           nameID: string;
@@ -33601,7 +34744,11 @@ export type SubspaceL1DataFragment = {
           };
           settings: {
             privacy: { contributionRolesPubliclyVisible: boolean };
-            membership: { allowUsersMatchingDomainToJoin: boolean };
+            membership: {
+              allowUsersMatchingDomainToJoin: boolean;
+              allowSpaceInvitations: boolean;
+              allowApplications: boolean;
+            };
           };
           authorization?:
             | {
@@ -33859,7 +35006,11 @@ export type SubspaceL1DataFragment = {
           };
           settings: {
             privacy: { contributionRolesPubliclyVisible: boolean };
-            membership: { allowUsersMatchingDomainToJoin: boolean };
+            membership: {
+              allowUsersMatchingDomainToJoin: boolean;
+              allowSpaceInvitations: boolean;
+              allowApplications: boolean;
+            };
           };
           authorization?:
             | {
@@ -34117,7 +35268,11 @@ export type SubspaceL1DataFragment = {
           };
           settings: {
             privacy: { contributionRolesPubliclyVisible: boolean };
-            membership: { allowUsersMatchingDomainToJoin: boolean };
+            membership: {
+              allowUsersMatchingDomainToJoin: boolean;
+              allowSpaceInvitations: boolean;
+              allowApplications: boolean;
+            };
           };
           authorization?:
             | {
@@ -34848,9 +36003,33 @@ export type SubspaceL1DataFragment = {
           }
         | undefined;
       currentState?:
-        | { description?: any | undefined; displayName: string }
+        | {
+            id: string;
+            description?: any | undefined;
+            displayName: string;
+            sortOrder: number;
+            settings: {
+              allowNewCallouts: boolean;
+              descriptionDisplayMode: SchemaTypes.CalloutDescriptionDisplayMode;
+              showPublishDetails: boolean;
+              sidebar: Array<SchemaTypes.SidebarWidget>;
+              visible: boolean;
+            };
+          }
         | undefined;
-      states: Array<{ description?: any | undefined; displayName: string }>;
+      states: Array<{
+        id: string;
+        description?: any | undefined;
+        displayName: string;
+        sortOrder: number;
+        settings: {
+          allowNewCallouts: boolean;
+          descriptionDisplayMode: SchemaTypes.CalloutDescriptionDisplayMode;
+          showPublishDetails: boolean;
+          sidebar: Array<SchemaTypes.SidebarWidget>;
+          visible: boolean;
+        };
+      }>;
     };
   };
   authorization?:
@@ -35006,25 +36185,6 @@ export type SubspaceL1DataFragment = {
     }>;
     roleSet: {
       id: string;
-      applications: Array<{
-        id: string;
-        state: string;
-        nextEvents: Array<string>;
-        isFinalized: boolean;
-        lifecycle: { id: string };
-        questions: Array<{ id: string }>;
-        actor: {
-          id: string;
-          profile?: { id: string; displayName: string } | undefined;
-        };
-        authorization?:
-          | {
-              myPrivileges?:
-                | Array<SchemaTypes.AuthorizationPrivilege>
-                | undefined;
-            }
-          | undefined;
-      }>;
       memberUsers: Array<{
         id: string;
         nameID: string;
@@ -35468,7 +36628,11 @@ export type SubspaceL1DataFragment = {
         };
         settings: {
           privacy: { contributionRolesPubliclyVisible: boolean };
-          membership: { allowUsersMatchingDomainToJoin: boolean };
+          membership: {
+            allowUsersMatchingDomainToJoin: boolean;
+            allowSpaceInvitations: boolean;
+            allowApplications: boolean;
+          };
         };
         authorization?:
           | {
@@ -35726,7 +36890,11 @@ export type SubspaceL1DataFragment = {
         };
         settings: {
           privacy: { contributionRolesPubliclyVisible: boolean };
-          membership: { allowUsersMatchingDomainToJoin: boolean };
+          membership: {
+            allowUsersMatchingDomainToJoin: boolean;
+            allowSpaceInvitations: boolean;
+            allowApplications: boolean;
+          };
         };
         authorization?:
           | {
@@ -35984,7 +37152,11 @@ export type SubspaceL1DataFragment = {
         };
         settings: {
           privacy: { contributionRolesPubliclyVisible: boolean };
-          membership: { allowUsersMatchingDomainToJoin: boolean };
+          membership: {
+            allowUsersMatchingDomainToJoin: boolean;
+            allowSpaceInvitations: boolean;
+            allowApplications: boolean;
+          };
         };
         authorization?:
           | {
@@ -36730,9 +37902,33 @@ export type SubspaceL2DataFragment = {
             }
           | undefined;
         currentState?:
-          | { description?: any | undefined; displayName: string }
+          | {
+              id: string;
+              description?: any | undefined;
+              displayName: string;
+              sortOrder: number;
+              settings: {
+                allowNewCallouts: boolean;
+                descriptionDisplayMode: SchemaTypes.CalloutDescriptionDisplayMode;
+                showPublishDetails: boolean;
+                sidebar: Array<SchemaTypes.SidebarWidget>;
+                visible: boolean;
+              };
+            }
           | undefined;
-        states: Array<{ description?: any | undefined; displayName: string }>;
+        states: Array<{
+          id: string;
+          description?: any | undefined;
+          displayName: string;
+          sortOrder: number;
+          settings: {
+            allowNewCallouts: boolean;
+            descriptionDisplayMode: SchemaTypes.CalloutDescriptionDisplayMode;
+            showPublishDetails: boolean;
+            sidebar: Array<SchemaTypes.SidebarWidget>;
+            visible: boolean;
+          };
+        }>;
       };
     };
     authorization?:
@@ -36892,25 +38088,6 @@ export type SubspaceL2DataFragment = {
       }>;
       roleSet: {
         id: string;
-        applications: Array<{
-          id: string;
-          state: string;
-          nextEvents: Array<string>;
-          isFinalized: boolean;
-          lifecycle: { id: string };
-          questions: Array<{ id: string }>;
-          actor: {
-            id: string;
-            profile?: { id: string; displayName: string } | undefined;
-          };
-          authorization?:
-            | {
-                myPrivileges?:
-                  | Array<SchemaTypes.AuthorizationPrivilege>
-                  | undefined;
-              }
-            | undefined;
-        }>;
         memberUsers: Array<{
           id: string;
           nameID: string;
@@ -37354,7 +38531,11 @@ export type SubspaceL2DataFragment = {
           };
           settings: {
             privacy: { contributionRolesPubliclyVisible: boolean };
-            membership: { allowUsersMatchingDomainToJoin: boolean };
+            membership: {
+              allowUsersMatchingDomainToJoin: boolean;
+              allowSpaceInvitations: boolean;
+              allowApplications: boolean;
+            };
           };
           authorization?:
             | {
@@ -37612,7 +38793,11 @@ export type SubspaceL2DataFragment = {
           };
           settings: {
             privacy: { contributionRolesPubliclyVisible: boolean };
-            membership: { allowUsersMatchingDomainToJoin: boolean };
+            membership: {
+              allowUsersMatchingDomainToJoin: boolean;
+              allowSpaceInvitations: boolean;
+              allowApplications: boolean;
+            };
           };
           authorization?:
             | {
@@ -37870,7 +39055,11 @@ export type SubspaceL2DataFragment = {
           };
           settings: {
             privacy: { contributionRolesPubliclyVisible: boolean };
-            membership: { allowUsersMatchingDomainToJoin: boolean };
+            membership: {
+              allowUsersMatchingDomainToJoin: boolean;
+              allowSpaceInvitations: boolean;
+              allowApplications: boolean;
+            };
           };
           authorization?:
             | {
@@ -38601,9 +39790,33 @@ export type SubspaceL2DataFragment = {
           }
         | undefined;
       currentState?:
-        | { description?: any | undefined; displayName: string }
+        | {
+            id: string;
+            description?: any | undefined;
+            displayName: string;
+            sortOrder: number;
+            settings: {
+              allowNewCallouts: boolean;
+              descriptionDisplayMode: SchemaTypes.CalloutDescriptionDisplayMode;
+              showPublishDetails: boolean;
+              sidebar: Array<SchemaTypes.SidebarWidget>;
+              visible: boolean;
+            };
+          }
         | undefined;
-      states: Array<{ description?: any | undefined; displayName: string }>;
+      states: Array<{
+        id: string;
+        description?: any | undefined;
+        displayName: string;
+        sortOrder: number;
+        settings: {
+          allowNewCallouts: boolean;
+          descriptionDisplayMode: SchemaTypes.CalloutDescriptionDisplayMode;
+          showPublishDetails: boolean;
+          sidebar: Array<SchemaTypes.SidebarWidget>;
+          visible: boolean;
+        };
+      }>;
     };
   };
   authorization?:
@@ -38759,25 +39972,6 @@ export type SubspaceL2DataFragment = {
     }>;
     roleSet: {
       id: string;
-      applications: Array<{
-        id: string;
-        state: string;
-        nextEvents: Array<string>;
-        isFinalized: boolean;
-        lifecycle: { id: string };
-        questions: Array<{ id: string }>;
-        actor: {
-          id: string;
-          profile?: { id: string; displayName: string } | undefined;
-        };
-        authorization?:
-          | {
-              myPrivileges?:
-                | Array<SchemaTypes.AuthorizationPrivilege>
-                | undefined;
-            }
-          | undefined;
-      }>;
       memberUsers: Array<{
         id: string;
         nameID: string;
@@ -39221,7 +40415,11 @@ export type SubspaceL2DataFragment = {
         };
         settings: {
           privacy: { contributionRolesPubliclyVisible: boolean };
-          membership: { allowUsersMatchingDomainToJoin: boolean };
+          membership: {
+            allowUsersMatchingDomainToJoin: boolean;
+            allowSpaceInvitations: boolean;
+            allowApplications: boolean;
+          };
         };
         authorization?:
           | {
@@ -39479,7 +40677,11 @@ export type SubspaceL2DataFragment = {
         };
         settings: {
           privacy: { contributionRolesPubliclyVisible: boolean };
-          membership: { allowUsersMatchingDomainToJoin: boolean };
+          membership: {
+            allowUsersMatchingDomainToJoin: boolean;
+            allowSpaceInvitations: boolean;
+            allowApplications: boolean;
+          };
         };
         authorization?:
           | {
@@ -39737,7 +40939,11 @@ export type SubspaceL2DataFragment = {
         };
         settings: {
           privacy: { contributionRolesPubliclyVisible: boolean };
-          membership: { allowUsersMatchingDomainToJoin: boolean };
+          membership: {
+            allowUsersMatchingDomainToJoin: boolean;
+            allowSpaceInvitations: boolean;
+            allowApplications: boolean;
+          };
         };
         authorization?:
           | {
@@ -40224,25 +41430,6 @@ export type SpaceDataFragment = {
     }>;
     roleSet: {
       id: string;
-      applications: Array<{
-        id: string;
-        state: string;
-        nextEvents: Array<string>;
-        isFinalized: boolean;
-        lifecycle: { id: string };
-        questions: Array<{ id: string }>;
-        actor: {
-          id: string;
-          profile?: { id: string; displayName: string } | undefined;
-        };
-        authorization?:
-          | {
-              myPrivileges?:
-                | Array<SchemaTypes.AuthorizationPrivilege>
-                | undefined;
-            }
-          | undefined;
-      }>;
       memberUsers: Array<{
         id: string;
         nameID: string;
@@ -40686,7 +41873,11 @@ export type SpaceDataFragment = {
         };
         settings: {
           privacy: { contributionRolesPubliclyVisible: boolean };
-          membership: { allowUsersMatchingDomainToJoin: boolean };
+          membership: {
+            allowUsersMatchingDomainToJoin: boolean;
+            allowSpaceInvitations: boolean;
+            allowApplications: boolean;
+          };
         };
         authorization?:
           | {
@@ -40944,7 +42135,11 @@ export type SpaceDataFragment = {
         };
         settings: {
           privacy: { contributionRolesPubliclyVisible: boolean };
-          membership: { allowUsersMatchingDomainToJoin: boolean };
+          membership: {
+            allowUsersMatchingDomainToJoin: boolean;
+            allowSpaceInvitations: boolean;
+            allowApplications: boolean;
+          };
         };
         authorization?:
           | {
@@ -41202,7 +42397,11 @@ export type SpaceDataFragment = {
         };
         settings: {
           privacy: { contributionRolesPubliclyVisible: boolean };
-          membership: { allowUsersMatchingDomainToJoin: boolean };
+          membership: {
+            allowUsersMatchingDomainToJoin: boolean;
+            allowSpaceInvitations: boolean;
+            allowApplications: boolean;
+          };
         };
         authorization?:
           | {
@@ -41850,9 +43049,33 @@ export type SpaceDataFragment = {
           }
         | undefined;
       currentState?:
-        | { description?: any | undefined; displayName: string }
+        | {
+            id: string;
+            description?: any | undefined;
+            displayName: string;
+            sortOrder: number;
+            settings: {
+              allowNewCallouts: boolean;
+              descriptionDisplayMode: SchemaTypes.CalloutDescriptionDisplayMode;
+              showPublishDetails: boolean;
+              sidebar: Array<SchemaTypes.SidebarWidget>;
+              visible: boolean;
+            };
+          }
         | undefined;
-      states: Array<{ description?: any | undefined; displayName: string }>;
+      states: Array<{
+        id: string;
+        description?: any | undefined;
+        displayName: string;
+        sortOrder: number;
+        settings: {
+          allowNewCallouts: boolean;
+          descriptionDisplayMode: SchemaTypes.CalloutDescriptionDisplayMode;
+          showPublishDetails: boolean;
+          sidebar: Array<SchemaTypes.SidebarWidget>;
+          visible: boolean;
+        };
+      }>;
     };
   };
   subspaces: Array<{
@@ -42509,9 +43732,33 @@ export type SpaceDataFragment = {
             }
           | undefined;
         currentState?:
-          | { description?: any | undefined; displayName: string }
+          | {
+              id: string;
+              description?: any | undefined;
+              displayName: string;
+              sortOrder: number;
+              settings: {
+                allowNewCallouts: boolean;
+                descriptionDisplayMode: SchemaTypes.CalloutDescriptionDisplayMode;
+                showPublishDetails: boolean;
+                sidebar: Array<SchemaTypes.SidebarWidget>;
+                visible: boolean;
+              };
+            }
           | undefined;
-        states: Array<{ description?: any | undefined; displayName: string }>;
+        states: Array<{
+          id: string;
+          description?: any | undefined;
+          displayName: string;
+          sortOrder: number;
+          settings: {
+            allowNewCallouts: boolean;
+            descriptionDisplayMode: SchemaTypes.CalloutDescriptionDisplayMode;
+            showPublishDetails: boolean;
+            sidebar: Array<SchemaTypes.SidebarWidget>;
+            visible: boolean;
+          };
+        }>;
       };
     };
     authorization?:
@@ -42671,25 +43918,6 @@ export type SpaceDataFragment = {
       }>;
       roleSet: {
         id: string;
-        applications: Array<{
-          id: string;
-          state: string;
-          nextEvents: Array<string>;
-          isFinalized: boolean;
-          lifecycle: { id: string };
-          questions: Array<{ id: string }>;
-          actor: {
-            id: string;
-            profile?: { id: string; displayName: string } | undefined;
-          };
-          authorization?:
-            | {
-                myPrivileges?:
-                  | Array<SchemaTypes.AuthorizationPrivilege>
-                  | undefined;
-              }
-            | undefined;
-        }>;
         memberUsers: Array<{
           id: string;
           nameID: string;
@@ -43133,7 +44361,11 @@ export type SpaceDataFragment = {
           };
           settings: {
             privacy: { contributionRolesPubliclyVisible: boolean };
-            membership: { allowUsersMatchingDomainToJoin: boolean };
+            membership: {
+              allowUsersMatchingDomainToJoin: boolean;
+              allowSpaceInvitations: boolean;
+              allowApplications: boolean;
+            };
           };
           authorization?:
             | {
@@ -43391,7 +44623,11 @@ export type SpaceDataFragment = {
           };
           settings: {
             privacy: { contributionRolesPubliclyVisible: boolean };
-            membership: { allowUsersMatchingDomainToJoin: boolean };
+            membership: {
+              allowUsersMatchingDomainToJoin: boolean;
+              allowSpaceInvitations: boolean;
+              allowApplications: boolean;
+            };
           };
           authorization?:
             | {
@@ -43649,7 +44885,11 @@ export type SpaceDataFragment = {
           };
           settings: {
             privacy: { contributionRolesPubliclyVisible: boolean };
-            membership: { allowUsersMatchingDomainToJoin: boolean };
+            membership: {
+              allowUsersMatchingDomainToJoin: boolean;
+              allowSpaceInvitations: boolean;
+              allowApplications: boolean;
+            };
           };
           authorization?:
             | {
@@ -45002,9 +46242,33 @@ export type SubspaceDataFragment = {
           }
         | undefined;
       currentState?:
-        | { description?: any | undefined; displayName: string }
+        | {
+            id: string;
+            description?: any | undefined;
+            displayName: string;
+            sortOrder: number;
+            settings: {
+              allowNewCallouts: boolean;
+              descriptionDisplayMode: SchemaTypes.CalloutDescriptionDisplayMode;
+              showPublishDetails: boolean;
+              sidebar: Array<SchemaTypes.SidebarWidget>;
+              visible: boolean;
+            };
+          }
         | undefined;
-      states: Array<{ description?: any | undefined; displayName: string }>;
+      states: Array<{
+        id: string;
+        description?: any | undefined;
+        displayName: string;
+        sortOrder: number;
+        settings: {
+          allowNewCallouts: boolean;
+          descriptionDisplayMode: SchemaTypes.CalloutDescriptionDisplayMode;
+          showPublishDetails: boolean;
+          sidebar: Array<SchemaTypes.SidebarWidget>;
+          visible: boolean;
+        };
+      }>;
     };
   };
   authorization?:
@@ -45160,25 +46424,6 @@ export type SubspaceDataFragment = {
     }>;
     roleSet: {
       id: string;
-      applications: Array<{
-        id: string;
-        state: string;
-        nextEvents: Array<string>;
-        isFinalized: boolean;
-        lifecycle: { id: string };
-        questions: Array<{ id: string }>;
-        actor: {
-          id: string;
-          profile?: { id: string; displayName: string } | undefined;
-        };
-        authorization?:
-          | {
-              myPrivileges?:
-                | Array<SchemaTypes.AuthorizationPrivilege>
-                | undefined;
-            }
-          | undefined;
-      }>;
       memberUsers: Array<{
         id: string;
         nameID: string;
@@ -45622,7 +46867,11 @@ export type SubspaceDataFragment = {
         };
         settings: {
           privacy: { contributionRolesPubliclyVisible: boolean };
-          membership: { allowUsersMatchingDomainToJoin: boolean };
+          membership: {
+            allowUsersMatchingDomainToJoin: boolean;
+            allowSpaceInvitations: boolean;
+            allowApplications: boolean;
+          };
         };
         authorization?:
           | {
@@ -45880,7 +47129,11 @@ export type SubspaceDataFragment = {
         };
         settings: {
           privacy: { contributionRolesPubliclyVisible: boolean };
-          membership: { allowUsersMatchingDomainToJoin: boolean };
+          membership: {
+            allowUsersMatchingDomainToJoin: boolean;
+            allowSpaceInvitations: boolean;
+            allowApplications: boolean;
+          };
         };
         authorization?:
           | {
@@ -46138,7 +47391,11 @@ export type SubspaceDataFragment = {
         };
         settings: {
           privacy: { contributionRolesPubliclyVisible: boolean };
-          membership: { allowUsersMatchingDomainToJoin: boolean };
+          membership: {
+            allowUsersMatchingDomainToJoin: boolean;
+            allowSpaceInvitations: boolean;
+            allowApplications: boolean;
+          };
         };
         authorization?:
           | {
@@ -47820,6 +49077,30 @@ export type UserDataFragment = {
           inApp: boolean;
           push: boolean;
         };
+        adminSpaceCommunityInvitation: {
+          __typename: "UserSettingsNotificationChannels";
+          email: boolean;
+          inApp: boolean;
+          push: boolean;
+        };
+        adminAssociateInvitationResponse: {
+          __typename: "UserSettingsNotificationChannels";
+          email: boolean;
+          inApp: boolean;
+          push: boolean;
+        };
+        adminAssociateApplicationReceived: {
+          __typename: "UserSettingsNotificationChannels";
+          email: boolean;
+          inApp: boolean;
+          push: boolean;
+        };
+        adminAssociateJoined: {
+          __typename: "UserSettingsNotificationChannels";
+          email: boolean;
+          inApp: boolean;
+          push: boolean;
+        };
       };
       space: {
         __typename: "UserSettingsNotificationSpace";
@@ -47832,6 +49113,12 @@ export type UserDataFragment = {
             push: boolean;
           };
           collaborationCalloutContributionCreated: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
+          communityInvitationResponse: {
             __typename: "UserSettingsNotificationChannels";
             email: boolean;
             inApp: boolean;
@@ -47922,6 +49209,18 @@ export type UserDataFragment = {
             push: boolean;
           };
           spaceCommunityJoined: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
+          organizationAssociateInvitationReceived: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
+          organizationAssociateApplicationDecided: {
             __typename: "UserSettingsNotificationChannels";
             email: boolean;
             inApp: boolean;
@@ -48059,6 +49358,30 @@ export type UserSettingsFragmentFragment = {
         inApp: boolean;
         push: boolean;
       };
+      adminSpaceCommunityInvitation: {
+        __typename: "UserSettingsNotificationChannels";
+        email: boolean;
+        inApp: boolean;
+        push: boolean;
+      };
+      adminAssociateInvitationResponse: {
+        __typename: "UserSettingsNotificationChannels";
+        email: boolean;
+        inApp: boolean;
+        push: boolean;
+      };
+      adminAssociateApplicationReceived: {
+        __typename: "UserSettingsNotificationChannels";
+        email: boolean;
+        inApp: boolean;
+        push: boolean;
+      };
+      adminAssociateJoined: {
+        __typename: "UserSettingsNotificationChannels";
+        email: boolean;
+        inApp: boolean;
+        push: boolean;
+      };
     };
     space: {
       __typename: "UserSettingsNotificationSpace";
@@ -48071,6 +49394,12 @@ export type UserSettingsFragmentFragment = {
           push: boolean;
         };
         collaborationCalloutContributionCreated: {
+          __typename: "UserSettingsNotificationChannels";
+          email: boolean;
+          inApp: boolean;
+          push: boolean;
+        };
+        communityInvitationResponse: {
           __typename: "UserSettingsNotificationChannels";
           email: boolean;
           inApp: boolean;
@@ -48161,6 +49490,18 @@ export type UserSettingsFragmentFragment = {
           push: boolean;
         };
         spaceCommunityJoined: {
+          __typename: "UserSettingsNotificationChannels";
+          email: boolean;
+          inApp: boolean;
+          push: boolean;
+        };
+        organizationAssociateInvitationReceived: {
+          __typename: "UserSettingsNotificationChannels";
+          email: boolean;
+          inApp: boolean;
+          push: boolean;
+        };
+        organizationAssociateApplicationDecided: {
           __typename: "UserSettingsNotificationChannels";
           email: boolean;
           inApp: boolean;
@@ -48467,7 +49808,11 @@ export type AssignRoleToOrganizationMutation = {
     };
     settings: {
       privacy: { contributionRolesPubliclyVisible: boolean };
-      membership: { allowUsersMatchingDomainToJoin: boolean };
+      membership: {
+        allowUsersMatchingDomainToJoin: boolean;
+        allowSpaceInvitations: boolean;
+        allowApplications: boolean;
+      };
     };
     authorization?:
       | { myPrivileges?: Array<SchemaTypes.AuthorizationPrivilege> | undefined }
@@ -48716,6 +50061,30 @@ export type AssignRoleToUserMutation = {
             inApp: boolean;
             push: boolean;
           };
+          adminSpaceCommunityInvitation: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
+          adminAssociateInvitationResponse: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
+          adminAssociateApplicationReceived: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
+          adminAssociateJoined: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
         };
         space: {
           __typename: "UserSettingsNotificationSpace";
@@ -48728,6 +50097,12 @@ export type AssignRoleToUserMutation = {
               push: boolean;
             };
             collaborationCalloutContributionCreated: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+              push: boolean;
+            };
+            communityInvitationResponse: {
               __typename: "UserSettingsNotificationChannels";
               email: boolean;
               inApp: boolean;
@@ -48818,6 +50193,18 @@ export type AssignRoleToUserMutation = {
               push: boolean;
             };
             spaceCommunityJoined: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+              push: boolean;
+            };
+            organizationAssociateInvitationReceived: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+              push: boolean;
+            };
+            organizationAssociateApplicationDecided: {
               __typename: "UserSettingsNotificationChannels";
               email: boolean;
               inApp: boolean;
@@ -49116,6 +50503,30 @@ export type AssignRoleToUserExtendedDataMutation = {
             inApp: boolean;
             push: boolean;
           };
+          adminSpaceCommunityInvitation: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
+          adminAssociateInvitationResponse: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
+          adminAssociateApplicationReceived: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
+          adminAssociateJoined: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
         };
         space: {
           __typename: "UserSettingsNotificationSpace";
@@ -49128,6 +50539,12 @@ export type AssignRoleToUserExtendedDataMutation = {
               push: boolean;
             };
             collaborationCalloutContributionCreated: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+              push: boolean;
+            };
+            communityInvitationResponse: {
               __typename: "UserSettingsNotificationChannels";
               email: boolean;
               inApp: boolean;
@@ -49223,6 +50640,18 @@ export type AssignRoleToUserExtendedDataMutation = {
               inApp: boolean;
               push: boolean;
             };
+            organizationAssociateInvitationReceived: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+              push: boolean;
+            };
+            organizationAssociateApplicationDecided: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+              push: boolean;
+            };
           };
           mentioned: {
             __typename: "UserSettingsNotificationChannels";
@@ -49271,6 +50700,21 @@ export type AssignRoleToUserExtendedDataMutation = {
           myPrivileges?: Array<SchemaTypes.AuthorizationPrivilege> | undefined;
           credentialRules?: Array<{ name?: string | undefined }> | undefined;
         }
+      | undefined;
+  };
+};
+
+export type AssignRoleToVirtualContributorMutationVariables =
+  SchemaTypes.Exact<{
+    roleData: SchemaTypes.AssignRoleOnRoleSetInput;
+  }>;
+
+export type AssignRoleToVirtualContributorMutation = {
+  assignRoleToVirtualContributor: {
+    __typename: "VirtualContributor";
+    id: string;
+    profile?:
+      | { __typename: "Profile"; id: string; displayName: string }
       | undefined;
   };
 };
@@ -49345,10 +50789,15 @@ export type InvitationStateEventMutationVariables = SchemaTypes.Exact<{
 
 export type InvitationStateEventMutation = {
   eventOnInvitation: {
+    extraRolesWithheld?: Array<SchemaTypes.RoleName> | undefined;
     id: string;
     state: string;
     nextEvents: Array<string>;
     isFinalized: boolean;
+    createdDate: Date;
+    extraRoles: Array<SchemaTypes.RoleName>;
+    invitedToParent: boolean;
+    welcomeMessage?: string | undefined;
     lifecycle: { id: string };
     createdBy?:
       | {
@@ -49369,6 +50818,7 @@ export type InvitationStateEventMutation = {
       | undefined;
     actor: {
       id: string;
+      type: SchemaTypes.ActorType;
       profile?: { id: string; displayName: string } | undefined;
     };
     authorization?:
@@ -49395,14 +50845,18 @@ export type InviteForEntryRoleOnRoleSetMutation = {
   inviteForEntryRoleOnRoleSet: Array<{
     __typename: "RoleSetInvitationResult";
     type: SchemaTypes.RoleSetInvitationResultType;
+    notice?: SchemaTypes.RoleSetInvitationResultNotice | undefined;
     invitation?:
       | {
           __typename: "Invitation";
           id: string;
           state: string;
+          extraRoles: Array<SchemaTypes.RoleName>;
+          invitedToParent: boolean;
           actor: {
             __typename: "Actor";
             id: string;
+            type: SchemaTypes.ActorType;
             profile?:
               | { __typename: "Profile"; id: string; displayName: string }
               | undefined;
@@ -49677,7 +51131,11 @@ export type RemoveRoleFromOrganizationMutation = {
     };
     settings: {
       privacy: { contributionRolesPubliclyVisible: boolean };
-      membership: { allowUsersMatchingDomainToJoin: boolean };
+      membership: {
+        allowUsersMatchingDomainToJoin: boolean;
+        allowSpaceInvitations: boolean;
+        allowApplications: boolean;
+      };
     };
     authorization?:
       | { myPrivileges?: Array<SchemaTypes.AuthorizationPrivilege> | undefined }
@@ -49926,6 +51384,30 @@ export type RemoveRoleFromUserMutation = {
             inApp: boolean;
             push: boolean;
           };
+          adminSpaceCommunityInvitation: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
+          adminAssociateInvitationResponse: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
+          adminAssociateApplicationReceived: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
+          adminAssociateJoined: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
         };
         space: {
           __typename: "UserSettingsNotificationSpace";
@@ -49938,6 +51420,12 @@ export type RemoveRoleFromUserMutation = {
               push: boolean;
             };
             collaborationCalloutContributionCreated: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+              push: boolean;
+            };
+            communityInvitationResponse: {
               __typename: "UserSettingsNotificationChannels";
               email: boolean;
               inApp: boolean;
@@ -50028,6 +51516,18 @@ export type RemoveRoleFromUserMutation = {
               push: boolean;
             };
             spaceCommunityJoined: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+              push: boolean;
+            };
+            organizationAssociateInvitationReceived: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+              push: boolean;
+            };
+            organizationAssociateApplicationDecided: {
               __typename: "UserSettingsNotificationChannels";
               email: boolean;
               inApp: boolean;
@@ -50327,6 +51827,30 @@ export type RemoveRoleFromUserExtendedDataMutation = {
             inApp: boolean;
             push: boolean;
           };
+          adminSpaceCommunityInvitation: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
+          adminAssociateInvitationResponse: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
+          adminAssociateApplicationReceived: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
+          adminAssociateJoined: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
         };
         space: {
           __typename: "UserSettingsNotificationSpace";
@@ -50339,6 +51863,12 @@ export type RemoveRoleFromUserExtendedDataMutation = {
               push: boolean;
             };
             collaborationCalloutContributionCreated: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+              push: boolean;
+            };
+            communityInvitationResponse: {
               __typename: "UserSettingsNotificationChannels";
               email: boolean;
               inApp: boolean;
@@ -50429,6 +51959,18 @@ export type RemoveRoleFromUserExtendedDataMutation = {
               push: boolean;
             };
             spaceCommunityJoined: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+              push: boolean;
+            };
+            organizationAssociateInvitationReceived: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+              push: boolean;
+            };
+            organizationAssociateApplicationDecided: {
               __typename: "UserSettingsNotificationChannels";
               email: boolean;
               inApp: boolean;
@@ -50726,7 +52268,7 @@ export type CreateCalloutOnCalloutsSetMutation = {
       id: string;
       defaultDisplayName?: string | undefined;
       postDescription?: any | undefined;
-      whiteboardContent?: any | undefined;
+      whiteboardContentAvailable: boolean;
     };
     contributions: Array<{
       authorization?:
@@ -51161,6 +52703,54 @@ export type RemoveReactionFromCalloutMutation = {
   };
 };
 
+export type CreateSpacesCollectionCalloutMutationVariables = SchemaTypes.Exact<{
+  calloutData: SchemaTypes.CreateCalloutOnCalloutsSetInput;
+}>;
+
+export type CreateSpacesCollectionCalloutMutation = {
+  createCalloutOnCalloutsSet: {
+    id: string;
+    framing: { id: string; type: SchemaTypes.CalloutFramingType };
+    settings: {
+      framing: {
+        spaces?:
+          | { cardVariant: SchemaTypes.SpaceCollectionCardVariant }
+          | undefined;
+        selection?:
+          | {
+              mode: SchemaTypes.CalloutSelectionMode;
+              selectedIds: Array<string>;
+            }
+          | undefined;
+      };
+    };
+  };
+};
+
+export type UpdateCalloutSpacesSettingsMutationVariables = SchemaTypes.Exact<{
+  calloutData: SchemaTypes.UpdateCalloutEntityInput;
+}>;
+
+export type UpdateCalloutSpacesSettingsMutation = {
+  updateCallout: {
+    id: string;
+    settings: {
+      framing: {
+        commentsEnabled: boolean;
+        spaces?:
+          | { cardVariant: SchemaTypes.SpaceCollectionCardVariant }
+          | undefined;
+        selection?:
+          | {
+              mode: SchemaTypes.CalloutSelectionMode;
+              selectedIds: Array<string>;
+            }
+          | undefined;
+      };
+    };
+  };
+};
+
 export type UpdateCalloutMutationVariables = SchemaTypes.Exact<{
   calloutData: SchemaTypes.UpdateCalloutEntityInput;
 }>;
@@ -51266,7 +52856,7 @@ export type UpdateCalloutMutation = {
       id: string;
       defaultDisplayName?: string | undefined;
       postDescription?: any | undefined;
-      whiteboardContent?: any | undefined;
+      whiteboardContentAvailable: boolean;
     };
     contributions: Array<{
       authorization?:
@@ -53247,25 +54837,6 @@ export type ConvertSpaceL1ToSpaceL0Mutation = {
       }>;
       roleSet: {
         id: string;
-        applications: Array<{
-          id: string;
-          state: string;
-          nextEvents: Array<string>;
-          isFinalized: boolean;
-          lifecycle: { id: string };
-          questions: Array<{ id: string }>;
-          actor: {
-            id: string;
-            profile?: { id: string; displayName: string } | undefined;
-          };
-          authorization?:
-            | {
-                myPrivileges?:
-                  | Array<SchemaTypes.AuthorizationPrivilege>
-                  | undefined;
-              }
-            | undefined;
-        }>;
         memberUsers: Array<{
           id: string;
           nameID: string;
@@ -53709,7 +55280,11 @@ export type ConvertSpaceL1ToSpaceL0Mutation = {
           };
           settings: {
             privacy: { contributionRolesPubliclyVisible: boolean };
-            membership: { allowUsersMatchingDomainToJoin: boolean };
+            membership: {
+              allowUsersMatchingDomainToJoin: boolean;
+              allowSpaceInvitations: boolean;
+              allowApplications: boolean;
+            };
           };
           authorization?:
             | {
@@ -53967,7 +55542,11 @@ export type ConvertSpaceL1ToSpaceL0Mutation = {
           };
           settings: {
             privacy: { contributionRolesPubliclyVisible: boolean };
-            membership: { allowUsersMatchingDomainToJoin: boolean };
+            membership: {
+              allowUsersMatchingDomainToJoin: boolean;
+              allowSpaceInvitations: boolean;
+              allowApplications: boolean;
+            };
           };
           authorization?:
             | {
@@ -54225,7 +55804,11 @@ export type ConvertSpaceL1ToSpaceL0Mutation = {
           };
           settings: {
             privacy: { contributionRolesPubliclyVisible: boolean };
-            membership: { allowUsersMatchingDomainToJoin: boolean };
+            membership: {
+              allowUsersMatchingDomainToJoin: boolean;
+              allowSpaceInvitations: boolean;
+              allowApplications: boolean;
+            };
           };
           authorization?:
             | {
@@ -54881,9 +56464,33 @@ export type ConvertSpaceL1ToSpaceL0Mutation = {
             }
           | undefined;
         currentState?:
-          | { description?: any | undefined; displayName: string }
+          | {
+              id: string;
+              description?: any | undefined;
+              displayName: string;
+              sortOrder: number;
+              settings: {
+                allowNewCallouts: boolean;
+                descriptionDisplayMode: SchemaTypes.CalloutDescriptionDisplayMode;
+                showPublishDetails: boolean;
+                sidebar: Array<SchemaTypes.SidebarWidget>;
+                visible: boolean;
+              };
+            }
           | undefined;
-        states: Array<{ description?: any | undefined; displayName: string }>;
+        states: Array<{
+          id: string;
+          description?: any | undefined;
+          displayName: string;
+          sortOrder: number;
+          settings: {
+            allowNewCallouts: boolean;
+            descriptionDisplayMode: SchemaTypes.CalloutDescriptionDisplayMode;
+            showPublishDetails: boolean;
+            sidebar: Array<SchemaTypes.SidebarWidget>;
+            visible: boolean;
+          };
+        }>;
       };
     };
     subspaces: Array<{
@@ -55554,9 +57161,33 @@ export type ConvertSpaceL1ToSpaceL0Mutation = {
               }
             | undefined;
           currentState?:
-            | { description?: any | undefined; displayName: string }
+            | {
+                id: string;
+                description?: any | undefined;
+                displayName: string;
+                sortOrder: number;
+                settings: {
+                  allowNewCallouts: boolean;
+                  descriptionDisplayMode: SchemaTypes.CalloutDescriptionDisplayMode;
+                  showPublishDetails: boolean;
+                  sidebar: Array<SchemaTypes.SidebarWidget>;
+                  visible: boolean;
+                };
+              }
             | undefined;
-          states: Array<{ description?: any | undefined; displayName: string }>;
+          states: Array<{
+            id: string;
+            description?: any | undefined;
+            displayName: string;
+            sortOrder: number;
+            settings: {
+              allowNewCallouts: boolean;
+              descriptionDisplayMode: SchemaTypes.CalloutDescriptionDisplayMode;
+              showPublishDetails: boolean;
+              sidebar: Array<SchemaTypes.SidebarWidget>;
+              visible: boolean;
+            };
+          }>;
         };
       };
       authorization?:
@@ -55720,25 +57351,6 @@ export type ConvertSpaceL1ToSpaceL0Mutation = {
         }>;
         roleSet: {
           id: string;
-          applications: Array<{
-            id: string;
-            state: string;
-            nextEvents: Array<string>;
-            isFinalized: boolean;
-            lifecycle: { id: string };
-            questions: Array<{ id: string }>;
-            actor: {
-              id: string;
-              profile?: { id: string; displayName: string } | undefined;
-            };
-            authorization?:
-              | {
-                  myPrivileges?:
-                    | Array<SchemaTypes.AuthorizationPrivilege>
-                    | undefined;
-                }
-              | undefined;
-          }>;
           memberUsers: Array<{
             id: string;
             nameID: string;
@@ -56194,7 +57806,11 @@ export type ConvertSpaceL1ToSpaceL0Mutation = {
             };
             settings: {
               privacy: { contributionRolesPubliclyVisible: boolean };
-              membership: { allowUsersMatchingDomainToJoin: boolean };
+              membership: {
+                allowUsersMatchingDomainToJoin: boolean;
+                allowSpaceInvitations: boolean;
+                allowApplications: boolean;
+              };
             };
             authorization?:
               | {
@@ -56455,7 +58071,11 @@ export type ConvertSpaceL1ToSpaceL0Mutation = {
             };
             settings: {
               privacy: { contributionRolesPubliclyVisible: boolean };
-              membership: { allowUsersMatchingDomainToJoin: boolean };
+              membership: {
+                allowUsersMatchingDomainToJoin: boolean;
+                allowSpaceInvitations: boolean;
+                allowApplications: boolean;
+              };
             };
             authorization?:
               | {
@@ -56716,7 +58336,11 @@ export type ConvertSpaceL1ToSpaceL0Mutation = {
             };
             settings: {
               privacy: { contributionRolesPubliclyVisible: boolean };
-              membership: { allowUsersMatchingDomainToJoin: boolean };
+              membership: {
+                allowUsersMatchingDomainToJoin: boolean;
+                allowSpaceInvitations: boolean;
+                allowApplications: boolean;
+              };
             };
             authorization?:
               | {
@@ -57424,6 +59048,18 @@ export type ConvertSpaceL1ToSpaceL0Mutation = {
   };
 };
 
+export type ConvertSpaceL1ToSpaceL2MutationVariables = SchemaTypes.Exact<{
+  convertData: SchemaTypes.ConvertSpaceL1ToSpaceL2Input;
+}>;
+
+export type ConvertSpaceL1ToSpaceL2Mutation = {
+  convertSpaceL1ToSpaceL2: {
+    id: string;
+    nameID: string;
+    level: SchemaTypes.SpaceLevel;
+  };
+};
+
 export type ConvertSpaceL2ToSpaceL1MutationVariables = SchemaTypes.Exact<{
   convertData: SchemaTypes.ConvertSpaceL2ToSpaceL1Input;
 }>;
@@ -57769,25 +59405,6 @@ export type ConvertSpaceL2ToSpaceL1Mutation = {
       }>;
       roleSet: {
         id: string;
-        applications: Array<{
-          id: string;
-          state: string;
-          nextEvents: Array<string>;
-          isFinalized: boolean;
-          lifecycle: { id: string };
-          questions: Array<{ id: string }>;
-          actor: {
-            id: string;
-            profile?: { id: string; displayName: string } | undefined;
-          };
-          authorization?:
-            | {
-                myPrivileges?:
-                  | Array<SchemaTypes.AuthorizationPrivilege>
-                  | undefined;
-              }
-            | undefined;
-        }>;
         memberUsers: Array<{
           id: string;
           nameID: string;
@@ -58231,7 +59848,11 @@ export type ConvertSpaceL2ToSpaceL1Mutation = {
           };
           settings: {
             privacy: { contributionRolesPubliclyVisible: boolean };
-            membership: { allowUsersMatchingDomainToJoin: boolean };
+            membership: {
+              allowUsersMatchingDomainToJoin: boolean;
+              allowSpaceInvitations: boolean;
+              allowApplications: boolean;
+            };
           };
           authorization?:
             | {
@@ -58489,7 +60110,11 @@ export type ConvertSpaceL2ToSpaceL1Mutation = {
           };
           settings: {
             privacy: { contributionRolesPubliclyVisible: boolean };
-            membership: { allowUsersMatchingDomainToJoin: boolean };
+            membership: {
+              allowUsersMatchingDomainToJoin: boolean;
+              allowSpaceInvitations: boolean;
+              allowApplications: boolean;
+            };
           };
           authorization?:
             | {
@@ -58747,7 +60372,11 @@ export type ConvertSpaceL2ToSpaceL1Mutation = {
           };
           settings: {
             privacy: { contributionRolesPubliclyVisible: boolean };
-            membership: { allowUsersMatchingDomainToJoin: boolean };
+            membership: {
+              allowUsersMatchingDomainToJoin: boolean;
+              allowSpaceInvitations: boolean;
+              allowApplications: boolean;
+            };
           };
           authorization?:
             | {
@@ -59403,9 +61032,33 @@ export type ConvertSpaceL2ToSpaceL1Mutation = {
             }
           | undefined;
         currentState?:
-          | { description?: any | undefined; displayName: string }
+          | {
+              id: string;
+              description?: any | undefined;
+              displayName: string;
+              sortOrder: number;
+              settings: {
+                allowNewCallouts: boolean;
+                descriptionDisplayMode: SchemaTypes.CalloutDescriptionDisplayMode;
+                showPublishDetails: boolean;
+                sidebar: Array<SchemaTypes.SidebarWidget>;
+                visible: boolean;
+              };
+            }
           | undefined;
-        states: Array<{ description?: any | undefined; displayName: string }>;
+        states: Array<{
+          id: string;
+          description?: any | undefined;
+          displayName: string;
+          sortOrder: number;
+          settings: {
+            allowNewCallouts: boolean;
+            descriptionDisplayMode: SchemaTypes.CalloutDescriptionDisplayMode;
+            showPublishDetails: boolean;
+            sidebar: Array<SchemaTypes.SidebarWidget>;
+            visible: boolean;
+          };
+        }>;
       };
     };
     subspaces: Array<{
@@ -60076,9 +61729,33 @@ export type ConvertSpaceL2ToSpaceL1Mutation = {
               }
             | undefined;
           currentState?:
-            | { description?: any | undefined; displayName: string }
+            | {
+                id: string;
+                description?: any | undefined;
+                displayName: string;
+                sortOrder: number;
+                settings: {
+                  allowNewCallouts: boolean;
+                  descriptionDisplayMode: SchemaTypes.CalloutDescriptionDisplayMode;
+                  showPublishDetails: boolean;
+                  sidebar: Array<SchemaTypes.SidebarWidget>;
+                  visible: boolean;
+                };
+              }
             | undefined;
-          states: Array<{ description?: any | undefined; displayName: string }>;
+          states: Array<{
+            id: string;
+            description?: any | undefined;
+            displayName: string;
+            sortOrder: number;
+            settings: {
+              allowNewCallouts: boolean;
+              descriptionDisplayMode: SchemaTypes.CalloutDescriptionDisplayMode;
+              showPublishDetails: boolean;
+              sidebar: Array<SchemaTypes.SidebarWidget>;
+              visible: boolean;
+            };
+          }>;
         };
       };
       authorization?:
@@ -60242,25 +61919,6 @@ export type ConvertSpaceL2ToSpaceL1Mutation = {
         }>;
         roleSet: {
           id: string;
-          applications: Array<{
-            id: string;
-            state: string;
-            nextEvents: Array<string>;
-            isFinalized: boolean;
-            lifecycle: { id: string };
-            questions: Array<{ id: string }>;
-            actor: {
-              id: string;
-              profile?: { id: string; displayName: string } | undefined;
-            };
-            authorization?:
-              | {
-                  myPrivileges?:
-                    | Array<SchemaTypes.AuthorizationPrivilege>
-                    | undefined;
-                }
-              | undefined;
-          }>;
           memberUsers: Array<{
             id: string;
             nameID: string;
@@ -60716,7 +62374,11 @@ export type ConvertSpaceL2ToSpaceL1Mutation = {
             };
             settings: {
               privacy: { contributionRolesPubliclyVisible: boolean };
-              membership: { allowUsersMatchingDomainToJoin: boolean };
+              membership: {
+                allowUsersMatchingDomainToJoin: boolean;
+                allowSpaceInvitations: boolean;
+                allowApplications: boolean;
+              };
             };
             authorization?:
               | {
@@ -60977,7 +62639,11 @@ export type ConvertSpaceL2ToSpaceL1Mutation = {
             };
             settings: {
               privacy: { contributionRolesPubliclyVisible: boolean };
-              membership: { allowUsersMatchingDomainToJoin: boolean };
+              membership: {
+                allowUsersMatchingDomainToJoin: boolean;
+                allowSpaceInvitations: boolean;
+                allowApplications: boolean;
+              };
             };
             authorization?:
               | {
@@ -61238,7 +62904,11 @@ export type ConvertSpaceL2ToSpaceL1Mutation = {
             };
             settings: {
               privacy: { contributionRolesPubliclyVisible: boolean };
-              membership: { allowUsersMatchingDomainToJoin: boolean };
+              membership: {
+                allowUsersMatchingDomainToJoin: boolean;
+                allowSpaceInvitations: boolean;
+                allowApplications: boolean;
+              };
             };
             authorization?:
               | {
@@ -62291,25 +63961,6 @@ export type MoveSpaceL1ToSpaceL0Mutation = {
       }>;
       roleSet: {
         id: string;
-        applications: Array<{
-          id: string;
-          state: string;
-          nextEvents: Array<string>;
-          isFinalized: boolean;
-          lifecycle: { id: string };
-          questions: Array<{ id: string }>;
-          actor: {
-            id: string;
-            profile?: { id: string; displayName: string } | undefined;
-          };
-          authorization?:
-            | {
-                myPrivileges?:
-                  | Array<SchemaTypes.AuthorizationPrivilege>
-                  | undefined;
-              }
-            | undefined;
-        }>;
         memberUsers: Array<{
           id: string;
           nameID: string;
@@ -62753,7 +64404,11 @@ export type MoveSpaceL1ToSpaceL0Mutation = {
           };
           settings: {
             privacy: { contributionRolesPubliclyVisible: boolean };
-            membership: { allowUsersMatchingDomainToJoin: boolean };
+            membership: {
+              allowUsersMatchingDomainToJoin: boolean;
+              allowSpaceInvitations: boolean;
+              allowApplications: boolean;
+            };
           };
           authorization?:
             | {
@@ -63011,7 +64666,11 @@ export type MoveSpaceL1ToSpaceL0Mutation = {
           };
           settings: {
             privacy: { contributionRolesPubliclyVisible: boolean };
-            membership: { allowUsersMatchingDomainToJoin: boolean };
+            membership: {
+              allowUsersMatchingDomainToJoin: boolean;
+              allowSpaceInvitations: boolean;
+              allowApplications: boolean;
+            };
           };
           authorization?:
             | {
@@ -63269,7 +64928,11 @@ export type MoveSpaceL1ToSpaceL0Mutation = {
           };
           settings: {
             privacy: { contributionRolesPubliclyVisible: boolean };
-            membership: { allowUsersMatchingDomainToJoin: boolean };
+            membership: {
+              allowUsersMatchingDomainToJoin: boolean;
+              allowSpaceInvitations: boolean;
+              allowApplications: boolean;
+            };
           };
           authorization?:
             | {
@@ -63925,9 +65588,33 @@ export type MoveSpaceL1ToSpaceL0Mutation = {
             }
           | undefined;
         currentState?:
-          | { description?: any | undefined; displayName: string }
+          | {
+              id: string;
+              description?: any | undefined;
+              displayName: string;
+              sortOrder: number;
+              settings: {
+                allowNewCallouts: boolean;
+                descriptionDisplayMode: SchemaTypes.CalloutDescriptionDisplayMode;
+                showPublishDetails: boolean;
+                sidebar: Array<SchemaTypes.SidebarWidget>;
+                visible: boolean;
+              };
+            }
           | undefined;
-        states: Array<{ description?: any | undefined; displayName: string }>;
+        states: Array<{
+          id: string;
+          description?: any | undefined;
+          displayName: string;
+          sortOrder: number;
+          settings: {
+            allowNewCallouts: boolean;
+            descriptionDisplayMode: SchemaTypes.CalloutDescriptionDisplayMode;
+            showPublishDetails: boolean;
+            sidebar: Array<SchemaTypes.SidebarWidget>;
+            visible: boolean;
+          };
+        }>;
       };
     };
     subspaces: Array<{
@@ -64598,9 +66285,33 @@ export type MoveSpaceL1ToSpaceL0Mutation = {
               }
             | undefined;
           currentState?:
-            | { description?: any | undefined; displayName: string }
+            | {
+                id: string;
+                description?: any | undefined;
+                displayName: string;
+                sortOrder: number;
+                settings: {
+                  allowNewCallouts: boolean;
+                  descriptionDisplayMode: SchemaTypes.CalloutDescriptionDisplayMode;
+                  showPublishDetails: boolean;
+                  sidebar: Array<SchemaTypes.SidebarWidget>;
+                  visible: boolean;
+                };
+              }
             | undefined;
-          states: Array<{ description?: any | undefined; displayName: string }>;
+          states: Array<{
+            id: string;
+            description?: any | undefined;
+            displayName: string;
+            sortOrder: number;
+            settings: {
+              allowNewCallouts: boolean;
+              descriptionDisplayMode: SchemaTypes.CalloutDescriptionDisplayMode;
+              showPublishDetails: boolean;
+              sidebar: Array<SchemaTypes.SidebarWidget>;
+              visible: boolean;
+            };
+          }>;
         };
       };
       authorization?:
@@ -64764,25 +66475,6 @@ export type MoveSpaceL1ToSpaceL0Mutation = {
         }>;
         roleSet: {
           id: string;
-          applications: Array<{
-            id: string;
-            state: string;
-            nextEvents: Array<string>;
-            isFinalized: boolean;
-            lifecycle: { id: string };
-            questions: Array<{ id: string }>;
-            actor: {
-              id: string;
-              profile?: { id: string; displayName: string } | undefined;
-            };
-            authorization?:
-              | {
-                  myPrivileges?:
-                    | Array<SchemaTypes.AuthorizationPrivilege>
-                    | undefined;
-                }
-              | undefined;
-          }>;
           memberUsers: Array<{
             id: string;
             nameID: string;
@@ -65238,7 +66930,11 @@ export type MoveSpaceL1ToSpaceL0Mutation = {
             };
             settings: {
               privacy: { contributionRolesPubliclyVisible: boolean };
-              membership: { allowUsersMatchingDomainToJoin: boolean };
+              membership: {
+                allowUsersMatchingDomainToJoin: boolean;
+                allowSpaceInvitations: boolean;
+                allowApplications: boolean;
+              };
             };
             authorization?:
               | {
@@ -65499,7 +67195,11 @@ export type MoveSpaceL1ToSpaceL0Mutation = {
             };
             settings: {
               privacy: { contributionRolesPubliclyVisible: boolean };
-              membership: { allowUsersMatchingDomainToJoin: boolean };
+              membership: {
+                allowUsersMatchingDomainToJoin: boolean;
+                allowSpaceInvitations: boolean;
+                allowApplications: boolean;
+              };
             };
             authorization?:
               | {
@@ -65760,7 +67460,11 @@ export type MoveSpaceL1ToSpaceL0Mutation = {
             };
             settings: {
               privacy: { contributionRolesPubliclyVisible: boolean };
-              membership: { allowUsersMatchingDomainToJoin: boolean };
+              membership: {
+                allowUsersMatchingDomainToJoin: boolean;
+                allowSpaceInvitations: boolean;
+                allowApplications: boolean;
+              };
             };
             authorization?:
               | {
@@ -66813,25 +68517,6 @@ export type MoveSpaceL1ToSpaceL2Mutation = {
       }>;
       roleSet: {
         id: string;
-        applications: Array<{
-          id: string;
-          state: string;
-          nextEvents: Array<string>;
-          isFinalized: boolean;
-          lifecycle: { id: string };
-          questions: Array<{ id: string }>;
-          actor: {
-            id: string;
-            profile?: { id: string; displayName: string } | undefined;
-          };
-          authorization?:
-            | {
-                myPrivileges?:
-                  | Array<SchemaTypes.AuthorizationPrivilege>
-                  | undefined;
-              }
-            | undefined;
-        }>;
         memberUsers: Array<{
           id: string;
           nameID: string;
@@ -67275,7 +68960,11 @@ export type MoveSpaceL1ToSpaceL2Mutation = {
           };
           settings: {
             privacy: { contributionRolesPubliclyVisible: boolean };
-            membership: { allowUsersMatchingDomainToJoin: boolean };
+            membership: {
+              allowUsersMatchingDomainToJoin: boolean;
+              allowSpaceInvitations: boolean;
+              allowApplications: boolean;
+            };
           };
           authorization?:
             | {
@@ -67533,7 +69222,11 @@ export type MoveSpaceL1ToSpaceL2Mutation = {
           };
           settings: {
             privacy: { contributionRolesPubliclyVisible: boolean };
-            membership: { allowUsersMatchingDomainToJoin: boolean };
+            membership: {
+              allowUsersMatchingDomainToJoin: boolean;
+              allowSpaceInvitations: boolean;
+              allowApplications: boolean;
+            };
           };
           authorization?:
             | {
@@ -67791,7 +69484,11 @@ export type MoveSpaceL1ToSpaceL2Mutation = {
           };
           settings: {
             privacy: { contributionRolesPubliclyVisible: boolean };
-            membership: { allowUsersMatchingDomainToJoin: boolean };
+            membership: {
+              allowUsersMatchingDomainToJoin: boolean;
+              allowSpaceInvitations: boolean;
+              allowApplications: boolean;
+            };
           };
           authorization?:
             | {
@@ -68447,9 +70144,33 @@ export type MoveSpaceL1ToSpaceL2Mutation = {
             }
           | undefined;
         currentState?:
-          | { description?: any | undefined; displayName: string }
+          | {
+              id: string;
+              description?: any | undefined;
+              displayName: string;
+              sortOrder: number;
+              settings: {
+                allowNewCallouts: boolean;
+                descriptionDisplayMode: SchemaTypes.CalloutDescriptionDisplayMode;
+                showPublishDetails: boolean;
+                sidebar: Array<SchemaTypes.SidebarWidget>;
+                visible: boolean;
+              };
+            }
           | undefined;
-        states: Array<{ description?: any | undefined; displayName: string }>;
+        states: Array<{
+          id: string;
+          description?: any | undefined;
+          displayName: string;
+          sortOrder: number;
+          settings: {
+            allowNewCallouts: boolean;
+            descriptionDisplayMode: SchemaTypes.CalloutDescriptionDisplayMode;
+            showPublishDetails: boolean;
+            sidebar: Array<SchemaTypes.SidebarWidget>;
+            visible: boolean;
+          };
+        }>;
       };
     };
     subspaces: Array<{
@@ -69120,9 +70841,33 @@ export type MoveSpaceL1ToSpaceL2Mutation = {
               }
             | undefined;
           currentState?:
-            | { description?: any | undefined; displayName: string }
+            | {
+                id: string;
+                description?: any | undefined;
+                displayName: string;
+                sortOrder: number;
+                settings: {
+                  allowNewCallouts: boolean;
+                  descriptionDisplayMode: SchemaTypes.CalloutDescriptionDisplayMode;
+                  showPublishDetails: boolean;
+                  sidebar: Array<SchemaTypes.SidebarWidget>;
+                  visible: boolean;
+                };
+              }
             | undefined;
-          states: Array<{ description?: any | undefined; displayName: string }>;
+          states: Array<{
+            id: string;
+            description?: any | undefined;
+            displayName: string;
+            sortOrder: number;
+            settings: {
+              allowNewCallouts: boolean;
+              descriptionDisplayMode: SchemaTypes.CalloutDescriptionDisplayMode;
+              showPublishDetails: boolean;
+              sidebar: Array<SchemaTypes.SidebarWidget>;
+              visible: boolean;
+            };
+          }>;
         };
       };
       authorization?:
@@ -69286,25 +71031,6 @@ export type MoveSpaceL1ToSpaceL2Mutation = {
         }>;
         roleSet: {
           id: string;
-          applications: Array<{
-            id: string;
-            state: string;
-            nextEvents: Array<string>;
-            isFinalized: boolean;
-            lifecycle: { id: string };
-            questions: Array<{ id: string }>;
-            actor: {
-              id: string;
-              profile?: { id: string; displayName: string } | undefined;
-            };
-            authorization?:
-              | {
-                  myPrivileges?:
-                    | Array<SchemaTypes.AuthorizationPrivilege>
-                    | undefined;
-                }
-              | undefined;
-          }>;
           memberUsers: Array<{
             id: string;
             nameID: string;
@@ -69760,7 +71486,11 @@ export type MoveSpaceL1ToSpaceL2Mutation = {
             };
             settings: {
               privacy: { contributionRolesPubliclyVisible: boolean };
-              membership: { allowUsersMatchingDomainToJoin: boolean };
+              membership: {
+                allowUsersMatchingDomainToJoin: boolean;
+                allowSpaceInvitations: boolean;
+                allowApplications: boolean;
+              };
             };
             authorization?:
               | {
@@ -70021,7 +71751,11 @@ export type MoveSpaceL1ToSpaceL2Mutation = {
             };
             settings: {
               privacy: { contributionRolesPubliclyVisible: boolean };
-              membership: { allowUsersMatchingDomainToJoin: boolean };
+              membership: {
+                allowUsersMatchingDomainToJoin: boolean;
+                allowSpaceInvitations: boolean;
+                allowApplications: boolean;
+              };
             };
             authorization?:
               | {
@@ -70282,7 +72016,11 @@ export type MoveSpaceL1ToSpaceL2Mutation = {
             };
             settings: {
               privacy: { contributionRolesPubliclyVisible: boolean };
-              membership: { allowUsersMatchingDomainToJoin: boolean };
+              membership: {
+                allowUsersMatchingDomainToJoin: boolean;
+                allowSpaceInvitations: boolean;
+                allowApplications: boolean;
+              };
             };
             authorization?:
               | {
@@ -71335,25 +73073,6 @@ export type MoveSpaceL2ToSpaceL1Mutation = {
       }>;
       roleSet: {
         id: string;
-        applications: Array<{
-          id: string;
-          state: string;
-          nextEvents: Array<string>;
-          isFinalized: boolean;
-          lifecycle: { id: string };
-          questions: Array<{ id: string }>;
-          actor: {
-            id: string;
-            profile?: { id: string; displayName: string } | undefined;
-          };
-          authorization?:
-            | {
-                myPrivileges?:
-                  | Array<SchemaTypes.AuthorizationPrivilege>
-                  | undefined;
-              }
-            | undefined;
-        }>;
         memberUsers: Array<{
           id: string;
           nameID: string;
@@ -71797,7 +73516,11 @@ export type MoveSpaceL2ToSpaceL1Mutation = {
           };
           settings: {
             privacy: { contributionRolesPubliclyVisible: boolean };
-            membership: { allowUsersMatchingDomainToJoin: boolean };
+            membership: {
+              allowUsersMatchingDomainToJoin: boolean;
+              allowSpaceInvitations: boolean;
+              allowApplications: boolean;
+            };
           };
           authorization?:
             | {
@@ -72055,7 +73778,11 @@ export type MoveSpaceL2ToSpaceL1Mutation = {
           };
           settings: {
             privacy: { contributionRolesPubliclyVisible: boolean };
-            membership: { allowUsersMatchingDomainToJoin: boolean };
+            membership: {
+              allowUsersMatchingDomainToJoin: boolean;
+              allowSpaceInvitations: boolean;
+              allowApplications: boolean;
+            };
           };
           authorization?:
             | {
@@ -72313,7 +74040,11 @@ export type MoveSpaceL2ToSpaceL1Mutation = {
           };
           settings: {
             privacy: { contributionRolesPubliclyVisible: boolean };
-            membership: { allowUsersMatchingDomainToJoin: boolean };
+            membership: {
+              allowUsersMatchingDomainToJoin: boolean;
+              allowSpaceInvitations: boolean;
+              allowApplications: boolean;
+            };
           };
           authorization?:
             | {
@@ -72969,9 +74700,33 @@ export type MoveSpaceL2ToSpaceL1Mutation = {
             }
           | undefined;
         currentState?:
-          | { description?: any | undefined; displayName: string }
+          | {
+              id: string;
+              description?: any | undefined;
+              displayName: string;
+              sortOrder: number;
+              settings: {
+                allowNewCallouts: boolean;
+                descriptionDisplayMode: SchemaTypes.CalloutDescriptionDisplayMode;
+                showPublishDetails: boolean;
+                sidebar: Array<SchemaTypes.SidebarWidget>;
+                visible: boolean;
+              };
+            }
           | undefined;
-        states: Array<{ description?: any | undefined; displayName: string }>;
+        states: Array<{
+          id: string;
+          description?: any | undefined;
+          displayName: string;
+          sortOrder: number;
+          settings: {
+            allowNewCallouts: boolean;
+            descriptionDisplayMode: SchemaTypes.CalloutDescriptionDisplayMode;
+            showPublishDetails: boolean;
+            sidebar: Array<SchemaTypes.SidebarWidget>;
+            visible: boolean;
+          };
+        }>;
       };
     };
     subspaces: Array<{
@@ -73642,9 +75397,33 @@ export type MoveSpaceL2ToSpaceL1Mutation = {
               }
             | undefined;
           currentState?:
-            | { description?: any | undefined; displayName: string }
+            | {
+                id: string;
+                description?: any | undefined;
+                displayName: string;
+                sortOrder: number;
+                settings: {
+                  allowNewCallouts: boolean;
+                  descriptionDisplayMode: SchemaTypes.CalloutDescriptionDisplayMode;
+                  showPublishDetails: boolean;
+                  sidebar: Array<SchemaTypes.SidebarWidget>;
+                  visible: boolean;
+                };
+              }
             | undefined;
-          states: Array<{ description?: any | undefined; displayName: string }>;
+          states: Array<{
+            id: string;
+            description?: any | undefined;
+            displayName: string;
+            sortOrder: number;
+            settings: {
+              allowNewCallouts: boolean;
+              descriptionDisplayMode: SchemaTypes.CalloutDescriptionDisplayMode;
+              showPublishDetails: boolean;
+              sidebar: Array<SchemaTypes.SidebarWidget>;
+              visible: boolean;
+            };
+          }>;
         };
       };
       authorization?:
@@ -73808,25 +75587,6 @@ export type MoveSpaceL2ToSpaceL1Mutation = {
         }>;
         roleSet: {
           id: string;
-          applications: Array<{
-            id: string;
-            state: string;
-            nextEvents: Array<string>;
-            isFinalized: boolean;
-            lifecycle: { id: string };
-            questions: Array<{ id: string }>;
-            actor: {
-              id: string;
-              profile?: { id: string; displayName: string } | undefined;
-            };
-            authorization?:
-              | {
-                  myPrivileges?:
-                    | Array<SchemaTypes.AuthorizationPrivilege>
-                    | undefined;
-                }
-              | undefined;
-          }>;
           memberUsers: Array<{
             id: string;
             nameID: string;
@@ -74282,7 +76042,11 @@ export type MoveSpaceL2ToSpaceL1Mutation = {
             };
             settings: {
               privacy: { contributionRolesPubliclyVisible: boolean };
-              membership: { allowUsersMatchingDomainToJoin: boolean };
+              membership: {
+                allowUsersMatchingDomainToJoin: boolean;
+                allowSpaceInvitations: boolean;
+                allowApplications: boolean;
+              };
             };
             authorization?:
               | {
@@ -74543,7 +76307,11 @@ export type MoveSpaceL2ToSpaceL1Mutation = {
             };
             settings: {
               privacy: { contributionRolesPubliclyVisible: boolean };
-              membership: { allowUsersMatchingDomainToJoin: boolean };
+              membership: {
+                allowUsersMatchingDomainToJoin: boolean;
+                allowSpaceInvitations: boolean;
+                allowApplications: boolean;
+              };
             };
             authorization?:
               | {
@@ -74804,7 +76572,11 @@ export type MoveSpaceL2ToSpaceL1Mutation = {
             };
             settings: {
               privacy: { contributionRolesPubliclyVisible: boolean };
-              membership: { allowUsersMatchingDomainToJoin: boolean };
+              membership: {
+                allowUsersMatchingDomainToJoin: boolean;
+                allowSpaceInvitations: boolean;
+                allowApplications: boolean;
+              };
             };
             authorization?:
               | {
@@ -75875,25 +77647,6 @@ export type UpdateSpaceMutation = {
       }>;
       roleSet: {
         id: string;
-        applications: Array<{
-          id: string;
-          state: string;
-          nextEvents: Array<string>;
-          isFinalized: boolean;
-          lifecycle: { id: string };
-          questions: Array<{ id: string }>;
-          actor: {
-            id: string;
-            profile?: { id: string; displayName: string } | undefined;
-          };
-          authorization?:
-            | {
-                myPrivileges?:
-                  | Array<SchemaTypes.AuthorizationPrivilege>
-                  | undefined;
-              }
-            | undefined;
-        }>;
         memberUsers: Array<{
           id: string;
           nameID: string;
@@ -76337,7 +78090,11 @@ export type UpdateSpaceMutation = {
           };
           settings: {
             privacy: { contributionRolesPubliclyVisible: boolean };
-            membership: { allowUsersMatchingDomainToJoin: boolean };
+            membership: {
+              allowUsersMatchingDomainToJoin: boolean;
+              allowSpaceInvitations: boolean;
+              allowApplications: boolean;
+            };
           };
           authorization?:
             | {
@@ -76595,7 +78352,11 @@ export type UpdateSpaceMutation = {
           };
           settings: {
             privacy: { contributionRolesPubliclyVisible: boolean };
-            membership: { allowUsersMatchingDomainToJoin: boolean };
+            membership: {
+              allowUsersMatchingDomainToJoin: boolean;
+              allowSpaceInvitations: boolean;
+              allowApplications: boolean;
+            };
           };
           authorization?:
             | {
@@ -76853,7 +78614,11 @@ export type UpdateSpaceMutation = {
           };
           settings: {
             privacy: { contributionRolesPubliclyVisible: boolean };
-            membership: { allowUsersMatchingDomainToJoin: boolean };
+            membership: {
+              allowUsersMatchingDomainToJoin: boolean;
+              allowSpaceInvitations: boolean;
+              allowApplications: boolean;
+            };
           };
           authorization?:
             | {
@@ -77509,9 +79274,33 @@ export type UpdateSpaceMutation = {
             }
           | undefined;
         currentState?:
-          | { description?: any | undefined; displayName: string }
+          | {
+              id: string;
+              description?: any | undefined;
+              displayName: string;
+              sortOrder: number;
+              settings: {
+                allowNewCallouts: boolean;
+                descriptionDisplayMode: SchemaTypes.CalloutDescriptionDisplayMode;
+                showPublishDetails: boolean;
+                sidebar: Array<SchemaTypes.SidebarWidget>;
+                visible: boolean;
+              };
+            }
           | undefined;
-        states: Array<{ description?: any | undefined; displayName: string }>;
+        states: Array<{
+          id: string;
+          description?: any | undefined;
+          displayName: string;
+          sortOrder: number;
+          settings: {
+            allowNewCallouts: boolean;
+            descriptionDisplayMode: SchemaTypes.CalloutDescriptionDisplayMode;
+            showPublishDetails: boolean;
+            sidebar: Array<SchemaTypes.SidebarWidget>;
+            visible: boolean;
+          };
+        }>;
       };
     };
     subspaces: Array<{
@@ -78182,9 +79971,33 @@ export type UpdateSpaceMutation = {
               }
             | undefined;
           currentState?:
-            | { description?: any | undefined; displayName: string }
+            | {
+                id: string;
+                description?: any | undefined;
+                displayName: string;
+                sortOrder: number;
+                settings: {
+                  allowNewCallouts: boolean;
+                  descriptionDisplayMode: SchemaTypes.CalloutDescriptionDisplayMode;
+                  showPublishDetails: boolean;
+                  sidebar: Array<SchemaTypes.SidebarWidget>;
+                  visible: boolean;
+                };
+              }
             | undefined;
-          states: Array<{ description?: any | undefined; displayName: string }>;
+          states: Array<{
+            id: string;
+            description?: any | undefined;
+            displayName: string;
+            sortOrder: number;
+            settings: {
+              allowNewCallouts: boolean;
+              descriptionDisplayMode: SchemaTypes.CalloutDescriptionDisplayMode;
+              showPublishDetails: boolean;
+              sidebar: Array<SchemaTypes.SidebarWidget>;
+              visible: boolean;
+            };
+          }>;
         };
       };
       authorization?:
@@ -78348,25 +80161,6 @@ export type UpdateSpaceMutation = {
         }>;
         roleSet: {
           id: string;
-          applications: Array<{
-            id: string;
-            state: string;
-            nextEvents: Array<string>;
-            isFinalized: boolean;
-            lifecycle: { id: string };
-            questions: Array<{ id: string }>;
-            actor: {
-              id: string;
-              profile?: { id: string; displayName: string } | undefined;
-            };
-            authorization?:
-              | {
-                  myPrivileges?:
-                    | Array<SchemaTypes.AuthorizationPrivilege>
-                    | undefined;
-                }
-              | undefined;
-          }>;
           memberUsers: Array<{
             id: string;
             nameID: string;
@@ -78822,7 +80616,11 @@ export type UpdateSpaceMutation = {
             };
             settings: {
               privacy: { contributionRolesPubliclyVisible: boolean };
-              membership: { allowUsersMatchingDomainToJoin: boolean };
+              membership: {
+                allowUsersMatchingDomainToJoin: boolean;
+                allowSpaceInvitations: boolean;
+                allowApplications: boolean;
+              };
             };
             authorization?:
               | {
@@ -79083,7 +80881,11 @@ export type UpdateSpaceMutation = {
             };
             settings: {
               privacy: { contributionRolesPubliclyVisible: boolean };
-              membership: { allowUsersMatchingDomainToJoin: boolean };
+              membership: {
+                allowUsersMatchingDomainToJoin: boolean;
+                allowSpaceInvitations: boolean;
+                allowApplications: boolean;
+              };
             };
             authorization?:
               | {
@@ -79344,7 +81146,11 @@ export type UpdateSpaceMutation = {
             };
             settings: {
               privacy: { contributionRolesPubliclyVisible: boolean };
-              membership: { allowUsersMatchingDomainToJoin: boolean };
+              membership: {
+                allowUsersMatchingDomainToJoin: boolean;
+                allowSpaceInvitations: boolean;
+                allowApplications: boolean;
+              };
             };
             authorization?:
               | {
@@ -80730,9 +82536,33 @@ export type CreateSubspaceMutation = {
               }
             | undefined;
           currentState?:
-            | { description?: any | undefined; displayName: string }
+            | {
+                id: string;
+                description?: any | undefined;
+                displayName: string;
+                sortOrder: number;
+                settings: {
+                  allowNewCallouts: boolean;
+                  descriptionDisplayMode: SchemaTypes.CalloutDescriptionDisplayMode;
+                  showPublishDetails: boolean;
+                  sidebar: Array<SchemaTypes.SidebarWidget>;
+                  visible: boolean;
+                };
+              }
             | undefined;
-          states: Array<{ description?: any | undefined; displayName: string }>;
+          states: Array<{
+            id: string;
+            description?: any | undefined;
+            displayName: string;
+            sortOrder: number;
+            settings: {
+              allowNewCallouts: boolean;
+              descriptionDisplayMode: SchemaTypes.CalloutDescriptionDisplayMode;
+              showPublishDetails: boolean;
+              sidebar: Array<SchemaTypes.SidebarWidget>;
+              visible: boolean;
+            };
+          }>;
         };
       };
       authorization?:
@@ -80896,25 +82726,6 @@ export type CreateSubspaceMutation = {
         }>;
         roleSet: {
           id: string;
-          applications: Array<{
-            id: string;
-            state: string;
-            nextEvents: Array<string>;
-            isFinalized: boolean;
-            lifecycle: { id: string };
-            questions: Array<{ id: string }>;
-            actor: {
-              id: string;
-              profile?: { id: string; displayName: string } | undefined;
-            };
-            authorization?:
-              | {
-                  myPrivileges?:
-                    | Array<SchemaTypes.AuthorizationPrivilege>
-                    | undefined;
-                }
-              | undefined;
-          }>;
           memberUsers: Array<{
             id: string;
             nameID: string;
@@ -81370,7 +83181,11 @@ export type CreateSubspaceMutation = {
             };
             settings: {
               privacy: { contributionRolesPubliclyVisible: boolean };
-              membership: { allowUsersMatchingDomainToJoin: boolean };
+              membership: {
+                allowUsersMatchingDomainToJoin: boolean;
+                allowSpaceInvitations: boolean;
+                allowApplications: boolean;
+              };
             };
             authorization?:
               | {
@@ -81631,7 +83446,11 @@ export type CreateSubspaceMutation = {
             };
             settings: {
               privacy: { contributionRolesPubliclyVisible: boolean };
-              membership: { allowUsersMatchingDomainToJoin: boolean };
+              membership: {
+                allowUsersMatchingDomainToJoin: boolean;
+                allowSpaceInvitations: boolean;
+                allowApplications: boolean;
+              };
             };
             authorization?:
               | {
@@ -81892,7 +83711,11 @@ export type CreateSubspaceMutation = {
             };
             settings: {
               privacy: { contributionRolesPubliclyVisible: boolean };
-              membership: { allowUsersMatchingDomainToJoin: boolean };
+              membership: {
+                allowUsersMatchingDomainToJoin: boolean;
+                allowSpaceInvitations: boolean;
+                allowApplications: boolean;
+              };
             };
             authorization?:
               | {
@@ -82631,9 +84454,33 @@ export type CreateSubspaceMutation = {
             }
           | undefined;
         currentState?:
-          | { description?: any | undefined; displayName: string }
+          | {
+              id: string;
+              description?: any | undefined;
+              displayName: string;
+              sortOrder: number;
+              settings: {
+                allowNewCallouts: boolean;
+                descriptionDisplayMode: SchemaTypes.CalloutDescriptionDisplayMode;
+                showPublishDetails: boolean;
+                sidebar: Array<SchemaTypes.SidebarWidget>;
+                visible: boolean;
+              };
+            }
           | undefined;
-        states: Array<{ description?: any | undefined; displayName: string }>;
+        states: Array<{
+          id: string;
+          description?: any | undefined;
+          displayName: string;
+          sortOrder: number;
+          settings: {
+            allowNewCallouts: boolean;
+            descriptionDisplayMode: SchemaTypes.CalloutDescriptionDisplayMode;
+            showPublishDetails: boolean;
+            sidebar: Array<SchemaTypes.SidebarWidget>;
+            visible: boolean;
+          };
+        }>;
       };
     };
     authorization?:
@@ -82793,25 +84640,6 @@ export type CreateSubspaceMutation = {
       }>;
       roleSet: {
         id: string;
-        applications: Array<{
-          id: string;
-          state: string;
-          nextEvents: Array<string>;
-          isFinalized: boolean;
-          lifecycle: { id: string };
-          questions: Array<{ id: string }>;
-          actor: {
-            id: string;
-            profile?: { id: string; displayName: string } | undefined;
-          };
-          authorization?:
-            | {
-                myPrivileges?:
-                  | Array<SchemaTypes.AuthorizationPrivilege>
-                  | undefined;
-              }
-            | undefined;
-        }>;
         memberUsers: Array<{
           id: string;
           nameID: string;
@@ -83255,7 +85083,11 @@ export type CreateSubspaceMutation = {
           };
           settings: {
             privacy: { contributionRolesPubliclyVisible: boolean };
-            membership: { allowUsersMatchingDomainToJoin: boolean };
+            membership: {
+              allowUsersMatchingDomainToJoin: boolean;
+              allowSpaceInvitations: boolean;
+              allowApplications: boolean;
+            };
           };
           authorization?:
             | {
@@ -83513,7 +85345,11 @@ export type CreateSubspaceMutation = {
           };
           settings: {
             privacy: { contributionRolesPubliclyVisible: boolean };
-            membership: { allowUsersMatchingDomainToJoin: boolean };
+            membership: {
+              allowUsersMatchingDomainToJoin: boolean;
+              allowSpaceInvitations: boolean;
+              allowApplications: boolean;
+            };
           };
           authorization?:
             | {
@@ -83771,7 +85607,11 @@ export type CreateSubspaceMutation = {
           };
           settings: {
             privacy: { contributionRolesPubliclyVisible: boolean };
-            membership: { allowUsersMatchingDomainToJoin: boolean };
+            membership: {
+              allowUsersMatchingDomainToJoin: boolean;
+              allowSpaceInvitations: boolean;
+              allowApplications: boolean;
+            };
           };
           authorization?:
             | {
@@ -84541,9 +86381,33 @@ export type UpdateSubspaceMutation = {
               }
             | undefined;
           currentState?:
-            | { description?: any | undefined; displayName: string }
+            | {
+                id: string;
+                description?: any | undefined;
+                displayName: string;
+                sortOrder: number;
+                settings: {
+                  allowNewCallouts: boolean;
+                  descriptionDisplayMode: SchemaTypes.CalloutDescriptionDisplayMode;
+                  showPublishDetails: boolean;
+                  sidebar: Array<SchemaTypes.SidebarWidget>;
+                  visible: boolean;
+                };
+              }
             | undefined;
-          states: Array<{ description?: any | undefined; displayName: string }>;
+          states: Array<{
+            id: string;
+            description?: any | undefined;
+            displayName: string;
+            sortOrder: number;
+            settings: {
+              allowNewCallouts: boolean;
+              descriptionDisplayMode: SchemaTypes.CalloutDescriptionDisplayMode;
+              showPublishDetails: boolean;
+              sidebar: Array<SchemaTypes.SidebarWidget>;
+              visible: boolean;
+            };
+          }>;
         };
       };
       authorization?:
@@ -84707,25 +86571,6 @@ export type UpdateSubspaceMutation = {
         }>;
         roleSet: {
           id: string;
-          applications: Array<{
-            id: string;
-            state: string;
-            nextEvents: Array<string>;
-            isFinalized: boolean;
-            lifecycle: { id: string };
-            questions: Array<{ id: string }>;
-            actor: {
-              id: string;
-              profile?: { id: string; displayName: string } | undefined;
-            };
-            authorization?:
-              | {
-                  myPrivileges?:
-                    | Array<SchemaTypes.AuthorizationPrivilege>
-                    | undefined;
-                }
-              | undefined;
-          }>;
           memberUsers: Array<{
             id: string;
             nameID: string;
@@ -85181,7 +87026,11 @@ export type UpdateSubspaceMutation = {
             };
             settings: {
               privacy: { contributionRolesPubliclyVisible: boolean };
-              membership: { allowUsersMatchingDomainToJoin: boolean };
+              membership: {
+                allowUsersMatchingDomainToJoin: boolean;
+                allowSpaceInvitations: boolean;
+                allowApplications: boolean;
+              };
             };
             authorization?:
               | {
@@ -85442,7 +87291,11 @@ export type UpdateSubspaceMutation = {
             };
             settings: {
               privacy: { contributionRolesPubliclyVisible: boolean };
-              membership: { allowUsersMatchingDomainToJoin: boolean };
+              membership: {
+                allowUsersMatchingDomainToJoin: boolean;
+                allowSpaceInvitations: boolean;
+                allowApplications: boolean;
+              };
             };
             authorization?:
               | {
@@ -85703,7 +87556,11 @@ export type UpdateSubspaceMutation = {
             };
             settings: {
               privacy: { contributionRolesPubliclyVisible: boolean };
-              membership: { allowUsersMatchingDomainToJoin: boolean };
+              membership: {
+                allowUsersMatchingDomainToJoin: boolean;
+                allowSpaceInvitations: boolean;
+                allowApplications: boolean;
+              };
             };
             authorization?:
               | {
@@ -86442,9 +88299,33 @@ export type UpdateSubspaceMutation = {
             }
           | undefined;
         currentState?:
-          | { description?: any | undefined; displayName: string }
+          | {
+              id: string;
+              description?: any | undefined;
+              displayName: string;
+              sortOrder: number;
+              settings: {
+                allowNewCallouts: boolean;
+                descriptionDisplayMode: SchemaTypes.CalloutDescriptionDisplayMode;
+                showPublishDetails: boolean;
+                sidebar: Array<SchemaTypes.SidebarWidget>;
+                visible: boolean;
+              };
+            }
           | undefined;
-        states: Array<{ description?: any | undefined; displayName: string }>;
+        states: Array<{
+          id: string;
+          description?: any | undefined;
+          displayName: string;
+          sortOrder: number;
+          settings: {
+            allowNewCallouts: boolean;
+            descriptionDisplayMode: SchemaTypes.CalloutDescriptionDisplayMode;
+            showPublishDetails: boolean;
+            sidebar: Array<SchemaTypes.SidebarWidget>;
+            visible: boolean;
+          };
+        }>;
       };
     };
     authorization?:
@@ -86604,25 +88485,6 @@ export type UpdateSubspaceMutation = {
       }>;
       roleSet: {
         id: string;
-        applications: Array<{
-          id: string;
-          state: string;
-          nextEvents: Array<string>;
-          isFinalized: boolean;
-          lifecycle: { id: string };
-          questions: Array<{ id: string }>;
-          actor: {
-            id: string;
-            profile?: { id: string; displayName: string } | undefined;
-          };
-          authorization?:
-            | {
-                myPrivileges?:
-                  | Array<SchemaTypes.AuthorizationPrivilege>
-                  | undefined;
-              }
-            | undefined;
-        }>;
         memberUsers: Array<{
           id: string;
           nameID: string;
@@ -87066,7 +88928,11 @@ export type UpdateSubspaceMutation = {
           };
           settings: {
             privacy: { contributionRolesPubliclyVisible: boolean };
-            membership: { allowUsersMatchingDomainToJoin: boolean };
+            membership: {
+              allowUsersMatchingDomainToJoin: boolean;
+              allowSpaceInvitations: boolean;
+              allowApplications: boolean;
+            };
           };
           authorization?:
             | {
@@ -87324,7 +89190,11 @@ export type UpdateSubspaceMutation = {
           };
           settings: {
             privacy: { contributionRolesPubliclyVisible: boolean };
-            membership: { allowUsersMatchingDomainToJoin: boolean };
+            membership: {
+              allowUsersMatchingDomainToJoin: boolean;
+              allowSpaceInvitations: boolean;
+              allowApplications: boolean;
+            };
           };
           authorization?:
             | {
@@ -87582,7 +89452,11 @@ export type UpdateSubspaceMutation = {
           };
           settings: {
             privacy: { contributionRolesPubliclyVisible: boolean };
-            membership: { allowUsersMatchingDomainToJoin: boolean };
+            membership: {
+              allowUsersMatchingDomainToJoin: boolean;
+              allowSpaceInvitations: boolean;
+              allowApplications: boolean;
+            };
           };
           authorization?:
             | {
@@ -87792,6 +89666,23 @@ export type UpdateInnovationFlowStateMutationVariables = SchemaTypes.Exact<{
 
 export type UpdateInnovationFlowStateMutation = {
   updateInnovationFlowState: { id: string; displayName: string };
+};
+
+export type PrepareMemoSigningMutationVariables = SchemaTypes.Exact<{
+  signingData: SchemaTypes.MemoSigningPrepareInput;
+}>;
+
+export type PrepareMemoSigningMutation = {
+  prepareMemoSigning: { attemptId: string; previewUrl: string };
+};
+
+export type AuthorizationPolicyResetOnOrganizationMutationVariables =
+  SchemaTypes.Exact<{
+    organizationID: SchemaTypes.Scalars["UUID"]["input"];
+  }>;
+
+export type AuthorizationPolicyResetOnOrganizationMutation = {
+  authorizationPolicyResetOnOrganization: { id: string };
 };
 
 export type CreateOrganizationMutationVariables = SchemaTypes.Exact<{
@@ -88044,7 +89935,11 @@ export type CreateOrganizationMutation = {
     };
     settings: {
       privacy: { contributionRolesPubliclyVisible: boolean };
-      membership: { allowUsersMatchingDomainToJoin: boolean };
+      membership: {
+        allowUsersMatchingDomainToJoin: boolean;
+        allowSpaceInvitations: boolean;
+        allowApplications: boolean;
+      };
     };
     authorization?:
       | { myPrivileges?: Array<SchemaTypes.AuthorizationPrivilege> | undefined }
@@ -88308,7 +90203,11 @@ export type UpdateOrganizationMutation = {
     };
     settings: {
       privacy: { contributionRolesPubliclyVisible: boolean };
-      membership: { allowUsersMatchingDomainToJoin: boolean };
+      membership: {
+        allowUsersMatchingDomainToJoin: boolean;
+        allowSpaceInvitations: boolean;
+        allowApplications: boolean;
+      };
     };
     authorization?:
       | { myPrivileges?: Array<SchemaTypes.AuthorizationPrivilege> | undefined }
@@ -88325,9 +90224,724 @@ export type UpdateOrganizationSettingsMutation = {
     id: string;
     settings: {
       privacy: { contributionRolesPubliclyVisible: boolean };
-      membership: { allowUsersMatchingDomainToJoin: boolean };
+      membership: {
+        allowUsersMatchingDomainToJoin: boolean;
+        allowSpaceInvitations: boolean;
+        allowApplications: boolean;
+      };
     };
   };
+};
+
+export type AddIframeAllowedUrlMutationVariables = SchemaTypes.Exact<{
+  whitelistedURL: SchemaTypes.Scalars["String"]["input"];
+}>;
+
+export type AddIframeAllowedUrlMutation = {
+  addIframeAllowedURL: Array<string>;
+};
+
+export type AddNotificationEmailToBlacklistMutationVariables =
+  SchemaTypes.Exact<{
+    input: SchemaTypes.NotificationEmailAddressInput;
+  }>;
+
+export type AddNotificationEmailToBlacklistMutation = {
+  addNotificationEmailToBlacklist: Array<string>;
+};
+
+export type AdminCommunicationEnsureAccessToCommunicationsMutationVariables =
+  SchemaTypes.Exact<{
+    communicationData: SchemaTypes.CommunicationAdminEnsureAccessInput;
+  }>;
+
+export type AdminCommunicationEnsureAccessToCommunicationsMutation = {
+  adminCommunicationEnsureAccessToCommunications: boolean;
+};
+
+export type AdminCommunicationMigrateOrphanedConversationsMutationVariables =
+  SchemaTypes.Exact<{ [key: string]: never }>;
+
+export type AdminCommunicationMigrateOrphanedConversationsMutation = {
+  adminCommunicationMigrateOrphanedConversations: { migrated: number };
+};
+
+export type AdminCommunicationRemoveOrphanedRoomMutationVariables =
+  SchemaTypes.Exact<{
+    orphanedRoomData: SchemaTypes.CommunicationAdminRemoveOrphanedRoomInput;
+  }>;
+
+export type AdminCommunicationRemoveOrphanedRoomMutation = {
+  adminCommunicationRemoveOrphanedRoom: boolean;
+};
+
+export type AdminCommunicationSyncSpaceHierarchyMutationVariables =
+  SchemaTypes.Exact<{ [key: string]: never }>;
+
+export type AdminCommunicationSyncSpaceHierarchyMutation = {
+  adminCommunicationSyncSpaceHierarchy: boolean;
+};
+
+export type AdminCommunicationUpdateRoomStateMutationVariables =
+  SchemaTypes.Exact<{
+    roomStateData: SchemaTypes.CommunicationAdminUpdateRoomStateInput;
+  }>;
+
+export type AdminCommunicationUpdateRoomStateMutation = {
+  adminCommunicationUpdateRoomState: boolean;
+};
+
+export type AdminForumRemoveDiscussionCategoryMutationVariables =
+  SchemaTypes.Exact<{
+    removeData: SchemaTypes.ForumRemoveDiscussionCategoryInput;
+  }>;
+
+export type AdminForumRemoveDiscussionCategoryMutation = {
+  adminForumRemoveDiscussionCategory: {
+    id: string;
+    discussionCategories: Array<SchemaTypes.ForumDiscussionCategory>;
+  };
+};
+
+export type AdminIdentityDeleteKratosIdentityMutationVariables =
+  SchemaTypes.Exact<{
+    kratosIdentityId: SchemaTypes.Scalars["UUID"]["input"];
+  }>;
+
+export type AdminIdentityDeleteKratosIdentityMutation = {
+  adminIdentityDeleteKratosIdentity: boolean;
+};
+
+export type AdminInAppNotificationsPruneMutationVariables = SchemaTypes.Exact<{
+  [key: string]: never;
+}>;
+
+export type AdminInAppNotificationsPruneMutation = {
+  adminInAppNotificationsPrune: { removedCountExceedingUserLimit: number };
+};
+
+export type AdminLicensePolicyCreateCredentialRuleMutationVariables =
+  SchemaTypes.Exact<{
+    createData: SchemaTypes.CreateLicensePolicyCredentialRuleInput;
+  }>;
+
+export type AdminLicensePolicyCreateCredentialRuleMutation = {
+  adminLicensePolicyCreateCredentialRule: { id: string };
+};
+
+export type AdminLicensePolicyDeleteCredentialRuleMutationVariables =
+  SchemaTypes.Exact<{
+    deleteData: SchemaTypes.DeleteLicensePolicyCredentialRuleInput;
+  }>;
+
+export type AdminLicensePolicyDeleteCredentialRuleMutation = {
+  adminLicensePolicyDeleteCredentialRule: { id: string };
+};
+
+export type AdminLicensePolicyUpdateCredentialRuleMutationVariables =
+  SchemaTypes.Exact<{
+    updateData: SchemaTypes.UpdateLicensePolicyCredentialRuleInput;
+  }>;
+
+export type AdminLicensePolicyUpdateCredentialRuleMutation = {
+  adminLicensePolicyUpdateCredentialRule: { id: string };
+};
+
+export type AdminRevokeMcpApiKeyMutationVariables = SchemaTypes.Exact<{
+  revokeData: SchemaTypes.AdminRevokeMcpApiKeyInput;
+}>;
+
+export type AdminRevokeMcpApiKeyMutation = {
+  adminRevokeMcpApiKey: { id: string };
+};
+
+export type AdminUpdateContributorAvatarsMutationVariables = SchemaTypes.Exact<{
+  profileID: SchemaTypes.Scalars["UUID"]["input"];
+}>;
+
+export type AdminUpdateContributorAvatarsMutation = {
+  adminUpdateContributorAvatars: { id: string };
+};
+
+export type AdminUpdateGeoLocationDataMutationVariables = SchemaTypes.Exact<{
+  [key: string]: never;
+}>;
+
+export type AdminUpdateGeoLocationDataMutation = {
+  adminUpdateGeoLocationData: boolean;
+};
+
+export type AdminUserAccountDeleteMutationVariables = SchemaTypes.Exact<{
+  userID: SchemaTypes.Scalars["UUID"]["input"];
+}>;
+
+export type AdminUserAccountDeleteMutation = {
+  adminUserAccountDelete: { id: string };
+};
+
+export type AdminUserEmailChangeMutationVariables = SchemaTypes.Exact<{
+  adminUserEmailChangeData: SchemaTypes.AdminUserEmailChangeInput;
+}>;
+
+export type AdminUserEmailChangeMutation = {
+  adminUserEmailChange: { success: boolean };
+};
+
+export type AdminUserEmailChangeDriftResolveMutationVariables =
+  SchemaTypes.Exact<{
+    adminUserEmailChangeDriftResolveData: SchemaTypes.AdminUserEmailChangeDriftResolveInput;
+  }>;
+
+export type AdminUserEmailChangeDriftResolveMutation = {
+  adminUserEmailChangeDriftResolve: { success: boolean };
+};
+
+export type AiServerAuthorizationPolicyResetMutationVariables =
+  SchemaTypes.Exact<{ [key: string]: never }>;
+
+export type AiServerAuthorizationPolicyResetMutation = {
+  aiServerAuthorizationPolicyReset: { id: string };
+};
+
+export type AssignPlatformRoleToOrganizationMutationVariables =
+  SchemaTypes.Exact<{
+    roleData: SchemaTypes.AssignPlatformRoleInput;
+  }>;
+
+export type AssignPlatformRoleToOrganizationMutation = {
+  assignPlatformRoleToOrganization: { id: string };
+};
+
+export type AuthorizationPlatformRolesAccessResetMutationVariables =
+  SchemaTypes.Exact<{ [key: string]: never }>;
+
+export type AuthorizationPlatformRolesAccessResetMutation = {
+  authorizationPlatformRolesAccessReset: boolean;
+};
+
+export type AuthorizationPolicyResetAllMutationVariables = SchemaTypes.Exact<{
+  [key: string]: never;
+}>;
+
+export type AuthorizationPolicyResetAllMutation = {
+  authorizationPolicyResetAll: string;
+};
+
+export type AuthorizationPolicyResetOnAccountMutationVariables =
+  SchemaTypes.Exact<{
+    authorizationResetData: SchemaTypes.AccountAuthorizationResetInput;
+  }>;
+
+export type AuthorizationPolicyResetOnAccountMutation = {
+  authorizationPolicyResetOnAccount: { id: string };
+};
+
+export type AuthorizationPolicyResetOnPlatformMutationVariables =
+  SchemaTypes.Exact<{ [key: string]: never }>;
+
+export type AuthorizationPolicyResetOnPlatformMutation = {
+  authorizationPolicyResetOnPlatform: { id: string };
+};
+
+export type AuthorizationPolicyResetOnUserMutationVariables =
+  SchemaTypes.Exact<{
+    authorizationResetData: SchemaTypes.UserAuthorizationResetInput;
+  }>;
+
+export type AuthorizationPolicyResetOnUserMutation = {
+  authorizationPolicyResetOnUser: { id: string };
+};
+
+export type AuthorizationPolicyResetToGlobalAdminsAccessMutationVariables =
+  SchemaTypes.Exact<{
+    authorizationID: SchemaTypes.Scalars["String"]["input"];
+  }>;
+
+export type AuthorizationPolicyResetToGlobalAdminsAccessMutation = {
+  authorizationPolicyResetToGlobalAdminsAccess: { id: string };
+};
+
+export type CleanupCollectionsMutationVariables = SchemaTypes.Exact<{
+  [key: string]: never;
+}>;
+
+export type CleanupCollectionsMutation = {
+  cleanupCollections: { success: boolean };
+};
+
+export type CreateContributionOnCalloutIdMutationVariables = SchemaTypes.Exact<{
+  contributionData: SchemaTypes.CreateContributionOnCalloutInput;
+}>;
+
+export type CreateContributionOnCalloutIdMutation = {
+  createContributionOnCallout: { id: string };
+};
+
+export type CreateTemplateFromContentSpaceMutationVariables =
+  SchemaTypes.Exact<{
+    templateData: SchemaTypes.CreateTemplateFromContentSpaceOnTemplatesSetInput;
+  }>;
+
+export type CreateTemplateFromContentSpaceMutation = {
+  createTemplateFromContentSpace: { id: string };
+};
+
+export type CreateWingbackAccountMutationVariables = SchemaTypes.Exact<{
+  accountID: SchemaTypes.Scalars["UUID"]["input"];
+}>;
+
+export type CreateWingbackAccountMutation = { createWingbackAccount: string };
+
+export type DeleteContributionMutationVariables = SchemaTypes.Exact<{
+  deleteData: SchemaTypes.DeleteContributionInput;
+}>;
+
+export type DeleteContributionMutation = { deleteContribution: { id: string } };
+
+export type GrantCredentialToActorMutationVariables = SchemaTypes.Exact<{
+  actorID: SchemaTypes.Scalars["UUID"]["input"];
+  credentialType: SchemaTypes.CredentialType;
+  resourceID?: SchemaTypes.InputMaybe<SchemaTypes.Scalars["UUID"]["input"]>;
+}>;
+
+export type GrantCredentialToActorMutation = {
+  grantCredentialToActor: { id: string };
+};
+
+export type GrantCredentialToOrganizationMutationVariables = SchemaTypes.Exact<{
+  grantCredentialData: SchemaTypes.GrantOrganizationAuthorizationCredentialInput;
+}>;
+
+export type GrantCredentialToOrganizationMutation = {
+  grantCredentialToOrganization: { id: string };
+};
+
+export type GrantCredentialToUserMutationVariables = SchemaTypes.Exact<{
+  grantCredentialData: SchemaTypes.GrantAuthorizationCredentialInput;
+}>;
+
+export type GrantCredentialToUserMutation = {
+  grantCredentialToUser: { id: string };
+};
+
+export type LicenseResetOnAccountMutationVariables = SchemaTypes.Exact<{
+  resetData: SchemaTypes.AccountLicenseResetInput;
+}>;
+
+export type LicenseResetOnAccountMutation = {
+  licenseResetOnAccount: { id: string };
+};
+
+export type MigrateLegacyMemoContentMutationVariables = SchemaTypes.Exact<{
+  [key: string]: never;
+}>;
+
+export type MigrateLegacyMemoContentMutation = {
+  migrateLegacyMemoContent: { total: number; migrated: number };
+};
+
+export type MigrateLegacyWhiteboardContentMutationVariables =
+  SchemaTypes.Exact<{ [key: string]: never }>;
+
+export type MigrateLegacyWhiteboardContentMutation = {
+  migrateLegacyWhiteboardContent: { total: number; migrated: number };
+};
+
+export type MintMcpApiKeyMutationVariables = SchemaTypes.Exact<{
+  mintData: SchemaTypes.MintMcpApiKeyInput;
+}>;
+
+export type MintMcpApiKeyMutation = { mintMcpApiKey: { key: { id: string } } };
+
+export type MoveContributionToCalloutMutationVariables = SchemaTypes.Exact<{
+  moveContributionData: SchemaTypes.MoveCalloutContributionInput;
+}>;
+
+export type MoveContributionToCalloutMutation = {
+  moveContributionToCallout: { id: string };
+};
+
+export type PlatformRolesAssignLicensePlanToAccountMutationVariables =
+  SchemaTypes.Exact<{
+    planData: SchemaTypes.AssignLicensePlanToAccount;
+  }>;
+
+export type PlatformRolesAssignLicensePlanToAccountMutation = {
+  assignLicensePlanToAccount: { id: string };
+};
+
+export type PlatformRolesAssignLicensePlanToSpaceMutationVariables =
+  SchemaTypes.Exact<{
+    planData: SchemaTypes.AssignLicensePlanToSpace;
+  }>;
+
+export type PlatformRolesAssignLicensePlanToSpaceMutation = {
+  assignLicensePlanToSpace: { id: string };
+};
+
+export type PlatformRolesAssignRoleToUserMutationVariables = SchemaTypes.Exact<{
+  roleData: SchemaTypes.AssignPlatformRoleInput;
+}>;
+
+export type PlatformRolesAssignRoleToUserMutation = {
+  assignPlatformRoleToUser: { id: string };
+};
+
+export type PlatformRolesConvertSpaceL1ToSpaceL0MutationVariables =
+  SchemaTypes.Exact<{
+    convertData: SchemaTypes.ConvertSpaceL1ToSpaceL0Input;
+  }>;
+
+export type PlatformRolesConvertSpaceL1ToSpaceL0Mutation = {
+  convertSpaceL1ToSpaceL0: { id: string };
+};
+
+export type PlatformRolesConvertSpaceL2ToSpaceL1MutationVariables =
+  SchemaTypes.Exact<{
+    convertData: SchemaTypes.ConvertSpaceL2ToSpaceL1Input;
+  }>;
+
+export type PlatformRolesConvertSpaceL2ToSpaceL1Mutation = {
+  convertSpaceL2ToSpaceL1: { id: string };
+};
+
+export type PlatformRolesConvertVirtualContributorToUseKnowledgeBaseMutationVariables =
+  SchemaTypes.Exact<{
+    conversionData: SchemaTypes.ConversionVcSpaceToVcKnowledgeBaseInput;
+  }>;
+
+export type PlatformRolesConvertVirtualContributorToUseKnowledgeBaseMutation = {
+  convertVirtualContributorToUseKnowledgeBase: { id: string };
+};
+
+export type PlatformRolesCreateLicensePlanMutationVariables =
+  SchemaTypes.Exact<{
+    planData: SchemaTypes.CreateLicensePlanOnLicensingFrameworkInput;
+  }>;
+
+export type PlatformRolesCreateLicensePlanMutation = {
+  createLicensePlan: { id: string };
+};
+
+export type PlatformRolesCreateOrganizationMutationVariables =
+  SchemaTypes.Exact<{
+    organizationData: SchemaTypes.CreateOrganizationInput;
+  }>;
+
+export type PlatformRolesCreateOrganizationMutation = {
+  createOrganization: { id: string };
+};
+
+export type PlatformRolesCreateTemplateMutationVariables = SchemaTypes.Exact<{
+  templateData: SchemaTypes.CreateTemplateOnTemplatesSetInput;
+}>;
+
+export type PlatformRolesCreateTemplateMutation = {
+  createTemplate: { id: string };
+};
+
+export type PlatformRolesCreateTemplateFromSpaceMutationVariables =
+  SchemaTypes.Exact<{
+    templateData: SchemaTypes.CreateTemplateFromSpaceOnTemplatesSetInput;
+  }>;
+
+export type PlatformRolesCreateTemplateFromSpaceMutation = {
+  createTemplateFromSpace: { id: string };
+};
+
+export type PlatformRolesDeleteDiscussionMutationVariables = SchemaTypes.Exact<{
+  deleteData: SchemaTypes.DeleteDiscussionInput;
+}>;
+
+export type PlatformRolesDeleteDiscussionMutation = {
+  deleteDiscussion: { id: string };
+};
+
+export type PlatformRolesDeleteLicensePlanMutationVariables =
+  SchemaTypes.Exact<{
+    deleteData: SchemaTypes.DeleteLicensePlanInput;
+  }>;
+
+export type PlatformRolesDeleteLicensePlanMutation = {
+  deleteLicensePlan: { id: string };
+};
+
+export type PlatformRolesMoveSpaceL1ToSpaceL0MutationVariables =
+  SchemaTypes.Exact<{
+    moveData: SchemaTypes.MoveSpaceL1ToSpaceL0Input;
+  }>;
+
+export type PlatformRolesMoveSpaceL1ToSpaceL0Mutation = {
+  moveSpaceL1ToSpaceL0: { id: string };
+};
+
+export type PlatformRolesMoveSpaceL1ToSpaceL2MutationVariables =
+  SchemaTypes.Exact<{
+    moveData: SchemaTypes.MoveSpaceL1ToSpaceL2Input;
+  }>;
+
+export type PlatformRolesMoveSpaceL1ToSpaceL2Mutation = {
+  moveSpaceL1ToSpaceL2: { id: string };
+};
+
+export type PlatformRolesMoveSpaceL2ToSpaceL1MutationVariables =
+  SchemaTypes.Exact<{
+    moveData: SchemaTypes.MoveSpaceL2ToSpaceL1Input;
+  }>;
+
+export type PlatformRolesMoveSpaceL2ToSpaceL1Mutation = {
+  moveSpaceL2ToSpaceL1: { id: string };
+};
+
+export type PlatformRolesRemoveRoleFromUserMutationVariables =
+  SchemaTypes.Exact<{
+    roleData: SchemaTypes.RemovePlatformRoleInput;
+  }>;
+
+export type PlatformRolesRemoveRoleFromUserMutation = {
+  removePlatformRoleFromUser: { id: string };
+};
+
+export type PlatformRolesRevokeLicensePlanFromAccountMutationVariables =
+  SchemaTypes.Exact<{
+    planData: SchemaTypes.RevokeLicensePlanFromAccount;
+  }>;
+
+export type PlatformRolesRevokeLicensePlanFromAccountMutation = {
+  revokeLicensePlanFromAccount: { id: string };
+};
+
+export type PlatformRolesRevokeLicensePlanFromSpaceMutationVariables =
+  SchemaTypes.Exact<{
+    planData: SchemaTypes.RevokeLicensePlanFromSpace;
+  }>;
+
+export type PlatformRolesRevokeLicensePlanFromSpaceMutation = {
+  revokeLicensePlanFromSpace: { id: string };
+};
+
+export type PlatformRolesTransferCalloutMutationVariables = SchemaTypes.Exact<{
+  transferData: SchemaTypes.TransferCalloutInput;
+}>;
+
+export type PlatformRolesTransferCalloutMutation = {
+  transferCallout: { id: string };
+};
+
+export type PlatformRolesTransferInnovationHubToAccountMutationVariables =
+  SchemaTypes.Exact<{
+    transferData: SchemaTypes.TransferAccountInnovationHubInput;
+  }>;
+
+export type PlatformRolesTransferInnovationHubToAccountMutation = {
+  transferInnovationHubToAccount: { id: string };
+};
+
+export type PlatformRolesTransferInnovationPackToAccountMutationVariables =
+  SchemaTypes.Exact<{
+    transferData: SchemaTypes.TransferAccountInnovationPackInput;
+  }>;
+
+export type PlatformRolesTransferInnovationPackToAccountMutation = {
+  transferInnovationPackToAccount: { id: string };
+};
+
+export type PlatformRolesTransferSpaceToAccountMutationVariables =
+  SchemaTypes.Exact<{
+    transferData: SchemaTypes.TransferAccountSpaceInput;
+  }>;
+
+export type PlatformRolesTransferSpaceToAccountMutation = {
+  transferSpaceToAccount: { id: string };
+};
+
+export type PlatformRolesTransferVirtualContributorToAccountMutationVariables =
+  SchemaTypes.Exact<{
+    transferData: SchemaTypes.TransferAccountVirtualContributorInput;
+  }>;
+
+export type PlatformRolesTransferVirtualContributorToAccountMutation = {
+  transferVirtualContributorToAccount: { id: string };
+};
+
+export type PlatformRolesUpdateCalloutMutationVariables = SchemaTypes.Exact<{
+  calloutData: SchemaTypes.UpdateCalloutEntityInput;
+}>;
+
+export type PlatformRolesUpdateCalloutMutation = {
+  updateCallout: { id: string };
+};
+
+export type PlatformRolesUpdateDiscussionMutationVariables = SchemaTypes.Exact<{
+  updateData: SchemaTypes.UpdateDiscussionInput;
+}>;
+
+export type PlatformRolesUpdateDiscussionMutation = {
+  updateDiscussion: { id: string };
+};
+
+export type PlatformRolesUpdateLicensePlanMutationVariables =
+  SchemaTypes.Exact<{
+    updateData: SchemaTypes.UpdateLicensePlanInput;
+  }>;
+
+export type PlatformRolesUpdateLicensePlanMutation = {
+  updateLicensePlan: { id: string };
+};
+
+export type PlatformRolesUpdateSpaceVisibilityMutationVariables =
+  SchemaTypes.Exact<{
+    updateData: SchemaTypes.UpdateSpacePlatformSettingsInput;
+  }>;
+
+export type PlatformRolesUpdateSpaceVisibilityMutation = {
+  updateSpacePlatformSettings: { id: string };
+};
+
+export type PlatformRolesUpdateTemplateMutationVariables = SchemaTypes.Exact<{
+  updateData: SchemaTypes.UpdateTemplateInput;
+}>;
+
+export type PlatformRolesUpdateTemplateMutation = {
+  updateTemplate: { id: string };
+};
+
+export type RefreshAllBodiesOfKnowledgeMutationVariables = SchemaTypes.Exact<{
+  [key: string]: never;
+}>;
+
+export type RefreshAllBodiesOfKnowledgeMutation = {
+  refreshAllBodiesOfKnowledge: boolean;
+};
+
+export type RemoveIframeAllowedUrlMutationVariables = SchemaTypes.Exact<{
+  whitelistedURL: SchemaTypes.Scalars["String"]["input"];
+}>;
+
+export type RemoveIframeAllowedUrlMutation = {
+  removeIframeAllowedURL: Array<string>;
+};
+
+export type RemoveNotificationEmailFromBlacklistMutationVariables =
+  SchemaTypes.Exact<{
+    input: SchemaTypes.NotificationEmailAddressInput;
+  }>;
+
+export type RemoveNotificationEmailFromBlacklistMutation = {
+  removeNotificationEmailFromBlacklist: Array<string>;
+};
+
+export type RemovePlatformRoleFromOrganizationMutationVariables =
+  SchemaTypes.Exact<{
+    roleData: SchemaTypes.RemovePlatformRoleInput;
+  }>;
+
+export type RemovePlatformRoleFromOrganizationMutation = {
+  removePlatformRoleFromOrganization: { id: string };
+};
+
+export type ResetLicenseOnAccountsMutationVariables = SchemaTypes.Exact<{
+  [key: string]: never;
+}>;
+
+export type ResetLicenseOnAccountsMutation = {
+  resetLicenseOnAccounts: boolean;
+};
+
+export type RevokeCredentialFromActorMutationVariables = SchemaTypes.Exact<{
+  actorID: SchemaTypes.Scalars["UUID"]["input"];
+  credentialType: SchemaTypes.CredentialType;
+  resourceID?: SchemaTypes.InputMaybe<SchemaTypes.Scalars["UUID"]["input"]>;
+}>;
+
+export type RevokeCredentialFromActorMutation = {
+  revokeCredentialFromActor: boolean;
+};
+
+export type RevokeCredentialFromOrganizationMutationVariables =
+  SchemaTypes.Exact<{
+    revokeCredentialData: SchemaTypes.RevokeOrganizationAuthorizationCredentialInput;
+  }>;
+
+export type RevokeCredentialFromOrganizationMutation = {
+  revokeCredentialFromOrganization: { id: string };
+};
+
+export type RevokeCredentialFromUserMutationVariables = SchemaTypes.Exact<{
+  revokeCredentialData: SchemaTypes.RevokeAuthorizationCredentialInput;
+}>;
+
+export type RevokeCredentialFromUserMutation = {
+  revokeCredentialFromUser: { id: string };
+};
+
+export type SetPlatformWellKnownVirtualContributorMutationVariables =
+  SchemaTypes.Exact<{
+    mappingData: SchemaTypes.SetPlatformWellKnownVirtualContributorInput;
+  }>;
+
+export type SetPlatformWellKnownVirtualContributorMutation = {
+  setPlatformWellKnownVirtualContributor: {
+    mappings: Array<{ wellKnown: SchemaTypes.VirtualContributorWellKnown }>;
+  };
+};
+
+export type UpdateAssistantActorCapabilitiesMutationVariables =
+  SchemaTypes.Exact<{
+    grantData: SchemaTypes.GrantAssistantActorCapabilitiesInput;
+  }>;
+
+export type UpdateAssistantActorCapabilitiesMutation = {
+  updateAssistantActorCapabilities: { id: string };
+};
+
+export type UpdateBaselineLicensePlanOnAccountMutationVariables =
+  SchemaTypes.Exact<{
+    updateData: SchemaTypes.UpdateBaselineLicensePlanOnAccount;
+  }>;
+
+export type UpdateBaselineLicensePlanOnAccountMutation = {
+  updateBaselineLicensePlanOnAccount: { id: string };
+};
+
+export type UpdateCalloutPublishInfoMutationVariables = SchemaTypes.Exact<{
+  calloutData: SchemaTypes.UpdateCalloutPublishInfoInput;
+}>;
+
+export type UpdateCalloutPublishInfoMutation = {
+  updateCalloutPublishInfo: { id: string };
+};
+
+export type UpdateInnovationHubMutationVariables = SchemaTypes.Exact<{
+  updateData: SchemaTypes.UpdateInnovationHubInput;
+}>;
+
+export type UpdateInnovationHubMutation = {
+  updateInnovationHub: { id: string };
+};
+
+export type UpdateInnovationPackMutationVariables = SchemaTypes.Exact<{
+  innovationPackData: SchemaTypes.UpdateInnovationPackInput;
+}>;
+
+export type UpdateInnovationPackMutation = {
+  updateInnovationPack: { id: string };
+};
+
+export type UpdatePlatformSettingsMutationVariables = SchemaTypes.Exact<{
+  settingsData: SchemaTypes.UpdatePlatformSettingsInput;
+}>;
+
+export type UpdatePlatformSettingsMutation = {
+  updatePlatformSettings: { integration: { iframeAllowedUrls: Array<string> } };
+};
+
+export type UpdateTemplateFromSpaceMutationVariables = SchemaTypes.Exact<{
+  updateData: SchemaTypes.UpdateTemplateFromSpaceInput;
+}>;
+
+export type UpdateTemplateFromSpaceMutation = {
+  updateTemplateFromSpace: { id: string };
 };
 
 export type AssignPlatformRoleToUserMutationVariables = SchemaTypes.Exact<{
@@ -88433,6 +91047,20 @@ export type UpdateSpacePlatformSettingsMutation = {
     __typename: "Space";
     id: string;
     nameID: string;
+    visibility: SchemaTypes.SpaceVisibility;
+  };
+};
+
+export type UpdateSpaceVisibilityPlatformSettingsMutationVariables =
+  SchemaTypes.Exact<{
+    spaceId: SchemaTypes.Scalars["UUID"]["input"];
+    visibility: SchemaTypes.SpaceVisibility;
+  }>;
+
+export type UpdateSpaceVisibilityPlatformSettingsMutation = {
+  updateSpacePlatformSettings: {
+    __typename: "Space";
+    id: string;
     visibility: SchemaTypes.SpaceVisibility;
   };
 };
@@ -89146,6 +91774,30 @@ export type CreateUserMutation = {
             inApp: boolean;
             push: boolean;
           };
+          adminSpaceCommunityInvitation: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
+          adminAssociateInvitationResponse: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
+          adminAssociateApplicationReceived: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
+          adminAssociateJoined: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
         };
         space: {
           __typename: "UserSettingsNotificationSpace";
@@ -89158,6 +91810,12 @@ export type CreateUserMutation = {
               push: boolean;
             };
             collaborationCalloutContributionCreated: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+              push: boolean;
+            };
+            communityInvitationResponse: {
               __typename: "UserSettingsNotificationChannels";
               email: boolean;
               inApp: boolean;
@@ -89248,6 +91906,18 @@ export type CreateUserMutation = {
               push: boolean;
             };
             spaceCommunityJoined: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+              push: boolean;
+            };
+            organizationAssociateInvitationReceived: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+              push: boolean;
+            };
+            organizationAssociateApplicationDecided: {
               __typename: "UserSettingsNotificationChannels";
               email: boolean;
               inApp: boolean;
@@ -89552,6 +92222,30 @@ export type UpdateUserMutation = {
             inApp: boolean;
             push: boolean;
           };
+          adminSpaceCommunityInvitation: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
+          adminAssociateInvitationResponse: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
+          adminAssociateApplicationReceived: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
+          adminAssociateJoined: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
         };
         space: {
           __typename: "UserSettingsNotificationSpace";
@@ -89564,6 +92258,12 @@ export type UpdateUserMutation = {
               push: boolean;
             };
             collaborationCalloutContributionCreated: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+              push: boolean;
+            };
+            communityInvitationResponse: {
               __typename: "UserSettingsNotificationChannels";
               email: boolean;
               inApp: boolean;
@@ -89654,6 +92354,18 @@ export type UpdateUserMutation = {
               push: boolean;
             };
             spaceCommunityJoined: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+              push: boolean;
+            };
+            organizationAssociateInvitationReceived: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+              push: boolean;
+            };
+            organizationAssociateApplicationDecided: {
               __typename: "UserSettingsNotificationChannels";
               email: boolean;
               inApp: boolean;
@@ -89788,6 +92500,30 @@ export type UpdateUserSettingsMutation = {
             inApp: boolean;
             push: boolean;
           };
+          adminSpaceCommunityInvitation: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
+          adminAssociateInvitationResponse: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
+          adminAssociateApplicationReceived: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
+          adminAssociateJoined: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
         };
         space: {
           __typename: "UserSettingsNotificationSpace";
@@ -89800,6 +92536,12 @@ export type UpdateUserSettingsMutation = {
               push: boolean;
             };
             collaborationCalloutContributionCreated: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+              push: boolean;
+            };
+            communityInvitationResponse: {
               __typename: "UserSettingsNotificationChannels";
               email: boolean;
               inApp: boolean;
@@ -89890,6 +92632,18 @@ export type UpdateUserSettingsMutation = {
               push: boolean;
             };
             spaceCommunityJoined: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+              push: boolean;
+            };
+            organizationAssociateInvitationReceived: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+              push: boolean;
+            };
+            organizationAssociateApplicationDecided: {
               __typename: "UserSettingsNotificationChannels";
               email: boolean;
               inApp: boolean;
@@ -90142,6 +92896,53 @@ export type UpdateVirtualContributorSettingsMutation = {
   };
 };
 
+export type GetOrganizationRoleSetPendingQueryVariables = SchemaTypes.Exact<{
+  roleSetId: SchemaTypes.Scalars["UUID"]["input"];
+}>;
+
+export type GetOrganizationRoleSetPendingQuery = {
+  lookup: {
+    roleSet?:
+      | {
+          id: string;
+          applications: Array<{
+            id: string;
+            state: string;
+            questions: Array<{ name: string; value: string }>;
+          }>;
+          invitations: Array<{
+            id: string;
+            state: string;
+            extraRoles: Array<SchemaTypes.RoleName>;
+          }>;
+          platformInvitations: Array<{ id: string }>;
+        }
+      | undefined;
+  };
+};
+
+export type GetRoleSetApplicationFormQueryVariables = SchemaTypes.Exact<{
+  roleSetId: SchemaTypes.Scalars["UUID"]["input"];
+}>;
+
+export type GetRoleSetApplicationFormQuery = {
+  lookup: {
+    roleSet?:
+      | {
+          id: string;
+          applicationForm: {
+            id: string;
+            questions: Array<{
+              question: string;
+              required: boolean;
+              sortOrder: number;
+            }>;
+          };
+        }
+      | undefined;
+  };
+};
+
 export type RoleSetAvailableMembersQueryVariables = SchemaTypes.Exact<{
   roleSetId: SchemaTypes.Scalars["UUID"]["input"];
   first: SchemaTypes.Scalars["Int"]["input"];
@@ -90249,6 +93050,10 @@ export type RoleSetApplicationsInvitationsQuery = {
             state: string;
             nextEvents: Array<string>;
             isFinalized: boolean;
+            createdDate: Date;
+            extraRoles: Array<SchemaTypes.RoleName>;
+            invitedToParent: boolean;
+            welcomeMessage?: string | undefined;
             lifecycle: { id: string };
             createdBy?:
               | {
@@ -90269,6 +93074,7 @@ export type RoleSetApplicationsInvitationsQuery = {
               | undefined;
             actor: {
               id: string;
+              type: SchemaTypes.ActorType;
               profile?: { id: string; displayName: string } | undefined;
             };
             authorization?:
@@ -90425,6 +93231,46 @@ export type CommunityMemberVirtualContributorFragment = {
   profile?: { id: string; displayName: string } | undefined;
 };
 
+export type RoleSetPendingApplicationsQueryVariables = SchemaTypes.Exact<{
+  roleSetId: SchemaTypes.Scalars["UUID"]["input"];
+}>;
+
+export type RoleSetPendingApplicationsQuery = {
+  lookup: {
+    roleSet?:
+      | { id: string; applications: Array<{ id: string; state: string }> }
+      | undefined;
+  };
+};
+
+export type RoleSetPendingInvitationsQueryVariables = SchemaTypes.Exact<{
+  roleSetId: SchemaTypes.Scalars["UUID"]["input"];
+}>;
+
+export type RoleSetPendingInvitationsQuery = {
+  lookup: {
+    roleSet?:
+      | { id: string; invitations: Array<{ id: string; state: string }> }
+      | undefined;
+  };
+};
+
+export type RoleSetPendingPlatformInvitationsQueryVariables =
+  SchemaTypes.Exact<{
+    roleSetId: SchemaTypes.Scalars["UUID"]["input"];
+  }>;
+
+export type RoleSetPendingPlatformInvitationsQuery = {
+  lookup: {
+    roleSet?:
+      | {
+          id: string;
+          platformInvitations: Array<{ id: string; email: string }>;
+        }
+      | undefined;
+  };
+};
+
 export type RoleSetUserPrivilegesQueryVariables = SchemaTypes.Exact<{
   roleSetId: SchemaTypes.Scalars["UUID"]["input"];
 }>;
@@ -90449,6 +93295,25 @@ export type RoleSetUserPrivilegesQuery = {
   };
 };
 
+export type GetRoleSetUsersInRolesQueryVariables = SchemaTypes.Exact<{
+  roleSetId: SchemaTypes.Scalars["UUID"]["input"];
+  roles: Array<SchemaTypes.RoleName> | SchemaTypes.RoleName;
+}>;
+
+export type GetRoleSetUsersInRolesQuery = {
+  lookup: {
+    roleSet?:
+      | {
+          id: string;
+          usersInRoles: Array<{
+            role: SchemaTypes.RoleName;
+            users: Array<{ id: string; nameID: string; email: string }>;
+          }>;
+        }
+      | undefined;
+  };
+};
+
 export type GetSpaceInvitationsQueryVariables = SchemaTypes.Exact<{
   spaceId: SchemaTypes.Scalars["UUID"]["input"];
 }>;
@@ -90466,6 +93331,10 @@ export type GetSpaceInvitationsQuery = {
                 state: string;
                 nextEvents: Array<string>;
                 isFinalized: boolean;
+                createdDate: Date;
+                extraRoles: Array<SchemaTypes.RoleName>;
+                invitedToParent: boolean;
+                welcomeMessage?: string | undefined;
                 lifecycle: { id: string };
                 createdBy?:
                   | {
@@ -90486,6 +93355,7 @@ export type GetSpaceInvitationsQuery = {
                   | undefined;
                 actor: {
                   id: string;
+                  type: SchemaTypes.ActorType;
                   profile?: { id: string; displayName: string } | undefined;
                 };
                 authorization?:
@@ -90829,7 +93699,7 @@ export type SpaceCalloutQuery = {
                   id: string;
                   defaultDisplayName?: string | undefined;
                   postDescription?: any | undefined;
-                  whiteboardContent?: any | undefined;
+                  whiteboardContentAvailable: boolean;
                 };
                 contributions: Array<{
                   authorization?:
@@ -91347,7 +94217,7 @@ export type CalloutDetailsQuery = {
             id: string;
             defaultDisplayName?: string | undefined;
             postDescription?: any | undefined;
-            whiteboardContent?: any | undefined;
+            whiteboardContentAvailable: boolean;
           };
           contributions: Array<{
             authorization?:
@@ -92118,6 +94988,35 @@ export type VisualFullFragment = {
   minHeight: number;
   minWidth: number;
   alternativeText?: string | undefined;
+};
+
+export type GetCalloutSpacesSettingsQueryVariables = SchemaTypes.Exact<{
+  calloutId: SchemaTypes.Scalars["UUID"]["input"];
+}>;
+
+export type GetCalloutSpacesSettingsQuery = {
+  lookup: {
+    callout?:
+      | {
+          id: string;
+          framing: { id: string; type: SchemaTypes.CalloutFramingType };
+          settings: {
+            framing: {
+              commentsEnabled: boolean;
+              spaces?:
+                | { cardVariant: SchemaTypes.SpaceCollectionCardVariant }
+                | undefined;
+              selection?:
+                | {
+                    mode: SchemaTypes.CalloutSelectionMode;
+                    selectedIds: Array<string>;
+                  }
+                | undefined;
+            };
+          };
+        }
+      | undefined;
+  };
 };
 
 export type CalloutWhiateboardStorageConfigQueryVariables = SchemaTypes.Exact<{
@@ -93328,7 +96227,11 @@ export type GetSpaceAvailableMembersQuery = {
                 };
                 settings: {
                   privacy: { contributionRolesPubliclyVisible: boolean };
-                  membership: { allowUsersMatchingDomainToJoin: boolean };
+                  membership: {
+                    allowUsersMatchingDomainToJoin: boolean;
+                    allowSpaceInvitations: boolean;
+                    allowApplications: boolean;
+                  };
                 };
                 authorization?:
                   | {
@@ -93589,7 +96492,11 @@ export type GetSpaceAvailableMembersQuery = {
                 };
                 settings: {
                   privacy: { contributionRolesPubliclyVisible: boolean };
-                  membership: { allowUsersMatchingDomainToJoin: boolean };
+                  membership: {
+                    allowUsersMatchingDomainToJoin: boolean;
+                    allowSpaceInvitations: boolean;
+                    allowApplications: boolean;
+                  };
                 };
                 authorization?:
                   | {
@@ -93850,7 +96757,11 @@ export type GetSpaceAvailableMembersQuery = {
                 };
                 settings: {
                   privacy: { contributionRolesPubliclyVisible: boolean };
-                  membership: { allowUsersMatchingDomainToJoin: boolean };
+                  membership: {
+                    allowUsersMatchingDomainToJoin: boolean;
+                    allowSpaceInvitations: boolean;
+                    allowApplications: boolean;
+                  };
                 };
                 authorization?:
                   | {
@@ -94335,7 +97246,11 @@ export type GetSpaceCommunityQuery = {
                 };
                 settings: {
                   privacy: { contributionRolesPubliclyVisible: boolean };
-                  membership: { allowUsersMatchingDomainToJoin: boolean };
+                  membership: {
+                    allowUsersMatchingDomainToJoin: boolean;
+                    allowSpaceInvitations: boolean;
+                    allowApplications: boolean;
+                  };
                 };
                 authorization?:
                   | {
@@ -94596,7 +97511,11 @@ export type GetSpaceCommunityQuery = {
                 };
                 settings: {
                   privacy: { contributionRolesPubliclyVisible: boolean };
-                  membership: { allowUsersMatchingDomainToJoin: boolean };
+                  membership: {
+                    allowUsersMatchingDomainToJoin: boolean;
+                    allowSpaceInvitations: boolean;
+                    allowApplications: boolean;
+                  };
                 };
                 authorization?:
                   | {
@@ -94857,7 +97776,11 @@ export type GetSpaceCommunityQuery = {
                 };
                 settings: {
                   privacy: { contributionRolesPubliclyVisible: boolean };
-                  membership: { allowUsersMatchingDomainToJoin: boolean };
+                  membership: {
+                    allowUsersMatchingDomainToJoin: boolean;
+                    allowSpaceInvitations: boolean;
+                    allowApplications: boolean;
+                  };
                 };
                 authorization?:
                   | {
@@ -95341,7 +98264,11 @@ export type GetSubspaceAvailableMembersQuery = {
                 };
                 settings: {
                   privacy: { contributionRolesPubliclyVisible: boolean };
-                  membership: { allowUsersMatchingDomainToJoin: boolean };
+                  membership: {
+                    allowUsersMatchingDomainToJoin: boolean;
+                    allowSpaceInvitations: boolean;
+                    allowApplications: boolean;
+                  };
                 };
                 authorization?:
                   | {
@@ -95602,7 +98529,11 @@ export type GetSubspaceAvailableMembersQuery = {
                 };
                 settings: {
                   privacy: { contributionRolesPubliclyVisible: boolean };
-                  membership: { allowUsersMatchingDomainToJoin: boolean };
+                  membership: {
+                    allowUsersMatchingDomainToJoin: boolean;
+                    allowSpaceInvitations: boolean;
+                    allowApplications: boolean;
+                  };
                 };
                 authorization?:
                   | {
@@ -95863,7 +98794,11 @@ export type GetSubspaceAvailableMembersQuery = {
                 };
                 settings: {
                   privacy: { contributionRolesPubliclyVisible: boolean };
-                  membership: { allowUsersMatchingDomainToJoin: boolean };
+                  membership: {
+                    allowUsersMatchingDomainToJoin: boolean;
+                    allowSpaceInvitations: boolean;
+                    allowApplications: boolean;
+                  };
                 };
                 authorization?:
                   | {
@@ -96347,7 +99282,11 @@ export type GetSubspaceCommunityQuery = {
                 };
                 settings: {
                   privacy: { contributionRolesPubliclyVisible: boolean };
-                  membership: { allowUsersMatchingDomainToJoin: boolean };
+                  membership: {
+                    allowUsersMatchingDomainToJoin: boolean;
+                    allowSpaceInvitations: boolean;
+                    allowApplications: boolean;
+                  };
                 };
                 authorization?:
                   | {
@@ -96608,7 +99547,11 @@ export type GetSubspaceCommunityQuery = {
                 };
                 settings: {
                   privacy: { contributionRolesPubliclyVisible: boolean };
-                  membership: { allowUsersMatchingDomainToJoin: boolean };
+                  membership: {
+                    allowUsersMatchingDomainToJoin: boolean;
+                    allowSpaceInvitations: boolean;
+                    allowApplications: boolean;
+                  };
                 };
                 authorization?:
                   | {
@@ -96869,7 +99812,11 @@ export type GetSubspaceCommunityQuery = {
                 };
                 settings: {
                   privacy: { contributionRolesPubliclyVisible: boolean };
-                  membership: { allowUsersMatchingDomainToJoin: boolean };
+                  membership: {
+                    allowUsersMatchingDomainToJoin: boolean;
+                    allowSpaceInvitations: boolean;
+                    allowApplications: boolean;
+                  };
                 };
                 authorization?:
                   | {
@@ -96917,6 +99864,27 @@ export type PendingMembershipsJourneyProfileFragment = {
   displayName: string;
   tagset?: { id: string; tags: Array<string> } | undefined;
   cardBanner?: { id: string; uri: string } | undefined;
+};
+
+export type BannerVisualConstraintsQueryVariables = SchemaTypes.Exact<{
+  [key: string]: never;
+}>;
+
+export type BannerVisualConstraintsQuery = {
+  platform: {
+    configuration: {
+      defaultVisualTypeConstraints: {
+        minWidth: number;
+        minHeight: number;
+        maxWidth: number;
+        maxHeight: number;
+        aspectRatio: number;
+        minAspectRatio: number;
+        maxAspectRatio: number;
+        allowedTypes: Array<string>;
+      };
+    };
+  };
 };
 
 export type ConfigurationQueryVariables = SchemaTypes.Exact<{
@@ -97146,8 +100114,35 @@ export type GetInnovationFlowStatesWithIdsQuery = {
           collaboration: {
             innovationFlow: {
               id: string;
-              states: Array<{ id: string; displayName: string }>;
+              states: Array<{
+                id: string;
+                displayName: string;
+                sortOrder: number;
+                settings: { sidebar: Array<SchemaTypes.SidebarWidget> };
+              }>;
             };
+          };
+        }
+      | undefined;
+  };
+};
+
+export type GetSpaceLicenseEntitlementsQueryVariables = SchemaTypes.Exact<{
+  spaceID: SchemaTypes.Scalars["UUID"]["input"];
+}>;
+
+export type GetSpaceLicenseEntitlementsQuery = {
+  lookup: {
+    space?:
+      | {
+          id: string;
+          license: {
+            id: string;
+            entitlements: Array<{
+              type: SchemaTypes.LicenseEntitlementType;
+              enabled: boolean;
+              limit: number;
+            }>;
           };
         }
       | undefined;
@@ -97215,6 +100210,11 @@ export type LookupProfileVisualsQuery = {
             id: string;
             name: SchemaTypes.VisualType;
             uri: string;
+            minWidth: number;
+            minHeight: number;
+            maxWidth: number;
+            maxHeight: number;
+            aspectRatio: number;
             authorization?:
               | {
                   myPrivileges?:
@@ -97223,6 +100223,29 @@ export type LookupProfileVisualsQuery = {
                 }
               | undefined;
           }>;
+        }
+      | undefined;
+  };
+};
+
+export type GetCalloutFramingMemoQueryVariables = SchemaTypes.Exact<{
+  calloutID: SchemaTypes.Scalars["UUID"]["input"];
+}>;
+
+export type GetCalloutFramingMemoQuery = {
+  lookup: {
+    callout?:
+      | {
+          id: string;
+          framing: {
+            id: string;
+            memo?:
+              | {
+                  id: string;
+                  profile: { id: string; displayName: string; url: string };
+                }
+              | undefined;
+          };
         }
       | undefined;
   };
@@ -97266,6 +100289,27 @@ export type GetOrgVisualUriQuery = {
           }>;
         }
       | undefined;
+  };
+};
+
+export type GetOrganizationAssociateEligibilityQueryVariables =
+  SchemaTypes.Exact<{
+    organizationId: SchemaTypes.Scalars["UUID"]["input"];
+  }>;
+
+export type GetOrganizationAssociateEligibilityQuery = {
+  organization: {
+    id: string;
+    myAssociateEligibility: {
+      canApply: boolean;
+      canJoinDirectly: boolean;
+      reason: SchemaTypes.OrganizationAssociateEligibilityReason;
+    };
+    roleSet: {
+      id: string;
+      myMembershipStatus?: SchemaTypes.CommunityMembershipStatus | undefined;
+      myRolesImplicit: Array<SchemaTypes.RoleSetRoleImplicit>;
+    };
   };
 };
 
@@ -97519,7 +100563,11 @@ export type GetOrganizationDataQuery = {
     };
     settings: {
       privacy: { contributionRolesPubliclyVisible: boolean };
-      membership: { allowUsersMatchingDomainToJoin: boolean };
+      membership: {
+        allowUsersMatchingDomainToJoin: boolean;
+        allowSpaceInvitations: boolean;
+        allowApplications: boolean;
+      };
     };
     authorization?:
       | { myPrivileges?: Array<SchemaTypes.AuthorizationPrivilege> | undefined }
@@ -97777,7 +100825,11 @@ export type GetOrganizationsDataQuery = {
     };
     settings: {
       privacy: { contributionRolesPubliclyVisible: boolean };
-      membership: { allowUsersMatchingDomainToJoin: boolean };
+      membership: {
+        allowUsersMatchingDomainToJoin: boolean;
+        allowSpaceInvitations: boolean;
+        allowApplications: boolean;
+      };
     };
     authorization?:
       | { myPrivileges?: Array<SchemaTypes.AuthorizationPrivilege> | undefined }
@@ -98061,7 +101113,11 @@ export type OrganizationsPaginatedQuery = {
       };
       settings: {
         privacy: { contributionRolesPubliclyVisible: boolean };
-        membership: { allowUsersMatchingDomainToJoin: boolean };
+        membership: {
+          allowUsersMatchingDomainToJoin: boolean;
+          allowSpaceInvitations: boolean;
+          allowApplications: boolean;
+        };
       };
       authorization?:
         | {
@@ -98326,6 +101382,30 @@ export type UsersPaginatedQuery = {
               inApp: boolean;
               push: boolean;
             };
+            adminSpaceCommunityInvitation: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+              push: boolean;
+            };
+            adminAssociateInvitationResponse: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+              push: boolean;
+            };
+            adminAssociateApplicationReceived: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+              push: boolean;
+            };
+            adminAssociateJoined: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+              push: boolean;
+            };
           };
           space: {
             __typename: "UserSettingsNotificationSpace";
@@ -98338,6 +101418,12 @@ export type UsersPaginatedQuery = {
                 push: boolean;
               };
               collaborationCalloutContributionCreated: {
+                __typename: "UserSettingsNotificationChannels";
+                email: boolean;
+                inApp: boolean;
+                push: boolean;
+              };
+              communityInvitationResponse: {
                 __typename: "UserSettingsNotificationChannels";
                 email: boolean;
                 inApp: boolean;
@@ -98433,6 +101519,18 @@ export type UsersPaginatedQuery = {
                 inApp: boolean;
                 push: boolean;
               };
+              organizationAssociateInvitationReceived: {
+                __typename: "UserSettingsNotificationChannels";
+                email: boolean;
+                inApp: boolean;
+                push: boolean;
+              };
+              organizationAssociateApplicationDecided: {
+                __typename: "UserSettingsNotificationChannels";
+                email: boolean;
+                inApp: boolean;
+                push: boolean;
+              };
             };
             mentioned: {
               __typename: "UserSettingsNotificationChannels";
@@ -98492,6 +101590,202 @@ export type UsersPaginatedQuery = {
       hasPreviousPage: boolean;
     };
   };
+};
+
+export type ActorsWithCredentialQueryVariables = SchemaTypes.Exact<{
+  credentialType: SchemaTypes.CredentialType;
+  resourceID?: SchemaTypes.InputMaybe<SchemaTypes.Scalars["UUID"]["input"]>;
+}>;
+
+export type ActorsWithCredentialQuery = {
+  actorsWithCredential: Array<
+    | { id: string }
+    | { id: string }
+    | { id: string }
+    | { id: string }
+    | { id: string }
+    | { id: string }
+    | { id: string }
+  >;
+};
+
+export type LatestUserEmailChangeAuditEntryQueryVariables = SchemaTypes.Exact<{
+  userID: SchemaTypes.Scalars["UUID"]["input"];
+}>;
+
+export type LatestUserEmailChangeAuditEntryQuery = {
+  platformAdmin: {
+    latestUserEmailChangeAuditEntry?:
+      | { id: string; outcome: SchemaTypes.UserEmailChangeAuditOutcome }
+      | undefined;
+  };
+};
+
+export type PlatformAdminMcpApiKeysQueryVariables = SchemaTypes.Exact<{
+  userID: SchemaTypes.Scalars["UUID"]["input"];
+}>;
+
+export type PlatformAdminMcpApiKeysQuery = {
+  platformAdmin: { mcpApiKeys: Array<{ id: string }> };
+};
+
+export type PlatformAdminVirtualAssistantQueryVariables = SchemaTypes.Exact<{
+  [key: string]: never;
+}>;
+
+export type PlatformAdminVirtualAssistantQuery = {
+  platformAdmin: { virtualAssistant: { id: string } };
+};
+
+export type PlatformForumDiscussionCategoriesQueryVariables =
+  SchemaTypes.Exact<{ [key: string]: never }>;
+
+export type PlatformForumDiscussionCategoriesQuery = {
+  platform: {
+    forum: {
+      id: string;
+      discussionCategories: Array<SchemaTypes.ForumDiscussionCategory>;
+    };
+  };
+};
+
+export type PlatformRoleSetOrganizationsInRoleQueryVariables =
+  SchemaTypes.Exact<{
+    role: SchemaTypes.RoleName;
+  }>;
+
+export type PlatformRoleSetOrganizationsInRoleQuery = {
+  platform: { roleSet: { organizationsInRole: Array<{ id: string }> } };
+};
+
+export type PlatformRoleSetOrganizationsInRolesQueryVariables =
+  SchemaTypes.Exact<{
+    roles: Array<SchemaTypes.RoleName> | SchemaTypes.RoleName;
+  }>;
+
+export type PlatformRoleSetOrganizationsInRolesQuery = {
+  platform: {
+    roleSet: {
+      organizationsInRoles: Array<{
+        role: SchemaTypes.RoleName;
+        organizations: Array<{ id: string }>;
+      }>;
+    };
+  };
+};
+
+export type PlatformRoleSetRoleNamesQueryVariables = SchemaTypes.Exact<{
+  [key: string]: never;
+}>;
+
+export type PlatformRoleSetRoleNamesQuery = {
+  platform: { roleSet: { roleNames: Array<SchemaTypes.RoleName> } };
+};
+
+export type PlatformRoleSetUsersInRoleQueryVariables = SchemaTypes.Exact<{
+  role: SchemaTypes.RoleName;
+}>;
+
+export type PlatformRoleSetUsersInRoleQuery = {
+  platform: { roleSet: { usersInRole: Array<{ id: string }> } };
+};
+
+export type PlatformRoleSetUsersInRolesQueryVariables = SchemaTypes.Exact<{
+  roles: Array<SchemaTypes.RoleName> | SchemaTypes.RoleName;
+}>;
+
+export type PlatformRoleSetUsersInRolesQuery = {
+  platform: {
+    roleSet: {
+      usersInRoles: Array<{
+        role: SchemaTypes.RoleName;
+        users: Array<{ id: string }>;
+      }>;
+    };
+  };
+};
+
+export type PlatformRolesSpaceApplicationsProbeQueryVariables =
+  SchemaTypes.Exact<{
+    spaceId: SchemaTypes.Scalars["UUID"]["input"];
+  }>;
+
+export type PlatformRolesSpaceApplicationsProbeQuery = {
+  lookup: {
+    space?:
+      | {
+          id: string;
+          community: { roleSet: { applications: Array<{ id: string }> } };
+        }
+      | undefined;
+  };
+};
+
+export type SpaceCollaborationReadProbeQueryVariables = SchemaTypes.Exact<{
+  spaceId: SchemaTypes.Scalars["UUID"]["input"];
+}>;
+
+export type SpaceCollaborationReadProbeQuery = {
+  lookup: { space?: { id: string; collaboration: { id: string } } | undefined };
+};
+
+export type SpaceReadProbeQueryVariables = SchemaTypes.Exact<{
+  spaceId: SchemaTypes.Scalars["UUID"]["input"];
+}>;
+
+export type SpaceReadProbeQuery = {
+  lookup: { space?: { id: string } | undefined };
+};
+
+export type SpaceSupportAdminPrivilegeProbeQueryVariables = SchemaTypes.Exact<{
+  spaceId: SchemaTypes.Scalars["UUID"]["input"];
+}>;
+
+export type SpaceSupportAdminPrivilegeProbeQuery = {
+  lookup: {
+    space?:
+      | {
+          id: string;
+          authorization?:
+            | {
+                myPrivileges?:
+                  | Array<SchemaTypes.AuthorizationPrivilege>
+                  | undefined;
+              }
+            | undefined;
+        }
+      | undefined;
+  };
+};
+
+export type UpdateUserServiceProfileMutationVariables = SchemaTypes.Exact<{
+  userData: SchemaTypes.UpdateUserInput;
+}>;
+
+export type UpdateUserServiceProfileMutation = { updateUser: { id: string } };
+
+export type UserEmailChangeAuditEntriesQueryVariables = SchemaTypes.Exact<{
+  userID: SchemaTypes.Scalars["UUID"]["input"];
+}>;
+
+export type UserEmailChangeAuditEntriesQuery = {
+  platformAdmin: {
+    userEmailChangeAuditEntries: {
+      total: number;
+      auditEntries: Array<{
+        id: string;
+        outcome: SchemaTypes.UserEmailChangeAuditOutcome;
+      }>;
+    };
+  };
+};
+
+export type UsersWithAuthorizationCredentialQueryVariables = SchemaTypes.Exact<{
+  credentialsCriteriaData: SchemaTypes.UsersWithAuthorizationCredentialInput;
+}>;
+
+export type UsersWithAuthorizationCredentialQuery = {
+  usersWithAuthorizationCredential: Array<{ id: string }>;
 };
 
 export type GetOrgVisualUriInnovationHubQueryVariables = SchemaTypes.Exact<{
@@ -99185,25 +102479,6 @@ export type GetSpaceDataQuery = {
             }>;
             roleSet: {
               id: string;
-              applications: Array<{
-                id: string;
-                state: string;
-                nextEvents: Array<string>;
-                isFinalized: boolean;
-                lifecycle: { id: string };
-                questions: Array<{ id: string }>;
-                actor: {
-                  id: string;
-                  profile?: { id: string; displayName: string } | undefined;
-                };
-                authorization?:
-                  | {
-                      myPrivileges?:
-                        | Array<SchemaTypes.AuthorizationPrivilege>
-                        | undefined;
-                    }
-                  | undefined;
-              }>;
               memberUsers: Array<{
                 id: string;
                 nameID: string;
@@ -99659,7 +102934,11 @@ export type GetSpaceDataQuery = {
                 };
                 settings: {
                   privacy: { contributionRolesPubliclyVisible: boolean };
-                  membership: { allowUsersMatchingDomainToJoin: boolean };
+                  membership: {
+                    allowUsersMatchingDomainToJoin: boolean;
+                    allowSpaceInvitations: boolean;
+                    allowApplications: boolean;
+                  };
                 };
                 authorization?:
                   | {
@@ -99920,7 +103199,11 @@ export type GetSpaceDataQuery = {
                 };
                 settings: {
                   privacy: { contributionRolesPubliclyVisible: boolean };
-                  membership: { allowUsersMatchingDomainToJoin: boolean };
+                  membership: {
+                    allowUsersMatchingDomainToJoin: boolean;
+                    allowSpaceInvitations: boolean;
+                    allowApplications: boolean;
+                  };
                 };
                 authorization?:
                   | {
@@ -100181,7 +103464,11 @@ export type GetSpaceDataQuery = {
                 };
                 settings: {
                   privacy: { contributionRolesPubliclyVisible: boolean };
-                  membership: { allowUsersMatchingDomainToJoin: boolean };
+                  membership: {
+                    allowUsersMatchingDomainToJoin: boolean;
+                    allowSpaceInvitations: boolean;
+                    allowApplications: boolean;
+                  };
                 };
                 authorization?:
                   | {
@@ -100852,11 +104139,32 @@ export type GetSpaceDataQuery = {
                   }
                 | undefined;
               currentState?:
-                | { description?: any | undefined; displayName: string }
+                | {
+                    id: string;
+                    description?: any | undefined;
+                    displayName: string;
+                    sortOrder: number;
+                    settings: {
+                      allowNewCallouts: boolean;
+                      descriptionDisplayMode: SchemaTypes.CalloutDescriptionDisplayMode;
+                      showPublishDetails: boolean;
+                      sidebar: Array<SchemaTypes.SidebarWidget>;
+                      visible: boolean;
+                    };
+                  }
                 | undefined;
               states: Array<{
+                id: string;
                 description?: any | undefined;
                 displayName: string;
+                sortOrder: number;
+                settings: {
+                  allowNewCallouts: boolean;
+                  descriptionDisplayMode: SchemaTypes.CalloutDescriptionDisplayMode;
+                  showPublishDetails: boolean;
+                  sidebar: Array<SchemaTypes.SidebarWidget>;
+                  visible: boolean;
+                };
               }>;
             };
           };
@@ -101537,11 +104845,32 @@ export type GetSpaceDataQuery = {
                     }
                   | undefined;
                 currentState?:
-                  | { description?: any | undefined; displayName: string }
+                  | {
+                      id: string;
+                      description?: any | undefined;
+                      displayName: string;
+                      sortOrder: number;
+                      settings: {
+                        allowNewCallouts: boolean;
+                        descriptionDisplayMode: SchemaTypes.CalloutDescriptionDisplayMode;
+                        showPublishDetails: boolean;
+                        sidebar: Array<SchemaTypes.SidebarWidget>;
+                        visible: boolean;
+                      };
+                    }
                   | undefined;
                 states: Array<{
+                  id: string;
                   description?: any | undefined;
                   displayName: string;
+                  sortOrder: number;
+                  settings: {
+                    allowNewCallouts: boolean;
+                    descriptionDisplayMode: SchemaTypes.CalloutDescriptionDisplayMode;
+                    showPublishDetails: boolean;
+                    sidebar: Array<SchemaTypes.SidebarWidget>;
+                    visible: boolean;
+                  };
                 }>;
               };
             };
@@ -101712,25 +105041,6 @@ export type GetSpaceDataQuery = {
               }>;
               roleSet: {
                 id: string;
-                applications: Array<{
-                  id: string;
-                  state: string;
-                  nextEvents: Array<string>;
-                  isFinalized: boolean;
-                  lifecycle: { id: string };
-                  questions: Array<{ id: string }>;
-                  actor: {
-                    id: string;
-                    profile?: { id: string; displayName: string } | undefined;
-                  };
-                  authorization?:
-                    | {
-                        myPrivileges?:
-                          | Array<SchemaTypes.AuthorizationPrivilege>
-                          | undefined;
-                      }
-                    | undefined;
-                }>;
                 memberUsers: Array<{
                   id: string;
                   nameID: string;
@@ -102186,7 +105496,11 @@ export type GetSpaceDataQuery = {
                   };
                   settings: {
                     privacy: { contributionRolesPubliclyVisible: boolean };
-                    membership: { allowUsersMatchingDomainToJoin: boolean };
+                    membership: {
+                      allowUsersMatchingDomainToJoin: boolean;
+                      allowSpaceInvitations: boolean;
+                      allowApplications: boolean;
+                    };
                   };
                   authorization?:
                     | {
@@ -102447,7 +105761,11 @@ export type GetSpaceDataQuery = {
                   };
                   settings: {
                     privacy: { contributionRolesPubliclyVisible: boolean };
-                    membership: { allowUsersMatchingDomainToJoin: boolean };
+                    membership: {
+                      allowUsersMatchingDomainToJoin: boolean;
+                      allowSpaceInvitations: boolean;
+                      allowApplications: boolean;
+                    };
                   };
                   authorization?:
                     | {
@@ -102708,7 +106026,11 @@ export type GetSpaceDataQuery = {
                   };
                   settings: {
                     privacy: { contributionRolesPubliclyVisible: boolean };
-                    membership: { allowUsersMatchingDomainToJoin: boolean };
+                    membership: {
+                      allowUsersMatchingDomainToJoin: boolean;
+                      allowSpaceInvitations: boolean;
+                      allowApplications: boolean;
+                    };
                   };
                   authorization?:
                     | {
@@ -104148,11 +107470,32 @@ export type GetSubspacePageQuery = {
                     }
                   | undefined;
                 currentState?:
-                  | { description?: any | undefined; displayName: string }
+                  | {
+                      id: string;
+                      description?: any | undefined;
+                      displayName: string;
+                      sortOrder: number;
+                      settings: {
+                        allowNewCallouts: boolean;
+                        descriptionDisplayMode: SchemaTypes.CalloutDescriptionDisplayMode;
+                        showPublishDetails: boolean;
+                        sidebar: Array<SchemaTypes.SidebarWidget>;
+                        visible: boolean;
+                      };
+                    }
                   | undefined;
                 states: Array<{
+                  id: string;
                   description?: any | undefined;
                   displayName: string;
+                  sortOrder: number;
+                  settings: {
+                    allowNewCallouts: boolean;
+                    descriptionDisplayMode: SchemaTypes.CalloutDescriptionDisplayMode;
+                    showPublishDetails: boolean;
+                    sidebar: Array<SchemaTypes.SidebarWidget>;
+                    visible: boolean;
+                  };
                 }>;
               };
             };
@@ -104323,25 +107666,6 @@ export type GetSubspacePageQuery = {
               }>;
               roleSet: {
                 id: string;
-                applications: Array<{
-                  id: string;
-                  state: string;
-                  nextEvents: Array<string>;
-                  isFinalized: boolean;
-                  lifecycle: { id: string };
-                  questions: Array<{ id: string }>;
-                  actor: {
-                    id: string;
-                    profile?: { id: string; displayName: string } | undefined;
-                  };
-                  authorization?:
-                    | {
-                        myPrivileges?:
-                          | Array<SchemaTypes.AuthorizationPrivilege>
-                          | undefined;
-                      }
-                    | undefined;
-                }>;
                 memberUsers: Array<{
                   id: string;
                   nameID: string;
@@ -104797,7 +108121,11 @@ export type GetSubspacePageQuery = {
                   };
                   settings: {
                     privacy: { contributionRolesPubliclyVisible: boolean };
-                    membership: { allowUsersMatchingDomainToJoin: boolean };
+                    membership: {
+                      allowUsersMatchingDomainToJoin: boolean;
+                      allowSpaceInvitations: boolean;
+                      allowApplications: boolean;
+                    };
                   };
                   authorization?:
                     | {
@@ -105058,7 +108386,11 @@ export type GetSubspacePageQuery = {
                   };
                   settings: {
                     privacy: { contributionRolesPubliclyVisible: boolean };
-                    membership: { allowUsersMatchingDomainToJoin: boolean };
+                    membership: {
+                      allowUsersMatchingDomainToJoin: boolean;
+                      allowSpaceInvitations: boolean;
+                      allowApplications: boolean;
+                    };
                   };
                   authorization?:
                     | {
@@ -105319,7 +108651,11 @@ export type GetSubspacePageQuery = {
                   };
                   settings: {
                     privacy: { contributionRolesPubliclyVisible: boolean };
-                    membership: { allowUsersMatchingDomainToJoin: boolean };
+                    membership: {
+                      allowUsersMatchingDomainToJoin: boolean;
+                      allowSpaceInvitations: boolean;
+                      allowApplications: boolean;
+                    };
                   };
                   authorization?:
                     | {
@@ -106075,11 +109411,32 @@ export type GetSubspacePageQuery = {
                   }
                 | undefined;
               currentState?:
-                | { description?: any | undefined; displayName: string }
+                | {
+                    id: string;
+                    description?: any | undefined;
+                    displayName: string;
+                    sortOrder: number;
+                    settings: {
+                      allowNewCallouts: boolean;
+                      descriptionDisplayMode: SchemaTypes.CalloutDescriptionDisplayMode;
+                      showPublishDetails: boolean;
+                      sidebar: Array<SchemaTypes.SidebarWidget>;
+                      visible: boolean;
+                    };
+                  }
                 | undefined;
               states: Array<{
+                id: string;
                 description?: any | undefined;
                 displayName: string;
+                sortOrder: number;
+                settings: {
+                  allowNewCallouts: boolean;
+                  descriptionDisplayMode: SchemaTypes.CalloutDescriptionDisplayMode;
+                  showPublishDetails: boolean;
+                  sidebar: Array<SchemaTypes.SidebarWidget>;
+                  visible: boolean;
+                };
               }>;
             };
           };
@@ -106247,25 +109604,6 @@ export type GetSubspacePageQuery = {
             }>;
             roleSet: {
               id: string;
-              applications: Array<{
-                id: string;
-                state: string;
-                nextEvents: Array<string>;
-                isFinalized: boolean;
-                lifecycle: { id: string };
-                questions: Array<{ id: string }>;
-                actor: {
-                  id: string;
-                  profile?: { id: string; displayName: string } | undefined;
-                };
-                authorization?:
-                  | {
-                      myPrivileges?:
-                        | Array<SchemaTypes.AuthorizationPrivilege>
-                        | undefined;
-                    }
-                  | undefined;
-              }>;
               memberUsers: Array<{
                 id: string;
                 nameID: string;
@@ -106721,7 +110059,11 @@ export type GetSubspacePageQuery = {
                 };
                 settings: {
                   privacy: { contributionRolesPubliclyVisible: boolean };
-                  membership: { allowUsersMatchingDomainToJoin: boolean };
+                  membership: {
+                    allowUsersMatchingDomainToJoin: boolean;
+                    allowSpaceInvitations: boolean;
+                    allowApplications: boolean;
+                  };
                 };
                 authorization?:
                   | {
@@ -106982,7 +110324,11 @@ export type GetSubspacePageQuery = {
                 };
                 settings: {
                   privacy: { contributionRolesPubliclyVisible: boolean };
-                  membership: { allowUsersMatchingDomainToJoin: boolean };
+                  membership: {
+                    allowUsersMatchingDomainToJoin: boolean;
+                    allowSpaceInvitations: boolean;
+                    allowApplications: boolean;
+                  };
                 };
                 authorization?:
                   | {
@@ -107243,7 +110589,11 @@ export type GetSubspacePageQuery = {
                 };
                 settings: {
                   privacy: { contributionRolesPubliclyVisible: boolean };
-                  membership: { allowUsersMatchingDomainToJoin: boolean };
+                  membership: {
+                    allowUsersMatchingDomainToJoin: boolean;
+                    allowSpaceInvitations: boolean;
+                    allowApplications: boolean;
+                  };
                 };
                 authorization?:
                   | {
@@ -108015,11 +111365,32 @@ export type GetSpaceAboutDetailsQuery = {
                   }
                 | undefined;
               currentState?:
-                | { description?: any | undefined; displayName: string }
+                | {
+                    id: string;
+                    description?: any | undefined;
+                    displayName: string;
+                    sortOrder: number;
+                    settings: {
+                      allowNewCallouts: boolean;
+                      descriptionDisplayMode: SchemaTypes.CalloutDescriptionDisplayMode;
+                      showPublishDetails: boolean;
+                      sidebar: Array<SchemaTypes.SidebarWidget>;
+                      visible: boolean;
+                    };
+                  }
                 | undefined;
               states: Array<{
+                id: string;
                 description?: any | undefined;
                 displayName: string;
+                sortOrder: number;
+                settings: {
+                  allowNewCallouts: boolean;
+                  descriptionDisplayMode: SchemaTypes.CalloutDescriptionDisplayMode;
+                  showPublishDetails: boolean;
+                  sidebar: Array<SchemaTypes.SidebarWidget>;
+                  visible: boolean;
+                };
               }>;
             };
           };
@@ -108187,25 +111558,6 @@ export type GetSpaceAboutDetailsQuery = {
             }>;
             roleSet: {
               id: string;
-              applications: Array<{
-                id: string;
-                state: string;
-                nextEvents: Array<string>;
-                isFinalized: boolean;
-                lifecycle: { id: string };
-                questions: Array<{ id: string }>;
-                actor: {
-                  id: string;
-                  profile?: { id: string; displayName: string } | undefined;
-                };
-                authorization?:
-                  | {
-                      myPrivileges?:
-                        | Array<SchemaTypes.AuthorizationPrivilege>
-                        | undefined;
-                    }
-                  | undefined;
-              }>;
               memberUsers: Array<{
                 id: string;
                 nameID: string;
@@ -108661,7 +112013,11 @@ export type GetSpaceAboutDetailsQuery = {
                 };
                 settings: {
                   privacy: { contributionRolesPubliclyVisible: boolean };
-                  membership: { allowUsersMatchingDomainToJoin: boolean };
+                  membership: {
+                    allowUsersMatchingDomainToJoin: boolean;
+                    allowSpaceInvitations: boolean;
+                    allowApplications: boolean;
+                  };
                 };
                 authorization?:
                   | {
@@ -108922,7 +112278,11 @@ export type GetSpaceAboutDetailsQuery = {
                 };
                 settings: {
                   privacy: { contributionRolesPubliclyVisible: boolean };
-                  membership: { allowUsersMatchingDomainToJoin: boolean };
+                  membership: {
+                    allowUsersMatchingDomainToJoin: boolean;
+                    allowSpaceInvitations: boolean;
+                    allowApplications: boolean;
+                  };
                 };
                 authorization?:
                   | {
@@ -109183,7 +112543,11 @@ export type GetSpaceAboutDetailsQuery = {
                 };
                 settings: {
                   privacy: { contributionRolesPubliclyVisible: boolean };
-                  membership: { allowUsersMatchingDomainToJoin: boolean };
+                  membership: {
+                    allowUsersMatchingDomainToJoin: boolean;
+                    allowSpaceInvitations: boolean;
+                    allowApplications: boolean;
+                  };
                 };
                 authorization?:
                   | {
@@ -109971,11 +113335,32 @@ export type GetSubspacesDataQuery = {
                       }
                     | undefined;
                   currentState?:
-                    | { description?: any | undefined; displayName: string }
+                    | {
+                        id: string;
+                        description?: any | undefined;
+                        displayName: string;
+                        sortOrder: number;
+                        settings: {
+                          allowNewCallouts: boolean;
+                          descriptionDisplayMode: SchemaTypes.CalloutDescriptionDisplayMode;
+                          showPublishDetails: boolean;
+                          sidebar: Array<SchemaTypes.SidebarWidget>;
+                          visible: boolean;
+                        };
+                      }
                     | undefined;
                   states: Array<{
+                    id: string;
                     description?: any | undefined;
                     displayName: string;
+                    sortOrder: number;
+                    settings: {
+                      allowNewCallouts: boolean;
+                      descriptionDisplayMode: SchemaTypes.CalloutDescriptionDisplayMode;
+                      showPublishDetails: boolean;
+                      sidebar: Array<SchemaTypes.SidebarWidget>;
+                      visible: boolean;
+                    };
                   }>;
                 };
               };
@@ -110146,25 +113531,6 @@ export type GetSubspacesDataQuery = {
                 }>;
                 roleSet: {
                   id: string;
-                  applications: Array<{
-                    id: string;
-                    state: string;
-                    nextEvents: Array<string>;
-                    isFinalized: boolean;
-                    lifecycle: { id: string };
-                    questions: Array<{ id: string }>;
-                    actor: {
-                      id: string;
-                      profile?: { id: string; displayName: string } | undefined;
-                    };
-                    authorization?:
-                      | {
-                          myPrivileges?:
-                            | Array<SchemaTypes.AuthorizationPrivilege>
-                            | undefined;
-                        }
-                      | undefined;
-                  }>;
                   memberUsers: Array<{
                     id: string;
                     nameID: string;
@@ -110620,7 +113986,11 @@ export type GetSubspacesDataQuery = {
                     };
                     settings: {
                       privacy: { contributionRolesPubliclyVisible: boolean };
-                      membership: { allowUsersMatchingDomainToJoin: boolean };
+                      membership: {
+                        allowUsersMatchingDomainToJoin: boolean;
+                        allowSpaceInvitations: boolean;
+                        allowApplications: boolean;
+                      };
                     };
                     authorization?:
                       | {
@@ -110881,7 +114251,11 @@ export type GetSubspacesDataQuery = {
                     };
                     settings: {
                       privacy: { contributionRolesPubliclyVisible: boolean };
-                      membership: { allowUsersMatchingDomainToJoin: boolean };
+                      membership: {
+                        allowUsersMatchingDomainToJoin: boolean;
+                        allowSpaceInvitations: boolean;
+                        allowApplications: boolean;
+                      };
                     };
                     authorization?:
                       | {
@@ -111142,7 +114516,11 @@ export type GetSubspacesDataQuery = {
                     };
                     settings: {
                       privacy: { contributionRolesPubliclyVisible: boolean };
-                      membership: { allowUsersMatchingDomainToJoin: boolean };
+                      membership: {
+                        allowUsersMatchingDomainToJoin: boolean;
+                        allowSpaceInvitations: boolean;
+                        allowApplications: boolean;
+                      };
                     };
                     authorization?:
                       | {
@@ -111904,11 +115282,32 @@ export type GetSubspacesDataQuery = {
                     }
                   | undefined;
                 currentState?:
-                  | { description?: any | undefined; displayName: string }
+                  | {
+                      id: string;
+                      description?: any | undefined;
+                      displayName: string;
+                      sortOrder: number;
+                      settings: {
+                        allowNewCallouts: boolean;
+                        descriptionDisplayMode: SchemaTypes.CalloutDescriptionDisplayMode;
+                        showPublishDetails: boolean;
+                        sidebar: Array<SchemaTypes.SidebarWidget>;
+                        visible: boolean;
+                      };
+                    }
                   | undefined;
                 states: Array<{
+                  id: string;
                   description?: any | undefined;
                   displayName: string;
+                  sortOrder: number;
+                  settings: {
+                    allowNewCallouts: boolean;
+                    descriptionDisplayMode: SchemaTypes.CalloutDescriptionDisplayMode;
+                    showPublishDetails: boolean;
+                    sidebar: Array<SchemaTypes.SidebarWidget>;
+                    visible: boolean;
+                  };
                 }>;
               };
             };
@@ -112079,25 +115478,6 @@ export type GetSubspacesDataQuery = {
               }>;
               roleSet: {
                 id: string;
-                applications: Array<{
-                  id: string;
-                  state: string;
-                  nextEvents: Array<string>;
-                  isFinalized: boolean;
-                  lifecycle: { id: string };
-                  questions: Array<{ id: string }>;
-                  actor: {
-                    id: string;
-                    profile?: { id: string; displayName: string } | undefined;
-                  };
-                  authorization?:
-                    | {
-                        myPrivileges?:
-                          | Array<SchemaTypes.AuthorizationPrivilege>
-                          | undefined;
-                      }
-                    | undefined;
-                }>;
                 memberUsers: Array<{
                   id: string;
                   nameID: string;
@@ -112553,7 +115933,11 @@ export type GetSubspacesDataQuery = {
                   };
                   settings: {
                     privacy: { contributionRolesPubliclyVisible: boolean };
-                    membership: { allowUsersMatchingDomainToJoin: boolean };
+                    membership: {
+                      allowUsersMatchingDomainToJoin: boolean;
+                      allowSpaceInvitations: boolean;
+                      allowApplications: boolean;
+                    };
                   };
                   authorization?:
                     | {
@@ -112814,7 +116198,11 @@ export type GetSubspacesDataQuery = {
                   };
                   settings: {
                     privacy: { contributionRolesPubliclyVisible: boolean };
-                    membership: { allowUsersMatchingDomainToJoin: boolean };
+                    membership: {
+                      allowUsersMatchingDomainToJoin: boolean;
+                      allowSpaceInvitations: boolean;
+                      allowApplications: boolean;
+                    };
                   };
                   authorization?:
                     | {
@@ -113075,7 +116463,11 @@ export type GetSubspacesDataQuery = {
                   };
                   settings: {
                     privacy: { contributionRolesPubliclyVisible: boolean };
-                    membership: { allowUsersMatchingDomainToJoin: boolean };
+                    membership: {
+                      allowUsersMatchingDomainToJoin: boolean;
+                      allowSpaceInvitations: boolean;
+                      allowApplications: boolean;
+                    };
                   };
                   authorization?:
                     | {
@@ -113596,6 +116988,30 @@ export type GetUserDataQuery = {
             inApp: boolean;
             push: boolean;
           };
+          adminSpaceCommunityInvitation: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
+          adminAssociateInvitationResponse: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
+          adminAssociateApplicationReceived: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
+          adminAssociateJoined: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
         };
         space: {
           __typename: "UserSettingsNotificationSpace";
@@ -113608,6 +117024,12 @@ export type GetUserDataQuery = {
               push: boolean;
             };
             collaborationCalloutContributionCreated: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+              push: boolean;
+            };
+            communityInvitationResponse: {
               __typename: "UserSettingsNotificationChannels";
               email: boolean;
               inApp: boolean;
@@ -113703,6 +117125,18 @@ export type GetUserDataQuery = {
               inApp: boolean;
               push: boolean;
             };
+            organizationAssociateInvitationReceived: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+              push: boolean;
+            };
+            organizationAssociateApplicationDecided: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+              push: boolean;
+            };
           };
           mentioned: {
             __typename: "UserSettingsNotificationChannels";
@@ -113774,6 +117208,277 @@ export type GetUserReferenceUriQuery = {
             | undefined;
         }
       | undefined;
+  };
+};
+
+export type GetUserSettingsQueryVariables = SchemaTypes.Exact<{
+  userId: SchemaTypes.Scalars["UUID"]["input"];
+}>;
+
+export type GetUserSettingsQuery = {
+  user: {
+    id: string;
+    settings: {
+      __typename: "UserSettings";
+      id: string;
+      communication: {
+        __typename: "UserSettingsCommunication";
+        allowOtherUsersToSendMessages: boolean;
+      };
+      privacy: {
+        __typename: "UserSettingsPrivacy";
+        contributionRolesPubliclyVisible: boolean;
+      };
+      notification: {
+        __typename: "UserSettingsNotification";
+        platform: {
+          __typename: "UserSettingsNotificationPlatform";
+          admin: {
+            __typename: "UserSettingsNotificationPlatformAdmin";
+            userProfileRemoved: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+              push: boolean;
+            };
+            userProfileCreated: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+              push: boolean;
+            };
+            spaceCreated: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+              push: boolean;
+            };
+            userGlobalRoleChanged: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+              push: boolean;
+            };
+          };
+          forumDiscussionComment: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
+          forumDiscussionCreated: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
+        };
+        organization: {
+          __typename: "UserSettingsNotificationOrganization";
+          adminMentioned: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
+          adminMessageReceived: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
+          adminSpaceCommunityInvitation: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
+          adminAssociateInvitationResponse: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
+          adminAssociateApplicationReceived: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
+          adminAssociateJoined: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
+        };
+        space: {
+          __typename: "UserSettingsNotificationSpace";
+          admin: {
+            __typename: "UserSettingsNotificationSpaceAdmin";
+            communityApplicationReceived: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+              push: boolean;
+            };
+            collaborationCalloutContributionCreated: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+              push: boolean;
+            };
+            communityInvitationResponse: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+              push: boolean;
+            };
+            communityNewMember: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+              push: boolean;
+            };
+            communicationMessageReceived: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+              push: boolean;
+            };
+          };
+          collaborationCalloutContributionCreated: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
+          communicationUpdates: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
+          collaborationCalloutPublished: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
+          collaborationCalloutComment: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
+          collaborationCalloutPostContributionComment: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
+          communityCalendarEvents: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
+          collaborationPollVoteCastOnOwnPoll: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
+          collaborationPollVoteCastOnPollIVotedOn: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
+          collaborationPollModifiedOnPollIVotedOn: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
+          collaborationPollVoteAffectedByOptionChange: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
+        };
+        user: {
+          __typename: "UserSettingsNotificationUser";
+          membership: {
+            __typename: "UserSettingsNotificationUserMembership";
+            spaceCommunityInvitationReceived: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+              push: boolean;
+            };
+            spaceCommunityJoined: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+              push: boolean;
+            };
+            organizationAssociateInvitationReceived: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+              push: boolean;
+            };
+            organizationAssociateApplicationDecided: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+              push: boolean;
+            };
+          };
+          mentioned: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
+          commentReply: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
+          messageReceived: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
+          conversationMessageDirect: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
+          conversationMessageGroup: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
+        };
+        virtualContributor: {
+          __typename: "UserSettingsNotificationVirtualContributor";
+          adminSpaceCommunityInvitation: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
+        };
+      };
+    };
   };
 };
 
@@ -114018,6 +117723,30 @@ export type GetUsersDataQuery = {
             inApp: boolean;
             push: boolean;
           };
+          adminSpaceCommunityInvitation: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
+          adminAssociateInvitationResponse: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
+          adminAssociateApplicationReceived: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
+          adminAssociateJoined: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
         };
         space: {
           __typename: "UserSettingsNotificationSpace";
@@ -114030,6 +117759,12 @@ export type GetUsersDataQuery = {
               push: boolean;
             };
             collaborationCalloutContributionCreated: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+              push: boolean;
+            };
+            communityInvitationResponse: {
               __typename: "UserSettingsNotificationChannels";
               email: boolean;
               inApp: boolean;
@@ -114125,6 +117860,18 @@ export type GetUsersDataQuery = {
               inApp: boolean;
               push: boolean;
             };
+            organizationAssociateInvitationReceived: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+              push: boolean;
+            };
+            organizationAssociateApplicationDecided: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+              push: boolean;
+            };
           };
           mentioned: {
             __typename: "UserSettingsNotificationChannels";
@@ -114177,6 +117924,47 @@ export type GetUsersDataQuery = {
   }>;
 };
 
+export type MeInAppNotificationsQueryVariables = SchemaTypes.Exact<{
+  types?: SchemaTypes.InputMaybe<
+    Array<SchemaTypes.NotificationEvent> | SchemaTypes.NotificationEvent
+  >;
+}>;
+
+export type MeInAppNotificationsQuery = {
+  me: {
+    notifications: {
+      total: number;
+      inAppNotifications: Array<{
+        id: string;
+        type: SchemaTypes.NotificationEvent;
+      }>;
+    };
+  };
+};
+
+export type MeOrganizationPendingQueryVariables = SchemaTypes.Exact<{
+  [key: string]: never;
+}>;
+
+export type MeOrganizationPendingQuery = {
+  me: {
+    communityInvitationsCount: number;
+    organizationInvitationsCount: number;
+    communityInvitations: Array<{ invitation: { id: string } }>;
+    communityApplications: Array<{ application: { id: string } }>;
+    organizationInvitations: Array<{
+      id: string;
+      invitation: { id: string; extraRoles: Array<SchemaTypes.RoleName> };
+      organization: { id: string; nameID: string };
+    }>;
+    organizationApplications: Array<{
+      id: string;
+      application: { id: string };
+      organization: { id: string; nameID: string };
+    }>;
+  };
+};
+
 export type MeQueryQueryVariables = SchemaTypes.Exact<{ [key: string]: never }>;
 
 export type MeQueryQuery = {
@@ -114209,6 +117997,13 @@ export type MeQueryQuery = {
         state: string;
         nextEvents: Array<string>;
         isFinalized: boolean;
+        createdDate: Date;
+        extraRoles: Array<SchemaTypes.RoleName>;
+        invitedToParent: boolean;
+        welcomeMessage?: string | undefined;
+        spacesToJoinOnAccept?:
+          | Array<{ id: string; displayName: string; url: string }>
+          | undefined;
         lifecycle: { id: string };
         createdBy?:
           | {
@@ -114229,6 +118024,7 @@ export type MeQueryQuery = {
           | undefined;
         actor: {
           id: string;
+          type: SchemaTypes.ActorType;
           profile?: { id: string; displayName: string } | undefined;
         };
         authorization?:
@@ -114780,6 +118576,30 @@ export type ConversationEventsSubscription = {
   };
 };
 
+export const ApplicationDataFragmentDoc = gql`
+  fragment ApplicationData on Application {
+    id
+    state
+    nextEvents
+    isFinalized
+    lifecycle {
+      id
+    }
+    questions {
+      id
+    }
+    actor {
+      id
+      profile {
+        id
+        displayName
+      }
+    }
+    authorization {
+      myPrivileges
+    }
+  }
+`;
 export const UserDataLightFragmentDoc = gql`
   fragment UserDataLight on User {
     id
@@ -114802,6 +118622,10 @@ export const InvitationDataFragmentDoc = gql`
     state
     nextEvents
     isFinalized
+    createdDate
+    extraRoles
+    invitedToParent
+    welcomeMessage
     lifecycle {
       id
     }
@@ -114810,6 +118634,7 @@ export const InvitationDataFragmentDoc = gql`
     }
     actor {
       id
+      type
       profile {
         id
         displayName
@@ -115228,7 +119053,7 @@ export const CalloutDetailsFragmentDoc = gql`
       id
       defaultDisplayName
       postDescription
-      whiteboardContent
+      whiteboardContentAvailable
       __typename
     }
     sortOrder
@@ -115564,8 +119389,17 @@ export const CalloutDataFragmentDoc = gql`
 `;
 export const InnovationFlowStateDataFragmentDoc = gql`
   fragment InnovationFlowStateData on InnovationFlowState {
+    id
     description
     displayName
+    sortOrder
+    settings {
+      allowNewCallouts
+      descriptionDisplayMode
+      showPublishDetails
+      sidebar
+      visible
+    }
   }
 `;
 export const InnovationFlowDataFragmentDoc = gql`
@@ -115736,6 +119570,8 @@ export const OrganizationDataFragmentDoc = gql`
       }
       membership {
         allowUsersMatchingDomainToJoin
+        allowSpaceInvitations
+        allowApplications
       }
     }
     authorization {
@@ -115771,30 +119607,6 @@ export const MembersAndLeadsDataFragmentDoc = gql`
   ${MemberDataFragmentDoc}
   ${OrganizationDataFragmentDoc}
 `;
-export const ApplicationDataFragmentDoc = gql`
-  fragment ApplicationData on Application {
-    id
-    state
-    nextEvents
-    isFinalized
-    lifecycle {
-      id
-    }
-    questions {
-      id
-    }
-    actor {
-      id
-      profile {
-        id
-        displayName
-      }
-    }
-    authorization {
-      myPrivileges
-    }
-  }
-`;
 export const CommunityDataFragmentDoc = gql`
   fragment CommunityData on Community {
     id
@@ -115807,9 +119619,6 @@ export const CommunityDataFragmentDoc = gql`
     roleSet {
       id
       ...MembersAndLeadsData
-      applications {
-        ...ApplicationData
-      }
     }
     communication {
       id
@@ -115830,7 +119639,6 @@ export const CommunityDataFragmentDoc = gql`
   ${AuthorizationDataFragmentDoc}
   ${GroupDataFragmentDoc}
   ${MembersAndLeadsDataFragmentDoc}
-  ${ApplicationDataFragmentDoc}
   ${MessageDetailsFragmentDoc}
 `;
 export const SubspaceDataFragmentDoc = gql`
@@ -116122,6 +119930,30 @@ export const UserSettingsFragmentFragmentDoc = gql`
           push
           __typename
         }
+        adminSpaceCommunityInvitation {
+          email
+          inApp
+          push
+          __typename
+        }
+        adminAssociateInvitationResponse {
+          email
+          inApp
+          push
+          __typename
+        }
+        adminAssociateApplicationReceived {
+          email
+          inApp
+          push
+          __typename
+        }
+        adminAssociateJoined {
+          email
+          inApp
+          push
+          __typename
+        }
         __typename
       }
       space {
@@ -116133,6 +119965,12 @@ export const UserSettingsFragmentFragmentDoc = gql`
             __typename
           }
           collaborationCalloutContributionCreated {
+            email
+            inApp
+            push
+            __typename
+          }
+          communityInvitationResponse {
             email
             inApp
             push
@@ -116223,6 +120061,18 @@ export const UserSettingsFragmentFragmentDoc = gql`
             __typename
           }
           spaceCommunityJoined {
+            email
+            inApp
+            push
+            __typename
+          }
+          organizationAssociateInvitationReceived {
+            email
+            inApp
+            push
+            __typename
+          }
+          organizationAssociateApplicationDecided {
             email
             inApp
             push
@@ -116773,9 +120623,6 @@ export const RevokeLicensePlanFromSpaceDocument = gql`
       subspaces {
         id
       }
-      actor {
-        id
-      }
     }
   }
 `;
@@ -116802,6 +120649,21 @@ export const AssignRoleToUserExtendedDataDocument = gql`
     }
   }
   ${UserDataFragmentDoc}
+`;
+export const AssignRoleToVirtualContributorDocument = gql`
+  mutation assignRoleToVirtualContributor(
+    $roleData: AssignRoleOnRoleSetInput!
+  ) {
+    assignRoleToVirtualContributor(roleData: $roleData) {
+      id
+      profile {
+        id
+        displayName
+        __typename
+      }
+      __typename
+    }
+  }
 `;
 export const ApplyForEntryRoleDocument = gql`
   mutation applyForEntryRole(
@@ -116846,6 +120708,7 @@ export const InvitationStateEventDocument = gql`
   mutation InvitationStateEvent($input: InvitationEventInput!) {
     eventOnInvitation(eventData: $input) {
       ...InvitationData
+      extraRolesWithheld
     }
   }
   ${InvitationDataFragmentDoc}
@@ -116868,11 +120731,15 @@ export const InviteForEntryRoleOnRoleSetDocument = gql`
       }
     ) {
       type
+      notice
       invitation {
         id
         state
+        extraRoles
+        invitedToParent
         actor {
           id
+          type
           profile {
             id
             displayName
@@ -117118,6 +120985,51 @@ export const RemoveReactionFromCalloutDocument = gql`
     }
   }
 `;
+export const CreateSpacesCollectionCalloutDocument = gql`
+  mutation CreateSpacesCollectionCallout(
+    $calloutData: CreateCalloutOnCalloutsSetInput!
+  ) {
+    createCalloutOnCalloutsSet(calloutData: $calloutData) {
+      id
+      framing {
+        id
+        type
+      }
+      settings {
+        framing {
+          spaces {
+            cardVariant
+          }
+          selection {
+            mode
+            selectedIds
+          }
+        }
+      }
+    }
+  }
+`;
+export const UpdateCalloutSpacesSettingsDocument = gql`
+  mutation UpdateCalloutSpacesSettings(
+    $calloutData: UpdateCalloutEntityInput!
+  ) {
+    updateCallout(calloutData: $calloutData) {
+      id
+      settings {
+        framing {
+          commentsEnabled
+          spaces {
+            cardVariant
+          }
+          selection {
+            mode
+            selectedIds
+          }
+        }
+      }
+    }
+  }
+`;
 export const UpdateCalloutDocument = gql`
   mutation UpdateCallout($calloutData: UpdateCalloutEntityInput!) {
     updateCallout(calloutData: $calloutData) {
@@ -117331,6 +121243,17 @@ export const ConvertSpaceL1ToSpaceL0Document = gql`
   }
   ${SpaceDataFragmentDoc}
 `;
+export const ConvertSpaceL1ToSpaceL2Document = gql`
+  mutation ConvertSpaceL1ToSpaceL2(
+    $convertData: ConvertSpaceL1ToSpaceL2Input!
+  ) {
+    convertSpaceL1ToSpaceL2(convertData: $convertData) {
+      id
+      nameID
+      level
+    }
+  }
+`;
 export const ConvertSpaceL2ToSpaceL1Document = gql`
   mutation ConvertSpaceL2ToSpaceL1(
     $convertData: ConvertSpaceL2ToSpaceL1Input!
@@ -117506,6 +121429,23 @@ export const UpdateInnovationFlowStateDocument = gql`
     }
   }
 `;
+export const PrepareMemoSigningDocument = gql`
+  mutation PrepareMemoSigning($signingData: MemoSigningPrepareInput!) {
+    prepareMemoSigning(signingData: $signingData) {
+      attemptId
+      previewUrl
+    }
+  }
+`;
+export const AuthorizationPolicyResetOnOrganizationDocument = gql`
+  mutation AuthorizationPolicyResetOnOrganization($organizationID: UUID!) {
+    authorizationPolicyResetOnOrganization(
+      authorizationResetData: { organizationID: $organizationID }
+    ) {
+      id
+    }
+  }
+`;
 export const CreateOrganizationDocument = gql`
   mutation CreateOrganization($organizationData: CreateOrganizationInput!) {
     createOrganization(organizationData: $organizationData) {
@@ -117541,8 +121481,705 @@ export const UpdateOrganizationSettingsDocument = gql`
         }
         membership {
           allowUsersMatchingDomainToJoin
+          allowSpaceInvitations
+          allowApplications
         }
       }
+    }
+  }
+`;
+export const AddIframeAllowedUrlDocument = gql`
+  mutation addIframeAllowedURL($whitelistedURL: String!) {
+    addIframeAllowedURL(whitelistedURL: $whitelistedURL)
+  }
+`;
+export const AddNotificationEmailToBlacklistDocument = gql`
+  mutation addNotificationEmailToBlacklist(
+    $input: NotificationEmailAddressInput!
+  ) {
+    addNotificationEmailToBlacklist(input: $input)
+  }
+`;
+export const AdminCommunicationEnsureAccessToCommunicationsDocument = gql`
+  mutation adminCommunicationEnsureAccessToCommunications(
+    $communicationData: CommunicationAdminEnsureAccessInput!
+  ) {
+    adminCommunicationEnsureAccessToCommunications(
+      communicationData: $communicationData
+    )
+  }
+`;
+export const AdminCommunicationMigrateOrphanedConversationsDocument = gql`
+  mutation adminCommunicationMigrateOrphanedConversations {
+    adminCommunicationMigrateOrphanedConversations {
+      migrated
+    }
+  }
+`;
+export const AdminCommunicationRemoveOrphanedRoomDocument = gql`
+  mutation adminCommunicationRemoveOrphanedRoom(
+    $orphanedRoomData: CommunicationAdminRemoveOrphanedRoomInput!
+  ) {
+    adminCommunicationRemoveOrphanedRoom(orphanedRoomData: $orphanedRoomData)
+  }
+`;
+export const AdminCommunicationSyncSpaceHierarchyDocument = gql`
+  mutation adminCommunicationSyncSpaceHierarchy {
+    adminCommunicationSyncSpaceHierarchy
+  }
+`;
+export const AdminCommunicationUpdateRoomStateDocument = gql`
+  mutation adminCommunicationUpdateRoomState(
+    $roomStateData: CommunicationAdminUpdateRoomStateInput!
+  ) {
+    adminCommunicationUpdateRoomState(roomStateData: $roomStateData)
+  }
+`;
+export const AdminForumRemoveDiscussionCategoryDocument = gql`
+  mutation adminForumRemoveDiscussionCategory(
+    $removeData: ForumRemoveDiscussionCategoryInput!
+  ) {
+    adminForumRemoveDiscussionCategory(removeData: $removeData) {
+      id
+      discussionCategories
+    }
+  }
+`;
+export const AdminIdentityDeleteKratosIdentityDocument = gql`
+  mutation adminIdentityDeleteKratosIdentity($kratosIdentityId: UUID!) {
+    adminIdentityDeleteKratosIdentity(kratosIdentityId: $kratosIdentityId)
+  }
+`;
+export const AdminInAppNotificationsPruneDocument = gql`
+  mutation adminInAppNotificationsPrune {
+    adminInAppNotificationsPrune {
+      removedCountExceedingUserLimit
+    }
+  }
+`;
+export const AdminLicensePolicyCreateCredentialRuleDocument = gql`
+  mutation adminLicensePolicyCreateCredentialRule(
+    $createData: CreateLicensePolicyCredentialRuleInput!
+  ) {
+    adminLicensePolicyCreateCredentialRule(createData: $createData) {
+      id
+    }
+  }
+`;
+export const AdminLicensePolicyDeleteCredentialRuleDocument = gql`
+  mutation adminLicensePolicyDeleteCredentialRule(
+    $deleteData: DeleteLicensePolicyCredentialRuleInput!
+  ) {
+    adminLicensePolicyDeleteCredentialRule(deleteData: $deleteData) {
+      id
+    }
+  }
+`;
+export const AdminLicensePolicyUpdateCredentialRuleDocument = gql`
+  mutation adminLicensePolicyUpdateCredentialRule(
+    $updateData: UpdateLicensePolicyCredentialRuleInput!
+  ) {
+    adminLicensePolicyUpdateCredentialRule(updateData: $updateData) {
+      id
+    }
+  }
+`;
+export const AdminRevokeMcpApiKeyDocument = gql`
+  mutation adminRevokeMcpApiKey($revokeData: AdminRevokeMcpApiKeyInput!) {
+    adminRevokeMcpApiKey(revokeData: $revokeData) {
+      id
+    }
+  }
+`;
+export const AdminUpdateContributorAvatarsDocument = gql`
+  mutation adminUpdateContributorAvatars($profileID: UUID!) {
+    adminUpdateContributorAvatars(profileID: $profileID) {
+      id
+    }
+  }
+`;
+export const AdminUpdateGeoLocationDataDocument = gql`
+  mutation adminUpdateGeoLocationData {
+    adminUpdateGeoLocationData
+  }
+`;
+export const AdminUserAccountDeleteDocument = gql`
+  mutation adminUserAccountDelete($userID: UUID!) {
+    adminUserAccountDelete(userID: $userID) {
+      id
+    }
+  }
+`;
+export const AdminUserEmailChangeDocument = gql`
+  mutation adminUserEmailChange(
+    $adminUserEmailChangeData: AdminUserEmailChangeInput!
+  ) {
+    adminUserEmailChange(adminUserEmailChangeData: $adminUserEmailChangeData) {
+      success
+    }
+  }
+`;
+export const AdminUserEmailChangeDriftResolveDocument = gql`
+  mutation adminUserEmailChangeDriftResolve(
+    $adminUserEmailChangeDriftResolveData: AdminUserEmailChangeDriftResolveInput!
+  ) {
+    adminUserEmailChangeDriftResolve(
+      adminUserEmailChangeDriftResolveData: $adminUserEmailChangeDriftResolveData
+    ) {
+      success
+    }
+  }
+`;
+export const AiServerAuthorizationPolicyResetDocument = gql`
+  mutation aiServerAuthorizationPolicyReset {
+    aiServerAuthorizationPolicyReset {
+      id
+    }
+  }
+`;
+export const AssignPlatformRoleToOrganizationDocument = gql`
+  mutation assignPlatformRoleToOrganization(
+    $roleData: AssignPlatformRoleInput!
+  ) {
+    assignPlatformRoleToOrganization(roleData: $roleData) {
+      id
+    }
+  }
+`;
+export const AuthorizationPlatformRolesAccessResetDocument = gql`
+  mutation authorizationPlatformRolesAccessReset {
+    authorizationPlatformRolesAccessReset
+  }
+`;
+export const AuthorizationPolicyResetAllDocument = gql`
+  mutation authorizationPolicyResetAll {
+    authorizationPolicyResetAll
+  }
+`;
+export const AuthorizationPolicyResetOnAccountDocument = gql`
+  mutation authorizationPolicyResetOnAccount(
+    $authorizationResetData: AccountAuthorizationResetInput!
+  ) {
+    authorizationPolicyResetOnAccount(
+      authorizationResetData: $authorizationResetData
+    ) {
+      id
+    }
+  }
+`;
+export const AuthorizationPolicyResetOnPlatformDocument = gql`
+  mutation authorizationPolicyResetOnPlatform {
+    authorizationPolicyResetOnPlatform {
+      id
+    }
+  }
+`;
+export const AuthorizationPolicyResetOnUserDocument = gql`
+  mutation authorizationPolicyResetOnUser(
+    $authorizationResetData: UserAuthorizationResetInput!
+  ) {
+    authorizationPolicyResetOnUser(
+      authorizationResetData: $authorizationResetData
+    ) {
+      id
+    }
+  }
+`;
+export const AuthorizationPolicyResetToGlobalAdminsAccessDocument = gql`
+  mutation authorizationPolicyResetToGlobalAdminsAccess(
+    $authorizationID: String!
+  ) {
+    authorizationPolicyResetToGlobalAdminsAccess(
+      authorizationID: $authorizationID
+    ) {
+      id
+    }
+  }
+`;
+export const CleanupCollectionsDocument = gql`
+  mutation cleanupCollections {
+    cleanupCollections {
+      success
+    }
+  }
+`;
+export const CreateContributionOnCalloutIdDocument = gql`
+  mutation createContributionOnCalloutId(
+    $contributionData: CreateContributionOnCalloutInput!
+  ) {
+    createContributionOnCallout(contributionData: $contributionData) {
+      id
+    }
+  }
+`;
+export const CreateTemplateFromContentSpaceDocument = gql`
+  mutation createTemplateFromContentSpace(
+    $templateData: CreateTemplateFromContentSpaceOnTemplatesSetInput!
+  ) {
+    createTemplateFromContentSpace(templateData: $templateData) {
+      id
+    }
+  }
+`;
+export const CreateWingbackAccountDocument = gql`
+  mutation createWingbackAccount($accountID: UUID!) {
+    createWingbackAccount(accountID: $accountID)
+  }
+`;
+export const DeleteContributionDocument = gql`
+  mutation deleteContribution($deleteData: DeleteContributionInput!) {
+    deleteContribution(deleteData: $deleteData) {
+      id
+    }
+  }
+`;
+export const GrantCredentialToActorDocument = gql`
+  mutation grantCredentialToActor(
+    $actorID: UUID!
+    $credentialType: CredentialType!
+    $resourceID: UUID
+  ) {
+    grantCredentialToActor(
+      actorID: $actorID
+      credentialType: $credentialType
+      resourceID: $resourceID
+    ) {
+      id
+    }
+  }
+`;
+export const GrantCredentialToOrganizationDocument = gql`
+  mutation grantCredentialToOrganization(
+    $grantCredentialData: GrantOrganizationAuthorizationCredentialInput!
+  ) {
+    grantCredentialToOrganization(grantCredentialData: $grantCredentialData) {
+      id
+    }
+  }
+`;
+export const GrantCredentialToUserDocument = gql`
+  mutation grantCredentialToUser(
+    $grantCredentialData: GrantAuthorizationCredentialInput!
+  ) {
+    grantCredentialToUser(grantCredentialData: $grantCredentialData) {
+      id
+    }
+  }
+`;
+export const LicenseResetOnAccountDocument = gql`
+  mutation licenseResetOnAccount($resetData: AccountLicenseResetInput!) {
+    licenseResetOnAccount(resetData: $resetData) {
+      id
+    }
+  }
+`;
+export const MigrateLegacyMemoContentDocument = gql`
+  mutation migrateLegacyMemoContent {
+    migrateLegacyMemoContent {
+      total
+      migrated
+    }
+  }
+`;
+export const MigrateLegacyWhiteboardContentDocument = gql`
+  mutation migrateLegacyWhiteboardContent {
+    migrateLegacyWhiteboardContent {
+      total
+      migrated
+    }
+  }
+`;
+export const MintMcpApiKeyDocument = gql`
+  mutation mintMcpApiKey($mintData: MintMcpApiKeyInput!) {
+    mintMcpApiKey(mintData: $mintData) {
+      key {
+        id
+      }
+    }
+  }
+`;
+export const MoveContributionToCalloutDocument = gql`
+  mutation moveContributionToCallout(
+    $moveContributionData: MoveCalloutContributionInput!
+  ) {
+    moveContributionToCallout(moveContributionData: $moveContributionData) {
+      id
+    }
+  }
+`;
+export const PlatformRolesAssignLicensePlanToAccountDocument = gql`
+  mutation PlatformRolesAssignLicensePlanToAccount(
+    $planData: AssignLicensePlanToAccount!
+  ) {
+    assignLicensePlanToAccount(planData: $planData) {
+      id
+    }
+  }
+`;
+export const PlatformRolesAssignLicensePlanToSpaceDocument = gql`
+  mutation PlatformRolesAssignLicensePlanToSpace(
+    $planData: AssignLicensePlanToSpace!
+  ) {
+    assignLicensePlanToSpace(planData: $planData) {
+      id
+    }
+  }
+`;
+export const PlatformRolesAssignRoleToUserDocument = gql`
+  mutation PlatformRolesAssignRoleToUser($roleData: AssignPlatformRoleInput!) {
+    assignPlatformRoleToUser(roleData: $roleData) {
+      id
+    }
+  }
+`;
+export const PlatformRolesConvertSpaceL1ToSpaceL0Document = gql`
+  mutation PlatformRolesConvertSpaceL1ToSpaceL0(
+    $convertData: ConvertSpaceL1ToSpaceL0Input!
+  ) {
+    convertSpaceL1ToSpaceL0(convertData: $convertData) {
+      id
+    }
+  }
+`;
+export const PlatformRolesConvertSpaceL2ToSpaceL1Document = gql`
+  mutation PlatformRolesConvertSpaceL2ToSpaceL1(
+    $convertData: ConvertSpaceL2ToSpaceL1Input!
+  ) {
+    convertSpaceL2ToSpaceL1(convertData: $convertData) {
+      id
+    }
+  }
+`;
+export const PlatformRolesConvertVirtualContributorToUseKnowledgeBaseDocument = gql`
+  mutation PlatformRolesConvertVirtualContributorToUseKnowledgeBase(
+    $conversionData: ConversionVcSpaceToVcKnowledgeBaseInput!
+  ) {
+    convertVirtualContributorToUseKnowledgeBase(
+      conversionData: $conversionData
+    ) {
+      id
+    }
+  }
+`;
+export const PlatformRolesCreateLicensePlanDocument = gql`
+  mutation PlatformRolesCreateLicensePlan(
+    $planData: CreateLicensePlanOnLicensingFrameworkInput!
+  ) {
+    createLicensePlan(planData: $planData) {
+      id
+    }
+  }
+`;
+export const PlatformRolesCreateOrganizationDocument = gql`
+  mutation PlatformRolesCreateOrganization(
+    $organizationData: CreateOrganizationInput!
+  ) {
+    createOrganization(organizationData: $organizationData) {
+      id
+    }
+  }
+`;
+export const PlatformRolesCreateTemplateDocument = gql`
+  mutation PlatformRolesCreateTemplate(
+    $templateData: CreateTemplateOnTemplatesSetInput!
+  ) {
+    createTemplate(templateData: $templateData) {
+      id
+    }
+  }
+`;
+export const PlatformRolesCreateTemplateFromSpaceDocument = gql`
+  mutation PlatformRolesCreateTemplateFromSpace(
+    $templateData: CreateTemplateFromSpaceOnTemplatesSetInput!
+  ) {
+    createTemplateFromSpace(templateData: $templateData) {
+      id
+    }
+  }
+`;
+export const PlatformRolesDeleteDiscussionDocument = gql`
+  mutation PlatformRolesDeleteDiscussion($deleteData: DeleteDiscussionInput!) {
+    deleteDiscussion(deleteData: $deleteData) {
+      id
+    }
+  }
+`;
+export const PlatformRolesDeleteLicensePlanDocument = gql`
+  mutation PlatformRolesDeleteLicensePlan(
+    $deleteData: DeleteLicensePlanInput!
+  ) {
+    deleteLicensePlan(deleteData: $deleteData) {
+      id
+    }
+  }
+`;
+export const PlatformRolesMoveSpaceL1ToSpaceL0Document = gql`
+  mutation PlatformRolesMoveSpaceL1ToSpaceL0(
+    $moveData: MoveSpaceL1ToSpaceL0Input!
+  ) {
+    moveSpaceL1ToSpaceL0(moveData: $moveData) {
+      id
+    }
+  }
+`;
+export const PlatformRolesMoveSpaceL1ToSpaceL2Document = gql`
+  mutation PlatformRolesMoveSpaceL1ToSpaceL2(
+    $moveData: MoveSpaceL1ToSpaceL2Input!
+  ) {
+    moveSpaceL1ToSpaceL2(moveData: $moveData) {
+      id
+    }
+  }
+`;
+export const PlatformRolesMoveSpaceL2ToSpaceL1Document = gql`
+  mutation PlatformRolesMoveSpaceL2ToSpaceL1(
+    $moveData: MoveSpaceL2ToSpaceL1Input!
+  ) {
+    moveSpaceL2ToSpaceL1(moveData: $moveData) {
+      id
+    }
+  }
+`;
+export const PlatformRolesRemoveRoleFromUserDocument = gql`
+  mutation PlatformRolesRemoveRoleFromUser(
+    $roleData: RemovePlatformRoleInput!
+  ) {
+    removePlatformRoleFromUser(roleData: $roleData) {
+      id
+    }
+  }
+`;
+export const PlatformRolesRevokeLicensePlanFromAccountDocument = gql`
+  mutation PlatformRolesRevokeLicensePlanFromAccount(
+    $planData: RevokeLicensePlanFromAccount!
+  ) {
+    revokeLicensePlanFromAccount(planData: $planData) {
+      id
+    }
+  }
+`;
+export const PlatformRolesRevokeLicensePlanFromSpaceDocument = gql`
+  mutation PlatformRolesRevokeLicensePlanFromSpace(
+    $planData: RevokeLicensePlanFromSpace!
+  ) {
+    revokeLicensePlanFromSpace(planData: $planData) {
+      id
+    }
+  }
+`;
+export const PlatformRolesTransferCalloutDocument = gql`
+  mutation PlatformRolesTransferCallout($transferData: TransferCalloutInput!) {
+    transferCallout(transferData: $transferData) {
+      id
+    }
+  }
+`;
+export const PlatformRolesTransferInnovationHubToAccountDocument = gql`
+  mutation PlatformRolesTransferInnovationHubToAccount(
+    $transferData: TransferAccountInnovationHubInput!
+  ) {
+    transferInnovationHubToAccount(transferData: $transferData) {
+      id
+    }
+  }
+`;
+export const PlatformRolesTransferInnovationPackToAccountDocument = gql`
+  mutation PlatformRolesTransferInnovationPackToAccount(
+    $transferData: TransferAccountInnovationPackInput!
+  ) {
+    transferInnovationPackToAccount(transferData: $transferData) {
+      id
+    }
+  }
+`;
+export const PlatformRolesTransferSpaceToAccountDocument = gql`
+  mutation PlatformRolesTransferSpaceToAccount(
+    $transferData: TransferAccountSpaceInput!
+  ) {
+    transferSpaceToAccount(transferData: $transferData) {
+      id
+    }
+  }
+`;
+export const PlatformRolesTransferVirtualContributorToAccountDocument = gql`
+  mutation PlatformRolesTransferVirtualContributorToAccount(
+    $transferData: TransferAccountVirtualContributorInput!
+  ) {
+    transferVirtualContributorToAccount(transferData: $transferData) {
+      id
+    }
+  }
+`;
+export const PlatformRolesUpdateCalloutDocument = gql`
+  mutation PlatformRolesUpdateCallout($calloutData: UpdateCalloutEntityInput!) {
+    updateCallout(calloutData: $calloutData) {
+      id
+    }
+  }
+`;
+export const PlatformRolesUpdateDiscussionDocument = gql`
+  mutation PlatformRolesUpdateDiscussion($updateData: UpdateDiscussionInput!) {
+    updateDiscussion(updateData: $updateData) {
+      id
+    }
+  }
+`;
+export const PlatformRolesUpdateLicensePlanDocument = gql`
+  mutation PlatformRolesUpdateLicensePlan(
+    $updateData: UpdateLicensePlanInput!
+  ) {
+    updateLicensePlan(updateData: $updateData) {
+      id
+    }
+  }
+`;
+export const PlatformRolesUpdateSpaceVisibilityDocument = gql`
+  mutation PlatformRolesUpdateSpaceVisibility(
+    $updateData: UpdateSpacePlatformSettingsInput!
+  ) {
+    updateSpacePlatformSettings(updateData: $updateData) {
+      id
+    }
+  }
+`;
+export const PlatformRolesUpdateTemplateDocument = gql`
+  mutation PlatformRolesUpdateTemplate($updateData: UpdateTemplateInput!) {
+    updateTemplate(updateData: $updateData) {
+      id
+    }
+  }
+`;
+export const RefreshAllBodiesOfKnowledgeDocument = gql`
+  mutation refreshAllBodiesOfKnowledge {
+    refreshAllBodiesOfKnowledge
+  }
+`;
+export const RemoveIframeAllowedUrlDocument = gql`
+  mutation removeIframeAllowedURL($whitelistedURL: String!) {
+    removeIframeAllowedURL(whitelistedURL: $whitelistedURL)
+  }
+`;
+export const RemoveNotificationEmailFromBlacklistDocument = gql`
+  mutation removeNotificationEmailFromBlacklist(
+    $input: NotificationEmailAddressInput!
+  ) {
+    removeNotificationEmailFromBlacklist(input: $input)
+  }
+`;
+export const RemovePlatformRoleFromOrganizationDocument = gql`
+  mutation removePlatformRoleFromOrganization(
+    $roleData: RemovePlatformRoleInput!
+  ) {
+    removePlatformRoleFromOrganization(roleData: $roleData) {
+      id
+    }
+  }
+`;
+export const ResetLicenseOnAccountsDocument = gql`
+  mutation resetLicenseOnAccounts {
+    resetLicenseOnAccounts
+  }
+`;
+export const RevokeCredentialFromActorDocument = gql`
+  mutation revokeCredentialFromActor(
+    $actorID: UUID!
+    $credentialType: CredentialType!
+    $resourceID: UUID
+  ) {
+    revokeCredentialFromActor(
+      actorID: $actorID
+      credentialType: $credentialType
+      resourceID: $resourceID
+    )
+  }
+`;
+export const RevokeCredentialFromOrganizationDocument = gql`
+  mutation revokeCredentialFromOrganization(
+    $revokeCredentialData: RevokeOrganizationAuthorizationCredentialInput!
+  ) {
+    revokeCredentialFromOrganization(
+      revokeCredentialData: $revokeCredentialData
+    ) {
+      id
+    }
+  }
+`;
+export const RevokeCredentialFromUserDocument = gql`
+  mutation revokeCredentialFromUser(
+    $revokeCredentialData: RevokeAuthorizationCredentialInput!
+  ) {
+    revokeCredentialFromUser(revokeCredentialData: $revokeCredentialData) {
+      id
+    }
+  }
+`;
+export const SetPlatformWellKnownVirtualContributorDocument = gql`
+  mutation setPlatformWellKnownVirtualContributor(
+    $mappingData: SetPlatformWellKnownVirtualContributorInput!
+  ) {
+    setPlatformWellKnownVirtualContributor(mappingData: $mappingData) {
+      mappings {
+        wellKnown
+      }
+    }
+  }
+`;
+export const UpdateAssistantActorCapabilitiesDocument = gql`
+  mutation updateAssistantActorCapabilities(
+    $grantData: GrantAssistantActorCapabilitiesInput!
+  ) {
+    updateAssistantActorCapabilities(grantData: $grantData) {
+      id
+    }
+  }
+`;
+export const UpdateBaselineLicensePlanOnAccountDocument = gql`
+  mutation updateBaselineLicensePlanOnAccount(
+    $updateData: UpdateBaselineLicensePlanOnAccount!
+  ) {
+    updateBaselineLicensePlanOnAccount(updateData: $updateData) {
+      id
+    }
+  }
+`;
+export const UpdateCalloutPublishInfoDocument = gql`
+  mutation updateCalloutPublishInfo(
+    $calloutData: UpdateCalloutPublishInfoInput!
+  ) {
+    updateCalloutPublishInfo(calloutData: $calloutData) {
+      id
+    }
+  }
+`;
+export const UpdateInnovationHubDocument = gql`
+  mutation updateInnovationHub($updateData: UpdateInnovationHubInput!) {
+    updateInnovationHub(updateData: $updateData) {
+      id
+    }
+  }
+`;
+export const UpdateInnovationPackDocument = gql`
+  mutation updateInnovationPack(
+    $innovationPackData: UpdateInnovationPackInput!
+  ) {
+    updateInnovationPack(innovationPackData: $innovationPackData) {
+      id
+    }
+  }
+`;
+export const UpdatePlatformSettingsDocument = gql`
+  mutation updatePlatformSettings($settingsData: UpdatePlatformSettingsInput!) {
+    updatePlatformSettings(settingsData: $settingsData) {
+      integration {
+        iframeAllowedUrls
+      }
+    }
+  }
+`;
+export const UpdateTemplateFromSpaceDocument = gql`
+  mutation updateTemplateFromSpace($updateData: UpdateTemplateFromSpaceInput!) {
+    updateTemplateFromSpace(updateData: $updateData) {
+      id
     }
   }
 `;
@@ -117640,6 +122277,20 @@ export const UpdateSpacePlatformSettingsDocument = gql`
     ) {
       id
       nameID
+      visibility
+      __typename
+    }
+  }
+`;
+export const UpdateSpaceVisibilityPlatformSettingsDocument = gql`
+  mutation UpdateSpaceVisibilityPlatformSettings(
+    $spaceId: UUID!
+    $visibility: SpaceVisibility!
+  ) {
+    updateSpacePlatformSettings(
+      updateData: { spaceID: $spaceId, visibility: $visibility }
+    ) {
+      id
       visibility
       __typename
     }
@@ -118099,6 +122750,48 @@ export const UpdateVirtualContributorSettingsDocument = gql`
   }
   ${TagsetDetailsFragmentDoc}
 `;
+export const GetOrganizationRoleSetPendingDocument = gql`
+  query GetOrganizationRoleSetPending($roleSetId: UUID!) {
+    lookup {
+      roleSet(ID: $roleSetId) {
+        id
+        applications {
+          id
+          state
+          questions {
+            name
+            value
+          }
+        }
+        invitations {
+          id
+          state
+          extraRoles
+        }
+        platformInvitations {
+          id
+        }
+      }
+    }
+  }
+`;
+export const GetRoleSetApplicationFormDocument = gql`
+  query GetRoleSetApplicationForm($roleSetId: UUID!) {
+    lookup {
+      roleSet(ID: $roleSetId) {
+        id
+        applicationForm {
+          id
+          questions {
+            question
+            required
+            sortOrder
+          }
+        }
+      }
+    }
+  }
+`;
 export const RoleSetAvailableMembersDocument = gql`
   query RoleSetAvailableMembers(
     $roleSetId: UUID!
@@ -118149,6 +122842,45 @@ export const RoleSetMembersListDocument = gql`
   }
   ${RoleSetMembersDetailsFragmentDoc}
 `;
+export const RoleSetPendingApplicationsDocument = gql`
+  query RoleSetPendingApplications($roleSetId: UUID!) {
+    lookup {
+      roleSet(ID: $roleSetId) {
+        id
+        applications {
+          id
+          state
+        }
+      }
+    }
+  }
+`;
+export const RoleSetPendingInvitationsDocument = gql`
+  query RoleSetPendingInvitations($roleSetId: UUID!) {
+    lookup {
+      roleSet(ID: $roleSetId) {
+        id
+        invitations {
+          id
+          state
+        }
+      }
+    }
+  }
+`;
+export const RoleSetPendingPlatformInvitationsDocument = gql`
+  query RoleSetPendingPlatformInvitations($roleSetId: UUID!) {
+    lookup {
+      roleSet(ID: $roleSetId) {
+        id
+        platformInvitations {
+          id
+          email
+        }
+      }
+    }
+  }
+`;
 export const RoleSetUserPrivilegesDocument = gql`
   query RoleSetUserPrivileges($roleSetId: UUID!) {
     lookup {
@@ -118158,6 +122890,23 @@ export const RoleSetUserPrivilegesDocument = gql`
           myPrivileges
         }
         myMembershipStatus
+      }
+    }
+  }
+`;
+export const GetRoleSetUsersInRolesDocument = gql`
+  query GetRoleSetUsersInRoles($roleSetId: UUID!, $roles: [RoleName!]!) {
+    lookup {
+      roleSet(ID: $roleSetId) {
+        id
+        usersInRoles(roles: $roles) {
+          role
+          users {
+            id
+            nameID
+            email
+          }
+        }
       }
     }
   }
@@ -118429,6 +123178,31 @@ export const GetCalloutPostsDocument = gql`
     }
   }
   ${ContributeTabPostFragmentDoc}
+`;
+export const GetCalloutSpacesSettingsDocument = gql`
+  query GetCalloutSpacesSettings($calloutId: UUID!) {
+    lookup {
+      callout(ID: $calloutId) {
+        id
+        framing {
+          id
+          type
+        }
+        settings {
+          framing {
+            commentsEnabled
+            spaces {
+              cardVariant
+            }
+            selection {
+              mode
+              selectedIds
+            }
+          }
+        }
+      }
+    }
+  }
 `;
 export const CalloutWhiateboardStorageConfigDocument = gql`
   query CalloutWhiateboardStorageConfig($calloutId: UUID!) {
@@ -118764,6 +123538,24 @@ export const PendingMembershipsSpaceDocument = gql`
   }
   ${PendingMembershipsJourneyProfileFragmentDoc}
 `;
+export const BannerVisualConstraintsDocument = gql`
+  query bannerVisualConstraints {
+    platform {
+      configuration {
+        defaultVisualTypeConstraints(type: BANNER) {
+          minWidth
+          minHeight
+          maxWidth
+          maxHeight
+          aspectRatio
+          minAspectRatio
+          maxAspectRatio
+          allowedTypes
+        }
+      }
+    }
+  }
+`;
 export const ConfigurationDocument = gql`
   query configuration {
     platform {
@@ -118961,7 +123753,28 @@ export const GetInnovationFlowStatesWithIdsDocument = gql`
             states {
               id
               displayName
+              sortOrder
+              settings {
+                sidebar
+              }
             }
+          }
+        }
+      }
+    }
+  }
+`;
+export const GetSpaceLicenseEntitlementsDocument = gql`
+  query GetSpaceLicenseEntitlements($spaceID: UUID!) {
+    lookup {
+      space(ID: $spaceID) {
+        id
+        license {
+          id
+          entitlements {
+            type
+            enabled
+            limit
           }
         }
       }
@@ -119012,8 +123825,33 @@ export const LookupProfileVisualsDocument = gql`
           id
           name
           uri
+          minWidth
+          minHeight
+          maxWidth
+          maxHeight
+          aspectRatio
           authorization {
             myPrivileges
+          }
+        }
+      }
+    }
+  }
+`;
+export const GetCalloutFramingMemoDocument = gql`
+  query GetCalloutFramingMemo($calloutID: UUID!) {
+    lookup {
+      callout(ID: $calloutID) {
+        id
+        framing {
+          id
+          memo {
+            id
+            profile {
+              id
+              displayName
+              url
+            }
           }
         }
       }
@@ -119045,6 +123883,23 @@ export const GetOrgVisualUriDocument = gql`
           name
           uri
         }
+      }
+    }
+  }
+`;
+export const GetOrganizationAssociateEligibilityDocument = gql`
+  query GetOrganizationAssociateEligibility($organizationId: UUID!) {
+    organization(ID: $organizationId) {
+      id
+      myAssociateEligibility {
+        canApply
+        canJoinDirectly
+        reason
+      }
+      roleSet {
+        id
+        myMembershipStatus
+        myRolesImplicit
       }
     }
   }
@@ -119142,6 +123997,196 @@ export const UsersPaginatedDocument = gql`
     }
   }
   ${UserDataFragmentDoc}
+`;
+export const ActorsWithCredentialDocument = gql`
+  query actorsWithCredential(
+    $credentialType: CredentialType!
+    $resourceID: UUID
+  ) {
+    actorsWithCredential(
+      credentialType: $credentialType
+      resourceID: $resourceID
+    ) {
+      id
+    }
+  }
+`;
+export const LatestUserEmailChangeAuditEntryDocument = gql`
+  query latestUserEmailChangeAuditEntry($userID: UUID!) {
+    platformAdmin {
+      latestUserEmailChangeAuditEntry(userID: $userID) {
+        id
+        outcome
+      }
+    }
+  }
+`;
+export const PlatformAdminMcpApiKeysDocument = gql`
+  query platformAdminMcpApiKeys($userID: UUID!) {
+    platformAdmin {
+      mcpApiKeys(userID: $userID) {
+        id
+      }
+    }
+  }
+`;
+export const PlatformAdminVirtualAssistantDocument = gql`
+  query platformAdminVirtualAssistant {
+    platformAdmin {
+      virtualAssistant {
+        id
+      }
+    }
+  }
+`;
+export const PlatformForumDiscussionCategoriesDocument = gql`
+  query platformForumDiscussionCategories {
+    platform {
+      forum {
+        id
+        discussionCategories
+      }
+    }
+  }
+`;
+export const PlatformRoleSetOrganizationsInRoleDocument = gql`
+  query platformRoleSetOrganizationsInRole($role: RoleName!) {
+    platform {
+      roleSet {
+        organizationsInRole(role: $role) {
+          id
+        }
+      }
+    }
+  }
+`;
+export const PlatformRoleSetOrganizationsInRolesDocument = gql`
+  query platformRoleSetOrganizationsInRoles($roles: [RoleName!]!) {
+    platform {
+      roleSet {
+        organizationsInRoles(roles: $roles) {
+          role
+          organizations {
+            id
+          }
+        }
+      }
+    }
+  }
+`;
+export const PlatformRoleSetRoleNamesDocument = gql`
+  query platformRoleSetRoleNames {
+    platform {
+      roleSet {
+        roleNames
+      }
+    }
+  }
+`;
+export const PlatformRoleSetUsersInRoleDocument = gql`
+  query platformRoleSetUsersInRole($role: RoleName!) {
+    platform {
+      roleSet {
+        usersInRole(role: $role) {
+          id
+        }
+      }
+    }
+  }
+`;
+export const PlatformRoleSetUsersInRolesDocument = gql`
+  query platformRoleSetUsersInRoles($roles: [RoleName!]!) {
+    platform {
+      roleSet {
+        usersInRoles(roles: $roles) {
+          role
+          users {
+            id
+          }
+        }
+      }
+    }
+  }
+`;
+export const PlatformRolesSpaceApplicationsProbeDocument = gql`
+  query PlatformRolesSpaceApplicationsProbe($spaceId: UUID!) {
+    lookup {
+      space(ID: $spaceId) {
+        id
+        community {
+          roleSet {
+            applications {
+              id
+            }
+          }
+        }
+      }
+    }
+  }
+`;
+export const SpaceCollaborationReadProbeDocument = gql`
+  query spaceCollaborationReadProbe($spaceId: UUID!) {
+    lookup {
+      space(ID: $spaceId) {
+        id
+        collaboration {
+          id
+        }
+      }
+    }
+  }
+`;
+export const SpaceReadProbeDocument = gql`
+  query spaceReadProbe($spaceId: UUID!) {
+    lookup {
+      space(ID: $spaceId) {
+        id
+      }
+    }
+  }
+`;
+export const SpaceSupportAdminPrivilegeProbeDocument = gql`
+  query spaceSupportAdminPrivilegeProbe($spaceId: UUID!) {
+    lookup {
+      space(ID: $spaceId) {
+        id
+        authorization {
+          myPrivileges
+        }
+      }
+    }
+  }
+`;
+export const UpdateUserServiceProfileDocument = gql`
+  mutation updateUserServiceProfile($userData: UpdateUserInput!) {
+    updateUser(userData: $userData) {
+      id
+    }
+  }
+`;
+export const UserEmailChangeAuditEntriesDocument = gql`
+  query userEmailChangeAuditEntries($userID: UUID!) {
+    platformAdmin {
+      userEmailChangeAuditEntries(userID: $userID) {
+        total
+        auditEntries {
+          id
+          outcome
+        }
+      }
+    }
+  }
+`;
+export const UsersWithAuthorizationCredentialDocument = gql`
+  query usersWithAuthorizationCredential(
+    $credentialsCriteriaData: UsersWithAuthorizationCredentialInput!
+  ) {
+    usersWithAuthorizationCredential(
+      credentialsCriteriaData: $credentialsCriteriaData
+    ) {
+      id
+    }
+  }
 `;
 export const GetOrgVisualUriInnovationHubDocument = gql`
   query GetOrgVisualUriInnovationHub($ID: UUID!) {
@@ -119518,6 +124563,17 @@ export const GetUserReferenceUriDocument = gql`
     }
   }
 `;
+export const GetUserSettingsDocument = gql`
+  query GetUserSettings($userId: UUID!) {
+    user(ID: $userId) {
+      id
+      settings {
+        ...userSettingsFragment
+      }
+    }
+  }
+  ${UserSettingsFragmentFragmentDoc}
+`;
 export const GetUsersDataDocument = gql`
   query getUsersData {
     users {
@@ -119525,6 +124581,58 @@ export const GetUsersDataDocument = gql`
     }
   }
   ${UserDataFragmentDoc}
+`;
+export const MeInAppNotificationsDocument = gql`
+  query MeInAppNotifications($types: [NotificationEvent!]) {
+    me {
+      notifications(filter: { types: $types }) {
+        total
+        inAppNotifications {
+          id
+          type
+        }
+      }
+    }
+  }
+`;
+export const MeOrganizationPendingDocument = gql`
+  query MeOrganizationPending {
+    me {
+      communityInvitations {
+        invitation {
+          id
+        }
+      }
+      communityApplications {
+        application {
+          id
+        }
+      }
+      communityInvitationsCount
+      organizationInvitations {
+        id
+        invitation {
+          id
+          extraRoles
+        }
+        organization {
+          id
+          nameID
+        }
+      }
+      organizationApplications {
+        id
+        application {
+          id
+        }
+        organization {
+          id
+          nameID
+        }
+      }
+      organizationInvitationsCount
+    }
+  }
 `;
 export const MeQueryDocument = gql`
   query MeQuery {
@@ -119540,6 +124648,11 @@ export const MeQueryDocument = gql`
       communityInvitations {
         invitation {
           ...InvitationData
+          spacesToJoinOnAccept {
+            id
+            displayName
+            url
+          }
         }
         spacePendingMembershipInfo {
           id
@@ -119992,6 +125105,9 @@ const AssignRoleToUserDocumentString = print(AssignRoleToUserDocument);
 const AssignRoleToUserExtendedDataDocumentString = print(
   AssignRoleToUserExtendedDataDocument
 );
+const AssignRoleToVirtualContributorDocumentString = print(
+  AssignRoleToVirtualContributorDocument
+);
 const ApplyForEntryRoleDocumentString = print(ApplyForEntryRoleDocument);
 const DeleteApplicationDocumentString = print(DeleteApplicationDocument);
 const DeletePlatformInvitationDocumentString = print(
@@ -120041,6 +125157,12 @@ const AddReactionToCalloutDocumentString = print(AddReactionToCalloutDocument);
 const RemoveReactionFromCalloutDocumentString = print(
   RemoveReactionFromCalloutDocument
 );
+const CreateSpacesCollectionCalloutDocumentString = print(
+  CreateSpacesCollectionCalloutDocument
+);
+const UpdateCalloutSpacesSettingsDocumentString = print(
+  UpdateCalloutSpacesSettingsDocument
+);
 const UpdateCalloutDocumentString = print(UpdateCalloutDocument);
 const UpdateCalloutVisibilityDocumentString = print(
   UpdateCalloutVisibilityDocument
@@ -120087,6 +125209,9 @@ const UpdatePostDocumentString = print(UpdatePostDocument);
 const ConvertSpaceL1ToSpaceL0DocumentString = print(
   ConvertSpaceL1ToSpaceL0Document
 );
+const ConvertSpaceL1ToSpaceL2DocumentString = print(
+  ConvertSpaceL1ToSpaceL2Document
+);
 const ConvertSpaceL2ToSpaceL1DocumentString = print(
   ConvertSpaceL2ToSpaceL1Document
 );
@@ -120115,11 +125240,250 @@ const UpdateInnovationFlowCurrentStateDocumentString = print(
 const UpdateInnovationFlowStateDocumentString = print(
   UpdateInnovationFlowStateDocument
 );
+const PrepareMemoSigningDocumentString = print(PrepareMemoSigningDocument);
+const AuthorizationPolicyResetOnOrganizationDocumentString = print(
+  AuthorizationPolicyResetOnOrganizationDocument
+);
 const CreateOrganizationDocumentString = print(CreateOrganizationDocument);
 const DeleteOrganizationDocumentString = print(DeleteOrganizationDocument);
 const UpdateOrganizationDocumentString = print(UpdateOrganizationDocument);
 const UpdateOrganizationSettingsDocumentString = print(
   UpdateOrganizationSettingsDocument
+);
+const AddIframeAllowedUrlDocumentString = print(AddIframeAllowedUrlDocument);
+const AddNotificationEmailToBlacklistDocumentString = print(
+  AddNotificationEmailToBlacklistDocument
+);
+const AdminCommunicationEnsureAccessToCommunicationsDocumentString = print(
+  AdminCommunicationEnsureAccessToCommunicationsDocument
+);
+const AdminCommunicationMigrateOrphanedConversationsDocumentString = print(
+  AdminCommunicationMigrateOrphanedConversationsDocument
+);
+const AdminCommunicationRemoveOrphanedRoomDocumentString = print(
+  AdminCommunicationRemoveOrphanedRoomDocument
+);
+const AdminCommunicationSyncSpaceHierarchyDocumentString = print(
+  AdminCommunicationSyncSpaceHierarchyDocument
+);
+const AdminCommunicationUpdateRoomStateDocumentString = print(
+  AdminCommunicationUpdateRoomStateDocument
+);
+const AdminForumRemoveDiscussionCategoryDocumentString = print(
+  AdminForumRemoveDiscussionCategoryDocument
+);
+const AdminIdentityDeleteKratosIdentityDocumentString = print(
+  AdminIdentityDeleteKratosIdentityDocument
+);
+const AdminInAppNotificationsPruneDocumentString = print(
+  AdminInAppNotificationsPruneDocument
+);
+const AdminLicensePolicyCreateCredentialRuleDocumentString = print(
+  AdminLicensePolicyCreateCredentialRuleDocument
+);
+const AdminLicensePolicyDeleteCredentialRuleDocumentString = print(
+  AdminLicensePolicyDeleteCredentialRuleDocument
+);
+const AdminLicensePolicyUpdateCredentialRuleDocumentString = print(
+  AdminLicensePolicyUpdateCredentialRuleDocument
+);
+const AdminRevokeMcpApiKeyDocumentString = print(AdminRevokeMcpApiKeyDocument);
+const AdminUpdateContributorAvatarsDocumentString = print(
+  AdminUpdateContributorAvatarsDocument
+);
+const AdminUpdateGeoLocationDataDocumentString = print(
+  AdminUpdateGeoLocationDataDocument
+);
+const AdminUserAccountDeleteDocumentString = print(
+  AdminUserAccountDeleteDocument
+);
+const AdminUserEmailChangeDocumentString = print(AdminUserEmailChangeDocument);
+const AdminUserEmailChangeDriftResolveDocumentString = print(
+  AdminUserEmailChangeDriftResolveDocument
+);
+const AiServerAuthorizationPolicyResetDocumentString = print(
+  AiServerAuthorizationPolicyResetDocument
+);
+const AssignPlatformRoleToOrganizationDocumentString = print(
+  AssignPlatformRoleToOrganizationDocument
+);
+const AuthorizationPlatformRolesAccessResetDocumentString = print(
+  AuthorizationPlatformRolesAccessResetDocument
+);
+const AuthorizationPolicyResetAllDocumentString = print(
+  AuthorizationPolicyResetAllDocument
+);
+const AuthorizationPolicyResetOnAccountDocumentString = print(
+  AuthorizationPolicyResetOnAccountDocument
+);
+const AuthorizationPolicyResetOnPlatformDocumentString = print(
+  AuthorizationPolicyResetOnPlatformDocument
+);
+const AuthorizationPolicyResetOnUserDocumentString = print(
+  AuthorizationPolicyResetOnUserDocument
+);
+const AuthorizationPolicyResetToGlobalAdminsAccessDocumentString = print(
+  AuthorizationPolicyResetToGlobalAdminsAccessDocument
+);
+const CleanupCollectionsDocumentString = print(CleanupCollectionsDocument);
+const CreateContributionOnCalloutIdDocumentString = print(
+  CreateContributionOnCalloutIdDocument
+);
+const CreateTemplateFromContentSpaceDocumentString = print(
+  CreateTemplateFromContentSpaceDocument
+);
+const CreateWingbackAccountDocumentString = print(
+  CreateWingbackAccountDocument
+);
+const DeleteContributionDocumentString = print(DeleteContributionDocument);
+const GrantCredentialToActorDocumentString = print(
+  GrantCredentialToActorDocument
+);
+const GrantCredentialToOrganizationDocumentString = print(
+  GrantCredentialToOrganizationDocument
+);
+const GrantCredentialToUserDocumentString = print(
+  GrantCredentialToUserDocument
+);
+const LicenseResetOnAccountDocumentString = print(
+  LicenseResetOnAccountDocument
+);
+const MigrateLegacyMemoContentDocumentString = print(
+  MigrateLegacyMemoContentDocument
+);
+const MigrateLegacyWhiteboardContentDocumentString = print(
+  MigrateLegacyWhiteboardContentDocument
+);
+const MintMcpApiKeyDocumentString = print(MintMcpApiKeyDocument);
+const MoveContributionToCalloutDocumentString = print(
+  MoveContributionToCalloutDocument
+);
+const PlatformRolesAssignLicensePlanToAccountDocumentString = print(
+  PlatformRolesAssignLicensePlanToAccountDocument
+);
+const PlatformRolesAssignLicensePlanToSpaceDocumentString = print(
+  PlatformRolesAssignLicensePlanToSpaceDocument
+);
+const PlatformRolesAssignRoleToUserDocumentString = print(
+  PlatformRolesAssignRoleToUserDocument
+);
+const PlatformRolesConvertSpaceL1ToSpaceL0DocumentString = print(
+  PlatformRolesConvertSpaceL1ToSpaceL0Document
+);
+const PlatformRolesConvertSpaceL2ToSpaceL1DocumentString = print(
+  PlatformRolesConvertSpaceL2ToSpaceL1Document
+);
+const PlatformRolesConvertVirtualContributorToUseKnowledgeBaseDocumentString =
+  print(PlatformRolesConvertVirtualContributorToUseKnowledgeBaseDocument);
+const PlatformRolesCreateLicensePlanDocumentString = print(
+  PlatformRolesCreateLicensePlanDocument
+);
+const PlatformRolesCreateOrganizationDocumentString = print(
+  PlatformRolesCreateOrganizationDocument
+);
+const PlatformRolesCreateTemplateDocumentString = print(
+  PlatformRolesCreateTemplateDocument
+);
+const PlatformRolesCreateTemplateFromSpaceDocumentString = print(
+  PlatformRolesCreateTemplateFromSpaceDocument
+);
+const PlatformRolesDeleteDiscussionDocumentString = print(
+  PlatformRolesDeleteDiscussionDocument
+);
+const PlatformRolesDeleteLicensePlanDocumentString = print(
+  PlatformRolesDeleteLicensePlanDocument
+);
+const PlatformRolesMoveSpaceL1ToSpaceL0DocumentString = print(
+  PlatformRolesMoveSpaceL1ToSpaceL0Document
+);
+const PlatformRolesMoveSpaceL1ToSpaceL2DocumentString = print(
+  PlatformRolesMoveSpaceL1ToSpaceL2Document
+);
+const PlatformRolesMoveSpaceL2ToSpaceL1DocumentString = print(
+  PlatformRolesMoveSpaceL2ToSpaceL1Document
+);
+const PlatformRolesRemoveRoleFromUserDocumentString = print(
+  PlatformRolesRemoveRoleFromUserDocument
+);
+const PlatformRolesRevokeLicensePlanFromAccountDocumentString = print(
+  PlatformRolesRevokeLicensePlanFromAccountDocument
+);
+const PlatformRolesRevokeLicensePlanFromSpaceDocumentString = print(
+  PlatformRolesRevokeLicensePlanFromSpaceDocument
+);
+const PlatformRolesTransferCalloutDocumentString = print(
+  PlatformRolesTransferCalloutDocument
+);
+const PlatformRolesTransferInnovationHubToAccountDocumentString = print(
+  PlatformRolesTransferInnovationHubToAccountDocument
+);
+const PlatformRolesTransferInnovationPackToAccountDocumentString = print(
+  PlatformRolesTransferInnovationPackToAccountDocument
+);
+const PlatformRolesTransferSpaceToAccountDocumentString = print(
+  PlatformRolesTransferSpaceToAccountDocument
+);
+const PlatformRolesTransferVirtualContributorToAccountDocumentString = print(
+  PlatformRolesTransferVirtualContributorToAccountDocument
+);
+const PlatformRolesUpdateCalloutDocumentString = print(
+  PlatformRolesUpdateCalloutDocument
+);
+const PlatformRolesUpdateDiscussionDocumentString = print(
+  PlatformRolesUpdateDiscussionDocument
+);
+const PlatformRolesUpdateLicensePlanDocumentString = print(
+  PlatformRolesUpdateLicensePlanDocument
+);
+const PlatformRolesUpdateSpaceVisibilityDocumentString = print(
+  PlatformRolesUpdateSpaceVisibilityDocument
+);
+const PlatformRolesUpdateTemplateDocumentString = print(
+  PlatformRolesUpdateTemplateDocument
+);
+const RefreshAllBodiesOfKnowledgeDocumentString = print(
+  RefreshAllBodiesOfKnowledgeDocument
+);
+const RemoveIframeAllowedUrlDocumentString = print(
+  RemoveIframeAllowedUrlDocument
+);
+const RemoveNotificationEmailFromBlacklistDocumentString = print(
+  RemoveNotificationEmailFromBlacklistDocument
+);
+const RemovePlatformRoleFromOrganizationDocumentString = print(
+  RemovePlatformRoleFromOrganizationDocument
+);
+const ResetLicenseOnAccountsDocumentString = print(
+  ResetLicenseOnAccountsDocument
+);
+const RevokeCredentialFromActorDocumentString = print(
+  RevokeCredentialFromActorDocument
+);
+const RevokeCredentialFromOrganizationDocumentString = print(
+  RevokeCredentialFromOrganizationDocument
+);
+const RevokeCredentialFromUserDocumentString = print(
+  RevokeCredentialFromUserDocument
+);
+const SetPlatformWellKnownVirtualContributorDocumentString = print(
+  SetPlatformWellKnownVirtualContributorDocument
+);
+const UpdateAssistantActorCapabilitiesDocumentString = print(
+  UpdateAssistantActorCapabilitiesDocument
+);
+const UpdateBaselineLicensePlanOnAccountDocumentString = print(
+  UpdateBaselineLicensePlanOnAccountDocument
+);
+const UpdateCalloutPublishInfoDocumentString = print(
+  UpdateCalloutPublishInfoDocument
+);
+const UpdateInnovationHubDocumentString = print(UpdateInnovationHubDocument);
+const UpdateInnovationPackDocumentString = print(UpdateInnovationPackDocument);
+const UpdatePlatformSettingsDocumentString = print(
+  UpdatePlatformSettingsDocument
+);
+const UpdateTemplateFromSpaceDocumentString = print(
+  UpdateTemplateFromSpaceDocument
 );
 const AssignPlatformRoleToUserDocumentString = print(
   AssignPlatformRoleToUserDocument
@@ -120133,6 +125497,9 @@ const DeleteInnovationHubDocumentString = print(DeleteInnovationHubDocument);
 const DeleteInnovationPackDocumentString = print(DeleteInnovationPackDocument);
 const UpdateSpacePlatformSettingsDocumentString = print(
   UpdateSpacePlatformSettingsDocument
+);
+const UpdateSpaceVisibilityPlatformSettingsDocumentString = print(
+  UpdateSpaceVisibilityPlatformSettingsDocument
 );
 const SubscribeToPushNotificationsDocumentString = print(
   SubscribeToPushNotificationsDocument
@@ -120182,6 +125549,12 @@ const UpdateVirtualContributorDocumentString = print(
 const UpdateVirtualContributorSettingsDocumentString = print(
   UpdateVirtualContributorSettingsDocument
 );
+const GetOrganizationRoleSetPendingDocumentString = print(
+  GetOrganizationRoleSetPendingDocument
+);
+const GetRoleSetApplicationFormDocumentString = print(
+  GetRoleSetApplicationFormDocument
+);
 const RoleSetAvailableMembersDocumentString = print(
   RoleSetAvailableMembersDocument
 );
@@ -120189,8 +125562,20 @@ const RoleSetApplicationsInvitationsDocumentString = print(
   RoleSetApplicationsInvitationsDocument
 );
 const RoleSetMembersListDocumentString = print(RoleSetMembersListDocument);
+const RoleSetPendingApplicationsDocumentString = print(
+  RoleSetPendingApplicationsDocument
+);
+const RoleSetPendingInvitationsDocumentString = print(
+  RoleSetPendingInvitationsDocument
+);
+const RoleSetPendingPlatformInvitationsDocumentString = print(
+  RoleSetPendingPlatformInvitationsDocument
+);
 const RoleSetUserPrivilegesDocumentString = print(
   RoleSetUserPrivilegesDocument
+);
+const GetRoleSetUsersInRolesDocumentString = print(
+  GetRoleSetUsersInRolesDocument
 );
 const GetSpaceInvitationsDocumentString = print(GetSpaceInvitationsDocument);
 const GetAccountMainEntitiesDocumentString = print(
@@ -120212,6 +125597,9 @@ const CalloutPostStorageConfigDocumentString = print(
   CalloutPostStorageConfigDocument
 );
 const GetCalloutPostsDocumentString = print(GetCalloutPostsDocument);
+const GetCalloutSpacesSettingsDocumentString = print(
+  GetCalloutSpacesSettingsDocument
+);
 const CalloutWhiateboardStorageConfigDocumentString = print(
   CalloutWhiateboardStorageConfigDocument
 );
@@ -120251,6 +125639,9 @@ const GetSubspaceCommunityDocumentString = print(GetSubspaceCommunityDocument);
 const PendingMembershipsSpaceDocumentString = print(
   PendingMembershipsSpaceDocument
 );
+const BannerVisualConstraintsDocumentString = print(
+  BannerVisualConstraintsDocument
+);
 const ConfigurationDocumentString = print(ConfigurationDocument);
 const FullConfigurationDocumentString = print(FullConfigurationDocument);
 const MyEntitlementsQueryDocumentString = print(MyEntitlementsQueryDocument);
@@ -120260,12 +125651,21 @@ const OrganizationEntitlementsQueryDocumentString = print(
 const GetInnovationFlowStatesWithIdsDocumentString = print(
   GetInnovationFlowStatesWithIdsDocument
 );
+const GetSpaceLicenseEntitlementsDocumentString = print(
+  GetSpaceLicenseEntitlementsDocument
+);
 const GetSpaceLicenseSubscriptionsDocumentString = print(
   GetSpaceLicenseSubscriptionsDocument
 );
 const LookupProfileVisualsDocumentString = print(LookupProfileVisualsDocument);
+const GetCalloutFramingMemoDocumentString = print(
+  GetCalloutFramingMemoDocument
+);
 const GetOrgReferenceUriDocumentString = print(GetOrgReferenceUriDocument);
 const GetOrgVisualUriDocumentString = print(GetOrgVisualUriDocument);
+const GetOrganizationAssociateEligibilityDocumentString = print(
+  GetOrganizationAssociateEligibilityDocument
+);
 const GetOrganizationDataDocumentString = print(GetOrganizationDataDocument);
 const GetOrganizationsDataDocumentString = print(GetOrganizationsDataDocument);
 const GetRolesOrganizationDocumentString = print(GetRolesOrganizationDocument);
@@ -120273,6 +125673,53 @@ const OrganizationsPaginatedDocumentString = print(
   OrganizationsPaginatedDocument
 );
 const UsersPaginatedDocumentString = print(UsersPaginatedDocument);
+const ActorsWithCredentialDocumentString = print(ActorsWithCredentialDocument);
+const LatestUserEmailChangeAuditEntryDocumentString = print(
+  LatestUserEmailChangeAuditEntryDocument
+);
+const PlatformAdminMcpApiKeysDocumentString = print(
+  PlatformAdminMcpApiKeysDocument
+);
+const PlatformAdminVirtualAssistantDocumentString = print(
+  PlatformAdminVirtualAssistantDocument
+);
+const PlatformForumDiscussionCategoriesDocumentString = print(
+  PlatformForumDiscussionCategoriesDocument
+);
+const PlatformRoleSetOrganizationsInRoleDocumentString = print(
+  PlatformRoleSetOrganizationsInRoleDocument
+);
+const PlatformRoleSetOrganizationsInRolesDocumentString = print(
+  PlatformRoleSetOrganizationsInRolesDocument
+);
+const PlatformRoleSetRoleNamesDocumentString = print(
+  PlatformRoleSetRoleNamesDocument
+);
+const PlatformRoleSetUsersInRoleDocumentString = print(
+  PlatformRoleSetUsersInRoleDocument
+);
+const PlatformRoleSetUsersInRolesDocumentString = print(
+  PlatformRoleSetUsersInRolesDocument
+);
+const PlatformRolesSpaceApplicationsProbeDocumentString = print(
+  PlatformRolesSpaceApplicationsProbeDocument
+);
+const SpaceCollaborationReadProbeDocumentString = print(
+  SpaceCollaborationReadProbeDocument
+);
+const SpaceReadProbeDocumentString = print(SpaceReadProbeDocument);
+const SpaceSupportAdminPrivilegeProbeDocumentString = print(
+  SpaceSupportAdminPrivilegeProbeDocument
+);
+const UpdateUserServiceProfileDocumentString = print(
+  UpdateUserServiceProfileDocument
+);
+const UserEmailChangeAuditEntriesDocumentString = print(
+  UserEmailChangeAuditEntriesDocument
+);
+const UsersWithAuthorizationCredentialDocumentString = print(
+  UsersWithAuthorizationCredentialDocument
+);
 const GetOrgVisualUriInnovationHubDocumentString = print(
   GetOrgVisualUriInnovationHubDocument
 );
@@ -120309,7 +125756,12 @@ const GetSpaceApplicationsDocumentString = print(GetSpaceApplicationsDocument);
 const GetUserByNameIdDocumentString = print(GetUserByNameIdDocument);
 const GetUserDataDocumentString = print(GetUserDataDocument);
 const GetUserReferenceUriDocumentString = print(GetUserReferenceUriDocument);
+const GetUserSettingsDocumentString = print(GetUserSettingsDocument);
 const GetUsersDataDocumentString = print(GetUsersDataDocument);
+const MeInAppNotificationsDocumentString = print(MeInAppNotificationsDocument);
+const MeOrganizationPendingDocumentString = print(
+  MeOrganizationPendingDocument
+);
 const MeQueryDocumentString = print(MeQueryDocument);
 const GetAiPersonaModelCardDocumentString = print(
   GetAiPersonaModelCardDocument
@@ -120486,6 +125938,28 @@ export function getSdk(
             { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "AssignRoleToUserExtendedData",
+        "mutation",
+        variables
+      );
+    },
+    assignRoleToVirtualContributor(
+      variables: SchemaTypes.AssignRoleToVirtualContributorMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.AssignRoleToVirtualContributorMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.AssignRoleToVirtualContributorMutation>(
+            AssignRoleToVirtualContributorDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "assignRoleToVirtualContributor",
         "mutation",
         variables
       );
@@ -121040,6 +126514,50 @@ export function getSdk(
         variables
       );
     },
+    CreateSpacesCollectionCallout(
+      variables: SchemaTypes.CreateSpacesCollectionCalloutMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.CreateSpacesCollectionCalloutMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.CreateSpacesCollectionCalloutMutation>(
+            CreateSpacesCollectionCalloutDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "CreateSpacesCollectionCallout",
+        "mutation",
+        variables
+      );
+    },
+    UpdateCalloutSpacesSettings(
+      variables: SchemaTypes.UpdateCalloutSpacesSettingsMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.UpdateCalloutSpacesSettingsMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.UpdateCalloutSpacesSettingsMutation>(
+            UpdateCalloutSpacesSettingsDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "UpdateCalloutSpacesSettings",
+        "mutation",
+        variables
+      );
+    },
     UpdateCallout(
       variables: SchemaTypes.UpdateCalloutMutationVariables,
       requestHeaders?: GraphQLClientRequestHeaders
@@ -121568,6 +127086,28 @@ export function getSdk(
         variables
       );
     },
+    ConvertSpaceL1ToSpaceL2(
+      variables: SchemaTypes.ConvertSpaceL1ToSpaceL2MutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.ConvertSpaceL1ToSpaceL2Mutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.ConvertSpaceL1ToSpaceL2Mutation>(
+            ConvertSpaceL1ToSpaceL2DocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "ConvertSpaceL1ToSpaceL2",
+        "mutation",
+        variables
+      );
+    },
     ConvertSpaceL2ToSpaceL1(
       variables: SchemaTypes.ConvertSpaceL2ToSpaceL1MutationVariables,
       requestHeaders?: GraphQLClientRequestHeaders
@@ -121964,6 +127504,50 @@ export function getSdk(
         variables
       );
     },
+    PrepareMemoSigning(
+      variables: SchemaTypes.PrepareMemoSigningMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.PrepareMemoSigningMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.PrepareMemoSigningMutation>(
+            PrepareMemoSigningDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "PrepareMemoSigning",
+        "mutation",
+        variables
+      );
+    },
+    AuthorizationPolicyResetOnOrganization(
+      variables: SchemaTypes.AuthorizationPolicyResetOnOrganizationMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.AuthorizationPolicyResetOnOrganizationMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.AuthorizationPolicyResetOnOrganizationMutation>(
+            AuthorizationPolicyResetOnOrganizationDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "AuthorizationPolicyResetOnOrganization",
+        "mutation",
+        variables
+      );
+    },
     CreateOrganization(
       variables: SchemaTypes.CreateOrganizationMutationVariables,
       requestHeaders?: GraphQLClientRequestHeaders
@@ -122048,6 +127632,1854 @@ export function getSdk(
             { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "UpdateOrganizationSettings",
+        "mutation",
+        variables
+      );
+    },
+    addIframeAllowedURL(
+      variables: SchemaTypes.AddIframeAllowedUrlMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.AddIframeAllowedUrlMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.AddIframeAllowedUrlMutation>(
+            AddIframeAllowedUrlDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "addIframeAllowedURL",
+        "mutation",
+        variables
+      );
+    },
+    addNotificationEmailToBlacklist(
+      variables: SchemaTypes.AddNotificationEmailToBlacklistMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.AddNotificationEmailToBlacklistMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.AddNotificationEmailToBlacklistMutation>(
+            AddNotificationEmailToBlacklistDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "addNotificationEmailToBlacklist",
+        "mutation",
+        variables
+      );
+    },
+    adminCommunicationEnsureAccessToCommunications(
+      variables: SchemaTypes.AdminCommunicationEnsureAccessToCommunicationsMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.AdminCommunicationEnsureAccessToCommunicationsMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.AdminCommunicationEnsureAccessToCommunicationsMutation>(
+            AdminCommunicationEnsureAccessToCommunicationsDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "adminCommunicationEnsureAccessToCommunications",
+        "mutation",
+        variables
+      );
+    },
+    adminCommunicationMigrateOrphanedConversations(
+      variables?: SchemaTypes.AdminCommunicationMigrateOrphanedConversationsMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.AdminCommunicationMigrateOrphanedConversationsMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.AdminCommunicationMigrateOrphanedConversationsMutation>(
+            AdminCommunicationMigrateOrphanedConversationsDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "adminCommunicationMigrateOrphanedConversations",
+        "mutation",
+        variables
+      );
+    },
+    adminCommunicationRemoveOrphanedRoom(
+      variables: SchemaTypes.AdminCommunicationRemoveOrphanedRoomMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.AdminCommunicationRemoveOrphanedRoomMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.AdminCommunicationRemoveOrphanedRoomMutation>(
+            AdminCommunicationRemoveOrphanedRoomDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "adminCommunicationRemoveOrphanedRoom",
+        "mutation",
+        variables
+      );
+    },
+    adminCommunicationSyncSpaceHierarchy(
+      variables?: SchemaTypes.AdminCommunicationSyncSpaceHierarchyMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.AdminCommunicationSyncSpaceHierarchyMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.AdminCommunicationSyncSpaceHierarchyMutation>(
+            AdminCommunicationSyncSpaceHierarchyDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "adminCommunicationSyncSpaceHierarchy",
+        "mutation",
+        variables
+      );
+    },
+    adminCommunicationUpdateRoomState(
+      variables: SchemaTypes.AdminCommunicationUpdateRoomStateMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.AdminCommunicationUpdateRoomStateMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.AdminCommunicationUpdateRoomStateMutation>(
+            AdminCommunicationUpdateRoomStateDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "adminCommunicationUpdateRoomState",
+        "mutation",
+        variables
+      );
+    },
+    adminForumRemoveDiscussionCategory(
+      variables: SchemaTypes.AdminForumRemoveDiscussionCategoryMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.AdminForumRemoveDiscussionCategoryMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.AdminForumRemoveDiscussionCategoryMutation>(
+            AdminForumRemoveDiscussionCategoryDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "adminForumRemoveDiscussionCategory",
+        "mutation",
+        variables
+      );
+    },
+    adminIdentityDeleteKratosIdentity(
+      variables: SchemaTypes.AdminIdentityDeleteKratosIdentityMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.AdminIdentityDeleteKratosIdentityMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.AdminIdentityDeleteKratosIdentityMutation>(
+            AdminIdentityDeleteKratosIdentityDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "adminIdentityDeleteKratosIdentity",
+        "mutation",
+        variables
+      );
+    },
+    adminInAppNotificationsPrune(
+      variables?: SchemaTypes.AdminInAppNotificationsPruneMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.AdminInAppNotificationsPruneMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.AdminInAppNotificationsPruneMutation>(
+            AdminInAppNotificationsPruneDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "adminInAppNotificationsPrune",
+        "mutation",
+        variables
+      );
+    },
+    adminLicensePolicyCreateCredentialRule(
+      variables: SchemaTypes.AdminLicensePolicyCreateCredentialRuleMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.AdminLicensePolicyCreateCredentialRuleMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.AdminLicensePolicyCreateCredentialRuleMutation>(
+            AdminLicensePolicyCreateCredentialRuleDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "adminLicensePolicyCreateCredentialRule",
+        "mutation",
+        variables
+      );
+    },
+    adminLicensePolicyDeleteCredentialRule(
+      variables: SchemaTypes.AdminLicensePolicyDeleteCredentialRuleMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.AdminLicensePolicyDeleteCredentialRuleMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.AdminLicensePolicyDeleteCredentialRuleMutation>(
+            AdminLicensePolicyDeleteCredentialRuleDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "adminLicensePolicyDeleteCredentialRule",
+        "mutation",
+        variables
+      );
+    },
+    adminLicensePolicyUpdateCredentialRule(
+      variables: SchemaTypes.AdminLicensePolicyUpdateCredentialRuleMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.AdminLicensePolicyUpdateCredentialRuleMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.AdminLicensePolicyUpdateCredentialRuleMutation>(
+            AdminLicensePolicyUpdateCredentialRuleDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "adminLicensePolicyUpdateCredentialRule",
+        "mutation",
+        variables
+      );
+    },
+    adminRevokeMcpApiKey(
+      variables: SchemaTypes.AdminRevokeMcpApiKeyMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.AdminRevokeMcpApiKeyMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.AdminRevokeMcpApiKeyMutation>(
+            AdminRevokeMcpApiKeyDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "adminRevokeMcpApiKey",
+        "mutation",
+        variables
+      );
+    },
+    adminUpdateContributorAvatars(
+      variables: SchemaTypes.AdminUpdateContributorAvatarsMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.AdminUpdateContributorAvatarsMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.AdminUpdateContributorAvatarsMutation>(
+            AdminUpdateContributorAvatarsDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "adminUpdateContributorAvatars",
+        "mutation",
+        variables
+      );
+    },
+    adminUpdateGeoLocationData(
+      variables?: SchemaTypes.AdminUpdateGeoLocationDataMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.AdminUpdateGeoLocationDataMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.AdminUpdateGeoLocationDataMutation>(
+            AdminUpdateGeoLocationDataDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "adminUpdateGeoLocationData",
+        "mutation",
+        variables
+      );
+    },
+    adminUserAccountDelete(
+      variables: SchemaTypes.AdminUserAccountDeleteMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.AdminUserAccountDeleteMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.AdminUserAccountDeleteMutation>(
+            AdminUserAccountDeleteDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "adminUserAccountDelete",
+        "mutation",
+        variables
+      );
+    },
+    adminUserEmailChange(
+      variables: SchemaTypes.AdminUserEmailChangeMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.AdminUserEmailChangeMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.AdminUserEmailChangeMutation>(
+            AdminUserEmailChangeDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "adminUserEmailChange",
+        "mutation",
+        variables
+      );
+    },
+    adminUserEmailChangeDriftResolve(
+      variables: SchemaTypes.AdminUserEmailChangeDriftResolveMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.AdminUserEmailChangeDriftResolveMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.AdminUserEmailChangeDriftResolveMutation>(
+            AdminUserEmailChangeDriftResolveDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "adminUserEmailChangeDriftResolve",
+        "mutation",
+        variables
+      );
+    },
+    aiServerAuthorizationPolicyReset(
+      variables?: SchemaTypes.AiServerAuthorizationPolicyResetMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.AiServerAuthorizationPolicyResetMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.AiServerAuthorizationPolicyResetMutation>(
+            AiServerAuthorizationPolicyResetDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "aiServerAuthorizationPolicyReset",
+        "mutation",
+        variables
+      );
+    },
+    assignPlatformRoleToOrganization(
+      variables: SchemaTypes.AssignPlatformRoleToOrganizationMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.AssignPlatformRoleToOrganizationMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.AssignPlatformRoleToOrganizationMutation>(
+            AssignPlatformRoleToOrganizationDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "assignPlatformRoleToOrganization",
+        "mutation",
+        variables
+      );
+    },
+    authorizationPlatformRolesAccessReset(
+      variables?: SchemaTypes.AuthorizationPlatformRolesAccessResetMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.AuthorizationPlatformRolesAccessResetMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.AuthorizationPlatformRolesAccessResetMutation>(
+            AuthorizationPlatformRolesAccessResetDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "authorizationPlatformRolesAccessReset",
+        "mutation",
+        variables
+      );
+    },
+    authorizationPolicyResetAll(
+      variables?: SchemaTypes.AuthorizationPolicyResetAllMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.AuthorizationPolicyResetAllMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.AuthorizationPolicyResetAllMutation>(
+            AuthorizationPolicyResetAllDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "authorizationPolicyResetAll",
+        "mutation",
+        variables
+      );
+    },
+    authorizationPolicyResetOnAccount(
+      variables: SchemaTypes.AuthorizationPolicyResetOnAccountMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.AuthorizationPolicyResetOnAccountMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.AuthorizationPolicyResetOnAccountMutation>(
+            AuthorizationPolicyResetOnAccountDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "authorizationPolicyResetOnAccount",
+        "mutation",
+        variables
+      );
+    },
+    authorizationPolicyResetOnPlatform(
+      variables?: SchemaTypes.AuthorizationPolicyResetOnPlatformMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.AuthorizationPolicyResetOnPlatformMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.AuthorizationPolicyResetOnPlatformMutation>(
+            AuthorizationPolicyResetOnPlatformDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "authorizationPolicyResetOnPlatform",
+        "mutation",
+        variables
+      );
+    },
+    authorizationPolicyResetOnUser(
+      variables: SchemaTypes.AuthorizationPolicyResetOnUserMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.AuthorizationPolicyResetOnUserMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.AuthorizationPolicyResetOnUserMutation>(
+            AuthorizationPolicyResetOnUserDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "authorizationPolicyResetOnUser",
+        "mutation",
+        variables
+      );
+    },
+    authorizationPolicyResetToGlobalAdminsAccess(
+      variables: SchemaTypes.AuthorizationPolicyResetToGlobalAdminsAccessMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.AuthorizationPolicyResetToGlobalAdminsAccessMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.AuthorizationPolicyResetToGlobalAdminsAccessMutation>(
+            AuthorizationPolicyResetToGlobalAdminsAccessDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "authorizationPolicyResetToGlobalAdminsAccess",
+        "mutation",
+        variables
+      );
+    },
+    cleanupCollections(
+      variables?: SchemaTypes.CleanupCollectionsMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.CleanupCollectionsMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.CleanupCollectionsMutation>(
+            CleanupCollectionsDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "cleanupCollections",
+        "mutation",
+        variables
+      );
+    },
+    createContributionOnCalloutId(
+      variables: SchemaTypes.CreateContributionOnCalloutIdMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.CreateContributionOnCalloutIdMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.CreateContributionOnCalloutIdMutation>(
+            CreateContributionOnCalloutIdDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "createContributionOnCalloutId",
+        "mutation",
+        variables
+      );
+    },
+    createTemplateFromContentSpace(
+      variables: SchemaTypes.CreateTemplateFromContentSpaceMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.CreateTemplateFromContentSpaceMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.CreateTemplateFromContentSpaceMutation>(
+            CreateTemplateFromContentSpaceDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "createTemplateFromContentSpace",
+        "mutation",
+        variables
+      );
+    },
+    createWingbackAccount(
+      variables: SchemaTypes.CreateWingbackAccountMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.CreateWingbackAccountMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.CreateWingbackAccountMutation>(
+            CreateWingbackAccountDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "createWingbackAccount",
+        "mutation",
+        variables
+      );
+    },
+    deleteContribution(
+      variables: SchemaTypes.DeleteContributionMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.DeleteContributionMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.DeleteContributionMutation>(
+            DeleteContributionDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "deleteContribution",
+        "mutation",
+        variables
+      );
+    },
+    grantCredentialToActor(
+      variables: SchemaTypes.GrantCredentialToActorMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.GrantCredentialToActorMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.GrantCredentialToActorMutation>(
+            GrantCredentialToActorDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "grantCredentialToActor",
+        "mutation",
+        variables
+      );
+    },
+    grantCredentialToOrganization(
+      variables: SchemaTypes.GrantCredentialToOrganizationMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.GrantCredentialToOrganizationMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.GrantCredentialToOrganizationMutation>(
+            GrantCredentialToOrganizationDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "grantCredentialToOrganization",
+        "mutation",
+        variables
+      );
+    },
+    grantCredentialToUser(
+      variables: SchemaTypes.GrantCredentialToUserMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.GrantCredentialToUserMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.GrantCredentialToUserMutation>(
+            GrantCredentialToUserDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "grantCredentialToUser",
+        "mutation",
+        variables
+      );
+    },
+    licenseResetOnAccount(
+      variables: SchemaTypes.LicenseResetOnAccountMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.LicenseResetOnAccountMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.LicenseResetOnAccountMutation>(
+            LicenseResetOnAccountDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "licenseResetOnAccount",
+        "mutation",
+        variables
+      );
+    },
+    migrateLegacyMemoContent(
+      variables?: SchemaTypes.MigrateLegacyMemoContentMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.MigrateLegacyMemoContentMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.MigrateLegacyMemoContentMutation>(
+            MigrateLegacyMemoContentDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "migrateLegacyMemoContent",
+        "mutation",
+        variables
+      );
+    },
+    migrateLegacyWhiteboardContent(
+      variables?: SchemaTypes.MigrateLegacyWhiteboardContentMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.MigrateLegacyWhiteboardContentMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.MigrateLegacyWhiteboardContentMutation>(
+            MigrateLegacyWhiteboardContentDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "migrateLegacyWhiteboardContent",
+        "mutation",
+        variables
+      );
+    },
+    mintMcpApiKey(
+      variables: SchemaTypes.MintMcpApiKeyMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.MintMcpApiKeyMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.MintMcpApiKeyMutation>(
+            MintMcpApiKeyDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "mintMcpApiKey",
+        "mutation",
+        variables
+      );
+    },
+    moveContributionToCallout(
+      variables: SchemaTypes.MoveContributionToCalloutMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.MoveContributionToCalloutMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.MoveContributionToCalloutMutation>(
+            MoveContributionToCalloutDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "moveContributionToCallout",
+        "mutation",
+        variables
+      );
+    },
+    PlatformRolesAssignLicensePlanToAccount(
+      variables: SchemaTypes.PlatformRolesAssignLicensePlanToAccountMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.PlatformRolesAssignLicensePlanToAccountMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.PlatformRolesAssignLicensePlanToAccountMutation>(
+            PlatformRolesAssignLicensePlanToAccountDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "PlatformRolesAssignLicensePlanToAccount",
+        "mutation",
+        variables
+      );
+    },
+    PlatformRolesAssignLicensePlanToSpace(
+      variables: SchemaTypes.PlatformRolesAssignLicensePlanToSpaceMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.PlatformRolesAssignLicensePlanToSpaceMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.PlatformRolesAssignLicensePlanToSpaceMutation>(
+            PlatformRolesAssignLicensePlanToSpaceDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "PlatformRolesAssignLicensePlanToSpace",
+        "mutation",
+        variables
+      );
+    },
+    PlatformRolesAssignRoleToUser(
+      variables: SchemaTypes.PlatformRolesAssignRoleToUserMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.PlatformRolesAssignRoleToUserMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.PlatformRolesAssignRoleToUserMutation>(
+            PlatformRolesAssignRoleToUserDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "PlatformRolesAssignRoleToUser",
+        "mutation",
+        variables
+      );
+    },
+    PlatformRolesConvertSpaceL1ToSpaceL0(
+      variables: SchemaTypes.PlatformRolesConvertSpaceL1ToSpaceL0MutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.PlatformRolesConvertSpaceL1ToSpaceL0Mutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.PlatformRolesConvertSpaceL1ToSpaceL0Mutation>(
+            PlatformRolesConvertSpaceL1ToSpaceL0DocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "PlatformRolesConvertSpaceL1ToSpaceL0",
+        "mutation",
+        variables
+      );
+    },
+    PlatformRolesConvertSpaceL2ToSpaceL1(
+      variables: SchemaTypes.PlatformRolesConvertSpaceL2ToSpaceL1MutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.PlatformRolesConvertSpaceL2ToSpaceL1Mutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.PlatformRolesConvertSpaceL2ToSpaceL1Mutation>(
+            PlatformRolesConvertSpaceL2ToSpaceL1DocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "PlatformRolesConvertSpaceL2ToSpaceL1",
+        "mutation",
+        variables
+      );
+    },
+    PlatformRolesConvertVirtualContributorToUseKnowledgeBase(
+      variables: SchemaTypes.PlatformRolesConvertVirtualContributorToUseKnowledgeBaseMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.PlatformRolesConvertVirtualContributorToUseKnowledgeBaseMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.PlatformRolesConvertVirtualContributorToUseKnowledgeBaseMutation>(
+            PlatformRolesConvertVirtualContributorToUseKnowledgeBaseDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "PlatformRolesConvertVirtualContributorToUseKnowledgeBase",
+        "mutation",
+        variables
+      );
+    },
+    PlatformRolesCreateLicensePlan(
+      variables: SchemaTypes.PlatformRolesCreateLicensePlanMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.PlatformRolesCreateLicensePlanMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.PlatformRolesCreateLicensePlanMutation>(
+            PlatformRolesCreateLicensePlanDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "PlatformRolesCreateLicensePlan",
+        "mutation",
+        variables
+      );
+    },
+    PlatformRolesCreateOrganization(
+      variables: SchemaTypes.PlatformRolesCreateOrganizationMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.PlatformRolesCreateOrganizationMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.PlatformRolesCreateOrganizationMutation>(
+            PlatformRolesCreateOrganizationDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "PlatformRolesCreateOrganization",
+        "mutation",
+        variables
+      );
+    },
+    PlatformRolesCreateTemplate(
+      variables: SchemaTypes.PlatformRolesCreateTemplateMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.PlatformRolesCreateTemplateMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.PlatformRolesCreateTemplateMutation>(
+            PlatformRolesCreateTemplateDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "PlatformRolesCreateTemplate",
+        "mutation",
+        variables
+      );
+    },
+    PlatformRolesCreateTemplateFromSpace(
+      variables: SchemaTypes.PlatformRolesCreateTemplateFromSpaceMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.PlatformRolesCreateTemplateFromSpaceMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.PlatformRolesCreateTemplateFromSpaceMutation>(
+            PlatformRolesCreateTemplateFromSpaceDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "PlatformRolesCreateTemplateFromSpace",
+        "mutation",
+        variables
+      );
+    },
+    PlatformRolesDeleteDiscussion(
+      variables: SchemaTypes.PlatformRolesDeleteDiscussionMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.PlatformRolesDeleteDiscussionMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.PlatformRolesDeleteDiscussionMutation>(
+            PlatformRolesDeleteDiscussionDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "PlatformRolesDeleteDiscussion",
+        "mutation",
+        variables
+      );
+    },
+    PlatformRolesDeleteLicensePlan(
+      variables: SchemaTypes.PlatformRolesDeleteLicensePlanMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.PlatformRolesDeleteLicensePlanMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.PlatformRolesDeleteLicensePlanMutation>(
+            PlatformRolesDeleteLicensePlanDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "PlatformRolesDeleteLicensePlan",
+        "mutation",
+        variables
+      );
+    },
+    PlatformRolesMoveSpaceL1ToSpaceL0(
+      variables: SchemaTypes.PlatformRolesMoveSpaceL1ToSpaceL0MutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.PlatformRolesMoveSpaceL1ToSpaceL0Mutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.PlatformRolesMoveSpaceL1ToSpaceL0Mutation>(
+            PlatformRolesMoveSpaceL1ToSpaceL0DocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "PlatformRolesMoveSpaceL1ToSpaceL0",
+        "mutation",
+        variables
+      );
+    },
+    PlatformRolesMoveSpaceL1ToSpaceL2(
+      variables: SchemaTypes.PlatformRolesMoveSpaceL1ToSpaceL2MutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.PlatformRolesMoveSpaceL1ToSpaceL2Mutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.PlatformRolesMoveSpaceL1ToSpaceL2Mutation>(
+            PlatformRolesMoveSpaceL1ToSpaceL2DocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "PlatformRolesMoveSpaceL1ToSpaceL2",
+        "mutation",
+        variables
+      );
+    },
+    PlatformRolesMoveSpaceL2ToSpaceL1(
+      variables: SchemaTypes.PlatformRolesMoveSpaceL2ToSpaceL1MutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.PlatformRolesMoveSpaceL2ToSpaceL1Mutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.PlatformRolesMoveSpaceL2ToSpaceL1Mutation>(
+            PlatformRolesMoveSpaceL2ToSpaceL1DocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "PlatformRolesMoveSpaceL2ToSpaceL1",
+        "mutation",
+        variables
+      );
+    },
+    PlatformRolesRemoveRoleFromUser(
+      variables: SchemaTypes.PlatformRolesRemoveRoleFromUserMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.PlatformRolesRemoveRoleFromUserMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.PlatformRolesRemoveRoleFromUserMutation>(
+            PlatformRolesRemoveRoleFromUserDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "PlatformRolesRemoveRoleFromUser",
+        "mutation",
+        variables
+      );
+    },
+    PlatformRolesRevokeLicensePlanFromAccount(
+      variables: SchemaTypes.PlatformRolesRevokeLicensePlanFromAccountMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.PlatformRolesRevokeLicensePlanFromAccountMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.PlatformRolesRevokeLicensePlanFromAccountMutation>(
+            PlatformRolesRevokeLicensePlanFromAccountDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "PlatformRolesRevokeLicensePlanFromAccount",
+        "mutation",
+        variables
+      );
+    },
+    PlatformRolesRevokeLicensePlanFromSpace(
+      variables: SchemaTypes.PlatformRolesRevokeLicensePlanFromSpaceMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.PlatformRolesRevokeLicensePlanFromSpaceMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.PlatformRolesRevokeLicensePlanFromSpaceMutation>(
+            PlatformRolesRevokeLicensePlanFromSpaceDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "PlatformRolesRevokeLicensePlanFromSpace",
+        "mutation",
+        variables
+      );
+    },
+    PlatformRolesTransferCallout(
+      variables: SchemaTypes.PlatformRolesTransferCalloutMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.PlatformRolesTransferCalloutMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.PlatformRolesTransferCalloutMutation>(
+            PlatformRolesTransferCalloutDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "PlatformRolesTransferCallout",
+        "mutation",
+        variables
+      );
+    },
+    PlatformRolesTransferInnovationHubToAccount(
+      variables: SchemaTypes.PlatformRolesTransferInnovationHubToAccountMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.PlatformRolesTransferInnovationHubToAccountMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.PlatformRolesTransferInnovationHubToAccountMutation>(
+            PlatformRolesTransferInnovationHubToAccountDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "PlatformRolesTransferInnovationHubToAccount",
+        "mutation",
+        variables
+      );
+    },
+    PlatformRolesTransferInnovationPackToAccount(
+      variables: SchemaTypes.PlatformRolesTransferInnovationPackToAccountMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.PlatformRolesTransferInnovationPackToAccountMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.PlatformRolesTransferInnovationPackToAccountMutation>(
+            PlatformRolesTransferInnovationPackToAccountDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "PlatformRolesTransferInnovationPackToAccount",
+        "mutation",
+        variables
+      );
+    },
+    PlatformRolesTransferSpaceToAccount(
+      variables: SchemaTypes.PlatformRolesTransferSpaceToAccountMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.PlatformRolesTransferSpaceToAccountMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.PlatformRolesTransferSpaceToAccountMutation>(
+            PlatformRolesTransferSpaceToAccountDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "PlatformRolesTransferSpaceToAccount",
+        "mutation",
+        variables
+      );
+    },
+    PlatformRolesTransferVirtualContributorToAccount(
+      variables: SchemaTypes.PlatformRolesTransferVirtualContributorToAccountMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.PlatformRolesTransferVirtualContributorToAccountMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.PlatformRolesTransferVirtualContributorToAccountMutation>(
+            PlatformRolesTransferVirtualContributorToAccountDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "PlatformRolesTransferVirtualContributorToAccount",
+        "mutation",
+        variables
+      );
+    },
+    PlatformRolesUpdateCallout(
+      variables: SchemaTypes.PlatformRolesUpdateCalloutMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.PlatformRolesUpdateCalloutMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.PlatformRolesUpdateCalloutMutation>(
+            PlatformRolesUpdateCalloutDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "PlatformRolesUpdateCallout",
+        "mutation",
+        variables
+      );
+    },
+    PlatformRolesUpdateDiscussion(
+      variables: SchemaTypes.PlatformRolesUpdateDiscussionMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.PlatformRolesUpdateDiscussionMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.PlatformRolesUpdateDiscussionMutation>(
+            PlatformRolesUpdateDiscussionDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "PlatformRolesUpdateDiscussion",
+        "mutation",
+        variables
+      );
+    },
+    PlatformRolesUpdateLicensePlan(
+      variables: SchemaTypes.PlatformRolesUpdateLicensePlanMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.PlatformRolesUpdateLicensePlanMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.PlatformRolesUpdateLicensePlanMutation>(
+            PlatformRolesUpdateLicensePlanDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "PlatformRolesUpdateLicensePlan",
+        "mutation",
+        variables
+      );
+    },
+    PlatformRolesUpdateSpaceVisibility(
+      variables: SchemaTypes.PlatformRolesUpdateSpaceVisibilityMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.PlatformRolesUpdateSpaceVisibilityMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.PlatformRolesUpdateSpaceVisibilityMutation>(
+            PlatformRolesUpdateSpaceVisibilityDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "PlatformRolesUpdateSpaceVisibility",
+        "mutation",
+        variables
+      );
+    },
+    PlatformRolesUpdateTemplate(
+      variables: SchemaTypes.PlatformRolesUpdateTemplateMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.PlatformRolesUpdateTemplateMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.PlatformRolesUpdateTemplateMutation>(
+            PlatformRolesUpdateTemplateDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "PlatformRolesUpdateTemplate",
+        "mutation",
+        variables
+      );
+    },
+    refreshAllBodiesOfKnowledge(
+      variables?: SchemaTypes.RefreshAllBodiesOfKnowledgeMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.RefreshAllBodiesOfKnowledgeMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.RefreshAllBodiesOfKnowledgeMutation>(
+            RefreshAllBodiesOfKnowledgeDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "refreshAllBodiesOfKnowledge",
+        "mutation",
+        variables
+      );
+    },
+    removeIframeAllowedURL(
+      variables: SchemaTypes.RemoveIframeAllowedUrlMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.RemoveIframeAllowedUrlMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.RemoveIframeAllowedUrlMutation>(
+            RemoveIframeAllowedUrlDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "removeIframeAllowedURL",
+        "mutation",
+        variables
+      );
+    },
+    removeNotificationEmailFromBlacklist(
+      variables: SchemaTypes.RemoveNotificationEmailFromBlacklistMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.RemoveNotificationEmailFromBlacklistMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.RemoveNotificationEmailFromBlacklistMutation>(
+            RemoveNotificationEmailFromBlacklistDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "removeNotificationEmailFromBlacklist",
+        "mutation",
+        variables
+      );
+    },
+    removePlatformRoleFromOrganization(
+      variables: SchemaTypes.RemovePlatformRoleFromOrganizationMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.RemovePlatformRoleFromOrganizationMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.RemovePlatformRoleFromOrganizationMutation>(
+            RemovePlatformRoleFromOrganizationDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "removePlatformRoleFromOrganization",
+        "mutation",
+        variables
+      );
+    },
+    resetLicenseOnAccounts(
+      variables?: SchemaTypes.ResetLicenseOnAccountsMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.ResetLicenseOnAccountsMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.ResetLicenseOnAccountsMutation>(
+            ResetLicenseOnAccountsDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "resetLicenseOnAccounts",
+        "mutation",
+        variables
+      );
+    },
+    revokeCredentialFromActor(
+      variables: SchemaTypes.RevokeCredentialFromActorMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.RevokeCredentialFromActorMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.RevokeCredentialFromActorMutation>(
+            RevokeCredentialFromActorDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "revokeCredentialFromActor",
+        "mutation",
+        variables
+      );
+    },
+    revokeCredentialFromOrganization(
+      variables: SchemaTypes.RevokeCredentialFromOrganizationMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.RevokeCredentialFromOrganizationMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.RevokeCredentialFromOrganizationMutation>(
+            RevokeCredentialFromOrganizationDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "revokeCredentialFromOrganization",
+        "mutation",
+        variables
+      );
+    },
+    revokeCredentialFromUser(
+      variables: SchemaTypes.RevokeCredentialFromUserMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.RevokeCredentialFromUserMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.RevokeCredentialFromUserMutation>(
+            RevokeCredentialFromUserDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "revokeCredentialFromUser",
+        "mutation",
+        variables
+      );
+    },
+    setPlatformWellKnownVirtualContributor(
+      variables: SchemaTypes.SetPlatformWellKnownVirtualContributorMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.SetPlatformWellKnownVirtualContributorMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.SetPlatformWellKnownVirtualContributorMutation>(
+            SetPlatformWellKnownVirtualContributorDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "setPlatformWellKnownVirtualContributor",
+        "mutation",
+        variables
+      );
+    },
+    updateAssistantActorCapabilities(
+      variables: SchemaTypes.UpdateAssistantActorCapabilitiesMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.UpdateAssistantActorCapabilitiesMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.UpdateAssistantActorCapabilitiesMutation>(
+            UpdateAssistantActorCapabilitiesDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "updateAssistantActorCapabilities",
+        "mutation",
+        variables
+      );
+    },
+    updateBaselineLicensePlanOnAccount(
+      variables: SchemaTypes.UpdateBaselineLicensePlanOnAccountMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.UpdateBaselineLicensePlanOnAccountMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.UpdateBaselineLicensePlanOnAccountMutation>(
+            UpdateBaselineLicensePlanOnAccountDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "updateBaselineLicensePlanOnAccount",
+        "mutation",
+        variables
+      );
+    },
+    updateCalloutPublishInfo(
+      variables: SchemaTypes.UpdateCalloutPublishInfoMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.UpdateCalloutPublishInfoMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.UpdateCalloutPublishInfoMutation>(
+            UpdateCalloutPublishInfoDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "updateCalloutPublishInfo",
+        "mutation",
+        variables
+      );
+    },
+    updateInnovationHub(
+      variables: SchemaTypes.UpdateInnovationHubMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.UpdateInnovationHubMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.UpdateInnovationHubMutation>(
+            UpdateInnovationHubDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "updateInnovationHub",
+        "mutation",
+        variables
+      );
+    },
+    updateInnovationPack(
+      variables: SchemaTypes.UpdateInnovationPackMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.UpdateInnovationPackMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.UpdateInnovationPackMutation>(
+            UpdateInnovationPackDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "updateInnovationPack",
+        "mutation",
+        variables
+      );
+    },
+    updatePlatformSettings(
+      variables: SchemaTypes.UpdatePlatformSettingsMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.UpdatePlatformSettingsMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.UpdatePlatformSettingsMutation>(
+            UpdatePlatformSettingsDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "updatePlatformSettings",
+        "mutation",
+        variables
+      );
+    },
+    updateTemplateFromSpace(
+      variables: SchemaTypes.UpdateTemplateFromSpaceMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.UpdateTemplateFromSpaceMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.UpdateTemplateFromSpaceMutation>(
+            UpdateTemplateFromSpaceDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "updateTemplateFromSpace",
         "mutation",
         variables
       );
@@ -122202,6 +129634,28 @@ export function getSdk(
             { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "UpdateSpacePlatformSettings",
+        "mutation",
+        variables
+      );
+    },
+    UpdateSpaceVisibilityPlatformSettings(
+      variables: SchemaTypes.UpdateSpaceVisibilityPlatformSettingsMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.UpdateSpaceVisibilityPlatformSettingsMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.UpdateSpaceVisibilityPlatformSettingsMutation>(
+            UpdateSpaceVisibilityPlatformSettingsDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "UpdateSpaceVisibilityPlatformSettings",
         "mutation",
         variables
       );
@@ -122734,6 +130188,50 @@ export function getSdk(
         variables
       );
     },
+    GetOrganizationRoleSetPending(
+      variables: SchemaTypes.GetOrganizationRoleSetPendingQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.GetOrganizationRoleSetPendingQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.GetOrganizationRoleSetPendingQuery>(
+            GetOrganizationRoleSetPendingDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "GetOrganizationRoleSetPending",
+        "query",
+        variables
+      );
+    },
+    GetRoleSetApplicationForm(
+      variables: SchemaTypes.GetRoleSetApplicationFormQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.GetRoleSetApplicationFormQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.GetRoleSetApplicationFormQuery>(
+            GetRoleSetApplicationFormDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "GetRoleSetApplicationForm",
+        "query",
+        variables
+      );
+    },
     RoleSetAvailableMembers(
       variables: SchemaTypes.RoleSetAvailableMembersQueryVariables,
       requestHeaders?: GraphQLClientRequestHeaders
@@ -122800,6 +130298,72 @@ export function getSdk(
         variables
       );
     },
+    RoleSetPendingApplications(
+      variables: SchemaTypes.RoleSetPendingApplicationsQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.RoleSetPendingApplicationsQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.RoleSetPendingApplicationsQuery>(
+            RoleSetPendingApplicationsDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "RoleSetPendingApplications",
+        "query",
+        variables
+      );
+    },
+    RoleSetPendingInvitations(
+      variables: SchemaTypes.RoleSetPendingInvitationsQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.RoleSetPendingInvitationsQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.RoleSetPendingInvitationsQuery>(
+            RoleSetPendingInvitationsDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "RoleSetPendingInvitations",
+        "query",
+        variables
+      );
+    },
+    RoleSetPendingPlatformInvitations(
+      variables: SchemaTypes.RoleSetPendingPlatformInvitationsQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.RoleSetPendingPlatformInvitationsQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.RoleSetPendingPlatformInvitationsQuery>(
+            RoleSetPendingPlatformInvitationsDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "RoleSetPendingPlatformInvitations",
+        "query",
+        variables
+      );
+    },
     RoleSetUserPrivileges(
       variables: SchemaTypes.RoleSetUserPrivilegesQueryVariables,
       requestHeaders?: GraphQLClientRequestHeaders
@@ -122818,6 +130382,28 @@ export function getSdk(
             { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "RoleSetUserPrivileges",
+        "query",
+        variables
+      );
+    },
+    GetRoleSetUsersInRoles(
+      variables: SchemaTypes.GetRoleSetUsersInRolesQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.GetRoleSetUsersInRolesQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.GetRoleSetUsersInRolesQuery>(
+            GetRoleSetUsersInRolesDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "GetRoleSetUsersInRoles",
         "query",
         variables
       );
@@ -123082,6 +130668,28 @@ export function getSdk(
             { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "GetCalloutPosts",
+        "query",
+        variables
+      );
+    },
+    GetCalloutSpacesSettings(
+      variables: SchemaTypes.GetCalloutSpacesSettingsQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.GetCalloutSpacesSettingsQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.GetCalloutSpacesSettingsQuery>(
+            GetCalloutSpacesSettingsDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "GetCalloutSpacesSettings",
         "query",
         variables
       );
@@ -123460,6 +131068,28 @@ export function getSdk(
         variables
       );
     },
+    bannerVisualConstraints(
+      variables?: SchemaTypes.BannerVisualConstraintsQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.BannerVisualConstraintsQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.BannerVisualConstraintsQuery>(
+            BannerVisualConstraintsDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "bannerVisualConstraints",
+        "query",
+        variables
+      );
+    },
     configuration(
       variables?: SchemaTypes.ConfigurationQueryVariables,
       requestHeaders?: GraphQLClientRequestHeaders
@@ -123570,6 +131200,28 @@ export function getSdk(
         variables
       );
     },
+    GetSpaceLicenseEntitlements(
+      variables: SchemaTypes.GetSpaceLicenseEntitlementsQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.GetSpaceLicenseEntitlementsQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.GetSpaceLicenseEntitlementsQuery>(
+            GetSpaceLicenseEntitlementsDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "GetSpaceLicenseEntitlements",
+        "query",
+        variables
+      );
+    },
     GetSpaceLicenseSubscriptions(
       variables: SchemaTypes.GetSpaceLicenseSubscriptionsQueryVariables,
       requestHeaders?: GraphQLClientRequestHeaders
@@ -123614,6 +131266,28 @@ export function getSdk(
         variables
       );
     },
+    GetCalloutFramingMemo(
+      variables: SchemaTypes.GetCalloutFramingMemoQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.GetCalloutFramingMemoQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.GetCalloutFramingMemoQuery>(
+            GetCalloutFramingMemoDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "GetCalloutFramingMemo",
+        "query",
+        variables
+      );
+    },
     GetOrgReferenceUri(
       variables: SchemaTypes.GetOrgReferenceUriQueryVariables,
       requestHeaders?: GraphQLClientRequestHeaders
@@ -123654,6 +131328,28 @@ export function getSdk(
             { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "GetOrgVisualUri",
+        "query",
+        variables
+      );
+    },
+    GetOrganizationAssociateEligibility(
+      variables: SchemaTypes.GetOrganizationAssociateEligibilityQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.GetOrganizationAssociateEligibilityQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.GetOrganizationAssociateEligibilityQuery>(
+            GetOrganizationAssociateEligibilityDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "GetOrganizationAssociateEligibility",
         "query",
         variables
       );
@@ -123764,6 +131460,380 @@ export function getSdk(
             { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "UsersPaginated",
+        "query",
+        variables
+      );
+    },
+    actorsWithCredential(
+      variables: SchemaTypes.ActorsWithCredentialQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.ActorsWithCredentialQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.ActorsWithCredentialQuery>(
+            ActorsWithCredentialDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "actorsWithCredential",
+        "query",
+        variables
+      );
+    },
+    latestUserEmailChangeAuditEntry(
+      variables: SchemaTypes.LatestUserEmailChangeAuditEntryQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.LatestUserEmailChangeAuditEntryQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.LatestUserEmailChangeAuditEntryQuery>(
+            LatestUserEmailChangeAuditEntryDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "latestUserEmailChangeAuditEntry",
+        "query",
+        variables
+      );
+    },
+    platformAdminMcpApiKeys(
+      variables: SchemaTypes.PlatformAdminMcpApiKeysQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.PlatformAdminMcpApiKeysQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.PlatformAdminMcpApiKeysQuery>(
+            PlatformAdminMcpApiKeysDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "platformAdminMcpApiKeys",
+        "query",
+        variables
+      );
+    },
+    platformAdminVirtualAssistant(
+      variables?: SchemaTypes.PlatformAdminVirtualAssistantQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.PlatformAdminVirtualAssistantQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.PlatformAdminVirtualAssistantQuery>(
+            PlatformAdminVirtualAssistantDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "platformAdminVirtualAssistant",
+        "query",
+        variables
+      );
+    },
+    platformForumDiscussionCategories(
+      variables?: SchemaTypes.PlatformForumDiscussionCategoriesQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.PlatformForumDiscussionCategoriesQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.PlatformForumDiscussionCategoriesQuery>(
+            PlatformForumDiscussionCategoriesDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "platformForumDiscussionCategories",
+        "query",
+        variables
+      );
+    },
+    platformRoleSetOrganizationsInRole(
+      variables: SchemaTypes.PlatformRoleSetOrganizationsInRoleQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.PlatformRoleSetOrganizationsInRoleQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.PlatformRoleSetOrganizationsInRoleQuery>(
+            PlatformRoleSetOrganizationsInRoleDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "platformRoleSetOrganizationsInRole",
+        "query",
+        variables
+      );
+    },
+    platformRoleSetOrganizationsInRoles(
+      variables: SchemaTypes.PlatformRoleSetOrganizationsInRolesQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.PlatformRoleSetOrganizationsInRolesQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.PlatformRoleSetOrganizationsInRolesQuery>(
+            PlatformRoleSetOrganizationsInRolesDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "platformRoleSetOrganizationsInRoles",
+        "query",
+        variables
+      );
+    },
+    platformRoleSetRoleNames(
+      variables?: SchemaTypes.PlatformRoleSetRoleNamesQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.PlatformRoleSetRoleNamesQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.PlatformRoleSetRoleNamesQuery>(
+            PlatformRoleSetRoleNamesDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "platformRoleSetRoleNames",
+        "query",
+        variables
+      );
+    },
+    platformRoleSetUsersInRole(
+      variables: SchemaTypes.PlatformRoleSetUsersInRoleQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.PlatformRoleSetUsersInRoleQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.PlatformRoleSetUsersInRoleQuery>(
+            PlatformRoleSetUsersInRoleDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "platformRoleSetUsersInRole",
+        "query",
+        variables
+      );
+    },
+    platformRoleSetUsersInRoles(
+      variables: SchemaTypes.PlatformRoleSetUsersInRolesQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.PlatformRoleSetUsersInRolesQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.PlatformRoleSetUsersInRolesQuery>(
+            PlatformRoleSetUsersInRolesDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "platformRoleSetUsersInRoles",
+        "query",
+        variables
+      );
+    },
+    PlatformRolesSpaceApplicationsProbe(
+      variables: SchemaTypes.PlatformRolesSpaceApplicationsProbeQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.PlatformRolesSpaceApplicationsProbeQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.PlatformRolesSpaceApplicationsProbeQuery>(
+            PlatformRolesSpaceApplicationsProbeDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "PlatformRolesSpaceApplicationsProbe",
+        "query",
+        variables
+      );
+    },
+    spaceCollaborationReadProbe(
+      variables: SchemaTypes.SpaceCollaborationReadProbeQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.SpaceCollaborationReadProbeQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.SpaceCollaborationReadProbeQuery>(
+            SpaceCollaborationReadProbeDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "spaceCollaborationReadProbe",
+        "query",
+        variables
+      );
+    },
+    spaceReadProbe(
+      variables: SchemaTypes.SpaceReadProbeQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.SpaceReadProbeQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.SpaceReadProbeQuery>(
+            SpaceReadProbeDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "spaceReadProbe",
+        "query",
+        variables
+      );
+    },
+    spaceSupportAdminPrivilegeProbe(
+      variables: SchemaTypes.SpaceSupportAdminPrivilegeProbeQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.SpaceSupportAdminPrivilegeProbeQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.SpaceSupportAdminPrivilegeProbeQuery>(
+            SpaceSupportAdminPrivilegeProbeDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "spaceSupportAdminPrivilegeProbe",
+        "query",
+        variables
+      );
+    },
+    updateUserServiceProfile(
+      variables: SchemaTypes.UpdateUserServiceProfileMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.UpdateUserServiceProfileMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.UpdateUserServiceProfileMutation>(
+            UpdateUserServiceProfileDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "updateUserServiceProfile",
+        "mutation",
+        variables
+      );
+    },
+    userEmailChangeAuditEntries(
+      variables: SchemaTypes.UserEmailChangeAuditEntriesQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.UserEmailChangeAuditEntriesQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.UserEmailChangeAuditEntriesQuery>(
+            UserEmailChangeAuditEntriesDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "userEmailChangeAuditEntries",
+        "query",
+        variables
+      );
+    },
+    usersWithAuthorizationCredential(
+      variables: SchemaTypes.UsersWithAuthorizationCredentialQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.UsersWithAuthorizationCredentialQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.UsersWithAuthorizationCredentialQuery>(
+            UsersWithAuthorizationCredentialDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "usersWithAuthorizationCredential",
         "query",
         variables
       );
@@ -124296,6 +132366,28 @@ export function getSdk(
         variables
       );
     },
+    GetUserSettings(
+      variables: SchemaTypes.GetUserSettingsQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.GetUserSettingsQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.GetUserSettingsQuery>(
+            GetUserSettingsDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "GetUserSettings",
+        "query",
+        variables
+      );
+    },
     getUsersData(
       variables?: SchemaTypes.GetUsersDataQueryVariables,
       requestHeaders?: GraphQLClientRequestHeaders
@@ -124314,6 +132406,50 @@ export function getSdk(
             { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "getUsersData",
+        "query",
+        variables
+      );
+    },
+    MeInAppNotifications(
+      variables?: SchemaTypes.MeInAppNotificationsQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.MeInAppNotificationsQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.MeInAppNotificationsQuery>(
+            MeInAppNotificationsDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "MeInAppNotifications",
+        "query",
+        variables
+      );
+    },
+    MeOrganizationPending(
+      variables?: SchemaTypes.MeOrganizationPendingQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.MeOrganizationPendingQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.MeOrganizationPendingQuery>(
+            MeOrganizationPendingDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "MeOrganizationPending",
         "query",
         variables
       );

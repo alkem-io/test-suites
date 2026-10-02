@@ -173,11 +173,20 @@ describe('Push Subscriptions - Unsubscribe', () => {
 });
 
 describe('Push Subscriptions - List (myPushSubscriptions)', () => {
-  test('should return empty list when user has no subscriptions', async () => {
+  test('should return no ACTIVE subscriptions for a user who has none', async () => {
     const res = await getMyPushSubscriptions(TestUser.NON_SPACE_MEMBER);
 
     expect(res.body.data?.myPushSubscriptions).toBeDefined();
-    expect(res.body.data?.myPushSubscriptions).toEqual([]);
+    // Asserted on ACTIVE rows, not on an empty array. `unsubscribeFromPushNotifications`
+    // only flips a subscription to DISABLED and `myPushSubscriptions` keeps returning it
+    // (BUG#5961, which the two skipped tests below also wait on), so any spec that
+    // subscribes a SHARED persona and correctly unsubscribes afterwards still leaves a
+    // DISABLED row behind. Requiring a literally empty array made this test depend on no
+    // other spec in the sequential run having ever touched this persona's subscriptions.
+    const active = res.body.data?.myPushSubscriptions.filter(
+      (s: any) => s.status !== 'DISABLED'
+    );
+    expect(active).toEqual([]);
   });
 
   test('should list all active subscriptions for the current user', async () => {

@@ -1,9 +1,7 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+ 
 import { updateSpaceSettings } from '@functional-api/journey/space/space.request.params';
 import {
-  delay,
   deleteMailSlurperMails,
-  getMailsData,
   TestScenarioConfig,
   TestScenarioFactory,
   TestUserManager,
@@ -16,7 +14,7 @@ import { TestUser } from '@alkemio/tests-lib';
 import { updateUserSettings } from '@functional-api/contributor-management/user/user.request.params';
 import { RoleName } from '@alkemio/tests-lib/core/generated/alkemio-schema';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
-import { notif } from '../../notification.helpers';
+import { notif, getMailsDataSettled } from '../../notification.helpers';
 
 // Notification settings for invitation events
 const invitationNotificationSettings = {
@@ -78,7 +76,7 @@ const sendInvitationAndGetEmails = async (
   userIds: string[],
   roles: RoleName[],
   sender: TestUser,
-  delayMs = 2000
+  expectedMails = 1
 ) => {
   const invitationData = await inviteForEntryRoleOnRoleSet(
     roleSetId,
@@ -98,8 +96,10 @@ const sendInvitationAndGetEmails = async (
     }
   }
 
-  await delay(delayMs);
-  const emailsData = await getMailsData();
+  // Polls for the expected mail instead of sleeping a fixed `delayMs`: under
+  // load the old 2 s sleep read an empty mailbox and the mail then landed in
+  // the next test's.
+  const emailsData = await getMailsDataSettled(expectedMails);
 
   return { invitationData, emailsData, invitationId };
 };
@@ -303,9 +303,7 @@ describe('Notifications - invitations', () => {
       }
     }
 
-    await delay(1000);
-
-    const getEmailsData = await getMailsData();
+    const getEmailsData = await getMailsDataSettled(0);
     // Assert
     expect(getEmailsData[1]).toEqual(0);
     expect(invitationData.data?.inviteForEntryRoleOnRoleSet).toEqual([
@@ -313,6 +311,10 @@ describe('Notifications - invitations', () => {
         type: 'INVITATION_TO_PARENT_NOT_AUTHORIZED',
         invitation: null,
         platformInvitation: null,
+        // Nullable informational notice on the result (061) — the shared mutation
+        // document selects it, so it is present and null on every outcome that
+        // carries no notice.
+        notice: null,
         __typename: 'RoleSetInvitationResult',
       },
     ]);
@@ -338,9 +340,7 @@ describe('Notifications - invitations', () => {
       }
     }
 
-    await delay(1000);
-
-    const getEmailsData = await getMailsData();
+    const getEmailsData = await getMailsDataSettled(1);
     // Assert
     expect(getEmailsData[1]).toEqual(1);
     expect(getEmailsData[0]).toEqual(
@@ -373,9 +373,7 @@ describe('Notifications - invitations', () => {
       }
     }
 
-    await delay(1000);
-
-    const getEmailsData = await getMailsData();
+    const getEmailsData = await getMailsDataSettled(1);
     // Assert
     expect(getEmailsData[1]).toEqual(1);
     expect(getEmailsData[0]).toEqual(
@@ -412,9 +410,7 @@ describe('Notifications - invitations', () => {
       }
     }
 
-    await delay(1000);
-
-    const getEmailsData = await getMailsData();
+    const getEmailsData = await getMailsDataSettled(0);
     // Assert
     expect(getEmailsData[1]).toEqual(0);
   });
@@ -446,9 +442,7 @@ describe('Notifications - invitations', () => {
       }
     }
 
-    await delay(1000);
-
-    const getEmailsData = await getMailsData();
+    const getEmailsData = await getMailsDataSettled(0);
     // Assert
     expect(getEmailsData[1]).toEqual(0);
   });

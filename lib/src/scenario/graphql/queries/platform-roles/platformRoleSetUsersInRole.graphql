@@ -1,0 +1,9 @@
+query platformRoleSetUsersInRole($role: RoleName!) {
+  platform {
+    roleSet {
+      usersInRole(role: $role) {
+        id
+      }
+    }
+  }
+}

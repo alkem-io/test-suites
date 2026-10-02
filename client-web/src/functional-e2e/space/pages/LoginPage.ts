@@ -1,4 +1,5 @@
 import { Page, expect } from '@playwright/test';
+import { fillSecret } from '../../helpers/login.helper';
 
 const password = process.env.AUTH_TEST_HARNESS_PASSWORD || 'change_me';
 
@@ -42,9 +43,10 @@ export class LoginPage {
     const emailField = this.page.getByRole('textbox', { name: 'E-Mail' });
     await emailField.waitFor({ state: 'visible', timeout: 30_000 });
     await emailField.fill(email);
-    await this.page
-      .getByRole('textbox', { name: 'Password' })
-      .fill(userPassword);
+    await fillSecret(
+      this.page.getByRole('textbox', { name: 'Password' }),
+      userPassword
+    );
     await this.page
       .getByRole('button', { name: 'Sign in', exact: true })
       .click();

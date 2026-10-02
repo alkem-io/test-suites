@@ -32,7 +32,11 @@ export const getWhiteboardTemplatesCount = async (templateSetId: string) => {
 
 export const createWhiteboardTemplate = async (
   templatesSetId: string,
-  content: string = whiteboardTemplateValuesEmpty,
+  // Since server#6399 CreateWhiteboardInput has no inline content — the
+  // template whiteboard is created empty (seed via sourceWhiteboardID).
+  // Parameter kept so existing callers compile; it is no longer sent.
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  _content: string = whiteboardTemplateValuesEmpty,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
@@ -50,7 +54,6 @@ export const createWhiteboardTemplate = async (
           profile: {
             displayName: 'Whiteboard Template',
           },
-          content,
         },
       },
       {

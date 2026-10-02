@@ -37,10 +37,16 @@ export const createConfigUsingEnvVars = (): AlkemioTestConfig => {
 };
 
 export const stringifyConfig = (config: AlkemioTestConfig): string => {
-  const fieldsToMask = ['password'];
+  // Pattern rather than an exact-name list — see the parallel copy in
+  // `lib/src/config/create-config-using-envvars.ts` for the rationale
+  // (`sessionSigningKey` must never print in the clear).
+  const sensitiveKeyPattern = /password|secret|key|token/i;
   return JSON.stringify(
     config,
-    (key, value) => (fieldsToMask.includes(key) ? `**${value.length}**` : value),
+    (key, value) =>
+      sensitiveKeyPattern.test(key) && typeof value === 'string'
+        ? `**${value.length}**`
+        : value,
     2 // Indentation for pretty output
   );
 };

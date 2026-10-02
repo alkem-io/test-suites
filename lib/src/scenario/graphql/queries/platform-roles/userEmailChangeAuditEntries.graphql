@@ -1,0 +1,11 @@
+query userEmailChangeAuditEntries($userID: UUID!) {
+  platformAdmin {
+    userEmailChangeAuditEntries(userID: $userID) {
+      total
+      auditEntries {
+        id
+        outcome
+      }
+    }
+  }
+}

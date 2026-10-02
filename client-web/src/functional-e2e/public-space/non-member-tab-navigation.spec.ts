@@ -1,6 +1,7 @@
 // spec: client-web/src/functional-e2e/public-space/public-space-non-member-navigation-test-plan.md
 // seed: client-web/src/functional-e2e/seed-public-space.spec.ts
 
+import { aboutThisSpaceButton } from '../helpers/space-navigation.helper';
 import {
   CommunityMembershipPolicy,
   SpacePrivacyMode,
@@ -141,7 +142,7 @@ test.describe('Space Tab Navigation for Non-Members', () => {
 
     // Verify About this Space button is visible
     await expect(
-      page.getByRole('button', { name: 'About this Space' })
+      aboutThisSpaceButton(page)
     ).toBeVisible();
   });
 
