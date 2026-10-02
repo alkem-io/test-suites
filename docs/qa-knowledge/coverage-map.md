@@ -25,6 +25,18 @@ _Searched 2026-09-03, branch `qa/9528-promotion-keeps-flow-states` off
 | `moveSpaceL1ToSpaceL0`/`L1ToL2`/`L2ToL1` (cross-L0 move, distinct from convert) | Full for basic/community/rooms/applications/auto-invite/authorization scenarios | `journey/conversion/move-L1-to-*-*.it-spec.ts` — does not touch innovation-flow at all, confirmed by search |
 | Callout transfer + differing default flow state names (cross-space) | Full | `callout/transfer/transfer-callout-flow-state.it-spec.ts`, `transfer-callout-changed-flow.it-spec.ts` |
 
+## Space classifications (024 / alkemio#1985)
+
+_Searched 2026-10-01, `origin/develop` @ `7b1b6ce73` (test-suites), against server#6380 and client-web#10163 (server `develop` @ `615817441`, client-web `develop` @ `2e576ee17`). Plan: `client-web/src/functional-e2e/classifications/classifications-test-plan.md`._
+
+| Area | Status | Evidence |
+|---|---|---|
+| Step A/B walks, duplicate guard, single-select, About display, hide toggle, removal, subspace picker | Full (UI) | `classifications/classifications-space.spec.ts` SL-01…08 |
+| Template authoring, value ids, snapshot independence, library import, seed, out-of-scope negatives | Full (UI); TL-01b skipped pending product decision (QA-PF-01) | `classifications/classifications-templates.spec.ts` TL-01…08 |
+| API contract: FR-014a denials (member, non-member, 6 mutations), hidden entry on the anonymous read, FR-002a bounds 0/1/50/51, FR-011c, FR-012c, FR-018b order + re-add, FR-002c ids, SC-007 | Full (API) | `server-api/.../journey/space/space-classifications.it-spec.ts` |
+| Seed idempotency / bootstrap race / seeded-pack auth (R-5/13/14) | **Proven absent** here — needs a bootstrap restart | server unit specs T047/T055 only |
+| Server `test/integration/classification/classification-entry.spec.ts` | Mock-only (no DB, no HTTP) — not system coverage | its own header |
+
 ## Space community notifications — invitations, joins, outcomes (061 / notifications#356)
 
 _Searched 2026-09-28, `origin/develop` @ `0ca74068` (test-suites), against server#6467, notifications#594, client-web#10272, test-suites#632. Plan: `client-web/src/functional-e2e/organization-space-invitations/organization-space-invitations-test-plan.md`._
