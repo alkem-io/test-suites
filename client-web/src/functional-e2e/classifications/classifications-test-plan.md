@@ -1,63 +1,95 @@
-# Test plan — Space Classifications acceptance walks (024)
+# Test plan — Space Classifications (024)
 
-- **Story:** [alkem-io/alkemio#1985](https://github.com/alkem-io/alkemio/issues/1985) — *Classifications* (epic)
-- **Workspace spec:** `specs/024-classifications/` in `alkem-io/agents-hq` (source of truth for FR/S/SC ids); the walked source is `specs/024-classifications/checklists/manual-acceptance-walk.md` (§ numbers below refer to it)
-- **Product code:** `server` and `client-web` branches `feat/024-classifications` (`workspace#024-classifications`)
+> **Status:** Implemented — challenged and reworked 2026-10-01 (test-suites#613, QA-CH-01…22) · **Story:** epic [alkem-io/alkemio#1985](https://github.com/alkem-io/alkemio/issues/1985), story [alkem-io/alkemio#2049](https://github.com/alkem-io/alkemio/issues/2049) · **Spec:** `specs/024-classifications/` in `alkem-io/agents-hq` (source of truth; walk ids `USn-ASm` are `repos.yaml › tracks › acceptance`). Where #2049's acceptance list and the spec disagree (compact card/tile/search display, "other defaults"), the spec's operator rulings D2/D6 win — see QA-PF-02.
+
 - **Suites:**
-  - `classifications-space.spec.ts` (+ `space-lifecycle.helpers.ts`) — suite **SL**: Space-side entry lifecycle on the Default Space `/eco1`
-  - `classifications-templates.spec.ts` (+ `templates-library.helpers.ts`) — suite **TL**: template library/pack/picker surfaces and snapshot independence
+  - `client-web/src/functional-e2e/classifications/classifications-space.spec.ts` — Space-side walks SL-01…08 (US1, US3, REMOVAL).
+  - `client-web/src/functional-e2e/classifications/classifications-templates.spec.ts` — template-side walks TL-01…08 (US1, US2, seed, out of scope).
+  - `server-api/src/functional-api/journey/space/space-classifications.it-spec.ts` — the API contract: authorization, read surface, write rules, value ids.
+  - Shared: `classifications.fixture.ts` (seed/teardown, personas, raw GraphQL), `classifications.helpers.ts` (page helpers), `console-guard.ts` (crash tripwire — not counted as coverage).
+- **Product under test when last run:** server `develop` @ `615817441` (0.167.0), client-web `develop` @ `2e576ee17` — both include server#6380 and client-web#10163.
+- **Personas** (harness, `AUTH_TEST_HARNESS_PASSWORD`): `spaceAdmin` — the Space's own admin, the editor (FR-014a grants writes to whoever can edit the About; a platform admin would pass for the wrong reason); `spaceMember` — a plain member, the viewer; `nonSpaceMember` and an anonymous caller for the read-surface and denial cases.
 
 ## How to run
 
-Against a running app on the **same origin** as the API (traefik `:3000`, not the
-`:3001` vite dev origin):
-
 ```bash
 cd client-web
-pnpm run test:classifications
+UI_HEADLESS=true pnpm run test:classifications      # both walk files, 2 workers
+
+cd ../server-api
+pnpm exec vitest run --project journey src/functional-api/journey/space/space-classifications.it-spec.ts
 ```
 
-The dedicated config (`config/playwright.config.classifications.ts`) pins
-`workers: 1` and `fullyParallel: false` — **required**, both suites mutate the
-same shared Space `/eco1`. Running these files through the default config is
-blocked (`testIgnore`) precisely so a parallel run cannot race the shared state
-or trip the leak sweeps mid-flight.
+- **Nightly:** the walks run in the nightly Playwright project `Classifications` (`client-web/config/playwright.config.nightly.ts`); the it-spec runs nightly through the `journey/**` glob of the server-api `nightly` project.
+- **Data:** each file seeds its own Space through `TestScenarioFactory` (the Space walk adds one subspace) and two freeform Tags, and deletes subspace, Space and organization in `afterAll`; the teardown throws if anything is left. Entries hang off the Space About and templates live in the Space's own library, so the tree deletion removes everything. Nothing reads or writes pre-existing stack data.
+- **Order:** inside a file tests run in declaration order on one worker (`describe.configure({ mode: 'default' })`); every test owns uniquely labelled artifacts, so none depends on another. TL-05 is one journey written as five `test.step`s.
 
-State safety on the shared stack: every artifact is prefixed `e2e024 SL` /
-`e2e024 TL`, each scenario cleans up in `afterAll`, and each file ends with a
-leak detector that sweeps both editor surfaces and fails loudly on leftovers.
-The seeded SDGs platform template, pre-existing user entries, and the Space
-Tags are never touched.
+## Risk
 
-Personas: `admin@alkem.io` (editor, shared session fixture) and
-`walker@alkem.io` (viewer — zero writes, suite-local session state).
+| #         | Risk (in user terms)                                                                      | Likelihood | Impact | Level    | Drives                                         |
+| --------- | ----------------------------------------------------------------------------------------- | ---------- | ------ | -------- | ---------------------------------------------- |
+| R-1       | Editing, renaming or deleting a template changes the classifications Spaces already added | Low        | High   | **High** | TL-05 (byte-identical API snapshot), SL-06     |
+| R-8       | "Hidden" is read as "private" — a hidden entry is in fact anonymously readable            | Med        | High   | **High** | SL-05 wording + anonymous read; it-spec        |
+| R-6       | Narrowing multi→single silently truncates a selection                                     | Med        | High   | **High** | it-spec (API-only path, D4)                    |
+| A-1       | A member or outsider can add, select, hide, edit or remove a classification               | Low        | High   | **High** | it-spec FR-014a denials; SL-07 (UI half)       |
+| A-2       | The selection write clobbers sibling values, or a reselection re-adds the entry           | Med        | Med    | Med      | SL-01 (sibling-safe deselect, SC-002 identity) |
+| A-3       | Duplicate labels slip through (case/whitespace), or groups render alphabetically          | Med        | Med    | Med      | SL-02, SL-04, it-spec                          |
+| A-4       | Value ids drift between Spaces or are re-derived on rename, breaking aggregation          | Low        | High   | Med      | TL-04b, TL-06, TL-08, it-spec (SC-007)         |
+| R-4       | The seeded SDGs pack is invisible to pickers                                              | Low        | High   | Med      | TL-01, TL-02, TL-03                            |
+| R-10      | Classification actions emit activity-stream entries                                       | Low        | Med    | Low      | TL-07 (UI absence only)                        |
+| R-5/13/14 | Seed re-run overwrites edits, races across pods, or leaves empty auth policies            | Med        | Med    | Med      | **not reachable here** — see Not covered       |
 
-## Scenario → test mapping
+## Existing coverage before this work
 
-| Scenario | Covers | Automated by | Layer |
-|---|---|---|---|
-| Walk §2+§3 / S2+S3 | Step A add + Step B select roundtrip: immediate commit, authored order, persistence, sibling-safe deselect (FR-006a/002b/012a/012d) | `classifications-space.spec.ts` › SL-01 | UI |
-| Walk §4 / S4 | Duplicate guard: server-side conflict dialog, pre-seeded retry, case/whitespace variants, alias persistence (FR-011a/b/c, FR-018b) | `classifications-space.spec.ts` › SL-02 | UI |
-| Walk §7 / S7 | Single-select cardinality: radio semantics, replace-not-add, one-chip About display (FR-012) | `classifications-space.spec.ts` › SL-03 | UI |
-| Walk §9 / S9 | About-page display: labelled groups, editor-only empty group, addition order, Tags untouched, viewer read-only (FR-018b/c, FR-013) | `classifications-space.spec.ts` › SL-04 | UI |
-| Walk §8 / S8 | Show/hide toggle: settings persistence, editor badge vs viewer absence, reversible, FR-010d wording soft probe (FR-010b/d, FR-018d) | `classifications-space.spec.ts` › SL-05 | UI |
-| Walk §10 / S10 | Removal gate: confirm names the entry + no-undo, cancel is a no-op, confirm destroys only the target (FR-014, FR-014b) | `classifications-space.spec.ts` › SL-06 | UI |
-| Walk §12 (viewer half) | Viewer authorization negative: editor surfaces denied or read-only, no write affordances (read-only, zero cleanup) | `classifications-space.spec.ts` › SL-07 | UI |
-| Walk §1 / S1 | Seeded library: SDGs present with the full 17-value authored sequence, no Language/Sector (rulings D3/D5/D6) | `classifications-templates.spec.ts` › TL-01 | UI |
-| Walk §11 / S11 | Seed pack page: Classification templates section, deterministic chip band with +13 overflow, matching preview | `classifications-templates.spec.ts` › TL-02 | UI |
-| Walk §2 (picker) / S5 | Picker contract: grouping, relative counts, name AND description search, no create path, cancel-is-noop | `classifications-templates.spec.ts` › TL-03 | UI |
-| Walk §5 / S5 | Template CRUD + authoring: input guards, 0-values rejection, reorder + custom-id round-trip, card/preview contract, delete | `classifications-templates.spec.ts` › TL-04 | UI |
-| Walk §6 / S6 | Snapshot independence, 5 stages: rename/add/delete of the source template never touches the entry; orphaned entry still writable (FR-009, FR-010a) | `classifications-templates.spec.ts` › TL-05 | UI |
-| Walk §11 (import) | Library import: "Select from library" pulls platform SDGs into the Space library (diff-fenced deletion) | `classifications-templates.spec.ts` › TL-06 | UI |
-| Walk §12 / D2+D4 | Out-of-scope negatives: no Explore chips/filter, value labels unsearchable (soft), no activity entries | `classifications-templates.spec.ts` › TL-07 | UI |
+- **Searched:** `server-api/src`, `client-web/src`, `lib/src` on `origin/develop` @ `7b1b6ce73`. No classification operation documents or request wrappers existed; the generated types (`lib/src/core/generated/alkemio-schema.ts`) already carried the six mutations.
+- **Owning-repo coverage** (`server`): unit specs under `src/domain/space/classification.entry/`, `src/domain/common/classification-value/`, `src/core/bootstrap/bootstrap.service.classification.spec.ts`, and `test/integration/classification/classification-entry.spec.ts` — which is **mock-only** ("no real DB or HTTP server", per its header). Nothing durable exercised the GraphQL contract against a running stack; the forge run's gql-live probes were one-off.
 
-## Not covered — known gaps
+## Scenario → test
 
-| Scenario | Why not automated | Where it belongs |
-|---|---|---|
-| Walk §2 section *placement* (Classifications beside Tags, visual ordering within About) | Purely visual layout judgement — the suites assert presence/behaviour, not pixel placement | Manual QA (mockup comparison) |
-| Walk §11 pack **create-dialog** walk | The create dialog inside the platform pack surface needs platform-admin pack mutation on the shared stack; TL-04 covers the identical form in the Space library instead | Manual QA on a disposable stack |
-| Walk §13 i18n + keyboard navigation | Cross-cutting quality checks (translated strings, full keyboard traversal) are not automated in this area yet | Manual QA; candidate for a later a11y pass |
-| Innovation Library type filter offers no "Classifications" entry | **Known product gap on this build** (`TemplateTypeFilter` ALL_TYPES omits classification) — recorded as a `known-gap` annotation in TL-01, not a failure | Un-annotate once the filter entry ships |
-| /innovation-library gallery card badge band | Cards render the generic gradient header, no Multi-select badge — recorded as a `known-gap` annotation in TL-01 | Un-annotate once the badge band ships |
-| Server API contract (mutations, auth, S-1…S-22 semantics) | This plan covers the UI acceptance walks; the GraphQL contract is exercised by the server repo's own integration specs this iteration | `server` `test/integration/` on `feat/024-classifications` |
+| Scenario                                                                                                    | Test                                                                              |
+| ----------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| US1-AS1 picker lists platform + top-level Space templates, distinguished, with descriptions, no create path | `classifications-templates.spec.ts › TL-03`                                       |
+| US1-AS2 picked entry persists with 0 selected                                                               | `classifications-space.spec.ts › SL-01`                                           |
+| US1-AS3 single-select: second value replaces the first                                                      | `classifications-space.spec.ts › SL-03`                                           |
+| US1-AS4 multi-select values persist on reload, no form save                                                 | `classifications-space.spec.ts › SL-01`                                           |
+| US1-AS5 template rename/edit/delete leaves the entry byte-identical                                         | `classifications-templates.spec.ts › TL-05`                                       |
+| US1-AS6 duplicate label (incl. case/whitespace) rejected; alias succeeds                                    | `classifications-space.spec.ts › SL-02`; API: it-spec › write rules               |
+| US1-AS7 subspace picker offers the top-level library; entry attaches to the subspace                        | `classifications-space.spec.ts › SL-08`                                           |
+| US1-AS8 / SC-002 reselection keeps the same entry id, sortOrder and position                                | `classifications-space.spec.ts › SL-01`                                           |
+| US2-AS1 template created with no approval, all fields captured                                              | `classifications-templates.spec.ts › TL-04a`, `TL-04b`                            |
+| US2-AS2 slugified ids, deterministic suffix, rename keeps the id                                            | `classifications-templates.spec.ts › TL-08`, `TL-04b`; API: it-spec › value ids   |
+| US2-AS3 duplicate explicit id rejected, never suffixed                                                      | `classifications-templates.spec.ts › TL-08`; API: it-spec › value ids             |
+| US2-AS4 a newly saved template is offered by the picker                                                     | `classifications-templates.spec.ts › TL-04b`                                      |
+| US3-AS1 labelled groups, authored value order, separate from Tags                                           | `classifications-space.spec.ts › SL-04`                                           |
+| US3-AS2 hidden: editor badge, viewer absence, anonymous API still returns it with its flag                  | `classifications-space.spec.ts › SL-05`; API: it-spec › read surface              |
+| US3-AS4 zero-value entry: editor-only empty group                                                           | `classifications-space.spec.ts › SL-04`                                           |
+| US3-AS5 addition order; remove + re-add moves to the end                                                    | `classifications-space.spec.ts › SL-04`; API: it-spec › read surface              |
+| REM-AS1 confirmed, permanent removal; template and other Spaces untouched                                   | `classifications-space.spec.ts › SL-06`                                           |
+| FR-014a writes need the Space's edit right — UI affordances                                                 | `classifications-space.spec.ts › SL-07`                                           |
+| FR-014a writes need the Space's edit right — API denials (member, non-member, 6 mutations)                  | `space-classifications.it-spec.ts › authorization`                                |
+| FR-002a value-set bounds 0/1/50/51 (entry and template paths)                                               | `space-classifications.it-spec.ts › write rules`; client 0-values guard: `TL-04a` |
+| FR-012c narrowing rejected atomically, naming the selection                                                 | `space-classifications.it-spec.ts › write rules`                                  |
+| FR-010c / SC-007 two Spaces hold the template's value ids verbatim                                          | `space-classifications.it-spec.ts › value ids`; import copy: `TL-06`              |
+| FR-013 / SC-006 Tags untouched by adds and removals                                                         | `classifications-space.spec.ts › SL-04`                                           |
+| FR-005a seed present, 17 values in order, no Language/Sector (D6)                                           | `classifications-templates.spec.ts › TL-01`, `TL-02`                              |
+| Walk §11 import from the platform library                                                                   | `classifications-templates.spec.ts › TL-06`                                       |
+| Walk §12 out of scope: no Explore filter/chips, no search hit, no activity (D2, FR-021)                     | `classifications-templates.spec.ts › TL-07`                                       |
+
+## Not covered
+
+| Scenario                                                                                    | Why not automated                                                                                                                     | Where it belongs                                        |
+| ------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------- |
+| US2-S2 two same-named templates told apart by `name-id`                                     | `name-id` is not rendered; spec routes it to the server unit spec                                                                     | server T046 (`template.service.classification.spec.ts`) |
+| Seed re-run idempotency, parallel-bootstrap race, seeded-pack auth (R-5/13/14, SC-003a, D5) | Needs a bootstrap restart / fresh DB — no infra lever from inside a test (harness.md)                                                 | server T047/T055; release-ops check                     |
+| FR-005b a classification template in another public platform pack is offered                | Needs a second publicly listed platform pack — a platform-level write on the shared stack                                             | Manual QA on a disposable stack                         |
+| FR-021 no analytics events                                                                  | No analytics harness; TL-07 covers only the visible activity feed                                                                     | server T067 (absence of emission)                       |
+| Free-text search does not index classification text                                         | TL-07's check is soft: a meaningful negative needs `adminSearchIngestFromScratch` + settle on a stack with Elasticsearch (harness.md) | Manual QA, or an it-spec once re-ingest is affordable   |
+| FR-017a / SC-010 ad-hoc create + edit-definition parity with template-sourced entries       | API-only (D4) and the writer client (vng-gemeente-delers) is out of tree; the it-spec covers its validation rules, not display parity | Follow-up it-spec if the API gains callers here         |
+| Section placement, keyboard-only walk, screen-reader labels, i18n (walk §2, §13)            | Visual judgement; no axe harness; locale copy belongs to client-web                                                                   | Manual QA; client-web locale tests                      |
+| Walk §11 platform-pack create dialog                                                        | Needs platform-admin pack writes on the shared stack; TL-04 covers the identical form in a Space library                              | Manual QA on a disposable stack                         |
+
+## Product findings
+
+- **QA-PF-01 — pending product decision.** Manual walk §11 expects a "Classifications" entry in the `/innovation-library` type filter and a Multi-select badge on the gallery card; neither is rendered (`TemplateTypeFilter.tsx` `ALL_TYPES` omits classification) and no FR asks for them. Not chased now (QA lead, 2026-10-02): the two checks live in `TL-01b`, a `test.skip` whose assertions are the oracle for that decision — un-skip if product builds them, delete the test if the walk record is corrected instead.
+- **QA-PF-02 — spec vs story.** #2049's acceptance list still names compact card/tile/search display and "other defaults"; the epic's 2026-08-20 must-have edit dropped the show/hide toggle and SDG seeding. The spec (D2, D6) governs these suites; product should reconcile the story.
+- **QA-PF-03 — note.** FR-002a requires a "clear, actionable" error; the server returns the raw class-validator dump (`arrayMinSize` / `arrayMaxSize`) with the generic `badUserInput` user message.

@@ -152,6 +152,11 @@ root — look in all three before concluding an area has none.
   operation makes the negative pass forever. This has bitten cross-Space search scoping and
   request-count assertions alike.
 
+- **A test-scoped fixture runs before `beforeAll` has populated `TestUserManager`.** A `storageState` fixture that calls `TestUserManager.getUserModelByType(...)` throws `Cannot read properties of undefined (reading 'get')`. Derive persona emails with the manager's own rule, `${TestUser.X}@alkem.io`. 2026-10-01 (test-suites#613).
+- **A failed Playwright test restarts the worker, and the next test re-runs `beforeAll`.** A file-level seeded fixture is then a *fresh* one — so "pre-state" a later test captures is not the state earlier tests left. Keep each test independent of its file-mates' data. 2026-10-01.
+- **CRD template dialogs:** a *dirty* create/edit form asks "Discard your changes?" (`Keep editing` / `Yes, close`) on Cancel; a *pristine* edit form's dismiss button reads **Done**, not Cancel (client-web#10243). The classification value reorder buttons are named `Move value N up/down`. Deleting a template card removes it before the `DeleteTemplate` round trip completes — await the operation response before reading the API. 2026-10-01.
+- **Anonymous reads go through the private non-interactive endpoint with no bearer** (`postGraphqlRaw(query, { variables })`); it answers as the anonymous actor. 2026-10-01.
+
 ### Client-web / CRD locator conventions
 
 - **CRD sidebar labels and section headings are CSS `uppercase`.** `innerText` returns the
