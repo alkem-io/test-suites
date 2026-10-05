@@ -36,6 +36,7 @@ import {
   deleteFormResponse,
   errorCode,
   FormCallout,
+  FormQuestion,
   getFormResponses,
   getSpaceSets,
   isDenied,
@@ -49,7 +50,8 @@ import {
 
 /**
  * Lifecycle, concurrency and moderation of the Form framing: what may change
- * while responses exist, what the submit lock guarantees under parallel
+ * while responses exist (since R19 — response mode, visibility and answer type
+ * all stay editable), what the submit lock guarantees under parallel
  * requests, and who may withdraw or delete which response.
  */
 
@@ -130,6 +132,10 @@ const idsSeenByAdmin = async (form: FormCallout) =>
   (
     await getFormResponses(form.formId, TestUser.SPACE_ADMIN)
   ).data?.lookup.calloutFormResponses.all.responses.map(r => r.id) ?? [];
+
+/** The viewer's own responses from a lookup result. */
+const mineOf = (result: Awaited<ReturnType<typeof getFormResponses>>) =>
+  result.data?.lookup.calloutFormResponses.mine ?? [];
 
 beforeAll(async () => {
   baseScenario = await TestScenarioFactory.createBaseScenario(scenarioConfig);
@@ -225,43 +231,138 @@ describe('Form lifecycle — SINGLE response mode under concurrency', () => {
     expect(view.mine).toBe(2);
   });
 
-  test('MULTIPLE back to SINGLE is blocked while a member holds two responses', async () => {
-    const blocked = await updateCalloutForm(form.formId, {
+  // R19a: MULTIPLE -> SINGLE is always allowed and keeps every response; the
+  // SINGLE check at submit ("holds any response") does the rest.
+  test('MULTIPLE back to SINGLE is allowed while a member holds two responses, and keeps both', async () => {
+    const before = await totalSeenByAdmin(form);
+
+    const switched = await updateCalloutForm(form.formId, {
       settings: { responseMode: SINGLE },
     });
 
-    expect(errorCode(blocked)).toBe('FORM_RESPONSE_MODE_SWITCH_BLOCKED');
+    expect(switched.error).toBeUndefined();
+    expect(errorCode(switched)).toBeUndefined();
+    expect(switched.data?.updateCalloutForm.settings.responseMode).toBe(SINGLE);
+    expect(
+      mineOf(await getFormResponses(form.formId, TestUser.SPACE_MEMBER))
+    ).toHaveLength(2);
+    expect(await totalSeenByAdmin(form)).toBe(before);
   });
 
-  test('MULTIPLE back to SINGLE is allowed once the member holds only one', async () => {
-    const mine =
-      (await getFormResponses(form.formId, TestUser.SPACE_MEMBER)).data?.lookup
-        .calloutFormResponses.mine ?? [];
-    const withdrawn = await deleteFormResponse(
-      mine[0].id,
+  test('under SINGLE a member holding two responses cannot submit a third', async () => {
+    const rejected = await submitFormResponse(
+      form.formId,
+      answersFor(form.questions),
+      ADMINS,
       TestUser.SPACE_MEMBER
     );
+
+    expect(errorCode(rejected)).toBe('FORM_RESPONSE_ALREADY_EXISTS');
+    expect(
+      mineOf(await getFormResponses(form.formId, TestUser.SPACE_MEMBER))
+    ).toHaveLength(2);
+  });
+
+  test('withdrawing one of the two still blocks a new submit', async () => {
+    const [first] = mineOf(
+      await getFormResponses(form.formId, TestUser.SPACE_MEMBER)
+    );
+    const withdrawn = await deleteFormResponse(first.id, TestUser.SPACE_MEMBER);
     expect(withdrawn.error).toBeUndefined();
 
-    const allowed = await updateCalloutForm(form.formId, {
-      settings: { responseMode: SINGLE },
-    });
+    const rejected = await submitFormResponse(
+      form.formId,
+      answersFor(form.questions),
+      ADMINS,
+      TestUser.SPACE_MEMBER
+    );
 
-    expect(allowed.error).toBeUndefined();
-    expect(allowed.data?.updateCalloutForm.settings.responseMode).toBe(SINGLE);
+    expect(errorCode(rejected)).toBe('FORM_RESPONSE_ALREADY_EXISTS');
+    expect(
+      mineOf(await getFormResponses(form.formId, TestUser.SPACE_MEMBER))
+    ).toHaveLength(1);
+  });
+
+  test('withdrawing the last one lets the member submit exactly one again', async () => {
+    const [last] = mineOf(
+      await getFormResponses(form.formId, TestUser.SPACE_MEMBER)
+    );
+    const withdrawn = await deleteFormResponse(last.id, TestUser.SPACE_MEMBER);
+    expect(withdrawn.error).toBeUndefined();
+
+    expect(await respond(form, ADMINS)).toBeDefined();
+
+    expect(
+      mineOf(await getFormResponses(form.formId, TestUser.SPACE_MEMBER))
+    ).toHaveLength(1);
   });
 });
 
 describe('Form lifecycle — visibility changes', () => {
-  test('widening ADMINS to MEMBERS is blocked once a response exists', async () => {
+  // R19b: visibility changes freely in both directions and the current
+  // setting applies to every response, past and future. SUBSPACE_MEMBER is a
+  // member of this (L0) space, so under MEMBERS it reads every response.
+  test('widening ADMINS to MEMBERS with a response applies to that response; narrowing back takes it away', async () => {
     const form = await newForm('widen', { visibility: ADMINS });
-    await respond(form, ADMINS);
+    const responseId = await respond(form, ADMINS);
+    const reader = TestUser.SUBSPACE_MEMBER;
+    const readerSees = async () => {
+      const result = await getFormResponses(form.formId, reader);
+      return {
+        canReadAll: result.data?.lookup.calloutFormResponses.canReadAll,
+        ids:
+          result.data?.lookup.calloutFormResponses.all.responses.map(
+            r => r.id
+          ) ?? [],
+        total: result.data?.lookup.calloutFormResponses.all.total,
+      };
+    };
 
-    const blocked = await updateCalloutForm(form.formId, {
-      settings: { visibility: MEMBERS },
+    // Before: the member reads only their own rows (none).
+    expect(await readerSees()).toEqual({
+      canReadAll: false,
+      ids: [],
+      total: 0,
     });
 
-    expect(errorCode(blocked)).toBe('FORM_VISIBILITY_WIDENING_BLOCKED');
+    const widened = await updateCalloutForm(form.formId, {
+      settings: { visibility: MEMBERS },
+    });
+    expect(widened.error).toBeUndefined();
+    expect(errorCode(widened)).toBeUndefined();
+    expect(widened.data?.updateCalloutForm.settings.visibility).toBe(MEMBERS);
+
+    // After: the earlier response, submitted under ADMINS, is now readable.
+    expect(await readerSees()).toEqual({
+      canReadAll: true,
+      ids: [responseId],
+      total: 1,
+    });
+
+    // Positive control: a registered user who is not a member of this space
+    // still reads only their own rows after the widening.
+    expect(
+      responsesView(
+        await getFormResponses(form.formId, TestUser.NON_SPACE_MEMBER)
+      )
+    ).toEqual({
+      mine: 0,
+      total: 0,
+      listed: 0,
+      canReadAll: false,
+      canModerate: false,
+    });
+
+    const narrowed = await updateCalloutForm(form.formId, {
+      settings: { visibility: ADMINS },
+    });
+    expect(narrowed.error).toBeUndefined();
+
+    expect(await readerSees()).toEqual({
+      canReadAll: false,
+      ids: [],
+      total: 0,
+    });
   });
 
   test('positive control: the same widening is allowed while the Form has no response', async () => {
@@ -305,18 +406,148 @@ describe('Form lifecycle — editing the definition under existing responses', (
     );
   });
 
-  test('a question type is locked once a response exists', async () => {
-    const form = await newForm('type-locked');
-    await respond(form, ADMINS);
-    const changed = questionsAsUpdate(form.questions).map((question, index) =>
-      index === 1
-        ? { ...question, type: CalloutFormQuestionType.ShortText }
-        : question
-    );
+  // R19c: the answer type can change at any time; stored answers keep their
+  // snapshot (prompt, type, labels), new answers follow the new type.
+  describe('answer type changes while responses exist', () => {
+    let form: FormCallout;
+    let responseId: string;
 
-    const result = await updateCalloutForm(form.formId, { questions: changed });
+    const storedAnswer = async (questionID: string) => {
+      const view = await getFormResponses(form.formId, TestUser.SPACE_ADMIN);
+      return view.data?.lookup.calloutFormResponses.all.responses
+        .find(r => r.id === responseId)
+        ?.answers.find(a => a.questionID === questionID);
+    };
 
-    expect(errorCode(result)).toBe('FORM_QUESTION_TYPE_LOCKED');
+    beforeAll(async () => {
+      // MULTIPLE, so the new-type submissions below are not stopped by the
+      // SINGLE check before the answers are validated.
+      form = await newForm('type-change', { responseMode: MULTIPLE });
+      responseId = await respond(form, ADMINS);
+    });
+
+    test('short text -> single choice with 2 options succeeds and the old answer keeps its text', async () => {
+      const shortText = form.questions[0];
+      const changed = questionsAsUpdate(form.questions).map(
+        (question, index) =>
+          index === 0
+            ? {
+                ...question,
+                type: CalloutFormQuestionType.SingleChoice,
+                options: [{ label: 'Yes' }, { label: 'No' }],
+              }
+            : question
+      );
+
+      const result = await updateCalloutForm(form.formId, {
+        questions: changed,
+      });
+
+      expect(result.error).toBeUndefined();
+      expect(errorCode(result)).toBeUndefined();
+      const updated = result.data?.updateCalloutForm.questions ?? [];
+      expect(updated[0].type).toBe(CalloutFormQuestionType.SingleChoice);
+      expect(updated[0].options?.map(o => o.label)).toEqual(['Yes', 'No']);
+
+      const answer = await storedAnswer(shortText.id);
+      expect(answer?.type).toBe(CalloutFormQuestionType.ShortText);
+      expect(answer?.text).toBe('a short answer');
+      expect(answer?.prompt).toBe(shortText.prompt);
+      expect(answer?.selectedOptions ?? []).toHaveLength(0);
+
+      form = { ...form, questions: updated as FormQuestion[] };
+    });
+
+    test('a new submission must now answer that question with option ids', async () => {
+      const mismatch = await submitFormResponse(
+        form.formId,
+        answersFor(form.questions, {
+          0: { text: 'a short answer', selectedOptionIDs: undefined },
+        }),
+        ADMINS,
+        TestUser.SPACE_MEMBER
+      );
+      expect(errorCode(mismatch)).toBe('FORM_ANSWER_TYPE_MISMATCH');
+
+      // Positive control: the same submission with an option id is stored.
+      const stored = await submitFormResponse(
+        form.formId,
+        answersFor(form.questions),
+        ADMINS,
+        TestUser.SPACE_MEMBER
+      );
+      expect(stored.error).toBeUndefined();
+      const answer = stored.data?.submitCalloutFormResponse.answers.find(
+        a => a.questionID === form.questions[0].id
+      );
+      expect(answer?.type).toBe(CalloutFormQuestionType.SingleChoice);
+      expect(answer?.selectedOptions?.map(o => o.label)).toEqual(['Yes']);
+    });
+
+    test('single choice -> long text is rejected while options are still sent', async () => {
+      const changed = questionsAsUpdate(form.questions).map(
+        (question, index) =>
+          index === 2
+            ? { ...question, type: CalloutFormQuestionType.LongText }
+            : question
+      );
+
+      const result = await updateCalloutForm(form.formId, {
+        questions: changed,
+      });
+
+      expect(errorCode(result)).toBe('FORM_OPTIONS_COUNT');
+    });
+
+    test('single choice -> long text without options succeeds and the old answer keeps its option label', async () => {
+      const singleChoice = form.questions[2];
+      const changed = questionsAsUpdate(form.questions).map(
+        (question, index) =>
+          index === 2
+            ? {
+                ...question,
+                type: CalloutFormQuestionType.LongText,
+                options: undefined,
+              }
+            : question
+      );
+
+      const result = await updateCalloutForm(form.formId, {
+        questions: changed,
+      });
+
+      expect(result.error).toBeUndefined();
+      const updated = result.data?.updateCalloutForm.questions ?? [];
+      expect(updated[2].type).toBe(CalloutFormQuestionType.LongText);
+
+      const answer = await storedAnswer(singleChoice.id);
+      expect(answer?.type).toBe(CalloutFormQuestionType.SingleChoice);
+      expect(answer?.prompt).toBe(singleChoice.prompt);
+      expect(answer?.selectedOptions?.map(o => o.label)).toEqual([
+        singleChoice.options?.[0]?.label,
+      ]);
+
+      form = { ...form, questions: updated as FormQuestion[] };
+    });
+
+    test('text -> choice with a single option is rejected', async () => {
+      const changed = questionsAsUpdate(form.questions).map(
+        (question, index) =>
+          index === 1
+            ? {
+                ...question,
+                type: CalloutFormQuestionType.SingleChoice,
+                options: [{ label: 'Only' }],
+              }
+            : question
+      );
+
+      const result = await updateCalloutForm(form.formId, {
+        questions: changed,
+      });
+
+      expect(errorCode(result)).toBe('FORM_OPTIONS_COUNT');
+    });
   });
 
   test('removing an answered question keeps its snapshot in the old response', async () => {

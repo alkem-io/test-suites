@@ -21,7 +21,9 @@ import {
   errorCode,
   errorText,
   FormCallout,
+  getFormResponses,
   isDenied,
+  responsesView,
   submitFormResponse,
   submitFormResponseAnonymous,
   uniqueFormName,
@@ -49,7 +51,12 @@ const scenarioConfig: TestScenarioConfig = {
     },
     community: {
       admins: [TestUser.SPACE_ADMIN],
-      members: [TestUser.SPACE_MEMBER, TestUser.SPACE_ADMIN],
+      // SUBSUBSPACE_MEMBER holds the earlier response of the R19b race variant.
+      members: [
+        TestUser.SPACE_MEMBER,
+        TestUser.SPACE_ADMIN,
+        TestUser.SUBSUBSPACE_MEMBER,
+      ],
     },
   },
 };
@@ -408,6 +415,55 @@ describe('Form submit — the acknowledged visibility', () => {
     const fresh = await submit(widening, markedAnswers(widening), MEMBERS);
     expect(fresh.error).toBeUndefined();
     expect(fresh.data?.submitCalloutFormResponse.id).toBeDefined();
+  });
+
+  // R19b: widening is no longer blocked once responses exist, so the same race
+  // applies to a Form that already holds a response.
+  test('a widened Form that already holds a response rejects a response acknowledged against the old audience', async () => {
+    const widening = await createFormCallout(setId(), {
+      displayName: uniqueFormName(`widen-answered-${uniqueId}`),
+      settings: { visibility: ADMINS },
+    });
+    const earlier = await submit(
+      widening,
+      markedAnswers(widening),
+      ADMINS,
+      TestUser.SUBSUBSPACE_MEMBER
+    );
+    expect(earlier.error).toBeUndefined();
+    const earlierId = earlier.data?.submitCalloutFormResponse.id;
+    expect(earlierId).toBeDefined();
+
+    // The member has the Form open under ADMINS; the admin now widens.
+    const widened = await updateCalloutForm(widening.formId, {
+      settings: { visibility: MEMBERS },
+    });
+    expect(widened.error).toBeUndefined();
+    expect(errorCode(widened)).toBeUndefined();
+    expect(widened.data?.updateCalloutForm.settings.visibility).toBe(MEMBERS);
+
+    const stale = await submit(widening, markedAnswers(widening), ADMINS);
+    expect(errorCode(stale)).toBe('FORM_VISIBILITY_CHANGED');
+    expect(errorText(stale)).not.toContain(MARKER);
+
+    const fresh = await submit(widening, markedAnswers(widening), MEMBERS);
+    expect(fresh.error).toBeUndefined();
+    expect(fresh.data?.submitCalloutFormResponse.id).toBeDefined();
+
+    // Both responses are stored: the earlier one and the re-acknowledged one.
+    const asAdmin = await getFormResponses(
+      widening.formId,
+      TestUser.SPACE_ADMIN
+    );
+    expect(responsesView(asAdmin).total).toBe(2);
+    expect(
+      asAdmin.data?.lookup.calloutFormResponses.all.responses.map(r => r.id)
+    ).toEqual(
+      expect.arrayContaining([
+        earlierId,
+        fresh.data?.submitCalloutFormResponse.id,
+      ])
+    );
   });
 
   test('a narrowed Form still accepts a response acknowledged against the wider audience', async () => {
