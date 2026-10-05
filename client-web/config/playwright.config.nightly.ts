@@ -219,6 +219,33 @@ export default defineConfig({
       expect: { timeout: 15_000 },
     },
     {
+      // workspace#040-sidebar-widget-config (client-web#10092) — per-tab sidebar widgets:
+      // US1 default rendering and US2 admin configuration. Each file seeds its own Space
+      // through TestScenarioFactory, opens one isolated context per persona, runs serially
+      // (describe.configure) and deletes the subspace, Space and organization in afterAll.
+      // Trace/video are off at file level (admin sessions). US2-AS6 is `test.skip`ped pending
+      // alkem-io/server#6571 (QA-PF-01) and stays the file's last test, so that once it is
+      // un-skipped a red run cannot skip the tests after it in serial mode.
+      name: 'Sidebar widgets',
+      testMatch: ['/sidebar-widgets/*.spec.ts'],
+      timeout: 120_000,
+      expect: { timeout: 15_000 },
+    },
+    {
+      // workspace#024-classifications (epic alkem-io/alkemio#1985) — the Space-side
+      // (US1/US3/REMOVAL) and template-side (US1/US2) acceptance walks. Each file seeds its
+      // own Space through TestScenarioFactory (the Space suite adds one subspace), drives it
+      // as the Space admin and a plain member, and deletes subspace, Space and organization
+      // in afterAll. TL-01 carries two deliberate soft reds pending a product decision
+      // (QA-PF-01, see classifications-test-plan.md).
+      name: 'Classifications',
+      testMatch: ['/classifications/*.spec.ts'],
+      timeout: 120_000,
+      expect: { timeout: 15_000 },
+      // A renamed control fails in seconds instead of burning the test budget.
+      use: { actionTimeout: 15_000 },
+    },
+    {
       // Story client-web#10107 / workspace#054 (self-service account
       // deletion) — the portable delta after test-suites#620: TC-14 (the
       // notification centre survives the removed

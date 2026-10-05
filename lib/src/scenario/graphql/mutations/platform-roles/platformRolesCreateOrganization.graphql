@@ -1,0 +1,8 @@
+# Minimal selection ON PURPOSE: a role allowed to create an organization need
+# not be allowed to read the account, role-set or verification sub-trees that
+# the shared `CreateOrganization` document selects.
+mutation PlatformRolesCreateOrganization($organizationData: CreateOrganizationInput!) {
+  createOrganization(organizationData: $organizationData) {
+    id
+  }
+}

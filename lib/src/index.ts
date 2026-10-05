@@ -14,6 +14,7 @@ export * from "./utils/graphql.raw.client";
 export * from "./utils/decode-jwt-unsafe";
 export * from "./utils/harness-redis.client";
 export * from "./utils/harness-db.client";
+export * from "./utils/harness-synapse.client";
 export * from "./scenario/TestScenarioFactory";
 export * from "./scenario/baseFunctions";
 export * from "./scenario/TestSetupUtils";
@@ -35,6 +36,7 @@ export * from "./config/test.configuration";
 export * from "./config/alkemio-test-config";
 export * from "./config/create-config-using-envvars";
 export * from "./config/optional-infra";
+export * from "./scenario/platform-roles/platform-role-users";
 export {
   ConversationCreationType,
   ActorType,

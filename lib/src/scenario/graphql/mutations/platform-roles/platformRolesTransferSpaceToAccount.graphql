@@ -1,0 +1,5 @@
+mutation PlatformRolesTransferSpaceToAccount($transferData: TransferAccountSpaceInput!) {
+  transferSpaceToAccount(transferData: $transferData) {
+    id
+  }
+}

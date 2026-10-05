@@ -17,7 +17,12 @@ export default defineConfig({
   /* The 029 language-offer acceptance walks need their own runner settings
      (longer timeouts, per-file locales) and are run via
      config/playwright.config.language-offer.ts, not this default suite. */
-  testIgnore: '**/language-offer/**',
+  testIgnore: [
+    '**/language-offer/**',
+    /* workspace#027: needs a stack running the 027 server AND client — run via
+       config/playwright.config.platform-roles.ts (`pnpm run test:platform-roles`). */
+    '**/platform-roles/**',
+  ],
   /* Run tests in files in parallel */
   fullyParallel: true,
   /* Fail the build on CI if you accidentally left test.only in the source code. */

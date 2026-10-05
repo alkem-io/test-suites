@@ -29,7 +29,24 @@ place; cite this file instead of rediscovering a gap.
 - **Classifying a callout into a specific flow phase at creation**: `createCalloutOnCalloutsSet(..., { classification: { tagsets: [{ name: TagsetReservedName.FlowState, tags: [<phase displayName>] }] } })` — used by the platform's own bootstrap L0 template definition (`server/src/core/bootstrap/platform-template-definitions/default-templates/bootstrap.template.space.content.space.l0.ts`) and reusable directly in tests since 2026-09-03 (see cleared gap above). Demonstrated in `apply-template-l0-wholesale-replace.it-spec.ts`.
 - **A `TestScenarioConfig` with no `space` key creates NO space at all** (`createBaseScenarioPrivate` returns early when `scenarioConfig.space` is falsy), and a `space` with no `subspace` key creates the L0 only, no L1. Always pass at least `space: {}` (L0-only scenario) or `space: { subspace: {} }` (L0 + L1) explicitly — an empty `{ name: '...' }` config silently yields empty IDs on `baseScenario.space`/`.subspace`, which then fail downstream as an opaque "Invalid value supplied for a GraphQL variable" rather than a clear setup error.
 
+- **Async admin operations report through `task(id)`.** Mutations such as `adminCommunicationReconcileForumHierarchy` return a TaskService id. Poll `query { task(id) { status results errors } }` until the status is not `IN_PROGRESS`. No `lib` document or wrapper existed as of 2026-09-28; use a raw `graphqlRequestAuth` helper. `task`/`tasks` resolvers carry **no** auth guard on the server — do not treat a successful read as an authorization signal. 2026-09-28.
+- **Loopback Redis = the server's `storage.redis`.** `lib/src/utils/harness-redis.client.ts` points at the same instance the server's messaging client uses, so single-owner leases (e.g. `alkemio:forum-hierarchy-reconcile:lease`) can be planted to test "already running" paths deterministically. Confirm the DB index before relying on it. 2026-09-28.
+
+- **Matrix observability on a local stack (established 2026-09-29, read-only probes).**
+  - Without a token, Synapse answers `GET /_matrix/client/v3/directory/room/{alias}` (alias → room id) and `GET /_matrix/client/v3/directory/list/room/{roomId}` (directory visibility).
+  - `publicRooms` and room state return 401.
+  - Alkemio aliases are `#<uuid>:<server_name>` (matrix-adapter `idmapper.go`). The local server name is `alkemio.matrix.host`.
+  - Forum category space ids are `uuidv5("<forumId>:category:<value>", f47ac10b-58cc-4372-a567-0e02b2c3d479)` (server `forum.constants.ts`).
+  - For state reads, use the dev appservice token from the server repo's tracked `.build/synapse/matrix-adapter.yaml`. Pass it through an env var set by the user. The harness must never read the server checkout, and should use GET-only helpers.
+- **Server develop's quickstart pins matrix-adapter v0.8.17** (`quickstart-services.yml:473`) while the server pins lib 0.8.21, so local stacks lack `set_children` until the image is bumped. 2026-09-29.
+- **E2E locale coverage is bounded by `platform.configuration.language.eligible`.** The local stack has default `en` and eligible `["nl"]`. Switch language through the stored setting: `updateUserSettings(settingsData: { userID, settings: { language } })`, as in `language-offer/us2-cross-device-persistence.spec.ts`. 2026-09-29.
+
 ## Environment / gotchas
+
+- **Irreversible platform mutations need an owned, just-verified fixture.** `adminForumRemoveDiscussionCategory` succeeds for any `PLATFORM_FORUM_MANAGE` holder (GA, GLOBAL_SUPPORT, PLATFORM_SUPPORT since 027) on an empty category, and there is no add-category API. Until 2026-09-29, `platform-discussions.it-spec.ts`'s `beforeAll` deleted **every** platform discussion; it now deletes only the titles that file creates. Keep every remove call inside that file, and read the fixture back immediately before the call. 2026-09-29.
+- **Generated TS enums are alphabetical, not declaration order.** `schema.graphql` sorts enum members, so `Object.values(ForumDiscussionCategory)` in `lib` is alphabetical. Never derive "the canonical order" or "the last member" from it. test-suites#600 picks `all[all.length-1]` and would target TIPS_AND_TRICKS. 2026-09-28.
+- **`@Min/@Max` on a GraphQL input are not necessarily enforced.** The server's global `ValidationPipe` validates only the DTO classes listed in `src/core/validation/handlers/base/base.handler.ts`. Before planning a BVA case on an input, check the class is on that list; otherwise the decorators are dead code. 2026-09-28.
+- **027 (server#6322, merged 2026-09-28) moved forum gates off `PLATFORM_ADMIN`.** Admin-only create, update/delete of a discussion, and category retirement now check `PLATFORM_FORUM_MANAGE`. GLOBAL_LICENSE_ADMIN lost them. Denial messages name `'platform-forum-manage'`. Existing discussions need `authorizationPolicyResetOnPlatform` before the new privilege reaches them. 2026-09-28.
 
 - `test.skip` left in a spec sometimes encodes a *known, tracked* bug rather than flakiness — read the comment above it before assuming it's safe to leave skipped once the referenced issue ships. `convert-L1-to-L0-basic.it-spec.ts` had exactly this pattern for client-web#9528.
 - Sibling repo clones under the workspace root can be on an unrelated branch (observed: `server/` clone on `fix/move-space-recompute-platform-roles-access`, not `develop`) — always check `git log --oneline --all | grep <issue#>` rather than assuming the checked-out branch is current; the target commit is usually still reachable via `git log --all`. Reconfirmed 2026-09-28 (same branch); reading `git show origin/develop:<path>` in the clone is the cheap workaround.
@@ -117,12 +134,40 @@ root — look in all three before concluding an area has none.
 - **E2E auth:** the session fixture (`fixtures/authenticated-session.fixture.ts`) logs each persona
   in **once per run** and persists storage state to `.auth/`. Use it. The one area that legitimately
   does not is `messaging-notifications`, which needs brand-new accounts for settings defaults.
+- **`createAuthenticatedSessionFixture` is a module singleton.** Its context and page are
+  module-level, so two instances in one file share **one page**, and the last
+  `setupAuthentication` wins. In test-suites#615 the "admin" steps silently ran as the member.
+  For two personas in one test, open one context per persona from a stored session
+  (`ensurePersonaState` + `browser.newContext({ storageState })`), as
+  `sidebar-widgets/sidebar-widgets.helpers.ts › openPersona` does. 2026-10-01.
+- **Teardown must delete subspaces first, and must not swallow errors.** The server refuses to
+  delete an L0 Space that still has a subspace. `lib` `deleteSpace` *returns* `{ error }` rather
+  than throwing, and `TestScenarioFactory.cleanUpBaseScenario` logs and continues. A UI walk that
+  deleted only the L0 behind `.catch(() => {})` leaked a Space on every run, until the hosting
+  account showed "Capacity reached" and no Space could be created at all. Reuse
+  `subspaces-callout.helpers.ts › deleteFixtureTree` with a delete that throws on `error`.
+  2026-10-01.
 - **Positive controls.** Every "must not appear" assertion in this repo needs a paired assertion
   proving the thing exists somewhere — otherwise a misspelt fixture, a stale index, or a renamed
   operation makes the negative pass forever. This has bitten cross-Space search scoping and
   request-count assertions alike.
 
+- **A test-scoped fixture runs before `beforeAll` has populated `TestUserManager`.** A `storageState` fixture that calls `TestUserManager.getUserModelByType(...)` throws `Cannot read properties of undefined (reading 'get')`. Derive persona emails with the manager's own rule, `${TestUser.X}@alkem.io`. 2026-10-01 (test-suites#613).
+- **A failed Playwright test restarts the worker, and the next test re-runs `beforeAll`.** A file-level seeded fixture is then a *fresh* one — so "pre-state" a later test captures is not the state earlier tests left. Keep each test independent of its file-mates' data. 2026-10-01.
+- **CRD template dialogs:** a *dirty* create/edit form asks "Discard your changes?" (`Keep editing` / `Yes, close`) on Cancel; a *pristine* edit form's dismiss button reads **Done**, not Cancel (client-web#10243). The classification value reorder buttons are named `Move value N up/down`. Deleting a template card removes it before the `DeleteTemplate` round trip completes — await the operation response before reading the API. 2026-10-01.
+- **Anonymous reads go through the private non-interactive endpoint with no bearer** (`postGraphqlRaw(query, { variables })`); it answers as the anonymous actor. 2026-10-01.
+
 ### Client-web / CRD locator conventions
+
+- **CRD sidebar labels and section headings are CSS `uppercase`.** `innerText` returns the
+  *rendered* text ("SPACE LEADS"), so `innerText().indexOf('Space Leads')` is -1. Assert order on
+  role/name locators via `compareDocumentPosition` (`sidebar-widgets.helpers.ts ›
+  expectInDocumentOrder`). Role and text locators match the DOM text and are unaffected.
+  2026-10-01.
+- **Space Settings > Layout columns have no accessible name.** Each column is a
+  `[data-slot="card"]` whose title is a `span[title]`, and every column's menu button is named
+  "Column actions". Scope with `locator('[data-slot="card"]').filter({ has: getByTitle(name, { exact: true }) })`.
+  2026-10-01.
 
 - The Space sidebar is `<nav aria-label="Space sidebar">`; a **sub**space sidebar is
   `<aside aria-label="SubSpace sidebar">` (role `complementary`), so one `getByRole('navigation')`

@@ -25,6 +25,18 @@ _Searched 2026-09-03, branch `qa/9528-promotion-keeps-flow-states` off
 | `moveSpaceL1ToSpaceL0`/`L1ToL2`/`L2ToL1` (cross-L0 move, distinct from convert) | Full for basic/community/rooms/applications/auto-invite/authorization scenarios | `journey/conversion/move-L1-to-*-*.it-spec.ts` — does not touch innovation-flow at all, confirmed by search |
 | Callout transfer + differing default flow state names (cross-space) | Full | `callout/transfer/transfer-callout-flow-state.it-spec.ts`, `transfer-callout-changed-flow.it-spec.ts` |
 
+## Space classifications (024 / alkemio#1985)
+
+_Searched 2026-10-01, `origin/develop` @ `7b1b6ce73` (test-suites), against server#6380 and client-web#10163 (server `develop` @ `615817441`, client-web `develop` @ `2e576ee17`). Plan: `client-web/src/functional-e2e/classifications/classifications-test-plan.md`._
+
+| Area | Status | Evidence |
+|---|---|---|
+| Step A/B walks, duplicate guard, single-select, About display, hide toggle, removal, subspace picker | Full (UI) | `classifications/classifications-space.spec.ts` SL-01…08 |
+| Template authoring, value ids, snapshot independence, library import, seed, out-of-scope negatives | Full (UI); TL-01b skipped pending product decision (QA-PF-01) | `classifications/classifications-templates.spec.ts` TL-01…08 |
+| API contract: FR-014a denials (member, non-member, 6 mutations), hidden entry on the anonymous read, FR-002a bounds 0/1/50/51, FR-011c, FR-012c, FR-018b order + re-add, FR-002c ids, SC-007 | Full (API) | `server-api/.../journey/space/space-classifications.it-spec.ts` |
+| Seed idempotency / bootstrap race / seeded-pack auth (R-5/13/14) | **Proven absent** here — needs a bootstrap restart | server unit specs T047/T055 only |
+| Server `test/integration/classification/classification-entry.spec.ts` | Mock-only (no DB, no HTTP) — not system coverage | its own header |
+
 ## Space community notifications — invitations, joins, outcomes (061 / notifications#356)
 
 _Searched 2026-09-28, `origin/develop` @ `0ca74068` (test-suites), against server#6467, notifications#594, client-web#10272, test-suites#632. Plan: `client-web/src/functional-e2e/organization-space-invitations/organization-space-invitations-test-plan.md`._
@@ -42,6 +54,25 @@ _Searched 2026-09-28, `origin/develop` @ `0ca74068` (test-suites), against serve
 | Bell rendering of user-outcome rows | **None** — client-web #10272 unit tests name the organization events only | manual row proposed (plan M-1) |
 
 **Search again with:** `git grep -n -E "eventOnRoleSetInvitation|SpaceAdmin(User|Organization)CommunityInvitation|communityInvitationResponse|joined \\$\\{|Welcome to the Community" origin/develop -- server-api/src client-web/src`.
+
+## Platform forum — categories, retirement, Matrix hierarchy reconcile (060 / 061)
+
+_Searched 2026-09-28, develop @ `ea5eebe9`, with the open PRs test-suites#600/#643 and server develop @ `df7445856` (027 merged the same day). Plan: `server-api/src/functional-api/communications/forum-discussions/forum-discussions-test-plan.md`._
+
+| Area | Status | Evidence |
+|---|---|---|
+| Category create/refuse matrix (GA, QA), new members active, recategorise round-trip, remove refused (non-admin; non-empty with count) | Full | `communications/forum-discussions/platform-discussions.it-spec.ts` (#628) |
+| Canonical category order (D-09) | **Partial** — the live test asserts the set and length 8, not order. Order is pinned only in server `forum.discussion.category.spec.ts` | plan U-1 |
+| Forum update/delete denial messages | **Red on develop since server#6322**: the privilege is now `platform-forum-manage`. Fix is in open #600 | same file |
+| Remove-category success / idempotency / tombstone | Unit only, **by ruling** (060 D-06). Never automate it against shared envs | server `forum.service.spec.ts`, `forum.resolver.mutations.spec.ts` |
+| Read-side drift filter (active list; discussion → OTHER) | Unit only before this plan | server `forum.resolver.fields.spec.ts`, `discussion.resolver.fields.spec.ts` |
+| Forum notification silence on recategorise | **None** | — |
+| Reconcile mutation, task summary, Redis lease, audit rows | **None** in test-suites on develop. Unit + Go only. #600 adds only role-matrix dry-run ALLOW/DENY cells | server `admin.communication.forum.hierarchy.reconcile.*.spec.ts`; matrix-adapter `space_service_setchildren_test.go` |
+| Matrix hierarchy edges, room-directory visibility | **Observable on a local stack only**: directory visibility without a token, `m.space.child` with the dev appservice token (see harness.md). Unobservable on nightly/ACC | plan N-11, N-12a/b, N-15 (planned 2026-09-29) |
+| Forum category UI (nav, pickers, edit dialog) E2E | **None** in test-suites. client-web's `e2e/specs/forum{Categories,Recategorise}.e2e.spec.ts` are `@forge-acceptance` and not executed in CI | — |
+| Legacy-category dependence of the harness | PLATFORM_FUNCTIONALITIES is the harness default; OTHER is used by the remove negatives and #643's A15 fixture; `TestScenarioFactory.categoryMap` lacks NEWSLETTER/TIPS_AND_TRICKS | plan U-4 — must land before any targeted env retires a category |
+
+**Search again with:** `git grep -n -E "forum|discussionCategor|ForumDiscussionCategory|latestReleaseDiscussion|ReconcileForumHierarchy|SyncSpaceHierarchy|platform_audit" <ref> -- server-api/src client-web/src lib/src ':!lib/src/core/generated'`.
 
 ## How to search this area again
 
@@ -63,9 +94,9 @@ verdict depends on it.
 |---|---|---|---|
 | Global search — categories, filters, location, term limit, space filter, archived spaces, public/private space+subspace visibility matrices | **Covered, strong** (844 lines) | `server-api/src/functional-api/search/search.it-spec.ts` + `search.request.params.ts` | 2026-09-03 · `qa/055-sidebar-search-widget` off `develop` @ `7cdd17c9` |
 | Flow-state-scoped / folded-callout search (`searchInFlowStateFilter`, `foldCalloutResources`, category `cursor`) | **None.** 0 hits outside generated types. `lib/…/queries/search/search.graphql` selects `calloutResults` but no `cursor` | — | 2026-09-03 · same |
-| Sidebar widget lists (`InnovationFlowState.settings.sidebar`) at any level | **None.** No `lib` query selects `settings`; `getInnovationFlowStatesWithIds.graphql` selects `id displayName` only | — | 2026-09-03 · same |
+| Sidebar widget lists (`InnovationFlowState.settings.sidebar`) at any level | **Covered (API).** The four L0 FR-009 defaults and the subspace generic default. Save-as-template and apply carry lists verbatim on L1 and on L0 (wholesale since server#6418), including the empty list. Mutation responses serialize the list. Member write → `FORBIDDEN_POLICY`; duplicate/unknown → `BAD_USER_INPUT`. A concurrent sidebar save plus rename loses the sidebar (server#6571; the pinning test US2-AS6 is skipped until the fix ships). L1→L0 promotion carry-over is in the conversion spec. *Was "None" on 2026-09-03; corrected 2026-10-01* | `templates/space/space-templates.it-spec.ts` › `innovation flow state sidebar round-trip`; `journey/conversion/convert-L1-to-L0-flow-states.it-spec.ts`; `sidebar-widgets/us2-admin-config.spec.ts` AS5–AS7 | 2026-10-01 · test-suites#615 |
 | `calloutsSet.tags` — the tag list, and its per-callout read authorization | **None.** 0 hits in either suite | — | 2026-09-03 · same |
-| Space sidebar contents, E2E | **Blind.** Three specs use `nav[name="Space sidebar"]` purely as a scope (a "Space Leads" text check, a scoped `Add Post` lookup). **No spec asserts a widget list**, so adding a widget invalidates nothing | `public-space/non-member-tab-navigation.spec.ts`, `public-space/non-member-lead-profile-access.spec.ts`, `callouts/pages/CollaborationPage.ts` | 2026-09-03 · same |
+| Space sidebar contents, E2E | **Covered for L0 tabs.** Every default tab plus an added tab renders its FR-009 list in DOM order for a plain member. Action widgets are gated (admin sees, member does not). The Layout editor shows the vocabulary and selection and persists remove/add/reorder/empty; the member view reflects it on the next page load. Fetch parity holds for Events. Subspace settings and the hidden-section round-trip are **not** covered. *Was "Blind" on 2026-09-03; corrected 2026-10-01* | `sidebar-widgets/us1-default-rendering.spec.ts`, `sidebar-widgets/us2-admin-config.spec.ts` | 2026-10-01 · test-suites#615 |
 | Search UI, E2E | **None.** Every `search` hit under `functional-e2e` is incidental (`research`, `searchVisibility`, member/user pickers) | — | 2026-09-03 · same |
 | Banners / visuals / aspect ratios, any level | **None** before 10178; a first floor added by that plan | `client-web/src/functional-e2e/space-banner/`, `server-api/…/visual/` | 2026-09-02 · 10178 |
 | Innovation-flow state transitions, callout transfer between states | Covered | `server-api/…/callout/transfer/*.it-spec.ts`, `…/journey/conversion/` | 2026-09-03 · same |

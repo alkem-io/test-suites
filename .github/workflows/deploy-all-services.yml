@@ -15,10 +15,6 @@ on:
         required: false
         type: string
         default: develop
-      whiteboard_branch:
-        required: false
-        type: string
-        default: develop
       matrix_adapter_branch:
         required: false
         type: string
@@ -40,10 +36,6 @@ on:
         type: string
         default: develop
       vc_engine_libra_flow_branch:
-        required: false
-        type: string
-        default: develop
-      collaborative_document_service_branch:
         required: false
         type: string
         default: develop
@@ -76,11 +68,6 @@ on:
         required: false
         type: string
         default: develop
-      whiteboard_branch:
-        description: "Branch for whiteboard-collaboration-service"
-        required: false
-        type: string
-        default: develop
       matrix_adapter_branch:
         description: "Branch for matrix-adapter"
         required: false
@@ -108,11 +95,6 @@ on:
         default: develop
       vc_engine_libra_flow_branch:
         description: "Branch for virtual-contributor-engine-libra-flow"
-        required: false
-        type: string
-        default: develop
-      collaborative_document_service_branch:
-        description: "Branch for collaborative-document-service"
         required: false
         type: string
         default: develop
@@ -147,14 +129,12 @@ jobs:
             ["server"]="${{ inputs.server_branch }}"
             ["client-web"]="${{ inputs.client_web_branch }}"
             ["notifications"]="${{ inputs.notifications_branch }}"
-            ["whiteboard-collaboration-service"]="${{ inputs.whiteboard_branch }}"
             ["matrix-adapter"]="${{ inputs.matrix_adapter_branch }}"
             ["oidc-service"]="${{ inputs.oidc_branch }}"
             ["file-service"]="${{ inputs.file_service_branch }}"
             ["authorization-evaluation-service"]="${{ inputs.auth_eval_branch }}"
             ["documentation"]="${{ inputs.documentations_branch }}"
             ["virtual-contributor-engine-libra-flow"]="${{ inputs.vc_engine_libra_flow_branch }}"
-            ["collaborative-document-service"]="${{ inputs.collaborative_document_service_branch }}"
             ["kratos-webhooks"]="${{ inputs.kratos_webhooks_branch }}"
             ["wopi-service"]="${{ inputs.wopi_service_branch }}"
             ["collaboration-service"]="${{ inputs.collaboration_service_branch }}"
