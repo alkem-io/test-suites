@@ -407,6 +407,8 @@ baseTest.describe('US1-AS8 — who may invite by email, list, revoke and resend'
 
       const revoke = await deleteEmailInvitationRaw(seededId, persona.token);
       expect(revoke.errors.length, `${persona.email} revoke`).toBeGreaterThan(0);
+      // Revoke is gated on DELETE of the record: the refusal must be that one.
+      expect(revoke.raw).toMatch(/unable to grant 'delete' privilege/);
 
       const resend = await resendEmailInvitationRaw(seededId, persona.token);
       expect(resend.errors.length, `${persona.email} resend`).toBeGreaterThan(0);

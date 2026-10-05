@@ -62,6 +62,9 @@ const uniqueId = UniqueIDGenerator.getID();
 const message = `Join our organization ${uniqueId}`;
 /** The admin-only refusal every gated call answers with. */
 const NOT_AUTHORIZED = /Authorization: unable to grant/;
+/** The refusal of a revoke: DELETE on the platform invitation record. */
+const NOT_AUTHORIZED_DELETE =
+  /Authorization: unable to grant 'delete' privilege/;
 
 const addr = (label: string) => `${label}-${uniqueId}@alkemio.test`;
 
@@ -434,6 +437,10 @@ describe('Invite an unregistered address to an organization (US1)', () => {
 
       const revokeRes = await deleteExternalInvitation(seededId, persona);
       expect(revokeRes?.error, persona).toBeDefined();
+      // Revoke is gated on DELETE of the record: the refusal must be that one.
+      expect(revokeRes?.error?.errors?.[0]?.message, persona).toMatch(
+        NOT_AUTHORIZED_DELETE
+      );
 
       const resendRes = await resendPlatformInvitation(seededId, persona);
       expect(resendRes?.error?.errors?.[0]?.message, persona).toMatch(
