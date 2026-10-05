@@ -30,6 +30,7 @@ import {
 } from './invitation.request.params';
 import {
   drainMailsTo,
+  INVITATION_REFUSED_CODE,
   mailsToAfter,
   mailSummary,
   THROTTLED_CODE,
@@ -343,6 +344,10 @@ describe('Resend a Space email invitation', () => {
         );
         expect(res?.error).toBeDefined();
         expect(getErrorCode(res)).not.toEqual(THROTTLED_CODE);
+        // The typed "consumed" refusal, not just any error (an unknown id or
+        // an authorization refusal must not satisfy this case).
+        expect(getErrorCode(res)).toEqual(INVITATION_REFUSED_CODE);
+        expect(res?.error?.errors?.[0]?.message).toMatch(/already consumed/i);
         expect(res?.data?.resendPlatformInvitation).toBeUndefined();
       },
       email,

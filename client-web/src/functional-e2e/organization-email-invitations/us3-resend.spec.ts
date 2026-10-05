@@ -54,6 +54,8 @@ import {
 baseTest.describe.configure({ mode: 'serial' });
 
 const THROTTLED_CODE = 'ROLESET_INVITATION_RESEND_THROTTLED';
+// RoleSetInvitationException: resending a consumed email invitation (FR-016).
+const CONSUMED_CODE = 'ROLESET_INVITATION';
 
 // Longest window a walk is willing to sit out; the server default is far above it.
 const MAX_WAITABLE_WINDOW_SECONDS = 30;
@@ -245,6 +247,10 @@ baseTest.describe('US3-AS4 — a consumed invitation cannot be resent', () => {
     const res = await resendEmailInvitationRaw(id, orgAdminToken);
     expect(res.errors.length, res.raw).toBeGreaterThan(0);
     expect(errorCodeOf(res)).not.toEqual(THROTTLED_CODE);
+    // The typed "consumed" refusal, not just any error (an unknown id or an
+    // authorization refusal must not satisfy this case).
+    expect(errorCodeOf(res), res.raw).toEqual(CONSUMED_CODE);
+    expect(res.errors[0]?.message).toMatch(/already consumed/i);
     expect(res.data?.resendPlatformInvitation).toBeUndefined();
     expect(await settledMailsTo(consumedEmail)).toHaveLength(mailsBefore);
   });

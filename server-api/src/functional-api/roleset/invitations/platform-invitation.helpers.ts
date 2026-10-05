@@ -11,6 +11,10 @@ const QUIET_PERIOD_MS = 4_000;
 const SETTLE_MS = 2_500;
 
 export const THROTTLED_CODE = 'ROLESET_INVITATION_RESEND_THROTTLED';
+/** The typed refusal (`RoleSetInvitationException`) for resending a consumed
+ * email invitation (FR-016). The same code also covers a platform-level role
+ * set, so callers pin the message too. */
+export const INVITATION_REFUSED_CODE = 'ROLESET_INVITATION';
 
 const addressedTo = (mail: MailItem, address: string): boolean =>
   Array.isArray(mail.toAddresses) &&
