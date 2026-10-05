@@ -262,6 +262,9 @@ describe('Form response — never in subscriptions', () => {
     // the server's message text is not reliably available: assert only that a
     // refusal was recorded.
     expect(formSubscription.getErrors().length).toBeGreaterThanOrEqual(1);
+    // Whatever the refusal looked like, no payload reached the Form callout's
+    // subscriber (the AC: a response never travels a contribution subscription).
+    expect(formSubscription.getMessages()).toHaveLength(0);
   });
 });
 

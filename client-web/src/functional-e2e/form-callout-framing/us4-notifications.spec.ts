@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { execSync } from 'node:child_process';
 import { expect, type Browser, type Page, test } from '@playwright/test';
+import { harnessPostgresConfigured, queryHarnessDb } from '@alkemio/tests-lib';
 import { fillSecret } from '../helpers/login.helper';
 
 /**
@@ -21,7 +22,8 @@ import { fillSecret } from '../helpers/login.helper';
  *      notifications service stopped the submission still succeeds; once it is
  *      back the queued mails arrive.
  * AS7  MULTIPLE mode, three submissions -> three admin emails (no batching).
- * AS8  (needs DB_EXEC) a user_settings row stripped of the new key still gets
+ * AS8  (needs the loopback harness Postgres, POSTGRES_*) a user_settings row
+ *      stripped of the new key still gets
  *      notified with the all-on default and the settings page loads with the row.
  *
  * Self-contained: provisions its own Kratos identities (admin API), Space,
@@ -36,9 +38,7 @@ import { fillSecret } from '../helpers/login.helper';
  *   ALKEMIO_ADMIN_EMAIL       admin@alkem.io
  *   ALKEMIO_ADMIN_PASSWORD    the platform admin's password
  *   RABBITMQ_MANAGEMENT_ENDPOINT / _USER / _PASSWORD   push-emit counting (optional)
- *   DB_EXEC                   shell prefix that runs one SQL statement against the
- *                             alkemio DB, e.g.
- *                             docker exec <postgres> psql -U synapse -d alkemio -At -c
+ *   POSTGRES_*                AS8 only — the loopback-guarded harness database
  *   NOTIFICATIONS_STOP_CMD / NOTIFICATIONS_START_CMD   AS6 only
  */
 
@@ -60,7 +60,6 @@ const RMQ_AUTH = `Basic ${Buffer.from(
     process.env.RABBITMQ_MANAGEMENT_PASSWORD || 'alkemio!'
   }`
 ).toString('base64')}`;
-const DB_EXEC = process.env.DB_EXEC || '';
 const STOP_CMD = process.env.NOTIFICATIONS_STOP_CMD || '';
 const START_CMD = process.env.NOTIFICATIONS_START_CMD || '';
 const GRAPHQL = `${BASE}/api/private/non-interactive/graphql`;
@@ -680,17 +679,24 @@ test.describe(
     test('US4-AS8 a settings row without the new key notifies with the all-on default and the settings page loads', async ({
       browser,
     }) => {
-      test.skip(!DB_EXEC, 'DB_EXEC not provided');
+      // Through the loopback-guarded harness client only: it refuses any
+      // database that is not a local/CI compose stack.
+      test.skip(
+        !harnessPostgresConfigured(),
+        'the loopback harness Postgres (POSTGRES_*) is not configured'
+      );
       const userId = fixture.userIds.a2;
-      const sql = (statement: string) =>
-        execSync(`${DB_EXEC} "${statement}"`, { encoding: 'utf8' }).trim();
-      sql(
-        `update user_settings set notification = notification #- '{space,admin,collaborationCalloutFormResponseReceived}' where id = (select \\"settingsId\\" from \\"user\\" where id = '${userId}')`
+      const settingsOfUser =
+        'where id = (select "settingsId" from "user" where id = $1)';
+      await queryHarnessDb(
+        `update user_settings set notification = notification #- '{space,admin,collaborationCalloutFormResponseReceived}' ${settingsOfUser}`,
+        [userId]
       );
-      const stripped = sql(
-        `select notification->'space'->'admin' ? 'collaborationCalloutFormResponseReceived' from user_settings where id = (select \\"settingsId\\" from \\"user\\" where id = '${userId}')`
+      const [stripped] = await queryHarnessDb<{ present: boolean }>(
+        `select notification->'space'->'admin' ? 'collaborationCalloutFormResponseReceived' as present from user_settings ${settingsOfUser}`,
+        [userId]
       );
-      expect(stripped).toBe('f');
+      expect(stripped?.present).toBe(false);
 
       const before = to(
         await mailsAbout(multi.name),

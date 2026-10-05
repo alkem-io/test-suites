@@ -33,11 +33,12 @@ import {
   createFormCallout,
   createFormCalloutRaw,
   defaultFormQuestions,
+  errorClass,
   errorCode,
   FormCallout,
   getFormDefinition,
   getSpaceSets,
-  isDenied,
+  isForbiddenByPolicy,
   uniqueFormName,
 } from './form.request.params';
 
@@ -259,7 +260,7 @@ describe('Form placement — who can create a FORM callout', () => {
       TestUser.SPACE_MEMBER
     );
 
-    expect(isDenied(result)).toBe(true);
+    expect(isForbiddenByPolicy(result)).toBe(true);
     expect(result.data).toBeUndefined();
   });
 
@@ -372,6 +373,24 @@ describe('Form placement — carriers that build framings refuse a FORM', () => 
 
     expect(result.error).toBeUndefined();
     expect(result.data?.createVirtualContributor.id).toBeDefined();
+  });
+
+  test('a FORM callout cannot be added to an existing knowledge base (US1-AS3)', async () => {
+    const vc = await createKnowledgeBaseVirtualContributor([], 'existing');
+    const kbSetId =
+      vc.data?.createVirtualContributor.knowledgeBase?.calloutsSet.id ?? '';
+    expect(kbSetId).not.toBe('');
+
+    const result = await createFormCalloutRaw(kbSetId, {
+      displayName: uniqueFormName(`kb-direct-${uniqueId}`),
+    });
+
+    expect(errorClass(result)).toBe('BAD_USER_INPUT');
+    expect(result.data).toBeUndefined();
+    const kbCallouts = await framingTypesOf(kbSetId);
+    expect(kbCallouts.map(callout => callout.framing.type)).not.toContain(
+      CalloutFramingType.Form
+    );
   });
 
   test('a callout template cannot carry a FORM callout', async () => {

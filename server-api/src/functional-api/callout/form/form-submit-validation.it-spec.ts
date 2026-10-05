@@ -18,11 +18,15 @@ import {
   answersFor,
   createFormCallout,
   createFormCalloutRaw,
+  errorClass,
   errorCode,
   errorText,
   FormCallout,
+  FormQuestion,
   getFormResponses,
   isDenied,
+  isForbiddenByPolicy,
+  questionsAsUpdate,
   responsesView,
   submitFormResponse,
   submitFormResponseAnonymous,
@@ -346,6 +350,67 @@ describe('Form submit — answer validation', () => {
   });
 });
 
+describe('Form submit — answers to removed questions and options (US2-AS3)', () => {
+  let edited: FormCallout;
+  let removedQuestion: FormQuestion;
+  let removedOptionId: string;
+
+  beforeAll(async () => {
+    const created = await createFormCallout(setId(), {
+      displayName: uniqueFormName(`edited-${uniqueId}`),
+      settings: { responseMode: CalloutFormResponseMode.Multiple },
+    });
+    removedQuestion = created.questions[3];
+    removedOptionId = created.questions[2].options?.[2].id ?? '';
+    // Drop the multiple-choice question and the third single-choice option.
+    const remaining = questionsAsUpdate(created.questions.slice(0, 3)).map(
+      (question, index) =>
+        index === 2
+          ? { ...question, options: question.options?.slice(0, 2) }
+          : question
+    );
+    const updated = await updateCalloutForm(created.formId, {
+      questions: remaining,
+    });
+    const questions = updated.data?.updateCalloutForm.questions;
+    if (!questions) {
+      throw new Error(
+        `removing a question failed: ${JSON.stringify(updated.error?.errors)}`
+      );
+    }
+    edited = { ...created, questions: questions as FormQuestion[] };
+  });
+
+  test('positive control: the edited Form accepts a valid response', async () => {
+    const result = await submit(edited, markedAnswers(edited));
+
+    expect(result.error).toBeUndefined();
+  });
+
+  test('rejects an answer to a question that was removed', async () => {
+    const result = await submit(edited, [
+      ...markedAnswers(edited),
+      {
+        questionID: removedQuestion.id,
+        selectedOptionIDs: [removedQuestion.options?.[0].id ?? ''],
+      },
+    ]);
+
+    expect(errorCode(result)).toBe('FORM_ANSWER_UNKNOWN_QUESTION');
+    expect(errorText(result)).not.toContain(MARKER);
+  });
+
+  test('rejects a choice of an option that was removed', async () => {
+    const result = await submit(
+      edited,
+      markedAnswers(edited, { 2: { selectedOptionIDs: [removedOptionId] } })
+    );
+
+    expect(errorCode(result)).toBe('FORM_ANSWER_INVALID_OPTION');
+    expect(errorText(result)).not.toContain(MARKER);
+  });
+});
+
 describe('Form submit — state and access', () => {
   test('a DRAFT callout rejects responses', async () => {
     const draft = await createFormCallout(setId(), {
@@ -382,7 +447,7 @@ describe('Form submit — state and access', () => {
       TestUser.NON_SPACE_MEMBER
     );
 
-    expect(isDenied(result)).toBe(true);
+    expect(isForbiddenByPolicy(result)).toBe(true);
     expect(errorText(result)).not.toContain(MARKER);
   });
 
@@ -562,6 +627,120 @@ describe('Form definition — limits', () => {
       ).toBeDefined();
     }
   );
+
+  // D-16 / contract C-1 "pinned constants": prompt and option label <= 512,
+  // explanation <= 2048; FR-007: labels non-empty, text questions carry no
+  // options. These are input validation (BAD_USER_INPUT); the spec names no
+  // reason code for them, so none is asserted.
+  test.each([
+    {
+      name: 'an empty option label',
+      questions: () => choiceWith(['', 'Other']),
+    },
+    {
+      name: 'a blank option label',
+      questions: () => choiceWith(['   ', 'Other']),
+    },
+    {
+      name: 'an option label of 513 characters',
+      questions: () => choiceWith(['o'.repeat(513), 'Other']),
+    },
+    {
+      name: 'a prompt of 513 characters',
+      questions: () => [
+        { prompt: 'p'.repeat(513), type: CalloutFormQuestionType.ShortText },
+      ],
+    },
+    {
+      name: 'an explanation of 2049 characters',
+      questions: () => [
+        {
+          prompt: 'Explained',
+          explanation: 'e'.repeat(2049),
+          type: CalloutFormQuestionType.ShortText,
+        },
+      ],
+    },
+    {
+      name: 'options on a text question',
+      questions: () => [
+        {
+          prompt: 'Text with options',
+          type: CalloutFormQuestionType.ShortText,
+          options: [{ label: 'A' }, { label: 'B' }],
+        },
+      ],
+    },
+  ])(
+    'a new Form with $name is rejected as invalid input',
+    async ({ questions }) => {
+      const result = await createFormCalloutRaw(setId(), {
+        displayName: uniqueFormName(`limits-input-${uniqueId}`),
+        questions: questions(),
+      });
+
+      expect(errorClass(result)).toBe('BAD_USER_INPUT');
+      expect(result.data).toBeUndefined();
+    }
+  );
+
+  test.each([
+    {
+      name: 'an option label of 512 characters',
+      questions: () => choiceWith(['o'.repeat(512), 'Other']),
+    },
+    {
+      name: 'a prompt of 512 characters',
+      questions: () => [
+        { prompt: 'p'.repeat(512), type: CalloutFormQuestionType.ShortText },
+      ],
+    },
+    {
+      name: 'an explanation of 2048 characters',
+      questions: () => [
+        {
+          prompt: 'Explained',
+          explanation: 'e'.repeat(2048),
+          type: CalloutFormQuestionType.ShortText,
+        },
+      ],
+    },
+  ])(
+    'boundary control: a new Form with $name is accepted',
+    async ({ questions }) => {
+      const result = await createFormCalloutRaw(setId(), {
+        displayName: uniqueFormName(`limits-input-ok-${uniqueId}`),
+        questions: questions(),
+      });
+
+      expect(result.error).toBeUndefined();
+      expect(
+        result.data?.createCalloutOnCalloutsSet.framing.form?.questions
+      ).toHaveLength(1);
+    }
+  );
+
+  test('an update that names an unknown option id is rejected', async () => {
+    const choice = await createFormCallout(setId(), {
+      displayName: uniqueFormName(`unknown-option-${uniqueId}`),
+      questions: choiceWith(labels(2)),
+    });
+    const [question] = questionsAsUpdate(choice.questions);
+
+    const result = await updateCalloutForm(choice.formId, {
+      questions: [
+        {
+          ...question,
+          options: [
+            ...(question.options ?? []),
+            { id: randomUUID(), label: 'Not one of ours' },
+          ],
+        },
+      ],
+    });
+
+    expect(errorCode(result)).toBe('FORM_UNKNOWN_OPTION_ID');
+  });
 
   test('an update that names an unknown question id is rejected', async () => {
     const result = await updateCalloutForm(form.formId, {

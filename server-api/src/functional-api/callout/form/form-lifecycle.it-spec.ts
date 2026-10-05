@@ -39,7 +39,7 @@ import {
   FormQuestion,
   getFormResponses,
   getSpaceSets,
-  isDenied,
+  isForbiddenByPolicy,
   questionsAsUpdate,
   responsesView,
   submitFormResponse,
@@ -575,9 +575,9 @@ describe('Form lifecycle — editing the definition under existing responses', (
     );
   });
 
-  test('toggling required is allowed with responses', async () => {
+  test('toggling required is allowed with responses and binds new submissions only', async () => {
     const form = await newForm('required-toggle');
-    await respond(form, ADMINS);
+    const existing = await respond(form, ADMINS);
     const toggled = questionsAsUpdate(form.questions).map((question, index) =>
       index === 1 ? { ...question, required: true } : question
     );
@@ -586,6 +586,16 @@ describe('Form lifecycle — editing the definition under existing responses', (
 
     expect(result.error).toBeUndefined();
     expect(result.data?.updateCalloutForm.questions[1].required).toBe(true);
+    // R9: a new submission must now answer the question ...
+    const missing = await submitFormResponse(
+      form.formId,
+      answersFor(form.questions, { 1: null }),
+      ADMINS,
+      TestUser.SUBSPACE_MEMBER
+    );
+    expect(errorCode(missing)).toBe('FORM_ANSWER_REQUIRED');
+    // ... while the response collected before the toggle is untouched.
+    expect(await idsSeenByAdmin(form)).toEqual([existing]);
   });
 
   test('a plain member cannot edit the definition', async () => {
@@ -597,7 +607,7 @@ describe('Form lifecycle — editing the definition under existing responses', (
       TestUser.SPACE_MEMBER
     );
 
-    expect(isDenied(result)).toBe(true);
+    expect(isForbiddenByPolicy(result)).toBe(true);
   });
 });
 
@@ -721,7 +731,7 @@ describe('Form lifecycle — who may delete which response', () => {
   ])('$who cannot delete or withdraw it', async ({ user }) => {
     const attempt = await deleteFormResponse(responseId, user);
 
-    expect(isDenied(attempt)).toBe(true);
+    expect(isForbiddenByPolicy(attempt)).toBe(true);
     expect(await stillThere()).toBe(true);
   });
 
@@ -733,7 +743,7 @@ describe('Form lifecycle — who may delete which response', () => {
       TestUser.SUBSUBSPACE_ADMIN
     );
 
-    expect(isDenied(attempt)).toBe(true);
+    expect(isForbiddenByPolicy(attempt)).toBe(true);
     expect(await totalSeenByAdmin(exAdminForm)).toBe(1);
   });
 
@@ -743,7 +753,7 @@ describe('Form lifecycle — who may delete which response', () => {
       TestUser.SUBSUBSPACE_ADMIN
     );
 
-    expect(isDenied(attempt)).toBe(true);
+    expect(isForbiddenByPolicy(attempt)).toBe(true);
     expect(await totalSeenByAdmin(exAdminForm)).toBe(1);
   });
 

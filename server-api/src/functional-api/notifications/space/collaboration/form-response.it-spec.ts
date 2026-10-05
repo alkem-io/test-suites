@@ -27,6 +27,7 @@ import {
   getMailsDataSettled,
   getPushQueuePublishedTotal,
   MailItem,
+  notif,
   snapshotNotificationSettings,
   subscribeRecipientsToPush,
   unsubscribeRecipientsFromPush,
@@ -94,6 +95,17 @@ const adminRow = (on: boolean): UpdateUserSettingsEntityInput => ({
   },
 });
 
+// FR-023a: the generic "new contribution" rows are switched ON for everyone
+// involved, so "no contribution mail" cannot pass because a row was muted.
+const genericContributionRowsOn: UpdateUserSettingsEntityInput = {
+  notification: {
+    space: {
+      admin: { collaborationCalloutContributionCreated: notif(true) },
+      collaborationCalloutContributionCreated: notif(true),
+    },
+  },
+};
+
 let baseScenario: OrganizationWithSpaceModel;
 const snapshots = new Map<string, UpdateUserSettingsEntityInput>();
 
@@ -102,6 +114,7 @@ const users = () => ({
   // admin role too and is a legitimate recipient of the admin notification.
   globalAdmin: TestUserManager.users.globalAdmin,
   spaceAdmin: TestUserManager.users.spaceAdmin,
+  spaceMember: TestUserManager.users.spaceMember,
   subspaceAdmin: TestUserManager.users.subspaceAdmin,
   subspaceMember: TestUserManager.users.subspaceMember,
 });
@@ -166,6 +179,12 @@ beforeAll(async () => {
       await updateUserSettings(user.id, adminRow(true))
     );
   }
+  for (const user of Object.values(users())) {
+    assertCleanupSucceeded(
+      'switch the generic contribution rows on',
+      await updateUserSettings(user.id, genericContributionRowsOn)
+    );
+  }
 });
 
 afterAll(async () => {
@@ -208,6 +227,18 @@ describe('Form response notifications — a member responds', () => {
       to(mails, adminSubject(form), users().subspaceMember.email),
       detail
     ).toHaveLength(0);
+    // SC-004: a member who is not an admin of the subspace hears nothing.
+    expect(
+      mails.filter(m => m.toAddresses?.includes(users().spaceMember.email)),
+      detail
+    ).toHaveLength(0);
+
+    // US4-AS4: the admin email names the submitter and links to the Post.
+    const adminBody =
+      to(mails, adminSubject(form), users().subspaceAdmin.email)[0]?.body ?? '';
+    expect(adminBody).toContain(users().subspaceMember.displayName);
+    expect(adminBody).toContain(form.url);
+    expect(adminBody).not.toContain(ANSWER_MARKER);
 
     const receipts = to(
       mails,
@@ -216,7 +247,10 @@ describe('Form response notifications — a member responds', () => {
     );
     expect(receipts, detail).toHaveLength(1);
     const body = receipts[0].body ?? '';
-    expect(body).toContain('Only the admins of');
+    // D-9: the receipt names who can read the response, for this subspace.
+    expect(body).toContain(
+      `Only the admins of ${subspaceName()} can read your response`
+    );
     expect(body).toContain(form.url);
     expect(body).not.toContain(ANSWER_MARKER);
   });
@@ -257,7 +291,9 @@ describe('Form response notifications — a member responds', () => {
       users().subspaceMember.email
     );
     expect(receipts, summary(mails)).toHaveLength(1);
-    expect(receipts[0].body).toContain('Members of');
+    expect(receipts[0].body).toContain(
+      `Members of ${subspaceName()} can read your response`
+    );
     expect(receipts[0].body).not.toContain('Only the admins of');
   });
 });

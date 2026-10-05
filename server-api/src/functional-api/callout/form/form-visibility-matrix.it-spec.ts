@@ -1,5 +1,7 @@
 import {
   createSpaceBasicData,
+  harnessPostgresConfigured,
+  queryHarnessDb,
   TestScenarioConfig,
   TestScenarioFactory,
   TestUser,
@@ -23,12 +25,14 @@ import {
   answersFor,
   createFormCallout,
   deleteFormResponse,
+  deleteFormResponseAnonymous,
   FormCallout,
   getFormResponses,
   getFormResponsesAnonymous,
   getSpaceSets,
   grantPlatformRole,
   isDenied,
+  isForbiddenByPolicy,
   responsesView,
   revokePlatformRole,
   submitFormResponse,
@@ -265,6 +269,22 @@ const submitAs = async (
   return id;
 };
 
+type AuditRow = {
+  category: string;
+  outcome: string;
+  initiatorUserId: string | null;
+  details: Record<string, unknown> | null;
+};
+
+/** The platform_audit_entry rows written for one Form response (R14). */
+const auditRowsFor = (responseId: string) =>
+  queryHarnessDb<AuditRow>(
+    `SELECT category, outcome, "initiatorUserId", details
+       FROM platform_audit_entry
+      WHERE details->>'resourceId' = $1`,
+    [responseId]
+  );
+
 beforeAll(async () => {
   baseScenario = await TestScenarioFactory.createBaseScenario(scenarioConfig);
 
@@ -395,7 +415,7 @@ describe('Form responses — who can delete another member’s response', () => 
         expect(attempt.data?.deleteCalloutFormResponse.id).toBe(responseId);
         expect(stillThere).toBe(false);
       } else {
-        expect(isDenied(attempt)).toBe(true);
+        expect(isForbiddenByPolicy(attempt)).toBe(true);
         // Positive control: the denied attempt left the row in place.
         expect(stillThere).toBe(true);
         const cleanup = await deleteFormResponse(
@@ -406,6 +426,29 @@ describe('Form responses — who can delete another member’s response', () => 
       }
     }
   );
+
+  test('anonymous cannot delete another member’s response', async () => {
+    const responseId = await submitAs(
+      deletionForm,
+      CalloutFormResponseVisibility.Members
+    );
+
+    const attempt = await deleteFormResponseAnonymous(responseId);
+
+    expect(isDenied(attempt)).toBe(true);
+    expect(attempt.body.data?.deleteCalloutFormResponse).toBeFalsy();
+    const stillThere = (
+      await getFormResponses(deletionForm.formId, TestUser.GLOBAL_ADMIN)
+    ).data?.lookup.calloutFormResponses.all.responses.some(
+      response => response.id === responseId
+    );
+    expect(stillThere).toBe(true);
+    const cleanup = await deleteFormResponse(
+      responseId,
+      TestUser.SUBSPACE_MEMBER
+    );
+    expect(cleanup.error).toBeUndefined();
+  });
 
   test('the author can always withdraw their own response', async () => {
     const responseId = await submitAs(
@@ -469,7 +512,7 @@ describe('Form responses — the ex-admin creator', () => {
       TestUser.SUBSUBSPACE_ADMIN
     );
 
-    expect(isDenied(attempt)).toBe(true);
+    expect(isForbiddenByPolicy(attempt)).toBe(true);
   });
 
   test('positive control: the current subspace admin still reads the one response', async () => {
@@ -479,6 +522,53 @@ describe('Form responses — the ex-admin creator', () => {
     );
 
     expect(responsesView(result)).toEqual(everything(0, true));
+  });
+});
+
+describe('Form responses — a parent space member with inherited rights (US3-AS7, D-4)', () => {
+  // The tests share one Form and run in order: the submission comes first.
+  let inheritedForm: FormCallout;
+
+  beforeAll(async () => {
+    inheritedForm = await createFormCallout(subspaceSetId(), {
+      displayName: uniqueFormName(`inherited-${uniqueId}`),
+      settings: {
+        visibility: CalloutFormResponseVisibility.Members,
+        responseMode: CalloutFormResponseMode.Single,
+      },
+    });
+  });
+
+  test('submits to a Space-members Form of the subspace', async () => {
+    const submitted = await submitFormResponse(
+      inheritedForm.formId,
+      answersFor(inheritedForm.questions),
+      CalloutFormResponseVisibility.Members,
+      TestUser.SPACE_MEMBER
+    );
+
+    expect(submitted.error).toBeUndefined();
+    expect(submitted.data?.submitCalloutFormResponse.createdBy?.id).toBe(
+      TestUserManager.users.spaceMember.id
+    );
+  });
+
+  test('reads only their own response', async () => {
+    const result = await getFormResponses(
+      inheritedForm.formId,
+      TestUser.SPACE_MEMBER
+    );
+
+    expect(responsesView(result)).toEqual(own(1));
+  });
+
+  test('positive control: a member of the subspace reads that response', async () => {
+    const result = await getFormResponses(
+      inheritedForm.formId,
+      TestUser.SUBSUBSPACE_MEMBER
+    );
+
+    expect(responsesView(result)).toEqual(everything(0, false));
   });
 });
 
@@ -533,7 +623,7 @@ describe('Form responses — a private space', () => {
       TestUser.GLOBAL_SUPPORT_ADMIN
     );
 
-    expect(isDenied(result)).toBe(true);
+    expect(isForbiddenByPolicy(result)).toBe(true);
     expect(result.data?.lookup.calloutFormResponses).toBeUndefined();
   });
 
@@ -635,6 +725,25 @@ describe('Form responses — a space that allows platform support as admin', () 
     expect(attempt.data?.deleteCalloutFormResponse.id).toBe(responseId);
   });
 
+  test.skipIf(!harnessPostgresConfigured())(
+    'Global Support moderating through support-as-admin writes no audit row (R14)',
+    async () => {
+      const responseId = await submitAs(
+        supportForm,
+        CalloutFormResponseVisibility.Admins,
+        TestUser.SPACE_MEMBER
+      );
+
+      const attempt = await deleteFormResponse(
+        responseId,
+        TestUser.GLOBAL_SUPPORT_ADMIN
+      );
+      expect(attempt.error).toBeUndefined();
+
+      expect(await auditRowsFor(responseId)).toHaveLength(0);
+    }
+  );
+
   test('control: a registered non-member still reads nothing here', async () => {
     const result = await getFormResponses(
       supportForm.formId,
@@ -644,3 +753,68 @@ describe('Form responses — a space that allows platform support as admin', () 
     expect(responsesView(result)).toEqual(own(0));
   });
 });
+
+describe.skipIf(!harnessPostgresConfigured())(
+  'Form responses — audit of platform-role moderation (R14, local Postgres)',
+  () => {
+    const AUDIT_MARKER = `audit-answer-${uniqueId}`;
+
+    const submitMarked = async () => {
+      const submitted = await submitFormResponse(
+        deletionForm.formId,
+        answersFor(deletionForm.questions, { 0: { text: AUDIT_MARKER } }),
+        CalloutFormResponseVisibility.Members,
+        TestUser.SUBSPACE_MEMBER
+      );
+      const id = submitted.data?.submitCalloutFormResponse.id;
+      if (!id) {
+        throw new Error(
+          `marked submit failed: ${JSON.stringify(submitted.error?.errors)}`
+        );
+      }
+      return id;
+    };
+
+    test.each([
+      {
+        label: 'Platform Content Full Access',
+        user: TestUser.QA_USER,
+        actorId: () => TestUserManager.users.qaUser.id,
+      },
+      {
+        label: 'Global Admin',
+        user: TestUser.GLOBAL_ADMIN,
+        actorId: () => TestUserManager.users.globalAdmin.id,
+      },
+    ])(
+      '$label deleting another member’s response writes one id-only audit row',
+      async ({ user, actorId }) => {
+        const responseId = await submitMarked();
+
+        const deleted = await deleteFormResponse(responseId, user);
+        expect(deleted.error).toBeUndefined();
+
+        const rows = await auditRowsFor(responseId);
+        expect(rows).toHaveLength(1);
+        expect(rows[0].category).toBe('platform_resource');
+        expect(rows[0].outcome).toBe('resource_deleted');
+        expect(rows[0].initiatorUserId).toBe(actorId());
+        expect(rows[0].details?.formId).toBe(deletionForm.formId);
+        // Ids only: the answer never reaches the audit trail.
+        expect(JSON.stringify(rows[0].details)).not.toContain(AUDIT_MARKER);
+      }
+    );
+
+    test.each([
+      { label: 'a subspace admin moderating', user: TestUser.SUBSPACE_ADMIN },
+      { label: 'the submitter withdrawing', user: TestUser.SUBSPACE_MEMBER },
+    ])('$label writes no audit row', async ({ user }) => {
+      const responseId = await submitMarked();
+
+      const deleted = await deleteFormResponse(responseId, user);
+      expect(deleted.error).toBeUndefined();
+
+      expect(await auditRowsFor(responseId)).toHaveLength(0);
+    });
+  }
+);
