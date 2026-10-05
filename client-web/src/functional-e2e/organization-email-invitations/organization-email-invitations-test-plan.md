@@ -31,3 +31,16 @@ The flipped 062 pins: `organization-user-associates/us1-invite-associates.spec.t
 
 - Account-deletion erasure, the registration precedence rule itself and conversion carrying the message and language: `organization-email-invitation-registration.it-spec.ts`.
 - The escaped-markup and subject rules at the mail level without a browser: `associate-email-invitation.it-spec.ts`.
+
+Not covered anywhere in this repository, or covered only under a condition:
+
+| Scenario / requirement | State | Why |
+| ---------------------- | ----- | --- |
+| FR-029 / SC-009 — the hourly email budget (200 per acting user, 300 per role set), refused with `ROLESET_INVITATION_EMAIL_BUDGET_EXCEEDED`, nothing created | **Not covered** (server unit specs only) | There is no per-test server-config override (`docs/qa-knowledge/harness.md`). Exhausting the default budget would refuse every other invite spec for the shared personas for an hour. Automating it needs a stack booted with low `PLATFORM_INVITATION_EMAIL_BUDGET_*` values. |
+| US3-AS3 — "after the window a resend succeeds again" | **Conditional** — `us3-resend.spec.ts` skips it against the 300 s default | It runs only when the stack and this run share `PLATFORM_INVITATION_RESEND_COOLDOWN_SECONDS` ≤ 30. The nightly stack runs the default, so nightly never executes it. |
+| US4-AS4 — a consumed record is never converted again | **Loopback tier** — `organization-email-invitation-registration.it-spec.ts` skips it when the harness cannot reach Postgres | A consumed record can only be forged in the database. It is not continuous coverage on a remote nightly. |
+| US4-AS3 — self-service account deletion erases the records | **Not covered**: only the platform-admin deletion is driven | Self-deletion is gated on a fresh cookie session (`harness.md`, session freshness gates). The bearer suite cannot reach it, and no walk deletes an email invitee's own account. |
+| US2-AS3 decline half, and the admins' "accepted" / "declined" notifications. US2-AS5 withheld-role notice, and the admins' "role not granted" mail | **Not re-asserted for a converted email invitation** | This is 062 behaviour, unchanged. For registered invitees it is pinned by `organization-user-associates/us2-invitee-responds.spec.ts` (US2-AS3, US2-AS5) and `server-api/.../notifications/organization/associates.it-spec.ts` (accept, withheld Owner, REJECT). |
+| US2-AS1 — no push notification for the account-less recipient | **Partial** | In-app absence is asserted (`associate-email-invitation.it-spec.ts`). Push absence is not. |
+| FR-016 — resend refused for a record on a platform-level role set | **Not covered** (server unit spec only) | No spec creates a platform-level email invitation. |
+| US1-AS2 — the date column of the pending row | **Not covered** | The row's role, status and actions are asserted, but its date is not. |
