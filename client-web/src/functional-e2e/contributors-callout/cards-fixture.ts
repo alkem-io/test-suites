@@ -230,14 +230,24 @@ export class CardsFixture {
     options: { associates: number; website?: string; seed?: ProfileSeed },
     adminUserId: string
   ): Promise<string> {
+    if (!displayName.includes(this.runToken)) {
+      throw new Error(
+        `"${displayName}" must contain the run token ${this.runToken}`
+      );
+    }
+    const orgNameID = nameID.toLowerCase().slice(0, 24);
     const res = await createOrganization(
       displayName,
-      nameID.toLowerCase().slice(0, 24),
+      orgNameID,
       undefined,
       undefined,
       options.website
     );
     if (res.error || !res.data?.createOrganization) {
+      // A retried create re-fails on the fixed nameID ("already taken") even
+      // though the first attempt was committed. Track that twin so `cleanUp`
+      // removes it, then report the failure.
+      await this.trackOrganizationByNameID(orgNameID);
       throw new Error(
         `createOrganization(${displayName}): ${JSON.stringify(res.error)}`
       );
@@ -262,6 +272,22 @@ export class CardsFixture {
     }
     if (options.seed) await setProfile('organization', id, options.seed);
     return id;
+  }
+
+  /** Track an organization that exists under `nameID` although its create reported a failure. */
+  private async trackOrganizationByNameID(nameID: string): Promise<void> {
+    try {
+      const { lookupByName } = await adminGql<{
+        lookupByName: { organization: { id: string } | null };
+      }>(
+        'query($n: NameID!) { lookupByName { organization(NAMEID: $n) { id } } }',
+        { n: nameID }
+      );
+      const id = lookupByName.organization?.id;
+      if (id && !this.organizations.includes(id)) this.organizations.push(id);
+    } catch {
+      /* nothing committed under that nameID — the create error stands */
+    }
   }
 
   async virtualContributorMember(
