@@ -1,61 +1,53 @@
 /**
  * Functional API specs pinning the contributor-card-enrichment contract
- * (workspace feature 077-richer-contributor-cards): the five additive
- * `ContributorCollectionItem` fields — `tagline`, `tags`, `joinedDate`,
- * `website`, `associatesCount` — as delivered by `contributors(type)` on a
- * CONTRIBUTORS callout.
+ * (workspace feature 077-richer-contributor-cards, client-web#10316): the five
+ * additive `ContributorCollectionItem` fields — `tagline`, `tags`,
+ * `joinedDate`, `website`, `associatesCount` — as delivered by
+ * `contributors(type)` on a CONTRIBUTORS callout.
  *
- * API-only, no SQL: irregular association rows and backdated membership rows
- * are proven live (`gql-live` probes 4 and 6), never here. This suite fixes
- * the *shape* of clean-data behaviour so a schema/behaviour regression fails
- * fast in the wave-2 verification track, before a live walk ever runs.
+ * Oracles come from the amended spec (FR-004, 2026-09-28: tag lists MERGED in
+ * preference order, duplicates compared ignoring case keep the first
+ * occurrence, blank tags dropped) and from contract
+ * `graphql-contributor-card-enrichment` §2. Visibility (FR-032) lives in
+ * `contributor-cards-visibility.it-spec.ts`.
  *
- * Execution: pnpm --filter @alkemio/test-suite-server-api exec vitest run
- *   src/functional-api/callout/contributors-collection
+ * API only, no SQL: backdated or duplicated membership rows and irregular
+ * association rows cannot be built from this repo (see the area test plan's
+ * Not covered table).
  */
 
 import {
   TestScenarioConfig,
   TestScenarioFactory,
   UniqueIDGenerator,
+  TestUserManager,
 } from '@alkemio/tests-lib';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import { RoleName } from '@alkemio/tests-lib/core/generated/alkemio-schema';
 import {
+  assignRoleToOrganization,
   assignRoleToUser,
   assignRoleToVirtualContributor,
+  createOrganization,
+  deleteOrganization,
+  removeRoleFromUser,
 } from '@alkemio/tests-lib/scenario/baseFunctions';
 
 import {
   createUserDataOrFail,
   deleteUser,
-  getUserData,
-  CreatedUserData,
 } from '../../contributor-management/user/user.request.params';
-import {
-  createOrganization,
-  deleteOrganization,
-} from '../../contributor-management/organization/organization.request.params';
-import { assignRoleToOrganization } from '../../roleset/roles-request.params';
 
 import {
+  ContributorCard,
+  ContributorCardActorType,
   createContributorCardsCallout,
   getContributorCards,
   getOrganizationAssociatesMetric,
-  setUserTaglineAndTags,
+  setOrganizationProfileOrFail,
+  setUserProfileOrFail,
+  setVirtualContributorProfileOrFail,
 } from './contributor-cards.request.params';
-
-type ContributorCardItem = {
-  id: string;
-  type: string;
-  displayName: string;
-  roleLabel?: string | null;
-  tagline: string | null;
-  tags: string[] | null;
-  joinedDate: string | null;
-  website: string | null;
-  associatesCount: number | null;
-};
 
 const uniqueId = UniqueIDGenerator.getID();
 
@@ -69,71 +61,126 @@ const scenarioConfig: TestScenarioConfig = {
   virtualContributors: {
     useBaseOrganization: true,
     virtualContributors: [
-      { profileDisplayName: `contributor-cards-vc-${uniqueId}` },
+      { profileDisplayName: `contributor-cards-helper-vc-${uniqueId}` },
+      { profileDisplayName: `contributor-cards-quiet-vc-${uniqueId}` },
     ],
   },
 };
 
-let baseScenario: OrganizationWithSpaceModel;
-let calloutID = '';
-// The UTC-month window a fresh member-role assignment made during this suite
-// can land in — captured before any role is assigned, read again at
-// assertion time, so a run that straddles a month boundary still passes
-// (mirrors the contract's "accept the month of beforeAll start OR end").
-let beforeAllStart: Date;
+// ---- Fixture profiles and the oracle each one implies ---------------------
 
-let userWithTags: CreatedUserData;
-let userWithoutTags: CreatedUserData;
-
-const SKILLS = ['Urban Planning', 'Sustainability', 'Facilitation'];
-const KEYWORDS_FALLBACK = ['Policy', 'Energy'];
+/** Skills then keywords, merged; 'sustainability' and 'URBAN PLANNING' are
+ * case-duplicates of skills (first spelling wins); ' ' and '' are blanks. */
+const MERGED_SKILLS = ['Urban Planning', 'Sustainability', 'Facilitation'];
+const MERGED_KEYWORDS = [
+  'sustainability',
+  ' ',
+  '',
+  'Mobility',
+  'URBAN PLANNING',
+  'Water',
+];
+const MERGED_EXPECTED = [
+  'Urban Planning',
+  'Sustainability',
+  'Facilitation',
+  'Mobility',
+  'Water',
+];
 const TAGLINE = 'Building inclusive, well-run civic spaces.';
+
+const KEYWORDS_ONLY = ['Policy', 'Energy'];
+
+/** Organizations and VCs: keywords then capabilities, merged. */
+const ORG_KEYWORDS = ['Renewable Energy', 'Grid'];
+const ORG_CAPABILITIES = ['grid', 'Funding'];
+const ORG_EXPECTED = ['Renewable Energy', 'Grid', 'Funding'];
+const CAPABILITIES_ONLY = ['Funding'];
+const VC_KEYWORDS = ['Assistant', 'research'];
+const VC_CAPABILITIES = ['Research', 'Summaries'];
+const VC_EXPECTED = ['Assistant', 'research', 'Summaries'];
+const VC_TAGLINE = 'Answers questions about this space.';
 
 const ORG_VALID = 'valid';
 const ORG_BARE = 'bare';
 const ORG_HOSTILE = 'hostile';
 const ORG_SCHEMELESS = 'schemeless';
 const ORG_SPACEY = 'spacey';
+const ORG_KEYS = [
+  ORG_VALID,
+  ORG_BARE,
+  ORG_HOSTILE,
+  ORG_SCHEMELESS,
+  ORG_SPACEY,
+] as const;
+type OrgKey = (typeof ORG_KEYS)[number];
 
-const orgWebsites: Record<string, string | undefined> = {
+const orgWebsites: Record<OrgKey, string | undefined> = {
   [ORG_VALID]: 'https://example.org',
   [ORG_BARE]: undefined,
   [ORG_HOSTILE]: 'javascript:alert(1)',
   [ORG_SCHEMELESS]: 'www.example.org',
   [ORG_SPACEY]: '  HTTPS://Spacey.example/about  ',
 };
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const orgs: Record<string, any> = {};
 
-const associateUserIds: string[] = [];
+/** Associates added to ORG_VALID on top of its creator. */
 const ASSOCIATE_COUNT = 3;
-// `createOrganization` grants the CREATING user (the harness admin) an
-// ASSOCIATE role on every new organisation, so every org's platform-wide
-// `associates` metric starts at 1, not 0. Captured right after each org is
-// created (before this suite's own associate assignments), so the parity
-// assertions below derive their expectations from the API instead of a
-// literal that assumes a zero baseline.
-const orgAssociatesBaseline: Record<string, number> = {};
+
+let baseScenario: OrganizationWithSpaceModel;
+let calloutID = '';
+const users = { merged: '', keywordsOnly: '', empty: '' };
+const orgs = {} as Record<OrgKey, { id: string; roleSetId: string }>;
+const associateUserIds: string[] = [];
+/** ORG_VALID's `associates` metric right after creation (the creating admin
+ * is auto-associated, so this is 1 on a correct server, not 0). */
+let validAssociatesBaseline = 0;
+/** The UTC wall-clock window in which the member roles were assigned — an
+ * oracle independent of the server's own `joinedDate`. */
+let memberAssignedFrom: Date;
+let memberAssignedTo: Date;
 
 const monthStartUtcIso = (d: Date): string =>
   new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), 1)).toISOString();
 
 const cardsByType = async (
-  type: 'USER' | 'ORGANIZATION' | 'VIRTUAL_CONTRIBUTOR'
-): Promise<ContributorCardItem[]> => {
+  type: ContributorCardActorType
+): Promise<ContributorCard[]> => {
   const res = await getContributorCards(calloutID, type);
   expect(res.body.errors, JSON.stringify(res.body.errors)).toBeUndefined();
-  return res.body.data?.lookup?.callout?.framing?.contributors ?? [];
+  return res.body.data.lookup.callout.framing.contributors;
 };
 
+const cardFor = (cards: ContributorCard[], id: string): ContributorCard => {
+  const card = cards.find(c => c.id === id);
+  expect(card, `no card for ${id}`).toBeDefined();
+  return card!;
+};
+
+const associatesMetric = async (organizationId: string): Promise<number> => {
+  const res = await getOrganizationAssociatesMetric(organizationId);
+  expect(res.body.errors, JSON.stringify(res.body.errors)).toBeUndefined();
+  const metric = (
+    res.body.data.organization.metrics as { name: string; value: string }[]
+  ).find(m => m.name === 'associates');
+  expect(metric, 'organization has no associates metric').toBeDefined();
+  return Number(metric!.value);
+};
+
+const createUserOrFail = async (key: string) =>
+  (
+    await createUserDataOrFail({
+      nameID: `cc-${key}-${uniqueId}`,
+      email: `cc-${key}-${uniqueId}@alkem.io`,
+      profileData: { displayName: `CC ${key} ${uniqueId}` },
+    })
+  ).id;
+
 beforeAll(async () => {
-  beforeAllStart = new Date();
   baseScenario = await TestScenarioFactory.createBaseScenario(scenarioConfig);
-  const calloutsSetID = baseScenario.space.collaboration.calloutsSetId;
   const spaceRoleSetID = baseScenario.space.community.roleSetId;
 
   const calloutRes = await createContributorCardsCallout(
-    calloutsSetID,
+    baseScenario.space.collaboration.calloutsSetId,
     `contributor-cards-${uniqueId}`,
     ['USER', 'ORGANIZATION', 'VIRTUAL_CONTRIBUTOR']
   );
@@ -143,267 +190,272 @@ beforeAll(async () => {
   ).toBeUndefined();
   calloutID = calloutRes.body.data.createCalloutOnCalloutsSet.id;
 
-  // ---- Users ---------------------------------------------------------
-  userWithTags = await createUserDataOrFail({
-    nameID: `cc-user-tags-${uniqueId}`,
-    email: `cc-user-tags-${uniqueId}@alkem.io`,
-    profileData: { displayName: `CC User With Tags ${uniqueId}` },
+  // ---- Users -----------------------------------------------------------
+  users.merged = await createUserOrFail('merged');
+  users.keywordsOnly = await createUserOrFail('keywords-only');
+  users.empty = await createUserOrFail('empty');
+  memberAssignedFrom = new Date();
+  for (const id of Object.values(users)) {
+    const res = await assignRoleToUser(id, spaceRoleSetID, RoleName.Member);
+    expect(res.error, JSON.stringify(res.error)).toBeUndefined();
+  }
+  memberAssignedTo = new Date();
+  await setUserProfileOrFail(users.merged, {
+    tagline: `  ${TAGLINE}  `,
+    tags: { skills: MERGED_SKILLS, keywords: MERGED_KEYWORDS },
   });
-  userWithoutTags = await createUserDataOrFail({
-    nameID: `cc-user-notags-${uniqueId}`,
-    email: `cc-user-notags-${uniqueId}@alkem.io`,
-    profileData: { displayName: `CC User Without Tags ${uniqueId}` },
+  await setUserProfileOrFail(users.keywordsOnly, {
+    tagline: '   ',
+    tags: { skills: [], keywords: KEYWORDS_ONLY },
   });
 
-  await assignRoleToUser(userWithTags.id, spaceRoleSetID, RoleName.Member);
-  await assignRoleToUser(userWithoutTags.id, spaceRoleSetID, RoleName.Member);
-
-  const withTagsProfile = await getUserData(userWithTags.id);
-  const withoutTagsProfile = await getUserData(userWithoutTags.id);
-  await setUserTaglineAndTags(
-    userWithTags.id,
-    withTagsProfile.data?.user?.profile?.tagsets ?? [],
-    { tagline: TAGLINE, skills: SKILLS, keywords: ['unused-keyword'] }
-  );
-  await setUserTaglineAndTags(
-    userWithoutTags.id,
-    withoutTagsProfile.data?.user?.profile?.tagsets ?? [],
-    { tagline: '', skills: [], keywords: KEYWORDS_FALLBACK }
-  );
-
-  // ---- Organizations ---------------------------------------------------
-  for (const key of [
-    ORG_VALID,
-    ORG_BARE,
-    ORG_HOSTILE,
-    ORG_SCHEMELESS,
-    ORG_SPACEY,
-  ]) {
-    const website = orgWebsites[key];
+  // ---- Organizations -------------------------------------------------------
+  for (const key of ORG_KEYS) {
     const res = await createOrganization(
       `cc-org-${key}-${uniqueId}`,
       `cc-org-${key}-${uniqueId}`.toLowerCase().slice(0, 24),
       undefined,
       undefined,
-      website
+      orgWebsites[key]
     );
     if (res.error || !res.data?.createOrganization) {
       throw new Error(
         `Unable to create fixture organization '${key}': ${JSON.stringify(res.error)}`
       );
     }
-    orgs[key] = res.data.createOrganization;
+    orgs[key] = {
+      id: res.data.createOrganization.id,
+      roleSetId: res.data.createOrganization.roleSet.id,
+    };
     await assignRoleToOrganization(
       orgs[key].id,
       spaceRoleSetID,
       RoleName.Member
     );
-
-    const baselineRes = await getOrganizationAssociatesMetric(orgs[key].id);
-    const baselineMetrics = baselineRes.body.data?.organization?.metrics ?? [];
-    const baselineMetric = baselineMetrics.find(
-      (m: { name: string; value: string }) => m.name === 'associates'
-    );
-    orgAssociatesBaseline[key] = baselineMetric
-      ? Number(baselineMetric.value)
-      : 0;
   }
+  await setOrganizationProfileOrFail(orgs[ORG_VALID].id, {
+    tags: { keywords: ORG_KEYWORDS, capabilities: ORG_CAPABILITIES },
+  });
+  await setOrganizationProfileOrFail(orgs[ORG_HOSTILE].id, {
+    tags: { keywords: [], capabilities: CAPABILITIES_ONLY },
+  });
 
-  // Three throwaway associate users on the first organization (ruling R4 /
-  // contract §2's associates parity) — platform-wide, unrelated to space
-  // membership.
+  // ORG_BARE at a real zero: drop the creating admin's automatic ASSOCIATE.
+  const removed = await removeRoleFromUser(
+    TestUserManager.users.globalAdmin.id,
+    orgs[ORG_BARE].roleSetId,
+    RoleName.Associate
+  );
+  expect(removed.error, JSON.stringify(removed.error)).toBeUndefined();
+
+  // ORG_VALID at N: three throwaway associates on top of its creator.
+  validAssociatesBaseline = await associatesMetric(orgs[ORG_VALID].id);
   for (let i = 0; i < ASSOCIATE_COUNT; i++) {
-    const associate = await createUserDataOrFail({
-      nameID: `cc-associate-${i}-${uniqueId}`,
-      email: `cc-associate-${i}-${uniqueId}@alkem.io`,
-      profileData: { displayName: `CC Associate ${i} ${uniqueId}` },
-    });
-    associateUserIds.push(associate.id);
-    await assignRoleToUser(
-      associate.id,
-      orgs[ORG_VALID].roleSet.id,
+    const id = await createUserOrFail(`associate-${i}`);
+    associateUserIds.push(id);
+    const res = await assignRoleToUser(
+      id,
+      orgs[ORG_VALID].roleSetId,
       RoleName.Associate
     );
+    expect(res.error, JSON.stringify(res.error)).toBeUndefined();
   }
 
-  // ---- Virtual Contributor ---------------------------------------------
-  const vcId = baseScenario.virtualContributors?.[0]?.id;
-  if (!vcId) {
-    throw new Error('Scenario did not create the fixture virtual contributor');
+  // ---- Virtual Contributors -----------------------------------------------
+  const [helperVc, quietVc] = baseScenario.virtualContributors ?? [];
+  if (!helperVc || !quietVc) {
+    throw new Error(
+      'Scenario did not create the two fixture virtual contributors'
+    );
   }
-  await assignRoleToVirtualContributor(vcId, spaceRoleSetID, RoleName.Member);
-}, 120_000);
+  for (const vc of [helperVc, quietVc]) {
+    const res = await assignRoleToVirtualContributor(
+      vc.id,
+      spaceRoleSetID,
+      RoleName.Member
+    );
+    expect(res.error, JSON.stringify(res.error)).toBeUndefined();
+  }
+  await setVirtualContributorProfileOrFail(helperVc.id, {
+    tagline: VC_TAGLINE,
+    tags: { keywords: VC_KEYWORDS, capabilities: VC_CAPABILITIES },
+  });
+}, 300_000);
 
 afterAll(async () => {
-  for (const key of [
-    ORG_VALID,
-    ORG_BARE,
-    ORG_HOSTILE,
-    ORG_SCHEMELESS,
-    ORG_SPACEY,
-  ]) {
+  // Every deletion is attempted; any failure is reported, never swallowed.
+  const failures: string[] = [];
+  const attempt = async (
+    label: string,
+    run: () => Promise<{ error?: unknown }>
+  ) => {
+    try {
+      const res = await run();
+      if (res?.error) failures.push(`${label}: ${JSON.stringify(res.error)}`);
+    } catch (e) {
+      failures.push(`${label}: ${String(e)}`);
+    }
+  };
+  for (const key of ORG_KEYS) {
     if (orgs[key]?.id) {
-      await deleteOrganization(orgs[key].id).catch(() => undefined);
+      await attempt(`delete org ${key}`, () =>
+        deleteOrganization(orgs[key].id)
+      );
     }
   }
-  for (const id of associateUserIds) {
-    await deleteUser(id).catch(() => undefined);
-  }
-  if (userWithTags?.id) {
-    await deleteUser(userWithTags.id).catch(() => undefined);
-  }
-  if (userWithoutTags?.id) {
-    await deleteUser(userWithoutTags.id).catch(() => undefined);
+  for (const id of [...associateUserIds, ...Object.values(users)]) {
+    if (id) await attempt(`delete user ${id}`, () => deleteUser(id));
   }
   await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
-}, 120_000);
+  expect(failures, failures.join('\n')).toEqual([]);
+}, 300_000);
 
 // ===========================================================================
-// US1 / US5 — card content: null matrix, tags rule, website rule
+// FR-027/FR-028 — which fields apply to which contributor type
 // ===========================================================================
 
-describe('Contributor card enrichment — content', () => {
-  test('US1 — null matrix: USER has no website/associatesCount, ORGANIZATION has no joinedDate and a numeric associatesCount, VIRTUAL_CONTRIBUTOR has all three null', async () => {
+describe('Contributor card enrichment — null matrix', () => {
+  test('FR-028 — USER has no website/associatesCount, ORGANIZATION has no joinedDate and a numeric associatesCount, VIRTUAL_CONTRIBUTOR has all three null', async () => {
     const users = await cardsByType('USER');
     const organizations = await cardsByType('ORGANIZATION');
     const vcs = await cardsByType('VIRTUAL_CONTRIBUTOR');
 
-    expect(users.length).toBeGreaterThanOrEqual(2);
+    expect(users.length).toBeGreaterThanOrEqual(3);
     for (const item of users) {
       expect(item.website).toBeNull();
       expect(item.associatesCount).toBeNull();
     }
-
-    // `TestScenarioFactory.createBaseScenario` seeds its own host organization
-    // as a space member alongside this suite's five fixture organizations, so
-    // the callout's ORGANIZATION segment carries six items, not five. Filter
-    // to the five this suite created rather than asserting the raw total.
-    const fixtureOrgIds = new Set(
-      [ORG_VALID, ORG_BARE, ORG_HOSTILE, ORG_SCHEMELESS, ORG_SPACEY].map(
-        key => orgs[key].id
-      )
-    );
-    const fixtureOrganizations = organizations.filter(item =>
-      fixtureOrgIds.has(item.id)
-    );
-    expect(fixtureOrganizations.length).toBe(5);
+    expect(
+      organizations.filter(o => ORG_KEYS.some(k => orgs[k].id === o.id))
+    ).toHaveLength(ORG_KEYS.length);
     for (const item of organizations) {
       expect(item.joinedDate).toBeNull();
       expect(typeof item.associatesCount).toBe('number');
     }
-
-    expect(vcs.length).toBeGreaterThanOrEqual(1);
+    expect(vcs.length).toBeGreaterThanOrEqual(2);
     for (const item of vcs) {
       expect(item.joinedDate).toBeNull();
       expect(item.website).toBeNull();
       expect(item.associatesCount).toBeNull();
     }
   });
+});
 
-  test('US1 — tags rule: skills win over keywords and are returned in full; empty skills fall back to keywords; no tags on the VC ⇒ []; tagline trims to null when empty', async () => {
-    const users = await cardsByType('USER');
-    const withTagsItem = users.find(u => u.id === userWithTags.id);
-    const withoutTagsItem = users.find(u => u.id === userWithoutTags.id);
-    expect(withTagsItem).toBeDefined();
-    expect(withoutTagsItem).toBeDefined();
+// ===========================================================================
+// FR-001/FR-002/FR-004/FR-005 — tagline and the merged tag list
+// ===========================================================================
 
-    // Skills win, full list, stored order — never clamped (ruling R9).
-    expect(withTagsItem!.tags).toEqual(SKILLS);
-    expect(withTagsItem!.tagline).toBe(TAGLINE);
-
-    // Empty skills ⇒ keywords.
-    expect(withoutTagsItem!.tags).toEqual(KEYWORDS_FALLBACK);
-    expect(withoutTagsItem!.tagline).toBeNull();
-
-    const vcs = await cardsByType('VIRTUAL_CONTRIBUTOR');
-    const vc = vcs.find(v => v.id === baseScenario.virtualContributors?.[0]?.id);
-    expect(vc).toBeDefined();
-    expect(vc!.tags).toEqual([]);
-    expect(vc!.tagline).toBeNull();
+describe('Contributor card enrichment — tagline and tags (FR-004 as amended 2026-09-28)', () => {
+  test('US1-AS3 — a user gets skills then keywords merged, case-duplicates kept once with the first spelling, blank tags dropped, no cap', async () => {
+    const card = cardFor(await cardsByType('USER'), users.merged);
+    expect(card.tags).toEqual(MERGED_EXPECTED);
   });
 
-  test('US5 — website rule: valid absolute URL passes through, spaced/upper-case is trimmed, empty/hostile/schemeless all normalise to null', async () => {
-    const organizations = await cardsByType('ORGANIZATION');
-    const byId = (key: string) =>
-      organizations.find(o => o.id === orgs[key].id);
+  test('US1-AS3 — a user with no skills gets the keywords', async () => {
+    const card = cardFor(await cardsByType('USER'), users.keywordsOnly);
+    expect(card.tags).toEqual(KEYWORDS_ONLY);
+  });
 
-    expect(byId(ORG_VALID)!.website).toBe('https://example.org');
-    expect(byId(ORG_SPACEY)!.website).toBe('HTTPS://Spacey.example/about');
-    expect(byId(ORG_BARE)!.website).toBeNull();
-    expect(byId(ORG_HOSTILE)!.website).toBeNull();
-    expect(byId(ORG_SCHEMELESS)!.website).toBeNull();
+  test('D-EMPTY — a user with no tags gets an empty list, not null', async () => {
+    const card = cardFor(await cardsByType('USER'), users.empty);
+    expect(card.tags).toEqual([]);
+  });
+
+  test('FR-001 — the tagline is trimmed; a whitespace-only or absent tagline is null', async () => {
+    const userCards = await cardsByType('USER');
+    expect(cardFor(userCards, users.merged).tagline).toBe(TAGLINE);
+    expect(cardFor(userCards, users.keywordsOnly).tagline).toBeNull();
+    expect(cardFor(userCards, users.empty).tagline).toBeNull();
+  });
+
+  test('US1-AS3 — an organization gets keywords then capabilities merged and deduplicated; capabilities alone are used when keywords are empty; none ⇒ []', async () => {
+    const organizations = await cardsByType('ORGANIZATION');
+    expect(cardFor(organizations, orgs[ORG_VALID].id).tags).toEqual(
+      ORG_EXPECTED
+    );
+    expect(cardFor(organizations, orgs[ORG_HOSTILE].id).tags).toEqual(
+      CAPABILITIES_ONLY
+    );
+    expect(cardFor(organizations, orgs[ORG_BARE].id).tags).toEqual([]);
+  });
+
+  test('US1-AS5 — a virtual contributor gets its tagline and keywords then capabilities merged (first spelling wins); an empty VC gets null and []', async () => {
+    const [helperVc, quietVc] = baseScenario.virtualContributors!;
+    const vcs = await cardsByType('VIRTUAL_CONTRIBUTOR');
+    const helper = cardFor(vcs, helperVc.id);
+    expect(helper.tagline).toBe(VC_TAGLINE);
+    expect(helper.tags).toEqual(VC_EXPECTED);
+    const quiet = cardFor(vcs, quietVc.id);
+    expect(quiet.tagline).toBeNull();
+    expect(quiet.tags).toEqual([]);
   });
 });
 
 // ===========================================================================
-// US4 — join month (users only, month precision, UTC)
+// FR-026 — website normalisation (US5)
+// ===========================================================================
+
+describe('Contributor card enrichment — website', () => {
+  test('US5 — a valid absolute URL passes through, spaced/upper-case is trimmed and otherwise kept, empty/hostile/schemeless are null', async () => {
+    const organizations = await cardsByType('ORGANIZATION');
+    const website = (key: OrgKey) =>
+      cardFor(organizations, orgs[key].id).website;
+
+    expect(website(ORG_VALID)).toBe('https://example.org');
+    expect(website(ORG_SPACEY)).toBe('HTTPS://Spacey.example/about');
+    expect(website(ORG_BARE)).toBeNull();
+    expect(website(ORG_HOSTILE)).toBeNull();
+    expect(website(ORG_SCHEMELESS)).toBeNull();
+  });
+});
+
+// ===========================================================================
+// FR-010/FR-029 — join month (US4)
 // ===========================================================================
 
 describe('Contributor card enrichment — join month', () => {
-  test('US4 — every USER item carries a month-precision UTC joinedDate, matching the month the member role was assigned in', async () => {
-    const users = await cardsByType('USER');
-    const monthRegex = /^\d{4}-\d{2}-01T00:00:00\.000Z$/;
-    const acceptableMonths = [
-      monthStartUtcIso(beforeAllStart),
-      monthStartUtcIso(new Date()),
+  test('US4 — each member gets the first day (00:00 UTC) of the UTC month in which the member role was assigned', async () => {
+    const userCards = await cardsByType('USER');
+    // Independent oracle: the wall-clock window around the assignment, not a
+    // value read back from the server. Accepts both ends so a run straddling a
+    // month boundary still has one right answer.
+    const expectedMonths = [
+      monthStartUtcIso(memberAssignedFrom),
+      monthStartUtcIso(memberAssignedTo),
     ];
-
-    const withTagsItem = users.find(u => u.id === userWithTags.id);
-    const withoutTagsItem = users.find(u => u.id === userWithoutTags.id);
-    expect(withTagsItem).toBeDefined();
-    expect(withoutTagsItem).toBeDefined();
-
-    for (const item of [withTagsItem!, withoutTagsItem!]) {
-      expect(item.joinedDate).toMatch(monthRegex);
-      expect(acceptableMonths).toContain(item.joinedDate);
+    for (const id of Object.values(users)) {
+      const joinedDate = cardFor(userCards, id).joinedDate;
+      expect(joinedDate).toMatch(/^\d{4}-\d{2}-01T00:00:00\.000Z$/);
+      expect(expectedMonths).toContain(joinedDate);
     }
   });
 });
 
 // ===========================================================================
-// US1 — associates parity (ruling R4)
+// FR-009/FR-030 — associates count (US1-AS4)
 // ===========================================================================
 
-describe('Contributor card enrichment — associates parity', () => {
-  test('US1 — associatesCount equals the organization profile associates metric for every fixture organization, including one at N > 0 and one at 0', async () => {
+describe('Contributor card enrichment — associates count', () => {
+  test('D-ZERO — an organization with no associates reports 0, and so does its profile metric', async () => {
+    const card = cardFor(await cardsByType('ORGANIZATION'), orgs[ORG_BARE].id);
+    expect(card.associatesCount).toBe(0);
+    expect(await associatesMetric(orgs[ORG_BARE].id)).toBe(0);
+  });
+
+  test('US1-AS4 — adding N associates raises the count by exactly N', async () => {
+    const card = cardFor(await cardsByType('ORGANIZATION'), orgs[ORG_VALID].id);
+    expect(card.associatesCount).toBe(
+      validAssociatesBaseline + ASSOCIATE_COUNT
+    );
+  });
+
+  test('FR-030 — every fixture organization reports the same number as its profile associates metric', async () => {
     const organizations = await cardsByType('ORGANIZATION');
-    const byId = (key: string) =>
-      organizations.find(o => o.id === orgs[key].id)!;
-
-    for (const key of [
-      ORG_VALID,
-      ORG_BARE,
-      ORG_HOSTILE,
-      ORG_SCHEMELESS,
-      ORG_SPACEY,
-    ]) {
-      const metricRes = await getOrganizationAssociatesMetric(orgs[key].id);
+    for (const key of ORG_KEYS) {
       expect(
-        metricRes.body.errors,
-        JSON.stringify(metricRes.body.errors)
-      ).toBeUndefined();
-      const metrics = metricRes.body.data?.organization?.metrics ?? [];
-      const associatesMetric = metrics.find(
-        (m: { name: string; value: string }) => m.name === 'associates'
-      );
-      const expected = associatesMetric ? Number(associatesMetric.value) : 0;
-      expect(byId(key).associatesCount).toBe(expected);
+        cardFor(organizations, orgs[key].id).associatesCount,
+        `organization '${key}'`
+      ).toBe(await associatesMetric(orgs[key].id));
     }
-
-    // Derived from each org's own post-creation baseline (see
-    // `orgAssociatesBaseline`), not a literal that assumes a zero start.
-    expect(byId(ORG_VALID).associatesCount).toBe(
-      orgAssociatesBaseline[ORG_VALID] + ASSOCIATE_COUNT
-    );
-    expect(byId(ORG_BARE).associatesCount).toBe(
-      orgAssociatesBaseline[ORG_BARE]
-    );
-    // Explicit discriminator kept alongside the parity check above: assigning
-    // ASSOCIATE_COUNT associates to ORG_VALID must move it exactly
-    // ASSOCIATE_COUNT above ORG_BARE, so this still fails a row-counting
-    // implementation that drifts from the metric it should mirror.
-    expect(
-      byId(ORG_VALID).associatesCount! - byId(ORG_BARE).associatesCount!
-    ).toBe(ASSOCIATE_COUNT);
   });
 });

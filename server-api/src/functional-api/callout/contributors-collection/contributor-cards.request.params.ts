@@ -1,21 +1,17 @@
-import { getGraphqlClient, TestUser } from '@alkemio/tests-lib';
+import { TestUser } from '@alkemio/tests-lib';
 import { graphqlRequestAuth } from '@alkemio/tests-lib/utils/graphql.request';
-import { graphqlErrorWrapper } from '@alkemio/tests-lib/utils/graphql.wrapper';
+import { ContributorCollectionItem } from '@alkemio/tests-lib/core/generated/alkemio-schema';
+import { postGraphqlRaw } from '../../graphql-guard/me-degradation.request.params';
 
 /**
  * Contributor-card-enrichment fixture + query helpers
  * (workspace feature 077-richer-contributor-cards).
  *
- * The three read/create helpers below use the raw-request pattern of
- * `functional-api/visual/visual.request.params.ts`: `graphqlRequestAuth` with
- * an inline document, rather than the generated `@alkemio/tests-lib` SDK.
- * Two of these select the five NEW `ContributorCollectionItem` fields
- * (`tagline`, `tags`, `joinedDate`, `website`, `associatesCount`), and the
- * committed codegen is regenerated from the wave-1 server's schema
- * specifically so this it-spec can build against it — but keeping the
- * selection as an inline document (rather than a new `.graphql` operation
- * file) means this one-off query never becomes a shared generated operation
- * every other consumer has to keep in sync.
+ * The read/create helpers use the raw-request pattern of
+ * `functional-api/visual/visual.request.params.ts` (`graphqlRequestAuth` with
+ * an inline document) so this one-off selection of the five enrichment fields
+ * never becomes a shared generated operation other specs must keep in sync.
+ * Results are typed with the generated `ContributorCollectionItem`.
  */
 
 export type ContributorCardActorType =
@@ -66,6 +62,65 @@ export const createContributorCardsCallout = async (
   );
 };
 
+/** One enriched card as selected by `CONTRIBUTOR_CARDS_QUERY`. */
+export type ContributorCard = Pick<
+  ContributorCollectionItem,
+  | 'id'
+  | 'type'
+  | 'displayName'
+  | 'roleLabel'
+  | 'tagline'
+  | 'tags'
+  | 'joinedDate'
+  | 'website'
+  | 'associatesCount'
+>;
+
+export type ContributorCardCounts = {
+  users: number;
+  organizations: number;
+  virtualContributors: number;
+};
+
+const CONTRIBUTOR_CARDS_QUERY = `query ContributorCards($calloutID: UUID!, $type: ActorType!) {
+  lookup {
+    callout(ID: $calloutID) {
+      id
+      framing {
+        id
+        contributorCounts { users organizations virtualContributors }
+        contributors(type: $type) {
+          id type displayName roleLabel
+          tagline tags joinedDate website associatesCount
+        }
+      }
+    }
+  }
+}`;
+
+/**
+ * The enriched contributor cards of one type on one callout, read with an
+ * explicit bearer token — or with none, which is the anonymous viewer
+ * (`postGraphqlRaw` omits the Authorization header when the token is
+ * undefined). Returns the raw GraphQL body so a denial can be asserted by its
+ * error code.
+ */
+export const getContributorCardsAs = async (
+  calloutID: string,
+  type: ContributorCardActorType,
+  bearerToken: string | undefined
+) =>
+  postGraphqlRaw<{
+    lookup: {
+      callout: {
+        framing: {
+          contributorCounts: ContributorCardCounts;
+          contributors: ContributorCard[];
+        };
+      };
+    };
+  }>(CONTRIBUTOR_CARDS_QUERY, bearerToken, { calloutID, type });
+
 /**
  * The enriched contributor cards of one type on one callout — the existing
  * identity fields plus the five new ones (contract
@@ -75,36 +130,15 @@ export const getContributorCards = async (
   calloutID: string,
   type: ContributorCardActorType,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
-) => {
-  return graphqlRequestAuth(
+) =>
+  graphqlRequestAuth(
     {
       operationName: 'ContributorCards',
-      query: `query ContributorCards($calloutID: UUID!, $type: ActorType!) {
-        lookup {
-          callout(ID: $calloutID) {
-            id
-            framing {
-              id
-              contributors(type: $type) {
-                id
-                type
-                displayName
-                roleLabel
-                tagline
-                tags
-                joinedDate
-                website
-                associatesCount
-              }
-            }
-          }
-        }
-      }`,
+      query: CONTRIBUTOR_CARDS_QUERY,
       variables: { calloutID, type },
     },
     userRole
   );
-};
 
 /**
  * An organization's platform-wide `associates` metric — the parity oracle
@@ -130,54 +164,130 @@ export const getOrganizationAssociatesMetric = async (
 };
 
 // ---------------------------------------------------------------------------
-// Fixture-setup helper. `updateUser` in
-// `contributor-management/user/user.request.params.ts` only types
-// `location`/`description` on `profileData` (its existing callers never
-// needed more); this feature's fixture needs `tagline` + the `skills`/
-// `keywords` tagsets too, so this calls the same already-generated
-// `updateUser` mutation directly with the fuller input the schema already
-// supports.
+// Fixture-setup helpers. The existing `updateUser` / `updateOrganization`
+// wrappers do not expose `tagline` + tagsets; these call the generated
+// mutations with the fuller input the schema supports. Every helper throws on
+// a GraphQL error or a missing tagset, so a fixture can never silently fall
+// back to an empty profile and make an assertion pass for the wrong reason.
 // ---------------------------------------------------------------------------
 
-/** A profile's tagset id by reserved name ('skills' | 'keywords'), if the profile carries one. */
-const findTagsetId = (
-  tagsets: Array<{ id: string; name: string }> | undefined | null,
-  name: string
-): string | undefined => tagsets?.find(t => t.name === name)?.id;
+type TagsetRef = { id: string; name: string };
+type ProfileTags = {
+  tagline?: string;
+  tags?: Partial<Record<'skills' | 'keywords' | 'capabilities', string[]>>;
+};
 
-/**
- * Set a USER's tagline and skills/keywords tagsets in one call. `tagsets` is
- * that user's current `profile.tagsets` (from `getUserData`), read first so
- * the existing tagset ids can be targeted — `UpdateTagsetInput` replaces a
- * tagset's tags by id, it does not create one.
- */
-export const setUserTaglineAndTags = async (
-  userId: string,
-  tagsets: Array<{ id: string; name: string }>,
-  options: { tagline?: string; skills?: string[]; keywords?: string[] }
+const tagsetInputs = (tagsets: TagsetRef[], tags: ProfileTags['tags']) =>
+  Object.entries(tags ?? {}).map(([name, values]) => {
+    const tagset = tagsets.find(t => t.name === name);
+    if (!tagset) {
+      throw new Error(
+        `Profile has no '${name}' tagset (has: ${tagsets.map(t => t.name).join(', ')})`
+      );
+    }
+    return { ID: tagset.id, tags: values ?? [] };
+  });
+
+const updateProfileOrFail = async <TRead>(
+  label: string,
+  readTagsets: string,
+  pickTagsets: (data: TRead) => TagsetRef[],
+  mutation: string,
+  buildVariables: (
+    profileData: Record<string, unknown>
+  ) => Record<string, unknown>,
+  id: string,
+  profile: ProfileTags
 ) => {
-  const tagsetsInput: { ID: string; tags: string[] }[] = [];
-  const skillsId = findTagsetId(tagsets, 'skills');
-  const keywordsId = findTagsetId(tagsets, 'keywords');
-  if (skillsId && options.skills !== undefined) {
-    tagsetsInput.push({ ID: skillsId, tags: options.skills });
-  }
-  if (keywordsId && options.keywords !== undefined) {
-    tagsetsInput.push({ ID: keywordsId, tags: options.keywords });
-  }
-  const graphqlClient = getGraphqlClient();
-  const callback = (authToken: string | undefined) =>
-    graphqlClient.updateUser(
-      {
-        userData: {
-          ID: userId,
-          profileData: {
-            tagline: options.tagline ?? '',
-            tagsets: tagsetsInput,
-          },
-        },
-      },
-      { authorization: `Bearer ${authToken}` }
+  const read = await graphqlRequestAuth(
+    { query: readTagsets, variables: { id } },
+    TestUser.GLOBAL_ADMIN
+  );
+  if (read.body.errors) {
+    throw new Error(
+      `${label}: reading tagsets failed: ${JSON.stringify(read.body.errors)}`
     );
-  return graphqlErrorWrapper(callback, TestUser.GLOBAL_ADMIN);
+  }
+  const profileData: Record<string, unknown> = {
+    tagsets: tagsetInputs(pickTagsets(read.body.data as TRead), profile.tags),
+  };
+  if (profile.tagline !== undefined) profileData.tagline = profile.tagline;
+  const res = await graphqlRequestAuth(
+    { query: mutation, variables: buildVariables(profileData) },
+    TestUser.GLOBAL_ADMIN
+  );
+  if (res.body.errors) {
+    throw new Error(
+      `${label}: update failed: ${JSON.stringify(res.body.errors)}`
+    );
+  }
+};
+
+/** Set a USER's tagline and skills/keywords. */
+export const setUserProfileOrFail = (userId: string, profile: ProfileTags) =>
+  updateProfileOrFail(
+    `user ${userId}`,
+    'query($id: UUID!) { user(ID: $id) { profile { tagsets { id name } } } }',
+    (data: { user: { profile: { tagsets: TagsetRef[] } } }) =>
+      data.user.profile.tagsets,
+    'mutation($d: UpdateUserInput!) { updateUser(userData: $d) { id } }',
+    profileData => ({ d: { ID: userId, profileData } }),
+    userId,
+    profile
+  );
+
+/** Set an ORGANIZATION's tagline and keywords/capabilities. */
+export const setOrganizationProfileOrFail = (
+  organizationId: string,
+  profile: ProfileTags
+) =>
+  updateProfileOrFail(
+    `organization ${organizationId}`,
+    'query($id: UUID!) { organization(ID: $id) { profile { tagsets { id name } } } }',
+    (data: { organization: { profile: { tagsets: TagsetRef[] } } }) =>
+      data.organization.profile.tagsets,
+    'mutation($d: UpdateOrganizationInput!) { updateOrganization(organizationData: $d) { id } }',
+    profileData => ({ d: { ID: organizationId, profileData } }),
+    organizationId,
+    profile
+  );
+
+/** Set a VIRTUAL CONTRIBUTOR's tagline and keywords/capabilities. */
+export const setVirtualContributorProfileOrFail = (
+  virtualContributorId: string,
+  profile: ProfileTags
+) =>
+  updateProfileOrFail(
+    `virtual contributor ${virtualContributorId}`,
+    'query($id: UUID!) { lookup { virtualContributor(ID: $id) { profile { tagsets { id name } } } } }',
+    (data: {
+      lookup: { virtualContributor: { profile: { tagsets: TagsetRef[] } } };
+    }) => data.lookup.virtualContributor.profile.tagsets,
+    'mutation($d: UpdateVirtualContributorInput!) { updateVirtualContributor(virtualContributorData: $d) { id } }',
+    profileData => ({ d: { ID: virtualContributorId, profileData } }),
+    virtualContributorId,
+    profile
+  );
+
+/** Set a space's privacy mode and user-information visibility; throws on error. */
+export const setSpacePrivacyOrFail = async (
+  spaceID: string,
+  privacy: {
+    mode?: 'PUBLIC' | 'PRIVATE';
+    userInformationVisibility?: 'FOLLOW_SPACE_VISIBILITY' | 'MEMBERS_ONLY';
+  }
+) => {
+  const res = await graphqlRequestAuth(
+    {
+      query:
+        'mutation($d: UpdateSpaceSettingsInput!) { updateSpaceSettings(settingsData: $d) { id } }',
+      variables: { d: { spaceID, settings: { privacy } } },
+    },
+    TestUser.GLOBAL_ADMIN
+  );
+  if (res.body.errors) {
+    throw new Error(
+      `updateSpaceSettings failed: ${JSON.stringify(res.body.errors)}`
+    );
+  }
 };
