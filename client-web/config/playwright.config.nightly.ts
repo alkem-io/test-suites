@@ -354,6 +354,33 @@ export default defineConfig({
       // stripped from the public report by scripts/publish-report.sh like
       // every other project's, so no per-project opt-out is needed.
     },
+    {
+      // workspace#077 (richer contributor cards, client-web#10316). Every file
+      // seeds its own public Space through the API and deletes it in
+      // afterAll — no fixture is provisioned out of band. Files are serial
+      // inside; the product-finding tests (QA-PF-01 client-web#10369,
+      // QA-PF-03 client-web#10370) are test.skip'ped by the QA lead's decision
+      // until those fixes ship, and sit last in their files so that once
+      // un-skipped a red skips nothing else.
+      // More headroom than 30s/5s: several cases open two or three browser
+      // contexts (anonymous, non-member, member) or three timezones.
+      //
+      // The shipped 0.1contributors-callout.spec.ts is deliberately NOT
+      // listed: its scenario cleanup lives only in the Member block, so any
+      // failure in the Admin block restarts the worker and leaks a Space, an
+      // Organization and a VC. It is red on QA-PF-01 today, so it would leak
+      // on every nightly. Add it here once its cleanup moves to file level.
+      name: 'Contributors callout',
+      testMatch: [
+        '/contributors-callout/us1-card-content.spec.ts',
+        '/contributors-callout/us2-nothing-else-changes.spec.ts',
+        '/contributors-callout/us3-card-menu.spec.ts',
+        '/contributors-callout/us4-joined-this-space.spec.ts',
+        '/contributors-callout/us5-organisation-website.spec.ts',
+      ],
+      timeout: 60_000,
+      expect: { timeout: 10_000 },
+    },
   ],
   // % or number of the available CPUs
   // workers: '100%',
