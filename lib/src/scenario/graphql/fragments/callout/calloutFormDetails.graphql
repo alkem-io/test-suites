@@ -1,5 +1,7 @@
 fragment CalloutFormDetails on CalloutForm {
   id
+  title
+  description
   questions {
     id
     prompt
@@ -15,5 +17,6 @@ fragment CalloutFormDetails on CalloutForm {
     visibility
     responseMode
     state
+    defaultCollapsed
   }
 }

@@ -1345,12 +1345,16 @@ export enum CalloutDescriptionDisplayMode {
 export type CalloutForm = {
   /** The date at which the entity was created. */
   createdDate: Scalars["DateTime"]["output"];
+  /** The optional plain-text description of the Form, at most 2048 characters. Null when not set. */
+  description?: Maybe<Scalars["String"]["output"]>;
   /** The ID of the entity */
   id: Scalars["UUID"]["output"];
   /** The ordered questions of the Form. */
   questions: Array<CalloutFormQuestion>;
   /** The settings of the Form. */
   settings: CalloutFormSettings;
+  /** The optional plain-text title of the Form, at most 512 characters. Null when not set. */
+  title?: Maybe<Scalars["String"]["output"]>;
   /** The date at which the entity was last updated. */
   updatedDate: Scalars["DateTime"]["output"];
 };
@@ -1446,6 +1450,8 @@ export type CalloutFormResponses = {
 };
 
 export type CalloutFormSettings = {
+  /** Whether the Form box starts collapsed for every viewer. Presentation only. Defaults to false (expanded). */
+  defaultCollapsed: Scalars["Boolean"]["output"];
   /** Whether a member can submit one or several responses. Defaults to SINGLE. */
   responseMode: CalloutFormResponseMode;
   /** Whether the Form accepts new responses. Defaults to OPEN. */
@@ -2366,17 +2372,25 @@ export type CreateCalloutData = {
 };
 
 export type CreateCalloutFormData = {
+  /** The optional plain-text description of the Form, at most 2048 characters. Trimmed; empty or whitespace-only is stored as null. */
+  description?: Maybe<Scalars["String"]["output"]>;
   /** The ordered questions of the Form. Between 1 and 50; the count is enforced with a reason code. */
   questions: Array<CreateCalloutFormQuestionData>;
   /** The Form settings. Defaults: visibility ADMINS, responseMode SINGLE, state OPEN. */
   settings?: Maybe<CreateCalloutFormSettingsData>;
+  /** The optional plain-text title of the Form, at most 512 characters. Trimmed; empty or whitespace-only is stored as null. */
+  title?: Maybe<Scalars["String"]["output"]>;
 };
 
 export type CreateCalloutFormInput = {
+  /** The optional plain-text description of the Form, at most 2048 characters. Trimmed; empty or whitespace-only is stored as null. */
+  description?: InputMaybe<Scalars["String"]["input"]>;
   /** The ordered questions of the Form. Between 1 and 50; the count is enforced with a reason code. */
   questions: Array<CreateCalloutFormQuestionInput>;
   /** The Form settings. Defaults: visibility ADMINS, responseMode SINGLE, state OPEN. */
   settings?: InputMaybe<CreateCalloutFormSettingsInput>;
+  /** The optional plain-text title of the Form, at most 512 characters. Trimmed; empty or whitespace-only is stored as null. */
+  title?: InputMaybe<Scalars["String"]["input"]>;
 };
 
 export type CreateCalloutFormQuestionData = {
@@ -2414,6 +2428,8 @@ export type CreateCalloutFormQuestionOptionInput = {
 };
 
 export type CreateCalloutFormSettingsData = {
+  /** Whether the Form box starts collapsed for every viewer. Defaults to false (expanded). */
+  defaultCollapsed?: Maybe<Scalars["Boolean"]["output"]>;
   /** One or several responses per member. Defaults to SINGLE. */
   responseMode?: Maybe<CalloutFormResponseMode>;
   /** Whether the Form accepts responses. Defaults to OPEN. */
@@ -2423,6 +2439,8 @@ export type CreateCalloutFormSettingsData = {
 };
 
 export type CreateCalloutFormSettingsInput = {
+  /** Whether the Form box starts collapsed for every viewer. Defaults to false (expanded). */
+  defaultCollapsed?: InputMaybe<Scalars["Boolean"]["input"]>;
   /** One or several responses per member. Defaults to SINGLE. */
   responseMode?: InputMaybe<CalloutFormResponseMode>;
   /** Whether the Form accepts responses. Defaults to OPEN. */
@@ -5803,6 +5821,8 @@ export type Mutation = {
   replaceCollaboraDocument: CollaboraDocument;
   /** Replace a Whiteboard from another Whiteboard through the live collaboration room. Content and media are copied server-side; snapshot bytes never pass through GraphQL. */
   replaceWhiteboardContentFromSource: Whiteboard;
+  /** Sends the invitation email of an open platform invitation again (Space or Organization role sets); throttled per role set and address, and counted against an hourly email budget. */
+  resendPlatformInvitation: PlatformInvitation;
   /** Resets the interaction with the VC by recreating the room. */
   resetConversationVc: Conversation;
   /** Reset all license plans on Accounts */
@@ -5835,7 +5855,7 @@ export type Mutation = {
   setDefaultCalloutTemplateOnInnovationFlowState: InnovationFlowState;
   /** Set the mapping of a well-known Virtual Contributor to a specific Virtual Contributor UUID. */
   setPlatformWellKnownVirtualContributor: PlatformWellKnownVirtualContributors;
-  /** Submit a response to a Form. Requires CONTRIBUTE on the Post. The Post must be published and the Form open; a single-response Form accepts one response per member. acknowledgedVisibility is the audience the respondent was shown. */
+  /** Submit a response to a Form. Requires CONTRIBUTE on the Post. The Post must be published and the Form open; a single-response Form rejects the submission while the member holds any response. acknowledgedVisibility is the audience the respondent was shown. */
   submitCalloutFormResponse: CalloutFormResponse;
   /** Subscribe the current user's device to push notifications. If the subscription endpoint already exists, it is updated. If the user has reached the maximum number of subscriptions (10), the oldest subscription is automatically replaced. */
   subscribeToPushNotifications: PushSubscription;
@@ -6572,6 +6592,10 @@ export type MutationReplaceWhiteboardContentFromSourceArgs = {
   input: ReplaceWhiteboardContentFromSourceInput;
 };
 
+export type MutationResendPlatformInvitationArgs = {
+  resendData: ResendPlatformInvitationInput;
+};
+
 export type MutationResetConversationVcArgs = {
   input: ConversationVcResetInput;
 };
@@ -6966,6 +6990,7 @@ export enum NotificationEvent {
   OrganizationAdminMessage = "ORGANIZATION_ADMIN_MESSAGE",
   OrganizationAdminSpaceCommunityInvitation = "ORGANIZATION_ADMIN_SPACE_COMMUNITY_INVITATION",
   OrganizationAdminSpaceCommunityJoined = "ORGANIZATION_ADMIN_SPACE_COMMUNITY_JOINED",
+  OrganizationAssociateInvitationUserPlatform = "ORGANIZATION_ASSOCIATE_INVITATION_USER_PLATFORM",
   OrganizationMessageSender = "ORGANIZATION_MESSAGE_SENDER",
   PlatformAdminGlobalRoleChanged = "PLATFORM_ADMIN_GLOBAL_ROLE_CHANGED",
   PlatformAdminSpaceCreated = "PLATFORM_ADMIN_SPACE_CREATED",
@@ -8423,6 +8448,11 @@ export type ReplaceWhiteboardContentFromSourceInput = {
   targetWhiteboardID: Scalars["UUID"]["input"];
 };
 
+export type ResendPlatformInvitationInput = {
+  /** The open platform invitation whose email is sent again. */
+  ID: Scalars["UUID"]["input"];
+};
+
 export type RevokeAuthorizationCredentialInput = {
   /** The resource to which access is being removed. */
   resourceID: Scalars["String"]["input"];
@@ -8554,7 +8584,7 @@ export type RoleSet = {
   organizationsInRole: Array<Organization>;
   /** All organizations that have a role in this RoleSet in the specified Roles. */
   organizationsInRoles: Array<OrganizationsInRolesResponse>;
-  /** Invitations to join this RoleSet in an entry role for users not yet on the Alkemio platform. */
+  /** Open (not yet consumed) invitations to join this RoleSet in an entry role for people not yet on the Alkemio platform. */
   platformInvitations: Array<PlatformInvitation>;
   /** The Role Definitions from this RoleSet to return. */
   roleDefinition: Role;
@@ -9965,10 +9995,14 @@ export type UpdateCalloutEntityInput = {
 };
 
 export type UpdateCalloutFormInput = {
+  /** The optional plain-text description of the Form, at most 2048 characters. Trimmed; empty or whitespace-only (or null) clears it; omit to leave it unchanged. */
+  description?: InputMaybe<Scalars["String"]["input"]>;
   formID: Scalars["UUID"]["input"];
   /** The complete ordered list of questions. Omit to leave the questions unchanged. */
   questions?: InputMaybe<Array<UpdateCalloutFormQuestionInput>>;
   settings?: InputMaybe<UpdateCalloutFormSettingsInput>;
+  /** The optional plain-text title of the Form, at most 512 characters. Trimmed; empty or whitespace-only (or null) clears it; omit to leave it unchanged. */
+  title?: InputMaybe<Scalars["String"]["input"]>;
 };
 
 export type UpdateCalloutFormQuestionInput = {
@@ -9988,6 +10022,8 @@ export type UpdateCalloutFormQuestionOptionInput = {
 };
 
 export type UpdateCalloutFormSettingsInput = {
+  /** Whether the Form box starts collapsed for every viewer. Omit (or null) to leave it unchanged. */
+  defaultCollapsed?: InputMaybe<Scalars["Boolean"]["input"]>;
   responseMode?: InputMaybe<CalloutFormResponseMode>;
   state?: InputMaybe<CalloutFormState>;
   visibility?: InputMaybe<CalloutFormResponseVisibility>;
@@ -13530,6 +13566,7 @@ export type ResolversTypes = {
   ReorderPollOptionsInput: SchemaTypes.ReorderPollOptionsInput;
   ReplaceCollaboraDocumentInput: SchemaTypes.ReplaceCollaboraDocumentInput;
   ReplaceWhiteboardContentFromSourceInput: SchemaTypes.ReplaceWhiteboardContentFromSourceInput;
+  ResendPlatformInvitationInput: SchemaTypes.ResendPlatformInvitationInput;
   RevokeAuthorizationCredentialInput: SchemaTypes.RevokeAuthorizationCredentialInput;
   RevokeLicensePlanFromAccount: SchemaTypes.RevokeLicensePlanFromAccount;
   RevokeLicensePlanFromSpace: SchemaTypes.RevokeLicensePlanFromSpace;
@@ -15183,6 +15220,7 @@ export type ResolversParentTypes = {
   ReorderPollOptionsInput: SchemaTypes.ReorderPollOptionsInput;
   ReplaceCollaboraDocumentInput: SchemaTypes.ReplaceCollaboraDocumentInput;
   ReplaceWhiteboardContentFromSourceInput: SchemaTypes.ReplaceWhiteboardContentFromSourceInput;
+  ResendPlatformInvitationInput: SchemaTypes.ResendPlatformInvitationInput;
   RevokeAuthorizationCredentialInput: SchemaTypes.RevokeAuthorizationCredentialInput;
   RevokeLicensePlanFromAccount: SchemaTypes.RevokeLicensePlanFromAccount;
   RevokeLicensePlanFromSpace: SchemaTypes.RevokeLicensePlanFromSpace;
@@ -16806,6 +16844,11 @@ export type CalloutFormResolvers<
   ParentType extends ResolversParentTypes["CalloutForm"] = ResolversParentTypes["CalloutForm"]
 > = {
   createdDate?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
+  description?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes["String"]>,
+    ParentType,
+    ContextType
+  >;
   id?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
   questions?: Resolver<
     Array<ResolversTypes["CalloutFormQuestion"]>,
@@ -16814,6 +16857,11 @@ export type CalloutFormResolvers<
   >;
   settings?: Resolver<
     ResolversTypes["CalloutFormSettings"],
+    ParentType,
+    ContextType
+  >;
+  title?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes["String"]>,
     ParentType,
     ContextType
   >;
@@ -16931,6 +16979,11 @@ export type CalloutFormSettingsResolvers<
   ContextType = any,
   ParentType extends ResolversParentTypes["CalloutFormSettings"] = ResolversParentTypes["CalloutFormSettings"]
 > = {
+  defaultCollapsed?: Resolver<
+    ResolversTypes["Boolean"],
+    ParentType,
+    ContextType
+  >;
   responseMode?: Resolver<
     ResolversTypes["CalloutFormResponseMode"],
     ParentType,
@@ -18066,6 +18119,11 @@ export type CreateCalloutFormDataResolvers<
   ContextType = any,
   ParentType extends ResolversParentTypes["CreateCalloutFormData"] = ResolversParentTypes["CreateCalloutFormData"]
 > = {
+  description?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes["String"]>,
+    ParentType,
+    ContextType
+  >;
   questions?: Resolver<
     Array<ResolversTypes["CreateCalloutFormQuestionData"]>,
     ParentType,
@@ -18073,6 +18131,11 @@ export type CreateCalloutFormDataResolvers<
   >;
   settings?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["CreateCalloutFormSettingsData"]>,
+    ParentType,
+    ContextType
+  >;
+  title?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes["String"]>,
     ParentType,
     ContextType
   >;
@@ -18121,6 +18184,11 @@ export type CreateCalloutFormSettingsDataResolvers<
   ContextType = any,
   ParentType extends ResolversParentTypes["CreateCalloutFormSettingsData"] = ResolversParentTypes["CreateCalloutFormSettingsData"]
 > = {
+  defaultCollapsed?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes["Boolean"]>,
+    ParentType,
+    ContextType
+  >;
   responseMode?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["CalloutFormResponseMode"]>,
     ParentType,
@@ -22408,6 +22476,15 @@ export type MutationResolvers<
     RequireFields<
       SchemaTypes.MutationReplaceWhiteboardContentFromSourceArgs,
       "input"
+    >
+  >;
+  resendPlatformInvitation?: Resolver<
+    ResolversTypes["PlatformInvitation"],
+    ParentType,
+    ContextType,
+    RequireFields<
+      SchemaTypes.MutationResendPlatformInvitationArgs,
+      "resendData"
     >
   >;
   resetConversationVc?: Resolver<
@@ -30395,6 +30472,8 @@ export type CalloutDetailsFragment = {
 
 export type CalloutFormDetailsFragment = {
   id: string;
+  title?: string | undefined;
+  description?: string | undefined;
   questions: Array<{
     id: string;
     prompt: string;
@@ -30407,6 +30486,7 @@ export type CalloutFormDetailsFragment = {
     visibility: SchemaTypes.CalloutFormResponseVisibility;
     responseMode: SchemaTypes.CalloutFormResponseMode;
     state: SchemaTypes.CalloutFormState;
+    defaultCollapsed: boolean;
   };
 };
 
@@ -54836,6 +54916,8 @@ export type CreateFormCalloutOnCalloutsSetMutation = {
       form?:
         | {
             id: string;
+            title?: string | undefined;
+            description?: string | undefined;
             questions: Array<{
               id: string;
               prompt: string;
@@ -54848,6 +54930,7 @@ export type CreateFormCalloutOnCalloutsSetMutation = {
               visibility: SchemaTypes.CalloutFormResponseVisibility;
               responseMode: SchemaTypes.CalloutFormResponseMode;
               state: SchemaTypes.CalloutFormState;
+              defaultCollapsed: boolean;
             };
           }
         | undefined;
@@ -54889,6 +54972,8 @@ export type UpdateCalloutFormMutationVariables = SchemaTypes.Exact<{
 export type UpdateCalloutFormMutation = {
   updateCalloutForm: {
     id: string;
+    title?: string | undefined;
+    description?: string | undefined;
     questions: Array<{
       id: string;
       prompt: string;
@@ -54901,6 +54986,7 @@ export type UpdateCalloutFormMutation = {
       visibility: SchemaTypes.CalloutFormResponseVisibility;
       responseMode: SchemaTypes.CalloutFormResponseMode;
       state: SchemaTypes.CalloutFormState;
+      defaultCollapsed: boolean;
     };
   };
 };
@@ -95660,6 +95746,8 @@ export type CalloutFormDefinitionQuery = {
             form?:
               | {
                   id: string;
+                  title?: string | undefined;
+                  description?: string | undefined;
                   questions: Array<{
                     id: string;
                     prompt: string;
@@ -95672,6 +95760,7 @@ export type CalloutFormDefinitionQuery = {
                     visibility: SchemaTypes.CalloutFormResponseVisibility;
                     responseMode: SchemaTypes.CalloutFormResponseMode;
                     state: SchemaTypes.CalloutFormState;
+                    defaultCollapsed: boolean;
                   };
                 }
               | undefined;
@@ -120176,6 +120265,8 @@ export const CalloutDetailsFragmentDoc = gql`
 export const CalloutFormDetailsFragmentDoc = gql`
   fragment CalloutFormDetails on CalloutForm {
     id
+    title
+    description
     questions {
       id
       prompt
@@ -120191,6 +120282,7 @@ export const CalloutFormDetailsFragmentDoc = gql`
       visibility
       responseMode
       state
+      defaultCollapsed
     }
   }
 `;

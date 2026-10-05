@@ -40,6 +40,8 @@ export type FormCallout = {
   formId: string;
   displayName: string;
   url: string;
+  title: string | null;
+  description: string | null;
   questions: FormQuestion[];
 };
 
@@ -139,6 +141,10 @@ export const uniqueFormName = (tag: string): string =>
   `form-${tag}-${UniqueIDGenerator.getID()}`;
 
 type FormCalloutOptions = {
+  /** The optional Form title (R17) — distinct from the Post's display name. */
+  title?: string;
+  /** The optional Form description (R17) — distinct from the Post's description. */
+  description?: string;
   questions?: CreateCalloutFormQuestionInput[];
   settings?: CreateCalloutFormSettingsInput;
   displayName?: string;
@@ -168,6 +174,8 @@ export const createFormCalloutRaw = async (
               description: 'Form callout framing',
             },
             form: {
+              title: options.title,
+              description: options.description,
               questions: options.questions ?? defaultFormQuestions(),
               settings: options.settings,
             },
@@ -224,6 +232,8 @@ export const createFormCallout = async (
     formId: form.id,
     displayName: callout.framing.profile.displayName,
     url: callout.framing.profile.url,
+    title: form.title ?? null,
+    description: form.description ?? null,
     questions: form.questions as FormQuestion[],
   };
 };
