@@ -306,7 +306,11 @@ afterAll(async () => {
   for (const id of [...associateUserIds, ...Object.values(users)]) {
     if (id) await attempt(`delete user ${id}`, () => deleteUser(id));
   }
-  await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
+  // `beforeAll` can fail before the scenario exists; a teardown error on an
+  // undefined scenario would hide the real setup error.
+  if (baseScenario) {
+    await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
+  }
   expect(failures, failures.join('\n')).toEqual([]);
 }, 300_000);
 

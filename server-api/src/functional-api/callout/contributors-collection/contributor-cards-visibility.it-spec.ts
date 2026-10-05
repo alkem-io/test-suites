@@ -162,13 +162,31 @@ beforeAll(async () => {
 }, 300_000);
 
 afterAll(async () => {
+  // Tolerant of a partial `beforeAll`: only what was created is deleted, every
+  // deletion is attempted, and any failure is reported, never swallowed.
   const failures: string[] = [];
-  const org = await deleteOrganization(organizationId);
-  if (org.error)
-    failures.push(`delete organization: ${JSON.stringify(org.error)}`);
-  const user = await deleteUser(memberUserId);
-  if (user.error) failures.push(`delete user: ${JSON.stringify(user.error)}`);
-  await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
+  const attempt = async (
+    label: string,
+    run: () => Promise<{ error?: unknown }>
+  ) => {
+    try {
+      const res = await run();
+      if (res?.error) failures.push(`${label}: ${JSON.stringify(res.error)}`);
+    } catch (e) {
+      failures.push(`${label}: ${String(e)}`);
+    }
+  };
+  if (organizationId) {
+    await attempt('delete organization', () =>
+      deleteOrganization(organizationId)
+    );
+  }
+  if (memberUserId) {
+    await attempt('delete user', () => deleteUser(memberUserId));
+  }
+  if (baseScenario) {
+    await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
+  }
   expect(failures, failures.join('\n')).toEqual([]);
 }, 300_000);
 
