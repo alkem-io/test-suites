@@ -34,9 +34,13 @@ import { fillSecret } from '../helpers/login.helper';
  * AS10 (R17) the box above question 1 holds the Form title and description; both
  *      save while responses exist and show in the Form box header; an empty title
  *      shows "Form".
- * AS11 (R20) each question is one row — drag handle, prompt labelled "Question N",
- *      answer type, required switch, delete — with the explanation below; the
- *      labels follow a reorder; the row wraps at 375px without horizontal scroll.
+ * AS11 (R21, amends R20) each question is a two-column card — drag handle with the
+ *      "Remove question" button (tooltip) beneath it on the left; prompt labelled
+ *      "Question N", answer type and a small "Required" switch on the first line of
+ *      the right column, the explanation below, the options of a choice question
+ *      below that with "Add option" right-aligned; removing a filled question asks
+ *      (cancel keeps it), an empty one goes at once; the labels follow a reorder;
+ *      at 375px the first line wraps, the left column stays, no horizontal scroll.
  * AS12 (R18) "collapsed by default" in the Form settings makes a member first see
  *      only the Form box header; turning it off makes the Form start expanded.
  * AS13 (R19c) changing an answered short-answer question to single choice shows the
@@ -273,14 +277,17 @@ const questionField = (scope: ReturnType<Page['getByRole']>, n: number) =>
   scope.getByRole('textbox', { name: `Question ${n}`, exact: true });
 
 /**
- * The option fields ("Option 1", "Option 2", ...) of question `n`: scoped to the
- * question's box, i.e. the parent of the one-row block holding its prompt and
- * required switch.
+ * The card of question `n` (R21): the innermost ancestor of its prompt that also
+ * holds its drag handle ("Reorder question N", in the card's left column).
  */
+const questionCard = (scope: ReturnType<Page['getByRole']>, n: number) =>
+  questionField(scope, n).locator(
+    'xpath=ancestor::*[.//button[starts-with(@aria-label, "Reorder question")]][1]'
+  );
+
+/** The option fields ("Option 1", "Option 2", ...) of question `n`, scoped to its card. */
 const questionOptions = (scope: ReturnType<Page['getByRole']>, n: number) =>
-  questionField(scope, n)
-    .locator('xpath=ancestor::*[.//*[@role="switch"]][2]')
-    .getByRole('textbox', { name: /^Option \d+$/ });
+  questionCard(scope, n).getByRole('textbox', { name: /^Option \d+$/ });
 
 const visibleFormRadio = (page: Page) =>
   page.getByRole('dialog').getByRole('radio', { name: 'Form', exact: true });
@@ -1241,7 +1248,7 @@ test.describe(
       await expect(untitled.getByText(formDescription)).toBeVisible();
     });
 
-    test('US1-AS11 each question is one row labelled "Question N"; labels follow a reorder; the row wraps on a phone', async ({
+    test('US1-AS11 each question is a two-column card; a filled question asks before removal; labels follow a reorder; the left column stays on a phone', async ({
       browser,
     }) => {
       const page = await signIn(browser, personaEmail.a2);
@@ -1255,48 +1262,127 @@ test.describe(
       await dialog.getByRole('button', { name: /add question/i }).click();
       await questionField(dialog, 1).fill('First prompt');
       await questionField(dialog, 2).fill('Second prompt');
+      await questionCard(dialog, 2)
+        .getByRole('combobox', { name: 'Answer type' })
+        .click();
+      await page.getByRole('option', { name: 'Single choice' }).click();
+      await expect(questionOptions(dialog, 2)).toHaveCount(2);
+
+      const box = async (l: ReturnType<Page['getByRole']>) => {
+        const b = await l.boundingBox();
+        expect(b).toBeTruthy();
+        return b!;
+      };
+      const overlapsVertically = (
+        a: { y: number; height: number },
+        b: { y: number; height: number }
+      ) => a.y < b.y + b.height && a.y + a.height > b.y;
 
       for (const n of [1, 2]) {
+        const card = questionCard(dialog, n);
         const prompt = questionField(dialog, n);
-        // The row: the innermost ancestor of the prompt holding the switch.
-        const row = prompt.locator(
-          'xpath=ancestor::*[.//*[@role="switch"]][1]'
-        );
-        const handle = row.getByRole('button', {
+        const handle = card.getByRole('button', {
           name: `Reorder question ${n}`,
         });
-        const type = row.getByRole('combobox', { name: 'Answer type' });
-        const required = row.getByRole('switch', { name: 'Required' });
-        const remove = row.getByRole('button', { name: /remove question/i });
-        for (const control of [handle, type, required, remove]) {
+        const remove = card.getByRole('button', {
+          name: 'Remove question',
+          exact: true,
+        });
+        const type = card.getByRole('combobox', { name: 'Answer type' });
+        const required = card.getByRole('switch', { name: 'Required' });
+        const explanation = card.getByRole('textbox', { name: /explanation/i });
+        for (const control of [handle, remove, type, required, explanation]) {
           await expect(control).toHaveCount(1);
         }
-        // Left to right in one row: handle, prompt, type, required, delete.
-        const boxes = await Promise.all(
-          [handle, prompt, type, required, remove].map(c => c.boundingBox())
+        const [hB, rB, pB, tB, qB, eB] = await Promise.all(
+          [handle, remove, prompt, type, required, explanation].map(box)
         );
-        for (const box of boxes) expect(box).toBeTruthy();
-        const xs = boxes.map(b => b!.x);
-        expect([...xs].sort((a, b) => a - b)).toEqual(xs);
-        const promptBox = boxes[1]!;
-        for (const box of boxes) {
-          // Vertically overlapping the prompt field: the same row.
-          expect(box!.y).toBeLessThan(promptBox.y + promptBox.height);
-          expect(box!.y + box!.height).toBeGreaterThan(promptBox.y);
-        }
-        // The explanation sits below the row.
-        const explanation = dialog
-          .getByRole('textbox', { name: /explanation/i })
-          .nth(n - 1);
-        const explanationBox = await explanation.boundingBox();
-        expect(explanationBox!.y).toBeGreaterThanOrEqual(
-          promptBox.y + promptBox.height
-        );
+        // Left column: the delete button directly beneath the handle, both left of the prompt.
+        expect(
+          Math.abs(hB.x + hB.width / 2 - (rB.x + rB.width / 2))
+        ).toBeLessThan(4);
+        expect(rB.y).toBeGreaterThanOrEqual(hB.y + hB.height - 1);
+        expect(hB.x + hB.width).toBeLessThanOrEqual(pB.x);
+        expect(rB.x + rB.width).toBeLessThanOrEqual(pB.x);
+        // Right column, first line: prompt, answer type, required — left to right.
+        expect(pB.x).toBeLessThan(tB.x);
+        expect(tB.x).toBeLessThan(qB.x);
+        expect(overlapsVertically(tB, pB)).toBe(true);
+        expect(overlapsVertically(qB, pB)).toBe(true);
+        // Second line: the explanation, aligned with the prompt.
+        expect(eB.y).toBeGreaterThanOrEqual(pB.y + pB.height);
+        expect(Math.abs(eB.x - pB.x)).toBeLessThan(2);
       }
-      // No separate "Question N" title above the row: the label is the only one.
+
+      // "Required" is no larger than the other field labels.
+      const fontSize = (l: ReturnType<Page['getByRole']>) =>
+        l.evaluate(el => parseFloat(getComputedStyle(el).fontSize));
+      const requiredSize = await fontSize(
+        dialog.locator('label', { hasText: /^Required$/ }).first()
+      );
+      const questionLabelSize = await fontSize(
+        dialog.locator('label', { hasText: /^Question 1$/ })
+      );
+      expect(requiredSize).toBeLessThanOrEqual(questionLabelSize);
+
+      // Third line (choice question only): options inside the right column, below the
+      // explanation; "Add option" aligned right; a text question has no options.
+      const card2 = questionCard(dialog, 2);
+      const explanation2 = await box(
+        card2.getByRole('textbox', { name: /explanation/i })
+      );
+      const firstOption = await box(questionOptions(dialog, 2).first());
+      const optionHandle = await box(
+        card2.getByRole('button', { name: /^Reorder option/ }).first()
+      );
+      expect(firstOption.y).toBeGreaterThanOrEqual(
+        explanation2.y + explanation2.height
+      );
+      expect(optionHandle.x).toBeGreaterThanOrEqual(explanation2.x - 1);
+      const addOption = await box(
+        card2.getByRole('button', { name: /add option/i })
+      );
+      expect(
+        Math.abs(
+          addOption.x + addOption.width - (explanation2.x + explanation2.width)
+        )
+      ).toBeLessThan(4);
+      await expect(questionOptions(dialog, 1)).toHaveCount(0);
+      await expect(
+        questionCard(dialog, 1).getByRole('button', { name: /add option/i })
+      ).toHaveCount(0);
+
+      // No separate "Question N" title above the prompt: the label is the only one.
       await expect(dialog.getByText('Question 1', { exact: true })).toHaveCount(
         1
       );
+
+      // The delete button has a "Remove question" tooltip.
+      await questionCard(dialog, 2)
+        .getByRole('button', { name: 'Remove question', exact: true })
+        .hover();
+      await expect(page.getByRole('tooltip')).toHaveText(/Remove question/);
+
+      // Removing a filled question asks; cancel keeps it.
+      await questionCard(dialog, 2)
+        .getByRole('button', { name: 'Remove question', exact: true })
+        .click();
+      const confirm = page.getByRole('alertdialog');
+      await expect(confirm).toBeVisible();
+      await confirm.getByRole('button', { name: /cancel/i }).click();
+      await expect(confirm).toHaveCount(0);
+      await expect(questionField(dialog, 2)).toHaveValue('Second prompt');
+      // An empty question is removed without a dialog.
+      await dialog.getByRole('button', { name: /add question/i }).click();
+      await expect(questionField(dialog, 3)).toHaveValue('');
+      await questionCard(dialog, 3)
+        .getByRole('button', { name: 'Remove question', exact: true })
+        .click();
+      await expect(page.getByRole('alertdialog')).toHaveCount(0);
+      await expect(questionField(dialog, 3)).toHaveCount(0);
+      await expect(
+        dialog.getByRole('textbox', { name: /^Question \d+$/ })
+      ).toHaveCount(2);
 
       // The labels follow a reorder.
       const from = await dialog
@@ -1315,9 +1401,16 @@ test.describe(
       await expect(questionField(dialog, 1)).toHaveValue('Second prompt');
       await expect(questionField(dialog, 2)).toHaveValue('First prompt');
 
-      // At 375px the row wraps instead of scrolling sideways.
+      // At 375px the first line wraps instead of scrolling sideways; the left column stays.
       await page.setViewportSize({ width: 375, height: 800 });
       await expect(questionField(dialog, 1)).toBeVisible();
+      const narrowHandle = await box(
+        dialog.getByRole('button', { name: 'Reorder question 1' })
+      );
+      const narrowPrompt = await box(questionField(dialog, 1));
+      expect(narrowHandle.x + narrowHandle.width).toBeLessThanOrEqual(
+        narrowPrompt.x
+      );
       await expect
         .poll(() => dialog.evaluate(el => el.scrollWidth <= el.clientWidth + 1))
         .toBe(true);
