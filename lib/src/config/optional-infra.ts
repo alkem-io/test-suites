@@ -24,6 +24,16 @@ export const harnessPostgresConfigured = (): boolean => {
   return Boolean(process.env.POSTGRES_HOST) || targetsLoopbackServer();
 };
 
+/**
+ * The MailSlurper mail sink: configured when the operator points the harness at
+ * one, or when the harness targets a loopback server (the compose stack runs it
+ * on the default endpoint).
+ */
+export const mailSinkConfigured = (): boolean => {
+  dotenv.config();
+  return Boolean(process.env.MAIL_SLURPER_ENDPOINT) || targetsLoopbackServer();
+};
+
 export const rabbitMqManagementConfigured = (): boolean => {
   dotenv.config();
   return (
