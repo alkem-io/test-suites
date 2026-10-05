@@ -19,7 +19,6 @@
 import {
   createOrganization,
   deleteOrganization,
-  getGraphqlClient,
   TestScenarioConfig,
   TestScenarioFactory,
   TestUser,
@@ -28,41 +27,17 @@ import {
 } from '@alkemio/tests-lib';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import { RoleName } from '@alkemio/tests-lib/core/generated/alkemio-schema';
-import { graphqlErrorWrapper } from '@alkemio/tests-lib/utils/graphql.wrapper';
-import { assignRoleToVirtualContributor } from '@alkemio/tests-lib/scenario/baseFunctions';
+import {
+  assignRoleToOrganization,
+  assignRoleToVirtualContributor,
+} from '@alkemio/tests-lib/scenario/baseFunctions';
 import { expect } from '@playwright/test';
+import { createContributorsCalloutViaApi } from './cards-fixture';
 import { createAuthenticatedSessionFixture } from '../fixtures/authenticated-session.fixture';
 import { ContributorsCalloutPage } from './pages';
 
 const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 const uniqueId = UniqueIDGenerator.getID();
-
-/** Grants `role` to an ORGANIZATION actor on a space's roleset (space
- * membership — not the organization's own roleset). `@alkemio/tests-lib` has
- * `assignRoleToUser` / `assignRoleToVirtualContributor` but no organization
- * equivalent; the generated SDK exposes the mutation directly (same pattern
- * as `assignUserRoleOnOrganization` in
- * `organization-user-associates.helpers.ts`). */
-const assignRoleToOrganization = async (
-  roleSetID: string,
-  actorID: string,
-  role: RoleName
-) => {
-  const client = getGraphqlClient();
-  const res = await graphqlErrorWrapper(
-    authToken =>
-      client.AssignRoleToOrganization(
-        { roleData: { actorID, roleSetID, role } },
-        { authorization: `Bearer ${authToken}` }
-      ),
-    TestUser.GLOBAL_ADMIN
-  );
-  if (res.error) {
-    throw new Error(
-      `assignRoleToOrganization(${role}) failed for ${actorID} on ${roleSetID}: ${JSON.stringify(res.error)}`
-    );
-  }
-};
 
 const ORG_VALID = `US5 Valid Website Org ${uniqueId}`;
 const ORG_BARE = `US5 Bare Org ${uniqueId}`;
@@ -164,11 +139,18 @@ adminFixture.test.describe.serial(
           name: displayName,
         };
         await assignRoleToOrganization(
-          spaceRoleSetID,
           orgs[slug].id,
+          spaceRoleSetID,
           RoleName.Member
         );
       }
+
+      // Created through the API so every case below stands on its own; the
+      // shipped 0.1 suite covers creating the post through the form.
+      await createContributorsCalloutViaApi(
+        baseScenario.space.collaboration.calloutsSetId,
+        CALLOUT_TITLE
+      );
 
       await adminFixture.setupAuthentication(
         browser,
@@ -179,12 +161,16 @@ adminFixture.test.describe.serial(
     adminFixture.test.afterAll(async () => {
       adminFixture.test.setTimeout(60_000);
       await adminFixture.teardownAuthentication();
+      const failures: string[] = [];
       for (const org of Object.values(orgs)) {
-        await deleteOrganization(org.id).catch(() => undefined);
+        const res = await deleteOrganization(org.id);
+        if (res.error)
+          failures.push(`${org.name}: ${JSON.stringify(res.error)}`);
       }
       if (baseScenario) {
         await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
       }
+      expect(failures, failures.join('\n')).toEqual([]);
     });
 
     adminFixture.test(
@@ -193,7 +179,6 @@ adminFixture.test.describe.serial(
         adminFixture.test.setTimeout(60_000);
         const cc = new ContributorsCalloutPage(page, baseUrl);
         await cc.navigateToSpace(baseScenario.space.nameId);
-        await cc.createContributorsCallout(CALLOUT_TITLE);
 
         const col = cc.collection(CALLOUT_TITLE);
         await col.switchType('Organizations');
@@ -260,13 +245,10 @@ adminFixture.test.describe.serial(
           website.click(),
           requestPromise,
         ]);
-        expect(new URL(request.url()).origin).toBe(new URL(VALID_WEBSITE).origin);
+        expect(new URL(request.url()).origin).toBe(
+          new URL(VALID_WEBSITE).origin
+        );
         await popup.close();
-
-        // Exactly one profile link remains on this card (the name).
-        await expect(
-          col.region.getByRole('link', { name: ORG_VALID, exact: true })
-        ).toHaveCount(1);
       }
     );
 
@@ -285,23 +267,30 @@ adminFixture.test.describe.serial(
         const col = cc.collection(CALLOUT_TITLE);
         await col.switchType('Organizations');
 
+        // Positive control: the valid organisation's control is rendered, so
+        // the absences below are measured on a fully rendered list.
+        await expect(col.websiteLink(ORG_VALID)).toBeVisible();
+        const menu = page.getByRole('menu');
         for (const name of [ORG_BARE, ORG_HOSTILE, ORG_SCHEMELESS]) {
-          await expect(col.websiteLink(name)).toHaveCount(0);
+          const actions = col.actionsButton(name);
+          await expect(actions, name).toBeVisible();
+          await expect(col.websiteLink(name), name).toHaveCount(0);
           // Every other control on the card is still safe to reach: opening
           // the actions menu never triggers navigation or a dialog.
-          const actions = col.actionsButton(name);
-          await expect(actions).toBeVisible();
           await actions.click();
-          await expect(page.getByRole('menu')).toBeVisible();
+          await expect(menu, name).toBeVisible();
           await page.keyboard.press('Escape');
+          await expect(menu, name).toBeHidden();
         }
 
         // No People or Virtual Contributor card ever shows a website control.
         await col.switchType('People');
+        await expect(col.cardItems.first()).toBeVisible();
         await expect(
           col.region.getByRole('link', { name: /^Visit the website of/ })
         ).toHaveCount(0);
         await col.switchType('Virtual Contributors');
+        await expect(col.cardFor(VC_NAME)).toBeVisible();
         await expect(
           col.region.getByRole('link', { name: /^Visit the website of/ })
         ).toHaveCount(0);
@@ -329,6 +318,25 @@ adminFixture.test.describe.serial(
         const href = await website.getAttribute('href');
         expect(href).toBe(SPACEY_WEBSITE_TRIMMED);
         expect(href).not.toMatch(/^\s|\s$/);
+      }
+    );
+
+    // Product finding QA-PF-01 — https://github.com/alkem-io/client-web/issues/10369
+    // The avatar anchor carries the organisation's name as aria-label, so the
+    // card exposes two exact-name links. Kept last so a red here skips nothing.
+    // Skipped by decision of the QA lead (2026-10-05) until that issue ships; the assertions below
+    // are the acceptance oracle for the fix and must not be softened. Un-skip, do not delete.
+    adminFixture.test.skip(
+      'US5 / FR-016 — an organisation card with a website control still exposes exactly one profile link (the name)',
+      async ({ page }) => {
+        const cc = new ContributorsCalloutPage(page, baseUrl);
+        await cc.navigateToSpace(baseScenario.space.nameId);
+        const col = cc.collection(CALLOUT_TITLE);
+        await col.switchType('Organizations');
+        await expect(col.websiteLink(ORG_VALID)).toBeVisible();
+        await expect(
+          col.region.getByRole('link', { name: ORG_VALID, exact: true })
+        ).toHaveCount(1);
       }
     );
   }
