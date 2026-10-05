@@ -1,3 +1,5 @@
+server	v0.167.1	2026-09-30	false
+server	v0.167.0	2026-09-29	false
 server	v0.166.0	2026-09-15	false
 server	v0.165.1	2026-09-11	false
 server	v0.165.0	2026-09-09	false
@@ -545,6 +547,8 @@ server	v0.2.0	2020-10-15	true
 server	v0.1.8	2020-10-06	true
 server	v0.1.7	2020-10-02	true
 server	v0.1.6	2020-10-01	true
+client-web	v0.167.1	2026-09-30	false
+client-web	v0.167.0	2026-09-29	false
 client-web	v0.166.1	2026-09-16	false
 client-web	v0.166.0	2026-09-16	false
 client-web	v0.165.1	2026-09-15	false
@@ -1110,6 +1114,8 @@ client-web	v0.2.0	2020-10-27	true
 client-web	v0.1.5	2020-10-20	true
 client-web	v0.1.4	2020-10-02	true
 client-web	v0.1.3	2020-09-30	true
+notifications	v0.42.0	2026-10-02	false
+notifications	v0.41.0	2026-10-01	false
 notifications	v0.40.2	2026-09-16	false
 notifications	v0.39.0	2026-09-11	false
 notifications	v0.38.1	2026-08-27	false
@@ -1196,6 +1202,7 @@ notifications	v0.3.1	2021-11-11	false
 notifications	v0.3.0	2021-11-04	false
 notifications	v0.1.0	2021-10-19	false
 documentation	v0.0.1	2024-09-19	false
+kratos-webhooks	v0.2.5	2026-09-29	false
 kratos-webhooks	v0.2.4	2026-08-08	false
 kratos-webhooks	v0.2.3	2026-06-01	false
 kratos-webhooks	v0.2.2	2026-03-06	false
@@ -1240,6 +1247,7 @@ matrix-adapter	v0.8.3	2025-12-17	false
 matrix-adapter	v0.8.2	2025-12-16	false
 matrix-adapter	v0.8.1	2025-12-15	false
 matrix-adapter	v0.8.0	2025-12-11	false
+file-service	v0.3.2	2026-10-01	false
 file-service	v0.3.1	2026-09-22	false
 file-service	v0.3.0	2026-09-22	false
 file-service	v0.2.6	2026-08-25	false
