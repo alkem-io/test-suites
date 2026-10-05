@@ -198,6 +198,13 @@ adminTest.describe('US1-AS1 — the dialog offers the registered-user search and
     await expect(associate).toBeDisabled();
     await expect(page.getByRole('checkbox', { name: 'Admin' })).toBeEnabled();
     await expect(page.getByRole('checkbox', { name: 'Owner' })).toBeEnabled();
+
+    // At most one of Admin / Owner (FR-002): choosing Owner after Admin replaces it.
+    await page.getByRole('checkbox', { name: 'Admin' }).check();
+    await page.getByRole('checkbox', { name: 'Owner' }).click();
+    await expect(page.getByRole('checkbox', { name: 'Owner' })).toBeChecked();
+    await expect(page.getByRole('checkbox', { name: 'Admin' })).not.toBeChecked();
+    await expect(associate).toBeChecked();
   });
 });
 
