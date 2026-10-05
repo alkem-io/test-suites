@@ -350,7 +350,7 @@ const submitButton = (scope: ReturnType<typeof dialogOf> | Page) =>
  */
 const formChevron = (scope: ReturnType<typeof dialogOf>) =>
   scope
-    .getByRole('button', { name: /expand|collapse/i })
+    .getByRole('button', { name: /^(expand|collapse) form$/i })
     .and(scope.locator('button[aria-expanded][aria-controls]'));
 
 async function fillValid(scope: ReturnType<typeof dialogOf>, name: string) {
@@ -959,7 +959,12 @@ test.describe(
       const dialog = dialogOf(page);
       const chevron = formChevron(dialog);
       const header = async () => {
-        await expect(dialog.getByText(formTitle, { exact: true })).toBeVisible();
+        // The Form box is a region named by its heading (the Form title).
+        await expect(
+          dialog
+            .getByRole('region', { name: formTitle })
+            .getByRole('heading', { name: formTitle, exact: true })
+        ).toBeVisible();
         await expect(dialog.getByText('3 questions', { exact: true })).toBeVisible();
         await expect(dialog.getByText(NOTICE_ADMINS)).toBeVisible();
         await expect(dialog.getByText(formDescription)).toBeVisible();

@@ -724,7 +724,10 @@ test.describe(
       await spaceMembers.click();
       const confirm = page.getByRole('alertdialog');
       await expect(confirm).toBeVisible();
-      await expect(confirm).toContainText(/existing responses/i);
+      // "Show responses to members?" — with one known response the copy is
+      // singular ("the 1 existing response").
+      await expect(confirm).toContainText('Show responses to members?');
+      await expect(confirm).toContainText(/existing response/i);
       await evidence(page, 'US3-AS4-widen-confirm');
       await confirm.getByRole('button', { name: /cancel/i }).click();
       await expect(confirm).toBeHidden();

@@ -265,12 +265,22 @@ async function saveEdit(page: Page) {
 const formChevron = (page: Page) =>
   page
     .getByRole('dialog')
-    .getByRole('button', { name: /expand|collapse/i })
+    .getByRole('button', { name: /^(expand|collapse) form$/i })
     .and(page.locator('button[aria-expanded][aria-controls]'));
 
 /** The builder's prompt field of question `n` (R20: labelled "Question N"). */
 const questionField = (scope: ReturnType<Page['getByRole']>, n: number) =>
   scope.getByRole('textbox', { name: `Question ${n}`, exact: true });
+
+/**
+ * The option fields ("Option 1", "Option 2", ...) of question `n`: scoped to the
+ * question's box, i.e. the parent of the one-row block holding its prompt and
+ * required switch.
+ */
+const questionOptions = (scope: ReturnType<Page['getByRole']>, n: number) =>
+  questionField(scope, n)
+    .locator('xpath=ancestor::*[.//*[@role="switch"]][2]')
+    .getByRole('textbox', { name: /^Option \d+$/ });
 
 const visibleFormRadio = (page: Page) =>
   page.getByRole('dialog').getByRole('radio', { name: 'Form', exact: true });
@@ -734,12 +744,28 @@ test.describe(
       await visibleFormRadio(page).click();
       await dialog.getByRole('textbox', { name: 'Title' }).fill(BUILT_TITLE);
 
-      const field = (n: number, suffix: string) =>
-        dialog
-          .locator(`[id^="form-question-question-"][id$="-${suffix}"]`)
-          .nth(n - 1);
-      const optionInputs = (q: number) =>
-        dialog.locator(`input[id^="form-q${q}-option"]`);
+      // Role/label-based per question n (R20 row): the prompt is labelled
+      // "Question n"; type, required and explanation are the n-th of their kind.
+      const field = (
+        n: number,
+        suffix: 'prompt' | 'type' | 'required' | 'explanation'
+      ) => {
+        switch (suffix) {
+          case 'prompt':
+            return questionField(dialog, n);
+          case 'type':
+            return dialog
+              .getByRole('combobox', { name: 'Answer type' })
+              .nth(n - 1);
+          case 'required':
+            return dialog.getByRole('switch', { name: 'Required' }).nth(n - 1);
+          default:
+            return dialog
+              .getByRole('textbox', { name: 'Explanation (optional)' })
+              .nth(n - 1);
+        }
+      };
+      const optionInputs = (q: number) => questionOptions(dialog, q);
       const pickType = async (n: number, label: string) => {
         await field(n, 'type').click();
         await page.getByRole('option', { name: label }).click();
@@ -991,12 +1017,9 @@ test.describe(
       await page.getByRole('option', { name: 'Short text' }).click();
       await expect(dialog.getByText(TYPE_CHANGE_HINT)).toBeVisible();
 
-      const prompts = dialog.locator('[id^="form-question-"][id$="-prompt"]');
+      const prompts = dialog.getByRole('textbox', { name: /^Question \d+$/ });
       await prompts.nth(0).fill('Your full name');
-      await dialog
-        .locator('input[id^="form-q3-option"]')
-        .nth(0)
-        .fill('Monday morning');
+      await questionOptions(dialog, 3).nth(0).fill('Monday morning');
       await dialog.getByRole('button', { name: /add question/i }).click();
       await prompts.nth(4).fill('Anything else?');
       // Remove "Tell us about yourself" (it holds an answer).
@@ -1083,15 +1106,13 @@ test.describe(
       const page = await signIn(browser, personaEmail.a2);
       const dialog = await openEdit(page, presentable.url);
 
-      const titleInput = dialog.getByRole('textbox', { name: 'Form title' });
-      // The box holding both fields: the innermost element containing the title
-      // input and a textarea (the description).
-      const headerBox = dialog
-        .locator('div', { has: titleInput })
-        .filter({ has: page.locator('textarea') })
-        .last();
+      // The header editor box (FormHeaderEditor, data-testid form-header-editor).
+      const headerBox = dialog.getByTestId('form-header-editor');
+      const titleInput = headerBox.getByRole('textbox', {
+        name: 'Form title (optional)',
+      });
       const descriptionInput = headerBox.getByRole('textbox', {
-        name: /description/i,
+        name: 'Description (optional)',
       });
       await expect(titleInput).toBeVisible();
       await expect(descriptionInput).toBeVisible();
@@ -1104,8 +1125,12 @@ test.describe(
       await titleInput.fill(formTitle);
       await descriptionInput.fill(formDescription);
       // The 512 / 2048 limits are indicated next to the fields.
-      await expect(headerBox.getByText(/512/).first()).toBeVisible();
-      await expect(headerBox.getByText(/2048/).first()).toBeVisible();
+      await expect(
+        headerBox.getByText(`${formTitle.length}/512`, { exact: true })
+      ).toBeVisible();
+      await expect(
+        headerBox.getByText(`${formDescription.length}/2048`, { exact: true })
+      ).toBeVisible();
       await saveEdit(page);
 
       await expect
@@ -1122,12 +1147,19 @@ test.describe(
       const member = await signIn(browser, personaEmail.m1);
       await open(member, presentable.url);
       const detail = member.getByRole('dialog');
-      await expect(detail.getByText(formTitle, { exact: true })).toBeVisible();
-      await expect(detail.getByText(formDescription)).toBeVisible();
+      // The Form box is a region named by its heading (the Form title).
+      const box = detail.getByRole('region', { name: formTitle });
+      await expect(
+        box.getByRole('heading', { name: formTitle, exact: true })
+      ).toBeVisible();
+      await expect(box.getByText(formDescription)).toBeVisible();
 
       // An emptied title falls back to the generic "Form" label.
       const again = await openEdit(page, presentable.url);
-      await again.getByRole('textbox', { name: 'Form title' }).fill('');
+      await again
+        .getByTestId('form-header-editor')
+        .getByRole('textbox', { name: 'Form title (optional)' })
+        .fill('');
       await saveEdit(page);
       await expect
         .poll(async () => {
@@ -1140,9 +1172,14 @@ test.describe(
         })
         .toBeNull();
       await open(member, presentable.url);
-      await expect(detail.getByText(formTitle, { exact: true })).toHaveCount(0);
-      await expect(detail.getByText('Form', { exact: true }).first()).toBeVisible();
-      await expect(detail.getByText(formDescription)).toBeVisible();
+      await expect(
+        detail.getByRole('heading', { name: formTitle, exact: true })
+      ).toHaveCount(0);
+      const untitled = detail.getByRole('region', { name: 'Form', exact: true });
+      await expect(
+        untitled.getByRole('heading', { name: 'Form', exact: true })
+      ).toBeVisible();
+      await expect(untitled.getByText(formDescription)).toBeVisible();
     });
 
     test('US1-AS11 each question is one row labelled "Question N"; labels follow a reorder; the row wraps on a phone', async ({
@@ -1167,7 +1204,7 @@ test.describe(
           name: `Reorder question ${n}`,
         });
         const type = row.getByRole('combobox', { name: 'Answer type' });
-        const required = row.getByRole('switch');
+        const required = row.getByRole('switch', { name: 'Required' });
         const remove = row.getByRole('button', { name: /remove question/i });
         for (const control of [handle, type, required, remove]) {
           await expect(control).toHaveCount(1);
