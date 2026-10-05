@@ -25,6 +25,31 @@ _Searched 2026-09-03, branch `qa/9528-promotion-keeps-flow-states` off
 | `moveSpaceL1ToSpaceL0`/`L1ToL2`/`L2ToL1` (cross-L0 move, distinct from convert) | Full for basic/community/rooms/applications/auto-invite/authorization scenarios | `journey/conversion/move-L1-to-*-*.it-spec.ts` — does not touch innovation-flow at all, confirmed by search |
 | Callout transfer + differing default flow state names (cross-space) | Full | `callout/transfer/transfer-callout-flow-state.it-spec.ts`, `transfer-callout-changed-flow.it-spec.ts` |
 
+## Space classifications (024 / alkemio#1985)
+
+_Searched 2026-10-01, `origin/develop` @ `7b1b6ce73` (test-suites), against server#6380 and client-web#10163 (server `develop` @ `615817441`, client-web `develop` @ `2e576ee17`). Plan: `client-web/src/functional-e2e/classifications/classifications-test-plan.md`._
+
+| Area | Status | Evidence |
+|---|---|---|
+| Step A/B walks, duplicate guard, single-select, About display, hide toggle, removal, subspace picker | Full (UI) | `classifications/classifications-space.spec.ts` SL-01…08 |
+| Template authoring, value ids, snapshot independence, library import, seed, out-of-scope negatives | Full (UI); TL-01b skipped pending product decision (QA-PF-01) | `classifications/classifications-templates.spec.ts` TL-01…08 |
+| API contract: FR-014a denials (member, non-member, 6 mutations), hidden entry on the anonymous read, FR-002a bounds 0/1/50/51, FR-011c, FR-012c, FR-018b order + re-add, FR-002c ids, SC-007 | Full (API) | `server-api/.../journey/space/space-classifications.it-spec.ts` |
+| Seed idempotency / bootstrap race / seeded-pack auth (R-5/13/14) | **Proven absent** here — needs a bootstrap restart | server unit specs T047/T055 only |
+| Server `test/integration/classification/classification-entry.spec.ts` | Mock-only (no DB, no HTTP) — not system coverage | its own header |
+
+## Contributors callout — richer contributor cards (077 / client-web#10316)
+
+_Established 2026-10-02 on `feat/077-richer-contributor-cards` (test-suites#641, merged with `origin/develop` @ `d576c14c`), against server `develop` @ `7496da9a7` and client-web `develop` @ `cc126d7a6`. Plan: `client-web/src/functional-e2e/contributors-callout/contributors-callout-test-plan.md`._
+
+| Area | Status | Evidence |
+|---|---|---|
+| Five enrichment fields: null matrix, merged tag rule (FR-004 as amended), tagline trim, website normalisation, month-precision join date, associates parity at 0 and N | Full (API) | `server-api/src/functional-api/callout/contributors-collection/contributor-cards.it-spec.ts` |
+| Members-only visibility (FR-032/SC-009): anonymous and non-member get no People and a 0 count; organisations/VCs enriched; PRIVATE ⇒ `FORBIDDEN_POLICY` | Full (API), UI walk in US2-AS2 | `contributor-cards-visibility.it-spec.ts`; `us2-nothing-else-changes.spec.ts` |
+| Card rows, "+N", tooltip, heights, dialog/map/deep-link parity, map popup unchanged | Full except the "+N" wrap, whose test is skipped pending QA-PF-03 (client-web#10370) | `us1-card-content.spec.ts` |
+| One profile link per card (FR-016) | **Red** — QA-PF-01 client-web#10369 | `us2 › US2-AS4`, `us3 › US3-AS7`, `us5 › US5 / FR-016`, shipped `0.1 › 1.4` |
+| Join month: two oracles, UTC−8/UTC/UTC+14, Dutch, subspace month | Full for current-month memberships; month boundary and duplicates not buildable (no SQL) | `us4-joined-this-space.spec.ts` |
+| Card menu: View Profile, Message (user, organisation incl. discard and failed send), non-contactable, signed-out | Full | `us3-card-menu.spec.ts` |
+
 ## Space community notifications — invitations, joins, outcomes (061 / notifications#356)
 
 _Searched 2026-09-28, `origin/develop` @ `0ca74068` (test-suites), against server#6467, notifications#594, client-web#10272, test-suites#632. Plan: `client-web/src/functional-e2e/organization-space-invitations/organization-space-invitations-test-plan.md`._

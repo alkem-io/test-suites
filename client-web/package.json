@@ -22,6 +22,7 @@
     "codegen": "graphql-codegen --config codegen.ts",
     "stop-process": "fuser 4000/tcp -k",
     "test:auth-playwright": "playwright test",
+    "test:classifications": "playwright test --config=config/playwright.config.classifications.ts",
     "test:nightly": "playwright test --config=config/playwright.config.nightly.ts",
     "test:platform-roles": "playwright test --config=config/playwright.config.platform-roles.ts",
     "test:form-callout-framing": "playwright test --config=config/playwright.config.form-callout-framing.ts"

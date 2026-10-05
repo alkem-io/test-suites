@@ -232,6 +232,20 @@ export default defineConfig({
       expect: { timeout: 15_000 },
     },
     {
+      // workspace#024-classifications (epic alkem-io/alkemio#1985) — the Space-side
+      // (US1/US3/REMOVAL) and template-side (US1/US2) acceptance walks. Each file seeds its
+      // own Space through TestScenarioFactory (the Space suite adds one subspace), drives it
+      // as the Space admin and a plain member, and deletes subspace, Space and organization
+      // in afterAll. TL-01 carries two deliberate soft reds pending a product decision
+      // (QA-PF-01, see classifications-test-plan.md).
+      name: 'Classifications',
+      testMatch: ['/classifications/*.spec.ts'],
+      timeout: 120_000,
+      expect: { timeout: 15_000 },
+      // A renamed control fails in seconds instead of burning the test budget.
+      use: { actionTimeout: 15_000 },
+    },
+    {
       // Story client-web#10107 / workspace#054 (self-service account
       // deletion) — the portable delta after test-suites#620: TC-14 (the
       // notification centre survives the removed
@@ -339,6 +353,33 @@ export default defineConfig({
       // Traces/videos of this walk (which types the harness password) are
       // stripped from the public report by scripts/publish-report.sh like
       // every other project's, so no per-project opt-out is needed.
+    },
+    {
+      // workspace#077 (richer contributor cards, client-web#10316). Every file
+      // seeds its own public Space through the API and deletes it in
+      // afterAll — no fixture is provisioned out of band. Files are serial
+      // inside; the product-finding tests (QA-PF-01 client-web#10369,
+      // QA-PF-03 client-web#10370) are test.skip'ped by the QA lead's decision
+      // until those fixes ship, and sit last in their files so that once
+      // un-skipped a red skips nothing else.
+      // More headroom than 30s/5s: several cases open two or three browser
+      // contexts (anonymous, non-member, member) or three timezones.
+      //
+      // The shipped 0.1contributors-callout.spec.ts is deliberately NOT
+      // listed: its scenario cleanup lives only in the Member block, so any
+      // failure in the Admin block restarts the worker and leaks a Space, an
+      // Organization and a VC. It is red on QA-PF-01 today, so it would leak
+      // on every nightly. Add it here once its cleanup moves to file level.
+      name: 'Contributors callout',
+      testMatch: [
+        '/contributors-callout/us1-card-content.spec.ts',
+        '/contributors-callout/us2-nothing-else-changes.spec.ts',
+        '/contributors-callout/us3-card-menu.spec.ts',
+        '/contributors-callout/us4-joined-this-space.spec.ts',
+        '/contributors-callout/us5-organisation-website.spec.ts',
+      ],
+      timeout: 60_000,
+      expect: { timeout: 10_000 },
     },
   ],
   // % or number of the available CPUs

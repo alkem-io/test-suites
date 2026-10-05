@@ -73,3 +73,6 @@ web_modules/
 config/playwright-report-language-offer/
 config/playwright-report-platform-roles/
 config/playwright-report-form-callout-framing/
+
+# 024 classifications acceptance run report (throwaway)
+config/playwright-report-classifications/

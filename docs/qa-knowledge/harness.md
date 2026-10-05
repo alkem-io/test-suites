@@ -51,6 +51,19 @@ place; cite this file instead of rediscovering a gap.
 - `test.skip` left in a spec sometimes encodes a *known, tracked* bug rather than flakiness — read the comment above it before assuming it's safe to leave skipped once the referenced issue ships. `convert-L1-to-L0-basic.it-spec.ts` had exactly this pattern for client-web#9528.
 - Sibling repo clones under the workspace root can be on an unrelated branch (observed: `server/` clone on `fix/move-space-recompute-platform-roles-access`, not `develop`) — always check `git log --oneline --all | grep <issue#>` rather than assuming the checked-out branch is current; the target commit is usually still reachable via `git log --all`. Reconfirmed 2026-09-28 (same branch); reading `git show origin/develop:<path>` in the clone is the cheap workaround.
 
+### Contributors callout and CRD cards (established 2026-10-02, test-suites#641)
+
+- **New L0 scenario spaces are PRIVATE.** A walk with an anonymous or non-member viewer must set `settings: { privacy: { mode: SpacePrivacyMode.Public } }` in the scenario config, or call `updateSpaceSettings` with `privacy.mode: PUBLIC` — on the subspace too. An anonymous visitor on a private space is redirected to `/about`.
+- **`createOrganization` makes the creating admin an ASSOCIATE** of the new organisation, so every fixture organisation starts with an associates count of 1. Use `removeRoleFromUser(admin, ASSOCIATE, org roleSet)` (now in `lib` `baseFunctions`) to reach a real 0.
+- **The server caps a profile tagline at 128 characters** (`maxLength`); longer values are rejected, not truncated.
+- **CRD tag rows (`CollapsibleTagList`) are lists of `listitem`s with a "+N" chip button named "Show N more"**; there is no `title` attribute. The cut-pill tooltip is a Radix tooltip on the inner badge `span` — hover the span, and press Escape to close it (moving the mouse away does not). The "+N" chip opens a portalled popover (`[data-radix-popper-content-wrapper]`) listing the hidden tags.
+- **Measure a card grid on its top-level items only** (`region.getByRole('list').first()` → `:scope > li`): every card also contains a nested tag list and an aria-hidden measuring mirror.
+- **A Playwright `has:` filter must be anchored at the page**, not at the outer locator: `items.filter({ has: region.getByRole(…) })` resolves to nothing, `items.filter({ has: page.getByRole(…) })` works.
+- **After a Radix dropdown closes with Escape the page stays `aria-hidden` for a moment**, so a role-based `toHaveCount(0)` taken right then passes vacuously. Wait for `getByRole('menu')` to be hidden and assert a positive control on the same card first.
+- **The chat panel is a `dialog` named after the conversation partner**; its header is not a heading.
+- **A retried `createUser` can leave an untracked twin.** `graphqlErrorWrapper` retries a mutation after a connection reset even when the server already committed it, and `createUser` draws a fresh nameID and email on each attempt. On this host it happened deterministically around the seventh user created in quick succession. Put a run-unique token in every throwaway display name and sweep by it at cleanup (`contributors-callout/cards-fixture.ts` › `CardsFixture.cleanUp`).
+- **Switching a Space tab replaces the history entry**: Browser Back from a subspace lands on the parent's previous tab (`?tab=3`), not on Home; click the Home tab to return client-side.
+
 ### Notification it-specs (established 2026-09-28, `origin/develop` @ `0ca74068`)
 
 - **The `nightly` vitest project lists notification specs by explicit path**, not by glob (`server-api/vitest.config.ts`, the "Feature 061's own notification specs ONLY" block). A new file under `notifications/**` runs under `--project notifications` but **never nightly** until its path is added there. Put that edit in every build sheet that adds a notification spec.
@@ -151,6 +164,11 @@ root — look in all three before concluding an area has none.
   proving the thing exists somewhere — otherwise a misspelt fixture, a stale index, or a renamed
   operation makes the negative pass forever. This has bitten cross-Space search scoping and
   request-count assertions alike.
+
+- **A test-scoped fixture runs before `beforeAll` has populated `TestUserManager`.** A `storageState` fixture that calls `TestUserManager.getUserModelByType(...)` throws `Cannot read properties of undefined (reading 'get')`. Derive persona emails with the manager's own rule, `${TestUser.X}@alkem.io`. 2026-10-01 (test-suites#613).
+- **A failed Playwright test restarts the worker, and the next test re-runs `beforeAll`.** A file-level seeded fixture is then a *fresh* one — so "pre-state" a later test captures is not the state earlier tests left. Keep each test independent of its file-mates' data. 2026-10-01.
+- **CRD template dialogs:** a *dirty* create/edit form asks "Discard your changes?" (`Keep editing` / `Yes, close`) on Cancel; a *pristine* edit form's dismiss button reads **Done**, not Cancel (client-web#10243). The classification value reorder buttons are named `Move value N up/down`. Deleting a template card removes it before the `DeleteTemplate` round trip completes — await the operation response before reading the API. 2026-10-01.
+- **Anonymous reads go through the private non-interactive endpoint with no bearer** (`postGraphqlRaw(query, { variables })`); it answers as the anonymous actor. 2026-10-01.
 
 ### Client-web / CRD locator conventions
 
