@@ -98,6 +98,9 @@ let baseScenario: OrganizationWithSpaceModel;
 const snapshots = new Map<string, UpdateUserSettingsEntityInput>();
 
 const users = () => ({
+  // The scenario creator: it creates the subspace, so it holds the subspace
+  // admin role too and is a legitimate recipient of the admin notification.
+  globalAdmin: TestUserManager.users.globalAdmin,
   spaceAdmin: TestUserManager.users.spaceAdmin,
   subspaceAdmin: TestUserManager.users.subspaceAdmin,
   subspaceMember: TestUserManager.users.subspaceMember,
@@ -320,6 +323,14 @@ describe('Form response notifications — push', () => {
     'the subspace admin gets one push publish per active subscription',
     async () => {
       const form = await newForm('push');
+      // The scenario creator is a subspace admin as well, and a real browser
+      // may hold an active subscription for it on a shared stack: switch its
+      // row off (restored from the snapshot in afterAll) so the delta below
+      // is attributable to the subspace admin alone.
+      assertCleanupSucceeded(
+        'switch the Form response row off for the scenario creator',
+        await updateUserSettings(users().globalAdmin.id, adminRow(false))
+      );
       const handles = await subscribeRecipientsToPush([
         { userRole: TestUser.SUBSPACE_ADMIN, label: `form-admin-${uniqueId}` },
       ]);
@@ -336,7 +347,7 @@ describe('Form response notifications — push', () => {
           { baseline }
         );
 
-        // Only the admin has a push subscription, and the receipt has no push.
+        // Only the subspace admin's row is on here, and the receipt has no push.
         expect(result.delta).toBe(subscriptions);
         expect(await getPushQueuePublishedTotal()).toBe(
           result.baseline + subscriptions
