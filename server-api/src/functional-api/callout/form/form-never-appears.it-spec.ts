@@ -264,7 +264,8 @@ describe('Form response — never in subscriptions', () => {
     expect(formSubscription.getErrors().length).toBeGreaterThanOrEqual(1);
     // Whatever the refusal looked like, no payload reached the Form callout's
     // subscriber (the AC: a response never travels a contribution subscription).
-    expect(formSubscription.getMessages()).toHaveLength(0);
+    // getMessages() throws once an error is recorded, so read the raw buffer.
+    expect(formSubscription.getReceivedMessages()).toHaveLength(0);
   });
 });
 

@@ -123,6 +123,13 @@ export class SubscriptionClient {
     }
     return this._messages;
   }
+  /**
+   * Returns every message received so far without throwing on recorded errors.
+   * Use it to assert that a refused subscription (`recordErrors`) delivered no payload.
+   */
+  public getReceivedMessages(): SubscriptionMessage[] {
+    return this._messages;
+  }
   /** Returns the latest received message */
   public getLatest(): SubscriptionMessage | undefined {
     return this.getMessages().slice(-1)?.[0];
