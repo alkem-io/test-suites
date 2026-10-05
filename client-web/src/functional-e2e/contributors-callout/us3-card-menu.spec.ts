@@ -18,21 +18,29 @@ import { TestUser } from '@alkemio/tests-lib/common/enums/test.user';
 import { TestScenarioConfig } from '@alkemio/tests-lib/scenario/config/test-scenario-config';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import { TestScenarioFactory } from '@alkemio/tests-lib/scenario/TestScenarioFactory';
-import { TestUserManager, getGraphqlClient } from '@alkemio/tests-lib';
-import { RoleName } from '@alkemio/tests-lib/core/generated/graphql';
 import {
+  TestUserManager,
+  UniqueIDGenerator,
+  getGraphqlClient,
+} from '@alkemio/tests-lib';
+import {
+  RoleName,
+  SpacePrivacyMode,
+} from '@alkemio/tests-lib/core/generated/graphql';
+import {
+  assignRoleToOrganization,
   assignRoleToVirtualContributor,
   assignRoleToUser,
   createUser,
 } from '@alkemio/tests-lib/scenario/baseFunctions';
 import { graphqlRequestAuth } from '@alkemio/tests-lib/utils/graphql.request';
 import { graphqlErrorWrapper } from '@alkemio/tests-lib/utils/graphql.wrapper';
-import { expect } from '@playwright/test';
+import { expect, type Route } from '@playwright/test';
 import { createAuthenticatedSessionFixture } from '../fixtures/authenticated-session.fixture';
 import { ContributorsCalloutPage } from './pages';
 
 const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
-const uniqueId = Date.now();
+const uniqueId = UniqueIDGenerator.getID();
 
 const TITLE = `US3 Card Menu ${uniqueId}`;
 const ORG_WEBSITE = 'https://greenfuture.example';
@@ -55,37 +63,14 @@ const scenarioConfig: TestScenarioConfig = {
       // it never has to touch a persona another suite relies on.
       members: [TestUser.SPACE_MEMBER],
     },
+    // PUBLIC so the signed-out case (US3-AS5) can read the post at all; new
+    // L0 spaces are PRIVATE by default.
+    settings: { privacy: { mode: SpacePrivacyMode.Public } },
   },
   virtualContributors: {
     useBaseOrganization: true,
     virtualContributors: [{ profileDisplayName: VC_NAME }],
   },
-};
-
-/** Grants `role` to an ORGANIZATION actor on a space's roleset (space
- * membership — not the organisation's own roleset). `@alkemio/tests-lib` has
- * `assignRoleToUser` / `assignRoleToVirtualContributor` but no organisation
- * equivalent; the generated SDK exposes the mutation directly (same pattern
- * as `us5-organisation-website.spec.ts`'s local helper). */
-const assignRoleToOrganization = async (
-  roleSetID: string,
-  actorID: string,
-  role: RoleName
-) => {
-  const client = getGraphqlClient();
-  const res = await graphqlErrorWrapper(
-    authToken =>
-      client.AssignRoleToOrganization(
-        { roleData: { actorID, roleSetID, role } },
-        { authorization: `Bearer ${authToken}` }
-      ),
-    TestUser.GLOBAL_ADMIN
-  );
-  if (res.error) {
-    throw new Error(
-      `assignRoleToOrganization(${role}) failed for ${actorID} on ${roleSetID}: ${JSON.stringify(res.error)}`
-    );
-  }
 };
 
 /** Deletes the scenario-owned throwaway user created for "Quiet Quinn".
@@ -132,15 +117,16 @@ adminFixture.test.describe(
     adminFixture.test.beforeAll(async ({ browser }) => {
       adminFixture.test.setTimeout(120_000);
 
-      baseScenario = await TestScenarioFactory.createBaseScenario(scenarioConfig);
+      baseScenario =
+        await TestScenarioFactory.createBaseScenario(scenarioConfig);
       const spaceRoleSetID = baseScenario.space.community.roleSetId;
 
       // The base organisation is created by every scenario but is NOT a
       // member of the space by default — add it so it renders as an
       // Organizations-segment card.
       await assignRoleToOrganization(
-        spaceRoleSetID,
         baseScenario.organization.id,
+        spaceRoleSetID,
         RoleName.Member
       );
 
@@ -205,7 +191,9 @@ adminFixture.test.describe(
           variables: {
             settingsData: {
               userID: quietPersonaId,
-              settings: { communication: { allowOtherUsersToSendMessages: false } },
+              settings: {
+                communication: { allowOtherUsersToSendMessages: false },
+              },
             },
           },
         },
@@ -226,7 +214,10 @@ adminFixture.test.describe(
             updateOrganization(organizationData: $organizationData) { id website }
           }`,
           variables: {
-            organizationData: { ID: baseScenario.organization.id, website: ORG_WEBSITE },
+            organizationData: {
+              ID: baseScenario.organization.id,
+              website: ORG_WEBSITE,
+            },
           },
         },
         TestUser.GLOBAL_ADMIN
@@ -245,7 +236,10 @@ adminFixture.test.describe(
       // Created via the real UI form (same as 0.1contributors-callout.spec.ts)
       // rather than a raw API call, so this file has no cross-package
       // dependency on the server-api package's fixture helpers.
-      const cc = new ContributorsCalloutPage(adminFixture.getSharedPage(), baseUrl);
+      const cc = new ContributorsCalloutPage(
+        adminFixture.getSharedPage(),
+        baseUrl
+      );
       await cc.navigateToSpace(baseScenario.space.nameId);
       await cc.createContributorsCallout(TITLE);
     });
@@ -253,13 +247,13 @@ adminFixture.test.describe(
     adminFixture.test.afterAll(async () => {
       adminFixture.test.setTimeout(30_000);
       await adminFixture.teardownAuthentication();
-      if (quietPersonaId) {
-        // Best-effort: a failed delete here must never mask a real test
-        // failure, and never touches any persona other suites depend on.
-        await deleteQuietPersona(quietPersonaId).catch(() => {});
-      }
-      if (baseScenario) {
-        await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
+      try {
+        // Throws on failure so a leaked throwaway user is reported.
+        if (quietPersonaId) await deleteQuietPersona(quietPersonaId);
+      } finally {
+        if (baseScenario) {
+          await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
+        }
       }
     });
 
@@ -309,8 +303,11 @@ adminFixture.test.describe(
         await col.switchType('People');
 
         const memberName = TestUserManager.users.spaceMember.displayName;
-        const panelHeading = page.getByRole('heading', { name: memberName });
-        const composer = page.getByRole('textbox', { name: 'Add a comment...' });
+        // The chat panel is a dialog named after the conversation partner.
+        const panelHeading = page.getByRole('dialog', { name: memberName });
+        const composer = page.getByRole('textbox', {
+          name: 'Add a comment...',
+        });
         const closeButton = page.getByRole('button', { name: 'Close chat' });
 
         await col.actionsButton(memberName).click();
@@ -335,9 +332,9 @@ adminFixture.test.describe(
     // organisation-message dialog; Escape-with-text asks before discarding;
     // sending closes it and confirms success.
     adminFixture.test(
-      'US3-AS3 Message on an organisation: compose, discard-guard, send',
+      'US3-AS3 Message on an organisation: compose, discard-guard, failed send keeps the draft, send, discard',
       async ({ page }) => {
-        adminFixture.test.setTimeout(30_000);
+        adminFixture.test.setTimeout(60_000);
         const cc = new ContributorsCalloutPage(page, baseUrl);
         await cc.navigateToSpace(baseScenario.space.nameId);
         const col = cc.collection(TITLE);
@@ -353,7 +350,9 @@ adminFixture.test.describe(
           dialog.getByText("Delivered to the organisation's administrators.")
         ).toBeVisible();
 
-        const textarea = dialog.getByRole('textbox', { name: 'Compose message' });
+        const textarea = dialog.getByRole('textbox', {
+          name: 'Compose message',
+        });
         await textarea.fill('Hello from the US3 acceptance walk.');
 
         // Escape with unsent text asks before discarding.
@@ -364,16 +363,61 @@ adminFixture.test.describe(
         await expect(discardDialog).toBeVisible();
 
         // "Keep editing" returns to the compose dialog with the draft intact.
-        await discardDialog.getByRole('button', { name: 'Keep editing' }).click();
+        await discardDialog
+          .getByRole('button', { name: 'Keep editing' })
+          .click();
         await expect(discardDialog).toBeHidden();
         await expect(dialog).toBeVisible();
-        await expect(textarea).toHaveValue('Hello from the US3 acceptance walk.');
+        await expect(textarea).toHaveValue(
+          'Hello from the US3 acceptance walk.'
+        );
+
+        // A failed send keeps the draft and shows the error (FR-020). Fault
+        // injection: only this one request is aborted at the network layer;
+        // nothing is fabricated, the client handles a real transport failure.
+        const failSend = async (route: Route) => {
+          const body = route.request().postDataJSON() as {
+            operationName?: string;
+          } | null;
+          if (body?.operationName === 'sendMessageToOrganization') {
+            await route.abort('failed');
+          } else {
+            await route.fallback();
+          }
+        };
+        await page.route('**/graphql*', failSend);
+        await dialog.getByRole('button', { name: 'Send', exact: true }).click();
+        await expect(dialog.getByRole('alert')).toBeVisible({
+          timeout: 10_000,
+        });
+        await expect(dialog).toBeVisible();
+        await expect(textarea).toHaveValue(
+          'Hello from the US3 acceptance walk.'
+        );
+        await page.unroute('**/graphql*', failSend);
 
         // Sending closes the dialog and shows the success toast.
         await dialog.getByRole('button', { name: 'Send', exact: true }).click();
-        await expect(page.getByText('Your message has been sent.')).toBeVisible({
-          timeout: 10_000,
-        });
+        await expect(page.getByText('Your message has been sent.')).toBeVisible(
+          {
+            timeout: 10_000,
+          }
+        );
+        await expect(dialog).toBeHidden();
+
+        // Confirming the discard question closes the dialog and drops the draft.
+        await col.actionsButton(orgName).click();
+        await col.menuItem('Message').click();
+        await expect(dialog).toBeVisible();
+        await textarea.fill('A draft to throw away.');
+        await page.keyboard.press('Escape');
+        await expect(discardDialog).toBeVisible();
+        await discardDialog.getByRole('button', { name: 'Yes, close' }).click();
+        await expect(dialog).toBeHidden();
+        await col.actionsButton(orgName).click();
+        await col.menuItem('Message').click();
+        await expect(textarea).toHaveValue('');
+        await page.keyboard.press('Escape');
         await expect(dialog).toBeHidden();
       }
     );
@@ -437,51 +481,13 @@ adminFixture.test.describe(
         // No raw/generic backend-error toast alongside the friendly one, and
         // no messaging panel opened.
         await expect(page.getByText(/Error Code: 13103/)).toHaveCount(0);
-        await expect(page.getByRole('heading', { name: quietName })).toHaveCount(0);
-      }
-    );
-
-    // AS7 — keyboard-only: tab stops in order (name, website, actions),
-    // Enter/Space opens, arrows move, Escape closes and returns focus,
-    // activating the actions control never navigates.
-    adminFixture.test(
-      'US3-AS7 Keyboard-only: tab order, menu operation, focus return, no navigation',
-      async ({ page }) => {
-        adminFixture.test.setTimeout(30_000);
-        const cc = new ContributorsCalloutPage(page, baseUrl);
-        await cc.navigateToSpace(baseScenario.space.nameId);
-        const col = cc.collection(TITLE);
-        await col.switchType('Organizations');
-
-        const orgName = baseScenario.organization.profile.displayName;
-        const nameLink = col.contributorCard(orgName);
-        const websiteControl = col.websiteLink(orgName);
-        const actionsControl = col.actionsButton(orgName);
-        const startUrl = page.url();
-
-        await nameLink.focus();
-        await expect(nameLink).toBeFocused();
-
-        await page.keyboard.press('Tab');
-        await expect(websiteControl).toBeFocused();
-
-        await page.keyboard.press('Tab');
-        await expect(actionsControl).toBeFocused();
-
-        // Enter opens the menu; activating the control itself never navigates.
-        await page.keyboard.press('Enter');
-        await expect(col.menuItem('View Profile')).toBeVisible();
-        expect(page.url()).toBe(startUrl);
-
-        // Arrow keys move between items.
-        await page.keyboard.press('ArrowDown');
-        await expect(col.menuItem('Message')).toBeFocused();
-
-        // Escape closes the menu and returns focus to the actions control.
-        await page.keyboard.press('Escape');
-        await expect(col.menuItem('View Profile')).toHaveCount(0);
-        await expect(actionsControl).toBeFocused();
-        expect(page.url()).toBe(startUrl);
+        // The chat panel would be a dialog named after the recipient (AS2).
+        await expect(page.getByRole('dialog', { name: quietName })).toHaveCount(
+          0
+        );
+        await expect(
+          page.getByRole('button', { name: 'Close chat' })
+        ).toHaveCount(0);
       }
     );
 
@@ -499,24 +505,22 @@ adminFixture.test.describe(
           name: /remove from space/i,
         });
 
-        await col.switchType('People');
-        await col
-          .actionsButton(TestUserManager.users.spaceMember.displayName)
-          .click();
-        await expect(removeItem).toHaveCount(0);
-        await page.keyboard.press('Escape');
-
-        await col.switchType('Organizations');
-        await col
-          .actionsButton(baseScenario.organization.profile.displayName)
-          .click();
-        await expect(removeItem).toHaveCount(0);
-        await page.keyboard.press('Escape');
-
-        await col.switchType('Virtual Contributors');
-        await col.actionsButton(VC_NAME).click();
-        await expect(removeItem).toHaveCount(0);
-        await page.keyboard.press('Escape');
+        const menu = page.getByRole('menu');
+        const cases: [Parameters<typeof col.switchType>[0], string][] = [
+          ['People', TestUserManager.users.spaceMember.displayName],
+          ['Organizations', baseScenario.organization.profile.displayName],
+          ['Virtual Contributors', VC_NAME],
+        ];
+        for (const [type, name] of cases) {
+          await col.switchType(type);
+          await col.actionsButton(name).click();
+          // Positive control: the menu is open and populated before the absence check.
+          await expect(menu, name).toBeVisible();
+          await expect(col.menuItem('View Profile'), name).toBeVisible();
+          await expect(removeItem, name).toHaveCount(0);
+          await page.keyboard.press('Escape');
+          await expect(menu, name).toBeHidden();
+        }
       }
     );
 
@@ -557,6 +561,55 @@ adminFixture.test.describe(
         await page.keyboard.press('Escape');
 
         await context.close();
+      }
+    );
+    // Product finding QA-PF-01 — https://github.com/alkem-io/client-web/issues/10369
+    // The name link cannot be focused unambiguously while the avatar anchor
+    // also carries the contributor's name (two exact-name links per card).
+    // Kept last so a red here skips nothing else in this serial block.
+    // AS7 — keyboard-only: tab stops in order (name, website, actions),
+    // Enter/Space opens, arrows move, Escape closes and returns focus,
+    // activating the actions control never navigates.
+    // Skipped by decision of the QA lead (2026-10-05) until that issue ships; the assertions below
+    // are the acceptance oracle for the fix and must not be softened. Un-skip, do not delete.
+    adminFixture.test.skip(
+      'US3-AS7 Keyboard-only: tab order, menu operation, focus return, no navigation',
+      async ({ page }) => {
+        adminFixture.test.setTimeout(30_000);
+        const cc = new ContributorsCalloutPage(page, baseUrl);
+        await cc.navigateToSpace(baseScenario.space.nameId);
+        const col = cc.collection(TITLE);
+        await col.switchType('Organizations');
+
+        const orgName = baseScenario.organization.profile.displayName;
+        const nameLink = col.contributorCard(orgName);
+        const websiteControl = col.websiteLink(orgName);
+        const actionsControl = col.actionsButton(orgName);
+        const startUrl = page.url();
+
+        await nameLink.focus();
+        await expect(nameLink).toBeFocused();
+
+        await page.keyboard.press('Tab');
+        await expect(websiteControl).toBeFocused();
+
+        await page.keyboard.press('Tab');
+        await expect(actionsControl).toBeFocused();
+
+        // Enter opens the menu; activating the control itself never navigates.
+        await page.keyboard.press('Enter');
+        await expect(col.menuItem('View Profile')).toBeVisible();
+        expect(page.url()).toBe(startUrl);
+
+        // Arrow keys move between items.
+        await page.keyboard.press('ArrowDown');
+        await expect(col.menuItem('Message')).toBeFocused();
+
+        // Escape closes the menu and returns focus to the actions control.
+        await page.keyboard.press('Escape');
+        await expect(col.menuItem('View Profile')).toHaveCount(0);
+        await expect(actionsControl).toBeFocused();
+        expect(page.url()).toBe(startUrl);
       }
     );
   }
