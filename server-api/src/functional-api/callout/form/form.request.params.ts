@@ -574,9 +574,14 @@ export const revokePlatformRole = async (
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const result = await removePlatformRole(actorID, role, userRole);
+  if (result.error) {
+    throw new Error(
+      `unable to revoke ${role} from ${actorID}: ${JSON.stringify(result.error)}`
+    );
+  }
   if (role === RoleName.PlatformSpacesReader) {
     const graphqlClient = getGraphqlClient();
-    await graphqlErrorWrapper(
+    const unmarked = await graphqlErrorWrapper(
       (authToken: string | undefined) =>
         graphqlClient.updateUserServiceProfile(
           { userData: { ID: actorID, serviceProfile: false } },
@@ -584,6 +589,13 @@ export const revokePlatformRole = async (
         ),
       userRole
     );
+    if (unmarked.error) {
+      throw new Error(
+        `unable to clear the service-profile marker of ${actorID}: ${JSON.stringify(
+          unmarked.error
+        )}`
+      );
+    }
   }
   return result;
 };

@@ -541,10 +541,18 @@ test.describe(
           .toBe(1);
       }
 
-      // The parent-Space-only admin hears nothing.
-      const about = await mailsAbout(one.name);
-      expect(about.filter(m => m.toAddresses.includes(personaEmail.sa))).toHaveLength(0);
-      expect(await formInApp('sa', one.calloutId)).toHaveLength(0);
+      // The parent-Space-only admin hears nothing: deliveries are asynchronous,
+      // so hold both negatives over the settle window.
+      await Promise.all([
+        staysAt(
+          async () =>
+            (await mailsAbout(one.name)).filter(m =>
+              m.toAddresses.includes(personaEmail.sa)
+            ).length,
+          0
+        ),
+        staysAt(async () => (await formInApp('sa', one.calloutId)).length, 0),
+      ]);
 
       // In-app is reachable in the UI and links to the Post.
       const page = await signIn(browser, personaEmail.a2);
@@ -573,14 +581,23 @@ test.describe(
     });
 
     test('US4-AS3 no generic contribution notification reaches anyone', async () => {
-      const about = await mailsAbout(one.name);
-      for (const mail of about) {
-        expect(mail.subject.toLowerCase()).not.toContain('contribution');
-      }
-      for (const p of ['a2', 'm1', 'sa'] as Persona[]) {
-        const types = (await inApp(p)).map(n => n.type);
-        expect(types.filter(t => t.includes('CONTRIBUTION'))).toEqual([]);
-      }
+      // Held over the settle window so a late generic notification is caught.
+      await Promise.all([
+        staysAt(
+          async () =>
+            (await mailsAbout(one.name)).filter(m =>
+              m.subject.toLowerCase().includes('contribution')
+            ).length,
+          0
+        ),
+        ...(['a2', 'm1', 'sa'] as Persona[]).map(p =>
+          staysAt(
+            async () =>
+              (await inApp(p)).filter(n => n.type.includes('CONTRIBUTION')).length,
+            0
+          )
+        ),
+      ]);
     });
 
     test('US4-AS4 the admin email and in-app name the submitter and the Form, link to the Post, carry no answer', async () => {
@@ -644,7 +661,21 @@ test.describe(
           { timeout: 90_000 }
         )
         .toBe(3);
-      expect(await formInApp('a2', multi.calloutId)).toHaveLength(3);
+      await expect
+        .poll(async () => (await formInApp('a2', multi.calloutId)).length, {
+          timeout: 30_000,
+        })
+        .toBe(3);
+      // No fourth (duplicate) delivery lands late on either channel.
+      await Promise.all([
+        staysAt(
+          async () =>
+            to(await mailsAbout(multi.name), adminSubject(multi.name), personaEmail.a2)
+              .length,
+          3
+        ),
+        staysAt(async () => (await formInApp('a2', multi.calloutId)).length, 3),
+      ]);
       const about = await mailsAbout(multi.name);
       expect(about.some(m => m.body.includes('US4-MULTI-SECRET'))).toBe(false);
     });

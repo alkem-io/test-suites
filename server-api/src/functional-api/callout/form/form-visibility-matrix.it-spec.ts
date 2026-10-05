@@ -221,7 +221,8 @@ const readers: Reader[] = [
 ];
 
 // The four personas that carry a platform role only for the duration of the file.
-const platformGrants: { user: () => string; role: RoleName }[] = [
+type PlatformGrant = { user: () => string; role: RoleName };
+const platformGrants: PlatformGrant[] = [
   {
     user: () => TestUserManager.users.qaUser.id,
     role: RoleName.PlatformContentFullAccess,
@@ -239,6 +240,8 @@ const platformGrants: { user: () => string; role: RoleName }[] = [
     role: RoleName.PlatformSpacesReader,
   },
 ];
+// The grants that actually landed — only these are revoked in afterAll.
+const grantedPlatformRoles: PlatformGrant[] = [];
 
 let baseScenario: OrganizationWithSpaceModel;
 let adminsForm: FormCallout;
@@ -308,6 +311,7 @@ beforeAll(async () => {
 
   for (const grant of platformGrants) {
     await grantPlatformRole(grant.user(), grant.role);
+    grantedPlatformRoles.push(grant);
   }
 
   adminsForm = await createFormCallout(subspaceSetId(), {
@@ -338,10 +342,24 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await Promise.allSettled(
-    platformGrants.map(grant => revokePlatformRole(grant.user(), grant.role))
+  // Revoke every grant that landed, clean up the scenario regardless, then fail
+  // the hook if any shared persona kept its temporary platform role.
+  const revocations = await Promise.allSettled(
+    grantedPlatformRoles.map(grant =>
+      revokePlatformRole(grant.user(), grant.role)
+    )
   );
   await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
+  const failed = revocations.flatMap((outcome, i) =>
+    outcome.status === 'rejected'
+      ? [`${grantedPlatformRoles[i].role}: ${String(outcome.reason)}`]
+      : []
+  );
+  if (failed.length > 0) {
+    throw new Error(
+      `platform role revocation failed for ${failed.length} grant(s):\n${failed.join('\n')}`
+    );
+  }
 });
 
 describe('Form responses — read scope per role', () => {

@@ -787,22 +787,28 @@ test.describe(
       await narrowPage.close();
 
       // API agrees: widening with a response is accepted.
-      const widenAttempt = await gql(
-        'a2',
-        'mutation ($d: UpdateCalloutFormInput!) { updateCalloutForm(formData: $d) { id settings { visibility } } }',
-        { d: { formID: formAdmins.formId, settings: { visibility: 'MEMBERS' } } }
-      );
-      expect(widenAttempt.errors).toBeUndefined();
-      expect(widenAttempt.data?.updateCalloutForm.settings.visibility).toBe('MEMBERS');
-      // Put the shared Form back to Admins only for the later cases.
-      await must(
-        await gql(
+      try {
+        const widenAttempt = await gql(
           'a2',
-          'mutation ($d: UpdateCalloutFormInput!) { updateCalloutForm(formData: $d) { id } }',
-          { d: { formID: formAdmins.formId, settings: { visibility: 'ADMINS' } } }
-        ),
-        'narrow formAdmins back'
-      );
+          'mutation ($d: UpdateCalloutFormInput!) { updateCalloutForm(formData: $d) { id settings { visibility } } }',
+          { d: { formID: formAdmins.formId, settings: { visibility: 'MEMBERS' } } }
+        );
+        expect(widenAttempt.errors).toBeUndefined();
+        expect(widenAttempt.data?.updateCalloutForm.settings.visibility).toBe(
+          'MEMBERS'
+        );
+      } finally {
+        // Put the shared Form back to Admins only for the later cases, even
+        // when the widening assertions fail (the suite runs serially).
+        await must(
+          await gql(
+            'a2',
+            'mutation ($d: UpdateCalloutFormInput!) { updateCalloutForm(formData: $d) { id } }',
+            { d: { formID: formAdmins.formId, settings: { visibility: 'ADMINS' } } }
+          ),
+          'narrow formAdmins back'
+        );
+      }
     });
 
     test('US3-AS5 the Space admin reads every response through View responses', async ({
@@ -946,26 +952,31 @@ test.describe(
         ['S', fixture.spaceCollaborationId],
       ] as const) {
         for (const who of ['admin', 'a2'] as Actor[]) {
-          const log = (
-            await must(
-              await gql(
-                who,
-                `query ($d: ActivityLogInput!) {
-                  activityLogOnCollaboration(queryData: $d) { id type description }
-                }`,
-                { d: { collaborationID, includeChild: true, limit: 200 } }
-              ),
-              `activity log ${name}/${who}`
-            )
-          ).activityLogOnCollaboration as Array<{
-            type: string;
-            description: string;
-          }>;
+          // Activity entries land asynchronously: poll until the control Post
+          // is present, then assert the response never reached the same log.
+          let log: Array<{ type: string; description: string }> = [];
+          await expect(async () => {
+            log = (
+              await must(
+                await gql(
+                  who,
+                  `query ($d: ActivityLogInput!) {
+                    activityLogOnCollaboration(queryData: $d) { id type description }
+                  }`,
+                  { d: { collaborationID, includeChild: true, limit: 200 } }
+                ),
+                `activity log ${name}/${who}`
+              )
+            ).activityLogOnCollaboration as Array<{
+              type: string;
+              description: string;
+            }>;
+            expect(
+              log.some(e => (e.description ?? '').includes(MARK.as6PostTitle)),
+              `control Post is in the activity log ${name}/${who}`
+            ).toBe(true);
+          }).toPass({ intervals: [1_000, 2_000, 5_000], timeout: 60_000 });
           expect(leaked(log), `activity ${name}/${who}`).toBe(false);
-          expect(
-            log.some(e => (e.description ?? '').includes(MARK.as6PostTitle)),
-            `control Post is in the activity log ${name}/${who}`
-          ).toBe(true);
         }
       }
 
