@@ -28,6 +28,12 @@ import path from 'node:path';
  * AS11 an audience widened while the member has the Form open: submit rejected
  *      (FORM_VISIBILITY_CHANGED), notice refreshed, draft kept, resubmit stored.
  * AS12 five parallel submits in SINGLE mode store exactly one response.
+ * AS13 (R17/R18) the Form sits in its own box: the header (title, "N questions",
+ *      notice, description) is always visible; the chevron collapses / expands the
+ *      question cards and the Cancel / "Submit Form" footer; the initial state
+ *      follows the default-collapsed setting.
+ * AS14 (R19a) SINGLE after MULTIPLE: a member holding two responses sees both with
+ *      Withdraw and no Submit until both are withdrawn; then one submit is stored.
  *
  * Self-contained: provisions its own Kratos identities (admin API), Space, Subspace
  * and Forms through the non-interactive GraphQL endpoint, then walks the real UI.
@@ -258,6 +264,9 @@ async function createForm(
     questions?: Array<Record<string, unknown>>;
     settings?: Record<string, unknown>;
     publish?: boolean;
+    /** The optional Form title / description (R17), separate from the Post. */
+    formTitle?: string;
+    formDescription?: string;
   } = {}
 ): Promise<FormFixture> {
   const created = (
@@ -269,6 +278,8 @@ async function createForm(
             type: 'FORM',
             profile: { displayName: title, description: 'Form callout framing' },
             form: {
+              title: opts.formTitle,
+              description: opts.formDescription,
               questions: opts.questions ?? FOUR_QUESTIONS,
               settings: opts.settings ?? {},
             },
@@ -329,7 +340,18 @@ const lookupAs = async (who: string, f: FormFixture) =>
 
 const dialogOf = (page: Page) => page.getByRole('dialog');
 const submitButton = (scope: ReturnType<typeof dialogOf> | Page) =>
-  scope.getByRole('button', { name: /submit response/i });
+  scope.getByRole('button', { name: /submit form/i });
+
+/**
+ * The Form box's expand/collapse chevron (R18): a button that carries
+ * `aria-expanded` and `aria-controls` (the collapsible body) and is named
+ * "expand"/"collapse". Matching both attributes keeps it apart from any other
+ * expand control of the Post dialog.
+ */
+const formChevron = (scope: ReturnType<typeof dialogOf>) =>
+  scope
+    .getByRole('button', { name: /expand|collapse/i })
+    .and(scope.locator('button[aria-expanded][aria-controls]'));
 
 async function fillValid(scope: ReturnType<typeof dialogOf>, name: string) {
   await scope.getByRole('textbox', { name: /What is your name/ }).fill(name);
@@ -911,6 +933,125 @@ test.describe(
       }
       expect((await lookupAs(personaEmail.m1, f)).mine).toHaveLength(1);
       expect((await lookupAs(ADMIN_EMAIL, f)).all.total).toBe(1);
+    });
+
+    test('US2-AS13 the Form box: header always visible, chevron collapses the questions and footer, initial state from the setting', async ({
+      browser,
+    }) => {
+      const formTitle = `US2 Box ${RUN}`;
+      const formDescription = `Tell us how you will take part ${RUN}`;
+      const f = await createForm(personaEmail.a2, fx.subCalloutsSetId, `US2 Box Post ${RUN}`, {
+        formTitle,
+        formDescription,
+        questions: [
+          { prompt: 'What is your name?', type: 'SHORT_TEXT', required: true },
+          { prompt: 'Tell us more', type: 'LONG_TEXT' },
+          {
+            prompt: 'Pick one',
+            type: 'SINGLE_CHOICE',
+            options: [{ label: 'Alpha' }, { label: 'Beta' }],
+          },
+        ],
+      });
+
+      const page = await signIn(browser, personaEmail.m1);
+      await open(page, f.url);
+      const dialog = dialogOf(page);
+      const chevron = formChevron(dialog);
+      const header = async () => {
+        await expect(dialog.getByText(formTitle, { exact: true })).toBeVisible();
+        await expect(dialog.getByText('3 questions', { exact: true })).toBeVisible();
+        await expect(dialog.getByText(NOTICE_ADMINS)).toBeVisible();
+        await expect(dialog.getByText(formDescription)).toBeVisible();
+      };
+      const body = async (visible: boolean) => {
+        const state = visible ? 'toBeVisible' : 'toBeHidden';
+        await expect(dialog.getByRole('textbox', { name: /What is your name/ }))[state]();
+        await expect(dialog.getByRole('radio', { name: 'Beta' }))[state]();
+        await expect(submitButton(dialog))[state]();
+        await expect(dialog.getByRole('button', { name: /^cancel$/i }))[state]();
+      };
+
+      // Default (expanded): header + questions + Cancel / Submit Form.
+      await expect(chevron).toHaveAttribute('aria-expanded', 'true');
+      await header();
+      await body(true);
+      await shot(page, 'US2-AS13-expanded');
+
+      await chevron.click();
+      await expect(chevron).toHaveAttribute('aria-expanded', 'false');
+      await header();
+      await body(false);
+      await shot(page, 'US2-AS13-collapsed');
+
+      await chevron.click();
+      await expect(chevron).toHaveAttribute('aria-expanded', 'true');
+      await body(true);
+
+      // "Collapsed by default" on: the Form first shows its header only.
+      await must(
+        await gql(personaEmail.a2, UPDATE_FORM, {
+          d: { formID: f.formId, settings: { defaultCollapsed: true } },
+        }),
+        'collapse by default'
+      );
+      await open(page, f.url);
+      await expect(chevron).toHaveAttribute('aria-expanded', 'false');
+      await header();
+      await body(false);
+      await shot(page, 'US2-AS13-default-collapsed');
+      await chevron.click();
+      await body(true);
+      await page.context().close();
+    });
+
+    test('US2-AS14 SINGLE after MULTIPLE: both own responses listed with Withdraw, no Submit until both are withdrawn', async ({
+      browser,
+    }) => {
+      const f = await createForm(personaEmail.a2, fx.subCalloutsSetId, `US2 Mode Switch ${RUN}`, {
+        settings: { responseMode: 'MULTIPLE' },
+      });
+      await must(await submitApi('m1', f, validAnswers(f, 'Mode First')), 'first response');
+      await must(await submitApi('m1', f, validAnswers(f, 'Mode Second')), 'second response');
+      // R19a: the switch is allowed although M1 holds two responses.
+      await must(
+        await gql(personaEmail.a2, UPDATE_FORM, {
+          d: { formID: f.formId, settings: { responseMode: 'SINGLE' } },
+        }),
+        'switch to SINGLE'
+      );
+      expect((await lookupAs(personaEmail.m1, f)).mine).toHaveLength(2);
+
+      const page = await signIn(browser, personaEmail.m1);
+      await open(page, f.url);
+      const dialog = dialogOf(page);
+      const withdrawButtons = dialog.getByRole('button', { name: 'Withdraw' });
+      await expect(dialog.getByRole('heading', { name: 'Your responses' })).toBeVisible();
+      await expect(dialog.getByText('Mode First')).toBeVisible();
+      await expect(dialog.getByText('Mode Second')).toBeVisible();
+      await expect(withdrawButtons).toHaveCount(2);
+      await expect(submitButton(dialog)).toHaveCount(0);
+      await shot(page, 'US2-AS14-two-own-responses-single');
+
+      // One withdrawn: still no Submit.
+      await withdrawButtons.first().click();
+      await page.getByRole('alertdialog').getByRole('button', { name: 'Withdraw' }).click();
+      await expect(withdrawButtons).toHaveCount(1);
+      await expect(submitButton(dialog)).toHaveCount(0);
+      expect((await lookupAs(personaEmail.m1, f)).mine).toHaveLength(1);
+
+      // Both withdrawn: the fill-in returns and one submission is stored.
+      await withdrawButtons.first().click();
+      await page.getByRole('alertdialog').getByRole('button', { name: 'Withdraw' }).click();
+      await expect(dialog.getByRole('textbox', { name: /What is your name/ })).toBeVisible();
+      await expect(submitButton(dialog)).toBeVisible();
+      await fillValid(dialog, 'Mode Third');
+      await submitButton(dialog).click();
+      await expect(dialog.getByText('Mode Third')).toBeVisible();
+      await expect(submitButton(dialog)).toHaveCount(0);
+      await shot(page, 'US2-AS14-single-after-withdrawals');
+      await page.context().close();
+      expect((await lookupAs(personaEmail.m1, f)).mine).toHaveLength(1);
     });
   }
 );

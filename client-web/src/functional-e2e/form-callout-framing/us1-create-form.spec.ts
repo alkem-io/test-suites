@@ -26,9 +26,22 @@ import { fillSecret } from '../helpers/login.helper';
  *      prompt is blocked inline) and the API answers FORM_QUESTIONS_COUNT.
  * AS7a closing / reopening the Form in the settings dialogue reaches a member.
  * AS8  an admin edits a Form that has responses (rename, option label, add, remove,
- *      reorder); answer types are locked; existing responses stay readable.
+ *      reorder); the answer-type select stays enabled and changing an answered
+ *      question's type shows "Existing answers keep their original format" (R19c);
+ *      existing responses stay readable.
  * AS9  in edit mode the Form chip is active and cannot be cleared; no other chip
  *      can be switched.
+ * AS10 (R17) the box above question 1 holds the Form title and description; both
+ *      save while responses exist and show in the Form box header; an empty title
+ *      shows "Form".
+ * AS11 (R20) each question is one row — drag handle, prompt labelled "Question N",
+ *      answer type, required switch, delete — with the explanation below; the
+ *      labels follow a reorder; the row wraps at 375px without horizontal scroll.
+ * AS12 (R18) "collapsed by default" in the Form settings makes a member first see
+ *      only the Form box header; turning it off makes the Form start expanded.
+ * AS13 (R19c) changing an answered short-answer question to single choice shows the
+ *      hint, saves, and View responses shows the old text answer and the new
+ *      option answer in the same column.
  *
  * Self-contained: provisions its own Kratos identities (admin API), Space, Subspace,
  * Virtual Contributor and Forms through the non-interactive GraphQL endpoint, then
@@ -217,6 +230,47 @@ let editable: {
   formId: string;
   questionIds: string[];
 };
+
+// Pre-provisioned Forms for the R17-R20 cases (AS10, AS12, AS13).
+let presentable: { url: string; calloutId: string };
+let collapsible: { url: string; calloutId: string };
+let typed: { url: string; calloutId: string; formId: string };
+
+const TYPE_CHANGE_HINT = 'Existing answers keep their original format';
+
+/** Opens the Post's edit dialog (detail view -> Settings -> Edit). */
+async function openEdit(page: Page, url: string) {
+  await open(page, url);
+  await page
+    .getByRole('dialog')
+    .getByRole('button', { name: 'Settings' })
+    .click();
+  await page.getByRole('menuitem', { name: 'Edit' }).click();
+  const dialog = page.getByRole('dialog').last();
+  await dialog.getByRole('button', { name: /add question/i }).waitFor();
+  return dialog;
+}
+
+async function saveEdit(page: Page) {
+  await page.getByRole('button', { name: /^save$/i }).click();
+  await expect(page.getByRole('button', { name: /^save$/i })).toBeHidden({
+    timeout: 20_000,
+  });
+}
+
+/**
+ * The Form box's expand/collapse chevron (R18): a button named
+ * "expand"/"collapse" that carries `aria-expanded` and `aria-controls`.
+ */
+const formChevron = (page: Page) =>
+  page
+    .getByRole('dialog')
+    .getByRole('button', { name: /expand|collapse/i })
+    .and(page.locator('button[aria-expanded][aria-controls]'));
+
+/** The builder's prompt field of question `n` (R20: labelled "Question N"). */
+const questionField = (scope: ReturnType<Page['getByRole']>, n: number) =>
+  scope.getByRole('textbox', { name: `Question ${n}`, exact: true });
 
 const visibleFormRadio = (page: Page) =>
   page.getByRole('dialog').getByRole('radio', { name: 'Form', exact: true });
@@ -420,6 +474,56 @@ test.describe(
           }
         ),
         'seed response'
+      );
+
+      // AS10: a Form with a response, edited through the builder's header box.
+      const pres = await createForm(`US1 Presentable ${RUN}`, [
+        { prompt: 'Presentable question', type: 'SHORT_TEXT', required: true },
+      ]);
+      presentable = { url: pres.url, calloutId: pres.calloutId };
+      await must(
+        await gql(
+          personaEmail.m1,
+          `mutation ($d: SubmitCalloutFormResponseInput!) {
+            submitCalloutFormResponse(responseData: $d) { id }
+          }`,
+          {
+            d: {
+              formID: pres.formId,
+              acknowledgedVisibility: 'ADMINS',
+              answers: [{ questionID: pres.questions[0].id, text: 'Present' }],
+            },
+          }
+        ),
+        'seed presentable response'
+      );
+
+      // AS12: a Form whose default-collapsed setting is toggled in the UI.
+      const coll = await createForm(`US1 Collapsible ${RUN}`, [
+        { prompt: 'Collapsible question', type: 'SHORT_TEXT', required: true },
+      ]);
+      collapsible = { url: coll.url, calloutId: coll.calloutId };
+
+      // AS13: a short-answer question answered by M1, then changed to a choice.
+      const typ = await createForm(`US1 Typed ${RUN}`, [
+        { prompt: 'Your answer', type: 'SHORT_TEXT', required: true },
+      ]);
+      typed = { url: typ.url, calloutId: typ.calloutId, formId: typ.formId };
+      await must(
+        await gql(
+          personaEmail.m1,
+          `mutation ($d: SubmitCalloutFormResponseInput!) {
+            submitCalloutFormResponse(responseData: $d) { id }
+          }`,
+          {
+            d: {
+              formID: typ.formId,
+              acknowledgedVisibility: 'ADMINS',
+              answers: [{ questionID: typ.questions[0].id, text: 'Mia text' }],
+            },
+          }
+        ),
+        'seed typed response'
       );
     });
 
@@ -777,7 +881,7 @@ test.describe(
         'None',
       ]);
       await expect(
-        dialog.getByRole('button', { name: /submit response/i })
+        dialog.getByRole('button', { name: /submit form/i })
       ).toHaveCount(1);
     });
 
@@ -802,7 +906,7 @@ test.describe(
       const member = await signIn(browser, personaEmail.m1);
       const submitButton = member
         .getByRole('dialog')
-        .getByRole('button', { name: /submit response/i });
+        .getByRole('button', { name: /submit form/i });
 
       const setOpen = async (open: boolean) => {
         await admin.goto(closableUrl);
@@ -873,14 +977,19 @@ test.describe(
         'true'
       );
 
-      // AS8: answer types are locked once responses exist.
-      const typeButtons = dialog.locator(
-        '[id^="form-question-"][id$="-type"]'
-      );
-      await expect(typeButtons).toHaveCount(4);
-      for (const button of await typeButtons.all()) {
-        await expect(button).toBeDisabled();
+      // AS8 (R19c): the answer type stays editable on answered questions.
+      const typeSelects = dialog.getByRole('combobox', { name: 'Answer type' });
+      await expect(typeSelects).toHaveCount(4);
+      for (const select of await typeSelects.all()) {
+        await expect(select).toBeEnabled();
+        await expect(select).not.toHaveAttribute('aria-disabled', 'true');
       }
+      await expect(dialog.getByText(TYPE_CHANGE_HINT)).toHaveCount(0);
+      // Change the type of "Tell us about yourself" (answered; removed below, so
+      // the saved definition is unaffected): the hint appears.
+      await typeSelects.nth(1).click();
+      await page.getByRole('option', { name: 'Short text' }).click();
+      await expect(dialog.getByText(TYPE_CHANGE_HINT)).toBeVisible();
 
       const prompts = dialog.locator('[id^="form-question-"][id$="-prompt"]');
       await prompts.nth(0).fill('Your full name');
@@ -964,6 +1073,287 @@ test.describe(
       await expect(table).toContainText('Tell us about yourself');
       await expect(table).toContainText('removed question');
       await expect(table).toContainText('Mia Memberone');
+    });
+
+    test('US1-AS10 the Form title and description box sits above question 1, saves with responses, and shows in the Form box header', async ({
+      browser,
+    }) => {
+      const formTitle = `US1 Form title ${RUN}`;
+      const formDescription = `What this form is for ${RUN}`;
+      const page = await signIn(browser, personaEmail.a2);
+      const dialog = await openEdit(page, presentable.url);
+
+      const titleInput = dialog.getByRole('textbox', { name: 'Form title' });
+      // The box holding both fields: the innermost element containing the title
+      // input and a textarea (the description).
+      const headerBox = dialog
+        .locator('div', { has: titleInput })
+        .filter({ has: page.locator('textarea') })
+        .last();
+      const descriptionInput = headerBox.getByRole('textbox', {
+        name: /description/i,
+      });
+      await expect(titleInput).toBeVisible();
+      await expect(descriptionInput).toBeVisible();
+      // Above the first question.
+      const titleBox = await titleInput.boundingBox();
+      const firstQuestion = await questionField(dialog, 1).boundingBox();
+      expect(titleBox && firstQuestion).toBeTruthy();
+      expect(titleBox!.y).toBeLessThan(firstQuestion!.y);
+
+      await titleInput.fill(formTitle);
+      await descriptionInput.fill(formDescription);
+      // The 512 / 2048 limits are indicated next to the fields.
+      await expect(headerBox.getByText(/512/).first()).toBeVisible();
+      await expect(headerBox.getByText(/2048/).first()).toBeVisible();
+      await saveEdit(page);
+
+      await expect
+        .poll(async () => {
+          const result = await gql(
+            personaEmail.a2,
+            'query ($id: UUID!) { lookup { callout(ID: $id) { framing { form { title description } } } } }',
+            { id: presentable.calloutId }
+          );
+          return result.data?.lookup?.callout?.framing?.form;
+        })
+        .toEqual({ title: formTitle, description: formDescription });
+
+      const member = await signIn(browser, personaEmail.m1);
+      await open(member, presentable.url);
+      const detail = member.getByRole('dialog');
+      await expect(detail.getByText(formTitle, { exact: true })).toBeVisible();
+      await expect(detail.getByText(formDescription)).toBeVisible();
+
+      // An emptied title falls back to the generic "Form" label.
+      const again = await openEdit(page, presentable.url);
+      await again.getByRole('textbox', { name: 'Form title' }).fill('');
+      await saveEdit(page);
+      await expect
+        .poll(async () => {
+          const result = await gql(
+            personaEmail.a2,
+            'query ($id: UUID!) { lookup { callout(ID: $id) { framing { form { title } } } } }',
+            { id: presentable.calloutId }
+          );
+          return result.data?.lookup?.callout?.framing?.form?.title;
+        })
+        .toBeNull();
+      await open(member, presentable.url);
+      await expect(detail.getByText(formTitle, { exact: true })).toHaveCount(0);
+      await expect(detail.getByText('Form', { exact: true }).first()).toBeVisible();
+      await expect(detail.getByText(formDescription)).toBeVisible();
+    });
+
+    test('US1-AS11 each question is one row labelled "Question N"; labels follow a reorder; the row wraps on a phone', async ({
+      browser,
+    }) => {
+      const page = await signIn(browser, personaEmail.a2);
+      await open(page, fixture.subUrl);
+      await page.getByRole('button', { name: /add post/i }).first().click();
+      const dialog = page.getByRole('dialog');
+      await visibleFormRadio(page).click();
+      await dialog.getByRole('button', { name: /add question/i }).click();
+      await questionField(dialog, 1).fill('First prompt');
+      await questionField(dialog, 2).fill('Second prompt');
+
+      for (const n of [1, 2]) {
+        const prompt = questionField(dialog, n);
+        // The row: the innermost ancestor of the prompt holding the switch.
+        const row = prompt.locator(
+          'xpath=ancestor::*[.//*[@role="switch"]][1]'
+        );
+        const handle = row.getByRole('button', {
+          name: `Reorder question ${n}`,
+        });
+        const type = row.getByRole('combobox', { name: 'Answer type' });
+        const required = row.getByRole('switch');
+        const remove = row.getByRole('button', { name: /remove question/i });
+        for (const control of [handle, type, required, remove]) {
+          await expect(control).toHaveCount(1);
+        }
+        // Left to right in one row: handle, prompt, type, required, delete.
+        const boxes = await Promise.all(
+          [handle, prompt, type, required, remove].map(c => c.boundingBox())
+        );
+        for (const box of boxes) expect(box).toBeTruthy();
+        const xs = boxes.map(b => b!.x);
+        expect([...xs].sort((a, b) => a - b)).toEqual(xs);
+        const promptBox = boxes[1]!;
+        for (const box of boxes) {
+          // Vertically overlapping the prompt field: the same row.
+          expect(box!.y).toBeLessThan(promptBox.y + promptBox.height);
+          expect(box!.y + box!.height).toBeGreaterThan(promptBox.y);
+        }
+        // The explanation sits below the row.
+        const explanation = dialog
+          .getByRole('textbox', { name: /explanation/i })
+          .nth(n - 1);
+        const explanationBox = await explanation.boundingBox();
+        expect(explanationBox!.y).toBeGreaterThanOrEqual(
+          promptBox.y + promptBox.height
+        );
+      }
+      // No separate "Question N" title above the row: the label is the only one.
+      await expect(dialog.getByText('Question 1', { exact: true })).toHaveCount(1);
+
+      // The labels follow a reorder.
+      const from = await dialog
+        .getByRole('button', { name: 'Reorder question 2' })
+        .boundingBox();
+      const to = await dialog
+        .getByRole('button', { name: 'Reorder question 1' })
+        .boundingBox();
+      await page.mouse.move(from!.x + from!.width / 2, from!.y + from!.height / 2);
+      await page.mouse.down();
+      await page.mouse.move(to!.x + to!.width / 2, to!.y - 20, { steps: 20 });
+      await page.mouse.up();
+      await expect(questionField(dialog, 1)).toHaveValue('Second prompt');
+      await expect(questionField(dialog, 2)).toHaveValue('First prompt');
+
+      // At 375px the row wraps instead of scrolling sideways.
+      await page.setViewportSize({ width: 375, height: 800 });
+      await expect(questionField(dialog, 1)).toBeVisible();
+      await expect
+        .poll(() =>
+          dialog.evaluate(el => el.scrollWidth <= el.clientWidth + 1)
+        )
+        .toBe(true);
+      await expect
+        .poll(() =>
+          page.evaluate(
+            () =>
+              document.documentElement.scrollWidth <=
+              document.documentElement.clientWidth + 1
+          )
+        )
+        .toBe(true);
+    });
+
+    test('US1-AS12 "collapsed by default" makes a member first see only the Form box header', async ({
+      browser,
+    }) => {
+      const admin = await signIn(browser, personaEmail.a2);
+      const member = await signIn(browser, personaEmail.m1);
+      const memberSubmit = member
+        .getByRole('dialog')
+        .getByRole('button', { name: /submit form/i });
+
+      const setCollapsed = async (collapsed: boolean) => {
+        await openEdit(admin, collapsible.url);
+        await admin.getByRole('button', { name: 'Form settings' }).click();
+        const settings = admin.getByRole('dialog', { name: 'Form settings' });
+        const toggle = settings.getByRole('switch', {
+          name: /collapsed by default/i,
+        });
+        await expect(toggle).toHaveAttribute('aria-checked', String(!collapsed));
+        await toggle.click();
+        await expect(toggle).toHaveAttribute('aria-checked', String(collapsed));
+        await admin.keyboard.press('Escape');
+        await saveEdit(admin);
+        await expect
+          .poll(async () => {
+            const result = await gql(
+              personaEmail.a2,
+              'query ($id: UUID!) { lookup { callout(ID: $id) { framing { form { settings { defaultCollapsed } } } } } }',
+              { id: collapsible.calloutId }
+            );
+            return result.data?.lookup?.callout?.framing?.form?.settings
+              ?.defaultCollapsed;
+          })
+          .toBe(collapsed);
+      };
+
+      // Default: expanded.
+      await open(member, collapsible.url);
+      await expect(formChevron(member)).toHaveAttribute('aria-expanded', 'true');
+      await expect(memberSubmit).toBeVisible();
+
+      await setCollapsed(true);
+      await open(member, collapsible.url);
+      await expect(formChevron(member)).toHaveAttribute('aria-expanded', 'false');
+      await expect(
+        member.getByRole('dialog').getByText('1 question', { exact: true })
+      ).toBeVisible();
+      await expect(
+        member.getByRole('dialog').getByRole('textbox', { name: /Collapsible question/ })
+      ).toBeHidden();
+      await expect(memberSubmit).toBeHidden();
+      await formChevron(member).click();
+      await expect(formChevron(member)).toHaveAttribute('aria-expanded', 'true');
+      await expect(memberSubmit).toBeVisible();
+
+      await setCollapsed(false);
+      await open(member, collapsible.url);
+      await expect(formChevron(member)).toHaveAttribute('aria-expanded', 'true');
+      await expect(memberSubmit).toBeVisible();
+    });
+
+    test('US1-AS13 changing an answered question to single choice keeps the old answer as text beside new option answers', async ({
+      browser,
+    }) => {
+      const page = await signIn(browser, personaEmail.a2);
+      const dialog = await openEdit(page, typed.url);
+      const typeSelect = dialog.getByRole('combobox', { name: 'Answer type' });
+      await expect(typeSelect).toBeEnabled();
+      await typeSelect.click();
+      await page.getByRole('option', { name: 'Single choice' }).click();
+      await expect(dialog.getByText(TYPE_CHANGE_HINT)).toBeVisible();
+      await dialog.getByRole('textbox', { name: 'Option 1', exact: true }).fill('Yes');
+      await dialog.getByRole('textbox', { name: 'Option 2', exact: true }).fill('No');
+      await saveEdit(page);
+
+      let options: Array<{ id: string; label: string }> = [];
+      let questionId = '';
+      await expect
+        .poll(async () => {
+          const result = await gql(
+            personaEmail.a2,
+            'query ($id: UUID!) { lookup { callout(ID: $id) { framing { form { questions { id type options { id label } } } } } } }',
+            { id: typed.calloutId }
+          );
+          const question = result.data?.lookup?.callout?.framing?.form?.questions?.[0];
+          options = question?.options ?? [];
+          questionId = question?.id ?? '';
+          return question?.type;
+        })
+        .toBe('SINGLE_CHOICE');
+      expect(options.map(o => o.label)).toEqual(['Yes', 'No']);
+
+      // A new answer follows the new type.
+      await must(
+        await gql(
+          personaEmail.m2,
+          `mutation ($d: SubmitCalloutFormResponseInput!) {
+            submitCalloutFormResponse(responseData: $d) { id }
+          }`,
+          {
+            d: {
+              formID: typed.formId,
+              acknowledgedVisibility: 'ADMINS',
+              answers: [{ questionID: questionId, selectedOptionIDs: [options[0].id] }],
+            },
+          }
+        ),
+        'new-type answer'
+      );
+
+      await open(page, typed.url);
+      await page
+        .getByRole('dialog')
+        .getByRole('button', { name: 'View responses (2)' })
+        .click();
+      const table = page.getByRole('dialog', { name: 'Form responses' });
+      const oldAnswer = table.getByRole('cell', { name: 'Mia text', exact: true });
+      const newAnswer = table.getByRole('cell', { name: 'Yes', exact: true });
+      await expect(oldAnswer).toBeVisible();
+      await expect(newAnswer).toBeVisible();
+      // Same column: the two cells share their horizontal position.
+      const [oldBox, newBox] = await Promise.all([
+        oldAnswer.boundingBox(),
+        newAnswer.boundingBox(),
+      ]);
+      expect(Math.abs(oldBox!.x - newBox!.x)).toBeLessThan(2);
     });
   }
 );

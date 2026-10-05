@@ -13,8 +13,10 @@ import { fillSecret } from '../helpers/login.helper';
  * AS3  Space members on the PUBLIC Space S Form: an anonymous visitor and a
  *      NON-member see no response (API: empty for anonymous, OWN scope for the
  *      non-member).
- * AS4  with 1 response, widening to "Space members" is disabled with the
- *      explanation, narrowing stays enabled (UI) and widening is rejected (API).
+ * AS4  (R19b) with 1 response, widening to "Space members" opens a confirmation:
+ *      cancel keeps "Admins only", confirm + save widens and M2 then reads the
+ *      earlier response; narrowing back needs no confirmation; the API accepts
+ *      widening with responses.
  * AS5  the S admin (platform admin) opens the Sub Form: "View responses" lists
  *      every response.
  * AS6  a stored response with a unique marker never appears in the contributions
@@ -392,6 +394,7 @@ const MARK = {
   m2OnAdmins: `US3-M2-ADMINS-${RUN}`,
   m1OnSpace: `US3-M1-SPACE-${RUN}`,
   m1OnMembers: `US3-M1-MEMBERS-${RUN}`,
+  m1OnWiden: `US3-M1-WIDEN-${RUN}`,
   pOnMembers: `US3-P-MEMBERS-${RUN}`,
   a2Own: `US3-A2-OWN-${RUN}`,
   as6Answer: `US3-AS6-ANSWER-${RUN}`,
@@ -603,10 +606,10 @@ test.describe(
       });
       await expect(cardTitle).toBeVisible();
       const card = cardTitle.locator(
-        'xpath=ancestor::*[.//button[contains(., "Submit response")]][1]'
+        'xpath=ancestor::*[.//button[contains(., "Submit Form")]][1]'
       );
       await expect(
-        card.getByRole('button', { name: /Submit response/ })
+        card.getByRole('button', { name: /Submit Form/ })
       ).toBeVisible();
       await expect(card.getByRole('button', { name: /View responses/i })).toHaveCount(0);
       await expect(page.getByText(MARK.m1OnAdmins)).toHaveCount(0);
@@ -642,7 +645,7 @@ test.describe(
       await expect(
         anonDialog.getByText('You do not have permission to respond to this form.')
       ).toBeVisible();
-      await expect(anonDialog.getByRole('button', { name: 'Submit response' })).toHaveCount(0);
+      await expect(anonDialog.getByRole('button', { name: 'Submit Form' })).toHaveCount(0);
       await expect(anonDialog.getByRole('button', { name: /View responses/i })).toHaveCount(0);
       await expect(anon.getByText(MARK.m1OnSpace)).toHaveCount(0);
       await evidence(anon, 'US3-AS3-anonymous');
@@ -654,7 +657,7 @@ test.describe(
       await expect(
         dialog.getByText('You do not have permission to respond to this form.')
       ).toBeVisible();
-      await expect(dialog.getByRole('button', { name: 'Submit response' })).toHaveCount(0);
+      await expect(dialog.getByRole('button', { name: 'Submit Form' })).toHaveCount(0);
       await expect(dialog.getByRole('button', { name: /View responses/i })).toHaveCount(0);
       await expect(page.getByText(MARK.m1OnSpace)).toHaveCount(0);
       await evidence(page, 'US3-AS3-non-member');
@@ -683,42 +686,120 @@ test.describe(
       });
     });
 
-    test('US3-AS4 with a response, widening is disabled with the explanation, narrowing stays enabled', async ({
+    test('US3-AS4 widening with a response asks for confirmation; confirming exposes the earlier response to members; narrowing never asks', async ({
       browser,
     }) => {
+      // R19b: visibility changes in both directions at any time and applies to
+      // every response. A dedicated Form, so the shared Admins-only Form keeps
+      // its audience for the later cases.
       await submitName('m1', formMembers, 'MEMBERS', MARK.m1OnMembers);
-      const page = await signIn(browser, 'a2');
+      const formWiden = await createForm(
+        'a2',
+        fixture.subCalloutsSetId,
+        `US3 Widen Form ${RUN}`,
+        'ADMINS'
+      );
+      await submitName('m1', formWiden, 'ADMINS', MARK.m1OnWiden);
+      // Before: M2 (a Sub member) reads only own responses.
+      expect(await lookupAs('m2', formWiden.formId)).toMatchObject({
+        canReadAll: false,
+        total: 0,
+      });
 
-      // Admins only + 1 response: widening to Space members is disabled + explained.
-      const widen = await openFormSettings(page, formAdmins);
-      const widenGroup = widen.getByRole('radiogroup', {
+      const page = await signIn(browser, 'a2');
+      const settings = await openFormSettings(page, formWiden);
+      const group = settings.getByRole('radiogroup', {
         name: 'Who can see the responses',
       });
-      await expect(widenGroup.getByRole('radio', { name: 'Space members' })).toBeDisabled();
+      const adminsOnly = group.getByRole('radio', { name: 'Admins only' });
+      const spaceMembers = group.getByRole('radio', { name: 'Space members' });
+      await expect(adminsOnly).toBeChecked();
+      // Never disabled any more, and no "cannot widen" explanation.
+      await expect(spaceMembers).toBeEnabled();
       await expect(
-        widen.getByText('Cannot widen who can see responses once responses exist')
-      ).toBeVisible();
-      await evidence(page, 'US3-AS4-widen-disabled');
+        settings.getByText('Cannot widen who can see responses once responses exist')
+      ).toHaveCount(0);
+
+      // Cancel keeps Admins only.
+      await spaceMembers.click();
+      const confirm = page.getByRole('alertdialog');
+      await expect(confirm).toBeVisible();
+      await expect(confirm).toContainText(/existing responses/i);
+      await evidence(page, 'US3-AS4-widen-confirm');
+      await confirm.getByRole('button', { name: /cancel/i }).click();
+      await expect(confirm).toBeHidden();
+      await expect(adminsOnly).toBeChecked();
+      await expect(spaceMembers).not.toBeChecked();
+
+      // Confirm selects Space members; saving the Post persists it.
+      await spaceMembers.click();
+      await expect(confirm).toBeVisible();
+      await confirm
+        .getByRole('button', { name: 'Show responses to members' })
+        .click();
+      await expect(confirm).toBeHidden();
+      await expect(spaceMembers).toBeChecked();
+      await page.keyboard.press('Escape');
+      await page.getByRole('button', { name: /^save$/i }).click();
+      await expect(page.getByRole('button', { name: /^save$/i })).toBeHidden({
+        timeout: 20_000,
+      });
+      await expect
+        .poll(async () => (await lookupAs('m2', formWiden.formId)).canReadAll)
+        .toBe(true);
+      expect(await lookupAs('m2', formWiden.formId)).toMatchObject({
+        canReadAll: true,
+        total: 1,
+        texts: [MARK.m1OnWiden],
+      });
       await page.close();
 
-      // Space members + 1 response: narrowing to Admins only stays enabled.
+      // M2 now reads M1's earlier response (submitted under Admins only).
+      const m2 = await signIn(browser, 'm2');
+      const m2Dialog = await openForm(m2, formWiden);
+      await expect(
+        m2Dialog.getByText(/Members of .* can see your response/)
+      ).toBeVisible();
+      await m2Dialog.getByRole('button', { name: 'View responses (1)' }).click();
+      const table = m2.getByRole('dialog', { name: 'Form responses' });
+      await expect(table.getByRole('cell', { name: MARK.m1OnWiden })).toBeVisible();
+      await evidence(m2, 'US3-AS4-m2-reads-earlier-response');
+      await m2.close();
+
+      // Narrowing back never asks.
       const narrowPage = await signIn(browser, 'a2');
-      const narrow = await openFormSettings(narrowPage, formMembers);
+      const narrow = await openFormSettings(narrowPage, formWiden);
       const narrowGroup = narrow.getByRole('radiogroup', {
         name: 'Who can see the responses',
       });
-      await expect(narrowGroup.getByRole('radio', { name: 'Space members' })).toBeChecked();
-      await expect(narrowGroup.getByRole('radio', { name: 'Admins only' })).toBeEnabled();
-      await evidence(narrowPage, 'US3-AS4-narrow-enabled');
+      await expect(
+        narrowGroup.getByRole('radio', { name: 'Space members' })
+      ).toBeChecked();
+      await narrowGroup.getByRole('radio', { name: 'Admins only' }).click();
+      await expect(narrowPage.getByRole('alertdialog')).toHaveCount(0);
+      await expect(
+        narrowGroup.getByRole('radio', { name: 'Admins only' })
+      ).toBeChecked();
+      await evidence(narrowPage, 'US3-AS4-narrow-no-confirm');
       await narrowPage.close();
 
-      // API agrees: widening is refused.
+      // API agrees: widening with a response is accepted.
       const widenAttempt = await gql(
         'a2',
-        'mutation ($d: UpdateCalloutFormInput!) { updateCalloutForm(formData: $d) { id } }',
+        'mutation ($d: UpdateCalloutFormInput!) { updateCalloutForm(formData: $d) { id settings { visibility } } }',
         { d: { formID: formAdmins.formId, settings: { visibility: 'MEMBERS' } } }
       );
-      expect(JSON.stringify(widenAttempt.errors)).toContain('cannot be widened');
+      expect(widenAttempt.errors).toBeUndefined();
+      expect(widenAttempt.data?.updateCalloutForm.settings.visibility).toBe('MEMBERS');
+      // Put the shared Form back to Admins only for the later cases.
+      await must(
+        await gql(
+          'a2',
+          'mutation ($d: UpdateCalloutFormInput!) { updateCalloutForm(formData: $d) { id } }',
+          { d: { formID: formAdmins.formId, settings: { visibility: 'ADMINS' } } }
+        ),
+        'narrow formAdmins back'
+      );
     });
 
     test('US3-AS5 the Space admin reads every response through View responses', async ({
@@ -997,7 +1078,7 @@ test.describe(
       ).toBeVisible();
       await expect(page.getByText(MARK.m1OnMembers)).toHaveCount(0);
       await dialog.getByRole('textbox', { name: /What is your name/ }).fill(MARK.pOnMembers);
-      await dialog.getByRole('button', { name: 'Submit response' }).click();
+      await dialog.getByRole('button', { name: 'Submit Form' }).click();
       await expect(dialog.getByRole('heading', { name: 'Your responses' })).toBeVisible();
       await expect(dialog.getByText(MARK.pOnMembers)).toBeVisible();
 
