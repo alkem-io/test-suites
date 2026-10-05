@@ -19,17 +19,20 @@ import { Page, expect, Locator } from '@playwright/test';
  * contract at
  * `agents-hq/specs/009-contributors-callout-ui-tests/contracts/`.
  *
- * Feature 077 (richer contributor cards) adds the per-card row locators
- * below (`cardFor`, `taglineOf`, `tagsOf`, `locationOf`, `bottomLineOf`,
- * `actionsButton`, `menuItem`, `websiteLink`) per
+ * Feature 077 (richer contributor cards) adds `contributorCardsIn(region)`
+ * below: the card grid and the per-card rows, usable on any surface that
+ * renders the collection (feed, detail dialog, the map's "No location data"
+ * list). Locators follow the accessibility contract in
  * `agents-hq/specs/077-richer-contributor-cards/contracts/crd-contributor-card.md`
- * §5 (the accessibility contract) — `actionsButton`/`websiteLink`/`menuItem`
- * key off documented `aria-label`s and role text; `taglineOf`/`tagsOf`/
- * `locationOf`/`bottomLineOf` key off the CSS utility classes / lucide icon
- * class the contract's rendering rules (§4) name, since those rows carry no
- * accessible name of their own.
+ * §5 — role and accessible name wherever the markup exposes one. The location
+ * row and the bottom line have no role of their own; they are matched by
+ * their text (the §6 strings) or, for the location row's absence, by its
+ * decorative MapPin icon.
  */
-export type ContributorType = 'People' | 'Organizations' | 'Virtual Contributors';
+export type ContributorType =
+  | 'People'
+  | 'Organizations'
+  | 'Virtual Contributors';
 
 /** The full set of contributor types, in render order. */
 const ALL_CONTRIBUTOR_TYPES: ContributorType[] = [
@@ -41,6 +44,90 @@ const ALL_CONTRIBUTOR_TYPES: ContributorType[] = [
 /** Escape a string for safe interpolation into a `RegExp` source. */
 function escapeForRegExp(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+/** The "+N" overflow chip of a tag row (`CollapsibleTagList`, `tags.moreAria`). */
+const MORE_CHIP_NAME = /^Show (\d+) more$/;
+
+/** Text that must never reach a card (FR-034). */
+export const BAD_CARD_TEXT = /\bundefined\b|\bnull\b|Invalid Date|\bNaN\b/i;
+
+/**
+ * Feature 077 card locators for one rendered contributor collection — any
+ * `region "Contributors"` (feed, detail dialog). Works in List view and on the
+ * map's "No location data" list, which render the same card.
+ */
+export function contributorCardsIn(region: Locator) {
+  const page = region.page();
+  // The card grid is the region's first list; each card's tag row is a nested
+  // list that comes after it in document order.
+  const grid = region.getByRole('list').first();
+  const items = grid.locator(':scope > li');
+  const cardFor = (name: string): Locator =>
+    items.filter({ has: page.getByRole('link', { name, exact: true }) });
+  const moreChipOf = (name: string): Locator =>
+    cardFor(name).getByRole('button', { name: MORE_CHIP_NAME });
+  return {
+    /** Every card (top-level grid item) currently rendered. */
+    cardItems: items,
+    cardFor,
+    /** Tagline or the user fallback — the card's only paragraph (§4.2). */
+    taglineOf: (name: string): Locator => cardFor(name).getByRole('paragraph'),
+    /** The tag row (a list; the hidden measuring mirror is aria-hidden). */
+    tagListOf: (name: string): Locator => cardFor(name).getByRole('list'),
+    /** The visible tag pills, excluding the "+N" chip. */
+    tagPillsOf: (name: string): Locator =>
+      cardFor(name)
+        .getByRole('list')
+        .getByRole('listitem')
+        .filter({ hasNot: page.getByRole('button', { name: MORE_CHIP_NAME }) }),
+    moreChipOf,
+    /** N on the "+N" chip, or 0 when every tag fits. */
+    hiddenTagCount: async (name: string): Promise<number> => {
+      const chip = moreChipOf(name);
+      if ((await chip.count()) === 0) return 0;
+      const label = (await chip.getAttribute('aria-label')) ?? '';
+      return Number(MORE_CHIP_NAME.exec(label)?.[1] ?? NaN);
+    },
+    /** The location row ("City, CC"); it has no role, only a decorative MapPin. */
+    locationOf: (name: string): Locator =>
+      cardFor(name).locator('svg.lucide-map-pin').locator('xpath=..'),
+    /** The bottom line: "Joined this space …" or "N associate(s) in this organization". */
+    bottomLineOf: (name: string): Locator =>
+      cardFor(name).getByText(
+        /^(Joined this space .+|\d+ associates? in this organization)$/
+      ),
+    actionsButton: (name: string): Locator =>
+      region.getByRole('button', {
+        name: new RegExp(`^Actions for ${escapeForRegExp(name)}`),
+      }),
+    menuItem: (label: string): Locator =>
+      page.getByRole('menuitem', { name: label }),
+    websiteLink: (name: string): Locator =>
+      region.getByRole('link', {
+        name: new RegExp(`^Visit the website of ${escapeForRegExp(name)}`),
+      }),
+  };
+}
+
+export type ContributorCards = ReturnType<typeof contributorCardsIn>;
+
+/**
+ * The rows and controls one card shows, independent of how many tag pills fit
+ * the card's width (US1-AS8 / FR-015 parity across surfaces).
+ */
+export async function cardRowSignature(cards: ContributorCards, name: string) {
+  return {
+    tagline: (await cards.taglineOf(name).allInnerTexts()).join(''),
+    firstTag: (await cards.tagPillsOf(name).allInnerTexts())[0] ?? null,
+    totalTags:
+      (await cards.tagPillsOf(name).count()) +
+      (await cards.hiddenTagCount(name)),
+    location: (await cards.locationOf(name).allInnerTexts()).join(''),
+    bottomLine: (await cards.bottomLineOf(name).allInnerTexts()).join(''),
+    actions: await cards.actionsButton(name).count(),
+    website: await cards.websiteLink(name).count(),
+  };
 }
 
 export class ContributorsCalloutPage {
@@ -132,7 +219,9 @@ export class ContributorsCalloutPage {
 
   async openCreateForm() {
     await this.addCalloutButton.click();
-    await expect(this.framingContributorsOption).toBeVisible({ timeout: 10000 });
+    await expect(this.framingContributorsOption).toBeVisible({
+      timeout: 10000,
+    });
   }
 
   async selectContributorsFraming() {
@@ -208,9 +297,14 @@ export class ContributorsCalloutPage {
   calloutCard(title: string): Locator {
     return this.page
       .locator('div')
-      .filter({ has: this.page.getByRole('heading', { name: title, exact: true }) })
       .filter({
-        has: this.page.getByRole('region', { name: 'Contributors', exact: true }),
+        has: this.page.getByRole('heading', { name: title, exact: true }),
+      })
+      .filter({
+        has: this.page.getByRole('region', {
+          name: 'Contributors',
+          exact: true,
+        }),
       })
       .last();
   }
@@ -221,14 +315,11 @@ export class ContributorsCalloutPage {
    */
   collection(title: string) {
     const card = this.calloutCard(title);
-    const region = card.getByRole('region', { name: 'Contributors', exact: true });
-    // The `li` carrying a card's exact-named profile link — feature 077's
-    // per-card row locators (tagline/tags/location/bottom line) are scoped to
-    // this container.
-    const cardFor = (name: string): Locator =>
-      region
-        .locator('li')
-        .filter({ has: region.getByRole('link', { name, exact: true }) });
+    const region = card.getByRole('region', {
+      name: 'Contributors',
+      exact: true,
+    });
+    const cards = contributorCardsIn(region);
     return {
       card,
       region,
@@ -249,45 +340,12 @@ export class ContributorsCalloutPage {
       emptyState: (): Locator => region.getByText('No contributors to show.'),
       emptySearchState: (): Locator =>
         region.getByText('No contributors match your search.'),
-      // Exact — after feature 077 an organisation card's website control also
-      // carries the organisation's name in its accessible name, so a
-      // substring match turns ambiguous under Playwright strict mode. Post-077
-      // every card exposes exactly one profile link (contract
-      // crd-contributor-card §5 / spec D-LINK / FR-016).
+      // Exact: an organisation card's website control also carries the
+      // organisation's name in its accessible name, so a substring match is
+      // ambiguous. FR-016 / contract §5: exactly one profile link per card.
       contributorCard: (name: string): Locator =>
         region.getByRole('link', { name, exact: true }),
-      cardFor,
-      // The tagline row (contract crd-contributor-card §4.2: `line-clamp-2`).
-      // Best-effort structural locator pending confirmation against the
-      // shipped markup — the contract names this CSS utility class as the
-      // row's distinguishing marker, since neither row carries a role/label.
-      taglineOf: (name: string): Locator =>
-        cardFor(name).locator('.line-clamp-2'),
-      // The tag pills (contract §4.3: each pill carries `title={tag}`).
-      tagsOf: (name: string): Locator => cardFor(name).locator('[title]'),
-      // The location row (contract §4.4: a decorative MapPin icon + text).
-      // lucide-react renders each icon with a deterministic `lucide-<name>`
-      // class; the row is that icon's immediate parent.
-      locationOf: (name: string): Locator =>
-        cardFor(name).locator('.lucide-map-pin').locator('xpath=..'),
-      // The bottom line (contract §4.5: `mt-auto`) — "Joined this space …" for
-      // users, "N associates in this organization" for organisations.
-      bottomLineOf: (name: string): Locator =>
-        cardFor(name).locator('.mt-auto'),
-      // "…" actions control (contract §5: `aria-label = "Actions for {{name}}"`).
-      actionsButton: (name: string): Locator =>
-        region.getByRole('button', {
-          name: new RegExp(`^Actions for ${escapeForRegExp(name)}`),
-        }),
-      // A menu item by its visible label ("View Profile" / "Message").
-      menuItem: (label: string): Locator =>
-        this.page.getByRole('menuitem', { name: label }),
-      // Organisation website control (contract §5: `aria-label = "Visit the
-      // website of {{name}} (opens in a new tab)"`).
-      websiteLink: (name: string): Locator =>
-        region.getByRole('link', {
-          name: new RegExp(`^Visit the website of ${escapeForRegExp(name)}`),
-        }),
+      ...cards,
       switchType: async (type: ContributorType) => {
         const tab = card.getByRole('tab', {
           name: new RegExp(`^${type}\\s*\\d`),
@@ -313,7 +371,10 @@ export class ContributorsCalloutPage {
    * context-menu item. The callout renders inline; its "Open" link opens a
    * role=dialog carrying the single "Settings" (3-dots) button.
    */
-  private async openCalloutMenuItem(displayName: string, item: string | RegExp) {
+  private async openCalloutMenuItem(
+    displayName: string,
+    item: string | RegExp
+  ) {
     // Ensure the feed has rendered the callout before reaching for its link.
     await expect(
       this.page.getByRole('heading', { name: displayName }).first()
@@ -330,7 +391,9 @@ export class ContributorsCalloutPage {
   /** Open the callout context (3-dots) menu, then Edit. */
   async openEdit(displayName: string) {
     await this.openCalloutMenuItem(displayName, /edit/i);
-    await expect(this.framingContributorsOption).toBeVisible({ timeout: 10000 });
+    await expect(this.framingContributorsOption).toBeVisible({
+      timeout: 10000,
+    });
   }
 
   /** Delete a Contributors callout via the CRD two-step confirmation flow. */
