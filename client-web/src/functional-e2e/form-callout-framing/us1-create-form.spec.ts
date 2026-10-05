@@ -431,7 +431,7 @@ test.describe(
         await publish(created.id);
         return {
           calloutId: created.id as string,
-        url: created.framing.profile.url as string,
+          url: created.framing.profile.url as string,
           formId: created.framing.form.id as string,
           questions: created.framing.form.questions as Array<{
             id: string;
@@ -542,10 +542,15 @@ test.describe(
     }) => {
       const page = await signIn(browser, personaEmail.a2);
       await open(page, fixture.subUrl);
-      await page.getByRole('button', { name: /add post/i }).first().click();
+      await page
+        .getByRole('button', { name: /add post/i })
+        .first()
+        .click();
       await expect(visibleFormRadio(page)).toBeVisible();
       await expect(
-        page.getByRole('dialog').getByRole('radio', { name: 'Poll', exact: true })
+        page
+          .getByRole('dialog')
+          .getByRole('radio', { name: 'Poll', exact: true })
       ).toBeVisible();
     });
 
@@ -554,9 +559,14 @@ test.describe(
     }) => {
       const page = await signIn(browser, personaEmail.m1);
       await open(page, fixture.subUrl);
-      await page.getByRole('button', { name: /add post/i }).first().click();
+      await page
+        .getByRole('button', { name: /add post/i })
+        .first()
+        .click();
       await expect(
-        page.getByRole('dialog').getByRole('radio', { name: 'Poll', exact: true })
+        page
+          .getByRole('dialog')
+          .getByRole('radio', { name: 'Poll', exact: true })
       ).toBeVisible();
       await expect(visibleFormRadio(page)).toHaveCount(0);
 
@@ -593,7 +603,12 @@ test.describe(
         `mutation ($d: UpdateCalloutEntityInput!) {
           updateCallout(calloutData: $d) { id }
         }`,
-        { d: { ID: plain.createCalloutOnCalloutsSet.id, framing: { type: 'FORM' } } }
+        {
+          d: {
+            ID: plain.createCalloutOnCalloutsSet.id,
+            framing: { type: 'FORM' },
+          },
+        }
       );
       expect(detailsCode(switched)).toBe('FORM_FRAMING_FIXED_KIND');
     });
@@ -638,9 +653,14 @@ test.describe(
 
       const admin = await signIn(browser, ADMIN_EMAIL, ADMIN_PASSWORD);
       await open(admin, `${vc.profile.url}/knowledge-base`);
-      await admin.getByRole('button', { name: 'Add', exact: true }).first().click();
+      await admin
+        .getByRole('button', { name: 'Add', exact: true })
+        .first()
+        .click();
       await expect(
-        admin.getByRole('dialog').getByRole('radio', { name: 'Posts', exact: true })
+        admin
+          .getByRole('dialog')
+          .getByRole('radio', { name: 'Posts', exact: true })
       ).toBeVisible();
       await expect(visibleFormRadio(admin)).toHaveCount(0);
 
@@ -739,10 +759,15 @@ test.describe(
     }) => {
       const page = await signIn(browser, personaEmail.a2);
       await open(page, fixture.subUrl);
-      await page.getByRole('button', { name: /add post/i }).first().click();
+      await page
+        .getByRole('button', { name: /add post/i })
+        .first()
+        .click();
       const dialog = page.getByRole('dialog');
       await visibleFormRadio(page).click();
-      await dialog.getByRole('textbox', { name: 'Title' }).fill(BUILT_TITLE);
+      await dialog
+        .getByRole('textbox', { name: 'Title', exact: true })
+        .fill(BUILT_TITLE);
 
       // Role/label-based per question n (R20 row): the prompt is labelled
       // "Question n"; type, required and explanation are the n-th of their kind.
@@ -773,7 +798,10 @@ test.describe(
       const post = dialog.getByRole('button', { name: /^post$/i });
 
       // AS4: four answer types, required defaults to optional.
-      await expect(field(1, 'required')).toHaveAttribute('aria-checked', 'false');
+      await expect(field(1, 'required')).toHaveAttribute(
+        'aria-checked',
+        'false'
+      );
       await field(1, 'type').click();
       await expect(page.getByRole('option')).toHaveText([
         'Short text',
@@ -788,11 +816,16 @@ test.describe(
         dialog.getByRole('button', { name: /remove question/i })
       ).toBeDisabled();
       await post.click();
-      await expect(dialog.getByText('The question text is required')).toBeVisible();
+      await expect(
+        dialog.getByText('The question text is required')
+      ).toBeVisible();
 
       await field(1, 'prompt').fill('Your name');
       await field(1, 'required').click();
-      await expect(field(1, 'required')).toHaveAttribute('aria-checked', 'true');
+      await expect(field(1, 'required')).toHaveAttribute(
+        'aria-checked',
+        'true'
+      );
 
       await dialog.getByRole('button', { name: /add question/i }).click();
       await field(2, 'prompt').fill('Tell us about yourself');
@@ -843,9 +876,15 @@ test.describe(
       await pickType(4, 'Multiple choice');
       await optionInputs(4).nth(0).fill('Vegetarian');
       await optionInputs(4).nth(1).fill('Vegan');
-      await dialog.getByRole('button', { name: /add option/i }).nth(1).click();
+      await dialog
+        .getByRole('button', { name: /add option/i })
+        .nth(1)
+        .click();
       await optionInputs(4).nth(2).fill('Halal');
-      await dialog.getByRole('button', { name: /add option/i }).nth(1).click();
+      await dialog
+        .getByRole('button', { name: /add option/i })
+        .nth(1)
+        .click();
       await optionInputs(4).nth(3).fill('None');
 
       await post.click();
@@ -869,7 +908,11 @@ test.describe(
       );
       builtUrl = built.framing.profile.url as string;
       expect(
-        built.framing.form.questions.map((q: any) => [q.prompt, q.type, q.required])
+        built.framing.form.questions.map((q: any) => [
+          q.prompt,
+          q.type,
+          q.required,
+        ])
       ).toEqual([
         ['Your name', 'SHORT_TEXT', true],
         ['Tell us about yourself', 'LONG_TEXT', false],
@@ -948,9 +991,9 @@ test.describe(
         await expect(toggle).toHaveAttribute('aria-checked', String(open));
         await admin.keyboard.press('Escape');
         await admin.getByRole('button', { name: /^save$/i }).click();
-        await expect(
-          admin.getByRole('button', { name: /^save$/i })
-        ).toBeHidden({ timeout: 20_000 });
+        await expect(admin.getByRole('button', { name: /^save$/i })).toBeHidden(
+          { timeout: 20_000 }
+        );
       };
 
       await open(member, closableUrl);
@@ -986,22 +1029,22 @@ test.describe(
 
       // AS9: Form chip active and not clearable, nothing else switchable.
       const radios = dialog.getByRole('radio');
-      await expect(dialog.getByRole('radio', { name: 'Form', exact: true })).toHaveAttribute(
-        'aria-checked',
-        'true'
-      );
+      await expect(
+        dialog.getByRole('radio', { name: 'Form', exact: true })
+      ).toHaveAttribute('aria-checked', 'true');
       for (const radio of await radios.all()) {
         await expect(radio).toHaveAttribute('aria-disabled', 'true');
       }
       await dialog
         .getByRole('radio', { name: 'Form', exact: true })
         .click({ force: true });
-      await dialog.getByRole('radio', { name: 'Poll', exact: true }).click({ force: true });
+      await dialog
+        .getByRole('radio', { name: 'Poll', exact: true })
+        .click({ force: true });
       await expect(dialog.getByRole('radio', { checked: true })).toHaveCount(1);
-      await expect(dialog.getByRole('radio', { name: 'Form', exact: true })).toHaveAttribute(
-        'aria-checked',
-        'true'
-      );
+      await expect(
+        dialog.getByRole('radio', { name: 'Form', exact: true })
+      ).toHaveAttribute('aria-checked', 'true');
 
       // AS8 (R19c): the answer type stays editable on answered questions.
       const typeSelects = dialog.getByRole('combobox', { name: 'Answer type' });
@@ -1023,7 +1066,10 @@ test.describe(
       await dialog.getByRole('button', { name: /add question/i }).click();
       await prompts.nth(4).fill('Anything else?');
       // Remove "Tell us about yourself" (it holds an answer).
-      await dialog.getByRole('button', { name: 'Remove question' }).nth(1).click();
+      await dialog
+        .getByRole('button', { name: 'Remove question' })
+        .nth(1)
+        .click();
       await page
         .getByRole('alertdialog')
         .getByRole('button', { name: /remove question/i })
@@ -1037,11 +1083,18 @@ test.describe(
         .getByRole('button', { name: 'Reorder question 1' })
         .boundingBox();
       expect(from && to).toBeTruthy();
-      await page.mouse.move(from!.x + from!.width / 2, from!.y + from!.height / 2);
+      await page.mouse.move(
+        from!.x + from!.width / 2,
+        from!.y + from!.height / 2
+      );
       await page.mouse.down();
       await page.mouse.move(to!.x + to!.width / 2, to!.y - 20, { steps: 20 });
       await page.mouse.up();
       await expect(prompts.nth(0)).toHaveValue('Dietary needs');
+      // dnd-kit swallows every click for 50 ms after a drop (a capture-phase
+      // click listener removed by setTimeout(…, 50) in the pointer sensor's
+      // detach), so a Save click right after the drop is silently dropped.
+      await page.waitForTimeout(100);
       await dialog.getByRole('button', { name: /^save$/i }).click();
 
       await expect
@@ -1081,7 +1134,10 @@ test.describe(
         .answers as Array<{ prompt: string; text: string }>;
       expect(answers).toEqual(
         expect.arrayContaining([
-          expect.objectContaining({ prompt: 'Your name', text: 'Mia Memberone' }),
+          expect.objectContaining({
+            prompt: 'Your name',
+            text: 'Mia Memberone',
+          }),
           expect.objectContaining({
             prompt: 'Tell us about yourself',
             text: 'Removed later',
@@ -1175,7 +1231,10 @@ test.describe(
       await expect(
         detail.getByRole('heading', { name: formTitle, exact: true })
       ).toHaveCount(0);
-      const untitled = detail.getByRole('region', { name: 'Form', exact: true });
+      const untitled = detail.getByRole('region', {
+        name: 'Form',
+        exact: true,
+      });
       await expect(
         untitled.getByRole('heading', { name: 'Form', exact: true })
       ).toBeVisible();
@@ -1187,7 +1246,10 @@ test.describe(
     }) => {
       const page = await signIn(browser, personaEmail.a2);
       await open(page, fixture.subUrl);
-      await page.getByRole('button', { name: /add post/i }).first().click();
+      await page
+        .getByRole('button', { name: /add post/i })
+        .first()
+        .click();
       const dialog = page.getByRole('dialog');
       await visibleFormRadio(page).click();
       await dialog.getByRole('button', { name: /add question/i }).click();
@@ -1232,7 +1294,9 @@ test.describe(
         );
       }
       // No separate "Question N" title above the row: the label is the only one.
-      await expect(dialog.getByText('Question 1', { exact: true })).toHaveCount(1);
+      await expect(dialog.getByText('Question 1', { exact: true })).toHaveCount(
+        1
+      );
 
       // The labels follow a reorder.
       const from = await dialog
@@ -1241,7 +1305,10 @@ test.describe(
       const to = await dialog
         .getByRole('button', { name: 'Reorder question 1' })
         .boundingBox();
-      await page.mouse.move(from!.x + from!.width / 2, from!.y + from!.height / 2);
+      await page.mouse.move(
+        from!.x + from!.width / 2,
+        from!.y + from!.height / 2
+      );
       await page.mouse.down();
       await page.mouse.move(to!.x + to!.width / 2, to!.y - 20, { steps: 20 });
       await page.mouse.up();
@@ -1252,9 +1319,7 @@ test.describe(
       await page.setViewportSize({ width: 375, height: 800 });
       await expect(questionField(dialog, 1)).toBeVisible();
       await expect
-        .poll(() =>
-          dialog.evaluate(el => el.scrollWidth <= el.clientWidth + 1)
-        )
+        .poll(() => dialog.evaluate(el => el.scrollWidth <= el.clientWidth + 1))
         .toBe(true);
       await expect
         .poll(() =>
@@ -1283,7 +1348,10 @@ test.describe(
         const toggle = settings.getByRole('switch', {
           name: /collapsed by default/i,
         });
-        await expect(toggle).toHaveAttribute('aria-checked', String(!collapsed));
+        await expect(toggle).toHaveAttribute(
+          'aria-checked',
+          String(!collapsed)
+        );
         await toggle.click();
         await expect(toggle).toHaveAttribute('aria-checked', String(collapsed));
         await admin.keyboard.press('Escape');
@@ -1303,26 +1371,40 @@ test.describe(
 
       // Default: expanded.
       await open(member, collapsible.url);
-      await expect(formChevron(member)).toHaveAttribute('aria-expanded', 'true');
+      await expect(formChevron(member)).toHaveAttribute(
+        'aria-expanded',
+        'true'
+      );
       await expect(memberSubmit).toBeVisible();
 
       await setCollapsed(true);
       await open(member, collapsible.url);
-      await expect(formChevron(member)).toHaveAttribute('aria-expanded', 'false');
+      await expect(formChevron(member)).toHaveAttribute(
+        'aria-expanded',
+        'false'
+      );
       await expect(
         member.getByRole('dialog').getByText('1 question', { exact: true })
       ).toBeVisible();
       await expect(
-        member.getByRole('dialog').getByRole('textbox', { name: /Collapsible question/ })
+        member
+          .getByRole('dialog')
+          .getByRole('textbox', { name: /Collapsible question/ })
       ).toBeHidden();
       await expect(memberSubmit).toBeHidden();
       await formChevron(member).click();
-      await expect(formChevron(member)).toHaveAttribute('aria-expanded', 'true');
+      await expect(formChevron(member)).toHaveAttribute(
+        'aria-expanded',
+        'true'
+      );
       await expect(memberSubmit).toBeVisible();
 
       await setCollapsed(false);
       await open(member, collapsible.url);
-      await expect(formChevron(member)).toHaveAttribute('aria-expanded', 'true');
+      await expect(formChevron(member)).toHaveAttribute(
+        'aria-expanded',
+        'true'
+      );
       await expect(memberSubmit).toBeVisible();
     });
 
@@ -1336,8 +1418,12 @@ test.describe(
       await typeSelect.click();
       await page.getByRole('option', { name: 'Single choice' }).click();
       await expect(dialog.getByText(TYPE_CHANGE_HINT)).toBeVisible();
-      await dialog.getByRole('textbox', { name: 'Option 1', exact: true }).fill('Yes');
-      await dialog.getByRole('textbox', { name: 'Option 2', exact: true }).fill('No');
+      await dialog
+        .getByRole('textbox', { name: 'Option 1', exact: true })
+        .fill('Yes');
+      await dialog
+        .getByRole('textbox', { name: 'Option 2', exact: true })
+        .fill('No');
       await saveEdit(page);
 
       let options: Array<{ id: string; label: string }> = [];
@@ -1349,7 +1435,8 @@ test.describe(
             'query ($id: UUID!) { lookup { callout(ID: $id) { framing { form { questions { id type options { id label } } } } } } }',
             { id: typed.calloutId }
           );
-          const question = result.data?.lookup?.callout?.framing?.form?.questions?.[0];
+          const question =
+            result.data?.lookup?.callout?.framing?.form?.questions?.[0];
           options = question?.options ?? [];
           questionId = question?.id ?? '';
           return question?.type;
@@ -1368,7 +1455,9 @@ test.describe(
             d: {
               formID: typed.formId,
               acknowledgedVisibility: 'ADMINS',
-              answers: [{ questionID: questionId, selectedOptionIDs: [options[0].id] }],
+              answers: [
+                { questionID: questionId, selectedOptionIDs: [options[0].id] },
+              ],
             },
           }
         ),
@@ -1381,7 +1470,10 @@ test.describe(
         .getByRole('button', { name: 'View responses (2)' })
         .click();
       const table = page.getByRole('dialog', { name: 'Form responses' });
-      const oldAnswer = table.getByRole('cell', { name: 'Mia text', exact: true });
+      const oldAnswer = table.getByRole('cell', {
+        name: 'Mia text',
+        exact: true,
+      });
       const newAnswer = table.getByRole('cell', { name: 'Yes', exact: true });
       await expect(oldAnswer).toBeVisible();
       await expect(newAnswer).toBeVisible();
