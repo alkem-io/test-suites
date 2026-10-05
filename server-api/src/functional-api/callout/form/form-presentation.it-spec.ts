@@ -353,16 +353,20 @@ describe('Form presentation — never in a notification', () => {
         Boolean(mail.body?.includes(titleMarker)) ||
         Boolean(mail.body?.includes(descriptionMarker));
 
+      const memberEmail = TestUserManager.users.spaceMember.email;
+      const isReceipt = (mail: MailItem) =>
+        aboutForm(mail) &&
+        Boolean(mail.toAddresses?.includes(memberEmail)) &&
+        Boolean(mail.subject?.includes('was received'));
+
       await respond(form);
 
       // The receipt is always sent (no setting); any admin mail arrives with it.
+      // Wait for the receipt itself: an admin mail about the same Form can land
+      // first and would otherwise end the wait before the receipt arrives.
+      await getMailsDataSettled(1, { scope: isReceipt });
       const [mails] = await getMailsDataSettled(1, { scope: aboutForm });
-      const memberEmail = TestUserManager.users.spaceMember.email;
-      const receipts = mails.filter(
-        mail =>
-          mail.toAddresses?.includes(memberEmail) &&
-          Boolean(mail.subject?.includes('was received'))
-      );
+      const receipts = mails.filter(isReceipt);
       // Positive control: the receipt arrived and names the Post.
       expect(receipts.length).toBeGreaterThanOrEqual(1);
       for (const mail of mails) {
