@@ -50048,6 +50048,12 @@ export type UserDataFragment = {
             inApp: boolean;
             push: boolean;
           };
+          collaborationCalloutFormResponseReceived: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
         };
         collaborationCalloutContributionCreated: {
           __typename: "UserSettingsNotificationChannels";
@@ -50324,6 +50330,12 @@ export type UserSettingsFragmentFragment = {
           push: boolean;
         };
         communicationMessageReceived: {
+          __typename: "UserSettingsNotificationChannels";
+          email: boolean;
+          inApp: boolean;
+          push: boolean;
+        };
+        collaborationCalloutFormResponseReceived: {
           __typename: "UserSettingsNotificationChannels";
           email: boolean;
           inApp: boolean;
@@ -51032,6 +51044,12 @@ export type AssignRoleToUserMutation = {
               inApp: boolean;
               push: boolean;
             };
+            collaborationCalloutFormResponseReceived: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+              push: boolean;
+            };
           };
           collaborationCalloutContributionCreated: {
             __typename: "UserSettingsNotificationChannels";
@@ -51469,6 +51487,12 @@ export type AssignRoleToUserExtendedDataMutation = {
               push: boolean;
             };
             communicationMessageReceived: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+              push: boolean;
+            };
+            collaborationCalloutFormResponseReceived: {
               __typename: "UserSettingsNotificationChannels";
               email: boolean;
               inApp: boolean;
@@ -52355,6 +52379,12 @@ export type RemoveRoleFromUserMutation = {
               inApp: boolean;
               push: boolean;
             };
+            collaborationCalloutFormResponseReceived: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+              push: boolean;
+            };
           };
           collaborationCalloutContributionCreated: {
             __typename: "UserSettingsNotificationChannels";
@@ -52793,6 +52823,12 @@ export type RemoveRoleFromUserExtendedDataMutation = {
               push: boolean;
             };
             communicationMessageReceived: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+              push: boolean;
+            };
+            collaborationCalloutFormResponseReceived: {
               __typename: "UserSettingsNotificationChannels";
               email: boolean;
               inApp: boolean;
@@ -92836,6 +92872,12 @@ export type CreateUserMutation = {
               inApp: boolean;
               push: boolean;
             };
+            collaborationCalloutFormResponseReceived: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+              push: boolean;
+            };
           };
           collaborationCalloutContributionCreated: {
             __typename: "UserSettingsNotificationChannels";
@@ -93284,6 +93326,12 @@ export type UpdateUserMutation = {
               inApp: boolean;
               push: boolean;
             };
+            collaborationCalloutFormResponseReceived: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+              push: boolean;
+            };
           };
           collaborationCalloutContributionCreated: {
             __typename: "UserSettingsNotificationChannels";
@@ -93557,6 +93605,12 @@ export type UpdateUserSettingsMutation = {
               push: boolean;
             };
             communicationMessageReceived: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+              push: boolean;
+            };
+            collaborationCalloutFormResponseReceived: {
               __typename: "UserSettingsNotificationChannels";
               email: boolean;
               inApp: boolean;
@@ -102615,6 +102669,12 @@ export type UsersPaginatedQuery = {
                 push: boolean;
               };
               communicationMessageReceived: {
+                __typename: "UserSettingsNotificationChannels";
+                email: boolean;
+                inApp: boolean;
+                push: boolean;
+              };
+              collaborationCalloutFormResponseReceived: {
                 __typename: "UserSettingsNotificationChannels";
                 email: boolean;
                 inApp: boolean;
@@ -118226,6 +118286,12 @@ export type GetUserDataQuery = {
               inApp: boolean;
               push: boolean;
             };
+            collaborationCalloutFormResponseReceived: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+              push: boolean;
+            };
           };
           collaborationCalloutContributionCreated: {
             __typename: "UserSettingsNotificationChannels";
@@ -118520,6 +118586,12 @@ export type GetUserSettingsQuery = {
               push: boolean;
             };
             communicationMessageReceived: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+              push: boolean;
+            };
+            collaborationCalloutFormResponseReceived: {
               __typename: "UserSettingsNotificationChannels";
               email: boolean;
               inApp: boolean;
@@ -118956,6 +119028,12 @@ export type GetUsersDataQuery = {
               push: boolean;
             };
             communicationMessageReceived: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+              push: boolean;
+            };
+            collaborationCalloutFormResponseReceived: {
               __typename: "UserSettingsNotificationChannels";
               email: boolean;
               inApp: boolean;
@@ -121205,6 +121283,12 @@ export const UserSettingsFragmentFragmentDoc = gql`
             __typename
           }
           communicationMessageReceived {
+            email
+            inApp
+            push
+            __typename
+          }
+          collaborationCalloutFormResponseReceived {
             email
             inApp
             push
