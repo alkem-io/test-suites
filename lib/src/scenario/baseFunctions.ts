@@ -109,6 +109,52 @@ export const assignRoleToVirtualContributor = async (
 };
 
 /** `prepareMemoSigning` — starts a signing attempt for a memo (server#6468). */
+/**
+ * Assign a role on a role set to an Organization (e.g. make an organization a
+ * MEMBER of a space). Same input shape as assignRoleToUser; the actorID is the
+ * organization id. Throws on a GraphQL error so a fixture never continues on a
+ * missing role.
+ */
+export const assignRoleToOrganization = async (
+  organizationID: string,
+  roleSetID: string,
+  role: RoleName,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN,
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string | undefined) =>
+    graphqlClient.AssignRoleToOrganization(
+      { roleData: { actorID: organizationID, roleSetID, role } },
+      { authorization: `Bearer ${authToken}` },
+    );
+  const result = await graphqlErrorWrapper(callback, userRole);
+  if (result.error) {
+    throw new Error(
+      `assignRoleToOrganization(${role}) failed for ${organizationID} on ${roleSetID}: ${JSON.stringify(result.error)}`,
+    );
+  }
+  return result;
+};
+
+/**
+ * Remove a role on a role set from a User (e.g. drop the creating admin's
+ * automatic ASSOCIATE role on a fixture organization).
+ */
+export const removeRoleFromUser = async (
+  userID: string,
+  roleSetID: string,
+  role: RoleName,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN,
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string | undefined) =>
+    graphqlClient.removeRoleFromUser(
+      { roleData: { actorID: userID, roleSetID, role } },
+      { authorization: `Bearer ${authToken}` },
+    );
+  return graphqlErrorWrapper(callback, userRole);
+};
+
 export const prepareMemoSigning = async (
   memoID: string,
   userRole: TestUser = TestUser.GLOBAL_ADMIN,
