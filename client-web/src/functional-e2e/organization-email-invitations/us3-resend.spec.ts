@@ -178,7 +178,7 @@ orgAdminTest.describe('US3-AS1 / US3-AS3 — Resend in the organization Associat
     await expect(pendingRow(page, orgEmail)).toBeVisible({ timeout: 20_000 });
     await resendButton(page, orgEmail).click();
     await expect(page.getByText('Already resent recently — try again in a few minutes')).toBeVisible({ timeout: 15_000 });
-    expect(await settledMailsTo(orgEmail)).toHaveLength(mailsBefore);
+    expect(await settledMailsTo(orgEmail, mailsBefore)).toHaveLength(mailsBefore);
 
     // A different address has its own cooldown.
     const otherBefore = (await mailsTo(orgEmail2)).length;
@@ -242,7 +242,8 @@ baseTest.describe('US3-AS4 — a consumed invitation cannot be resent', () => {
     const id = await createEmailInvitation(orgRoleSetId, consumedEmail, []);
     await waitForMailsTo(consumedEmail, 1);
     await registerUserAtAddress(consumedEmail, `Consumed${runSuffix}`);
-    const mailsBefore = (await settledMailsTo(consumedEmail, 6_000)).length;
+    // Registration may still be delivering mail for the address; count from a settled baseline.
+    const mailsBefore = (await settledMailsTo(consumedEmail)).length;
 
     const res = await resendEmailInvitationRaw(id, orgAdminToken);
     expect(res.errors.length, res.raw).toBeGreaterThan(0);
@@ -252,7 +253,7 @@ baseTest.describe('US3-AS4 — a consumed invitation cannot be resent', () => {
     expect(errorCodeOf(res), res.raw).toEqual(CONSUMED_CODE);
     expect(res.errors[0]?.message).toMatch(/already consumed/i);
     expect(res.data?.resendPlatformInvitation).toBeUndefined();
-    expect(await settledMailsTo(consumedEmail)).toHaveLength(mailsBefore);
+    expect(await settledMailsTo(consumedEmail, mailsBefore)).toHaveLength(mailsBefore);
   });
 });
 
@@ -271,8 +272,8 @@ baseTest.describe('US3-AS5 — only someone who may invite may resend', () => {
     expect(member.errors.length).toBeGreaterThan(0);
     expect(member.raw).toMatch(forbidden);
 
-    expect(await settledMailsTo(orgEmail2)).toHaveLength(orgBefore);
-    expect(await settledMailsTo(spaceEmail, 1_000)).toHaveLength(spaceBefore);
+    expect(await settledMailsTo(orgEmail2, orgBefore)).toHaveLength(orgBefore);
+    expect(await settledMailsTo(spaceEmail, spaceBefore)).toHaveLength(spaceBefore);
   });
 });
 

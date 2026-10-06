@@ -5,7 +5,6 @@
 // at all for a consumed or unauthorized call.
 // The platform invitation itself is never touched by a resend.
 import {
-  delay,
   postGraphqlRaw,
   TestScenarioConfig,
   TestScenarioFactory,
@@ -33,6 +32,7 @@ import {
   INVITATION_REFUSED_CODE,
   mailsToAfter,
   mailSummary,
+  settledMailsTo,
   THROTTLED_CODE,
 } from './platform-invitation.helpers';
 
@@ -332,9 +332,10 @@ describe('Resend a Space email invitation', () => {
     );
     createdUserIds.push(userId);
     // Registration itself may still be delivering mail for this address (the
-    // welcome message, the converted invitation). Let it land before the
-    // resend's own quiet period starts, so only the resend can add mail.
-    await delay(6_000);
+    // welcome message, the converted invitation). Wait until that has stopped
+    // arriving before the resend's own quiet period starts, so only the resend
+    // can add mail.
+    await settledMailsTo(email);
 
     const mails = await mailsToAfter(
       async () => {

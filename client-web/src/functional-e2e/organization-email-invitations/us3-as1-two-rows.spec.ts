@@ -98,7 +98,7 @@ orgAdminTest('US3-AS1: Resend A then B back-to-back dispatches both; a second Re
   expect(await row(emailB).innerText()).toEqual(rowBefore.b);
 
   // Second Resend on A within the window.
-  const aAfterFirst = (await settledMailsTo(emailA, 3_000)).length;
+  const aAfterFirst = (await settledMailsTo(emailA, aBefore + 1)).length;
   await resend(emailA).click();
   const toast = page.getByText('Already resent recently — try again in a few minutes').first();
   await expect(toast).toBeVisible({ timeout: 15_000 });
@@ -116,7 +116,7 @@ orgAdminTest('US3-AS1: Resend A then B back-to-back dispatches both; a second Re
     })(),
   }));
   console.info(`[US3-AS1] error toast element: ${JSON.stringify(toastInfo)}`);
-  expect(await settledMailsTo(emailA)).toHaveLength(aAfterFirst);
+  expect(await settledMailsTo(emailA, aAfterFirst)).toHaveLength(aAfterFirst);
   // Entries are pushed once each response body has been read; wait for the third.
   await expect.poll(() => graphqlResends.length, { timeout: 10_000 }).toBe(3);
   expect(graphqlResends.filter(r => r.ok)).toHaveLength(2);

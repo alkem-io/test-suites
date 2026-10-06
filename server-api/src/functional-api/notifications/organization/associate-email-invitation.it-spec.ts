@@ -79,6 +79,33 @@ const inAppTotal = async (userRole: TestUser): Promise<number> => {
   return response.body?.data?.me?.notifications?.total as number;
 };
 
+/** How long the in-app fan-out of one event is given to show up. The email of
+ * the same event has already landed when this runs; the in-app leg travels a
+ * separate queue, so the negative holds its baseline for one more period. */
+const IN_APP_SETTLE_MS = 3_000;
+const IN_APP_POLL_MS = 500;
+
+/** Email-only means no in-app row for anyone: re-reads both admins' totals
+ * throughout the settle period and fails at the first read that moves — a
+ * bounded poll in place of a sleep, so a late row cannot slip past a single
+ * read and a stray one surfaces as soon as it lands. */
+const expectNoInAppFanOut = async (baseline: {
+  admin: number;
+  platformAdmin: number;
+}): Promise<void> => {
+  const until = Date.now() + IN_APP_SETTLE_MS;
+  for (;;) {
+    expect(await inAppTotal(TestUser.ORGANIZATION_ADMIN)).toEqual(
+      baseline.admin
+    );
+    expect(await inAppTotal(TestUser.GLOBAL_ADMIN)).toEqual(
+      baseline.platformAdmin
+    );
+    if (Date.now() >= until) return;
+    await delay(IN_APP_POLL_MS);
+  }
+};
+
 describe('Organization email invitation — the unregistered invitee is emailed (US2-AS1, US2-AS7, US3-AS1)', () => {
   test('one email on the organization template: subject names the organization only, body names the inviter, the offered role, the escaped message and the invitations link; no in-app row; resend sends exactly one more', async () => {
     const organizationName = baseScenario.organization.profile.displayName;
@@ -137,14 +164,11 @@ describe('Organization email invitation — the unregistered invitee is emailed 
     ).toHaveLength(0);
 
     // Email-only: nobody gets an in-app notification for it. A negative that
-    // has to hold, so let the fan-out settle before reading.
-    await delay(3_000);
-    expect(await inAppTotal(TestUser.ORGANIZATION_ADMIN)).toEqual(
-      adminTotalBefore
-    );
-    expect(await inAppTotal(TestUser.GLOBAL_ADMIN)).toEqual(
-      platformAdminTotalBefore
-    );
+    // has to hold through the fan-out, not just at one read.
+    await expectNoInAppFanOut({
+      admin: adminTotalBefore,
+      platformAdmin: platformAdminTotalBefore,
+    });
 
     // Resend: exactly one more mail, same template, same subject.
     const resent = await mailsToAfter(
@@ -162,13 +186,10 @@ describe('Organization email invitation — the unregistered invitee is emailed 
     expect(resent[0].subject).toEqual(expectedSubject);
     expect(decodeBody(resent[0].body)).toContain('Associate + Owner');
 
-    await delay(3_000);
-    expect(await inAppTotal(TestUser.ORGANIZATION_ADMIN)).toEqual(
-      adminTotalBefore
-    );
-    expect(await inAppTotal(TestUser.GLOBAL_ADMIN)).toEqual(
-      platformAdminTotalBefore
-    );
+    await expectNoInAppFanOut({
+      admin: adminTotalBefore,
+      platformAdmin: platformAdminTotalBefore,
+    });
   });
 
   test('the Space external invitation in the same run still uses the Space template and subject', async () => {

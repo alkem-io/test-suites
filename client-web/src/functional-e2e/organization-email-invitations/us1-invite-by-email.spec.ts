@@ -265,7 +265,7 @@ adminTest.describe('US1-AS2 → AS4 → AS7 — invite an unknown address, repea
 
     const addresses = await openEmailAddresses(org.roleSetId, admin.token);
     expect(addresses.filter(a => a === chainEmail)).toHaveLength(1);
-    expect(await settledMailsTo(chainEmail)).toHaveLength(1);
+    expect(await settledMailsTo(chainEmail, 1)).toHaveLength(1);
   });
 
   adminTest('US1-AS7: Revoke (confirmed) removes the row and the record; re-inviting creates a fresh row and sends a new email', async ({ page }) => {

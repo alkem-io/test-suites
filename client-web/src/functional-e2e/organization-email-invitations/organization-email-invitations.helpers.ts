@@ -344,6 +344,16 @@ export const getUserIdsInRole = async (roleSetId: string, role: RoleName, bearer
 
 export type MailItem = { subject?: string; body?: string; toAddresses?: string[] };
 
+/** How often the inbox is re-read while a walk waits on mail. */
+const MAIL_POLL_MS = 500;
+/** Delivery is fire-and-forget: "no (more) mail" only means something once
+ * nothing new has arrived for the address for this long, and "exactly N" only
+ * once the count has held for this long. The same quiet period the server-api
+ * suite uses for the same claims (`platform-invitation.helpers.ts`). */
+export const MAIL_QUIET_MS = 4_000;
+/** Upper bound on waiting for mail that is expected to arrive at all. */
+export const MAIL_DELIVERY_TIMEOUT_MS = 45_000;
+
 export const mailsTo = async (address: string): Promise<MailItem[]> => {
   const [items] = (await getMailsData()) as [MailItem[], number];
   return items.filter(m => m.toAddresses?.some(a => a.toLowerCase() === address.toLowerCase()));
@@ -352,22 +362,44 @@ export const mailsTo = async (address: string): Promise<MailItem[]> => {
 /** Waits until at least `count` mails to `address` exist (or the timeout passes)
  * and returns them. Returns whatever was found, so the caller's own assertion
  * carries the failure message. */
-export const waitForMailsTo = async (address: string, count: number, timeoutMs = 45_000): Promise<MailItem[]> => {
+export const waitForMailsTo = async (
+  address: string,
+  count: number,
+  timeoutMs = MAIL_DELIVERY_TIMEOUT_MS
+): Promise<MailItem[]> => {
   const deadline = Date.now() + timeoutMs;
   let found = await mailsTo(address);
   while (found.length < count && Date.now() < deadline) {
-    await delay(1_000);
+    await delay(MAIL_POLL_MS);
     found = await mailsTo(address);
   }
   return found;
 };
 
-/** Holds for `windowMs` and returns the mails to `address` at the end — the
- * negative counterpart of `waitForMailsTo`: "no more mail" means none within
- * the whole delivery bound, never "none yet". */
-export const settledMailsTo = async (address: string, windowMs = 12_000): Promise<MailItem[]> => {
-  await delay(windowMs);
-  return mailsTo(address);
+/**
+ * Polls the mails to `address` until there are `expected` of them and that
+ * number has held for a full quiet period — the one read behind every exact
+ * count and every "no more mail" claim in these walks. More than `expected`
+ * ends the poll at once (the claim is already broken, there is nothing left to
+ * wait for); fewer keeps polling until the delivery bound. Without `expected`
+ * it simply waits for the address's mail to stop changing, for a settled
+ * baseline. Returns whatever is there at the end, so the caller's own assertion
+ * carries the message.
+ */
+export const settledMailsTo = async (address: string, expected?: number): Promise<MailItem[]> => {
+  const deadline = Date.now() + MAIL_DELIVERY_TIMEOUT_MS;
+  let found = await mailsTo(address);
+  let stableSince = Date.now();
+  for (;;) {
+    const now = Date.now();
+    if (expected !== undefined && found.length > expected) return found;
+    if ((expected === undefined || found.length >= expected) && now - stableSince >= MAIL_QUIET_MS) return found;
+    if (now >= deadline) return found;
+    await delay(MAIL_POLL_MS);
+    const next = await mailsTo(address);
+    if (next.length !== found.length) stableSince = Date.now();
+    found = next;
+  }
 };
 
 /** Undoes quoted-printable transfer encoding so links and markup match as written. */
