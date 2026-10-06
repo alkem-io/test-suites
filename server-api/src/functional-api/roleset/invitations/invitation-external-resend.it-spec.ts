@@ -67,8 +67,12 @@ const scenarioConfig: TestScenarioConfig = {
 // The resend cooldown the stack runs with, as exported to this run (the server
 // reads the same variable; five minutes when unset).
 const configuredResendWindowMs = (): number => {
-  const configured = Number(process.env.PLATFORM_INVITATION_RESEND_COOLDOWN_SECONDS);
-  return (Number.isInteger(configured) && configured >= 1 ? configured : 300) * 1000;
+  const configured = Number(
+    process.env.PLATFORM_INVITATION_RESEND_COOLDOWN_SECONDS
+  );
+  return (
+    (Number.isInteger(configured) && configured >= 1 ? configured : 300) * 1000
+  );
 };
 
 const createdUserIds: string[] = [];

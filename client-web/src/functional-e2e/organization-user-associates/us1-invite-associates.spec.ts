@@ -55,8 +55,19 @@ const runSuffix = UniqueIDGenerator.getID();
 // org would make the two caps interfere with AS1/AS2/AS5's own role grants).
 baseTest.describe.configure({ mode: 'serial' });
 
-type OrgFixture = { id: string; nameID: string; roleSetId: string; displayName: string };
-type Persona = { email: string; token: string; id: string; displayName: string; firstName: string };
+type OrgFixture = {
+  id: string;
+  nameID: string;
+  roleSetId: string;
+  displayName: string;
+};
+type Persona = {
+  email: string;
+  token: string;
+  id: string;
+  displayName: string;
+  firstName: string;
+};
 
 let orgMain: OrgFixture; // AS1, AS2, AS4, AS5, AS6, AS7, AS8
 let orgAS3Admin: OrgFixture; // AS3 — Admin cap (max 6)
@@ -94,7 +105,10 @@ let as3OwnerOverflow: Persona; // AS3: offered Owner once the cap is full
  * which cannot represent a freshly registered disposable user (same
  * rationale as us7-pending-lists-integrity.spec.ts / 054-delete-own-account),
  * so every call these personas make goes through `postGraphqlRaw`. */
-const registerPersona = async (email: string, firstName: string): Promise<Persona> => {
+const registerPersona = async (
+  email: string,
+  firstName: string
+): Promise<Persona> => {
   // Idempotent: the authenticated-session fixture resolves BEFORE this hook and
   // provisions any UI persona it has to log in as, so for those three emails the
   // identity already exists and Kratos answers 400. That is not a failure — the
@@ -102,16 +116,21 @@ const registerPersona = async (email: string, firstName: string): Promise<Person
   // identity created either way is equally usable.
   let verificationFlowId: string | undefined;
   try {
-    ({ verificationFlowId } = await registerInKratosOrFail(firstName, 'US1E2E', email));
+    ({ verificationFlowId } = await registerInKratosOrFail(
+      firstName,
+      'US1E2E',
+      email
+    ));
   } catch {
     // already registered — fall through to verification, which is also idempotent
   }
   await verifyInKratosOrFail(email, verificationFlowId);
   const token = await getUserToken(email);
-  const meRes = await postGraphqlRaw<{ me: { user: { id: string; profile: { displayName: string } } } }>(
-    'query { me { user { id profile { displayName } } } }',
-    { bearerToken: token }
-  );
+  const meRes = await postGraphqlRaw<{
+    me: { user: { id: string; profile: { displayName: string } } };
+  }>('query { me { user { id profile { displayName } } } }', {
+    bearerToken: token,
+  });
   const id = meRes.body.data?.me.user.id;
   const displayName = meRes.body.data?.me.user.profile.displayName;
   if (!id || !displayName) {
@@ -129,10 +148,14 @@ const registerDisposablePersona = (label: string): Promise<Persona> => {
 
 const createTestOrganization = async (label: string): Promise<OrgFixture> => {
   const displayName = `US1 ${label} ${runSuffix}`;
-  const nameID = `us1${label.replace(/[^a-zA-Z0-9]/g, '')}${runSuffix}`.toLowerCase().slice(0, 24);
+  const nameID = `us1${label.replace(/[^a-zA-Z0-9]/g, '')}${runSuffix}`
+    .toLowerCase()
+    .slice(0, 24);
   const res = await createOrganization(displayName, nameID);
   if (!res.data?.createOrganization) {
-    throw new Error(`Failed to create organization "${label}": ${JSON.stringify(res.error)}`);
+    throw new Error(
+      `Failed to create organization "${label}": ${JSON.stringify(res.error)}`
+    );
   }
   return {
     id: res.data.createOrganization.id,
@@ -160,7 +183,9 @@ const assignOrgRole = async (
     userRole
   );
   if (res.error) {
-    throw new Error(`assignOrgRole(${role}) failed for ${actorID} on ${roleSetID}: ${JSON.stringify(res.error)}`);
+    throw new Error(
+      `assignOrgRole(${role}) failed for ${actorID} on ${roleSetID}: ${JSON.stringify(res.error)}`
+    );
   }
 };
 
@@ -199,7 +224,13 @@ const inviteForRoles = async (
   return graphqlErrorWrapper(
     authToken =>
       client.InviteForEntryRoleOnRoleSet(
-        { roleSetId, invitedActorIds, invitedUserEmails: [], extraRoles, welcomeMessage },
+        {
+          roleSetId,
+          invitedActorIds,
+          invitedUserEmails: [],
+          extraRoles,
+          welcomeMessage,
+        },
         { authorization: `Bearer ${authToken}` }
       ),
     userRole
@@ -250,15 +281,31 @@ baseTest.beforeAll(async () => {
   // orgMain: an ADMIN who is not an OWNER (AS1/AS2/AS7's actor, AS5's admin
   // half), an OWNER who is not an ADMIN (AS5's owner half), and a plain
   // ASSOCIATE (AS8).
-  await assignOrgRole(orgMain.roleSetId, orgAdminNotOwner.id, RoleName.Associate);
+  await assignOrgRole(
+    orgMain.roleSetId,
+    orgAdminNotOwner.id,
+    RoleName.Associate
+  );
   await assignOrgRole(orgMain.roleSetId, orgAdminNotOwner.id, RoleName.Admin);
-  await assignOrgRole(orgMain.roleSetId, orgOwnerNotAdmin.id, RoleName.Associate);
+  await assignOrgRole(
+    orgMain.roleSetId,
+    orgOwnerNotAdmin.id,
+    RoleName.Associate
+  );
   await assignOrgRole(orgMain.roleSetId, orgOwnerNotAdmin.id, RoleName.Owner);
-  await assignOrgRole(orgMain.roleSetId, plainAssociateAS8.id, RoleName.Associate);
+  await assignOrgRole(
+    orgMain.roleSetId,
+    plainAssociateAS8.id,
+    RoleName.Associate
+  );
 
   // AS4 fixtures on orgMain: already an associate; already invited (never
   // accepted); an open application.
-  await assignOrgRole(orgMain.roleSetId, as4AlreadyAssociate.id, RoleName.Associate);
+  await assignOrgRole(
+    orgMain.roleSetId,
+    as4AlreadyAssociate.id,
+    RoleName.Associate
+  );
 
   const preSeededInvite = await inviteForRoles(
     orgMain.roleSetId,
@@ -268,7 +315,8 @@ baseTest.beforeAll(async () => {
   );
   if (
     preSeededInvite.error ||
-    preSeededInvite.data?.inviteForEntryRoleOnRoleSet?.[0]?.type !== RoleSetInvitationResultType.InvitedToRoleSet
+    preSeededInvite.data?.inviteForEntryRoleOnRoleSet?.[0]?.type !==
+      RoleSetInvitationResultType.InvitedToRoleSet
   ) {
     throw new Error(
       `AS4 pre-seed invitation failed: ${JSON.stringify(preSeededInvite.error ?? preSeededInvite.data)}`
@@ -277,12 +325,22 @@ baseTest.beforeAll(async () => {
   as4AlreadyInvitedInvitationId =
     preSeededInvite.data!.inviteForEntryRoleOnRoleSet![0]!.invitation!.id;
 
-  const preSeededApplication = await postGraphqlRaw<{ applyForEntryRoleOnRoleSet: { id: string } }>(
+  const preSeededApplication = await postGraphqlRaw<{
+    applyForEntryRoleOnRoleSet: { id: string };
+  }>(
     'mutation($roleSetID: UUID!) { applyForEntryRoleOnRoleSet(applicationData: { roleSetID: $roleSetID, questions: [] }) { id } }',
-    { bearerToken: as4OpenApplication.token, variables: { roleSetID: orgMain.roleSetId } }
+    {
+      bearerToken: as4OpenApplication.token,
+      variables: { roleSetID: orgMain.roleSetId },
+    }
   );
-  if ((preSeededApplication.body.errors ?? []).length > 0 || !preSeededApplication.body.data?.applyForEntryRoleOnRoleSet.id) {
-    throw new Error(`AS4 pre-seed application failed: ${preSeededApplication.raw}`);
+  if (
+    (preSeededApplication.body.errors ?? []).length > 0 ||
+    !preSeededApplication.body.data?.applyForEntryRoleOnRoleSet.id
+  ) {
+    throw new Error(
+      `AS4 pre-seed application failed: ${preSeededApplication.raw}`
+    );
   }
 
   // AS3 admin-cap fixture: six granted ADMIN holders on a dedicated
@@ -326,9 +384,12 @@ baseTest.afterAll(async () => {
     if (!org) continue; // beforeAll failed before creating it
     try {
       const res = await deleteOrganization(org.id);
-      if (res?.error) failures.push(`organization ${org.id}: ${JSON.stringify(res.error)}`);
+      if (res?.error)
+        failures.push(`organization ${org.id}: ${JSON.stringify(res.error)}`);
     } catch (error) {
-      failures.push(`organization ${org.id}: ${(error as Error)?.message ?? error}`);
+      failures.push(
+        `organization ${org.id}: ${(error as Error)?.message ?? error}`
+      );
     }
   }
 
@@ -351,10 +412,16 @@ baseTest.afterAll(async () => {
     if (!persona) continue; // beforeAll failed before registering it
     const res = await graphqlErrorWrapper(
       authToken =>
-        client.deleteUser({ deleteData: { ID: persona.id } }, { authorization: `Bearer ${authToken}` }),
+        client.deleteUser(
+          { deleteData: { ID: persona.id } },
+          { authorization: `Bearer ${authToken}` }
+        ),
       TestUser.GLOBAL_ADMIN
     );
-    if (res.error) failures.push(`user ${persona.email} (${persona.id}): ${JSON.stringify(res.error)}`);
+    if (res.error)
+      failures.push(
+        `user ${persona.email} (${persona.id}): ${JSON.stringify(res.error)}`
+      );
   }
 
   if (failures.length > 0) {
@@ -373,153 +440,248 @@ baseTest.afterAll(async () => {
 // OrgInviteAssociatesDialogConnector.tsx and
 // client-web/src/crd/i18n/community/community.en.json) ───
 
-orgAdminNotOwnerTest.describe('US1-AS1 — the Associates-tab invite dialog offers the registered-user search, email paste and the suggested language', () => {
-  orgAdminNotOwnerTest(
-    'an organization admin who is not a platform admin gets a name-or-email search, the suggested-language control (when the platform offers languages), a pre-filled message, and Associate locked plus Admin/Owner',
-    async ({ page }) => {
-      await page.goto(`${baseUrl}/organization/${orgMain.nameID}/settings/community`);
-      await page.getByRole('button', { name: 'Invite', exact: true }).click();
+orgAdminNotOwnerTest.describe(
+  'US1-AS1 — the Associates-tab invite dialog offers the registered-user search, email paste and the suggested language',
+  () => {
+    orgAdminNotOwnerTest(
+      'an organization admin who is not a platform admin gets a name-or-email search, the suggested-language control (when the platform offers languages), a pre-filled message, and Associate locked plus Admin/Owner',
+      async ({ page }) => {
+        await page.goto(
+          `${baseUrl}/organization/${orgMain.nameID}/settings/community`
+        );
+        await page.getByRole('button', { name: 'Invite', exact: true }).click();
 
-      await expect(page.getByRole('dialog').getByText(`Invite associates to "${orgMain.displayName}"`)).toBeVisible();
+        await expect(
+          page
+            .getByRole('dialog')
+            .getByText(`Invite associates to "${orgMain.displayName}"`)
+        ).toBeVisible();
 
-      // Name-or-email search: registered people are searched by name, anyone
-      // else can be added by pasting their email address (organizations no longer
-      // restrict invitations to existing users).
-      await expect(page.getByRole('textbox', { name: 'Search for users by name or email' })).toBeVisible();
-      await expect(page.getByPlaceholder(/email/i)).toHaveCount(1);
-      await expect(
-        page.getByText('Search for people below or directly add their email address')
-      ).toBeVisible();
+        // Name-or-email search: registered people are searched by name, anyone
+        // else can be added by pasting their email address (organizations no longer
+        // restrict invitations to existing users).
+        await expect(
+          page.getByRole('textbox', {
+            name: 'Search for users by name or email',
+          })
+        ).toBeVisible();
+        await expect(page.getByPlaceholder(/email/i)).toHaveCount(1);
+        await expect(
+          page.getByText(
+            'Search for people below or directly add their email address'
+          )
+        ).toBeVisible();
 
-      // The suggested-language control is offered whenever the platform offers
-      // any language to suggest — read from the same config the dialog reads.
-      const languageRes = await postGraphqlRaw<{
-        platform: { configuration: { language: { eligible: string[] } } };
-      }>('query { platform { configuration { language { eligible } } } }');
-      const eligibleLanguages = languageRes.body.data?.platform.configuration.language.eligible ?? [];
-      await expect(page.getByLabel('Suggested language for invitee')).toHaveCount(
-        eligibleLanguages.length > 0 ? 1 : 0
-      );
+        // The suggested-language control is offered whenever the platform offers
+        // any language to suggest — read from the same config the dialog reads.
+        const languageRes = await postGraphqlRaw<{
+          platform: { configuration: { language: { eligible: string[] } } };
+        }>('query { platform { configuration { language { eligible } } } }');
+        const eligibleLanguages =
+          languageRes.body.data?.platform.configuration.language.eligible ?? [];
+        await expect(
+          page.getByLabel('Suggested language for invitee')
+        ).toHaveCount(eligibleLanguages.length > 0 ? 1 : 0);
 
-      // Message pre-filled with organization-specific copy.
-      await expect(page.getByLabel('Invitation message')).toHaveValue(new RegExp(orgMain.displayName));
+        // Message pre-filled with organization-specific copy.
+        await expect(page.getByLabel('Invitation message')).toHaveValue(
+          new RegExp(orgMain.displayName)
+        );
 
-      // Role picker: Associate locked (checked, disabled); Admin/Owner offered.
-      await page.getByRole('button', { name: 'Choose roles for the invitees' }).click();
-      const associateCheckbox = page.getByRole('checkbox', { name: 'Associate' });
-      await expect(associateCheckbox).toBeChecked();
-      await expect(associateCheckbox).toBeDisabled();
-      await expect(page.getByRole('checkbox', { name: 'Admin' })).toBeEnabled();
-      await expect(page.getByRole('checkbox', { name: 'Owner' })).toBeEnabled();
+        // Role picker: Associate locked (checked, disabled); Admin/Owner offered.
+        await page
+          .getByRole('button', { name: 'Choose roles for the invitees' })
+          .click();
+        const associateCheckbox = page.getByRole('checkbox', {
+          name: 'Associate',
+        });
+        await expect(associateCheckbox).toBeChecked();
+        await expect(associateCheckbox).toBeDisabled();
+        await expect(
+          page.getByRole('checkbox', { name: 'Admin' })
+        ).toBeEnabled();
+        await expect(
+          page.getByRole('checkbox', { name: 'Owner' })
+        ).toBeEnabled();
 
-      // Regression guard (previously-fixed defect F-US1-AS1 / P5 / FR-021 /
-      // SC-008): the helper text must speak of "Associate", never the Space
-      // dialog's "Member" copy.
-      await expect(
-        page.getByText('Associate is always granted on accepting the invitation.')
-      ).toBeVisible();
-      await expect(page.getByText(/Member is always granted/i)).toHaveCount(0);
-    }
-  );
-});
+        // Regression guard (previously-fixed defect F-US1-AS1 / P5 / FR-021 /
+        // SC-008): the helper text must speak of "Associate", never the Space
+        // dialog's "Member" copy.
+        await expect(
+          page.getByText(
+            'Associate is always granted on accepting the invitation.'
+          )
+        ).toBeVisible();
+        await expect(page.getByText(/Member is always granted/i)).toHaveCount(
+          0
+        );
+      }
+    );
+  }
+);
 
-orgAdminNotOwnerTest.describe('US1-AS2 → AS7 — invite, list, then revoke (chained on the same session)', () => {
-  orgAdminNotOwnerTest(
-    'US1-AS2: inviting U1 as Associate and U2 as Associate + Owner with a message both show "Invitation sent"; both appear in Pending applications & invitations with the offered role, date and Revoke',
-    async ({ page }) => {
-      await page.goto(`${baseUrl}/organization/${orgMain.nameID}/settings/community`);
+orgAdminNotOwnerTest.describe(
+  'US1-AS2 → AS7 — invite, list, then revoke (chained on the same session)',
+  () => {
+    orgAdminNotOwnerTest(
+      'US1-AS2: inviting U1 as Associate and U2 as Associate + Owner with a message both show "Invitation sent"; both appear in Pending applications & invitations with the offered role, date and Revoke',
+      async ({ page }) => {
+        await page.goto(
+          `${baseUrl}/organization/${orgMain.nameID}/settings/community`
+        );
 
-      // U1 — Associate only.
-      await page.getByRole('button', { name: 'Invite', exact: true }).click();
-      await page.getByRole('textbox', { name: 'Search for users by name' }).fill(as2Invitee1.firstName);
-      await page.getByRole('button', { name: as2Invitee1.displayName }).click();
-      await page.getByLabel('Invitation message').fill(`US1-AS2 welcome ${runSuffix}`);
-      await page.getByRole('button', { name: 'Send' }).click();
-      await expect(page.getByRole('dialog').getByText('Invitation sent')).toBeVisible();
-      await page.getByRole('button', { name: 'Close', exact: true }).click();
+        // U1 — Associate only.
+        await page.getByRole('button', { name: 'Invite', exact: true }).click();
+        await page
+          .getByRole('textbox', { name: 'Search for users by name' })
+          .fill(as2Invitee1.firstName);
+        await page
+          .getByRole('button', { name: as2Invitee1.displayName })
+          .click();
+        await page
+          .getByLabel('Invitation message')
+          .fill(`US1-AS2 welcome ${runSuffix}`);
+        await page.getByRole('button', { name: 'Send' }).click();
+        await expect(
+          page.getByRole('dialog').getByText('Invitation sent')
+        ).toBeVisible();
+        await page.getByRole('button', { name: 'Close', exact: true }).click();
 
-      // U2 — Associate + Owner.
-      await page.getByRole('button', { name: 'Invite', exact: true }).click();
-      await page.getByRole('textbox', { name: 'Search for users by name' }).fill(as2Invitee2.firstName);
-      await page.getByRole('button', { name: as2Invitee2.displayName }).click();
-      await page.getByLabel('Invitation message').fill(`US1-AS2 welcome ${runSuffix}`);
-      await page.getByRole('button', { name: 'Choose roles for the invitees' }).click();
-      await page.getByRole('checkbox', { name: 'Owner' }).check();
-      await page.getByRole('button', { name: 'Choose roles for the invitees' }).click(); // close the popover
-      await page.getByRole('button', { name: 'Send' }).click();
-      await expect(page.getByRole('dialog').getByText('Invitation sent')).toBeVisible();
-      await page.getByRole('button', { name: 'Close', exact: true }).click();
+        // U2 — Associate + Owner.
+        await page.getByRole('button', { name: 'Invite', exact: true }).click();
+        await page
+          .getByRole('textbox', { name: 'Search for users by name' })
+          .fill(as2Invitee2.firstName);
+        await page
+          .getByRole('button', { name: as2Invitee2.displayName })
+          .click();
+        await page
+          .getByLabel('Invitation message')
+          .fill(`US1-AS2 welcome ${runSuffix}`);
+        await page
+          .getByRole('button', { name: 'Choose roles for the invitees' })
+          .click();
+        await page.getByRole('checkbox', { name: 'Owner' }).check();
+        await page
+          .getByRole('button', { name: 'Choose roles for the invitees' })
+          .click(); // close the popover
+        await page.getByRole('button', { name: 'Send' }).click();
+        await expect(
+          page.getByRole('dialog').getByText('Invitation sent')
+        ).toBeVisible();
+        await page.getByRole('button', { name: 'Close', exact: true }).click();
 
-      // Pending applications & invitations: both rows, offered role, Revoke.
-      const row1 = page.getByRole('row', { name: new RegExp(as2Invitee1.displayName) });
-      await expect(row1).toContainText('Associate');
-      await expect(row1).not.toContainText('Associate +');
-      await expect(row1.getByRole('button', { name: 'Delete' })).toBeVisible();
+        // Pending applications & invitations: both rows, offered role, Revoke.
+        const row1 = page.getByRole('row', {
+          name: new RegExp(as2Invitee1.displayName),
+        });
+        await expect(row1).toContainText('Associate');
+        await expect(row1).not.toContainText('Associate +');
+        await expect(
+          row1.getByRole('button', { name: 'Delete' })
+        ).toBeVisible();
 
-      const row2 = page.getByRole('row', { name: new RegExp(as2Invitee2.displayName) });
-      await expect(row2).toContainText('Associate + Owner');
-      await expect(row2.getByRole('button', { name: 'Delete' })).toBeVisible();
-    }
-  );
+        const row2 = page.getByRole('row', {
+          name: new RegExp(as2Invitee2.displayName),
+        });
+        await expect(row2).toContainText('Associate + Owner');
+        await expect(
+          row2.getByRole('button', { name: 'Delete' })
+        ).toBeVisible();
+      }
+    );
 
-  orgAdminNotOwnerTest(
-    "US1-AS7: revoking U1's pending invitation removes it from the Associates pending list",
-    async ({ page }) => {
-      await page.goto(`${baseUrl}/organization/${orgMain.nameID}/settings/community`);
-      const row = page.getByRole('row', { name: new RegExp(as2Invitee1.displayName) });
-      await expect(row).toBeVisible();
-      await row.getByRole('button', { name: 'Delete' }).click();
-      // Revoking destroys a pending invitation, so it is confirmed. Answer the
-      // dialog explicitly: while it is open the table behind it is inert, so a
-      // bare row-count assertion would pass without the revoke ever happening.
-      await page.getByRole('button', { name: 'Revoke invitation' }).click();
-      await expect(page.getByRole('row', { name: new RegExp(as2Invitee1.displayName) })).toHaveCount(0, {
-        timeout: 10_000,
-      });
-    }
-  );
+    orgAdminNotOwnerTest(
+      "US1-AS7: revoking U1's pending invitation removes it from the Associates pending list",
+      async ({ page }) => {
+        await page.goto(
+          `${baseUrl}/organization/${orgMain.nameID}/settings/community`
+        );
+        const row = page.getByRole('row', {
+          name: new RegExp(as2Invitee1.displayName),
+        });
+        await expect(row).toBeVisible();
+        await row.getByRole('button', { name: 'Delete' }).click();
+        // Revoking destroys a pending invitation, so it is confirmed. Answer the
+        // dialog explicitly: while it is open the table behind it is inert, so a
+        // bare row-count assertion would pass without the revoke ever happening.
+        await page.getByRole('button', { name: 'Revoke invitation' }).click();
+        await expect(
+          page.getByRole('row', { name: new RegExp(as2Invitee1.displayName) })
+        ).toHaveCount(0, {
+          timeout: 10_000,
+        });
+      }
+    );
 
-  baseTest(
-    "US1-AS7 (invitee view): the revoked invitation is gone from U1's own pending organization invitations",
-    async () => {
-      const res = await postGraphqlRaw<{ me: { organizationInvitations: Array<{ organization: { id: string } }> } }>(
-        'query { me { organizationInvitations { organization { id } } } }',
-        { bearerToken: as2Invitee1.token }
-      );
-      // A failed read (field renamed, expired token) must not read as "gone":
-      // the query has to succeed and return the list before its contents count.
-      expect(res.body.errors ?? []).toEqual([]);
-      const invitations = res.body.data?.me.organizationInvitations;
-      expect(Array.isArray(invitations)).toBe(true);
-      expect(invitations!.some(i => i.organization.id === orgMain.id)).toBe(false);
-    }
-  );
-});
+    baseTest(
+      "US1-AS7 (invitee view): the revoked invitation is gone from U1's own pending organization invitations",
+      async () => {
+        const res = await postGraphqlRaw<{
+          me: {
+            organizationInvitations: Array<{ organization: { id: string } }>;
+          };
+        }>('query { me { organizationInvitations { organization { id } } } }', {
+          bearerToken: as2Invitee1.token,
+        });
+        // A failed read (field renamed, expired token) must not read as "gone":
+        // the query has to succeed and return the list before its contents count.
+        expect(res.body.errors ?? []).toEqual([]);
+        const invitations = res.body.data?.me.organizationInvitations;
+        expect(Array.isArray(invitations)).toBe(true);
+        expect(invitations!.some(i => i.organization.id === orgMain.id)).toBe(
+          false
+        );
+      }
+    );
+  }
+);
 
-orgOwnerNotAdminTest.describe('US1-AS5 — no inviter-role ceiling (R1): an OWNER who is not an ADMIN may also offer any of the three roles', () => {
-  orgOwnerNotAdminTest(
-    'an organization OWNER who is not an ADMIN sees Associate/Admin/Owner all offerable',
-    async ({ page }) => {
-      await page.goto(`${baseUrl}/organization/${orgMain.nameID}/settings/community`);
-      await page.getByRole('button', { name: 'Invite', exact: true }).click();
-      await page.getByRole('button', { name: 'Choose roles for the invitees' }).click();
-      await expect(page.getByRole('checkbox', { name: 'Associate' })).toBeChecked();
-      await expect(page.getByRole('checkbox', { name: 'Admin' })).toBeEnabled();
-      await expect(page.getByRole('checkbox', { name: 'Owner' })).toBeEnabled();
-      // AS1's own walk (an ADMIN who is not an OWNER) already proves the other
-      // half of R1 — both dialog affordances are identical by construction
-      // (one shared RoleMultiSelect), so together the two walks cover
-      // "both may offer any of the three roles".
-    }
-  );
-});
+orgOwnerNotAdminTest.describe(
+  'US1-AS5 — no inviter-role ceiling (R1): an OWNER who is not an ADMIN may also offer any of the three roles',
+  () => {
+    orgOwnerNotAdminTest(
+      'an organization OWNER who is not an ADMIN sees Associate/Admin/Owner all offerable',
+      async ({ page }) => {
+        await page.goto(
+          `${baseUrl}/organization/${orgMain.nameID}/settings/community`
+        );
+        await page.getByRole('button', { name: 'Invite', exact: true }).click();
+        await page
+          .getByRole('button', { name: 'Choose roles for the invitees' })
+          .click();
+        await expect(
+          page.getByRole('checkbox', { name: 'Associate' })
+        ).toBeChecked();
+        await expect(
+          page.getByRole('checkbox', { name: 'Admin' })
+        ).toBeEnabled();
+        await expect(
+          page.getByRole('checkbox', { name: 'Owner' })
+        ).toBeEnabled();
+        // AS1's own walk (an ADMIN who is not an OWNER) already proves the other
+        // half of R1 — both dialog affordances are identical by construction
+        // (one shared RoleMultiSelect), so together the two walks cover
+        // "both may offer any of the three roles".
+      }
+    );
+  }
+);
 
-plainAssociateAS8Test.describe('US1-AS8 (UI half) — a plain associate is refused the organization settings surface', () => {
-  plainAssociateAS8Test('navigating to the Associates settings tab does not land there', async ({ page }) => {
-    await page.goto(`${baseUrl}/organization/${orgMain.nameID}/settings/community`);
-    await expect(page).not.toHaveURL(/\/settings\/community/);
-  });
-});
+plainAssociateAS8Test.describe(
+  'US1-AS8 (UI half) — a plain associate is refused the organization settings surface',
+  () => {
+    plainAssociateAS8Test(
+      'navigating to the Associates settings tab does not land there',
+      async ({ page }) => {
+        await page.goto(
+          `${baseUrl}/organization/${orgMain.nameID}/settings/community`
+        );
+        await expect(page).not.toHaveURL(/\/settings\/community/);
+      }
+    );
+  }
+);
 
 // ─── API safety-net walk — AS3, AS4, AS6, AS8's API half ──────────────────
 //
@@ -534,118 +696,172 @@ plainAssociateAS8Test.describe('US1-AS8 (UI half) — a plain associate is refus
 // at the layer where it is actually reachable — same rationale as US1-AS5's
 // "server safety net" case in the 061 sibling file.
 
-baseTest.describe('US1-AS3 — role-offer caps are enforced at invite time', () => {
-  baseTest(
-    'offering Admin once six admins are already granted returns "role limit reached" and creates nothing',
-    async () => {
-      const res = await inviteForRoles(
-        orgAS3Admin.roleSetId,
-        [as3AdminOverflow.id],
-        `US1 AS3 admin overflow ${runSuffix}`,
-        [RoleName.Admin]
-      );
-      expect(res.error).toBeFalsy();
-      expect(res.data?.inviteForEntryRoleOnRoleSet?.[0]?.type).toEqual(
-        RoleSetInvitationResultType.ExtraRoleLimitReached
-      );
-      expect(res.data?.inviteForEntryRoleOnRoleSet?.[0]?.invitation).toBeFalsy();
-    }
-  );
-
-  baseTest(
-    'offering Owner once three owners are already granted returns "role limit reached" and creates nothing',
-    async () => {
-      const res = await inviteForRoles(
-        orgAS3Owner.roleSetId,
-        [as3OwnerOverflow.id],
-        `US1 AS3 owner overflow ${runSuffix}`,
-        [RoleName.Owner]
-      );
-      expect(res.error).toBeFalsy();
-      expect(res.data?.inviteForEntryRoleOnRoleSet?.[0]?.type).toEqual(
-        RoleSetInvitationResultType.ExtraRoleLimitReached
-      );
-      expect(res.data?.inviteForEntryRoleOnRoleSet?.[0]?.invitation).toBeFalsy();
-    }
-  );
-});
-
-baseTest.describe('US1-AS4 — pre-existing state produces the typed outcome, never a duplicate row', () => {
-  baseTest('inviting an existing associate returns the "already an associate" typed outcome', async () => {
-    const res = await inviteForRoles(orgMain.roleSetId, [as4AlreadyAssociate.id], `US1 AS4 dup ${runSuffix}`, []);
-    expect(res.error).toBeFalsy();
-    expect(res.data?.inviteForEntryRoleOnRoleSet?.[0]?.type).toEqual(
-      RoleSetInvitationResultType.AlreadyMemberOfRoleSet
+baseTest.describe(
+  'US1-AS3 — role-offer caps are enforced at invite time',
+  () => {
+    baseTest(
+      'offering Admin once six admins are already granted returns "role limit reached" and creates nothing',
+      async () => {
+        const res = await inviteForRoles(
+          orgAS3Admin.roleSetId,
+          [as3AdminOverflow.id],
+          `US1 AS3 admin overflow ${runSuffix}`,
+          [RoleName.Admin]
+        );
+        expect(res.error).toBeFalsy();
+        expect(res.data?.inviteForEntryRoleOnRoleSet?.[0]?.type).toEqual(
+          RoleSetInvitationResultType.ExtraRoleLimitReached
+        );
+        expect(
+          res.data?.inviteForEntryRoleOnRoleSet?.[0]?.invitation
+        ).toBeFalsy();
+      }
     );
-    expect(res.data?.inviteForEntryRoleOnRoleSet?.[0]?.invitation).toBeFalsy();
-  });
 
-  baseTest('re-inviting an already-invited user returns the "already invited" typed outcome', async () => {
-    const res = await inviteForRoles(orgMain.roleSetId, [as4AlreadyInvited.id], `US1 AS4 dup ${runSuffix}`, []);
-    expect(res.error).toBeFalsy();
-    expect(res.data?.inviteForEntryRoleOnRoleSet?.[0]?.type).toEqual(
-      RoleSetInvitationResultType.AlreadyInvitedToRoleSet
+    baseTest(
+      'offering Owner once three owners are already granted returns "role limit reached" and creates nothing',
+      async () => {
+        const res = await inviteForRoles(
+          orgAS3Owner.roleSetId,
+          [as3OwnerOverflow.id],
+          `US1 AS3 owner overflow ${runSuffix}`,
+          [RoleName.Owner]
+        );
+        expect(res.error).toBeFalsy();
+        expect(res.data?.inviteForEntryRoleOnRoleSet?.[0]?.type).toEqual(
+          RoleSetInvitationResultType.ExtraRoleLimitReached
+        );
+        expect(
+          res.data?.inviteForEntryRoleOnRoleSet?.[0]?.invitation
+        ).toBeFalsy();
+      }
     );
-    // ALREADY_INVITED carries the EXISTING invitation rather than nothing —
-    // shipped behaviour on both role-set types (server#5088, 061 R36). "No
-    // second row" means the id is the original invitation's, not that the field
-    // is empty. The other typed outcomes here really do create nothing, so they
-    // keep asserting falsy.
-    expect(res.data?.inviteForEntryRoleOnRoleSet?.[0]?.invitation?.id).toEqual(
-      as4AlreadyInvitedInvitationId
-    );
-  });
+  }
+);
 
-  baseTest('inviting a user with an open application returns the "has an open application" typed outcome', async () => {
-    const res = await inviteForRoles(orgMain.roleSetId, [as4OpenApplication.id], `US1 AS4 dup ${runSuffix}`, []);
-    expect(res.error).toBeFalsy();
-    expect(res.data?.inviteForEntryRoleOnRoleSet?.[0]?.type).toEqual(
-      RoleSetInvitationResultType.AlreadyHasOpenApplication
+baseTest.describe(
+  'US1-AS4 — pre-existing state produces the typed outcome, never a duplicate row',
+  () => {
+    baseTest(
+      'inviting an existing associate returns the "already an associate" typed outcome',
+      async () => {
+        const res = await inviteForRoles(
+          orgMain.roleSetId,
+          [as4AlreadyAssociate.id],
+          `US1 AS4 dup ${runSuffix}`,
+          []
+        );
+        expect(res.error).toBeFalsy();
+        expect(res.data?.inviteForEntryRoleOnRoleSet?.[0]?.type).toEqual(
+          RoleSetInvitationResultType.AlreadyMemberOfRoleSet
+        );
+        expect(
+          res.data?.inviteForEntryRoleOnRoleSet?.[0]?.invitation
+        ).toBeFalsy();
+      }
     );
-    expect(res.data?.inviteForEntryRoleOnRoleSet?.[0]?.invitation).toBeFalsy();
-  });
-});
 
-baseTest.describe('US1-AS6 — an email address on an organization role set creates a platform invitation', () => {
-  baseTest('an invitedUserEmails entry is accepted: the typed outcome is INVITED_TO_PLATFORM_AND_ROLE_SET and the row is cleaned up', async () => {
-    const client = getGraphqlClient();
-    const res = await graphqlErrorWrapper(
-      authToken =>
-        client.InviteForEntryRoleOnRoleSet(
-          {
-            roleSetId: orgMain.roleSetId,
-            invitedActorIds: [],
-            invitedUserEmails: [`nobody-on-platform-${runSuffix}@example.com`],
-            extraRoles: [],
-            welcomeMessage: `US1 AS6 ${runSuffix}`,
-          },
-          { authorization: `Bearer ${authToken}` }
-        ),
-      TestUser.GLOBAL_ADMIN
+    baseTest(
+      're-inviting an already-invited user returns the "already invited" typed outcome',
+      async () => {
+        const res = await inviteForRoles(
+          orgMain.roleSetId,
+          [as4AlreadyInvited.id],
+          `US1 AS4 dup ${runSuffix}`,
+          []
+        );
+        expect(res.error).toBeFalsy();
+        expect(res.data?.inviteForEntryRoleOnRoleSet?.[0]?.type).toEqual(
+          RoleSetInvitationResultType.AlreadyInvitedToRoleSet
+        );
+        // ALREADY_INVITED carries the EXISTING invitation rather than nothing —
+        // shipped behaviour on both role-set types (server#5088, 061 R36). "No
+        // second row" means the id is the original invitation's, not that the field
+        // is empty. The other typed outcomes here really do create nothing, so they
+        // keep asserting falsy.
+        expect(
+          res.data?.inviteForEntryRoleOnRoleSet?.[0]?.invitation?.id
+        ).toEqual(as4AlreadyInvitedInvitationId);
+      }
     );
-    expect(res.error).toBeFalsy();
-    const outcome = res.data?.inviteForEntryRoleOnRoleSet?.[0];
-    expect(outcome?.type).toEqual(RoleSetInvitationResultType.InvitedToPlatformAndRoleSet);
-    const platformInvitationId = outcome?.platformInvitation?.id;
-    expect(platformInvitationId).toBeTruthy();
 
-    // Nothing is left behind: revoke the email invitation again.
-    const cleanup = await graphqlErrorWrapper(
-      authToken =>
-        client.DeletePlatformInvitation(
-          { invitationId: platformInvitationId! },
-          { authorization: `Bearer ${authToken}` }
-        ),
-      TestUser.GLOBAL_ADMIN
+    baseTest(
+      'inviting a user with an open application returns the "has an open application" typed outcome',
+      async () => {
+        const res = await inviteForRoles(
+          orgMain.roleSetId,
+          [as4OpenApplication.id],
+          `US1 AS4 dup ${runSuffix}`,
+          []
+        );
+        expect(res.error).toBeFalsy();
+        expect(res.data?.inviteForEntryRoleOnRoleSet?.[0]?.type).toEqual(
+          RoleSetInvitationResultType.AlreadyHasOpenApplication
+        );
+        expect(
+          res.data?.inviteForEntryRoleOnRoleSet?.[0]?.invitation
+        ).toBeFalsy();
+      }
     );
-    expect(cleanup.error).toBeFalsy();
-  });
-});
+  }
+);
 
-baseTest.describe('US1-AS8 (API half) — a plain associate cannot invite through the API', () => {
-  baseTest('inviteForEntryRoleOnRoleSet is refused with a forbidden-policy error', async () => {
-    const res = await postGraphqlRaw<{ inviteForEntryRoleOnRoleSet: unknown }>(
-      `mutation($roleSetID: UUID!, $actorID: UUID!) {
+baseTest.describe(
+  'US1-AS6 — an email address on an organization role set creates a platform invitation',
+  () => {
+    baseTest(
+      'an invitedUserEmails entry is accepted: the typed outcome is INVITED_TO_PLATFORM_AND_ROLE_SET and the row is cleaned up',
+      async () => {
+        const client = getGraphqlClient();
+        const res = await graphqlErrorWrapper(
+          authToken =>
+            client.InviteForEntryRoleOnRoleSet(
+              {
+                roleSetId: orgMain.roleSetId,
+                invitedActorIds: [],
+                invitedUserEmails: [
+                  `nobody-on-platform-${runSuffix}@example.com`,
+                ],
+                extraRoles: [],
+                welcomeMessage: `US1 AS6 ${runSuffix}`,
+              },
+              { authorization: `Bearer ${authToken}` }
+            ),
+          TestUser.GLOBAL_ADMIN
+        );
+        expect(res.error).toBeFalsy();
+        const outcome = res.data?.inviteForEntryRoleOnRoleSet?.[0];
+        expect(outcome?.type).toEqual(
+          RoleSetInvitationResultType.InvitedToPlatformAndRoleSet
+        );
+        const platformInvitationId = outcome?.platformInvitation?.id;
+        expect(platformInvitationId).toBeTruthy();
+
+        // Nothing is left behind: revoke the email invitation again.
+        const cleanup = await graphqlErrorWrapper(
+          authToken =>
+            client.DeletePlatformInvitation(
+              { invitationId: platformInvitationId! },
+              { authorization: `Bearer ${authToken}` }
+            ),
+          TestUser.GLOBAL_ADMIN
+        );
+        expect(cleanup.error).toBeFalsy();
+      }
+    );
+  }
+);
+
+baseTest.describe(
+  'US1-AS8 (API half) — a plain associate cannot invite through the API',
+  () => {
+    baseTest(
+      'inviteForEntryRoleOnRoleSet is refused with a forbidden-policy error',
+      async () => {
+        const res = await postGraphqlRaw<{
+          inviteForEntryRoleOnRoleSet: unknown;
+        }>(
+          `mutation($roleSetID: UUID!, $actorID: UUID!) {
         inviteForEntryRoleOnRoleSet(invitationData: {
           roleSetID: $roleSetID
           invitedActorIDs: [$actorID]
@@ -654,14 +870,19 @@ baseTest.describe('US1-AS8 (API half) — a plain associate cannot invite throug
           welcomeMessage: "US1 AS8 probe"
         }) { type }
       }`,
-      {
-        bearerToken: plainAssociateAS8.token,
-        variables: { roleSetID: orgMain.roleSetId, actorID: as4AlreadyInvited.id },
+          {
+            bearerToken: plainAssociateAS8.token,
+            variables: {
+              roleSetID: orgMain.roleSetId,
+              actorID: as4AlreadyInvited.id,
+            },
+          }
+        );
+        expect(res.body.data).toBeFalsy();
+        const errors = res.body.errors ?? [];
+        expect(errors.length).toBeGreaterThan(0);
+        expect(res.raw).toMatch(/FORBIDDEN_POLICY/);
       }
     );
-    expect(res.body.data).toBeFalsy();
-    const errors = res.body.errors ?? [];
-    expect(errors.length).toBeGreaterThan(0);
-    expect(res.raw).toMatch(/FORBIDDEN_POLICY/);
-  });
-});
+  }
+);

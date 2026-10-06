@@ -137,17 +137,19 @@ describe('Invitations', () => {
       RoleSetInvitationResultType.InvitedToPlatformAndRoleSet
     );
     // Open: listed, not consumed.
-    expect(listedFor(whileOpen.platformInvitations, emailExternalUser)).toEqual([
-      expect.objectContaining({
-        email: emailExternalUser,
-        profileCreated: false,
-      }),
-    ]);
+    expect(listedFor(whileOpen.platformInvitations, emailExternalUser)).toEqual(
+      [
+        expect.objectContaining({
+          email: emailExternalUser,
+          profileCreated: false,
+        }),
+      ]
+    );
     // Consumed: no longer listed as pending, and converted into an invitation
     // for the new user.
-    expect(listedFor(after.platformInvitations, emailExternalUser)).toHaveLength(
-      0
-    );
+    expect(
+      listedFor(after.platformInvitations, emailExternalUser)
+    ).toHaveLength(0);
     const converted = convertedFor(after.invitations, userId);
     expect(converted).toHaveLength(1);
     expect(converted[0].state).toEqual('invited');
@@ -327,12 +329,12 @@ describe('Invitations', () => {
       const space2 = await readRoleSet(secondSpaceRoleSetId);
 
       // Assert
-      expect(listedFor(space1WhileOpen.platformInvitations, userEmail)).toHaveLength(
-        1
-      );
-      expect(listedFor(space2WhileOpen.platformInvitations, userEmail)).toHaveLength(
-        1
-      );
+      expect(
+        listedFor(space1WhileOpen.platformInvitations, userEmail)
+      ).toHaveLength(1);
+      expect(
+        listedFor(space2WhileOpen.platformInvitations, userEmail)
+      ).toHaveLength(1);
       expect(listedFor(space1.platformInvitations, userEmail)).toHaveLength(0);
       expect(listedFor(space2.platformInvitations, userEmail)).toHaveLength(0);
       expect(convertedFor(space1.invitations, userId)).toHaveLength(1);

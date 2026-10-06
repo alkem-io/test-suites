@@ -23,7 +23,9 @@ import {
 
 baseTest.describe.configure({ mode: 'serial' });
 
-const orgAdminTest = createPersonaTest(`${TestUser.ORGANIZATION_ADMIN}@alkem.io`);
+const orgAdminTest = createPersonaTest(
+  `${TestUser.ORGANIZATION_ADMIN}@alkem.io`
+);
 const emailA = `us081c-twoa-${runSuffix}@example.com`;
 const emailB = `us081c-twob-${runSuffix}@example.com`;
 
@@ -38,12 +40,17 @@ baseTest.beforeAll(async () => {
     space: { collaboration: { addTutorialCallouts: false } },
   });
   for (const email of [emailA, emailB]) {
-    const res = await inviteRaw(scenario.organization.roleSetId, globalAdminToken, {
-      emails: [email],
-      roles: [],
-      message: `US3 two rows ${runSuffix}`,
-    });
-    if (res.errors.length > 0) throw new Error(`invite ${email} failed: ${res.raw}`);
+    const res = await inviteRaw(
+      scenario.organization.roleSetId,
+      globalAdminToken,
+      {
+        emails: [email],
+        roles: [],
+        message: `US3 two rows ${runSuffix}`,
+      }
+    );
+    if (res.errors.length > 0)
+      throw new Error(`invite ${email} failed: ${res.raw}`);
   }
   await Promise.all([waitForMailsTo(emailA, 1), waitForMailsTo(emailB, 1)]);
 });
@@ -52,52 +59,73 @@ baseTest.afterAll(async () => {
   await TestScenarioFactory.cleanUpBaseScenario(scenario);
 });
 
-orgAdminTest('US3-AS1: Resend A then B back-to-back dispatches both; a second Resend on A is an error toast', async ({ page }) => {
-  orgAdminTest.setTimeout(150_000);
-  const row = (email: string) => page.getByRole('row', { name: new RegExp(escapeRegExp(email)) });
-  const resend = (email: string) => row(email).getByRole('button', { name: 'Resend invitation email' });
+orgAdminTest(
+  'US3-AS1: Resend A then B back-to-back dispatches both; a second Resend on A is an error toast',
+  async ({ page }) => {
+    orgAdminTest.setTimeout(150_000);
+    const row = (email: string) =>
+      page.getByRole('row', { name: new RegExp(escapeRegExp(email)) });
+    const resend = (email: string) =>
+      row(email).getByRole('button', { name: 'Resend invitation email' });
 
-  const aBefore = (await mailsTo(emailA)).length;
-  const bBefore = (await mailsTo(emailB)).length;
-  const graphqlResends: Array<{ at: number; status: number; ok: boolean }> = [];
-  page.on('response', async r => {
-    if (!r.url().includes('graphql')) return;
-    const post = r.request().postData() ?? '';
-    if (!/resendPlatformInvitation/i.test(post)) return;
-    const body = await r.text().catch(() => '');
-    graphqlResends.push({ at: Date.now(), status: r.status(), ok: !body.includes('"errors"') });
-  });
+    const aBefore = (await mailsTo(emailA)).length;
+    const bBefore = (await mailsTo(emailB)).length;
+    const graphqlResends: Array<{ at: number; status: number; ok: boolean }> =
+      [];
+    page.on('response', async r => {
+      if (!r.url().includes('graphql')) return;
+      const post = r.request().postData() ?? '';
+      if (!/resendPlatformInvitation/i.test(post)) return;
+      const body = await r.text().catch(() => '');
+      graphqlResends.push({
+        at: Date.now(),
+        status: r.status(),
+        ok: !body.includes('"errors"'),
+      });
+    });
 
-  await page.goto(`${baseUrl}/organization/${scenario.organization.nameId}/settings/community`);
-  await expect(row(emailA)).toBeVisible({ timeout: 25_000 });
-  await expect(row(emailB)).toBeVisible();
-  const rowBefore = { a: await row(emailA).innerText(), b: await row(emailB).innerText() };
+    await page.goto(
+      `${baseUrl}/organization/${scenario.organization.nameId}/settings/community`
+    );
+    await expect(row(emailA)).toBeVisible({ timeout: 25_000 });
+    await expect(row(emailB)).toBeVisible();
+    const rowBefore = {
+      a: await row(emailA).innerText(),
+      b: await row(emailB).innerText(),
+    };
 
-  // Back-to-back: no awaiting of A's outcome before B is clicked.
-  await resend(emailA).click();
-  await expect(resend(emailB)).toBeEnabled();
-  await resend(emailB).click();
+    // Back-to-back: no awaiting of A's outcome before B is clicked.
+    await resend(emailA).click();
+    await expect(resend(emailB)).toBeEnabled();
+    await resend(emailB).click();
 
-  await expect(page.getByText('Invitation email sent again').first()).toBeVisible({ timeout: 15_000 });
-  expect(await settledMailsTo(emailA, aBefore + 1)).toHaveLength(aBefore + 1);
-  expect(await settledMailsTo(emailB, bBefore + 1)).toHaveLength(bBefore + 1);
-  // Two success toasts (one per row) or at least two successful resend calls.
-  await expect.poll(() => graphqlResends.filter(r => r.ok).length, { timeout: 10_000 }).toBe(2);
-  expect(await row(emailA).innerText()).toEqual(rowBefore.a);
-  expect(await row(emailB).innerText()).toEqual(rowBefore.b);
+    await expect(
+      page.getByText('Invitation email sent again').first()
+    ).toBeVisible({ timeout: 15_000 });
+    expect(await settledMailsTo(emailA, aBefore + 1)).toHaveLength(aBefore + 1);
+    expect(await settledMailsTo(emailB, bBefore + 1)).toHaveLength(bBefore + 1);
+    // Two success toasts (one per row) or at least two successful resend calls.
+    await expect
+      .poll(() => graphqlResends.filter(r => r.ok).length, { timeout: 10_000 })
+      .toBe(2);
+    expect(await row(emailA).innerText()).toEqual(rowBefore.a);
+    expect(await row(emailB).innerText()).toEqual(rowBefore.b);
 
-  // Second Resend on A within the window.
-  const aAfterFirst = (await settledMailsTo(emailA, aBefore + 1)).length;
-  await resend(emailA).click();
-  // The refusal is an ERROR toast, not a success one: sonner marks the variant
-  // on the toast element (`data-type`), so the oracle is the typed element with
-  // the readable message, never a success toast that happens to carry it.
-  const errorToast = page
-    .locator('[data-sonner-toast][data-type="error"]')
-    .filter({ hasText: 'Already resent recently — try again in a few minutes' });
-  await expect(errorToast).toBeVisible({ timeout: 15_000 });
-  expect(await settledMailsTo(emailA, aAfterFirst)).toHaveLength(aAfterFirst);
-  // Entries are pushed once each response body has been read; wait for the third.
-  await expect.poll(() => graphqlResends.length, { timeout: 10_000 }).toBe(3);
-  expect(graphqlResends.filter(r => r.ok)).toHaveLength(2);
-});
+    // Second Resend on A within the window.
+    const aAfterFirst = (await settledMailsTo(emailA, aBefore + 1)).length;
+    await resend(emailA).click();
+    // The refusal is an ERROR toast, not a success one: sonner marks the variant
+    // on the toast element (`data-type`), so the oracle is the typed element with
+    // the readable message, never a success toast that happens to carry it.
+    const errorToast = page
+      .locator('[data-sonner-toast][data-type="error"]')
+      .filter({
+        hasText: 'Already resent recently — try again in a few minutes',
+      });
+    await expect(errorToast).toBeVisible({ timeout: 15_000 });
+    expect(await settledMailsTo(emailA, aAfterFirst)).toHaveLength(aAfterFirst);
+    // Entries are pushed once each response body has been read; wait for the third.
+    await expect.poll(() => graphqlResends.length, { timeout: 10_000 }).toBe(3);
+    expect(graphqlResends.filter(r => r.ok)).toHaveLength(2);
+  }
+);

@@ -140,10 +140,9 @@ const inviteEmail = async (
 /** The invitation is erased: the lookup answers entity-not-found (any other
  * error does not count), and where the harness reaches Postgres no row is left. */
 const expectInvitationErased = async (id: string) => {
-  expect(
-    isPlatformInvitationGone(await lookupPlatformInvitation(id)),
-    id
-  ).toBe(true);
+  expect(isPlatformInvitationGone(await lookupPlatformInvitation(id)), id).toBe(
+    true
+  );
   expect(await platformInvitationRowExists(id), id).not.toEqual(true);
 };
 
@@ -247,9 +246,9 @@ describe('An open invitation wins over the domain auto-join (US2)', () => {
     await ensureInvitedAddressRegistered();
 
     // Not auto-joined.
-    expect(await roleHolders(organizationRoleSetId, RoleName.Associate)).not.toContain(
-      invitedUserId
-    );
+    expect(
+      await roleHolders(organizationRoleSetId, RoleName.Associate)
+    ).not.toContain(invitedUserId);
 
     // Exactly one open invitation for the new user, with everything carried over.
     const pending = await getRoleSetInvitationsApplications(
@@ -401,27 +400,30 @@ describe('An open invitation wins over the domain auto-join (US2)', () => {
 describe('A consumed invitation is never converted again (US4-AS4)', () => {
   // The erasure case above cannot reach this rule: it re-registers after the rows are gone. A consumed
   // record can only be forged by flipping the flag on an open row, which needs the harness database.
-  test.skipIf(!harnessPostgresConfigured())('registering an address whose record is already consumed creates no invitation and no membership', async () => {
-    const email = `consumed-${uniqueId}@alkemio.test`;
-    const roleSetId = orgScenario.organization.roleSetId;
-    const id = await inviteEmail(roleSetId, email, [RoleName.Admin]);
-    await queryHarnessDb(
-      'UPDATE platform_invitation SET "profileCreated" = true WHERE id = $1',
-      [id]
-    );
+  test.skipIf(!harnessPostgresConfigured())(
+    'registering an address whose record is already consumed creates no invitation and no membership',
+    async () => {
+      const email = `consumed-${uniqueId}@alkemio.test`;
+      const roleSetId = orgScenario.organization.roleSetId;
+      const id = await inviteEmail(roleSetId, email, [RoleName.Admin]);
+      await queryHarnessDb(
+        'UPDATE platform_invitation SET "profileCreated" = true WHERE id = $1',
+        [id]
+      );
 
-    const userId = await register(email, 'consumed');
+      const userId = await register(email, 'consumed');
 
-    const pending = await getRoleSetInvitationsApplications(roleSetId);
-    expect(
-      (pending?.data?.lookup?.roleSet?.invitations ?? []).filter(
-        i => i.actor.id === userId
-      )
-    ).toHaveLength(0);
-    expect(await roleHolders(roleSetId, RoleName.Associate)).not.toContain(
-      userId
-    );
-  });
+      const pending = await getRoleSetInvitationsApplications(roleSetId);
+      expect(
+        (pending?.data?.lookup?.roleSet?.invitations ?? []).filter(
+          i => i.actor.id === userId
+        )
+      ).toHaveLength(0);
+      expect(await roleHolders(roleSetId, RoleName.Associate)).not.toContain(
+        userId
+      );
+    }
+  );
 });
 
 describe('The offered Owner role is withheld at accept time when the cap is full (US2-AS5)', () => {

@@ -463,9 +463,10 @@ describe('Invite an unregistered address to an organization (US1)', () => {
         RoleSetInvitationResultType.InvitedToPlatformAndRoleSet
       );
       const createdId = created!.platformInvitation!.id;
-      expect((await openList(persona)).map(p => p.id), persona).toContain(
-        createdId
-      );
+      expect(
+        (await openList(persona)).map(p => p.id),
+        persona
+      ).toContain(createdId);
       const resend = await resendPlatformInvitation(createdId, persona);
       expect(resend?.error, persona).toBeUndefined();
       const revoke = await deleteExternalInvitation(createdId, persona);
@@ -587,16 +588,17 @@ describe('Resend an organization email invitation (US3)', () => {
 
     const inviteeEmail = addr('orphan');
     const token = await getUserToken(adminEmail);
-    const inviteAsThrowaway = await getGraphqlClient().InviteForEntryRoleOnRoleSet(
-      {
-        roleSetId,
-        invitedActorIds: [],
-        invitedUserEmails: [inviteeEmail],
-        welcomeMessage: message,
-        extraRoles: [RoleName.Admin],
-      },
-      { authorization: `Bearer ${token}` }
-    );
+    const inviteAsThrowaway =
+      await getGraphqlClient().InviteForEntryRoleOnRoleSet(
+        {
+          roleSetId,
+          invitedActorIds: [],
+          invitedUserEmails: [inviteeEmail],
+          welcomeMessage: message,
+          extraRoles: [RoleName.Admin],
+        },
+        { authorization: `Bearer ${token}` }
+      );
     const id =
       inviteAsThrowaway.data.inviteForEntryRoleOnRoleSet[0].platformInvitation
         ?.id ?? '';

@@ -71,11 +71,15 @@ const inAppTotal = async (userRole: TestUser): Promise<number> => {
   const response = await graphqlRequestAuth(
     {
       operationName: 'MeInAppNotificationsTotal',
-      query: 'query MeInAppNotificationsTotal { me { notifications { total } } }',
+      query:
+        'query MeInAppNotificationsTotal { me { notifications { total } } }',
     },
     userRole
   );
-  expect(response.body?.errors, JSON.stringify(response.body?.errors)).toBeUndefined();
+  expect(
+    response.body?.errors,
+    JSON.stringify(response.body?.errors)
+  ).toBeUndefined();
   return response.body?.data?.me?.notifications?.total as number;
 };
 
