@@ -1,3 +1,4 @@
+import type { MailItem } from '@alkemio/tests-lib';
 import {
   ConversationCreationType,
   delay,
@@ -563,12 +564,7 @@ export const waitForMailsCountAtLeast = async (
  *   + `toHaveLength(0)` cannot express that: it passes vacuously when
  *   nothing at all lands and still returns early on an unrelated mail.
  */
-export type MailItem = {
-  subject?: string;
-  body?: string;
-  toAddresses?: string[];
-  [key: string]: unknown;
-};
+export type { MailItem };
 
 export const waitForMailsWhere = async (
   isSatisfied: (mailItems: MailItem[], total: number) => boolean,

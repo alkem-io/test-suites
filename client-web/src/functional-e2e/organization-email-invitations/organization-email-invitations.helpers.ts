@@ -1,6 +1,7 @@
 import {
   applyOrganizationVerificationSequence,
   delay,
+  getGraphqlClient,
   getMailsData,
   getUserToken,
   harnessPostgresConfigured,
@@ -12,6 +13,12 @@ import {
   verifyInKratosOrFail,
 } from '@alkemio/tests-lib';
 import { RoleName } from '@alkemio/tests-lib/core/generated/alkemio-schema';
+import type {
+  InviteForEntryRoleOnRoleSetMutation,
+  RoleSetApplicationsInvitationsQuery,
+  RoleSetPendingPlatformInvitationsQuery,
+} from '@alkemio/tests-lib/core/generated/graphql';
+import type { MailItem } from '@alkemio/tests-lib';
 import {
   assignUserRoleOnOrganization,
   cleanUpTestOrganizations,
@@ -26,11 +33,12 @@ import {
 /**
  * Local GraphQL/mailbox helpers for the organization email invitation
  * acceptance walks. Built on the organization-user-associates helper file: organizations, role grants and persona teardown are reused from
- * there; this file adds what the email-invitation walks need that
- * `@alkemio/tests-lib` does not expose — the email-invite, resend, revoke and
- * lookup shapes (raw GraphQL with a bearer token, so a freshly registered
- * persona can act), a verified-domain organization, MailSlurper reads scoped to
- * one address, and a registration path that resolves the Alkemio user.
+ * there; this file adds what the email-invitation walks need on top — the
+ * email-invite, resend, revoke and lookup calls (the generated
+ * `@alkemio/tests-lib` SDK, run with a persona's bearer token so a freshly
+ * registered persona can act), a verified-domain organization, MailSlurper
+ * reads scoped to one address, and a registration path that resolves the
+ * Alkemio user.
  *
  * Every mail assertion is a per-address DELTA (count before, act, count after):
  * invitee addresses are unique per run, so no walk needs to prune the shared
@@ -161,26 +169,40 @@ export const createDomainJoinOrganization = async (label: string, domain: string
   return org;
 };
 
-// ─── Email-invitation API (bearer-token GraphQL) ──────────────────────────
+// ─── Email-invitation API (generated SDK, persona bearer token) ───────────
 
-export type InviteOutcome = {
-  type: string;
-  invitedActorID: string | null;
-  invitedEmail: string | null;
-  invitation: { id: string } | null;
-  platformInvitation: { id: string; email: string; roleSetExtraRoles: string[] } | null;
-};
+type Sdk = ReturnType<typeof getGraphqlClient>;
 
 export type ApiResult<T> = { data: T | undefined; errors: Array<{ message?: string; extensions?: { code?: string } }>; raw: string };
 
-const toResult = <T>(res: { body: { data?: T | null; errors?: ApiResult<T>['errors'] }; raw: string }): ApiResult<T> => ({
-  data: res.body.data ?? undefined,
-  errors: res.body.errors ?? [],
-  raw: res.raw,
-});
+/**
+ * Runs one generated-SDK operation (`@alkemio/tests-lib`, the documents under
+ * `lib/src/scenario/graphql`) as the holder of `bearerToken`, so a freshly
+ * registered persona can act, and normalizes the outcome: graphql-request
+ * throws on GraphQL errors, here they come back as `errors` beside the data
+ * with `raw` for assertion messages, the shape every walk asserts on.
+ */
+const asPersona = async <T>(
+  bearerToken: string,
+  call: (sdk: Sdk, headers: { authorization: string }) => Promise<{ data: T }>
+): Promise<ApiResult<T>> => {
+  try {
+    const { data } = await call(getGraphqlClient(), { authorization: `Bearer ${bearerToken}` });
+    return { data, errors: [], raw: JSON.stringify(data) };
+  } catch (error) {
+    const response = (error as { response?: { data?: T | null; errors?: ApiResult<T>['errors'] } }).response;
+    return {
+      data: response?.data ?? undefined,
+      errors: response?.errors ?? [{ message: String(error) }],
+      raw: JSON.stringify(response ?? String(error)),
+    };
+  }
+};
 
 export const errorCodeOf = (result: { errors: ApiResult<unknown>['errors'] }): string | undefined =>
   result.errors[0]?.extensions?.code;
+
+export type InviteOutcome = InviteForEntryRoleOnRoleSetMutation['inviteForEntryRoleOnRoleSet'][number];
 
 /** `inviteForEntryRoleOnRoleSet` with both pickable actors and typed emails. */
 export const inviteRaw = async (
@@ -193,56 +215,36 @@ export const inviteRaw = async (
     message?: string;
     language?: string;
   }
-): Promise<ApiResult<{ inviteForEntryRoleOnRoleSet: InviteOutcome[] }>> =>
-  toResult(
-    await postGraphqlRaw<{ inviteForEntryRoleOnRoleSet: InviteOutcome[] }>(
-      `mutation($data: InviteForEntryRoleOnRoleSetInput!) {
-        inviteForEntryRoleOnRoleSet(invitationData: $data) {
-          type invitedActorID invitedEmail
-          invitation { id }
-          platformInvitation { id email roleSetExtraRoles }
-        }
-      }`,
+): Promise<ApiResult<InviteForEntryRoleOnRoleSetMutation>> =>
+  asPersona(bearerToken, (sdk, headers) =>
+    sdk.InviteForEntryRoleOnRoleSet(
       {
-        bearerToken,
-        variables: {
-          data: {
-            roleSetID,
-            invitedActorIDs: options.actorIds ?? [],
-            invitedUserEmails: options.emails ?? [],
-            extraRoles: options.roles ?? [],
-            welcomeMessage: options.message ?? `E2E invitation ${runSuffix}`,
-            ...(options.language ? { suggestedLanguage: options.language } : {}),
-          },
-        },
-      }
+        roleSetId: roleSetID,
+        invitedActorIds: options.actorIds ?? [],
+        invitedUserEmails: options.emails ?? [],
+        extraRoles: options.roles ?? [],
+        welcomeMessage: options.message ?? `E2E invitation ${runSuffix}`,
+        suggestedLanguage: options.language,
+      },
+      headers
     )
   );
 
-export type OpenEmailInvitation = {
-  id: string;
-  email: string;
-  profileCreated: boolean;
-  roleSetExtraRoles: string[];
-  welcomeMessage: string | null;
-  suggestedLanguage: string | null;
-};
+export type OpenEmailInvitation = NonNullable<
+  RoleSetPendingPlatformInvitationsQuery['lookup']['roleSet']
+>['platformInvitations'][number];
 
 /** The role set's OPEN email invitations (the list the pending tables render). */
 export const listOpenEmailInvitations = async (
   roleSetId: string,
   bearerToken: string
-): Promise<ApiResult<{ lookup: { roleSet: { platformInvitations: OpenEmailInvitation[] } } }>> =>
-  toResult(
-    await postGraphqlRaw<{ lookup: { roleSet: { platformInvitations: OpenEmailInvitation[] } } }>(
-      `query($id: UUID!) {
-        lookup { roleSet(ID: $id) {
-          platformInvitations { id email profileCreated roleSetExtraRoles welcomeMessage suggestedLanguage }
-        } }
-      }`,
-      { bearerToken, variables: { id: roleSetId } }
-    )
-  );
+): Promise<ApiResult<{ lookup: { roleSet: { platformInvitations: OpenEmailInvitation[] } } }>> => {
+  const res = await asPersona(bearerToken, (sdk, headers) => sdk.RoleSetPendingPlatformInvitations({ roleSetId }, headers));
+  return {
+    ...res,
+    data: res.data ? { lookup: { roleSet: { platformInvitations: res.data.lookup.roleSet?.platformInvitations ?? [] } } } : undefined,
+  };
+};
 
 export const openEmailAddresses = async (roleSetId: string, bearerToken: string): Promise<string[]> => {
   const res = await listOpenEmailInvitations(roleSetId, bearerToken);
@@ -250,70 +252,26 @@ export const openEmailAddresses = async (roleSetId: string, bearerToken: string)
   return (res.data?.lookup.roleSet.platformInvitations ?? []).map(p => p.email);
 };
 
-export type RoleSetInvitationRow = {
-  id: string;
-  state: string;
-  extraRoles: string[];
-  welcomeMessage: string | null;
-  suggestedLanguage: string | null;
-  createdBy: { id: string } | null;
-  actor: { id: string };
-};
+export type RoleSetInvitationRow = NonNullable<RoleSetApplicationsInvitationsQuery['lookup']['roleSet']>['invitations'][number];
 
 /** The role set's regular invitations — where a registered email invitee lands. */
 export const listInvitations = async (roleSetId: string, bearerToken: string): Promise<RoleSetInvitationRow[]> => {
-  const res = toResult(
-    await postGraphqlRaw<{ lookup: { roleSet: { invitations: RoleSetInvitationRow[] } } }>(
-      `query($id: UUID!) {
-        lookup { roleSet(ID: $id) {
-          invitations { id state extraRoles welcomeMessage suggestedLanguage createdBy { id } actor { id } }
-        } }
-      }`,
-      { bearerToken, variables: { id: roleSetId } }
-    )
-  );
+  const res = await asPersona(bearerToken, (sdk, headers) => sdk.RoleSetApplicationsInvitations({ roleSetId }, headers));
   if (res.errors.length > 0) throw new Error(`listing invitations failed: ${res.raw}`);
-  return res.data?.lookup.roleSet.invitations ?? [];
+  return res.data?.lookup.roleSet?.invitations ?? [];
 };
 
 export const deleteEmailInvitationRaw = async (id: string, bearerToken: string) =>
-  toResult(
-    await postGraphqlRaw<{ deletePlatformInvitation: { id: string } }>(
-      'mutation($id: UUID!) { deletePlatformInvitation(deleteData: { ID: $id }) { id } }',
-      { bearerToken, variables: { id } }
-    )
-  );
+  asPersona(bearerToken, (sdk, headers) => sdk.DeletePlatformInvitation({ invitationId: id }, headers));
 
 export const resendEmailInvitationRaw = async (id: string, bearerToken: string) =>
-  toResult(
-    await postGraphqlRaw<{ resendPlatformInvitation: { id: string; email: string } }>(
-      'mutation($id: UUID!) { resendPlatformInvitation(resendData: { ID: $id }) { id email } }',
-      { bearerToken, variables: { id } }
-    )
-  );
+  asPersona(bearerToken, (sdk, headers) => sdk.ResendPlatformInvitation({ invitationId: id }, headers));
 
+/** One platform invitation by id — the read that still answers for a consumed
+ * row (`createdBy` is deliberately not selected: it fails once the inviter's
+ * account is gone, see `lookupEmailInvitationCreatedBy`). */
 export const lookupEmailInvitationRaw = async (id: string, bearerToken: string) =>
-  toResult(
-    await postGraphqlRaw<{
-      lookup: {
-        platformInvitation: {
-          id: string;
-          email: string;
-          profileCreated: boolean;
-          createdDate: string;
-          roleSetExtraRoles: string[];
-          welcomeMessage: string | null;
-        } | null;
-      };
-    }>(
-      `query($id: UUID!) {
-        lookup { platformInvitation(ID: $id) {
-          id email profileCreated createdDate roleSetExtraRoles welcomeMessage
-        } }
-      }`,
-      { bearerToken, variables: { id } }
-    )
-  );
+  asPersona(bearerToken, (sdk, headers) => sdk.LookupPlatformInvitation({ invitationId: id }, headers));
 
 /** The recorded inviter, read straight from the table: through the API it
  * does not resolve once that account is deleted. Undefined when the harness
@@ -328,21 +286,14 @@ export const recordedInviterId = async (platformInvitationId: string): Promise<s
 };
 
 export const getUserIdsInRole = async (roleSetId: string, role: RoleName, bearerToken: string): Promise<string[]> => {
-  const res = toResult(
-    await postGraphqlRaw<{ lookup: { roleSet: { usersInRoles: Array<{ users: Array<{ id: string }> }> } } }>(
-      `query($id: UUID!, $roles: [RoleName!]!) {
-        lookup { roleSet(ID: $id) { usersInRoles(roles: $roles) { users { id } } } }
-      }`,
-      { bearerToken, variables: { id: roleSetId, roles: [role] } }
-    )
-  );
+  const res = await asPersona(bearerToken, (sdk, headers) => sdk.GetRoleSetUsersInRoles({ roleSetId, roles: [role] }, headers));
   if (res.errors.length > 0) throw new Error(`usersInRoles(${role}) failed: ${res.raw}`);
-  return (res.data?.lookup.roleSet.usersInRoles ?? []).flatMap(r => r.users.map(u => u.id));
+  return (res.data?.lookup.roleSet?.usersInRoles ?? []).flatMap(r => r.users.map(u => u.id));
 };
 
 // ─── MailSlurper (per-address) ────────────────────────────────────────────
 
-export type MailItem = { subject?: string; body?: string; toAddresses?: string[] };
+export type { MailItem };
 
 /** How often the inbox is re-read while a walk waits on mail. */
 const MAIL_POLL_MS = 500;
