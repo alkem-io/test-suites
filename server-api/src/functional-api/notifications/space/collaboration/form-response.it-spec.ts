@@ -162,6 +162,17 @@ const to = (mails: MailItem[], subject: string, email: string) =>
     mail => mail.subject === subject && mail.toAddresses?.includes(email)
   );
 
+/**
+ * Scope for ONE mail: `subject` to `email`. The scenario creator (Global
+ * Admin) is a subspace admin too and gets its own admin mail about every
+ * Form, so a wait on `aboutForm(form)` alone can end before the mail under
+ * test lands. Wait for that mail itself, then read the window.
+ */
+const mailTo =
+  (subject: string, email: string) =>
+  (mail: MailItem): boolean =>
+    mail.subject === subject && Boolean(mail.toAddresses?.includes(email));
+
 const summary = (mails: MailItem[]) =>
   JSON.stringify(mails.map(m => ({ subject: m.subject, to: m.toAddresses })));
 
@@ -210,6 +221,12 @@ describe('Form response notifications — a member responds', () => {
 
     await respond(form, TestUser.SUBSPACE_MEMBER);
 
+    await getMailsDataSettled(1, {
+      scope: mailTo(receiptSubject(form), users().subspaceMember.email),
+    });
+    await getMailsDataSettled(1, {
+      scope: mailTo(adminSubject(form), users().subspaceAdmin.email),
+    });
     const [mails] = await getMailsDataSettled(2, { scope: aboutForm(form) });
     const detail = summary(mails);
     expect(
@@ -304,6 +321,9 @@ describe('Form response notifications — an admin responds', () => {
 
     await respond(form, TestUser.SUBSPACE_ADMIN);
 
+    await getMailsDataSettled(1, {
+      scope: mailTo(receiptSubject(form), users().subspaceAdmin.email),
+    });
     const [mails] = await getMailsDataSettled(1, { scope: aboutForm(form) });
     const detail = summary(mails);
     expect(
@@ -341,6 +361,9 @@ describe('Form response notifications — the admin row is off', () => {
 
     // Wait for the receipt (the mail that must arrive), then read the whole
     // window: the admin mail would have been sent alongside it.
+    await getMailsDataSettled(1, {
+      scope: mailTo(receiptSubject(form), users().subspaceMember.email),
+    });
     const [mails] = await getMailsDataSettled(1, { scope: aboutForm(form) });
     const detail = summary(mails);
     expect(
