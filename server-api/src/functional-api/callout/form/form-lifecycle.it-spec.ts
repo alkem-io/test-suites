@@ -30,10 +30,12 @@ import {
   removeRoleFromUser,
 } from '../../roleset/roles-request.params';
 import { deleteCallout } from '../callouts.request.params';
+import { randomUUID } from 'node:crypto';
 import {
   answersFor,
   createFormCallout,
   deleteFormResponse,
+  errorClass,
   errorCode,
   FormCallout,
   FormQuestion,
@@ -732,6 +734,30 @@ describe('Form lifecycle — who may delete which response', () => {
     const attempt = await deleteFormResponse(responseId, user);
 
     expect(isForbiddenByPolicy(attempt)).toBe(true);
+    expect(await stillThere()).toBe(true);
+  });
+
+  // FR-020: visibility is enforced on every path that returns a response's
+  // existence. A caller who may not moderate must not learn, from the shape of
+  // the refusal, whether a guessed id is a real response. The server loads the
+  // response before authorizing, so today an unknown id answers
+  // ENTITY_NOT_FOUND and a real one FORBIDDEN_POLICY:
+  // https://github.com/alkem-io/server/issues/6591. Skipped until that fix
+  // lands — drop the `.skip` then; the case already pins the expected
+  // behaviour.
+  test.skip('a non-moderator gets the same refusal for an existing response id and an unknown one (FR-020, alkem-io/server#6591)', async () => {
+    const unknown = await deleteFormResponse(
+      randomUUID(),
+      TestUser.NON_SPACE_MEMBER
+    );
+    const existing = await deleteFormResponse(
+      responseId,
+      TestUser.NON_SPACE_MEMBER
+    );
+
+    expect(unknown.error).toBeDefined();
+    expect(existing.error).toBeDefined();
+    expect(errorClass(existing)).toBe(errorClass(unknown));
     expect(await stillThere()).toBe(true);
   });
 
