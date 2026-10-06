@@ -106,9 +106,11 @@ export const mailSummary = (mails: MailItem[]): string =>
 
 /**
  * Waits for the mail an invitation just triggered to land, then for the
- * pipeline to settle. Call it after creating an invitation and BEFORE the step
- * whose mail count is asserted: the creation mail is asynchronous and would
- * otherwise arrive during that step and be counted as its mail.
+ * pipeline to settle. Call it after creating an invitation to a FRESH address
+ * and BEFORE the step whose mail count is asserted: the creation mail is
+ * asynchronous and would otherwise arrive during that step and be counted as
+ * its mail. It has no baseline of its own, so for an address that already
+ * holds mail use `mailsToAfter`, which captures one.
  */
 export const drainMailsTo = async (address: string): Promise<void> => {
   await pollMailsTo(address, { atLeast: 1, stableMs: SETTLE_MS });
