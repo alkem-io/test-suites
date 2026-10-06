@@ -79,8 +79,8 @@ orgAdminTest('US3-AS1: Resend A then B back-to-back dispatches both; a second Re
   await resend(emailB).click();
 
   await expect(page.getByText('Invitation email sent again').first()).toBeVisible({ timeout: 15_000 });
-  expect(await waitForMailsTo(emailA, aBefore + 1)).toHaveLength(aBefore + 1);
-  expect(await waitForMailsTo(emailB, bBefore + 1)).toHaveLength(bBefore + 1);
+  expect(await settledMailsTo(emailA, aBefore + 1)).toHaveLength(aBefore + 1);
+  expect(await settledMailsTo(emailB, bBefore + 1)).toHaveLength(bBefore + 1);
   // Two success toasts (one per row) or at least two successful resend calls.
   await expect.poll(() => graphqlResends.filter(r => r.ok).length, { timeout: 10_000 }).toBe(2);
   expect(await row(emailA).innerText()).toEqual(rowBefore.a);

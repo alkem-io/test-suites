@@ -42,7 +42,7 @@ import {
   registerUserAtAddress,
   RoleName,
   runSuffix,
-  waitForMailsTo,
+  settledMailsTo,
   adminToken,
   TestUserManager,
   type OrgFixture,
@@ -153,7 +153,8 @@ baseTest.afterAll(async () => {
 
 baseTest.describe('US2-AS1 / US2-AS7 — one dedicated email, message escaped and out of the subject', () => {
   baseTest('exactly one mail reaches the address: organization subject, inviter, organization, offered role, the escaped message and a link to the invitations entry point', async () => {
-    const mails = await waitForMailsTo(invitee1Email, 1);
+    // Exactly one: read once the count has settled, so a late second mail still fails it.
+    const mails = await settledMailsTo(invitee1Email, 1);
     expect(mails).toHaveLength(1);
     const mail = mails[0];
 

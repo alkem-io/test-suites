@@ -48,7 +48,6 @@ import {
   runSuffix,
   settledMailsTo,
   TestUserManager,
-  waitForMailsTo,
   type OrgFixture,
   type RegisteredUser,
 } from './organization-email-invitations.helpers';
@@ -245,8 +244,9 @@ adminTest.describe('US1-AS2 → AS4 → AS7 — invite an unknown address, repea
       if (eligibleLanguage) expect(record?.suggestedLanguage).toEqual(eligibleLanguage);
       chainInvitationId = record!.id;
 
-      // One email, on the organization template.
-      const mails = await waitForMailsTo(chainEmail, 1);
+      // Exactly one email, on the organization template: the count is read once
+      // it has settled, so a second mail landing late would still fail it.
+      const mails = await settledMailsTo(chainEmail, 1);
       expect(mails).toHaveLength(1);
       expect(mails[0].subject).toEqual(organizationInvitationSubject(org.displayName));
 
@@ -302,7 +302,7 @@ adminTest.describe('US1-AS2 → AS4 → AS7 — invite an unknown address, repea
     expect(outcome?.type).toEqual('INVITED_TO_PLATFORM_AND_ROLE_SET');
     expect(outcome?.platformInvitation?.id).not.toEqual(chainInvitationId);
     chainInvitationId = outcome!.platformInvitation!.id;
-    expect(await waitForMailsTo(chainEmail, mailsBefore + 1)).toHaveLength(mailsBefore + 1);
+    expect(await settledMailsTo(chainEmail, mailsBefore + 1)).toHaveLength(mailsBefore + 1);
   });
 });
 
@@ -386,7 +386,7 @@ baseTest.describe('US1-AS6 — no invite-time role cap for an email invitee; the
     const res = await inviteRaw(capOrg.roleSetId, globalAdminToken, { emails: [capAddress], roles: [RoleName.Admin] });
     expect(res.errors).toEqual([]);
     expect(res.data?.inviteForEntryRoleOnRoleSet[0]?.type).toEqual('INVITED_TO_PLATFORM_AND_ROLE_SET');
-    expect(await waitForMailsTo(capAddress, 1)).toHaveLength(1);
+    expect(await settledMailsTo(capAddress, 1)).toHaveLength(1);
 
     const advisory = await inviteRaw(capOrg.roleSetId, globalAdminToken, { actorIds: [capInvitee.id], roles: [RoleName.Admin] });
     expect(advisory.errors).toEqual([]);

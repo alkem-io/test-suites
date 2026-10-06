@@ -153,7 +153,7 @@ orgAdminTest.describe('US3-AS1 / US3-AS3 — Resend in the organization Associat
     await resendButton(page, orgEmail).click();
     await expect(page.getByText('Invitation email sent again')).toBeVisible({ timeout: 15_000 });
 
-    const mails = await waitForMailsTo(orgEmail, mailsBefore + 1);
+    const mails = await settledMailsTo(orgEmail, mailsBefore + 1);
     expect(mails).toHaveLength(mailsBefore + 1);
     // MailSlurper lists newest first and the original invitation mail is in the same mailbox, so the
     // resent mail is identified by what distinguishes it: it names the resending admin as the inviter
@@ -185,7 +185,7 @@ orgAdminTest.describe('US3-AS1 / US3-AS3 — Resend in the organization Associat
     const otherBefore = (await mailsTo(orgEmail2)).length;
     await resendButton(page, orgEmail2).click();
     await expect(page.getByText('Invitation email sent again')).toBeVisible({ timeout: 15_000 });
-    expect(await waitForMailsTo(orgEmail2, otherBefore + 1)).toHaveLength(otherBefore + 1);
+    expect(await settledMailsTo(orgEmail2, otherBefore + 1)).toHaveLength(otherBefore + 1);
   });
 
   orgAdminTest('US3-AS3: after the window the same address can be resent again', async ({ page }) => {
@@ -204,7 +204,7 @@ orgAdminTest.describe('US3-AS1 / US3-AS3 — Resend in the organization Associat
     await expect(pendingRow(page, orgEmail)).toBeVisible({ timeout: 20_000 });
     await resendButton(page, orgEmail).click();
     await expect(page.getByText('Invitation email sent again')).toBeVisible({ timeout: 15_000 });
-    expect(await waitForMailsTo(orgEmail, mailsBefore + 1)).toHaveLength(mailsBefore + 1);
+    expect(await settledMailsTo(orgEmail, mailsBefore + 1)).toHaveLength(mailsBefore + 1);
   });
 });
 
@@ -222,7 +222,7 @@ spaceAdminTest.describe('US3-AS2 — Resend in the Space community pending table
     await resendButton(page, spaceEmail).click();
     await expect(page.getByText('Invitation email sent again')).toBeVisible({ timeout: 15_000 });
 
-    const mails = await waitForMailsTo(spaceEmail, mailsBefore + 1);
+    const mails = await settledMailsTo(spaceEmail, mailsBefore + 1);
     expect(mails).toHaveLength(mailsBefore + 1);
     // The Space template and subject — not the organization one. The original and the resent mail share
     // the mailbox, so every mail counted must carry the Space subject: whichever one is the resent mail,
@@ -298,7 +298,7 @@ baseTest.describe('US3-AS6 — the original inviter was deleted', () => {
     const res = await resendEmailInvitationRaw(id, orgAdminToken);
     expect(res.errors, res.raw).toEqual([]);
 
-    const mails = await waitForMailsTo(inviteeEmail, mailsBefore + 1);
+    const mails = await settledMailsTo(inviteeEmail, mailsBefore + 1);
     expect(mails).toHaveLength(mailsBefore + 1);
     // Newest first: the original mail names the deleted inviter's account, the resent one names the resending admin.
     expect(mails.some(m => decodeMailBody(m.body).includes(TestUserManager.users.organizationAdmin.displayName))).toBe(true);
