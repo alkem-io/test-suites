@@ -3,8 +3,9 @@
 // associate (Associate | +Admin | +Owner), the invitee responds, and the
 // shared contracts this feature depends on: no inviter-role ceiling on who
 // may offer which role; an invite-time cap plus a typed accept-time
-// withheld-role notice when the cap is already full; and email invitees are
-// rejected outright for organization role sets.
+// withheld-role notice when the cap is already full; and an email address that
+// belongs to nobody yet is invited through a platform invitation (the dedicated
+// email-invitation suites cover that path in depth).
 //
 // Personas (assignRoleToUser on the organization's own role set, never a
 // Space one): `organizationAdmin` = the org's ASSOCIATE + ADMIN (factory
@@ -22,6 +23,7 @@ import {
   TestScenarioFactory,
   TestUser,
   TestUserManager,
+  UniqueIDGenerator,
 } from '@alkemio/tests-lib';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import {
@@ -29,6 +31,7 @@ import {
   RoleSetInvitationResultType,
 } from '@alkemio/tests-lib/core/generated/alkemio-schema';
 import {
+  deleteExternalInvitation,
   deleteInvitation,
   inviteForEntryRoleOnRoleSet,
 } from '../invitations/invitation.request.params';
@@ -64,9 +67,8 @@ const ADMIN_CAP = 6;
 const OWNER_CAP = 3;
 
 beforeAll(async () => {
-  baseScenario = await TestScenarioFactory.createBaseScenarioOrganization(
-    scenarioConfig
-  );
+  baseScenario =
+    await TestScenarioFactory.createBaseScenarioOrganization(scenarioConfig);
   roleSetId = baseScenario.organization.roleSetId;
 
   // organizationAdmin already holds ASSOCIATE + ADMIN from the factory;
@@ -212,19 +214,47 @@ describe('Organization associate invitations (US1)', () => {
     }
   });
 
-  test('US1-AS6: invitedUserEmails on an organization role set is rejected — existing Alkemio users only', async () => {
-    const res = await inviteForEntryRoleOnRoleSet(
-      roleSetId,
-      [],
-      ['not-yet-a-user@example.com'],
-      message,
-      [],
-      TestUser.SPACE_ADMIN
-    );
-    // A validation refusal with the product's own message — not an
-    // authorization error, not a 500.
-    expect(res?.error?.errors?.[0]?.message).toMatch(/existing Alkemio users/i);
-    expect(res?.data?.inviteForEntryRoleOnRoleSet).toBeUndefined();
+  test('US1-AS6 (081): an unknown email on an organization role set creates a platform invitation', async () => {
+    const email = `not-yet-a-user-${UniqueIDGenerator.getID()}@example.com`;
+    let platformInvitationId = '';
+    try {
+      const res = await inviteForEntryRoleOnRoleSet(
+        roleSetId,
+        [],
+        [email],
+        message,
+        [RoleName.Admin],
+        TestUser.SPACE_ADMIN // an organization ADMIN persona
+      );
+      expect(res?.error).toBeUndefined();
+      const result = getSingleInvitationResult(res);
+      expect(result?.type).toEqual(
+        RoleSetInvitationResultType.InvitedToPlatformAndRoleSet
+      );
+      expect(result?.invitedEmail).toEqual(email);
+      platformInvitationId = result?.platformInvitation?.id ?? '';
+      expect(platformInvitationId.length).toEqual(36);
+      expect(result?.platformInvitation?.roleSetExtraRoles).toEqual([
+        RoleName.Admin,
+      ]);
+
+      // The same address again is reported, never duplicated.
+      const repeat = await inviteForEntryRoleOnRoleSet(
+        roleSetId,
+        [],
+        [email],
+        message,
+        [RoleName.Admin],
+        TestUser.SPACE_ADMIN
+      );
+      expect(getSingleInvitationResult(repeat)?.type).toEqual(
+        RoleSetInvitationResultType.AlreadyInvitedToPlatformAndRoleSet
+      );
+    } finally {
+      if (platformInvitationId) {
+        await deleteExternalInvitation(platformInvitationId);
+      }
+    }
   });
 
   test('US1-AS4: already an associate / already invited / has an open application → typed outcomes, no second row', async () => {
@@ -304,9 +334,7 @@ describe('Organization associate invitations (US1)', () => {
         expect(getSingleInvitationResult(dupAppRes)?.type).toEqual(
           RoleSetInvitationResultType.AlreadyHasOpenApplication
         );
-        expect(
-          getSingleInvitationResult(dupAppRes)?.invitation
-        ).toBeFalsy();
+        expect(getSingleInvitationResult(dupAppRes)?.invitation).toBeFalsy();
       } finally {
         await deleteApplication(applicationId!);
       }
@@ -340,9 +368,11 @@ describe('Organization associate invitations (US1)', () => {
     const ownersToGrant = Math.max(0, OWNER_CAP - 1 - baselineOwners);
 
     const grantedAdmins = [];
-    for (let i = 0; i < adminsToGrant; i++) grantedAdmins.push(await newInvitee());
+    for (let i = 0; i < adminsToGrant; i++)
+      grantedAdmins.push(await newInvitee());
     const grantedOwners = [];
-    for (let i = 0; i < ownersToGrant; i++) grantedOwners.push(await newInvitee());
+    for (let i = 0; i < ownersToGrant; i++)
+      grantedOwners.push(await newInvitee());
     const pendingAdminLast = await newInvitee();
     const refusedAdmin = await newInvitee();
     const freedAdmin = await newInvitee();
@@ -359,22 +389,45 @@ describe('Organization associate invitations (US1)', () => {
     ];
     const invitationIds: string[] = [];
     const offerAdmin = (userId: string, as = TestUser.SPACE_ADMIN) =>
-      inviteForEntryRoleOnRoleSet(roleSetId, [userId], [], message, [RoleName.Admin], as);
+      inviteForEntryRoleOnRoleSet(
+        roleSetId,
+        [userId],
+        [],
+        message,
+        [RoleName.Admin],
+        as
+      );
     const offerOwner = (userId: string, as = TestUser.SPACE_MEMBER) =>
-      inviteForEntryRoleOnRoleSet(roleSetId, [userId], [], message, [RoleName.Owner], as);
+      inviteForEntryRoleOnRoleSet(
+        roleSetId,
+        [userId],
+        [],
+        message,
+        [RoleName.Owner],
+        as
+      );
     try {
-      for (const u of grantedAdmins) await assignRoleToUser(u.id, roleSetId, RoleName.Admin);
+      for (const u of grantedAdmins)
+        await assignRoleToUser(u.id, roleSetId, RoleName.Admin);
 
       // One short of the cap: this offer is the last that fits.
-      const lastAdmin = getSingleInvitationResult(await offerAdmin(pendingAdminLast.id));
-      expect(lastAdmin?.type).toEqual(RoleSetInvitationResultType.InvitedToRoleSet);
+      const lastAdmin = getSingleInvitationResult(
+        await offerAdmin(pendingAdminLast.id)
+      );
+      expect(lastAdmin?.type).toEqual(
+        RoleSetInvitationResultType.InvitedToRoleSet
+      );
       invitationIds.push(lastAdmin!.invitation!.id);
 
       // Granted + pending now reach the cap — the next offer is refused and
       // creates nothing. This is the assertion that matters: pending offers
       // count toward the cap, not just granted roles.
-      const overAdmin = getSingleInvitationResult(await offerAdmin(refusedAdmin.id));
-      expect(overAdmin?.type).toEqual(RoleSetInvitationResultType.ExtraRoleLimitReached);
+      const overAdmin = getSingleInvitationResult(
+        await offerAdmin(refusedAdmin.id)
+      );
+      expect(overAdmin?.type).toEqual(
+        RoleSetInvitationResultType.ExtraRoleLimitReached
+      );
       expect(overAdmin?.invitation).toBeFalsy();
 
       // Revoking the pending offer frees the slot again.
@@ -385,21 +438,31 @@ describe('Organization associate invitations (US1)', () => {
       invitationIds.push(freed!.invitation!.id);
 
       // Same shape for OWNER, whose cap is lower.
-      for (const u of grantedOwners) await assignRoleToUser(u.id, roleSetId, RoleName.Owner);
-      const lastOwner = getSingleInvitationResult(await offerOwner(pendingOwnerLast.id));
-      expect(lastOwner?.type).toEqual(RoleSetInvitationResultType.InvitedToRoleSet);
+      for (const u of grantedOwners)
+        await assignRoleToUser(u.id, roleSetId, RoleName.Owner);
+      const lastOwner = getSingleInvitationResult(
+        await offerOwner(pendingOwnerLast.id)
+      );
+      expect(lastOwner?.type).toEqual(
+        RoleSetInvitationResultType.InvitedToRoleSet
+      );
       invitationIds.push(lastOwner!.invitation!.id);
 
-      const overOwner = getSingleInvitationResult(await offerOwner(refusedOwner.id));
-      expect(overOwner?.type).toEqual(RoleSetInvitationResultType.ExtraRoleLimitReached);
+      const overOwner = getSingleInvitationResult(
+        await offerOwner(refusedOwner.id)
+      );
+      expect(overOwner?.type).toEqual(
+        RoleSetInvitationResultType.ExtraRoleLimitReached
+      );
       expect(overOwner?.invitation).toBeFalsy();
     } finally {
-      for (const id of invitationIds) await deleteInvitation(id).catch(() => undefined);
+      for (const id of invitationIds)
+        await deleteInvitation(id).catch(() => undefined);
       for (const u of created) await deleteUser(u.id).catch(() => undefined);
     }
   });
 
-  test('US1-AS7: revoking a pending invitation removes it from the invitee\'s own pending list', async () => {
+  test("US1-AS7: revoking a pending invitation removes it from the invitee's own pending list", async () => {
     const res = await inviteForEntryRoleOnRoleSet(
       roleSetId,
       [TestUserManager.users.subspaceMember.id],
@@ -469,9 +532,9 @@ describe('Organization associate invitations — the invitee responds (US2)', ()
         'ACCEPT',
         TestUser.SUBSPACE_ADMIN
       );
-      expect((accepted?.data as any)?.eventOnInvitation?.extraRolesWithheld).toEqual(
-        []
-      );
+      expect(
+        (accepted?.data as any)?.eventOnInvitation?.extraRolesWithheld
+      ).toEqual([]);
 
       const roles = await usersInRoles(
         roleSetId,
@@ -702,7 +765,10 @@ describe('Organization associate invitations — the invitee responds (US2)', ()
     }
     await teardownOrFail(testError, [
       // Restore the offerer's ADMIN first — later tests invite as SPACE_ADMIN.
-      ['restore ADMIN on offerer', () => assignRoleToUser(offerer, roleSetId, RoleName.Admin)],
+      [
+        'restore ADMIN on offerer',
+        () => assignRoleToUser(offerer, roleSetId, RoleName.Admin),
+      ],
       [
         'remove ASSOCIATE from subsubspaceMember',
         () =>
@@ -759,12 +825,18 @@ describe('Organization associate invitations — the invitee responds (US2)', ()
       testError = error;
     }
     await teardownOrFail(testError, [
-      ['remove ADMIN from invitee', () => removeRoleFromUser(invitee, roleSetId, RoleName.Admin)],
-      ['remove ASSOCIATE from invitee', () => removeRoleFromUser(invitee, roleSetId, RoleName.Associate)],
+      [
+        'remove ADMIN from invitee',
+        () => removeRoleFromUser(invitee, roleSetId, RoleName.Admin),
+      ],
+      [
+        'remove ASSOCIATE from invitee',
+        () => removeRoleFromUser(invitee, roleSetId, RoleName.Associate),
+      ],
     ]);
   });
 
-  test('an associate-only persona cannot ACCEPT an invitation on someone else\'s behalf', async () => {
+  test("an associate-only persona cannot ACCEPT an invitation on someone else's behalf", async () => {
     const invite = await inviteForEntryRoleOnRoleSet(
       roleSetId,
       [TestUserManager.users.nonSpaceMember.id],

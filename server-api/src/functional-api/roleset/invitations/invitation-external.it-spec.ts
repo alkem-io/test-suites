@@ -24,6 +24,11 @@ import {
   RoleSetInvitationResultType,
 } from '@alkemio/tests-lib/core/generated/alkemio-schema';
 
+// An email invitation is listed as pending only while it is OPEN: the address
+// has not registered yet. Registering consumes it — the platform invitation
+// leaves the role set's `platformInvitations` list and the same offer shows up
+// as a regular invitation addressed to the new user. The reads below therefore
+// happen on both sides of `registerVerifiedUser`.
 const uniqueId = UniqueIDGenerator.getID();
 
 let emailExternalUser = '';
@@ -55,6 +60,30 @@ const scenarioConfig: TestScenarioConfig = {
   },
 };
 
+/** The open email invitations (and the regular invitations) of a role set. */
+const readRoleSet = async (roleSetId: string) => {
+  const res = await getRoleSetInvitationsApplications(
+    roleSetId,
+    TestUser.GLOBAL_ADMIN
+  );
+  expect(res?.error).toBeUndefined();
+  const roleSet = res?.data?.lookup?.roleSet;
+  return {
+    platformInvitations: roleSet?.platformInvitations ?? [],
+    invitations: roleSet?.invitations ?? [],
+  };
+};
+
+const listedFor = (
+  platformInvitations: Array<{ email: string; profileCreated: boolean }>,
+  email: string
+) => platformInvitations.filter(p => p.email === email);
+
+const convertedFor = (
+  invitations: Array<{ state: string; actor: { id: string } }>,
+  actorId: string
+) => invitations.filter(i => i.actor.id === actorId);
+
 beforeAll(async () => {
   baseScenario = await TestScenarioFactory.createBaseScenario(scenarioConfig);
 });
@@ -76,14 +105,12 @@ describe('Invitations', () => {
   });
   test('should create external invitation', async () => {
     // Arrange
-    const getInvBefore = await getRoleSetInvitationsApplications(
-      baseScenario.space.community.roleSetId,
-      TestUser.GLOBAL_ADMIN
-    );
+    const roleSetId = baseScenario.space.community.roleSetId;
+    const before = await readRoleSet(roleSetId);
 
     // Act
     const invitationData = await inviteForEntryRoleOnRoleSet(
-      baseScenario.space.community.roleSetId,
+      roleSetId,
       [],
       [emailExternalUser],
       message,
@@ -94,6 +121,7 @@ describe('Invitations', () => {
     if (invitationResult && invitationResult.platformInvitation) {
       platformInvitationId = invitationResult.platformInvitation.id;
     }
+    const whileOpen = await readRoleSet(roleSetId);
 
     userId = await registerVerifiedUser(
       emailExternalUser,
@@ -101,31 +129,41 @@ describe('Invitations', () => {
       firstNameExternalUser
     );
 
-    const getInvAfter = await getRoleSetInvitationsApplications(
-      baseScenario.space.community.roleSetId,
-      TestUser.GLOBAL_ADMIN
-    );
+    const after = await readRoleSet(roleSetId);
 
     // Assert
+    expect(before.platformInvitations).toHaveLength(0);
+    expect(invitationResult?.type).toEqual(
+      RoleSetInvitationResultType.InvitedToPlatformAndRoleSet
+    );
+    // Open: listed, not consumed.
+    expect(listedFor(whileOpen.platformInvitations, emailExternalUser)).toEqual(
+      [
+        expect.objectContaining({
+          email: emailExternalUser,
+          profileCreated: false,
+        }),
+      ]
+    );
+    // Consumed: no longer listed as pending, and converted into an invitation
+    // for the new user.
     expect(
-      getInvBefore?.data?.lookup?.roleSet?.platformInvitations
+      listedFor(after.platformInvitations, emailExternalUser)
     ).toHaveLength(0);
-    expect(
-      getInvAfter?.data?.lookup?.roleSet?.platformInvitations?.[0].email
-    ).toEqual(emailExternalUser);
+    const converted = convertedFor(after.invitations, userId);
+    expect(converted).toHaveLength(1);
+    expect(converted[0].state).toEqual('invited');
   });
 
   test('should fail to create second external invitation from same community to same user', async () => {
     // Arrange
     const userEmail = `2+${emailExternalUser}`;
+    const roleSetId = baseScenario.space.community.roleSetId;
 
-    const getInvBefore = await getRoleSetInvitationsApplications(
-      baseScenario.space.community.roleSetId,
-      TestUser.GLOBAL_ADMIN
-    );
+    const before = await readRoleSet(roleSetId);
 
     const invitationData = await inviteForEntryRoleOnRoleSet(
-      baseScenario.space.community.roleSetId,
+      roleSetId,
       [],
       [userEmail],
       message,
@@ -140,7 +178,7 @@ describe('Invitations', () => {
 
     // Act
     const invitationMutation2 = await inviteForEntryRoleOnRoleSet(
-      baseScenario.space.community.roleSetId,
+      roleSetId,
       [],
       [userEmail],
       message,
@@ -149,35 +187,34 @@ describe('Invitations', () => {
     );
     const invitationResult2 = getSingleInvitationResult(invitationMutation2);
 
+    const whileOpen = await readRoleSet(roleSetId);
+
     userId = await registerVerifiedUser(
       userEmail,
       firstNameExternalUser,
       firstNameExternalUser
     );
 
-    const getInvAfter = await getRoleSetInvitationsApplications(
-      baseScenario.space.community.roleSetId,
-      TestUser.GLOBAL_ADMIN
-    );
+    const after = await readRoleSet(roleSetId);
 
     // Assert
-    expect(
-      getInvBefore?.data?.lookup?.roleSet?.platformInvitations
-    ).toHaveLength(0);
-    expect(
-      getInvAfter?.data?.lookup?.roleSet?.platformInvitations?.[0].email
-    ).toEqual(userEmail);
+    expect(before.platformInvitations).toHaveLength(0);
     expect(invitationResult2?.type).toEqual(
       RoleSetInvitationResultType.AlreadyInvitedToPlatformAndRoleSet
     );
+    // One open row, not two.
+    expect(listedFor(whileOpen.platformInvitations, userEmail)).toHaveLength(1);
+    expect(listedFor(after.platformInvitations, userEmail)).toHaveLength(0);
+    expect(convertedFor(after.invitations, userId)).toHaveLength(1);
   });
 
   test('should create second external invitation from same community to same user, after the first is deleted', async () => {
     // Arrange
     const userEmail = `3+${emailExternalUser}`;
+    const roleSetId = baseScenario.space.community.roleSetId;
 
     const invitationData = await inviteForEntryRoleOnRoleSet(
-      baseScenario.space.community.roleSetId,
+      roleSetId,
       [],
       [userEmail],
       message,
@@ -190,16 +227,14 @@ describe('Invitations', () => {
       platformInvitationId = invitationResult.platformInvitation.id;
     }
 
-    const invData = await getRoleSetInvitationsApplications(
-      baseScenario.space.community.roleSetId,
-      TestUser.GLOBAL_ADMIN
-    );
+    const invData = await readRoleSet(roleSetId);
 
     // Act
     await deleteExternalInvitation(platformInvitationId);
+    const afterDelete = await readRoleSet(roleSetId);
 
     const invitationData2 = await inviteForEntryRoleOnRoleSet(
-      baseScenario.space.community.roleSetId,
+      roleSetId,
       [],
       [userEmail],
       message,
@@ -212,24 +247,29 @@ describe('Invitations', () => {
       platformInvitationId = invitationResult2.platformInvitation.id;
     }
 
+    const invData2 = await readRoleSet(roleSetId);
+
     userId = await registerVerifiedUser(
       userEmail,
       firstNameExternalUser,
       firstNameExternalUser
     );
 
-    const invData2 = await getRoleSetInvitationsApplications(
-      baseScenario.space.community.roleSetId,
-      TestUser.GLOBAL_ADMIN
-    );
+    const invData3 = await readRoleSet(roleSetId);
 
     // Assert
-    expect(
-      invData?.data?.lookup?.roleSet?.platformInvitations?.[0].email
-    ).toEqual(userEmail);
-    expect(
-      invData2?.data?.lookup?.roleSet?.platformInvitations?.[0].email
-    ).toEqual(userEmail);
+    expect(listedFor(invData.platformInvitations, userEmail)).toHaveLength(1);
+    expect(listedFor(afterDelete.platformInvitations, userEmail)).toHaveLength(
+      0
+    );
+    expect(invitationResult2?.type).toEqual(
+      RoleSetInvitationResultType.InvitedToPlatformAndRoleSet
+    );
+    expect(listedFor(invData2.platformInvitations, userEmail)).toEqual([
+      expect.objectContaining({ email: userEmail, profileCreated: false }),
+    ]);
+    expect(listedFor(invData3.platformInvitations, userEmail)).toHaveLength(0);
+    expect(convertedFor(invData3.invitations, userId)).toHaveLength(1);
   });
 
   test('should create second external invitation from different community to same user', async () => {
@@ -245,54 +285,65 @@ describe('Invitations', () => {
     const secondSpaceData = responseSpace2?.data?.lookup?.space;
     const secondSpaceId = secondSpaceData?.id ?? '';
     const secondSpaceRoleSetId = secondSpaceData?.community?.roleSet.id ?? '';
+    const firstRoleSetId = baseScenario.space.community.roleSetId;
+    let secondInvitationId = '';
 
-    const invitationData = await inviteForEntryRoleOnRoleSet(
-      baseScenario.space.community.roleSetId,
-      [],
-      [userEmail],
-      message,
-      [RoleName.Member],
-      TestUser.GLOBAL_ADMIN
-    );
+    try {
+      const invitationData = await inviteForEntryRoleOnRoleSet(
+        firstRoleSetId,
+        [],
+        [userEmail],
+        message,
+        [RoleName.Member],
+        TestUser.GLOBAL_ADMIN
+      );
 
-    const invitationResult = getSingleInvitationResult(invitationData);
-    if (invitationResult && invitationResult.platformInvitation) {
-      platformInvitationId = invitationResult.platformInvitation.id;
+      const invitationResult = getSingleInvitationResult(invitationData);
+      if (invitationResult && invitationResult.platformInvitation) {
+        platformInvitationId = invitationResult.platformInvitation.id;
+      }
+
+      // Act
+      const secondInvitationData = await inviteForEntryRoleOnRoleSet(
+        secondSpaceRoleSetId,
+        [],
+        [userEmail],
+        message,
+        [RoleName.Member],
+        TestUser.GLOBAL_ADMIN
+      );
+      secondInvitationId =
+        getSingleInvitationResult(secondInvitationData)?.platformInvitation
+          ?.id ?? '';
+
+      const space1WhileOpen = await readRoleSet(firstRoleSetId);
+      const space2WhileOpen = await readRoleSet(secondSpaceRoleSetId);
+
+      userId = await registerVerifiedUser(
+        userEmail,
+        firstNameExternalUser,
+        firstNameExternalUser
+      );
+
+      const space1 = await readRoleSet(firstRoleSetId);
+      const space2 = await readRoleSet(secondSpaceRoleSetId);
+
+      // Assert
+      expect(
+        listedFor(space1WhileOpen.platformInvitations, userEmail)
+      ).toHaveLength(1);
+      expect(
+        listedFor(space2WhileOpen.platformInvitations, userEmail)
+      ).toHaveLength(1);
+      expect(listedFor(space1.platformInvitations, userEmail)).toHaveLength(0);
+      expect(listedFor(space2.platformInvitations, userEmail)).toHaveLength(0);
+      expect(convertedFor(space1.invitations, userId)).toHaveLength(1);
+      expect(convertedFor(space2.invitations, userId)).toHaveLength(1);
+    } finally {
+      if (secondInvitationId) {
+        await deleteExternalInvitation(secondInvitationId);
+      }
+      await deleteSpace(secondSpaceId);
     }
-
-    // Act
-    await inviteForEntryRoleOnRoleSet(
-      secondSpaceRoleSetId,
-      [],
-      [userEmail],
-      message,
-      [RoleName.Member],
-      TestUser.GLOBAL_ADMIN
-    );
-
-    userId = await registerVerifiedUser(
-      userEmail,
-      firstNameExternalUser,
-      firstNameExternalUser
-    );
-
-    const invSpace1 = await getRoleSetInvitationsApplications(
-      baseScenario.space.community.roleSetId,
-      TestUser.GLOBAL_ADMIN
-    );
-
-    const invSpace2 = await getRoleSetInvitationsApplications(
-      secondSpaceRoleSetId,
-      TestUser.GLOBAL_ADMIN
-    );
-
-    // Assert
-    expect(
-      invSpace1?.data?.lookup?.roleSet?.platformInvitations?.[0].email
-    ).toEqual(userEmail);
-    expect(
-      invSpace2?.data?.lookup?.roleSet?.platformInvitations?.[0].email
-    ).toEqual(userEmail);
-    await deleteSpace(secondSpaceId);
   });
 });

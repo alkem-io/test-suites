@@ -103,6 +103,11 @@ describe('Subspace admin invitations - allowSubspaceAdminsToInviteMembers', () =
       if (invitationResult?.platformInvitation) {
         platformInvitationId = invitationResult.platformInvitation.id;
       }
+      const getInvBefore = await getRoleSetInvitationsApplications(
+        baseScenario.space.community.roleSetId,
+        TestUser.GLOBAL_ADMIN
+      );
+
       externalUserId = await registerVerifiedUser(
         externalUserEmail,
         `First${uniqueId}`,
@@ -117,9 +122,24 @@ describe('Subspace admin invitations - allowSubspaceAdminsToInviteMembers', () =
       // Assert
       expect(invitationData?.error).toBeUndefined();
       expect(platformInvitationId.length).toEqual(36);
+      // Open while the address has not registered...
       expect(
-        getInvAfter?.data?.lookup?.roleSet?.platformInvitations?.[0].email
-      ).toEqual(externalUserEmail);
+        getInvBefore?.data?.lookup?.roleSet?.platformInvitations?.map(
+          p => p.email
+        )
+      ).toContain(externalUserEmail);
+      // ...and consumed once it has: no longer listed as pending, and
+      // converted into an invitation for the new user.
+      expect(
+        getInvAfter?.data?.lookup?.roleSet?.platformInvitations?.map(
+          p => p.email
+        )
+      ).not.toContain(externalUserEmail);
+      expect(
+        getInvAfter?.data?.lookup?.roleSet?.invitations?.filter(
+          i => i.actor.id === externalUserId
+        )
+      ).toHaveLength(1);
     });
 
     test('subspace admin can invite a platform user to parent space', async () => {

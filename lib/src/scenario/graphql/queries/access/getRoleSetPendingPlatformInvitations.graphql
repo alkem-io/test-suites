@@ -6,6 +6,10 @@ query RoleSetPendingPlatformInvitations($roleSetId: UUID!) {
       platformInvitations {
         id
         email
+        profileCreated
+        roleSetExtraRoles
+        welcomeMessage
+        suggestedLanguage
       }
     }
   }
