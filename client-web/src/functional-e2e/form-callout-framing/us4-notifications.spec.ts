@@ -18,9 +18,12 @@ import { fillSecret } from '../helpers/login.helper';
  *      the Post and carries no answer text.
  * AS5  an admin who submits gets the receipt only — no admin notification (mail,
  *      in-app, push) for their own response.
- * AS6  (needs NOTIFICATIONS_STOP_CMD / NOTIFICATIONS_START_CMD) with the
- *      notifications service stopped the submission still succeeds; once it is
- *      back the queued mails arrive.
+ * AS6  (needs NOTIFICATIONS_STOP_CMD / NOTIFICATIONS_START_CMD) RE-SCOPED:
+ *      the spec's "delivery fails" (FR-024a, the server's publish failing) has
+ *      no infrastructure lever here and is covered by server unit tests. This
+ *      walk proves the weaker, operational property instead: with the
+ *      notifications CONSUMER stopped the submission still succeeds and the
+ *      queued mails arrive once it is back (at-least-once delivery).
  * AS7  MULTIPLE mode, three submissions -> three admin emails (no batching).
  * AS8  (needs the loopback harness Postgres, POSTGRES_*) a user_settings row
  *      stripped of the new key still gets
@@ -680,7 +683,9 @@ test.describe(
       expect(about.some(m => m.body.includes('US4-MULTI-SECRET'))).toBe(false);
     });
 
-    test('US4-AS6 with the notifications service stopped the submission succeeds and the mails arrive after restart', async () => {
+    // Re-scoped, see the header: this is a consumer OUTAGE, not FR-024a's
+    // publish failure. It proves at-least-once delivery after a restart.
+    test('US4-AS6 (re-scoped: consumer outage, not a publish failure) with the notifications consumer stopped the submission succeeds and the queued mails arrive after restart', async () => {
       test.skip(
         !STOP_CMD || !START_CMD,
         'NOTIFICATIONS_STOP_CMD / NOTIFICATIONS_START_CMD not provided'
