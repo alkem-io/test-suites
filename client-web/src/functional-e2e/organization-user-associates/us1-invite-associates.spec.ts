@@ -533,7 +533,7 @@ orgAdminNotOwnerTest.describe(
         // U1 — Associate only.
         await page.getByRole('button', { name: 'Invite', exact: true }).click();
         await page
-          .getByRole('textbox', { name: 'Search for users by name' })
+          .getByRole('textbox', { name: 'Search for users by name or email' })
           .fill(as2Invitee1.firstName);
         await page
           .getByRole('button', { name: as2Invitee1.displayName })
@@ -550,7 +550,7 @@ orgAdminNotOwnerTest.describe(
         // U2 — Associate + Owner.
         await page.getByRole('button', { name: 'Invite', exact: true }).click();
         await page
-          .getByRole('textbox', { name: 'Search for users by name' })
+          .getByRole('textbox', { name: 'Search for users by name or email' })
           .fill(as2Invitee2.firstName);
         await page
           .getByRole('button', { name: as2Invitee2.displayName })
