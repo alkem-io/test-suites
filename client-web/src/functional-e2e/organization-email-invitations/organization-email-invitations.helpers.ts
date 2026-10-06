@@ -273,6 +273,13 @@ export const resendEmailInvitationRaw = async (id: string, bearerToken: string) 
 export const lookupEmailInvitationRaw = async (id: string, bearerToken: string) =>
   asPersona(bearerToken, (sdk, headers) => sdk.LookupPlatformInvitation({ invitationId: id }, headers));
 
+/** The recorded inviter through the API. `createdBy` is non-null, so once that
+ * account is deleted the field fails and `createdBy?.id` is undefined — which
+ * is the point: a resend that rewrote the inviter to the resender would
+ * resolve to that admin instead, so "not the resender" is checkable anywhere. */
+export const lookupEmailInvitationCreatedBy = async (id: string, bearerToken: string) =>
+  asPersona(bearerToken, (sdk, headers) => sdk.LookupPlatformInvitationCreatedBy({ invitationId: id }, headers));
+
 /** The recorded inviter, read straight from the table: through the API it
  * does not resolve once that account is deleted. Undefined when the harness
  * cannot reach Postgres (remote targets). */

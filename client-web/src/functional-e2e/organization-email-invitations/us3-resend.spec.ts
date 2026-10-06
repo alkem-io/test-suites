@@ -36,6 +36,7 @@ import {
   errorCodeOf,
   escapeRegExp,
   inviteRaw,
+  lookupEmailInvitationCreatedBy,
   lookupEmailInvitationRaw,
   mailsTo,
   organizationInvitationSubject,
@@ -305,7 +306,13 @@ baseTest.describe('US3-AS6 — the original inviter was deleted', () => {
     const after = await lookupEmailInvitationRaw(id, globalAdminToken);
     expect(after.data?.lookup.platformInvitation).toEqual(before.data?.lookup.platformInvitation);
     // The recorded inviter is a bare reference that no longer resolves through
-    // the API, so it is read from the table where the harness can reach it.
+    // the API. A resend that rewrote it to the resender would resolve to that
+    // admin, so "not the resender" holds on every run, remote included.
+    const recordedAfter = await lookupEmailInvitationCreatedBy(id, globalAdminToken);
+    expect(recordedAfter.data?.lookup.platformInvitation?.createdBy?.id).not.toEqual(
+      TestUserManager.users.organizationAdmin.id
+    );
+    // The stronger check reads the table where the harness can reach it.
     const inviter = await recordedInviterId(id);
     if (inviter !== undefined) expect(inviter).toEqual(goneAdmin.id);
   });
