@@ -204,6 +204,37 @@ describe('An open invitation wins over the domain auto-join (US2)', () => {
   let invitedUserId = '';
   const consumedInvitationIds: string[] = [];
 
+  /**
+   * The state US2-AS4/AS6/US4-AS2, US2-AS3 and US4-AS3 all build on: the
+   * organization and the Space each hold an open invitation for the address,
+   * and the address has then registered (so both records are consumed and one
+   * converted invitation per role set exists). Memoized, so the first test to
+   * run does the work and the later ones reuse it — each of the three can be
+   * run alone (`-t`) and the chain still reads top to bottom.
+   */
+  let invitedState: Promise<void> | undefined;
+  const ensureInvitedAddressRegistered = (): Promise<void> =>
+    (invitedState ??= (async () => {
+      const orgInvitationId = await inviteEmail(
+        orgScenario.organization.roleSetId,
+        invitedEmail,
+        [RoleName.Admin],
+        TestUser.ORGANIZATION_ADMIN,
+        suggestedLanguage
+      );
+      const spaceInvitationId = await inviteEmail(
+        orgScenario.space.community.roleSetId,
+        invitedEmail,
+        [RoleName.Member],
+        TestUser.GLOBAL_ADMIN,
+        suggestedLanguage
+      );
+      consumedInvitationIds.push(orgInvitationId, spaceInvitationId);
+
+      // Registration must not fail mid-finalize on the colliding domain join.
+      invitedUserId = await register(invitedEmail, 'invited');
+    })());
+
   test('US2-AS4: the organization is verified and its domain door is open', async () => {
     const org = await getOrganizationData(orgScenario.organization.id);
     expect(org?.data?.organization.verification.status).toEqual(
@@ -213,24 +244,7 @@ describe('An open invitation wins over the domain auto-join (US2)', () => {
 
   test('US2-AS4/AS6/US4-AS2: registering with an invited same-domain address succeeds, does not auto-join, and leaves exactly one converted invitation carrying roles, inviter, message and language', async () => {
     const organizationRoleSetId = orgScenario.organization.roleSetId;
-    const orgInvitationId = await inviteEmail(
-      organizationRoleSetId,
-      invitedEmail,
-      [RoleName.Admin],
-      TestUser.ORGANIZATION_ADMIN,
-      suggestedLanguage
-    );
-    const spaceInvitationId = await inviteEmail(
-      orgScenario.space.community.roleSetId,
-      invitedEmail,
-      [RoleName.Member],
-      TestUser.GLOBAL_ADMIN,
-      suggestedLanguage
-    );
-    consumedInvitationIds.push(orgInvitationId, spaceInvitationId);
-
-    // Registration must not fail mid-finalize on the colliding domain join.
-    invitedUserId = await register(invitedEmail, 'invited');
+    await ensureInvitedAddressRegistered();
 
     // Not auto-joined.
     expect(await roleHolders(organizationRoleSetId, RoleName.Associate)).not.toContain(
@@ -305,6 +319,7 @@ describe('An open invitation wins over the domain auto-join (US2)', () => {
   });
 
   test('US2-AS3: accepting the converted invitation grants Associate + Admin', async () => {
+    await ensureInvitedAddressRegistered();
     const pending = await getRoleSetInvitationsApplications(
       orgScenario.organization.roleSetId
     );
@@ -340,6 +355,7 @@ describe('An open invitation wins over the domain auto-join (US2)', () => {
   });
 
   test('US4-AS3: deleting the account erases every email-invitation record for the address, and registering the address again finds nothing', async () => {
+    await ensureInvitedAddressRegistered();
     expect(consumedInvitationIds).toHaveLength(2);
     // Consumed, but still on record until the account goes.
     for (const id of consumedInvitationIds) {
