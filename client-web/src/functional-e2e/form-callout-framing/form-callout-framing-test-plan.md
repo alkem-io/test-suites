@@ -3,7 +3,7 @@
 > **Status:** Implemented (test-suites#651). Mapping reconciled with the code on 2026-10-02 by the QA PR challenge (static; cases it added are marked *(added)*), then **run live on 2026-10-06** against `develop` with server#6567, notifications#613 and client-web#10362 merged — results under *Live runs* below. · **Story:** epic [alkemio#2005](https://github.com/alkem-io/alkemio/issues/2005), test sub-issue [test-suites#642](https://github.com/alkem-io/test-suites/issues/642) · **Spec:** `specs/080-form-callout-framing/` in `alkem-io/agents-hq` (source of truth for the US/AS/FR/SC/D/R ids below; it governs where the issues disagree) · **Build sheet:** that spec's `tasks/test-suites.md` (T301–T309)
 
 - **Suites:**
-  - `server-api/src/functional-api/callout/form/` — five it-specs plus `form.request.params.ts`.
+  - `server-api/src/functional-api/callout/form/` — seven it-specs (`form-lifecycle`, `form-never-appears`, `form-placement-guards`, `form-presentation`, `form-space-move`, `form-submit-validation`, `form-visibility-matrix`) plus `form.request.params.ts`.
   - `server-api/src/functional-api/notifications/space/collaboration/form-response.it-spec.ts` — MailSlurper.
   - `client-web/src/functional-e2e/form-callout-framing/` — five `@forge-acceptance` walks, persisted from the /forge live verification. They provision their own Kratos identities, Space and Forms; they do not use the harness personas.
   - R25 (Polls and Forms in templates) — see *R25 — Polls and Forms in templates* below: two it-specs under `server-api/src/functional-api/templates/` and two `templates-CRD` Playwright files (harness personas, session fixtures).
