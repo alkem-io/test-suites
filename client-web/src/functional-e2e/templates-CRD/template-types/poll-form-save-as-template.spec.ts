@@ -307,7 +307,8 @@ const publishPost = async (
   postTitle: string
 ) => {
   await createPostDialog
-    .getByRole('textbox', { name: 'Title' })
+    // The Post title, not the Form builder's own "Title" field in the same dialog.
+    .getByPlaceholder('Give your Post a title...')
     .fill(postTitle);
   await createPostDialog
     .getByRole('button', { name: 'Post', exact: true })

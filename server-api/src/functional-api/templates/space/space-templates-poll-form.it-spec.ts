@@ -4,6 +4,7 @@ import {
   TestUser,
 } from '@alkemio/tests-lib';
 import {
+  CalloutContributionType,
   CalloutFormResponseMode,
   CalloutFormResponseVisibility,
   CalloutFormState,
@@ -250,6 +251,9 @@ beforeAll(async () => {
     description: FORM.description,
     questions: FORM.questions,
     settings: FORM.settings,
+    // LINK contributions carry into the template copy, so its CONTRIBUTE check passes
+    // and the template rule itself is what refuses a response there.
+    contributionTypes: [CalloutContributionType.Link],
   });
   const answered = await submitFormResponse(
     sourceForm.formId,

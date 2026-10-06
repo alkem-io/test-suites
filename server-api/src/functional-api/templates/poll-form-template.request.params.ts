@@ -4,6 +4,7 @@ import {
   UniqueIDGenerator,
 } from '@alkemio/tests-lib';
 import {
+  CalloutContributionType,
   CalloutFormDetailsFragment,
   CalloutFramingType,
   CalloutVisibility,
@@ -67,14 +68,20 @@ export type FormDefinitionInput = {
 /** A FORM callout as a template's (or a set's) callout data. */
 export const formCalloutData = (
   displayName: string,
-  form: FormDefinitionInput
+  form: FormDefinitionInput,
+  contributionTypes?: CalloutContributionType[]
 ): CreateCalloutInput => ({
   framing: {
     type: CalloutFramingType.Form,
     profile: { displayName, description: 'Form callout framing' },
     form,
   },
-  settings: calloutSettings,
+  settings: contributionTypes
+    ? {
+        ...calloutSettings,
+        contribution: { enabled: true, allowedTypes: contributionTypes },
+      }
+    : calloutSettings,
 });
 
 /** A NONE callout — the positive control of every carrier refusal. */

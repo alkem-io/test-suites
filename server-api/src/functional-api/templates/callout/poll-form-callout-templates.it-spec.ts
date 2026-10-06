@@ -4,6 +4,7 @@ import {
   TestUser,
 } from '@alkemio/tests-lib';
 import {
+  CalloutContributionType,
   CalloutFormDetailsFragment,
   CalloutFormResponseMode,
   CalloutFormResponseVisibility,
@@ -115,12 +116,13 @@ const templatesSetId = () => baseScenario.space.templateSetId;
 
 const createFormTemplate = async (
   tag: string,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.GLOBAL_ADMIN,
+  contributionTypes?: CalloutContributionType[]
 ): Promise<{ templateId: string; form: CalloutFormDetailsFragment }> => {
   const created = await createCalloutTemplateWithFraming(
     templatesSetId(),
     uniqueTemplateName(tag),
-    formCalloutData(uniqueTemplateName(`${tag}-post`), FORM),
+    formCalloutData(uniqueTemplateName(`${tag}-post`), FORM, contributionTypes),
     userRole
   );
   const template = created.data?.createTemplate;
@@ -198,7 +200,13 @@ describe('R25 — a template Form never accepts responses (US5-AS6, FR-027b)', (
   let templateForm: CalloutFormDetailsFragment;
 
   beforeAll(async () => {
-    templateForm = (await createFormTemplate('form-norespond')).form;
+    // LINK contributions grant CONTRIBUTE to the template's creators, so the
+    // submit passes the privilege check and reaches the template rule itself.
+    templateForm = (
+      await createFormTemplate('form-norespond', TestUser.GLOBAL_ADMIN, [
+        CalloutContributionType.Link,
+      ])
+    ).form;
   });
 
   test('submitCalloutFormResponse on a callout template Form is refused with FORM_TEMPLATE_NOT_RESPONDABLE', async () => {

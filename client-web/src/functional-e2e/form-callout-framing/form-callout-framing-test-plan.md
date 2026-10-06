@@ -65,7 +65,20 @@ Spec ids are the 080 spec's. "API" = `server-api/src/functional-api/callout/form
 
 Ruling R25 brings US5 into scope and amends D-7 / FR-027: callout templates and space templates carry a Poll's or a Form's **definition** (never votes, poll status or responses); (sub)spaces and collaborations built from a space template get an OPEN Poll with no votes and a Form with fresh question ids and no responses; a template Form never accepts a response. Build sheet: `tasks/test-suites.md` T316–T320.
 
-**Status:** authored 2026-10-06, static gates green (codegen offline from the server schema, lint + typecheck of lib, server-api and client-web). **Not run live yet** — they need a stack built from the `fix/form-callout-framing` server and client branches.
+**Status:** authored 2026-10-06, static gates green. **Run live 2026-10-06** against server `fix/form-callout-framing` (a229b18c8) and client `fix/form-callout-framing` (1a1220830) on the local dev stack:
+
+| Suite | Result |
+|---|---|
+| API `templates/callout/poll-form-callout-templates` + `templates/space/space-templates-poll-form` | 17/17 passed |
+| API `callout/form/form-placement-guards` (incl. the two R25 flips) | 17/17 passed |
+| API `--project templates` (regression, all template specs) | 46/46 passed |
+| API `callout/form/*` (regression, the whole 080 Form suite) | 196 passed, 5 skipped |
+| Playwright `templates-CRD/…/poll-form-save-as-template` | 2/2 passed |
+| Playwright `templates-CRD/…/callout-tests` (incl. 58 Form, Poll 42–57) | 31 passed, 1 failed — *25 Memos*, unrelated to R25: its locator expects the edited memo title inside the card button, which the current develop card no longer renders there (reproduces alone; no R25 file touches contribution cards) |
+
+Two fixes found by the live run, both in the tests:
+- **The template-Form refusal cases need a persona that holds CONTRIBUTE.** On a template callout the Global Admin is refused at the privilege check before the template rule is reached. So the template (and the source Form copied into the space template) allow LINK contributions, which grant CONTRIBUTE to the template's creators, and the refusal is then the template rule's `FORM_TEMPLATE_NOT_RESPONDABLE`.
+- **The Form walk filled the wrong "Title" field.** The create-Post dialog now holds two "Title" text boxes, the Post's and the Form builder's. The walk now targets the Post title by its placeholder.
 
 ```bash
 cd server-api
