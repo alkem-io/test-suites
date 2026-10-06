@@ -39,14 +39,23 @@ export type Scalars = {
   Boolean: { input: boolean; output: boolean };
   Int: { input: number; output: number };
   Float: { input: number; output: number };
+  /** A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format. */
   DateTime: { input: Date; output: Date };
+  /** An Emoji. */
   Emoji: { input: any; output: any };
+  /** A representation of a Lifecycle Definition, based on XState. It is serialized JSON. */
   LifecycleDefinition: { input: any; output: any };
+  /** A markdown string. */
   Markdown: { input: any; output: any };
+  /** An identifier that originates from the underlying messaging platform. */
   MessageID: { input: any; output: any };
+  /** A human readable identifier, 3 <= length <= 28. Used for URL paths in clients. Characters allowed: a-z,A-Z,0-9. */
   NameID: { input: string; output: string };
+  /** Cursor used for paginating search results. */
   SearchCursor: { input: any; output: any };
+  /** A uuid identifier. Length 36 characters. */
   UUID: { input: string; output: string };
+  /** The `Upload` scalar type represents a file upload. */
   Upload: {
     input: import("graphql-upload").FileUpload;
     output: import("graphql-upload").FileUpload;
@@ -28930,6 +28939,39 @@ export type CalloutDetailsFragment = {
   };
 };
 
+export type CalloutFormDetailsFragment = {
+  id: string;
+  title?: string | undefined;
+  description?: string | undefined;
+  questions: Array<{
+    id: string;
+    prompt: string;
+    explanation?: string | undefined;
+    type: CalloutFormQuestionType;
+    required: boolean;
+    options?: Array<{ id: string; label: string }> | undefined;
+  }>;
+  settings: {
+    visibility: CalloutFormResponseVisibility;
+    responseMode: CalloutFormResponseMode;
+    state: CalloutFormState;
+    defaultCollapsed: boolean;
+  };
+};
+
+export type CalloutFormResponseDetailsFragment = {
+  id: string;
+  createdDate: Date;
+  createdBy?: { id: string } | undefined;
+  answers: Array<{
+    questionID: string;
+    prompt: string;
+    type: CalloutFormQuestionType;
+    text?: string | undefined;
+    selectedOptions?: Array<{ id: string; label: string }> | undefined;
+  }>;
+};
+
 export type CalloutOnCollaborationWithStorageConfigFragment = {
   __typename: "Collaboration";
   id: string;
@@ -45965,6 +46007,12 @@ export type UserDataFragment = {
             inApp: boolean;
             push: boolean;
           };
+          collaborationCalloutFormResponseReceived: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
         };
         collaborationCalloutContributionCreated: {
           __typename: "UserSettingsNotificationChannels";
@@ -46241,6 +46289,12 @@ export type UserSettingsFragmentFragment = {
           push: boolean;
         };
         communicationMessageReceived: {
+          __typename: "UserSettingsNotificationChannels";
+          email: boolean;
+          inApp: boolean;
+          push: boolean;
+        };
+        collaborationCalloutFormResponseReceived: {
           __typename: "UserSettingsNotificationChannels";
           email: boolean;
           inApp: boolean;
@@ -46875,6 +46929,12 @@ export type AssignRoleToUserMutation = {
               inApp: boolean;
               push: boolean;
             };
+            collaborationCalloutFormResponseReceived: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+              push: boolean;
+            };
           };
           collaborationCalloutContributionCreated: {
             __typename: "UserSettingsNotificationChannels";
@@ -47281,6 +47341,12 @@ export type AssignRoleToUserExtendedDataMutation = {
               push: boolean;
             };
             communicationMessageReceived: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+              push: boolean;
+            };
+            collaborationCalloutFormResponseReceived: {
               __typename: "UserSettingsNotificationChannels";
               email: boolean;
               inApp: boolean;
@@ -48089,6 +48155,12 @@ export type RemoveRoleFromUserMutation = {
               inApp: boolean;
               push: boolean;
             };
+            collaborationCalloutFormResponseReceived: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+              push: boolean;
+            };
           };
           collaborationCalloutContributionCreated: {
             __typename: "UserSettingsNotificationChannels";
@@ -48495,6 +48567,12 @@ export type RemoveRoleFromUserExtendedDataMutation = {
               push: boolean;
             };
             communicationMessageReceived: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+              push: boolean;
+            };
+            collaborationCalloutFormResponseReceived: {
               __typename: "UserSettingsNotificationChannels";
               email: boolean;
               inApp: boolean;
@@ -50392,6 +50470,96 @@ export type CreateContributionOnCalloutMutation = {
           };
         }
       | undefined;
+  };
+};
+
+export type CreateFormCalloutOnCalloutsSetMutationVariables = Exact<{
+  calloutData: CreateCalloutOnCalloutsSetInput;
+}>;
+
+export type CreateFormCalloutOnCalloutsSetMutation = {
+  createCalloutOnCalloutsSet: {
+    id: string;
+    settings: { visibility: CalloutVisibility };
+    framing: {
+      id: string;
+      type: CalloutFramingType;
+      profile: { id: string; displayName: string; url: string };
+      form?:
+        | {
+            id: string;
+            title?: string | undefined;
+            description?: string | undefined;
+            questions: Array<{
+              id: string;
+              prompt: string;
+              explanation?: string | undefined;
+              type: CalloutFormQuestionType;
+              required: boolean;
+              options?: Array<{ id: string; label: string }> | undefined;
+            }>;
+            settings: {
+              visibility: CalloutFormResponseVisibility;
+              responseMode: CalloutFormResponseMode;
+              state: CalloutFormState;
+              defaultCollapsed: boolean;
+            };
+          }
+        | undefined;
+    };
+  };
+};
+
+export type DeleteCalloutFormResponseMutationVariables = Exact<{
+  deleteData: DeleteCalloutFormResponseInput;
+}>;
+
+export type DeleteCalloutFormResponseMutation = {
+  deleteCalloutFormResponse: { id: string };
+};
+
+export type SubmitCalloutFormResponseMutationVariables = Exact<{
+  responseData: SubmitCalloutFormResponseInput;
+}>;
+
+export type SubmitCalloutFormResponseMutation = {
+  submitCalloutFormResponse: {
+    id: string;
+    createdDate: Date;
+    createdBy?: { id: string } | undefined;
+    answers: Array<{
+      questionID: string;
+      prompt: string;
+      type: CalloutFormQuestionType;
+      text?: string | undefined;
+      selectedOptions?: Array<{ id: string; label: string }> | undefined;
+    }>;
+  };
+};
+
+export type UpdateCalloutFormMutationVariables = Exact<{
+  formData: UpdateCalloutFormInput;
+}>;
+
+export type UpdateCalloutFormMutation = {
+  updateCalloutForm: {
+    id: string;
+    title?: string | undefined;
+    description?: string | undefined;
+    questions: Array<{
+      id: string;
+      prompt: string;
+      explanation?: string | undefined;
+      type: CalloutFormQuestionType;
+      required: boolean;
+      options?: Array<{ id: string; label: string }> | undefined;
+    }>;
+    settings: {
+      visibility: CalloutFormResponseVisibility;
+      responseMode: CalloutFormResponseMode;
+      state: CalloutFormState;
+      defaultCollapsed: boolean;
+    };
   };
 };
 
@@ -84777,6 +84945,12 @@ export type CreateUserMutation = {
               inApp: boolean;
               push: boolean;
             };
+            collaborationCalloutFormResponseReceived: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+              push: boolean;
+            };
           };
           collaborationCalloutContributionCreated: {
             __typename: "UserSettingsNotificationChannels";
@@ -85194,6 +85368,12 @@ export type UpdateUserMutation = {
               inApp: boolean;
               push: boolean;
             };
+            collaborationCalloutFormResponseReceived: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+              push: boolean;
+            };
           };
           collaborationCalloutContributionCreated: {
             __typename: "UserSettingsNotificationChannels";
@@ -85467,6 +85647,12 @@ export type UpdateUserSettingsMutation = {
               push: boolean;
             };
             communicationMessageReceived: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+              push: boolean;
+            };
+            collaborationCalloutFormResponseReceived: {
               __typename: "UserSettingsNotificationChannels";
               email: boolean;
               inApp: boolean;
@@ -87002,6 +87188,72 @@ export type SpaceCalloutQuery = {
   };
 };
 
+export type CalloutFormResponsesQueryVariables = Exact<{
+  formID: Scalars["UUID"]["input"];
+  first?: InputMaybe<Scalars["Int"]["input"]>;
+  after?: InputMaybe<Scalars["UUID"]["input"]>;
+}>;
+
+export type CalloutFormResponsesQuery = {
+  lookup: {
+    calloutFormResponses: {
+      formID: string;
+      canReadAll: boolean;
+      canModerate: boolean;
+      mine: Array<{
+        id: string;
+        createdDate: Date;
+        createdBy?: { id: string } | undefined;
+        answers: Array<{
+          questionID: string;
+          prompt: string;
+          type: CalloutFormQuestionType;
+          text?: string | undefined;
+          selectedOptions?: Array<{ id: string; label: string }> | undefined;
+        }>;
+      }>;
+      all: {
+        total: number;
+        pageInfo: { hasNextPage: boolean; endCursor?: string | undefined };
+        responses: Array<{
+          id: string;
+          createdDate: Date;
+          createdBy?: { id: string } | undefined;
+          answers: Array<{
+            questionID: string;
+            prompt: string;
+            type: CalloutFormQuestionType;
+            text?: string | undefined;
+            selectedOptions?: Array<{ id: string; label: string }> | undefined;
+          }>;
+        }>;
+      };
+    };
+  };
+};
+
+export type CalloutContributionCountsQueryVariables = Exact<{
+  calloutId: Scalars["UUID"]["input"];
+}>;
+
+export type CalloutContributionCountsQuery = {
+  lookup: {
+    callout?:
+      | {
+          id: string;
+          contributions: Array<{ id: string }>;
+          contributionsCount: {
+            post: number;
+            whiteboard: number;
+            link: number;
+            memo: number;
+            collaboraDocument: number;
+          };
+        }
+      | undefined;
+  };
+};
+
 export type CalloutDetailsQueryVariables = Exact<{
   calloutId: Scalars["UUID"]["input"];
 }>;
@@ -87543,6 +87795,45 @@ export type CalloutStorageConfigQuery = {
   };
 };
 
+export type CalloutFormDefinitionQueryVariables = Exact<{
+  calloutId: Scalars["UUID"]["input"];
+}>;
+
+export type CalloutFormDefinitionQuery = {
+  lookup: {
+    callout?:
+      | {
+          id: string;
+          framing: {
+            id: string;
+            type: CalloutFramingType;
+            form?:
+              | {
+                  id: string;
+                  title?: string | undefined;
+                  description?: string | undefined;
+                  questions: Array<{
+                    id: string;
+                    prompt: string;
+                    explanation?: string | undefined;
+                    type: CalloutFormQuestionType;
+                    required: boolean;
+                    options?: Array<{ id: string; label: string }> | undefined;
+                  }>;
+                  settings: {
+                    visibility: CalloutFormResponseVisibility;
+                    responseMode: CalloutFormResponseMode;
+                    state: CalloutFormState;
+                    defaultCollapsed: boolean;
+                  };
+                }
+              | undefined;
+          };
+        }
+      | undefined;
+  };
+};
+
 export type CalloutLinkContributionStorageConfigQueryVariables = Exact<{
   calloutId: Scalars["UUID"]["input"];
 }>;
@@ -88040,6 +88331,28 @@ export type CalloutFragment = {
   settings: { __typename: "CalloutSettings"; visibility: CalloutVisibility };
 };
 
+export type CalloutsSetFramingTypesQueryVariables = Exact<{
+  calloutsSetId: Scalars["UUID"]["input"];
+}>;
+
+export type CalloutsSetFramingTypesQuery = {
+  lookup: {
+    calloutsSet?:
+      | {
+          id: string;
+          callouts: Array<{
+            id: string;
+            framing: {
+              id: string;
+              type: CalloutFramingType;
+              profile: { displayName: string };
+            };
+          }>;
+        }
+      | undefined;
+  };
+};
+
 export type GetPostDataQueryVariables = Exact<{
   postId: Scalars["UUID"]["input"];
 }>;
@@ -88128,6 +88441,55 @@ export type GetPostDataQuery = {
             }>;
           };
           createdBy?: { email: string } | undefined;
+        }
+      | undefined;
+  };
+};
+
+export type SpaceCalloutsSetAndRoleSetQueryVariables = Exact<{
+  spaceId: Scalars["UUID"]["input"];
+}>;
+
+export type SpaceCalloutsSetAndRoleSetQuery = {
+  lookup: {
+    space?:
+      | {
+          id: string;
+          collaboration: { id: string; calloutsSet: { id: string } };
+          community: { id: string; roleSet: { id: string } };
+        }
+      | undefined;
+  };
+};
+
+export type TemplateContentSpaceCalloutsQueryVariables = Exact<{
+  templateId: Scalars["UUID"]["input"];
+}>;
+
+export type TemplateContentSpaceCalloutsQuery = {
+  lookup: {
+    template?:
+      | {
+          id: string;
+          contentSpace?:
+            | {
+                id: string;
+                collaboration: {
+                  id: string;
+                  calloutsSet: {
+                    id: string;
+                    callouts: Array<{
+                      id: string;
+                      framing: {
+                        id: string;
+                        type: CalloutFramingType;
+                        profile: { displayName: string };
+                      };
+                    }>;
+                  };
+                };
+              }
+            | undefined;
         }
       | undefined;
   };
@@ -93989,6 +94351,12 @@ export type UsersPaginatedQuery = {
                 push: boolean;
               };
               communicationMessageReceived: {
+                __typename: "UserSettingsNotificationChannels";
+                email: boolean;
+                inApp: boolean;
+                push: boolean;
+              };
+              collaborationCalloutFormResponseReceived: {
                 __typename: "UserSettingsNotificationChannels";
                 email: boolean;
                 inApp: boolean;
@@ -109051,6 +109419,12 @@ export type GetUserDataQuery = {
               inApp: boolean;
               push: boolean;
             };
+            collaborationCalloutFormResponseReceived: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+              push: boolean;
+            };
           };
           collaborationCalloutContributionCreated: {
             __typename: "UserSettingsNotificationChannels";
@@ -109345,6 +109719,12 @@ export type GetUserSettingsQuery = {
               push: boolean;
             };
             communicationMessageReceived: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+              push: boolean;
+            };
+            collaborationCalloutFormResponseReceived: {
               __typename: "UserSettingsNotificationChannels";
               email: boolean;
               inApp: boolean;
@@ -109748,6 +110128,12 @@ export type GetUsersDataQuery = {
               push: boolean;
             };
             communicationMessageReceived: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+              push: boolean;
+            };
+            collaborationCalloutFormResponseReceived: {
               __typename: "UserSettingsNotificationChannels";
               email: boolean;
               inApp: boolean;

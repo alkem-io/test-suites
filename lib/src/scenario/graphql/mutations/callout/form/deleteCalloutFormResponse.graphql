@@ -1,0 +1,5 @@
+mutation deleteCalloutFormResponse($deleteData: DeleteCalloutFormResponseInput!) {
+  deleteCalloutFormResponse(deleteData: $deleteData) {
+    id
+  }
+}

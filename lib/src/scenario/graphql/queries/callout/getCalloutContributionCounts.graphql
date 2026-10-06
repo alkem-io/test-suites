@@ -1,0 +1,17 @@
+query calloutContributionCounts($calloutId: UUID!) {
+  lookup {
+    callout(ID: $calloutId) {
+      id
+      contributions {
+        id
+      }
+      contributionsCount {
+        post
+        whiteboard
+        link
+        memo
+        collaboraDocument
+      }
+    }
+  }
+}

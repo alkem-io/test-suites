@@ -45,14 +45,23 @@ export type Scalars = {
   Boolean: { input: boolean; output: boolean };
   Int: { input: number; output: number };
   Float: { input: number; output: number };
+  /** A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format. */
   DateTime: { input: Date; output: Date };
+  /** An Emoji. */
   Emoji: { input: any; output: any };
+  /** A representation of a Lifecycle Definition, based on XState. It is serialized JSON. */
   LifecycleDefinition: { input: any; output: any };
+  /** A markdown string. */
   Markdown: { input: any; output: any };
+  /** An identifier that originates from the underlying messaging platform. */
   MessageID: { input: any; output: any };
+  /** A human readable identifier, 3 <= length <= 28. Used for URL paths in clients. Characters allowed: a-z,A-Z,0-9. */
   NameID: { input: string; output: string };
+  /** Cursor used for paginating search results. */
   SearchCursor: { input: any; output: any };
+  /** A uuid identifier. Length 36 characters. */
   UUID: { input: string; output: string };
+  /** The `Upload` scalar type represents a file upload. */
   Upload: {
     input: import("graphql-upload").FileUpload;
     output: import("graphql-upload").FileUpload;
@@ -30465,6 +30474,39 @@ export type CalloutDetailsFragment = {
   };
 };
 
+export type CalloutFormDetailsFragment = {
+  id: string;
+  title?: string | undefined;
+  description?: string | undefined;
+  questions: Array<{
+    id: string;
+    prompt: string;
+    explanation?: string | undefined;
+    type: SchemaTypes.CalloutFormQuestionType;
+    required: boolean;
+    options?: Array<{ id: string; label: string }> | undefined;
+  }>;
+  settings: {
+    visibility: SchemaTypes.CalloutFormResponseVisibility;
+    responseMode: SchemaTypes.CalloutFormResponseMode;
+    state: SchemaTypes.CalloutFormState;
+    defaultCollapsed: boolean;
+  };
+};
+
+export type CalloutFormResponseDetailsFragment = {
+  id: string;
+  createdDate: Date;
+  createdBy?: { id: string } | undefined;
+  answers: Array<{
+    questionID: string;
+    prompt: string;
+    type: SchemaTypes.CalloutFormQuestionType;
+    text?: string | undefined;
+    selectedOptions?: Array<{ id: string; label: string }> | undefined;
+  }>;
+};
+
 export type CalloutOnCollaborationWithStorageConfigFragment = {
   __typename: "Collaboration";
   id: string;
@@ -50010,6 +50052,12 @@ export type UserDataFragment = {
             inApp: boolean;
             push: boolean;
           };
+          collaborationCalloutFormResponseReceived: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
         };
         collaborationCalloutContributionCreated: {
           __typename: "UserSettingsNotificationChannels";
@@ -50286,6 +50334,12 @@ export type UserSettingsFragmentFragment = {
           push: boolean;
         };
         communicationMessageReceived: {
+          __typename: "UserSettingsNotificationChannels";
+          email: boolean;
+          inApp: boolean;
+          push: boolean;
+        };
+        collaborationCalloutFormResponseReceived: {
           __typename: "UserSettingsNotificationChannels";
           email: boolean;
           inApp: boolean;
@@ -50994,6 +51048,12 @@ export type AssignRoleToUserMutation = {
               inApp: boolean;
               push: boolean;
             };
+            collaborationCalloutFormResponseReceived: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+              push: boolean;
+            };
           };
           collaborationCalloutContributionCreated: {
             __typename: "UserSettingsNotificationChannels";
@@ -51431,6 +51491,12 @@ export type AssignRoleToUserExtendedDataMutation = {
               push: boolean;
             };
             communicationMessageReceived: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+              push: boolean;
+            };
+            collaborationCalloutFormResponseReceived: {
               __typename: "UserSettingsNotificationChannels";
               email: boolean;
               inApp: boolean;
@@ -52324,6 +52390,12 @@ export type RemoveRoleFromUserMutation = {
               inApp: boolean;
               push: boolean;
             };
+            collaborationCalloutFormResponseReceived: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+              push: boolean;
+            };
           };
           collaborationCalloutContributionCreated: {
             __typename: "UserSettingsNotificationChannels";
@@ -52762,6 +52834,12 @@ export type RemoveRoleFromUserExtendedDataMutation = {
               push: boolean;
             };
             communicationMessageReceived: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+              push: boolean;
+            };
+            collaborationCalloutFormResponseReceived: {
               __typename: "UserSettingsNotificationChannels";
               email: boolean;
               inApp: boolean;
@@ -54879,6 +54957,97 @@ export type CreateContributionOnCalloutMutation = {
           };
         }
       | undefined;
+  };
+};
+
+export type CreateFormCalloutOnCalloutsSetMutationVariables =
+  SchemaTypes.Exact<{
+    calloutData: SchemaTypes.CreateCalloutOnCalloutsSetInput;
+  }>;
+
+export type CreateFormCalloutOnCalloutsSetMutation = {
+  createCalloutOnCalloutsSet: {
+    id: string;
+    settings: { visibility: SchemaTypes.CalloutVisibility };
+    framing: {
+      id: string;
+      type: SchemaTypes.CalloutFramingType;
+      profile: { id: string; displayName: string; url: string };
+      form?:
+        | {
+            id: string;
+            title?: string | undefined;
+            description?: string | undefined;
+            questions: Array<{
+              id: string;
+              prompt: string;
+              explanation?: string | undefined;
+              type: SchemaTypes.CalloutFormQuestionType;
+              required: boolean;
+              options?: Array<{ id: string; label: string }> | undefined;
+            }>;
+            settings: {
+              visibility: SchemaTypes.CalloutFormResponseVisibility;
+              responseMode: SchemaTypes.CalloutFormResponseMode;
+              state: SchemaTypes.CalloutFormState;
+              defaultCollapsed: boolean;
+            };
+          }
+        | undefined;
+    };
+  };
+};
+
+export type DeleteCalloutFormResponseMutationVariables = SchemaTypes.Exact<{
+  deleteData: SchemaTypes.DeleteCalloutFormResponseInput;
+}>;
+
+export type DeleteCalloutFormResponseMutation = {
+  deleteCalloutFormResponse: { id: string };
+};
+
+export type SubmitCalloutFormResponseMutationVariables = SchemaTypes.Exact<{
+  responseData: SchemaTypes.SubmitCalloutFormResponseInput;
+}>;
+
+export type SubmitCalloutFormResponseMutation = {
+  submitCalloutFormResponse: {
+    id: string;
+    createdDate: Date;
+    createdBy?: { id: string } | undefined;
+    answers: Array<{
+      questionID: string;
+      prompt: string;
+      type: SchemaTypes.CalloutFormQuestionType;
+      text?: string | undefined;
+      selectedOptions?: Array<{ id: string; label: string }> | undefined;
+    }>;
+  };
+};
+
+export type UpdateCalloutFormMutationVariables = SchemaTypes.Exact<{
+  formData: SchemaTypes.UpdateCalloutFormInput;
+}>;
+
+export type UpdateCalloutFormMutation = {
+  updateCalloutForm: {
+    id: string;
+    title?: string | undefined;
+    description?: string | undefined;
+    questions: Array<{
+      id: string;
+      prompt: string;
+      explanation?: string | undefined;
+      type: SchemaTypes.CalloutFormQuestionType;
+      required: boolean;
+      options?: Array<{ id: string; label: string }> | undefined;
+    }>;
+    settings: {
+      visibility: SchemaTypes.CalloutFormResponseVisibility;
+      responseMode: SchemaTypes.CalloutFormResponseMode;
+      state: SchemaTypes.CalloutFormState;
+      defaultCollapsed: boolean;
+    };
   };
 };
 
@@ -92727,6 +92896,12 @@ export type CreateUserMutation = {
               inApp: boolean;
               push: boolean;
             };
+            collaborationCalloutFormResponseReceived: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+              push: boolean;
+            };
           };
           collaborationCalloutContributionCreated: {
             __typename: "UserSettingsNotificationChannels";
@@ -93175,6 +93350,12 @@ export type UpdateUserMutation = {
               inApp: boolean;
               push: boolean;
             };
+            collaborationCalloutFormResponseReceived: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+              push: boolean;
+            };
           };
           collaborationCalloutContributionCreated: {
             __typename: "UserSettingsNotificationChannels";
@@ -93448,6 +93629,12 @@ export type UpdateUserSettingsMutation = {
               push: boolean;
             };
             communicationMessageReceived: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+              push: boolean;
+            };
+            collaborationCalloutFormResponseReceived: {
               __typename: "UserSettingsNotificationChannels";
               email: boolean;
               inApp: boolean;
@@ -95049,6 +95236,72 @@ export type SpaceCalloutQuery = {
   };
 };
 
+export type CalloutFormResponsesQueryVariables = SchemaTypes.Exact<{
+  formID: SchemaTypes.Scalars["UUID"]["input"];
+  first?: SchemaTypes.InputMaybe<SchemaTypes.Scalars["Int"]["input"]>;
+  after?: SchemaTypes.InputMaybe<SchemaTypes.Scalars["UUID"]["input"]>;
+}>;
+
+export type CalloutFormResponsesQuery = {
+  lookup: {
+    calloutFormResponses: {
+      formID: string;
+      canReadAll: boolean;
+      canModerate: boolean;
+      mine: Array<{
+        id: string;
+        createdDate: Date;
+        createdBy?: { id: string } | undefined;
+        answers: Array<{
+          questionID: string;
+          prompt: string;
+          type: SchemaTypes.CalloutFormQuestionType;
+          text?: string | undefined;
+          selectedOptions?: Array<{ id: string; label: string }> | undefined;
+        }>;
+      }>;
+      all: {
+        total: number;
+        pageInfo: { hasNextPage: boolean; endCursor?: string | undefined };
+        responses: Array<{
+          id: string;
+          createdDate: Date;
+          createdBy?: { id: string } | undefined;
+          answers: Array<{
+            questionID: string;
+            prompt: string;
+            type: SchemaTypes.CalloutFormQuestionType;
+            text?: string | undefined;
+            selectedOptions?: Array<{ id: string; label: string }> | undefined;
+          }>;
+        }>;
+      };
+    };
+  };
+};
+
+export type CalloutContributionCountsQueryVariables = SchemaTypes.Exact<{
+  calloutId: SchemaTypes.Scalars["UUID"]["input"];
+}>;
+
+export type CalloutContributionCountsQuery = {
+  lookup: {
+    callout?:
+      | {
+          id: string;
+          contributions: Array<{ id: string }>;
+          contributionsCount: {
+            post: number;
+            whiteboard: number;
+            link: number;
+            memo: number;
+            collaboraDocument: number;
+          };
+        }
+      | undefined;
+  };
+};
+
 export type CalloutDetailsQueryVariables = SchemaTypes.Exact<{
   calloutId: SchemaTypes.Scalars["UUID"]["input"];
 }>;
@@ -95602,6 +95855,45 @@ export type CalloutStorageConfigQuery = {
   };
 };
 
+export type CalloutFormDefinitionQueryVariables = SchemaTypes.Exact<{
+  calloutId: SchemaTypes.Scalars["UUID"]["input"];
+}>;
+
+export type CalloutFormDefinitionQuery = {
+  lookup: {
+    callout?:
+      | {
+          id: string;
+          framing: {
+            id: string;
+            type: SchemaTypes.CalloutFramingType;
+            form?:
+              | {
+                  id: string;
+                  title?: string | undefined;
+                  description?: string | undefined;
+                  questions: Array<{
+                    id: string;
+                    prompt: string;
+                    explanation?: string | undefined;
+                    type: SchemaTypes.CalloutFormQuestionType;
+                    required: boolean;
+                    options?: Array<{ id: string; label: string }> | undefined;
+                  }>;
+                  settings: {
+                    visibility: SchemaTypes.CalloutFormResponseVisibility;
+                    responseMode: SchemaTypes.CalloutFormResponseMode;
+                    state: SchemaTypes.CalloutFormState;
+                    defaultCollapsed: boolean;
+                  };
+                }
+              | undefined;
+          };
+        }
+      | undefined;
+  };
+};
+
 export type CalloutLinkContributionStorageConfigQueryVariables =
   SchemaTypes.Exact<{
     calloutId: SchemaTypes.Scalars["UUID"]["input"];
@@ -96117,6 +96409,28 @@ export type CalloutFragment = {
   };
 };
 
+export type CalloutsSetFramingTypesQueryVariables = SchemaTypes.Exact<{
+  calloutsSetId: SchemaTypes.Scalars["UUID"]["input"];
+}>;
+
+export type CalloutsSetFramingTypesQuery = {
+  lookup: {
+    calloutsSet?:
+      | {
+          id: string;
+          callouts: Array<{
+            id: string;
+            framing: {
+              id: string;
+              type: SchemaTypes.CalloutFramingType;
+              profile: { displayName: string };
+            };
+          }>;
+        }
+      | undefined;
+  };
+};
+
 export type GetPostDataQueryVariables = SchemaTypes.Exact<{
   postId: SchemaTypes.Scalars["UUID"]["input"];
 }>;
@@ -96221,6 +96535,55 @@ export type GetPostDataQuery = {
             }>;
           };
           createdBy?: { email: string } | undefined;
+        }
+      | undefined;
+  };
+};
+
+export type SpaceCalloutsSetAndRoleSetQueryVariables = SchemaTypes.Exact<{
+  spaceId: SchemaTypes.Scalars["UUID"]["input"];
+}>;
+
+export type SpaceCalloutsSetAndRoleSetQuery = {
+  lookup: {
+    space?:
+      | {
+          id: string;
+          collaboration: { id: string; calloutsSet: { id: string } };
+          community: { id: string; roleSet: { id: string } };
+        }
+      | undefined;
+  };
+};
+
+export type TemplateContentSpaceCalloutsQueryVariables = SchemaTypes.Exact<{
+  templateId: SchemaTypes.Scalars["UUID"]["input"];
+}>;
+
+export type TemplateContentSpaceCalloutsQuery = {
+  lookup: {
+    template?:
+      | {
+          id: string;
+          contentSpace?:
+            | {
+                id: string;
+                collaboration: {
+                  id: string;
+                  calloutsSet: {
+                    id: string;
+                    callouts: Array<{
+                      id: string;
+                      framing: {
+                        id: string;
+                        type: SchemaTypes.CalloutFramingType;
+                        profile: { displayName: string };
+                      };
+                    }>;
+                  };
+                };
+              }
+            | undefined;
         }
       | undefined;
   };
@@ -102376,6 +102739,12 @@ export type UsersPaginatedQuery = {
                 push: boolean;
               };
               communicationMessageReceived: {
+                __typename: "UserSettingsNotificationChannels";
+                email: boolean;
+                inApp: boolean;
+                push: boolean;
+              };
+              collaborationCalloutFormResponseReceived: {
                 __typename: "UserSettingsNotificationChannels";
                 email: boolean;
                 inApp: boolean;
@@ -117987,6 +118356,12 @@ export type GetUserDataQuery = {
               inApp: boolean;
               push: boolean;
             };
+            collaborationCalloutFormResponseReceived: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+              push: boolean;
+            };
           };
           collaborationCalloutContributionCreated: {
             __typename: "UserSettingsNotificationChannels";
@@ -118281,6 +118656,12 @@ export type GetUserSettingsQuery = {
               push: boolean;
             };
             communicationMessageReceived: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+              push: boolean;
+            };
+            collaborationCalloutFormResponseReceived: {
               __typename: "UserSettingsNotificationChannels";
               email: boolean;
               inApp: boolean;
@@ -118717,6 +119098,12 @@ export type GetUsersDataQuery = {
               push: boolean;
             };
             communicationMessageReceived: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+              push: boolean;
+            };
+            collaborationCalloutFormResponseReceived: {
               __typename: "UserSettingsNotificationChannels";
               email: boolean;
               inApp: boolean;
@@ -120028,6 +120415,49 @@ export const CalloutDetailsFragmentDoc = gql`
   ${CommentsWithMessagesFragmentDoc}
   ${CalloutSettingsFullFragmentDoc}
 `;
+export const CalloutFormDetailsFragmentDoc = gql`
+  fragment CalloutFormDetails on CalloutForm {
+    id
+    title
+    description
+    questions {
+      id
+      prompt
+      explanation
+      type
+      required
+      options {
+        id
+        label
+      }
+    }
+    settings {
+      visibility
+      responseMode
+      state
+      defaultCollapsed
+    }
+  }
+`;
+export const CalloutFormResponseDetailsFragmentDoc = gql`
+  fragment CalloutFormResponseDetails on CalloutFormResponse {
+    id
+    createdDate
+    createdBy {
+      id
+    }
+    answers {
+      questionID
+      prompt
+      type
+      text
+      selectedOptions {
+        id
+        label
+      }
+    }
+  }
+`;
 export const CalloutOnCollaborationWithStorageConfigFragmentDoc = gql`
   fragment CalloutOnCollaborationWithStorageConfig on Collaboration {
     id
@@ -120928,6 +121358,12 @@ export const UserSettingsFragmentFragmentDoc = gql`
             __typename
           }
           communicationMessageReceived {
+            email
+            inApp
+            push
+            __typename
+          }
+          collaborationCalloutFormResponseReceived {
             email
             inApp
             push
@@ -122017,6 +122453,58 @@ export const CreateContributionOnCalloutDocument = gql`
     }
   }
   ${ContributionsDataFragmentDoc}
+`;
+export const CreateFormCalloutOnCalloutsSetDocument = gql`
+  mutation createFormCalloutOnCalloutsSet(
+    $calloutData: CreateCalloutOnCalloutsSetInput!
+  ) {
+    createCalloutOnCalloutsSet(calloutData: $calloutData) {
+      id
+      settings {
+        visibility
+      }
+      framing {
+        id
+        type
+        profile {
+          id
+          displayName
+          url
+        }
+        form {
+          ...CalloutFormDetails
+        }
+      }
+    }
+  }
+  ${CalloutFormDetailsFragmentDoc}
+`;
+export const DeleteCalloutFormResponseDocument = gql`
+  mutation deleteCalloutFormResponse(
+    $deleteData: DeleteCalloutFormResponseInput!
+  ) {
+    deleteCalloutFormResponse(deleteData: $deleteData) {
+      id
+    }
+  }
+`;
+export const SubmitCalloutFormResponseDocument = gql`
+  mutation submitCalloutFormResponse(
+    $responseData: SubmitCalloutFormResponseInput!
+  ) {
+    submitCalloutFormResponse(responseData: $responseData) {
+      ...CalloutFormResponseDetails
+    }
+  }
+  ${CalloutFormResponseDetailsFragmentDoc}
+`;
+export const UpdateCalloutFormDocument = gql`
+  mutation updateCalloutForm($formData: UpdateCalloutFormInput!) {
+    updateCalloutForm(formData: $formData) {
+      ...CalloutFormDetails
+    }
+  }
+  ${CalloutFormDetailsFragmentDoc}
 `;
 export const TransferCalloutDocument = gql`
   mutation transferCallout($transferData: TransferCalloutInput!) {
@@ -124073,6 +124561,50 @@ export const SpaceCalloutDocument = gql`
   }
   ${CalloutDetailsFragmentDoc}
 `;
+export const CalloutFormResponsesDocument = gql`
+  query calloutFormResponses($formID: UUID!, $first: Int, $after: UUID) {
+    lookup {
+      calloutFormResponses(formID: $formID, first: $first, after: $after) {
+        formID
+        canReadAll
+        canModerate
+        mine {
+          ...CalloutFormResponseDetails
+        }
+        all {
+          total
+          pageInfo {
+            hasNextPage
+            endCursor
+          }
+          responses {
+            ...CalloutFormResponseDetails
+          }
+        }
+      }
+    }
+  }
+  ${CalloutFormResponseDetailsFragmentDoc}
+`;
+export const CalloutContributionCountsDocument = gql`
+  query calloutContributionCounts($calloutId: UUID!) {
+    lookup {
+      callout(ID: $calloutId) {
+        id
+        contributions {
+          id
+        }
+        contributionsCount {
+          post
+          whiteboard
+          link
+          memo
+          collaboraDocument
+        }
+      }
+    }
+  }
+`;
 export const CalloutDetailsDocument = gql`
   query CalloutDetails($calloutId: UUID!) {
     lookup {
@@ -124104,6 +124636,23 @@ export const CalloutStorageConfigDocument = gql`
     }
   }
   ${ProfileStorageConfigFragmentDoc}
+`;
+export const CalloutFormDefinitionDocument = gql`
+  query calloutFormDefinition($calloutId: UUID!) {
+    lookup {
+      callout(ID: $calloutId) {
+        id
+        framing {
+          id
+          type
+          form {
+            ...CalloutFormDetails
+          }
+        }
+      }
+    }
+  }
+  ${CalloutFormDetailsFragmentDoc}
 `;
 export const CalloutLinkContributionStorageConfigDocument = gql`
   query CalloutLinkContributionStorageConfig($calloutId: UUID!) {
@@ -124245,6 +124794,25 @@ export const GetCalloutsOnCalloutsSetUsingClassificationDocument = gql`
   ${CalloutFragmentDoc}
   ${ClassificationDetailsFragmentDoc}
 `;
+export const CalloutsSetFramingTypesDocument = gql`
+  query calloutsSetFramingTypes($calloutsSetId: UUID!) {
+    lookup {
+      calloutsSet(ID: $calloutsSetId) {
+        id
+        callouts {
+          id
+          framing {
+            id
+            type
+            profile {
+              displayName
+            }
+          }
+        }
+      }
+    }
+  }
+`;
 export const GetPostDataDocument = gql`
   query GetPostData($postId: UUID!) {
     lookup {
@@ -124254,6 +124822,55 @@ export const GetPostDataDocument = gql`
     }
   }
   ${PostDataFragmentDoc}
+`;
+export const SpaceCalloutsSetAndRoleSetDocument = gql`
+  query spaceCalloutsSetAndRoleSet($spaceId: UUID!) {
+    lookup {
+      space(ID: $spaceId) {
+        id
+        collaboration {
+          id
+          calloutsSet {
+            id
+          }
+        }
+        community {
+          id
+          roleSet {
+            id
+          }
+        }
+      }
+    }
+  }
+`;
+export const TemplateContentSpaceCalloutsDocument = gql`
+  query templateContentSpaceCallouts($templateId: UUID!) {
+    lookup {
+      template(ID: $templateId) {
+        id
+        contentSpace {
+          id
+          collaboration {
+            id
+            calloutsSet {
+              id
+              callouts {
+                id
+                framing {
+                  id
+                  type
+                  profile {
+                    displayName
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
 `;
 export const WhiteboardCalloutStorageConfigDocument = gql`
   query WhiteboardCalloutStorageConfig($calloutId: UUID!) {
@@ -126164,6 +126781,16 @@ const UpdateCalloutVisibilityDocumentString = print(
 const CreateContributionOnCalloutDocumentString = print(
   CreateContributionOnCalloutDocument
 );
+const CreateFormCalloutOnCalloutsSetDocumentString = print(
+  CreateFormCalloutOnCalloutsSetDocument
+);
+const DeleteCalloutFormResponseDocumentString = print(
+  DeleteCalloutFormResponseDocument
+);
+const SubmitCalloutFormResponseDocumentString = print(
+  SubmitCalloutFormResponseDocument
+);
+const UpdateCalloutFormDocumentString = print(UpdateCalloutFormDocument);
 const TransferCalloutDocumentString = print(TransferCalloutDocument);
 const UpdateCollaborationFromSpaceTemplateDocumentString = print(
   UpdateCollaborationFromSpaceTemplateDocument
@@ -126588,8 +127215,15 @@ const GetCalendarEventByIdDocumentString = print(GetCalendarEventByIdDocument);
 const GetCalendarEventsDocumentString = print(GetCalendarEventsDocument);
 const GetSpaceCalendarIdDocumentString = print(GetSpaceCalendarIdDocument);
 const SpaceCalloutDocumentString = print(SpaceCalloutDocument);
+const CalloutFormResponsesDocumentString = print(CalloutFormResponsesDocument);
+const CalloutContributionCountsDocumentString = print(
+  CalloutContributionCountsDocument
+);
 const CalloutDetailsDocumentString = print(CalloutDetailsDocument);
 const CalloutStorageConfigDocumentString = print(CalloutStorageConfigDocument);
+const CalloutFormDefinitionDocumentString = print(
+  CalloutFormDefinitionDocument
+);
 const CalloutLinkContributionStorageConfigDocumentString = print(
   CalloutLinkContributionStorageConfigDocument
 );
@@ -126606,7 +127240,16 @@ const CalloutWhiateboardStorageConfigDocumentString = print(
 const GetCalloutsOnCalloutsSetUsingClassificationDocumentString = print(
   GetCalloutsOnCalloutsSetUsingClassificationDocument
 );
+const CalloutsSetFramingTypesDocumentString = print(
+  CalloutsSetFramingTypesDocument
+);
 const GetPostDataDocumentString = print(GetPostDataDocument);
+const SpaceCalloutsSetAndRoleSetDocumentString = print(
+  SpaceCalloutsSetAndRoleSetDocument
+);
+const TemplateContentSpaceCalloutsDocumentString = print(
+  TemplateContentSpaceCalloutsDocument
+);
 const WhiteboardCalloutStorageConfigDocumentString = print(
   WhiteboardCalloutStorageConfigDocument
 );
@@ -127642,6 +128285,94 @@ export function getSdk(
             { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "CreateContributionOnCallout",
+        "mutation",
+        variables
+      );
+    },
+    createFormCalloutOnCalloutsSet(
+      variables: SchemaTypes.CreateFormCalloutOnCalloutsSetMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.CreateFormCalloutOnCalloutsSetMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.CreateFormCalloutOnCalloutsSetMutation>(
+            CreateFormCalloutOnCalloutsSetDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "createFormCalloutOnCalloutsSet",
+        "mutation",
+        variables
+      );
+    },
+    deleteCalloutFormResponse(
+      variables: SchemaTypes.DeleteCalloutFormResponseMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.DeleteCalloutFormResponseMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.DeleteCalloutFormResponseMutation>(
+            DeleteCalloutFormResponseDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "deleteCalloutFormResponse",
+        "mutation",
+        variables
+      );
+    },
+    submitCalloutFormResponse(
+      variables: SchemaTypes.SubmitCalloutFormResponseMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.SubmitCalloutFormResponseMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.SubmitCalloutFormResponseMutation>(
+            SubmitCalloutFormResponseDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "submitCalloutFormResponse",
+        "mutation",
+        variables
+      );
+    },
+    updateCalloutForm(
+      variables: SchemaTypes.UpdateCalloutFormMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.UpdateCalloutFormMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.UpdateCalloutFormMutation>(
+            UpdateCalloutFormDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "updateCalloutForm",
         "mutation",
         variables
       );
@@ -131628,6 +132359,50 @@ export function getSdk(
         variables
       );
     },
+    calloutFormResponses(
+      variables: SchemaTypes.CalloutFormResponsesQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.CalloutFormResponsesQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.CalloutFormResponsesQuery>(
+            CalloutFormResponsesDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "calloutFormResponses",
+        "query",
+        variables
+      );
+    },
+    calloutContributionCounts(
+      variables: SchemaTypes.CalloutContributionCountsQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.CalloutContributionCountsQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.CalloutContributionCountsQuery>(
+            CalloutContributionCountsDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "calloutContributionCounts",
+        "query",
+        variables
+      );
+    },
     CalloutDetails(
       variables: SchemaTypes.CalloutDetailsQueryVariables,
       requestHeaders?: GraphQLClientRequestHeaders
@@ -131668,6 +132443,28 @@ export function getSdk(
             { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "CalloutStorageConfig",
+        "query",
+        variables
+      );
+    },
+    calloutFormDefinition(
+      variables: SchemaTypes.CalloutFormDefinitionQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.CalloutFormDefinitionQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.CalloutFormDefinitionQuery>(
+            CalloutFormDefinitionDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "calloutFormDefinition",
         "query",
         variables
       );
@@ -131804,6 +132601,28 @@ export function getSdk(
         variables
       );
     },
+    calloutsSetFramingTypes(
+      variables: SchemaTypes.CalloutsSetFramingTypesQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.CalloutsSetFramingTypesQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.CalloutsSetFramingTypesQuery>(
+            CalloutsSetFramingTypesDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "calloutsSetFramingTypes",
+        "query",
+        variables
+      );
+    },
     GetPostData(
       variables: SchemaTypes.GetPostDataQueryVariables,
       requestHeaders?: GraphQLClientRequestHeaders
@@ -131822,6 +132641,50 @@ export function getSdk(
             { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "GetPostData",
+        "query",
+        variables
+      );
+    },
+    spaceCalloutsSetAndRoleSet(
+      variables: SchemaTypes.SpaceCalloutsSetAndRoleSetQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.SpaceCalloutsSetAndRoleSetQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.SpaceCalloutsSetAndRoleSetQuery>(
+            SpaceCalloutsSetAndRoleSetDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "spaceCalloutsSetAndRoleSet",
+        "query",
+        variables
+      );
+    },
+    templateContentSpaceCallouts(
+      variables: SchemaTypes.TemplateContentSpaceCalloutsQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.TemplateContentSpaceCalloutsQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.TemplateContentSpaceCalloutsQuery>(
+            TemplateContentSpaceCalloutsDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "templateContentSpaceCallouts",
         "query",
         variables
       );

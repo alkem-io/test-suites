@@ -1,0 +1,5 @@
+mutation updateCalloutForm($formData: UpdateCalloutFormInput!) {
+  updateCalloutForm(formData: $formData) {
+    ...CalloutFormDetails
+  }
+}
