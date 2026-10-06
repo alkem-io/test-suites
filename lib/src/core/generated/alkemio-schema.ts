@@ -50602,7 +50602,7 @@ export type CreatePollCalloutOnCalloutsSetMutation = {
     framing: {
       id: string;
       type: CalloutFramingType;
-      profile: { id: string; displayName: string };
+      profile: { id: string; displayName: string; url: string };
       poll?:
         | {
             id: string;

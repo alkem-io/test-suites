@@ -55091,7 +55091,7 @@ export type CreatePollCalloutOnCalloutsSetMutation = {
     framing: {
       id: string;
       type: SchemaTypes.CalloutFramingType;
-      profile: { id: string; displayName: string };
+      profile: { id: string; displayName: string; url: string };
       poll?:
         | {
             id: string;
@@ -122866,6 +122866,7 @@ export const CreatePollCalloutOnCalloutsSetDocument = gql`
         profile {
           id
           displayName
+          url
         }
         poll {
           ...PollDefinition

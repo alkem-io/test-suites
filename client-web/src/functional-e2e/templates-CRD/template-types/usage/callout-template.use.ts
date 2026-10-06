@@ -1,5 +1,6 @@
 import { Locator, Page, expect } from '@playwright/test';
 import { CalloutTemplateForm } from '../forms/callout/callout-template-form.models';
+import { formQuestionField } from '../forms/callout/callout-template-framing';
 import { verifyCalloutContributionLinks } from './contributions/callout-template.use.links';
 import { verifyCalloutContributionPosts } from './contributions/callout-template.use.posts';
 import { verifyContributionSettings } from './contributions/callout-template.use.contributions';
@@ -26,9 +27,7 @@ export const verifyCalloutTemplateUsage = async (
   await expect(createPostDialog).toBeVisible();
 
   // Open the "Use a template" picker
-  await createPostDialog
-    .getByRole('button', { name: 'Find Template' })
-    .click();
+  await createPostDialog.getByRole('button', { name: 'Find Template' }).click();
 
   // The picker lists templates as list items with a "Use template" button per
   // row (same pattern as the whiteboard editor's picker).
@@ -47,6 +46,19 @@ export const verifyCalloutTemplateUsage = async (
   await expect(
     createPostDialog.getByRole('textbox', { name: 'Title' })
   ).toHaveValue(templateData.calloutTitle);
+
+  // A Form template fills the builder: title and every question, in order
+  // (workspace#080, R25f).
+  if (templateData.framing.type === 'form') {
+    await expect(
+      createPostDialog.getByRole('textbox', { name: 'Form title (optional)' })
+    ).toHaveValue(templateData.framing.title);
+    for (const [index, question] of templateData.framing.questions.entries()) {
+      await expect(formQuestionField(createPostDialog, index + 1)).toHaveValue(
+        question.prompt
+      );
+    }
+  }
 
   // Publish the post
   await createPostDialog
@@ -75,7 +87,9 @@ export const verifyCalloutTemplateUsage = async (
     calloutContainer.getByText('Callout Template Description', { exact: false })
   ).toBeVisible();
   await expect(
-    calloutContainer.getByText(`- ID: ${templateData.testId}`, { exact: false }).first()
+    calloutContainer
+      .getByText(`- ID: ${templateData.testId}`, { exact: false })
+      .first()
   ).toBeVisible();
 
   // Verify at least the first 3 callout tags are present. Tag chips render
@@ -107,7 +121,9 @@ export const verifyCalloutTemplateUsage = async (
       // unlike the legacy MUI overlay-on-hover. There's also a "Open Whiteboard"
       // affordance on the standalone whiteboard editor, hence `.first()`.
       await expect(
-        calloutContainer.getByRole('button', { name: 'Open Whiteboard' }).first()
+        calloutContainer
+          .getByRole('button', { name: 'Open Whiteboard' })
+          .first()
       ).toBeVisible();
       break;
     }
@@ -156,7 +172,9 @@ export const verifyCalloutTemplateUsage = async (
       //    and the other is absent.
       const optionRole = settings.allowMultipleResponses ? 'checkbox' : 'radio';
       const wrongRole = settings.allowMultipleResponses ? 'radio' : 'checkbox';
-      await expect(calloutContainer.getByRole(optionRole).first()).toBeVisible();
+      await expect(
+        calloutContainer.getByRole(optionRole).first()
+      ).toBeVisible();
       await expect(calloutContainer.getByRole(wrongRole)).toHaveCount(0);
 
       // 2) Allow contributors to add options -> an "Add your own option..."
@@ -192,6 +210,23 @@ export const verifyCalloutTemplateUsage = async (
       } else {
         await expect(voteTallies.first()).toBeVisible();
       }
+      break;
+    }
+    case 'form': {
+      // In-feed Form box (workspace#080): a region named by the Form title,
+      // each question prompt, and one "Submit Form" button.
+      const { title, questions } = templateData.framing;
+      await expect(
+        calloutContainer.getByRole('region', { name: title }).first()
+      ).toBeVisible();
+      for (const question of questions) {
+        await expect(
+          calloutContainer.getByText(question.prompt, { exact: false }).first()
+        ).toBeVisible();
+      }
+      await expect(
+        calloutContainer.getByRole('button', { name: 'Submit Form' })
+      ).toHaveCount(1);
       break;
     }
     case 'none':

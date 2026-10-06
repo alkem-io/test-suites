@@ -12,6 +12,7 @@ mutation createPollCalloutOnCalloutsSet(
       profile {
         id
         displayName
+        url
       }
       poll {
         ...PollDefinition

@@ -7,7 +7,10 @@
  */
 
 import { Locator, Page, expect } from '@playwright/test';
-import { CalloutTemplateFraming } from './callout-template-form.models';
+import {
+  CalloutTemplateFraming,
+  CalloutTemplateFramingForm,
+} from './callout-template-form.models';
 import {
   closeWhiteboardEditor,
   getWhiteboardEditorDialog,
@@ -65,9 +68,7 @@ export const selectAndFillCalloutTemplateFraming = async (
       // rows also expose a "URL" textbox, which would collide with role+name
       // / label lookups when both CTA framing and references are present.
       await dialog.locator('#link-framing-url').fill(framing.ctaUrl);
-      await dialog
-        .locator('#link-framing-display-name')
-        .fill(framing.ctaText);
+      await dialog.locator('#link-framing-display-name').fill(framing.ctaText);
       return;
     }
 
@@ -95,12 +96,18 @@ export const selectAndFillCalloutTemplateFraming = async (
       // Open the "Poll Settings" sub-dialog. The poll editor's "Settings"
       // button is the only `button "Settings"` inside the template dialog
       // (the space banner's "Settings" is a `link`, different role).
-      await dialog.getByRole('button', { name: 'Settings', exact: true }).click();
-      const settingsDialog = page.getByRole('dialog', { name: 'Poll Settings' });
+      await dialog
+        .getByRole('button', { name: 'Settings', exact: true })
+        .click();
+      const settingsDialog = page.getByRole('dialog', {
+        name: 'Poll Settings',
+      });
       await expect(settingsDialog).toBeVisible();
 
       await setPollSwitch(
-        settingsDialog.getByRole('switch', { name: 'Allow multiple responses' }),
+        settingsDialog.getByRole('switch', {
+          name: 'Allow multiple responses',
+        }),
         framing.settings.allowMultipleResponses
       );
       await setPollSwitch(
@@ -126,6 +133,71 @@ export const selectAndFillCalloutTemplateFraming = async (
       await page.keyboard.press('Escape');
       await expect(settingsDialog).not.toBeVisible();
       return;
+    }
+
+    case 'form': {
+      await framingRadio(dialog, 'Form').click();
+      await fillFormBuilder(page, dialog, framing);
+      return;
+    }
+  }
+};
+
+/** The Form builder's prompt field of question `n` (labelled "Question N"). */
+export const formQuestionField = (scope: Locator, n: number): Locator =>
+  scope.getByRole('textbox', { name: `Question ${n}`, exact: true });
+
+/**
+ * The card of question `n`: the innermost ancestor of its prompt that also
+ * holds its drag handle ("Reorder question N").
+ */
+export const formQuestionCard = (scope: Locator, n: number): Locator =>
+  formQuestionField(scope, n).locator(
+    'xpath=ancestor::*[.//button[starts-with(@aria-label, "Reorder question")]][1]'
+  );
+
+/** The option fields ("Option 1", "Option 2", ...) of question `n`. */
+export const formQuestionOptions = (scope: Locator, n: number): Locator =>
+  formQuestionCard(scope, n).getByRole('textbox', { name: /^Option \d+$/ });
+
+/**
+ * Fills the Form builder (workspace#080): title, description and the ordered
+ * questions. Selecting the Form chip seeds ONE question; a choice type seeds
+ * two option rows, more are added with "Add option".
+ */
+export const fillFormBuilder = async (
+  page: Page,
+  dialog: Locator,
+  framing: CalloutTemplateFramingForm
+): Promise<void> => {
+  await dialog
+    .getByRole('textbox', { name: 'Form title (optional)' })
+    .fill(framing.title);
+  await dialog
+    .getByRole('textbox', { name: 'Description (optional)' })
+    .fill(framing.description);
+
+  for (const [index, question] of framing.questions.entries()) {
+    const n = index + 1;
+    if (n > 1) {
+      await dialog.getByRole('button', { name: 'Add question' }).click();
+    }
+    await formQuestionField(dialog, n).fill(question.prompt);
+    const card = formQuestionCard(dialog, n);
+    if (question.type !== 'Short text') {
+      await card.getByRole('combobox', { name: 'Answer type' }).click();
+      await page.getByRole('option', { name: question.type }).click();
+    }
+    const options = question.options ?? [];
+    for (let i = 2; i < options.length; i++) {
+      await card.getByRole('button', { name: 'Add option' }).click();
+    }
+    for (const [optionIndex, option] of options.entries()) {
+      await formQuestionOptions(dialog, n).nth(optionIndex).fill(option);
+    }
+    const required = card.getByRole('switch', { name: 'Required' });
+    if ((await required.isChecked()) !== question.required) {
+      await required.click();
     }
   }
 };

@@ -6,6 +6,7 @@
   - `server-api/src/functional-api/callout/form/` — five it-specs plus `form.request.params.ts`.
   - `server-api/src/functional-api/notifications/space/collaboration/form-response.it-spec.ts` — MailSlurper.
   - `client-web/src/functional-e2e/form-callout-framing/` — five `@forge-acceptance` walks, persisted from the /forge live verification. They provision their own Kratos identities, Space and Forms; they do not use the harness personas.
+  - R25 (Polls and Forms in templates) — see *R25 — Polls and Forms in templates* below: two it-specs under `server-api/src/functional-api/templates/` and two `templates-CRD` Playwright files (harness personas, session fixtures).
 
 ## How to run
 
@@ -41,7 +42,7 @@ Spec ids are the 080 spec's. "API" = `server-api/src/functional-api/callout/form
 | US1-AS1/AS4/AS6/AS7a/AS9 builder, chip, publish, close/reopen, fixed chip | walk `us1` |
 | US1-AS2 / FR-001a member cannot create a Form; fixed kind both ways | API `form-placement-guards.it-spec.ts › who can create`, `› the framing kind is fixed`; walk `us1 › US1-AS2` |
 | US1-AS3 / FR-001b VC knowledge base: seeded, direct add, conversion | API `form-placement-guards.it-spec.ts › carriers…` incl. *direct add (added)*, `› spaces holding a FORM callout`; walk `us1 › US1-AS3` |
-| D-7 carriers: template, subspace request, transfer, space template | API `form-placement-guards.it-spec.ts` |
+| D-7 carriers, amended by R25: the subspace create request's own callouts, transfer, VC knowledge base and conversion still refuse a FORM; a callout template and a space template now carry one | API `form-placement-guards.it-spec.ts` (*a callout template carries a FORM definition (R25)*, *a template made from the space keeps the FORM callout (R25)* — flipped 2026-10-06; every refusal kept); the R25 carriers themselves: see the R25 section |
 | US1-AS5, FR-003, FR-007, D-16 caps and lengths (0/1/50/51 questions, 1/2/20/21 options, duplicate, blank/empty label, 512/513 prompt and label, 2048/2049 explanation, options on a text question) | API `form-submit-validation.it-spec.ts › Form definition — limits` (lengths, blank/empty, text-with-options *added*) |
 | FR-004a unknown question / option id on update | API `form-submit-validation.it-spec.ts › Form definition — limits` (option id *added*) |
 | US2-AS2/AS3/AS10, FR-009 answer validation, no echo | API `form-submit-validation.it-spec.ts › answer validation`, `› answers to removed questions and options` *(added)*; walk `us2` |
@@ -59,6 +60,40 @@ Spec ids are the 080 spec's. "API" = `server-api/src/functional-api/callout/form
 | US4-AS3 / FR-023a no generic contribution mail, with the generic rows switched on | `form-response.it-spec.ts › no mail carries the answer…` |
 | US4-AS7 one admin notification per response | walk `us4 › US4-AS7` (3 submissions) |
 | US4a-AS1..AS4 review dialogs, 120 responses in pages of 50, confirm-delete, members read all | walk `us4a` |
+
+## R25 — Polls and Forms in templates (server#6435, 2026-10-06)
+
+Ruling R25 brings US5 into scope and amends D-7 / FR-027: callout templates and space templates carry a Poll's or a Form's **definition** (never votes, poll status or responses); (sub)spaces and collaborations built from a space template get an OPEN Poll with no votes and a Form with fresh question ids and no responses; a template Form never accepts a response. Build sheet: `tasks/test-suites.md` T316–T320.
+
+**Status:** authored 2026-10-06, static gates green (codegen offline from the server schema, lint + typecheck of lib, server-api and client-web). **Not run live yet** — they need a stack built from the `fix/form-callout-framing` server and client branches.
+
+```bash
+cd server-api
+pnpm exec vitest run --project templates src/functional-api/templates/callout/poll-form-callout-templates.it-spec.ts src/functional-api/templates/space/space-templates-poll-form.it-spec.ts
+pnpm exec vitest run --project callouts src/functional-api/callout/form/form-placement-guards.it-spec.ts
+
+cd ../client-web
+UI_HEADLESS=true pnpm exec playwright test src/functional-e2e/templates-CRD/template-types/poll-form-save-as-template.spec.ts
+UI_HEADLESS=true pnpm exec playwright test src/functional-e2e/templates-CRD/template-types/callout-tests.spec.ts -g "58 Form"
+```
+
+"TPL" = `server-api/src/functional-api/templates/`; "CRD" = `client-web/src/functional-e2e/templates-CRD/template-types/`. Every negative has a positive control in the same describe.
+
+| Scenario | Test |
+| --- | --- |
+| US5-AS5 / FR-027 a callout template keeps a Poll: title, options in order, settings; no votes | API TPL `callout/poll-form-callout-templates.it-spec.ts › a callout template carries a Poll` (read back through `lookup.template`) |
+| US5-AS1/AS2 / FR-025–FR-027 a callout template keeps a Form: title, description, questions (types, options, required), settings | API TPL `callout/… › a callout template carries a Form` |
+| US5-AS6 / FR-027b a callout-template Form refuses responses (`FORM_TEMPLATE_NOT_RESPONDABLE`) | API TPL `callout/… › a template Form never accepts responses` (control: the same definition on a live Post accepts the same answers) |
+| FR-027b / R25d the template admin edits a template Form; a space member is refused and nothing changes | API TPL `callout/… › a template Form definition is edited by the template admin` |
+| US5-AS3/AS5 / FR-027 a space template from a space with a voted Poll and an answered Form keeps both definitions, no votes, no responses, no source ids | API TPL `space/space-templates-poll-form.it-spec.ts › a space template keeps Poll and Form definitions only` (control: the source keeps its vote and response) |
+| US5-AS6 a Form inside a template content space refuses responses | API TPL `space/… › a Form inside a template content space never accepts responses` |
+| US5-AS3/AS5 a subspace created from the template: Poll OPEN, same options, 0 votes; Form same questions/settings, fresh ids, 0 responses | API TPL `space/… › a subspace created from the template` (control: both take a vote / a response) |
+| R25c `updateCollaborationFromSpaceTemplate` (addCallouts) adds them the same way | API TPL `space/… › updateCollaborationFromSpaceTemplate adds the Poll and the Form` |
+| FR-027a a FORM in the create-subspace request itself stays refused, also with a template | API TPL `space/… › only the template may carry a Form into a new subspace` (control: same template + NONE callout); without a template: `form-placement-guards.it-spec.ts` |
+| US5-AS4 / FR-001b a template never places a Form in a VC knowledge base | API `form-placement-guards.it-spec.ts › carriers…` (seeded, direct add) and `› spaces holding a FORM callout` (conversion) — unchanged by R25 |
+| US5-AS2/AS5 / FR-026 save a Poll Post as a template from the Post menu; preview; start a Post from it (question/options prefilled, editable); the new poll takes a vote | walk CRD `poll-form-save-as-template.spec.ts › US5-AS5` |
+| US5-AS1/AS2 / FR-025/FR-026 save a Form Post as a template; preview lists "Questions" (numbered, type badges, "Required"); start a Post from it (builder prefilled, editable); the new Form takes a response | walk CRD `poll-form-save-as-template.spec.ts › US5-AS1/AS2` |
+| R25a the callout-template editor offers the Form framing | walk CRD `callout-tests.spec.ts › 58 Form` (create in the editor → preview → use → in-feed Form box) |
 
 ## Not covered
 
