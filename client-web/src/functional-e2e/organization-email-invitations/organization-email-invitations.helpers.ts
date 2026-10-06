@@ -470,12 +470,18 @@ export const settledMailsTo = async (
   }
 };
 
-/** Undoes quoted-printable transfer encoding so links and markup match as written. */
+/** Undoes quoted-printable transfer encoding so links, markup and names match
+ * as written: soft line breaks removed, every `=XX` byte decoded, the bytes
+ * read as UTF-8 (so a non-ASCII organization or inviter name survives). */
 export const decodeMailBody = (body: string | undefined): string =>
-  (body ?? '')
-    .replace(/=\r?\n/g, '')
-    .replace(/=3D/gi, '=')
-    .replace(/=20/g, ' ');
+  Buffer.from(
+    (body ?? '')
+      .replace(/=\r?\n/g, '')
+      .replace(/=([0-9A-F]{2})/gi, (_, hex: string) =>
+        String.fromCharCode(parseInt(hex, 16))
+      ),
+    'latin1'
+  ).toString('utf8');
 
 /** The call-to-action link of the organization email (the invitations entry point). */
 export const invitationLinkFromMail = (

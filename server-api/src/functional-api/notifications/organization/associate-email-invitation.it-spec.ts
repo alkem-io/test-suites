@@ -60,10 +60,14 @@ afterAll(async () => {
 /** Undoes quoted-printable transfer encoding so markup and links can be
  * matched as written, whichever way the transport delivered the body. */
 const decodeBody = (body: string | undefined): string =>
-  (body ?? '')
-    .replace(/=\r?\n/g, '')
-    .replace(/=3D/gi, '=')
-    .replace(/=20/g, ' ');
+  Buffer.from(
+    (body ?? '')
+      .replace(/=\r?\n/g, '')
+      .replace(/=([0-9A-F]{2})/gi, (_, hex: string) =>
+        String.fromCharCode(parseInt(hex, 16))
+      ),
+    'latin1'
+  ).toString('utf8');
 
 /** The in-app notification total of a persona — every type. */
 const inAppTotal = async (userRole: TestUser): Promise<number> => {
