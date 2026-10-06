@@ -1,7 +1,12 @@
 import { CodegenConfig } from "@graphql-codegen/cli";
 
 const config: CodegenConfig = {
-  schema: "http://localhost:3000/api/private/non-interactive/graphql",
+  // Overridable so codegen can read a committed `schema.graphql` file offline
+  // (e.g. a sibling repo's worktree) instead of introspecting a live server —
+  // the same escape hatch client-web's codegen.yml already exposes.
+  schema:
+    process.env.CODEGEN_SCHEMA ||
+    "http://localhost:3000/api/private/non-interactive/graphql",
   documents: ["src/**/*.graphql"],
   hooks: {
     afterAllFileWrite: ["prettier --write"],
