@@ -27044,6 +27044,7 @@ export type InvitationDataFragment = {
   extraRoles: Array<RoleName>;
   invitedToParent: boolean;
   welcomeMessage?: string | undefined;
+  suggestedLanguage?: string | undefined;
   lifecycle: { id: string };
   createdBy?:
     | {
@@ -27074,6 +27075,9 @@ export type PlatformInvitationDataFragment = {
   profileCreated: boolean;
   firstName?: string | undefined;
   lastName?: string | undefined;
+  roleSetExtraRoles: Array<RoleName>;
+  welcomeMessage?: string | undefined;
+  suggestedLanguage?: string | undefined;
   authorization?:
     | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
     | undefined;
@@ -47583,6 +47587,7 @@ export type InvitationStateEventMutation = {
     extraRoles: Array<RoleName>;
     invitedToParent: boolean;
     welcomeMessage?: string | undefined;
+    suggestedLanguage?: string | undefined;
     lifecycle: { id: string };
     createdBy?:
       | {
@@ -47616,6 +47621,7 @@ export type InviteForEntryRoleOnRoleSetMutationVariables = Exact<{
     | Scalars["String"]["input"];
   welcomeMessage?: InputMaybe<Scalars["String"]["input"]>;
   extraRoles: Array<RoleName> | RoleName;
+  suggestedLanguage?: InputMaybe<Scalars["String"]["input"]>;
 }>;
 
 export type InviteForEntryRoleOnRoleSetMutation = {
@@ -47623,6 +47629,8 @@ export type InviteForEntryRoleOnRoleSetMutation = {
     __typename: "RoleSetInvitationResult";
     type: RoleSetInvitationResultType;
     notice?: RoleSetInvitationResultNotice | undefined;
+    invitedActorID?: string | undefined;
+    invitedEmail?: string | undefined;
     invitation?:
       | {
           __typename: "Invitation";
@@ -47647,6 +47655,7 @@ export type InviteForEntryRoleOnRoleSetMutation = {
           email: string;
           firstName?: string | undefined;
           lastName?: string | undefined;
+          roleSetExtraRoles: Array<RoleName>;
         }
       | undefined;
   }>;
@@ -48720,6 +48729,19 @@ export type RemoveRoleFromVirtualContributorMutation = {
   removeRoleFromVirtualContributor: {
     __typename: "VirtualContributor";
     id: string;
+  };
+};
+
+export type ResendPlatformInvitationMutationVariables = Exact<{
+  invitationId: Scalars["UUID"]["input"];
+}>;
+
+export type ResendPlatformInvitationMutation = {
+  resendPlatformInvitation: {
+    id: string;
+    email: string;
+    profileCreated: boolean;
+    roleSetExtraRoles: Array<RoleName>;
   };
 };
 
@@ -86100,6 +86122,7 @@ export type RoleSetApplicationsInvitationsQuery = {
             extraRoles: Array<RoleName>;
             invitedToParent: boolean;
             welcomeMessage?: string | undefined;
+            suggestedLanguage?: string | undefined;
             lifecycle: { id: string };
             createdBy?:
               | {
@@ -86133,6 +86156,9 @@ export type RoleSetApplicationsInvitationsQuery = {
             profileCreated: boolean;
             firstName?: string | undefined;
             lastName?: string | undefined;
+            roleSetExtraRoles: Array<RoleName>;
+            welcomeMessage?: string | undefined;
+            suggestedLanguage?: string | undefined;
             authorization?:
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
               | undefined;
@@ -86302,7 +86328,14 @@ export type RoleSetPendingPlatformInvitationsQuery = {
     roleSet?:
       | {
           id: string;
-          platformInvitations: Array<{ id: string; email: string }>;
+          platformInvitations: Array<{
+            id: string;
+            email: string;
+            profileCreated: boolean;
+            roleSetExtraRoles: Array<RoleName>;
+            welcomeMessage?: string | undefined;
+            suggestedLanguage?: string | undefined;
+          }>;
         }
       | undefined;
   };
@@ -86366,6 +86399,7 @@ export type GetSpaceInvitationsQuery = {
                 extraRoles: Array<RoleName>;
                 invitedToParent: boolean;
                 welcomeMessage?: string | undefined;
+                suggestedLanguage?: string | undefined;
                 lifecycle: { id: string };
                 createdBy?:
                   | {
@@ -86399,6 +86433,9 @@ export type GetSpaceInvitationsQuery = {
                 profileCreated: boolean;
                 firstName?: string | undefined;
                 lastName?: string | undefined;
+                roleSetExtraRoles: Array<RoleName>;
+                welcomeMessage?: string | undefined;
+                suggestedLanguage?: string | undefined;
                 authorization?:
                   | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                   | undefined;
@@ -86407,6 +86444,36 @@ export type GetSpaceInvitationsQuery = {
           };
         }
       | undefined;
+  };
+};
+
+export type LookupPlatformInvitationQueryVariables = Exact<{
+  invitationId: Scalars["UUID"]["input"];
+}>;
+
+export type LookupPlatformInvitationQuery = {
+  lookup: {
+    platformInvitation?:
+      | {
+          id: string;
+          email: string;
+          profileCreated: boolean;
+          createdDate: Date;
+          roleSetExtraRoles: Array<RoleName>;
+          welcomeMessage?: string | undefined;
+          suggestedLanguage?: string | undefined;
+        }
+      | undefined;
+  };
+};
+
+export type LookupPlatformInvitationCreatedByQueryVariables = Exact<{
+  invitationId: Scalars["UUID"]["input"];
+}>;
+
+export type LookupPlatformInvitationCreatedByQuery = {
+  lookup: {
+    platformInvitation?: { id: string; createdBy: { id: string } } | undefined;
   };
 };
 
@@ -110282,6 +110349,7 @@ export type MeQueryQuery = {
         extraRoles: Array<RoleName>;
         invitedToParent: boolean;
         welcomeMessage?: string | undefined;
+        suggestedLanguage?: string | undefined;
         spacesToJoinOnAccept?:
           | Array<{ id: string; displayName: string; url: string }>
           | undefined;

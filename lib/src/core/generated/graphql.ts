@@ -28180,6 +28180,7 @@ export type InvitationDataFragment = {
   extraRoles: Array<SchemaTypes.RoleName>;
   invitedToParent: boolean;
   welcomeMessage?: string | undefined;
+  suggestedLanguage?: string | undefined;
   lifecycle: { id: string };
   createdBy?:
     | {
@@ -28214,6 +28215,9 @@ export type PlatformInvitationDataFragment = {
   profileCreated: boolean;
   firstName?: string | undefined;
   lastName?: string | undefined;
+  roleSetExtraRoles: Array<SchemaTypes.RoleName>;
+  welcomeMessage?: string | undefined;
+  suggestedLanguage?: string | undefined;
   authorization?:
     | { myPrivileges?: Array<SchemaTypes.AuthorizationPrivilege> | undefined }
     | undefined;
@@ -51734,6 +51738,7 @@ export type InvitationStateEventMutation = {
     extraRoles: Array<SchemaTypes.RoleName>;
     invitedToParent: boolean;
     welcomeMessage?: string | undefined;
+    suggestedLanguage?: string | undefined;
     lifecycle: { id: string };
     createdBy?:
       | {
@@ -51775,6 +51780,9 @@ export type InviteForEntryRoleOnRoleSetMutationVariables = SchemaTypes.Exact<{
     SchemaTypes.Scalars["String"]["input"]
   >;
   extraRoles: Array<SchemaTypes.RoleName> | SchemaTypes.RoleName;
+  suggestedLanguage?: SchemaTypes.InputMaybe<
+    SchemaTypes.Scalars["String"]["input"]
+  >;
 }>;
 
 export type InviteForEntryRoleOnRoleSetMutation = {
@@ -51782,6 +51790,8 @@ export type InviteForEntryRoleOnRoleSetMutation = {
     __typename: "RoleSetInvitationResult";
     type: SchemaTypes.RoleSetInvitationResultType;
     notice?: SchemaTypes.RoleSetInvitationResultNotice | undefined;
+    invitedActorID?: string | undefined;
+    invitedEmail?: string | undefined;
     invitation?:
       | {
           __typename: "Invitation";
@@ -51806,6 +51816,7 @@ export type InviteForEntryRoleOnRoleSetMutation = {
           email: string;
           firstName?: string | undefined;
           lastName?: string | undefined;
+          roleSetExtraRoles: Array<SchemaTypes.RoleName>;
         }
       | undefined;
   }>;
@@ -52986,6 +52997,19 @@ export type RemoveRoleFromVirtualContributorMutation = {
   removeRoleFromVirtualContributor: {
     __typename: "VirtualContributor";
     id: string;
+  };
+};
+
+export type ResendPlatformInvitationMutationVariables = SchemaTypes.Exact<{
+  invitationId: SchemaTypes.Scalars["UUID"]["input"];
+}>;
+
+export type ResendPlatformInvitationMutation = {
+  resendPlatformInvitation: {
+    id: string;
+    email: string;
+    profileCreated: boolean;
+    roleSetExtraRoles: Array<SchemaTypes.RoleName>;
   };
 };
 
@@ -94111,6 +94135,7 @@ export type RoleSetApplicationsInvitationsQuery = {
             extraRoles: Array<SchemaTypes.RoleName>;
             invitedToParent: boolean;
             welcomeMessage?: string | undefined;
+            suggestedLanguage?: string | undefined;
             lifecycle: { id: string };
             createdBy?:
               | {
@@ -94148,6 +94173,9 @@ export type RoleSetApplicationsInvitationsQuery = {
             profileCreated: boolean;
             firstName?: string | undefined;
             lastName?: string | undefined;
+            roleSetExtraRoles: Array<SchemaTypes.RoleName>;
+            welcomeMessage?: string | undefined;
+            suggestedLanguage?: string | undefined;
             authorization?:
               | {
                   myPrivileges?:
@@ -94322,7 +94350,14 @@ export type RoleSetPendingPlatformInvitationsQuery = {
     roleSet?:
       | {
           id: string;
-          platformInvitations: Array<{ id: string; email: string }>;
+          platformInvitations: Array<{
+            id: string;
+            email: string;
+            profileCreated: boolean;
+            roleSetExtraRoles: Array<SchemaTypes.RoleName>;
+            welcomeMessage?: string | undefined;
+            suggestedLanguage?: string | undefined;
+          }>;
         }
       | undefined;
   };
@@ -94392,6 +94427,7 @@ export type GetSpaceInvitationsQuery = {
                 extraRoles: Array<SchemaTypes.RoleName>;
                 invitedToParent: boolean;
                 welcomeMessage?: string | undefined;
+                suggestedLanguage?: string | undefined;
                 lifecycle: { id: string };
                 createdBy?:
                   | {
@@ -94429,6 +94465,9 @@ export type GetSpaceInvitationsQuery = {
                 profileCreated: boolean;
                 firstName?: string | undefined;
                 lastName?: string | undefined;
+                roleSetExtraRoles: Array<SchemaTypes.RoleName>;
+                welcomeMessage?: string | undefined;
+                suggestedLanguage?: string | undefined;
                 authorization?:
                   | {
                       myPrivileges?:
@@ -94441,6 +94480,37 @@ export type GetSpaceInvitationsQuery = {
           };
         }
       | undefined;
+  };
+};
+
+export type LookupPlatformInvitationQueryVariables = SchemaTypes.Exact<{
+  invitationId: SchemaTypes.Scalars["UUID"]["input"];
+}>;
+
+export type LookupPlatformInvitationQuery = {
+  lookup: {
+    platformInvitation?:
+      | {
+          id: string;
+          email: string;
+          profileCreated: boolean;
+          createdDate: Date;
+          roleSetExtraRoles: Array<SchemaTypes.RoleName>;
+          welcomeMessage?: string | undefined;
+          suggestedLanguage?: string | undefined;
+        }
+      | undefined;
+  };
+};
+
+export type LookupPlatformInvitationCreatedByQueryVariables =
+  SchemaTypes.Exact<{
+    invitationId: SchemaTypes.Scalars["UUID"]["input"];
+  }>;
+
+export type LookupPlatformInvitationCreatedByQuery = {
+  lookup: {
+    platformInvitation?: { id: string; createdBy: { id: string } } | undefined;
   };
 };
 
@@ -119258,6 +119328,7 @@ export type MeQueryQuery = {
         extraRoles: Array<SchemaTypes.RoleName>;
         invitedToParent: boolean;
         welcomeMessage?: string | undefined;
+        suggestedLanguage?: string | undefined;
         spacesToJoinOnAccept?:
           | Array<{ id: string; displayName: string; url: string }>
           | undefined;
@@ -119883,6 +119954,7 @@ export const InvitationDataFragmentDoc = gql`
     extraRoles
     invitedToParent
     welcomeMessage
+    suggestedLanguage
     lifecycle {
       id
     }
@@ -119913,6 +119985,9 @@ export const PlatformInvitationDataFragmentDoc = gql`
     profileCreated
     firstName
     lastName
+    roleSetExtraRoles
+    welcomeMessage
+    suggestedLanguage
   }
 `;
 export const ReferenceDataFragmentDoc = gql`
@@ -122026,6 +122101,7 @@ export const InviteForEntryRoleOnRoleSetDocument = gql`
     $invitedUserEmails: [String!]!
     $welcomeMessage: String
     $extraRoles: [RoleName!]!
+    $suggestedLanguage: String
   ) {
     inviteForEntryRoleOnRoleSet(
       invitationData: {
@@ -122034,10 +122110,13 @@ export const InviteForEntryRoleOnRoleSetDocument = gql`
         roleSetID: $roleSetId
         welcomeMessage: $welcomeMessage
         extraRoles: $extraRoles
+        suggestedLanguage: $suggestedLanguage
       }
     ) {
       type
       notice
+      invitedActorID
+      invitedEmail
       invitation {
         id
         state
@@ -122060,6 +122139,7 @@ export const InviteForEntryRoleOnRoleSetDocument = gql`
         email
         firstName
         lastName
+        roleSetExtraRoles
         __typename
       }
       __typename
@@ -122113,6 +122193,16 @@ export const RemoveRoleFromVirtualContributorDocument = gql`
     ) {
       id
       __typename
+    }
+  }
+`;
+export const ResendPlatformInvitationDocument = gql`
+  mutation ResendPlatformInvitation($invitationId: UUID!) {
+    resendPlatformInvitation(resendData: { ID: $invitationId }) {
+      id
+      email
+      profileCreated
+      roleSetExtraRoles
     }
   }
 `;
@@ -124234,6 +124324,10 @@ export const RoleSetPendingPlatformInvitationsDocument = gql`
         platformInvitations {
           id
           email
+          profileCreated
+          roleSetExtraRoles
+          welcomeMessage
+          suggestedLanguage
         }
       }
     }
@@ -124290,6 +124384,33 @@ export const GetSpaceInvitationsDocument = gql`
   }
   ${InvitationDataFragmentDoc}
   ${PlatformInvitationDataFragmentDoc}
+`;
+export const LookupPlatformInvitationDocument = gql`
+  query LookupPlatformInvitation($invitationId: UUID!) {
+    lookup {
+      platformInvitation(ID: $invitationId) {
+        id
+        email
+        profileCreated
+        createdDate
+        roleSetExtraRoles
+        welcomeMessage
+        suggestedLanguage
+      }
+    }
+  }
+`;
+export const LookupPlatformInvitationCreatedByDocument = gql`
+  query LookupPlatformInvitationCreatedBy($invitationId: UUID!) {
+    lookup {
+      platformInvitation(ID: $invitationId) {
+        id
+        createdBy {
+          id
+        }
+      }
+    }
+  }
 `;
 export const GetAccountMainEntitiesDocument = gql`
   query GetAccountMainEntities($accountId: UUID!) {
@@ -126617,6 +126738,9 @@ const RemoveRoleFromUserExtendedDataDocumentString = print(
 const RemoveRoleFromVirtualContributorDocumentString = print(
   RemoveRoleFromVirtualContributorDocument
 );
+const ResendPlatformInvitationDocumentString = print(
+  ResendPlatformInvitationDocument
+);
 const TransferInnovationHubToAccountDocumentString = print(
   TransferInnovationHubToAccountDocument
 );
@@ -127075,6 +127199,12 @@ const GetRoleSetUsersInRolesDocumentString = print(
   GetRoleSetUsersInRolesDocument
 );
 const GetSpaceInvitationsDocumentString = print(GetSpaceInvitationsDocument);
+const LookupPlatformInvitationDocumentString = print(
+  LookupPlatformInvitationDocument
+);
+const LookupPlatformInvitationCreatedByDocumentString = print(
+  LookupPlatformInvitationCreatedByDocument
+);
 const GetAccountMainEntitiesDocumentString = print(
   GetAccountMainEntitiesDocument
 );
@@ -127737,6 +127867,28 @@ export function getSdk(
             { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "RemoveRoleFromVirtualContributor",
+        "mutation",
+        variables
+      );
+    },
+    ResendPlatformInvitation(
+      variables: SchemaTypes.ResendPlatformInvitationMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.ResendPlatformInvitationMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.ResendPlatformInvitationMutation>(
+            ResendPlatformInvitationDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "ResendPlatformInvitation",
         "mutation",
         variables
       );
@@ -132027,6 +132179,50 @@ export function getSdk(
             { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "getSpaceInvitations",
+        "query",
+        variables
+      );
+    },
+    LookupPlatformInvitation(
+      variables: SchemaTypes.LookupPlatformInvitationQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.LookupPlatformInvitationQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.LookupPlatformInvitationQuery>(
+            LookupPlatformInvitationDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "LookupPlatformInvitation",
+        "query",
+        variables
+      );
+    },
+    LookupPlatformInvitationCreatedBy(
+      variables: SchemaTypes.LookupPlatformInvitationCreatedByQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.LookupPlatformInvitationCreatedByQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.LookupPlatformInvitationCreatedByQuery>(
+            LookupPlatformInvitationCreatedByDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "LookupPlatformInvitationCreatedBy",
         "query",
         variables
       );

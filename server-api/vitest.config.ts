@@ -209,6 +209,7 @@ export default defineConfig({
           // workspace#080 Form response notifications, same rationale: its one
           // push case skips itself without the RabbitMQ management API.
           'src/functional-api/notifications/space/collaboration/form-response.it-spec.ts',
+          'src/functional-api/notifications/organization/associate-email-invitation.it-spec.ts',
           'src/functional-api/contributor-management/**/*.it-spec.ts',
           'src/functional-api/callout/**/*.it-spec.ts',
           'src/functional-api/communications/**/*.it-spec.ts',
