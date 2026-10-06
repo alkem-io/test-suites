@@ -30918,6 +30918,22 @@ export type LinkContributionInCalloutOnCollaborationWithStorageConfigFragment =
     };
   };
 
+export type PollDefinitionFragment = {
+  id: string;
+  title: string;
+  status: SchemaTypes.PollStatus;
+  deadline?: Date | undefined;
+  totalVotes?: number | undefined;
+  options: Array<{ id: string; text: string; sortOrder: number }>;
+  settings: {
+    minResponses: number;
+    maxResponses: number;
+    resultsVisibility: SchemaTypes.PollResultsVisibility;
+    resultsDetail: SchemaTypes.PollResultsDetail;
+    allowContributorsAddOptions: boolean;
+  };
+};
+
 export type PostCardInCalloutOnCollaborationWithStorageConfigFragment = {
   __typename: "Collaboration";
   id: string;
@@ -55047,6 +55063,52 @@ export type UpdateCalloutFormMutation = {
       responseMode: SchemaTypes.CalloutFormResponseMode;
       state: SchemaTypes.CalloutFormState;
       defaultCollapsed: boolean;
+    };
+  };
+};
+
+export type CastPollVoteMutationVariables = SchemaTypes.Exact<{
+  voteData: SchemaTypes.CastPollVoteInput;
+}>;
+
+export type CastPollVoteMutation = {
+  castPollVote: {
+    id: string;
+    totalVotes?: number | undefined;
+    myVote?: { id: string; selectedOptions: Array<{ id: string }> } | undefined;
+  };
+};
+
+export type CreatePollCalloutOnCalloutsSetMutationVariables =
+  SchemaTypes.Exact<{
+    calloutData: SchemaTypes.CreateCalloutOnCalloutsSetInput;
+  }>;
+
+export type CreatePollCalloutOnCalloutsSetMutation = {
+  createCalloutOnCalloutsSet: {
+    id: string;
+    settings: { visibility: SchemaTypes.CalloutVisibility };
+    framing: {
+      id: string;
+      type: SchemaTypes.CalloutFramingType;
+      profile: { id: string; displayName: string };
+      poll?:
+        | {
+            id: string;
+            title: string;
+            status: SchemaTypes.PollStatus;
+            deadline?: Date | undefined;
+            totalVotes?: number | undefined;
+            options: Array<{ id: string; text: string; sortOrder: number }>;
+            settings: {
+              minResponses: number;
+              maxResponses: number;
+              resultsVisibility: SchemaTypes.PollResultsVisibility;
+              resultsDetail: SchemaTypes.PollResultsDetail;
+              allowContributorsAddOptions: boolean;
+            };
+          }
+        | undefined;
     };
   };
 };
@@ -92211,6 +92273,72 @@ export type CreateSpaceMutationVariables = SchemaTypes.Exact<{
 
 export type CreateSpaceMutation = { createSpace: { id: string } };
 
+export type CreateCalloutTemplateWithFramingMutationVariables =
+  SchemaTypes.Exact<{
+    templatesSetId: SchemaTypes.Scalars["UUID"]["input"];
+    profileData: SchemaTypes.CreateProfileInput;
+    calloutData: SchemaTypes.CreateCalloutInput;
+  }>;
+
+export type CreateCalloutTemplateWithFramingMutation = {
+  createTemplate: {
+    id: string;
+    type: SchemaTypes.TemplateType;
+    callout?:
+      | {
+          id: string;
+          isTemplate: boolean;
+          framing: {
+            id: string;
+            type: SchemaTypes.CalloutFramingType;
+            poll?:
+              | {
+                  id: string;
+                  title: string;
+                  status: SchemaTypes.PollStatus;
+                  deadline?: Date | undefined;
+                  totalVotes?: number | undefined;
+                  options: Array<{
+                    id: string;
+                    text: string;
+                    sortOrder: number;
+                  }>;
+                  settings: {
+                    minResponses: number;
+                    maxResponses: number;
+                    resultsVisibility: SchemaTypes.PollResultsVisibility;
+                    resultsDetail: SchemaTypes.PollResultsDetail;
+                    allowContributorsAddOptions: boolean;
+                  };
+                }
+              | undefined;
+            form?:
+              | {
+                  id: string;
+                  title?: string | undefined;
+                  description?: string | undefined;
+                  questions: Array<{
+                    id: string;
+                    prompt: string;
+                    explanation?: string | undefined;
+                    type: SchemaTypes.CalloutFormQuestionType;
+                    required: boolean;
+                    options?: Array<{ id: string; label: string }> | undefined;
+                  }>;
+                  settings: {
+                    visibility: SchemaTypes.CalloutFormResponseVisibility;
+                    responseMode: SchemaTypes.CalloutFormResponseMode;
+                    state: SchemaTypes.CalloutFormState;
+                    defaultCollapsed: boolean;
+                  };
+                }
+              | undefined;
+          };
+        }
+      | undefined;
+  };
+};
+
 export type CreateTemplateMutationVariables = SchemaTypes.Exact<{
   templatesSetId: SchemaTypes.Scalars["UUID"]["input"];
   profileData: SchemaTypes.CreateProfileInput;
@@ -96409,6 +96537,74 @@ export type CalloutFragment = {
   };
 };
 
+export type CalloutsSetFramingDefinitionsQueryVariables = SchemaTypes.Exact<{
+  calloutsSetId: SchemaTypes.Scalars["UUID"]["input"];
+}>;
+
+export type CalloutsSetFramingDefinitionsQuery = {
+  lookup: {
+    calloutsSet?:
+      | {
+          id: string;
+          callouts: Array<{
+            id: string;
+            isTemplate: boolean;
+            settings: { visibility: SchemaTypes.CalloutVisibility };
+            framing: {
+              id: string;
+              type: SchemaTypes.CalloutFramingType;
+              profile: { displayName: string };
+              poll?:
+                | {
+                    id: string;
+                    title: string;
+                    status: SchemaTypes.PollStatus;
+                    deadline?: Date | undefined;
+                    totalVotes?: number | undefined;
+                    options: Array<{
+                      id: string;
+                      text: string;
+                      sortOrder: number;
+                    }>;
+                    settings: {
+                      minResponses: number;
+                      maxResponses: number;
+                      resultsVisibility: SchemaTypes.PollResultsVisibility;
+                      resultsDetail: SchemaTypes.PollResultsDetail;
+                      allowContributorsAddOptions: boolean;
+                    };
+                  }
+                | undefined;
+              form?:
+                | {
+                    id: string;
+                    title?: string | undefined;
+                    description?: string | undefined;
+                    questions: Array<{
+                      id: string;
+                      prompt: string;
+                      explanation?: string | undefined;
+                      type: SchemaTypes.CalloutFormQuestionType;
+                      required: boolean;
+                      options?:
+                        | Array<{ id: string; label: string }>
+                        | undefined;
+                    }>;
+                    settings: {
+                      visibility: SchemaTypes.CalloutFormResponseVisibility;
+                      responseMode: SchemaTypes.CalloutFormResponseMode;
+                      state: SchemaTypes.CalloutFormState;
+                      defaultCollapsed: boolean;
+                    };
+                  }
+                | undefined;
+            };
+          }>;
+        }
+      | undefined;
+  };
+};
+
 export type CalloutsSetFramingTypesQueryVariables = SchemaTypes.Exact<{
   calloutsSetId: SchemaTypes.Scalars["UUID"]["input"];
 }>;
@@ -96574,10 +96770,55 @@ export type TemplateContentSpaceCalloutsQuery = {
                     id: string;
                     callouts: Array<{
                       id: string;
+                      isTemplate: boolean;
                       framing: {
                         id: string;
                         type: SchemaTypes.CalloutFramingType;
                         profile: { displayName: string };
+                        poll?:
+                          | {
+                              id: string;
+                              title: string;
+                              status: SchemaTypes.PollStatus;
+                              deadline?: Date | undefined;
+                              totalVotes?: number | undefined;
+                              options: Array<{
+                                id: string;
+                                text: string;
+                                sortOrder: number;
+                              }>;
+                              settings: {
+                                minResponses: number;
+                                maxResponses: number;
+                                resultsVisibility: SchemaTypes.PollResultsVisibility;
+                                resultsDetail: SchemaTypes.PollResultsDetail;
+                                allowContributorsAddOptions: boolean;
+                              };
+                            }
+                          | undefined;
+                        form?:
+                          | {
+                              id: string;
+                              title?: string | undefined;
+                              description?: string | undefined;
+                              questions: Array<{
+                                id: string;
+                                prompt: string;
+                                explanation?: string | undefined;
+                                type: SchemaTypes.CalloutFormQuestionType;
+                                required: boolean;
+                                options?:
+                                  | Array<{ id: string; label: string }>
+                                  | undefined;
+                              }>;
+                              settings: {
+                                visibility: SchemaTypes.CalloutFormResponseVisibility;
+                                responseMode: SchemaTypes.CalloutFormResponseMode;
+                                state: SchemaTypes.CalloutFormState;
+                                defaultCollapsed: boolean;
+                              };
+                            }
+                          | undefined;
                       };
                     }>;
                   };
@@ -117929,6 +118170,75 @@ export type GetTemplateByIdQuery = {
   };
 };
 
+export type TemplateCalloutFramingQueryVariables = SchemaTypes.Exact<{
+  templateId: SchemaTypes.Scalars["UUID"]["input"];
+}>;
+
+export type TemplateCalloutFramingQuery = {
+  lookup: {
+    template?:
+      | {
+          id: string;
+          type: SchemaTypes.TemplateType;
+          callout?:
+            | {
+                id: string;
+                isTemplate: boolean;
+                framing: {
+                  id: string;
+                  type: SchemaTypes.CalloutFramingType;
+                  poll?:
+                    | {
+                        id: string;
+                        title: string;
+                        status: SchemaTypes.PollStatus;
+                        deadline?: Date | undefined;
+                        totalVotes?: number | undefined;
+                        options: Array<{
+                          id: string;
+                          text: string;
+                          sortOrder: number;
+                        }>;
+                        settings: {
+                          minResponses: number;
+                          maxResponses: number;
+                          resultsVisibility: SchemaTypes.PollResultsVisibility;
+                          resultsDetail: SchemaTypes.PollResultsDetail;
+                          allowContributorsAddOptions: boolean;
+                        };
+                      }
+                    | undefined;
+                  form?:
+                    | {
+                        id: string;
+                        title?: string | undefined;
+                        description?: string | undefined;
+                        questions: Array<{
+                          id: string;
+                          prompt: string;
+                          explanation?: string | undefined;
+                          type: SchemaTypes.CalloutFormQuestionType;
+                          required: boolean;
+                          options?:
+                            | Array<{ id: string; label: string }>
+                            | undefined;
+                        }>;
+                        settings: {
+                          visibility: SchemaTypes.CalloutFormResponseVisibility;
+                          responseMode: SchemaTypes.CalloutFormResponseMode;
+                          state: SchemaTypes.CalloutFormState;
+                          defaultCollapsed: boolean;
+                        };
+                      }
+                    | undefined;
+                };
+              }
+            | undefined;
+        }
+      | undefined;
+  };
+};
+
 export type GetWhiteboardTemplatesCountByTemplateSetIdQueryVariables =
   SchemaTypes.Exact<{
     templateSetId: SchemaTypes.Scalars["UUID"]["input"];
@@ -120518,6 +120828,27 @@ export const LinkContributionInCalloutOnCollaborationWithStorageConfigFragmentDo
   }
   ${ProfileStorageConfigFragmentDoc}
 `;
+export const PollDefinitionFragmentDoc = gql`
+  fragment PollDefinition on Poll {
+    id
+    title
+    status
+    deadline
+    totalVotes
+    options {
+      id
+      text
+      sortOrder
+    }
+    settings {
+      minResponses
+      maxResponses
+      resultsVisibility
+      resultsDetail
+      allowContributorsAddOptions
+    }
+  }
+`;
 export const PostCardInCalloutOnCollaborationWithStorageConfigFragmentDoc = gql`
   fragment PostCardInCalloutOnCollaborationWithStorageConfig on Collaboration {
     id
@@ -122506,6 +122837,44 @@ export const UpdateCalloutFormDocument = gql`
   }
   ${CalloutFormDetailsFragmentDoc}
 `;
+export const CastPollVoteDocument = gql`
+  mutation castPollVote($voteData: CastPollVoteInput!) {
+    castPollVote(voteData: $voteData) {
+      id
+      totalVotes
+      myVote {
+        id
+        selectedOptions {
+          id
+        }
+      }
+    }
+  }
+`;
+export const CreatePollCalloutOnCalloutsSetDocument = gql`
+  mutation createPollCalloutOnCalloutsSet(
+    $calloutData: CreateCalloutOnCalloutsSetInput!
+  ) {
+    createCalloutOnCalloutsSet(calloutData: $calloutData) {
+      id
+      settings {
+        visibility
+      }
+      framing {
+        id
+        type
+        profile {
+          id
+          displayName
+        }
+        poll {
+          ...PollDefinition
+        }
+      }
+    }
+  }
+  ${PollDefinitionFragmentDoc}
+`;
 export const TransferCalloutDocument = gql`
   mutation transferCallout($transferData: TransferCalloutInput!) {
     transferCallout(transferData: $transferData) {
@@ -123807,6 +124176,41 @@ export const CreateSpaceDocument = gql`
     }
   }
 `;
+export const CreateCalloutTemplateWithFramingDocument = gql`
+  mutation CreateCalloutTemplateWithFraming(
+    $templatesSetId: UUID!
+    $profileData: CreateProfileInput!
+    $calloutData: CreateCalloutInput!
+  ) {
+    createTemplate(
+      templateData: {
+        templatesSetID: $templatesSetId
+        profileData: $profileData
+        type: CALLOUT
+        calloutData: $calloutData
+      }
+    ) {
+      id
+      type
+      callout {
+        id
+        isTemplate
+        framing {
+          id
+          type
+          poll {
+            ...PollDefinition
+          }
+          form {
+            ...CalloutFormDetails
+          }
+        }
+      }
+    }
+  }
+  ${PollDefinitionFragmentDoc}
+  ${CalloutFormDetailsFragmentDoc}
+`;
 export const CreateTemplateDocument = gql`
   mutation CreateTemplate(
     $templatesSetId: UUID!
@@ -124794,6 +125198,37 @@ export const GetCalloutsOnCalloutsSetUsingClassificationDocument = gql`
   ${CalloutFragmentDoc}
   ${ClassificationDetailsFragmentDoc}
 `;
+export const CalloutsSetFramingDefinitionsDocument = gql`
+  query calloutsSetFramingDefinitions($calloutsSetId: UUID!) {
+    lookup {
+      calloutsSet(ID: $calloutsSetId) {
+        id
+        callouts {
+          id
+          isTemplate
+          settings {
+            visibility
+          }
+          framing {
+            id
+            type
+            profile {
+              displayName
+            }
+            poll {
+              ...PollDefinition
+            }
+            form {
+              ...CalloutFormDetails
+            }
+          }
+        }
+      }
+    }
+  }
+  ${PollDefinitionFragmentDoc}
+  ${CalloutFormDetailsFragmentDoc}
+`;
 export const CalloutsSetFramingTypesDocument = gql`
   query calloutsSetFramingTypes($calloutsSetId: UUID!) {
     lookup {
@@ -124857,11 +125292,18 @@ export const TemplateContentSpaceCalloutsDocument = gql`
               id
               callouts {
                 id
+                isTemplate
                 framing {
                   id
                   type
                   profile {
                     displayName
+                  }
+                  poll {
+                    ...PollDefinition
+                  }
+                  form {
+                    ...CalloutFormDetails
                   }
                 }
               }
@@ -124871,6 +125313,8 @@ export const TemplateContentSpaceCalloutsDocument = gql`
       }
     }
   }
+  ${PollDefinitionFragmentDoc}
+  ${CalloutFormDetailsFragmentDoc}
 `;
 export const WhiteboardCalloutStorageConfigDocument = gql`
   query WhiteboardCalloutStorageConfig($calloutId: UUID!) {
@@ -126057,6 +126501,32 @@ export const GetTemplateByIdDocument = gql`
     }
   }
 `;
+export const TemplateCalloutFramingDocument = gql`
+  query templateCalloutFraming($templateId: UUID!) {
+    lookup {
+      template(ID: $templateId) {
+        id
+        type
+        callout {
+          id
+          isTemplate
+          framing {
+            id
+            type
+            poll {
+              ...PollDefinition
+            }
+            form {
+              ...CalloutFormDetails
+            }
+          }
+        }
+      }
+    }
+  }
+  ${PollDefinitionFragmentDoc}
+  ${CalloutFormDetailsFragmentDoc}
+`;
 export const GetWhiteboardTemplatesCountByTemplateSetIdDocument = gql`
   query GetWhiteboardTemplatesCountByTemplateSetId($templateSetId: UUID!) {
     lookup {
@@ -126791,6 +127261,10 @@ const SubmitCalloutFormResponseDocumentString = print(
   SubmitCalloutFormResponseDocument
 );
 const UpdateCalloutFormDocumentString = print(UpdateCalloutFormDocument);
+const CastPollVoteDocumentString = print(CastPollVoteDocument);
+const CreatePollCalloutOnCalloutsSetDocumentString = print(
+  CreatePollCalloutOnCalloutsSetDocument
+);
 const TransferCalloutDocumentString = print(TransferCalloutDocument);
 const UpdateCollaborationFromSpaceTemplateDocumentString = print(
   UpdateCollaborationFromSpaceTemplateDocument
@@ -127137,6 +127611,9 @@ const AdminSearchIngestFromScratchDocumentString = print(
 );
 const UpdateSpaceSettingsDocumentString = print(UpdateSpaceSettingsDocument);
 const CreateSpaceDocumentString = print(CreateSpaceDocument);
+const CreateCalloutTemplateWithFramingDocumentString = print(
+  CreateCalloutTemplateWithFramingDocument
+);
 const CreateTemplateDocumentString = print(CreateTemplateDocument);
 const CreateTemplateFromSpaceDocumentString = print(
   CreateTemplateFromSpaceDocument
@@ -127239,6 +127716,9 @@ const CalloutWhiateboardStorageConfigDocumentString = print(
 );
 const GetCalloutsOnCalloutsSetUsingClassificationDocumentString = print(
   GetCalloutsOnCalloutsSetUsingClassificationDocument
+);
+const CalloutsSetFramingDefinitionsDocumentString = print(
+  CalloutsSetFramingDefinitionsDocument
 );
 const CalloutsSetFramingTypesDocumentString = print(
   CalloutsSetFramingTypesDocument
@@ -127387,6 +127867,9 @@ const GetSpaceTemplatesCountByTemplateSetIdDocumentString = print(
   GetSpaceTemplatesCountByTemplateSetIdDocument
 );
 const GetTemplateByIdDocumentString = print(GetTemplateByIdDocument);
+const TemplateCalloutFramingDocumentString = print(
+  TemplateCalloutFramingDocument
+);
 const GetWhiteboardTemplatesCountByTemplateSetIdDocumentString = print(
   GetWhiteboardTemplatesCountByTemplateSetIdDocument
 );
@@ -128373,6 +128856,50 @@ export function getSdk(
             { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "updateCalloutForm",
+        "mutation",
+        variables
+      );
+    },
+    castPollVote(
+      variables: SchemaTypes.CastPollVoteMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.CastPollVoteMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.CastPollVoteMutation>(
+            CastPollVoteDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "castPollVote",
+        "mutation",
+        variables
+      );
+    },
+    createPollCalloutOnCalloutsSet(
+      variables: SchemaTypes.CreatePollCalloutOnCalloutsSetMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.CreatePollCalloutOnCalloutsSetMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.CreatePollCalloutOnCalloutsSetMutation>(
+            CreatePollCalloutOnCalloutsSetDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "createPollCalloutOnCalloutsSet",
         "mutation",
         variables
       );
@@ -131567,6 +132094,28 @@ export function getSdk(
         variables
       );
     },
+    CreateCalloutTemplateWithFraming(
+      variables: SchemaTypes.CreateCalloutTemplateWithFramingMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.CreateCalloutTemplateWithFramingMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.CreateCalloutTemplateWithFramingMutation>(
+            CreateCalloutTemplateWithFramingDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "CreateCalloutTemplateWithFraming",
+        "mutation",
+        variables
+      );
+    },
     CreateTemplate(
       variables: SchemaTypes.CreateTemplateMutationVariables,
       requestHeaders?: GraphQLClientRequestHeaders
@@ -132597,6 +133146,28 @@ export function getSdk(
             { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "GetCalloutsOnCalloutsSetUsingClassification",
+        "query",
+        variables
+      );
+    },
+    calloutsSetFramingDefinitions(
+      variables: SchemaTypes.CalloutsSetFramingDefinitionsQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.CalloutsSetFramingDefinitionsQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.CalloutsSetFramingDefinitionsQuery>(
+            CalloutsSetFramingDefinitionsDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "calloutsSetFramingDefinitions",
         "query",
         variables
       );
@@ -134115,6 +134686,28 @@ export function getSdk(
             { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "GetTemplateById",
+        "query",
+        variables
+      );
+    },
+    templateCalloutFraming(
+      variables: SchemaTypes.TemplateCalloutFramingQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.TemplateCalloutFramingQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.TemplateCalloutFramingQuery>(
+            TemplateCalloutFramingDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "templateCalloutFraming",
         "query",
         variables
       );

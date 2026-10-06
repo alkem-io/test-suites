@@ -29303,6 +29303,22 @@ export type LinkContributionInCalloutOnCollaborationWithStorageConfigFragment =
     };
   };
 
+export type PollDefinitionFragment = {
+  id: string;
+  title: string;
+  status: PollStatus;
+  deadline?: Date | undefined;
+  totalVotes?: number | undefined;
+  options: Array<{ id: string; text: string; sortOrder: number }>;
+  settings: {
+    minResponses: number;
+    maxResponses: number;
+    resultsVisibility: PollResultsVisibility;
+    resultsDetail: PollResultsDetail;
+    allowContributorsAddOptions: boolean;
+  };
+};
+
 export type PostCardInCalloutOnCollaborationWithStorageConfigFragment = {
   __typename: "Collaboration";
   id: string;
@@ -50559,6 +50575,51 @@ export type UpdateCalloutFormMutation = {
       responseMode: CalloutFormResponseMode;
       state: CalloutFormState;
       defaultCollapsed: boolean;
+    };
+  };
+};
+
+export type CastPollVoteMutationVariables = Exact<{
+  voteData: CastPollVoteInput;
+}>;
+
+export type CastPollVoteMutation = {
+  castPollVote: {
+    id: string;
+    totalVotes?: number | undefined;
+    myVote?: { id: string; selectedOptions: Array<{ id: string }> } | undefined;
+  };
+};
+
+export type CreatePollCalloutOnCalloutsSetMutationVariables = Exact<{
+  calloutData: CreateCalloutOnCalloutsSetInput;
+}>;
+
+export type CreatePollCalloutOnCalloutsSetMutation = {
+  createCalloutOnCalloutsSet: {
+    id: string;
+    settings: { visibility: CalloutVisibility };
+    framing: {
+      id: string;
+      type: CalloutFramingType;
+      profile: { id: string; displayName: string };
+      poll?:
+        | {
+            id: string;
+            title: string;
+            status: PollStatus;
+            deadline?: Date | undefined;
+            totalVotes?: number | undefined;
+            options: Array<{ id: string; text: string; sortOrder: number }>;
+            settings: {
+              minResponses: number;
+              maxResponses: number;
+              resultsVisibility: PollResultsVisibility;
+              resultsDetail: PollResultsDetail;
+              allowContributorsAddOptions: boolean;
+            };
+          }
+        | undefined;
     };
   };
 };
@@ -84344,6 +84405,71 @@ export type CreateSpaceMutationVariables = Exact<{
 
 export type CreateSpaceMutation = { createSpace: { id: string } };
 
+export type CreateCalloutTemplateWithFramingMutationVariables = Exact<{
+  templatesSetId: Scalars["UUID"]["input"];
+  profileData: CreateProfileInput;
+  calloutData: CreateCalloutInput;
+}>;
+
+export type CreateCalloutTemplateWithFramingMutation = {
+  createTemplate: {
+    id: string;
+    type: TemplateType;
+    callout?:
+      | {
+          id: string;
+          isTemplate: boolean;
+          framing: {
+            id: string;
+            type: CalloutFramingType;
+            poll?:
+              | {
+                  id: string;
+                  title: string;
+                  status: PollStatus;
+                  deadline?: Date | undefined;
+                  totalVotes?: number | undefined;
+                  options: Array<{
+                    id: string;
+                    text: string;
+                    sortOrder: number;
+                  }>;
+                  settings: {
+                    minResponses: number;
+                    maxResponses: number;
+                    resultsVisibility: PollResultsVisibility;
+                    resultsDetail: PollResultsDetail;
+                    allowContributorsAddOptions: boolean;
+                  };
+                }
+              | undefined;
+            form?:
+              | {
+                  id: string;
+                  title?: string | undefined;
+                  description?: string | undefined;
+                  questions: Array<{
+                    id: string;
+                    prompt: string;
+                    explanation?: string | undefined;
+                    type: CalloutFormQuestionType;
+                    required: boolean;
+                    options?: Array<{ id: string; label: string }> | undefined;
+                  }>;
+                  settings: {
+                    visibility: CalloutFormResponseVisibility;
+                    responseMode: CalloutFormResponseMode;
+                    state: CalloutFormState;
+                    defaultCollapsed: boolean;
+                  };
+                }
+              | undefined;
+          };
+        }
+      | undefined;
+  };
+};
+
 export type CreateTemplateMutationVariables = Exact<{
   templatesSetId: Scalars["UUID"]["input"];
   profileData: CreateProfileInput;
@@ -88331,6 +88457,74 @@ export type CalloutFragment = {
   settings: { __typename: "CalloutSettings"; visibility: CalloutVisibility };
 };
 
+export type CalloutsSetFramingDefinitionsQueryVariables = Exact<{
+  calloutsSetId: Scalars["UUID"]["input"];
+}>;
+
+export type CalloutsSetFramingDefinitionsQuery = {
+  lookup: {
+    calloutsSet?:
+      | {
+          id: string;
+          callouts: Array<{
+            id: string;
+            isTemplate: boolean;
+            settings: { visibility: CalloutVisibility };
+            framing: {
+              id: string;
+              type: CalloutFramingType;
+              profile: { displayName: string };
+              poll?:
+                | {
+                    id: string;
+                    title: string;
+                    status: PollStatus;
+                    deadline?: Date | undefined;
+                    totalVotes?: number | undefined;
+                    options: Array<{
+                      id: string;
+                      text: string;
+                      sortOrder: number;
+                    }>;
+                    settings: {
+                      minResponses: number;
+                      maxResponses: number;
+                      resultsVisibility: PollResultsVisibility;
+                      resultsDetail: PollResultsDetail;
+                      allowContributorsAddOptions: boolean;
+                    };
+                  }
+                | undefined;
+              form?:
+                | {
+                    id: string;
+                    title?: string | undefined;
+                    description?: string | undefined;
+                    questions: Array<{
+                      id: string;
+                      prompt: string;
+                      explanation?: string | undefined;
+                      type: CalloutFormQuestionType;
+                      required: boolean;
+                      options?:
+                        | Array<{ id: string; label: string }>
+                        | undefined;
+                    }>;
+                    settings: {
+                      visibility: CalloutFormResponseVisibility;
+                      responseMode: CalloutFormResponseMode;
+                      state: CalloutFormState;
+                      defaultCollapsed: boolean;
+                    };
+                  }
+                | undefined;
+            };
+          }>;
+        }
+      | undefined;
+  };
+};
+
 export type CalloutsSetFramingTypesQueryVariables = Exact<{
   calloutsSetId: Scalars["UUID"]["input"];
 }>;
@@ -88480,10 +88674,55 @@ export type TemplateContentSpaceCalloutsQuery = {
                     id: string;
                     callouts: Array<{
                       id: string;
+                      isTemplate: boolean;
                       framing: {
                         id: string;
                         type: CalloutFramingType;
                         profile: { displayName: string };
+                        poll?:
+                          | {
+                              id: string;
+                              title: string;
+                              status: PollStatus;
+                              deadline?: Date | undefined;
+                              totalVotes?: number | undefined;
+                              options: Array<{
+                                id: string;
+                                text: string;
+                                sortOrder: number;
+                              }>;
+                              settings: {
+                                minResponses: number;
+                                maxResponses: number;
+                                resultsVisibility: PollResultsVisibility;
+                                resultsDetail: PollResultsDetail;
+                                allowContributorsAddOptions: boolean;
+                              };
+                            }
+                          | undefined;
+                        form?:
+                          | {
+                              id: string;
+                              title?: string | undefined;
+                              description?: string | undefined;
+                              questions: Array<{
+                                id: string;
+                                prompt: string;
+                                explanation?: string | undefined;
+                                type: CalloutFormQuestionType;
+                                required: boolean;
+                                options?:
+                                  | Array<{ id: string; label: string }>
+                                  | undefined;
+                              }>;
+                              settings: {
+                                visibility: CalloutFormResponseVisibility;
+                                responseMode: CalloutFormResponseMode;
+                                state: CalloutFormState;
+                                defaultCollapsed: boolean;
+                              };
+                            }
+                          | undefined;
                       };
                     }>;
                   };
@@ -109029,6 +109268,75 @@ export type GetTemplateByIdQuery = {
           contentSpace?: { id: string } | undefined;
           whiteboard?: { id: string } | undefined;
           callout?: { id: string } | undefined;
+        }
+      | undefined;
+  };
+};
+
+export type TemplateCalloutFramingQueryVariables = Exact<{
+  templateId: Scalars["UUID"]["input"];
+}>;
+
+export type TemplateCalloutFramingQuery = {
+  lookup: {
+    template?:
+      | {
+          id: string;
+          type: TemplateType;
+          callout?:
+            | {
+                id: string;
+                isTemplate: boolean;
+                framing: {
+                  id: string;
+                  type: CalloutFramingType;
+                  poll?:
+                    | {
+                        id: string;
+                        title: string;
+                        status: PollStatus;
+                        deadline?: Date | undefined;
+                        totalVotes?: number | undefined;
+                        options: Array<{
+                          id: string;
+                          text: string;
+                          sortOrder: number;
+                        }>;
+                        settings: {
+                          minResponses: number;
+                          maxResponses: number;
+                          resultsVisibility: PollResultsVisibility;
+                          resultsDetail: PollResultsDetail;
+                          allowContributorsAddOptions: boolean;
+                        };
+                      }
+                    | undefined;
+                  form?:
+                    | {
+                        id: string;
+                        title?: string | undefined;
+                        description?: string | undefined;
+                        questions: Array<{
+                          id: string;
+                          prompt: string;
+                          explanation?: string | undefined;
+                          type: CalloutFormQuestionType;
+                          required: boolean;
+                          options?:
+                            | Array<{ id: string; label: string }>
+                            | undefined;
+                        }>;
+                        settings: {
+                          visibility: CalloutFormResponseVisibility;
+                          responseMode: CalloutFormResponseMode;
+                          state: CalloutFormState;
+                          defaultCollapsed: boolean;
+                        };
+                      }
+                    | undefined;
+                };
+              }
+            | undefined;
         }
       | undefined;
   };
