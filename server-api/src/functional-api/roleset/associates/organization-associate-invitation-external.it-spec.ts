@@ -7,7 +7,9 @@
 // `nonSpaceMember` = OWNER-not-admin; `betaTester` = associate-only (no manager
 // credential); `qaUser` = a registered user with no role on the organization;
 // `globalSupportAdmin` = platform support (holds the invite privilege
-// everywhere). Invitees are throwaway addresses on the reserved `.test` TLD.
+// everywhere). Invitees are throwaway addresses under `alkemio.test` (the
+// reserved `.test` TLD, RFC 2606); the registration and resend it-specs and
+// the walks use the equally reserved `example.com`.
 //
 // Every mail assertion is a per-address delta (`mailsToAfter`: the mails to the
 // address before the step are noted, the new ones returned; the inbox is never emptied)

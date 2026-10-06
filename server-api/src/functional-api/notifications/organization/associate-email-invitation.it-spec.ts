@@ -7,6 +7,7 @@
 // own template and keeps its own subject — asserted here in the same run so a
 // change to one cannot silently leak into the other.
 import {
+  delay,
   TestScenarioConfig,
   TestScenarioFactory,
   TestUser,
@@ -22,12 +23,10 @@ import {
   resendPlatformInvitation,
 } from '@functional-api/roleset/invitations/invitation.request.params';
 import {
-  drainMailsTo,
   mailsToAfter,
   mailSummary,
 } from '@functional-api/roleset/invitations/platform-invitation.helpers';
 import { getSingleInvitationResult } from '@functional-api/roleset/roleset.request.params';
-import { delay } from '@alkemio/tests-lib';
 
 const uniqueId = UniqueIDGenerator.getID();
 const secretPhrase = `secret-phrase-${uniqueId}`;
@@ -221,6 +220,5 @@ describe('Organization email invitation — the unregistered invitee is emailed 
     expect(mails, mailSummary(mails)).toHaveLength(1);
     expect(mails[0].subject).toEqual(`Invitation to join ${spaceName}`);
     expect(mails[0].subject).not.toContain('You are invited to join');
-    await drainMailsTo(email);
   });
 });
