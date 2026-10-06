@@ -48,7 +48,6 @@ import {
   runSuffix,
   settledMailsTo,
   TestUserManager,
-  waitForMailsTo,
   type RegisteredUser,
 } from './organization-email-invitations.helpers';
 
@@ -145,9 +144,9 @@ baseTest.beforeAll(async () => {
   ]);
   // Let the three creation mails land so every later count is a true delta.
   await Promise.all([
-    waitForMailsTo(orgEmail, 1),
-    waitForMailsTo(orgEmail2, 1),
-    waitForMailsTo(spaceEmail, 1),
+    settledMailsTo(orgEmail, 1),
+    settledMailsTo(orgEmail2, 1),
+    settledMailsTo(spaceEmail, 1),
   ]);
 });
 
@@ -352,7 +351,7 @@ baseTest.describe('US3-AS4 — a consumed invitation cannot be resent', () => {
     async () => {
       baseTest.setTimeout(180_000);
       const id = await createEmailInvitation(orgRoleSetId, consumedEmail, []);
-      await waitForMailsTo(consumedEmail, 1);
+      await settledMailsTo(consumedEmail, 1);
       await registerUserAtAddress(consumedEmail, `Consumed${runSuffix}`);
       // Registration may still be delivering mail for the address; count from a settled baseline.
       const mailsBefore = (await settledMailsTo(consumedEmail)).length;
@@ -432,7 +431,7 @@ baseTest.describe('US3-AS6 — the original inviter was deleted', () => {
       expect(created.errors, created.raw).toEqual([]);
       const id =
         created.data!.inviteForEntryRoleOnRoleSet[0]!.platformInvitation!.id;
-      await waitForMailsTo(inviteeEmail, 1);
+      await settledMailsTo(inviteeEmail, 1);
       const before = await lookupEmailInvitationRaw(id, globalAdminToken);
 
       // The inviter's account goes away; the invitation addressed to someone else stays.

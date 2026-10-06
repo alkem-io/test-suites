@@ -410,7 +410,8 @@ adminTest.describe(
         // "A later sign-up finds nothing" is asserted in organization-associate-invitation-external.it-spec.ts (US1-AS7).
 
         // Re-inviting creates a fresh invitation and a fresh email.
-        const mailsBefore = (await mailsTo(chainEmail)).length;
+        // Baseline from a settled read: a late AS2/AS4 mail must not be counted as the re-invite's.
+        const mailsBefore = (await settledMailsTo(chainEmail)).length;
         const reinvite = await inviteRaw(org.roleSetId, admin.token, {
           emails: [chainEmail],
           roles: [RoleName.Admin],

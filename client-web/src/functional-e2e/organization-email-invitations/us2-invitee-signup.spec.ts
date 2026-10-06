@@ -329,11 +329,9 @@ baseTest.describe(
         await page.goto(
           `${baseUrl}/organization/${org.nameID}/settings/community`
         );
-        const ownRow = page
-          .getByRole('listitem')
-          .filter({
-            hasText: new RegExp(escapeRegExp(`New1${runSuffix}`), 'i'),
-          });
+        const ownRow = page.getByRole('listitem').filter({
+          hasText: new RegExp(escapeRegExp(`New1${runSuffix}`), 'i'),
+        });
         await expect(ownRow).toBeVisible({ timeout: 20_000 });
         await expect(
           ownRow.getByText(text.associate, { exact: true })

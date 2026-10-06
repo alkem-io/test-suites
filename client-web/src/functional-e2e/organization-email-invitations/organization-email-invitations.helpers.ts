@@ -420,23 +420,6 @@ export const mailsTo = async (address: string): Promise<MailItem[]> => {
   );
 };
 
-/** Waits until at least `count` mails to `address` exist (or the timeout passes)
- * and returns them. Returns whatever was found, so the caller's own assertion
- * carries the failure message. */
-export const waitForMailsTo = async (
-  address: string,
-  count: number,
-  timeoutMs = MAIL_DELIVERY_TIMEOUT_MS
-): Promise<MailItem[]> => {
-  const deadline = Date.now() + timeoutMs;
-  let found = await mailsTo(address);
-  while (found.length < count && Date.now() < deadline) {
-    await delay(MAIL_POLL_MS);
-    found = await mailsTo(address);
-  }
-  return found;
-};
-
 /**
  * Polls the mails to `address` until there are `expected` of them and that
  * number has held for a full quiet period — the one read behind every exact

@@ -18,7 +18,6 @@ import {
   runSuffix,
   settledMailsTo,
   TestUserManager,
-  waitForMailsTo,
 } from './organization-email-invitations.helpers';
 
 baseTest.describe.configure({ mode: 'serial' });
@@ -52,7 +51,7 @@ baseTest.beforeAll(async () => {
     if (res.errors.length > 0)
       throw new Error(`invite ${email} failed: ${res.raw}`);
   }
-  await Promise.all([waitForMailsTo(emailA, 1), waitForMailsTo(emailB, 1)]);
+  await Promise.all([settledMailsTo(emailA, 1), settledMailsTo(emailB, 1)]);
 });
 
 baseTest.afterAll(async () => {
