@@ -20,17 +20,8 @@ import {
   TestUserManager,
   waitForMailsTo,
 } from './organization-email-invitations.helpers';
-import fs from 'fs';
 
 baseTest.describe.configure({ mode: 'serial' });
-
-const EVIDENCE_DIR = process.env.US3_EVIDENCE_DIR;
-const shot = async (page: import('@playwright/test').Page, name: string) => {
-  if (EVIDENCE_DIR) {
-    fs.mkdirSync(EVIDENCE_DIR, { recursive: true });
-    await page.screenshot({ path: `${EVIDENCE_DIR}/${name}.png` });
-  }
-};
 
 const orgAdminTest = createPersonaTest(`${TestUser.ORGANIZATION_ADMIN}@alkem.io`);
 const emailA = `us081c-twoa-${runSuffix}@example.com`;
@@ -80,7 +71,6 @@ orgAdminTest('US3-AS1: Resend A then B back-to-back dispatches both; a second Re
   await page.goto(`${baseUrl}/organization/${scenario.organization.nameId}/settings/community`);
   await expect(row(emailA)).toBeVisible({ timeout: 25_000 });
   await expect(row(emailB)).toBeVisible();
-  await shot(page, 'US3-AS1-v3-0-two-rows');
   const rowBefore = { a: await row(emailA).innerText(), b: await row(emailB).innerText() };
 
   // Back-to-back: no awaiting of A's outcome before B is clicked.
@@ -89,7 +79,6 @@ orgAdminTest('US3-AS1: Resend A then B back-to-back dispatches both; a second Re
   await resend(emailB).click();
 
   await expect(page.getByText('Invitation email sent again').first()).toBeVisible({ timeout: 15_000 });
-  await shot(page, 'US3-AS1-v3-1-after-A-and-B');
   expect(await waitForMailsTo(emailA, aBefore + 1)).toHaveLength(aBefore + 1);
   expect(await waitForMailsTo(emailB, bBefore + 1)).toHaveLength(bBefore + 1);
   // Two success toasts (one per row) or at least two successful resend calls.
@@ -100,25 +89,15 @@ orgAdminTest('US3-AS1: Resend A then B back-to-back dispatches both; a second Re
   // Second Resend on A within the window.
   const aAfterFirst = (await settledMailsTo(emailA, aBefore + 1)).length;
   await resend(emailA).click();
-  const toast = page.getByText('Already resent recently — try again in a few minutes').first();
-  await expect(toast).toBeVisible({ timeout: 15_000 });
-  await shot(page, 'US3-AS1-v3-2-second-A-error-toast');
-  const toastEl = page.locator('[data-sonner-toast], [role="alert"], [role="status"]').filter({ hasText: 'Already resent recently' }).first();
-  const toastInfo = await toastEl.evaluate(el => ({
-    tag: el.tagName,
-    role: el.getAttribute('role'),
-    dataType: el.getAttribute('data-type'),
-    cls: el.className?.toString().slice(0, 200),
-    ancestorTypes: (() => {
-      const out: string[] = [];
-      for (let n: Element | null = el; n && out.length < 6; n = n.parentElement) out.push(`${n.tagName}[type=${n.getAttribute('data-type')}][role=${n.getAttribute('role')}]`);
-      return out;
-    })(),
-  }));
-  console.info(`[US3-AS1] error toast element: ${JSON.stringify(toastInfo)}`);
+  // The refusal is an ERROR toast, not a success one: sonner marks the variant
+  // on the toast element (`data-type`), so the oracle is the typed element with
+  // the readable message, never a success toast that happens to carry it.
+  const errorToast = page
+    .locator('[data-sonner-toast][data-type="error"]')
+    .filter({ hasText: 'Already resent recently — try again in a few minutes' });
+  await expect(errorToast).toBeVisible({ timeout: 15_000 });
   expect(await settledMailsTo(emailA, aAfterFirst)).toHaveLength(aAfterFirst);
   // Entries are pushed once each response body has been read; wait for the third.
   await expect.poll(() => graphqlResends.length, { timeout: 10_000 }).toBe(3);
   expect(graphqlResends.filter(r => r.ok)).toHaveLength(2);
-  expect(toastInfo.ancestorTypes.join(' ') + toastInfo.cls).toMatch(/error|destructive|danger/i);
 });
