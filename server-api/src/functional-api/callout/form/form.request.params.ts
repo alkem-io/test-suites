@@ -421,6 +421,16 @@ export const deleteFormResponseAnonymous = (responseID: string) =>
     { variables: { deleteData: { responseID } } }
   );
 
+/** The same delete with an arbitrary bearer (e.g. a disposable user). */
+export const deleteFormResponseWithBearer = (
+  responseID: string,
+  bearerToken: string
+) =>
+  postGraphqlRaw<{ deleteCalloutFormResponse: { id: string } }>(
+    DELETE_MUTATION,
+    { variables: { deleteData: { responseID } }, bearerToken }
+  );
+
 /** The same lookup with an arbitrary bearer (e.g. a disposable user). */
 export const getFormResponsesWithBearer = (
   formID: string,
@@ -430,6 +440,27 @@ export const getFormResponsesWithBearer = (
     variables: { formID },
     bearerToken,
   });
+
+/** `responsesView` for the raw (bearer / anonymous) lookup shape. */
+export const responsesViewRaw = (
+  result: Awaited<ReturnType<typeof getFormResponsesWithBearer>>
+) => {
+  const view = result.body.data?.lookup.calloutFormResponses;
+  if (!view) {
+    throw new Error(
+      `lookup.calloutFormResponses returned no data: ${JSON.stringify(
+        result.body.errors ?? result.body
+      )}`
+    );
+  }
+  return {
+    mine: view.mine.length,
+    total: view.all.total,
+    listed: view.all.responses.length,
+    canReadAll: view.canReadAll,
+    canModerate: view.canModerate,
+  };
+};
 
 export const submitFormResponseWithBearer = (
   formID: string,

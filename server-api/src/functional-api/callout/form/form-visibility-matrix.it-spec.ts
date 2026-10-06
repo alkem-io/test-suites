@@ -17,6 +17,11 @@ import {
 } from '@alkemio/tests-lib/core/generated/alkemio-schema';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import { deleteSpace } from '../../journey/space/space.request.params';
+import { deleteDisposableUsers } from '../../platform-roles/_support/groups/disposable-user';
+import {
+  RegisteredUser,
+  registerUser,
+} from '../../platform-roles/_support/users';
 import {
   assignRoleToUser,
   removeRoleFromUser,
@@ -26,14 +31,17 @@ import {
   createFormCallout,
   deleteFormResponse,
   deleteFormResponseAnonymous,
+  deleteFormResponseWithBearer,
   FormCallout,
   getFormResponses,
   getFormResponsesAnonymous,
+  getFormResponsesWithBearer,
   getSpaceSets,
   grantPlatformRole,
   isDenied,
   isForbiddenByPolicy,
   responsesView,
+  responsesViewRaw,
   revokePlatformRole,
   submitFormResponse,
   uniqueFormName,
@@ -50,6 +58,12 @@ import {
  *   ALL  -> `all.total == 1` and `canReadAll`
  *   OWN  -> `all.total == 0` (they wrote nothing) and `!canReadAll`
  * The submitter (mine == 1) is the positive control that the row exists at all.
+ *
+ * The four platform-role cells (Content Full Access, Platform Support, Global
+ * Spaces Reader, Platform Spaces Reader) run as DISPOSABLE users registered
+ * for this file and deleted at its end. Granting those roles to the shared
+ * harness personas would change what every other file sees of them while
+ * this one runs (vitest runs files in parallel under the default config).
  */
 
 const uniqueId = UniqueIDGenerator.getID();
@@ -120,123 +134,179 @@ const everything = (mine: number, canModerate: boolean): View => ({
   canModerate,
 });
 
+/** A disposable user that holds ONE platform role for the duration of the file. */
+type DisposableRole =
+  | 'contentFullAccess'
+  | 'platformSupport'
+  | 'globalSpacesReader'
+  | 'platformSpacesReader';
+/** Who performs a cell: a shared harness persona, or a disposable user. */
+type Actor = { persona: TestUser } | { disposable: DisposableRole };
+
 type Reader = {
   label: string;
-  user: TestUser;
+  actor: Actor;
   admins: View;
   members: View;
   /** Can delete the response of another member (moderation). */
   deletesOthers: boolean;
 };
 
+const disposables = new Map<DisposableRole, RegisteredUser>();
+const disposable = (role: DisposableRole): RegisteredUser => {
+  const user = disposables.get(role);
+  if (!user) {
+    throw new Error(`disposable user for ${role} was not registered`);
+  }
+  return user;
+};
+const isPersona = (actor: Actor, persona: TestUser) =>
+  'persona' in actor && actor.persona === persona;
+
+const viewFor = async (formId: string, actor: Actor): Promise<View> =>
+  'persona' in actor
+    ? responsesView(await getFormResponses(formId, actor.persona))
+    : responsesViewRaw(
+        await getFormResponsesWithBearer(
+          formId,
+          disposable(actor.disposable).token
+        )
+      );
+
+/** A delete attempt by either kind of actor, flattened to one shape. */
+const deleteAs = async (responseId: string, actor: Actor) => {
+  if ('persona' in actor) {
+    const result = await deleteFormResponse(responseId, actor.persona);
+    return {
+      result,
+      failed: result.error !== undefined,
+      deletedId: result.data?.deleteCalloutFormResponse.id,
+    };
+  }
+  const result = await deleteFormResponseWithBearer(
+    responseId,
+    disposable(actor.disposable).token
+  );
+  return {
+    result,
+    failed: (result.body.errors?.length ?? 0) > 0,
+    deletedId: result.body.data?.deleteCalloutFormResponse?.id,
+  };
+};
+
 // Moderation is CREATE on the current callouts set. Platform Content Full Access
-// holds it through the root policy cascade, which is why QA_USER can moderate
-// while it still only READS its own responses; Global Support does not while
-// the space keeps allowPlatformSupportAsAdmin off.
+// holds it through the root policy cascade, which is why the Content Full
+// Access user can moderate while it still only READS its own responses;
+// Global Support does not while the space keeps allowPlatformSupportAsAdmin off.
 const readers: Reader[] = [
   {
     label: 'Global Admin',
-    user: TestUser.GLOBAL_ADMIN,
+    actor: { persona: TestUser.GLOBAL_ADMIN },
     admins: everything(0, true),
     members: everything(0, true),
     deletesOthers: true,
   },
   {
     label: 'Global Support (reads by the draft-Post rule, cannot moderate)',
-    user: TestUser.GLOBAL_SUPPORT_ADMIN,
+    actor: { persona: TestUser.GLOBAL_SUPPORT_ADMIN },
     admins: everything(0, false),
     members: everything(0, false),
     deletesOthers: false,
   },
   {
     label: 'subspace admin',
-    user: TestUser.SUBSPACE_ADMIN,
+    actor: { persona: TestUser.SUBSPACE_ADMIN },
     admins: everything(0, true),
     members: everything(0, true),
     deletesOthers: true,
   },
   {
     label: 'parent space admin',
-    user: TestUser.SPACE_ADMIN,
+    actor: { persona: TestUser.SPACE_ADMIN },
     admins: everything(0, true),
     members: everything(0, true),
     deletesOthers: true,
   },
   {
     label: 'submitting member',
-    user: TestUser.SUBSPACE_MEMBER,
+    actor: { persona: TestUser.SUBSPACE_MEMBER },
     admins: own(1),
     members: everything(1, false),
     deletesOthers: false,
   },
   {
     label: 'other subspace member',
-    user: TestUser.SUBSUBSPACE_MEMBER,
+    actor: { persona: TestUser.SUBSUBSPACE_MEMBER },
     admins: own(0),
     members: everything(0, false),
     deletesOthers: false,
   },
   {
     label: 'parent space member (not a member of the subspace)',
-    user: TestUser.SPACE_MEMBER,
+    actor: { persona: TestUser.SPACE_MEMBER },
     admins: own(0),
     members: own(0),
     deletesOthers: false,
   },
   {
     label: 'registered non-member',
-    user: TestUser.NON_SPACE_MEMBER,
+    actor: { persona: TestUser.NON_SPACE_MEMBER },
     admins: own(0),
     members: own(0),
     deletesOthers: false,
   },
   {
     label: 'Platform Content Full Access',
-    user: TestUser.QA_USER,
+    actor: { disposable: 'contentFullAccess' },
     admins: own(0, true),
     members: own(0, true),
     deletesOthers: true,
   },
   {
     label: 'Platform Support (support-as-admin off)',
-    user: TestUser.GLOBAL_BETA_TESTER,
+    actor: { disposable: 'platformSupport' },
     admins: own(0),
     members: own(0),
     deletesOthers: false,
   },
   {
     label: 'Global Spaces Reader',
-    user: TestUser.ORGANIZATION_ADMIN,
+    actor: { disposable: 'globalSpacesReader' },
     admins: own(0),
     members: own(0),
     deletesOthers: false,
   },
   {
     label: 'Platform Spaces Reader',
-    user: TestUser.GLOBAL_LICENSE_ADMIN,
+    actor: { disposable: 'platformSpacesReader' },
     admins: own(0),
     members: own(0),
     deletesOthers: false,
   },
 ];
 
-// The four personas that carry a platform role only for the duration of the file.
-type PlatformGrant = { user: () => string; role: RoleName };
+// The four disposable users and the one platform role each carries for the
+// duration of the file. `tag` becomes part of the registration email.
+type PlatformGrant = { key: DisposableRole; tag: string; role: RoleName };
 const platformGrants: PlatformGrant[] = [
   {
-    user: () => TestUserManager.users.qaUser.id,
+    key: 'contentFullAccess',
+    tag: 'formpcfa',
     role: RoleName.PlatformContentFullAccess,
   },
   {
-    user: () => TestUserManager.users.betaTester.id,
+    key: 'platformSupport',
+    tag: 'formpsupport',
     role: RoleName.PlatformSupport,
   },
   {
-    user: () => TestUserManager.users.organizationAdmin.id,
+    key: 'globalSpacesReader',
+    tag: 'formgsreader',
     role: RoleName.GlobalSpacesReader,
   },
   {
-    user: () => TestUserManager.users.globalLicenseAdmin.id,
+    key: 'platformSpacesReader',
+    tag: 'formpsreader',
     role: RoleName.PlatformSpacesReader,
   },
 ];
@@ -309,8 +379,13 @@ beforeAll(async () => {
     }
   }
 
+  // Registration is serialized by `registerUser`; a run-unique name keeps the
+  // identities apart from any other file's.
+  const runTag = uniqueId.toLowerCase().replace(/[^a-z0-9]/g, '');
   for (const grant of platformGrants) {
-    await grantPlatformRole(grant.user(), grant.role);
+    const user = await registerUser(`${grant.tag}.${runTag}`);
+    disposables.set(grant.key, user);
+    await grantPlatformRole(user.id, grant.role);
     grantedPlatformRoles.push(grant);
   }
 
@@ -342,22 +417,32 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  // Revoke every grant that landed, clean up the scenario regardless, then fail
-  // the hook if any shared persona kept its temporary platform role.
+  // Revoke every grant that landed, delete the disposable users, clean up the
+  // scenario regardless, then fail the hook if any step left something behind.
   const revocations = await Promise.allSettled(
     grantedPlatformRoles.map(grant =>
-      revokePlatformRole(grant.user(), grant.role)
+      revokePlatformRole(disposable(grant.key).id, grant.role)
     )
   );
+  const deletion = await Promise.allSettled([
+    deleteDisposableUsers(TestUserManager.users.globalAdmin.authToken, [
+      ...disposables.values(),
+    ]),
+  ]);
   await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
-  const failed = revocations.flatMap((outcome, i) =>
-    outcome.status === 'rejected'
-      ? [`${grantedPlatformRoles[i].role}: ${String(outcome.reason)}`]
-      : []
-  );
+  const failed = [
+    ...revocations.flatMap((outcome, i) =>
+      outcome.status === 'rejected'
+        ? [`${grantedPlatformRoles[i].role}: ${String(outcome.reason)}`]
+        : []
+    ),
+    ...deletion.flatMap(outcome =>
+      outcome.status === 'rejected' ? [String(outcome.reason)] : []
+    ),
+  ];
   if (failed.length > 0) {
     throw new Error(
-      `platform role revocation failed for ${failed.length} grant(s):\n${failed.join('\n')}`
+      `cleanup of the disposable platform-role users failed:\n${failed.join('\n')}`
     );
   }
 });
@@ -370,9 +455,9 @@ describe('Form responses — read scope per role', () => {
     const formOf = () => (visibility === 'ADMINS' ? adminsForm : membersForm);
 
     test.each(readers)('$label', async reader => {
-      const result = await getFormResponses(formOf().formId, reader.user);
-
-      expect(responsesView(result)).toEqual(pick(reader));
+      expect(await viewFor(formOf().formId, reader.actor)).toEqual(
+        pick(reader)
+      );
     });
 
     test('anonymous reads nothing', async () => {
@@ -413,37 +498,36 @@ describe('Form responses — read scope per role', () => {
 });
 
 describe('Form responses — who can delete another member’s response', () => {
-  test.each(readers.filter(reader => reader.user !== TestUser.SUBSPACE_MEMBER))(
-    '$label',
-    async reader => {
-      const responseId = await submitAs(
-        deletionForm,
-        CalloutFormResponseVisibility.Members
-      );
+  test.each(
+    readers.filter(reader => !isPersona(reader.actor, TestUser.SUBSPACE_MEMBER))
+  )('$label', async reader => {
+    const responseId = await submitAs(
+      deletionForm,
+      CalloutFormResponseVisibility.Members
+    );
 
-      const attempt = await deleteFormResponse(responseId, reader.user);
+    const attempt = await deleteAs(responseId, reader.actor);
 
-      const stillThere = (
-        await getFormResponses(deletionForm.formId, TestUser.GLOBAL_ADMIN)
-      ).data?.lookup.calloutFormResponses.all.responses.some(
-        response => response.id === responseId
+    const stillThere = (
+      await getFormResponses(deletionForm.formId, TestUser.GLOBAL_ADMIN)
+    ).data?.lookup.calloutFormResponses.all.responses.some(
+      response => response.id === responseId
+    );
+    if (reader.deletesOthers) {
+      expect(attempt.failed).toBe(false);
+      expect(attempt.deletedId).toBe(responseId);
+      expect(stillThere).toBe(false);
+    } else {
+      expect(isForbiddenByPolicy(attempt.result)).toBe(true);
+      // Positive control: the denied attempt left the row in place.
+      expect(stillThere).toBe(true);
+      const cleanup = await deleteFormResponse(
+        responseId,
+        TestUser.SUBSPACE_MEMBER
       );
-      if (reader.deletesOthers) {
-        expect(attempt.error).toBeUndefined();
-        expect(attempt.data?.deleteCalloutFormResponse.id).toBe(responseId);
-        expect(stillThere).toBe(false);
-      } else {
-        expect(isForbiddenByPolicy(attempt)).toBe(true);
-        // Positive control: the denied attempt left the row in place.
-        expect(stillThere).toBe(true);
-        const cleanup = await deleteFormResponse(
-          responseId,
-          TestUser.SUBSPACE_MEMBER
-        );
-        expect(cleanup.error).toBeUndefined();
-      }
+      expect(cleanup.error).toBeUndefined();
     }
-  );
+  });
 
   test('anonymous cannot delete another member’s response', async () => {
     const responseId = await submitAs(
@@ -796,21 +880,21 @@ describe.skipIf(!harnessPostgresConfigured())(
     test.each([
       {
         label: 'Platform Content Full Access',
-        user: TestUser.QA_USER,
-        actorId: () => TestUserManager.users.qaUser.id,
+        actor: { disposable: 'contentFullAccess' } as Actor,
+        actorId: () => disposable('contentFullAccess').id,
       },
       {
         label: 'Global Admin',
-        user: TestUser.GLOBAL_ADMIN,
+        actor: { persona: TestUser.GLOBAL_ADMIN } as Actor,
         actorId: () => TestUserManager.users.globalAdmin.id,
       },
     ])(
       '$label deleting another member’s response writes one id-only audit row',
-      async ({ user, actorId }) => {
+      async ({ actor, actorId }) => {
         const responseId = await submitMarked();
 
-        const deleted = await deleteFormResponse(responseId, user);
-        expect(deleted.error).toBeUndefined();
+        const deleted = await deleteAs(responseId, actor);
+        expect(deleted.failed).toBe(false);
 
         const rows = await auditRowsFor(responseId);
         expect(rows).toHaveLength(1);
