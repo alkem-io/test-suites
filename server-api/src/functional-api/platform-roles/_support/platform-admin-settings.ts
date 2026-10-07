@@ -76,15 +76,22 @@ export const writePlatformAdminRows = async (
   });
 };
 
+/** Sets the given channels of the given rows, on every owner; channels left out stay as they are. */
+export const setPlatformAdminChannels = async (
+  owners: readonly SettingsOwner[],
+  rows: readonly PlatformAdminRow[],
+  channels: Partial<Channels>
+): Promise<void> => {
+  const update = Object.fromEntries(rows.map(row => [row, channels]));
+  await Promise.all(owners.map(owner => writePlatformAdminRows(owner, update)));
+};
+
 /** Sets the EMAIL channel of the given rows, on every owner; the other channels stay as they are. */
-export const setPlatformAdminEmail = async (
+export const setPlatformAdminEmail = (
   owners: readonly SettingsOwner[],
   rows: readonly PlatformAdminRow[],
   email: boolean
-): Promise<void> => {
-  const update = Object.fromEntries(rows.map(row => [row, { email }]));
-  await Promise.all(owners.map(owner => writePlatformAdminRows(owner, update)));
-};
+): Promise<void> => setPlatformAdminChannels(owners, rows, { email });
 
 export type PlatformAdminSnapshot = {
   owner: SettingsOwner;

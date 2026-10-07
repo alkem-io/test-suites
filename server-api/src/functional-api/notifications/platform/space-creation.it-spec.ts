@@ -1,7 +1,6 @@
 import {
   deleteMailSlurperMails,
   PLATFORM_ROLE_NAMES,
-  TestUserManager,
   UniqueIDGenerator,
 } from '@alkemio/tests-lib';
 import type {
@@ -22,27 +21,29 @@ import {
 import type { RegisteredUser } from '@functional-api/platform-roles/_support/users';
 import { getMailsDataSettled } from '../notification.helpers';
 import {
+  cleanUp,
   expectedEmail,
   mailTo,
   platformRoleHolders,
   roleHolder,
-  testUserHolder,
 } from './platform-admin-mail.helpers';
 import type { Holder } from './platform-admin-mail.helpers';
 
 /**
  * PLATFORM_ADMIN_SPACE_CREATED is routed to Platform Support and Platform
- * License Manager. The legacy Global Admin / Support / License Manager audience
- * no longer receives it.
+ * License Manager.
  *
- * Every other single-role holder, and all three legacy-trio users, keep the
- * `spaceCreated` row switched ON, so "not routed to them" is observed rather
- * than implied by their settings.
+ * Every other single-role holder keeps the `spaceCreated` row switched ON, so
+ * "not routed to them" is observed rather than implied by their settings —
+ * those 12 carry the negative proof. The legacy personas (`admin@`,
+ * `global.support@`, `global.license@`) are outside the audience: which
+ * platform roles they hold depends on how the environment was bootstrapped.
  *
  * The spaces are hosted on a pool user's own account: a fresh account is
  * entitled to no space, so Platform License Manager raises its baseline — the
- * same arrangement as the platform-roles suite's space host. A role user never
- * hosts one: hosting would hand that role space-admin rights.
+ * same arrangement as the platform-roles suite's space host — and puts the
+ * value it found back afterwards. A role user never hosts one: hosting would
+ * hand that role space-admin rights.
  */
 
 const uniqueId = UniqueIDGenerator.getID();
@@ -52,7 +53,11 @@ const ROUTED: readonly PlatformRoleName[] = [
   'PLATFORM_LICENSE_MANAGER',
 ];
 
-const RAISE_BASELINE =
+/** Free spaces the host needs at once: one per test, plus headroom for a leftover. */
+const HOST_SPACE_FREE = 3;
+const SPACE_FREE_BASELINE =
+  'query { me { user { account { baselineLicensePlan { spaceFree } } } } }';
+const SET_BASELINE =
   'mutation($updateData: UpdateBaselineLicensePlanOnAccount!) { updateBaselineLicensePlanOnAccount(updateData: $updateData) { id } }';
 const HOSTED_SPACES = 'query { me { user { account { spaces { id } } } } }';
 const CREATE_SPACE =
@@ -66,14 +71,25 @@ let licenseManager: Holder;
 /** Holders the event is NOT routed to — every one keeps its row on. */
 let notRouted: Holder[];
 let host: RegisteredUser;
+/** The host account's `spaceFree` as found, before it is raised. */
+let hostSpaceFreeBefore: number | undefined;
 let snapshot: PlatformAdminSnapshot | undefined;
 
-const deleteHostedSpaces = async (): Promise<void> => {
+const setHostSpaceFree = async (
+  account: RegisteredUser,
+  spaceFree: number
+): Promise<void> => {
+  await rawRead(users.tokens.PLATFORM_LICENSE_MANAGER, SET_BASELINE, {
+    updateData: { accountID: account.accountId, spaceFree },
+  });
+};
+
+const deleteHostedSpaces = async (account: RegisteredUser): Promise<void> => {
   const { me } = await rawRead<{
     me: { user: { account: { spaces: { id: string }[] } } };
-  }>(host.token, HOSTED_SPACES);
+  }>(account.token, HOSTED_SPACES);
   for (const { id } of me.user.account.spaces) {
-    await rawRead(host.token, DELETE_SPACE, { id });
+    await rawRead(account.token, DELETE_SPACE, { id });
   }
 };
 
@@ -92,20 +108,12 @@ const createSpace = async (tag: string): Promise<string> => {
 };
 
 beforeAll(async () => {
-  // Only the test-user map: the base scenario would also try to grant the
-  // legacy global roles, which no longer exist.
-  await TestUserManager.populateUserModelMap();
   users = await platformRoleHolders();
   support = roleHolder(users, 'PLATFORM_SUPPORT');
   licenseManager = roleHolder(users, 'PLATFORM_LICENSE_MANAGER');
-  notRouted = [
-    ...PLATFORM_ROLE_NAMES.filter(role => !ROUTED.includes(role)).map(role =>
-      roleHolder(users, role)
-    ),
-    testUserHolder(TestUserManager.users.globalAdmin),
-    testUserHolder(TestUserManager.users.globalSupportAdmin),
-    testUserHolder(TestUserManager.users.globalLicenseAdmin),
-  ];
+  notRouted = PLATFORM_ROLE_NAMES.filter(role => !ROUTED.includes(role)).map(
+    role => roleHolder(users, role)
+  );
   snapshot = await snapshotPlatformAdminRows([
     support,
     licenseManager,
@@ -116,22 +124,52 @@ beforeAll(async () => {
     users.tokens.PLATFORM_ROLES_ADMIN,
     'notifspacehost'
   );
-  await rawRead(users.tokens.PLATFORM_LICENSE_MANAGER, RAISE_BASELINE, {
-    updateData: { accountID: host.accountId, spaceFree: 3 },
-  });
+  // Read BEFORE raising, so afterAll puts back what was there.
+  hostSpaceFreeBefore = (
+    await rawRead<{
+      me: { user: { account: { baselineLicensePlan: { spaceFree: number } } } };
+    }>(host.token, SPACE_FREE_BASELINE)
+  ).me.user.account.baselineLicensePlan.spaceFree;
+  await setHostSpaceFree(host, HOST_SPACE_FREE);
   // A previous run that died mid-test leaves its space on this account.
-  await deleteHostedSpaces();
+  await deleteHostedSpaces(host);
 });
 
 afterAll(async () => {
-  try {
-    if (snapshot) await restorePlatformAdminRows(snapshot);
-  } finally {
-    if (host) {
-      await deleteHostedSpaces();
-      await releasePoolUsers(users.tokens.PLATFORM_ROLES_ADMIN, [host.id]);
-    }
-  }
+  const account = host;
+  const spaceFreeBefore = hostSpaceFreeBefore;
+  await cleanUp([
+    [
+      'restore the holders settings',
+      async () => {
+        if (snapshot) await restorePlatformAdminRows(snapshot);
+      },
+    ],
+    [
+      'delete the hosted spaces',
+      async () => {
+        if (account) await deleteHostedSpaces(account);
+      },
+    ],
+    [
+      'restore the host baseline',
+      async () => {
+        if (account && spaceFreeBefore !== undefined) {
+          await setHostSpaceFree(account, spaceFreeBefore);
+        }
+      },
+    ],
+    [
+      'release the host',
+      async () => {
+        if (account) {
+          await releasePoolUsers(users.tokens.PLATFORM_ROLES_ADMIN, [
+            account.id,
+          ]);
+        }
+      },
+    ],
+  ]);
 });
 
 describe('Notifications - Space creation', () => {
@@ -142,10 +180,10 @@ describe('Notifications - Space creation', () => {
   });
 
   afterEach(async () => {
-    await deleteHostedSpaces();
+    await deleteHostedSpaces(host);
   });
 
-  test('Space created - Platform Support(1), Platform License Manager(1) get notifications; no other role holder and not the legacy trio', async () => {
+  test('Space created - Platform Support(1), Platform License Manager(1) get notifications; no other role holder', async () => {
     // Arrange
     await setPlatformAdminEmail(everyone(), ['spaceCreated'], true);
 

@@ -5,7 +5,6 @@ import type {
   PlatformRoleName,
   SeededPlatformRoleUsers,
 } from '@alkemio/tests-lib';
-import type { UserModel } from '@alkemio/tests-lib/scenario/models/UserModel';
 import type { SettingsOwner } from '@functional-api/platform-roles/_support/platform-admin-settings';
 import { rawRead } from '@functional-api/platform-roles/_support/raw-request';
 import { acquirePoolUser } from '@functional-api/platform-roles/_support/users';
@@ -14,11 +13,11 @@ import { acquirePoolUser } from '@functional-api/platform-roles/_support/users';
  * Shared by the platform-admin notification specs in this directory.
  *
  * Who receives a platform-admin notification is decided by the purpose-specific
- * platform roles (workspace#065). The holders these specs reason about are the
- * 14 single-role users the platform-roles suites seed — each holds exactly its
- * one role — plus a pool user granted a role for one block. Mail to anyone
- * else on a shared stack is outside every assertion here: `mailTo` scopes the
- * mailbox to the holders a spec names.
+ * platform roles. The holders these specs reason about are the 14 single-role
+ * users the platform-roles suites seed — each holds exactly its one role — plus
+ * pool users granted a role for one block. Mail to anyone else on a shared
+ * stack is outside every assertion here: `mailTo` scopes the mailbox to the
+ * holders a spec names.
  */
 
 /** Someone acting with their own token, whose mail lands at `email`. */
@@ -42,12 +41,6 @@ export const roleHolder = (
   id: users.userIds[role],
   token: users.tokens[role],
   email: platformRoleEmail(role),
-});
-
-export const testUserHolder = (user: UserModel): Holder => ({
-  id: user.id,
-  token: user.authToken,
-  email: user.email,
 });
 
 /** Scope for `getMailsDataSettled`: mail with exactly `subject`, sent to one of `audience`. */
@@ -107,6 +100,27 @@ export const createUserAs = async (
     }
   );
   return createUser.id;
+};
+
+/**
+ * Runs every cleanup step even when an earlier one fails, then fails naming
+ * each one that did: the users these specs touch are shared, so a step skipped
+ * because the one before it threw leaks into every later run.
+ */
+export const cleanUp = async (
+  steps: readonly (readonly [string, () => Promise<unknown>])[]
+): Promise<void> => {
+  const failures: string[] = [];
+  for (const [what, step] of steps) {
+    try {
+      await step();
+    } catch (e) {
+      failures.push(`${what}: ${(e as Error).message}`);
+    }
+  }
+  if (failures.length > 0) {
+    throw new Error(`cleanup left residue —\n  ${failures.join('\n  ')}`);
+  }
 };
 
 /** Throws when refused — a denied delete must fail as such, not as a missing mail. */

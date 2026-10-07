@@ -1,7 +1,6 @@
 import {
   deleteMailSlurperMails,
   PLATFORM_ROLE_NAMES,
-  TestUserManager,
   UniqueIDGenerator,
 } from '@alkemio/tests-lib';
 import type { SeededPlatformRoleUsers } from '@alkemio/tests-lib';
@@ -14,6 +13,7 @@ import type { PlatformAdminSnapshot } from '@functional-api/platform-roles/_supp
 import { releasePoolUsers } from '@functional-api/platform-roles/_support/users';
 import { getMailsDataSettled } from '../notification.helpers';
 import {
+  cleanUp,
   createUserAs,
   deleteUserAs,
   expectedEmail,
@@ -21,21 +21,20 @@ import {
   platformRoleHolders,
   poolHolderWithRole,
   roleHolder,
-  testUserHolder,
 } from './platform-admin-mail.helpers';
 import type { Holder } from './platform-admin-mail.helpers';
 
 /**
  * PLATFORM_ADMIN_USER_PROFILE_CREATED and PLATFORM_ADMIN_USER_PROFILE_REMOVED
  * are routed to Platform Users Admin only; the removal leaves out the operator
- * who removed the user. The legacy Global Admin / Support / License Manager
- * audience receives neither.
+ * who removed the user.
  *
- * Every other single-role holder, and the two legacy-trio users, keep the
- * matching row switched ON, so "not routed to them" is observed rather than
- * implied by their settings. `admin@alkem.io` is left out of the assertions:
- * whether it holds Platform Users Admin depends on how the environment was
- * bootstrapped, so it may legitimately receive these mails.
+ * Every other single-role holder keeps the matching row switched ON, so "not
+ * routed to them" is observed rather than implied by their settings — those 13
+ * carry the negative proof. The legacy personas (`admin@`, `global.support@`,
+ * `global.license@`) are outside the audience: which platform roles they hold
+ * depends on how the environment was bootstrapped, so they may legitimately
+ * receive these mails.
  *
  * The users these specs create are created by Platform Content Full Access —
  * the only role holding the platform CREATE that `createUser` checks — and
@@ -59,19 +58,12 @@ const newUser = (tag: string) => ({
 });
 
 beforeAll(async () => {
-  // Only the test-user map: the base scenario would also try to grant the
-  // legacy global roles, which no longer exist.
-  await TestUserManager.populateUserModelMap();
   users = await platformRoleHolders();
   usersAdmin = roleHolder(users, 'PLATFORM_USERS_ADMIN');
   creator = roleHolder(users, 'PLATFORM_CONTENT_FULL_ACCESS');
-  notRouted = [
-    ...PLATFORM_ROLE_NAMES.filter(role => role !== 'PLATFORM_USERS_ADMIN').map(
-      role => roleHolder(users, role)
-    ),
-    testUserHolder(TestUserManager.users.globalSupportAdmin),
-    testUserHolder(TestUserManager.users.globalLicenseAdmin),
-  ];
+  notRouted = PLATFORM_ROLE_NAMES.filter(
+    role => role !== 'PLATFORM_USERS_ADMIN'
+  ).map(role => roleHolder(users, role));
   snapshot = await snapshotPlatformAdminRows([usersAdmin, ...notRouted]);
 });
 
@@ -93,7 +85,7 @@ describe('Notifications - User registration', () => {
     }
   });
 
-  test('User sign up - Platform Users Admin(1) gets notifications; no other role holder and not the legacy trio', async () => {
+  test('User sign up - Platform Users Admin(1) gets notifications; no other role holder', async () => {
     // Arrange
     await setPlatformAdminEmail(
       [usersAdmin, ...notRouted],
@@ -142,6 +134,8 @@ describe('Notifications - User removal', () => {
   // read as zero mails.
   let otherUsersAdmin: Holder;
   let otherSnapshot: PlatformAdminSnapshot | undefined;
+  /** The user the current test created, until its removal succeeded. */
+  let createdUserId = '';
 
   beforeAll(async () => {
     otherUsersAdmin = await poolHolderWithRole(
@@ -157,16 +151,35 @@ describe('Notifications - User removal', () => {
     );
   });
 
-  afterAll(async () => {
-    try {
-      if (otherSnapshot) await restorePlatformAdminRows(otherSnapshot);
-    } finally {
-      if (otherUsersAdmin) {
-        await releasePoolUsers(users.tokens.PLATFORM_ROLES_ADMIN, [
-          otherUsersAdmin.id,
-        ]);
-      }
+  // A removal that failed leaves its user behind — removed here instead, by
+  // the fixture Users Admin.
+  afterEach(async () => {
+    if (createdUserId) {
+      const id = createdUserId;
+      createdUserId = '';
+      await deleteUserAs(usersAdmin.token, id);
     }
+  });
+
+  afterAll(async () => {
+    await cleanUp([
+      [
+        'restore the other Users Admin settings',
+        async () => {
+          if (otherSnapshot) await restorePlatformAdminRows(otherSnapshot);
+        },
+      ],
+      [
+        'release the other Users Admin',
+        async () => {
+          if (otherUsersAdmin) {
+            await releasePoolUsers(users.tokens.PLATFORM_ROLES_ADMIN, [
+              otherUsersAdmin.id,
+            ]);
+          }
+        },
+      ],
+    ]);
   });
 
   const removeAndGetEmails = async (
@@ -175,10 +188,11 @@ describe('Notifications - User removal', () => {
   ): Promise<{ subject: string; mails: unknown[]; count: number }> => {
     const user = newUser(tag);
     const subject = `User profile deleted from the Alkemio platform: ${user.displayName}`;
-    const userId = await createUserAs(creator.token, user);
+    createdUserId = await createUserAs(creator.token, user);
     await deleteMailSlurperMails();
 
-    await deleteUserAs(remover.token, userId);
+    await deleteUserAs(remover.token, createdUserId);
+    createdUserId = '';
 
     const [mails, count] = await getMailsDataSettled(1, {
       scope: mailTo(subject, [usersAdmin, otherUsersAdmin, ...notRouted]),

@@ -141,10 +141,6 @@ export default defineConfig({
             'src/functional-api/platform-roles/coverage-guard.it-spec.ts',
             'src/functional-api/platform-roles/holder-lists.it-spec.ts',
             'src/functional-api/platform-roles/audit-trail.it-spec.ts',
-            // workspace#065: who the server resolves as the recipients of the
-            // five platform-admin notification events — read-only apart from
-            // the holders' own notification rows, which it restores.
-            'src/functional-api/platform-roles/platform-admin-notification-routing.it-spec.ts',
           ],
           globalSetup: [
             './src/functional-api/platform-roles/_support/global-setup.ts',
