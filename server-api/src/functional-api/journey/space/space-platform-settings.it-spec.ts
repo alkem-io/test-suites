@@ -1,11 +1,12 @@
 import {
   readAboutPrivilege,
-  readAboutPrivilege_readLicense,
+  sorted__space_sliceB_harnessAdmin,
+  sorted__space_sliceB_platformSupport_flagOn,
+  sorted__space_sliceB_spaceAdmin,
+  sorted__space_sliceB_licenseManager_private,
+  sorted__space_sliceB_licenseManager_public,
   readPrivilege,
-  sorted__create_read_readAbout_update_delete_grant_createSubspace_accountLicenseManage_readLicense_notifications_notificationsAdmin_globalAdmin,
-  sorted__create_read_readAbout_update_delete_grant_createSubspace_accountLicenseManage_readLicense_notificationsAdmin,
-  sorted__create_read_readAbout_update_delete_grant_createSubspace_readLicense_notifications_notificationsAdmin,
-  sorted__create_read_update_delete_grant_authorizationReset_createSubspace_platformAdmin,
+  sorted__create_read_update_delete_grant_authorizationReset_createSubspace,
   sorted_read_readAbout_readLicense,
   sorted_read_readAbout_readLicense_notifications,
   TestScenarioConfig,
@@ -20,7 +21,7 @@ import {
   getSpacesFilteredByVisibilityWithAccess,
   getSpacesFilteredByVisibilityNoAccess,
   updateSpaceSettings,
-  updateSpacePlatformSettings,
+  updateSpaceVisibility,
 } from './space.request.params';
 import {
   createOrganization,
@@ -104,21 +105,19 @@ describe('Update space platform settings', () => {
     });
 
     afterAll(async () => {
-      await updateSpacePlatformSettings(
-        baseScenario.space.id,
-        spaceNameId,
-        SpaceVisibility.Active
-      );
+      await updateSpaceVisibility(
+    baseScenario.space.id,
+    SpaceVisibility.Active
+  );
     });
 
     // Previously this was testing different host (account) for the space, to be updated after we have such mutation
     test('Update space settings', async () => {
       // Act
-      await updateSpacePlatformSettings(
-        baseScenario.space.id,
-        spaceNameId,
-        SpaceVisibility.Demo
-      );
+      await updateSpaceVisibility(
+    baseScenario.space.id,
+    SpaceVisibility.Demo
+  );
 
       const spaceData = await getSpaceData(baseScenario.space.id);
       const spaceSettings = spaceData?.data?.lookup?.space;
@@ -134,21 +133,20 @@ describe('Update space platform settings', () => {
 
   describe('Authorization - Update space platform settings', () => {
     beforeAll(async () => {
-      await updateSpacePlatformSettings(
-        baseScenario.space.id,
-        spaceNameId,
-        SpaceVisibility.Active
-      );
+      await updateSpaceVisibility(
+    baseScenario.space.id,
+    SpaceVisibility.Active
+  );
     });
 
     describe('DDT role access to private Space', () => {
       // Arrange
       test.each`
         user                             | spaceMyPrivileges
-        ${TestUser.GLOBAL_ADMIN}         | ${sorted__create_read_readAbout_update_delete_grant_createSubspace_accountLicenseManage_readLicense_notifications_notificationsAdmin_globalAdmin}
-        ${TestUser.GLOBAL_SUPPORT_ADMIN} | ${sorted__create_read_readAbout_update_delete_grant_createSubspace_accountLicenseManage_readLicense_notificationsAdmin}
-        ${TestUser.GLOBAL_LICENSE_ADMIN} | ${readAboutPrivilege_readLicense}
-        ${TestUser.SPACE_ADMIN}          | ${sorted__create_read_readAbout_update_delete_grant_createSubspace_readLicense_notifications_notificationsAdmin}
+        ${TestUser.GLOBAL_ADMIN}         | ${sorted__space_sliceB_harnessAdmin}
+        ${TestUser.GLOBAL_SUPPORT_ADMIN} | ${sorted__space_sliceB_platformSupport_flagOn}
+        ${TestUser.GLOBAL_LICENSE_ADMIN} | ${sorted__space_sliceB_licenseManager_private}
+        ${TestUser.SPACE_ADMIN}          | ${sorted__space_sliceB_spaceAdmin}
         ${TestUser.SPACE_MEMBER}         | ${sorted_read_readAbout_readLicense_notifications}
         ${TestUser.NON_SPACE_MEMBER}     | ${readAboutPrivilege}
       `(
@@ -171,11 +169,10 @@ describe('Update space platform settings', () => {
     describe('DDT role access to public Space', () => {
       // Arrange
       beforeAll(async () => {
-        await updateSpacePlatformSettings(
-          baseScenario.space.id,
-          spaceNameId,
-          SpaceVisibility.Active
-        );
+        await updateSpaceVisibility(
+    baseScenario.space.id,
+    SpaceVisibility.Active
+  );
 
         await updateSpaceSettings(baseScenario.space.id, {
           privacy: { mode: SpacePrivacyMode.Public },
@@ -184,10 +181,10 @@ describe('Update space platform settings', () => {
 
       test.each`
         user                             | spaceMyPrivileges
-        ${TestUser.GLOBAL_ADMIN}         | ${sorted__create_read_readAbout_update_delete_grant_createSubspace_accountLicenseManage_readLicense_notifications_notificationsAdmin_globalAdmin}
-        ${TestUser.GLOBAL_SUPPORT_ADMIN} | ${sorted__create_read_readAbout_update_delete_grant_createSubspace_accountLicenseManage_readLicense_notificationsAdmin}
-        ${TestUser.GLOBAL_LICENSE_ADMIN} | ${sorted_read_readAbout_readLicense}
-        ${TestUser.SPACE_ADMIN}          | ${sorted__create_read_readAbout_update_delete_grant_createSubspace_readLicense_notifications_notificationsAdmin}
+        ${TestUser.GLOBAL_ADMIN}         | ${sorted__space_sliceB_harnessAdmin}
+        ${TestUser.GLOBAL_SUPPORT_ADMIN} | ${sorted__space_sliceB_platformSupport_flagOn}
+        ${TestUser.GLOBAL_LICENSE_ADMIN} | ${sorted__space_sliceB_licenseManager_public}
+        ${TestUser.SPACE_ADMIN}          | ${sorted__space_sliceB_spaceAdmin}
         ${TestUser.SPACE_MEMBER}         | ${sorted_read_readAbout_readLicense_notifications}
         ${TestUser.NON_SPACE_MEMBER}     | ${sorted_read_readAbout_readLicense}
       `(
@@ -212,11 +209,10 @@ describe('Update space platform settings', () => {
   describe.skip('DDT role WITH access to public archived Space', () => {
     // Arrange
     beforeEach(async () => {
-      await updateSpacePlatformSettings(
-        baseScenario.space.id,
-        spaceNameId,
-        SpaceVisibility.Active
-      );
+      await updateSpaceVisibility(
+    baseScenario.space.id,
+    SpaceVisibility.Active
+  );
     });
 
     beforeAll(async () => {
@@ -227,8 +223,8 @@ describe('Update space platform settings', () => {
 
     test.each`
       user                             | communicationMyPrivileges                                                                  | subspacesCount | opportunitiesCount
-      ${TestUser.GLOBAL_ADMIN}         | ${sorted__create_read_update_delete_grant_authorizationReset_createSubspace_platformAdmin} | ${1}           | ${1}
-      ${TestUser.GLOBAL_LICENSE_ADMIN} | ${sorted__create_read_update_delete_grant_authorizationReset_createSubspace_platformAdmin} | ${1}           | ${1}
+      ${TestUser.GLOBAL_ADMIN}         | ${sorted__create_read_update_delete_grant_authorizationReset_createSubspace} | ${1}           | ${1}
+      ${TestUser.GLOBAL_LICENSE_ADMIN} | ${sorted__create_read_update_delete_grant_authorizationReset_createSubspace} | ${1}           | ${1}
       ${TestUser.GLOBAL_SUPPORT_ADMIN} | ${readPrivilege}                                                                           | ${1}           | ${1}
     `(
       'User role: "$user", have access to public archived Space',
@@ -245,11 +241,10 @@ describe('Update space platform settings', () => {
         beforeVisibilityChangeAllSpaces?.filter((obj: { nameID: string }) => {
           return obj.nameID.includes(spaceNameId);
         });
-        await updateSpacePlatformSettings(
-          baseScenario.space.id,
-          spaceNameId,
-          SpaceVisibility.Archived
-        );
+        await updateSpaceVisibility(
+    baseScenario.space.id,
+    SpaceVisibility.Archived
+  );
 
         const spaceDataAfterArchive =
           await getSpacesFilteredByVisibilityWithAccess(
@@ -276,11 +271,10 @@ describe('Update space platform settings', () => {
   describe.skip('DDT role WITHOUT access to public archived Space', () => {
     // Arrange
     beforeEach(async () => {
-      await updateSpacePlatformSettings(
-        baseScenario.space.id,
-        spaceNameId,
-        SpaceVisibility.Active
-      );
+      await updateSpaceVisibility(
+    baseScenario.space.id,
+    SpaceVisibility.Active
+  );
     });
 
     beforeAll(async () => {
@@ -298,11 +292,10 @@ describe('Update space platform settings', () => {
       'User role: "$user", have NO access to public archived Space',
       async ({ user, communicationMyPrivileges }) => {
         // Act
-        await updateSpacePlatformSettings(
-          baseScenario.space.id,
-          spaceNameId,
-          SpaceVisibility.Archived
-        );
+        await updateSpaceVisibility(
+    baseScenario.space.id,
+    SpaceVisibility.Archived
+  );
 
         const spaceDataAfterArchive =
           await getSpacesFilteredByVisibilityNoAccess(

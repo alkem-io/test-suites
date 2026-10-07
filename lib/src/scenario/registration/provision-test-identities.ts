@@ -72,15 +72,23 @@ export const provisionTestIdentities = async (
     );
 
     if (existing) {
-      await identityApi.updateIdentity({
-        id: existing.id,
-        updateIdentityBody: {
-          schema_id: IDENTITY_SCHEMA_ID,
-          state: 'active',
-          traits,
-          credentials,
-        },
-      });
+      try {
+        await identityApi.updateIdentity({
+          id: existing.id,
+          updateIdentityBody: {
+            schema_id: IDENTITY_SCHEMA_ID,
+            state: 'active',
+            traits,
+            credentials,
+          },
+        });
+      } catch (e) {
+        // 409: another worker of the same run is updating this identity right
+        // now, with the same traits and password — nothing left to do here.
+        if ((e as { response?: { status?: number } })?.response?.status !== 409) {
+          throw e;
+        }
+      }
       updated++;
     } else {
       await identityApi.createIdentity({

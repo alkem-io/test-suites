@@ -118,6 +118,11 @@ test('14.1 With the entitlement granted, the identity gate still hides the Sign 
   const dialog = await openMemo(page);
   // The memo itself still opens and is shareable…
   await expect(dialog.getByRole('button', { name: 'Share' })).toBeVisible();
-  // …but signing is not offered to an identity without a Cleverbase method.
-  await expect(dialog.getByRole('button', { name: 'Sign memo' })).toHaveCount(0);
+  // …but signing is not USABLE by an identity without a Cleverbase method:
+  // since client-web#10305 (2026-09-14) the dialog shows a DISABLED "Sign memo"
+  // beside the guidance to link Cleverbase first, instead of hiding the action.
+  const sign = dialog.getByRole('button', { name: 'Sign memo' });
+  await expect(sign).toHaveCount(1);
+  await expect(sign).toBeDisabled();
+  await expect(dialog.getByText('Link Cleverbase before signing.')).toBeVisible();
 });

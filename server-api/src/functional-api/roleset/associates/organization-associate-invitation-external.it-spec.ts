@@ -476,29 +476,21 @@ describe('Invite an unregistered address to an organization (US1)', () => {
     }
   });
 
-  test('US1-AS8: platform support can invite, list and resend', async () => {
+  test('US1-AS8 (Slice B): platform support can no longer invite on an organisation — refused at the gate', async () => {
+    // workspace#027 Slice B: ROLESET_ENTRY_ROLE_INVITE on organisation role
+    // sets stays with the organisation's own admins; Platform Support owns the
+    // organisation LIFECYCLE (create / delete / verification), not its
+    // membership. Through Slice A the legacy global-support cascade let it.
     const email = addr('as8-support');
     const res = await invite({
       emails: [email],
       as: TestUser.GLOBAL_SUPPORT_ADMIN,
     });
-    expect(res?.error).toBeUndefined();
-    const created = getSingleInvitationResult(res);
-    expect(created?.type).toEqual(
-      RoleSetInvitationResultType.InvitedToPlatformAndRoleSet
+    expect(String(res?.error?.errors?.[0]?.message)).toMatch(
+      /roleset-entry-role-invite/
     );
-    const id = created!.platformInvitation!.id;
-    expect(
-      (await openList(TestUser.GLOBAL_SUPPORT_ADMIN)).map(p => p.id)
-    ).toContain(id);
-    const resend = await resendPlatformInvitation(
-      id,
-      TestUser.GLOBAL_SUPPORT_ADMIN
-    );
-    expect(resend?.error).toBeUndefined();
-    expect(resend?.data?.resendPlatformInvitation.id).toEqual(id);
+    expect(res?.data).toBeUndefined();
   });
-
   test('boundary: a 128-character address is accepted and emailed', async () => {
     // 128 is the storage limit of the address. (A longer address is a known,
     // pre-existing failure of the shared invite path and is not asserted.)

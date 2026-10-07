@@ -2,9 +2,9 @@
 
 > **Status:** Built — QA-lead directive in-session 2026-09-18 (single delivery); awaiting review at PR · **Depth:** Deep (authorization change, cross-repo, release-train gated) · **Story:** alkem-io/server#4764 · Epic alkem-io/server#6320 · **Generated** from `capabilities.data.ts` + `scenarios.data.ts` — do not edit by hand
 
-The single Global Admin "god mode" is decomposed into 10 `Platform …` administration roles and 4 `Feature …` roles. This suite answers one question per role, in both directions: **can it do everything the acceptance criteria give it, and is it refused everything else.** It tracks **119 administrative capabilities** in 21 groups × **14 roles** = **142 positive** and **1482 negative** role-level checks, plus **27 rule scenarios** that a grid cannot express.
+The single Global Admin "god mode" is decomposed into 10 `Platform …` administration roles and 4 `Feature …` roles. This suite answers one question per role, in both directions: **can it do everything the acceptance criteria give it, and is it refused everything else.** It tracks **112 administrative capabilities** in 21 groups × **14 roles** = **141 positive** and **1413 negative** role-level checks, plus **28 rule scenarios** that a grid cannot express.
 
-**Negatives run at Slice A.** Each test user holds exactly one target role and no legacy credential (scenario X1 proves it first), so "this role is refused" is a valid assertion today — it does not have to wait for the legacy roles to be removed.
+**Slice B vocabulary.** The table names the surfaces as they exist after workspace#027 Slice B (server alkem-io/server#6582): `adminUpdateSpaceVisibility` for A14, the two A17 rename surfaces, and none of the deleted FR-021/FR-022 mutations. Each test user holds exactly one target role (scenario X1 proves it first, and L2 proves the legacy vocabulary is gone from the schema).
 
 ## How to run
 
@@ -32,37 +32,36 @@ Phase 1 (`platform-roles`) runs the 14 role files and the read-only specs in par
 
 ## Coverage at a glance
 
-- Capabilities — positive: 93 automated · 14 exclusive · 8 not-applicable · 4 not-automated
-- Capabilities — negative: 116 automated · 3 not-automated
-- Rule scenarios — positive: 20 automated · 5 not-applicable · 2 not-automated
-- Rule scenarios — negative: 21 automated · 1 planned · 1 exclusive · 1 not-applicable · 3 not-automated
+- Capabilities — positive: 92 automated · 14 exclusive · 4 not-applicable · 2 not-automated
+- Capabilities — negative: 111 automated · 1 not-automated
+- Rule scenarios — positive: 21 automated · 5 not-applicable · 2 not-automated
+- Rule scenarios — negative: 23 automated · 1 exclusive · 1 not-applicable · 3 not-automated
 
 | Role | Spec file | Can (positive) | Cannot (negative) |
 |---|---|---|---|
-| PLATFORM_ROLES_ADMIN | `roles/platform-roles-admin.it-spec.ts` | 20 | 96 |
-| PLATFORM_CONTENT_FULL_ACCESS | `roles/platform-content-full-access.it-spec.ts` | 17 | 99 |
-| PLATFORM_RESOURCE_ADMIN | `roles/platform-resource-admin.it-spec.ts` | 13 | 103 |
-| PLATFORM_SETTINGS_ADMIN | `roles/platform-settings-admin.it-spec.ts` | 12 | 104 |
-| PLATFORM_OPERATIONS_ADMIN | `roles/platform-operations-admin.it-spec.ts` | 24 | 92 |
-| PLATFORM_USERS_ADMIN | `roles/platform-users-admin.it-spec.ts` | 17 | 99 |
-| PLATFORM_SUPPORT | `roles/platform-support.it-spec.ts` | 15 | 101 |
-| PLATFORM_LICENSE_MANAGER | `roles/platform-license-manager.it-spec.ts` | 7 | 109 |
-| PLATFORM_SPACES_READER | `roles/platform-spaces-reader.it-spec.ts` | 1 | 115 |
-| PLATFORM_AUDIT_READER | `roles/platform-audit-reader.it-spec.ts` | 15 | 101 |
-| FEATURE_BETA_TESTER | `roles/feature-beta-tester.it-spec.ts` | 0 | 116 |
-| FEATURE_VIRTUAL_ASSISTANT | `roles/feature-virtual-assistant.it-spec.ts` | 0 | 116 |
-| FEATURE_ORGANIZATION_CREATOR | `roles/feature-organization-creator.it-spec.ts` | 1 | 115 |
-| FEATURE_VC_CAMPAIGN | `roles/feature-vc-campaign.it-spec.ts` | 0 | 116 |
+| PLATFORM_ROLES_ADMIN | `roles/platform-roles-admin.it-spec.ts` | 20 | 91 |
+| PLATFORM_CONTENT_FULL_ACCESS | `roles/platform-content-full-access.it-spec.ts` | 17 | 94 |
+| PLATFORM_RESOURCE_ADMIN | `roles/platform-resource-admin.it-spec.ts` | 13 | 98 |
+| PLATFORM_SETTINGS_ADMIN | `roles/platform-settings-admin.it-spec.ts` | 12 | 99 |
+| PLATFORM_OPERATIONS_ADMIN | `roles/platform-operations-admin.it-spec.ts` | 24 | 87 |
+| PLATFORM_USERS_ADMIN | `roles/platform-users-admin.it-spec.ts` | 17 | 94 |
+| PLATFORM_SUPPORT | `roles/platform-support.it-spec.ts` | 15 | 96 |
+| PLATFORM_LICENSE_MANAGER | `roles/platform-license-manager.it-spec.ts` | 6 | 105 |
+| PLATFORM_SPACES_READER | `roles/platform-spaces-reader.it-spec.ts` | 1 | 110 |
+| PLATFORM_AUDIT_READER | `roles/platform-audit-reader.it-spec.ts` | 15 | 96 |
+| FEATURE_BETA_TESTER | `roles/feature-beta-tester.it-spec.ts` | 0 | 111 |
+| FEATURE_VIRTUAL_ASSISTANT | `roles/feature-virtual-assistant.it-spec.ts` | 0 | 111 |
+| FEATURE_ORGANIZATION_CREATOR | `roles/feature-organization-creator.it-spec.ts` | 1 | 110 |
+| FEATURE_VC_CAMPAIGN | `roles/feature-vc-campaign.it-spec.ts` | 0 | 111 |
 
 ## Allowed — verified against the requirements
 
-Checked 2026-09-18 against `spec.md` (§Target global role model, §Action → owning role) and `contracts/privilege-map.md`. **All 21 action families' owner sets match the spec exactly**, including the three declared exceptions (Content Full Access on A6 delete, A7 and the A16 read). The spec assigns owners per action FAMILY; per surface: **55** are named in the requirements, **56** are covered by their family's wording, **6** are backed by neither (⚠️), **2** contradict a requirement (❌).
+Checked 2026-09-18 against `spec.md` (§Target global role model, §Action → owning role) and `contracts/privilege-map.md`. **All 21 action families' owner sets match the spec exactly**, including the three declared exceptions (Content Full Access on A6 delete, A7 and the A16 read). The spec assigns owners per action FAMILY; per surface: **49** are named in the requirements, **56** are covered by their family's wording, **6** are backed by neither (⚠️), **1** contradict a requirement (❌).
 
 | Capability | Allowed today | Finding |
 |---|---|---|
 | ⚠️ `A3.authorizationPolicyResetToGlobalAdminsAccess` | operations admin | spec A3 lists platform/account/user/org/all; this one is unnamed - and "global admins" cease to exist at Slice B |
 | ⚠️ `A9.convertVirtualContributorToUseKnowledgeBase` | resource admin | spec A9 is "move resources"; converting a VC body of knowledge is not a move and the contract A9 list omits it |
-| ❌ `A12.createWingbackAccount` | license manager | FR-021 requires this mutation to be DELETED, not re-gated to License Manager |
 | ⚠️ `A13.createLicensePlan` | settings admin | the spec gives Settings Admin the DEFINITION of license plans; the server census (a.row.surfaces.ts, A13) lists update / delete and the three rule mutations but omits this one - found in the manual pass of 2026-09-21. Gate: CREATE on the licensing framework. |
 | ⚠️ `A13.updateLicensePlan` | settings admin | PRODUCT BUG: LicensePlanService.update() saves the plan unchanged - the mutation reports success and nothing is applied (also on develop). The positive is RED until fixed |
 | ❌ `A16.createPlatformRolesAccess` | spaces reader, content full access | the server DELIBERATELY grants Platform Resource Admin READ on every space (space.service.platform.roles.access.ts); the requirements allow only Spaces Reader plus the Content Full Access exception. The negative for PLATFORM_RESOURCE_ADMIN is RED until product decides |
@@ -82,7 +81,7 @@ These rows are still tested as implemented — the finding is for product/spec o
 | **effect** | 65 | the call succeeded AND the effect is read back independently (entity gone / field changed / holder listed / resource on the target account) |
 | **returns-data** | 18 | the read returned KNOWN fixture data — an always-empty or always-null resolver fails |
 | **executed** | 21 | success payload only — maintenance jobs (resets, re-index, migrations) have no API-visible effect to read back; this is the honest limit |
-| **reached-resolver** | 4 | an external dependency is absent in test environments; the oracle is a NON-authorization error on the root field, proving the gate was passed |
+| **reached-resolver** | 3 | an external dependency is absent in test environments; the oracle is a NON-authorization error on the root field, proving the gate was passed |
 
 ## Capability → coverage
 
@@ -96,12 +95,6 @@ Spec: A1 · FR-003 · FR-015 · FR-022
 |---|---|---|---|---|
 | `assignPlatformRoleToUser` | roles admin | **effect** — holder list shows the target after assign | ✅ automated | ✅ automated |
 | `removePlatformRoleFromUser` | roles admin | **effect** — holder list no longer shows the target after remove | ✅ automated | ✅ automated |
-| `grantCredentialToUser` (deleted at Slice B) | **nobody** | — | — n/a — no target role may reach this surface - every role is a negative | ✅ automated |
-| `revokeCredentialFromUser` (deleted at Slice B) | **nobody** | — | — n/a — no target role may reach this surface - every role is a negative | ✅ automated |
-| `grantCredentialToOrganization` (deleted at Slice B) | **nobody** | — | — n/a — no target role may reach this surface - every role is a negative | ✅ automated |
-| `revokeCredentialFromOrganization` (deleted at Slice B) | **nobody** | — | — n/a — no target role may reach this surface - every role is a negative | ✅ automated |
-| `assignPlatformRoleToUser` (legacy GLOBAL_ADMIN role payload) | **nobody** | — | — n/a — no target role may reach this surface - every role is a negative | ✅ automated |
-| `removePlatformRoleFromUser` (legacy GLOBAL_ADMIN role payload) | **nobody** | — | — n/a — no target role may reach this surface - every role is a negative | ✅ automated |
 | `grantCredentialToActor` | **nobody** | — | — n/a — no target role may reach this surface - every role is a negative | ✅ automated |
 | `revokeCredentialFromActor` | **nobody** | — | — n/a — no target role may reach this surface - every role is a negative | ✅ automated |
 
@@ -253,7 +246,6 @@ Spec: A12
 
 | Capability | Allowed | Positive — must observe | Positive | Negative |
 |---|---|---|---|---|
-| `createWingbackAccount` ❌ | license manager | **reached-resolver** — Wingback disabled: "not enabled" on the root field is accepted | ✅ automated — where Wingback is disabled the oracle is "reached the resolver": a non-authorization error on the root field. FR-021 says this surface must be DELETED - the row goes when the server complies | ✅ automated |
 | `assignLicensePlanToAccount` | license manager | **effect** — the plan appears among the account / space subscriptions | ✅ automated | ✅ automated |
 | `assignLicensePlanToSpace` | license manager | **effect** — the plan appears among the account / space subscriptions | ✅ automated | ✅ automated |
 | `revokeLicensePlanFromAccount` | license manager | **effect** — the plan no longer appears | ✅ automated | ✅ automated |
@@ -279,7 +271,7 @@ Spec: A14
 
 | Capability | Allowed | Positive — must observe | Positive | Negative |
 |---|---|---|---|---|
-| `updateSpacePlatformSettings` (renamed `adminUpdateSpaceVisibility` at Slice B) | license manager | **effect** — the space reports the new visibility on re-read (restored after) | ✅ automated | ✅ automated |
+| `adminUpdateSpaceVisibility` | license manager | **effect** — the space reports the new visibility on re-read (restored after) | ✅ automated | ✅ automated |
 
 ### A15 — Support inside a flag-enabled space; manage the forum
 
@@ -306,8 +298,8 @@ Spec: A17 · FR-020
 
 | Capability | Allowed | Positive — must observe | Positive | Negative |
 |---|---|---|---|---|
-| `updateActorNameID` | **nobody** | — | ⛔ not automated — surface does not exist until Slice B | ⛔ not automated — surface does not exist until Slice B |
-| `nameID (protected section of the general content-entity update)` | **nobody** | — | ⛔ not automated — surface does not exist until Slice B | ⛔ not automated — surface does not exist until Slice B |
+| `updateActorNameID` | **nobody** | — | — n/a — no global role may reach this surface - the actor itself renames (rules/rename-nameid.it-spec.ts) | ✅ automated |
+| `updateSpace.nameID` (protected `nameID` section of `updateSpace` (UPDATE_NAMEID)) | **nobody** | — | — n/a — no global role may reach this surface - the space admin renames (rules/rename-nameid.it-spec.ts) | ✅ automated |
 
 ### A19 — Read the platform audit trail
 
@@ -390,9 +382,9 @@ One section per role, in the order of `roles/*.it-spec.ts`. **Can** lists every 
 | `A21.updateUser#0` (set serviceProfile) | owner | **effect** — serviceProfile has NO output field, so the marker is observed through its only visible effect: a set marker admits a Platform Spaces Reader grant |
 | `A21.updateUser#1` (clear serviceProfile) | owner | **effect** — serviceProfile has NO output field: a cleared marker makes the Platform Spaces Reader grant fail with the service-account rule |
 
-**Cannot (99)** — by group:
+**Cannot (92)** — by group:
 
-- **A1** Assign / revoke a Platform role: `grantCredentialToUser`, `revokeCredentialFromUser`, `grantCredentialToOrganization`, `revokeCredentialFromOrganization`, `assignPlatformRoleToUser` (legacy GLOBAL_ADMIN role payload), `removePlatformRoleFromUser` (legacy GLOBAL_ADMIN role payload), `grantCredentialToActor`, `revokeCredentialFromActor`
+- **A1** Assign / revoke a Platform role: `grantCredentialToActor`, `revokeCredentialFromActor`
 - **A3** Authorization reset & license-entitlement reset: `authorizationPolicyResetOnPlatform`, `aiServerAuthorizationPolicyReset`, `authorizationPolicyResetOnUser`, `authorizationPolicyResetOnOrganization`, `authorizationPolicyResetOnAccount`, `licenseResetOnAccount`, `authorizationPolicyResetAll`, `authorizationPlatformRolesAccessReset`, `authorizationPolicyResetToGlobalAdminsAccess`, `resetLicenseOnAccounts`
 - **A4** Change a user's login email: `adminUserEmailChange`, `deleteUser` ⛔, `adminUserEmailChangeDriftResolve`
 - **A5** Delete a user; reset an identity/account; administer users' MCP keys: `deleteUser`, `adminIdentityDeleteKratosIdentity`, `adminUserAccountDelete`, `mcpApiKeys`, `adminRevokeMcpApiKey`
@@ -402,12 +394,12 @@ One section per role, in the order of `roles/*.it-spec.ts`. **Can** lists every 
 - **A9** Move resources between accounts / space levels: `moveSpaceL1ToSpaceL0`, `moveSpaceL1ToSpaceL2`, `moveSpaceL2ToSpaceL1`, `convertSpaceL1ToSpaceL0`, `convertSpaceL2ToSpaceL1`, `convertSpaceL1ToSpaceL2`, `convertVirtualContributorToUseKnowledgeBase`, `moveContributionToCallout`, `transferCallout`, `transferInnovationHubToAccount`, `transferSpaceToAccount`, `transferInnovationPackToAccount`, `transferVirtualContributorToAccount`
 - **A10** Platform settings & configuration: `updatePlatformSettings`, `addIframeAllowedURL`, `removeIframeAllowedURL`, `addNotificationEmailToBlacklist`, `removeNotificationEmailFromBlacklist`, `setPlatformWellKnownVirtualContributor`
 - **A11** Operational machinery: `cleanupCollections`, `updateAssistantActorCapabilities`, `adminInAppNotificationsPrune`, `adminUpdateContributorAvatars`, `adminUpdateGeoLocationData`, `adminSearchIngestFromScratch`, `migrateLegacyMemoContent`, `migrateLegacyWhiteboardContent`, `refreshAllBodiesOfKnowledge`, `adminCommunicationEnsureAccessToCommunications`, `adminCommunicationRemoveOrphanedRoom`, `adminCommunicationUpdateRoomState`, `adminCommunicationMigrateOrphanedConversations`, `adminCommunicationSyncSpaceHierarchy`
-- **A12** License usage: `createWingbackAccount`, `assignLicensePlanToAccount`, `assignLicensePlanToSpace`, `revokeLicensePlanFromAccount`, `revokeLicensePlanFromSpace`, `updateBaselineLicensePlanOnAccount`
+- **A12** License usage: `assignLicensePlanToAccount`, `assignLicensePlanToSpace`, `revokeLicensePlanFromAccount`, `revokeLicensePlanFromSpace`, `updateBaselineLicensePlanOnAccount`
 - **A13** License plan definition: `createLicensePlan`, `deleteLicensePlan`, `updateLicensePlan`, `adminLicensePolicyDeleteCredentialRule`, `adminLicensePolicyUpdateCredentialRule`, `adminLicensePolicyCreateCredentialRule`
-- **A14** Space visibility: `updateSpacePlatformSettings`
+- **A14** Space visibility: `adminUpdateSpaceVisibility`
 - **A15** Support inside a flag-enabled space; manage the forum: `getAccessPrivilegesForPlatformSupport`, `updateDiscussion`, `deleteDiscussion`, `adminForumRemoveDiscussionCategory`
 - **A16** Read across spaces (service accounts only): `createPlatformRolesAccess`
-- **A17** Rename an entity (nameID): `updateActorNameID` ⛔, `nameID` ⛔
+- **A17** Rename an entity (nameID): `updateActorNameID`, `updateSpace.nameID` (protected `nameID` section of `updateSpace` (UPDATE_NAMEID))
 - **A19** Read the platform audit trail: `audit-log-analyze`, `latestUserEmailChangeAuditEntry`, `userEmailChangeAuditEntries`
 
 ### PLATFORM_CONTENT_FULL_ACCESS
@@ -439,9 +431,9 @@ One section per role, in the order of `roles/*.it-spec.ts`. **Can** lists every 
 | `A8.updateCalloutPublishInfo` | owner | **effect** — publisher / published date changed on re-read |
 | `A16.createPlatformRolesAccess` | *accepted exception* | **returns-data** — reads the collaboration of a PRIVATE space it is not a member of |
 
-**Cannot (102)** — by group:
+**Cannot (95)** — by group:
 
-- **A1** Assign / revoke a Platform role: `assignPlatformRoleToUser`, `removePlatformRoleFromUser`, `grantCredentialToUser`, `revokeCredentialFromUser`, `grantCredentialToOrganization`, `revokeCredentialFromOrganization`, `assignPlatformRoleToUser` (legacy GLOBAL_ADMIN role payload), `removePlatformRoleFromUser` (legacy GLOBAL_ADMIN role payload), `grantCredentialToActor`, `revokeCredentialFromActor`
+- **A1** Assign / revoke a Platform role: `assignPlatformRoleToUser`, `removePlatformRoleFromUser`, `grantCredentialToActor`, `revokeCredentialFromActor`
 - **A2** Assign / revoke a Feature role (user or organization): `assignPlatformRoleToUser`, `removePlatformRoleFromUser`, `assignPlatformRoleToOrganization`, `removePlatformRoleFromOrganization`
 - **A3** Authorization reset & license-entitlement reset: `authorizationPolicyResetOnPlatform`, `aiServerAuthorizationPolicyReset`, `authorizationPolicyResetOnUser`, `authorizationPolicyResetOnOrganization`, `authorizationPolicyResetOnAccount`, `licenseResetOnAccount`, `authorizationPolicyResetAll`, `authorizationPlatformRolesAccessReset`, `authorizationPolicyResetToGlobalAdminsAccess`, `resetLicenseOnAccounts`
 - **A4** Change a user's login email: `adminUserEmailChange`, `deleteUser` ⛔, `adminUserEmailChangeDriftResolve`
@@ -450,11 +442,11 @@ One section per role, in the order of `roles/*.it-spec.ts`. **Can** lists every 
 - **A9** Move resources between accounts / space levels: `moveSpaceL1ToSpaceL0`, `moveSpaceL1ToSpaceL2`, `moveSpaceL2ToSpaceL1`, `convertSpaceL1ToSpaceL0`, `convertSpaceL2ToSpaceL1`, `convertSpaceL1ToSpaceL2`, `convertVirtualContributorToUseKnowledgeBase`, `moveContributionToCallout`, `transferCallout`, `transferInnovationHubToAccount`, `transferSpaceToAccount`, `transferInnovationPackToAccount`, `transferVirtualContributorToAccount`
 - **A10** Platform settings & configuration: `updatePlatformSettings`, `addIframeAllowedURL`, `removeIframeAllowedURL`, `addNotificationEmailToBlacklist`, `removeNotificationEmailFromBlacklist`, `setPlatformWellKnownVirtualContributor`
 - **A11** Operational machinery: `cleanupCollections`, `updateAssistantActorCapabilities`, `adminInAppNotificationsPrune`, `adminUpdateContributorAvatars`, `adminUpdateGeoLocationData`, `adminSearchIngestFromScratch`, `migrateLegacyMemoContent`, `migrateLegacyWhiteboardContent`, `refreshAllBodiesOfKnowledge`, `adminCommunicationEnsureAccessToCommunications`, `adminCommunicationRemoveOrphanedRoom`, `adminCommunicationUpdateRoomState`, `adminCommunicationMigrateOrphanedConversations`, `adminCommunicationSyncSpaceHierarchy`
-- **A12** License usage: `createWingbackAccount`, `assignLicensePlanToAccount`, `assignLicensePlanToSpace`, `revokeLicensePlanFromAccount`, `revokeLicensePlanFromSpace`, `updateBaselineLicensePlanOnAccount`
+- **A12** License usage: `assignLicensePlanToAccount`, `assignLicensePlanToSpace`, `revokeLicensePlanFromAccount`, `revokeLicensePlanFromSpace`, `updateBaselineLicensePlanOnAccount`
 - **A13** License plan definition: `createLicensePlan`, `deleteLicensePlan`, `updateLicensePlan`, `adminLicensePolicyDeleteCredentialRule`, `adminLicensePolicyUpdateCredentialRule`, `adminLicensePolicyCreateCredentialRule`
-- **A14** Space visibility: `updateSpacePlatformSettings`
+- **A14** Space visibility: `adminUpdateSpaceVisibility`
 - **A15** Support inside a flag-enabled space; manage the forum: `getAccessPrivilegesForPlatformSupport`, `updateDiscussion`, `deleteDiscussion`, `adminForumRemoveDiscussionCategory`
-- **A17** Rename an entity (nameID): `updateActorNameID` ⛔, `nameID` ⛔
+- **A17** Rename an entity (nameID): `updateActorNameID`, `updateSpace.nameID` (protected `nameID` section of `updateSpace` (UPDATE_NAMEID))
 - **A19** Read the platform audit trail: `audit-log-analyze`, `latestUserEmailChangeAuditEntry`, `userEmailChangeAuditEntries`
 - **A20** Read Platform-role holder lists: `usersInRole`, `usersInRoles`, `organizationsInRole`, `organizationsInRoles`, `actorsWithCredential`, `usersWithAuthorizationCredential`
 - **A20b** Read Feature-role holder lists: `usersInRole`, `usersInRoles`, `organizationsInRole`, `organizationsInRoles`, `actorsWithCredential`, `usersWithAuthorizationCredential`
@@ -485,9 +477,9 @@ One section per role, in the order of `roles/*.it-spec.ts`. **Can** lists every 
 | `A9.transferInnovationPackToAccount` | owner | **effect** — the resource reports the TARGET account on re-read |
 | `A9.transferVirtualContributorToAccount` | owner | **effect** — the resource reports the TARGET account on re-read |
 
-**Cannot (106)** — by group:
+**Cannot (99)** — by group:
 
-- **A1** Assign / revoke a Platform role: `assignPlatformRoleToUser`, `removePlatformRoleFromUser`, `grantCredentialToUser`, `revokeCredentialFromUser`, `grantCredentialToOrganization`, `revokeCredentialFromOrganization`, `assignPlatformRoleToUser` (legacy GLOBAL_ADMIN role payload), `removePlatformRoleFromUser` (legacy GLOBAL_ADMIN role payload), `grantCredentialToActor`, `revokeCredentialFromActor`
+- **A1** Assign / revoke a Platform role: `assignPlatformRoleToUser`, `removePlatformRoleFromUser`, `grantCredentialToActor`, `revokeCredentialFromActor`
 - **A2** Assign / revoke a Feature role (user or organization): `assignPlatformRoleToUser`, `removePlatformRoleFromUser`, `assignPlatformRoleToOrganization`, `removePlatformRoleFromOrganization`
 - **A3** Authorization reset & license-entitlement reset: `authorizationPolicyResetOnPlatform`, `aiServerAuthorizationPolicyReset`, `authorizationPolicyResetOnUser`, `authorizationPolicyResetOnOrganization`, `authorizationPolicyResetOnAccount`, `licenseResetOnAccount`, `authorizationPolicyResetAll`, `authorizationPlatformRolesAccessReset`, `authorizationPolicyResetToGlobalAdminsAccess`, `resetLicenseOnAccounts`
 - **A4** Change a user's login email: `adminUserEmailChange`, `deleteUser` ⛔, `adminUserEmailChangeDriftResolve`
@@ -497,12 +489,12 @@ One section per role, in the order of `roles/*.it-spec.ts`. **Can** lists every 
 - **A8** Delete content; set callout publisher: `deleteCallout`, `deleteContribution`, `deleteSpace`, `deleteInnovationPack`, `deleteInnovationHub`, `updateCalloutPublishInfo`
 - **A10** Platform settings & configuration: `updatePlatformSettings`, `addIframeAllowedURL`, `removeIframeAllowedURL`, `addNotificationEmailToBlacklist`, `removeNotificationEmailFromBlacklist`, `setPlatformWellKnownVirtualContributor`
 - **A11** Operational machinery: `cleanupCollections`, `updateAssistantActorCapabilities`, `adminInAppNotificationsPrune`, `adminUpdateContributorAvatars`, `adminUpdateGeoLocationData`, `adminSearchIngestFromScratch`, `migrateLegacyMemoContent`, `migrateLegacyWhiteboardContent`, `refreshAllBodiesOfKnowledge`, `adminCommunicationEnsureAccessToCommunications`, `adminCommunicationRemoveOrphanedRoom`, `adminCommunicationUpdateRoomState`, `adminCommunicationMigrateOrphanedConversations`, `adminCommunicationSyncSpaceHierarchy`
-- **A12** License usage: `createWingbackAccount`, `assignLicensePlanToAccount`, `assignLicensePlanToSpace`, `revokeLicensePlanFromAccount`, `revokeLicensePlanFromSpace`, `updateBaselineLicensePlanOnAccount`
+- **A12** License usage: `assignLicensePlanToAccount`, `assignLicensePlanToSpace`, `revokeLicensePlanFromAccount`, `revokeLicensePlanFromSpace`, `updateBaselineLicensePlanOnAccount`
 - **A13** License plan definition: `createLicensePlan`, `deleteLicensePlan`, `updateLicensePlan`, `adminLicensePolicyDeleteCredentialRule`, `adminLicensePolicyUpdateCredentialRule`, `adminLicensePolicyCreateCredentialRule`
-- **A14** Space visibility: `updateSpacePlatformSettings`
+- **A14** Space visibility: `adminUpdateSpaceVisibility`
 - **A15** Support inside a flag-enabled space; manage the forum: `getAccessPrivilegesForPlatformSupport`, `updateDiscussion`, `deleteDiscussion`, `adminForumRemoveDiscussionCategory`
 - **A16** Read across spaces (service accounts only): `createPlatformRolesAccess`
-- **A17** Rename an entity (nameID): `updateActorNameID` ⛔, `nameID` ⛔
+- **A17** Rename an entity (nameID): `updateActorNameID`, `updateSpace.nameID` (protected `nameID` section of `updateSpace` (UPDATE_NAMEID))
 - **A19** Read the platform audit trail: `audit-log-analyze`, `latestUserEmailChangeAuditEntry`, `userEmailChangeAuditEntries`
 - **A20** Read Platform-role holder lists: `usersInRole`, `usersInRoles`, `organizationsInRole`, `organizationsInRoles`, `actorsWithCredential`, `usersWithAuthorizationCredential`
 - **A20b** Read Feature-role holder lists: `usersInRole`, `usersInRoles`, `organizationsInRole`, `organizationsInRoles`, `actorsWithCredential`, `usersWithAuthorizationCredential`
@@ -532,9 +524,9 @@ One section per role, in the order of `roles/*.it-spec.ts`. **Can** lists every 
 | `A13.adminLicensePolicyUpdateCredentialRule` | owner | **effect** — the changed field is visible on re-read |
 | `A13.adminLicensePolicyCreateCredentialRule` | owner | **effect** — the new rule is present in the license policy read (then removed) |
 
-**Cannot (107)** — by group:
+**Cannot (100)** — by group:
 
-- **A1** Assign / revoke a Platform role: `assignPlatformRoleToUser`, `removePlatformRoleFromUser`, `grantCredentialToUser`, `revokeCredentialFromUser`, `grantCredentialToOrganization`, `revokeCredentialFromOrganization`, `assignPlatformRoleToUser` (legacy GLOBAL_ADMIN role payload), `removePlatformRoleFromUser` (legacy GLOBAL_ADMIN role payload), `grantCredentialToActor`, `revokeCredentialFromActor`
+- **A1** Assign / revoke a Platform role: `assignPlatformRoleToUser`, `removePlatformRoleFromUser`, `grantCredentialToActor`, `revokeCredentialFromActor`
 - **A2** Assign / revoke a Feature role (user or organization): `assignPlatformRoleToUser`, `removePlatformRoleFromUser`, `assignPlatformRoleToOrganization`, `removePlatformRoleFromOrganization`
 - **A3** Authorization reset & license-entitlement reset: `authorizationPolicyResetOnPlatform`, `aiServerAuthorizationPolicyReset`, `authorizationPolicyResetOnUser`, `authorizationPolicyResetOnOrganization`, `authorizationPolicyResetOnAccount`, `licenseResetOnAccount`, `authorizationPolicyResetAll`, `authorizationPlatformRolesAccessReset`, `authorizationPolicyResetToGlobalAdminsAccess`, `resetLicenseOnAccounts`
 - **A4** Change a user's login email: `adminUserEmailChange`, `deleteUser` ⛔, `adminUserEmailChangeDriftResolve`
@@ -544,11 +536,11 @@ One section per role, in the order of `roles/*.it-spec.ts`. **Can** lists every 
 - **A8** Delete content; set callout publisher: `deleteCallout`, `deleteContribution`, `deleteSpace`, `deleteInnovationPack`, `deleteInnovationHub`, `updateCalloutPublishInfo`
 - **A9** Move resources between accounts / space levels: `moveSpaceL1ToSpaceL0`, `moveSpaceL1ToSpaceL2`, `moveSpaceL2ToSpaceL1`, `convertSpaceL1ToSpaceL0`, `convertSpaceL2ToSpaceL1`, `convertSpaceL1ToSpaceL2`, `convertVirtualContributorToUseKnowledgeBase`, `moveContributionToCallout`, `transferCallout`, `transferInnovationHubToAccount`, `transferSpaceToAccount`, `transferInnovationPackToAccount`, `transferVirtualContributorToAccount`
 - **A11** Operational machinery: `cleanupCollections`, `updateAssistantActorCapabilities`, `adminInAppNotificationsPrune`, `adminUpdateContributorAvatars`, `adminUpdateGeoLocationData`, `adminSearchIngestFromScratch`, `migrateLegacyMemoContent`, `migrateLegacyWhiteboardContent`, `refreshAllBodiesOfKnowledge`, `adminCommunicationEnsureAccessToCommunications`, `adminCommunicationRemoveOrphanedRoom`, `adminCommunicationUpdateRoomState`, `adminCommunicationMigrateOrphanedConversations`, `adminCommunicationSyncSpaceHierarchy`
-- **A12** License usage: `createWingbackAccount`, `assignLicensePlanToAccount`, `assignLicensePlanToSpace`, `revokeLicensePlanFromAccount`, `revokeLicensePlanFromSpace`, `updateBaselineLicensePlanOnAccount`
-- **A14** Space visibility: `updateSpacePlatformSettings`
+- **A12** License usage: `assignLicensePlanToAccount`, `assignLicensePlanToSpace`, `revokeLicensePlanFromAccount`, `revokeLicensePlanFromSpace`, `updateBaselineLicensePlanOnAccount`
+- **A14** Space visibility: `adminUpdateSpaceVisibility`
 - **A15** Support inside a flag-enabled space; manage the forum: `getAccessPrivilegesForPlatformSupport`, `updateDiscussion`, `deleteDiscussion`, `adminForumRemoveDiscussionCategory`
 - **A16** Read across spaces (service accounts only): `createPlatformRolesAccess`
-- **A17** Rename an entity (nameID): `updateActorNameID` ⛔, `nameID` ⛔
+- **A17** Rename an entity (nameID): `updateActorNameID`, `updateSpace.nameID` (protected `nameID` section of `updateSpace` (UPDATE_NAMEID))
 - **A19** Read the platform audit trail: `audit-log-analyze`, `latestUserEmailChangeAuditEntry`, `userEmailChangeAuditEntries`
 - **A20** Read Platform-role holder lists: `usersInRole`, `usersInRoles`, `organizationsInRole`, `organizationsInRoles`, `actorsWithCredential`, `usersWithAuthorizationCredential`
 - **A20b** Read Feature-role holder lists: `usersInRole`, `usersInRoles`, `organizationsInRole`, `organizationsInRoles`, `actorsWithCredential`, `usersWithAuthorizationCredential`
@@ -590,9 +582,9 @@ One section per role, in the order of `roles/*.it-spec.ts`. **Can** lists every 
 | `A11.adminCommunicationMigrateOrphanedConversations` 🟠 | owner | **executed** — returns its success payload with no error; a maintenance job has no API-visible effect to read back |
 | `A11.adminCommunicationSyncSpaceHierarchy` 🟠 | owner | **executed** — returns its success payload with no error; a maintenance job has no API-visible effect to read back |
 
-**Cannot (95)** — by group:
+**Cannot (88)** — by group:
 
-- **A1** Assign / revoke a Platform role: `assignPlatformRoleToUser`, `removePlatformRoleFromUser`, `grantCredentialToUser`, `revokeCredentialFromUser`, `grantCredentialToOrganization`, `revokeCredentialFromOrganization`, `assignPlatformRoleToUser` (legacy GLOBAL_ADMIN role payload), `removePlatformRoleFromUser` (legacy GLOBAL_ADMIN role payload), `grantCredentialToActor`, `revokeCredentialFromActor`
+- **A1** Assign / revoke a Platform role: `assignPlatformRoleToUser`, `removePlatformRoleFromUser`, `grantCredentialToActor`, `revokeCredentialFromActor`
 - **A2** Assign / revoke a Feature role (user or organization): `assignPlatformRoleToUser`, `removePlatformRoleFromUser`, `assignPlatformRoleToOrganization`, `removePlatformRoleFromOrganization`
 - **A4** Change a user's login email: `adminUserEmailChange`, `deleteUser` ⛔, `adminUserEmailChangeDriftResolve`
 - **A5** Delete a user; reset an identity/account; administer users' MCP keys: `deleteUser`, `adminIdentityDeleteKratosIdentity`, `adminUserAccountDelete`, `mcpApiKeys`, `adminRevokeMcpApiKey`
@@ -601,12 +593,12 @@ One section per role, in the order of `roles/*.it-spec.ts`. **Can** lists every 
 - **A8** Delete content; set callout publisher: `deleteCallout`, `deleteContribution`, `deleteSpace`, `deleteInnovationPack`, `deleteInnovationHub`, `updateCalloutPublishInfo`
 - **A9** Move resources between accounts / space levels: `moveSpaceL1ToSpaceL0`, `moveSpaceL1ToSpaceL2`, `moveSpaceL2ToSpaceL1`, `convertSpaceL1ToSpaceL0`, `convertSpaceL2ToSpaceL1`, `convertSpaceL1ToSpaceL2`, `convertVirtualContributorToUseKnowledgeBase`, `moveContributionToCallout`, `transferCallout`, `transferInnovationHubToAccount`, `transferSpaceToAccount`, `transferInnovationPackToAccount`, `transferVirtualContributorToAccount`
 - **A10** Platform settings & configuration: `updatePlatformSettings`, `addIframeAllowedURL`, `removeIframeAllowedURL`, `addNotificationEmailToBlacklist`, `removeNotificationEmailFromBlacklist`, `setPlatformWellKnownVirtualContributor`
-- **A12** License usage: `createWingbackAccount`, `assignLicensePlanToAccount`, `assignLicensePlanToSpace`, `revokeLicensePlanFromAccount`, `revokeLicensePlanFromSpace`, `updateBaselineLicensePlanOnAccount`
+- **A12** License usage: `assignLicensePlanToAccount`, `assignLicensePlanToSpace`, `revokeLicensePlanFromAccount`, `revokeLicensePlanFromSpace`, `updateBaselineLicensePlanOnAccount`
 - **A13** License plan definition: `createLicensePlan`, `deleteLicensePlan`, `updateLicensePlan`, `adminLicensePolicyDeleteCredentialRule`, `adminLicensePolicyUpdateCredentialRule`, `adminLicensePolicyCreateCredentialRule`
-- **A14** Space visibility: `updateSpacePlatformSettings`
+- **A14** Space visibility: `adminUpdateSpaceVisibility`
 - **A15** Support inside a flag-enabled space; manage the forum: `getAccessPrivilegesForPlatformSupport`, `updateDiscussion`, `deleteDiscussion`, `adminForumRemoveDiscussionCategory`
 - **A16** Read across spaces (service accounts only): `createPlatformRolesAccess`
-- **A17** Rename an entity (nameID): `updateActorNameID` ⛔, `nameID` ⛔
+- **A17** Rename an entity (nameID): `updateActorNameID`, `updateSpace.nameID` (protected `nameID` section of `updateSpace` (UPDATE_NAMEID))
 - **A19** Read the platform audit trail: `audit-log-analyze`, `latestUserEmailChangeAuditEntry`, `userEmailChangeAuditEntries`
 - **A20** Read Platform-role holder lists: `usersInRole`, `usersInRoles`, `organizationsInRole`, `organizationsInRoles`, `actorsWithCredential`, `usersWithAuthorizationCredential`
 - **A20b** Read Feature-role holder lists: `usersInRole`, `usersInRoles`, `organizationsInRole`, `organizationsInRoles`, `actorsWithCredential`, `usersWithAuthorizationCredential`
@@ -641,9 +633,9 @@ One section per role, in the order of `roles/*.it-spec.ts`. **Can** lists every 
 | `A20b.actorsWithCredential` | owner | **returns-data** — the KNOWN single-role fixture holder is present in the result - an always-empty resolver must fail |
 | `A20b.usersWithAuthorizationCredential` | owner | **returns-data** — the KNOWN single-role fixture holder is present in the result - an always-empty resolver must fail |
 
-**Cannot (102)** — by group:
+**Cannot (95)** — by group:
 
-- **A1** Assign / revoke a Platform role: `assignPlatformRoleToUser`, `removePlatformRoleFromUser`, `grantCredentialToUser`, `revokeCredentialFromUser`, `grantCredentialToOrganization`, `revokeCredentialFromOrganization`, `assignPlatformRoleToUser` (legacy GLOBAL_ADMIN role payload), `removePlatformRoleFromUser` (legacy GLOBAL_ADMIN role payload), `grantCredentialToActor`, `revokeCredentialFromActor`
+- **A1** Assign / revoke a Platform role: `assignPlatformRoleToUser`, `removePlatformRoleFromUser`, `grantCredentialToActor`, `revokeCredentialFromActor`
 - **A3** Authorization reset & license-entitlement reset: `authorizationPolicyResetOnPlatform`, `aiServerAuthorizationPolicyReset`, `authorizationPolicyResetOnUser`, `authorizationPolicyResetOnOrganization`, `authorizationPolicyResetOnAccount`, `licenseResetOnAccount`, `authorizationPolicyResetAll`, `authorizationPlatformRolesAccessReset`, `authorizationPolicyResetToGlobalAdminsAccess`, `resetLicenseOnAccounts`
 - **A4** Change a user's login email: `deleteUser` ⛔
 - **A6** Create / delete an organization: `createOrganization`, `deleteOrganization`
@@ -652,12 +644,12 @@ One section per role, in the order of `roles/*.it-spec.ts`. **Can** lists every 
 - **A9** Move resources between accounts / space levels: `moveSpaceL1ToSpaceL0`, `moveSpaceL1ToSpaceL2`, `moveSpaceL2ToSpaceL1`, `convertSpaceL1ToSpaceL0`, `convertSpaceL2ToSpaceL1`, `convertSpaceL1ToSpaceL2`, `convertVirtualContributorToUseKnowledgeBase`, `moveContributionToCallout`, `transferCallout`, `transferInnovationHubToAccount`, `transferSpaceToAccount`, `transferInnovationPackToAccount`, `transferVirtualContributorToAccount`
 - **A10** Platform settings & configuration: `updatePlatformSettings`, `addIframeAllowedURL`, `removeIframeAllowedURL`, `addNotificationEmailToBlacklist`, `removeNotificationEmailFromBlacklist`, `setPlatformWellKnownVirtualContributor`
 - **A11** Operational machinery: `cleanupCollections`, `updateAssistantActorCapabilities`, `adminInAppNotificationsPrune`, `adminUpdateContributorAvatars`, `adminUpdateGeoLocationData`, `adminSearchIngestFromScratch`, `migrateLegacyMemoContent`, `migrateLegacyWhiteboardContent`, `refreshAllBodiesOfKnowledge`, `adminCommunicationEnsureAccessToCommunications`, `adminCommunicationRemoveOrphanedRoom`, `adminCommunicationUpdateRoomState`, `adminCommunicationMigrateOrphanedConversations`, `adminCommunicationSyncSpaceHierarchy`
-- **A12** License usage: `createWingbackAccount`, `assignLicensePlanToAccount`, `assignLicensePlanToSpace`, `revokeLicensePlanFromAccount`, `revokeLicensePlanFromSpace`, `updateBaselineLicensePlanOnAccount`
+- **A12** License usage: `assignLicensePlanToAccount`, `assignLicensePlanToSpace`, `revokeLicensePlanFromAccount`, `revokeLicensePlanFromSpace`, `updateBaselineLicensePlanOnAccount`
 - **A13** License plan definition: `createLicensePlan`, `deleteLicensePlan`, `updateLicensePlan`, `adminLicensePolicyDeleteCredentialRule`, `adminLicensePolicyUpdateCredentialRule`, `adminLicensePolicyCreateCredentialRule`
-- **A14** Space visibility: `updateSpacePlatformSettings`
+- **A14** Space visibility: `adminUpdateSpaceVisibility`
 - **A15** Support inside a flag-enabled space; manage the forum: `getAccessPrivilegesForPlatformSupport`, `updateDiscussion`, `deleteDiscussion`, `adminForumRemoveDiscussionCategory`
 - **A16** Read across spaces (service accounts only): `createPlatformRolesAccess`
-- **A17** Rename an entity (nameID): `updateActorNameID` ⛔, `nameID` ⛔
+- **A17** Rename an entity (nameID): `updateActorNameID`, `updateSpace.nameID` (protected `nameID` section of `updateSpace` (UPDATE_NAMEID))
 - **A19** Read the platform audit trail: `audit-log-analyze`, `latestUserEmailChangeAuditEntry`, `userEmailChangeAuditEntries`
 - **A20** Read Platform-role holder lists: `usersInRole`, `usersInRoles`, `organizationsInRole`, `organizationsInRoles`, `actorsWithCredential`, `usersWithAuthorizationCredential`
 - **A21** Set / clear the service-profile marker: `updateUser` (set serviceProfile), `updateUser` (clear serviceProfile)
@@ -689,9 +681,9 @@ One section per role, in the order of `roles/*.it-spec.ts`. **Can** lists every 
 | `A15.deleteDiscussion` | owner | **effect** — the discussion is gone on re-read |
 | `A15.adminForumRemoveDiscussionCategory` ⛔ | owner | **effect** — the category is no longer among the forum discussion categories |
 
-**Cannot (104)** — by group:
+**Cannot (97)** — by group:
 
-- **A1** Assign / revoke a Platform role: `assignPlatformRoleToUser`, `removePlatformRoleFromUser`, `grantCredentialToUser`, `revokeCredentialFromUser`, `grantCredentialToOrganization`, `revokeCredentialFromOrganization`, `assignPlatformRoleToUser` (legacy GLOBAL_ADMIN role payload), `removePlatformRoleFromUser` (legacy GLOBAL_ADMIN role payload), `grantCredentialToActor`, `revokeCredentialFromActor`
+- **A1** Assign / revoke a Platform role: `assignPlatformRoleToUser`, `removePlatformRoleFromUser`, `grantCredentialToActor`, `revokeCredentialFromActor`
 - **A2** Assign / revoke a Feature role (user or organization): `assignPlatformRoleToUser`, `removePlatformRoleFromUser`, `assignPlatformRoleToOrganization`, `removePlatformRoleFromOrganization`
 - **A3** Authorization reset & license-entitlement reset: `authorizationPolicyResetOnPlatform`, `aiServerAuthorizationPolicyReset`, `authorizationPolicyResetOnUser`, `authorizationPolicyResetOnOrganization`, `authorizationPolicyResetOnAccount`, `licenseResetOnAccount`, `authorizationPolicyResetAll`, `authorizationPlatformRolesAccessReset`, `authorizationPolicyResetToGlobalAdminsAccess`, `resetLicenseOnAccounts`
 - **A4** Change a user's login email: `adminUserEmailChange`, `deleteUser` ⛔, `adminUserEmailChangeDriftResolve`
@@ -700,11 +692,11 @@ One section per role, in the order of `roles/*.it-spec.ts`. **Can** lists every 
 - **A9** Move resources between accounts / space levels: `moveSpaceL1ToSpaceL0`, `moveSpaceL1ToSpaceL2`, `moveSpaceL2ToSpaceL1`, `convertSpaceL1ToSpaceL0`, `convertSpaceL2ToSpaceL1`, `convertSpaceL1ToSpaceL2`, `convertVirtualContributorToUseKnowledgeBase`, `moveContributionToCallout`, `transferCallout`, `transferInnovationHubToAccount`, `transferSpaceToAccount`, `transferInnovationPackToAccount`, `transferVirtualContributorToAccount`
 - **A10** Platform settings & configuration: `updatePlatformSettings`, `addIframeAllowedURL`, `removeIframeAllowedURL`, `addNotificationEmailToBlacklist`, `removeNotificationEmailFromBlacklist`, `setPlatformWellKnownVirtualContributor`
 - **A11** Operational machinery: `cleanupCollections`, `updateAssistantActorCapabilities`, `adminInAppNotificationsPrune`, `adminUpdateContributorAvatars`, `adminUpdateGeoLocationData`, `adminSearchIngestFromScratch`, `migrateLegacyMemoContent`, `migrateLegacyWhiteboardContent`, `refreshAllBodiesOfKnowledge`, `adminCommunicationEnsureAccessToCommunications`, `adminCommunicationRemoveOrphanedRoom`, `adminCommunicationUpdateRoomState`, `adminCommunicationMigrateOrphanedConversations`, `adminCommunicationSyncSpaceHierarchy`
-- **A12** License usage: `createWingbackAccount`, `assignLicensePlanToAccount`, `assignLicensePlanToSpace`, `revokeLicensePlanFromAccount`, `revokeLicensePlanFromSpace`, `updateBaselineLicensePlanOnAccount`
+- **A12** License usage: `assignLicensePlanToAccount`, `assignLicensePlanToSpace`, `revokeLicensePlanFromAccount`, `revokeLicensePlanFromSpace`, `updateBaselineLicensePlanOnAccount`
 - **A13** License plan definition: `createLicensePlan`, `deleteLicensePlan`, `updateLicensePlan`, `adminLicensePolicyDeleteCredentialRule`, `adminLicensePolicyUpdateCredentialRule`, `adminLicensePolicyCreateCredentialRule`
-- **A14** Space visibility: `updateSpacePlatformSettings`
+- **A14** Space visibility: `adminUpdateSpaceVisibility`
 - **A16** Read across spaces (service accounts only): `createPlatformRolesAccess`
-- **A17** Rename an entity (nameID): `updateActorNameID` ⛔, `nameID` ⛔
+- **A17** Rename an entity (nameID): `updateActorNameID`, `updateSpace.nameID` (protected `nameID` section of `updateSpace` (UPDATE_NAMEID))
 - **A19** Read the platform audit trail: `audit-log-analyze`, `latestUserEmailChangeAuditEntry`, `userEmailChangeAuditEntries`
 - **A20** Read Platform-role holder lists: `usersInRole`, `usersInRoles`, `organizationsInRole`, `organizationsInRoles`, `actorsWithCredential`, `usersWithAuthorizationCredential`
 - **A20b** Read Feature-role holder lists: `usersInRole`, `usersInRoles`, `organizationsInRole`, `organizationsInRoles`, `actorsWithCredential`, `usersWithAuthorizationCredential`
@@ -717,21 +709,20 @@ One section per role, in the order of `roles/*.it-spec.ts`. **Can** lists every 
 - **Owns:** License usage: assigns and revokes plans on accounts and spaces, sets the baseline plan, changes space visibility.
 - **Must not:** Defining plans (that is Settings Admin); everything else.
 
-**Can (7)**
+**Can (6)**
 
 | Capability | Reaches it as | A passing positive must observe |
 |---|---|---|
-| `A12.createWingbackAccount` | owner | **reached-resolver** — Wingback disabled: "not enabled" on the root field is accepted |
 | `A12.assignLicensePlanToAccount` | owner | **effect** — the plan appears among the account / space subscriptions |
 | `A12.assignLicensePlanToSpace` | owner | **effect** — the plan appears among the account / space subscriptions |
 | `A12.revokeLicensePlanFromAccount` | owner | **effect** — the plan no longer appears |
 | `A12.revokeLicensePlanFromSpace` | owner | **effect** — the plan no longer appears |
 | `A12.updateBaselineLicensePlanOnAccount` | owner | **effect** — the baseline plan value changed on re-read |
-| `A14.updateSpacePlatformSettings` | owner | **effect** — the space reports the new visibility on re-read (restored after) |
+| `A14.adminUpdateSpaceVisibility` | owner | **effect** — the space reports the new visibility on re-read (restored after) |
 
-**Cannot (112)** — by group:
+**Cannot (106)** — by group:
 
-- **A1** Assign / revoke a Platform role: `assignPlatformRoleToUser`, `removePlatformRoleFromUser`, `grantCredentialToUser`, `revokeCredentialFromUser`, `grantCredentialToOrganization`, `revokeCredentialFromOrganization`, `assignPlatformRoleToUser` (legacy GLOBAL_ADMIN role payload), `removePlatformRoleFromUser` (legacy GLOBAL_ADMIN role payload), `grantCredentialToActor`, `revokeCredentialFromActor`
+- **A1** Assign / revoke a Platform role: `assignPlatformRoleToUser`, `removePlatformRoleFromUser`, `grantCredentialToActor`, `revokeCredentialFromActor`
 - **A2** Assign / revoke a Feature role (user or organization): `assignPlatformRoleToUser`, `removePlatformRoleFromUser`, `assignPlatformRoleToOrganization`, `removePlatformRoleFromOrganization`
 - **A3** Authorization reset & license-entitlement reset: `authorizationPolicyResetOnPlatform`, `aiServerAuthorizationPolicyReset`, `authorizationPolicyResetOnUser`, `authorizationPolicyResetOnOrganization`, `authorizationPolicyResetOnAccount`, `licenseResetOnAccount`, `authorizationPolicyResetAll`, `authorizationPlatformRolesAccessReset`, `authorizationPolicyResetToGlobalAdminsAccess`, `resetLicenseOnAccounts`
 - **A4** Change a user's login email: `adminUserEmailChange`, `deleteUser` ⛔, `adminUserEmailChangeDriftResolve`
@@ -745,7 +736,7 @@ One section per role, in the order of `roles/*.it-spec.ts`. **Can** lists every 
 - **A13** License plan definition: `createLicensePlan`, `deleteLicensePlan`, `updateLicensePlan`, `adminLicensePolicyDeleteCredentialRule`, `adminLicensePolicyUpdateCredentialRule`, `adminLicensePolicyCreateCredentialRule`
 - **A15** Support inside a flag-enabled space; manage the forum: `getAccessPrivilegesForPlatformSupport`, `updateDiscussion`, `deleteDiscussion`, `adminForumRemoveDiscussionCategory`
 - **A16** Read across spaces (service accounts only): `createPlatformRolesAccess`
-- **A17** Rename an entity (nameID): `updateActorNameID` ⛔, `nameID` ⛔
+- **A17** Rename an entity (nameID): `updateActorNameID`, `updateSpace.nameID` (protected `nameID` section of `updateSpace` (UPDATE_NAMEID))
 - **A19** Read the platform audit trail: `audit-log-analyze`, `latestUserEmailChangeAuditEntry`, `userEmailChangeAuditEntries`
 - **A20** Read Platform-role holder lists: `usersInRole`, `usersInRoles`, `organizationsInRole`, `organizationsInRoles`, `actorsWithCredential`, `usersWithAuthorizationCredential`
 - **A20b** Read Feature-role holder lists: `usersInRole`, `usersInRoles`, `organizationsInRole`, `organizationsInRoles`, `actorsWithCredential`, `usersWithAuthorizationCredential`
@@ -764,9 +755,9 @@ One section per role, in the order of `roles/*.it-spec.ts`. **Can** lists every 
 |---|---|---|
 | `A16.createPlatformRolesAccess` | owner | **returns-data** — reads the collaboration of a PRIVATE space it is not a member of |
 
-**Cannot (118)** — by group:
+**Cannot (111)** — by group:
 
-- **A1** Assign / revoke a Platform role: `assignPlatformRoleToUser`, `removePlatformRoleFromUser`, `grantCredentialToUser`, `revokeCredentialFromUser`, `grantCredentialToOrganization`, `revokeCredentialFromOrganization`, `assignPlatformRoleToUser` (legacy GLOBAL_ADMIN role payload), `removePlatformRoleFromUser` (legacy GLOBAL_ADMIN role payload), `grantCredentialToActor`, `revokeCredentialFromActor`
+- **A1** Assign / revoke a Platform role: `assignPlatformRoleToUser`, `removePlatformRoleFromUser`, `grantCredentialToActor`, `revokeCredentialFromActor`
 - **A2** Assign / revoke a Feature role (user or organization): `assignPlatformRoleToUser`, `removePlatformRoleFromUser`, `assignPlatformRoleToOrganization`, `removePlatformRoleFromOrganization`
 - **A3** Authorization reset & license-entitlement reset: `authorizationPolicyResetOnPlatform`, `aiServerAuthorizationPolicyReset`, `authorizationPolicyResetOnUser`, `authorizationPolicyResetOnOrganization`, `authorizationPolicyResetOnAccount`, `licenseResetOnAccount`, `authorizationPolicyResetAll`, `authorizationPlatformRolesAccessReset`, `authorizationPolicyResetToGlobalAdminsAccess`, `resetLicenseOnAccounts`
 - **A4** Change a user's login email: `adminUserEmailChange`, `deleteUser` ⛔, `adminUserEmailChangeDriftResolve`
@@ -777,11 +768,11 @@ One section per role, in the order of `roles/*.it-spec.ts`. **Can** lists every 
 - **A9** Move resources between accounts / space levels: `moveSpaceL1ToSpaceL0`, `moveSpaceL1ToSpaceL2`, `moveSpaceL2ToSpaceL1`, `convertSpaceL1ToSpaceL0`, `convertSpaceL2ToSpaceL1`, `convertSpaceL1ToSpaceL2`, `convertVirtualContributorToUseKnowledgeBase`, `moveContributionToCallout`, `transferCallout`, `transferInnovationHubToAccount`, `transferSpaceToAccount`, `transferInnovationPackToAccount`, `transferVirtualContributorToAccount`
 - **A10** Platform settings & configuration: `updatePlatformSettings`, `addIframeAllowedURL`, `removeIframeAllowedURL`, `addNotificationEmailToBlacklist`, `removeNotificationEmailFromBlacklist`, `setPlatformWellKnownVirtualContributor`
 - **A11** Operational machinery: `cleanupCollections`, `updateAssistantActorCapabilities`, `adminInAppNotificationsPrune`, `adminUpdateContributorAvatars`, `adminUpdateGeoLocationData`, `adminSearchIngestFromScratch`, `migrateLegacyMemoContent`, `migrateLegacyWhiteboardContent`, `refreshAllBodiesOfKnowledge`, `adminCommunicationEnsureAccessToCommunications`, `adminCommunicationRemoveOrphanedRoom`, `adminCommunicationUpdateRoomState`, `adminCommunicationMigrateOrphanedConversations`, `adminCommunicationSyncSpaceHierarchy`
-- **A12** License usage: `createWingbackAccount`, `assignLicensePlanToAccount`, `assignLicensePlanToSpace`, `revokeLicensePlanFromAccount`, `revokeLicensePlanFromSpace`, `updateBaselineLicensePlanOnAccount`
+- **A12** License usage: `assignLicensePlanToAccount`, `assignLicensePlanToSpace`, `revokeLicensePlanFromAccount`, `revokeLicensePlanFromSpace`, `updateBaselineLicensePlanOnAccount`
 - **A13** License plan definition: `createLicensePlan`, `deleteLicensePlan`, `updateLicensePlan`, `adminLicensePolicyDeleteCredentialRule`, `adminLicensePolicyUpdateCredentialRule`, `adminLicensePolicyCreateCredentialRule`
-- **A14** Space visibility: `updateSpacePlatformSettings`
+- **A14** Space visibility: `adminUpdateSpaceVisibility`
 - **A15** Support inside a flag-enabled space; manage the forum: `getAccessPrivilegesForPlatformSupport`, `updateDiscussion`, `deleteDiscussion`, `adminForumRemoveDiscussionCategory`
-- **A17** Rename an entity (nameID): `updateActorNameID` ⛔, `nameID` ⛔
+- **A17** Rename an entity (nameID): `updateActorNameID`, `updateSpace.nameID` (protected `nameID` section of `updateSpace` (UPDATE_NAMEID))
 - **A19** Read the platform audit trail: `audit-log-analyze`, `latestUserEmailChangeAuditEntry`, `userEmailChangeAuditEntries`
 - **A20** Read Platform-role holder lists: `usersInRole`, `usersInRoles`, `organizationsInRole`, `organizationsInRoles`, `actorsWithCredential`, `usersWithAuthorizationCredential`
 - **A20b** Read Feature-role holder lists: `usersInRole`, `usersInRoles`, `organizationsInRole`, `organizationsInRoles`, `actorsWithCredential`, `usersWithAuthorizationCredential`
@@ -814,9 +805,9 @@ One section per role, in the order of `roles/*.it-spec.ts`. **Can** lists every 
 | `A20b.actorsWithCredential` | owner | **returns-data** — the KNOWN single-role fixture holder is present in the result - an always-empty resolver must fail |
 | `A20b.usersWithAuthorizationCredential` | owner | **returns-data** — the KNOWN single-role fixture holder is present in the result - an always-empty resolver must fail |
 
-**Cannot (104)** — by group:
+**Cannot (97)** — by group:
 
-- **A1** Assign / revoke a Platform role: `assignPlatformRoleToUser`, `removePlatformRoleFromUser`, `grantCredentialToUser`, `revokeCredentialFromUser`, `grantCredentialToOrganization`, `revokeCredentialFromOrganization`, `assignPlatformRoleToUser` (legacy GLOBAL_ADMIN role payload), `removePlatformRoleFromUser` (legacy GLOBAL_ADMIN role payload), `grantCredentialToActor`, `revokeCredentialFromActor`
+- **A1** Assign / revoke a Platform role: `assignPlatformRoleToUser`, `removePlatformRoleFromUser`, `grantCredentialToActor`, `revokeCredentialFromActor`
 - **A2** Assign / revoke a Feature role (user or organization): `assignPlatformRoleToUser`, `removePlatformRoleFromUser`, `assignPlatformRoleToOrganization`, `removePlatformRoleFromOrganization`
 - **A3** Authorization reset & license-entitlement reset: `authorizationPolicyResetOnPlatform`, `aiServerAuthorizationPolicyReset`, `authorizationPolicyResetOnUser`, `authorizationPolicyResetOnOrganization`, `authorizationPolicyResetOnAccount`, `licenseResetOnAccount`, `authorizationPolicyResetAll`, `authorizationPlatformRolesAccessReset`, `authorizationPolicyResetToGlobalAdminsAccess`, `resetLicenseOnAccounts`
 - **A4** Change a user's login email: `adminUserEmailChange`, `deleteUser` ⛔, `adminUserEmailChangeDriftResolve`
@@ -827,12 +818,12 @@ One section per role, in the order of `roles/*.it-spec.ts`. **Can** lists every 
 - **A9** Move resources between accounts / space levels: `moveSpaceL1ToSpaceL0`, `moveSpaceL1ToSpaceL2`, `moveSpaceL2ToSpaceL1`, `convertSpaceL1ToSpaceL0`, `convertSpaceL2ToSpaceL1`, `convertSpaceL1ToSpaceL2`, `convertVirtualContributorToUseKnowledgeBase`, `moveContributionToCallout`, `transferCallout`, `transferInnovationHubToAccount`, `transferSpaceToAccount`, `transferInnovationPackToAccount`, `transferVirtualContributorToAccount`
 - **A10** Platform settings & configuration: `updatePlatformSettings`, `addIframeAllowedURL`, `removeIframeAllowedURL`, `addNotificationEmailToBlacklist`, `removeNotificationEmailFromBlacklist`, `setPlatformWellKnownVirtualContributor`
 - **A11** Operational machinery: `cleanupCollections`, `updateAssistantActorCapabilities`, `adminInAppNotificationsPrune`, `adminUpdateContributorAvatars`, `adminUpdateGeoLocationData`, `adminSearchIngestFromScratch`, `migrateLegacyMemoContent`, `migrateLegacyWhiteboardContent`, `refreshAllBodiesOfKnowledge`, `adminCommunicationEnsureAccessToCommunications`, `adminCommunicationRemoveOrphanedRoom`, `adminCommunicationUpdateRoomState`, `adminCommunicationMigrateOrphanedConversations`, `adminCommunicationSyncSpaceHierarchy`
-- **A12** License usage: `createWingbackAccount`, `assignLicensePlanToAccount`, `assignLicensePlanToSpace`, `revokeLicensePlanFromAccount`, `revokeLicensePlanFromSpace`, `updateBaselineLicensePlanOnAccount`
+- **A12** License usage: `assignLicensePlanToAccount`, `assignLicensePlanToSpace`, `revokeLicensePlanFromAccount`, `revokeLicensePlanFromSpace`, `updateBaselineLicensePlanOnAccount`
 - **A13** License plan definition: `createLicensePlan`, `deleteLicensePlan`, `updateLicensePlan`, `adminLicensePolicyDeleteCredentialRule`, `adminLicensePolicyUpdateCredentialRule`, `adminLicensePolicyCreateCredentialRule`
-- **A14** Space visibility: `updateSpacePlatformSettings`
+- **A14** Space visibility: `adminUpdateSpaceVisibility`
 - **A15** Support inside a flag-enabled space; manage the forum: `getAccessPrivilegesForPlatformSupport`, `updateDiscussion`, `deleteDiscussion`, `adminForumRemoveDiscussionCategory`
 - **A16** Read across spaces (service accounts only): `createPlatformRolesAccess`
-- **A17** Rename an entity (nameID): `updateActorNameID` ⛔, `nameID` ⛔
+- **A17** Rename an entity (nameID): `updateActorNameID`, `updateSpace.nameID` (protected `nameID` section of `updateSpace` (UPDATE_NAMEID))
 - **A21** Set / clear the service-profile marker: `updateUser` (set serviceProfile), `updateUser` (clear serviceProfile)
 
 ### FEATURE_BETA_TESTER
@@ -844,9 +835,9 @@ One section per role, in the order of `roles/*.it-spec.ts`. **Can** lists every 
 
 **Can:** nothing in the capability table — this role owns no administrative capability. What it confers is proven by the Feature-role scenarios (F1–F3) below.
 
-**Cannot (119)** — by group:
+**Cannot (112)** — by group:
 
-- **A1** Assign / revoke a Platform role: `assignPlatformRoleToUser`, `removePlatformRoleFromUser`, `grantCredentialToUser`, `revokeCredentialFromUser`, `grantCredentialToOrganization`, `revokeCredentialFromOrganization`, `assignPlatformRoleToUser` (legacy GLOBAL_ADMIN role payload), `removePlatformRoleFromUser` (legacy GLOBAL_ADMIN role payload), `grantCredentialToActor`, `revokeCredentialFromActor`
+- **A1** Assign / revoke a Platform role: `assignPlatformRoleToUser`, `removePlatformRoleFromUser`, `grantCredentialToActor`, `revokeCredentialFromActor`
 - **A2** Assign / revoke a Feature role (user or organization): `assignPlatformRoleToUser`, `removePlatformRoleFromUser`, `assignPlatformRoleToOrganization`, `removePlatformRoleFromOrganization`
 - **A3** Authorization reset & license-entitlement reset: `authorizationPolicyResetOnPlatform`, `aiServerAuthorizationPolicyReset`, `authorizationPolicyResetOnUser`, `authorizationPolicyResetOnOrganization`, `authorizationPolicyResetOnAccount`, `licenseResetOnAccount`, `authorizationPolicyResetAll`, `authorizationPlatformRolesAccessReset`, `authorizationPolicyResetToGlobalAdminsAccess`, `resetLicenseOnAccounts`
 - **A4** Change a user's login email: `adminUserEmailChange`, `deleteUser` ⛔, `adminUserEmailChangeDriftResolve`
@@ -857,12 +848,12 @@ One section per role, in the order of `roles/*.it-spec.ts`. **Can** lists every 
 - **A9** Move resources between accounts / space levels: `moveSpaceL1ToSpaceL0`, `moveSpaceL1ToSpaceL2`, `moveSpaceL2ToSpaceL1`, `convertSpaceL1ToSpaceL0`, `convertSpaceL2ToSpaceL1`, `convertSpaceL1ToSpaceL2`, `convertVirtualContributorToUseKnowledgeBase`, `moveContributionToCallout`, `transferCallout`, `transferInnovationHubToAccount`, `transferSpaceToAccount`, `transferInnovationPackToAccount`, `transferVirtualContributorToAccount`
 - **A10** Platform settings & configuration: `updatePlatformSettings`, `addIframeAllowedURL`, `removeIframeAllowedURL`, `addNotificationEmailToBlacklist`, `removeNotificationEmailFromBlacklist`, `setPlatformWellKnownVirtualContributor`
 - **A11** Operational machinery: `cleanupCollections`, `updateAssistantActorCapabilities`, `adminInAppNotificationsPrune`, `adminUpdateContributorAvatars`, `adminUpdateGeoLocationData`, `adminSearchIngestFromScratch`, `migrateLegacyMemoContent`, `migrateLegacyWhiteboardContent`, `refreshAllBodiesOfKnowledge`, `adminCommunicationEnsureAccessToCommunications`, `adminCommunicationRemoveOrphanedRoom`, `adminCommunicationUpdateRoomState`, `adminCommunicationMigrateOrphanedConversations`, `adminCommunicationSyncSpaceHierarchy`
-- **A12** License usage: `createWingbackAccount`, `assignLicensePlanToAccount`, `assignLicensePlanToSpace`, `revokeLicensePlanFromAccount`, `revokeLicensePlanFromSpace`, `updateBaselineLicensePlanOnAccount`
+- **A12** License usage: `assignLicensePlanToAccount`, `assignLicensePlanToSpace`, `revokeLicensePlanFromAccount`, `revokeLicensePlanFromSpace`, `updateBaselineLicensePlanOnAccount`
 - **A13** License plan definition: `createLicensePlan`, `deleteLicensePlan`, `updateLicensePlan`, `adminLicensePolicyDeleteCredentialRule`, `adminLicensePolicyUpdateCredentialRule`, `adminLicensePolicyCreateCredentialRule`
-- **A14** Space visibility: `updateSpacePlatformSettings`
+- **A14** Space visibility: `adminUpdateSpaceVisibility`
 - **A15** Support inside a flag-enabled space; manage the forum: `getAccessPrivilegesForPlatformSupport`, `updateDiscussion`, `deleteDiscussion`, `adminForumRemoveDiscussionCategory`
 - **A16** Read across spaces (service accounts only): `createPlatformRolesAccess`
-- **A17** Rename an entity (nameID): `updateActorNameID` ⛔, `nameID` ⛔
+- **A17** Rename an entity (nameID): `updateActorNameID`, `updateSpace.nameID` (protected `nameID` section of `updateSpace` (UPDATE_NAMEID))
 - **A19** Read the platform audit trail: `audit-log-analyze`, `latestUserEmailChangeAuditEntry`, `userEmailChangeAuditEntries`
 - **A20** Read Platform-role holder lists: `usersInRole`, `usersInRoles`, `organizationsInRole`, `organizationsInRoles`, `actorsWithCredential`, `usersWithAuthorizationCredential`
 - **A20b** Read Feature-role holder lists: `usersInRole`, `usersInRoles`, `organizationsInRole`, `organizationsInRoles`, `actorsWithCredential`, `usersWithAuthorizationCredential`
@@ -877,9 +868,9 @@ One section per role, in the order of `roles/*.it-spec.ts`. **Can** lists every 
 
 **Can:** nothing in the capability table — this role owns no administrative capability. What it confers is proven by the Feature-role scenarios (F1–F3) below.
 
-**Cannot (119)** — by group:
+**Cannot (112)** — by group:
 
-- **A1** Assign / revoke a Platform role: `assignPlatformRoleToUser`, `removePlatformRoleFromUser`, `grantCredentialToUser`, `revokeCredentialFromUser`, `grantCredentialToOrganization`, `revokeCredentialFromOrganization`, `assignPlatformRoleToUser` (legacy GLOBAL_ADMIN role payload), `removePlatformRoleFromUser` (legacy GLOBAL_ADMIN role payload), `grantCredentialToActor`, `revokeCredentialFromActor`
+- **A1** Assign / revoke a Platform role: `assignPlatformRoleToUser`, `removePlatformRoleFromUser`, `grantCredentialToActor`, `revokeCredentialFromActor`
 - **A2** Assign / revoke a Feature role (user or organization): `assignPlatformRoleToUser`, `removePlatformRoleFromUser`, `assignPlatformRoleToOrganization`, `removePlatformRoleFromOrganization`
 - **A3** Authorization reset & license-entitlement reset: `authorizationPolicyResetOnPlatform`, `aiServerAuthorizationPolicyReset`, `authorizationPolicyResetOnUser`, `authorizationPolicyResetOnOrganization`, `authorizationPolicyResetOnAccount`, `licenseResetOnAccount`, `authorizationPolicyResetAll`, `authorizationPlatformRolesAccessReset`, `authorizationPolicyResetToGlobalAdminsAccess`, `resetLicenseOnAccounts`
 - **A4** Change a user's login email: `adminUserEmailChange`, `deleteUser` ⛔, `adminUserEmailChangeDriftResolve`
@@ -890,12 +881,12 @@ One section per role, in the order of `roles/*.it-spec.ts`. **Can** lists every 
 - **A9** Move resources between accounts / space levels: `moveSpaceL1ToSpaceL0`, `moveSpaceL1ToSpaceL2`, `moveSpaceL2ToSpaceL1`, `convertSpaceL1ToSpaceL0`, `convertSpaceL2ToSpaceL1`, `convertSpaceL1ToSpaceL2`, `convertVirtualContributorToUseKnowledgeBase`, `moveContributionToCallout`, `transferCallout`, `transferInnovationHubToAccount`, `transferSpaceToAccount`, `transferInnovationPackToAccount`, `transferVirtualContributorToAccount`
 - **A10** Platform settings & configuration: `updatePlatformSettings`, `addIframeAllowedURL`, `removeIframeAllowedURL`, `addNotificationEmailToBlacklist`, `removeNotificationEmailFromBlacklist`, `setPlatformWellKnownVirtualContributor`
 - **A11** Operational machinery: `cleanupCollections`, `updateAssistantActorCapabilities`, `adminInAppNotificationsPrune`, `adminUpdateContributorAvatars`, `adminUpdateGeoLocationData`, `adminSearchIngestFromScratch`, `migrateLegacyMemoContent`, `migrateLegacyWhiteboardContent`, `refreshAllBodiesOfKnowledge`, `adminCommunicationEnsureAccessToCommunications`, `adminCommunicationRemoveOrphanedRoom`, `adminCommunicationUpdateRoomState`, `adminCommunicationMigrateOrphanedConversations`, `adminCommunicationSyncSpaceHierarchy`
-- **A12** License usage: `createWingbackAccount`, `assignLicensePlanToAccount`, `assignLicensePlanToSpace`, `revokeLicensePlanFromAccount`, `revokeLicensePlanFromSpace`, `updateBaselineLicensePlanOnAccount`
+- **A12** License usage: `assignLicensePlanToAccount`, `assignLicensePlanToSpace`, `revokeLicensePlanFromAccount`, `revokeLicensePlanFromSpace`, `updateBaselineLicensePlanOnAccount`
 - **A13** License plan definition: `createLicensePlan`, `deleteLicensePlan`, `updateLicensePlan`, `adminLicensePolicyDeleteCredentialRule`, `adminLicensePolicyUpdateCredentialRule`, `adminLicensePolicyCreateCredentialRule`
-- **A14** Space visibility: `updateSpacePlatformSettings`
+- **A14** Space visibility: `adminUpdateSpaceVisibility`
 - **A15** Support inside a flag-enabled space; manage the forum: `getAccessPrivilegesForPlatformSupport`, `updateDiscussion`, `deleteDiscussion`, `adminForumRemoveDiscussionCategory`
 - **A16** Read across spaces (service accounts only): `createPlatformRolesAccess`
-- **A17** Rename an entity (nameID): `updateActorNameID` ⛔, `nameID` ⛔
+- **A17** Rename an entity (nameID): `updateActorNameID`, `updateSpace.nameID` (protected `nameID` section of `updateSpace` (UPDATE_NAMEID))
 - **A19** Read the platform audit trail: `audit-log-analyze`, `latestUserEmailChangeAuditEntry`, `userEmailChangeAuditEntries`
 - **A20** Read Platform-role holder lists: `usersInRole`, `usersInRoles`, `organizationsInRole`, `organizationsInRoles`, `actorsWithCredential`, `usersWithAuthorizationCredential`
 - **A20b** Read Feature-role holder lists: `usersInRole`, `usersInRoles`, `organizationsInRole`, `organizationsInRoles`, `actorsWithCredential`, `usersWithAuthorizationCredential`
@@ -914,9 +905,9 @@ One section per role, in the order of `roles/*.it-spec.ts`. **Can** lists every 
 |---|---|---|
 | `A6.createOrganization` | owner | **effect** — the organization is readable by the returned id (then cleaned up) |
 
-**Cannot (118)** — by group:
+**Cannot (111)** — by group:
 
-- **A1** Assign / revoke a Platform role: `assignPlatformRoleToUser`, `removePlatformRoleFromUser`, `grantCredentialToUser`, `revokeCredentialFromUser`, `grantCredentialToOrganization`, `revokeCredentialFromOrganization`, `assignPlatformRoleToUser` (legacy GLOBAL_ADMIN role payload), `removePlatformRoleFromUser` (legacy GLOBAL_ADMIN role payload), `grantCredentialToActor`, `revokeCredentialFromActor`
+- **A1** Assign / revoke a Platform role: `assignPlatformRoleToUser`, `removePlatformRoleFromUser`, `grantCredentialToActor`, `revokeCredentialFromActor`
 - **A2** Assign / revoke a Feature role (user or organization): `assignPlatformRoleToUser`, `removePlatformRoleFromUser`, `assignPlatformRoleToOrganization`, `removePlatformRoleFromOrganization`
 - **A3** Authorization reset & license-entitlement reset: `authorizationPolicyResetOnPlatform`, `aiServerAuthorizationPolicyReset`, `authorizationPolicyResetOnUser`, `authorizationPolicyResetOnOrganization`, `authorizationPolicyResetOnAccount`, `licenseResetOnAccount`, `authorizationPolicyResetAll`, `authorizationPlatformRolesAccessReset`, `authorizationPolicyResetToGlobalAdminsAccess`, `resetLicenseOnAccounts`
 - **A4** Change a user's login email: `adminUserEmailChange`, `deleteUser` ⛔, `adminUserEmailChangeDriftResolve`
@@ -927,12 +918,12 @@ One section per role, in the order of `roles/*.it-spec.ts`. **Can** lists every 
 - **A9** Move resources between accounts / space levels: `moveSpaceL1ToSpaceL0`, `moveSpaceL1ToSpaceL2`, `moveSpaceL2ToSpaceL1`, `convertSpaceL1ToSpaceL0`, `convertSpaceL2ToSpaceL1`, `convertSpaceL1ToSpaceL2`, `convertVirtualContributorToUseKnowledgeBase`, `moveContributionToCallout`, `transferCallout`, `transferInnovationHubToAccount`, `transferSpaceToAccount`, `transferInnovationPackToAccount`, `transferVirtualContributorToAccount`
 - **A10** Platform settings & configuration: `updatePlatformSettings`, `addIframeAllowedURL`, `removeIframeAllowedURL`, `addNotificationEmailToBlacklist`, `removeNotificationEmailFromBlacklist`, `setPlatformWellKnownVirtualContributor`
 - **A11** Operational machinery: `cleanupCollections`, `updateAssistantActorCapabilities`, `adminInAppNotificationsPrune`, `adminUpdateContributorAvatars`, `adminUpdateGeoLocationData`, `adminSearchIngestFromScratch`, `migrateLegacyMemoContent`, `migrateLegacyWhiteboardContent`, `refreshAllBodiesOfKnowledge`, `adminCommunicationEnsureAccessToCommunications`, `adminCommunicationRemoveOrphanedRoom`, `adminCommunicationUpdateRoomState`, `adminCommunicationMigrateOrphanedConversations`, `adminCommunicationSyncSpaceHierarchy`
-- **A12** License usage: `createWingbackAccount`, `assignLicensePlanToAccount`, `assignLicensePlanToSpace`, `revokeLicensePlanFromAccount`, `revokeLicensePlanFromSpace`, `updateBaselineLicensePlanOnAccount`
+- **A12** License usage: `assignLicensePlanToAccount`, `assignLicensePlanToSpace`, `revokeLicensePlanFromAccount`, `revokeLicensePlanFromSpace`, `updateBaselineLicensePlanOnAccount`
 - **A13** License plan definition: `createLicensePlan`, `deleteLicensePlan`, `updateLicensePlan`, `adminLicensePolicyDeleteCredentialRule`, `adminLicensePolicyUpdateCredentialRule`, `adminLicensePolicyCreateCredentialRule`
-- **A14** Space visibility: `updateSpacePlatformSettings`
+- **A14** Space visibility: `adminUpdateSpaceVisibility`
 - **A15** Support inside a flag-enabled space; manage the forum: `getAccessPrivilegesForPlatformSupport`, `updateDiscussion`, `deleteDiscussion`, `adminForumRemoveDiscussionCategory`
 - **A16** Read across spaces (service accounts only): `createPlatformRolesAccess`
-- **A17** Rename an entity (nameID): `updateActorNameID` ⛔, `nameID` ⛔
+- **A17** Rename an entity (nameID): `updateActorNameID`, `updateSpace.nameID` (protected `nameID` section of `updateSpace` (UPDATE_NAMEID))
 - **A19** Read the platform audit trail: `audit-log-analyze`, `latestUserEmailChangeAuditEntry`, `userEmailChangeAuditEntries`
 - **A20** Read Platform-role holder lists: `usersInRole`, `usersInRoles`, `organizationsInRole`, `organizationsInRoles`, `actorsWithCredential`, `usersWithAuthorizationCredential`
 - **A20b** Read Feature-role holder lists: `usersInRole`, `usersInRoles`, `organizationsInRole`, `organizationsInRoles`, `actorsWithCredential`, `usersWithAuthorizationCredential`
@@ -947,9 +938,9 @@ One section per role, in the order of `roles/*.it-spec.ts`. **Can** lists every 
 
 **Can:** nothing in the capability table — this role owns no administrative capability. What it confers is proven by the Feature-role scenarios (F1–F3) below.
 
-**Cannot (119)** — by group:
+**Cannot (112)** — by group:
 
-- **A1** Assign / revoke a Platform role: `assignPlatformRoleToUser`, `removePlatformRoleFromUser`, `grantCredentialToUser`, `revokeCredentialFromUser`, `grantCredentialToOrganization`, `revokeCredentialFromOrganization`, `assignPlatformRoleToUser` (legacy GLOBAL_ADMIN role payload), `removePlatformRoleFromUser` (legacy GLOBAL_ADMIN role payload), `grantCredentialToActor`, `revokeCredentialFromActor`
+- **A1** Assign / revoke a Platform role: `assignPlatformRoleToUser`, `removePlatformRoleFromUser`, `grantCredentialToActor`, `revokeCredentialFromActor`
 - **A2** Assign / revoke a Feature role (user or organization): `assignPlatformRoleToUser`, `removePlatformRoleFromUser`, `assignPlatformRoleToOrganization`, `removePlatformRoleFromOrganization`
 - **A3** Authorization reset & license-entitlement reset: `authorizationPolicyResetOnPlatform`, `aiServerAuthorizationPolicyReset`, `authorizationPolicyResetOnUser`, `authorizationPolicyResetOnOrganization`, `authorizationPolicyResetOnAccount`, `licenseResetOnAccount`, `authorizationPolicyResetAll`, `authorizationPlatformRolesAccessReset`, `authorizationPolicyResetToGlobalAdminsAccess`, `resetLicenseOnAccounts`
 - **A4** Change a user's login email: `adminUserEmailChange`, `deleteUser` ⛔, `adminUserEmailChangeDriftResolve`
@@ -960,12 +951,12 @@ One section per role, in the order of `roles/*.it-spec.ts`. **Can** lists every 
 - **A9** Move resources between accounts / space levels: `moveSpaceL1ToSpaceL0`, `moveSpaceL1ToSpaceL2`, `moveSpaceL2ToSpaceL1`, `convertSpaceL1ToSpaceL0`, `convertSpaceL2ToSpaceL1`, `convertSpaceL1ToSpaceL2`, `convertVirtualContributorToUseKnowledgeBase`, `moveContributionToCallout`, `transferCallout`, `transferInnovationHubToAccount`, `transferSpaceToAccount`, `transferInnovationPackToAccount`, `transferVirtualContributorToAccount`
 - **A10** Platform settings & configuration: `updatePlatformSettings`, `addIframeAllowedURL`, `removeIframeAllowedURL`, `addNotificationEmailToBlacklist`, `removeNotificationEmailFromBlacklist`, `setPlatformWellKnownVirtualContributor`
 - **A11** Operational machinery: `cleanupCollections`, `updateAssistantActorCapabilities`, `adminInAppNotificationsPrune`, `adminUpdateContributorAvatars`, `adminUpdateGeoLocationData`, `adminSearchIngestFromScratch`, `migrateLegacyMemoContent`, `migrateLegacyWhiteboardContent`, `refreshAllBodiesOfKnowledge`, `adminCommunicationEnsureAccessToCommunications`, `adminCommunicationRemoveOrphanedRoom`, `adminCommunicationUpdateRoomState`, `adminCommunicationMigrateOrphanedConversations`, `adminCommunicationSyncSpaceHierarchy`
-- **A12** License usage: `createWingbackAccount`, `assignLicensePlanToAccount`, `assignLicensePlanToSpace`, `revokeLicensePlanFromAccount`, `revokeLicensePlanFromSpace`, `updateBaselineLicensePlanOnAccount`
+- **A12** License usage: `assignLicensePlanToAccount`, `assignLicensePlanToSpace`, `revokeLicensePlanFromAccount`, `revokeLicensePlanFromSpace`, `updateBaselineLicensePlanOnAccount`
 - **A13** License plan definition: `createLicensePlan`, `deleteLicensePlan`, `updateLicensePlan`, `adminLicensePolicyDeleteCredentialRule`, `adminLicensePolicyUpdateCredentialRule`, `adminLicensePolicyCreateCredentialRule`
-- **A14** Space visibility: `updateSpacePlatformSettings`
+- **A14** Space visibility: `adminUpdateSpaceVisibility`
 - **A15** Support inside a flag-enabled space; manage the forum: `getAccessPrivilegesForPlatformSupport`, `updateDiscussion`, `deleteDiscussion`, `adminForumRemoveDiscussionCategory`
 - **A16** Read across spaces (service accounts only): `createPlatformRolesAccess`
-- **A17** Rename an entity (nameID): `updateActorNameID` ⛔, `nameID` ⛔
+- **A17** Rename an entity (nameID): `updateActorNameID`, `updateSpace.nameID` (protected `nameID` section of `updateSpace` (UPDATE_NAMEID))
 - **A19** Read the platform audit trail: `audit-log-analyze`, `latestUserEmailChangeAuditEntry`, `userEmailChangeAuditEntries`
 - **A20** Read Platform-role holder lists: `usersInRole`, `usersInRoles`, `organizationsInRole`, `organizationsInRoles`, `actorsWithCredential`, `usersWithAuthorizationCredential`
 - **A20b** Read Feature-role holder lists: `usersInRole`, `usersInRoles`, `organizationsInRole`, `organizationsInRoles`, `actorsWithCredential`, `usersWithAuthorizationCredential`
@@ -998,17 +989,18 @@ One section per role, in the order of `roles/*.it-spec.ts`. **Can** lists every 
 | AR2.self-affecting-predicate | Self-affecting actions are retrievable; platform-wide ones are not false positives | SC-015 · FR-015 · FR-030 | `audit-records.it-spec.ts` | ✅ automated — a rejected self-grant and a self-targeted admin action are returned by initiator = subject — ⚠️ reads audit records through the MCP tool — detected automatically; a visible todo where the server runs with MCP off | ✅ automated — a grant to another user is NOT returned (normal run). The platform-wide half — a reset with no subject — runs in the on-demand exclusive project: a platform reset must never run beside other tests — ⚠️ reads audit records through the MCP tool — detected automatically; a visible todo where the server runs with MCP off |
 | AR3.audit-store-outage | Fail-open / fail-closed behaviour when the audit store is unwritable | FR-025 · research D25 | — | ⛔ not automated — needs fault injection (REVOKE INSERT on the audit table) — impossible against a shared API, straightforward on a throwaway compose stack | ⛔ not automated — same enabler; until then server unit specs + the quickstart §5 drill |
 | S1.marker-owned-by-roles-admin | Only Platform Roles Admin sets or clears the service-profile marker | A21 · FR-002 | `rules/service-profile.it-spec.ts` | ✅ automated — Roles Admin sets then clears it; each change is recorded; a cleared account can no longer be granted Spaces Reader | ✅ automated — all 13 other roles, via the MINIMAL updateUserServiceProfile document (never the heavy updateUser fragment — a forbidden sub-field reads as a denial): authorization error on the root field AND the marker did not move, on a target whose marker WAS set |
-| X1.single-role-fixtures | Each test user holds exactly its one role — the premise of every negative | test integrity | `role-integrity.it-spec.ts` | ✅ automated — myRoles equals [role, REGISTERED] for all 14 fixtures | ✅ automated — no fixture holds PLATFORM_ADMIN or any legacy global-* credential; runs FIRST and aborts the project when it fails |
+| X1.single-role-fixtures | Each test user holds exactly its one role — the premise of every negative | test integrity | `role-integrity.it-spec.ts` | ✅ automated — myRoles equals [role, REGISTERED] for all 14 fixtures | ✅ automated — no fixture holds any privilege outside its own role family, and the schema no longer knows PLATFORM_ADMIN; runs FIRST and aborts the project when it fails |
 | X2.root-cascade-limits | Content Full Access holds cascaded CRUD and still cannot escalate | FR-004 · SC-004 | `role-integrity.it-spec.ts` | ✅ automated — holds DELETE on a space it has no membership in | ✅ automated — cannot assign any role, cannot manage the forum, cannot change visibility — asserted after proving it holds the root cascade |
 | L1.seed-survives-restart | Bootstrap re-seeds a Roles Admin on every start; a rule-violating seed fails startup | FR-013 · FR-013b | — | ⛔ not automated — needs a stack restart between two assertions | ⛔ not automated — needs a stack start with a deliberately invalid seed |
-| L2.legacy-roles-gone | After Slice B no legacy global role or credential remains | SC-005 · FR-012 | — | — n/a — a pure negative | 🟡 planned — schema introspection: RoleName and AuthorizationCredential list none of the 10 legacy values; usersWithAuthorizationCredential rejects them. No database needed — ⚠️ activates at Slice B |
+| L2.legacy-roles-gone | After Slice B no legacy global role or credential remains | SC-005 · FR-012 | `role-integrity.it-spec.ts` | — n/a — a pure negative | ✅ automated — schema introspection: RoleName, AuthorizationCredential and CredentialType list none of the 10 legacy values, AuthorizationPrivilege has neither PLATFORM_ADMIN nor GRANT_GLOBAL_ADMINS, and the live role-set offers only the 14 target roles + REGISTERED. No database needed |
+| A17.entity-admin-rename | Renaming (nameID) stays with the entity admin after FR-020 | A17 · FR-020 | `rules/rename-nameid.it-spec.ts` | ✅ automated — a user renames itself through updateActorNameID and a space admin renames its space through updateSpace.nameID; both read back | ✅ automated — all 14 global roles are refused both surfaces on entities they do not administer (the A17 matrix cells); a refused rename leaves the nameID unchanged |
 
 ## Existing tests requiring update
 
 | File | Currently | Must become |
 |---|---|---|
-| `server-api/.../graphql-guard/graphql-guard-nested-queries.it-spec.ts` | Expects GLOBAL_ADMIN space privileges with `PLATFORM_ADMIN` — 5 of 8 tests red on the 027 server (run 2026-09-18) | Same swap its two sibling guard specs got: drop `PLATFORM_ADMIN`, add `ACCOUNT_LICENSE_MANAGE` + `PLATFORM_CONTENT_FULL_ACCESS` |
-| `client-web/.../authz-admin-guard/platform-global-roles.spec.ts` | Navigates to the removed `GLOBAL_COMMUNITY_READER` role page; on the 027 client that falls back to the first offered role and **grants Platform Roles Admin to `qa.user`** | Rewrite against a target role before the 027 client reaches the nightly (UI phase) |
+| 22 server-api specs that assert what `global.support` / `global.license` see (storage/auth, roleset, notifications, graphql-guard, space-platform-settings) | Expected-privilege rows derived from the legacy `global-support` cascade (full CRUD + GRANT on any space) | Re-read from a live Slice B stack: Platform Support reaches a space only through the support flag and its named privileges; Platform License Manager through `ACCOUNT_LICENSE_MANAGE` / `PLATFORM_LICENSING_LISTS_READ` |
+| `notifications/platform/space-creation.it-spec.ts`, `registration.it-spec.ts` | Recipient sets written for the legacy global roles (server T109 re-routes them per event) | Verified on a Slice B stack: space created → Support + Users Admin + License Manager; profile created/removed → Support + Users Admin; role changed → Roles Admin |
 
 ## Not covered — known gaps
 
@@ -1016,8 +1008,6 @@ One section per role, in the order of `roles/*.it-spec.ts`. **Can** lists every 
 |---|---|---|---|
 | `A4.deleteUser` | positive | declaration only - the same resolver is exercised by A5.deleteUser | covered-elsewhere |
 | `A15.adminForumRemoveDiscussionCategory` | positive | removal is permanent and the API has no add-category mutation, so the test cannot restore what it removes | server-change |
-| `A17.updateActorNameID` | positive | surface does not exist until Slice B | slice-b |
-| `A17.nameID (protected section of the general content-entity update)` | positive | surface does not exist until Slice B | slice-b |
 | AR1.grant-revoke-recorded — Every grant and revoke is recorded with operator, target, authorizing role and outcome | negative | ORGANIZATION-subject records: the MCP tool filters by subjectUserId only and this repo has no database access. Closes with a one-field server change (subjectOrganizationId filter) | server-change |
 | AR3.audit-store-outage — Fail-open / fail-closed behaviour when the audit store is unwritable | positive | needs fault injection (REVOKE INSERT on the audit table) — impossible against a shared API, straightforward on a throwaway compose stack | isolated-stack-lane |
 | AR3.audit-store-outage — Fail-open / fail-closed behaviour when the audit store is unwritable | negative | same enabler; until then server unit specs + the quickstart §5 drill | isolated-stack-lane |
@@ -1030,11 +1020,11 @@ One section per role, in the order of `roles/*.it-spec.ts`. **Can** lists every 
 | Test | Observed | Why it stays red |
 |---|---|---|
 | `PLATFORM_SETTINGS_ADMIN › can › A13.updateLicensePlan` | the mutation reports success; the value re-reads unchanged | `LicensePlanService.update()` saves the plan without applying the input (also on `develop`). A positive must observe its effect — there is none to observe |
+| `PLATFORM_CONTENT_FULL_ACCESS › cannot › A3.aiServerAuthorizationPolicyReset` | Content Full Access resets the AI server authorization (Slice B stack, 2026-10-07) | `ai.server.service.authorization.ts` re-anchors the old `CREDENTIAL_RULE_AI_SERVER_GLOBAL_ADMINS` rule — CRUD **plus GRANT and AUTHORIZATION_RESET** — onto `PLATFORM_CONTENT_FULL_ACCESS`. FR-004 removed GRANT from the content role and A3 resets belong to Operations Admin; raised on alkem-io/server#6582 |
 | `PLATFORM_RESOURCE_ADMIN › cannot › A16.createPlatformRolesAccess` | Resource Admin READS a private space it is not a member of | the server grants it READ on every space deliberately; the requirements allow only Spaces Reader (+ the Content Full Access exception). Needs a product decision — then either the table or the server changes |
-| `PLATFORM_CONTENT_FULL_ACCESS › cannot › A13.createLicensePlan` | Content Full Access CREATES a license plan | the five censused A13 mutations check a dedicated in-memory policy, exactly so that the root CRUD cascade does not admit Content Full Access; `createLicensePlan` was left out of the census and still checks `licensingFramework.authorization`, which inherits that cascade. Found 2026-09-21 |
 
 ## What is genuinely proven
 
-Verified live against the 027 server, twice in a row with identical results (2026-09-18): **93 of 119 capabilities have an automated positive and 116 an automated negative**, run for all 14 roles — 142 positive and 1482 negative role-level checks in the table, of which the exclusive and not-automated rows are excluded from the default run. Every negative is a refusal AT THE AUTHORIZATION GATE (an authorization code on the gate path), never a validation error, a not-found, or a forbidden sub-field. Every positive observes what its row declares — an effect read back, known data returned, a success payload, or (5 rows) a non-authorization error proving the gate was passed.
+Verified live against the 027 server, twice in a row with identical results (2026-09-18): **92 of 112 capabilities have an automated positive and 111 an automated negative**, run for all 14 roles — 141 positive and 1413 negative role-level checks in the table, of which the exclusive and not-automated rows are excluded from the default run. Every negative is a refusal AT THE AUTHORIZATION GATE (an authorization code on the gate path), never a validation error, a not-found, or a forbidden sub-field. Every positive observes what its row declares — an effect read back, known data returned, a success payload, or (5 rows) a non-authorization error proving the gate was passed.
 
-Rule scenarios: 20 positive and 21 negative halves automated. **What is NOT proven:** anything that reads a role-assignment audit record (the MCP endpoint is disabled on the stack this was built against — those halves are visible `test.todo`s that switch on with `PLATFORM_ROLES_MCP=1` once the endpoint answers); the 14 platform-wide positives in the `exclusive` project, which are written and type-checked but have NEVER been executed; restart and fault-injection scenarios; and the UI.
+Rule scenarios: 21 positive and 23 negative halves automated. **What is NOT proven:** anything that reads a role-assignment audit record (the MCP endpoint is disabled on the stack this was built against — those halves are visible `test.todo`s that switch on with `PLATFORM_ROLES_MCP=1` once the endpoint answers); the 14 platform-wide positives in the `exclusive` project, which are written and type-checked but have NEVER been executed; restart and fault-injection scenarios; and the UI.

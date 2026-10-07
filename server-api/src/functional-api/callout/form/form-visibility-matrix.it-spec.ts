@@ -51,8 +51,9 @@ import {
  * SC-003 — who can read a Form's responses, per role, per visibility.
  *
  * The Form lives in a SUBSPACE of a public space whose `allowPlatformSupportAsAdmin`
- * is off, so Global Support reads by the draft-Post rule but never moderates.
- * A separate space with the flag on covers the positive Global Support cell.
+ * is off, so Global Support has no standing there at all (workspace#027 Slice B:
+ * the flag is Support's only door into a space). A separate space with the
+ * flag on covers the positive Global Support cell.
  * Every response is written by SUBSPACE_MEMBER; the other readers are told apart
  * by what they see of that one response:
  *   ALL  -> `all.total == 1` and `canReadAll`
@@ -207,10 +208,15 @@ const readers: Reader[] = [
     deletesOthers: true,
   },
   {
-    label: 'Global Support (reads by the draft-Post rule, cannot moderate)',
+    // workspace#027 Slice B: Platform Support's reach into a space is bounded
+    // by that space's `allowPlatformSupportAsAdmin` flag (spec row 7). The
+    // legacy global-support credential's unconditional L0 READ — which is
+    // what the draft-Post rule used to key on — is deliberately not carried
+    // over, so with the flag OFF Support reads nothing and moderates nothing.
+    label: 'Global Support (flag off: no standing in the space, reads nothing)',
     actor: { persona: TestUser.GLOBAL_SUPPORT_ADMIN },
-    admins: everything(0, false),
-    members: everything(0, false),
+    admins: own(0),
+    members: own(0),
     deletesOthers: false,
   },
   {
@@ -302,7 +308,7 @@ const platformGrants: PlatformGrant[] = [
   {
     key: 'globalSpacesReader',
     tag: 'formgsreader',
-    role: RoleName.GlobalSpacesReader,
+    role: RoleName.PlatformSpacesReader,
   },
   {
     key: 'platformSpacesReader',

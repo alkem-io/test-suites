@@ -259,7 +259,7 @@ export type Capability = {
   /** Stable id — `<group>.<surface>`; `#n` only where a group lists a surface twice. */
   id: string;
   group: CapabilityGroupId;
-  /** The GraphQL field / MCP tool name at Slice A. */
+  /** The GraphQL field / MCP tool name (Slice B vocabulary). */
   surface: string;
   kind: 'mutation' | 'query' | 'field' | 'mcp-tool';
   /** Roles the acceptance criteria name as owning this capability. */
@@ -268,8 +268,6 @@ export type Capability = {
   acceptedExtra: readonly PlatformRole[];
   /** What distinguishes two rows that share a surface (payload differs). */
   variant?: string;
-  renamedAtSliceB?: string;
-  retiredAtSliceB?: boolean;
   /**
    * How the Allowed set is backed by the requirements (spec.md + contracts):
    * `named` the surface is named there · `family` the spec assigns the owner at
@@ -329,102 +327,6 @@ export const CAPABILITIES: readonly Capability[] = [
       oracle: 'holder list no longer shows the target after remove',
     },
     positive: { status: 'automated' },
-    negative: { status: 'automated' },
-  },
-  {
-    id: 'A1.grantCredentialToUser',
-    group: 'A1',
-    surface: 'grantCredentialToUser',
-    kind: 'mutation',
-    owners: [],
-    acceptedExtra: [],
-    retiredAtSliceB: true,
-    requirement: { basis: 'named' },
-    positive: {
-      status: 'not-applicable',
-      reason:
-        'no target role may reach this surface - every role is a negative',
-    },
-    negative: { status: 'automated' },
-  },
-  {
-    id: 'A1.revokeCredentialFromUser',
-    group: 'A1',
-    surface: 'revokeCredentialFromUser',
-    kind: 'mutation',
-    owners: [],
-    acceptedExtra: [],
-    retiredAtSliceB: true,
-    requirement: { basis: 'named' },
-    positive: {
-      status: 'not-applicable',
-      reason:
-        'no target role may reach this surface - every role is a negative',
-    },
-    negative: { status: 'automated' },
-  },
-  {
-    id: 'A1.grantCredentialToOrganization',
-    group: 'A1',
-    surface: 'grantCredentialToOrganization',
-    kind: 'mutation',
-    owners: [],
-    acceptedExtra: [],
-    retiredAtSliceB: true,
-    requirement: { basis: 'named' },
-    positive: {
-      status: 'not-applicable',
-      reason:
-        'no target role may reach this surface - every role is a negative',
-    },
-    negative: { status: 'automated' },
-  },
-  {
-    id: 'A1.revokeCredentialFromOrganization',
-    group: 'A1',
-    surface: 'revokeCredentialFromOrganization',
-    kind: 'mutation',
-    owners: [],
-    acceptedExtra: [],
-    retiredAtSliceB: true,
-    requirement: { basis: 'named' },
-    positive: {
-      status: 'not-applicable',
-      reason:
-        'no target role may reach this surface - every role is a negative',
-    },
-    negative: { status: 'automated' },
-  },
-  {
-    id: 'A1.assignPlatformRoleToUser#6',
-    group: 'A1',
-    surface: 'assignPlatformRoleToUser',
-    kind: 'mutation',
-    owners: [],
-    acceptedExtra: [],
-    variant: 'legacy GLOBAL_ADMIN role payload',
-    requirement: { basis: 'named' },
-    positive: {
-      status: 'not-applicable',
-      reason:
-        'no target role may reach this surface - every role is a negative',
-    },
-    negative: { status: 'automated' },
-  },
-  {
-    id: 'A1.removePlatformRoleFromUser#7',
-    group: 'A1',
-    surface: 'removePlatformRoleFromUser',
-    kind: 'mutation',
-    owners: [],
-    acceptedExtra: [],
-    variant: 'legacy GLOBAL_ADMIN role payload',
-    requirement: { basis: 'named' },
-    positive: {
-      status: 'not-applicable',
-      reason:
-        'no target role may reach this surface - every role is a negative',
-    },
     negative: { status: 'automated' },
   },
   {
@@ -1631,28 +1533,6 @@ export const CAPABILITIES: readonly Capability[] = [
   },
   // ===== A12 — License usage =====
   {
-    id: 'A12.createWingbackAccount',
-    group: 'A12',
-    surface: 'createWingbackAccount',
-    kind: 'mutation',
-    owners: ['PLATFORM_LICENSE_MANAGER'],
-    acceptedExtra: [],
-    requirement: {
-      basis: 'conflict',
-      note: 'FR-021 requires this mutation to be DELETED, not re-gated to License Manager',
-    },
-    verifies: {
-      kind: 'reached-resolver',
-      oracle: 'Wingback disabled: "not enabled" on the root field is accepted',
-    },
-    positive: {
-      status: 'automated',
-      reason:
-        'where Wingback is disabled the oracle is "reached the resolver": a non-authorization error on the root field. FR-021 says this surface must be DELETED - the row goes when the server complies',
-    },
-    negative: { status: 'automated' },
-  },
-  {
     id: 'A12.assignLicensePlanToAccount',
     group: 'A12',
     surface: 'assignLicensePlanToAccount',
@@ -1822,13 +1702,12 @@ export const CAPABILITIES: readonly Capability[] = [
   },
   // ===== A14 — Space visibility =====
   {
-    id: 'A14.updateSpacePlatformSettings',
+    id: 'A14.adminUpdateSpaceVisibility',
     group: 'A14',
-    surface: 'updateSpacePlatformSettings',
+    surface: 'adminUpdateSpaceVisibility',
     kind: 'mutation',
     owners: ['PLATFORM_LICENSE_MANAGER'],
     acceptedExtra: [],
-    renamedAtSliceB: 'adminUpdateSpaceVisibility',
     requirement: { basis: 'named' },
     verifies: {
       kind: 'effect',
@@ -1923,6 +1802,10 @@ export const CAPABILITIES: readonly Capability[] = [
     negative: { status: 'automated' },
   },
   // ===== A17 — Rename an entity (nameID) =====
+  // Owned by the ENTITY admin (a user renames itself, a space admin renames its
+  // space) and reached by NO global role — spec §Action → owning role. The 14
+  // denials are matrix cells; the owner positives live in
+  // `rules/rename-nameid.it-spec.ts` (scenario A17.entity-admin-rename).
   {
     id: 'A17.updateActorNameID',
     group: 'A17',
@@ -1932,34 +1815,27 @@ export const CAPABILITIES: readonly Capability[] = [
     acceptedExtra: [],
     requirement: { basis: 'named' },
     positive: {
-      status: 'not-automated',
-      reason: 'surface does not exist until Slice B',
-      belongs: 'slice-b',
+      status: 'not-applicable',
+      reason:
+        'no global role may reach this surface - the actor itself renames (rules/rename-nameid.it-spec.ts)',
     },
-    negative: {
-      status: 'not-automated',
-      reason: 'surface does not exist until Slice B',
-      belongs: 'slice-b',
-    },
+    negative: { status: 'automated' },
   },
   {
-    id: 'A17.nameID (protected section of the general content-entity update)',
+    id: 'A17.updateSpace.nameID',
     group: 'A17',
-    surface: 'nameID (protected section of the general content-entity update)',
+    surface: 'updateSpace.nameID',
     kind: 'field',
     owners: [],
     acceptedExtra: [],
+    variant: 'protected `nameID` section of `updateSpace` (UPDATE_NAMEID)',
     requirement: { basis: 'named' },
     positive: {
-      status: 'not-automated',
-      reason: 'surface does not exist until Slice B',
-      belongs: 'slice-b',
+      status: 'not-applicable',
+      reason:
+        'no global role may reach this surface - the space admin renames (rules/rename-nameid.it-spec.ts)',
     },
-    negative: {
-      status: 'not-automated',
-      reason: 'surface does not exist until Slice B',
-      belongs: 'slice-b',
-    },
+    negative: { status: 'automated' },
   },
   // ===== A19 — Read the platform audit trail =====
   {

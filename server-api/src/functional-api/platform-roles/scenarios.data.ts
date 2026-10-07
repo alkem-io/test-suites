@@ -399,7 +399,7 @@ export const SCENARIOS: readonly Scenario[] = [
       'myRoles equals [role, REGISTERED] for all 14 fixtures'
     ),
     negative: automated(
-      'no fixture holds PLATFORM_ADMIN or any legacy global-* credential; runs FIRST and aborts the project when it fails'
+      'no fixture holds any privilege outside its own role family, and the schema no longer knows PLATFORM_ADMIN; runs FIRST and aborts the project when it fails'
     ),
   },
   {
@@ -438,16 +438,26 @@ export const SCENARIOS: readonly Scenario[] = [
     area: 'lifecycle',
     title: 'After Slice B no legacy global role or credential remains',
     spec: 'SC-005 · FR-012',
-    file: '-',
+    file: 'role-integrity.it-spec.ts',
     positive: {
       status: 'not-applicable',
       reason: 'a pure negative',
     },
-    negative: {
-      status: 'planned',
-      reason: 'activates at Slice B',
-      oracle:
-        'schema introspection: RoleName and AuthorizationCredential list none of the 10 legacy values; usersWithAuthorizationCredential rejects them. No database needed',
-    },
+    negative: automated(
+      'schema introspection: RoleName, AuthorizationCredential and CredentialType list none of the 10 legacy values, AuthorizationPrivilege has neither PLATFORM_ADMIN nor GRANT_GLOBAL_ADMINS, and the live role-set offers only the 14 target roles + REGISTERED. No database needed'
+    ),
+  },
+  {
+    id: 'A17.entity-admin-rename',
+    area: 'role-integrity',
+    title: 'Renaming (nameID) stays with the entity admin after FR-020',
+    spec: 'A17 · FR-020',
+    file: 'rules/rename-nameid.it-spec.ts',
+    positive: automated(
+      'a user renames itself through updateActorNameID and a space admin renames its space through updateSpace.nameID; both read back'
+    ),
+    negative: automated(
+      'all 14 global roles are refused both surfaces on entities they do not administer (the A17 matrix cells); a refused rename leaves the nameID unchanged'
+    ),
   },
 ];

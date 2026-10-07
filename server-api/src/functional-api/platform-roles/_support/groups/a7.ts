@@ -6,7 +6,7 @@ import { rawRead } from '../raw-request';
 import type { GroupModule, Headers, PerRole } from '../types';
 import {
   createCallout,
-  createHubAsLegacyAdmin,
+  createHubAsLicenseManager,
   createOwnedOrganization,
   createPack,
   createSpace,
@@ -151,7 +151,7 @@ export const A7_GROUP: GroupModule<A7> = {
       return {
         own: {
           ...pack,
-          hubId: await createHubAsLegacyAdmin(ctx, accountId, name),
+          hubId: await createHubAsLicenseManager(ctx, accountId, name),
           postTemplateId: (await template(TemplateType.Post, post)).id,
           deletableTemplateId: (await template(TemplateType.Post, post)).id,
           spaceTemplateId: fromSpace.id,

@@ -154,16 +154,6 @@ export const A12_GROUP: GroupModule<A12> = {
   },
 
   invocations: {
-    'A12.createWingbackAccount': {
-      gate: ['createWingbackAccount'],
-      call: (sdk, headers, fx) =>
-        sdk.createWingbackAccount({ accountID: fx.host.accountId }, headers),
-      // Past the gate the resolver talks to Wingback: switched off it answers
-      // "not enabled", switched on without a reachable tenant it answers that
-      // the customer could not be created.
-      acceptFailure:
-        /^[A-Z_]+: (Wingback is not enabled|Error while creating Wingback customer)$/,
-    },
     'A12.assignLicensePlanToAccount': {
       gate: ['assignLicensePlanToAccount'],
       call: (sdk, headers, fx) =>

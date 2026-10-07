@@ -9,6 +9,10 @@ import {
   TestScenarioPlatformDiscussionConfig,
 } from "./config/test-scenario-config";
 import { TestUserManager } from "./TestUserManager";
+import {
+  ensureSpaceMembers,
+  registerSpaceRoleSet,
+} from "./membership/space-membership";
 import { UserModel } from "./models/UserModel";
 import { OrganizationModel } from "./models/OrganizationModel";
 import { LogManager } from "./LogManager";
@@ -583,20 +587,28 @@ export class TestScenarioFactory {
     }
   }
 
+  /**
+   * workspace#027 Slice B: the three shared personas hold the TARGET roles that
+   * replaced their legacy twins (`global-license-manager` → Platform License
+   * Manager, `global-support` → Platform Support, `platform-beta-tester` →
+   * Feature Beta Tester). The persona names are kept — renaming `global.support`
+   * would touch every spec that names it — but what they reach is now exactly
+   * what the single-purpose role reaches, nothing inherited from the old model.
+   */
   private static async populateGlobalRoles(): Promise<void> {
     await this.checkAndAssignRoleNameToUser(
       TestUserManager.users.globalLicenseAdmin,
-      RoleName.GlobalLicenseManager,
+      RoleName.PlatformLicenseManager,
     );
 
     await this.checkAndAssignRoleNameToUser(
       TestUserManager.users.globalSupportAdmin,
-      RoleName.GlobalSupport,
+      RoleName.PlatformSupport,
     );
 
     await this.checkAndAssignRoleNameToUser(
       TestUserManager.users.betaTester,
-      RoleName.PlatformBetaTester,
+      RoleName.FeatureBetaTester,
     );
   }
 
@@ -696,6 +708,39 @@ export class TestScenarioFactory {
   ): Promise<SpaceModel> {
     const roleSetID = spaceModel.community.roleSetId;
     const spaceCommunityConfig = spaceConfig.community;
+    // Slice B: seed the community FIRST, while the fresh space still has the
+    // server's default OPEN membership policy — members join themselves, so no
+    // policy toggle is ever needed here — and apply the configured settings
+    // (privacy, membership policy, collaboration) afterwards.
+    if (spaceCommunityConfig) {
+      if (spaceCommunityConfig.members) {
+        // Slice B: members JOIN as themselves, in parallel (see
+        // `ensureSpaceMembers`) — the harness admin can no longer add them.
+        await ensureSpaceMembers(
+          roleSetID,
+          spaceCommunityConfig.members.map(
+            (userName) => TestUserManager.getUserModelByType(userName).id,
+          ),
+          spaceModel.id,
+        );
+      }
+      if (spaceCommunityConfig.admins) {
+        await this.assignUsersByTypeToRole(
+          spaceCommunityConfig.admins,
+          RoleName.Admin,
+          roleSetID,
+        );
+      }
+
+      if (spaceCommunityConfig.leads) {
+        await this.assignUsersByTypeToRole(
+          spaceCommunityConfig.leads,
+          RoleName.Lead,
+          roleSetID,
+        );
+      }
+    }
+
     if (spaceConfig.settings) {
       if (spaceConfig.settings.privacy) {
         await updateSpaceSettings(spaceModel.id, {
@@ -735,30 +780,6 @@ export class TestScenarioFactory {
               spaceConfig.settings.collaboration.allowGuestContributions,
           },
         });
-      }
-    }
-    if (spaceCommunityConfig) {
-      if (spaceCommunityConfig.members) {
-        await this.assignUsersByTypeToRole(
-          spaceCommunityConfig.members,
-          RoleName.Member,
-          roleSetID,
-        );
-      }
-      if (spaceCommunityConfig.admins) {
-        await this.assignUsersByTypeToRole(
-          spaceCommunityConfig.admins,
-          RoleName.Admin,
-          roleSetID,
-        );
-      }
-
-      if (spaceCommunityConfig.leads) {
-        await this.assignUsersByTypeToRole(
-          spaceCommunityConfig.leads,
-          RoleName.Lead,
-          roleSetID,
-        );
       }
     }
     const spaceCollaborationConfig = spaceConfig.collaboration;
@@ -988,6 +1009,7 @@ export class TestScenarioFactory {
       spaceData?.collaboration.calloutsSet?.id ?? "";
     spaceModel.community.id = spaceData?.community?.id ?? "";
     spaceModel.community.roleSetId = spaceData?.community?.roleSet?.id ?? "";
+    registerSpaceRoleSet(spaceModel.community.roleSetId, spaceModel.id);
     spaceModel.templateSetId =
       spaceData?.templatesManager?.templatesSet?.id ?? "";
 
@@ -1184,11 +1206,24 @@ export class TestScenarioFactory {
     );
 
     const subspaceData = responseSubspace.data?.createSubspace;
+    if (!subspaceData) {
+      // Surface the GraphQL error instead of handing back an empty model: an
+      // empty role-set id used to fail only later, as a silent role assignment
+      // (test-suites, 2026-10-07, while moving membership to self-join).
+      throw new Error(
+        `Failed to create subspace '${displayName}' under ${parentSpaceID}: ${JSON.stringify(responseSubspace.error ?? responseSubspace).slice(0, 400)}`,
+      );
+    }
     targetModel.id = subspaceData?.id ?? "";
     targetModel.nameId = subspaceData?.nameID ?? "";
     targetModel.community.id = subspaceData?.community?.id ?? "";
     targetModel.community.roleSetId =
       subspaceData?.community?.roleSet?.id ?? "";
+    registerSpaceRoleSet(
+      targetModel.community.roleSetId,
+      targetModel.id,
+      parentSpaceID,
+    );
     targetModel.communication.id =
       subspaceData?.community?.communication?.id ?? "";
     targetModel.communication.updatesId =
@@ -1224,9 +1259,7 @@ export class TestScenarioFactory {
         usersIdsToAssign.push(TestUserManager.users.subsubspaceAdmin.id);
         usersIdsToAssign.push(TestUserManager.users.subsubspaceMember.id);
     }
-    for (const userID of usersIdsToAssign) {
-      await assignRoleToUser(userID, roleSetId, RoleName.Member);
-    }
+    await ensureSpaceMembers(roleSetId, usersIdsToAssign);
   }
 
   private static async createSpaceAndGetData(

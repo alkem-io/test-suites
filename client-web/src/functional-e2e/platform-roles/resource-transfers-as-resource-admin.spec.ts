@@ -66,7 +66,8 @@ asResourceAdmin.describe('PLATFORM_RESOURCE_ADMIN — transfers from the Adminis
     //    target resolves by name, Transfer is enabled, the confirm dialog opens
     //    and closes — and NO request is made, no error is shown.
     // Expected to fail until both are fixed — then this turns RED: delete it.
-    asResourceAdmin.fail(true, '027: target account id is null for Resource Admin; client returns silently');
+    // (The null-account / silent-return defect is fixed on develop; the
+    // marker that expected this to fail turned red on 2026-10-06.)
 
     await page.goto(`${baseUrl}/admin/transfer`);
     const main = page.getByRole('main');

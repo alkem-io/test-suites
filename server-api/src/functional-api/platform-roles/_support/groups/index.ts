@@ -15,6 +15,7 @@ import { A13_GROUP } from './a13';
 import { A14_GROUP } from './a14';
 import { A15_GROUP } from './a15';
 import { A16_GROUP } from './a16';
+import { A17_GROUP } from './a17';
 import { A19_GROUP } from './a19';
 import { A20_GROUP, A20B_GROUP } from './a20';
 import { A21_GROUP } from './a21';
@@ -41,6 +42,7 @@ export const GROUPS = [
   A14_GROUP,
   A15_GROUP,
   A16_GROUP,
+  A17_GROUP,
   A19_GROUP,
   A20_GROUP,
   A20B_GROUP,

@@ -47,8 +47,12 @@ const SEES: Partial<Record<PlatformRoleName, readonly SectionId[]>> = {
   PLATFORM_SUPPORT: ['organizations', 'innovation-packs', 'innovation-hubs'],
   PLATFORM_LICENSE_MANAGER: ['licensing'],
   PLATFORM_AUDIT_READER: ['authorization'],
-  // Settings Admin, Operations Admin, Spaces Reader and the four Feature roles
-  // have no Administration UI at all: everything they own is API-only today.
+  // Slice B (server T074 / client T013): the authorization-policies inspector's
+  // two queries moved from the retired PLATFORM_ADMIN onto Operations Admin —
+  // the diagnostic twin of the authorization reset it owns.
+  PLATFORM_OPERATIONS_ADMIN: ['authorization-policies'],
+  // Settings Admin, Spaces Reader and the four Feature roles have no
+  // Administration UI at all: everything they own is API-only today.
 };
 
 // Seeding is idempotent and cheap once done (15 sign-ins, no writes); memoised
@@ -89,15 +93,8 @@ for (const role of PLATFORM_ROLE_NAMES) {
     }
 
     asRole('no other section opens by URL', async ({ page }) => {
-      // KNOWN CLIENT DEFECT (027): the shell filters the NAVIGATION but does not
-      // guard the ROUTES. A role that has at least one section can type another
-      // section's URL and its page renders — usually empty, because the server
-      // refuses the data, but e.g. Platform License Manager on /admin/users gets
-      // every user listed with Edit / Email change history / Delete controls.
-      // Roles with NO section are bounced to "Access Restricted" correctly, so
-      // for them this test passes for real. Expected to fail for the others
-      // until the client guards the routes — then it turns RED: delete this line.
-      asRole.fail(sees.length > 0, 'client-web 027: /admin/<section> routes are not guarded per section');
+      // The per-section route guard landed on develop (AdminSectionGuard): a
+      // role typing another section's URL is bounced, not shown an empty page.
       // Up to ten navigations in one test.
       asRole.setTimeout(150_000);
 
