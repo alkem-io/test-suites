@@ -57,6 +57,7 @@
     "test:roleset": "vitest run --project roleset --fileParallelism=false",
     "test:platform-roles": "vitest run --project platform-roles --project platform-roles-rules --maxWorkers=4",
     "test:platform-roles:exclusive": "vitest run --project platform-roles-exclusive --fileParallelism=false",
+    "test:platform-roles:notification-routing": "vitest run --project platform-roles platform-admin-notification-routing --fileParallelism=false",
     "test:platform-roles:plan": "tsx src/functional-api/platform-roles/generate-test-plan.ts",
     "test:language": "vitest run --project language --fileParallelism=false",
     "test:subscriptions": "vitest run --project subscriptions --fileParallelism=false",

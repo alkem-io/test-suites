@@ -1,226 +1,208 @@
 import {
-  createUser,
-  deleteUser,
-  updateUserSettings,
-} from '@functional-api/contributor-management/user/user.request.params';
-import {
   deleteMailSlurperMails,
-  getMailsData,
-  TestScenarioFactory,
-  TestScenarioNoPreCreationConfig,
+  PLATFORM_ROLE_NAMES,
   TestUserManager,
   UniqueIDGenerator,
 } from '@alkemio/tests-lib';
-import { delay } from '@alkemio/tests-lib';
-import { notif } from '../notification.helpers';
+import type { SeededPlatformRoleUsers } from '@alkemio/tests-lib';
+import {
+  restorePlatformAdminRows,
+  setPlatformAdminEmail,
+  snapshotPlatformAdminRows,
+} from '@functional-api/platform-roles/_support/platform-admin-settings';
+import type { PlatformAdminSnapshot } from '@functional-api/platform-roles/_support/platform-admin-settings';
+import { releasePoolUsers } from '@functional-api/platform-roles/_support/users';
+import { getMailsDataSettled } from '../notification.helpers';
+import {
+  createUserAs,
+  deleteUserAs,
+  expectedEmail,
+  mailTo,
+  platformRoleHolders,
+  poolHolderWithRole,
+  roleHolder,
+  testUserHolder,
+} from './platform-admin-mail.helpers';
+import type { Holder } from './platform-admin-mail.helpers';
+
+/**
+ * PLATFORM_ADMIN_USER_PROFILE_CREATED and PLATFORM_ADMIN_USER_PROFILE_REMOVED
+ * are routed to Platform Users Admin only; the removal leaves out the operator
+ * who removed the user. The legacy Global Admin / Support / License Manager
+ * audience receives neither.
+ *
+ * Every other single-role holder, and the two legacy-trio users, keep the
+ * matching row switched ON, so "not routed to them" is observed rather than
+ * implied by their settings. `admin@alkem.io` is left out of the assertions:
+ * whether it holds Platform Users Admin depends on how the environment was
+ * bootstrapped, so it may legitimately receive these mails.
+ *
+ * The users these specs create are created by Platform Content Full Access —
+ * the only role holding the platform CREATE that `createUser` checks — and
+ * removed by a Platform Users Admin.
+ */
 
 const uniqueId = UniqueIDGenerator.getID();
 
-let userName = '';
-let userId = '';
-let userEmail = '';
-const scenarioConfig: TestScenarioNoPreCreationConfig = {
-  name: 'notifications-user-registration',
-};
+let users: SeededPlatformRoleUsers;
+let usersAdmin: Holder;
+let creator: Holder;
+/** Holders the two events are NOT routed to — every one keeps its row on. */
+let notRouted: Holder[];
+let snapshot: PlatformAdminSnapshot | undefined;
 
-// Reusable notification settings using NotificationSettingInput shape
-const notificationSettings = {
-  notification: {
-    platform: {
-      forumDiscussionComment: notif(false),
-      forumDiscussionCreated: notif(false),
-      admin: {
-        userProfileCreated: notif(true),
-        userProfileRemoved: notif(false),
-        spaceCreated: notif(false),
-        userGlobalRoleChanged: notif(false),
-      },
-    },
-  },
-};
-
-// Helper function to update notification settings for multiple admin users
-const updateAdminNotificationSettings = async () => {
-  const adminUsers = [
-    TestUserManager.users.globalAdmin.id,
-    TestUserManager.users.globalLicenseAdmin.id,
-    TestUserManager.users.globalSupportAdmin.id,
-  ];
-
-  await Promise.all(
-    adminUsers.map(userId => updateUserSettings(userId, notificationSettings))
-  );
-};
-
-// Helper function to disable all admin notifications
-const disableAllAdminNotifications = async () => {
-  const disabledNotificationSettings = {
-    notification: {
-      platform: {
-        forumDiscussionComment: notif(false),
-        forumDiscussionCreated: notif(false),
-        admin: {
-          userProfileCreated: notif(false),
-          userProfileRemoved: notif(false),
-          spaceCreated: notif(false),
-          userGlobalRoleChanged: notif(false),
-        },
-      },
-    },
-  };
-
-  const adminUsers = [
-    TestUserManager.users.globalAdmin.id,
-    TestUserManager.users.globalLicenseAdmin.id,
-    TestUserManager.users.globalSupportAdmin.id,
-  ];
-
-  await Promise.all(
-    adminUsers.map(userId =>
-      updateUserSettings(userId, disabledNotificationSettings)
-    )
-  );
-};
-
-// Helper function to create expected email objects
-const expectedEmail = (subject: string, toAddress: string) =>
-  expect.objectContaining({
-    subject,
-    toAddresses: [toAddress],
-  });
-
-// Helper function to create user and wait for emails
-const createUserAndGetEmails = async (
-  email: string,
-  displayName: string,
-  delayMs = 1000
-) => {
-  const response = await createUser({
-    email,
-    profileData: { displayName },
-  });
-  const newUserId = response?.data?.createUser.id ?? '';
-
-  await delay(delayMs);
-  const emailsData = await getMailsData();
-
-  return { userId: newUserId, emailsData };
-};
+/** `tag`: a few lowercase letters — the nameID must stay within 25 characters. */
+const newUser = (tag: string) => ({
+  email: `${tag}${uniqueId}@test.com`,
+  nameID: `nr-${tag}-${uniqueId}`,
+  displayName: `testuser${tag}${uniqueId}`,
+});
 
 beforeAll(async () => {
-  await TestScenarioFactory.createBaseScenarioEmpty(scenarioConfig);
-  await deleteMailSlurperMails();
-  userName = `testuser${uniqueId}`;
-  userEmail = `${uniqueId}@test.com`;
+  // Only the test-user map: the base scenario would also try to grant the
+  // legacy global roles, which no longer exist.
+  await TestUserManager.populateUserModelMap();
+  users = await platformRoleHolders();
+  usersAdmin = roleHolder(users, 'PLATFORM_USERS_ADMIN');
+  creator = roleHolder(users, 'PLATFORM_CONTENT_FULL_ACCESS');
+  notRouted = [
+    ...PLATFORM_ROLE_NAMES.filter(role => role !== 'PLATFORM_USERS_ADMIN').map(
+      role => roleHolder(users, role)
+    ),
+    testUserHolder(TestUserManager.users.globalSupportAdmin),
+    testUserHolder(TestUserManager.users.globalLicenseAdmin),
+  ];
+  snapshot = await snapshotPlatformAdminRows([usersAdmin, ...notRouted]);
+});
+
+afterAll(async () => {
+  if (snapshot) await restorePlatformAdminRows(snapshot);
 });
 
 describe('Notifications - User registration', () => {
-  beforeAll(async () => {
-    // Set up notification settings for all admin users
-    await updateAdminNotificationSettings();
-  });
+  let createdUserId = '';
 
   beforeEach(async () => {
     await deleteMailSlurperMails();
   });
 
   afterEach(async () => {
-    await deleteUser(userId);
+    if (createdUserId) {
+      await deleteUserAs(usersAdmin.token, createdUserId);
+      createdUserId = '';
+    }
   });
 
-  test('User sign up - GA(1), SA(1), New User(1) get notifications', async () => {
-    // Act
-    const { userId: newUserId, emailsData } = await createUserAndGetEmails(
-      userEmail,
-      userName
+  test('User sign up - Platform Users Admin(1) gets notifications; no other role holder and not the legacy trio', async () => {
+    // Arrange
+    await setPlatformAdminEmail(
+      [usersAdmin, ...notRouted],
+      ['userProfileCreated'],
+      true
     );
-    userId = newUserId;
+    const user = newUser('signup');
+    const subject = `New user registration on Alkemio: ${user.displayName}`;
+
+    // Act
+    createdUserId = await createUserAs(creator.token, user);
+    const [mails, count] = await getMailsDataSettled(1, {
+      scope: mailTo(subject, [usersAdmin, ...notRouted]),
+    });
 
     // Assert
-    expect(emailsData[1]).toEqual(3);
-    expect(emailsData[0]).toEqual(
-      expect.arrayContaining([
-        expectedEmail(
-          `New user registration on Alkemio: ${userName}`,
-          TestUserManager.users.globalAdmin.email
-        ),
-        expectedEmail(
-          `New user registration on Alkemio: ${userName}`,
-          TestUserManager.users.globalSupportAdmin.email
-        ),
-        expectedEmail(
-          `New user registration on Alkemio: ${userName}`,
-          TestUserManager.users.globalLicenseAdmin.email
-        ),
-        //expectedEmail('Alkemio - Registration successful!', userEmail),
-      ])
-    );
+    expect(count).toEqual(1);
+    expect(mails).toEqual([expectedEmail(subject, usersAdmin.email)]);
   });
-  test('User sign up - GA(0), New User(1) get notifications', async () => {
-    // Arrange - Disable all admin notifications
-    await disableAllAdminNotifications();
+
+  test('User sign up - Platform Users Admin(0) with the row switched off, nobody else either', async () => {
+    // Arrange
+    await setPlatformAdminEmail(
+      [usersAdmin, ...notRouted],
+      ['userProfileCreated'],
+      false
+    );
+    const user = newUser('muted');
+    const subject = `New user registration on Alkemio: ${user.displayName}`;
 
     // Act
-    const { userId: newUserId, emailsData } = await createUserAndGetEmails(
-      'only' + userEmail,
-      userName + 'only',
-      1000
-    );
-    userId = newUserId;
+    createdUserId = await createUserAs(creator.token, user);
+    const [, count] = await getMailsDataSettled(0, {
+      scope: mailTo(subject, [usersAdmin, ...notRouted]),
+    });
 
     // Assert
-    expect(emailsData[1]).toEqual(0);
-    // expect(emailsData[0]).toEqual(
-    //   expect.arrayContaining([
-    //     expectedEmail('Alkemio - Registration successful!', 'only' + userEmail),
-    //   ])
-    // );
+    expect(count).toEqual(0);
   });
 });
 
 describe('Notifications - User removal', () => {
+  // A second Platform Users Admin, so that whichever of the two removes the
+  // user, the other one is a third party who must still receive the mail —
+  // without it, "the actor is left out" and "the mail is never sent" both
+  // read as zero mails.
+  let otherUsersAdmin: Holder;
+  let otherSnapshot: PlatformAdminSnapshot | undefined;
+
   beforeAll(async () => {
-    // Enable user removal notifications for admin
-    await updateUserSettings(TestUserManager.users.globalAdmin.id, {
-      notification: {
-        platform: {
-          forumDiscussionComment: notif(false),
-          forumDiscussionCreated: notif(false),
-          admin: {
-            userProfileCreated: notif(false),
-            userProfileRemoved: notif(true),
-            spaceCreated: notif(false),
-            userGlobalRoleChanged: notif(false),
-          },
-        },
-      },
-    });
+    otherUsersAdmin = await poolHolderWithRole(
+      users,
+      'notifremoval',
+      'PLATFORM_USERS_ADMIN'
+    );
+    otherSnapshot = await snapshotPlatformAdminRows([otherUsersAdmin]);
+    await setPlatformAdminEmail(
+      [usersAdmin, otherUsersAdmin, ...notRouted],
+      ['userProfileRemoved'],
+      true
+    );
   });
 
-  test('User removed - GA(1) get notifications', async () => {
-    // Act - Create user first
-    const { userId: newUserId } = await createUserAndGetEmails(
-      userEmail,
-      userName
-    );
-    userId = newUserId;
+  afterAll(async () => {
+    try {
+      if (otherSnapshot) await restorePlatformAdminRows(otherSnapshot);
+    } finally {
+      if (otherUsersAdmin) {
+        await releasePoolUsers(users.tokens.PLATFORM_ROLES_ADMIN, [
+          otherUsersAdmin.id,
+        ]);
+      }
+    }
+  });
 
-    // Clean emails and delete user
+  const removeAndGetEmails = async (
+    remover: Holder,
+    tag: string
+  ): Promise<{ subject: string; mails: unknown[]; count: number }> => {
+    const user = newUser(tag);
+    const subject = `User profile deleted from the Alkemio platform: ${user.displayName}`;
+    const userId = await createUserAs(creator.token, user);
     await deleteMailSlurperMails();
-    await deleteUser(userId);
 
-    await delay(1000);
-    const emailsData = await getMailsData();
+    await deleteUserAs(remover.token, userId);
 
-    // Assert
-    expect(emailsData[1]).toEqual(1);
-    expect(emailsData[0]).toEqual(
-      expect.arrayContaining([
-        expectedEmail(
-          `User profile deleted from the Alkemio platform: ${userName}`,
-          TestUserManager.users.globalAdmin.email
-        ),
-      ])
+    const [mails, count] = await getMailsDataSettled(1, {
+      scope: mailTo(subject, [usersAdmin, otherUsersAdmin, ...notRouted]),
+    });
+    return { subject, mails, count };
+  };
+
+  test('User removed by Platform Users Admin - the acting operator(0) is left out, the other Users Admin(1) gets notifications', async () => {
+    const { subject, mails, count } = await removeAndGetEmails(
+      usersAdmin,
+      'rmfix'
     );
+
+    expect(count).toEqual(1);
+    expect(mails).toEqual([expectedEmail(subject, otherUsersAdmin.email)]);
+  });
+
+  test('User removed by the other Users Admin - Platform Users Admin(1) gets notifications, the acting operator(0) does not', async () => {
+    const { subject, mails, count } = await removeAndGetEmails(
+      otherUsersAdmin,
+      'rmpool'
+    );
+
+    expect(count).toEqual(1);
+    expect(mails).toEqual([expectedEmail(subject, usersAdmin.email)]);
   });
 });
