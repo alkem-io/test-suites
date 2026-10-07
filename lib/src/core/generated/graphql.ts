@@ -102930,6 +102930,19 @@ export type LatestUserEmailChangeAuditEntryQuery = {
   };
 };
 
+export type NotificationRecipientsQueryVariables = SchemaTypes.Exact<{
+  eventData: SchemaTypes.NotificationRecipientsInput;
+}>;
+
+export type NotificationRecipientsQuery = {
+  notificationRecipients: {
+    emailRecipients: Array<{ id: string }>;
+    inAppRecipients: Array<{ id: string }>;
+    pushRecipients: Array<{ id: string }>;
+    triggeredBy?: { id: string } | undefined;
+  };
+};
+
 export type PlatformAdminMcpApiKeysQueryVariables = SchemaTypes.Exact<{
   userID: SchemaTypes.Scalars["UUID"]["input"];
 }>;
@@ -125629,6 +125642,24 @@ export const LatestUserEmailChangeAuditEntryDocument = gql`
     }
   }
 `;
+export const NotificationRecipientsDocument = gql`
+  query notificationRecipients($eventData: NotificationRecipientsInput!) {
+    notificationRecipients(eventData: $eventData) {
+      emailRecipients {
+        id
+      }
+      inAppRecipients {
+        id
+      }
+      pushRecipients {
+        id
+      }
+      triggeredBy {
+        id
+      }
+    }
+  }
+`;
 export const PlatformAdminMcpApiKeysDocument = gql`
   query platformAdminMcpApiKeys($userID: UUID!) {
     platformAdmin {
@@ -127319,6 +127350,9 @@ const UsersPaginatedDocumentString = print(UsersPaginatedDocument);
 const ActorsWithCredentialDocumentString = print(ActorsWithCredentialDocument);
 const LatestUserEmailChangeAuditEntryDocumentString = print(
   LatestUserEmailChangeAuditEntryDocument
+);
+const NotificationRecipientsDocumentString = print(
+  NotificationRecipientsDocument
 );
 const PlatformAdminMcpApiKeysDocumentString = print(
   PlatformAdminMcpApiKeysDocument
@@ -133433,6 +133467,28 @@ export function getSdk(
             { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "latestUserEmailChangeAuditEntry",
+        "query",
+        variables
+      );
+    },
+    notificationRecipients(
+      variables: SchemaTypes.NotificationRecipientsQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.NotificationRecipientsQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.NotificationRecipientsQuery>(
+            NotificationRecipientsDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "notificationRecipients",
         "query",
         variables
       );
