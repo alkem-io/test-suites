@@ -14,7 +14,14 @@
  * - Organization B: NON_SPACE_MEMBER is its ADMIN (no role in A, none in S).
  * - SPACE_ADMIN is ADMIN of S; SUBSUBSPACE_ADMIN holds no Space or
  *   organization role here and no platform role at all.
- * - A is (re)seeded as MEMBER of S, S1 and S2 before every test.
+ * - A is (re)seeded as MEMBER of S, S1 and S2 before every test, through the
+ *   consent path (Space admin invites, A's admin accepts): since the platform
+ *   role redesign no actor holds ROLESET_ENTRY_ROLE_ASSIGN_ORGANIZATION, so a direct
+ *   assignRoleToOrganization cannot bring a NEW organization into a Space.
+ *   LEAD is added with assignRoleToOrganization by the Space admin (GRANT-only,
+ *   A is already in the role set).
+ *
+ * @forge-acceptance (organization self-removal acceptance scenarios)
  */
 import {
   TestScenarioConfig,
@@ -32,7 +39,12 @@ import {
   removeRoleFromOrganization,
   removeRoleFromUser,
 } from '../roles-request.params';
-import { getRoleSetMembersList } from '../roleset.request.params';
+import {
+  getRoleSetMembersList,
+  getSingleInvitationResult,
+} from '../roleset.request.params';
+import { inviteForEntryRoleOnRoleSet } from '../invitations/invitation.request.params';
+import { eventOnRoleSetInvitation } from '../roleset-events.request.params';
 import {
   createOrganization,
   deleteOrganization,
@@ -96,10 +108,46 @@ const ensureOrgARole = async (
   role: RoleName.Member | RoleName.Lead
 ) => {
   if ((await organizationsInRole(roleSetId, role)).includes(orgAId)) return;
-  const res = await assignRoleToOrganization(orgAId, roleSetId, role);
-  if (res.error) {
+
+  if (role === RoleName.Lead) {
+    // A is already a Member: changing its role needs GRANT alone.
+    const res = await assignRoleToOrganization(
+      orgAId,
+      roleSetId,
+      role,
+      TestUser.SPACE_ADMIN
+    );
+    if (res.error) {
+      throw new Error(
+        `Seeding ${role} of organization A on ${roleSetId} failed: ${JSON.stringify(res.error.errors)}`
+      );
+    }
+    return;
+  }
+
+  // New entry: Space admin invites, the organization's admin accepts.
+  const invitation = await inviteForEntryRoleOnRoleSet(
+    roleSetId,
+    [orgAId],
+    [],
+    'forge-acceptance reseed',
+    [],
+    TestUser.SPACE_ADMIN
+  );
+  const invitationId = getSingleInvitationResult(invitation)?.invitation?.id;
+  if (!invitationId) {
     throw new Error(
-      `Seeding ${role} of organization A on ${roleSetId} failed: ${JSON.stringify(res.error.errors)}`
+      `Inviting organization A to ${roleSetId} failed: ${JSON.stringify(invitation.error?.errors ?? invitation.data)}`
+    );
+  }
+  const accepted = await eventOnRoleSetInvitation(
+    invitationId,
+    'ACCEPT',
+    TestUser.ORGANIZATION_ADMIN
+  );
+  if (accepted.error) {
+    throw new Error(
+      `Accepting the invitation for organization A failed: ${JSON.stringify(accepted.error.errors)}`
     );
   }
 };
@@ -146,7 +194,7 @@ beforeAll(async () => {
 
   // Admin of a different organization B.
   const orgB = await createOrganization(
-    'ha-org-b',
+    `ha-org-b-${uniqueId}`,
     `ha-org-b-${uniqueId}`.toLowerCase()
   );
   orgBId = orgB.data?.createOrganization?.id ?? '';
@@ -170,8 +218,18 @@ beforeAll(async () => {
 
 afterAll(async () => {
   // Removing MEMBER on the L0 role set cascades to every Subspace.
-  await removeRoleFromOrganization(orgAId, spaceRoleSetId, RoleName.Lead);
-  await removeRoleFromOrganization(orgAId, spaceRoleSetId, RoleName.Member);
+  await removeRoleFromOrganization(
+    orgAId,
+    spaceRoleSetId,
+    RoleName.Lead,
+    TestUser.ORGANIZATION_ADMIN
+  );
+  await removeRoleFromOrganization(
+    orgAId,
+    spaceRoleSetId,
+    RoleName.Member,
+    TestUser.ORGANIZATION_ADMIN
+  );
 
   await removeRoleFromUser(
     TestUserManager.users.subspaceMember.id,
@@ -198,7 +256,7 @@ afterAll(async () => {
   await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
 });
 
-describe('Organization self-removal from a Space community', () => {
+describe('@forge-acceptance Organization self-removal from a Space community', () => {
   beforeEach(async () => {
     await seedMembership();
   });
