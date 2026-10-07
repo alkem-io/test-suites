@@ -20,8 +20,13 @@
 import { Page } from '@playwright/test';
 import { expect } from '@playwright/test';
 import axios from 'axios';
-import { getGraphqlClient, testConfiguration, TestUser } from '@alkemio/tests-lib';
-import { graphqlErrorWrapper } from '@alkemio/tests-lib/utils/graphql.wrapper';
+import {
+  getUserToken,
+  provisionTestIdentities,
+  registerTestUser,
+  testConfiguration,
+} from '@alkemio/tests-lib';
+import type { PlatformRoleName } from '@alkemio/tests-lib';
 import {
   acceptAllCookiesButton,
   logInHeaderLink,
@@ -163,12 +168,17 @@ export const createPostContributionAsUser = async (
  * `me { user { id } }`) — the smallest raw probe available, matching
  * `session-revocation.helpers.ts::resolveAlkemioUserId`.
  */
-export const resolveUserIdFromToken = async (token: string): Promise<string> => {
+export const resolveUserIdFromToken = async (
+  token: string
+): Promise<string> => {
   const response = await axios.post(
     testConfiguration.endPoints.graphql.private,
     { query: '{ me { user { id } } }' },
     {
-      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
       validateStatus: () => true,
     }
   );
@@ -181,42 +191,216 @@ export const resolveUserIdFromToken = async (token: string): Promise<string> => 
   return userId;
 };
 
+// --------------------------------------------------------------------------
+// TC-14 on the platform-role model (workspace#065). The profile-removed
+// notification goes to Platform Users Admin holders, minus the operator who
+// removed the user — so the walk needs two holders: one removes, the other
+// looks. None of the operations below has a generated client-web SDK method.
+// --------------------------------------------------------------------------
+
+/** A bearer GraphQL call that throws on any GraphQL or transport error. */
+const gqlAs = async <T>(
+  token: string,
+  query: string,
+  variables: Record<string, unknown> = {}
+): Promise<T> => {
+  const response = await axios.post(
+    testConfiguration.endPoints.graphql.private,
+    { query, variables },
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      validateStatus: () => true,
+    }
+  );
+  const errors = response.data?.errors;
+  if (!response.data?.data || errors?.length) {
+    throw new Error(
+      `GraphQL request failed (HTTP ${response.status}): ${JSON.stringify(
+        errors ?? response.data
+      ).slice(0, 400)}`
+    );
+  }
+  return response.data.data as T;
+};
+
+export type UsableUser = {
+  email: string;
+  displayName: string;
+  userId: string;
+  token: string;
+};
+
+const USABLE_TIMEOUT_MS = 150_000;
+const USABLE_POLL_MS = 3_000;
+
+/**
+ * A run-unique user who can sign in — through the Kratos ADMIN API where it is
+ * configured (an already-verified identity, no self-service password checks),
+ * by self-service registration otherwise — returned once its first sign-in has
+ * created the platform user AND that user's authorization is in place — it
+ * holds UPDATE on itself. The first sign-in runs user creation inside Kratos's
+ * login webhook, and the user row is visible before its authorization policy
+ * is written (on a busy stack by tens of seconds), so readiness is polled,
+ * bounded.
+ *
+ * `userName`: `<first>.<last>`, lowercase letters and digits.
+ */
+export const provisionUsableUser = async (
+  userName: string
+): Promise<UsableUser> => {
+  if (testConfiguration.endPoints.kratos.admin) {
+    await provisionTestIdentities([userName]);
+  } else {
+    await registerTestUser(userName);
+  }
+  const email = `${userName}@alkem.io`;
+  const deadline = Date.now() + USABLE_TIMEOUT_MS;
+  for (;;) {
+    try {
+      const token = await getUserToken(email);
+      const { me } = await gqlAs<{
+        me: {
+          user: {
+            id: string;
+            profile: { displayName: string };
+            authorization: { myPrivileges: string[] | null };
+          };
+        };
+      }>(
+        token,
+        'query { me { user { id profile { displayName } authorization { myPrivileges } } } }'
+      );
+      if (!me.user.authorization.myPrivileges?.includes('UPDATE')) {
+        throw new Error('authorization not in place yet');
+      }
+      return {
+        email,
+        displayName: me.user.profile.displayName,
+        userId: me.user.id,
+        token,
+      };
+    } catch (e) {
+      if (Date.now() > deadline) {
+        throw new Error(
+          `${email} could not sign in within ${USABLE_TIMEOUT_MS / 1000}s: ${(e as Error).message}`
+        );
+      }
+      await new Promise(resolve => setTimeout(resolve, USABLE_POLL_MS));
+    }
+  }
+};
+
+/** As Platform Roles Admin — the only role that assigns `PLATFORM_*` roles. */
+export const assignPlatformRole = async (
+  rolesAdminToken: string,
+  actorID: string,
+  role: PlatformRoleName
+): Promise<void> => {
+  await gqlAs(
+    rolesAdminToken,
+    `mutation($id: UUID!) { assignPlatformRoleToUser(roleData: { actorID: $id, role: ${role} }) { id } }`,
+    { id: actorID }
+  );
+};
+
+export const removePlatformRole = async (
+  rolesAdminToken: string,
+  actorID: string,
+  role: PlatformRoleName
+): Promise<void> => {
+  await gqlAs(
+    rolesAdminToken,
+    `mutation($id: UUID!) { removePlatformRoleFromUser(roleData: { actorID: $id, role: ${role} }) { id } }`,
+    { id: actorID }
+  );
+};
+
+/** Removes the user AND its sign-in identity, with the caller's own token. */
+export const deleteUserAs = async (
+  token: string,
+  userId: string
+): Promise<void> => {
+  await gqlAs(
+    token,
+    'mutation($id: UUID!) { deleteUser(deleteData: { ID: $id, deleteIdentity: true }) { id } }',
+    { id: userId }
+  );
+};
+
 /**
  * `platform.admin.userProfileRemoved` ships `inApp: false` by default
  * (`user.service.ts::getDefaultUserSettings`) — an operational admin has to
  * opt in before the notification centre shows anything for this event at
- * all. TC-14 needs it on for the duration of the test; flip it back after,
- * so a shared `TestUserManager` persona's settings are not left mutated for
- * every other suite that runs against this environment.
+ * all. Read and written by the user THEMSELVES: on the platform-role model
+ * only the owner holds UPDATE on their settings.
  */
-export const setUserProfileRemovedInAppNotification = async (
+export const getProfileRemovedInApp = async (
+  token: string
+): Promise<boolean> => {
+  const { me } = await gqlAs<{
+    me: {
+      user: {
+        settings: {
+          notification: {
+            platform: { admin: { userProfileRemoved: { inApp: boolean } } };
+          };
+        };
+      };
+    };
+  }>(
+    token,
+    'query { me { user { settings { notification { platform { admin { userProfileRemoved { inApp } } } } } } } }'
+  );
+  return me.user.settings.notification.platform.admin.userProfileRemoved.inApp;
+};
+
+export const setProfileRemovedInApp = async (
+  token: string,
   userID: string,
-  enabled: boolean
+  inApp: boolean
 ): Promise<void> => {
-  const graphqlClient = getGraphqlClient();
-  const callback = (authToken: string | undefined) =>
-    graphqlClient.UpdateUserSettings(
-      {
-        settingsData: {
-          userID,
-          settings: {
-            notification: {
-              platform: {
-                admin: {
-                  userProfileRemoved: { inApp: enabled },
-                },
-              },
-            },
+  await gqlAs(
+    token,
+    'mutation($settingsData: UpdateUserSettingsInput!) { updateUserSettings(settingsData: $settingsData) { id } }',
+    {
+      settingsData: {
+        userID,
+        settings: {
+          notification: {
+            platform: { admin: { userProfileRemoved: { inApp } } },
           },
         },
       },
-      { authorization: `Bearer ${authToken}` }
-    );
+    }
+  );
+};
 
-  const result = await graphqlErrorWrapper(callback, TestUser.GLOBAL_ADMIN);
-  if (result.error) {
-    throw new Error(
-      `setUserProfileRemovedInAppNotification failed: ${JSON.stringify(result.error)}`
-    );
-  }
+/**
+ * Ids of the caller's OWN profile-removed in-app notifications that `actorId`
+ * triggered. Newest first, in the server's default page of 25 — which always
+ * holds the ones a test has just caused.
+ */
+export const profileRemovedNotificationsTriggeredBy = async (
+  token: string,
+  actorId: string
+): Promise<string[]> => {
+  const { me } = await gqlAs<{
+    me: {
+      notifications: {
+        inAppNotifications: {
+          id: string;
+          triggeredBy: { id: string } | null;
+        }[];
+      };
+    };
+  }>(
+    token,
+    'query { me { notifications(filter: { types: [PLATFORM_ADMIN_USER_PROFILE_REMOVED] }) { inAppNotifications { id triggeredBy { id } } } } }'
+  );
+  return me.notifications.inAppNotifications
+    .filter(notification => notification.triggeredBy?.id === actorId)
+    .map(notification => notification.id);
 };
