@@ -1,6 +1,6 @@
 // spec: client-web/src/functional-e2e/account-deletion/account-deletion-test-plan.md
 // story: client-web#10107, workspace#054 — the portable delta after test-suites#620.
-// routing: workspace#065 — who receives the entry.
+// routing: who receives the entry is described below.
 //
 // TC-14 — the notification centre survives the removed payload fields.
 //
@@ -16,26 +16,33 @@
 // never renders the notification centre at all, so this risk is entirely
 // untouched by it.
 //
-// Who sees the entry (workspace#065): PLATFORM_ADMIN_USER_PROFILE_REMOVED goes
-// to Platform Users Admin holders, minus the operator who removed the user. So
-// the removal is done by one holder — the platform-roles suite's single-role
-// Users Admin — and the entry is looked for in the centre of a SECOND holder, a
-// run-unique user granted the role for this file. The remover keeps the in-app
-// row switched on, so its exclusion is observed rather than implied by its
-// settings.
+// Who sees the entry: PLATFORM_ADMIN_USER_PROFILE_REMOVED goes to Platform
+// Users Admin holders, minus the operator who removed the user. So the removal
+// is done by one holder — the platform-roles suite's single-role Users Admin —
+// and the entry is looked for in the centre of a SECOND holder: a pool user,
+// persistent across runs, stripped of every platform role when acquired and
+// again when released, and granted the role for this file. The remover keeps
+// the in-app row switched on, so its exclusion is observed rather than implied
+// by its settings.
 
 import { test, expect } from '@playwright/test';
 import { seedPlatformRoleUsers, UniqueIDGenerator } from '@alkemio/tests-lib';
 import {
+  acquireViewer,
   assignPlatformRole,
   baseUrl,
   deleteUserAs,
+  expectNoNewIds,
   getProfileRemovedInApp,
+  identityEmail,
   profileRemovedNotificationsTriggeredBy,
-  provisionUsableUser,
-  removePlatformRole,
+  provisionIdentity,
+  releaseViewer,
+  removeUnconfirmedUser,
+  requirePlatformRoleModel,
   setProfileRemovedInApp,
   signIn,
+  waitUntilUsable,
 } from './account-deletion.helpers';
 import type { UsableUser } from './account-deletion.helpers';
 
@@ -49,7 +56,10 @@ let removerInAppBefore: boolean | undefined;
 let removerSelfEntriesBefore: string[] = [];
 /** The second Users Admin, whose centre must show the entry. */
 let viewer: UsableUser | undefined;
-let viewerHoldsRole = false;
+/** Remover-triggered entries the (persistent) viewer had before this run. */
+let viewerEntriesBefore: string[] = [];
+/** Set before the departed user's identity exists, so cleanup can find it. */
+let departedEmail: string | undefined;
 let departed: UsableUser | undefined;
 let departedRemoved = false;
 
@@ -62,6 +72,9 @@ test.describe('Notification centre — profile-removed entry (054 delta)', () =>
     // Two first sign-ins: a fresh user can take a while to become usable.
     test.setTimeout(360_000);
 
+    // Before any identity is registered or signed in.
+    await requirePlatformRoleModel();
+
     const users = await seedPlatformRoleUsers();
     rolesAdminToken = users.tokens.PLATFORM_ROLES_ADMIN;
     remover = {
@@ -69,14 +82,17 @@ test.describe('Notification centre — profile-removed entry (054 delta)', () =>
       token: users.tokens.PLATFORM_USERS_ADMIN,
     };
 
-    viewer = await provisionUsableUser(`tc14viewer.${uniqueId}`);
+    viewer = await acquireViewer(rolesAdminToken);
     await assignPlatformRole(
       rolesAdminToken,
       viewer.userId,
       'PLATFORM_USERS_ADMIN'
     );
-    viewerHoldsRole = true;
     await setProfileRemovedInApp(viewer.token, viewer.userId, true);
+    viewerEntriesBefore = await profileRemovedNotificationsTriggeredBy(
+      viewer.token,
+      remover.id
+    );
 
     removerInAppBefore = await getProfileRemovedInApp(remover.token);
     await setProfileRemovedInApp(remover.token, remover.id, true);
@@ -85,7 +101,10 @@ test.describe('Notification centre — profile-removed entry (054 delta)', () =>
       remover.id
     );
 
-    departed = await provisionUsableUser(`tc14gone.${uniqueId}`);
+    const departedName = `tc14gone.${uniqueId}`;
+    departedEmail = identityEmail(departedName);
+    await provisionIdentity(departedName);
+    departed = await waitUntilUsable(departedEmail);
     await deleteUserAs(remover.token, departed.userId);
     departedRemoved = true;
   });
@@ -110,16 +129,16 @@ test.describe('Notification centre — profile-removed entry (054 delta)', () =>
       await attempt('remove the departed user', () =>
         deleteUserAs(remover.token, userId)
       );
+    } else if (!departed && departedEmail) {
+      const email = departedEmail;
+      await attempt('remove the unconfirmed departed user', () =>
+        removeUnconfirmedUser(remover.token, email)
+      );
     }
     if (viewer) {
-      const { userId } = viewer;
-      if (viewerHoldsRole) {
-        await attempt('revoke the viewer role', () =>
-          removePlatformRole(rolesAdminToken, userId, 'PLATFORM_USERS_ADMIN')
-        );
-      }
-      await attempt('remove the viewer', () =>
-        deleteUserAs(remover.token, userId)
+      const released = viewer;
+      await attempt('release the viewer', () =>
+        releaseViewer(rolesAdminToken, released)
       );
     }
     if (failures.length > 0) {
@@ -130,8 +149,9 @@ test.describe('Notification centre — profile-removed entry (054 delta)', () =>
   });
 
   test('TC-14 — the other Users Admin gets the entry, the remover does not', async () => {
-    // By identity: the viewer's centre did not exist before this run, and the
-    // entry must be the one the remover triggered.
+    test.setTimeout(120_000);
+
+    // By identity: a NEW entry in the viewer's centre, triggered by the remover.
     await expect
       .poll(
         async () =>
@@ -140,20 +160,19 @@ test.describe('Notification centre — profile-removed entry (054 delta)', () =>
               viewer!.token,
               remover.id
             )
-          ).length,
+          ).filter(id => !viewerEntriesBefore.includes(id)).length,
         { timeout: 60_000, intervals: [1_000, 2_000, 5_000] }
       )
       .toBeGreaterThan(0);
 
-    // Both legs are written by the same dispatch, so once the viewer's entry
-    // exists the remover's would too.
-    const removerSelfEntries = await profileRemovedNotificationsTriggeredBy(
-      remover.token,
-      remover.id
+    // The remover's own centre must gain none. Re-read across a settle window
+    // that starts once the viewer's entry exists, so a self-entry written a
+    // moment after it is caught rather than raced.
+    await expectNoNewIds(
+      () => profileRemovedNotificationsTriggeredBy(remover.token, remover.id),
+      removerSelfEntriesBefore,
+      { windowMs: 10_000, intervalMs: 2_000 }
     );
-    expect(
-      removerSelfEntries.filter(id => !removerSelfEntriesBefore.includes(id))
-    ).toEqual([]);
   });
 
   test('TC-14 — no PII, no blank row, list stays populated', async ({
@@ -168,7 +187,10 @@ test.describe('Notification centre — profile-removed entry (054 delta)', () =>
     // full page reload — a persona with a long notification history spends
     // its budget on re-fetching all of them instead of retrying). A plain
     // `expect.poll` over a DOM assertion would only re-check the
-    // already-rendered (unrefetched) list.
+    // already-rendered (unrefetched) list. The pool viewer may also hold
+    // entries from earlier runs: every profile-removed row is rendered from
+    // the same fragment, which is what this walk guards, and the API test
+    // above has proved this run's entry is in the list.
     await expect
       .poll(
         async () => {

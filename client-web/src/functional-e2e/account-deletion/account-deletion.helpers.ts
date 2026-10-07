@@ -192,10 +192,10 @@ export const resolveUserIdFromToken = async (
 };
 
 // --------------------------------------------------------------------------
-// TC-14 on the platform-role model (workspace#065). The profile-removed
-// notification goes to Platform Users Admin holders, minus the operator who
-// removed the user — so the walk needs two holders: one removes, the other
-// looks. None of the operations below has a generated client-web SDK method.
+// TC-14 on the platform-role model. The profile-removed notification goes to
+// Platform Users Admin holders, minus the operator who removed the user — so
+// the walk needs two holders: one removes, the other looks. None of the
+// operations below has a generated client-web SDK method.
 // --------------------------------------------------------------------------
 
 /** A bearer GraphQL call that throws on any GraphQL or transport error. */
@@ -226,6 +226,43 @@ const gqlAs = async <T>(
   return response.data.data as T;
 };
 
+/**
+ * Fails — never skips — unless the server under test is on the platform-role
+ * model: its `RoleName` carries PLATFORM_USERS_ADMIN and no longer GLOBAL_ADMIN.
+ * Asked by anonymous introspection, so it runs before any identity is
+ * registered or signed in.
+ */
+export const requirePlatformRoleModel = async (): Promise<void> => {
+  const endpoint = testConfiguration.endPoints.graphql.private;
+  const response = await axios.post(
+    endpoint,
+    { query: '{ __type(name: "RoleName") { enumValues { name } } }' },
+    {
+      headers: { 'Content-Type': 'application/json' },
+      validateStatus: () => true,
+    }
+  );
+  const roles: string[] | undefined =
+    response.data?.data?.__type?.enumValues?.map(
+      (value: { name: string }) => value.name
+    );
+  const problems = !roles
+    ? [`its RoleName enum could not be read (HTTP ${response.status})`]
+    : [
+        ...(roles.includes('PLATFORM_USERS_ADMIN')
+          ? []
+          : ['RoleName has no PLATFORM_USERS_ADMIN']),
+        ...(roles.includes('GLOBAL_ADMIN')
+          ? ['RoleName still has GLOBAL_ADMIN']
+          : []),
+      ];
+  if (problems.length > 0) {
+    throw new Error(
+      `Precondition failed: TC-14 needs a server on the platform-role model, where Platform Users Admin replaces Global Admin — ${endpoint}: ${problems.join('; ')}`
+    );
+  }
+};
+
 export type UsableUser = {
   email: string;
   displayName: string;
@@ -233,30 +270,39 @@ export type UsableUser = {
   token: string;
 };
 
-const USABLE_TIMEOUT_MS = 150_000;
-const USABLE_POLL_MS = 3_000;
+/** The sign-in email of a harness identity named `userName`. */
+export const identityEmail = (userName: string): string =>
+  `${userName}@alkem.io`;
 
 /**
- * A run-unique user who can sign in — through the Kratos ADMIN API where it is
- * configured (an already-verified identity, no self-service password checks),
- * by self-service registration otherwise — returned once its first sign-in has
- * created the platform user AND that user's authorization is in place — it
- * holds UPDATE on itself. The first sign-in runs user creation inside Kratos's
- * login webhook, and the user row is visible before its authorization policy
- * is written (on a busy stack by tens of seconds), so readiness is polled,
- * bounded.
+ * Creates the sign-in identity for `userName` — through the Kratos ADMIN API
+ * where it is configured (an already-verified identity, no self-service
+ * password checks), by self-service registration otherwise. Does not wait for
+ * the platform user: take the identity's handle (`identityEmail`) BEFORE
+ * calling this, so a cleanup can remove it even if that user never appears.
  *
  * `userName`: `<first>.<last>`, lowercase letters and digits.
  */
-export const provisionUsableUser = async (
-  userName: string
-): Promise<UsableUser> => {
+export const provisionIdentity = async (userName: string): Promise<void> => {
   if (testConfiguration.endPoints.kratos.admin) {
     await provisionTestIdentities([userName]);
   } else {
     await registerTestUser(userName);
   }
-  const email = `${userName}@alkem.io`;
+};
+
+const USABLE_TIMEOUT_MS = 150_000;
+const USABLE_POLL_MS = 3_000;
+
+/**
+ * The user signing in as `email`, returned once its first sign-in has created
+ * the platform user AND that user's authorization is in place — it holds
+ * UPDATE on itself. The first sign-in runs user creation inside Kratos's login
+ * webhook, and the user row is visible before its authorization policy is
+ * written (on a busy stack by tens of seconds), so readiness is polled,
+ * bounded.
+ */
+export const waitUntilUsable = async (email: string): Promise<UsableUser> => {
   const deadline = Date.now() + USABLE_TIMEOUT_MS;
   for (;;) {
     try {
@@ -293,6 +339,40 @@ export const provisionUsableUser = async (
   }
 };
 
+/**
+ * Removes what a provisioning left behind when its user was never confirmed
+ * usable: the platform user together with its identity if the user did appear
+ * after all, otherwise the bare Kratos identity — through the admin API, the
+ * only way to remove one. Without that API the leftover is reported, never
+ * silently kept.
+ */
+export const removeUnconfirmedUser = async (
+  removerToken: string,
+  email: string
+): Promise<void> => {
+  const userId = await getUserToken(email)
+    .then(resolveUserIdFromToken)
+    .catch(() => undefined);
+  if (userId) {
+    await deleteUserAs(removerToken, userId);
+    return;
+  }
+  const admin = testConfiguration.endPoints.kratos.admin;
+  if (!admin) {
+    throw new Error(
+      `${email} may be left behind: it never became a platform user, and without the Kratos admin API its identity cannot be removed`
+    );
+  }
+  // The same admin paths `provisionTestIdentities` uses on this base URL.
+  const identities = `${admin.replace(/\/$/, '')}/admin/identities`;
+  const { data } = await axios.get<
+    { id: string; traits?: { email?: string } }[]
+  >(identities, { params: { credentials_identifier: email } });
+  for (const identity of data.filter(i => i.traits?.email === email)) {
+    await axios.delete(`${identities}/${identity.id}`);
+  }
+};
+
 /** As Platform Roles Admin — the only role that assigns `PLATFORM_*` roles. */
 export const assignPlatformRole = async (
   rolesAdminToken: string,
@@ -301,22 +381,69 @@ export const assignPlatformRole = async (
 ): Promise<void> => {
   await gqlAs(
     rolesAdminToken,
-    `mutation($id: UUID!) { assignPlatformRoleToUser(roleData: { actorID: $id, role: ${role} }) { id } }`,
-    { id: actorID }
+    'mutation($roleData: AssignPlatformRoleInput!) { assignPlatformRoleToUser(roleData: $roleData) { id } }',
+    { roleData: { actorID, role } }
   );
 };
 
-export const removePlatformRole = async (
-  rolesAdminToken: string,
-  actorID: string,
-  role: PlatformRoleName
-): Promise<void> => {
-  await gqlAs(
-    rolesAdminToken,
-    `mutation($id: UUID!) { removePlatformRoleFromUser(roleData: { actorID: $id, role: ${role} }) { id } }`,
-    { id: actorID }
-  );
+/** The platform roles the caller holds, `REGISTERED` aside. */
+const platformRolesOf = async (token: string): Promise<string[]> => {
+  const { platform } = await gqlAs<{
+    platform: { roleSet: { myRoles: string[] } };
+  }>(token, 'query { platform { roleSet { myRoles } } }');
+  return platform.roleSet.myRoles.filter(role => role !== 'REGISTERED');
 };
+
+/**
+ * Revokes every platform role `user` holds, as Platform Roles Admin, and fails
+ * unless none is left.
+ */
+export const revokeAllPlatformRoles = async (
+  rolesAdminToken: string,
+  user: Pick<UsableUser, 'userId' | 'token' | 'email'>
+): Promise<void> => {
+  for (const role of await platformRolesOf(user.token)) {
+    await gqlAs(
+      rolesAdminToken,
+      'mutation($roleData: RemovePlatformRoleInput!) { removePlatformRoleFromUser(roleData: $roleData) { id } }',
+      { roleData: { actorID: user.userId, role } }
+    );
+  }
+  const left = await platformRolesOf(user.token);
+  if (left.length > 0) {
+    throw new Error(`${user.email} still holds ${left.join(', ')}`);
+  }
+};
+
+/**
+ * TC-14's viewer is a POOL user: one persistent identity, registered once per
+ * environment and NORMALISED — every platform role revoked — when acquired and
+ * again when released, so a role granted by a run that never reached its
+ * cleanup does not outlive the next run. The same arrangement as the
+ * platform-roles suite's pool users.
+ */
+const VIEWER_POOL_USER = 'prpool.tc14viewer';
+
+export const acquireViewer = async (
+  rolesAdminToken: string
+): Promise<UsableUser> => {
+  const email = identityEmail(VIEWER_POOL_USER);
+  // From the second run on the identity exists and signing in is enough.
+  const exists = await getUserToken(email).then(
+    () => true,
+    () => false
+  );
+  if (!exists) await provisionIdentity(VIEWER_POOL_USER);
+  const viewer = await waitUntilUsable(email);
+  await revokeAllPlatformRoles(rolesAdminToken, viewer);
+  return viewer;
+};
+
+/** Leaves the viewer in place, normalised. */
+export const releaseViewer = (
+  rolesAdminToken: string,
+  viewer: UsableUser
+): Promise<void> => revokeAllPlatformRoles(rolesAdminToken, viewer);
 
 /** Removes the user AND its sign-in identity, with the caller's own token. */
 export const deleteUserAs = async (
@@ -403,4 +530,23 @@ export const profileRemovedNotificationsTriggeredBy = async (
   return me.notifications.inAppNotifications
     .filter(notification => notification.triggeredBy?.id === actorId)
     .map(notification => notification.id);
+};
+
+/**
+ * Re-reads `read` every `intervalMs` until `windowMs` has passed, failing on
+ * the first read that returns an id not in `before` — for a "nothing new
+ * arrives" assertion that must not be decided by a single early read.
+ */
+export const expectNoNewIds = async (
+  read: () => Promise<string[]>,
+  before: readonly string[],
+  { windowMs, intervalMs }: { windowMs: number; intervalMs: number }
+): Promise<void> => {
+  const deadline = Date.now() + windowMs;
+  for (;;) {
+    const fresh = (await read()).filter(id => !before.includes(id));
+    expect(fresh).toEqual([]);
+    if (Date.now() >= deadline) return;
+    await new Promise(resolve => setTimeout(resolve, intervalMs));
+  }
 };
