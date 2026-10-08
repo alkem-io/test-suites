@@ -1,4 +1,5 @@
 import { afterAll, beforeAll, describe, expect, inject, test } from 'vitest';
+import { harnessPostgresConfigured, queryHarnessDb } from '@alkemio/tests-lib';
 import { PLATFORM_ROLES } from './capabilities.data';
 import {
   createDisposableUser,
@@ -118,6 +119,63 @@ describe('L2.legacy-roles-gone', () => {
     expect(privileges).toContain('PLATFORM_ROLES_ASSIGN');
   });
 
+  // SC-005 says "verifiable BY QUERY: zero stored credential rows of any
+  // retired legacy type". The enum checks above prove the server no longer
+  // KNOWS the values; only the stored rows prove the cleanup migration ran — a
+  // left-over row is a grant the canonical map cannot resolve (server#6615 was
+  // exactly that, through a cache). Loopback stacks only: the harness has no
+  // database anywhere else, so the case skips itself there.
+  const RETIRED_CREDENTIAL_TYPES = [
+    'global-admin',
+    'global-support',
+    'global-license-manager',
+    'global-community-read',
+    'global-spaces-read',
+    'global-spaces-reader',
+    'global-community-reader',
+    'global-platform-manager',
+    'global-support-manager',
+    'beta-tester',
+    'vc-campaign',
+    'assistant-access',
+  ];
+  const RETIRED_ROLE_NAMES = [
+    'global-admin',
+    'global-support',
+    'global-license-manager',
+    'global-spaces-reader',
+    'global-community-reader',
+    'global-platform-manager',
+    'global-support-manager',
+    'platform-beta-tester',
+    'platform-vc-campaign',
+    'platform-assistant-access',
+  ];
+
+  test.skipIf(!harnessPostgresConfigured())(
+    'negative: zero stored credential rows of a retired type and zero retired role rows remain (SC-005 query, loopback Postgres)',
+    async () => {
+      // Positive control: the same query sees the target model's rows, so an
+      // empty answer below is about the retired types, not a wrong table.
+      const target = await queryHarnessDb<{ count: string }>(
+        "SELECT count(*) FROM credential WHERE type = 'platform-roles-admin'"
+      );
+      expect(Number(target[0]?.count)).toBeGreaterThanOrEqual(1);
+
+      const credentials = await queryHarnessDb<{ type: string; count: string }>(
+        'SELECT type, count(*) FROM credential WHERE type = ANY($1) GROUP BY type',
+        [RETIRED_CREDENTIAL_TYPES]
+      );
+      expect(credentials).toEqual([]);
+
+      const roles = await queryHarnessDb<{ name: string }>(
+        'SELECT name FROM role WHERE name = ANY($1)',
+        [RETIRED_ROLE_NAMES]
+      );
+      expect(roles).toEqual([]);
+    }
+  );
+
   test('negative: the platform role-set offers only the 14 target roles and REGISTERED', async () => {
     const { platform } = await rawRead<{
       platform: { roleSet: { roleNames: string[] } };
@@ -127,6 +185,55 @@ describe('L2.legacy-roles-gone', () => {
     );
     expect([...platform.roleSet.roleNames].sort()).toEqual(
       [...PLATFORM_ROLES, 'REGISTERED'].sort()
+    );
+  });
+});
+
+/**
+ * FR-020 / FR-021 / FR-022 — the surfaces Slice B DELETES rather than
+ * re-gates. Until this PR the matrix carried them as "every role is refused"
+ * cells; at Slice B they no longer exist, so the only honest pin is that the
+ * schema does not offer them — a surface that came back would be a grant path
+ * no rule engine and no audit row stands in front of (the reason FR-022 exists).
+ * The successors are asserted beside them, so a renamed Mutation type or an
+ * empty introspection answer cannot pass the absence check by accident.
+ */
+describe('L3.retired-surfaces-gone', () => {
+  const RETIRED_MUTATIONS = [
+    // FR-022 — generic credential writes past the rule engine
+    'grantCredentialToUser',
+    'revokeCredentialFromUser',
+    'grantCredentialToOrganization',
+    'revokeCredentialFromOrganization',
+    // FR-021 — Wingback
+    'createWingbackAccount',
+    'adminWingbackCreateTestCustomer',
+    'adminWingbackGetCustomerEntitlements',
+    // FR-020 — the platform-settings mutations
+    'updateUserPlatformSettings',
+    'updateOrganizationPlatformSettings',
+    'updateSpacePlatformSettings',
+  ];
+  const SUCCESSORS = [
+    'adminUpdateSpaceVisibility',
+    'updateActorNameID',
+    'grantCredentialToActor',
+    'revokeCredentialFromActor',
+    'assignPlatformRoleToUser',
+    'removePlatformRoleFromUser',
+  ];
+
+  test('negative: none of the ten deleted mutations is offered; their successors are', async () => {
+    const { __type } = await rawRead<{
+      __type: { fields: { name: string }[] } | null;
+    }>(
+      ctx.tokens.PLATFORM_AUDIT_READER,
+      'query { __type(name: "Mutation") { fields { name } } }'
+    );
+    const offered = (__type?.fields ?? []).map(f => f.name);
+    expect(offered).toEqual(expect.arrayContaining(SUCCESSORS));
+    expect(offered.filter(name => RETIRED_MUTATIONS.includes(name))).toEqual(
+      []
     );
   });
 });

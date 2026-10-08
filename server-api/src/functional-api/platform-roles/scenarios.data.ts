@@ -25,6 +25,7 @@ export type ScenarioArea =
   | 'audit-records'
   | 'service-profile'
   | 'role-integrity'
+  | 'admin-notifications'
   | 'lifecycle';
 
 export type Scenario = {
@@ -444,7 +445,36 @@ export const SCENARIOS: readonly Scenario[] = [
       reason: 'a pure negative',
     },
     negative: automated(
-      'schema introspection: RoleName, AuthorizationCredential and CredentialType list none of the 10 legacy values, AuthorizationPrivilege has neither PLATFORM_ADMIN nor GRANT_GLOBAL_ADMINS, and the live role-set offers only the 14 target roles + REGISTERED. No database needed'
+      'schema introspection: RoleName, AuthorizationCredential and CredentialType list none of the 10 legacy values, AuthorizationPrivilege has neither PLATFORM_ADMIN nor GRANT_GLOBAL_ADMINS, and the live role-set offers only the 14 target roles + REGISTERED; plus the SC-005 query itself on a loopback stack — zero stored credential rows of the 12 retired types and zero retired role rows (skips itself where the harness has no Postgres)'
+    ),
+  },
+  {
+    id: 'L3.retired-surfaces-gone',
+    area: 'lifecycle',
+    title:
+      'The mutations Slice B deletes (FR-020/021/022) are gone from the schema',
+    spec: 'FR-020 · FR-021 · FR-022',
+    file: 'role-integrity.it-spec.ts',
+    positive: {
+      status: 'not-applicable',
+      reason: 'a pure negative',
+    },
+    negative: automated(
+      'schema introspection: the Mutation type offers none of the four credential mutations, the three Wingback mutations or the three platform-settings mutations, and does offer their successors (adminUpdateSpaceVisibility, updateActorNameID, the *CredentialToActor pair, the *PlatformRole* pair)'
+    ),
+  },
+  {
+    id: 'N1.admin-notification-routing',
+    area: 'admin-notifications',
+    title:
+      'Each platform-admin notification reaches exactly its target roles; Content Full Access none',
+    spec: 'server T109 · slice-b-ledger §10 (operator ruling 2026-10-05)',
+    file: 'rules/admin-notification-routing.it-spec.ts',
+    positive: automated(
+      'with the event email switched on for the five admin-family single-role users: profile created and removed reach Support + Users Admin, an L0 space reaches Support + Users Admin + License Manager, a Feature-role grant reaches Roles Admin — each mail matched by recipient and by a subject naming this run’s entity'
+    ),
+    negative: automated(
+      'every other observed role user — Content Full Access always, Roles Admin / License Manager / Support / Users Admin outside their events — receives nothing within a settle period after the expected mails landed'
     ),
   },
   {

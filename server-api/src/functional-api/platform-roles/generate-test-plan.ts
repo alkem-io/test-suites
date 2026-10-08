@@ -357,6 +357,9 @@ out(
 out(
   '| `PLATFORM_RESOURCE_ADMIN › cannot › A16.createPlatformRolesAccess` | Resource Admin READS a private space it is not a member of | the server grants it READ on every space deliberately; the requirements allow only Spaces Reader (+ the Content Full Access exception). Needs a product decision — then either the table or the server changes |'
 );
+out(
+  '| `PLATFORM_RESOURCE_ADMIN › cannot › A8.updateCalloutPublishInfo` | Resource Admin rewrites the publisher and published date of a callout it cannot even READ (develop @ server c47d48983, 2026-10-07) | server#6582 adds `PLATFORM_RESOURCE_ADMIN` to `UPDATE_CALLOUT_PUBLISHER` citing an "operator amendment 2026-10-07"; the workspace spec (privilege map A8, spec §Action → owning role) still names Content Full Access alone. Needs the amendment recorded in the spec — then this row moves to `acceptedExtra` — or the grant reverted |'
+);
 out();
 out('## What is genuinely proven');
 out();
