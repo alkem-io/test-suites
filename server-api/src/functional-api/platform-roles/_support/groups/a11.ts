@@ -51,18 +51,16 @@ const isStale = (nameID: string): boolean => {
 };
 
 /**
- * The ONE read in this group that no target role can make:
- * `platformAdmin.virtualAssistant` is gated on the legacy `platform-admin`
- * privilege, which none of the 14 roles holds — not even Platform Operations
- * Admin, who owns the mutation this field is the documented discovery path for.
- * Until the server re-gates it, the break-glass account is the only reader.
+ * `platformAdmin.virtualAssistant` is gated on PLATFORM_OPERATIONS_ADMIN since
+ * Slice B (server T074) — through Slice A it sat on the retired `platform-admin`
+ * catch-all and only the break-glass account could read it.
  */
-const readAssistantAsLegacyAdmin = async (
-  bootstrapToken: string
+const readAssistantAsOperationsAdmin = async (
+  operationsAdminToken: string
 ): Promise<A11['assistant']> =>
   (
     await rawRead<{ platformAdmin: { virtualAssistant: A11['assistant'] } }>(
-      bootstrapToken,
+      operationsAdminToken,
       ASSISTANT
     )
   ).platformAdmin.virtualAssistant;
@@ -156,7 +154,7 @@ export const A11_GROUP: GroupModule<A11> = {
       profileId,
       spaceId,
       communityId,
-      assistant: await readAssistantAsLegacyAdmin(ctx.bootstrapToken),
+      assistant: await readAssistantAsOperationsAdmin(ctx.tokens.PLATFORM_OPERATIONS_ADMIN),
       probeCapability: `platform-roles-probe-${ctx.runId}`,
     };
   },
@@ -176,7 +174,7 @@ export const A11_GROUP: GroupModule<A11> = {
 
     // Only the exclusive positive writes the grant, and it restores it itself;
     // this matters when that positive died between its write and its restore.
-    const current = await readAssistantAsLegacyAdmin(ctx.bootstrapToken);
+    const current = await readAssistantAsOperationsAdmin(ctx.tokens.PLATFORM_OPERATIONS_ADMIN);
     if (
       current.capabilityGrant.some(t => t.capability === fx.probeCapability)
     ) {
@@ -218,7 +216,7 @@ export const A11_GROUP: GroupModule<A11> = {
               .updateAssistantActorCapabilities.id
           ).toBe(fx.assistant.id);
           expect(
-            (await readAssistantAsLegacyAdmin(ctx.bootstrapToken))
+            (await readAssistantAsOperationsAdmin(ctx.tokens.PLATFORM_OPERATIONS_ADMIN))
               .capabilityGrant
           ).toEqual([
             ...fx.assistant.capabilityGrant,
@@ -228,7 +226,7 @@ export const A11_GROUP: GroupModule<A11> = {
           await restoreGrant(sdk, ctx.tokens.PLATFORM_OPERATIONS_ADMIN, fx);
         }
         expect(
-          (await readAssistantAsLegacyAdmin(ctx.bootstrapToken)).capabilityGrant
+          (await readAssistantAsOperationsAdmin(ctx.tokens.PLATFORM_OPERATIONS_ADMIN)).capabilityGrant
         ).toEqual(fx.assistant.capabilityGrant);
       },
     },

@@ -1,4 +1,5 @@
 import {
+  ensureHarnessAdminRoles,
   registerAllTestUsers,
   registerTestUser,
   stringifyConfig,
@@ -45,6 +46,10 @@ export default async function globalSetup() {
   );
 
   await registerAllTestUsers();
+
+  // workspace#027 Slice B: see `ensureHarnessAdminRoles` — the bootstrap
+  // account no longer reaches content on its own.
+  await ensureHarnessAdminRoles();
 
   // Two extra personas the organization-space-invitations walks need as
   // ORGANIZATION admins/associates with no pre-existing standing in any Space.

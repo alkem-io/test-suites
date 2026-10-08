@@ -26,7 +26,12 @@ export const expectRecorded = async (
   expect(newest).toMatchObject(expected.newest);
 };
 
-/** A refused role assignment: the record carries the rejection MESSAGE, which names the rule. */
+/**
+ * A refused role assignment: `details.rejectedRule` carries the RULE ID
+ * (`assigner-capability`, `holder-kind`, `spaces-reader-service-account`,
+ * `audit-reader-exclusion`, `last-roles-admin`, `self-assignment`) — the
+ * message the caller saw is asserted separately by each rule spec.
+ */
 export const rejectedGrant = (naming: string | RegExp) => ({
   category: 'platform_role_assignment',
   outcome: 'role_grant_rejected',

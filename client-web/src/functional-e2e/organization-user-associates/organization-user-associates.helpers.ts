@@ -9,6 +9,8 @@ import {
   TestUser,
   TestUserManager,
   UniqueIDGenerator,
+  assignRoleToUser as libAssignRoleToUser,
+  removeRoleFromUser as libRemoveRoleFromUser,
 } from '@alkemio/tests-lib';
 import { graphqlErrorWrapper } from '@alkemio/tests-lib/utils/graphql.wrapper';
 import { RoleName } from '@alkemio/tests-lib/core/generated/alkemio-schema';
@@ -133,11 +135,10 @@ export const assignUserRoleOnOrganization = async (
   role: RoleName,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
-  const client = getGraphqlClient();
-  const res = await graphqlErrorWrapper(
-    authToken => client.assignRoleToUser({ roleData: { actorID, roleSetID, role } }, { authorization: `Bearer ${authToken}` }),
-    userRole
-  );
+  // workspace#027 Slice B: the lib wrapper retries an organisation role the
+  // harness admin is refused (no GRANT / entry-assign on an organisation it is
+  // not an admin of) as one of that organisation's current admins.
+  const res = await libAssignRoleToUser(actorID, roleSetID, role, userRole);
   if (res.error) {
     throw new Error(`assignUserRoleOnOrganization(${role}) failed for ${actorID} on ${roleSetID}: ${JSON.stringify(res.error)}`);
   }
@@ -149,11 +150,7 @@ export const removeUserRoleOnOrganization = async (
   role: RoleName,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
-  const client = getGraphqlClient();
-  const res = await graphqlErrorWrapper(
-    authToken => client.removeRoleFromUser({ roleData: { actorID, roleSetID, role } }, { authorization: `Bearer ${authToken}` }),
-    userRole
-  );
+  const res = await libRemoveRoleFromUser(actorID, roleSetID, role, userRole);
   if (res.error) {
     throw new Error(`removeUserRoleOnOrganization(${role}) failed for ${actorID} on ${roleSetID}: ${JSON.stringify(res.error)}`);
   }

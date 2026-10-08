@@ -304,9 +304,12 @@ describe('Organization Space invitations — GATE 0 core roleset flow', () => {
     // exercising a global-admin bypass. Create a dedicated organization with
     // a disinterested creator instead, so GLOBAL_ADMIN holds no org-admin
     // credential on it.
+    // Slice B: a Feature Beta Tester can no longer create organisations
+    // (CREATE_ORGANIZATION is Support's / Organization Creator's); Platform
+    // Support creates it, and the harness admin is still no admin of it.
     const orgNonAdmin = await createTestOrganization(
       'globalAdminReject',
-      TestUser.GLOBAL_BETA_TESTER
+      TestUser.GLOBAL_SUPPORT_ADMIN
     );
 
     const invitationData = await inviteOrg(orgNonAdmin.id);
@@ -361,7 +364,7 @@ describe('Organization Space invitations — GATE 0 core roleset flow', () => {
     // nothing about the global-admin bypass this test exists to forbid.
     const orgNonAdmin = await createTestOrganization(
       'globalAdminRejectFr010',
-      TestUser.GLOBAL_BETA_TESTER
+      TestUser.GLOBAL_SUPPORT_ADMIN
     );
 
     const invitationData = await inviteOrg(orgNonAdmin.id);

@@ -3,7 +3,7 @@ import { rawRead, rawRequest } from '../raw-request';
 import type { GroupModule, Headers } from '../types';
 import {
   createCallout,
-  createHubAsLegacyAdmin,
+  createHubAsLicenseManager,
   createOwnedOrganization,
   createPack,
   createSpace,
@@ -112,7 +112,7 @@ export const A8_GROUP: GroupModule<A8> = {
         async tag => (await createPack(accountId, name(tag))).packId
       ),
       hub: await pairOf(tag =>
-        createHubAsLegacyAdmin(ctx, accountId, name(tag))
+        createHubAsLicenseManager(ctx, accountId, name(tag))
       ),
       republishedCalloutId: await createCallout(
         host.calloutsSetId,

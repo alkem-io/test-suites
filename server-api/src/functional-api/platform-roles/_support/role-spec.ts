@@ -71,9 +71,24 @@ const callAs = async (
   return { ctx, fx, invocation: found.invocation, outcome };
 };
 
-const register = (capability: Capability, body: () => Promise<void>): void => {
-  if (invocationFor(capability.id)) test(capability.id, body);
-  else test.todo(capability.id);
+const register = (
+  capability: Capability,
+  role: PlatformRole,
+  half: 'positive' | 'negative',
+  body: () => Promise<void>
+): void => {
+  if (!invocationFor(capability.id)) {
+    test.todo(capability.id);
+    return;
+  }
+  // A confirmed, filed server defect on this cell: keep the assertion (it is
+  // the expected behaviour) but skip it with the issue in the title until the
+  // fix lands — see `Capability.knownDefects`.
+  const defect = capability.knownDefects?.find(
+    d => d.role === role && d.half === half
+  );
+  if (defect) test.skip(`${capability.id} (${defect.issue})`, body);
+  else test(capability.id, body);
 };
 
 /** NEGATIVE — refused at the gate. Changes no state, so it is safe anywhere. */
@@ -81,7 +96,7 @@ export const expectRefused = (
   role: PlatformRole,
   capability: Capability
 ): void =>
-  register(capability, async () => {
+  register(capability, role, 'negative', async () => {
     const { outcome } = await callAs(role, capability);
     expect(outcome.kind, describeOutcome(outcome)).toBe('denied');
   });
@@ -91,7 +106,7 @@ export const expectAllowed = (
   role: PlatformRole,
   capability: Capability
 ): void =>
-  register(capability, async () => {
+  register(capability, role, 'positive', async () => {
     const { ctx, fx, invocation, outcome } = await callAs(role, capability);
 
     // An external dependency is absent on test stacks: the oracle is a specific

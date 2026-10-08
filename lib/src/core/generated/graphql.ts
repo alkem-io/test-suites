@@ -704,6 +704,13 @@ export type AdminRevokeMcpApiKeyInput = {
   userID: Scalars["UUID"]["input"];
 };
 
+export type AdminUpdateSpaceVisibilityInput = {
+  /** The Space whose visibility is to be updated. */
+  spaceID: Scalars["UUID"]["input"];
+  /** Visibility of the Space, only on L0 spaces. */
+  visibility: SpaceVisibility;
+};
+
 export type AdminUserEmailChangeDriftResolveInput = {
   /** The admin-chosen canonical email. MUST equal either the old or new email recorded on the drift_detected audit entry. Both sides are force-aligned to this value. */
   canonicalEmail: Scalars["String"]["input"];
@@ -935,22 +942,13 @@ export type AuthorizationHasPrivilegeArgs = {
 
 export enum AuthorizationCredential {
   AccountAdmin = "ACCOUNT_ADMIN",
-  AssistantAccess = "ASSISTANT_ACCESS",
-  BetaTester = "BETA_TESTER",
   FeatureBetaTester = "FEATURE_BETA_TESTER",
   FeatureOrganizationCreator = "FEATURE_ORGANIZATION_CREATOR",
   FeatureVcCampaign = "FEATURE_VC_CAMPAIGN",
   FeatureVirtualAssistant = "FEATURE_VIRTUAL_ASSISTANT",
-  GlobalAdmin = "GLOBAL_ADMIN",
   GlobalAnonymous = "GLOBAL_ANONYMOUS",
-  GlobalCommunityRead = "GLOBAL_COMMUNITY_READ",
   GlobalGuest = "GLOBAL_GUEST",
-  GlobalLicenseManager = "GLOBAL_LICENSE_MANAGER",
-  GlobalPlatformManager = "GLOBAL_PLATFORM_MANAGER",
   GlobalRegistered = "GLOBAL_REGISTERED",
-  GlobalSpacesReader = "GLOBAL_SPACES_READER",
-  GlobalSupport = "GLOBAL_SUPPORT",
-  GlobalSupportManager = "GLOBAL_SUPPORT_MANAGER",
   OrganizationAdmin = "ORGANIZATION_ADMIN",
   OrganizationAssociate = "ORGANIZATION_ASSOCIATE",
   OrganizationOwner = "ORGANIZATION_OWNER",
@@ -971,7 +969,6 @@ export enum AuthorizationCredential {
   SpaceSubspaceAdmin = "SPACE_SUBSPACE_ADMIN",
   UserGroupMember = "USER_GROUP_MEMBER",
   UserSelfManagement = "USER_SELF_MANAGEMENT",
-  VcCampaign = "VC_CAMPAIGN",
 }
 
 export type AuthorizationPolicyRuleCredential = {
@@ -1082,17 +1079,16 @@ export enum AuthorizationPrivilege {
   FileDelete = "FILE_DELETE",
   FileUpload = "FILE_UPLOAD",
   Grant = "GRANT",
-  GrantGlobalAdmins = "GRANT_GLOBAL_ADMINS",
   LicenseReset = "LICENSE_RESET",
   MoveContribution = "MOVE_CONTRIBUTION",
   MovePost = "MOVE_POST",
   MoveTask = "MOVE_TASK",
-  PlatformAdmin = "PLATFORM_ADMIN",
   PlatformAuditRead = "PLATFORM_AUDIT_READ",
   PlatformContentFullAccess = "PLATFORM_CONTENT_FULL_ACCESS",
   PlatformForumManage = "PLATFORM_FORUM_MANAGE",
   PlatformLicensingListsRead = "PLATFORM_LICENSING_LISTS_READ",
   PlatformOperationsAdmin = "PLATFORM_OPERATIONS_ADMIN",
+  PlatformRolesAssign = "PLATFORM_ROLES_ASSIGN",
   PlatformRoleHoldersRead = "PLATFORM_ROLE_HOLDERS_READ",
   PlatformSettingsAdmin = "PLATFORM_SETTINGS_ADMIN",
   PlatformSupportListsRead = "PLATFORM_SUPPORT_LISTS_READ",
@@ -3282,22 +3278,13 @@ export type CredentialDefinition = {
 export enum CredentialType {
   AccountAdmin = "ACCOUNT_ADMIN",
   AccountLicensePlus = "ACCOUNT_LICENSE_PLUS",
-  AssistantAccess = "ASSISTANT_ACCESS",
-  BetaTester = "BETA_TESTER",
   FeatureBetaTester = "FEATURE_BETA_TESTER",
   FeatureOrganizationCreator = "FEATURE_ORGANIZATION_CREATOR",
   FeatureVcCampaign = "FEATURE_VC_CAMPAIGN",
   FeatureVirtualAssistant = "FEATURE_VIRTUAL_ASSISTANT",
-  GlobalAdmin = "GLOBAL_ADMIN",
   GlobalAnonymous = "GLOBAL_ANONYMOUS",
-  GlobalCommunityRead = "GLOBAL_COMMUNITY_READ",
   GlobalGuest = "GLOBAL_GUEST",
-  GlobalLicenseManager = "GLOBAL_LICENSE_MANAGER",
-  GlobalPlatformManager = "GLOBAL_PLATFORM_MANAGER",
   GlobalRegistered = "GLOBAL_REGISTERED",
-  GlobalSpacesReader = "GLOBAL_SPACES_READER",
-  GlobalSupport = "GLOBAL_SUPPORT",
-  GlobalSupportManager = "GLOBAL_SUPPORT_MANAGER",
   OrganizationAdmin = "ORGANIZATION_ADMIN",
   OrganizationAssociate = "ORGANIZATION_ASSOCIATE",
   OrganizationOwner = "ORGANIZATION_OWNER",
@@ -3328,7 +3315,6 @@ export enum CredentialType {
   SpaceSubspaceAdmin = "SPACE_SUBSPACE_ADMIN",
   UserGroupMember = "USER_GROUP_MEMBER",
   UserSelfManagement = "USER_SELF_MANAGEMENT",
-  VcCampaign = "VC_CAMPAIGN",
 }
 
 export type DeleteAiPersonaInput = {
@@ -3723,22 +3709,6 @@ export type GrantAssistantActorCapabilitiesInput = {
   enabledCapabilities: Array<AssistantCapabilityToggleInput>;
   /** The VirtualAssistant actor whose admin grant is being set. */
   virtualAssistantID: Scalars["UUID"]["input"];
-};
-
-export type GrantAuthorizationCredentialInput = {
-  /** The resource to which this credential is tied. */
-  resourceID?: InputMaybe<Scalars["UUID"]["input"]>;
-  type: AuthorizationCredential;
-  /** The user to whom the credential is being granted. */
-  userID: Scalars["UUID"]["input"];
-};
-
-export type GrantOrganizationAuthorizationCredentialInput = {
-  /** The Organization to whom the credential is being granted. */
-  organizationID: Scalars["UUID"]["input"];
-  /** The resource to which this credential is tied. */
-  resourceID?: InputMaybe<Scalars["UUID"]["input"]>;
-  type: AuthorizationCredential;
 };
 
 export type Groupable = {
@@ -5547,16 +5517,14 @@ export type Mutation = {
   adminUpdateContributorAvatars: Profile;
   /** Updates the GeoLocation data where required on the platform. */
   adminUpdateGeoLocationData: Scalars["Boolean"]["output"];
+  /** Update the visibility of the specified Space. */
+  adminUpdateSpaceVisibility: Space;
   /** Remove the Kratos account associated with the specified User. Note: the Users profile on the platform is not deleted. */
   adminUserAccountDelete: User;
   /** Change a user's login email synchronously, acting as a platform administrator. The admin is responsible for verifying the subject user's identity out-of-band — the platform does NOT send a confirmation message to the new mailbox and does NOT require the new mailbox to prove ownership. Validates uniqueness, commits Kratos → Alkemio with bounded retry, invalidates the subject's existing sessions, and sends a security-signal notification to the old address. Requires PLATFORM_USERS_ADMIN. */
   adminUserEmailChange: UserEmailChangeResult;
   /** Reconcile an outstanding drift-detected state for a subject user by force-aligning Alkemio and Kratos to a canonical email chosen by the admin. Requires PLATFORM_USERS_ADMIN. */
   adminUserEmailChangeDriftResolve: UserEmailChangeResult;
-  /** Create a test customer on wingback. */
-  adminWingbackCreateTestCustomer: Scalars["String"]["output"];
-  /** Get wingback customer entitlements. */
-  adminWingbackGetCustomerEntitlements: Array<LicensingGrantedEntitlement>;
   /** Reset the Authorization Policy on the specified AiServer. */
   aiServerAuthorizationPolicyReset: AiServer;
   /** Creates a new AiPersona on the aiServer. */
@@ -5665,8 +5633,6 @@ export type Mutation = {
   createWhiteboardDraftOnCalloutsSet: Scalars["UUID"]["output"];
   /** Materializes a server-owned live Whiteboard draft for a Template form. GraphQL returns identifiers only. */
   createWhiteboardDraftOnTemplatesSet: Scalars["UUID"]["output"];
-  /** Creates an account in Wingback */
-  createWingbackAccount: Scalars["String"]["output"];
   /** Removes the specified Application. */
   deleteApplication: Application;
   /** Deletes the specified CalendarEvent. */
@@ -5739,10 +5705,6 @@ export type Mutation = {
   eventOnOrganizationVerification: OrganizationVerification;
   /** Grant a credential to an Actor. */
   grantCredentialToActor: Credential;
-  /** Grants an authorization credential to an Organization. */
-  grantCredentialToOrganization: Organization;
-  /** Grants an authorization credential to a User. */
-  grantCredentialToUser: User;
   /** Import an existing file as a CollaboraDocument contribution on the callout. file-service-go sniffs the MIME from content and rejects formats Collabora cannot edit. */
   importCollaboraDocument: CalloutContribution;
   /** Invite new Contributors or users by email to join the specified RoleSet in the Entry Role. */
@@ -5829,10 +5791,6 @@ export type Mutation = {
   resetLicenseOnAccounts: Scalars["Boolean"]["output"];
   /** Revoke a credential from an Actor. */
   revokeCredentialFromActor: Scalars["Boolean"]["output"];
-  /** Removes an authorization credential from an Organization. */
-  revokeCredentialFromOrganization: Organization;
-  /** Removes an authorization credential from a User. */
-  revokeCredentialFromUser: User;
   /** Revokes the specified LicensePlan on an Account. */
   revokeLicensePlanFromAccount: Account;
   /** Revokes the specified LicensePlan on a Space. */
@@ -5871,6 +5829,8 @@ export type Mutation = {
   transferVirtualContributorToAccount: InnovationPack;
   /** Disable a push notification subscription for the current user. The subscription is retained but will not receive notifications until re-enabled. */
   unsubscribeFromPushNotifications: PushSubscription;
+  /** Update the nameID (URL path) of the specified Actor. A protected update: renaming repoints every inbound link to the entity. */
+  updateActorNameID: Actor;
   /** Update the Application Form used by this RoleSet. */
   updateApplicationFormOnRoleSet: RoleSet;
   /** Set the admin per-capability grant on the virtual-assistant actor, governing what it may do system-invoked (default read-only). Requires the platform-operations-admin privilege. */
@@ -5933,8 +5893,6 @@ export type Mutation = {
   updateNotificationState: NotificationEventInAppState;
   /** Updates the specified Organization. */
   updateOrganization: Organization;
-  /** Updates the specified Organization platform settings. */
-  updateOrganizationPlatformSettings: Organization;
   /** Updates one of the Setting on an Organization */
   updateOrganizationSettings: Organization;
   /** Updates one of the Setting on the Platform */
@@ -5951,8 +5909,6 @@ export type Mutation = {
   updateReference: Reference;
   /** Updates the Space. */
   updateSpace: Space;
-  /** Update the platform settings, such as nameID, of the specified Space. */
-  updateSpacePlatformSettings: Space;
   /** Updates one of the Setting on a Space */
   updateSpaceSettings: Space;
   /** Updates the pinned state of a Subspace within the specified Space. Returns the updated Subspace. */
@@ -5977,8 +5933,6 @@ export type Mutation = {
   updateUser: User;
   /** Updates the specified User Group. */
   updateUserGroup: UserGroup;
-  /** Update the platform settings, such as nameID, email, for the specified User. */
-  updateUserPlatformSettings: User;
   /** Updates one of the Setting on a User */
   updateUserSettings: User;
   /** Updates the specified VirtualContributor. */
@@ -6075,6 +6029,10 @@ export type MutationAdminUpdateContributorAvatarsArgs = {
   profileID: Scalars["UUID"]["input"];
 };
 
+export type MutationAdminUpdateSpaceVisibilityArgs = {
+  updateData: AdminUpdateSpaceVisibilityInput;
+};
+
 export type MutationAdminUserAccountDeleteArgs = {
   userID: Scalars["UUID"]["input"];
 };
@@ -6085,10 +6043,6 @@ export type MutationAdminUserEmailChangeArgs = {
 
 export type MutationAdminUserEmailChangeDriftResolveArgs = {
   adminUserEmailChangeDriftResolveData: AdminUserEmailChangeDriftResolveInput;
-};
-
-export type MutationAdminWingbackGetCustomerEntitlementsArgs = {
-  customerID: Scalars["String"]["input"];
 };
 
 export type MutationAiServerCreateAiPersonaArgs = {
@@ -6288,10 +6242,6 @@ export type MutationCreateWhiteboardDraftOnTemplatesSetArgs = {
   draftData: CreateWhiteboardDraftOnTemplatesSetInput;
 };
 
-export type MutationCreateWingbackAccountArgs = {
-  accountID: Scalars["UUID"]["input"];
-};
-
 export type MutationDeleteApplicationArgs = {
   deleteData: DeleteApplicationInput;
 };
@@ -6436,14 +6386,6 @@ export type MutationGrantCredentialToActorArgs = {
   actorID: Scalars["UUID"]["input"];
   credentialType: CredentialType;
   resourceID?: InputMaybe<Scalars["UUID"]["input"]>;
-};
-
-export type MutationGrantCredentialToOrganizationArgs = {
-  grantCredentialData: GrantOrganizationAuthorizationCredentialInput;
-};
-
-export type MutationGrantCredentialToUserArgs = {
-  grantCredentialData: GrantAuthorizationCredentialInput;
 };
 
 export type MutationImportCollaboraDocumentArgs = {
@@ -6606,14 +6548,6 @@ export type MutationRevokeCredentialFromActorArgs = {
   resourceID?: InputMaybe<Scalars["UUID"]["input"]>;
 };
 
-export type MutationRevokeCredentialFromOrganizationArgs = {
-  revokeCredentialData: RevokeOrganizationAuthorizationCredentialInput;
-};
-
-export type MutationRevokeCredentialFromUserArgs = {
-  revokeCredentialData: RevokeAuthorizationCredentialInput;
-};
-
 export type MutationRevokeLicensePlanFromAccountArgs = {
   planData: RevokeLicensePlanFromAccount;
 };
@@ -6688,6 +6622,10 @@ export type MutationTransferVirtualContributorToAccountArgs = {
 
 export type MutationUnsubscribeFromPushNotificationsArgs = {
   subscriptionData: UnsubscribeFromPushNotificationsInput;
+};
+
+export type MutationUpdateActorNameIdArgs = {
+  updateData: UpdateActorNameIdInput;
 };
 
 export type MutationUpdateApplicationFormOnRoleSetArgs = {
@@ -6814,10 +6752,6 @@ export type MutationUpdateOrganizationArgs = {
   organizationData: UpdateOrganizationInput;
 };
 
-export type MutationUpdateOrganizationPlatformSettingsArgs = {
-  organizationData: UpdateOrganizationPlatformSettingsInput;
-};
-
 export type MutationUpdateOrganizationSettingsArgs = {
   settingsData: UpdateOrganizationSettingsInput;
 };
@@ -6848,10 +6782,6 @@ export type MutationUpdateReferenceArgs = {
 
 export type MutationUpdateSpaceArgs = {
   spaceData: UpdateSpaceInput;
-};
-
-export type MutationUpdateSpacePlatformSettingsArgs = {
-  updateData: UpdateSpacePlatformSettingsInput;
 };
 
 export type MutationUpdateSpaceSettingsArgs = {
@@ -6900,10 +6830,6 @@ export type MutationUpdateUserArgs = {
 
 export type MutationUpdateUserGroupArgs = {
   userGroupData: UpdateUserGroupInput;
-};
-
-export type MutationUpdateUserPlatformSettingsArgs = {
-  updateData: UpdateUserPlatformSettingsInput;
 };
 
 export type MutationUpdateUserSettingsArgs = {
@@ -7470,7 +7396,7 @@ export type PlatformAdminQueryResults = {
   userEmailChangeAuditEntries: UserEmailChangeAuditEntries;
   /** Retrieve all Users on the Platform. This is only available to Platform Admins. */
   users: PaginatedUsers;
-  /** The singleton virtual-assistant actor, including its current admin capability grant and ID. Only available to Platform Operations Admins (and legacy holders); the discovery path for updateAssistantActorCapabilities. */
+  /** The singleton virtual-assistant actor, including its current admin capability grant and ID. Only available to Platform Operations Admins; the discovery path for updateAssistantActorCapabilities. */
   virtualAssistant: VirtualAssistant;
   /** Retrieve all Virtual Contributors on the Platform. This is only available to Platform Admins. */
   virtualContributors: Array<VirtualContributor>;
@@ -8453,14 +8379,6 @@ export type ResendPlatformInvitationInput = {
   ID: Scalars["UUID"]["input"];
 };
 
-export type RevokeAuthorizationCredentialInput = {
-  /** The resource to which access is being removed. */
-  resourceID: Scalars["String"]["input"];
-  type: AuthorizationCredential;
-  /** The user from whom the credential is being removed. */
-  userID: Scalars["UUID"]["input"];
-};
-
 export type RevokeLicensePlanFromAccount = {
   /** The ID of the Account to assign the LicensePlan to. */
   accountID: Scalars["UUID"]["input"];
@@ -8481,14 +8399,6 @@ export type RevokeLicensePlanFromSpace = {
 
 export type RevokeMcpApiKeyInput = {
   keyID: Scalars["UUID"]["input"];
-};
-
-export type RevokeOrganizationAuthorizationCredentialInput = {
-  /** The Organization from whom the credential is being removed. */
-  organizationID: Scalars["UUID"]["input"];
-  /** The resource to which access is being removed. */
-  resourceID?: InputMaybe<Scalars["UUID"]["input"]>;
-  type: AuthorizationCredential;
 };
 
 export type Role = {
@@ -8524,20 +8434,11 @@ export enum RoleName {
   FeatureOrganizationCreator = "FEATURE_ORGANIZATION_CREATOR",
   FeatureVcCampaign = "FEATURE_VC_CAMPAIGN",
   FeatureVirtualAssistant = "FEATURE_VIRTUAL_ASSISTANT",
-  GlobalAdmin = "GLOBAL_ADMIN",
-  GlobalCommunityReader = "GLOBAL_COMMUNITY_READER",
-  GlobalLicenseManager = "GLOBAL_LICENSE_MANAGER",
-  GlobalPlatformManager = "GLOBAL_PLATFORM_MANAGER",
-  GlobalSpacesReader = "GLOBAL_SPACES_READER",
-  GlobalSupport = "GLOBAL_SUPPORT",
-  GlobalSupportManager = "GLOBAL_SUPPORT_MANAGER",
   Guest = "GUEST",
   Lead = "LEAD",
   Member = "MEMBER",
   Owner = "OWNER",
-  PlatformAssistantAccess = "PLATFORM_ASSISTANT_ACCESS",
   PlatformAuditReader = "PLATFORM_AUDIT_READER",
-  PlatformBetaTester = "PLATFORM_BETA_TESTER",
   PlatformContentFullAccess = "PLATFORM_CONTENT_FULL_ACCESS",
   PlatformLicenseManager = "PLATFORM_LICENSE_MANAGER",
   PlatformOperationsAdmin = "PLATFORM_OPERATIONS_ADMIN",
@@ -8547,7 +8448,6 @@ export enum RoleName {
   PlatformSpacesReader = "PLATFORM_SPACES_READER",
   PlatformSupport = "PLATFORM_SUPPORT",
   PlatformUsersAdmin = "PLATFORM_USERS_ADMIN",
-  PlatformVcCampaign = "PLATFORM_VC_CAMPAIGN",
   Registered = "REGISTERED",
 }
 
@@ -9903,6 +9803,13 @@ export type UnsubscribeFromPushNotificationsInput = {
   subscriptionID: Scalars["UUID"]["input"];
 };
 
+export type UpdateActorNameIdInput = {
+  /** The Actor (User, Organization or VirtualContributor) to rename. */
+  actorID: Scalars["UUID"]["input"];
+  /** The new URL path (nameID) for the Actor. */
+  nameID: Scalars["NameID"]["input"];
+};
+
 export type UpdateAiPersonaInput = {
   ID: Scalars["UUID"]["input"];
   engine?: InputMaybe<AiPersonaEngine>;
@@ -10366,13 +10273,6 @@ export type UpdateOrganizationInput = {
   website?: InputMaybe<Scalars["String"]["input"]>;
 };
 
-export type UpdateOrganizationPlatformSettingsInput = {
-  /** Upate the URL path for the Organization. */
-  nameID: Scalars["NameID"]["input"];
-  /** The ID of the Organization to update. */
-  organizationID: Scalars["UUID"]["input"];
-};
-
 export type UpdateOrganizationSettingsEntityInput = {
   membership?: InputMaybe<UpdateOrganizationSettingsMembershipInput>;
   privacy?: InputMaybe<UpdateOrganizationSettingsPrivacyInput>;
@@ -10477,15 +10377,8 @@ export type UpdateSpaceInput = {
   ID: Scalars["UUID"]["input"];
   /** Update the Space About information. */
   about?: InputMaybe<UpdateSpaceAboutInput>;
-};
-
-export type UpdateSpacePlatformSettingsInput = {
-  /** Upate the URL path for the Space. */
+  /** Update the URL path (nameID) for the Space. Protected: additionally requires the UPDATE_NAMEID privilege. */
   nameID?: InputMaybe<Scalars["NameID"]["input"]>;
-  /** The identifier for the Space whose license etc is to be updated. */
-  spaceID: Scalars["UUID"]["input"];
-  /** Visibility of the Space, only on L0 spaces. */
-  visibility?: InputMaybe<SpaceVisibility>;
 };
 
 export type UpdateSpaceSettingsCollaborationInput = {
@@ -10632,14 +10525,6 @@ export type UpdateUserInput = {
   profileData?: InputMaybe<UpdateProfileInput>;
   /** Set this user profile as being used as a service account or not. */
   serviceProfile?: InputMaybe<Scalars["Boolean"]["input"]>;
-};
-
-export type UpdateUserPlatformSettingsInput = {
-  email?: InputMaybe<Scalars["String"]["input"]>;
-  /** Upate the URL path for the User. */
-  nameID?: InputMaybe<Scalars["NameID"]["input"]>;
-  /** The identifier for the User whose platform managed information is to be updated. */
-  userID: Scalars["String"]["input"];
 };
 
 export type UpdateUserSettingsAssistantInput = {
@@ -12395,6 +12280,7 @@ export type ResolversTypes = {
   AddVisualToMediaGalleryInput: SchemaTypes.AddVisualToMediaGalleryInput;
   AdminCommunicationReconcileForumHierarchyInput: SchemaTypes.AdminCommunicationReconcileForumHierarchyInput;
   AdminRevokeMcpApiKeyInput: SchemaTypes.AdminRevokeMcpApiKeyInput;
+  AdminUpdateSpaceVisibilityInput: SchemaTypes.AdminUpdateSpaceVisibilityInput;
   AdminUserEmailChangeDriftResolveInput: SchemaTypes.AdminUserEmailChangeDriftResolveInput;
   AdminUserEmailChangeInput: SchemaTypes.AdminUserEmailChangeInput;
   AiPersona: ResolverTypeWrapper<SchemaTypes.AiPersona>;
@@ -12869,8 +12755,6 @@ export type ResolversTypes = {
   Geo: ResolverTypeWrapper<SchemaTypes.Geo>;
   GeoLocation: ResolverTypeWrapper<SchemaTypes.GeoLocation>;
   GrantAssistantActorCapabilitiesInput: SchemaTypes.GrantAssistantActorCapabilitiesInput;
-  GrantAuthorizationCredentialInput: SchemaTypes.GrantAuthorizationCredentialInput;
-  GrantOrganizationAuthorizationCredentialInput: SchemaTypes.GrantOrganizationAuthorizationCredentialInput;
   Groupable: ResolverTypeWrapper<
     ResolversInterfaceTypes<ResolversTypes>["Groupable"]
   >;
@@ -13567,11 +13451,9 @@ export type ResolversTypes = {
   ReplaceCollaboraDocumentInput: SchemaTypes.ReplaceCollaboraDocumentInput;
   ReplaceWhiteboardContentFromSourceInput: SchemaTypes.ReplaceWhiteboardContentFromSourceInput;
   ResendPlatformInvitationInput: SchemaTypes.ResendPlatformInvitationInput;
-  RevokeAuthorizationCredentialInput: SchemaTypes.RevokeAuthorizationCredentialInput;
   RevokeLicensePlanFromAccount: SchemaTypes.RevokeLicensePlanFromAccount;
   RevokeLicensePlanFromSpace: SchemaTypes.RevokeLicensePlanFromSpace;
   RevokeMcpApiKeyInput: SchemaTypes.RevokeMcpApiKeyInput;
-  RevokeOrganizationAuthorizationCredentialInput: SchemaTypes.RevokeOrganizationAuthorizationCredentialInput;
   Role: ResolverTypeWrapper<SchemaTypes.Role>;
   RoleName: SchemaTypes.RoleName;
   RoleSet: ResolverTypeWrapper<
@@ -13854,6 +13736,7 @@ export type ResolversTypes = {
   TransferCalloutInput: SchemaTypes.TransferCalloutInput;
   UUID: ResolverTypeWrapper<SchemaTypes.Scalars["UUID"]["output"]>;
   UnsubscribeFromPushNotificationsInput: SchemaTypes.UnsubscribeFromPushNotificationsInput;
+  UpdateActorNameIDInput: SchemaTypes.UpdateActorNameIdInput;
   UpdateAiPersonaInput: SchemaTypes.UpdateAiPersonaInput;
   UpdateApplicationFormOnRoleSetInput: SchemaTypes.UpdateApplicationFormOnRoleSetInput;
   UpdateBaselineLicensePlanOnAccount: SchemaTypes.UpdateBaselineLicensePlanOnAccount;
@@ -13903,7 +13786,6 @@ export type ResolversTypes = {
   UpdateMemoEntityInput: SchemaTypes.UpdateMemoEntityInput;
   UpdateNotificationStateInput: SchemaTypes.UpdateNotificationStateInput;
   UpdateOrganizationInput: SchemaTypes.UpdateOrganizationInput;
-  UpdateOrganizationPlatformSettingsInput: SchemaTypes.UpdateOrganizationPlatformSettingsInput;
   UpdateOrganizationSettingsEntityInput: SchemaTypes.UpdateOrganizationSettingsEntityInput;
   UpdateOrganizationSettingsInput: SchemaTypes.UpdateOrganizationSettingsInput;
   UpdateOrganizationSettingsMembershipInput: SchemaTypes.UpdateOrganizationSettingsMembershipInput;
@@ -13919,7 +13801,6 @@ export type ResolversTypes = {
   UpdateReferenceInput: SchemaTypes.UpdateReferenceInput;
   UpdateSpaceAboutInput: SchemaTypes.UpdateSpaceAboutInput;
   UpdateSpaceInput: SchemaTypes.UpdateSpaceInput;
-  UpdateSpacePlatformSettingsInput: SchemaTypes.UpdateSpacePlatformSettingsInput;
   UpdateSpaceSettingsCollaborationInput: SchemaTypes.UpdateSpaceSettingsCollaborationInput;
   UpdateSpaceSettingsEntityInput: SchemaTypes.UpdateSpaceSettingsEntityInput;
   UpdateSpaceSettingsInput: SchemaTypes.UpdateSpaceSettingsInput;
@@ -13937,7 +13818,6 @@ export type ResolversTypes = {
   UpdateTemplateInput: SchemaTypes.UpdateTemplateInput;
   UpdateUserGroupInput: SchemaTypes.UpdateUserGroupInput;
   UpdateUserInput: SchemaTypes.UpdateUserInput;
-  UpdateUserPlatformSettingsInput: SchemaTypes.UpdateUserPlatformSettingsInput;
   UpdateUserSettingsAssistantInput: SchemaTypes.UpdateUserSettingsAssistantInput;
   UpdateUserSettingsCommunicationInput: SchemaTypes.UpdateUserSettingsCommunicationInput;
   UpdateUserSettingsDashboardInput: SchemaTypes.UpdateUserSettingsDashboardInput;
@@ -14235,6 +14115,7 @@ export type ResolversParentTypes = {
   AddVisualToMediaGalleryInput: SchemaTypes.AddVisualToMediaGalleryInput;
   AdminCommunicationReconcileForumHierarchyInput: SchemaTypes.AdminCommunicationReconcileForumHierarchyInput;
   AdminRevokeMcpApiKeyInput: SchemaTypes.AdminRevokeMcpApiKeyInput;
+  AdminUpdateSpaceVisibilityInput: SchemaTypes.AdminUpdateSpaceVisibilityInput;
   AdminUserEmailChangeDriftResolveInput: SchemaTypes.AdminUserEmailChangeDriftResolveInput;
   AdminUserEmailChangeInput: SchemaTypes.AdminUserEmailChangeInput;
   AiPersona: SchemaTypes.AiPersona;
@@ -14631,8 +14512,6 @@ export type ResolversParentTypes = {
   Geo: SchemaTypes.Geo;
   GeoLocation: SchemaTypes.GeoLocation;
   GrantAssistantActorCapabilitiesInput: SchemaTypes.GrantAssistantActorCapabilitiesInput;
-  GrantAuthorizationCredentialInput: SchemaTypes.GrantAuthorizationCredentialInput;
-  GrantOrganizationAuthorizationCredentialInput: SchemaTypes.GrantOrganizationAuthorizationCredentialInput;
   Groupable: ResolversInterfaceTypes<ResolversParentTypes>["Groupable"];
   ID: SchemaTypes.Scalars["ID"]["output"];
   ISearchCategoryResult: Omit<SchemaTypes.ISearchCategoryResult, "results"> & {
@@ -15221,11 +15100,9 @@ export type ResolversParentTypes = {
   ReplaceCollaboraDocumentInput: SchemaTypes.ReplaceCollaboraDocumentInput;
   ReplaceWhiteboardContentFromSourceInput: SchemaTypes.ReplaceWhiteboardContentFromSourceInput;
   ResendPlatformInvitationInput: SchemaTypes.ResendPlatformInvitationInput;
-  RevokeAuthorizationCredentialInput: SchemaTypes.RevokeAuthorizationCredentialInput;
   RevokeLicensePlanFromAccount: SchemaTypes.RevokeLicensePlanFromAccount;
   RevokeLicensePlanFromSpace: SchemaTypes.RevokeLicensePlanFromSpace;
   RevokeMcpApiKeyInput: SchemaTypes.RevokeMcpApiKeyInput;
-  RevokeOrganizationAuthorizationCredentialInput: SchemaTypes.RevokeOrganizationAuthorizationCredentialInput;
   Role: SchemaTypes.Role;
   RoleSet: Omit<
     SchemaTypes.RoleSet,
@@ -15454,6 +15331,7 @@ export type ResolversParentTypes = {
   TransferCalloutInput: SchemaTypes.TransferCalloutInput;
   UUID: SchemaTypes.Scalars["UUID"]["output"];
   UnsubscribeFromPushNotificationsInput: SchemaTypes.UnsubscribeFromPushNotificationsInput;
+  UpdateActorNameIDInput: SchemaTypes.UpdateActorNameIdInput;
   UpdateAiPersonaInput: SchemaTypes.UpdateAiPersonaInput;
   UpdateApplicationFormOnRoleSetInput: SchemaTypes.UpdateApplicationFormOnRoleSetInput;
   UpdateBaselineLicensePlanOnAccount: SchemaTypes.UpdateBaselineLicensePlanOnAccount;
@@ -15503,7 +15381,6 @@ export type ResolversParentTypes = {
   UpdateMemoEntityInput: SchemaTypes.UpdateMemoEntityInput;
   UpdateNotificationStateInput: SchemaTypes.UpdateNotificationStateInput;
   UpdateOrganizationInput: SchemaTypes.UpdateOrganizationInput;
-  UpdateOrganizationPlatformSettingsInput: SchemaTypes.UpdateOrganizationPlatformSettingsInput;
   UpdateOrganizationSettingsEntityInput: SchemaTypes.UpdateOrganizationSettingsEntityInput;
   UpdateOrganizationSettingsInput: SchemaTypes.UpdateOrganizationSettingsInput;
   UpdateOrganizationSettingsMembershipInput: SchemaTypes.UpdateOrganizationSettingsMembershipInput;
@@ -15519,7 +15396,6 @@ export type ResolversParentTypes = {
   UpdateReferenceInput: SchemaTypes.UpdateReferenceInput;
   UpdateSpaceAboutInput: SchemaTypes.UpdateSpaceAboutInput;
   UpdateSpaceInput: SchemaTypes.UpdateSpaceInput;
-  UpdateSpacePlatformSettingsInput: SchemaTypes.UpdateSpacePlatformSettingsInput;
   UpdateSpaceSettingsCollaborationInput: SchemaTypes.UpdateSpaceSettingsCollaborationInput;
   UpdateSpaceSettingsEntityInput: SchemaTypes.UpdateSpaceSettingsEntityInput;
   UpdateSpaceSettingsInput: SchemaTypes.UpdateSpaceSettingsInput;
@@ -15537,7 +15413,6 @@ export type ResolversParentTypes = {
   UpdateTemplateInput: SchemaTypes.UpdateTemplateInput;
   UpdateUserGroupInput: SchemaTypes.UpdateUserGroupInput;
   UpdateUserInput: SchemaTypes.UpdateUserInput;
-  UpdateUserPlatformSettingsInput: SchemaTypes.UpdateUserPlatformSettingsInput;
   UpdateUserSettingsAssistantInput: SchemaTypes.UpdateUserSettingsAssistantInput;
   UpdateUserSettingsCommunicationInput: SchemaTypes.UpdateUserSettingsCommunicationInput;
   UpdateUserSettingsDashboardInput: SchemaTypes.UpdateUserSettingsDashboardInput;
@@ -21476,6 +21351,15 @@ export type MutationResolvers<
     ParentType,
     ContextType
   >;
+  adminUpdateSpaceVisibility?: Resolver<
+    ResolversTypes["Space"],
+    ParentType,
+    ContextType,
+    RequireFields<
+      SchemaTypes.MutationAdminUpdateSpaceVisibilityArgs,
+      "updateData"
+    >
+  >;
   adminUserAccountDelete?: Resolver<
     ResolversTypes["User"],
     ParentType,
@@ -21498,20 +21382,6 @@ export type MutationResolvers<
     RequireFields<
       SchemaTypes.MutationAdminUserEmailChangeDriftResolveArgs,
       "adminUserEmailChangeDriftResolveData"
-    >
-  >;
-  adminWingbackCreateTestCustomer?: Resolver<
-    ResolversTypes["String"],
-    ParentType,
-    ContextType
-  >;
-  adminWingbackGetCustomerEntitlements?: Resolver<
-    Array<ResolversTypes["LicensingGrantedEntitlement"]>,
-    ParentType,
-    ContextType,
-    RequireFields<
-      SchemaTypes.MutationAdminWingbackGetCustomerEntitlementsArgs,
-      "customerID"
     >
   >;
   aiServerAuthorizationPolicyReset?: Resolver<
@@ -21923,12 +21793,6 @@ export type MutationResolvers<
       "draftData"
     >
   >;
-  createWingbackAccount?: Resolver<
-    ResolversTypes["String"],
-    ParentType,
-    ContextType,
-    RequireFields<SchemaTypes.MutationCreateWingbackAccountArgs, "accountID">
-  >;
   deleteApplication?: Resolver<
     ResolversTypes["Application"],
     ParentType,
@@ -22173,24 +22037,6 @@ export type MutationResolvers<
     RequireFields<
       SchemaTypes.MutationGrantCredentialToActorArgs,
       "actorID" | "credentialType"
-    >
-  >;
-  grantCredentialToOrganization?: Resolver<
-    ResolversTypes["Organization"],
-    ParentType,
-    ContextType,
-    RequireFields<
-      SchemaTypes.MutationGrantCredentialToOrganizationArgs,
-      "grantCredentialData"
-    >
-  >;
-  grantCredentialToUser?: Resolver<
-    ResolversTypes["User"],
-    ParentType,
-    ContextType,
-    RequireFields<
-      SchemaTypes.MutationGrantCredentialToUserArgs,
-      "grantCredentialData"
     >
   >;
   importCollaboraDocument?: Resolver<
@@ -22507,24 +22353,6 @@ export type MutationResolvers<
       "actorID" | "credentialType"
     >
   >;
-  revokeCredentialFromOrganization?: Resolver<
-    ResolversTypes["Organization"],
-    ParentType,
-    ContextType,
-    RequireFields<
-      SchemaTypes.MutationRevokeCredentialFromOrganizationArgs,
-      "revokeCredentialData"
-    >
-  >;
-  revokeCredentialFromUser?: Resolver<
-    ResolversTypes["User"],
-    ParentType,
-    ContextType,
-    RequireFields<
-      SchemaTypes.MutationRevokeCredentialFromUserArgs,
-      "revokeCredentialData"
-    >
-  >;
   revokeLicensePlanFromAccount?: Resolver<
     ResolversTypes["Account"],
     ParentType,
@@ -22680,6 +22508,12 @@ export type MutationResolvers<
       SchemaTypes.MutationUnsubscribeFromPushNotificationsArgs,
       "subscriptionData"
     >
+  >;
+  updateActorNameID?: Resolver<
+    ResolversTypes["Actor"],
+    ParentType,
+    ContextType,
+    RequireFields<SchemaTypes.MutationUpdateActorNameIdArgs, "updateData">
   >;
   updateApplicationFormOnRoleSet?: Resolver<
     ResolversTypes["RoleSet"],
@@ -22927,15 +22761,6 @@ export type MutationResolvers<
       "organizationData"
     >
   >;
-  updateOrganizationPlatformSettings?: Resolver<
-    ResolversTypes["Organization"],
-    ParentType,
-    ContextType,
-    RequireFields<
-      SchemaTypes.MutationUpdateOrganizationPlatformSettingsArgs,
-      "organizationData"
-    >
-  >;
   updateOrganizationSettings?: Resolver<
     ResolversTypes["Organization"],
     ParentType,
@@ -22989,15 +22814,6 @@ export type MutationResolvers<
     ParentType,
     ContextType,
     RequireFields<SchemaTypes.MutationUpdateSpaceArgs, "spaceData">
-  >;
-  updateSpacePlatformSettings?: Resolver<
-    ResolversTypes["Space"],
-    ParentType,
-    ContextType,
-    RequireFields<
-      SchemaTypes.MutationUpdateSpacePlatformSettingsArgs,
-      "updateData"
-    >
   >;
   updateSpaceSettings?: Resolver<
     ResolversTypes["Space"],
@@ -23085,15 +22901,6 @@ export type MutationResolvers<
     ParentType,
     ContextType,
     RequireFields<SchemaTypes.MutationUpdateUserGroupArgs, "userGroupData">
-  >;
-  updateUserPlatformSettings?: Resolver<
-    ResolversTypes["User"],
-    ParentType,
-    ContextType,
-    RequireFields<
-      SchemaTypes.MutationUpdateUserPlatformSettingsArgs,
-      "updateData"
-    >
   >;
   updateUserSettings?: Resolver<
     ResolversTypes["User"],
@@ -91611,12 +91418,6 @@ export type CreateTemplateFromContentSpaceMutation = {
   createTemplateFromContentSpace: { id: string };
 };
 
-export type CreateWingbackAccountMutationVariables = SchemaTypes.Exact<{
-  accountID: SchemaTypes.Scalars["UUID"]["input"];
-}>;
-
-export type CreateWingbackAccountMutation = { createWingbackAccount: string };
-
 export type DeleteContributionMutationVariables = SchemaTypes.Exact<{
   deleteData: SchemaTypes.DeleteContributionInput;
 }>;
@@ -91631,22 +91432,6 @@ export type GrantCredentialToActorMutationVariables = SchemaTypes.Exact<{
 
 export type GrantCredentialToActorMutation = {
   grantCredentialToActor: { id: string };
-};
-
-export type GrantCredentialToOrganizationMutationVariables = SchemaTypes.Exact<{
-  grantCredentialData: SchemaTypes.GrantOrganizationAuthorizationCredentialInput;
-}>;
-
-export type GrantCredentialToOrganizationMutation = {
-  grantCredentialToOrganization: { id: string };
-};
-
-export type GrantCredentialToUserMutationVariables = SchemaTypes.Exact<{
-  grantCredentialData: SchemaTypes.GrantAuthorizationCredentialInput;
-}>;
-
-export type GrantCredentialToUserMutation = {
-  grantCredentialToUser: { id: string };
 };
 
 export type LicenseResetOnAccountMutationVariables = SchemaTypes.Exact<{
@@ -91916,11 +91701,11 @@ export type PlatformRolesUpdateLicensePlanMutation = {
 
 export type PlatformRolesUpdateSpaceVisibilityMutationVariables =
   SchemaTypes.Exact<{
-    updateData: SchemaTypes.UpdateSpacePlatformSettingsInput;
+    updateData: SchemaTypes.AdminUpdateSpaceVisibilityInput;
   }>;
 
 export type PlatformRolesUpdateSpaceVisibilityMutation = {
-  updateSpacePlatformSettings: { id: string };
+  adminUpdateSpaceVisibility: { id: string };
 };
 
 export type PlatformRolesUpdateTemplateMutationVariables = SchemaTypes.Exact<{
@@ -91983,23 +91768,6 @@ export type RevokeCredentialFromActorMutation = {
   revokeCredentialFromActor: boolean;
 };
 
-export type RevokeCredentialFromOrganizationMutationVariables =
-  SchemaTypes.Exact<{
-    revokeCredentialData: SchemaTypes.RevokeOrganizationAuthorizationCredentialInput;
-  }>;
-
-export type RevokeCredentialFromOrganizationMutation = {
-  revokeCredentialFromOrganization: { id: string };
-};
-
-export type RevokeCredentialFromUserMutationVariables = SchemaTypes.Exact<{
-  revokeCredentialData: SchemaTypes.RevokeAuthorizationCredentialInput;
-}>;
-
-export type RevokeCredentialFromUserMutation = {
-  revokeCredentialFromUser: { id: string };
-};
-
 export type SetPlatformWellKnownVirtualContributorMutationVariables =
   SchemaTypes.Exact<{
     mappingData: SchemaTypes.SetPlatformWellKnownVirtualContributorInput;
@@ -92010,6 +91778,12 @@ export type SetPlatformWellKnownVirtualContributorMutation = {
     mappings: Array<{ wellKnown: SchemaTypes.VirtualContributorWellKnown }>;
   };
 };
+
+export type UpdateActorNameIdMutationVariables = SchemaTypes.Exact<{
+  updateData: SchemaTypes.UpdateActorNameIdInput;
+}>;
+
+export type UpdateActorNameIdMutation = { updateActorNameID: { id: string } };
 
 export type UpdateAssistantActorCapabilitiesMutationVariables =
   SchemaTypes.Exact<{
@@ -92105,6 +91879,19 @@ export type RemovePlatformRoleFromUserMutation = {
   };
 };
 
+export type AdminUpdateSpaceVisibilityMutationVariables = SchemaTypes.Exact<{
+  spaceId: SchemaTypes.Scalars["UUID"]["input"];
+  visibility: SchemaTypes.SpaceVisibility;
+}>;
+
+export type AdminUpdateSpaceVisibilityMutation = {
+  adminUpdateSpaceVisibility: {
+    __typename: "Space";
+    id: string;
+    visibility: SchemaTypes.SpaceVisibility;
+  };
+};
+
 export type CreateInnovationHubMutationVariables = SchemaTypes.Exact<{
   input: SchemaTypes.CreateInnovationHubOnAccountInput;
 }>;
@@ -92161,33 +91948,13 @@ export type DeleteInnovationPackMutation = {
   deleteInnovationPack: { __typename: "InnovationPack"; id: string };
 };
 
-export type UpdateSpacePlatformSettingsMutationVariables = SchemaTypes.Exact<{
+export type UpdateSpaceNameIdMutationVariables = SchemaTypes.Exact<{
   spaceId: SchemaTypes.Scalars["UUID"]["input"];
   nameId: SchemaTypes.Scalars["NameID"]["input"];
-  visibility: SchemaTypes.SpaceVisibility;
 }>;
 
-export type UpdateSpacePlatformSettingsMutation = {
-  updateSpacePlatformSettings: {
-    __typename: "Space";
-    id: string;
-    nameID: string;
-    visibility: SchemaTypes.SpaceVisibility;
-  };
-};
-
-export type UpdateSpaceVisibilityPlatformSettingsMutationVariables =
-  SchemaTypes.Exact<{
-    spaceId: SchemaTypes.Scalars["UUID"]["input"];
-    visibility: SchemaTypes.SpaceVisibility;
-  }>;
-
-export type UpdateSpaceVisibilityPlatformSettingsMutation = {
-  updateSpacePlatformSettings: {
-    __typename: "Space";
-    id: string;
-    visibility: SchemaTypes.SpaceVisibility;
-  };
+export type UpdateSpaceNameIdMutation = {
+  updateSpace: { __typename: "Space"; id: string; nameID: string };
 };
 
 export type SubscribeToPushNotificationsMutationVariables = SchemaTypes.Exact<{
@@ -123539,11 +123306,6 @@ export const CreateTemplateFromContentSpaceDocument = gql`
     }
   }
 `;
-export const CreateWingbackAccountDocument = gql`
-  mutation createWingbackAccount($accountID: UUID!) {
-    createWingbackAccount(accountID: $accountID)
-  }
-`;
 export const DeleteContributionDocument = gql`
   mutation deleteContribution($deleteData: DeleteContributionInput!) {
     deleteContribution(deleteData: $deleteData) {
@@ -123562,24 +123324,6 @@ export const GrantCredentialToActorDocument = gql`
       credentialType: $credentialType
       resourceID: $resourceID
     ) {
-      id
-    }
-  }
-`;
-export const GrantCredentialToOrganizationDocument = gql`
-  mutation grantCredentialToOrganization(
-    $grantCredentialData: GrantOrganizationAuthorizationCredentialInput!
-  ) {
-    grantCredentialToOrganization(grantCredentialData: $grantCredentialData) {
-      id
-    }
-  }
-`;
-export const GrantCredentialToUserDocument = gql`
-  mutation grantCredentialToUser(
-    $grantCredentialData: GrantAuthorizationCredentialInput!
-  ) {
-    grantCredentialToUser(grantCredentialData: $grantCredentialData) {
       id
     }
   }
@@ -123853,9 +123597,9 @@ export const PlatformRolesUpdateLicensePlanDocument = gql`
 `;
 export const PlatformRolesUpdateSpaceVisibilityDocument = gql`
   mutation PlatformRolesUpdateSpaceVisibility(
-    $updateData: UpdateSpacePlatformSettingsInput!
+    $updateData: AdminUpdateSpaceVisibilityInput!
   ) {
-    updateSpacePlatformSettings(updateData: $updateData) {
+    adminUpdateSpaceVisibility(updateData: $updateData) {
       id
     }
   }
@@ -123911,26 +123655,6 @@ export const RevokeCredentialFromActorDocument = gql`
     )
   }
 `;
-export const RevokeCredentialFromOrganizationDocument = gql`
-  mutation revokeCredentialFromOrganization(
-    $revokeCredentialData: RevokeOrganizationAuthorizationCredentialInput!
-  ) {
-    revokeCredentialFromOrganization(
-      revokeCredentialData: $revokeCredentialData
-    ) {
-      id
-    }
-  }
-`;
-export const RevokeCredentialFromUserDocument = gql`
-  mutation revokeCredentialFromUser(
-    $revokeCredentialData: RevokeAuthorizationCredentialInput!
-  ) {
-    revokeCredentialFromUser(revokeCredentialData: $revokeCredentialData) {
-      id
-    }
-  }
-`;
 export const SetPlatformWellKnownVirtualContributorDocument = gql`
   mutation setPlatformWellKnownVirtualContributor(
     $mappingData: SetPlatformWellKnownVirtualContributorInput!
@@ -123939,6 +123663,13 @@ export const SetPlatformWellKnownVirtualContributorDocument = gql`
       mappings {
         wellKnown
       }
+    }
+  }
+`;
+export const UpdateActorNameIdDocument = gql`
+  mutation updateActorNameID($updateData: UpdateActorNameIDInput!) {
+    updateActorNameID(updateData: $updateData) {
+      id
     }
   }
 `;
@@ -124017,6 +123748,20 @@ export const RemovePlatformRoleFromUserDocument = gql`
   }
   ${UserDataLightFragmentDoc}
 `;
+export const AdminUpdateSpaceVisibilityDocument = gql`
+  mutation AdminUpdateSpaceVisibility(
+    $spaceId: UUID!
+    $visibility: SpaceVisibility!
+  ) {
+    adminUpdateSpaceVisibility(
+      updateData: { spaceID: $spaceId, visibility: $visibility }
+    ) {
+      id
+      visibility
+      __typename
+    }
+  }
+`;
 export const CreateInnovationHubDocument = gql`
   mutation CreateInnovationHub($input: CreateInnovationHubOnAccountInput!) {
     createInnovationHub(createData: $input) {
@@ -124080,36 +123825,11 @@ export const DeleteInnovationPackDocument = gql`
     }
   }
 `;
-export const UpdateSpacePlatformSettingsDocument = gql`
-  mutation UpdateSpacePlatformSettings(
-    $spaceId: UUID!
-    $nameId: NameID!
-    $visibility: SpaceVisibility!
-  ) {
-    updateSpacePlatformSettings(
-      updateData: {
-        spaceID: $spaceId
-        nameID: $nameId
-        visibility: $visibility
-      }
-    ) {
+export const UpdateSpaceNameIdDocument = gql`
+  mutation UpdateSpaceNameId($spaceId: UUID!, $nameId: NameID!) {
+    updateSpace(spaceData: { ID: $spaceId, nameID: $nameId }) {
       id
       nameID
-      visibility
-      __typename
-    }
-  }
-`;
-export const UpdateSpaceVisibilityPlatformSettingsDocument = gql`
-  mutation UpdateSpaceVisibilityPlatformSettings(
-    $spaceId: UUID!
-    $visibility: SpaceVisibility!
-  ) {
-    updateSpacePlatformSettings(
-      updateData: { spaceID: $spaceId, visibility: $visibility }
-    ) {
-      id
-      visibility
       __typename
     }
   }
@@ -127428,18 +127148,9 @@ const CreateContributionOnCalloutIdDocumentString = print(
 const CreateTemplateFromContentSpaceDocumentString = print(
   CreateTemplateFromContentSpaceDocument
 );
-const CreateWingbackAccountDocumentString = print(
-  CreateWingbackAccountDocument
-);
 const DeleteContributionDocumentString = print(DeleteContributionDocument);
 const GrantCredentialToActorDocumentString = print(
   GrantCredentialToActorDocument
-);
-const GrantCredentialToOrganizationDocumentString = print(
-  GrantCredentialToOrganizationDocument
-);
-const GrantCredentialToUserDocumentString = print(
-  GrantCredentialToUserDocument
 );
 const LicenseResetOnAccountDocumentString = print(
   LicenseResetOnAccountDocument
@@ -127555,15 +127266,10 @@ const ResetLicenseOnAccountsDocumentString = print(
 const RevokeCredentialFromActorDocumentString = print(
   RevokeCredentialFromActorDocument
 );
-const RevokeCredentialFromOrganizationDocumentString = print(
-  RevokeCredentialFromOrganizationDocument
-);
-const RevokeCredentialFromUserDocumentString = print(
-  RevokeCredentialFromUserDocument
-);
 const SetPlatformWellKnownVirtualContributorDocumentString = print(
   SetPlatformWellKnownVirtualContributorDocument
 );
+const UpdateActorNameIdDocumentString = print(UpdateActorNameIdDocument);
 const UpdateAssistantActorCapabilitiesDocumentString = print(
   UpdateAssistantActorCapabilitiesDocument
 );
@@ -127587,16 +127293,14 @@ const AssignPlatformRoleToUserDocumentString = print(
 const RemovePlatformRoleFromUserDocumentString = print(
   RemovePlatformRoleFromUserDocument
 );
+const AdminUpdateSpaceVisibilityDocumentString = print(
+  AdminUpdateSpaceVisibilityDocument
+);
 const CreateInnovationHubDocumentString = print(CreateInnovationHubDocument);
 const CreateInnovationPackDocumentString = print(CreateInnovationPackDocument);
 const DeleteInnovationHubDocumentString = print(DeleteInnovationHubDocument);
 const DeleteInnovationPackDocumentString = print(DeleteInnovationPackDocument);
-const UpdateSpacePlatformSettingsDocumentString = print(
-  UpdateSpacePlatformSettingsDocument
-);
-const UpdateSpaceVisibilityPlatformSettingsDocumentString = print(
-  UpdateSpaceVisibilityPlatformSettingsDocument
-);
+const UpdateSpaceNameIdDocumentString = print(UpdateSpaceNameIdDocument);
 const SubscribeToPushNotificationsDocumentString = print(
   SubscribeToPushNotificationsDocument
 );
@@ -130577,28 +130281,6 @@ export function getSdk(
         variables
       );
     },
-    createWingbackAccount(
-      variables: SchemaTypes.CreateWingbackAccountMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders
-    ): Promise<{
-      data: SchemaTypes.CreateWingbackAccountMutation;
-      errors?: GraphQLError[];
-      extensions?: any;
-      headers: Headers;
-      status: number;
-    }> {
-      return withWrapper(
-        (wrappedRequestHeaders) =>
-          client.rawRequest<SchemaTypes.CreateWingbackAccountMutation>(
-            CreateWingbackAccountDocumentString,
-            variables,
-            { ...requestHeaders, ...wrappedRequestHeaders }
-          ),
-        "createWingbackAccount",
-        "mutation",
-        variables
-      );
-    },
     deleteContribution(
       variables: SchemaTypes.DeleteContributionMutationVariables,
       requestHeaders?: GraphQLClientRequestHeaders
@@ -130639,50 +130321,6 @@ export function getSdk(
             { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "grantCredentialToActor",
-        "mutation",
-        variables
-      );
-    },
-    grantCredentialToOrganization(
-      variables: SchemaTypes.GrantCredentialToOrganizationMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders
-    ): Promise<{
-      data: SchemaTypes.GrantCredentialToOrganizationMutation;
-      errors?: GraphQLError[];
-      extensions?: any;
-      headers: Headers;
-      status: number;
-    }> {
-      return withWrapper(
-        (wrappedRequestHeaders) =>
-          client.rawRequest<SchemaTypes.GrantCredentialToOrganizationMutation>(
-            GrantCredentialToOrganizationDocumentString,
-            variables,
-            { ...requestHeaders, ...wrappedRequestHeaders }
-          ),
-        "grantCredentialToOrganization",
-        "mutation",
-        variables
-      );
-    },
-    grantCredentialToUser(
-      variables: SchemaTypes.GrantCredentialToUserMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders
-    ): Promise<{
-      data: SchemaTypes.GrantCredentialToUserMutation;
-      errors?: GraphQLError[];
-      extensions?: any;
-      headers: Headers;
-      status: number;
-    }> {
-      return withWrapper(
-        (wrappedRequestHeaders) =>
-          client.rawRequest<SchemaTypes.GrantCredentialToUserMutation>(
-            GrantCredentialToUserDocumentString,
-            variables,
-            { ...requestHeaders, ...wrappedRequestHeaders }
-          ),
-        "grantCredentialToUser",
         "mutation",
         variables
       );
@@ -131545,50 +131183,6 @@ export function getSdk(
         variables
       );
     },
-    revokeCredentialFromOrganization(
-      variables: SchemaTypes.RevokeCredentialFromOrganizationMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders
-    ): Promise<{
-      data: SchemaTypes.RevokeCredentialFromOrganizationMutation;
-      errors?: GraphQLError[];
-      extensions?: any;
-      headers: Headers;
-      status: number;
-    }> {
-      return withWrapper(
-        (wrappedRequestHeaders) =>
-          client.rawRequest<SchemaTypes.RevokeCredentialFromOrganizationMutation>(
-            RevokeCredentialFromOrganizationDocumentString,
-            variables,
-            { ...requestHeaders, ...wrappedRequestHeaders }
-          ),
-        "revokeCredentialFromOrganization",
-        "mutation",
-        variables
-      );
-    },
-    revokeCredentialFromUser(
-      variables: SchemaTypes.RevokeCredentialFromUserMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders
-    ): Promise<{
-      data: SchemaTypes.RevokeCredentialFromUserMutation;
-      errors?: GraphQLError[];
-      extensions?: any;
-      headers: Headers;
-      status: number;
-    }> {
-      return withWrapper(
-        (wrappedRequestHeaders) =>
-          client.rawRequest<SchemaTypes.RevokeCredentialFromUserMutation>(
-            RevokeCredentialFromUserDocumentString,
-            variables,
-            { ...requestHeaders, ...wrappedRequestHeaders }
-          ),
-        "revokeCredentialFromUser",
-        "mutation",
-        variables
-      );
-    },
     setPlatformWellKnownVirtualContributor(
       variables: SchemaTypes.SetPlatformWellKnownVirtualContributorMutationVariables,
       requestHeaders?: GraphQLClientRequestHeaders
@@ -131607,6 +131201,28 @@ export function getSdk(
             { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "setPlatformWellKnownVirtualContributor",
+        "mutation",
+        variables
+      );
+    },
+    updateActorNameID(
+      variables: SchemaTypes.UpdateActorNameIdMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.UpdateActorNameIdMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.UpdateActorNameIdMutation>(
+            UpdateActorNameIdDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "updateActorNameID",
         "mutation",
         variables
       );
@@ -131809,6 +131425,28 @@ export function getSdk(
         variables
       );
     },
+    AdminUpdateSpaceVisibility(
+      variables: SchemaTypes.AdminUpdateSpaceVisibilityMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.AdminUpdateSpaceVisibilityMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.AdminUpdateSpaceVisibilityMutation>(
+            AdminUpdateSpaceVisibilityDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "AdminUpdateSpaceVisibility",
+        "mutation",
+        variables
+      );
+    },
     CreateInnovationHub(
       variables: SchemaTypes.CreateInnovationHubMutationVariables,
       requestHeaders?: GraphQLClientRequestHeaders
@@ -131897,11 +131535,11 @@ export function getSdk(
         variables
       );
     },
-    UpdateSpacePlatformSettings(
-      variables: SchemaTypes.UpdateSpacePlatformSettingsMutationVariables,
+    UpdateSpaceNameId(
+      variables: SchemaTypes.UpdateSpaceNameIdMutationVariables,
       requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
-      data: SchemaTypes.UpdateSpacePlatformSettingsMutation;
+      data: SchemaTypes.UpdateSpaceNameIdMutation;
       errors?: GraphQLError[];
       extensions?: any;
       headers: Headers;
@@ -131909,34 +131547,12 @@ export function getSdk(
     }> {
       return withWrapper(
         (wrappedRequestHeaders) =>
-          client.rawRequest<SchemaTypes.UpdateSpacePlatformSettingsMutation>(
-            UpdateSpacePlatformSettingsDocumentString,
+          client.rawRequest<SchemaTypes.UpdateSpaceNameIdMutation>(
+            UpdateSpaceNameIdDocumentString,
             variables,
             { ...requestHeaders, ...wrappedRequestHeaders }
           ),
-        "UpdateSpacePlatformSettings",
-        "mutation",
-        variables
-      );
-    },
-    UpdateSpaceVisibilityPlatformSettings(
-      variables: SchemaTypes.UpdateSpaceVisibilityPlatformSettingsMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders
-    ): Promise<{
-      data: SchemaTypes.UpdateSpaceVisibilityPlatformSettingsMutation;
-      errors?: GraphQLError[];
-      extensions?: any;
-      headers: Headers;
-      status: number;
-    }> {
-      return withWrapper(
-        (wrappedRequestHeaders) =>
-          client.rawRequest<SchemaTypes.UpdateSpaceVisibilityPlatformSettingsMutation>(
-            UpdateSpaceVisibilityPlatformSettingsDocumentString,
-            variables,
-            { ...requestHeaders, ...wrappedRequestHeaders }
-          ),
-        "UpdateSpaceVisibilityPlatformSettings",
+        "UpdateSpaceNameId",
         "mutation",
         variables
       );

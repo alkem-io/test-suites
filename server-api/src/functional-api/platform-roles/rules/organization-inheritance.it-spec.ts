@@ -183,7 +183,7 @@ describe('organization inheritance', () => {
       };
 
       expect(forbidden('platform')).toContain('PLATFORM_AUDIT_READ');
-      expect(forbidden('roleSet')).toContain('GRANT_GLOBAL_ADMINS');
+      expect(forbidden('roleSet')).toContain('PLATFORM_ROLES_ASSIGN');
       expect(
         after.platform.filter(p => forbidden('platform').includes(p))
       ).toEqual([]);

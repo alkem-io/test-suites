@@ -214,33 +214,25 @@ describe('Pending-list confidentiality — organizations (US7-AS2, contract §6)
     expect(asApplicant?.data).toBeUndefined();
   });
 
-  test('GLOBAL_SUPPORT reads the invitation lists (it may invite) but is refused the applications (it does not decide them)', async () => {
-    // The two gates differ on purpose: whoever may create an invitation may
-    // see the pending ones (the invite dialog dedupes on them), while the
-    // applications carry the applicant's answers and are readable only by
-    // those who decide them. Platform support holds the first standing on
-    // organizations, not the second. Read one field per query — the fields
+  test('Platform Support is refused every pending list of an organisation (Slice B: it may neither invite nor decide)', async () => {
+    // workspace#027 Slice B: the invitation lists follow ROLESET_ENTRY_ROLE_INVITE,
+    // which Platform Support no longer holds on organisation role sets (the
+    // legacy global-support cascade is gone), and the applications follow the
+    // deciders' standing it never had. Read one field per query — the fields
     // are non-null, so a combined read would null all three on the refusal.
     const roleSetId = orgScenario.organization.roleSetId;
-
     const invitations = await getRoleSetPendingInvitations(
       roleSetId,
       TestUser.GLOBAL_SUPPORT_ADMIN
     );
-    expect(invitations?.error).toBeUndefined();
-    expect(
-      (invitations?.data?.lookup?.roleSet?.invitations ?? []).map(i => i.id)
-    ).toContain(orgInvitationId);
-
+    expect(invitations?.error?.errors?.[0]?.message).toMatch(/Authorization: unable to grant/);
+    expect(invitations?.data).toBeUndefined();
     const platformInvitations = await getRoleSetPendingPlatformInvitations(
       roleSetId,
       TestUser.GLOBAL_SUPPORT_ADMIN
     );
-    expect(platformInvitations?.error).toBeUndefined();
-    expect(
-      platformInvitations?.data?.lookup?.roleSet?.platformInvitations
-    ).toBeDefined();
-
+    expect(platformInvitations?.error?.errors?.[0]?.message).toMatch(/Authorization: unable to grant/);
+    expect(platformInvitations?.data).toBeUndefined();
     const applications = await getRoleSetPendingApplications(
       roleSetId,
       TestUser.GLOBAL_SUPPORT_ADMIN
@@ -249,7 +241,6 @@ describe('Pending-list confidentiality — organizations (US7-AS2, contract §6)
     expect(applications?.data).toBeUndefined();
   });
 });
-
 describe('Pending-list confidentiality — a PUBLIC Space (US7-AS3, deliberate R3 change)', () => {
   test('a plain member is refused; a Space admin reads the pending lists', async () => {
     const roleSetId = spaceScenario.space.community.roleSetId;

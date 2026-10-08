@@ -46,6 +46,14 @@ const createAndVerifyCalloutTemplate = async (
   page: Page,
   templateData: ReturnType<typeof createCalloutTemplateData>
 ) => {
+  // A memo response walks the whole contribution flow (create the memo,
+  // rename it, type into the collaborative body editor, autosave, re-read the
+  // card): ~30 s on a local stack, which is the default test budget to the
+  // second — and this describe is serial, so one timeout skips every later
+  // memo case. Give those cases the same headroom the teardown already has.
+  if (templateData.responseOptions.type === 'memos') {
+    test.setTimeout(90_000);
+  }
   // Wait for the templates page to be fully loaded
   await page
     .getByRole('button', { name: /^Collaboration tools/ })

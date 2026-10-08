@@ -66,12 +66,8 @@ asAuthor('an author creates a discussion and is offered no edit / delete on it (
 
 const asSupport = createPersonaTest(platformRoleEmail('PLATFORM_SUPPORT'));
 asSupport('PLATFORM_SUPPORT, who manages the forum, is offered edit and delete on it', async ({ page }) => {
-  // KNOWN CLIENT DEFECT (027, E28): the server grants Support
-  // PLATFORM_FORUM_MANAGE on every discussion (the API suite proves update and
-  // delete work), but the discussion page shows Support the same controls as a
-  // reader: "Add reaction" and nothing else. Expected to fail until the client
-  // keys the controls on that privilege.
-  asSupport.fail(true, 'client-web 027: discussion page ignores PLATFORM_FORUM_MANAGE');
+  // E28 (discussion page ignored PLATFORM_FORUM_MANAGE) is fixed on develop:
+  // the controls are keyed on the privilege now.
   expect(discussionUrl, 'the author test must have created the discussion').not.toBe('');
   await page.goto(discussionUrl);
   await expect(page.getByRole('heading', { name: title })).toBeVisible({ timeout: 20_000 });
