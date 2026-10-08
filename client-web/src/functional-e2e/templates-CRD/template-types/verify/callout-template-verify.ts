@@ -255,13 +255,10 @@ export const verifyPollSettings = async (
   await page.keyboard.press('Escape');
   await expect(settingsDialog).not.toBeVisible();
 
-  // Close the Edit dialog without saving. No changes were made, but Cancel can
-  // still raise a discard confirmation - dismiss it if it appears.
-  await editDialog.getByRole('button', { name: 'Cancel' }).click();
-  const discardAlert = page.getByRole('alertdialog');
-  if (await discardAlert.isVisible({ timeout: 500 }).catch(() => false)) {
-    await discardAlert.getByRole('button', { name: 'Discard' }).click();
-  }
+  // Close the Edit dialog without saving. A pristine CRD edit form offers
+  // "Done", not "Cancel" (client-web#10243), and asks no discard question.
+  await editDialog.getByRole('button', { name: 'Done', exact: true }).click();
+  await expect(page.getByRole('alertdialog')).toHaveCount(0);
   await expect(editDialog).not.toBeVisible();
 };
 
