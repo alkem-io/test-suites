@@ -88,13 +88,14 @@ Two fixes found by the live run, both in the tests:
 | API `--project templates` | 53/53 |
 | API `callout/form/form-placement-guards` | 17/17 |
 | Playwright `poll-form-save-as-template` | 2/2, twice |
-| Playwright `callout-tests` (the whole template-editor matrix, 69 tests) | **59 passed; the 10 Memos-response rows are red.** The 59 include the eight whiteboard-framing rows that carry `test.fail` (client-web#10283, no preview image), Poll 42–57 and Form 58. Of the 10 rows with Memos responses (25, 25b, 25c, 26–32), row 25 failed live. The other nine did not run (serial), and they go through the same `responseRadio(dialog, 'Memos')` step (static). client-web#10373 moved Memos behind "More ways to respond", and `forms/callout/collection/index.ts` (`responseRadio`, outside this PR) still clicks it in the strip. The describe is serial, so an unfiltered run stops at 25 and the 37 rows after it **do not run**; the 59 come from `--grep-invert "Response: Memos"` |
+| Playwright `callout-tests` (the whole template-editor matrix, 69 tests, one unfiltered run) | **69/69 passed (14.5 min).** That count includes the ten whiteboard-framing rows (3, 4, 11, 12, 19, 20, 27, 28, 35, 36), which carry `test.fail` (client-web#10283, no preview image) and failed as expected. Before the Memos fix, row 25 failed and the serial describe kept the 37 rows after it from running; the ten Memos-response rows (25–32) also passed as a group, 10/10 |
 
-Fixed in the tests by this challenge: the framing chips behind "More to add" (`selectFraming`), the exact Post `Title` locator, and the pristine edit dialog's **Done** in place of `Cancel` (client-web#10243) for Poll 42–57.
+Fixed in the tests by this challenge:
+- client-web#10373 moved the less-used chips behind menus. Framing chips are now picked from the strip or "More to add" (`selectFraming`), and response types from the strip or "More ways to respond" (`selectResponseType`, `forms/callout/collection/index.ts`; Memos is in the menu, and so is Whiteboards when the Tasks chip is shown). Both assert the chip is checked.
+- The Post `Title` locator is exact.
+- The pristine edit dialog closes with **Done** instead of `Cancel` (client-web#10243) for Poll 42–57.
 
 On 2026-10-06 the "31 passed, 1 failed" was the same truncation: rows after 25 (including Poll 42–57 and Form 58) did not run in that full run.
-
-`createTemplate` (SPACE) with `contentSpaceData` that omits `subspaces` (optional in the schema) fails server-side with `UNSPECIFIED` "templateContentSpaceData.subspaces is not iterable", for any callouts, NONE included. The helper sends `subspaces: []`.
 
 Sabotage probes (worktree only, reverted): replacing the read-back Poll/Form definition with `null` (the pre-R25 "type POLL without the poll" regression) left five cases **green** before QA-CH-01 and turns them red after it.
 

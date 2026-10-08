@@ -457,7 +457,8 @@ export const createSpaceTemplateWithCallouts = async (
             about: { profileData: { displayName } },
             settings: {},
             // Optional in the schema, but omitting it fails server-side
-            // ("templateContentSpaceData.subspaces is not iterable").
+            // ("templateContentSpaceData.subspaces is not iterable"),
+            // https://github.com/alkem-io/server/issues/6635
             subspaces: [],
             collaborationData: { calloutsSetData: { calloutsData } },
           },
