@@ -297,7 +297,7 @@ describe('R25 — a space template keeps Poll and Form definitions only (FR-027)
     expect(pollCallout.framing.type).toBe(CalloutFramingType.Poll);
     const poll = pollCallout.framing.poll;
     expect(poll).toBeDefined();
-    if (!poll) return;
+    if (!poll) throw new Error('the template POLL callout carries no poll');
     expect(pollShape(poll)).toEqual(expectedPollShape);
     expect(poll.totalVotes).toBe(0);
     expect(poll.id).not.toBe(sourcePoll.pollId);
@@ -311,7 +311,7 @@ describe('R25 — a space template keeps Poll and Form definitions only (FR-027)
     expect(formCallout.framing.type).toBe(CalloutFramingType.Form);
     const form = formCallout.framing.form;
     expect(form).toBeDefined();
-    if (!form) return;
+    if (!form) throw new Error('the template FORM callout carries no form');
     expect(formShape(form)).toEqual(expectedFormShape);
     expect(form.id).not.toBe(sourceForm.formId);
     for (const id of formIds(form)) {
@@ -339,7 +339,7 @@ describe('R25 — a Form inside a template content space never accepts responses
     const callouts = await getTemplateContentSpaceCallouts(templateId);
     const form = byName(callouts, sourceForm.displayName).framing.form;
     expect(form).toBeDefined();
-    if (!form) return;
+    if (!form) throw new Error('the template FORM callout carries no form');
 
     const result = await submitFormResponse(
       form.id,
@@ -489,7 +489,7 @@ describe('R25 — only the template may carry a Form into a new subspace (FR-027
     expect(result.error).toBeUndefined();
     const subspace = result.data?.createSubspace;
     expect(subspace?.id).toBeDefined();
-    if (!subspace) return;
+    if (!subspace) throw new Error('no subspace');
     spaceIds.push(subspace.id);
     const callouts = await getCalloutsSetFramingDefinitions(
       subspace.collaboration.calloutsSet.id

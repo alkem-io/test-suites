@@ -170,7 +170,7 @@ describe('R25 — a callout template carries a Poll (US5-AS5, FR-027)', () => {
     expect(callout?.framing.type).toBe(CalloutFramingType.Poll);
     const poll = callout?.framing.poll;
     expect(poll).toBeDefined();
-    if (!poll) return;
+    if (!poll) throw new Error('the template POLL callout carries no poll');
     expect(pollShape(poll)).toEqual(expectedPollShape);
     expect(poll.totalVotes ?? 0).toBe(0);
   });
@@ -190,7 +190,7 @@ describe('R25 — a callout template carries a Form (US5-AS1/AS2, FR-025–FR-02
     expect(callout?.framing.type).toBe(CalloutFramingType.Form);
     const form = callout?.framing.form;
     expect(form).toBeDefined();
-    if (!form) return;
+    if (!form) throw new Error('the template FORM callout carries no form');
     expect(formShape(form)).toEqual(expectedFormShape);
     expect(form.id).toBe(echoed.id);
   });
