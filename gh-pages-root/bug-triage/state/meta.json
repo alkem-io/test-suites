@@ -1,19 +1,19 @@
 {
  "last_sync": {
-  "alkemio": "2026-10-07T08:14:57Z",
-  "server": "2026-10-07T08:14:57Z",
-  "client-web": "2026-10-07T08:14:57Z",
-  "notifications": "2026-10-07T08:14:57Z",
-  "documentation": "2026-10-07T08:14:57Z",
-  "kratos-webhooks": "2026-10-07T08:14:57Z",
-  "oidc-service": "2026-10-07T08:14:57Z",
-  "matrix-adapter": "2026-10-07T08:14:57Z",
-  "file-service": "2026-10-07T08:14:57Z",
-  "collaborative-document-service": "2026-10-07T08:14:57Z",
-  "whiteboard-collaboration-service": "2026-10-07T08:14:57Z",
-  "virtual-contributor": "2026-10-07T08:14:57Z",
-  "ecosystem-analytics": "2026-10-07T08:14:57Z",
-  "test-suites": "2026-10-07T08:14:57Z"
+  "alkemio": "2026-10-08T07:58:46Z",
+  "server": "2026-10-08T07:58:46Z",
+  "client-web": "2026-10-08T07:58:46Z",
+  "notifications": "2026-10-08T07:58:46Z",
+  "documentation": "2026-10-08T07:58:46Z",
+  "kratos-webhooks": "2026-10-08T07:58:46Z",
+  "oidc-service": "2026-10-08T07:58:46Z",
+  "matrix-adapter": "2026-10-08T07:58:46Z",
+  "file-service": "2026-10-08T07:58:46Z",
+  "collaborative-document-service": "2026-10-08T07:58:46Z",
+  "whiteboard-collaboration-service": "2026-10-08T07:58:46Z",
+  "virtual-contributor": "2026-10-08T07:58:46Z",
+  "ecosystem-analytics": "2026-10-08T07:58:46Z",
+  "test-suites": "2026-10-08T07:58:46Z"
  },
- "synced_at": "2026-10-07T08:19:57Z"
+ "synced_at": "2026-10-08T08:03:46Z"
 }
