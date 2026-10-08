@@ -6,6 +6,7 @@
   - `server-api/src/functional-api/callout/form/` — seven it-specs (`form-lifecycle`, `form-never-appears`, `form-placement-guards`, `form-presentation`, `form-space-move`, `form-submit-validation`, `form-visibility-matrix`) plus `form.request.params.ts`.
   - `server-api/src/functional-api/notifications/space/collaboration/form-response.it-spec.ts` — MailSlurper.
   - `client-web/src/functional-e2e/form-callout-framing/` — five `@forge-acceptance` walks, persisted from the /forge live verification. They provision their own Kratos identities, Space and Forms; they do not use the harness personas.
+  - R25 (Polls and Forms in templates) — see *R25 — Polls and Forms in templates* below: two it-specs under `server-api/src/functional-api/templates/` and two `templates-CRD` Playwright files (harness personas, session fixtures).
 
 ## How to run
 
@@ -41,7 +42,7 @@ Spec ids are the 080 spec's. "API" = `server-api/src/functional-api/callout/form
 | US1-AS1/AS4/AS6/AS7a/AS9 builder, chip, publish, close/reopen, fixed chip | walk `us1` |
 | US1-AS2 / FR-001a member cannot create a Form; fixed kind both ways | API `form-placement-guards.it-spec.ts › who can create`, `› the framing kind is fixed`; walk `us1 › US1-AS2` |
 | US1-AS3 / FR-001b VC knowledge base: seeded, direct add, conversion | API `form-placement-guards.it-spec.ts › carriers…` incl. *direct add (added)*, `› spaces holding a FORM callout`; walk `us1 › US1-AS3` |
-| D-7 carriers: template, subspace request, transfer, space template | API `form-placement-guards.it-spec.ts` |
+| D-7 carriers, amended by R25: the subspace create request's own callouts, transfer, VC knowledge base and conversion still refuse a FORM; a callout template and a space template now carry one | API `form-placement-guards.it-spec.ts` (*a callout template carries a FORM definition (R25)*, *a template made from the space keeps the FORM callout (R25)* — flipped 2026-10-06; every refusal kept); the R25 carriers themselves: see the R25 section |
 | US1-AS5, FR-003, FR-007, D-16 caps and lengths (0/1/50/51 questions, 1/2/20/21 options, duplicate, blank/empty label, 512/513 prompt and label, 2048/2049 explanation, options on a text question) | API `form-submit-validation.it-spec.ts › Form definition — limits` (lengths, blank/empty, text-with-options *added*) |
 | FR-004a unknown question / option id on update | API `form-submit-validation.it-spec.ts › Form definition — limits` (option id *added*) |
 | US2-AS2/AS3/AS10, FR-009 answer validation, no echo | API `form-submit-validation.it-spec.ts › answer validation`, `› answers to removed questions and options` *(added)*; walk `us2` |
@@ -60,6 +61,76 @@ Spec ids are the 080 spec's. "API" = `server-api/src/functional-api/callout/form
 | US4-AS7 one admin notification per response | walk `us4 › US4-AS7` (3 submissions) |
 | US4a-AS1..AS4 review dialogs, 120 responses in pages of 50, confirm-delete, members read all | walk `us4a` |
 
+## R25 — Polls and Forms in templates (server#6435, 2026-10-06)
+
+Ruling R25 brings US5 into scope and amends D-7 / FR-027: callout templates and space templates carry a Poll's or a Form's **definition** (never votes, poll status or responses); (sub)spaces and collaborations built from a space template get an OPEN Poll with no votes and a Form with fresh question ids and no responses; a template Form never accepts a response. Build sheet: `tasks/test-suites.md` T316–T320.
+
+**Status:** authored 2026-10-06, static gates green. **Run live 2026-10-06** against server `fix/form-callout-framing` (a229b18c8) and client `fix/form-callout-framing` (1a1220830) on the local dev stack:
+
+| Suite | Result |
+|---|---|
+| API `templates/callout/poll-form-callout-templates` + `templates/space/space-templates-poll-form` | 17/17 passed |
+| API `callout/form/form-placement-guards` (incl. the two R25 flips) | 17/17 passed |
+| API `--project templates` (regression, all template specs) | 46/46 passed |
+| API `callout/form/*` (regression, the whole 080 Form suite) | 196 passed, 5 skipped |
+| Playwright `templates-CRD/…/poll-form-save-as-template` | 2/2 passed |
+| Playwright `templates-CRD/…/callout-tests` (incl. 58 Form, Poll 42–57) | 31 passed, 1 failed — *25 Memos*, unrelated to R25: its locator expects the edited memo title inside the card button, which the current develop card no longer renders there (reproduces alone; no R25 file touches contribution cards) |
+
+Two fixes found by the live run, both in the tests:
+- **The template-Form refusal cases need a persona that holds CONTRIBUTE.** On a template callout the Global Admin is refused at the privilege check before the template rule is reached. So the template (and the source Form copied into the space template) allow LINK contributions, which grant CONTRIBUTE to the template's creators, and the refusal is then the template rule's `FORM_TEMPLATE_NOT_RESPONDABLE`.
+- **The Form walk filled the wrong "Title" field.** The create-Post dialog now holds two "Title" text boxes, the Post's and the Form builder's. The walk now targets the Post title by its placeholder.
+
+**Run live 2026-10-08** (QA PR challenge, after merging `develop` @ `8467bc98`), local stack on server `develop` @ `87caca746` (includes server#6595) and client-web `develop` @ `b1095a408` (includes client-web#10382 and #10373):
+
+| Suite | Result |
+|---|---|
+| API R25 pair (24 cases: the 17 of 2026-10-06, then the CLOSED-Form and `updateTemplateFromSpace` cases, the four other carriers and template removal) | 24/24, twice (alone and in the project run) |
+| API `--project templates` | 53/53 |
+| API `callout/form/form-placement-guards` | 17/17 |
+| Playwright `poll-form-save-as-template` | 2/2, twice |
+| Playwright `callout-tests` (the whole template-editor matrix, 69 tests, one unfiltered run) | **69/69 passed (14.5 min).** That count includes the ten whiteboard-framing rows (3, 4, 11, 12, 19, 20, 27, 28, 35, 36), which carry `test.fail` (client-web#10283, no preview image) and failed as expected. Before the Memos fix, row 25 failed and the serial describe kept the 37 rows after it from running; the ten Memos-response rows (25–32) also passed as a group, 10/10 |
+
+Fixed in the tests by this challenge:
+- client-web#10373 moved the less-used chips behind menus. Framing chips are now picked from the strip or "More to add" (`selectFraming`), and response types from the strip or "More ways to respond" (`selectResponseType`, `forms/callout/collection/index.ts`; Memos is in the menu, and so is Whiteboards when the Tasks chip is shown). Both assert the chip is checked.
+- The Post `Title` locator is exact.
+- The pristine edit dialog closes with **Done** instead of `Cancel` (client-web#10243) for Poll 42–57.
+
+On 2026-10-06 the "31 passed, 1 failed" was the same truncation: rows after 25 (including Poll 42–57 and Form 58) did not run in that full run.
+
+Sabotage probes (worktree only, reverted): replacing the read-back Poll/Form definition with `null` (the pre-R25 "type POLL without the poll" regression) left five cases **green** before QA-CH-01 and turns them red after it.
+
+```bash
+cd server-api
+pnpm exec vitest run --project templates src/functional-api/templates/callout/poll-form-callout-templates.it-spec.ts src/functional-api/templates/space/space-templates-poll-form.it-spec.ts
+pnpm exec vitest run --project callouts src/functional-api/callout/form/form-placement-guards.it-spec.ts
+
+cd ../client-web
+UI_HEADLESS=true pnpm exec playwright test src/functional-e2e/templates-CRD/template-types/poll-form-save-as-template.spec.ts
+UI_HEADLESS=true pnpm exec playwright test src/functional-e2e/templates-CRD/template-types/callout-tests.spec.ts -g "58 Form"
+```
+
+"TPL" = `server-api/src/functional-api/templates/`; "CRD" = `client-web/src/functional-e2e/templates-CRD/template-types/`. Every negative has a positive control in the same describe.
+
+| Scenario | Test |
+| --- | --- |
+| US5-AS5 / FR-027 a callout template keeps a Poll: title, options in order, settings; no votes | API TPL `callout/poll-form-callout-templates.it-spec.ts › a callout template carries a Poll` (read back through `lookup.template`) |
+| US5-AS1/AS2 / FR-025–FR-027 a callout template keeps a Form: title, description, questions (types, options, required), settings | API TPL `callout/… › a callout template carries a Form` |
+| US5-AS6 / FR-027b a callout-template Form refuses responses (`FORM_TEMPLATE_NOT_RESPONDABLE`) | API TPL `callout/… › a template Form never accepts responses` (control: the same definition on a live Post accepts the same answers) |
+| FR-027b / R25d the template admin edits a template Form; a space member is refused and nothing changes | API TPL `callout/… › a template Form definition is edited by the template admin` |
+| US5-AS3/AS5 / FR-027 a space template from a space with a voted, then CLOSED Poll and an answered Form keeps both definitions, no votes, no responses, no source ids; the template poll is OPEN (status is never copied) | API TPL `space/space-templates-poll-form.it-spec.ts › a space template keeps Poll and Form definitions only` (control: the source keeps its vote, its CLOSED status and its response) |
+| FR-027 / server#6435 AC "settings (visibility, single/multiple, open/closed)" copied as-is: a second source Form holds the other class of every setting (ADMINS, SINGLE, CLOSED, expanded) and keeps it in the template, in a subspace created from it and after `updateCollaborationFromSpaceTemplate` — never reopened *(added 2026-10-08, QA-CH-02)* | API TPL `space/… › the template content space keeps the CLOSED Form with the other class of every setting, as-is`; the subspace and collaboration cases through `expectFreshCopies` |
+| US5-AS6 a Form inside a template content space refuses responses | API TPL `space/… › a Form inside a template content space never accepts responses` |
+| US5-AS6 / R25 template flag: a Form that reaches a template through `updateTemplateFromSpace` (the path server#6595 sec-server-1 fixed) refuses responses *(added 2026-10-08, QA-CH-04)* | API TPL `space/… › a Form brought into a template by updateTemplateFromSpace is refused with FORM_TEMPLATE_NOT_RESPONDABLE` (precondition: the template held no Form; control: the source Form accepts the same answers) |
+| US5-AS3/AS5 a subspace created from the template: Poll OPEN, same options, 0 votes; Form same questions/settings, fresh ids, 0 responses | API TPL `space/… › a subspace created from the template` (control: both take a vote / a response) |
+| R25c `updateCollaborationFromSpaceTemplate` (addCallouts) adds them the same way | API TPL `space/… › updateCollaborationFromSpaceTemplate adds the Poll and the Form` |
+| FR-027a a FORM in the create-subspace request itself stays refused, also with a template | API TPL `space/… › only the template may carry a Form into a new subspace` (control: same template + NONE callout); without a template: `form-placement-guards.it-spec.ts` |
+| FR-027a / R25c the other carriers: `createTemplateFromContentSpace` and `createTemplate` (SPACE, the request's own content space) carry a Form as a never-respondable definition; an **L0** created from the template gets the Poll OPEN with no votes and the Forms as-is with fresh ids and no responses, while a FORM in the L0 create request itself is refused (`FORM_FRAMING_NOT_ALLOWED`) *(added 2026-10-08, QA-CH-08)* | API TPL `space/… › the other template carriers carry a Form` (4 cases) |
+| server#6435 AC "removed like other Post templates": the template admin deletes a Form callout template and it no longer reads back (`ENTITY_NOT_FOUND`) *(added 2026-10-08, QA-CH-11)* | API TPL `callout/… › a Form callout template is removed like any template` (control: it reads back with its Form before the delete) |
+| US5-AS4 / FR-027a a template never places a Form in a VC knowledge base | **Partial** (story card [test-suites#661](https://github.com/alkem-io/test-suites/issues/661)). A FORM supplied in the VC request itself, a direct add and conversion stay refused: `form-placement-guards.it-spec.ts › carriers…` and `› spaces holding a FORM callout`. The R25 path itself — the platform knowledge-base template seeding a new VC, which now drops Form and Poll callouts — is **not covered** here (see *Not covered*) |
+| US5-AS2/AS5 / FR-026 save a Poll Post as a template from the Post menu; preview; start a Post from it (question/options prefilled, editable); the new poll takes a vote | walk CRD `poll-form-save-as-template.spec.ts › US5-AS5` |
+| US5-AS1/AS2 / FR-025/FR-026 save a Form Post as a template; preview lists "Questions" (numbered, type badges, "Required"); start a Post from it: the builder is prefilled with the title, description and every question's prompt, answer type, required flag and options, all editable; the published Form carries the whole definition and the non-default settings (Space members, multiple responses) — *2026-10-08, QA-CH-07*; the new Form takes a response | walk CRD `poll-form-save-as-template.spec.ts › US5-AS1/AS2` |
+| R25a the callout-template editor offers the Form framing | walk CRD `callout-tests.spec.ts › 58 Form` (create in the editor → preview → use → in-feed Form box) |
+
 ## Not covered
 
 | Item | Why | Where it is pinned instead / what clears it |
@@ -73,6 +144,10 @@ Spec ids are the 080 spec's. "API" = `server-api/src/functional-api/callout/form
 | Search | Descoped by the operator on 2026-09-30 (`forge-run.md` 5d); not recorded in `spec.md` | — |
 | FR-016c no comments or reactions, FR-015a no edit, FR-016d not movable | No surface exists to call | Structural; walk `us4a › US4a-AS3` asserts no edit affordance |
 | Six-locale copy, "Deleted user" label in all locales | Locale assertions have no home here | client-web unit tests |
+| R25 US5-AS4: the platform knowledge-base template seeds a new VC without its Form and Poll callouts (server#6595 sec-server-2) — [test-suites#661](https://github.com/alkem-io/test-suites/issues/661) | The only lever is the platform-wide default knowledge-base template. Pointing it at a Form-holding template changes what every VC created on the stack receives, including other suites' VCs running in parallel. **Decision needed:** accept a local-only, serial case that swaps and restores the platform default, or leave it to the unit spec | server unit `platform.templates.service.spec.ts` |
+| R25 template flag, third path: a Form Post created directly in a template's callouts set — [server#6631](https://github.com/alkem-io/server/issues/6631) | Not reachable through the API: `createCalloutOnCalloutsSet` on a template content-space callouts set fails for every framing, NONE included, with `ENTITY_NOT_FOUND` "Unable to retrieve storage aggregator to use for CalloutsSet …" (reproduced 2026-10-08). **Decision needed** (QA-PF-01): is the path meant to exist? | server unit `callout.form.resolver.mutations.spec.ts` (collaboration `isTemplate` branch) |
+| R25e: Poll options edited in a callout template are saved; editing a template poll sends no vote notification and no contribution report | No case in this PR | server unit `poll.resolver.mutations.spec.ts` / `poll.service.spec.ts`; a system case needs an options edit on a template poll |
+| R25c "as built" carrier: the Platform Support (`PLATFORM_SUPPORT_ORG_RESOURCES`) branch of the template mutations carrying a Form | Isolating the branch needs the single-role Platform Support persona and an organization-owned innovation pack, both provisioned by the `platform-roles` suite (A7), which is not part of the `templates` project or nightly. The harness Global Admin holds Platform Support **plus** three content roles, so it cannot isolate the branch | A Form variant of A7's template cases in `platform-roles/_support/groups/a7.ts`; server unit `template.service.spec.ts` (`allowFormFraming` on template content-space creation) and `template.resolver.mutations.spec.ts` (the Support branch) |
 
 ## Open questions (need a decision, not a test)
 

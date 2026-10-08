@@ -22,10 +22,28 @@ const setSwitch = async (sw: Locator, desired: boolean): Promise<void> => {
   }
 };
 
-const responseRadio = (dialog: Locator, name: string): Locator =>
-  dialog
-    .getByRole('radiogroup', { name: 'Responses' })
-    .getByRole('radio', { name, exact: true });
+/**
+ * Selects a "Responses" chip. Since client-web#10373 the strip surfaces Links &
+ * Files and Posts, plus Tasks or (without Tasks) Whiteboards; the rest, Memos
+ * among them, sit in the "More ways to respond" menu. A type chosen there
+ * joins the row, checked.
+ */
+const selectResponseType = async (
+  page: Page,
+  dialog: Locator,
+  name: string
+): Promise<void> => {
+  const group = dialog.getByRole('radiogroup', { name: 'Responses' });
+  await expect(group).toBeVisible();
+  const radio = group.getByRole('radio', { name, exact: true });
+  if ((await radio.count()) === 0) {
+    await dialog.getByRole('button', { name: 'More ways to respond' }).click();
+    await page.getByRole('menuitem', { name, exact: true }).click();
+  } else {
+    await radio.click();
+  }
+  await expect(radio).toHaveAttribute('aria-checked', 'true');
+};
 
 const setContributionPermissions = async (
   dialog: Locator,
@@ -62,12 +80,12 @@ export const selectAndFillCalloutCollection = async (
       return;
 
     case 'linksFiles':
-      await responseRadio(dialog, 'Links & Files').click();
+      await selectResponseType(page, dialog, 'Links & Files');
       await setContributionPermissions(dialog, collection);
       return;
 
     case 'posts': {
-      await responseRadio(dialog, 'Posts').click();
+      await selectResponseType(page, dialog, 'Posts');
       await setContributionPermissions(dialog, collection);
       await setSwitch(
         dialog.getByRole('switch', { name: 'Enable comments' }),
@@ -88,7 +106,7 @@ export const selectAndFillCalloutCollection = async (
     }
 
     case 'memos': {
-      await responseRadio(dialog, 'Memos').click();
+      await selectResponseType(page, dialog, 'Memos');
       await setContributionPermissions(dialog, collection);
       const defaultsDialog = await openDefaultResponseDialog(page, dialog);
       await defaultsDialog
@@ -107,7 +125,7 @@ export const selectAndFillCalloutCollection = async (
     }
 
     case 'whiteboards': {
-      await responseRadio(dialog, 'Whiteboards').click();
+      await selectResponseType(page, dialog, 'Whiteboards');
       await setContributionPermissions(dialog, collection);
       const defaultsDialog = await openDefaultResponseDialog(page, dialog);
       await defaultsDialog
