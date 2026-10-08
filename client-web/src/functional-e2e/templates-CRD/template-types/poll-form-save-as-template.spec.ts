@@ -17,9 +17,12 @@ import {
 } from '@alkemio/tests-lib';
 import {
   CalloutFormQuestionType,
+  CalloutFormResponseMode,
+  CalloutFormResponseVisibility,
   CalloutFramingType,
   CalloutVisibility,
   CreateCalloutOnCalloutsSetInput,
+  PollStatus,
 } from '@alkemio/tests-lib/core/generated/alkemio-schema';
 import {
   graphqlErrorWrapper,
@@ -30,7 +33,11 @@ import { createAuthenticatedSessionFixture } from '@src/functional-e2e/fixtures/
 import { acceptCookiesIfVisible } from '@src/functional-e2e/helpers/cookies.helper';
 import { randomBytes } from 'crypto';
 import { fillTemplateForm } from './forms/template-form';
-import { formQuestionField } from './forms/callout/callout-template-framing';
+import {
+  formQuestionCard,
+  formQuestionField,
+  formQuestionOptions,
+} from './forms/callout/callout-template-framing';
 import { verifyFormTemplatePreview } from './verify/callout-template-verify';
 
 const { test, setupAuthentication, teardownAuthentication } =
@@ -84,6 +91,12 @@ const FORM = {
       options: [`Track A ${hexId}`, `Track B ${hexId}`],
     },
   ],
+  // Non-default, so a Post started from the template must carry them (R25f).
+  // Expanded (the default) and OPEN, so the walk can answer the new Form.
+  settings: {
+    visibility: CalloutFormResponseVisibility.Members,
+    responseMode: CalloutFormResponseMode.Multiple,
+  },
 };
 
 // ---------------------------------------------------------------------------
@@ -173,6 +186,7 @@ const createSourceFormPost = async (): Promise<string> => {
                 required: question.required,
                 options: question.options.map(label => ({ label })),
               })),
+              settings: FORM.settings,
             },
           },
         },
@@ -264,8 +278,7 @@ const openTemplatePreview = async (page: Page, templateName: string) => {
 };
 
 /**
- * "Add Post" -> "Find Template" -> "Use a template" -> "Use template" (and
- * "Load template" when the dialog asks before replacing its content). Returns
+ * "Add Post" -> "Find Template" -> "Use a template" -> "Use template". Returns
  * the Create Post dialog, now filled from the template.
  */
 const startPostFromTemplate = async (page: Page, templateName: string) => {
@@ -286,17 +299,12 @@ const startPostFromTemplate = async (page: Page, templateName: string) => {
     .getByRole('button', { name: 'Use template', exact: true })
     .click();
 
-  const replace = page.getByRole('alertdialog', {
-    name: 'Replace your current content?',
-  });
-  const asked = await replace
-    .waitFor({ state: 'visible', timeout: 3_000 })
-    .then(() => true)
-    .catch(() => false);
-  if (asked) {
-    await replace.getByRole('button', { name: 'Load template' }).click();
-  }
+  // The dialog is pristine, so the template applies at once: the "Replace
+  // your current content?" confirmation is asked only of a dirty form.
   await expect(picker).not.toBeVisible();
+  await expect(
+    page.getByRole('alertdialog', { name: 'Replace your current content?' })
+  ).toHaveCount(0);
   return createPostDialog;
 };
 
@@ -327,8 +335,10 @@ const publishPost = async (
 // Walks
 // ---------------------------------------------------------------------------
 
-test.describe
-  .serial('R25 — Poll and Form Posts in the template library', () => {
+test.describe('R25 — Poll and Form Posts in the template library', () => {
+  // The two walks are independent: same worker and one shared fixture, but a
+  // failure in one does not skip the other.
+  test.describe.configure({ mode: 'default' });
   test.setTimeout(240_000);
 
   let pollPostUrl = '';
@@ -416,8 +426,13 @@ test.describe
     const before = await findPost(newPostTitle);
     expect(before.framing.type).toBe(CalloutFramingType.Poll);
     expect(before.framing.poll?.title).toBe(editedQuestion);
-    expect(before.framing.poll?.status).toBe('OPEN');
-    expect(before.framing.poll?.totalVotes ?? 0).toBe(0);
+    expect(
+      [...(before.framing.poll?.options ?? [])]
+        .sort((a, b) => a.sortOrder - b.sortOrder)
+        .map(option => option.text)
+    ).toEqual(POLL.options);
+    expect(before.framing.poll?.status).toBe(PollStatus.Open);
+    expect(before.framing.poll?.totalVotes).toBe(0);
 
     await card.getByRole('radio').first().click();
     await expect(
@@ -459,10 +474,26 @@ test.describe
     await expect(
       createPostDialog.getByRole('textbox', { name: 'Form title (optional)' })
     ).toHaveValue(FORM.title);
+    await expect(
+      createPostDialog.getByRole('textbox', { name: 'Description (optional)' })
+    ).toHaveValue(FORM.description);
     for (const [index, q] of FORM.questions.entries()) {
       await expect(formQuestionField(createPostDialog, index + 1)).toHaveValue(
         q.prompt
       );
+      // Answer type, required flag and options come with the prompt (US5-AS1).
+      const card = formQuestionCard(createPostDialog, index + 1);
+      await expect(
+        card.getByRole('combobox', { name: 'Answer type' })
+      ).toContainText(q.type);
+      await expect(card.getByRole('switch', { name: 'Required' })).toBeChecked({
+        checked: q.required,
+      });
+      const options = formQuestionOptions(createPostDialog, index + 1);
+      await expect(options).toHaveCount(q.options.length);
+      for (const [optionIndex, option] of q.options.entries()) {
+        await expect(options.nth(optionIndex)).toHaveValue(option);
+      }
     }
     const editedPrompt = `${FORM.questions[0].prompt} (edited)`;
     await formQuestionField(createPostDialog, 1).fill(editedPrompt);
@@ -480,6 +511,31 @@ test.describe
       editedPrompt,
       FORM.questions[1].prompt,
     ]);
+    // The whole definition, as the template carried it (only the edited prompt
+    // differs).
+    expect({
+      title: form?.title,
+      description: form?.description,
+      questions: form?.questions.map(q => ({
+        prompt: q.prompt,
+        type: q.type,
+        required: q.required,
+        options: (q.options ?? []).map(option => option.label),
+      })),
+      visibility: form?.settings.visibility,
+      responseMode: form?.settings.responseMode,
+    }).toEqual({
+      title: FORM.title,
+      description: FORM.description,
+      questions: FORM.questions.map((q, index) => ({
+        prompt: index === 0 ? editedPrompt : q.prompt,
+        type: q.apiType,
+        required: q.required,
+        options: q.options,
+      })),
+      visibility: FORM.settings.visibility,
+      responseMode: FORM.settings.responseMode,
+    });
     const formId = form!.id;
     const responses = async () =>
       (
