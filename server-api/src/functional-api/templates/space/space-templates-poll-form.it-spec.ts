@@ -49,6 +49,7 @@ import {
   pollShape,
   uniqueTemplateName,
   updatePollStatus,
+  updateTemplateFromSpace,
 } from '../poll-form-template.request.params';
 
 /**
@@ -163,6 +164,7 @@ let sourceForm: FormCallout;
 let sourceClosedForm: FormCallout;
 let templateId = '';
 const spaceIds: string[] = [];
+const extraTemplateIds: string[] = [];
 
 type FramedCallout = Awaited<
   ReturnType<typeof getCalloutsSetFramingDefinitions>
@@ -331,8 +333,8 @@ afterAll(async () => {
   for (const id of spaceIds) {
     await deleteSpace(id);
   }
-  if (templateId) {
-    await deleteTemplate(templateId);
+  for (const id of [templateId, ...extraTemplateIds].filter(Boolean)) {
+    await deleteTemplate(id);
   }
   await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
 });
@@ -422,6 +424,45 @@ describe('R25 — a Form inside a template content space never accepts responses
 
     expect(result.error).toBeUndefined();
     expect(result.data?.submitCalloutFormResponse.id).toBeDefined();
+  });
+
+  test('a Form brought into a template by updateTemplateFromSpace is refused with FORM_TEMPLATE_NOT_RESPONDABLE', async () => {
+    // A space template with no Form: made from the L0, which holds no callouts.
+    const created = await createTemplateFromSpace(
+      baseScenario.space.id,
+      baseScenario.space.templateSetId,
+      uniqueTemplateName('upd-from-space')
+    );
+    const target = created.data?.createTemplateFromSpace.id ?? '';
+    expect(target).not.toBe('');
+    extraTemplateIds.push(target);
+    const before = await getTemplateContentSpaceCallouts(target);
+    expect(before.map(callout => callout.framing.type)).not.toContain(
+      CalloutFramingType.Form
+    );
+
+    const updated = await updateTemplateFromSpace(
+      target,
+      baseScenario.subspace.id
+    );
+    expect(updated.error).toBeUndefined();
+
+    const formCallout = byName(
+      await getTemplateContentSpaceCallouts(target),
+      sourceForm.displayName
+    );
+    const form = formCallout.framing.form;
+    if (!form) throw new Error('the template FORM callout carries no form');
+    const result = await submitFormResponse(
+      form.id,
+      answersFor(form.questions as FormQuestion[]),
+      CalloutFormResponseVisibility.Members,
+      TestUser.GLOBAL_ADMIN
+    );
+
+    expect(errorCode(result)).toBe('FORM_TEMPLATE_NOT_RESPONDABLE');
+    expect(result.data).toBeUndefined();
+    expect(responsesView(await getFormResponses(form.id)).total).toBe(0);
   });
 });
 

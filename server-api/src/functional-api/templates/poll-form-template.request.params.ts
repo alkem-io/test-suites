@@ -299,6 +299,21 @@ export const getTemplateContentSpaceCallouts = async (
   return callouts;
 };
 
+/** updateTemplateFromSpace: replaces a space template's content with `spaceID`'s. */
+export const updateTemplateFromSpace = async (
+  templateID: string,
+  spaceID: string,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string | undefined) =>
+    graphqlClient.updateTemplateFromSpace(
+      { updateData: { templateID, spaceID } },
+      { authorization: `Bearer ${authToken}` }
+    );
+  return graphqlErrorWrapper(callback, userRole);
+};
+
 /** The callouts of a callouts set, with their Poll / Form definitions. */
 export const getCalloutsSetFramingDefinitions = async (
   calloutsSetId: string,
