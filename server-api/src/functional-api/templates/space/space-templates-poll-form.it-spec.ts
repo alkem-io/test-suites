@@ -48,6 +48,7 @@ import {
   PollDefinitionInput,
   pollShape,
   uniqueTemplateName,
+  updatePollStatus,
 } from '../poll-form-template.request.params';
 
 /**
@@ -102,7 +103,8 @@ const POLL: PollDefinitionInput = {
   },
 };
 
-// Non-default settings, so a copy can never pass as a default.
+// Non-default settings except `state` (OPEN is the default); CLOSED_FORM
+// below holds the other class of every setting.
 const FORM: FormDefinitionInput = {
   title: 'Event registration',
   description: 'Register for the meetup',
@@ -112,6 +114,20 @@ const FORM: FormDefinitionInput = {
     responseMode: CalloutFormResponseMode.Multiple,
     state: CalloutFormState.Open,
     defaultCollapsed: true,
+  },
+};
+
+// The other class of every Form setting, CLOSED included: a copy that reset
+// the state to OPEN (as a Poll's is) would lose it. Settings are copied as-is.
+const CLOSED_FORM: FormDefinitionInput = {
+  title: 'Closed registration',
+  description: 'Registration has closed',
+  questions: defaultFormQuestions(),
+  settings: {
+    visibility: CalloutFormResponseVisibility.Admins,
+    responseMode: CalloutFormResponseMode.Single,
+    state: CalloutFormState.Closed,
+    defaultCollapsed: false,
   },
 };
 
@@ -134,9 +150,17 @@ const expectedFormShape = {
   settings: FORM.settings,
 };
 
+const expectedClosedFormShape = {
+  ...expectedFormShape,
+  title: CLOSED_FORM.title,
+  description: CLOSED_FORM.description,
+  settings: CLOSED_FORM.settings,
+};
+
 let baseScenario: OrganizationWithSpaceModel;
 let sourcePoll: PollCallout;
 let sourceForm: FormCallout;
+let sourceClosedForm: FormCallout;
 let templateId = '';
 const spaceIds: string[] = [];
 
@@ -206,6 +230,13 @@ const expectFreshCopies = async (calloutsSetId: string) => {
   }
   expect(responsesView(await getFormResponses(form.id)).total).toBe(0);
 
+  // The CLOSED Form keeps the other class of every setting: not reopened.
+  const closedForm = byName(callouts, sourceClosedForm.displayName).framing
+    .form;
+  if (!closedForm) throw new Error('no closed form');
+  expect(formShape(closedForm)).toEqual(expectedClosedFormShape);
+  expect(closedForm.id).not.toBe(sourceClosedForm.formId);
+
   return { pollCallout, formCallout, poll, form };
 };
 
@@ -243,6 +274,15 @@ beforeAll(async () => {
   if (voted.error || voted.data?.castPollVote.totalVotes !== 1) {
     throw new Error(`fixture vote failed: ${JSON.stringify(voted)}`);
   }
+  // ... then CLOSED, so a copy that kept the status would differ from the
+  // OPEN status a Poll created from a template must start with.
+  const closed = await updatePollStatus(sourcePoll.pollId, PollStatus.Closed);
+  if (
+    closed.error ||
+    closed.data?.updatePollStatus.status !== PollStatus.Closed
+  ) {
+    throw new Error(`fixture poll close failed: ${JSON.stringify(closed)}`);
+  }
 
   // ... and a Form with a response.
   sourceForm = await createFormCallout(sourceSetId, {
@@ -264,6 +304,15 @@ beforeAll(async () => {
   if (answered.error) {
     throw new Error(`fixture response failed: ${JSON.stringify(answered)}`);
   }
+
+  // ... and a CLOSED Form with the other class of every setting.
+  sourceClosedForm = await createFormCallout(sourceSetId, {
+    displayName: uniqueTemplateName('src-closed-form'),
+    title: CLOSED_FORM.title,
+    description: CLOSED_FORM.description,
+    questions: CLOSED_FORM.questions,
+    settings: CLOSED_FORM.settings,
+  });
 
   const created = await createTemplateFromSpace(
     baseScenario.subspace.id,
@@ -300,6 +349,7 @@ describe('R25 — a space template keeps Poll and Form definitions only (FR-027)
     if (!poll) throw new Error('the template POLL callout carries no poll');
     expect(pollShape(poll)).toEqual(expectedPollShape);
     expect(poll.totalVotes).toBe(0);
+    expect(poll.status).toBe(PollStatus.Open);
     expect(poll.id).not.toBe(sourcePoll.pollId);
   });
 
@@ -320,14 +370,23 @@ describe('R25 — a space template keeps Poll and Form definitions only (FR-027)
     expect(responsesView(await getFormResponses(form.id)).total).toBe(0);
   });
 
-  test('positive control: the source keeps its vote and its response', async () => {
+  test('the template content space keeps the CLOSED Form with the other class of every setting, as-is', async () => {
+    const callouts = await getTemplateContentSpaceCallouts(templateId);
+    const form = byName(callouts, sourceClosedForm.displayName).framing.form;
+    if (!form) throw new Error('the template FORM callout carries no form');
+
+    expect(formShape(form)).toEqual(expectedClosedFormShape);
+    expect(form.id).not.toBe(sourceClosedForm.formId);
+  });
+
+  test('positive control: the source keeps its vote, its CLOSED status and its response', async () => {
     const source = await getCalloutsSetFramingDefinitions(
       baseScenario.subspace.collaboration.calloutsSetId
     );
 
-    expect(
-      byName(source, sourcePoll.displayName).framing.poll?.totalVotes
-    ).toBe(1);
+    const sourcePollRead = byName(source, sourcePoll.displayName).framing.poll;
+    expect(sourcePollRead?.totalVotes).toBe(1);
+    expect(sourcePollRead?.status).toBe(PollStatus.Closed);
     expect(responsesView(await getFormResponses(sourceForm.formId)).total).toBe(
       1
     );

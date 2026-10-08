@@ -50440,6 +50440,14 @@ export type CreatePollCalloutOnCalloutsSetMutation = {
   };
 };
 
+export type UpdatePollStatusMutationVariables = Exact<{
+  statusData: UpdatePollStatusInput;
+}>;
+
+export type UpdatePollStatusMutation = {
+  updatePollStatus: { id: string; status: PollStatus };
+};
+
 export type TransferCalloutMutationVariables = Exact<{
   transferData: TransferCalloutInput;
 }>;

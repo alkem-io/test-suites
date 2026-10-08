@@ -13,6 +13,7 @@ import {
   CreateCalloutInput,
   PollDefinitionFragment,
   PollSettingsInput,
+  PollStatus,
 } from '@alkemio/tests-lib/core/generated/alkemio-schema';
 import { graphqlErrorWrapper } from '@alkemio/tests-lib/utils/graphql.wrapper';
 import { updateCalloutVisibility } from '../callout/callouts.request.params';
@@ -247,6 +248,21 @@ export const castPollVote = async (
   const callback = (authToken: string | undefined) =>
     graphqlClient.castPollVote(
       { voteData: { pollID, selectedOptionIDs } },
+      { authorization: `Bearer ${authToken}` }
+    );
+  return graphqlErrorWrapper(callback, userRole);
+};
+
+/** Closes or reopens a Poll (requires UPDATE on its callout). */
+export const updatePollStatus = async (
+  pollID: string,
+  status: PollStatus,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string | undefined) =>
+    graphqlClient.updatePollStatus(
+      { statusData: { pollID, status } },
       { authorization: `Bearer ${authToken}` }
     );
   return graphqlErrorWrapper(callback, userRole);

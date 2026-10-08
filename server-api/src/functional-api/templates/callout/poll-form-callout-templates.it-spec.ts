@@ -80,7 +80,8 @@ const POLL: PollDefinitionInput = {
   },
 };
 
-// Every setting is a non-default, so "copied" can never be "defaulted".
+// Every setting but `state` is a non-default, so "copied" can never be
+// "defaulted"; OPEN is the default, and CLOSED is pinned by the edit case below.
 const FORM: FormDefinitionInput = {
   title: 'Intake form',
   description: 'Tell us about your project',

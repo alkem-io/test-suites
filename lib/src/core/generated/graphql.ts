@@ -54920,6 +54920,14 @@ export type CreatePollCalloutOnCalloutsSetMutation = {
   };
 };
 
+export type UpdatePollStatusMutationVariables = SchemaTypes.Exact<{
+  statusData: SchemaTypes.UpdatePollStatusInput;
+}>;
+
+export type UpdatePollStatusMutation = {
+  updatePollStatus: { id: string; status: SchemaTypes.PollStatus };
+};
+
 export type TransferCalloutMutationVariables = SchemaTypes.Exact<{
   transferData: SchemaTypes.TransferCalloutInput;
 }>;
@@ -122643,6 +122651,14 @@ export const CreatePollCalloutOnCalloutsSetDocument = gql`
   }
   ${PollDefinitionFragmentDoc}
 `;
+export const UpdatePollStatusDocument = gql`
+  mutation updatePollStatus($statusData: UpdatePollStatusInput!) {
+    updatePollStatus(statusData: $statusData) {
+      id
+      status
+    }
+  }
+`;
 export const TransferCalloutDocument = gql`
   mutation transferCallout($transferData: TransferCalloutInput!) {
     transferCallout(transferData: $transferData) {
@@ -126986,6 +127002,7 @@ const CastPollVoteDocumentString = print(CastPollVoteDocument);
 const CreatePollCalloutOnCalloutsSetDocumentString = print(
   CreatePollCalloutOnCalloutsSetDocument
 );
+const UpdatePollStatusDocumentString = print(UpdatePollStatusDocument);
 const TransferCalloutDocumentString = print(TransferCalloutDocument);
 const UpdateCollaborationFromSpaceTemplateDocumentString = print(
   UpdateCollaborationFromSpaceTemplateDocument
@@ -128605,6 +128622,28 @@ export function getSdk(
             { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "createPollCalloutOnCalloutsSet",
+        "mutation",
+        variables
+      );
+    },
+    updatePollStatus(
+      variables: SchemaTypes.UpdatePollStatusMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.UpdatePollStatusMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.UpdatePollStatusMutation>(
+            UpdatePollStatusDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "updatePollStatus",
         "mutation",
         variables
       );

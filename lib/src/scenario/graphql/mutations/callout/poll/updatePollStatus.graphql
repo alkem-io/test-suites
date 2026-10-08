@@ -1,0 +1,8 @@
+# Closes or reopens a Poll (workspace#080, R25): a space template must never
+# carry the source poll's status, so the source is closed before capture.
+mutation updatePollStatus($statusData: UpdatePollStatusInput!) {
+  updatePollStatus(statusData: $statusData) {
+    id
+    status
+  }
+}
