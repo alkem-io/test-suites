@@ -80,6 +80,19 @@ Two fixes found by the live run, both in the tests:
 - **The template-Form refusal cases need a persona that holds CONTRIBUTE.** On a template callout the Global Admin is refused at the privilege check before the template rule is reached. So the template (and the source Form copied into the space template) allow LINK contributions, which grant CONTRIBUTE to the template's creators, and the refusal is then the template rule's `FORM_TEMPLATE_NOT_RESPONDABLE`.
 - **The Form walk filled the wrong "Title" field.** The create-Post dialog now holds two "Title" text boxes, the Post's and the Form builder's. The walk now targets the Post title by its placeholder.
 
+**Run live 2026-10-08** (QA PR challenge, after merging `develop` @ `8467bc98`), local stack on server `develop` @ `87caca746` (includes server#6595) and client-web `develop` @ `b1095a408` (includes client-web#10382 and #10373):
+
+| Suite | Result |
+|---|---|
+| API R25 pair (19 cases: 17 + the CLOSED-Form and `updateTemplateFromSpace` cases) | 19/19, twice |
+| API `--project templates` | 48/48 |
+| API `callout/form/form-placement-guards` | 17/17 |
+| Playwright `poll-form-save-as-template` | 2/2 |
+| Playwright `callout-tests › 58 Form` | passed twice. It was red on this client: client-web#10373 moved Poll, Form and Call to Action behind "More to add", and the usage helper's `Title` locator also matched "Form title (optional)". Both helpers are fixed (QA-CH-06) |
+| Playwright `callout-tests › 42 Poll` | **red, not R25**: with the framing fix it now reaches the edit dialog, where it fails on `Cancel`. A pristine CRD edit form dismisses with **Done** (client-web#10243, see harness notes), `verify/callout-template-verify.ts:269`. Rows 42–57 share that step |
+
+Sabotage probes (worktree only, reverted): replacing the read-back Poll/Form definition with `null` (the pre-R25 "type POLL without the poll" regression) left five cases **green** before QA-CH-01 and turns them red after it.
+
 ```bash
 cd server-api
 pnpm exec vitest run --project templates src/functional-api/templates/callout/poll-form-callout-templates.it-spec.ts src/functional-api/templates/space/space-templates-poll-form.it-spec.ts
@@ -98,12 +111,14 @@ UI_HEADLESS=true pnpm exec playwright test src/functional-e2e/templates-CRD/temp
 | US5-AS1/AS2 / FR-025–FR-027 a callout template keeps a Form: title, description, questions (types, options, required), settings | API TPL `callout/… › a callout template carries a Form` |
 | US5-AS6 / FR-027b a callout-template Form refuses responses (`FORM_TEMPLATE_NOT_RESPONDABLE`) | API TPL `callout/… › a template Form never accepts responses` (control: the same definition on a live Post accepts the same answers) |
 | FR-027b / R25d the template admin edits a template Form; a space member is refused and nothing changes | API TPL `callout/… › a template Form definition is edited by the template admin` |
-| US5-AS3/AS5 / FR-027 a space template from a space with a voted Poll and an answered Form keeps both definitions, no votes, no responses, no source ids | API TPL `space/space-templates-poll-form.it-spec.ts › a space template keeps Poll and Form definitions only` (control: the source keeps its vote and response) |
+| US5-AS3/AS5 / FR-027 a space template from a space with a voted, then CLOSED Poll and an answered Form keeps both definitions, no votes, no responses, no source ids; the template poll is OPEN (status is never copied) | API TPL `space/space-templates-poll-form.it-spec.ts › a space template keeps Poll and Form definitions only` (control: the source keeps its vote, its CLOSED status and its response) |
+| FR-027 / server#6435 AC "settings (visibility, single/multiple, open/closed)" copied as-is: a second source Form holds the other class of every setting (ADMINS, SINGLE, CLOSED, expanded) and keeps it in the template, in a subspace created from it and after `updateCollaborationFromSpaceTemplate` — never reopened *(added 2026-10-08, QA-CH-02)* | API TPL `space/… › the template content space keeps the CLOSED Form with the other class of every setting, as-is`; the subspace and collaboration cases through `expectFreshCopies` |
 | US5-AS6 a Form inside a template content space refuses responses | API TPL `space/… › a Form inside a template content space never accepts responses` |
+| US5-AS6 / R25 template flag: a Form that reaches a template through `updateTemplateFromSpace` (the path server#6595 sec-server-1 fixed) refuses responses *(added 2026-10-08, QA-CH-04)* | API TPL `space/… › a Form brought into a template by updateTemplateFromSpace is refused with FORM_TEMPLATE_NOT_RESPONDABLE` (precondition: the template held no Form; control: the source Form accepts the same answers) |
 | US5-AS3/AS5 a subspace created from the template: Poll OPEN, same options, 0 votes; Form same questions/settings, fresh ids, 0 responses | API TPL `space/… › a subspace created from the template` (control: both take a vote / a response) |
 | R25c `updateCollaborationFromSpaceTemplate` (addCallouts) adds them the same way | API TPL `space/… › updateCollaborationFromSpaceTemplate adds the Poll and the Form` |
 | FR-027a a FORM in the create-subspace request itself stays refused, also with a template | API TPL `space/… › only the template may carry a Form into a new subspace` (control: same template + NONE callout); without a template: `form-placement-guards.it-spec.ts` |
-| US5-AS4 / FR-001b a template never places a Form in a VC knowledge base | API `form-placement-guards.it-spec.ts › carriers…` (seeded, direct add) and `› spaces holding a FORM callout` (conversion) — unchanged by R25 |
+| US5-AS4 / FR-027a a template never places a Form in a VC knowledge base | **Partial.** A FORM supplied in the VC request itself, a direct add and conversion stay refused: `form-placement-guards.it-spec.ts › carriers…` and `› spaces holding a FORM callout`. The R25 path itself — the platform knowledge-base template seeding a new VC, which now drops Form and Poll callouts — is **not covered** here (see *Not covered*) |
 | US5-AS2/AS5 / FR-026 save a Poll Post as a template from the Post menu; preview; start a Post from it (question/options prefilled, editable); the new poll takes a vote | walk CRD `poll-form-save-as-template.spec.ts › US5-AS5` |
 | US5-AS1/AS2 / FR-025/FR-026 save a Form Post as a template; preview lists "Questions" (numbered, type badges, "Required"); start a Post from it (builder prefilled, editable); the new Form takes a response | walk CRD `poll-form-save-as-template.spec.ts › US5-AS1/AS2` |
 | R25a the callout-template editor offers the Form framing | walk CRD `callout-tests.spec.ts › 58 Form` (create in the editor → preview → use → in-feed Form box) |
@@ -121,6 +136,9 @@ UI_HEADLESS=true pnpm exec playwright test src/functional-e2e/templates-CRD/temp
 | Search | Descoped by the operator on 2026-09-30 (`forge-run.md` 5d); not recorded in `spec.md` | — |
 | FR-016c no comments or reactions, FR-015a no edit, FR-016d not movable | No surface exists to call | Structural; walk `us4a › US4a-AS3` asserts no edit affordance |
 | Six-locale copy, "Deleted user" label in all locales | Locale assertions have no home here | client-web unit tests |
+| R25 US5-AS4: the platform knowledge-base template seeds a new VC without its Form and Poll callouts (server#6595 sec-server-2) | The only lever is the platform-wide default knowledge-base template. Pointing it at a Form-holding template changes what every VC created on the stack receives, including other suites' VCs running in parallel. **Decision needed:** accept a local-only, serial case that swaps and restores the platform default, or leave it to the unit spec | server unit `platform.templates.service.spec.ts` |
+| R25 template flag, third path: a Form Post created directly in a template's callouts set | Not reachable through the API: `createCalloutOnCalloutsSet` on a template content-space callouts set fails for every framing, NONE included, with `ENTITY_NOT_FOUND` "Unable to retrieve storage aggregator to use for CalloutsSet …" (reproduced 2026-10-08). **Decision needed** (QA-PF-01): is the path meant to exist? | server unit `callout.form.resolver.mutations.spec.ts` (collaboration `isTemplate` branch) |
+| R25e: Poll options edited in a callout template are saved; editing a template poll sends no vote notification and no contribution report | No case in this PR | server unit `poll.resolver.mutations.spec.ts` / `poll.service.spec.ts`; a system case needs an options edit on a template poll |
 
 ## Open questions (need a decision, not a test)
 
