@@ -389,16 +389,17 @@ test.describe('Organization Membership tab — leave a Space', () => {
       const dialog = await startLeave(page, spaceName(), 'Space');
       await leaveButton(dialog).click();
 
-      // Re-open the same confirmation while the request is still in flight:
-      // its confirm is busy/disabled, so no second request can be sent.
-      await card(page, spaceName())
-        .getByRole('button', { name: COPY.menuTrigger })
-        .click();
-      await leaveMenuItem(page, 'Space').click();
-      await expect(leaveButton(dialogOf(page))).toBeDisabled();
+      // The confirmed dialog itself stays open and non-interactive while the
+      // removal is in flight: busy, disabled confirm and disabled Cancel, so
+      // no second request can be sent and the leave cannot be abandoned.
+      await expect(dialog).toBeVisible();
+      await expect(leaveButton(dialog)).toBeDisabled();
+      await expect(leaveButton(dialog)).toHaveAttribute('aria-busy', 'true');
+      await expect(cancelBtn(dialog)).toBeDisabled();
       expect(removeRequests).toBe(1);
 
       await expect(successToast(page)).toBeVisible({ timeout: 15_000 });
+      await expect(dialog).toBeHidden();
       expect(removeRequests).toBe(1);
       expect(await orgIsMemberOf(spaceRoleSetId(), orgId())).toBe(false);
     } finally {
