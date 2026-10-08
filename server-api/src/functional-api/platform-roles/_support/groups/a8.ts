@@ -1,6 +1,7 @@
 import { expect } from 'vitest';
+import { allowedRoles, CAPABILITIES } from '../../capabilities.data';
 import { rawRead, rawRequest } from '../raw-request';
-import type { GroupModule, Headers } from '../types';
+import type { GroupModule, Headers, PerRole } from '../types';
 import {
   createCallout,
   createHubAsLicenseManager,
@@ -12,12 +13,16 @@ import {
 } from './organization-content';
 
 /**
- * A8 — delete content; set a callout's publisher. Owner: Platform Content Full
- * Access, and nobody else — in particular NOT Platform Support, which may edit
- * an organization's pack and hub (A7) but never delete them.
+ * A8 — delete content; set a callout's publisher. Deletes are owned by Platform
+ * Content Full Access and nobody else — in particular NOT Platform Support,
+ * which may edit an organization's pack and hub (A7) but never delete them.
+ * Setting the publisher is shared with Platform Resource Admin (027 operator
+ * amendment 2026-10-07).
  *
- * Destructive and single-owner: one dedicated `doomed` target per capability,
- * and a `kept` twin that every negative aims at and that must outlive the run.
+ * Destructive: one dedicated `doomed` target per capability, and a `kept` twin
+ * that every negative aims at and that must outlive the run. The publisher
+ * positive has its own callout per allowed role, so the two owners never race
+ * on one entity and neither can pass on the other's write.
  * Everything sits in an organization's account, in a PRIVATE space.
  */
 type Pair = { doomed: string; kept: string };
@@ -29,8 +34,9 @@ type A8 = {
   space: Pair;
   pack: Pair;
   hub: Pair;
-  /** Positive target of `updateCalloutPublishInfo`; negatives use `callout.kept`. */
-  republishedCalloutId: string;
+  /** Positive targets of `updateCalloutPublishInfo`, one per allowed role;
+   * negatives use `callout.kept`. */
+  republishedCalloutIds: PerRole;
   publisherId: string;
 };
 
@@ -38,6 +44,7 @@ type A8 = {
 const PUBLISH_DATE = Date.UTC(2020, 0, 1);
 
 const OWNER = 'PLATFORM_CONTENT_FULL_ACCESS';
+const PUBLISH = CAPABILITIES.find(c => c.id === 'A8.updateCalloutPublishInfo')!;
 
 const READ = {
   callout: 'query($id: UUID!) { lookup { callout(ID: $id) { id } } }',
@@ -99,6 +106,12 @@ export const A8_GROUP: GroupModule<A8> = {
           )
         ).createContributionOnCallout.id
     );
+    const republishedCalloutIds: PerRole = {};
+    for (const [i, role] of allowedRoles(PUBLISH).entries())
+      republishedCalloutIds[role] = await createCallout(
+        host.calloutsSetId,
+        name(`republished${i}`)
+      );
 
     return {
       organizationId,
@@ -114,10 +127,7 @@ export const A8_GROUP: GroupModule<A8> = {
       hub: await pairOf(tag =>
         createHubAsLicenseManager(ctx, accountId, name(tag))
       ),
-      republishedCalloutId: await createCallout(
-        host.calloutsSetId,
-        name('republished')
-      ),
+      republishedCalloutIds,
       publisherId: ctx.userIds[OWNER],
     };
   },
@@ -174,8 +184,7 @@ export const A8_GROUP: GroupModule<A8> = {
         sdk.updateCalloutPublishInfo(
           {
             calloutData: {
-              calloutID:
-                role === OWNER ? fx.republishedCalloutId : fx.callout.kept,
+              calloutID: fx.republishedCalloutIds[role] ?? fx.callout.kept,
               publisherID: fx.publisherId,
               publishDate: PUBLISH_DATE,
             },
@@ -184,7 +193,7 @@ export const A8_GROUP: GroupModule<A8> = {
         ),
       // Built by the organization's admin, so the publisher was NOT this role
       // and the date was "now".
-      verify: async ({ fx, reader }) => {
+      verify: async ({ fx, reader, role }) => {
         const { lookup } = await rawRead<{
           lookup: {
             callout: { publishedBy: { id: string }; publishedDate: string };
@@ -192,7 +201,7 @@ export const A8_GROUP: GroupModule<A8> = {
         }>(
           reader.authorization.replace(/^Bearer /, ''),
           'query($id: UUID!) { lookup { callout(ID: $id) { publishedBy { id } publishedDate } } }',
-          { id: fx.republishedCalloutId }
+          { id: fx.republishedCalloutIds[role] }
         );
         expect(lookup.callout.publishedBy.id).toBe(fx.publisherId);
         expect(Date.parse(lookup.callout.publishedDate)).toBe(PUBLISH_DATE);

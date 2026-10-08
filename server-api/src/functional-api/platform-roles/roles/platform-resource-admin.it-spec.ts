@@ -9,7 +9,9 @@ import {
  * Platform Resource Admin
  *
  * OWNS: Resource moves: a space, hub, pack or VC to another account; promote,
- * demote or move a space; move a callout or a contribution.
+ * demote or move a space; move a callout or a contribution. Also sets a
+ * callout's publisher information (A8 `updateCalloutPublishInfo`, shared with
+ * Content Full Access - operator amendment 2026-10-07).
  *
  * MUST NOT: Everything else - role assignment, settings, operations, user
  * records, content access, the forum, support.

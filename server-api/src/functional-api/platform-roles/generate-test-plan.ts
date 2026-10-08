@@ -352,7 +352,7 @@ out(
   '| `PLATFORM_SETTINGS_ADMIN › can › A13.updateLicensePlan` | the mutation reports success; the value re-reads unchanged | `LicensePlanService.update()` saves the plan without applying the input (also on `develop`). A positive must observe its effect — there is none to observe |'
 );
 out(
-  '| `PLATFORM_CONTENT_FULL_ACCESS › cannot › A3.aiServerAuthorizationPolicyReset` | Content Full Access resets the AI server authorization (Slice B stack, 2026-10-07) | `ai.server.service.authorization.ts` re-anchors the old `CREDENTIAL_RULE_AI_SERVER_GLOBAL_ADMINS` rule — CRUD **plus GRANT and AUTHORIZATION_RESET** — onto `PLATFORM_CONTENT_FULL_ACCESS`. FR-004 removed GRANT from the content role and A3 resets belong to Operations Admin; raised on alkem-io/server#6582 |'
+  '| `PLATFORM_CONTENT_FULL_ACCESS › cannot › A3.aiServerAuthorizationPolicyReset` | Content Full Access resets the AI server authorization (Slice B stack, 2026-10-07) | `ai.server.service.authorization.ts` re-anchors the old `CREDENTIAL_RULE_AI_SERVER_GLOBAL_ADMINS` rule — CRUD **plus GRANT and AUTHORIZATION_RESET** — onto `PLATFORM_CONTENT_FULL_ACCESS`. FR-004 removed GRANT from the content role and A3 resets belong to Operations Admin. Filed as [alkem-io/server#6619](https://github.com/alkem-io/server/issues/6619); fixed by [alkem-io/server#6626](https://github.com/alkem-io/server/pull/6626) — goes green once that PR is on `develop` |'
 );
 out(
   '| `PLATFORM_RESOURCE_ADMIN › cannot › A16.createPlatformRolesAccess` | Resource Admin READS a private space it is not a member of | the server grants it READ on every space deliberately; the requirements allow only Spaces Reader (+ the Content Full Access exception). Needs a product decision — then either the table or the server changes |'
@@ -364,14 +364,18 @@ out(
   'Written against the expected behaviour and registered as `test.skip` with the issue in the title (operator decision 2026-10-06: skip rather than `test.fails`, so the nightly is not red by design). Drop the `knownDefects` entry in `capabilities.data.ts` when the fix is on `develop`.'
 );
 out();
-out('| Cell | Issue | Observed |');
-out('|---|---|---|');
-for (const c of CAPABILITIES) {
-  for (const d of c.knownDefects ?? []) {
-    out(
-      `| \`${d.role} › ${d.half === 'negative' ? 'cannot' : 'can'} › ${c.id}\` | [${d.issue}](https://github.com/${d.issue.replace('#', '/issues/')}) | ${d.observed} |`
-    );
+if (CAPABILITIES.some(c => c.knownDefects?.length)) {
+  out('| Cell | Issue | Observed |');
+  out('|---|---|---|');
+  for (const c of CAPABILITIES) {
+    for (const d of c.knownDefects ?? []) {
+      out(
+        `| \`${d.role} › ${d.half === 'negative' ? 'cannot' : 'can'} › ${c.id}\` | [${d.issue}](https://github.com/${d.issue.replace('#', '/issues/')}) | ${d.observed} |`
+      );
+    }
   }
+} else {
+  out('None open.');
 }
 out();
 out('## What is genuinely proven');

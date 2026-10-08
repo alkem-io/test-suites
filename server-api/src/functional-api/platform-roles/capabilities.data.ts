@@ -66,7 +66,7 @@ export const ROLE_SUMMARY: Record<
   },
   PLATFORM_RESOURCE_ADMIN: {
     name: 'Platform Resource Admin',
-    owns: 'Resource moves: a space, hub, pack or VC to another account; promote, demote or move a space; move a callout or a contribution.',
+    owns: "Resource moves: a space, hub, pack or VC to another account; promote, demote or move a space; move a callout or a contribution. Also sets a callout's publisher information (A8 `updateCalloutPublishInfo`, shared with Content Full Access - operator amendment 2026-10-07).",
     mustNot:
       'Everything else - role assignment, settings, operations, user records, content access, the forum, support.',
   },
@@ -1000,7 +1000,9 @@ export const CAPABILITIES: readonly Capability[] = [
     group: 'A8',
     surface: 'updateCalloutPublishInfo',
     kind: 'mutation',
-    owners: ['PLATFORM_CONTENT_FULL_ACCESS'],
+    // Resource Admin: 027 operator amendment 2026-10-07 (spec Session
+    // 2026-10-07, privilege map A8; closes alkem-io/server#6620).
+    owners: ['PLATFORM_CONTENT_FULL_ACCESS', 'PLATFORM_RESOURCE_ADMIN'],
     acceptedExtra: [],
     requirement: { basis: 'named' },
     verifies: {
@@ -1009,15 +1011,6 @@ export const CAPABILITIES: readonly Capability[] = [
     },
     positive: { status: 'automated' },
     negative: { status: 'automated' },
-    knownDefects: [
-      {
-        role: 'PLATFORM_RESOURCE_ADMIN',
-        half: 'negative',
-        issue: 'alkem-io/server#6620',
-        observed:
-          'Resource Admin rewrites the publisher and published date of a callout it cannot even READ (develop @ server c47d48983, 2026-10-07): server#6582 adds PLATFORM_RESOURCE_ADMIN to UPDATE_CALLOUT_PUBLISHER citing an "operator amendment" the workspace spec (privilege map A8) does not record',
-      },
-    ],
   },
   // ===== A9 — Move resources between accounts / space levels =====
   {

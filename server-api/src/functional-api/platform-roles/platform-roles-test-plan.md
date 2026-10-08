@@ -2,7 +2,7 @@
 
 > **Status:** Built — QA-lead directive in-session 2026-09-18 (single delivery); awaiting review at PR · **Depth:** Deep (authorization change, cross-repo, release-train gated) · **Story:** alkem-io/server#4764 · Epic alkem-io/server#6320 · **Generated** from `capabilities.data.ts` + `scenarios.data.ts` — do not edit by hand
 
-The single Global Admin "god mode" is decomposed into 10 `Platform …` administration roles and 4 `Feature …` roles. This suite answers one question per role, in both directions: **can it do everything the acceptance criteria give it, and is it refused everything else.** It tracks **112 administrative capabilities** in 21 groups × **14 roles** = **141 positive** and **1413 negative** role-level checks, plus **30 rule scenarios** that a grid cannot express.
+The single Global Admin "god mode" is decomposed into 10 `Platform …` administration roles and 4 `Feature …` roles. This suite answers one question per role, in both directions: **can it do everything the acceptance criteria give it, and is it refused everything else.** It tracks **112 administrative capabilities** in 21 groups × **14 roles** = **142 positive** and **1412 negative** role-level checks, plus **30 rule scenarios** that a grid cannot express.
 
 **Slice B vocabulary.** The table names the surfaces as they exist after workspace#027 Slice B (server alkem-io/server#6582): `adminUpdateSpaceVisibility` for A14, the two A17 rename surfaces, and none of the deleted FR-021/FR-022 mutations. Each test user holds exactly one target role (scenario X1 proves it first, and L2 proves the legacy vocabulary is gone from the schema).
 
@@ -41,7 +41,7 @@ Phase 1 (`platform-roles`) runs the 14 role files and the read-only specs in par
 |---|---|---|---|
 | PLATFORM_ROLES_ADMIN | `roles/platform-roles-admin.it-spec.ts` | 20 | 91 |
 | PLATFORM_CONTENT_FULL_ACCESS | `roles/platform-content-full-access.it-spec.ts` | 17 | 94 |
-| PLATFORM_RESOURCE_ADMIN | `roles/platform-resource-admin.it-spec.ts` | 13 | 98 |
+| PLATFORM_RESOURCE_ADMIN | `roles/platform-resource-admin.it-spec.ts` | 14 | 97 |
 | PLATFORM_SETTINGS_ADMIN | `roles/platform-settings-admin.it-spec.ts` | 12 | 99 |
 | PLATFORM_OPERATIONS_ADMIN | `roles/platform-operations-admin.it-spec.ts` | 24 | 87 |
 | PLATFORM_USERS_ADMIN | `roles/platform-users-admin.it-spec.ts` | 17 | 94 |
@@ -184,7 +184,7 @@ Spec: A8 · FR-004
 | `deleteSpace` | content full access | **effect** — re-reading the deleted entity returns not-found | ✅ automated | ✅ automated |
 | `deleteInnovationPack` | content full access | **effect** — re-reading the deleted entity returns not-found | ✅ automated | ✅ automated |
 | `deleteInnovationHub` | content full access | **effect** — re-reading the deleted entity returns not-found | ✅ automated | ✅ automated |
-| `updateCalloutPublishInfo` | content full access | **effect** — publisher / published date changed on re-read | ✅ automated | ✅ automated |
+| `updateCalloutPublishInfo` | content full access, resource admin | **effect** — publisher / published date changed on re-read | ✅ automated | ✅ automated |
 
 ### A9 — Move resources between accounts / space levels
 
@@ -456,13 +456,14 @@ One section per role, in the order of `roles/*.it-spec.ts`. **Can** lists every 
 
 **Platform Resource Admin** — `roles/platform-resource-admin.it-spec.ts`
 
-- **Owns:** Resource moves: a space, hub, pack or VC to another account; promote, demote or move a space; move a callout or a contribution.
+- **Owns:** Resource moves: a space, hub, pack or VC to another account; promote, demote or move a space; move a callout or a contribution. Also sets a callout's publisher information (A8 `updateCalloutPublishInfo`, shared with Content Full Access - operator amendment 2026-10-07).
 - **Must not:** Everything else - role assignment, settings, operations, user records, content access, the forum, support.
 
-**Can (13)**
+**Can (14)**
 
 | Capability | Reaches it as | A passing positive must observe |
 |---|---|---|
+| `A8.updateCalloutPublishInfo` | owner | **effect** — publisher / published date changed on re-read |
 | `A9.moveSpaceL1ToSpaceL0` | owner | **effect** — the space reports the new level / parent on re-read |
 | `A9.moveSpaceL1ToSpaceL2` | owner | **effect** — the space reports the new level / parent on re-read |
 | `A9.moveSpaceL2ToSpaceL1` | owner | **effect** — the space reports the new level / parent on re-read |
@@ -477,7 +478,7 @@ One section per role, in the order of `roles/*.it-spec.ts`. **Can** lists every 
 | `A9.transferInnovationPackToAccount` | owner | **effect** — the resource reports the TARGET account on re-read |
 | `A9.transferVirtualContributorToAccount` | owner | **effect** — the resource reports the TARGET account on re-read |
 
-**Cannot (99)** — by group:
+**Cannot (98)** — by group:
 
 - **A1** Assign / revoke a Platform role: `assignPlatformRoleToUser`, `removePlatformRoleFromUser`, `grantCredentialToActor`, `revokeCredentialFromActor`
 - **A2** Assign / revoke a Feature role (user or organization): `assignPlatformRoleToUser`, `removePlatformRoleFromUser`, `assignPlatformRoleToOrganization`, `removePlatformRoleFromOrganization`
@@ -486,7 +487,7 @@ One section per role, in the order of `roles/*.it-spec.ts`. **Can** lists every 
 - **A5** Delete a user; reset an identity/account; administer users' MCP keys: `deleteUser`, `adminIdentityDeleteKratosIdentity`, `adminUserAccountDelete`, `mcpApiKeys`, `adminRevokeMcpApiKey`
 - **A6** Create / delete an organization: `createOrganization`, `deleteOrganization`
 - **A7** Edit an organization-owned pack, hub or its templates: `updateInnovationPack`, `updateInnovationHub`, `createTemplate`, `createTemplateFromSpace`, `createTemplateFromContentSpace`, `updateTemplate`, `updateTemplateFromSpace`, `deleteTemplate`, `updateCallout`
-- **A8** Delete content; set callout publisher: `deleteCallout`, `deleteContribution`, `deleteSpace`, `deleteInnovationPack`, `deleteInnovationHub`, `updateCalloutPublishInfo`
+- **A8** Delete content; set callout publisher: `deleteCallout`, `deleteContribution`, `deleteSpace`, `deleteInnovationPack`, `deleteInnovationHub`
 - **A10** Platform settings & configuration: `updatePlatformSettings`, `addIframeAllowedURL`, `removeIframeAllowedURL`, `addNotificationEmailToBlacklist`, `removeNotificationEmailFromBlacklist`, `setPlatformWellKnownVirtualContributor`
 - **A11** Operational machinery: `cleanupCollections`, `updateAssistantActorCapabilities`, `adminInAppNotificationsPrune`, `adminUpdateContributorAvatars`, `adminUpdateGeoLocationData`, `adminSearchIngestFromScratch`, `migrateLegacyMemoContent`, `migrateLegacyWhiteboardContent`, `refreshAllBodiesOfKnowledge`, `adminCommunicationEnsureAccessToCommunications`, `adminCommunicationRemoveOrphanedRoom`, `adminCommunicationUpdateRoomState`, `adminCommunicationMigrateOrphanedConversations`, `adminCommunicationSyncSpaceHierarchy`
 - **A12** License usage: `assignLicensePlanToAccount`, `assignLicensePlanToSpace`, `revokeLicensePlanFromAccount`, `revokeLicensePlanFromSpace`, `updateBaselineLicensePlanOnAccount`
@@ -1022,19 +1023,17 @@ One section per role, in the order of `roles/*.it-spec.ts`. **Can** lists every 
 | Test | Observed | Why it stays red |
 |---|---|---|
 | `PLATFORM_SETTINGS_ADMIN › can › A13.updateLicensePlan` | the mutation reports success; the value re-reads unchanged | `LicensePlanService.update()` saves the plan without applying the input (also on `develop`). A positive must observe its effect — there is none to observe |
-| `PLATFORM_CONTENT_FULL_ACCESS › cannot › A3.aiServerAuthorizationPolicyReset` | Content Full Access resets the AI server authorization (Slice B stack, 2026-10-07) | `ai.server.service.authorization.ts` re-anchors the old `CREDENTIAL_RULE_AI_SERVER_GLOBAL_ADMINS` rule — CRUD **plus GRANT and AUTHORIZATION_RESET** — onto `PLATFORM_CONTENT_FULL_ACCESS`. FR-004 removed GRANT from the content role and A3 resets belong to Operations Admin; raised on alkem-io/server#6582 |
+| `PLATFORM_CONTENT_FULL_ACCESS › cannot › A3.aiServerAuthorizationPolicyReset` | Content Full Access resets the AI server authorization (Slice B stack, 2026-10-07) | `ai.server.service.authorization.ts` re-anchors the old `CREDENTIAL_RULE_AI_SERVER_GLOBAL_ADMINS` rule — CRUD **plus GRANT and AUTHORIZATION_RESET** — onto `PLATFORM_CONTENT_FULL_ACCESS`. FR-004 removed GRANT from the content role and A3 resets belong to Operations Admin. Filed as [alkem-io/server#6619](https://github.com/alkem-io/server/issues/6619); fixed by [alkem-io/server#6626](https://github.com/alkem-io/server/pull/6626) — goes green once that PR is on `develop` |
 | `PLATFORM_RESOURCE_ADMIN › cannot › A16.createPlatformRolesAccess` | Resource Admin READS a private space it is not a member of | the server grants it READ on every space deliberately; the requirements allow only Spaces Reader (+ the Content Full Access exception). Needs a product decision — then either the table or the server changes |
 
 ## Known server defects — cells skipped until the fix lands
 
 Written against the expected behaviour and registered as `test.skip` with the issue in the title (operator decision 2026-10-06: skip rather than `test.fails`, so the nightly is not red by design). Drop the `knownDefects` entry in `capabilities.data.ts` when the fix is on `develop`.
 
-| Cell | Issue | Observed |
-|---|---|---|
-| `PLATFORM_RESOURCE_ADMIN › cannot › A8.updateCalloutPublishInfo` | [alkem-io/server#6620](https://github.com/alkem-io/server/issues/6620) | Resource Admin rewrites the publisher and published date of a callout it cannot even READ (develop @ server c47d48983, 2026-10-07): server#6582 adds PLATFORM_RESOURCE_ADMIN to UPDATE_CALLOUT_PUBLISHER citing an "operator amendment" the workspace spec (privilege map A8) does not record |
+None open.
 
 ## What is genuinely proven
 
-Verified live against the 027 server, twice in a row with identical results (2026-09-18): **92 of 112 capabilities have an automated positive and 111 an automated negative**, run for all 14 roles — 141 positive and 1413 negative role-level checks in the table, of which the exclusive and not-automated rows are excluded from the default run. Every negative is a refusal AT THE AUTHORIZATION GATE (an authorization code on the gate path), never a validation error, a not-found, or a forbidden sub-field. Every positive observes what its row declares — an effect read back, known data returned, a success payload, or (5 rows) a non-authorization error proving the gate was passed.
+Verified live against the 027 server, twice in a row with identical results (2026-09-18): **92 of 112 capabilities have an automated positive and 111 an automated negative**, run for all 14 roles — 142 positive and 1412 negative role-level checks in the table, of which the exclusive and not-automated rows are excluded from the default run. Every negative is a refusal AT THE AUTHORIZATION GATE (an authorization code on the gate path), never a validation error, a not-found, or a forbidden sub-field. Every positive observes what its row declares — an effect read back, known data returned, a success payload, or (5 rows) a non-authorization error proving the gate was passed.
 
 Rule scenarios: 22 positive and 25 negative halves automated. **What is NOT proven:** anything that reads a role-assignment audit record (the MCP endpoint is disabled on the stack this was built against — those halves are visible `test.todo`s that switch on with `PLATFORM_ROLES_MCP=1` once the endpoint answers); the 14 platform-wide positives in the `exclusive` project, which are written and type-checked but have NEVER been executed; restart and fault-injection scenarios; and the UI.
