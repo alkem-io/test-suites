@@ -2,7 +2,7 @@
   "name": "@alkemio/test-suites",
   "version": "0.3.0",
   "description": "Alkemio system level API / integration tests",
-  "author": "Alkemio Holding",
+  "author": "Alkemio",
   "private": false,
   "license": "EUPL-1.2",
   "main": "src/main.ts",
