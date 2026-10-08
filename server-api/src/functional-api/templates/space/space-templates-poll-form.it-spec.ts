@@ -334,14 +334,34 @@ beforeAll(async () => {
   }
 });
 
+/** Teardown runs every step even when one rejects, then reports all failures at once. */
+const teardownFailures: string[] = [];
+const tearDown = async (label: string, step: () => Promise<unknown>) => {
+  try {
+    await step();
+  } catch (error) {
+    teardownFailures.push(`${label}: ${String(error)}`);
+  }
+};
+const assertTeardownClean = () => {
+  if (teardownFailures.length > 0) {
+    throw new Error(`Teardown failed:\n${teardownFailures.join('\n')}`);
+  }
+};
+
 afterAll(async () => {
   for (const id of spaceIds) {
-    await deleteSpace(id);
+    await tearDown(`space ${id}`, () => deleteSpace(id));
   }
   for (const id of [templateId, ...extraTemplateIds].filter(Boolean)) {
-    await deleteTemplate(id);
+    await tearDown(`template ${id}`, () => deleteTemplate(id));
   }
-  await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
+  if (baseScenario) {
+    await tearDown('base scenario', () =>
+      TestScenarioFactory.cleanUpBaseScenario(baseScenario)
+    );
+  }
+  assertTeardownClean();
 });
 
 describe('R25 — a space template keeps Poll and Form definitions only (FR-027)', () => {

@@ -15,6 +15,7 @@ import {
 } from '@alkemio/tests-lib/core/generated/alkemio-schema';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import { deleteTemplate } from '../template.request.params';
+import { deleteCallout } from '../../callout/callouts.request.params';
 import {
   answersFor,
   createFormCallout,
@@ -68,6 +69,7 @@ const scenarioConfig: TestScenarioConfig = {
 
 let baseScenario: OrganizationWithSpaceModel;
 const templateIds: string[] = [];
+const liveCalloutIds: string[] = [];
 
 const POLL: PollDefinitionInput = {
   title: 'Which colour for the logo?',
@@ -144,11 +146,34 @@ beforeAll(async () => {
   baseScenario = await TestScenarioFactory.createBaseScenario(scenarioConfig);
 });
 
-afterAll(async () => {
-  for (const id of templateIds) {
-    await deleteTemplate(id);
+/** Teardown runs every step even when one rejects, then reports all failures at once. */
+const teardownFailures: string[] = [];
+const tearDown = async (label: string, step: () => Promise<unknown>) => {
+  try {
+    await step();
+  } catch (error) {
+    teardownFailures.push(`${label}: ${String(error)}`);
   }
-  await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
+};
+const assertTeardownClean = () => {
+  if (teardownFailures.length > 0) {
+    throw new Error(`Teardown failed:\n${teardownFailures.join('\n')}`);
+  }
+};
+
+afterAll(async () => {
+  for (const id of liveCalloutIds) {
+    await tearDown(`callout ${id}`, () => deleteCallout(id));
+  }
+  for (const id of templateIds) {
+    await tearDown(`template ${id}`, () => deleteTemplate(id));
+  }
+  if (baseScenario) {
+    await tearDown('base scenario', () =>
+      TestScenarioFactory.cleanUpBaseScenario(baseScenario)
+    );
+  }
+  assertTeardownClean();
 });
 
 describe('R25 — a callout template carries a Poll (US5-AS5, FR-027)', () => {
@@ -234,6 +259,7 @@ describe('R25 — a template Form never accepts responses (US5-AS6, FR-027b)', (
         settings: FORM.settings,
       }
     );
+    liveCalloutIds.push(live.calloutId);
 
     const result = await submitFormResponse(
       live.formId,
