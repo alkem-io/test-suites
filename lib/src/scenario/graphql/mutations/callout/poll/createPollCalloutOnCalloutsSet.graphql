@@ -1,0 +1,22 @@
+mutation createPollCalloutOnCalloutsSet(
+  $calloutData: CreateCalloutOnCalloutsSetInput!
+) {
+  createCalloutOnCalloutsSet(calloutData: $calloutData) {
+    id
+    settings {
+      visibility
+    }
+    framing {
+      id
+      type
+      profile {
+        id
+        displayName
+        url
+      }
+      poll {
+        ...PollDefinition
+      }
+    }
+  }
+}

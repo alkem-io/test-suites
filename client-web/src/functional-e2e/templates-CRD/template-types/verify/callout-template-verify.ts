@@ -23,8 +23,49 @@
  * the in-feed callout and are asserted in the usage flow.
  */
 
-import { expect, Page, test } from '@playwright/test';
-import { CalloutTemplateForm } from '../forms/callout/callout-template-form.models';
+import { expect, Locator, Page, test } from '@playwright/test';
+import {
+  CalloutTemplateForm,
+  CalloutTemplateFramingForm,
+} from '../forms/callout/callout-template-form.models';
+
+/**
+ * A Form template's preview (workspace#080, R25f): the Form title and
+ * description, then an ordered list named "Questions" — one item per question
+ * in order, each with its "N." number, prompt, answer-type badge, a "Required"
+ * badge only on required questions, and the options of a choice question.
+ */
+export const verifyFormTemplatePreview = async (
+  dialog: Locator,
+  form: Pick<CalloutTemplateFramingForm, 'title' | 'questions'> & {
+    description?: string;
+  }
+): Promise<void> => {
+  await expect(dialog.getByText(form.title, { exact: true })).toBeVisible();
+  if (form.description) {
+    await expect(
+      dialog.getByText(form.description, { exact: true })
+    ).toBeVisible();
+  }
+  const list = dialog.getByRole('list', { name: 'Questions', exact: true });
+  await expect(list).toBeVisible();
+  const items = list.locator(':scope > li');
+  await expect(items).toHaveCount(form.questions.length);
+  for (const [index, question] of form.questions.entries()) {
+    const item = items.nth(index);
+    await expect(item).toContainText(`${index + 1}.`);
+    await expect(item).toContainText(question.prompt);
+    await expect(item.getByText(question.type, { exact: true })).toBeVisible();
+    await expect(item.getByText('Required', { exact: true })).toHaveCount(
+      question.required ? 1 : 0
+    );
+    for (const option of question.options ?? []) {
+      await expect(
+        item.getByRole('listitem').filter({ hasText: option })
+      ).toBeVisible();
+    }
+  }
+};
 
 export const verifyCalloutTemplate = async (
   page: Page,
@@ -132,6 +173,10 @@ export const verifyCalloutTemplate = async (
       }
       break;
     }
+    case 'form': {
+      await verifyFormTemplatePreview(dialog, templateData.framing);
+      break;
+    }
     case 'none':
     default:
       break;
@@ -210,13 +255,10 @@ export const verifyPollSettings = async (
   await page.keyboard.press('Escape');
   await expect(settingsDialog).not.toBeVisible();
 
-  // Close the Edit dialog without saving. No changes were made, but Cancel can
-  // still raise a discard confirmation - dismiss it if it appears.
-  await editDialog.getByRole('button', { name: 'Cancel' }).click();
-  const discardAlert = page.getByRole('alertdialog');
-  if (await discardAlert.isVisible({ timeout: 500 }).catch(() => false)) {
-    await discardAlert.getByRole('button', { name: 'Discard' }).click();
-  }
+  // Close the Edit dialog without saving. A pristine CRD edit form offers
+  // "Done", not "Cancel" (client-web#10243), and asks no discard question.
+  await editDialog.getByRole('button', { name: 'Done', exact: true }).click();
+  await expect(page.getByRole('alertdialog')).toHaveCount(0);
   await expect(editDialog).not.toBeVisible();
 };
 

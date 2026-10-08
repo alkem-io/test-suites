@@ -210,6 +210,18 @@ const createAndVerifyCalloutTemplate = async (
 // | 56  |  10    | ON         | ON         | ON          | OFF        | all-on, anonymous, max option count              |
 // | 57  |   3    | ON         | ON         | ON          | ON         | all four settings ON                             |
 
+// =========================================================================================================================================
+//   FORM FRAMING TEST (Additional Content = Form) — workspace#080, ruling R25 (server#6435)
+// =========================================================================================================================================
+// A callout template may carry a Form definition. The editor offers the Form
+// chip next to the Poll; the template preview lists the questions ("Questions",
+// numbered, type badges, "Required"); starting a Post from the template fills
+// the builder; the published Post shows the Form box with "Submit Form".
+//
+// | No  | Questions                                   | Notes                                   |
+// |-----|---------------------------------------------|-----------------------------------------|
+// | 58  | required short text + optional single choice | Form framing, Response None, Comments Off |
+
 test.describe.serial('Callout Templates', () => {
   test.beforeAll(async ({ browser }) => {
     baseScenario = await TestScenarioFactory.createBaseScenario(scenarioConfig);
@@ -1226,6 +1238,22 @@ test.describe.serial('Callout Templates', () => {
       pollAllowAddOptions: true,
       pollHideResults: true,
       pollShowVoters: true,
+    });
+    await createAndVerifyCalloutTemplate(page, templateData);
+  });
+
+  // ============================================================
+  //  FORM FRAMING TEST (58) — workspace#080, ruling R25
+  // ============================================================
+
+  test('58 Form (2 questions), Response: None, Comments: Disabled', async ({
+    page,
+  }) => {
+    const templateData = createCalloutTemplateData({
+      testNumber: '58',
+      framingType: 'form',
+      responseType: 'none',
+      commentsEnabled: false,
     });
     await createAndVerifyCalloutTemplate(page, templateData);
   });
