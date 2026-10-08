@@ -357,9 +357,22 @@ out(
 out(
   '| `PLATFORM_RESOURCE_ADMIN › cannot › A16.createPlatformRolesAccess` | Resource Admin READS a private space it is not a member of | the server grants it READ on every space deliberately; the requirements allow only Spaces Reader (+ the Content Full Access exception). Needs a product decision — then either the table or the server changes |'
 );
+out();
+out('## Known server defects — cells skipped until the fix lands');
+out();
 out(
-  '| `PLATFORM_RESOURCE_ADMIN › cannot › A8.updateCalloutPublishInfo` | Resource Admin rewrites the publisher and published date of a callout it cannot even READ (develop @ server c47d48983, 2026-10-07) | server#6582 adds `PLATFORM_RESOURCE_ADMIN` to `UPDATE_CALLOUT_PUBLISHER` citing an "operator amendment 2026-10-07"; the workspace spec (privilege map A8, spec §Action → owning role) still names Content Full Access alone. Needs the amendment recorded in the spec — then this row moves to `acceptedExtra` — or the grant reverted |'
+  'Written against the expected behaviour and registered as `test.skip` with the issue in the title (operator decision 2026-10-06: skip rather than `test.fails`, so the nightly is not red by design). Drop the `knownDefects` entry in `capabilities.data.ts` when the fix is on `develop`.'
 );
+out();
+out('| Cell | Issue | Observed |');
+out('|---|---|---|');
+for (const c of CAPABILITIES) {
+  for (const d of c.knownDefects ?? []) {
+    out(
+      `| \`${d.role} › ${d.half === 'negative' ? 'cannot' : 'can'} › ${c.id}\` | [${d.issue}](https://github.com/${d.issue.replace('#', '/issues/')}) | ${d.observed} |`
+    );
+  }
+}
 out();
 out('## What is genuinely proven');
 out();

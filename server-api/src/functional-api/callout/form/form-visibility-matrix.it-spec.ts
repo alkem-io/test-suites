@@ -808,7 +808,12 @@ describe('Form responses — a space that allows platform support as admin', () 
     await deleteSpace(supportSpaceId);
   });
 
-  test('Global Support reads every response and can moderate', async () => {
+  // Known server defect — alkem-io/server#6621: with `allowPlatformSupportAsAdmin`
+  // on, Support gets `canModerate` but reads none of the responses
+  // (`canReadAll: false`, total 0) on the Slice B server (develop c47d489).
+  // Written against the expected behaviour (027 spec row 7, 080 SC-003);
+  // drop the .skip when the fix lands.
+  test.skip('Global Support reads every response and can moderate (alkem-io/server#6621)', async () => {
     const result = await getFormResponses(
       supportForm.formId,
       TestUser.GLOBAL_SUPPORT_ADMIN

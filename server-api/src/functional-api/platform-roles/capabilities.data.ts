@@ -295,6 +295,22 @@ export type Capability = {
   positive: Coverage;
   /** "Every other target role CANNOT, with an authorization error on the root field." */
   negative: Coverage;
+  /**
+   * Cells that are red because of a CONFIRMED, filed server defect. The cell's
+   * test is registered as `test.skip` with the issue in its title (operator
+   * decision 2026-10-06: skip rather than `test.fails`, so the nightly is not
+   * red by design) and listed by the plan generator; drop the entry when the
+   * fix is on `develop`.
+   */
+  knownDefects?: readonly KnownDefect[];
+};
+
+export type KnownDefect = {
+  role: PlatformRole;
+  half: 'positive' | 'negative';
+  /** `owner/repo#n` */
+  issue: string;
+  observed: string;
 };
 
 export const CAPABILITIES: readonly Capability[] = [
@@ -993,6 +1009,15 @@ export const CAPABILITIES: readonly Capability[] = [
     },
     positive: { status: 'automated' },
     negative: { status: 'automated' },
+    knownDefects: [
+      {
+        role: 'PLATFORM_RESOURCE_ADMIN',
+        half: 'negative',
+        issue: 'alkem-io/server#6620',
+        observed:
+          'Resource Admin rewrites the publisher and published date of a callout it cannot even READ (develop @ server c47d48983, 2026-10-07): server#6582 adds PLATFORM_RESOURCE_ADMIN to UPDATE_CALLOUT_PUBLISHER citing an "operator amendment" the workspace spec (privilege map A8) does not record',
+      },
+    ],
   },
   // ===== A9 — Move resources between accounts / space levels =====
   {

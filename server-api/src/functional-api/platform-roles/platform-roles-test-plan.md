@@ -1024,7 +1024,14 @@ One section per role, in the order of `roles/*.it-spec.ts`. **Can** lists every 
 | `PLATFORM_SETTINGS_ADMIN › can › A13.updateLicensePlan` | the mutation reports success; the value re-reads unchanged | `LicensePlanService.update()` saves the plan without applying the input (also on `develop`). A positive must observe its effect — there is none to observe |
 | `PLATFORM_CONTENT_FULL_ACCESS › cannot › A3.aiServerAuthorizationPolicyReset` | Content Full Access resets the AI server authorization (Slice B stack, 2026-10-07) | `ai.server.service.authorization.ts` re-anchors the old `CREDENTIAL_RULE_AI_SERVER_GLOBAL_ADMINS` rule — CRUD **plus GRANT and AUTHORIZATION_RESET** — onto `PLATFORM_CONTENT_FULL_ACCESS`. FR-004 removed GRANT from the content role and A3 resets belong to Operations Admin; raised on alkem-io/server#6582 |
 | `PLATFORM_RESOURCE_ADMIN › cannot › A16.createPlatformRolesAccess` | Resource Admin READS a private space it is not a member of | the server grants it READ on every space deliberately; the requirements allow only Spaces Reader (+ the Content Full Access exception). Needs a product decision — then either the table or the server changes |
-| `PLATFORM_RESOURCE_ADMIN › cannot › A8.updateCalloutPublishInfo` | Resource Admin rewrites the publisher and published date of a callout it cannot even READ (develop @ server c47d48983, 2026-10-07) | server#6582 adds `PLATFORM_RESOURCE_ADMIN` to `UPDATE_CALLOUT_PUBLISHER` citing an "operator amendment 2026-10-07"; the workspace spec (privilege map A8, spec §Action → owning role) still names Content Full Access alone. Needs the amendment recorded in the spec — then this row moves to `acceptedExtra` — or the grant reverted |
+
+## Known server defects — cells skipped until the fix lands
+
+Written against the expected behaviour and registered as `test.skip` with the issue in the title (operator decision 2026-10-06: skip rather than `test.fails`, so the nightly is not red by design). Drop the `knownDefects` entry in `capabilities.data.ts` when the fix is on `develop`.
+
+| Cell | Issue | Observed |
+|---|---|---|
+| `PLATFORM_RESOURCE_ADMIN › cannot › A8.updateCalloutPublishInfo` | [alkem-io/server#6620](https://github.com/alkem-io/server/issues/6620) | Resource Admin rewrites the publisher and published date of a callout it cannot even READ (develop @ server c47d48983, 2026-10-07): server#6582 adds PLATFORM_RESOURCE_ADMIN to UPDATE_CALLOUT_PUBLISHER citing an "operator amendment" the workspace spec (privilege map A8) does not record |
 
 ## What is genuinely proven
 
