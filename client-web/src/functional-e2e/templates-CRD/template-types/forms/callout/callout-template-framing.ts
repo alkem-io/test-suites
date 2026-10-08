@@ -85,7 +85,9 @@ export const selectAndFillCalloutTemplateFraming = async (
       // rows also expose a "URL" textbox, which would collide with role+name
       // / label lookups when both CTA framing and references are present.
       await dialog.locator('#link-framing-url').fill(framing.ctaUrl);
-      await dialog.locator('#link-framing-display-name').fill(framing.ctaText);
+      await dialog
+        .locator('#link-framing-display-name')
+        .fill(framing.ctaText);
       return;
     }
 
@@ -113,18 +115,12 @@ export const selectAndFillCalloutTemplateFraming = async (
       // Open the "Poll Settings" sub-dialog. The poll editor's "Settings"
       // button is the only `button "Settings"` inside the template dialog
       // (the space banner's "Settings" is a `link`, different role).
-      await dialog
-        .getByRole('button', { name: 'Settings', exact: true })
-        .click();
-      const settingsDialog = page.getByRole('dialog', {
-        name: 'Poll Settings',
-      });
+      await dialog.getByRole('button', { name: 'Settings', exact: true }).click();
+      const settingsDialog = page.getByRole('dialog', { name: 'Poll Settings' });
       await expect(settingsDialog).toBeVisible();
 
       await setPollSwitch(
-        settingsDialog.getByRole('switch', {
-          name: 'Allow multiple responses',
-        }),
+        settingsDialog.getByRole('switch', { name: 'Allow multiple responses' }),
         framing.settings.allowMultipleResponses
       );
       await setPollSwitch(

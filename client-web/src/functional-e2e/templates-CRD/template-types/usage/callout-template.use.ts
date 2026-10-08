@@ -27,7 +27,9 @@ export const verifyCalloutTemplateUsage = async (
   await expect(createPostDialog).toBeVisible();
 
   // Open the "Use a template" picker
-  await createPostDialog.getByRole('button', { name: 'Find Template' }).click();
+  await createPostDialog
+    .getByRole('button', { name: 'Find Template' })
+    .click();
 
   // The picker lists templates as list items with a "Use template" button per
   // row (same pattern as the whiteboard editor's picker).
@@ -88,9 +90,7 @@ export const verifyCalloutTemplateUsage = async (
     calloutContainer.getByText('Callout Template Description', { exact: false })
   ).toBeVisible();
   await expect(
-    calloutContainer
-      .getByText(`- ID: ${templateData.testId}`, { exact: false })
-      .first()
+    calloutContainer.getByText(`- ID: ${templateData.testId}`, { exact: false }).first()
   ).toBeVisible();
 
   // Verify at least the first 3 callout tags are present. Tag chips render
@@ -122,9 +122,7 @@ export const verifyCalloutTemplateUsage = async (
       // unlike the legacy MUI overlay-on-hover. There's also a "Open Whiteboard"
       // affordance on the standalone whiteboard editor, hence `.first()`.
       await expect(
-        calloutContainer
-          .getByRole('button', { name: 'Open Whiteboard' })
-          .first()
+        calloutContainer.getByRole('button', { name: 'Open Whiteboard' }).first()
       ).toBeVisible();
       break;
     }
@@ -173,9 +171,7 @@ export const verifyCalloutTemplateUsage = async (
       //    and the other is absent.
       const optionRole = settings.allowMultipleResponses ? 'checkbox' : 'radio';
       const wrongRole = settings.allowMultipleResponses ? 'radio' : 'checkbox';
-      await expect(
-        calloutContainer.getByRole(optionRole).first()
-      ).toBeVisible();
+      await expect(calloutContainer.getByRole(optionRole).first()).toBeVisible();
       await expect(calloutContainer.getByRole(wrongRole)).toHaveCount(0);
 
       // 2) Allow contributors to add options -> an "Add your own option..."

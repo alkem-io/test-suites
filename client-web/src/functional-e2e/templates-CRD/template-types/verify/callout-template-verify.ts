@@ -128,17 +128,8 @@ export const verifyCalloutTemplate = async (
       // `test.fail` keeps the suite's signal clean until the product is fixed,
       // at which point Playwright reports "expected to fail, but passed" —
       // delete these three lines then.
-      test
-        .info()
-        .annotations.push({
-          type: 'known-issue',
-          description:
-            'client-web#10283 — no preview image for whiteboard framing',
-        });
-      test.fail(
-        true,
-        'client-web#10283: callout template whiteboard framing has no preview image'
-      );
+      test.info().annotations.push({ type: 'known-issue', description: 'client-web#10283 — no preview image for whiteboard framing' });
+      test.fail(true, 'client-web#10283: callout template whiteboard framing has no preview image');
       await expect(
         dialog.getByRole('img', { name: templateData.calloutTitle })
       ).toBeVisible();
