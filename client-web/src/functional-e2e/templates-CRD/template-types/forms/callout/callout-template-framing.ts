@@ -17,10 +17,27 @@ import {
   writeTextInWhiteboardDialog,
 } from '../whiteboards/whiteboard-dialog';
 
-const framingRadio = (dialog: Locator, name: string): Locator =>
-  dialog
-    .getByRole('radiogroup', { name: 'Add to post' })
-    .getByRole('radio', { name, exact: true });
+/**
+ * Selects an "Add to Post" framing chip. Since client-web#10373 the strip
+ * surfaces three chips (Whiteboard, Memo, Media Gallery) and the rest sit in
+ * the "More to add" menu; a type chosen there joins the row, checked.
+ */
+const selectFraming = async (
+  page: Page,
+  dialog: Locator,
+  name: string
+): Promise<void> => {
+  const group = dialog.getByRole('radiogroup', { name: 'Add to post' });
+  await expect(group).toBeVisible();
+  const radio = group.getByRole('radio', { name, exact: true });
+  if ((await radio.count()) === 0) {
+    await dialog.getByRole('button', { name: 'More to add' }).click();
+    await page.getByRole('menuitem', { name, exact: true }).click();
+  } else {
+    await radio.click();
+  }
+  await expect(radio).toHaveAttribute('aria-checked', 'true');
+};
 
 export const selectAndFillCalloutTemplateFraming = async (
   page: Page,
@@ -33,7 +50,7 @@ export const selectAndFillCalloutTemplateFraming = async (
       return;
 
     case 'whiteboard': {
-      await framingRadio(dialog, 'Whiteboard').click();
+      await selectFraming(page, dialog, 'Whiteboard');
       // After selecting Whiteboard framing, two "Edit" buttons appear in the
       // framing section: an icon-only one (preview thumbnail) and a labeled
       // one (drawing). The labeled one - last in DOM order - opens the editor.
@@ -48,7 +65,7 @@ export const selectAndFillCalloutTemplateFraming = async (
     }
 
     case 'memo': {
-      await framingRadio(dialog, 'Memo').click();
+      await selectFraming(page, dialog, 'Memo');
       // Selecting Memo reveals a dedicated rich-text editor with accessible
       // name "Write your memo…". DO NOT use "Write something..." - that's the
       // callout description and writing there would overwrite it.
@@ -59,7 +76,7 @@ export const selectAndFillCalloutTemplateFraming = async (
     }
 
     case 'callToAction': {
-      await framingRadio(dialog, 'Call to Action').click();
+      await selectFraming(page, dialog, 'Call to Action');
       // Selecting "Call to Action" reveals two inputs - validated against the
       // live CRD UI:
       //   #link-framing-url           <input type="url"> labelled "URL"
@@ -73,7 +90,7 @@ export const selectAndFillCalloutTemplateFraming = async (
     }
 
     case 'poll': {
-      await framingRadio(dialog, 'Poll').click();
+      await selectFraming(page, dialog, 'Poll');
 
       // Question (single line)
       await dialog
@@ -136,7 +153,7 @@ export const selectAndFillCalloutTemplateFraming = async (
     }
 
     case 'form': {
-      await framingRadio(dialog, 'Form').click();
+      await selectFraming(page, dialog, 'Form');
       await fillFormBuilder(page, dialog, framing);
       return;
     }

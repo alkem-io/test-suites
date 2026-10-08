@@ -44,7 +44,8 @@ export const verifyCalloutTemplateUsage = async (
   // callout title was filled in.
   await expect(pickerDialog).not.toBeVisible();
   await expect(
-    createPostDialog.getByRole('textbox', { name: 'Title' })
+    // exact: a Form framing adds "Form title (optional)" to the same dialog.
+    createPostDialog.getByRole('textbox', { name: 'Title', exact: true })
   ).toHaveValue(templateData.calloutTitle);
 
   // A Form template fills the builder: title and every question, in order
