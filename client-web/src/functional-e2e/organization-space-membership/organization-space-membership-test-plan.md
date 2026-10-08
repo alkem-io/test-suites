@@ -36,7 +36,7 @@ Spec: `us1-membership-tab.spec.ts` (serial).
 | US1-AS5 | Organization also Lead of *S* → *S*'s card shows "Lead" | automated |
 | US1-AS6 | Card menu → *View Space* lands on the Space page | automated |
 | US1-AS7 | Plain associate opening the tab URL is redirected to the organization's public profile | automated |
-| US1-AS8 | Page title / breadcrumb name the tab; copy present in all six languages | manual + client-web unit coverage (i18n key-parity test, route/tab tests) |
+| US1-AS8 | Page title / breadcrumb name the tab; copy present in all six languages | English title, breadcrumb and no-raw-keys automated; the language switch is manual + client-web unit coverage (i18n key-parity test, route/tab tests) — switching languages persists on the shared persona and would race the parallel specs |
 | US1-AS9 | Skeleton while loading; the empty caption never flashes first | manual + client-web unit coverage (loading-state test of the organization tab) |
 
 ## User Story 2 — the organization leaves a Space or Subspace
@@ -51,7 +51,7 @@ Spec: `us2-org-leaves-space.spec.ts` (serial; each test builds on the previous s
 | US2-AS4 | With *S*, *S1*, *S2* seeded, leaving *S* removes all three cards (empty caption); API: none lists the organization | automated |
 | US2-AS5 | Organization Member + Lead of *S* leaves → success; Member removed, Lead kept; card stays with "Lead" (documented behaviour) | automated |
 | US2-AS6 | Membership removed by a Space admin while the tab is open → "Couldn't leave — try again", dialog closes, no success toast, card gone after the refresh | automated |
-| US2-AS7 | While the removal is in flight the confirm button is disabled with `aria-busy="true"` and Cancel is disabled | automated (removal request delayed via `page.route`) |
+| US2-AS7 | While the removal is in flight the confirmed dialog stays open; its confirm button is disabled with `aria-busy="true"` and Cancel is disabled | automated on the confirmed dialog itself (removal request delayed via `page.route`) |
 
 ## User Story 3 — authorization boundary (API)
 
