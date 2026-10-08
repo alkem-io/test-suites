@@ -66,7 +66,7 @@ export const ROLE_SUMMARY: Record<
   },
   PLATFORM_RESOURCE_ADMIN: {
     name: 'Platform Resource Admin',
-    owns: 'Resource moves: a space, hub, pack or VC to another account; promote, demote or move a space; move a callout or a contribution.',
+    owns: "Resource moves: a space, hub, pack or VC to another account; promote, demote or move a space; move a callout or a contribution. Also sets a callout's publisher information (A8 `updateCalloutPublishInfo`, shared with Content Full Access - operator amendment 2026-10-07).",
     mustNot:
       'Everything else - role assignment, settings, operations, user records, content access, the forum, support.',
   },
@@ -187,7 +187,8 @@ export type CapabilityGroupId =
   | 'A19'
   | 'A20'
   | 'A20b'
-  | 'A21';
+  | 'A21'
+  | 'A22';
 
 export type CapabilityGroup = { title: string; spec: string };
 
@@ -252,6 +253,10 @@ export const CAPABILITY_GROUPS: Record<CapabilityGroupId, CapabilityGroup> = {
   A21: {
     title: 'Set / clear the service-profile marker',
     spec: 'A21 · FR-002',
+  },
+  A22: {
+    title: 'Direct add without consent (invitation only)',
+    spec: 'A22 · 061 R32 · alkem-io/server#6623',
   },
 };
 
@@ -1000,7 +1005,9 @@ export const CAPABILITIES: readonly Capability[] = [
     group: 'A8',
     surface: 'updateCalloutPublishInfo',
     kind: 'mutation',
-    owners: ['PLATFORM_CONTENT_FULL_ACCESS'],
+    // Resource Admin: 027 operator amendment 2026-10-07 (spec Session
+    // 2026-10-07, privilege map A8; closes alkem-io/server#6620).
+    owners: ['PLATFORM_CONTENT_FULL_ACCESS', 'PLATFORM_RESOURCE_ADMIN'],
     acceptedExtra: [],
     requirement: { basis: 'named' },
     verifies: {
@@ -1009,15 +1016,6 @@ export const CAPABILITIES: readonly Capability[] = [
     },
     positive: { status: 'automated' },
     negative: { status: 'automated' },
-    knownDefects: [
-      {
-        role: 'PLATFORM_RESOURCE_ADMIN',
-        half: 'negative',
-        issue: 'alkem-io/server#6620',
-        observed:
-          'Resource Admin rewrites the publisher and published date of a callout it cannot even READ (develop @ server c47d48983, 2026-10-07): server#6582 adds PLATFORM_RESOURCE_ADMIN to UPDATE_CALLOUT_PUBLISHER citing an "operator amendment" the workspace spec (privilege map A8) does not record',
-      },
-    ],
   },
   // ===== A9 — Move resources between accounts / space levels =====
   {
@@ -2182,6 +2180,61 @@ export const CAPABILITIES: readonly Capability[] = [
         'serviceProfile has NO output field: a cleared marker makes the Platform Spaces Reader grant fail with the service-account rule',
     },
     positive: { status: 'automated' },
+    negative: { status: 'automated' },
+  },
+  // ===== A22 — Direct add without consent (invitation only) =====
+  // 027 Session 2026-10-08, operator ruling on alkem-io/server#6623: the
+  // intended holder set is EMPTY, as A17's. The way in instead - invitation -
+  // is proven in `roleset/invitations/`; direct add below L0 is pinned at
+  // privilege level only (`roleset/user/user.authorization.it-spec.ts`).
+  {
+    id: 'A22.assignRoleToUser',
+    group: 'A22',
+    surface: 'assignRoleToUser',
+    kind: 'mutation',
+    owners: [],
+    acceptedExtra: [],
+    variant: 'a user as MEMBER of an L0 space - ROLESET_ENTRY_ROLE_ASSIGN',
+    requirement: { basis: 'named' },
+    positive: {
+      status: 'not-applicable',
+      reason:
+        'no global role may reach this surface - entry to an L0 space is by invitation; direct add below L0 stays with the subspace and ancestor admins (roleset/user)',
+    },
+    negative: { status: 'automated' },
+  },
+  {
+    id: 'A22.assignRoleToVirtualContributor',
+    group: 'A22',
+    surface: 'assignRoleToVirtualContributor',
+    kind: 'mutation',
+    owners: [],
+    acceptedExtra: [],
+    variant:
+      'a VC from ANOTHER account as MEMBER of an L0 space - ROLESET_ENTRY_ROLE_ASSIGN',
+    requirement: { basis: 'named' },
+    positive: {
+      status: 'not-applicable',
+      reason:
+        'no global role may reach this surface - a VC from another account enters by invitation',
+    },
+    negative: { status: 'automated' },
+  },
+  {
+    id: 'A22.assignRoleToOrganization',
+    group: 'A22',
+    surface: 'assignRoleToOrganization',
+    kind: 'mutation',
+    owners: [],
+    acceptedExtra: [],
+    variant:
+      'an organization NOT yet in the space - ROLESET_ENTRY_ROLE_ASSIGN_ORGANIZATION',
+    requirement: { basis: 'named' },
+    positive: {
+      status: 'not-applicable',
+      reason:
+        'no global role may reach this surface - a new organization enters by invitation; one already in the space is managed with GRANT alone (roleset/invitations, R32)',
+    },
     negative: { status: 'automated' },
   },
 ];

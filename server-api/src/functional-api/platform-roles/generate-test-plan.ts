@@ -164,7 +164,7 @@ out();
   const n = (b: string): number =>
     CAPABILITIES.filter(c => c.requirement.basis === b).length;
   out(
-    `Checked 2026-09-18 against \`spec.md\` (§Target global role model, §Action → owning role) and \`contracts/privilege-map.md\`. **All ${Object.keys(CAPABILITY_GROUPS).length} action families' owner sets match the spec exactly**, including the three declared exceptions (Content Full Access on A6 delete, A7 and the A16 read). The spec assigns owners per action FAMILY; per surface: **${n('named')}** are named in the requirements, **${n('family')}** are covered by their family's wording, **${n('silent')}** are backed by neither (⚠️), **${n('conflict')}** contradict a requirement (❌).`
+    `Checked 2026-09-18 against \`spec.md\` (§Target global role model, §Action → owning role) and \`contracts/privilege-map.md\`; the two rows later rulings changed were re-checked 2026-10-08 — A8 \`updateCalloutPublishInfo\` (Resource Admin a second owner, amendment 2026-10-07) and A22 (direct add, no owner, ruling 2026-10-08). **All ${Object.keys(CAPABILITY_GROUPS).length} action families' owner sets match the spec exactly**, including the three declared exceptions (Content Full Access on A6 delete, A7 and the A16 read). The spec assigns owners per action FAMILY; per surface: **${n('named')}** are named in the requirements, **${n('family')}** are covered by their family's wording, **${n('silent')}** are backed by neither (⚠️), **${n('conflict')}** contradict a requirement (❌).`
   );
   out();
   out('| Capability | Allowed today | Finding |');
@@ -352,7 +352,7 @@ out(
   '| `PLATFORM_SETTINGS_ADMIN › can › A13.updateLicensePlan` | the mutation reports success; the value re-reads unchanged | `LicensePlanService.update()` saves the plan without applying the input (also on `develop`). A positive must observe its effect — there is none to observe |'
 );
 out(
-  '| `PLATFORM_CONTENT_FULL_ACCESS › cannot › A3.aiServerAuthorizationPolicyReset` | Content Full Access resets the AI server authorization (Slice B stack, 2026-10-07) | `ai.server.service.authorization.ts` re-anchors the old `CREDENTIAL_RULE_AI_SERVER_GLOBAL_ADMINS` rule — CRUD **plus GRANT and AUTHORIZATION_RESET** — onto `PLATFORM_CONTENT_FULL_ACCESS`. FR-004 removed GRANT from the content role and A3 resets belong to Operations Admin; raised on alkem-io/server#6582 |'
+  '| `PLATFORM_CONTENT_FULL_ACCESS › cannot › A3.aiServerAuthorizationPolicyReset` | Content Full Access resets the AI server authorization (Slice B stack, 2026-10-07) | `ai.server.service.authorization.ts` re-anchors the old `CREDENTIAL_RULE_AI_SERVER_GLOBAL_ADMINS` rule — CRUD **plus GRANT and AUTHORIZATION_RESET** — onto `PLATFORM_CONTENT_FULL_ACCESS`. FR-004 removed GRANT from the content role and A3 resets belong to Operations Admin. Filed as [alkem-io/server#6619](https://github.com/alkem-io/server/issues/6619); fixed by [alkem-io/server#6626](https://github.com/alkem-io/server/pull/6626) — goes green once that PR is on `develop` |'
 );
 out(
   '| `PLATFORM_RESOURCE_ADMIN › cannot › A16.createPlatformRolesAccess` | Resource Admin READS a private space it is not a member of | the server grants it READ on every space deliberately; the requirements allow only Spaces Reader (+ the Content Full Access exception). Needs a product decision — then either the table or the server changes |'
@@ -364,14 +364,18 @@ out(
   'Written against the expected behaviour and registered as `test.skip` with the issue in the title (operator decision 2026-10-06: skip rather than `test.fails`, so the nightly is not red by design). Drop the `knownDefects` entry in `capabilities.data.ts` when the fix is on `develop`.'
 );
 out();
-out('| Cell | Issue | Observed |');
-out('|---|---|---|');
-for (const c of CAPABILITIES) {
-  for (const d of c.knownDefects ?? []) {
-    out(
-      `| \`${d.role} › ${d.half === 'negative' ? 'cannot' : 'can'} › ${c.id}\` | [${d.issue}](https://github.com/${d.issue.replace('#', '/issues/')}) | ${d.observed} |`
-    );
+if (CAPABILITIES.some(c => c.knownDefects?.length)) {
+  out('| Cell | Issue | Observed |');
+  out('|---|---|---|');
+  for (const c of CAPABILITIES) {
+    for (const d of c.knownDefects ?? []) {
+      out(
+        `| \`${d.role} › ${d.half === 'negative' ? 'cannot' : 'can'} › ${c.id}\` | [${d.issue}](https://github.com/${d.issue.replace('#', '/issues/')}) | ${d.observed} |`
+      );
+    }
   }
+} else {
+  out('None open.');
 }
 out();
 out('## What is genuinely proven');
@@ -382,7 +386,7 @@ out();
   const capPos = CAPABILITIES.map(c => c.positive);
   const capNeg = CAPABILITIES.map(c => c.negative);
   out(
-    `Verified live against the 027 server, twice in a row with identical results (2026-09-18): **${count(capPos, 'automated')} of ${CAPABILITIES.length} capabilities have an automated positive and ${count(capNeg, 'automated')} an automated negative**, run for all ${PLATFORM_ROLES.length} roles — ${positiveChecks} positive and ${negativeChecks} negative role-level checks in the table, of which the exclusive and not-automated rows are excluded from the default run. Every negative is a refusal AT THE AUTHORIZATION GATE (an authorization code on the gate path), never a validation error, a not-found, or a forbidden sub-field. Every positive observes what its row declares — an effect read back, known data returned, a success payload, or (5 rows) a non-authorization error proving the gate was passed.`
+    `Verified live against the 027 server, twice in a row with identical results — 2026-09-18 for the original rows, 2026-10-08 on server develop for the A8 and A22 rows the later rulings changed: **${count(capPos, 'automated')} of ${CAPABILITIES.length} capabilities have an automated positive and ${count(capNeg, 'automated')} an automated negative**, run for all ${PLATFORM_ROLES.length} roles — ${positiveChecks} positive and ${negativeChecks} negative role-level checks in the table, of which the exclusive and not-automated rows are excluded from the default run. Every negative is a refusal AT THE AUTHORIZATION GATE (an authorization code on the gate path), never a validation error, a not-found, or a forbidden sub-field. Every positive observes what its row declares — an effect read back, known data returned, a success payload, or (5 rows) a non-authorization error proving the gate was passed.`
   );
   out();
   out(

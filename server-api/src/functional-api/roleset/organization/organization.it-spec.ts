@@ -360,6 +360,8 @@ describe('Assign / Remove organization to community', () => {
 // invitation. `ROLESET_ENTRY_ROLE_ASSIGN_ORGANIZATION` is granted to nobody,
 // so a DIRECT add is refused at the gate for every caller, the harness admin
 // (Content Full Access + Support + GRANT on the role set) included.
+// Confirmed as the intended end state, not a defect: ruled 2026-10-08
+// (alkem-io/server#6623).
 describe('Direct organisation add is gone at Slice B', () => {
   test('the harness admin cannot add a NEW organisation directly; the role set is unchanged', async () => {
     const { data: created } = await createOrganization(
