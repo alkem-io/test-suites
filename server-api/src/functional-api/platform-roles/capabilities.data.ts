@@ -187,7 +187,8 @@ export type CapabilityGroupId =
   | 'A19'
   | 'A20'
   | 'A20b'
-  | 'A21';
+  | 'A21'
+  | 'A22';
 
 export type CapabilityGroup = { title: string; spec: string };
 
@@ -252,6 +253,10 @@ export const CAPABILITY_GROUPS: Record<CapabilityGroupId, CapabilityGroup> = {
   A21: {
     title: 'Set / clear the service-profile marker',
     spec: 'A21 · FR-002',
+  },
+  A22: {
+    title: 'Direct add without consent (invitation only)',
+    spec: 'A22 · 061 R32 · alkem-io/server#6623',
   },
 };
 
@@ -2175,6 +2180,61 @@ export const CAPABILITIES: readonly Capability[] = [
         'serviceProfile has NO output field: a cleared marker makes the Platform Spaces Reader grant fail with the service-account rule',
     },
     positive: { status: 'automated' },
+    negative: { status: 'automated' },
+  },
+  // ===== A22 — Direct add without consent (invitation only) =====
+  // 027 Session 2026-10-08, operator ruling on alkem-io/server#6623: the
+  // intended holder set is EMPTY, as A17's. The way in instead - invitation -
+  // is proven in `roleset/invitations/`; direct add below L0 is pinned at
+  // privilege level only (`roleset/user/user.authorization.it-spec.ts`).
+  {
+    id: 'A22.assignRoleToUser',
+    group: 'A22',
+    surface: 'assignRoleToUser',
+    kind: 'mutation',
+    owners: [],
+    acceptedExtra: [],
+    variant: 'a user as MEMBER of an L0 space - ROLESET_ENTRY_ROLE_ASSIGN',
+    requirement: { basis: 'named' },
+    positive: {
+      status: 'not-applicable',
+      reason:
+        'no global role may reach this surface - entry to an L0 space is by invitation; direct add below L0 stays with the subspace and ancestor admins (roleset/user)',
+    },
+    negative: { status: 'automated' },
+  },
+  {
+    id: 'A22.assignRoleToVirtualContributor',
+    group: 'A22',
+    surface: 'assignRoleToVirtualContributor',
+    kind: 'mutation',
+    owners: [],
+    acceptedExtra: [],
+    variant:
+      'a VC from ANOTHER account as MEMBER of an L0 space - ROLESET_ENTRY_ROLE_ASSIGN',
+    requirement: { basis: 'named' },
+    positive: {
+      status: 'not-applicable',
+      reason:
+        'no global role may reach this surface - a VC from another account enters by invitation',
+    },
+    negative: { status: 'automated' },
+  },
+  {
+    id: 'A22.assignRoleToOrganization',
+    group: 'A22',
+    surface: 'assignRoleToOrganization',
+    kind: 'mutation',
+    owners: [],
+    acceptedExtra: [],
+    variant:
+      'an organization NOT yet in the space - ROLESET_ENTRY_ROLE_ASSIGN_ORGANIZATION',
+    requirement: { basis: 'named' },
+    positive: {
+      status: 'not-applicable',
+      reason:
+        'no global role may reach this surface - a new organization enters by invitation; one already in the space is managed with GRANT alone (roleset/invitations, R32)',
+    },
     negative: { status: 'automated' },
   },
 ];

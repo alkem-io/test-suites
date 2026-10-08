@@ -164,7 +164,7 @@ out();
   const n = (b: string): number =>
     CAPABILITIES.filter(c => c.requirement.basis === b).length;
   out(
-    `Checked 2026-09-18 against \`spec.md\` (§Target global role model, §Action → owning role) and \`contracts/privilege-map.md\`. **All ${Object.keys(CAPABILITY_GROUPS).length} action families' owner sets match the spec exactly**, including the three declared exceptions (Content Full Access on A6 delete, A7 and the A16 read). The spec assigns owners per action FAMILY; per surface: **${n('named')}** are named in the requirements, **${n('family')}** are covered by their family's wording, **${n('silent')}** are backed by neither (⚠️), **${n('conflict')}** contradict a requirement (❌).`
+    `Checked 2026-09-18 against \`spec.md\` (§Target global role model, §Action → owning role) and \`contracts/privilege-map.md\`; the two rows later rulings changed were re-checked 2026-10-08 — A8 \`updateCalloutPublishInfo\` (Resource Admin a second owner, amendment 2026-10-07) and A22 (direct add, no owner, ruling 2026-10-08). **All ${Object.keys(CAPABILITY_GROUPS).length} action families' owner sets match the spec exactly**, including the three declared exceptions (Content Full Access on A6 delete, A7 and the A16 read). The spec assigns owners per action FAMILY; per surface: **${n('named')}** are named in the requirements, **${n('family')}** are covered by their family's wording, **${n('silent')}** are backed by neither (⚠️), **${n('conflict')}** contradict a requirement (❌).`
   );
   out();
   out('| Capability | Allowed today | Finding |');

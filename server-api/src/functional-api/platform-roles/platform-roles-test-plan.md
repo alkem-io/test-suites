@@ -2,7 +2,7 @@
 
 > **Status:** Built — QA-lead directive in-session 2026-09-18 (single delivery); awaiting review at PR · **Depth:** Deep (authorization change, cross-repo, release-train gated) · **Story:** alkem-io/server#4764 · Epic alkem-io/server#6320 · **Generated** from `capabilities.data.ts` + `scenarios.data.ts` — do not edit by hand
 
-The single Global Admin "god mode" is decomposed into 10 `Platform …` administration roles and 4 `Feature …` roles. This suite answers one question per role, in both directions: **can it do everything the acceptance criteria give it, and is it refused everything else.** It tracks **112 administrative capabilities** in 21 groups × **14 roles** = **142 positive** and **1412 negative** role-level checks, plus **30 rule scenarios** that a grid cannot express.
+The single Global Admin "god mode" is decomposed into 10 `Platform …` administration roles and 4 `Feature …` roles. This suite answers one question per role, in both directions: **can it do everything the acceptance criteria give it, and is it refused everything else.** It tracks **115 administrative capabilities** in 22 groups × **14 roles** = **142 positive** and **1454 negative** role-level checks, plus **30 rule scenarios** that a grid cannot express.
 
 **Slice B vocabulary.** The table names the surfaces as they exist after workspace#027 Slice B (server alkem-io/server#6582): `adminUpdateSpaceVisibility` for A14, the two A17 rename surfaces, and none of the deleted FR-021/FR-022 mutations. Each test user holds exactly one target role (scenario X1 proves it first, and L2 proves the legacy vocabulary is gone from the schema).
 
@@ -32,31 +32,31 @@ Phase 1 (`platform-roles`) runs the 14 role files and the read-only specs in par
 
 ## Coverage at a glance
 
-- Capabilities — positive: 92 automated · 14 exclusive · 4 not-applicable · 2 not-automated
-- Capabilities — negative: 111 automated · 1 not-automated
+- Capabilities — positive: 92 automated · 14 exclusive · 7 not-applicable · 2 not-automated
+- Capabilities — negative: 114 automated · 1 not-automated
 - Rule scenarios — positive: 22 automated · 6 not-applicable · 2 not-automated
 - Rule scenarios — negative: 25 automated · 1 exclusive · 1 not-applicable · 3 not-automated
 
 | Role | Spec file | Can (positive) | Cannot (negative) |
 |---|---|---|---|
-| PLATFORM_ROLES_ADMIN | `roles/platform-roles-admin.it-spec.ts` | 20 | 91 |
-| PLATFORM_CONTENT_FULL_ACCESS | `roles/platform-content-full-access.it-spec.ts` | 17 | 94 |
-| PLATFORM_RESOURCE_ADMIN | `roles/platform-resource-admin.it-spec.ts` | 14 | 97 |
-| PLATFORM_SETTINGS_ADMIN | `roles/platform-settings-admin.it-spec.ts` | 12 | 99 |
-| PLATFORM_OPERATIONS_ADMIN | `roles/platform-operations-admin.it-spec.ts` | 24 | 87 |
-| PLATFORM_USERS_ADMIN | `roles/platform-users-admin.it-spec.ts` | 17 | 94 |
-| PLATFORM_SUPPORT | `roles/platform-support.it-spec.ts` | 15 | 96 |
-| PLATFORM_LICENSE_MANAGER | `roles/platform-license-manager.it-spec.ts` | 6 | 105 |
-| PLATFORM_SPACES_READER | `roles/platform-spaces-reader.it-spec.ts` | 1 | 110 |
-| PLATFORM_AUDIT_READER | `roles/platform-audit-reader.it-spec.ts` | 15 | 96 |
-| FEATURE_BETA_TESTER | `roles/feature-beta-tester.it-spec.ts` | 0 | 111 |
-| FEATURE_VIRTUAL_ASSISTANT | `roles/feature-virtual-assistant.it-spec.ts` | 0 | 111 |
-| FEATURE_ORGANIZATION_CREATOR | `roles/feature-organization-creator.it-spec.ts` | 1 | 110 |
-| FEATURE_VC_CAMPAIGN | `roles/feature-vc-campaign.it-spec.ts` | 0 | 111 |
+| PLATFORM_ROLES_ADMIN | `roles/platform-roles-admin.it-spec.ts` | 20 | 94 |
+| PLATFORM_CONTENT_FULL_ACCESS | `roles/platform-content-full-access.it-spec.ts` | 17 | 97 |
+| PLATFORM_RESOURCE_ADMIN | `roles/platform-resource-admin.it-spec.ts` | 14 | 100 |
+| PLATFORM_SETTINGS_ADMIN | `roles/platform-settings-admin.it-spec.ts` | 12 | 102 |
+| PLATFORM_OPERATIONS_ADMIN | `roles/platform-operations-admin.it-spec.ts` | 24 | 90 |
+| PLATFORM_USERS_ADMIN | `roles/platform-users-admin.it-spec.ts` | 17 | 97 |
+| PLATFORM_SUPPORT | `roles/platform-support.it-spec.ts` | 15 | 99 |
+| PLATFORM_LICENSE_MANAGER | `roles/platform-license-manager.it-spec.ts` | 6 | 108 |
+| PLATFORM_SPACES_READER | `roles/platform-spaces-reader.it-spec.ts` | 1 | 113 |
+| PLATFORM_AUDIT_READER | `roles/platform-audit-reader.it-spec.ts` | 15 | 99 |
+| FEATURE_BETA_TESTER | `roles/feature-beta-tester.it-spec.ts` | 0 | 114 |
+| FEATURE_VIRTUAL_ASSISTANT | `roles/feature-virtual-assistant.it-spec.ts` | 0 | 114 |
+| FEATURE_ORGANIZATION_CREATOR | `roles/feature-organization-creator.it-spec.ts` | 1 | 113 |
+| FEATURE_VC_CAMPAIGN | `roles/feature-vc-campaign.it-spec.ts` | 0 | 114 |
 
 ## Allowed — verified against the requirements
 
-Checked 2026-09-18 against `spec.md` (§Target global role model, §Action → owning role) and `contracts/privilege-map.md`. **All 21 action families' owner sets match the spec exactly**, including the three declared exceptions (Content Full Access on A6 delete, A7 and the A16 read). The spec assigns owners per action FAMILY; per surface: **49** are named in the requirements, **56** are covered by their family's wording, **6** are backed by neither (⚠️), **1** contradict a requirement (❌).
+Checked 2026-09-18 against `spec.md` (§Target global role model, §Action → owning role) and `contracts/privilege-map.md`; the two rows later rulings changed were re-checked 2026-10-08 — A8 `updateCalloutPublishInfo` (Resource Admin a second owner, amendment 2026-10-07) and A22 (direct add, no owner, ruling 2026-10-08). **All 22 action families' owner sets match the spec exactly**, including the three declared exceptions (Content Full Access on A6 delete, A7 and the A16 read). The spec assigns owners per action FAMILY; per surface: **52** are named in the requirements, **56** are covered by their family's wording, **6** are backed by neither (⚠️), **1** contradict a requirement (❌).
 
 | Capability | Allowed today | Finding |
 |---|---|---|
@@ -346,6 +346,16 @@ Spec: A21 · FR-002
 | `updateUser` (set serviceProfile) | roles admin | **effect** — serviceProfile has NO output field, so the marker is observed through its only visible effect: a set marker admits a Platform Spaces Reader grant | ✅ automated | ✅ automated |
 | `updateUser` (clear serviceProfile) | roles admin | **effect** — serviceProfile has NO output field: a cleared marker makes the Platform Spaces Reader grant fail with the service-account rule | ✅ automated | ✅ automated |
 
+### A22 — Direct add without consent (invitation only)
+
+Spec: A22 · 061 R32 · alkem-io/server#6623
+
+| Capability | Allowed | Positive — must observe | Positive | Negative |
+|---|---|---|---|---|
+| `assignRoleToUser` (a user as MEMBER of an L0 space - ROLESET_ENTRY_ROLE_ASSIGN) | **nobody** | — | — n/a — no global role may reach this surface - entry to an L0 space is by invitation; direct add below L0 stays with the subspace and ancestor admins (roleset/user) | ✅ automated |
+| `assignRoleToVirtualContributor` (a VC from ANOTHER account as MEMBER of an L0 space - ROLESET_ENTRY_ROLE_ASSIGN) | **nobody** | — | — n/a — no global role may reach this surface - a VC from another account enters by invitation | ✅ automated |
+| `assignRoleToOrganization` (an organization NOT yet in the space - ROLESET_ENTRY_ROLE_ASSIGN_ORGANIZATION) | **nobody** | — | — n/a — no global role may reach this surface - a new organization enters by invitation; one already in the space is managed with GRANT alone (roleset/invitations, R32) | ✅ automated |
+
 ## Per role — what it can do, and what it is refused
 
 One section per role, in the order of `roles/*.it-spec.ts`. **Can** lists every capability the role is allowed, with what a passing positive must observe. **Cannot** lists everything else — each one is a negative that must be refused at the authorization gate. Marks: 🟠 runs in the on-demand project only · ⛔ not automated (see gaps) · no mark = runs in the default project.
@@ -382,7 +392,7 @@ One section per role, in the order of `roles/*.it-spec.ts`. **Can** lists every 
 | `A21.updateUser#0` (set serviceProfile) | owner | **effect** — serviceProfile has NO output field, so the marker is observed through its only visible effect: a set marker admits a Platform Spaces Reader grant |
 | `A21.updateUser#1` (clear serviceProfile) | owner | **effect** — serviceProfile has NO output field: a cleared marker makes the Platform Spaces Reader grant fail with the service-account rule |
 
-**Cannot (92)** — by group:
+**Cannot (95)** — by group:
 
 - **A1** Assign / revoke a Platform role: `grantCredentialToActor`, `revokeCredentialFromActor`
 - **A3** Authorization reset & license-entitlement reset: `authorizationPolicyResetOnPlatform`, `aiServerAuthorizationPolicyReset`, `authorizationPolicyResetOnUser`, `authorizationPolicyResetOnOrganization`, `authorizationPolicyResetOnAccount`, `licenseResetOnAccount`, `authorizationPolicyResetAll`, `authorizationPlatformRolesAccessReset`, `authorizationPolicyResetToGlobalAdminsAccess`, `resetLicenseOnAccounts`
@@ -401,6 +411,7 @@ One section per role, in the order of `roles/*.it-spec.ts`. **Can** lists every 
 - **A16** Read across spaces (service accounts only): `createPlatformRolesAccess`
 - **A17** Rename an entity (nameID): `updateActorNameID`, `updateSpace.nameID` (protected `nameID` section of `updateSpace` (UPDATE_NAMEID))
 - **A19** Read the platform audit trail: `audit-log-analyze`, `latestUserEmailChangeAuditEntry`, `userEmailChangeAuditEntries`
+- **A22** Direct add without consent (invitation only): `assignRoleToUser` (a user as MEMBER of an L0 space - ROLESET_ENTRY_ROLE_ASSIGN), `assignRoleToVirtualContributor` (a VC from ANOTHER account as MEMBER of an L0 space - ROLESET_ENTRY_ROLE_ASSIGN), `assignRoleToOrganization` (an organization NOT yet in the space - ROLESET_ENTRY_ROLE_ASSIGN_ORGANIZATION)
 
 ### PLATFORM_CONTENT_FULL_ACCESS
 
@@ -431,7 +442,7 @@ One section per role, in the order of `roles/*.it-spec.ts`. **Can** lists every 
 | `A8.updateCalloutPublishInfo` | owner | **effect** — publisher / published date changed on re-read |
 | `A16.createPlatformRolesAccess` | *accepted exception* | **returns-data** — reads the collaboration of a PRIVATE space it is not a member of |
 
-**Cannot (95)** — by group:
+**Cannot (98)** — by group:
 
 - **A1** Assign / revoke a Platform role: `assignPlatformRoleToUser`, `removePlatformRoleFromUser`, `grantCredentialToActor`, `revokeCredentialFromActor`
 - **A2** Assign / revoke a Feature role (user or organization): `assignPlatformRoleToUser`, `removePlatformRoleFromUser`, `assignPlatformRoleToOrganization`, `removePlatformRoleFromOrganization`
@@ -451,6 +462,7 @@ One section per role, in the order of `roles/*.it-spec.ts`. **Can** lists every 
 - **A20** Read Platform-role holder lists: `usersInRole`, `usersInRoles`, `organizationsInRole`, `organizationsInRoles`, `actorsWithCredential`, `usersWithAuthorizationCredential`
 - **A20b** Read Feature-role holder lists: `usersInRole`, `usersInRoles`, `organizationsInRole`, `organizationsInRoles`, `actorsWithCredential`, `usersWithAuthorizationCredential`
 - **A21** Set / clear the service-profile marker: `updateUser` (set serviceProfile), `updateUser` (clear serviceProfile)
+- **A22** Direct add without consent (invitation only): `assignRoleToUser` (a user as MEMBER of an L0 space - ROLESET_ENTRY_ROLE_ASSIGN), `assignRoleToVirtualContributor` (a VC from ANOTHER account as MEMBER of an L0 space - ROLESET_ENTRY_ROLE_ASSIGN), `assignRoleToOrganization` (an organization NOT yet in the space - ROLESET_ENTRY_ROLE_ASSIGN_ORGANIZATION)
 
 ### PLATFORM_RESOURCE_ADMIN
 
@@ -478,7 +490,7 @@ One section per role, in the order of `roles/*.it-spec.ts`. **Can** lists every 
 | `A9.transferInnovationPackToAccount` | owner | **effect** — the resource reports the TARGET account on re-read |
 | `A9.transferVirtualContributorToAccount` | owner | **effect** — the resource reports the TARGET account on re-read |
 
-**Cannot (98)** — by group:
+**Cannot (101)** — by group:
 
 - **A1** Assign / revoke a Platform role: `assignPlatformRoleToUser`, `removePlatformRoleFromUser`, `grantCredentialToActor`, `revokeCredentialFromActor`
 - **A2** Assign / revoke a Feature role (user or organization): `assignPlatformRoleToUser`, `removePlatformRoleFromUser`, `assignPlatformRoleToOrganization`, `removePlatformRoleFromOrganization`
@@ -500,6 +512,7 @@ One section per role, in the order of `roles/*.it-spec.ts`. **Can** lists every 
 - **A20** Read Platform-role holder lists: `usersInRole`, `usersInRoles`, `organizationsInRole`, `organizationsInRoles`, `actorsWithCredential`, `usersWithAuthorizationCredential`
 - **A20b** Read Feature-role holder lists: `usersInRole`, `usersInRoles`, `organizationsInRole`, `organizationsInRoles`, `actorsWithCredential`, `usersWithAuthorizationCredential`
 - **A21** Set / clear the service-profile marker: `updateUser` (set serviceProfile), `updateUser` (clear serviceProfile)
+- **A22** Direct add without consent (invitation only): `assignRoleToUser` (a user as MEMBER of an L0 space - ROLESET_ENTRY_ROLE_ASSIGN), `assignRoleToVirtualContributor` (a VC from ANOTHER account as MEMBER of an L0 space - ROLESET_ENTRY_ROLE_ASSIGN), `assignRoleToOrganization` (an organization NOT yet in the space - ROLESET_ENTRY_ROLE_ASSIGN_ORGANIZATION)
 
 ### PLATFORM_SETTINGS_ADMIN
 
@@ -525,7 +538,7 @@ One section per role, in the order of `roles/*.it-spec.ts`. **Can** lists every 
 | `A13.adminLicensePolicyUpdateCredentialRule` | owner | **effect** — the changed field is visible on re-read |
 | `A13.adminLicensePolicyCreateCredentialRule` | owner | **effect** — the new rule is present in the license policy read (then removed) |
 
-**Cannot (100)** — by group:
+**Cannot (103)** — by group:
 
 - **A1** Assign / revoke a Platform role: `assignPlatformRoleToUser`, `removePlatformRoleFromUser`, `grantCredentialToActor`, `revokeCredentialFromActor`
 - **A2** Assign / revoke a Feature role (user or organization): `assignPlatformRoleToUser`, `removePlatformRoleFromUser`, `assignPlatformRoleToOrganization`, `removePlatformRoleFromOrganization`
@@ -546,6 +559,7 @@ One section per role, in the order of `roles/*.it-spec.ts`. **Can** lists every 
 - **A20** Read Platform-role holder lists: `usersInRole`, `usersInRoles`, `organizationsInRole`, `organizationsInRoles`, `actorsWithCredential`, `usersWithAuthorizationCredential`
 - **A20b** Read Feature-role holder lists: `usersInRole`, `usersInRoles`, `organizationsInRole`, `organizationsInRoles`, `actorsWithCredential`, `usersWithAuthorizationCredential`
 - **A21** Set / clear the service-profile marker: `updateUser` (set serviceProfile), `updateUser` (clear serviceProfile)
+- **A22** Direct add without consent (invitation only): `assignRoleToUser` (a user as MEMBER of an L0 space - ROLESET_ENTRY_ROLE_ASSIGN), `assignRoleToVirtualContributor` (a VC from ANOTHER account as MEMBER of an L0 space - ROLESET_ENTRY_ROLE_ASSIGN), `assignRoleToOrganization` (an organization NOT yet in the space - ROLESET_ENTRY_ROLE_ASSIGN_ORGANIZATION)
 
 ### PLATFORM_OPERATIONS_ADMIN
 
@@ -583,7 +597,7 @@ One section per role, in the order of `roles/*.it-spec.ts`. **Can** lists every 
 | `A11.adminCommunicationMigrateOrphanedConversations` 🟠 | owner | **executed** — returns its success payload with no error; a maintenance job has no API-visible effect to read back |
 | `A11.adminCommunicationSyncSpaceHierarchy` 🟠 | owner | **executed** — returns its success payload with no error; a maintenance job has no API-visible effect to read back |
 
-**Cannot (88)** — by group:
+**Cannot (91)** — by group:
 
 - **A1** Assign / revoke a Platform role: `assignPlatformRoleToUser`, `removePlatformRoleFromUser`, `grantCredentialToActor`, `revokeCredentialFromActor`
 - **A2** Assign / revoke a Feature role (user or organization): `assignPlatformRoleToUser`, `removePlatformRoleFromUser`, `assignPlatformRoleToOrganization`, `removePlatformRoleFromOrganization`
@@ -604,6 +618,7 @@ One section per role, in the order of `roles/*.it-spec.ts`. **Can** lists every 
 - **A20** Read Platform-role holder lists: `usersInRole`, `usersInRoles`, `organizationsInRole`, `organizationsInRoles`, `actorsWithCredential`, `usersWithAuthorizationCredential`
 - **A20b** Read Feature-role holder lists: `usersInRole`, `usersInRoles`, `organizationsInRole`, `organizationsInRoles`, `actorsWithCredential`, `usersWithAuthorizationCredential`
 - **A21** Set / clear the service-profile marker: `updateUser` (set serviceProfile), `updateUser` (clear serviceProfile)
+- **A22** Direct add without consent (invitation only): `assignRoleToUser` (a user as MEMBER of an L0 space - ROLESET_ENTRY_ROLE_ASSIGN), `assignRoleToVirtualContributor` (a VC from ANOTHER account as MEMBER of an L0 space - ROLESET_ENTRY_ROLE_ASSIGN), `assignRoleToOrganization` (an organization NOT yet in the space - ROLESET_ENTRY_ROLE_ASSIGN_ORGANIZATION)
 
 ### PLATFORM_USERS_ADMIN
 
@@ -634,7 +649,7 @@ One section per role, in the order of `roles/*.it-spec.ts`. **Can** lists every 
 | `A20b.actorsWithCredential` | owner | **returns-data** — the KNOWN single-role fixture holder is present in the result - an always-empty resolver must fail |
 | `A20b.usersWithAuthorizationCredential` | owner | **returns-data** — the KNOWN single-role fixture holder is present in the result - an always-empty resolver must fail |
 
-**Cannot (95)** — by group:
+**Cannot (98)** — by group:
 
 - **A1** Assign / revoke a Platform role: `assignPlatformRoleToUser`, `removePlatformRoleFromUser`, `grantCredentialToActor`, `revokeCredentialFromActor`
 - **A3** Authorization reset & license-entitlement reset: `authorizationPolicyResetOnPlatform`, `aiServerAuthorizationPolicyReset`, `authorizationPolicyResetOnUser`, `authorizationPolicyResetOnOrganization`, `authorizationPolicyResetOnAccount`, `licenseResetOnAccount`, `authorizationPolicyResetAll`, `authorizationPlatformRolesAccessReset`, `authorizationPolicyResetToGlobalAdminsAccess`, `resetLicenseOnAccounts`
@@ -654,6 +669,7 @@ One section per role, in the order of `roles/*.it-spec.ts`. **Can** lists every 
 - **A19** Read the platform audit trail: `audit-log-analyze`, `latestUserEmailChangeAuditEntry`, `userEmailChangeAuditEntries`
 - **A20** Read Platform-role holder lists: `usersInRole`, `usersInRoles`, `organizationsInRole`, `organizationsInRoles`, `actorsWithCredential`, `usersWithAuthorizationCredential`
 - **A21** Set / clear the service-profile marker: `updateUser` (set serviceProfile), `updateUser` (clear serviceProfile)
+- **A22** Direct add without consent (invitation only): `assignRoleToUser` (a user as MEMBER of an L0 space - ROLESET_ENTRY_ROLE_ASSIGN), `assignRoleToVirtualContributor` (a VC from ANOTHER account as MEMBER of an L0 space - ROLESET_ENTRY_ROLE_ASSIGN), `assignRoleToOrganization` (an organization NOT yet in the space - ROLESET_ENTRY_ROLE_ASSIGN_ORGANIZATION)
 
 ### PLATFORM_SUPPORT
 
@@ -682,7 +698,7 @@ One section per role, in the order of `roles/*.it-spec.ts`. **Can** lists every 
 | `A15.deleteDiscussion` | owner | **effect** — the discussion is gone on re-read |
 | `A15.adminForumRemoveDiscussionCategory` ⛔ | owner | **effect** — the category is no longer among the forum discussion categories |
 
-**Cannot (97)** — by group:
+**Cannot (100)** — by group:
 
 - **A1** Assign / revoke a Platform role: `assignPlatformRoleToUser`, `removePlatformRoleFromUser`, `grantCredentialToActor`, `revokeCredentialFromActor`
 - **A2** Assign / revoke a Feature role (user or organization): `assignPlatformRoleToUser`, `removePlatformRoleFromUser`, `assignPlatformRoleToOrganization`, `removePlatformRoleFromOrganization`
@@ -702,6 +718,7 @@ One section per role, in the order of `roles/*.it-spec.ts`. **Can** lists every 
 - **A20** Read Platform-role holder lists: `usersInRole`, `usersInRoles`, `organizationsInRole`, `organizationsInRoles`, `actorsWithCredential`, `usersWithAuthorizationCredential`
 - **A20b** Read Feature-role holder lists: `usersInRole`, `usersInRoles`, `organizationsInRole`, `organizationsInRoles`, `actorsWithCredential`, `usersWithAuthorizationCredential`
 - **A21** Set / clear the service-profile marker: `updateUser` (set serviceProfile), `updateUser` (clear serviceProfile)
+- **A22** Direct add without consent (invitation only): `assignRoleToUser` (a user as MEMBER of an L0 space - ROLESET_ENTRY_ROLE_ASSIGN), `assignRoleToVirtualContributor` (a VC from ANOTHER account as MEMBER of an L0 space - ROLESET_ENTRY_ROLE_ASSIGN), `assignRoleToOrganization` (an organization NOT yet in the space - ROLESET_ENTRY_ROLE_ASSIGN_ORGANIZATION)
 
 ### PLATFORM_LICENSE_MANAGER
 
@@ -721,7 +738,7 @@ One section per role, in the order of `roles/*.it-spec.ts`. **Can** lists every 
 | `A12.updateBaselineLicensePlanOnAccount` | owner | **effect** — the baseline plan value changed on re-read |
 | `A14.adminUpdateSpaceVisibility` | owner | **effect** — the space reports the new visibility on re-read (restored after) |
 
-**Cannot (106)** — by group:
+**Cannot (109)** — by group:
 
 - **A1** Assign / revoke a Platform role: `assignPlatformRoleToUser`, `removePlatformRoleFromUser`, `grantCredentialToActor`, `revokeCredentialFromActor`
 - **A2** Assign / revoke a Feature role (user or organization): `assignPlatformRoleToUser`, `removePlatformRoleFromUser`, `assignPlatformRoleToOrganization`, `removePlatformRoleFromOrganization`
@@ -742,6 +759,7 @@ One section per role, in the order of `roles/*.it-spec.ts`. **Can** lists every 
 - **A20** Read Platform-role holder lists: `usersInRole`, `usersInRoles`, `organizationsInRole`, `organizationsInRoles`, `actorsWithCredential`, `usersWithAuthorizationCredential`
 - **A20b** Read Feature-role holder lists: `usersInRole`, `usersInRoles`, `organizationsInRole`, `organizationsInRoles`, `actorsWithCredential`, `usersWithAuthorizationCredential`
 - **A21** Set / clear the service-profile marker: `updateUser` (set serviceProfile), `updateUser` (clear serviceProfile)
+- **A22** Direct add without consent (invitation only): `assignRoleToUser` (a user as MEMBER of an L0 space - ROLESET_ENTRY_ROLE_ASSIGN), `assignRoleToVirtualContributor` (a VC from ANOTHER account as MEMBER of an L0 space - ROLESET_ENTRY_ROLE_ASSIGN), `assignRoleToOrganization` (an organization NOT yet in the space - ROLESET_ENTRY_ROLE_ASSIGN_ORGANIZATION)
 
 ### PLATFORM_SPACES_READER
 
@@ -756,7 +774,7 @@ One section per role, in the order of `roles/*.it-spec.ts`. **Can** lists every 
 |---|---|---|
 | `A16.createPlatformRolesAccess` | owner | **returns-data** — reads the collaboration of a PRIVATE space it is not a member of |
 
-**Cannot (111)** — by group:
+**Cannot (114)** — by group:
 
 - **A1** Assign / revoke a Platform role: `assignPlatformRoleToUser`, `removePlatformRoleFromUser`, `grantCredentialToActor`, `revokeCredentialFromActor`
 - **A2** Assign / revoke a Feature role (user or organization): `assignPlatformRoleToUser`, `removePlatformRoleFromUser`, `assignPlatformRoleToOrganization`, `removePlatformRoleFromOrganization`
@@ -778,6 +796,7 @@ One section per role, in the order of `roles/*.it-spec.ts`. **Can** lists every 
 - **A20** Read Platform-role holder lists: `usersInRole`, `usersInRoles`, `organizationsInRole`, `organizationsInRoles`, `actorsWithCredential`, `usersWithAuthorizationCredential`
 - **A20b** Read Feature-role holder lists: `usersInRole`, `usersInRoles`, `organizationsInRole`, `organizationsInRoles`, `actorsWithCredential`, `usersWithAuthorizationCredential`
 - **A21** Set / clear the service-profile marker: `updateUser` (set serviceProfile), `updateUser` (clear serviceProfile)
+- **A22** Direct add without consent (invitation only): `assignRoleToUser` (a user as MEMBER of an L0 space - ROLESET_ENTRY_ROLE_ASSIGN), `assignRoleToVirtualContributor` (a VC from ANOTHER account as MEMBER of an L0 space - ROLESET_ENTRY_ROLE_ASSIGN), `assignRoleToOrganization` (an organization NOT yet in the space - ROLESET_ENTRY_ROLE_ASSIGN_ORGANIZATION)
 
 ### PLATFORM_AUDIT_READER
 
@@ -806,7 +825,7 @@ One section per role, in the order of `roles/*.it-spec.ts`. **Can** lists every 
 | `A20b.actorsWithCredential` | owner | **returns-data** — the KNOWN single-role fixture holder is present in the result - an always-empty resolver must fail |
 | `A20b.usersWithAuthorizationCredential` | owner | **returns-data** — the KNOWN single-role fixture holder is present in the result - an always-empty resolver must fail |
 
-**Cannot (97)** — by group:
+**Cannot (100)** — by group:
 
 - **A1** Assign / revoke a Platform role: `assignPlatformRoleToUser`, `removePlatformRoleFromUser`, `grantCredentialToActor`, `revokeCredentialFromActor`
 - **A2** Assign / revoke a Feature role (user or organization): `assignPlatformRoleToUser`, `removePlatformRoleFromUser`, `assignPlatformRoleToOrganization`, `removePlatformRoleFromOrganization`
@@ -826,6 +845,7 @@ One section per role, in the order of `roles/*.it-spec.ts`. **Can** lists every 
 - **A16** Read across spaces (service accounts only): `createPlatformRolesAccess`
 - **A17** Rename an entity (nameID): `updateActorNameID`, `updateSpace.nameID` (protected `nameID` section of `updateSpace` (UPDATE_NAMEID))
 - **A21** Set / clear the service-profile marker: `updateUser` (set serviceProfile), `updateUser` (clear serviceProfile)
+- **A22** Direct add without consent (invitation only): `assignRoleToUser` (a user as MEMBER of an L0 space - ROLESET_ENTRY_ROLE_ASSIGN), `assignRoleToVirtualContributor` (a VC from ANOTHER account as MEMBER of an L0 space - ROLESET_ENTRY_ROLE_ASSIGN), `assignRoleToOrganization` (an organization NOT yet in the space - ROLESET_ENTRY_ROLE_ASSIGN_ORGANIZATION)
 
 ### FEATURE_BETA_TESTER
 
@@ -836,7 +856,7 @@ One section per role, in the order of `roles/*.it-spec.ts`. **Can** lists every 
 
 **Can:** nothing in the capability table — this role owns no administrative capability. What it confers is proven by the Feature-role scenarios (F1–F3) below.
 
-**Cannot (112)** — by group:
+**Cannot (115)** — by group:
 
 - **A1** Assign / revoke a Platform role: `assignPlatformRoleToUser`, `removePlatformRoleFromUser`, `grantCredentialToActor`, `revokeCredentialFromActor`
 - **A2** Assign / revoke a Feature role (user or organization): `assignPlatformRoleToUser`, `removePlatformRoleFromUser`, `assignPlatformRoleToOrganization`, `removePlatformRoleFromOrganization`
@@ -859,6 +879,7 @@ One section per role, in the order of `roles/*.it-spec.ts`. **Can** lists every 
 - **A20** Read Platform-role holder lists: `usersInRole`, `usersInRoles`, `organizationsInRole`, `organizationsInRoles`, `actorsWithCredential`, `usersWithAuthorizationCredential`
 - **A20b** Read Feature-role holder lists: `usersInRole`, `usersInRoles`, `organizationsInRole`, `organizationsInRoles`, `actorsWithCredential`, `usersWithAuthorizationCredential`
 - **A21** Set / clear the service-profile marker: `updateUser` (set serviceProfile), `updateUser` (clear serviceProfile)
+- **A22** Direct add without consent (invitation only): `assignRoleToUser` (a user as MEMBER of an L0 space - ROLESET_ENTRY_ROLE_ASSIGN), `assignRoleToVirtualContributor` (a VC from ANOTHER account as MEMBER of an L0 space - ROLESET_ENTRY_ROLE_ASSIGN), `assignRoleToOrganization` (an organization NOT yet in the space - ROLESET_ENTRY_ROLE_ASSIGN_ORGANIZATION)
 
 ### FEATURE_VIRTUAL_ASSISTANT
 
@@ -869,7 +890,7 @@ One section per role, in the order of `roles/*.it-spec.ts`. **Can** lists every 
 
 **Can:** nothing in the capability table — this role owns no administrative capability. What it confers is proven by the Feature-role scenarios (F1–F3) below.
 
-**Cannot (112)** — by group:
+**Cannot (115)** — by group:
 
 - **A1** Assign / revoke a Platform role: `assignPlatformRoleToUser`, `removePlatformRoleFromUser`, `grantCredentialToActor`, `revokeCredentialFromActor`
 - **A2** Assign / revoke a Feature role (user or organization): `assignPlatformRoleToUser`, `removePlatformRoleFromUser`, `assignPlatformRoleToOrganization`, `removePlatformRoleFromOrganization`
@@ -892,6 +913,7 @@ One section per role, in the order of `roles/*.it-spec.ts`. **Can** lists every 
 - **A20** Read Platform-role holder lists: `usersInRole`, `usersInRoles`, `organizationsInRole`, `organizationsInRoles`, `actorsWithCredential`, `usersWithAuthorizationCredential`
 - **A20b** Read Feature-role holder lists: `usersInRole`, `usersInRoles`, `organizationsInRole`, `organizationsInRoles`, `actorsWithCredential`, `usersWithAuthorizationCredential`
 - **A21** Set / clear the service-profile marker: `updateUser` (set serviceProfile), `updateUser` (clear serviceProfile)
+- **A22** Direct add without consent (invitation only): `assignRoleToUser` (a user as MEMBER of an L0 space - ROLESET_ENTRY_ROLE_ASSIGN), `assignRoleToVirtualContributor` (a VC from ANOTHER account as MEMBER of an L0 space - ROLESET_ENTRY_ROLE_ASSIGN), `assignRoleToOrganization` (an organization NOT yet in the space - ROLESET_ENTRY_ROLE_ASSIGN_ORGANIZATION)
 
 ### FEATURE_ORGANIZATION_CREATOR
 
@@ -906,7 +928,7 @@ One section per role, in the order of `roles/*.it-spec.ts`. **Can** lists every 
 |---|---|---|
 | `A6.createOrganization` | owner | **effect** — the organization is readable by the returned id (then cleaned up) |
 
-**Cannot (111)** — by group:
+**Cannot (114)** — by group:
 
 - **A1** Assign / revoke a Platform role: `assignPlatformRoleToUser`, `removePlatformRoleFromUser`, `grantCredentialToActor`, `revokeCredentialFromActor`
 - **A2** Assign / revoke a Feature role (user or organization): `assignPlatformRoleToUser`, `removePlatformRoleFromUser`, `assignPlatformRoleToOrganization`, `removePlatformRoleFromOrganization`
@@ -929,6 +951,7 @@ One section per role, in the order of `roles/*.it-spec.ts`. **Can** lists every 
 - **A20** Read Platform-role holder lists: `usersInRole`, `usersInRoles`, `organizationsInRole`, `organizationsInRoles`, `actorsWithCredential`, `usersWithAuthorizationCredential`
 - **A20b** Read Feature-role holder lists: `usersInRole`, `usersInRoles`, `organizationsInRole`, `organizationsInRoles`, `actorsWithCredential`, `usersWithAuthorizationCredential`
 - **A21** Set / clear the service-profile marker: `updateUser` (set serviceProfile), `updateUser` (clear serviceProfile)
+- **A22** Direct add without consent (invitation only): `assignRoleToUser` (a user as MEMBER of an L0 space - ROLESET_ENTRY_ROLE_ASSIGN), `assignRoleToVirtualContributor` (a VC from ANOTHER account as MEMBER of an L0 space - ROLESET_ENTRY_ROLE_ASSIGN), `assignRoleToOrganization` (an organization NOT yet in the space - ROLESET_ENTRY_ROLE_ASSIGN_ORGANIZATION)
 
 ### FEATURE_VC_CAMPAIGN
 
@@ -939,7 +962,7 @@ One section per role, in the order of `roles/*.it-spec.ts`. **Can** lists every 
 
 **Can:** nothing in the capability table — this role owns no administrative capability. What it confers is proven by the Feature-role scenarios (F1–F3) below.
 
-**Cannot (112)** — by group:
+**Cannot (115)** — by group:
 
 - **A1** Assign / revoke a Platform role: `assignPlatformRoleToUser`, `removePlatformRoleFromUser`, `grantCredentialToActor`, `revokeCredentialFromActor`
 - **A2** Assign / revoke a Feature role (user or organization): `assignPlatformRoleToUser`, `removePlatformRoleFromUser`, `assignPlatformRoleToOrganization`, `removePlatformRoleFromOrganization`
@@ -962,6 +985,7 @@ One section per role, in the order of `roles/*.it-spec.ts`. **Can** lists every 
 - **A20** Read Platform-role holder lists: `usersInRole`, `usersInRoles`, `organizationsInRole`, `organizationsInRoles`, `actorsWithCredential`, `usersWithAuthorizationCredential`
 - **A20b** Read Feature-role holder lists: `usersInRole`, `usersInRoles`, `organizationsInRole`, `organizationsInRoles`, `actorsWithCredential`, `usersWithAuthorizationCredential`
 - **A21** Set / clear the service-profile marker: `updateUser` (set serviceProfile), `updateUser` (clear serviceProfile)
+- **A22** Direct add without consent (invitation only): `assignRoleToUser` (a user as MEMBER of an L0 space - ROLESET_ENTRY_ROLE_ASSIGN), `assignRoleToVirtualContributor` (a VC from ANOTHER account as MEMBER of an L0 space - ROLESET_ENTRY_ROLE_ASSIGN), `assignRoleToOrganization` (an organization NOT yet in the space - ROLESET_ENTRY_ROLE_ASSIGN_ORGANIZATION)
 
 ## Rule scenarios
 
@@ -1034,6 +1058,6 @@ None open.
 
 ## What is genuinely proven
 
-Verified live against the 027 server, twice in a row with identical results (2026-09-18): **92 of 112 capabilities have an automated positive and 111 an automated negative**, run for all 14 roles — 142 positive and 1412 negative role-level checks in the table, of which the exclusive and not-automated rows are excluded from the default run. Every negative is a refusal AT THE AUTHORIZATION GATE (an authorization code on the gate path), never a validation error, a not-found, or a forbidden sub-field. Every positive observes what its row declares — an effect read back, known data returned, a success payload, or (5 rows) a non-authorization error proving the gate was passed.
+Verified live against the 027 server, twice in a row with identical results (2026-09-18): **92 of 115 capabilities have an automated positive and 114 an automated negative**, run for all 14 roles — 142 positive and 1454 negative role-level checks in the table, of which the exclusive and not-automated rows are excluded from the default run. Every negative is a refusal AT THE AUTHORIZATION GATE (an authorization code on the gate path), never a validation error, a not-found, or a forbidden sub-field. Every positive observes what its row declares — an effect read back, known data returned, a success payload, or (5 rows) a non-authorization error proving the gate was passed.
 
 Rule scenarios: 22 positive and 25 negative halves automated. **What is NOT proven:** anything that reads a role-assignment audit record (the MCP endpoint is disabled on the stack this was built against — those halves are visible `test.todo`s that switch on with `PLATFORM_ROLES_MCP=1` once the endpoint answers); the 14 platform-wide positives in the `exclusive` project, which are written and type-checked but have NEVER been executed; restart and fault-injection scenarios; and the UI.
