@@ -1,0 +1,284 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e2]:
+  - generic [ref=e5]:
+    - link "Skip to content" [ref=e6] [cursor=pointer]:
+      - /url: "#crd-main-content"
+    - banner [ref=e7]:
+      - generic [ref=e10]:
+        - link "Home" [ref=e12] [cursor=pointer]:
+          - /url: /home
+          - img "Alkemio" [ref=e14]
+        - navigation "Menu" [ref=e20]:
+          - button "Search" [ref=e21] [cursor=pointer]:
+            - img
+          - button "Messages" [ref=e22] [cursor=pointer]:
+            - img
+          - button "Notifications" [ref=e23] [cursor=pointer]:
+            - img
+          - button "Platform navigation" [ref=e24] [cursor=pointer]:
+            - img
+          - button "admin alkemio" [ref=e26] [cursor=pointer]:
+            - img "admin alkemio" [ref=e29]
+    - main [ref=e30]:
+      - generic [ref=e34]:
+        - navigation "Dashboard navigation" [ref=e35]:
+          - generic [ref=e36]:
+            - generic [ref=e37]:
+              - button "Invitations" [ref=e38] [cursor=pointer]:
+                - img [ref=e39]
+                - generic [ref=e42]: Invitations
+              - button "Tips & Tricks" [ref=e43] [cursor=pointer]:
+                - img [ref=e44]
+                - generic [ref=e46]: Tips & Tricks
+              - link "My Account" [ref=e47] [cursor=pointer]:
+                - /url: https://test-alkem.io/user/admin-alkemio/settings/account
+                - img [ref=e48]
+                - generic [ref=e51]: My Account
+              - button "Create my own Space" [ref=e52] [cursor=pointer]:
+                - img [ref=e53]
+                - generic [ref=e58]: Create my own Space
+            - generic [ref=e59]:
+              - switch "Activity View" [checked] [ref=e60] [cursor=pointer]
+              - generic [ref=e61] [cursor=pointer]: Activity View
+        - generic [ref=e62]:
+          - generic [ref=e63]:
+            - generic [ref=e64]:
+              - heading "Recent Spaces" [level=2] [ref=e65]
+              - button "Explore all your Spaces" [ref=e66] [cursor=pointer]:
+                - text: Explore all your Spaces
+                - img [ref=e67]
+            - generic [ref=e69]:
+              - link "Set your Home Space Pin your favourite space to the dashboard" [ref=e70] [cursor=pointer]:
+                - /url: https://test-alkem.io/user/admin-alkemio/settings/membership
+                - img [ref=e71]
+                - paragraph [ref=e74]: Set your Home Space
+                - paragraph [ref=e75]: Pin your favourite space to the dashboard
+              - link "Private l0-callout-creation-43d36" [ref=e76] [cursor=pointer]:
+                - /url: https://test-alkem.io/callout-creation-43d36
+                - img "Private" [ref=e79]:
+                  - img [ref=e80]
+                - generic [ref=e83]:
+                  - generic [ref=e84]: L
+                  - paragraph [ref=e85]: l0-callout-creation-43d36
+              - link "Private l0-callout-creation-45142" [ref=e86] [cursor=pointer]:
+                - /url: https://test-alkem.io/callout-creation-45142
+                - img "Private" [ref=e89]:
+                  - img [ref=e90]
+                - generic [ref=e93]:
+                  - generic [ref=e94]: L
+                  - paragraph [ref=e95]: l0-callout-creation-45142
+              - link "Private l0-callout-creation-c6f3c" [ref=e96] [cursor=pointer]:
+                - /url: https://test-alkem.io/callout-creation-c6f3c
+                - img "Private" [ref=e99]:
+                  - img [ref=e100]
+                - generic [ref=e103]:
+                  - generic [ref=e104]: L
+                  - paragraph [ref=e105]: l0-callout-creation-c6f3c
+          - generic [ref=e106]:
+            - generic [ref=e107]:
+              - heading "Latest Activity in my Spaces" [level=3] [ref=e109]
+              - generic [ref=e110]:
+                - generic [ref=e111]:
+                  - generic [ref=e112]: Space
+                  - combobox "Space" [ref=e113] [cursor=pointer]:
+                    - generic: All Spaces
+                    - img
+                - generic [ref=e114]:
+                  - generic [ref=e115]: My role
+                  - combobox "My role" [ref=e116] [cursor=pointer]:
+                    - generic: All roles
+                    - img
+              - generic [ref=e118]:
+                - link "space admin New Post Test Whiteboard 1791469689102 l0-callout-creation-43d36 1h" [ref=e119] [cursor=pointer]:
+                  - /url: https://test-alkem.io/callout-creation-43d36/collaboration/testwhiteboard17914696891
+                  - generic [ref=e120]:
+                    - img "space admin" [ref=e122]
+                    - img "New Post" [ref=e123]:
+                      - img [ref=e124]
+                  - generic [ref=e127]:
+                    - generic [ref=e128]:
+                      - generic [ref=e129]: Test Whiteboard 1791469689102
+                      - time [ref=e130]: 1h
+                    - generic [ref=e131]: l0-callout-creation-43d36
+                - link "space admin New Post Test Post Callout 1791469682320 l0-callout-creation-43d36 1h" [ref=e132] [cursor=pointer]:
+                  - /url: https://test-alkem.io/callout-creation-43d36/collaboration/testpostcallout1791469682
+                  - generic [ref=e133]:
+                    - img "space admin" [ref=e135]
+                    - img "New Post" [ref=e136]:
+                      - img [ref=e137]
+                  - generic [ref=e140]:
+                    - generic [ref=e141]:
+                      - generic [ref=e142]: Test Post Callout 1791469682320
+                      - time [ref=e143]: 1h
+                    - generic [ref=e144]: l0-callout-creation-43d36
+                - link "space admin New member space admin joined l0-callout-creation-43d36 1h" [ref=e145] [cursor=pointer]:
+                  - /url: https://test-alkem.io/user/space-admin
+                  - generic [ref=e146]:
+                    - img "space admin" [ref=e148]
+                    - img "New member" [ref=e149]:
+                      - img [ref=e150]
+                  - generic [ref=e153]:
+                    - generic [ref=e154]:
+                      - generic [ref=e155]: space admin joined
+                      - time [ref=e156]: 1h
+                    - generic [ref=e157]: l0-callout-creation-43d36
+                - link "space member New member space member joined l0-callout-creation-43d36 1h" [ref=e158] [cursor=pointer]:
+                  - /url: https://test-alkem.io/user/space-member
+                  - generic [ref=e159]:
+                    - img "space member" [ref=e161]
+                    - img "New member" [ref=e162]:
+                      - img [ref=e163]
+                  - generic [ref=e166]:
+                    - generic [ref=e167]:
+                      - generic [ref=e168]: space member joined
+                      - time [ref=e169]: 1h
+                    - generic [ref=e170]: l0-callout-creation-43d36
+                - link "admin alkemio New member admin alkemio joined l0-callout-creation-43d36 1h" [ref=e171] [cursor=pointer]:
+                  - /url: https://test-alkem.io/user/admin-alkemio
+                  - generic [ref=e172]:
+                    - img "admin alkemio" [ref=e174]
+                    - img "New member" [ref=e175]:
+                      - img [ref=e176]
+                  - generic [ref=e179]:
+                    - generic [ref=e180]:
+                      - generic [ref=e181]: admin alkemio joined
+                      - time [ref=e182]: 1h
+                    - generic [ref=e183]: l0-callout-creation-43d36
+                - link "space admin New Post Test Whiteboard 1791469625115 l0-callout-creation-45142 1h" [ref=e184] [cursor=pointer]:
+                  - /url: https://test-alkem.io/callout-creation-45142/collaboration/testwhiteboard17914696251
+                  - generic [ref=e185]:
+                    - img "space admin" [ref=e187]
+                    - img "New Post" [ref=e188]:
+                      - img [ref=e189]
+                  - generic [ref=e192]:
+                    - generic [ref=e193]:
+                      - generic [ref=e194]: Test Whiteboard 1791469625115
+                      - time [ref=e195]: 1h
+                    - generic [ref=e196]: l0-callout-creation-45142
+                - link "space admin New Post Test Post Callout 1791469618243 l0-callout-creation-45142 1h" [ref=e197] [cursor=pointer]:
+                  - /url: https://test-alkem.io/callout-creation-45142/collaboration/testpostcallout1791469618
+                  - generic [ref=e198]:
+                    - img "space admin" [ref=e200]
+                    - img "New Post" [ref=e201]:
+                      - img [ref=e202]
+                  - generic [ref=e205]:
+                    - generic [ref=e206]:
+                      - generic [ref=e207]: Test Post Callout 1791469618243
+                      - time [ref=e208]: 1h
+                    - generic [ref=e209]: l0-callout-creation-45142
+              - button "Show more" [ref=e211] [cursor=pointer]
+            - generic [ref=e212]:
+              - heading "My Latest Activity" [level=3] [ref=e214]
+              - generic [ref=e216]:
+                - generic [ref=e217]: Space
+                - combobox "Space" [ref=e218] [cursor=pointer]:
+                  - generic: All Spaces
+                  - img
+              - generic [ref=e220]:
+                - link "admin alkemio New member admin alkemio joined l0-callout-creation-43d36 1h" [ref=e221] [cursor=pointer]:
+                  - /url: https://test-alkem.io/user/admin-alkemio
+                  - generic [ref=e222]:
+                    - img "admin alkemio" [ref=e224]
+                    - img "New member" [ref=e225]:
+                      - img [ref=e226]
+                  - generic [ref=e229]:
+                    - generic [ref=e230]:
+                      - generic [ref=e231]: admin alkemio joined
+                      - time [ref=e232]: 1h
+                    - generic [ref=e233]: l0-callout-creation-43d36
+                - link "admin alkemio New member admin alkemio joined l0-callout-creation-45142 1h" [ref=e234] [cursor=pointer]:
+                  - /url: https://test-alkem.io/user/admin-alkemio
+                  - generic [ref=e235]:
+                    - img "admin alkemio" [ref=e237]
+                    - img "New member" [ref=e238]:
+                      - img [ref=e239]
+                  - generic [ref=e242]:
+                    - generic [ref=e243]:
+                      - generic [ref=e244]: admin alkemio joined
+                      - time [ref=e245]: 1h
+                    - generic [ref=e246]: l0-callout-creation-45142
+                - link "admin alkemio New member admin alkemio joined l0-callout-creation-c6f3c 1h" [ref=e247] [cursor=pointer]:
+                  - /url: https://test-alkem.io/user/admin-alkemio
+                  - generic [ref=e248]:
+                    - img "admin alkemio" [ref=e250]
+                    - img "New member" [ref=e251]:
+                      - img [ref=e252]
+                  - generic [ref=e255]:
+                    - generic [ref=e256]:
+                      - generic [ref=e257]: admin alkemio joined
+                      - time [ref=e258]: 1h
+                    - generic [ref=e259]: l0-callout-creation-c6f3c
+                - link "admin alkemio New subspace fl-ch-dname-1am2740fl-ch-dname-1am2740 l0-subspace-flows-1ao3cae 2h" [ref=e260] [cursor=pointer]:
+                  - /url: https://test-alkem.io/subspace-flows-1ao3cae/challenges/1am27401am2740
+                  - generic [ref=e261]:
+                    - img "admin alkemio" [ref=e263]
+                    - img "New subspace" [ref=e264]:
+                      - img [ref=e265]
+                  - generic [ref=e270]:
+                    - generic [ref=e271]:
+                      - generic [ref=e272]: fl-ch-dname-1am2740fl-ch-dname-1am2740
+                      - time [ref=e273]: 2h
+                    - generic [ref=e274]: l0-subspace-flows-1ao3cae
+                - link "admin alkemio New member admin alkemio joined fl-ch-dname-1am2740fl-ch-dname-1am2740 2h" [ref=e275] [cursor=pointer]:
+                  - /url: https://test-alkem.io/user/admin-alkemio
+                  - generic [ref=e276]:
+                    - img "admin alkemio" [ref=e278]
+                    - img "New member" [ref=e279]:
+                      - img [ref=e280]
+                  - generic [ref=e283]:
+                    - generic [ref=e284]:
+                      - generic [ref=e285]: admin alkemio joined
+                      - time [ref=e286]: 2h
+                    - generic [ref=e287]: fl-ch-dname-1am2740fl-ch-dname-1am2740
+                - link "admin alkemio New subspace fl-ch-dname-1am2740 l0-subspace-flows-1ao3cae 2h" [ref=e288] [cursor=pointer]:
+                  - /url: https://test-alkem.io/subspace-flows-1ao3cae/challenges/1am2740
+                  - generic [ref=e289]:
+                    - img "admin alkemio" [ref=e291]
+                    - img "New subspace" [ref=e292]:
+                      - img [ref=e293]
+                  - generic [ref=e298]:
+                    - generic [ref=e299]:
+                      - generic [ref=e300]: fl-ch-dname-1am2740
+                      - time [ref=e301]: 2h
+                    - generic [ref=e302]: l0-subspace-flows-1ao3cae
+                - link "admin alkemio New member admin alkemio joined fl-ch-dname-1am2740 2h" [ref=e303] [cursor=pointer]:
+                  - /url: https://test-alkem.io/user/admin-alkemio
+                  - generic [ref=e304]:
+                    - img "admin alkemio" [ref=e306]
+                    - img "New member" [ref=e307]:
+                      - img [ref=e308]
+                  - generic [ref=e311]:
+                    - generic [ref=e312]:
+                      - generic [ref=e313]: admin alkemio joined
+                      - time [ref=e314]: 2h
+                    - generic [ref=e315]: fl-ch-dname-1am2740
+              - button "Show more" [ref=e317] [cursor=pointer]
+    - contentinfo [ref=e318]:
+      - generic [ref=e319]:
+        - generic [ref=e320]:
+          - img "Alkemio" [ref=e322]
+          - generic [ref=e328]: © 2026 Alkemio B.V.
+        - navigation "Footer" [ref=e329]:
+          - link "Terms" [ref=e330] [cursor=pointer]:
+            - /url: https://welcome.alkem.io/legal/terms/
+          - link "Privacy" [ref=e331] [cursor=pointer]:
+            - /url: https://welcome.alkem.io/legal/privacy
+          - link "Security" [ref=e332] [cursor=pointer]:
+            - /url: https://welcome.alkem.io/legal/security
+          - button "Support" [ref=e333] [cursor=pointer]
+          - link "About" [ref=e334] [cursor=pointer]:
+            - /url: https://welcome.alkem.io
+        - button "English" [ref=e336] [cursor=pointer]:
+          - img [ref=e337]
+          - generic [ref=e340]: English
+  - generic [ref=e342]:
+    - paragraph [ref=e343]: By clicking "Accept All Cookies", you agree to the storing of cookies on your device to enhance site navigation and analyse site usage.
+    - generic [ref=e344]:
+      - button "settings" [ref=e345] [cursor=pointer]
+      - button "Accept All Cookies" [ref=e346] [cursor=pointer]
+  - region "Notifications alt+T"
+  - button "Open chat" [ref=e347]:
+    - img [ref=e348]
+```
