@@ -14,6 +14,8 @@ import {
   PollDefinitionFragment,
   PollSettingsInput,
   PollStatus,
+  SpaceLevel,
+  TemplateType,
 } from '@alkemio/tests-lib/core/generated/alkemio-schema';
 import { graphqlErrorWrapper } from '@alkemio/tests-lib/utils/graphql.wrapper';
 import { updateCalloutVisibility } from '../callout/callouts.request.params';
@@ -385,4 +387,142 @@ export const createSubspaceFromTemplate = async (
       { authorization: `Bearer ${authToken}` }
     );
   return graphqlErrorWrapper(callback, userRole);
+};
+
+// ---------------------------------------------------------------------------
+// The other FORM carriers of R25c (FR-027a)
+// ---------------------------------------------------------------------------
+
+/** The id of a template's content space. */
+export const getTemplateContentSpaceId = async (
+  templateId: string
+): Promise<string> => {
+  const result = await graphqlErrorWrapper(
+    (authToken: string | undefined) =>
+      getGraphqlClient().templateContentSpaceCallouts(
+        { templateId },
+        { authorization: `Bearer ${authToken}` }
+      ),
+    TestUser.GLOBAL_ADMIN
+  );
+  const id = result.data?.lookup.template?.contentSpace?.id;
+  if (!id) {
+    throw new Error(
+      `no content space on template ${templateId}: ${JSON.stringify(
+        result.error?.errors ?? result
+      )}`
+    );
+  }
+  return id;
+};
+
+/** createTemplateFromContentSpace: a new space template copied from a content space. */
+export const createTemplateFromContentSpace = async (
+  contentSpaceID: string,
+  templatesSetID: string,
+  displayName: string,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) =>
+  graphqlErrorWrapper(
+    (authToken: string | undefined) =>
+      getGraphqlClient().createTemplateFromContentSpace(
+        {
+          templateData: {
+            contentSpaceID,
+            templatesSetID,
+            profileData: { displayName },
+          },
+        },
+        { authorization: `Bearer ${authToken}` }
+      ),
+    userRole
+  );
+
+/** createTemplate of type SPACE whose request carries the content space's callouts. */
+export const createSpaceTemplateWithCallouts = async (
+  templatesSetId: string,
+  displayName: string,
+  calloutsData: CreateCalloutInput[],
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) =>
+  graphqlErrorWrapper(
+    (authToken: string | undefined) =>
+      getGraphqlClient().CreateTemplate(
+        {
+          templatesSetId,
+          profileData: { displayName },
+          type: TemplateType.Space,
+          contentSpaceData: {
+            level: SpaceLevel.L0,
+            about: { profileData: { displayName } },
+            settings: {},
+            // Optional in the schema, but omitting it fails server-side
+            // ("templateContentSpaceData.subspaces is not iterable").
+            subspaces: [],
+            collaborationData: { calloutsSetData: { calloutsData } },
+          },
+        },
+        { authorization: `Bearer ${authToken}` }
+      ),
+    userRole
+  );
+
+/**
+ * createSpace (an L0) on `accountID` from a space template, optionally with
+ * callouts of the request's own (each given a classification, as for subspaces).
+ */
+export const createSpaceFromTemplate = async (
+  accountID: string,
+  tag: string,
+  spaceTemplateID: string,
+  calloutsData: CreateCalloutInput[] = [],
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const nameID = uniqueTemplateName(tag).toLowerCase().slice(0, 25);
+  return graphqlErrorWrapper(
+    (authToken: string | undefined) =>
+      getGraphqlClient().CreateSpaceBasicData(
+        {
+          spaceData: {
+            accountID,
+            nameID,
+            spaceTemplateID,
+            about: { profileData: { displayName: nameID } },
+            collaborationData: {
+              calloutsSetData: {
+                calloutsData: calloutsData.map(callout => ({
+                  ...callout,
+                  classification: callout.classification ?? { tagsets: [] },
+                })),
+              },
+            },
+          },
+        },
+        { authorization: `Bearer ${authToken}` }
+      ),
+    userRole
+  );
+};
+
+/** The callouts set of a space (any level). */
+export const getSpaceCalloutsSetId = async (
+  spaceId: string
+): Promise<string> => {
+  const result = await graphqlErrorWrapper(
+    (authToken: string | undefined) =>
+      getGraphqlClient().spaceCalloutsSetAndRoleSet(
+        { spaceId },
+        { authorization: `Bearer ${authToken}` }
+      ),
+    TestUser.GLOBAL_ADMIN
+  );
+  const id = result.data?.lookup.space?.collaboration.calloutsSet.id;
+  if (!id) {
+    throw new Error(
+      `no callouts set on space ${spaceId}: ${JSON.stringify(
+        result.error?.errors ?? result
+      )}`
+    );
+  }
+  return id;
 };

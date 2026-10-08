@@ -36,13 +36,18 @@ import {
 import {
   castPollVote,
   createPollCallout,
+  createSpaceFromTemplate,
+  createSpaceTemplateWithCallouts,
   createSubspaceFromTemplate,
-  FormDefinitionInput,
+  createTemplateFromContentSpace,
   formCalloutData,
+  FormDefinitionInput,
   formIds,
   formShape,
   getCalloutsSetFramingDefinitions,
+  getSpaceCalloutsSetId,
   getTemplateContentSpaceCallouts,
+  getTemplateContentSpaceId,
   noneCalloutData,
   PollCallout,
   PollDefinitionInput,
@@ -599,5 +604,82 @@ describe('R25 — only the template may carry a Form into a new subspace (FR-027
     expect(byName(callouts, sourceForm.displayName).framing.type).toBe(
       CalloutFramingType.Form
     );
+  });
+});
+
+describe('R25 — the other template carriers carry a Form (FR-027a, R25c)', () => {
+  /** A template content space's Form: the expected definition, never respondable. */
+  const expectTemplateFormDefinition = async (
+    tplId: string,
+    displayName: string
+  ) => {
+    const callouts = await getTemplateContentSpaceCallouts(tplId);
+    const form = byName(callouts, displayName).framing.form;
+    if (!form) throw new Error('the template FORM callout carries no form');
+    expect(formShape(form)).toEqual(expectedFormShape);
+
+    const result = await submitFormResponse(
+      form.id,
+      answersFor(form.questions as FormQuestion[]),
+      CalloutFormResponseVisibility.Members,
+      TestUser.GLOBAL_ADMIN
+    );
+    expect(errorCode(result)).toBe('FORM_TEMPLATE_NOT_RESPONDABLE');
+    expect(responsesView(await getFormResponses(form.id)).total).toBe(0);
+  };
+
+  test('createTemplateFromContentSpace copies the Form definition into the new template, never respondable', async () => {
+    const created = await createTemplateFromContentSpace(
+      await getTemplateContentSpaceId(templateId),
+      baseScenario.space.templateSetId,
+      uniqueTemplateName('from-content')
+    );
+
+    expect(created.error).toBeUndefined();
+    const id = created.data?.createTemplateFromContentSpace.id ?? '';
+    expect(id).not.toBe('');
+    extraTemplateIds.push(id);
+    await expectTemplateFormDefinition(id, sourceForm.displayName);
+  });
+
+  test('createTemplate (SPACE) accepts a FORM in its own content space, as a never-respondable definition', async () => {
+    const displayName = uniqueTemplateName('tpl-own-form');
+    const created = await createSpaceTemplateWithCallouts(
+      baseScenario.space.templateSetId,
+      uniqueTemplateName('space-tpl-form'),
+      [formCalloutData(displayName, FORM, [CalloutContributionType.Link])]
+    );
+
+    expect(created.error).toBeUndefined();
+    const id = created.data?.createTemplate.id ?? '';
+    expect(id).not.toBe('');
+    extraTemplateIds.push(id);
+    await expectTemplateFormDefinition(id, displayName);
+  });
+
+  test('an L0 created from the template holds an OPEN poll with no votes and Forms as-is with fresh ids and no responses', async () => {
+    const created = await createSpaceFromTemplate(
+      baseScenario.organization.accountId,
+      'l0-from-tpl',
+      templateId
+    );
+
+    expect(created.error).toBeUndefined();
+    const id = created.data?.createSpace.id ?? '';
+    expect(id).not.toBe('');
+    spaceIds.push(id);
+    await expectFreshCopies(await getSpaceCalloutsSetId(id));
+  });
+
+  test('a FORM in the create-space (L0) request itself is refused even when a template is used', async () => {
+    const result = await createSpaceFromTemplate(
+      baseScenario.organization.accountId,
+      'l0-req-form',
+      templateId,
+      [formCalloutData(uniqueTemplateName('l0-req-form-post'), FORM)]
+    );
+
+    expect(errorCode(result)).toBe('FORM_FRAMING_NOT_ALLOWED');
+    expect(result.data?.createSpace).toBeUndefined();
   });
 });
