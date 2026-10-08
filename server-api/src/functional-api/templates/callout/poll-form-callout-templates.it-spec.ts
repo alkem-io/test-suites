@@ -19,6 +19,7 @@ import {
   answersFor,
   createFormCallout,
   defaultFormQuestions,
+  errorClass,
   errorCode,
   FormQuestion,
   isForbiddenByPolicy,
@@ -173,7 +174,7 @@ describe('R25 — a callout template carries a Poll (US5-AS5, FR-027)', () => {
     expect(poll).toBeDefined();
     if (!poll) throw new Error('the template POLL callout carries no poll');
     expect(pollShape(poll)).toEqual(expectedPollShape);
-    expect(poll.totalVotes ?? 0).toBe(0);
+    expect(poll.totalVotes).toBe(0);
   });
 });
 
@@ -294,5 +295,28 @@ describe('R25 — a template Form definition is edited by the template admin (FR
     expect(form?.questions[0].prompt).toBe('What is your full name?');
     expect(form?.questions).toHaveLength(FORM.questions.length);
     expect(form?.settings.state).toBe(CalloutFormState.Closed);
+  });
+});
+
+describe('R25 — a Form callout template is removed like any template (server#6435)', () => {
+  test('deleteTemplate by the template admin removes the Form template: it can no longer be read', async () => {
+    const { templateId, form } = await createFormTemplate(
+      'form-delete',
+      TestUser.SPACE_ADMIN
+    );
+    // Control: before the delete it reads back with its Form.
+    const before = await getTemplateCalloutFraming(templateId);
+    expect(before.data?.lookup.template?.callout?.framing.form?.id).toBe(
+      form.id
+    );
+
+    const deleted = await deleteTemplate(templateId, TestUser.SPACE_ADMIN);
+    expect(deleted.error).toBeUndefined();
+    expect(deleted.data?.deleteTemplate.id).toBe(templateId);
+    templateIds.splice(templateIds.indexOf(templateId), 1);
+
+    const after = await getTemplateCalloutFraming(templateId);
+    expect(errorClass(after)).toBe('ENTITY_NOT_FOUND');
+    expect(after.data?.lookup.template?.callout).toBeUndefined();
   });
 });
