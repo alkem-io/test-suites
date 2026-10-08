@@ -5,6 +5,7 @@ import {
   TestUser,
   TestUserManager,
   UniqueIDGenerator,
+  assignRoleToOrganization as libAssignRoleToOrganization,
 } from '@alkemio/tests-lib';
 import { graphqlErrorWrapper } from '@alkemio/tests-lib/utils/graphql.wrapper';
 import { graphqlRequestAuth } from '@alkemio/tests-lib/utils/graphql.request';
@@ -186,18 +187,17 @@ export const assignOrgRole = async (
   role: RoleName,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
-  const graphqlClient = getGraphqlClient();
-  const callback = (authToken: string | undefined) =>
-    graphqlClient.AssignRoleToOrganization(
-      { roleData: { actorID: organizationID, roleSetID, role } },
-      { authorization: `Bearer ${authToken}` }
-    );
-  const res = await graphqlErrorWrapper(callback, userRole);
-  if (res.error) {
-    throw new Error(
-      `assignOrgRole(${role}) failed for ${organizationID}: ${JSON.stringify(res.error)}`
-    );
-  }
+  // workspace#027 Slice B: nobody holds ROLESET_ENTRY_ROLE_ASSIGN_ORGANIZATION
+  // any more, so the lib's wrapper seeds a MEMBER organisation the product way
+  // (invite + accept as one of its admins) when the harness admin is refused at
+  // that gate, and grants the non-entry role on top. The lib's direct helper
+  // THROWS on any other refusal, which is this helper's contract too.
+  const res = await libAssignRoleToOrganization(
+    organizationID,
+    roleSetID,
+    role,
+    userRole
+  );
   // Unshift: roles are stripped in reverse grant order at teardown, so LEAD
   // comes off before the MEMBER entry role it depends on.
   grantedOrgRoles.unshift({ organizationID, roleSetID, role });

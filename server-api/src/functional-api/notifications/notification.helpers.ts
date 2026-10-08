@@ -2,6 +2,7 @@ import type { MailItem } from '@alkemio/tests-lib';
 import {
   ConversationCreationType,
   delay,
+  deleteMailSlurperMails,
   getMailsData,
   getQueueStats,
   NotificationEvent,
@@ -634,6 +635,38 @@ export const getMailsDataSettled = async (
   const [all] = await getMailsData();
   const scoped = inScope((all ?? []) as MailItem[]);
   return [scoped, scoped.length];
+};
+
+/**
+ * Waits until the mailbox has been QUIET for `quietMs` (no new mail landed),
+ * then prunes it. Use right after scenario/membership set-up in a spec that
+ * asserts exact mail counts.
+ *
+ * Since workspace#027 Slice B the harness seeds space MEMBERS by letting each
+ * persona join the space as itself (no actor holds the direct entry-assign
+ * privilege any more), and a join fans out "<name> has joined <space>" mails to
+ * every member/admin with `communityNewMember` on, plus the joiner's welcome.
+ * Those land asynchronously — a plain `deleteMailSlurperMails()` right after
+ * set-up races them, and the stragglers surface as extra mails in the first
+ * test's exact-count assertion.
+ */
+export const drainMailbox = async ({
+  quietMs = 4_000,
+  timeout = 30_000,
+  interval = 1_000,
+}: { quietMs?: number; timeout?: number; interval?: number } = {}): Promise<void> => {
+  const start = Date.now();
+  let [, lastTotal] = await getMailsData();
+  let quietSince = Date.now();
+  while (Date.now() - start < timeout && Date.now() - quietSince < quietMs) {
+    await delay(interval);
+    const [, total] = await getMailsData();
+    if (total !== lastTotal) {
+      lastTotal = total;
+      quietSince = Date.now();
+    }
+  }
+  await deleteMailSlurperMails();
 };
 
 /**

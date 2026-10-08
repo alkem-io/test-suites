@@ -9,7 +9,7 @@ import {
 import {
   createSpaceAndGetData,
   deleteSpace,
-  updateSpacePlatformSettings,
+  updateSpaceVisibility,
 } from '../../journey/space/space.request.params';
 import {
   createSubspace,
@@ -45,7 +45,6 @@ const uniqueId = UniqueIDGenerator.getID();
 let invitationId = '';
 let invitationData: any;
 
-const spaceNameId = 'appl-eco-nameid' + uniqueId;
 let vcSpaceId = '';
 let l1VCId = '';
 let vcLicensePlanId = '';
@@ -98,9 +97,8 @@ beforeAll(async () => {
     vcLicensePlanId
   );
 
-  await updateSpacePlatformSettings(
+  await updateSpaceVisibility(
     baseScenario.space.id,
-    spaceNameId,
     SpaceVisibility.Active
   );
 

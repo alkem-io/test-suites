@@ -56,10 +56,28 @@ const suggestedLanguageSelect = (page: Page) =>
 /** Resolve the target space (nameID + roleSetID) once per run. */
 async function resolveSpace(page: Page): Promise<{ nameId: string; roleSetId: string }> {
   if (spaceNameId && spaceRoleSetId) return { nameId: spaceNameId, roleSetId: spaceRoleSetId };
-  const data = await gql(page.request, '{ spaces { nameID about { membership { roleSetID } } } }');
-  const spaces: Array<{ nameID: string; about: { membership: { roleSetID: string } } }> = data?.spaces ?? [];
-  const match = spaceNameId ? spaces.find(s => s.nameID === spaceNameId) : spaces[0];
-  expect(match, `no usable space found (looked for ${spaceNameId || 'the first space'})`).toBeTruthy();
+  // workspace#027 Slice B: the harness admin (Content Full Access, no GRANT)
+  // can no longer invite into an arbitrary space — only into one it
+  // administers. Pick the first space where it holds GRANT, not merely the
+  // first space the server lists.
+  const data = await gql(
+    page.request,
+    '{ spaces { nameID authorization { myPrivileges } about { membership { roleSetID } } } }'
+  );
+  const spaces: Array<{
+    nameID: string;
+    authorization?: { myPrivileges?: string[] | null } | null;
+    about: { membership: { roleSetID: string } };
+  }> = data?.spaces ?? [];
+  const administered = (s: (typeof spaces)[number]) =>
+    (s.authorization?.myPrivileges ?? []).includes('GRANT');
+  const match = spaceNameId
+    ? spaces.find(s => s.nameID === spaceNameId)
+    : spaces.find(administered);
+  expect(
+    match,
+    `no usable space found (looked for ${spaceNameId || 'the first space the admin administers'})`
+  ).toBeTruthy();
   spaceNameId = match!.nameID;
   spaceRoleSetId = match!.about.membership.roleSetID;
   return { nameId: spaceNameId, roleSetId: spaceRoleSetId };

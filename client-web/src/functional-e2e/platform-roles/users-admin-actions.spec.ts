@@ -88,11 +88,7 @@ asUsersAdmin.describe('PLATFORM_USERS_ADMIN on Administration → Users', () => 
   });
 
   asUsersAdmin('deletes the user; the list drops the row without a reload', async ({ page }) => {
-    // KNOWN CLIENT DEFECT (027, E26): `useAdminGlobalUserList` evicts the cache
-    // field `usersPaginated` after a delete, but the list reads
-    // `platformAdmin.users` — nothing is refetched and the deleted user stays
-    // listed until the page is reloaded. Expected to fail until fixed.
-    asUsersAdmin.fail(true, 'client-web 027: users list is stale after delete');
+    // E26 (stale list after delete) is fixed on develop: the list refetches.
 
     await page.goto(`${baseUrl}/admin/users`);
     const row = await search(page, victim);

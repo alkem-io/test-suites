@@ -63,7 +63,7 @@ describe('Functional tests - Innovation Pack', () => {
       await TestScenarioFactory.createBaseScenarioEmpty(scenarioConfig);
       await assignPlatformRole(
         TestUserManager.users.nonSpaceMember.id,
-        RoleName.PlatformVcCampaign
+        RoleName.FeatureVcCampaign
       );
     });
     const allPrivileges = [
@@ -83,7 +83,7 @@ describe('Functional tests - Innovation Pack', () => {
     afterAll(async () => {
       await removePlatformRole(
         TestUserManager.users.nonSpaceMember.id,
-        RoleName.PlatformVcCampaign
+        RoleName.FeatureVcCampaign
       );
     });
 

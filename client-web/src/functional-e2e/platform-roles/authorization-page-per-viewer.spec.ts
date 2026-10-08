@@ -154,13 +154,17 @@ asRolesAdmin.describe('Authorization page — Platform Roles Admin', () => {
     await expect(roleTabs(page)).toHaveText([...PLATFORM_TABS, ...FEATURE_TABS], { timeout: 20_000 });
   });
 
-  asRolesAdmin('an unknown role in the URL falls back to the FIRST tab — and says so', async ({ page }) => {
-    // Documents the trap described at the top of this file: the fallback is the
-    // most powerful role, so it must at least be unmistakable on screen.
+  asRolesAdmin('an unknown role in the URL opens NO role: it says so, and no tab is pressed', async ({ page }) => {
+    // client-15 (develop since #643): a URL naming a role the operator is not
+    // offered must not silently fall back to the first offered role — that
+    // showed the most powerful role's holders and editor with no sign anything
+    // was off. The tabs stay, none is selected, and the page says so.
     await page.goto(`${baseUrl}/admin/authorization/roles/NO_SUCH_ROLE`);
-    await expect(roleTabs(page).first()).toHaveAttribute('aria-pressed', 'true', { timeout: 20_000 });
-    await expect(roleTabs(page).first()).toHaveText('Platform Roles Admin');
-    await expect(page.getByRole('heading', { name: 'Platform Roles Admin', level: 2 })).toBeVisible();
+    await expect(roleTabs(page).first()).toHaveText('Platform Roles Admin', { timeout: 20_000 });
+    await expect(page.getByText('This role could not be found.')).toBeVisible();
+    await expect(roleTabs(page).and(page.locator('[aria-pressed="true"]'))).toHaveCount(0);
+    await expect(page.getByRole('heading', { name: 'Platform Roles Admin', level: 2 })).toHaveCount(0);
+    await expect(page.getByRole('heading', { name: 'Current members' })).toHaveCount(0);
   });
 
   asRolesAdmin('adds a user to a Platform role; it persists across a reload', async ({ page }) => {
@@ -229,11 +233,13 @@ asUsersAdmin.describe('Authorization page — Platform Users Admin', () => {
     await expect(roleTabs(page)).toHaveText(FEATURE_TABS, { timeout: 20_000 });
   });
 
-  asUsersAdmin('a Platform role typed into the URL does not open: it falls back to a Feature role', async ({ page }) => {
+  asUsersAdmin('a Platform role typed into the URL does not open: not found, no tab pressed, no editor', async ({ page }) => {
     await page.goto(`${baseUrl}/admin/authorization/roles/PLATFORM_SUPPORT`);
     await expect(roleTabs(page)).toHaveText(FEATURE_TABS, { timeout: 20_000 });
-    await expect(roleTabs(page).first()).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.getByText('This role could not be found.')).toBeVisible();
+    await expect(roleTabs(page).and(page.locator('[aria-pressed="true"]'))).toHaveCount(0);
     await expect(page.getByRole('heading', { name: 'Platform Support', level: 2 })).toHaveCount(0);
+    await expect(page.getByRole('heading', { name: 'Current members' })).toHaveCount(0);
   });
 
   asUsersAdmin('adds and removes a user on a Feature role', async ({ page }) => {
@@ -269,12 +275,7 @@ asAuditReader.describe('Authorization page — Platform Audit Reader', () => {
   });
 
   asAuditReader('is offered all 14 roles', async ({ page }) => {
-    // KNOWN CLIENT DEFECT (027): only the 10 Platform tabs are offered. The
-    // requirements give Audit Reader the holder lists of ALL 14 roles and the
-    // server serves them (the API suite proves it), but the client decides which
-    // tabs to show from FEATURE_ROLE_HOLDERS_READ, which Audit Reader does not
-    // hold. Expected to fail until fixed — then it turns RED: delete this line.
-    asAuditReader.fail(true, 'client-web 027: Audit Reader is not offered the 4 Feature role tabs');
+    // Fixed on develop: Audit Reader is offered the 4 Feature role tabs too.
     await page.goto(`${baseUrl}/admin/authorization`);
     await expect(roleTabs(page).first()).toHaveText('Platform Roles Admin', { timeout: 20_000 });
     await expect(roleTabs(page)).toHaveText([...PLATFORM_TABS, ...FEATURE_TABS], { timeout: 5_000 });

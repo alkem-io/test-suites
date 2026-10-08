@@ -50,14 +50,14 @@ beforeAll(async () => {
   await TestScenarioFactory.createBaseScenarioEmpty(scenarioConfig);
   await assignPlatformRole(
     TestUserManager.users.nonSpaceMember.id,
-    RoleName.PlatformVcCampaign
+    RoleName.FeatureVcCampaign
   );
 });
 
 afterAll(async () => {
   await removePlatformRole(
     TestUserManager.users.nonSpaceMember.id,
-    RoleName.PlatformVcCampaign
+    RoleName.FeatureVcCampaign
   );
   await deleteSpace(spaceId, TestUser.GLOBAL_ADMIN);
 });

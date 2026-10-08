@@ -55,6 +55,10 @@ const disabledSpaceCreationNotificationSettings = {
   },
 };
 
+// workspace#027 Slice B (server T109): `spaceCreated` is routed to Platform
+// Support + Platform Users Admin + Platform License Manager — which the three
+// personas below hold (`admin@alkem.io` is the seeded Users Admin), so the
+// recipient set is unchanged from the legacy global-role routing.
 // Helper function to update space creation notification settings for multiple admin users
 const updateAdminSpaceCreationNotificationSettings = async () => {
   const adminUsers = [

@@ -1,3 +1,4 @@
+import { ensureHarnessAdminRoles } from '@alkemio/tests-lib';
 import { clearPersonaSessions } from './global-setup';
 
 /**
@@ -11,4 +12,6 @@ import { clearPersonaSessions } from './global-setup';
  */
 export default async function globalSetup() {
   clearPersonaSessions();
+  // Slice B: `admin@alkem.io` must reach content before any scenario builds.
+  await ensureHarnessAdminRoles();
 }

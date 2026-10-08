@@ -1,6 +1,5 @@
 import { expect } from 'vitest';
 import {
-  AuthorizationCredential,
   CredentialType,
   RoleName,
 } from '@alkemio/tests-lib/core/generated/alkemio-schema';
@@ -17,9 +16,9 @@ import {
 /**
  * A1 — assign / revoke a PLATFORM role. Owner: Platform Roles Admin.
  *
- * Also the surfaces NO target role may reach: the legacy GLOBAL_ADMIN payload
- * of the same two mutations, and the six raw credential mutations. Those are
- * negatives for all 14 roles.
+ * Also the two generic actor-credential mutations (FR-022 deleted the other
+ * four at Slice B). They reject the role vocabulary before their gate, so they
+ * are called with a non-role credential; today no target role reaches them.
  *
  * One disposable user per allowed role and per direction, so the remove
  * positive never depends on the assign positive having run first.
@@ -42,10 +41,10 @@ const ASSIGN = CAPABILITIES.find(
 /**
  * Not a `platform-*` / `feature-*` credential ON PURPOSE: the actor mutations
  * reject that vocabulary BEFORE their authorization check, and that rejection
- * is a Forbidden too — a denial for the wrong reason.
+ * is a Forbidden too — a denial for the wrong reason. (`ASSISTANT_ACCESS`, the
+ * Slice A choice, left the enum with the legacy credentials.)
  */
-const ACTOR_CREDENTIAL = CredentialType.AssistantAccess;
-const LEGACY_CREDENTIAL = AuthorizationCredential.GlobalCommunityRead;
+const ACTOR_CREDENTIAL = CredentialType.UserGroupMember;
 
 export const A1_GROUP: GroupModule<A1> = {
   group: 'A1',
@@ -122,78 +121,6 @@ export const A1_GROUP: GroupModule<A1> = {
       },
     },
 
-    // The legacy branch is gated on a policy no target role satisfies — not
-    // even Platform Roles Admin.
-    'A1.assignPlatformRoleToUser#6': {
-      gate: ['assignPlatformRoleToUser'],
-      call: (sdk, headers, fx) =>
-        sdk.PlatformRolesAssignRoleToUser(
-          { roleData: { actorID: fx.denyTarget, role: RoleName.GlobalAdmin } },
-          headers
-        ),
-    },
-    'A1.removePlatformRoleFromUser#7': {
-      gate: ['removePlatformRoleFromUser'],
-      call: (sdk, headers, fx) =>
-        sdk.PlatformRolesRemoveRoleFromUser(
-          { roleData: { actorID: fx.denyTarget, role: RoleName.GlobalAdmin } },
-          headers
-        ),
-    },
-
-    'A1.grantCredentialToUser': {
-      gate: ['grantCredentialToUser'],
-      call: (sdk, headers, fx) =>
-        sdk.grantCredentialToUser(
-          {
-            grantCredentialData: {
-              userID: fx.denyTarget,
-              type: LEGACY_CREDENTIAL,
-            },
-          },
-          headers
-        ),
-    },
-    'A1.revokeCredentialFromUser': {
-      gate: ['revokeCredentialFromUser'],
-      call: (sdk, headers, fx) =>
-        sdk.revokeCredentialFromUser(
-          {
-            revokeCredentialData: {
-              userID: fx.denyTarget,
-              type: AuthorizationCredential.PlatformOperationsAdmin,
-              resourceID: '',
-            },
-          },
-          headers
-        ),
-    },
-    'A1.grantCredentialToOrganization': {
-      gate: ['grantCredentialToOrganization'],
-      call: (sdk, headers, fx) =>
-        sdk.grantCredentialToOrganization(
-          {
-            grantCredentialData: {
-              organizationID: fx.organizationId,
-              type: LEGACY_CREDENTIAL,
-            },
-          },
-          headers
-        ),
-    },
-    'A1.revokeCredentialFromOrganization': {
-      gate: ['revokeCredentialFromOrganization'],
-      call: (sdk, headers, fx) =>
-        sdk.revokeCredentialFromOrganization(
-          {
-            revokeCredentialData: {
-              organizationID: fx.organizationId,
-              type: LEGACY_CREDENTIAL,
-            },
-          },
-          headers
-        ),
-    },
     'A1.grantCredentialToActor': {
       gate: ['grantCredentialToActor'],
       call: (sdk, headers, fx) =>

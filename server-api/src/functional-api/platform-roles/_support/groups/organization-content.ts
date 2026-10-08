@@ -200,20 +200,21 @@ export const createPack = async (
 };
 
 /**
- * THE ONE EXCEPTION to "setup actors are target roles". `createInnovationHub`
- * is gated on CREATE_INNOVATION_HUB, which the account policy grants to the
- * legacy global admin / support / license-manager credentials only — no target
- * role and no organization admin holds it, so nobody else CAN create a hub.
- * The bootstrap account still carries the legacy credential at Slice A.
+ * `createInnovationHub` is gated on CREATE_INNOVATION_HUB, which the account
+ * policy grants to Platform Content Full Access and, on its own rule, to
+ * Platform License Manager — no organization admin holds it. The fixtures
+ * need MORE hubs than an account's entitlement allows (limit 1), and at Slice
+ * B the soft-limit bypass belongs to ACCOUNT_LICENSE_MANAGE alone (server
+ * T074, A12), so the License Manager user creates them.
  */
-export const createHubAsLegacyAdmin = async (
+export const createHubAsLicenseManager = async (
   ctx: Ctx,
   accountId: string,
   name: string
 ): Promise<string> =>
   (
     await rawRead<{ createInnovationHub: { id: string } }>(
-      ctx.bootstrapToken,
+      ctx.tokens.PLATFORM_LICENSE_MANAGER,
       'mutation($data: CreateInnovationHubOnAccountInput!) { createInnovationHub(createData: $data) { id } }',
       {
         data: {

@@ -315,6 +315,11 @@ describe('Notifications - invitations', () => {
         // document selects it, so it is present and null on every outcome that
         // carries no notice.
         notice: null,
+        // workspace#027 Slice B: every outcome now names the invitee it belongs
+        // to (the actor id for an actor invite, null email), including the
+        // refused ones.
+        invitedActorID: TestUserManager.users.qaUser.id,
+        invitedEmail: null,
         __typename: 'RoleSetInvitationResult',
       },
     ]);

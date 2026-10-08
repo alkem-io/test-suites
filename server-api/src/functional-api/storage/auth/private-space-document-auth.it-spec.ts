@@ -25,7 +25,7 @@ import {
 } from '../upload.params';
 import path from 'path';
 import { lookupProfileVisuals } from '../../lookup/lookup-request.params';
-import { updateSpacePlatformSettings } from '../../journey/space/space.request.params';
+import { updateSpaceVisibility } from '../../journey/space/space.request.params';
 
 import {
   createLinkCollectionCallout,
@@ -83,9 +83,8 @@ const scenarioConfig: TestScenarioConfig = {
 
 beforeAll(async () => {
   baseScenario = await TestScenarioFactory.createBaseScenario(scenarioConfig);
-  await updateSpacePlatformSettings(
+  await updateSpaceVisibility(
     baseScenario.space.id,
-    baseScenario.space.nameId,
     SpaceVisibility.Active
   );
 });

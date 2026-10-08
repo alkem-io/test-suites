@@ -105,7 +105,7 @@ describe('R5.last-roles-admin', () => {
       ctx.tokens.PLATFORM_AUDIT_READER,
       last.id,
       () => removeRole(ctx.bootstrapToken, ROLE, last.id),
-      { newest: rejectedGrant('cannot remove the last platform-roles-admin') }
+      { newest: rejectedGrant('last-roles-admin') }
     )
   );
 });

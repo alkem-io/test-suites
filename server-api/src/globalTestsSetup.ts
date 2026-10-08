@@ -1,4 +1,5 @@
 import {
+  ensureHarnessAdminRoles,
   LogManager,
   provisionTestIdentities,
   registerAllTestUsers,
@@ -39,6 +40,12 @@ export default async function setup() {
   // failing 40+ minutes in. Runs even when registration is skipped (users are
   // expected pre-seeded in that mode — verify they can authenticate).
   await verifyEnvPrerequisites();
+
+  // workspace#027 Slice B: the bootstrap account is seeded with the four
+  // operational families only; the harness grants it the content, support,
+  // resource and licensing families through a second Platform Roles Admin.
+  // No-op on a Slice A stack or once done.
+  await ensureHarnessAdminRoles();
 
   // Return a teardown function so Vitest can ensure a clean exit.
   // The GraphQL client is stateless HTTP and WebSocket subscriptions are

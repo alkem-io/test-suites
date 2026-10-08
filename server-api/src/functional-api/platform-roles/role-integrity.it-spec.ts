@@ -1,4 +1,5 @@
 import { afterAll, beforeAll, describe, expect, inject, test } from 'vitest';
+import { harnessPostgresConfigured, queryHarnessDb } from '@alkemio/tests-lib';
 import { PLATFORM_ROLES } from './capabilities.data';
 import {
   createDisposableUser,
@@ -20,22 +21,6 @@ const ctx = inject('platformRoles');
  * check as a reported result, so a plan reader sees it was made.
  */
 describe('X1.single-role-fixtures', () => {
-  // The ten credentials of the legacy global-role model.
-  const LEGACY_CREDENTIALS = [
-    'GLOBAL_ADMIN',
-    'GLOBAL_SUPPORT',
-    'GLOBAL_LICENSE_MANAGER',
-    'GLOBAL_SPACES_READER',
-    'GLOBAL_COMMUNITY_READ',
-    'GLOBAL_PLATFORM_MANAGER',
-    'GLOBAL_SUPPORT_MANAGER',
-    'BETA_TESTER',
-    'VC_CAMPAIGN',
-    'ASSISTANT_ACCESS',
-  ];
-  const HOLDERS =
-    'query($type: AuthorizationCredential!) { usersWithAuthorizationCredential(credentialsCriteriaData: { type: $type }) { id } }';
-
   test('positive: every role user’s myRoles is exactly [its role, REGISTERED]', async () => {
     const held: Record<string, string[]> = {};
     const expected: Record<string, string[]> = {};
@@ -48,27 +33,208 @@ describe('X1.single-role-fixtures', () => {
     expect(held).toEqual(expected);
   });
 
-  test('negative: no role user holds PLATFORM_ADMIN or a legacy global credential', async () => {
+  test('negative: no role user holds a privilege of another family at platform level', async () => {
+    // Slice B: the catch-all `PLATFORM_ADMIN` no longer exists (L2 proves it),
+    // so contamination can only show as a family privilege the role does not
+    // own. The precise per-family grant sets are asserted by
+    // rules/grantability.it-spec.ts; this is the cheap tripwire that runs first.
     const offenders: string[] = [];
-    const emailById = new Map(
-      PLATFORM_ROLES.map(r => [ctx.userIds[r], emailOf(r)])
-    );
-
     for (const role of PLATFORM_ROLES) {
       const { platform } = await readPrivileges(ctx.tokens[role]);
       if (platform.includes('PLATFORM_ADMIN'))
         offenders.push(`${emailOf(role)} holds the PLATFORM_ADMIN privilege`);
-    }
-    for (const type of LEGACY_CREDENTIALS) {
-      const { usersWithAuthorizationCredential: holders } = await rawRead<{
-        usersWithAuthorizationCredential: { id: string }[];
-      }>(ctx.tokens.PLATFORM_ROLES_ADMIN, HOLDERS, { type });
-      for (const { id } of holders) {
-        if (emailById.has(id))
-          offenders.push(`${emailById.get(id)} holds the ${type} credential`);
-      }
+      if (
+        role !== 'PLATFORM_CONTENT_FULL_ACCESS' &&
+        platform.includes('PLATFORM_CONTENT_FULL_ACCESS')
+      )
+        offenders.push(`${emailOf(role)} holds PLATFORM_CONTENT_FULL_ACCESS`);
     }
     expect(offenders).toEqual([]);
+  });
+});
+
+/**
+ * SC-005 / FR-012 — after Slice B the legacy global-role model is gone from the
+ * schema itself: no enum value, no privilege, no role-set entry. Asserted by
+ * introspection because this repo has no database access; a retired value that
+ * survived in the schema would be a live legacy grant path (FR-007(d)).
+ */
+describe('L2.legacy-roles-gone', () => {
+  const LEGACY_ROLE_NAMES = [
+    'GLOBAL_ADMIN',
+    'GLOBAL_SUPPORT',
+    'GLOBAL_LICENSE_MANAGER',
+    'GLOBAL_COMMUNITY_READER',
+    'GLOBAL_SPACES_READER',
+    'GLOBAL_PLATFORM_MANAGER',
+    'GLOBAL_SUPPORT_MANAGER',
+    'PLATFORM_BETA_TESTER',
+    'PLATFORM_VC_CAMPAIGN',
+    'PLATFORM_ASSISTANT_ACCESS',
+  ];
+  const LEGACY_CREDENTIALS = [
+    'GLOBAL_ADMIN',
+    'GLOBAL_SUPPORT',
+    'GLOBAL_LICENSE_MANAGER',
+    'GLOBAL_SPACES_READER',
+    'GLOBAL_COMMUNITY_READ',
+    'GLOBAL_PLATFORM_MANAGER',
+    'GLOBAL_SUPPORT_MANAGER',
+    'BETA_TESTER',
+    'VC_CAMPAIGN',
+    'ASSISTANT_ACCESS',
+  ];
+  const ENUM =
+    'query($name: String!) { __type(name: $name) { enumValues { name } } }';
+  const valuesOf = async (name: string): Promise<string[]> =>
+    (
+      await rawRead<{ __type: { enumValues: { name: string }[] } }>(
+        ctx.tokens.PLATFORM_AUDIT_READER,
+        ENUM,
+        { name }
+      )
+    ).__type.enumValues.map(v => v.name);
+
+  test('negative: RoleName lists none of the 10 legacy role names', async () => {
+    const values = await valuesOf('RoleName');
+    expect(values.filter(v => LEGACY_ROLE_NAMES.includes(v))).toEqual([]);
+    expect(values).toEqual(expect.arrayContaining([...PLATFORM_ROLES]));
+  });
+
+  test('negative: AuthorizationCredential and CredentialType list none of the 10 legacy credentials', async () => {
+    const credentials = await valuesOf('AuthorizationCredential');
+    expect(
+      credentials.filter(v => LEGACY_CREDENTIALS.includes(v))
+    ).toEqual([]);
+    const types = await valuesOf('CredentialType');
+    expect(
+      types.filter(v => LEGACY_ROLE_NAMES.includes(v) || v === 'GLOBAL_COMMUNITY_READER')
+    ).toEqual([]);
+  });
+
+  test('negative: the god-mode privileges are gone and the assigner privilege is PLATFORM_ROLES_ASSIGN', async () => {
+    const privileges = await valuesOf('AuthorizationPrivilege');
+    expect(privileges).not.toContain('PLATFORM_ADMIN');
+    expect(privileges).not.toContain('GRANT_GLOBAL_ADMINS');
+    expect(privileges).toContain('PLATFORM_ROLES_ASSIGN');
+  });
+
+  // SC-005 says "verifiable BY QUERY: zero stored credential rows of any
+  // retired legacy type". The enum checks above prove the server no longer
+  // KNOWS the values; only the stored rows prove the cleanup migration ran — a
+  // left-over row is a grant the canonical map cannot resolve (server#6615 was
+  // exactly that, through a cache). Loopback stacks only: the harness has no
+  // database anywhere else, so the case skips itself there.
+  const RETIRED_CREDENTIAL_TYPES = [
+    'global-admin',
+    'global-support',
+    'global-license-manager',
+    'global-community-read',
+    'global-spaces-read',
+    'global-spaces-reader',
+    'global-community-reader',
+    'global-platform-manager',
+    'global-support-manager',
+    'beta-tester',
+    'vc-campaign',
+    'assistant-access',
+  ];
+  const RETIRED_ROLE_NAMES = [
+    'global-admin',
+    'global-support',
+    'global-license-manager',
+    'global-spaces-reader',
+    'global-community-reader',
+    'global-platform-manager',
+    'global-support-manager',
+    'platform-beta-tester',
+    'platform-vc-campaign',
+    'platform-assistant-access',
+  ];
+
+  test.skipIf(!harnessPostgresConfigured())(
+    'negative: zero stored credential rows of a retired type and zero retired role rows remain (SC-005 query, loopback Postgres)',
+    async () => {
+      // Positive control: the same query sees the target model's rows, so an
+      // empty answer below is about the retired types, not a wrong table.
+      const target = await queryHarnessDb<{ count: string }>(
+        "SELECT count(*) FROM credential WHERE type = 'platform-roles-admin'"
+      );
+      expect(Number(target[0]?.count)).toBeGreaterThanOrEqual(1);
+
+      const credentials = await queryHarnessDb<{ type: string; count: string }>(
+        'SELECT type, count(*) FROM credential WHERE type = ANY($1) GROUP BY type',
+        [RETIRED_CREDENTIAL_TYPES]
+      );
+      expect(credentials).toEqual([]);
+
+      const roles = await queryHarnessDb<{ name: string }>(
+        'SELECT name FROM role WHERE name = ANY($1)',
+        [RETIRED_ROLE_NAMES]
+      );
+      expect(roles).toEqual([]);
+    }
+  );
+
+  test('negative: the platform role-set offers only the 14 target roles and REGISTERED', async () => {
+    const { platform } = await rawRead<{
+      platform: { roleSet: { roleNames: string[] } };
+    }>(
+      ctx.tokens.PLATFORM_ROLES_ADMIN,
+      'query { platform { roleSet { roleNames } } }'
+    );
+    expect([...platform.roleSet.roleNames].sort()).toEqual(
+      [...PLATFORM_ROLES, 'REGISTERED'].sort()
+    );
+  });
+});
+
+/**
+ * FR-020 / FR-021 / FR-022 — the surfaces Slice B DELETES rather than
+ * re-gates. Until this PR the matrix carried them as "every role is refused"
+ * cells; at Slice B they no longer exist, so the only honest pin is that the
+ * schema does not offer them — a surface that came back would be a grant path
+ * no rule engine and no audit row stands in front of (the reason FR-022 exists).
+ * The successors are asserted beside them, so a renamed Mutation type or an
+ * empty introspection answer cannot pass the absence check by accident.
+ */
+describe('L3.retired-surfaces-gone', () => {
+  const RETIRED_MUTATIONS = [
+    // FR-022 — generic credential writes past the rule engine
+    'grantCredentialToUser',
+    'revokeCredentialFromUser',
+    'grantCredentialToOrganization',
+    'revokeCredentialFromOrganization',
+    // FR-021 — Wingback
+    'createWingbackAccount',
+    'adminWingbackCreateTestCustomer',
+    'adminWingbackGetCustomerEntitlements',
+    // FR-020 — the platform-settings mutations
+    'updateUserPlatformSettings',
+    'updateOrganizationPlatformSettings',
+    'updateSpacePlatformSettings',
+  ];
+  const SUCCESSORS = [
+    'adminUpdateSpaceVisibility',
+    'updateActorNameID',
+    'grantCredentialToActor',
+    'revokeCredentialFromActor',
+    'assignPlatformRoleToUser',
+    'removePlatformRoleFromUser',
+  ];
+
+  test('negative: none of the ten deleted mutations is offered; their successors are', async () => {
+    const { __type } = await rawRead<{
+      __type: { fields: { name: string }[] } | null;
+    }>(
+      ctx.tokens.PLATFORM_AUDIT_READER,
+      'query { __type(name: "Mutation") { fields { name } } }'
+    );
+    const offered = (__type?.fields ?? []).map(f => f.name);
+    expect(offered).toEqual(expect.arrayContaining(SUCCESSORS));
+    expect(offered.filter(name => RETIRED_MUTATIONS.includes(name))).toEqual(
+      []
+    );
   });
 });
 
@@ -249,14 +415,14 @@ describe('X2.root-cascade-limits', () => {
     expect((await discussionAsSeenBy(host.token))?.id).toBe(discussionId);
   });
 
-  test('negative: cannot change visibility — holds UPDATE on the space, updateSpacePlatformSettings is refused, visibility stays ACTIVE', async () => {
+  test('negative: cannot change visibility — holds UPDATE on the space, adminUpdateSpaceVisibility is refused, visibility stays ACTIVE', async () => {
     expect(
       (await spaceAsSeenBy(contentFullAccess)).authorization.myPrivileges
     ).toContain('UPDATE');
     const outcome = await rawOutcome(
-      ['updateSpacePlatformSettings'],
+      ['adminUpdateSpaceVisibility'],
       contentFullAccess,
-      'mutation($id: UUID!) { updateSpacePlatformSettings(updateData: { spaceID: $id, visibility: ARCHIVED }) { id } }',
+      'mutation($id: UUID!) { adminUpdateSpaceVisibility(updateData: { spaceID: $id, visibility: ARCHIVED }) { id } }',
       { id: spaceId }
     );
     expect(outcome.kind, describeOutcome(outcome)).toBe('denied');

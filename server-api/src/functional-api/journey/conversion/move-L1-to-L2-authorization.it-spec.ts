@@ -105,7 +105,7 @@ afterAll(async () => {
 });
 
 describe('Move L1 to L2 - authorization', () => {
-  test('Platform Admin (GLOBAL_ADMIN) can execute move', async () => {
+  test('Platform Resource Admin (the harness admin) can execute move', async () => {
     const res = await moveSpaceL1ToSpaceL2(
       sourceScenario.subspace.id,
       targetScenario.subspace.id,
