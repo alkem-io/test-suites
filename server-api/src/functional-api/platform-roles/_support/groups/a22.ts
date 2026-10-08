@@ -91,14 +91,31 @@ export const A22_GROUP: GroupModule<A22> = {
       };
     }),
 
+  // In order (the VC lives on the user's account), but every step is attempted
+  // even when an earlier one fails, so a bad VC delete cannot leak the organisation.
   teardown: async (ctx, _sdk, fx) => {
-    await removeVirtualContributor(ctx, fx.virtualContributorId);
-    await removeDisposableUser(ctx, fx.user);
-    await removeOwnedOrganization(ctx, fx.organizationId, {
-      packs: [],
-      hubs: [],
-      spaces: [],
-    });
+    const steps: Array<[string, () => Promise<unknown>]> = [
+      ['vc', () => removeVirtualContributor(ctx, fx.virtualContributorId)],
+      ['user', () => removeDisposableUser(ctx, fx.user)],
+      [
+        'organization',
+        () =>
+          removeOwnedOrganization(ctx, fx.organizationId, {
+            packs: [],
+            hubs: [],
+            spaces: [],
+          }),
+      ],
+    ];
+    const failures: string[] = [];
+    for (const [name, step] of steps) {
+      try {
+        await step();
+      } catch (e) {
+        failures.push(`${name}: ${(e as Error).message}`);
+      }
+    }
+    if (failures.length) throw new Error(failures.join('; '));
   },
 
   invocations: {
