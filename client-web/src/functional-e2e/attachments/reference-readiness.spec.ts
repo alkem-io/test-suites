@@ -5,8 +5,6 @@ import {
   loadAcceptanceFixture,
   openFixtureConversation,
   referenceURL,
-  UPLOAD_ATTACHMENT,
-  type UploadResult,
 } from './attachments.acceptance';
 
 for (const recover of [true, false]) {
@@ -19,16 +17,11 @@ for (const recover of [true, false]) {
     await actor.authenticate();
     const room = fixture.independentRooms[0];
     const name = `${fixture.runID}-${randomUUID()}-readiness.jpg`;
-    const result = await actor.uploadGraphql<{
-      uploadRoomMessageAttachment: UploadResult;
-    }>({
-      query: UPLOAD_ATTACHMENT,
-      variables: { uploadData: { roomID: room.roomID } },
+    const reference = await actor.uploadMedia({
       file: fixture.media.image.path,
       name,
       mimeType: fixture.media.image.mimeType,
     });
-    const reference = result.uploadRoomMessageAttachment;
     await actor.graphql(
       'mutation ReadinessSend($input:RoomSendMessageInput!){sendMessageToRoom(messageData:$input){id}}',
       {

@@ -16,7 +16,6 @@ import {
   matrixEventFor,
   openFixtureConversation,
   uploadIdentity,
-  type UploadResult,
 } from './attachments.acceptance';
 import {
   openElement,
@@ -127,12 +126,12 @@ for (const origin of ['web', 'element'] as const) {
       const contexts = await test.step('login both real web viewers', () =>
         Promise.all(actors.map(actor => actor.browserContext(browser))));
       const pages = contexts.map(context => context.pages()[0]);
-      let multipartRequests = 0;
+      let rawUploadRequests = 0;
       const countUpload = (request: import('@playwright/test').Request) => {
         if (
-          request.headers()['content-type']?.startsWith('multipart/form-data')
+          request.method() === 'POST' && new URL(request.url()).pathname === '/api/private/rest/messaging/media/upload'
         )
-          multipartRequests++;
+          rawUploadRequests++;
       };
       pages[0].on('request', countUpload);
       let pause: Awaited<ReturnType<typeof pauseAttachmentSend>> | undefined;
@@ -142,9 +141,10 @@ for (const origin of ['web', 'element'] as const) {
         | undefined;
       const forbidden: string[] = [];
       const reads = (request: import('@playwright/test').Request) => {
+        if (request.url().endsWith('/graphql') && request.headers()['content-type']?.startsWith('multipart/form-data')) forbidden.push('GraphQL file bytes');
         if (
           request.headers()['content-type']?.startsWith('application/json') &&
-          /messageAttachments|content-matches/.test(request.postData() ?? '')
+          /messageAttachments|content-matches|uploadRoomMessageAttachment/.test(request.postData() ?? '')
         )
           forbidden.push('per-attachment resolver');
       };
@@ -165,23 +165,11 @@ for (const origin of ['web', 'element'] as const) {
         let completedUploads = 0;
         if (origin === 'web') {
           pause = await pauseAttachmentSend(pages[0]);
-          // Response observation never reads/buffers the multipart request body.
-          const upload = pages[0].waitForResponse(async response => {
-            if (
-              !response.url().endsWith('/graphql') ||
-              response.request().method() !== 'POST'
-            )
-              return false;
-            try {
-              const data = await response.json();
-              if (data.data?.uploadRoomMessageAttachment) {
-                completedUploads++;
-                return true;
-              }
-            } catch {
-              /* A non-JSON response is not completed upload evidence. */
-            }
-            return false;
+          // Observe only the direct upload response, never the original request bytes.
+          const upload = pages[0].waitForResponse(response => {
+            if (new URL(response.url()).pathname !== '/api/private/rest/messaging/media/upload' || response.request().method() !== 'POST') return false;
+            if (response.status() === 201) completedUploads++;
+            return true;
           });
           await pages[0].locator('input[type="file"]').setInputFiles({
             name,
@@ -199,24 +187,24 @@ for (const origin of ['web', 'element'] as const) {
             )
           ).toEqual(before.map(row => row.id));
           expect(completedUploads).toBe(0);
-          expect(multipartRequests).toBe(0);
+          expect(rawUploadRequests).toBe(0);
           await pages[0]
             .getByRole('button', { name: 'Send', exact: true })
             .click();
           const body = (await test.step('complete real web upload', async () =>
             (await upload).json())) as {
-            data: { uploadRoomMessageAttachment: UploadResult };
+            mediaId: string; contentUri: string;
           };
           const identity = await uploadIdentity(
             rows,
-            body.data.uploadRoomMessageAttachment,
+            { externalReference: body.mediaId, displayName: name },
             fixture
           );
           ({ fileID, mediaID } = identity);
           mxc = `mxc://${identity.homeserver}/${mediaID}`;
           await pause.wait();
           expect(completedUploads).toBe(1);
-          expect(multipartRequests).toBe(1);
+          expect(rawUploadRequests).toBe(1);
         } else {
           element = await openElement(fixture);
           elementPause = await pauseElementMediaSend(element.page);
@@ -247,7 +235,7 @@ for (const origin of ['web', 'element'] as const) {
         if (origin === 'web') pause!.release();
         else elementPause!.release();
         const event = await matrixEventFor(actors[0], room.matrixRoomID, name);
-        if (origin === 'web') expect(multipartRequests).toBe(1);
+        if (origin === 'web') expect(rawUploadRequests).toBe(1);
         expect(event.content.url).toBe(mxc); // A second Synapse upload cannot hide behind UI success.
         expect(event.content['io.alkemio.document_id']).toBeUndefined();
         await expect

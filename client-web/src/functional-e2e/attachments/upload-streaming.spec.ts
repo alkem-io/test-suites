@@ -15,9 +15,7 @@ import {
 } from './attachments.helpers';
 import {
   loadAcceptanceFixture,
-  UPLOAD_ATTACHMENT,
   uploadIdentity,
-  type UploadResult,
 } from './attachments.acceptance';
 
 test.describe.configure({ timeout: 300_000 });
@@ -109,7 +107,7 @@ for (const hop of ['adapter'] as const) {
       });
       const adapter = await createStreamingProxy({
         target: driver.targets.adapter,
-        observePath: path => path === '/internal/media/upload',
+        observePath: path => path === '/rest/messaging/media/upload',
         requestGate: gate,
       });
       const synapse = await createStreamingProxy({
@@ -140,13 +138,7 @@ for (const hop of ['adapter'] as const) {
         });
         const started = Date.now();
         // Attach rejection immediately: a failing byte assertion must still cancel/clean up the real upload.
-        const upload = actor.uploadGraphql<{
-          uploadRoomMessageAttachment: UploadResult;
-        }>({
-          query: UPLOAD_ATTACHMENT,
-          variables: {
-            uploadData: { roomID: fixture.independentRooms[0].roomID },
-          },
+        const upload = actor.uploadMedia({
           file,
           name: `${fixture.runID}-${hop}-${scale}.pdf`,
           mimeType: 'application/pdf',
@@ -162,7 +154,7 @@ for (const hop of ['adapter'] as const) {
             (
               await uploadIdentity(
                 rows,
-                result.uploadRoomMessageAttachment,
+                result,
                 fixture
               )
             ).size
@@ -189,7 +181,7 @@ for (const hop of ['adapter'] as const) {
             size,
             elapsedMs: Date.now() - started,
             sourceThrottle:
-              '64KiB per 12ms; raw original-byte replacement measurement',
+              '64KiB per 12ms; direct public raw upload measurement',
             runtimeLimits: driver.runtimeLimits,
             candidateDiskPeakBytes: diskPeakBytes,
             candidate: measured.samples,
@@ -234,7 +226,7 @@ for (const hop of ['adapter'] as const) {
     });
     const adapter = await createStreamingProxy({
       target: driver.targets.adapter,
-      observePath: path => path === '/internal/media/upload',
+      observePath: path => path === '/rest/messaging/media/upload',
       requestGate: gate,
     });
     const synapse = await createStreamingProxy({
@@ -250,11 +242,7 @@ for (const hop of ['adapter'] as const) {
         adapter: adapter.url,
         synapse: synapse.url,
       });
-      const upload = actor.uploadGraphql({
-        query: UPLOAD_ATTACHMENT,
-        variables: {
-          uploadData: { roomID: fixture.independentRooms[0].roomID },
-        },
+      const upload = actor.uploadMedia({
         file,
         name: `${fixture.runID}-${hop}-negative.pdf`,
         mimeType: 'application/pdf',
@@ -278,7 +266,7 @@ for (const hop of ['adapter'] as const) {
   });
 }
 
-test('cancelling a throttled maximum upload stops forwarding and discards upload spool', async ({}, testInfo) => {
+test('cancelling a throttled fixture-maximum upload stops forwarding without upload spool', async ({}, testInfo) => {
   const fixture = await loadAcceptanceFixture();
   const driver = await loadDriver(fixture.runID);
   const file = testInfo.outputPath('cancel.pdf');
@@ -292,7 +280,7 @@ test('cancelling a throttled maximum upload stops forwarding and discards upload
   });
   const adapter = await createStreamingProxy({
     target: driver.targets.adapter,
-    observePath: path => path === '/internal/media/upload',
+    observePath: path => path === '/rest/messaging/media/upload',
     requestGate: gate,
   });
   const synapse = await createStreamingProxy({
@@ -311,11 +299,7 @@ test('cancelling a throttled maximum upload stops forwarding and discards upload
     });
     const before = await driver.temporaryUploadFiles();
     pending = actor
-      .uploadGraphql({
-        query: UPLOAD_ATTACHMENT,
-        variables: {
-          uploadData: { roomID: fixture.independentRooms[0].roomID },
-        },
+      .uploadMedia({
         file,
         name: `${fixture.runID}-cancel.pdf`,
         mimeType: 'application/pdf',
@@ -347,7 +331,7 @@ test('cancelling a throttled maximum upload stops forwarding and discards upload
   }
 });
 
-test('raw GraphQL source is counted to EOF before the adapter upload starts', async ({}, testInfo) => {
+test('raw public upload reaches Synapse before caller request EOF', async ({}, testInfo) => {
   const fixture = await loadAcceptanceFixture();
   const driver = await loadDriver(fixture.runID);
   const actor = new AttachmentActor(fixture, fixture.users[0]);
@@ -357,17 +341,19 @@ test('raw GraphQL source is counted to EOF before the adapter upload starts', as
   const sourceGate = new UpstreamEofGate(Math.floor(fixture.maxFileBytes / 8));
   const adapter = await createStreamingProxy({
     target: driver.targets.adapter,
-    observePath: path => path === '/internal/media/upload',
+    observePath: path => path === '/rest/messaging/media/upload',
+  });
+  const synapse = await createStreamingProxy({ target: driver.targets.synapse,
+    observePath: path => /\/_matrix\/(media\/v3|client\/v1\/media)\/upload$/.test(path),
   });
   let pending: Promise<unknown> | undefined;
   try {
     await driver.configureForwarding({
       ...driver.targets,
       adapter: adapter.url,
+      synapse: synapse.url,
     });
-    const upload = actor.uploadGraphql({
-      query: UPLOAD_ATTACHMENT,
-      variables: { uploadData: { roomID: fixture.independentRooms[0].roomID } },
+    const upload = actor.uploadMedia({
       file,
       name: `${fixture.runID}-count-original.pdf`,
       mimeType: 'application/pdf',
@@ -376,9 +362,10 @@ test('raw GraphQL source is counted to EOF before the adapter upload starts', as
     pending = upload.catch(() => undefined);
     await waitUntil(
       () => sourceGate.held,
-      'Browser source gate was not reached'
+      'Caller source gate was not reached'
     );
-    expect(adapter.counts().requests).toBe(0);
+    await assertBytesBeforeEof(sourceGate, synapse.requestBytes);
+    expect(adapter.counts().requests).toBe(1);
     sourceGate.release();
     await upload;
     expect(adapter.counts()).toEqual({ requests: 1, failures: 0 });
@@ -386,7 +373,7 @@ test('raw GraphQL source is counted to EOF before the adapter upload starts', as
   } finally {
     sourceGate.release();
     await pending;
-    await adapter.close();
+    await Promise.all([adapter.close(), synapse.close()]);
     await driver.restoreForwarding();
   }
 });

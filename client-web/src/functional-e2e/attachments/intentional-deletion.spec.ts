@@ -10,9 +10,7 @@ import {
 import {
   byteHash,
   referenceURL,
-  UPLOAD_ATTACHMENT,
   uploadIdentity,
-  type UploadResult,
 } from './attachments.acceptance';
 import {
   loadHistoryDriver,
@@ -104,16 +102,11 @@ test('permitted callout storage deletion leaves shared messages unavailable; ind
       mediaIDs: untouchedMediaIDs,
       fileIDs: [fixture.history.ordinaryDraftID],
     });
-    const uploaded = await alpha.uploadGraphql<{
-      uploadRoomMessageAttachment: UploadResult;
-    }>({
-      query: UPLOAD_ATTACHMENT,
-      variables: { uploadData: { roomID: callout.roomID } },
+    const reference = await alpha.uploadMedia({
       file: fixture.media.file.path,
       name,
       mimeType: fixture.media.file.mimeType,
     });
-    const reference = uploaded.uploadRoomMessageAttachment;
     const identity = await uploadIdentity(rows, reference, fixture);
     const mxc = `mxc://${identity.homeserver}/${identity.mediaID}`;
     const sent = await alpha.graphql<{ sendMessageToRoom: { id: string } }>(

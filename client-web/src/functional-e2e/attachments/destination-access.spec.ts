@@ -12,7 +12,6 @@ import {
   loadAcceptanceFixture,
   referenceURL,
   uploadIdentity,
-  UPLOAD_ATTACHMENT,
   type AcceptanceFixture,
   type UploadResult,
 } from './attachments.acceptance';
@@ -52,18 +51,10 @@ async function upload(
   name: string,
   threadID?: string
 ) {
-  const result = await actor.uploadGraphql<{
-    uploadRoomMessageAttachment: UploadResult;
-  }>({
-    query: UPLOAD_ATTACHMENT,
-    variables: {
-      uploadData: { roomID: room.roomID, ...(threadID ? { threadID } : {}) },
-    },
-    file: fixture.media.file.path,
-    name,
-    mimeType: fixture.media.file.mimeType,
-  });
-  return result.uploadRoomMessageAttachment;
+  // Upload is intentionally room-neutral; room/thread are send-time context only.
+  void room;
+  void threadID;
+  return actor.uploadMedia({ file: fixture.media.file.path, name, mimeType: fixture.media.file.mimeType });
 }
 
 async function send(
@@ -191,9 +182,8 @@ test('group leave revokes Alkemio reads and a completed-upload send; rejoining p
     await expect(send(beta, room, pending)).rejects.toThrow(
       'Attachment GraphQL operation failed'
     );
-    await expect(
-      upload(beta, fixture, room, `${name}-denied.pdf`).then(() => undefined)
-    ).rejects.toThrow('Attachment upload GraphQL failed');
+    const roomNeutral = await upload(beta, fixture, room, `${name}-room-neutral.pdf`);
+    await expect(send(beta, room, roomNeutral)).rejects.toThrow('Attachment GraphQL operation failed');
     expect(
       (await rows.files({ mediaIDs: [pendingIdentity.mediaID] }))[0]
         .storageBucketId
@@ -212,6 +202,16 @@ test('group leave revokes Alkemio reads and a completed-upload send; rejoining p
     expect((await contexts[0].request.get(url)).status()).toBe(200);
     const restoredAt = Date.now();
     await restore();
+    // Membership and cached authorization converge separately; never retry a send
+    // just to probe recovery, because an ambiguous success could duplicate it.
+    await expect.poll(async () => {
+      const result = await beta.graphql<{ lookup: { myPrivileges: { room: string[] } } }>(
+        'query RestoredRoomPrivileges($id:UUID!){lookup{myPrivileges{room(ID:$id)}}}',
+        { id: room.roomID }
+      );
+      return result.lookup.myPrivileges.room;
+    }, { timeout: 80_000, intervals: [1000] }).toContain('CREATE_MESSAGE');
+    const restoredSendPrivilegeAt = Date.now();
     await send(beta, room, pending);
     expect(
       (await placed(rows, pendingIdentity.mediaID, room.bucketID)).id
@@ -229,6 +229,7 @@ test('group leave revokes Alkemio reads and a completed-upload send; rejoining p
         pendingFileID: pendingIdentity.fileID,
         removedAt: new Date(removedAt).toISOString(),
         restoredAt: new Date(restoredAt).toISOString(),
+        restoredSendPrivilegeAt: new Date(restoredSendPrivilegeAt).toISOString(),
         readStatusesAfterLeave: statuses,
         restoredReadAt: new Date().toISOString(),
         leaveTransport:
@@ -343,9 +344,8 @@ test('callout comments policy is rechecked after upload and callout/post events 
     await rows.verifySharedSpaceRooms();
     // Membership permits comments, but this existing Space bucket does not
     // grant FILE_UPLOAD to an ordinary member. Preserve that boundary.
-    await expect(
-      upload(beta, fixture, callout, 'member-denied.pdf').then(() => undefined)
-    ).rejects.toThrow('Attachment upload GraphQL failed');
+    const memberUpload = await upload(beta, fixture, callout, 'member-denied.pdf');
+    await expect(send(beta, callout, memberUpload)).rejects.toThrow('Attachment GraphQL operation failed');
     const result = await upload(
       alpha,
       fixture,
@@ -358,11 +358,8 @@ test('callout comments policy is rechecked after upload and callout/post events 
     await expect(send(alpha, callout, result)).rejects.toThrow(
       'Attachment GraphQL operation failed'
     );
-    await expect(
-      upload(alpha, fixture, callout, 'disabled-callout.pdf').then(
-        () => undefined
-      )
-    ).rejects.toThrow('Attachment upload GraphQL failed');
+    const disabledUpload = await upload(alpha, fixture, callout, 'disabled-callout.pdf');
+    await expect(send(alpha, callout, disabledUpload)).rejects.toThrow('Attachment GraphQL operation failed');
     expect(
       (await rows.files({ mediaIDs: [identity.mediaID] }))[0].storageBucketId
     ).toBe(MATRIX_STAGING_BUCKET);
@@ -448,17 +445,9 @@ test('Synapse accepts disallowed media but Alkemio import leaves it staged and u
   const file = testInfo.outputPath(name);
   await writeFile(file, 'Isolated fixture plain text attachment.\n'.repeat(10));
   try {
-    await expect(
-      actor
-        .uploadGraphql({
-          query: UPLOAD_ATTACHMENT,
-          variables: { uploadData: { roomID: room.roomID } },
-          file,
-          name,
-          mimeType: 'text/plain',
-        })
-        .then(() => undefined)
-    ).rejects.toThrow('Attachment upload GraphQL failed');
+    const webUploaded = await actor.uploadMedia({ file, name, mimeType: 'text/plain' });
+    await expect(send(actor, room, webUploaded)).rejects.toThrow('Attachment GraphQL operation failed');
+    expect((await rows.files({ mediaIDs: [webUploaded.externalReference] })).map(row => row.storageBucketId)).toEqual([MATRIX_STAGING_BUCKET]);
     const mxc = await actor.matrixUpload(file, name, 'text/plain');
     const mediaID = mxc.split('/').at(-1)!;
     const eventID = await actor.matrixSend(room, {

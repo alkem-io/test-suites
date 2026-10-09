@@ -10,11 +10,6 @@ import {
   loadAttachmentFixture,
 } from './attachments.helpers';
 
-export const UPLOAD_ATTACHMENT = `mutation HarnessUpload($uploadData: RoomMessageAttachmentUploadInput!, $file: Upload!) {
-  uploadRoomMessageAttachment(uploadData: $uploadData, file: $file) {
-    externalReference displayName
-  }
-}`;
 export type UploadResult = {
   externalReference: string;
   displayName: string;

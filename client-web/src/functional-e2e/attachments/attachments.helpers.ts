@@ -230,6 +230,42 @@ export class AttachmentActor {
     return result.data;
   }
 
+  /** Raw public upload through the real identity gateway; no GraphQL byte path. */
+  async uploadMedia(options: {
+    file: string;
+    name: string;
+    mimeType: string;
+    signal?: AbortSignal;
+    sourceChunkDelayMs?: number;
+    sourceGate?: UpstreamEofGate;
+  }): Promise<{ externalReference: string; displayName: string }> {
+    if (!this.token) throw new Error('Authenticate attachment actor before upload');
+    const size = (await stat(options.file)).size;
+    const body = Readable.from((async function* () {
+      for await (const chunk of createReadStream(options.file, { highWaterMark: 65_536 })) {
+        yield chunk;
+        if (options.sourceChunkDelayMs) await delay(options.sourceChunkDelayMs);
+      }
+    })());
+    const url = new URL('/api/private/rest/messaging/media/upload', this.fixture.baseURL);
+    url.searchParams.set('filename', options.name);
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        authorization: `Bearer ${this.token}`,
+        'content-type': options.mimeType,
+        'content-length': String(size),
+      },
+      body: Readable.toWeb(options.sourceGate ? body.pipe(options.sourceGate) : body) as ReadableStream,
+      duplex: 'half',
+      signal: options.signal ?? AbortSignal.timeout(120_000),
+    } as RequestInit & { duplex: string });
+    const result = await checkedJson<{ mediaId: string; contentUri: string }>(response, 'Attachment public upload');
+    if (!result.mediaId || !result.contentUri?.endsWith(`/${result.mediaId}`))
+      throw new Error('Attachment public upload returned no media reference');
+    return { externalReference: result.mediaId, displayName: options.name };
+  }
+
   /** Real multipart upload; does not buffer the fixture in Playwright's driver. */
   async uploadGraphql<T>(options: {
     query: string;

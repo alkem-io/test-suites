@@ -174,7 +174,7 @@ test('web retry after actual server rejection reuses the completed upload', asyn
   let uploads = 0;
   let actualServerRejected = false;
   page.on('request', request => {
-    if (request.headers()['content-type']?.startsWith('multipart/form-data'))
+    if (request.method() === 'POST' && new URL(request.url()).pathname === '/api/private/rest/messaging/media/upload')
       uploads++;
   });
   const handler = async (route: Route) => {
@@ -282,7 +282,7 @@ test('partial web send clears confirmed items and does not automatically resend 
   let sends = 0;
   let committedResponseDropped = false;
   page.on('request', request => {
-    if (request.headers()['content-type']?.startsWith('multipart/form-data'))
+    if (request.method() === 'POST' && new URL(request.url()).pathname === '/api/private/rest/messaging/media/upload')
       uploads++;
   });
   const handler = async (route: Route) => {
