@@ -14,17 +14,27 @@ import { describeOutcome } from '../_support/outcome';
 import { assignRole, removeRole } from '../_support/role-set';
 import { rawRead } from '../_support/raw-request';
 import { emailOf } from '../_support/role-users';
+import { acquirePoolUser, releasePoolUsers } from '../_support/users';
+import type { RegisteredUser } from '../_support/users';
 
 const ctx = inject('platformRoles');
 
 /**
- * N1.admin-notification-routing — server T109, operator ruling of 2026-10-05
- * (workspace#027 slice-b-ledger §10): each platform-admin notification goes to
- * a fixed set of target roles, and Platform Content Full Access receives none.
+ * N1.admin-notification-routing — the workspace#065 routing table (spec 065,
+ * Session 2026-10-07; server#6616), which supersedes the interim server T109
+ * routing of 2026-10-05: each platform-admin notification goes to a fixed set
+ * of target roles, and Platform Content Full Access receives none.
  *
- *   user profile created / removed → Support, Users Admin
- *   L0 space created               → Support, Users Admin, License Manager
- *   global role changed            → Roles Admin only
+ *   user profile created → Users Admin
+ *   user profile removed → Users Admin, minus the operator who removed (FR-011)
+ *   L0 space created     → Support, License Manager
+ *   global role changed  → Roles Admin, minus the operator (FR-011); a
+ *                          Feature-role grant emits nothing at all (FR-013)
+ *
+ * The two events that leave out their operator are driven by a SECOND holder
+ * of the routed role — a pool user — so the observed single-role holder is a
+ * bystander who must receive; otherwise "the operator is left out" and "the
+ * mail is never sent" would both read as nobody.
  *
  * The shared notification personas cannot tell these apart: `admin@alkem.io`
  * holds all of those roles at once, so it receives every event whichever role
@@ -149,15 +159,74 @@ const recipientsAfterSettle = async (
   return [...got].sort();
 };
 
+/**
+ * One entry per observed recipient of every mail whose subject starts with
+ * `prefix` — duplicates KEPT, so a second mail to the same role is visible.
+ * Waits like `recipientsAfterSettle`.
+ */
+const deliveriesAfterSettle = async (
+  prefix: string,
+  expected: readonly Observed[]
+): Promise<Observed[]> => {
+  const read = async () =>
+    (await allMails())
+      .filter(m => m.subject?.startsWith(prefix))
+      .flatMap(m => (m.toAddresses ?? []).map(a => a.toLowerCase()))
+      .flatMap(address =>
+        OBSERVED.filter(role => emailOf(role).toLowerCase() === address)
+      )
+      .sort();
+  const deadline = Date.now() + DELIVERY_TIMEOUT_MS;
+  let got = await read();
+  while (
+    !expected.every(r => got.includes(r)) &&
+    got.every(r => expected.includes(r)) &&
+    Date.now() < deadline
+  ) {
+    await new Promise(resolve => setTimeout(resolve, 1_000));
+    got = await read();
+  }
+  if (got.every(r => expected.includes(r))) {
+    await new Promise(resolve => setTimeout(resolve, SETTLE_MS));
+    got = await read();
+  }
+  return got;
+};
+
 const sorted = (roles: readonly Observed[]) => [...roles].sort();
+
+const DELETE_USER =
+  'mutation($id: UUID!) { deleteUser(deleteData: { ID: $id, deleteIdentity: true }) { id } }';
 
 describe('N1.admin-notification-routing', () => {
   const snapshots = new Map<Observed, { id: string; admin: AdminSettings }>();
   let subject: DisposableUser | undefined;
   const cleanups: (() => Promise<unknown>)[] = [];
   const onCleanup = (fn: () => Promise<unknown>) => cleanups.push(fn);
+  /** Second holders: the operators of the two operator-excluding events. */
+  let secondRolesAdmin: RegisteredUser;
+  let secondUsersAdmin: RegisteredUser;
+
+  const poolHolder = async (
+    slot: string,
+    role: 'PLATFORM_ROLES_ADMIN' | 'PLATFORM_USERS_ADMIN'
+  ): Promise<RegisteredUser> => {
+    const user = await acquirePoolUser(ctx.tokens.PLATFORM_ROLES_ADMIN, slot);
+    onCleanup(() =>
+      releasePoolUsers(ctx.tokens.PLATFORM_ROLES_ADMIN, [user.id])
+    );
+    const granted = await assignRole(
+      ctx.tokens.PLATFORM_ROLES_ADMIN,
+      role,
+      user.id
+    );
+    expect(granted.kind, describeOutcome(granted)).toBe('ok');
+    return user;
+  };
 
   beforeAll(async () => {
+    secondRolesAdmin = await poolHolder('n1rolesadmin', 'PLATFORM_ROLES_ADMIN');
+    secondUsersAdmin = await poolHolder('n1usersadmin', 'PLATFORM_USERS_ADMIN');
     for (const role of OBSERVED) {
       const { id, settings } = await readAdminSettings(ctx.tokens[role]);
       snapshots.set(role, { id, admin: settings.notification.platform.admin });
@@ -202,10 +271,10 @@ describe('N1.admin-notification-routing', () => {
     expect(failures, 'cleanup and settings restore').toEqual([]);
   });
 
-  test('user profile created → Support and Users Admin only', async () => {
+  test('user profile created → Users Admin only', async () => {
     subject = await createDisposableUser(ctx, 'notifn');
     const name = await displayNameOf(subject.token);
-    const expected = ['PLATFORM_SUPPORT', 'PLATFORM_USERS_ADMIN'] as const;
+    const expected = ['PLATFORM_USERS_ADMIN'] as const;
     expect(
       await recipientsAfterSettle(
         `New user registration on Alkemio: ${name}`,
@@ -214,34 +283,43 @@ describe('N1.admin-notification-routing', () => {
     ).toEqual(sorted(expected));
   }, 120_000);
 
-  test('global role changed → Roles Admin only (Users Admin grants a Feature role)', async () => {
+  test('global role changed → Roles Admin only, minus the operator; a Feature-role grant emits nothing', async () => {
     const target = subject ?? (await createDisposableUser(ctx, 'notifn'));
     subject = target;
     const name = await displayNameOf(target.token);
-    const granted = await assignRole(
+    // FR-013: granted FIRST, by Users Admin. Had it emitted, the fixture Roles
+    // Admin — not its operator — would hold a second mail by the time the
+    // anchor below has landed and settled.
+    const feature = await assignRole(
       ctx.tokens.PLATFORM_USERS_ADMIN,
       'FEATURE_BETA_TESTER',
       target.id
     );
-    expect(granted.kind, describeOutcome(granted)).toBe('ok');
+    // The anchor: a Platform-role grant by the SECOND Roles Admin, so the
+    // fixture Roles Admin is a bystander who must receive it (FR-011).
+    const platform = await assignRole(
+      secondRolesAdmin.token,
+      'PLATFORM_RESOURCE_ADMIN',
+      target.id
+    );
     try {
-      const prefix = `Global role change on Alkemio: ${name} - added - `;
+      expect(feature.kind, describeOutcome(feature)).toBe('ok');
+      expect(platform.kind, describeOutcome(platform)).toBe('ok');
       // The role label in the subject is the notifications service's to
-      // render; find this grant's subject by its prefix once it has landed.
-      const findSubject = async () =>
-        (await allMails()).find(m => m.subject?.startsWith(prefix))?.subject;
-      let roleChangeSubject = await findSubject();
-      const deadline = Date.now() + DELIVERY_TIMEOUT_MS;
-      while (!roleChangeSubject && Date.now() < deadline) {
-        await new Promise(resolve => setTimeout(resolve, 1_000));
-        roleChangeSubject = await findSubject();
-      }
-      expect(roleChangeSubject, `a mail starting "${prefix}"`).toBeDefined();
-      const expected = ['PLATFORM_ROLES_ADMIN'] as const;
-      expect(await recipientsAfterSettle(roleChangeSubject!, expected)).toEqual(
-        sorted(expected)
-      );
+      // render, so every grant mail on this target is matched by its prefix.
+      // Exactly ONE delivery, to Roles Admin: the Platform grant's.
+      expect(
+        await deliveriesAfterSettle(
+          `Global role change on Alkemio: ${name} - added - `,
+          ['PLATFORM_ROLES_ADMIN']
+        )
+      ).toEqual(['PLATFORM_ROLES_ADMIN']);
     } finally {
+      await removeRole(
+        secondRolesAdmin.token,
+        'PLATFORM_RESOURCE_ADMIN',
+        target.id
+      );
       await removeRole(
         ctx.tokens.PLATFORM_USERS_ADMIN,
         'FEATURE_BETA_TESTER',
@@ -250,7 +328,7 @@ describe('N1.admin-notification-routing', () => {
     }
   }, 120_000);
 
-  test('L0 space created → Support, Users Admin and License Manager only', async () => {
+  test('L0 space created → Support and License Manager only', async () => {
     const host = await spaceHost(ctx);
     const tag = 'n1space';
     const spaceId = await createHostedSpace(ctx, host, tag);
@@ -261,11 +339,7 @@ describe('N1.admin-notification-routing', () => {
         { id: spaceId }
       )
     );
-    const expected = [
-      'PLATFORM_SUPPORT',
-      'PLATFORM_USERS_ADMIN',
-      'PLATFORM_LICENSE_MANAGER',
-    ] as const;
+    const expected = ['PLATFORM_SUPPORT', 'PLATFORM_LICENSE_MANAGER'] as const;
     expect(
       await recipientsAfterSettle(
         `New space created - platform-roles ${tag} ${ctx.runId}`,
@@ -274,12 +348,14 @@ describe('N1.admin-notification-routing', () => {
     ).toEqual(sorted(expected));
   }, 120_000);
 
-  test('user profile removed → Support and Users Admin only', async () => {
+  test('user profile removed → Users Admin only, minus the operator who removed', async () => {
     const target = subject ?? (await createDisposableUser(ctx, 'notifn'));
     const name = await displayNameOf(target.token);
-    await deleteDisposableUser(ctx, target);
+    // Removed by the SECOND Users Admin, so the fixture Users Admin is a
+    // bystander who must receive it (FR-011). The target hosts no space.
+    await rawRead(secondUsersAdmin.token, DELETE_USER, { id: target.id });
     subject = undefined;
-    const expected = ['PLATFORM_SUPPORT', 'PLATFORM_USERS_ADMIN'] as const;
+    const expected = ['PLATFORM_USERS_ADMIN'] as const;
     expect(
       await recipientsAfterSettle(
         `User profile deleted from the Alkemio platform: ${name}`,

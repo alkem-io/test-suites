@@ -320,7 +320,7 @@ out(
   '| 22 server-api specs that assert what `global.support` / `global.license` see (storage/auth, roleset, notifications, graphql-guard, space-platform-settings) | Expected-privilege rows derived from the legacy `global-support` cascade (full CRUD + GRANT on any space) | Re-read from a live Slice B stack: Platform Support reaches a space only through the support flag and its named privileges; Platform License Manager through `ACCOUNT_LICENSE_MANAGE` / `PLATFORM_LICENSING_LISTS_READ` |'
 );
 out(
-  '| `notifications/platform/space-creation.it-spec.ts`, `registration.it-spec.ts` | Recipient sets written for the legacy global roles (server T109 re-routes them per event) | Verified on a Slice B stack: space created → Support + Users Admin + License Manager; profile created/removed → Support + Users Admin; role changed → Roles Admin |'
+  '| `notifications/platform/space-creation.it-spec.ts`, `registration.it-spec.ts` | Recipient sets written for the legacy global roles | Rewritten on test-suites#657 to the workspace#065 routing table (server#6616) and verified live: space created → Support + License Manager; profile created/removed → Users Admin only, the remover excluded; role changed → Roles Admin, the actor excluded |'
 );
 out();
 out('## Not covered — known gaps');

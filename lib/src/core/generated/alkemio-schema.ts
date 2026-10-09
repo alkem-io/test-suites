@@ -94571,6 +94571,19 @@ export type LatestUserEmailChangeAuditEntryQuery = {
   };
 };
 
+export type NotificationRecipientsQueryVariables = Exact<{
+  eventData: NotificationRecipientsInput;
+}>;
+
+export type NotificationRecipientsQuery = {
+  notificationRecipients: {
+    emailRecipients: Array<{ id: string }>;
+    inAppRecipients: Array<{ id: string }>;
+    pushRecipients: Array<{ id: string }>;
+    triggeredBy?: { id: string } | undefined;
+  };
+};
+
 export type PlatformAdminMcpApiKeysQueryVariables = Exact<{
   userID: Scalars["UUID"]["input"];
 }>;
