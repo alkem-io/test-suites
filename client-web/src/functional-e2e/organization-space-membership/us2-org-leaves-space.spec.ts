@@ -156,11 +156,23 @@ test.describe('Organization Membership tab — leave a Space', () => {
   test.afterAll(async () => {
     test.setTimeout(120_000);
     await teardownAuthentication();
-    await removeOrgRoleIfHeld(orgId(), leadRoleSetId(), RoleName.Lead);
-    await removeOrgRoleIfHeld(orgId(), leadRoleSetId(), RoleName.Member);
-    await removeAllOrgSpaceRoles(baseScenario);
-    await TestScenarioFactory.cleanUpBaseScenario(leadScenario);
-    await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
+    // A failed createBaseScenario leaves nothing to clean; surface that error,
+    // not a TypeError from here.
+    if (!baseScenario) return;
+    // Role removal is best-effort; the scenarios are deleted regardless so a
+    // failed removal never leaks organizations and Spaces on the shared server.
+    try {
+      if (leadScenario) {
+        await removeOrgRoleIfHeld(orgId(), leadRoleSetId(), RoleName.Lead);
+        await removeOrgRoleIfHeld(orgId(), leadRoleSetId(), RoleName.Member);
+      }
+      await removeAllOrgSpaceRoles(baseScenario);
+    } finally {
+      if (leadScenario) {
+        await TestScenarioFactory.cleanUpBaseScenario(leadScenario);
+      }
+      await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
+    }
   });
 
   test('US2-AS1 Leave Subspace opens a destructive confirmation naming the Subspace', async ({
@@ -202,6 +214,7 @@ test.describe('Organization Membership tab — leave a Space', () => {
   test('US2-AS3 confirming leaves only the Subspace chosen', async ({
     page,
   }) => {
+    await openTabWithCards(page, 4); // S, S1, S2, L
     const dialog = await startLeave(page, subspaceName(), 'Subspace');
 
     await leaveButton(dialog).click();

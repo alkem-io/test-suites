@@ -111,6 +111,9 @@ test.describe('Organization Membership tab — list, search, filter @forge-accep
   test.afterAll(async () => {
     test.setTimeout(90_000);
     await teardownAuthentication();
+    // A failed createBaseScenario leaves nothing to clean; surface that error,
+    // not a TypeError from here.
+    if (!baseScenario) return;
     await changeUserRole(
       'remove',
       TestUserManager.users.qaUser.id,
@@ -126,11 +129,16 @@ test.describe('Organization Membership tab — list, search, filter @forge-accep
       ).catch(() => undefined);
       await deleteOrganization(emptyOrg.id);
     }
-    await removeAllOrgSpaceRoles(baseScenario);
-    if (leadScenario) {
-      await TestScenarioFactory.cleanUpBaseScenario(leadScenario);
+    // Role removal is best-effort; the scenarios are deleted regardless so a
+    // failed removal never leaks organizations and Spaces on the shared server.
+    try {
+      await removeAllOrgSpaceRoles(baseScenario);
+    } finally {
+      if (leadScenario) {
+        await TestScenarioFactory.cleanUpBaseScenario(leadScenario);
+      }
+      await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
     }
-    await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
   });
 
   test('US1-AS1 tab lists the Space and Subspace memberships', async ({
