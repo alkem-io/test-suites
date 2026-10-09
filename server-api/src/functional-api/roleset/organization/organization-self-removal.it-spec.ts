@@ -12,6 +12,10 @@
  *   is ASSOCIATE+ADMIN, SUBSPACE_MEMBER is promoted to OWNER, QA_USER is a
  *   plain ASSOCIATE.
  * - Organization B: NON_SPACE_MEMBER is its ADMIN (no role in A, none in S).
+ *   A hosts S, so A's admins also administer S's account; B does not. The
+ *   non-host cases put B into S by invitation, so that "admin of the
+ *   organization being removed" is told apart from "admin of the Space's
+ *   host account" (contract §2).
  * - SPACE_ADMIN is ADMIN of S; SUBSUBSPACE_ADMIN holds no Space or
  *   organization role here and no platform role at all.
  * - A is (re)seeded as MEMBER of S, S1 and S2 before every test, through the
@@ -103,6 +107,41 @@ const isOrgAMember = async (roleSetId: string) =>
 const isOrgALead = async (roleSetId: string) =>
   (await organizationsInRole(roleSetId, RoleName.Lead)).includes(orgAId);
 
+const isOrgBMember = async (roleSetId: string) =>
+  (await organizationsInRole(roleSetId, RoleName.Member)).includes(orgBId);
+
+// A Space admin invites the organization, one of its admins accepts.
+const enterByInvitation = async (
+  organizationId: string,
+  roleSetId: string,
+  accepter: TestUser
+) => {
+  const invitation = await inviteForEntryRoleOnRoleSet(
+    roleSetId,
+    [organizationId],
+    [],
+    'forge-acceptance reseed',
+    [],
+    TestUser.SPACE_ADMIN
+  );
+  const invitationId = getSingleInvitationResult(invitation)?.invitation?.id;
+  if (!invitationId) {
+    throw new Error(
+      `Inviting organization ${organizationId} to ${roleSetId} failed: ${JSON.stringify(invitation.error?.errors ?? invitation.data)}`
+    );
+  }
+  const accepted = await eventOnRoleSetInvitation(
+    invitationId,
+    'ACCEPT',
+    accepter
+  );
+  if (accepted.error) {
+    throw new Error(
+      `Accepting the invitation for organization ${organizationId} failed: ${JSON.stringify(accepted.error.errors)}`
+    );
+  }
+};
+
 const ensureOrgARole = async (
   roleSetId: string,
   role: RoleName.Member | RoleName.Lead
@@ -126,30 +165,13 @@ const ensureOrgARole = async (
   }
 
   // New entry: Space admin invites, the organization's admin accepts.
-  const invitation = await inviteForEntryRoleOnRoleSet(
-    roleSetId,
-    [orgAId],
-    [],
-    'forge-acceptance reseed',
-    [],
-    TestUser.SPACE_ADMIN
-  );
-  const invitationId = getSingleInvitationResult(invitation)?.invitation?.id;
-  if (!invitationId) {
-    throw new Error(
-      `Inviting organization A to ${roleSetId} failed: ${JSON.stringify(invitation.error?.errors ?? invitation.data)}`
-    );
-  }
-  const accepted = await eventOnRoleSetInvitation(
-    invitationId,
-    'ACCEPT',
-    TestUser.ORGANIZATION_ADMIN
-  );
-  if (accepted.error) {
-    throw new Error(
-      `Accepting the invitation for organization A failed: ${JSON.stringify(accepted.error.errors)}`
-    );
-  }
+  await enterByInvitation(orgAId, roleSetId, TestUser.ORGANIZATION_ADMIN);
+};
+
+// B enters S only for the non-host cases; B's own admin accepts.
+const ensureOrgBMember = async () => {
+  if (await isOrgBMember(spaceRoleSetId)) return;
+  await enterByInvitation(orgBId, spaceRoleSetId, TestUser.NON_SPACE_MEMBER);
 };
 
 // Parent before child: a Subspace role requires the parent Space role.
@@ -252,6 +274,12 @@ afterAll(async () => {
     RoleName.Associate
   );
 
+  await removeRoleFromOrganization(
+    orgBId,
+    spaceRoleSetId,
+    RoleName.Member,
+    TestUser.SPACE_ADMIN
+  );
   await deleteOrganization(orgBId);
   await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
 });
@@ -372,6 +400,69 @@ describe('@forge-acceptance Organization self-removal from a Space community', (
     // Assert
     expect(allowed.error).toBeUndefined();
     expect(await isOrgAMember(spaceRoleSetId)).toBe(false);
+  });
+
+  test('US3-AS7 generic removeRole: associate-only of A is denied (SC-002)', async () => {
+    // Act
+    const res = await removeRole(
+      orgAId,
+      spaceRoleSetId,
+      RoleName.Member,
+      TestUser.QA_USER
+    );
+
+    // Assert
+    expect(res.error?.errors[0].message).toMatch(NOT_AUTHORIZED);
+    expect(await isOrgAMember(spaceRoleSetId)).toBe(true);
+  });
+
+  test('US3-AS7 generic removeRole: unrelated user is denied (SC-002)', async () => {
+    // Act
+    const res = await removeRole(
+      orgAId,
+      spaceRoleSetId,
+      RoleName.Member,
+      TestUser.SUBSUBSPACE_ADMIN
+    );
+
+    // Assert
+    expect(res.error?.errors[0].message).toMatch(NOT_AUTHORIZED);
+    expect(await isOrgAMember(spaceRoleSetId)).toBe(true);
+  });
+
+  test('US3-AS4 non-host: admin of host organization A cannot remove organization B', async () => {
+    // Arrange
+    await ensureOrgBMember();
+
+    // Act — A hosts S: its admin administers S's account, not B's.
+    const res = await removeRoleFromOrganization(
+      orgBId,
+      spaceRoleSetId,
+      RoleName.Member,
+      TestUser.ORGANIZATION_ADMIN
+    );
+
+    // Assert
+    expect(res.error?.errors[0].message).toMatch(NOT_AUTHORIZED);
+    expect(await isOrgBMember(spaceRoleSetId)).toBe(true);
+  });
+
+  test('US3-AS1 non-host: admin of organization B removes B from S', async () => {
+    // Arrange
+    await ensureOrgBMember();
+
+    // Act — B does not host S, so only the self-removal rule can allow this.
+    const res = await removeRoleFromOrganization(
+      orgBId,
+      spaceRoleSetId,
+      RoleName.Member,
+      TestUser.NON_SPACE_MEMBER
+    );
+
+    // Assert
+    expect(res.error).toBeUndefined();
+    expect(await isOrgBMember(spaceRoleSetId)).toBe(false);
+    expect(await isOrgAMember(spaceRoleSetId)).toBe(true);
   });
 
   test("US3-AS8 org admin removes A's LEAD", async () => {

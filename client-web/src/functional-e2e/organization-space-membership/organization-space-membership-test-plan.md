@@ -59,8 +59,12 @@ Covered by `server-api/src/functional-api/roleset/organization/organization-self
 (vitest project `roleset`): own admin and own owner may remove the organization on
 both `removeRoleFromOrganization` and the generic `removeRole`, including its Lead
 role; a plain associate, an admin of another organization and an unrelated user are
-denied; the Space-admin path is unchanged; leaving an L0 Space cascades to its
-Subspaces. Regression of the Space-side paths:
+denied on both operations (SC-002); the Space-admin path is unchanged; leaving an
+L0 Space cascades to its Subspaces. The scenario organization *A* hosts *S*, so
+its admins also administer *S*'s account; two non-host cases tell "admin of the
+organization being removed" apart from "admin of the Space's host account": an
+admin of organization *B* (invited into *S*) removes *B*, and *A*'s admin may not
+remove *B*. Regression of the Space-side paths:
 `roleset/organization/organization.it-spec.ts`,
 `roleset/organization/organization-edge.it-spec.ts`,
 `roleset/invitations/invitation-organization.it-spec.ts`.
