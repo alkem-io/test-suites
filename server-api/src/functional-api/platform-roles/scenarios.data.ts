@@ -468,13 +468,13 @@ export const SCENARIOS: readonly Scenario[] = [
     area: 'admin-notifications',
     title:
       'Each platform-admin notification reaches exactly its target roles; Content Full Access none',
-    spec: 'server T109 · slice-b-ledger §10 (operator ruling 2026-10-05)',
+    spec: 'workspace#065 routing table (spec 065 Session 2026-10-07, FR-011, FR-013; server#6616) — supersedes server T109',
     file: 'rules/admin-notification-routing.it-spec.ts',
     positive: automated(
-      'with the event email switched on for the five admin-family single-role users: profile created and removed reach Support + Users Admin, an L0 space reaches Support + Users Admin + License Manager, a Feature-role grant reaches Roles Admin — each mail matched by recipient and by a subject naming this run’s entity'
+      'with the event email switched on for the five admin-family single-role users: profile created reaches Users Admin; a removal by a second Users Admin reaches the fixture Users Admin; an L0 space reaches Support + License Manager; a Platform-role grant by a second Roles Admin reaches the fixture Roles Admin exactly once — each mail matched by recipient and by a subject naming this run’s entity'
     ),
     negative: automated(
-      'every other observed role user — Content Full Access always, Roles Admin / License Manager / Support / Users Admin outside their events — receives nothing within a settle period after the expected mails landed'
+      'every other observed role user — Content Full Access always, Roles Admin / License Manager / Support / Users Admin outside their events — receives nothing within a settle period after the expected mails landed; a Feature-role grant made before the Platform grant adds no second role-change mail (FR-013)'
     ),
   },
   {
