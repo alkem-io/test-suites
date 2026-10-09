@@ -2,7 +2,7 @@
   "name": "@alkemio/test-suite-client-web",
   "version": "0.1.0",
   "description": "Alkemio web client test suite.",
-  "author": "Alkemio Holding",
+  "author": "Alkemio",
   "private": false,
   "license": "EUPL-1.2",
   "main": "src/setupTests.ts",

@@ -1,5 +1,5 @@
 <p align="center">
-  <a href="https://alkemio.org/" target="blank"><img src="https://alkemio.org/uploads/logos/alkemio-logo.svg" width="400" alt="Alkemio Logo" /></a>
+  <a href="https://alkemio.org/" target="blank"><img src="https://alkem.io/logo.png" width="400" alt="Alkemio Logo" /></a>
 </p>
 <p align="center"><i>Smart safe spaces for collective action. On a platform designed to benefit society.</i></p>
 

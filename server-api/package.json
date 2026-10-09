@@ -2,7 +2,7 @@
   "name": "@alkemio/test-suite-server-api",
   "version": "0.3.0",
   "description": "Alkemio API quality assurance test suite.",
-  "author": "Alkemio Holding",
+  "author": "Alkemio",
   "private": false,
   "license": "EUPL-1.2",
   "main": "src/setupTests.ts",
