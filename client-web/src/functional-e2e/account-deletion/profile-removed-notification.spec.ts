@@ -1,5 +1,6 @@
 // spec: client-web/src/functional-e2e/account-deletion/account-deletion-test-plan.md
 // story: client-web#10107, workspace#054 — the portable delta after test-suites#620.
+// routing: who receives the entry is described below.
 //
 // TC-14 — the notification centre survives the removed payload fields.
 //
@@ -14,81 +15,182 @@
 // this one row (R-e). #620 counts DB rows containing the departed email; it
 // never renders the notification centre at all, so this risk is entirely
 // untouched by it.
+//
+// Who sees the entry: PLATFORM_ADMIN_USER_PROFILE_REMOVED goes to Platform
+// Users Admin holders, minus the operator who removed the user. So the removal
+// is done by one holder — the platform-roles suite's single-role Users Admin —
+// and the entry is looked for in the centre of a SECOND holder: a pool user,
+// persistent across runs, stripped of every platform role when acquired and
+// again when released, and granted the role for this file. The remover keeps
+// the in-app row switched on, so its exclusion is observed rather than implied
+// by its settings.
 
 import { test, expect } from '@playwright/test';
+import { seedPlatformRoleUsers, UniqueIDGenerator } from '@alkemio/tests-lib';
 import {
-  getUserToken,
-  TestScenarioFactory,
-  TestScenarioNoPreCreationConfig,
-} from '@alkemio/tests-lib';
-import {
-  deleteUserAsGlobalAdmin,
-  provisionDisposableUser,
-} from '../session-revocation/session-revocation.helpers';
-import {
-  adminEmail,
+  acquireViewer,
+  assignPlatformRole,
   baseUrl,
-  resolveUserIdFromToken,
-  setUserProfileRemovedInAppNotification,
+  deleteUserAs,
+  expectNoNewIds,
+  getProfileRemovedInApp,
+  identityEmail,
+  profileRemovedNotificationsTriggeredBy,
+  provisionIdentity,
+  releaseViewer,
+  removeUnconfirmedUser,
+  requirePlatformRoleModel,
+  setProfileRemovedInApp,
   signIn,
+  waitUntilUsable,
 } from './account-deletion.helpers';
+import type { UsableUser } from './account-deletion.helpers';
 
-let departedUserId: string;
-let departedEmail: string;
-let departedDisplayName: string;
-let adminUserId: string;
+const uniqueId = UniqueIDGenerator.getID();
 
-const scenarioConfig: TestScenarioNoPreCreationConfig = {
-  name: 'account-deletion-profile-removed-notification',
-};
+let rolesAdminToken: string;
+/** The Users Admin who removes the departed user. */
+let remover: { id: string; token: string };
+let removerInAppBefore: boolean | undefined;
+/** Remover-triggered entries already in the remover's own centre. */
+let removerSelfEntriesBefore: string[] = [];
+/** The second Users Admin, whose centre must show the entry. */
+let viewer: UsableUser | undefined;
+/** Remover-triggered entries the (persistent) viewer had before this run. */
+let viewerEntriesBefore: string[] = [];
+/** Set before the departed user's identity exists, so cleanup can find it. */
+let departedEmail: string | undefined;
+let departed: UsableUser | undefined;
+let departedRemoved = false;
 
 test.describe('Notification centre — profile-removed entry (054 delta)', () => {
+  // One worker, one setup: the remover's setting is snapshotted and restored
+  // around the whole file, which parallel workers would race on.
+  test.describe.configure({ mode: 'default' });
+
   test.beforeAll(async () => {
-    // `graphqlErrorWrapper(..., TestUser.GLOBAL_ADMIN)` resolves the admin's
-    // token through TestUserManager, which needs its map populated first.
-    await TestScenarioFactory.createBaseScenarioEmpty(scenarioConfig);
+    // Two first sign-ins: a fresh user can take a while to become usable.
+    test.setTimeout(360_000);
 
-    // `platform.admin.userProfileRemoved` ships `inApp: false` by default
-    // (server `getDefaultUserSettings`) — confirmed live 2026-09-02: with it
-    // off, the deletion below produces zero rows for this event and the
-    // panel never renders the entry at all. Opt the admin persona in for the
-    // duration of this test, and restore it in afterAll.
-    const adminToken = await getUserToken(adminEmail);
-    adminUserId = await resolveUserIdFromToken(adminToken);
-    await setUserProfileRemovedInAppNotification(adminUserId, true);
+    // Before any identity is registered or signed in.
+    await requirePlatformRoleModel();
 
-    const subject = await provisionDisposableUser('del-notif');
-    departedUserId = subject.userId;
-    departedEmail = subject.email;
-    departedDisplayName = `${subject.firstName} ${subject.lastName}`;
+    const users = await seedPlatformRoleUsers();
+    rolesAdminToken = users.tokens.PLATFORM_ROLES_ADMIN;
+    remover = {
+      id: users.userIds.PLATFORM_USERS_ADMIN,
+      token: users.tokens.PLATFORM_USERS_ADMIN,
+    };
 
-    // Admin-initiated deletion: the profile-removed notification payload is
-    // branch-independent (fires for both self and admin deletion), so this
-    // reaches the same observable state without any of #620's session-minting
-    // machinery.
-    await deleteUserAsGlobalAdmin(departedUserId, { deleteIdentity: true });
+    viewer = await acquireViewer(rolesAdminToken);
+    await assignPlatformRole(
+      rolesAdminToken,
+      viewer.userId,
+      'PLATFORM_USERS_ADMIN'
+    );
+    await setProfileRemovedInApp(viewer.token, viewer.userId, true);
+    viewerEntriesBefore = await profileRemovedNotificationsTriggeredBy(
+      viewer.token,
+      remover.id
+    );
+
+    removerInAppBefore = await getProfileRemovedInApp(remover.token);
+    await setProfileRemovedInApp(remover.token, remover.id, true);
+    removerSelfEntriesBefore = await profileRemovedNotificationsTriggeredBy(
+      remover.token,
+      remover.id
+    );
+
+    const departedName = `tc14gone.${uniqueId}`;
+    departedEmail = identityEmail(departedName);
+    await provisionIdentity(departedName);
+    departed = await waitUntilUsable(departedEmail);
+    await deleteUserAs(remover.token, departed.userId);
+    departedRemoved = true;
   });
 
   test.afterAll(async () => {
-    if (adminUserId) {
-      await setUserProfileRemovedInAppNotification(adminUserId, false);
+    test.setTimeout(180_000);
+    const failures: string[] = [];
+    const attempt = async (what: string, step: () => Promise<unknown>) => {
+      try {
+        await step();
+      } catch (e) {
+        failures.push(`${what}: ${(e as Error).message}`);
+      }
+    };
+    if (removerInAppBefore !== undefined) {
+      await attempt('restore the remover setting', () =>
+        setProfileRemovedInApp(remover.token, remover.id, removerInAppBefore!)
+      );
     }
+    if (departed && !departedRemoved) {
+      const { userId } = departed;
+      await attempt('remove the departed user', () =>
+        deleteUserAs(remover.token, userId)
+      );
+    } else if (!departed && departedEmail) {
+      const email = departedEmail;
+      await attempt('remove the unconfirmed departed user', () =>
+        removeUnconfirmedUser(remover.token, email)
+      );
+    }
+    if (viewer) {
+      const released = viewer;
+      await attempt('release the viewer', () =>
+        releaseViewer(rolesAdminToken, released)
+      );
+    }
+    if (failures.length > 0) {
+      throw new Error(
+        `TC-14 cleanup left residue —\n  ${failures.join('\n  ')}`
+      );
+    }
+  });
+
+  test('TC-14 — the other Users Admin gets the entry, the remover does not', async () => {
+    test.setTimeout(120_000);
+
+    // By identity: a NEW entry in the viewer's centre, triggered by the remover.
+    await expect
+      .poll(
+        async () =>
+          (
+            await profileRemovedNotificationsTriggeredBy(
+              viewer!.token,
+              remover.id
+            )
+          ).filter(id => !viewerEntriesBefore.includes(id)).length,
+        { timeout: 60_000, intervals: [1_000, 2_000, 5_000] }
+      )
+      .toBeGreaterThan(0);
+
+    // The remover's own centre must gain none. Re-read across a settle window
+    // that starts once the viewer's entry exists, so a self-entry written a
+    // moment after it is caught rather than raced.
+    await expectNoNewIds(
+      () => profileRemovedNotificationsTriggeredBy(remover.token, remover.id),
+      removerSelfEntriesBefore,
+      { windowMs: 10_000, intervalMs: 2_000 }
+    );
   });
 
   test('TC-14 — no PII, no blank row, list stays populated', async ({
     page,
   }) => {
     test.setTimeout(90_000);
-    await signIn(page, adminEmail);
+    await signIn(page, viewer!.email);
     await page.goto(`${baseUrl}/home`);
 
     // Delivery may lag behind the deletion (best-effort post-commit leg) —
     // poll by RE-OPENING the panel on each attempt (close + reopen, not a
-    // full page reload — this admin persona carries ~70 existing
-    // notifications, and a full `page.goto` per attempt spent its budget on
-    // re-fetching all of them instead of retrying). A plain `expect.poll`
-    // over a DOM assertion would only re-check the already-rendered
-    // (unrefetched) list.
+    // full page reload — a persona with a long notification history spends
+    // its budget on re-fetching all of them instead of retrying). A plain
+    // `expect.poll` over a DOM assertion would only re-check the
+    // already-rendered (unrefetched) list. The pool viewer may also hold
+    // entries from earlier runs: every profile-removed row is rendered from
+    // the same fragment, which is what this walk guards, and the API test
+    // above has proved this run's entry is in the list.
     await expect
       .poll(
         async () => {
@@ -133,7 +235,7 @@ test.describe('Notification centre — profile-removed entry (054 delta)', () =>
     // content, not just the visible text, so a hidden/off-screen leak is
     // caught too.
     const pageContent = await page.content();
-    expect(pageContent).not.toContain(departedEmail);
-    expect(pageContent).not.toContain(departedDisplayName);
+    expect(pageContent).not.toContain(departed!.email);
+    expect(pageContent).not.toContain(departed!.displayName);
   });
 });

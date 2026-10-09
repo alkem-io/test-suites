@@ -1,273 +1,239 @@
-import { updateUserSettings } from '@functional-api/contributor-management/user/user.request.params';
-import {
-  createSpaceAndGetData,
-  deleteSpace,
-} from '@functional-api/journey/space/space.request.params';
 import {
   deleteMailSlurperMails,
-  getMailsData,
-  TestScenarioFactory,
-  TestScenarioNoPreCreationConfig,
-  TestUserManager,
+  PLATFORM_ROLE_NAMES,
   UniqueIDGenerator,
 } from '@alkemio/tests-lib';
-import { delay } from '@alkemio/tests-lib';
-import { notif } from '../notification.helpers';
+import type {
+  PlatformRoleName,
+  SeededPlatformRoleUsers,
+} from '@alkemio/tests-lib';
+import {
+  restorePlatformAdminRows,
+  setPlatformAdminEmail,
+  snapshotPlatformAdminRows,
+} from '@functional-api/platform-roles/_support/platform-admin-settings';
+import type { PlatformAdminSnapshot } from '@functional-api/platform-roles/_support/platform-admin-settings';
+import { rawRead } from '@functional-api/platform-roles/_support/raw-request';
+import {
+  acquirePoolUser,
+  releasePoolUsers,
+} from '@functional-api/platform-roles/_support/users';
+import type { RegisteredUser } from '@functional-api/platform-roles/_support/users';
+import { getMailsDataSettled } from '../notification.helpers';
+import {
+  cleanUp,
+  expectedEmail,
+  mailTo,
+  platformRoleHolders,
+  roleHolder,
+} from './platform-admin-mail.helpers';
+import type { Holder } from './platform-admin-mail.helpers';
+
+/**
+ * PLATFORM_ADMIN_SPACE_CREATED is routed to Platform Support and Platform
+ * License Manager.
+ *
+ * Every other single-role holder keeps the `spaceCreated` row switched ON, so
+ * "not routed to them" is observed rather than implied by their settings —
+ * those 12 carry the negative proof. The legacy personas (`admin@`,
+ * `global.support@`, `global.license@`) are outside the audience: which
+ * platform roles they hold depends on how the environment was bootstrapped.
+ *
+ * The spaces are hosted on a pool user's own account: a fresh account is
+ * entitled to no space, so Platform License Manager raises its baseline — the
+ * same arrangement as the platform-roles suite's space host — and puts the
+ * value it found back afterwards. A role user never hosts one: hosting would
+ * hand that role space-admin rights.
+ */
 
 const uniqueId = UniqueIDGenerator.getID();
 
-let spaceName = 'space' + uniqueId;
-let spaceNameId = 'space' + uniqueId;
-let spaceId = '';
-const scenarioConfig: TestScenarioNoPreCreationConfig = {
-  name: 'notifications-space-creation',
-};
+const ROUTED: readonly PlatformRoleName[] = [
+  'PLATFORM_SUPPORT',
+  'PLATFORM_LICENSE_MANAGER',
+];
 
-// Reusable notification settings for space creation
-const spaceCreationNotificationSettings = {
-  notification: {
-    platform: {
-      forumDiscussionComment: notif(false),
-      forumDiscussionCreated: notif(false),
-      admin: {
-        userProfileCreated: notif(false),
-        userProfileRemoved: notif(false),
-        spaceCreated: notif(true),
-        userGlobalRoleChanged: notif(false),
-      },
-    },
-  },
-};
+/** Free spaces the host needs at once: one per test, plus headroom for a leftover. */
+const HOST_SPACE_FREE = 3;
+const SPACE_FREE_BASELINE =
+  'query { me { user { account { baselineLicensePlan { spaceFree } } } } }';
+const SET_BASELINE =
+  'mutation($updateData: UpdateBaselineLicensePlanOnAccount!) { updateBaselineLicensePlanOnAccount(updateData: $updateData) { id } }';
+const HOSTED_SPACES = 'query { me { user { account { spaces { id } } } } }';
+const CREATE_SPACE =
+  'mutation($spaceData: CreateSpaceOnAccountInput!) { createSpace(spaceData: $spaceData) { id } }';
+const DELETE_SPACE =
+  'mutation($id: UUID!) { deleteSpace(deleteData: { ID: $id }) { id } }';
 
-// Reusable notification settings to disable space creation notifications
-const disabledSpaceCreationNotificationSettings = {
-  notification: {
-    platform: {
-      forumDiscussionComment: notif(false),
-      forumDiscussionCreated: notif(false),
-      admin: {
-        userProfileCreated: notif(false),
-        userProfileRemoved: notif(false),
-        spaceCreated: notif(false),
-        userGlobalRoleChanged: notif(false),
-      },
-    },
-  },
-};
+let users: SeededPlatformRoleUsers;
+let support: Holder;
+let licenseManager: Holder;
+/** Holders the event is NOT routed to — every one keeps its row on. */
+let notRouted: Holder[];
+let host: RegisteredUser;
+/** The host account's `spaceFree` as found, before it is raised. */
+let hostSpaceFreeBefore: number | undefined;
+let snapshot: PlatformAdminSnapshot | undefined;
 
-// workspace#027 Slice B (server T109): `spaceCreated` is routed to Platform
-// Support + Platform Users Admin + Platform License Manager — which the three
-// personas below hold (`admin@alkem.io` is the seeded Users Admin), so the
-// recipient set is unchanged from the legacy global-role routing.
-// Helper function to update space creation notification settings for multiple admin users
-const updateAdminSpaceCreationNotificationSettings = async () => {
-  const adminUsers = [
-    TestUserManager.users.globalAdmin.id,
-    TestUserManager.users.globalLicenseAdmin.id,
-    TestUserManager.users.globalSupportAdmin.id,
-  ];
-
-  await Promise.all(
-    adminUsers.map(userId =>
-      updateUserSettings(userId, spaceCreationNotificationSettings)
-    )
-  );
-};
-
-// Helper function to disable all admin space creation notifications
-const disableAllAdminSpaceCreationNotifications = async () => {
-  const adminUsers = [
-    TestUserManager.users.globalAdmin.id,
-    TestUserManager.users.globalLicenseAdmin.id,
-    TestUserManager.users.globalSupportAdmin.id,
-  ];
-
-  await Promise.all(
-    adminUsers.map(userId =>
-      updateUserSettings(userId, disabledSpaceCreationNotificationSettings)
-    )
-  );
-};
-
-// Helper function to create expected email objects
-const expectedEmail = (subject: string, toAddress: string) =>
-  expect.objectContaining({
-    subject,
-    toAddresses: [toAddress],
+const setHostSpaceFree = async (
+  account: RegisteredUser,
+  spaceFree: number
+): Promise<void> => {
+  await rawRead(users.tokens.PLATFORM_LICENSE_MANAGER, SET_BASELINE, {
+    updateData: { accountID: account.accountId, spaceFree },
   });
+};
 
-// Helper function to create space and wait for emails
-const createSpace = async (
-  spaceName: string,
-  spaceNameId: string,
-  accountId: string
-) => {
-  const response = await createSpaceAndGetData(
-    spaceName,
-    spaceNameId,
-    accountId
-  );
-  const newSpaceId = response?.data?.lookup?.space?.id ?? '';
+const deleteHostedSpaces = async (account: RegisteredUser): Promise<void> => {
+  const { me } = await rawRead<{
+    me: { user: { account: { spaces: { id: string }[] } } };
+  }>(account.token, HOSTED_SPACES);
+  for (const { id } of me.user.account.spaces) {
+    await rawRead(account.token, DELETE_SPACE, { id });
+  }
+};
 
-  return { spaceId: newSpaceId };
+/** `tag`: a few lowercase letters — the nameID must stay within 25 characters. */
+const createSpace = async (tag: string): Promise<string> => {
+  const displayName = `testspace${tag}${uniqueId}`;
+  await rawRead(host.token, CREATE_SPACE, {
+    spaceData: {
+      accountID: host.accountId,
+      nameID: `ns-${tag}-${uniqueId}`,
+      about: { profileData: { displayName } },
+      collaborationData: { addTutorialCallouts: false, calloutsSetData: {} },
+    },
+  });
+  return `New space created - ${displayName}`;
 };
 
 beforeAll(async () => {
-  await TestScenarioFactory.createBaseScenarioEmpty(scenarioConfig);
-  await deleteMailSlurperMails();
-  spaceName = `testspace${uniqueId}`;
-  spaceNameId = `testspace${uniqueId}`;
+  users = await platformRoleHolders();
+  support = roleHolder(users, 'PLATFORM_SUPPORT');
+  licenseManager = roleHolder(users, 'PLATFORM_LICENSE_MANAGER');
+  notRouted = PLATFORM_ROLE_NAMES.filter(role => !ROUTED.includes(role)).map(
+    role => roleHolder(users, role)
+  );
+  snapshot = await snapshotPlatformAdminRows([
+    support,
+    licenseManager,
+    ...notRouted,
+  ]);
+
+  host = await acquirePoolUser(
+    users.tokens.PLATFORM_ROLES_ADMIN,
+    'notifspacehost'
+  );
+  // Read BEFORE raising, so afterAll puts back what was there.
+  hostSpaceFreeBefore = (
+    await rawRead<{
+      me: { user: { account: { baselineLicensePlan: { spaceFree: number } } } };
+    }>(host.token, SPACE_FREE_BASELINE)
+  ).me.user.account.baselineLicensePlan.spaceFree;
+  await setHostSpaceFree(host, HOST_SPACE_FREE);
+  // A previous run that died mid-test leaves its space on this account.
+  await deleteHostedSpaces(host);
+});
+
+afterAll(async () => {
+  const account = host;
+  const spaceFreeBefore = hostSpaceFreeBefore;
+  await cleanUp([
+    [
+      'restore the holders settings',
+      async () => {
+        if (snapshot) await restorePlatformAdminRows(snapshot);
+      },
+    ],
+    [
+      'delete the hosted spaces',
+      async () => {
+        if (account) await deleteHostedSpaces(account);
+      },
+    ],
+    [
+      'restore the host baseline',
+      async () => {
+        if (account && spaceFreeBefore !== undefined) {
+          await setHostSpaceFree(account, spaceFreeBefore);
+        }
+      },
+    ],
+    [
+      'release the host',
+      async () => {
+        if (account) {
+          await releasePoolUsers(users.tokens.PLATFORM_ROLES_ADMIN, [
+            account.id,
+          ]);
+        }
+      },
+    ],
+  ]);
 });
 
 describe('Notifications - Space creation', () => {
-  beforeAll(async () => {
-    // Set up space creation notification settings for all admin users
-    await updateAdminSpaceCreationNotificationSettings();
-  });
+  const everyone = () => [support, licenseManager, ...notRouted];
 
   beforeEach(async () => {
     await deleteMailSlurperMails();
   });
 
   afterEach(async () => {
-    if (spaceId) {
-      await deleteSpace(spaceId);
-    }
+    await deleteHostedSpaces(host);
   });
 
-  test('Space created - GA(1), LA(1), SA(1) get notifications', async () => {
-    // Act
-    const { spaceId: newSpaceId } = await createSpace(
-      spaceName,
-      spaceNameId,
-      TestUserManager.users.betaTester.accountId
-    );
-    spaceId = newSpaceId;
-    await delay(1000);
-    const emailsData = await getMailsData();
-    // Assert
-    expect(emailsData[1]).toEqual(3);
-    expect(emailsData[0]).toEqual(
-      expect.arrayContaining([
-        expectedEmail(
-          `New space created - ${spaceName}`,
-          TestUserManager.users.globalAdmin.email
-        ),
-        expectedEmail(
-          `New space created - ${spaceName}`,
-          TestUserManager.users.globalSupportAdmin.email
-        ),
-        expectedEmail(
-          `New space created - ${spaceName}`,
-          TestUserManager.users.globalLicenseAdmin.email
-        ),
-      ])
-    );
-  });
-
-  test('Space created - GA(0), SA(0) - no admin notifications', async () => {
-    // Arrange - Disable all admin space creation notifications
-    await disableAllAdminSpaceCreationNotifications();
+  test('Space created - Platform Support(1), Platform License Manager(1) get notifications; no other role holder', async () => {
+    // Arrange
+    await setPlatformAdminEmail(everyone(), ['spaceCreated'], true);
 
     // Act
-    const { spaceId: newSpaceId } = await createSpace(
-      spaceName + 'disabled',
-      spaceNameId + 'disabled',
-      TestUserManager.users.betaTester.accountId
-    );
-    spaceId = newSpaceId;
-    await delay(1000);
-    const emailsData = await getMailsData();
-    // Assert
-    expect(emailsData[1]).toEqual(0);
-    expect(emailsData[0]).toEqual([]);
-  });
-
-  test('Space created - Only GA(1) gets notifications', async () => {
-    // Arrange - Enable only global admin notifications
-    await updateUserSettings(
-      TestUserManager.users.globalAdmin.id,
-      spaceCreationNotificationSettings
-    );
-    await updateUserSettings(
-      TestUserManager.users.globalLicenseAdmin.id,
-      disabledSpaceCreationNotificationSettings
-    );
-    await updateUserSettings(
-      TestUserManager.users.globalSupportAdmin.id,
-      disabledSpaceCreationNotificationSettings
-    );
-
-    // Act
-    const { spaceId: newSpaceId } = await createSpace(
-      spaceName + 'gaonly',
-      spaceNameId + 'gaonly',
-      TestUserManager.users.betaTester.accountId
-    );
-    spaceId = newSpaceId;
-    await delay(1000);
-    const emailsData = await getMailsData();
-    // Assert
-    expect(emailsData[1]).toEqual(1);
-    expect(emailsData[0]).toEqual(
-      expect.arrayContaining([
-        expectedEmail(
-          `New space created - ${spaceName}gaonly`,
-          TestUserManager.users.globalAdmin.email
-        ),
-      ])
-    );
-  });
-});
-
-describe.skip('Notifications - Space deletion', () => {
-  beforeAll(async () => {
-    // Enable space deletion notifications for admin (assuming this is supported)
-    await updateUserSettings(TestUserManager.users.globalAdmin.id, {
-      notification: {
-        platform: {
-          forumDiscussionComment: notif(false),
-          forumDiscussionCreated: notif(false),
-          admin: {
-            userProfileCreated: notif(true),
-            userProfileRemoved: notif(false),
-            spaceCreated: notif(false),
-            userGlobalRoleChanged: notif(false),
-          },
-        },
-      },
+    const subject = await createSpace('all');
+    const [mails, count] = await getMailsDataSettled(2, {
+      scope: mailTo(subject, everyone()),
     });
+
+    // Assert
+    expect(count).toEqual(2);
+    expect(mails).toEqual(
+      expect.arrayContaining([
+        expectedEmail(subject, support.email),
+        expectedEmail(subject, licenseManager.email),
+      ])
+    );
   });
 
-  test('Space deleted - GA(1) get notifications', async () => {
-    // Act - Create space first
-    const { spaceId: newSpaceId } = await createSpace(
-      spaceName + 'delete',
-      spaceNameId + 'delete',
-      TestUserManager.users.betaTester.accountId
+  test('Space created - Platform Support(0), Platform License Manager(0) with the row switched off, nobody else either', async () => {
+    // Arrange
+    await setPlatformAdminEmail(everyone(), ['spaceCreated'], false);
+
+    // Act
+    const subject = await createSpace('muted');
+    const [, count] = await getMailsDataSettled(0, {
+      scope: mailTo(subject, everyone()),
+    });
+
+    // Assert
+    expect(count).toEqual(0);
+  });
+
+  test('Space created - Platform Support(1) gets notifications, Platform License Manager(0) with its row switched off', async () => {
+    // Arrange
+    await setPlatformAdminEmail(
+      [support, ...notRouted],
+      ['spaceCreated'],
+      true
     );
-    spaceId = newSpaceId;
+    await setPlatformAdminEmail([licenseManager], ['spaceCreated'], false);
 
-    // Clean emails and delete space
-    await deleteMailSlurperMails();
-    await deleteSpace(spaceId);
-    spaceId = ''; // Clear the ID since space is deleted
+    // Act
+    const subject = await createSpace('one');
+    const [mails, count] = await getMailsDataSettled(1, {
+      scope: mailTo(subject, everyone()),
+    });
 
-    await delay(6000);
-    const emailsData = await getMailsData();
-
-    // Assert - Note: This test might fail if space deletion notifications are not implemented
-    // This is a placeholder test to demonstrate the pattern
-    expect(emailsData[1]).toBeGreaterThanOrEqual(0);
-    if (emailsData[1] > 0) {
-      expect(emailsData[0]).toEqual(
-        expect.arrayContaining([
-          expectedEmail(
-            `Space deleted from Alkemio platform: ${spaceName}delete`,
-            TestUserManager.users.globalAdmin.email
-          ),
-        ])
-      );
-    }
+    // Assert
+    expect(count).toEqual(1);
+    expect(mails).toEqual([expectedEmail(subject, support.email)]);
   });
 });

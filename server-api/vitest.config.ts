@@ -210,6 +210,17 @@ export default defineConfig({
           // push case skips itself without the RabbitMQ management API.
           'src/functional-api/notifications/space/collaboration/form-response.it-spec.ts',
           'src/functional-api/notifications/organization/associate-email-invitation.it-spec.ts',
+          // workspace#065: the live twin of the platform-admin routing table.
+          // It reads the STORED platform policy, so it is the nightly probe
+          // for a stale RECEIVE_NOTIFICATIONS_ADMIN grant (065 risk R-1). No
+          // mail, no RabbitMQ management API, ~15 s once its pool users exist.
+          'src/functional-api/notifications/platform/platform-admin-notification-routing.it-spec.ts',
+          // workspace#065 delivery twins of the routing table: real mail to the
+          // routed holders (Users Admin on registration/removal, Support +
+          // License Manager on space creation) with the remover excluded, plus
+          // zero mail to every muted role. MailSlurper only, ~33 s together.
+          'src/functional-api/notifications/platform/registration.it-spec.ts',
+          'src/functional-api/notifications/platform/space-creation.it-spec.ts',
           'src/functional-api/contributor-management/**/*.it-spec.ts',
           'src/functional-api/callout/**/*.it-spec.ts',
           'src/functional-api/communications/**/*.it-spec.ts',
