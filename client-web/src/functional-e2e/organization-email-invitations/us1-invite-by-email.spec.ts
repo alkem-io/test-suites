@@ -579,7 +579,7 @@ baseTest.describe(
     const forbidden = /FORBIDDEN_POLICY|unable to grant/i;
 
     baseTest(
-      'a plain associate and a registered non-admin are refused all four; an OWNER and platform support are not',
+      'a plain associate, a registered non-admin and platform support are refused the invite; an OWNER can do all four (workspace#027 Slice B)',
       async () => {
         const seededEmail = address('as8-seed');
         const seeded = await inviteRaw(org.roleSetId, admin.token, {
@@ -660,25 +660,21 @@ baseTest.describe(
           (await deleteEmailInvitationRaw(ownerRowId, owner.token)).errors
         ).toEqual([]);
 
-        // Platform support can invite, list and resend.
+        // workspace#027 Slice B: Platform Support holds no
+        // ROLESET_ENTRY_ROLE_INVITE on organisation role sets any more — the
+        // legacy global-support cascade is gone and organisation membership is
+        // its own admins' alone. The email invite is refused at the gate and
+        // leaves no row behind.
         const supportEmail = address('as8-support');
         const supportInvite = await inviteRaw(org.roleSetId, supportToken, {
           emails: [supportEmail],
           roles: [],
         });
-        expect(supportInvite.errors).toEqual([]);
-        const supportRowId =
-          supportInvite.data!.inviteForEntryRoleOnRoleSet[0]!
-            .platformInvitation!.id;
-        expect(await openEmailAddresses(org.roleSetId, supportToken)).toContain(
-          supportEmail
-        );
-        const supportResend = await resendEmailInvitationRaw(
-          supportRowId,
-          supportToken
-        );
-        expect(supportResend.errors, supportResend.raw).toEqual([]);
-        expect(errorCodeOf(supportResend)).toBeUndefined();
+        expect(supportInvite.errors.length, 'support invite').toBeGreaterThan(0);
+        expect(supportInvite.raw).toMatch(/roleset-entry-role-invite/);
+        expect(
+          await openEmailAddresses(org.roleSetId, admin.token)
+        ).not.toContain(supportEmail);
       }
     );
   }

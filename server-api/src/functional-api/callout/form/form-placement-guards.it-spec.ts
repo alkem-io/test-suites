@@ -43,12 +43,17 @@ import {
 } from './form.request.params';
 
 /**
- * A FORM framing exists only when it is created through
- * `createCalloutOnCalloutsSet` by a space admin. Every other path that builds
- * framings (knowledge bases, templates, subspace creation, conversions,
- * transfers) must refuse it. Each negative below is paired with a positive
- * control that runs the SAME carrier with a NONE-framing callout and succeeds,
- * so a refusal means "FORM was rejected", never "the carrier is broken".
+ * A FORM framing is created through `createCalloutOnCalloutsSet` by a space
+ * admin, or — since ruling R25 (server#6435) amended D-7 — through the template
+ * carriers: a callout template, a space template's content space, and the
+ * (sub)spaces / collaborations built from a space template. Every other path
+ * that builds framings (knowledge bases, the create-subspace request's own
+ * callouts, conversions, transfers) must refuse it. Each negative below is
+ * paired with a positive control that runs the SAME carrier with a
+ * NONE-framing callout and succeeds, so a refusal means "FORM was rejected",
+ * never "the carrier is broken". The R25 carriers themselves are covered in
+ * `templates/callout/poll-form-callout-templates.it-spec.ts` and
+ * `templates/space/space-templates-poll-form.it-spec.ts`.
  */
 
 const uniqueId = UniqueIDGenerator.getID();
@@ -354,7 +359,7 @@ describe('Form placement — the framing kind is fixed', () => {
   });
 });
 
-describe('Form placement — carriers that build framings refuse a FORM', () => {
+describe('Form placement — carriers that build framings (only templates accept a FORM, R25)', () => {
   test('a virtual contributor knowledge base cannot be seeded with a FORM callout', async () => {
     const result = await createKnowledgeBaseVirtualContributor(
       [formCalloutData(`kb-form-${uniqueId}`)],
@@ -393,14 +398,14 @@ describe('Form placement — carriers that build framings refuse a FORM', () => 
     );
   });
 
-  test('a callout template cannot carry a FORM callout', async () => {
+  test('a callout template carries a FORM definition (R25)', async () => {
     const result = await createCalloutTemplate(
       formCalloutData(`tpl-form-${uniqueId}`),
       'form'
     );
 
-    expect(errorCode(result)).toBe('FORM_FRAMING_NOT_ALLOWED');
-    expect(result.data?.createTemplate).toBeUndefined();
+    expect(result.error).toBeUndefined();
+    expect(result.data?.createTemplate.id).toBeDefined();
   });
 
   test('positive control: a NONE callout template is created', async () => {
@@ -511,7 +516,7 @@ describe('Form placement — spaces holding a FORM callout', () => {
     ).calloutId;
   });
 
-  test('a template made from the space leaves the FORM callout out', async () => {
+  test('a template made from the space keeps the FORM callout (R25)', async () => {
     const created = await createTemplateFromSpace(
       holdingSpaceId,
       baseScenario.space.templateSetId,
@@ -535,13 +540,18 @@ describe('Form placement — spaces holding a FORM callout', () => {
       content.data?.lookup.template?.contentSpace?.collaboration.calloutsSet
         .callouts ?? [];
 
-    // Positive control: the plain callout made it into the template ...
+    // The plain callout made it into the template ...
     expect(
       callouts.map(callout => callout.framing.profile.displayName)
     ).toContain(plainDisplayName);
-    // ... and the FORM did not.
-    expect(callouts.map(callout => callout.framing.type)).not.toContain(
-      CalloutFramingType.Form
+    // ... and so did the FORM, as a template definition with its questions.
+    const formCallouts = callouts.filter(
+      callout => callout.framing.type === CalloutFramingType.Form
+    );
+    expect(formCallouts).toHaveLength(1);
+    expect(formCallouts[0].isTemplate).toBe(true);
+    expect(formCallouts[0].framing.form?.questions).toHaveLength(
+      defaultFormQuestions().length
     );
   });
 

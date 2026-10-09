@@ -25,6 +25,7 @@ export type ScenarioArea =
   | 'audit-records'
   | 'service-profile'
   | 'role-integrity'
+  | 'admin-notifications'
   | 'lifecycle';
 
 export type Scenario = {
@@ -399,7 +400,7 @@ export const SCENARIOS: readonly Scenario[] = [
       'myRoles equals [role, REGISTERED] for all 14 fixtures'
     ),
     negative: automated(
-      'no fixture holds PLATFORM_ADMIN or any legacy global-* credential; runs FIRST and aborts the project when it fails'
+      'no fixture holds any privilege outside its own role family, and the schema no longer knows PLATFORM_ADMIN; runs FIRST and aborts the project when it fails'
     ),
   },
   {
@@ -438,16 +439,55 @@ export const SCENARIOS: readonly Scenario[] = [
     area: 'lifecycle',
     title: 'After Slice B no legacy global role or credential remains',
     spec: 'SC-005 · FR-012',
-    file: '-',
+    file: 'role-integrity.it-spec.ts',
     positive: {
       status: 'not-applicable',
       reason: 'a pure negative',
     },
-    negative: {
-      status: 'planned',
-      reason: 'activates at Slice B',
-      oracle:
-        'schema introspection: RoleName and AuthorizationCredential list none of the 10 legacy values; usersWithAuthorizationCredential rejects them. No database needed',
+    negative: automated(
+      'schema introspection: RoleName, AuthorizationCredential and CredentialType list none of the 10 legacy values, AuthorizationPrivilege has neither PLATFORM_ADMIN nor GRANT_GLOBAL_ADMINS, and the live role-set offers only the 14 target roles + REGISTERED; plus the SC-005 query itself on a loopback stack — zero stored credential rows of the 12 retired types and zero retired role rows (skips itself where the harness has no Postgres)'
+    ),
+  },
+  {
+    id: 'L3.retired-surfaces-gone',
+    area: 'lifecycle',
+    title:
+      'The mutations Slice B deletes (FR-020/021/022) are gone from the schema',
+    spec: 'FR-020 · FR-021 · FR-022',
+    file: 'role-integrity.it-spec.ts',
+    positive: {
+      status: 'not-applicable',
+      reason: 'a pure negative',
     },
+    negative: automated(
+      'schema introspection: the Mutation type offers none of the four credential mutations, the three Wingback mutations or the three platform-settings mutations, and does offer their successors (adminUpdateSpaceVisibility, updateActorNameID, the *CredentialToActor pair, the *PlatformRole* pair)'
+    ),
+  },
+  {
+    id: 'N1.admin-notification-routing',
+    area: 'admin-notifications',
+    title:
+      'Each platform-admin notification reaches exactly its target roles; Content Full Access none',
+    spec: 'server T109 · slice-b-ledger §10 (operator ruling 2026-10-05)',
+    file: 'rules/admin-notification-routing.it-spec.ts',
+    positive: automated(
+      'with the event email switched on for the five admin-family single-role users: profile created and removed reach Support + Users Admin, an L0 space reaches Support + Users Admin + License Manager, a Feature-role grant reaches Roles Admin — each mail matched by recipient and by a subject naming this run’s entity'
+    ),
+    negative: automated(
+      'every other observed role user — Content Full Access always, Roles Admin / License Manager / Support / Users Admin outside their events — receives nothing within a settle period after the expected mails landed'
+    ),
+  },
+  {
+    id: 'A17.entity-admin-rename',
+    area: 'role-integrity',
+    title: 'Renaming (nameID) stays with the entity admin after FR-020',
+    spec: 'A17 · FR-020',
+    file: 'rules/rename-nameid.it-spec.ts',
+    positive: automated(
+      'a user renames itself through updateActorNameID and a space admin renames its space through updateSpace.nameID; both read back'
+    ),
+    negative: automated(
+      'all 14 global roles are refused both surfaces on entities they do not administer (the A17 matrix cells); a refused rename leaves the nameID unchanged'
+    ),
   },
 ];

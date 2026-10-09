@@ -154,6 +154,9 @@ beforeAll(async () => {
     });
   }
 
+  // workspace#027 Slice B: the harness admin keeps its organisation standing
+  // only as this organisation's auto-granted ADMIN, so shape the admin set
+  // BEFORE stripping that grant (the old global cascade is gone).
   // createBaseScenario's default actor (GLOBAL_ADMIN) is auto-granted
   // ASSOCIATE+ADMIN on the new organization; strip the ADMIN grant so the
   // organization's manager set is exactly the three documented personas
@@ -163,11 +166,6 @@ beforeAll(async () => {
   // Notified set = the ADMINS only: organizationAdmin + subspaceAdmin. qaUser
   // is OWNER+ASSOCIATE and subsubspaceAdmin is ASSOCIATE-only; both are
   // negative cases (R17b / US2-AS7).
-  await removeRoleFromUser(
-    TestUserManager.users.globalAdmin.id,
-    baseScenario.organization.roleSetId,
-    RoleName.Admin
-  );
 
   await assignRoleToUser(
     TestUserManager.users.qaUser.id,
@@ -188,6 +186,11 @@ beforeAll(async () => {
     TestUserManager.users.subsubspaceAdmin.id,
     baseScenario.organization.roleSetId,
     RoleName.Associate
+  );
+  await removeRoleFromUser(
+    TestUserManager.users.globalAdmin.id,
+    baseScenario.organization.roleSetId,
+    RoleName.Admin
   );
 });
 

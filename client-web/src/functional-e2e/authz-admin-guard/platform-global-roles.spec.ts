@@ -4,8 +4,10 @@
 //
 //  - An assigner (the bootstrap admin)  — adds and removes a user on a harmless
 //                     FEATURE role; the change persists and raises no denied toast.
-//  - GLOBAL_SUPPORT — may VIEW holders but is never offered Add/Remove (4.4
-//                     records a known 027 client defect in the legacy section).
+//  - (4.3 / 4.4, the read-only viewer, moved: at Slice B `global.support` holds
+//    Platform Support, which has no holder-list read at all, and the legacy
+//    section those tests targeted is deleted. The read-only viewer is Platform
+//    Audit Reader — covered in platform-roles/authorization-page-per-viewer.)
 //
 // SAFETY: the 027 page resolves the role from the URL and FALLS BACK to the
 // first offered role when it does not recognise it — and the first offered role
@@ -27,7 +29,6 @@ const rolePageUrl = `${baseUrl}/admin/authorization/roles/${ROLE}`;
 const subject = () => TestUserManager.users.qaUser.displayName;
 
 const assignerTest = createPersonaTest('admin@alkem.io');
-const globalSupportTest = createPersonaTest('global.support@alkem.io');
 assignerTest.describe.configure({ mode: 'serial' });
 
 // No scenario is created in this file, so populate the persona map explicitly.
@@ -114,43 +115,4 @@ assignerTest.describe('Platform Global Roles — an assigner (P4)', () => {
     await expect(page.getByRole('heading', { name: 'Current members' })).toBeVisible({ timeout: 15_000 });
     await expect(memberRow(page)).toHaveCount(0);
   });
-});
-
-// The persona only holds the legacy role as a SIDE EFFECT of some other suite
-// having created a scenario first; on a fresh database it is a plain registered
-// user (and lands on "Access Restricted"). These tests stand on their own.
-const openAsGlobalSupport = async (page: Page) => {
-  await TestUserManager.populateUserModelMap();
-  const { globalSupportAdmin, globalAdmin } = TestUserManager.users;
-  if (!globalSupportAdmin.RoleNames.includes(RoleName.GlobalSupport)) {
-    await getGraphqlClient().PlatformRolesAssignRoleToUser(
-      { roleData: { actorID: globalSupportAdmin.id, role: RoleName.GlobalSupport } },
-      { authorization: `Bearer ${globalAdmin.authToken}` }
-    );
-  }
-  await page.goto(rolePageUrl);
-  await expectRoleSelected(page);
-};
-
-globalSupportTest('4.3 GLOBAL_SUPPORT sees the holders read-only: the editor offers no Add', async ({ page }) => {
-  await openAsGlobalSupport(page);
-  // The page says so out loud rather than silently hiding the controls…
-  await expect(
-    page.getByText("You can view this role's holders but not add or remove them.")
-  ).toBeVisible({ timeout: 15_000 });
-  await expect(page.getByRole('heading', { name: 'Current members' })).toBeVisible();
-  // …and offers no way to add anyone.
-  await expect(page.getByRole('heading', { name: 'Add members' })).toHaveCount(0);
-  await expect(page.getByRole('button', { name: 'Add', exact: true })).toHaveCount(0);
-});
-
-globalSupportTest('4.4 GLOBAL_SUPPORT is offered no Remove anywhere on the page', async ({ page }) => {
-  // KNOWN CLIENT DEFECT (027): the "Legacy roles (revoke only)" section ignores
-  // the read-only state and renders enabled Remove buttons to a viewer who
-  // cannot use them (the server refuses the click). Expected to fail until the
-  // client is fixed — at which point this turns RED: delete the line below.
-  globalSupportTest.fail(true, 'client-web 027: legacy-roles section ignores readOnly');
-  await openAsGlobalSupport(page);
-  await expect(page.getByRole('heading', { name: 'Current members' })).toBeVisible({ timeout: 15_000 });
-  await expect(page.getByRole('button', { name: 'Remove', exact: true })).toHaveCount(0);
 });

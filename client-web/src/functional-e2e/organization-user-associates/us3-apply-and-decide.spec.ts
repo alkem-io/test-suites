@@ -134,8 +134,13 @@ baseTest.beforeAll(async () => {
   await assignUserRoleOnOrganization(orgO.roleSetId, adminOtherId, RoleName.Associate);
   await assignUserRoleOnOrganization(orgO.roleSetId, adminOtherId, RoleName.Admin);
 
-  // org Z: the creating GLOBAL_ADMIN is auto OWNER+ADMIN+ASSOCIATE — drop the
-  // ADMIN role only, leaving zero true admins and one owner (US3-AS8).
+  // org Z: zero true admins and one owner (US3-AS8). The creating GLOBAL_ADMIN
+  // is auto ADMIN+ASSOCIATE (workspace#027 Slice B grants no OWNER on
+  // creation), so make it the OWNER explicitly — while it still holds the
+  // organization's ADMIN grant — and only then drop the ADMIN role.
+  await assignUserRoleOnOrganization(orgZ.roleSetId, TestUserManager.users.globalAdmin.id, RoleName.Owner).catch(
+    () => undefined // already an owner on a server that still auto-grants it
+  );
   await removeUserRoleOnOrganization(orgZ.roleSetId, TestUserManager.users.globalAdmin.id, RoleName.Admin);
 
   // org Q: applications switched off (US3-AS5).

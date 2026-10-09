@@ -142,7 +142,7 @@ describe('T1.audit-reader-alone', () => {
       async () => {
         expect(await callAuditTool(ctx.tokens[role], history())).toEqual({
           isError: true,
-          text: 'Access denied: analyze_audit_log requires platform-admin privileges.',
+          text: 'Access denied: analyze_audit_log requires platform-audit-read (Platform Audit Reader) privileges.',
         });
       }
     );

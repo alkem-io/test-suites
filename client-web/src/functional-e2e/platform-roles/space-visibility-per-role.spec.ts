@@ -46,37 +46,30 @@ const visibilityOf = (page: Page) =>
   }, scenario.space.id);
 
 const asContentFullAccess = createPersonaTest(platformRoleEmail('PLATFORM_CONTENT_FULL_ACCESS'));
-asContentFullAccess('PLATFORM_CONTENT_FULL_ACCESS: a refused visibility change is reported, not swallowed', async ({ page }) => {
-  // KNOWN CLIENT DEFECT (027, E25): the server refuses `updateSpacePlatformSettings`
-  // to this role (only License Manager may), but `CrdAdminSpacesPage.saveSettings`
-  // is `void update(...).then(close)` with no error branch — the dialog stays
-  // open, no toast, no message. Expected to fail until the refusal is shown.
-  asContentFullAccess.fail(true, 'client-web 027: refused space-settings save shows no error');
-
+asContentFullAccess('PLATFORM_CONTENT_FULL_ACCESS: is offered no visibility editor, and the visibility stays', async ({ page }) => {
+  // E25 (a refused save was swallowed) is closed on develop by PREVENTION: the
+  // Spaces list offers "Edit space settings" only to a holder of
+  // ACCOUNT_LICENSE_MANAGE (`spaceListMapper.canEditPlatformSettings`), which
+  // Content Full Access does not hold — so there is no refused save to report.
+  // The row itself is listed (the role reads every space).
   await page.goto(`${baseUrl}/admin/spaces`);
   const row = page.getByRole('row').filter({ hasText: scenario.space.nameId });
   await expect(row).toBeVisible({ timeout: 20_000 });
-  await row.getByRole('button', { name: 'Edit space settings' }).click();
-  const dialog = page.getByRole('dialog', { name: 'Space settings' });
-  await dialog.getByRole('combobox', { name: 'Visibility' }).click();
-  await page.getByRole('option', { name: 'Demo' }).click();
-  const refused = page.waitForResponse(
-    r => r.url().includes('/graphql') && r.request().postDataJSON()?.operationName === 'UpdateSpacePlatformSettings'
-  );
-  await dialog.getByRole('button', { name: 'Save' }).click();
-  expect((await (await refused).json()).errors?.[0]?.extensions?.code).toBe('FORBIDDEN_POLICY');
+  await expect(row.getByRole('button', { name: 'Edit space settings' })).toHaveCount(0);
+  await expect(page.getByRole('dialog', { name: 'Space settings' })).toHaveCount(0);
   expect(await visibilityOf(page)).toBe('ACTIVE');
-  // What the user must see: some error text, in the dialog or as a toast.
-  await expect(page.getByRole('alert').or(dialog.getByText(/denied|not allowed|permission|failed/i))).toBeVisible({
-    timeout: 5_000,
-  });
 });
 
 const asLicenseManager = createPersonaTest(platformRoleEmail('PLATFORM_LICENSE_MANAGER'));
 asLicenseManager.describe('PLATFORM_LICENSE_MANAGER on the Licensing section', () => {
   asLicenseManager('changes a space visibility inline, and it persists', async ({ page }) => {
     await page.goto(`${baseUrl}/admin/licensing`);
-    const row = page.getByRole('row').filter({ hasText: scenario.space.nameId });
+    // Slice B (R-F.3): the Licensing list shows name, owner, visibility and
+    // plans — no nameID — and pages by 10, so find the space by display name
+    // through the list's own search box.
+    const displayName = scenario.space.about.profile.displayName;
+    await page.getByRole('main').getByPlaceholder('Search…').first().fill(displayName);
+    const row = page.getByRole('row').filter({ hasText: displayName });
     await expect(row).toBeVisible({ timeout: 20_000 });
     expect(await visibilityOf(page)).toBe('ACTIVE');
     await row.getByRole('combobox', { name: /^Visibility of / }).click();

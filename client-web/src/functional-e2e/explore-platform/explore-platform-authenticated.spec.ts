@@ -93,6 +93,7 @@ const scenarioConfig: TestScenarioConfig = {
 // Serial mode to ensure clean setup/teardown
 (test.describe as any).configure?.({ mode: 'serial' });
 
+
 test.describe('Explore Alkemio Platform - Authenticated User Flow', () => {
   test.beforeAll(async ({ browser }) => {
     test.setTimeout(120_000);
@@ -113,7 +114,13 @@ test.describe('Explore Alkemio Platform - Authenticated User Flow', () => {
   });
 
   test('1. Home page loads for authenticated user', async ({ page }) => {
-    await page.goto(baseUrl);
+    // The root URL is not a stable way to reach the dashboard: the client
+    // redirects a signed-in user with exactly ONE L0 membership straight into
+    // that space (useHomeRedirect, priority 1), and with several memberships to
+    // a pinned Home Space when auto-redirect is on. The shared persona's
+    // membership count depends on what else ran against this database, so open
+    // the dashboard route itself.
+    await page.goto(`${baseUrl}/home`);
     await page.waitForURL('**/home');
 
     // Verify user is authenticated and on dashboard
@@ -321,7 +328,7 @@ test.describe('Explore Alkemio Platform - Authenticated User Flow', () => {
   });
 
   test('10. Explore Forum', async ({ page }) => {
-    await page.goto(baseUrl);
+    await page.goto(`${baseUrl}/home`); // see case 1: `/` may redirect into a space
     await page.waitForURL('**/home');
 
     // Open Tools Menu
@@ -347,7 +354,7 @@ test.describe('Explore Alkemio Platform - Authenticated User Flow', () => {
   });
 
   test('12. Explore Template Library', async ({ page }) => {
-    await page.goto(baseUrl);
+    await page.goto(`${baseUrl}/home`); // see case 1: `/` may redirect into a space
     await page.waitForURL('**/home');
 
     // Open Tools Menu
@@ -416,7 +423,7 @@ test.describe('Explore Alkemio Platform - Authenticated User Flow', () => {
   });
 
   test('15. Verify user profile is accessible', async ({ page }) => {
-    await page.goto(baseUrl);
+    await page.goto(`${baseUrl}/home`); // see case 1: `/` may redirect into a space
     await page.waitForURL('**/home');
     await verifyMyDashboardWelcomeElement(page);
 

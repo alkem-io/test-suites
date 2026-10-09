@@ -102,14 +102,12 @@ beforeAll(async () => {
   baseScenario = await TestScenarioFactory.createBaseScenarioOrganization(
     scenarioConfig
   );
+  // workspace#027 Slice B: the harness admin keeps its organisation standing
+  // only as this organisation's auto-granted ADMIN, so shape the admin set
+  // BEFORE stripping that grant (the old global cascade is gone).
   // The factory-default creator (GLOBAL_ADMIN) is auto-granted
   // ASSOCIATE+ADMIN; strip it so the admin set is exactly the three
   // documented personas below.
-  await removeRoleFromUser(
-    TestUserManager.users.globalAdmin.id,
-    baseScenario.organization.roleSetId,
-    RoleName.Admin
-  );
   await assignRoleToUser(
     TestUserManager.users.subspaceAdmin.id,
     baseScenario.organization.roleSetId,
@@ -134,6 +132,11 @@ beforeAll(async () => {
     TestUserManager.users.qaUser.id,
     baseScenario.organization.roleSetId,
     RoleName.Owner
+  );
+  await removeRoleFromUser(
+    TestUserManager.users.globalAdmin.id,
+    baseScenario.organization.roleSetId,
+    RoleName.Admin
   );
 });
 
@@ -375,8 +378,14 @@ describe('Organization associate invitations — the response is told to the oth
       const joinedRows = await inAppNotificationsFor(TestUser.ORGANIZATION_ADMIN, [
         NotificationEvent.OrganizationAdminAssociateJoined,
       ]);
+      // Scoped to THIS organization: in-app rows outlive the run, and the
+      // fixed persona joins a fresh scenario organization every nightly.
       return (joinedRows?.inAppNotifications ?? [])
-        .filter(n => n.payload?.actor?.id === TestUserManager.users.nonSpaceMember.id)
+        .filter(
+          n =>
+            n.payload?.actor?.id === TestUserManager.users.nonSpaceMember.id &&
+            n.payload?.organization?.id === baseScenario.organization.id
+        )
         .map(n => n.id);
     });
 
@@ -637,17 +646,19 @@ describe('Organization associate applications — the admins are told, the appli
     // the deletion result is inspected, and the test's own error wins.
     let testError: unknown;
     try {
-      await removeRoleFromUser(
-        TestUserManager.users.globalAdmin.id,
-        org.roleSet.id,
-        RoleName.Admin
-      );
       // Keep an OWNER so the organization is not orphaned — owners are
-      // irrelevant to the zero-ADMIN count.
+      // irrelevant to the zero-ADMIN count. Granted while the harness admin
+      // is still this organization's ADMIN (workspace#027 Slice B: no
+      // global cascade), then that ADMIN grant is stripped.
       await assignRoleToUser(
         TestUserManager.users.qaUser.id,
         org.roleSet.id,
         RoleName.Owner
+      );
+      await removeRoleFromUser(
+        TestUserManager.users.globalAdmin.id,
+        org.roleSet.id,
+        RoleName.Admin
       );
 
       await deleteMailSlurperMails();
@@ -705,11 +716,8 @@ describe('Domain-match join notifies the other admins (US4-AS1)', () => {
     const orgRes = await createOrganization(orgName, nameId);
     const org = orgRes.data!.createOrganization!;
     try {
-      await removeRoleFromUser(
-        TestUserManager.users.globalAdmin.id,
-        org.roleSet.id,
-        RoleName.Admin
-      );
+      // workspace#027 Slice B: shape the admin set while the harness admin is
+      // still this organization's auto-granted ADMIN, then strip that grant.
       await assignRoleToUser(
         TestUserManager.users.organizationAdmin.id,
         org.roleSet.id,
@@ -717,6 +725,11 @@ describe('Domain-match join notifies the other admins (US4-AS1)', () => {
       );
       await assignRoleToUser(
         TestUserManager.users.organizationAdmin.id,
+        org.roleSet.id,
+        RoleName.Admin
+      );
+      await removeRoleFromUser(
+        TestUserManager.users.globalAdmin.id,
         org.roleSet.id,
         RoleName.Admin
       );

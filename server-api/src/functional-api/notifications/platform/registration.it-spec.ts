@@ -128,7 +128,11 @@ describe('Notifications - User registration', () => {
     await deleteUser(userId);
   });
 
-  test('User sign up - GA(1), SA(1), New User(1) get notifications', async () => {
+  test('User sign up - Users Admin(1), Support(1) get notifications; License Manager does not', async () => {
+    // workspace#027 Slice B (server T109): `userProfileCreated` is routed to
+    // Platform Support + Platform Users Admin. `admin@alkem.io` is the seeded
+    // Users Admin, `global.support` holds Platform Support; `global.license`
+    // (Platform License Manager) is no longer a recipient.
     // Act
     const { userId: newUserId, emailsData } = await createUserAndGetEmails(
       userEmail,
@@ -137,7 +141,7 @@ describe('Notifications - User registration', () => {
     userId = newUserId;
 
     // Assert
-    expect(emailsData[1]).toEqual(3);
+    expect(emailsData[1]).toEqual(2);
     expect(emailsData[0]).toEqual(
       expect.arrayContaining([
         expectedEmail(
@@ -148,11 +152,14 @@ describe('Notifications - User registration', () => {
           `New user registration on Alkemio: ${userName}`,
           TestUserManager.users.globalSupportAdmin.email
         ),
+      ])
+    );
+    expect(emailsData[0]).not.toEqual(
+      expect.arrayContaining([
         expectedEmail(
           `New user registration on Alkemio: ${userName}`,
           TestUserManager.users.globalLicenseAdmin.email
         ),
-        //expectedEmail('Alkemio - Registration successful!', userEmail),
       ])
     );
   });

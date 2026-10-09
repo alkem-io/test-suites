@@ -158,23 +158,27 @@ orgAdminTest.describe('Org Associates editor — ORGANIZATION_ADMIN (P2, P3)', (
 
 globalSupportTest.describe('Org Associates tab — GLOBAL_SUPPORT probe (R-2 / R-6)', () => {
   globalSupportTest(
-    '4.1 Invite: GLOBAL_SUPPORT holds the invite privilege on every organization (062 US2-AS9), so the control is enabled and opens the dialog',
+    '4.1 Invite: GLOBAL_SUPPORT holds no invite privilege on an organization (workspace#027 Slice B), so the control is gated off — never enabled-then-refused',
     async ({ page }) => {
       await openAssociatesTab(page);
       // Exactly the Associates card's "Invite" action — NOT the pending section's
       // "Revoke invitation" rows, which also match a loose /invite/i and render first.
       //
-      // This used to be a three-way probe that recorded whichever branch it
-      // found and could not fail on any product defect. The policy is settled
-      // (spec 062 US2-AS9: GLOBAL_ADMIN / GLOBAL_SUPPORT hold
-      // ROLESET_ENTRY_ROLE_INVITE on every organization), so the expected
-      // branch is asserted: offered, enabled, and the invite dialog opens with
-      // no denied toast.
+      // workspace#027 Slice B removes the legacy global-support cascade that gave
+      // Platform Support ROLESET_ENTRY_ROLE_INVITE on every organization (the
+      // 062 US2-AS9 standing this probe used to assert). Organization membership
+      // is now the organization's own admins' alone; Support keeps the
+      // organization LIFECYCLE (create / delete / verification). So the invite
+      // control must be withheld or disabled — an enabled control that the
+      // server then refuses (the denied toast) is the one outcome that fails.
       const invite = page.getByRole('button', { name: 'Invite', exact: true });
-      await expect(invite).toBeVisible({ timeout: 8_000 });
-      await expect(invite).toBeEnabled();
-      await invite.click();
-      await expect(page.getByRole('dialog')).toBeVisible({ timeout: 5_000 });
+      await invite.waitFor({ state: 'visible', timeout: 8_000 }).catch(() => undefined);
+      if ((await invite.count()) === 0) {
+        globalSupportTest.info().annotations.push({ type: 'GLOBAL_SUPPORT outcome', description: 'Invite: not offered' });
+        return;
+      }
+      await expect(invite).toBeDisabled();
+      await expect(page.getByRole('dialog')).toHaveCount(0);
       await expect(page.getByText(DENIED_TOAST)).toHaveCount(0);
     }
   );

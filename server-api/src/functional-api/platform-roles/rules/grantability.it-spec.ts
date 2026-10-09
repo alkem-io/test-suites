@@ -39,11 +39,14 @@ const GRANT_ADDS: Record<
   PlatformRole,
   { platform: string[]; roleSet: string[] }
 > = {
+  // Slice B (server T109): the admin families that receive platform-admin
+  // notifications — Roles Admin, Users Admin, Support, License Manager — hold
+  // RECEIVE_NOTIFICATIONS_ADMIN on the platform; Content Full Access never.
   PLATFORM_ROLES_ADMIN: {
-    platform: ['SET_SERVICE_PROFILE'],
+    platform: ['RECEIVE_NOTIFICATIONS_ADMIN', 'SET_SERVICE_PROFILE'],
     roleSet: [
       'FEATURE_ROLE_ASSIGN',
-      'GRANT_GLOBAL_ADMINS',
+      'PLATFORM_ROLES_ASSIGN',
       'PLATFORM_ROLE_HOLDERS_READ',
     ],
   },
@@ -73,7 +76,7 @@ const GRANT_ADDS: Record<
     roleSet: [],
   },
   PLATFORM_USERS_ADMIN: {
-    platform: ['PLATFORM_USERS_ADMIN'],
+    platform: ['PLATFORM_USERS_ADMIN', 'RECEIVE_NOTIFICATIONS_ADMIN'],
     roleSet: ['FEATURE_ROLE_ASSIGN', 'FEATURE_ROLE_HOLDERS_READ'],
   },
   PLATFORM_SUPPORT: {
@@ -81,13 +84,14 @@ const GRANT_ADDS: Record<
       'CREATE_ORGANIZATION',
       'PLATFORM_FORUM_MANAGE',
       'PLATFORM_SUPPORT_LISTS_READ',
+      'RECEIVE_NOTIFICATIONS_ADMIN',
     ],
     roleSet: ['PLATFORM_FORUM_MANAGE'],
   },
   // The console lists (spaces / organizations / users) License Manager needs to
   // find what it licenses — server 553f1c1b6, 2026-09-18.
   PLATFORM_LICENSE_MANAGER: {
-    platform: ['PLATFORM_LICENSING_LISTS_READ'],
+    platform: ['PLATFORM_LICENSING_LISTS_READ', 'RECEIVE_NOTIFICATIONS_ADMIN'],
     roleSet: [],
   },
   PLATFORM_SPACES_READER: { platform: [], roleSet: [] },
@@ -129,7 +133,7 @@ const OWNED_ACTION: Partial<Record<PlatformRole, string>> = {
   // This spec runs in the SECOND phase, after every role file has finished, so
   // these two may touch group fixtures: the visibility change restores itself,
   // and the VC conversion is repeatable (its effect still holds on a second call).
-  PLATFORM_LICENSE_MANAGER: 'A14.updateSpacePlatformSettings',
+  PLATFORM_LICENSE_MANAGER: 'A14.adminUpdateSpaceVisibility',
   PLATFORM_RESOURCE_ADMIN: 'A9.convertVirtualContributorToUseKnowledgeBase',
 };
 const PROVEN_BY_FEATURE_SCENARIOS: ReadonlySet<PlatformRole> = new Set([

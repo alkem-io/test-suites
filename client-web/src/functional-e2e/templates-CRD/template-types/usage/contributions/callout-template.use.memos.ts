@@ -137,12 +137,20 @@ export const verifyCalloutContributionMemos = async (
   // text contains the original description and the appended edit as
   // substrings. Scroll the card into view first - on long feeds it can render
   // below the fold after the modal closes.
-  const editedCard = calloutContainer
-    .getByRole('button')
-    .filter({ hasText: editedTitle })
-    .first();
-  await editedCard.scrollIntoViewIfNeeded();
-  await expect(editedCard).toBeVisible();
+  //
+  // The CRD memo card is an aria-labelled button ("Open <title>") with NO text
+  // content of its own — the title and body excerpt are rendered in sibling
+  // elements of the same card wrapper — so a `hasText` filter on the button
+  // never matches (seen 2026-10-07: the card was on screen, the locator waited
+  // the whole budget). Find the button by its accessible name, then read the
+  // excerpt from the wrapper around it.
+  const editedCardButton = calloutContainer.getByRole('button', {
+    name: `Open ${editedTitle}`,
+    exact: true,
+  });
+  await editedCardButton.scrollIntoViewIfNeeded();
+  await expect(editedCardButton).toBeVisible();
+  const editedCard = editedCardButton.locator('xpath=..');
   await expect(editedCard).toContainText(defaultDescription);
   await expect(editedCard).toContainText(bodyEdition);
 };

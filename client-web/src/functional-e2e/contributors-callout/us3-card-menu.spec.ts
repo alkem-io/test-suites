@@ -308,7 +308,9 @@ adminFixture.test.describe(
         const composer = page.getByRole('textbox', {
           name: 'Add a comment...',
         });
-        const closeButton = page.getByRole('button', { name: 'Close chat' });
+        // The panel's own close control — the floating chat launcher in the
+        // page corner carries the same "Close chat" name while a panel is open.
+        const closeButton = panelHeading.getByRole('button', { name: 'Close chat' });
 
         await col.actionsButton(memberName).click();
         await col.menuItem('Message').click();

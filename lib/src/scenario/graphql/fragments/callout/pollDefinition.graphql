@@ -1,0 +1,19 @@
+fragment PollDefinition on Poll {
+  id
+  title
+  status
+  deadline
+  totalVotes
+  options {
+    id
+    text
+    sortOrder
+  }
+  settings {
+    minResponses
+    maxResponses
+    resultsVisibility
+    resultsDetail
+    allowContributorsAddOptions
+  }
+}

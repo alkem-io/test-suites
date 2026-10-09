@@ -143,16 +143,16 @@ const all = async <T extends Record<string, Promise<unknown>>>(
   ) as { [K in keyof T]: Awaited<T[K]> };
 
 /**
- * The ONE setup step no target role can perform: `create-innovation-hub` is
- * granted to the legacy global roles only, so the hubs are created by the
- * bootstrap account. Everything else in this fixture is built by role users.
+ * The hubs exceed an account's entitlement (limit 1), and at Slice B only an
+ * ACCOUNT_LICENSE_MANAGE holder bypasses that limit — so Platform License
+ * Manager, who also holds CREATE_INNOVATION_HUB on its own rule, creates them.
  */
-const createInnovationHubAsLegacyAdmin = (
+const createInnovationHubAsLicenseManager = (
   ctx: Ctx,
   accountID: string,
   tag: string
 ): Promise<string> =>
-  create(ctx.bootstrapToken, CREATE_HUB, {
+  create(ctx.tokens.PLATFORM_LICENSE_MANAGER, CREATE_HUB, {
     accountID,
     displayName: `platform-roles a9 hub ${tag} ${ctx.runId}`,
     subdomain: `a9hub${tag}${ctx.runId}`
@@ -248,9 +248,9 @@ const build = async (ctx: Ctx, organizations: string[]): Promise<A9> => {
     packs: perRole('transferInnovationPackToAccount', (_, i) =>
       packOn(`pack-${i}`)
     ),
-    denyHub: createInnovationHubAsLegacyAdmin(ctx, sourceAccount, 'deny'),
+    denyHub: createInnovationHubAsLicenseManager(ctx, sourceAccount, 'deny'),
     hubs: perRole('transferInnovationHubToAccount', (_, i) =>
-      createInnovationHubAsLegacyAdmin(ctx, sourceAccount, i)
+      createInnovationHubAsLicenseManager(ctx, sourceAccount, i)
     ),
   });
   const { spaceA, spaceB } = account;

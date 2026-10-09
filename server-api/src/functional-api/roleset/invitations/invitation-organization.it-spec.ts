@@ -304,9 +304,12 @@ describe('Organization Space invitations — GATE 0 core roleset flow', () => {
     // exercising a global-admin bypass. Create a dedicated organization with
     // a disinterested creator instead, so GLOBAL_ADMIN holds no org-admin
     // credential on it.
+    // Slice B: a Feature Beta Tester can no longer create organisations
+    // (CREATE_ORGANIZATION is Support's / Organization Creator's); Platform
+    // Support creates it, and the harness admin is still no admin of it.
     const orgNonAdmin = await createTestOrganization(
       'globalAdminReject',
-      TestUser.GLOBAL_BETA_TESTER
+      TestUser.GLOBAL_SUPPORT_ADMIN
     );
 
     const invitationData = await inviteOrg(orgNonAdmin.id);
@@ -361,7 +364,7 @@ describe('Organization Space invitations — GATE 0 core roleset flow', () => {
     // nothing about the global-admin bypass this test exists to forbid.
     const orgNonAdmin = await createTestOrganization(
       'globalAdminRejectFr010',
-      TestUser.GLOBAL_BETA_TESTER
+      TestUser.GLOBAL_SUPPORT_ADMIN
     );
 
     const invitationData = await inviteOrg(orgNonAdmin.id);
@@ -887,10 +890,11 @@ describe('Organization Space invitations — invitee actor-type validation', () 
 /**
  * R32 / FR-002a. The invite flow is only half a feature if the Space admin who
  * brought the organization in cannot then manage it. `ROLESET_ENTRY_ROLE_ASSIGN_
- * ORGANIZATION` gates bringing a NEW organization in (global admins, support and
- * beta testers only, because a direct add never asks the organization); once the
- * organization holds the entry role, both mutations need `GRANT` alone, which a
- * Space admin has.
+ * ORGANIZATION` gates bringing a NEW organization in, and since workspace#027
+ * Slice B nobody holds it — a direct add never asks the organization, so
+ * invitation is the only way in (ruled 2026-10-08, alkem-io/server#6623); once
+ * the organization holds the entry role, both mutations need `GRANT` alone,
+ * which a Space admin has.
  */
 describe('Organization Space invitations — the Space admin can manage the organization afterwards (R32)', () => {
   beforeEach(async () => {

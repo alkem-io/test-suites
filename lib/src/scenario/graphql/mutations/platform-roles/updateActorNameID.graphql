@@ -1,0 +1,5 @@
+mutation updateActorNameID($updateData: UpdateActorNameIDInput!) {
+  updateActorNameID(updateData: $updateData) {
+    id
+  }
+}

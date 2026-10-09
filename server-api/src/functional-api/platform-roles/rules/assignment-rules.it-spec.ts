@@ -199,7 +199,7 @@ describe('R1.assigner-capability', () => {
       ctx.tokens.PLATFORM_AUDIT_READER,
       human.id,
       () => assignRole(usersAdmin, 'PLATFORM_SUPPORT', human.id),
-      { newest: rejectedGrant('required to assign role platform-support') }
+      { newest: rejectedGrant('assigner-capability') }
     )
   );
 });
@@ -302,7 +302,7 @@ describe('R3.spaces-reader-service-account', () => {
       ctx.tokens.PLATFORM_AUDIT_READER,
       human.id,
       () => assignRole(rolesAdmin, 'PLATFORM_SPACES_READER', human.id),
-      { newest: rejectedGrant('may only be granted to a service account') }
+      { newest: rejectedGrant('spaces-reader-service-account') }
     )
   );
 });
@@ -395,7 +395,7 @@ describe('R4.audit-reader-exclusion', () => {
           ctx.tokens.PLATFORM_AUDIT_READER,
           holder.id,
           () => assignRole(rolesAdmin, 'PLATFORM_AUDIT_READER', holder.id),
-          { newest: rejectedGrant('mutually exclusive with platform-support') }
+          { newest: rejectedGrant('audit-reader-exclusion') }
         );
       } finally {
         await revokeAllRoles(rolesAdmin, holder);
@@ -415,7 +415,7 @@ describe('R4.audit-reader-exclusion', () => {
           ctx.tokens.PLATFORM_AUDIT_READER,
           service.id,
           () => assignRole(rolesAdmin, 'PLATFORM_SUPPORT', service.id),
-          { newest: rejectedGrant('mutually exclusive with platform-support') }
+          { newest: rejectedGrant('audit-reader-exclusion') }
         );
       } finally {
         await revokeAllRoles(rolesAdmin, service);
@@ -513,7 +513,7 @@ describe('R6.self-assignment', () => {
         ctx.tokens.PLATFORM_AUDIT_READER,
         adminOne.id,
         () => assignRole(adminOne.token, 'PLATFORM_SUPPORT', adminOne.id),
-        { newest: rejectedGrant('self-assignment of role platform-support') }
+        { newest: rejectedGrant('self-assignment') }
       )
   );
 });

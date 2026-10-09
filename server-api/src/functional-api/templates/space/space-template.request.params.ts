@@ -107,7 +107,8 @@ export const updateSpaceTemplate = async (
 export const updateCollaborationFromSpaceTemplate = async (
   collaborationID: string,
   spaceTemplateID: string,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.GLOBAL_ADMIN,
+  options: { addCallouts?: boolean; deleteExistingCallouts?: boolean } = {}
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -116,6 +117,7 @@ export const updateCollaborationFromSpaceTemplate = async (
         updateData: {
           collaborationID,
           spaceTemplateID,
+          ...options,
         },
       },
       {
