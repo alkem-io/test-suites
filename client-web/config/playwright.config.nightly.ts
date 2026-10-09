@@ -345,6 +345,19 @@ export default defineConfig({
       expect: { timeout: 15_000 },
     },
     {
+      // workspace#083 (organization leaves a Space, server#6560) — US1/US2
+      // acceptance walks of Organization → Settings → Membership. Each file
+      // seeds its own scenario through the API (invite + accept) and tears it
+      // down in afterAll; both files are serial inside. Their beforeAll builds
+      // one or two scenarios and several role changes, and the walks retry
+      // navigation until the settings guard sees freshly granted roles, so
+      // they need the same headroom as the organization entries above.
+      name: 'Organization space membership',
+      testMatch: ['/organization-space-membership/*.spec.ts'],
+      timeout: 120_000,
+      expect: { timeout: 15_000 },
+    },
+    {
       // Feature 070 (contribution notify switch) — persisted P1 acceptance
       // walk, same forge-verify shape as 038/041: machine-generated file in
       // tests/, self-seeding (its own org + space + response callout),
