@@ -32,6 +32,9 @@ importers:
       graphql-upload:
         specifier: ^17.0.0
         version: 17.0.0(graphql@16.12.0)
+      pg:
+        specifier: ^8.13.1
+        version: 8.23.0
       tsx:
         specifier: ^4.21.0
         version: 4.21.0
@@ -63,6 +66,9 @@ importers:
       '@types/node':
         specifier: ^20.13.1
         version: 20.19.33
+      '@types/pg':
+        specifier: ^8.13.1
+        version: 8.23.1
       '@typescript-eslint/eslint-plugin':
         specifier: ^8.46.2
         version: 8.55.0(@typescript-eslint/parser@8.55.0(@typescript/typescript6@6.0.2)(eslint@9.39.2(jiti@2.6.1)))(@typescript/typescript6@6.0.2)(eslint@9.39.2(jiti@2.6.1))

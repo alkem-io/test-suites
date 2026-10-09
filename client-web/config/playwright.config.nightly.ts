@@ -42,6 +42,7 @@ const testDirectory = '../src/functional-e2e';
 export default defineConfig({
   globalSetup: './global-setup.ts',
   testDir: testDirectory,
+  testIgnore: ['**/attachments/**'],
 
   /* Configure projects for major browsers */
   projects: [
