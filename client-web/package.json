@@ -22,6 +22,8 @@
     "codegen": "graphql-codegen --config codegen.ts",
     "stop-process": "fuser 4000/tcp -k",
     "test:auth-playwright": "playwright test",
+    "test:attachments": "playwright test --config=config/playwright.config.attachments.ts",
+    "test:attachments:harness": "tsx --test src/functional-e2e/attachments/attachments.harness.test.ts",
     "test:classifications": "playwright test --config=config/playwright.config.classifications.ts",
     "test:nightly": "playwright test --config=config/playwright.config.nightly.ts",
     "test:platform-roles": "playwright test --config=config/playwright.config.platform-roles.ts",
@@ -33,6 +35,7 @@
     "axios": "1.13.5",
     "graphql": "^16.6.0",
     "graphql-upload": "^17.0.0",
+    "pg": "^8.13.1",
     "tsx": "^4.21.0"
   },
   "devDependencies": {
@@ -45,6 +48,7 @@
     "@graphql-codegen/typescript-resolvers": "4.4.1",
     "@playwright/test": "^1.57.0",
     "@types/node": "^20.13.1",
+    "@types/pg": "^8.13.1",
     "@typescript-eslint/eslint-plugin": "^8.46.2",
     "@typescript-eslint/parser": "^8.46.2",
     "cross-env": "^7.0.3",

@@ -18,6 +18,8 @@ export default defineConfig({
      (longer timeouts, per-file locales) and are run via
      config/playwright.config.language-offer.ts, not this default suite. */
   testIgnore: [
+    // workspace#082 requires its explicitly isolated attachment fixture.
+    '**/attachments/**',
     '**/language-offer/**',
     /* workspace#027: needs a stack running the 027 server AND client — run via
        config/playwright.config.platform-roles.ts (`pnpm run test:platform-roles`). */

@@ -76,3 +76,6 @@ config/playwright-report-form-callout-framing/
 
 # 024 classifications acceptance run report (throwaway)
 config/playwright-report-classifications/
+
+# 082 isolated attachment harness reports
+/config/playwright-report-attachments/
