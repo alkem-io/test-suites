@@ -1,5 +1,9 @@
 import { expect, Locator, Page } from '@playwright/test';
-import { getGraphqlClient, TestUser } from '@alkemio/tests-lib';
+import {
+  getGraphqlClient,
+  TestUser,
+  TestUserManager,
+} from '@alkemio/tests-lib';
 import { graphqlErrorWrapper } from '@alkemio/tests-lib/utils/graphql.wrapper';
 import { RoleName } from '@alkemio/tests-lib/core/generated/alkemio-schema';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
@@ -82,51 +86,6 @@ export const orgIsMemberOf = async (roleSetId: string, orgId: string) =>
 export const orgIsLeadOf = async (roleSetId: string, orgId: string) =>
   (await organizationsInRole(roleSetId, RoleName.Lead)).includes(orgId);
 
-const changeOrgRole = async (
-  action: 'assign' | 'remove',
-  organizationID: string,
-  roleSetID: string,
-  role: SpaceRole
-) => {
-  const graphqlClient = getGraphqlClient();
-  const roleData = { actorID: organizationID, roleSetID, role };
-  const res =
-    action === 'assign'
-      ? await graphqlErrorWrapper(
-          authToken =>
-            graphqlClient.AssignRoleToOrganization(
-              { roleData },
-              { authorization: `Bearer ${authToken}` }
-            ),
-          TestUser.GLOBAL_ADMIN
-        )
-      : await graphqlErrorWrapper(
-          authToken =>
-            graphqlClient.RemoveRoleFromOrganization(
-              { roleData },
-              { authorization: `Bearer ${authToken}` }
-            ),
-          TestUser.GLOBAL_ADMIN
-        );
-  if (res.error) {
-    throw new Error(
-      `${action} ${role} of organization ${organizationID} on ${roleSetID} failed: ${JSON.stringify(res.error)}`
-    );
-  }
-};
-
-/** Grants `role` unless the organization already holds it. */
-export const ensureOrgRole = async (
-  organizationID: string,
-  roleSetID: string,
-  role: SpaceRole
-) => {
-  if ((await organizationsInRole(roleSetID, role)).includes(organizationID)) {
-    return;
-  }
-  await changeOrgRole('assign', organizationID, roleSetID, role);
-};
-
 /** Revokes `role` if the organization holds it, as GLOBAL_ADMIN. */
 export const removeOrgRoleIfHeld = async (
   organizationID: string,
@@ -136,35 +95,85 @@ export const removeOrgRoleIfHeld = async (
   if (!(await organizationsInRole(roleSetID, role)).includes(organizationID)) {
     return;
   }
-  await changeOrgRole('remove', organizationID, roleSetID, role);
+  const graphqlClient = getGraphqlClient();
+  const res = await graphqlErrorWrapper(
+    authToken =>
+      graphqlClient.RemoveRoleFromOrganization(
+        { roleData: { actorID: organizationID, roleSetID, role } },
+        { authorization: `Bearer ${authToken}` }
+      ),
+    TestUser.GLOBAL_ADMIN
+  );
+  if (res.error) {
+    throw new Error(
+      `remove ${role} of organization ${organizationID} on ${roleSetID} failed: ${JSON.stringify(res.error)}`
+    );
+  }
 };
 
 /**
- * Makes the scenario organization a plain MEMBER of the Space and its
- * Subspace (and of the sub-subspace when asked), parent first because a
- * Subspace role requires the parent role.
+ * Invites `actorID` to the entry role of a Space role set (as GLOBAL_ADMIN)
+ * and accepts it as `accepter`. A NEW organization can only enter a Space this
+ * way: `roleset-entry-role-assign-organization` is held by nobody, so
+ * `assignRoleToOrganization` cannot add one. A platform admin may accept on an
+ * organization's behalf; accepting a Subspace invitation also seats the actor
+ * in the parent chain (`invitedToParent`).
  */
-export const seedOrgMemberships = async (
-  scenario: OrganizationWithSpaceModel,
-  { includeSubsubspace = false } = {}
+export const inviteAndAccept = async (
+  actorID: string,
+  roleSetId: string,
+  accepter: TestUser,
+  extraRoles: RoleName[] = []
 ) => {
-  const orgId = scenario.organization.id;
-  await ensureOrgRole(
-    orgId,
-    scenario.space.community.roleSetId,
-    RoleName.Member
+  const graphqlClient = getGraphqlClient();
+  const invited = await graphqlErrorWrapper(
+    authToken =>
+      graphqlClient.InviteForEntryRoleOnRoleSet(
+        {
+          roleSetId,
+          invitedActorIds: [actorID],
+          invitedUserEmails: [],
+          welcomeMessage: 'organization-space-membership',
+          extraRoles,
+        },
+        { authorization: `Bearer ${authToken}` }
+      ),
+    TestUser.GLOBAL_ADMIN
   );
-  await ensureOrgRole(
-    orgId,
-    scenario.subspace.community.roleSetId,
-    RoleName.Member
-  );
-  if (includeSubsubspace) {
-    await ensureOrgRole(
-      orgId,
-      scenario.subsubspace.community.roleSetId,
-      RoleName.Member
+  const invitationID =
+    invited.data?.inviteForEntryRoleOnRoleSet[0]?.invitation?.id;
+  if (!invitationID) {
+    throw new Error(
+      `No invitation created for ${actorID} on ${roleSetId}: ${JSON.stringify(invited.error ?? invited.data)}`
     );
+  }
+  const accepted = await graphqlErrorWrapper(
+    authToken =>
+      graphqlClient.InvitationStateEvent(
+        { input: { invitationID, eventName: 'ACCEPT' } },
+        { authorization: `Bearer ${authToken}` }
+      ),
+    accepter
+  );
+  if (accepted.error) {
+    throw new Error(
+      `Accepting invitation ${invitationID} as ${accepter} failed: ${JSON.stringify(accepted.error)}`
+    );
+  }
+};
+
+/**
+ * Makes the organization a MEMBER of each role set it is not already in,
+ * parent first (pass the role sets in that order), through invite + accept.
+ */
+export const ensureOrgMemberOf = async (
+  organizationID: string,
+  roleSetIds: string[]
+) => {
+  for (const roleSetId of roleSetIds) {
+    if (!(await orgIsMemberOf(roleSetId, organizationID))) {
+      await inviteAndAccept(organizationID, roleSetId, TestUser.GLOBAL_ADMIN);
+    }
   }
 };
 
@@ -193,15 +202,15 @@ export const removeAllOrgSpaceRoles = async (
   await removeOrgRoleIfHeld(orgId, spaceRoleSetId, RoleName.Member);
 };
 
-/** Grants or revokes a user's role on an organization's own role set. */
-export const changeUserOrgRole = async (
+/** Grants or revokes a user's role on a role set, as GLOBAL_ADMIN. */
+export const changeUserRole = async (
   action: 'assign' | 'remove',
   userID: string,
-  organizationRoleSetId: string,
+  roleSetId: string,
   role: RoleName
 ) => {
   const graphqlClient = getGraphqlClient();
-  const roleData = { actorID: userID, roleSetID: organizationRoleSetId, role };
+  const roleData = { actorID: userID, roleSetID: roleSetId, role };
   const res =
     action === 'assign'
       ? await graphqlErrorWrapper(
@@ -222,8 +231,29 @@ export const changeUserOrgRole = async (
         );
   if (res.error) {
     throw new Error(
-      `${action} ${role} for user ${userID} on ${organizationRoleSetId} failed: ${JSON.stringify(res.error)}`
+      `${action} ${role} for user ${userID} on ${roleSetId} failed: ${JSON.stringify(res.error)}`
     );
+  }
+};
+
+/**
+ * The Membership tab lists only Spaces the VIEWER can read (Clarification
+ * C-5), and a Subspace is readable by its members only, so the organization
+ * admin persona is made a user-Member of the Space (invite + accept: nobody
+ * may add a user to an L0 directly) and of the given Subspaces.
+ */
+export const makePersonaUserMember = async (
+  spaceRoleSetId: string,
+  subspaceRoleSetIds: string[]
+) => {
+  const persona = TestUserManager.users.organizationAdmin;
+  await inviteAndAccept(
+    persona.id,
+    spaceRoleSetId,
+    TestUser.ORGANIZATION_ADMIN
+  );
+  for (const roleSetId of subspaceRoleSetIds) {
+    await changeUserRole('assign', persona.id, roleSetId, RoleName.Member);
   }
 };
 
@@ -231,10 +261,16 @@ export const changeUserOrgRole = async (
 // Locators
 // ---------------------------------------------------------------------------
 
-/** Every membership card on the tab (a card carrying the per-card menu). */
+/**
+ * Every membership card on the tab: a leaf card carrying the per-card menu.
+ * The outer "Space Memberships" container is a card too and is excluded.
+ * The cards expose no role or test id (client-web `MembershipsSection.tsx`),
+ * so the CRD `Card` primitive's `data-slot` is the hook.
+ */
 export const membershipCards = (page: Page): Locator =>
   page
     .locator('[data-slot="card"]')
+    .filter({ hasNot: page.locator('[data-slot="card"]') })
     .filter({ has: page.getByRole('button', { name: COPY.menuTrigger }) });
 
 /** The card whose title is exactly `name`. */
@@ -252,15 +288,6 @@ export const viewMenuItem = (page: Page, type: MembershipType): Locator =>
 
 export const leaveMenuItem = (page: Page, type: MembershipType): Locator =>
   page.getByRole('menuitem', { name: `Leave ${type}`, exact: true });
-
-export const confirmDialog = (page: Page): Locator =>
-  page.getByRole('alertdialog');
-
-export const confirmButton = (dialog: Locator): Locator =>
-  dialog.getByRole('button', { name: COPY.dialogConfirm, exact: true });
-
-export const cancelButton = (dialog: Locator): Locator =>
-  dialog.getByRole('button', { name: COPY.dialogCancel, exact: true });
 
 export const successToast = (page: Page): Locator =>
   page.getByText(COPY.success, { exact: true });

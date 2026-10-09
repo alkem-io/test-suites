@@ -1,13 +1,13 @@
 // spec: client-web/src/functional-e2e/organization-space-membership/organization-space-membership-test-plan.md
 // server-api coverage: server-api/src/functional-api/roleset/organization/organization-self-removal.it-spec.ts
 
-import { expect, Locator, Page } from '@playwright/test';
+import { expect, Page } from '@playwright/test';
 import {
   createOrganization,
   deleteOrganization,
-  getUserToken,
   TestScenarioConfig,
   TestScenarioFactory,
+  TestUser,
   TestUserManager,
   UniqueIDGenerator,
 } from '@alkemio/tests-lib';
@@ -19,13 +19,17 @@ import {
 } from '../fixtures/authenticated-session.fixture';
 import {
   baseUrl,
-  changeUserOrgRole,
+  changeUserRole,
   clearHostLead,
   COPY,
+  ensureOrgMemberOf,
   gotoMembershipTab,
+  inviteAndAccept,
+  makePersonaUserMember,
+  membershipCard,
+  membershipCards,
   membershipTabUrl,
   openCardMenu,
-  orgIsMemberOf,
   removeAllOrgSpaceRoles,
   removeOrgRoleIfHeld,
   summaryLine,
@@ -49,117 +53,10 @@ const { test, setupAuthentication, teardownAuthentication } =
 
 const runSuffix = UniqueIDGenerator.getID();
 const associateEmail = 'qa.user@alkem.io';
-const gqlEndpoint =
-  process.env.ALKEMIO_SERVER ||
-  'http://localhost:3000/api/private/non-interactive/graphql';
-const adminEmail = process.env.AUTH_TEST_HARNESS_EMAIL || 'admin@alkem.io';
 
 let baseScenario: OrganizationWithSpaceModel;
 let leadScenario: OrganizationWithSpaceModel | undefined;
 let emptyOrg: { id: string; nameID: string; roleSetId: string } | undefined;
-
-// --- API fixtures ----------------------------------------------------------
-// A NEW organization can only enter a Space through an accepted invitation
-// (`roleset-entry-role-assign-organization` is held by nobody), so memberships
-// are seeded with invite + accept rather than `assignRoleToOrganization`.
-
-async function gqlAs<T>(
-  email: string,
-  query: string,
-  variables: Record<string, unknown>
-): Promise<T> {
-  const res = await fetch(gqlEndpoint, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${await getUserToken(email)}`,
-    },
-    body: JSON.stringify({ query, variables }),
-  });
-  const body = await res.json();
-  if (body.errors) {
-    throw new Error(`GraphQL error: ${JSON.stringify(body.errors)}`);
-  }
-  return body.data as T;
-}
-
-/** Invites `actorID` to a role set and accepts it as `accepterEmail`. */
-async function inviteAndAccept(
-  actorID: string,
-  roleSetId: string,
-  accepterEmail: string,
-  extraRoles: RoleName[] = []
-) {
-  const invited = await gqlAs<{
-    inviteForEntryRoleOnRoleSet: Array<{ invitation: { id: string } | null }>;
-  }>(
-    adminEmail,
-    `mutation($roleSetID: UUID!, $actors: [UUID!]!, $extra: [RoleName!]!) {
-      inviteForEntryRoleOnRoleSet(invitationData: {
-        invitedActorIDs: $actors, invitedUserEmails: [], roleSetID: $roleSetID,
-        welcomeMessage: "us1", extraRoles: $extra
-      }) { invitation { id } }
-    }`,
-    { roleSetID: roleSetId, actors: [actorID], extra: extraRoles }
-  );
-  const invitationID = invited.inviteForEntryRoleOnRoleSet[0]?.invitation?.id;
-  if (!invitationID) {
-    throw new Error(`No invitation created for ${actorID} on ${roleSetId}`);
-  }
-  await gqlAs(
-    accepterEmail,
-    `mutation($id: UUID!) {
-      eventOnInvitation(eventData: { invitationID: $id, eventName: "ACCEPT" }) { id state }
-    }`,
-    { id: invitationID }
-  );
-}
-
-/** Organization → Member of Space S and Subspace S1 (S2 stays out). */
-const seedOrgMemberships = async () => {
-  const orgId = baseScenario.organization.id;
-  for (const roleSetId of [
-    baseScenario.space.community.roleSetId,
-    baseScenario.subspace.community.roleSetId,
-  ]) {
-    if (!(await orgIsMemberOf(roleSetId, orgId))) {
-      await inviteAndAccept(orgId, roleSetId, adminEmail);
-    }
-  }
-};
-
-/** The persona must be able to READ S and S1, or their cards are hidden. */
-const makePersonaUserMember = async () => {
-  const persona = TestUserManager.users.organizationAdmin;
-  await inviteAndAccept(
-    persona.id,
-    baseScenario.space.community.roleSetId,
-    persona.email
-  );
-  await gqlAs(
-    adminEmail,
-    `mutation($roleSetID: UUID!, $actorID: UUID!) {
-      assignRoleToUser(roleData: { roleSetID: $roleSetID, actorID: $actorID, role: MEMBER }) { id }
-    }`,
-    {
-      roleSetID: baseScenario.subspace.community.roleSetId,
-      actorID: persona.id,
-    }
-  );
-};
-
-// --- Locators ---------------------------------------------------------------
-
-/** Membership cards: leaf cards carrying the menu (the outer "Space
- * Memberships" container is a card too and must not be counted). */
-const membershipCards = (page: Page): Locator =>
-  page
-    .locator('[data-slot="card"]')
-    .filter({ hasNot: page.locator('[data-slot="card"]') })
-    .filter({ has: page.getByRole('button', { name: COPY.menuTrigger }) });
-
-const membershipCard = (page: Page, name: string): Locator =>
-  membershipCards(page).filter({ has: page.getByText(name, { exact: true }) });
 
 const scenarioConfig: TestScenarioConfig = {
   name: `org-membership-us1-${runSuffix}`,
@@ -190,9 +87,16 @@ test.describe('Organization Membership tab — list, search, filter @forge-accep
     test.setTimeout(180_000);
     baseScenario = await TestScenarioFactory.createBaseScenario(scenarioConfig);
     await clearHostLead(baseScenario);
-    await makePersonaUserMember();
-    await seedOrgMemberships();
-    await changeUserOrgRole(
+    // The persona must be able to READ S and S1, or their cards are hidden.
+    await makePersonaUserMember(baseScenario.space.community.roleSetId, [
+      baseScenario.subspace.community.roleSetId,
+    ]);
+    // The organization: Member of Space S and Subspace S1 (S2 stays out).
+    await ensureOrgMemberOf(baseScenario.organization.id, [
+      baseScenario.space.community.roleSetId,
+      baseScenario.subspace.community.roleSetId,
+    ]);
+    await changeUserRole(
       'assign',
       TestUserManager.users.qaUser.id,
       baseScenario.organization.roleSetId,
@@ -207,14 +111,14 @@ test.describe('Organization Membership tab — list, search, filter @forge-accep
   test.afterAll(async () => {
     test.setTimeout(90_000);
     await teardownAuthentication();
-    await changeUserOrgRole(
+    await changeUserRole(
       'remove',
       TestUserManager.users.qaUser.id,
       baseScenario.organization.roleSetId,
       RoleName.Associate
     ).catch(() => undefined);
     if (emptyOrg) {
-      await changeUserOrgRole(
+      await changeUserRole(
         'remove',
         TestUserManager.users.organizationAdmin.id,
         emptyOrg.roleSetId,
@@ -343,7 +247,9 @@ test.describe('Organization Membership tab — list, search, filter @forge-accep
     const leadRoleSetId = leadScenario.space.community.roleSetId;
     const leadName = leadScenario.space.about.profile.displayName;
     try {
-      await inviteAndAccept(orgId, leadRoleSetId, adminEmail, [RoleName.Lead]);
+      await inviteAndAccept(orgId, leadRoleSetId, TestUser.GLOBAL_ADMIN, [
+        RoleName.Lead,
+      ]);
 
       await openTabWithCards(page, 3);
       await expect(
@@ -379,7 +285,7 @@ test.describe('Organization Membership tab — list, search, filter @forge-accep
       nameID: created.nameID,
       roleSetId: created.roleSet.id,
     };
-    await changeUserOrgRole(
+    await changeUserRole(
       'assign',
       TestUserManager.users.organizationAdmin.id,
       emptyOrg.roleSetId,
@@ -407,16 +313,18 @@ test.describe('Organization Membership tab — list, search, filter @forge-accep
     await openTabWithCards(page, 2);
 
     // Browser title and breadcrumb name the Membership tab. The title is
-    // asserted after in-app tab navigation: on a cold direct load every
-    // organization settings tab (Associates, Invitations, Membership) keeps the
-    // shell's "Profile" title — pre-existing shell behaviour, not specific to
-    // this tab.
+    // asserted after in-app tab navigation: on a cold direct load the shell's
+    // "Profile" title and the tab's own title race, so any organization
+    // settings tab (Associates, Invitations, Membership) may keep "Profile" —
+    // pre-existing defect alkem-io/client-web#10415, not specific to this tab.
     await page.getByRole('tab', { name: COPY.tabAfter, exact: true }).click();
     await page.getByRole('tab', { name: COPY.tab, exact: true }).click();
     await expect(membershipCards(page)).toHaveCount(2);
     await expect(page).toHaveTitle(/Membership/);
     await expect(
-      page.locator('header nav').getByText(COPY.tab, { exact: true })
+      page
+        .getByRole('navigation', { name: 'breadcrumb' })
+        .getByText(COPY.tab, { exact: true })
     ).toBeVisible();
 
     // No untranslated i18n keys leak into the page.
@@ -451,7 +359,10 @@ test.describe('Organization Membership tab — list, search, filter @forge-accep
     );
 
     // While the memberships are unresolved: skeleton, and no empty caption.
-    await expect(page.locator('main .animate-pulse').first()).toBeVisible({
+    // The CRD Skeleton primitive has no role; its `data-slot` is the hook.
+    await expect(
+      page.locator('main [data-slot="skeleton"]').first()
+    ).toBeVisible({
       timeout: 30_000,
     });
     await expect(page.getByText(COPY.empty, { exact: true })).toHaveCount(0);
