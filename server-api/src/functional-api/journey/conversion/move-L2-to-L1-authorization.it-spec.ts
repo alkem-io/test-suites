@@ -169,7 +169,7 @@ describe('Move L2 to L1 - platform-admin gate (FR-012 / S9)', () => {
     expect(res.error?.errors?.length).toBeGreaterThan(0);
   });
 
-  test('Platform Admin (GLOBAL_ADMIN) can execute the move; stays L2', async () => {
+  test('Platform Resource Admin (the harness admin) can execute the move; stays L2', async () => {
     const res = await moveSpaceL2ToSpaceL1(
       sourceScenario.subsubspace.id,
       targetScenario.subspace.id,

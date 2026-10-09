@@ -146,21 +146,10 @@ describe('coverage guard', () => {
     expect(check.status, check.stderr || check.stdout).toBe(0);
   });
 
-  test('LIVE: the platform role-set offers exactly the 14 target roles plus the known legacy names', async () => {
-    // A role added on the server must get its rows here before this passes again.
-    const LEGACY_AND_BASE = [
-      'REGISTERED',
-      'GLOBAL_ADMIN',
-      'GLOBAL_SUPPORT',
-      'GLOBAL_LICENSE_MANAGER',
-      'GLOBAL_SPACES_READER',
-      'GLOBAL_COMMUNITY_READER',
-      'GLOBAL_PLATFORM_MANAGER',
-      'GLOBAL_SUPPORT_MANAGER',
-      'PLATFORM_BETA_TESTER',
-      'PLATFORM_VC_CAMPAIGN',
-      'PLATFORM_ASSISTANT_ACCESS',
-    ];
+  test('LIVE: the platform role-set offers exactly the 14 target roles plus REGISTERED', async () => {
+    // A role added on the server must get its rows here before this passes
+    // again. Slice B (SC-005): the ten legacy names are gone from the role-set.
+    const LEGACY_AND_BASE = ['REGISTERED'];
     const { platform } = await rawRead<{
       platform: { roleSet: { roleNames: string[] } };
     }>(

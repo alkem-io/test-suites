@@ -10,15 +10,15 @@ import {
 import {
   createSpaceAndGetData,
   deleteSpace,
-  updateSpacePlatformSettings,
+  updateSpaceVisibility,
 } from '../../journey/space/space.request.params';
 import {
   assignRoleToUser,
   readPrivilege,
-  sorted__create_read_update_delete_contribute_fileDelete_fileUpload_receiveNotifications,
-  sorted__create_read_update_delete_contribute_readAbout_receiveNotifications,
-  sorted__create_read_update_delete_grant_fileUp_fileDel_globalAdmin,
-  sorted__create_read_update_delete_grant_platformAdmin_readAbout_globalAdmin,
+  sorted__create_read_update_delete_contribute_fileDelete_fileUpload_receiveNotifications_updateNameId,
+  sorted__create_read_update_delete_contribute_readAbout_receiveNotifications_updateNameId,
+  sorted__create_read_update_delete_fileUp_fileDel_globalAdmin,
+  sorted__create_read_update_delete_readAbout_opsAdmin_globalAdmin,
   sorted_read_readAbout,
   TestScenarioConfig,
   TestScenarioFactory,
@@ -43,7 +43,6 @@ import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/O
 import { RoleName } from '@alkemio/tests-lib/core/generated/alkemio-schema';
 const uniqueId = UniqueIDGenerator.getID();
 
-const spaceNameId = 'appl-eco-nameid' + uniqueId;
 let vcSpaceId = '';
 let vcLicensePlanId = '';
 const spaceNameVC = 'appl-sp-name' + uniqueId;
@@ -93,9 +92,8 @@ beforeAll(async () => {
     vcLicensePlanId
   );
 
-  await updateSpacePlatformSettings(
+  await updateSpaceVisibility(
     baseScenario.space.id,
-    spaceNameId,
     SpaceVisibility.Active
   );
 
@@ -179,8 +177,8 @@ describe('Virtual Contributor ACCESS - All Public - Visibility Public / BoK / Pu
       ${TestUser.NON_SPACE_MEMBER}   | ${sorted_read_readAbout}
       ${TestUser.SPACE_ADMIN}        | ${sorted_read_readAbout}
       ${TestUser.SPACE_MEMBER}       | ${sorted_read_readAbout}
-      ${TestUser.GLOBAL_ADMIN}       | ${sorted__create_read_update_delete_grant_platformAdmin_readAbout_globalAdmin}
-      ${TestUser.GLOBAL_BETA_TESTER} | ${sorted__create_read_update_delete_contribute_readAbout_receiveNotifications}
+      ${TestUser.GLOBAL_ADMIN}       | ${sorted__create_read_update_delete_readAbout_opsAdmin_globalAdmin}
+      ${TestUser.GLOBAL_BETA_TESTER} | ${sorted__create_read_update_delete_contribute_readAbout_receiveNotifications_updateNameId}
     `(
       'User: "$userRole" has this privileges: "$privileges" to spaceBasedVC',
       async ({ userRole, privileges }) => {
@@ -197,8 +195,8 @@ describe('Virtual Contributor ACCESS - All Public - Visibility Public / BoK / Pu
       ${TestUser.NON_SPACE_MEMBER}   | ${sorted_read_readAbout}
       ${TestUser.SPACE_ADMIN}        | ${sorted_read_readAbout}
       ${TestUser.SPACE_MEMBER}       | ${sorted_read_readAbout}
-      ${TestUser.GLOBAL_ADMIN}       | ${sorted__create_read_update_delete_grant_platformAdmin_readAbout_globalAdmin}
-      ${TestUser.GLOBAL_BETA_TESTER} | ${sorted__create_read_update_delete_contribute_readAbout_receiveNotifications}
+      ${TestUser.GLOBAL_ADMIN}       | ${sorted__create_read_update_delete_readAbout_opsAdmin_globalAdmin}
+      ${TestUser.GLOBAL_BETA_TESTER} | ${sorted__create_read_update_delete_contribute_readAbout_receiveNotifications_updateNameId}
     `(
       'User: "$userRole" has this privileges: "$privileges" to knowledgeBasedVC',
       async ({ userRole, privileges }) => {
@@ -218,8 +216,8 @@ describe('Virtual Contributor ACCESS - All Public - Visibility Public / BoK / Pu
       ${TestUser.NON_SPACE_MEMBER}   | ${readPrivilege}
       ${TestUser.SPACE_ADMIN}        | ${readPrivilege}
       ${TestUser.SPACE_MEMBER}       | ${readPrivilege}
-      ${TestUser.GLOBAL_ADMIN}       | ${sorted__create_read_update_delete_grant_fileUp_fileDel_globalAdmin}
-      ${TestUser.GLOBAL_BETA_TESTER} | ${sorted__create_read_update_delete_contribute_fileDelete_fileUpload_receiveNotifications}
+      ${TestUser.GLOBAL_ADMIN}       | ${sorted__create_read_update_delete_fileUp_fileDel_globalAdmin}
+      ${TestUser.GLOBAL_BETA_TESTER} | ${sorted__create_read_update_delete_contribute_fileDelete_fileUpload_receiveNotifications_updateNameId}
     `(
       'User: "$userRole" has this privileges: "$privileges" to spaceBasedVC',
       async ({ userRole, privileges }) => {
@@ -238,8 +236,8 @@ describe('Virtual Contributor ACCESS - All Public - Visibility Public / BoK / Pu
       ${TestUser.NON_SPACE_MEMBER}   | ${readPrivilege}
       ${TestUser.SPACE_ADMIN}        | ${readPrivilege}
       ${TestUser.SPACE_MEMBER}       | ${readPrivilege}
-      ${TestUser.GLOBAL_ADMIN}       | ${sorted__create_read_update_delete_grant_fileUp_fileDel_globalAdmin}
-      ${TestUser.GLOBAL_BETA_TESTER} | ${sorted__create_read_update_delete_contribute_fileDelete_fileUpload_receiveNotifications}
+      ${TestUser.GLOBAL_ADMIN}       | ${sorted__create_read_update_delete_fileUp_fileDel_globalAdmin}
+      ${TestUser.GLOBAL_BETA_TESTER} | ${sorted__create_read_update_delete_contribute_fileDelete_fileUpload_receiveNotifications_updateNameId}
     `(
       'User: "$userRole" has this privileges: "$privileges" to knowledgeBasedVC',
       async ({ userRole, privileges }) => {
@@ -273,8 +271,8 @@ describe('Virtual Contributor Access - All Private - Visibility Private / BoK / 
       ${TestUser.NON_SPACE_MEMBER}   | ${undefined}
       ${TestUser.SPACE_ADMIN}        | ${sorted_read_readAbout}
       ${TestUser.SPACE_MEMBER}       | ${sorted_read_readAbout}
-      ${TestUser.GLOBAL_ADMIN}       | ${sorted__create_read_update_delete_grant_platformAdmin_readAbout_globalAdmin}
-      ${TestUser.GLOBAL_BETA_TESTER} | ${sorted__create_read_update_delete_contribute_readAbout_receiveNotifications}
+      ${TestUser.GLOBAL_ADMIN}       | ${sorted__create_read_update_delete_readAbout_opsAdmin_globalAdmin}
+      ${TestUser.GLOBAL_BETA_TESTER} | ${sorted__create_read_update_delete_contribute_readAbout_receiveNotifications_updateNameId}
     `(
       'User: "$userRole" has this privileges: "$privileges" to spaceBasedVC',
       async ({ userRole, privileges }) => {
@@ -291,8 +289,8 @@ describe('Virtual Contributor Access - All Private - Visibility Private / BoK / 
       ${TestUser.NON_SPACE_MEMBER}   | ${undefined}
       ${TestUser.SPACE_ADMIN}        | ${sorted_read_readAbout}
       ${TestUser.SPACE_MEMBER}       | ${sorted_read_readAbout}
-      ${TestUser.GLOBAL_ADMIN}       | ${sorted__create_read_update_delete_grant_platformAdmin_readAbout_globalAdmin}
-      ${TestUser.GLOBAL_BETA_TESTER} | ${sorted__create_read_update_delete_contribute_readAbout_receiveNotifications}
+      ${TestUser.GLOBAL_ADMIN}       | ${sorted__create_read_update_delete_readAbout_opsAdmin_globalAdmin}
+      ${TestUser.GLOBAL_BETA_TESTER} | ${sorted__create_read_update_delete_contribute_readAbout_receiveNotifications_updateNameId}
     `(
       'User: "$userRole" has this privileges: "$privileges" to knowledgeBasedVC',
       async ({ userRole, privileges }) => {
@@ -312,8 +310,8 @@ describe('Virtual Contributor Access - All Private - Visibility Private / BoK / 
       ${TestUser.NON_SPACE_MEMBER}   | ${undefined}
       ${TestUser.SPACE_ADMIN}        | ${readPrivilege}
       ${TestUser.SPACE_MEMBER}       | ${readPrivilege}
-      ${TestUser.GLOBAL_ADMIN}       | ${sorted__create_read_update_delete_grant_fileUp_fileDel_globalAdmin}
-      ${TestUser.GLOBAL_BETA_TESTER} | ${sorted__create_read_update_delete_contribute_fileDelete_fileUpload_receiveNotifications}
+      ${TestUser.GLOBAL_ADMIN}       | ${sorted__create_read_update_delete_fileUp_fileDel_globalAdmin}
+      ${TestUser.GLOBAL_BETA_TESTER} | ${sorted__create_read_update_delete_contribute_fileDelete_fileUpload_receiveNotifications_updateNameId}
     `(
       'User: "$userRole" has this privileges: "$privileges" to spaceBasedVC',
       async ({ userRole, privileges }) => {
@@ -332,8 +330,8 @@ describe('Virtual Contributor Access - All Private - Visibility Private / BoK / 
       ${TestUser.NON_SPACE_MEMBER}   | ${undefined}
       ${TestUser.SPACE_ADMIN}        | ${readPrivilege}
       ${TestUser.SPACE_MEMBER}       | ${readPrivilege}
-      ${TestUser.GLOBAL_ADMIN}       | ${sorted__create_read_update_delete_grant_fileUp_fileDel_globalAdmin}
-      ${TestUser.GLOBAL_BETA_TESTER} | ${sorted__create_read_update_delete_contribute_fileDelete_fileUpload_receiveNotifications}
+      ${TestUser.GLOBAL_ADMIN}       | ${sorted__create_read_update_delete_fileUp_fileDel_globalAdmin}
+      ${TestUser.GLOBAL_BETA_TESTER} | ${sorted__create_read_update_delete_contribute_fileDelete_fileUpload_receiveNotifications_updateNameId}
     `(
       'User: "$userRole" has this privileges: "$privileges" to knowledgeBasedVC',
       async ({ userRole, privileges }) => {
@@ -367,8 +365,8 @@ describe('Virtual Contributor Access - All Private - Visibility Private / BoK / 
       ${TestUser.NON_SPACE_MEMBER}   | ${undefined}
       ${TestUser.SPACE_ADMIN}        | ${sorted_read_readAbout}
       ${TestUser.SPACE_MEMBER}       | ${sorted_read_readAbout}
-      ${TestUser.GLOBAL_ADMIN}       | ${sorted__create_read_update_delete_grant_platformAdmin_readAbout_globalAdmin}
-      ${TestUser.GLOBAL_BETA_TESTER} | ${sorted__create_read_update_delete_contribute_readAbout_receiveNotifications}
+      ${TestUser.GLOBAL_ADMIN}       | ${sorted__create_read_update_delete_readAbout_opsAdmin_globalAdmin}
+      ${TestUser.GLOBAL_BETA_TESTER} | ${sorted__create_read_update_delete_contribute_readAbout_receiveNotifications_updateNameId}
     `(
       'User: "$userRole" has this privileges: "$privileges" to spaceBasedVC',
       async ({ userRole, privileges }) => {
@@ -385,8 +383,8 @@ describe('Virtual Contributor Access - All Private - Visibility Private / BoK / 
       ${TestUser.NON_SPACE_MEMBER}   | ${undefined}
       ${TestUser.SPACE_ADMIN}        | ${sorted_read_readAbout}
       ${TestUser.SPACE_MEMBER}       | ${sorted_read_readAbout}
-      ${TestUser.GLOBAL_ADMIN}       | ${sorted__create_read_update_delete_grant_platformAdmin_readAbout_globalAdmin}
-      ${TestUser.GLOBAL_BETA_TESTER} | ${sorted__create_read_update_delete_contribute_readAbout_receiveNotifications}
+      ${TestUser.GLOBAL_ADMIN}       | ${sorted__create_read_update_delete_readAbout_opsAdmin_globalAdmin}
+      ${TestUser.GLOBAL_BETA_TESTER} | ${sorted__create_read_update_delete_contribute_readAbout_receiveNotifications_updateNameId}
     `(
       'User: "$userRole" has this privileges: "$privileges" to knowledgeBasedVC',
       async ({ userRole, privileges }) => {
@@ -406,8 +404,8 @@ describe('Virtual Contributor Access - All Private - Visibility Private / BoK / 
       ${TestUser.NON_SPACE_MEMBER}   | ${undefined}
       ${TestUser.SPACE_ADMIN}        | ${readPrivilege}
       ${TestUser.SPACE_MEMBER}       | ${readPrivilege}
-      ${TestUser.GLOBAL_ADMIN}       | ${sorted__create_read_update_delete_grant_fileUp_fileDel_globalAdmin}
-      ${TestUser.GLOBAL_BETA_TESTER} | ${sorted__create_read_update_delete_contribute_fileDelete_fileUpload_receiveNotifications}
+      ${TestUser.GLOBAL_ADMIN}       | ${sorted__create_read_update_delete_fileUp_fileDel_globalAdmin}
+      ${TestUser.GLOBAL_BETA_TESTER} | ${sorted__create_read_update_delete_contribute_fileDelete_fileUpload_receiveNotifications_updateNameId}
     `(
       'User: "$userRole" has this privileges: "$privileges" to spaceBasedVC',
       async ({ userRole, privileges }) => {
@@ -426,8 +424,8 @@ describe('Virtual Contributor Access - All Private - Visibility Private / BoK / 
       ${TestUser.NON_SPACE_MEMBER}   | ${undefined}
       ${TestUser.SPACE_ADMIN}        | ${readPrivilege}
       ${TestUser.SPACE_MEMBER}       | ${readPrivilege}
-      ${TestUser.GLOBAL_ADMIN}       | ${sorted__create_read_update_delete_grant_fileUp_fileDel_globalAdmin}
-      ${TestUser.GLOBAL_BETA_TESTER} | ${sorted__create_read_update_delete_contribute_fileDelete_fileUpload_receiveNotifications}
+      ${TestUser.GLOBAL_ADMIN}       | ${sorted__create_read_update_delete_fileUp_fileDel_globalAdmin}
+      ${TestUser.GLOBAL_BETA_TESTER} | ${sorted__create_read_update_delete_contribute_fileDelete_fileUpload_receiveNotifications_updateNameId}
     `(
       'User: "$userRole" has this privileges: "$privileges" to knowledgeBasedVC',
       async ({ userRole, privileges }) => {
@@ -458,8 +456,8 @@ describe('Virtual Contributor Access - All Private - Visibility Public / BoK / P
       ${TestUser.NON_SPACE_MEMBER}   | ${sorted_read_readAbout}
       ${TestUser.SPACE_ADMIN}        | ${sorted_read_readAbout}
       ${TestUser.SPACE_MEMBER}       | ${sorted_read_readAbout}
-      ${TestUser.GLOBAL_ADMIN}       | ${sorted__create_read_update_delete_grant_platformAdmin_readAbout_globalAdmin}
-      ${TestUser.GLOBAL_BETA_TESTER} | ${sorted__create_read_update_delete_contribute_readAbout_receiveNotifications}
+      ${TestUser.GLOBAL_ADMIN}       | ${sorted__create_read_update_delete_readAbout_opsAdmin_globalAdmin}
+      ${TestUser.GLOBAL_BETA_TESTER} | ${sorted__create_read_update_delete_contribute_readAbout_receiveNotifications_updateNameId}
     `(
       'User: "$userRole" has this privileges: "$privileges" to spaceBasedVC',
       async ({ userRole, privileges }) => {
@@ -476,8 +474,8 @@ describe('Virtual Contributor Access - All Private - Visibility Public / BoK / P
       ${TestUser.NON_SPACE_MEMBER}   | ${sorted_read_readAbout}
       ${TestUser.SPACE_ADMIN}        | ${sorted_read_readAbout}
       ${TestUser.SPACE_MEMBER}       | ${sorted_read_readAbout}
-      ${TestUser.GLOBAL_ADMIN}       | ${sorted__create_read_update_delete_grant_platformAdmin_readAbout_globalAdmin}
-      ${TestUser.GLOBAL_BETA_TESTER} | ${sorted__create_read_update_delete_contribute_readAbout_receiveNotifications}
+      ${TestUser.GLOBAL_ADMIN}       | ${sorted__create_read_update_delete_readAbout_opsAdmin_globalAdmin}
+      ${TestUser.GLOBAL_BETA_TESTER} | ${sorted__create_read_update_delete_contribute_readAbout_receiveNotifications_updateNameId}
     `(
       'User: "$userRole" has this privileges: "$privileges" to knowledgeBasedVC',
       async ({ userRole, privileges }) => {
@@ -497,8 +495,8 @@ describe('Virtual Contributor Access - All Private - Visibility Public / BoK / P
       ${TestUser.NON_SPACE_MEMBER}   | ${readPrivilege}
       ${TestUser.SPACE_ADMIN}        | ${readPrivilege}
       ${TestUser.SPACE_MEMBER}       | ${readPrivilege}
-      ${TestUser.GLOBAL_ADMIN}       | ${sorted__create_read_update_delete_grant_fileUp_fileDel_globalAdmin}
-      ${TestUser.GLOBAL_BETA_TESTER} | ${sorted__create_read_update_delete_contribute_fileDelete_fileUpload_receiveNotifications}
+      ${TestUser.GLOBAL_ADMIN}       | ${sorted__create_read_update_delete_fileUp_fileDel_globalAdmin}
+      ${TestUser.GLOBAL_BETA_TESTER} | ${sorted__create_read_update_delete_contribute_fileDelete_fileUpload_receiveNotifications_updateNameId}
     `(
       'User: "$userRole" has this privileges: "$privileges" to spaceBasedVC',
       async ({ userRole, privileges }) => {
@@ -517,8 +515,8 @@ describe('Virtual Contributor Access - All Private - Visibility Public / BoK / P
       ${TestUser.NON_SPACE_MEMBER}   | ${readPrivilege}
       ${TestUser.SPACE_ADMIN}        | ${readPrivilege}
       ${TestUser.SPACE_MEMBER}       | ${readPrivilege}
-      ${TestUser.GLOBAL_ADMIN}       | ${sorted__create_read_update_delete_grant_fileUp_fileDel_globalAdmin}
-      ${TestUser.GLOBAL_BETA_TESTER} | ${sorted__create_read_update_delete_contribute_fileDelete_fileUpload_receiveNotifications}
+      ${TestUser.GLOBAL_ADMIN}       | ${sorted__create_read_update_delete_fileUp_fileDel_globalAdmin}
+      ${TestUser.GLOBAL_BETA_TESTER} | ${sorted__create_read_update_delete_contribute_fileDelete_fileUpload_receiveNotifications_updateNameId}
     `(
       'User: "$userRole" has this privileges: "$privileges" to knowledgeBasedVC',
       async ({ userRole, privileges }) => {

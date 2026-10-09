@@ -37,6 +37,9 @@ export * from "./config/alkemio-test-config";
 export * from "./config/create-config-using-envvars";
 export * from "./config/optional-infra";
 export * from "./scenario/platform-roles/platform-role-users";
+export * from "./scenario/platform-roles/harness-admin-roles";
+export * from "./scenario/membership/space-membership";
+export * from "./scenario/membership/space-organization-membership";
 export {
   ConversationCreationType,
   ActorType,

@@ -86,7 +86,7 @@ describe('Transfer innovation pack to Account', () => {
       ])
     );
   });
-  test('Support Admin transfer innovation pack from Beta Test account to User account without valid entitlements', async () => {
+  test('Support Admin cannot transfer an innovation pack (Slice B: transfers are Platform Resource Admin\'s); the pack stays', async () => {
     // Arrange
     const packData = await createInnovationPack(
       packName,
@@ -95,31 +95,25 @@ describe('Transfer innovation pack to Account', () => {
       TestUser.GLOBAL_BETA_TESTER
     );
     innovationPackId = packData?.data?.createInnovationPack?.id ?? '';
-
-    // Act
+    // Act — workspace#027 Slice B: TRANSFER_RESOURCE_OFFER / ACCEPT on accounts
+    // belong to Platform Resource Admin; Support lost the legacy cascade.
     const transferData = await transferInnovationPackToAccount(
       innovationPackId,
       TestUserManager.users.qaUser.accountId,
       TestUser.GLOBAL_SUPPORT_ADMIN
     );
-
-    const transferedData = transferData.data?.transferInnovationPackToAccount;
-    const targetAccountData = await getAccountMainEntities(
-      TestUserManager.users.qaUser.accountId,
-      TestUser.QA_USER
+    const sourceAccountData = await getAccountMainEntities(
+      TestUserManager.users.betaTester.accountId,
+      TestUser.GLOBAL_BETA_TESTER
     );
-
     // Assert
-    expect(targetAccountData.data?.lookup.account?.innovationPacks).toEqual(
+    expect(String(transferData.error?.errors?.[0]?.message)).toMatch(
+      /Authorization: unable to grant/
+    );
+    expect(transferData.data?.transferInnovationPackToAccount).toBeUndefined();
+    expect(sourceAccountData.data?.lookup.account?.innovationPacks).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({
-          id: transferedData?.id,
-          nameID: transferedData?.nameID,
-          provider: {
-            id: TestUserManager.users.qaUser.id,
-            nameID: TestUserManager.users.qaUser.nameId,
-          },
-        }),
+        expect.objectContaining({ id: innovationPackId }),
       ])
     );
   });
@@ -169,7 +163,7 @@ describe('Transfer innovation pack to Account', () => {
     // Arrange
     await assignPlatformRole(
       TestUserManager.users.nonSpaceMember.id,
-      RoleName.PlatformVcCampaign
+      RoleName.FeatureVcCampaign
     );
     const packData = await createInnovationPack(
       packName,
@@ -210,7 +204,7 @@ describe('Transfer innovation pack to Account', () => {
     );
     await removePlatformRole(
       TestUserManager.users.nonSpaceMember.id,
-      RoleName.PlatformVcCampaign
+      RoleName.FeatureVcCampaign
     );
   });
 

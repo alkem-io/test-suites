@@ -1,0 +1,12 @@
+mutation castPollVote($voteData: CastPollVoteInput!) {
+  castPollVote(voteData: $voteData) {
+    id
+    totalVotes
+    myVote {
+      id
+      selectedOptions {
+        id
+      }
+    }
+  }
+}

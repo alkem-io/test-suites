@@ -20,7 +20,7 @@ import {
   deleteSpace,
   createSpaceAndGetData,
   updateSpaceSettings,
-  updateSpacePlatformSettings,
+  updateSpaceVisibility,
 } from '../journey/space/space.request.params';
 
 import {
@@ -656,11 +656,10 @@ describe('Search', () => {
 
   describe('Search Archived Space Data', () => {
     beforeAll(async () => {
-      await updateSpacePlatformSettings(
-        baseScenario.space.id,
-        baseScenario.space.nameId,
-        SpaceVisibility.Archived
-      );
+      await updateSpaceVisibility(
+    baseScenario.space.id,
+    SpaceVisibility.Archived
+  );
     });
 
     test.each`
@@ -724,11 +723,10 @@ describe('Search', () => {
 
   describe.skip('Search IN Public Space Private Subspace Data', () => {
     beforeAll(async () => {
-      await updateSpacePlatformSettings(
-        baseScenario.space.id,
-        baseScenario.space.nameId,
-        SpaceVisibility.Active
-      );
+      await updateSpaceVisibility(
+    baseScenario.space.id,
+    SpaceVisibility.Active
+  );
 
       await updateSpaceSettings(baseScenario.space.id, {
         privacy: { mode: SpacePrivacyMode.Public },
@@ -766,11 +764,10 @@ describe('Search', () => {
 
   describe('Search Public Space Private Subspace Data', () => {
     beforeAll(async () => {
-      await updateSpacePlatformSettings(
-        baseScenario.space.id,
-        baseScenario.space.nameId,
-        SpaceVisibility.Active
-      );
+      await updateSpaceVisibility(
+    baseScenario.space.id,
+    SpaceVisibility.Active
+  );
 
       await updateSpaceSettings(baseScenario.space.id, {
         privacy: { mode: SpacePrivacyMode.Public },
@@ -803,11 +800,10 @@ describe('Search', () => {
 
   describe('Search Private Space Private Subspace Data', () => {
     beforeAll(async () => {
-      await updateSpacePlatformSettings(
-        baseScenario.space.id,
-        baseScenario.space.nameId,
-        SpaceVisibility.Active
-      );
+      await updateSpaceVisibility(
+    baseScenario.space.id,
+    SpaceVisibility.Active
+  );
 
       await updateSpaceSettings(baseScenario.space.id, {
         privacy: { mode: SpacePrivacyMode.Private },

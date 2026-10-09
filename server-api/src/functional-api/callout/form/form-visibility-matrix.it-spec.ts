@@ -51,8 +51,9 @@ import {
  * SC-003 — who can read a Form's responses, per role, per visibility.
  *
  * The Form lives in a SUBSPACE of a public space whose `allowPlatformSupportAsAdmin`
- * is off, so Global Support reads by the draft-Post rule but never moderates.
- * A separate space with the flag on covers the positive Global Support cell.
+ * is off, so Global Support has no standing there at all (workspace#027 Slice B:
+ * the flag is Support's only door into a space). A separate space with the
+ * flag on covers the positive Global Support cell.
  * Every response is written by SUBSPACE_MEMBER; the other readers are told apart
  * by what they see of that one response:
  *   ALL  -> `all.total == 1` and `canReadAll`
@@ -207,10 +208,15 @@ const readers: Reader[] = [
     deletesOthers: true,
   },
   {
-    label: 'Global Support (reads by the draft-Post rule, cannot moderate)',
+    // workspace#027 Slice B: Platform Support's reach into a space is bounded
+    // by that space's `allowPlatformSupportAsAdmin` flag (spec row 7). The
+    // legacy global-support credential's unconditional L0 READ — which is
+    // what the draft-Post rule used to key on — is deliberately not carried
+    // over, so with the flag OFF Support reads nothing and moderates nothing.
+    label: 'Global Support (flag off: no standing in the space, reads nothing)',
     actor: { persona: TestUser.GLOBAL_SUPPORT_ADMIN },
-    admins: everything(0, false),
-    members: everything(0, false),
+    admins: own(0),
+    members: own(0),
     deletesOthers: false,
   },
   {
@@ -302,7 +308,7 @@ const platformGrants: PlatformGrant[] = [
   {
     key: 'globalSpacesReader',
     tag: 'formgsreader',
-    role: RoleName.GlobalSpacesReader,
+    role: RoleName.PlatformSpacesReader,
   },
   {
     key: 'platformSpacesReader',
@@ -346,13 +352,14 @@ type AuditRow = {
   category: string;
   outcome: string;
   initiatorUserId: string | null;
+  initiatorRole: string;
   details: Record<string, unknown> | null;
 };
 
 /** The platform_audit_entry rows written for one Form response (R14). */
 const auditRowsFor = (responseId: string) =>
   queryHarnessDb<AuditRow>(
-    `SELECT category, outcome, "initiatorUserId", details
+    `SELECT category, outcome, "initiatorUserId", "initiatorRole", details
        FROM platform_audit_entry
       WHERE details->>'resourceId' = $1`,
     [responseId]
@@ -802,6 +809,8 @@ describe('Form responses — a space that allows platform support as admin', () 
     await deleteSpace(supportSpaceId);
   });
 
+  // Ruled 2026-10-08 (alkem-io/server#6621): with the flag on, Support reads
+  // ALL responses like a space admin. Red until the server fix lands.
   test('Global Support reads every response and can moderate', async () => {
     const result = await getFormResponses(
       supportForm.formId,
@@ -827,22 +836,38 @@ describe('Form responses — a space that allows platform support as admin', () 
     expect(attempt.data?.deleteCalloutFormResponse.id).toBe(responseId);
   });
 
+  // Ruled 2026-10-06 (alkem-io/server#6622): support-as-admin moderation is a
+  // platform-role content deletion, so it IS audited (FR-019).
   test.skipIf(!harnessPostgresConfigured())(
-    'Global Support moderating through support-as-admin writes no audit row (R14)',
+    'Global Support moderating through support-as-admin writes one id-only audit row as platform_support (R14)',
     async () => {
-      const responseId = await submitAs(
-        supportForm,
+      const marker = `support-audit-answer-${uniqueId}`;
+      const submitted = await submitFormResponse(
+        supportForm.formId,
+        answersFor(supportForm.questions, { 0: { text: marker } }),
         CalloutFormResponseVisibility.Admins,
         TestUser.SPACE_MEMBER
       );
+      const responseId = submitted.data?.submitCalloutFormResponse.id;
+      expect(responseId, JSON.stringify(submitted.error?.errors)).toBeDefined();
 
       const attempt = await deleteFormResponse(
-        responseId,
+        responseId!,
         TestUser.GLOBAL_SUPPORT_ADMIN
       );
       expect(attempt.error).toBeUndefined();
 
-      expect(await auditRowsFor(responseId)).toHaveLength(0);
+      const rows = await auditRowsFor(responseId!);
+      expect(rows).toHaveLength(1);
+      expect(rows[0].category).toBe('platform_resource');
+      expect(rows[0].outcome).toBe('resource_deleted');
+      expect(rows[0].initiatorRole).toBe('platform_support');
+      expect(rows[0].initiatorUserId).toBe(
+        TestUserManager.users.globalSupportAdmin.id
+      );
+      expect(rows[0].details?.formId).toBe(supportForm.formId);
+      // Ids only: the answer never reaches the audit trail.
+      expect(JSON.stringify(rows[0].details)).not.toContain(marker);
     }
   );
 

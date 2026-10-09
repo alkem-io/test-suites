@@ -105,8 +105,13 @@ test.describe('Authentication - Password Recovery Flows', () => {
       await expect(
         page.getByRole('link', { name: 'My Account' })
       ).toBeVisible();
+      // The dashboard's "Create my own Space" call to action is a button on the
+      // current client (it used to be a link); the walk only needs the
+      // authenticated dashboard to be fully rendered, so accept either role.
       await expect(
-        page.getByRole('link', { name: 'Create my own Space' })
+        page.getByRole('button', { name: 'Create my own Space' }).or(
+          page.getByRole('link', { name: 'Create my own Space' })
+        )
       ).toBeVisible();
     } finally {
       // Restore the shared default password (only if it was changed), from a

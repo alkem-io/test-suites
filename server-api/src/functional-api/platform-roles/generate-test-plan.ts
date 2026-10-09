@@ -90,7 +90,7 @@ out(
 );
 out();
 out(
-  '**Negatives run at Slice A.** Each test user holds exactly one target role and no legacy credential (scenario X1 proves it first), so "this role is refused" is a valid assertion today — it does not have to wait for the legacy roles to be removed.'
+  '**Slice B vocabulary.** The table names the surfaces as they exist after workspace#027 Slice B (server alkem-io/server#6582): `adminUpdateSpaceVisibility` for A14, the two A17 rename surfaces, and none of the deleted FR-021/FR-022 mutations. Each test user holds exactly one target role (scenario X1 proves it first, and L2 proves the legacy vocabulary is gone from the schema).'
 );
 out();
 out('## How to run');
@@ -164,7 +164,7 @@ out();
   const n = (b: string): number =>
     CAPABILITIES.filter(c => c.requirement.basis === b).length;
   out(
-    `Checked 2026-09-18 against \`spec.md\` (§Target global role model, §Action → owning role) and \`contracts/privilege-map.md\`. **All ${Object.keys(CAPABILITY_GROUPS).length} action families' owner sets match the spec exactly**, including the three declared exceptions (Content Full Access on A6 delete, A7 and the A16 read). The spec assigns owners per action FAMILY; per surface: **${n('named')}** are named in the requirements, **${n('family')}** are covered by their family's wording, **${n('silent')}** are backed by neither (⚠️), **${n('conflict')}** contradict a requirement (❌).`
+    `Checked 2026-09-18 against \`spec.md\` (§Target global role model, §Action → owning role) and \`contracts/privilege-map.md\`; the two rows later rulings changed were re-checked 2026-10-08 — A8 \`updateCalloutPublishInfo\` (Resource Admin a second owner, amendment 2026-10-07) and A22 (direct add, no owner, ruling 2026-10-08). **All ${Object.keys(CAPABILITY_GROUPS).length} action families' owner sets match the spec exactly**, including the three declared exceptions (Content Full Access on A6 delete, A7 and the A16 read). The spec assigns owners per action FAMILY; per surface: **${n('named')}** are named in the requirements, **${n('family')}** are covered by their family's wording, **${n('silent')}** are backed by neither (⚠️), **${n('conflict')}** contradict a requirement (❌).`
   );
   out();
   out('| Capability | Allowed today | Finding |');
@@ -229,8 +229,6 @@ for (const [id, group] of Object.entries(CAPABILITY_GROUPS)) {
       ].join(', ') || '**nobody**';
     const tags = [
       c.variant,
-      c.renamedAtSliceB ? `renamed \`${c.renamedAtSliceB}\` at Slice B` : '',
-      c.retiredAtSliceB ? 'deleted at Slice B' : '',
       c.kind === 'mcp-tool' ? 'MCP tool' : '',
     ].filter(Boolean);
     out(
@@ -319,10 +317,10 @@ out();
 out('| File | Currently | Must become |');
 out('|---|---|---|');
 out(
-  '| `server-api/.../graphql-guard/graphql-guard-nested-queries.it-spec.ts` | Expects GLOBAL_ADMIN space privileges with `PLATFORM_ADMIN` — 5 of 8 tests red on the 027 server (run 2026-09-18) | Same swap its two sibling guard specs got: drop `PLATFORM_ADMIN`, add `ACCOUNT_LICENSE_MANAGE` + `PLATFORM_CONTENT_FULL_ACCESS` |'
+  '| 22 server-api specs that assert what `global.support` / `global.license` see (storage/auth, roleset, notifications, graphql-guard, space-platform-settings) | Expected-privilege rows derived from the legacy `global-support` cascade (full CRUD + GRANT on any space) | Re-read from a live Slice B stack: Platform Support reaches a space only through the support flag and its named privileges; Platform License Manager through `ACCOUNT_LICENSE_MANAGE` / `PLATFORM_LICENSING_LISTS_READ` |'
 );
 out(
-  '| `client-web/.../authz-admin-guard/platform-global-roles.spec.ts` | Navigates to the removed `GLOBAL_COMMUNITY_READER` role page; on the 027 client that falls back to the first offered role and **grants Platform Roles Admin to `qa.user`** | Rewrite against a target role before the 027 client reaches the nightly (UI phase) |'
+  '| `notifications/platform/space-creation.it-spec.ts`, `registration.it-spec.ts` | Recipient sets written for the legacy global roles (server T109 re-routes them per event) | Verified on a Slice B stack: space created → Support + Users Admin + License Manager; profile created/removed → Support + Users Admin; role changed → Roles Admin |'
 );
 out();
 out('## Not covered — known gaps');
@@ -354,11 +352,31 @@ out(
   '| `PLATFORM_SETTINGS_ADMIN › can › A13.updateLicensePlan` | the mutation reports success; the value re-reads unchanged | `LicensePlanService.update()` saves the plan without applying the input (also on `develop`). A positive must observe its effect — there is none to observe |'
 );
 out(
-  '| `PLATFORM_RESOURCE_ADMIN › cannot › A16.createPlatformRolesAccess` | Resource Admin READS a private space it is not a member of | the server grants it READ on every space deliberately; the requirements allow only Spaces Reader (+ the Content Full Access exception). Needs a product decision — then either the table or the server changes |'
+  '| `PLATFORM_CONTENT_FULL_ACCESS › cannot › A3.aiServerAuthorizationPolicyReset` | Content Full Access resets the AI server authorization (Slice B stack, 2026-10-07) | `ai.server.service.authorization.ts` re-anchors the old `CREDENTIAL_RULE_AI_SERVER_GLOBAL_ADMINS` rule — CRUD **plus GRANT and AUTHORIZATION_RESET** — onto `PLATFORM_CONTENT_FULL_ACCESS`. FR-004 removed GRANT from the content role and A3 resets belong to Operations Admin. Filed as [alkem-io/server#6619](https://github.com/alkem-io/server/issues/6619); fixed by [alkem-io/server#6626](https://github.com/alkem-io/server/pull/6626) — goes green once that PR is on `develop` |'
 );
 out(
-  '| `PLATFORM_CONTENT_FULL_ACCESS › cannot › A13.createLicensePlan` | Content Full Access CREATES a license plan | the five censused A13 mutations check a dedicated in-memory policy, exactly so that the root CRUD cascade does not admit Content Full Access; `createLicensePlan` was left out of the census and still checks `licensingFramework.authorization`, which inherits that cascade. Found 2026-09-21 |'
+  '| `PLATFORM_RESOURCE_ADMIN › cannot › A16.createPlatformRolesAccess` | Resource Admin READS a private space it is not a member of | the server grants it READ on every space deliberately; the requirements allow only Spaces Reader (+ the Content Full Access exception). Needs a product decision — then either the table or the server changes |'
 );
+out();
+out('## Known server defects — cells skipped until the fix lands');
+out();
+out(
+  'Written against the expected behaviour and registered as `test.skip` with the issue in the title (operator decision 2026-10-06: skip rather than `test.fails`, so the nightly is not red by design). Drop the `knownDefects` entry in `capabilities.data.ts` when the fix is on `develop`.'
+);
+out();
+if (CAPABILITIES.some(c => c.knownDefects?.length)) {
+  out('| Cell | Issue | Observed |');
+  out('|---|---|---|');
+  for (const c of CAPABILITIES) {
+    for (const d of c.knownDefects ?? []) {
+      out(
+        `| \`${d.role} › ${d.half === 'negative' ? 'cannot' : 'can'} › ${c.id}\` | [${d.issue}](https://github.com/${d.issue.replace('#', '/issues/')}) | ${d.observed} |`
+      );
+    }
+  }
+} else {
+  out('None open.');
+}
 out();
 out('## What is genuinely proven');
 out();
@@ -368,7 +386,7 @@ out();
   const capPos = CAPABILITIES.map(c => c.positive);
   const capNeg = CAPABILITIES.map(c => c.negative);
   out(
-    `Verified live against the 027 server, twice in a row with identical results (2026-09-18): **${count(capPos, 'automated')} of ${CAPABILITIES.length} capabilities have an automated positive and ${count(capNeg, 'automated')} an automated negative**, run for all ${PLATFORM_ROLES.length} roles — ${positiveChecks} positive and ${negativeChecks} negative role-level checks in the table, of which the exclusive and not-automated rows are excluded from the default run. Every negative is a refusal AT THE AUTHORIZATION GATE (an authorization code on the gate path), never a validation error, a not-found, or a forbidden sub-field. Every positive observes what its row declares — an effect read back, known data returned, a success payload, or (5 rows) a non-authorization error proving the gate was passed.`
+    `Verified live against the 027 server, twice in a row with identical results — 2026-09-18 for the original rows, 2026-10-08 on server develop for the A8 and A22 rows the later rulings changed: **${count(capPos, 'automated')} of ${CAPABILITIES.length} capabilities have an automated positive and ${count(capNeg, 'automated')} an automated negative**, run for all ${PLATFORM_ROLES.length} roles — ${positiveChecks} positive and ${negativeChecks} negative role-level checks in the table, of which the exclusive and not-automated rows are excluded from the default run. Every negative is a refusal AT THE AUTHORIZATION GATE (an authorization code on the gate path), never a validation error, a not-found, or a forbidden sub-field. Every positive observes what its row declares — an effect read back, known data returned, a success payload, or (5 rows) a non-authorization error proving the gate was passed.`
   );
   out();
   out(

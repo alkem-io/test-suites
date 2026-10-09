@@ -781,61 +781,26 @@ describe('Organization associate invitations — the invitee responds (US2)', ()
     ]);
   });
 
-  test('US2-AS9: an offered role from a platform GLOBAL_SUPPORT offerer (no organization-scoped credential) is granted on accept', async () => {
-    // GLOBAL_ADMIN / GLOBAL_SUPPORT hold ROLESET_ENTRY_ROLE_ASSIGN (and so
-    // INVITE) on every organization without ever being ADMIN/OWNER of it; the
-    // accept-time re-check must count that standing, or every support-issued
-    // invitation silently loses its offered role.
+  test('US2-AS9 (Slice B): a platform Support offerer holds no standing on an organisation — the invitation is refused', async () => {
+    // Through Slice A the legacy global-support cascade gave Support
+    // ROLESET_ENTRY_ROLE_INVITE (and ASSIGN) on every organisation. Slice B
+    // removes that cascade and re-anchors nothing: organisation membership is
+    // the organisation admins' alone, so the offer never reaches the
+    // accept-time re-check this case used to exercise.
     const invitee = TestUserManager.users.subsubspaceAdmin.id;
-    let testError: unknown;
-    try {
-      const invite = await inviteForEntryRoleOnRoleSet(
-        roleSetId,
-        [invitee],
-        [],
-        message,
-        [RoleName.Admin],
-        TestUser.GLOBAL_SUPPORT_ADMIN
-      );
-      const result = getSingleInvitationResult(invite);
-      expect(result?.type).toEqual(
-        RoleSetInvitationResultType.InvitedToRoleSet
-      );
-
-      const accepted = await eventOnRoleSetInvitation(
-        result!.invitation!.id,
-        'ACCEPT',
-        TestUser.SUBSUBSPACE_ADMIN
-      );
-      expect(accepted?.error).toBeUndefined();
-      expect(
-        (accepted?.data as any)?.eventOnInvitation?.extraRolesWithheld
-      ).toEqual([]);
-
-      const roles = await usersInRoles(
-        roleSetId,
-        [RoleName.Admin],
-        TestUser.GLOBAL_ADMIN
-      );
-      const adminIds = (
-        roles?.data?.lookup?.roleSet?.usersInRoles?.[0]?.users ?? []
-      ).map((u: any) => u.id);
-      expect(adminIds).toEqual(expect.arrayContaining([invitee]));
-    } catch (error) {
-      testError = error;
-    }
-    await teardownOrFail(testError, [
-      [
-        'remove ADMIN from invitee',
-        () => removeRoleFromUser(invitee, roleSetId, RoleName.Admin),
-      ],
-      [
-        'remove ASSOCIATE from invitee',
-        () => removeRoleFromUser(invitee, roleSetId, RoleName.Associate),
-      ],
-    ]);
+    const invite = await inviteForEntryRoleOnRoleSet(
+      roleSetId,
+      [invitee],
+      [],
+      message,
+      [RoleName.Admin],
+      TestUser.GLOBAL_SUPPORT_ADMIN
+    );
+    expect(String(invite?.error?.errors?.[0]?.message)).toMatch(
+      /roleset-entry-role-invite/
+    );
+    expect(invite?.data).toBeUndefined();
   });
-
   test("an associate-only persona cannot ACCEPT an invitation on someone else's behalf", async () => {
     const invite = await inviteForEntryRoleOnRoleSet(
       roleSetId,

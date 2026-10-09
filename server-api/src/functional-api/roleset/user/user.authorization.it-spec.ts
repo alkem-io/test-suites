@@ -1,17 +1,19 @@
 import { getRoleSetUserPrivilege } from '../../journey/space/space.request.params';
 import {
+  sorted__roleSet_sliceB_harnessAdmin_L0,
+  sorted__roleSet_sliceB_harnessAdmin_subspace,
+  sorted__create_read_update_delete_grant_addMember_invite_addVC_accessVC,
   sorted__create_read_update_delete_grant_addMember_apply_invite_addVC_accessVC,
-  sorted__create_read_update_delete_grant_addMember_apply_invite_addVC_accessVC_assignOrganization,
-  sorted__create_read_update_delete_grant_addMember_apply_invite_addVC_accessVC_assignOrganization_noContentFullAccess,
-  sorted__create_read_update_delete_grant_addMember_invite_addVC_accessVC_assignOrganization,
   sorted__create_read_update_delete_grant_apply_invite_addVC_accessVC,
-  sorted__create_read_update_delete_grant_apply_invite_addVC_accessVC_assignOrganization,
   sorted__read_applyToRoleSet,
   sorted__read_applyToRoleSet_invite_addVC,
   TestScenarioConfig,
   TestScenarioFactory,
   TestUser,
+  TestUserManager,
 } from '@alkemio/tests-lib';
+import { assignRoleToUser } from '../roles-request.params';
+import { getErrorCode, getRoleSetMembersList } from '../roleset.request.params';
 import {
   assignPlatformRole,
   removePlatformRole,
@@ -75,7 +77,7 @@ beforeAll(async () => {
   baseScenario = await TestScenarioFactory.createBaseScenario(scenarioConfig);
   await assignPlatformRole(
     TestUser.NON_SPACE_MEMBER,
-    RoleName.PlatformBetaTester
+    RoleName.FeatureBetaTester
   );
 });
 
@@ -83,7 +85,7 @@ afterAll(async () => {
   await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
   await removePlatformRole(
     TestUser.NON_SPACE_MEMBER,
-    RoleName.PlatformBetaTester
+    RoleName.FeatureBetaTester
   );
 });
 
@@ -94,10 +96,10 @@ describe('Verify ROLESET_ENTRY_ROLE_ASSIGN privilege', () => {
     // Arrange
     test.each`
       user                             | myPrivileges
-      ${TestUser.GLOBAL_ADMIN}         | ${sorted__create_read_update_delete_grant_addMember_apply_invite_addVC_accessVC_assignOrganization}
-      ${TestUser.GLOBAL_SUPPORT_ADMIN} | ${sorted__create_read_update_delete_grant_addMember_apply_invite_addVC_accessVC_assignOrganization_noContentFullAccess}
+      ${TestUser.GLOBAL_ADMIN}         | ${sorted__roleSet_sliceB_harnessAdmin_L0}
+      ${TestUser.GLOBAL_SUPPORT_ADMIN} | ${sorted__create_read_update_delete_grant_apply_invite_addVC_accessVC}
       ${TestUser.SPACE_ADMIN}          | ${sorted__create_read_update_delete_grant_apply_invite_addVC_accessVC}
-      ${TestUser.GLOBAL_BETA_TESTER}   | ${sorted__create_read_update_delete_grant_apply_invite_addVC_accessVC_assignOrganization}
+      ${TestUser.GLOBAL_BETA_TESTER}   | ${sorted__create_read_update_delete_grant_apply_invite_addVC_accessVC}
       ${TestUser.NON_SPACE_MEMBER}     | ${sorted__read_applyToRoleSet}
       ${TestUser.SPACE_MEMBER}         | ${sorted__read_applyToRoleSet}
       ${TestUser.SUBSPACE_ADMIN}       | ${sorted__read_applyToRoleSet_invite_addVC}
@@ -124,8 +126,8 @@ describe('Verify ROLESET_ENTRY_ROLE_ASSIGN privilege', () => {
     // Arrange
     test.each`
       user                             | myPrivileges
-      ${TestUser.GLOBAL_ADMIN}         | ${sorted__create_read_update_delete_grant_addMember_apply_invite_addVC_accessVC_assignOrganization}
-      ${TestUser.GLOBAL_SUPPORT_ADMIN} | ${sorted__create_read_update_delete_grant_addMember_apply_invite_addVC_accessVC_assignOrganization_noContentFullAccess}
+      ${TestUser.GLOBAL_ADMIN}         | ${sorted__roleSet_sliceB_harnessAdmin_subspace}
+      ${TestUser.GLOBAL_SUPPORT_ADMIN} | ${sorted__create_read_update_delete_grant_addMember_apply_invite_addVC_accessVC}
       ${TestUser.SPACE_ADMIN}          | ${sorted__create_read_update_delete_grant_addMember_apply_invite_addVC_accessVC}
       ${TestUser.SPACE_MEMBER}         | ${['ROLESET_ENTRY_ROLE_APPLY']}
       ${TestUser.SUBSPACE_ADMIN}       | ${sorted__create_read_update_delete_grant_addMember_apply_invite_addVC_accessVC}
@@ -162,8 +164,8 @@ describe('Verify ROLESET_ENTRY_ROLE_ASSIGN privilege', () => {
     //  - SPACE_MEMBER (grandparent member only) no longer sees APPLY.
     test.each`
       user                             | myPrivileges
-      ${TestUser.GLOBAL_ADMIN}         | ${sorted__create_read_update_delete_grant_addMember_apply_invite_addVC_accessVC_assignOrganization}
-      ${TestUser.GLOBAL_SUPPORT_ADMIN} | ${sorted__create_read_update_delete_grant_addMember_invite_addVC_accessVC_assignOrganization}
+      ${TestUser.GLOBAL_ADMIN}         | ${sorted__roleSet_sliceB_harnessAdmin_subspace}
+      ${TestUser.GLOBAL_SUPPORT_ADMIN} | ${sorted__create_read_update_delete_grant_addMember_invite_addVC_accessVC}
       ${TestUser.SPACE_MEMBER}         | ${[]}
       ${TestUser.SUBSPACE_ADMIN}       | ${sorted__create_read_update_delete_grant_addMember_apply_invite_addVC_accessVC}
       ${TestUser.SUBSPACE_MEMBER}      | ${['ROLESET_ENTRY_ROLE_APPLY']}
@@ -183,5 +185,34 @@ describe('Verify ROLESET_ENTRY_ROLE_ASSIGN privilege', () => {
         expect(result.sort()).toEqual(myPrivileges);
       }
     );
+  });
+});
+
+// Ruled 2026-10-08 (alkem-io/server#6623): invitation-only is the intended end
+// state — nobody adds a user to an L0 space directly. The behavioural twin of
+// the L0 privilege row above (no ROLESET_ENTRY_ROLE_ASSIGN for the space admin).
+// The space admin's refusal is returned as-is: the helper's join fallback is
+// for the harness admin only.
+describe('Direct user add to an L0 space is gone at Slice B', () => {
+  test('the L0 space admin cannot add a user as MEMBER directly; the role set is unchanged', async () => {
+    const userId = TestUserManager.users.nonSpaceMember.id;
+
+    const res = await assignRoleToUser(
+      userId,
+      baseScenario.space.community.roleSetId,
+      RoleName.Member,
+      TestUser.SPACE_ADMIN
+    );
+
+    expect(getErrorCode(res)).toBe('FORBIDDEN_POLICY');
+    expect(String(res.error?.errors?.[0]?.message)).toContain(
+      'roleset-entry-role-assign'
+    );
+    const members = await getRoleSetMembersList(
+      baseScenario.space.community.roleSetId
+    );
+    expect(
+      members.data?.lookup.roleSet?.memberUsers?.map(u => u.id)
+    ).not.toContain(userId);
   });
 });

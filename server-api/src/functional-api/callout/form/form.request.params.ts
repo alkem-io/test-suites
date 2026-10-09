@@ -7,6 +7,7 @@ import {
 import {
   CalloutFormAnswerInput,
   CalloutFormQuestionType,
+  CalloutContributionType,
   CalloutFormResponseVisibility,
   CalloutFramingType,
   CalloutVisibility,
@@ -160,6 +161,12 @@ type FormCalloutOptions = {
   displayName?: string;
   /** Publish right after creation (default) — a DRAFT Form rejects responses. */
   publish?: boolean;
+  /**
+   * Allow these contribution types on the Post (default: contributions off). Allowing LINK
+   * grants CONTRIBUTE to whoever may create on the callout, which is how a template admin
+   * reaches the Form's own response rules.
+   */
+  contributionTypes?: CalloutContributionType[];
 };
 
 /**
@@ -192,7 +199,9 @@ export const createFormCalloutRaw = async (
           },
           settings: {
             visibility: CalloutVisibility.Draft,
-            contribution: { enabled: false },
+            contribution: options.contributionTypes
+              ? { enabled: true, allowedTypes: options.contributionTypes }
+              : { enabled: false },
             framing: { commentsEnabled: false },
           },
         },

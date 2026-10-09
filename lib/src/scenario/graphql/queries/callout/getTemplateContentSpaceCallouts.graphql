@@ -10,11 +10,18 @@ query templateContentSpaceCallouts($templateId: UUID!) {
             id
             callouts {
               id
+              isTemplate
               framing {
                 id
                 type
                 profile {
                   displayName
+                }
+                poll {
+                  ...PollDefinition
+                }
+                form {
+                  ...CalloutFormDetails
                 }
               }
             }

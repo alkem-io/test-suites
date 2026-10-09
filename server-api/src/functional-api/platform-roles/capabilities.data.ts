@@ -66,7 +66,7 @@ export const ROLE_SUMMARY: Record<
   },
   PLATFORM_RESOURCE_ADMIN: {
     name: 'Platform Resource Admin',
-    owns: 'Resource moves: a space, hub, pack or VC to another account; promote, demote or move a space; move a callout or a contribution.',
+    owns: "Resource moves: a space, hub, pack or VC to another account; promote, demote or move a space; move a callout or a contribution. Also sets a callout's publisher information (A8 `updateCalloutPublishInfo`, shared with Content Full Access - operator amendment 2026-10-07).",
     mustNot:
       'Everything else - role assignment, settings, operations, user records, content access, the forum, support.',
   },
@@ -187,7 +187,8 @@ export type CapabilityGroupId =
   | 'A19'
   | 'A20'
   | 'A20b'
-  | 'A21';
+  | 'A21'
+  | 'A22';
 
 export type CapabilityGroup = { title: string; spec: string };
 
@@ -253,13 +254,17 @@ export const CAPABILITY_GROUPS: Record<CapabilityGroupId, CapabilityGroup> = {
     title: 'Set / clear the service-profile marker',
     spec: 'A21 · FR-002',
   },
+  A22: {
+    title: 'Direct add without consent (invitation only)',
+    spec: 'A22 · 061 R32 · alkem-io/server#6623',
+  },
 };
 
 export type Capability = {
   /** Stable id — `<group>.<surface>`; `#n` only where a group lists a surface twice. */
   id: string;
   group: CapabilityGroupId;
-  /** The GraphQL field / MCP tool name at Slice A. */
+  /** The GraphQL field / MCP tool name (Slice B vocabulary). */
   surface: string;
   kind: 'mutation' | 'query' | 'field' | 'mcp-tool';
   /** Roles the acceptance criteria name as owning this capability. */
@@ -268,8 +273,6 @@ export type Capability = {
   acceptedExtra: readonly PlatformRole[];
   /** What distinguishes two rows that share a surface (payload differs). */
   variant?: string;
-  renamedAtSliceB?: string;
-  retiredAtSliceB?: boolean;
   /**
    * How the Allowed set is backed by the requirements (spec.md + contracts):
    * `named` the surface is named there · `family` the spec assigns the owner at
@@ -297,6 +300,22 @@ export type Capability = {
   positive: Coverage;
   /** "Every other target role CANNOT, with an authorization error on the root field." */
   negative: Coverage;
+  /**
+   * Cells that are red because of a CONFIRMED, filed server defect. The cell's
+   * test is registered as `test.skip` with the issue in its title (operator
+   * decision 2026-10-06: skip rather than `test.fails`, so the nightly is not
+   * red by design) and listed by the plan generator; drop the entry when the
+   * fix is on `develop`.
+   */
+  knownDefects?: readonly KnownDefect[];
+};
+
+export type KnownDefect = {
+  role: PlatformRole;
+  half: 'positive' | 'negative';
+  /** `owner/repo#n` */
+  issue: string;
+  observed: string;
 };
 
 export const CAPABILITIES: readonly Capability[] = [
@@ -329,102 +348,6 @@ export const CAPABILITIES: readonly Capability[] = [
       oracle: 'holder list no longer shows the target after remove',
     },
     positive: { status: 'automated' },
-    negative: { status: 'automated' },
-  },
-  {
-    id: 'A1.grantCredentialToUser',
-    group: 'A1',
-    surface: 'grantCredentialToUser',
-    kind: 'mutation',
-    owners: [],
-    acceptedExtra: [],
-    retiredAtSliceB: true,
-    requirement: { basis: 'named' },
-    positive: {
-      status: 'not-applicable',
-      reason:
-        'no target role may reach this surface - every role is a negative',
-    },
-    negative: { status: 'automated' },
-  },
-  {
-    id: 'A1.revokeCredentialFromUser',
-    group: 'A1',
-    surface: 'revokeCredentialFromUser',
-    kind: 'mutation',
-    owners: [],
-    acceptedExtra: [],
-    retiredAtSliceB: true,
-    requirement: { basis: 'named' },
-    positive: {
-      status: 'not-applicable',
-      reason:
-        'no target role may reach this surface - every role is a negative',
-    },
-    negative: { status: 'automated' },
-  },
-  {
-    id: 'A1.grantCredentialToOrganization',
-    group: 'A1',
-    surface: 'grantCredentialToOrganization',
-    kind: 'mutation',
-    owners: [],
-    acceptedExtra: [],
-    retiredAtSliceB: true,
-    requirement: { basis: 'named' },
-    positive: {
-      status: 'not-applicable',
-      reason:
-        'no target role may reach this surface - every role is a negative',
-    },
-    negative: { status: 'automated' },
-  },
-  {
-    id: 'A1.revokeCredentialFromOrganization',
-    group: 'A1',
-    surface: 'revokeCredentialFromOrganization',
-    kind: 'mutation',
-    owners: [],
-    acceptedExtra: [],
-    retiredAtSliceB: true,
-    requirement: { basis: 'named' },
-    positive: {
-      status: 'not-applicable',
-      reason:
-        'no target role may reach this surface - every role is a negative',
-    },
-    negative: { status: 'automated' },
-  },
-  {
-    id: 'A1.assignPlatformRoleToUser#6',
-    group: 'A1',
-    surface: 'assignPlatformRoleToUser',
-    kind: 'mutation',
-    owners: [],
-    acceptedExtra: [],
-    variant: 'legacy GLOBAL_ADMIN role payload',
-    requirement: { basis: 'named' },
-    positive: {
-      status: 'not-applicable',
-      reason:
-        'no target role may reach this surface - every role is a negative',
-    },
-    negative: { status: 'automated' },
-  },
-  {
-    id: 'A1.removePlatformRoleFromUser#7',
-    group: 'A1',
-    surface: 'removePlatformRoleFromUser',
-    kind: 'mutation',
-    owners: [],
-    acceptedExtra: [],
-    variant: 'legacy GLOBAL_ADMIN role payload',
-    requirement: { basis: 'named' },
-    positive: {
-      status: 'not-applicable',
-      reason:
-        'no target role may reach this surface - every role is a negative',
-    },
     negative: { status: 'automated' },
   },
   {
@@ -1082,7 +1005,9 @@ export const CAPABILITIES: readonly Capability[] = [
     group: 'A8',
     surface: 'updateCalloutPublishInfo',
     kind: 'mutation',
-    owners: ['PLATFORM_CONTENT_FULL_ACCESS'],
+    // Resource Admin: 027 operator amendment 2026-10-07 (spec Session
+    // 2026-10-07, privilege map A8; closes alkem-io/server#6620).
+    owners: ['PLATFORM_CONTENT_FULL_ACCESS', 'PLATFORM_RESOURCE_ADMIN'],
     acceptedExtra: [],
     requirement: { basis: 'named' },
     verifies: {
@@ -1631,28 +1556,6 @@ export const CAPABILITIES: readonly Capability[] = [
   },
   // ===== A12 — License usage =====
   {
-    id: 'A12.createWingbackAccount',
-    group: 'A12',
-    surface: 'createWingbackAccount',
-    kind: 'mutation',
-    owners: ['PLATFORM_LICENSE_MANAGER'],
-    acceptedExtra: [],
-    requirement: {
-      basis: 'conflict',
-      note: 'FR-021 requires this mutation to be DELETED, not re-gated to License Manager',
-    },
-    verifies: {
-      kind: 'reached-resolver',
-      oracle: 'Wingback disabled: "not enabled" on the root field is accepted',
-    },
-    positive: {
-      status: 'automated',
-      reason:
-        'where Wingback is disabled the oracle is "reached the resolver": a non-authorization error on the root field. FR-021 says this surface must be DELETED - the row goes when the server complies',
-    },
-    negative: { status: 'automated' },
-  },
-  {
     id: 'A12.assignLicensePlanToAccount',
     group: 'A12',
     surface: 'assignLicensePlanToAccount',
@@ -1822,13 +1725,12 @@ export const CAPABILITIES: readonly Capability[] = [
   },
   // ===== A14 — Space visibility =====
   {
-    id: 'A14.updateSpacePlatformSettings',
+    id: 'A14.adminUpdateSpaceVisibility',
     group: 'A14',
-    surface: 'updateSpacePlatformSettings',
+    surface: 'adminUpdateSpaceVisibility',
     kind: 'mutation',
     owners: ['PLATFORM_LICENSE_MANAGER'],
     acceptedExtra: [],
-    renamedAtSliceB: 'adminUpdateSpaceVisibility',
     requirement: { basis: 'named' },
     verifies: {
       kind: 'effect',
@@ -1923,6 +1825,10 @@ export const CAPABILITIES: readonly Capability[] = [
     negative: { status: 'automated' },
   },
   // ===== A17 — Rename an entity (nameID) =====
+  // Owned by the ENTITY admin (a user renames itself, a space admin renames its
+  // space) and reached by NO global role — spec §Action → owning role. The 14
+  // denials are matrix cells; the owner positives live in
+  // `rules/rename-nameid.it-spec.ts` (scenario A17.entity-admin-rename).
   {
     id: 'A17.updateActorNameID',
     group: 'A17',
@@ -1932,34 +1838,27 @@ export const CAPABILITIES: readonly Capability[] = [
     acceptedExtra: [],
     requirement: { basis: 'named' },
     positive: {
-      status: 'not-automated',
-      reason: 'surface does not exist until Slice B',
-      belongs: 'slice-b',
+      status: 'not-applicable',
+      reason:
+        'no global role may reach this surface - the actor itself renames (rules/rename-nameid.it-spec.ts)',
     },
-    negative: {
-      status: 'not-automated',
-      reason: 'surface does not exist until Slice B',
-      belongs: 'slice-b',
-    },
+    negative: { status: 'automated' },
   },
   {
-    id: 'A17.nameID (protected section of the general content-entity update)',
+    id: 'A17.updateSpace.nameID',
     group: 'A17',
-    surface: 'nameID (protected section of the general content-entity update)',
+    surface: 'updateSpace.nameID',
     kind: 'field',
     owners: [],
     acceptedExtra: [],
+    variant: 'protected `nameID` section of `updateSpace` (UPDATE_NAMEID)',
     requirement: { basis: 'named' },
     positive: {
-      status: 'not-automated',
-      reason: 'surface does not exist until Slice B',
-      belongs: 'slice-b',
+      status: 'not-applicable',
+      reason:
+        'no global role may reach this surface - the space admin renames (rules/rename-nameid.it-spec.ts)',
     },
-    negative: {
-      status: 'not-automated',
-      reason: 'surface does not exist until Slice B',
-      belongs: 'slice-b',
-    },
+    negative: { status: 'automated' },
   },
   // ===== A19 — Read the platform audit trail =====
   {
@@ -2281,6 +2180,61 @@ export const CAPABILITIES: readonly Capability[] = [
         'serviceProfile has NO output field: a cleared marker makes the Platform Spaces Reader grant fail with the service-account rule',
     },
     positive: { status: 'automated' },
+    negative: { status: 'automated' },
+  },
+  // ===== A22 — Direct add without consent (invitation only) =====
+  // 027 Session 2026-10-08, operator ruling on alkem-io/server#6623: the
+  // intended holder set is EMPTY, as A17's. The way in instead - invitation -
+  // is proven in `roleset/invitations/`; direct add below L0 is pinned at
+  // privilege level only (`roleset/user/user.authorization.it-spec.ts`).
+  {
+    id: 'A22.assignRoleToUser',
+    group: 'A22',
+    surface: 'assignRoleToUser',
+    kind: 'mutation',
+    owners: [],
+    acceptedExtra: [],
+    variant: 'a user as MEMBER of an L0 space - ROLESET_ENTRY_ROLE_ASSIGN',
+    requirement: { basis: 'named' },
+    positive: {
+      status: 'not-applicable',
+      reason:
+        'no global role may reach this surface - entry to an L0 space is by invitation; direct add below L0 stays with the subspace and ancestor admins (roleset/user)',
+    },
+    negative: { status: 'automated' },
+  },
+  {
+    id: 'A22.assignRoleToVirtualContributor',
+    group: 'A22',
+    surface: 'assignRoleToVirtualContributor',
+    kind: 'mutation',
+    owners: [],
+    acceptedExtra: [],
+    variant:
+      'a VC from ANOTHER account as MEMBER of an L0 space - ROLESET_ENTRY_ROLE_ASSIGN',
+    requirement: { basis: 'named' },
+    positive: {
+      status: 'not-applicable',
+      reason:
+        'no global role may reach this surface - a VC from another account enters by invitation',
+    },
+    negative: { status: 'automated' },
+  },
+  {
+    id: 'A22.assignRoleToOrganization',
+    group: 'A22',
+    surface: 'assignRoleToOrganization',
+    kind: 'mutation',
+    owners: [],
+    acceptedExtra: [],
+    variant:
+      'an organization NOT yet in the space - ROLESET_ENTRY_ROLE_ASSIGN_ORGANIZATION',
+    requirement: { basis: 'named' },
+    positive: {
+      status: 'not-applicable',
+      reason:
+        'no global role may reach this surface - a new organization enters by invitation; one already in the space is managed with GRANT alone (roleset/invitations, R32)',
+    },
     negative: { status: 'automated' },
   },
 ];

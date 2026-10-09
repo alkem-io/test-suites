@@ -17,7 +17,8 @@ export type CalloutTemplateFramingType =
   | 'whiteboard'
   | 'memo'
   | 'callToAction'
-  | 'poll';
+  | 'poll'
+  | 'form';
 
 export interface CalloutTemplateFramingNone {
   type: 'none';
@@ -63,12 +64,41 @@ export interface CalloutTemplateFramingPoll {
   };
 }
 
+/** The builder's answer-type labels (combobox "Answer type"). */
+export type CalloutTemplateFormQuestionType =
+  | 'Short text'
+  | 'Long text'
+  | 'Single choice'
+  | 'Multiple choice';
+
+export interface CalloutTemplateFormQuestion {
+  prompt: string;
+  type: CalloutTemplateFormQuestionType;
+  required: boolean;
+  /** Choice questions only (2–20). */
+  options?: string[];
+}
+
+/**
+ * Form framing (workspace#080, ruling R25 — Forms in templates). Only the
+ * definition: title, description and ordered questions. The editor seeds one
+ * question when the Form chip is selected; a template Form never collects
+ * responses.
+ */
+export interface CalloutTemplateFramingForm {
+  type: 'form';
+  title: string;
+  description: string;
+  questions: CalloutTemplateFormQuestion[];
+}
+
 export type CalloutTemplateFraming =
   | CalloutTemplateFramingNone
   | CalloutTemplateFramingWhiteboard
   | CalloutTemplateFramingMemo
   | CalloutTemplateFramingCallToAction
-  | CalloutTemplateFramingPoll;
+  | CalloutTemplateFramingPoll
+  | CalloutTemplateFramingForm;
 
 // ============================================================================
 // Response Types
@@ -201,6 +231,22 @@ export const createCalloutTemplateData = ({
           hideResultsUntilUserVotes: pollHideResults,
           showVoterAvatars: pollShowVoters,
         },
+      };
+      break;
+    case 'form':
+      framing = {
+        type: 'form',
+        title: `Form title ${hexId}`,
+        description: `Form description ${hexId}`,
+        questions: [
+          { prompt: `Your name ${hexId}`, type: 'Short text', required: true },
+          {
+            prompt: `Pick one ${hexId}`,
+            type: 'Single choice',
+            required: false,
+            options: [`Alpha ${hexId}`, `Beta ${hexId}`],
+          },
+        ],
       };
       break;
     case 'none':

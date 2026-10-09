@@ -88,7 +88,7 @@ For every row: log in → open `/admin`. Two separate checks:
 
 **Questions to answer while here** *(all four are product questions — none can be closed by a tester)*
 - [ ] A8/A9: Settings Admin and Operations Admin have **no admin UI at all** — every action they own is API-only today. Is that intended for release? (Spec user stories read as if an operator does these in the product.)
-- [ ] "Authorization policies" is reachable only through the legacy platform-admin privilege — at Slice B nobody will see it. Intended?
+- [x] ☑ Slice B (server T074 / client T013): "Authorization policies" is Platform Operations Admin's section — `admin-sections-per-role.spec.ts` asserts it.
 - [ ] A5: Platform Support sees **no Spaces tab**, by design — its space rights exist only where a space enables the support flag, and the platform-wide list (private spaces included) belongs to Spaces Reader / Content Full Access; the server grants Support a list read on Organisations, Innovation packs and Innovation hubs only. But the role then has **no way to find the spaces that opted in to support** — it needs the URL from the customer. Should there be a list filtered to support-enabled spaces? Needs a server query first; none returns that set for this role today. (Raised in the manual pass, 2026-09-21.)
 - [ ] A7: Platform Audit Reader has **no audit screen**. Its only UI is the read-only Authorization tab (holder lists). The platform audit trail is reachable only through the MCP tool `analyze_audit_log`, and the two email-change audit queries have a dialog ("Email change history") that lives on the **Users** list — a section this role does not have, while Users Admin is offered the button and refused by the server (E17). Is an audit reader without an audit view acceptable for release? At minimum the history dialog is offered to the wrong role. (Raised in the manual pass, 2026-09-21.)
 
@@ -117,7 +117,7 @@ For every row: log in → open `/admin`. Two separate checks:
 - [ ] 🤖UI *(the 14-tabs part is an expected failure: E10)* All 14 tabs, the notice **"You can view this role's holders but not add or remove them."** 🔎, "Current members" lists, **no "Add members"**, no Add buttons 🔎.
 - [ ] 🤖UI *(as GLOBAL_SUPPORT: expected failure E1; as Audit Reader the automated check finds NO Remove button and passes)* ❗ **Known defect to confirm:** scroll to **"Legacy roles (revoke only)"**. For a read-only viewer this section still renders **enabled "Remove" buttons** 🔎 (seen as GLOBAL_SUPPORT on Global Admin / Global Support / Global Community Reader holders). Check whether Audit Reader gets them too. Do **not** confirm the dialog on a real holder; if you must test the click, use a throwaway holder — expected: the server refuses.
 
-### B4 — Legacy roles (Slice A only)
+### B4 — Legacy roles (Slice A only — the section is DELETED at Slice B, client-web#10380)
 - [x] ☑ 2026-09-23 · 👤 As `admin@alkem.io`: the "Legacy roles (revoke only)" section lists current holders of the old global roles with **Remove** only — there is no way to *add* anyone to a legacy role.
 
 ---
@@ -157,7 +157,7 @@ For every row: log in → open `/admin`. Two separate checks:
 
 | # | Where | What was seen | Automated? — ✔ reproduced / ☐ not yet |
 |---|---|---|---|
-| E1 | Authorization → "Legacy roles (revoke only)" | Read-only viewers still get enabled **Remove** buttons (B3) | 🤖UI *(expected failure, as GLOBAL_SUPPORT)* — ☐ |
+| E1 | Authorization → "Legacy roles (revoke only)" | Read-only viewers still get enabled **Remove** buttons (B3) | ✔ closed by deletion at Slice B: the legacy section no longer exists; the read-only viewer check now lives on Audit Reader (`authorization-page-per-viewer.spec.ts`) |
 | E2 | Authorization → a Feature role | The **organization** search box is labelled "Search users…" (same label/placeholder as the user search above it) 🔎 | ✔ reproduced 2026-09-25: both boxes carry the "Search users…" placeholder |
 | E3 | Innovation hubs | **Nobody** holding only target roles can *create* a hub (server grants it only to legacy global roles). Is "create hub" offered to Support / Content Full Access / License Manager, and what happens on submit? | ✔ closed 2026-09-25: no create-hub control on Administration → Innovation hubs for Support or Content Full Access (Content Full Access gets Delete, correctly). Hub creation lives on an account's own settings page |
 | E4 | Licensing → edit a license plan | The server's `updateLicensePlan` **saves nothing** (reports success). If the UI lets Settings Admin / legacy admin edit a plan: change a value, reload — is it still the old value? | 🤖API *(red)* · 👤 only if a UI for editing plans exists — ☐ in the UI *(the API test is red for it; posted on the server PR)* |

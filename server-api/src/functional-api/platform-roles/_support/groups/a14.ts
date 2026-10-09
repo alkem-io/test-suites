@@ -15,15 +15,16 @@ import { undoOnFailure } from '../undo-on-failure';
 /**
  * A14 — space visibility. Owner: Platform License Manager.
  *
- * The mutation is renamed at Slice B. The gate follows `capability.surface`, so
- * the only place that still carries today's name is the codegen document — and
- * a stale document then fails loudly instead of passing as a denial.
- * Only `visibility` is sent: `nameID` on the same input opens a second gate.
+ * Slice B (FR-020): `updateSpacePlatformSettings` became
+ * `adminUpdateSpaceVisibility`, visibility only — the alias moved to a
+ * protected `nameID` on `updateSpace` (A17). The gate follows
+ * `capability.surface`, so a stale codegen document fails loudly instead of
+ * passing as a denial.
  */
 type A14 = { host: DisposableUser; spaceId: string };
 
 const CAPABILITY = CAPABILITIES.find(
-  c => c.id === 'A14.updateSpacePlatformSettings'
+  c => c.id === 'A14.adminUpdateSpaceVisibility'
 )!;
 
 const VISIBILITY =

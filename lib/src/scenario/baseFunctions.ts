@@ -4,6 +4,15 @@ import {
   CreateOrganizationInput,
   SpacePrivacyMode,
 } from "@alkemio/client-lib";
+import {
+  ensureSpaceMembers,
+  resolveSpaceOfRoleSet,
+} from "./membership/space-membership";
+import {
+  assignUserRoleAsOrganizationAdmin,
+  ensureSpaceOrganizationMember,
+  removeUserRoleAsOrganizationAdmin,
+} from "./membership/space-organization-membership";
 import { TestUser } from "../common/enums/test.user";
 import {
   CreateSpaceOnAccountInput,
@@ -55,7 +64,7 @@ export const updateCalloutVisibility = async (
   return graphqlErrorWrapper(callback, userRole);
 };
 
-export const assignRoleToUser = async (
+const assignRoleToUserDirect = async (
   userID: string,
   roleSetID: string,
   role: RoleName,
@@ -77,6 +86,87 @@ export const assignRoleToUser = async (
     );
 
   return graphqlErrorWrapper(callback, userRole);
+};
+
+const ENTRY_ASSIGN_GAP = [
+  "roleset-entry-role-assign",
+  "not a member of parent roleSet",
+];
+// Slice B: the harness admin holds no GRANT on an organisation it is not an
+// admin of, so ADMIN / OWNER assignments there are refused on 'grant'.
+const ORGANISATION_GRANT_GAP =
+  /unable to grant 'grant' privilege: assign role to User: .* on roleSet of type: organization/;
+const ORGANISATION_REMOVE_GAP =
+  /unable to grant 'grant' privilege: remove role from User: .* on roleSet of type organization/;
+
+/**
+ * Assign a role on a role set. workspace#027 Slice B: no actor can put a user
+ * directly into a SPACE as MEMBER any more (`ROLESET_ENTRY_ROLE_ASSIGN` is
+ * granted to nobody at L0), so when the harness admin is refused at that gate
+ * the user JOINS the space as themself instead (`ensureSpaceMembers`: open
+ * membership, join, restore), and a non-entry role is then granted on top.
+ * Calls made as any other persona are returned untouched — their refusals are
+ * what the authorization specs assert.
+ */
+export const assignRoleToUser = async (
+  userID: string,
+  roleSetID: string,
+  role: RoleName,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN,
+) => {
+  const result = await assignRoleToUserDirect(userID, roleSetID, role, userRole);
+  const message = String(result?.error?.errors?.[0]?.message ?? "");
+  if (userRole !== TestUser.GLOBAL_ADMIN || !result?.error) {
+    return result;
+  }
+  // Organisation role sets: ASSOCIATE / OWNER exist only there, and an
+  // organisation's own admins still hold the direct assign (entry role) and
+  // GRANT (ADMIN / OWNER) — retry as one. ADMIN is shared with spaces, so it
+  // goes the space way first and lands here only when the role set has no
+  // space behind it.
+  const organisationRole =
+    role === RoleName.Associate ||
+    role === RoleName.Owner ||
+    (role === RoleName.Admin && !(await resolveSpaceOfRoleSet(roleSetID)));
+  const organisationGap =
+    organisationRole &&
+    (ENTRY_ASSIGN_GAP.some((gap) => message.includes(gap)) ||
+      ORGANISATION_GRANT_GAP.test(message));
+  if (!organisationGap && !ENTRY_ASSIGN_GAP.some((gap) => message.includes(gap))) {
+    return result;
+  }
+  if (organisationRole) {
+    const retried = await assignUserRoleAsOrganizationAdmin(
+      roleSetID,
+      userID,
+      role,
+    );
+    if (!retried || retried.errors) {
+      LogManager.getLogger().error(
+        `assignRoleToUser: organisation-admin fallback failed for ${userID} (${role}) on ${roleSetID}: ${retried?.errors?.[0]?.message ?? "no admin available"}`,
+      );
+      return result;
+    }
+    return {
+      data: { assignRoleToUser: { id: userID } },
+      error: undefined,
+    } as unknown as typeof result;
+  }
+  try {
+    await ensureSpaceMembers(roleSetID, [userID]);
+  } catch (e) {
+    LogManager.getLogger().error(
+      `assignRoleToUser: join fallback failed for ${userID} on ${roleSetID}: ${e instanceof Error ? e.message : e}`,
+    );
+    return result;
+  }
+  if (role === RoleName.Member) {
+    return {
+      data: { assignRoleToUser: { id: userID } },
+      error: undefined,
+    } as unknown as typeof result;
+  }
+  return assignRoleToUserDirect(userID, roleSetID, role, userRole);
 };
 
 /**
@@ -115,7 +205,7 @@ export const assignRoleToVirtualContributor = async (
  * organization id. Throws on a GraphQL error so a fixture never continues on a
  * missing role.
  */
-export const assignRoleToOrganization = async (
+const assignRoleToOrganizationDirect = async (
   organizationID: string,
   roleSetID: string,
   role: RoleName,
@@ -152,7 +242,73 @@ export const removeRoleFromUser = async (
       { roleData: { actorID: userID, roleSetID, role } },
       { authorization: `Bearer ${authToken}` },
     );
-  return graphqlErrorWrapper(callback, userRole);
+  const result = await graphqlErrorWrapper(callback, userRole);
+  const message = String(result?.error?.errors?.[0]?.message ?? "");
+  // Slice B: same organisation gap as assignRoleToUser — the harness admin
+  // holds no GRANT on an organisation it is not an admin of, so a cleanup
+  // removal there is retried as one of the organisation's admins.
+  if (
+    userRole !== TestUser.GLOBAL_ADMIN ||
+    !result?.error ||
+    !ORGANISATION_REMOVE_GAP.test(message)
+  ) {
+    return result;
+  }
+  const retried = await removeUserRoleAsOrganizationAdmin(roleSetID, userID, role);
+  if (!retried || retried.errors) {
+    LogManager.getLogger().error(
+      `removeRoleFromUser: organisation-admin fallback failed for ${userID} (${role}) on ${roleSetID}: ${retried?.errors?.[0]?.message ?? "no admin available"}`,
+    );
+    return result;
+  }
+  return {
+    data: { removeRoleFromUser: { id: userID } },
+    error: undefined,
+  } as unknown as typeof result;
+};
+
+/**
+ * Assign a role on a space role set to an organisation. workspace#027 Slice B:
+ * nobody holds ROLESET_ENTRY_ROLE_ASSIGN_ORGANIZATION any more, so when the
+ * harness admin is refused at that gate the organisation is INVITED and the
+ * invitation ACCEPTED by one of its admins (`ensureSpaceOrganizationMember`);
+ * a non-entry role is then granted on top. Other personas' refusals are
+ * returned untouched.
+ */
+export const assignRoleToOrganization = async (
+  organizationID: string,
+  roleSetID: string,
+  role: RoleName,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN,
+) => {
+  // The direct helper THROWS on a GraphQL error (it always did); catch the
+  // one refusal Slice B introduced and fall back, rethrow everything else.
+  let result: Awaited<ReturnType<typeof assignRoleToOrganizationDirect>>;
+  try {
+    result = await assignRoleToOrganizationDirect(
+      organizationID,
+      roleSetID,
+      role,
+      userRole,
+    );
+    return result;
+  } catch (e) {
+    const message = e instanceof Error ? e.message : String(e);
+    if (
+      userRole !== TestUser.GLOBAL_ADMIN ||
+      !message.includes("roleset-entry-role-assign-organization")
+    ) {
+      throw e;
+    }
+  }
+  await ensureSpaceOrganizationMember(roleSetID, organizationID);
+  if (role === RoleName.Member) {
+    return {
+      data: { assignRoleToOrganization: { id: organizationID } },
+      error: undefined,
+    } as unknown as Awaited<ReturnType<typeof assignRoleToOrganizationDirect>>;
+  }
+  return assignRoleToOrganizationDirect(organizationID, roleSetID, role, userRole);
 };
 
 export const prepareMemoSigning = async (

@@ -274,11 +274,23 @@ spaceAdminTest.describe('US1-AS1 — permission gating (space admin half)', () =
 
 platformAdminTest.describe('US1-AS1 — permission gating (platform admin half)', () => {
   platformAdminTest(
-    'a platform admin sees both Invite Organisation and Add Organisation',
+    'a platform admin can Invite Organisation; Add Organisation is never actionable for anyone (workspace#027 Slice B)',
     async ({ page }) => {
+      // workspace#027 Slice B grants ROLESET_ENTRY_ROLE_ASSIGN_ORGANIZATION to
+      // nobody: a direct add put an organisation into a Space without its
+      // consent (R6), so the only way in is an invitation one of its admins
+      // accepts — for platform admins exactly as for Space admins. Same
+      // absent-or-inert invariant as the Space-admin half above.
       await openMemberOrganizationsSection(page);
-      await expect(page.getByRole('button', { name: 'Invite Organisation' })).toBeVisible();
-      await expect(page.getByRole('button', { name: 'Add Organisation' })).toBeEnabled();
+      await expect(page.getByRole('button', { name: 'Invite Organisation' })).toBeEnabled();
+      const addOrganisation = page.getByRole('button', { name: 'Add Organisation' });
+      if (await addOrganisation.isVisible()) {
+        await expect(addOrganisation).toBeDisabled();
+      } else {
+        await expect(
+          page.getByRole('button', { name: 'Add Organisation', includeHidden: true })
+        ).toHaveCount(0);
+      }
     }
   );
 });

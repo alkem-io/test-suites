@@ -296,23 +296,37 @@ export const deleteSpace = async (
   return graphqlErrorWrapper(callback, userRole);
 };
 
-export const updateSpacePlatformSettings = async (
+/**
+ * workspace#027 Slice B (FR-020): `updateSpacePlatformSettings` is gone.
+ * Visibility is `adminUpdateSpaceVisibility` (Platform License Manager's);
+ * the alias is a protected `nameID` on `updateSpace` (the space's own admins,
+ * `UPDATE_NAMEID`). Two surfaces, two helpers.
+ */
+export const updateSpaceVisibility = async (
   spaceId: string,
-  nameId: any,
   visibility: SpaceVisibility,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
-    graphqlClient.UpdateSpacePlatformSettings(
-      {
-        spaceId,
-        nameId,
-        visibility,
-      },
-      {
-        authorization: `Bearer ${authToken}`,
-      }
+    graphqlClient.AdminUpdateSpaceVisibility(
+      { spaceId, visibility },
+      { authorization: `Bearer ${authToken}` }
+    );
+
+  return graphqlErrorWrapper(callback, userRole);
+};
+
+export const updateSpaceNameId = async (
+  spaceId: string,
+  nameId: string,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string | undefined) =>
+    graphqlClient.UpdateSpaceNameId(
+      { spaceId, nameId },
+      { authorization: `Bearer ${authToken}` }
     );
 
   return graphqlErrorWrapper(callback, userRole);

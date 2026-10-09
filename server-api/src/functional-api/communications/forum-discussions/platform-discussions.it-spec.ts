@@ -743,7 +743,7 @@ describe('Forum category reorganisation - recategorise an existing post', () => 
     );
   });
 
-  test('Global admin (holder of PLATFORM_ADMIN) moves a post into Newsletter', async () => {
+  test('Platform Support (holder of PLATFORM_FORUM_MANAGE) moves a post into Newsletter', async () => {
     // Arrange
     const created = await createDiscussion(
       platformDiscussionId,

@@ -72,7 +72,7 @@ describe('Get User Account Authorization and License privileges ', () => {
     // Arrange
     await removePlatformRole(
       TestUserManager.users.nonSpaceMember.id,
-      RoleName.PlatformVcCampaign
+      RoleName.FeatureVcCampaign
     );
 
     // Act
@@ -99,7 +99,7 @@ describe('Get User Account Authorization and License privileges ', () => {
     // Arrange
     await assignPlatformRole(
       TestUserManager.users.nonSpaceMember.id,
-      RoleName.PlatformVcCampaign
+      RoleName.FeatureVcCampaign
     );
 
     // Act
@@ -122,7 +122,7 @@ describe('Get User Account Authorization and License privileges ', () => {
 
     await removePlatformRole(
       TestUserManager.users.nonSpaceMember.id,
-      RoleName.PlatformVcCampaign
+      RoleName.FeatureVcCampaign
     );
   });
   describe('VC campaign Licenses cleanup', () => {
@@ -132,14 +132,14 @@ describe('Get User Account Authorization and License privileges ', () => {
       await deleteInnovationPack(innovationPackId, TestUser.GLOBAL_ADMIN);
       await removePlatformRole(
         TestUserManager.users.nonSpaceMember.id,
-        RoleName.PlatformVcCampaign
+        RoleName.FeatureVcCampaign
       );
     });
     test('User with VC campaign licenses assigned and created Space, VC and Innovation Pack', async () => {
       // Arrange
       await assignPlatformRole(
         TestUserManager.users.nonSpaceMember.id,
-        RoleName.PlatformVcCampaign
+        RoleName.FeatureVcCampaign
       );
 
       const createSpace = await createSpaceAndGetData(
@@ -195,7 +195,7 @@ describe('Get User Account Authorization and License privileges ', () => {
     // Arrange
     await assignPlatformRole(
       TestUserManager.users.nonSpaceMember.id,
-      RoleName.PlatformBetaTester
+      RoleName.FeatureBetaTester
     );
 
     // Act
@@ -221,7 +221,7 @@ describe('Get User Account Authorization and License privileges ', () => {
 
     await removePlatformRole(
       TestUserManager.users.nonSpaceMember.id,
-      RoleName.PlatformBetaTester
+      RoleName.FeatureBetaTester
     );
   });
   describe('BetaTested Licenses cleanup', () => {
@@ -231,14 +231,14 @@ describe('Get User Account Authorization and License privileges ', () => {
       await deleteInnovationPack(innovationPackId, TestUser.GLOBAL_ADMIN);
       await removePlatformRole(
         TestUserManager.users.nonSpaceMember.id,
-        RoleName.PlatformBetaTester
+        RoleName.FeatureBetaTester
       );
     });
     test('User with Beta tester licenses assigned and created Space, VC and Innovation Pack', async () => {
       // Arrange
       await assignPlatformRole(
         TestUserManager.users.nonSpaceMember.id,
-        RoleName.PlatformBetaTester
+        RoleName.FeatureBetaTester
       );
 
       const createSpace = await createSpaceAndGetData(
