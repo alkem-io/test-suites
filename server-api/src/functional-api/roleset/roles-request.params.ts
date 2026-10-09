@@ -220,6 +220,31 @@ export const removeRoleFromOrganization = async (
   return graphqlErrorWrapper(callback, userRole);
 };
 
+/** Generic actor removal: the server resolves the actor type from `actorID`. */
+export const removeRole = async (
+  actorID: string,
+  roleSetID: string,
+  role: RoleName = RoleName.Member,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string | undefined) =>
+    graphqlClient.RemoveRole(
+      {
+        roleData: {
+          actorID,
+          roleSetID,
+          role,
+        },
+      },
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+
+  return graphqlErrorWrapper(callback, userRole);
+};
+
 export const joinRoleSet = async (
   roleSetID: string,
   userRole: TestUser = TestUser.GLOBAL_ADMIN

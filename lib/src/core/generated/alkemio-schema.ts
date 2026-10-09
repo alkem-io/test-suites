@@ -47499,6 +47499,12 @@ export type JoinRoleSetMutationVariables = Exact<{
 
 export type JoinRoleSetMutation = { joinRoleSet: { id: string } };
 
+export type RemoveRoleMutationVariables = Exact<{
+  roleData: RemoveRoleOnRoleSetInput;
+}>;
+
+export type RemoveRoleMutation = { removeRole: { id: string } };
+
 export type RemoveRoleFromOrganizationMutationVariables = Exact<{
   roleData: RemoveRoleOnRoleSetInput;
 }>;

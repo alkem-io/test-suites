@@ -51651,6 +51651,12 @@ export type JoinRoleSetMutationVariables = SchemaTypes.Exact<{
 
 export type JoinRoleSetMutation = { joinRoleSet: { id: string } };
 
+export type RemoveRoleMutationVariables = SchemaTypes.Exact<{
+  roleData: SchemaTypes.RemoveRoleOnRoleSetInput;
+}>;
+
+export type RemoveRoleMutation = { removeRole: { id: string } };
+
 export type RemoveRoleFromOrganizationMutationVariables = SchemaTypes.Exact<{
   roleData: SchemaTypes.RemoveRoleOnRoleSetInput;
 }>;
@@ -122272,6 +122278,13 @@ export const JoinRoleSetDocument = gql`
     }
   }
 `;
+export const RemoveRoleDocument = gql`
+  mutation RemoveRole($roleData: RemoveRoleOnRoleSetInput!) {
+    removeRole(roleData: $roleData) {
+      id
+    }
+  }
+`;
 export const RemoveRoleFromOrganizationDocument = gql`
   mutation RemoveRoleFromOrganization($roleData: RemoveRoleOnRoleSetInput!) {
     removeRoleFromOrganization(roleData: $roleData) {
@@ -126966,6 +126979,7 @@ const InviteForEntryRoleOnRoleSetDocumentString = print(
   InviteForEntryRoleOnRoleSetDocument
 );
 const JoinRoleSetDocumentString = print(JoinRoleSetDocument);
+const RemoveRoleDocumentString = print(RemoveRoleDocument);
 const RemoveRoleFromOrganizationDocumentString = print(
   RemoveRoleFromOrganizationDocument
 );
@@ -128018,6 +128032,28 @@ export function getSdk(
             { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "joinRoleSet",
+        "mutation",
+        variables
+      );
+    },
+    RemoveRole(
+      variables: SchemaTypes.RemoveRoleMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.RemoveRoleMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.RemoveRoleMutation>(
+            RemoveRoleDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "RemoveRole",
         "mutation",
         variables
       );
