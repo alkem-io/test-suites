@@ -253,11 +253,8 @@ afterAll(async () => {
     TestUser.ORGANIZATION_ADMIN
   );
 
-  await removeRoleFromUser(
-    TestUserManager.users.subspaceMember.id,
-    orgARoleSetId,
-    RoleName.Owner
-  );
+  // SUBSPACE_MEMBER is A's only OWNER, so the role-set policy refuses its
+  // removal; the credential goes when the scenario deletes A.
   await removeRoleFromUser(
     TestUserManager.users.qaUser.id,
     orgARoleSetId,
@@ -462,6 +459,37 @@ describe('@forge-acceptance Organization self-removal from a Space community', (
     // Assert
     expect(res.error).toBeUndefined();
     expect(await isOrgBMember(spaceRoleSetId)).toBe(false);
+    expect(await isOrgAMember(spaceRoleSetId)).toBe(true);
+  });
+
+  test('FR-007 the self-removal grant does not stick to the Space role set', async () => {
+    // Arrange — a Space admin may make A Lead (positive control on the
+    // operation), then A's admin removes A's Lead through the extended policy.
+    await ensureOrgARole(spaceRoleSetId, RoleName.Lead);
+    expect(await isOrgALead(spaceRoleSetId)).toBe(true);
+    const removed = await removeRoleFromOrganization(
+      orgAId,
+      spaceRoleSetId,
+      RoleName.Lead,
+      TestUser.ORGANIZATION_ADMIN
+    );
+    expect(removed.error).toBeUndefined();
+    expect(await isOrgALead(spaceRoleSetId)).toBe(false);
+
+    // Act — A is still a Member, so assigning Lead needs GRANT alone: only a
+    // persisted copy of the removal grant would let A's admin through.
+    const res = await assignRoleToOrganization(
+      orgAId,
+      spaceRoleSetId,
+      RoleName.Lead,
+      TestUser.ORGANIZATION_ADMIN
+    );
+
+    // Assert — denied on GRANT itself, not on the entry-role privilege.
+    expect(res.error?.errors[0].message).toMatch(
+      /Authorization: unable to grant 'grant' privilege/
+    );
+    expect(await isOrgALead(spaceRoleSetId)).toBe(false);
     expect(await isOrgAMember(spaceRoleSetId)).toBe(true);
   });
 
