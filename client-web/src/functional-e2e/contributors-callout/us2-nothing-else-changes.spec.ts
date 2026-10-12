@@ -237,13 +237,26 @@ test.describe.serial('US2 — Everything else keeps working', () => {
     const col = await openCollection(page);
     await expect(col.region.getByText('Page 1 of 2')).toBeVisible();
     await expect(col.cardItems).toHaveCount(9);
-    const names = async () =>
-      (await col.cardItems.allInnerTexts()).map(t => t.split('\n')[0].trim());
-    const page1 = await names();
+    // Which seeded people have a card on the current page, by the name link
+    // (`cardFor`). A card's first text line is the avatar: while the image is
+    // not loaded it reads as the fallback initial ("U"), which is what the
+    // 2026-10-12 nightlies collected for the second page.
+    const shown = async () => {
+      const names: string[] = [];
+      for (const person of people) {
+        if ((await col.cardFor(person.displayName).count()) > 0) {
+          names.push(person.displayName);
+        }
+      }
+      return names;
+    };
+    const page1 = await shown();
+    expect(page1).toHaveLength(9);
     await col.region.getByRole('button', { name: /next/i }).click();
     await expect(col.region.getByText('Page 2 of 2')).toBeVisible();
     await expect(col.cardItems).toHaveCount(people.length - 9);
-    const page2 = await names();
+    const page2 = await shown();
+    expect(page2).toHaveLength(people.length - 9);
     expect(page2.filter(n => page1.includes(n))).toEqual([]);
     expect([...page1, ...page2].sort()).toEqual(
       people.map(p => p.displayName).sort()

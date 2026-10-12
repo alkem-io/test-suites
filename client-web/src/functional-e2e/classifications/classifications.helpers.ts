@@ -321,6 +321,29 @@ export function classificationSection(page: Page): Locator {
     .first();
 }
 
+/**
+ * Opens the classification section's "Add new ▾" menu and waits for both
+ * entries. The templates page renders its section list only while
+ * `AllTemplatesInTemplatesSet` is not loading, so a reload after the first
+ * paint unmounts the list together with an open Radix menu (the 2026-10-12
+ * nightly: "element was detached from the DOM", then no menu at all).
+ * Retrying the click through `toPass` rides out such a remount instead of
+ * clicking once and waiting on a menu that no longer exists.
+ */
+export async function openClassificationAddNewMenu(page: Page) {
+  await expect(async () => {
+    await classificationSection(page)
+      .getByRole('button', { name: 'Add new' })
+      .click();
+    await expect(
+      page.getByRole('menuitem', { name: 'Create new' })
+    ).toBeVisible({ timeout: 3_000 });
+    await expect(
+      page.getByRole('menuitem', { name: 'Select from library' })
+    ).toBeVisible({ timeout: 3_000 });
+  }).toPass({ intervals: [500, 1_000, 2_000], timeout: 30_000 });
+}
+
 /** Parse the numeric count badge out of the section header. */
 export async function classificationSectionCount(page: Page): Promise<number> {
   const text = (await classificationTemplatesTrigger(page).textContent()) ?? '';
