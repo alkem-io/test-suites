@@ -990,7 +990,7 @@ export class TestScenarioFactory {
         if (!message.includes("already taken or restricted")) {
           throw e;
         }
-        const adopted = await this.adoptSpaceByNameId(spaceName);
+        const adopted = await this.adoptSpaceByNameId(spaceName, accountID);
         if (adopted) {
           attempt = { spaceName, res: adopted };
           break;
@@ -1284,10 +1284,18 @@ export class TestScenarioFactory {
    * Reads back a root space this process created a moment ago under
    * `spaceName` (its nameID is the lower-cased name) — the recovery for a
    * create that was committed server-side but reported as failed. Returns the
-   * same data `createSpaceAndGetData` returns, or `undefined` when no space
-   * exists under that nameID (then the collision was a genuine clash).
+   * same data `createSpaceAndGetData` returns, or `undefined` when the nameID
+   * is free or held by a space that is not ours.
+   *
+   * "Ours" means: hosted on the account this call created it in, under the
+   * display name this call sent. A space that fails either check is foreign
+   * (another file's scenario, a leftover of an earlier run): it is neither
+   * modified nor adopted, and the caller retries with a fresh id.
    */
-  private static async adoptSpaceByNameId(spaceName: string) {
+  private static async adoptSpaceByNameId(
+    spaceName: string,
+    accountID: string,
+  ) {
     const nameID = this.validateAndClean(spaceName.toLowerCase());
     if (!nameID) return undefined;
     const graphqlClient = getGraphqlClient();
@@ -1301,6 +1309,16 @@ export class TestScenarioFactory {
     );
     const spaceId = lookup.data?.lookupByName?.space?.id;
     if (!spaceId) return undefined;
+    const candidate = (await getSpaceData(spaceId)).data?.lookup?.space;
+    const ours =
+      candidate?.account?.id === accountID &&
+      candidate?.about?.profile?.displayName === `l0-${spaceName}`;
+    if (!ours) {
+      LogManager.getLogger().warn(
+        `[createRootSpace] '${nameID}' is held by a space that is not this call's (account or display name differ) — not adopted`,
+      );
+      return undefined;
+    }
     LogManager.getLogger().warn(
       `[createRootSpace] '${nameID}' was already committed by an earlier attempt — adopted instead of re-created`,
     );

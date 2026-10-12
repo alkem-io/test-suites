@@ -638,9 +638,9 @@ const NAME_ID_TAKEN = "nameID is already taken";
  * exists and is ours. Instead of surfacing that as a setup failure (and leaking
  * the committed twin), this reads the organization back by its nameID and
  * returns it in the exact shape the mutation would have — callers never know
- * the difference. A genuine collision with foreign data is impossible to
- * distinguish here, which is fine for test nameIDs that carry a per-process
- * random suffix; anything else still surfaces verbatim.
+ * the difference. An organization under that nameID whose display name is not
+ * the one this call sent is foreign data, never adopted: the original
+ * collision error is returned. Anything else still surfaces verbatim.
  */
 export const createOrganizationOrAdopt = async (
   organizationName: string,
@@ -687,7 +687,16 @@ export const createOrganizationOrAdopt = async (
       ),
     userRole,
   );
-  if (!existing.data?.organization) {
+  // Ownership check: the committed twin of THIS call carries the display name
+  // we just sent (it embeds the caller's unique id in full, while the nameID
+  // may be truncated). Anything else under the nameID is foreign data — a
+  // leftover of an earlier run or another file's scenario — and adopting it
+  // would attach this test to someone else's state (and its teardown would
+  // delete it). Surface the original collision instead.
+  if (
+    !existing.data?.organization ||
+    existing.data.organization.profile?.displayName !== organizationName
+  ) {
     return created;
   }
   LogManager.getLogger().warn(
