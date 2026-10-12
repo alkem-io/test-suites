@@ -25,15 +25,21 @@ import { fillSecret } from '../helpers/login.helper';
 import { listMcpKeyIds, revokeMintedMcpKeys } from '../helpers/mcp-api-keys.helper';
 
 const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
-// Local dev: the Traefik edge on ALKEMIO_BASE_URL does not route `/rest/mcp`
-// (no IngressRoute in the compose stack's http.yml — only production/acceptance
-// carry the dedicated `mcp-api` IngressRoute). The server's MCP host is reached
-// directly on its own port locally; set ALKEMIO_MCP_URL to override per-env.
+const serverRestUrl = (process.env.ALKEMIO_SERVER_REST || '').replace(/\/+$/, '');
+// `/rest/mcp` is served by the server's REST host, not by the client-web edge.
+// On the shared environments that host is ALKEMIO_SERVER_REST (the nightly's
+// `…/api/private/rest`); `${ALKEMIO_BASE_URL}/rest/mcp` answers 405 there
+// (nightly 2026-10-12, three US2 reds). Local dev: the compose Traefik edge
+// does not route `/rest/mcp` at all (no IngressRoute in http.yml), so the
+// server's MCP host is reached directly on its own port. ALKEMIO_MCP_URL
+// overrides both.
 const mcpUrl =
   process.env.ALKEMIO_MCP_URL ||
   (baseUrl.includes('localhost')
     ? 'http://localhost:4000/rest/mcp'
-    : `${baseUrl}/rest/mcp`);
+    : serverRestUrl
+      ? `${serverRestUrl}/mcp`
+      : `${baseUrl}/rest/mcp`);
 const adminEmail = process.env.AUTH_ADMIN_EMAIL || 'admin@alkem.io';
 const adminPassword = process.env.AUTH_TEST_HARNESS_PASSWORD || 'change_me';
 

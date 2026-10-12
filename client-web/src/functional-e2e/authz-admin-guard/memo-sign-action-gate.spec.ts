@@ -13,7 +13,11 @@ import { graphqlErrorWrapper } from '@alkemio/tests-lib/utils/graphql.wrapper';
 import { TestScenarioConfig } from '@alkemio/tests-lib/scenario/config/test-scenario-config';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import { TestScenarioFactory } from '@alkemio/tests-lib/scenario/TestScenarioFactory';
-import { CalloutFramingType, CalloutVisibility } from '@alkemio/tests-lib/core/generated/alkemio-schema';
+import {
+  CalloutFramingType,
+  CalloutVisibility,
+  LicenseEntitlementType,
+} from '@alkemio/tests-lib/core/generated/alkemio-schema';
 import { createPersonaTest } from '../fixtures/authenticated-session.fixture';
 
 const MEMO_SIGNING_PLAN_NAME = 'SPACE_FEATURE_MEMO_SIGNING';
@@ -115,14 +119,43 @@ test('14.1 With the entitlement granted, the identity gate still hides the Sign 
     )
   );
   expect(assigned.error).toBeUndefined();
+  // The assignment is not visible to the UI the instant the mutation returns:
+  // the space's entitlements are resolved from the plan credentials and cached
+  // on the server side. The nightly of 2026-10-12 (and 2026-10-08) failed
+  // here with the gate rendered correctly in the failure screenshot — it had
+  // simply arrived after the assertion window. Wait for the entitlement to be
+  // reported through the API before the dialog is asked to render on it.
+  await expect
+    .poll(
+      async () => {
+        const license = await admin(token =>
+          client.GetSpaceLicenseEntitlements(
+            { spaceID: baseScenario.space.id },
+            { authorization: `Bearer ${token}` }
+          )
+        );
+        return (
+          license.data?.lookup?.space?.license?.entitlements?.find(
+            (e: { type: LicenseEntitlementType }) => e.type === LicenseEntitlementType.SpaceFlagMemoSigning
+          )?.enabled ?? false
+        );
+      },
+      {
+        timeout: 30_000,
+        message: 'SPACE_FLAG_MEMO_SIGNING never reported enabled after AssignLicensePlanToSpace',
+      }
+    )
+    .toBe(true);
   const dialog = await openMemo(page);
   // The memo itself still opens and is shareable…
   await expect(dialog.getByRole('button', { name: 'Share' })).toBeVisible();
   // …but signing is not USABLE by an identity without a Cleverbase method:
   // since client-web#10305 (2026-09-14) the dialog shows a DISABLED "Sign memo"
   // beside the guidance to link Cleverbase first, instead of hiding the action.
+  // The dialog resolves the entitlement in its own query, so the first look
+  // still gets the long window.
   const sign = dialog.getByRole('button', { name: 'Sign memo' });
-  await expect(sign).toHaveCount(1);
+  await expect(sign).toHaveCount(1, { timeout: 30_000 });
   await expect(sign).toBeDisabled();
   await expect(dialog.getByText('Link Cleverbase before signing.')).toBeVisible();
 });

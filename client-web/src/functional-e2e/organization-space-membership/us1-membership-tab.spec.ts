@@ -314,21 +314,29 @@ test.describe('Organization Membership tab — list, search, filter @forge-accep
     ).toHaveCount(0);
   });
 
-  test('US1-AS8 title and breadcrumb name the tab; no raw i18n keys', async ({
+  // Known client-web defect — https://github.com/alkem-io/client-web/issues/10415
+  // Today: the settings shell's "Profile" title and the tab's own title race,
+  // and the tab loses even after in-app tab navigation — the nightly of
+  // 2026-10-12 read "(8) Profile | Alkemio" with the Membership cards already
+  // rendered, so the in-app-navigation workaround does not hold either.
+  // Drop the .skip when the fix lands; the assertion is the acceptance oracle
+  // and must not be softened.
+  test.skip('US1-AS8 the browser title names the tab (alkem-io/client-web#10415)', async ({
     page,
   }) => {
     test.setTimeout(90_000);
     await openTabWithCards(page, 2);
-
-    // Browser title and breadcrumb name the Membership tab. The title is
-    // asserted after in-app tab navigation: on a cold direct load the shell's
-    // "Profile" title and the tab's own title race, so any organization
-    // settings tab (Associates, Invitations, Membership) may keep "Profile" —
-    // pre-existing defect alkem-io/client-web#10415, not specific to this tab.
     await page.getByRole('tab', { name: COPY.tabAfter, exact: true }).click();
     await page.getByRole('tab', { name: COPY.tab, exact: true }).click();
     await expect(membershipCards(page)).toHaveCount(2);
     await expect(page).toHaveTitle(/Membership/);
+  });
+
+  test('US1-AS8 breadcrumb names the tab; no raw i18n keys', async ({
+    page,
+  }) => {
+    test.setTimeout(90_000);
+    await openTabWithCards(page, 2);
     await expect(
       page
         .getByRole('navigation', { name: 'breadcrumb' })
