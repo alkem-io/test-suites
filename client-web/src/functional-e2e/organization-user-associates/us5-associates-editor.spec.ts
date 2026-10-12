@@ -274,15 +274,16 @@ actorTest.describe('US5-AS1 — the retired Authorization URL lands on the Assoc
     await expect(page.getByRole('heading', { name: 'Pending applications & invitations' })).toBeVisible();
   });
 
-  actorTest('the tab strip is Profile / Account / Associates / Invitations / Settings — no Authorisation tab', async ({ page }) => {
+  actorTest('the tab strip is Profile / Account / Associates / Membership / Invitations / Settings — no Authorisation tab', async ({ page }) => {
     await page.goto(`${baseUrl}/organization/${orgAdminCap.nameID}/settings/community`);
     await expect(page.getByRole('heading', { name: 'Associates' })).toBeVisible({ timeout: 15_000 });
     // shell.tabs.org in contributorSettings.en.json; the strip renders each
     // entry as role="tab" (the breadcrumb above it also links "Settings", so
-    // the role matters).
+    // the role matters). Membership joined the strip with the organization
+    // space-membership feature (083, client-web develop since 2026-10-09).
     const tabs = page.getByRole('tab');
-    await expect(tabs).toHaveCount(5);
-    for (const label of ['Profile', 'Account', 'Associates', 'Invitations', 'Settings']) {
+    await expect(tabs).toHaveCount(6);
+    for (const label of ['Profile', 'Account', 'Associates', 'Membership', 'Invitations', 'Settings']) {
       await expect(page.getByRole('tab', { name: label, exact: true })).toBeVisible();
     }
     for (const retired of ['Authorisation', 'Authorization', 'Community']) {

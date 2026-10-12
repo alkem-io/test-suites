@@ -47,7 +47,7 @@ Levels are the 083 risk register's (workspace `specs/083-org-leave-space`,
 | R-1 | A stranger, or another organization's admin, ejects an organization from a Space | — | — | high | US3-AS4, US3-AS7, non-host cases, FR-007 |
 | R-2 | A plain associate or unrelated user removes the organization | — | — | high | US3-AS3, US3-AS5, SC-002 generic twins |
 | R-3 | Leave acts on the wrong role set (parent instead of Subspace) | — | — | high | US2-AS3, US2-AS4, US3-AS1 |
-| R-4 | Lead survives Leave (accepted residual, D-2) | — | — | medium | US2-AS5, US3-AS8 |
+| R-4 | Leave leaves a Lead-without-Member behind (D-2 "Lead survives" was superseded by the server#6649 operator ruling: leaving is all-or-nothing) | — | — | medium | US2-AS5, US3-AS8 |
 | R-6 | A failed leave reports success | — | — | medium | US2-AS6 |
 | R-7 | "No memberships" flashes before the cards | — | — | medium | US1-AS9 |
 | R-10 | The tab is reachable by non-admins | — | — | low | US1-AS7 |
@@ -78,13 +78,13 @@ US3 rows in `server-api/src/functional-api/roleset/organization/organization-sel
 | US1-AS5 | Lead badge | › US1-AS5 Lead role shows the Lead badge | E2E |
 | US1-AS6 | View Space | › US1-AS6 View Space opens the Space | E2E |
 | US1-AS7 | Plain associate redirected | › US1-AS7 a plain associate is redirected to the public profile | E2E |
-| US1-AS8 | Title (after in-app navigation), breadcrumb, no raw keys — **partial**, see gaps | › US1-AS8 title and breadcrumb name the tab; no raw i18n keys | E2E |
+| US1-AS8 | Breadcrumb, no raw keys — **partial**, see gaps; the title assertion is pinned with `test.skip` on client-web#10415 | › US1-AS8 breadcrumb names the tab; no raw i18n keys · › US1-AS8 the browser title names the tab (skipped) | E2E |
 | US1-AS9 | Skeleton while `rolesOrganization` is held; no empty caption | › US1-AS9 skeleton while loading, never the empty caption before the cards | E2E (request delayed, not faked) |
 | US2-AS1 | Dialog names S1; nothing sent; still Member | `us2-org-leaves-space.spec.ts` › US2-AS1 Leave Subspace opens a destructive confirmation naming the Subspace | E2E + API read |
 | US2-AS2 | Cancel changes nothing | › US2-AS2 Cancel changes nothing | E2E + API read |
 | US2-AS3 | Leave S1 only; toast within 3 s (SC-001) | › US2-AS3 confirming leaves only the Subspace chosen | E2E + API read |
 | US2-AS4 | Leave S cascades to S1/S2 | › US2-AS4 leaving the Space ends its Subspace memberships too | E2E + API read |
-| US2-AS5 | Lead survives Leave | › US2-AS5 leaving a Space where the organization is Lead keeps the Lead role | E2E + API read |
+| US2-AS5 | Leave revokes Lead with Member (server#6649) | › US2-AS5 leaving a Space where the organization is Lead removes the Lead role too | E2E + API read |
 | US2-AS6 | Removed meanwhile → error, never success | › US2-AS6 a membership removed meanwhile reports an error, never success | E2E + API read |
 | US2-AS7 | Confirmed dialog busy and disabled; one request | › US2-AS7 a second submit is impossible while the leave is in flight | E2E (request delayed) |
 | US3-AS1 | Org admin removes A from S1 | › US3-AS1 org admin removes A from S1 | API |
@@ -111,7 +111,7 @@ US3 rows in `server-api/src/functional-api/roleset/organization/organization-sel
 | Scenario | Why not automated | Where it belongs |
 |---|---|---|
 | US1-AS8 / FR-012 — copy in all six languages | Switching the UI language persists on the shared persona and would leak into parallel specs; locale assertions have no home here (`harness.md`) | client-web i18n key-parity unit test + manual release check |
-| US1-AS8 / FR-001 — title on a cold direct load | Pre-existing race between the settings shell's "Profile" title and each tab's own title: [alkem-io/client-web#10415](https://github.com/alkem-io/client-web/issues/10415). The walk asserts the title after in-app navigation only | client-web; add the cold-load assertion once #10415 ships |
+| US1-AS8 / FR-001 — browser title | Pre-existing race between the settings shell's "Profile" title and each tab's own title: [alkem-io/client-web#10415](https://github.com/alkem-io/client-web/issues/10415). The nightly of 2026-10-12 showed it losing after in-app tab navigation too, so the title walk is kept as a `test.skip` pin until the fix lands | client-web; un-skip (and add the cold-load assertion) once #10415 ships |
 | FR-016 — focus trapped in and returned from the Leave dialog; banner alt text; "Led by" group label | No accessibility harness (`harness.md`). The walks pin only the filter's `aria-pressed` and the menu trigger's accessible name | Manual a11y check; client-web `MembershipsSection.test.tsx` pins `aria-pressed` only |
 | C-5 — a Space the viewing admin cannot read is not listed (API leave still allowed) | Every walk makes the persona a user-Member so that its cards render; no case drops that read access | Manual, or a future walk with a non-member admin |
 | Archived Spaces excluded from the tab | No scenario archives a Space with an organization member | Manual / server `rolesOrganization` tests |

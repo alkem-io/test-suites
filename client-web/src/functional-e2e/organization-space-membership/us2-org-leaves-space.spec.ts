@@ -252,9 +252,15 @@ test.describe('Organization Membership tab — leave a Space', () => {
     expect(await orgIsMemberOf(subsubspaceRoleSetId(), orgId())).toBe(false);
   });
 
-  test('US2-AS5 leaving a Space where the organization is Lead keeps the Lead role', async ({
+  test('US2-AS5 leaving a Space where the organization is Lead removes the Lead role too', async ({
     page,
   }) => {
+    // Leaving is all-or-nothing: the operator ruling in server#6649 (merged
+    // 2026-10-09, one hour after this suite) superseded decision D-2 "Lead
+    // survives Leave". Removing the organization's MEMBER role now revokes
+    // every other role it holds on that role set (LEAD), so the Space leaves
+    // the Membership tab entirely — an organization is never left a
+    // Lead-without-Member.
     expect(await orgIsMemberOf(leadRoleSetId(), orgId())).toBe(true);
     expect(await orgIsLeadOf(leadRoleSetId(), orgId())).toBe(true);
     await openTabWithCards(page, 1);
@@ -269,11 +275,14 @@ test.describe('Organization Membership tab — leave a Space', () => {
       timeout: SUCCESS_TOAST_MS,
     });
     expect(await orgIsMemberOf(leadRoleSetId(), orgId())).toBe(false);
-    expect(await orgIsLeadOf(leadRoleSetId(), orgId())).toBe(true);
-    await expect(membershipCard(page, leadName())).toBeVisible();
-    await expect(
-      membershipCard(page, leadName()).getByText(COPY.roleLead, { exact: true })
-    ).toBeVisible();
+    expect(await orgIsLeadOf(leadRoleSetId(), orgId())).toBe(false);
+    await expect(membershipCard(page, leadName())).toHaveCount(0);
+    await expect(membershipCards(page)).toHaveCount(0);
+
+    // AS6 and AS7 count on L still being listed next to S: put the plain
+    // membership back the only way a new organization can enter a Space.
+    await inviteAndAccept(orgId(), leadRoleSetId(), TestUser.GLOBAL_ADMIN);
+    expect(await orgIsMemberOf(leadRoleSetId(), orgId())).toBe(true);
   });
 
   test('US2-AS6 a membership removed meanwhile reports an error, never success', async ({
