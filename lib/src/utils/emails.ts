@@ -76,7 +76,11 @@ type AddressedMail = { subject: string; body: string; toAddresses?: string[] };
 const mailsTo = (items: AddressedMail[], email: string): AddressedMail[] => {
   const wanted = email.toLowerCase();
   return items.filter((item) =>
-    (item.toAddresses ?? []).some((to) => to.toLowerCase().includes(wanted))
+    (item.toAddresses ?? []).some((to) => {
+      // MailSlurper may render a recipient as `Name <addr>`; compare the address only.
+      const addr = (to.match(/<([^>]+)>/)?.[1] ?? to).trim().toLowerCase();
+      return addr === wanted;
+    })
   );
 };
 

@@ -229,30 +229,32 @@ test.describe(
 
     test.afterAll(async () => {
       await authContext?.close().catch(() => undefined);
-      await restoreReactionChannels?.();
+      try {
+        await restoreReactionChannels?.();
+      } finally {
+        // Remove reactor A — Kratos identity AND Alkemio user — before scenario
+        // cleanup. The library `deleteUser` helper is not index-exported and
+        // defaults to deleteIdentity:false, so issue the mutation directly with
+        // deleteIdentity:true (mirrors the chat-avatars teardown). Caught so
+        // scenario cleanup still runs if the delete fails.
+        if (reactorId) {
+          const sdk = getGraphqlClient() as unknown as {
+            deleteUser: (
+              v: { deleteData: { ID: string; deleteIdentity: boolean } },
+              h: { authorization: string }
+            ) => Promise<unknown>;
+          };
+          await sdk
+            .deleteUser(
+              { deleteData: { ID: reactorId, deleteIdentity: true } },
+              { authorization: `Bearer ${adminToken}` }
+            )
+            .catch(() => undefined);
+        }
 
-      // Remove reactor A — Kratos identity AND Alkemio user — before scenario
-      // cleanup. The library `deleteUser` helper is not index-exported and
-      // defaults to deleteIdentity:false, so issue the mutation directly with
-      // deleteIdentity:true (mirrors the chat-avatars teardown). Caught so
-      // scenario cleanup still runs if the delete fails.
-      if (reactorId) {
-        const sdk = getGraphqlClient() as unknown as {
-          deleteUser: (
-            v: { deleteData: { ID: string; deleteIdentity: boolean } },
-            h: { authorization: string }
-          ) => Promise<unknown>;
-        };
-        await sdk
-          .deleteUser(
-            { deleteData: { ID: reactorId, deleteIdentity: true } },
-            { authorization: `Bearer ${adminToken}` }
-          )
-          .catch(() => undefined);
-      }
-
-      if (scenario) {
-        await TestScenarioFactory.cleanUpBaseScenario(scenario);
+        if (scenario) {
+          await TestScenarioFactory.cleanUpBaseScenario(scenario);
+        }
       }
     });
 

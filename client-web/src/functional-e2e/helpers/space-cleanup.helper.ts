@@ -16,6 +16,9 @@ export async function deleteSpaceByNameId(nameID: string): Promise<void> {
     (authToken: string | undefined) => client.getSpaceIdByNameId({ nameID }, { authorization: `Bearer ${authToken}` }),
     TestUser.GLOBAL_ADMIN
   );
+  if (lookup.error) {
+    throw new Error(`could not look up Space '${nameID}': ${JSON.stringify(lookup.error)}`);
+  }
   const id = lookup.data?.lookupByName?.space?.id;
   if (!id) return;
   const res = await deleteSpace(id);

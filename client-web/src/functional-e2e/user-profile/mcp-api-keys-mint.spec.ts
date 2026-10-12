@@ -22,7 +22,7 @@ import {
   logInHeaderLink,
 } from '../authentication/common-authentication-page-elements';
 import { fillSecret } from '../helpers/login.helper';
-import { revokeMintedMcpKeys } from '../helpers/mcp-api-keys.helper';
+import { listMcpKeyIds, revokeMintedMcpKeys } from '../helpers/mcp-api-keys.helper';
 
 const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 const adminEmail = process.env.AUTH_ADMIN_EMAIL || 'admin@alkem.io';
@@ -82,8 +82,13 @@ test.describe(
   () => {
     // Every key this file mints is revoked again: the server caps usable keys
     // at 10 per user, so leftovers from one run block the next run's mints.
+    // Keys the admin held BEFORE this file ran are not ours to revoke.
+    let preexistingKeyIds: Set<string> = new Set();
+    test.beforeAll(async () => {
+      preexistingKeyIds = await listMcpKeyIds(adminEmail);
+    });
     test.afterAll(async () => {
-      await revokeMintedMcpKeys(adminEmail, ['A11y Key', 'Claude Desktop', 'Ephemeral Reveal', 'Expiry Key', 'No Operation Key']);
+      await revokeMintedMcpKeys(adminEmail, ['A11y Key', 'Claude Desktop', 'Ephemeral Reveal', 'Expiry Key', 'No Operation Key'], preexistingKeyIds);
     });
 
     test.beforeEach(async ({ page }) => {

@@ -144,19 +144,24 @@ test.describe('US5 — inviter suggests Dutch (compose-time)', () => {
   // its organization, so a run leaves the environment as it found it.
   test.afterAll(async ({ browser }) => {
     test.setTimeout(120_000);
-    if (createdInvitationIds.length > 0) {
-      const ctx = await browser.newContext({ storageState: ADMIN_STATE });
-      try {
-        for (const id of createdInvitationIds) {
-          await gql(ctx.request, 'mutation Del($id: UUID!) { deletePlatformInvitation(deleteData: { ID: $id }) { id } }', {
-            id,
-          });
+    try {
+      if (createdInvitationIds.length > 0) {
+        const ctx = await browser.newContext({ storageState: ADMIN_STATE });
+        try {
+          for (const id of createdInvitationIds) {
+            await gql(ctx.request, 'mutation Del($id: UUID!) { deletePlatformInvitation(deleteData: { ID: $id }) { id } }', {
+              id,
+            });
+          }
+        } finally {
+          await ctx.close();
         }
-      } finally {
-        await ctx.close();
       }
+    } finally {
+      // The space and its organization go even if an invitation delete failed;
+      // that failure still surfaces from the try above.
+      if (baseScenario) await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
     }
-    if (baseScenario) await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
   });
 
   // US5-AS1: the control is present, offers exactly the platform's eligible set,

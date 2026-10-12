@@ -1322,9 +1322,14 @@ export class TestScenarioFactory {
     LogManager.getLogger().warn(
       `[createRootSpace] '${nameID}' was already committed by an earlier attempt — adopted instead of re-created`,
     );
-    await updateSpaceSettings(spaceId, {
+    const updated = await updateSpaceSettings(spaceId, {
       privacy: { allowPlatformSupportAsAdmin: true },
     });
+    if (updated.error) {
+      throw new Error(
+        `[createRootSpace] adopted '${nameID}' but the privacy update failed: ${JSON.stringify(updated.error)}`,
+      );
+    }
     return getSpaceData(spaceId);
   }
 

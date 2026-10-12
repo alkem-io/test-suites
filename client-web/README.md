@@ -32,7 +32,7 @@ pnpm exec playwright install --with-deps chromium chrome
 set -a; . ../client-web/.env; set +a
 export AUTH_TEST_HARNESS_PASSWORD="$(grep '^AUTH_TEST_HARNESS_PASSWORD=' ../server-api/.env | cut -d= -f2-)"
 export UI_HEADLESS=true
-export KRATOS_ADMIN_URL=http://localhost:<port of alkemio_dev_kratos 4434>   # bare base URL, no /admin
+export KRATOS_ADMIN_URL=http://localhost:32818   # the host port mapped to alkemio_dev_kratos:4434 (`docker ps`); bare base URL, no /admin
 
 pnpm exec playwright test src/functional-e2e/callouts/0.5callout-creation.spec.ts   # one file
 pnpm run test:nightly --project=Callouts                                            # one nightly suite

@@ -213,7 +213,7 @@ memberFixture.test.describe.serial('Callout Editing - Member', () => {
           exact: true,
         })
       ).toBeVisible({ timeout: 5000 });
-      page
+      await page
         .getByRole('heading', {
           name: `${baseScenario!.space.collaboration.calloutPostCollectionDisplayName}`,
           exact: true,

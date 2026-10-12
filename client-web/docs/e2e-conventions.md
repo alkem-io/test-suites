@@ -195,7 +195,7 @@ do, raise the worker count in CI and leave the config alone.
 # from client-web/ — the .env files live in the main clone, never copy them
 set -a; . ../../test-suites/client-web/.env; set +a
 export AUTH_TEST_HARNESS_PASSWORD="$(grep '^AUTH_TEST_HARNESS_PASSWORD=' ../../test-suites/server-api/.env | cut -d= -f2-)"
-export UI_HEADLESS=true KRATOS_ADMIN_URL=http://localhost:<kratos 4434 port>
+export UI_HEADLESS=true KRATOS_ADMIN_URL=http://localhost:32818   # host port of alkemio_dev_kratos:4434, see `docker ps`
 
 pnpm exec playwright test src/functional-e2e/callouts/0.5callout-creation.spec.ts
 pnpm run test:nightly --project=Callouts

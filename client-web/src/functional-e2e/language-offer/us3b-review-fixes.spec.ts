@@ -170,8 +170,9 @@ test.describe("US3b — Phase V' review-fix regressions", () => {
   // works). The open vector is welcome.alkem.io, which writes this cookie at the
   // same apex domain from a different codebase — unverified here.
   //
-  // fixme: product defect, not a test defect — un-fixme once the consent read
-  // shape-guards its parsed value. Tracked in language-offer-test-plan.md.
+  // Was a `test.fixme` while client-web#10123 (the consent read crashed on a
+  // non-array value) was open; the fix shipped 2026-08-11 and the case is
+  // live again. See language-offer-test-plan.md.
   test('corr-client-2b — wrong-shape consent cookie must not break the app', async ({
     page,
     context,

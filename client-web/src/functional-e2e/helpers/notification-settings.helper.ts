@@ -229,6 +229,14 @@ export const enableCalloutReactionNotifications = async (
     data.lookup.user.settings.notification.space.collaborationCalloutReaction;
   const write = (reaction: NotificationChannels) =>
     client.request(WRITE_REACTION_CHANNELS, { id: userId, reaction }, adminHeaders());
-  await write(ALL_CHANNELS_ON);
-  return () => write(previous).then(() => undefined);
+  const restore = () => write(previous).then(() => undefined);
+  try {
+    await write(ALL_CHANNELS_ON);
+  } catch (error) {
+    // The server may have committed the write although the response failed:
+    // put the previous channels back before surfacing the error.
+    await restore().catch(() => undefined);
+    throw error;
+  }
+  return restore;
 };

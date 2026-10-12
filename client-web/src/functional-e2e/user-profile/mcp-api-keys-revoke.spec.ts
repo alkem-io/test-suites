@@ -22,7 +22,7 @@ import {
   logInHeaderLink,
 } from '../authentication/common-authentication-page-elements';
 import { fillSecret } from '../helpers/login.helper';
-import { revokeMintedMcpKeys } from '../helpers/mcp-api-keys.helper';
+import { listMcpKeyIds, revokeMintedMcpKeys } from '../helpers/mcp-api-keys.helper';
 
 const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 // Local dev: the Traefik edge on ALKEMIO_BASE_URL does not route `/rest/mcp`
@@ -110,8 +110,13 @@ test.describe(
   () => {
     // Every key this file mints is revoked again: the server caps usable keys
     // at 10 per user, so leftovers from one run block the next run's mints.
+    // Keys the admin held BEFORE this file ran are not ours to revoke.
+    let preexistingKeyIds: Set<string> = new Set();
+    test.beforeAll(async () => {
+      preexistingKeyIds = await listMcpKeyIds(adminEmail);
+    });
     test.afterAll(async () => {
-      await revokeMintedMcpKeys(adminEmail, ['US2-']);
+      await revokeMintedMcpKeys(adminEmail, ['US2-'], preexistingKeyIds);
     });
 
     test.beforeEach(async ({ page }) => {

@@ -25,5 +25,7 @@ export default defineConfig({
     '**/language-offer/**',
     // Needs a stack running the 027 server AND client: config/playwright.config.platform-roles.ts
     '**/platform-roles/**',
+    // Needs the Kratos admin API and the admin password: config/playwright.config.form-callout-framing.ts
+    '**/form-callout-framing/**',
   ],
 });
