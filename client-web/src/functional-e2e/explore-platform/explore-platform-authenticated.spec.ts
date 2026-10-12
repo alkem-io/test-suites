@@ -17,7 +17,7 @@ import {
   SpacePrivacyMode,
 } from '@alkemio/client-lib/dist/generated/graphql';
 import { createAuthenticatedSessionFixture } from '../fixtures/authenticated-session.fixture';
-import { expectSignedIn } from '../my-dashboard/my-dashboard-page-objects';
+import { expectOnDashboard } from '../my-dashboard/my-dashboard-page-objects';
 import { userMenuAvatar } from '../authentication/common-authentication-page-elements';
 
 const { test, setupAuthentication, teardownAuthentication } =
@@ -124,7 +124,7 @@ test.describe('Explore Alkemio Platform - Authenticated User Flow', () => {
     await page.waitForURL('**/home');
 
     // Verify user is authenticated and on dashboard
-    await expectSignedIn(page);
+    await expectOnDashboard(page);
 
     // [BUG] todo: verify the below expectations as the user has memberships and these are for users without memberships
     // Verify explore section
@@ -379,7 +379,7 @@ test.describe('Explore Alkemio Platform - Authenticated User Flow', () => {
   test('15. Verify user profile is accessible', async ({ page }) => {
     await page.goto(`${baseUrl}/home`); // see case 1: `/` may redirect into a space
     await page.waitForURL('**/home');
-    await expectSignedIn(page);
+    await expectOnDashboard(page);
 
     // CRD replaces the legacy avatar/"My Dashboard" affordance with a user
     // button in the header (the avatar, keyed by the user's display name). The

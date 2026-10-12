@@ -263,6 +263,21 @@ export class CollaborationPage {
     await expect(this.knowledgeTab).toHaveAttribute('aria-selected', 'true');
   }
 
+  /**
+   * The member-side negative for "no Add Post". `isAddCalloutVisible()` reads
+   * the DOM once, right after navigation, so it answers `false` before the
+   * tab has rendered — for an admin too (reproduced: green as space admin).
+   * The create privilege arrives with the tab's callout list
+   * (client-web `useCrdCalloutList`), so a callout of that list on screen is
+   * the positive control that makes the absence an observation.
+   */
+  async expectAddCalloutAbsent(knownCalloutName: string) {
+    await expect(
+      this.page.getByRole('heading', { name: knownCalloutName, exact: true })
+    ).toBeVisible();
+    await expect(this.addCalloutButton).toHaveCount(0);
+  }
+
   async isAddCalloutVisible(): Promise<boolean> {
     return await this.addCalloutButton
       .isVisible({ timeout: 5000 })

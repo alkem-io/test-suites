@@ -9,6 +9,7 @@ import { TestUser } from '@alkemio/tests-lib/common/enums/test.user';
 import { TestScenarioConfig } from '@alkemio/tests-lib/scenario/config/test-scenario-config';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import { TestScenarioFactory } from '@alkemio/tests-lib/scenario/TestScenarioFactory';
+import { createCalloutOnCalloutsSet } from '@alkemio/tests-lib/scenario/baseFunctions';
 import { TestUserManager } from '@alkemio/tests-lib';
 import { expect } from '@playwright/test';
 import { createAuthenticatedSessionFixture } from '../fixtures/authenticated-session.fixture';
@@ -230,11 +231,24 @@ adminFixture.test.describe.serial('Callout Creation', () => {
 });
 
 memberFixture.test.describe.serial('Callout Creation - Member', () => {
+  let memberVisibleCalloutName = '';
+
   memberFixture.test.beforeAll(async ({ browser }) => {
     memberFixture.test.setTimeout(60_000);
     if (!baseScenario) {
       baseScenario =
         await TestScenarioFactory.createBaseScenario(scenarioConfig);
+    }
+    // A published callout the member can see: the positive control for 1.9.
+    memberVisibleCalloutName = `Member Visible ${Date.now()}`;
+    const seeded = await createCalloutOnCalloutsSet(
+      baseScenario!.space.collaboration.calloutsSetId,
+      { framing: { profile: { displayName: memberVisibleCalloutName } } }
+    );
+    if (!seeded.data?.createCalloutOnCalloutsSet?.id) {
+      throw new Error(
+        `[1.9 seed] published callout was not created: ${JSON.stringify(seeded.error ?? seeded)}`
+      );
     }
     await memberFixture.setupAuthentication(
       browser,
@@ -259,6 +273,7 @@ memberFixture.test.describe.serial('Callout Creation - Member', () => {
 
       await collaborationPage.navigateToSpace(baseScenario!.space.nameId);
 
+      await collaborationPage.expectAddCalloutAbsent(memberVisibleCalloutName);
       const isAddVisible = await collaborationPage.isAddCalloutVisible();
       expect(isAddVisible).toBe(false);
     }

@@ -124,23 +124,40 @@ test.describe('Authentication - Password Recovery Flows', () => {
     // server, not inferred from the redirect: the non-interactive login with
     // the new password succeeds, and with the old one it is refused.
     await expect
-      .poll(() => getUserTokenWith(recoveryEmail, recoveredPassword), {
+      .poll(() => nonInteractiveLogin(recoveryEmail, recoveredPassword), {
         message: 'non-interactive login with the recovered password',
         timeout: 20_000,
       })
-      .toBe('ok');
-    expect(await getUserTokenWith(recoveryEmail, harnessPassword)).toBe('refused');
+      .toMatchObject({ ok: true, token: true });
+    // The specific denial, not "anything but a token": a 5xx or a rate limit
+    // must not pass for "the old password is refused".
+    expect(await nonInteractiveLogin(recoveryEmail, harnessPassword)).toEqual({
+      ok: false,
+      status: 401,
+      token: false,
+      message: 'invalid_credentials',
+    });
   });
 });
 
-/** 'ok' when the server issues a token for the pair, 'refused' when it does not. */
-async function getUserTokenWith(email: string, password: string): Promise<'ok' | 'refused'> {
+/** What the server answers to a non-interactive login with this pair. */
+async function nonInteractiveLogin(
+  email: string,
+  password: string
+): Promise<{ ok: boolean; status: number; token: boolean; message: string | undefined }> {
   const response = await fetch(`${baseUrl}/api/auth/non-interactive-login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email, password }),
   });
-  if (!response.ok) return 'refused';
-  const body = (await response.json().catch(() => ({}))) as { api_token?: string };
-  return body.api_token ? 'ok' : 'refused';
+  const body = (await response.json().catch(() => ({}))) as {
+    api_token?: string;
+    message?: string;
+  };
+  return {
+    ok: response.ok,
+    status: response.status,
+    token: Boolean(body.api_token),
+    message: body.message,
+  };
 }

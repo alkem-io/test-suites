@@ -10,7 +10,10 @@
 import { expect } from '@playwright/test';
 import { TestUserManager } from '@alkemio/tests-lib';
 import { createAuthenticatedSessionFixture } from '../fixtures/authenticated-session.fixture';
-import { expectSignedIn } from '../my-dashboard/my-dashboard-page-objects';
+import {
+  expectOnDashboard,
+  expectSignedIn,
+} from '../my-dashboard/my-dashboard-page-objects';
 
 const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 
@@ -52,7 +55,11 @@ test.describe('Support Navigation Additional Tests', () => {
       // 3. Click Close button (X icon)
       await page.getByRole('button', { name: 'Close' }).click();
 
-      // 4-5. Verify dialog closes and dashboard is still visible
+      // 4-5. Verify the dialog closes and the signed-in page is still there
+      // (`/` may land in a space, so the page behind is not always /home).
+      await expect(
+        page.getByRole('heading', { name: 'Looking for help?' })
+      ).toBeHidden();
       await expectSignedIn(page);
     });
   });
@@ -94,7 +101,7 @@ test.describe('Support Navigation Additional Tests', () => {
       await page.waitForURL(/.*\/home.*/, { timeout: 15000 });
 
       // 4. Verify return to dashboard
-      await expectSignedIn(page);
+      await expectOnDashboard(page);
     });
   });
 });

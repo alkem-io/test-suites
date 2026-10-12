@@ -298,15 +298,22 @@ test.describe(
       const keyName = uniqueName('US2-NoRemoval-Key');
       await mintKey(page, keyName);
 
-      // Scoped to the keys list: the Security tab also hosts the account's
-      // own "Delete account" card (workspace#054), which is not a key control.
-      const keysList = rowFor(page, keyName).locator('xpath=ancestor::ul');
+      // Scoped to the keys CARD (its header, list and footer — the whole
+      // surface the AC names), not the page: the Security tab also hosts the
+      // account's own "Delete account" card (workspace#054), which is not a
+      // key control. The card is the heading's nearest ancestor holding the
+      // key list; the list alone would miss a control in the card header.
+      const keysCard = page
+        .getByRole('heading', { name: 'MCP API Keys' })
+        .locator('xpath=ancestor::div[.//ul][1]');
+      await expect(keysCard.getByRole('button', { name: 'Create API key' })).toBeVisible();
+      await expect(keysCard.getByText('Delete account')).toHaveCount(0);
       await expect(rowFor(page, keyName).getByRole('button', { name: 'Revoke', exact: true })).toBeVisible();
       // Controls only: a text match would also hit key NAMES from earlier
       // runs that happen to contain the word.
-      await expect(keysList.getByRole('button', { name: /delete/i })).toHaveCount(0);
-      await expect(keysList.getByRole('menuitem', { name: /delete/i })).toHaveCount(0);
-      await expect(keysList.getByRole('link', { name: /delete/i })).toHaveCount(0);
+      await expect(keysCard.getByRole('button', { name: /delete/i })).toHaveCount(0);
+      await expect(keysCard.getByRole('menuitem', { name: /delete/i })).toHaveCount(0);
+      await expect(keysCard.getByRole('link', { name: /delete/i })).toHaveCount(0);
     });
   }
 );

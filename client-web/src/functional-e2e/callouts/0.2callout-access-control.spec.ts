@@ -164,6 +164,7 @@ memberFixture.test.describe.serial('Callout Access Control - Member', () => {
 
     await collaborationPage.navigateToSpace(baseScenario!.space.nameId);
 
+    await collaborationPage.expectAddCalloutAbsent(memberCalloutName);
     const isAddVisible = await collaborationPage.isAddCalloutVisible();
     expect(isAddVisible).toBe(false);
 
