@@ -33,7 +33,7 @@ const scenarioConfig: TestScenarioConfig = {
   },
 };
 
-let baseScenario: OrganizationWithSpaceModel;
+let baseScenario: OrganizationWithSpaceModel | undefined;
 
 const adminFixture = createAuthenticatedSessionFixture({
   storageStateName: 'callout-viewing-admin.json',
@@ -54,7 +54,7 @@ adminFixture.test.describe.serial('Callout Viewing', () => {
       TestUserManager.users.spaceAdmin.email
     );
     calloutName =
-      baseScenario.space.collaboration.calloutPostCollectionDisplayName;
+      baseScenario!.space.collaboration.calloutPostCollectionDisplayName;
   });
 
   adminFixture.test.afterAll(async () => {
@@ -68,10 +68,10 @@ adminFixture.test.describe.serial('Callout Viewing', () => {
       adminFixture.test.setTimeout(30_000);
       const collaborationPage = new CollaborationPage(page, baseUrl);
 
-      await collaborationPage.navigateToSpace(baseScenario.space.nameId);
+      await collaborationPage.navigateToSpace(baseScenario!.space.nameId);
 
       await updateCalloutVisibility(
-        baseScenario.space.collaboration.calloutPostCollectionId,
+        baseScenario!.space.collaboration.calloutPostCollectionId,
         CalloutVisibility.Draft
       );
 
@@ -99,7 +99,7 @@ adminFixture.test.describe.serial('Callout Viewing', () => {
       adminFixture.test.setTimeout(30_000);
       const collaborationPage = new CollaborationPage(page, baseUrl);
 
-      await collaborationPage.navigateToSpace(baseScenario.space.nameId);
+      await collaborationPage.navigateToSpace(baseScenario!.space.nameId);
 
       await collaborationPage.clickCallout(`${calloutName}`);
 
@@ -118,7 +118,7 @@ memberFixture.test.describe.serial('Callout Viewing - Member', () => {
       baseScenario =
         await TestScenarioFactory.createBaseScenario(scenarioConfig);
       calloutName =
-        baseScenario.space.collaboration.calloutPostCollectionDisplayName;
+        baseScenario!.space.collaboration.calloutPostCollectionDisplayName;
     }
     await memberFixture.setupAuthentication(
       browser,
@@ -131,6 +131,7 @@ memberFixture.test.describe.serial('Callout Viewing - Member', () => {
     await memberFixture.teardownAuthentication();
     if (baseScenario) {
       await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
+      baseScenario = undefined;
     }
   });
 
@@ -140,11 +141,11 @@ memberFixture.test.describe.serial('Callout Viewing - Member', () => {
       memberFixture.test.setTimeout(30_000);
       const collaborationPage = new CollaborationPage(page, baseUrl);
       await updateCalloutVisibility(
-        baseScenario.space.collaboration.calloutPostCollectionId,
+        baseScenario!.space.collaboration.calloutPostCollectionId,
         CalloutVisibility.Published
       );
 
-      await collaborationPage.navigateToSpace(baseScenario.space.nameId);
+      await collaborationPage.navigateToSpace(baseScenario!.space.nameId);
       await expect(page.getByRole('tab', { name: 'Home' })).toBeVisible({
         timeout: 10000,
       });
@@ -163,11 +164,11 @@ memberFixture.test.describe.serial('Callout Viewing - Member', () => {
       memberFixture.test.setTimeout(30_000);
       const collaborationPage = new CollaborationPage(page, baseUrl);
       await updateCalloutVisibility(
-        baseScenario.space.collaboration.calloutPostCollectionId,
+        baseScenario!.space.collaboration.calloutPostCollectionId,
         CalloutVisibility.Draft
       );
 
-      await collaborationPage.navigateToSpace(baseScenario.space.nameId);
+      await collaborationPage.navigateToSpace(baseScenario!.space.nameId);
       await expect(page.getByRole('tab', { name: 'Home' })).toBeVisible({
         timeout: 10000,
       });

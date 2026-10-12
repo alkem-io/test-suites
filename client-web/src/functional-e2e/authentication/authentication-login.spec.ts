@@ -4,7 +4,7 @@ import {
   fillUpSignInPageElements,
   pressSignInButtonSignInPage,
 } from '../identity-flows/signin-page-objects';
-import { verifyMyDashboardWelcomeElement } from '../my-dashboard/my-dashboard-page-objects';
+import { expectSignedIn } from '../my-dashboard/my-dashboard-page-objects';
 import {
   emailField,
   passwordField,
@@ -34,7 +34,7 @@ test.describe('Authentication - Login Flows', () => {
     await pressSignInButtonSignInPage(page);
 
     // Verify successful login by checking dashboard welcome message
-    await verifyMyDashboardWelcomeElement(page);
+    await expectSignedIn(page);
   });
 
   test('user successful authentication with regular user account', async ({
@@ -48,7 +48,7 @@ test.describe('Authentication - Login Flows', () => {
     await pressSignInButtonSignInPage(page);
 
     // Verify successful login by checking dashboard welcome message
-    await verifyMyDashboardWelcomeElement(page);
+    await expectSignedIn(page);
   });
 
   test('invalid credentials show error message', async ({ page }) => {
@@ -79,7 +79,7 @@ test.describe('Authentication - Login Flows', () => {
     await pressSignInButtonSignInPage(page);
 
     // Wait for sign-in to complete
-    await verifyMyDashboardWelcomeElement(page);
+    await expectSignedIn(page);
 
     // Logout via user menu
     await userMenuAvatar(page).click();
@@ -101,7 +101,7 @@ test.describe('Authentication - Login Flows', () => {
     await navigateToLoginPageFromMenu(baseUrl, page);
     await fillUpSignInPageElements('admin@alkem.io', password, page);
     await pressSignInButtonSignInPage(page);
-    await verifyMyDashboardWelcomeElement(page);
+    await expectSignedIn(page);
 
     // Logout
     await userMenuAvatar(page).click();
@@ -116,6 +116,6 @@ test.describe('Authentication - Login Flows', () => {
     await pressSignInButtonSignInPage(page);
 
     // Verify successful re-authentication
-    await verifyMyDashboardWelcomeElement(page);
+    await expectSignedIn(page);
   });
 });

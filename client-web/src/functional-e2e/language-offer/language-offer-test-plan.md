@@ -87,3 +87,7 @@ per web client"* — is now proven end to end at the API layer: invite an addres
 with a suggested language, register that person, and their account comes back
 already set to it (`invitation-language-seeding.it-spec.ts`). What remains
 unautomated is the *visual* sign-up journey, not the contract behind it.
+
+## Not automatable as a black-box walk
+
+- **corr-client-4 LIVE — in-memory answered survives a CLIENT-SIDE cross-route-group navigation.** The anonymous surface exposes no SPA-internal cross-route-group link: every shell link and public space card triggers a full document load (React Router v7 data router; `page.goBack()` reloads too), which by design discards the un-persisted in-memory choice. Verified structurally in client-web `App.tsx` (provider hoisted above `<Outlet/>`) + `CrdLayoutWrapper` (provider removed). Previously carried as an empty `test.skip`; recorded here instead so a skip in the report always means a tracked defect.

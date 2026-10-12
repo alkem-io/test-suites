@@ -81,25 +81,6 @@ test.describe("US3b — Phase V' review-fix regressions", () => {
     await page.screenshot({ path: testInfo.outputPath('us3b-corr-client-4-inmemory-only.png'), fullPage: false });
   });
 
-  // corr-client-4 — LIVE client-side-navigation form of the scenario.
-  // INFEASIBILITY NOTE (verified 2026-07-23): the anonymous surface of this build
-  // exposes no client-side (SPA-internal) cross-route-group link. Probed
-  // exhaustively: the shell links (logo→/home, Log in→/login, Sign Up→/sign_up)
-  // and every public space card (absolute-URL <a> e.g. /welcome-space) each
-  // trigger a FULL document load (a window sentinel planted before the click does
-  // not survive), which by design discards the un-persisted in-memory choice.
-  // React Router v7 is a data router: history.pushState + synthetic popstate does
-  // not drive a transition, and page.goBack() also reloads here. There is thus no
-  // anonymous UI path that performs a client-side route-group transition, so the
-  // corr-client-4 precondition cannot be reproduced as an anonymous black-box
-  // walk. The fix is verified structurally in App.tsx (provider hoisted above
-  // <Outlet/>) + CrdLayoutWrapper (provider removed) — see the verifier report.
-  // Kept as an explicit skip so the committed suite records WHY, rather than
-  // silently omitting the scenario.
-  test.skip('corr-client-4 LIVE — in-memory answered survives CLIENT-SIDE cross-route-group navigation', async () => {
-    // Intentionally empty: infeasible on the anonymous surface (see note above).
-  });
-
   // corr-client-2 robustness: a non-JSON accepted_cookies cookie must NOT crash the
   // app. Seed the raw cookie BEFORE load.
   //
@@ -191,7 +172,7 @@ test.describe("US3b — Phase V' review-fix regressions", () => {
   //
   // fixme: product defect, not a test defect — un-fixme once the consent read
   // shape-guards its parsed value. Tracked in language-offer-test-plan.md.
-  test.fixme('corr-client-2b — wrong-shape consent cookie must not break the app', async ({
+  test('corr-client-2b — wrong-shape consent cookie must not break the app', async ({
     page,
     context,
   }) => {

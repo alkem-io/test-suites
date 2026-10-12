@@ -388,9 +388,7 @@ test.describe(
       page: Page,
       postTitle = EXPANDED_POST
     ): Promise<Locator> {
-      await page.goto(`${baseUrl}/${fixture.spaceNameId}`, {
-        waitUntil: 'networkidle',
-      });
+      await page.goto(`${baseUrl}/${fixture.spaceNameId}`);
       await acceptCookiesIfVisible(page);
       const list = await listOfPost(page, postTitle);
       await list.scrollIntoViewIfNeeded();
@@ -652,7 +650,7 @@ test.describe(
       alpha = cardNamed(list, 'Alpha');
       // Centre the card so the excerpt cannot sit under the sticky page header.
       await alpha.evaluate(el => el.scrollIntoView({ block: 'center' }));
-      await page.waitForTimeout(300);
+      await expect(alpha).toBeInViewport();
       const box = await alpha.locator('.line-clamp-5').first().boundingBox();
       expect(box).not.toBeNull();
       await page.mouse.click(box!.x + box!.width / 2, box!.y + box!.height / 2);
@@ -778,19 +776,13 @@ test.describe(
           expandedNames.includes('Epsilon')
         );
 
-        await page.goto(
-          `${baseUrl}/${fixture.spaceNameId}/challenges/${fixture.subspaceNameIds.Epsilon}/about`,
-          {
-            waitUntil: 'networkidle',
-          }
-        );
+        await page.goto(`${baseUrl}/${fixture.spaceNameId}/challenges/${fixture.subspaceNameIds.Epsilon}/about`);
         await acceptCookiesIfVisible(page);
-        const aboutText = (await page.locator('body').innerText()).replace(
-          /\s+/g,
-          ' '
-        );
+        // Retrying assertion: the About view's text arrives after the shell.
         for (const excerpt of Object.values(cardSections)) {
-          expect(aboutText).toContain(excerpt.replace(/\s+/g, ' ').trim());
+          await expect(page.locator('body')).toContainText(
+            excerpt.replace(/\s+/g, ' ').trim()
+          );
         }
       } finally {
         await context.close();

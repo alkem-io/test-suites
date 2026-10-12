@@ -63,6 +63,7 @@ import {
   getUserToken,
   getGraphqlClient,
   UniqueIDGenerator,
+  TestUserManager,
   delay,
 } from '@alkemio/tests-lib';
 import {
@@ -71,6 +72,7 @@ import {
 } from '@alkemio/tests-lib/core/generated/alkemio-schema';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import { loginViaCrd } from '../src/functional-e2e/helpers/login.helper';
+import { enableCalloutReactionNotifications } from '../src/functional-e2e/helpers/notification-settings.helper';
 
 const BASE_URL = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 const ADMIN_EMAIL = 'admin@alkem.io';
@@ -140,6 +142,7 @@ test.describe(
     // Authenticated browser context for B, reused across every serial test.
     let authContext: BrowserContext;
     let authPage: Page;
+    let restoreReactionChannels: (() => Promise<void>) | undefined;
 
     test.beforeAll(async ({ browser }) => {
       test.setTimeout(180_000);
@@ -210,6 +213,13 @@ test.describe(
         'seed: admin display name should resolve'
       ).toBeTruthy();
 
+      // B is the shared harness admin, whose notification channels other
+      // suites switch off and leave that way; the bell only shows a reaction
+      // row when `collaborationCalloutReaction.inApp` is on. Set it here,
+      // restore it in afterAll.
+      const adminId = TestUserManager.users.globalAdmin.id;
+      restoreReactionChannels = await enableCalloutReactionNotifications(adminId);
+
       // Sign the recipient B into the browser once; retain the context so every
       // page inherits the session cookies for the in-app notification centre.
       authContext = await browser.newContext();
@@ -219,6 +229,7 @@ test.describe(
 
     test.afterAll(async () => {
       await authContext?.close().catch(() => undefined);
+      await restoreReactionChannels?.();
 
       // Remove reactor A — Kratos identity AND Alkemio user — before scenario
       // cleanup. The library `deleteUser` helper is not index-exported and
@@ -336,6 +347,7 @@ test.describe(
           `reaction-row count must stay ${expected} across the settle window`
         ).toBe(expected);
         if (i < samples - 1) {
+          // eslint-disable-next-line no-restricted-syntax -- sampling interval of a negative settle window
           await delay(2_000);
         }
       }
@@ -394,6 +406,7 @@ test.describe(
       // Give any (erroneous) self-notification the full settle window to appear,
       // then assert the reactor-row count is unchanged across a fixed window: no
       // self-row was added, and none appears late.
+      // eslint-disable-next-line no-restricted-syntax -- negative settle window: a late self-row must have had time to appear
       await delay(3_000);
       await assertReactionRowCountStable(authPage, before);
 
@@ -423,6 +436,7 @@ test.describe(
       await reactAs(reactorToken, calloutId, 'rocket');
 
       // No additional row for B; the count stays at 1 across the settle window.
+      // eslint-disable-next-line no-restricted-syntax -- negative settle window: a late swap row must have had time to appear
       await delay(3_000);
       await assertReactionRowCountStable(authPage, 1);
 

@@ -113,9 +113,7 @@ test.describe('Level 0 Space - Applications', () => {
         const page = nonSpaceMemberPage;
 
         // Navigate to the PUBLIC space dashboard (not /about)
-        await page.goto(`${baseUrl}/${publicScenario.space.nameId}`, {
-          waitUntil: 'networkidle',
-        });
+        await page.goto(`${baseUrl}/${publicScenario.space.nameId}`);
 
         // PR #10000 removed the Apply button from the L0 dashboard; the
         // per-tab sidebar widgets (client-web#10194, shipped in 0.163.0)
@@ -139,9 +137,7 @@ test.describe('Level 0 Space - Applications', () => {
       const spaceNameId = baseScenario.space.nameId;
 
       // 1. Navigate directly to Level 0 Space About page
-      await page.goto(`${baseUrl}/${spaceNameId}/about`, {
-        waitUntil: 'networkidle',
-      });
+      await page.goto(`${baseUrl}/${spaceNameId}/about`);
 
       // 2. Locate and click the "Apply" button
       await page.getByRole('button', { name: 'Apply' }).click();
@@ -236,18 +232,19 @@ test.describe('Level 0 Space - Applications', () => {
 
       // Navigate directly to the space about page using nameId
       // This avoids issues with the space not appearing on home page immediately
-      await applicantPage.goto(`${baseUrl}/${spaceNameId}/about`, {
-        waitUntil: 'networkidle',
-      });
+      await applicantPage.goto(`${baseUrl}/${spaceNameId}/about`);
 
       // Check if there's already a pending application (CRD shows a disabled
       // "Application pending" button in place of the Apply button).
       const applicationPending = applicantPage.getByRole('button', {
         name: 'Application pending',
       });
-      const isApplicationPending = await applicationPending
-        .isVisible()
-        .catch(() => false);
+      // Either control is rendered once the page has resolved the viewer's
+      // standing; only then is "no pending application" a real observation.
+      await expect(
+        applicantPage.getByRole('button', { name: /^(Apply|Application pending)$/ })
+      ).toBeVisible();
+      const isApplicationPending = await applicationPending.isVisible();
 
       if (!isApplicationPending) {
         // Click the "Apply" button only if no pending application exists

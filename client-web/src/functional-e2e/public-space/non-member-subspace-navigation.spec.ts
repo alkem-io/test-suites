@@ -195,7 +195,6 @@ test.describe('Subspace Navigation for Non-Members', () => {
     // Click on the subspace card to enter the public subspace
     await subspaceCard.click();
 
-    await page.waitForTimeout(2_000);
     // Verify we are in the subspace
     await expect(
       page.getByRole('heading', {
@@ -221,12 +220,12 @@ test.describe('Subspace Navigation for Non-Members', () => {
     await subsubspaceCard.click();
 
     // For PRIVATE sub-subspace, non-member should see a dialog or restricted content
-    // Wait a moment for any dialog to appear
-    await page.waitForTimeout(2_000);
-
-    // Check if a dialog appeared (About Space dialog)
+    // Check if a dialog appeared (About Space dialog) — bounded wait, then branch.
     const dialog = page.getByRole('dialog');
-    const dialogVisible = (await dialog.count()) > 0;
+    const dialogVisible = await dialog
+      .first()
+      .waitFor({ state: 'visible', timeout: 5_000 })
+      .then(() => true, () => false);
 
     if (dialogVisible) {
       // Verify dialog is visible

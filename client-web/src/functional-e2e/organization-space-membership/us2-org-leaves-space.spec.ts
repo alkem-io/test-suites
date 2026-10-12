@@ -64,7 +64,7 @@ const { test, setupAuthentication, teardownAuthentication } =
 
 const runSuffix = UniqueIDGenerator.getID();
 
-let baseScenario: OrganizationWithSpaceModel;
+let baseScenario: OrganizationWithSpaceModel | undefined;
 let leadScenario: OrganizationWithSpaceModel;
 
 const sceneConfig = (name: string, deep: boolean): TestScenarioConfig => ({
@@ -82,15 +82,15 @@ const sceneConfig = (name: string, deep: boolean): TestScenarioConfig => ({
   },
 });
 
-const orgId = () => baseScenario.organization.id;
-const spaceRoleSetId = () => baseScenario.space.community.roleSetId;
-const subspaceRoleSetId = () => baseScenario.subspace.community.roleSetId;
-const subsubspaceRoleSetId = () => baseScenario.subsubspace.community.roleSetId;
+const orgId = () => baseScenario!.organization.id;
+const spaceRoleSetId = () => baseScenario!.space.community.roleSetId;
+const subspaceRoleSetId = () => baseScenario!.subspace.community.roleSetId;
+const subsubspaceRoleSetId = () => baseScenario!.subsubspace.community.roleSetId;
 const leadRoleSetId = () => leadScenario.space.community.roleSetId;
-const spaceName = () => baseScenario.space.about.profile.displayName;
-const subspaceName = () => baseScenario.subspace.about.profile.displayName;
+const spaceName = () => baseScenario!.space.about.profile.displayName;
+const subspaceName = () => baseScenario!.subspace.about.profile.displayName;
 const subsubspaceName = () =>
-  baseScenario.subsubspace.about.profile.displayName;
+  baseScenario!.subsubspace.about.profile.displayName;
 const leadName = () => leadScenario.space.about.profile.displayName;
 
 /** Makes the scenario organization a Member of the Space, Subspace and
@@ -114,7 +114,7 @@ const cancelBtn = (dialog: Locator): Locator =>
   dialog.getByRole('button', { name: COPY.dialogCancel, exact: true });
 
 const openTabWithCards = (page: Page, count: number) =>
-  gotoMembershipTab(page, baseScenario.organization.nameId, async p => {
+  gotoMembershipTab(page, baseScenario!.organization.nameId, async p => {
     await expect(membershipCards(p)).toHaveCount(count, { timeout: 5_000 });
   });
 

@@ -556,7 +556,7 @@ baseTest.describe('US7-AS5 — account deletion and organization deletion both c
   });
 });
 
-baseTest.describe('US7-AS6 — the eligibility signal reflects the reset-loop window', () => {
+baseTest.describe('US7-AS6 — the eligibility signal reflects the reset-loop window', { tag: '@local-stack' }, () => {
   baseTest.skip(!harnessPostgresConfigured(), 'needs loopback Postgres to strip the stored APPLY rule');
   baseTest('APPLY_NOT_GRANTED before the per-organization reset loop; ELIGIBLE_TO_APPLY after', async () => {
     // org O3 was created AFTER this feature deployed, so it is born with the

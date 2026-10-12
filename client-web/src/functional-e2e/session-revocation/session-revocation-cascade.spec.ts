@@ -164,6 +164,7 @@ test.describe('Session revocation cascade over the BFF cookie (server#6315)', ()
       ).not.toBe(200);
       expect(hint.status, `attempt ${attempt}`).toBe(401);
 
+      // eslint-disable-next-line no-restricted-syntax -- spacing between probes of a revoked session, so each attempt is a fresh request
       if (attempt < 3) await c1!.page.waitForTimeout(2000);
     }
   });

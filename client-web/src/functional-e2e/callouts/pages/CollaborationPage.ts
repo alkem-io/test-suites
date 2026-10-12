@@ -1,5 +1,5 @@
-import { delay } from '@alkemio/tests-lib';
 import { Page, expect, Locator } from '@playwright/test';
+import { chooseFramingChip, chooseResponseChip } from '../../helpers/callout-form.helper';
 
 /**
  * Page object for the Space/Subspace Collaboration (Knowledge) tab
@@ -260,8 +260,7 @@ export class CollaborationPage {
 
   async openKnowledgeTab() {
     await this.knowledgeTab.click();
-    // Wait for the tab content to load
-    await this.page.waitForLoadState('networkidle');
+    await expect(this.knowledgeTab).toHaveAttribute('aria-selected', 'true');
   }
 
   async isAddCalloutVisible(): Promise<boolean> {
@@ -280,7 +279,7 @@ export class CollaborationPage {
         await this.whiteboardOption.click();
         break;
       case 'link':
-        await this.linkOption.click();
+        await chooseFramingChip(this.calloutDialog, 'Call to Action');
         break;
       case 'memo':
         await this.memoOption.click();
@@ -316,24 +315,15 @@ export class CollaborationPage {
   async selectCollectionType(
     type: 'none' | 'links' | 'posts' | 'memos' | 'whiteboards'
   ) {
-    switch (type) {
-      case 'links':
-        await this.collectionLinksFilesOption.click();
-        break;
-      case 'posts':
-        await this.collectionPostsOption.click();
-        break;
-      case 'memos':
-        await this.collectionMemosOption.click();
-        break;
-      case 'whiteboards':
-        await this.collectionWhiteboardsOption.click();
-        break;
-      case 'none':
-      default:
-        // CRD: leaving no Responses radio selected means "no responses".
-        break;
-    }
+    const label = {
+      links: 'Links & Files',
+      posts: 'Posts',
+      memos: 'Memos',
+      whiteboards: 'Whiteboards',
+    }[type as Exclude<typeof type, 'none'>];
+    // CRD: leaving no Responses chip selected means "no responses".
+    if (!label) return;
+    await chooseResponseChip(this.calloutDialog, label);
   }
 
   async createCallout(
@@ -353,7 +343,7 @@ export class CollaborationPage {
       await this.ctaUrlInput.fill(ctaOptions.url);
     }
 
-    await delay(300); // Small delay to ensure the button is enabled
+    await expect(this.saveButton).toBeEnabled();
     await this.saveCallout(asDraft);
 
     // Wait for the callout to appear in the list after creation
@@ -375,7 +365,7 @@ export class CollaborationPage {
     await this.expandResponseOptions();
     await this.selectCollectionType(collectionType);
 
-    await delay(300); // Small delay to ensure the button is enabled
+    await expect(this.saveButton).toBeEnabled();
     await this.saveCallout(asDraft);
 
     // Wait for the callout to appear in the list after creation
@@ -479,8 +469,6 @@ export class CollaborationPage {
 
   async openContextualMenu() {
     await this.contextualMenuButton.click({ timeout: 5000 });
-    // Wait for menu to open
-    // await delay(300);
   }
 
   async editCallout() {

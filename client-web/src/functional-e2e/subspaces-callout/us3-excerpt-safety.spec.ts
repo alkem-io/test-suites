@@ -445,6 +445,7 @@ test.describe(
       );
       // Requests are async relative to render — give the network a moment, then
       // assert the negative for real (not "none yet").
+      // eslint-disable-next-line no-restricted-syntax -- negative network window: "never requested" needs a settle after render
       await page.waitForTimeout(1000);
       expect(probeRequests).toEqual([]);
     });

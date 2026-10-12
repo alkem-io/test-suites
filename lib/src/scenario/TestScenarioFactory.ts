@@ -23,6 +23,8 @@ import {
 } from "../core/generated/alkemio-schema";
 import { TestUser } from "../common/enums/test.user";
 import { UniqueIDGenerator } from "../utils/uniqueId";
+import { graphqlErrorWrapper } from "../utils/graphql.wrapper";
+import { getGraphqlClient } from "../utils/graphqlClient";
 import { describeError, isEnvFailure } from "../utils/env-failure";
 import { delay } from "../utils/delay";
 import {
@@ -31,7 +33,7 @@ import {
   assignLicensePlanToAccount,
   getLicensePlanByName,
   createCalloutOnCalloutsSet,
-  createOrganization,
+  createOrganizationOrAdopt,
   createSpaceBasicData,
   createSubspace,
   createWhiteboardCalloutOnCalloutsSet,
@@ -835,7 +837,7 @@ export class TestScenarioFactory {
         `Unable to create organization: Invalid hostNameId: ${orgNameId}`,
       );
     }
-    const responseOrg = await createOrganization(
+    const responseOrg = await createOrganizationOrAdopt(
       orgName,
       orgNameId.toLowerCase().slice(0, 24),
       undefined,
@@ -948,36 +950,52 @@ export class TestScenarioFactory {
     // truncated-18 prefix (e.g. several `storage-auth-public…` scenarios) can
     // draw the same short id and collide (test-suites#563). Any other failure is
     // surfaced verbatim rather than masked (test-suites#577).
-    const createOnce = async () => {
-      const uniqueId = UniqueIDGenerator.getID();
-      const spaceName = `${truncatedScenarioName}-${uniqueId}`;
-      const spaceNameId = this.validateAndClean(spaceName.toLowerCase());
-      if (!spaceNameId) {
-        throw new Error(
-          `Unable to create space: Invalid nameId: ${spaceNameId}`,
-        );
-      }
-      const res = await this.createSpaceAndGetData(
-        "l0-" + spaceName,
-        spaceNameId,
-        accountID,
-        addTutorialCallouts,
-      );
-      return { spaceName, res };
+    type CreateAttempt = {
+      spaceName: string;
+      res: Awaited<ReturnType<typeof TestScenarioFactory.createSpaceAndGetData>>;
     };
 
     // createSpaceAndGetData throws on a failed create (its de-masking throw,
     // test-suites#577) with the GraphQL error detail in the message — so the
-    // collision arrives as a thrown Error, not as `res.error`. Catch it, retry
-    // with a fresh id, and rethrow anything else verbatim.
-    let attempt: Awaited<ReturnType<typeof createOnce>> | undefined;
+    // collision arrives as a thrown Error, not as `res.error`. A collision has
+    // two causes, handled in order:
+    //   1. `graphqlErrorWrapper` retried the create after a connection-level
+    //      failure although the server had already committed it — the space
+    //      under that nameID is OURS. Adopt it (read it back by nameID) rather
+    //      than creating a twin that no teardown knows about.
+    //   2. A genuine clash with foreign data — retry with a fresh id.
+    // Anything else is rethrown verbatim.
+    let attempt: CreateAttempt | undefined;
     for (let i = 0; i < 3; i++) {
+      let spaceName = "";
       try {
-        attempt = await createOnce();
+        const uniqueId = UniqueIDGenerator.getID();
+        spaceName = `${truncatedScenarioName}-${uniqueId}`;
+        const spaceNameId = this.validateAndClean(spaceName.toLowerCase());
+        if (!spaceNameId) {
+          throw new Error(
+            `Unable to create space: Invalid nameId: ${spaceNameId}`,
+          );
+        }
+        const res = await this.createSpaceAndGetData(
+          "l0-" + spaceName,
+          spaceNameId,
+          accountID,
+          addTutorialCallouts,
+        );
+        attempt = { spaceName, res };
         break;
       } catch (e) {
         const message = e instanceof Error ? e.message : String(e);
-        if (i === 2 || !message.includes("already taken or restricted")) {
+        if (!message.includes("already taken or restricted")) {
+          throw e;
+        }
+        const adopted = await this.adoptSpaceByNameId(spaceName);
+        if (adopted) {
+          attempt = { spaceName, res: adopted };
+          break;
+        }
+        if (i === 2) {
           throw e;
         }
       }
@@ -1260,6 +1278,36 @@ export class TestScenarioFactory {
         usersIdsToAssign.push(TestUserManager.users.subsubspaceMember.id);
     }
     await ensureSpaceMembers(roleSetId, usersIdsToAssign);
+  }
+
+  /**
+   * Reads back a root space this process created a moment ago under
+   * `spaceName` (its nameID is the lower-cased name) — the recovery for a
+   * create that was committed server-side but reported as failed. Returns the
+   * same data `createSpaceAndGetData` returns, or `undefined` when no space
+   * exists under that nameID (then the collision was a genuine clash).
+   */
+  private static async adoptSpaceByNameId(spaceName: string) {
+    const nameID = this.validateAndClean(spaceName.toLowerCase());
+    if (!nameID) return undefined;
+    const graphqlClient = getGraphqlClient();
+    const lookup = await graphqlErrorWrapper(
+      (authToken) =>
+        graphqlClient.getSpaceIdByNameId(
+          { nameID },
+          { authorization: `Bearer ${authToken}` },
+        ),
+      TestUser.GLOBAL_ADMIN,
+    );
+    const spaceId = lookup.data?.lookupByName?.space?.id;
+    if (!spaceId) return undefined;
+    LogManager.getLogger().warn(
+      `[createRootSpace] '${nameID}' was already committed by an earlier attempt — adopted instead of re-created`,
+    );
+    await updateSpaceSettings(spaceId, {
+      privacy: { allowPlatformSupportAsAdmin: true },
+    });
+    return getSpaceData(spaceId);
   }
 
   private static async createSpaceAndGetData(

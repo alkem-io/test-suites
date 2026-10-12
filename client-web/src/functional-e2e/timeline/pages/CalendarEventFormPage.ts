@@ -51,7 +51,7 @@ export class CalendarEventFormPage {
 
   async gotoCalendar(spaceNameId: string): Promise<void> {
     await this.page.goto(`${this.baseUrl}/${spaceNameId}/calendar`);
-    await this.page.waitForLoadState('networkidle');
+    await expect(this.page.getByRole('main')).toBeVisible();
   }
 
   async openCreateForm(): Promise<void> {
@@ -109,7 +109,7 @@ export class CalendarEventFormPage {
       const shownIdx = Number(yr) * 12 + MONTHS.indexOf(name);
       const dir = wantIdx > shownIdx ? 'Go to next month' : 'Go to previous month';
       await pop.getByRole('button', { name: dir }).click();
-      await this.page.waitForTimeout(120);
+      await expect(caption).not.toHaveText(shown);
     }
     await expect(caption).toHaveText(wanted);
 
@@ -179,7 +179,7 @@ export class CalendarEventFormPage {
       const shownIdx = Number(yr) * 12 + MONTHS.indexOf(name);
       const dir = Number.isFinite(shownIdx) && wantIdx < shownIdx ? /previous month/i : /next month/i;
       await this.page.getByRole('button', { name: dir }).click();
-      await this.page.waitForTimeout(150);
+      await expect(this.page.getByRole('grid').first()).not.toHaveAttribute('aria-label', shown);
     }
     await expect(targetGrid, `${wantLabel} grid`).toBeVisible({ timeout: 10_000 });
     return targetGrid;

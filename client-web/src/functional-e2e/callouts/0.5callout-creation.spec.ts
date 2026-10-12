@@ -36,7 +36,7 @@ const scenarioConfig: TestScenarioConfig = {
   },
 };
 
-let baseScenario: OrganizationWithSpaceModel;
+let baseScenario: OrganizationWithSpaceModel | undefined;
 
 const adminFixture = createAuthenticatedSessionFixture({
   storageStateName: 'callout-creation-admin.json',
@@ -70,7 +70,7 @@ adminFixture.test.describe.serial('Callout Creation', () => {
       const collaborationPage = new CollaborationPage(page, baseUrl);
       const calloutName = `Test Post Callout ${Date.now()}`;
 
-      await collaborationPage.navigateToSpace(baseScenario.space.nameId);
+      await collaborationPage.navigateToSpace(baseScenario!.space.nameId);
 
       await expect(collaborationPage.addCalloutButton).toBeVisible();
 
@@ -92,7 +92,7 @@ adminFixture.test.describe.serial('Callout Creation', () => {
       const collaborationPage = new CollaborationPage(page, baseUrl);
       const calloutName = `Test Whiteboard ${Date.now()}`;
 
-      await collaborationPage.navigateToSpace(baseScenario.space.nameId);
+      await collaborationPage.navigateToSpace(baseScenario!.space.nameId);
 
       await collaborationPage.createCallout(
         'whiteboard',
@@ -112,7 +112,7 @@ adminFixture.test.describe.serial('Callout Creation', () => {
       const collaborationPage = new CollaborationPage(page, baseUrl);
       const calloutName = `Test CTA Callout ${Date.now()}`;
 
-      await collaborationPage.navigateToSpace(baseScenario.space.nameId);
+      await collaborationPage.navigateToSpace(baseScenario!.space.nameId);
 
       await collaborationPage.createCallout(
         'link',
@@ -134,7 +134,7 @@ adminFixture.test.describe.serial('Callout Creation', () => {
       const collaborationPage = new CollaborationPage(page, baseUrl);
       const calloutName = `Test Memo ${Date.now()}`;
 
-      await collaborationPage.navigateToSpace(baseScenario.space.nameId);
+      await collaborationPage.navigateToSpace(baseScenario!.space.nameId);
 
       await collaborationPage.createCallout(
         'memo',
@@ -155,7 +155,7 @@ adminFixture.test.describe.serial('Callout Creation', () => {
       const collaborationPage = new CollaborationPage(page, baseUrl);
       const calloutName = `Posts Collection ${Date.now()}`;
 
-      await collaborationPage.navigateToSpace(baseScenario.space.nameId);
+      await collaborationPage.navigateToSpace(baseScenario!.space.nameId);
 
       await collaborationPage.createCalloutWithContributions(
         calloutName,
@@ -175,7 +175,7 @@ adminFixture.test.describe.serial('Callout Creation', () => {
       const collaborationPage = new CollaborationPage(page, baseUrl);
       const calloutName = `Links Collection ${Date.now()}`;
 
-      await collaborationPage.navigateToSpace(baseScenario.space.nameId);
+      await collaborationPage.navigateToSpace(baseScenario!.space.nameId);
 
       await collaborationPage.createCalloutWithContributions(
         calloutName,
@@ -195,7 +195,7 @@ adminFixture.test.describe.serial('Callout Creation', () => {
       const collaborationPage = new CollaborationPage(page, baseUrl);
       const calloutName = `Memos Collection ${Date.now()}`;
 
-      await collaborationPage.navigateToSpace(baseScenario.space.nameId);
+      await collaborationPage.navigateToSpace(baseScenario!.space.nameId);
 
       await collaborationPage.createCalloutWithContributions(
         calloutName,
@@ -215,7 +215,7 @@ adminFixture.test.describe.serial('Callout Creation', () => {
       const collaborationPage = new CollaborationPage(page, baseUrl);
       const calloutName = `Whiteboards Collection ${Date.now()}`;
 
-      await collaborationPage.navigateToSpace(baseScenario.space.nameId);
+      await collaborationPage.navigateToSpace(baseScenario!.space.nameId);
 
       await collaborationPage.createCalloutWithContributions(
         calloutName,
@@ -247,6 +247,7 @@ memberFixture.test.describe.serial('Callout Creation - Member', () => {
     await memberFixture.teardownAuthentication();
     if (baseScenario) {
       await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
+      baseScenario = undefined;
     }
   });
 
@@ -256,7 +257,7 @@ memberFixture.test.describe.serial('Callout Creation - Member', () => {
       memberFixture.test.setTimeout(30_000);
       const collaborationPage = new CollaborationPage(page, baseUrl);
 
-      await collaborationPage.navigateToSpace(baseScenario.space.nameId);
+      await collaborationPage.navigateToSpace(baseScenario!.space.nameId);
 
       const isAddVisible = await collaborationPage.isAddCalloutVisible();
       expect(isAddVisible).toBe(false);

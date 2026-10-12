@@ -110,7 +110,7 @@ for (const role of PLATFORM_ROLE_NAMES) {
           if (new URL(page.url()).pathname.startsWith(path)) {
             // "Showing N of M" when the page has a list — never WAIT for it: most
             // of these pages have no such element.
-            await page.waitForLoadState('networkidle').catch(() => undefined);
+            await page.getByRole('main').waitFor({ state: 'visible' }).catch(() => undefined);
             const status = page.getByRole('main').getByRole('status').first();
             const rows = (await status.count()) > 0 ? await status.textContent() : null;
             leaks.push(`${label}${rows ? ` (${rows.trim()})` : ''}`);

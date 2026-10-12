@@ -375,6 +375,7 @@ test.describe(
       // bound — the recipient has push at its mandated default ON and email
       // toggled off — so the dispatch whose in-app side-effect this asserts
       // the absence of has provably already happened.
+      // eslint-disable-next-line no-restricted-syntax -- negative settle window at the slower direct track's MAX-DELAY bound
       await delay(
         Math.max(directPush.maxDelayGraceMs, directEmail.maxDelayGraceMs)
       );
@@ -445,6 +446,7 @@ test.describe(
           item.toAddresses.includes(recipientEmail)
         );
         if (deliveredToRecipient) break;
+        // eslint-disable-next-line no-restricted-syntax -- poll interval of a mailbox reader
         await delay(2000);
       } while (Date.now() < pollDeadline);
 

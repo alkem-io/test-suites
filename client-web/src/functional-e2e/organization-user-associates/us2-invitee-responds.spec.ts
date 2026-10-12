@@ -183,7 +183,6 @@ baseTest.afterAll(async () => {
 
 const openOrganizationProfile = async (page: Page) => {
   await page.goto(`${baseUrl}/organization/${orgO.nameID}`);
-  await page.waitForLoadState('networkidle');
 };
 
 /** The API's view of the invitee's standing — polled, because the accept
@@ -266,7 +265,6 @@ declinerTest.describe('US2-AS3 — declining leaves the invitee outside the orga
     // Declining is not joining: the profile falls back to the apply state
     // (orgO accepts applications by default), never to the associate state.
     await page.reload();
-    await page.waitForLoadState('networkidle');
     await expect(page.getByRole('button', { name: 'Respond to invitation' })).toHaveCount(0);
     await expect(page.getByRole('button', { name: 'Apply to associate' })).toBeVisible({ timeout: 15_000 });
   });
@@ -279,7 +277,6 @@ listAccepterTest.describe('US2-AS4 — the personal pending list keeps organizat
     'the organisation invitation renders in its own section with the organisation name, and accepting returns to the list',
     async ({ page }) => {
       await page.goto(`${baseUrl}/home`);
-      await page.waitForLoadState('networkidle');
 
       // The pending-memberships dialog is reached from the top bar; the
       // organization row must be visually separated from Space invitations

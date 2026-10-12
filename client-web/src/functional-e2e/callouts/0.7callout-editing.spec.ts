@@ -9,7 +9,7 @@ import { TestUser } from '@alkemio/tests-lib/common/enums/test.user';
 import { TestScenarioConfig } from '@alkemio/tests-lib/scenario/config/test-scenario-config';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import { TestScenarioFactory } from '@alkemio/tests-lib/scenario/TestScenarioFactory';
-import { delay, TestUserManager } from '@alkemio/tests-lib';
+import { TestUserManager } from '@alkemio/tests-lib';
 import { expect } from '@playwright/test';
 import { createAuthenticatedSessionFixture } from '../fixtures/authenticated-session.fixture';
 import { CollaborationPage } from './pages';
@@ -44,7 +44,7 @@ const scenarioConfig: TestScenarioConfig = {
   },
 };
 
-let baseScenario: OrganizationWithSpaceModel;
+let baseScenario: OrganizationWithSpaceModel | undefined;
 let currentCalloutName = `Editable Callout ${Date.now()}`;
 
 const adminFixture = createAuthenticatedSessionFixture({
@@ -72,6 +72,7 @@ adminFixture.test.describe.serial('Callout Editing', () => {
     await adminFixture.teardownAuthentication();
     if (baseScenario) {
       await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
+      baseScenario = undefined;
     }
   });
 
@@ -83,7 +84,7 @@ adminFixture.test.describe.serial('Callout Editing', () => {
       const updatedName = `Updated Callout ${Date.now()}`;
       const updatedDescription = 'Updated description for testing';
 
-      await collaborationPage.navigateToSpace(baseScenario.space.nameId);
+      await collaborationPage.navigateToSpace(baseScenario!.space.nameId);
 
       await collaborationPage.createCallout(
         'post',
@@ -129,7 +130,7 @@ adminFixture.test.describe.serial('Callout Editing', () => {
       adminFixture.test.setTimeout(30_000);
       const collaborationPage = new CollaborationPage(page, baseUrl);
 
-      await collaborationPage.navigateToSpace(baseScenario.space.nameId);
+      await collaborationPage.navigateToSpace(baseScenario!.space.nameId);
 
       expect(
         collaborationPage.getCalloutByName(currentCalloutName)
@@ -149,7 +150,7 @@ adminFixture.test.describe.serial('Callout Editing', () => {
       const collaborationPage = new CollaborationPage(page, baseUrl);
       const draftCalloutName = `Draft to Publish ${Date.now()}`;
 
-      await collaborationPage.navigateToSpace(baseScenario.space.nameId);
+      await collaborationPage.navigateToSpace(baseScenario!.space.nameId);
 
       await collaborationPage.createCallout(
         'post',
@@ -189,49 +190,44 @@ memberFixture.test.describe.serial('Callout Editing - Member', () => {
     await memberFixture.teardownAuthentication();
     if (baseScenario) {
       await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
+      baseScenario = undefined;
     }
   });
 
-  memberFixture.test.skip(
+  memberFixture.test(
     '3.3 Cannot Edit Callout - As Space Member',
     async ({ page }) => {
       memberFixture.test.setTimeout(30_000);
       const collaborationPage = new CollaborationPage(page, baseUrl);
 
-      await collaborationPage.navigateToSpace(baseScenario.space.nameId);
+      await collaborationPage.navigateToSpace(baseScenario!.space.nameId);
 
-      await delay(500);
       // expect(
       //   collaborationPage.getCalloutByName(
-      //     baseScenario.space.collaboration.calloutPostDisplayName
+      //     baseScenario!.space.collaboration.calloutPostDisplayName
       //   )
       // ).toBeDefined();
       await expect(
         page.getByRole('heading', {
-          name: `${baseScenario.space.collaboration.calloutPostCollectionDisplayName}`,
+          name: `${baseScenario!.space.collaboration.calloutPostCollectionDisplayName}`,
           exact: true,
         })
       ).toBeVisible({ timeout: 5000 });
       page
         .getByRole('heading', {
-          name: `${baseScenario.space.collaboration.calloutPostCollectionDisplayName}`,
+          name: `${baseScenario!.space.collaboration.calloutPostCollectionDisplayName}`,
           exact: true,
         })
         .click({ timeout: 5000 });
-      // await collaborationPage.clickCallout(
-      //   baseScenario.space.collaboration.calloutPostDisplayName
-      // );
-      await delay(500);
       // const isEditVisible = await collaborationPage.isEditButtonVisible();
       // expect(isEditVisible).toBe(false);
       await page
         .getByRole('button', { name: 'settings' })
         .first()
         .click({ timeout: 5000 });
-      await delay(500);
-      await expect(page.getByText('Edit', { exact: true })).not.toBeVisible({
-        timeout: 5000,
-      });
+      // Positive control first: the menu IS open, so "no Edit" is a real observation.
+      await expect(page.getByRole('menu')).toBeVisible();
+      await expect(page.getByRole('menuitem', { name: /^edit$/i })).toHaveCount(0);
     }
   );
 });

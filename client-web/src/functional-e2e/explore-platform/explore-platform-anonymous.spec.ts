@@ -212,7 +212,6 @@ test.describe('Explore Alkemio Platform - Anonymous User Flow', () => {
 
     // Open Tools Menu
     await page.getByRole('button', { name: 'Platform navigation' }).click();
-    await page.waitForTimeout(500); // Wait for menu animation
 
     // Verify menu items
     await expect(
@@ -263,7 +262,6 @@ test.describe('Explore Alkemio Platform - Anonymous User Flow', () => {
 
     // Open Tools Menu
     await page.getByRole('button', { name: 'Platform navigation' }).click();
-    await page.waitForTimeout(500); // Wait for menu animation
 
     // Click Alkemio Forum
     await page.getByRole('link', { name: 'Alkemio Forum' }).click();
@@ -289,7 +287,6 @@ test.describe('Explore Alkemio Platform - Anonymous User Flow', () => {
 
     // Open Tools Menu
     await page.getByRole('button', { name: 'Platform navigation' }).click();
-    await page.waitForTimeout(500); // Wait for menu animation
 
     // Click Template Library
     await page.getByRole('link', { name: 'Template Library' }).click();

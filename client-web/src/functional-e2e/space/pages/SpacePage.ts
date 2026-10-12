@@ -50,7 +50,9 @@ export class SpacePage {
 
   // Tutorial headings
   get tutorialHeadings() {
-    return this.page.getByRole('heading', { level: 2 });
+    // CRD renders callout titles as h3 (they were h2 in the MUI client);
+    // match on the tutorial's emoji-prefixed name, whatever the level.
+    return this.page.getByRole('heading');
   }
 
   // Methods

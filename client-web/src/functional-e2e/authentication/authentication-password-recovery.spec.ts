@@ -1,4 +1,26 @@
+// spec: client-web/src/functional-e2e/authentication/AUTHENTICATION_TEST_PLAN.md
+//
+// Password recovery, end to end against the CRD recovery LINK flow (both the
+// local and the remote Kratos send a self-service recovery link, not a code).
+//
+// The account under test is a DISPOSABLE identity registered by this file and
+// deleted again in `afterAll` — never a shared harness persona. Recovery
+// changes the account's password, and a persona whose password was changed by
+// a run that then failed before restoring it is exactly how every later
+// sign-in of that persona went red on the nightly (login, restricted access,
+// language offer…). A throwaway identity makes the walk independent of the
+// rest of the suite and of previous runs.
+
 import { test, expect, Page } from '@playwright/test';
+import {
+  getRecoveryLinkFor,
+  getUserToken,
+  postGraphqlRaw,
+  registerInKratosOrFail,
+  TestUser,
+  UniqueIDGenerator,
+  verifyInKratosOrFail,
+} from '@alkemio/tests-lib';
 import { navigateToLoginPageFromMenu } from './login-page-objects';
 import {
   continueButton,
@@ -7,120 +29,118 @@ import {
   recoveryEmailField,
   saveButton,
 } from './common-authentication-page-elements';
-import { verifyMyDashboardWelcomeElement } from '../my-dashboard/my-dashboard-page-objects';
-import {
-  delay,
-  deleteMailSlurperMails,
-  getRecoveryLink,
-} from '@alkemio/tests-lib';
+import { expectSignedIn } from '../my-dashboard/my-dashboard-page-objects';
 import { fillSecret } from '../helpers/login.helper';
 
-const password = process.env.AUTH_TEST_HARNESS_PASSWORD || 'change_me';
+const harnessPassword = process.env.AUTH_TEST_HARNESS_PASSWORD || 'change_me';
 const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 
-/**
- * Drives the recovery flow from the CRD recovery screen (already navigated to)
- * through to a saved new password. Both local and remote Kratos send a recovery
- * LINK (no 6-digit code), so this polls MailSlurper for the recovery link and
- * navigates to it to reach the "Set new password" screen.
- *
- * NOTE: the CRD/Kratos "set new password" screen rejects a new password equal to
- * the current one ("The new password must be different from the old password"),
- * so callers must pass a password that differs from the account's current one.
- */
-const submitRecoveryAndSetPassword = async (
-  page: Page,
-  email: string,
-  newPassword: string
-) => {
-  await deleteMailSlurperMails();
+const uniqueId = UniqueIDGenerator.getID();
+const recoveryEmail = `recovery.${uniqueId}@alkem.io`;
+/** Must differ from the registration password: Kratos refuses to "change" a
+ * password to its current value. */
+const recoveredPassword = `${harnessPassword}Rec${uniqueId}!`;
 
-  // Recovery request screen: enter the account email (field labelled "Email *").
-  await recoveryEmailField(page).click();
+let recoveryUserId: string | undefined;
+
+/**
+ * Drives the recovery screen (already open) through to a saved new password:
+ * request the link for `email`, follow it from the shared inbox, set
+ * `newPassword`. The inbox is read scoped to this address and never pruned —
+ * other flows' mail is theirs.
+ */
+async function recoverPassword(page: Page, email: string, newPassword: string) {
   await recoveryEmailField(page).fill(email);
   await continueButton(page).click();
 
-  // Wait for the recovery email to arrive.
-  await delay(3000);
+  // The screen confirms the request before the mail is sent; from there the
+  // link is a matter of delivery latency.
+  await expect(page.getByText(/sent|check your/i).first()).toBeVisible();
+  await expect
+    .poll(() => getRecoveryLinkFor(email), {
+      message: `recovery link for ${email} in the inbox`,
+      timeout: 30_000,
+    })
+    .toBeTruthy();
 
-  // Poll for the recovery link and navigate to it.
-  let recoveryLink: string | undefined;
-  for (let attempt = 0; attempt < 10; attempt++) {
-    recoveryLink = await getRecoveryLink();
-    if (recoveryLink) break;
-    await delay(2000);
-  }
-  if (recoveryLink === undefined) {
-    throw new Error('Recovery link from email is missing!');
-  }
-
-  await page.goto(recoveryLink);
-
-  // CRD "Set new password" screen.
-  await expect(
-    page.getByRole('heading', { name: 'Set new password' })
-  ).toBeVisible({ timeout: 10000 });
-  await passwordField(page).click();
+  await page.goto((await getRecoveryLinkFor(email))!);
+  await expect(page.getByRole('heading', { name: 'Set new password' })).toBeVisible();
   await fillSecret(passwordField(page), newPassword);
   await saveButton(page).click();
-};
+}
 
 test.describe('Authentication - Password Recovery Flows', () => {
-  test.beforeEach(async ({ context }) => {
-    await context.clearCookies();
-    await deleteMailSlurperMails();
+  test.beforeAll(async () => {
+    // Self-service registration + verification through Kratos, same path a
+    // real user takes; the identity then exists with the harness password.
+    const { verificationFlowId } = await registerInKratosOrFail(
+      'Recovery',
+      uniqueId,
+      recoveryEmail
+    );
+    await verifyInKratosOrFail(recoveryEmail, verificationFlowId);
+    // First authenticated contact creates the Alkemio user; capture its id so
+    // afterAll can remove user AND identity.
+    const token = await getUserToken(recoveryEmail);
+    const me = await postGraphqlRaw<{ me: { user: { id: string } | null } }>(
+      '{ me { user { id } } }',
+      { bearerToken: token }
+    );
+    recoveryUserId = me.body.data?.me?.user?.id;
+    expect(recoveryUserId, `Alkemio user for ${recoveryEmail}`).toBeTruthy();
   });
 
-  // Runs end-to-end against the CRD recovery LINK flow, which both local and
-  // remote Kratos use (the recovery email carries a self-service/recovery link,
-  // not a 6-digit code).
-  //
-  // Idempotency: the CRD set-password screen rejects reusing the current
-  // password, so the test sets a distinct temporary password, verifies the
-  // recovered session, then restores the shared default password in a `finally`
-  // (guarded so it only runs if the password was actually changed) — keeping
-  // `non.space@alkem.io` usable by the other suites that sign in as that user.
-  test('user successful password recovery', async ({ page, context }) => {
-    test.setTimeout(120000); // two email-dependent recovery cycles
-
-    const recoveryUser = 'non.space@alkem.io';
-    const tempPassword = `${password}Tmp9!`;
-    let passwordChanged = false;
-
-    try {
-      // Cycle 1 — via the UI entry path, recover to a NEW (different) password.
-      await navigateToLoginPageFromMenu(baseUrl, page);
-      await page.getByRole('link', { name: 'Forgot password?' }).click();
-      await submitRecoveryAndSetPassword(page, recoveryUser, tempPassword);
-      passwordChanged = true;
-
-      // Saving the new password signs the user in — opt into the new design and
-      // verify the authenticated dashboard.
-      await dismissNewLookDialog(page);
-      await verifyMyDashboardWelcomeElement(page);
-
-      await expect(
-        page.getByRole('button', { name: 'Invitations' })
-      ).toBeVisible();
-      await expect(
-        page.getByRole('link', { name: 'My Account' })
-      ).toBeVisible();
-      // The dashboard's "Create my own Space" call to action is a button on the
-      // current client (it used to be a link); the walk only needs the
-      // authenticated dashboard to be fully rendered, so accept either role.
-      await expect(
-        page.getByRole('button', { name: 'Create my own Space' }).or(
-          page.getByRole('link', { name: 'Create my own Space' })
-        )
-      ).toBeVisible();
-    } finally {
-      // Restore the shared default password (only if it was changed), from a
-      // logged-out state so the recovery screen renders the email form.
-      if (passwordChanged) {
-        await context.clearCookies();
-        await page.goto(`${baseUrl}/recovery`);
-        await submitRecoveryAndSetPassword(page, recoveryUser, password);
-      }
+  test.afterAll(async () => {
+    if (!recoveryUserId) return;
+    // User AND Kratos identity, so the address is free for the next run.
+    const res = await postGraphqlRaw(
+      'mutation($id: UUID!) { deleteUser(deleteData: { ID: $id, deleteIdentity: true }) { id } }',
+      { variables: { id: recoveryUserId }, bearerToken: await getUserToken(TestUser.GLOBAL_ADMIN + '@alkem.io') }
+    );
+    if (res.body.errors) {
+      throw new Error(
+        `could not remove the disposable recovery identity ${recoveryEmail}: ${JSON.stringify(res.body.errors)}`
+      );
     }
   });
+
+  test.beforeEach(async ({ context }) => {
+    await context.clearCookies();
+  });
+
+  test('user successful password recovery', async ({ page }) => {
+    // Entry via the sign-in screen's "Forgot password?" link.
+    await navigateToLoginPageFromMenu(baseUrl, page);
+    await page.getByRole('link', { name: 'Forgot password?' }).click();
+    await expect(recoveryEmailField(page)).toBeVisible();
+
+    await recoverPassword(page, recoveryEmail, recoveredPassword);
+
+    // Saving the new password signs the user in.
+    await dismissNewLookDialog(page);
+    await expectSignedIn(page);
+
+    // The NEW password is what the account accepts now — proven against the
+    // server, not inferred from the redirect: the non-interactive login with
+    // the new password succeeds, and with the old one it is refused.
+    await expect
+      .poll(() => getUserTokenWith(recoveryEmail, recoveredPassword), {
+        message: 'non-interactive login with the recovered password',
+        timeout: 20_000,
+      })
+      .toBe('ok');
+    expect(await getUserTokenWith(recoveryEmail, harnessPassword)).toBe('refused');
+  });
 });
+
+/** 'ok' when the server issues a token for the pair, 'refused' when it does not. */
+async function getUserTokenWith(email: string, password: string): Promise<'ok' | 'refused'> {
+  const response = await fetch(`${baseUrl}/api/auth/non-interactive-login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, password }),
+  });
+  if (!response.ok) return 'refused';
+  const body = (await response.json().catch(() => ({}))) as { api_token?: string };
+  return body.api_token ? 'ok' : 'refused';
+}

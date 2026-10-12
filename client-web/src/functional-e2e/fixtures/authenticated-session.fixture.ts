@@ -3,6 +3,7 @@ import fs from 'fs';
 import path from 'path';
 import { LoginPage } from '@src/functional-e2e/space/pages';
 import { registerInKratosOrFail, verifyInKratosOrFail } from '@alkemio/tests-lib';
+import { grantCookieConsent } from '@src/functional-e2e/helpers/cookies.helper';
 
 const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 
@@ -152,6 +153,9 @@ export async function ensurePersonaState(
     // in-progress write.
     const tmpPath = `${statePath}.${process.pid}.${attempt}.tmp`;
     try {
+      // Consent travels with the persisted session: every context built from
+      // this state starts without the cookie banner.
+      await grantCookieConsent(context);
       const page = await context.newPage();
       const loginPage = new LoginPage(page, baseUrl);
       await loginPage.login(email);

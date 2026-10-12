@@ -210,7 +210,6 @@ test.describe('Default Template Per Flow State', () => {
       await acceptCookiesIfVisible(page);
       await spacePage.navigateToSettings();
       await spaceSettingsPage.layoutTab.click();
-      await page.waitForLoadState('networkidle');
 
       // Verify the Home flow-state column header is visible. CRD renders each
       // flow state as a column whose header is now plain text (no longer an
@@ -283,8 +282,13 @@ test.describe('Default Template Per Flow State', () => {
   });
 
   test.describe('Template Auto-Loading for Members', () => {
-    // SKIP: flow-state "update default template" path does not persist — the first-set template loads instead of the updated one (product/data issue, see specs/008 gap log).
-    test.skip('4.1 Default template is loaded when member creates a post', async ({
+    // Known client-web defect — https://github.com/alkem-io/client-web/issues/10416
+    // Today: after 3.1 (Alternative) and 3.2 (Default) the member's Create Post
+    // dialog still pre-fills "Alternative Post Template - Test"; the API persists
+    // the second assignment (verified by mutation + read-back), so the client
+    // is at fault. Drop the .skip when the fix lands; the assertions below are
+    // the acceptance oracle and must not be softened.
+    test.skip('4.1 Default template is loaded when member creates a post (alkem-io/client-web#10416)', async ({
       browser,
     }) => {
       // Create new context and login as Space Member

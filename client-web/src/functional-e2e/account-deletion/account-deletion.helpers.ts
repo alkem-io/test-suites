@@ -70,6 +70,9 @@ export const signIn = async (
   await page.waitForURL(url => !url.pathname.startsWith('/login'), {
     timeout: 15000,
   });
+  // The URL leaves /login one tick before the session is usable; the header
+  // dropping its "Log in" link is the authenticated signal to wait for.
+  await expect(logInHeaderLink(page)).toHaveCount(0);
 };
 
 /**

@@ -1,4 +1,4 @@
-import { Page } from '@playwright/test';
+import { expect, Page } from '@playwright/test';
 
 // Authentication pages selectors
 
@@ -112,14 +112,13 @@ export const dismissNewLookDialog = async (page: Page): Promise<void> => {
   const switchToNewDesign = page.getByRole('button', {
     name: /take me to the new design/i,
   });
-  // The dialog renders a few seconds after the authenticated shell loads, so
-  // poll for it. Returns quickly on screens where it never appears.
-  for (let attempt = 0; attempt < 6; attempt++) {
-    if (await switchToNewDesign.isVisible({ timeout: 1500 }).catch(() => false)) {
-      await switchToNewDesign.click().catch(() => {});
-      await page.waitForTimeout(500);
-      return;
-    }
-    await page.waitForTimeout(750);
-  }
+  // The dialog renders a few seconds after the authenticated shell loads;
+  // give it a bounded window, and if it shows, click it away and wait for it
+  // to be gone. On screens where it never appears this is a no-op.
+  const appeared = await switchToNewDesign
+    .waitFor({ state: 'visible', timeout: 8_000 })
+    .then(() => true, () => false);
+  if (!appeared) return;
+  await switchToNewDesign.click();
+  await expect(switchToNewDesign).toBeHidden();
 };

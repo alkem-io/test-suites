@@ -56,6 +56,38 @@ module.exports = [
           message:
             'Do not pass a password through Locator.fill — it is published in the report step title. Use fillSecret() from helpers/login.helper.ts.',
         })),
+        // No fixed waits. A sleep is a guess about how long the platform
+        // takes — right on one machine, wrong on the next — and every flaky
+        // red in this suite's history started as one. Wait for the thing
+        // itself: a web-first `expect(locator)…`, `expect.poll`, `expect(…)
+        // .toPass`, `locator.waitFor`, `page.waitForURL/Response`. The one
+        // legitimate sleep is a NEGATIVE settle window ("nothing arrives for
+        // N seconds") derived from a product constant — mark it with
+        // `// eslint-disable-next-line no-restricted-syntax -- <why>` so the
+        // reason is reviewed. See docs/e2e-conventions.md.
+        {
+          selector: "CallExpression[callee.property.name='waitForTimeout']",
+          message:
+            'No fixed waits (page.waitForTimeout). Wait for a condition instead — see docs/e2e-conventions.md § Waiting.',
+        },
+        {
+          selector: "CallExpression[callee.name='delay']",
+          message:
+            'No fixed waits (delay()). Wait for a condition instead — see docs/e2e-conventions.md § Waiting.',
+        },
+        // `waitUntil: 'networkidle'` never settles on a page that keeps a
+        // subscription or poll open — which every authenticated Alkemio page
+        // does — so it burns the whole budget on a slow environment.
+        {
+          selector: "Property[key.name='waitUntil'][value.value='networkidle']",
+          message:
+            "Do not wait for 'networkidle' — authenticated pages never go idle. Wait for the element the test needs.",
+        },
+        {
+          selector: "CallExpression[callee.property.name='waitForLoadState'][arguments.0.value='networkidle']",
+          message:
+            "Do not wait for 'networkidle' — authenticated pages never go idle. Wait for the element the test needs.",
+        },
       ],
     },
   },

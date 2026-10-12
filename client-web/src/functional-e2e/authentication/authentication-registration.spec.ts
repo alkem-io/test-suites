@@ -11,16 +11,11 @@ import {
   fillUpSignInPageElements,
   pressSignInButtonSignInPage,
 } from '../identity-flows/signin-page-objects';
-import { verifyMyDashboardWelcomeElement } from '../my-dashboard/my-dashboard-page-objects';
+import { expectSignedIn } from '../my-dashboard/my-dashboard-page-objects';
 import {
   nextButton,
 } from './common-authentication-page-elements';
-import {
-  delay,
-  deleteMailSlurperMails,
-  getVerificationLink,
-  UniqueIDGenerator,
-} from '@alkemio/tests-lib';
+import { getVerificationLinkFor, UniqueIDGenerator } from '@alkemio/tests-lib';
 
 const password = process.env.AUTH_TEST_HARNESS_PASSWORD || 'change_me';
 const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
@@ -33,7 +28,6 @@ test.describe('Authentication - Registration Flows', () => {
 
   test.beforeEach(async ({ context }) => {
     await context.clearCookies();
-    await deleteMailSlurperMails();
   });
 
   /**
@@ -75,19 +69,15 @@ test.describe('Authentication - Registration Flows', () => {
       )
     ).toBeVisible();
 
-    // Wait for verification email to arrive
-    await delay(3000);
-
-    // Link verification flow: poll for verification link
-    let verificationLink: string | undefined;
-    for (let attempt = 0; attempt < 10; attempt++) {
-      verificationLink = await getVerificationLink();
-      if (verificationLink) break;
-      await delay(2000);
-    }
-    if (verificationLink === undefined) {
-      throw new Error('Verification link from email is missing!');
-    }
+    // The verification mail for THIS address — read scoped to the recipient,
+    // so other flows' mail in the shared inbox is neither matched nor removed.
+    await expect
+      .poll(() => getVerificationLinkFor(userEmail), {
+        message: `verification link for ${userEmail} in the inbox`,
+        timeout: 30_000,
+      })
+      .toBeTruthy();
+    const verificationLink = (await getVerificationLinkFor(userEmail))!;
 
     await page.goto(verificationLink);
     await expect(page.getByText('You successfully verified')).toBeVisible({
@@ -107,7 +97,7 @@ test.describe('Authentication - Registration Flows', () => {
     await pressSignInButtonSignInPage(page);
 
     // Verify successful login
-    await verifyMyDashboardWelcomeElement(page);
+    await expectSignedIn(page);
 
     // Note: User cleanup not implemented - each test creates unique user (test+{uniqueId}@alkem.io)
     // that won't conflict with subsequent runs. To implement cleanup, add deleteUser
@@ -142,19 +132,15 @@ test.describe('Authentication - Registration Flows', () => {
       page.getByRole('heading', { name: 'Verify your email' })
     ).toBeVisible();
 
-    // Wait for verification email to arrive
-    await delay(3000);
-
-    // Link verification flow: poll for verification link
-    let verificationLink: string | undefined;
-    for (let attempt = 0; attempt < 10; attempt++) {
-      verificationLink = await getVerificationLink();
-      if (verificationLink) break;
-      await delay(2000);
-    }
-    if (verificationLink === undefined) {
-      throw new Error('Verification link from email is missing!');
-    }
+    // The verification mail for THIS address — read scoped to the recipient,
+    // so other flows' mail in the shared inbox is neither matched nor removed.
+    await expect
+      .poll(() => getVerificationLinkFor(userEmail), {
+        message: `verification link for ${userEmail} in the inbox`,
+        timeout: 30_000,
+      })
+      .toBeTruthy();
+    const verificationLink = (await getVerificationLinkFor(userEmail))!;
 
     await page.goto(verificationLink);
     await expect(page.getByText('You successfully verified')).toBeVisible({
@@ -174,7 +160,7 @@ test.describe('Authentication - Registration Flows', () => {
     await pressSignInButtonSignInPage(page);
 
     // Verify successful login
-    await verifyMyDashboardWelcomeElement(page);
+    await expectSignedIn(page);
 
     // TODO: Cleanup - delete test user after verification
   });

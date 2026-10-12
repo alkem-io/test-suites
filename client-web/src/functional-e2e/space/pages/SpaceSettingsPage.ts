@@ -67,8 +67,23 @@ export class SpaceSettingsPage {
     await this.navigateToAccount();
     await this.deleteSpaceButton.click();
     await expect(this.deleteDialog).toBeVisible();
+    // The client redirects as soon as the delete is sent; the server-side
+    // cascade (callouts, community, account bookkeeping) completes a moment
+    // later. Returning on the redirect alone let the next step load an
+    // account page that still referenced the half-deleted Space ("Could not
+    // load relation 'about' for Space", every capacity badge "Not
+    // available"). Wait for the mutation's own response, and for it to be
+    // error-free, before handing control back.
+    const deleted = this.page.waitForResponse(
+      response =>
+        response.url().includes('graphql') &&
+        (response.request().postData() ?? '').includes('deleteSpace'),
+      { timeout: 30_000 }
+    );
     await this.confirmDeleteButton.click();
-    // Wait for redirect after deletion
+    const response = await deleted;
+    const body = (await response.json().catch(() => ({}))) as { errors?: unknown[] };
+    expect(body.errors, 'deleteSpace mutation errors').toBeUndefined();
     await this.page.waitForURL(/.*\/(home|spaces|account).*/, {
       timeout: 30_000,
     });

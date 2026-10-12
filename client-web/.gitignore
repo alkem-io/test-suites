@@ -76,3 +76,4 @@ config/playwright-report-form-callout-framing/
 
 # 024 classifications acceptance run report (throwaway)
 config/playwright-report-classifications/
+/playwright-report-local-stack/

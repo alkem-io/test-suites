@@ -17,7 +17,7 @@ import {
   SpacePrivacyMode,
 } from '@alkemio/client-lib/dist/generated/graphql';
 import { createAuthenticatedSessionFixture } from '../fixtures/authenticated-session.fixture';
-import { verifyMyDashboardWelcomeElement } from '../my-dashboard/my-dashboard-page-objects';
+import { expectSignedIn } from '../my-dashboard/my-dashboard-page-objects';
 import { userMenuAvatar } from '../authentication/common-authentication-page-elements';
 
 const { test, setupAuthentication, teardownAuthentication } =
@@ -124,7 +124,7 @@ test.describe('Explore Alkemio Platform - Authenticated User Flow', () => {
     await page.waitForURL('**/home');
 
     // Verify user is authenticated and on dashboard
-    await verifyMyDashboardWelcomeElement(page);
+    await expectSignedIn(page);
 
     // [BUG] todo: verify the below expectations as the user has memberships and these are for users without memberships
     // Verify explore section
@@ -239,7 +239,6 @@ test.describe('Explore Alkemio Platform - Authenticated User Flow', () => {
 
     // Open Tools Menu
     await page.getByRole('button', { name: 'Platform navigation' }).click();
-    await page.waitForTimeout(500); // Wait for menu animation
 
     // Verify menu items
     await expect(
@@ -284,56 +283,12 @@ test.describe('Explore Alkemio Platform - Authenticated User Flow', () => {
     ).toBeVisible();
   });
 
-  // SKIP: the /contributors page is being retired — it is reachable only by
-  // direct URL (no longer linked in the product) and its <main> never renders
-  // content (stays on the loading spinner). This scenario therefore exercises an
-  // obsolete surface; it is skipped rather than marked an expected failure
-  // (test.fail), since the page is deprecated, not pending a fix. Being skipped,
-  // it does not cascade-block the serial tests below it. Remove this test once
-  // the page is fully removed.
-  test.skip('8. Explore Contributors page', async ({ page }) => {
-    await page.goto(`${baseUrl}/contributors`);
-    await page.waitForURL('**/contributors');
-
-    // Verify navigation (this part works; the URL resolves correctly).
-    await expect(page).toHaveURL(/\/contributors/);
-
-    // Intended content assertion. The Contributors page is expected to show a
-    // level-1 "find talent" heading; it never renders because of the bug above,
-    // which is what produces the expected failure.
-    await expect(
-      page.getByRole('heading', {
-        name: 'Find talent and expertise!',
-        level: 1,
-      })
-    ).toBeVisible();
-
-    // Verify sections
-    await expect(
-      page.getByRole('heading', { name: 'Users', exact: true })
-    ).toBeVisible();
-    await expect(
-      page.getByRole('heading', { name: 'Virtual Contributors' })
-    ).toBeVisible();
-    await expect(
-      page.getByRole('heading', { name: 'Organizations' })
-    ).toBeVisible();
-
-    // Authenticated user should see users list (not login prompt)
-    await expect(
-      page.getByRole('heading', {
-        name: 'Please log in to see all contributing users',
-      })
-    ).not.toBeVisible();
-  });
-
   test('10. Explore Forum', async ({ page }) => {
     await page.goto(`${baseUrl}/home`); // see case 1: `/` may redirect into a space
     await page.waitForURL('**/home');
 
     // Open Tools Menu
     await page.getByRole('button', { name: 'Platform navigation' }).click();
-    await page.waitForTimeout(500); // Wait for menu animation
 
     // Click Alkemio Forum
     await page.getByRole('link', { name: 'Alkemio Forum' }).click();
@@ -359,7 +314,6 @@ test.describe('Explore Alkemio Platform - Authenticated User Flow', () => {
 
     // Open Tools Menu
     await page.getByRole('button', { name: 'Platform navigation' }).click();
-    await page.waitForTimeout(500); // Wait for menu animation
 
     // Click Template Library
     await page.getByRole('link', { name: 'Template Library' }).click();
@@ -425,7 +379,7 @@ test.describe('Explore Alkemio Platform - Authenticated User Flow', () => {
   test('15. Verify user profile is accessible', async ({ page }) => {
     await page.goto(`${baseUrl}/home`); // see case 1: `/` may redirect into a space
     await page.waitForURL('**/home');
-    await verifyMyDashboardWelcomeElement(page);
+    await expectSignedIn(page);
 
     // CRD replaces the legacy avatar/"My Dashboard" affordance with a user
     // button in the header (the avatar, keyed by the user's display name). The

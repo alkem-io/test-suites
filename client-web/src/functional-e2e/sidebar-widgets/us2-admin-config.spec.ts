@@ -71,7 +71,20 @@ async function loadHomeCollectingOperations(
   try {
     await page.goto(spaceUrl);
     await expect(widgets(spaceSidebar(page)).updates).toBeVisible();
-    await page.waitForLoadState('networkidle');
+    // The list must be COMPLETE, not just non-empty: a widget's data query
+    // can be issued after the sidebar is on screen. Wait until no new
+    // operation has been issued for a full sampling interval.
+    let seen = -1;
+    await expect
+      .poll(
+        () => {
+          const stable = operations.length === seen;
+          seen = operations.length;
+          return stable;
+        },
+        { intervals: [1_500], timeout: 20_000 }
+      )
+      .toBe(true);
   } finally {
     page.off('request', onRequest);
   }

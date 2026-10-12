@@ -10,7 +10,6 @@
 
 import { expect, type Page } from '@playwright/test';
 import {
-  delay,
   getUserToken,
   postGraphqlRaw,
   queryHarnessDb,
@@ -57,21 +56,29 @@ type SubjectRow = { id: string; accountId: string; displayName: string };
  * opt-in dev/CI feature flag this walk must not depend on being enabled.
  */
 const resolveSubjectRow = async (email: string): Promise<SubjectRow> => {
-  for (let attempt = 0; attempt < 20; attempt++) {
-    const rows = await queryHarnessDb<SubjectRow>(
-      `SELECT u.id, u."accountID" AS "accountId", p."displayName" AS "displayName"
-       FROM "user" u
-       JOIN actor a ON a.id = u.id
-       JOIN profile p ON p.id = a."profileId"
-       WHERE u.email = $1`,
-      [email]
-    );
-    if (rows[0]) return rows[0];
-    await delay(500);
-  }
-  throw new Error(
-    `resolveSubjectRow: no Alkemio user row appeared for '${email}' after registration + verification`
-  );
+  let row: SubjectRow | undefined;
+  await expect
+    .poll(
+      async () => {
+        const rows = await queryHarnessDb<SubjectRow>(
+          `SELECT u.id, u."accountID" AS "accountId", p."displayName" AS "displayName"
+           FROM "user" u
+           JOIN actor a ON a.id = u.id
+           JOIN profile p ON p.id = a."profileId"
+           WHERE u.email = $1`,
+          [email]
+        );
+        row = rows[0];
+        return Boolean(row);
+      },
+      {
+        message: `resolveSubjectRow: no Alkemio user row appeared for '${email}' after registration + verification`,
+        intervals: [500],
+        timeout: 10_000,
+      }
+    )
+    .toBe(true);
+  return row!;
 };
 
 /**

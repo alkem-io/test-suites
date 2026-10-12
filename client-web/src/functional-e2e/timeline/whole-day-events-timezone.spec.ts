@@ -166,7 +166,7 @@ const openCalendarIn = async (
   const context = await browser.newContext({ storageState: storageStatePath, timezoneId });
   const page = await context.newPage();
   await page.goto(calendarUrl);
-  await page.waitForLoadState('networkidle');
+  await expect(page.getByRole('main')).toBeVisible();
   return context;
 };
 
