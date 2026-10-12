@@ -22,6 +22,7 @@ import {
   logInHeaderLink,
 } from '../authentication/common-authentication-page-elements';
 import { fillSecret } from '../helpers/login.helper';
+import { listMcpKeyIds, revokeMintedMcpKeys } from '../helpers/mcp-api-keys.helper';
 
 const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 // Local dev: the Traefik edge on ALKEMIO_BASE_URL does not route `/rest/mcp`
@@ -107,6 +108,17 @@ test.describe(
   'MCP API keys — see and revoke my keys (US2)',
   { tag: '@forge-acceptance' },
   () => {
+    // Every key this file mints is revoked again: the server caps usable keys
+    // at 10 per user, so leftovers from one run block the next run's mints.
+    // Keys the admin held BEFORE this file ran are not ours to revoke.
+    let preexistingKeyIds: Set<string> = new Set();
+    test.beforeAll(async () => {
+      preexistingKeyIds = await listMcpKeyIds(adminEmail);
+    });
+    test.afterAll(async () => {
+      await revokeMintedMcpKeys(adminEmail, ['US2-'], preexistingKeyIds);
+    });
+
     test.beforeEach(async ({ page }) => {
       await signIn(page);
       await goToSecuritySettings(page);
@@ -288,13 +300,25 @@ test.describe(
     test('US2-AS6: no delete control exists anywhere on the keys card — revocation is the only removal', async ({
       page,
     }) => {
-      const keyName = uniqueName('US2-NoDelete-Key');
+      const keyName = uniqueName('US2-NoRemoval-Key');
       await mintKey(page, keyName);
 
-      await expect(
-        page.getByRole('button', { name: /delete/i })
-      ).toHaveCount(0);
-      await expect(page.getByText(/delete/i)).toHaveCount(0);
+      // Scoped to the keys CARD (its header, list and footer — the whole
+      // surface the AC names), not the page: the Security tab also hosts the
+      // account's own "Delete account" card (workspace#054), which is not a
+      // key control. The card is the heading's nearest ancestor holding the
+      // key list; the list alone would miss a control in the card header.
+      const keysCard = page
+        .getByRole('heading', { name: 'MCP API Keys' })
+        .locator('xpath=ancestor::div[.//ul][1]');
+      await expect(keysCard.getByRole('button', { name: 'Create API key' })).toBeVisible();
+      await expect(keysCard.getByText('Delete account')).toHaveCount(0);
+      await expect(rowFor(page, keyName).getByRole('button', { name: 'Revoke', exact: true })).toBeVisible();
+      // Controls only: a text match would also hit key NAMES from earlier
+      // runs that happen to contain the word.
+      await expect(keysCard.getByRole('button', { name: /delete/i })).toHaveCount(0);
+      await expect(keysCard.getByRole('menuitem', { name: /delete/i })).toHaveCount(0);
+      await expect(keysCard.getByRole('link', { name: /delete/i })).toHaveCount(0);
     });
   }
 );

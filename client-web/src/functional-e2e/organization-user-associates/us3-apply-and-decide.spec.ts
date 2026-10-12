@@ -189,7 +189,6 @@ baseTest.afterAll(async () => {
 
 async function applyToAssociateViaUi(page: Page, orgNameId: string, message: string) {
   await page.goto(`${baseUrl}/organization/${orgNameId}`);
-  await page.waitForLoadState('networkidle');
   const applyBtn = page.getByRole('button', { name: 'Apply to associate' });
   await expect(applyBtn).toBeVisible({ timeout: 15_000 });
   await applyBtn.click();
@@ -217,7 +216,6 @@ applicantApproveTest.describe('US3-AS1 — a registered user with a domain misma
     await page.getByRole('button', { name: /close/i }).click();
 
     await page.reload();
-    await page.waitForLoadState('networkidle');
     await expect(page.getByText('Application pending', { exact: true })).toBeVisible({ timeout: 10_000 });
   });
 });
@@ -329,7 +327,6 @@ applicantRejectTest.describe('US3-AS4 — the applicant applies, then adminA rej
     await applyToAssociateViaUi(page, orgO.nameID, `US3-AS4 application ${runSuffix}`);
     await page.getByRole('button', { name: /close/i }).click();
     await page.reload();
-    await page.waitForLoadState('networkidle');
     await expect(page.getByText('Application pending', { exact: true })).toBeVisible({ timeout: 10_000 });
   });
 });
@@ -372,7 +369,6 @@ adminATest.describe('US3-AS4 (decision) — adminA rejects the AS4 applicant', (
 viewerTest.describe('US3-AS5 — an organization with applications switched off offers no Apply action', () => {
   viewerTest('profile shows the closed line; the API refusal is typed; nothing is created', async ({ page }) => {
     await page.goto(`${baseUrl}/organization/${orgQ.nameID}`);
-    await page.waitForLoadState('networkidle');
     await expect(page.getByRole('button', { name: 'Apply to associate' })).toHaveCount(0);
     await expect(page.getByText('This organisation is not currently accepting applications.')).toBeVisible({
       timeout: 10_000,
@@ -415,7 +411,6 @@ baseTest.describe('US3-AS6 — inviting a user with a pending application is ref
 baseTest.describe('US3-AS7 — an unauthenticated visitor is sent to log in and returned to the profile', () => {
   baseTest('clicking Apply to associate leads to /login and back to the organization profile', async ({ page }) => {
     await page.goto(`${baseUrl}/organization/${orgO.nameID}`);
-    await page.waitForLoadState('networkidle');
     const cookieBtn = page.getByRole('button', { name: 'Accept All Cookies' });
     if (await cookieBtn.isVisible({ timeout: 2000 }).catch(() => false)) await cookieBtn.click();
 
@@ -495,11 +490,10 @@ platformAdminTest.describe('US3-AS8 (decision) — the remaining owner decides f
 
 // ─── US3-AS9 ────────────────────────────────────────────────────────────
 
-viewerTest.describe('US3-AS9 — a pre-migration organization reads as accepting applications', () => {
+viewerTest.describe('US3-AS9 — a pre-migration organization reads as accepting applications', { tag: '@local-stack' }, () => {
   viewerTest.skip(!harnessPostgresConfigured(), 'needs loopback Postgres to strip the settings key');
   viewerTest('the profile offers Apply and the form still shows exactly one optional message field', async ({ page }) => {
     await page.goto(`${baseUrl}/organization/${orgP.nameID}`);
-    await page.waitForLoadState('networkidle');
     const applyBtn = page.getByRole('button', { name: 'Apply to associate' });
     await expect(applyBtn).toBeVisible({ timeout: 15_000 });
     await applyBtn.click();

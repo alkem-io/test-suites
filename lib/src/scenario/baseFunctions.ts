@@ -627,6 +627,87 @@ export const createOrganization = async (
   return graphqlErrorWrapper(callback, userRole);
 };
 
+const NAME_ID_TAKEN = "nameID is already taken";
+
+/**
+ * `createOrganization` for throwaway test data, resilient to the one failure
+ * mode that made every self-seeding Playwright walk flaky on the nightly:
+ * `graphqlErrorWrapper` retries a mutation after a connection-level failure
+ * (reset, timeout) even when the server had already committed it, and the
+ * retry then re-fails with "nameID is already taken" for an organization that
+ * exists and is ours. Instead of surfacing that as a setup failure (and leaking
+ * the committed twin), this reads the organization back by its nameID and
+ * returns it in the exact shape the mutation would have — callers never know
+ * the difference. An organization under that nameID whose display name is not
+ * the one this call sent is foreign data, never adopted: the original
+ * collision error is returned. Anything else still surfaces verbatim.
+ */
+export const createOrganizationOrAdopt = async (
+  organizationName: string,
+  nameID: string,
+  legalEntityName?: string,
+  domain?: string,
+  website?: string,
+  contactEmail?: string,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN,
+  options?: { tags?: string[] },
+) => {
+  const created = await createOrganization(
+    organizationName,
+    nameID,
+    legalEntityName,
+    domain,
+    website,
+    contactEmail,
+    userRole,
+    options,
+  );
+  const message = String(created.error?.errors?.[0]?.message ?? "");
+  if (created.data?.createOrganization || !message.includes(NAME_ID_TAKEN)) {
+    return created;
+  }
+  const graphqlClient = getGraphqlClient();
+  const lookup = await graphqlErrorWrapper(
+    (authToken) =>
+      graphqlClient.getOrganizationIdByNameId(
+        { nameID },
+        { authorization: `Bearer ${authToken}` },
+      ),
+    userRole,
+  );
+  const organizationId = lookup.data?.lookupByName?.organization;
+  if (!organizationId) {
+    return created;
+  }
+  const existing = await graphqlErrorWrapper(
+    (authToken) =>
+      graphqlClient.getOrganizationData(
+        { organizationId },
+        { authorization: `Bearer ${authToken}` },
+      ),
+    userRole,
+  );
+  // Ownership check: the committed twin of THIS call carries the display name
+  // we just sent (it embeds the caller's unique id in full, while the nameID
+  // may be truncated). Anything else under the nameID is foreign data — a
+  // leftover of an earlier run or another file's scenario — and adopting it
+  // would attach this test to someone else's state (and its teardown would
+  // delete it). Surface the original collision instead.
+  if (
+    !existing.data?.organization ||
+    existing.data.organization.profile?.displayName !== organizationName
+  ) {
+    return created;
+  }
+  LogManager.getLogger().warn(
+    `[createOrganizationOrAdopt] '${nameID}' was already committed by an earlier attempt — adopted instead of re-created`,
+  );
+  return {
+    data: { createOrganization: existing.data.organization },
+    error: undefined,
+  } as unknown as typeof created;
+};
+
 export const deleteOrganization = async (
   organizationId: string,
   userRole: TestUser = TestUser.GLOBAL_ADMIN,

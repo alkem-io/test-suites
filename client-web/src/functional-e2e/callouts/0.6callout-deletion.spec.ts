@@ -5,7 +5,7 @@ import { TestUser } from '@alkemio/tests-lib/common/enums/test.user';
 import { TestScenarioConfig } from '@alkemio/tests-lib/scenario/config/test-scenario-config';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import { TestScenarioFactory } from '@alkemio/tests-lib/scenario/TestScenarioFactory';
-import { delay, TestUserManager } from '@alkemio/tests-lib';
+import { TestUserManager } from '@alkemio/tests-lib';
 import { expect } from '@playwright/test';
 import { createAuthenticatedSessionFixture } from '../fixtures/authenticated-session.fixture';
 import { CollaborationPage } from './pages';
@@ -32,7 +32,7 @@ const scenarioConfig: TestScenarioConfig = {
   },
 };
 
-let baseScenario: OrganizationWithSpaceModel;
+let baseScenario: OrganizationWithSpaceModel | undefined;
 
 const adminFixture = createAuthenticatedSessionFixture({
   storageStateName: 'callout-deletion-admin.json',
@@ -58,9 +58,7 @@ adminFixture.test.describe.serial('Callout Deletion', () => {
   adminFixture.test.afterAll(async () => {
     adminFixture.test.setTimeout(30_000);
     await adminFixture.teardownAuthentication();
-    //if (baseScenario) {
-    // await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
-    //}
+    // The scenario is shared with the Member block below, which cleans it up.
   });
 
   adminFixture.test('4.1 Delete Callout - As Space Admin', async ({ page }) => {
@@ -68,7 +66,7 @@ adminFixture.test.describe.serial('Callout Deletion', () => {
     const collaborationPage = new CollaborationPage(page, baseUrl);
     const calloutToDelete = `Callout to Delete ${Date.now()}`;
 
-    await collaborationPage.navigateToSpace(baseScenario.space.nameId);
+    await collaborationPage.navigateToSpace(baseScenario!.space.nameId);
 
     await collaborationPage.createCallout(
       'post',
@@ -89,7 +87,7 @@ adminFixture.test.describe.serial('Callout Deletion', () => {
     await expect(collaborationPage.confirmDialog).toBeVisible();
     await collaborationPage.confirmDeleteButton.click({ timeout: 5000 });
 
-    await collaborationPage.navigateToSpace(baseScenario.space.nameId);
+    await collaborationPage.navigateToSpace(baseScenario!.space.nameId);
 
     await expect(
       page.getByRole('heading', {
@@ -117,7 +115,10 @@ memberFixture.test.describe.serial('Callout Deletion - Member', () => {
   memberFixture.test.afterAll(async () => {
     memberFixture.test.setTimeout(30_000);
     await memberFixture.teardownAuthentication();
-    await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
+    if (baseScenario) {
+      await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
+      baseScenario = undefined;
+    }
   });
 
   memberFixture.test(
@@ -126,22 +127,21 @@ memberFixture.test.describe.serial('Callout Deletion - Member', () => {
       memberFixture.test.setTimeout(30_000);
       const collaborationPage = new CollaborationPage(page, baseUrl);
 
-      await collaborationPage.navigateToSpace(baseScenario.space.nameId);
+      await collaborationPage.navigateToSpace(baseScenario!.space.nameId);
 
-      await delay(500);
       await expect(
         page.getByRole('heading', {
-          name: baseScenario.space.collaboration.calloutPostDisplayName,
+          name: baseScenario!.space.collaboration.calloutPostDisplayName,
           exact: true,
         })
       ).toBeVisible({ timeout: 5000 });
       await collaborationPage.clickCallout(
-        baseScenario.space.collaboration.calloutPostDisplayName
+        baseScenario!.space.collaboration.calloutPostDisplayName
       );
-      await delay(500);
       await collaborationPage.openContextualMenu();
-      await delay(500);
-      await expect(page.getByText('Delete')).not.toBeVisible({ timeout: 4000 });
+      // Positive control first: the menu IS open, so "no Delete" is a real observation.
+      await expect(page.getByRole('menu')).toBeVisible();
+      await expect(page.getByRole('menuitem', { name: 'Delete' })).toHaveCount(0);
     }
   );
 });

@@ -37,6 +37,7 @@ import {
   UniqueIDGenerator,
 } from '@alkemio/tests-lib';
 import { createPersonaTest } from '../fixtures/authenticated-session.fixture';
+import { chooseFramingChip } from '../helpers/callout-form.helper';
 import {
   EXCERPT_SELECTOR,
   findArticleByName,
@@ -183,9 +184,7 @@ async function readCalloutSettings(calloutId: string) {
 }
 
 async function gotoFixtureSpace(page: Page) {
-  await page.goto(`${baseUrl}/${fixture.spaceNameId}`, {
-    waitUntil: 'networkidle',
-  });
+  await page.goto(`${baseUrl}/${fixture.spaceNameId}`);
 }
 
 async function openAddPostDialog(page: Page) {
@@ -297,7 +296,7 @@ test.describe(
     }) => {
       await gotoFixtureSpace(page);
       const dialog = await openAddPostDialog(page);
-      await dialog.getByText('Subspaces', { exact: true }).click();
+      await chooseFramingChip(dialog, 'Subspaces');
 
       const manualSwitch = dialog.getByRole('switch', {
         name: 'Manual selection',
@@ -355,7 +354,7 @@ test.describe(
       const title = `US2 AS2 Expanded ${runSuffix}`;
       const dialog = await openAddPostDialog(page);
       await dialog.getByRole('textbox', { name: 'Title' }).fill(title);
-      await dialog.getByText('Subspaces', { exact: true }).click();
+      await chooseFramingChip(dialog, 'Subspaces');
       await dialog.getByRole('switch', { name: 'Expanded card' }).click();
       await page
         .getByRole('button', { name: 'Post', exact: true })
@@ -382,9 +381,7 @@ test.describe(
       const anonContext = await browser.newContext({ storageState: undefined });
       expect(await anonContext.cookies()).toHaveLength(0);
       const anonPage = await anonContext.newPage();
-      await anonPage.goto(`${baseUrl}/${fixture.spaceNameId}`, {
-        waitUntil: 'networkidle',
-      });
+      await anonPage.goto(`${baseUrl}/${fixture.spaceNameId}`);
       try {
         const anonHeading = anonPage.getByText(title, { exact: true });
         await anonHeading.waitFor({ state: 'visible', timeout: 15_000 });
@@ -535,14 +532,14 @@ test.describe(
       await expect(dialog).not.toContainText('Expanded card'); // no attachment yet
 
       for (const chip of ['Whiteboard', 'Memo', 'Contributors', 'Poll']) {
-        await dialog.getByText(chip, { exact: true }).click();
+        await chooseFramingChip(dialog, chip);
         await expect(dialog).not.toContainText('Expanded card');
       }
       // No teardown: the create-post dialog has no Cancel control, and this
       // test never submits.
     });
 
-    test('US2-AS6: a legacy-shaped Subspaces post (stripped `framing.spaces`) reads as compact without error, and fetches no `who`/`description`', async ({
+    test('US2-AS6: a legacy-shaped Subspaces post (stripped `framing.spaces`) reads as compact without error, and fetches no `who`/`description`', { tag: '@local-stack' }, async ({
       page,
     }) => {
       test.skip(

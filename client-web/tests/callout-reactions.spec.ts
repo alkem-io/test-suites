@@ -156,6 +156,7 @@ test.describe('Callout emoji reactions — US1 P1 acceptance walk', { tag: ['@ca
         if (await picker.isVisible().catch(() => false)) {
           const own = picker.getByRole('option', { selected: true });
           if (await own.count()) await own.first().click(); // clicking own = remove (no dialog)
+          // eslint-disable-next-line no-restricted-syntax -- best-effort cleanup click; nothing observable to wait on
           await delay(500);
         }
       }

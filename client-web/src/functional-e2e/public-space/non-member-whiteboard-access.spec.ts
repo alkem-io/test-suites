@@ -71,7 +71,6 @@ test.describe('Whiteboard Access for Non-Members', () => {
     test.setTimeout(60_000);
     // Navigate to the public space as non-member (already authenticated)
     await page.goto(`${baseUrl}/${baseScenario.space.nameId}`);
-    await page.waitForLoadState('networkidle');
 
     // Verify whiteboard callout is visible on the home tab
     await expect(
@@ -103,7 +102,6 @@ test.describe('Whiteboard Access for Non-Members', () => {
     test.setTimeout(60_000);
     // Navigate to the public space as non-member (already authenticated)
     await page.goto(`${baseUrl}/${baseScenario.space.nameId}`);
-    await page.waitForLoadState('networkidle');
 
     // CRD exposes the whiteboard callout via an explicit "Open ... whiteboard
     // callout" link (the heading link no longer triggers the modal).
@@ -125,8 +123,14 @@ test.describe('Whiteboard Access for Non-Members', () => {
       page.getByRole('dialog').getByText('Whiteboard - initial')
     ).toBeVisible();
 
-    // Wait for whiteboard to load - it may take time to render canvas
-    await page.waitForTimeout(3000);
+    // The canvas may take a while to mount; give it a bounded wait, then
+    // branch on whether this configuration renders one at all.
+    await page
+      .getByRole('dialog')
+      .locator('canvas')
+      .first()
+      .waitFor({ state: 'visible', timeout: 15_000 })
+      .catch(() => undefined);
 
     // Verify whiteboard canvas is rendered
     // Check if canvas exists at all in the dialog
@@ -170,7 +174,6 @@ test.describe('Whiteboard Access for Non-Members', () => {
     test.setTimeout(60_000);
     // Navigate to the public space as non-member (already authenticated)
     await page.goto(`${baseUrl}/${baseScenario.space.nameId}`);
-    await page.waitForLoadState('networkidle');
 
     // Open the whiteboard callout dialog via the explicit "Open ..." link.
     await page
@@ -191,7 +194,6 @@ test.describe('Whiteboard Access for Non-Members', () => {
     const expandWindow = page.getByRole('button', { name: 'Expand Window' });
     if (await expandWindow.count()) {
       await expandWindow.click();
-      await page.waitForLoadState('networkidle');
     }
 
     // Verify read-only mode indicator or message
@@ -225,7 +227,6 @@ test.describe('Whiteboard Access for Non-Members', () => {
     test.setTimeout(120_000);
     // Navigate to the public space as anonymous user
     await page.goto(`${baseUrl}/${baseScenario.space.nameId}`);
-    await page.waitForLoadState('networkidle');
 
     // As anonymous user (not logged in), verify whiteboard is visible
     await expect(

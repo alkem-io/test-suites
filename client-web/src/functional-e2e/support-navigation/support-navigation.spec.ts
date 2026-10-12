@@ -15,7 +15,7 @@ import {
 } from '@alkemio/tests-lib';
 import { createAuthenticatedSessionFixture } from '../fixtures/authenticated-session.fixture';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
-import { verifyMyDashboardWelcomeElement } from '../my-dashboard/my-dashboard-page-objects';
+import { expectOnDashboard } from '../my-dashboard/my-dashboard-page-objects';
 
 const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 
@@ -89,6 +89,6 @@ test.describe('Support Navigation Flow', () => {
     await page.goto(`${baseUrl}/home`);
 
     // 6. Verify return to dashboard
-    await verifyMyDashboardWelcomeElement(page);
+    await expectOnDashboard(page);
   });
 });

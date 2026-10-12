@@ -11,7 +11,7 @@ export const getEmails = async (): Promise<
   [string | undefined, string, number]
 > => {
   const response = await getMails();
-  const lastEmailBody = response.body.mailItems[0].body as string;
+  const lastEmailBody = (response.body.mailItems?.[0]?.body ?? '') as string;
 
   function detectUrl(text: string) {
     const cleanText = text.replace(/<.*?>/gm, "");
@@ -36,7 +36,7 @@ export const getRecoveryCode = async (): Promise<
   [string | undefined, string, number]
 > => {
   const response = await getMails();
-  const lastEmailBody = response.body.mailItems[0].body as string;
+  const lastEmailBody = (response.body.mailItems?.[0]?.body ?? '') as string;
 
   function detectRecoveryCode(text: string): string | undefined {
     const cleanText = text.replace(/<.*?>/gm, "");
@@ -63,12 +63,58 @@ export const getRecoveryCode = async (): Promise<
  */
 export const getRecoveryLink = async (): Promise<string | undefined> => {
   const response = await getMails();
-  const items = response.body.mailItems as Array<{ subject: string; body: string }>;
+  const items = (response.body.mailItems ?? []) as Array<{ subject: string; body: string }>;
   const recoveryEmail = items.find(
     (item) => item.subject.toLowerCase().includes("recover")
   );
   if (!recoveryEmail) return undefined;
   return extractKratosLink(recoveryEmail.body, "self-service/recovery");
+};
+
+type AddressedMail = { subject: string; body: string; toAddresses?: string[] };
+
+const mailsTo = (items: AddressedMail[], email: string): AddressedMail[] => {
+  const wanted = email.toLowerCase();
+  return items.filter((item) =>
+    (item.toAddresses ?? []).some((to) => {
+      // MailSlurper may render a recipient as `Name <addr>`; compare the address only.
+      const addr = (to.match(/<([^>]+)>/)?.[1] ?? to).trim().toLowerCase();
+      return addr === wanted;
+    })
+  );
+};
+
+/**
+ * The recovery link of the newest recovery email addressed to `email`, or
+ * `undefined` when none has arrived. Recipient-scoped on purpose: MailSlurper
+ * is ONE shared inbox, so a reader that takes "the latest recovery mail"
+ * races every other flow that sends mail, and a writer that prunes the inbox
+ * first destroys the mail those flows are waiting for. Scope the read, never
+ * prune.
+ */
+export const getRecoveryLinkFor = async (
+  email: string
+): Promise<string | undefined> => {
+  const response = await getMails();
+  const items = (response.body.mailItems ?? []) as AddressedMail[];
+  const recoveryEmail = mailsTo(items, email).find((item) =>
+    item.subject.toLowerCase().includes("recover")
+  );
+  if (!recoveryEmail) return undefined;
+  return extractKratosLink(recoveryEmail.body, "self-service/recovery");
+};
+
+/** Recipient-scoped counterpart of `getVerificationLink` — see `getRecoveryLinkFor`. */
+export const getVerificationLinkFor = async (
+  email: string
+): Promise<string | undefined> => {
+  const response = await getMails();
+  const items = (response.body.mailItems ?? []) as AddressedMail[];
+  const verificationEmail = mailsTo(items, email).find((item) =>
+    item.subject.toLowerCase().includes("verify")
+  );
+  if (!verificationEmail) return undefined;
+  return extractKratosLink(verificationEmail.body, "self-service/verification");
 };
 
 /**
@@ -78,7 +124,7 @@ export const getRecoveryLink = async (): Promise<string | undefined> => {
  */
 export const getVerificationLink = async (): Promise<string | undefined> => {
   const response = await getMails();
-  const items = response.body.mailItems as Array<{ subject: string; body: string }>;
+  const items = (response.body.mailItems ?? []) as Array<{ subject: string; body: string }>;
   const verificationEmail = items.find(
     (item) => item.subject.toLowerCase().includes("verify")
   );

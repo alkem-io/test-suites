@@ -15,6 +15,7 @@ import {
   SpaceSettingsPage,
 } from './pages';
 import { createAuthenticatedSessionFixture } from '../fixtures/authenticated-session.fixture';
+import { deleteSpaceByNameId } from '../helpers/space-cleanup.helper';
 
 // Create the authenticated fixture with a unique storage state name for this test suite
 const { test, setupAuthentication, teardownAuthentication } =
@@ -42,6 +43,20 @@ test.describe('CREATE Space Operations', () => {
   });
   test.beforeEach(async ({ page }) => {
     await page.goto(baseUrl);
+  });
+
+  /** nameID of the Space the running test created through the UI; cleared
+   * once the test deleted it itself. */
+  let createdSpaceNameId: string | undefined;
+
+  // A walk that creates a Space and fails before its own UI deletion leaves
+  // the Space behind; three such leaks exhaust the account's free allowance
+  // and every later create shows "Capacity reached". Sweep through the API.
+  test.afterEach(async () => {
+    if (!createdSpaceNameId) return;
+    const nameId = createdSpaceNameId;
+    createdSpaceNameId = undefined;
+    await deleteSpaceByNameId(nameId);
   });
 
   test('1.1 Create Space - Happy Path (Valid Data)', async ({ page }) => {
@@ -82,7 +97,7 @@ test.describe('CREATE Space Operations', () => {
     await createSpaceDialog.waitForHidden();
   });
 
-  test.skip('1.4 Create Space - With Tutorials Enabled', async ({ page }) => {
+  test('1.4 Create Space - With Tutorials Enabled', async ({ page }) => {
     const homePage = new HomePage(page, baseUrl);
     const myAccountPage = new MyAccountPage(page, baseUrl);
     const createSpaceDialog = new CreateSpaceDialog(page);
@@ -93,6 +108,7 @@ test.describe('CREATE Space Operations', () => {
     const uniqueId = Date.now().toString().slice(-6);
     const spaceName = `Tutorial Space ${uniqueId}`;
     const spaceUrl = `tutor-${uniqueId}`;
+    createdSpaceNameId = spaceUrl;
 
     // 1. Navigate to My Account
     await homePage.navigateToMyAccount();
@@ -121,11 +137,11 @@ test.describe('CREATE Space Operations', () => {
     await createSpaceDialog.verifyCreateButtonEnabled();
     await createSpaceDialog.clickCreate();
 
-    // 8. Verify success dialog appears
+    // 8. The new Space is open (CRD routes straight to it; a success dialog,
+    // when shown, is dismissed).
+    await page.waitForURL(new RegExp(`.*/${spaceUrl}.*`));
     await spacePage.waitForSpaceReady();
-
-    // 9. Click GET STARTED to go to Space page
-    await spacePage.clickGetStarted();
+    await spacePage.dismissSuccessDialog();
 
     // 10. Verify tutorials are present on the Space page
     await spacePage.verifyTutorialsPresent(2);
@@ -133,6 +149,7 @@ test.describe('CREATE Space Operations', () => {
     // 11. Cleanup: Navigate to Settings and delete the Space
     await spacePage.navigateToSettings();
     await spaceSettingsPage.deleteSpace();
+    createdSpaceNameId = undefined;
   });
 
   test('1.5 Create Space - Validation: Missing Required Fields (Title)', async ({
@@ -348,6 +365,7 @@ test.describe('CREATE Space Operations', () => {
     const uniqueId = Date.now().toString().slice(-6);
     const spaceName = `Test Space ${uniqueId}`;
     const spaceUrl = `test-${uniqueId}`;
+    createdSpaceNameId = spaceUrl;
 
     // Navigate to My Account
     await homePage.navigateToMyAccount();
@@ -382,5 +400,6 @@ test.describe('CREATE Space Operations', () => {
     // Cleanup: Delete the created Space
     await spacePage.navigateToSettings();
     await spaceSettingsPage.deleteSpace();
+    createdSpaceNameId = undefined;
   });
 });

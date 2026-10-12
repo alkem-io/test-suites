@@ -9,7 +9,7 @@ import { TestUser } from '@alkemio/tests-lib/common/enums/test.user';
 import { TestScenarioConfig } from '@alkemio/tests-lib/scenario/config/test-scenario-config';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import { TestScenarioFactory } from '@alkemio/tests-lib/scenario/TestScenarioFactory';
-import { delay, TestUserManager } from '@alkemio/tests-lib';
+import { TestUserManager } from '@alkemio/tests-lib';
 import { expect } from '@playwright/test';
 import { createAuthenticatedSessionFixture } from '../fixtures/authenticated-session.fixture';
 import { CollaborationPage } from './pages';
@@ -43,7 +43,7 @@ const scenarioConfig: TestScenarioConfig = {
   },
 };
 
-let baseScenario: OrganizationWithSpaceModel;
+let baseScenario: OrganizationWithSpaceModel | undefined;
 const testCalloutName = `Comments Test Callout ${Date.now()}`;
 
 const adminFixture = createAuthenticatedSessionFixture({
@@ -78,10 +78,10 @@ adminFixture.test.describe.serial('Callout Comments', () => {
       const collaborationPage = new CollaborationPage(page, baseUrl);
       const adminComment = `Admin comment ${Date.now()}`;
 
-      await collaborationPage.navigateToSpace(baseScenario.space.nameId);
+      await collaborationPage.navigateToSpace(baseScenario!.space.nameId);
 
       await collaborationPage.clickCallout(
-        baseScenario.space.collaboration.calloutPostDisplayName
+        baseScenario!.space.collaboration.calloutPostDisplayName
       );
 
       await expect(collaborationPage.commentInput).toBeVisible({
@@ -116,6 +116,7 @@ memberFixture.test.describe.serial('Callout Comments - Member', () => {
     await memberFixture.teardownAuthentication();
     if (baseScenario) {
       await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
+      baseScenario = undefined;
     }
   });
 
@@ -126,16 +127,16 @@ memberFixture.test.describe.serial('Callout Comments - Member', () => {
       const collaborationPage = new CollaborationPage(page, baseUrl);
       const commentText = `Test comment from member ${Date.now()}`;
 
-      await collaborationPage.navigateToSpace(baseScenario.space.nameId);
+      await collaborationPage.navigateToSpace(baseScenario!.space.nameId);
 
       await expect(
         page.getByRole('heading', {
-          name: baseScenario.space.collaboration.calloutPostDisplayName,
+          name: baseScenario!.space.collaboration.calloutPostDisplayName,
           exact: true,
         })
       ).toBeVisible({ timeout: 5000 });
       await collaborationPage.clickCallout(
-        baseScenario.space.collaboration.calloutPostDisplayName
+        baseScenario!.space.collaboration.calloutPostDisplayName
       );
 
       await expect(collaborationPage.commentInput).toBeVisible({
@@ -155,10 +156,10 @@ memberFixture.test.describe.serial('Callout Comments - Member', () => {
     memberFixture.test.setTimeout(30_000);
     const collaborationPage = new CollaborationPage(page, baseUrl);
 
-    await collaborationPage.navigateToSpace(baseScenario.space.nameId);
+    await collaborationPage.navigateToSpace(baseScenario!.space.nameId);
 
     await collaborationPage.clickCallout(
-      baseScenario.space.collaboration.calloutPostDisplayName
+      baseScenario!.space.collaboration.calloutPostDisplayName
     );
 
     await expect(collaborationPage.commentInput).toBeVisible({ timeout: 5000 });

@@ -80,10 +80,14 @@ problems that the component unit tests could not see:
 | "latest-created eligible suggestion wins" (full form) | Needs **two different** eligible languages; environments currently configure a single eligible language (`nl`), so the ordering rule cannot be distinguished end-to-end. The partial form (a later invitation *without* a suggestion does not cancel an earlier one) **is** covered | Server unit tests (`registration.service.spec.ts`); re-check here if a second eligible language is ever configured |
 | "a non-fresh account is never re-seeded" | Not reachable through the API — seeding only runs during registration finalization, and an account cannot be registered twice | Server unit tests (`registration.service.spec.ts`) |
 | corr-client-4 (client-side navigation form) | The anonymous surface exposes no SPA-internal cross-route-group link — every anonymous navigation is a full document load | Kept as an explicit `test.skip` recording why; the fix is verified structurally in `App.tsx` |
-| corr-client-2b (wrong-shape consent cookie) | **Open product defect**, not a test gap — a valid-JSON non-array `accepted_cookies` crashes the app into its error boundary via `useApmInit`'s unguarded `.includes`. Written as `test.fixme` so it is tracked without reddening the nightly | Un-`fixme` once the consent read shape-guards its parsed value |
+| corr-client-2b (wrong-shape consent cookie) | **Resolved** — a valid-JSON non-array `accepted_cookies` used to crash the app into its error boundary via `useApmInit`'s unguarded `.includes` (client-web#10123, closed 2026-08-11). Was `test.fixme` while open; live in the nightly since test-suites#665 | — |
 
 The story's headline — *"the language would need to be stored per user, not just
 per web client"* — is now proven end to end at the API layer: invite an address
 with a suggested language, register that person, and their account comes back
 already set to it (`invitation-language-seeding.it-spec.ts`). What remains
 unautomated is the *visual* sign-up journey, not the contract behind it.
+
+## Not automatable as a black-box walk
+
+- **corr-client-4 LIVE — in-memory answered survives a CLIENT-SIDE cross-route-group navigation.** The anonymous surface exposes no SPA-internal cross-route-group link: every shell link and public space card triggers a full document load (React Router v7 data router; `page.goBack()` reloads too), which by design discards the un-persisted in-memory choice. Verified structurally in client-web `App.tsx` (provider hoisted above `<Outlet/>`) + `CrdLayoutWrapper` (provider removed). Previously carried as an empty `test.skip`; recorded here instead so a skip in the report always means a tracked defect.

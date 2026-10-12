@@ -16,7 +16,7 @@ import {
   fillUpSignInPageElements,
   pressSignInButtonSignInPage,
 } from './identity-flows/signin-page-objects';
-import { verifyMyDashboardWelcomeElement } from './my-dashboard/my-dashboard-page-objects';
+import { expectSignedIn } from './my-dashboard/my-dashboard-page-objects';
 
 const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 const serverHealthUrl =
@@ -93,7 +93,7 @@ test.describe(
       await fillUpSignInPageElements(adminEmail, adminPassword, page);
       await pressSignInButtonSignInPage(page);
 
-      await verifyMyDashboardWelcomeElement(page);
+      await expectSignedIn(page);
 
       await page.goto(`${baseUrl}/home`);
       await expect(page).toHaveURL(/\/home/);

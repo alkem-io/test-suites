@@ -49,7 +49,7 @@ const scenarioConfig: TestScenarioConfig = {
   },
 };
 
-let baseScenario: OrganizationWithSpaceModel;
+let baseScenario: OrganizationWithSpaceModel | undefined;
 
 const adminFixture = createAuthenticatedSessionFixture({
   storageStateName: 'contributors-callout-admin.json',
@@ -70,13 +70,13 @@ adminFixture.test.describe.serial('Contributors Callout - Admin', () => {
     adminFixture.test.setTimeout(60_000);
     baseScenario = await TestScenarioFactory.createBaseScenario(scenarioConfig);
     // Make the scenario VC a space member so the VC segment has a count of 1.
-    const vcId = baseScenario.virtualContributors?.[0]?.id;
+    const vcId = baseScenario!.virtualContributors?.[0]?.id;
     if (!vcId) {
       throw new Error('Scenario did not create the virtual contributor');
     }
     const assigned = await assignRoleToVirtualContributor(
       vcId,
-      baseScenario.space.community.roleSetId,
+      baseScenario!.space.community.roleSetId,
       RoleName.Member
     );
     if (assigned.error) {
@@ -101,7 +101,7 @@ adminFixture.test.describe.serial('Contributors Callout - Admin', () => {
     async ({ page }) => {
       adminFixture.test.setTimeout(30_000);
       const cc = new ContributorsCalloutPage(page, baseUrl);
-      await cc.navigateToSpace(baseScenario.space.nameId);
+      await cc.navigateToSpace(baseScenario!.space.nameId);
       await expect(cc.addCalloutButton).toBeVisible();
       await cc.openCreateForm();
       await expect(cc.framingContributorsOption).toBeVisible();
@@ -115,7 +115,7 @@ adminFixture.test.describe.serial('Contributors Callout - Admin', () => {
       adminFixture.test.setTimeout(30_000);
       const cc = new ContributorsCalloutPage(page, baseUrl);
       const title = `Zero Types ${Date.now()}`;
-      await cc.navigateToSpace(baseScenario.space.nameId);
+      await cc.navigateToSpace(baseScenario!.space.nameId);
       await cc.openCreateForm();
       await cc.selectContributorsFraming();
       await cc.titleInput.fill(title);
@@ -147,7 +147,7 @@ adminFixture.test.describe.serial('Contributors Callout - Admin', () => {
     async ({ page }) => {
       adminFixture.test.setTimeout(45_000);
       const cc = new ContributorsCalloutPage(page, baseUrl);
-      await cc.navigateToSpace(baseScenario.space.nameId);
+      await cc.navigateToSpace(baseScenario!.space.nameId);
 
       await cc.createContributorsCallout(MAIN);
 
@@ -174,7 +174,7 @@ adminFixture.test.describe.serial('Contributors Callout - Admin', () => {
     async ({ page }) => {
       adminFixture.test.setTimeout(45_000);
       const cc = new ContributorsCalloutPage(page, baseUrl);
-      await cc.navigateToSpace(baseScenario.space.nameId);
+      await cc.navigateToSpace(baseScenario!.space.nameId);
       const col = cc.collection(MAIN);
 
       // On the People segment the List/Map toggle is available (locatable type).
@@ -196,7 +196,7 @@ adminFixture.test.describe.serial('Contributors Callout - Admin', () => {
     async ({ page }) => {
       adminFixture.test.setTimeout(45_000);
       const cc = new ContributorsCalloutPage(page, baseUrl);
-      await cc.navigateToSpace(baseScenario.space.nameId);
+      await cc.navigateToSpace(baseScenario!.space.nameId);
       const col = cc.collection(MAIN);
 
       await col.switchType('People');
@@ -212,7 +212,7 @@ adminFixture.test.describe.serial('Contributors Callout - Admin', () => {
     async ({ page }) => {
       adminFixture.test.setTimeout(45_000);
       const cc = new ContributorsCalloutPage(page, baseUrl);
-      await cc.navigateToSpace(baseScenario.space.nameId);
+      await cc.navigateToSpace(baseScenario!.space.nameId);
       const col = cc.collection(MAIN);
 
       await col.switchType('People');
@@ -235,7 +235,7 @@ adminFixture.test.describe.serial('Contributors Callout - Admin', () => {
     async ({ page }) => {
       adminFixture.test.setTimeout(45_000);
       const cc = new ContributorsCalloutPage(page, baseUrl);
-      await cc.navigateToSpace(baseScenario.space.nameId);
+      await cc.navigateToSpace(baseScenario!.space.nameId);
 
       await cc.openEdit(MAIN);
       // Exclude Virtual Contributors.
@@ -243,7 +243,7 @@ adminFixture.test.describe.serial('Contributors Callout - Admin', () => {
       await cc.saveEditButton.click();
 
       // Reload so the inline collection reflects the persisted settings.
-      await cc.navigateToSpace(baseScenario.space.nameId);
+      await cc.navigateToSpace(baseScenario!.space.nameId);
       const col = cc.collection(MAIN);
       await expect(col.region).toBeVisible();
 
@@ -262,7 +262,7 @@ adminFixture.test.describe.serial('Contributors Callout - Admin', () => {
     async ({ page }) => {
       adminFixture.test.setTimeout(60_000);
       const cc = new ContributorsCalloutPage(page, baseUrl);
-      await cc.navigateToSpace(baseScenario.space.nameId);
+      await cc.navigateToSpace(baseScenario!.space.nameId);
 
       // Remove the multi-type callout we created earlier.
       await cc.deleteContributorsCallout(MAIN);
@@ -288,7 +288,7 @@ adminFixture.test.describe.serial('Contributors Callout - Admin', () => {
     async ({ page }) => {
       adminFixture.test.setTimeout(60_000);
       const cc = new ContributorsCalloutPage(page, baseUrl);
-      await cc.navigateToSpace(baseScenario.space.nameId);
+      await cc.navigateToSpace(baseScenario!.space.nameId);
 
       const orgDefault = `Org Default ${Date.now()}`;
       await cc.createContributorsCallout(orgDefault, {
@@ -328,6 +328,7 @@ memberFixture.test.describe.serial('Contributors Callout - Member', () => {
     await memberFixture.teardownAuthentication();
     if (baseScenario) {
       await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
+      baseScenario = undefined;
     }
   });
 
@@ -338,7 +339,7 @@ memberFixture.test.describe.serial('Contributors Callout - Member', () => {
     async ({ page }) => {
       memberFixture.test.setTimeout(30_000);
       const cc = new ContributorsCalloutPage(page, baseUrl);
-      await cc.navigateToSpace(baseScenario.space.nameId);
+      await cc.navigateToSpace(baseScenario!.space.nameId);
       expect(await cc.isAddCalloutVisible()).toBe(false);
     }
   );

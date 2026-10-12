@@ -5,7 +5,7 @@ import { TestUser } from '@alkemio/tests-lib/common/enums/test.user';
 import { TestScenarioConfig } from '@alkemio/tests-lib/scenario/config/test-scenario-config';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import { TestScenarioFactory } from '@alkemio/tests-lib/scenario/TestScenarioFactory';
-import { delay, TestUserManager } from '@alkemio/tests-lib';
+import { TestUserManager } from '@alkemio/tests-lib';
 import { expect } from '@playwright/test';
 import { createAuthenticatedSessionFixture } from '../fixtures/authenticated-session.fixture';
 import { CollaborationPage } from './pages';
@@ -75,10 +75,7 @@ memberFixture.test.describe.serial('Callout Contributions - Member', () => {
       await collaborationPage.clickCallout(
         baseScenario.space.collaboration.calloutPostCollectionDisplayName
       );
-      await delay(500); // Wait for contributions to load
-      await expect(collaborationPage.addContributionButton).toBeVisible({
-        timeout: 5000,
-      });
+      await expect(collaborationPage.addContributionButton).toBeVisible();
 
       await collaborationPage.addPostContribution(postTitle, postContent);
 
@@ -100,10 +97,7 @@ memberFixture.test.describe.serial('Callout Contributions - Member', () => {
       await collaborationPage.clickCallout(
         baseScenario.space.collaboration.calloutLinkCollectionDisplayName
       );
-      await delay(500); // Wait for contributions to load
-      await expect(collaborationPage.addContributionButton.first()).toBeVisible(
-        { timeout: 3000 }
-      );
+      await expect(collaborationPage.addContributionButton.first()).toBeVisible();
 
       await collaborationPage.addLinkContribution(linkUrl, linkTitle);
 
@@ -127,7 +121,7 @@ memberFixture.test.describe.serial('Callout Contributions - Member', () => {
       );
 
       // Add a post contribution
-      await delay(500); // Wait for contributions to load
+      await expect(collaborationPage.addContributionButton.first()).toBeVisible();
       await collaborationPage.addPostContribution(
         originalTitle,
         originalContent
@@ -148,10 +142,9 @@ memberFixture.test.describe.serial('Callout Contributions - Member', () => {
       await expect(editButton).toBeVisible();
       await editButton.click();
 
-      await delay(500); // Small delay to allow editor to load
-
       // Edit the title (CRD: textbox named "Title")
       const titleInput = page.getByRole('textbox', { name: 'Title' });
+      await expect(titleInput).toBeVisible();
       await titleInput.clear();
       await titleInput.fill(editedTitle);
 

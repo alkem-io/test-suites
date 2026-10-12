@@ -18,6 +18,11 @@
 // spec source: specs/029-detect-signup-language/repos.yaml -> tracks (US5)
 
 import { test, expect, Page } from '@playwright/test';
+import {
+  TestScenarioConfig,
+  TestScenarioFactory,
+} from '@alkemio/tests-lib';
+import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import { BASE_URL, gql, languageConfig } from './helpers';
 import { ADMIN_STATE } from './authState';
 
@@ -39,10 +44,18 @@ const NO_PREFERENCE_LABEL = 'No preference';
 /** crd-community `inviteMembers.results.sent` — the exact success outcome label. */
 const SENT_LABEL = 'Invitation sent';
 
-// A space the admin can administer + invite into. Resolved at run time from the
-// server so the walk is not pinned to a seeded nameID that exists on only one
-// environment; override with LANGUAGE_OFFER_SPACE_NAMEID to target a specific space.
-let spaceNameId = process.env.LANGUAGE_OFFER_SPACE_NAMEID ?? '';
+// The space the admin invites into is THIS file's own: seeded through the API
+// in beforeAll (the harness admin creates it, so it administers it) and deleted
+// in afterAll. Scanning the platform's spaces for "one the admin administers"
+// made the walk depend on every space on the environment being readable — one
+// space with a broken authorization policy failed the whole query, and with it
+// both walks, on the 2026-10-08 nightly.
+const scenarioConfig: TestScenarioConfig = {
+  name: 'lang-offer-us5',
+  space: { collaboration: { addTutorialCallouts: false } },
+};
+let baseScenario: OrganizationWithSpaceModel;
+let spaceNameId = '';
 let spaceRoleSetId = '';
 
 /** Invitations created by this file, removed in afterAll so runs stay idempotent. */
@@ -53,33 +66,9 @@ const createdInvitationIds: string[] = [];
 const suggestedLanguageSelect = (page: Page) =>
   page.getByRole('combobox', { name: /Suggested language for invitee|Voorgestelde taal voor de genodigde/i });
 
-/** Resolve the target space (nameID + roleSetID) once per run. */
-async function resolveSpace(page: Page): Promise<{ nameId: string; roleSetId: string }> {
-  if (spaceNameId && spaceRoleSetId) return { nameId: spaceNameId, roleSetId: spaceRoleSetId };
-  // workspace#027 Slice B: the harness admin (Content Full Access, no GRANT)
-  // can no longer invite into an arbitrary space — only into one it
-  // administers. Pick the first space where it holds GRANT, not merely the
-  // first space the server lists.
-  const data = await gql(
-    page.request,
-    '{ spaces { nameID authorization { myPrivileges } about { membership { roleSetID } } } }'
-  );
-  const spaces: Array<{
-    nameID: string;
-    authorization?: { myPrivileges?: string[] | null } | null;
-    about: { membership: { roleSetID: string } };
-  }> = data?.spaces ?? [];
-  const administered = (s: (typeof spaces)[number]) =>
-    (s.authorization?.myPrivileges ?? []).includes('GRANT');
-  const match = spaceNameId
-    ? spaces.find(s => s.nameID === spaceNameId)
-    : spaces.find(administered);
-  expect(
-    match,
-    `no usable space found (looked for ${spaceNameId || 'the first space the admin administers'})`
-  ).toBeTruthy();
-  spaceNameId = match!.nameID;
-  spaceRoleSetId = match!.about.membership.roleSetID;
+/** The seeded space (nameID + roleSetID). */
+async function resolveSpace(_page: Page): Promise<{ nameId: string; roleSetId: string }> {
+  expect(spaceNameId && spaceRoleSetId, 'the US5 space is seeded in beforeAll').toBeTruthy();
   return { nameId: spaceNameId, roleSetId: spaceRoleSetId };
 }
 
@@ -144,19 +133,34 @@ test.describe('US5 — inviter suggests Dutch (compose-time)', () => {
   // never drives the login UI itself.
   test.use({ locale: 'en-US', storageState: ADMIN_STATE });
 
-  // The walks create real PlatformInvitations; remove them so repeated runs do
-  // not accumulate pending invitations on the environment.
+  test.beforeAll(async () => {
+    test.setTimeout(120_000);
+    baseScenario = await TestScenarioFactory.createBaseScenario(scenarioConfig);
+    spaceNameId = baseScenario.space.nameId;
+    spaceRoleSetId = baseScenario.space.community.roleSetId;
+  });
+
+  // The walks create real PlatformInvitations; remove them, then the space and
+  // its organization, so a run leaves the environment as it found it.
   test.afterAll(async ({ browser }) => {
-    if (createdInvitationIds.length === 0) return;
-    const ctx = await browser.newContext({ storageState: ADMIN_STATE });
+    test.setTimeout(120_000);
     try {
-      for (const id of createdInvitationIds) {
-        await gql(ctx.request, 'mutation Del($id: UUID!) { deletePlatformInvitation(deleteData: { ID: $id }) { id } }', {
-          id,
-        });
+      if (createdInvitationIds.length > 0) {
+        const ctx = await browser.newContext({ storageState: ADMIN_STATE });
+        try {
+          for (const id of createdInvitationIds) {
+            await gql(ctx.request, 'mutation Del($id: UUID!) { deletePlatformInvitation(deleteData: { ID: $id }) { id } }', {
+              id,
+            });
+          }
+        } finally {
+          await ctx.close();
+        }
       }
     } finally {
-      await ctx.close();
+      // The space and its organization go even if an invitation delete failed;
+      // that failure still surfaces from the try above.
+      if (baseScenario) await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
     }
   });
 

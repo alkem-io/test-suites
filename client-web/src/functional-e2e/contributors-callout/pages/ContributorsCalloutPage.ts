@@ -1,4 +1,5 @@
 import { Page, expect, Locator } from '@playwright/test';
+import { chooseFramingChip } from '../../helpers/callout-form.helper';
 
 /**
  * Page object for the admin-only **Contributors callout** (client-web feature
@@ -219,13 +220,12 @@ export class ContributorsCalloutPage {
 
   async openCreateForm() {
     await this.addCalloutButton.click();
-    await expect(this.framingContributorsOption).toBeVisible({
-      timeout: 10000,
-    });
+    await expect(this.page.getByRole('dialog')).toBeVisible({ timeout: 10000 });
   }
 
   async selectContributorsFraming() {
-    await this.framingContributorsOption.click();
+    // The chip sits behind the "More to add" menu on the redesigned form.
+    await chooseFramingChip(this.page.getByRole('dialog'), 'Contributors');
     // Type toggles appear once the framing is selected.
     await expect(this.typeToggle('People')).toBeVisible({ timeout: 5000 });
   }

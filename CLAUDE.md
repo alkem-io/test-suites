@@ -64,19 +64,25 @@ Test files use the `.it-spec.ts` suffix. All domain projects are defined in a si
 
 ```bash
 # Install Playwright browsers (required after fresh install)
-pnpm --filter @alkemio/test-suite-client-web exec playwright install
+pnpm --filter @alkemio/test-suite-client-web exec playwright install --with-deps chromium chrome
 
-# Playwright E2E tests (Chrome only)
-pnpm --filter @alkemio/test-suite-client-web run test:auth-playwright
+# The nightly configuration (every registered suite), or one suite of it
+pnpm --filter @alkemio/test-suite-client-web run test:nightly
+pnpm --filter @alkemio/test-suite-client-web run test:nightly --project=Callouts
 
-# Jest unit tests
-pnpm --filter @alkemio/test-suite-client-web run test
-
-# Run a specific Playwright test file
+# Run a specific Playwright test file (interactive runner)
 cd client-web && pnpm exec playwright test src/functional-e2e/path/to/file.spec.ts
+
+# Same suites on another browser / viewport (see config/playwright.shared.ts)
+PW_BROWSER=firefox pnpm --filter @alkemio/test-suite-client-web run test:nightly
 ```
 
-Test files use the `.spec.ts` suffix.
+Test files use the `.spec.ts` suffix. Every runner is built from
+`client-web/config/playwright.shared.ts` (browser presets via `PW_BROWSER`,
+timeout tiers, reporters, artifact policy); a suite declares only its files and
+its tier. **The rules every spec follows — self-seeding, no fixed waits, no
+`networkidle`, falsifiable assertions, shared personas never mutated — are in
+`client-web/docs/e2e-conventions.md`**; ESLint enforces the wait rules.
 
 ### GraphQL Code Generation
 
@@ -174,9 +180,10 @@ A new feature area is added by creating its directory alongside these and listin
 
 `messaging-notifications/` is the one area that does **not** use the session-based auth fixtures: its walks register every persona inline through the real sign-up flow, because they assert on notification-settings defaults for a brand-new account and on digest tracks that must start empty. Its shared fixtures live in `messaging-notifications/messaging.helpers.ts`.
 
-- Chrome only (branded channel, not Chromium)
-- Session-based auth fixtures with storage state persistence in `.auth/`
-- CI: 1 worker, 2 retries; Local: parallel, no retries
+- Branded Chrome by default; `PW_BROWSER` switches the whole run to chromium / firefox / webkit / msedge / a mobile preset
+- Session-based auth fixtures with storage state persistence in `.auth/` (cookie consent is seeded into the session, so no banner in persona contexts)
+- CI: 1 worker, 2 retries; Local: parallel files in the interactive runner, no retries
+- Conventions and the definition of done: `client-web/docs/e2e-conventions.md`
 
 ### Test Personas
 

@@ -1,4 +1,4 @@
-import { Page } from '@playwright/test';
+import { expect, Page } from '@playwright/test';
 
 // Authentication pages selectors
 
@@ -103,23 +103,17 @@ export const cookieSettingsButton = (page: Page) =>
 export const logInHeaderLink = (page: Page) =>
   page.getByRole('link', { name: 'Log in', exact: true });
 
-// Post-login the authenticated shell shows a one-time "A fresh new Alkemio is
-// here" dialog inviting the user to switch design. We opt into the new CRD
-// design ("Take me to the new design") so the authenticated shell matches the
-// CRD experience. The dialog overlays the page and blocks interaction, so
-// handle it right after sign-in.
+// The legacy MUI shell showed a one-time "A fresh new Alkemio is here" dialog
+// after sign-in ("Take me to the new design"). client-web removed it with the
+// MUI shell (alkem-io/client-web#9954, b5a03922b), so on a current client it
+// never renders. Waiting for it cost a fixed 8 s on EVERY sign-in that does not
+// show it — i.e. all of them. Kept as a no-wait guard for an older client: if
+// it is on screen when the caller's next condition wait has passed, click it.
 export const dismissNewLookDialog = async (page: Page): Promise<void> => {
   const switchToNewDesign = page.getByRole('button', {
     name: /take me to the new design/i,
   });
-  // The dialog renders a few seconds after the authenticated shell loads, so
-  // poll for it. Returns quickly on screens where it never appears.
-  for (let attempt = 0; attempt < 6; attempt++) {
-    if (await switchToNewDesign.isVisible({ timeout: 1500 }).catch(() => false)) {
-      await switchToNewDesign.click().catch(() => {});
-      await page.waitForTimeout(500);
-      return;
-    }
-    await page.waitForTimeout(750);
-  }
+  if (!(await switchToNewDesign.isVisible())) return;
+  await switchToNewDesign.click();
+  await expect(switchToNewDesign).toBeHidden();
 };

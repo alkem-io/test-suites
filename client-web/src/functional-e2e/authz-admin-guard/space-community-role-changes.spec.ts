@@ -168,7 +168,7 @@ spaceMemberTest.describe('Space Community — SPACE_MEMBER boundary', () => {
     await page.goto(`${baseUrl}/${baseScenario.space.nameId}/settings`);
     // Either the settings route bounces the member away, or it renders without
     // the members table. In neither case is a per-member "Actions" menu offered.
-    await page.waitForLoadState('networkidle');
+    await expect(page.getByRole('banner')).toBeVisible();
     await expect(page.getByRole('button', { name: 'Actions' })).toHaveCount(0);
   });
 });

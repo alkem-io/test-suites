@@ -9,6 +9,7 @@ import { TestUser } from '@alkemio/tests-lib/common/enums/test.user';
 import { TestScenarioConfig } from '@alkemio/tests-lib/scenario/config/test-scenario-config';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import { TestScenarioFactory } from '@alkemio/tests-lib/scenario/TestScenarioFactory';
+import { createCalloutOnCalloutsSet } from '@alkemio/tests-lib/scenario/baseFunctions';
 import { TestUserManager } from '@alkemio/tests-lib';
 import { expect } from '@playwright/test';
 import { createAuthenticatedSessionFixture } from '../fixtures/authenticated-session.fixture';
@@ -36,7 +37,7 @@ const scenarioConfig: TestScenarioConfig = {
   },
 };
 
-let baseScenario: OrganizationWithSpaceModel;
+let baseScenario: OrganizationWithSpaceModel | undefined;
 
 const adminFixture = createAuthenticatedSessionFixture({
   storageStateName: 'callout-creation-admin.json',
@@ -70,7 +71,7 @@ adminFixture.test.describe.serial('Callout Creation', () => {
       const collaborationPage = new CollaborationPage(page, baseUrl);
       const calloutName = `Test Post Callout ${Date.now()}`;
 
-      await collaborationPage.navigateToSpace(baseScenario.space.nameId);
+      await collaborationPage.navigateToSpace(baseScenario!.space.nameId);
 
       await expect(collaborationPage.addCalloutButton).toBeVisible();
 
@@ -92,7 +93,7 @@ adminFixture.test.describe.serial('Callout Creation', () => {
       const collaborationPage = new CollaborationPage(page, baseUrl);
       const calloutName = `Test Whiteboard ${Date.now()}`;
 
-      await collaborationPage.navigateToSpace(baseScenario.space.nameId);
+      await collaborationPage.navigateToSpace(baseScenario!.space.nameId);
 
       await collaborationPage.createCallout(
         'whiteboard',
@@ -112,7 +113,7 @@ adminFixture.test.describe.serial('Callout Creation', () => {
       const collaborationPage = new CollaborationPage(page, baseUrl);
       const calloutName = `Test CTA Callout ${Date.now()}`;
 
-      await collaborationPage.navigateToSpace(baseScenario.space.nameId);
+      await collaborationPage.navigateToSpace(baseScenario!.space.nameId);
 
       await collaborationPage.createCallout(
         'link',
@@ -134,7 +135,7 @@ adminFixture.test.describe.serial('Callout Creation', () => {
       const collaborationPage = new CollaborationPage(page, baseUrl);
       const calloutName = `Test Memo ${Date.now()}`;
 
-      await collaborationPage.navigateToSpace(baseScenario.space.nameId);
+      await collaborationPage.navigateToSpace(baseScenario!.space.nameId);
 
       await collaborationPage.createCallout(
         'memo',
@@ -155,7 +156,7 @@ adminFixture.test.describe.serial('Callout Creation', () => {
       const collaborationPage = new CollaborationPage(page, baseUrl);
       const calloutName = `Posts Collection ${Date.now()}`;
 
-      await collaborationPage.navigateToSpace(baseScenario.space.nameId);
+      await collaborationPage.navigateToSpace(baseScenario!.space.nameId);
 
       await collaborationPage.createCalloutWithContributions(
         calloutName,
@@ -175,7 +176,7 @@ adminFixture.test.describe.serial('Callout Creation', () => {
       const collaborationPage = new CollaborationPage(page, baseUrl);
       const calloutName = `Links Collection ${Date.now()}`;
 
-      await collaborationPage.navigateToSpace(baseScenario.space.nameId);
+      await collaborationPage.navigateToSpace(baseScenario!.space.nameId);
 
       await collaborationPage.createCalloutWithContributions(
         calloutName,
@@ -195,7 +196,7 @@ adminFixture.test.describe.serial('Callout Creation', () => {
       const collaborationPage = new CollaborationPage(page, baseUrl);
       const calloutName = `Memos Collection ${Date.now()}`;
 
-      await collaborationPage.navigateToSpace(baseScenario.space.nameId);
+      await collaborationPage.navigateToSpace(baseScenario!.space.nameId);
 
       await collaborationPage.createCalloutWithContributions(
         calloutName,
@@ -215,7 +216,7 @@ adminFixture.test.describe.serial('Callout Creation', () => {
       const collaborationPage = new CollaborationPage(page, baseUrl);
       const calloutName = `Whiteboards Collection ${Date.now()}`;
 
-      await collaborationPage.navigateToSpace(baseScenario.space.nameId);
+      await collaborationPage.navigateToSpace(baseScenario!.space.nameId);
 
       await collaborationPage.createCalloutWithContributions(
         calloutName,
@@ -230,11 +231,24 @@ adminFixture.test.describe.serial('Callout Creation', () => {
 });
 
 memberFixture.test.describe.serial('Callout Creation - Member', () => {
+  let memberVisibleCalloutName = '';
+
   memberFixture.test.beforeAll(async ({ browser }) => {
     memberFixture.test.setTimeout(60_000);
     if (!baseScenario) {
       baseScenario =
         await TestScenarioFactory.createBaseScenario(scenarioConfig);
+    }
+    // A published callout the member can see: the positive control for 1.9.
+    memberVisibleCalloutName = `Member Visible ${Date.now()}`;
+    const seeded = await createCalloutOnCalloutsSet(
+      baseScenario!.space.collaboration.calloutsSetId,
+      { framing: { profile: { displayName: memberVisibleCalloutName } } }
+    );
+    if (!seeded.data?.createCalloutOnCalloutsSet?.id) {
+      throw new Error(
+        `[1.9 seed] published callout was not created: ${JSON.stringify(seeded.error ?? seeded)}`
+      );
     }
     await memberFixture.setupAuthentication(
       browser,
@@ -247,6 +261,7 @@ memberFixture.test.describe.serial('Callout Creation - Member', () => {
     await memberFixture.teardownAuthentication();
     if (baseScenario) {
       await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
+      baseScenario = undefined;
     }
   });
 
@@ -256,8 +271,9 @@ memberFixture.test.describe.serial('Callout Creation - Member', () => {
       memberFixture.test.setTimeout(30_000);
       const collaborationPage = new CollaborationPage(page, baseUrl);
 
-      await collaborationPage.navigateToSpace(baseScenario.space.nameId);
+      await collaborationPage.navigateToSpace(baseScenario!.space.nameId);
 
+      await collaborationPage.expectAddCalloutAbsent(memberVisibleCalloutName);
       const isAddVisible = await collaborationPage.isAddCalloutVisible();
       expect(isAddVisible).toBe(false);
     }

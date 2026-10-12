@@ -3,18 +3,23 @@
 // admin and removed again by `CardsFixture.cleanUp()`; no spec depends on data
 // provisioned out of band, and none touches a shared persona's profile.
 //
-// Throwaway users are created with `createUser` (no Kratos identity): they are
+// Throwaway users are registered with a real Kratos identity (see
+// `registerFixtureUser`), so they can JOIN the scenario Space; they are
 // only ever *shown* on cards. Walks that need a signed-in viewer use the
 // harness personas, which are never modified here.
 
-import { TestUser } from '@alkemio/tests-lib';
+import {
+  registerInAlkemioOrFail,
+  registerInKratosOrFail,
+  TestUser,
+  verifyInKratosOrFail,
+} from '@alkemio/tests-lib';
 import { RoleName } from '@alkemio/tests-lib/core/generated/alkemio-schema';
 import {
   assignRoleToOrganization,
   assignRoleToUser,
   assignRoleToVirtualContributor,
   createOrganization,
-  createUser,
   deleteOrganization,
   removeRoleFromUser,
 } from '@alkemio/tests-lib/scenario/baseFunctions';
@@ -42,6 +47,43 @@ export type ProfileSeed = {
   tagline?: string;
   tags?: Partial<Record<TagsetName, string[]>>;
   location?: { city?: string; country?: string };
+};
+
+/**
+ * A throwaway user WITH a Kratos identity, registered through the same
+ * self-service path a real person takes (sign-up, e-mail verification, first
+ * sign-in). An identity is what lets the user JOIN a Space: since
+ * workspace#027 Slice B no actor can assign MEMBER on an L0 space, so the
+ * lib's `assignRoleToUser` falls back to signing the user in and joining —
+ * impossible for a `createUser`-made record, which has no identity unless the
+ * Kratos admin API is reachable (it is not from the Playwright nightly).
+ *
+ * The display name is derived exactly as the registration derives it
+ * (`first` = first word, `last` = the rest), so the card shows `displayName`
+ * verbatim. The e-mail is the slug of the name, unique through the run token.
+ */
+export const registerFixtureUser = async (
+  displayName: string
+): Promise<{ id: string; email: string }> => {
+  const [first, ...rest] = displayName.trim().split(/\s+/);
+  const last = rest.join(' ') || 'User';
+  const email = `${displayName
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '')}@alkem.io`;
+  const { verificationFlowId } = await registerInKratosOrFail(first, last, email);
+  await verifyInKratosOrFail(email, verificationFlowId);
+  const id = await registerInAlkemioOrFail(first, last, email);
+  return { id, email };
+};
+
+/** Removes a `registerFixtureUser` user together with its Kratos identity. */
+export const deleteFixtureUser = async (id: string): Promise<void> => {
+  const { deleteUser } = await adminGql<{ deleteUser: { id: string } }>(
+    'mutation($d: DeleteUserInput!) { deleteUser(deleteData: $d) { id } }',
+    { d: { ID: id, deleteIdentity: true } }
+  );
+  if (deleteUser.id !== id) throw new Error(`deleted ${deleteUser.id} instead of ${id}`);
 };
 
 /** Run a GraphQL document as the platform admin; throw on any error. */
@@ -198,13 +240,7 @@ export class CardsFixture {
         `"${displayName}" must contain the run token ${this.runToken}`
       );
     }
-    const res = await createUser({ profileData: { displayName } });
-    if (res.error || !res.data?.createUser) {
-      throw new Error(
-        `createUser(${displayName}): ${JSON.stringify(res.error)}`
-      );
-    }
-    const id = res.data.createUser.id;
+    const { id } = await registerFixtureUser(displayName);
     this.users.push(id);
     for (const role of roles) {
       const assigned = await assignRoleToUser(id, roleSetID, role);
@@ -329,11 +365,7 @@ export class CardsFixture {
       .filter(id => !this.users.includes(id));
     for (const id of [...this.users.splice(0), ...twins]) {
       try {
-        const { deleteUser } = await adminGql<{ deleteUser: { id: string } }>(
-          'mutation($d: DeleteUserInput!) { deleteUser(deleteData: $d) { id } }',
-          { d: { ID: id, deleteIdentity: false } }
-        );
-        if (deleteUser.id !== id) throw new Error(`deleted ${deleteUser.id}`);
+        await deleteFixtureUser(id);
       } catch (e) {
         failures.push(`user ${id}: ${String(e)}`);
       }

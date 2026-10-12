@@ -164,10 +164,7 @@ test.describe('Level 1 Subspace - Applications', () => {
       // before interacting. In CRD the subspace About view itself renders as a
       // routed Radix dialog, so we deliberately do NOT press Escape here (that
       // would close the About view and navigate back to the parent space).
-      await page.goto(
-        `${baseUrl}/${spaceNameId}/challenges/${subspaceNameId}/about`,
-        { waitUntil: 'networkidle' }
-      );
+      await page.goto(`${baseUrl}/${spaceNameId}/challenges/${subspaceNameId}/about`);
 
       // 2. Locate and click the page-level "Apply" button on the About view.
       // Scope it to the About dialog (heading = subspace name) so we don't match
@@ -237,12 +234,7 @@ test.describe('Level 1 Subspace - Applications', () => {
       const subspaceNameId = baseScenario.subspace.nameId;
 
       // 1. Navigate directly to the Level 1 Subspace page
-      await page.goto(
-        `${baseUrl}/${spaceNameId}/challenges/${subspaceNameId}`,
-        {
-          waitUntil: 'networkidle',
-        }
-      );
+      await page.goto(`${baseUrl}/${spaceNameId}/challenges/${subspaceNameId}`);
 
       // 2. Open subspace settings via the CRD banner "Settings" link
       const settingsLink = page.getByRole('link', { name: 'Settings' });
@@ -280,21 +272,19 @@ test.describe('Level 1 Subspace - Applications', () => {
       const applicantPage = nonSpaceMemberPage;
 
       // Navigate directly to the subspace about page using nameId
-      await applicantPage.goto(
-        `${baseUrl}/${spaceNameId}/challenges/${subspaceNameId}/about`,
-        {
-          waitUntil: 'networkidle',
-        }
-      );
+      await applicantPage.goto(`${baseUrl}/${spaceNameId}/challenges/${subspaceNameId}/about`);
 
       // Check if there's already a pending application (CRD shows a disabled
       // "Application pending" button in place of the Apply button).
       const applicationPending = applicantPage.getByRole('button', {
         name: 'Application pending',
       });
-      const isApplicationPending = await applicationPending
-        .isVisible()
-        .catch(() => false);
+      // Either control is rendered once the page has resolved the viewer's
+      // standing; only then is "no pending application" a real observation.
+      await expect(
+        applicantPage.getByRole('button', { name: /^(Apply|Application pending)$/ })
+      ).toBeVisible();
+      const isApplicationPending = await applicationPending.isVisible();
 
       if (!isApplicationPending) {
         // Click the "Apply" button only if no pending application exists

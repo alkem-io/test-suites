@@ -45,23 +45,14 @@ export type Scalars = {
   Boolean: { input: boolean; output: boolean };
   Int: { input: number; output: number };
   Float: { input: number; output: number };
-  /** A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format. */
   DateTime: { input: Date; output: Date };
-  /** An Emoji. */
   Emoji: { input: any; output: any };
-  /** A representation of a Lifecycle Definition, based on XState. It is serialized JSON. */
   LifecycleDefinition: { input: any; output: any };
-  /** A markdown string. */
   Markdown: { input: any; output: any };
-  /** An identifier that originates from the underlying messaging platform. */
   MessageID: { input: any; output: any };
-  /** A human readable identifier, 3 <= length <= 28. Used for URL paths in clients. Characters allowed: a-z,A-Z,0-9. */
   NameID: { input: string; output: string };
-  /** Cursor used for paginating search results. */
   SearchCursor: { input: any; output: any };
-  /** A uuid identifier. Length 36 characters. */
   UUID: { input: string; output: string };
-  /** The `Upload` scalar type represents a file upload. */
   Upload: {
     input: import("graphql-upload").FileUpload;
     output: import("graphql-upload").FileUpload;
@@ -3843,6 +3834,8 @@ export type InAppNotificationPayloadPlatformForumDiscussion =
 
 export type InAppNotificationPayloadPlatformGlobalRoleChange =
   InAppNotificationPayload & {
+    /** Whether the role was added or removed; absent on records written before this field existed. */
+    changeType?: Maybe<RoleChangeType>;
     /** The new role. */
     role: Scalars["String"]["output"];
     /** The payload type. */
@@ -5813,7 +5806,7 @@ export type Mutation = {
   setDefaultCalloutTemplateOnInnovationFlowState: InnovationFlowState;
   /** Set the mapping of a well-known Virtual Contributor to a specific Virtual Contributor UUID. */
   setPlatformWellKnownVirtualContributor: PlatformWellKnownVirtualContributors;
-  /** Submit a response to a Form. Requires CONTRIBUTE on the Post. The Post must be published and the Form open; a single-response Form rejects the submission while the member holds any response. acknowledgedVisibility is the audience the respondent was shown. */
+  /** Submit a response to a Form. Requires CONTRIBUTE on the Post. The Post must be published and the Form open; a single-response Form rejects the submission while the member holds any response; a Form that is part of a template never accepts responses. acknowledgedVisibility is the audience the respondent was shown. */
   submitCalloutFormResponse: CalloutFormResponse;
   /** Subscribe the current user's device to push notifications. If the subscription endpoint already exists, it is updated. If the user has reached the maximum number of subscriptions (10), the oldest subscription is automatically replaced. */
   subscribeToPushNotifications: PushSubscription;
@@ -5841,7 +5834,7 @@ export type Mutation = {
   updateCalendarEvent: CalendarEvent;
   /** Update a Callout. */
   updateCallout: Callout;
-  /** Update the definition and/or the settings of a Form. Requires the privilege to create callouts on the collection the Post is in (space admin), the same as creating a Form. Serialized against submissions. */
+  /** Update the definition and/or the settings of a Form. Requires the privilege to create callouts on the collection the Post is in (space admin), the same as creating a Form; for a Form in a standalone callout template, the privilege to update that template callout instead. Serialized against submissions. */
   updateCalloutForm: CalloutForm;
   /** Update the information describing the publishing of the specified Callout. */
   updateCalloutPublishInfo: Callout;
@@ -8425,6 +8418,12 @@ export type Role = {
   /** The role policy that applies for VirtualContributors in this Role. */
   virtualContributorPolicy: ActorRolePolicy;
 };
+
+/** Whether a role was added or removed. */
+export enum RoleChangeType {
+  Added = "ADDED",
+  Removed = "REMOVED",
+}
 
 export enum RoleName {
   Admin = "ADMIN",
@@ -13455,6 +13454,7 @@ export type ResolversTypes = {
   RevokeLicensePlanFromSpace: SchemaTypes.RevokeLicensePlanFromSpace;
   RevokeMcpApiKeyInput: SchemaTypes.RevokeMcpApiKeyInput;
   Role: ResolverTypeWrapper<SchemaTypes.Role>;
+  RoleChangeType: SchemaTypes.RoleChangeType;
   RoleName: SchemaTypes.RoleName;
   RoleSet: ResolverTypeWrapper<
     Omit<
@@ -19192,6 +19192,11 @@ export type InAppNotificationPayloadPlatformGlobalRoleChangeResolvers<
   ContextType = any,
   ParentType extends ResolversParentTypes["InAppNotificationPayloadPlatformGlobalRoleChange"] = ResolversParentTypes["InAppNotificationPayloadPlatformGlobalRoleChange"]
 > = {
+  changeType?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes["RoleChangeType"]>,
+    ParentType,
+    ContextType
+  >;
   role?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
   type?: Resolver<
     ResolversTypes["NotificationEventPayload"],
@@ -101638,6 +101643,14 @@ export type GetOrganizationAssociateEligibilityQuery = {
   };
 };
 
+export type GetOrganizationIdByNameIdQueryVariables = SchemaTypes.Exact<{
+  nameID: SchemaTypes.Scalars["NameID"]["input"];
+}>;
+
+export type GetOrganizationIdByNameIdQuery = {
+  lookupByName: { organization?: string | undefined };
+};
+
 export type GetOrganizationDataQueryVariables = SchemaTypes.Exact<{
   organizationId: SchemaTypes.Scalars["UUID"]["input"];
 }>;
@@ -108097,6 +108110,14 @@ export type GetSpaceDataQuery = {
         }
       | undefined;
   };
+};
+
+export type GetSpaceIdByNameIdQueryVariables = SchemaTypes.Exact<{
+  nameID: SchemaTypes.Scalars["NameID"]["input"];
+}>;
+
+export type GetSpaceIdByNameIdQuery = {
+  lookupByName: { space?: { id: string } | undefined };
 };
 
 export type GetSpacesDataQueryVariables = SchemaTypes.Exact<{
@@ -125719,6 +125740,13 @@ export const GetOrganizationAssociateEligibilityDocument = gql`
     }
   }
 `;
+export const GetOrganizationIdByNameIdDocument = gql`
+  query getOrganizationIdByNameId($nameID: NameID!) {
+    lookupByName {
+      organization(NAMEID: $nameID)
+    }
+  }
+`;
 export const GetOrganizationDataDocument = gql`
   query getOrganizationData($organizationId: UUID!) {
     organization(ID: $organizationId) {
@@ -126162,6 +126190,15 @@ export const GetSpaceDataDocument = gql`
     }
   }
   ${SpaceDataFragmentDoc}
+`;
+export const GetSpaceIdByNameIdDocument = gql`
+  query getSpaceIdByNameId($nameID: NameID!) {
+    lookupByName {
+      space(NAMEID: $nameID) {
+        id
+      }
+    }
+  }
 `;
 export const GetSpacesDataDocument = gql`
   query GetSpacesData {
@@ -127556,6 +127593,9 @@ const GetOrgVisualUriDocumentString = print(GetOrgVisualUriDocument);
 const GetOrganizationAssociateEligibilityDocumentString = print(
   GetOrganizationAssociateEligibilityDocument
 );
+const GetOrganizationIdByNameIdDocumentString = print(
+  GetOrganizationIdByNameIdDocument
+);
 const GetOrganizationDataDocumentString = print(GetOrganizationDataDocument);
 const GetOrganizationsDataDocumentString = print(GetOrganizationsDataDocument);
 const GetRolesOrganizationDocumentString = print(GetRolesOrganizationDocument);
@@ -127625,6 +127665,7 @@ const VapidPublicKeyDocumentString = print(VapidPublicKeyDocument);
 const SearchDocumentString = print(SearchDocument);
 const PrivateSpaceDataDocumentString = print(PrivateSpaceDataDocument);
 const GetSpaceDataDocumentString = print(GetSpaceDataDocument);
+const GetSpaceIdByNameIdDocumentString = print(GetSpaceIdByNameIdDocument);
 const GetSpacesDataDocumentString = print(GetSpacesDataDocument);
 const GetSpacesFilteredByVisibilityWithAccessDocumentString = print(
   GetSpacesFilteredByVisibilityWithAccessDocument
@@ -133580,6 +133621,28 @@ export function getSdk(
         variables
       );
     },
+    getOrganizationIdByNameId(
+      variables: SchemaTypes.GetOrganizationIdByNameIdQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.GetOrganizationIdByNameIdQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.GetOrganizationIdByNameIdQuery>(
+            GetOrganizationIdByNameIdDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "getOrganizationIdByNameId",
+        "query",
+        variables
+      );
+    },
     getOrganizationData(
       variables: SchemaTypes.GetOrganizationDataQueryVariables,
       requestHeaders?: GraphQLClientRequestHeaders
@@ -134258,6 +134321,28 @@ export function getSdk(
             { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "GetSpaceData",
+        "query",
+        variables
+      );
+    },
+    getSpaceIdByNameId(
+      variables: SchemaTypes.GetSpaceIdByNameIdQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.GetSpaceIdByNameIdQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.GetSpaceIdByNameIdQuery>(
+            GetSpaceIdByNameIdDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "getSpaceIdByNameId",
         "query",
         variables
       );

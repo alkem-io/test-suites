@@ -109,9 +109,7 @@ test.describe('Level 1 Subspace - Applications (Public Parent Space)', () => {
       const subspaceName = baseScenario.subspace.about.profile.displayName;
 
       // Navigate to the public L0 space
-      await page.goto(`${baseUrl}/${spaceNameId}`, {
-        waitUntil: 'networkidle',
-      });
+      await page.goto(`${baseUrl}/${spaceNameId}`);
 
       // Click on the "Subspaces" tab in the navigation
       const subspacesTab = page.getByRole('tab', { name: 'Subspaces' });
@@ -141,10 +139,7 @@ test.describe('Level 1 Subspace - Applications (Public Parent Space)', () => {
       // Navigate directly to L1 Subspace About page.
       // The user is NOT a member of L0 but L0 is public, so this route
       // is reachable. The server grants ROLESET_ENTRY_ROLE_APPLY.
-      await page.goto(
-        `${baseUrl}/${spaceNameId}/challenges/${subspaceNameId}/about`,
-        { waitUntil: 'networkidle' }
-      );
+      await page.goto(`${baseUrl}/${spaceNameId}/challenges/${subspaceNameId}/about`);
 
       // Locate and click the "Apply" button on the About dialog.
       // Per PR #9986, the client trusts the server-granted privilege
@@ -206,10 +201,7 @@ test.describe('Level 1 Subspace - Applications (Public Parent Space)', () => {
       const subspaceNameId = baseScenario.subspace.nameId;
 
       // Navigate directly to the Level 1 Subspace page
-      await page.goto(
-        `${baseUrl}/${spaceNameId}/challenges/${subspaceNameId}`,
-        { waitUntil: 'networkidle' }
-      );
+      await page.goto(`${baseUrl}/${spaceNameId}/challenges/${subspaceNameId}`);
 
       // Open subspace settings via the CRD banner "Settings" link
       const settingsLink = page.getByRole('link', { name: 'Settings' });
@@ -250,18 +242,18 @@ test.describe('Level 1 Subspace - Applications (Public Parent Space)', () => {
       // Step 1: As Non-Space Member - Submit Application to L1 subspace
       const applicantPage = nonSpaceMemberPage;
 
-      await applicantPage.goto(
-        `${baseUrl}/${spaceNameId}/challenges/${subspaceNameId}/about`,
-        { waitUntil: 'networkidle' }
-      );
+      await applicantPage.goto(`${baseUrl}/${spaceNameId}/challenges/${subspaceNameId}/about`);
 
       // Check if there's already a pending application
       const applicationPending = applicantPage.getByRole('button', {
         name: 'Application pending',
       });
-      const isApplicationPending = await applicationPending
-        .isVisible()
-        .catch(() => false);
+      // Either control is rendered once the page has resolved the viewer's
+      // standing; only then is "no pending application" a real observation.
+      await expect(
+        applicantPage.getByRole('button', { name: /^(Apply|Application pending)$/ })
+      ).toBeVisible();
+      const isApplicationPending = await applicationPending.isVisible();
 
       if (!isApplicationPending) {
         // Click the "Apply" button

@@ -148,6 +148,7 @@ const waitForQueueQuiet = async (
   let stableSince = Date.now();
 
   for (;;) {
+    // eslint-disable-next-line no-restricted-syntax -- poll interval of a queue-counter reader
     await delay(500);
     const current = (await getQueueStats(queueName)).publishedTotal;
     if (current !== last) {
@@ -421,6 +422,7 @@ test.describe(
       // space-admin contribution notification is emitted — one flag
       // suppresses both channels together (no member-only variant).
       if (checkQueueEmission) {
+        // eslint-disable-next-line no-restricted-syntax -- negative emission window (NO_EMISSION_GRACE_MS)
         await delay(NO_EMISSION_GRACE_MS);
         const after = (await getQueueStats(NOTIFICATIONS_QUEUE)).publishedTotal;
         expect(
@@ -486,6 +488,7 @@ test.describe(
 
       // AS3/AS4 hold identically for the task: zero notification events…
       if (checkQueueEmission) {
+        // eslint-disable-next-line no-restricted-syntax -- negative emission window (NO_EMISSION_GRACE_MS)
         await delay(NO_EMISSION_GRACE_MS);
         const after = (await getQueueStats(NOTIFICATIONS_QUEUE)).publishedTotal;
         expect(
@@ -504,7 +507,7 @@ test.describe(
 
     // ── US2-AS1 (task path) ──────────────────────────────────────────────
 
-    test('US2-AS1: a Tasks board task with the switch ON emits notification events — the ON path holds for tasks as it does for responses', async () => {
+    test('US2-AS1: a Tasks board task with the switch ON emits notification events — the ON path holds for tasks as it does for responses', { tag: '@local-stack' }, async () => {
       // Skipped where the queue counter is unreachable (nightly): without it
       // this test would only re-prove the switch toggles, which AS5 covers.
       test.skip(

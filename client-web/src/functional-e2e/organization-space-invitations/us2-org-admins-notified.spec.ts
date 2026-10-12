@@ -170,6 +170,7 @@ async function waitForMailTo(
         `Timed out after ${timeoutMs}ms waiting for a mail to "${recipientSubstring}" with subject containing "${subjectSubstring}"`
       );
     }
+    // eslint-disable-next-line no-restricted-syntax -- poll interval of a mailbox reader
     await delay(1_000);
   }
 }
@@ -186,6 +187,7 @@ async function assertNoMailTo(recipientSubstring: string, subjectSubstring: stri
       m => m.toAddresses?.some(a => a.includes(recipientSubstring)) && m.subject?.includes(subjectSubstring)
     );
     expect(match, `unexpected mail to "${recipientSubstring}" with subject containing "${subjectSubstring}"`).toBeFalsy();
+    // eslint-disable-next-line no-restricted-syntax -- sampling interval of a negative mail window
     await delay(1_000);
   }
 }

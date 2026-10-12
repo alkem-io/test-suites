@@ -31,9 +31,9 @@ import {
   assignRoleToOrganization,
   assignRoleToVirtualContributor,
   assignRoleToUser,
-  createUser,
 } from '@alkemio/tests-lib/scenario/baseFunctions';
 import { graphqlRequestAuth } from '@alkemio/tests-lib/utils/graphql.request';
+import { registerFixtureUser } from './cards-fixture';
 import { graphqlErrorWrapper } from '@alkemio/tests-lib/utils/graphql.wrapper';
 import { expect, type Route } from '@playwright/test';
 import { createAuthenticatedSessionFixture } from '../fixtures/authenticated-session.fixture';
@@ -83,7 +83,7 @@ const deleteQuietPersona = async (userId: string) => {
   const res = await graphqlErrorWrapper(
     authToken =>
       client.deleteUser(
-        { deleteData: { ID: userId, deleteIdentity: false } },
+        { deleteData: { ID: userId, deleteIdentity: true } },
         { authorization: `Bearer ${authToken}` }
       ),
     TestUser.GLOBAL_ADMIN
@@ -147,21 +147,9 @@ adminFixture.test.describe(
 
       // "Quiet Quinn" — a scenario-owned throwaway user, member of this
       // scenario's space, with messaging turned off (AS6 precondition).
-      // `createUser`/`assignRoleToUser` come from the same
-      // `@alkemio/tests-lib/scenario/baseFunctions` module already imported
-      // above for the VC role assignment — plain relative imports, so
-      // (unlike the tests-lib helper of the same name as the settings
-      // mutation below) they don't collide with client-web's own `@src/*`
-      // alias.
-      const createdQuiet = await createUser({
-        profileData: { displayName: QUIET_NAME },
-      });
-      if (createdQuiet.error) {
-        throw new Error(
-          `Unable to create the quiet persona: ${JSON.stringify(createdQuiet.error)}`
-        );
-      }
-      quietPersonaId = createdQuiet.data!.createUser.id;
+      // A real identity (sign-up + verification), so the user can JOIN the
+      // space — see `registerFixtureUser` in cards-fixture.ts.
+      quietPersonaId = (await registerFixtureUser(QUIET_NAME)).id;
 
       const quietAssigned = await assignRoleToUser(
         quietPersonaId,

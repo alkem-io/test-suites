@@ -237,6 +237,7 @@ test.describe('US1 - direct (1:1) message notifications', () => {
     // Grace stops just short of `email:direct`'s quiet period, measured from
     // the last message — a sweep can only delay a flush past that point, never
     // advance it, so any email here means the pipeline sent on arrival.
+    // eslint-disable-next-line no-restricted-syntax -- probe inside the quiet window: "nothing sent on arrival" (digestWindow constant)
     await delay(directEmail.preFireProbeMs);
     const [, duringWindowTotal] = await getMailsData();
     expect(duringWindowTotal).toBe(0);
@@ -249,6 +250,7 @@ test.describe('US1 - direct (1:1) message notifications', () => {
 
     // Assert 3 — and only one. Settle to `email:direct`'s MAX-DELAY bound so a
     // per-message dispatch regression has every chance to reveal itself.
+    // eslint-disable-next-line no-restricted-syntax -- negative settle window at the digest MAX-DELAY bound (digestWindow constant)
     await delay(directEmail.maxDelayGraceMs);
     const [, settledTotal] = await getMailsData();
     expect(settledTotal).toBe(1);
@@ -272,6 +274,7 @@ test.describe('US1 - direct (1:1) message notifications', () => {
     // clean slate and its counts are attributable to its own message. Grace
     // covers `email:direct` at its MAX-DELAY bound — the slower of the two
     // direct tracks — so both have provably flushed.
+    // eslint-disable-next-line no-restricted-syntax -- drains the previous scenario's track to its MAX-DELAY bound before a clean slate
     await delay(directEmail.maxDelayGraceMs);
     await deleteMailSlurperMails();
 
@@ -304,6 +307,7 @@ test.describe('US1 - direct (1:1) message notifications', () => {
     // Drain the track AS4's send armed. Grace covers `email:direct` at its
     // MAX-DELAY bound, so the digest asserted on below carries only this
     // scenario's hostile message.
+    // eslint-disable-next-line no-restricted-syntax -- drains the previous scenario's track to its MAX-DELAY bound before a clean slate
     await delay(directEmail.maxDelayGraceMs);
     await deleteMailSlurperMails();
 

@@ -91,7 +91,10 @@ export const updateUser = async (
 
 export const deleteUser = async (
   userId: string,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.GLOBAL_ADMIN,
+  /** Also remove the Kratos identity — required for a disposable persona a
+   * spec registered through the sign-up flow, or its email stays taken. */
+  deleteIdentity = false
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -99,7 +102,7 @@ export const deleteUser = async (
       {
         deleteData: {
           ID: userId,
-          deleteIdentity: false,
+          deleteIdentity,
         },
       },
       {

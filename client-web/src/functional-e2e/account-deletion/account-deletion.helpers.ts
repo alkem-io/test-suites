@@ -70,6 +70,15 @@ export const signIn = async (
   await page.waitForURL(url => !url.pathname.startsWith('/login'), {
     timeout: 15000,
   });
+  // The URL leaves /login one tick before the session is usable. Wait for the
+  // authenticated-only "Notifications" header control first (it proves the
+  // header has rendered), then assert the "Log in" link is gone — the other
+  // way round the absence passes on a still-blank page (same ordering as
+  // `expectSignedIn`).
+  await expect(
+    page.getByRole('banner').getByRole('button', { name: 'Notifications', exact: true })
+  ).toBeVisible();
+  await expect(logInHeaderLink(page)).toHaveCount(0);
 };
 
 /**

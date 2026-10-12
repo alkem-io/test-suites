@@ -43,7 +43,7 @@ const scenarioConfig: TestScenarioConfig = {
   },
 };
 
-let baseScenario: OrganizationWithSpaceModel;
+let baseScenario: OrganizationWithSpaceModel | undefined;
 const testCalloutName = `Admin Full Access Test ${Date.now()}`;
 
 const adminFixture = createAuthenticatedSessionFixture({
@@ -75,7 +75,7 @@ adminFixture.test.describe.serial('Callout Access Control', () => {
     adminFixture.test.setTimeout(60_000);
     const collaborationPage = new CollaborationPage(page, baseUrl);
 
-    await collaborationPage.navigateToSpace(baseScenario.space.nameId);
+    await collaborationPage.navigateToSpace(baseScenario!.space.nameId);
 
     // The "Add Post" create button appears after the space + collaboration tab
     // finish rendering; on the slower test env that can take longer than the
@@ -127,7 +127,7 @@ memberFixture.test.describe.serial('Callout Access Control - Member', () => {
     }
     memberCalloutName = `Member Access Test ${Date.now()}`;
     const created = await createCalloutOnCalloutsSet(
-      baseScenario.space.collaboration.calloutsSetId,
+      baseScenario!.space.collaboration.calloutsSetId,
       {
         framing: {
           profile: {
@@ -154,6 +154,7 @@ memberFixture.test.describe.serial('Callout Access Control - Member', () => {
     await memberFixture.teardownAuthentication();
     if (baseScenario) {
       await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
+      baseScenario = undefined;
     }
   });
 
@@ -161,8 +162,9 @@ memberFixture.test.describe.serial('Callout Access Control - Member', () => {
     memberFixture.test.setTimeout(45_000);
     const collaborationPage = new CollaborationPage(page, baseUrl);
 
-    await collaborationPage.navigateToSpace(baseScenario.space.nameId);
+    await collaborationPage.navigateToSpace(baseScenario!.space.nameId);
 
+    await collaborationPage.expectAddCalloutAbsent(memberCalloutName);
     const isAddVisible = await collaborationPage.isAddCalloutVisible();
     expect(isAddVisible).toBe(false);
 

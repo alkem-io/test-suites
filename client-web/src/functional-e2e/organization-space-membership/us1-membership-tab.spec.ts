@@ -54,7 +54,7 @@ const { test, setupAuthentication, teardownAuthentication } =
 const runSuffix = UniqueIDGenerator.getID();
 const associateEmail = 'qa.user@alkem.io';
 
-let baseScenario: OrganizationWithSpaceModel;
+let baseScenario: OrganizationWithSpaceModel | undefined;
 let leadScenario: OrganizationWithSpaceModel | undefined;
 let emptyOrg: { id: string; nameID: string; roleSetId: string } | undefined;
 
@@ -71,11 +71,11 @@ const scenarioConfig: TestScenarioConfig = {
   },
 };
 
-const spaceName = () => baseScenario.space.about.profile.displayName;
-const subspaceName = () => baseScenario.subspace.about.profile.displayName;
+const spaceName = () => baseScenario!.space.about.profile.displayName;
+const subspaceName = () => baseScenario!.subspace.about.profile.displayName;
 
 const openTabWithCards = (page: Page, count: number) =>
-  gotoMembershipTab(page, baseScenario.organization.nameId, async p => {
+  gotoMembershipTab(page, baseScenario!.organization.nameId, async p => {
     await expect(membershipCards(p)).toHaveCount(count, { timeout: 10_000 });
   });
 
@@ -88,18 +88,18 @@ test.describe('Organization Membership tab — list, search, filter @forge-accep
     baseScenario = await TestScenarioFactory.createBaseScenario(scenarioConfig);
     await clearHostLead(baseScenario);
     // The persona must be able to READ S and S1, or their cards are hidden.
-    await makePersonaUserMember(baseScenario.space.community.roleSetId, [
-      baseScenario.subspace.community.roleSetId,
+    await makePersonaUserMember(baseScenario!.space.community.roleSetId, [
+      baseScenario!.subspace.community.roleSetId,
     ]);
     // The organization: Member of Space S and Subspace S1 (S2 stays out).
-    await ensureOrgMemberOf(baseScenario.organization.id, [
-      baseScenario.space.community.roleSetId,
-      baseScenario.subspace.community.roleSetId,
+    await ensureOrgMemberOf(baseScenario!.organization.id, [
+      baseScenario!.space.community.roleSetId,
+      baseScenario!.subspace.community.roleSetId,
     ]);
     await changeUserRole(
       'assign',
       TestUserManager.users.qaUser.id,
-      baseScenario.organization.roleSetId,
+      baseScenario!.organization.roleSetId,
       RoleName.Associate
     );
     await setupAuthentication(
@@ -117,7 +117,7 @@ test.describe('Organization Membership tab — list, search, filter @forge-accep
     await changeUserRole(
       'remove',
       TestUserManager.users.qaUser.id,
-      baseScenario.organization.roleSetId,
+      baseScenario!.organization.roleSetId,
       RoleName.Associate
     ).catch(() => undefined);
     if (emptyOrg) {
@@ -239,7 +239,7 @@ test.describe('Organization Membership tab — list, search, filter @forge-accep
     await viewMenuItem(page, 'Space').click();
 
     await expect(page).toHaveURL(
-      new RegExp(`/${baseScenario.space.nameId}(?:[/?#]|$)`)
+      new RegExp(`/${baseScenario!.space.nameId}(?:[/?#]|$)`)
     );
   });
 
@@ -251,7 +251,7 @@ test.describe('Organization Membership tab — list, search, filter @forge-accep
       name: `org-membership-us1l-${runSuffix}`,
       space: { collaboration: { addTutorialCallouts: false } },
     });
-    const orgId = baseScenario.organization.id;
+    const orgId = baseScenario!.organization.id;
     const leadRoleSetId = leadScenario.space.community.roleSetId;
     const leadName = leadScenario.space.about.profile.displayName;
     try {
@@ -363,7 +363,7 @@ test.describe('Organization Membership tab — list, search, filter @forge-accep
     });
 
     await page.goto(
-      membershipTabUrl(baseUrl, baseScenario.organization.nameId)
+      membershipTabUrl(baseUrl, baseScenario!.organization.nameId)
     );
 
     // While the memberships are unresolved: skeleton, and no empty caption.
@@ -388,7 +388,7 @@ test.describe('Organization Membership tab — list, search, filter @forge-accep
     const context = await browser.newContext({ storageState: statePath });
     try {
       const associatePage = await context.newPage();
-      const orgNameId = baseScenario.organization.nameId;
+      const orgNameId = baseScenario!.organization.nameId;
       await associatePage.goto(membershipTabUrl(baseUrl, orgNameId));
 
       await expect(associatePage).toHaveURL(

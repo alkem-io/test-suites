@@ -519,8 +519,8 @@ orgAdminTest.describe('US3-AS7 — a granted Lead slot fills while the Lead invi
 orgAssociateTest.describe('US3-AS8 — a plain associate cannot see or act on the invitation', () => {
   orgAssociateTest('navigating to the Invitations tab redirects away from Settings entirely', async ({ page }) => {
     await page.goto(`${baseUrl}/organization/${orgAS8.nameID}/settings/invitations`);
-    await page.waitForLoadState('networkidle');
-    expect(page.url()).not.toContain('/settings/invitations');
+    await expect(page.getByRole('banner')).toBeVisible();
+    await expect(page).not.toHaveURL(/\/settings\/invitations/);
   });
 });
 

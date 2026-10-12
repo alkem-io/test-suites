@@ -2,7 +2,7 @@
 // Test: 1.1 Access User Profile from Dashboard
 
 import { expect } from '@playwright/test';
-import { verifyMyDashboardWelcomeElement } from '../my-dashboard/my-dashboard-page-objects';
+import { expectSignedIn } from '../my-dashboard/my-dashboard-page-objects';
 import { createPersonaTest } from '../fixtures/authenticated-session.fixture';
 
 const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
@@ -15,7 +15,7 @@ test.describe('Navigation and Access', () => {
     // home dashboard.
     await page.goto(baseUrl);
 
-    await verifyMyDashboardWelcomeElement(page);
+    await expectSignedIn(page);
 
     // 2. Click "My Account" from the dropdown menu
     await page.getByRole('link', { name: 'My Account' }).click();

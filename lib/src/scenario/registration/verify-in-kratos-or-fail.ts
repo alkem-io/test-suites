@@ -135,7 +135,9 @@ const getVerificationLink = async (email: string): Promise<string> =>
 const getVerificationEmailBody = async (email: string): Promise<string> =>
   getMails()
     .then(x => {
-      const verificationEmail = x.body.mailItems
+      // MailSlurper omits `mailItems` for an empty inbox (and sometimes under
+      // load); read it as "no mail yet", never as a crash.
+      const verificationEmail = (x.body.mailItems ?? [])
         .filter(
           (item: { subject: string; toAddresses: string[] }) =>
             item.subject === '[Alkemio] Please verify your email address!' &&

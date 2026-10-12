@@ -22,6 +22,7 @@ import {
   logInHeaderLink,
 } from '../authentication/common-authentication-page-elements';
 import { fillSecret } from '../helpers/login.helper';
+import { listMcpKeyIds, revokeMintedMcpKeys } from '../helpers/mcp-api-keys.helper';
 
 const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 const adminEmail = process.env.AUTH_ADMIN_EMAIL || 'admin@alkem.io';
@@ -79,6 +80,17 @@ test.describe(
   'MCP API keys — mint + one-time reveal (US1)',
   { tag: '@forge-acceptance' },
   () => {
+    // Every key this file mints is revoked again: the server caps usable keys
+    // at 10 per user, so leftovers from one run block the next run's mints.
+    // Keys the admin held BEFORE this file ran are not ours to revoke.
+    let preexistingKeyIds: Set<string> = new Set();
+    test.beforeAll(async () => {
+      preexistingKeyIds = await listMcpKeyIds(adminEmail);
+    });
+    test.afterAll(async () => {
+      await revokeMintedMcpKeys(adminEmail, ['A11y Key', 'Claude Desktop', 'Ephemeral Reveal', 'Expiry Key', 'No Operation Key'], preexistingKeyIds);
+    });
+
     test.beforeEach(async ({ page }) => {
       await signIn(page);
       await goToSecuritySettings(page);
@@ -230,7 +242,23 @@ test.describe(
         .first()
         .locator('xpath=ancestor::li');
       await expect(row).not.toContainText('Never expires');
-      await expect(row).toContainText(selectedExpiry);
+      // The picker shows the long form ("October 14th, 2026"); the row renders
+      // the same date in the short form ("Oct 14, 2026"). Compare the DATE,
+      // not the string.
+      // The trigger renders the date upper-cased ("OCTOBER 17TH, 2026"), which
+      // Date.parse refuses — parse the three parts explicitly.
+      const parts = /([a-z]+)\s+(\d{1,2})(?:st|nd|rd|th)?,?\s+(\d{4})/i.exec(selectedExpiry);
+      expect(parts, `picker date "${selectedExpiry}" has month, day and year`).toBeTruthy();
+      const monthIndex = [
+        'january', 'february', 'march', 'april', 'may', 'june',
+        'july', 'august', 'september', 'october', 'november', 'december',
+      ].indexOf(parts![1].toLowerCase());
+      expect(monthIndex, `month "${parts![1]}" is a month name`).toBeGreaterThanOrEqual(0);
+      const chosen = new Date(Number(parts![3]), monthIndex, Number(parts![2]));
+      const short = chosen.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+      const long = chosen.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+      await expect(row).toContainText(/Expires/);
+      await expect(row).toContainText(new RegExp(`${short}|${long}`, 'i'));
     });
 
     test('US1-AS6: submitting with no operation selected is refused client-side, with no key created', async ({

@@ -5,7 +5,7 @@ import { TestUser } from '@alkemio/tests-lib/common/enums/test.user';
 import { TestScenarioConfig } from '@alkemio/tests-lib/scenario/config/test-scenario-config';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import { TestScenarioFactory } from '@alkemio/tests-lib/scenario/TestScenarioFactory';
-import { delay, TestUserManager } from '@alkemio/tests-lib';
+import { TestUserManager } from '@alkemio/tests-lib';
 import { expect, test } from '@playwright/test';
 import { createAuthenticatedSessionFixture } from '../fixtures/authenticated-session.fixture';
 import { CollaborationPage } from './pages';
@@ -141,10 +141,7 @@ test.describe.serial('Callout Full Workflow', () => {
         await collaborationPage.clickCallout(sharedCalloutName);
 
         await collaborationPage.addPostContribution(postTitle, postContent);
-        await delay(1000); // Small delay to allow contribution to render
-        await expect(page.getByText(postTitle).first()).toBeVisible({
-          timeout: 3000,
-        });
+        await expect(page.getByText(postTitle).first()).toBeVisible();
       }
     );
 

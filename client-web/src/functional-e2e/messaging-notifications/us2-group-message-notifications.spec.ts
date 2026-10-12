@@ -295,6 +295,7 @@ test.describe('US2 - group message notifications', () => {
     // outcome the count assertion below could not distinguish from a genuine
     // failure. Grace covers `email:group` at its MAX-DELAY bound, so AS2's
     // digest has provably flushed and this scenario starts from a clean track.
+    // eslint-disable-next-line no-restricted-syntax -- drains the previous scenario's track to its MAX-DELAY bound before a clean slate
     await delay(groupEmail.maxDelayGraceMs);
     await deleteMailSlurperMails();
 
@@ -314,6 +315,7 @@ test.describe('US2 - group message notifications', () => {
     // B's. Grace covers `email:group` at its MAX-DELAY bound before the
     // address list is read; reading it at B's arrival would have proven
     // nothing about D.
+    // eslint-disable-next-line no-restricted-syntax -- negative settle window at the digest MAX-DELAY bound (digestWindow constant)
     await delay(groupEmail.maxDelayGraceMs);
     const [mailItems, settledTotal] = await getMailsData();
     await snap(aPage, 'US2-AS3-after-send');
@@ -402,6 +404,7 @@ test.describe('US2 - group message notifications', () => {
     // re-reading membership at the next send (the local-authoritative path
     // is synchronous with the mutation, but leave headroom for the dialog
     // to close and the client cache to settle).
+    // eslint-disable-next-line no-restricted-syntax -- known debt: no product signal for the async membership-removal pipeline yet
     await delay(3_000);
 
     const baselineAfterRemoval = await pushPublishedTotal();
@@ -413,6 +416,7 @@ test.describe('US2 - group message notifications', () => {
     // a push for C would be debounced before it ever reached the queue, so
     // the previous literal 6s could have read the counter while C's wrongly
     // armed dispatch was still comfortably pending.
+    // eslint-disable-next-line no-restricted-syntax -- negative settle window at the push digest MAX-DELAY bound
     await delay(groupPush.maxDelayGraceMs);
     const deltaAfterRemoval =
       (await pushPublishedTotal()) - baselineAfterRemoval;
@@ -463,11 +467,13 @@ test.describe('US2 - group message notifications', () => {
     // immediately without waiting at all (an increase of 0 is satisfied by
     // the baseline itself). It therefore reported "no push" before the
     // pipeline had even had a chance to debounce one.
+    // eslint-disable-next-line no-restricted-syntax -- negative settle window at the push digest MAX-DELAY bound
     await delay(groupPush.maxDelayGraceMs);
     const totalFirst = await pushPublishedTotal();
     const deltaFirst = totalFirst - baselineBefore;
 
     await sendMessage(aPage, 'US2-AS5 second send, B still disabled');
+    // eslint-disable-next-line no-restricted-syntax -- negative settle window at the push digest MAX-DELAY bound
     await delay(groupPush.maxDelayGraceMs);
     const deltaSecond = (await pushPublishedTotal()) - totalFirst;
 

@@ -446,6 +446,7 @@ export const settledMailsTo = async (
     )
       return found;
     if (now >= deadline) return found;
+    // eslint-disable-next-line no-restricted-syntax -- poll interval of a quiet-window mailbox reader
     await delay(MAIL_POLL_MS);
     const next = await mailsTo(address);
     if (next.length !== found.length) stableSince = Date.now();

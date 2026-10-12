@@ -173,3 +173,70 @@ export const enableApplicationNotifications = async (
 
   return restore;
 };
+
+// ─── Callout reactions ───────────────────────────────────────────────────────
+
+const READ_REACTION_CHANNELS = `
+  query($id: UUID!) {
+    lookup {
+      user(ID: $id) {
+        settings {
+          notification {
+            space { collaborationCalloutReaction { email inApp push } }
+          }
+        }
+      }
+    }
+  }`;
+
+const WRITE_REACTION_CHANNELS = `
+  mutation($id: UUID!, $reaction: NotificationSettingInput!) {
+    updateUserSettings(
+      settingsData: {
+        userID: $id
+        settings: {
+          notification: {
+            space: { collaborationCalloutReaction: $reaction }
+          }
+        }
+      }
+    ) { id }
+  }`;
+
+/**
+ * Turn on every channel of `space.collaborationCalloutReaction`
+ * ("someone reacted to a callout you published") for one user — the setting
+ * the callout-reaction walks assert on in the bell dialog. Same contract as
+ * `enableApplicationNotifications`: reads first, returns a restore function
+ * for `afterAll`.
+ */
+export const enableCalloutReactionNotifications = async (
+  userId: string
+): Promise<() => Promise<void>> => {
+  await TestUserManager.populateUserModelMap();
+  const data = await client.request<{
+    lookup: {
+      user: {
+        settings: {
+          notification: {
+            space: { collaborationCalloutReaction: NotificationChannels };
+          };
+        };
+      };
+    };
+  }>(READ_REACTION_CHANNELS, { id: userId }, adminHeaders());
+  const previous =
+    data.lookup.user.settings.notification.space.collaborationCalloutReaction;
+  const write = (reaction: NotificationChannels) =>
+    client.request(WRITE_REACTION_CHANNELS, { id: userId, reaction }, adminHeaders());
+  const restore = () => write(previous).then(() => undefined);
+  try {
+    await write(ALL_CHANNELS_ON);
+  } catch (error) {
+    // The server may have committed the write although the response failed:
+    // put the previous channels back before surfacing the error.
+    await restore().catch(() => undefined);
+    throw error;
+  }
+  return restore;
+};

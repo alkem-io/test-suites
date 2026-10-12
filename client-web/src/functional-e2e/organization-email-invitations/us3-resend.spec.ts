@@ -266,7 +266,7 @@ orgAdminTest.describe(
 
     orgAdminTest(
       'US3-AS3: after the window the same address can be resent again',
-      async ({ page }) => {
+      { tag: '@local-stack' }, async ({ page }) => {
         const windowSeconds = resendCooldownSeconds();
         orgAdminTest.skip(
           windowSeconds > MAX_WAITABLE_WINDOW_SECONDS,
@@ -276,6 +276,7 @@ orgAdminTest.describe(
         const mailsBefore = (await mailsTo(orgEmail)).length;
 
         // The earlier tests claimed this address's window; let it lapse.
+        // eslint-disable-next-line no-restricted-syntax -- the server's resend cooldown (PLATFORM_INVITATION_RESEND_COOLDOWN_SECONDS) must lapse
         await page.waitForTimeout(windowSeconds * 1000 + WINDOW_SETTLE_MS);
 
         await page.goto(

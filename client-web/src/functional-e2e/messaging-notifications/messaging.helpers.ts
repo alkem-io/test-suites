@@ -11,7 +11,7 @@ import {
   deleteMailSlurperMails,
   getMailsData,
   getQueueStats,
-  getVerificationLink,
+  getVerificationLinkFor,
   UniqueIDGenerator,
   waitForQueuePublishIncrease,
 } from '@alkemio/tests-lib';
@@ -87,15 +87,13 @@ export async function registerAndVerifyUser(
     page.getByRole('heading', { name: 'Verify your email' })
   ).toBeVisible();
 
-  let verificationLink: string | undefined;
-  for (let attempt = 0; attempt < 10; attempt++) {
-    verificationLink = await getVerificationLink();
-    if (verificationLink) break;
-    await delay(2000);
-  }
-  if (verificationLink === undefined) {
-    throw new Error('Verification link from email is missing!');
-  }
+  await expect
+    .poll(() => getVerificationLinkFor(userEmail), {
+      message: `verification link for ${userEmail} in the inbox`,
+      timeout: 30_000,
+    })
+    .toBeTruthy();
+  const verificationLink = (await getVerificationLinkFor(userEmail))!;
 
   await page.goto(verificationLink);
   await expect(page.getByText('You successfully verified')).toBeVisible({
@@ -225,11 +223,13 @@ export async function waitForMailsCountAtLeast(
   const start = Date.now();
   let [mailItems, total] = (await getMailsData()) as [MailItem[], number];
   while (total < expectedCount && Date.now() - start < timeout) {
+    // eslint-disable-next-line no-restricted-syntax -- poll interval of a mailbox reader
     await delay(interval);
     [mailItems, total] = (await getMailsData()) as [MailItem[], number];
   }
 
   if (settleMs !== undefined && total >= expectedCount) {
+    // eslint-disable-next-line no-restricted-syntax -- negative settle window: "exactly N mails" must outlast a late arrival
     await delay(settleMs);
     [mailItems, total] = (await getMailsData()) as [MailItem[], number];
   }
@@ -261,6 +261,7 @@ export async function settledPushDelta(
     expectedIncrease,
     { timeout: pollTimeoutMs }
   );
+  // eslint-disable-next-line no-restricted-syntax -- negative settle window on the queue counter (digest max-delay bound)
   await delay(settleMs);
   const stats = await getQueueStats(PUSH_NOTIFICATIONS_QUEUE);
   return stats.publishedTotal - baseline;

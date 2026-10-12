@@ -1101,6 +1101,7 @@ test.describe(
       // dnd-kit swallows every click for 50 ms after a drop (a capture-phase
       // click listener removed by setTimeout(…, 50) in the pointer sensor's
       // detach), so a Save click right after the drop is silently dropped.
+      // eslint-disable-next-line no-restricted-syntax -- dnd-kit swallows clicks for 50 ms after a drop; no DOM signal marks the end of that window
       await page.waitForTimeout(100);
       await dialog.getByRole('button', { name: /^save$/i }).click();
 
