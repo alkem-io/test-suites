@@ -364,7 +364,11 @@ test.describe('Organization Membership tab — list, search, filter @forge-accep
     });
     await page.route(/graphql/, async route => {
       const body = route.request().postData() ?? '';
-      if (body.includes('"operationName":"rolesOrganization"')) {
+      // The tab's own operation (client-web#10410) — not the public profile's
+      // `rolesOrganization`, which this gate matched before and never held.
+      if (
+        body.includes('"operationName":"OrganizationSettingsMemberships"')
+      ) {
         await rolesGate;
       }
       await route.continue();

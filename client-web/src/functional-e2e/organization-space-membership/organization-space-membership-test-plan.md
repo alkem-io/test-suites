@@ -79,7 +79,7 @@ US3 rows in `server-api/src/functional-api/roleset/organization/organization-sel
 | US1-AS6 | View Space | › US1-AS6 View Space opens the Space | E2E |
 | US1-AS7 | Plain associate redirected | › US1-AS7 a plain associate is redirected to the public profile | E2E |
 | US1-AS8 | Breadcrumb, no raw keys — **partial**, see gaps; the title assertion is pinned with `test.skip` on client-web#10415 | › US1-AS8 breadcrumb names the tab; no raw i18n keys · › US1-AS8 the browser title names the tab (skipped) | E2E |
-| US1-AS9 | Skeleton while `rolesOrganization` is held; no empty caption | › US1-AS9 skeleton while loading, never the empty caption before the cards | E2E (request delayed, not faked) |
+| US1-AS9 | Skeleton while `OrganizationSettingsMemberships` is held; no empty caption | › US1-AS9 skeleton while loading, never the empty caption before the cards | E2E (request delayed, not faked) |
 | US2-AS1 | Dialog names S1; nothing sent; still Member | `us2-org-leaves-space.spec.ts` › US2-AS1 Leave Subspace opens a destructive confirmation naming the Subspace | E2E + API read |
 | US2-AS2 | Cancel changes nothing | › US2-AS2 Cancel changes nothing | E2E + API read |
 | US2-AS3 | Leave S1 only; toast within 3 s (SC-001) | › US2-AS3 confirming leaves only the Subspace chosen | E2E + API read |

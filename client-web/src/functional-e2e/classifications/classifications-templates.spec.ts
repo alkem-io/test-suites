@@ -41,6 +41,7 @@ import {
   escapeRegExp,
   gotoSettingsAbout,
   gotoTemplatesSettings,
+  openClassificationAddNewMenu,
   openPickerDialog,
   pickerGroup,
   pickerGroupCount,
@@ -428,9 +429,7 @@ test.describe('TL-04 template authoring', () => {
       .length;
 
     // "Add new ▾" offers Create new + Select from library.
-    await classificationSection(page)
-      .getByRole('button', { name: 'Add new' })
-      .click();
+    await openClassificationAddNewMenu(page);
     await expect(
       page.getByRole('menuitem', { name: 'Create new' })
     ).toBeVisible();
@@ -516,9 +515,7 @@ test.describe('TL-04 template authoring', () => {
     await gotoTemplatesSettings(page);
     const countBefore = await classificationSectionCount(page);
 
-    await classificationSection(page)
-      .getByRole('button', { name: 'Add new' })
-      .click();
+    await openClassificationAddNewMenu(page);
     await page.getByRole('menuitem', { name: 'Create new' }).click();
     const dialog = page
       .getByRole('dialog')
@@ -811,9 +808,7 @@ test.describe('TL-06 library import', () => {
     expect(preState).not.toContain('SDGs');
     await gotoTemplatesSettings(page);
 
-    await classificationSection(page)
-      .getByRole('button', { name: 'Add new' })
-      .click();
+    await openClassificationAddNewMenu(page);
     await page.getByRole('menuitem', { name: 'Select from library' }).click();
     const dialog = page
       .getByRole('dialog')
@@ -1031,9 +1026,7 @@ test.describe('TL-08 value ids', () => {
   }) => {
     test.setTimeout(90_000);
     await gotoTemplatesSettings(page);
-    await classificationSection(page)
-      .getByRole('button', { name: 'Add new' })
-      .click();
+    await openClassificationAddNewMenu(page);
     await page.getByRole('menuitem', { name: 'Create new' }).click();
     const dialog = page
       .getByRole('dialog')
@@ -1093,9 +1086,7 @@ test.describe('TL-08 value ids', () => {
     // The server rejects the save on purpose.
     consoleGuard.allow.push(/collides/i, /override/i);
     await gotoTemplatesSettings(page);
-    await classificationSection(page)
-      .getByRole('button', { name: 'Add new' })
-      .click();
+    await openClassificationAddNewMenu(page);
     await page.getByRole('menuitem', { name: 'Create new' }).click();
     const dialog = page
       .getByRole('dialog')
