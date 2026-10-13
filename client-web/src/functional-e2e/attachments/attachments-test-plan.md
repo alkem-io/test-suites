@@ -26,7 +26,7 @@ for race, policy or setup scenarios are labelled separately.
 | Direct reference reads | send-and-download.spec.ts and destination-access.spec.ts | Bucket/reference GET and HEAD, membership/anonymous/removal, Range206/416, seek, no file-ID request or attachment resolver |
 | Forward and retry | forward-and-retry.spec.ts | Same reference across authorized buckets, one upload on retry, no automatic resend after partial confirmation |
 | Current destination gates | destination-access.spec.ts | Permissions/consent/comments/MIME/size rechecked; shared callout/post bucket; ordinary storage unaffected |
-| Bounded readiness | reference-readiness.spec.ts | Controlled same-resource404 injection, recovery and exhausted4HEAD budget; explicitly not actual storage lag |
+| Bounded readiness | reference-readiness.spec.ts | Controlled same-resource 404/503 injection, recovery and exhausted 4-HEAD budget; explicitly not actual storage lag or an authorization-service outage |
 | Public gateway boundary | public-upload-boundary.spec.ts | Anonymous/guest spoof denied, authenticated spoof overwritten, zero-byte File, global-cap rejection, room-neutral upload then unsupported send denial |
 | Raw streaming | upload-streaming.spec.ts | Protected gateway to adapter/Synapse before caller EOF, half/fixture-max sizes, cancellation and allocation observations; no GraphQL bytes, adapter accumulator or spool |
 | One-time normalization | historical-normalization.spec.ts | Genuine old writer data, explicit reviewed missing tuples, finite complete inventory, ordinary IDs intact, idempotent repeat, no runtime cutoff/hint read fallback |

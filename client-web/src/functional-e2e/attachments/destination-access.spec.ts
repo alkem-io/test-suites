@@ -9,6 +9,7 @@ import {
   type AttachmentRoom,
 } from './attachments.helpers';
 import {
+  byteHash,
   loadAcceptanceFixture,
   referenceURL,
   uploadIdentity,
@@ -200,6 +201,19 @@ test('group leave revokes Alkemio reads and a completed-upload send; rejoining p
       )
       .toBe(403);
     expect((await contexts[0].request.get(url)).status()).toBe(200);
+    const nativeDownload = await fetch(
+      `${fixture.matrixURL}/_matrix/client/v1/media/download/${encodeURIComponent(identity.homeserver)}/${encodeURIComponent(identity.mediaID)}`,
+      {
+        headers: {
+          authorization: `Bearer ${fixture.users[1].matrixAccessToken}`,
+        },
+        signal: AbortSignal.timeout(30_000),
+      }
+    );
+    expect(nativeDownload.status).toBe(200);
+    expect(byteHash(Buffer.from(await nativeDownload.arrayBuffer()))).toBe(
+      byteHash(await readFile(fixture.media.file.path))
+    );
     const restoredAt = Date.now();
     await restore();
     // Membership and cached authorization converge separately; never retry a send
@@ -235,6 +249,7 @@ test('group leave revokes Alkemio reads and a completed-upload send; rejoining p
         leaveTransport:
           'authenticated Matrix self-leave API, reflected by Alkemio membership event',
         currentSendDeniedAfterLeave: true,
+        nativeKnownMediaStillReadableAfterLeave: true,
         sameReferencePermittedAfterRejoin: true,
       }),
     });
