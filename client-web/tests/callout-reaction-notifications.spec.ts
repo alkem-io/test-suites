@@ -311,6 +311,17 @@ test.describe(
         .poll(
           async () => {
             await openBell(page);
+            if (expected > 0) {
+              // Same race as assertReactionRowCountStable: the dialog is
+              // visible while its rows are still loading (skeletons), so an
+              // immediate count samples 0 — and every poll attempt re-opens a
+              // fresh panel, so it samples 0 every time. Grace-wait for the
+              // first row; a genuinely missing row still times out to 0.
+              await reactionRows(page)
+                .first()
+                .waitFor({ state: 'visible', timeout: 5_000 })
+                .catch(() => undefined);
+            }
             const n = await reactionRows(page).count();
             await closeBellIfOpen(page);
             return n;

@@ -424,10 +424,6 @@ test.describe('TL-04 template authoring', () => {
     await expect(classificationTemplatesTrigger(page)).toContainText(
       'Structured, reusable vocabularies such as SDGs, Language, or Sector.'
     );
-    const countBefore = await classificationSectionCount(page);
-    const libraryBefore = (await libraryTemplates(fixture.templatesSetId))
-      .length;
-
     // "Add new ▾" offers Create new + Select from library.
     await openClassificationAddNewMenu(page);
     await expect(
@@ -502,10 +498,17 @@ test.describe('TL-04 template authoring', () => {
     await expect(discard).toBeVisible();
     await discard.getByRole('button', { name: 'Yes, close' }).click();
     await expect(dialog).toBeHidden();
-    expect(await classificationSectionCount(page)).toBe(countBefore);
-    expect((await libraryTemplates(fixture.templatesSetId)).length).toBe(
-      libraryBefore
-    );
+    // By name, not by count: the badge read on the first paint can lag the
+    // page's second list load (TL-03's template lives in this Space too), which
+    // is what the 2026-10-12 nightlies compared against.
+    await expect(
+      classificationSection(page).getByRole('heading', { name: NAME, exact: true })
+    ).toHaveCount(0);
+    expect(
+      (await libraryTemplates(fixture.templatesSetId)).map(
+        t => t.profile.displayName
+      )
+    ).not.toContain(NAME);
   });
 
   test('TL-04b US2-AS1/AS2/AS4 — create with reorder + custom id, card/preview contract, stored ids, edit round-trip, offered by the picker, delete (FR-002/002b/002c)', async ({
