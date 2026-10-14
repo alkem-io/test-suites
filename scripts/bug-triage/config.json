@@ -56,5 +56,5 @@
     }
   ],
   "page_url": "https://alkem-io.github.io/test-suites/bug-triage/",
-  "schedule": "Mondays 06:00 UTC (workflow bug-triage-refresh.yml)"
+  "schedule": "every weekday (Monday to Friday) 06:00 UTC (workflow bug-triage-refresh.yml)"
 }
