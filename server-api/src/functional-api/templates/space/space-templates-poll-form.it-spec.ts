@@ -584,7 +584,12 @@ describe('R25 — updateCollaborationFromSpaceTemplate adds the Poll and the For
 });
 
 describe('R25 — only the template may carry a Form into a new subspace (FR-027a)', () => {
-  test('a FORM in the create-subspace request itself is refused even when a template is used', async () => {
+  // Skipped until alkem-io/server#6648 lands: the refusal itself is correct, but
+  // the server has already persisted the space when it throws, leaving an orphan
+  // with an empty authorization policy that the API cannot delete. On a shared
+  // env the L0 orphan blanks Explore Spaces for everyone (error 11106) and reds
+  // the client-web nightly (explore-platform, classifications TL-07).
+  test.skip('a FORM in the create-subspace request itself is refused even when a template is used', async () => {
     const result = await createSubspaceFromTemplate(
       baseScenario.space.id,
       'req-form',
@@ -691,7 +696,12 @@ describe('R25 — the other template carriers carry a Form (FR-027a, R25c)', () 
     await expectFreshCopies(await getSpaceCalloutsSetId(id));
   });
 
-  test('a FORM in the create-space (L0) request itself is refused even when a template is used', async () => {
+  // Skipped until alkem-io/server#6648 lands: the refusal itself is correct, but
+  // the server has already persisted the space when it throws, leaving an orphan
+  // with an empty authorization policy that the API cannot delete. On a shared
+  // env the L0 orphan blanks Explore Spaces for everyone (error 11106) and reds
+  // the client-web nightly (explore-platform, classifications TL-07).
+  test.skip('a FORM in the create-space (L0) request itself is refused even when a template is used', async () => {
     const result = await createSpaceFromTemplate(
       baseScenario.organization.accountId,
       'l0-req-form',
