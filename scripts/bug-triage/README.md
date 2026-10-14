@@ -1,7 +1,7 @@
 # Alkemio Open Bug Triage page
 
 **Page:** https://alkem-io.github.io/test-suites/bug-triage/
-**Refresh:** every Monday 06:00 UTC by `.github/workflows/bug-triage-refresh.yml`,
+**Refresh:** every weekday (Monday to Friday) 06:00 UTC by `.github/workflows/bug-triage-refresh.yml`,
 or on demand from the Actions tab ("Bug Triage Page Refresh" → Run workflow;
 tick *full* to discard the cached state). The "synced" time in the page
 eyebrow (UTC) is when the data was pulled; anything opened or closed after
@@ -154,7 +154,10 @@ One row per release story, newest first, last 13 with a ship date.
 ### All open bugs
 Grouped High → Medium → Low. Columns: repo, number, title (with `prod` and
 `no bug label` badges), area, where it stands (the planning chips, each PR or
-release story linked), age. Filters: severity, area, repository, age bucket,
+release story linked), age. Click a column header to sort within each severity
+group; click again to reverse. "Where it stands" sorts in tile order (fix PR
+open → merged → release story → board/epic → no signal). The default order is
+area, then oldest first; Clear restores it. Filters: severity, area, repository, age bucket,
 flag (production-labelled, no bug label, unassigned), planning bucket, free
 text on title or number. `+` expands the issue body inline; links open on
 GitHub.
