@@ -148,7 +148,7 @@ export async function ensurePersonaState(
   const maxAttempts = 3;
   let lastError: unknown;
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-    const context = await browser.newContext({ storageState: undefined });
+    const context = await browser.newContext({ storageState: undefined, locale: 'en-US' });
     // pid-unique temp path so two concurrent workers can't clobber each other's
     // in-progress write.
     const tmpPath = `${statePath}.${process.pid}.${attempt}.tmp`;
@@ -268,7 +268,7 @@ export function createAuthenticatedSessionFixture(
       });
       await fs.promises.copyFile(statePath, storageStatePath);
 
-      sharedContext = await browser.newContext({ storageState: statePath });
+      sharedContext = await browser.newContext({ storageState: statePath, locale: 'en-US' });
       sharedPage = await sharedContext.newPage();
       // Land on the authenticated home, matching the post-login state tests
       // previously received (LoginPage.login ends on /home).
