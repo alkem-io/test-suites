@@ -13,18 +13,6 @@
  * populated on level-zero rows only. See spec Clarifications (rev 5, COMP-01)
  * and spec A6 / A25.
  *
- * Covers, as the executed form of each requirement:
- *   case 1 — AC4 / FR-003, create: a foreign-account id is rejected, nothing persisted.
- *   case 2 — AC4 / FR-003b, update: a NEWLY ADDED foreign id is rejected, stored list unchanged.
- *   case 3 — AC7 / FR-003b, the matched drop: a carried-over id that has left
- *            the account is dropped silently, with no error.
- *   case 4 — AC1 / FR-004a, the positive direction: a space under a DIFFERENT L0
- *            of the same account and the host's own L2 are both accepted, persisted,
- *            and rendered — rendered with every non-null scalar present (FR-017).
- *   case 5 — AC2 / FR-010: `accountSpaces` offers the account's spaces at every
- *            level and never the foreign one.
- *   case 6 — AC3 / FR-009: `accountSpaces` is refused to an actor holding READ but not UPDATE.
- *
  * These tests run against a live API stack. They are self-seeding: every
  * required entity is created in beforeAll and removed in afterAll.
  *
@@ -177,19 +165,12 @@ type RenderedSpacesData = {
 
 /**
  * The CUSTOM read path, selecting FOUR NON-NULL scalars on purpose
- * (COMP-084-R5-06 / FEAS-01, FR-017). `ISpace.level`, `.visibility`,
- * `.pinned` and `.sortOrder` are all `@Field(nullable: false)` properties read
- * off the entity, and `CalloutFraming.subspaces` is `[Space!]!`. So if the
- * CUSTOM branch ever narrows its query to a column list — e.g.
- * `.select(['space.id'])`, a natural and cheaper reading of "load no relation
- * other than authorization" — every element nullifies, the nullification
- * bubbles through the non-null list, and this document comes back with
- * `errors` and no data. That is the discriminating assertion: it is RED
- * against a restricted select and green only against whole entity rows. It is
- * also the only executed proof anywhere that the CUSTOM READ path (not just
- * the write guard's copy of the predicate) resolves the account through
- * `levelZeroSpaceID`. `client-web`'s real consumer selects exactly these
- * fields (`subspaceCard.graphql`).
+ * (COMP-084-R5-06 / FEAS-01, FR-017): `ISpace.level`, `.visibility`, `.pinned`
+ * and `.sortOrder` are `@Field(nullable: false)` and `CalloutFraming.subspaces`
+ * is `[Space!]!`, so a column-restricted select in the CUSTOM branch — e.g.
+ * `.select(['space.id'])`, a natural reading of "load no relation other than
+ * authorization" — nullifies every element and the whole list. These are also
+ * exactly the fields the real consumer selects (`subspaceCard.graphql`).
  */
 const RENDERED_SPACES_QUERY = `
   query CalloutRenderedSpaces($calloutId: UUID!) {
@@ -209,6 +190,8 @@ const RENDERED_SPACES_QUERY = `
   }
 `;
 
+const calloutDisplayName = (label: string) => `spaces-${label}-${uniqueId}`;
+
 /** Creates a SPACES callout with a CUSTOM selection, as the space admin. */
 const createSpacesCalloutWithSelection = async (
   label: string,
@@ -219,7 +202,7 @@ const createSpacesCalloutWithSelection = async (
       calloutsSetID: calloutsSetId,
       framing: {
         type: CalloutFramingType.Spaces,
-        profile: { displayName: `spaces-${label}-${uniqueId}` },
+        profile: { displayName: calloutDisplayName(label) },
       },
       settings: {
         framing: {
@@ -304,8 +287,7 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  const calloutIds = createdCalloutIds.filter(id => id.length > 0);
-  await Promise.allSettled(calloutIds.map(id => deleteCallout(id)));
+  await Promise.allSettled(createdCalloutIds.map(id => deleteCallout(id)));
   // Children before parents; `staleL1Id` is already gone by case 3.
   for (const id of [siblingL1Id, staleL1Id, siblingL0Id, foreignSpaceId]) {
     if (id) await deleteSpace(id).catch(() => undefined);
@@ -315,25 +297,10 @@ afterAll(async () => {
 
 describe('Spaces-collection CUSTOM selection — the account boundary', () => {
   test('case 1 (AC4 / FR-003, create) — a foreign-account id is rejected and nothing is persisted', async () => {
-    const displayName = `spaces-create-foreign-${uniqueId}`;
-    const res = await createSpacesCollectionCallout(
-      {
-        calloutsSetID: calloutsSetId,
-        framing: {
-          type: CalloutFramingType.Spaces,
-          profile: { displayName },
-        },
-        settings: {
-          framing: {
-            selection: {
-              mode: CalloutSelectionMode.Custom,
-              selectedIds: [foreignSpaceId],
-            },
-          },
-        },
-      },
-      TestUser.SPACE_ADMIN
-    );
+    const displayName = calloutDisplayName('create-foreign');
+    const res = await createSpacesCalloutWithSelection('create-foreign', [
+      foreignSpaceId,
+    ]);
 
     // The wrapper also reports `error` on a connection failure, so a rejection
     // is only proven by its reason.
@@ -449,10 +416,10 @@ describe('Spaces-collection CUSTOM selection — the account boundary', () => {
   });
 
   test('case 4 (AC1 / FR-004a, FR-017) — a space under a DIFFERENT L0 of the same account and the host’s own L2 are accepted, persisted and rendered whole', async () => {
-    // This is what fails if the predicate joins `space."accountId"` directly
-    // instead of resolving the account through `levelZeroSpaceID`:
-    // `space.accountId` is meaningfully populated on level-zero rows ONLY, so
-    // the wrong join returns a different set — and no mock-based spec can tell.
+    // RED if the predicate joins `space."accountId"` directly instead of
+    // resolving the account through `levelZeroSpaceID` (see file header) — and
+    // the only executed proof that the READ path, not just the write guard,
+    // resolves it that way.
     const created = await createSpacesCalloutWithSelection('cross-l0', [
       siblingL1Id,
       hostL2Id,
