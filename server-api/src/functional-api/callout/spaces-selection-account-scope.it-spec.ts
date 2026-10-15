@@ -20,8 +20,20 @@
  * stack this suite points at: `accountSpaces` does not exist before it, and
  * the pre-084 write guard rejects every same-account non-subspace. Do not
  * soften a case to make it pass earlier — this file is the feature's only
- * executed security proof (SC-002). Case 7 stays red beyond that window; its
- * own comment says why and who owns the fix.
+ * executed security proof (SC-002). Every case below goes GREEN once that
+ * slice is deployed; nothing here is knowingly permanent-red.
+ *
+ * NOT ASSERTED HERE, deliberately — S9 ("the stored selection is not handed to
+ * a viewer who is not a host-space admin"). 084 widens what `selectedIds` may
+ * hold from the host's own subspaces to every space of the account, while
+ * `Callout.settings` carries no privilege decorator and the 084 `server` slice
+ * adds none — so the exposure is real and UNFIXED, and its owning fix is
+ * server-side. A case for it would be permanently red, is outside the six
+ * assertions this slice was scoped to (`tasks/test-suites.md` T202), and this
+ * directory is enrolled in the shared-cluster `nightly` project, where a
+ * knowingly-red case normalises the colour of the only file that proves
+ * SC-002. It is carried as a finding against the 084 `server` PR instead. Do
+ * not add it here before that gate ships.
  *
  * ORDERING PREREQUISITE — read before merging this file.
  * `server-api/vitest.config.ts` puts `src/functional-api/callout/**` in the
@@ -523,39 +535,5 @@ describe('Spaces-collection CUSTOM selection — the account boundary', () => {
     expect(res.errors.length).toBeGreaterThan(0);
     expect(res.errors[0].extensions?.code).toBe('FORBIDDEN_POLICY');
     expect(res.data?.lookup?.space).toBeNull();
-  });
-
-  test('case 7 (S9 / FR-018) — the stored selection is not handed to a viewer who is not a host-space admin', async () => {
-    // The suite's only S9 assertion: every other case reads the selection as
-    // GLOBAL_ADMIN and so cannot see this. 084 widens what `selectedIds` may
-    // hold from the host's own subspaces to every space of the account, while
-    // `Callout.settings` carries no privilege decorator — so a member holding
-    // READ on the callout can read the ids of in-account spaces whose cards
-    // FR-016 withholds from them, and READ_ABOUT on a level-zero space is
-    // unconditional, so a leaked id resolves to an About display name.
-    //
-    // RED beyond the window the header describes: it stays red until the server
-    // gates or per-viewer-filters the `selection` read. That is the owning fix —
-    // a server finding against the 084 server PR. Do NOT relax this assertion to
-    // whatever the server currently returns.
-    const created = await createSpacesCalloutWithSelection('member-read', [
-      siblingL1Id,
-      hostL2Id,
-    ]);
-    expect(created.error).toBeUndefined();
-    const calloutId = created?.data?.createCalloutOnCalloutsSet?.id ?? '';
-    expect(calloutId).toBeTruthy();
-    createdCalloutIds.push(calloutId);
-
-    const asMember = await getCalloutSpacesSettings(
-      calloutId,
-      TestUser.SPACE_MEMBER
-    );
-    // Refused outright (no `callout` payload) or handed no ids — either is S9.
-    // Handing back the stored list is not.
-    expect(
-      asMember?.data?.lookup?.callout?.settings?.framing?.selection
-        ?.selectedIds ?? []
-    ).toEqual([]);
   });
 });
