@@ -86,6 +86,20 @@ let templateResponse: Awaited<
 
 // Captured by case 1 and reused by cases 2-4.
 let templateId = '';
+/** The slice of `createTemplate` this spec reads; asserted properly in AC1. */
+type CreatedCollaboraTemplate = {
+  id?: string;
+  callout?: {
+    framing?: {
+      collaboraDocument?: {
+        id?: string;
+        documentType?: string;
+        previewUrl?: string;
+      };
+    };
+  };
+};
+
 let templateDocumentId = '';
 let templatePreviewUrl = '';
 // Captured by case 2, asserted invariant by case 3.
@@ -124,6 +138,29 @@ beforeAll(async () => {
     spaceA.space.templateSetId,
     `collabora-template-${uniqueId}`
   );
+
+  // Fail HERE, not three cases later. createCollaboraCalloutTemplate returns the
+  // GraphQL response and does not throw on `errors`; without this every later
+  // case runs with empty ids and reports a misleading cause — and AC6's
+  // `toContain(templateDocumentId)` against '' passes vacuously, which is the
+  // one outcome a persistence assertion must never have.
+  if (templateResponse.errors) {
+    throw new Error(
+      `template setup failed, aborting before the cases run: ${JSON.stringify(
+        templateResponse.errors
+      )}`
+    );
+  }
+  const setupDocument = (
+    templateResponse.data?.createTemplate as CreatedCollaboraTemplate | undefined
+  )?.callout?.framing?.collaboraDocument;
+  if (!setupDocument?.id || !setupDocument?.previewUrl) {
+    throw new Error(
+      'template setup returned no Collabora document id/previewUrl — the later cases would assert against empty strings'
+    );
+  }
+  templateDocumentId = setupDocument.id;
+  templatePreviewUrl = setupDocument.previewUrl;
 });
 
 afterAll(async () => {
@@ -134,18 +171,7 @@ afterAll(async () => {
 describe('document post templates - template and post content are independent', () => {
   test('AC1: the template carries the uploaded content', async () => {
     const template = templateResponse.data?.createTemplate as
-      | {
-          id?: string;
-          callout?: {
-            framing?: {
-              collaboraDocument?: {
-                id?: string;
-                documentType?: string;
-                previewUrl?: string;
-              };
-            };
-          };
-        }
+      | CreatedCollaboraTemplate
       | undefined;
     const document = template?.callout?.framing?.collaboraDocument;
 
