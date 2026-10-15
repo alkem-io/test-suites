@@ -212,3 +212,14 @@ Three things it deliberately leaves out:
 Since revision 6 deleted the US2 acceptance walk (spec §5.2), this suite is
 also **US2's only automated evidence** — there is no browser proof of the apply
 at all.
+
+**And nothing schedules it.** The `collabora` vitest project is not in the
+`nightly` project's glob list in `server-api/vitest.config.ts`, and no workflow
+in `.github/workflows/` invokes `test:collabora` — so AC1/AC2/AC3/AC6, and the
+copy-on-apply source READ they are the only cover for, are verified **on demand
+only**. Read "US2's only automated evidence" as *the only automated evidence
+that exists*, not as standing coverage: a later change dropping that source
+READ would leave every CI check green. Widening the nightly glob is the
+obvious fix and is deliberately not done here — AC3 and the editor-URL cases
+need a reachable `wopi-service`, so it has to be verified against the nightly
+cluster first, as its own change.

@@ -273,7 +273,11 @@ describe('document post templates - template and post content are independent', 
       undefined,
       TestUser.NON_SPACE_MEMBER
     );
-    const idsBefore = (beforeRead.data?.lookup.calloutsSet?.callouts ?? []).map(
+    // No `?? []`: B's callouts set exists, so a read that comes back without
+    // one is a broken reader, and both legs of the comparison below would
+    // silently become the empty set — the attempt would then "persist
+    // nothing" no matter what it left behind.
+    const idsBefore = beforeRead.data!.lookup.calloutsSet!.callouts.map(
       callout => callout.id
     );
 
@@ -300,7 +304,7 @@ describe('document post templates - template and post content are independent', 
       undefined,
       TestUser.NON_SPACE_MEMBER
     );
-    const calloutsAfter = afterRead.data?.lookup.calloutsSet?.callouts ?? [];
+    const calloutsAfter = afterRead.data!.lookup.calloutsSet!.callouts;
 
     // An id-set comparison, not toHaveLength(0): B is a fresh space, so zero
     // is already true before the attempt and would pass either way.
