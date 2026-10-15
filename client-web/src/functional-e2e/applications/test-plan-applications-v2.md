@@ -615,7 +615,7 @@ Same as the standard L1 2.1 test, but the applicant is a non-parent-member. Veri
 
 # Test plan — No dead-end apply control on invitation-only spaces (client-web#10419)
 
-> **Status:** Draft · **Approve:** Light. The requester set this explicitly (`DEPTH=light`). One repo, no elevated-risk trigger, and the change removes a UI state rather than adding a surface · **Story:** [client-web#10419](https://github.com/alkem-io/client-web/issues/10419), fixed by [client-web#10401](https://github.com/alkem-io/client-web/pull/10401) (`f7f44c43`, merged 2026-10-12)
+> **Status:** Approved · **Depth:** Light. The requester set this explicitly (`DEPTH=light`). One repo, no elevated-risk trigger, and the change removes a UI state rather than adding a surface · **Story:** [client-web#10419](https://github.com/alkem-io/client-web/issues/10419), fixed by [client-web#10401](https://github.com/alkem-io/client-web/pull/10401) (`f7f44c43`, merged 2026-10-12)
 
 #10401 hides `SpaceAboutApplyButton` whenever it would render only its disabled "Apply not available" fallback. It does this on four surfaces: the L0 Space sidebar, the Space About dialog, the subspace banner above the Innovation-flow tabs, and the Subspace About dialog. The decision goes through the new pure predicate `isApplyUnavailable`. The same PR also collapses three disagreeing copies of `isApplicationPending` into one enum-derived predicate: `{new, approving}`. Before this work, the hidden state had **no system coverage on any surface**, and no test anywhere in `test-suites` seeded an invitation-only community. Five new or extended cases in `space-applications-level-0.spec.ts`, which is already in the nightly, close the gaps. The predicate's full decision table stays at unit level, where the fix put it.
 
