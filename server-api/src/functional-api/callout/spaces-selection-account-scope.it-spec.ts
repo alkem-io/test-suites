@@ -20,7 +20,22 @@
  * stack this suite points at: `accountSpaces` does not exist before it, and
  * the pre-084 write guard rejects every same-account non-subspace. Do not
  * soften a case to make it pass earlier — this file is the feature's only
- * executed security proof (SC-002).
+ * executed security proof (SC-002). Case 7 stays red beyond that window; its
+ * own comment says why and who owns the fix.
+ *
+ * ORDERING PREREQUISITE — read before merging this file.
+ * `server-api/vitest.config.ts` puts `src/functional-api/callout/**` in the
+ * `nightly` project, which runs against the SHARED test cluster. So from the
+ * moment this file is on `develop` the nightly executes it — fixture writes
+ * included — and reports it red until the `server` slice is deployed there.
+ * The remedy is merge/deploy ORDER (the feature's wave 1 is `server`, wave 4 is
+ * this), not confinement: the task sheet's "assert ALKEMIO_SERVER resolves to
+ * localhost" pre-flight is deliberately absent because it is unimplementable
+ * alongside that nightly enrollment — it would red the nightly by construction.
+ * Pointing a `.env` at a local stack is an operator prerequisite of the
+ * verification track (`tasks/test-suites.md`, prerequisite (a)), not a property
+ * this spec can assert. And the slice contract forbids buying the window with a
+ * skip, so if the order cannot be held the nightly is KNOWINGLY red for it.
  *
  * Execution: pnpm --filter @alkemio/test-suite-server-api run test:callouts
  */
@@ -265,15 +280,22 @@ beforeAll(async () => {
   );
 
   // A DIFFERENT account: `spaceAdmin`'s own user account, which the factory
-  // also pre-licenses. The host-space admin CAN read this space — it belongs
-  // to their own identity's account — which makes the proof stronger: case 5's
-  // refusal to offer it is attributable to the account predicate, not to a
-  // READ denial.
+  // also pre-licenses. Created BY `spaceAdmin` (not the default GLOBAL_ADMIN),
+  // because the creating actor is assigned MEMBER/LEAD/ADMIN on the new space
+  // (`space.service.ts` → `assignUserToRoles`) and `spaceAdmin` holds
+  // CREATE_SPACE on their own account. That is load-bearing for case 5, not
+  // tidiness: `accountSpaces` filters per viewer on READ, not READ_ABOUT, and a
+  // PRIVATE L0 created by someone else grants the account owner READ_ABOUT
+  // only — so the exclusion would hold even with NO account predicate at all,
+  // and the case would be over-determined. Owning it as its admin gives plain
+  // READ while the space keeps the PRIVATE default, so the only thing that can
+  // keep it out of `accountSpaces` is the account boundary itself.
   foreignSpaceId = await createSpaceBasicDataOrFail(
     `acct-scope-foreign-${uniqueId}`,
     `acctforeign${uniqueId}`,
     TestUserManager.users.spaceAdmin.accountId,
-    false
+    false,
+    TestUser.SPACE_ADMIN
   );
 
   // A fixture that silently failed must fail AS A FIXTURE ERROR, never as a
@@ -474,8 +496,9 @@ describe('Spaces-collection CUSTOM selection — the account boundary', () => {
         siblingL1Id,
       ])
     );
-    // The boundary. The acting admin could read this space; the field still
-    // must not offer it.
+    // The boundary, and the only thing that can produce it: the acting admin
+    // holds READ on this space — they are its admin (see the fixture) — so the
+    // per-viewer READ filter cannot account for the exclusion.
     expect(ids).not.toContain(foreignSpaceId);
 
     // The four DTO scalars, and the parentage the picker sorts by.
@@ -500,5 +523,39 @@ describe('Spaces-collection CUSTOM selection — the account boundary', () => {
     expect(res.errors.length).toBeGreaterThan(0);
     expect(res.errors[0].extensions?.code).toBe('FORBIDDEN_POLICY');
     expect(res.data?.lookup?.space).toBeNull();
+  });
+
+  test('case 7 (S9 / FR-018) — the stored selection is not handed to a viewer who is not a host-space admin', async () => {
+    // The suite's only S9 assertion: every other case reads the selection as
+    // GLOBAL_ADMIN and so cannot see this. 084 widens what `selectedIds` may
+    // hold from the host's own subspaces to every space of the account, while
+    // `Callout.settings` carries no privilege decorator — so a member holding
+    // READ on the callout can read the ids of in-account spaces whose cards
+    // FR-016 withholds from them, and READ_ABOUT on a level-zero space is
+    // unconditional, so a leaked id resolves to an About display name.
+    //
+    // RED beyond the window the header describes: it stays red until the server
+    // gates or per-viewer-filters the `selection` read. That is the owning fix —
+    // a server finding against the 084 server PR. Do NOT relax this assertion to
+    // whatever the server currently returns.
+    const created = await createSpacesCalloutWithSelection('member-read', [
+      siblingL1Id,
+      hostL2Id,
+    ]);
+    expect(created.error).toBeUndefined();
+    const calloutId = created?.data?.createCalloutOnCalloutsSet?.id ?? '';
+    expect(calloutId).toBeTruthy();
+    createdCalloutIds.push(calloutId);
+
+    const asMember = await getCalloutSpacesSettings(
+      calloutId,
+      TestUser.SPACE_MEMBER
+    );
+    // Refused outright (no `callout` payload) or handed no ids — either is S9.
+    // Handing back the stored list is not.
+    expect(
+      asMember?.data?.lookup?.callout?.settings?.framing?.selection
+        ?.selectedIds ?? []
+    ).toEqual([]);
   });
 });
