@@ -25,6 +25,14 @@ import {
   removeConversationMember,
   leaveConversation,
 } from './conversation.request.params';
+import {
+  byConversation,
+  eventsFor,
+  negativeWindowMs,
+  settle,
+  subscribeConversationEvents,
+  waitForEvents,
+} from './conversation-events.helpers';
 
 type ConversationEventMessage = {
   conversationEvents?: {
@@ -126,8 +134,7 @@ describe('Conversation Event Subscriptions', () => {
     });
   });
 
-  // skipped until this one is fixed: BUG: [Conversation] When user try to leave group chat, the conversation remains in the list#9543
-  describe.skip('MEMBER_REMOVED event', () => {
+  describe('MEMBER_REMOVED event', () => {
     let subscription: SubscriptionClient;
     let groupConversationId: string;
     let memberToRemoveActorId: string;
@@ -169,30 +176,37 @@ describe('Conversation Event Subscriptions', () => {
 
     test('should receive MEMBER_REMOVED event when a member is removed', async () => {
       // Act
+      const t0 = Date.now();
       await removeConversationMember(
         groupConversationId,
         memberToRemoveActorId,
         TestUser.GLOBAL_ADMIN
       );
 
-      // Assert — wait for subscription event
-      await delay(3000);
-      const messages = subscription.getMessages();
-      const memberRemovedEvent = messages.find(
-        (m: SubscriptionMessage) =>
-          (m as ConversationEventMessage)?.conversationEvents?.eventType ===
-          'MEMBER_REMOVED'
+      // Assert — bounded wait for the event, then a settle window so a
+      // duplicate publish cannot hide behind `find` (server#6329 U-3)
+      const { observedAtMs } = await waitForEvents(
+        subscription,
+        'MEMBER_REMOVED',
+        byConversation(groupConversationId)
+      );
+      await settle(negativeWindowMs(observedAtMs - t0));
+      const removedEvents = eventsFor(
+        subscription,
+        'MEMBER_REMOVED',
+        byConversation(groupConversationId)
       );
 
-      expect(memberRemovedEvent).toBeDefined();
-      const payload = (memberRemovedEvent as ConversationEventMessage)
-        ?.conversationEvents?.memberRemoved;
+      expect(removedEvents).toHaveLength(1);
+      const payload = removedEvents[0].memberRemoved;
       expect(payload?.conversation?.id).toBe(groupConversationId);
       expect(payload?.removedMemberID).toBe(memberToRemoveActorId);
     });
 
     test('should receive MEMBER_REMOVED event when a member leaves', async () => {
-      // Arrange — create a new group and subscribe
+      // Arrange — subscribe BEFORE the conversation exists and wait for its
+      // creation event, so a slow handshake cannot drop the event under test
+      const sub = await subscribeConversationEvents(TestUser.GLOBAL_ADMIN);
       const leavingMemberActorId = TestUserManager.users.subspaceMember.agentId;
       const res = await createConversation(
         [leavingMemberActorId],
@@ -201,33 +215,30 @@ describe('Conversation Event Subscriptions', () => {
         TestUser.GLOBAL_ADMIN
       );
       const convId = res?.data?.createConversation?.id ?? '';
-
-      // Clear previous messages
-      const sub = new SubscriptionClient();
-      await sub.subscribe(
-        {
-          operationName: 'ConversationEvents',
-          query: subscriptionConversationEvents,
-          variables: {},
-        },
-        TestUser.GLOBAL_ADMIN
-      );
+      expect(convId).toBeTruthy();
+      await waitForEvents(sub, 'CONVERSATION_CREATED', byConversation(convId));
 
       // Act
+      const t0 = Date.now();
       await leaveConversation(convId, TestUser.SUBSPACE_MEMBER);
 
       // Assert
-      await delay(3000);
-      const messages = sub.getMessages();
-      const leaveEvent = messages.find(
-        (m: SubscriptionMessage) =>
-          (m as ConversationEventMessage)?.conversationEvents?.eventType ===
-            'MEMBER_REMOVED' &&
-          (m as ConversationEventMessage)?.conversationEvents?.memberRemoved
-            ?.conversation?.id === convId
+      const { observedAtMs } = await waitForEvents(
+        sub,
+        'MEMBER_REMOVED',
+        byConversation(convId)
+      );
+      await settle(negativeWindowMs(observedAtMs - t0));
+      const leaveEvents = eventsFor(
+        sub,
+        'MEMBER_REMOVED',
+        byConversation(convId)
       );
 
-      expect(leaveEvent).toBeDefined();
+      expect(leaveEvents).toHaveLength(1);
+      expect(leaveEvents[0].memberRemoved?.removedMemberID).toBe(
+        leavingMemberActorId
+      );
       sub.terminate();
 
       // Cleanup
@@ -327,16 +338,9 @@ describe('Conversation Event Subscriptions', () => {
   });
 
   describe('CONVERSATION_DELETED event', () => {
-    // skipped until bug is fixed: BUG: [Conversation] When user try to leave group chat, the conversation remains in the list#9543
-    test.skip('should receive CONVERSATION_DELETED event when all members leave', async () => {
+    test('should receive CONVERSATION_DELETED event when all members leave', async () => {
       // Arrange — subscribe before creating the conversation
-      const subscription = new SubscriptionClient();
-      await subscription.subscribe(
-        {
-          operationName: 'ConversationEvents',
-          query: subscriptionConversationEvents,
-          variables: {},
-        },
+      const subscription = await subscribeConversationEvents(
         TestUser.GLOBAL_ADMIN
       );
 
@@ -349,37 +353,43 @@ describe('Conversation Event Subscriptions', () => {
       );
       const conversationId = res?.data?.createConversation?.id ?? '';
       expect(conversationId).toBeTruthy();
+      await waitForEvents(
+        subscription,
+        'CONVERSATION_CREATED',
+        byConversation(conversationId)
+      );
 
-      // Act — all members leave, triggering implicit deletion
+      // Act — all members leave, triggering implicit deletion. The two leaves
+      // are issued back-to-back on purpose (concurrent leaves are processed
+      // independently; DB atomicity prevents a double delete) — exactly one
+      // CONVERSATION_DELETED pins "no double delete".
+      const t0 = Date.now();
       await leaveConversation(conversationId, TestUser.SPACE_MEMBER);
       await leaveConversation(conversationId, TestUser.GLOBAL_ADMIN);
 
       // Assert
-      await delay(5000);
-      const messages = subscription.getMessages();
-      const deletedEvent = messages.find(
-        (m: SubscriptionMessage) =>
-          (m as ConversationEventMessage)?.conversationEvents?.eventType ===
-          'CONVERSATION_DELETED'
+      const { observedAtMs } = await waitForEvents(
+        subscription,
+        'CONVERSATION_DELETED',
+        byConversation(conversationId)
+      );
+      await settle(negativeWindowMs(observedAtMs - t0));
+      const deletedEvents = eventsFor(
+        subscription,
+        'CONVERSATION_DELETED',
+        byConversation(conversationId)
       );
 
-      expect(deletedEvent).toBeDefined();
-      const payload = (deletedEvent as ConversationEventMessage)
-        ?.conversationEvents?.conversationDeleted;
-      expect(payload?.conversationID).toBe(conversationId);
+      expect(deletedEvents).toHaveLength(1);
+      expect(deletedEvents[0].conversationDeleted?.conversationID).toBe(
+        conversationId
+      );
       subscription.terminate();
     });
 
-    // skipped until bug is fixed: BUG: [Conversation] When user try to leave group chat, the conversation remains in the list#9543
-    test.skip('should notify member via subscription before they leave', async () => {
+    test('should notify member via subscription before they leave', async () => {
       // Arrange — subscribe as a member who will receive the event
-      const memberSub = new SubscriptionClient();
-      await memberSub.subscribe(
-        {
-          operationName: 'ConversationEvents',
-          query: subscriptionConversationEvents,
-          variables: {},
-        },
+      const memberSub = await subscribeConversationEvents(
         TestUser.SPACE_MEMBER
       );
 
@@ -391,22 +401,34 @@ describe('Conversation Event Subscriptions', () => {
         TestUser.GLOBAL_ADMIN
       );
       const conversationId = res?.data?.createConversation?.id ?? '';
-
-      // Act — creator leaves first, then member leaves (triggers deletion)
-      await leaveConversation(conversationId, TestUser.GLOBAL_ADMIN);
-
-      // Assert — member should receive MEMBER_REMOVED for the creator
-      await delay(5000);
-      const messages = memberSub.getMessages();
-      const memberRemovedEvent = messages.find(
-        (m: SubscriptionMessage) =>
-          (m as ConversationEventMessage)?.conversationEvents?.eventType ===
-            'MEMBER_REMOVED' &&
-          (m as ConversationEventMessage)?.conversationEvents?.memberRemoved
-            ?.conversation?.id === conversationId
+      expect(conversationId).toBeTruthy();
+      await waitForEvents(
+        memberSub,
+        'CONVERSATION_CREATED',
+        byConversation(conversationId)
       );
 
-      expect(memberRemovedEvent).toBeDefined();
+      // Act — creator leaves first, then member leaves (triggers deletion)
+      const t0 = Date.now();
+      await leaveConversation(conversationId, TestUser.GLOBAL_ADMIN);
+
+      // Assert — member should receive MEMBER_REMOVED for the creator, once
+      const { observedAtMs } = await waitForEvents(
+        memberSub,
+        'MEMBER_REMOVED',
+        byConversation(conversationId)
+      );
+      await settle(negativeWindowMs(observedAtMs - t0));
+      const memberRemovedEvents = eventsFor(
+        memberSub,
+        'MEMBER_REMOVED',
+        byConversation(conversationId)
+      );
+
+      expect(memberRemovedEvents).toHaveLength(1);
+      expect(memberRemovedEvents[0].memberRemoved?.removedMemberID).toBe(
+        TestUserManager.users.globalAdmin.agentId
+      );
       memberSub.terminate();
 
       // Cleanup — member leaves too
