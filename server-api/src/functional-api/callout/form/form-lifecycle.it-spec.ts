@@ -739,13 +739,9 @@ describe('Form lifecycle — who may delete which response', () => {
 
   // FR-020: visibility is enforced on every path that returns a response's
   // existence. A caller who may not moderate must not learn, from the shape of
-  // the refusal, whether a guessed id is a real response. The server loads the
-  // response before authorizing, so today an unknown id answers
-  // ENTITY_NOT_FOUND and a real one FORBIDDEN_POLICY:
-  // https://github.com/alkem-io/server/issues/6591. Skipped until that fix
-  // lands — drop the `.skip` then; the case already pins the expected
-  // behaviour.
-  test.skip('a non-moderator gets the same refusal for an existing response id and an unknown one (FR-020, alkem-io/server#6591)', async () => {
+  // the refusal — its code or its message — whether a guessed id is a real
+  // response (alkem-io/server#6591).
+  test('a non-moderator gets the same refusal for an existing response id and an unknown one (FR-020, alkem-io/server#6591)', async () => {
     const unknown = await deleteFormResponse(
       randomUUID(),
       TestUser.NON_SPACE_MEMBER
@@ -758,6 +754,9 @@ describe('Form lifecycle — who may delete which response', () => {
     expect(unknown.error).toBeDefined();
     expect(existing.error).toBeDefined();
     expect(errorClass(existing)).toBe(errorClass(unknown));
+    expect(existing.error?.errors[0]?.message).toBe(
+      unknown.error?.errors[0]?.message
+    );
     expect(await stillThere()).toBe(true);
   });
 
