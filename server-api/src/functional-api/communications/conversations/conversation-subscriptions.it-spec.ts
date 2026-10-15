@@ -134,7 +134,9 @@ describe('Conversation Event Subscriptions', () => {
     });
   });
 
-  describe('MEMBER_REMOVED event', () => {
+  // skipped: NOT YET VERIFIED GREEN (server#6329 U-3). Red on the 2026-10-15 local stack because Synapse cannot push to the adapter's appservice port,
+  // so no inbound Matrix event reaches the server (see conversations-test-plan.md, 'How to run'). Un-skip after one green run on a healthy stack.
+  describe.skip('MEMBER_REMOVED event', () => {
     let subscription: SubscriptionClient;
     let groupConversationId: string;
     let memberToRemoveActorId: string;
@@ -338,7 +340,9 @@ describe('Conversation Event Subscriptions', () => {
   });
 
   describe('CONVERSATION_DELETED event', () => {
-    test('should receive CONVERSATION_DELETED event when all members leave', async () => {
+    // skipped: NOT YET VERIFIED GREEN (server#6329 U-4). Red on the 2026-10-15 local stack because Synapse cannot push to the adapter's appservice port,
+    // so no inbound Matrix event reaches the server (see conversations-test-plan.md, 'How to run'). Un-skip after one green run on a healthy stack.
+    test.skip('should receive CONVERSATION_DELETED event when all members leave', async () => {
       // Arrange — subscribe before creating the conversation
       const subscription = await subscribeConversationEvents(
         TestUser.GLOBAL_ADMIN
@@ -387,7 +391,9 @@ describe('Conversation Event Subscriptions', () => {
       subscription.terminate();
     });
 
-    test('should notify member via subscription before they leave', async () => {
+    // skipped: NOT YET VERIFIED GREEN (server#6329 U-4). Red on the 2026-10-15 local stack because Synapse cannot push to the adapter's appservice port,
+    // so no inbound Matrix event reaches the server (see conversations-test-plan.md, 'How to run'). Un-skip after one green run on a healthy stack.
+    test.skip('should notify member via subscription before they leave', async () => {
       // Arrange — subscribe as a member who will receive the event
       const memberSub = await subscribeConversationEvents(
         TestUser.SPACE_MEMBER
