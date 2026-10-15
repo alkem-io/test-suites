@@ -504,7 +504,8 @@ describe('Update Conversation', () => {
 });
 
 describe('Leave Conversation', () => {
-  // skipped until this one is fixed: BUG: [Conversation] When user try to leave group chat, the conversation remains in the list#9543
+  // skipped: NOT YET VERIFIED GREEN (server#6329 U-1). Red on the 2026-10-15 local stack because Synapse cannot push to the adapter's appservice port,
+  // so no inbound Matrix event reaches the server (see conversations-test-plan.md, 'How to run'). Un-skip after one green run on a healthy stack.
   test.skip('should leave a GROUP conversation', async () => {
     // Arrange
     const memberActorId = TestUserManager.users.globalAdmin.agentId;
@@ -593,7 +594,8 @@ describe('Remove Conversation Member', () => {
     }
   });
 
-  // skipped until this one is fixed: BUG: [Conversation] When user try to leave group chat, the conversation remains in the list#9543
+  // skipped: NOT YET VERIFIED GREEN (server#6329 U-2). Red on the 2026-10-15 local stack because Synapse cannot push to the adapter's appservice port,
+  // so no inbound Matrix event reaches the server (see conversations-test-plan.md, 'How to run'). Un-skip after one green run on a healthy stack.
   test.skip('should remove a member from a GROUP conversation', async () => {
     // Arrange — verify member is present before removal
     const meResBefore = await getMeConversations(TestUser.GLOBAL_ADMIN);
@@ -630,6 +632,21 @@ describe('Remove Conversation Member', () => {
     ).find(c => c.id === groupConversationId);
     const membersAfter = convAfter?.members?.map(m => m.id) ?? [];
     expect(membersAfter).not.toContain(memberToRemoveActorId());
+
+    // Assert — the removed member's OWN list no longer carries the conversation
+    // (U-2, plan server#6329 R4; removal lands via the member's own Matrix leave)
+    await waitForCondition(async () => {
+      const removedRes = await getMeConversations(TestUser.SPACE_ADMIN);
+      return !(removedRes?.data?.me.conversations.conversations ?? []).some(
+        c => c.id === groupConversationId
+      );
+    });
+    const removedRes = await getMeConversations(TestUser.SPACE_ADMIN);
+    expect(
+      (removedRes?.data?.me.conversations.conversations ?? []).some(
+        c => c.id === groupConversationId
+      )
+    ).toBe(false);
   });
 
   test('should fail to remove member from non-existent conversation', async () => {

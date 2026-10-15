@@ -10,6 +10,7 @@ import {
 } from '@alkemio/tests-lib';
 import {
   baseUrl,
+  conversationNamesOf,
   newContextPage,
   openChatPanel,
   openConversationByName,
@@ -103,6 +104,7 @@ test.describe('US2 - group message notifications', () => {
   const nameD = `Us2D${runSuffix}`;
   let userAEmail: string;
   let userBEmail: string;
+  let userCEmail: string;
   let userDEmail: string;
   // A's display name is no longer asserted on: an R4 group digest names the
   // CONVERSATION, not the sender (data-model 9.1), so the subject carries G's
@@ -139,7 +141,12 @@ test.describe('US2 - group message notifications', () => {
 
   test('setup: register C (member)', async ({ page }) => {
     test.setTimeout(SETUP_TIMEOUT_MS);
-    await registerAndVerifyUser(page, 'us2c', nameC, 'Member');
+    ({ email: userCEmail } = await registerAndVerifyUser(
+      page,
+      'us2c',
+      nameC,
+      'Member'
+    ));
     await subscribeToPush(page, 'us2c');
   });
 
@@ -325,36 +332,27 @@ test.describe('US2 - group message notifications', () => {
     await aContext.close();
   });
 
-  // Previously BLOCKED BY alkem-io/server#6329 (test.fixme) — group member removal
-  // used to be non-functional for two independent reasons: (1) the Matrix kick is
-  // rejected with M_FORBIDDEN (insufficient power level, root cause in
-  // matrix-adapter, still open as of this run), and (2) ConversationService.removeMember
-  // used to throw on that rejection instead of keeping Alkemio's own membership
-  // authoritative.
+  // Previously BLOCKED BY alkem-io/server#6329 (test.fixme) — group member
+  // removal used to be non-functional for two independent reasons: (1) the
+  // Matrix kick was rejected with M_FORBIDDEN, and (2)
+  // ConversationAuthorizationService.applyAuthorizationPolicy appended the
+  // participant rule to the persisted policy without reset(), so stale rules
+  // naming removed members kept granting READ + CONTRIBUTE.
   //
-  // FIXED in this branch (sec-server-11): ConversationService.removeMember now
-  // catches a rejected Matrix kick, logs the Matrix-side divergence for manual
-  // reconciliation, and proceeds to delete the LOCAL conversation_membership row
-  // regardless — notification recipients are re-read from that table at send
-  // time (D-13), so the removal takes effect for every channel on the very next
-  // message even though the Matrix room membership itself is now known to
-  // diverge (tracked separately, out of scope for this repo, see
-  // docs/matrix-admin-reflection.md Finding 1 and alkem-io/server#6329). Live
-  // re-verification 2026-08-04 (workspace#034-messaging-notifications, US2):
-  // removeConversationMember resolves without a GraphQL error, C disappears
-  // from both the group's member list AND C's own chat list, and the
-  // recipient-resolution log for the next USER_CONVERSATION_MESSAGE_GROUP event
-  // no longer includes C's actor id on any channel.
+  // Both are FIXED: the adapter now has the member leave through their own
+  // account (matrix-adapter#82, shipped in v0.8.23), the policy is reset on
+  // every apply (server#6525), and server#6573 makes the local fallback always
+  // complete. Removal is therefore ASYNCHRONOUS: the server waits for the
+  // member's Matrix leave event before it persists the removal, so this test
+  // polls C's own `me.conversations` for the signal instead of sleeping.
   //
-  // SCOPE WARNING — a green run here means "we stopped NOTIFYING them", NOT "we
-  // revoked their ACCESS". Two revocation gaps remain open under #6329:
-  //   (1) Matrix room membership still diverges — C's Matrix session can still reach
-  //       the room;
-  //   (2) ConversationAuthorizationService.applyAuthorizationPolicy pushes the
-  //       participant credential rule onto the persisted policy without calling
-  //       reset() first, so stale rules naming removed members are never cleared and
-  //       keep granting READ + CONTRIBUTE on the conversation.
-  // Do not widen this test — or cite it — as evidence that removal revokes access.
+  // SCOPE: this test still proves only that we stopped NOTIFYING C — push
+  // recipients are re-read from the membership table at send time. It does NOT
+  // prove that removal revokes access. That is covered by
+  // server-api/src/functional-api/communications/conversations/
+  // conversation-member-removal*.it-spec.ts (plan:
+  // conversations-test-plan.md, server#6329). Do not cite this test as
+  // evidence that removal revokes access.
   test('US2-AS4: C removed from G — a message afterwards must reach nobody but current members', async ({
     browser,
   }) => {
@@ -388,11 +386,16 @@ test.describe('US2 - group message notifications', () => {
     // push-on), C should still be a current push recipient.
     expect(memberCountBeforeRemoval).toBeGreaterThanOrEqual(1);
 
-    // Remove C via the real Group settings UI (Remove -> confirm). The
-    // mutation must resolve without throwing even though the underlying
-    // Matrix kick is rejected (M_FORBIDDEN) — sec-server-11 makes Alkemio's
-    // own membership authoritative in that case rather than surfacing the
-    // Matrix-side failure to the caller.
+    // Control: before the removal C really has the group, so the "C no longer
+    // has it" poll below cannot pass on a wrong name or a failed read.
+    await expect
+      .poll(() => conversationNamesOf(userCEmail), {
+        message: `C lists "${groupName}" before the removal`,
+        timeout: 30_000,
+      })
+      .toContain(groupName);
+
+    // Remove C via the real Group settings UI (Remove -> confirm).
     await aPage.getByRole('button', { name: 'Group settings' }).click();
     await aPage.getByRole('button', { name: `Remove ${nameC} Member` }).click();
     await aPage.getByRole('button', { name: 'Remove', exact: true }).click();
@@ -400,12 +403,16 @@ test.describe('US2 - group message notifications', () => {
     await expect(aPage.getByText(`${nameC} Member`)).toHaveCount(0);
     await aPage.getByRole('button', { name: 'Save' }).click();
 
-    // Give the async membership-removal pipeline a moment to land before
-    // re-reading membership at the next send (the local-authoritative path
-    // is synchronous with the mutation, but leave headroom for the dialog
-    // to close and the client cache to settle).
-    // eslint-disable-next-line no-restricted-syntax -- known debt: no product signal for the async membership-removal pipeline yet
-    await delay(3_000);
+    // The removal lands asynchronously (C's Matrix leave, then the server
+    // persists it), so wait for the product's own signal: the group drops out
+    // of C's chat list. Bounded; the next send re-reads membership, so it must
+    // not run before this.
+    await expect
+      .poll(() => conversationNamesOf(userCEmail), {
+        message: `C's chat list must drop "${groupName}" after the removal`,
+        timeout: 30_000,
+      })
+      .not.toContain(groupName);
 
     const baselineAfterRemoval = await pushPublishedTotal();
     await sendMessage(aPage, 'US2-AS4 after removing C from the group');

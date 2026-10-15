@@ -40,7 +40,8 @@ beforeAll(async () => {
 
 describe('Delete Conversation', () => {
   describe('Implicit deletion — all members leave', () => {
-    // skipped until bug is fixed: BUG: [Conversation] When user try to leave group chat, the conversation remains in the list#9543
+    // skipped: NOT YET VERIFIED GREEN (server#6329 U-5). Red on the 2026-10-15 local stack because Synapse cannot push to the adapter's appservice port,
+    // so no inbound Matrix event reaches the server (see conversations-test-plan.md, 'How to run'). Un-skip after one green run on a healthy stack.
     test.skip('should remove GROUP conversation when all members leave', async () => {
       // Arrange — create a group with 2 members (creator + 1)
       const memberActorId = TestUserManager.users.spaceMember.agentId;
@@ -81,7 +82,8 @@ describe('Delete Conversation', () => {
       );
     });
 
-    // skip until this issue is fixed: BUG: [Conversation] When user try to leave group chat, the conversation remains in the list#9543
+    // skipped: NOT YET VERIFIED GREEN (server#6329 U-5). Red on the 2026-10-15 local stack because Synapse cannot push to the adapter's appservice port,
+    // so no inbound Matrix event reaches the server (see conversations-test-plan.md, 'How to run'). Un-skip after one green run on a healthy stack.
     test.skip('should remove GROUP conversation from remaining member after last member leaves', async () => {
       // Arrange — create group with creator + 2 members
       const member1ActorId = TestUserManager.users.spaceMember.agentId;
