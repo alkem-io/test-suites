@@ -433,7 +433,6 @@ export const createCollaboraCalloutTemplate = async (
               id
               documentType
               previewUrl
-              profile { id displayName }
             }
           }
         }
@@ -533,8 +532,7 @@ export const getCalloutCollaboraPreviewUrl = async (
  * fetched through the storage REST endpoint named by its `previewUrl`.
  */
 export const fetchDocumentBytesHash = async (
-  previewUrl: string,
-  userRole: TestUser
+  previewUrl: string
 ): Promise<string> => {
   const fileID = previewUrl.match(
     /\/api\/private\/wopi\/files\/([^/]+)\/preview$/
@@ -547,7 +545,9 @@ export const fetchDocumentBytesHash = async (
   // dispatches the request with superagent's DEFAULT parser and returns a
   // Response you can no longer attach `.buffer`/`.parse` to. The parser must be
   // attached BEFORE the request is awaited.
-  const token = TestUserManager.getUserModelByType(userRole).authToken;
+  const token = TestUserManager.getUserModelByType(
+    TestUser.GLOBAL_ADMIN
+  ).authToken;
   const res = await getDocument(decodeURIComponent(fileID))
     .set('Authorization', `Bearer ${token}`)
     .buffer(true)

@@ -89,11 +89,9 @@ let templateId = '';
 let templateDocumentId = '';
 let templatePreviewUrl = '';
 // Captured by case 2, asserted invariant by case 3.
-let templateHash = '';
 let postA1CalloutId = '';
 let postA1DocumentId = '';
 let postA2PreviewUrl = '';
-let postA2Hash = '';
 
 const importHash = fixtureHash(collaboraFixtures.import);
 const replacementHash = fixtureHash(collaboraFixtures.replacement);
@@ -164,9 +162,9 @@ describe('document post templates - template and post content are independent', 
     templateDocumentId = document?.id as string;
     templatePreviewUrl = document?.previewUrl as string;
 
-    await expect(
-      fetchDocumentBytesHash(templatePreviewUrl, TestUser.GLOBAL_ADMIN)
-    ).resolves.toEqual(importHash);
+    await expect(fetchDocumentBytesHash(templatePreviewUrl)).resolves.toEqual(
+      importHash
+    );
   });
 
   test('AC2: two posts from one template have three distinct files, all with the fixture content', async () => {
@@ -210,22 +208,13 @@ describe('document post templates - template and post content are independent', 
       new Set([templatePreviewUrl, a1PreviewUrl, a2PreviewUrl]).size
     ).toEqual(3);
 
-    templateHash = await fetchDocumentBytesHash(
-      templatePreviewUrl,
-      TestUser.GLOBAL_ADMIN
-    );
-    const a1Hash = await fetchDocumentBytesHash(
-      a1PreviewUrl as string,
-      TestUser.GLOBAL_ADMIN
-    );
-    postA2Hash = await fetchDocumentBytesHash(
-      a2PreviewUrl as string,
-      TestUser.GLOBAL_ADMIN
-    );
+    const templateHash = await fetchDocumentBytesHash(templatePreviewUrl);
+    const a1Hash = await fetchDocumentBytesHash(a1PreviewUrl as string);
+    const a2Hash = await fetchDocumentBytesHash(a2PreviewUrl as string);
 
     expect(templateHash).toEqual(importHash);
     expect(a1Hash).toEqual(importHash);
-    expect(postA2Hash).toEqual(importHash);
+    expect(a2Hash).toEqual(importHash);
 
     postA1CalloutId = a1Callout?.id as string;
     postA1DocumentId = a1Callout?.framing?.collaboraDocument?.id as string;
@@ -253,17 +242,17 @@ describe('document post templates - template and post content are independent', 
     expect(a1PreviewUrlAfter).toEqual(expect.any(String));
 
     await expect(
-      fetchDocumentBytesHash(a1PreviewUrlAfter as string, TestUser.GLOBAL_ADMIN)
+      fetchDocumentBytesHash(a1PreviewUrlAfter as string)
     ).resolves.toEqual(replacementHash);
 
     // The template and A2 were not written, so their captured previewUrls are
-    // still valid — and their bytes must be exactly what case 2 recorded.
-    await expect(
-      fetchDocumentBytesHash(templatePreviewUrl, TestUser.GLOBAL_ADMIN)
-    ).resolves.toEqual(templateHash);
-    await expect(
-      fetchDocumentBytesHash(postA2PreviewUrl, TestUser.GLOBAL_ADMIN)
-    ).resolves.toEqual(postA2Hash);
+    // still valid — and their bytes must still be the fixture case 2 recorded.
+    await expect(fetchDocumentBytesHash(templatePreviewUrl)).resolves.toEqual(
+      importHash
+    );
+    await expect(fetchDocumentBytesHash(postA2PreviewUrl)).resolves.toEqual(
+      importHash
+    );
   });
 
   test('AC6: a foreign source is refused, and nothing is persisted', async () => {
