@@ -162,6 +162,20 @@ export default defineConfig(
         tier: 'long',
       }),
       suite({
+        // workspace#034 (conversation-message notifications, notifications#522):
+        // US1 direct and US2 group walks send on one session and wait for the
+        // bell/push on another; US3 round-trips the settings rows. Since
+        // client-web#10365 the browser sends through its own Matrix session,
+        // so this is the cheapest nightly proof that message notifications
+        // still fire end to end. Each file registers fresh personas through
+        // the real sign-up flow (see messaging.helpers.ts), so the in-app
+        // setting the API notification specs leave off on the shared
+        // personas cannot reach these walks.
+        name: 'Messaging notifications',
+        testMatch: ['/messaging-notifications/*.spec.ts'],
+        tier: 'long',
+      }),
+      suite({
         // client-web#10033 / workspace#076 (expanded subspace cards): each
         // file seeds its own public Space through the API and deletes it in
         // afterAll; fixtures carry up to seven subspaces.
