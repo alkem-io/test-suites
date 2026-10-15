@@ -278,9 +278,22 @@ beforeAll(async () => {
     // 4's rendered half RED for environment reasons. Acting as GLOBAL_ADMIN
     // instead would reach PRIVATE spaces through the inherited root policy and
     // destroy case 6's contrast (FEAS-084-R5-01).
-    await updateSpaceSettings(siblingL0Id, {
+    // The result is CHECKED, unlike the unasserted calls elsewhere in the
+    // suite, because this one is load-bearing: cases 4 and 5 cannot pass while
+    // the sibling is PRIVATE (FEAS-084-R5-01), and `updateSpaceSettings`
+    // reports GraphQL failures in `result.error` rather than rejecting. A
+    // silent failure here would turn two PRODUCT assertions red for an
+    // environment reason — the misattribution this spec exists to avoid.
+    const privacyFlip = await updateSpaceSettings(siblingL0Id, {
       privacy: { mode: SpacePrivacyMode.Public },
     });
+    if (privacyFlip.error) {
+      throw new Error(
+        `Fixture setup: could not make the sibling L0 PUBLIC — ${JSON.stringify(
+          privacyFlip.error.errors
+        )}`
+      );
+    }
     siblingL1Id = await createSubspaceOrFail(
       `acct-scope-sibling-l1-${uniqueId}`,
       `acctsiblingl1${uniqueId}`,
