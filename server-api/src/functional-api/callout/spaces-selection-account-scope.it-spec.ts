@@ -251,82 +251,114 @@ const REJECTION_REASON =
   'One or more selected spaces do not belong to the account of this space.';
 
 beforeAll(async () => {
-  baseScenario = await TestScenarioFactory.createBaseScenario(scenarioConfig);
-  calloutsSetId = baseScenario.space.collaboration.calloutsSetId;
-  hostSpaceId = baseScenario.space.id;
-  hostL2Id = baseScenario.subsubspace.id;
+  try {
+    baseScenario = await TestScenarioFactory.createBaseScenario(scenarioConfig);
+    calloutsSetId = baseScenario.space.collaboration.calloutsSetId;
+    hostSpaceId = baseScenario.space.id;
+    hostL2Id = baseScenario.subsubspace.id;
 
-  // The host space sits on the scenario ORGANIZATION's account, which
-  // TestScenarioFactory pre-licenses with ACCOUNT_LICENSE_PLUS
-  // (ACCOUNT_SPACE_FREE limit 3; the scenario space uses one, the sibling L0
-  // below uses a second). No licence call is therefore needed here. If a
-  // create below is nevertheless denied on an entitlement, it throws from
-  // `createSpaceBasicDataOrFail` naming the entitlement — a FIXTURE error, not
-  // a product verdict — and the permitted remedy is one
-  // `assignLicensePlanToAccount(accountId, getLicensePlanByName('ACCOUNT_LICENSE_PLUS'))`
-  // line here (T202).
-  siblingL0Id = await createSpaceBasicDataOrFail(
-    `acct-scope-sibling-${uniqueId}`,
-    `acctsibling${uniqueId}`,
-    baseScenario.organization.accountId,
-    false
-  );
-  // PUBLIC, immediately. Left PRIVATE (the space-template default) the
-  // host-space admin holds no role on it, so FR-010's per-viewer READ filter
-  // would exclude it and its L1 from `accountSpaces`, making case 5 and case
-  // 4's rendered half RED for environment reasons. Acting as GLOBAL_ADMIN
-  // instead would reach PRIVATE spaces through the inherited root policy and
-  // destroy case 6's contrast (FEAS-084-R5-01).
-  await updateSpaceSettings(siblingL0Id, {
-    privacy: { mode: SpacePrivacyMode.Public },
-  });
-  siblingL1Id = await createSubspaceOrFail(
-    `acct-scope-sibling-l1-${uniqueId}`,
-    `acctsiblingl1${uniqueId}`,
-    siblingL0Id
-  );
-  staleL1Id = await createSubspaceOrFail(
-    `acct-scope-stale-l1-${uniqueId}`,
-    `acctstalel1${uniqueId}`,
-    siblingL0Id
-  );
+    // The host space sits on the scenario ORGANIZATION's account, which
+    // TestScenarioFactory pre-licenses with ACCOUNT_LICENSE_PLUS
+    // (ACCOUNT_SPACE_FREE limit 3; the scenario space uses one, the sibling L0
+    // below uses a second). No licence call is therefore needed here. If a
+    // create below is nevertheless denied on an entitlement, it throws from
+    // `createSpaceBasicDataOrFail` naming the entitlement — a FIXTURE error, not
+    // a product verdict — and the permitted remedy is one
+    // `assignLicensePlanToAccount(accountId, getLicensePlanByName('ACCOUNT_LICENSE_PLUS'))`
+    // line here (T202).
+    siblingL0Id = await createSpaceBasicDataOrFail(
+      `acct-scope-sibling-${uniqueId}`,
+      `acctsibling${uniqueId}`,
+      baseScenario.organization.accountId,
+      false
+    );
+    // PUBLIC, immediately. Left PRIVATE (the space-template default) the
+    // host-space admin holds no role on it, so FR-010's per-viewer READ filter
+    // would exclude it and its L1 from `accountSpaces`, making case 5 and case
+    // 4's rendered half RED for environment reasons. Acting as GLOBAL_ADMIN
+    // instead would reach PRIVATE spaces through the inherited root policy and
+    // destroy case 6's contrast (FEAS-084-R5-01).
+    await updateSpaceSettings(siblingL0Id, {
+      privacy: { mode: SpacePrivacyMode.Public },
+    });
+    siblingL1Id = await createSubspaceOrFail(
+      `acct-scope-sibling-l1-${uniqueId}`,
+      `acctsiblingl1${uniqueId}`,
+      siblingL0Id
+    );
+    staleL1Id = await createSubspaceOrFail(
+      `acct-scope-stale-l1-${uniqueId}`,
+      `acctstalel1${uniqueId}`,
+      siblingL0Id
+    );
 
-  // A DIFFERENT account: `spaceAdmin`'s own user account, which the factory
-  // also pre-licenses. Created BY `spaceAdmin` (not the default GLOBAL_ADMIN),
-  // because the creating actor is assigned MEMBER/LEAD/ADMIN on the new space
-  // (`space.service.ts` → `assignUserToRoles`) and `spaceAdmin` holds
-  // CREATE_SPACE on their own account. That is load-bearing for case 5, not
-  // tidiness: `accountSpaces` filters per viewer on READ, not READ_ABOUT, and a
-  // PRIVATE L0 created by someone else grants the account owner READ_ABOUT
-  // only — so the exclusion would hold even with NO account predicate at all,
-  // and the case would be over-determined. Owning it as its admin gives plain
-  // READ while the space keeps the PRIVATE default, so the only thing that can
-  // keep it out of `accountSpaces` is the account boundary itself.
-  foreignSpaceId = await createSpaceBasicDataOrFail(
-    `acct-scope-foreign-${uniqueId}`,
-    `acctforeign${uniqueId}`,
-    TestUserManager.users.spaceAdmin.accountId,
-    false,
-    TestUser.SPACE_ADMIN
-  );
+    // A DIFFERENT account: `spaceAdmin`'s own user account, which the factory
+    // also pre-licenses. Created BY `spaceAdmin` (not the default GLOBAL_ADMIN),
+    // because the creating actor is assigned MEMBER/LEAD/ADMIN on the new space
+    // (`space.service.ts` → `assignUserToRoles`) and `spaceAdmin` holds
+    // CREATE_SPACE on their own account. That is load-bearing for case 5, not
+    // tidiness: `accountSpaces` filters per viewer on READ, not READ_ABOUT, and a
+    // PRIVATE L0 created by someone else grants the account owner READ_ABOUT
+    // only — so the exclusion would hold even with NO account predicate at all,
+    // and the case would be over-determined. Owning it as its admin gives plain
+    // READ while the space keeps the PRIVATE default, so the only thing that can
+    // keep it out of `accountSpaces` is the account boundary itself.
+    foreignSpaceId = await createSpaceBasicDataOrFail(
+      `acct-scope-foreign-${uniqueId}`,
+      `acctforeign${uniqueId}`,
+      TestUserManager.users.spaceAdmin.accountId,
+      false,
+      TestUser.SPACE_ADMIN
+    );
 
-  // A fixture that silently failed must fail AS A FIXTURE ERROR, never as a
-  // green test over `undefined`.
-  expect(hostSpaceId).toBeTruthy();
-  expect(hostL2Id).toBeTruthy();
-  expect(siblingL0Id).toBeTruthy();
-  expect(siblingL1Id).toBeTruthy();
-  expect(staleL1Id).toBeTruthy();
-  expect(foreignSpaceId).toBeTruthy();
+    // A fixture that silently failed must fail AS A FIXTURE ERROR, never as a
+    // green test over `undefined`.
+    expect(hostSpaceId).toBeTruthy();
+    expect(hostL2Id).toBeTruthy();
+    expect(siblingL0Id).toBeTruthy();
+    expect(siblingL1Id).toBeTruthy();
+    expect(staleL1Id).toBeTruthy();
+    expect(foreignSpaceId).toBeTruthy();
+  } catch (error) {
+    // Clean up whatever was created before rethrowing, so a failed setup never
+    // leaves fixture spaces behind on a shared cluster. The rethrow keeps the
+    // suite red: this swallows nothing.
+    await tearDownFixture();
+    throw error;
+  }
 });
 
-afterAll(async () => {
+/**
+ * ONE owner for teardown, called from `afterAll` AND from `beforeAll`'s own
+ * failure path.
+ *
+ * Why both: this file is enrolled in the `nightly` project, which runs against
+ * the SHARED test cluster, and Vitest 4 does not document whether `afterAll`
+ * runs when `beforeAll` throws (reviewed on PR #675; the docs are silent and a
+ * local probe was inconclusive). A `beforeAll` that fails after creating two of
+ * its four spaces would then leak them into a shared environment, which is
+ * precisely the risk the slice already records as a residual. So setup cleans
+ * up after itself rather than relying on the hook ordering.
+ *
+ * Every step is individually guarded and failure-tolerant: ids are read off the
+ * module bindings, so whichever ones were assigned before the throw are removed
+ * and the rest are skipped.
+ */
+const tearDownFixture = async () => {
   await Promise.allSettled(createdCalloutIds.map(id => deleteCallout(id)));
   // Children before parents; `staleL1Id` is already gone by case 3.
   for (const id of [siblingL1Id, staleL1Id, siblingL0Id, foreignSpaceId]) {
     if (id) await deleteSpace(id).catch(() => undefined);
   }
-  await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
+  if (baseScenario) {
+    await TestScenarioFactory.cleanUpBaseScenario(baseScenario).catch(
+      () => undefined
+    );
+  }
+};
+
+afterAll(async () => {
+  await tearDownFixture();
 });
 
 describe('Spaces-collection CUSTOM selection — the account boundary', () => {
