@@ -119,6 +119,8 @@ export default defineConfig(
           // walks on the account's Security settings; self-cleaning.
           '/user-profile/mcp-api-keys-mint.spec.ts',
           '/user-profile/mcp-api-keys-revoke.spec.ts',
+          // client-web#10179: public profile tab strip, user + organisation; self-seeding.
+          '/user-profile/profile-resource-tabs.spec.ts',
         ],
         tier: 'extended',
       }),
