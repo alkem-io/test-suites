@@ -136,6 +136,9 @@ describe('Conversation Event Subscriptions', () => {
 
   // skipped: NOT YET VERIFIED GREEN (server#6329 U-3). Red on the 2026-10-15 local stack because Synapse cannot push to the adapter's appservice port,
   // so no inbound Matrix event reaches the server (see conversations-test-plan.md, 'How to run'). Un-skip after one green run on a healthy stack.
+  // Never shown green on any stack. The original product skip, client-web#9543
+  // (https://github.com/alkem-io/client-web/issues/9543), is still OPEN on 2026-10-15: un-skip only
+  // after that green run, and close or re-link #9543 then.
   describe.skip('MEMBER_REMOVED event', () => {
     let subscription: SubscriptionClient;
     let groupConversationId: string;
@@ -342,6 +345,9 @@ describe('Conversation Event Subscriptions', () => {
   describe('CONVERSATION_DELETED event', () => {
     // skipped: NOT YET VERIFIED GREEN (server#6329 U-4). Red on the 2026-10-15 local stack because Synapse cannot push to the adapter's appservice port,
     // so no inbound Matrix event reaches the server (see conversations-test-plan.md, 'How to run'). Un-skip after one green run on a healthy stack.
+    // Never shown green on any stack. The original product skip, client-web#9543
+    // (https://github.com/alkem-io/client-web/issues/9543), is still OPEN on 2026-10-15: un-skip only
+    // after that green run, and close or re-link #9543 then.
     test.skip('should receive CONVERSATION_DELETED event when all members leave', async () => {
       // Arrange — subscribe before creating the conversation
       const subscription = await subscribeConversationEvents(
@@ -393,6 +399,9 @@ describe('Conversation Event Subscriptions', () => {
 
     // skipped: NOT YET VERIFIED GREEN (server#6329 U-4). Red on the 2026-10-15 local stack because Synapse cannot push to the adapter's appservice port,
     // so no inbound Matrix event reaches the server (see conversations-test-plan.md, 'How to run'). Un-skip after one green run on a healthy stack.
+    // Never shown green on any stack. The original product skip, client-web#9543
+    // (https://github.com/alkem-io/client-web/issues/9543), is still OPEN on 2026-10-15: un-skip only
+    // after that green run, and close or re-link #9543 then.
     test.skip('should notify member via subscription before they leave', async () => {
       // Arrange — subscribe as a member who will receive the event
       const memberSub = await subscribeConversationEvents(

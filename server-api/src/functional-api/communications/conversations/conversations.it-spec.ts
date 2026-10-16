@@ -506,6 +506,9 @@ describe('Update Conversation', () => {
 describe('Leave Conversation', () => {
   // skipped: NOT YET VERIFIED GREEN (server#6329 U-1). Red on the 2026-10-15 local stack because Synapse cannot push to the adapter's appservice port,
   // so no inbound Matrix event reaches the server (see conversations-test-plan.md, 'How to run'). Un-skip after one green run on a healthy stack.
+  // Never shown green on any stack. The original product skip, client-web#9543
+  // (https://github.com/alkem-io/client-web/issues/9543), is still OPEN on 2026-10-15: un-skip only
+  // after that green run, and close or re-link #9543 then.
   test.skip('should leave a GROUP conversation', async () => {
     // Arrange
     const memberActorId = TestUserManager.users.globalAdmin.agentId;
@@ -596,6 +599,9 @@ describe('Remove Conversation Member', () => {
 
   // skipped: NOT YET VERIFIED GREEN (server#6329 U-2). Red on the 2026-10-15 local stack because Synapse cannot push to the adapter's appservice port,
   // so no inbound Matrix event reaches the server (see conversations-test-plan.md, 'How to run'). Un-skip after one green run on a healthy stack.
+  // Never shown green on any stack. The original product skip, client-web#9543
+  // (https://github.com/alkem-io/client-web/issues/9543), is still OPEN on 2026-10-15: un-skip only
+  // after that green run, and close or re-link #9543 then.
   test.skip('should remove a member from a GROUP conversation', async () => {
     // Arrange — verify member is present before removal
     const meResBefore = await getMeConversations(TestUser.GLOBAL_ADMIN);

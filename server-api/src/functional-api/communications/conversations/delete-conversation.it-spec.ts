@@ -42,6 +42,9 @@ describe('Delete Conversation', () => {
   describe('Implicit deletion — all members leave', () => {
     // skipped: NOT YET VERIFIED GREEN (server#6329 U-5). Red on the 2026-10-15 local stack because Synapse cannot push to the adapter's appservice port,
     // so no inbound Matrix event reaches the server (see conversations-test-plan.md, 'How to run'). Un-skip after one green run on a healthy stack.
+    // Never shown green on any stack. The original product skip, client-web#9543
+    // (https://github.com/alkem-io/client-web/issues/9543), is still OPEN on 2026-10-15: un-skip only
+    // after that green run, and close or re-link #9543 then.
     test.skip('should remove GROUP conversation when all members leave', async () => {
       // Arrange — create a group with 2 members (creator + 1)
       const memberActorId = TestUserManager.users.spaceMember.agentId;
@@ -84,6 +87,9 @@ describe('Delete Conversation', () => {
 
     // skipped: NOT YET VERIFIED GREEN (server#6329 U-5). Red on the 2026-10-15 local stack because Synapse cannot push to the adapter's appservice port,
     // so no inbound Matrix event reaches the server (see conversations-test-plan.md, 'How to run'). Un-skip after one green run on a healthy stack.
+    // Never shown green on any stack. The original product skip, client-web#9543
+    // (https://github.com/alkem-io/client-web/issues/9543), is still OPEN on 2026-10-15: un-skip only
+    // after that green run, and close or re-link #9543 then.
     test.skip('should remove GROUP conversation from remaining member after last member leaves', async () => {
       // Arrange — create group with creator + 2 members
       const member1ActorId = TestUserManager.users.spaceMember.agentId;
