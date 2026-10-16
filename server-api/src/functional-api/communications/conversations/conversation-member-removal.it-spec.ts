@@ -105,6 +105,8 @@ describe('Removal revokes access (server#6329)', () => {
   let sendBeforeRes: Awaited<ReturnType<typeof sendMessageToRoom>>;
   let lookupConversationBefore: Awaited<ReturnType<typeof lookupConversation>>;
   let lookupRoomBefore: Awaited<ReturnType<typeof lookupRoomMessages>>;
+  // C's READ probe taken the moment A observes MEMBER_REMOVED (re-apply ordering guard).
+  let lookupConversationAtEvent: Awaited<ReturnType<typeof lookupConversation>>;
 
   beforeAll(async () => {
     await TestScenarioFactory.createBaseScenarioEmpty({
@@ -165,6 +167,13 @@ describe('Removal revokes access (server#6329)', () => {
       { label: 'A' }
     );
     latencyMs = observedAtMs - t0;
+
+    // The server saves the re-applied policy BEFORE it publishes MEMBER_REMOVED
+    // (message.inbox.service.ts › handleConversationMemberLeft), so C's READ is
+    // already gone when the event is observed. Probe now, with no poll and
+    // before N-1/N-3's settle windows, so a publish-before-re-apply regression
+    // is caught (plan: "Regression guards", re-apply ordering).
+    lookupConversationAtEvent = await lookupConversation(C, conversationId);
   });
 
   afterAll(async () => {
@@ -298,6 +307,18 @@ describe('Removal revokes access (server#6329)', () => {
       'row c: C saw T1 before removal'
     ).toContain(t1);
 
+    // Row e0: READ was already revoked when MEMBER_REMOVED was observed
+    // (captured in beforeAll; the rows below run after N-1/N-3's settle windows,
+    // so on their own they cannot detect a publish-before-re-apply ordering).
+    expect(
+      lookupConversationAtEvent.errors[0]?.extensions?.code,
+      'row e0: removed C reads the conversation at the moment MEMBER_REMOVED is observed'
+    ).toBe(FORBIDDEN);
+    expect(
+      lookupConversationAtEvent.data?.lookup?.conversation ?? null,
+      'row e0: no conversation returned at MEMBER_REMOVED'
+    ).toBeNull();
+
     // Row d: send via API.
     const sendAfter = await sendMessageToRoom(roomId, t3, C);
     expect(getErrorCode(sendAfter), 'row d: removed C sends to the room').toBe(
@@ -348,8 +369,9 @@ describe('Removal revokes access (server#6329)', () => {
     const removeB = await removeConversationMember(conversationId, bId, C);
     expect(getErrorCode(removeB), 'row i: removed C removes B').toBe(FORBIDDEN);
 
-    // Row j: leave. Any error is correct; a future "not a member" validation
-    // error is equally good behaviour — only success is wrong.
+    // Row j: leave. `leaveConversation` is gated on READ on the conversation
+    // (conversation.resolver.mutations.ts › removeMemberAndSendRpc), which rows
+    // e/e0 show C no longer holds, so the denial is the authorization one.
     const leave = await leaveConversation(conversationId, C);
     expect(leave?.data?.leaveConversation, 'row j: removed C leaves').not.toBe(
       true
@@ -358,6 +380,7 @@ describe('Removal revokes access (server#6329)', () => {
       leave?.error?.errors?.length ?? 0,
       'row j: removed C leaves'
     ).toBeGreaterThan(0);
+    expect(getErrorCode(leave), 'row j: removed C leaves').toBe(FORBIDDEN);
 
     // Row k: the group is not in C's own list.
     const cList = await getMeConversations(C);
