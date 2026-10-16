@@ -88,10 +88,10 @@ const EMPTY_ORG_MEMBERSHIP = 'Not a member of any Space or Subspace yet.';
 // (the same fixtures, same assertions): `non.space` sees ['Leading', 'Member
 // Of'] only, `admin` sees all three tabs and every assertion below passes.
 // PT-1, PT-4 and PT-6 assert the designed behaviour for the plan's visitor and
-// are skipped until the product defect is fixed or ruled intended (plan Q4):
-// drop the skip when it is fixed. The assertions are unchanged.
+// are skipped until alkem-io/server#6670 is fixed (plan Q4): drop the skip when
+// it lands. The assertions are unchanged.
 const OTHER_RESOURCES_HIDDEN_FROM_VISITOR =
-  'client-web#10179 / plan Q4: User.account and Organization.account are null for an ordinary visitor, so Other Resources is hidden';
+  'alkem-io/server#6670: User.account and Organization.account are null for an ordinary visitor, so Other Resources is hidden (client-web#10179, plan Q4)';
 
 // ---------------------------------------------------------------------------
 // Locators
@@ -425,6 +425,9 @@ test.describe('Public profile resource tabs — user (client-web#10179)', () => 
 
     // Leading and Other Resources are hidden, not shown empty. The tablist itself
     // rendering with exactly one tab is the positive control.
+    // Limit: while Q4 stands this viewer never sees Other Resources, so the
+    // "hidden when there are no resources" half cannot fail here (shown green
+    // with a pack on U3, 2026-10-15). Its positive twins are PT-1/PT-4/PT-6.
     await expect(tabs(page)).toHaveText([TAB.user.memberOf]);
     await expect(tab(page, TAB.user.memberOf)).toHaveAttribute('aria-selected', 'true');
     await expect(text(page, EMPTY_USER_MEMBERSHIP)).toBeVisible();
@@ -619,6 +622,7 @@ test.describe('Public profile resource tabs — organisation (client-web#10179)'
   }) => {
     await openProfile(page, `/organization/${orgD!.nameID}`, orgD!.displayName);
 
+    // Same Q4 limit as PT-2: the Other Resources absence cannot fail for this viewer.
     await expect(tabs(page)).toHaveText([TAB.org.memberOf]);
     await expect(tab(page, TAB.org.memberOf)).toHaveAttribute('aria-selected', 'true');
     await expect(text(page, EMPTY_ORG_MEMBERSHIP)).toBeVisible();
