@@ -119,6 +119,8 @@ export default defineConfig(
           // walks on the account's Security settings; self-cleaning.
           '/user-profile/mcp-api-keys-mint.spec.ts',
           '/user-profile/mcp-api-keys-revoke.spec.ts',
+          // client-web#10179: public profile tab strip, user + organisation; self-seeding.
+          '/user-profile/profile-resource-tabs.spec.ts',
         ],
         tier: 'extended',
       }),
@@ -159,6 +161,20 @@ export default defineConfig(
         // subscription push on another); US2 uploads and crops photos too.
         name: 'Chat avatars',
         testMatch: ['/chat-avatars/*.spec.ts'],
+        tier: 'long',
+      }),
+      suite({
+        // workspace#034 (conversation-message notifications, notifications#522):
+        // US1 direct and US2 group walks send on one session and wait for the
+        // bell/push on another; US3 round-trips the settings rows. Since
+        // client-web#10365 the browser sends through its own Matrix session,
+        // so this is the cheapest nightly proof that message notifications
+        // still fire end to end. Each file registers fresh personas through
+        // the real sign-up flow (see messaging.helpers.ts), so the in-app
+        // setting the API notification specs leave off on the shared
+        // personas cannot reach these walks.
+        name: 'Messaging notifications',
+        testMatch: ['/messaging-notifications/*.spec.ts'],
         tier: 'long',
       }),
       suite({

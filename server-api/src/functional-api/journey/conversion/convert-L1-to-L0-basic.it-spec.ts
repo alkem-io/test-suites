@@ -10,6 +10,8 @@
  *   unchanged; innovationFlow URL points to the promoted L0 root.
  * - License (#6022): parent L0 seeded with Plus; promoted L0 has a Free license and does NOT
  *   inherit the parent's Plus license.
+ * - Replaced license (alkem-io/server#6614 §C, fix #6637): the L1's own license and its
+ *   authorization policy are deleted by the promotion; the fresh license resolves.
  * - Innovation flow states are carried over verbatim from the L1 (names, descriptions, order),
  *   not reset to the parent L0's platform-default phases (alkem-io/server#6418,
  *   alkem-io/client-web#9528).
@@ -20,6 +22,7 @@ import {
   TestScenarioConfig,
   TestScenarioFactory,
   TestUser,
+  TestUserManager,
 } from '@alkemio/tests-lib';
 import { convertSpaceL1ToSpaceL0 } from './conversion.request.params';
 import {
@@ -42,6 +45,14 @@ import {
   LicensingCredentialBasedCredentialType,
 } from '@alkemio/tests-lib/core/generated/alkemio-schema';
 import { sortArraysInObject, stripProfileUrls } from '@utils/array.matcher';
+import { rawRead } from '@functional-api/platform-roles/_support/raw-request';
+import {
+  expectLookupGone,
+  expectPoliciesGone,
+  expectPoliciesPresent,
+  ids,
+  operationsAdminToken,
+} from '../../orphan-free-deletion/_support/owned-records';
 
 const { ALKEMIO_BASE_URL } = process.env;
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
@@ -94,6 +105,28 @@ let subspaceAfter:
   | NonNullable<typeof convertResult.data>['convertSpaceL1ToSpaceL0']
   | undefined;
 let calendarEventId: string;
+// alkem-io/server#6614 §C — the L1's own license, captured before the promotion.
+let oldLicenseId: string;
+let oldLicensePolicies: Record<string, string>;
+let poa: string;
+
+const READ_SPACE_LICENSE = `
+  query($id: UUID!) {
+    lookup { space(ID: $id) { license { id authorization { id } } } }
+  }`;
+type SpaceLicenseRead = {
+  lookup: {
+    space: { license: { id: string; authorization: { id: string } | null } };
+  };
+};
+const readSpaceLicense = async (spaceId: string) => {
+  const { lookup } = await rawRead<SpaceLicenseRead>(
+    TestUserManager.getUserModelByType(TestUser.GLOBAL_ADMIN).authToken,
+    READ_SPACE_LICENSE,
+    { id: spaceId }
+  );
+  return lookup.space.license;
+};
 
 beforeAll(async () => {
   baseScenario = await TestScenarioFactory.createBaseScenario(scenarioConfig);
@@ -134,6 +167,16 @@ beforeAll(async () => {
   parentSubscriptionsBefore =
     parentLicenseBefore.data?.lookup.space?.subscriptions.map(s => s.name) ??
     [];
+
+  // alkem-io/server#6614 §C — capture the L1's own license and policy, and prove they exist
+  // (same POA token the later negative uses) BEFORE the promotion replaces them.
+  poa = await operationsAdminToken();
+  const oldLicense = await readSpaceLicense(baseScenario.subspace.id);
+  oldLicenseId = oldLicense.id;
+  oldLicensePolicies = ids({
+    'replaced subspace license policy': oldLicense.authorization?.id,
+  });
+  await expectPoliciesPresent(poa, oldLicensePolicies);
 
   // Execute conversion
   convertResult = await convertSpaceL1ToSpaceL0(baseScenario.subspace.id);
@@ -293,6 +336,32 @@ describe('Convert L1 to L0 - basic', () => {
     expect(subscriptionNames).not.toContain(
       LicensingCredentialBasedCredentialType.SpaceLicensePlus
     );
+  });
+
+  // alkem-io/server#6614 §C (fix #6637) — the promotion deletes the replaced license and its
+  // policy in the save's transaction; before the fix both were orphaned. Red without #6637.
+  test('replaced subspace license and its policy are deleted (server#6614)', async () => {
+    const newLicense = await readSpaceLicense(baseScenario.subspace.id);
+    const newPolicies = ids({
+      'fresh license policy': newLicense.authorization?.id,
+    });
+
+    // The fresh-license behaviour is retained, and its policy is the positive control.
+    expect(newLicense.id).not.toBe(oldLicenseId);
+    await expectPoliciesPresent(poa, newPolicies);
+    const fresh = await rawRead<{ lookup: { license: { id: string } } }>(
+      poa,
+      'query($id: UUID!) { lookup { license(ID: $id) { id } } }',
+      { id: newLicense.id }
+    );
+    expect(fresh.lookup.license.id).toBe(newLicense.id);
+
+    await expectPoliciesGone(
+      poa,
+      oldLicensePolicies,
+      'replaced subspace license'
+    );
+    await expectLookupGone(poa, 'license', oldLicenseId);
   });
 
   test('calendar events are preserved after conversion', async () => {

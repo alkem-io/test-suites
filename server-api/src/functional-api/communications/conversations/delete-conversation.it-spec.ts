@@ -40,8 +40,8 @@ beforeAll(async () => {
 
 describe('Delete Conversation', () => {
   describe('Implicit deletion — all members leave', () => {
-    // skipped until bug is fixed: BUG: [Conversation] When user try to leave group chat, the conversation remains in the list#9543
-    test.skip('should remove GROUP conversation when all members leave', async () => {
+    // Re-enabled 2026-10-16 (server#6329 U-5): green against the test environment after server#6573 + matrix-adapter#82 deployed there on the 2026-10-16 nightly; red on a local stack whose Synapse cannot reach the adapter (conversations-test-plan.md, 'How to run'). The original product skip, client-web#9543, is re-checked by this test.
+    test('should remove GROUP conversation when all members leave', async () => {
       // Arrange — create a group with 2 members (creator + 1)
       const memberActorId = TestUserManager.users.spaceMember.agentId;
       const res = await createConversation(
@@ -81,8 +81,8 @@ describe('Delete Conversation', () => {
       );
     });
 
-    // skip until this issue is fixed: BUG: [Conversation] When user try to leave group chat, the conversation remains in the list#9543
-    test.skip('should remove GROUP conversation from remaining member after last member leaves', async () => {
+    // Re-enabled 2026-10-16 (server#6329 U-5): green against the test environment after server#6573 + matrix-adapter#82 deployed there on the 2026-10-16 nightly; red on a local stack whose Synapse cannot reach the adapter (conversations-test-plan.md, 'How to run'). The original product skip, client-web#9543, is re-checked by this test.
+    test('should remove GROUP conversation from remaining member after last member leaves', async () => {
       // Arrange — create group with creator + 2 members
       const member1ActorId = TestUserManager.users.spaceMember.agentId;
       const member2ActorId = TestUserManager.users.spaceAdmin.agentId;

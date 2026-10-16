@@ -52,6 +52,7 @@
     "test:activity-logs": "vitest run --project activity-logs --fileParallelism=false",
     "test:contributormanagement": "vitest run --project contributor-management --fileParallelism=false",
     "test:integration": "vitest run --project integration --fileParallelism=false",
+    "test:orphan-free-deletion": "vitest run --project orphan-free-deletion --fileParallelism=false",
     "test:storage": "vitest run --project storage --fileParallelism=false",
     "test:preferences": "vitest run --project preferences --poolOptions.threads.maxThreads=3",
     "test:pagination": "vitest run --project pagination --fileParallelism=false",

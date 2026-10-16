@@ -1456,6 +1456,21 @@ export const CAPABILITIES: readonly Capability[] = [
     negative: { status: 'automated' },
   },
   {
+    id: 'A11.adminRepairTemplateFiles',
+    group: 'A11',
+    surface: 'adminRepairTemplateFiles',
+    kind: 'mutation',
+    owners: ['PLATFORM_OPERATIONS_ADMIN'],
+    acceptedExtra: [],
+    requirement: { basis: 'family' },
+    verifies: {
+      kind: 'executed',
+      oracle: 'an empty template list returns the all-zero dry-run report',
+    },
+    positive: { status: 'automated' },
+    negative: { status: 'automated' },
+  },
+  {
     id: 'A11.refreshAllBodiesOfKnowledge',
     group: 'A11',
     surface: 'refreshAllBodiesOfKnowledge',

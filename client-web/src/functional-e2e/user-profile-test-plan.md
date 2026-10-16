@@ -1599,8 +1599,115 @@ A test passes when:
 
 ---
 
+<!-- ===================== BEGIN client-web#10179 — public profile resource tabs ===================== -->
+
+## Test plan — Profile resource tabs (client-web#10179)
+
+> **Status:** Approved · **Depth:** Light — set explicitly by the requester, and it matches the evidence: one repo, no elevated-risk trigger, an existing surface reshaped rather than a new one · **Story:** [alkem-io/client-web#10179](https://github.com/alkem-io/client-web/issues/10179) · **Diff:** client-web#10424 @ `b1311f68` (develop, merged 2026-10-14)
+
+This section covers the **public** profile pages (`/user/<nameID>` and `/organization/<nameID>`), not the My Account settings tabs described above. #10424 changed the shared `ProfileResourceTabStrip`. The tab order is now Leading, Member of, Other Resources. Leading is hidden when the profile leads no Space, and the page then lands on Member of. "Resources Hosted" is renamed "Other Resources" and now shows VCs, Template Packs and Custom Homepages but no Spaces; it is hidden when empty. Member of always shows. Before this work, no system test checked the tab set, its order or the landing tab on either page. One new spec with 6 cases covers both profile types. One existing anonymous-visitor case failed on a stack with #10424 and is skipped pending Q1.
+
+Tab labels differ by profile type (bundle `crd-profilePages`, en). The tablist is named `Resource sections`.
+
+|              | Leading       | Member of         | Other Resources   |
+| ------------ | ------------- | ----------------- | ----------------- |
+| User         | `Leading`     | `Member Of`       | `Other Resources` |
+| Organisation | `Lead Spaces` | `All Memberships` | `Other Resources` |
+
+### How to run
+
+```bash
+cd client-web
+pnpm exec playwright test src/functional-e2e/user-profile/profile-resource-tabs.spec.ts
+pnpm run test:nightly --project="User Profile"
+```
+
+Needs `MAIL_SLURPER_ENDPOINT` (throwaway users are verified by mail) and the harness password. No `@local-stack` cases. The **User Profile** nightly suite lists its files explicitly, not by glob, so the new spec runs nightly only after its path is added to `config/playwright.config.nightly.ts`.
+
+### Risk
+
+| #   | Risk (in user terms)                                                                                                                                                                                                                                                                          | Likelihood                                        | Impact | Level           | Drives                                   |
+| --- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------- | ------ | --------------- | ---------------------------------------- |
+| R1  | A visitor to a profile that leads Spaces lands on, or first sees, memberships or resources instead of leadership (wrong order or landing tab)                                                                                                                                                 | Low — literal arrays, but duplicated in two pages | Medium | Medium          | PT-1, PT-4                               |
+| R2  | A tab is shown empty, or hidden while it has content. The two visibility conditions are inline in each page, untested, and could be swapped; `hasOtherResources` could miss a resource kind, e.g. a VC-only owner loses the tab                                                               | Medium                                            | Medium | **Medium-High** | PT-2, PT-3, PT-5, PT-6                   |
+| R3  | Member of disappears when empty, leaving a profile with a blank right column                                                                                                                                                                                                                  | Low                                               | Medium | Medium          | PT-2, PT-5                               |
+| R4  | The old "Resources Hosted" copy survives, or a locale shows a raw key                                                                                                                                                                                                                         | Low — all 6 locales checked by hand               | Low    | Low             | PT-1, PT-4 (en only)                     |
+| R5  | Spaces leak into Other Resources, or a hosted Space the org does not lead is shown there                                                                                                                                                                                                      | Low — field removed from the type                 | Medium | Low-Medium      | PT-4, PT-6                               |
+| R6  | An **anonymous** visitor sees no leadership on an organisation that leads Spaces, and lands on "Not a member of any Space or Subspace yet." The client skips `rolesOrganization` without `READ_USERS`. This predates the PR; #10424 changes it from an empty Lead Spaces tab to no tab at all | High (deterministic)                              | Medium | **Medium-High** | product question Q1; existing case below |
+| R7  | The right column now waits for **both** queries; if the memberships query fails, the tab strip never renders (skeleton forever, no error state)                                                                                                                                               | Low                                               | Medium | Low-Medium      | not automated (gap)                      |
+
+Elevated-risk triggers present: none. ☐ migration ☐ breaking contract (GraphQL query unchanged) ☐ authorization/visibility (viewer gating predates the PR and is unchanged) ☐ cross-repo ☐ infra ☐ data-destructive ☐ performance-sensitive.
+
+### Existing coverage before this work
+
+Search terms: `Resources Hosted|resourcesHosted|Other Resources|Resource sections|All Memberships|Lead Spaces|Member Of|Leading`, `getByRole('tab'`, `goto(.../user/|/organization/)`, across `client-web/src`, `client-web/tests`, `server-api/src` and `lib/src`. Every candidate was opened.
+
+- `user-profile/*.spec.ts` (all 6): **settings** pages only (`/settings/profile|account|security`). They do not touch the public tab strip. Confirmed unaffected.
+- `memberships/view-organization-profile-public.spec.ts` › _Authenticated Non-Admin_, and `view-organization-profile-as-admin.spec.ts`: the `Lead Spaces` tab is present, and after clicking it the host org's Space is listed. Org leadership is **covered**. Unaffected: the scenario org is host and therefore Lead of a PUBLIC Space.
+- `memberships/view-own-user-profile-public-information.spec.ts`: after clicking the `Member Of` tab, the persona's Space is listed. User membership is **covered**. Unaffected.
+- `memberships/view-another-user-profile-public-view.spec.ts`: already `test.skip` (pending a product decision), so it is unaffected.
+- `organization-space-membership/us1-membership-tab.spec.ts`: this is the **settings** tablist. It is unaffected, and its `allTextContents` order check is the pattern reused here.
+- client-web unit tests (at `b1311f68`): `useResourceTabs.test.ts` covers the landing tab, a kept pick, the fallback when a picked tab disappears, and picks not carrying over to another profile. `publicProfileMapper.test.ts` › `mapAccountHostedResources` covers the 3 buckets (VC, pack, hub). **No** unit test covers the tab list each page builds.
+- **Proven absent:** any system assertion on tab order, landing tab, a hidden tab, the "Other Resources" copy, or Other Resources content on either page.
+
+**Reuse:** 5 of 13 scenarios need no new test (S7, S8 at unit level; S9, S11, S12 in E2E). 2 more (S10, S13) are not automated (see gaps). 6 need new cases. 1 existing test needs updating.
+
+**Existing test requiring update.** `memberships/view-organization-profile-public.spec.ts` › _View Organization Profile - Unauthenticated_, step 5: `getByRole('tab', { name: /Lead Spaces/i })` visible for an anonymous visitor. After #10424 that tab is not rendered for anonymous visitors (R6), so this case is **predicted red**. Observed red on 2026-10-15 against a stack at `b1311f68` (`getByRole('tab', { name: /Lead Spaces/i })` not found), and now `test.skip` with the reason in the test (assertion unchanged) until Q1 is answered. Do not weaken it. Once Q1 is answered, either (a) treat it as a defect: `test.skip('anonymous visitor sees the Spaces an organisation leads (alkem-io/client-web#NNN)')` with today's behaviour in a comment (`plans/memberships-test-plan.md` 4.2 already expects "Spaces they lead"), or (b) re-align it to the ruled behaviour.
+
+### Scenario → test mapping
+
+`PT-n` = `user-profile/profile-resource-tabs.spec.ts`. Every PT case asserts the **exact** tab list in DOM order and `aria-selected` on the landing tab. Exact list equality also proves "Resources Hosted" is absent.
+
+| Scenario                                                                                                                                                | Covers                 | Automated by                                                                                                                   | Layer |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------ | ----- |
+| S1 User: leads + has resources → `Leading · Member Of · Other Resources`, lands on Leading, Member Of empty but present                                 | AC1, AC3, AC4, AC6     | `user-profile/profile-resource-tabs.spec.ts` › _PT-1 — a user who leads and owns a pack sees Leading, Member Of, Other Resources; lands on Leading_ (**built, skipped**, see Q4 and gaps) | E2E   |
+| S2 User: leads nothing, no resources → only `Member Of`, selected, "No memberships yet."                                                                | AC2, AC5, AC6          | `user-profile/profile-resource-tabs.spec.ts` › _PT-2 — a user who leads nothing and owns nothing sees only Member Of, selected and empty_ (live green for AC2/AC6; its AC5 half — Other Resources absent — **cannot fail for this viewer while Q4 stands**: it stayed green with a Template Pack seeded on U3, 2026-10-15) | E2E   |
+| S3 User: leads (a subspace), no resources → `Leading · Member Of`, no Other Resources                                                                   | AC1, AC5; R2           | `user-profile/profile-resource-tabs.spec.ts` › _PT-3 — a user who leads only a subspace sees Leading and Member Of; the L1 under Leading, the L0 under Member Of_ (live green) | E2E   |
+| S4 Org: leads + pack + hub → `Lead Spaces · All Memberships · Other Resources`; Other Resources has Template Packs + Custom Homepages and **no** Spaces | AC1, AC3, AC4, AC6; R5 | `user-profile/profile-resource-tabs.spec.ts` › _PT-4 — an organisation that leads and owns a pack and a hub sees three tabs; Other Resources holds no Spaces_ (**built, skipped**, see Q4 and gaps) | E2E   |
+| S5 Org: fresh, nothing → only `All Memberships`, selected, empty state                                                                                  | AC2, AC5, AC6          | `user-profile/profile-resource-tabs.spec.ts` › _PT-5 — an organisation with nothing sees only All Memberships, selected and empty_ (live green for AC2/AC6; its AC5 half is vacuous for this viewer while Q4 stands, as for PT-2) | E2E   |
+| S6 Org: member not lead + VC → `All Memberships · Other Resources`, lands on All Memberships; the hosted Space is not in Other Resources                | AC2, AC4; R2, R5       | `user-profile/profile-resource-tabs.spec.ts` › _PT-6 — an organisation that is a member, not a lead, and owns a VC lands on All Memberships; Other Resources shows the VC and not the hosted Space_ (**built, skipped**, see Q4 and gaps) | E2E   |
+| S7 Landing tab = first visible; pick kept / falls back / not carried across profiles                                                                    | AC2                    | `useResourceTabs.test.ts` (client-web)                                                                                         | Unit  |
+| S8 Other Resources mapper: VC, pack, hub buckets                                                                                                        | AC4                    | `publicProfileMapper.test.ts` › `mapAccountHostedResources` (client-web)                                                       | Unit  |
+| S9 Signed-in visitor sees the Spaces an org leads                                                                                                       | AC1                    | `memberships/view-organization-profile-public.spec.ts` › Authenticated Non-Admin; `view-organization-profile-as-admin.spec.ts` | E2E   |
+| S10 Rename in all 6 locales                                                                                                                             | AC3                    | not automated here — checked by hand at `b1311f68`, see gaps                                                                   | —     |
+| S11 User Member Of lists the user's Space                                                                                                               | AC6                    | `memberships/view-own-user-profile-public-information.spec.ts`                                                                 | E2E   |
+| S12 Org settings tablist unaffected                                                                                                                     | —                      | `organization-space-membership/us1-membership-tab.spec.ts` › US1-AS1                                                           | E2E   |
+| S13 Anonymous visitor on an org that leads Spaces                                                                                                       | AC1 (visitor story)    | see Not covered (Q1)                                                                                                           | —     |
+
+### Regression guards
+
+- **Hosted Spaces in Other Resources** (PT-4, PT-6). #10424 removed the `hostedSpaces` mapping and the org-only inactive/archived filter. Both cases seed an org whose **account hosts** a Space and assert there is no `Spaces` sub-section heading and no Space name while Other Resources is selected. Each assertion is paired with a positive control (the resource heading and name).
+
+### Not covered — known gaps
+
+| Scenario                                                                                                                          | Why not automated                                                                                                                                                                                               | Where it belongs                                                                                                             |
+| --------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| S13 / R6 anonymous visitor sees an org's leadership                                                                               | **Deferred: needs a product ruling (Q1, filed as alkem-io/client-web#10433).** Automating today would pin behaviour that may be a defect. The story's second user story is a visitor story, and the memberships plan 4.2 expects "Spaces they lead" | Product decision first. Then either a skipped expected-behaviour case plus an issue, or re-align the existing anonymous case |
+| S1 / S4 / S6 Other Resources for an ordinary signed-in visitor (PT-1, PT-4, PT-6 built but skipped) | **Product defect, found while implementing (Q4), filed as alkem-io/server#6670.** The client learns the account id from `User.account` / `Organization.account`; the server resolves both to null unless the viewer is the user, holds `READ_USER_PII`, or holds UPDATE on the organisation. So `non.space` never sees the Other Resources tab. Same fixtures and assertions pass with `admin` as the viewer (6/6) | Fix in client/server, then drop the three `test.skip(true, ...)` calls. Or the QA lead rules the viewer for these cases (an account-privileged viewer) |
+| S10 locale copy (bg/de/es/fr/nl)                                                                                                  | Standing gap: locale assertions have no home here (`docs/qa-knowledge/harness.md`). Checked by hand: all 6 `profilePages.*.json` have `otherResources`, and none has `resourcesHosted`                          | client-web unit / i18n parity check                                                                                          |
+| R7 memberships query fails → column never renders                                                                                 | Not in the ACs. It needs request interception and would pin a defect. Found by reading the code                                                                                                                 | Raise with the client team (Q3); a `page.route` abort case if they accept it as a defect                                     |
+| Mobile horizontal scroll, keyboard arrows over a 1- or 3-tab strip; tablist has no `tabpanel` / `aria-controls` (predates the PR) | No accessibility harness (standing gap). The component's keyboard code is unchanged                                                                                                                             | Manual: release-checklist row proposed below                                                                                 |
+| Perceived latency (column waits for the slower of 2 queries)                                                                      | No load/latency harness (standing gap). Low risk: no new query                                                                                                                                                  | Post-deploy observation                                                                                                      |
+
+Proposed `release-verification-checklist.md` row: _Profile tabs (#10179): on one user and one org profile, tab order Leading → Member of → Other Resources; keyboard ←/→ moves between the visible tabs; at 390 px the strip scrolls and the active tab is in view; nl shows "Overige bronnen"._
+
+**Open questions.**
+
+- **Q1:** Filed as alkem-io/client-web#10433 (2026-10-16). Should an anonymous visitor see the Spaces an organisation leads? The story's visitor user story and the memberships plan 4.2 suggest yes. The client skips `rolesOrganization` without `READ_USERS`.
+- **Q2:** The user page counts Space **Admin** as Leading (`[Lead, Admin]`); the org page counts Lead only. This predates the PR. Is it intended?
+- **Q4:** Filed as alkem-io/server#6670 (2026-10-16). Should an ordinary signed-in visitor see Other Resources (VCs, Template Packs, Custom Homepages) on someone else's profile? Today they cannot: `User.account` and `Organization.account` are null for them (server `user.resolver.fields.ts`, `organization.resolver.fields.ts`), the client skips the account-resources query, and the tab is hidden. Found 2026-10-15 while building PT-1/PT-4/PT-6; the same data path fed "Resources Hosted" before #10424.
+- **Q3:** If the memberships query fails, the right column, including the tab strip, stays a skeleton. Is that a defect?
+
+**What is proven, and what is not.** Once PT-1…PT-6 are built and green, the following is proven end to end for a signed-in visitor on both profile types: the order, Leading hidden and landing on Member of, Other Resources hidden when empty, Member of present when empty, the en rename, and the absence of Spaces in Other Resources. All three resource kinds are rendered across the cases: pack and hub in PT-4, VC in PT-6, pack in PT-1. **Update 2026-10-15:** only PT-2, PT-3 and PT-5 run live (hidden tabs, landing tab, Member Of always present, a subspace lead counted as Leading). PT-1, PT-4 and PT-6, which carry Leading-first order with three tabs and the Other Resources content, are skipped on Q4, so "Leading first" is proven live only for the two-tab case (PT-3), and the Other Resources content and the hosted-Space regression guard are not proven by a running test. **Not proven:** the copy in 5 locales (checked by hand only), and above all what an **anonymous** visitor sees on an organisation. For anonymous visitors, AC1 ("Show Leading first") is not delivered today, and no test can say whether that is correct until Q1 is answered.
+
+<!-- ====================== END client-web#10179 ====================== -->
+
+---
+
 ## Revision History
 
-| Version | Date       | Changes                   | Author                  |
-| ------- | ---------- | ------------------------- | ----------------------- |
-| 1.0     | 2025-01-15 | Initial test plan created | Test Planning Assistant |
+| Version | Date       | Changes                                                                  | Author                  |
+| ------- | ---------- | ------------------------------------------------------------------------ | ----------------------- |
+| 1.0     | 2025-01-15 | Initial test plan created                                                | Test Planning Assistant |
+| 1.1     | 2026-10-15 | Added the client-web#10179 section (public profile resource tabs, Draft) | qa-test-designer        |
+| 1.2     | 2026-10-15 | client-web#10179: PT-1..PT-6 built (3 live, 3 skipped on Q4); mapping, gaps and Q4 updated | qa-test-implementer     |

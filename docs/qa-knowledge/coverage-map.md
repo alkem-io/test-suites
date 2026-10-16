@@ -114,6 +114,97 @@ _Searched 2026-09-28, develop @ `ea5eebe9`, with the open PRs test-suites#600/#6
 
 **Search again with:** `git grep -n -E "forum|discussionCategor|ForumDiscussionCategory|latestReleaseDiscussion|ReconcileForumHierarchy|SyncSpaceHierarchy|platform_audit" <ref> -- server-api/src client-web/src lib/src ':!lib/src/core/generated'`.
 
+## Activity feed and activity logs (server#6640 / #6643, server#6561)
+
+_Searched 2026-10-15, test-suites `origin/develop` @ `663c61d9`, server `origin/develop` @ `a9ba1ea50`, client-web `origin/develop` @ `b1311f688`. Plan: `server-api/src/functional-api/activity-logs/activity-logs-test-plan.md` (one section per story)._
+
+| Area | Status | Evidence |
+|---|---|---|
+| `activityFeed` / `activityFeedGrouped` (platform-level feeds), any actor | **Proven absent** before 2026-10-15: 0 hits in `server-api/src`, `client-web/src` and `lib/src` (generated excluded). There is no `.graphql` document and no wrapper. server#6640 AF-01 planned. server#6561 AF-11/AF-12 planned | — |
+| `activityLogOnCollaboration` per collaboration: entry counts, MEMBER_JOINED, private/public read matrix (NON_SPACE_MEMBER → `Authorization`) | Full (API). The CALLOUT_PUBLISHED/POST/WHITEBOARD cases are `test.skip` "to be updated" in all three level specs | `activity-logs/{space,challenge,opportunity}-activity-logs.it-spec.ts` |
+| Activity follows callout transfer / L1→L0 promotion / move into a private subspace | Full (API) | `activity-logs/activity-log-on-transfer-conversion.it-spec.ts`. Its `generateCalloutActivity` (publish a callout, add a post) is the proven way to seed visible, uniquely named activity |
+| Empty-scope guard in `ActivityService.getGroupedActivity` | Unit only (mocks) | server `activity.service.spec.ts` › `should return no activity without querying when the collaboration scope is empty`. `activity.feed.service.spec.ts` mocks `ActivityService` and passes `[]` through, so it is **not** a boundary test |
+| Other `ActivityService` readers on an empty scope (error-guessed for the #6640 pattern) | Not vulnerable to that pattern. `getActivityForCollaborations`, `getPaginatedActivity` and `getLatestActivitiesPerSpaceMembership` use ORM `In(...)` (empty → `0=1`). `getMySpacesActivity` is scoped by `triggeredBy` = self. Only `getGroupedActivity` builds raw SQL. None has a system test for the empty case | server `src/platform/activity/activity.service.ts` |
+| `excludeMyActivity` / `myActivity` on `activityFeed` (and inherited by `activityFeedGrouped`) | Unit only, against a mocked query builder and mocked SQL: server `activity.feed.service.spec.ts`, `activity.service.spec.ts` (PR #6639). No system test before 2026-10-15; AF-11 (exclusion + full pages + cursor walk) and AF-12 (the `myActivity` × `excludeMyActivity` table) are planned | server unit specs |
+| Relay paginator `getRelayStylePaginationResults` (all `first`/`after` paginated queries) under a narrowing predicate, and on an **empty** result | Unit only, fully mocked (`relay.style.pagination.fn.spec.ts`). The empty-page `getPageInfo` path has no real-DB test anywhere; AF-12 D5 would be the first | server `src/core/pagination/` |
+| client-web dashboard consumer of `activityFeed` (`LatestContributions`: spaces feed with `excludeMyActivity`, "My activity" with `myActivity`) | Unit full: client-web `DashboardWithMemberships.activityView.test.tsx` (initial query, `fetchMore`, My activity unchanged). E2E touches the surface only: `home-menus.spec.ts` opens the dialogs, and `classifications-templates.spec.ts` › TL-07 asserts a page-wide absence | client-web `src/main/crdPages/dashboard/` |
+| client-web consumer of `activityFeedGrouped` | The `LatestContributionsGrouped.graphql` document exists, but nothing calls its generated hook on develop. Exposure is via the API only | client-web `src/main/topLevelPages/myDashboard/latestContributions/` |
+
+**Search again with:** `git grep -n -E "activityFeed|ActivityFeed(Grouped)?QueryArgs|activityLogOnCollaboration|getGroupedActivity|LatestContributions|excludeMyActivity|myActivity" <ref> -- server-api/src client-web/src lib/src ':!lib/src/core/generated'`.
+
+## Template file repair — `adminRepairTemplateFiles` (server#6596 / server#6656)
+
+_Searched 2026-10-15, test-suites `origin/develop` @ `663c61d9` + working tree, server `origin/develop` @ `a9ba1ea50` (contains #6656 merge `8e1d7c35`). Plan: `server-api/src/functional-api/templates/templates-test-plan.md` (Draft; scope = gate + dry run only, by user ruling)._
+
+| Area | Status | Evidence |
+|---|---|---|
+| Any test-suites reference to the mutation or its types | **None — proven absent.** Not in the lib generated schema either | `rg -n 'adminRepairTemplateFiles\|AdminTemplateFileRepair\|TemplateFileRepair'` over `server-api/src client-web/src lib/src` |
+| Gate: `PLATFORM_OPERATIONS_ADMIN` only (A11), role matrix | **None** — missing from `platform-roles/capabilities.data.ts` (the server census lists it) | planned PR-1 |
+| Gate for anonymous / registered-without-role / template-owning space admin | **None** | planned TF-1 |
+| Refused call never reaches the service; audit per run | Unit (mocked) | server `admin.template.file.repair.resolver.mutations.spec.ts` |
+| Dry run copies nothing; empty list = none vs omitted = all; scanned count; missing files; owner credentials; edit race | Unit, **mocked SQL** | server `admin.template.file.repair.service.spec.ts` |
+| Dry run on a real DB: shape, default, idempotency, template text unchanged | **None** | planned TF-2 (seeds a foreign reference via a verbatim `updatePostTemplate` description) |
+| Real run (copy, ownerCanRead=false left as written, whiteboard/memo/office slots) | Unit only; **out of scope** for the plan | service spec |
+| `createSpace` from a template whose whiteboard references an unreadable file (the story's user-facing bug) | **None** in test-suites (the issue says so itself); not assessed in this plan | — |
+
+**Search again with:** `git grep -n -E "adminRepairTemplateFiles|AdminTemplateFileRepair|spaceTemplateID|rehomeSnapshotAssets" <ref> -- server-api/src client-web/src lib/src ':!lib/src/core/generated'`.
+
+## Space membership control — Apply / Join / pending / invitation button (client-web#10401 / #10419)
+
+_Searched 2026-10-15, test-suites `origin/develop` @ `663c61d9` (client-web, server-api, lib), client-web `develop` @ `7a37d4c4b` (contains `f7f44c43`). Plan: the #10419 section appended to `client-web/src/functional-e2e/applications/test-plan-applications-v2.md` (Draft)._
+
+The control is one CRD component, `SpaceAboutApplyButton`, rendered on four surfaces: L0 Space sidebar (`SpaceTabSidebarConnector`, widget `applicationButton`), Space About (`CrdSpaceAbout`), subspace banner above the flow tabs (`SpaceApplyButtonConnector`), and Subspace About (`CrdSubspaceAbout`). The subspace sidebar has **no** apply widget.
+
+| Area | Status | Evidence |
+|---|---|---|
+| An **invitation-only** (`CommunityMembershipPolicy.Invitations`) fixture anywhere in test-suites | **None, proven absent** in all three packages | `rg -n "CommunityMembershipPolicy\.(Invitations\|Open)"`. Only `Open` and `Applications` occur |
+| Server privilege matrix under the INVITATIONS policy (no APPLY/JOIN for a non-member) | **None.** `roleset/user/user.authorization.it-spec.ts` only uses APPLICATIONS | — |
+| "Apply" shown to a signed-in non-member, applications enabled | Full on the L0 sidebar, Space About and Subspace About. **None on the subspace banner** | `applications/space-applications-level-0.spec.ts › 1.0`, `› 1.1`; `explore-platform/explore-platform-authenticated.spec.ts › 2`; `applications/space-applications-level-1*.spec.ts › 1.2` |
+| Subspace banner apply control (any state) | **None.** `public-space/non-member-subspace-navigation.spec.ts › 5.4` checks it inside an `if` and can never fail | — |
+| "Application pending" label renders | **None** before #10419's plan. The three applications `beforeEach` blocks accept `/^(Apply\|Application pending)$/` and assert neither | planned IO-4 / IO-5 |
+| "Sign in to apply" for anonymous visitors | Full (Space About, applications-policy spaces) | `explore-platform/explore-platform-anonymous.spec.ts`; `public-space/anonymous-user-access-public-space.spec.ts` |
+| "Accept invitation" on the space control for a **user** invitee | **None at E2E.** The only "Accept invitation" hit is the organization Invitations tab (`organization-space-invitations/us3-org-accepts-declines.spec.ts`) | client-web unit only |
+| Hide predicate decision table (`isApplyUnavailable`) and pending predicate (`isApplicationPending`, `{new, approving}`) | Unit | client-web `src/main/crdPages/space/isApplyUnavailable.test.ts`, `src/domain/community/applicationButton/isApplicationPending.test.ts`. No connector or component test exists |
+| `approving` / `archived` / `rejected` application states in this UI | **Unreachable.** The button reads `me.communityApplications(states: ["new"])` (`UserPendingMemberships.graphql`); `approving` is transient inside the approval transaction | stays unit |
+
+**Search again with:** `git grep -n -E "Apply not available|Application pending|Accept invitation|Sign in to apply|CommunityMembershipPolicy\.Invitations|applyForEntryRole" <ref> -- client-web/src server-api/src lib/src ':!lib/src/core/generated'`.
+
+## Public profile resource tabs — user and organisation (client-web#10179 / #10424)
+
+_Searched 2026-10-15, test-suites local `develop` @ `b451c329` (no relevant file differs from `origin/develop` @ `663c61d9`): client-web, server-api, lib, `client-web/tests`. client-web read at merge `b1311f68` (= its `origin/develop`; the sibling clone's local `develop` was behind it). Plan: the #10179 section of `client-web/src/functional-e2e/user-profile-test-plan.md` (Draft)._
+
+Both `/user/<nameID>` and `/organization/<nameID>` render the shared `ProfileResourceTabStrip` (tablist `Resource sections`). Each page builds its own tab list inline: Leading if the profile leads a Space, then Member of (always), then Other Resources if the account owns a VC, pack or hub. The user page counts **Lead or Admin** as leading; the org page counts Lead only.
+
+| Area | Status | Evidence |
+|---|---|---|
+| Tab order, landing tab, hidden-when-empty, "Other Resources" copy, Other Resources content, on either profile type | **None, proven absent** before #10179's plan | planned PT-1…PT-6 in `user-profile/profile-resource-tabs.spec.ts` |
+| Signed-in visitor sees the Spaces an org leads (`Lead Spaces` tab → Space listed) | Full | `memberships/view-organization-profile-public.spec.ts` › Authenticated Non-Admin; `memberships/view-organization-profile-as-admin.spec.ts` |
+| Anonymous visitor on an org profile | **Asserts the `Lead Spaces` tab** — predicted red after #10424 (anonymous never loads org roles, so the tab is hidden) | `view-organization-profile-public.spec.ts` › Unauthenticated, step 5 |
+| User's own profile, `Member Of` tab lists the Space | Full | `memberships/view-own-user-profile-public-information.spec.ts` |
+| Another user's profile memberships | Skipped (pending a product decision) | `memberships/view-another-user-profile-public-view.spec.ts` |
+| `user-profile/*.spec.ts` (6 files) | **Settings pages only**, not the public profile | — |
+| Landing tab / kept pick / not carried across profiles; Other Resources mapper (VC, pack, hub) | Unit (client-web) | `useResourceTabs.test.ts`; `publicProfileMapper.test.ts › mapAccountHostedResources` |
+| Six-locale `otherResources` key | Checked by hand at `b1311f68`, no test | standing locale gap |
+
+**Search again with:** `rg -n -i "Resource sections|Lead Spaces|All Memberships|Member Of|Other Resources|Resources Hosted" client-web/src client-web/tests`, then open every `memberships/view-*-profile-*.spec.ts`.
+
+## Group conversations — member removal, leave, last-member auto-delete (server#6329 / #6573, matrix-adapter#82)
+
+_Searched 2026-10-15, test-suites `origin/develop` @ `663c61d9`, server `origin/develop` @ `a9ba1ea50`, matrix-adapter `origin/develop` @ `97d58a8`. Plan: `server-api/src/functional-api/communications/conversations/conversations-test-plan.md`._
+
+| Area | Status | Evidence |
+|---|---|---|
+| Create / update / query / send in DIRECT and GROUP conversations; non-member remove/update refused; removal from a non-existent conversation | Full (API), active | `communications/conversations/conversations.it-spec.ts` |
+| Remove a member, leave, last-member auto-delete (lists + `MEMBER_REMOVED` / `CONVERSATION_DELETED` events) | **Skipped**: 8 tests across `conversations`, `conversation-subscriptions` and `delete-conversation`, all `test.skip` on client-web#9543 (open). The subscription ones used `delay(3000)` and at-least-once `find`. Plan U-1…U-5 re-enables and re-aligns them | same directory |
+| Removed member's Alkemio privileges (read, API send, re-add self, update, remove others) | **Proven absent** before 2026-10-15. Plan N-2 | — |
+| Matrix side of removal (membership `leave` by self, send `M_FORBIDDEN`, history cut at the leave) | **Proven absent**; local stack + appservice token only. Plan M-1…M-3 | — |
+| Policy reset drops a removed member's READ; resets are idempotent | Unit | server `conversation.service.authorization.spec.ts` › A1 |
+| `handleConversationMemberLeft` re-applies the policy before publishing | **Not unit-pinned**. Only plan N-2 guards the wiring | — |
+| Late leave after a local removal is a no-op; a leave for a deleted room is ignored; local removal always completes | Unit | server `message.inbox.service.spec.ts`, `conversation.service.spec.ts`; adapter `TestKickUser_Room_*`, `TestHandleBatchRemoveMember_RemovalRejected` |
+| Removal in the browser UI (chat list, timeline, composer) | **None**. The net audit proposes `NEW-F-group-membership-edit` | — |
+
+**Search again with:** `git grep -n -E "removeConversationMember|leaveConversation|MEMBER_REMOVED|CONVERSATION_DELETED|conversationEvents|memberRemoved|conversation\(ID|room\(ID" <ref> -- server-api/src client-web/src lib/src ':!lib/src/core/generated'`.
+
 ## How to search this area again
 
 `rg -n 'innovationFlow|minimumNumberOfStates|maximumNumberOfStates|L0_FIXED_INNOVATION|L0_MIN_INNOVATION' server-api/src/functional-api` — the conversion/callout-transfer/templates directories are the load-bearing ones; also check the server repo's own `*.spec.ts` unit suites before proposing a new system-level case, several risk-relevant assertions live there only.
@@ -162,3 +253,25 @@ are load-bearing:
 |---|---|---|
 | `client-web` repo's own `e2e/specs/*.e2e.spec.ts` tagged **`@forge-acceptance`** | Absent from `ci-test.yml`, **never executed**, and driven by hand-seeded `E2E_*` env fixtures no seeder produces. Read them for locator and copy evidence — they are written from the real DOM — but never cite them as proof | 2026-09-03 · 055 (`sidebarSearchWidget`, `sidebarSearchDefaults`) |
 | A migration spec under `src/migrations/__tests__/` | Asserts the text of its own SQL | 2026-09-02 · 10178, reconfirmed 055 |
+| client-web `messaging-notifications/us2-group-message-notifications.spec.ts` › US2-AS4, and server-api `notifications/messaging/conversation-messages-negative.it-spec.ts` › US2-AS4 | They prove that a removed member stops being **notified**, not that their **access** is revoked. The client spec says so in its own scope warning | 2026-10-15 · server#6329 |
+
+## Orphan-free deletion: owned records and policies after a delete (server#6614 / #6637)
+
+_Searched 2026-10-16, test-suites `develop` @ `b451c329`, server `origin/develop` @ `1691e98e9` (contains the #6637 merge `08f088eaa`). Plan: `server-api/src/functional-api/orphan-free-deletion/orphan-free-deletion-test-plan.md` (Approved), plus the server#6614 addendum (Approved 2026-10-16; CV-1 built) in `journey/conversion/conversion-test-plan.md`._
+
+| Area | Status | Evidence |
+|---|---|---|
+| Any spec reading `lookup.authorizationPolicy` / `authorizationPrivilegesForUser` | **None, proven absent** | `rg -n 'authorizationPolicy\(\|authorizationPrivilegesForUser'` over `server-api/src client-web/src lib/src`. Only plan prose and `platform-roles/capabilities.data.ts` reset rows match |
+| Any assertion that an owned record or policy is gone after a delete (any entity) | **None, proven absent** | same search plus `lookup { profile(` / `storageBucket(` / `license(`. Deletion specs assert only list membership |
+| Callout delete succeeds; permission matrix L0/L1/L2 | Full | `callout/callouts.it-spec.ts` › `should delete callout…`, 3× `DDT user privileges to delete callout` |
+| Reactions removed with the callout | Full | `callout/reactions/callout-reactions.it-spec.ts` › `US4-AS3` |
+| Callout classification + tagset policies gone after delete (plain, Tasks board) | **Full** → `orphan-free-deletion/callout-delete-owned-records.it-spec.ts` (CD-1 / CD-2) | unit: server `callout.service.spec.ts` (mocked) |
+| Tasks-board callouts in any spec (`taskBoard`, `TaskColumn`) | **None, proven absent** | zero matches in `server-api/src client-web/src lib/src` |
+| Space delete succeeds | Full (list only) | `journey/space/space.it-spec.ts` › `should remove space` |
+| Space **actor** profile (`space.profile`, type SPACE) + bucket + documents gone after delete | **Full** → `orphan-free-deletion/space-delete-owned-records.it-spec.ts` (SD-1 / SD-2) | unit: server `space.service.spec.ts` (mocked) |
+| Upload into `space.profile.storageBucket` (the Space-level staging bucket) | **None, proven absent** | `storage/**` uploads target references, visuals, about/org/user profiles |
+| L1→L0 promotion: new Free license | Full | `journey/conversion/convert-L1-to-L0-basic.it-spec.ts` › `promoted L0 has a Free license…` |
+| L1→L0 promotion: replaced license + policy deleted | **Full** → `convert-L1-to-L0-basic.it-spec.ts` (CV-1) | unit: server `conversion.service.spec.ts` |
+| Group-A own-policy leaks (13 delete paths), user-application cascade, failed creates | **Product defect, unfixed on develop**: deferred, no tests | server#6614 fix areas 1 and 3 |
+
+**Search again with:** `git grep -n -E "authorizationPolicy\(|lookup \{ (license|storageBucket|profile|document)\(|taskBoard|space\.profile|orphan-free-deletion" <ref> -- server-api/src client-web/src lib/src ':!lib/src/core/generated'`.
