@@ -504,12 +504,8 @@ describe('Update Conversation', () => {
 });
 
 describe('Leave Conversation', () => {
-  // skipped: NOT YET VERIFIED GREEN (server#6329 U-1). Red on the 2026-10-15 local stack because Synapse cannot push to the adapter's appservice port,
-  // so no inbound Matrix event reaches the server (see conversations-test-plan.md, 'How to run'). Un-skip after one green run on a healthy stack.
-  // Never shown green on any stack. The original product skip, client-web#9543
-  // (https://github.com/alkem-io/client-web/issues/9543), is still OPEN on 2026-10-15: un-skip only
-  // after that green run, and close or re-link #9543 then.
-  test.skip('should leave a GROUP conversation', async () => {
+  // Re-enabled 2026-10-16 (server#6329 U-1): green against the test environment after server#6573 + matrix-adapter#82 deployed there on the 2026-10-16 nightly; red on a local stack whose Synapse cannot reach the adapter (conversations-test-plan.md, 'How to run'). The original product skip, client-web#9543, is re-checked by this test.
+  test('should leave a GROUP conversation', async () => {
     // Arrange
     const memberActorId = TestUserManager.users.globalAdmin.agentId;
     const creatorUser = TestUser.SPACE_MEMBER;
@@ -597,12 +593,8 @@ describe('Remove Conversation Member', () => {
     }
   });
 
-  // skipped: NOT YET VERIFIED GREEN (server#6329 U-2). Red on the 2026-10-15 local stack because Synapse cannot push to the adapter's appservice port,
-  // so no inbound Matrix event reaches the server (see conversations-test-plan.md, 'How to run'). Un-skip after one green run on a healthy stack.
-  // Never shown green on any stack. The original product skip, client-web#9543
-  // (https://github.com/alkem-io/client-web/issues/9543), is still OPEN on 2026-10-15: un-skip only
-  // after that green run, and close or re-link #9543 then.
-  test.skip('should remove a member from a GROUP conversation', async () => {
+  // Re-enabled 2026-10-16 (server#6329 U-2): green against the test environment after server#6573 + matrix-adapter#82 deployed there on the 2026-10-16 nightly; red on a local stack whose Synapse cannot reach the adapter (conversations-test-plan.md, 'How to run'). The original product skip, client-web#9543, is re-checked by this test.
+  test('should remove a member from a GROUP conversation', async () => {
     // Arrange — verify member is present before removal
     const meResBefore = await getMeConversations(TestUser.GLOBAL_ADMIN);
     const convBefore = (
