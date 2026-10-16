@@ -99,6 +99,18 @@ place; cite this file instead of rediscovering a gap.
 - **Seeding account resources (VC, Template Pack, Custom Homepage) on a fresh account needs a licence plan first.** A new account's entitlements for `ACCOUNT_VIRTUAL_CONTRIBUTOR`, `ACCOUNT_INNOVATION_PACK` and `ACCOUNT_INNOVATION_HUB` all have limit 0. `ACCOUNT_LICENSE_PLUS` grants VC 3, pack 3 and hub 1 (server seed migration `1764590884533`). `TestScenarioFactory` assigns it to the scenario organisation, `globalAdmin` and `spaceAdmin` accounts **only**. For a throwaway user's account, call `getLicensePlanByName('ACCOUNT_LICENSE_PLUS')` + `assignLicensePlanToAccount(accountId, id)` before `createInnovationPack` / `createVirtualContributor`. Delete those resources before the user or organisation: they are account-deletion blockers. 2026-10-15.
 - **Innovation hubs have no `lib` wrapper.** The generated SDK op `CreateInnovationHub` (and `DeleteInnovationHub`) is in `lib`, but the wrapper only exists in `server-api/.../innovation-hub/innovation-hub-params.ts`. That wrapper is the template for calling `getGraphqlClient().CreateInnovationHub(...)` from client-web. It needs a unique lowercase `subdomain`. 2026-10-15.
 - **A scenario's host organisation is MEMBER and LEAD of its L0 at creation.** `organization-space-membership.helpers.ts › clearHostLead` removes the Lead, and `orgIsLeadOf` / `orgIsMemberOf` read it back. `lib` has no `removeRoleFromOrganization`. 2026-10-15.
+- **"Record is gone" oracle over GraphQL (no DB): `lookup.authorizationPolicy(ID)` as the Platform Operations Admin.**
+  - Nearly every entity row owns one `authorization_policy` row. A policy that still resolves after its owner's delete is the observable form of an orphan.
+  - The resolver (`lookup.resolver.fields.ts:292-309`) loads the row **before** it checks `PLATFORM_OPERATIONS_ADMIN`. A token without POA therefore gets `ENTITY_NOT_FOUND` for a missing id and FORBIDDEN for an existing one, so a "gone" assertion made with the wrong token passes vacuously.
+  - Always pair it with a same-token "present" lookup before the delete, and assert `extensions.code === 'ENTITY_NOT_FOUND'` exactly.
+  - `lookup.profile` / `storageBucket` / `document` also load before their READ check. `lookup.license(ID)` has **no** privilege check at all.
+  - The not-found answer is `ENTITY_NOT_FOUND` for every lookup used here except `lookup.storageBucket`, which lets TypeORM's `EntityNotFoundError` through (`UNSPECIFIED`, message `Could not find any entity of type "StorageBucket"…`; same answer for a random UUID). `owned-records.ts` accepts exactly that one extra shape for that one field. Verified live 2026-10-16.
+  - There is no `lookup.classification`, tagset, visual or reference lookup. Prove those through their policies.
+  - Helper: `server-api/src/functional-api/orphan-free-deletion/_support/owned-records.ts` (`expectPoliciesPresent` / `expectPoliciesGone` / `expectLookupGone`). 2026-10-16, server `1691e98e9`.
+- **A Space carries two profiles.**
+  - `Space.profile` is the Actor profile (type `SPACE`, created with `displayName` only). It has no visuals, tagsets or references, and it is never renamed with the Space. Its storage bucket is the Space-level staging bucket where new callout content is uploaded before the callout exists (`space.service.authorization.ts`).
+  - `Space.about.profile` (type `SPACE_ABOUT`) is what the UI shows.
+  - A case about the Space's "own" profile that reads `about.profile` tests the wrong record. 2026-10-16.
 
 ## Environment / gotchas
 
@@ -118,6 +130,9 @@ place; cite this file instead of rediscovering a gap.
   Do not use the global admin as the viewer when the visibility rule is under test. 2026-10-15.
 - **Several client-web nightly suites list files explicitly, not by glob.** Examples are `User Profile`, `Space` and `Support navigation` in `config/playwright.config.nightly.ts`. A new spec in such a folder never runs nightly until its path is added. Check the suite's `testMatch` before claiming a folder is "already in nightly". 2026-10-15.
 - The stale-clone note above (sibling repo clones) also applies to the **client-web** sibling clone: on 2026-10-15 its local `develop` was behind `origin/develop` by the commit under test. Read product code with `git show <merge-sha>:<path>`.
+
+- **Document content reads (`getAuthDocument`, REST) are skipped on CI by house precedent.** `storage/uploads.it-spec.ts` gates them on `!process.env.CI`. Pair any file-content oracle with a GraphQL one (the document's policy or lookup) that runs everywhere. 2026-10-16.
+- **Precedent-file caveat:** `templates/template-file-repair/template-file-repair.it-spec.ts` (a POA-token precedent cited in some briefs) is on `origin/develop` only once test-suites#672 merges; before that it lives on `test/r78-qa-coverage`. The develop precedent for a POA token outside platform-roles is `notifications/platform/platform-admin-mail.helpers.ts` (`seedPlatformRoleUsers()`). 2026-10-16.
 
 ### Conversations and Matrix (established 2026-10-15, server#6329 design, server `a9ba1ea50`)
 

@@ -254,3 +254,24 @@ are load-bearing:
 | `client-web` repo's own `e2e/specs/*.e2e.spec.ts` tagged **`@forge-acceptance`** | Absent from `ci-test.yml`, **never executed**, and driven by hand-seeded `E2E_*` env fixtures no seeder produces. Read them for locator and copy evidence — they are written from the real DOM — but never cite them as proof | 2026-09-03 · 055 (`sidebarSearchWidget`, `sidebarSearchDefaults`) |
 | A migration spec under `src/migrations/__tests__/` | Asserts the text of its own SQL | 2026-09-02 · 10178, reconfirmed 055 |
 | client-web `messaging-notifications/us2-group-message-notifications.spec.ts` › US2-AS4, and server-api `notifications/messaging/conversation-messages-negative.it-spec.ts` › US2-AS4 | They prove that a removed member stops being **notified**, not that their **access** is revoked. The client spec says so in its own scope warning | 2026-10-15 · server#6329 |
+
+## Orphan-free deletion: owned records and policies after a delete (server#6614 / #6637)
+
+_Searched 2026-10-16, test-suites `develop` @ `b451c329`, server `origin/develop` @ `1691e98e9` (contains the #6637 merge `08f088eaa`). Plan: `server-api/src/functional-api/orphan-free-deletion/orphan-free-deletion-test-plan.md` (Approved), plus the server#6614 addendum (Approved 2026-10-16; CV-1 built) in `journey/conversion/conversion-test-plan.md`._
+
+| Area | Status | Evidence |
+|---|---|---|
+| Any spec reading `lookup.authorizationPolicy` / `authorizationPrivilegesForUser` | **None, proven absent** | `rg -n 'authorizationPolicy\(\|authorizationPrivilegesForUser'` over `server-api/src client-web/src lib/src`. Only plan prose and `platform-roles/capabilities.data.ts` reset rows match |
+| Any assertion that an owned record or policy is gone after a delete (any entity) | **None, proven absent** | same search plus `lookup { profile(` / `storageBucket(` / `license(`. Deletion specs assert only list membership |
+| Callout delete succeeds; permission matrix L0/L1/L2 | Full | `callout/callouts.it-spec.ts` › `should delete callout…`, 3× `DDT user privileges to delete callout` |
+| Reactions removed with the callout | Full | `callout/reactions/callout-reactions.it-spec.ts` › `US4-AS3` |
+| Callout classification + tagset policies gone after delete (plain, Tasks board) | **Full** → `orphan-free-deletion/callout-delete-owned-records.it-spec.ts` (CD-1 / CD-2) | unit: server `callout.service.spec.ts` (mocked) |
+| Tasks-board callouts in any spec (`taskBoard`, `TaskColumn`) | **None, proven absent** | zero matches in `server-api/src client-web/src lib/src` |
+| Space delete succeeds | Full (list only) | `journey/space/space.it-spec.ts` › `should remove space` |
+| Space **actor** profile (`space.profile`, type SPACE) + bucket + documents gone after delete | **Full** → `orphan-free-deletion/space-delete-owned-records.it-spec.ts` (SD-1 / SD-2) | unit: server `space.service.spec.ts` (mocked) |
+| Upload into `space.profile.storageBucket` (the Space-level staging bucket) | **None, proven absent** | `storage/**` uploads target references, visuals, about/org/user profiles |
+| L1→L0 promotion: new Free license | Full | `journey/conversion/convert-L1-to-L0-basic.it-spec.ts` › `promoted L0 has a Free license…` |
+| L1→L0 promotion: replaced license + policy deleted | **Full** → `convert-L1-to-L0-basic.it-spec.ts` (CV-1) | unit: server `conversion.service.spec.ts` |
+| Group-A own-policy leaks (13 delete paths), user-application cascade, failed creates | **Product defect, unfixed on develop**: deferred, no tests | server#6614 fix areas 1 and 3 |
+
+**Search again with:** `git grep -n -E "authorizationPolicy\(|lookup \{ (license|storageBucket|profile|document)\(|taskBoard|space\.profile|orphan-free-deletion" <ref> -- server-api/src client-web/src lib/src ':!lib/src/core/generated'`.
