@@ -92,8 +92,8 @@ US3 rows in `server-api/src/functional-api/roleset/organization/organization-sel
 | US3-AS3 / AS4 / AS5 | Associate, admin of B, unrelated user denied | › US3-AS3 associate-only of A is denied; US3-AS4 admin of B is denied; US3-AS5 unrelated user is denied | API |
 | US3-AS6 | Space-admin path unchanged | › US3-AS6 space admin path unchanged | API |
 | US3-AS7 / SC-002 | Generic `removeRole`: admin of A allowed; admin of B, associate, unrelated user denied | › US3-AS7 generic removeRole twin; US3-AS7 generic removeRole: associate-only of A is denied (SC-002); US3-AS7 generic removeRole: unrelated user is denied (SC-002) | API |
-| US3-AS8 | Org admin removes A's Lead | › US3-AS8 org admin removes A's LEAD | API |
-| FR-007 | The removal grant is per request, never persisted on the Space | › FR-007 the self-removal grant does not stick to the Space role set | API |
+| US3-AS8 | Org admin cannot drop A's Lead directly (denied on GRANT); leaving as Member revokes Lead too — server#6649 operator ruling, supersedes D-2 | › US3-AS8 org admin cannot drop A's LEAD on its own; leaving as Member revokes Lead too | API |
+| FR-007 | The removal grant is per request, never persisted on the Space (exercised through a Member leave, then re-entry by invitation, then a GRANT-only assign is denied) | › FR-007 the self-removal grant does not stick to the Space role set | API |
 
 ### Regression guards
 
@@ -123,3 +123,5 @@ host and a non-host organization, and that the grant does not outlive the
 request. The walks prove the tab's list, filters, Leave flow and failure path
 end to end. Languages, accessibility, unreadable and archived Spaces, and the
 cold-load title are not proven here.
+
+**Revision 2026-10-16 (QA):** FR-007 and US3-AS8 were red on every nightly since the merge of server#6649 (16:23 on 2026-10-09, after test-suites#663 merged at 15:24): both asserted that an organization admin may remove the organization's LEAD role directly, which the merged PR deliberately denies (self-removal extension is MEMBER-only; leaving is all-or-nothing). Re-aligned to the ruling, assertions strengthened, 13/13 green against the test environment on 2026-10-16. The status line above is unchanged; the plan still awaits QA lead review.
