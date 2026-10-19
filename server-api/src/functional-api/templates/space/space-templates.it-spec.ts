@@ -201,8 +201,33 @@ const L0_DEFAULT_SIDEBARS: SidebarWidget[][] = [
     SidebarWidget.Index,
   ],
 ];
-// FR-009 subspace / added-tab default.
+// The default for an added tab, and for every subspace phase from position 4 on.
 const GENERIC_DEFAULT_SIDEBAR = L0_DEFAULT_SIDEBARS[3];
+// The first phase of a subspace holds the subspace sidebar: the widgets a subspace page
+// showed before its sidebar became configurable, in that order.
+const SUBSPACE_DEFAULT_SIDEBAR: SidebarWidget[] = [
+  SidebarWidget.Intent,
+  SidebarWidget.About,
+  SidebarWidget.CreatePost,
+  SidebarWidget.Community,
+  SidebarWidget.Events,
+  SidebarWidget.Activity,
+  SidebarWidget.Index,
+  SidebarWidget.SubspaceLinks,
+  SidebarWidget.VirtualContributors,
+  SidebarWidget.Updates,
+];
+
+/** Flow rank: sortOrder ascending, ties broken by the lower id (plain string compare). */
+const byRank = (
+  a: { sortOrder: number; id: string },
+  b: { sortOrder: number; id: string }
+) => {
+  if (a.sortOrder !== b.sortOrder) return a.sortOrder - b.sortOrder;
+  const left = a.id.toLowerCase();
+  const right = b.id.toLowerCase();
+  return left < right ? -1 : left > right ? 1 : 0;
+};
 
 /** A Space's flow states in tab order, failing loudly if the read itself failed. */
 const readFlow = async (spaceId: string) => {
@@ -212,7 +237,7 @@ const readFlow = async (spaceId: string) => {
   expect(flow?.states.length).toBeGreaterThan(0);
   return {
     flowId: flow?.id ?? '',
-    states: [...(flow?.states ?? [])].sort((a, b) => a.sortOrder - b.sortOrder),
+    states: [...(flow?.states ?? [])].sort(byRank),
   };
 };
 
@@ -243,10 +268,19 @@ describe('innovation flow state sidebar round-trip', () => {
     expect(spaceStates.map(state => state.settings.sidebar)).toEqual(
       L0_DEFAULT_SIDEBARS
     );
-    // US4-AS3 (store half): subspace states carry the generic default.
+    // A subspace created from the platform subspace template carries positional lists:
+    // the subspace sidebar on its first phase, the second and third L0 tab defaults on the
+    // next two, and the generic default from the fourth phase on.
     const { states: subspaceStates } = await readFlow(baseScenario.subspace.id);
-    subspaceStates.forEach(state =>
-      expect(state.settings.sidebar).toEqual(GENERIC_DEFAULT_SIDEBAR)
+    expect(subspaceStates.length).toBeGreaterThanOrEqual(3);
+    subspaceStates.forEach((state, index) =>
+      expect(state.settings.sidebar).toEqual(
+        index === 0
+          ? SUBSPACE_DEFAULT_SIDEBAR
+          : index < 3
+            ? L0_DEFAULT_SIDEBARS[index]
+            : GENERIC_DEFAULT_SIDEBAR
+      )
     );
 
     // Arrange: four distinct lists — a reordered custom list, an explicit empty list, and
@@ -337,10 +371,11 @@ describe('innovation flow state sidebar round-trip', () => {
       state.displayName,
       state.settings.sidebar,
     ]);
-    // The reversal took: the last-created state now leads.
+    // The reversal took: the last-created state now leads. On a subspace flow the lists
+    // stay at their positions, so the leading state now holds the first list.
     expect(expected[0]).toEqual([
       `Donor ${donor.states.length - 1} ${runId}`,
-      donorLists[donor.states.length - 1],
+      donorLists[0],
     ]);
 
     const createRes = await createTemplateFromSpace(
