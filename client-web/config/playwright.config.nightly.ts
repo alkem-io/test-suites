@@ -84,6 +84,8 @@ export default defineConfig(
           '/templates-CRD/template-types/whiteboard-template.spec.ts',
           // workspace#080 ruling R25: Poll / Form posts saved as templates and reused.
           '/templates-CRD/template-types/poll-form-save-as-template.spec.ts',
+          // client-web#10423: documents with content in post templates (browser apply + toolbox route).
+          '/templates-CRD/template-types/document-template-content.spec.ts',
         ],
         // A memo response walks the whole contribution flow inside one case.
         tier: 'extended',
