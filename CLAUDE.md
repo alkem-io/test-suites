@@ -178,6 +178,8 @@ A new feature area is added by creating its directory alongside these and listin
 
 `form-callout-framing/` (workspace#080) holds self-provisioning acceptance walks: they create throwaway identities through the Kratos **admin** API, so they need `KRATOS_ADMIN_URL` and `ALKEMIO_ADMIN_PASSWORD`. The default config ignores the folder; run them with `pnpm --filter @alkemio/test-suite-client-web run test:form-callout-framing`. Its plan, `form-callout-framing-test-plan.md`, also maps the `server-api` suites under `callout/form/` and `notifications/space/collaboration/form-response.it-spec.ts`.
 
+`memo-pdf-download/` holds the memo PDF download acceptance walks. The access walk provisions throwaway identities through the Kratos **admin** API (`KRATOS_ADMIN_URL`, `ALKEMIO_ADMIN_PASSWORD`) and both walks need a stack serving the memo PDF export. The default config ignores the folder and the nightly does not list it; run them with `pnpm --filter @alkemio/test-suite-client-web run test:memo-pdf-download`.
+
 `messaging-notifications/` is the one area that does **not** use the session-based auth fixtures: its walks register every persona inline through the real sign-up flow, because they assert on notification-settings defaults for a brand-new account and on digest tracks that must start empty. Its shared fixtures live in `messaging-notifications/messaging.helpers.ts`.
 
 - Branded Chrome by default; `PW_BROWSER` switches the whole run to chromium / firefox / webkit / msedge / a mobile preset

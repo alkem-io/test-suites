@@ -27,5 +27,7 @@ export default defineConfig({
     '**/platform-roles/**',
     // Needs the Kratos admin API and the admin password: config/playwright.config.form-callout-framing.ts
     '**/form-callout-framing/**',
+    // Needs the Kratos admin API and a stack with the memo PDF export: config/playwright.config.memo-pdf-download.ts
+    '**/memo-pdf-download/**',
   ],
 });
