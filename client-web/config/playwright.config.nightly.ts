@@ -37,7 +37,11 @@ export default defineConfig(
       }),
       suite({
         name: 'Space',
-        testMatch: ['/space/organization-space-create.spec.ts', '/space/space-create.spec.ts'],
+        testMatch: [
+          '/space/organization-space-create.spec.ts',
+          '/space/space-create.spec.ts',
+          '/space/space-settings-about-limit.spec.ts',
+        ],
       }),
       suite({ name: 'Public Space', testMatch: ['/public-space/*.spec.ts'] }),
       suite({
@@ -66,6 +70,7 @@ export default defineConfig(
           '/callouts/0.7callout-editing.spec.ts',
           '/callouts/0.8callout-subspace-creation.spec.ts',
           '/callouts/0.9callout-viewing.spec.ts',
+          '/callouts/0.10callout-description-limit.spec.ts',
         ],
       }),
       suite({
@@ -295,6 +300,7 @@ export default defineConfig(
           '/contributors-callout/us3-card-menu.spec.ts',
           '/contributors-callout/us4-joined-this-space.spec.ts',
           '/contributors-callout/us5-organisation-website.spec.ts',
+          '/contributors-callout/us6-manual-org-selection.spec.ts',
         ],
         tier: 'extended',
       }),
