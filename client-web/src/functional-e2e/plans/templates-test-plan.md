@@ -1956,3 +1956,22 @@ Still manual: human check 1 (type in the real Collabora editor of a post, autosa
 
 Finding for the delivery pipeline: the `collabora` vitest project that holds #674's four cases is not part of `test:nightly` (`--project nightly`), so once merged they run only when invoked by name.
 
+
+---
+
+## Collaboration-tool template round-trip (client-web#10443, server#6682)
+
+> **Status:** Approved — QA lead, in-session, 2026-10-19 · **Depth:** Light · **Found during:** Release 78 verification of client-web#10423 on dev (QA lead, 2026-10-19); neither defect belongs to a Release 78 story · **Spec:** `templates-CRD/template-types/collaboration-tool-template-roundtrip.spec.ts` (nightly Templates)
+
+What a Space admin saves in the collaboration-tool template form must come back when the template is used or edited, and the creator must be able to edit the content they put into it. Two gaps, both reproduced from a fresh scenario on the local stack and pinned with `test.skip` until the fixes land:
+
+| Case | Covers | Result 2026-10-19 (local stack, client-web `fa98c933b`, server `901f96281`) |
+| --- | --- | --- |
+| RT-1 | Template form → Responses = Documents → Save; API: `allowedTypes = ["COLLABORA_DOCUMENT"]` (the server stores it) | green |
+| RT-2 | Add Post → Find Template → Use template: title prefilled **and Responses = Documents** | red → **client-web#10443** (`calloutTemplateMapper` maps `CollaboraDocument → 'none'`; no chip checked) |
+| RT-3 | Preview → Edit template: Responses = Documents | red → **client-web#10443** (same mapper) |
+| RT-4 | Edit template → change the description → Save: `allowedTypes` unchanged (no write-back loss) | green |
+| MT-1 | Template form → Add to post = Memo → Save; API as the creator: `memo.createdBy` = creator, `myPrivileges` ∋ `UPDATE_CONTENT` | red → **server#6682** (`createdBy` null: the template path creates the callout without a `userID`) |
+| MT-2 | Preview → Edit template → Open memo: the creator's editor is `contenteditable="true"` | red → **server#6682** (renders `contenteditable="false"`) |
+
+RT-2…RT-4 and MT-2 run on templates seeded by API as the same creator, so each case stands alone; RT-1 and MT-1 keep the browser authoring walk the QA lead followed on dev. Not a defect, recorded for the record: a post whose response type is Documents has no default document and no pre-populate control (client-web#10083 — documents are added to the published post), and the Documents chips are greyed out on a Space without `SPACE_FEATURE_OFFICE_DOCUMENTS` (the scenario is entitled in `beforeAll`).

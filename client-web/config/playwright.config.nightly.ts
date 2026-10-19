@@ -86,6 +86,9 @@ export default defineConfig(
           '/templates-CRD/template-types/poll-form-save-as-template.spec.ts',
           // client-web#10423: documents with content in post templates (browser apply + toolbox route).
           '/templates-CRD/template-types/document-template-content.spec.ts',
+          // Round-trip of what the template form saved (Documents response type, memo ownership);
+          // RT-2/RT-3 pinned on client-web#10443, MT-1/MT-2 on server#6682.
+          '/templates-CRD/template-types/collaboration-tool-template-roundtrip.spec.ts',
         ],
         // A memo response walks the whole contribution flow inside one case.
         tier: 'extended',
