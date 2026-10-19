@@ -10,12 +10,20 @@
 // absence of every hidden one (including the old "Resources Hosted") together.
 //
 // Everything is seeded per run through the API and removed again in afterAll.
-// The viewer is the registered, non-privileged `non.space` persona: platform
-// admins read more than a visitor does and would hide the viewer-dependent
-// filters this feature rests on. All Spaces are PUBLIC for the same reason: the
-// server drops Spaces the viewer cannot read from `rolesUser` / `rolesOrganization`.
+// Two viewers, never a platform admin (who reads more than either and would
+// hide the viewer-dependent filters this feature rests on):
+//   - the registered, non-privileged `non.space` persona for the VISITOR cases
+//     (PT-1 … PT-6; three of them skipped on server#6670, see below);
+//   - the profile's OWNER for the Other Resources cases (PT-1o, PT-4o, PT-6o):
+//     the user on their own page, and a plain user who administers the
+//     organisation on its page. These are the viewers the server resolves
+//     `User.account` / `Organization.account` for today, so they are the only
+//     non-admin viewers who can see Other Resources at all (QA lead ruling,
+//     2026-10-19). They sign in through the shared persona session cache.
+// All Spaces are PUBLIC for the same reason: the server drops Spaces the viewer
+// cannot read from `rolesUser` / `rolesOrganization`.
 
-import { expect, type Locator, type Page } from '@playwright/test';
+import { type Browser, expect, type Locator, type Page } from '@playwright/test';
 import {
   assignLicensePlanToAccount,
   assignRoleToUser,
@@ -51,7 +59,10 @@ import {
   orgIsLeadOf,
   orgIsMemberOf,
 } from '../organization-space-membership/organization-space-membership.helpers';
-import { createPersonaTest } from '../fixtures/authenticated-session.fixture';
+import {
+  createPersonaTest,
+  ensurePersonaState,
+} from '../fixtures/authenticated-session.fixture';
 
 const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 // Registered, non-privileged visitor (platform READ_USERS via GLOBAL_REGISTERED); never mutated.
@@ -89,7 +100,8 @@ const EMPTY_ORG_MEMBERSHIP = 'Not a member of any Space or Subspace yet.';
 // Of'] only, `admin` sees all three tabs and every assertion below passes.
 // PT-1, PT-4 and PT-6 assert the designed behaviour for the plan's visitor and
 // are skipped until alkem-io/server#6670 is fixed (plan Q4): drop the skip when
-// it lands. The assertions are unchanged.
+// it lands. The assertions are unchanged, and the SAME assertions run live as
+// PT-1o / PT-4o / PT-6o with the profile's owner as the viewer.
 const OTHER_RESOURCES_HIDDEN_FROM_VISITOR =
   'alkem-io/server#6670: User.account and Organization.account are null for an ordinary visitor, so Other Resources is hidden (client-web#10179, plan Q4)';
 
@@ -134,18 +146,39 @@ const expectSelected = async (
   }
 };
 
+/**
+ * Runs `walk` on a page signed in as `email` (a seeded user, registered with the
+ * harness password) in its own context, which is closed afterwards.
+ */
+const asViewer = async (
+  browser: Browser,
+  email: string,
+  walk: (page: Page) => Promise<void>
+): Promise<void> => {
+  const context = await browser.newContext({
+    storageState: await ensurePersonaState(browser, email),
+    locale: 'en-US',
+  });
+  try {
+    await walk(await context.newPage());
+  } finally {
+    await context.close();
+  }
+};
+
 // ---------------------------------------------------------------------------
 // Seeding helpers
 // ---------------------------------------------------------------------------
 type SeededUser = {
   id: string;
+  email: string;
   displayName: string;
   nameID: string;
   accountId: string;
 };
 
 const seedUser = async (displayName: string): Promise<SeededUser> => {
-  const { id } = await registerFixtureUser(displayName);
+  const { id, email } = await registerFixtureUser(displayName);
   const data = await adminGql<{
     lookup: { user: { nameID: string; account: { id: string } } };
   }>(
@@ -154,6 +187,7 @@ const seedUser = async (displayName: string): Promise<SeededUser> => {
   );
   return {
     id,
+    email,
     displayName,
     nameID: data.lookup.user.nameID,
     accountId: data.lookup.user.account.id,
@@ -389,10 +423,8 @@ test.describe('Public profile resource tabs — user (client-web#10179)', () => 
     ]);
   });
 
-  test('PT-1 — a user who leads and owns a pack sees Leading, Member Of, Other Resources; lands on Leading', async ({
-    page,
-  }) => {
-    test.skip(true, OTHER_RESOURCES_HIDDEN_FROM_VISITOR);
+  /** S1 on U1's profile, for any viewer who can see Other Resources. */
+  const walkLeadWithPack = async (page: Page): Promise<void> => {
     const user = u1!;
     const l0Name = scenarioA!.space.about.profile.displayName;
     const labels = [TAB.user.leading, TAB.user.memberOf, TAB.user.other];
@@ -414,6 +446,21 @@ test.describe('Public profile resource tabs — user (client-web#10179)', () => 
     await expect(tab(page, TAB.user.other)).toHaveAttribute('aria-selected', 'true');
     await expect(h3(page, 'Template Packs')).toBeVisible();
     await expect(h4(page, `PT pack ${RUN}`)).toBeVisible();
+    // Regression guard (R5): the pack is listed under its own heading, never as a Space.
+    await expect(h3(page, 'Spaces')).toHaveCount(0);
+  };
+
+  test('PT-1 — a user who leads and owns a pack sees Leading, Member Of, Other Resources; lands on Leading', async ({
+    page,
+  }) => {
+    test.skip(true, OTHER_RESOURCES_HIDDEN_FROM_VISITOR);
+    await walkLeadWithPack(page);
+  });
+
+  test('PT-1o — the same user on their OWN profile sees Leading, Member Of, Other Resources; lands on Leading', async ({
+    browser,
+  }) => {
+    await asViewer(browser, u1!.email, walkLeadWithPack);
   });
 
   test('PT-2 — a user who leads nothing and owns nothing sees only Member Of, selected and empty', async ({
@@ -462,6 +509,7 @@ test.describe('Public profile resource tabs — organisation (client-web#10179)'
   let scenarioC: OrganizationWithSpaceModel | undefined; // member only, VC
   let orgDId: string | undefined;
   let orgD: { nameID: string; displayName: string } | undefined;
+  let orgAdmin: SeededUser | undefined; // plain user, Admin of orgs B and C
   let packId: string | undefined;
   let hubId: string | undefined;
   let vcId: string | undefined;
@@ -537,6 +585,25 @@ test.describe('Public profile resource tabs — organisation (client-web#10179)'
     vcId = vc.data?.createVirtualContributor.id;
     if (!vcId) throw new Error('VC id missing from createVirtualContributor');
 
+    // A plain user who administers orgs B and C: holds UPDATE on each, which is
+    // what lets the server resolve `Organization.account` for them. No
+    // platform privilege, no Space role (read back below).
+    orgAdmin = await seedUser(`PT Orgadmin ${RUN}`);
+    for (const org of [orgB, orgC]) {
+      failOnError(
+        `org admin associate of ${org.nameId}`,
+        await assignRoleToUser(orgAdmin.id, org.roleSetId, RoleName.Associate)
+      );
+      failOnError(
+        `org admin admin of ${org.nameId}`,
+        await assignRoleToUser(orgAdmin.id, org.roleSetId, RoleName.Admin)
+      );
+    }
+    expect(
+      await rolesOf('rolesUser', orgAdmin.id),
+      'the org admin must hold no Space role of their own'
+    ).toEqual([]);
+
     // Org D: bare.
     const displayName = `PT bare org ${RUN}`;
     const d = await createOrganizationOrAdopt(displayName, `pt-bare-${RUN}`);
@@ -576,16 +643,15 @@ test.describe('Public profile resource tabs — organisation (client-web#10179)'
       ['pack', async () => packId && failOnError('delete pack', await deleteInnovationPack(packId))],
       // The VC goes before its body-of-knowledge Space.
       ['VC', async () => vcId && failOnError('delete VC', await deleteVirtualContributor(vcId))],
+      ['org admin user', async () => orgAdmin && deleteFixtureUser(orgAdmin.id)],
       ['scenario B', () => removeScenario(scenarioB)],
       ['scenario C', () => removeScenario(scenarioC)],
       ['org D', async () => orgDId && failOnError('delete org D', await deleteOrganization(orgDId))],
     ]);
   });
 
-  test('PT-4 — an organisation that leads and owns a pack and a hub sees three tabs; Other Resources holds no Spaces', async ({
-    page,
-  }) => {
-    test.skip(true, OTHER_RESOURCES_HIDDEN_FROM_VISITOR);
+  /** S4 on org B's profile, for any viewer who can see Other Resources. */
+  const walkOrgFull = async (page: Page): Promise<void> => {
     const org = scenarioB!.organization;
     const l0Name = scenarioB!.space.about.profile.displayName;
     const labels = [TAB.org.leading, TAB.org.memberOf, TAB.org.other];
@@ -615,6 +681,19 @@ test.describe('Public profile resource tabs — organisation (client-web#10179)'
     await expect(text(page, l0Name)).toHaveCount(0);
     // Sub-sections are conditional: no VC was seeded for B.
     await expect(h3(page, 'Virtual Contributors')).toHaveCount(0);
+  };
+
+  test('PT-4 — an organisation that leads and owns a pack and a hub sees three tabs; Other Resources holds no Spaces', async ({
+    page,
+  }) => {
+    test.skip(true, OTHER_RESOURCES_HIDDEN_FROM_VISITOR);
+    await walkOrgFull(page);
+  });
+
+  test('PT-4o — the organisation\'s own admin sees three tabs on its profile; Other Resources holds no Spaces', async ({
+    browser,
+  }) => {
+    await asViewer(browser, orgAdmin!.email, walkOrgFull);
   });
 
   test('PT-5 — an organisation with nothing sees only All Memberships, selected and empty', async ({
@@ -628,10 +707,8 @@ test.describe('Public profile resource tabs — organisation (client-web#10179)'
     await expect(text(page, EMPTY_ORG_MEMBERSHIP)).toBeVisible();
   });
 
-  test('PT-6 — an organisation that is a member, not a lead, and owns a VC lands on All Memberships; Other Resources shows the VC and not the hosted Space', async ({
-    page,
-  }) => {
-    test.skip(true, OTHER_RESOURCES_HIDDEN_FROM_VISITOR);
+  /** S6 on org C's profile, for any viewer who can see Other Resources. */
+  const walkOrgMemberWithVc = async (page: Page): Promise<void> => {
     const org = scenarioC!.organization;
     const l0Name = scenarioC!.space.about.profile.displayName;
     const labels = [TAB.org.memberOf, TAB.org.other];
@@ -649,5 +726,18 @@ test.describe('Public profile resource tabs — organisation (client-web#10179)'
     // Regression guard: C's account hosts this Space but does not lead it.
     await expect(h3(page, 'Spaces')).toHaveCount(0);
     await expect(text(page, l0Name)).toHaveCount(0);
+  };
+
+  test('PT-6 — an organisation that is a member, not a lead, and owns a VC lands on All Memberships; Other Resources shows the VC and not the hosted Space', async ({
+    page,
+  }) => {
+    test.skip(true, OTHER_RESOURCES_HIDDEN_FROM_VISITOR);
+    await walkOrgMemberWithVc(page);
+  });
+
+  test('PT-6o — the organisation\'s own admin lands on All Memberships; Other Resources shows the VC and not the hosted Space', async ({
+    browser,
+  }) => {
+    await asViewer(browser, orgAdmin!.email, walkOrgMemberWithVc);
   });
 });
