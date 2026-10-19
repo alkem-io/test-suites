@@ -187,27 +187,25 @@ describe('Subspace sidebar - positional reorder', () => {
     ).toEqual(visibleBefore);
   });
 
-  test('a partial reorder of an L1 flow ranks over the whole flow and keeps the lists by position', async () => {
-    // Arrange: the previous test left la, lb, lc on positions 1-3.
+  test('a reorder naming only some phases of an L1 flow is rejected and changes nothing', async () => {
+    // Arrange
     const before = await readFlow(baseScenario.subspace.collaboration.id);
-    expect(
-      before.states.slice(0, 3).map(state => state.settings.sidebar)
-    ).toEqual([la, lb, lc]);
     const [first, second] = before.states;
 
-    // Act: only two ids, swapped — the new ranks still cover the whole flow.
+    // Act: the server only accepts a reorder that names every phase.
     const res = await updateInnovationFlowStatesSortOrder(before.flowId, [
       second.id,
       first.id,
     ]);
-    expect(res.error).toBeUndefined();
-    expect(res.data?.updateInnovationFlowStatesSortOrder).toHaveLength(
-      before.states.length
-    );
 
-    // Assert: the swap took, and every position still holds the list it held before.
+    // Assert
+    expect(res.error?.errors[0].message).toContain(
+      'does not match the number of states'
+    );
     const after = await readFlow(baseScenario.subspace.collaboration.id);
-    expect(after.states[0].id).toEqual(second.id);
+    expect(after.states.map(state => state.id)).toEqual(
+      before.states.map(state => state.id)
+    );
     expect(after.states.map(state => state.settings.sidebar)).toEqual(
       before.states.map(state => state.settings.sidebar)
     );
