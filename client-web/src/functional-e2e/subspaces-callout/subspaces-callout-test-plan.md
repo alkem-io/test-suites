@@ -37,6 +37,7 @@ them in `afterAll`; nothing pre-existing is assumed except the `admin@alkem.io` 
 | US2 — the switch         | placement under Manual selection; publish on; edit both directions without reload, cards re-rendered in place; curated selection survives a variant flip; not offered for other attachments; legacy-shaped post reads compact and fetches no What/Who; title-only edit keeps the variant                                                                        | `us2-expanded-card-switch.spec.ts`                                           |
 | US3 — content safety     | images/iframes neither render nor fetch; fixed-position HTML not interpreted; headings/lists/tables flattened within the clamp; links inert; suppressed-only field counts as empty; 500-char token wraps; maximum-length fields clamp and the page stays responsive (elapsed time attached to the report); nested-emphasis payload renders without a page error | `us3-excerpt-safety.spec.ts`                                                 |
 | US4 — narrow layout      | 390 px stacks identity → excerpts → footer; arrangement follows the card's width, not the viewport (feed vs. detail dialog); resize across the threshold keeps "Show more" and search                                                                                                                                                                           | `us4-narrow-layout.spec.ts`                                                  |
+| US5 — account scope (#10344) | `us5-account-scope-selection.spec.ts`: Pick spaces manually lists the whole account (host badge, own-tree badge, level + ancestor path, C withheld from an admin without READ), search narrows, clear restores; B + B1 (name clash → "in B" chip) + A1a saved and rendered, A1 not; a new subspace does not change a manual post, AUTO unchanged; viewer filtering: admin 3 cards no notice, member of A only → A1a + notice, `selectedIds` redacted; anonymous on a withheld-only post → no cards + notice (server flag probed first). AS1b (host row disabled) and AS1c (Escape clears the query) are `test.skip` on client-web#10439 / #10440 |
 
 Unit-level coverage for the excerpt pipeline (length ceiling, nesting bound, linear image removal,
 footnotes and form controls, per-section error boundary) lives in client-web next to
@@ -73,3 +74,26 @@ footnotes and form controls, per-section error boundary) lives in client-web nex
 - The identity block and its footer are still located by styling classes in US1 (`w-[320px]`,
   `border-t`): the card exposes no test id for them yet.
 - Phone _styling_ fidelity (FR-028) is a designer sign-off, not an automated check.
+
+---
+
+## Account-scoped manual selection (client-web#10344)
+
+> **Status:** Approved — QA lead, in-session, 2026-10-19 ("automate it") · **Depth:** Light · **Story:** [client-web#10344](https://github.com/alkem-io/client-web/issues/10344) · **Diff:** [server#6667](https://github.com/alkem-io/server/pull/6667) + [client-web#10430](https://github.com/alkem-io/client-web/pull/10430), both merged 2026-10-15 (`workspace#084-spaces-callout-account-scope`) · **API half:** [test-suites#675](https://github.com/alkem-io/test-suites/pull/675) (open), the account boundary against real SQL — not restated here
+
+The forge's browser walks (US1 10/10, US2 3/3) ran once on the author's stack and were never committed; `us5-account-scope-selection.spec.ts` is that gate, persisted. Fixture = the spec's named one, on the scenario organisation's account: host A (PUBLIC) → A1 → A1a; sibling B (PRIVATE, host admin a member) → B1 (PUBLIC, same name as A1); C (PRIVATE, host admin not a member). Viewers: the host admin, a member of A only, an anonymous visitor (explicitly empty storage state — `browser.newContext()` otherwise inherits the persona's session from the config).
+
+| Spec scenario | Case | Result 2026-10-19 (local stack, client-web `17c1aa6d3`, server `1691e98e94`) |
+| --- | --- | --- |
+| US1-AS1, AS3; US2-AS7; US3-AS1…AS5 | US5-AS1 | green ×2 |
+| US1-AS4 host row disabled | US5-AS1b | **`test.skip` — client-web#10439**: the row carries "Post is here" but is enabled; a click picks the host (4th chip, save succeeds) |
+| US3-AS6 Escape clears the query | US5-AS1c | **`test.skip` — client-web#10440**: Escape closes the Edit Post dialog (or raises "Discard your changes?") when the editor was opened from the detail dialog |
+| US1-AS2, US1-AS6 / US2-AS6 (AUTO) | US5-AS2 | green ×2 |
+| US2-AS1, AS4 | US5-AS3 | green ×2 |
+| US2-AS2 + SEC-084-CW-01 (`selectedIds` empty for a non-admin) | US5-AS4 | green ×2 |
+| US2-AS3 (empty state + notice) — the PR said "not exercised" | US5-AS5 | green ×2; anonymous API probe `hasHiddenSpaces: true`, `subspaces: []` first |
+
+Not covered here: US4 (account transfer, stale drop, foreign-account reject) — test-suites#675; the other five locales; the 500 cap; the Escape path from the feed's inline Settings button (global admin), which the acceptance walk used and which may behave differently from #10440.
+
+Side effect of #10430 on this folder: the Spaces switch is now labelled **"Pick spaces manually"** and its custom description reads "Shows only the spaces you select below."; `us2-expanded-card-switch.spec.ts` was re-aligned (it was red on develop since 2026-10-15 and unseen, the client nightly being dispatch-only).
+

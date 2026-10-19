@@ -299,7 +299,7 @@ test.describe(
       await chooseFramingChip(dialog, 'Subspaces');
 
       const manualSwitch = dialog.getByRole('switch', {
-        name: 'Manual selection',
+        name: 'Pick spaces manually',
       });
       const expandedSwitch = dialog.getByRole('switch', {
         name: 'Expanded card',
@@ -311,7 +311,7 @@ test.describe(
       // Placement: Expanded card's DOM position is below Manual selection's,
       // with Manual selection off (no picker in between).
       const manualBox = await dialog
-        .getByText('Manual selection', { exact: true })
+        .getByText('Pick spaces manually', { exact: true })
         .boundingBox();
       const expandedBox = await dialog
         .getByText('Expanded card', { exact: true })
@@ -326,10 +326,10 @@ test.describe(
       // below Manual selection's own label).
       await manualSwitch.click();
       await expect(dialog).toContainText(
-        'Shows only the subspaces you select below.'
+        'Shows only the spaces you select below.'
       );
       const manualBoxOn = await dialog
-        .getByText('Manual selection', { exact: true })
+        .getByText('Pick spaces manually', { exact: true })
         .boundingBox();
       const expandedBoxAfter = await dialog
         .getByText('Expanded card', { exact: true })
@@ -484,7 +484,7 @@ test.describe(
       await gotoFixtureSpace(page);
       const dialog = await openEditDialog(page, title);
       await expect(
-        dialog.getByRole('switch', { name: 'Manual selection' })
+        dialog.getByRole('switch', { name: 'Pick spaces manually' })
       ).toBeChecked();
       await expect(
         dialog.getByRole('switch', { name: 'Expanded card' })
@@ -492,7 +492,7 @@ test.describe(
 
       await dialog.getByRole('switch', { name: 'Expanded card' }).click(); // flip ONLY Expanded card
       await expect(
-        dialog.getByRole('switch', { name: 'Manual selection' })
+        dialog.getByRole('switch', { name: 'Pick spaces manually' })
       ).toBeChecked(); // untouched
       await page.getByRole('button', { name: /^Save$/i }).click();
       await expect(page.getByRole('dialog')).toHaveCount(0, {
