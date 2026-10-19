@@ -98,7 +98,9 @@ test.beforeAll(async () => {
   );
   await createMemoCallout('cyrillic', 'Решение', 'Cyrillic title memo body.');
   await createMemoCallout('punct', '!!! ??? ...', 'Punctuation title memo body.');
-  await createMemoCallout('long', 'A'.repeat(200), 'Very long title memo body.');
+  // Profile display names are capped at 128 characters by the server, so the
+  // longest seedable title is 128; 120 is still well past the 80-character slug cap.
+  await createMemoCallout('long', 'A'.repeat(120), 'Very long title memo body.');
   await createMemoCallout('live', `Live memo ${uniqueId}`, 'Initial paragraph.');
   const client = getGraphqlClient();
   const plans = await admin(token => client.GetPlatformLicensePlans({}, { authorization: `Bearer ${token}` }));
@@ -205,7 +207,7 @@ test.describe('US1 — a reader downloads a memo as PDF', () => {
     }
   });
 
-  test('US1-AS5 @forge-acceptance — non-Latin / punctuation-only titles fall back to memo-<date>.pdf; a 200-char title yields an 80-char slug', async ({ page }, testInfo) => {
+  test('US1-AS5 @forge-acceptance — non-Latin / punctuation-only titles fall back to memo-<date>.pdf; a 120-char title yields an 80-char slug', async ({ page }, testInfo) => {
     for (const key of ['cyrillic', 'punct']) {
       await openMemo(page, key);
       const { name } = await download(page, testInfo.outputPath(`as5-${key}.pdf`));
