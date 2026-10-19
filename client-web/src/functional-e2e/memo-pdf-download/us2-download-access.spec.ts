@@ -32,8 +32,10 @@ import { fillSecret } from '../helpers/login.helper';
  * Space P and a PRIVATE Space S (holding the memo under test and a second memo
  * whose bucket owns the embedded image) through the non-interactive GraphQL
  * endpoint, then walks the real UI and the real REST endpoint through the
- * gateway. An image READ denial (same bucket, no READ) maps to the same 422 in
- * MemoPdfDownloadService; it has unit coverage and is not re-created here.
+ * gateway. Everything it creates is deleted again in afterAll (Spaces supplied
+ * through the env vars are left alone). An image READ denial (same bucket, no
+ * READ) maps to the same 422 in MemoPdfDownloadService; it has unit coverage
+ * and is not re-created here.
  *
  * Environment (defaults suit the local forge stack; the file self-skips without
  * KRATOS_ADMIN_URL):
@@ -81,6 +83,18 @@ const PNG_1X1 = Buffer.from(
 
 const tokens = new Map<string, string>();
 
+/**
+ * Everything this run creates, recorded the moment it exists so the afterAll
+ * can undo a half-failed beforeAll. Spaces supplied through the env vars are
+ * never recorded here, so they are never deleted.
+ */
+const created = {
+  spaceIds: [] as string[],
+  calloutIds: [] as string[],
+  identityIds: {} as Partial<Record<Persona, string>>,
+  userIds: {} as Partial<Record<Persona, string>>,
+};
+
 async function mintToken(userEmail: string) {
   const password = userEmail === ADMIN_EMAIL ? ADMIN_PASSWORD : USER_PASSWORD;
   const cached = tokens.get(userEmail);
@@ -127,7 +141,8 @@ function must<T = any>(result: GqlResult<T>, what: string): T {
   return result.data as T;
 }
 
-async function createIdentity(userEmail: string, first: string, last: string) {
+async function createIdentity(persona: Persona, first: string, last: string) {
+  const userEmail = personaEmail[persona];
   const res = await fetch(`${KRATOS_ADMIN}/identities`, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
@@ -142,6 +157,15 @@ async function createIdentity(userEmail: string, first: string, last: string) {
     }),
   });
   expect(res.status, `kratos identity ${userEmail}`).toBe(201);
+  created.identityIds[persona] = ((await res.json()) as { id: string }).id;
+}
+
+/** Signs the persona in once over the API, which registers its Alkemio user. */
+async function registerAlkemioUser(persona: Persona) {
+  created.userIds[persona] = must(
+    await gql(personaEmail[persona], '{ me { user { id } } }'),
+    `${persona} me`
+  ).me.user.id as string;
 }
 
 async function acceptCookies(page: Page) {
@@ -225,7 +249,8 @@ type Container = {
   collaboration: { calloutsSet: { id: string } };
 };
 
-const CONTAINER_FIELDS = 'id community { roleSet { id } } collaboration { calloutsSet { id } }';
+const CONTAINER_FIELDS =
+  'id community { roleSet { id } } collaboration { calloutsSet { id } }';
 
 /** A Space of the given privacy: an existing one (env id) or a freshly created one. */
 async function space(
@@ -254,7 +279,7 @@ async function space(
     'admin account'
   ).me.user.account.id as string;
   const nameId = `us2-${privacy.toLowerCase()}-${RUN}`;
-  const created = must(
+  const newSpace = must(
     await gql(
       ADMIN_EMAIL,
       `mutation ($d: CreateSpaceOnAccountInput!) {
@@ -272,10 +297,11 @@ async function space(
     ),
     `create ${privacy} space`
   ).createSpace;
+  created.spaceIds.push(newSpace.id);
   let found: Container | null = null;
   // Space creation finishes asynchronously; poll the lookup until it resolves.
   await expect(async () => {
-    found = await lookup(created.id);
+    found = await lookup(newSpace.id);
     expect(found).not.toBeNull();
   }).toPass({ intervals: [1_000, 2_000], timeout: 90_000 });
   return found!;
@@ -311,6 +337,7 @@ async function createMemoCallout(
     ),
     `create memo callout ${title}`
   ).createCalloutOnCalloutsSet;
+  created.calloutIds.push(callout.id);
   if (publish) {
     must(
       await gql(
@@ -380,6 +407,7 @@ async function createMemoContribution(
     ),
     `create contributions callout ${title}`
   ).createCalloutOnCalloutsSet;
+  created.calloutIds.push(callout.id);
   const contribution = must(
     await gql(
       contributor,
@@ -472,6 +500,90 @@ async function openContributionMemo(page: Page, memo: MemoFixture) {
   });
 }
 
+async function adminMutation(
+  query: string,
+  variables: Record<string, unknown>,
+  what: string
+) {
+  const result = await gql(ADMIN_EMAIL, query, variables);
+  if (result.errors) {
+    throw new Error(`${what}: ${JSON.stringify(result.errors)}`);
+  }
+}
+
+async function deleteKratosIdentity(identityId: string) {
+  const res = await fetch(`${KRATOS_ADMIN}/identities/${identityId}`, {
+    method: 'DELETE',
+  });
+  // 404: already gone, which is the state teardown wants.
+  if (res.status !== 204 && res.status !== 404) {
+    throw new Error(`kratos DELETE answered ${res.status}`);
+  }
+}
+
+/**
+ * Undoes everything recorded in `created`, children first: callouts (with
+ * their memos, the uploaded image and the contribution), then the Spaces this
+ * run created (with the reader's membership and application), then the
+ * throwaway users and their Kratos identities. Every step is attempted; any
+ * failure fails the hook, because a leaked fixture breaks the next run.
+ */
+async function teardown() {
+  const failures: string[] = [];
+  const attempt = async (what: string, step: () => Promise<unknown>) => {
+    try {
+      await step();
+    } catch (error) {
+      failures.push(
+        `${what}: ${error instanceof Error ? error.message : String(error)}`
+      );
+    }
+  };
+  for (const id of created.calloutIds.splice(0).reverse()) {
+    await attempt(`delete callout ${id}`, () =>
+      adminMutation(
+        'mutation ($d: DeleteCalloutInput!) { deleteCallout(deleteData: $d) { id } }',
+        { d: { ID: id } },
+        'deleteCallout'
+      )
+    );
+  }
+  for (const id of created.spaceIds.splice(0).reverse()) {
+    await attempt(`delete space ${id}`, () =>
+      adminMutation(
+        'mutation ($d: DeleteSpaceInput!) { deleteSpace(deleteData: $d) { id } }',
+        { d: { ID: id } },
+        'deleteSpace'
+      )
+    );
+  }
+  for (const persona of Object.keys(personaEmail) as Persona[]) {
+    const userId = created.userIds[persona];
+    const identityId = created.identityIds[persona];
+    delete created.userIds[persona];
+    delete created.identityIds[persona];
+    if (userId) {
+      // deleteIdentity also removes the Kratos identity behind the user.
+      await attempt(`delete user ${persona}`, () =>
+        adminMutation(
+          'mutation ($d: DeleteUserInput!) { deleteUser(deleteData: $d) { id } }',
+          { d: { ID: userId, deleteIdentity: true } },
+          'deleteUser'
+        )
+      );
+    } else if (identityId) {
+      // The identity exists but its Alkemio user was never registered.
+      await attempt(`delete kratos identity ${persona}`, () =>
+        deleteKratosIdentity(identityId)
+      );
+    }
+  }
+  expect(
+    failures,
+    'US2 teardown left fixtures behind; the next run may fail in beforeAll'
+  ).toEqual([]);
+}
+
 const downloadButton = (page: Page) =>
   page.getByRole('button', { name: /download pdf/i });
 
@@ -496,19 +608,15 @@ test.describe(
       await Promise.all(openContexts.splice(0).map(context => context.close()));
     });
 
+    test.afterAll(teardown);
+
     test.beforeAll(async () => {
-      await createIdentity(personaEmail.reader, 'Rita', 'Reader');
-      await createIdentity(personaEmail.outsider, 'Otto', 'Outsider');
+      await createIdentity('reader', 'Rita', 'Reader');
+      await createIdentity('outsider', 'Otto', 'Outsider');
       // Both personas must exist as Alkemio users before they are used.
-      must(
-        await gql(personaEmail.reader, '{ me { user { id } } }'),
-        'reader me'
-      );
+      await registerAlkemioUser('reader');
       // Registered, but never given a role anywhere.
-      must(
-        await gql(personaEmail.outsider, '{ me { user { id } } }'),
-        'outsider me'
-      );
+      await registerAlkemioUser('outsider');
 
       // P is PUBLIC: an anonymous visitor may read its memo.
       const spaceP = await space(PUBLIC_SPACE_ID, 'PUBLIC');
