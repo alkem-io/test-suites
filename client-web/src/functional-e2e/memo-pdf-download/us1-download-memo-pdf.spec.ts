@@ -185,7 +185,14 @@ test.describe('US1 — a reader downloads a memo as PDF', () => {
 
   test('US1-AS4 @forge-acceptance — a paragraph typed by another collaborator is in the PDF (live read)', async ({ page, browser }, testInfo) => {
     await openMemo(page, 'live');
-    const collabContext = await browser.newContext({ acceptDownloads: true });
+    // The persona fixture overrides the storageState option, and a bare
+    // browser.newContext() inherits it, so the collaborator would start signed
+    // in as the reader. An explicit empty session makes it start logged out.
+    const collabContext = await browser.newContext({
+      acceptDownloads: true,
+      storageState: { cookies: [], origins: [] },
+    });
+    expect(await collabContext.cookies()).toHaveLength(0);
     const collab = await collabContext.newPage();
     try {
       await loginViaCrd(collab, 'space.admin@alkem.io');
