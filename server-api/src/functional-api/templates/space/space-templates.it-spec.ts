@@ -17,11 +17,11 @@ import {
 import {
   getTemplateContentSpaceFlowStates,
   updateInnovationFlowStateSidebar,
-  updateInnovationFlowStatesSortOrder,
 } from './space-template.request.params';
 import {
   getInnovationFlowStatesWithIds,
   updateInnovationFlowState,
+  updateInnovationFlowStatesSortOrder,
 } from '@functional-api/innovation-flow/innovation-flow.request.params';
 import { SidebarWidget } from '@alkemio/tests-lib/core/generated/alkemio-schema';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
