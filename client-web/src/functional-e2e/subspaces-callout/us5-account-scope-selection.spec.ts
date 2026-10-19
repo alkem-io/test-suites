@@ -12,10 +12,15 @@
 // organisation's): host L0 A (PUBLIC) with A1 → A1a; sibling L0 B (PRIVATE,
 // the host admin is a member) with B1 (PUBLIC, named like A1 to force the
 // chip's "in <parent>" context); L0 C (PRIVATE, the host admin is NOT a
-// member — the candidate the picker must withhold). Three callouts on A:
-// `pick` (AUTO, the admin curates it in the browser), `mixed` {A1a, B, B1}
-// and `withheld` {B, B1}. Three viewers: the host admin (member of A and B),
-// a member of A only, and an anonymous visitor.
+// member — the candidate the picker must withhold), and B2 (PRIVATE under B;
+// the host admin becomes its member only inside US5-AS6, which proves that
+// membership of the private L0 alone does not reach its private subspaces).
+// Four callouts on A: `pick` (AUTO, the admin curates it in the browser),
+// `mixed` {A1a, B, B1}, `withheld` {B, B1} and `priv` (AUTO, curated to {B2}
+// in US5-AS6). Three viewers: the host admin (member of A and B), a member of
+// A only, and an anonymous visitor. US5-AS7 adds A2 (PRIVATE under A), a
+// `matrix` post selecting {A1, A2, B, B1, B2}, and three more viewers: an
+// admin of BOTH A and B, a member of B only, and a registered non-member.
 
 import { type Browser, expect, type Locator, type Page } from '@playwright/test';
 import {
@@ -66,10 +71,14 @@ const NAMES = {
   B: `Acct sibling B ${uid}`,
   B1: `Community of practice ${uid}`,
   C: `Acct closed C ${uid}`,
+  B2: `Closed B2 ${uid}`,
+  A2: `Closed A2 ${uid}`,
   pick: `Portfolio pick ${uid}`,
   mixed: `Portfolio mixed ${uid}`,
   withheld: `Portfolio withheld ${uid}`,
   auto: `Portfolio auto ${uid}`,
+  priv: `Portfolio private B2 ${uid}`,
+  matrix: `Portfolio matrix ${uid}`,
 };
 
 const scenarioConfig: TestScenarioConfig = {
@@ -94,9 +103,15 @@ const scenarioConfig: TestScenarioConfig = {
 };
 
 let scenario: OrganizationWithSpaceModel | undefined;
-const extra = newFixtureTree(); // B, B1, C — removed leaves-first in afterAll
-const ids = { A: '', A1: '', A1a: '', B: '', B1: '', C: '' };
-const callouts = { pick: '', mixed: '', withheld: '', auto: '' };
+const extra = newFixtureTree(); // B, B1, B2, C — removed leaves-first in afterAll
+const ids = { A: '', A1: '', A1a: '', A2: '', B: '', B1: '', B2: '', C: '' };
+const roleSets = { B: '', B2: '' };
+const callouts = { pick: '', mixed: '', withheld: '', auto: '', priv: '', matrix: '' };
+// Viewers added in US5-AS7 (harness personas; no role on A or B until then).
+const BOTH_ADMIN = 'subspace.admin@alkem.io';
+const B_MEMBER = 'subspace.member@alkem.io';
+const NON_MEMBER = 'non.space@alkem.io';
+let spaceAdminId = '';
 
 // ---------------------------------------------------------------------------
 // API helpers (global admin)
@@ -117,9 +132,14 @@ const createL0 = async (displayName: string, nameID: string, privacy: SpacePriva
   return { id: data.createSpace.id, roleSetId: data.createSpace.community.roleSet.id };
 };
 
-const createL1 = async (parentId: string, displayName: string, nameID: string, privacy: SpacePrivacyMode): Promise<string> => {
-  const data = await adminGql<{ createSubspace: { id: string } }>(
-    'mutation($d: CreateSubspaceInput!){ createSubspace(subspaceData: $d) { id } }',
+const createL1 = async (
+  parentId: string,
+  displayName: string,
+  nameID: string,
+  privacy: SpacePrivacyMode
+): Promise<{ id: string; roleSetId: string }> => {
+  const data = await adminGql<{ createSubspace: { id: string; community: { roleSet: { id: string } } } }>(
+    'mutation($d: CreateSubspaceInput!){ createSubspace(subspaceData: $d) { id community { roleSet { id } } } }',
     {
       d: {
         spaceID: parentId,
@@ -130,7 +150,7 @@ const createL1 = async (parentId: string, displayName: string, nameID: string, p
       },
     }
   );
-  return data.createSubspace.id;
+  return { id: data.createSubspace.id, roleSetId: data.createSubspace.community.roleSet.id };
 };
 
 const createSpacesPost = async (displayName: string, selection?: { mode: 'AUTO' | 'CUSTOM'; selectedIds: string[] }): Promise<string> => {
@@ -154,6 +174,19 @@ const selectionOf = async (calloutId: string): Promise<{ mode: string; selectedI
       { id: calloutId }
     )
   ).lookup.callout.settings.framing.selection;
+
+const userIdByEmail = async (email: string): Promise<string> =>
+  (
+    await adminGql<{ usersPaginated: { users: { id: string }[] } }>(
+      'query($f: UserFilterInput){ usersPaginated(filter: $f, first: 1) { users { id } } }',
+      { f: { email } }
+    )
+  ).usersPaginated.users[0].id;
+
+const grantRole = async (email: string, roleSetId: string, role: RoleName): Promise<void> => {
+  const res = await assignRoleToUser(await userIdByEmail(email), roleSetId, role);
+  if (res.error) throw new Error(`${role} for ${email}: ${JSON.stringify(res.error)}`);
+};
 
 const renderedIdsFor = async (calloutId: string, as: TestUser): Promise<{ ids: string[]; hidden: boolean }> => {
   const res = await graphqlRequestAuth(
@@ -272,13 +305,14 @@ test.describe.serial('US5 — Spaces from the whole account in Manual selection 
 
     const b = await createL0(NAMES.B, shortId('acctb'), SpacePrivacyMode.Private);
     ids.B = b.id;
+    roleSets.B = b.roleSetId;
     const adminId = (
       await adminGql<{ lookupByName: { user: { id: string } } }>(
         'query($e: String!){ lookupByName { user(NAMEID: $e) { id } } }',
         { e: 'space-admin' }
       ).catch(() => ({ lookupByName: { user: { id: '' } } }))
     ).lookupByName.user.id;
-    const spaceAdminId =
+    spaceAdminId =
       adminId ||
       (
         await adminGql<{ usersPaginated: { users: { id: string }[] } }>(
@@ -288,20 +322,30 @@ test.describe.serial('US5 — Spaces from the whole account in Manual selection 
       ).usersPaginated.users[0].id;
     const member = await assignRoleToUser(spaceAdminId, b.roleSetId, RoleName.Member);
     if (member.error) throw new Error(`admin member of B: ${JSON.stringify(member.error)}`);
-    ids.B1 = await createL1(ids.B, NAMES.B1, shortId('acctb1'), SpacePrivacyMode.Public);
+    ids.B1 = (await createL1(ids.B, NAMES.B1, shortId('acctb1'), SpacePrivacyMode.Public)).id;
+    // B2: private under private B. The admin is a member of B, NOT of B2, so
+    // B2 is the one row of B's tree the admin cannot read (until US5-AS6).
+    const b2 = await createL1(ids.B, NAMES.B2, shortId('acctb2'), SpacePrivacyMode.Private);
+    ids.B2 = b2.id;
+    roleSets.B2 = b2.roleSetId;
     const c = await createL0(NAMES.C, shortId('acctc'), SpacePrivacyMode.Private);
     ids.C = c.id;
-    extra.subspaceIds.push(ids.B1, ids.B, ids.C); // leaves first for the teardown
+    extra.subspaceIds.push(ids.B1, ids.B2, ids.B, ids.C); // leaves first for the teardown
 
     callouts.pick = await createSpacesPost(NAMES.pick);
     callouts.mixed = await createSpacesPost(NAMES.mixed, { mode: 'CUSTOM', selectedIds: [ids.A1a, ids.B, ids.B1] });
     callouts.withheld = await createSpacesPost(NAMES.withheld, { mode: 'CUSTOM', selectedIds: [ids.B, ids.B1] });
     callouts.auto = await createSpacesPost(NAMES.auto);
+    callouts.priv = await createSpacesPost(NAMES.priv);
 
     // Precondition read-backs: the privilege shape the whole file rests on.
     expect((await renderedIdsFor(callouts.mixed, TestUser.SPACE_ADMIN)).ids.sort()).toEqual([ids.A1a, ids.B, ids.B1].sort());
     const asMember = await renderedIdsFor(callouts.mixed, TestUser.SPACE_MEMBER);
     expect(asMember, 'member of A only must see A1a and be told something is hidden').toEqual({ ids: [ids.A1a], hidden: true });
+    expect(
+      (await renderedIdsFor(callouts.mixed, TestUser.SPACE_ADMIN)).ids,
+      'B2 is not selected anywhere yet; its existence must not surface'
+    ).not.toContain(ids.B2);
   });
 
   test.afterAll(async () => {
@@ -411,7 +455,7 @@ test.describe.serial('US5 — Spaces from the whole account in Manual selection 
     page,
   }) => {
     test.setTimeout(120_000);
-    const newId = await createL1(ids.B, `Late arrival ${uid}`, shortId('acctlate'), SpacePrivacyMode.Public);
+    const newId = (await createL1(ids.B, `Late arrival ${uid}`, shortId('acctlate'), SpacePrivacyMode.Public)).id;
     extra.subspaceIds.unshift(newId);
 
     const pick = await openSpace(page, NAMES.pick);
@@ -485,5 +529,156 @@ test.describe.serial('US5 — Spaces from the whole account in Manual selection 
       await expect(block.locator('article')).toHaveCount(0);
       await expect(block.getByText(NAMES.B, { exact: true })).toHaveCount(0);
     });
+  });
+
+  test('US5-AS6 — membership of a private sibling does not reach its private subspace: B2 is withheld until the admin joins B2, then offered, saved, rendered to the admin and hidden (with the notice) from a member of A only', async ({
+    page,
+    browser,
+  }) => {
+    test.setTimeout(240_000);
+    // Server half first: the picker's candidate query, as the admin, before the membership change.
+    const candidates = async (): Promise<string[]> => {
+      const token = await getUserToken(ADMIN);
+      const res = await fetch(process.env.ALKEMIO_SERVER || `${baseUrl}/api/private/non-interactive/graphql`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({
+          query: 'query($id: UUID!){ lookup { space(ID: $id) { accountSpaces { id } } } }',
+          variables: { id: ids.A },
+        }),
+      });
+      const body = await res.json();
+      expect(body.errors, `accountSpaces as the admin: ${JSON.stringify(body.errors ?? '').slice(0, 300)}`).toBeUndefined();
+      return body.data.lookup.space.accountSpaces.map((s: { id: string }) => s.id);
+    };
+    const before = await candidates();
+    expect(before, 'member of B → B and public B1 are candidates').toEqual(expect.arrayContaining([ids.B, ids.B1]));
+    expect(before, 'member of B only → private B2 is not a candidate').not.toContain(ids.B2);
+
+    // Browser: B's tree lists B and B1, and nothing of B2.
+    await openEdit(page, NAMES.priv);
+    const sw = dialog(page).getByRole('switch', { name: COPY.manualSwitch });
+    await sw.click();
+    await expect(sw).toBeChecked();
+    await expect(row(page, NAMES.B, COPY.level.space)).toBeVisible({ timeout: 15_000 });
+    await expect(row(page, NAMES.B1, COPY.path(COPY.level.subspace, NAMES.B))).toBeVisible();
+    await expect(dialog(page).getByText(NAMES.B2)).toHaveCount(0);
+    const search = dialog(page).getByRole('textbox', { name: COPY.search });
+    await search.fill('Closed B2');
+    await expect(row(page, NAMES.B, COPY.level.space)).toHaveCount(0);
+    await expect(dialog(page).getByText(NAMES.B2)).toHaveCount(0);
+
+    // The admin joins B2 (global admin assigns the role) → READ on B2.
+    const joined = await assignRoleToUser(spaceAdminId, roleSets.B2, RoleName.Member);
+    if (joined.error) throw new Error(`admin member of B2: ${JSON.stringify(joined.error)}`);
+    expect(await candidates(), 'member of B2 → B2 is a candidate').toContain(ids.B2);
+
+    // Fresh editor: B2 is offered with its path under B, picked and saved.
+    await openEdit(page, NAMES.priv);
+    const sw2 = dialog(page).getByRole('switch', { name: COPY.manualSwitch });
+    await sw2.click();
+    await expect(sw2).toBeChecked();
+    const b2Row = row(page, NAMES.B2, COPY.path(COPY.level.subspace, NAMES.B));
+    await expect(b2Row).toBeVisible({ timeout: 15_000 });
+    await b2Row.click();
+    await expect(chip(page, `Remove ${NAMES.B2}`)).toBeVisible();
+    await expect(dialog(page).getByText(COPY.selected(1), { exact: true })).toBeVisible();
+    await dialog(page).getByRole('button', { name: COPY.save, exact: true }).click();
+    await expect(dialog(page).getByRole('switch', { name: COPY.manualSwitch })).toHaveCount(0, { timeout: 15_000 });
+    expect(await selectionOf(callouts.priv)).toEqual({ mode: 'CUSTOM', selectedIds: [ids.B2] });
+
+    // Rendering follows READ per viewer: the admin gets B2's card, a member of A only gets the notice.
+    expect(await renderedIdsFor(callouts.priv, TestUser.SPACE_ADMIN)).toEqual({ ids: [ids.B2], hidden: false });
+    expect(await renderedIdsFor(callouts.priv, TestUser.SPACE_MEMBER)).toEqual({ ids: [], hidden: true });
+    const block = await openSpace(page, NAMES.priv);
+    await findArticleByName(block, NAMES.B2);
+    await expect(block.locator('article')).toHaveCount(1);
+    await expect(block.getByText(COPY.notice, { exact: true })).toHaveCount(0);
+    await viewAs(browser, MEMBER, async memberPage => {
+      const memberBlock = await openSpace(memberPage, NAMES.priv);
+      await expect(memberBlock.getByText(COPY.notice, { exact: true })).toBeVisible({ timeout: 20_000 });
+      await expect(memberBlock.locator('article')).toHaveCount(0);
+      await expect(memberBlock.getByText(NAMES.B2, { exact: true })).toHaveCount(0);
+    });
+  });
+
+  test('US5-AS7 — viewer matrix on a post selecting {A1, A2, B, B1, B2}: an admin of both L0s reads every private (sub)space, everyone else gets exactly what READ allows plus the notice, and no viewer gets an error', async ({
+    browser,
+  }) => {
+    test.setTimeout(300_000);
+    // A2: PRIVATE under the public host. Created last so the AUTO/pick counts
+    // of the earlier cases are untouched (serial describe).
+    ids.A2 = (await createL1(ids.A, NAMES.A2, shortId('accta2'), SpacePrivacyMode.Private)).id;
+    extra.subspaceIds.unshift(ids.A2);
+    // Roles: BOTH_ADMIN administers A and B (admin of an L0 reads its private
+    // subspaces through the cascading admin rule); B_MEMBER is a member of B only.
+    for (const rs of [scenario!.space.community.roleSetId, roleSets.B]) {
+      await grantRole(BOTH_ADMIN, rs, RoleName.Member);
+      await grantRole(BOTH_ADMIN, rs, RoleName.Admin);
+    }
+    await grantRole(B_MEMBER, roleSets.B, RoleName.Member);
+    const all = [ids.A1, ids.A2, ids.B, ids.B1, ids.B2];
+    callouts.matrix = await createSpacesPost(NAMES.matrix, { mode: 'CUSTOM', selectedIds: all });
+    expect((await selectionOf(callouts.matrix)).selectedIds.sort()).toEqual([...all].sort());
+
+    // The expected rows. A1 is public under public A → anyone. B1 is public
+    // under PRIVATE B → members of B only. A2 and B2 are private → their own
+    // members and their L0's admins.
+    const rows: { label: string; email: string | null; as?: TestUser; ids: string[]; hidden: boolean }[] = [
+      { label: 'admin of A and B', email: BOTH_ADMIN, as: TestUser.SUBSPACE_ADMIN, ids: all, hidden: false },
+      { label: 'member of A only', email: MEMBER, as: TestUser.SPACE_MEMBER, ids: [ids.A1], hidden: true },
+      { label: 'member of B only', email: B_MEMBER, as: TestUser.SUBSPACE_MEMBER, ids: [ids.A1, ids.B, ids.B1], hidden: true },
+      { label: 'registered non-member', email: NON_MEMBER, as: TestUser.NON_SPACE_MEMBER, ids: [ids.A1], hidden: true },
+      { label: 'anonymous', email: null, ids: [ids.A1], hidden: true },
+    ];
+    const nameOf = new Map<string, string>([
+      [ids.A1, NAMES.A1],
+      [ids.A2, NAMES.A2],
+      [ids.B, NAMES.B],
+      [ids.B1, NAMES.B1],
+      [ids.B2, NAMES.B2],
+    ]);
+
+    for (const r of rows) {
+      // Server half: the per-viewer list and flag, with no GraphQL error.
+      if (r.as) {
+        expect(await renderedIdsFor(callouts.matrix, r.as), r.label).toEqual({ ids: expect.arrayContaining(r.ids), hidden: r.hidden });
+        expect((await renderedIdsFor(callouts.matrix, r.as)).ids, r.label).toHaveLength(r.ids.length);
+      } else {
+        const anon = await fetch(`${baseUrl}/api/public/graphql`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            query: 'query($id: UUID!){ lookup { callout(ID: $id) { hasHiddenSpaces framing { subspaces { id } } } } }',
+            variables: { id: callouts.matrix },
+          }),
+        });
+        const body = await anon.json();
+        expect(body.errors, `${r.label}: ${JSON.stringify(body.errors ?? '').slice(0, 300)}`).toBeUndefined();
+        expect(body.data.lookup.callout.hasHiddenSpaces, r.label).toBe(r.hidden);
+        expect(body.data.lookup.callout.framing.subspaces.map((x: { id: string }) => x.id), r.label).toEqual(r.ids);
+      }
+
+      // Browser half: exactly the readable cards, the notice iff something is withheld, no error surface.
+      await viewAs(browser, r.email, async page => {
+        const block = await openSpace(page, NAMES.matrix);
+        await expect(block.locator('article'), r.label).toHaveCount(r.ids.length, { timeout: 20_000 });
+        // A1 and B1 share a name: count headings per distinct name.
+        const expectedNames = r.ids.map(id => nameOf.get(id)!);
+        for (const name of new Set(expectedNames)) {
+          await expect(block.getByRole('heading', { name, exact: true }), `${r.label}: ${name}`).toHaveCount(
+            expectedNames.filter(n => n === name).length
+          );
+        }
+        for (const [id, name] of nameOf) {
+          if (!r.ids.includes(id) && !expectedNames.includes(name)) {
+            await expect(block.getByText(name, { exact: true }), `${r.label} must not see ${name}`).toHaveCount(0);
+          }
+        }
+        if (r.hidden) await expect(block.getByText(COPY.notice, { exact: true }), r.label).toBeVisible();
+        else await expect(block.getByText(COPY.notice, { exact: true }), r.label).toHaveCount(0);
+        await expect(page.getByText(/something went wrong|unexpected error/i), r.label).toHaveCount(0);
+      });
+    }
   });
 });
