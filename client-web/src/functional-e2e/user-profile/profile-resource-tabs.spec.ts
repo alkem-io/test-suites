@@ -14,7 +14,8 @@
 // hide the viewer-dependent filters this feature rests on):
 //   - the registered, non-privileged `non.space` persona for the VISITOR cases
 //     (PT-1 … PT-6; three of them skipped on server#6670, see below);
-//   - the profile's OWNER for the Other Resources cases (PT-1o, PT-4o, PT-6o):
+//   - the profile's OWNER for the Other Resources cases (PT-1o, PT-4o, PT-6o,
+//     and their empty twins PT-2o, PT-5o that keep AC5's "hidden" half falsifiable):
 //     the user on their own page, and a plain user who administers the
 //     organisation on its page. These are the viewers the server resolves
 //     `User.account` / `Organization.account` for today, so they are the only
@@ -480,6 +481,21 @@ test.describe('Public profile resource tabs — user (client-web#10179)', () => 
     await expect(text(page, EMPTY_USER_MEMBERSHIP)).toBeVisible();
   });
 
+  // AC5 for a viewer the server resolves `account` for: PT-1o is the positive
+  // twin (the owner of a pack sees Other Resources), so here the hidden tab can
+  // fail. PT-2's visitor cannot make it fail while server#6670 stands.
+  test('PT-2o — the same bare user on their OWN profile sees only Member Of: Other Resources stays hidden although this viewer could see it', async ({
+    browser,
+  }) => {
+    const user = u3!;
+    await asViewer(browser, user.email, async page => {
+      await openProfile(page, `/user/${user.nameID}`, user.displayName);
+      await expect(tabs(page)).toHaveText([TAB.user.memberOf]);
+      await expect(tab(page, TAB.user.memberOf)).toHaveAttribute('aria-selected', 'true');
+      await expect(text(page, EMPTY_USER_MEMBERSHIP)).toBeVisible();
+    });
+  });
+
   test('PT-3 — a user who leads only a subspace sees Leading and Member Of; the L1 under Leading, the L0 under Member Of', async ({
     page,
   }) => {
@@ -611,6 +627,20 @@ test.describe('Public profile resource tabs — organisation (client-web#10179)'
     orgDId = d.data?.createOrganization.id;
     if (!orgDId) throw new Error('org D id missing from createOrganization');
     orgD = { nameID: d.data!.createOrganization.nameID, displayName };
+    // The org admin administers D as well, so PT-5o can view D as a viewer who
+    // would see Other Resources if D owned anything.
+    const orgDRoleSetId = (
+      await adminGql<{ lookup: { organization: { roleSet: { id: string } } } }>(
+        'query($id: UUID!){ lookup { organization(ID: $id) { roleSet { id } } } }',
+        { id: orgDId }
+      )
+    ).lookup.organization.roleSet.id;
+    for (const role of [RoleName.Associate, RoleName.Admin]) {
+      failOnError(
+        `org admin ${role} of org D`,
+        await assignRoleToUser(orgAdmin.id, orgDRoleSetId, role)
+      );
+    }
     expect(
       await rolesOf('rolesOrganization', orgDId),
       'org D must hold no Space role'
@@ -705,6 +735,19 @@ test.describe('Public profile resource tabs — organisation (client-web#10179)'
     await expect(tabs(page)).toHaveText([TAB.org.memberOf]);
     await expect(tab(page, TAB.org.memberOf)).toHaveAttribute('aria-selected', 'true');
     await expect(text(page, EMPTY_ORG_MEMBERSHIP)).toBeVisible();
+  });
+
+  // AC5 for the organisation case, with a viewer who could see Other Resources
+  // (PT-4o / PT-6o are the positive twins). PT-5's visitor cannot make it fail.
+  test('PT-5o — the bare organisation\'s own admin sees only All Memberships: Other Resources stays hidden although this viewer could see it', async ({
+    browser,
+  }) => {
+    await asViewer(browser, orgAdmin!.email, async page => {
+      await openProfile(page, `/organization/${orgD!.nameID}`, orgD!.displayName);
+      await expect(tabs(page)).toHaveText([TAB.org.memberOf]);
+      await expect(tab(page, TAB.org.memberOf)).toHaveAttribute('aria-selected', 'true');
+      await expect(text(page, EMPTY_ORG_MEMBERSHIP)).toBeVisible();
+    });
   });
 
   /** S6 on org C's profile, for any viewer who can see Other Resources. */
