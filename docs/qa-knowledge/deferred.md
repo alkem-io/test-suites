@@ -31,6 +31,7 @@ re-derive it from scratch in a future run.
 | Space delete is refused, and the Space stays whole, when a document in the Space-level bucket is held by a signing attempt | server#6614 / #6637 | No harness lever to create a signing attempt (memo signing needs a provider). Unit-pinned in `space.service.spec.ts` | A signing stub or test provider on the stack | test-suites |
 | file-service fails during the Space profile's bucket delete, then a retry finishes the job | server#6637 | No fault injection for file-service. Unit-pinned | A file-service fault-injection lever | test-suites |
 | #6655 orphan-cleanup migration, and "after `authorizationPolicyResetAll` every remaining policy is reachable from a live record" | server#6614 / #6657 / #6655 | Whole-table SQL. No DB access (standing) | Not expected to clear. Release-ops SQL with #6655 | Release verification / DBA |
+| Backwards relay paging (`last`/`before`) in server `getRelayStylePaginationResults`: with `sort: 'DESC'` the window is `rowId > c AND rowId <= c - last` (always empty); with `ASC` a filter that leaves `rowId` gaps shortens the page (harness.md, code-read 2026-10-15) | server#6561 (side note) | Code read only, never executed; no consumer sending `last`/`before` was found, so there is nothing user-facing to reproduce and no server issue yet. Its unit spec is fully mocked | A consumer of `last`/`before` appears, or a real-DB reproduction is written; then file the server issue and add a bounded case next to AF-11 | QA lead / server |
 
 ## Cleared
 

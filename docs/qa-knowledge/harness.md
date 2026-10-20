@@ -64,7 +64,7 @@ place; cite this file instead of rediscovering a gap.
   - `after` is resolved through the **same filtered** query builder. A cursor taken from a row the current filter excludes raises `Unable to find entity with ID`.
   - `total` is the filtered count.
   - `hasNextPage` is a filtered count past the end row.
-  - **Code-read, not run:** with `sort: 'DESC'`, `last`/`before` builds `rowId > c AND rowId <= c - last`, which is always empty. With `ASC`, it assumes contiguous `rowId`s, so any filter shortens backwards pages. No issue is filed.
+  - **Code-read, not run:** with `sort: 'DESC'`, `last`/`before` builds `rowId > c AND rowId <= c - last`, which is always empty. With `ASC`, it assumes contiguous `rowId`s, so any filter shortens backwards pages. No server issue is filed, because it is a code read with no reproduction and no consumer sending `last`/`before` was found; tracked as an open row in `deferred.md` so it is not lost.
   - Its unit spec is fully mocked.
   - 2026-10-15.
 

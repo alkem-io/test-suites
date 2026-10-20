@@ -1449,6 +1449,12 @@ Based on the comprehensive test plan above, the following scenarios are **P1 pri
 | --- | --------------------------------------- | ------ | ------------------------------- |
 | 23  | **8.1** - Post Collection Full Workflow | ✅     | `callout-full-workflow.spec.ts` |
 
+### **Error Handling (1 scenario)**
+
+| #   | Scenario                                                         | Status | Test File                               |
+| --- | ---------------------------------------------------------------- | ------ | --------------------------------------- |
+| 24  | **10.6** - Description over the Limit (client-web#9972)          | ✅     | `0.10callout-description-limit.spec.ts` |
+
 ---
 
 ### **P1 Implementation Summary**
@@ -1463,11 +1469,12 @@ Based on the comprehensive test plan above, the following scenarios are **P1 pri
 | Contributions          | 3      | 3              | 0          | 0                  |
 | Access Control         | 2      | 2              | 0          | 0                  |
 | Type-Specific          | 1      | 1              | 0          | 0                  |
-| **Total P1 Scenarios** | **28** | **28**         | **0**      | **0**              |
+| Error Handling         | 1      | 1              | 0          | 0                  |
+| **Total P1 Scenarios** | **29** | **29**         | **0**      | **0**              |
 
 **Test Files Location:** `client-web/src/functional-e2e/callouts/`
 
-**Total Test Files:** 9
+**Total Test Files:** 10
 
 - `callout-creation.spec.ts` - Tests 1.1-1.9 (9 tests: Post, Whiteboard, CTA, Memo + 4 collection types + member cannot create)
 - `callout-subspace-creation.spec.ts` - Tests 1.10, 1.11 (2 tests: Subspace creation + cannot create in parent)
@@ -1478,6 +1485,7 @@ Based on the comprehensive test plan above, the following scenarios are **P1 pri
 - `callout-contributions.spec.ts` - Tests 6.1, 6.2, 6.4
 - `callout-access-control.spec.ts` - Tests 7.1, 7.2
 - `callout-full-workflow.spec.ts` - Test 8.1
+- `0.10callout-description-limit.spec.ts` - Test 10.6 (3 tests: over the limit, missing title wins, ring thresholds; client-web#9972)
 
 ---
 
@@ -1590,18 +1598,18 @@ Based on the comprehensive test plan above, the following scenarios are **P1 pri
 | 7. Callout Access Control by Role     | 5      | 2              | 0          | 3                  |
 | 8. Callout Types - Specific Behaviors | 4      | 1              | 0          | 3                  |
 | 9. Cross-Level Callout Visibility     | 3      | 0              | 0          | 3                  |
-| 10. Error Handling and Edge Cases | 6 | 1 | 0 | 5 |
-| **Total**                             | **59** | **28**         | **0**      | **31**             |
+| 10. Error Handling and Edge Cases     | 6      | 1              | 0          | 5                  |
+| **Total**                             | **60** | **29**         | **0**      | **31**             |
 
 **Test Files Location:** `client-web/src/functional-e2e/callouts/`
 
-**Total Test Files:** 9
+**Total Test Files:** 10
 
 ---
 
-**Total Test Scenarios: 59**
+**Total Test Scenarios: 60**
 
-- **P1 (Critical)**: 28 scenarios (28 implemented ✅)
+- **P1 (Critical)**: 29 scenarios (29 implemented ✅)
 - **P2 (Important)**: 23 scenarios (0 implemented)
 - **P3 (Nice to have)**: 8 scenarios (0 implemented)
 
