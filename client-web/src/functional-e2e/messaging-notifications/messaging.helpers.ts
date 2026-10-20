@@ -291,12 +291,15 @@ export async function conversationNamesOf(email: string): Promise<string[]> {
     '{ me { conversations { conversations { id room { displayName } } } } }',
     { bearerToken }
   );
-  if (result.body.errors) {
+  // This read is the evidence that a removal landed, and US2-AS4 polls it
+  // with `.not.toContain`: a failed read that came back as `[]` would pass
+  // that poll at once. So anything but HTTP 200 with a conversations array
+  // throws; the status and raw body name the cause.
+  const conversations = result.body?.data?.me?.conversations?.conversations;
+  if (result.status !== 200 || result.body?.errors || !conversations) {
     throw new Error(
-      `me.conversations read failed for ${email}: ${JSON.stringify(result.body.errors)}`
+      `me.conversations read failed for ${email} (HTTP ${result.status}): ${result.raw.slice(0, 300)}`
     );
   }
-  return (result.body.data?.me.conversations.conversations ?? []).map(
-    c => c.room.displayName
-  );
+  return conversations.map(c => c.room.displayName);
 }

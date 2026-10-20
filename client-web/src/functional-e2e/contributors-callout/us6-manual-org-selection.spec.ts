@@ -138,8 +138,14 @@ test.describe.serial('US6 — Organisations in Manual selection (client-web#1030
     await resultRow(page, ORG, 'organization').click();
     await expect(chip(page, ORG)).toBeVisible();
 
-    await searchBox(page).fill(PERSON);
+    // An already-selected contributor leaves the result list. The query is the
+    // run id, which both fixture names carry: the person row resolving proves
+    // the filtered list is rendered before the organisation's absence is
+    // asserted, so the count-0 check cannot pass on a list that has not
+    // updated yet.
+    await searchBox(page).fill(uid);
     await expect(resultRow(page, PERSON, 'user')).toBeVisible();
+    await expect(resultRow(page, ORG, 'organization')).toHaveCount(0);
     await resultRow(page, PERSON, 'user').click();
     await expect(chip(page, PERSON)).toBeVisible();
 
@@ -148,9 +154,6 @@ test.describe.serial('US6 — Organisations in Manual selection (client-web#1030
       await expect(c).not.toContainText(UUID);
       await expect(c).not.toContainText(COPY.noLongerAvailable);
     }
-    // An already-selected contributor leaves the result list.
-    await searchBox(page).fill(ORG);
-    await expect(resultRow(page, ORG, 'organization')).toHaveCount(0);
 
     await saveAndReload(page, cc);
     expect(await selection()).toEqual({ mode: 'CUSTOM', selectedIds: expect.arrayContaining([orgId, personId]) });

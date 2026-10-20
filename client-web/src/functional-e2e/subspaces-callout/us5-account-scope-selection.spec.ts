@@ -303,9 +303,13 @@ test.describe.serial('US5 — Spaces from the whole account in Manual selection 
     NAMES.A1a = scenario.subsubspace.about.profile.displayName;
     expect(NAMES.A1, "B1 must share A1's name").toBe(`Community of practice ${uid}`);
 
+    // Every extra space is registered for the teardown the moment it exists,
+    // leaves first (each child is created after its parent, so `unshift`
+    // keeps that order), so a failure later in this hook leaks nothing.
     const b = await createL0(NAMES.B, shortId('acctb'), SpacePrivacyMode.Private);
     ids.B = b.id;
     roleSets.B = b.roleSetId;
+    extra.subspaceIds.unshift(ids.B);
     const adminId = (
       await adminGql<{ lookupByName: { user: { id: string } } }>(
         'query($e: String!){ lookupByName { user(NAMEID: $e) { id } } }',
@@ -323,14 +327,16 @@ test.describe.serial('US5 — Spaces from the whole account in Manual selection 
     const member = await assignRoleToUser(spaceAdminId, b.roleSetId, RoleName.Member);
     if (member.error) throw new Error(`admin member of B: ${JSON.stringify(member.error)}`);
     ids.B1 = (await createL1(ids.B, NAMES.B1, shortId('acctb1'), SpacePrivacyMode.Public)).id;
+    extra.subspaceIds.unshift(ids.B1);
     // B2: private under private B. The admin is a member of B, NOT of B2, so
     // B2 is the one row of B's tree the admin cannot read (until US5-AS6).
     const b2 = await createL1(ids.B, NAMES.B2, shortId('acctb2'), SpacePrivacyMode.Private);
     ids.B2 = b2.id;
     roleSets.B2 = b2.roleSetId;
+    extra.subspaceIds.unshift(ids.B2);
     const c = await createL0(NAMES.C, shortId('acctc'), SpacePrivacyMode.Private);
     ids.C = c.id;
-    extra.subspaceIds.push(ids.B1, ids.B2, ids.B, ids.C); // leaves first for the teardown
+    extra.subspaceIds.unshift(ids.C);
 
     callouts.pick = await createSpacesPost(NAMES.pick);
     callouts.mixed = await createSpacesPost(NAMES.mixed, { mode: 'CUSTOM', selectedIds: [ids.A1a, ids.B, ids.B1] });
@@ -350,10 +356,15 @@ test.describe.serial('US5 — Spaces from the whole account in Manual selection 
 
   test.afterAll(async () => {
     test.setTimeout(180_000);
-    await deleteFixtureTree(extra, async id =>
-      adminGql('mutation($d: DeleteSpaceInput!){ deleteSpace(deleteData: $d) { id } }', { d: { ID: id } })
-    );
-    if (scenario) await TestScenarioFactory.cleanUpBaseScenario(scenario);
+    // `deleteFixtureTree` throws by design when any delete fails; the host
+    // space and the scenario organisation must still go.
+    try {
+      await deleteFixtureTree(extra, async id =>
+        adminGql('mutation($d: DeleteSpaceInput!){ deleteSpace(deleteData: $d) { id } }', { d: { ID: id } })
+      );
+    } finally {
+      if (scenario) await TestScenarioFactory.cleanUpBaseScenario(scenario);
+    }
   });
 
   test('US5-AS1 — the picker lists the whole account with level + path, badges the host and its tree, withholds C, searches, clears with Escape; the saved pick renders exactly B, B1 and A1a', async ({
@@ -499,7 +510,10 @@ test.describe.serial('US5 — Spaces from the whole account in Manual selection 
       }),
     });
     const body = await res.json();
-    expect(body.data?.lookup?.callout?.settings?.framing?.selection?.selectedIds ?? []).toEqual([]);
+    // The server redacts the LIST only (`selectedIds: []`) and keeps `mode`, so
+    // the mode is the positive anchor: a failed or empty read cannot pass.
+    expect(body.errors, `member API read: ${JSON.stringify(body).slice(0, 300)}`).toBeUndefined();
+    expect(body.data.lookup.callout.settings.framing.selection).toEqual({ mode: 'CUSTOM', selectedIds: [] });
   });
 
   test('US5-AS5 — an anonymous visitor on the withheld-only post gets no cards, the empty state and the notice (US2-AS3)', async ({

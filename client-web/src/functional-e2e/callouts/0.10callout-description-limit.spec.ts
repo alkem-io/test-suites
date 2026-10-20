@@ -232,6 +232,10 @@ test.describe('Create Callout — description over the limit (client-web#9972)',
   test('DL-3 ring thresholds: hidden under 20 %, shown from 20 %, the formatting hint from 80 %; 50,000 allowed, 50,001 refused', async ({
     page,
   }) => {
+    // Six large fills (about 200k characters in total) into the rich-text
+    // editor plus three tooltips: more than DL-1's workload, which already
+    // needs 120 s; the Callouts suite's standard tier allows 60 s.
+    test.setTimeout(180_000);
     const collaboration = await openCreateDialog(page, 'dl3-thresholds');
 
     await setDescription(collaboration, textForCount(RING_FROM - 1));
