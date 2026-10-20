@@ -11,7 +11,9 @@ import {
   deleteMailSlurperMails,
   getMailsData,
   getQueueStats,
+  getUserToken,
   getVerificationLinkFor,
+  postGraphqlRaw,
   UniqueIDGenerator,
   waitForQueuePublishIncrease,
 } from '@alkemio/tests-lib';
@@ -270,4 +272,33 @@ export async function settledPushDelta(
 /** Current cumulative publish count for the push queue — an emit baseline. */
 export async function pushPublishedTotal(): Promise<number> {
   return (await getQueueStats(PUSH_NOTIFICATIONS_QUEUE)).publishedTotal;
+}
+
+/**
+ * Display names of the conversations `email` can currently see, read through
+ * the API with that user's own token (`me.conversations`). The browser is not
+ * the oracle for "C no longer has the group": membership removal lands
+ * asynchronously (the member leaves the Matrix room, then the server persists
+ * the removal), so a UI read can only say what the page last rendered.
+ */
+export async function conversationNamesOf(email: string): Promise<string[]> {
+  const bearerToken = await getUserToken(email);
+  const result = await postGraphqlRaw<{
+    me: {
+      conversations: { conversations: { room: { displayName: string } }[] };
+    };
+  }>('{ me { conversations { conversations { id room { displayName } } } } }', {
+    bearerToken,
+  });
+  // This read is the evidence that a removal landed, and US2-AS4 polls it
+  // with `.not.toContain`: a failed read that came back as `[]` would pass
+  // that poll at once. So anything but HTTP 200 with a conversations array
+  // throws; the status and raw body name the cause.
+  const conversations = result.body?.data?.me?.conversations?.conversations;
+  if (result.status !== 200 || result.body?.errors || !conversations) {
+    throw new Error(
+      `me.conversations read failed for ${email} (HTTP ${result.status}): ${result.raw.slice(0, 300)}`
+    );
+  }
+  return conversations.map(c => c.room.displayName);
 }

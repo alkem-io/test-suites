@@ -103,6 +103,10 @@ export default defineConfig({
       project('notifications-messaging', [
         'src/functional-api/notifications/messaging/**/*.it-spec.ts',
       ]),
+      // server#6614 / #6637 — owned records are removed with their owner.
+      project('orphan-free-deletion', [
+        'src/functional-api/orphan-free-deletion/**/*.it-spec.ts',
+      ]),
       project('organization', [
         'src/functional-api/contributor-management/organization/**/*.it-spec.ts',
       ]),
@@ -233,6 +237,7 @@ export default defineConfig({
           'src/functional-api/calendar/**/*.it-spec.ts',
           'src/functional-api/push-notifications/**/*.it-spec.ts',
           'src/functional-api/language/**/*.it-spec.ts',
+          'src/functional-api/orphan-free-deletion/**/*.it-spec.ts',
         ],
         // 054-delete-own-account: these it-specs need loopback Redis/Postgres
         // and a matching local/CI `SESSION_SIGNING_KEY`
