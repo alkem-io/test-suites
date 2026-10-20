@@ -85,6 +85,7 @@ export const adminRepairTemplateFiles = async (
   // body, an HTML page) is a transport failure, never "no error".
   if (
     !response.body ||
+    typeof response.body !== 'object' ||
     !('data' in response.body || 'errors' in response.body)
   ) {
     throw new Error(

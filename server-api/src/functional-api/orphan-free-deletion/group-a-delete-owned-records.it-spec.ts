@@ -168,23 +168,35 @@ beforeAll(async () => {
   await expectRandomPolicyIsNotFound(poa);
 });
 
+// Every sweep step runs even when an earlier one fails (a case that left its
+// space in `liveSpaces` because its own delete failed makes the sweep fail
+// the same way); the failures are thrown once at the end, after the base
+// scenario is gone, so a red run never leaves the organisation behind.
 afterAll(async () => {
+  const failures: string[] = [];
   for (const packId of [...livePacks]) {
-    await mutate(
-      'sweep innovation pack',
-      'mutation($d: DeleteInnovationPackInput!) { deleteInnovationPack(deleteData: $d) { id } }',
-      { d: { ID: packId } }
-    );
+    try {
+      await mutate(
+        'sweep innovation pack',
+        'mutation($d: DeleteInnovationPackInput!) { deleteInnovationPack(deleteData: $d) { id } }',
+        { d: { ID: packId } }
+      );
+    } catch (error) {
+      failures.push(error instanceof Error ? error.message : String(error));
+    }
   }
   for (const spaceId of [...liveSpaces]) {
     const res = await deleteSpace(spaceId);
     if (res.error) {
-      throw new Error(
+      failures.push(
         `deleteSpace(${spaceId}) failed: ${JSON.stringify(res.error.errors)}`
       );
     }
   }
   await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
+  if (failures.length > 0) {
+    throw new Error(`teardown left entities behind:\n${failures.join('\n')}`);
+  }
 });
 
 describe('Orphan-free deletion - group A policies (server#6614, #6678)', () => {

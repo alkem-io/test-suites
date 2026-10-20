@@ -165,11 +165,21 @@ beforeAll(async () => {
   );
 });
 
+// A failed Space delete (plan Risk 3) must not skip the remaining spaces or
+// the base scenario: collect, clean up, then throw once.
 afterAll(async () => {
+  const failures: string[] = [];
   for (const spaceId of [...liveSpaces]) {
-    await deleteSpaceOrThrow(spaceId);
+    try {
+      await deleteSpaceOrThrow(spaceId);
+    } catch (error) {
+      failures.push(error instanceof Error ? error.message : String(error));
+    }
   }
   await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
+  if (failures.length > 0) {
+    throw new Error(`teardown left entities behind:\n${failures.join('\n')}`);
+  }
 });
 
 describe('Orphan-free deletion - spaces (server#6614)', () => {
