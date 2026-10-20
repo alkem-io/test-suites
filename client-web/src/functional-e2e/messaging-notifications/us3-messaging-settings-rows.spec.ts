@@ -273,192 +273,201 @@ test.describe(
       await expect(page.getByText('Cannot return null')).toHaveCount(0);
     });
 
-    test('US3-AS3: forcing the stored in-app flag on through the public settings API never produces an in-app notification', async ({
-      page,
-      browser,
-    }) => {
-      test.setTimeout(digestTestTimeoutMs([directPush, directEmail]));
-      requireRecipientFromAS1();
-      await deleteMailSlurperMails();
-      const { displayName: senderDisplayName } = await registerUniquePersona(
-        page,
-        'us3sender',
-        'Us3',
-        'Sender'
-      );
-
-      // Recipient's own session drives the public GraphQL API directly
-      // (same-origin fetch, authenticated via the session cookie) to force
-      // the stored preference on, bypassing the (correctly locked) settings
-      // UI, then to assert the in-app notification count/list afterward.
-      const recipientContext = await browser.newContext();
-      const recipientPage = await recipientContext.newPage();
-      await loginViaCrd(recipientPage, recipientEmail, password, baseUrl);
-
-      // Every caller below reads straight into `.data.…`, so a GraphQL error
-      // would surface as an opaque TypeError on an undefined property — and
-      // the in-app COUNT assertions further down would happily read a missing
-      // field as "no notifications", i.e. pass for the wrong reason. Assert
-      // the contract here, once, with the errors in the message.
-      const gql = async (
-        query: string,
-        variables?: Record<string, unknown>
-      ) => {
-        const result = await recipientPage.evaluate(
-          async ({ query, variables }) => {
-            const res = await fetch('/api/private/graphql', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              credentials: 'include',
-              body: JSON.stringify({ query, variables }),
-            });
-            return res.json();
-          },
-          { query, variables }
+    // AS3 and AS4 settle on digest windows (and AS3 on the push track), so
+    // they are `@local-stack`; AS1/AS2/AS5 are plain settings-row walks and
+    // stay in the nightly. The local-stack runner takes the whole file, since
+    // the serial walk needs AS1's recipient.
+    test(
+      'US3-AS3: forcing the stored in-app flag on through the public settings API never produces an in-app notification',
+      { tag: '@local-stack' },
+      async ({ page, browser }) => {
+        test.setTimeout(digestTestTimeoutMs([directPush, directEmail]));
+        requireRecipientFromAS1();
+        await deleteMailSlurperMails();
+        const { displayName: senderDisplayName } = await registerUniquePersona(
+          page,
+          'us3sender',
+          'Us3',
+          'Sender'
         );
-        expect(
-          result.errors,
-          `GraphQL errors for ${query.trim().slice(0, 60)}: ${JSON.stringify(
-            result.errors
-          )}`
-        ).toBeUndefined();
-        return result;
-      };
 
-      const me = await gql('query { me { user { id } } }');
-      const userID = me.data.me.user.id;
+        // Recipient's own session drives the public GraphQL API directly
+        // (same-origin fetch, authenticated via the session cookie) to force
+        // the stored preference on, bypassing the (correctly locked) settings
+        // UI, then to assert the in-app notification count/list afterward.
+        const recipientContext = await browser.newContext();
+        const recipientPage = await recipientContext.newPage();
+        await loginViaCrd(recipientPage, recipientEmail, password, baseUrl);
 
-      const forceUpdate = await gql(
-        `mutation Force($userID: UUID!, $settings: UpdateUserSettingsEntityInput!) {
+        // Every caller below reads straight into `.data.…`, so a GraphQL error
+        // would surface as an opaque TypeError on an undefined property — and
+        // the in-app COUNT assertions further down would happily read a missing
+        // field as "no notifications", i.e. pass for the wrong reason. Assert
+        // the contract here, once, with the errors in the message.
+        const gql = async (
+          query: string,
+          variables?: Record<string, unknown>
+        ) => {
+          const result = await recipientPage.evaluate(
+            async ({ query, variables }) => {
+              const res = await fetch('/api/private/graphql', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({ query, variables }),
+              });
+              return res.json();
+            },
+            { query, variables }
+          );
+          expect(
+            result.errors,
+            `GraphQL errors for ${query.trim().slice(0, 60)}: ${JSON.stringify(
+              result.errors
+            )}`
+          ).toBeUndefined();
+          return result;
+        };
+
+        const me = await gql('query { me { user { id } } }');
+        const userID = me.data.me.user.id;
+
+        const forceUpdate = await gql(
+          `mutation Force($userID: UUID!, $settings: UpdateUserSettingsEntityInput!) {
           updateUserSettings(settingsData: { userID: $userID, settings: $settings }) {
             id
             settings { notification { user { conversationMessageDirect { inApp } } } }
           }
         }`,
-        {
-          userID,
-          settings: {
-            notification: {
-              user: { conversationMessageDirect: { inApp: true } },
+          {
+            userID,
+            settings: {
+              notification: {
+                user: { conversationMessageDirect: { inApp: true } },
+              },
             },
-          },
-        }
-      );
-      expect(
-        forceUpdate.data.updateUserSettings.settings.notification.user
-          .conversationMessageDirect.inApp
-      ).toBe(true);
-
-      // Sender starts a 1:1 conversation with the recipient and sends a
-      // message.
-      const probeMessage = `US3-AS3 forced in-app probe ${UniqueIDGenerator.getID()}`;
-      await sendDirectMessage(page, recipientDisplayName, probeMessage);
-
-      // Wait for the message to propagate to the recipient (their chat
-      // conversation list picks up the sender). NOTE this bounds the
-      // SUBSCRIPTION path only.
-      await recipientPage.goto(`${baseUrl}/home`);
-      await recipientPage.getByRole('button', { name: 'Open chat' }).click();
-      await expect(
-        recipientPage.getByText(senderDisplayName).first()
-      ).toBeVisible({ timeout: 15000 });
-
-      // ...and under R4 that is NOT enough to assert the negative. Message
-      // propagation and notification dispatch are now different paths on
-      // different clocks: the message reaches the chat panel immediately,
-      // while any notification is debounced on its track and dispatched by a
-      // later sweep. Asserting zero in-app notifications at propagation time
-      // would therefore have passed on a build that produced them, because
-      // they would not have been produced YET.
-      //
-      // Grace covers the LONGER of the two direct tracks at its MAX-DELAY
-      // bound — the recipient has push at its mandated default ON and email
-      // toggled off — so the dispatch whose in-app side-effect this asserts
-      // the absence of has provably already happened.
-      // eslint-disable-next-line no-restricted-syntax -- negative settle window at the slower direct track's MAX-DELAY bound
-      await delay(
-        Math.max(directPush.maxDelayGraceMs, directEmail.maxDelayGraceMs)
-      );
-
-      const notifCount = await gql('query { me { notificationsUnreadCount } }');
-      expect(notifCount.data.me.notificationsUnreadCount).toBe(0);
-
-      const notifList = await gql(
-        'query { me { notifications(first: 10) { inAppNotifications { id } } } }'
-      );
-      expect(notifList.data.me.notifications.inAppNotifications).toHaveLength(
-        0
-      );
-
-      await recipientContext.close();
-    });
-
-    test('US3-AS4: toggling email on a messaging row persists across reload and is honored for the next message', async ({
-      page,
-      browser,
-    }) => {
-      test.setTimeout(digestTestTimeoutMs(directEmail));
-      requireRecipientFromAS1();
-      await deleteMailSlurperMails();
-      await loginViaCrd(page, recipientEmail, password, baseUrl);
-      await page.goto(`${baseUrl}/user/me/settings/notifications`);
-
-      const emailToggle = directRowEmailToggle(page);
-      await expect(emailToggle).toHaveAttribute('aria-checked', 'false');
-      await emailToggle.click();
-      await expect(emailToggle).toHaveAttribute('aria-checked', 'true');
-
-      await page.reload();
-      await expect(directRowEmailToggle(page)).toHaveAttribute(
-        'aria-checked',
-        'true'
-      );
-
-      // Honored for the next message: a fresh sender messages the
-      // recipient and an email is actually delivered (subject names the
-      // sender, never the message text — FR-008/FR-009).
-      const senderContext = await browser.newContext();
-      const senderPage = await senderContext.newPage();
-      const probeMessage = `US3-AS4 email-honored probe ${UniqueIDGenerator.getID()}`;
-      const { displayName: as4SenderDisplayName } = await registerUniquePersona(
-        senderPage,
-        'us3as4sender',
-        'Us3As4',
-        'Sender'
-      );
-      await sendDirectMessage(senderPage, recipientDisplayName, probeMessage);
-
-      // Poll bound covers `email:direct` quiet + sweep + settle, rather than a
-      // fixed 10 x 2s. The email is debounced, so the previous fixed ceiling
-      // would have expired before the digest was ever dispatched on any stack
-      // whose direct-email quiet period exceeded ~18s — including one running
-      // the production default.
-      let deliveredToRecipient:
-        | { subject: string; toAddresses: string[]; body: string }
-        | undefined;
-      const pollDeadline = Date.now() + directEmail.quietGraceMs;
-      do {
-        const [emailsData] = (await getMailsData()) as [
-          Array<{ subject: string; toAddresses: string[]; body: string }>,
-          number,
-        ];
-        deliveredToRecipient = emailsData.find(item =>
-          item.toAddresses.includes(recipientEmail)
+          }
         );
-        if (deliveredToRecipient) break;
-        // eslint-disable-next-line no-restricted-syntax -- poll interval of a mailbox reader
-        await delay(2000);
-      } while (Date.now() < pollDeadline);
+        expect(
+          forceUpdate.data.updateUserSettings.settings.notification.user
+            .conversationMessageDirect.inApp
+        ).toBe(true);
 
-      expect(
-        deliveredToRecipient,
-        'email delivered to the recipient after enabling the row'
-      ).toBeDefined();
-      expect(deliveredToRecipient!.subject).toContain(as4SenderDisplayName);
-      expect(deliveredToRecipient!.body).not.toContain(probeMessage);
+        // Sender starts a 1:1 conversation with the recipient and sends a
+        // message.
+        const probeMessage = `US3-AS3 forced in-app probe ${UniqueIDGenerator.getID()}`;
+        await sendDirectMessage(page, recipientDisplayName, probeMessage);
 
-      await senderContext.close();
-    });
+        // Wait for the message to propagate to the recipient (their chat
+        // conversation list picks up the sender). NOTE this bounds the
+        // SUBSCRIPTION path only.
+        await recipientPage.goto(`${baseUrl}/home`);
+        await recipientPage.getByRole('button', { name: 'Open chat' }).click();
+        await expect(
+          recipientPage.getByText(senderDisplayName).first()
+        ).toBeVisible({ timeout: 15000 });
+
+        // ...and under R4 that is NOT enough to assert the negative. Message
+        // propagation and notification dispatch are now different paths on
+        // different clocks: the message reaches the chat panel immediately,
+        // while any notification is debounced on its track and dispatched by a
+        // later sweep. Asserting zero in-app notifications at propagation time
+        // would therefore have passed on a build that produced them, because
+        // they would not have been produced YET.
+        //
+        // Grace covers the LONGER of the two direct tracks at its MAX-DELAY
+        // bound — the recipient has push at its mandated default ON and email
+        // toggled off — so the dispatch whose in-app side-effect this asserts
+        // the absence of has provably already happened.
+        // eslint-disable-next-line no-restricted-syntax -- negative settle window at the slower direct track's MAX-DELAY bound
+        await delay(
+          Math.max(directPush.maxDelayGraceMs, directEmail.maxDelayGraceMs)
+        );
+
+        const notifCount = await gql(
+          'query { me { notificationsUnreadCount } }'
+        );
+        expect(notifCount.data.me.notificationsUnreadCount).toBe(0);
+
+        const notifList = await gql(
+          'query { me { notifications(first: 10) { inAppNotifications { id } } } }'
+        );
+        expect(notifList.data.me.notifications.inAppNotifications).toHaveLength(
+          0
+        );
+
+        await recipientContext.close();
+      }
+    );
+
+    test(
+      'US3-AS4: toggling email on a messaging row persists across reload and is honored for the next message',
+      { tag: '@local-stack' },
+      async ({ page, browser }) => {
+        test.setTimeout(digestTestTimeoutMs(directEmail));
+        requireRecipientFromAS1();
+        await deleteMailSlurperMails();
+        await loginViaCrd(page, recipientEmail, password, baseUrl);
+        await page.goto(`${baseUrl}/user/me/settings/notifications`);
+
+        const emailToggle = directRowEmailToggle(page);
+        await expect(emailToggle).toHaveAttribute('aria-checked', 'false');
+        await emailToggle.click();
+        await expect(emailToggle).toHaveAttribute('aria-checked', 'true');
+
+        await page.reload();
+        await expect(directRowEmailToggle(page)).toHaveAttribute(
+          'aria-checked',
+          'true'
+        );
+
+        // Honored for the next message: a fresh sender messages the
+        // recipient and an email is actually delivered (subject names the
+        // sender, never the message text — FR-008/FR-009).
+        const senderContext = await browser.newContext();
+        const senderPage = await senderContext.newPage();
+        const probeMessage = `US3-AS4 email-honored probe ${UniqueIDGenerator.getID()}`;
+        const { displayName: as4SenderDisplayName } =
+          await registerUniquePersona(
+            senderPage,
+            'us3as4sender',
+            'Us3As4',
+            'Sender'
+          );
+        await sendDirectMessage(senderPage, recipientDisplayName, probeMessage);
+
+        // Poll bound covers `email:direct` quiet + sweep + settle, rather than a
+        // fixed 10 x 2s. The email is debounced, so the previous fixed ceiling
+        // would have expired before the digest was ever dispatched on any stack
+        // whose direct-email quiet period exceeded ~18s — including one running
+        // the production default.
+        let deliveredToRecipient:
+          | { subject: string; toAddresses: string[]; body: string }
+          | undefined;
+        const pollDeadline = Date.now() + directEmail.quietGraceMs;
+        do {
+          const [emailsData] = (await getMailsData()) as [
+            Array<{ subject: string; toAddresses: string[]; body: string }>,
+            number,
+          ];
+          deliveredToRecipient = emailsData.find(item =>
+            item.toAddresses.includes(recipientEmail)
+          );
+          if (deliveredToRecipient) break;
+          // eslint-disable-next-line no-restricted-syntax -- poll interval of a mailbox reader
+          await delay(2000);
+        } while (Date.now() < pollDeadline);
+
+        expect(
+          deliveredToRecipient,
+          'email delivered to the recipient after enabling the row'
+        ).toBeDefined();
+        expect(deliveredToRecipient!.subject).toContain(as4SenderDisplayName);
+        expect(deliveredToRecipient!.body).not.toContain(probeMessage);
+
+        await senderContext.close();
+      }
+    );
 
     test("US3-AS5: the chat panel's settings shortcut lands on notification settings with both rows visible", async ({
       page,

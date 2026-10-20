@@ -19,6 +19,9 @@ import { baseConfig, GENERATED_WALKS_DIR, LOCAL_STACK_TAG, suite } from './playw
  *     contribution-notify-switch US2-AS1 (task path)
  *   PLATFORM_INVITATION_RESEND_COOLDOWN_SECONDS (<= 120, set on the SERVER too):
  *     organization-email-invitations US3-AS3
+ *   RABBITMQ_MANAGEMENT_* plus the nine MESSAGING_DIGEST_* variables (same
+ *   values on the SERVER, see the suite's test plan):
+ *     messaging-notifications US1 and US2 (whole walks), US3-AS3 and US3-AS4
  */
 export default defineConfig(
   baseConfig({
@@ -45,6 +48,15 @@ export default defineConfig(
       suite({
         name: 'Local stack — server env overrides',
         testMatch: ['/organization-email-invitations/us3-resend.spec.ts'],
+        tier: 'long',
+      }),
+      suite({
+        // workspace#034 (conversation-message notifications, notifications#522):
+        // queue counters plus MESSAGING_DIGEST_* windows. US1/US2 are tagged at
+        // describe level; US3's tagged AS3/AS4 sit inside a serial walk that
+        // needs AS1's recipient, so all three files run whole here.
+        name: 'Local stack — messaging digests',
+        testMatch: ['/messaging-notifications/*.spec.ts'],
         tier: 'long',
       }),
     ],

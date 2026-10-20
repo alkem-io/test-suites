@@ -175,16 +175,17 @@ export default defineConfig(
       }),
       suite({
         // workspace#034 (conversation-message notifications, notifications#522):
-        // US1 direct and US2 group walks send on one session and wait for the
-        // bell/push on another; US3 round-trips the settings rows. Since
-        // client-web#10365 the browser sends through its own Matrix session,
-        // so this is the cheapest nightly proof that message notifications
-        // still fire end to end. Each file registers fresh personas through
-        // the real sign-up flow (see messaging.helpers.ts), so the in-app
-        // setting the API notification specs leave off on the shared
+        // only the settings-row walks US3-AS1/AS2/AS5 run here. The US1 direct
+        // and US2 group walks, and US3-AS3/AS4, read the RabbitMQ publish
+        // counter and settle on the MESSAGING_DIGEST_* windows, neither of
+        // which the nightly cluster provides (no management env; production
+        // windows of up to 60 min), so they are `@local-stack` and live in
+        // playwright.config.local-stack.ts. The file registers fresh personas
+        // through the real sign-up flow (see messaging.helpers.ts), so the
+        // in-app setting the API notification specs leave off on the shared
         // personas cannot reach these walks.
         name: 'Messaging notifications',
-        testMatch: ['/messaging-notifications/*.spec.ts'],
+        testMatch: ['/messaging-notifications/us3-messaging-settings-rows.spec.ts'],
         tier: 'long',
       }),
       suite({
