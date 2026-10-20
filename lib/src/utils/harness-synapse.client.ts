@@ -15,7 +15,8 @@ import { assertLoopbackInternal } from '../config/loopback-guard';
  *   ONLY via `HARNESS_SYNAPSE_AS_TOKEN`, placed by the operator's own secret
  *   handling — this module never reads it from anywhere else (no server
  *   checkout, no config file), never logs it, and refuses a non-loopback
- *   `HARNESS_SYNAPSE_URL`.
+ *   `HARNESS_SYNAPSE_URL` unless `HARNESS_ALLOW_NON_LOOPBACK_INTERNALS=true` is set, which the
+ *   guard logs loudly every time (see `config/loopback-guard.ts`).
  *
  * Writes this client performs (there are exactly two):
  * - `setDirectoryVisibility` seeds the pre-fix "published" state in N-12b
