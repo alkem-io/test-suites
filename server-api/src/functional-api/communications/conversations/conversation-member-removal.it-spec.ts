@@ -233,12 +233,12 @@ describe('Removal revokes access (server#6329)', () => {
     }
   });
 
-  // Product defect alkem-io/server#6673 (found 2026-10-16 on the test environment, 3/3 runs): the
-  // memberships DataLoader hardcodes cache:true, so on a subscription that already resolved this
-  // conversation's members (CONVERSATION_CREATED in beforeAll) the MEMBER_REMOVED payload still lists
-  // the removed member. A subscription opened after creation, and an HTTP lookup, are correct.
-  // Assertions unchanged; drop the skip when #6673 lands.
-  test.skip('N-1b — the MEMBER_REMOVED payload reflects the post-removal state (alkem-io/server#6673)', async () => {
+  // Was skipped 2026-10-16 → 2026-10-20 on alkem-io/server#6673: the memberships DataLoader
+  // hardcoded cache:true, so a subscription that had already resolved this conversation's members
+  // (CONVERSATION_CREATED in beforeAll) still listed the removed member. Fixed by server#6680
+  // (v0.169.1). The case deliberately keeps the long-lived subscriptions from beforeAll, because
+  // that is the path that regressed.
+  test('N-1b — the MEMBER_REMOVED payload reflects the post-removal state', async () => {
     const forB = eventsFor(
       subB,
       'MEMBER_REMOVED',
