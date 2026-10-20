@@ -34,7 +34,9 @@ import { loginViaCrd } from '../helpers/login.helper';
 
 const SIGNING_PLAN_NAME = 'SPACE_FEATURE_MEMO_SIGNING';
 const uniqueId = UniqueIDGenerator.getID();
-const todayUtc = new Date().toISOString().slice(0, 10);
+// Provisioning and a PDF render per walk need more than the long tier's 180 s.
+const WALK_TIMEOUT_MS = 300_000;
+const utcDay = () => new Date().toISOString().slice(0, 10);
 
 const scenarioConfig: TestScenarioConfig = {
   name: 'memo-pdf-download-us1',
@@ -49,6 +51,7 @@ const scenarioConfig: TestScenarioConfig = {
 
 let baseScenario: OrganizationWithSpaceModel;
 let planId = '';
+let planAssigned = false;
 const test = createPersonaTest('space.member@alkem.io');
 test.describe.configure({ mode: 'serial' });
 
@@ -86,6 +89,7 @@ const createMemoCallout = async (
 };
 
 test.beforeAll(async () => {
+  test.setTimeout(WALK_TIMEOUT_MS);
   baseScenario = await TestScenarioFactory.createBaseScenario(scenarioConfig);
   await createMemoCallout(
     'board',
@@ -108,18 +112,33 @@ test.beforeAll(async () => {
 });
 
 test.afterAll(async () => {
-  if (planId && baseScenario?.space?.id) {
-    const client = getGraphqlClient();
-    const plans = await admin(token => client.GetPlatformLicensePlans({}, { authorization: `Bearer ${token}` }));
-    const licensingID = plans.data?.platform?.licensingFramework?.id ?? '';
-    await admin(token =>
-      client.RevokeLicensePlanFromSpace(
-        { planData: { spaceID: baseScenario.space.id, licensePlanID: planId, licensingID } },
-        { authorization: `Bearer ${token}` }
-      )
-    );
+  test.setTimeout(WALK_TIMEOUT_MS);
+  // The revocation is checked, but the Space is deleted either way; a failed
+  // revocation is raised only after the house cleanup has run.
+  let revokeFailure = '';
+  try {
+    if (planAssigned && baseScenario?.space?.id) {
+      const client = getGraphqlClient();
+      const plans = await admin(token => client.GetPlatformLicensePlans({}, { authorization: `Bearer ${token}` }));
+      const licensingID = plans.data?.platform?.licensingFramework?.id ?? '';
+      if (!licensingID) {
+        revokeFailure = `licensing framework not found: ${JSON.stringify(plans.error)}`;
+      } else {
+        const revoked = await admin(token =>
+          client.RevokeLicensePlanFromSpace(
+            { planData: { spaceID: baseScenario.space.id, licensePlanID: planId, licensingID } },
+            { authorization: `Bearer ${token}` }
+          )
+        );
+        if (revoked.error) revokeFailure = JSON.stringify(revoked.error);
+      }
+    }
+  } finally {
+    await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
   }
-  await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
+  if (revokeFailure) {
+    throw new Error(`revoking ${SIGNING_PLAN_NAME} from Space ${baseScenario.space.id} failed: ${revokeFailure}`);
+  }
 });
 
 const openMemo = async (page: Page, key: string) => {
@@ -145,20 +164,40 @@ const download = async (page: Page, savePath: string) => {
 const pdfText = (path: string): string | null => {
   try {
     return execFileSync('pdftotext', ['-layout', path, '-'], { encoding: 'utf8' });
-  } catch {
-    return null; // poppler-utils not installed on this runner
+  } catch (error) {
+    // Only a missing binary (poppler-utils not installed) skips the text checks;
+    // a PDF pdftotext cannot read is a red, never a skip.
+    if ((error as NodeJS.ErrnoException).code === 'ENOENT') return null;
+    throw error;
   }
 };
 
+/** The UTC days the server may have stamped a download with: the request can straddle midnight. */
+const downloadDays = async <T>(fn: () => Promise<T>): Promise<{ result: T; days: string[] }> => {
+  const before = utcDay();
+  const result = await fn();
+  const after = utcDay();
+  return { result, days: before === after ? [before] : [before, after] };
+};
+
+// Sonner marks the variant on the toast element (`data-type`); it carries no status role.
+const errorToast = (page: Page) =>
+  page.locator('[data-sonner-toast][data-type="error"], [data-sonner-toast][data-type="warning"]');
+
 test.describe('US1 — a reader downloads a memo as PDF', () => {
+  test.setTimeout(WALK_TIMEOUT_MS);
+
   test('US1-AS1 @forge-acceptance — saves <slug>-<today UTC>.pdf, busy until it arrives, no error toast, within 10 s', async ({ page }, testInfo) => {
     await openMemo(page, 'board');
     const started = Date.now();
-    const { name, bytes } = await download(page, testInfo.outputPath('as1.pdf'));
+    const {
+      result: { name, bytes },
+      days,
+    } = await downloadDays(() => download(page, testInfo.outputPath('as1.pdf')));
     expect(Date.now() - started).toBeLessThanOrEqual(10_000);
-    expect(name).toBe(`board-decision-q4-${todayUtc}.pdf`);
+    expect(days.map(day => `board-decision-q4-${day}.pdf`)).toContain(name);
     expect(bytes.subarray(0, 5).toString()).toBe('%PDF-');
-    await expect(page.getByRole('status').filter({ hasText: /fail|error|busy|too large/i })).toHaveCount(0);
+    await expect(errorToast(page)).toHaveCount(0);
   });
 
   test('US1-AS2 @forge-acceptance — the button is on the callout framing / contribution dialog for an authenticated reader', async ({ page }, testInfo) => {
@@ -217,12 +256,18 @@ test.describe('US1 — a reader downloads a memo as PDF', () => {
   test('US1-AS5 @forge-acceptance — non-Latin / punctuation-only titles fall back to memo-<date>.pdf; a 120-char title yields an 80-char slug', async ({ page }, testInfo) => {
     for (const key of ['cyrillic', 'punct']) {
       await openMemo(page, key);
-      const { name } = await download(page, testInfo.outputPath(`as5-${key}.pdf`));
-      expect(name).toBe(`memo-${todayUtc}.pdf`);
+      const {
+        result: { name },
+        days,
+      } = await downloadDays(() => download(page, testInfo.outputPath(`as5-${key}.pdf`)));
+      expect(days.map(day => `memo-${day}.pdf`)).toContain(name);
     }
     await openMemo(page, 'long');
-    const { name } = await download(page, testInfo.outputPath('as5-long.pdf'));
-    expect(name).toBe(`${'a'.repeat(80)}-${todayUtc}.pdf`);
+    const {
+      result: { name },
+      days,
+    } = await downloadDays(() => download(page, testInfo.outputPath('as5-long.pdf')));
+    expect(days.map(day => `${'a'.repeat(80)}-${day}.pdf`)).toContain(name);
   });
 
   test('US1-AS6 @forge-acceptance — Download PDF is present with and without the signing entitlement', async ({ page }, testInfo) => {
@@ -239,6 +284,7 @@ test.describe('US1 — a reader downloads a memo as PDF', () => {
         { authorization: `Bearer ${token}` }
       )
     );
+    if (!assigned.error) planAssigned = true;
     expect(assigned.error).toBeUndefined();
     await expect
       .poll(async () => {

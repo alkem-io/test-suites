@@ -6,7 +6,8 @@ import {
   type Page,
   test,
 } from '@playwright/test';
-import { fillSecret } from '../helpers/login.helper';
+import { grantCookieConsent } from '../helpers/cookies.helper';
+import { loginViaCrd } from '../helpers/login.helper';
 
 /**
  * workspace#087-memo-pdf-download — User Story 2 (P1):
@@ -184,25 +185,10 @@ async function signIn(browser: Browser, userEmail: string): Promise<Page> {
     viewport: { width: 1400, height: 900 },
   });
   openContexts.push(context);
+  // Consent is seeded, so the banner never renders over the signed-in pages.
+  await grantCookieConsent(context);
   const page = await context.newPage();
-  await page.goto(BASE);
-  const login = page.getByRole('link', { name: 'Log in', exact: true });
-  await login.waitFor({ state: 'visible', timeout: 30_000 });
-  await login.click();
-  await page.waitForURL(/.*login.*/);
-  await page.getByRole('textbox', { name: 'E-Mail' }).fill(userEmail);
-  await fillSecret(
-    page.getByRole('textbox', { name: 'Password' }),
-    USER_PASSWORD
-  );
-  await page.getByRole('button', { name: 'Sign in', exact: true }).click();
-  await page.waitForURL(/.*home.*/, { timeout: 30_000 });
-  const newDesign = page.getByRole('button', {
-    name: /take me to the new design/i,
-  });
-  if (await newDesign.isVisible().catch(() => false)) {
-    await newDesign.click();
-  }
+  await loginViaCrd(page, userEmail, USER_PASSWORD, BASE);
   return page;
 }
 
@@ -602,15 +588,22 @@ test.describe(
       KRATOS_ADMIN === '',
       'KRATOS_ADMIN_URL must point at the Kratos admin API (e.g. http://localhost:34515)'
     );
-    test.setTimeout(300_000);
+    // Provisioning and a PDF render per walk need more than the long tier's
+    // 180 s. beforeAll/afterAll run on the project timeout, so they set it too.
+    const WALK_TIMEOUT_MS = 300_000;
+    test.setTimeout(WALK_TIMEOUT_MS);
 
     test.afterEach(async () => {
       await Promise.all(openContexts.splice(0).map(context => context.close()));
     });
 
-    test.afterAll(teardown);
+    test.afterAll(async () => {
+      test.setTimeout(WALK_TIMEOUT_MS);
+      await teardown();
+    });
 
     test.beforeAll(async () => {
+      test.setTimeout(WALK_TIMEOUT_MS);
       await createIdentity('reader', 'Rita', 'Reader');
       await createIdentity('outsider', 'Otto', 'Outsider');
       // Both personas must exist as Alkemio users before they are used.
@@ -678,7 +671,21 @@ test.describe(
 
       // The private memo's page offers the outsider no Download PDF either.
       await outsider.goto(fixture.privateMemo.calloutUrl);
-      await acceptCookies(outsider);
+      // Wait for the refusal to render before asserting absences: the URL
+      // resolver answers Forbidden for the callout, which the client shows as
+      // the redirect-to-nearest-page dialog (or "Access Restricted" when no
+      // ancestor is offered). Without this the zero counts pass on a blank page.
+      await expect(
+        outsider
+          .getByText('We are redirecting you...', { exact: true })
+          .or(
+            outsider.getByRole('heading', {
+              name: 'Access Restricted',
+              exact: true,
+            })
+          )
+          .first()
+      ).toBeVisible({ timeout: 30_000 });
       await expect(outsider.locator('.ProseMirror')).toHaveCount(0);
       await expect(downloadButton(outsider)).toHaveCount(0);
     });
@@ -751,10 +758,15 @@ test.describe(
       await downloadButton(reader).click();
       expect((await response).status()).toBe(422);
 
+      // The refusal is a typed Sonner toast carrying the neutral message.
       await expect(
-        reader.getByText(
-          /too large or contains content that cannot be exported/i
-        )
+        reader
+          .locator(
+            '[data-sonner-toast][data-type="error"], [data-sonner-toast][data-type="warning"]'
+          )
+          .filter({
+            hasText: /too large or contains content that cannot be exported/i,
+          })
       ).toBeVisible();
       await expect(reader.getByRole('dialog').first()).toBeVisible();
       await expect(reader.locator('.ProseMirror').first()).toContainText(
