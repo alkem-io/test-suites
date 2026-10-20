@@ -1970,7 +1970,7 @@ What a Space admin saves in the collaboration-tool template form must come back 
 | RT-1 | Template form → Responses = Documents → Save; API: `allowedTypes = ["COLLABORA_DOCUMENT"]` (the server stores it) | green |
 | RT-2 | Add Post → Find Template → Use template: title prefilled **and Responses = Documents** | red → **client-web#10443** (`calloutTemplateMapper` maps `CollaboraDocument → 'none'`; no chip checked) |
 | RT-3 | Preview → Edit template: Responses = Documents | red → **client-web#10443** (same mapper) |
-| RT-4 | Edit template → change the description → Save: `allowedTypes` unchanged (no write-back loss) | green |
+| RT-4 | Edit template → change the description → Save: the new description is read back from the server (the save happened), and `allowedTypes` is unchanged (no write-back loss) | green |
 | MT-1 | Template form → Add to post = Memo → Save; API as the creator: `memo.createdBy` = creator, `myPrivileges` ∋ `UPDATE_CONTENT` | red → **server#6682** (`createdBy` null: the template path creates the callout without a `userID`) |
 | MT-2 | Preview → Edit template → Open memo: the creator's editor is `contenteditable="true"` | red → **server#6682** (renders `contenteditable="false"`) |
 

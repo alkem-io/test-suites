@@ -73,19 +73,23 @@ const entitle = async (spaceID: string): Promise<void> => {
 
 type TemplateRow = {
   id: string;
-  profile: { displayName: string };
+  profile: { displayName: string; description: string | null };
   callout: {
     settings: { contribution: { allowedTypes: string[] } };
-    framing: { type: string; memo: { id: string; createdBy: { id: string } | null; authorization: { myPrivileges: string[] } | null } | null };
+    framing: {
+      type: string;
+      profile: { description: string | null };
+      memo: { id: string; createdBy: { id: string } | null; authorization: { myPrivileges: string[] } | null } | null;
+    };
   } | null;
 };
 /** The template as the bearer of `token` sees it (privileges are per viewer). */
 const templateByName = async (token: string, name: string): Promise<TemplateRow> => {
   const data = await gqlAs<{ lookup: { templatesSet: { templates: TemplateRow[] } } }>(
     token,
-    `query($id: UUID!){ lookup { templatesSet(ID: $id) { templates { id profile { displayName }
+    `query($id: UUID!){ lookup { templatesSet(ID: $id) { templates { id profile { displayName description }
       callout { settings { contribution { allowedTypes } }
-        framing { type memo { id createdBy { id } authorization { myPrivileges } } } } } } } }`,
+        framing { type profile { description } memo { id createdBy { id } authorization { myPrivileges } } } } } } } }`,
     { id: scenario!.space.templateSetId }
   );
   const row = data.lookup.templatesSet.templates.find(t => t.profile.displayName === name);
@@ -225,11 +229,17 @@ test.describe('Collaboration-tool templates: round-trip of what the form saved',
 
   test('RT-4 — editing the template\'s description keeps COLLABORA_DOCUMENT', async ({ page }) => {
     test.setTimeout(120_000);
+    const edited = `Description edited, nothing else (${uid}).`;
     const dialog = await openEditTemplateDialog(page, NAMES.docEdit);
     // Save is inert until something changes; the response type is not what changes here.
-    await dialog.getByRole('textbox', { name: 'Description' }).first().fill('Description edited, nothing else.');
+    await dialog.getByRole('textbox', { name: 'Description' }).first().fill(edited);
     await dialog.getByRole('button', { name: 'Save', exact: true }).click();
     await expect(dialog).not.toBeVisible({ timeout: 30_000 });
+    // The save reached the server (otherwise "allowedTypes unchanged" proves nothing) …
+    await expect
+      .poll(async () => (await templateByName(creatorToken, NAMES.docEdit)).profile.description?.trim())
+      .toBe(edited);
+    // … and it did not take the response type with it.
     const row = await templateByName(creatorToken, NAMES.docEdit);
     expect(row.callout?.settings.contribution.allowedTypes).toEqual(['COLLABORA_DOCUMENT']);
   });
