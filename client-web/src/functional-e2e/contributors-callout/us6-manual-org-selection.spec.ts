@@ -121,7 +121,7 @@ test.describe.serial('US6 — Organisations in Manual selection (client-web#1030
     }
   });
 
-  test('US6-AS1 — Manual selection offers the organisation and the person, each labelled by kind; chips carry names; the type controls stay; the post renders exactly the two picked', async ({
+  test('US6-AS1 — Manual selection offers the organisation and the person, each labelled by kind; chips carry names; the type controls stay; the post renders exactly the two picked; the editor reopens with both', async ({
     page,
   }) => {
     test.setTimeout(120_000);
@@ -164,6 +164,15 @@ test.describe.serial('US6 — Organisations in Manual selection (client-web#1030
     await expect(col.cardFor(PERSON)).toBeVisible();
     // The admin is a member too, and is NOT rendered: the selection, not the community, drives the post.
     await expect(col.cardItems).toHaveCount(1);
+
+    // AC "a mixed selection stays intact across save → reload → edit": the editor
+    // reopens with both chips resolved to their names. Both are current members, so
+    // once each name shows no chip may read "No longer available" (ENG-084-01 settled).
+    await openEdit(page);
+    await expect(manualSwitch(page)).toBeChecked();
+    await expect(chip(page, ORG)).toBeVisible({ timeout: 20_000 });
+    await expect(chip(page, PERSON)).toBeVisible();
+    await expect(chip(page, COPY.noLongerAvailable)).toHaveCount(0);
   });
 
   test('US6-AS2 — an organisation that left the community reads "No longer available" on its chip, not an id, and is no longer rendered', async ({

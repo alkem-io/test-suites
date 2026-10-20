@@ -131,7 +131,7 @@ A Space admin can pick organisations as well as people in a Contributors post's 
 
 | Scenario | Automated by | Notes |
 | --- | --- | --- |
-| P-M7 steps 1–5: switch to Manual, type controls stay; org offered as *Organizations*, person as *People*; two chips with names, never an id; save → the post renders exactly the two picked (the admin, a member, is not rendered); a picked contributor leaves the result list | US6-AS1 | live green ×2, local stack 2026-10-19; sabotage (kind label swapped) red |
+| P-M7 steps 1–5: switch to Manual, type controls stay; org offered as *Organizations*, person as *People*; two chips with names, never an id; save → the post renders exactly the two picked (the admin, a member, is not rendered); a picked contributor leaves the result list; after reload the editor reopens with both chips named (story AC "save → reload → edit") | US6-AS1 | live green ×2, local stack 2026-10-19; sabotage (kind label swapped) red |
 | P-M7 step 7: the organisation leaves the community → its chip reads "No longer available", not a UUID, while a current member's chip still resolves (guards ENG-084-01's loading state); the post no longer renders it; the server still lists it | US6-AS2 | live green ×2 |
 | P-M7 step 5: remove the stale chip, save → only the person, on the post and on the server (`selectedIds` exact) | US6-AS3 | live green ×2 |
 | P-M7 step 6: ticking Virtual Contributors in custom mode offers no candidates and no explanation | — | accepted residual (PR, operator ruling); record only |
