@@ -8,8 +8,9 @@
 // develop, 2026-10-19): no `error` prop on the editors, so no live message,
 // and no client-side block on Save. The PR describes Why / Who as "show the
 // ring but do not block Save past the limit" (a listed follow-up) and is silent
-// on What. AL-1 records what the product does for What over the limit against
-// the server's own limit (65,568), so a change in either direction is caught.
+// on What. Filed as client-web#10452 (2026-10-20): AL-1 / AL-2 keep the ring
+// assertions live, AL-1b / AL-2b carry the expected over-limit contract (the
+// callout dialog's) and are skipped on that issue until it lands.
 //
 // The count is the markdown length (typed + 1 for a plain run), as in
 // `callouts/0.10callout-description-limit.spec.ts`.
@@ -34,6 +35,7 @@ const count = (n: number, max: number): string =>
   `${n.toLocaleString('en-US')}/${max.toLocaleString('en-US')} characters`;
 
 const COPY = {
+  overLimit: 'This text exceeds the length limits for this field.',
   countHint:
     'Formatting, images and links count toward the limit too, so this number may be higher than the text you see.',
   save: 'Save',
@@ -42,9 +44,21 @@ const COPY = {
 
 // Editors are named by their placeholder (bundle crd-spaceSettings, en).
 const EDITOR = {
-  what: { section: '#description', placeholder: "What's this space about…", limit: WHAT_LIMIT },
-  why: { section: '#why', placeholder: 'Why does this space exist…', limit: WHY_WHO_LIMIT },
-  who: { section: '#who', placeholder: 'Who is this space for…', limit: WHY_WHO_LIMIT },
+  what: {
+    section: '#description',
+    placeholder: "What's this space about…",
+    limit: WHAT_LIMIT,
+  },
+  why: {
+    section: '#why',
+    placeholder: 'Why does this space exist…',
+    limit: WHY_WHO_LIMIT,
+  },
+  who: {
+    section: '#who',
+    placeholder: 'Who is this space for…',
+    limit: WHY_WHO_LIMIT,
+  },
 } as const;
 type Field = keyof typeof EDITOR;
 
@@ -52,24 +66,40 @@ const scenarioConfig: TestScenarioConfig = {
   name: 'about-description-limit',
   space: {
     about: { profile: { displayName: 'About Description Limit Space' } },
-    collaboration: { addTutorialCallouts: false, addPostCollectionCallout: false, addWhiteboardCallout: false },
-    community: { admins: [TestUser.SPACE_ADMIN], members: [TestUser.SPACE_ADMIN] },
+    collaboration: {
+      addTutorialCallouts: false,
+      addPostCollectionCallout: false,
+      addWhiteboardCallout: false,
+    },
+    community: {
+      admins: [TestUser.SPACE_ADMIN],
+      members: [TestUser.SPACE_ADMIN],
+    },
   },
 };
 let scenario: OrganizationWithSpaceModel | undefined;
 
-const section = (page: Page, field: Field): Locator => page.locator(EDITOR[field].section);
+const section = (page: Page, field: Field): Locator =>
+  page.locator(EDITOR[field].section);
 const editor = (page: Page, field: Field): Locator =>
-  section(page, field).getByRole('textbox', { name: EDITOR[field].placeholder });
+  section(page, field).getByRole('textbox', {
+    name: EDITOR[field].placeholder,
+  });
 const ring = (page: Page, field: Field): Locator =>
-  section(page, field).getByRole('button', { name: /^[\d,]+\/[\d,]+ characters$/ });
+  section(page, field).getByRole('button', {
+    name: /^[\d,]+\/[\d,]+ characters$/,
+  });
 const saveButton = (page: Page, field: Field): Locator =>
   section(page, field).getByRole('button', { name: COPY.save, exact: true });
 const tooltipWith = (page: Page, text: string): Locator =>
   page.getByRole('tooltip').filter({ hasText: text }).first();
 
 /** Focus-opened tooltip (see 0.10callout-description-limit for why not hover). */
-const expectTooltip = async (trigger: Locator, present: string[], absent: string[] = []): Promise<void> => {
+const expectTooltip = async (
+  trigger: Locator,
+  present: string[],
+  absent: string[] = []
+): Promise<void> => {
   const page = trigger.page();
   await trigger.focus();
   for (const t of present) await expect(tooltipWith(page, t)).toBeVisible();
@@ -78,14 +108,31 @@ const expectTooltip = async (trigger: Locator, present: string[], absent: string
   await expect(page.getByRole('tooltip')).toHaveCount(0);
 };
 
-const aboutLengths = async (spaceId: string): Promise<{ what: number; why: number; who: number }> => {
+const aboutLengths = async (
+  spaceId: string
+): Promise<{ what: number; why: number; who: number }> => {
   const data = await adminGql<{
-    lookup: { space: { about: { why: string | null; who: string | null; profile: { description: string | null } } } };
-  }>('query($id: UUID!){ lookup { space(ID: $id) { about { why who profile { description } } } } }', {
-    id: spaceId,
-  });
+    lookup: {
+      space: {
+        about: {
+          why: string | null;
+          who: string | null;
+          profile: { description: string | null };
+        };
+      };
+    };
+  }>(
+    'query($id: UUID!){ lookup { space(ID: $id) { about { why who profile { description } } } } }',
+    {
+      id: spaceId,
+    }
+  );
   const a = data.lookup.space.about;
-  return { what: a.profile.description?.length ?? 0, why: a.why?.length ?? 0, who: a.who?.length ?? 0 };
+  return {
+    what: a.profile.description?.length ?? 0,
+    why: a.why?.length ?? 0,
+    who: a.who?.length ?? 0,
+  };
 };
 
 const openAbout = async (page: Page): Promise<void> => {
@@ -106,43 +153,71 @@ test.describe('Space settings About — description limits (client-web#9972)', (
     }
   });
 
-  test('AL-1 What: ring from 10,000 with the count, hint from 40,000; over 50,000 the ring is full and Save is still offered — the server, not the client, is the limit', async ({
+  test('AL-1 What: ring from 10,000 with the count, hint from 40,000; over 50,000 the ring is full', async ({
     page,
   }) => {
     test.setTimeout(180_000);
     await openAbout(page);
-    const before = await aboutLengths(scenario!.space.id);
 
     await editor(page, 'what').fill(textForCount(WHAT_LIMIT * 0.2 - 1));
     await expect(saveButton(page, 'what')).toBeVisible(); // dirty: the editor took the text
     await expect(ring(page, 'what')).toHaveCount(0);
 
     await editor(page, 'what').fill(textForCount(WHAT_LIMIT * 0.2));
-    await expect(ring(page, 'what')).toHaveAccessibleName(count(WHAT_LIMIT * 0.2, WHAT_LIMIT));
-    await expectTooltip(ring(page, 'what'), [count(WHAT_LIMIT * 0.2, WHAT_LIMIT)], [COPY.countHint]);
+    await expect(ring(page, 'what')).toHaveAccessibleName(
+      count(WHAT_LIMIT * 0.2, WHAT_LIMIT)
+    );
+    await expectTooltip(
+      ring(page, 'what'),
+      [count(WHAT_LIMIT * 0.2, WHAT_LIMIT)],
+      [COPY.countHint]
+    );
 
     await editor(page, 'what').fill(textForCount(WHAT_LIMIT * 0.8));
-    await expectTooltip(ring(page, 'what'), [count(WHAT_LIMIT * 0.8, WHAT_LIMIT), COPY.countHint]);
+    await expectTooltip(ring(page, 'what'), [
+      count(WHAT_LIMIT * 0.8, WHAT_LIMIT),
+      COPY.countHint,
+    ]);
 
-    // Over the limit: the ring says so; nothing else on this page does.
+    // Over the limit the ring says so (the only thing on this page that does
+    // today — see AL-1b).
     await editor(page, 'what').fill(textForCount(WHAT_LIMIT + 100));
-    await expect(ring(page, 'what')).toHaveAccessibleName(count(WHAT_LIMIT + 100, WHAT_LIMIT));
-    await expect(section(page, 'what').getByText(/exceeds the length limit/i)).toHaveCount(0);
-    await expect(saveButton(page, 'what')).toBeEnabled();
-
-    // Observed behaviour, pinned: Save goes through, because the client only
-    // counts and the server allows 65,568 on profile.description. Expected by
-    // the story: the author is told and the save is refused. If this flips to
-    // refused, the next two lines are what to change, with the story's blessing.
-    await saveButton(page, 'what').click();
-    await expect(section(page, 'what').getByText(COPY.saved, { exact: true })).toBeVisible({ timeout: 20_000 });
-    await expect.poll(async () => (await aboutLengths(scenario!.space.id)).what, { timeout: 15_000 }).toBe(
-      WHAT_LIMIT + 100
+    await expect(ring(page, 'what')).toHaveAccessibleName(
+      count(WHAT_LIMIT + 100, WHAT_LIMIT)
     );
-    expect(before.what).toBeLessThan(WHAT_LIMIT);
   });
 
-  test('AL-2 Why and Who: ring from 6,400 against 32,000, hint from 25,600; over 32,000 Save still goes through (PR follow-up, pinned) up to the server limit', async ({
+  // Product defect client-web#10452 (2026-10-20): the About editors only count.
+  // Nothing says the text is over the limit, and Save goes through for What
+  // (the server allows 65,568) and Why (server 32,784), while Who is refused by
+  // the server and rendered as a generic alert. Expected, per the callout
+  // contract #10422 delivered for #9972: an inline over-limit error and no
+  // persisted save. Assertions below are the expected behaviour; drop the
+  // skip when #10452 lands.
+  test.skip('AL-1b What over 50,000: inline over-limit error, nothing persists (client-web#10452)', async ({
+    page,
+  }) => {
+    test.setTimeout(180_000);
+    await openAbout(page);
+    const before = await aboutLengths(scenario!.space.id);
+
+    await editor(page, 'what').fill(textForCount(WHAT_LIMIT + 100));
+    await expect(ring(page, 'what')).toHaveAccessibleName(
+      count(WHAT_LIMIT + 100, WHAT_LIMIT)
+    );
+    await expect(
+      section(page, 'what').getByText(COPY.overLimit, { exact: true })
+    ).toBeVisible();
+    // Whether the fix disables Save or refuses the click is its call; either way nothing persists.
+    if (await saveButton(page, 'what').isEnabled())
+      await saveButton(page, 'what').click();
+    await expect(
+      section(page, 'what').getByText(COPY.saved, { exact: true })
+    ).toHaveCount(0);
+    expect((await aboutLengths(scenario!.space.id)).what).toBe(before.what);
+  });
+
+  test('AL-2 Why and Who: ring from 6,400 against 32,000, hint from 25,600', async ({
     page,
   }) => {
     test.setTimeout(180_000);
@@ -154,29 +229,61 @@ test.describe('Space settings About — description limits (client-web#9972)', (
       await expect(ring(page, field)).toHaveCount(0);
 
       await editor(page, field).fill(textForCount(WHY_WHO_LIMIT * 0.2));
-      await expect(ring(page, field)).toHaveAccessibleName(count(WHY_WHO_LIMIT * 0.2, WHY_WHO_LIMIT));
-      await expectTooltip(ring(page, field), [count(WHY_WHO_LIMIT * 0.2, WHY_WHO_LIMIT)], [COPY.countHint]);
+      await expect(ring(page, field)).toHaveAccessibleName(
+        count(WHY_WHO_LIMIT * 0.2, WHY_WHO_LIMIT)
+      );
+      await expectTooltip(
+        ring(page, field),
+        [count(WHY_WHO_LIMIT * 0.2, WHY_WHO_LIMIT)],
+        [COPY.countHint]
+      );
 
       await editor(page, field).fill(textForCount(WHY_WHO_LIMIT * 0.8));
-      await expectTooltip(ring(page, field), [count(WHY_WHO_LIMIT * 0.8, WHY_WHO_LIMIT), COPY.countHint]);
+      await expectTooltip(ring(page, field), [
+        count(WHY_WHO_LIMIT * 0.8, WHY_WHO_LIMIT),
+        COPY.countHint,
+      ]);
     }
+  });
 
-    // Why over the client limit but under the server's: saved (the PR's listed follow-up).
+  // See AL-1b: same defect, client-web#10452. Why sits between the client
+  // limit and the server's (saved today); Who is pushed past the server limit
+  // too (generic alert + Retry today). Expected: the inline error in both
+  // cases, before any server round trip, and nothing persisted.
+  test.skip('AL-2b Why and Who over 32,000: inline over-limit error, nothing persists, no server error (client-web#10452)', async ({
+    page,
+  }) => {
+    test.setTimeout(180_000);
+    await openAbout(page);
+    const before = await aboutLengths(scenario!.space.id);
+
     await editor(page, 'why').fill(textForCount(WHY_WHO_LIMIT + 100));
-    await expect(ring(page, 'why')).toHaveAccessibleName(count(WHY_WHO_LIMIT + 100, WHY_WHO_LIMIT));
-    await saveButton(page, 'why').click();
-    await expect(section(page, 'why').getByText(COPY.saved, { exact: true })).toBeVisible({ timeout: 20_000 });
-    await expect.poll(async () => (await aboutLengths(scenario!.space.id)).why, { timeout: 15_000 }).toBe(
-      WHY_WHO_LIMIT + 100
+    await expect(ring(page, 'why')).toHaveAccessibleName(
+      count(WHY_WHO_LIMIT + 100, WHY_WHO_LIMIT)
     );
+    await expect(
+      section(page, 'why').getByText(COPY.overLimit, { exact: true })
+    ).toBeVisible();
+    if (await saveButton(page, 'why').isEnabled())
+      await saveButton(page, 'why').click();
+    await expect(
+      section(page, 'why').getByText(COPY.saved, { exact: true })
+    ).toHaveCount(0);
+    expect((await aboutLengths(scenario!.space.id)).why).toBe(before.why);
 
-    // Who over the SERVER limit: the client lets the click through and the
-    // server refuses, which the footer reports as an error with a Retry.
     await editor(page, 'who').fill(textForCount(SERVER_WHY_WHO_LIMIT + 100));
-    await expect(ring(page, 'who')).toHaveAccessibleName(count(SERVER_WHY_WHO_LIMIT + 100, WHY_WHO_LIMIT));
-    await saveButton(page, 'who').click();
-    await expect(section(page, 'who').getByRole('alert')).toBeVisible({ timeout: 20_000 });
-    await expect(section(page, 'who').getByRole('button', { name: 'Retry', exact: true })).toBeVisible();
-    expect((await aboutLengths(scenario!.space.id)).who).toBeLessThan(WHY_WHO_LIMIT);
+    await expect(ring(page, 'who')).toHaveAccessibleName(
+      count(SERVER_WHY_WHO_LIMIT + 100, WHY_WHO_LIMIT)
+    );
+    await expect(
+      section(page, 'who').getByText(COPY.overLimit, { exact: true })
+    ).toBeVisible();
+    if (await saveButton(page, 'who').isEnabled())
+      await saveButton(page, 'who').click();
+    await expect(section(page, 'who').getByRole('alert')).toHaveCount(0);
+    await expect(
+      section(page, 'who').getByText(COPY.saved, { exact: true })
+    ).toHaveCount(0);
+    expect((await aboutLengths(scenario!.space.id)).who).toBe(before.who);
   });
 });
