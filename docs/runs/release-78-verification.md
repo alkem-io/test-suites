@@ -123,7 +123,7 @@
 | --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------ |
 | O1  | Deploy order server → client (D4).                                                                                                                                                   | deploy PR order                |
 | O2  | `authorizationPolicyResetAll` with the **78 worker image** (D3a).                                                                                                                    | call result + worker image tag |
-| O3  | `adminRepairTemplateFiles(repairData:{dryRun:true})` as Platform Operations Admin, attach the counts; then `dryRun:false`; then a second apply (expect `copiedReferences: 0`) (D3b). | three result payloads          |
+| O3  | `adminRepairTemplateFiles(repairData:{dryRun:true})` as Platform Operations Admin, attach the counts; then `dryRun:false`; then a second apply (expect `copiedReferences: 0`) (D3b). | **Dry run done 2026-10-20 08:10 UTC** by QA (comoque+184, Ops Admin) via API: `templatesScanned 1855, templatesWithForeignFiles 239, references 514 (ownerCanRead:false 51 whiteboard/description refs), missingFiles 13, failed 0`; full payload `~/repos/qa/release-78/dryrun-acc-2026-10-20T0810Z.json`. Apply + second apply still pending (operator). |
 | O4  | If D2 = ship: migration log line with deleted counts; `_orphan_cleanup_backup_*` tables exist.                                                                                       | log excerpt                    |
 | O5  | If D1 = ship: browser homeserver URL + Synapse callback whitelist set on ACC; `file-service ≥ v0.3.3`, `matrix-adapter ≥ v0.8.22` running.                                           | manifest diff                  |
 
@@ -263,6 +263,7 @@ Prepare a 50,100-character string once: in the browser console `copy('x'.repeat(
 
 **P-A1 / P-A2 — Create a space from a July-2025 template (R78-3, #6596)** · ACC · 👤L = a licensed user who is **not** a member of the private source subspace · 🔑 for O3. Needs the template list from O3's dry run (`references[].templateName`, `location` containing `whiteboard`).
 
+   _Candidates from the ACC dry run (space templates whose whiteboard file sits in a private L1 subspace the template owner cannot read):_ **"check after latest"** (pack `j5pack`, 3 refs) and **"J5 full - up-after"** (pack `j5pack`, 1 ref) — both saved 31 Jul 2025 from private subspace `l1-2space` under `l0space`, whose only member/admin is the QA account; also "GA l1 many tabs - no l2s" (pack `pack-admin`) and "from pack" (pack `j25-pack2`) from private `augustl1subspace` under `j25august7-up`. 👤L must not be that account.
 1. _(A1, before O3 apply)_ As 👤L: user menu → **Create space** (or dashboard → create) → choose **from template** → pick one of the listed templates → name `a1-<date>` → create. _Expect:_ the space is created and opens; the whiteboard callout exists; its image placeholder may be **broken** — that is acceptable here. ⛔ if `FORBIDDEN_POLICY … re-home whiteboard media document` is returned (network tab).
 2. As a member of the source subspace repeat step 1. _Expect:_ created, image visible.
 3. _(O3 apply by 🔑 happens here.)_
