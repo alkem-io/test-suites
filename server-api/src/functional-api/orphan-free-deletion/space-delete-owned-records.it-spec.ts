@@ -17,9 +17,10 @@
  *   which now routes through file-service on the delete path). The delete must
  *   still succeed, and the document's policy and file must be gone.
  *
- * Deliberately NOT asserted (still leaked on develop, group A of the issue):
- * community guidelines, innovation flow, innovation-flow-state, room /
- * communication, template, template-default and poll policies.
+ * Not asserted here: community guidelines, innovation flow, innovation-flow
+ * state, room / communication, template and template-default policies on the
+ * Space path. They leaked until server#6678 and are now pinned by GA-4 in
+ * `group-a-delete-owned-records.it-spec.ts`.
  */
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';

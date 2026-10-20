@@ -1,6 +1,6 @@
 # Test plan — Orphan-free deletion: deletes remove the records they own (server#6614)
 
-> **Status:** Approved · **Depth:** Standard — one repo (server), one elevated trigger (data-destructive: the space delete now removes a profile, a storage bucket and its files through file-service); no migration, contract or rule change · **Story:** [server#6614](https://github.com/alkem-io/server/issues/6614) (no workspace spec; story + diff only) · fix [server#6637](https://github.com/alkem-io/server/pull/6637), merged `08f088eaa` 2026-10-13, in no release tag yet
+> **Status:** Approved · **Depth:** Standard — one repo (server), one elevated trigger (data-destructive: the space delete now removes a profile, a storage bucket and its files through file-service); no migration, contract or rule change · **Story:** [server#6614](https://github.com/alkem-io/server/issues/6614) (no workspace spec; story + diff only) · fixes [server#6637](https://github.com/alkem-io/server/pull/6637) (merged `08f088eaa` 2026-10-13) and [server#6678](https://github.com/alkem-io/server/pull/6678) (group A, merged `b430b2231` 2026-10-19), in no release tag yet
 
 server#6637 fixes three of the issue's leak sites (§B/§C). (1) `deleteCallout` deletes the
 callout's classification, its tagsets and their policies for every callout, not only for Tasks
@@ -9,19 +9,21 @@ type SPACE) and its storage bucket and documents, before any other step. This is
 `space.about.profile`, which was already deleted. (3) `convertSpaceL1ToSpaceL0` deletes the
 replaced license in the save's transaction. **Headline claim:** all three are proven at API
 level by observing that the owned records' authorization policies stop existing. Each case is
-red against a server without the fix. The 13 group-A policy leaks, the user-application
-cascade, failed creates and the cleanup of existing orphans (#6657 / draft #6655) are **not
-fixed**, so they are deferred, not tested.
+red against a server without the fix. server#6678 then closes the 13 group-A policy leaks;
+the eleven of them the API can reach are pinned by GA-1…GA-8 (the former D-1 and D-2), each red
+without #6678. Forum and license-policy deletes have no API path (unit-only in #6678). Failed
+creates (#6679 for the callout path) and the cleanup of existing orphans (#6657 / draft #6655)
+stay deferred.
 
 ## How to run
 
 ```bash
-cd server-api && pnpm exec vitest run --project orphan-free-deletion   # CD-*, SD-*
+cd server-api && pnpm exec vitest run --project orphan-free-deletion   # CD-*, SD-*, GA-*
 cd server-api && pnpm exec vitest run src/functional-api/journey/conversion/convert-L1-to-L0-basic.it-spec.ts  # CV-1
 ```
 
 - Needs the 027 platform roles: the oracle runs as the Platform Operations Admin from `seedPlatformRoleUsers()`.
-- Run against server `develop` (test-alkem.io nightly, or a local stack). **ACC stays red until a release tag contains `08f088eaa`.**
+- Run against server `develop` (test-alkem.io nightly, or a local stack). **ACC stays red until a release tag contains `08f088eaa` (CD/SD/CV) and `b430b2231` (GA).**
 - No serial constraint. Each case owns its callout or space.
 
 ## Risk
@@ -35,7 +37,7 @@ cd server-api && pnpm exec vitest run src/functional-api/journey/conversion/conv
 | 5   | Promoting L1→L0 keeps the old license and its policy (6 since April)                                                                                                    | Low        | Low     | Low-Med  | CV-1                                                   |
 | 6   | Promotion now fails or loses its license: save and license delete share one transaction                                                                                 | Low        | High    | Med      | existing `convert-L1-to-L0-basic` (Free license), unit |
 | 7   | A failed classification or profile delete leaves a half-deleted record                                                                                                  | Low        | Med     | Med      | unit only (see gaps)                                   |
-| 8   | Unfixed leak paths keep leaking, and existing orphans remain until #6655 runs                                                                                           | Certain    | Low-Med | Med      | deferred D-1…D-3, M-3                                  |
+| 8   | Group-A delete paths leak their own policy (13 sites, #6678); existing orphans remain until #6655 runs                                                                | High       | Med     | **High** | GA-1…GA-8; deferred D-3, M-3                           |
 
 Elevated-risk triggers present: data-destructive ✓ (new profile, bucket and document deletes on the Space path). Not present: migration (#6655 is a separate PR), contract change, auth-rule change (policy **rows** of deleted owners only), cross-repo contract change, infra.
 
@@ -77,6 +79,15 @@ Searched `server-api/src`, `client-web/src` and `lib/src` (test-suites `develop`
 | Promotion applies a fresh Free license                                  | R6           | `convert-L1-to-L0-basic.it-spec.ts` (existing)                                                                                                                   | API   |
 | Promotion deletes the replaced license + policy                         | §C, R5       | `convert-L1-to-L0-basic.it-spec.ts › Convert L1 to L0 - basic › replaced subspace license and its policy are deleted (server#6614)` (CV-1)                       | API   |
 | Save + license delete roll back together                                | R6           | `conversion.service.spec.ts` (#6637)                                                                                                                             | Unit  |
+| Innovation-flow state delete removes its policy                         | #6678, R8    | `group-a-delete-owned-records.it-spec.ts › GA-1`                                                                                                                 | API   |
+| POLL callout delete removes the poll policy                             | #6678, R8    | `… › GA-2` (poll policy read from the `addPollOption` answer; `framing.poll.authorization` resolves null)                                                        | API   |
+| Callout delete removes its comments room and its post's room policies   | #6678, R8    | `… › GA-3`                                                                                                                                                       | API   |
+| Space delete removes guidelines, flow + states, communication + updates room, templates manager + defaults + set + a template | #6678, R8 | `… › GA-4`                                                                                                                               | API   |
+| Template delete removes template, profile and content policies (callout, guidelines) | #6678, R8 | `… › GA-5`                                                                                                                                              | API   |
+| Forum discussion delete removes discussion, profile and comments room   | #6678, R8    | `… › GA-6`                                                                                                                                                       | API   |
+| Innovation pack delete removes pack, profile, templates set and a template | #6678, R8 | `… › GA-7`                                                                                                                                                       | API   |
+| User delete removes the settings policy; the application goes with it (control, cascade since #3122) | #6678 / former D-2 | `… › GA-8`                                                                                                                                      | API   |
+| Forum and license-policy deletes (no API path)                          | #6678        | `forum.service.spec.ts`, `license.policy.service.spec.ts` (#6678)                                                                                                | Unit  |
 
 ### Regression guards
 
@@ -87,9 +98,8 @@ Searched `server-api/src`, `client-web/src` and `lib/src` (test-suites `develop`
 
 | Scenario                                                                                                                                                                                   | Why not automated                                                                | Where it belongs                                          |
 | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------- | --------------------------------------------------------- |
-| 13 group-A paths still leak their own policy (flow state, room, user settings, guidelines, flow, communication, template, template default, poll, discussion, pack, forum, license policy) | **Product defect, not fixed** (#6614 fix area 1). A test would be red on develop | Deferred D-1; reuse this area's oracle when the fix lands |
-| User deletion leaves application policies (DB cascade)                                                                                                                                     | Not fixed                                                                        | Deferred D-2                                              |
-| Failed create leaves `[]` policies                                                                                                                                                         | Not fixed; no lever to fail a create partway                                     | Deferred D-3                                              |
+| Failed create leaves `[]` policies                                                                                                                                                         | Callout path fixed in #6679 (children rolled back); the rolled-back children are never returned, so there is no API-visible id to probe. Other create paths unfixed | Deferred D-3; unit + the author's live DB check on #6679 |
+| Policies the API cannot show: a template callout's `framing.authorization`, `CommunityGuidelines.profile.authorization` (template and space alike), `framing.poll.authorization`           | Resolver gaps found 2026-10-19 (reported on the story). Unobservable, not leaking as far as the API can tell | Server resolver fix; then add the labels to GA-2/GA-4/GA-5 |
 | Space delete refused while a document in the Space bucket is held by a signing attempt                                                                                                     | No harness lever (signing provider). Unit-proven that the Space stays whole      | Deferred D-4                                              |
 | file-service failure mid-delete, then a retry finishes the job                                                                                                                             | No fault injection                                                               | Deferred D-5; exploratory EX-1 on dev                     |
 | Issue's SQL reproduction / orphan counts by type stop growing after deploy                                                                                                                 | No DB access (standing constraint)                                               | **Manual-only** M-3 (ops SQL on dev)                      |
@@ -99,8 +109,10 @@ Searched `server-api/src`, `client-web/src` and `lib/src` (test-suites `develop`
 **What is proven:** after these cases land, a plain or board callout delete, a Space delete
 (with and without an uploaded document) and an L1→L0 promotion leave none of their owned
 records' policies, profile, bucket, document or license behind on a real database. That is
-observable over GraphQL and red without #6637. **What is not proven:** the issue's own expected
-behaviour beyond these three paths. Group-A policies, user applications and failed creates
-still leak on develop. The statement "after `authorizationPolicyResetAll` every remaining policy
+observable over GraphQL and red without #6637. The eleven API-reachable group-A deletes leave
+no policy of their own behind either (GA-1…GA-8, red without #6678; local run 2026-10-19,
+12/12 green on server `b430b2231`). **What is not proven:** failed creates beyond the author's
+own live check on #6679, the forum and license-policy singletons, and the three policies the
+resolvers cannot show. The statement "after `authorizationPolicyResetAll` every remaining policy
 is reachable from a live record" **has no covering test and cannot have one here**: it is a
 whole-table SQL property, and it stays false until #6655 and fix areas 1 and 3 ship.

@@ -75,7 +75,10 @@ type LookupField =
   | 'document'
   | 'license'
   | 'callout'
-  | 'space';
+  | 'space'
+  | 'room'
+  | 'template'
+  | 'user';
 
 type LookupData = { lookup?: Partial<Record<LookupField, { id: string }>> };
 
@@ -106,11 +109,12 @@ const resolves = (
 
 /**
  * What "this id does not exist" looks like per lookup. Everything answers
- * ENTITY_NOT_FOUND except `lookup.storageBucket`, which lets TypeORM's own
- * `EntityNotFoundError` through with code UNSPECIFIED (established 2026-10-16,
- * server develop: it is the answer for a random UUID too, so it is the shape
- * of a missing bucket, not of a leak). That one message is accepted for that
- * one field; "any error" is never accepted.
+ * ENTITY_NOT_FOUND. `lookup.storageBucket` used to let TypeORM's own
+ * `EntityNotFoundError` through with code UNSPECIFIED (established 2026-10-16;
+ * the answer for a random UUID too, so the shape of a missing bucket, not of
+ * a leak); server#6678 aligned it to ENTITY_NOT_FOUND. Both shapes stay
+ * accepted for that one field so SD-1/SD-2 are green on either side of the
+ * fix; "any error" is never accepted.
  */
 const isNotFoundAnswer = (
   r: RawResult<LookupData>,
