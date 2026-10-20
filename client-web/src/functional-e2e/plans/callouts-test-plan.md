@@ -1333,9 +1333,9 @@ The seed creates:
 
 #### 10.6 Create Callout with a Description over the Limit (client-web#9972)
 
-**User:** SPACE_ADMIN
+**User:** SPACE*ADMIN
 **Priority:** P1 — Release 78 story; before client-web#10422 the length was checked only on submit, with no counter, no live error and no sign the footer was blocked
-**Test file:** `0.10callout-description-limit.spec.ts` (DL-1 … DL-3) · nightly _Callouts_ suite
+**Test file:** `0.10callout-description-limit.spec.ts` (DL-1 … DL-3) · nightly \_Callouts* suite
 
 **Steps:**
 

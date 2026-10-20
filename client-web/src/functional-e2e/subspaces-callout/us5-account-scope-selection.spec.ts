@@ -602,11 +602,9 @@ test.describe
     await findArticleByName(block, NAMES.A1a);
     // B1 and A1 share a name: B1's card is the one that is not A1 — count the shared heading once.
     await expect(
-      block
-        .locator('article')
-        .filter({
-          has: page.getByRole('heading', { name: NAMES.B1, exact: true }),
-        })
+      block.locator('article').filter({
+        has: page.getByRole('heading', { name: NAMES.B1, exact: true }),
+      })
     ).toHaveCount(1);
     await expect(block.locator('article')).toHaveCount(3);
     await expect(block.getByText(COPY.notice, { exact: true })).toHaveCount(0);
