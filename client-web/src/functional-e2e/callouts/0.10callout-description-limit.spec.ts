@@ -214,6 +214,8 @@ test.describe('Create Callout — description over the limit (client-web#9972)',
     await expect(dialog(page)).toHaveCount(0);
     await expect(page.getByRole('heading', { name: title }).first()).toBeVisible({ timeout: 15_000 });
     expect(await calloutTitles(scenario!.space.id)).toContain(title);
+    // Exactly one: a late write from the two over-limit clicks above would be a second callout with this title.
+    expect((await calloutTitles(scenario!.space.id)).filter(t => t === title)).toHaveLength(1);
   });
 
   test('DL-2 a missing title wins over an over-long description', async ({ page }) => {
@@ -227,7 +229,7 @@ test.describe('Create Callout — description over the limit (client-web#9972)',
     await expect(dialog(page).getByText(COPY.overLimit, { exact: true })).toBeVisible();
   });
 
-  test('DL-3 ring thresholds: hidden under 20 %, shown from 20 %, the formatting hint from 80 %', async ({
+  test('DL-3 ring thresholds: hidden under 20 %, shown from 20 %, the formatting hint from 80 %; 50,000 allowed, 50,001 refused', async ({
     page,
   }) => {
     const collaboration = await openCreateDialog(page, 'dl3-thresholds');
@@ -241,6 +243,11 @@ test.describe('Create Callout — description over the limit (client-web#9972)',
     await expect(ring(page)).toHaveAccessibleName(count(RING_FROM));
     await expectTooltip(ring(page), [count(RING_FROM)], [COPY.countHint]);
 
+    // BVA on the 80 % boundary: one under has no formatting hint, the boundary has it.
+    await setDescription(collaboration, textForCount(HINT_FROM - 1));
+    await expect(ring(page)).toHaveAccessibleName(count(HINT_FROM - 1));
+    await expectTooltip(ring(page), [count(HINT_FROM - 1)], [COPY.countHint]);
+
     await setDescription(collaboration, textForCount(HINT_FROM));
     await expect(ring(page)).toHaveAccessibleName(count(HINT_FROM));
     await expectTooltip(ring(page), [count(HINT_FROM), COPY.countHint]);
@@ -250,5 +257,11 @@ test.describe('Create Callout — description over the limit (client-web#9972)',
     await expect(ring(page)).toHaveAccessibleName(count(LIMIT));
     await expect(dialog(page).getByText(COPY.overLimit, { exact: true })).toHaveCount(0);
     await expectNotBlocked(page);
+
+    // BVA on the limit: one character over is already an error, and the footer is blocked.
+    await setDescription(collaboration, textForCount(LIMIT + 1));
+    await expect(ring(page)).toHaveAccessibleName(count(LIMIT + 1));
+    await expect(dialog(page).getByText(COPY.overLimit, { exact: true })).toBeVisible();
+    await expectBlocked(page, COPY.descriptionHint);
   });
 });

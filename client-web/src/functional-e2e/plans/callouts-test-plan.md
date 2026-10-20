@@ -1344,7 +1344,7 @@ The seed creates:
 3. Click Post, then Save Draft
 4. Shorten to 49,900 and Post
 5. Paste over the limit again and clear the title
-6. Thresholds: 9,999 / 10,000 / 40,000 / 50,000
+6. Thresholds (BVA, both sides of each boundary): 9,999 / 10,000 / 39,999 / 40,000 / 50,000 / 50,001
 
 **Expected Results:**
 
@@ -1353,7 +1353,8 @@ The seed creates:
 - A click runs validation: the dialog stays, the error stays, no callout exists (API read)
 - Under the limit: error gone, no hint, Post creates the callout
 - Missing title wins: the hint becomes "Add a title to your Post to continue" while the description error is still shown
-- Ring hidden under 20 % of the limit, shown from 20 % without the hint line, hint line from 80 %; exactly 50,000 is allowed
+- Ring hidden under 20 % of the limit, shown from 20 % without the hint line, hint line from 80 % (none at 39,999); exactly 50,000 is allowed, 50,001 shows the error and blocks the footer
+- After the under-limit Post, exactly one callout carries the title (the two over-limit clicks wrote nothing, not even late)
 
 **Notes:**
 
