@@ -15,11 +15,20 @@
 // name, so a stale-label assertion can never pass on the loading state.
 
 import { expect, type Locator, type Page } from '@playwright/test';
-import { TestScenarioFactory, TestUser, TestUserManager, UniqueIDGenerator } from '@alkemio/tests-lib';
+import {
+  TestScenarioFactory,
+  TestUser,
+  TestUserManager,
+  UniqueIDGenerator,
+} from '@alkemio/tests-lib';
 import type { TestScenarioConfig } from '@alkemio/tests-lib/scenario/config/test-scenario-config';
 import type { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import { SpacePrivacyMode } from '@alkemio/tests-lib/core/generated/alkemio-schema';
-import { adminGql, CardsFixture, createContributorsCalloutViaApi } from './cards-fixture';
+import {
+  adminGql,
+  CardsFixture,
+  createContributorsCalloutViaApi,
+} from './cards-fixture';
 import { createPersonaTest } from '../fixtures/authenticated-session.fixture';
 import { ContributorsCalloutPage } from './pages';
 
@@ -46,8 +55,15 @@ const scenarioConfig: TestScenarioConfig = {
   space: {
     about: { profile: { displayName: 'Manual Org Selection Space' } },
     settings: { privacy: { mode: SpacePrivacyMode.Public } },
-    collaboration: { addTutorialCallouts: false, addPostCollectionCallout: false, addWhiteboardCallout: false },
-    community: { admins: [TestUser.SPACE_ADMIN], members: [TestUser.SPACE_ADMIN] },
+    collaboration: {
+      addTutorialCallouts: false,
+      addPostCollectionCallout: false,
+      addWhiteboardCallout: false,
+    },
+    community: {
+      admins: [TestUser.SPACE_ADMIN],
+      members: [TestUser.SPACE_ADMIN],
+    },
   },
 };
 
@@ -61,21 +77,46 @@ let personId = '';
 // Picker locators (inside the edit dialog)
 // ---------------------------------------------------------------------------
 const dialog = (page: Page): Locator => page.getByRole('dialog');
-const manualSwitch = (page: Page): Locator => dialog(page).getByRole('switch', { name: COPY.manualSelection });
-const searchBox = (page: Page): Locator => dialog(page).getByRole('textbox', { name: COPY.search });
+const manualSwitch = (page: Page): Locator =>
+  dialog(page).getByRole('switch', { name: COPY.manualSelection });
+const searchBox = (page: Page): Locator =>
+  dialog(page).getByRole('textbox', { name: COPY.search });
 /** A result row: the button carrying the name and the kind label. */
-const resultRow = (page: Page, name: string, kind: keyof typeof COPY.typeLabel): Locator =>
-  dialog(page).getByRole('button').filter({ hasText: name }).filter({ hasText: COPY.typeLabel[kind] });
+const resultRow = (
+  page: Page,
+  name: string,
+  kind: keyof typeof COPY.typeLabel
+): Locator =>
+  dialog(page)
+    .getByRole('button')
+    .filter({ hasText: name })
+    .filter({ hasText: COPY.typeLabel[kind] });
 /** A selected chip, found by its remove control, which carries the chip's label. */
 const chip = (page: Page, label: string): Locator =>
-  dialog(page).getByRole('listitem').filter({ has: page.getByRole('button', { name: COPY.remove(label), exact: true }) });
+  dialog(page)
+    .getByRole('listitem')
+    .filter({
+      has: page.getByRole('button', { name: COPY.remove(label), exact: true }),
+    });
 
-const selection = async (): Promise<{ mode: string; selectedIds: string[] }> => {
+const selection = async (): Promise<{
+  mode: string;
+  selectedIds: string[];
+}> => {
   const data = await adminGql<{
-    lookup: { callout: { settings: { framing: { selection: { mode: string; selectedIds: string[] } } } } };
-  }>('query($id: UUID!){ lookup { callout(ID: $id) { settings { framing { selection { mode selectedIds } } } } } }', {
-    id: calloutId,
-  });
+    lookup: {
+      callout: {
+        settings: {
+          framing: { selection: { mode: string; selectedIds: string[] } };
+        };
+      };
+    };
+  }>(
+    'query($id: UUID!){ lookup { callout(ID: $id) { settings { framing { selection { mode selectedIds } } } } } }',
+    {
+      id: calloutId,
+    }
+  );
   return data.lookup.callout.settings.framing.selection;
 };
 
@@ -86,9 +127,14 @@ const openEdit = async (page: Page): Promise<ContributorsCalloutPage> => {
   return cc;
 };
 
-const saveAndReload = async (page: Page, cc: ContributorsCalloutPage): Promise<void> => {
+const saveAndReload = async (
+  page: Page,
+  cc: ContributorsCalloutPage
+): Promise<void> => {
   await cc.saveEditButton.click();
-  await expect(dialog(page).getByRole('switch', { name: COPY.manualSelection })).toHaveCount(0, { timeout: 15_000 });
+  await expect(
+    dialog(page).getByRole('switch', { name: COPY.manualSelection })
+  ).toHaveCount(0, { timeout: 15_000 });
   await page.reload();
 };
 
@@ -101,14 +147,24 @@ const collection = async (page: Page, cc: ContributorsCalloutPage) => {
   return col;
 };
 
-test.describe.serial('US6 — Organisations in Manual selection (client-web#10300)', () => {
+test.describe
+  .serial('US6 — Organisations in Manual selection (client-web#10300)', () => {
   test.beforeAll(async () => {
     test.setTimeout(180_000);
     scenario = await TestScenarioFactory.createBaseScenario(scenarioConfig);
     const roleSet = scenario.space.community.roleSetId;
-    orgId = await fixture.organization(ORG, `msorg${uid}`, roleSet, { associates: 0 }, TestUserManager.users.globalAdmin.id);
+    orgId = await fixture.organization(
+      ORG,
+      `msorg${uid}`,
+      roleSet,
+      { associates: 0 },
+      TestUserManager.users.globalAdmin.id
+    );
     personId = await fixture.user(PERSON, roleSet);
-    calloutId = await createContributorsCalloutViaApi(scenario.space.collaboration.calloutsSetId, TITLE);
+    calloutId = await createContributorsCalloutViaApi(
+      scenario.space.collaboration.calloutsSetId,
+      TITLE
+    );
     expect(await selection()).toEqual({ mode: 'AUTO', selectedIds: [] });
   });
 
@@ -130,7 +186,9 @@ test.describe.serial('US6 — Organisations in Manual selection (client-web#1030
     await manualSwitch(page).click();
     await expect(manualSwitch(page)).toBeChecked();
     // 084 FR-002: the type controls are not hidden in custom mode.
-    await expect(dialog(page).getByRole('group', { name: COPY.types })).toBeVisible();
+    await expect(
+      dialog(page).getByRole('group', { name: COPY.types })
+    ).toBeVisible();
 
     await searchBox(page).fill(ORG);
     await expect(resultRow(page, ORG, 'organization')).toBeVisible();
@@ -156,7 +214,10 @@ test.describe.serial('US6 — Organisations in Manual selection (client-web#1030
     }
 
     await saveAndReload(page, cc);
-    expect(await selection()).toEqual({ mode: 'CUSTOM', selectedIds: expect.arrayContaining([orgId, personId]) });
+    expect(await selection()).toEqual({
+      mode: 'CUSTOM',
+      selectedIds: expect.arrayContaining([orgId, personId]),
+    });
     expect((await selection()).selectedIds).toHaveLength(2);
 
     const col = await collection(page, cc);
@@ -184,7 +245,13 @@ test.describe.serial('US6 — Organisations in Manual selection (client-web#1030
     test.setTimeout(120_000);
     await adminGql(
       'mutation($d: RemoveRoleOnRoleSetInput!){ removeRoleFromOrganization(roleData: $d) { id } }',
-      { d: { actorID: orgId, roleSetID: scenario!.space.community.roleSetId, role: 'MEMBER' } }
+      {
+        d: {
+          actorID: orgId,
+          roleSetID: scenario!.space.community.roleSetId,
+          role: 'MEMBER',
+        },
+      }
     );
 
     const cc = await openEdit(page);
@@ -194,7 +261,9 @@ test.describe.serial('US6 — Organisations in Manual selection (client-web#1030
     await expect(chip(page, COPY.noLongerAvailable)).not.toContainText(UUID);
     await expect(chip(page, ORG)).toHaveCount(0);
     // Still selected on the server: the relabel is presentation only.
-    expect((await selection()).selectedIds).toEqual(expect.arrayContaining([orgId, personId]));
+    expect((await selection()).selectedIds).toEqual(
+      expect.arrayContaining([orgId, personId])
+    );
 
     // Leave without saving: a fresh load of the Space is the clean way out of the
     // edit dialog AND the detail dialog beneath it.
@@ -212,12 +281,20 @@ test.describe.serial('US6 — Organisations in Manual selection (client-web#1030
     test.setTimeout(120_000);
     const cc = await openEdit(page);
     await expect(chip(page, PERSON)).toBeVisible({ timeout: 20_000 });
-    await dialog(page).getByRole('button', { name: COPY.remove(COPY.noLongerAvailable), exact: true }).click();
+    await dialog(page)
+      .getByRole('button', {
+        name: COPY.remove(COPY.noLongerAvailable),
+        exact: true,
+      })
+      .click();
     await expect(chip(page, COPY.noLongerAvailable)).toHaveCount(0);
     await expect(chip(page, PERSON)).toBeVisible();
 
     await saveAndReload(page, cc);
-    expect(await selection()).toEqual({ mode: 'CUSTOM', selectedIds: [personId] });
+    expect(await selection()).toEqual({
+      mode: 'CUSTOM',
+      selectedIds: [personId],
+    });
 
     const col = await collection(page, cc);
     await expect(col.cardFor(PERSON)).toBeVisible();

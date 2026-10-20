@@ -287,10 +287,9 @@ export async function conversationNamesOf(email: string): Promise<string[]> {
     me: {
       conversations: { conversations: { room: { displayName: string } }[] };
     };
-  }>(
-    '{ me { conversations { conversations { id room { displayName } } } } }',
-    { bearerToken }
-  );
+  }>('{ me { conversations { conversations { id room { displayName } } } } }', {
+    bearerToken,
+  });
   // This read is the evidence that a removal landed, and US2-AS4 polls it
   // with `.not.toContain`: a failed read that came back as `[]` would pass
   // that poll at once. So anything but HTTP 200 with a conversations array

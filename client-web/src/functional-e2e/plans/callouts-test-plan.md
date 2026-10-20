@@ -1335,7 +1335,7 @@ The seed creates:
 
 **User:** SPACE_ADMIN
 **Priority:** P1 — Release 78 story; before client-web#10422 the length was checked only on submit, with no counter, no live error and no sign the footer was blocked
-**Test file:** `0.10callout-description-limit.spec.ts` (DL-1 … DL-3) · nightly *Callouts* suite
+**Test file:** `0.10callout-description-limit.spec.ts` (DL-1 … DL-3) · nightly _Callouts_ suite
 
 **Steps:**
 
@@ -1360,7 +1360,7 @@ The seed creates:
 
 - The count is the **markdown** length: a plain text run serialises with one trailing newline, so the counter reads typed + 1. The spec pins that offset first (DL-1) so a serialisation change fails loudly. A user who pastes exactly 50,000 visible characters is therefore over the limit by one; the tooltip's second line is the explanation the product gives.
 - Tooltips are opened by **focusing** the trigger, not hovering: re-hovering the same Radix trigger after a pointer leave did not reopen it reliably (2026-10-19).
-- The Space settings About *What* / *Why* / *Who* editors are covered by `space/space-settings-about-limit.spec.ts` (AL-1, AL-2; nightly *Space*): ring thresholds per limit (What 50,000; Why / Who 32,000). **Observed and pinned, not ruled:** none of the three About editors shows a live error or blocks Save past its limit — What at 50,100 saves (server limit 65,568), Why at 32,100 saves, Who at 32,884 is refused by the server and the footer shows the error + Retry. The PR lists Why / Who as a follow-up and is silent on What. Not covered: the innovation-flow state description, the forum body and the VC knowledge base (client-web unit tests cover the limits passed to each); the title field's own red-on-blur and 128 counter were not delivered (Release 78 decision D5).
+- The Space settings About _What_ / _Why_ / _Who_ editors are covered by `space/space-settings-about-limit.spec.ts` (AL-1, AL-2; nightly _Space_): ring thresholds per limit (What 50,000; Why / Who 32,000). **Observed and pinned, not ruled:** none of the three About editors shows a live error or blocks Save past its limit — What at 50,100 saves (server limit 65,568), Why at 32,100 saves, Who at 32,884 is refused by the server and the footer shows the error + Retry. The PR lists Why / Who as a follow-up and is silent on What. Not covered: the innovation-flow state description, the forum body and the VC knowledge base (client-web unit tests cover the limits passed to each); the title field's own red-on-blur and 128 counter were not delivered (Release 78 decision D5).
 
 ---
 
@@ -1451,9 +1451,9 @@ Based on the comprehensive test plan above, the following scenarios are **P1 pri
 
 ### **Error Handling (1 scenario)**
 
-| #   | Scenario                                                         | Status | Test File                               |
-| --- | ---------------------------------------------------------------- | ------ | --------------------------------------- |
-| 24  | **10.6** - Description over the Limit (client-web#9972)          | ✅     | `0.10callout-description-limit.spec.ts` |
+| #   | Scenario                                                | Status | Test File                               |
+| --- | ------------------------------------------------------- | ------ | --------------------------------------- |
+| 24  | **10.6** - Description over the Limit (client-web#9972) | ✅     | `0.10callout-description-limit.spec.ts` |
 
 ---
 

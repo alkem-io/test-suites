@@ -14,13 +14,13 @@ place; cite this file instead of rediscovering a gap.
 
 ## Standing tooling gaps
 
-- **No `createStateOnInnovationFlow` / `deleteStateOnInnovationFlow` request-params wrappers**, despite both mutations existing in the generated schema (`lib/src/core/generated/alkemio-schema.ts`). This blocks building a donor space/template with an *exact* custom state count (e.g. exactly 2 or exactly 9 states) at the API level — the only levers available are the platform's default templates (4 states for L0, 5 for a subspace) and renaming existing states via `updateInnovationFlowState`, which changes names but not counts. Any future case needing a precise state-count boundary (1..8 enforcement, template min/max) is blocked on this until someone adds the wrappers. Cleared once: the `.graphql` mutation files + request-params wrappers exist (small, mechanical — follow the pattern of `updateInnovationFlowState`). Still open as of 2026-09-03 — out of scope for the conversion plan's automate-now rows (M-3/M-4 stay manual).
+- **No `createStateOnInnovationFlow` / `deleteStateOnInnovationFlow` request-params wrappers**, despite both mutations existing in the generated schema (`lib/src/core/generated/alkemio-schema.ts`). This blocks building a donor space/template with an _exact_ custom state count (e.g. exactly 2 or exactly 9 states) at the API level — the only levers available are the platform's default templates (4 states for L0, 5 for a subspace) and renaming existing states via `updateInnovationFlowState`, which changes names but not counts. Any future case needing a precise state-count boundary (1..8 enforcement, template min/max) is blocked on this until someone adds the wrappers. Cleared once: the `.graphql` mutation files + request-params wrappers exist (small, mechanical — follow the pattern of `updateInnovationFlowState`). Still open as of 2026-09-03 — out of scope for the conversion plan's automate-now rows (M-3/M-4 stay manual).
 - ~~`InnovationFlowStateData` fragment only selects `description` + `displayName`~~ — **cleared 2026-09-03** (test-suites PR implementing `conversion-test-plan.md`'s NC-1/NC-2). The fragment (`lib/src/scenario/graphql/fragments/innovation-flow/innovation-flow-state.graphql`) now also selects `id`, `sortOrder`, and `settings { allowNewCallouts descriptionDisplayMode showPublishDetails sidebar visible }`. Every consumer of `InnovationFlowStateData` (states AND currentState, on both `getSpaceData` and the conversion mutations) gets these fields for free.
 - ~~`getInnovationFlowStatesWithIds` query only selects `id` + `displayName`~~ — **cleared 2026-09-03**, same PR. The query now also selects `sortOrder` and `settings { sidebar }` (kept minimal — it's a setup/ID-lookup query; use `getSpaceData` if a test needs the full per-state settings before conversion).
 - ~~`updateInnovationFlowCurrentState` mutation has a `.graphql` file but zero request-params consumers~~ — **cleared 2026-09-03**, same PR. Wrapper added in `server-api/src/functional-api/innovation-flow/innovation-flow.request.params.ts`: `updateInnovationFlowCurrentState(innovationFlowId, currentStateID, userRole?)`.
 - ~~`updateInnovationFlowState` wrapper doesn't expose the mutation's `settings` argument~~ — **cleared 2026-09-03**, same PR. `updateInnovationFlowState(innovationFlowStateID, displayName?, description?, settings?, userRole?)` — `displayName`/`description` are now optional too (previously `description` defaulted to `'Updated state'` even when omitted; omitting it now correctly leaves the stored value unchanged, matching the mutation's own contract). Verified the only two pre-existing callers (`transfer-callout-changed-flow.it-spec.ts`, `transfer-callout-template-flow.it-spec.ts`) don't assert on the old default.
 - **`createCalloutOnCalloutsSet`'s TypeScript `options` type didn't expose `classification`** even though the underlying `CreateCalloutOnCalloutsSetInput` always supported it — the fixture-pattern note below describing this as "reusable directly in tests" was aspirational, not yet true. **Cleared 2026-09-03**, same PR: `classification?: { tagsets: { name: TagsetReservedName; tags?: string[] }[] }` added to the wrapper's options type.
-- **test-suites has no DB access** (GraphQL-only surface) for this domain's specs — any assertion that needs to inspect raw table shape (e.g. verifying a migration's JSONB backfill against legacy scalar-null rows) is out of reach for automation here and belongs to release-ops SQL verification instead. Still standing — architectural, not expected to clear. **Qualified 2026-09-28** (`origin/develop` @ `0ca74068`): since 054 there IS a **loopback-only** Postgres/Redis primitive (`lib/src/config/optional-infra.ts` › `harnessPostgresConfigured`, fail-closed by `lib/src/config/loopback-guard.ts`), used by a few `roleset/associates/**` and `contributor-management/organization/**` cases that skip themselves elsewhere. It reaches a local/CI compose DB only — never ACC, prod, or the remote nightly cluster — so "did the migration rewrite *real* pre-existing rows" is still unreachable from here.
+- **test-suites has no DB access** (GraphQL-only surface) for this domain's specs — any assertion that needs to inspect raw table shape (e.g. verifying a migration's JSONB backfill against legacy scalar-null rows) is out of reach for automation here and belongs to release-ops SQL verification instead. Still standing — architectural, not expected to clear. **Qualified 2026-09-28** (`origin/develop` @ `0ca74068`): since 054 there IS a **loopback-only** Postgres/Redis primitive (`lib/src/config/optional-infra.ts` › `harnessPostgresConfigured`, fail-closed by `lib/src/config/loopback-guard.ts`), used by a few `roleset/associates/**` and `contributor-management/organization/**` cases that skip themselves elsewhere. It reaches a local/CI compose DB only — never ACC, prod, or the remote nightly cluster — so "did the migration rewrite _real_ pre-existing rows" is still unreachable from here.
 - **Push emit assertions need `RABBITMQ_MANAGEMENT_*`**, which the nightly workflow does not set (see the `nightly` project comment in `server-api/vitest.config.ts`). A push case either skips itself where the management API is absent (`rabbitMqManagementConfigured`) or does not run nightly at all. 2026-09-28.
 
 - **`TestUser.GLOBAL_ADMIN` does not hold Platform Operations Admin on develop (027 Slice B).**
@@ -34,7 +34,7 @@ place; cite this file instead of rediscovering a gap.
 
 ## Fixture patterns worth reusing
 
-- **Building a "flow-replacing" template for an existing space**: take a donor space, rename its states via `updateInnovationFlowState` to deliberately different names (so no state-name collision with the target), then `createTemplateFromSpace(donorSpaceId, donorTemplateSetId, name)`, then `updateCollaborationFromSpaceTemplate(targetCollaborationId, templateId)`. Demonstrated in `callout/transfer/transfer-callout-template-flow.it-spec.ts` (L1 target) and `journey/conversion/apply-template-l0-wholesale-replace.it-spec.ts` (L0 target — R-22). This is the only currently-buildable way to exercise "apply a template with a different state *set*" — it cannot control the exact state *count*.
+- **Building a "flow-replacing" template for an existing space**: take a donor space, rename its states via `updateInnovationFlowState` to deliberately different names (so no state-name collision with the target), then `createTemplateFromSpace(donorSpaceId, donorTemplateSetId, name)`, then `updateCollaborationFromSpaceTemplate(targetCollaborationId, templateId)`. Demonstrated in `callout/transfer/transfer-callout-template-flow.it-spec.ts` (L1 target) and `journey/conversion/apply-template-l0-wholesale-replace.it-spec.ts` (L0 target — R-22). This is the only currently-buildable way to exercise "apply a template with a different state _set_" — it cannot control the exact state _count_.
 - **Classifying a callout into a specific flow phase at creation**: `createCalloutOnCalloutsSet(..., { classification: { tagsets: [{ name: TagsetReservedName.FlowState, tags: [<phase displayName>] }] } })` — used by the platform's own bootstrap L0 template definition (`server/src/core/bootstrap/platform-template-definitions/default-templates/bootstrap.template.space.content.space.l0.ts`) and reusable directly in tests since 2026-09-03 (see cleared gap above). Demonstrated in `apply-template-l0-wholesale-replace.it-spec.ts`.
 - **A `TestScenarioConfig` with no `space` key creates NO space at all** (`createBaseScenarioPrivate` returns early when `scenarioConfig.space` is falsy), and a `space` with no `subspace` key creates the L0 only, no L1. Always pass at least `space: {}` (L0-only scenario) or `space: { subspace: {} }` (L0 + L1) explicitly — an empty `{ name: '...' }` config silently yields empty IDs on `baseScenario.space`/`.subspace`, which then fail downstream as an opaque "Invalid value supplied for a GraphQL variable" rather than a clear setup error.
 
@@ -69,7 +69,7 @@ place; cite this file instead of rediscovering a gap.
   - 2026-10-15.
 
 - **Seeding a cross-bucket ("foreign") document reference through the API.**
-  - Profile *updates* write `description` verbatim (`server profile.service.ts › updateProfile`; there is no re-home on update), unlike create paths, which re-home under the copy rule.
+  - Profile _updates_ write `description` verbatim (`server profile.service.ts › updateProfile`; there is no re-home on update), unlike create paths, which re-home under the copy rule.
   - So: upload a file into one bucket (`uploadFileOnStorageBucket` on a space-about bucket), then `updateTemplate` / `updatePostTemplate` another profile's description with that document URL. The result is a reference stored outside its own bucket.
   - Space-about documents are READ for everyone, including anonymous, even on a private space (`storage/auth/private-space-document-auth.it-spec.ts:264-269`), so any owner check on them comes out readable.
   - A random UUID in the same URL shape gives a dead reference.
@@ -86,7 +86,7 @@ place; cite this file instead of rediscovering a gap.
   - Forum category space ids are `uuidv5("<forumId>:category:<value>", f47ac10b-58cc-4372-a567-0e02b2c3d479)` (server `forum.constants.ts`).
   - For state reads, use the dev appservice token from the server repo's tracked `.build/synapse/matrix-adapter.yaml`. Pass it through an env var set by the user. The harness must never read the server checkout, and should use GET-only helpers.
   - Users are `@<actorId>:alkemio.matrix.host`; the actor id is the localpart (adapter `idmapper.go › UserID`). The actor id equals `TestUserManager.users.<x>.agentId`. 2026-10-15.
-  - **The adapter bot leaves conversation rooms once members join** (adapter #82 PR body; `docs/matrix-admin-reflection.md`). A state read made *as the bot* sees the room frozen at the bot's leave.
+  - **The adapter bot leaves conversation rooms once members join** (adapter #82 PR body; `docs/matrix-admin-reflection.md`). A state read made _as the bot_ sees the room frozen at the bot's leave.
     - Read and act as a joined member through appservice identity assertion (`?user_id=<member mxid>`); members are appservice ghosts.
     - This is a design-time inference from adapter code (server#6329 plan, 2026-10-15). Confirm it on the first run and correct this line.
   - Spaces are different: the bot stays a member, so the 061 forum reads as the bot remain valid.
@@ -119,7 +119,7 @@ place; cite this file instead of rediscovering a gap.
 - **`@Min/@Max` on a GraphQL input are not necessarily enforced.** The server's global `ValidationPipe` validates only the DTO classes listed in `src/core/validation/handlers/base/base.handler.ts`. Before planning a BVA case on an input, check the class is on that list; otherwise the decorators are dead code. 2026-09-28.
 - **027 (server#6322, merged 2026-09-28) moved forum gates off `PLATFORM_ADMIN`.** Admin-only create, update/delete of a discussion, and category retirement now check `PLATFORM_FORUM_MANAGE`. GLOBAL_LICENSE_ADMIN lost them. Denial messages name `'platform-forum-manage'`. Existing discussions need `authorizationPolicyResetOnPlatform` before the new privilege reaches them. 2026-09-28.
 
-- `test.skip` left in a spec sometimes encodes a *known, tracked* bug rather than flakiness — read the comment above it before assuming it's safe to leave skipped once the referenced issue ships. `convert-L1-to-L0-basic.it-spec.ts` had exactly this pattern for client-web#9528.
+- `test.skip` left in a spec sometimes encodes a _known, tracked_ bug rather than flakiness — read the comment above it before assuming it's safe to leave skipped once the referenced issue ships. `convert-L1-to-L0-basic.it-spec.ts` had exactly this pattern for client-web#9528.
 - Sibling repo clones under the workspace root can be on an unrelated branch (observed: `server/` clone on `fix/move-space-recompute-platform-roles-access`, not `develop`) — always check `git log --oneline --all | grep <issue#>` rather than assuming the checked-out branch is current; the target commit is usually still reachable via `git log --all`. Reconfirmed 2026-09-28 (same branch); reading `git show origin/develop:<path>` in the clone is the cheap workaround.
 
 - **What a profile page shows depends on the viewer.** Three rules apply to any test that asserts another user's or organisation's Spaces:
@@ -128,6 +128,7 @@ place; cite this file instead of rediscovering a gap.
   - On `/organization/<nameID>`, the client skips `rolesOrganization` without `READ_USERS`, so an **anonymous** visitor never sees an organisation's Space roles. `/user/*` is behind `NoIdentityRedirect`, so user profiles have no anonymous case at all.
 
   Do not use the global admin as the viewer when the visibility rule is under test. 2026-10-15.
+
 - **Several client-web nightly suites list files explicitly, not by glob.** Examples are `User Profile`, `Space` and `Support navigation` in `config/playwright.config.nightly.ts`. A new spec in such a folder never runs nightly until its path is added. Check the suite's `testMatch` before claiming a folder is "already in nightly". 2026-10-15.
 - The stale-clone note above (sibling repo clones) also applies to the **client-web** sibling clone: on 2026-10-15 its local `develop` was behind `origin/develop` by the commit under test. Read product code with `git show <merge-sha>:<path>`.
 
@@ -139,7 +140,7 @@ place; cite this file instead of rediscovering a gap.
 - **Browsers no longer go through GraphQL for conversation text.** Since client-web#10365 (merged 2026-10-14), the browser reads, sends and reacts directly against Synapse, using the user's own Matrix session.
   - The session comes from Synapse SSO → `/matrix-callback?loginToken=` → `m.login.token`.
   - Membership, metadata and lifecycle stay on GraphQL.
-  - So a GraphQL `FORBIDDEN_POLICY` on a conversation Room proves only the Alkemio half. Proving that a user cannot read or send *in the browser* needs a Synapse-side oracle (local stack + token) or a UI walk.
+  - So a GraphQL `FORBIDDEN_POLICY` on a conversation Room proves only the Alkemio half. Proving that a user cannot read or send _in the browser_ needs a Synapse-side oracle (local stack + token) or a UI walk.
   - server-api cannot obtain a per-user Matrix session.
 - **Group membership changes are asynchronous.** The mutations call the adapter over RPC. Row deletion or insertion, the policy re-apply and the MEMBER_REMOVED/ADDED publish happen only when the Matrix leave/join event comes back.
   - Since server#6573 + adapter v0.8.23, removal is no longer synchronous. The local path runs only when the Matrix removal fails.
@@ -147,7 +148,7 @@ place; cite this file instead of rediscovering a gap.
 - **Who receives `conversationEvents`.** The subscription filters on the publish-time `memberActorIds` snapshot.
   - MEMBER_REMOVED reaches the removed member too (server spec 040 FR-019).
   - MESSAGE_RECEIVED goes to the membership table at publish time.
-  - CONVERSATION_CREATED goes to every member. That makes it the readiness anchor for subscriptions opened *before* `createConversation`.
+  - CONVERSATION_CREATED goes to every member. That makes it the readiness anchor for subscriptions opened _before_ `createConversation`.
   - `SubscriptionClient` has no wait API (only `getMessages()`), and `subscribe()` resolves on connection ack.
 - **MEMBER_REMOVED is published only after the re-applied conversation policy is saved** (`message.inbox.service.ts › handleConversationMemberLeft`). That makes it a causal anchor for authorization negatives: no poll is needed afterwards.
 - **There is no per-room ordering from Matrix to server.** The adapter's `listener.go` dispatches every event in its own goroutine.
@@ -214,7 +215,7 @@ place; cite this file instead of rediscovering a gap.
 > Written independently by the 055 design session and merged in as-is when the plan was committed as a record; entries may overlap with the sections above.
 
 What is durably true about the `test-suites` harness. Not feature notes: the test for a line
-here is *would it help someone designing a different feature?* Correct anything you find stale
+here is _would it help someone designing a different feature?_ Correct anything you find stale
 and say so in your report.
 
 > Created 2026-09-03 during the 055 sidebar-search plan. Rows carry the date and the branch they
@@ -222,11 +223,11 @@ and say so in your report.
 
 ### Where suites live
 
-| Suite | Path | Runner | Notes |
-|---|---|---|---|
-| API | `server-api/src/functional-api/<domain>/*.it-spec.ts` | vitest | one project per domain in `server-api/vitest.config.ts`; a new file in an existing domain directory is picked up with no config change |
-| E2E | `client-web/src/functional-e2e/<area>/*.spec.ts` | Playwright | Chrome **branded channel**, not Chromium |
-| Shared | `lib/src` (`@alkemio/tests-lib`) | — | CommonJS; consumed by both via `workspace:*` |
+| Suite  | Path                                                  | Runner     | Notes                                                                                                                                  |
+| ------ | ----------------------------------------------------- | ---------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| API    | `server-api/src/functional-api/<domain>/*.it-spec.ts` | vitest     | one project per domain in `server-api/vitest.config.ts`; a new file in an existing domain directory is picked up with no config change |
+| E2E    | `client-web/src/functional-e2e/<area>/*.spec.ts`      | Playwright | Chrome **branded channel**, not Chromium                                                                                               |
+| Shared | `lib/src` (`@alkemio/tests-lib`)                      | —          | CommonJS; consumed by both via `workspace:*`                                                                                           |
 
 A new E2E feature area = its own directory under `functional-e2e/`, listed in `CLAUDE.md`, with
 `<area>-test-plan.md` **inside it**. Older plans also live in `plans/` and at the `functional-e2e/`
@@ -234,29 +235,29 @@ root — look in all three before concluding an area has none.
 
 ### Standing gaps (cite these, do not rediscover them)
 
-| Gap | Consequence for a plan | Established |
-|---|---|---|
-| **No database access from `test-suites`** | Any claim about what a migration did to *pre-existing* rows is unreachable. Every entity these suites create is post-migration, so it exercises the application's default path, never the migration SQL. Route to manual or defer to the owning repo's CI | 2026-09-02 (10178), reconfirmed 2026-09-03 (055) |
-| **No accessibility harness** — no `axe-core` / `@axe-core/playwright` | Screen-reader semantics, focus order, contrast and live-region announcements cannot be automated. Route to a manual release-checklist row | 2026-09-02 (10178), reconfirmed 2026-09-03 (055) |
-| **No load/latency harness for GraphQL read paths** | `load-testing/` is a socket/stress tool (`stress-test.ts`, `service.socket.ts`), not a query profiler. p95 claims about a query are manual observation or post-deploy monitoring | 2026-09-03 (055) |
-| **No infra lever from inside a test** | A test cannot stop a stack dependency (Elasticsearch, RabbitMQ) mid-run, so "backend unavailable → error state" cases are deferred, not manual. Clears if the compose harness ever gains a service-toggle helper | 2026-09-03 (055) |
-| **Locale assertions have no home** | Six-locale copy checks belong beside the locale files in the owning repo, not here | 2026-09-02 (10178) |
-| **No cross-repo contract harness** | When a client mirrors a server constant as a local literal, only the server half is pinnable here | 2026-09-02 (10178) |
+| Gap                                                                   | Consequence for a plan                                                                                                                                                                                                                                    | Established                                      |
+| --------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------ |
+| **No database access from `test-suites`**                             | Any claim about what a migration did to _pre-existing_ rows is unreachable. Every entity these suites create is post-migration, so it exercises the application's default path, never the migration SQL. Route to manual or defer to the owning repo's CI | 2026-09-02 (10178), reconfirmed 2026-09-03 (055) |
+| **No accessibility harness** — no `axe-core` / `@axe-core/playwright` | Screen-reader semantics, focus order, contrast and live-region announcements cannot be automated. Route to a manual release-checklist row                                                                                                                 | 2026-09-02 (10178), reconfirmed 2026-09-03 (055) |
+| **No load/latency harness for GraphQL read paths**                    | `load-testing/` is a socket/stress tool (`stress-test.ts`, `service.socket.ts`), not a query profiler. p95 claims about a query are manual observation or post-deploy monitoring                                                                          | 2026-09-03 (055)                                 |
+| **No infra lever from inside a test**                                 | A test cannot stop a stack dependency (Elasticsearch, RabbitMQ) mid-run, so "backend unavailable → error state" cases are deferred, not manual. Clears if the compose harness ever gains a service-toggle helper                                          | 2026-09-03 (055)                                 |
+| **Locale assertions have no home**                                    | Six-locale copy checks belong beside the locale files in the owning repo, not here                                                                                                                                                                        | 2026-09-02 (10178)                               |
+| **No cross-repo contract harness**                                    | When a client mirrors a server constant as a local literal, only the server half is pinnable here                                                                                                                                                         | 2026-09-02 (10178)                               |
 
 ### Tooling gotchas
 
 - **`lib` generated types drift.** `lib/src/core/generated/alkemio-schema.ts` is a committed
   artifact and is regularly **behind** the merged server schema. Check for the specific enum
   value / field you intend to assert on **before** planning a case; if it is missing, `pnpm --filter
-  @alkemio/tests-lib run codegen` is a prerequisite task, not a detail. *(2026-09-03: it had no
-  `Search = "SEARCH"` in `SidebarWidget` days after server#6448 merged.)* *(Reconfirmed 2026-10-15 on
-  `663c61d9`: `ActivityFeed(Grouped)QueryArgs` lacks `excludeMyActivity` six days after server#6639 merged.)*
+@alkemio/tests-lib run codegen` is a prerequisite task, not a detail. _(2026-09-03: it had no
+  `Search = "SEARCH"` in `SidebarWidget` days after server#6448 merged.)_ _(Reconfirmed 2026-10-15 on
+  `663c61d9`: `ActivityFeed(Grouped)QueryArgs` lacks `excludeMyActivity` six days after server#6639 merged.)_
 - **`rg -rn` silently means `--replace n`** and corrupts output. Always `rg -n`.
 - **`gh pr diff` has no `--name-only`** in the installed version; use
   `gh pr view <n> --json files -q '.files[].path'`.
 - **`server-api/package.json` scripts are not uniform.** Several projects have only a `:ui` script
   (e.g. `test:search:ui` exists, `test:search` does **not**), and the root `CLAUDE.md` lists some
-  that are absent. Verify the script before writing a *How to run* block; the portable form is
+  that are absent. Verify the script before writing a _How to run_ block; the portable form is
   `cd server-api && pnpm exec vitest run --project <name> --fileParallelism=false`.
 - **Widening a shared `lib` GraphQL document breaks unrelated specs.** When a case needs an extra
   field, add a **new** document rather than editing one other specs assert the shape of.
@@ -286,7 +287,7 @@ root — look in all three before concluding an area has none.
   (`ensurePersonaState` + `browser.newContext({ storageState })`), as
   `sidebar-widgets/sidebar-widgets.helpers.ts › openPersona` does. 2026-10-01.
 - **Teardown must delete subspaces first, and must not swallow errors.** The server refuses to
-  delete an L0 Space that still has a subspace. `lib` `deleteSpace` *returns* `{ error }` rather
+  delete an L0 Space that still has a subspace. `lib` `deleteSpace` _returns_ `{ error }` rather
   than throwing, and `TestScenarioFactory.cleanUpBaseScenario` logs and continues. A UI walk that
   deleted only the L0 behind `.catch(() => {})` leaked a Space on every run, until the hosting
   account showed "Capacity reached" and no Space could be created at all. Reuse
@@ -298,16 +299,16 @@ root — look in all three before concluding an area has none.
   request-count assertions alike.
 
 - **A test-scoped fixture runs before `beforeAll` has populated `TestUserManager`.** A `storageState` fixture that calls `TestUserManager.getUserModelByType(...)` throws `Cannot read properties of undefined (reading 'get')`. Derive persona emails with the manager's own rule, `${TestUser.X}@alkem.io`. 2026-10-01 (test-suites#613).
-- **A failed Playwright test restarts the worker, and the next test re-runs `beforeAll`.** A file-level seeded fixture is then a *fresh* one — so "pre-state" a later test captures is not the state earlier tests left. Keep each test independent of its file-mates' data. 2026-10-01.
-- **CRD template dialogs:** a *dirty* create/edit form asks "Discard your changes?" (`Keep editing` / `Yes, close`) on Cancel; a *pristine* edit form's dismiss button reads **Done**, not Cancel (client-web#10243). The classification value reorder buttons are named `Move value N up/down`. Deleting a template card removes it before the `DeleteTemplate` round trip completes — await the operation response before reading the API. 2026-10-01.
+- **A failed Playwright test restarts the worker, and the next test re-runs `beforeAll`.** A file-level seeded fixture is then a _fresh_ one — so "pre-state" a later test captures is not the state earlier tests left. Keep each test independent of its file-mates' data. 2026-10-01.
+- **CRD template dialogs:** a _dirty_ create/edit form asks "Discard your changes?" (`Keep editing` / `Yes, close`) on Cancel; a _pristine_ edit form's dismiss button reads **Done**, not Cancel (client-web#10243). The classification value reorder buttons are named `Move value N up/down`. Deleting a template card removes it before the `DeleteTemplate` round trip completes — await the operation response before reading the API. 2026-10-01.
 - **Anonymous reads go through the private non-interactive endpoint with no bearer** (`postGraphqlRaw(query, { variables })`); it answers as the anonymous actor. 2026-10-01.
 
 ### Client-web / CRD locator conventions
 
 - **CRD sidebar labels and section headings are CSS `uppercase`.** `innerText` returns the
-  *rendered* text ("SPACE LEADS"), so `innerText().indexOf('Space Leads')` is -1. Assert order on
+  _rendered_ text ("SPACE LEADS"), so `innerText().indexOf('Space Leads')` is -1. Assert order on
   role/name locators via `compareDocumentPosition` (`sidebar-widgets.helpers.ts ›
-  expectInDocumentOrder`). Role and text locators match the DOM text and are unaffected.
+expectInDocumentOrder`). Role and text locators match the DOM text and are unaffected.
   2026-10-01.
 - **Space Settings > Layout columns have no accessible name.** Each column is a
   `[data-slot="card"]` whose title is a `span[title]`, and every column's menu button is named

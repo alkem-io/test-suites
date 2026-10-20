@@ -36,7 +36,8 @@ const HINT_FROM = LIMIT * 0.8;
 // Copy (bundles crd-common, crd-markdown, crd-space; en)
 const COPY = {
   overLimit: 'This text exceeds the length limits for this field.',
-  descriptionHint: 'Shorten the description to continue — it is over the length limit',
+  descriptionHint:
+    'Shorten the description to continue — it is over the length limit',
   titleHint: 'Add a title to your Post to continue',
   countHint:
     'Formatting, images and links count toward the limit too, so this number may be higher than the text you see.',
@@ -44,7 +45,8 @@ const COPY = {
   saveDraft: 'Save Draft',
 } as const;
 
-const count = (n: number): string => `${n.toLocaleString('en-US')}/${LIMIT.toLocaleString('en-US')} characters`;
+const count = (n: number): string =>
+  `${n.toLocaleString('en-US')}/${LIMIT.toLocaleString('en-US')} characters`;
 /** Serialisation adds one trailing newline: the text that makes the counter read `n`. */
 const MARKDOWN_OVERHEAD = 1;
 const textForCount = (n: number): string => 'x'.repeat(n - MARKDOWN_OVERHEAD);
@@ -134,18 +136,27 @@ const calloutTitles = async (spaceId: string): Promise<string[]> => {
   const data = await adminGql<{
     lookup: {
       space: {
-        collaboration: { calloutsSet: { callouts: { framing: { profile: { displayName: string } } }[] } };
+        collaboration: {
+          calloutsSet: {
+            callouts: { framing: { profile: { displayName: string } } }[];
+          };
+        };
       };
     };
   }>(
     'query($id: UUID!){ lookup { space(ID: $id) { collaboration { calloutsSet { callouts { framing { profile { displayName } } } } } } } }',
     { id: spaceId }
   );
-  return data.lookup.space.collaboration.calloutsSet.callouts.map(c => c.framing.profile.displayName);
+  return data.lookup.space.collaboration.calloutsSet.callouts.map(
+    c => c.framing.profile.displayName
+  );
 };
 
 /** Opens the Create Callout dialog on the scenario Space with `title` filled. */
-const openCreateDialog = async (page: Page, title: string): Promise<CollaborationPage> => {
+const openCreateDialog = async (
+  page: Page,
+  title: string
+): Promise<CollaborationPage> => {
   const collaboration = new CollaborationPage(page, baseUrl);
   await collaboration.navigateToSpace(scenario!.space.nameId);
   await collaboration.clickAddCallout();
@@ -155,7 +166,10 @@ const openCreateDialog = async (page: Page, title: string): Promise<Collaboratio
 };
 
 /** Replaces the editor text. `fill` on the contenteditable replaces, not appends. */
-const setDescription = async (collaboration: CollaborationPage, text: string): Promise<void> => {
+const setDescription = async (
+  collaboration: CollaborationPage,
+  text: string
+): Promise<void> => {
   await collaboration.descriptionInput.first().fill(text);
 };
 
@@ -183,7 +197,9 @@ test.describe('Create Callout — description over the limit (client-web#9972)',
 
     // Pin the serialisation offset first: 10,000 typed characters count as 10,001.
     await setDescription(collaboration, 'x'.repeat(RING_FROM));
-    await expect(ring(page)).toHaveAccessibleName(count(RING_FROM + MARKDOWN_OVERHEAD));
+    await expect(ring(page)).toHaveAccessibleName(
+      count(RING_FROM + MARKDOWN_OVERHEAD)
+    );
 
     await setDescription(collaboration, textForCount(LIMIT + 100));
 
@@ -212,13 +228,19 @@ test.describe('Create Callout — description over the limit (client-web#9972)',
     await expectNotBlocked(page);
     await postButton(page).click();
     await expect(dialog(page)).toHaveCount(0);
-    await expect(page.getByRole('heading', { name: title }).first()).toBeVisible({ timeout: 15_000 });
+    await expect(
+      page.getByRole('heading', { name: title }).first()
+    ).toBeVisible({ timeout: 15_000 });
     expect(await calloutTitles(scenario!.space.id)).toContain(title);
     // Exactly one: a late write from the two over-limit clicks above would be a second callout with this title.
-    expect((await calloutTitles(scenario!.space.id)).filter(t => t === title)).toHaveLength(1);
+    expect(
+      (await calloutTitles(scenario!.space.id)).filter(t => t === title)
+    ).toHaveLength(1);
   });
 
-  test('DL-2 a missing title wins over an over-long description', async ({ page }) => {
+  test('DL-2 a missing title wins over an over-long description', async ({
+    page,
+  }) => {
     const collaboration = await openCreateDialog(page, 'dl2-will-be-cleared');
     await setDescription(collaboration, textForCount(LIMIT + 100));
     await expectBlocked(page, COPY.descriptionHint);
@@ -226,7 +248,9 @@ test.describe('Create Callout — description over the limit (client-web#9972)',
     await collaboration.displayNameInput.fill('');
     await expectBlocked(page, COPY.titleHint);
     // The description error itself is still shown; only the footer reason changes.
-    await expect(dialog(page).getByText(COPY.overLimit, { exact: true })).toBeVisible();
+    await expect(
+      dialog(page).getByText(COPY.overLimit, { exact: true })
+    ).toBeVisible();
   });
 
   test('DL-3 ring thresholds: hidden under 20 %, shown from 20 %, the formatting hint from 80 %; 50,000 allowed, 50,001 refused', async ({
@@ -259,13 +283,17 @@ test.describe('Create Callout — description over the limit (client-web#9972)',
     // Exactly at the limit is still allowed.
     await setDescription(collaboration, textForCount(LIMIT));
     await expect(ring(page)).toHaveAccessibleName(count(LIMIT));
-    await expect(dialog(page).getByText(COPY.overLimit, { exact: true })).toHaveCount(0);
+    await expect(
+      dialog(page).getByText(COPY.overLimit, { exact: true })
+    ).toHaveCount(0);
     await expectNotBlocked(page);
 
     // BVA on the limit: one character over is already an error, and the footer is blocked.
     await setDescription(collaboration, textForCount(LIMIT + 1));
     await expect(ring(page)).toHaveAccessibleName(count(LIMIT + 1));
-    await expect(dialog(page).getByText(COPY.overLimit, { exact: true })).toBeVisible();
+    await expect(
+      dialog(page).getByText(COPY.overLimit, { exact: true })
+    ).toBeVisible();
     await expectBlocked(page, COPY.descriptionHint);
   });
 });

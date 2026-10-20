@@ -117,11 +117,9 @@ const createTemplate = async (
   step: string,
   templateData: Record<string, unknown>
 ): Promise<TemplateRead> => {
-  const { createTemplate: created } = await mutate<{ createTemplate: { id: string } }>(
-    step,
-    CREATE_TEMPLATE,
-    { t: templateData }
-  );
+  const { createTemplate: created } = await mutate<{
+    createTemplate: { id: string };
+  }>(step, CREATE_TEMPLATE, { t: templateData });
   const { lookup } = await rawRead<{ lookup: { template: TemplateRead } }>(
     adminToken(),
     READ_TEMPLATE,
@@ -217,7 +215,9 @@ describe('Orphan-free deletion - group A policies (server#6614, #6678)', () => {
       'mutation($s: CreateStateOnInnovationFlowInput!) { createStateOnInnovationFlow(stateData: $s) { id authorization { id } } }',
       { s: { innovationFlowID, displayName: tag('state') } }
     );
-    const owned = ids({ 'innovation-flow state policy': state.authorization?.id });
+    const owned = ids({
+      'innovation-flow state policy': state.authorization?.id,
+    });
     await expectPoliciesPresent(poa, owned);
 
     await mutate(
@@ -233,7 +233,9 @@ describe('Orphan-free deletion - group A policies (server#6614, #6678)', () => {
     const { createCalloutOnCalloutsSet: callout } = await mutate<{
       createCalloutOnCalloutsSet: {
         id: string;
-        framing: { poll: { id: string; authorization: { id: string } | null } | null };
+        framing: {
+          poll: { id: string; authorization: { id: string } | null } | null;
+        };
       };
     }>(
       'createCalloutOnCalloutsSet POLL',
@@ -325,7 +327,8 @@ describe('Orphan-free deletion - group A policies (server#6614, #6678)', () => {
     const owned = ids({
       'callout comments room policy': callout.comments?.authorization?.id,
       'post contribution policy': contribution.authorization?.id,
-      'post comments room policy': contribution.post?.comments.authorization?.id,
+      'post comments room policy':
+        contribution.post?.comments.authorization?.id,
     });
     await expectPoliciesPresent(poa, owned);
 
@@ -356,7 +359,9 @@ describe('Orphan-free deletion - group A policies (server#6614, #6678)', () => {
           about: { guidelines: Policy };
           community: { communication: Policy & { updates: Policy } };
           collaboration: {
-            innovationFlow: Policy & { states: (Policy & { displayName: string })[] };
+            innovationFlow: Policy & {
+              states: (Policy & { displayName: string })[];
+            };
           };
           templatesManager: Policy & {
             templateDefaults: (Policy & { type: string })[];
@@ -377,17 +382,29 @@ describe('Orphan-free deletion - group A policies (server#6614, #6678)', () => {
       { id: spaceId }
     );
     const space = lookup.space;
-    expect(space.collaboration.innovationFlow.states.length, 'the flow has states').toBeGreaterThanOrEqual(1);
-    expect(space.templatesManager.templateDefaults.length, 'the manager has defaults').toBeGreaterThanOrEqual(1);
-    const template = await createCalloutTemplate(space.templatesManager.templatesSet.id, tag('tpl-in-space'));
+    expect(
+      space.collaboration.innovationFlow.states.length,
+      'the flow has states'
+    ).toBeGreaterThanOrEqual(1);
+    expect(
+      space.templatesManager.templateDefaults.length,
+      'the manager has defaults'
+    ).toBeGreaterThanOrEqual(1);
+    const template = await createCalloutTemplate(
+      space.templatesManager.templatesSet.id,
+      tag('tpl-in-space')
+    );
 
     const captured: Record<string, string | null | undefined> = {
       'community guidelines policy': space.about.guidelines.authorization?.id,
       'communication policy': space.community.communication.authorization?.id,
-      'updates room policy': space.community.communication.updates.authorization?.id,
-      'innovation flow policy': space.collaboration.innovationFlow.authorization?.id,
+      'updates room policy':
+        space.community.communication.updates.authorization?.id,
+      'innovation flow policy':
+        space.collaboration.innovationFlow.authorization?.id,
       'templates manager policy': space.templatesManager.authorization?.id,
-      'templates set policy': space.templatesManager.templatesSet.authorization?.id,
+      'templates set policy':
+        space.templatesManager.templatesSet.authorization?.id,
     };
     for (const s of space.collaboration.innovationFlow.states) {
       captured[`flow state '${s.displayName}' policy`] = s.authorization?.id;
@@ -395,7 +412,10 @@ describe('Orphan-free deletion - group A policies (server#6614, #6678)', () => {
     for (const d of space.templatesManager.templateDefaults) {
       captured[`template default '${d.type}' policy`] = d.authorization?.id;
     }
-    const owned = { ...ids(captured), ...calloutTemplatePolicies('space', template) };
+    const owned = {
+      ...ids(captured),
+      ...calloutTemplatePolicies('space', template),
+    };
     await expectPoliciesPresent(poa, owned);
 
     const deleted = await deleteSpace(spaceId);
@@ -405,19 +425,28 @@ describe('Orphan-free deletion - group A policies (server#6614, #6678)', () => {
 
     await expectPoliciesGone(poa, owned, 'group-A children of a deleted space');
     await expectLookupGone(poa, 'template', template.id);
-    await expectLookupGone(poa, 'room', space.community.communication.updates.id);
+    await expectLookupGone(
+      poa,
+      'room',
+      space.community.communication.updates.id
+    );
   });
 
   test('GA-5 - deleting a template deletes its policy, its profile policy and its content policies (callout and community-guidelines kinds)', async () => {
     const setId = baseScenario.space.templateSetId;
     const callout = await createCalloutTemplate(setId, tag('tpl-callout'));
-    const guidelines = await createGuidelinesTemplate(setId, tag('tpl-guidelines'));
+    const guidelines = await createGuidelinesTemplate(
+      setId,
+      tag('tpl-guidelines')
+    );
     const owned: OwnedIds = {
       ...calloutTemplatePolicies('callout', callout),
       ...ids({
         'guidelines template policy': guidelines.authorization?.id,
-        'guidelines template profile policy': guidelines.profile.authorization?.id,
-        'guidelines template guidelines policy': guidelines.communityGuidelines?.authorization?.id,
+        'guidelines template profile policy':
+          guidelines.profile.authorization?.id,
+        'guidelines template guidelines policy':
+          guidelines.communityGuidelines?.authorization?.id,
         // Not captured: `CommunityGuidelines.profile.authorization` resolves
         // null everywhere (template and a space's own guidelines alike), so
         // the profile's policy is unobservable here. Reported on the story.
@@ -497,12 +526,16 @@ describe('Orphan-free deletion - group A policies (server#6614, #6678)', () => {
       }
     );
     livePacks.add(pack.id);
-    const template = await createCalloutTemplate(pack.templatesSet.id, tag('tpl-in-pack'));
+    const template = await createCalloutTemplate(
+      pack.templatesSet.id,
+      tag('tpl-in-pack')
+    );
     const owned: OwnedIds = {
       ...ids({
         'innovation pack policy': pack.authorization?.id,
         'innovation pack profile policy': pack.profile.authorization?.id,
-        'innovation pack templates set policy': pack.templatesSet.authorization?.id,
+        'innovation pack templates set policy':
+          pack.templatesSet.authorization?.id,
       }),
       ...calloutTemplatePolicies('pack', template),
     };
@@ -523,7 +556,10 @@ describe('Orphan-free deletion - group A policies (server#6614, #6678)', () => {
     const user = await registerUser(`ofdga${uniqueId}`.toLowerCase());
     const { me } = await rawRead<{
       me: { user: { id: string; settings: Policy } };
-    }>(user.token, 'query { me { user { id settings { id authorization { id } } } } }');
+    }>(
+      user.token,
+      'query { me { user { id settings { id authorization { id } } } } }'
+    );
     expect(me.user.id).toBe(user.id);
 
     const { applyForEntryRoleOnRoleSet: application } = await mutate<{
@@ -531,10 +567,14 @@ describe('Orphan-free deletion - group A policies (server#6614, #6678)', () => {
     }>(
       'applyForEntryRoleOnRoleSet',
       'mutation($a: ApplyForEntryRoleOnRoleSetInput!) { applyForEntryRoleOnRoleSet(applicationData: $a) { id authorization { id } } }',
-      { a: { roleSetID: baseScenario.space.community.roleSetId, questions: [] } },
+      {
+        a: { roleSetID: baseScenario.space.community.roleSetId, questions: [] },
+      },
       user.token
     );
-    const settings = ids({ 'user settings policy': me.user.settings.authorization?.id });
+    const settings = ids({
+      'user settings policy': me.user.settings.authorization?.id,
+    });
     const app = ids({ 'application policy': application.authorization?.id });
     await expectPoliciesPresent(poa, { ...settings, ...app });
 
@@ -544,8 +584,16 @@ describe('Orphan-free deletion - group A policies (server#6614, #6678)', () => {
       { d: { ID: user.id, deleteIdentity: true } }
     );
 
-    await expectPoliciesGone(poa, settings, 'settings of a deleted user (#6678)');
-    await expectPoliciesGone(poa, app, 'application of a deleted user (cascade since #3122; a control)');
+    await expectPoliciesGone(
+      poa,
+      settings,
+      'settings of a deleted user (#6678)'
+    );
+    await expectPoliciesGone(
+      poa,
+      app,
+      'application of a deleted user (cascade since #3122; a control)'
+    );
     await expectLookupGone(adminToken(), 'user', user.id);
   });
 });
