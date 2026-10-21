@@ -1700,6 +1700,20 @@ Proposed `release-verification-checklist.md` row: _Profile tabs (#10179): on one
 
 **What is proven, and what is not.** Once PT-1…PT-6 are built and green, the following is proven end to end for a signed-in visitor on both profile types: the order, Leading hidden and landing on Member of, Other Resources hidden when empty, Member of present when empty, the en rename, and the absence of Spaces in Other Resources. All three resource kinds are rendered across the cases: pack and hub in PT-4, VC in PT-6, pack in PT-1. **Update 2026-10-15:** only PT-2, PT-3 and PT-5 run live (hidden tabs, landing tab, Member Of always present, a subspace lead counted as Leading). PT-1, PT-4 and PT-6, which carry Leading-first order with three tabs and the Other Resources content, are skipped on Q4, so "Leading first" is proven live only for the two-tab case (PT-3), and the Other Resources content and the hosted-Space regression guard are not proven by a running test. **Not proven:** the copy in 5 locales (checked by hand only), and above all what an **anonymous** visitor sees on an organisation. For anonymous visitors, AC1 ("Show Leading first") is not delivered today, and no test can say whether that is correct until Q1 is answered. **Update 2026-10-20:** PT-1o, PT-4o and PT-6o run live as the owner viewer (the profile's own user; a plain user who administers the organisation) and prove, for that viewer, the three-tab Leading-first order, the Other Resources content (pack in PT-1o; pack and hub in PT-4o; VC in PT-6o) and the hosted-Space regression guard. PT-2o and PT-5o prove the AC5 "hidden when empty" rule for a viewer who can see Other Resources. What remains unproven: the same claims for an ordinary signed-in visitor (PT-1, PT-4, PT-6, skipped on server#6670), the 5 locales, and the anonymous case (Q1).
 
+**Update (workspace#089-profile-other-resources, alkem-io/server#6670).** Q4 is resolved: the profile pages read the new viewer-scoped `hostedResources` field instead of `User.account` / `Organization.account`. PUBLIC packs and VCs and every hub are visible to any registered visitor; ACCOUNT ones to the account's user, or the organisation's associates, admins and owners; HIDDEN ones to the user, or the organisation's admins and owners only. `listedInStore` plays no part. PT-1, PT-4 and PT-6 now run live: their seeded pack / VC is set PUBLIC in `beforeAll` (both default to ACCOUNT) and read back. A guest on an organisation profile sees a sign-up notice instead. The new cases:
+
+| Scenario | Spec › case | Level |
+| --- | --- | --- |
+| Unrelated registered visitor sees PUBLIC only; no ACCOUNT / HIDDEN pack, no store-listed ACCOUNT VC, no guest notice | `user-profile/profile-resource-tabs.spec.ts` › _PT-7_ | E2E |
+| Organisation associate with no Space role sees PUBLIC + ACCOUNT and the ACCOUNT VC card, not HIDDEN | › _PT-8_ | E2E |
+| Organisation admin sees every pack, HIDDEN included, and the VC | › _PT-9_ | E2E |
+| Guest sees the sign-up notice (with a return link to the profile) and no Other Resources, on an org with resources and on a bare org | › _PT-10_ | E2E |
+| The notice goes away after the guest signs in as an associate | › _PT-11_ | E2E |
+| A user whose only resource is an ACCOUNT pack shows a visitor Member Of only (owner twin sees Other Resources) | › _PT-12_ | E2E |
+| The authorization-dependent rows of the visibility matrix (associate, org admin, unrelated, anonymous null, user-account owner / non-self / Platform Users Admin, role removal, two-field VC projection, full account still closed) | `server-api/src/functional-api/account/hosted-resources.it-spec.ts` | API |
+
+Follow-ups: hosted Spaces in Other Resources (alkem-io/server#6695); opening the VC page as an associate.
+
 <!-- ====================== END client-web#10179 ====================== -->
 
 ---
@@ -1712,3 +1726,4 @@ Proposed `release-verification-checklist.md` row: _Profile tabs (#10179): on one
 | 1.1     | 2026-10-15 | Added the client-web#10179 section (public profile resource tabs, Draft)                                                                                               | qa-test-designer        |
 | 1.2     | 2026-10-15 | client-web#10179: PT-1..PT-6 built (3 live, 3 skipped on Q4); mapping, gaps and Q4 updated                                                                             | qa-test-implementer     |
 | 1.3     | 2026-10-20 | client-web#10179: owner-viewer twins PT-1o/PT-4o/PT-6o (2026-10-19) and PT-2o/PT-5o (2026-10-20) added; reuse, mapping, gaps and the proven/not-proven summary updated | qa-test-implementer     |
+| 1.4     | 2026-10-21 | workspace#089: PT-1/PT-4/PT-6 un-skipped (PUBLIC arrange); visibility-tier and guest walks PT-7..PT-12; hostedResources it-spec mapped | forge implementer |
