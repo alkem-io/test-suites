@@ -157,10 +157,20 @@ export type AccountDeletionBlockerTotal = {
   total: Scalars["Int"]["output"];
 };
 
+/** A hosted Innovation Hub card: its identity, nameID and profile only. */
+export type AccountHostedInnovationHub = {
+  /** The ID of the Innovation Hub. */
+  id: Scalars["UUID"]["output"];
+  /** The nameID of the Innovation Hub. */
+  nameID: Scalars["NameID"]["output"];
+  /** The profile of this Innovation Hub. */
+  profile: Profile;
+};
+
 /** Resources hosted by an Account, as the current viewer may see them. */
 export type AccountHostedResources = {
   /** The Innovation Hubs hosted by the Account. */
-  innovationHubs: Array<InnovationHub>;
+  innovationHubs: Array<AccountHostedInnovationHub>;
   /** Innovation Packs of the Account that the current viewer may see. */
   innovationPacks: Array<InnovationPack>;
   /** Virtual Contributors of the Account that the current viewer may see. */
@@ -12262,12 +12272,13 @@ export type ResolversTypes = {
   AccountDeletionBlocker: ResolverTypeWrapper<SchemaTypes.AccountDeletionBlocker>;
   AccountDeletionBlockerKind: SchemaTypes.AccountDeletionBlockerKind;
   AccountDeletionBlockerTotal: ResolverTypeWrapper<SchemaTypes.AccountDeletionBlockerTotal>;
+  AccountHostedInnovationHub: ResolverTypeWrapper<
+    Omit<SchemaTypes.AccountHostedInnovationHub, "profile"> & {
+      profile: ResolversTypes["Profile"];
+    }
+  >;
   AccountHostedResources: ResolverTypeWrapper<
-    Omit<
-      SchemaTypes.AccountHostedResources,
-      "innovationHubs" | "innovationPacks"
-    > & {
-      innovationHubs: Array<ResolversTypes["InnovationHub"]>;
+    Omit<SchemaTypes.AccountHostedResources, "innovationPacks"> & {
       innovationPacks: Array<ResolversTypes["InnovationPack"]>;
     }
   >;
@@ -14155,13 +14166,14 @@ export type ResolversParentTypes = {
   AccountAuthorizationResetInput: SchemaTypes.AccountAuthorizationResetInput;
   AccountDeletionBlocker: SchemaTypes.AccountDeletionBlocker;
   AccountDeletionBlockerTotal: SchemaTypes.AccountDeletionBlockerTotal;
+  AccountHostedInnovationHub: Omit<
+    SchemaTypes.AccountHostedInnovationHub,
+    "profile"
+  > & { profile: ResolversParentTypes["Profile"] };
   AccountHostedResources: Omit<
     SchemaTypes.AccountHostedResources,
-    "innovationHubs" | "innovationPacks"
-  > & {
-    innovationHubs: Array<ResolversParentTypes["InnovationHub"]>;
-    innovationPacks: Array<ResolversParentTypes["InnovationPack"]>;
-  };
+    "innovationPacks"
+  > & { innovationPacks: Array<ResolversParentTypes["InnovationPack"]> };
   AccountHostedVirtualContributor: Omit<
     SchemaTypes.AccountHostedVirtualContributor,
     "profile"
@@ -15843,12 +15855,22 @@ export type AccountDeletionBlockerTotalResolvers<
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
+export type AccountHostedInnovationHubResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["AccountHostedInnovationHub"] = ResolversParentTypes["AccountHostedInnovationHub"]
+> = {
+  id?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
+  nameID?: Resolver<ResolversTypes["NameID"], ParentType, ContextType>;
+  profile?: Resolver<ResolversTypes["Profile"], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
 export type AccountHostedResourcesResolvers<
   ContextType = any,
   ParentType extends ResolversParentTypes["AccountHostedResources"] = ResolversParentTypes["AccountHostedResources"]
 > = {
   innovationHubs?: Resolver<
-    Array<ResolversTypes["InnovationHub"]>,
+    Array<ResolversTypes["AccountHostedInnovationHub"]>,
     ParentType,
     ContextType
   >;
@@ -27923,6 +27945,7 @@ export type Resolvers<ContextType = any> = {
   Account?: AccountResolvers<ContextType>;
   AccountDeletionBlocker?: AccountDeletionBlockerResolvers<ContextType>;
   AccountDeletionBlockerTotal?: AccountDeletionBlockerTotalResolvers<ContextType>;
+  AccountHostedInnovationHub?: AccountHostedInnovationHubResolvers<ContextType>;
   AccountHostedResources?: AccountHostedResourcesResolvers<ContextType>;
   AccountHostedVirtualContributor?: AccountHostedVirtualContributorResolvers<ContextType>;
   AccountLicensePlan?: AccountLicensePlanResolvers<ContextType>;

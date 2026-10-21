@@ -151,10 +151,20 @@ export type AccountDeletionBlockerTotal = {
   total: Scalars["Int"]["output"];
 };
 
+/** A hosted Innovation Hub card: its identity, nameID and profile only. */
+export type AccountHostedInnovationHub = {
+  /** The ID of the Innovation Hub. */
+  id: Scalars["UUID"]["output"];
+  /** The nameID of the Innovation Hub. */
+  nameID: Scalars["NameID"]["output"];
+  /** The profile of this Innovation Hub. */
+  profile: Profile;
+};
+
 /** Resources hosted by an Account, as the current viewer may see them. */
 export type AccountHostedResources = {
   /** The Innovation Hubs hosted by the Account. */
-  innovationHubs: Array<InnovationHub>;
+  innovationHubs: Array<AccountHostedInnovationHub>;
   /** Innovation Packs of the Account that the current viewer may see. */
   innovationPacks: Array<InnovationPack>;
   /** Virtual Contributors of the Account that the current viewer may see. */
@@ -12240,9 +12250,13 @@ export type ResolversTypes = {
   AccountDeletionBlocker: ResolverTypeWrapper<AccountDeletionBlocker>;
   AccountDeletionBlockerKind: AccountDeletionBlockerKind;
   AccountDeletionBlockerTotal: ResolverTypeWrapper<AccountDeletionBlockerTotal>;
+  AccountHostedInnovationHub: ResolverTypeWrapper<
+    Omit<AccountHostedInnovationHub, "profile"> & {
+      profile: ResolversTypes["Profile"];
+    }
+  >;
   AccountHostedResources: ResolverTypeWrapper<
-    Omit<AccountHostedResources, "innovationHubs" | "innovationPacks"> & {
-      innovationHubs: Array<ResolversTypes["InnovationHub"]>;
+    Omit<AccountHostedResources, "innovationPacks"> & {
       innovationPacks: Array<ResolversTypes["InnovationPack"]>;
     }
   >;
@@ -14036,11 +14050,10 @@ export type ResolversParentTypes = {
   AccountAuthorizationResetInput: AccountAuthorizationResetInput;
   AccountDeletionBlocker: AccountDeletionBlocker;
   AccountDeletionBlockerTotal: AccountDeletionBlockerTotal;
-  AccountHostedResources: Omit<
-    AccountHostedResources,
-    "innovationHubs" | "innovationPacks"
-  > & {
-    innovationHubs: Array<ResolversParentTypes["InnovationHub"]>;
+  AccountHostedInnovationHub: Omit<AccountHostedInnovationHub, "profile"> & {
+    profile: ResolversParentTypes["Profile"];
+  };
+  AccountHostedResources: Omit<AccountHostedResources, "innovationPacks"> & {
     innovationPacks: Array<ResolversParentTypes["InnovationPack"]>;
   };
   AccountHostedVirtualContributor: Omit<
@@ -15652,12 +15665,22 @@ export type AccountDeletionBlockerTotalResolvers<
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
+export type AccountHostedInnovationHubResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["AccountHostedInnovationHub"] = ResolversParentTypes["AccountHostedInnovationHub"]
+> = {
+  id?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
+  nameID?: Resolver<ResolversTypes["NameID"], ParentType, ContextType>;
+  profile?: Resolver<ResolversTypes["Profile"], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
 export type AccountHostedResourcesResolvers<
   ContextType = any,
   ParentType extends ResolversParentTypes["AccountHostedResources"] = ResolversParentTypes["AccountHostedResources"]
 > = {
   innovationHubs?: Resolver<
-    Array<ResolversTypes["InnovationHub"]>,
+    Array<ResolversTypes["AccountHostedInnovationHub"]>,
     ParentType,
     ContextType
   >;
@@ -26792,6 +26815,7 @@ export type Resolvers<ContextType = any> = {
   Account?: AccountResolvers<ContextType>;
   AccountDeletionBlocker?: AccountDeletionBlockerResolvers<ContextType>;
   AccountDeletionBlockerTotal?: AccountDeletionBlockerTotalResolvers<ContextType>;
+  AccountHostedInnovationHub?: AccountHostedInnovationHubResolvers<ContextType>;
   AccountHostedResources?: AccountHostedResourcesResolvers<ContextType>;
   AccountHostedVirtualContributor?: AccountHostedVirtualContributorResolvers<ContextType>;
   AccountLicensePlan?: AccountLicensePlanResolvers<ContextType>;
