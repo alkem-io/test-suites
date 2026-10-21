@@ -245,7 +245,7 @@ test.describe.serial('US4 — See when a person joined this space', () => {
     await context.close();
   });
 
-  test('US4-AS4 / FR-012 — in Dutch the line reads "Lid geworden van deze Space <maand> <jaar>" for the same month, and switching back to English without a reload re-labels every card', async ({
+  test('US4-AS4 / FR-012 — in Dutch the line reads "Lid van deze Space sinds <maand> <jaar>" for the same month, and switching back to English without a reload re-labels every card', async ({
     browser,
   }) => {
     const context = await browser.newContext({
@@ -264,16 +264,16 @@ test.describe.serial('US4 — See when a person joined this space', () => {
     await page.getByRole('button', { name: 'English' }).first().click();
     await page.getByRole('menuitem', { name: 'Nederlands' }).click();
     await expect(
-      col.cardFor(ADA).getByText(/^Lid geworden van deze Space /)
+      col.cardFor(ADA).getByText(/^Lid van deze Space sinds /)
     ).toHaveText(
-      new RegExp(`^Lid geworden van deze Space ${dutchMonth}\\.? ${year}$`)
+      new RegExp(`^Lid van deze Space sinds ${dutchMonth}\\.? ${year}$`)
     );
 
     await page.getByRole('button', { name: 'Nederlands' }).first().click();
     await page.getByRole('menuitem', { name: 'English' }).click();
     await expect(col.bottomLineOf(ADA)).toHaveText(joined(parentApiMonth));
     await expect(
-      col.region.getByText(/^Lid geworden van deze Space /)
+      col.region.getByText(/^Lid van deze Space sinds /)
     ).toHaveCount(0);
     expect(
       await page.evaluate(

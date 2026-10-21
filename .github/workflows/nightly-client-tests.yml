@@ -41,6 +41,11 @@ jobs:
         # `playwright install` only provisions the bundled Chromium.
         run: pnpm --filter @alkemio/test-suite-client-web exec playwright install --with-deps chromium chrome
 
+      - name: Install poppler-utils
+        # The Memo PDF download suite reads each downloaded PDF with pdftotext
+        # and pdffonts; its content checks fail (by design) without them.
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends poppler-utils
+
       - name: Set run folder variables
         run: |
           DATE=$(date +'%Y-%m-%d')

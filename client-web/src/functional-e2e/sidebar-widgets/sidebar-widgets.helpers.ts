@@ -30,6 +30,8 @@ export const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 export const WIDGET_LABEL: Record<SidebarWidget, string> = {
   [SidebarWidget.Intent]: 'Intention & Leads',
   [SidebarWidget.About]: 'About this Space',
+  [SidebarWidget.Activity]: 'Recent Activity',
+  [SidebarWidget.Community]: 'Community',
   [SidebarWidget.CreatePost]: 'Add Post',
   [SidebarWidget.ApplicationButton]: 'Apply / Join',
   [SidebarWidget.CreateSubspace]: 'Create Subspace',

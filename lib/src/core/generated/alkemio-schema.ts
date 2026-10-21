@@ -39,14 +39,23 @@ export type Scalars = {
   Boolean: { input: boolean; output: boolean };
   Int: { input: number; output: number };
   Float: { input: number; output: number };
+  /** A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format. */
   DateTime: { input: Date; output: Date };
+  /** An Emoji. */
   Emoji: { input: any; output: any };
+  /** A representation of a Lifecycle Definition, based on XState. It is serialized JSON. */
   LifecycleDefinition: { input: any; output: any };
+  /** A markdown string. */
   Markdown: { input: any; output: any };
+  /** An identifier that originates from the underlying messaging platform. */
   MessageID: { input: any; output: any };
+  /** A human readable identifier, 3 <= length <= 28. Used for URL paths in clients. Characters allowed: a-z,A-Z,0-9. */
   NameID: { input: string; output: string };
+  /** Cursor used for paginating search results. */
   SearchCursor: { input: any; output: any };
+  /** A uuid identifier. Length 36 characters. */
   UUID: { input: string; output: string };
+  /** The `Upload` scalar type represents a file upload. */
   Upload: {
     input: import("graphql-upload").FileUpload;
     output: import("graphql-upload").FileUpload;
@@ -210,6 +219,8 @@ export type ActivityFeed = {
 };
 
 export type ActivityFeedGroupedQueryArgs = {
+  /** Excludes events that the current user triggered; Includes all by default. Combined with myActivity both filters apply, composing to an empty result; that is not an error. */
+  excludeMyActivity?: InputMaybe<Scalars["Boolean"]["input"]>;
   /** What events to exclude. */
   excludeTypes?: InputMaybe<Array<ActivityEventType>>;
   /** Number of activities to return. */
@@ -225,6 +236,8 @@ export type ActivityFeedGroupedQueryArgs = {
 };
 
 export type ActivityFeedQueryArgs = {
+  /** Excludes events that the current user triggered; Includes all by default. Combined with myActivity both filters apply, composing to an empty result; that is not an error. */
+  excludeMyActivity?: InputMaybe<Scalars["Boolean"]["input"]>;
   /** What events to exclude. */
   excludeTypes?: InputMaybe<Array<ActivityEventType>>;
   /** Returns only events that the current user triggered; Includes all by default. */
@@ -687,6 +700,57 @@ export type AdminRevokeMcpApiKeyInput = {
   keyID: Scalars["UUID"]["input"];
   /** Owner of the key. Required — it scopes the revoke and the audit subject. */
   userID: Scalars["UUID"]["input"];
+};
+
+export type AdminTemplateFileRepairInput = {
+  /** List the references without copying anything. Set to false to copy the files the template's owner can read. */
+  dryRun?: Scalars["Boolean"]["input"];
+  /** The templates to process. When omitted, every template is processed. */
+  templateIDs?: InputMaybe<Array<Scalars["UUID"]["input"]>>;
+};
+
+export type AdminTemplateFileRepairIssue = {
+  entityID: Scalars["String"]["output"];
+  location: Scalars["String"]["output"];
+  reason: Scalars["String"]["output"];
+  templateID: Scalars["String"]["output"];
+};
+
+export type AdminTemplateFileRepairResult = {
+  copiedReferences: Scalars["Int"]["output"];
+  dryRun: Scalars["Boolean"]["output"];
+  failed: Array<AdminTemplateFileRepairIssue>;
+  missingFiles: Array<AdminTemplateMissingFileReference>;
+  references: Array<AdminTemplateForeignFileReference>;
+  templatesScanned: Scalars["Int"]["output"];
+  templatesWithForeignFiles: Scalars["Int"]["output"];
+};
+
+/** A file a template references that is stored outside the template entity referencing it. */
+export type AdminTemplateForeignFileReference = {
+  /** Whether this run copied the file into the template. */
+  copied: Scalars["Boolean"]["output"];
+  /** The entity holding the reference. */
+  entityID: Scalars["String"]["output"];
+  fileID: Scalars["String"]["output"];
+  /** Where in the template the reference sits, e.g. profileDescription, visualUri, linkUri, whiteboard. */
+  location: Scalars["String"]["output"];
+  /** Whether the template's owner can read the file. Only such files are copied; any other stays referenced as written. */
+  ownerCanRead: Scalars["Boolean"]["output"];
+  /** The bucket the file is stored in today. */
+  storageBucketID: Scalars["String"]["output"];
+  templateID: Scalars["String"]["output"];
+  templateName: Scalars["String"]["output"];
+};
+
+/** A reference in a template to a file that no longer exists. It cannot be repaired. */
+export type AdminTemplateMissingFileReference = {
+  /** The entity holding the reference. */
+  entityID: Scalars["String"]["output"];
+  fileID: Scalars["String"]["output"];
+  location: Scalars["String"]["output"];
+  templateID: Scalars["String"]["output"];
+  templateName: Scalars["String"]["output"];
 };
 
 export type AdminUpdateSpaceVisibilityInput = {
@@ -1197,6 +1261,8 @@ export type Callout = {
   createdDate: Scalars["DateTime"]["output"];
   /** The Callout Framing associated with this Callout. */
   framing: CalloutFraming;
+  /** Whether this Callout's SPACES collection is hiding at least one manually selected space from the requesting actor because they may not READ it. Always false for a SPACES collection in AUTO mode and for every other callout kind. A selection entry that has left the host space's account is stale, not hidden, and does NOT raise this flag; no count is exposed. */
+  hasHiddenSpaces: Scalars["Boolean"]["output"];
   /** The ID of the entity */
   id: Scalars["UUID"]["output"];
   /** Whether this callout is a Template or not. */
@@ -1213,7 +1279,7 @@ export type Callout = {
   reactions: Array<CalloutReaction>;
   /** Cheap always-shown summary (tier-1). Dataloader-batched; safe to select on feeds. */
   reactionsSummary: CalloutReactionsSummary;
-  /** The Callout Settings associated with this Callout. */
+  /** The Callout Settings associated with this Callout. `framing.selection.selectedIds` is returned EMPTY to actors without UPDATE on the Callout, so an empty list is AMBIGUOUS by design: it means either that nothing is selected or that the selection is withheld from you, and the two are deliberately indistinguishable, because a viewer must not learn which or how many spaces are hidden from them. Hold UPDATE and the list is exact. `framing.selection.mode` is always accurate. */
   settings: CalloutSettings;
   /** The sorting order for this Callout. */
   sortOrder: Scalars["Float"]["output"];
@@ -1472,7 +1538,7 @@ export type CalloutFraming = {
   poll?: Maybe<Poll>;
   /** The Profile for framing the associated Callout. */
   profile: Profile;
-  /** The host space's subspaces for a SPACES framing, ordered pinned-first then the space's sortOrder/displayName. Returns the existing Space type (no new item type). No server-side pagination/search: the client name-searches and paginates client-side over this set. Empty for non-SPACES framings, for a callout not attached to a space, or for a host with no subspaces. */
+  /** The spaces shown by a SPACES framing's collection, filtered to what the requesting actor may READ. In AUTO mode these are the host space's direct subspaces, ordered pinned-first then the space's sortOrder/displayName. In CUSTOM mode the list is the admin's stored selection, which may contain spaces that are NOT subspaces of the host (any space of the host space's account, at any level) and whose ORDER IS NOT MEANINGFUL — pinned/sortOrder are parent-relative, so the client is authoritative for ordering. Returns the existing Space type (no new item type). No server-side pagination/search: the client name-searches and paginates client-side over this set. Empty for non-SPACES framings, for a callout not attached to a space, for a host with no subspaces, and for a CUSTOM selection that is empty or wholly unreadable. */
   subspaces: Array<Space>;
   /** The type of the Callout Framing, the additional content attached to this callout */
   type: CalloutFramingType;
@@ -2633,6 +2699,8 @@ export type CreateCollaboraDocumentData = {
   displayName?: Maybe<Scalars["String"]["output"]>;
   /** Type of document to create. Required for blank-create. On the upload path, ignored — the type is derived from the uploaded file's sniffed MIME by file-service-go. */
   documentType?: Maybe<CollaboraDocumentType>;
+  /** Copy an existing CollaboraDocument's current content into the new document. The copy owns its own backing file from the moment it is created: editing it never changes the source, and editing the source never changes it. Mutually exclusive with the upload path. documentType, originalMimeType and displayName are inherited from the source. READ on the source is authorized server-side. */
+  sourceCollaboraDocumentID?: Maybe<Scalars["UUID"]["output"]>;
 };
 
 export type CreateCollaboraDocumentInput = {
@@ -2640,6 +2708,8 @@ export type CreateCollaboraDocumentInput = {
   displayName?: InputMaybe<Scalars["String"]["input"]>;
   /** Type of document to create. Required for blank-create. On the upload path, ignored — the type is derived from the uploaded file's sniffed MIME by file-service-go. */
   documentType?: InputMaybe<CollaboraDocumentType>;
+  /** Copy an existing CollaboraDocument's current content into the new document. The copy owns its own backing file from the moment it is created: editing it never changes the source, and editing the source never changes it. Mutually exclusive with the upload path. documentType, originalMimeType and displayName are inherited from the source. READ on the source is authorized server-side. */
+  sourceCollaboraDocumentID?: InputMaybe<Scalars["UUID"]["input"]>;
 };
 
 export type CreateCollaborationData = {
@@ -5255,7 +5325,7 @@ export type MemoSigningPrepareResult = {
 
 /** A message that was sent in a chat room */
 export type Message = {
-  /** Media attachments; unavailable documents retain their event filename without a download URL. */
+  /** Matrix media references and event metadata. */
   attachments: Array<MessageAttachment>;
   /** The id for the message event. */
   id: Scalars["MessageID"]["output"];
@@ -5272,19 +5342,12 @@ export type Message = {
 };
 
 export type MessageAttachment = {
-  /** The filename / display name of the attachment. */
   displayName: Scalars["String"]["output"];
-  /** The pixel height of the attachment (images only). */
+  /** The local Matrix media reference. */
+  externalReference?: Maybe<Scalars["String"]["output"]>;
   height?: Maybe<Scalars["Int"]["output"]>;
-  /** The file-service document id of the attachment. */
-  id?: Maybe<Scalars["UUID"]["output"]>;
-  /** The MIME type of the attachment. */
   mimeType?: Maybe<Scalars["String"]["output"]>;
-  /** The size of the attachment in bytes. */
   size?: Maybe<Scalars["Int"]["output"]>;
-  /** The Alkemio document URL (authorized via conversation policy). */
-  url?: Maybe<Scalars["String"]["output"]>;
-  /** The pixel width of the attachment (images only). */
   width?: Maybe<Scalars["Int"]["output"]>;
 };
 
@@ -5496,6 +5559,8 @@ export type Mutation = {
   adminLicensePolicyDeleteCredentialRule: LicensingCredentialBasedPolicyCredentialRule;
   /** Updates a CredentialRule on the LicensePolicy. */
   adminLicensePolicyUpdateCredentialRule: LicensingCredentialBasedPolicyCredentialRule;
+  /** Lists, and on request copies, the files templates reference but do not store. A file is copied only when the template's owner can read it. A dry run by default. */
+  adminRepairTemplateFiles: AdminTemplateFileRepairResult;
   /** Platform Users Admin: revoke a named user's MCP API key. Idempotent. */
   adminRevokeMcpApiKey: McpApiKey;
   /** Ingests new data into Elasticsearch from scratch. This will delete all existing data and ingest new data from the source. This is an admin only operation. */
@@ -5606,7 +5671,7 @@ export type Mutation = {
   createTagsetOnProfile: Tagset;
   /** Add a column to a Tasks board Callout. */
   createTaskColumnOnCallout: Callout;
-  /** Creates a new Template on the specified TemplatesSet. */
+  /** Creates a new Template on the specified TemplatesSet. When `file` is supplied alongside a COLLABORA_DOCUMENT callout framing, the template is framed with a Collabora document populated from the uploaded bytes (file-service-go sniffs MIME, validates format and size, and derives the document type; any documentType in the input is ignored on the upload path; displayName defaults from the filename when absent). When `file` is omitted, the existing behaviour applies. */
   createTemplate: Template;
   /** Creates a new Template on the specified TemplatesSet using the provided ContentSpace as content. */
   createTemplateFromContentSpace: Template;
@@ -5698,7 +5763,7 @@ export type Mutation = {
   inviteForEntryRoleOnRoleSet: Array<RoleSetInvitationResult>;
   /** Join the specified RoleSet using the entry Role, without going through an approval process. */
   joinRoleSet: RoleSet;
-  /** Leave a group conversation. Awaits the Matrix kick rather than reporting success merely because the RPC was sent: true means the kick was accepted, and the membership is then removed asynchronously — observe MEMBER_REMOVED for completion. If Matrix rejects the kick this still returns true, because Alkemio is authoritative for its own membership and applies the removal locally instead; on that path the Matrix-side room membership may diverge until an operator reconciles it. If the last member leaves, the conversation is auto-deleted and a CONVERSATION_DELETED event follows. */
+  /** Leave a group conversation. Awaits the Matrix removal rather than reporting success merely because the RPC was sent: true means Matrix accepted it (the member leaves the room), and the membership is then removed asynchronously — observe MEMBER_REMOVED for completion. If the Matrix removal fails (rejected — e.g. the member is no longer in the Matrix room — or the RPC times out) this still returns true, because Alkemio is authoritative for its own membership and applies the removal locally instead; on that path the Matrix-side room membership may diverge until an operator reconciles it. If the last member leaves, the conversation is auto-deleted and a CONVERSATION_DELETED event follows. */
   leaveConversation: Scalars["Boolean"]["output"];
   /** Reset the License with Entitlements on the specified Account. */
   licenseResetOnAccount: Account;
@@ -5730,9 +5795,11 @@ export type Mutation = {
   refreshAllBodiesOfKnowledge: Scalars["Boolean"]["output"];
   /** Triggers a request to the backing AI Service to refresh the knowledge that is available to it. */
   refreshVirtualContributorBodyOfKnowledge: Scalars["Boolean"]["output"];
+  /** Bind a native device push token (FCM on Android, APNs on iOS) to the current user. If the token is already bound to another user, it is rebound to the caller. */
+  registerDevicePushToken: Scalars["Boolean"]["output"];
   /** Empties the CommunityGuidelines. */
   removeCommunityGuidelinesContent: CommunityGuidelines;
-  /** Remove a member from a group conversation. Awaits the Matrix kick rather than reporting success merely because the RPC was sent: true means the kick was accepted, and the membership is then removed asynchronously — observe MEMBER_REMOVED for completion. If Matrix rejects the kick (e.g. insufficient permissions) this still returns true, because Alkemio is authoritative for its own membership and applies the removal locally instead; on that path the Matrix-side room membership may diverge until an operator reconciles it. */
+  /** Remove a member from a group conversation. Awaits the Matrix removal rather than reporting success merely because the RPC was sent: true means Matrix accepted it (the member leaves the room), and the membership is then removed asynchronously — observe MEMBER_REMOVED for completion. If the Matrix removal fails (rejected — e.g. the member is no longer in the Matrix room — or the RPC times out) this still returns true, because Alkemio is authoritative for its own membership and applies the removal locally instead; on that path the Matrix-side room membership may diverge until an operator reconciles it. */
   removeConversationMember: Scalars["Boolean"]["output"];
   /** Remove the default callout template from an InnovationFlowState. */
   removeDefaultCalloutTemplateOnInnovationFlowState: InnovationFlowState;
@@ -5814,6 +5881,8 @@ export type Mutation = {
   transferSpaceToAccount: Space;
   /** Transfer the specified Virtual Contributor to another Account. */
   transferVirtualContributorToAccount: InnovationPack;
+  /** Unbind a native device push token from the current user. Unknown tokens, and tokens bound to another user, are no-ops. */
+  unregisterDevicePushToken: Scalars["Boolean"]["output"];
   /** Disable a push notification subscription for the current user. The subscription is retained but will not receive notifications until re-enabled. */
   unsubscribeFromPushNotifications: PushSubscription;
   /** Update the nameID (URL path) of the specified Actor. A protected update: renaming repoints every inbound link to the entity. */
@@ -6006,6 +6075,10 @@ export type MutationAdminLicensePolicyDeleteCredentialRuleArgs = {
 
 export type MutationAdminLicensePolicyUpdateCredentialRuleArgs = {
   updateData: UpdateLicensePolicyCredentialRuleInput;
+};
+
+export type MutationAdminRepairTemplateFilesArgs = {
+  repairData: AdminTemplateFileRepairInput;
 };
 
 export type MutationAdminRevokeMcpApiKeyArgs = {
@@ -6202,6 +6275,7 @@ export type MutationCreateTaskColumnOnCalloutArgs = {
 };
 
 export type MutationCreateTemplateArgs = {
+  file?: InputMaybe<Scalars["Upload"]["input"]>;
   templateData: CreateTemplateOnTemplatesSetInput;
 };
 
@@ -6440,6 +6514,10 @@ export type MutationRefreshVirtualContributorBodyOfKnowledgeArgs = {
   refreshData: RefreshVirtualContributorBodyOfKnowledgeInput;
 };
 
+export type MutationRegisterDevicePushTokenArgs = {
+  registrationData: RegisterDevicePushTokenInput;
+};
+
 export type MutationRemoveCommunityGuidelinesContentArgs = {
   communityGuidelinesData: RemoveCommunityGuidelinesContentInput;
 };
@@ -6605,6 +6683,10 @@ export type MutationTransferSpaceToAccountArgs = {
 
 export type MutationTransferVirtualContributorToAccountArgs = {
   transferData: TransferAccountVirtualContributorInput;
+};
+
+export type MutationUnregisterDevicePushTokenArgs = {
+  registrationData: UnregisterDevicePushTokenInput;
 };
 
 export type MutationUnsubscribeFromPushNotificationsArgs = {
@@ -8199,11 +8281,20 @@ export type RefreshVirtualContributorBodyOfKnowledgeInput = {
   virtualContributorID: Scalars["UUID"]["input"];
 };
 
+export type RegisterDevicePushTokenInput = {
+  /** The native platform of the device: 'ios' or 'android'. */
+  platform: Scalars["String"]["input"];
+  /** The native push token for this device (FCM registration token on Android, APNs device token on iOS). */
+  token: Scalars["String"]["input"];
+};
+
 export type RelayPaginatedSpace = ActorFull & {
   /** About this space. */
   about: SpaceAbout;
   /** The Account that this Space is part of. */
   account: Account;
+  /** Spaces of THIS Space's account, at any level, on which the current actor holds READ - candidates for a Spaces callout's manual selection. READ, not READ_ABOUT: for a level-zero Space READ_ABOUT is granted to every actor including anonymous, so a READ_ABOUT filter would return the account's whole level-zero set to anyone. Capped at 500 as an unordered resource bound - no order is guaranteed and the picker sorts by ancestor path. Requires UPDATE on this Space. */
+  accountSpaces: Array<SpaceSelectionCandidate>;
   /** The "highest" subscription active for this Space. */
   activeSubscription?: Maybe<SpaceSubscription>;
   /** Count of visible activity events on this Space over the last 7 days, across all actors (excludes whiteboard-content-modified). Used to rank Spaces on the dashboard. */
@@ -8671,6 +8762,8 @@ export type RolesResultSpace = {
 };
 
 export type Room = {
+  /** The owning bucket for reference-based attachments. */
+  attachmentBucketId?: Maybe<Scalars["UUID"]["output"]>;
   /** The authorization rules for the entity */
   authorization?: Maybe<Authorization>;
   /** The avatar URL of the Room (mxc:// or https://). Fetched from Matrix. */
@@ -8733,6 +8826,13 @@ export type RoomMarkMessageReadInput = {
   threadID?: InputMaybe<Scalars["MessageID"]["input"]>;
 };
 
+export type RoomMessageAttachmentInput = {
+  /** The filename to use in this message. */
+  displayName: Scalars["String"]["input"];
+  /** The completed local Matrix media reference. */
+  externalReference: Scalars["String"]["input"];
+};
+
 /** A message event happened in the subscribed room */
 export type RoomMessageEventSubscriptionResult = {
   /** A message related event. */
@@ -8766,8 +8866,8 @@ export type RoomRemoveReactionToMessageInput = {
 };
 
 export type RoomSendMessageInput = {
-  /** The file-service document ids of attachments to send with the message (one per event). */
-  attachments?: InputMaybe<Array<Scalars["UUID"]["input"]>>;
+  /** An already-uploaded Matrix media reference. */
+  attachmentUpload?: InputMaybe<RoomMessageAttachmentInput>;
   /** The message being sent */
   message: Scalars["String"]["input"];
   /** The Room the message is being sent to */
@@ -8775,8 +8875,8 @@ export type RoomSendMessageInput = {
 };
 
 export type RoomSendMessageReplyInput = {
-  /** The file-service document ids of attachments to send with the message (one per event). */
-  attachments?: InputMaybe<Array<Scalars["UUID"]["input"]>>;
+  /** An already-uploaded Matrix media reference. */
+  attachmentUpload?: InputMaybe<RoomMessageAttachmentInput>;
   /** The message being sent */
   message: Scalars["String"]["input"];
   /** The Room the message is being sent to */
@@ -9045,7 +9145,7 @@ export type SetPlatformWellKnownVirtualContributorInput = {
   wellKnown: VirtualContributorWellKnown;
 };
 
-/** The widgets available for the Space sidepanel, per InnovationFlow state (tab). */
+/** The widgets available for the Space sidepanel, per InnovationFlow state (tab/phase). */
 export enum SidebarWidget {
   About = "ABOUT",
   Activity = "ACTIVITY",
@@ -9078,6 +9178,8 @@ export type Space = ActorFull & {
   about: SpaceAbout;
   /** The Account that this Space is part of. */
   account: Account;
+  /** Spaces of THIS Space's account, at any level, on which the current actor holds READ - candidates for a Spaces callout's manual selection. READ, not READ_ABOUT: for a level-zero Space READ_ABOUT is granted to every actor including anonymous, so a READ_ABOUT filter would return the account's whole level-zero set to anyone. Capped at 500 as an unordered resource bound - no order is guaranteed and the picker sorts by ancestor path. Requires UPDATE on this Space. */
+  accountSpaces: Array<SpaceSelectionCandidate>;
   /** The "highest" subscription active for this Space. */
   activeSubscription?: Maybe<SpaceSubscription>;
   /** Count of visible activity events on this Space over the last 7 days, across all actors (excludes whiteboard-content-modified). Used to rank Spaces on the dashboard. */
@@ -9241,6 +9343,18 @@ export enum SpacePrivacyMode {
   Private = "PRIVATE",
   Public = "PUBLIC",
 }
+
+/** A space of an account, reduced to what the Spaces-callout selection picker needs. */
+export type SpaceSelectionCandidate = {
+  /** This Space's current display name, from its About profile (never the actor-level profile, which is a creation-time snapshot that is not re-synced on rename). */
+  displayName: Scalars["String"]["output"];
+  /** The unique identifier of this Space. */
+  id: Scalars["UUID"]["output"];
+  /** The level of this Space (L0, L1 or L2). */
+  level: SpaceLevel;
+  /** The parent Space's id; NULL for a level-zero Space. */
+  parentSpaceID?: Maybe<Scalars["UUID"]["output"]>;
+};
 
 export type SpaceSettings = {
   /** The collaboration settings for this Space. */
@@ -9791,6 +9905,11 @@ export type TransferCalloutInput = {
   calloutID: Scalars["UUID"]["input"];
   /** The target CalloutsSet to which the Callout will be transferred. */
   targetCalloutsSetID: Scalars["UUID"]["input"];
+};
+
+export type UnregisterDevicePushTokenInput = {
+  /** The native push token to unbind from the current user. */
+  token: Scalars["String"]["input"];
 };
 
 export type UnsubscribeFromPushNotificationsInput = {
@@ -12259,6 +12378,11 @@ export type ResolversTypes = {
   AddVisualToMediaGalleryInput: AddVisualToMediaGalleryInput;
   AdminCommunicationReconcileForumHierarchyInput: AdminCommunicationReconcileForumHierarchyInput;
   AdminRevokeMcpApiKeyInput: AdminRevokeMcpApiKeyInput;
+  AdminTemplateFileRepairInput: AdminTemplateFileRepairInput;
+  AdminTemplateFileRepairIssue: ResolverTypeWrapper<AdminTemplateFileRepairIssue>;
+  AdminTemplateFileRepairResult: ResolverTypeWrapper<AdminTemplateFileRepairResult>;
+  AdminTemplateForeignFileReference: ResolverTypeWrapper<AdminTemplateForeignFileReference>;
+  AdminTemplateMissingFileReference: ResolverTypeWrapper<AdminTemplateMissingFileReference>;
   AdminUpdateSpaceVisibilityInput: AdminUpdateSpaceVisibilityInput;
   AdminUserEmailChangeDriftResolveInput: AdminUserEmailChangeDriftResolveInput;
   AdminUserEmailChangeInput: AdminUserEmailChangeInput;
@@ -13316,6 +13440,7 @@ export type ResolversTypes = {
   >;
   Reference: ResolverTypeWrapper<Reference>;
   RefreshVirtualContributorBodyOfKnowledgeInput: RefreshVirtualContributorBodyOfKnowledgeInput;
+  RegisterDevicePushTokenInput: RegisterDevicePushTokenInput;
   RelayPaginatedSpace: ResolverTypeWrapper<
     Omit<
       RelayPaginatedSpace,
@@ -13393,6 +13518,7 @@ export type ResolversTypes = {
   RoomAddReactionToMessageInput: RoomAddReactionToMessageInput;
   RoomEventSubscriptionResult: ResolverTypeWrapper<RoomEventSubscriptionResult>;
   RoomMarkMessageReadInput: RoomMarkMessageReadInput;
+  RoomMessageAttachmentInput: RoomMessageAttachmentInput;
   RoomMessageEventSubscriptionResult: ResolverTypeWrapper<RoomMessageEventSubscriptionResult>;
   RoomMessageReactionEventSubscriptionResult: ResolverTypeWrapper<RoomMessageReactionEventSubscriptionResult>;
   RoomRemoveMessageInput: RoomRemoveMessageInput;
@@ -13513,6 +13639,7 @@ export type ResolversTypes = {
     }
   >;
   SpacePrivacyMode: SpacePrivacyMode;
+  SpaceSelectionCandidate: ResolverTypeWrapper<SpaceSelectionCandidate>;
   SpaceSettings: ResolverTypeWrapper<SpaceSettings>;
   SpaceSettingsCollaboration: ResolverTypeWrapper<SpaceSettingsCollaboration>;
   SpaceSettingsLayout: ResolverTypeWrapper<SpaceSettingsLayout>;
@@ -13621,6 +13748,7 @@ export type ResolversTypes = {
   TransferAccountVirtualContributorInput: TransferAccountVirtualContributorInput;
   TransferCalloutInput: TransferCalloutInput;
   UUID: ResolverTypeWrapper<Scalars["UUID"]["output"]>;
+  UnregisterDevicePushTokenInput: UnregisterDevicePushTokenInput;
   UnsubscribeFromPushNotificationsInput: UnsubscribeFromPushNotificationsInput;
   UpdateActorNameIDInput: UpdateActorNameIdInput;
   UpdateAiPersonaInput: UpdateAiPersonaInput;
@@ -14001,6 +14129,11 @@ export type ResolversParentTypes = {
   AddVisualToMediaGalleryInput: AddVisualToMediaGalleryInput;
   AdminCommunicationReconcileForumHierarchyInput: AdminCommunicationReconcileForumHierarchyInput;
   AdminRevokeMcpApiKeyInput: AdminRevokeMcpApiKeyInput;
+  AdminTemplateFileRepairInput: AdminTemplateFileRepairInput;
+  AdminTemplateFileRepairIssue: AdminTemplateFileRepairIssue;
+  AdminTemplateFileRepairResult: AdminTemplateFileRepairResult;
+  AdminTemplateForeignFileReference: AdminTemplateForeignFileReference;
+  AdminTemplateMissingFileReference: AdminTemplateMissingFileReference;
   AdminUpdateSpaceVisibilityInput: AdminUpdateSpaceVisibilityInput;
   AdminUserEmailChangeDriftResolveInput: AdminUserEmailChangeDriftResolveInput;
   AdminUserEmailChangeInput: AdminUserEmailChangeInput;
@@ -14908,6 +15041,7 @@ export type ResolversParentTypes = {
   };
   Reference: Reference;
   RefreshVirtualContributorBodyOfKnowledgeInput: RefreshVirtualContributorBodyOfKnowledgeInput;
+  RegisterDevicePushTokenInput: RegisterDevicePushTokenInput;
   RelayPaginatedSpace: Omit<
     RelayPaginatedSpace,
     | "about"
@@ -14973,6 +15107,7 @@ export type ResolversParentTypes = {
   RoomAddReactionToMessageInput: RoomAddReactionToMessageInput;
   RoomEventSubscriptionResult: RoomEventSubscriptionResult;
   RoomMarkMessageReadInput: RoomMarkMessageReadInput;
+  RoomMessageAttachmentInput: RoomMessageAttachmentInput;
   RoomMessageEventSubscriptionResult: RoomMessageEventSubscriptionResult;
   RoomMessageReactionEventSubscriptionResult: RoomMessageReactionEventSubscriptionResult;
   RoomRemoveMessageInput: RoomRemoveMessageInput;
@@ -15072,6 +15207,7 @@ export type ResolversParentTypes = {
     about: ResolversParentTypes["SpaceAbout"];
     communityGuidelines: ResolversParentTypes["CommunityGuidelines"];
   };
+  SpaceSelectionCandidate: SpaceSelectionCandidate;
   SpaceSettings: SpaceSettings;
   SpaceSettingsCollaboration: SpaceSettingsCollaboration;
   SpaceSettingsLayout: SpaceSettingsLayout;
@@ -15162,6 +15298,7 @@ export type ResolversParentTypes = {
   TransferAccountVirtualContributorInput: TransferAccountVirtualContributorInput;
   TransferCalloutInput: TransferCalloutInput;
   UUID: Scalars["UUID"]["output"];
+  UnregisterDevicePushTokenInput: UnregisterDevicePushTokenInput;
   UnsubscribeFromPushNotificationsInput: UnsubscribeFromPushNotificationsInput;
   UpdateActorNameIDInput: UpdateActorNameIdInput;
   UpdateAiPersonaInput: UpdateAiPersonaInput;
@@ -15924,6 +16061,74 @@ export type ActorRolesResolvers<
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
+export type AdminTemplateFileRepairIssueResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["AdminTemplateFileRepairIssue"] = ResolversParentTypes["AdminTemplateFileRepairIssue"]
+> = {
+  entityID?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
+  location?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
+  reason?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
+  templateID?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type AdminTemplateFileRepairResultResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["AdminTemplateFileRepairResult"] = ResolversParentTypes["AdminTemplateFileRepairResult"]
+> = {
+  copiedReferences?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
+  dryRun?: Resolver<ResolversTypes["Boolean"], ParentType, ContextType>;
+  failed?: Resolver<
+    Array<ResolversTypes["AdminTemplateFileRepairIssue"]>,
+    ParentType,
+    ContextType
+  >;
+  missingFiles?: Resolver<
+    Array<ResolversTypes["AdminTemplateMissingFileReference"]>,
+    ParentType,
+    ContextType
+  >;
+  references?: Resolver<
+    Array<ResolversTypes["AdminTemplateForeignFileReference"]>,
+    ParentType,
+    ContextType
+  >;
+  templatesScanned?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
+  templatesWithForeignFiles?: Resolver<
+    ResolversTypes["Int"],
+    ParentType,
+    ContextType
+  >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type AdminTemplateForeignFileReferenceResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["AdminTemplateForeignFileReference"] = ResolversParentTypes["AdminTemplateForeignFileReference"]
+> = {
+  copied?: Resolver<ResolversTypes["Boolean"], ParentType, ContextType>;
+  entityID?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
+  fileID?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
+  location?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
+  ownerCanRead?: Resolver<ResolversTypes["Boolean"], ParentType, ContextType>;
+  storageBucketID?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
+  templateID?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
+  templateName?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type AdminTemplateMissingFileReferenceResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["AdminTemplateMissingFileReference"] = ResolversParentTypes["AdminTemplateMissingFileReference"]
+> = {
+  entityID?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
+  fileID?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
+  location?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
+  templateID?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
+  templateName?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
 export type AiPersonaResolvers<
   ContextType = any,
   ParentType extends ResolversParentTypes["AiPersona"] = ResolversParentTypes["AiPersona"]
@@ -16264,6 +16469,11 @@ export type CalloutResolvers<
   createdBy?: Resolver<Maybe<ResolversTypes["User"]>, ParentType, ContextType>;
   createdDate?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
   framing?: Resolver<ResolversTypes["CalloutFraming"], ParentType, ContextType>;
+  hasHiddenSpaces?: Resolver<
+    ResolversTypes["Boolean"],
+    ParentType,
+    ContextType
+  >;
   id?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
   isTemplate?: Resolver<ResolversTypes["Boolean"], ParentType, ContextType>;
   nameID?: Resolver<ResolversTypes["NameID"], ParentType, ContextType>;
@@ -17906,6 +18116,11 @@ export type CreateCollaboraDocumentDataResolvers<
   >;
   documentType?: Resolver<
     Maybe<ResolversTypes["CollaboraDocumentType"]>,
+    ParentType,
+    ContextType
+  >;
+  sourceCollaboraDocumentID?: Resolver<
+    Maybe<ResolversTypes["UUID"]>,
     ParentType,
     ContextType
   >;
@@ -20445,11 +20660,14 @@ export type MessageAttachmentResolvers<
   ParentType extends ResolversParentTypes["MessageAttachment"] = ResolversParentTypes["MessageAttachment"]
 > = {
   displayName?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
+  externalReference?: Resolver<
+    Maybe<ResolversTypes["String"]>,
+    ParentType,
+    ContextType
+  >;
   height?: Resolver<Maybe<ResolversTypes["Int"]>, ParentType, ContextType>;
-  id?: Resolver<Maybe<ResolversTypes["UUID"]>, ParentType, ContextType>;
   mimeType?: Resolver<Maybe<ResolversTypes["String"]>, ParentType, ContextType>;
   size?: Resolver<Maybe<ResolversTypes["Int"]>, ParentType, ContextType>;
-  url?: Resolver<Maybe<ResolversTypes["String"]>, ParentType, ContextType>;
   width?: Resolver<Maybe<ResolversTypes["Int"]>, ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
@@ -20718,6 +20936,12 @@ export type MutationResolvers<
       MutationAdminLicensePolicyUpdateCredentialRuleArgs,
       "updateData"
     >
+  >;
+  adminRepairTemplateFiles?: Resolver<
+    ResolversTypes["AdminTemplateFileRepairResult"],
+    ParentType,
+    ContextType,
+    RequireFields<MutationAdminRepairTemplateFilesArgs, "repairData">
   >;
   adminRevokeMcpApiKey?: Resolver<
     ResolversTypes["McpApiKey"],
@@ -21438,6 +21662,12 @@ export type MutationResolvers<
       "refreshData"
     >
   >;
+  registerDevicePushToken?: Resolver<
+    ResolversTypes["Boolean"],
+    ParentType,
+    ContextType,
+    RequireFields<MutationRegisterDevicePushTokenArgs, "registrationData">
+  >;
   removeCommunityGuidelinesContent?: Resolver<
     ResolversTypes["CommunityGuidelines"],
     ParentType,
@@ -21706,6 +21936,12 @@ export type MutationResolvers<
       MutationTransferVirtualContributorToAccountArgs,
       "transferData"
     >
+  >;
+  unregisterDevicePushToken?: Resolver<
+    ResolversTypes["Boolean"],
+    ParentType,
+    ContextType,
+    RequireFields<MutationUnregisterDevicePushTokenArgs, "registrationData">
   >;
   unsubscribeFromPushNotifications?: Resolver<
     ResolversTypes["PushSubscription"],
@@ -23645,6 +23881,11 @@ export type RelayPaginatedSpaceResolvers<
 > = {
   about?: Resolver<ResolversTypes["SpaceAbout"], ParentType, ContextType>;
   account?: Resolver<ResolversTypes["Account"], ParentType, ContextType>;
+  accountSpaces?: Resolver<
+    Array<ResolversTypes["SpaceSelectionCandidate"]>,
+    ParentType,
+    ContextType
+  >;
   activeSubscription?: Resolver<
     Maybe<ResolversTypes["SpaceSubscription"]>,
     ParentType,
@@ -24056,6 +24297,11 @@ export type RoomResolvers<
   ContextType = any,
   ParentType extends ResolversParentTypes["Room"] = ResolversParentTypes["Room"]
 > = {
+  attachmentBucketId?: Resolver<
+    Maybe<ResolversTypes["UUID"]>,
+    ParentType,
+    ContextType
+  >;
   authorization?: Resolver<
     Maybe<ResolversTypes["Authorization"]>,
     ParentType,
@@ -24335,6 +24581,11 @@ export type SpaceResolvers<
 > = {
   about?: Resolver<ResolversTypes["SpaceAbout"], ParentType, ContextType>;
   account?: Resolver<ResolversTypes["Account"], ParentType, ContextType>;
+  accountSpaces?: Resolver<
+    Array<ResolversTypes["SpaceSelectionCandidate"]>,
+    ParentType,
+    ContextType
+  >;
   activeSubscription?: Resolver<
     Maybe<ResolversTypes["SpaceSubscription"]>,
     ParentType,
@@ -24518,6 +24769,21 @@ export type SpacePendingMembershipInfoResolvers<
   >;
   id?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
   level?: Resolver<ResolversTypes["SpaceLevel"], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type SpaceSelectionCandidateResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["SpaceSelectionCandidate"] = ResolversParentTypes["SpaceSelectionCandidate"]
+> = {
+  displayName?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
+  id?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
+  level?: Resolver<ResolversTypes["SpaceLevel"], ParentType, ContextType>;
+  parentSpaceID?: Resolver<
+    Maybe<ResolversTypes["UUID"]>,
+    ParentType,
+    ContextType
+  >;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -26462,6 +26728,10 @@ export type Resolvers<ContextType = any> = {
   ActorFull?: ActorFullResolvers<ContextType>;
   ActorRolePolicy?: ActorRolePolicyResolvers<ContextType>;
   ActorRoles?: ActorRolesResolvers<ContextType>;
+  AdminTemplateFileRepairIssue?: AdminTemplateFileRepairIssueResolvers<ContextType>;
+  AdminTemplateFileRepairResult?: AdminTemplateFileRepairResultResolvers<ContextType>;
+  AdminTemplateForeignFileReference?: AdminTemplateForeignFileReferenceResolvers<ContextType>;
+  AdminTemplateMissingFileReference?: AdminTemplateMissingFileReferenceResolvers<ContextType>;
   AiPersona?: AiPersonaResolvers<ContextType>;
   AiServer?: AiServerResolvers<ContextType>;
   Application?: ApplicationResolvers<ContextType>;
@@ -26761,6 +27031,7 @@ export type Resolvers<ContextType = any> = {
   SpaceAboutMembership?: SpaceAboutMembershipResolvers<ContextType>;
   SpaceJoinPreview?: SpaceJoinPreviewResolvers<ContextType>;
   SpacePendingMembershipInfo?: SpacePendingMembershipInfoResolvers<ContextType>;
+  SpaceSelectionCandidate?: SpaceSelectionCandidateResolvers<ContextType>;
   SpaceSettings?: SpaceSettingsResolvers<ContextType>;
   SpaceSettingsCollaboration?: SpaceSettingsCollaborationResolvers<ContextType>;
   SpaceSettingsLayout?: SpaceSettingsLayoutResolvers<ContextType>;
@@ -83468,6 +83739,42 @@ export type AdminLicensePolicyUpdateCredentialRuleMutationVariables = Exact<{
 
 export type AdminLicensePolicyUpdateCredentialRuleMutation = {
   adminLicensePolicyUpdateCredentialRule: { id: string };
+};
+
+export type AdminRepairTemplateFilesMutationVariables = Exact<{
+  repairData: AdminTemplateFileRepairInput;
+}>;
+
+export type AdminRepairTemplateFilesMutation = {
+  adminRepairTemplateFiles: {
+    dryRun: boolean;
+    templatesScanned: number;
+    templatesWithForeignFiles: number;
+    copiedReferences: number;
+    references: Array<{
+      templateID: string;
+      templateName: string;
+      location: string;
+      entityID: string;
+      fileID: string;
+      storageBucketID: string;
+      ownerCanRead: boolean;
+      copied: boolean;
+    }>;
+    missingFiles: Array<{
+      templateID: string;
+      templateName: string;
+      location: string;
+      entityID: string;
+      fileID: string;
+    }>;
+    failed: Array<{
+      templateID: string;
+      location: string;
+      entityID: string;
+      reason: string;
+    }>;
+  };
 };
 
 export type AdminRevokeMcpApiKeyMutationVariables = Exact<{
