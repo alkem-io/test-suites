@@ -189,13 +189,14 @@ let vcAccountId = '';
 let vcHiddenId = '';
 let hubHiddenId = '';
 let ownerAccountId = '';
+let packPublicUId = '';
 let packHiddenUId = '';
 let vcHiddenUId = '';
 
 let associate: Viewer;
 let orgAdmin: Viewer;
 let unrelated: Viewer;
-let owner: Viewer; // owns a HIDDEN pack and a HIDDEN VC on their user account
+let owner: Viewer; // owns a PUBLIC and a HIDDEN pack and a HIDDEN VC on their user account
 
 const createPack = async (
   accountId: string,
@@ -321,8 +322,8 @@ beforeAll(async () => {
   }
   unrelated = await registerViewer('unrel');
 
-  // The owner gets a HIDDEN pack and a HIDDEN VC. A fresh account has a pack
-  // limit of 0.
+  // The owner gets a PUBLIC and a HIDDEN pack and a HIDDEN VC. A fresh account
+  // has a pack limit of 0.
   owner = await registerViewer('owner');
   ownerAccountId = (
     await adminGql<{ lookup: { user: { account: { id: string } } } }>(
@@ -335,6 +336,11 @@ beforeAll(async () => {
   failOnError(
     'license plan on owner account',
     await assignLicensePlanToAccount(ownerAccountId, plan[0].id)
+  );
+  packPublicUId = await createPack(
+    ownerAccountId,
+    'publicu',
+    SearchVisibility.Public
   );
   packHiddenUId = await createPack(
     ownerAccountId,
@@ -352,7 +358,7 @@ beforeAll(async () => {
       { searchVisibility: string; listedInStore: boolean }
     >;
   }>(
-    `query($pp: UUID!, $pa: UUID!, $ph: UUID!, $va: UUID!, $vh: UUID!, $hh: UUID!, $pu: UUID!, $vu: UUID!) {
+    `query($pp: UUID!, $pa: UUID!, $ph: UUID!, $va: UUID!, $vh: UUID!, $hh: UUID!, $pv: UUID!, $pu: UUID!, $vu: UUID!) {
       lookup {
         pp: innovationPack(ID: $pp) { searchVisibility listedInStore }
         pa: innovationPack(ID: $pa) { searchVisibility listedInStore }
@@ -360,6 +366,7 @@ beforeAll(async () => {
         va: virtualContributor(ID: $va) { searchVisibility listedInStore }
         vh: virtualContributor(ID: $vh) { searchVisibility listedInStore }
         hh: innovationHub(ID: $hh) { searchVisibility listedInStore }
+        pv: innovationPack(ID: $pv) { searchVisibility listedInStore }
         pu: innovationPack(ID: $pu) { searchVisibility listedInStore }
         vu: virtualContributor(ID: $vu) { searchVisibility listedInStore }
       }
@@ -371,6 +378,7 @@ beforeAll(async () => {
       va: vcAccountId,
       vh: vcHiddenId,
       hh: hubHiddenId,
+      pv: packPublicUId,
       pu: packHiddenUId,
       vu: vcHiddenUId,
     }
@@ -387,6 +395,7 @@ beforeAll(async () => {
   });
   expect(vis('vh')).toBe(SearchVisibility.Hidden);
   expect(vis('hh')).toBe(SearchVisibility.Hidden);
+  expect(vis('pv')).toBe(SearchVisibility.Public);
   expect(vis('pu')).toBe(SearchVisibility.Hidden);
   expect(vis('vu')).toBe(SearchVisibility.Hidden);
 
@@ -414,7 +423,13 @@ afterAll(async () => {
     }
   };
   // An account with a pack blocks user deletion: the packs go first.
-  for (const id of [packPublicId, packAccountId, packHiddenId, packHiddenUId]) {
+  for (const id of [
+    packPublicId,
+    packAccountId,
+    packHiddenId,
+    packPublicUId,
+    packHiddenUId,
+  ]) {
     if (id)
       await step(`pack ${id}`, async () =>
         failOnError('delete pack', await deleteInnovationPack(id))
@@ -551,23 +566,27 @@ describe('hostedResources — viewer-scoped hosted resources', () => {
     expect(result.hosted).toBeNull();
   });
 
-  test("an unrelated registered user sees nothing of a user account's HIDDEN pack", async () => {
+  test("an unrelated registered user sees only a user account's PUBLIC pack: not its HIDDEN pack or HIDDEN VC", async () => {
     const result = collect(
       await hosted('user', owner.id, await getUserToken(unrelated.email))
     );
 
-    expect(ids(result.innovationPacks)).toEqual([]);
+    expect(ids(result.innovationPacks)).toEqual([packPublicUId]);
+    expect(ids(result.virtualContributors)).toEqual([]);
   });
 
-  test('the owner of a user account sees their own HIDDEN pack', async () => {
+  test('the owner of a user account sees their own PUBLIC and HIDDEN packs and their HIDDEN VC', async () => {
     const result = collect(
       await hosted('user', owner.id, await getUserToken(owner.email))
     );
 
-    expect(ids(result.innovationPacks)).toEqual([packHiddenUId]);
+    expect(ids(result.innovationPacks).sort()).toEqual(
+      [packPublicUId, packHiddenUId].sort()
+    );
+    expect(ids(result.virtualContributors)).toEqual([vcHiddenUId]);
   });
 
-  test('a hosted VC is the closed card type, which exposes only id and profile', async () => {
+  test('a hosted VC and a hosted hub are closed card types: id and profile, and id, nameID and profile', async () => {
     const vcs: Hosted['virtualContributors'] = [];
     for (const viewer of [associate, orgAdmin]) {
       vcs.push(
@@ -595,6 +614,50 @@ describe('hostedResources — viewer-scoped hosted resources', () => {
       'id',
       'profile',
     ]);
+
+    const hub = await postGraphqlRaw<{
+      __type: { fields: Array<{ name: string }> } | null;
+    }>('{ __type(name: "AccountHostedInnovationHub") { fields { name } } }', {
+      bearerToken: await getUserToken(unrelated.email),
+    });
+    expect(hub.body.errors).toBeUndefined();
+    expect(hub.body.data?.__type?.fields.map(f => f.name).sort()).toEqual([
+      'id',
+      'nameID',
+      'profile',
+    ]);
+  });
+
+  test("a hosted hub offers no way into its account: selecting the hub's account is a validation error that returns no data", async () => {
+    // Positive control: the same viewer resolves the hub card itself.
+    const control = collect(
+      await hosted('organization', orgId, await getUserToken(unrelated.email))
+    );
+    expect(ids(control.innovationHubs)).toEqual([hubHiddenId]);
+
+    const res = await postGraphqlRaw<unknown>(
+      'query($id: UUID!) { lookup { organization(ID: $id) { hostedResources { innovationHubs { account { innovationPacks { id } } } } } } }',
+      {
+        variables: { id: orgId },
+        bearerToken: await getUserToken(unrelated.email),
+      }
+    );
+
+    const messages = (res.body.errors ?? []).map(e => String(e.message));
+    expect(
+      messages.some(
+        m =>
+          m.includes('"account"') && m.includes('"AccountHostedInnovationHub"')
+      ),
+      `a validation error on field "account" of AccountHostedInnovationHub, got ${JSON.stringify(messages)}`
+    ).toBe(true);
+    expect(
+      res.body.data ?? null,
+      'a rejected query carries no data'
+    ).toBeNull();
+    for (const id of [packAccountId, packHiddenId, vcAccountId, vcHiddenId]) {
+      expect(res.raw, 'no non-PUBLIC resource id leaks').not.toContain(id);
+    }
   });
 
   test('the full account stays closed to an unrelated registered user', async () => {
@@ -623,7 +686,9 @@ describe('hostedResources — viewer-scoped hosted resources', () => {
       const token = await getUserToken(unrelated.email);
       // collect() asserts no GraphQL error, so the HIDDEN VC card resolved.
       const result = collect(await hosted('user', owner.id, token));
-      expect(ids(result.innovationPacks)).toEqual([packHiddenUId]);
+      expect(ids(result.innovationPacks).sort()).toEqual(
+        [packPublicUId, packHiddenUId].sort()
+      );
       expect(ids(result.virtualContributors)).toContain(vcHiddenUId);
       expect(await accountIdOf('user', owner.id, token)).toBe(ownerAccountId);
     } finally {
