@@ -25,6 +25,7 @@
 import { type Browser, expect, type Locator, type Page } from '@playwright/test';
 import {
   assignLicensePlanToAccount,
+  assignPlatformRole,
   assignRoleToUser,
   createInnovationPack,
   createOrganizationOrAdopt,
@@ -35,6 +36,9 @@ import {
   deleteVirtualContributor,
   getGraphqlClient,
   getLicensePlanByName,
+  getUserToken,
+  removeRoleFromUser,
+  postGraphqlRaw,
   TestScenarioFactory,
   TestUser,
   UniqueIDGenerator,
@@ -137,6 +141,17 @@ const expectSelected = async (
     );
   }
 };
+
+/**
+ * A genuinely signed-out context. `browser.newContext()` inherits the persona
+ * `storageState` that `createPersonaTest` installs through `use`, so the guest
+ * must override it explicitly or it silently runs as `non.space`.
+ */
+const newGuestContext = (browser: Browser) =>
+  browser.newContext({
+    locale: 'en-US',
+    storageState: { cookies: [], origins: [] },
+  });
 
 /**
  * Runs `walk` on a page signed in as `email` (a seeded user, registered with the
@@ -1108,7 +1123,7 @@ test.describe('Public profile resource tabs — visibility tiers', () => {
     await expect(tab(page, TAB.org.other)).toHaveCount(0);
   };
 
-  test('PT-7 — an unrelated registered visitor sees only the PUBLIC pack: no ACCOUNT or HIDDEN pack, no VC despite its store listing, no guest notice', async ({
+  test('PT-7 @forge-acceptance — an unrelated registered visitor sees only the PUBLIC pack: no ACCOUNT or HIDDEN pack, no VC despite its store listing, no guest notice', async ({
     page,
   }) => {
     const org = scenarioE!.organization;
@@ -1171,10 +1186,10 @@ test.describe('Public profile resource tabs — visibility tiers', () => {
     await expect(tab(page, TAB.user.other)).toHaveCount(0);
   });
 
-  test('PT-10 — a guest sees the sign-up notice and no Other Resources, on an organisation with resources and on a bare one alike', async ({
+  test('PT-10 @forge-acceptance — a guest sees the sign-up notice and no Other Resources, on an organisation with resources and on a bare one alike', async ({
     browser,
   }) => {
-    const guest = await browser.newContext({ locale: 'en-US' });
+    const guest = await newGuestContext(browser);
     try {
       const page = await guest.newPage();
       const org = scenarioE!.organization;
@@ -1192,10 +1207,10 @@ test.describe('Public profile resource tabs — visibility tiers', () => {
     }
   });
 
-  test('PT-11 — the guest notice goes away once the guest signs in as an associate, and Other Resources appears', async ({
+  test('PT-11 @forge-acceptance — the guest notice goes away once the guest signs in as an associate, and Other Resources appears', async ({
     browser,
   }) => {
-    const guest = await browser.newContext({ locale: 'en-US' });
+    const guest = await newGuestContext(browser);
     try {
       const page = await guest.newPage();
       const org = scenarioE!.organization;
@@ -1212,5 +1227,476 @@ test.describe('Public profile resource tabs — visibility tiers', () => {
     } finally {
       await guest.close();
     }
+  });
+});
+
+// ===========================================================================
+// US2 — organisation associate sees ACCOUNT-scoped resources (@forge-acceptance)
+// Own fixtures (independent of the blocks above): ACCOUNT VC + ACCOUNT pack +
+// HIDDEN pack on an organisation, an associate with no Space role, a visitor
+// (the registered `non.space` persona) and a USER account owning an ACCOUNT pack.
+// ===========================================================================
+test.describe('US2 — associate sees the organisation ACCOUNT tier', { tag: '@forge-acceptance' }, () => {
+  let scenario: OrganizationWithSpaceModel | undefined;
+  let packAccountId: string | undefined;
+  let packHiddenId: string | undefined;
+  let vcId: string | undefined;
+  let associate: SeededUser | undefined;
+  let owner: SeededUser | undefined;
+  let ownerPackId: string | undefined;
+
+  const PACK_ACCOUNT = `US2 pack account ${RUN}`;
+  const PACK_HIDDEN = `US2 pack hidden ${RUN}`;
+  const VC_ACCOUNT = `US2 VC account ${RUN}`;
+  const PACK_OWNER = `US2 pack owner ${RUN}`;
+
+  const makePack = async (
+    accountId: string,
+    displayName: string,
+    nameID: string,
+    searchVisibility?: SearchVisibility
+  ): Promise<string> => {
+    const pack = await createInnovationPack(accountId, displayName, nameID);
+    failOnError(`create ${displayName}`, pack);
+    const id = pack.data?.createInnovationPack.id;
+    if (!id) throw new Error(`pack id missing for ${displayName}`);
+    if (searchVisibility) {
+      failOnError(
+        `${displayName} ${searchVisibility}`,
+        await updateInnovationPackVisibility(id, { searchVisibility })
+      );
+    }
+    return id;
+  };
+
+  test.beforeAll(async () => {
+    test.setTimeout(240_000);
+    scenario = await TestScenarioFactory.createBaseScenario({
+      name: `us2-${RUN}`,
+      space: spaceInput,
+    });
+    await clearHostLead(scenario);
+    const org = scenario.organization;
+    packAccountId = await makePack(org.accountId, PACK_ACCOUNT, `us2-pacc-${RUN}`);
+    packHiddenId = await makePack(
+      org.accountId,
+      PACK_HIDDEN,
+      `us2-phid-${RUN}`,
+      SearchVisibility.Hidden
+    );
+    const vc = await createVirtualContributor(org.accountId, {
+      profileDisplayName: VC_ACCOUNT,
+      nameID: `us2-vc-${RUN}`,
+      aiPersona: { engine: 'EXPERT' },
+      bodyOfKnowledgeType: 'ALKEMIO_SPACE',
+      bodyOfKnowledgeID: scenario.space.id,
+    });
+    failOnError('create VC', vc);
+    vcId = vc.data?.createVirtualContributor.id;
+    if (!vcId) throw new Error('VC id missing');
+    failOnError(
+      'VC ACCOUNT',
+      await updateVirtualContributorVisibility(vcId, {
+        searchVisibility: SearchVisibility.Account,
+        listedInStore: true,
+      })
+    );
+    associate = await seedUser(`US2 Associate ${RUN}`);
+    failOnError(
+      'associate role',
+      await assignRoleToUser(associate.id, org.roleSetId, RoleName.Associate)
+    );
+    owner = await seedUser(`US2 Owner ${RUN}`);
+    const plan = await getLicensePlanByName('ACCOUNT_LICENSE_PLUS');
+    if (!plan[0]) throw new Error('ACCOUNT_LICENSE_PLUS plan not found');
+    failOnError(
+      'license plan',
+      await assignLicensePlanToAccount(owner.accountId, plan[0].id)
+    );
+    ownerPackId = await makePack(owner.accountId, PACK_OWNER, `us2-powner-${RUN}`);
+
+    expect(
+      await rolesOf('rolesUser', associate.id),
+      'associate must hold no Space role'
+    ).toEqual([]);
+    expect(await searchVisibilityOf('innovationPack', packAccountId)).toBe(
+      SearchVisibility.Account
+    );
+  });
+
+  test.afterAll(async () => {
+    test.setTimeout(180_000);
+    await runTeardown([
+      ...(
+        [
+          ['pack account', packAccountId],
+          ['pack hidden', packHiddenId],
+          ['pack owner', ownerPackId],
+        ] as const
+      ).map(([label, id]): [string, () => Promise<unknown>] => [
+        label,
+        async () => id && failOnError(`delete ${label}`, await deleteInnovationPack(id)),
+      ]),
+      [
+        'VC',
+        async () => vcId && failOnError('delete VC', await deleteVirtualContributor(vcId)),
+      ],
+      ...[associate, owner].map((u): [string, () => Promise<unknown>] => [
+        `user ${u?.displayName}`,
+        async () => u && deleteFixtureUser(u.id),
+      ]),
+      ['scenario', () => removeScenario(scenario)],
+    ]);
+  });
+
+  const openOther = async (page: Page): Promise<void> => {
+    const org = scenario!.organization;
+    await openProfile(page, `/organization/${org.nameId}`, org.profile.displayName);
+    await tab(page, TAB.org.other).click();
+    await expect(tab(page, TAB.org.other)).toHaveAttribute('aria-selected', 'true');
+  };
+
+  test.describe.configure({ mode: 'serial' });
+
+  test('US2-AS1/AS2 — the associate sees the ACCOUNT VC card and ACCOUNT pack, not the HIDDEN pack', async ({
+    browser,
+  }) => {
+    await asViewer(browser, associate!.email, async page => {
+      const graphqlErrors: string[] = [];
+      page.on('response', async response => {
+        if (response.url().includes('graphql') && response.request().method() === 'POST') {
+          const body = await response.json().catch(() => undefined);
+          const operation = response.request().postDataJSON()?.operationName;
+          // The dashboard welcome-space lookup after sign-in is unrelated to the profile.
+          if (body?.errors && operation !== 'DashboardWelcomeSpace') {
+            graphqlErrors.push(`${operation}: ${JSON.stringify(body.errors.map((e: { message: string }) => e.message))}`);
+          }
+        }
+      });
+      await openOther(page);
+      await expect(h3(page, 'Virtual Contributors')).toBeVisible();
+      await expect(h4(page, VC_ACCOUNT)).toBeVisible();
+      await expect(h4(page, PACK_ACCOUNT)).toBeVisible();
+      await expect(h4(page, PACK_HIDDEN)).toHaveCount(0);
+      expect(graphqlErrors, 'the profile requests complete with zero GraphQL errors').toEqual([]);
+    });
+  });
+
+  test('US2-AS3 — an unrelated visitor sees none of the ACCOUNT VC, ACCOUNT pack or HIDDEN pack', async ({
+    page,
+  }) => {
+    const org = scenario!.organization;
+    await openProfile(page, `/organization/${org.nameId}`, org.profile.displayName);
+    // Positive control: the membership tab rendered before asserting absences.
+    await expect(tab(page, TAB.org.memberOf)).toBeVisible();
+    await expect(tab(page, TAB.org.other)).toHaveCount(0);
+    for (const name of [PACK_ACCOUNT, PACK_HIDDEN, VC_ACCOUNT]) {
+      await expect(text(page, name)).toHaveCount(0);
+    }
+  });
+
+  test('US2-AS4 — on a user profile the ACCOUNT tier is the owner alone: a visitor gets no Other Resources tab', async ({
+    page,
+  }) => {
+    const user = owner!;
+    await openProfile(page, `/user/${user.nameID}`, user.displayName);
+    await expect(tabs(page)).toHaveText([TAB.user.memberOf]);
+    await expect(tab(page, TAB.user.other)).toHaveCount(0);
+    await expect(text(page, PACK_OWNER)).toHaveCount(0);
+  });
+
+  test('US2-AS5 — once the association is removed the ACCOUNT items are no longer listed', async ({
+    browser,
+  }) => {
+    failOnError(
+      'remove associate role',
+      await removeRoleFromUser(
+        associate!.id,
+        scenario!.organization.roleSetId,
+        RoleName.Associate
+      )
+    );
+    await asViewer(browser, associate!.email, async page => {
+      const org = scenario!.organization;
+      await openProfile(page, `/organization/${org.nameId}`, org.profile.displayName);
+      await expect(tab(page, TAB.org.memberOf)).toBeVisible();
+      await expect(tab(page, TAB.org.other)).toHaveCount(0);
+      for (const name of [PACK_ACCOUNT, VC_ACCOUNT]) {
+        await expect(text(page, name)).toHaveCount(0);
+      }
+    });
+  });
+});
+
+// ===========================================================================
+// US3 — the owner side keeps its full, unfiltered view (@forge-acceptance)
+// Own fixtures: a USER account (U1) and an ORGANISATION account (O-H), each
+// owning a HIDDEN pack and a HIDDEN VC; the org also owns a PUBLIC pack (the
+// positive control that keeps the tab present for a plain associate).
+// Viewers: the owner, an org admin, a plain associate, and the platform roles
+// that resolve the account today (Platform Users Admin, License Manager,
+// Resource Admin). PT-1o / PT-2o / PT-4o / PT-5o / PT-6o above are US3-AS3.
+// ===========================================================================
+test.describe('US3 — the owner side keeps its full view', { tag: '@forge-acceptance' }, () => {
+  let scenario: OrganizationWithSpaceModel | undefined;
+  let u1: SeededUser | undefined;
+  let u1PackId: string | undefined;
+  let u1VcId: string | undefined;
+  let packPublicId: string | undefined;
+  let packHiddenId: string | undefined;
+  let vcHiddenId: string | undefined;
+  let adminH: SeededUser | undefined;
+  let associateH: SeededUser | undefined;
+  let usersAdmin: SeededUser | undefined;
+  let licenseManager: SeededUser | undefined;
+  let resourceAdmin: SeededUser | undefined;
+
+  const N = {
+    u1Pack: `US3 u1 pack hidden ${RUN}`,
+    u1Vc: `US3 u1 vc hidden ${RUN}`,
+    pub: `US3 org pack public ${RUN}`,
+    hid: `US3 org pack hidden ${RUN}`,
+    vc: `US3 org vc hidden ${RUN}`,
+  };
+
+  const removePlatformRoleFrom = async (actorID: string, role: RoleName) =>
+    adminGql(
+      'mutation($roleData: RemovePlatformRoleInput!) { removePlatformRoleFromUser(roleData: $roleData) { id } }',
+      { roleData: { actorID, role } }
+    );
+
+  const createHiddenPack = async (
+    accountId: string,
+    displayName: string,
+    nameID: string,
+    searchVisibility: SearchVisibility
+  ): Promise<string> => {
+    const pack = await createInnovationPack(accountId, displayName, nameID);
+    failOnError(`create ${displayName}`, pack);
+    const id = pack.data?.createInnovationPack.id;
+    if (!id) throw new Error(`pack id missing for ${displayName}`);
+    failOnError(
+      `${displayName} ${searchVisibility}`,
+      await updateInnovationPackVisibility(id, { searchVisibility })
+    );
+    return id;
+  };
+
+  const createVc = async (
+    accountId: string,
+    displayName: string,
+    nameID: string,
+    searchVisibility: SearchVisibility
+  ): Promise<string> => {
+    const vc = await createVirtualContributor(accountId, {
+      profileDisplayName: displayName,
+      nameID,
+      aiPersona: { engine: 'EXPERT' },
+      bodyOfKnowledgeType: 'ALKEMIO_SPACE',
+      bodyOfKnowledgeID: scenario!.space.id,
+    });
+    failOnError(`create VC ${displayName}`, vc);
+    const id = vc.data?.createVirtualContributor.id;
+    if (!id) throw new Error(`VC id missing for ${displayName}`);
+    failOnError(
+      `${displayName} ${searchVisibility}`,
+      await updateVirtualContributorVisibility(id, { searchVisibility })
+    );
+    return id;
+  };
+
+  /** Collects the GraphQL error payloads a page receives. */
+  const trackGraphqlErrors = (page: Page): string[] => {
+    const errors: string[] = [];
+    page.on('response', async res => {
+      if (!res.url().includes('graphql')) return;
+      try {
+        const body = await res.json();
+        if (Array.isArray(body?.errors) && body.errors.length > 0) {
+          errors.push(JSON.stringify(body.errors.map((e: { message: string }) => e.message)));
+        }
+      } catch {
+        // not a JSON response
+      }
+    });
+    return errors;
+  };
+
+  const openOtherResources = async (
+    page: Page,
+    path: string,
+    displayName: string
+  ): Promise<void> => {
+    await openProfile(page, path, displayName);
+    await tab(page, TAB.org.other).click();
+    await expect(tab(page, TAB.org.other)).toHaveAttribute('aria-selected', 'true');
+  };
+
+  test.beforeAll(async () => {
+    test.setTimeout(300_000);
+    scenario = await TestScenarioFactory.createBaseScenario({
+      name: `us3-${RUN}`,
+      space: spaceInput,
+    });
+    const org = scenario.organization;
+    const plan = await getLicensePlanByName('ACCOUNT_LICENSE_PLUS');
+    if (!plan[0]) throw new Error('ACCOUNT_LICENSE_PLUS plan not found');
+
+    u1 = await seedUser(`US3 Owner ${RUN}`);
+    failOnError(
+      'license plan on U1 account',
+      await assignLicensePlanToAccount(u1.accountId, plan[0].id)
+    );
+    u1PackId = await createHiddenPack(u1.accountId, N.u1Pack, `us3-u1p-${RUN}`, SearchVisibility.Hidden);
+    u1VcId = await createVc(u1.accountId, N.u1Vc, `us3-u1v-${RUN}`, SearchVisibility.Hidden);
+
+    packPublicId = await createHiddenPack(org.accountId, N.pub, `us3-opp-${RUN}`, SearchVisibility.Public);
+    packHiddenId = await createHiddenPack(org.accountId, N.hid, `us3-oph-${RUN}`, SearchVisibility.Hidden);
+    vcHiddenId = await createVc(org.accountId, N.vc, `us3-ovh-${RUN}`, SearchVisibility.Hidden);
+
+    adminH = await seedUser(`US3 AdminO ${RUN}`);
+    for (const role of [RoleName.Associate, RoleName.Admin]) {
+      failOnError(`admin ${role}`, await assignRoleToUser(adminH.id, org.roleSetId, role));
+    }
+    associateH = await seedUser(`US3 AssocO ${RUN}`);
+    failOnError(
+      'associate role',
+      await assignRoleToUser(associateH.id, org.roleSetId, RoleName.Associate)
+    );
+    usersAdmin = await seedUser(`US3 UsersAdmin ${RUN}`);
+    failOnError('Platform Users Admin', await assignPlatformRole(usersAdmin.id, RoleName.PlatformUsersAdmin));
+    licenseManager = await seedUser(`US3 LicMgr ${RUN}`);
+    failOnError('Platform License Manager', await assignPlatformRole(licenseManager.id, RoleName.PlatformLicenseManager));
+    resourceAdmin = await seedUser(`US3 ResAdmin ${RUN}`);
+    failOnError('Platform Resource Admin', await assignPlatformRole(resourceAdmin.id, RoleName.PlatformResourceAdmin));
+  });
+
+  test.afterAll(async () => {
+    test.setTimeout(240_000);
+    await runTeardown([
+      ...(
+        [
+          [usersAdmin, RoleName.PlatformUsersAdmin],
+          [licenseManager, RoleName.PlatformLicenseManager],
+          [resourceAdmin, RoleName.PlatformResourceAdmin],
+        ] as const
+      ).map(([u, role]): [string, () => Promise<unknown>] => [
+        `role ${role}`,
+        async () => u && removePlatformRoleFrom(u.id, role),
+      ]),
+      ...[u1PackId, packPublicId, packHiddenId].map((id): [string, () => Promise<unknown>] => [
+        'pack',
+        async () => id && failOnError('delete pack', await deleteInnovationPack(id)),
+      ]),
+      // The VCs go before their body-of-knowledge Space.
+      ...[u1VcId, vcHiddenId].map((id): [string, () => Promise<unknown>] => [
+        'VC',
+        async () => id && failOnError('delete VC', await deleteVirtualContributor(id)),
+      ]),
+      ...[u1, adminH, associateH, usersAdmin, licenseManager, resourceAdmin].map(
+        (u): [string, () => Promise<unknown>] => [
+          `user ${u?.displayName}`,
+          async () => u && deleteFixtureUser(u.id),
+        ]
+      ),
+      ['scenario', () => removeScenario(scenario)],
+    ]);
+  });
+
+  test('US3-AS1 — U1 on their own profile sees their HIDDEN pack and HIDDEN VC', async ({
+    browser,
+  }) => {
+    await asViewer(browser, u1!.email, async page => {
+      const errors = trackGraphqlErrors(page);
+      await openOtherResources(page, `/user/${u1!.nameID}`, u1!.displayName);
+      await expect(h3(page, 'Template Packs')).toBeVisible();
+      await expect(h4(page, N.u1Pack)).toBeVisible();
+      await expect(h3(page, 'Virtual Contributors')).toBeVisible();
+      await expect(h4(page, N.u1Vc)).toBeVisible();
+      expect(errors, 'the profile must load without GraphQL errors').toEqual([]);
+    });
+  });
+
+  test('US3-AS2 — an org admin sees the HIDDEN pack and the HIDDEN VC card without error; a plain associate sees neither', async ({
+    browser,
+  }) => {
+    const org = scenario!.organization;
+    await asViewer(browser, adminH!.email, async page => {
+      const errors = trackGraphqlErrors(page);
+      await openOtherResources(page, `/organization/${org.nameId}`, org.profile.displayName);
+      await expect(h4(page, N.pub)).toBeVisible();
+      await expect(h4(page, N.hid)).toBeVisible();
+      await expect(h3(page, 'Virtual Contributors')).toBeVisible();
+      await expect(h4(page, N.vc)).toBeVisible();
+      expect(errors, 'the admin view must load without GraphQL errors').toEqual([]);
+    });
+    await asViewer(browser, associateH!.email, async page => {
+      const errors = trackGraphqlErrors(page);
+      await openOtherResources(page, `/organization/${org.nameId}`, org.profile.displayName);
+      // Positive control first, then the absences it makes meaningful.
+      await expect(h4(page, N.pub)).toBeVisible();
+      await expect(h4(page, N.hid)).toHaveCount(0);
+      await expect(h3(page, 'Virtual Contributors')).toHaveCount(0);
+      await expect(text(page, N.vc)).toHaveCount(0);
+      expect(errors, 'the associate view must load without GraphQL errors').toEqual([]);
+    });
+  });
+
+  test('US3-AS4 — a Platform Users Admin on U1 and a License Manager on O-H see the HIDDEN items in the UI', async ({
+    browser,
+  }) => {
+    const org = scenario!.organization;
+    await asViewer(browser, usersAdmin!.email, async page => {
+      await openOtherResources(page, `/user/${u1!.nameID}`, u1!.displayName);
+      await expect(h4(page, N.u1Pack)).toBeVisible();
+      await expect(h4(page, N.u1Vc)).toBeVisible();
+    });
+    await asViewer(browser, licenseManager!.email, async page => {
+      await openOtherResources(page, `/organization/${org.nameId}`, org.profile.displayName);
+      await expect(h4(page, N.hid)).toBeVisible();
+      await expect(h4(page, N.vc)).toBeVisible();
+    });
+  });
+
+  test('US3-AS4 — API: platform-role viewers get the full hostedResources list and their account still resolves; an associate gets the filtered list and no account', async () => {
+    const org = scenario!.organization;
+    type Resources = {
+      account: { id: string } | null;
+      hostedResources: {
+        virtualContributors: { id: string }[];
+        innovationPacks: { id: string }[];
+      } | null;
+    };
+    const read = async (
+      kind: 'user' | 'organization',
+      id: string,
+      email: string
+    ): Promise<Resources> => {
+      const res = await postGraphqlRaw<{ lookup: Record<string, Resources> }>(
+        `query($id: UUID!){ lookup { ${kind}(ID: $id) { account { id } hostedResources { virtualContributors { id } innovationPacks { id } } } } }`,
+        { variables: { id }, bearerToken: await getUserToken(email) }
+      );
+      expect(res.body.errors, `${email}: ${kind} lookup must not error`).toBeUndefined();
+      return res.body.data!.lookup[kind];
+    };
+    const ids = (items: { id: string }[] | undefined): string[] => (items ?? []).map(i => i.id).sort();
+
+    const onUser = await read('user', u1!.id, usersAdmin!.email);
+    expect(onUser.account?.id, 'Platform Users Admin still resolves the user account').toBe(u1!.accountId);
+    expect(ids(onUser.hostedResources?.innovationPacks)).toEqual([u1PackId]);
+    expect(ids(onUser.hostedResources?.virtualContributors)).toEqual([u1VcId]);
+
+    for (const viewer of [licenseManager!, resourceAdmin!]) {
+      const onOrg = await read('organization', org.id, viewer.email);
+      expect(onOrg.account?.id, `${viewer.displayName} still resolves the organisation account`).toBe(org.accountId);
+      expect(ids(onOrg.hostedResources?.innovationPacks)).toEqual([packPublicId, packHiddenId].sort());
+      expect(ids(onOrg.hostedResources?.virtualContributors)).toEqual([vcHiddenId]);
+    }
+
+    // Negative control: a plain associate keeps the filtered list and no account.
+    const plain = await read('organization', org.id, associateH!.email);
+    expect(plain.account).toBeNull();
+    expect(ids(plain.hostedResources?.innovationPacks)).toEqual([packPublicId]);
+    expect(plain.hostedResources?.virtualContributors).toEqual([]);
   });
 });
