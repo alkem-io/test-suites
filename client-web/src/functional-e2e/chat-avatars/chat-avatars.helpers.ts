@@ -424,7 +424,13 @@ export async function ensureConversationList(page: Page): Promise<void> {
   if (await back.isVisible().catch(() => false)) {
     await back.click();
   }
-  await expect(conversationRows(page).first()).toBeVisible({ timeout: 15000 });
+  // "List view reached" is either a row or the list's own empty state: since
+  // client-web#10434 (v0.169.1) hid the pinned guidance conversation, a fresh
+  // persona has no rows at all, and the old row-only wait timed out on every
+  // first createConversation (nightly 2026-10-20).
+  await expect(
+    conversationRows(page).first().or(chatPanel(page).getByText('No conversations yet'))
+  ).toBeVisible({ timeout: 15000 });
 }
 
 /** Every conversation row in the list view. */

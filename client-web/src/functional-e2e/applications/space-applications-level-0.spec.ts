@@ -1,11 +1,12 @@
 // spec: client-web/src/functional-e2e/applications/test-plan-applications-v2.md
 // seed: client-web/src/functional-e2e/applications/seed-applications.spec.ts
 
-import { test, expect, Page } from '@playwright/test';
+import { test, expect, Page, Locator } from '@playwright/test';
 import {
   TestScenarioFactory,
   TestUser,
   TestScenarioConfig,
+  getGraphqlClient,
 } from '@alkemio/tests-lib';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import {
@@ -14,6 +15,12 @@ import {
 } from '@alkemio/client-lib';
 import { loginViaCrd } from '../helpers/login.helper';
 import { enableApplicationNotifications } from '../helpers/notification-settings.helper';
+import { graphqlErrorWrapper } from '@alkemio/tests-lib/utils/graphql.wrapper';
+import {
+  applyFlowSettled,
+  expectNoApplyControl,
+  setMembershipPolicy,
+} from './applications.helpers';
 
 const password = process.env.AUTH_TEST_HARNESS_PASSWORD || 'change_me';
 const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
@@ -183,9 +190,26 @@ test.describe('Level 0 Space - Applications', () => {
       await closeButton.click();
 
       // 7. Verify the application was submitted successfully
-      // Note: Based on manual testing, the UI currently allows re-applying,
-      // so we verify that the success message appeared, which confirms submission
       await expect(successHeading).not.toBeVisible();
+
+      // 8. 10419 IO-5: the just-submitted application flips the About dialog's
+      // action to the disabled "Application pending" (the optimistic
+      // `hasApplied` path), and "Apply" is gone.
+      const aboutDialog = page.getByRole('dialog').filter({
+        has: page.getByRole('heading', {
+          name: baseScenario.space.about.profile.displayName,
+          level: 2,
+        }),
+      });
+      const pendingButton = aboutDialog.getByRole('button', {
+        name: 'Application pending',
+        exact: true,
+      });
+      await expect(pendingButton).toBeVisible();
+      await expect(pendingButton).toBeDisabled();
+      await expect(
+        aboutDialog.getByRole('button', { name: 'Apply', exact: true })
+      ).toHaveCount(0);
     });
 
     test('1.2 View Pending Applications as Space Admin', async () => {
@@ -665,6 +689,279 @@ test.describe('Level 0 Space - Applications', () => {
       await expect(notificationsPanel).toContainText(
         /Welcome to the community/i
       );
+    });
+  });
+  // 10419 cases live in this (L0-named) file by the requester's choice; IO-2
+  // and IO-3 deliberately exercise L1 surfaces. Plan: test-plan-applications-v2.md
+  // "No dead-end apply control on invitation-only spaces (client-web#10419)".
+  test.describe('Invitation-only — no dead-end apply control (client-web#10419)', () => {
+    let fixture: OrganizationWithSpaceModel;
+
+    test.beforeAll(async () => {
+      // L0 + L1 creation.
+      test.setTimeout(60_000);
+      // No `settings.collaboration` on either level: the factory applies it in
+      // a later updateSpaceSettings call that resets membership.policy to OPEN.
+      fixture = await TestScenarioFactory.createBaseScenario({
+        name: 'apps-invitation-only',
+        space: {
+          collaboration: { addTutorialCallouts: false },
+          community: {
+            admins: [TestUser.SPACE_ADMIN],
+            members: [TestUser.SPACE_ADMIN],
+          },
+          settings: {
+            privacy: { mode: SpacePrivacyMode.Public },
+            membership: {
+              policy: CommunityMembershipPolicy.Invitations,
+              allowSubspaceAdminsToInviteMembers: true,
+            },
+          },
+          subspace: {
+            settings: {
+              privacy: { mode: SpacePrivacyMode.Public },
+              membership: { policy: CommunityMembershipPolicy.Invitations },
+            },
+          },
+        },
+      });
+    });
+
+    test.afterAll(async () => {
+      await TestScenarioFactory.cleanUpBaseScenario(fixture);
+    });
+
+    const aboutDialogOf = (page: Page, displayName: string) =>
+      page.getByRole('dialog').filter({
+        has: page.getByRole('heading', { name: displayName, level: 2 }),
+      });
+
+    // The sidebar (desktop) is mounted twice (a display:none drawer copy);
+    // role locators skip the hidden one.
+    const expectSidebarSettled = async (page: Page) => {
+      const sidebar = page.getByRole('navigation', { name: 'Space sidebar' });
+      await expect(
+        sidebar.getByRole('button', { name: 'About this Space' })
+      ).toBeVisible();
+      await expect(
+        sidebar.getByRole('status', { name: 'Loading membership status' })
+      ).toHaveCount(0);
+      return sidebar;
+    };
+
+    test('10419 IO-1 invitation-only L0: no apply control in the Space sidebar or the Space About dialog', async () => {
+      const page = nonSpaceMemberPage;
+      const { space } = fixture;
+      await setMembershipPolicy(space.id, CommunityMembershipPolicy.Invitations);
+
+      // Sidebar, on the plain page route (never while a dialog is open: the
+      // page behind a Radix dialog is aria-hidden and would pass vacuously).
+      const sidebarFlow = applyFlowSettled(page);
+      try {
+        await page.goto(`${baseUrl}/${space.nameId}`);
+        const sidebar = await expectSidebarSettled(page);
+        await sidebarFlow.settled();
+        await expectNoApplyControl(sidebar);
+      } finally {
+        sidebarFlow.dispose();
+      }
+
+      // Space About dialog.
+      const aboutFlow = applyFlowSettled(page);
+      try {
+        await page.goto(`${baseUrl}/${space.nameId}/about`);
+        const dialog = aboutDialogOf(page, space.about.profile.displayName);
+        await expect(dialog).toBeVisible();
+        await aboutFlow.settled();
+        await expectNoApplyControl(dialog);
+      } finally {
+        aboutFlow.dispose();
+      }
+    });
+
+    test('10419 IO-2 invitation-only L1 under invitation-only L0: no control on the subspace banner or in the Subspace About dialog', async () => {
+      const page = nonSpaceMemberPage;
+      const { space, subspace } = fixture;
+      // L0 first, then L1.
+      await setMembershipPolicy(space.id, CommunityMembershipPolicy.Invitations);
+      await setMembershipPolicy(
+        subspace.id,
+        CommunityMembershipPolicy.Invitations
+      );
+
+      const subspaceUrl = `${baseUrl}/${space.nameId}/challenges/${subspace.nameId}`;
+      const subspaceName = subspace.about.profile.displayName;
+
+      // Banner, on the plain page route (no dialog open).
+      const bannerFlow = applyFlowSettled(page, subspace.id);
+      try {
+        await page.goto(subspaceUrl);
+        await expect(
+          page,
+          'a non-member must land on the subspace page, not be redirected to /about'
+        ).not.toHaveURL(/\/about$/);
+        await expect(
+          page.getByRole('heading', { level: 1, name: subspaceName })
+        ).toBeVisible();
+        await expect(
+          page.getByRole('navigation', { name: 'Innovation flow phases' })
+        ).toBeVisible();
+        await bannerFlow.settled();
+        await expectNoApplyControl(page);
+      } finally {
+        bannerFlow.dispose();
+      }
+
+      // Subspace About dialog.
+      const aboutFlow = applyFlowSettled(page, subspace.id);
+      try {
+        await page.goto(`${subspaceUrl}/about`);
+        const dialog = aboutDialogOf(page, subspaceName);
+        await expect(dialog).toBeVisible();
+        await aboutFlow.settled();
+        await expectNoApplyControl(dialog);
+      } finally {
+        aboutFlow.dispose();
+      }
+    });
+
+    test('10419 IO-3 applications enabled: "Apply" shows on the subspace banner', async () => {
+      const page = nonSpaceMemberPage;
+      const { space, subspace } = fixture;
+      await setMembershipPolicy(space.id, CommunityMembershipPolicy.Applications);
+      await setMembershipPolicy(
+        subspace.id,
+        CommunityMembershipPolicy.Applications
+      );
+
+      const flow = applyFlowSettled(page, subspace.id);
+      try {
+        await page.goto(
+          `${baseUrl}/${space.nameId}/challenges/${subspace.nameId}`
+        );
+        await expect(page).not.toHaveURL(/\/about$/);
+        await expect(
+          page.getByRole('heading', {
+            level: 1,
+            name: subspace.about.profile.displayName,
+          })
+        ).toBeVisible();
+        await expect(
+          page.getByRole('navigation', { name: 'Innovation flow phases' })
+        ).toBeVisible();
+        await flow.settled();
+
+        // Not clicked: the parent-apply path opens a PreApplicationDialog,
+        // which is out of scope here.
+        const apply = page.getByRole('button', { name: 'Apply', exact: true });
+        await expect(apply).toBeVisible();
+        await expect(apply).toBeEnabled();
+        await expect(apply).toHaveCount(1);
+        await expect(
+          page.getByRole('button', { name: 'Apply not available', exact: true })
+        ).toHaveCount(0);
+      } finally {
+        flow.dispose();
+      }
+    });
+
+    test('10419 IO-4 a pending application keeps "Application pending", with applications enabled and after the space turns invitation-only', async () => {
+      // Own L0 (no subspace): the persona's application must not leak into
+      // the shared invitation-only fixture.
+      test.setTimeout(90_000);
+      const page = nonSpaceMemberPage;
+      const scenario = await TestScenarioFactory.createBaseScenario({
+        name: 'apps-pending-invitation-only',
+        space: {
+          collaboration: { addTutorialCallouts: false },
+          community: {
+            admins: [TestUser.SPACE_ADMIN],
+            members: [TestUser.SPACE_ADMIN],
+          },
+          settings: {
+            privacy: { mode: SpacePrivacyMode.Public },
+            membership: { policy: CommunityMembershipPolicy.Applications },
+          },
+        },
+      });
+
+      try {
+        const { space } = scenario;
+        const applied = await graphqlErrorWrapper(
+          token =>
+            getGraphqlClient().applyForEntryRole(
+              {
+                applicationData: {
+                  roleSetID: space.community.roleSetId,
+                  questions: [
+                    { name: 'Test Question 1', value: '10419 pending', sortOrder: 0 },
+                  ],
+                },
+              },
+              { authorization: `Bearer ${token}` }
+            ),
+          TestUser.NON_SPACE_MEMBER
+        );
+        // graphqlErrorWrapper can retry a committed mutation, so an
+        // "open application" error also means the application exists.
+        if (
+          !applied.data?.applyForEntryRoleOnRoleSet?.id &&
+          !/open application/i.test(JSON.stringify(applied.error))
+        ) {
+          throw new Error(
+            `Could not apply as ${TestUser.NON_SPACE_MEMBER}: ${JSON.stringify(applied.error)}`
+          );
+        }
+
+        const expectPendingOnly = async (scope: Locator) => {
+          const pending = scope.getByRole('button', {
+            name: 'Application pending',
+            exact: true,
+          });
+          await expect(pending).toBeVisible();
+          await expect(pending).toBeDisabled();
+          await expect(pending).toHaveCount(1);
+          await expect(
+            scope.getByRole('button', { name: 'Apply', exact: true })
+          ).toHaveCount(0);
+          await expect(
+            scope.getByRole('button', { name: 'Apply not available', exact: true })
+          ).toHaveCount(0);
+        };
+
+        const expectPendingOnBothSurfaces = async () => {
+          // Sidebar.
+          const sidebarFlow = applyFlowSettled(page);
+          try {
+            await page.goto(`${baseUrl}/${space.nameId}`);
+            const sidebar = await expectSidebarSettled(page);
+            await sidebarFlow.settled();
+            await expectPendingOnly(sidebar);
+          } finally {
+            sidebarFlow.dispose();
+          }
+          // Space About dialog.
+          const aboutFlow = applyFlowSettled(page);
+          try {
+            await page.goto(`${baseUrl}/${space.nameId}/about`);
+            const dialog = aboutDialogOf(page, space.about.profile.displayName);
+            await expect(dialog).toBeVisible();
+            await aboutFlow.settled();
+            await expectPendingOnly(dialog);
+          } finally {
+            aboutFlow.dispose();
+          }
+        };
+
+        // Row A: applications enabled.
+        await expectPendingOnBothSurfaces();
+
+        // Row B: the space turns invitation-only after the application.
+        await setMembershipPolicy(space.id, CommunityMembershipPolicy.Invitations);
+        await expectPendingOnBothSurfaces();
+      } finally {
+        await TestScenarioFactory.cleanUpBaseScenario(scenario);
+      }
     });
   });
 });

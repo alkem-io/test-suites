@@ -113,3 +113,22 @@ Searched by entity/operation/copy across `server-api/src/functional-api/journey/
 | Client-web rendering of a promoted space's phases (does the UI actually *show* the carried-over names/sidebar correctly, no stale cache) | client-web is unchanged in this diff and out of `REPOS IN SCOPE`; but it's the original bug report's symptom | **Manual** — M-1, ACC (visual oracle only reachable by eyeballing the UI) |
 
 **What is genuinely proven:** after this work, the API-level suite proves the L1's flow states, current-state pointer, and per-state settings survive promotion verbatim, that no platform-default phase appears, and that the R-22 wholesale-replacement mechanism generalizes correctly to an L0 target with its callouts re-homed as designed. **What is not proven by automation:** the exact 1..8 boundary values at the system level (unit-only), and the migration's behaviour against ACC's actual data shapes (no DB access from this suite) — both are carried as scripted manual rows for the QA lead's Release 74 ACC pass, not left as silent gaps.
+
+---
+
+## Addendum — server#6614: the replaced license is deleted on promotion
+
+> **Addendum status:** Approved — QA lead, in-session, 2026-10-16. The 2026-09-03 approval above did not cover this section; it was signed off separately. · **Story:** [server#6614](https://github.com/alkem-io/server/issues/6614) §C · fix [server#6637](https://github.com/alkem-io/server/pull/6637) (`08f088eaa`, on develop, in no release tag) · **Owning plan:** `../../orphan-free-deletion/orphan-free-deletion-test-plan.md` (risks 5–6)
+
+`convertSpaceL1ToSpaceL0` assigns the promoted L0 a fresh license (fail-closed, Free) and now
+deletes the replaced subspace license and its policy **in the save's transaction**. Before
+the fix both were orphaned (6 since April on ACC data).
+
+| Risk | Covered by | Gap |
+|---|---|---|
+| Old license and its policy survive promotion (§C) | **CV-1** (built), `convert-L1-to-L0-basic.it-spec.ts › … › replaced subspace license and its policy are deleted (server#6614)`. It reuses the file's setup and captures the subspace `license { id authorization { id } }` before the convert | none once built |
+| The new license is not applied, or the promotion fails (new transaction) | existing › `promoted L0 has a Free license and does not inherit the parent Plus license`, plus every conversion spec exercising the mutation | rollback on a failed license delete: unit only (`conversion.service.spec.ts`), no fault injection |
+
+Existing tests invalidated: **none**. The Free-license assertion stays correct: the fix keeps
+the fresh-license behaviour. Run against develop, because ACC is red until a release tag
+contains `08f088eaa`.
