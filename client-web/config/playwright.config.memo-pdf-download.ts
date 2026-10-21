@@ -5,10 +5,12 @@ import { baseConfig, suite } from './playwright.shared';
 //
 //   pnpm run test:memo-pdf-download          (from client-web/)
 //
-// The access walk provisions its own throwaway identities through the Kratos
-// ADMIN API (`KRATOS_ADMIN_URL`, `ALKEMIO_ADMIN_PASSWORD`) and the download walk
-// needs a stack running the memo PDF export, so the folder is kept out of the
-// default suite (`playwright.config.ts` ignores it) and out of the nightly.
+// Runs both walks. The access walk (US2) provisions its own throwaway
+// identities through the Kratos ADMIN API (`KRATOS_ADMIN_URL`,
+// `ALKEMIO_ADMIN_PASSWORD`), so the folder is kept out of the default suite
+// (`playwright.config.ts` ignores it). The nightly runs the download walk (US1)
+// only, as its `Memo PDF download` project. Both need poppler-utils
+// (pdftotext, pdffonts) on the runner.
 // The download walk signs in as the harness personas (space.member, space.admin,
 // the platform admin), so the shared globalSetup registers them and clears stale
 // persona sessions; the access walk provisions its own identities.

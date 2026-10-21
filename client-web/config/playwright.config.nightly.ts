@@ -282,6 +282,19 @@ export default defineConfig(
         ],
         tier: 'extended',
       }),
+      suite({
+        // workspace#087 (memo PDF download, alkem-io/server#6660): US1 walks a
+        // reader's download on a self-seeded Space with the harness personas.
+        // Its content checks read the PDF with poppler (pdftotext, pdffonts),
+        // which nightly-client-tests.yml installs; without them they FAIL by
+        // design. US2 (access) provisions identities through the Kratos admin
+        // API, which this workflow does not expose: run it with
+        // `pnpm run test:memo-pdf-download`. Capture off: admin sessions.
+        name: 'Memo PDF download',
+        testMatch: ['/memo-pdf-download/us1-download-memo-pdf.spec.ts'],
+        tier: 'long',
+        capture: 'off',
+      }),
     ],
   })
 );
