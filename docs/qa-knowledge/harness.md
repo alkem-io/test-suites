@@ -208,6 +208,12 @@ place; cite this file instead of rediscovering a gap.
 - **In-app reads with polymorphic payloads** have no committed `lib` fragment. The working pattern is a test-local raw query (`organization-invitations.it-spec.ts:280-329`, `me.notifications(filter:{types})` + `... on InAppNotificationPayloadSpaceCommunityActor { actor { id } space { id } }`). New-member, user-outcome and organization-outcome rows all use that `SPACE_COMMUNITY_ACTOR` payload, so one outcome row is a valid positive control for a "no new-member row" negative. Rows persist across runs, so filter on this run's `space.id`.
 - **MailSlurper's connection-pool leak drops mail under burst.** Keep each case at ≤ ~5 mails, assert per recipient + exact subject rather than inbox totals, and rerun a missing-positive once before filing it.
 
+
+### Memo walks (established 2026-10-21, test-suites#678)
+
+- **A memo on a scenario Space has ONE editor at a time.** Without the `SPACE_FLAG_MEMO_MULTI_USER` entitlement (server `memo.service.ts › isMultiUser`, read by the collaboration service on connect), only the first connection to the memo room may edit. Every later connection gets a read-only editor (`contenteditable="false"`) and the footer "You don't have permission to edit this memo. Ask the owner, …". That message is shown even to the memo's author, and even when GraphQL `myPrivileges` lists `UPDATE_CONTENT`. A two-user memo walk must open the **editing** user first, and assert that its editor is editable and holds the typed text before reading it anywhere else. US1-AS4 of `memo-pdf-download/` was red on develop for exactly this reason.
+- **PDF content oracles use poppler** (`pdftotext -layout`, `pdffonts`), from `poppler-utils`. GitHub's `ubuntu-latest` runner does not ship it, so `nightly-client-tests.yml` installs it. A spec that reads PDFs must fail, not skip, when the binary is missing.
+
 ---
 
 ## Sidebar search widget (055) — designer notes, 2026-09-03
