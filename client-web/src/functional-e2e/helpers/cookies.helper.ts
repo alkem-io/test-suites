@@ -16,7 +16,9 @@ export const COOKIE_CONSENT_COOKIE = {
 };
 
 /** Grants cookie consent up front, before the first navigation. */
-export async function grantCookieConsent(context: BrowserContext): Promise<void> {
+export async function grantCookieConsent(
+  context: BrowserContext
+): Promise<void> {
   await context.addCookies([COOKIE_CONSENT_COOKIE]);
 }
 
@@ -24,13 +26,25 @@ export async function grantCookieConsent(context: BrowserContext): Promise<void>
  * Dismisses the consent banner if it is on screen. For flows that must start
  * from a virgin context (cookie-consent and anonymous walks); everything else
  * should seed consent with `grantCookieConsent` and never see the banner.
- * No fixed wait: the banner is either already rendered with the page or it is
- * not shown at all.
+ *
+ * When the context carries no consent cookie the banner WILL mount, but after
+ * the SPA's first render — an instantaneous check can run before it exists and
+ * leave it covering the bottom of the page for a later click (nightly
+ * 2026-10-20: "Open chat" sat under it for three minutes). So the wait for the
+ * banner is bounded, and skipped entirely once consent is recorded.
  */
 export async function acceptCookiesIfVisible(page: Page): Promise<void> {
+  const answered = (await page.context().cookies()).some(
+    cookie => cookie.name === COOKIE_CONSENT_COOKIE.name
+  );
+  if (answered) return;
+
   const acceptCookiesButton = page
     .getByRole('button', { name: /accept all cookies/i })
     .first();
+  await acceptCookiesButton
+    .waitFor({ state: 'visible', timeout: 10_000 })
+    .catch(() => undefined);
   if (await acceptCookiesButton.isVisible().catch(() => false)) {
     await acceptCookiesButton.click();
     await acceptCookiesButton.waitFor({ state: 'hidden' });
