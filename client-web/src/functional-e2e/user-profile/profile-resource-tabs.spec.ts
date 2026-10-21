@@ -877,7 +877,8 @@ test.describe('Public profile resource tabs — organisation (client-web#10179)'
 // an unrelated registered visitor PUBLIC only (the store listing does not
 // count), an associate PUBLIC + ACCOUNT, an admin everything. A guest sees the
 // sign-up notice instead of any resource, whether the organisation owns
-// anything or not.
+// anything or not. Org G owns only an ACCOUNT and a HIDDEN pack, so a visitor
+// gets no Other Resources tab there at all.
 test.describe('Public profile resource tabs — visibility tiers', () => {
   let scenarioE: OrganizationWithSpaceModel | undefined; // org E: member only, the tier fixtures
   let packPublicId: string | undefined;
@@ -890,12 +891,18 @@ test.describe('Public profile resource tabs — visibility tiers', () => {
   let packAccount4Id: string | undefined;
   let orgFId: string | undefined;
   let orgF: { nameID: string; displayName: string } | undefined; // bare
+  let orgGId: string | undefined;
+  let orgG: { nameID: string; displayName: string } | undefined; // ACCOUNT + HIDDEN pack only
+  let packAccountGId: string | undefined;
+  let packHiddenGId: string | undefined;
 
   const PACK_PUBLIC = `PT pack public ${RUN}`;
   const PACK_ACCOUNT = `PT pack account ${RUN}`;
   const PACK_HIDDEN = `PT pack hidden ${RUN}`;
   const VC_ACCOUNT = `PT VC account ${RUN}`;
   const PACK_ACCOUNT_4 = `PT pack account4 ${RUN}`;
+  const PACK_ACCOUNT_G = `PT pack accountG ${RUN}`;
+  const PACK_HIDDEN_G = `PT pack hiddenG ${RUN}`;
 
   const guestNotice = (page: Page, organization: string): Locator =>
     page.getByText(
@@ -1007,6 +1014,32 @@ test.describe('Public profile resource tabs — visibility tiers', () => {
     if (!orgFId) throw new Error('org F id missing from createOrganization');
     orgF = { nameID: f.data!.createOrganization.nameID, displayName };
 
+    // Org G: no Space role, and only packs a visitor may not see.
+    const gName = `PT nonpublic org G ${RUN}`;
+    const g = await createOrganizationOrAdopt(gName, `pt-nonpub-g-${RUN}`);
+    failOnError('create org G', g);
+    orgGId = g.data?.createOrganization.id;
+    if (!orgGId) throw new Error('org G id missing from createOrganization');
+    orgG = { nameID: g.data!.createOrganization.nameID, displayName: gName };
+    const orgGAccount = await orgAccountId(orgGId);
+    failOnError(
+      'license plan on org G account',
+      await assignLicensePlanToAccount(orgGAccount, plan[0].id)
+    );
+    // Left at the ACCOUNT default; read back below.
+    packAccountGId = await createPack(
+      orgGAccount,
+      PACK_ACCOUNT_G,
+      `pt-paccg-${RUN}`,
+      undefined
+    );
+    packHiddenGId = await createPack(
+      orgGAccount,
+      PACK_HIDDEN_G,
+      `pt-phidg-${RUN}`,
+      SearchVisibility.Hidden
+    );
+
     // Precondition read-backs: fail fast and clearly.
     expect(
       await orgIsLeadOf(scenarioE.space.community.roleSetId, orgE.id),
@@ -1054,6 +1087,21 @@ test.describe('Public profile resource tabs — visibility tiers', () => {
       await accountResources(await orgAccountId(orgFId)),
       'org F account must own no VC, pack or hub'
     ).toEqual({ vcs: 0, packs: 0, hubs: 0 });
+    expect(
+      await searchVisibilityOf('innovationPack', packAccountGId),
+      'org G pack must default to ACCOUNT'
+    ).toBe(SearchVisibility.Account);
+    expect(await searchVisibilityOf('innovationPack', packHiddenGId)).toBe(
+      SearchVisibility.Hidden
+    );
+    expect(
+      await accountResources(orgGAccount),
+      'org G account must own exactly the two packs'
+    ).toEqual({ vcs: 0, packs: 2, hubs: 0 });
+    expect(
+      await rolesOf('rolesOrganization', orgGId),
+      'org G must hold no Space role'
+    ).toEqual([]);
   });
 
   test.afterAll(async () => {
@@ -1066,6 +1114,8 @@ test.describe('Public profile resource tabs — visibility tiers', () => {
           ['pack hidden', packHiddenId],
           // An account with a pack blocks user deletion: the pack goes first.
           ['pack account U4', packAccount4Id],
+          ['pack account G', packAccountGId],
+          ['pack hidden G', packHiddenGId],
         ] as const
       ).map(([label, id]): [string, () => Promise<unknown>] => [
         label,
@@ -1086,6 +1136,7 @@ test.describe('Public profile resource tabs — visibility tiers', () => {
       ),
       ['scenario E', () => removeScenario(scenarioE)],
       ['org F', async () => orgFId && failOnError('delete org F', await deleteOrganization(orgFId))],
+      ['org G', async () => orgGId && failOnError('delete org G', await deleteOrganization(orgGId))],
     ]);
   });
 
@@ -1203,6 +1254,14 @@ test.describe('Public profile resource tabs — visibility tiers', () => {
     await openProfile(page, `/user/${user.nameID}`, user.displayName);
     await expect(tabs(page)).toHaveText([TAB.user.memberOf]);
     await expect(tab(page, TAB.user.other)).toHaveCount(0);
+  });
+
+  test('PT-13 — an organisation whose account owns only an ACCOUNT and a HIDDEN pack shows a visitor no Other Resources tab', async ({
+    page,
+  }) => {
+    await openProfile(page, `/organization/${orgG!.nameID}`, orgG!.displayName);
+    await expect(tabs(page)).toHaveText([TAB.org.memberOf]);
+    await expect(tab(page, TAB.org.other)).toHaveCount(0);
   });
 
   test('PT-10 @forge-acceptance — a guest sees the sign-up notice and no Other Resources, on an organisation with resources and on a bare one alike', async ({

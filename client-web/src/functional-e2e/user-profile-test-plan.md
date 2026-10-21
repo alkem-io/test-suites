@@ -1710,7 +1710,10 @@ Proposed `release-verification-checklist.md` row: _Profile tabs (#10179): on one
 | Guest sees the sign-up notice (with a return link to the profile) above the membership tab and no Other Resources, on an org with resources and on a bare org | › _PT-10_ | E2E |
 | The notice goes away after the guest signs in as an associate | › _PT-11_ | E2E |
 | A user whose only resource is an ACCOUNT pack shows a visitor Member Of only (owner twin sees Other Resources) | › _PT-12_ | E2E |
+| An organisation whose account owns only an ACCOUNT and a HIDDEN pack shows a visitor All Memberships only: no Other Resources tab | › _PT-13_ | E2E |
 | The authorization-dependent rows of the visibility matrix (associate, org admin, unrelated, anonymous null, user-account owner / non-self, Platform Users Admin on a user account and Platform License Manager / Resource Admin on an organisation account (full view incl. a HIDDEN VC, account still resolves), role removal, two-field VC card type, full account still closed) | `server-api/src/functional-api/account/hosted-resources.it-spec.ts` | API |
+| User account seen by a non-self registered viewer: only the PUBLIC pack, no HIDDEN pack, no HIDDEN VC; by its owner: PUBLIC + HIDDEN packs and the HIDDEN VC | › _an unrelated registered user sees only a user account's PUBLIC pack…_ / _the owner of a user account sees their own PUBLIC and HIDDEN packs…_ | API |
+| A hosted hub is a closed card: introspection lists exactly `id`, `nameID`, `profile`; selecting `innovationHubs { account { innovationPacks } }` as an unrelated registered viewer is a GraphQL validation error on `account` of `AccountHostedInnovationHub`, with no data and no non-PUBLIC id in the response | › _a hosted VC and a hosted hub are closed card types…_ / _a hosted hub offers no way into its account…_ | API |
 
 Follow-ups: hosted Spaces in Other Resources (alkem-io/server#6695); opening the VC page as an associate.
 
@@ -1727,3 +1730,4 @@ Follow-ups: hosted Spaces in Other Resources (alkem-io/server#6695); opening the
 | 1.2     | 2026-10-15 | client-web#10179: PT-1..PT-6 built (3 live, 3 skipped on Q4); mapping, gaps and Q4 updated                                                                             | qa-test-implementer     |
 | 1.3     | 2026-10-20 | client-web#10179: owner-viewer twins PT-1o/PT-4o/PT-6o (2026-10-19) and PT-2o/PT-5o (2026-10-20) added; reuse, mapping, gaps and the proven/not-proven summary updated | qa-test-implementer     |
 | 1.4     | 2026-10-21 | workspace#089: PT-1/PT-4/PT-6 un-skipped (PUBLIC arrange); visibility-tier and guest walks PT-7..PT-12; hostedResources it-spec mapped | forge implementer |
+| 1.5     | 2026-10-21 | workspace#089: PT-13 (org with only non-PUBLIC packs); closed hub card + account-traversal validation rows; user-account PUBLIC pack and VC rows | forge implementer |
