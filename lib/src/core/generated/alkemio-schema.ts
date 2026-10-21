@@ -1261,6 +1261,8 @@ export type Callout = {
   createdDate: Scalars["DateTime"]["output"];
   /** The Callout Framing associated with this Callout. */
   framing: CalloutFraming;
+  /** Whether this Callout's SPACES collection is hiding at least one manually selected space from the requesting actor because they may not READ it. Always false for a SPACES collection in AUTO mode and for every other callout kind. A selection entry that has left the host space's account is stale, not hidden, and does NOT raise this flag; no count is exposed. */
+  hasHiddenSpaces: Scalars["Boolean"]["output"];
   /** The ID of the entity */
   id: Scalars["UUID"]["output"];
   /** Whether this callout is a Template or not. */
@@ -1277,7 +1279,7 @@ export type Callout = {
   reactions: Array<CalloutReaction>;
   /** Cheap always-shown summary (tier-1). Dataloader-batched; safe to select on feeds. */
   reactionsSummary: CalloutReactionsSummary;
-  /** The Callout Settings associated with this Callout. */
+  /** The Callout Settings associated with this Callout. `framing.selection.selectedIds` is returned EMPTY to actors without UPDATE on the Callout, so an empty list is AMBIGUOUS by design: it means either that nothing is selected or that the selection is withheld from you, and the two are deliberately indistinguishable, because a viewer must not learn which or how many spaces are hidden from them. Hold UPDATE and the list is exact. `framing.selection.mode` is always accurate. */
   settings: CalloutSettings;
   /** The sorting order for this Callout. */
   sortOrder: Scalars["Float"]["output"];
@@ -1536,7 +1538,7 @@ export type CalloutFraming = {
   poll?: Maybe<Poll>;
   /** The Profile for framing the associated Callout. */
   profile: Profile;
-  /** The host space's subspaces for a SPACES framing, ordered pinned-first then the space's sortOrder/displayName. Returns the existing Space type (no new item type). No server-side pagination/search: the client name-searches and paginates client-side over this set. Empty for non-SPACES framings, for a callout not attached to a space, or for a host with no subspaces. */
+  /** The spaces shown by a SPACES framing's collection, filtered to what the requesting actor may READ. In AUTO mode these are the host space's direct subspaces, ordered pinned-first then the space's sortOrder/displayName. In CUSTOM mode the list is the admin's stored selection, which may contain spaces that are NOT subspaces of the host (any space of the host space's account, at any level) and whose ORDER IS NOT MEANINGFUL — pinned/sortOrder are parent-relative, so the client is authoritative for ordering. Returns the existing Space type (no new item type). No server-side pagination/search: the client name-searches and paginates client-side over this set. Empty for non-SPACES framings, for a callout not attached to a space, for a host with no subspaces, and for a CUSTOM selection that is empty or wholly unreadable. */
   subspaces: Array<Space>;
   /** The type of the Callout Framing, the additional content attached to this callout */
   type: CalloutFramingType;
@@ -2697,6 +2699,8 @@ export type CreateCollaboraDocumentData = {
   displayName?: Maybe<Scalars["String"]["output"]>;
   /** Type of document to create. Required for blank-create. On the upload path, ignored — the type is derived from the uploaded file's sniffed MIME by file-service-go. */
   documentType?: Maybe<CollaboraDocumentType>;
+  /** Copy an existing CollaboraDocument's current content into the new document. The copy owns its own backing file from the moment it is created: editing it never changes the source, and editing the source never changes it. Mutually exclusive with the upload path. documentType, originalMimeType and displayName are inherited from the source. READ on the source is authorized server-side. */
+  sourceCollaboraDocumentID?: Maybe<Scalars["UUID"]["output"]>;
 };
 
 export type CreateCollaboraDocumentInput = {
@@ -2704,6 +2708,8 @@ export type CreateCollaboraDocumentInput = {
   displayName?: InputMaybe<Scalars["String"]["input"]>;
   /** Type of document to create. Required for blank-create. On the upload path, ignored — the type is derived from the uploaded file's sniffed MIME by file-service-go. */
   documentType?: InputMaybe<CollaboraDocumentType>;
+  /** Copy an existing CollaboraDocument's current content into the new document. The copy owns its own backing file from the moment it is created: editing it never changes the source, and editing the source never changes it. Mutually exclusive with the upload path. documentType, originalMimeType and displayName are inherited from the source. READ on the source is authorized server-side. */
+  sourceCollaboraDocumentID?: InputMaybe<Scalars["UUID"]["input"]>;
 };
 
 export type CreateCollaborationData = {
@@ -5665,7 +5671,7 @@ export type Mutation = {
   createTagsetOnProfile: Tagset;
   /** Add a column to a Tasks board Callout. */
   createTaskColumnOnCallout: Callout;
-  /** Creates a new Template on the specified TemplatesSet. */
+  /** Creates a new Template on the specified TemplatesSet. When `file` is supplied alongside a COLLABORA_DOCUMENT callout framing, the template is framed with a Collabora document populated from the uploaded bytes (file-service-go sniffs MIME, validates format and size, and derives the document type; any documentType in the input is ignored on the upload path; displayName defaults from the filename when absent). When `file` is omitted, the existing behaviour applies. */
   createTemplate: Template;
   /** Creates a new Template on the specified TemplatesSet using the provided ContentSpace as content. */
   createTemplateFromContentSpace: Template;
@@ -5789,6 +5795,8 @@ export type Mutation = {
   refreshAllBodiesOfKnowledge: Scalars["Boolean"]["output"];
   /** Triggers a request to the backing AI Service to refresh the knowledge that is available to it. */
   refreshVirtualContributorBodyOfKnowledge: Scalars["Boolean"]["output"];
+  /** Bind a native device push token (FCM on Android, APNs on iOS) to the current user. If the token is already bound to another user, it is rebound to the caller. */
+  registerDevicePushToken: Scalars["Boolean"]["output"];
   /** Empties the CommunityGuidelines. */
   removeCommunityGuidelinesContent: CommunityGuidelines;
   /** Remove a member from a group conversation. Awaits the Matrix removal rather than reporting success merely because the RPC was sent: true means Matrix accepted it (the member leaves the room), and the membership is then removed asynchronously — observe MEMBER_REMOVED for completion. If the Matrix removal fails (rejected — e.g. the member is no longer in the Matrix room — or the RPC times out) this still returns true, because Alkemio is authoritative for its own membership and applies the removal locally instead; on that path the Matrix-side room membership may diverge until an operator reconciles it. */
@@ -5873,6 +5881,8 @@ export type Mutation = {
   transferSpaceToAccount: Space;
   /** Transfer the specified Virtual Contributor to another Account. */
   transferVirtualContributorToAccount: InnovationPack;
+  /** Unbind a native device push token from the current user. Unknown tokens, and tokens bound to another user, are no-ops. */
+  unregisterDevicePushToken: Scalars["Boolean"]["output"];
   /** Disable a push notification subscription for the current user. The subscription is retained but will not receive notifications until re-enabled. */
   unsubscribeFromPushNotifications: PushSubscription;
   /** Update the nameID (URL path) of the specified Actor. A protected update: renaming repoints every inbound link to the entity. */
@@ -6265,6 +6275,7 @@ export type MutationCreateTaskColumnOnCalloutArgs = {
 };
 
 export type MutationCreateTemplateArgs = {
+  file?: InputMaybe<Scalars["Upload"]["input"]>;
   templateData: CreateTemplateOnTemplatesSetInput;
 };
 
@@ -6503,6 +6514,10 @@ export type MutationRefreshVirtualContributorBodyOfKnowledgeArgs = {
   refreshData: RefreshVirtualContributorBodyOfKnowledgeInput;
 };
 
+export type MutationRegisterDevicePushTokenArgs = {
+  registrationData: RegisterDevicePushTokenInput;
+};
+
 export type MutationRemoveCommunityGuidelinesContentArgs = {
   communityGuidelinesData: RemoveCommunityGuidelinesContentInput;
 };
@@ -6668,6 +6683,10 @@ export type MutationTransferSpaceToAccountArgs = {
 
 export type MutationTransferVirtualContributorToAccountArgs = {
   transferData: TransferAccountVirtualContributorInput;
+};
+
+export type MutationUnregisterDevicePushTokenArgs = {
+  registrationData: UnregisterDevicePushTokenInput;
 };
 
 export type MutationUnsubscribeFromPushNotificationsArgs = {
@@ -8262,11 +8281,20 @@ export type RefreshVirtualContributorBodyOfKnowledgeInput = {
   virtualContributorID: Scalars["UUID"]["input"];
 };
 
+export type RegisterDevicePushTokenInput = {
+  /** The native platform of the device: 'ios' or 'android'. */
+  platform: Scalars["String"]["input"];
+  /** The native push token for this device (FCM registration token on Android, APNs device token on iOS). */
+  token: Scalars["String"]["input"];
+};
+
 export type RelayPaginatedSpace = ActorFull & {
   /** About this space. */
   about: SpaceAbout;
   /** The Account that this Space is part of. */
   account: Account;
+  /** Spaces of THIS Space's account, at any level, on which the current actor holds READ - candidates for a Spaces callout's manual selection. READ, not READ_ABOUT: for a level-zero Space READ_ABOUT is granted to every actor including anonymous, so a READ_ABOUT filter would return the account's whole level-zero set to anyone. Capped at 500 as an unordered resource bound - no order is guaranteed and the picker sorts by ancestor path. Requires UPDATE on this Space. */
+  accountSpaces: Array<SpaceSelectionCandidate>;
   /** The "highest" subscription active for this Space. */
   activeSubscription?: Maybe<SpaceSubscription>;
   /** Count of visible activity events on this Space over the last 7 days, across all actors (excludes whiteboard-content-modified). Used to rank Spaces on the dashboard. */
@@ -9117,11 +9145,13 @@ export type SetPlatformWellKnownVirtualContributorInput = {
   wellKnown: VirtualContributorWellKnown;
 };
 
-/** The widgets available for the Space sidepanel, per InnovationFlow state (tab). */
+/** The widgets available for the Space sidepanel, per InnovationFlow state (tab/phase). */
 export enum SidebarWidget {
   About = "ABOUT",
+  Activity = "ACTIVITY",
   AddUser = "ADD_USER",
   ApplicationButton = "APPLICATION_BUTTON",
+  Community = "COMMUNITY",
   ContactLeads = "CONTACT_LEADS",
   CreatePost = "CREATE_POST",
   CreateSubspace = "CREATE_SUBSPACE",
@@ -9148,6 +9178,8 @@ export type Space = ActorFull & {
   about: SpaceAbout;
   /** The Account that this Space is part of. */
   account: Account;
+  /** Spaces of THIS Space's account, at any level, on which the current actor holds READ - candidates for a Spaces callout's manual selection. READ, not READ_ABOUT: for a level-zero Space READ_ABOUT is granted to every actor including anonymous, so a READ_ABOUT filter would return the account's whole level-zero set to anyone. Capped at 500 as an unordered resource bound - no order is guaranteed and the picker sorts by ancestor path. Requires UPDATE on this Space. */
+  accountSpaces: Array<SpaceSelectionCandidate>;
   /** The "highest" subscription active for this Space. */
   activeSubscription?: Maybe<SpaceSubscription>;
   /** Count of visible activity events on this Space over the last 7 days, across all actors (excludes whiteboard-content-modified). Used to rank Spaces on the dashboard. */
@@ -9311,6 +9343,18 @@ export enum SpacePrivacyMode {
   Private = "PRIVATE",
   Public = "PUBLIC",
 }
+
+/** A space of an account, reduced to what the Spaces-callout selection picker needs. */
+export type SpaceSelectionCandidate = {
+  /** This Space's current display name, from its About profile (never the actor-level profile, which is a creation-time snapshot that is not re-synced on rename). */
+  displayName: Scalars["String"]["output"];
+  /** The unique identifier of this Space. */
+  id: Scalars["UUID"]["output"];
+  /** The level of this Space (L0, L1 or L2). */
+  level: SpaceLevel;
+  /** The parent Space's id; NULL for a level-zero Space. */
+  parentSpaceID?: Maybe<Scalars["UUID"]["output"]>;
+};
 
 export type SpaceSettings = {
   /** The collaboration settings for this Space. */
@@ -9861,6 +9905,11 @@ export type TransferCalloutInput = {
   calloutID: Scalars["UUID"]["input"];
   /** The target CalloutsSet to which the Callout will be transferred. */
   targetCalloutsSetID: Scalars["UUID"]["input"];
+};
+
+export type UnregisterDevicePushTokenInput = {
+  /** The native push token to unbind from the current user. */
+  token: Scalars["String"]["input"];
 };
 
 export type UnsubscribeFromPushNotificationsInput = {
@@ -13391,6 +13440,7 @@ export type ResolversTypes = {
   >;
   Reference: ResolverTypeWrapper<Reference>;
   RefreshVirtualContributorBodyOfKnowledgeInput: RefreshVirtualContributorBodyOfKnowledgeInput;
+  RegisterDevicePushTokenInput: RegisterDevicePushTokenInput;
   RelayPaginatedSpace: ResolverTypeWrapper<
     Omit<
       RelayPaginatedSpace,
@@ -13589,6 +13639,7 @@ export type ResolversTypes = {
     }
   >;
   SpacePrivacyMode: SpacePrivacyMode;
+  SpaceSelectionCandidate: ResolverTypeWrapper<SpaceSelectionCandidate>;
   SpaceSettings: ResolverTypeWrapper<SpaceSettings>;
   SpaceSettingsCollaboration: ResolverTypeWrapper<SpaceSettingsCollaboration>;
   SpaceSettingsLayout: ResolverTypeWrapper<SpaceSettingsLayout>;
@@ -13697,6 +13748,7 @@ export type ResolversTypes = {
   TransferAccountVirtualContributorInput: TransferAccountVirtualContributorInput;
   TransferCalloutInput: TransferCalloutInput;
   UUID: ResolverTypeWrapper<Scalars["UUID"]["output"]>;
+  UnregisterDevicePushTokenInput: UnregisterDevicePushTokenInput;
   UnsubscribeFromPushNotificationsInput: UnsubscribeFromPushNotificationsInput;
   UpdateActorNameIDInput: UpdateActorNameIdInput;
   UpdateAiPersonaInput: UpdateAiPersonaInput;
@@ -14989,6 +15041,7 @@ export type ResolversParentTypes = {
   };
   Reference: Reference;
   RefreshVirtualContributorBodyOfKnowledgeInput: RefreshVirtualContributorBodyOfKnowledgeInput;
+  RegisterDevicePushTokenInput: RegisterDevicePushTokenInput;
   RelayPaginatedSpace: Omit<
     RelayPaginatedSpace,
     | "about"
@@ -15154,6 +15207,7 @@ export type ResolversParentTypes = {
     about: ResolversParentTypes["SpaceAbout"];
     communityGuidelines: ResolversParentTypes["CommunityGuidelines"];
   };
+  SpaceSelectionCandidate: SpaceSelectionCandidate;
   SpaceSettings: SpaceSettings;
   SpaceSettingsCollaboration: SpaceSettingsCollaboration;
   SpaceSettingsLayout: SpaceSettingsLayout;
@@ -15244,6 +15298,7 @@ export type ResolversParentTypes = {
   TransferAccountVirtualContributorInput: TransferAccountVirtualContributorInput;
   TransferCalloutInput: TransferCalloutInput;
   UUID: Scalars["UUID"]["output"];
+  UnregisterDevicePushTokenInput: UnregisterDevicePushTokenInput;
   UnsubscribeFromPushNotificationsInput: UnsubscribeFromPushNotificationsInput;
   UpdateActorNameIDInput: UpdateActorNameIdInput;
   UpdateAiPersonaInput: UpdateAiPersonaInput;
@@ -16414,6 +16469,11 @@ export type CalloutResolvers<
   createdBy?: Resolver<Maybe<ResolversTypes["User"]>, ParentType, ContextType>;
   createdDate?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
   framing?: Resolver<ResolversTypes["CalloutFraming"], ParentType, ContextType>;
+  hasHiddenSpaces?: Resolver<
+    ResolversTypes["Boolean"],
+    ParentType,
+    ContextType
+  >;
   id?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
   isTemplate?: Resolver<ResolversTypes["Boolean"], ParentType, ContextType>;
   nameID?: Resolver<ResolversTypes["NameID"], ParentType, ContextType>;
@@ -18056,6 +18116,11 @@ export type CreateCollaboraDocumentDataResolvers<
   >;
   documentType?: Resolver<
     Maybe<ResolversTypes["CollaboraDocumentType"]>,
+    ParentType,
+    ContextType
+  >;
+  sourceCollaboraDocumentID?: Resolver<
+    Maybe<ResolversTypes["UUID"]>,
     ParentType,
     ContextType
   >;
@@ -21597,6 +21662,12 @@ export type MutationResolvers<
       "refreshData"
     >
   >;
+  registerDevicePushToken?: Resolver<
+    ResolversTypes["Boolean"],
+    ParentType,
+    ContextType,
+    RequireFields<MutationRegisterDevicePushTokenArgs, "registrationData">
+  >;
   removeCommunityGuidelinesContent?: Resolver<
     ResolversTypes["CommunityGuidelines"],
     ParentType,
@@ -21865,6 +21936,12 @@ export type MutationResolvers<
       MutationTransferVirtualContributorToAccountArgs,
       "transferData"
     >
+  >;
+  unregisterDevicePushToken?: Resolver<
+    ResolversTypes["Boolean"],
+    ParentType,
+    ContextType,
+    RequireFields<MutationUnregisterDevicePushTokenArgs, "registrationData">
   >;
   unsubscribeFromPushNotifications?: Resolver<
     ResolversTypes["PushSubscription"],
@@ -23804,6 +23881,11 @@ export type RelayPaginatedSpaceResolvers<
 > = {
   about?: Resolver<ResolversTypes["SpaceAbout"], ParentType, ContextType>;
   account?: Resolver<ResolversTypes["Account"], ParentType, ContextType>;
+  accountSpaces?: Resolver<
+    Array<ResolversTypes["SpaceSelectionCandidate"]>,
+    ParentType,
+    ContextType
+  >;
   activeSubscription?: Resolver<
     Maybe<ResolversTypes["SpaceSubscription"]>,
     ParentType,
@@ -24499,6 +24581,11 @@ export type SpaceResolvers<
 > = {
   about?: Resolver<ResolversTypes["SpaceAbout"], ParentType, ContextType>;
   account?: Resolver<ResolversTypes["Account"], ParentType, ContextType>;
+  accountSpaces?: Resolver<
+    Array<ResolversTypes["SpaceSelectionCandidate"]>,
+    ParentType,
+    ContextType
+  >;
   activeSubscription?: Resolver<
     Maybe<ResolversTypes["SpaceSubscription"]>,
     ParentType,
@@ -24682,6 +24769,21 @@ export type SpacePendingMembershipInfoResolvers<
   >;
   id?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
   level?: Resolver<ResolversTypes["SpaceLevel"], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type SpaceSelectionCandidateResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["SpaceSelectionCandidate"] = ResolversParentTypes["SpaceSelectionCandidate"]
+> = {
+  displayName?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
+  id?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
+  level?: Resolver<ResolversTypes["SpaceLevel"], ParentType, ContextType>;
+  parentSpaceID?: Resolver<
+    Maybe<ResolversTypes["UUID"]>,
+    ParentType,
+    ContextType
+  >;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -26929,6 +27031,7 @@ export type Resolvers<ContextType = any> = {
   SpaceAboutMembership?: SpaceAboutMembershipResolvers<ContextType>;
   SpaceJoinPreview?: SpaceJoinPreviewResolvers<ContextType>;
   SpacePendingMembershipInfo?: SpacePendingMembershipInfoResolvers<ContextType>;
+  SpaceSelectionCandidate?: SpaceSelectionCandidateResolvers<ContextType>;
   SpaceSettings?: SpaceSettingsResolvers<ContextType>;
   SpaceSettingsCollaboration?: SpaceSettingsCollaborationResolvers<ContextType>;
   SpaceSettingsLayout?: SpaceSettingsLayoutResolvers<ContextType>;

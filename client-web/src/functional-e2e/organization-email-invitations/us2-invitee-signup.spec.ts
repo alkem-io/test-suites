@@ -67,12 +67,13 @@ const DUTCH_SKIP_REASON = `the stack does not list '${DUTCH}' as an eligible lan
 const labelsFor = (dutch: boolean) =>
   dutch
     ? {
-        section: 'Uitnodigingen als Geassocieerde',
-        offeredRole: 'Geassocieerde + Beheerder',
+        // Dutch copy as of client-web#10435 ("betrokkene" replaced "geassocieerde").
+        section: 'Uitnodigingen als betrokkene',
+        offeredRole: 'Betrokkene + Beheerder',
         detailTitle: (organization: string) =>
-          `Uitnodiging om te associëren met ${organization}`,
+          `Uitnodiging om betrokkene te worden bij ${organization}`,
         invitedBy: (name: string) => `Uitgenodigd door ${name}`,
-        associate: 'Geassocieerde',
+        associate: 'Betrokkene',
         admin: 'Beheerder',
       }
     : {
@@ -282,9 +283,9 @@ baseTest.describe(
         baseTest.skip(eligibleLanguage !== DUTCH, DUTCH_SKIP_REASON);
         const detail = inviteePage!.getByRole('dialog');
         await expect(detail).toContainText(
-          `Uitnodiging om te associëren met ${org.displayName}`
+          `Uitnodiging om betrokkene te worden bij ${org.displayName}`
         );
-        await expect(detail).toContainText('Geassocieerde + Beheerder');
+        await expect(detail).toContainText('Betrokkene + Beheerder');
       }
     );
 
