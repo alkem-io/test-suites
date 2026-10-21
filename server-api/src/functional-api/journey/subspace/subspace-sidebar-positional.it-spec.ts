@@ -102,6 +102,13 @@ const setSidebar = async (stateId: string, sidebar: SidebarWidget[]) => {
   expect(res.error).toBeUndefined();
 };
 
+const setVisible = async (stateId: string, visible: boolean) => {
+  const res = await updateInnovationFlowState(stateId, undefined, undefined, {
+    visible,
+  });
+  expect(res.error).toBeUndefined();
+};
+
 /** Pads a collaboration's flow with new phases until it has at least `count` of them. */
 const ensureAtLeastStates = async (collaborationId: string, count: number) => {
   const flow = await readFlow(collaborationId);
@@ -142,10 +149,14 @@ describe('Subspace sidebar - positional reorder', () => {
     await setSidebar(a.id, la);
     await setSidebar(b.id, lb);
     await setSidebar(c.id, lc);
+    // Hide one phase so a regression that moves whole settings by position is visible.
+    await setVisible(b.id, false);
     const before = await readFlow(baseScenario.subspace.collaboration.id);
     const visibleBefore = Object.fromEntries(
       before.states.map(state => [state.id, state.settings.visible])
     );
+    expect(visibleBefore[b.id]).toBe(false);
+    expect(visibleBefore[c.id]).toBe(true);
 
     // Act
     const res = await updateInnovationFlowStatesSortOrder(flowId, [
@@ -180,11 +191,15 @@ describe('Subspace sidebar - positional reorder', () => {
     expect(sidebarsById(after.states.slice(3))).toEqual(
       sidebarsById(before.states.slice(3))
     );
-    expect(
-      Object.fromEntries(
-        after.states.map(state => [state.id, state.settings.visible])
-      )
-    ).toEqual(visibleBefore);
+    const visibleAfter = Object.fromEntries(
+      after.states.map(state => [state.id, state.settings.visible])
+    );
+    expect(visibleAfter).toEqual(visibleBefore);
+    expect(visibleAfter[b.id]).toBe(false);
+    expect(visibleAfter[c.id]).toBe(true);
+
+    // Cleanup: leave the scenario flow fully visible for the tests that follow.
+    await setVisible(b.id, true);
   });
 
   test('a reorder naming only some phases of an L1 flow is rejected and changes nothing', async () => {
@@ -376,8 +391,8 @@ describe('Subspace sidebar - community and activity widgets', () => {
       TestUser.SPACE_MEMBER
     );
 
-    // Assert
-    expect(res.error).toBeDefined();
+    // Assert: denied for lack of the update privilege, not for any other reason.
+    expect(res.error?.errors?.[0]?.code).toEqual('FORBIDDEN_POLICY');
     const after = await readFlow(baseScenario.subspace.collaboration.id);
     expect(after.states[0].settings.sidebar).toEqual(stored);
   });
