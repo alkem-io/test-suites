@@ -10,19 +10,17 @@
 // absence of every hidden one (including the old "Resources Hosted") together.
 //
 // Everything is seeded per run through the API and removed again in afterAll.
-// Two viewers, never a platform admin (who reads more than either and would
-// hide the viewer-dependent filters this feature rests on):
+// Never a platform admin as the viewer (who reads more than anyone else and
+// would hide the viewer-dependent filters this feature rests on):
 //   - the registered, non-privileged `non.space` persona for the VISITOR cases
-//     (PT-1 … PT-6; three of them skipped on server#6670, see below);
-//   - the profile's OWNER for the Other Resources cases (PT-1o, PT-4o, PT-6o,
-//     and their empty twins PT-2o, PT-5o that keep AC5's "hidden" half falsifiable):
-//     the user on their own page, and a plain user who administers the
-//     organisation on its page. These are the viewers the server resolves
-//     `User.account` / `Organization.account` for today, so they are the only
-//     non-admin viewers who can see Other Resources at all (QA lead ruling,
-//     2026-10-19). They sign in through the shared persona session cache.
-// All Spaces are PUBLIC for the same reason: the server drops Spaces the viewer
-// cannot read from `rolesUser` / `rolesOrganization`.
+//     (PT-1 … PT-6), which see the PUBLIC packs and VCs and every hub;
+//   - the profile's OWNER for the full-view cases (PT-1o, PT-4o, PT-6o, and
+//     their empty twins PT-2o, PT-5o): the user on their own page, and a plain
+//     user who administers the organisation on its page. They sign in through
+//     the shared persona session cache;
+//   - the visibility-tier block seeds its own associate, admin and guest viewers.
+// All Spaces are PUBLIC: the server drops Spaces the viewer cannot read from
+// `rolesUser` / `rolesOrganization`.
 
 import { type Browser, expect, type Locator, type Page } from '@playwright/test';
 import {
@@ -40,10 +38,13 @@ import {
   TestScenarioFactory,
   TestUser,
   UniqueIDGenerator,
+  updateInnovationPackVisibility,
+  updateVirtualContributorVisibility,
 } from '@alkemio/tests-lib';
 import {
   InnovationHubType,
   RoleName,
+  SearchVisibility,
   SpacePrivacyMode,
   SpaceVisibility,
 } from '@alkemio/tests-lib/core/generated/alkemio-schema';
@@ -89,22 +90,10 @@ const TAB = {
 const EMPTY_USER_MEMBERSHIP = 'No memberships yet.';
 const EMPTY_ORG_MEMBERSHIP = 'Not a member of any Space or Subspace yet.';
 
-// KNOWN DEFECT, product (client-web#10179 / server): Other Resources never
-// appears for an ordinary signed-in visitor. The client learns the account id
-// from `User.account` / `Organization.account`, and the server resolves both
-// to null unless the viewer is the user, holds READ_USER_PII, or holds UPDATE
-// on the organisation (server `user.resolver.fields.ts` and
-// `organization.resolver.fields.ts`, the 027 R-F.3 comment). The client then
-// skips the account-resources query, `hasOtherResources` stays false and the
-// tab is hidden even though the profile owns a pack, hub or VC. Verified live
-// (the same fixtures, same assertions): `non.space` sees ['Leading', 'Member
-// Of'] only, `admin` sees all three tabs and every assertion below passes.
-// PT-1, PT-4 and PT-6 assert the designed behaviour for the plan's visitor and
-// are skipped until alkem-io/server#6670 is fixed (plan Q4): drop the skip when
-// it lands. The assertions are unchanged, and the SAME assertions run live as
-// PT-1o / PT-4o / PT-6o with the profile's owner as the viewer.
-const OTHER_RESOURCES_HIDDEN_FROM_VISITOR =
-  'alkem-io/server#6670: User.account and Organization.account are null for an ordinary visitor, so Other Resources is hidden (client-web#10179, plan Q4)';
+// Other Resources reads the viewer-scoped `hostedResources` field: PUBLIC packs
+// and VCs and every hub are visible to any registered visitor, so PT-1, PT-4 and
+// PT-6 run live. The owner twins PT-1o, PT-4o and PT-6o stay as the full-view
+// regression guard. Packs and VCs default to ACCOUNT, so each is arranged PUBLIC.
 
 // ---------------------------------------------------------------------------
 // Locators
@@ -265,6 +254,19 @@ const orgAccountId = async (orgId: string): Promise<string> => {
   return data.lookup.organization.account.id;
 };
 
+/** The stored search visibility of a pack or VC, read as the platform admin. */
+const searchVisibilityOf = async (
+  kind: 'innovationPack' | 'virtualContributor',
+  id: string
+): Promise<string> => {
+  const data = await adminGql<
+    Record<'lookup', Record<string, { searchVisibility: string }>>
+  >(`query($id: UUID!){ lookup { ${kind}(ID: $id) { searchVisibility } } }`, {
+    id,
+  });
+  return data.lookup[kind].searchVisibility;
+};
+
 const spaceInput = {
   collaboration: { addTutorialCallouts: false },
   settings: { privacy: { mode: SpacePrivacyMode.Public } },
@@ -382,8 +384,18 @@ test.describe('Public profile resource tabs — user (client-web#10179)', () => 
     failOnError('create pack on U1 account', pack);
     packId = pack.data?.createInnovationPack.id;
     if (!packId) throw new Error('pack id missing from createInnovationPack');
+    failOnError(
+      'U1 pack PUBLIC',
+      await updateInnovationPackVisibility(packId, {
+        searchVisibility: SearchVisibility.Public,
+      })
+    );
 
     // Precondition read-backs: fail fast and clearly.
+    expect(
+      await searchVisibilityOf('innovationPack', packId),
+      'U1 pack must be PUBLIC — defaults to ACCOUNT'
+    ).toBe(SearchVisibility.Public);
     const u3Spaces = await rolesOf('rolesUser', u3.id);
     expect(u3Spaces, 'U3 must hold no Space role (no welcome-Space auto-enrol)').toEqual([]);
     expect(
@@ -454,7 +466,6 @@ test.describe('Public profile resource tabs — user (client-web#10179)', () => 
   test('PT-1 — a user who leads and owns a pack sees Leading, Member Of, Other Resources; lands on Leading', async ({
     page,
   }) => {
-    test.skip(true, OTHER_RESOURCES_HIDDEN_FROM_VISITOR);
     await walkLeadWithPack(page);
   });
 
@@ -472,18 +483,15 @@ test.describe('Public profile resource tabs — user (client-web#10179)', () => 
     await openProfile(page, `/user/${user.nameID}`, user.displayName);
 
     // Leading and Other Resources are hidden, not shown empty. The tablist itself
-    // rendering with exactly one tab is the positive control.
-    // Limit: while Q4 stands this viewer never sees Other Resources, so the
-    // "hidden when there are no resources" half cannot fail here (shown green
-    // with a pack on U3, 2026-10-15). Its positive twins are PT-1/PT-4/PT-6.
+    // rendering with exactly one tab is the positive control; PT-1 is the
+    // positive twin for this same viewer.
     await expect(tabs(page)).toHaveText([TAB.user.memberOf]);
     await expect(tab(page, TAB.user.memberOf)).toHaveAttribute('aria-selected', 'true');
     await expect(text(page, EMPTY_USER_MEMBERSHIP)).toBeVisible();
   });
 
-  // AC5 for a viewer the server resolves `account` for: PT-1o is the positive
-  // twin (the owner of a pack sees Other Resources), so here the hidden tab can
-  // fail. PT-2's visitor cannot make it fail while server#6670 stands.
+  // AC5 for the owner's full view: PT-1o is the positive twin (the owner of a
+  // pack sees Other Resources), so here the hidden tab can fail.
   test('PT-2o — the same bare user on their OWN profile sees only Member Of: Other Resources stays hidden although this viewer could see it', async ({
     browser,
   }) => {
@@ -552,6 +560,16 @@ test.describe('Public profile resource tabs — organisation (client-web#10179)'
     failOnError('create pack on org B account', pack);
     packId = pack.data?.createInnovationPack.id;
     if (!packId) throw new Error('pack id missing from createInnovationPack');
+    failOnError(
+      'org B pack PUBLIC',
+      await updateInnovationPackVisibility(packId, {
+        searchVisibility: SearchVisibility.Public,
+      })
+    );
+    expect(
+      await searchVisibilityOf('innovationPack', packId),
+      'org B pack must be PUBLIC — defaults to ACCOUNT'
+    ).toBe(SearchVisibility.Public);
 
     // The lib has no wrapper for hubs; use the generated SDK directly.
     const hub = await graphqlErrorWrapper(
@@ -600,6 +618,17 @@ test.describe('Public profile resource tabs — organisation (client-web#10179)'
     failOnError('create VC on org C account', vc);
     vcId = vc.data?.createVirtualContributor.id;
     if (!vcId) throw new Error('VC id missing from createVirtualContributor');
+    // The update also re-applies the VC's authorization.
+    failOnError(
+      'org C VC PUBLIC',
+      await updateVirtualContributorVisibility(vcId, {
+        searchVisibility: SearchVisibility.Public,
+      })
+    );
+    expect(
+      await searchVisibilityOf('virtualContributor', vcId),
+      'org C VC must be PUBLIC — defaults to ACCOUNT'
+    ).toBe(SearchVisibility.Public);
 
     // A plain user who administers orgs B and C: holds UPDATE on each, which is
     // what lets the server resolve `Organization.account` for them. No
@@ -716,7 +745,6 @@ test.describe('Public profile resource tabs — organisation (client-web#10179)'
   test('PT-4 — an organisation that leads and owns a pack and a hub sees three tabs; Other Resources holds no Spaces', async ({
     page,
   }) => {
-    test.skip(true, OTHER_RESOURCES_HIDDEN_FROM_VISITOR);
     await walkOrgFull(page);
   });
 
@@ -731,14 +759,14 @@ test.describe('Public profile resource tabs — organisation (client-web#10179)'
   }) => {
     await openProfile(page, `/organization/${orgD!.nameID}`, orgD!.displayName);
 
-    // Same Q4 limit as PT-2: the Other Resources absence cannot fail for this viewer.
+    // PT-4 and PT-6 are the positive twins for this same viewer.
     await expect(tabs(page)).toHaveText([TAB.org.memberOf]);
     await expect(tab(page, TAB.org.memberOf)).toHaveAttribute('aria-selected', 'true');
     await expect(text(page, EMPTY_ORG_MEMBERSHIP)).toBeVisible();
   });
 
-  // AC5 for the organisation case, with a viewer who could see Other Resources
-  // (PT-4o / PT-6o are the positive twins). PT-5's visitor cannot make it fail.
+  // AC5 for the organisation case, with the owner's full view (PT-4o / PT-6o
+  // are the positive twins).
   test('PT-5o — the bare organisation\'s own admin sees only All Memberships: Other Resources stays hidden although this viewer could see it', async ({
     browser,
   }) => {
@@ -766,6 +794,11 @@ test.describe('Public profile resource tabs — organisation (client-web#10179)'
     await expect(tab(page, TAB.org.other)).toHaveAttribute('aria-selected', 'true');
     await expect(h3(page, 'Virtual Contributors')).toBeVisible();
     await expect(text(page, `PT VC ${RUN}`)).toBeVisible();
+    // The card links to the VC's profile.
+    await expect(page.getByRole('link', { name: `PT VC ${RUN}` })).toHaveAttribute(
+      'href',
+      new RegExp(`/pt-vc-${RUN}$`, 'i')
+    );
     // Regression guard: C's account hosts this Space but does not lead it.
     await expect(h3(page, 'Spaces')).toHaveCount(0);
     await expect(text(page, l0Name)).toHaveCount(0);
@@ -774,7 +807,6 @@ test.describe('Public profile resource tabs — organisation (client-web#10179)'
   test('PT-6 — an organisation that is a member, not a lead, and owns a VC lands on All Memberships; Other Resources shows the VC and not the hosted Space', async ({
     page,
   }) => {
-    test.skip(true, OTHER_RESOURCES_HIDDEN_FROM_VISITOR);
     await walkOrgMemberWithVc(page);
   });
 
