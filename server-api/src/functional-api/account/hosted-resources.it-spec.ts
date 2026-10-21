@@ -76,13 +76,11 @@ const HOSTED_SELECTION = `
 `;
 
 type Hosted = {
-  virtualContributors: Array<
-    {
-      __typename: string;
-      id: string;
-      profile: { displayName: string };
-    } & Record<string, unknown>
-  >;
+  virtualContributors: Array<{
+    __typename: string;
+    id: string;
+    profile: { displayName: string };
+  }>;
   innovationPacks: Array<{ id: string }>;
   innovationHubs: Array<{ id: string }>;
 };
@@ -112,6 +110,25 @@ const hosted = async (
 
 const ids = (items: Array<{ id: string }> | undefined): string[] =>
   (items ?? []).map(item => item.id);
+
+/** The account id the viewer resolves through the profile, or null. */
+const accountIdOf = async (
+  kind: 'organization' | 'user',
+  id: string,
+  token: string
+): Promise<string | null | undefined> => {
+  const res = await postGraphqlRaw<{
+    lookup: Record<string, { account: { id: string } | null } | null>;
+  }>(`query($id: UUID!) { lookup { ${kind}(ID: $id) { account { id } } } }`, {
+    variables: { id },
+    bearerToken: token,
+  });
+  expect(
+    res.body.errors,
+    `the ${kind} account lookup must not error`
+  ).toBeUndefined();
+  return res.body.data?.lookup?.[kind]?.account?.id;
+};
 
 /** Run a GraphQL document as the platform admin; throw on any error. */
 const adminGql = async <T>(
@@ -171,12 +188,14 @@ let packHiddenId = '';
 let vcAccountId = '';
 let vcHiddenId = '';
 let hubHiddenId = '';
+let ownerAccountId = '';
 let packHiddenUId = '';
+let vcHiddenUId = '';
 
 let associate: Viewer;
 let orgAdmin: Viewer;
 let unrelated: Viewer;
-let owner: Viewer; // owns a HIDDEN pack on their user account
+let owner: Viewer; // owns a HIDDEN pack and a HIDDEN VC on their user account
 
 const createPack = async (
   accountId: string,
@@ -302,9 +321,10 @@ beforeAll(async () => {
   }
   unrelated = await registerViewer('unrel');
 
-  // The owner gets a HIDDEN pack. A fresh account has a pack limit of 0.
+  // The owner gets a HIDDEN pack and a HIDDEN VC. A fresh account has a pack
+  // limit of 0.
   owner = await registerViewer('owner');
-  const ownerAccountId = (
+  ownerAccountId = (
     await adminGql<{ lookup: { user: { account: { id: string } } } }>(
       'query($id: UUID!){ lookup { user(ID: $id) { account { id } } } }',
       { id: owner.id }
@@ -321,6 +341,9 @@ beforeAll(async () => {
     'hiddenu',
     SearchVisibility.Hidden
   );
+  vcHiddenUId = await createVc(ownerAccountId, 'hiddenu', {
+    searchVisibility: SearchVisibility.Hidden,
+  });
 
   // Precondition read-backs: the stored settings are what the rows assume.
   const stored = await adminGql<{
@@ -329,7 +352,7 @@ beforeAll(async () => {
       { searchVisibility: string; listedInStore: boolean }
     >;
   }>(
-    `query($pp: UUID!, $pa: UUID!, $ph: UUID!, $va: UUID!, $vh: UUID!, $hh: UUID!, $pu: UUID!) {
+    `query($pp: UUID!, $pa: UUID!, $ph: UUID!, $va: UUID!, $vh: UUID!, $hh: UUID!, $pu: UUID!, $vu: UUID!) {
       lookup {
         pp: innovationPack(ID: $pp) { searchVisibility listedInStore }
         pa: innovationPack(ID: $pa) { searchVisibility listedInStore }
@@ -338,6 +361,7 @@ beforeAll(async () => {
         vh: virtualContributor(ID: $vh) { searchVisibility listedInStore }
         hh: innovationHub(ID: $hh) { searchVisibility listedInStore }
         pu: innovationPack(ID: $pu) { searchVisibility listedInStore }
+        vu: virtualContributor(ID: $vu) { searchVisibility listedInStore }
       }
     }`,
     {
@@ -348,6 +372,7 @@ beforeAll(async () => {
       vh: vcHiddenId,
       hh: hubHiddenId,
       pu: packHiddenUId,
+      vu: vcHiddenUId,
     }
   );
   const vis = (key: string) => stored.lookup[key].searchVisibility;
@@ -363,6 +388,7 @@ beforeAll(async () => {
   expect(vis('vh')).toBe(SearchVisibility.Hidden);
   expect(vis('hh')).toBe(SearchVisibility.Hidden);
   expect(vis('pu')).toBe(SearchVisibility.Hidden);
+  expect(vis('vu')).toBe(SearchVisibility.Hidden);
 
   for (const viewer of [associate, orgAdmin]) {
     const roles = await adminGql<{ rolesUser: { spaces: unknown[] } }>(
@@ -395,7 +421,7 @@ afterAll(async () => {
       );
   }
   // The VCs go before their body-of-knowledge Space.
-  for (const id of [vcAccountId, vcHiddenId]) {
+  for (const id of [vcAccountId, vcHiddenId, vcHiddenUId]) {
     if (id)
       await step(`VC ${id}`, async () =>
         failOnError('delete VC', await deleteVirtualContributor(id))
@@ -465,16 +491,12 @@ afterAll(async () => {
 // Rows
 // ---------------------------------------------------------------------------
 describe('hostedResources — viewer-scoped hosted resources', () => {
-  // Every VC object any row returned, for the projection check.
-  const returnedVcs: Hosted['virtualContributors'] = [];
-
   const collect = (result: HostedResult): Hosted => {
     expect(result.errors, 'the query must not error').toBeUndefined();
     expect(
       result.hosted,
       'a registered viewer gets hostedResources'
     ).toBeTruthy();
-    returnedVcs.push(...result.hosted!.virtualContributors);
     return result.hosted!;
   };
 
@@ -545,13 +567,34 @@ describe('hostedResources — viewer-scoped hosted resources', () => {
     expect(ids(result.innovationPacks)).toEqual([packHiddenUId]);
   });
 
-  test('every returned VC exposes only __typename, id and profile', () => {
-    // Positive control: the rows above returned VC objects at all.
-    expect(returnedVcs.length).toBeGreaterThan(0);
-    for (const vc of returnedVcs) {
-      expect(Object.keys(vc).sort()).toEqual(['__typename', 'id', 'profile']);
+  test('a hosted VC is the closed card type, which exposes only id and profile', async () => {
+    const vcs: Hosted['virtualContributors'] = [];
+    for (const viewer of [associate, orgAdmin]) {
+      vcs.push(
+        ...collect(
+          await hosted('organization', orgId, await getUserToken(viewer.email))
+        ).virtualContributors
+      );
+    }
+    // Positive control: the type check below ran over real VC objects.
+    expect(vcs.length).toBeGreaterThan(0);
+    for (const vc of vcs) {
       expect(vc.__typename).toBe('AccountHostedVirtualContributor');
     }
+
+    const res = await postGraphqlRaw<{
+      __type: { fields: Array<{ name: string }> } | null;
+    }>(
+      '{ __type(name: "AccountHostedVirtualContributor") { fields { name } } }',
+      {
+        bearerToken: await getUserToken(unrelated.email),
+      }
+    );
+    expect(res.body.errors).toBeUndefined();
+    expect(res.body.data?.__type?.fields.map(f => f.name).sort()).toEqual([
+      'id',
+      'profile',
+    ]);
   });
 
   test('the full account stays closed to an unrelated registered user', async () => {
@@ -571,16 +614,18 @@ describe('hostedResources — viewer-scoped hosted resources', () => {
     expect(res.body.data?.lookup.organization.account).toBeNull();
   });
 
-  test('a Platform Users Admin gets the full view of a user account', async () => {
+  test('a Platform Users Admin gets the full view of a user account, HIDDEN VC included, and still resolves the account', async () => {
     failOnError(
       'assign Platform Users Admin',
       await assignPlatformRole(unrelated.id, RoleName.PlatformUsersAdmin)
     );
     try {
-      const result = collect(
-        await hosted('user', owner.id, await getUserToken(unrelated.email))
-      );
+      const token = await getUserToken(unrelated.email);
+      // collect() asserts no GraphQL error, so the HIDDEN VC card resolved.
+      const result = collect(await hosted('user', owner.id, token));
       expect(ids(result.innovationPacks)).toEqual([packHiddenUId]);
+      expect(ids(result.virtualContributors)).toContain(vcHiddenUId);
+      expect(await accountIdOf('user', owner.id, token)).toBe(ownerAccountId);
     } finally {
       failOnError(
         'remove Platform Users Admin',
@@ -588,6 +633,34 @@ describe('hostedResources — viewer-scoped hosted resources', () => {
       );
     }
   });
+
+  test.each([RoleName.PlatformLicenseManager, RoleName.PlatformResourceAdmin])(
+    'a %s gets the full view of an organization account and still resolves the account',
+    async role => {
+      failOnError(
+        `assign ${role}`,
+        await assignPlatformRole(unrelated.id, role)
+      );
+      try {
+        const token = await getUserToken(unrelated.email);
+        const result = collect(await hosted('organization', orgId, token));
+        expect(ids(result.innovationPacks).sort()).toEqual(
+          [packPublicId, packAccountId, packHiddenId].sort()
+        );
+        expect(ids(result.virtualContributors).sort()).toEqual(
+          [vcAccountId, vcHiddenId].sort()
+        );
+        expect(await accountIdOf('organization', orgId, token)).toBe(
+          scenario.organization.accountId
+        );
+      } finally {
+        failOnError(
+          `remove ${role}`,
+          await removePlatformRole(unrelated.id, role)
+        );
+      }
+    }
+  );
 
   // Mutates the associate's role: keep it last.
   test('once the associate role is removed, the former associate sees the PUBLIC pack and the hub only', async () => {
