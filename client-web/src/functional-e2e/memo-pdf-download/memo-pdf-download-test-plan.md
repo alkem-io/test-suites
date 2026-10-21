@@ -51,4 +51,4 @@ pnpm --filter @alkemio/test-suite-client-web run test:nightly --project="Memo PD
 
 ## Open product questions
 
-- **Anonymous visitors of a public Space.** They hold READ on the memo (US2-AS2 reads its content), yet they get 401 and no button. The story's AC1 says "a user with read access", and its open question "Who may download?" names "visitors of public spaces". The product chose signed-in readers only. US2-AS2 pins that choice until the spec records it.
+- **Anonymous visitors of a public Space.** They hold READ on the memo (US2-AS2 reads its content), yet they get 401 and no button. The story's AC1 says "a user with read access", and its open question "Who may download?" names "visitors of public spaces". Confirmed with product on 2026-10-21: signed-in readers only is the intended behaviour and the spec will be updated to say so. US2-AS2 pins it.

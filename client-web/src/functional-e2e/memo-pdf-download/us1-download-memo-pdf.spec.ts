@@ -254,8 +254,9 @@ test.describe('US1 — a reader downloads a memo as PDF', () => {
     // A scenario Space has no SPACE_FLAG_MEMO_MULTI_USER, so only the FIRST
     // connection to the memo may edit (server memo.service.ts › isMultiUser);
     // everyone after it is a read-only viewer told "You don't have permission
-    // to edit this memo". The collaborator therefore opens the memo first and
-    // types; the reader joins the same live room afterwards and downloads.
+    // to edit this memo" (the wrong reason — alkem-io/client-web#10455). The
+    // collaborator therefore opens the memo first and types; the reader joins
+    // the same live room afterwards and downloads.
     //
     // The persona fixture overrides the storageState option, and a bare
     // browser.newContext() inherits it, so the collaborator would start signed
