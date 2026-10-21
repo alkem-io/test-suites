@@ -45,6 +45,7 @@ import {
   InnovationHubType,
   RoleName,
   SearchVisibility,
+  SpaceLevel,
   SpacePrivacyMode,
   SpaceVisibility,
 } from '@alkemio/tests-lib/core/generated/alkemio-schema';
@@ -280,25 +281,58 @@ const spaceInput = {
   settings: { privacy: { mode: SpacePrivacyMode.Public } },
 };
 
+type HostedSpace = {
+  id: string;
+  level: string;
+  subspaces: { id: string; subspaces: { id: string }[] }[];
+};
+
 /**
- * Removes a scenario's Spaces (leaves first), proves they are gone, then its
- * organisation. `cleanUpBaseScenario` logs and swallows every failure, which
- * left organisations behind on the shared stack when a Space delete did not go
- * through; here each failure surfaces.
+ * Every level-zero Space tree the account hosts, read from the server rather
+ * than from the scenario model. When a slow `createSpace` outlives the client's
+ * connection, the harness retries it although the server already committed the
+ * first one, so the account can host a second level-zero Space the model never
+ * learns of — and `deleteOrganization` refuses an account that still hosts any.
+ */
+const accountSpaceTrees = async (accountId: string) => {
+  const data = await adminGql<{ lookup: { account: { spaces: HostedSpace[] } } }>(
+    'query($id: UUID!){ lookup { account(ID: $id) { spaces { id level subspaces { id subspaces { id } } } } } }',
+    { id: accountId }
+  );
+  return data.lookup.account.spaces
+    .filter(space => space.level === SpaceLevel.L0)
+    .map(space => {
+      const tree = newFixtureTree();
+      tree.spaceId = space.id;
+      tree.subspaceIds = [
+        ...space.subspaces.flatMap(l1 => l1.subspaces.map(l2 => l2.id)),
+        ...space.subspaces.map(l1 => l1.id),
+      ];
+      return tree;
+    });
+};
+
+/**
+ * Removes every Space tree the scenario organisation's account hosts (leaves
+ * first), proves they are gone, then the organisation. `cleanUpBaseScenario`
+ * logs and swallows every failure, which left organisations behind on the
+ * shared stack when a Space delete did not go through; here each failure
+ * surfaces.
  */
 const removeScenario = async (
   scenario: OrganizationWithSpaceModel | undefined
 ): Promise<void> => {
   if (!scenario) return;
-  const tree = newFixtureTree();
-  tree.spaceId = scenario.space?.id || undefined;
-  tree.subspaceIds = scenario.subspace?.id ? [scenario.subspace.id] : [];
-  await deleteFixtureTree(tree, async id =>
-    failOnError(`delete Space ${id}`, await deleteSpace(id))
-  );
-  for (const id of [...tree.subspaceIds, tree.spaceId]) {
-    if (id && (await spaceStillResolves(id))) {
-      throw new Error(`Space ${id} still exists after deleteSpace`);
+  const accountId = scenario.organization?.accountId;
+  const trees = accountId ? await accountSpaceTrees(accountId) : [];
+  for (const tree of trees) {
+    await deleteFixtureTree(tree, async id =>
+      failOnError(`delete Space ${id}`, await deleteSpace(id))
+    );
+    for (const id of [...tree.subspaceIds, tree.spaceId]) {
+      if (id && (await spaceStillResolves(id))) {
+        throw new Error(`Space ${id} still exists after deleteSpace`);
+      }
     }
   }
   if (scenario.organization?.id) {

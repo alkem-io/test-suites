@@ -20,6 +20,7 @@ import {
   createInnovationPack,
   createVirtualContributor,
   deleteInnovationPack,
+  deleteSpace,
   deleteVirtualContributor,
   getGraphqlClient,
   getLicensePlanByName,
@@ -36,6 +37,7 @@ import {
   InnovationHubType,
   RoleName,
   SearchVisibility,
+  SpaceLevel,
   SpaceVisibility,
 } from '@alkemio/tests-lib/core/generated/alkemio-schema';
 import { graphqlErrorWrapper } from '@alkemio/tests-lib/utils/graphql.wrapper';
@@ -126,6 +128,21 @@ const adminGql = async <T>(
     );
   }
   return res.body.data as T;
+};
+
+const organizationStillResolves = async (id: string): Promise<boolean> => {
+  try {
+    const data = await adminGql<{
+      lookup: { organization: { id: string } | null };
+    }>('query($id: UUID!){ lookup { organization(ID: $id) { id } } }', { id });
+    return !!data.lookup.organization;
+  } catch (error) {
+    // Only "not found" means the organisation is gone; any other failure is unknown.
+    if (error instanceof Error && error.message.includes('ENTITY_NOT_FOUND')) {
+      return false;
+    }
+    throw error;
+  }
 };
 
 const failOnError = (label: string, res: { error?: unknown } | undefined) => {
@@ -405,7 +422,38 @@ afterAll(async () => {
         failOnError('delete user', await deleteUser(viewer.id))
       );
   }
+  // When a slow createSpace outlives the client's connection, the harness
+  // retries it although the server already committed the first one, so the
+  // account can host a second level-zero Space the scenario model never learns
+  // of. It would block deleting the organisation, so it goes first.
+  const accountId = scenario?.organization?.accountId;
+  if (accountId) {
+    await step('untracked Spaces', async () => {
+      const data = await adminGql<{
+        lookup: { account: { spaces: Array<{ id: string; level: string }> } };
+      }>(
+        'query($id: UUID!){ lookup { account(ID: $id) { spaces { id level } } } }',
+        { id: accountId }
+      );
+      for (const space of data.lookup.account.spaces) {
+        if (space.level === SpaceLevel.L0 && space.id !== scenario.space?.id) {
+          failOnError(`delete Space ${space.id}`, await deleteSpace(space.id));
+        }
+      }
+    });
+  }
   await TestScenarioFactory.cleanUpBaseScenario(scenario);
+  // cleanUpBaseScenario logs and swallows its failures; prove the organisation
+  // is gone so a refused delete surfaces here.
+  if (orgId) {
+    await step('organisation', async () => {
+      if (await organizationStillResolves(orgId)) {
+        throw new Error(
+          `organisation ${orgId} still exists after cleanUpBaseScenario`
+        );
+      }
+    });
+  }
   if (failures.length > 0) {
     throw new Error(
       `fixture teardown left entities behind:\n${failures.join('\n')}`
