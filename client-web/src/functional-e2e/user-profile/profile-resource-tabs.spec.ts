@@ -1,4 +1,4 @@
-// spec: client-web/src/functional-e2e/user-profile-test-plan.md (client-web#10179)
+// spec: client-web/src/functional-e2e/user-profile-test-plan.md
 //
 // Public profile resource tabs (`/user/<nameID>`, `/organization/<nameID>`):
 // order (Leading first), the landing tab, tabs hidden when they would be empty,
@@ -787,8 +787,8 @@ test.describe('Public profile resource tabs — organisation (client-web#10179)'
     await expect(h3(page, 'Custom Homepages')).toBeVisible();
     await expect(h4(page, `PT org pack ${RUN}`)).toBeVisible();
     await expect(h4(page, `PT hub ${RUN}`)).toBeVisible();
-    // Regression guard: B's account HOSTS this Space, and before #10424 it was
-    // listed here under "Spaces".
+    // Regression guard: B's account HOSTS this Space, which the Other Resources
+    // tab once listed here under "Spaces".
     await expect(h3(page, 'Spaces')).toHaveCount(0);
     await expect(text(page, l0Name)).toHaveCount(0);
     // Sub-sections are conditional: no VC was seeded for B.
