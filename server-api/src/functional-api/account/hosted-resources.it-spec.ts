@@ -192,6 +192,7 @@ let ownerAccountId = '';
 let packPublicUId = '';
 let packHiddenUId = '';
 let vcHiddenUId = '';
+let vcPublicRId = ''; // a PUBLIC VC on the unrelated viewer's account: readable by everyone
 
 let associate: Viewer;
 let orgAdmin: Viewer;
@@ -351,6 +352,23 @@ beforeAll(async () => {
     searchVisibility: SearchVisibility.Hidden,
   });
 
+  // A VC every registered viewer can READ, hosted on an account no row asserts
+  // on, so one operation can resolve VirtualContributor.profile next to the
+  // hosted cards.
+  const unrelatedAccountId = (
+    await adminGql<{ lookup: { user: { account: { id: string } } } }>(
+      'query($id: UUID!){ lookup { user(ID: $id) { account { id } } } }',
+      { id: unrelated.id }
+    )
+  ).lookup.user.account.id;
+  failOnError(
+    'license plan on unrelated account',
+    await assignLicensePlanToAccount(unrelatedAccountId, plan[0].id)
+  );
+  vcPublicRId = await createVc(unrelatedAccountId, 'publicr', {
+    searchVisibility: SearchVisibility.Public,
+  });
+
   // Precondition read-backs: the stored settings are what the rows assume.
   const stored = await adminGql<{
     lookup: Record<
@@ -436,7 +454,7 @@ afterAll(async () => {
       );
   }
   // The VCs go before their body-of-knowledge Space.
-  for (const id of [vcAccountId, vcHiddenId, vcHiddenUId]) {
+  for (const id of [vcAccountId, vcHiddenId, vcHiddenUId, vcPublicRId]) {
     if (id)
       await step(`VC ${id}`, async () =>
         failOnError('delete VC', await deleteVirtualContributor(id))
@@ -724,6 +742,42 @@ describe('hostedResources — viewer-scoped hosted resources', () => {
           await removePlatformRole(unrelated.id, role)
         );
       }
+    }
+  );
+
+  test.each([
+    ['direct VC profile first', true],
+    ['hosted cards first', false],
+  ])(
+    "an associate's ACCOUNT VC card still renders when the same operation also reads a VC profile directly (%s)",
+    async (_order, directFirst) => {
+      const direct =
+        'direct: lookup { virtualContributor(ID: $vc) { profile { displayName } } }';
+      const cards =
+        'cards: lookup { organization(ID: $org) { hostedResources { virtualContributors { id profile { displayName } } } } }';
+      const res = await postGraphqlRaw<{
+        direct: { virtualContributor: { profile: { displayName: string } } };
+        cards: {
+          organization: {
+            hostedResources: Hosted | null;
+          };
+        };
+      }>(
+        `query($vc: UUID!, $org: UUID!) { ${directFirst ? `${direct} ${cards}` : `${cards} ${direct}`} }`,
+        {
+          variables: { vc: vcPublicRId, org: orgId },
+          bearerToken: await getUserToken(associate.email),
+        }
+      );
+      expect(res.status).toBe(200);
+      expect(res.body.errors).toBeUndefined();
+      expect(res.body.data?.direct.virtualContributor.profile.displayName).toBe(
+        `HR VC publicr ${uniqueId}`
+      );
+      const vcs =
+        res.body.data?.cards.organization.hostedResources?.virtualContributors;
+      expect(ids(vcs)).toEqual([vcAccountId]);
+      expect(vcs?.[0].profile.displayName).toBe(`HR VC account ${uniqueId}`);
     }
   );
 
