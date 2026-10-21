@@ -23,6 +23,11 @@ import { loginViaCrd } from '../helpers/login.helper';
  *      bucket is refused as not exportable: 422 with the neutral message, the
  *      "too large / cannot be exported" toast, the memo stays open and
  *      readable, and no file is downloaded.
+ * AS5  READ, not membership, is the gate: the same signed-in non-member who is
+ *      refused in AS1 downloads a PUBLIC Space's memo (button shown, 200 with
+ *      the announced headers). This is AS1's positive control.
+ * AS6  a download stores nothing and signs nothing: the memo's bucket holds
+ *      the same documents and the memo has no signed copy afterwards.
  *
  * "No render was started" for AS1/AS2/AS3 is a server-log observation (a
  * rejected request never logs a "Memo PDF render completed" line); it is not
@@ -169,14 +174,6 @@ async function registerAlkemioUser(persona: Persona) {
   ).me.user.id as string;
 }
 
-async function acceptCookies(page: Page) {
-  const accept = page.getByRole('button', { name: /accept all cookies/i });
-  await accept
-    .waitFor({ state: 'visible', timeout: 8_000 })
-    .then(() => accept.click())
-    .catch(() => undefined);
-}
-
 /** Contexts opened by the walk; closed after every test, pass or fail. */
 const openContexts: BrowserContext[] = [];
 
@@ -197,6 +194,8 @@ async function anonymousPage(browser: Browser): Promise<Page> {
     viewport: { width: 1400, height: 900 },
   });
   openContexts.push(context);
+  // Consent is seeded: no banner, and no fixed wait for one that never comes.
+  await grantCookieConsent(context);
   return context.newPage();
 }
 
@@ -205,16 +204,20 @@ async function getPdf(page: Page, memoId: string) {
   let status = 0;
   let contentType = '';
   let body = '';
+  let headers: Record<string, string> = {};
+  let bytes: Buffer = Buffer.alloc(0);
   await expect(async () => {
     const res = await page
       .context()
       .request.get(PDF(memoId), { failOnStatusCode: false });
     status = res.status();
-    contentType = res.headers()['content-type'] ?? '';
-    body = (await res.body()).toString('utf8').slice(0, 300);
+    headers = res.headers();
+    contentType = headers['content-type'] ?? '';
+    bytes = await res.body();
+    body = bytes.toString('utf8').slice(0, 300);
     expect(status, 'download is not capacity-limited').not.toBe(429);
   }).toPass({ intervals: [500, 1_000, 2_000], timeout: 30_000 });
-  return { status, contentType, body };
+  return { status, contentType, body, headers, bytes };
 }
 
 const MEMO_FRAMING = `{
@@ -454,7 +457,6 @@ async function uploadToBucket(bucketId: string) {
 /** Opens the callout dialog, then the framing memo inside it. */
 async function openMemo(page: Page, calloutUrl: string) {
   await page.goto(calloutUrl);
-  await acceptCookies(page);
   const dialog = page.getByRole('dialog').first();
   await dialog.waitFor({ state: 'visible', timeout: 60_000 });
   await dialog
@@ -469,7 +471,6 @@ async function openMemo(page: Page, calloutUrl: string) {
 /** Opens a contributions callout, then one memo card inside it. */
 async function openContributionMemo(page: Page, memo: MemoFixture) {
   await page.goto(memo.calloutUrl);
-  await acceptCookies(page);
   const dialog = page.getByRole('dialog').first();
   await dialog.waitFor({ state: 'visible', timeout: 60_000 });
   const card = dialog.getByRole('button', {
@@ -568,6 +569,37 @@ async function teardown() {
     failures,
     'US2 teardown left fixtures behind; the next run may fail in beforeAll'
   ).toEqual([]);
+}
+
+/** The memo's stored documents and signed copies, read as the platform admin. */
+async function memoFootprint(memoId: string) {
+  const memo = must(
+    await gql(
+      ADMIN_EMAIL,
+      `query ($id: UUID!) { lookup { memo(ID: $id) {
+        signatures { id }
+        profile { storageBucket { documents { id } } }
+      } } }`,
+      { id: memoId }
+    ),
+    'memo footprint'
+  ).lookup.memo as {
+    signatures: { id: string }[];
+    profile: { storageBucket: { documents: { id: string }[] } };
+  };
+  return {
+    documentIds: memo.profile.storageBucket.documents.map(d => d.id).sort(),
+    signatureIds: memo.signatures.map(s => s.id),
+  };
+}
+
+/** The UTC days the server may stamp a request with: it can straddle midnight. */
+async function withUtcDays<T>(fn: () => Promise<T>) {
+  const day = () => new Date().toISOString().slice(0, 10);
+  const before = day();
+  const result = await fn();
+  const after = day();
+  return { result, days: before === after ? [before] : [before, after] };
 }
 
 const downloadButton = (page: Page) =>
@@ -730,7 +762,7 @@ test.describe(
       expect(malformed.status).toBe(400);
     });
 
-    test('AS4 — an unreadable embedded image makes the memo not exportable (422)', async ({
+    test("AS4 — an image from another memo's bucket makes the memo not exportable (422)", async ({
       browser,
     }) => {
       const reader = await signIn(browser, personaEmail.reader);
@@ -739,7 +771,11 @@ test.describe(
       const direct = await getPdf(reader, fixture.privateMemo.memoId);
       expect(direct.status).toBe(422);
       expect(direct.contentType).toContain('application/json');
-      expect(JSON.parse(direct.body).message).toBeTruthy();
+      // The bucket guard (memo.pdf.image.resolver.ts) — not a size cap, not
+      // the READ fallback ("…contains content that cannot be exported").
+      expect(JSON.parse(direct.body)).toEqual({
+        message: 'Memo PDF image does not belong to the memo bucket',
+      });
 
       // UI: Download PDF -> non-retryable toast; the memo stays open and readable.
       await openContributionMemo(reader, fixture.privateMemo);
@@ -774,6 +810,57 @@ test.describe(
       );
       await expect(downloadButton(reader)).toBeEnabled();
       expect(downloaded).toBe(false);
+    });
+
+    test('AS5 — READ, not membership: a signed-in non-member downloads a PUBLIC Space memo (200, announced headers)', async ({
+      browser,
+    }) => {
+      const outsider = await signIn(browser, personaEmail.outsider);
+      const slug = `public-memo-${RUN}`;
+
+      // UI: the outsider is offered the button on a memo they may read, and
+      // the saved file carries the server's name.
+      await openMemo(outsider, fixture.publicMemo.calloutUrl);
+      await expect(outsider.locator('.ProseMirror').first()).toContainText(
+        'Public memo text.'
+      );
+      const saved = await withUtcDays(async () => {
+        const downloadEvent = outsider.waitForEvent('download');
+        await downloadButton(outsider).click();
+        return (await downloadEvent).suggestedFilename();
+      });
+      expect(saved.days.map(day => `${slug}-${day}.pdf`)).toContain(
+        saved.result
+      );
+
+      // REST: the 200 contract of server#6686.
+      const { result: res, days } = await withUtcDays(() =>
+        getPdf(outsider, fixture.publicMemo.memoId)
+      );
+      expect(res.status).toBe(200);
+      expect(res.headers['content-type']).toBe('application/pdf');
+      expect(
+        days.map(day => `attachment; filename="${slug}-${day}.pdf"`)
+      ).toContain(res.headers['content-disposition']);
+      expect(res.headers['cache-control']).toBe('private, no-store');
+      expect(res.headers['x-content-type-options']).toBe('nosniff');
+      expect(res.bytes.subarray(0, 5).toString()).toBe('%PDF-');
+    });
+
+    test('AS6 — a download stores nothing and signs nothing', async ({
+      browser,
+    }) => {
+      const outsider = await signIn(browser, personaEmail.outsider);
+      const before = await memoFootprint(fixture.publicMemo.memoId);
+
+      const res = await getPdf(outsider, fixture.publicMemo.memoId);
+      expect(res.status).toBe(200);
+
+      const after = await memoFootprint(fixture.publicMemo.memoId);
+      // A signing preview would land in this bucket as a document, and a
+      // signed copy would show here; a download leaves both untouched.
+      expect(after.documentIds).toEqual(before.documentIds);
+      expect(after.signatureIds).toEqual([]);
     });
   }
 );
