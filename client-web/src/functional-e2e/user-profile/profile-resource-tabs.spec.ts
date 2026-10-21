@@ -56,6 +56,7 @@ import {
   registerFixtureUser,
 } from '../contributors-callout/cards-fixture';
 import { deleteFixtureTree, newFixtureTree } from '../subspaces-callout/subspaces-callout.helpers';
+import { signIn } from '../account-deletion/account-deletion.helpers';
 import {
   clearHostLead,
   orgIsLeadOf,
@@ -254,18 +255,25 @@ const orgAccountId = async (orgId: string): Promise<string> => {
   return data.lookup.organization.account.id;
 };
 
-/** The stored search visibility of a pack or VC, read as the platform admin. */
+type StoredVisibility = { searchVisibility: string; listedInStore: boolean };
+
+/** The stored visibility settings of a pack or VC, read as the platform admin. */
+const visibilityOf = async (
+  kind: 'innovationPack' | 'virtualContributor',
+  id: string
+): Promise<StoredVisibility> => {
+  const data = await adminGql<Record<'lookup', Record<string, StoredVisibility>>>(
+    `query($id: UUID!){ lookup { ${kind}(ID: $id) { searchVisibility listedInStore } } }`,
+    { id }
+  );
+  return data.lookup[kind];
+};
+
+/** The stored search visibility of a pack or VC. */
 const searchVisibilityOf = async (
   kind: 'innovationPack' | 'virtualContributor',
   id: string
-): Promise<string> => {
-  const data = await adminGql<
-    Record<'lookup', Record<string, { searchVisibility: string }>>
-  >(`query($id: UUID!){ lookup { ${kind}(ID: $id) { searchVisibility } } }`, {
-    id,
-  });
-  return data.lookup[kind].searchVisibility;
-};
+): Promise<string> => (await visibilityOf(kind, id)).searchVisibility;
 
 const spaceInput = {
   collaboration: { addTutorialCallouts: false },
@@ -814,5 +822,361 @@ test.describe('Public profile resource tabs — organisation (client-web#10179)'
     browser,
   }) => {
     await asViewer(browser, orgAdmin!.email, walkOrgMemberWithVc);
+  });
+});
+
+// ===========================================================================
+// Block V — visibility tiers and the guest notice (organisation profile)
+// ===========================================================================
+// One organisation account holds a PUBLIC, an ACCOUNT and a HIDDEN pack and an
+// ACCOUNT VC that is listed in the store. Each viewer tier sees its own slice:
+// an unrelated registered visitor PUBLIC only (the store listing does not
+// count), an associate PUBLIC + ACCOUNT, an admin everything. A guest sees the
+// sign-up notice instead of any resource, whether the organisation owns
+// anything or not.
+test.describe('Public profile resource tabs — visibility tiers', () => {
+  let scenarioE: OrganizationWithSpaceModel | undefined; // org E: member only, the tier fixtures
+  let packPublicId: string | undefined;
+  let packAccountId: string | undefined;
+  let packHiddenId: string | undefined;
+  let vcAccountId: string | undefined;
+  let associateE: SeededUser | undefined; // Associate of org E only
+  let adminE: SeededUser | undefined; // Associate + Admin of org E
+  let u4: SeededUser | undefined; // owns an ACCOUNT pack on their user account
+  let packAccount4Id: string | undefined;
+  let orgFId: string | undefined;
+  let orgF: { nameID: string; displayName: string } | undefined; // bare
+
+  const PACK_PUBLIC = `PT pack public ${RUN}`;
+  const PACK_ACCOUNT = `PT pack account ${RUN}`;
+  const PACK_HIDDEN = `PT pack hidden ${RUN}`;
+  const VC_ACCOUNT = `PT VC account ${RUN}`;
+  const PACK_ACCOUNT_4 = `PT pack account4 ${RUN}`;
+
+  const guestNotice = (page: Page, organization: string): Locator =>
+    page.getByText(
+      `Sign up on Alkemio to see the resources hosted by ${organization}`
+    );
+
+  const createPack = async (
+    accountId: string,
+    displayName: string,
+    nameID: string,
+    searchVisibility: SearchVisibility | undefined
+  ): Promise<string> => {
+    const pack = await createInnovationPack(accountId, displayName, nameID);
+    failOnError(`create ${displayName}`, pack);
+    const id = pack.data?.createInnovationPack.id;
+    if (!id) throw new Error(`pack id missing for ${displayName}`);
+    if (searchVisibility) {
+      failOnError(
+        `${displayName} ${searchVisibility}`,
+        await updateInnovationPackVisibility(id, { searchVisibility })
+      );
+    }
+    return id;
+  };
+
+  test.beforeAll(async () => {
+    test.setTimeout(240_000);
+
+    // Org E holds no lead: its Space is only the VC's body of knowledge.
+    scenarioE = await TestScenarioFactory.createBaseScenario({
+      name: `pt-tiers-${RUN}`,
+      space: spaceInput,
+    });
+    await clearHostLead(scenarioE);
+    const orgE = scenarioE.organization;
+
+    packPublicId = await createPack(
+      orgE.accountId,
+      PACK_PUBLIC,
+      `pt-ppub-${RUN}`,
+      SearchVisibility.Public
+    );
+    // Left at the ACCOUNT default; read back below.
+    packAccountId = await createPack(
+      orgE.accountId,
+      PACK_ACCOUNT,
+      `pt-pacc-${RUN}`,
+      undefined
+    );
+    packHiddenId = await createPack(
+      orgE.accountId,
+      PACK_HIDDEN,
+      `pt-phid-${RUN}`,
+      SearchVisibility.Hidden
+    );
+
+    const vc = await createVirtualContributor(orgE.accountId, {
+      profileDisplayName: VC_ACCOUNT,
+      nameID: `pt-vcacc-${RUN}`,
+      aiPersona: { engine: 'EXPERT' },
+      bodyOfKnowledgeType: 'ALKEMIO_SPACE',
+      bodyOfKnowledgeID: scenarioE.space.id,
+    });
+    failOnError('create VC on org E account', vc);
+    vcAccountId = vc.data?.createVirtualContributor.id;
+    if (!vcAccountId) throw new Error('VC id missing from createVirtualContributor');
+    // Listed in the store, which must NOT make it visible to a visitor.
+    failOnError(
+      'org E VC ACCOUNT + listed',
+      await updateVirtualContributorVisibility(vcAccountId, {
+        searchVisibility: SearchVisibility.Account,
+        listedInStore: true,
+      })
+    );
+
+    associateE = await seedUser(`PT Associate ${RUN}`);
+    failOnError(
+      'associate E associate of org E',
+      await assignRoleToUser(associateE.id, orgE.roleSetId, RoleName.Associate)
+    );
+    adminE = await seedUser(`PT Admin E ${RUN}`);
+    for (const role of [RoleName.Associate, RoleName.Admin]) {
+      failOnError(
+        `admin E ${role} of org E`,
+        await assignRoleToUser(adminE.id, orgE.roleSetId, role)
+      );
+    }
+
+    // U4 owns an ACCOUNT pack. A fresh account has a pack limit of 0.
+    u4 = await seedUser(`PT Owner4 ${RUN}`);
+    const plan = await getLicensePlanByName('ACCOUNT_LICENSE_PLUS');
+    if (!plan[0]) throw new Error('ACCOUNT_LICENSE_PLUS plan not found');
+    failOnError(
+      'license plan on U4 account',
+      await assignLicensePlanToAccount(u4.accountId, plan[0].id)
+    );
+    packAccount4Id = await createPack(
+      u4.accountId,
+      PACK_ACCOUNT_4,
+      `pt-pacc4-${RUN}`,
+      undefined
+    );
+
+    // Org F: bare. Block O's org D is torn down before this block runs.
+    const displayName = `PT bare org F ${RUN}`;
+    const f = await createOrganizationOrAdopt(displayName, `pt-bare-f-${RUN}`);
+    failOnError('create org F', f);
+    orgFId = f.data?.createOrganization.id;
+    if (!orgFId) throw new Error('org F id missing from createOrganization');
+    orgF = { nameID: f.data!.createOrganization.nameID, displayName };
+
+    // Precondition read-backs: fail fast and clearly.
+    expect(
+      await orgIsLeadOf(scenarioE.space.community.roleSetId, orgE.id),
+      'org E must NOT lead its L0 after clearHostLead'
+    ).toBe(false);
+    expect(
+      await orgIsMemberOf(scenarioE.space.community.roleSetId, orgE.id),
+      'org E must still be a member of its L0'
+    ).toBe(true);
+    expect(await searchVisibilityOf('innovationPack', packPublicId)).toBe(
+      SearchVisibility.Public
+    );
+    expect(
+      await searchVisibilityOf('innovationPack', packAccountId),
+      'a new pack must default to ACCOUNT'
+    ).toBe(SearchVisibility.Account);
+    expect(await searchVisibilityOf('innovationPack', packHiddenId)).toBe(
+      SearchVisibility.Hidden
+    );
+    expect(
+      await visibilityOf('virtualContributor', vcAccountId),
+      'org E VC must be ACCOUNT and listed in the store'
+    ).toEqual({ searchVisibility: SearchVisibility.Account, listedInStore: true });
+    expect(
+      await searchVisibilityOf('innovationPack', packAccount4Id),
+      'U4 pack must default to ACCOUNT'
+    ).toBe(SearchVisibility.Account);
+    expect(
+      await accountResources(u4.accountId),
+      'U4 account must own exactly the one pack'
+    ).toEqual({ vcs: 0, packs: 1, hubs: 0 });
+    expect(
+      await rolesOf('rolesUser', associateE.id),
+      'associateE must hold no Space role'
+    ).toEqual([]);
+    expect(
+      await rolesOf('rolesUser', adminE.id),
+      'adminE must hold no Space role'
+    ).toEqual([]);
+    expect(
+      await rolesOf('rolesUser', u4.id),
+      'U4 must hold no Space role'
+    ).toEqual([]);
+    expect(
+      await accountResources(await orgAccountId(orgFId)),
+      'org F account must own no VC, pack or hub'
+    ).toEqual({ vcs: 0, packs: 0, hubs: 0 });
+  });
+
+  test.afterAll(async () => {
+    test.setTimeout(180_000);
+    await runTeardown([
+      ...(
+        [
+          ['pack public', packPublicId],
+          ['pack account', packAccountId],
+          ['pack hidden', packHiddenId],
+          // An account with a pack blocks user deletion: the pack goes first.
+          ['pack account U4', packAccount4Id],
+        ] as const
+      ).map(([label, id]): [string, () => Promise<unknown>] => [
+        label,
+        async () => id && failOnError(`delete ${label}`, await deleteInnovationPack(id)),
+      ]),
+      // The VC goes before its body-of-knowledge Space.
+      [
+        'VC',
+        async () =>
+          vcAccountId &&
+          failOnError('delete VC', await deleteVirtualContributor(vcAccountId)),
+      ],
+      ...[associateE, adminE, u4].map(
+        (u): [string, () => Promise<unknown>] => [
+          `user ${u?.displayName}`,
+          async () => u && deleteFixtureUser(u.id),
+        ]
+      ),
+      ['scenario E', () => removeScenario(scenarioE)],
+      ['org F', async () => orgFId && failOnError('delete org F', await deleteOrganization(orgFId))],
+    ]);
+  });
+
+  /** Opens org E's profile on its Other Resources tab. */
+  const openOrgEOtherResources = async (page: Page): Promise<void> => {
+    const org = scenarioE!.organization;
+    await openProfile(page, `/organization/${org.nameId}`, org.profile.displayName);
+    await tab(page, TAB.org.other).click();
+    await expect(tab(page, TAB.org.other)).toHaveAttribute('aria-selected', 'true');
+  };
+
+  /** Asserts the guest notice and its sign-up link back to `profilePath`. */
+  const expectGuestNotice = async (
+    page: Page,
+    organization: string,
+    profilePath: string
+  ): Promise<void> => {
+    const notice = guestNotice(page, organization);
+    await expect(notice).toBeVisible();
+    const href = await notice
+      .getByRole('link', { name: 'Sign up', exact: true })
+      .getAttribute('href');
+    expect(href, 'the notice must link to sign-up').toBeTruthy();
+    const signUp = new URL(href!, baseUrl);
+    expect(signUp.pathname).toBe('/sign_up');
+    expect(
+      decodeURI(signUp.searchParams.get('returnUrl') ?? ''),
+      'sign-up must return to the profile'
+    ).toContain(profilePath);
+    await expect(tab(page, TAB.org.other)).toHaveCount(0);
+  };
+
+  test('PT-7 — an unrelated registered visitor sees only the PUBLIC pack: no ACCOUNT or HIDDEN pack, no VC despite its store listing, no guest notice', async ({
+    page,
+  }) => {
+    const org = scenarioE!.organization;
+    await openProfile(page, `/organization/${org.nameId}`, org.profile.displayName);
+    await expect(tabs(page)).toHaveText([TAB.org.memberOf, TAB.org.other]);
+
+    await tab(page, TAB.org.other).click();
+    await expect(tab(page, TAB.org.other)).toHaveAttribute('aria-selected', 'true');
+    // Positive control first, then the absences it makes meaningful.
+    await expect(h4(page, PACK_PUBLIC)).toBeVisible();
+    await expect(h4(page, PACK_ACCOUNT)).toHaveCount(0);
+    await expect(h4(page, PACK_HIDDEN)).toHaveCount(0);
+    await expect(h3(page, 'Virtual Contributors')).toHaveCount(0);
+    await expect(text(page, VC_ACCOUNT)).toHaveCount(0);
+    await expect(guestNotice(page, org.profile.displayName)).toHaveCount(0);
+  });
+
+  test('PT-8 — an associate who holds no Space role sees the PUBLIC and ACCOUNT packs and the ACCOUNT VC card, not the HIDDEN pack', async ({
+    browser,
+  }) => {
+    await asViewer(browser, associateE!.email, async page => {
+      await openOrgEOtherResources(page);
+      await expect(h4(page, PACK_PUBLIC)).toBeVisible();
+      await expect(h4(page, PACK_ACCOUNT)).toBeVisible();
+      await expect(h3(page, 'Virtual Contributors')).toBeVisible();
+      // The card renders for a viewer who cannot open the VC itself.
+      await expect(h4(page, VC_ACCOUNT)).toBeVisible();
+      await expect(h4(page, PACK_HIDDEN)).toHaveCount(0);
+    });
+  });
+
+  test('PT-9 — an organisation admin sees every pack, HIDDEN included, and the VC', async ({
+    browser,
+  }) => {
+    await asViewer(browser, adminE!.email, async page => {
+      await openOrgEOtherResources(page);
+      await expect(h4(page, PACK_PUBLIC)).toBeVisible();
+      await expect(h4(page, PACK_ACCOUNT)).toBeVisible();
+      await expect(h4(page, PACK_HIDDEN)).toBeVisible();
+      await expect(h3(page, 'Virtual Contributors')).toBeVisible();
+      await expect(h4(page, VC_ACCOUNT)).toBeVisible();
+    });
+  });
+
+  test('PT-12 — a user whose only resource is an ACCOUNT pack shows a visitor Member Of only; the owner still sees Other Resources', async ({
+    page,
+    browser,
+  }) => {
+    const user = u4!;
+    // Positive twin: the owner's full view lists the pack.
+    await asViewer(browser, user.email, async ownerPage => {
+      await openProfile(ownerPage, `/user/${user.nameID}`, user.displayName);
+      await expect(tabs(ownerPage)).toHaveText([TAB.user.memberOf, TAB.user.other]);
+      await tab(ownerPage, TAB.user.other).click();
+      await expect(h4(ownerPage, PACK_ACCOUNT_4)).toBeVisible();
+    });
+
+    await openProfile(page, `/user/${user.nameID}`, user.displayName);
+    await expect(tabs(page)).toHaveText([TAB.user.memberOf]);
+    await expect(tab(page, TAB.user.other)).toHaveCount(0);
+  });
+
+  test('PT-10 — a guest sees the sign-up notice and no Other Resources, on an organisation with resources and on a bare one alike', async ({
+    browser,
+  }) => {
+    const guest = await browser.newContext({ locale: 'en-US' });
+    try {
+      const page = await guest.newPage();
+      const org = scenarioE!.organization;
+      const orgEPath = `/organization/${org.nameId}`;
+      await openProfile(page, orgEPath, org.profile.displayName);
+      await expectGuestNotice(page, org.profile.displayName, orgEPath);
+      await expect(text(page, PACK_PUBLIC)).toHaveCount(0);
+
+      // The notice does not reveal whether the organisation owns anything.
+      const orgFPath = `/organization/${orgF!.nameID}`;
+      await openProfile(page, orgFPath, orgF!.displayName);
+      await expectGuestNotice(page, orgF!.displayName, orgFPath);
+    } finally {
+      await guest.close();
+    }
+  });
+
+  test('PT-11 — the guest notice goes away once the guest signs in as an associate, and Other Resources appears', async ({
+    browser,
+  }) => {
+    const guest = await browser.newContext({ locale: 'en-US' });
+    try {
+      const page = await guest.newPage();
+      const org = scenarioE!.organization;
+      const orgEPath = `/organization/${org.nameId}`;
+      await openProfile(page, orgEPath, org.profile.displayName);
+      await expect(guestNotice(page, org.profile.displayName)).toBeVisible();
+
+      await signIn(page, associateE!.email);
+      await openProfile(page, orgEPath, org.profile.displayName);
+      await expect(tab(page, TAB.org.other)).toBeVisible();
+      await expect(guestNotice(page, org.profile.displayName)).toHaveCount(0);
+      await tab(page, TAB.org.other).click();
+      await expect(h4(page, PACK_PUBLIC)).toBeVisible();
+    } finally {
+      await guest.close();
+    }
   });
 });
