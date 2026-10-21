@@ -323,7 +323,8 @@ describe('Subspace sidebar - template flows follow their level', () => {
   });
 
   test('a template made from an L0 space keeps every list with its own state', async () => {
-    // Arrange
+    // Arrange: pad here too, so this test does not depend on the L0 reorder test above.
+    await ensureAtLeastStates(baseScenario.space.collaboration.id, 3);
     const templateId = await createTemplate(
       baseScenario.space.id,
       'L0 sidebar template'
