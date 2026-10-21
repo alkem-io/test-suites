@@ -30,6 +30,7 @@ import {
   LicenseEntitlementType,
 } from '@alkemio/tests-lib/core/generated/alkemio-schema';
 import { createPersonaTest } from '../fixtures/authenticated-session.fixture';
+import { grantCookieConsent } from '../helpers/cookies.helper';
 import { loginViaCrd } from '../helpers/login.helper';
 
 const SIGNING_PLAN_NAME = 'SPACE_FEATURE_MEMO_SIGNING';
@@ -53,7 +54,6 @@ let baseScenario: OrganizationWithSpaceModel;
 let planId = '';
 let planAssigned = false;
 const test = createPersonaTest('space.member@alkem.io');
-test.describe.configure({ mode: 'serial' });
 
 const admin = async (fn: (token: string | undefined) => Promise<any>): Promise<any> =>
   graphqlErrorWrapper(fn as any, TestUser.GLOBAL_ADMIN);
@@ -154,23 +154,42 @@ const download = async (page: Page, savePath: string) => {
   await expect(button).toBeEnabled();
   const downloadPromise = page.waitForEvent('download');
   await button.click();
+  // Busy = announced AND inert, so a second click cannot start a second render.
   await expect(button).toHaveAttribute('aria-busy', 'true');
+  await expect(button).toBeDisabled();
   const file = await downloadPromise;
   await file.saveAs(savePath);
   await expect(button).toHaveAttribute('aria-busy', 'false');
+  await expect(button).toBeEnabled();
   return { name: file.suggestedFilename(), bytes: fs.readFileSync(savePath) };
 };
 
-const pdfText = (path: string): string | null => {
+/**
+ * Runs a poppler tool on the saved PDF. A missing binary FAILS the test: these
+ * reads are the only oracle for the content ACs, and a skipped oracle proves
+ * nothing (install `poppler-utils`; the nightly workflow does).
+ */
+const poppler = (tool: 'pdftotext' | 'pdffonts', args: string[]): string => {
   try {
-    return execFileSync('pdftotext', ['-layout', path, '-'], { encoding: 'utf8' });
+    return execFileSync(tool, args, { encoding: 'utf8' });
   } catch (error) {
-    // Only a missing binary (poppler-utils not installed) skips the text checks;
-    // a PDF pdftotext cannot read is a red, never a skip.
-    if ((error as NodeJS.ErrnoException).code === 'ENOENT') return null;
+    if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
+      throw new Error(`${tool} is required for the memo PDF content checks: install poppler-utils`);
+    }
     throw error;
   }
 };
+const pdfText = (path: string): string => poppler('pdftotext', ['-layout', path, '-']);
+/** `pdffonts` rows: font name and whether it is embedded ("emb" is 5th from the end). */
+const pdfFonts = (path: string): { name: string; embedded: boolean }[] =>
+  poppler('pdffonts', [path])
+    .split('\n')
+    .slice(2)
+    .filter(line => line.trim())
+    .map(line => {
+      const cols = line.trim().split(/\s+/);
+      return { name: cols[0], embedded: cols[cols.length - 5] === 'yes' };
+    });
 
 /** The UTC days the server may have stamped a download with: the request can straddle midnight. */
 const downloadDays = async <T>(fn: () => Promise<T>): Promise<{ result: T; days: string[] }> => {
@@ -212,18 +231,32 @@ test.describe('US1 — a reader downloads a memo as PDF', () => {
     const path = testInfo.outputPath('as3.pdf');
     const { bytes } = await download(page, path);
     const text = pdfText(path);
-    test.skip(text === null, 'pdftotext is not available on this runner');
     expect(text).toContain('highlight');
+    // The ==mark== was parsed into a mark, not printed as literal markdown.
+    expect(text).not.toContain('==');
     expect(text).toContain('link text');
+    // ...and "link text" is a live link to its target, not just its words.
+    expect(bytes.includes(Buffer.from('/URI (https://example.com)'))).toBe(true);
     expect(text).toContain('🎉');
     expect(text).toContain('external image');
     expect(text).not.toMatch(/sign/i);
     expect(text).not.toContain('Board decision');
     expect(bytes.includes(Buffer.from('/URI (https://example.com/x.png)'))).toBe(true);
+    // Fonts travel with the file, and the emoji is drawn by an emoji font
+    // rather than a missing-glyph box.
+    const fonts = pdfFonts(path);
+    expect(fonts.length).toBeGreaterThan(0);
+    expect(fonts.filter(font => !font.embedded)).toEqual([]);
+    expect(fonts.some(font => /emoji/i.test(font.name))).toBe(true);
   });
 
   test('US1-AS4 @forge-acceptance — a paragraph typed by another collaborator is in the PDF (live read)', async ({ page, browser }, testInfo) => {
-    await openMemo(page, 'live');
+    // A scenario Space has no SPACE_FLAG_MEMO_MULTI_USER, so only the FIRST
+    // connection to the memo may edit (server memo.service.ts › isMultiUser);
+    // everyone after it is a read-only viewer told "You don't have permission
+    // to edit this memo". The collaborator therefore opens the memo first and
+    // types; the reader joins the same live room afterwards and downloads.
+    //
     // The persona fixture overrides the storageState option, and a bare
     // browser.newContext() inherits it, so the collaborator would start signed
     // in as the reader. An explicit empty session makes it start logged out.
@@ -232,22 +265,27 @@ test.describe('US1 — a reader downloads a memo as PDF', () => {
       storageState: { cookies: [], origins: [] },
     });
     expect(await collabContext.cookies()).toHaveLength(0);
+    await grantCookieConsent(collabContext);
     const collab = await collabContext.newPage();
     try {
       await loginViaCrd(collab, 'space.admin@alkem.io');
       await openMemo(collab, 'live');
       const marker = `LIVE-${Date.now().toString(36)}`;
       const editor = collab.locator('.ProseMirror').first();
+      await expect(editor).toHaveAttribute('contenteditable', 'true');
       await editor.click();
       await collab.keyboard.press('Control+End');
       await collab.keyboard.press('Enter');
       await collab.keyboard.type(`New paragraph ${marker}.`);
+      // Precondition: the collaborator really edited the memo.
+      await expect(editor).toContainText(marker);
+
+      // The reader joins while the collaborator is still in the room.
+      await openMemo(page, 'live');
       await expect(page.locator('.ProseMirror').first()).toContainText(marker, { timeout: 15_000 });
       const path = testInfo.outputPath('as4.pdf');
       await download(page, path);
-      const text = pdfText(path);
-      test.skip(text === null, 'pdftotext is not available on this runner');
-      expect(text).toContain(marker);
+      expect(pdfText(path)).toContain(marker);
     } finally {
       await collabContext.close();
     }
@@ -271,13 +309,25 @@ test.describe('US1 — a reader downloads a memo as PDF', () => {
   });
 
   test('US1-AS6 @forge-acceptance — Download PDF is present with and without the signing entitlement', async ({ page }, testInfo) => {
-    test.skip(!planId, `license plan ${SIGNING_PLAN_NAME} not found on this stack`);
+    expect(planId, `license plan ${SIGNING_PLAN_NAME} exists on this stack`).not.toBe('');
+    const client = getGraphqlClient();
+    const signingEnabled = async (): Promise<boolean> => {
+      const license = await admin(token =>
+        client.GetSpaceLicenseEntitlements({ spaceID: baseScenario.space.id }, { authorization: `Bearer ${token}` })
+      );
+      return (
+        license.data?.lookup?.space?.license?.entitlements?.find(
+          (e: { type: LicenseEntitlementType }) => e.type === LicenseEntitlementType.SpaceFlagMemoSigning
+        )?.enabled ?? false
+      );
+    };
+    // Precondition: the "without" half really runs without the entitlement.
+    expect(await signingEnabled()).toBe(false);
     const dialog = await openMemo(page, 'board');
     await expect(dialog.getByRole('button', { name: /download pdf/i })).toBeVisible();
     const noEntitlement = await download(page, testInfo.outputPath('as6-off.pdf'));
     expect(noEntitlement.bytes.subarray(0, 5).toString()).toBe('%PDF-');
 
-    const client = getGraphqlClient();
     const assigned = await admin(token =>
       client.AssignLicensePlanToSpace(
         { planData: { spaceID: baseScenario.space.id, licensePlanID: planId } },
@@ -286,18 +336,7 @@ test.describe('US1 — a reader downloads a memo as PDF', () => {
     );
     if (!assigned.error) planAssigned = true;
     expect(assigned.error).toBeUndefined();
-    await expect
-      .poll(async () => {
-        const license = await admin(token =>
-          client.GetSpaceLicenseEntitlements({ spaceID: baseScenario.space.id }, { authorization: `Bearer ${token}` })
-        );
-        return (
-          license.data?.lookup?.space?.license?.entitlements?.find(
-            (e: { type: LicenseEntitlementType }) => e.type === LicenseEntitlementType.SpaceFlagMemoSigning
-          )?.enabled ?? false
-        );
-      }, { timeout: 30_000 })
-      .toBe(true);
+    await expect.poll(signingEnabled, { timeout: 30_000 }).toBe(true);
     const entitledDialog = await openMemo(page, 'board');
     await expect(entitledDialog.getByRole('button', { name: /download pdf/i })).toBeVisible();
     const entitled = await download(page, testInfo.outputPath('as6-on.pdf'));
