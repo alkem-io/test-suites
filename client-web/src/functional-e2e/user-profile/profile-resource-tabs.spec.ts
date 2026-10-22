@@ -909,6 +909,44 @@ test.describe('Public profile resource tabs — visibility tiers', () => {
       `Sign up on Alkemio to see the resources hosted by ${organization}`
     );
 
+  /**
+   * Records whether the guest notice for one organisation ever enters the DOM
+   * of the next document `page` loads. The observer is installed before any
+   * page script runs and inspects every inserted node, so a notice rendered for
+   * a single frame while the sign-in state loads is caught, although no
+   * locator could ever see it. It matches the notice's sign-up link by the
+   * organisation's name in the surrounding text or its nameID in the return
+   * URL, so it does not depend on the UI language. Returns a reader.
+   */
+  const recordGuestNotice = async (
+    page: Page,
+    org: { displayName: string; nameID: string }
+  ): Promise<() => Promise<boolean>> => {
+    await page.addInitScript(({ displayName, nameID }) => {
+      const state = window as unknown as { __guestNoticeSeen?: boolean };
+      state.__guestNoticeSeen = false;
+      const isNotice = (link: Element): boolean =>
+        (link.getAttribute('href') ?? '').includes(nameID) ||
+        !!link.parentElement?.textContent?.includes(displayName);
+      const scan = (node: Node): void => {
+        if (!(node instanceof Element)) return;
+        const links = node.matches('a[href*="sign_up"]')
+          ? [node]
+          : Array.from(node.querySelectorAll('a[href*="sign_up"]'));
+        if (links.some(isNotice)) state.__guestNoticeSeen = true;
+      };
+      new MutationObserver(records => {
+        for (const record of records) record.addedNodes.forEach(scan);
+      }).observe(document, { childList: true, subtree: true });
+    }, org);
+    return () =>
+      page.evaluate(
+        () =>
+          (window as unknown as { __guestNoticeSeen?: boolean })
+            .__guestNoticeSeen === true
+      );
+  };
+
   const createPack = async (
     accountId: string,
     displayName: string,
@@ -1212,6 +1250,10 @@ test.describe('Public profile resource tabs — visibility tiers', () => {
     page,
   }) => {
     const org = scenarioE!.organization;
+    const noticeEverShown = await recordGuestNotice(page, {
+      displayName: org.profile.displayName,
+      nameID: org.nameId,
+    });
     await openProfile(page, `/organization/${org.nameId}`, org.profile.displayName);
     await expect(tabs(page)).toHaveText([TAB.org.memberOf, TAB.org.other]);
 
@@ -1224,6 +1266,12 @@ test.describe('Public profile resource tabs — visibility tiers', () => {
     await expect(h3(page, 'Virtual Contributors')).toHaveCount(0);
     await expect(text(page, VC_ACCOUNT)).toHaveCount(0);
     await expect(guestNotice(page, org.profile.displayName)).toHaveCount(0);
+    // US4-AS4: not even briefly while the sign-in state was still loading.
+    // PT-10 is the positive control: the same recorder fires for a guest.
+    expect(
+      await noticeEverShown(),
+      'the guest notice must never render for a signed-in visitor'
+    ).toBe(false);
   });
 
   test('PT-8 — an associate who holds no Space role sees the PUBLIC and ACCOUNT packs and the ACCOUNT VC card, not the HIDDEN pack', async ({
@@ -1297,9 +1345,15 @@ test.describe('Public profile resource tabs — visibility tiers', () => {
       const page = await guest.newPage();
       const org = scenarioE!.organization;
       const orgEPath = `/organization/${org.nameId}`;
+      const noticeEverShown = await recordGuestNotice(page, {
+        displayName: org.profile.displayName,
+        nameID: org.nameId,
+      });
       await openProfile(page, orgEPath, org.profile.displayName);
       await expectGuestNotice(page, org.profile.displayName, orgEPath);
       await expect(text(page, PACK_PUBLIC)).toHaveCount(0);
+      // Positive control for the recorder that PT-7 and PT-11 assert stays silent.
+      expect(await noticeEverShown(), 'the recorder sees the guest notice').toBe(true);
 
       // The notice does not reveal whether the organisation owns anything.
       const orgFPath = `/organization/${orgF!.nameID}`;
@@ -1318,6 +1372,11 @@ test.describe('Public profile resource tabs — visibility tiers', () => {
       const page = await guest.newPage();
       const org = scenarioE!.organization;
       const orgEPath = `/organization/${org.nameId}`;
+      // Re-armed on every document, so after sign-in it reports the reload only.
+      const noticeEverShown = await recordGuestNotice(page, {
+        displayName: org.profile.displayName,
+        nameID: org.nameId,
+      });
       await openProfile(page, orgEPath, org.profile.displayName);
       await expect(guestNotice(page, org.profile.displayName)).toBeVisible();
 
@@ -1327,6 +1386,11 @@ test.describe('Public profile resource tabs — visibility tiers', () => {
       await expect(guestNotice(page, org.profile.displayName)).toHaveCount(0);
       await tab(page, TAB.org.other).click();
       await expect(h4(page, PACK_PUBLIC)).toBeVisible();
+      // US4-AS4 for the viewer who just signed in, in the same tab.
+      expect(
+        await noticeEverShown(),
+        'the guest notice must not flash on the signed-in reload'
+      ).toBe(false);
     } finally {
       await guest.close();
     }
