@@ -293,6 +293,17 @@ export default defineConfig(
         tier: 'long',
       }),
       suite({
+        // Comment images (one image per comment or reply, raster only):
+        // forge-verify walks, each seeding its own private Space and
+        // disposable Kratos identities (comment-images.helpers.ts). The
+        // upload goes through the messaging media route, so the target
+        // environment must have chat image uploads working.
+        name: 'Comment images',
+        testDir: GENERATED_WALKS_DIR,
+        testMatch: ['comment-images-us*.spec.ts'],
+        tier: 'extended',
+      }),
+      suite({
         // workspace#077 (richer contributor cards, client-web#10316): every
         // file seeds its own public Space through the API. The shipped
         // 0.1contributors-callout.spec.ts is deliberately NOT listed: its
