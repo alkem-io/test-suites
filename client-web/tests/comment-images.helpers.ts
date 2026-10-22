@@ -22,6 +22,8 @@ import {
   type Locator,
   type Page,
   type BrowserContext,
+  type Request,
+  type Response,
 } from '@playwright/test';
 import {
   TestScenarioFactory,
@@ -48,6 +50,7 @@ import {
   SpacePrivacyMode,
 } from '@alkemio/tests-lib/core/generated/alkemio-schema';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
+import { grantCookieConsent } from '../src/functional-e2e/helpers/cookies.helper';
 import { loginViaCrd } from '../src/functional-e2e/helpers/login.helper';
 
 export const BASE_URL = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
@@ -492,7 +495,11 @@ export const addOutsider = (
   role: string
 ): Promise<Identity> => registerIdentity(seed, role);
 
-/** Signs in in a fresh browser context; the context is closed by `cleanUpCommentImages`. */
+/**
+ * Signs in in a fresh browser context; the context is closed by
+ * `cleanUpCommentImages`. Cookie consent is granted up front, so the banner
+ * never renders over a composer.
+ */
 export async function signIn(
   browser: Browser,
   seed: CommentImagesSeed,
@@ -501,10 +508,64 @@ export async function signIn(
 ): Promise<Page> {
   const context = await browser.newContext({ viewport });
   seed.contexts.push(context);
+  await grantCookieConsent(context);
   const page = await context.newPage();
   await loginViaCrd(page, email);
   return page;
 }
+
+// --- sends ---------------------------------------------------------------------------------------
+
+/** The GraphQL mutations a comment and a reply are posted with. */
+export type SendOperation = 'sendMessageToRoom' | 'sendMessageReplyToRoom';
+
+export const isSendOf =
+  (operation: SendOperation) =>
+  (request: Request): boolean =>
+    request.url().includes('graphql') &&
+    (request.postData() ?? '').includes(operation);
+
+export type SendTracker = {
+  requests: Request[];
+  bodies: Array<{ data?: any; errors?: unknown }>;
+  stop: () => void;
+};
+
+/**
+ * Collects the page's calls of one send mutation. `requests` records each call
+ * as it leaves the page, in the order the calls leave, so once a later send
+ * has been seen every earlier one is counted. `bodies` fills in only as the
+ * responses are read: use it to inspect a send already counted, never to
+ * count.
+ */
+export function trackSends(
+  page: Page,
+  operation: SendOperation = 'sendMessageToRoom'
+): SendTracker {
+  const isSend = isSendOf(operation);
+  const requests: Request[] = [];
+  const bodies: Array<{ data?: any; errors?: unknown }> = [];
+  const onRequest = (request: Request) => {
+    if (isSend(request)) requests.push(request);
+  };
+  const onResponse = async (response: Response) => {
+    if (isSend(response.request())) bodies.push(await response.json());
+  };
+  page.on('request', onRequest);
+  page.on('response', onResponse);
+  return {
+    requests,
+    bodies,
+    stop: () => {
+      page.off('request', onRequest);
+      page.off('response', onResponse);
+    },
+  };
+}
+
+/** The variables a counted send carried. */
+export const sentVariables = (request: Request): Record<string, any> =>
+  JSON.parse(request.postData() ?? '{}').variables ?? {};
 
 /**
  * Removes a disposable person: the Alkemio user together with its Kratos

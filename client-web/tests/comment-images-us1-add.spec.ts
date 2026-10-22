@@ -24,14 +24,7 @@
  *   pnpm run test:nightly --project="Comment images" comment-images-us1
  */
 
-import {
-  expect,
-  test,
-  type Locator,
-  type Page,
-  type Request,
-  type Response,
-} from '@playwright/test';
+import { expect, test, type Locator, type Page } from '@playwright/test';
 import {
   UPLOAD_FAILED_MESSAGE,
   UPLOAD_ROUTE,
@@ -40,8 +33,11 @@ import {
   image,
   newSeed,
   seedCommentImages,
+  sentVariables,
   signIn,
+  trackSends,
   transfer,
+  type SendTracker,
 } from './comment-images.helpers';
 
 const ONE_FILE_MESSAGE = 'You can attach only one file.';
@@ -63,8 +59,6 @@ async function openComposer(page: Page, url: string): Promise<Composer> {
   const dlg = page.locator('[role=dialog]').last();
   const box = dlg.getByRole('textbox', { name: 'Add a comment...' });
   await box.waitFor();
-  const cookies = page.getByRole('button', { name: /accept all cookies/i });
-  if (await cookies.isVisible().catch(() => false)) await cookies.click();
   return {
     dlg,
     box,
@@ -72,41 +66,6 @@ async function openComposer(page: Page, url: string): Promise<Composer> {
     addImage: dlg.getByRole('button', { name: 'Add image' }),
     send: dlg.getByRole('button', { name: 'Send', exact: true }),
     fileInput: dlg.locator('input[type=file]').first(),
-  };
-}
-
-const isSend = (request: Request): boolean =>
-  request.url().includes('graphql') &&
-  (request.postData() ?? '').includes('sendMessageToRoom');
-
-/**
- * Collects the sendMessageToRoom GraphQL calls the page makes. `requests` is
- * recorded synchronously when each call leaves the page, so once the composer
- * has settled it holds every send the click caused; `bodies` fills in as the
- * responses are read.
- */
-function trackSends(page: Page): {
-  requests: Request[];
-  bodies: Array<{ data?: any; errors?: unknown }>;
-  stop: () => void;
-} {
-  const requests: Request[] = [];
-  const bodies: Array<{ data?: any; errors?: unknown }> = [];
-  const onRequest = (request: Request) => {
-    if (isSend(request)) requests.push(request);
-  };
-  const onResponse = async (response: Response) => {
-    if (isSend(response.request())) bodies.push(await response.json());
-  };
-  page.on('request', onRequest);
-  page.on('response', onResponse);
-  return {
-    requests,
-    bodies,
-    stop: () => {
-      page.off('request', onRequest);
-      page.off('response', onResponse);
-    },
   };
 }
 
@@ -124,8 +83,9 @@ const commentRows = (dlg: Locator, text: string): Locator =>
     .filter({ has: dlg.page().getByText(text, { exact: true }) });
 
 /**
- * One comment row carries the text and, beneath it in the same row, the
- * picture.
+ * One comment row carries both the text and the picture: the picture sits in
+ * that row's own Attachments list, the row holds no other list item (no reply
+ * or second message nested in it), and the text reads above the picture.
  */
 async function expectOneCaptionedRow(
   dlg: Locator,
@@ -134,8 +94,11 @@ async function expectOneCaptionedRow(
 ): Promise<Locator> {
   const row = commentRows(dlg, text);
   await expect(row).toHaveCount(1);
-  const picture = inlineImage(row, name);
+  const attachments = row.getByRole('list', { name: 'Attachments' });
+  const picture = inlineImage(attachments, name);
   await expect(picture).toBeVisible();
+  await expect(attachments.getByRole('listitem')).toHaveCount(1);
+  await expect(row.getByRole('listitem')).toHaveCount(1);
   await expect(inlineImage(dlg, name)).toHaveCount(1);
   const textBox = await row.getByText(text, { exact: true }).boundingBox();
   const pictureBox = await picture.boundingBox();
@@ -150,7 +113,7 @@ async function expectOneCaptionedRow(
  */
 async function expectOneCaptionedSend(
   c: Composer,
-  sends: ReturnType<typeof trackSends>,
+  sends: SendTracker,
   text: string
 ): Promise<void> {
   await expect(c.box).toHaveValue('');
@@ -167,8 +130,6 @@ async function expectOneCaptionedSend(
   expect(sent.message).toBe(text);
   expect(sent.attachments).toHaveLength(1);
 }
-
-test.describe.configure({ mode: 'serial' });
 
 test.describe(
   'Comment images — US1 P1 add-an-image walk',
@@ -195,9 +156,10 @@ test.describe(
 
     test('US1-AS1: pasting an image stages a removable chip; nothing is uploaded; Send is enabled', async () => {
       const uploads: string[] = [];
-      m.on('request', r => {
+      const onUpload = (r: { url: () => string }) => {
         if (r.url().includes('/messaging/media/upload')) uploads.push(r.url());
-      });
+      };
+      m.on('request', onUpload);
       const c = await openComposer(m, seed.calloutUrl);
       await expect(c.addImage).toBeVisible();
       await transfer(c.box, 'paste', image('one.png'));
@@ -206,6 +168,7 @@ test.describe(
         c.stagedList.getByRole('button', { name: 'Remove one.png' })
       ).toBeVisible();
       await expect(c.send).toBeEnabled();
+      m.off('request', onUpload);
       expect(uploads, 'staging must not upload').toHaveLength(0);
     });
 
@@ -257,6 +220,7 @@ test.describe(
       // Response bodies are collected asynchronously; wait for this one to land.
       await expect.poll(() => sends.bodies.length).toBe(1);
       sends.stop();
+      expect(sends.requests).toHaveLength(1);
       expect(sends.bodies).toHaveLength(1);
       expect(
         sends.bodies[0].data.sendMessageToRoom.attachments[0].mimeType
@@ -342,14 +306,25 @@ test.describe(
     });
 
     test('US1-AS7: removing a staged chip clears it and sends nothing', async () => {
+      const sentinel = `as7 sentinel ${RUN}`;
       const c = await openComposer(m, seed.calloutUrl);
       const sends = trackSends(m);
       await transfer(c.box, 'paste', image('a.png'));
       await expect(c.stagedList).toContainText('a.png');
       await c.stagedList.getByRole('button', { name: 'Remove a.png' }).click();
       await expect(c.stagedList).toHaveCount(0);
+      // A text-only comment sent next is the barrier: sends are counted in the
+      // order they leave the page, so one caused by the removal would be
+      // counted before it.
+      await c.box.fill(sentinel);
+      await c.send.click();
+      await expect(commentRows(c.dlg, sentinel)).toHaveCount(1);
+      await expect.poll(() => sends.requests.length).toBeGreaterThan(0);
       sends.stop();
-      expect(sends.bodies).toHaveLength(0);
+      expect(sends.requests, 'the removal sent nothing').toHaveLength(1);
+      const { messageData } = sentVariables(sends.requests[0]);
+      expect(messageData.message).toBe(sentinel);
+      expect(messageData.attachmentUpload ?? null).toBeNull();
     });
 
     test("US1-AS8: the same flow behaves identically in a post's own comments (contribution dialog)", async () => {
