@@ -161,7 +161,7 @@ pnpm --filter @alkemio/test-suite-server-api run test:collabora
 | AC2 | Applying that template twice yields **three** distinct backing files — template, post A1, post A2 — all hashing to the fixture | `two posts from one template have three distinct files…` |
 | AC2 | The copy-on-apply source READ reaches a **template-owned** document for an ordinary space role: one apply runs as `SPACE_ADMIN`, the other as `SPACE_MEMBER`, and the member's `CREATE_CALLOUT` is asserted first so a refusal would be attributable to the source READ alone | same case |
 | AC3 | A real content write on post A1 changes A1's bytes and leaves the template's and A2's **byte-identical** to their AC2 values — row-level *and* byte-level isolation | `editing one post changes only that post` |
-| AC6 | Applying a template the actor cannot read is refused **naming the source** (not the licence, not a destination `CREATE_CALLOUT` denial) and persists nothing | `a foreign source is refused, and nothing is persisted` |
+| AC6 | Applying a template the actor cannot read is refused as the source READ denial — `FORBIDDEN_POLICY`, `unable to grant 'read' privilege`, **naming the source** (not the licence code, not a destination `CREATE_CALLOUT` denial) — and persists nothing. Its precondition is the template read's own `FORBIDDEN_POLICY`, not merely an absent template | `a foreign source is refused, and nothing is persisted` |
 
 Every byte assertion flows through one reader, `fetchDocumentBytesHash`, which
 builds on the **non-async** `getDocument` so the binary parser is attached

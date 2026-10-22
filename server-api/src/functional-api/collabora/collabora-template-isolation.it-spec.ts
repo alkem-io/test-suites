@@ -84,7 +84,7 @@ let templateResponse: Awaited<
   ReturnType<typeof createCollaboraCalloutTemplate>
 >;
 
-// Captured by case 1 and reused by cases 2-4.
+// Captured in beforeAll and reused by every case.
 let templateId = '';
 /** The slice of `createTemplate` this spec reads; asserted properly in AC1. */
 type CreatedCollaboraTemplate = {
@@ -151,14 +151,18 @@ beforeAll(async () => {
       )}`
     );
   }
-  const setupDocument = (
-    templateResponse.data?.createTemplate as CreatedCollaboraTemplate | undefined
-  )?.callout?.framing?.collaboraDocument;
-  if (!setupDocument?.id || !setupDocument?.previewUrl) {
+  const setupTemplate = templateResponse.data?.createTemplate as
+    | CreatedCollaboraTemplate
+    | undefined;
+  const setupDocument = setupTemplate?.callout?.framing?.collaboraDocument;
+  if (!setupTemplate?.id || !setupDocument?.id || !setupDocument?.previewUrl) {
     throw new Error(
-      'template setup returned no Collabora document id/previewUrl — the later cases would assert against empty strings'
+      'template setup returned no template id / Collabora document id / previewUrl — the later cases would assert against empty strings'
     );
   }
+  // AC6 reads the template as another role; with '' that read fails as
+  // BAD_USER_INPUT and the precondition would pass on a malformed id.
+  templateId = setupTemplate.id;
   templateDocumentId = setupDocument.id;
   templatePreviewUrl = setupDocument.previewUrl;
 });
@@ -183,10 +187,6 @@ describe('document post templates - template and post content are independent', 
       CollaboraDocumentType.Wordprocessing
     );
     expect(document?.previewUrl).toEqual(expect.any(String));
-
-    templateId = template?.id as string;
-    templateDocumentId = document?.id as string;
-    templatePreviewUrl = document?.previewUrl as string;
 
     await expect(fetchDocumentBytesHash(templatePreviewUrl)).resolves.toEqual(
       importHash
@@ -293,6 +293,11 @@ describe('document post templates - template and post content are independent', 
         `precondition failed: B's admin can read A's template ${templateId} — AC6 would prove nothing`
       );
     }
+    // The READ denial itself. A malformed id (BAD_USER_INPUT) or an unreachable
+    // server also returns no template, and must not satisfy the precondition.
+    const foreignReadError = foreignRead.error?.errors[0];
+    expect(foreignReadError?.code).toEqual('FORBIDDEN_POLICY');
+    expect(String(foreignReadError?.message)).toContain(templateId);
 
     const beforeRead = await getCalloutsData(
       spaceB.space.collaboration.calloutsSetId,
@@ -315,14 +320,21 @@ describe('document post templates - template and post content are independent', 
       TestUser.NON_SPACE_MEMBER
     );
 
-    const messages = (refused.body?.errors ?? [])
-      .map((error: { message: string }) => error.message)
-      .join(' | ');
+    const errors: { message: string; extensions?: { code?: string } }[] =
+      refused.body?.errors ?? [];
+    const messages = errors.map(error => error.message).join(' | ');
+    const codes = errors.map(error => error.extensions?.code);
     expect(refused.body?.data?.createCalloutOnCalloutsSet).toBeFalsy();
-    // The refusal names the source document, not the destination and not the
-    // licence: B is entitled and its admin holds CREATE_CALLOUT on B.
+    // The refusal is the source READ denial — by code and by privilege, since
+    // a not-found that echoes the id would satisfy the id check on its own.
+    expect(codes).toEqual(['FORBIDDEN_POLICY']);
+    expect(messages).toMatch(/unable to grant 'read' privilege/);
+    // It names the source document, not the destination and not the licence:
+    // B is entitled and its admin holds CREATE_CALLOUT on B.
     expect(messages).toContain(templateDocumentId);
-    expect(messages).not.toContain('LICENSE_ENTITLEMENT_NOT_AVAILABLE');
+    // The licence refusal is identified by its code; its message ("Office Docs
+    // is not enabled for this Collaboration.") never contains that string.
+    expect(codes).not.toContain('LICENSE_ENTITLEMENT_NOT_AVAILABLE');
     expect(messages).not.toContain(spaceB.space.collaboration.calloutsSetId);
 
     const afterRead = await getCalloutsData(
