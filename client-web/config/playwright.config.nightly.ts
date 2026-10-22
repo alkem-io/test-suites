@@ -293,8 +293,8 @@ export default defineConfig(
         tier: 'long',
       }),
       suite({
-        // Comment images (one image per comment or reply, raster only):
-        // forge-verify walks, each seeding its own private Space and
+        // Comment images (one image per comment or reply; JPEG, PNG, GIF
+        // or WebP): forge-verify walks, each seeding its own private Space and
         // disposable Kratos identities (comment-images.helpers.ts). The
         // upload goes through the messaging media route, so the target
         // environment must have chat image uploads working.

@@ -2,7 +2,7 @@
 
 - **Story:** [alkem-io/client-web#10357](https://github.com/alkem-io/client-web/issues/10357), *Paste and add images in comments*
 - **Workspace spec:** `specs/088-comment-images/` in `alkem-io/agents-hq` (user stories US1–US5 and their acceptance scenarios).
-- **Product rules the walks pin:** one image per comment or reply send; raster images only; the image button follows the right to post in the room (not the upload right on the bucket); image and text sent together post as one comment or reply, the text being the image's caption; a failed upload posts nothing and keeps the text; rooms without an attachment bucket (calendar events, the forum) keep develop's text composers.
+- **Product rules the walks pin:** one image per comment or reply send; JPEG, PNG, GIF and WebP only; the image button follows the right to post in the room (not the upload right on the bucket); image and text sent together post as one comment or reply, the text being the image's caption; a failed upload posts nothing and keeps the text; rooms without an attachment bucket (calendar events, the forum) keep develop's text composers.
 - **Suite:** `client-web/tests/comment-images-us{1,2,3}-*.spec.ts` (forge-verify acceptance walks), shared fixtures in `client-web/tests/comment-images.helpers.ts`.
 
 ## How to run
@@ -55,5 +55,6 @@ pnpm --filter @alkemio/test-suite-client-web run test:nightly --project="Comment
 |---|---|
 | US4 (notifications and virtual-contributor invocation for image-only messages) | Needs notification payloads, email bodies, a virtual contributor and server log lines. The server changes carry unit specs (`message.details.service.spec.ts`, `message.inbox.service.spec.ts`); there is no persisted browser walk. |
 | US5 (deleting an image comment removes the picture for every viewer) | P2; no persisted walk yet. |
+| HEIC, HEIF and AVIF refused in comments even where the room's bucket allows them | Pinned by unit specs instead of a walk: the client side by `useCommentImageStorageConfig.test.ts` (client-web), the server side by `room.attachment.send.spec.ts` (server). The browser refusal path itself is walked by US3-AS3 (PDF) and US3-AS4 (SVG). |
 | A failed chip's own marking | The failed chip is set apart by colour only; it carries no accessible failed state of its own. US1-AS11 and US2-AS3 assert what a user perceives instead: the composer's alert with the failure text, and the chip still listed with its Remove control. |
 | Release check: a chat image upload succeeds in the target environment | Environment activation, not product behaviour; recorded in the Release NN story, not automated. |
