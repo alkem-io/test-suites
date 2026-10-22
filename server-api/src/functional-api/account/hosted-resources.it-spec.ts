@@ -213,10 +213,17 @@ const createPack = async (
   const id = res.data?.createInnovationPack.id;
   if (!id) throw new Error(`pack id missing for ${label}`);
   if (searchVisibility) {
-    failOnError(
-      `pack ${label} ${searchVisibility}`,
-      await updateInnovationPackVisibility(id, { searchVisibility })
-    );
+    try {
+      failOnError(
+        `pack ${label} ${searchVisibility}`,
+        await updateInnovationPackVisibility(id, { searchVisibility })
+      );
+    } catch (error) {
+      // The id never reaches teardown, so the pack is removed here; left
+      // behind it would block deleting its owning account.
+      await deleteInnovationPack(id).catch(() => undefined);
+      throw error;
+    }
   }
   return id;
 };
@@ -236,10 +243,17 @@ const createVc = async (
   failOnError(`create VC ${label}`, res);
   const id = res.data?.createVirtualContributor.id;
   if (!id) throw new Error(`VC id missing for ${label}`);
-  failOnError(
-    `VC ${label} visibility`,
-    await updateVirtualContributorVisibility(id, visibility)
-  );
+  try {
+    failOnError(
+      `VC ${label} visibility`,
+      await updateVirtualContributorVisibility(id, visibility)
+    );
+  } catch (error) {
+    // The id never reaches teardown, so the VC is removed here; left behind
+    // it would block deleting its body-of-knowledge Space.
+    await deleteVirtualContributor(id).catch(() => undefined);
+    throw error;
+  }
   return id;
 };
 
