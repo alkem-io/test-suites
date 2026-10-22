@@ -74,7 +74,8 @@ test.describe('Comment images — US2 P1 acceptance walk (replies)', { tag: ['@f
   };
   const openCallout = async (page: Page): Promise<void> => {
     await page.goto(seed.calloutUrl);
-    await expect(dialog(page)).toBeVisible();
+    // The first render of a private space's callout can exceed the tier's expect budget on a cold stack.
+    await expect(dialog(page)).toBeVisible({ timeout: 30_000 });
     await expect(dialog(page).getByRole('textbox', { name: 'Add a comment...' }).first()).toBeVisible();
   };
 
