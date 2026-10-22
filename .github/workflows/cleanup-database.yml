@@ -248,6 +248,25 @@ jobs:
           kubectl rollout status deployment/alkemio-file-service-deployment --timeout=600s
           kubectl rollout status deployment/oidc-service --timeout=600s || true
 
+      # The wipe above drops and recreates EVERY user database, including the
+      # ones owned by services that run their schema migrations only at process
+      # start (wopi-service, assistant-service, file-backup-service). Those pods
+      # were never scaled down, so without a restart they keep serving against
+      # an empty schema until their next image change — and the deploy jobs
+      # fire BEFORE this wipe, so an image change does not help either. Seen
+      # 2026-10-22: wopi `relation "access_tokens" does not exist` on every
+      # token issuance since 2026-10-15, i.e. Collabora dead on test; the same
+      # for assistant-service and file-backup-service. Rolling them here makes
+      # each one re-run its migrations against the fresh database.
+      - name: Remigrate services that migrate at startup
+        run: |
+          for d in alkemio-wopi-service-deployment alkemio-assistant-service alkemio-file-backup-service-deployment; do
+            kubectl rollout restart deployment/$d
+          done
+          for d in alkemio-wopi-service-deployment alkemio-assistant-service alkemio-file-backup-service-deployment; do
+            kubectl rollout status deployment/$d --timeout=600s
+          done
+
       # apply the latest schema
       - name: Run migration job
         run: |
