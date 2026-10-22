@@ -920,10 +920,17 @@ test.describe('Public profile resource tabs — visibility tiers', () => {
     const id = pack.data?.createInnovationPack.id;
     if (!id) throw new Error(`pack id missing for ${displayName}`);
     if (searchVisibility) {
-      failOnError(
-        `${displayName} ${searchVisibility}`,
-        await updateInnovationPackVisibility(id, { searchVisibility })
-      );
+      try {
+        failOnError(
+          `${displayName} ${searchVisibility}`,
+          await updateInnovationPackVisibility(id, { searchVisibility })
+        );
+      } catch (error) {
+        // The id never reaches teardown, so the pack is removed here; left
+        // behind it would block deleting its owning account.
+        await deleteInnovationPack(id).catch(() => undefined);
+        throw error;
+      }
     }
     return id;
   };
@@ -1148,19 +1155,35 @@ test.describe('Public profile resource tabs — visibility tiers', () => {
     await expect(tab(page, TAB.org.other)).toHaveAttribute('aria-selected', 'true');
   };
 
-  /** Collects the GraphQL error messages the page receives. */
-  const trackGraphqlErrors = (page: Page): string[] => {
+  /**
+   * Collects the GraphQL error messages the page receives. The returned reader
+   * waits for every response body still being parsed, so an error that arrives
+   * just before the assertion is not missed.
+   */
+  const trackGraphqlErrors = (page: Page): (() => Promise<string[]>) => {
     const errors: string[] = [];
-    page.on('response', async res => {
+    const pending: Promise<void>[] = [];
+    page.on('response', res => {
       if (!res.url().includes('graphql')) return;
-      const body = await res.json().catch(() => undefined);
-      if (Array.isArray(body?.errors) && body.errors.length > 0) {
-        errors.push(
-          JSON.stringify(body.errors.map((e: { message: string }) => e.message))
-        );
-      }
+      pending.push(
+        res
+          .json()
+          .catch(() => undefined)
+          .then(body => {
+            if (Array.isArray(body?.errors) && body.errors.length > 0) {
+              errors.push(
+                JSON.stringify(
+                  body.errors.map((e: { message: string }) => e.message)
+                )
+              );
+            }
+          })
+      );
     });
-    return errors;
+    return async () => {
+      await Promise.allSettled(pending);
+      return errors;
+    };
   };
 
   /** Asserts the guest notice and its sign-up link back to `profilePath`. */
@@ -1207,7 +1230,7 @@ test.describe('Public profile resource tabs — visibility tiers', () => {
     browser,
   }) => {
     await asViewer(browser, associateE!.email, async page => {
-      const errors = trackGraphqlErrors(page);
+      const readErrors = trackGraphqlErrors(page);
       await openOrgEOtherResources(page);
       await expect(h4(page, PACK_PUBLIC)).toBeVisible();
       await expect(h4(page, PACK_ACCOUNT)).toBeVisible();
@@ -1215,9 +1238,10 @@ test.describe('Public profile resource tabs — visibility tiers', () => {
       // The card renders for a viewer who cannot open the VC itself.
       await expect(h4(page, VC_ACCOUNT)).toBeVisible();
       await expect(h4(page, PACK_HIDDEN)).toHaveCount(0);
-      expect(errors, 'the profile must load without GraphQL errors').toEqual(
-        []
-      );
+      expect(
+        await readErrors(),
+        'the profile must load without GraphQL errors'
+      ).toEqual([]);
     });
   });
 
@@ -1225,16 +1249,17 @@ test.describe('Public profile resource tabs — visibility tiers', () => {
     browser,
   }) => {
     await asViewer(browser, adminE!.email, async page => {
-      const errors = trackGraphqlErrors(page);
+      const readErrors = trackGraphqlErrors(page);
       await openOrgEOtherResources(page);
       await expect(h4(page, PACK_PUBLIC)).toBeVisible();
       await expect(h4(page, PACK_ACCOUNT)).toBeVisible();
       await expect(h4(page, PACK_HIDDEN)).toBeVisible();
       await expect(h3(page, 'Virtual Contributors')).toBeVisible();
       await expect(h4(page, VC_ACCOUNT)).toBeVisible();
-      expect(errors, 'the profile must load without GraphQL errors').toEqual(
-        []
-      );
+      expect(
+        await readErrors(),
+        'the profile must load without GraphQL errors'
+      ).toEqual([]);
     });
   });
 
