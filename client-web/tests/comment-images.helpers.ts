@@ -15,6 +15,7 @@
  */
 
 import { deflateSync } from 'node:zlib';
+import axios from 'axios';
 import {
   expect,
   type Browser,
@@ -27,10 +28,13 @@ import {
   UniqueIDGenerator,
   assignRoleToUser,
   createCalloutOnCalloutsSet,
+  deleteOrganization,
+  deleteSpace,
   getUserToken,
   postGraphqlRaw,
   registerInAlkemioOrFail,
   registerInKratosOrFail,
+  testConfiguration,
   verifyInKratosOrFail,
 } from '@alkemio/tests-lib';
 // The callout helpers in tests-lib are typed against the client-lib enum.
@@ -167,11 +171,18 @@ export async function transfer(
 
 export type Identity = { id: string; email: string };
 
+/**
+ * A disposable person as teardown knows it: recorded the moment its Kratos
+ * identity exists, before it has an Alkemio user id.
+ */
+type RecordedIdentity = { email: string; id?: string };
+
 export type CommentImagesSeed = {
   uid: string;
   scenario?: OrganizationWithSpaceModel;
-  /** Disposable identities, recorded as soon as each exists. */
-  users: Identity[];
+  /** Disposable identities, recorded as soon as each Kratos identity exists. */
+  users: RecordedIdentity[];
+
   discussionId?: string;
   contexts: BrowserContext[];
   calloutName: string;
@@ -364,7 +375,11 @@ export async function seedCommentImages(
   }
 }
 
-/** Registers a disposable, verified Kratos identity with an Alkemio user (it can sign in). */
+/**
+ * Registers a disposable, verified Kratos identity with an Alkemio user (it
+ * can sign in). The identity is recorded on the seed as soon as Kratos holds
+ * it, so a later failed step still leaves teardown something to delete.
+ */
 async function registerIdentity(
   seed: CommentImagesSeed,
   role: string
@@ -376,11 +391,12 @@ async function registerIdentity(
     'Walker',
     email
   );
+  const recorded: RecordedIdentity = { email };
+  seed.users.push(recorded);
   await verifyInKratosOrFail(email, verificationFlowId);
   const id = await registerInAlkemioOrFail(firstName, 'Walker', email);
-  const identity = { id, email };
-  seed.users.push(identity);
-  return identity;
+  recorded.id = id;
+  return { id, email };
 }
 
 /** A disposable ORDINARY member of the seeded Space (member role only, no admin rights). */
@@ -421,6 +437,47 @@ export async function signIn(
 }
 
 /**
+ * Removes a disposable person: the Alkemio user together with its Kratos
+ * identity when the user exists (looked up by email when its id was never
+ * learned), otherwise the bare Kratos identity through the Kratos admin API —
+ * the only way to remove one that never became a platform user.
+ */
+async function deleteIdentity(user: RecordedIdentity): Promise<void> {
+  let userId = user.id;
+  if (!userId) {
+    const { usersPaginated } = await adminGql<{
+      usersPaginated: { users: Array<{ id: string; email: string }> };
+    }>(
+      `query ($email: String!) {
+        usersPaginated(first: 10, filter: { email: $email }) { users { id email } }
+      }`,
+      { email: user.email },
+      `teardown: user lookup for ${user.email}`
+    );
+    userId = usersPaginated.users.find(u => u.email === user.email)?.id;
+  }
+  if (userId) {
+    await adminGql(
+      'mutation ($d: DeleteUserInput!) { deleteUser(deleteData: $d) { id } }',
+      { d: { ID: userId, deleteIdentity: true } },
+      `teardown: user ${userId}`
+    );
+    return;
+  }
+  const admin = testConfiguration.endPoints.kratos.admin;
+  if (!admin)
+    throw new Error(
+      `teardown: ${user.email} never became a platform user, and without KRATOS_ADMIN_URL its Kratos identity cannot be removed`
+    );
+  const identities = `${admin.replace(/\/$/, '')}/admin/identities`;
+  const { data } = await axios.get<
+    Array<{ id: string; traits?: { email?: string } }>
+  >(identities, { params: { credentials_identifier: user.email } });
+  for (const identity of data.filter(i => i.traits?.email === user.email))
+    await axios.delete(`${identities}/${identity.id}`);
+}
+
+/**
  * Undoes everything `seedCommentImages`, `addMember` and `addOutsider`
  * recorded: the discussion, the identities, then the Space and its
  * organization. Every step is attempted; any failure fails the hook, because
@@ -440,14 +497,29 @@ export async function cleanUpCommentImages(
     ).catch((e: Error) => failures.push(e.message));
   }
   for (const user of seed.users) {
-    await adminGql(
-      'mutation ($d: DeleteUserInput!) { deleteUser(deleteData: $d) { id } }',
-      { d: { ID: user.id, deleteIdentity: true } },
-      `teardown: user ${user.id}`
-    ).catch((e: Error) => failures.push(e.message));
+    await deleteIdentity(user).catch((e: Error) =>
+      failures.push(`${user.email}: ${e.message}`)
+    );
   }
-  if (seed.scenario)
-    await TestScenarioFactory.cleanUpBaseScenario(seed.scenario);
+  // The Space first: its organization cannot be deleted while it hosts one.
+  if (seed.scenario) {
+    const { space, organization } = seed.scenario;
+    const attempt = async (
+      what: string,
+      remove: () => Promise<{ error?: unknown }>
+    ) => {
+      try {
+        const res = await remove();
+        if (res.error) failures.push(`${what}: ${JSON.stringify(res.error)}`);
+      } catch (e) {
+        failures.push(`${what}: ${String(e)}`);
+      }
+    };
+    await attempt(`space ${space.id}`, () => deleteSpace(space.id));
+    await attempt(`organization ${organization.id}`, () =>
+      deleteOrganization(organization.id)
+    );
+  }
   if (failures.length > 0)
     throw new Error(
       `comment-images teardown leaked fixtures: ${failures.join('; ')}`
