@@ -26,6 +26,7 @@
 
 import { expect, test, type Locator, type Page } from '@playwright/test';
 import {
+  UPLOAD_FAILED_LABEL,
   UPLOAD_FAILED_MESSAGE,
   UPLOAD_ROUTE,
   addMember,
@@ -437,7 +438,10 @@ test.describe(
       // The failure is announced as an alert, and the chip stays listed with
       // its Remove control so the file can be retried or dropped.
       await expect(c.dlg.getByRole('alert')).toHaveText(UPLOAD_FAILED_MESSAGE);
-      await expect(c.stagedList.getByRole('listitem')).toHaveText(name);
+      // The chip is marked failed in text, not by colour alone.
+      await expect(c.stagedList.getByRole('listitem')).toHaveText(
+        `${name}${UPLOAD_FAILED_LABEL}`
+      );
       await expect(
         c.stagedList.getByRole('button', { name: `Remove ${name}` })
       ).toBeEnabled();

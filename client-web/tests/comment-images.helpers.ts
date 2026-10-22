@@ -57,6 +57,9 @@ export const BASE_URL = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 export const ADMIN_EMAIL = 'admin@alkem.io';
 /** The messaging media upload every comment image goes through. */
 export const UPLOAD_ROUTE = '**/rest/messaging/media/upload**';
+/** Screen-reader text a failed chip carries, so it is not marked by colour alone. */
+export const UPLOAD_FAILED_LABEL = 'Upload failed';
+
 export const UPLOAD_FAILED_MESSAGE =
   'Upload failed. Send again to retry, or remove the file.';
 

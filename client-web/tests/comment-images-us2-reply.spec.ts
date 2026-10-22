@@ -32,6 +32,7 @@
 
 import { expect, test, type Locator, type Page } from '@playwright/test';
 import {
+  UPLOAD_FAILED_LABEL,
   UPLOAD_FAILED_MESSAGE,
   UPLOAD_ROUTE,
   addMember,
@@ -218,7 +219,8 @@ test.describe('Comment images — US2 P1 acceptance walk (replies)', { tag: ['@f
     // stays listed with its Remove control, nothing was posted.
     await expect(box.getByRole('alert')).toHaveText(UPLOAD_FAILED_MESSAGE);
     await expect(box).toBeVisible();
-    await expect(stagedList(box).getByRole('listitem')).toHaveText('b.png');
+    // The chip is marked failed in text, not by colour alone.
+    await expect(stagedList(box).getByRole('listitem')).toHaveText(`b.png${UPLOAD_FAILED_LABEL}`);
     await expect(box.getByRole('button', { name: 'Remove b.png' })).toBeEnabled();
     await expect(box.getByRole('textbox')).toBeEnabled();
     await expect(box.getByRole('textbox')).toHaveValue(TEXT_RETRY);
