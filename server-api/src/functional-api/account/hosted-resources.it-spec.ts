@@ -10,6 +10,9 @@
 //   organization admin / owner   yes     yes      yes      all
 //   anonymous                    hostedResources is null
 //
+// On a user account, ACCOUNT and HIDDEN belong to the user alone: any other
+// registered viewer gets PUBLIC only (US2-AS4), the user gets everything.
+//
 // `listedInStore` plays no part: an ACCOUNT VC that is listed in the store is
 // still hidden from an unrelated visitor. Every query sends the exact card
 // selection the client profile pages send, and reads the raw response so a
@@ -79,7 +82,11 @@ type Hosted = {
   virtualContributors: Array<{
     __typename: string;
     id: string;
-    profile: { displayName: string };
+    profile: {
+      displayName: string;
+      url: string;
+      avatar: { uri: string } | null;
+    };
   }>;
   innovationPacks: Array<{ id: string }>;
   innovationHubs: Array<{ id: string }>;
@@ -191,13 +198,16 @@ let hubHiddenId = '';
 let ownerAccountId = '';
 let packPublicUId = '';
 let packHiddenUId = '';
+let packAccountUId = '';
 let vcHiddenUId = '';
+let vcAccountUId = '';
+let vcPublicUId = '';
 let vcPublicRId = ''; // a PUBLIC VC on the unrelated viewer's account: readable by everyone
 
 let associate: Viewer;
 let orgAdmin: Viewer;
 let unrelated: Viewer;
-let owner: Viewer; // owns a PUBLIC and a HIDDEN pack and a HIDDEN VC on their user account
+let owner: Viewer; // owns a PUBLIC, an ACCOUNT and a HIDDEN pack and VC on their user account
 
 const createPack = async (
   accountId: string,
@@ -337,8 +347,8 @@ beforeAll(async () => {
   }
   unrelated = await registerViewer('unrel');
 
-  // The owner gets a PUBLIC and a HIDDEN pack and a HIDDEN VC. A fresh account
-  // has a pack limit of 0.
+  // The owner gets one pack and one VC per tier (ACCOUNT_LICENSE_PLUS allows
+  // three of each). A fresh account has a pack limit of 0.
   owner = await registerViewer('owner');
   ownerAccountId = (
     await adminGql<{ lookup: { user: { account: { id: string } } } }>(
@@ -362,8 +372,16 @@ beforeAll(async () => {
     'hiddenu',
     SearchVisibility.Hidden
   );
+  // Left at the ACCOUNT default; read back below.
+  packAccountUId = await createPack(ownerAccountId, 'accountu', undefined);
   vcHiddenUId = await createVc(ownerAccountId, 'hiddenu', {
     searchVisibility: SearchVisibility.Hidden,
+  });
+  vcAccountUId = await createVc(ownerAccountId, 'accountu', {
+    searchVisibility: SearchVisibility.Account,
+  });
+  vcPublicUId = await createVc(ownerAccountId, 'publicu', {
+    searchVisibility: SearchVisibility.Public,
   });
 
   // A VC every registered viewer can READ, hosted on an account no row asserts
@@ -390,7 +408,7 @@ beforeAll(async () => {
       { searchVisibility: string; listedInStore: boolean }
     >;
   }>(
-    `query($pp: UUID!, $pa: UUID!, $ph: UUID!, $va: UUID!, $vh: UUID!, $hh: UUID!, $pv: UUID!, $pu: UUID!, $vu: UUID!) {
+    `query($pp: UUID!, $pa: UUID!, $ph: UUID!, $va: UUID!, $vh: UUID!, $hh: UUID!, $pv: UUID!, $pu: UUID!, $vu: UUID!, $pau: UUID!, $vau: UUID!, $vpu: UUID!) {
       lookup {
         pp: innovationPack(ID: $pp) { searchVisibility listedInStore }
         pa: innovationPack(ID: $pa) { searchVisibility listedInStore }
@@ -401,6 +419,9 @@ beforeAll(async () => {
         pv: innovationPack(ID: $pv) { searchVisibility listedInStore }
         pu: innovationPack(ID: $pu) { searchVisibility listedInStore }
         vu: virtualContributor(ID: $vu) { searchVisibility listedInStore }
+        pau: innovationPack(ID: $pau) { searchVisibility listedInStore }
+        vau: virtualContributor(ID: $vau) { searchVisibility listedInStore }
+        vpu: virtualContributor(ID: $vpu) { searchVisibility listedInStore }
       }
     }`,
     {
@@ -413,6 +434,9 @@ beforeAll(async () => {
       pv: packPublicUId,
       pu: packHiddenUId,
       vu: vcHiddenUId,
+      pau: packAccountUId,
+      vau: vcAccountUId,
+      vpu: vcPublicUId,
     }
   );
   const vis = (key: string) => stored.lookup[key].searchVisibility;
@@ -430,6 +454,11 @@ beforeAll(async () => {
   expect(vis('pv')).toBe(SearchVisibility.Public);
   expect(vis('pu')).toBe(SearchVisibility.Hidden);
   expect(vis('vu')).toBe(SearchVisibility.Hidden);
+  expect(vis('pau'), 'a new pack must default to ACCOUNT').toBe(
+    SearchVisibility.Account
+  );
+  expect(vis('vau')).toBe(SearchVisibility.Account);
+  expect(vis('vpu')).toBe(SearchVisibility.Public);
 
   for (const viewer of [associate, orgAdmin]) {
     const roles = await adminGql<{ rolesUser: { spaces: unknown[] } }>(
@@ -461,6 +490,7 @@ afterAll(async () => {
     packHiddenId,
     packPublicUId,
     packHiddenUId,
+    packAccountUId,
   ]) {
     if (id)
       await step(`pack ${id}`, async () =>
@@ -468,7 +498,14 @@ afterAll(async () => {
       );
   }
   // The VCs go before their body-of-knowledge Space.
-  for (const id of [vcAccountId, vcHiddenId, vcHiddenUId, vcPublicRId]) {
+  for (const id of [
+    vcAccountId,
+    vcHiddenId,
+    vcHiddenUId,
+    vcAccountUId,
+    vcPublicUId,
+    vcPublicRId,
+  ]) {
     if (id)
       await step(`VC ${id}`, async () =>
         failOnError('delete VC', await deleteVirtualContributor(id))
@@ -598,24 +635,32 @@ describe('hostedResources — viewer-scoped hosted resources', () => {
     expect(result.hosted).toBeNull();
   });
 
-  test("an unrelated registered user sees only a user account's PUBLIC pack: not its HIDDEN pack or HIDDEN VC", async () => {
+  test("an unrelated registered user sees only a user account's PUBLIC pack and PUBLIC VC card: not its ACCOUNT or HIDDEN ones", async () => {
     const result = collect(
       await hosted('user', owner.id, await getUserToken(unrelated.email))
     );
 
+    // US2-AS4: on a user account the ACCOUNT tier belongs to the user alone.
     expect(ids(result.innovationPacks)).toEqual([packPublicUId]);
-    expect(ids(result.virtualContributors)).toEqual([]);
+    expect(ids(result.virtualContributors)).toEqual([vcPublicUId]);
+    // US1-AS7: the PUBLIC VC card renders its name and avatar and links to the VC.
+    const card = result.virtualContributors[0].profile;
+    expect(card.displayName).toBe(`HR VC publicu ${uniqueId}`);
+    expect(card.url).toMatch(new RegExp(`/vc/hr-vcpublicu-${uniqueId}$`, 'i'));
+    expect(card.avatar?.uri, 'the VC card has an avatar').toBeTruthy();
   });
 
-  test('the owner of a user account sees their own PUBLIC and HIDDEN packs and their HIDDEN VC', async () => {
+  test('the owner of a user account sees their own PUBLIC, ACCOUNT and HIDDEN packs and VCs', async () => {
     const result = collect(
       await hosted('user', owner.id, await getUserToken(owner.email))
     );
 
     expect(ids(result.innovationPacks).sort()).toEqual(
-      [packPublicUId, packHiddenUId].sort()
+      [packPublicUId, packAccountUId, packHiddenUId].sort()
     );
-    expect(ids(result.virtualContributors)).toEqual([vcHiddenUId]);
+    expect(ids(result.virtualContributors).sort()).toEqual(
+      [vcPublicUId, vcAccountUId, vcHiddenUId].sort()
+    );
   });
 
   test('a hosted VC and a hosted hub are closed card types: id and profile, and id, nameID and profile', async () => {
@@ -719,9 +764,12 @@ describe('hostedResources — viewer-scoped hosted resources', () => {
       // collect() asserts no GraphQL error, so the HIDDEN VC card resolved.
       const result = collect(await hosted('user', owner.id, token));
       expect(ids(result.innovationPacks).sort()).toEqual(
-        [packPublicUId, packHiddenUId].sort()
+        [packPublicUId, packAccountUId, packHiddenUId].sort()
       );
       expect(ids(result.virtualContributors)).toContain(vcHiddenUId);
+      expect(ids(result.virtualContributors).sort()).toEqual(
+        [vcPublicUId, vcAccountUId, vcHiddenUId].sort()
+      );
       expect(await accountIdOf('user', owner.id, token)).toBe(ownerAccountId);
     } finally {
       failOnError(
