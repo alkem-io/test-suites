@@ -1,27 +1,8 @@
 /**
- * Persisted acceptance walk for comment images: adding an image to a
- * top-level comment.
- *
- * Authored by forge-verify from a green pseudo-manual walk driven headless
- * against the live stack at http://localhost:3000 (the gateway; NEVER :3001).
- * Every scenario is driven as an ORDINARY space member (M); a second ordinary
- * member (V) is the second session for the live-update scenario.
- *
- * Self-seeding (comment-images.helpers.ts): a private Space with callout C
- * and post P (comments on), two fresh ORDINARY members M and V, all created
- * through the API in beforeAll under a run-unique name and deleted in
- * afterAll.
- *
- * Covers staging by paste, pick and drop; the one-image limit; sending an
- * image with text (one comment carrying both, the text as the image's
- * caption) or without; a post's own comments; a second viewer seeing the
- * picture live; accessibility; and a failed upload with its recovery. The
- * test plan maps each case to its acceptance scenario.
- *
- * `config/playwright.config.nightly.ts` registers the three walks as the
- * "Comment images" project (tier: extended). Run (from client-web/):
- *   pnpm run test:nightly --project="Comment images"
- *   pnpm run test:nightly --project="Comment images" comment-images-us1
+ * Acceptance walk: adding an image to a top-level comment, on a callout and in
+ * a post's own comments. Ordinary members act: M sends, V keeps the thread
+ * open to see a picture arrive live. Each case maps to its acceptance
+ * scenario in comment-images-test-plan.md.
  */
 
 import { expect, test, type Locator, type Page } from '@playwright/test';

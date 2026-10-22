@@ -1,33 +1,7 @@
 /**
- * Persisted acceptance walk for images in comment replies.
- *
- * Authored from a green pseudo-manual walk driven headless against the live
- * stack at http://localhost:3000 (the gateway; NEVER :3001 — the raw vite
- * origin is CORS-blocked and yields false failures).
- *
- * Replying to a comment with an image, as an ORDINARY space member (M holds
- * only the member role; the image button in a reply box follows the right to
- * reply in the room, not upload rights on the bucket):
- *   - paste one image, Send → the reply box stays open (controls disabled)
- *     while the send is in flight, then closes; the reply is the last one in
- *     the thread, with the picture inline.
- *   - text + one image → one reply carrying both, the text as the image's
- *     caption.
- *   - upload route blocked → the box stays open with the typed text, the
- *     failure is announced and the chip stays listed, nothing is posted; after
- *     unblocking, Send again posts one reply with the text and the image; the
- *     chip can also be removed.
- *   - an image staged on comment A's reply box is not carried over to comment
- *     B's reply box.
- *
- * Self-seeding (comment-images.helpers.ts): a private Space with a published
- * callout with comments, a fresh member M and a fresh member O who writes two
- * top-level comments. Everything is deleted in afterAll.
- *
- * `config/playwright.config.nightly.ts` registers the three walks as the
- * "Comment images" project (tier: extended). Run (from client-web/):
- *   pnpm run test:nightly --project="Comment images"
- *   pnpm run test:nightly --project="Comment images" comment-images-us2
+ * Acceptance walk: images in comment replies. Ordinary members act: O writes
+ * two top-level comments in set-up, M replies to them with images. Each case
+ * maps to its acceptance scenario in comment-images-test-plan.md.
  */
 
 import { expect, test, type Locator, type Page } from '@playwright/test';

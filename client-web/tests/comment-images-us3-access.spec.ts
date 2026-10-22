@@ -1,32 +1,8 @@
 /**
- * Persisted acceptance walk for comment images: only images, and only for
- * people who may comment.
- *
- * Authored by forge-verify from a green pseudo-manual walk driven headless
- * against the live stack at http://localhost:3000 (the gateway; NEVER :3001).
- *
- * Self-seeding (comment-images.helpers.ts): a private Space with callout C,
- * post P and calendar event E, a platform forum discussion D, a fresh ORDINARY
- * member M, a fresh space admin A and a fresh signed-in non-member X, all
- * created through the API in beforeAll under a run-unique name and deleted in
- * afterAll. The platform-admin cases sign in as the platform admin persona,
- * which is never modified.
- *
- * Covers:
- *   - signed-in non-member: no comment field, no image button
- *   - member, space admin and platform admin: image button on callout and post rooms; each can send an image
- *   - PDF dropped or pasted: "doc.pdf has an unsupported file type."; nothing staged
- *   - SVG picked: refused as unsupported
- *   - image one byte over the comment room's size limit: "big.png is larger than <limit> MB.", the limit read
- *     from the room's bucket
- *   - calendar event and forum discussion: no image button; a text comment and a text reply post as on
- *     develop — the field clears, and the reply box closes, as soon as they are submitted
- *   - plain text and Office rich text (with bitmap) pasted: the text lands in the field; nothing staged
- *
- * `config/playwright.config.nightly.ts` registers the three walks as the
- * "Comment images" project (tier: extended). Run (from client-web/):
- *   pnpm run test:nightly --project="Comment images"
- *   pnpm run test:nightly --project="Comment images" comment-images-us3
+ * Acceptance walk: who gets the image button and which files are refused.
+ * Acts as a signed-in non-member, an ordinary member, a space admin and the
+ * platform admin (the refusals run as the platform admin). Each case maps to
+ * its acceptance scenario in comment-images-test-plan.md.
  */
 
 import { writeFileSync } from 'node:fs';
