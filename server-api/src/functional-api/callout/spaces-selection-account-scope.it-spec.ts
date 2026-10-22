@@ -23,17 +23,12 @@
  * executed security proof (SC-002). Every case below goes GREEN once that
  * slice is deployed; nothing here is knowingly permanent-red.
  *
- * NOT ASSERTED HERE, deliberately — S9 ("the stored selection is not handed to
- * a viewer who is not a host-space admin"). 084 widens what `selectedIds` may
- * hold from the host's own subspaces to every space of the account, while
- * `Callout.settings` carries no privilege decorator and the 084 `server` slice
- * adds none — so the exposure is real and UNFIXED, and its owning fix is
- * server-side. A case for it would be permanently red, is outside the six
- * assertions this slice was scoped to (`tasks/test-suites.md` T202), and this
- * directory is enrolled in the shared-cluster `nightly` project, where a
- * knowingly-red case normalises the colour of the only file that proves
- * SC-002. It is carried as a finding against the 084 `server` PR instead. Do
- * not add it here before that gate ships.
+ * S9 ("the stored selection is not handed to a viewer who is not a host-space
+ * admin") shipped in server#6667 as SEC-084-CW-01: `Callout.settings` redacts
+ * `framing.selection.selectedIds` to `[]` for an actor without UPDATE on the
+ * callout and keeps `mode`. Case 9 pins it here, in the API nightly; the
+ * browser half is `client-web/.../subspaces-callout/us5-account-scope-selection.spec.ts`
+ * › US5-AS4. Case 8 pins the update-path admin gate (SEC-084-01).
  *
  * ORDERING PREREQUISITE — read before merging this file.
  * `server-api/vitest.config.ts` puts `src/functional-api/callout/**` in the
@@ -817,5 +812,38 @@ describe('Spaces-collection CUSTOM selection — the account boundary', () => {
     expect(
       converted.data?.lookup.callout?.settings.framing.selection?.selectedIds
     ).toEqual([siblingL1Id]);
+  });
+
+  test('case 9 (SEC-084-CW-01) — a viewer without UPDATE on the callout reads the mode but an empty selectedIds', async () => {
+    const created = await createSpacesCalloutWithSelection('redacted', [
+      hostL2Id,
+      siblingL1Id,
+    ]);
+    expect(created.error).toBeUndefined();
+    const calloutId = created?.data?.createCalloutOnCalloutsSet?.id ?? '';
+    expect(calloutId).toBeTruthy();
+    createdCalloutIds.push(calloutId);
+
+    // The space admin created it and holds UPDATE: the full list.
+    const asAdmin = await getCalloutSpacesSettings(
+      calloutId,
+      TestUser.SPACE_ADMIN
+    );
+    expect(asAdmin.error).toBeUndefined();
+    expect(asAdmin.data?.lookup.callout?.settings.framing.selection).toEqual({
+      mode: CalloutSelectionMode.Custom,
+      selectedIds: [hostL2Id, siblingL1Id],
+    });
+
+    // A member reads the callout (READ) but may not edit it (no UPDATE).
+    const asMember = await getCalloutSpacesSettings(
+      calloutId,
+      TestUser.SPACE_MEMBER
+    );
+    expect(asMember.error).toBeUndefined();
+    expect(asMember.data?.lookup.callout?.settings.framing.selection).toEqual({
+      mode: CalloutSelectionMode.Custom,
+      selectedIds: [],
+    });
   });
 });
