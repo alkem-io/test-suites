@@ -15,7 +15,8 @@ pnpm --filter @alkemio/test-suite-client-web run test:nightly --project="Comment
 ```
 
 - Every walk seeds its own private Space through the API (`seedCommentImages`) under a run-unique name, registers disposable Kratos identities for the people it drives (`addMember`, `addOutsider`), and deletes all of it in `afterAll`. The teardown fails the hook if anything leaks.
-- The only shared persona used is the platform admin (US3-AS2 admin case, US3-AS3/4/5/7). It is signed in, never modified.
+- The only shared persona used is the platform admin (US3-AS2 platform-admin case, US3-AS3/4/5/7). It is signed in, never modified. The ordinary member, the space admin (a disposable member given the Space's Admin role) and the non-member are disposable identities.
+- Teardown removes a disposable identity even when its set-up failed half way: one that never became a platform user is deleted through the Kratos admin API, so `KRATOS_ADMIN_URL` must be set (it is already required to add members).
 - The upload goes through the messaging media route (`/api/private/rest/messaging/media/upload`). An environment where chat image uploads do not work fails every send case here, by design.
 
 ## Scenario → test mapping
@@ -38,12 +39,12 @@ pnpm --filter @alkemio/test-suite-client-web run test:nightly --project="Comment
 | US2-AS3 | A failed reply upload keeps the box open with a marked chip and a message; retry succeeds; the chip can be removed | `us2-…` › US2-AS3 |
 | US2-AS4 | An image staged in one comment's reply box is not carried to another comment's reply box | `us2-…` › US2-AS4 |
 | US3-AS1 | A signed-in non-member of the private Space gets no comment field and no image button on the callout and the post | `comment-images-us3-access.spec.ts` › US3-AS1 |
-| US3-AS2 | An ordinary member and the platform admin both get the image button and can send an image on the callout and the post | `us3-…` › US3-AS2 (member, admin) |
+| US3-AS2 | An ordinary member and a space admin both get the image button and can send an image on the callout and the post; the platform admin is checked as an extra case | `us3-…` › US3-AS2 (member, space admin, platform admin) |
 | US3-AS3 | A PDF dropped or pasted is refused as an unsupported type; nothing staged | `us3-…` › US3-AS3 |
 | US3-AS4 | An SVG picked is refused as an unsupported type | `us3-…` › US3-AS4 |
-| US3-AS5 | An image above the room bucket's size limit is refused with the limit in MB | `us3-…` › US3-AS5 |
+| US3-AS5 | An image one byte above the room bucket's size limit (read from the bucket's `maxFileSize`) is refused with the exact message, the limit in whole MB as the composer words it | `us3-…` › US3-AS5 |
 | US3-AS6 | Calendar-event and forum-discussion threads show no image button, and a text comment still posts | `us3-…` › US3-AS6 |
-| US3-AS7 | Plain text and Office rich text with a bitmap paste as text and stage nothing; a bare bitmap still stages (control) | `us3-…` › US3-AS7 |
+| US3-AS7 | Plain text and Office rich text with a bitmap paste as text (the clipboard text lands in the field) and stage nothing; a bare bitmap is consumed and stages (control) | `us3-…` › US3-AS7 |
 
 ## Not covered — known gaps
 
@@ -51,4 +52,5 @@ pnpm --filter @alkemio/test-suite-client-web run test:nightly --project="Comment
 |---|---|
 | US4 (notifications and virtual-contributor invocation for image-only messages) | Needs notification payloads, email bodies, a virtual contributor and server log lines. The server changes carry unit specs (`message.details.service.spec.ts`, `message.inbox.service.spec.ts`); there is no persisted browser walk. |
 | US5 (deleting an image comment removes the picture for every viewer) | P2; no persisted walk yet. |
+| A failed chip's own marking | The failed chip is set apart by colour only; it carries no accessible failed state of its own. US1-AS11 and US2-AS3 assert what a user perceives instead: the composer's alert with the failure text, and the chip still listed with its Remove control. |
 | Release check: a chat image upload succeeds in the target environment | Environment activation, not product behaviour; recorded in the Release NN story, not automated. |

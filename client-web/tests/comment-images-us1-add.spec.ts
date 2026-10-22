@@ -1,6 +1,6 @@
 /**
- * Persisted P1 acceptance walk for comment images, User Story 1 —
- * "Add images to a comment".
+ * Persisted acceptance walk for comment images: adding an image to a
+ * top-level comment.
  *
  * Authored by forge-verify from a green pseudo-manual walk driven headless
  * against the live stack at http://localhost:3000 (the gateway; NEVER :3001).
@@ -12,7 +12,10 @@
  * through the API in beforeAll under a run-unique name and deleted in
  * afterAll.
  *
- * Covers US1-AS1 .. US1-AS11 (see the spec for the Given/When/Then of each).
+ * Covers staging by paste, pick and drop; the one-image limit; sending image
+ * and text together or apart; a post's own comments; a second viewer seeing
+ * the picture live; accessibility; and a failed upload with its recovery. The
+ * test plan maps each case to its acceptance scenario.
  *
  * `config/playwright.config.nightly.ts` registers the three walks as the
  * "Comment images" project (tier: extended). Run (from client-web/):
@@ -104,7 +107,8 @@ test.describe(
     test.beforeAll(async ({ browser }) => {
       test.setTimeout(240_000);
       await seedCommentImages(seed, 'us1', { post: true });
-      // M sends; V is a second ORDINARY member with the thread open (AS9).
+      // M sends; V is a second ORDINARY member who keeps the thread open to
+      // see a picture arrive live.
       const member = await addMember(seed, 'member');
       const viewer = await addMember(seed, 'viewer');
       m = await signIn(browser, seed, member.email);
@@ -195,6 +199,8 @@ test.describe(
       await expect(c.send).toBeEnabled();
       await c.send.click();
       await expect(inlineImage(c.dlg, name)).toBeVisible();
+      // Response bodies are collected asynchronously; wait for this one to land.
+      await expect.poll(() => sends.bodies.length).toBe(1);
       sends.stop();
       expect(sends.bodies).toHaveLength(1);
       expect(
@@ -400,8 +406,13 @@ test.describe(
       await c.box.fill(text);
       await m.route(UPLOAD_ROUTE, route => route.abort('failed'));
       await c.send.click();
+      // The failure is announced as an alert, and the chip stays listed with
+      // its Remove control so the file can be retried or dropped.
       await expect(c.dlg.getByRole('alert')).toHaveText(UPLOAD_FAILED_MESSAGE);
-      await expect(c.stagedList).toContainText(name);
+      await expect(c.stagedList.getByRole('listitem')).toHaveText(name);
+      await expect(
+        c.stagedList.getByRole('button', { name: `Remove ${name}` })
+      ).toBeEnabled();
       await expect(c.box).toHaveValue(text);
       await expect(c.box).toBeEnabled();
       expect(

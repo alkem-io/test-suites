@@ -1,23 +1,23 @@
 /**
- * Persisted P1 acceptance walk for images in comment replies (User Story 2).
+ * Persisted acceptance walk for images in comment replies.
  *
  * Authored from a green pseudo-manual walk driven headless against the live
  * stack at http://localhost:3000 (the gateway; NEVER :3001 — the raw vite
  * origin is CORS-blocked and yields false failures).
  *
- * Covers User Story 2 — "Reply to a comment with an image", as an ORDINARY
- * space member (M holds only the member role; the image button in a reply box
- * follows the right to reply in the room, not upload rights on the bucket):
- *   US2-AS1  paste one image, Send → the reply box stays open (controls
- *            disabled) while the send is in flight, then closes; the reply is
- *            the last one in the thread, with the picture inline.
- *   US2-AS2  text + one image → two rows, oldest first: the text reply, then
- *            the image.
- *   US2-AS3  upload route blocked → the box stays open, the chip is marked
- *            failed, a message explains, nothing is posted; after unblocking,
- *            Send again succeeds; the chip can also be removed.
- *   US2-AS4  an image staged on comment A's reply box is not carried over to
- *            comment B's reply box.
+ * Replying to a comment with an image, as an ORDINARY space member (M holds
+ * only the member role; the image button in a reply box follows the right to
+ * reply in the room, not upload rights on the bucket):
+ *   - paste one image, Send → the reply box stays open (controls disabled)
+ *     while the send is in flight, then closes; the reply is the last one in
+ *     the thread, with the picture inline.
+ *   - text + one image → two rows, oldest first: the text reply, then the
+ *     image.
+ *   - upload route blocked → the box stays open, the failure is announced and
+ *     the chip stays listed, nothing is posted; after unblocking, Send again
+ *     succeeds; the chip can also be removed.
+ *   - an image staged on comment A's reply box is not carried over to comment
+ *     B's reply box.
  *
  * Self-seeding (comment-images.helpers.ts): a private Space with a published
  * callout with comments, a fresh member M and a fresh member O who writes two
@@ -35,6 +35,7 @@ import {
   UPLOAD_ROUTE,
   addMember,
   cleanUpCommentImages,
+  displayNameOf,
   image,
   newSeed,
   seedCommentImages,
@@ -45,12 +46,14 @@ import {
 const PNG_ONE = image('one.png');
 const PNG_A = image('a.png');
 const PNG_B = image('b.png');
+const TEXT_REPLY = 'US2 text reply';
 
 test.describe.configure({ mode: 'serial' });
 
 test.describe('Comment images — US2 P1 acceptance walk (replies)', { tag: ['@forge-acceptance', '@comment-images'] }, () => {
   const seed = newSeed();
   let memberPage: Page;
+  let memberName: string;
   let commentA: string;
   let commentB: string;
 
@@ -69,16 +72,22 @@ test.describe('Comment images — US2 P1 acceptance walk (replies)', { tag: ['@f
     return box;
   };
   const stagedList = (box: Locator): Locator => box.getByRole('list', { name: 'Files to send' });
-  /** One entry per reply to the comment, oldest first: its text and its picture count. */
+  /**
+   * One entry per reply to the comment, oldest first: whether it carries the
+   * text reply, and its picture count. The reply list has no accessible name,
+   * so a reply row is the list item that names M as its author (every reply
+   * here is M's; the comments themselves are O's). The text is matched against
+   * the one text reply this walk sends.
+   */
   const replyRows = async (item: Locator): Promise<string[]> => {
-    const rows = item.locator('xpath=.//ul[not(@aria-label)]/li');
+    const rows = item.getByRole('listitem').filter({ has: memberPage.getByText(memberName, { exact: true }) });
     const out: string[] = [];
     const count = await rows.count();
     for (let i = 0; i < count; i++) {
       const row = rows.nth(i);
-      const text = (await row.locator('p').allInnerTexts()).join('/');
+      const hasText = (await row.getByText(TEXT_REPLY, { exact: true }).count()) > 0;
       const images = await row.getByRole('img', { name: /^Attached image/ }).count();
-      out.push(`${text}|images=${images}`);
+      out.push(`${hasText ? TEXT_REPLY : ''}|images=${images}`);
     }
     return out;
   };
@@ -92,8 +101,8 @@ test.describe('Comment images — US2 P1 acceptance walk (replies)', { tag: ['@f
     test.setTimeout(240_000);
 
     await seedCommentImages(seed, 'us2');
-    // M and O are ORDINARY members — the premise of the story (access follows
-    // space participation, no admin rights).
+    // M and O are ORDINARY members: the image button follows space
+    // participation, not admin rights.
     const owner = await addMember(seed, 'owner');
     const member = await addMember(seed, 'member');
 
@@ -111,6 +120,7 @@ test.describe('Comment images — US2 P1 acceptance walk (replies)', { tag: ['@f
     }
     await ownerPage.context().close();
 
+    memberName = await displayNameOf(member);
     memberPage = await signIn(browser, seed, member.email);
   });
 
@@ -167,19 +177,19 @@ test.describe('Comment images — US2 P1 acceptance walk (replies)', { tag: ['@f
     const item = comment(memberPage, commentB);
     const box = await openReply(item);
 
-    await box.getByRole('textbox').fill('US2 text reply');
+    await box.getByRole('textbox').fill(TEXT_REPLY);
     await transfer(box.getByRole('textbox'), 'paste', PNG_A);
     await expect(stagedList(box)).toContainText('a.png');
     await box.getByRole('button', { name: 'Send' }).click();
     await expect(box).toHaveCount(0);
 
     await expect(item.getByRole('img', { name: 'Attached image: a.png' })).toBeVisible();
-    expect(await replyRows(item)).toEqual(['US2 text reply|images=0', '|images=1']);
+    expect(await replyRows(item)).toEqual([`${TEXT_REPLY}|images=0`, '|images=1']);
 
     await memberPage.reload();
     await expect(dialog(memberPage)).toBeVisible();
     await expect(comment(memberPage, commentB).getByRole('img', { name: 'Attached image: a.png' })).toHaveCount(1);
-    expect(await replyRows(comment(memberPage, commentB))).toEqual(['US2 text reply|images=0', '|images=1']);
+    expect(await replyRows(comment(memberPage, commentB))).toEqual([`${TEXT_REPLY}|images=0`, '|images=1']);
   });
 
   test('US2-AS3: a failed upload keeps the box open with a marked chip and a message; retry succeeds; the chip can be removed', async () => {
@@ -194,10 +204,12 @@ test.describe('Comment images — US2 P1 acceptance walk (replies)', { tag: ['@f
     await expect(stagedList(box)).toContainText('b.png');
     await box.getByRole('button', { name: 'Send' }).click();
 
-    // Box stays open, chip is marked failed, the message explains, nothing was posted.
+    // Box stays open, the failure is announced, the chip stays listed with its
+    // Remove control, nothing was posted.
     await expect(box.getByRole('alert')).toHaveText(UPLOAD_FAILED_MESSAGE);
     await expect(box).toBeVisible();
-    await expect(stagedList(box).getByRole('listitem')).toHaveClass(/border-destructive/);
+    await expect(stagedList(box).getByRole('listitem')).toHaveText('b.png');
+    await expect(box.getByRole('button', { name: 'Remove b.png' })).toBeEnabled();
     await expect(box.getByRole('textbox')).toBeEnabled();
     await expect(box.getByRole('button', { name: 'Send' })).toBeEnabled();
     expect(await replyRows(item)).toEqual(rowsBefore);

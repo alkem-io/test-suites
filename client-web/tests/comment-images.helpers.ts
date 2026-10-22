@@ -8,10 +8,10 @@
  * its organization) through the API under a run-unique name, a published
  * callout C with comments, and on request a post P with its own comments, a
  * calendar event E and a platform forum discussion D. People are disposable
- * Kratos identities registered per run (`addMember`, `addOutsider`); the
- * shared harness personas are never modified. Every id is recorded on the
- * seed the moment it exists, so `cleanUpCommentImages` can undo a half-failed
- * `beforeAll`.
+ * Kratos identities registered per run (`addMember`, `addSpaceAdmin`,
+ * `addOutsider`); the shared harness personas are never modified. Every id is
+ * recorded on the seed the moment it exists, so `cleanUpCommentImages` can
+ * undo a half-failed `beforeAll`.
  */
 
 import { deflateSync } from 'node:zlib';
@@ -120,15 +120,17 @@ export const image = (name: string): TransferFile => ({
 /**
  * Dispatches a synthetic paste, drop or drag-over on a comment field, carrying
  * at most one file plus any extra clipboard flavours (`text/plain`, `text/rtf`,
- * …). A paste focuses the field first, as a real Ctrl+V does.
+ * …). A paste focuses the field first, as a real Ctrl+V does. Resolves to
+ * whether a handler cancelled the event's default action (for a drag-over,
+ * the `dragover` event's).
  */
 export async function transfer(
   box: Locator,
   kind: 'paste' | 'drop' | 'dragover',
   file: TransferFile | null,
   data: Record<string, string> = {}
-): Promise<void> {
-  await box.evaluate(
+): Promise<boolean> {
+  return box.evaluate(
     (el, { kind, file, data }) => {
       const dt = new DataTransfer();
       if (file) {
@@ -137,21 +139,24 @@ export async function transfer(
       }
       for (const [type, value] of Object.entries(data)) dt.setData(type, value);
       const init = { bubbles: true, cancelable: true };
+      // dispatchEvent returns false once any handler has called preventDefault.
       if (kind === 'paste') {
         (el as HTMLElement).focus();
-        el.dispatchEvent(
+        return !el.dispatchEvent(
           new ClipboardEvent('paste', { ...init, clipboardData: dt })
         );
-      } else if (kind === 'drop') {
-        el.dispatchEvent(new DragEvent('drop', { ...init, dataTransfer: dt }));
-      } else {
-        el.dispatchEvent(
-          new DragEvent('dragenter', { ...init, dataTransfer: dt })
-        );
-        el.dispatchEvent(
-          new DragEvent('dragover', { ...init, dataTransfer: dt })
+      }
+      if (kind === 'drop') {
+        return !el.dispatchEvent(
+          new DragEvent('drop', { ...init, dataTransfer: dt })
         );
       }
+      el.dispatchEvent(
+        new DragEvent('dragenter', { ...init, dataTransfer: dt })
+      );
+      return !el.dispatchEvent(
+        new DragEvent('dragover', { ...init, dataTransfer: dt })
+      );
     },
     {
       kind,
@@ -182,9 +187,9 @@ export type CommentImagesSeed = {
   scenario?: OrganizationWithSpaceModel;
   /** Disposable identities, recorded as soon as each Kratos identity exists. */
   users: RecordedIdentity[];
-
   discussionId?: string;
   contexts: BrowserContext[];
+  calloutId: string;
   calloutName: string;
   calloutUrl: string;
   postName: string;
@@ -197,6 +202,7 @@ export const newSeed = (): CommentImagesSeed => ({
   uid: UniqueIDGenerator.getID(),
   users: [],
   contexts: [],
+  calloutId: '',
   calloutName: '',
   calloutUrl: '',
   postName: '',
@@ -260,6 +266,9 @@ export async function seedCommentImages(
       visibility: CalloutVisibility.Published,
     },
   });
+  const calloutId = callout.data?.createCalloutOnCalloutsSet?.id;
+  if (!calloutId) throw new Error('seed: callout C was not created');
+  seed.calloutId = calloutId;
   seed.calloutUrl = appUrl(
     callout.data?.createCalloutOnCalloutsSet?.framing?.profile?.url,
     'callout C'
@@ -376,6 +385,52 @@ export async function seedCommentImages(
 }
 
 /**
+ * The size limit the callout's comment room enforces on an attached image: the
+ * `maxFileSize` of the room's attachment bucket, read as the platform admin.
+ */
+export async function commentRoomMaxFileSize(
+  seed: CommentImagesSeed
+): Promise<number> {
+  const { lookup } = await adminGql<{
+    lookup: { callout: { comments: { attachmentBucketId: string | null } } };
+  }>(
+    `query ($id: UUID!) {
+      lookup { callout(ID: $id) { comments { attachmentBucketId } } }
+    }`,
+    { id: seed.calloutId },
+    'seed: comment room bucket'
+  );
+  const bucketId = lookup.callout?.comments?.attachmentBucketId;
+  if (!bucketId)
+    throw new Error('seed: the comment room has no attachment bucket');
+  const bucket = await adminGql<{
+    lookup: { storageBucket: { maxFileSize: number } };
+  }>(
+    'query ($id: UUID!) { lookup { storageBucket(ID: $id) { maxFileSize } } }',
+    { id: bucketId },
+    'seed: comment room bucket size limit'
+  );
+  const maxFileSize = bucket.lookup.storageBucket?.maxFileSize;
+  if (!maxFileSize || maxFileSize <= 0)
+    throw new Error(`seed: bucket ${bucketId} reports no size limit`);
+  return maxFileSize;
+}
+
+/** The profile display name the platform shows for a user. */
+export async function displayNameOf(identity: Identity): Promise<string> {
+  const { lookup } = await adminGql<{
+    lookup: { user: { profile: { displayName: string } } };
+  }>(
+    'query ($id: UUID!) { lookup { user(ID: $id) { profile { displayName } } } }',
+    { id: identity.id },
+    `seed: display name of ${identity.id}`
+  );
+  const name = lookup.user?.profile?.displayName;
+  if (!name) throw new Error(`seed: user ${identity.id} has no display name`);
+  return name;
+}
+
+/**
  * Registers a disposable, verified Kratos identity with an Alkemio user (it
  * can sign in). The identity is recorded on the seed as soon as Kratos holds
  * it, so a later failed step still leaves teardown something to delete.
@@ -413,6 +468,21 @@ export async function addMember(
     RoleName.Member
   );
   expect(assigned?.error, `seed: ${role} joins the Space`).toBeFalsy();
+  return identity;
+}
+
+/** A disposable member of the seeded Space who also holds its Admin role. */
+export async function addSpaceAdmin(
+  seed: CommentImagesSeed,
+  role: string
+): Promise<Identity> {
+  const identity = await addMember(seed, role);
+  const assigned = await assignRoleToUser(
+    identity.id,
+    seed.scenario!.space.community.roleSetId,
+    RoleName.Admin
+  );
+  expect(assigned?.error, `seed: ${role} becomes a Space admin`).toBeFalsy();
   return identity;
 }
 
@@ -478,10 +548,10 @@ async function deleteIdentity(user: RecordedIdentity): Promise<void> {
 }
 
 /**
- * Undoes everything `seedCommentImages`, `addMember` and `addOutsider`
- * recorded: the discussion, the identities, then the Space and its
- * organization. Every step is attempted; any failure fails the hook, because
- * a leaked fixture breaks the next run.
+ * Undoes everything `seedCommentImages`, `addMember`, `addSpaceAdmin` and
+ * `addOutsider` recorded: the discussion, the identities, then the Space and
+ * its organization. Every step is attempted; any failure fails the hook,
+ * because a leaked fixture breaks the next run.
  */
 export async function cleanUpCommentImages(
   seed: CommentImagesSeed
