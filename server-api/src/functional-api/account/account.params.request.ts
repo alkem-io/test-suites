@@ -40,3 +40,25 @@ export const transferInnovationPackToAccount = async (
 
   return graphqlErrorWrapper(callback, userRole);
 };
+
+export const transferSpaceToAccount = async (
+  spaceID: string,
+  targetAccountID: string,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string | undefined) =>
+    graphqlClient.TransferSpaceToAccount(
+      {
+        transferData: {
+          spaceID,
+          targetAccountID,
+        },
+      },
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+
+  return graphqlErrorWrapper(callback, userRole);
+};

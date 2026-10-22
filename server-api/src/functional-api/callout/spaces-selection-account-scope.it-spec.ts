@@ -80,6 +80,7 @@ import {
   updateSpaceSettings,
 } from '@functional-api/journey/space/space.request.params';
 import { createSubspaceOrFail } from '@functional-api/journey/subspace/subspace.request.params';
+import { transferSpaceToAccount } from '@functional-api/account/account.params.request';
 
 const uniqueId = UniqueIDGenerator.getID();
 
@@ -96,6 +97,8 @@ let siblingL1Id = '';
 let staleL1Id = '';
 /** A space on a DIFFERENT account — the boundary under test. */
 let foreignSpaceId = '';
+/** A PUBLIC L0 of the host account that case 7 transfers to the foreign account. */
+let departingL0Id = '';
 
 const createdCalloutIds: string[] = [];
 
@@ -217,6 +220,49 @@ const RENDERED_SPACES_QUERY = `
   }
 `;
 
+type RenderedWithFlagData = {
+  lookup: {
+    callout: {
+      hasHiddenSpaces: boolean;
+      framing: { subspaces: Array<{ id: string }> };
+    } | null;
+  };
+};
+
+/** The CUSTOM read path as one viewer sees it: the cards, and AC6's per-viewer flag. */
+const RENDERED_WITH_FLAG_QUERY = `
+  query CalloutRenderedWithFlag($calloutId: UUID!) {
+    lookup {
+      callout(ID: $calloutId) {
+        hasHiddenSpaces
+        framing {
+          subspaces {
+            id
+          }
+        }
+      }
+    }
+  }
+`;
+
+type SpacePrivilegesData = {
+  lookup: {
+    space: { authorization: { myPrivileges: string[] } | null } | null;
+  };
+};
+
+const SPACE_PRIVILEGES_QUERY = `
+  query SpacePrivileges($spaceId: UUID!) {
+    lookup {
+      space(ID: $spaceId) {
+        authorization {
+          myPrivileges
+        }
+      }
+    }
+  }
+`;
+
 const calloutDisplayName = (label: string) => `spaces-${label}-${uniqueId}`;
 
 /** Creates a SPACES callout with a CUSTOM selection, as the space admin. */
@@ -324,6 +370,26 @@ beforeAll(async () => {
       TestUser.SPACE_ADMIN
     );
 
+    // PUBLIC, so after case 7 transfers it away the acting admin still holds
+    // READ on it: only the account boundary can then keep it out of the
+    // rendered collection.
+    departingL0Id = await createSpaceBasicDataOrFail(
+      `acct-scope-departing-${uniqueId}`,
+      `acctdeparting${uniqueId}`,
+      baseScenario.organization.accountId,
+      false
+    );
+    const departingPublic = await updateSpaceSettings(departingL0Id, {
+      privacy: { mode: SpacePrivacyMode.Public },
+    });
+    if (departingPublic.error) {
+      throw new Error(
+        `Fixture setup: could not make the departing L0 PUBLIC — ${JSON.stringify(
+          departingPublic.error.errors
+        )}`
+      );
+    }
+
     // A fixture that silently failed must fail AS A FIXTURE ERROR, never as a
     // green test over `undefined`.
     expect(hostSpaceId).toBeTruthy();
@@ -332,6 +398,7 @@ beforeAll(async () => {
     expect(siblingL1Id).toBeTruthy();
     expect(staleL1Id).toBeTruthy();
     expect(foreignSpaceId).toBeTruthy();
+    expect(departingL0Id).toBeTruthy();
   } catch (error) {
     // Clean up whatever was created before rethrowing, so a failed setup never
     // leaves fixture spaces behind on a shared cluster. The rethrow keeps the
@@ -360,7 +427,13 @@ beforeAll(async () => {
 const tearDownFixture = async () => {
   await Promise.allSettled(createdCalloutIds.map(id => deleteCallout(id)));
   // Children before parents; `staleL1Id` is already gone by case 3.
-  for (const id of [siblingL1Id, staleL1Id, siblingL0Id, foreignSpaceId]) {
+  for (const id of [
+    siblingL1Id,
+    staleL1Id,
+    siblingL0Id,
+    foreignSpaceId,
+    departingL0Id,
+  ]) {
     if (id) await deleteSpace(id).catch(() => undefined);
   }
   if (baseScenario) {
@@ -580,5 +653,92 @@ describe('Spaces-collection CUSTOM selection — the account boundary', () => {
     expect(res.errors.length).toBeGreaterThan(0);
     expect(res.errors[0].extensions?.code).toBe('FORBIDDEN_POLICY');
     expect(res.data?.lookup?.space).toBeNull();
+  });
+
+  test('case 7 (AC7 / US4, account transfer) — a space transferred out of the account drops out of the collection at read time, is not reported hidden, and is omitted on the next save', async () => {
+    // Case 3 proves the save half with a DELETED space, which no read path can
+    // render anyway. A transferred space still exists and the admin can still
+    // READ it, so only the CUSTOM read path's account predicate can keep it
+    // out — and a flag computed as "stored minus rendered" would wrongly
+    // report it hidden.
+    const created = await createSpacesCalloutWithSelection('transfer', [
+      hostL2Id,
+      departingL0Id,
+    ]);
+    expect(created.error).toBeUndefined();
+    const calloutId = created?.data?.createCalloutOnCalloutsSet?.id ?? '';
+    expect(calloutId).toBeTruthy();
+    createdCalloutIds.push(calloutId);
+
+    const rendered = () =>
+      rawQuery<RenderedWithFlagData>(
+        RENDERED_WITH_FLAG_QUERY,
+        { calloutId },
+        TestUser.SPACE_ADMIN
+      );
+
+    const before = await rendered();
+    expect(before.errors).toEqual([]);
+    expect(
+      before.data?.lookup?.callout?.framing.subspaces.map(s => s.id).sort()
+    ).toEqual([hostL2Id, departingL0Id].sort());
+    expect(before.data?.lookup?.callout?.hasHiddenSpaces).toBe(false);
+
+    const foreignAccountId = TestUserManager.users.spaceAdmin.accountId;
+    const transferred = await transferSpaceToAccount(
+      departingL0Id,
+      foreignAccountId
+    );
+    expect(transferred.error).toBeUndefined();
+    expect(transferred.data?.transferSpaceToAccount.account.id).toBe(
+      foreignAccountId
+    );
+
+    // The viewer still holds READ on the departed space, so READ cannot be
+    // what excludes it below.
+    const privileges = await rawQuery<SpacePrivilegesData>(
+      SPACE_PRIVILEGES_QUERY,
+      { spaceId: departingL0Id },
+      TestUser.SPACE_ADMIN
+    );
+    expect(privileges.errors).toEqual([]);
+    expect(
+      privileges.data?.lookup?.space?.authorization?.myPrivileges
+    ).toContain('READ');
+
+    // The transfer itself rewrites nothing: the drop happens at read time.
+    expect((await storedSelection(calloutId))?.selectedIds).toEqual([
+      hostL2Id,
+      departingL0Id,
+    ]);
+
+    const after = await rendered();
+    expect(after.errors).toEqual([]);
+    expect(
+      after.data?.lookup?.callout?.framing.subspaces.map(s => s.id)
+    ).toEqual([hostL2Id]);
+    // Stale, not hidden (the `hasHiddenSpaces` field contract).
+    expect(after.data?.lookup?.callout?.hasHiddenSpaces).toBe(false);
+
+    // The client posts back the selection it holds; the departed id is
+    // carried over, so it is dropped without an error.
+    const resubmitted = await updateCalloutSpacesSettings(
+      {
+        ID: calloutId,
+        settings: {
+          framing: {
+            selection: {
+              mode: CalloutSelectionMode.Custom,
+              selectedIds: [hostL2Id, departingL0Id],
+            },
+          },
+        },
+      },
+      TestUser.SPACE_ADMIN
+    );
+    expect(resubmitted.error).toBeUndefined();
+    const stored = await storedSelection(calloutId);
+    expect(stored?.mode).toBe(CalloutSelectionMode.Custom);
+    expect(stored?.selectedIds).toEqual([hostL2Id]);
   });
 });
