@@ -68,7 +68,11 @@ import {
 } from '@alkemio/tests-lib/core/generated/alkemio-schema';
 import { SpacePrivacyMode } from '@alkemio/client-lib';
 
-import { deleteCallout, getCalloutsData } from './callouts.request.params';
+import {
+  createCalloutOnCalloutsSet,
+  deleteCallout,
+  getCalloutsData,
+} from './callouts.request.params';
 import {
   createSpacesCollectionCallout,
   getCalloutSpacesSettings,
@@ -106,6 +110,11 @@ const scenarioConfig: TestScenarioConfig = {
   name: `spaces-selection-account-scope-${uniqueId}`,
   space: {
     collaboration: { addTutorialCallouts: false },
+    // SEC-084-01's precondition (case 8): a member may create a callout, so
+    // they hold UPDATE on one they could try to turn into a SPACES collection.
+    // It grants CONTRIBUTE, never CREATE on the callouts set or UPDATE on the
+    // space, so cases 6 and 9 keep their contrast.
+    settings: { collaboration: { allowMembersToCreateCallouts: true } },
     community: {
       admins: [TestUser.SPACE_ADMIN],
       members: [TestUser.SPACE_ADMIN, TestUser.SPACE_MEMBER],
@@ -740,5 +749,73 @@ describe('Spaces-collection CUSTOM selection — the account boundary', () => {
     const stored = await storedSelection(calloutId);
     expect(stored?.mode).toBe(CalloutSelectionMode.Custom);
     expect(stored?.selectedIds).toEqual([hostL2Id]);
+  });
+
+  test('case 8 (SEC-084-01, update) — a member cannot turn their own callout into a SPACES collection; the stored framing is unchanged', async () => {
+    const own = await createCalloutOnCalloutsSet(
+      calloutsSetId,
+      {
+        framing: {
+          profile: { displayName: calloutDisplayName('member-own') },
+          type: CalloutFramingType.None,
+        },
+      },
+      TestUser.SPACE_MEMBER
+    );
+    expect(own.error).toBeUndefined();
+    const calloutId = own.data?.createCalloutOnCalloutsSet.id ?? '';
+    expect(calloutId).toBeTruthy();
+    createdCalloutIds.push(calloutId);
+
+    // The member holds UPDATE on their own callout, so the refusal below is
+    // the restricted-framing gate, not a missing UPDATE.
+    const ordinaryEdit = await updateCalloutSpacesSettings(
+      { ID: calloutId, settings: { framing: { commentsEnabled: false } } },
+      TestUser.SPACE_MEMBER
+    );
+    expect(ordinaryEdit.error).toBeUndefined();
+
+    const conversion = {
+      ID: calloutId,
+      framing: { type: CalloutFramingType.Spaces },
+      settings: {
+        framing: {
+          selection: {
+            mode: CalloutSelectionMode.Custom,
+            selectedIds: [siblingL1Id],
+          },
+        },
+      },
+    };
+    const byMember = await updateCalloutSpacesSettings(
+      conversion,
+      TestUser.SPACE_MEMBER
+    );
+    const denial = byMember.error?.errors[0] as GqlError | undefined;
+    expect(denial?.extensions?.code).toBe('FORBIDDEN_POLICY');
+    expect(denial?.message).toContain('SPACES callout framing (admin-only)');
+
+    const reread = await getCalloutSpacesSettings(calloutId);
+    expect(reread.error).toBeUndefined();
+    expect(reread.data?.lookup.callout?.framing.type).toBe(
+      CalloutFramingType.None
+    );
+    expect(
+      reread.data?.lookup.callout?.settings.framing.selection?.selectedIds ?? []
+    ).not.toContain(siblingL1Id);
+
+    // Positive control: the same input is valid for the host-space admin.
+    const byAdmin = await updateCalloutSpacesSettings(
+      conversion,
+      TestUser.SPACE_ADMIN
+    );
+    expect(byAdmin.error).toBeUndefined();
+    const converted = await getCalloutSpacesSettings(calloutId);
+    expect(converted.data?.lookup.callout?.framing.type).toBe(
+      CalloutFramingType.Spaces
+    );
+    expect(
+      converted.data?.lookup.callout?.settings.framing.selection?.selectedIds
+    ).toEqual([siblingL1Id]);
   });
 });
