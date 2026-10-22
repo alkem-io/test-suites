@@ -214,13 +214,12 @@ Since revision 6 deleted the US2 acceptance walk (spec §5.2), this suite is
 also **US2's only automated evidence** — there is no browser proof of the apply
 at all.
 
-**And nothing schedules it.** The `collabora` vitest project is not in the
-`nightly` project's glob list in `server-api/vitest.config.ts`, and no workflow
-in `.github/workflows/` invokes `test:collabora` — so AC1/AC2/AC3/AC6, and the
-copy-on-apply source READ they are the only cover for, are verified **on demand
-only**. Read "US2's only automated evidence" as *the only automated evidence
-that exists*, not as standing coverage: a later change dropping that source
-READ would leave every CI check green. Widening the nightly glob is the
-obvious fix and is deliberately not done here — AC3 and the editor-URL cases
-need a reachable `wopi-service`, so it has to be verified against the nightly
-cluster first, as its own change.
+**Scheduled nightly.** The `collabora` project is part of the `nightly`
+project's glob in `server-api/vitest.config.ts`, so AC1/AC2/AC3/AC6 and the
+copy-on-apply source READ they are the only cover for run against the test
+environment every night. AC3 and the editor-URL cases need the server to
+reach `wopi-service` directly: a wopi outage on the nightly cluster reads as
+`collaboraEditorUrl` failing with "Request failed with status code 500" and
+`replaceCollaboraDocument` refusing with "could not be checked for active
+edits". Those reds are environment, not product — triage them against the
+wopi-service deployment before anything else.
