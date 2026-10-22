@@ -59,11 +59,16 @@ async function openComposer(page: Page, url: string): Promise<Composer> {
   const dlg = page.locator('[role=dialog]').last();
   const box = dlg.getByRole('textbox', { name: 'Add a comment...' });
   await box.waitFor();
+  const addImage = dlg.getByRole('button', { name: 'Add image' });
+  // The field renders before the room's storage bucket is known, and until
+  // then the composer ignores pasted and dropped files. The image button
+  // appears with the bucket, so it marks the composer as ready for them.
+  await expect(addImage).toBeVisible();
   return {
     dlg,
     box,
     stagedList: dlg.getByRole('list', { name: 'Files to send' }),
-    addImage: dlg.getByRole('button', { name: 'Add image' }),
+    addImage,
     send: dlg.getByRole('button', { name: 'Send', exact: true }),
     fileInput: dlg.locator('input[type=file]').first(),
   };

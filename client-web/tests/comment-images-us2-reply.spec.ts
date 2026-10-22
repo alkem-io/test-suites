@@ -71,6 +71,9 @@ test.describe('Comment images — US2 P1 acceptance walk (replies)', { tag: ['@f
     await item.getByRole('button', { name: 'Reply', exact: true }).click();
     const box = replyBox(item);
     await expect(box).toBeVisible();
+    // The reply box ignores pasted and dropped files until the room's storage
+    // bucket is known; its image button appears with the bucket.
+    await expect(box.getByRole('button', { name: 'Add image' })).toBeVisible();
     return box;
   };
   const stagedList = (box: Locator): Locator => box.getByRole('list', { name: 'Files to send' });
