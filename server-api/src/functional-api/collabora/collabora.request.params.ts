@@ -500,7 +500,8 @@ export const applyCollaboraTemplate = async (
   );
 
 /**
- * Re-read the current `previewUrl` of the document framing a callout.
+ * Re-read the current `previewUrl` of the document framing a callout, and the
+ * reading role's privileges on that document.
  *
  * Keyed off the **callout**, not the document: nothing in the schema returns a
  * `CollaboraDocument` by its own id. Required after every write, because
@@ -518,7 +519,13 @@ export const getCalloutCollaboraPreviewUrl = async (
       query: `query CalloutCollaboraPreviewUrl($calloutID: UUID!) {
         lookup {
           callout(ID: $calloutID) {
-            framing { collaboraDocument { id previewUrl } }
+            framing {
+              collaboraDocument {
+                id
+                previewUrl
+                authorization { myPrivileges }
+              }
+            }
           }
         }
       }`,

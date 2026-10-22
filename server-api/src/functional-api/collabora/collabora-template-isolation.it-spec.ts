@@ -35,8 +35,8 @@ import {
  * document that owns its own backing file, and editing that copy changes
  * nothing else.
  *
- * Cases run in declaration order and depend on it — case 3 is the only content
- * write, and cases 1-2 capture the hashes it must not disturb. What this suite
+ * Cases run in declaration order and depend on it — AC3 is the only content
+ * write, and AC1-AC2 capture the hashes it must not disturb. What this suite
  * does and does not prove is documented in ./README.md.
  */
 
@@ -102,9 +102,10 @@ type CreatedCollaboraTemplate = {
 
 let templateDocumentId = '';
 let templatePreviewUrl = '';
-// Captured by case 2, asserted invariant by case 3.
+// Captured by AC2, asserted invariant by AC3.
 let postA1CalloutId = '';
 let postA1DocumentId = '';
+let postA2CalloutId = '';
 let postA2PreviewUrl = '';
 
 const importHash = fixtureHash(collaboraFixtures.import);
@@ -244,7 +245,24 @@ describe('document post templates - template and post content are independent', 
 
     postA1CalloutId = a1Callout?.id as string;
     postA1DocumentId = a1Callout?.framing?.collaboraDocument?.id as string;
+    postA2CalloutId = a2Callout?.id as string;
     postA2PreviewUrl = a2PreviewUrl as string;
+  });
+
+  test("US2: the member's post gets a document that member can edit", async () => {
+    // client-web#10423: "Creating a post from that template gives an editable
+    // document". A Collabora edit is authorized on UPDATE_CONTENT, and A2 is
+    // the post SPACE_MEMBER created in AC2.
+    const memberView = await getCalloutCollaboraPreviewUrl(
+      postA2CalloutId,
+      TestUser.SPACE_MEMBER
+    );
+
+    expect(memberView.body?.errors).toBeUndefined();
+    expect(
+      memberView.body?.data?.lookup?.callout?.framing?.collaboraDocument
+        ?.authorization?.myPrivileges
+    ).toContain(AuthorizationPrivilege.UpdateContent);
   });
 
   test('AC3: editing one post changes only that post', async () => {
