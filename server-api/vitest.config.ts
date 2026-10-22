@@ -238,6 +238,14 @@ export default defineConfig({
           'src/functional-api/push-notifications/**/*.it-spec.ts',
           'src/functional-api/language/**/*.it-spec.ts',
           'src/functional-api/orphan-free-deletion/**/*.it-spec.ts',
+          // workspace#085 + server#6360: the Collabora document surface. Both
+          // files need the server to reach wopi-service directly
+          // (`WOPI_SERVICE_URL`); through the gateway the token and
+          // lock-status routes answer 401. A wopi outage shows up as
+          // `collaboraEditorUrl` "Request failed with status code 500" and
+          // `replaceCollaboraDocument` "could not be checked for active edits"
+          // — environment, not product. Licence assignment is self-contained.
+          'src/functional-api/collabora/**/*.it-spec.ts',
         ],
         // 054-delete-own-account: these it-specs need loopback Redis/Postgres
         // and a matching local/CI `SESSION_SIGNING_KEY`
