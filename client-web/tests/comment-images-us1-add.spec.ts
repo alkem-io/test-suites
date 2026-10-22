@@ -329,7 +329,7 @@ test.describe(
       await expect(
         c.stagedList.getByRole('status', { name: 'Uploading…' })
       ).toBeVisible();
-      await releaseUploads();
+      releaseUploads();
       await expect(c.stagedList).toHaveCount(0);
     });
 

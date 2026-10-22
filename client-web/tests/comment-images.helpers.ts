@@ -574,22 +574,20 @@ export const replyBox = (scope: Page | Locator): Locator =>
 
 /**
  * Holds every comment-image upload at the network until the returned function
- * is called; calling it lets the held uploads through and removes the hold.
+ * is called; calling it lets the held uploads through. The route stays (an
+ * open gate passes later uploads straight on): unrouting while an upload is
+ * still held would hand it to Playwright and fail its continue.
  */
-export async function holdUploads(page: Page): Promise<() => Promise<void>> {
+export async function holdUploads(page: Page): Promise<() => void> {
   let open: () => void = () => undefined;
   const gate = new Promise<void>(resolve => {
     open = resolve;
   });
-  const hold = async (route: Route) => {
+  await page.route(UPLOAD_ROUTE, async (route: Route) => {
     await gate;
     await route.continue();
-  };
-  await page.route(UPLOAD_ROUTE, hold);
-  return async () => {
-    open();
-    await page.unroute(UPLOAD_ROUTE, hold);
-  };
+  });
+  return open;
 }
 
 // --- sends ---------------------------------------------------------------------------------------

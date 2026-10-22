@@ -130,7 +130,7 @@ test.describe('Comment images — US2 P1 acceptance walk (replies)', { tag: ['@f
     await expect(box.getByRole('button', { name: 'Send' })).toBeDisabled();
     await expect(box.getByRole('button', { name: 'Add image' })).toBeDisabled();
 
-    await releaseUploads();
+    releaseUploads();
     await expect(box).toHaveCount(0);
 
     // The reply is the last one in the thread, with the picture rendered.
