@@ -44,8 +44,6 @@ export const WIDGET_LABEL: Record<SidebarWidget, string> = {
   [SidebarWidget.Guidelines]: 'Community Guidelines',
   [SidebarWidget.Index]: 'Post Index',
   [SidebarWidget.Search]: 'Search',
-  [SidebarWidget.Community]: 'Community',
-  [SidebarWidget.Activity]: 'Recent Activity',
 };
 
 /**
