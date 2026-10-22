@@ -4,9 +4,13 @@
 //
 // The browser half of the feature's verification, persisted: the forge walks
 // (US1 10/10, US2 3/3) ran once against the author's stack and were never
-// committed. The account BOUNDARY (foreign-account ids rejected, stale ids
-// dropped) is the API spec test-suites#675 `callout/spaces-selection-account-
-// scope.it-spec.ts`; this file does not restate it.
+// committed. The account BOUNDARY is split: what the browser can reach is
+// here — the stale path after an account transfer (US5-AS8: the card drops,
+// the editor marks the entry "No longer available", the save omits it) and
+// the create-dialog gate that keeps the SPACES framing from a member
+// (US5-AS9). The server-only half — a foreign-account id REJECTED on create
+// and on update (AC4), which no picker can send — stays in the API spec
+// test-suites#675 `callout/spaces-selection-account-scope.it-spec.ts`.
 //
 // Fixture (spec §US2 "Independent Test", one account = the scenario
 // organisation's): host L0 A (PUBLIC) with A1 → A1a; sibling L0 B (PRIVATE,
@@ -77,6 +81,20 @@ const COPY = {
   notice:
     "Some spaces in this overview are not shown because you don't have access to them.",
   save: 'Save',
+  // A selected id the candidate set no longer resolves (bundle key
+  // forms.selection.noLongerAvailable); the chip never prints the raw id.
+  unresolved: 'No longer available',
+  // Create Post dialog: the framing radiogroup, its overflow menu and the chips.
+  addPost: 'Add Post',
+  framingGroup: 'Add to Post',
+  moreMenu: 'More to add',
+  framing: {
+    whiteboard: 'Whiteboard',
+    poll: 'Poll',
+    subspaces: 'Subspaces',
+    contributors: 'Contributors',
+    form: 'Form',
+  },
 } as const;
 
 // A, A1 and A1a are read back from the scenario after creation: the factory
@@ -88,6 +106,7 @@ const NAMES = {
   B: `Acct sibling B ${uid}`,
   B1: `Community of practice ${uid}`,
   C: `Acct closed C ${uid}`,
+  D: `Acct departing D ${uid}`,
   B2: `Closed B2 ${uid}`,
   A2: `Closed A2 ${uid}`,
   pick: `Portfolio pick ${uid}`,
@@ -96,12 +115,19 @@ const NAMES = {
   auto: `Portfolio auto ${uid}`,
   priv: `Portfolio private B2 ${uid}`,
   matrix: `Portfolio matrix ${uid}`,
+  departing: `Portfolio departing ${uid}`,
 };
 
 const scenarioConfig: TestScenarioConfig = {
   name: 'acct-scope-ui',
   space: {
-    settings: { privacy: { mode: SpacePrivacyMode.Public } },
+    settings: {
+      privacy: { mode: SpacePrivacyMode.Public },
+      // US5-AS9's precondition: a member may create posts on A, so the
+      // create dialog is reachable for them and the SPACES chip's absence is
+      // the gate, not a closed door.
+      collaboration: { allowMembersToCreateCallouts: true },
+    },
     collaboration: {
       addTutorialCallouts: false,
       addPostCollectionCallout: false,
@@ -133,8 +159,18 @@ const scenarioConfig: TestScenarioConfig = {
 };
 
 let scenario: OrganizationWithSpaceModel | undefined;
-const extra = newFixtureTree(); // B, B1, B2, C — removed leaves-first in afterAll
-const ids = { A: '', A1: '', A1a: '', A2: '', B: '', B1: '', B2: '', C: '' };
+const extra = newFixtureTree(); // B, B1, B2, C, D — removed leaves-first in afterAll
+const ids = {
+  A: '',
+  A1: '',
+  A1a: '',
+  A2: '',
+  B: '',
+  B1: '',
+  B2: '',
+  C: '',
+  D: '',
+};
 const roleSets = { B: '', B2: '' };
 const callouts = {
   pick: '',
@@ -143,6 +179,7 @@ const callouts = {
   auto: '',
   priv: '',
   matrix: '',
+  departing: '',
 };
 // Viewers added in US5-AS7 (harness personas; no role on A or B until then).
 const BOTH_ADMIN = 'subspace.admin@alkem.io';
@@ -358,24 +395,29 @@ const viewAs = async (
 };
 
 /**
- * The feed mounts posts lazily as they scroll into view, so a post further down
- * is not in the DOM after navigation. Scroll until its heading exists.
+ * The feed mounts a post's content once its wrapper has been in view for half
+ * a second (`LazyCalloutItem` holds a skeleton until `useCalloutInView` fires:
+ * `delay: 500`, `trackVisibility`, `triggerOnce`), so a post further down is
+ * not in the DOM after navigation. Jumping to the end of a long feed (End key,
+ * `scrollIntoView`) is not enough: for an anonymous visitor the posts skipped
+ * over stay skeletons for good, as a slow wheel scroll from the top is the only
+ * motion that mounted every post in a seven-post feed (measured 2026-10-22).
+ * So reveal the way a reader does — wheel down one step per poll tick, with
+ * the pointer over the feed, until the heading exists. The tick is at least
+ * the mount delay: Playwright's default poll cadence starts at 100 and 250 ms,
+ * which could scroll a short post out of view before it ever mounts.
  */
 const revealPost = async (page: Page, title: string): Promise<Locator> => {
   const heading = page.getByRole('heading', { name: title, exact: true });
-  // Bringing the last mounted post into view is what makes the feed mount the
-  // next one; a wheel event alone depends on what sits under the pointer.
-  const lastPost = page.getByRole('link', { name: /^Open / }).last();
+  const viewport = page.viewportSize() ?? { width: 1280, height: 720 };
+  await page.mouse.move(viewport.width * 0.55, viewport.height * 0.5);
   await expect
     .poll(
       async () => {
-        if ((await heading.count()) === 0) {
-          await lastPost.scrollIntoViewIfNeeded().catch(() => undefined);
-          await page.keyboard.press('End');
-        }
+        if ((await heading.count()) === 0) await page.mouse.wheel(0, 350);
         return heading.count();
       },
-      { timeout: 60_000 }
+      { timeout: 60_000, intervals: [600] }
     )
     .toBeGreaterThan(0);
   await heading.scrollIntoViewIfNeeded();
@@ -465,6 +507,19 @@ test.describe
     );
     ids.C = c.id;
     extra.subspaceIds.unshift(ids.C);
+    // D is the account's FOURTH L0. ACCOUNT_LICENSE_PLUS (the factory's grant)
+    // allows three and is the only account plan the platform seeds, so the
+    // baseline plan is raised instead (ACCOUNT_LICENSE_MANAGE, held by the
+    // global admin). Surfaced, not swallowed: without it `createL0` throws on
+    // the entitlement.
+    await adminGql(
+      'mutation($u: UpdateBaselineLicensePlanOnAccount!){ updateBaselineLicensePlanOnAccount(updateData: $u) { id } }',
+      { u: { accountID: scenario.organization.accountId, spaceFree: 4 } }
+    );
+    ids.D = (
+      await createL0(NAMES.D, shortId('acctd'), SpacePrivacyMode.Public)
+    ).id;
+    extra.subspaceIds.unshift(ids.D);
 
     callouts.pick = await createSpacesPost(NAMES.pick);
     callouts.mixed = await createSpacesPost(NAMES.mixed, {
@@ -477,6 +532,10 @@ test.describe
     });
     callouts.auto = await createSpacesPost(NAMES.auto);
     callouts.priv = await createSpacesPost(NAMES.priv);
+    callouts.departing = await createSpacesPost(NAMES.departing, {
+      mode: 'CUSTOM',
+      selectedIds: [ids.A1a, ids.D],
+    });
 
     // Precondition read-backs: the privilege shape the whole file rests on.
     expect(
@@ -1048,5 +1107,164 @@ test.describe
         ).toHaveCount(0);
       });
     }
+  });
+
+  test('US5-AS8 — a selected space transferred to another account drops out of the collection with no notice, the editor marks it "No longer available" without printing its id, and a save omits it (AC7 / US4)', async ({
+    page,
+  }) => {
+    test.setTimeout(240_000);
+    // (a) Both cards render to the host admin while D is still in the account.
+    expect(
+      await renderedIdsFor(callouts.departing, TestUser.SPACE_ADMIN)
+    ).toEqual({ ids: expect.arrayContaining([ids.A1a, ids.D]), hidden: false });
+    const before = await openSpace(page, NAMES.departing);
+    await findArticleByName(before, NAMES.D);
+    await findArticleByName(before, NAMES.A1a);
+    await expect(before.locator('article')).toHaveCount(2);
+    await expect(before.getByText(COPY.notice, { exact: true })).toHaveCount(0);
+
+    // (b) D leaves the account: transferred to the host admin's OWN account,
+    // where they keep READ on it — so READ cannot be what drops it below.
+    const target = await graphqlRequestAuth(
+      { query: '{ me { user { account { id } } } }' },
+      TestUser.SPACE_ADMIN
+    );
+    const targetAccountId: string = target.body.data.me.user.account.id;
+    expect(targetAccountId).not.toBe(scenario!.organization.accountId);
+    const moved = await adminGql<{
+      transferSpaceToAccount: { account: { id: string } };
+    }>(
+      'mutation($t: TransferAccountSpaceInput!){ transferSpaceToAccount(transferData: $t) { account { id } } }',
+      { t: { spaceID: ids.D, targetAccountID: targetAccountId } }
+    );
+    expect(moved.transferSpaceToAccount.account.id).toBe(targetAccountId);
+    expect(
+      await renderedIdsFor(callouts.departing, TestUser.SPACE_ADMIN),
+      'the stored id is kept; the read path drops it and does not call it hidden'
+    ).toEqual({ ids: [ids.A1a], hidden: false });
+    expect((await selectionOf(callouts.departing)).selectedIds.sort()).toEqual(
+      [ids.A1a, ids.D].sort()
+    );
+
+    // (c) The card is gone, the sibling stays, no notice, D named nowhere.
+    const after = await openSpace(page, NAMES.departing);
+    await findArticleByName(after, NAMES.A1a);
+    await expect(after.locator('article')).toHaveCount(1);
+    await expect(after.getByText(COPY.notice, { exact: true })).toHaveCount(0);
+    await expect(after.getByText(NAMES.D, { exact: true })).toHaveCount(0);
+
+    // (d) The editor shows A1a by name and the departed entry as "No longer
+    // available", removable, never as a raw id; the count still says two.
+    await openEdit(page, NAMES.departing);
+    await expect(chip(page, `Remove ${NAMES.A1a}`)).toBeVisible({
+      timeout: 15_000,
+    });
+    await expect(chip(page, `Remove ${COPY.unresolved}`)).toBeVisible();
+    await expect(
+      chip(page, `Remove ${COPY.unresolved}`).getByText(COPY.unresolved, {
+        exact: true,
+      })
+    ).toBeVisible();
+    await expect(dialog(page).getByText(ids.D)).toHaveCount(0);
+    await expect(dialog(page).getByText(NAMES.D, { exact: true })).toHaveCount(
+      0
+    );
+    await expect(
+      dialog(page).getByText(COPY.selected(2), { exact: true })
+    ).toBeVisible();
+
+    // (e) Save without touching the stale chip: the server omits it (AC7),
+    // the editor reopens with A1a alone, and the stored list reads [A1a].
+    await dialog(page)
+      .getByRole('button', { name: COPY.save, exact: true })
+      .click();
+    await expect(
+      dialog(page).getByRole('switch', { name: COPY.manualSwitch })
+    ).toHaveCount(0, { timeout: 15_000 });
+    expect(await selectionOf(callouts.departing)).toEqual({
+      mode: 'CUSTOM',
+      selectedIds: [ids.A1a],
+    });
+    await openEdit(page, NAMES.departing);
+    await expect(chip(page, `Remove ${NAMES.A1a}`)).toBeVisible({
+      timeout: 15_000,
+    });
+    await expect(chip(page, `Remove ${COPY.unresolved}`)).toHaveCount(0);
+    await expect(
+      dialog(page).getByText(COPY.selected(1), { exact: true })
+    ).toBeVisible();
+  });
+
+  test('US5-AS9 — the Create Post dialog offers a member of A no Subspaces, Contributors or Form framing, in the row or behind More, while it is usable for them and offers Subspaces to the host admin (SEC-084-01 / AC3)', async ({
+    page,
+    browser,
+  }) => {
+    test.setTimeout(180_000);
+    const openCreate = async (p: Page): Promise<Locator> => {
+      await p.goto(`${baseUrl}/${scenario!.space.nameId}`);
+      await p
+        .getByRole('button', { name: COPY.addPost, exact: true })
+        .first()
+        .click();
+      const d = dialog(p).filter({
+        has: p.getByRole('radiogroup', { name: COPY.framingGroup }),
+      });
+      await expect(d.getByRole('textbox', { name: 'Title' })).toBeVisible({
+        timeout: 15_000,
+      });
+      return d;
+    };
+    const chipsOf = (d: Locator) =>
+      d.getByRole('radiogroup', { name: COPY.framingGroup });
+    const openMore = async (p: Page, d: Locator): Promise<Locator> => {
+      await d.getByRole('button', { name: COPY.moreMenu, exact: true }).click();
+      const menu = p.getByRole('menu');
+      await expect(menu).toBeVisible();
+      return menu;
+    };
+    const adminOnly = [
+      COPY.framing.subspaces,
+      COPY.framing.contributors,
+      COPY.framing.form,
+    ];
+
+    await viewAs(browser, MEMBER, async p => {
+      const d = await openCreate(p);
+      // Positive control: the dialog is live for the member (allowMembersToCreateCallouts).
+      await expect(
+        chipsOf(d).getByRole('radio', {
+          name: COPY.framing.whiteboard,
+          exact: true,
+        })
+      ).toBeVisible();
+      for (const name of adminOnly)
+        await expect(
+          chipsOf(d).getByRole('radio', { name, exact: true }),
+          `member row must not offer ${name}`
+        ).toHaveCount(0);
+      const menu = await openMore(p, d);
+      await expect(
+        menu.getByRole('menuitem', { name: COPY.framing.poll, exact: true })
+      ).toBeVisible();
+      for (const name of adminOnly)
+        await expect(
+          menu.getByRole('menuitem', { name, exact: true }),
+          `member More menu must not offer ${name}`
+        ).toHaveCount(0);
+    });
+
+    // The host admin, same dialog: Subspaces is offered (behind More — it is
+    // not one of the three primary chips).
+    const d = await openCreate(page);
+    const menu = await openMore(page, d);
+    await expect(
+      menu.getByRole('menuitem', { name: COPY.framing.subspaces, exact: true })
+    ).toBeVisible();
+    await expect(
+      menu.getByRole('menuitem', {
+        name: COPY.framing.contributors,
+        exact: true,
+      })
+    ).toBeVisible();
   });
 });

@@ -127,11 +127,11 @@ export const updateCollaborationFromSpaceTemplate = async (
   return graphqlErrorWrapper(callback, userRole);
 };
 
-// --- Sidebar widget round-trip (workspace#040-sidebar-widget-config) ---
+// --- Sidebar widget round-trip ---
 // The lib `UpdateInnovationFlowState` document selects only `id displayName`, and no lib
-// document reads a template's content-space flow states or reorders states, so these three
-// operations are raw documents. Everything else in the round-trip uses the shared helpers
-// (`getInnovationFlowStatesWithIds`, `updateInnovationFlowState`).
+// document reads a template's content-space flow states, so these two operations are raw
+// documents. Everything else in the round-trip uses the shared helpers in
+// `innovation-flow.request.params.ts`.
 const sidebarClient = new GraphQLClient(
   testConfiguration.endPoints.graphql.private
 );
@@ -174,40 +174,19 @@ export const getTemplateContentSpaceFlowStates = async (
         lookup: {
           template: {
             contentSpace: {
-              collaboration: { innovationFlow: { states: FlowStateSidebar[] } };
+              collaboration: {
+                innovationFlow: { id: string; states: FlowStateSidebar[] };
+              };
             };
           };
         };
       }>(
         `query GetTemplateContentSpaceFlowStates($templateId: UUID!) {
           lookup { template(ID: $templateId) { contentSpace { collaboration { innovationFlow {
-            states { id displayName sortOrder settings { sidebar } }
+            id states { id displayName sortOrder settings { sidebar } }
           } } } } }
         }`,
         { templateId },
-        bearer(authToken)
-      ),
-    userRole
-  );
-
-/** Reorders a flow's states to the given ID order. */
-export const updateInnovationFlowStatesSortOrder = async (
-  innovationFlowID: string,
-  stateIDs: string[],
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
-) =>
-  graphqlErrorWrapper(
-    (authToken: string | undefined) =>
-      sidebarClient.rawRequest<{
-        updateInnovationFlowStatesSortOrder: {
-          id: string;
-          sortOrder: number;
-        }[];
-      }>(
-        `mutation UpdateInnovationFlowStatesSortOrder($sortOrderData: UpdateInnovationFlowStatesSortOrderInput!) {
-          updateInnovationFlowStatesSortOrder(sortOrderData: $sortOrderData) { id sortOrder }
-        }`,
-        { sortOrderData: { innovationFlowID, stateIDs } },
         bearer(authToken)
       ),
     userRole

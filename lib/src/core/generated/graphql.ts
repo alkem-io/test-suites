@@ -157,6 +157,34 @@ export type AccountDeletionBlockerTotal = {
   total: Scalars["Int"]["output"];
 };
 
+/** A hosted Innovation Hub card: its identity, nameID and profile only. */
+export type AccountHostedInnovationHub = {
+  /** The ID of the Innovation Hub. */
+  id: Scalars["UUID"]["output"];
+  /** The nameID of the Innovation Hub. */
+  nameID: Scalars["NameID"]["output"];
+  /** The profile of this Innovation Hub. */
+  profile: Profile;
+};
+
+/** Resources hosted by an Account, as the current viewer may see them. */
+export type AccountHostedResources = {
+  /** The Innovation Hubs hosted by the Account. */
+  innovationHubs: Array<AccountHostedInnovationHub>;
+  /** Innovation Packs of the Account that the current viewer may see. */
+  innovationPacks: Array<InnovationPack>;
+  /** Virtual Contributors of the Account that the current viewer may see. */
+  virtualContributors: Array<AccountHostedVirtualContributor>;
+};
+
+/** A hosted Virtual Contributor card: its identity and profile only. */
+export type AccountHostedVirtualContributor = {
+  /** The ID of the Virtual Contributor. */
+  id: Scalars["UUID"]["output"];
+  /** The public profile of this Virtual Contributor. */
+  profile: Profile;
+};
+
 export type AccountLicensePlan = {
   /** The number of Innovation Packs allowed. */
   innovationPacks: Scalars["Int"]["output"];
@@ -7173,6 +7201,8 @@ export type Organization = ActorFull &
     group?: Maybe<UserGroup>;
     /** Groups defined on this organization. */
     groups?: Maybe<Array<UserGroup>>;
+    /** Viewer-scoped hosted resources, null if anonymous. Single-profile use. */
+    hostedResources?: Maybe<AccountHostedResources>;
     /** The ID of the Actor */
     id: Scalars["UUID"]["output"];
     /** Legal name - required if hosting an Space */
@@ -11056,6 +11086,8 @@ export type User = ActorFull & {
   /** The email address for this User. */
   email: Scalars["String"]["output"];
   firstName: Scalars["String"]["output"];
+  /** Viewer-scoped hosted resources, null if anonymous. Single-profile use. */
+  hostedResources?: Maybe<AccountHostedResources>;
   /** The ID of the Actor */
   id: Scalars["UUID"]["output"];
   /** Can a message be sent to this User. */
@@ -12240,6 +12272,21 @@ export type ResolversTypes = {
   AccountDeletionBlocker: ResolverTypeWrapper<SchemaTypes.AccountDeletionBlocker>;
   AccountDeletionBlockerKind: SchemaTypes.AccountDeletionBlockerKind;
   AccountDeletionBlockerTotal: ResolverTypeWrapper<SchemaTypes.AccountDeletionBlockerTotal>;
+  AccountHostedInnovationHub: ResolverTypeWrapper<
+    Omit<SchemaTypes.AccountHostedInnovationHub, "profile"> & {
+      profile: ResolversTypes["Profile"];
+    }
+  >;
+  AccountHostedResources: ResolverTypeWrapper<
+    Omit<SchemaTypes.AccountHostedResources, "innovationPacks"> & {
+      innovationPacks: Array<ResolversTypes["InnovationPack"]>;
+    }
+  >;
+  AccountHostedVirtualContributor: ResolverTypeWrapper<
+    Omit<SchemaTypes.AccountHostedVirtualContributor, "profile"> & {
+      profile: ResolversTypes["Profile"];
+    }
+  >;
   AccountLicensePlan: ResolverTypeWrapper<SchemaTypes.AccountLicensePlan>;
   AccountLicenseResetInput: SchemaTypes.AccountLicenseResetInput;
   AccountSubscription: ResolverTypeWrapper<SchemaTypes.AccountSubscription>;
@@ -14119,6 +14166,18 @@ export type ResolversParentTypes = {
   AccountAuthorizationResetInput: SchemaTypes.AccountAuthorizationResetInput;
   AccountDeletionBlocker: SchemaTypes.AccountDeletionBlocker;
   AccountDeletionBlockerTotal: SchemaTypes.AccountDeletionBlockerTotal;
+  AccountHostedInnovationHub: Omit<
+    SchemaTypes.AccountHostedInnovationHub,
+    "profile"
+  > & { profile: ResolversParentTypes["Profile"] };
+  AccountHostedResources: Omit<
+    SchemaTypes.AccountHostedResources,
+    "innovationPacks"
+  > & { innovationPacks: Array<ResolversParentTypes["InnovationPack"]> };
+  AccountHostedVirtualContributor: Omit<
+    SchemaTypes.AccountHostedVirtualContributor,
+    "profile"
+  > & { profile: ResolversParentTypes["Profile"] };
   AccountLicensePlan: SchemaTypes.AccountLicensePlan;
   AccountLicenseResetInput: SchemaTypes.AccountLicenseResetInput;
   AccountSubscription: SchemaTypes.AccountSubscription;
@@ -15793,6 +15852,47 @@ export type AccountDeletionBlockerTotalResolvers<
     ContextType
   >;
   total?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type AccountHostedInnovationHubResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["AccountHostedInnovationHub"] = ResolversParentTypes["AccountHostedInnovationHub"]
+> = {
+  id?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
+  nameID?: Resolver<ResolversTypes["NameID"], ParentType, ContextType>;
+  profile?: Resolver<ResolversTypes["Profile"], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type AccountHostedResourcesResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["AccountHostedResources"] = ResolversParentTypes["AccountHostedResources"]
+> = {
+  innovationHubs?: Resolver<
+    Array<ResolversTypes["AccountHostedInnovationHub"]>,
+    ParentType,
+    ContextType
+  >;
+  innovationPacks?: Resolver<
+    Array<ResolversTypes["InnovationPack"]>,
+    ParentType,
+    ContextType
+  >;
+  virtualContributors?: Resolver<
+    Array<ResolversTypes["AccountHostedVirtualContributor"]>,
+    ParentType,
+    ContextType
+  >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type AccountHostedVirtualContributorResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["AccountHostedVirtualContributor"] = ResolversParentTypes["AccountHostedVirtualContributor"]
+> = {
+  id?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
+  profile?: Resolver<ResolversTypes["Profile"], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -23334,6 +23434,11 @@ export type OrganizationResolvers<
     ParentType,
     ContextType
   >;
+  hostedResources?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes["AccountHostedResources"]>,
+    ParentType,
+    ContextType
+  >;
   id?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
   legalEntityName?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["String"]>,
@@ -26778,6 +26883,11 @@ export type UserResolvers<
   >;
   email?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
   firstName?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
+  hostedResources?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes["AccountHostedResources"]>,
+    ParentType,
+    ContextType
+  >;
   id?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
   isContactable?: Resolver<ResolversTypes["Boolean"], ParentType, ContextType>;
   isContactableViaEmail?: Resolver<
@@ -27835,6 +27945,9 @@ export type Resolvers<ContextType = any> = {
   Account?: AccountResolvers<ContextType>;
   AccountDeletionBlocker?: AccountDeletionBlockerResolvers<ContextType>;
   AccountDeletionBlockerTotal?: AccountDeletionBlockerTotalResolvers<ContextType>;
+  AccountHostedInnovationHub?: AccountHostedInnovationHubResolvers<ContextType>;
+  AccountHostedResources?: AccountHostedResourcesResolvers<ContextType>;
+  AccountHostedVirtualContributor?: AccountHostedVirtualContributorResolvers<ContextType>;
   AccountLicensePlan?: AccountLicensePlanResolvers<ContextType>;
   AccountSubscription?: AccountSubscriptionResolvers<ContextType>;
   ActivityCreatedSubscriptionResult?: ActivityCreatedSubscriptionResultResolvers<ContextType>;
