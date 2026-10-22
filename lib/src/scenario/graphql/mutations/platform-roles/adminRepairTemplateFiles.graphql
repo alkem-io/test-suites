@@ -1,0 +1,31 @@
+mutation adminRepairTemplateFiles($repairData: AdminTemplateFileRepairInput!) {
+  adminRepairTemplateFiles(repairData: $repairData) {
+    dryRun
+    templatesScanned
+    templatesWithForeignFiles
+    copiedReferences
+    references {
+      templateID
+      templateName
+      location
+      entityID
+      fileID
+      storageBucketID
+      ownerCanRead
+      copied
+    }
+    missingFiles {
+      templateID
+      templateName
+      location
+      entityID
+      fileID
+    }
+    failed {
+      templateID
+      location
+      entityID
+      reason
+    }
+  }
+}

@@ -108,6 +108,11 @@ export const createCalloutOnCalloutsSet = async (
         tags?: string[];
       }[];
     };
+
+    // Creates the callout as a Tasks board (server#6614 CD-2). `{}` seeds the
+    // default columns. The server requires a POST-only contribution type,
+    // which `defaultCallout` already is.
+    taskBoard?: { columns?: string[] };
   },
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
