@@ -16,6 +16,7 @@ import {
   applyCollaboraTemplate,
   collaboraFixtures,
   createCollaboraCalloutTemplate,
+  extractDocumentFileID,
   fetchDocumentBytesHash,
   fixtureHash,
   getCalloutCollaboraPreviewUrl,
@@ -230,9 +231,15 @@ describe('document post templates - template and post content are independent', 
     expect(a1PreviewUrl).toEqual(expect.any(String));
     expect(a2PreviewUrl).toEqual(expect.any(String));
 
-    // Three independent backing files: the copy owns its own bytes.
+    // Three independent backing files: the copy owns its own bytes. Compare
+    // the file IDs the URLs name, not the URL strings — a prefix or encoding
+    // difference must not count as a distinct file.
     expect(
-      new Set([templatePreviewUrl, a1PreviewUrl, a2PreviewUrl]).size
+      new Set([
+        extractDocumentFileID(templatePreviewUrl),
+        extractDocumentFileID(a1PreviewUrl as string),
+        extractDocumentFileID(a2PreviewUrl as string),
+      ]).size
     ).toEqual(3);
 
     const templateHash = await fetchDocumentBytesHash(templatePreviewUrl);

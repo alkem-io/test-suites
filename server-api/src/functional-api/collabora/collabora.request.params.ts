@@ -535,18 +535,28 @@ export const getCalloutCollaboraPreviewUrl = async (
   );
 
 /**
- * The only byte reader in the suite: sha256 of a document's current content,
- * fetched through the storage REST endpoint named by its `previewUrl`.
+ * The backing file ID a `previewUrl` names. Identity comparisons in the suite
+ * go through this (not the raw URL string), so two URLs that differ only in
+ * prefix or encoding but serve the same file cannot pass as "distinct".
  */
-export const fetchDocumentBytesHash = async (
-  previewUrl: string
-): Promise<string> => {
+export const extractDocumentFileID = (previewUrl: string): string => {
   const fileID = previewUrl.match(
     /\/api\/private\/wopi\/files\/([^/]+)\/preview$/
   )?.[1];
   if (!fileID) {
     throw new Error(`not a Collabora preview URL: ${previewUrl}`);
   }
+  return decodeURIComponent(fileID);
+};
+
+/**
+ * The only byte reader in the suite: sha256 of a document's current content,
+ * fetched through the storage REST endpoint named by its `previewUrl`.
+ */
+export const fetchDocumentBytesHash = async (
+  previewUrl: string
+): Promise<string> => {
+  const fileID = extractDocumentFileID(previewUrl);
 
   // getDocument (NOT getAuthDocument) — the latter is `async`, so awaiting it
   // dispatches the request with superagent's DEFAULT parser and returns a
@@ -555,7 +565,7 @@ export const fetchDocumentBytesHash = async (
   const token = TestUserManager.getUserModelByType(
     TestUser.GLOBAL_ADMIN
   ).authToken;
-  const res = await getDocument(decodeURIComponent(fileID))
+  const res = await getDocument(fileID)
     .set('Authorization', `Bearer ${token}`)
     .buffer(true)
     .parse((response, cb) => {
