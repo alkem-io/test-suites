@@ -23,7 +23,7 @@
  * the in-feed callout and are asserted in the usage flow.
  */
 
-import { expect, Locator, Page, test } from '@playwright/test';
+import { expect, Locator, Page } from '@playwright/test';
 import {
   CalloutTemplateForm,
   CalloutTemplateFramingForm,
@@ -119,20 +119,32 @@ export const verifyCalloutTemplate = async (
   switch (templateData.framing.type) {
     case 'whiteboard': {
       // Whiteboard preview is an <img> whose alt is the callout title.
+      // Was pinned with `test.fail` on client-web#10283 (no preview image
+      // since 0.163.0) from 2026-09-09; the preview is back since
+      // client-web#10431 (v0.169.1) — nightly 2026-10-20 reported
+      // "expected to fail, but passed", so the pin is gone.
       //
-      // KNOWN ISSUE client-web#10283 (2026-09-09): since the live-authoring
-      // rework (client-web#10205/#10213, 0.163.0) a callout template created
-      // with a whiteboard framing ends up without a preview image — the
-      // preview dialog shows the "Whiteboard" placeholder instead, also after
-      // a reload. The assertion below is the right contract, so it stays;
-      // `test.fail` keeps the suite's signal clean until the product is fixed,
-      // at which point Playwright reports "expected to fail, but passed" —
-      // delete these three lines then.
-      test.info().annotations.push({ type: 'known-issue', description: 'client-web#10283 — no preview image for whiteboard framing' });
-      test.fail(true, 'client-web#10283: callout template whiteboard framing has no preview image');
-      await expect(
-        dialog.getByRole('img', { name: templateData.calloutTitle })
-      ).toBeVisible();
+      // A stamped but unloadable preview URL still renders that <img> (alt
+      // text only), so also require the image to have decoded.
+      // `complete` + `naturalWidth` only prove the bytes arrived and the
+      // header parsed; `decode()` rejects when the body cannot actually be
+      // rendered. A rejection is mapped to `false` so the poll keeps retrying
+      // until its timeout instead of aborting on a transient src swap.
+      const preview = dialog.getByRole('img', {
+        name: templateData.calloutTitle,
+      });
+      await expect(preview).toBeVisible();
+      await expect
+        .poll(() =>
+          preview.evaluate(async (img: HTMLImageElement) => {
+            if (!img.complete || img.naturalWidth === 0) return false;
+            return img.decode().then(
+              () => true,
+              () => false
+            );
+          })
+        )
+        .toBe(true);
       break;
     }
     case 'memo': {

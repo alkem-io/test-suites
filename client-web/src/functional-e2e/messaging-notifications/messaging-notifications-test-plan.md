@@ -36,6 +36,23 @@ pnpm exec vitest run src/functional-api/notifications/messaging
 
 `--workers=1` is a **requirement**, not a convenience — see *Isolation* below.
 
+### Nightly vs local-stack split
+
+The nightly cluster exports no `RABBITMQ_MANAGEMENT_*` env and runs the
+production digest windows, so every walk that reads the push publish counter
+or settles on a `MESSAGING_DIGEST_*` window is tagged `@local-stack` and left
+out of the nightly by `grepInvert` (see `docs/e2e-conventions.md` › Local-stack
+runner):
+
+| Runner | Cases |
+|---|---|
+| Nightly (`playwright.config.nightly.ts` › Messaging notifications) | US3-AS1, US3-AS2, US3-AS5 — the settings rows |
+| Local stack (`playwright.config.local-stack.ts` › Local stack — messaging digests) | US1-AS1…AS5, US2-AS1…AS5, US3-AS3, US3-AS4 — the whole three files, since the serial walks need their setup steps |
+
+The end-to-end proof that a browser-sent message still fires a notification is
+therefore a local-stack run, not a nightly one; the it-spec matrix below keeps
+the server-side contract under the nightly's `server-api` run.
+
 ### The nine digest variables must be set on BOTH sides
 
 `MESSAGING_DIGEST_*` (eight window variables plus the sweep interval — the
@@ -89,7 +106,8 @@ earlier ones' settings state.
 
 **Residual:** unlike the 033 walks, these do **not** delete the accounts they
 create. Each run leaves its personas behind; the run-unique naming is what keeps
-that from breaking the next run. Worth fixing if this suite joins the nightly.
+that from breaking the next run. US3 is in the nightly now, so its AS1 recipient
+accumulates there one per night — worth fixing.
 
 ## Scenario → test mapping
 

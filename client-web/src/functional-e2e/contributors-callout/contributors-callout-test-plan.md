@@ -116,3 +116,29 @@ Browser walks (this directory; every file seeds its own Space):
 | Map pins and popups beyond "unchanged"                                                                | out of scope (spec)                                                                                  | —                                           |
 | Join-date trust on acceptance data (gate G-1) and designer sign-off (G-3)                             | human gates; both still unticked on client-web#10336                                                 | release checklist                           |
 | "Message" from a card sends nothing on the viewer's behalf (US3-AS2) beyond an empty composer         | the harness has no read of a 1:1 room's history                                                      | —                                           |
+
+---
+
+## Manual selection with organisations (client-web#10300)
+
+> **Status:** Approved — QA lead, in-session, 2026-10-19 (ruled "automate it" for the Release 78 walk P-M7) · **Depth:** Light · **Story:** [client-web#10300](https://github.com/alkem-io/client-web/issues/10300) · **Diff:** [client-web#10417](https://github.com/alkem-io/client-web/pull/10417) @ develop (merged 2026-10-12; `workspace#084`) · **PR evidence:** unit tests only, a human visual gate (`picker-type-indication-visual`) and no live-stack run
+
+A Space admin can pick organisations as well as people in a Contributors post's Manual selection. The picker labels each result by kind (`contributors.types.*`: People / Organizations), a chip shows the resolved name, the type controls stay visible in custom mode (084 FR-002), and a selected contributor that left the community is relabelled "No longer available" and can be removed. Virtual contributors are out by ruling (`SELECTABLE_KINDS`), an accepted residual.
+
+### Scenario → test mapping
+
+`US6-n` = `contributors-callout/us6-manual-org-selection.spec.ts` (nightly *Contributors callout*). One Space (admin = `space.admin`), one organisation member and one person member seeded by `CardsFixture`, one Contributors post created through the API; selection read back from `lookup.callout.settings.framing.selection` after every save.
+
+| Scenario | Automated by | Notes |
+| --- | --- | --- |
+| P-M7 steps 1–5: switch to Manual, type controls stay; org offered as *Organizations*, person as *People*; two chips with names, never an id; save → the post renders exactly the two picked (the admin, a member, is not rendered); a picked contributor leaves the result list; after reload the editor reopens with both chips named (story AC "save → reload → edit") | US6-AS1 | live green ×2, local stack 2026-10-19; sabotage (kind label swapped) red |
+| P-M7 step 7: the organisation leaves the community → its chip reads "No longer available", not a UUID, while a current member's chip still resolves (guards ENG-084-01's loading state); the post no longer renders it; the server still lists it | US6-AS2 | live green ×2 |
+| P-M7 step 5: remove the stale chip, save → only the person, on the post and on the server (`selectedIds` exact) | US6-AS3 | live green ×2 |
+| P-M7 step 6: ticking Virtual Contributors in custom mode offers no candidates and no explanation | — | accepted residual (PR, operator ruling); record only |
+| Org chip shows the organisation's **logo** | — | fixture organisations have no avatar; the chip renders the initials fallback. The name assertion is the contract; the logo is a glance |
+
+### Not covered — known gaps
+
+- ENG-084-01 (PR body, advisory): on a cold cache every chip reads "No longer available" while candidates load. Not pinned as a defect; AS2 and AS3 only read a stale label after a current member's chip has resolved.
+- The subspaces half of client-web#10066 stays with that issue (PR scope decision).
+

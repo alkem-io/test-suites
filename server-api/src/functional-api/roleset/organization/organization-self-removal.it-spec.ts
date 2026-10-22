@@ -463,21 +463,31 @@ describe('@forge-acceptance Organization self-removal from a Space community', (
   });
 
   test('FR-007 the self-removal grant does not stick to the Space role set', async () => {
-    // Arrange — a Space admin may make A Lead (positive control on the
-    // operation), then A's admin removes A's Lead through the extended policy.
+    // Arrange — A is Member + Lead of S (a Space admin may make A Lead:
+    // positive control on the assign operation itself).
+    await ensureOrgARole(spaceRoleSetId, RoleName.Member);
     await ensureOrgARole(spaceRoleSetId, RoleName.Lead);
     expect(await isOrgALead(spaceRoleSetId)).toBe(true);
-    const removed = await removeRoleFromOrganization(
+
+    // Exercise the extended policy once on S: A's admin makes A leave as
+    // Member. Under the server#6649 operator ruling leaving is all-or-nothing,
+    // so Lead goes with it (and descendants cascade).
+    const left = await removeRoleFromOrganization(
       orgAId,
       spaceRoleSetId,
-      RoleName.Lead,
+      RoleName.Member,
       TestUser.ORGANIZATION_ADMIN
     );
-    expect(removed.error).toBeUndefined();
+    expect(left.error).toBeUndefined();
+    expect(await isOrgAMember(spaceRoleSetId)).toBe(false);
     expect(await isOrgALead(spaceRoleSetId)).toBe(false);
 
-    // Act — A is still a Member, so assigning Lead needs GRANT alone: only a
-    // persisted copy of the removal grant would let A's admin through.
+    // A re-enters S as Member through the invitation path.
+    await ensureOrgARole(spaceRoleSetId, RoleName.Member);
+    expect(await isOrgAMember(spaceRoleSetId)).toBe(true);
+
+    // Act — assigning Lead needs GRANT alone: only a persisted copy of the
+    // removal grant on S's role set would let A's admin through.
     const res = await assignRoleToOrganization(
       orgAId,
       spaceRoleSetId,
@@ -493,22 +503,37 @@ describe('@forge-acceptance Organization self-removal from a Space community', (
     expect(await isOrgAMember(spaceRoleSetId)).toBe(true);
   });
 
-  test("US3-AS8 org admin removes A's LEAD", async () => {
+  test("US3-AS8 org admin cannot drop A's LEAD on its own; leaving as Member revokes Lead too", async () => {
+    // server#6649 operator ruling (supersedes D-2 "Lead survives Leave"): the
+    // self-removal extension covers MEMBER only. Whether an organization leads
+    // stays the Space admins' decision, and leaving is all-or-nothing.
     // Arrange
+    await ensureOrgARole(spaceRoleSetId, RoleName.Member);
     await ensureOrgARole(spaceRoleSetId, RoleName.Lead);
     expect(await isOrgALead(spaceRoleSetId)).toBe(true);
 
-    // Act
-    const res = await removeRoleFromOrganization(
+    // Act 1 — direct Lead removal by A's admin is denied on GRANT.
+    const dropLead = await removeRoleFromOrganization(
       orgAId,
       spaceRoleSetId,
       RoleName.Lead,
       TestUser.ORGANIZATION_ADMIN
     );
-
-    // Assert
-    expect(res.error).toBeUndefined();
-    expect(await isOrgALead(spaceRoleSetId)).toBe(false);
+    expect(dropLead.error?.errors[0].message).toMatch(
+      /Authorization: unable to grant 'grant' privilege/
+    );
+    expect(await isOrgALead(spaceRoleSetId)).toBe(true);
     expect(await isOrgAMember(spaceRoleSetId)).toBe(true);
+
+    // Act 2 — leaving as Member is allowed and takes Lead with it.
+    const leave = await removeRoleFromOrganization(
+      orgAId,
+      spaceRoleSetId,
+      RoleName.Member,
+      TestUser.ORGANIZATION_ADMIN
+    );
+    expect(leave.error).toBeUndefined();
+    expect(await isOrgAMember(spaceRoleSetId)).toBe(false);
+    expect(await isOrgALead(spaceRoleSetId)).toBe(false);
   });
 });

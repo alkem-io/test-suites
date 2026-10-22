@@ -37,7 +37,11 @@ export default defineConfig(
       }),
       suite({
         name: 'Space',
-        testMatch: ['/space/organization-space-create.spec.ts', '/space/space-create.spec.ts'],
+        testMatch: [
+          '/space/organization-space-create.spec.ts',
+          '/space/space-create.spec.ts',
+          '/space/space-settings-about-limit.spec.ts',
+        ],
       }),
       suite({ name: 'Public Space', testMatch: ['/public-space/*.spec.ts'] }),
       suite({
@@ -66,6 +70,7 @@ export default defineConfig(
           '/callouts/0.7callout-editing.spec.ts',
           '/callouts/0.8callout-subspace-creation.spec.ts',
           '/callouts/0.9callout-viewing.spec.ts',
+          '/callouts/0.10callout-description-limit.spec.ts',
         ],
       }),
       suite({
@@ -79,6 +84,11 @@ export default defineConfig(
           '/templates-CRD/template-types/whiteboard-template.spec.ts',
           // workspace#080 ruling R25: Poll / Form posts saved as templates and reused.
           '/templates-CRD/template-types/poll-form-save-as-template.spec.ts',
+          // client-web#10423: documents with content in post templates (browser apply + toolbox route).
+          '/templates-CRD/template-types/document-template-content.spec.ts',
+          // Round-trip of what the template form saved (Documents response type, memo ownership);
+          // RT-2/RT-3 pinned on client-web#10443, MT-1/MT-2 on server#6682.
+          '/templates-CRD/template-types/collaboration-tool-template-roundtrip.spec.ts',
         ],
         // A memo response walks the whole contribution flow inside one case.
         tier: 'extended',
@@ -119,6 +129,8 @@ export default defineConfig(
           // walks on the account's Security settings; self-cleaning.
           '/user-profile/mcp-api-keys-mint.spec.ts',
           '/user-profile/mcp-api-keys-revoke.spec.ts',
+          // Public profile tab strip, user + organisation; self-seeding.
+          '/user-profile/profile-resource-tabs.spec.ts',
         ],
         tier: 'extended',
       }),
@@ -159,6 +171,21 @@ export default defineConfig(
         // subscription push on another); US2 uploads and crops photos too.
         name: 'Chat avatars',
         testMatch: ['/chat-avatars/*.spec.ts'],
+        tier: 'long',
+      }),
+      suite({
+        // workspace#034 (conversation-message notifications, notifications#522):
+        // only the settings-row walks US3-AS1/AS2/AS5 run here. The US1 direct
+        // and US2 group walks, and US3-AS3/AS4, read the RabbitMQ publish
+        // counter and settle on the MESSAGING_DIGEST_* windows, neither of
+        // which the nightly cluster provides (no management env; production
+        // windows of up to 60 min), so they are `@local-stack` and live in
+        // playwright.config.local-stack.ts. The file registers fresh personas
+        // through the real sign-up flow (see messaging.helpers.ts), so the
+        // in-app setting the API notification specs leave off on the shared
+        // personas cannot reach these walks.
+        name: 'Messaging notifications',
+        testMatch: ['/messaging-notifications/us3-messaging-settings-rows.spec.ts'],
         tier: 'long',
       }),
       suite({
@@ -279,8 +306,22 @@ export default defineConfig(
           '/contributors-callout/us3-card-menu.spec.ts',
           '/contributors-callout/us4-joined-this-space.spec.ts',
           '/contributors-callout/us5-organisation-website.spec.ts',
+          '/contributors-callout/us6-manual-org-selection.spec.ts',
         ],
         tier: 'extended',
+      }),
+      suite({
+        // workspace#087 (memo PDF download, alkem-io/server#6660): US1 walks a
+        // reader's download on a self-seeded Space with the harness personas.
+        // Its content checks read the PDF with poppler (pdftotext, pdffonts),
+        // which nightly-client-tests.yml installs; without them they FAIL by
+        // design. US2 (access) provisions identities through the Kratos admin
+        // API, which this workflow does not expose: run it with
+        // `pnpm run test:memo-pdf-download`. Capture off: admin sessions.
+        name: 'Memo PDF download',
+        testMatch: ['/memo-pdf-download/us1-download-memo-pdf.spec.ts'],
+        tier: 'long',
+        capture: 'off',
       }),
     ],
   })
