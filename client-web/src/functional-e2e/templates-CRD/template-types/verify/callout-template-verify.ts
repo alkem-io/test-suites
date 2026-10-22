@@ -123,9 +123,28 @@ export const verifyCalloutTemplate = async (
       // since 0.163.0) from 2026-09-09; the preview is back since
       // client-web#10431 (v0.169.1) — nightly 2026-10-20 reported
       // "expected to fail, but passed", so the pin is gone.
-      await expect(
-        dialog.getByRole('img', { name: templateData.calloutTitle })
-      ).toBeVisible();
+      //
+      // A stamped but unloadable preview URL still renders that <img> (alt
+      // text only), so also require the image to have decoded.
+      // `complete` + `naturalWidth` only prove the bytes arrived and the
+      // header parsed; `decode()` rejects when the body cannot actually be
+      // rendered. A rejection is mapped to `false` so the poll keeps retrying
+      // until its timeout instead of aborting on a transient src swap.
+      const preview = dialog.getByRole('img', {
+        name: templateData.calloutTitle,
+      });
+      await expect(preview).toBeVisible();
+      await expect
+        .poll(() =>
+          preview.evaluate(async (img: HTMLImageElement) => {
+            if (!img.complete || img.naturalWidth === 0) return false;
+            return img.decode().then(
+              () => true,
+              () => false
+            );
+          })
+        )
+        .toBe(true);
       break;
     }
     case 'memo': {
