@@ -12,9 +12,10 @@
  * through the API in beforeAll under a run-unique name and deleted in
  * afterAll.
  *
- * Covers staging by paste, pick and drop; the one-image limit; sending image
- * and text together or apart; a post's own comments; a second viewer seeing
- * the picture live; accessibility; and a failed upload with its recovery. The
+ * Covers staging by paste, pick and drop; the one-image limit; sending an
+ * image with text (one comment carrying both, the text as the image's
+ * caption) or without; a post's own comments; a second viewer seeing the
+ * picture live; accessibility; and a failed upload with its recovery. The
  * test plan maps each case to its acceptance scenario.
  *
  * `config/playwright.config.nightly.ts` registers the three walks as the
@@ -28,6 +29,7 @@ import {
   test,
   type Locator,
   type Page,
+  type Request,
   type Response,
 } from '@playwright/test';
 import {
@@ -73,26 +75,98 @@ async function openComposer(page: Page, url: string): Promise<Composer> {
   };
 }
 
-/** Collects the sendMessageToRoom GraphQL responses the page receives. */
+const isSend = (request: Request): boolean =>
+  request.url().includes('graphql') &&
+  (request.postData() ?? '').includes('sendMessageToRoom');
+
+/**
+ * Collects the sendMessageToRoom GraphQL calls the page makes. `requests` is
+ * recorded synchronously when each call leaves the page, so once the composer
+ * has settled it holds every send the click caused; `bodies` fills in as the
+ * responses are read.
+ */
 function trackSends(page: Page): {
+  requests: Request[];
   bodies: Array<{ data?: any; errors?: unknown }>;
   stop: () => void;
 } {
+  const requests: Request[] = [];
   const bodies: Array<{ data?: any; errors?: unknown }> = [];
-  const onResponse = async (response: Response) => {
-    if (
-      response.url().includes('graphql') &&
-      (response.request().postData() ?? '').includes('sendMessageToRoom')
-    ) {
-      bodies.push(await response.json());
-    }
+  const onRequest = (request: Request) => {
+    if (isSend(request)) requests.push(request);
   };
+  const onResponse = async (response: Response) => {
+    if (isSend(response.request())) bodies.push(await response.json());
+  };
+  page.on('request', onRequest);
   page.on('response', onResponse);
-  return { bodies, stop: () => page.off('response', onResponse) };
+  return {
+    requests,
+    bodies,
+    stop: () => {
+      page.off('request', onRequest);
+      page.off('response', onResponse);
+    },
+  };
 }
 
-const inlineImage = (dlg: Locator, name: string): Locator =>
-  dlg.getByRole('img', { name: `Attached image: ${name}` });
+const inlineImage = (scope: Locator, name: string): Locator =>
+  scope.getByRole('img', { name: `Attached image: ${name}` });
+
+/**
+ * The comment rows (list items) whose text is exactly `text`. The picture's
+ * own list item never carries the text, so a captioned image comment is one
+ * match holding both the text and the picture.
+ */
+const commentRows = (dlg: Locator, text: string): Locator =>
+  dlg
+    .getByRole('listitem')
+    .filter({ has: dlg.page().getByText(text, { exact: true }) });
+
+/**
+ * One comment row carries the text and, beneath it in the same row, the
+ * picture.
+ */
+async function expectOneCaptionedRow(
+  dlg: Locator,
+  text: string,
+  name: string
+): Promise<Locator> {
+  const row = commentRows(dlg, text);
+  await expect(row).toHaveCount(1);
+  const picture = inlineImage(row, name);
+  await expect(picture).toBeVisible();
+  await expect(inlineImage(dlg, name)).toHaveCount(1);
+  const textBox = await row.getByText(text, { exact: true }).boundingBox();
+  const pictureBox = await picture.boundingBox();
+  expect(textBox!.y).toBeLessThan(pictureBox!.y);
+  return picture;
+}
+
+/**
+ * Waits for a text-plus-image send to settle (field and staged list cleared,
+ * so every call it makes has left the page), then checks it made exactly one
+ * sendMessageToRoom call carrying the text and the image together.
+ */
+async function expectOneCaptionedSend(
+  c: Composer,
+  sends: ReturnType<typeof trackSends>,
+  text: string
+): Promise<void> {
+  await expect(c.box).toHaveValue('');
+  await expect(c.stagedList).toHaveCount(0);
+  await expect.poll(() => sends.bodies.length).toBe(1);
+  sends.stop();
+  expect(sends.requests, 'text and image travel in one message').toHaveLength(
+    1
+  );
+  expect(sends.bodies).toHaveLength(1);
+  const [body] = sends.bodies;
+  expect(body.errors).toBeUndefined();
+  const sent = body.data.sendMessageToRoom;
+  expect(sent.message).toBe(text);
+  expect(sent.attachments).toHaveLength(1);
+}
 
 test.describe.configure({ mode: 'serial' });
 
@@ -135,7 +209,7 @@ test.describe(
       expect(uploads, 'staging must not upload').toHaveLength(0);
     });
 
-    test('US1-AS2: text + staged image → text comment with the inline picture beneath; click opens full size in a new tab', async () => {
+    test('US1-AS2: text + staged image → one comment with the text and the inline picture beneath it; click opens full size in a new tab', async () => {
       const name = `as2-${RUN}.png`;
       const text = `see this ${RUN}`;
       const c = await openComposer(m, seed.calloutUrl);
@@ -144,18 +218,10 @@ test.describe(
       await c.box.fill(text);
       await c.send.click();
 
-      const picture = inlineImage(c.dlg, name);
-      await expect(picture).toBeVisible();
-      await expect(c.dlg.getByText(text, { exact: true })).toBeVisible();
+      const picture = await expectOneCaptionedRow(c.dlg, text, name);
       // No chip, and no filename line anywhere in the thread.
       await expect(c.stagedList).toHaveCount(0);
       await expect(c.dlg.getByText(name, { exact: true })).toHaveCount(0);
-      // Newest first: the text comment is above the picture.
-      const textBox = await c.dlg
-        .getByText(text, { exact: true })
-        .boundingBox();
-      const pictureBox = await picture.boundingBox();
-      expect(textBox!.y).toBeLessThan(pictureBox!.y);
 
       const [tab] = await Promise.all([
         m.context().waitForEvent('page'),
@@ -167,7 +233,7 @@ test.describe(
       await tab.close();
     });
 
-    test('US1-AS3: image + text → exactly two new rows, the text on top and the image directly beneath', async () => {
+    test('US1-AS3: image + text → exactly one new comment row, carrying the text and the picture', async () => {
       const name = `as3-${RUN}.png`;
       const text = `as3 text ${RUN}`;
       const c = await openComposer(m, seed.calloutUrl);
@@ -175,19 +241,8 @@ test.describe(
       await transfer(c.box, 'paste', image(name));
       await c.box.fill(text);
       await c.send.click();
-      await expect.poll(() => sends.bodies.length).toBe(2);
-      await expect(inlineImage(c.dlg, name)).toBeVisible();
-      await expect(c.dlg.getByText(text, { exact: true })).toBeVisible();
-      sends.stop();
-      expect(sends.bodies.every(b => b.errors === undefined)).toBe(true);
-      const messages = sends.bodies.map(b => b.data.sendMessageToRoom);
-      expect(messages.filter(x => x.attachments.length === 1)).toHaveLength(1);
-      expect(messages.filter(x => x.message === text)).toHaveLength(1);
-      const textBox = await c.dlg
-        .getByText(text, { exact: true })
-        .boundingBox();
-      const pictureBox = await inlineImage(c.dlg, name).boundingBox();
-      expect(textBox!.y).toBeLessThan(pictureBox!.y);
+      await expectOneCaptionedSend(c, sends, text);
+      await expectOneCaptionedRow(c.dlg, text, name);
     });
 
     test('US1-AS4: a staged image with no text posts an image-only comment rendered inline', async () => {
@@ -306,16 +361,9 @@ test.describe(
       await expect(c.stagedList).toContainText(name);
       await c.box.fill(text);
       await c.send.click();
-      const picture = inlineImage(c.dlg, name);
-      await expect(picture).toBeVisible();
-      await expect(c.dlg.getByText(text, { exact: true })).toBeVisible();
+      const picture = await expectOneCaptionedRow(c.dlg, text, name);
       await expect(c.stagedList).toHaveCount(0);
       await expect(c.dlg.getByText(name, { exact: true })).toHaveCount(0);
-      const textBox = await c.dlg
-        .getByText(text, { exact: true })
-        .boundingBox();
-      const pictureBox = await picture.boundingBox();
-      expect(textBox!.y).toBeLessThan(pictureBox!.y);
       const [tab] = await Promise.all([
         m.context().waitForEvent('page'),
         picture.click(),
@@ -397,7 +445,7 @@ test.describe(
       await m.unroute(UPLOAD_ROUTE);
     });
 
-    test('US1-AS11: a failing upload posts nothing, marks the chip failed and keeps the text; after recovery Send posts the image then the text', async () => {
+    test('US1-AS11: a failing upload posts nothing, marks the chip failed and keeps the text; after recovery Send posts one message carrying the text and the image', async () => {
       const name = `as11-${RUN}.png`;
       const text = `as11 text ${RUN}`;
       const c = await openComposer(m, seed.calloutUrl);
@@ -416,23 +464,14 @@ test.describe(
       await expect(c.box).toHaveValue(text);
       await expect(c.box).toBeEnabled();
       expect(
-        sends.bodies,
+        sends.requests,
         'nothing may be posted while the upload fails'
       ).toHaveLength(0);
 
       await m.unroute(UPLOAD_ROUTE);
       await c.send.click();
-      await expect.poll(() => sends.bodies.length).toBe(2);
-      sends.stop();
-      await expect(inlineImage(c.dlg, name)).toBeVisible();
-      await expect(c.dlg.getByText(text, { exact: true })).toBeVisible();
-      await expect(c.box).toHaveValue('');
-      await expect(c.stagedList).toHaveCount(0);
-      // Image first, then the text.
-      expect(sends.bodies[0].data.sendMessageToRoom.attachments).toHaveLength(
-        1
-      );
-      expect(sends.bodies[1].data.sendMessageToRoom.message).toBe(text);
+      await expectOneCaptionedSend(c, sends, text);
+      await expectOneCaptionedRow(c.dlg, text, name);
     });
   }
 );
