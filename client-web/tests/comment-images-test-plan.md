@@ -26,20 +26,20 @@ pnpm --filter @alkemio/test-suite-client-web run test:nightly --project="Comment
 
 | Scenario | Covers | Automated by |
 |---|---|---|
-| US1-AS1 | Pasting an image stages a removable chip, uploads nothing, and enables Send | `comment-images-us1-add.spec.ts` › US1-AS1 |
+| US1-AS1 | Pasting an image stages a removable chip, uploads nothing, and enables Send (the chip is then removed and a text-only comment sent as a barrier: it is the only `sendMessageToRoom` call, and no upload request was made) | `comment-images-us1-add.spec.ts` › US1-AS1 |
 | US1-AS2 | Text + image posts one comment: one row holding both the text and the picture (the picture in that row's own attachment list, nothing else nested in the row), the picture beneath the text, no filename line; the picture opens full size in a new tab | `us1-…` › US1-AS2 |
 | US1-AS3 | Image + text produce exactly one new comment row carrying the text and the picture (checked on screen, and as exactly one `sendMessageToRoom` call whose message is the text and which carries the one attachment) | `us1-…` › US1-AS3 |
 | US1-AS4 | An image with no text posts an image-only comment rendered inline | `us1-…` › US1-AS4 |
 | US1-AS5 | The image button opens an images-only picker by mouse, Enter and Space; dragging shows the hint; a drop stages | `us1-…` › US1-AS5 |
 | US1-AS6 | A second image by paste, drop or pick is refused with the one-file alert; a two-file pick stages only the first | `us1-…` › US1-AS6 |
 | US1-AS7 | Removing the chip clears it and sends nothing (a text comment sent afterwards is the only `sendMessageToRoom` call, and carries no attachment) | `us1-…` › US1-AS7 |
-| US1-AS8 | The same flow in a post's own comments (contribution dialog): one row holding both the text and the picture, as in US1-AS2 | `us1-…` › US1-AS8 |
+| US1-AS8 | The same flow in a post's own comments (contribution dialog), with the same checks as US1-AS2 | `us1-…` › US1-AS8 |
 | US1-AS9 | A second member with the thread open sees the picture live and after reload | `us1-…` › US1-AS9 |
 | US1-AS10 | Accessible names, the upload status live region, the refusal alert, keyboard order and operation of the chip | `us1-…` › US1-AS10 |
-| US1-AS11 | A failing upload posts nothing, marks the chip failed and keeps the text; after recovery Send posts one message carrying the text and the image | `us1-…` › US1-AS11 |
+| US1-AS11 | A failing upload posts nothing, marks the chip failed (the chip marked 'Upload failed' in text) and keeps the text; after recovery Send posts one message carrying the text and the image | `us1-…` › US1-AS11 |
 | US2-AS1 | An ordinary member's image reply keeps the box open and disabled while the send is in flight, then closes; the reply is last in the thread | `comment-images-us2-reply.spec.ts` › US2-AS1 |
 | US2-AS2 | Text + image in a reply give one reply carrying the text and the picture, before and after reload | `us2-…` › US2-AS2 |
-| US2-AS3 | Text typed and an image staged, the upload blocked: Send posts nothing (no `sendMessageReplyToRoom` call), the box stays open with the typed text, the failed chip and a message; unblocked, the retry is exactly one `sendMessageReplyToRoom` call and one reply carrying the text and the image; the chip can also be removed | `us2-…` › US2-AS3 |
+| US2-AS3 | Text typed and an image staged, the upload blocked: Send posts nothing (no `sendMessageReplyToRoom` call), the box stays open with the typed text, the failed chip (marked 'Upload failed' in text) and a message; unblocked, the retry is exactly one `sendMessageReplyToRoom` call and one reply carrying the text and the image; the chip can also be removed | `us2-…` › US2-AS3 |
 | US2-AS4 | An image staged in one comment's reply box is not carried to another comment's reply box | `us2-…` › US2-AS4 |
 | US3-AS1 | A signed-in non-member of the private Space gets no comment field and no image button on the callout and the post | `comment-images-us3-access.spec.ts` › US3-AS1 |
 | US3-AS2 | An ordinary member and a space admin both get the image button and can send an image on the callout and the post; the platform admin is checked as an extra case | `us3-…` › US3-AS2 (member, space admin, platform admin) |
@@ -56,5 +56,4 @@ pnpm --filter @alkemio/test-suite-client-web run test:nightly --project="Comment
 | US4 (notifications and virtual-contributor invocation for image-only messages) | Needs notification payloads, email bodies, a virtual contributor and server log lines. The server changes carry unit specs (`message.details.service.spec.ts`, `message.inbox.service.spec.ts`); there is no persisted browser walk. |
 | US5 (deleting an image comment removes the picture for every viewer) | P2; no persisted walk yet. |
 | HEIC, HEIF and AVIF refused in comments even where the room's bucket allows them | Pinned by unit specs instead of a walk: the client side by `useCommentImageStorageConfig.test.ts` (client-web), the server side by `room.attachment.send.spec.ts` (server). The browser refusal path itself is walked by US3-AS3 (PDF) and US3-AS4 (SVG). |
-| A failed chip's own marking | The failed chip is set apart by colour only; it carries no accessible failed state of its own. US1-AS11 and US2-AS3 assert what a user perceives instead: the composer's alert with the failure text, and the chip still listed with its Remove control. |
 | Release check: a chat image upload succeeds in the target environment | Environment activation, not product behaviour; recorded in the Release NN story, not automated. |
