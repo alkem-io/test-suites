@@ -30,7 +30,7 @@
  */
 
 import { writeFileSync } from 'node:fs';
-import { expect, test, type Browser, type Locator, type Page, type Route } from '@playwright/test';
+import { expect, test, type Browser, type Page, type Route } from '@playwright/test';
 import {
   ADMIN_EMAIL,
   addMember,
@@ -38,12 +38,17 @@ import {
   addSpaceAdmin,
   cleanUpCommentImages,
   commentRoomMaxFileSize,
+  expectOneSend,
   image,
   isSendOf,
   makePng,
   newSeed,
+  openComposer,
+  replyBox,
+  rowsWithText,
   seedCommentImages,
   signIn as signInWith,
+  trackSends,
   transfer,
   type SendOperation,
 } from './comment-images.helpers';
@@ -73,18 +78,6 @@ const limitInMb = (limit: number): number => Math.floor(limit / (1024 * 1024));
 
 const signIn = (browser: Browser, email: string): Promise<Page> =>
   signInWith(browser, seed, email, { width: 1280, height: 900 });
-
-function dialog(page: Page): Locator {
-  return page.locator('[role=dialog]').last();
-}
-
-async function openComposer(page: Page, url: string): Promise<{ dlg: Locator; box: Locator; stagedList: Locator }> {
-  await page.goto(url);
-  const dlg = dialog(page);
-  const box = dlg.getByRole('textbox', { name: 'Add a comment...' });
-  await box.waitFor();
-  return { dlg, box, stagedList: dlg.getByRole('list', { name: 'Files to send' }) };
-}
 
 /**
  * Submits with every call of `operation` held at the network, runs `whileHeld`
@@ -161,19 +154,15 @@ test.describe('Comment images — US3 P1 access and validation walk', { tag: ['@
     }) => {
       const page = await signIn(browser, email());
       for (const url of [seed.calloutUrl, seed.postUrl]) {
-        const { dlg, stagedList } = await openComposer(page, url);
-        await expect(dlg.getByRole('button', { name: 'Add image' })).toBeVisible();
-        await dlg.locator('input[type=file]').first().setInputFiles(PNG);
-        await expect(stagedList).toContainText('a.png');
-        const sent = page.waitForResponse(
-          r => r.url().includes('graphql') && (r.request().postData() ?? '').includes('sendMessageToRoom')
-        );
-        await dlg.getByRole('button', { name: 'Send', exact: true }).click();
-        const response = await sent;
-        const body = await response.json();
-        expect(body.errors, 'sendMessageToRoom must not error').toBeUndefined();
-        expect(body.data.sendMessageToRoom.attachments[0].mimeType).toBe('image/png');
-        await expect(stagedList).toHaveCount(0);
+        // openComposer waits for the image button.
+        const c = await openComposer(page, url);
+        await c.fileInput.setInputFiles(PNG);
+        await expect(c.stagedList).toContainText('a.png');
+        const sends = trackSends(page);
+        await c.send.click();
+        // Staged list cleared: every call the send makes has left the page.
+        await expect(c.stagedList).toHaveCount(0);
+        await expectOneSend(sends, 'sendMessageToRoom', { mimeType: 'image/png' });
       }
     });
   }
@@ -187,7 +176,6 @@ test.describe('Comment images — US3 P1 access and validation walk', { tag: ['@
     test('US3-AS3: a PDF dropped or pasted is refused and nothing is staged', async () => {
       for (const kind of ['drop', 'paste'] as const) {
         const { dlg, box, stagedList } = await openComposer(page, seed.calloutUrl);
-        await expect(dlg.getByRole('button', { name: 'Add image' })).toBeVisible();
         await transfer(box, kind, { name: 'doc.pdf', mimeType: 'application/pdf', buffer: PDF });
         await expect(dlg.getByText('doc.pdf has an unsupported file type.')).toBeVisible();
         await expect(stagedList).toHaveCount(0);
@@ -195,9 +183,8 @@ test.describe('Comment images — US3 P1 access and validation walk', { tag: ['@
     });
 
     test('US3-AS4: an SVG picked is refused as unsupported', async () => {
-      const { dlg, stagedList } = await openComposer(page, seed.calloutUrl);
-      await expect(dlg.getByRole('button', { name: 'Add image' })).toBeVisible();
-      await dlg.locator('input[type=file]').first().setInputFiles({
+      const { dlg, stagedList, fileInput } = await openComposer(page, seed.calloutUrl);
+      await fileInput.setInputFiles({
         name: 'vector.svg',
         mimeType: 'image/svg+xml',
         buffer: SVG,
@@ -207,20 +194,18 @@ test.describe('Comment images — US3 P1 access and validation walk', { tag: ['@
     });
 
     test('US3-AS5: an image above the size limit is refused with the limit in MB', async () => {
-      const { dlg, stagedList } = await openComposer(page, seed.calloutUrl);
-      await expect(dlg.getByRole('button', { name: 'Add image' })).toBeVisible();
+      const { dlg, stagedList, fileInput } = await openComposer(page, seed.calloutUrl);
       // Handed over as a file path: Playwright refuses an in-memory buffer above
       // 50 MB, and the limit is whatever the bucket reports.
       const bigPng = test.info().outputPath('big.png');
       writeFileSync(bigPng, oversizedPng(maxFileSize));
-      await dlg.locator('input[type=file]').first().setInputFiles(bigPng);
+      await fileInput.setInputFiles(bigPng);
       await expect(dlg.getByRole('alert')).toHaveText(`big.png is larger than ${limitInMb(maxFileSize)} MB.`);
       await expect(stagedList).toHaveCount(0);
     });
 
     test('US3-AS7: plain text and Office rich text with a bitmap paste as text; nothing is staged', async () => {
-      const { dlg, box, stagedList } = await openComposer(page, seed.calloutUrl);
-      await expect(dlg.getByRole('button', { name: 'Add image' })).toBeVisible();
+      const { box, stagedList } = await openComposer(page, seed.calloutUrl);
       // The comment field inserts pasted text itself (its mention support takes
       // over the paste), so the clipboard text reaching the field proves the
       // image handling let the paste through. Each case starts from an empty field.
@@ -273,25 +258,22 @@ test.describe('Comment images — US3 P1 access and validation walk', { tag: ['@
 
       // Reply: the box closes on submit, before the send settles. The room
       // holds this one comment, so its innermost list item is the last match.
-      const item = page
-        .getByRole('listitem')
-        .filter({ has: page.getByText(text, { exact: true }) })
-        .last();
+      const item = rowsWithText(page, text).last();
       await item.getByRole('button', { name: 'Reply', exact: true }).click();
-      const replyBox = page.locator('[id^="comment-reply-input-"]');
-      await expect(replyBox).toBeVisible();
-      await expect(replyBox.getByRole('button', { name: 'Add image' })).toHaveCount(0);
-      const reply = `US3 text reply ${Date.now()}`;
-      await replyBox.getByRole('textbox').fill(reply);
+      const reply = replyBox(page);
+      await expect(reply).toBeVisible();
+      await expect(reply.getByRole('button', { name: 'Add image' })).toHaveCount(0);
+      const replyText = `US3 text reply ${Date.now()}`;
+      await reply.getByRole('textbox').fill(replyText);
       const replied = await submitWhileSendHeld(
         page,
         'sendMessageReplyToRoom',
-        () => replyBox.getByRole('button', { name: 'Send', exact: true }).click(),
-        () => expect(replyBox).toHaveCount(0)
+        () => reply.getByRole('button', { name: 'Send', exact: true }).click(),
+        () => expect(reply).toHaveCount(0)
       );
       expect(replied.errors, 'text reply must post as before').toBeUndefined();
-      expect(replied.data.sendMessageReplyToRoom.message).toBe(reply);
-      await expect(page.getByText(reply, { exact: true })).toBeVisible();
+      expect(replied.data.sendMessageReplyToRoom.message).toBe(replyText);
+      await expect(page.getByText(replyText, { exact: true })).toBeVisible();
     }
   });
 });

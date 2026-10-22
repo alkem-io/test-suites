@@ -24,6 +24,7 @@ import {
   type BrowserContext,
   type Request,
   type Response,
+  type Route,
 } from '@playwright/test';
 import {
   TestScenarioFactory,
@@ -517,6 +518,80 @@ export async function signIn(
   return page;
 }
 
+// --- composer ------------------------------------------------------------------------------------
+
+export type Composer = {
+  dlg: Locator;
+  box: Locator;
+  stagedList: Locator;
+  addImage: Locator;
+  send: Locator;
+  fileInput: Locator;
+};
+
+/**
+ * Opens the top-level comment composer of the dialog at `url`, waiting until
+ * it accepts files.
+ */
+export async function openComposer(page: Page, url: string): Promise<Composer> {
+  await page.goto(url);
+  const dlg = page.locator('[role=dialog]').last();
+  const box = dlg.getByRole('textbox', { name: 'Add a comment...' });
+  await box.waitFor();
+  const addImage = dlg.getByRole('button', { name: 'Add image' });
+  // The field renders before the room's storage bucket is known, and until
+  // then the composer ignores pasted and dropped files. The image button
+  // appears with the bucket, so it marks the composer as ready for them.
+  await expect(addImage).toBeVisible();
+  return {
+    dlg,
+    box,
+    stagedList: dlg.getByRole('list', { name: 'Files to send' }),
+    addImage,
+    send: dlg.getByRole('button', { name: 'Send', exact: true }),
+    fileInput: dlg.locator('input[type=file]').first(),
+  };
+}
+
+export const inlineImage = (scope: Locator, name: string): Locator =>
+  scope.getByRole('img', { name: `Attached image: ${name}` });
+
+/**
+ * The list items (comment and reply rows) inside `scope` that hold an element
+ * whose text is exactly `text`.
+ */
+export function rowsWithText(scope: Page | Locator, text: string): Locator {
+  // A `has` locator is resolved inside each row, so it starts from the page.
+  const page = 'mainFrame' in scope ? scope : scope.page();
+  return scope
+    .getByRole('listitem')
+    .filter({ has: page.getByText(text, { exact: true }) });
+}
+
+/** The open reply box inside `scope`. */
+export const replyBox = (scope: Page | Locator): Locator =>
+  scope.locator('[id^="comment-reply-input-"]');
+
+/**
+ * Holds every comment-image upload at the network until the returned function
+ * is called; calling it lets the held uploads through and removes the hold.
+ */
+export async function holdUploads(page: Page): Promise<() => Promise<void>> {
+  let open: () => void = () => undefined;
+  const gate = new Promise<void>(resolve => {
+    open = resolve;
+  });
+  const hold = async (route: Route) => {
+    await gate;
+    await route.continue();
+  };
+  await page.route(UPLOAD_ROUTE, hold);
+  return async () => {
+    open();
+    await page.unroute(UPLOAD_ROUTE, hold);
+  };
+}
+
 // --- sends ---------------------------------------------------------------------------------------
 
 /** The GraphQL mutations a comment and a reply are posted with. */
@@ -569,6 +644,29 @@ export function trackSends(
 /** The variables a counted send carried. */
 export const sentVariables = (request: Request): Record<string, any> =>
   JSON.parse(request.postData() ?? '{}').variables ?? {};
+
+/**
+ * Checks that exactly one `operation` call was made, carrying one image (and
+ * `text` / of `mimeType` when given), and that it did not error. Call it once
+ * the send has settled, so every call it made has left the page.
+ */
+export async function expectOneSend(
+  sends: SendTracker,
+  operation: SendOperation,
+  expected: { text?: string; mimeType?: string } = {}
+): Promise<void> {
+  // Response bodies are read asynchronously; wait for this one to land.
+  await expect.poll(() => sends.bodies.length).toBe(1);
+  sends.stop();
+  expect(sends.requests, `exactly one ${operation} call`).toHaveLength(1);
+  const [body] = sends.bodies;
+  expect(body.errors, `${operation} must not error`).toBeUndefined();
+  const sent = body.data[operation];
+  expect(sent.attachments).toHaveLength(1);
+  if (expected.text !== undefined) expect(sent.message).toBe(expected.text);
+  if (expected.mimeType)
+    expect(sent.attachments[0].mimeType).toBe(expected.mimeType);
+}
 
 /**
  * Removes a disposable person: the Alkemio user together with its Kratos

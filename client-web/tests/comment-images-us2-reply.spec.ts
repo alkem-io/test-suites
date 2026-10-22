@@ -38,10 +38,14 @@ import {
   addMember,
   cleanUpCommentImages,
   displayNameOf,
+  expectOneSend,
+  holdUploads,
   image,
+  inlineImage,
   newSeed,
+  replyBox,
+  rowsWithText,
   seedCommentImages,
-  sentVariables,
   signIn,
   trackSends,
   transfer,
@@ -62,12 +66,7 @@ test.describe('Comment images — US2 P1 acceptance walk (replies)', { tag: ['@f
 
   const dialog = (page: Page): Locator => page.getByRole('dialog', { name: seed.calloutName });
   /** The top-level comment (list item) carrying exactly this text. */
-  const comment = (page: Page, text: string): Locator =>
-    dialog(page)
-      .getByRole('listitem')
-      .filter({ has: page.getByText(text, { exact: true }) })
-      .first();
-  const replyBox = (item: Locator): Locator => item.locator('[id^="comment-reply-input-"]');
+  const comment = (page: Page, text: string): Locator => rowsWithText(dialog(page), text).first();
   const openReply = async (item: Locator): Promise<Locator> => {
     await item.getByRole('button', { name: 'Reply', exact: true }).click();
     const box = replyBox(item);
@@ -85,7 +84,7 @@ test.describe('Comment images — US2 P1 acceptance walk (replies)', { tag: ['@f
    * as its author (every reply here is M's; the comments themselves are O's).
    */
   const replyRows = async (item: Locator): Promise<string[]> => {
-    const rows = item.getByRole('listitem').filter({ has: memberPage.getByText(memberName, { exact: true }) });
+    const rows = rowsWithText(item, memberName);
     const out: string[] = [];
     const count = await rows.count();
     for (let i = 0; i < count; i++) {
@@ -101,7 +100,7 @@ test.describe('Comment images — US2 P1 acceptance walk (replies)', { tag: ['@f
   };
   const openCallout = async (page: Page): Promise<void> => {
     await page.goto(seed.calloutUrl);
-    await expect(dialog(page)).toBeVisible({ timeout: 30_000 });
+    await expect(dialog(page)).toBeVisible();
     await expect(dialog(page).getByRole('textbox', { name: 'Add a comment...' }).first()).toBeVisible();
   };
 
@@ -140,20 +139,11 @@ test.describe('Comment images — US2 P1 acceptance walk (replies)', { tag: ['@f
     await openCallout(memberPage);
     const item = comment(memberPage, commentA);
     const rowsBefore = await replyRows(item);
+    // openReply waits for the image button: it is offered to the ordinary member.
     const box = await openReply(item);
 
-    // The image button is offered to the ordinary member in the reply box.
-    await expect(box.getByRole('button', { name: 'Add image' })).toBeVisible();
-
     // Hold the upload so the in-flight state is observable deterministically.
-    let releaseUpload: () => void = () => undefined;
-    const uploadGate = new Promise<void>(resolve => {
-      releaseUpload = resolve;
-    });
-    await memberPage.route(UPLOAD_ROUTE, async route => {
-      await uploadGate;
-      await route.continue();
-    });
+    const releaseUploads = await holdUploads(memberPage);
 
     await transfer(box.getByRole('textbox'), 'paste', PNG_ONE);
     await expect(stagedList(box)).toContainText('one.png');
@@ -161,24 +151,22 @@ test.describe('Comment images — US2 P1 acceptance walk (replies)', { tag: ['@f
 
     // In flight: the box is still open and its controls are disabled.
     await expect(box.getByRole('status', { name: 'Uploading…' })).toBeVisible();
-    await expect(box).toBeVisible();
     await expect(box.getByRole('textbox')).toBeDisabled();
     await expect(box.getByRole('button', { name: 'Send' })).toBeDisabled();
     await expect(box.getByRole('button', { name: 'Add image' })).toBeDisabled();
 
-    releaseUpload();
+    await releaseUploads();
     await expect(box).toHaveCount(0);
-    await memberPage.unroute(UPLOAD_ROUTE);
 
     // The reply is the last one in the thread, with the picture rendered.
-    const picture = item.getByRole('img', { name: 'Attached image: one.png' });
+    const picture = inlineImage(item, 'one.png');
     await expect(picture).toBeVisible();
     await expect.poll(() => picture.evaluate((img: HTMLImageElement) => img.complete && img.naturalWidth > 0)).toBe(true);
     expect(await replyRows(item)).toEqual([...rowsBefore, '|images=1']);
 
     await memberPage.reload();
     await expect(dialog(memberPage)).toBeVisible();
-    await expect(comment(memberPage, commentA).getByRole('img', { name: 'Attached image: one.png' })).toHaveCount(1);
+    await expect(inlineImage(comment(memberPage, commentA), 'one.png')).toHaveCount(1);
   });
 
   test('US2-AS2: text plus an image in a reply produces one reply carrying the text and the picture', async () => {
@@ -193,12 +181,12 @@ test.describe('Comment images — US2 P1 acceptance walk (replies)', { tag: ['@f
     await box.getByRole('button', { name: 'Send' }).click();
     await expect(box).toHaveCount(0);
 
-    await expect(item.getByRole('img', { name: 'Attached image: a.png' })).toBeVisible();
+    await expect(inlineImage(item, 'a.png')).toBeVisible();
     expect(await replyRows(item)).toEqual([...rowsBefore, `${TEXT_REPLY}|images=1`]);
 
     await memberPage.reload();
     await expect(dialog(memberPage)).toBeVisible();
-    await expect(comment(memberPage, commentB).getByRole('img', { name: 'Attached image: a.png' })).toHaveCount(1);
+    await expect(inlineImage(comment(memberPage, commentB), 'a.png')).toHaveCount(1);
     expect(await replyRows(comment(memberPage, commentB))).toEqual([...rowsBefore, `${TEXT_REPLY}|images=1`]);
   });
 
@@ -218,7 +206,6 @@ test.describe('Comment images — US2 P1 acceptance walk (replies)', { tag: ['@f
     // Box stays open with the typed text, the failure is announced, the chip
     // stays listed with its Remove control, nothing was posted.
     await expect(box.getByRole('alert')).toHaveText(UPLOAD_FAILED_MESSAGE);
-    await expect(box).toBeVisible();
     // The chip is marked failed in text, not by colour alone.
     await expect(stagedList(box).getByRole('listitem')).toHaveText(`b.png${UPLOAD_FAILED_LABEL}`);
     await expect(box.getByRole('button', { name: 'Remove b.png' })).toBeEnabled();
@@ -235,15 +222,8 @@ test.describe('Comment images — US2 P1 acceptance walk (replies)', { tag: ['@f
     await memberPage.unroute(UPLOAD_ROUTE);
     await box.getByRole('button', { name: 'Send' }).click();
     await expect(box).toHaveCount(0);
-    await expect(item.getByRole('img', { name: 'Attached image: b.png' })).toBeVisible();
-    await expect.poll(() => sends.bodies.length).toBe(1);
-    sends.stop();
-    expect(sends.requests, 'text and image travel in one reply').toHaveLength(1);
-    expect(sentVariables(sends.requests[0]).attachmentUpload).toBeTruthy();
-    const [body] = sends.bodies;
-    expect(body.errors).toBeUndefined();
-    expect(body.data.sendMessageReplyToRoom.message).toBe(TEXT_RETRY);
-    expect(body.data.sendMessageReplyToRoom.attachments).toHaveLength(1);
+    await expect(inlineImage(item, 'b.png')).toBeVisible();
+    await expectOneSend(sends, 'sendMessageReplyToRoom', { text: TEXT_RETRY });
     expect(await replyRows(item)).toEqual([...rowsBefore, `${TEXT_RETRY}|images=1`]);
 
     // Remove path: fail again, then drop the chip instead of retrying.

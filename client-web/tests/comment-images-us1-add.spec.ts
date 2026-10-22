@@ -31,62 +31,27 @@ import {
   UPLOAD_ROUTE,
   addMember,
   cleanUpCommentImages,
+  expectOneSend,
+  holdUploads,
   image,
+  inlineImage,
   newSeed,
+  openComposer,
+  rowsWithText,
   seedCommentImages,
   sentVariables,
   signIn,
   trackSends,
   transfer,
+  type Composer,
   type SendTracker,
+  type TransferFile,
 } from './comment-images.helpers';
 
 const ONE_FILE_MESSAGE = 'You can attach only one file.';
 const RUN = Date.now().toString(36);
 
 // --- helpers -------------------------------------------------------------------------------------
-
-type Composer = {
-  dlg: Locator;
-  box: Locator;
-  stagedList: Locator;
-  addImage: Locator;
-  send: Locator;
-  fileInput: Locator;
-};
-
-async function openComposer(page: Page, url: string): Promise<Composer> {
-  await page.goto(url);
-  const dlg = page.locator('[role=dialog]').last();
-  const box = dlg.getByRole('textbox', { name: 'Add a comment...' });
-  await box.waitFor();
-  const addImage = dlg.getByRole('button', { name: 'Add image' });
-  // The field renders before the room's storage bucket is known, and until
-  // then the composer ignores pasted and dropped files. The image button
-  // appears with the bucket, so it marks the composer as ready for them.
-  await expect(addImage).toBeVisible();
-  return {
-    dlg,
-    box,
-    stagedList: dlg.getByRole('list', { name: 'Files to send' }),
-    addImage,
-    send: dlg.getByRole('button', { name: 'Send', exact: true }),
-    fileInput: dlg.locator('input[type=file]').first(),
-  };
-}
-
-const inlineImage = (scope: Locator, name: string): Locator =>
-  scope.getByRole('img', { name: `Attached image: ${name}` });
-
-/**
- * The comment rows (list items) whose text is exactly `text`. The picture's
- * own list item never carries the text, so a captioned image comment is one
- * match holding both the text and the picture.
- */
-const commentRows = (dlg: Locator, text: string): Locator =>
-  dlg
-    .getByRole('listitem')
-    .filter({ has: dlg.page().getByText(text, { exact: true }) });
 
 /**
  * One comment row carries both the text and the picture: the picture sits in
@@ -98,7 +63,7 @@ async function expectOneCaptionedRow(
   text: string,
   name: string
 ): Promise<Locator> {
-  const row = commentRows(dlg, text);
+  const row = rowsWithText(dlg, text);
   await expect(row).toHaveCount(1);
   const attachments = row.getByRole('list', { name: 'Attachments' });
   const picture = inlineImage(attachments, name);
@@ -113,28 +78,26 @@ async function expectOneCaptionedRow(
 }
 
 /**
- * Waits for a text-plus-image send to settle (field and staged list cleared,
- * so every call it makes has left the page), then checks it made exactly one
- * sendMessageToRoom call carrying the text and the image together.
+ * Sends `sentinel` as a text-only comment and checks it is the only send since
+ * `sends` started. Sends are counted in the order they leave the page, so a
+ * send caused by anything done before the sentinel is counted before it.
  */
-async function expectOneCaptionedSend(
+async function expectOnlySentinelSent(
   c: Composer,
   sends: SendTracker,
-  text: string
+  sentinel: string
 ): Promise<void> {
-  await expect(c.box).toHaveValue('');
-  await expect(c.stagedList).toHaveCount(0);
-  await expect.poll(() => sends.bodies.length).toBe(1);
+  await c.box.fill(sentinel);
+  await c.send.click();
+  await expect(rowsWithText(c.dlg, sentinel)).toHaveCount(1);
+  await expect.poll(() => sends.requests.length).toBeGreaterThan(0);
   sends.stop();
-  expect(sends.requests, 'text and image travel in one message').toHaveLength(
+  expect(sends.requests, 'nothing was sent before the sentinel').toHaveLength(
     1
   );
-  expect(sends.bodies).toHaveLength(1);
-  const [body] = sends.bodies;
-  expect(body.errors).toBeUndefined();
-  const sent = body.data.sendMessageToRoom;
-  expect(sent.message).toBe(text);
-  expect(sent.attachments).toHaveLength(1);
+  const { messageData } = sentVariables(sends.requests[0]);
+  expect(messageData.message).toBe(sentinel);
+  expect(messageData.attachmentUpload ?? null).toBeNull();
 }
 
 test.describe(
@@ -160,28 +123,18 @@ test.describe(
       await cleanUpCommentImages(seed);
     });
 
-    test('US1-AS1: pasting an image stages a removable chip; nothing is uploaded; Send is enabled', async () => {
-      const uploads: string[] = [];
-      const onUpload = (r: { url: () => string }) => {
-        if (r.url().includes('/messaging/media/upload')) uploads.push(r.url());
-      };
-      m.on('request', onUpload);
-      const c = await openComposer(m, seed.calloutUrl);
-      await expect(c.addImage).toBeVisible();
-      await transfer(c.box, 'paste', image('one.png'));
-      await expect(c.stagedList.getByRole('listitem')).toHaveText('one.png');
-      await expect(
-        c.stagedList.getByRole('button', { name: 'Remove one.png' })
-      ).toBeVisible();
-      await expect(c.send).toBeEnabled();
-      m.off('request', onUpload);
-      expect(uploads, 'staging must not upload').toHaveLength(0);
-    });
-
-    test('US1-AS2: text + staged image → one comment with the text and the inline picture beneath it; click opens full size in a new tab', async () => {
-      const name = `as2-${RUN}.png`;
-      const text = `see this ${RUN}`;
-      const c = await openComposer(m, seed.calloutUrl);
+    /**
+     * Text + a pasted image at `url` post one row with the text above the
+     * picture, leave no chip or filename line, and the picture opens full size
+     * in a new tab.
+     */
+    async function sendCaptionedAndOpen(
+      url: string,
+      label: string
+    ): Promise<void> {
+      const name = `${label}-${RUN}.png`;
+      const text = `${label} text ${RUN}`;
+      const c = await openComposer(m, url);
       await transfer(c.box, 'paste', image(name));
       await expect(c.stagedList).toContainText(name);
       await c.box.fill(text);
@@ -200,6 +153,35 @@ test.describe(
       expect(tab.url()).toContain('/storage/file/by-reference');
       expect(await tab.evaluate(() => document.contentType)).toBe('image/png');
       await tab.close();
+    }
+
+    test('US1-AS1: pasting an image stages a removable chip; nothing is uploaded; Send is enabled', async () => {
+      const sentinel = `as1 sentinel ${RUN}`;
+      const uploads: string[] = [];
+      const onUpload = (r: { url: () => string }) => {
+        if (r.url().includes('/messaging/media/upload')) uploads.push(r.url());
+      };
+      m.on('request', onUpload);
+      const c = await openComposer(m, seed.calloutUrl);
+      const sends = trackSends(m);
+      await transfer(c.box, 'paste', image('one.png'));
+      await expect(c.stagedList.getByRole('listitem')).toHaveText('one.png');
+      const remove = c.stagedList.getByRole('button', {
+        name: 'Remove one.png',
+      });
+      await expect(remove).toBeVisible();
+      await expect(c.send).toBeEnabled();
+      // Drop the chip and send a text-only sentinel: an upload caused by the
+      // staging would have left the page before the sentinel's send.
+      await remove.click();
+      await expect(c.stagedList).toHaveCount(0);
+      await expectOnlySentinelSent(c, sends, sentinel);
+      m.off('request', onUpload);
+      expect(uploads, 'staging must not upload').toHaveLength(0);
+    });
+
+    test('US1-AS2: text + staged image → one comment with the text and the inline picture beneath it; click opens full size in a new tab', async () => {
+      await sendCaptionedAndOpen(seed.calloutUrl, 'as2');
     });
 
     test('US1-AS3: image + text → exactly one new comment row, carrying the text and the picture', async () => {
@@ -210,7 +192,10 @@ test.describe(
       await transfer(c.box, 'paste', image(name));
       await c.box.fill(text);
       await c.send.click();
-      await expectOneCaptionedSend(c, sends, text);
+      // Field and staged list cleared: every call the send makes has left.
+      await expect(c.box).toHaveValue('');
+      await expect(c.stagedList).toHaveCount(0);
+      await expectOneSend(sends, 'sendMessageToRoom', { text });
       await expectOneCaptionedRow(c.dlg, text, name);
     });
 
@@ -223,15 +208,10 @@ test.describe(
       await expect(c.send).toBeEnabled();
       await c.send.click();
       await expect(inlineImage(c.dlg, name)).toBeVisible();
-      // Response bodies are collected asynchronously; wait for this one to land.
-      await expect.poll(() => sends.bodies.length).toBe(1);
-      sends.stop();
-      expect(sends.requests).toHaveLength(1);
-      expect(sends.bodies).toHaveLength(1);
-      expect(
-        sends.bodies[0].data.sendMessageToRoom.attachments[0].mimeType
-      ).toBe('image/png');
       await expect(c.stagedList).toHaveCount(0);
+      await expectOneSend(sends, 'sendMessageToRoom', {
+        mimeType: 'image/png',
+      });
     });
 
     test('US1-AS5: the image button opens an images-only picker by mouse and keyboard; dragging shows the hint; a drop stages', async () => {
@@ -241,20 +221,19 @@ test.describe(
         'application/pdf'
       );
 
-      let [chooser] = await Promise.all([
-        m.waitForEvent('filechooser'),
-        c.addImage.click(),
-      ]);
-      await chooser.setFiles(image('a.png'));
-      await expect(c.stagedList).toContainText('a.png');
-      await c.stagedList.getByRole('button', { name: 'Remove a.png' }).click();
-      await expect(c.stagedList).toHaveCount(0);
-
-      for (const key of ['Enter', 'Space']) {
+      const pressOnButton = (key: string) => async () => {
         await c.addImage.focus();
-        [chooser] = await Promise.all([
+        await m.keyboard.press(key);
+      };
+      const openers = [
+        () => c.addImage.click(),
+        pressOnButton('Enter'),
+        pressOnButton('Space'),
+      ];
+      for (const open of openers) {
+        const [chooser] = await Promise.all([
           m.waitForEvent('filechooser'),
-          m.keyboard.press(key),
+          open(),
         ]);
         await chooser.setFiles(image('a.png'));
         await expect(c.stagedList).toContainText('a.png');
@@ -275,83 +254,44 @@ test.describe(
       const alert = c.dlg
         .getByRole('alert')
         .filter({ hasText: ONE_FILE_MESSAGE });
-      const stageA = async () => {
+      const staged = c.stagedList.getByRole('listitem');
+      const adders: Array<(file: TransferFile) => Promise<unknown>> = [
+        file => transfer(c.box, 'paste', file),
+        file => transfer(c.box, 'drop', file),
+        file => c.fileInput.setInputFiles(file),
+      ];
+
+      for (const add of adders) {
         await transfer(c.box, 'paste', image('a.png'));
-        await expect(c.stagedList.getByRole('listitem')).toHaveText('a.png');
+        await expect(staged).toHaveText('a.png');
         await expect(alert).toHaveCount(0);
-      };
-      const reset = async () => {
+        await add(image('b.png'));
+        await expect(alert).toBeVisible();
+        await expect(staged).toHaveText('a.png');
         await c.stagedList
           .getByRole('button', { name: 'Remove a.png' })
           .click();
         await expect(c.stagedList).toHaveCount(0);
         await expect(alert).toHaveCount(0);
-      };
-
-      await stageA();
-      await transfer(c.box, 'paste', image('b.png'));
-      await expect(alert).toBeVisible();
-      await expect(c.stagedList.getByRole('listitem')).toHaveText('a.png');
-      await reset();
-
-      await stageA();
-      await transfer(c.box, 'drop', image('b.png'));
-      await expect(alert).toBeVisible();
-      await expect(c.stagedList.getByRole('listitem')).toHaveText('a.png');
-      await reset();
-
-      await stageA();
-      await c.fileInput.setInputFiles(image('b.png'));
-      await expect(alert).toBeVisible();
-      await expect(c.stagedList.getByRole('listitem')).toHaveText('a.png');
-      await reset();
+      }
 
       await c.fileInput.setInputFiles([image('a.png'), image('b.png')]);
       await expect(alert).toBeVisible();
-      await expect(c.stagedList.getByRole('listitem')).toHaveText('a.png');
+      await expect(staged).toHaveText('a.png');
     });
 
     test('US1-AS7: removing a staged chip clears it and sends nothing', async () => {
-      const sentinel = `as7 sentinel ${RUN}`;
       const c = await openComposer(m, seed.calloutUrl);
       const sends = trackSends(m);
       await transfer(c.box, 'paste', image('a.png'));
       await expect(c.stagedList).toContainText('a.png');
       await c.stagedList.getByRole('button', { name: 'Remove a.png' }).click();
       await expect(c.stagedList).toHaveCount(0);
-      // A text-only comment sent next is the barrier: sends are counted in the
-      // order they leave the page, so one caused by the removal would be
-      // counted before it.
-      await c.box.fill(sentinel);
-      await c.send.click();
-      await expect(commentRows(c.dlg, sentinel)).toHaveCount(1);
-      await expect.poll(() => sends.requests.length).toBeGreaterThan(0);
-      sends.stop();
-      expect(sends.requests, 'the removal sent nothing').toHaveLength(1);
-      const { messageData } = sentVariables(sends.requests[0]);
-      expect(messageData.message).toBe(sentinel);
-      expect(messageData.attachmentUpload ?? null).toBeNull();
+      await expectOnlySentinelSent(c, sends, `as7 sentinel ${RUN}`);
     });
 
     test("US1-AS8: the same flow behaves identically in a post's own comments (contribution dialog)", async () => {
-      const name = `as8-${RUN}.png`;
-      const text = `as8 text ${RUN}`;
-      const c = await openComposer(m, seed.postUrl);
-      await expect(c.addImage).toBeVisible();
-      await transfer(c.box, 'paste', image(name));
-      await expect(c.stagedList).toContainText(name);
-      await c.box.fill(text);
-      await c.send.click();
-      const picture = await expectOneCaptionedRow(c.dlg, text, name);
-      await expect(c.stagedList).toHaveCount(0);
-      await expect(c.dlg.getByText(name, { exact: true })).toHaveCount(0);
-      const [tab] = await Promise.all([
-        m.context().waitForEvent('page'),
-        picture.click(),
-      ]);
-      await tab.waitForLoadState('load');
-      expect(await tab.evaluate(() => document.contentType)).toBe('image/png');
-      await tab.close();
+      await sendCaptionedAndOpen(seed.postUrl, 'as8');
     });
 
     test('US1-AS9: a second member with the thread open sees the inline picture without reload and after reload', async () => {
@@ -362,6 +302,8 @@ test.describe(
       await transfer(sender.box, 'paste', image(name));
       await sender.send.click();
       await expect(inlineImage(sender.dlg, name)).toBeVisible();
+      // The viewer gets the message over the room subscription, which can lag
+      // the sender's own render by more than the default expect budget.
       await expect(inlineImage(viewer.dlg, name)).toBeVisible({
         timeout: 30_000,
       });
@@ -373,57 +315,41 @@ test.describe(
 
     test('US1-AS10: accessible names, live-region upload status, alert refusal, keyboard operability', async () => {
       const c = await openComposer(m, seed.calloutUrl);
-      await expect(
-        c.dlg.getByRole('button', { name: 'Add image' })
-      ).toBeVisible();
+      const removeA = c.dlg.getByRole('button', { name: 'Remove a.png' });
       await transfer(c.box, 'paste', image('a.png'));
-      await expect(
-        c.dlg.getByRole('list', { name: 'Files to send' })
-      ).toBeVisible();
-      await expect(
-        c.dlg.getByRole('button', { name: 'Remove a.png' })
-      ).toBeVisible();
+      await expect(c.stagedList).toBeVisible();
+      await expect(removeA).toBeVisible();
       await transfer(c.box, 'paste', image('b.png'));
       await expect(c.dlg.getByRole('alert')).toHaveText(ONE_FILE_MESSAGE);
 
       // Tab order: the chip's remove control precedes the field, the image button follows it.
       await c.box.focus();
       await m.keyboard.press('Shift+Tab');
-      await expect(
-        c.dlg.getByRole('button', { name: 'Remove a.png' })
-      ).toBeFocused();
+      await expect(removeA).toBeFocused();
       await m.keyboard.press('Tab');
       await expect(c.box).toBeFocused();
       await m.keyboard.press('Tab');
       await expect(c.addImage).toBeFocused();
 
       // Enter and Space operate the remove control.
-      await c.dlg.getByRole('button', { name: 'Remove a.png' }).focus();
+      await removeA.focus();
       await m.keyboard.press('Enter');
       await expect(c.stagedList).toHaveCount(0);
       await transfer(c.box, 'paste', image('a.png'));
-      await c.dlg.getByRole('button', { name: 'Remove a.png' }).focus();
+      await removeA.focus();
       await m.keyboard.press('Space');
       await expect(c.stagedList).toHaveCount(0);
 
       // Upload in progress is announced through a live region (<output> = role status).
-      let release!: () => void;
-      const gate = new Promise<void>(resolve => {
-        release = resolve;
-      });
-      await m.route(UPLOAD_ROUTE, async route => {
-        await gate;
-        await route.continue();
-      });
+      const releaseUploads = await holdUploads(m);
       await transfer(c.box, 'paste', image(`as10-${RUN}.png`));
       await c.send.focus();
       await m.keyboard.press('Enter');
       await expect(
         c.stagedList.getByRole('status', { name: 'Uploading…' })
       ).toBeVisible();
-      release();
+      await releaseUploads();
       await expect(c.stagedList).toHaveCount(0);
-      await m.unroute(UPLOAD_ROUTE);
     });
 
     test('US1-AS11: a failing upload posts nothing, marks the chip failed and keeps the text; after recovery Send posts one message carrying the text and the image', async () => {
@@ -454,7 +380,10 @@ test.describe(
 
       await m.unroute(UPLOAD_ROUTE);
       await c.send.click();
-      await expectOneCaptionedSend(c, sends, text);
+      // Field and staged list cleared: every call the send makes has left.
+      await expect(c.box).toHaveValue('');
+      await expect(c.stagedList).toHaveCount(0);
+      await expectOneSend(sends, 'sendMessageToRoom', { text });
       await expectOneCaptionedRow(c.dlg, text, name);
     });
   }
