@@ -403,7 +403,9 @@ const viewAs = async (
  * over stay skeletons for good, as a slow wheel scroll from the top is the only
  * motion that mounted every post in a seven-post feed (measured 2026-10-22).
  * So reveal the way a reader does — wheel down one step per poll tick, with
- * the pointer over the feed, until the heading exists.
+ * the pointer over the feed, until the heading exists. The tick is at least
+ * the mount delay: Playwright's default poll cadence starts at 100 and 250 ms,
+ * which could scroll a short post out of view before it ever mounts.
  */
 const revealPost = async (page: Page, title: string): Promise<Locator> => {
   const heading = page.getByRole('heading', { name: title, exact: true });
@@ -415,7 +417,7 @@ const revealPost = async (page: Page, title: string): Promise<Locator> => {
         if ((await heading.count()) === 0) await page.mouse.wheel(0, 350);
         return heading.count();
       },
-      { timeout: 60_000 }
+      { timeout: 60_000, intervals: [600] }
     )
     .toBeGreaterThan(0);
   await heading.scrollIntoViewIfNeeded();
