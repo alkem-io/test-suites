@@ -1,4 +1,4 @@
-// spec: client-web/src/functional-e2e/user-profile-test-plan.md (client-web#10179)
+// spec: client-web/src/functional-e2e/user-profile-test-plan.md
 //
 // Public profile resource tabs (`/user/<nameID>`, `/organization/<nameID>`):
 // order (Leading first), the landing tab, tabs hidden when they would be empty,
@@ -10,19 +10,17 @@
 // absence of every hidden one (including the old "Resources Hosted") together.
 //
 // Everything is seeded per run through the API and removed again in afterAll.
-// Two viewers, never a platform admin (who reads more than either and would
-// hide the viewer-dependent filters this feature rests on):
+// Never a platform admin as the viewer (who reads more than anyone else and
+// would hide the viewer-dependent filters this feature rests on):
 //   - the registered, non-privileged `non.space` persona for the VISITOR cases
-//     (PT-1 … PT-6; three of them skipped on server#6670, see below);
-//   - the profile's OWNER for the Other Resources cases (PT-1o, PT-4o, PT-6o,
-//     and their empty twins PT-2o, PT-5o that keep AC5's "hidden" half falsifiable):
-//     the user on their own page, and a plain user who administers the
-//     organisation on its page. These are the viewers the server resolves
-//     `User.account` / `Organization.account` for today, so they are the only
-//     non-admin viewers who can see Other Resources at all (QA lead ruling,
-//     2026-10-19). They sign in through the shared persona session cache.
-// All Spaces are PUBLIC for the same reason: the server drops Spaces the viewer
-// cannot read from `rolesUser` / `rolesOrganization`.
+//     (PT-1 … PT-6), which see the PUBLIC packs and VCs and every hub;
+//   - the profile's OWNER for the full-view cases (PT-1o, PT-4o, PT-6o, and
+//     their empty twins PT-2o, PT-5o): the user on their own page, and a plain
+//     user who administers the organisation on its page. They sign in through
+//     the shared persona session cache;
+//   - the visibility-tier block seeds its own associate, admin and guest viewers.
+// All Spaces are PUBLIC: the server drops Spaces the viewer cannot read from
+// `rolesUser` / `rolesOrganization`.
 
 import { type Browser, expect, type Locator, type Page } from '@playwright/test';
 import {
@@ -40,10 +38,14 @@ import {
   TestScenarioFactory,
   TestUser,
   UniqueIDGenerator,
+  updateInnovationPackVisibility,
+  updateVirtualContributorVisibility,
 } from '@alkemio/tests-lib';
 import {
   InnovationHubType,
   RoleName,
+  SearchVisibility,
+  SpaceLevel,
   SpacePrivacyMode,
   SpaceVisibility,
 } from '@alkemio/tests-lib/core/generated/alkemio-schema';
@@ -55,6 +57,7 @@ import {
   registerFixtureUser,
 } from '../contributors-callout/cards-fixture';
 import { deleteFixtureTree, newFixtureTree } from '../subspaces-callout/subspaces-callout.helpers';
+import { signIn } from '../account-deletion/account-deletion.helpers';
 import {
   clearHostLead,
   orgIsLeadOf,
@@ -89,22 +92,10 @@ const TAB = {
 const EMPTY_USER_MEMBERSHIP = 'No memberships yet.';
 const EMPTY_ORG_MEMBERSHIP = 'Not a member of any Space or Subspace yet.';
 
-// KNOWN DEFECT, product (client-web#10179 / server): Other Resources never
-// appears for an ordinary signed-in visitor. The client learns the account id
-// from `User.account` / `Organization.account`, and the server resolves both
-// to null unless the viewer is the user, holds READ_USER_PII, or holds UPDATE
-// on the organisation (server `user.resolver.fields.ts` and
-// `organization.resolver.fields.ts`, the 027 R-F.3 comment). The client then
-// skips the account-resources query, `hasOtherResources` stays false and the
-// tab is hidden even though the profile owns a pack, hub or VC. Verified live
-// (the same fixtures, same assertions): `non.space` sees ['Leading', 'Member
-// Of'] only, `admin` sees all three tabs and every assertion below passes.
-// PT-1, PT-4 and PT-6 assert the designed behaviour for the plan's visitor and
-// are skipped until alkem-io/server#6670 is fixed (plan Q4): drop the skip when
-// it lands. The assertions are unchanged, and the SAME assertions run live as
-// PT-1o / PT-4o / PT-6o with the profile's owner as the viewer.
-const OTHER_RESOURCES_HIDDEN_FROM_VISITOR =
-  'alkem-io/server#6670: User.account and Organization.account are null for an ordinary visitor, so Other Resources is hidden (client-web#10179, plan Q4)';
+// Other Resources reads the viewer-scoped `hostedResources` field: PUBLIC packs
+// and VCs and every hub are visible to any registered visitor, so PT-1, PT-4 and
+// PT-6 run live. The owner twins PT-1o, PT-4o and PT-6o stay as the full-view
+// regression guard. Packs and VCs default to ACCOUNT, so each is arranged PUBLIC.
 
 // ---------------------------------------------------------------------------
 // Locators
@@ -146,6 +137,17 @@ const expectSelected = async (
     );
   }
 };
+
+/**
+ * A genuinely signed-out context. `browser.newContext()` inherits the persona
+ * `storageState` that `createPersonaTest` installs through `use`, so the guest
+ * must override it explicitly or it silently runs as `non.space`.
+ */
+const newGuestContext = (browser: Browser) =>
+  browser.newContext({
+    locale: 'en-US',
+    storageState: { cookies: [], origins: [] },
+  });
 
 /**
  * Runs `walk` on a page signed in as `email` (a seeded user, registered with the
@@ -265,30 +267,83 @@ const orgAccountId = async (orgId: string): Promise<string> => {
   return data.lookup.organization.account.id;
 };
 
+type StoredVisibility = { searchVisibility: string; listedInStore: boolean };
+
+/** The stored visibility settings of a pack or VC, read as the platform admin. */
+const visibilityOf = async (
+  kind: 'innovationPack' | 'virtualContributor',
+  id: string
+): Promise<StoredVisibility> => {
+  const data = await adminGql<Record<'lookup', Record<string, StoredVisibility>>>(
+    `query($id: UUID!){ lookup { ${kind}(ID: $id) { searchVisibility listedInStore } } }`,
+    { id }
+  );
+  return data.lookup[kind];
+};
+
+/** The stored search visibility of a pack or VC. */
+const searchVisibilityOf = async (
+  kind: 'innovationPack' | 'virtualContributor',
+  id: string
+): Promise<string> => (await visibilityOf(kind, id)).searchVisibility;
+
 const spaceInput = {
   collaboration: { addTutorialCallouts: false },
   settings: { privacy: { mode: SpacePrivacyMode.Public } },
 };
 
+type HostedSpace = {
+  id: string;
+  level: string;
+  subspaces: { id: string; subspaces: { id: string }[] }[];
+};
+
 /**
- * Removes a scenario's Spaces (leaves first), proves they are gone, then its
- * organisation. `cleanUpBaseScenario` logs and swallows every failure, which
- * left organisations behind on the shared stack when a Space delete did not go
- * through; here each failure surfaces.
+ * Every level-zero Space tree the account hosts, read from the server rather
+ * than from the scenario model. When a slow `createSpace` outlives the client's
+ * connection, the harness retries it although the server already committed the
+ * first one, so the account can host a second level-zero Space the model never
+ * learns of — and `deleteOrganization` refuses an account that still hosts any.
+ */
+const accountSpaceTrees = async (accountId: string) => {
+  const data = await adminGql<{ lookup: { account: { spaces: HostedSpace[] } } }>(
+    'query($id: UUID!){ lookup { account(ID: $id) { spaces { id level subspaces { id subspaces { id } } } } } }',
+    { id: accountId }
+  );
+  return data.lookup.account.spaces
+    .filter(space => space.level === SpaceLevel.L0)
+    .map(space => {
+      const tree = newFixtureTree();
+      tree.spaceId = space.id;
+      tree.subspaceIds = [
+        ...space.subspaces.flatMap(l1 => l1.subspaces.map(l2 => l2.id)),
+        ...space.subspaces.map(l1 => l1.id),
+      ];
+      return tree;
+    });
+};
+
+/**
+ * Removes every Space tree the scenario organisation's account hosts (leaves
+ * first), proves they are gone, then the organisation. `cleanUpBaseScenario`
+ * logs and swallows every failure, which left organisations behind on the
+ * shared stack when a Space delete did not go through; here each failure
+ * surfaces.
  */
 const removeScenario = async (
   scenario: OrganizationWithSpaceModel | undefined
 ): Promise<void> => {
   if (!scenario) return;
-  const tree = newFixtureTree();
-  tree.spaceId = scenario.space?.id || undefined;
-  tree.subspaceIds = scenario.subspace?.id ? [scenario.subspace.id] : [];
-  await deleteFixtureTree(tree, async id =>
-    failOnError(`delete Space ${id}`, await deleteSpace(id))
-  );
-  for (const id of [...tree.subspaceIds, tree.spaceId]) {
-    if (id && (await spaceStillResolves(id))) {
-      throw new Error(`Space ${id} still exists after deleteSpace`);
+  const accountId = scenario.organization?.accountId;
+  const trees = accountId ? await accountSpaceTrees(accountId) : [];
+  for (const tree of trees) {
+    await deleteFixtureTree(tree, async id =>
+      failOnError(`delete Space ${id}`, await deleteSpace(id))
+    );
+    for (const id of [...tree.subspaceIds, tree.spaceId]) {
+      if (id && (await spaceStillResolves(id))) {
+        throw new Error(`Space ${id} still exists after deleteSpace`);
+      }
     }
   }
   if (scenario.organization?.id) {
@@ -382,8 +437,18 @@ test.describe('Public profile resource tabs — user (client-web#10179)', () => 
     failOnError('create pack on U1 account', pack);
     packId = pack.data?.createInnovationPack.id;
     if (!packId) throw new Error('pack id missing from createInnovationPack');
+    failOnError(
+      'U1 pack PUBLIC',
+      await updateInnovationPackVisibility(packId, {
+        searchVisibility: SearchVisibility.Public,
+      })
+    );
 
     // Precondition read-backs: fail fast and clearly.
+    expect(
+      await searchVisibilityOf('innovationPack', packId),
+      'U1 pack must be PUBLIC — defaults to ACCOUNT'
+    ).toBe(SearchVisibility.Public);
     const u3Spaces = await rolesOf('rolesUser', u3.id);
     expect(u3Spaces, 'U3 must hold no Space role (no welcome-Space auto-enrol)').toEqual([]);
     expect(
@@ -454,7 +519,6 @@ test.describe('Public profile resource tabs — user (client-web#10179)', () => 
   test('PT-1 — a user who leads and owns a pack sees Leading, Member Of, Other Resources; lands on Leading', async ({
     page,
   }) => {
-    test.skip(true, OTHER_RESOURCES_HIDDEN_FROM_VISITOR);
     await walkLeadWithPack(page);
   });
 
@@ -472,18 +536,15 @@ test.describe('Public profile resource tabs — user (client-web#10179)', () => 
     await openProfile(page, `/user/${user.nameID}`, user.displayName);
 
     // Leading and Other Resources are hidden, not shown empty. The tablist itself
-    // rendering with exactly one tab is the positive control.
-    // Limit: while Q4 stands this viewer never sees Other Resources, so the
-    // "hidden when there are no resources" half cannot fail here (shown green
-    // with a pack on U3, 2026-10-15). Its positive twins are PT-1/PT-4/PT-6.
+    // rendering with exactly one tab is the positive control; PT-1 is the
+    // positive twin for this same viewer.
     await expect(tabs(page)).toHaveText([TAB.user.memberOf]);
     await expect(tab(page, TAB.user.memberOf)).toHaveAttribute('aria-selected', 'true');
     await expect(text(page, EMPTY_USER_MEMBERSHIP)).toBeVisible();
   });
 
-  // AC5 for a viewer the server resolves `account` for: PT-1o is the positive
-  // twin (the owner of a pack sees Other Resources), so here the hidden tab can
-  // fail. PT-2's visitor cannot make it fail while server#6670 stands.
+  // AC5 for the owner's full view: PT-1o is the positive twin (the owner of a
+  // pack sees Other Resources), so here the hidden tab can fail.
   test('PT-2o — the same bare user on their OWN profile sees only Member Of: Other Resources stays hidden although this viewer could see it', async ({
     browser,
   }) => {
@@ -552,6 +613,16 @@ test.describe('Public profile resource tabs — organisation (client-web#10179)'
     failOnError('create pack on org B account', pack);
     packId = pack.data?.createInnovationPack.id;
     if (!packId) throw new Error('pack id missing from createInnovationPack');
+    failOnError(
+      'org B pack PUBLIC',
+      await updateInnovationPackVisibility(packId, {
+        searchVisibility: SearchVisibility.Public,
+      })
+    );
+    expect(
+      await searchVisibilityOf('innovationPack', packId),
+      'org B pack must be PUBLIC — defaults to ACCOUNT'
+    ).toBe(SearchVisibility.Public);
 
     // The lib has no wrapper for hubs; use the generated SDK directly.
     const hub = await graphqlErrorWrapper(
@@ -600,6 +671,17 @@ test.describe('Public profile resource tabs — organisation (client-web#10179)'
     failOnError('create VC on org C account', vc);
     vcId = vc.data?.createVirtualContributor.id;
     if (!vcId) throw new Error('VC id missing from createVirtualContributor');
+    // The update also re-applies the VC's authorization.
+    failOnError(
+      'org C VC PUBLIC',
+      await updateVirtualContributorVisibility(vcId, {
+        searchVisibility: SearchVisibility.Public,
+      })
+    );
+    expect(
+      await searchVisibilityOf('virtualContributor', vcId),
+      'org C VC must be PUBLIC — defaults to ACCOUNT'
+    ).toBe(SearchVisibility.Public);
 
     // A plain user who administers orgs B and C: holds UPDATE on each, which is
     // what lets the server resolve `Organization.account` for them. No
@@ -705,8 +787,8 @@ test.describe('Public profile resource tabs — organisation (client-web#10179)'
     await expect(h3(page, 'Custom Homepages')).toBeVisible();
     await expect(h4(page, `PT org pack ${RUN}`)).toBeVisible();
     await expect(h4(page, `PT hub ${RUN}`)).toBeVisible();
-    // Regression guard: B's account HOSTS this Space, and before #10424 it was
-    // listed here under "Spaces".
+    // Regression guard: B's account HOSTS this Space, which the Other Resources
+    // tab once listed here under "Spaces".
     await expect(h3(page, 'Spaces')).toHaveCount(0);
     await expect(text(page, l0Name)).toHaveCount(0);
     // Sub-sections are conditional: no VC was seeded for B.
@@ -716,7 +798,6 @@ test.describe('Public profile resource tabs — organisation (client-web#10179)'
   test('PT-4 — an organisation that leads and owns a pack and a hub sees three tabs; Other Resources holds no Spaces', async ({
     page,
   }) => {
-    test.skip(true, OTHER_RESOURCES_HIDDEN_FROM_VISITOR);
     await walkOrgFull(page);
   });
 
@@ -731,14 +812,14 @@ test.describe('Public profile resource tabs — organisation (client-web#10179)'
   }) => {
     await openProfile(page, `/organization/${orgD!.nameID}`, orgD!.displayName);
 
-    // Same Q4 limit as PT-2: the Other Resources absence cannot fail for this viewer.
+    // PT-4 and PT-6 are the positive twins for this same viewer.
     await expect(tabs(page)).toHaveText([TAB.org.memberOf]);
     await expect(tab(page, TAB.org.memberOf)).toHaveAttribute('aria-selected', 'true');
     await expect(text(page, EMPTY_ORG_MEMBERSHIP)).toBeVisible();
   });
 
-  // AC5 for the organisation case, with a viewer who could see Other Resources
-  // (PT-4o / PT-6o are the positive twins). PT-5's visitor cannot make it fail.
+  // AC5 for the organisation case, with the owner's full view (PT-4o / PT-6o
+  // are the positive twins).
   test('PT-5o — the bare organisation\'s own admin sees only All Memberships: Other Resources stays hidden although this viewer could see it', async ({
     browser,
   }) => {
@@ -774,13 +855,544 @@ test.describe('Public profile resource tabs — organisation (client-web#10179)'
   test('PT-6 — an organisation that is a member, not a lead, and owns a VC lands on All Memberships; Other Resources shows the VC and not the hosted Space', async ({
     page,
   }) => {
-    test.skip(true, OTHER_RESOURCES_HIDDEN_FROM_VISITOR);
     await walkOrgMemberWithVc(page);
+    // The card links to the VC's profile.
+    await expect(
+      page.getByRole('link', { name: `PT VC ${RUN}` })
+    ).toHaveAttribute('href', new RegExp(`/pt-vc-${RUN}$`, 'i'));
   });
 
   test('PT-6o — the organisation\'s own admin lands on All Memberships; Other Resources shows the VC and not the hosted Space', async ({
     browser,
   }) => {
     await asViewer(browser, orgAdmin!.email, walkOrgMemberWithVc);
+  });
+});
+
+// ===========================================================================
+// Block V — visibility tiers and the guest notice (organisation profile)
+// ===========================================================================
+// One organisation account holds a PUBLIC, an ACCOUNT and a HIDDEN pack and an
+// ACCOUNT VC that is listed in the store. Each viewer tier sees its own slice:
+// an unrelated registered visitor PUBLIC only (the store listing does not
+// count), an associate PUBLIC + ACCOUNT, an admin everything. A guest sees the
+// sign-up notice instead of any resource, whether the organisation owns
+// anything or not. Org G owns only an ACCOUNT and a HIDDEN pack, so a visitor
+// gets no Other Resources tab there at all.
+test.describe('Public profile resource tabs — visibility tiers', () => {
+  let scenarioE: OrganizationWithSpaceModel | undefined; // org E: member only, the tier fixtures
+  let packPublicId: string | undefined;
+  let packAccountId: string | undefined;
+  let packHiddenId: string | undefined;
+  let vcAccountId: string | undefined;
+  let associateE: SeededUser | undefined; // Associate of org E only
+  let adminE: SeededUser | undefined; // Associate + Admin of org E
+  let u4: SeededUser | undefined; // owns an ACCOUNT pack on their user account
+  let packAccount4Id: string | undefined;
+  let orgFId: string | undefined;
+  let orgF: { nameID: string; displayName: string } | undefined; // bare
+  let orgGId: string | undefined;
+  let orgG: { nameID: string; displayName: string } | undefined; // ACCOUNT + HIDDEN pack only
+  let packAccountGId: string | undefined;
+  let packHiddenGId: string | undefined;
+
+  const PACK_PUBLIC = `PT pack public ${RUN}`;
+  const PACK_ACCOUNT = `PT pack account ${RUN}`;
+  const PACK_HIDDEN = `PT pack hidden ${RUN}`;
+  const VC_ACCOUNT = `PT VC account ${RUN}`;
+  const PACK_ACCOUNT_4 = `PT pack account4 ${RUN}`;
+  const PACK_ACCOUNT_G = `PT pack accountG ${RUN}`;
+  const PACK_HIDDEN_G = `PT pack hiddenG ${RUN}`;
+
+  const guestNotice = (page: Page, organization: string): Locator =>
+    page.getByText(
+      `Sign up on Alkemio to see the resources hosted by ${organization}`
+    );
+
+  /**
+   * Records whether the guest notice for one organisation ever enters the DOM
+   * of the next document `page` loads. The observer is installed before any
+   * page script runs and inspects every inserted node, so a notice rendered for
+   * a single frame while the sign-in state loads is caught, although no
+   * locator could ever see it. It matches the notice's sign-up link by the
+   * organisation's name in the surrounding text or its nameID in the return
+   * URL, so it does not depend on the UI language. Returns a reader.
+   */
+  const recordGuestNotice = async (
+    page: Page,
+    org: { displayName: string; nameID: string }
+  ): Promise<() => Promise<boolean>> => {
+    await page.addInitScript(({ displayName, nameID }) => {
+      const state = window as unknown as { __guestNoticeSeen?: boolean };
+      state.__guestNoticeSeen = false;
+      const isNotice = (link: Element): boolean =>
+        (link.getAttribute('href') ?? '').includes(nameID) ||
+        !!link.parentElement?.textContent?.includes(displayName);
+      const scan = (node: Node): void => {
+        if (!(node instanceof Element)) return;
+        const links = node.matches('a[href*="sign_up"]')
+          ? [node]
+          : Array.from(node.querySelectorAll('a[href*="sign_up"]'));
+        if (links.some(isNotice)) state.__guestNoticeSeen = true;
+      };
+      new MutationObserver(records => {
+        for (const record of records) record.addedNodes.forEach(scan);
+      }).observe(document, { childList: true, subtree: true });
+    }, org);
+    return () =>
+      page.evaluate(
+        () =>
+          (window as unknown as { __guestNoticeSeen?: boolean })
+            .__guestNoticeSeen === true
+      );
+  };
+
+  const createPack = async (
+    accountId: string,
+    displayName: string,
+    nameID: string,
+    searchVisibility: SearchVisibility | undefined
+  ): Promise<string> => {
+    const pack = await createInnovationPack(accountId, displayName, nameID);
+    failOnError(`create ${displayName}`, pack);
+    const id = pack.data?.createInnovationPack.id;
+    if (!id) throw new Error(`pack id missing for ${displayName}`);
+    if (searchVisibility) {
+      try {
+        failOnError(
+          `${displayName} ${searchVisibility}`,
+          await updateInnovationPackVisibility(id, { searchVisibility })
+        );
+      } catch (error) {
+        // The id never reaches teardown, so the pack is removed here; left
+        // behind it would block deleting its owning account.
+        await deleteInnovationPack(id).catch(() => undefined);
+        throw error;
+      }
+    }
+    return id;
+  };
+
+  test.beforeAll(async () => {
+    test.setTimeout(240_000);
+
+    // Org E holds no lead: its Space is only the VC's body of knowledge.
+    scenarioE = await TestScenarioFactory.createBaseScenario({
+      name: `pt-tiers-${RUN}`,
+      space: spaceInput,
+    });
+    await clearHostLead(scenarioE);
+    const orgE = scenarioE.organization;
+
+    packPublicId = await createPack(
+      orgE.accountId,
+      PACK_PUBLIC,
+      `pt-ppub-${RUN}`,
+      SearchVisibility.Public
+    );
+    // Left at the ACCOUNT default; read back below.
+    packAccountId = await createPack(
+      orgE.accountId,
+      PACK_ACCOUNT,
+      `pt-pacc-${RUN}`,
+      undefined
+    );
+    packHiddenId = await createPack(
+      orgE.accountId,
+      PACK_HIDDEN,
+      `pt-phid-${RUN}`,
+      SearchVisibility.Hidden
+    );
+
+    const vc = await createVirtualContributor(orgE.accountId, {
+      profileDisplayName: VC_ACCOUNT,
+      nameID: `pt-vcacc-${RUN}`,
+      aiPersona: { engine: 'EXPERT' },
+      bodyOfKnowledgeType: 'ALKEMIO_SPACE',
+      bodyOfKnowledgeID: scenarioE.space.id,
+    });
+    failOnError('create VC on org E account', vc);
+    vcAccountId = vc.data?.createVirtualContributor.id;
+    if (!vcAccountId) throw new Error('VC id missing from createVirtualContributor');
+    // Listed in the store, which must NOT make it visible to a visitor.
+    failOnError(
+      'org E VC ACCOUNT + listed',
+      await updateVirtualContributorVisibility(vcAccountId, {
+        searchVisibility: SearchVisibility.Account,
+        listedInStore: true,
+      })
+    );
+
+    associateE = await seedUser(`PT Associate ${RUN}`);
+    failOnError(
+      'associate E associate of org E',
+      await assignRoleToUser(associateE.id, orgE.roleSetId, RoleName.Associate)
+    );
+    adminE = await seedUser(`PT Admin E ${RUN}`);
+    for (const role of [RoleName.Associate, RoleName.Admin]) {
+      failOnError(
+        `admin E ${role} of org E`,
+        await assignRoleToUser(adminE.id, orgE.roleSetId, role)
+      );
+    }
+
+    // U4 owns an ACCOUNT pack. A fresh account has a pack limit of 0.
+    u4 = await seedUser(`PT Owner4 ${RUN}`);
+    const plan = await getLicensePlanByName('ACCOUNT_LICENSE_PLUS');
+    if (!plan[0]) throw new Error('ACCOUNT_LICENSE_PLUS plan not found');
+    failOnError(
+      'license plan on U4 account',
+      await assignLicensePlanToAccount(u4.accountId, plan[0].id)
+    );
+    packAccount4Id = await createPack(
+      u4.accountId,
+      PACK_ACCOUNT_4,
+      `pt-pacc4-${RUN}`,
+      undefined
+    );
+
+    // Org F: bare. Block O's org D is torn down before this block runs.
+    const displayName = `PT bare org F ${RUN}`;
+    const f = await createOrganizationOrAdopt(displayName, `pt-bare-f-${RUN}`);
+    failOnError('create org F', f);
+    orgFId = f.data?.createOrganization.id;
+    if (!orgFId) throw new Error('org F id missing from createOrganization');
+    orgF = { nameID: f.data!.createOrganization.nameID, displayName };
+
+    // Org G: no Space role, and only packs a visitor may not see.
+    const gName = `PT nonpublic org G ${RUN}`;
+    const g = await createOrganizationOrAdopt(gName, `pt-nonpub-g-${RUN}`);
+    failOnError('create org G', g);
+    orgGId = g.data?.createOrganization.id;
+    if (!orgGId) throw new Error('org G id missing from createOrganization');
+    orgG = { nameID: g.data!.createOrganization.nameID, displayName: gName };
+    const orgGAccount = await orgAccountId(orgGId);
+    failOnError(
+      'license plan on org G account',
+      await assignLicensePlanToAccount(orgGAccount, plan[0].id)
+    );
+    // Left at the ACCOUNT default; read back below.
+    packAccountGId = await createPack(
+      orgGAccount,
+      PACK_ACCOUNT_G,
+      `pt-paccg-${RUN}`,
+      undefined
+    );
+    packHiddenGId = await createPack(
+      orgGAccount,
+      PACK_HIDDEN_G,
+      `pt-phidg-${RUN}`,
+      SearchVisibility.Hidden
+    );
+
+    // Precondition read-backs: fail fast and clearly.
+    expect(
+      await orgIsLeadOf(scenarioE.space.community.roleSetId, orgE.id),
+      'org E must NOT lead its L0 after clearHostLead'
+    ).toBe(false);
+    expect(
+      await orgIsMemberOf(scenarioE.space.community.roleSetId, orgE.id),
+      'org E must still be a member of its L0'
+    ).toBe(true);
+    expect(await searchVisibilityOf('innovationPack', packPublicId)).toBe(
+      SearchVisibility.Public
+    );
+    expect(
+      await searchVisibilityOf('innovationPack', packAccountId),
+      'a new pack must default to ACCOUNT'
+    ).toBe(SearchVisibility.Account);
+    expect(await searchVisibilityOf('innovationPack', packHiddenId)).toBe(
+      SearchVisibility.Hidden
+    );
+    expect(
+      await visibilityOf('virtualContributor', vcAccountId),
+      'org E VC must be ACCOUNT and listed in the store'
+    ).toEqual({ searchVisibility: SearchVisibility.Account, listedInStore: true });
+    expect(
+      await searchVisibilityOf('innovationPack', packAccount4Id),
+      'U4 pack must default to ACCOUNT'
+    ).toBe(SearchVisibility.Account);
+    expect(
+      await accountResources(u4.accountId),
+      'U4 account must own exactly the one pack'
+    ).toEqual({ vcs: 0, packs: 1, hubs: 0 });
+    expect(
+      await rolesOf('rolesUser', associateE.id),
+      'associateE must hold no Space role'
+    ).toEqual([]);
+    expect(
+      await rolesOf('rolesUser', adminE.id),
+      'adminE must hold no Space role'
+    ).toEqual([]);
+    expect(
+      await rolesOf('rolesUser', u4.id),
+      'U4 must hold no Space role'
+    ).toEqual([]);
+    expect(
+      await accountResources(await orgAccountId(orgFId)),
+      'org F account must own no VC, pack or hub'
+    ).toEqual({ vcs: 0, packs: 0, hubs: 0 });
+    expect(
+      await searchVisibilityOf('innovationPack', packAccountGId),
+      'org G pack must default to ACCOUNT'
+    ).toBe(SearchVisibility.Account);
+    expect(await searchVisibilityOf('innovationPack', packHiddenGId)).toBe(
+      SearchVisibility.Hidden
+    );
+    expect(
+      await accountResources(orgGAccount),
+      'org G account must own exactly the two packs'
+    ).toEqual({ vcs: 0, packs: 2, hubs: 0 });
+    expect(
+      await rolesOf('rolesOrganization', orgGId),
+      'org G must hold no Space role'
+    ).toEqual([]);
+  });
+
+  test.afterAll(async () => {
+    test.setTimeout(180_000);
+    await runTeardown([
+      ...(
+        [
+          ['pack public', packPublicId],
+          ['pack account', packAccountId],
+          ['pack hidden', packHiddenId],
+          // An account with a pack blocks user deletion: the pack goes first.
+          ['pack account U4', packAccount4Id],
+          ['pack account G', packAccountGId],
+          ['pack hidden G', packHiddenGId],
+        ] as const
+      ).map(([label, id]): [string, () => Promise<unknown>] => [
+        label,
+        async () => id && failOnError(`delete ${label}`, await deleteInnovationPack(id)),
+      ]),
+      // The VC goes before its body-of-knowledge Space.
+      [
+        'VC',
+        async () =>
+          vcAccountId &&
+          failOnError('delete VC', await deleteVirtualContributor(vcAccountId)),
+      ],
+      ...[associateE, adminE, u4].map(
+        (u): [string, () => Promise<unknown>] => [
+          `user ${u?.displayName}`,
+          async () => u && deleteFixtureUser(u.id),
+        ]
+      ),
+      ['scenario E', () => removeScenario(scenarioE)],
+      ['org F', async () => orgFId && failOnError('delete org F', await deleteOrganization(orgFId))],
+      ['org G', async () => orgGId && failOnError('delete org G', await deleteOrganization(orgGId))],
+    ]);
+  });
+
+  /** Opens org E's profile on its Other Resources tab. */
+  const openOrgEOtherResources = async (page: Page): Promise<void> => {
+    const org = scenarioE!.organization;
+    await openProfile(page, `/organization/${org.nameId}`, org.profile.displayName);
+    await tab(page, TAB.org.other).click();
+    await expect(tab(page, TAB.org.other)).toHaveAttribute('aria-selected', 'true');
+  };
+
+  /**
+   * Collects the GraphQL error messages the page receives. The returned reader
+   * waits for every response body still being parsed, so an error that arrives
+   * just before the assertion is not missed.
+   */
+  const trackGraphqlErrors = (page: Page): (() => Promise<string[]>) => {
+    const errors: string[] = [];
+    const pending: Promise<void>[] = [];
+    page.on('response', res => {
+      if (!res.url().includes('graphql')) return;
+      pending.push(
+        res
+          .json()
+          .catch(() => undefined)
+          .then(body => {
+            if (Array.isArray(body?.errors) && body.errors.length > 0) {
+              errors.push(
+                JSON.stringify(
+                  body.errors.map((e: { message: string }) => e.message)
+                )
+              );
+            }
+          })
+      );
+    });
+    return async () => {
+      await Promise.allSettled(pending);
+      return errors;
+    };
+  };
+
+  /** Asserts the guest notice and its sign-up link back to `profilePath`. */
+  const expectGuestNotice = async (
+    page: Page,
+    organization: string,
+    profilePath: string
+  ): Promise<void> => {
+    const notice = guestNotice(page, organization);
+    await expect(notice).toBeVisible();
+    const href = await notice
+      .getByRole('link', { name: 'Sign up', exact: true })
+      .getAttribute('href');
+    expect(href, 'the notice must link to sign-up').toBeTruthy();
+    const signUp = new URL(href!, baseUrl);
+    expect(signUp.pathname).toBe('/sign_up');
+    expect(
+      decodeURI(signUp.searchParams.get('returnUrl') ?? ''),
+      'sign-up must return to the profile'
+    ).toContain(profilePath);
+    await expect(tab(page, TAB.org.memberOf)).toBeVisible();
+    await expect(tab(page, TAB.org.other)).toHaveCount(0);
+  };
+
+  test('PT-7 @forge-acceptance — an unrelated registered visitor sees only the PUBLIC pack: no ACCOUNT or HIDDEN pack, no VC despite its store listing, no guest notice', async ({
+    page,
+  }) => {
+    const org = scenarioE!.organization;
+    const noticeEverShown = await recordGuestNotice(page, {
+      displayName: org.profile.displayName,
+      nameID: org.nameId,
+    });
+    await openProfile(page, `/organization/${org.nameId}`, org.profile.displayName);
+    await expect(tabs(page)).toHaveText([TAB.org.memberOf, TAB.org.other]);
+
+    await tab(page, TAB.org.other).click();
+    await expect(tab(page, TAB.org.other)).toHaveAttribute('aria-selected', 'true');
+    // Positive control first, then the absences it makes meaningful.
+    await expect(h4(page, PACK_PUBLIC)).toBeVisible();
+    await expect(h4(page, PACK_ACCOUNT)).toHaveCount(0);
+    await expect(h4(page, PACK_HIDDEN)).toHaveCount(0);
+    await expect(h3(page, 'Virtual Contributors')).toHaveCount(0);
+    await expect(text(page, VC_ACCOUNT)).toHaveCount(0);
+    await expect(guestNotice(page, org.profile.displayName)).toHaveCount(0);
+    // US4-AS4: not even briefly while the sign-in state was still loading.
+    // PT-10 is the positive control: the same recorder fires for a guest.
+    expect(
+      await noticeEverShown(),
+      'the guest notice must never render for a signed-in visitor'
+    ).toBe(false);
+  });
+
+  test('PT-8 — an associate who holds no Space role sees the PUBLIC and ACCOUNT packs and the ACCOUNT VC card, not the HIDDEN pack', async ({
+    browser,
+  }) => {
+    await asViewer(browser, associateE!.email, async page => {
+      const readErrors = trackGraphqlErrors(page);
+      await openOrgEOtherResources(page);
+      await expect(h4(page, PACK_PUBLIC)).toBeVisible();
+      await expect(h4(page, PACK_ACCOUNT)).toBeVisible();
+      await expect(h3(page, 'Virtual Contributors')).toBeVisible();
+      // The card renders for a viewer who cannot open the VC itself.
+      await expect(h4(page, VC_ACCOUNT)).toBeVisible();
+      await expect(h4(page, PACK_HIDDEN)).toHaveCount(0);
+      expect(
+        await readErrors(),
+        'the profile must load without GraphQL errors'
+      ).toEqual([]);
+    });
+  });
+
+  test('PT-9 — an organisation admin sees every pack, HIDDEN included, and the VC', async ({
+    browser,
+  }) => {
+    await asViewer(browser, adminE!.email, async page => {
+      const readErrors = trackGraphqlErrors(page);
+      await openOrgEOtherResources(page);
+      await expect(h4(page, PACK_PUBLIC)).toBeVisible();
+      await expect(h4(page, PACK_ACCOUNT)).toBeVisible();
+      await expect(h4(page, PACK_HIDDEN)).toBeVisible();
+      await expect(h3(page, 'Virtual Contributors')).toBeVisible();
+      await expect(h4(page, VC_ACCOUNT)).toBeVisible();
+      expect(
+        await readErrors(),
+        'the profile must load without GraphQL errors'
+      ).toEqual([]);
+    });
+  });
+
+  test('PT-12 — a user whose only resource is an ACCOUNT pack shows a visitor Member Of only; the owner still sees Other Resources', async ({
+    page,
+    browser,
+  }) => {
+    const user = u4!;
+    // Positive twin: the owner's full view lists the pack.
+    await asViewer(browser, user.email, async ownerPage => {
+      await openProfile(ownerPage, `/user/${user.nameID}`, user.displayName);
+      await expect(tabs(ownerPage)).toHaveText([TAB.user.memberOf, TAB.user.other]);
+      await tab(ownerPage, TAB.user.other).click();
+      await expect(h4(ownerPage, PACK_ACCOUNT_4)).toBeVisible();
+    });
+
+    await openProfile(page, `/user/${user.nameID}`, user.displayName);
+    await expect(tabs(page)).toHaveText([TAB.user.memberOf]);
+    await expect(tab(page, TAB.user.other)).toHaveCount(0);
+  });
+
+  test('PT-13 — an organisation whose account owns only an ACCOUNT and a HIDDEN pack shows a visitor no Other Resources tab', async ({
+    page,
+  }) => {
+    await openProfile(page, `/organization/${orgG!.nameID}`, orgG!.displayName);
+    await expect(tabs(page)).toHaveText([TAB.org.memberOf]);
+    await expect(tab(page, TAB.org.other)).toHaveCount(0);
+  });
+
+  test('PT-10 @forge-acceptance — a guest sees the sign-up notice and no Other Resources, on an organisation with resources and on a bare one alike', async ({
+    browser,
+  }) => {
+    const guest = await newGuestContext(browser);
+    try {
+      const page = await guest.newPage();
+      const org = scenarioE!.organization;
+      const orgEPath = `/organization/${org.nameId}`;
+      const noticeEverShown = await recordGuestNotice(page, {
+        displayName: org.profile.displayName,
+        nameID: org.nameId,
+      });
+      await openProfile(page, orgEPath, org.profile.displayName);
+      await expectGuestNotice(page, org.profile.displayName, orgEPath);
+      await expect(text(page, PACK_PUBLIC)).toHaveCount(0);
+      // Positive control for the recorder that PT-7 and PT-11 assert stays silent.
+      expect(await noticeEverShown(), 'the recorder sees the guest notice').toBe(true);
+
+      // The notice does not reveal whether the organisation owns anything.
+      const orgFPath = `/organization/${orgF!.nameID}`;
+      await openProfile(page, orgFPath, orgF!.displayName);
+      await expectGuestNotice(page, orgF!.displayName, orgFPath);
+    } finally {
+      await guest.close();
+    }
+  });
+
+  test('PT-11 @forge-acceptance — the guest notice goes away once the guest signs in as an associate, and Other Resources appears', async ({
+    browser,
+  }) => {
+    const guest = await newGuestContext(browser);
+    try {
+      const page = await guest.newPage();
+      const org = scenarioE!.organization;
+      const orgEPath = `/organization/${org.nameId}`;
+      // Re-armed on every document, so after sign-in it reports the reload only.
+      const noticeEverShown = await recordGuestNotice(page, {
+        displayName: org.profile.displayName,
+        nameID: org.nameId,
+      });
+      await openProfile(page, orgEPath, org.profile.displayName);
+      await expect(guestNotice(page, org.profile.displayName)).toBeVisible();
+
+      await signIn(page, associateE!.email);
+      await openProfile(page, orgEPath, org.profile.displayName);
+      await expect(tab(page, TAB.org.other)).toBeVisible();
+      await expect(guestNotice(page, org.profile.displayName)).toHaveCount(0);
+      await tab(page, TAB.org.other).click();
+      await expect(h4(page, PACK_PUBLIC)).toBeVisible();
+      // US4-AS4 for the viewer who just signed in, in the same tab.
+      expect(
+        await noticeEverShown(),
+        'the guest notice must not flash on the signed-in reload'
+      ).toBe(false);
+    } finally {
+      await guest.close();
+    }
   });
 });
