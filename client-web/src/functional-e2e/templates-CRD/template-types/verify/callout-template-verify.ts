@@ -123,9 +123,20 @@ export const verifyCalloutTemplate = async (
       // since 0.163.0) from 2026-09-09; the preview is back since
       // client-web#10431 (v0.169.1) — nightly 2026-10-20 reported
       // "expected to fail, but passed", so the pin is gone.
-      await expect(
-        dialog.getByRole('img', { name: templateData.calloutTitle })
-      ).toBeVisible();
+      //
+      // A stamped but unloadable preview URL still renders that <img> (alt
+      // text only), so also require the image to have decoded.
+      const preview = dialog.getByRole('img', {
+        name: templateData.calloutTitle,
+      });
+      await expect(preview).toBeVisible();
+      await expect
+        .poll(() =>
+          preview.evaluate(
+            (img: HTMLImageElement) => img.complete && img.naturalWidth > 0
+          )
+        )
+        .toBe(true);
       break;
     }
     case 'memo': {
