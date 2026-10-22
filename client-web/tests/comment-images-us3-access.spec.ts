@@ -19,7 +19,8 @@
  *   - SVG picked: refused as unsupported
  *   - image one byte over the comment room's size limit: "big.png is larger than <limit> MB.", the limit read
  *     from the room's bucket
- *   - calendar event and forum discussion: no image button; a text comment posts
+ *   - calendar event and forum discussion: no image button; a text comment and a text reply post as on
+ *     develop — the field clears, and the reply box closes, as soon as they are submitted
  *   - plain text and Office rich text (with bitmap) pasted: the text lands in the field; nothing staged
  *
  * `config/playwright.config.nightly.ts` registers the three walks as the
@@ -29,7 +30,7 @@
  */
 
 import { writeFileSync } from 'node:fs';
-import { expect, test, type Browser, type Locator, type Page } from '@playwright/test';
+import { expect, test, type Browser, type Locator, type Page, type Route } from '@playwright/test';
 import {
   ADMIN_EMAIL,
   addMember,
@@ -38,11 +39,13 @@ import {
   cleanUpCommentImages,
   commentRoomMaxFileSize,
   image,
+  isSendOf,
   makePng,
   newSeed,
   seedCommentImages,
   signIn as signInWith,
   transfer,
+  type SendOperation,
 } from './comment-images.helpers';
 
 const PNG = image('a.png');
@@ -75,21 +78,52 @@ function dialog(page: Page): Locator {
   return page.locator('[role=dialog]').last();
 }
 
-async function dismissCookies(page: Page): Promise<void> {
-  const cookies = page.getByRole('button', { name: /accept all cookies/i });
-  if (await cookies.isVisible().catch(() => false)) await cookies.click();
-}
-
 async function openComposer(page: Page, url: string): Promise<{ dlg: Locator; box: Locator; stagedList: Locator }> {
   await page.goto(url);
   const dlg = dialog(page);
   const box = dlg.getByRole('textbox', { name: 'Add a comment...' });
   await box.waitFor();
-  await dismissCookies(page);
   return { dlg, box, stagedList: dlg.getByRole('list', { name: 'Files to send' }) };
 }
 
-test.describe.configure({ mode: 'serial' });
+/**
+ * Submits with every call of `operation` held at the network, runs `whileHeld`
+ * once the call has left the page (what the composer shows before the send
+ * settles), then lets the call through and returns its response body.
+ */
+async function submitWhileSendHeld(
+  page: Page,
+  operation: SendOperation,
+  submit: () => Promise<void>,
+  whileHeld: () => Promise<void>
+): Promise<{ data?: any; errors?: unknown }> {
+  const isSend = isSendOf(operation);
+  const graphql = (url: URL): boolean => url.pathname.includes('graphql');
+  let release: () => void = () => undefined;
+  const gate = new Promise<void>(resolve => {
+    release = resolve;
+  });
+  let held = false;
+  const hold = async (route: Route) => {
+    if (!isSend(route.request())) return route.fallback();
+    held = true;
+    await gate;
+    await route.continue();
+  };
+  await page.route(graphql, hold);
+  try {
+    const response = page.waitForResponse(r => isSend(r.request()));
+    response.catch(() => undefined);
+    await submit();
+    await expect.poll(() => held, `${operation} left the page`).toBe(true);
+    await whileHeld();
+    release();
+    return await (await response).json();
+  } finally {
+    release();
+    await page.unroute(graphql, hold);
+  }
+}
 
 test.describe('Comment images — US3 P1 access and validation walk', { tag: ['@forge-acceptance', '@comment-images'] }, () => {
   test.beforeAll(async () => {
@@ -213,7 +247,7 @@ test.describe('Comment images — US3 P1 access and validation walk', { tag: ['@
     });
   });
 
-  test('US3-AS6: calendar event and forum discussion have no image button and still post text', async ({
+  test('US3-AS6: calendar event and forum discussion have no image button; text comments and replies behave as on develop', async ({
     browser,
   }) => {
     const page = await signIn(browser, personas.member);
@@ -221,19 +255,43 @@ test.describe('Comment images — US3 P1 access and validation walk', { tag: ['@
       await page.goto(url);
       const box = page.getByRole('textbox', { name: 'Add a comment...' });
       await box.waitFor();
-      await dismissCookies(page);
       await expect(page.getByRole('button', { name: 'Add image' })).toHaveCount(0);
       await expect(page.locator('input[type=file]')).toHaveCount(0);
+
+      // Top level: the field clears on submit, before the send settles.
       const text = `US3 text comment ${Date.now()}`;
       await box.fill(text);
-      const sent = page.waitForResponse(
-        r => r.url().includes('graphql') && (r.request().postData() ?? '').includes('sendMessageToRoom')
+      const posted = await submitWhileSendHeld(
+        page,
+        'sendMessageToRoom',
+        () => page.getByRole('button', { name: 'Send', exact: true }).click(),
+        () => expect(box).toHaveValue('')
       );
-      await page.getByRole('button', { name: 'Send', exact: true }).click();
-      const body = await (await sent).json();
-      expect(body.errors, 'text comment must post as before').toBeUndefined();
-      expect(body.data.sendMessageToRoom.message).toBe(text);
-      await expect(page.getByText(text)).toBeVisible();
+      expect(posted.errors, 'text comment must post as before').toBeUndefined();
+      expect(posted.data.sendMessageToRoom.message).toBe(text);
+      await expect(page.getByText(text, { exact: true })).toBeVisible();
+
+      // Reply: the box closes on submit, before the send settles. The room
+      // holds this one comment, so its innermost list item is the last match.
+      const item = page
+        .getByRole('listitem')
+        .filter({ has: page.getByText(text, { exact: true }) })
+        .last();
+      await item.getByRole('button', { name: 'Reply', exact: true }).click();
+      const replyBox = page.locator('[id^="comment-reply-input-"]');
+      await expect(replyBox).toBeVisible();
+      await expect(replyBox.getByRole('button', { name: 'Add image' })).toHaveCount(0);
+      const reply = `US3 text reply ${Date.now()}`;
+      await replyBox.getByRole('textbox').fill(reply);
+      const replied = await submitWhileSendHeld(
+        page,
+        'sendMessageReplyToRoom',
+        () => replyBox.getByRole('button', { name: 'Send', exact: true }).click(),
+        () => expect(replyBox).toHaveCount(0)
+      );
+      expect(replied.errors, 'text reply must post as before').toBeUndefined();
+      expect(replied.data.sendMessageReplyToRoom.message).toBe(reply);
+      await expect(page.getByText(reply, { exact: true })).toBeVisible();
     }
   });
 });
