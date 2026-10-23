@@ -428,7 +428,7 @@ export async function commentRoomMaxFileSize(
 /**
  * The `attachmentBucketId` of the comment rooms of callout C, calendar event E
  * and forum discussion D, read through the API as the platform admin. A
- * composer is image-capable exactly when its room has one (FR-016, C-25).
+ * composer is image-capable exactly when its room has one.
  */
 export async function commentRoomBuckets(seed: CommentImagesSeed): Promise<{
   callout: string | null;
