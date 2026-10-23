@@ -129,6 +129,7 @@ place; cite this file instead of rediscovering a gap.
 
 - **Audit-row assertions: `roleset/associates/support-org-community.helpers.ts › auditScope()`.**
   - `rows(subjectUserId, act, expected[])` runs the action and asserts the subject gained EXACTLY those `organization_administration` rows (a delta, listed oldest first), attributed as given and carrying no `@` in `details`; `noRow` is the same with nothing expected (pair it with a `rows` positive control in the same test).
+  - `expected` may also be a function of the action's result, for identifiers that exist only after the call (the `invitationId` of an `invite_user` row). Nest two `rows` scopes to measure two subjects of one call (A-12, one row per invitee).
   - With MCP off the effect assertions still run and `finish(ctx)` then skips the case with the reason, so an unasserted audit half never reads as green.
   - Rows with a null subject (organisation email invitations) are read by SQL (`orgAuditRowsSql`) and only on the local stack.
   - 2026-10-23.

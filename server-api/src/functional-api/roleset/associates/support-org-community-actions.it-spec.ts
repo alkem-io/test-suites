@@ -127,23 +127,24 @@ describe('A-01 — repair an orphan by invitation: offer Admin, the invitee acce
     expect(before[RoleName.Associate]).toEqual([]);
     expect(before[RoleName.Admin]).toEqual([]);
 
+    // The row also names the invitation it created.
     const sent = await audit.rows(
       invitee.id,
       () => invite(sup().token, roleSetId, { users: [invitee.id], roles: [RoleName.Admin] }),
-      [
+      res => [
         {
           action: 'invite_user',
           outcome: 'operation_succeeded',
           initiator: sup().id,
           roleSetId,
           roles: [RoleName.Admin],
+          invitationId: invitationOf(res).id,
         },
       ]
     );
     const invitation = invitationOf(sent);
     expect(invitation.extraRoles).toEqual([RoleName.Admin]);
 
-    // The row also names the invitation it created.
     const listed = (await pendingInvitations(sup().token, roleSetId)).find(
       i => i.id === invitation.id
     );
@@ -189,13 +190,14 @@ describe('A-02 — the offerer loses the Support credential before the accept (P
     const sent = await audit.rows(
       invitee.id,
       () => invite(offerer.token, roleSetId, { users: [invitee.id], roles: [RoleName.Admin] }),
-      [
+      res => [
         {
           action: 'invite_user',
           outcome: 'operation_succeeded',
           initiator: offerer.id,
           roleSetId,
           roles: [RoleName.Admin],
+          invitationId: invitationOf(res).id,
         },
       ]
     );
@@ -983,4 +985,59 @@ describe('A-11 — organisation-admin actions write no Support row (P1, decision
       expect(rows[0].subjectUserId).toEqual(member.id);
     }
   );
+});
+
+// ---------------------------------------------------------------------------
+describe('A-12 — one invite call to two users writes one row per invitee (P1, use case; FR-015 per target, C-14)', () => {
+  test('A-12 — Support invites two registered users in one call: two pending invitations, and each invitee gains exactly one invite_user row naming its own invitation', async ctx => {
+    await assertSupportIsSupportOnly();
+    const org = await makeOrg('a12');
+    const first = await makeUser('a12a');
+    const second = await makeUser('a12b');
+    const audit = auditScope();
+    const roleSetId = org.roleSetId;
+    const invitationFor = (
+      res: Awaited<ReturnType<typeof invite>>,
+      userId: string
+    ): string => {
+      expectOk(res, 'invite two users');
+      const result = res.data!.inviteForEntryRoleOnRoleSet.find(
+        r => r.invitedActorID === userId
+      );
+      expect(result?.type, `invitation for ${userId}`).toEqual(
+        'INVITED_TO_ROLE_SET'
+      );
+      return result!.invitation!.id;
+    };
+    const inviteRowFor =
+      (userId: string) => (res: Awaited<ReturnType<typeof invite>>) => [
+        {
+          action: 'invite_user',
+          outcome: 'operation_succeeded' as const,
+          initiator: sup().id,
+          roleSetId,
+          invitationId: invitationFor(res, userId),
+        },
+      ];
+
+    // One call, two targets: the outer scope measures `first`, the inner `second`.
+    const sent = await audit.rows(
+      first.id,
+      () =>
+        audit.rows(
+          second.id,
+          () =>
+            invite(sup().token, roleSetId, { users: [first.id, second.id] }),
+          inviteRowFor(second.id)
+        ),
+      inviteRowFor(first.id)
+    );
+
+    const ids = [invitationFor(sent, first.id), invitationFor(sent, second.id)];
+    expect(new Set(ids).size).toEqual(2);
+    expect(
+      (await pendingInvitations(sup().token, roleSetId)).map(i => i.id)
+    ).toEqual(expect.arrayContaining(ids));
+    audit.finish(ctx);
+  });
 });

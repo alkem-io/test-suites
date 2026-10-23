@@ -590,12 +590,14 @@ export const auditScope = () => {
     /**
      * Runs `act`, then asserts that `subject` gained EXACTLY these rows
      * (listed oldest first), attributed as given. The count is a delta, so a
-     * shared persona's history never matters.
+     * shared persona's history never matters. `expected` may be a function of
+     * `act`'s result, for identifiers that exist only once the call has
+     * returned (the invitation an invite created).
      */
     async rows<T>(
       subjectUserId: string,
       act: () => Promise<T>,
-      expected: ExpectedRow[]
+      expected: ExpectedRow[] | ((result: T) => ExpectedRow[])
     ): Promise<T> {
       if (!MCP_AVAILABLE) {
         unasserted++;
@@ -604,12 +606,14 @@ export const auditScope = () => {
       const before = await orgAdminHistory(subjectUserId);
       const result = await act();
       const after = await orgAdminHistory(subjectUserId);
+      const rowsExpected =
+        typeof expected === 'function' ? expected(result) : expected;
       expect(
         after.total - before.total,
         `audit rows gained by ${subjectUserId}`
-      ).toEqual(expected.length);
-      const gained = after.entries.slice(0, expected.length).reverse();
-      expected.forEach((row, index) => matchRow(gained[index], row));
+      ).toEqual(rowsExpected.length);
+      const gained = after.entries.slice(0, rowsExpected.length).reverse();
+      rowsExpected.forEach((row, index) => matchRow(gained[index], row));
       asserted++;
       return result;
     },
