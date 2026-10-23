@@ -194,6 +194,7 @@ export type CommentImagesSeed = {
   scenario?: OrganizationWithSpaceModel;
   /** Disposable identities, recorded as soon as each Kratos identity exists. */
   users: RecordedIdentity[];
+  eventId?: string;
   discussionId?: string;
   contexts: BrowserContext[];
   calloutId: string;
@@ -340,10 +341,10 @@ export async function seedCommentImages(
       'seed: space calendar'
     );
     const { createEventOnCalendar } = await adminGql<{
-      createEventOnCalendar: { profile: { url: string } };
+      createEventOnCalendar: { id: string; profile: { url: string } };
     }>(
       `mutation ($e: CreateCalendarEventOnCalendarInput!) {
-        createEventOnCalendar(eventData: $e) { profile { url } }
+        createEventOnCalendar(eventData: $e) { id profile { url } }
       }`,
       {
         e: {
@@ -361,6 +362,7 @@ export async function seedCommentImages(
       },
       'seed: calendar event E'
     );
+    seed.eventId = createEventOnCalendar.id;
     seed.eventUrl = appUrl(createEventOnCalendar.profile?.url, 'event E');
   }
 
@@ -421,6 +423,44 @@ export async function commentRoomMaxFileSize(
   if (!maxFileSize || maxFileSize <= 0)
     throw new Error(`seed: bucket ${bucketId} reports no size limit`);
   return maxFileSize;
+}
+
+/**
+ * The `attachmentBucketId` of the comment rooms of callout C, calendar event E
+ * and forum discussion D, read through the API as the platform admin. A
+ * composer is image-capable exactly when its room has one (FR-016, C-25).
+ */
+export async function commentRoomBuckets(seed: CommentImagesSeed): Promise<{
+  callout: string | null;
+  event: string | null;
+  discussion: string | null;
+}> {
+  if (!seed.eventId || !seed.discussionId)
+    throw new Error('seed: commentRoomBuckets needs event E and discussion D');
+  type Bucket = { comments: { attachmentBucketId: string | null } };
+  const { lookup, platform } = await adminGql<{
+    lookup: { callout: Bucket; calendarEvent: Bucket };
+    platform: { forum: { discussion: Bucket } };
+  }>(
+    `query ($callout: UUID!, $event: UUID!, $discussion: UUID!) {
+      lookup {
+        callout(ID: $callout) { comments { attachmentBucketId } }
+        calendarEvent(ID: $event) { comments { attachmentBucketId } }
+      }
+      platform { forum { discussion(ID: $discussion) { comments { attachmentBucketId } } } }
+    }`,
+    {
+      callout: seed.calloutId,
+      event: seed.eventId,
+      discussion: seed.discussionId,
+    },
+    'comment room buckets'
+  );
+  return {
+    callout: lookup.callout.comments.attachmentBucketId,
+    event: lookup.calendarEvent.comments.attachmentBucketId,
+    discussion: platform.forum.discussion.comments.attachmentBucketId,
+  };
 }
 
 /** The profile display name the platform shows for a user. */

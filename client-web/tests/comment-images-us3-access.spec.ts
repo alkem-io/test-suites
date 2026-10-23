@@ -13,6 +13,7 @@ import {
   addOutsider,
   addSpaceAdmin,
   cleanUpCommentImages,
+  commentRoomBuckets,
   commentRoomMaxFileSize,
   expectOneSend,
   image,
@@ -211,6 +212,14 @@ test.describe('Comment images — US3 P1 access and validation walk', { tag: ['@
   test('US3-AS6: calendar event and forum discussion have no image button; text comments and replies behave as on develop', async ({
     browser,
   }) => {
+    // The composer is image-capable exactly when its room has an attachment
+    // bucket, so the rule is pinned where it is decided: the event and forum
+    // rooms have none, the callout room (positive control) has one.
+    const buckets = await commentRoomBuckets(seed);
+    expect(buckets.callout, 'callout room has an attachment bucket').toBeTruthy();
+    expect(buckets.event, 'calendar-event room has no attachment bucket').toBeNull();
+    expect(buckets.discussion, 'forum-discussion room has no attachment bucket').toBeNull();
+
     const page = await signIn(browser, personas.member);
     for (const url of [seed.eventUrl, seed.discussionUrl]) {
       await page.goto(url);
@@ -231,6 +240,11 @@ test.describe('Comment images — US3 P1 access and validation walk', { tag: ['@
       expect(posted.errors, 'text comment must post as before').toBeUndefined();
       expect(posted.data.sendMessageToRoom.message).toBe(text);
       await expect(page.getByText(text, { exact: true })).toBeVisible();
+      // The image button only appears once the room's bucket policy has loaded,
+      // after the field first renders, so the check above can pass too early.
+      // A full send round trip later the policy would have arrived: still none.
+      await expect(page.getByRole('button', { name: 'Add image' })).toHaveCount(0);
+      await expect(page.locator('input[type=file]')).toHaveCount(0);
 
       // Reply: the box closes on submit, before the send settles. The room
       // holds this one comment, so its innermost list item is the last match.
