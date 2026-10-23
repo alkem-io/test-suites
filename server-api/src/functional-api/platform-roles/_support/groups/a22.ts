@@ -12,6 +12,7 @@ import type { GroupModule } from '../types';
 import { undoOnFailure } from '../undo-on-failure';
 import {
   createOwnedOrganization,
+  organizationAdminOf,
   removeOwnedOrganization,
 } from './organization-content';
 
@@ -25,12 +26,20 @@ import {
  * Targets that no role user administers: an L0 space on the run's disposable
  * host, a disposable user who is not in it, a VC on THAT user's account (so not
  * the space's account), and a bare organization that was never in the space.
+ *
+ * 090 adds the organisation form of the same ruling (workspace#090): the same
+ * disposable user is not an associate of that bare organization either, so
+ * adding it as ASSOCIATE (entry) or as ADMIN (elevated) is refused for all 14
+ * roles, Platform Support included, which gained the Community-tab reach but
+ * never a direct add.
  */
 type A22 = {
   roleSetId: string;
   user: DisposableUser;
   virtualContributorId: string;
   organizationId: string;
+  /** The role set of that organization, for the 090 org-entry / org-elevated variants. */
+  organizationRoleSetId: string;
 };
 
 const USER = CAPABILITIES.find(c => c.id === 'A22.assignRoleToUser')!;
@@ -40,9 +49,17 @@ const VC = CAPABILITIES.find(
 const ORGANIZATION = CAPABILITIES.find(
   c => c.id === 'A22.assignRoleToOrganization'
 )!;
+const ORG_ENTRY = CAPABILITIES.find(
+  c => c.id === 'A22.assignRoleToUser#org-entry'
+)!;
+const ORG_ELEVATED = CAPABILITIES.find(
+  c => c.id === 'A22.assignRoleToUser#org-elevated'
+)!;
 
 const ROLE_SET =
   'query($id: UUID!) { lookup { space(ID: $id) { community { roleSet { id } } } } }';
+const ORGANIZATION_ROLE_SET =
+  'query($id: UUID!) { lookup { organization(ID: $id) { roleSet { id } } } }';
 const ALLOW_ONE_VC =
   'mutation($accountID: UUID!) { updateBaselineLicensePlanOnAccount(updateData: { accountID: $accountID, virtualContributor: 1 }) { id } }';
 const CREATE_VC = `mutation($accountID: UUID!, $displayName: String!) {
@@ -83,11 +100,20 @@ export const A22_GROUP: GroupModule<A22> = {
         license: false,
       });
 
+      // The organization's admin (not Support: it resigned) reads its role set.
+      const organizationAdmin = await organizationAdminOf();
+      const organization = await rawRead<{
+        lookup: { organization: { roleSet: { id: string } } };
+      }>(organizationAdmin.token, ORGANIZATION_ROLE_SET, {
+        id: organizationId,
+      });
+
       return {
         roleSetId: lookup.space.community.roleSet.id,
         user,
         virtualContributorId,
         organizationId,
+        organizationRoleSetId: organization.lookup.organization.roleSet.id,
       };
     }),
 
@@ -142,6 +168,37 @@ export const A22_GROUP: GroupModule<A22> = {
               roleSetID: fx.roleSetId,
               actorID: fx.virtualContributorId,
               role: RoleName.Member,
+            },
+          },
+          headers
+        ),
+    },
+    // 090: the same ruling for an ORGANISATION. `user` is not in it, so the
+    // entry role needs ROLESET_ENTRY_ROLE_ASSIGN, and so does every higher role
+    // for someone not yet in the entry role (no side door in).
+    [ORG_ENTRY.id]: {
+      gate: [ORG_ENTRY.surface],
+      call: (sdk, headers, fx) =>
+        sdk.assignRoleToUser(
+          {
+            roleData: {
+              roleSetID: fx.organizationRoleSetId,
+              actorID: fx.user.id,
+              role: RoleName.Associate,
+            },
+          },
+          headers
+        ),
+    },
+    [ORG_ELEVATED.id]: {
+      gate: [ORG_ELEVATED.surface],
+      call: (sdk, headers, fx) =>
+        sdk.assignRoleToUser(
+          {
+            roleData: {
+              roleSetID: fx.organizationRoleSetId,
+              actorID: fx.user.id,
+              role: RoleName.Admin,
             },
           },
           headers
