@@ -13,8 +13,11 @@
 //                         controls act and the change persists, no denied toast.
 //  - GLOBAL_SUPPORT     — the actor R-2 names. The contract asserted is the
 //                         one that matters, and is unchanged: a control is
-//                         EITHER gated off OR enabled and honoured by the
-//                         server. "Enabled, then refused" is the defect.
+//                         never "enabled, then refused" (the defect). Since
+//                         workspace#090 (server#6708 / client-web#10468) Platform
+//                         Support is let in on the Community tab, so for it both
+//                         controls must be ENABLED and HONOURED by the server —
+//                         "not offered" or "gated off" is now the regression.
 //
 // The subject is seeded as an associate through the API, because no UI path
 // adds one any more (062 US5: the tab is invite-only). Editor mechanics,
@@ -26,11 +29,17 @@ import { RoleName } from '@alkemio/tests-lib/core/generated/alkemio-schema';
 import { TestScenarioConfig } from '@alkemio/tests-lib/scenario/config/test-scenario-config';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import { TestScenarioFactory } from '@alkemio/tests-lib/scenario/TestScenarioFactory';
-import { TestUserManager } from '@alkemio/tests-lib';
+import { TestUserManager, UniqueIDGenerator } from '@alkemio/tests-lib';
 import {
   assignUserRoleOnOrganization,
   getUserIdsInRole,
 } from '../organization-user-associates/organization-user-associates.helpers';
+import {
+  adminToken,
+  deleteEmailInvitationRaw,
+  escapeRegExp,
+  listOpenEmailInvitations,
+} from '../organization-email-invitations/organization-email-invitations.helpers';
 import { createPersonaTest } from '../fixtures/authenticated-session.fixture';
 import { DENIED_TOAST } from './authz-admin-guard.helpers';
 
@@ -57,8 +66,27 @@ orgAdminTest.beforeAll(async () => {
   await assignUserRoleOnOrganization(baseScenario.organization.roleSetId, subjectId(), RoleName.Associate);
 });
 
+/** The address the 4.1 probe invites. Run-unique, under the reserved `.test` TLD. */
+const supportInviteAddress = `authz41-${UniqueIDGenerator.getID()}@alkemio.test`;
+
 globalSupportTest.afterAll(async () => {
+  // The invitation 4.1 sent is an email invitation on the organisation's role
+  // set; revoke it through the API before the organisation goes, and fail the
+  // hook if it cannot be revoked (a leaked invitation is the next run's noise).
+  const token = await adminToken();
+  const open = await listOpenEmailInvitations(baseScenario.organization.roleSetId, token);
+  const leftovers = (open.data?.lookup.roleSet.platformInvitations ?? []).filter(
+    invitation => invitation.email === supportInviteAddress
+  );
+  const failures: string[] = [];
+  for (const invitation of leftovers) {
+    const revoked = await deleteEmailInvitationRaw(invitation.id, token);
+    if (revoked.errors.length > 0) failures.push(`${invitation.id}: ${revoked.raw}`);
+  }
   await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
+  if (failures.length > 0) {
+    throw new Error(`[org-associates-authorization afterAll] could not revoke the 4.1 invitation:\n  ${failures.join('\n  ')}`);
+  }
 });
 
 /** Associates tab, waiting for the associates card. */
@@ -158,39 +186,43 @@ orgAdminTest.describe('Org Associates editor — ORGANIZATION_ADMIN (P2, P3)', (
 
 globalSupportTest.describe('Org Associates tab — GLOBAL_SUPPORT probe (R-2 / R-6)', () => {
   globalSupportTest(
-    '4.1 Invite: GLOBAL_SUPPORT holds no invite privilege on an organization (workspace#027 Slice B), so the control is gated off — never enabled-then-refused',
+    "4.1 Invite: Platform Support's invite control is enabled and honoured (090)",
     async ({ page }) => {
       await openAssociatesTab(page);
       // Exactly the Associates card's "Invite" action — NOT the pending section's
       // "Revoke invitation" rows, which also match a loose /invite/i and render first.
       //
-      // workspace#027 Slice B removes the legacy global-support cascade that gave
-      // Platform Support ROLESET_ENTRY_ROLE_INVITE on every organization (the
-      // 062 US2-AS9 standing this probe used to assert). Organization membership
-      // is now the organization's own admins' alone; Support keeps the
-      // organization LIFECYCLE (create / delete / verification). So the invite
-      // control must be withheld or disabled — an enabled control that the
-      // server then refuses (the denied toast) is the one outcome that fails.
+      // workspace#090: Platform Support invites on an organisation again (by
+      // consent only). The control must be offered and enabled, and an invitation
+      // sent through it must be honoured: no denied toast, and the address is
+      // listed as pending. Through Slice B this asserted the opposite.
       const invite = page.getByRole('button', { name: 'Invite', exact: true });
-      await invite.waitFor({ state: 'visible', timeout: 8_000 }).catch(() => undefined);
-      if ((await invite.count()) === 0) {
-        globalSupportTest.info().annotations.push({ type: 'GLOBAL_SUPPORT outcome', description: 'Invite: not offered' });
-        return;
-      }
-      await expect(invite).toBeDisabled();
-      await expect(page.getByRole('dialog')).toHaveCount(0);
+      await expect(invite).toBeVisible({ timeout: 15_000 });
+      await expect(invite).toBeEnabled();
+
+      await invite.click();
+      const dialog = page.getByRole('dialog');
+      await expect(dialog).toBeVisible();
+      await dialog
+        .getByRole('textbox', { name: 'Search for users by name or email' })
+        .fill(supportInviteAddress);
+      await dialog.getByRole('textbox', { name: 'Search for users by name or email' }).press('Enter');
+      await dialog.getByRole('button', { name: 'Send', exact: true }).click();
+      await expect(dialog.getByText('Invitation sent', { exact: true })).toBeVisible({ timeout: 20_000 });
+      await page.getByRole('button', { name: 'Close', exact: true }).click();
+
       await expect(page.getByText(DENIED_TOAST)).toHaveCount(0);
+      // Honoured by the server: the pending table lists the address.
+      await expect(page.getByRole('row', { name: new RegExp(escapeRegExp(supportInviteAddress)) })).toBeVisible({
+        timeout: 15_000,
+      });
     }
   );
 
   globalSupportTest(
-    '4.2 Row editor: the control is gated off OR enabled-and-honoured, never enabled-then-refused',
+    '4.2 Row editor: the control is enabled and honoured, never enabled-then-refused (090: gated off is now the regression)',
     async ({ page }) => {
       await openAssociatesTab(page);
-      const record = (outcome: string) => {
-        globalSupportTest.info().annotations.push({ type: 'GLOBAL_SUPPORT outcome', description: `Editor: ${outcome}` });
-        console.log(`[authz-probe] GLOBAL_SUPPORT on org row editor: ${outcome}`);
-      };
 
       const row = page.getByRole('listitem').filter({ hasText: new RegExp(subject(), 'i') });
       if ((await row.count()) === 0) {
@@ -198,30 +230,26 @@ globalSupportTest.describe('Org Associates tab — GLOBAL_SUPPORT probe (R-2 / R
         await openAssociatesTab(page);
       }
 
+      // workspace#090: Platform Support manages the Community tab, so the row
+      // editor must be offered, enabled, and its Admin switch enabled. The
+      // honoured assertions below stay as they were.
       const editButton = page
         .getByRole('listitem')
         .filter({ hasText: new RegExp(subject(), 'i') })
         .getByRole('button', { name: new RegExp(`^Edit .*${subject()}`, 'i') });
-      await editButton.waitFor({ state: 'visible', timeout: 8_000 }).catch(() => undefined);
-      if ((await editButton.count()) === 0) {
-        record('editor not offered');
-        return;
-      }
-      if (await editButton.isDisabled()) {
-        record('editor gated off');
-        return;
-      }
+      await expect(editButton).toBeVisible({ timeout: 15_000 });
+      await expect(editButton).toBeEnabled();
 
       await editButton.click();
       const dialog = page.getByRole('dialog', { name: new RegExp(`^Edit .*${subject()}`, 'i') });
       await expect(dialog).toBeVisible();
       const admin = dialog.getByRole('switch', { name: 'Admin', exact: true });
-      if ((await admin.count()) === 0 || (await admin.isDisabled())) {
-        record('Admin switch gated off');
-        return;
-      }
+      await expect(admin).toBeVisible();
+      await expect(admin).toBeEnabled();
 
-      record('Admin switch enabled and honoured by the server');
+      globalSupportTest
+        .info()
+        .annotations.push({ type: 'GLOBAL_SUPPORT outcome', description: 'Editor: Admin switch enabled and honoured by the server' });
       await admin.click();
       await dialog.getByRole('button', { name: 'Save', exact: true }).click();
       await expect(page.getByText(DENIED_TOAST)).toHaveCount(0);
