@@ -778,6 +778,7 @@ describe('A-11 — organisation-admin actions write no Support row (P1, decision
     const approved = await makeUser('a11e');
     const rejected = await makeUser('a11f');
     const byDualRole = await makeUser('a11g');
+    const lateInvitee = await makeUser('a11i');
     const dsup = await makeSupportUser('a11s');
     const audit = auditScope();
     const oa = orgAdmin().token;
@@ -888,6 +889,65 @@ describe('A-11 — organisation-admin actions write no Support row (P1, decision
         RoleName.Associate,
         RoleName.Admin,
       ]);
+    });
+
+    // SC-003 asks for an org-admin control on every audited action. The rest:
+    // removing a member (`remove_member`) ...
+    await audit.noRow(approved.id, async () => {
+      expectOk(
+        await removeUser(oa, roleSetId, approved.id, RoleName.Associate),
+        'OA removes the member'
+      );
+      expect(await rolesOf(approved)).toEqual([]);
+    });
+
+    // ... reopening and archiving an application (`reopen_application`,
+    // `archive_application`, and a second `reject_application`) ...
+    await audit.noRow(rejected.id, async () => {
+      for (const [event, state] of [
+        ['REOPEN', 'new'],
+        ['REJECT', 'rejected'],
+        ['ARCHIVE', 'archived'],
+      ] as const) {
+        expectOk(
+          await eventOnApplication(oa, applicationRejected, event),
+          `OA ${event}`
+        );
+        expect(
+          (await applicationState(oa, applicationRejected)).state,
+          `after ${event}`
+        ).toEqual(state);
+      }
+    });
+
+    // ... and an offer withheld at accept (`extra_role_withheld`): an admin who
+    // lost standing before the accept has no Support offer row to recover, so
+    // the withholding (062 US2-AS8 behaviour) writes nothing. The Admin cap is
+    // six and the organisation is at it, so two seats are handed back first.
+    for (const user of [dsup, byDualRole]) {
+      expectOk(
+        await removeUser(oa, roleSetId, user.id, RoleName.Admin),
+        `OA demotes ${user.id}`
+      );
+    }
+    await grant(org, promoted, RoleName.Admin);
+    const lateInvitation = invitationOf(
+      await invite(promoted.token, roleSetId, {
+        users: [lateInvitee.id],
+        roles: [RoleName.Admin],
+      })
+    );
+    expectOk(
+      await removeUser(oa, roleSetId, promoted.id, RoleName.Admin),
+      'OA demotes the offering admin'
+    );
+    await audit.noRow(lateInvitee.id, async () => {
+      const accepted = await accept(lateInvitee, lateInvitation.id);
+      expectOk(accepted, 'accept');
+      expect(accepted.data?.eventOnInvitation.extraRolesWithheld).toEqual([
+        RoleName.Admin,
+      ]);
+      expect(await rolesOf(lateInvitee)).toEqual([RoleName.Associate]);
     });
     audit.finish(ctx);
   });
