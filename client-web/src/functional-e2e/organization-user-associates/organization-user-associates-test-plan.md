@@ -46,3 +46,10 @@ Outside nightly, run them explicitly with the command above, or via
 Shared fixtures (org creation, role assignment, invitation/application
 helpers, the `TestUserManager`/`OrgFixture` scaffolding) live in
 `organization-user-associates.helpers.ts`.
+
+## Not covered here
+
+Platform Support on this tab (workspace#090: invite, promote/demote, remove,
+approve/reject, revoke, resend, by consent only) is planned and walked in
+`../support-org-community-admin/support-org-community-admin-test-plan.md`. The
+walks above are driven by an organisation admin and stay unchanged.

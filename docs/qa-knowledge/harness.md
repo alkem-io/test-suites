@@ -29,7 +29,8 @@ place; cite this file instead of rediscovering a gap.
   - Calls that rely on it silently fail through `graphqlErrorWrapper`'s `{ error }`, for example `search.request.params.ts › adminSearchIngestFromScratch()` (unverified whether `search.it-spec.ts` checks the result).
   - Outside the platform-roles suite, get a POA token from `seedPlatformRoleUsers().tokens.PLATFORM_OPERATIONS_ADMIN` (idempotent; precedent `client-web/.../account-deletion/profile-removed-notification.spec.ts`).
   - Established 2026-10-15, `origin/develop` @ `663c61d9`, server @ `a9ba1ea50`.
-- **The platform-roles capability table does not detect new server surfaces.** `capabilities.data.ts` is hand-maintained. `coverage-guard.it-spec.ts` checks table ↔ invocations ↔ generated plan ↔ live role names, but never compares with the server census (`server src/platform/platform-role/verification/a.row.surfaces.ts`). A new gated mutation therefore leaves no red. Found 2026-10-15: `adminRepairTemplateFiles` (server#6656, A11) was missing. When a server PR adds a privileged surface, add its row + invocation and regenerate the plan.
+  - **Conflicting evidence, 2026-10-23:** server `src/core/bootstrap/platform-template-definitions/user/users.json:12` seeds `admin@alkem.io` with `platform-operations-admin` (bootstrap spec: added 2026-09-16), so a freshly bootstrapped local stack may give GA the POA privilege. Unverified on test-alkem.io. Until someone checks, take resets and A11 calls from `seedPlatformRoleUsers().tokens.PLATFORM_OPERATIONS_ADMIN`, which is correct either way.
+- **The platform-roles capability table does not detect new server surfaces.** `capabilities.data.ts` is hand-maintained. `coverage-guard.it-spec.ts` checks table ↔ invocations ↔ generated plan ↔ live role names, but never compares with the server census (`server src/platform/platform-role/verification/a.row.surfaces.ts`). A new gated mutation therefore leaves no red. Found 2026-10-15: `adminRepairTemplateFiles` (server#6656, A11) was missing. When a server PR adds a privileged surface, add its row + invocation and regenerate the plan. Recurred 2026-10-23: server#6708 (090) added nine Support-gated organisation Community-tab surfaces and changed A22's org consent rule, with no test-suites red. See the 090 build sheet U-6.
 - **The platform-roles projects run in no nightly** (`server-api/vitest.config.ts`: "Deliberately NOT part of `nightly`: they need a server running 027", which develop now is). A gate negative that must run nightly needs its own case in a nightly-globbed domain directory. 2026-10-15.
 
 ## Fixture patterns worth reusing
@@ -112,6 +113,30 @@ place; cite this file instead of rediscovering a gap.
   - `Space.about.profile` (type `SPACE_ABOUT`) is what the UI shows.
   - A case about the Space's "own" profile that reads `about.profile` tests the wrong record. 2026-10-16.
 
+- **Stored-policy oracle without a database: `authorization { credentialRules { name cascade grantedPrivileges criterias { type resourceID } } }`.**
+  - The field has no privilege gate (`authorization.policy.resolver.fields.ts`). Anyone who can read the parent entity reads the stored rules, e.g. `lookup.roleSet(ID).authorization.credentialRules`.
+  - It distinguishes "policy not reset since the deploy" (rule absent by name) from "rule present but the gate is broken". That is the oracle for any feature activated by an authorization reset, and it works on ACC by hand too.
+  - Child policies (invitation, platform invitation, application) carry cascaded rules. Match by `grantedPrivileges` + criteria type, not by name alone.
+  - Stored privilege values are the **wire** strings (`platform-support-org-membership`), not the GraphQL enum names.
+  - 2026-10-23.
+- **Reading audit rows: MCP `analyze_audit_log`** (`platform-roles/_support/mcp-client.ts › callAuditTool`, Platform Audit Reader token).
+  - `user_history` filters by `subjectUserId` and an optional `category` (any `platform_audit_category` value, e.g. `organization_administration`).
+  - Rows with a **null subject** are invisible to it: organisation email invitations, and platform-role rows targeting an organisation. Only `summary` sees them, and only as platform-wide counts by category and outcome. Prove such rows on the local stack with `queryHarnessDb` (`platform_audit_entry."subjectOrganizationId"`).
+  - The tool masks only `details.oldEmail` / `details.newEmail`, so a "no email address in details" assertion on other fields is non-vacuous.
+  - The tool does not return `subjectOrganizationId`; use `details.roleSetId` (or the category's own key) to tie a row to its organisation.
+  - The test env has MCP on (dev-orchestration `origin/main`, test overlay `MCP_ENABLED: "true"`).
+  - 2026-10-23.
+
+- **Audit-row assertions: `roleset/associates/support-org-community.helpers.ts › auditScope()`.**
+  - `rows(subjectUserId, act, expected[])` runs the action and asserts the subject gained EXACTLY those `organization_administration` rows (a delta, listed oldest first), attributed as given and carrying no `@` in `details`; `noRow` is the same with nothing expected (pair it with a `rows` positive control in the same test).
+  - `expected` may also be a function of the action's result, for identifiers that exist only after the call (the `invitationId` of an `invite_user` row). Nest two `rows` scopes to measure two subjects of one call (A-12, one row per invitee).
+  - With MCP off the effect assertions still run and `finish(ctx)` then skips the case with the reason, so an unasserted audit half never reads as green.
+  - Rows with a null subject (organisation email invitations) are read by SQL (`orgAuditRowsSql`) and only on the local stack.
+  - 2026-10-23.
+- **A spec that builds no `TestScenarioFactory` scenario must call `TestUserManager.populateUserModelMap()` itself** before `getUserModelByType`/`users.*` (the map is `undefined` otherwise: "Cannot read properties of undefined (reading 'get')"). The helper's `assertSupportIsSupportOnly()` does it, grants Platform Support if missing (as `populateGlobalRoles` would) and then requires the persona to hold exactly `PLATFORM_SUPPORT` + `REGISTERED`. 2026-10-23.
+- **An invocation in `platform-roles/_support/groups` must select `{ id }` only.** The generated `assignRoleToUser` / `removeRoleFromUser` documents select the whole `UserData` fragment, whose `settings` field Platform Support may not read: the action succeeds and the answer carries an authorization error BELOW the gate, which `classify` reports as `failed` (A23 hit it). Use `minimalCall` in `a23.ts` (a raw `{ id }` mutation re-thrown in the SDK error shape). 2026-10-23.
+- **A negative whose call SUCCEEDS without effect is judged on the state.** Content Full Access sending `APPROVE` passes the resolver and the lifecycle only warns, so `A23.eventOnApplication` reads the application back and re-throws "no state change" as a `FORBIDDEN_POLICY` at the gate path; an APPROVE that did take effect stays `ok` and fails the negative. 2026-10-23.
+
 ## Environment / gotchas
 
 - **Irreversible platform mutations need an owned, just-verified fixture.** `adminForumRemoveDiscussionCategory` succeeds for any `PLATFORM_FORUM_MANAGE` holder (GA, GLOBAL_SUPPORT, PLATFORM_SUPPORT since 027) on an empty category, and there is no add-category API. Until 2026-09-29, `platform-discussions.it-spec.ts`'s `beforeAll` deleted **every** platform discussion; it now deletes only the titles that file creates. Keep every remove call inside that file, and read the fixture back immediately before the call. 2026-09-29.
@@ -119,6 +144,15 @@ place; cite this file instead of rediscovering a gap.
 - **`@Min/@Max` on a GraphQL input are not necessarily enforced.** The server's global `ValidationPipe` validates only the DTO classes listed in `src/core/validation/handlers/base/base.handler.ts`. Before planning a BVA case on an input, check the class is on that list; otherwise the decorators are dead code. 2026-09-28.
 - **027 (server#6322, merged 2026-09-28) moved forum gates off `PLATFORM_ADMIN`.** Admin-only create, update/delete of a discussion, and category retirement now check `PLATFORM_FORUM_MANAGE`. GLOBAL_LICENSE_ADMIN lost them. Denial messages name `'platform-forum-manage'`. Existing discussions need `authorizationPolicyResetOnPlatform` before the new privilege reaches them. 2026-09-28.
 
+- **Since 090 (server#6708, live 2026-10-23), the harness admin passes organisation Community-tab gates on the Support path.**
+  - `TestUser.GLOBAL_ADMIN` holds Platform Support (`HARNESS_ADMIN_ROLES`). On an organisation it does **not** administer, its promote/demote/remove/approve/reject/revoke calls now **succeed directly** and write `organization_administration` audit rows attributed to `admin@alkem.io`. Before 090 they were refused and the lib fell back to acting as an org admin (`baseFunctions.ts › assignRoleToUser` / `removeRoleFromUser`).
+  - Direct add (ASSOCIATE, or any role for a non-associate) is still refused, now with `roleset-entry-role-assign`, which `ENTRY_ASSIGN_GAP` still catches.
+  - If GA targets **itself** on such an org, the server answers `PLATFORM_SUPPORT_SELF_TARGET`, which no fallback regex matches, so the fixture fails.
+  - Never use GA as "the Support actor": use `TestUser.GLOBAL_SUPPORT_ADMIN` (Support only) or a disposable user granted `PlatformSupport`.
+  - Organisations created by GA make GA ASSOCIATE + ADMIN, so the entity-admin path wins and nothing changes there.
+- **An organisation's creator gets ASSOCIATE + ADMIN, never OWNER** (server `organization.service.ts › createOrganization`). A fresh organisation therefore has **zero** owners; the min-1-owner rule only applies once an Owner exists. 2026-10-23.
+- **A lifecycle event that is valid by name but fails its guard is a silent success.** `lifecycle.service.ts` only warns when the state does not change, and returns the entity. An event not valid in the current state throws `InvalidStateTransitionException` ("Not in valid set of next events"). Example: Content Full Access sending `APPROVE` on an organisation application. It passes the resolver's UPDATE gate, fails the `hasGrantPrivilege` guard, and comes back without an error, still `new`. Oracle = state + membership, never "an error was returned". 2026-10-23, server `5a61e53b1`.
+- **The local `dev-orchestration` clone can lag `origin/main`**: on 2026-10-23 it showed no `MCP_ENABLED` for the test overlay, while `origin/main` (18dad22) sets `MCP_ENABLED: "true"` there. Read env config with `git show origin/main:<path>`.
 - `test.skip` left in a spec sometimes encodes a _known, tracked_ bug rather than flakiness — read the comment above it before assuming it's safe to leave skipped once the referenced issue ships. `convert-L1-to-L0-basic.it-spec.ts` had exactly this pattern for client-web#9528.
 - Sibling repo clones under the workspace root can be on an unrelated branch (observed: `server/` clone on `fix/move-space-recompute-platform-roles-access`, not `develop`) — always check `git log --oneline --all | grep <issue#>` rather than assuming the checked-out branch is current; the target commit is usually still reachable via `git log --all`. Reconfirmed 2026-09-28 (same branch); reading `git show origin/develop:<path>` in the clone is the cheap workaround.
 

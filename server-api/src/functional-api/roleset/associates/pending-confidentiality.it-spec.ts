@@ -214,31 +214,39 @@ describe('Pending-list confidentiality — organizations (US7-AS2, contract §6)
     expect(asApplicant?.data).toBeUndefined();
   });
 
-  test('Platform Support is refused every pending list of an organisation (Slice B: it may neither invite nor decide)', async () => {
-    // workspace#027 Slice B: the invitation lists follow ROLESET_ENTRY_ROLE_INVITE,
-    // which Platform Support no longer holds on organisation role sets (the
-    // legacy global-support cascade is gone), and the applications follow the
-    // deciders' standing it never had. Read one field per query — the fields
-    // are non-null, so a combined read would null all three on the refusal.
+  test('Platform Support reads every pending list of an organisation (090 FR-011)', async () => {
+    // workspace#090 (server#6708): Platform Support reads what the Community
+    // tab shows an organisation admin, through the stored
+    // PLATFORM_SUPPORT_ORG_MEMBERSHIP / ROLESET_ENTRY_ROLE_INVITE rules (the
+    // fixture organisation is created after the deploy, so it carries them).
+    // Through Slice B it was refused all three. Read one field per query: the
+    // fields are non-null and gated independently.
     const roleSetId = orgScenario.organization.roleSetId;
     const invitations = await getRoleSetPendingInvitations(
       roleSetId,
       TestUser.GLOBAL_SUPPORT_ADMIN
     );
-    expect(invitations?.error?.errors?.[0]?.message).toMatch(/Authorization: unable to grant/);
-    expect(invitations?.data).toBeUndefined();
+    expect(invitations?.error).toBeUndefined();
+    expect(
+      (invitations?.data?.lookup?.roleSet?.invitations ?? []).map(i => i.id)
+    ).toContain(orgInvitationId);
     const platformInvitations = await getRoleSetPendingPlatformInvitations(
       roleSetId,
       TestUser.GLOBAL_SUPPORT_ADMIN
     );
-    expect(platformInvitations?.error?.errors?.[0]?.message).toMatch(/Authorization: unable to grant/);
-    expect(platformInvitations?.data).toBeUndefined();
+    // The fixture seeds no email invitation, so an empty list is the answer.
+    expect(platformInvitations?.error).toBeUndefined();
+    expect(
+      platformInvitations?.data?.lookup?.roleSet?.platformInvitations
+    ).toEqual(expect.any(Array));
     const applications = await getRoleSetPendingApplications(
       roleSetId,
       TestUser.GLOBAL_SUPPORT_ADMIN
     );
-    expect(applications?.error?.errors?.[0]?.message).toMatch(/Authorization: unable to grant/);
-    expect(applications?.data).toBeUndefined();
+    expect(applications?.error).toBeUndefined();
+    expect(
+      (applications?.data?.lookup?.roleSet?.applications ?? []).map(a => a.id)
+    ).toContain(orgApplicationId);
   });
 });
 describe('Pending-list confidentiality — a PUBLIC Space (US7-AS3, deliberate R3 change)', () => {

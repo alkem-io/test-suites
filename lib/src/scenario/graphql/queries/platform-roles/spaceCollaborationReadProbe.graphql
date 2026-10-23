@@ -4,6 +4,12 @@ query spaceCollaborationReadProbe($spaceId: UUID!) {
       id
       collaboration {
         id
+        calloutsSet {
+          id
+          callouts {
+            id
+          }
+        }
       }
     }
   }

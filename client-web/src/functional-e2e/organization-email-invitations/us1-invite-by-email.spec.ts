@@ -579,7 +579,7 @@ baseTest.describe(
     const forbidden = /FORBIDDEN_POLICY|unable to grant/i;
 
     baseTest(
-      'a plain associate, a registered non-admin and platform support are refused the invite; an OWNER can do all four (workspace#027 Slice B)',
+      'a plain associate and a registered non-admin are refused the invite; an OWNER and platform support can invite, list, revoke and resend (workspace#090 re-allowed Support)',
       async () => {
         const seededEmail = address('as8-seed');
         const seeded = await inviteRaw(org.roleSetId, admin.token, {
@@ -660,18 +660,26 @@ baseTest.describe(
           (await deleteEmailInvitationRaw(ownerRowId, owner.token)).errors
         ).toEqual([]);
 
-        // workspace#027 Slice B: Platform Support holds no
-        // ROLESET_ENTRY_ROLE_INVITE on organisation role sets any more — the
-        // legacy global-support cascade is gone and organisation membership is
-        // its own admins' alone. The email invite is refused at the gate and
-        // leaves no row behind.
+        // workspace#090 (server#6708): Platform Support may invite, list and
+        // revoke an organisation's email invitations again, by consent only
+        // (Slice B had refused it at the gate). It holds the Community-tab
+        // privilege through the stored rules of the organisation's role set.
         const supportEmail = address('as8-support');
         const supportInvite = await inviteRaw(org.roleSetId, supportToken, {
           emails: [supportEmail],
           roles: [],
         });
-        expect(supportInvite.errors.length, 'support invite').toBeGreaterThan(0);
-        expect(supportInvite.raw).toMatch(/roleset-entry-role-invite/);
+        expect(supportInvite.errors).toEqual([]);
+        const supportRowId =
+          supportInvite.data!.inviteForEntryRoleOnRoleSet[0]!.platformInvitation!
+            .id;
+        // The organisation admin's own list shows the row Support created.
+        expect(await openEmailAddresses(org.roleSetId, admin.token)).toContain(
+          supportEmail
+        );
+        expect(
+          (await deleteEmailInvitationRaw(supportRowId, supportToken)).errors
+        ).toEqual([]);
         expect(
           await openEmailAddresses(org.roleSetId, admin.token)
         ).not.toContain(supportEmail);

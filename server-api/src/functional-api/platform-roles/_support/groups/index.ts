@@ -20,6 +20,7 @@ import { A19_GROUP } from './a19';
 import { A20_GROUP, A20B_GROUP } from './a20';
 import { A21_GROUP } from './a21';
 import { A22_GROUP } from './a22';
+import { A23_GROUP } from './a23';
 
 /**
  * One module per capability group. A group owns its fixtures, its teardown and
@@ -49,6 +50,7 @@ export const GROUPS = [
   A20B_GROUP,
   A21_GROUP,
   A22_GROUP,
+  A23_GROUP,
 ] as unknown as readonly GroupModule[];
 
 /**
@@ -72,6 +74,7 @@ export const BUILT_IN_SEQUENCE: ReadonlySet<string> = new Set([
   'A20',
   'A20b',
   'A22',
+  'A23',
 ]);
 
 export const invocationFor = (
