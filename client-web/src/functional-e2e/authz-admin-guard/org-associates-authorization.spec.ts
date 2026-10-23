@@ -75,10 +75,12 @@ globalSupportTest.afterAll(async () => {
   // hook if it cannot be revoked (a leaked invitation is the next run's noise).
   const token = await adminToken();
   const open = await listOpenEmailInvitations(baseScenario.organization.roleSetId, token);
+  const failures: string[] = [];
+  // A failed listing must not read as "nothing to revoke".
+  if (open.errors.length > 0) failures.push(`list open invitations: ${open.raw}`);
   const leftovers = (open.data?.lookup.roleSet.platformInvitations ?? []).filter(
     invitation => invitation.email === supportInviteAddress
   );
-  const failures: string[] = [];
   for (const invitation of leftovers) {
     const revoked = await deleteEmailInvitationRaw(invitation.id, token);
     if (revoked.errors.length > 0) failures.push(`${invitation.id}: ${revoked.raw}`);
