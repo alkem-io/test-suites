@@ -14,14 +14,26 @@ import { undoOnFailure } from '../undo-on-failure';
  * Full Access reaches it as a declared extra.
  *
  * `createPlatformRolesAccess` is server-internal; what a caller can observe is
- * a READ of a PRIVATE space it is no member of. `lookup.space` alone would not
- * tell: it opens on READ_ABOUT, which a private space still grants to every
- * registered user. The collaboration below it needs READ.
+ * a READ of a PRIVATE space's CONTENT as a non-member. Two shallower probes
+ * do not tell: `lookup.space` opens on READ_ABOUT, which a private space
+ * still grants to every registered user, and `space.collaboration { id }` is
+ * gated on READ of the SPACE itself — which Platform Resource Admin holds
+ * NON-cascading on every space (the mover-only rule
+ * `spacePlatformResourceAdminRead`, QA ruling (b′)), so the mover can resolve
+ * the space it is about to move without seeing inside it. The callouts under
+ * `collaboration.calloutsSet` are gated on READ of the callouts set, which
+ * only a CASCADING space READ reaches — that is the content oracle.
  */
-type A16 = { host: DisposableUser; spaceId: string; collaborationId: string };
+type A16 = {
+  host: DisposableUser;
+  spaceId: string;
+  collaborationId: string;
+  calloutIds: string[];
+};
 
-const COLLABORATION =
-  'query($id: UUID!) { lookup { space(ID: $id) { collaboration { id } } } }';
+const CONTENT = `query($id: UUID!) { lookup { space(ID: $id) {
+  collaboration { id calloutsSet { callouts { id } } }
+} } }`;
 
 export const A16_GROUP: GroupModule<A16> = {
   group: 'A16',
@@ -35,23 +47,60 @@ export const A16_GROUP: GroupModule<A16> = {
         allowPlatformSupportAsAdmin: false,
       });
       const { lookup } = await rawRead<{
-        lookup: { space: { collaboration: { id: string } } };
-      }>(host.token, COLLABORATION, { id: spaceId });
-      return { host, spaceId, collaborationId: lookup.space.collaboration.id };
+        lookup: {
+          space: {
+            collaboration: {
+              id: string;
+              calloutsSet: { callouts: { id: string }[] };
+            };
+          };
+        };
+      }>(host.token, CONTENT, { id: spaceId });
+      const calloutIds = lookup.space.collaboration.calloutsSet.callouts
+        .map(c => c.id)
+        .sort();
+      if (calloutIds.length === 0) {
+        throw new Error(
+          `A16 fixture: space ${spaceId} has no callouts — the content oracle would be vacuous`
+        );
+      }
+      return {
+        host,
+        spaceId,
+        collaborationId: lookup.space.collaboration.id,
+        calloutIds,
+      };
     }),
 
   teardown: (ctx, _sdk, fx) => removeDisposableUser(ctx, fx.host),
 
   invocations: {
     'A16.createPlatformRolesAccess': {
-      gate: ['lookup', 'space', 'collaboration'],
+      // The refusal lands on `callouts` (READ on the callouts set); anything
+      // at or above it on this path counts as the gate.
+      gate: ['lookup', 'space', 'collaboration', 'calloutsSet', 'callouts'],
       call: (sdk, headers, fx) =>
         sdk.spaceCollaborationReadProbe({ spaceId: fx.spaceId }, headers),
-      verify: async ({ fx, data }) =>
-        expect(
-          (data as { lookup: { space: { collaboration: { id: string } } } })
-            .lookup.space.collaboration.id
-        ).toBe(fx.collaborationId),
+      verify: async ({ fx, data }) => {
+        const collaboration = (
+          data as {
+            lookup: {
+              space: {
+                collaboration: {
+                  id: string;
+                  calloutsSet: { callouts: { id: string }[] };
+                };
+              };
+            };
+          }
+        ).lookup.space.collaboration;
+        expect(collaboration.id).toBe(fx.collaborationId);
+        // The content itself, not just the container: the same callouts the
+        // host sees.
+        expect(collaboration.calloutsSet.callouts.map(c => c.id).sort()).toEqual(
+          fx.calloutIds
+        );
+      },
     },
   },
 };

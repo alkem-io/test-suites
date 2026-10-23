@@ -1834,12 +1834,12 @@ export const CAPABILITIES: readonly Capability[] = [
     acceptedExtra: ['PLATFORM_CONTENT_FULL_ACCESS'],
     requirement: {
       basis: 'conflict',
-      note: 'the server DELIBERATELY grants Platform Resource Admin READ on every space (space.service.platform.roles.access.ts); the requirements allow only Spaces Reader plus the Content Full Access exception. The negative for PLATFORM_RESOURCE_ADMIN is RED until product decides',
+      note: 'Platform Resource Admin holds a NON-cascading READ on every space (the mover-only rule `spacePlatformResourceAdminRead`, QA ruling (b′): it resolves the space it moves, never its content). The oracle therefore reads the callouts under the collaboration, which only a cascading READ reaches - `space.collaboration { id }` alone is gated on the space READ and would wrongly show the mover as allowed (that was the standing red until 2026-10-23)',
     },
     verifies: {
       kind: 'returns-data',
       oracle:
-        'reads the collaboration of a PRIVATE space it is not a member of',
+        'reads the callouts of a PRIVATE space it is not a member of (the same set the host sees)',
     },
     positive: { status: 'automated' },
     negative: { status: 'automated' },

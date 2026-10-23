@@ -64,7 +64,7 @@ Checked 2026-09-18 against `spec.md` (§Target global role model, §Action → o
 | ⚠️ `A9.convertVirtualContributorToUseKnowledgeBase` | resource admin | spec A9 is "move resources"; converting a VC body of knowledge is not a move and the contract A9 list omits it |
 | ⚠️ `A13.createLicensePlan` | settings admin | the spec gives Settings Admin the DEFINITION of license plans; the server census (a.row.surfaces.ts, A13) lists update / delete and the three rule mutations but omits this one - found in the manual pass of 2026-09-21. Gate: CREATE on the licensing framework. |
 | ⚠️ `A13.updateLicensePlan` | settings admin | PRODUCT BUG: LicensePlanService.update() saves the plan unchanged - the mutation reports success and nothing is applied (also on develop). The positive is RED until fixed |
-| ❌ `A16.createPlatformRolesAccess` | spaces reader, content full access | the server DELIBERATELY grants Platform Resource Admin READ on every space (space.service.platform.roles.access.ts); the requirements allow only Spaces Reader plus the Content Full Access exception. The negative for PLATFORM_RESOURCE_ADMIN is RED until product decides |
+| ❌ `A16.createPlatformRolesAccess` | spaces reader, content full access | Platform Resource Admin holds a NON-cascading READ on every space (the mover-only rule `spacePlatformResourceAdminRead`, QA ruling (b′): it resolves the space it moves, never its content). The oracle therefore reads the callouts under the collaboration, which only a cascading READ reaches - `space.collaboration { id }` alone is gated on the space READ and would wrongly show the mover as allowed (that was the standing red until 2026-10-23) |
 | ⚠️ `A20.actorsWithCredential` | roles admin, audit reader | spec A20 names four holder-list fields; this credential query is not among them |
 | ⚠️ `A20.usersWithAuthorizationCredential` | roles admin, audit reader | spec A20 names four holder-list fields; this credential query is not among them |
 | ⚠️ `A20b.actorsWithCredential` | users admin, roles admin, audit reader | spec A20b names four holder-list fields; this credential query is not among them |
@@ -295,7 +295,7 @@ Spec: A16 · FR-002 · FR-010
 
 | Capability | Allowed | Positive — must observe | Positive | Negative |
 |---|---|---|---|---|
-| `createPlatformRolesAccess` ❌ | spaces reader, *content full access* | **returns-data** — reads the collaboration of a PRIVATE space it is not a member of | ✅ automated | ✅ automated |
+| `createPlatformRolesAccess` ❌ | spaces reader, *content full access* | **returns-data** — reads the callouts of a PRIVATE space it is not a member of (the same set the host sees) | ✅ automated | ✅ automated |
 
 ### A17 — Rename an entity (nameID)
 
@@ -464,7 +464,7 @@ One section per role, in the order of `roles/*.it-spec.ts`. **Can** lists every 
 | `A8.deleteInnovationPack` | owner | **effect** — re-reading the deleted entity returns not-found |
 | `A8.deleteInnovationHub` | owner | **effect** — re-reading the deleted entity returns not-found |
 | `A8.updateCalloutPublishInfo` | owner | **effect** — publisher / published date changed on re-read |
-| `A16.createPlatformRolesAccess` | *accepted exception* | **returns-data** — reads the collaboration of a PRIVATE space it is not a member of |
+| `A16.createPlatformRolesAccess` | *accepted exception* | **returns-data** — reads the callouts of a PRIVATE space it is not a member of (the same set the host sees) |
 | `A23.eventOnApplication#reject` (REJECT an application to an organisation) | *accepted exception* | **effect** — the application state is rejected, read back |
 | `A23.deleteInvitation` (a pending user invitation of an organisation) | *accepted exception* | **effect** — the invitation no longer resolves (entity not found) |
 | `A23.deletePlatformInvitation` (an email invitation of an organisation) | *accepted exception* | **effect** — the email invitation no longer resolves (entity not found) |
@@ -815,7 +815,7 @@ One section per role, in the order of `roles/*.it-spec.ts`. **Can** lists every 
 
 | Capability | Reaches it as | A passing positive must observe |
 |---|---|---|
-| `A16.createPlatformRolesAccess` | owner | **returns-data** — reads the collaboration of a PRIVATE space it is not a member of |
+| `A16.createPlatformRolesAccess` | owner | **returns-data** — reads the callouts of a PRIVATE space it is not a member of (the same set the host sees) |
 
 **Cannot (126)** — by group:
 

@@ -103507,7 +103507,17 @@ export type SpaceCollaborationReadProbeQueryVariables = SchemaTypes.Exact<{
 }>;
 
 export type SpaceCollaborationReadProbeQuery = {
-  lookup: { space?: { id: string; collaboration: { id: string } } | undefined };
+  lookup: {
+    space?:
+      | {
+          id: string;
+          collaboration: {
+            id: string;
+            calloutsSet: { id: string; callouts: Array<{ id: string }> };
+          };
+        }
+      | undefined;
+  };
 };
 
 export type SpaceReadProbeQueryVariables = SchemaTypes.Exact<{
@@ -126451,6 +126461,12 @@ export const SpaceCollaborationReadProbeDocument = gql`
         id
         collaboration {
           id
+          calloutsSet {
+            id
+            callouts {
+              id
+            }
+          }
         }
       }
     }
