@@ -1169,6 +1169,7 @@ export enum AuthorizationPrivilege {
   PlatformRoleHoldersRead = "PLATFORM_ROLE_HOLDERS_READ",
   PlatformSettingsAdmin = "PLATFORM_SETTINGS_ADMIN",
   PlatformSupportListsRead = "PLATFORM_SUPPORT_LISTS_READ",
+  PlatformSupportOrgMembership = "PLATFORM_SUPPORT_ORG_MEMBERSHIP",
   PlatformSupportOrgResources = "PLATFORM_SUPPORT_ORG_RESOURCES",
   PlatformUsersAdmin = "PLATFORM_USERS_ADMIN",
   PublicShare = "PUBLIC_SHARE",
