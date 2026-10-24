@@ -52,6 +52,7 @@ import {
   meOrganizationPending,
 } from '../application/application.request.params';
 import { getOrganizationAssociateEligibility } from '@functional-api/contributor-management/organization/organization.request.params';
+import { rawRead } from '../../platform-roles/_support/raw-request';
 
 const message = 'Come associate with our organization';
 
@@ -781,25 +782,59 @@ describe('Organization associate invitations — the invitee responds (US2)', ()
     ]);
   });
 
-  test('US2-AS9 (Slice B): a platform Support offerer holds no standing on an organisation — the invitation is refused', async () => {
-    // Through Slice A the legacy global-support cascade gave Support
-    // ROLESET_ENTRY_ROLE_INVITE (and ASSIGN) on every organisation. Slice B
-    // removes that cascade and re-anchors nothing: organisation membership is
-    // the organisation admins' alone, so the offer never reaches the
-    // accept-time re-check this case used to exercise.
+  test('US2-AS9 (090): a Platform Support invitation offering Admin is created and listed with its offer', async () => {
+    // Through Slice B Platform Support held no standing on an organisation and
+    // the invitation was refused at the gate. workspace#090 (server#6708) gives
+    // it the Community-tab reach back, by consent only: it may INVITE (the
+    // invitee still has to accept) offering an extra role. Accept-time
+    // honouring, the audit rows and the self-target refusal are pinned in
+    // support-org-community-actions.it-spec.ts (A-01, A-09, A-10).
     const invitee = TestUserManager.users.subsubspaceAdmin.id;
-    const invite = await inviteForEntryRoleOnRoleSet(
-      roleSetId,
-      [invitee],
-      [],
-      message,
-      [RoleName.Admin],
-      TestUser.GLOBAL_SUPPORT_ADMIN
-    );
-    expect(String(invite?.error?.errors?.[0]?.message)).toMatch(
-      /roleset-entry-role-invite/
-    );
-    expect(invite?.data).toBeUndefined();
+    let invitationId: string | undefined;
+    let testError: unknown;
+    try {
+      const invite = await inviteForEntryRoleOnRoleSet(
+        roleSetId,
+        [invitee],
+        [],
+        message,
+        [RoleName.Admin],
+        TestUser.GLOBAL_SUPPORT_ADMIN
+      );
+      expect(invite?.error).toBeUndefined();
+      const result = getSingleInvitationResult(invite);
+      expect(result?.type).toEqual(
+        RoleSetInvitationResultType.InvitedToRoleSet
+      );
+      invitationId = result!.invitation!.id;
+      expect(result?.invitation?.extraRoles).toEqual([RoleName.Admin]);
+
+      // The pending list the Community tab reads carries the offer. The shared
+      // list document selects only id and state, so read the offer directly.
+      const pending = await rawRead<{
+        lookup: {
+          roleSet: { invitations: { id: string; extraRoles: string[] }[] };
+        };
+      }>(
+        TestUserManager.users.globalSupportAdmin.authToken,
+        'query($roleSetId: UUID!) { lookup { roleSet(ID: $roleSetId) { invitations { id extraRoles } } } }',
+        { roleSetId }
+      );
+      const listed = pending.lookup.roleSet.invitations.find(
+        i => i.id === invitationId
+      );
+      expect(listed).toBeDefined();
+      expect(listed!.extraRoles).toEqual([RoleName.Admin]);
+    } catch (error) {
+      testError = error;
+    }
+    await teardownOrFail(testError, [
+      [
+        'delete invitation',
+        async () =>
+          invitationId ? deleteInvitation(invitationId) : undefined,
+      ],
+    ]);
   });
   test("an associate-only persona cannot ACCEPT an invitation on someone else's behalf", async () => {
     const invite = await inviteForEntryRoleOnRoleSet(

@@ -276,6 +276,18 @@ export default defineConfig(
         tier: 'long',
       }),
       suite({
+        // workspace#090 (Platform Support on the organisation Community tab,
+        // server#6692): W-01 repairs an orphaned organisation end to end (a
+        // real sign-up and an accept), W-02/W-03 walk the community-only shell
+        // and the self-target toast. Needs one worker for the Kratos sign-up.
+        // Its API half runs with server-api's roleset project; its
+        // email-invitation audit reads (SQL) skip themselves where Postgres is
+        // not loopback.
+        name: 'Support org community admin',
+        testMatch: ['/support-org-community-admin/*.spec.ts'],
+        tier: 'long',
+      }),
+      suite({
         // workspace#083 (organization leaves a Space, server#6560): each file
         // seeds its own scenario (invite + accept) and retries navigation until
         // the settings guard sees freshly granted roles.
