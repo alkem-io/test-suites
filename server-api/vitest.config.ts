@@ -56,6 +56,11 @@ export default defineConfig({
       ]),
       project('callouts', ['src/functional-api/callout/**/*.it-spec.ts']),
       project('collabora', ['src/functional-api/collabora/**/*.it-spec.ts']),
+      // 003-unify-collab-yjs: the collaboration service at the wire level
+      // (memo + whiteboard rooms over /collab). Needs only the gateway.
+      project('collaboration', [
+        'src/functional-api/collaboration/**/*.it-spec.ts',
+      ]),
       project('communication', [
         'src/functional-api/communications/**/*.it-spec.ts',
       ]),
@@ -246,6 +251,12 @@ export default defineConfig({
           // `replaceCollaboraDocument` "could not be checked for active edits"
           // — environment, not product. Licence assignment is self-contained.
           'src/functional-api/collabora/**/*.it-spec.ts',
+          // 003-unify-collab-yjs: two raw WebSocket collaborators per room
+          // through the gateway (`/collab`), bearer-authenticated like every
+          // other call here; no browser. Each file seeds and deletes its own
+          // private Space; the two cold-rehydrate cases wait out the service's
+          // 30 s room idle timeout once each (~75 s per file).
+          'src/functional-api/collaboration/**/*.it-spec.ts',
         ],
         // 054-delete-own-account: these it-specs need loopback Redis/Postgres
         // and a matching local/CI `SESSION_SIGNING_KEY`
