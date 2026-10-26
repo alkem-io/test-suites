@@ -39,15 +39,16 @@ const classifyNonGraphqlError = (
 
 /**
  * Retry only ENV_FAILURE (connection-level) failures — never GraphQL errors,
- * which are legitimate API responses to assert on. These come from a ~5s
- * connection reset by a network element between the runner and the cluster when
- * a heavy request (e.g. subspace-tree creation) hasn't responded yet
- * (test-suites#563). A retry gives a fresh connection a chance to complete under
- * the cutoff. The durable fix is server-side latency (alkem-io/server#6258);
- * this is resilience until then. Caveat: for a mutation the server may have
- * committed before the reset, so a retry can hit a duplicate/conflict — for the
- * ephemeral, unique-named test data here that is harmless (it re-fails at worst,
- * never silently corrupts a real store).
+ * which are legitimate API responses to assert on. Until 2026-10-26 the
+ * dominant ENV_FAILURE was a `socket hang up` after exactly ~5 s, blamed on a
+ * network element between the runner and the cluster (test-suites#563); it was
+ * in fact the GraphQL client reusing an axios-tainted keep-alive socket from
+ * Node's global agent pool — see `graphqlClient.ts`, which now keeps the client
+ * on its own agents. The retry stays as resilience against genuine resets.
+ * Caveat: for a mutation the server may have committed before the reset, so a
+ * retry can hit a duplicate/conflict — for the ephemeral, unique-named test
+ * data here that is harmless (it re-fails at worst, never silently corrupts a
+ * real store); setup helpers such as `createSubspaceOrFail` recover from it.
  */
 const ENV_FAILURE_MAX_ATTEMPTS = 3;
 const ENV_FAILURE_RETRY_BASE_MS = 1000;
@@ -89,7 +90,7 @@ export const graphqlErrorWrapper = async <TData>(
         if (code === "ENV_FAILURE" && attempt < ENV_FAILURE_MAX_ATTEMPTS) {
           const delay = ENV_FAILURE_RETRY_BASE_MS * attempt;
           LogManager.getLogger().warn(
-            `[ENV_FAILURE] request failed after ${elapsedMs}ms (attempt ${attempt}/${ENV_FAILURE_MAX_ATTEMPTS}); retrying in ${delay}ms: '${fn}'`,
+            `[ENV_FAILURE] request failed after ${elapsedMs}ms (attempt ${attempt}/${ENV_FAILURE_MAX_ATTEMPTS}) — ${detail.split("\n")[0].slice(0, 300)}; retrying in ${delay}ms: '${fn}'`,
           );
           await sleep(delay);
           continue;

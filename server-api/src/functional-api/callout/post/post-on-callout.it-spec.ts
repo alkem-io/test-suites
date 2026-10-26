@@ -668,7 +668,7 @@ describe('Posts - Messages', () => {
       );
       // Assert
       expect(messageRes.error?.errors[0].message).toContain(
-        `Authorization: unable to grant 'create-message' privilege: room send message: ${roomIdSpace}`
+        `Authorization: unable to grant 'create-message' privilege: room message operation: ${roomIdSpace}`
       );
     });
 

@@ -282,10 +282,10 @@ describe('Callout - Close State - User Privileges Posts', () => {
       );
 
       test.each`
-        userRole                     | message                                                                            | entity
-        ${TestUser.NON_SPACE_MEMBER} | ${"Authorization: unable to grant 'create-message' privilege: room send message:"} | ${'space'}
-        ${TestUser.NON_SPACE_MEMBER} | ${"Authorization: unable to grant 'create-message' privilege: room send message:"} | ${'subspace'}
-        ${TestUser.NON_SPACE_MEMBER} | ${"Authorization: unable to grant 'create-message' privilege: room send message:"} | ${'subsubspace'}
+        userRole                     | message                                                                                 | entity
+        ${TestUser.NON_SPACE_MEMBER} | ${"Authorization: unable to grant 'create-message' privilege: room message operation:"} | ${'space'}
+        ${TestUser.NON_SPACE_MEMBER} | ${"Authorization: unable to grant 'create-message' privilege: room message operation:"} | ${'subspace'}
+        ${TestUser.NON_SPACE_MEMBER} | ${"Authorization: unable to grant 'create-message' privilege: room message operation:"} | ${'subsubspace'}
       `(
         'User: "$userRole" cannot send message to closed "$entity" callout post',
         async ({ userRole, message, entity }) => {
