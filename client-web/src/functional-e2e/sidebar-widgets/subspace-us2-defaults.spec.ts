@@ -103,25 +103,30 @@ test.describe('086 US2 — untouched subspaces look as before', () => {
       nested: true,
     });
 
-    // Collapsed rail: icon-only Add Post plus the four Quick Actions, still no search.
+    // Collapsed rail: icon-only Add Post plus the four Quick Actions, still no search. The
+    // collapsed state persists in localStorage (`menuState`) across the shared admin context,
+    // so a red assertion in here must not leave the rail collapsed for the next case.
     const w = subspaceWidgets(sidebar);
     await w.collapse.click();
-    await expect(w.expand).toBeVisible();
-    await expect(w.createPost).toBeVisible();
-    for (const name of QUICK_ACTIONS) {
-      await expect(
-        sidebar.getByRole('button', { name, exact: true })
-      ).toBeVisible();
+    try {
+      await expect(w.expand).toBeVisible();
+      await expect(w.createPost).toBeVisible();
+      for (const name of QUICK_ACTIONS) {
+        await expect(
+          sidebar.getByRole('button', { name, exact: true })
+        ).toBeVisible();
+      }
+      await expect(sidebar.getByRole('searchbox')).toHaveCount(0);
+      // The rail in list order, ending with the nested L2's tile (US2-AS1 "same order").
+      expect(await sidebarEntries(sidebar)).toEqual([
+        'BUTTON:Expand',
+        'BUTTON:Add Post',
+        ...QUICK_ACTIONS.map(name => `BUTTON:${name}`),
+        `A:Alpha-2 ${f.runId}`,
+      ]);
+    } finally {
+      if (await w.expand.isVisible()) await w.expand.click();
     }
-    await expect(sidebar.getByRole('searchbox')).toHaveCount(0);
-    // The rail in list order, ending with the nested L2's tile (US2-AS1 "same order").
-    expect(await sidebarEntries(sidebar)).toEqual([
-      'BUTTON:Expand',
-      'BUTTON:Add Post',
-      ...QUICK_ACTIONS.map(name => `BUTTON:${name}`),
-      `A:Alpha-2 ${f.runId}`,
-    ]);
-    await w.expand.click();
     await expect(w.collapse).toBeVisible();
 
     const drawer = await openPhoneDrawer(admin, f.alpha.url);
@@ -170,12 +175,11 @@ test.describe('086 US2 — untouched subspaces look as before', () => {
   }) => {
     const f = fixture!;
     const { context, page } = await openAnonymous(browser);
-    const operations: string[] = [];
+    // Raw bodies, not operation names: the field name is matched wherever it appears.
+    const graphqlBodies: string[] = [];
     page.on('request', request => {
       if (request.url().includes('graphql')) {
-        operations.push(
-          /"operationName":"([^"]+)"/.exec(request.postData() ?? '')?.[1] ?? '?'
-        );
+        graphqlBodies.push(request.postData() ?? '');
       }
     });
     try {
@@ -186,9 +190,14 @@ test.describe('086 US2 — untouched subspaces look as before', () => {
         nested: true,
       });
       await expect(page.getByRole('alert')).toHaveCount(0);
+      // Control: the listener saw the page's GraphQL traffic, so the absence below is not vacuous.
+      expect(
+        graphqlBodies.length,
+        'control: GraphQL requests must be captured'
+      ).toBeGreaterThan(0);
       // FR-021: a viewer the gate hides Recent Activity from issues no activity-log request.
       expect(
-        operations.filter(o => /activityLogOnCollaboration/i.test(o))
+        graphqlBodies.filter(b => /activityLogOnCollaboration/i.test(b))
       ).toEqual([]);
     } finally {
       await context.close();

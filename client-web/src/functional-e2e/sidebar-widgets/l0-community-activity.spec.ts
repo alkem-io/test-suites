@@ -84,12 +84,11 @@ test.describe('086 US5 — Community and Recent Activity on an L0 tab', () => {
   }) => {
     const f = fixture!;
     const { context, page } = await openAnonymous(browser);
-    const operations: string[] = [];
+    // Raw bodies, not operation names: the field name is matched wherever it appears.
+    const graphqlBodies: string[] = [];
     page.on('request', request => {
       if (request.url().includes('graphql')) {
-        operations.push(
-          /"operationName":"([^"]+)"/.exec(request.postData() ?? '')?.[1] ?? '?'
-        );
+        graphqlBodies.push(request.postData() ?? '');
       }
     });
     try {
@@ -102,8 +101,13 @@ test.describe('086 US5 — Community and Recent Activity on an L0 tab', () => {
         sidebar.getByRole('button', { name: 'Recent Activity', exact: true })
       ).toHaveCount(0);
       await expect(page.getByRole('alert')).toHaveCount(0);
+      // Control: the listener saw the page's GraphQL traffic, so the absence below is not vacuous.
       expect(
-        operations.filter(o => /activityLogOnCollaboration/i.test(o))
+        graphqlBodies.length,
+        'control: GraphQL requests must be captured'
+      ).toBeGreaterThan(0);
+      expect(
+        graphqlBodies.filter(b => /activityLogOnCollaboration/i.test(b))
       ).toEqual([]);
     } finally {
       await context.close();

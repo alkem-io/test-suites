@@ -193,24 +193,29 @@ test.describe('086 US1 — admin customizes the subspace sidebar once for every 
       expect(entries[1]).toBe('INPUT:Search posts');
       expect(entries.join('|')).not.toContain('Post Index');
     }
-    // Collapsed rail: Post Index gone; Search is expanded-only by design.
+    // Collapsed rail: Post Index gone; Search is expanded-only by design. The collapsed state
+    // persists in localStorage (`menuState`) across the shared admin context, so a red assertion
+    // in here must not leave the rail collapsed for the next case.
     const w = subspaceWidgets(sidebar);
     await w.collapse.click();
-    await expect(w.expand).toBeVisible();
-    const rail = (await sidebarEntries(sidebar)).join('|');
-    expect(rail).not.toContain('Post Index');
-    expect(rail).not.toContain('Search');
-    // ...and it shows the configured compact widgets, in list order (FR-020, D-13): an empty
-    // or hard-coded rail would pass the two absences above.
-    expect(await sidebarEntries(sidebar)).toEqual([
-      'BUTTON:Expand',
-      'BUTTON:Add Post',
-      'BUTTON:Community',
-      'BUTTON:Events',
-      'BUTTON:Recent Activity',
-      `A:Alpha-2 ${f.runId}`,
-    ]);
-    await w.expand.click();
+    try {
+      await expect(w.expand).toBeVisible();
+      const rail = (await sidebarEntries(sidebar)).join('|');
+      expect(rail).not.toContain('Post Index');
+      expect(rail).not.toContain('Search');
+      // ...and it shows the configured compact widgets, in list order (FR-020, D-13): an empty
+      // or hard-coded rail would pass the two absences above.
+      expect(await sidebarEntries(sidebar)).toEqual([
+        'BUTTON:Expand',
+        'BUTTON:Add Post',
+        'BUTTON:Community',
+        'BUTTON:Events',
+        'BUTTON:Recent Activity',
+        `A:Alpha-2 ${f.runId}`,
+      ]);
+    } finally {
+      if (await w.expand.isVisible()) await w.expand.click();
+    }
     await expect(w.collapse).toBeVisible();
     // Phone drawer, still without a document load.
     await admin.setViewportSize(PHONE_VIEWPORT);
