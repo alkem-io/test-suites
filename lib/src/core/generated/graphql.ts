@@ -101766,6 +101766,7 @@ export type MyEntitlementsQueryQuery = {
                   }>;
                 };
                 spaces: Array<{
+                  id: string;
                   license: {
                     type?: SchemaTypes.LicenseType | undefined;
                     authorization?:
@@ -126029,6 +126030,7 @@ export const OrganizationEntitlementsQueryDocument = gql`
           type
         }
         spaces {
+          id
           license {
             authorization {
               myPrivileges

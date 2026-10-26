@@ -25,6 +25,7 @@ query MyEntitlementsQuery {
           type
         }
         spaces {
+          id
           license {
             authorization {
               myPrivileges
