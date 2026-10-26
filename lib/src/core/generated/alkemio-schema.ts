@@ -93557,6 +93557,7 @@ export type MyEntitlementsQueryQuery = {
                   }>;
                 };
                 spaces: Array<{
+                  id: string;
                   license: {
                     type?: LicenseType | undefined;
                     authorization?:

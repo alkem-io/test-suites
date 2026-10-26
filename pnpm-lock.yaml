@@ -114,6 +114,9 @@ importers:
       cookie-signature:
         specifier: ^1.2.2
         version: 1.2.2
+      cross-fetch:
+        specifier: 3.2.0
+        version: 3.2.0
       dotenv:
         specifier: ^16.0.1
         version: 16.6.1
