@@ -21,6 +21,7 @@ import {
   openSubspace,
   QUICK_ACTIONS,
   seedSubspaceFixture,
+  sidebarEntries,
   subspaceSidebar,
   subspaceWidgets,
   teardownSubspaceFixture,
@@ -47,6 +48,10 @@ async function expectTodaysSidebar(
 ) {
   const w = subspaceWidgets(root);
   await expect(w.about).toBeVisible();
+  // Position 1, intent: the info block inside the parent-space stack, whose cards are links
+  // named "Go to <parent>" (one per ancestor; the first places the widget).
+  const intent = root.getByRole('link', { name: /^Go to / }).first();
+  await expectInDocumentOrder([intent, w.about]);
   if (opts.addPost) {
     await expectInDocumentOrder([w.about, w.createPost, w.quickActions]);
   } else {
@@ -109,6 +114,13 @@ test.describe('086 US2 — untouched subspaces look as before', () => {
       ).toBeVisible();
     }
     await expect(sidebar.getByRole('searchbox')).toHaveCount(0);
+    // The rail in list order, ending with the nested L2's tile (US2-AS1 "same order").
+    expect(await sidebarEntries(sidebar)).toEqual([
+      'BUTTON:Expand',
+      'BUTTON:Add Post',
+      ...QUICK_ACTIONS.map(name => `BUTTON:${name}`),
+      `A:Alpha-2 ${f.runId}`,
+    ]);
     await w.expand.click();
     await expect(w.collapse).toBeVisible();
 
