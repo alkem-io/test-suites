@@ -415,6 +415,17 @@ test.describe('086 US1 — admin customizes the subspace sidebar once for every 
       SidebarWidget.About,
     ]);
 
+    // US4-AS10, same page, no reload: Customize Sidebar pre-selects the list now at position 1.
+    // If the reorder response did not refresh the cached lists, it would offer the moved
+    // phase's old tab-3 list (Intention & Leads, Create Subspace, Add Post, Search).
+    const reopened = await openCustomizeSidebar(admin);
+    expect(await selectedWidgets(reopened)).toEqual([
+      'Intention & Leads',
+      'About this Space',
+    ]);
+    await admin.keyboard.press('Escape');
+    await expect(reopened).toBeHidden();
+
     await openSubspace(admin, f.alpha.url);
     const entries = (await sidebarEntries(subspaceSidebar(admin))).join('|');
     expect(entries).toContain('BUTTON:About this Subspace');
