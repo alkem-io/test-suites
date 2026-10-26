@@ -249,6 +249,33 @@ place; cite this file instead of rediscovering a gap.
 
 ---
 
+### Subspace page, Settings › Layout and dnd-kit (established 2026-10-26, 086 design, client-web `f028c891`)
+
+- **The test env has no Elasticsearch.** dev-orchestration `origin/main` @ `18dad22`, `01-alkemio-platform/overlays/test/alkemio/config/01-elastic-configMap-overlay.yml`, sets `ELASTICSEARCH_URL: ""`. This was read from config, not run-verified. Any search assertion, UI or API, cannot pass nightly there. Tag it `@local-stack` and run it on a compose stack with ES.
+- **Subspace page locators:**
+  - Sidebar: `complementary` "SubSpace sidebar".
+  - Quick actions: `navigation` "Quick Actions", with buttons Community / Events / Recent Activity / Post Index. The collapsed rail has icon buttons with the same names.
+  - Mobile: trigger `button` "Open menu"; drawer `dialog` "Menu"; admins also get `link` "Edit innovation flow".
+  - Phase strip: `navigation` "Innovation flow phases", buttons "Switch to phase <name>"; the active one has `aria-current="page"`.
+  - "Events" is a quick-action **button** here; on the L0 sidebar it is a heading.
+- **The subspace sidebar's collapsed state persists in `localStorage` key `menuState`.** It carries over between tests that share a browser context, so restore "Expand" in a `finally`.
+- **CRD links are plain `<a href>`** (`SpaceSettingsHeader`, `BreadcrumbsTrail`), so clicking one reloads the document. To prove "updated without a reload", do `history.pushState` + a `popstate` event, and check that a `window` marker survives.
+- **dnd-kit keyboard drag must wait for the live region.**
+  - Read `[id^="DndLiveRegion"]`. Wait for "picked up". Then press the arrow until the text ends with `droppable area <id>.`, re-pressing as needed, because a key pressed before dnd-kit measures is a no-op. Drop, then wait for "dropped".
+  - A blind `Space`/`Arrow`/`Space` poll is flaky: 040 `us2-admin-config.spec.ts › US2-AS3` has been red nightly since 2026-10-20.
+  - Sortable ids: Layout dialog rows use the widget id (`intent`); Layout columns use `col:<stateId>`. Precedent: client-web `e2e/specs/subspaceSidebarCustomize.e2e.spec.ts › keyboardDrag`.
+  - **Implemented** as `client-web/src/functional-e2e/sidebar-widgets/subspace-sidebar.helpers.ts › keyboardDrag` (086 UI PR): each press waits for the live region to acknowledge the step and then for the sortable's slide transition to end (`document.getAnimations()` with no running finite animation) — conditions, no `waitForTimeout`. Reused by 040 `us2-admin-config.spec.ts › US2-AS3`.
+  - **The phase columns on Settings › Layout wrap into a grid** (three per row at 1280 px, four at 1920 px). dnd-kit's rect sorting computes a keyboard step "left" from the third column of a three-per-row grid onto the next row, so a multi-column keyboard move only works while the columns involved share a row — the persona contexts open at 1920×1080 for that reason.
+- **The Layout dialog appends a newly checked widget at the end.** Uncheck all, then check in the wanted order, to set any order without dragging.
+- **An L1 created from the platform subspace template allows members to create subspaces** (`allowMembersToCreateSubspaces: true`), so a plain member holds `CREATE_SUBSPACE` and the sidebar rightly shows Create Subspace. A gate test must pin the setting to false first (`subspace-sidebar.helpers.ts › pinMembersCannotCreateSubspaces`); the server re-applies the authorization policy in the same request.
+- **The lib's `updateSpaceSettings` fills every omitted `collaboration` field with its own default too** (`allowMembersToCreateCallouts` → false, `allowGuestContributions` → false, …), not only `membership`. Read the stored block first and send it back with the one override, or members silently lose Add Post.
+- **A red test in a `mode: 'serial'` file stops every later test in that file.** The list reporter only says "N did not run" and never names them. Before calling a serial file's later cases covered, check that they actually ran.
+- **client-web has no `lib` wrapper for reordering, creating or deleting flow states.** Copy the raw documents from `server-api/.../innovation-flow/innovation-flow.request.params.ts` into a `rawClient` call; client-web cannot import server-api.
+- **Subspace Settings › Layout header (L1/L2):** "Customize Sidebar", "Replace innovation flow" and "Add phase", in that order; L0 has "Add tab" instead.
+  - Replace flow: picker `dialog` "Use a template", then the card button named after the template, then "Use this template".
+  - Then `dialog` "Apply new template", with three radio options and an "Apply" button. Option 1 with existing posts asks for "Confirm Deletion".
+- **The `spaceSettings` i18n namespace has no locale-parity test** in client-web (the `space`, `auth`, `common` and `forum` namespaces have one). New Layout copy can ship untranslated without any red.
+
 ## Sidebar search widget (055) — designer notes, 2026-09-03
 
 > Written independently by the 055 design session and merged in as-is when the plan was committed as a record; entries may overlap with the sections above.
