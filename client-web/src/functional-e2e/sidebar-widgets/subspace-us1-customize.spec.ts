@@ -84,11 +84,15 @@ test.describe('086 US1 — admin customizes the subspace sidebar once for every 
   test.afterAll(async () => {
     await adminContext?.close();
     await memberContext?.close();
-    if (fixture) {
-      await restoreSubspaceFlow(fixture.alpha.id);
-      await restoreSubspaceFlow(fixture.alpha2.id);
+    try {
+      if (fixture) {
+        await restoreSubspaceFlow(fixture.alpha.id);
+        await restoreSubspaceFlow(fixture.alpha2.id);
+      }
+    } finally {
+      // A restore that throws (a case left the flow half-changed) must not leak the Space tree.
+      await teardownSubspaceFixture(fixture);
     }
-    await teardownSubspaceFixture(fixture);
   });
 
   test('S-08 — Customize Sidebar sits beside Replace flow / Add phase on L1 and L2 and not on the L0; the dialog pre-selects the first phase with 13 (L1) / 11 (L2) labels', async () => {

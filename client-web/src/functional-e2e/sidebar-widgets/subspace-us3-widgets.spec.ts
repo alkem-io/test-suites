@@ -59,8 +59,12 @@ test.describe('086 US3 — permission gates and out-of-vocabulary values on the 
   test.afterAll(async () => {
     await adminContext?.close();
     await memberContext?.close();
-    if (fixture) await restoreSubspaceFlow(fixture.alpha.id);
-    await teardownSubspaceFixture(fixture);
+    try {
+      if (fixture) await restoreSubspaceFlow(fixture.alpha.id);
+    } finally {
+      // A restore that throws must not leak the Space tree.
+      await teardownSubspaceFixture(fixture);
+    }
   });
 
   test('S-05 — gates are never granted by configuration: anonymous × member × admin over Add Post, Create Subspace, Invite, Recent Activity; a member has no entry point', async ({

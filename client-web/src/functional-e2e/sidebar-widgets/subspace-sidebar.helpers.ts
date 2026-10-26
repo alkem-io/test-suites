@@ -206,18 +206,23 @@ export async function seedSubspaceFixture(
   });
   const cleanupIds: string[] = [scenario.subspace.id, scenario.space.id];
   const l0Url = `${baseUrl}/${scenario.space.nameId}`;
+  const alphaUrl = `${l0Url}/challenges/${scenario.subspace.nameId}`;
   const fixture: SubspaceFixture = {
     runId,
     scenario,
     l0Url,
-    alpha: await spaceRef(
-      scenario.subspace.id,
-      `${l0Url}/challenges/${scenario.subspace.nameId}`
-    ),
+    alpha: {
+      id: scenario.subspace.id,
+      nameId: '',
+      url: alphaUrl,
+      roleSetId: '',
+    },
     alpha2: { id: '', nameId: '', url: '', roleSetId: '' },
     cleanupIds,
   };
+  // Every API call after the scenario exists runs inside the try, so a failure tears it down.
   try {
+    fixture.alpha = await spaceRef(scenario.subspace.id, alphaUrl);
     await pinMembersCannotCreateSubspaces(fixture.alpha.id);
     fixture.alpha2 = await addL2(fixture, 'Alpha-2');
   } catch (error) {
