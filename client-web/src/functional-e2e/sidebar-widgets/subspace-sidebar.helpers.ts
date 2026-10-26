@@ -623,6 +623,12 @@ export async function openPhoneDrawer(
   return drawer;
 }
 
+/** One phase button in the subspace's phase navigation — rendered only once the subspace page has its flow. */
+export const phaseButton = (page: Page, phaseName: string) =>
+  page
+    .getByRole('navigation', { name: 'Innovation flow phases' })
+    .getByRole('button', { name: `Switch to phase ${phaseName}`, exact: true });
+
 /** The accessible names of the phase buttons in the subspace's phase navigation. */
 export async function phaseButtonNames(page: Page): Promise<string[]> {
   return page

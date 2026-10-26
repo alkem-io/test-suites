@@ -22,6 +22,7 @@ import {
   openSettingsLayout,
   openSubspace,
   PHONE_VIEWPORT,
+  phaseButton,
   phaseButtonNames,
   readPhases,
   readSidebar,
@@ -35,6 +36,7 @@ import {
   subspaceSidebar,
   subspaceWidgets,
   teardownSubspaceFixture,
+  TEMPLATE_PHASES,
   toggle,
   unselectedWidgets,
   updatePhaseSettings,
@@ -344,6 +346,9 @@ test.describe('086 US1 — admin customizes the subspace sidebar once for every 
 
     await spaNavigate(admin, f.alpha.url);
     await expect(mainContent(admin)).toBeVisible();
+    // Settings › Layout shares #crd-main-content and has no subspace sidebar, so the absences
+    // below would pass before the subspace page renders; wait for its phase strip first.
+    await expect(phaseButton(admin, TEMPLATE_PHASES[0])).toBeVisible();
     await expect(subspaceSidebar(admin)).toHaveCount(0);
     await expect(
       admin.getByRole('button', { name: 'Collapse', exact: true })
