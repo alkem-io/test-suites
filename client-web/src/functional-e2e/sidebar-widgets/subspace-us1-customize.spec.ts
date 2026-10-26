@@ -33,6 +33,7 @@ import {
   setSidebar,
   sidebarEntries,
   spaNavigate,
+  SUBSPACE_DEFAULT_SIDEBAR,
   subspaceSidebar,
   subspaceWidgets,
   teardownSubspaceFixture,
@@ -159,6 +160,13 @@ test.describe('086 US1 — admin customizes the subspace sidebar once for every 
     const dialogOrder = await selectedWidgets(dialog);
     expect(dialogOrder[0]).toBe('Search');
     expect(dialogOrder).not.toContain('Post Index');
+    // The spec's oracle, not the dialog's own: Search on top, the default list minus Post Index.
+    expect(dialogOrder).toEqual(
+      labelsOf([
+        SidebarWidget.Search,
+        ...SUBSPACE_DEFAULT_SIDEBAR.filter(w => w !== SidebarWidget.Index),
+      ])
+    );
     await dialog.getByRole('button', { name: 'Save', exact: true }).click();
     await expect(dialog).toBeHidden();
     expect(await noReloadMarker(admin)).toBe('kept');
@@ -188,6 +196,16 @@ test.describe('086 US1 — admin customizes the subspace sidebar once for every 
     const rail = (await sidebarEntries(sidebar)).join('|');
     expect(rail).not.toContain('Post Index');
     expect(rail).not.toContain('Search');
+    // ...and it shows the configured compact widgets, in list order (FR-020, D-13): an empty
+    // or hard-coded rail would pass the two absences above.
+    expect(await sidebarEntries(sidebar)).toEqual([
+      'BUTTON:Expand',
+      'BUTTON:Add Post',
+      'BUTTON:Community',
+      'BUTTON:Events',
+      'BUTTON:Recent Activity',
+      `A:Alpha-2 ${f.runId}`,
+    ]);
     await w.expand.click();
     await expect(w.collapse).toBeVisible();
     // Phone drawer, still without a document load.
