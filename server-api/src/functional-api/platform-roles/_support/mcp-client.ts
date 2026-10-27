@@ -31,22 +31,48 @@ import type { Headers } from './types';
 const endpoint = (): string =>
   `${testConfiguration.endPoints.server.replace(/\/$/, '')}/rest/mcp`;
 
+const MCP_ACCEPT = 'application/json, text/event-stream';
+const INITIALIZE = {
+  method: 'initialize',
+  params: {
+    protocolVersion: '2025-03-26',
+    capabilities: {},
+    clientInfo: { name: 'platform-roles-tests', version: '1' },
+  },
+};
+
 /**
- * Detected, not configured: a server with MCP switched off answers 503 on the
- * endpoint, anything else means the controller is there. `PLATFORM_ROLES_MCP=1`
- * / `=0` overrides the probe (e.g. to make a missing endpoint FAIL in a pipeline
- * that must have it).
+ * Detected, not configured: the probe is a real, unauthenticated `initialize`
+ * handshake. A live controller answers it 2xx (or 401 when it gates the
+ * handshake); a server with MCP switched off answers 503; a host that does not
+ * route `/rest/mcp` at all answers from its proxy — nginx on test-alkem.io says
+ * 405 — so only the handshake itself counts as "the endpoint is there".
+ * `PLATFORM_ROLES_MCP=1` / `=0` overrides the probe (e.g. to make a missing
+ * endpoint FAIL in a pipeline that must have it).
  */
 const detectMcp = async (): Promise<boolean> => {
   if (process.env.PLATFORM_ROLES_MCP === '1') return true;
   if (process.env.PLATFORM_ROLES_MCP === '0') return false;
   try {
-    const { status } = await axios.post(
+    const { status, headers } = await axios.post(
       endpoint(),
-      {},
-      { validateStatus: () => true, timeout: 5_000 }
+      { jsonrpc: '2.0', id: 0, ...INITIALIZE },
+      {
+        headers: { 'Content-Type': 'application/json', Accept: MCP_ACCEPT },
+        validateStatus: () => true,
+        timeout: 5_000,
+      }
     );
-    return status !== 503 && status !== 404;
+    const sessionId = headers['mcp-session-id'] as string | undefined;
+    if (sessionId) {
+      // The probe opened a session like any client; do not leave it behind.
+      await axios.delete(endpoint(), {
+        headers: { 'mcp-session-id': sessionId },
+        validateStatus: () => true,
+        timeout: 5_000,
+      });
+    }
+    return (status >= 200 && status < 300) || status === 401;
   } catch {
     return false;
   }
@@ -59,7 +85,7 @@ export const mcpTest = (name: string, fn: () => Promise<void>): void => {
   if (MCP_AVAILABLE) test(name, fn);
   else
     test.todo(
-      `${name} — the server under test has MCP switched off (needs MCP_ENABLED=true)`
+      `${name} — the server under test exposes no MCP endpoint (MCP_ENABLED=false, or /rest/mcp not routed to the server)`
     );
 };
 
@@ -81,7 +107,7 @@ const post = async (
     {
       headers: {
         'Content-Type': 'application/json',
-        Accept: 'application/json, text/event-stream',
+        Accept: MCP_ACCEPT,
         authorization,
         ...(sessionId ? { 'mcp-session-id': sessionId } : {}),
       },
@@ -103,15 +129,7 @@ export const callTool = async (
   tool: string,
   args: Record<string, unknown>
 ): Promise<ToolResult> => {
-  const initialized = await post(authorization, {
-    id: 1,
-    method: 'initialize',
-    params: {
-      protocolVersion: '2025-03-26',
-      capabilities: {},
-      clientInfo: { name: 'platform-roles-tests', version: '1' },
-    },
-  });
+  const initialized = await post(authorization, { id: 1, ...INITIALIZE });
   const sessionId = initialized.headers['mcp-session-id'] as string | undefined;
   if (!sessionId) throw new Error('MCP initialize returned no mcp-session-id');
 
