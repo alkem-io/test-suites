@@ -1,0 +1,137 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e2]:
+  - generic [ref=e5]:
+    - link "Skip to content" [ref=e6] [cursor=pointer]:
+      - /url: "#crd-main-content"
+    - banner [ref=e7]:
+      - generic [ref=e10]:
+        - generic [ref=e11]:
+          - link "Home" [ref=e12] [cursor=pointer]:
+            - /url: /home
+            - img "Alkemio" [ref=e14]
+          - navigation "breadcrumb" [ref=e22]:
+            - list [ref=e23]:
+              - listitem [ref=e24]:
+                - img [ref=e25]
+                - link "admin alkemio" [ref=e28] [cursor=pointer]:
+                  - /url: /user/me
+              - listitem [ref=e29]:
+                - img [ref=e30]
+              - listitem [ref=e32]:
+                - link "Settings" [ref=e33] [cursor=pointer]:
+                  - /url: /user/me/settings
+              - listitem [ref=e34]:
+                - img [ref=e35]
+              - listitem [ref=e37]:
+                - generic [ref=e38]: Account
+        - navigation "Menu" [ref=e39]:
+          - button "Search" [ref=e40] [cursor=pointer]:
+            - img
+          - button "Messages" [ref=e41] [cursor=pointer]:
+            - img
+          - button "Notifications" [ref=e42] [cursor=pointer]:
+            - img
+          - button "Platform navigation" [ref=e43] [cursor=pointer]:
+            - img
+          - button "admin alkemio" [ref=e45] [cursor=pointer]:
+            - img "admin alkemio" [ref=e48]
+    - main [ref=e49]:
+      - generic [ref=e50]:
+        - generic [ref=e54]:
+          - heading "admin alkemio" [level=1] [ref=e58]
+          - tablist [ref=e59]:
+            - tab "Profile" [ref=e60] [cursor=pointer]:
+              - img [ref=e61]
+              - generic [ref=e64]: Profile
+            - tab "Account" [selected] [ref=e65] [cursor=pointer]:
+              - img [ref=e66]
+              - generic [ref=e69]: Account
+            - tab "Membership" [ref=e70] [cursor=pointer]:
+              - img [ref=e71]
+              - generic [ref=e76]: Membership
+            - tab "Organisations" [ref=e77] [cursor=pointer]:
+              - img [ref=e78]
+              - generic [ref=e81]: Organisations
+            - tab "Notifications" [ref=e82] [cursor=pointer]:
+              - img [ref=e83]
+              - generic [ref=e86]: Notifications
+            - tab "Settings" [ref=e87] [cursor=pointer]:
+              - img [ref=e88]
+              - generic [ref=e99]: Settings
+            - tab "Security" [ref=e100] [cursor=pointer]:
+              - img [ref=e101]
+              - generic [ref=e104]: Security
+        - generic [ref=e108]:
+          - generic [ref=e109]:
+            - generic [ref=e110]:
+              - heading "Hosted Spaces 0/3" [level=3] [ref=e111]:
+                - button "Hosted Spaces 0/3" [expanded] [ref=e112] [cursor=pointer]:
+                  - img [ref=e114]
+                  - generic [ref=e119]:
+                    - generic [ref=e120]: Hosted Spaces
+                    - generic [ref=e121]: 0/3
+                  - img [ref=e122]
+              - button "Create new space" [ref=e127] [cursor=pointer]:
+                - img [ref=e129]
+                - heading "Create New Space" [level=3] [ref=e130]
+                - paragraph [ref=e131]: Launch a new collaborative environment for your team.
+            - heading "Virtual Contributors 0/3" [level=3] [ref=e133]:
+              - button "Virtual Contributors 0/3" [ref=e134] [cursor=pointer]:
+                - img [ref=e136]
+                - generic [ref=e140]:
+                  - generic [ref=e141]: Virtual Contributors
+                  - generic [ref=e142]: 0/3
+                - img [ref=e143]
+            - heading "Template Packs 0/3" [level=3] [ref=e146]:
+              - button "Template Packs 0/3" [ref=e147] [cursor=pointer]:
+                - img [ref=e149]
+                - generic [ref=e155]:
+                  - generic [ref=e156]: Template Packs
+                  - generic [ref=e157]: 0/3
+                - img [ref=e158]
+            - heading "Custom Homepages 0/1" [level=3] [ref=e161]:
+              - button "Custom Homepages 0/1" [ref=e162] [cursor=pointer]:
+                - img [ref=e164]
+                - generic [ref=e168]:
+                  - generic [ref=e169]: Custom Homepages
+                  - generic [ref=e170]: 0/1
+                - img [ref=e171]
+          - heading "Danger Zone" [level=3] [ref=e174]:
+            - button "Danger Zone" [ref=e175] [cursor=pointer]:
+              - img [ref=e177]
+              - generic [ref=e181]: Danger Zone
+              - img [ref=e182]
+      - region:
+        - generic:
+          - generic:
+            - generic:
+              - generic:
+                - generic: "0"
+                - paragraph: 0 unsaved changes
+              - generic:
+                - button: Discard
+                - button [disabled]: Save changes
+    - contentinfo [ref=e184]:
+      - generic [ref=e185]:
+        - generic [ref=e186]:
+          - img "Alkemio" [ref=e188]
+          - generic [ref=e194]: © 2026 Alkemio B.V.
+        - navigation "Footer" [ref=e195]:
+          - link "Terms" [ref=e196] [cursor=pointer]:
+            - /url: https://welcome.alkem.io/legal/terms/
+          - link "Privacy" [ref=e197] [cursor=pointer]:
+            - /url: https://welcome.alkem.io/legal/privacy
+          - link "Security" [ref=e198] [cursor=pointer]:
+            - /url: https://welcome.alkem.io/legal/security
+          - button "Support" [ref=e199] [cursor=pointer]
+          - link "About" [ref=e200] [cursor=pointer]:
+            - /url: https://welcome.alkem.io
+        - button "English" [ref=e202] [cursor=pointer]:
+          - img [ref=e203]
+          - generic [ref=e206]: English
+  - region "Notifications alt+T"
+  - button "Open chat" [ref=e207]:
+    - img [ref=e208]
+```
