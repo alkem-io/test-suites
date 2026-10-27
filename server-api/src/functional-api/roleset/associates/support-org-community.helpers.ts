@@ -503,7 +503,7 @@ export const removeUsers = async (
 // ===== audit ==================================================================
 
 export const MCP_OFF_REASON =
-  'MCP off: audit half not asserted (the server under test runs with MCP_ENABLED=false)';
+  'MCP off: audit half not asserted (the server under test exposes no MCP endpoint: MCP_ENABLED=false, or /rest/mcp not routed)';
 
 export type OrgAdminAuditRow = AuditRecord & {
   details: Record<string, unknown> & {
