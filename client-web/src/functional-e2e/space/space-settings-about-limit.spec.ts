@@ -38,11 +38,13 @@ const COPY = {
   overLimit: 'This text exceeds the length limits for this field.',
   countHint:
     'Formatting, images and links count toward the limit too, so this number may be higher than the text you see.',
-  save: 'Save',
-  saved: 'Saved',
+  save: 'Save changes',
+  saved: 'Changes saved',
 } as const;
 
 // Editors are named by their placeholder (bundle crd-spaceSettings, en).
+// `#description` is the whole Context card (all three editors); `#why` / `#who`
+// are the anchors of the two editors below What.
 const EDITOR = {
   what: {
     section: '#description',
@@ -89,8 +91,14 @@ const ring = (page: Page, field: Field): Locator =>
   section(page, field).getByRole('button', {
     name: /^[\d,]+\/[\d,]+ characters$/,
   });
-const saveButton = (page: Page, field: Field): Locator =>
-  section(page, field).getByRole('button', { name: COPY.save, exact: true });
+// client-web#10437: the per-editor Save is gone. Every edit on the tab is
+// buffered and saved by the tab-wide "Unsaved changes" bar (`UnsavedChangesBar`,
+// aria-hidden while clean, so a role query only resolves it once dirty); its
+// "Save changes" button is the dirty signal for any of the three editors.
+const saveButton = (page: Page, _field: Field): Locator =>
+  page
+    .getByRole('region', { name: 'Unsaved changes', exact: true })
+    .getByRole('button', { name: COPY.save, exact: true });
 const tooltipWith = (page: Page, text: string): Locator =>
   page.getByRole('tooltip').filter({ hasText: text }).first();
 
@@ -135,8 +143,17 @@ const aboutLengths = async (
   };
 };
 
+// client-web#10437: the About tab is a stack of collapsible `SettingsSection`
+// cards; the What / Why / Who editors live in the "Context" card (`#description`,
+// `#why` / `#who` anchors inside it), which starts collapsed — its body is in
+// the DOM but hidden until the h3 trigger is clicked.
 const openAbout = async (page: Page): Promise<void> => {
   await page.goto(`${baseUrl}/${scenario!.space.nameId}/settings/about`);
+  const contextTrigger = page
+    .getByRole('heading', { name: 'Context', exact: true })
+    .getByRole('button');
+  await expect(contextTrigger).toBeVisible({ timeout: 30_000 });
+  await contextTrigger.click();
   await expect(editor(page, 'what')).toBeVisible({ timeout: 30_000 });
 };
 

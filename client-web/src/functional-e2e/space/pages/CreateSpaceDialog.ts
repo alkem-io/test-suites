@@ -160,7 +160,21 @@ export class CreateSpaceDialog {
 
   // Action methods
   async clickCreate() {
+    // The dialog only closes once the `createSpace` mutation has answered,
+    // and on a loaded stack that is more than the 15 s `waitForHidden` budget
+    // (seen 2026-10-28: the dialog outlived the wait, the Space was created
+    // anyway and leaked). Wait for the mutation's own response — and for it
+    // to be error-free — before handing control back.
+    const created = this.page.waitForResponse(
+      response =>
+        response.url().includes('graphql') &&
+        (response.request().postData() ?? '').includes('mutation CreateSpace'),
+      { timeout: 60_000 }
+    );
     await this.createButton.click();
+    const response = await created;
+    const body = (await response.json().catch(() => ({}))) as { errors?: unknown[] };
+    expect(body.errors, 'createSpace mutation errors').toBeUndefined();
   }
 
   async clickCancel() {
