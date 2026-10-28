@@ -23,6 +23,7 @@
  */
 import { expect, type Locator, type Page } from '@playwright/test';
 import { spaceUrl } from './classifications.fixture';
+import { openSettingsSection, settingsSectionTrigger } from '../helpers/settings-section.helper';
 
 export const SDG_VALUES = [
   '1 · No Poverty',
@@ -101,10 +102,6 @@ export function operationResponse(page: Page, operationName: string) {
     }
   });
 }
-
-/** The selection-write mutation a Save issues for a staged value selection. */
-export const selectionSaved = (page: Page) =>
-  operationResponse(page, 'UpdateClassificationEntrySelection');
 
 /* ------------------------------------------------------------------ */
 /* Navigation                                                          */
@@ -220,9 +217,7 @@ export function classificationsSection(page: Page): Locator {
 
 /** The section's `<h3><button>` collapsible trigger. */
 export function classificationsSectionTrigger(page: Page): Locator {
-  return classificationsSection(page)
-    .getByRole('heading', { level: 3 })
-    .getByRole('button', { name: 'Classifications', exact: true });
+  return settingsSectionTrigger(page, 'Classifications', { scope: classificationsSection(page) });
 }
 
 /**
@@ -230,12 +225,9 @@ export function classificationsSectionTrigger(page: Page): Locator {
  * re-mount its sections after the first paint (a refetch), which resets the open state.
  */
 export async function ensureClassificationsSectionOpen(page: Page) {
-  const trigger = classificationsSectionTrigger(page);
-  await expect(trigger).toBeVisible({ timeout: 20_000 });
+  await expect(classificationsSectionTrigger(page)).toBeVisible({ timeout: 20_000 });
   await expect(async () => {
-    if ((await trigger.getAttribute('aria-expanded')) !== 'true') {
-      await trigger.click();
-    }
+    await openSettingsSection(page, 'Classifications', { scope: classificationsSection(page), timeout: 3_000 });
     await expect(
       classificationsSection(page).getByRole('button', {
         name: 'Add Classification',

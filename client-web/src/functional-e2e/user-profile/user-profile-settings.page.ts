@@ -12,6 +12,7 @@
 // touches the tab, so a copy or layout change is fixed here once.
 
 import { expect, type Locator, type Page } from '@playwright/test';
+import { openSettingsSection, settingsSectionTrigger } from '../helpers/settings-section.helper';
 
 const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 
@@ -41,17 +42,12 @@ export class UserProfileSettingsPage {
 
   /** The section's collapse trigger — the button inside its `<h3>`. */
   sectionTrigger(title: ProfileSection): Locator {
-    return this.page.getByRole('heading', { name: title, level: 3, exact: true }).getByRole('button', { name: title });
+    return settingsSectionTrigger(this.page, title);
   }
 
   /** Expands a collapsed section; a no-op when it is already open. */
   async openSection(title: ProfileSection) {
-    const trigger = this.sectionTrigger(title);
-    await expect(trigger).toBeVisible();
-    if ((await trigger.getAttribute('aria-expanded')) !== 'true') {
-      await trigger.click();
-    }
-    await expect(trigger).toHaveAttribute('aria-expanded', 'true');
+    await openSettingsSection(this.page, title);
   }
 
   /** A boxed text input by its visible label ("Display Name", "First Name", "Tagline", …). */

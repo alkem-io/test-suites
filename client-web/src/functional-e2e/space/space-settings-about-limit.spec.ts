@@ -21,6 +21,7 @@ import type { TestScenarioConfig } from '@alkemio/tests-lib/scenario/config/test
 import type { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import { adminGql } from '../contributors-callout/cards-fixture';
 import { createPersonaTest } from '../fixtures/authenticated-session.fixture';
+import { openSettingsSection } from '../helpers/settings-section.helper';
 
 const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 const test = createPersonaTest('space.admin@alkem.io');
@@ -201,11 +202,7 @@ const aboutLengths = async (
 // the DOM but hidden until the h3 trigger is clicked.
 const openAbout = async (page: Page): Promise<void> => {
   await page.goto(`${baseUrl}/${scenario!.space.nameId}/settings/about`);
-  const contextTrigger = page
-    .getByRole('heading', { name: 'Context', exact: true })
-    .getByRole('button');
-  await expect(contextTrigger).toBeVisible({ timeout: 30_000 });
-  await contextTrigger.click();
+  await openSettingsSection(page, 'Context', { timeout: 30_000 });
   await expect(editor(page, 'what')).toBeVisible({ timeout: 30_000 });
 };
 

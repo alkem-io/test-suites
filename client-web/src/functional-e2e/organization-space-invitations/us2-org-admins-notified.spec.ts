@@ -33,6 +33,7 @@ import {
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import { NotificationEvent, RoleName } from '@alkemio/tests-lib/core/generated/alkemio-schema';
 import { createPersonaTest, ensurePersonaState } from '../fixtures/authenticated-session.fixture';
+import { openSettingsSection } from '../helpers/settings-section.helper';
 import {
   assignOrganizationAdmin,
   createTestOrganization,
@@ -559,12 +560,7 @@ const orgAdminSettingsTest = createPersonaTest('subspace.admin@alkem.io');
  * "Organisation Notifications Control alerts…" — matched by prefix.
  */
 async function openOrganisationNotificationsGroup(page: Page) {
-  const trigger = page
-    .getByRole('heading', { level: 3, name: /^Organisation Notifications/ })
-    .getByRole('button');
-  await expect(trigger).toBeVisible();
-  if ((await trigger.getAttribute('aria-expanded')) !== 'true') await trigger.click();
-  await expect(trigger).toHaveAttribute('aria-expanded', 'true');
+  await openSettingsSection(page, /^Organisation Notifications/);
 }
 
 orgAdminSettingsTest.describe('US2-AS6 — the organization notification settings row renders, persists, and is honored', () => {

@@ -1,4 +1,5 @@
 import { Page, expect } from '@playwright/test';
+import { openSettingsSection } from '../../helpers/settings-section.helper';
 
 export class SpaceSettingsPage {
   constructor(private page: Page) {}
@@ -46,15 +47,6 @@ export class SpaceSettingsPage {
     return this.page.getByRole('button', { name: 'Delete this Space' });
   }
 
-  // client-web#10437: "Danger Zone" is a collapsible `SettingsSection` that
-  // starts collapsed — its body (and the delete button) is in the DOM but
-  // hidden until the h3 trigger is clicked.
-  get dangerZoneTrigger() {
-    return this.page
-      .getByRole('heading', { name: 'Danger Zone', exact: true })
-      .getByRole('button');
-  }
-
   // CRD confirmation is a Radix alertdialog "Delete Space" with no checkbox;
   // a "Delete Space" button confirms (replacing the old checkbox + "Yes,
   // delete" flow).
@@ -74,8 +66,10 @@ export class SpaceSettingsPage {
 
   async deleteSpace() {
     await this.navigateToAccount();
-    await expect(this.dangerZoneTrigger).toBeVisible();
-    await this.dangerZoneTrigger.click();
+    // client-web#10437: "Danger Zone" is a collapsible `SettingsSection` that
+    // starts collapsed — its body (and the delete button) is in the DOM but
+    // hidden until the h3 trigger is clicked.
+    await openSettingsSection(this.page, 'Danger Zone');
     await expect(this.deleteSpaceButton).toBeVisible();
     await this.deleteSpaceButton.click();
     await expect(this.deleteDialog).toBeVisible();

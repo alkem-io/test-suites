@@ -14,6 +14,7 @@ import { CommunityGuidelinesTemplateForm } from './forms/template-form.models';
 import { fillCommunityGuidelinesForm } from './forms/community-guidelines-template-form';
 import { verifyCommunityGuidelinesTemplate } from './verify/community-guidelines-template-verify';
 import { sectionAddNewButton } from './section-helpers';
+import { openSettingsSection } from '@src/functional-e2e/helpers/settings-section.helper';
 
 // Create the authenticated fixture with a unique storage state name for this test suite
 const { test, setupAuthentication, teardownAuthentication } =
@@ -246,10 +247,7 @@ test.describe.serial('Community Guidelines Template', () => {
     // Since client-web#10437 the Community tab is built from collapsible
     // SettingsSection cards. "Community Guidelines" starts collapsed and is
     // not even mounted until its `<h3><button>` trigger is clicked.
-    await page
-      .getByRole('heading', { name: 'Community Guidelines', exact: true })
-      .getByRole('button')
-      .click();
+    await openSettingsSection(page, 'Community Guidelines');
 
     // The guidelines are previewed inline; editing (and the template actions)
     // moved into a SettingsEditorDialog opened by "Edit Guidelines".

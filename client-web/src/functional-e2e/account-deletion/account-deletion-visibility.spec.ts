@@ -20,6 +20,10 @@ import {
   gotoUserSecuritySettings,
   signIn,
 } from './account-deletion.helpers';
+import {
+  openSettingsSection,
+  settingsSectionTrigger,
+} from '../helpers/settings-section.helper';
 
 const scenarioConfig: TestScenarioNoPreCreationConfig = {
   name: 'account-deletion-visibility',
@@ -96,9 +100,10 @@ test.describe('Delete-account card visibility (054 delta)', () => {
         `${baseUrl}/user/${subject.nameId}/settings/account`
       );
 
-      const dangerZoneTrigger = subjectPage
-        .getByRole('heading', { name: 'Danger Zone', level: 3 })
-        .getByRole('button', { name: 'Danger Zone' });
+      const dangerZoneTrigger = settingsSectionTrigger(
+        subjectPage,
+        /^Danger Zone/
+      );
       await expect(dangerZoneTrigger).toBeVisible({ timeout: 15000 });
       // Collapsed by default (the card is hidden, not absent) — it opens on
       // the trigger, never on its own.
@@ -106,8 +111,7 @@ test.describe('Delete-account card visibility (054 delta)', () => {
         subjectPage.getByRole('button', { name: 'Delete account' })
       ).toBeHidden();
       await expect(dangerZoneTrigger).toHaveAttribute('aria-expanded', 'false');
-      await dangerZoneTrigger.click();
-      await expect(dangerZoneTrigger).toHaveAttribute('aria-expanded', 'true');
+      await openSettingsSection(subjectPage, /^Danger Zone/);
 
       await expect(
         subjectPage

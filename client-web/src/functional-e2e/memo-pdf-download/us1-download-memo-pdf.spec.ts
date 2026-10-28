@@ -66,6 +66,7 @@ const createMemoCallout = async (
   title: string,
   markdown: string
 ): Promise<void> => {
+  const calloutName = `${key} ${uniqueId}`;
   const client = getGraphqlClient();
   const created = await admin(token =>
     client.CreateCalloutOnCalloutsSet(
@@ -73,7 +74,7 @@ const createMemoCallout = async (
         calloutData: {
           calloutsSetID: baseScenario.space.collaboration.calloutsSetId,
           framing: {
-            profile: { displayName: `${key} ${uniqueId}` },
+            profile: { displayName: calloutName },
             type: CalloutFramingType.Memo,
             memo: { markdown, profile: { displayName: title } },
           },
@@ -85,7 +86,7 @@ const createMemoCallout = async (
   );
   const calloutUrl = created.data?.createCalloutOnCalloutsSet?.framing?.profile?.url ?? '';
   if (!calloutUrl) throw new Error(`memo callout ${key} not created: ${JSON.stringify(created.error)}`);
-  seeded[key] = { calloutUrl, calloutName: `${key} ${uniqueId}`, title };
+  seeded[key] = { calloutUrl, calloutName, title };
 };
 
 test.beforeAll(async () => {

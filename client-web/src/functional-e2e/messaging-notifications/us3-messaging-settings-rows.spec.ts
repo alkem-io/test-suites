@@ -1,6 +1,7 @@
 import { test, expect, Page } from '@playwright/test';
 import { loginViaCrd } from '../helpers/login.helper';
 import { acceptCookiesIfVisible } from '../helpers/cookies.helper';
+import { openSettingsSection } from '../helpers/settings-section.helper';
 import {
   delay,
   deleteMailSlurperMails,
@@ -121,14 +122,7 @@ async function getMessagingRowSwitches(
  * exactly. A no-op when it is already open.
  */
 async function openUserNotificationsGroup(page: Page) {
-  const trigger = page
-    .getByRole('heading', { level: 3, name: /^User Notifications/ })
-    .getByRole('button');
-  await expect(trigger).toBeVisible();
-  if ((await trigger.getAttribute('aria-expanded')) !== 'true') {
-    await trigger.click();
-  }
-  await expect(trigger).toHaveAttribute('aria-expanded', 'true');
+  await openSettingsSection(page, /^User Notifications/);
 }
 
 function directRowEmailToggle(page: Page) {

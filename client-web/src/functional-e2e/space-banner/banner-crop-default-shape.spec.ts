@@ -12,6 +12,7 @@ import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/O
 import { TestScenarioConfig } from '@alkemio/tests-lib/scenario/config/test-scenario-config';
 import { SpacePage, SpaceSettingsPage } from '../space/pages';
 import { createAuthenticatedSessionFixture } from '../fixtures/authenticated-session.fixture';
+import { openSettingsSection } from '../helpers/settings-section.helper';
 
 const { test, setupAuthentication, teardownAuthentication } =
   createAuthenticatedSessionFixture({
@@ -57,11 +58,7 @@ async function completeCrop(page: Page, from = 0.15, to = 0.85): Promise<void> {
  * clicked); the tile is a `<button aria-label="Upload page banner">`.
  */
 async function openVisualsSection(page: Page): Promise<void> {
-  const trigger = page
-    .getByRole('heading', { name: 'Visuals', exact: true })
-    .getByRole('button');
-  await expect(trigger).toBeVisible({ timeout: 20_000 });
-  await trigger.click();
+  await openSettingsSection(page, 'Visuals', { timeout: 20_000 });
 }
 function pageBannerUploadButton(page: Page): Locator {
   return page.getByRole('button', { name: 'Upload page banner', exact: true });
