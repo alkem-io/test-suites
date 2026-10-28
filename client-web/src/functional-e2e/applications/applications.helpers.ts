@@ -158,6 +158,66 @@ export const applyFlowSettled = (
   };
 };
 
+/**
+ * Submits an application to a PRIVATE subspace from its routed About dialog,
+ * unless one is already pending.
+ *
+ * `/<space>/challenges/<subspace>/about` renders TWO "Apply" buttons for a
+ * non-member: one in the page body (the banner above the flow tabs) and one in
+ * the About dialog that the route opens on top of it. The dialog mounts a
+ * beat after the body, so an unscoped `getByRole('button', { name: 'Apply' })`
+ * either resolves to the body button and then spends the whole hook budget
+ * retrying a click the dialog overlay intercepts, or clicks the body button
+ * first and the questionnaire mounts UNDER the About dialog, where its fields
+ * are `aria-hidden` and never found (nightly 2026-10-28, run 40707979543:
+ * seven `beforeEach` time-outs across the two Level-1 files). Scoping every
+ * step to the dialog it belongs to removes both races; the dialog is the
+ * surface the plan's 1.2 cases walk anyway.
+ */
+export const applyFromSubspaceAboutDialog = async (
+  page: Page,
+  subspaceDisplayName: string,
+  answer: string
+): Promise<void> => {
+  const aboutDialog = page.getByRole('dialog').filter({
+    has: page.getByRole('heading', { name: subspaceDisplayName, level: 2 }),
+  });
+  // Either control is rendered once the dialog has resolved the viewer's
+  // standing; only then is "no pending application" a real observation.
+  await expect(
+    aboutDialog.getByRole('button', { name: /^(Apply|Application pending)$/ })
+  ).toBeVisible({ timeout: 15_000 });
+  if (
+    await aboutDialog
+      .getByRole('button', { name: 'Application pending' })
+      .isVisible()
+  ) {
+    return;
+  }
+
+  await aboutDialog.getByRole('button', { name: 'Apply' }).click();
+
+  const questionnaire = page
+    .getByRole('dialog')
+    .filter({ has: page.getByRole('heading', { name: 'Apply to', level: 2 }) });
+  await expect(questionnaire).toBeVisible();
+  await questionnaire
+    .getByRole('textbox', { name: 'What brings you here?' })
+    .fill(answer);
+  const submit = questionnaire.getByRole('button', { name: 'Apply' });
+  await expect(submit).toBeEnabled();
+  await submit.click();
+
+  const submitted = page
+    .getByRole('dialog')
+    .filter({ hasText: 'Application submitted' });
+  await expect(
+    submitted.getByRole('heading', { name: 'Application submitted', level: 2 })
+  ).toBeVisible();
+  await submitted.getByRole('button', { name: 'Close' }).click();
+  await expect(submitted).not.toBeVisible();
+};
+
 /** Asserts none of THE_CONTROL_NAMES exists as a button inside `scope`. */
 export const expectNoApplyControl = async (scope: Locator | Page): Promise<void> => {
   for (const name of THE_CONTROL_NAMES) {
