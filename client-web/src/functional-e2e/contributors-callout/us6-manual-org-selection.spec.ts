@@ -196,16 +196,19 @@ test.describe
     await resultRow(page, ORG, 'organization').click();
     await expect(chip(page, ORG)).toBeVisible();
 
-    // An already-selected contributor leaves the result list. The query is the
-    // run id, which both fixture names carry: the person row resolving proves
-    // the filtered list is rendered before the organisation's absence is
-    // asserted, so the count-0 check cannot pass on a list that has not
-    // updated yet.
+    // A picked contributor stays in the results as a ticked toggle row
+    // (client-web#10456, 088 contributor-picker parity, superseding 084
+    // FR-006 "leaves the list"), so the oracle is the row's pressed state. The
+    // query is the run id, which both fixture names carry: the not-yet-picked
+    // person reads unpressed next to the pressed organisation, so a list that
+    // has not updated yet cannot satisfy both.
     await searchBox(page).fill(uid);
     await expect(resultRow(page, PERSON, 'user')).toBeVisible();
-    await expect(resultRow(page, ORG, 'organization')).toHaveCount(0);
+    await expect(resultRow(page, PERSON, 'user')).toHaveAttribute('aria-pressed', 'false');
+    await expect(resultRow(page, ORG, 'organization')).toHaveAttribute('aria-pressed', 'true');
     await resultRow(page, PERSON, 'user').click();
     await expect(chip(page, PERSON)).toBeVisible();
+    await expect(resultRow(page, PERSON, 'user')).toHaveAttribute('aria-pressed', 'true');
 
     // Chips: the display name, never an id, and no stale label for a current member.
     for (const c of [chip(page, ORG), chip(page, PERSON)]) {

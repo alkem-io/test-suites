@@ -72,7 +72,7 @@ baseTest.afterAll(async () => {
   await cleanUpTestOrganizations();
 });
 
-// Index, the five legacy tabs, the old "settings" tab and an unknown segment.
+// Index, the five legacy tabs, the old "settings" tab, the pre-#10476 "community" URL and an unknown segment.
 const OTHER_SETTINGS_PATHS = [
   '',
   '/profile',
@@ -81,6 +81,7 @@ const OTHER_SETTINGS_PATHS = [
   '/invitations',
   '/settings',
   '/authorization',
+  '/community',
   '/bogus',
 ];
 
@@ -92,7 +93,7 @@ supportTest.describe('W-02 — Support is confined to the Community tab', () => 
       await expect(page.getByRole('heading', { name: 'Pending applications & invitations' }), `settings${tail}`).toBeVisible({
         timeout: 20_000,
       });
-      await expect(page, `settings${tail}`).toHaveURL(new RegExp(`/organization/${outsider.nameID}/settings/community$`));
+      await expect(page, `settings${tail}`).toHaveURL(new RegExp(`/organization/${outsider.nameID}/settings/associates$`));
       await expect(page.getByRole('tab'), `settings${tail}`).toHaveCount(1);
       await expect(page.getByRole('tab', { name: 'Associates' }), `settings${tail}`).toHaveAttribute(
         'aria-selected',

@@ -237,7 +237,7 @@ accepterTest.describe('US2-AS2 — the invitee answers from the organization pro
 
       // Now an admin, the accepter can open the Associates tab and sees their
       // own row carrying both badges (org.associates.badge.*).
-      await page.goto(`${baseUrl}/organization/${orgO.nameID}/settings/community`);
+      await page.goto(`${baseUrl}/organization/${orgO.nameID}/settings/associates`);
       const ownRow = page
         .getByRole('listitem')
         .filter({ hasText: new RegExp(accepterEmail.replace('@alkem.io', ''), 'i') });
