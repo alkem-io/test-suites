@@ -51,7 +51,7 @@ pnpm exec vitest run --project journey src/functional-api/journey/space/space-cl
 | US1-AS1 picker lists platform + top-level Space templates, distinguished, with descriptions, no create path | `classifications-templates.spec.ts › TL-03`                                       |
 | US1-AS2 picked entry persists with 0 selected                                                               | `classifications-space.spec.ts › SL-01`                                           |
 | US1-AS3 single-select: second value replaces the first                                                      | `classifications-space.spec.ts › SL-03`                                           |
-| US1-AS4 multi-select values persist on reload, no form save                                                 | `classifications-space.spec.ts › SL-01`                                           |
+| US1-AS4 multi-select values persist on reload (since client-web#10437 they are staged and written by the tab-wide "Save changes" bar — 045 Session 2026-10-22 supersedes 024 FR-006a) | `classifications-space.spec.ts › SL-01`                                           |
 | US1-AS5 template rename/edit/delete leaves the entry byte-identical                                         | `classifications-templates.spec.ts › TL-05`                                       |
 | US1-AS6 duplicate label (incl. case/whitespace) rejected; alias succeeds                                    | `classifications-space.spec.ts › SL-02`; API: it-spec › write rules               |
 | US1-AS7 subspace picker offers the top-level library; entry attaches to the subspace                        | `classifications-space.spec.ts › SL-08`                                           |
@@ -64,7 +64,7 @@ pnpm exec vitest run --project journey src/functional-api/journey/space/space-cl
 | US3-AS2 hidden: editor badge, viewer absence, anonymous API still returns it with its flag                  | `classifications-space.spec.ts › SL-05`; API: it-spec › read surface              |
 | US3-AS4 zero-value entry: editor-only empty group                                                           | `classifications-space.spec.ts › SL-04`                                           |
 | US3-AS5 addition order; remove + re-add moves to the end                                                    | `classifications-space.spec.ts › SL-04`; API: it-spec › read surface              |
-| REM-AS1 confirmed, permanent removal; template and other Spaces untouched                                   | `classifications-space.spec.ts › SL-06`                                           |
+| REM-AS1 removal gated by the tab Save bar (staged → Discard restores, Save deletes; the FR-014b confirmation dialog is gone since client-web#10437); template and other Spaces untouched | `classifications-space.spec.ts › SL-06`                                           |
 | FR-014a writes need the Space's edit right — UI affordances                                                 | `classifications-space.spec.ts › SL-07`                                           |
 | FR-014a writes need the Space's edit right — API denials (member, non-member, 6 mutations)                  | `space-classifications.it-spec.ts › authorization`                                |
 | FR-002a value-set bounds 0/1/50/51 (entry and template paths)                                               | `space-classifications.it-spec.ts › write rules`; client 0-values guard: `TL-04a` |
