@@ -31,9 +31,21 @@ import { graphqlErrorWrapper } from '@alkemio/tests-lib/utils/graphql.wrapper';
 import type { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import { deleteFixtureTree } from '../subspaces-callout/subspaces-callout.helpers';
 import { grantCookieConsent } from '../helpers/cookies.helper';
-import { baseUrl, WIDGET_LABEL } from './sidebar-widgets.helpers';
+import { baseUrl, WIDGET_LABEL as L0_WIDGET_LABEL } from './sidebar-widgets.helpers';
 
-export { baseUrl, WIDGET_LABEL };
+export { baseUrl };
+
+/**
+ * Widget labels as the subspace editors word them. Since client-web#10490 (FR-042) the
+ * Customize Sidebar / phase Layout dialog of an L1/L2 says "About this Subspace" for the
+ * About widget — the L0 dialog keeps "About this Space" (`L0_WIDGET_LABEL`). The checkbox
+ * aria-label is `Toggle <label>`, so `toggle()`, `selectedWidgets()` and `labelsOf()` all
+ * read through this map.
+ */
+export const WIDGET_LABEL: Record<SidebarWidget, string> = {
+  ...L0_WIDGET_LABEL,
+  [SidebarWidget.About]: 'About this Subspace',
+};
 
 const rawClient = new GraphQLClient(
   testConfiguration.endPoints.graphql.private

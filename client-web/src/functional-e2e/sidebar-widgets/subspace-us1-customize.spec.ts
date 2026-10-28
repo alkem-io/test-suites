@@ -425,7 +425,7 @@ test.describe('086 US1 — admin customizes the subspace sidebar once for every 
     await toggle(dialog, WIDGET_LABEL[SidebarWidget.About]).check();
     expect(await selectedWidgets(dialog)).toEqual([
       'Intention & Leads',
-      'About this Space',
+      'About this Subspace',
     ]);
     await dialog.getByRole('button', { name: 'Save', exact: true }).click();
     await expect(dialog).toBeHidden();
@@ -448,7 +448,7 @@ test.describe('086 US1 — admin customizes the subspace sidebar once for every 
     const reopened = await openCustomizeSidebar(admin);
     expect(await selectedWidgets(reopened)).toEqual([
       'Intention & Leads',
-      'About this Space',
+      'About this Subspace',
     ]);
     await admin.keyboard.press('Escape');
     await expect(reopened).toBeHidden();
