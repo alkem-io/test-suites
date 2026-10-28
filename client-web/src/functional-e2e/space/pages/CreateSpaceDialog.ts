@@ -173,7 +173,8 @@ export class CreateSpaceDialog {
     );
     await this.createButton.click();
     const response = await created;
-    const body = (await response.json().catch(() => ({}))) as { errors?: unknown[] };
+    expect(response.ok(), 'createSpace HTTP response').toBe(true);
+    const body = (await response.json()) as { errors?: unknown[] };
     expect(body.errors, 'createSpace mutation errors').toBeUndefined();
   }
 

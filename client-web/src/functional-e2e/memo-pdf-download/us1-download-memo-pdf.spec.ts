@@ -152,10 +152,10 @@ const openMemo = async (page: Page, key: string) => {
   // which then hides it from assistive tech — nameless dialog, nameless
   // "Download PDF" (nightlies 2026-10-22 and 2026-10-27 on test-alkem.io).
   const calloutDialog = page.getByRole('dialog', { name: seeded[key].calloutName, exact: true });
-  await expect(calloutDialog).toBeVisible({ timeout: 15_000 });
+  await expect(calloutDialog).toBeVisible();
   await calloutDialog.getByRole('button', { name: 'Open Memo' }).click();
   const dialog = page.getByRole('dialog', { name: seeded[key].title, exact: true });
-  await expect(dialog).toBeVisible({ timeout: 15_000 });
+  await expect(dialog).toBeVisible();
   return dialog;
 };
 

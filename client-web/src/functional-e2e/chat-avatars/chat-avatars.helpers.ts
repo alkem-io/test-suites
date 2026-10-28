@@ -623,8 +623,18 @@ export async function avatarCellCount(scope: Locator): Promise<number> {
  * members on, GroupAvatar draws three faces and a fourth quarter counting the
  * rest). Empty when the composite has no overflow tile.
  */
+export function overflowCountTile(scope: Locator): Locator {
+  return scope.getByText(/^\+\d+$/);
+}
+
+/**
+ * The overflow tile's text, asserted VISIBLE first: `textContent` alone would
+ * read a hidden tile and let a composite that users cannot see pass.
+ */
 export async function overflowCountText(scope: Locator): Promise<string> {
-  return (await scope.getByText(/^\+\d+$/).allTextContents()).map(text => text.trim()).join(',');
+  const tile = overflowCountTile(scope);
+  await expect(tile).toBeVisible();
+  return (await tile.allTextContents()).map(text => text.trim()).join(',');
 }
 
 // ────────────────────────────── cleanup ──────────────────────────────
