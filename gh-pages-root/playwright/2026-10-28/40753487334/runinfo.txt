@@ -1,0 +1,5 @@
+Run ID: 40753487334
+Date: 2026-10-28
+Branch: refs/heads/fix/nightly-2026-10-28-flaky
+Commit: 86ef2f3aeaff4a40090635597703cda7092be3cc
+Playwright outcome: success
