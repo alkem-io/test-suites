@@ -31,16 +31,21 @@ import { graphqlErrorWrapper } from '@alkemio/tests-lib/utils/graphql.wrapper';
 import type { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import { deleteFixtureTree } from '../subspaces-callout/subspaces-callout.helpers';
 import { grantCookieConsent } from '../helpers/cookies.helper';
-import { baseUrl, WIDGET_LABEL as L0_WIDGET_LABEL } from './sidebar-widgets.helpers';
+import {
+  baseUrl,
+  WIDGET_LABEL as L0_WIDGET_LABEL,
+} from './sidebar-widgets.helpers';
 
 export { baseUrl };
 
 /**
- * Widget labels as the subspace editors word them. Since client-web#10490 (FR-042) the
- * Customize Sidebar / phase Layout dialog of an L1/L2 says "About this Subspace" for the
- * About widget — the L0 dialog keeps "About this Space" (`L0_WIDGET_LABEL`). The checkbox
- * aria-label is `Toggle <label>`, so `toggle()`, `selectedWidgets()` and `labelsOf()` all
- * read through this map.
+ * Widget labels as the subspace editor words them. Since client-web#10490 (045 FR-042) the
+ * Customize Sidebar dialog of an L1/L2 says "About this Subspace" for the About widget —
+ * the same literal as the rail button, from its own i18n key (`sidebarDialog.widgets.about`,
+ * context `subspace`), so a drift on either side goes red on its own. The per-phase Layout
+ * dialog shows no widget section on subspaces, and the L0 Layout dialog keeps "About this
+ * Space" (`L0_WIDGET_LABEL`). The checkbox aria-label is `Toggle <label>`, so `toggle()`,
+ * `selectedWidgets()` and `labelsOf()` all read through this map.
  */
 export const WIDGET_LABEL: Record<SidebarWidget, string> = {
   ...L0_WIDGET_LABEL,

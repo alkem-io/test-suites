@@ -177,6 +177,7 @@ The headline claim is narrower than the feature. Once built, these walks prove t
   - **U-1b (QA lead's call, OQ-5):** `mode: 'serial'` is left in place.
 - **U-2 — `convert-L2-to-L1.it-spec.ts` (P3).** Before converting, give the L2's first phase a non-default list (`[COMMUNITY, CREATE_SUBSPACE, SUBSPACE_LINKS, ACTIVITY]`). The existing equality assertion then catches a sidebar reset.
 - **Already re-aligned:** the positional-defaults assertion in `space-templates.it-spec.ts` (#677), and `WIDGET_LABEL` gaining `COMMUNITY`/`ACTIVITY` (#680).
+- **Re-aligned 2026-10-28 (#692):** client-web#10490 (client-web spec 045 FR-042) words the About widget of the L1/L2 Customize Sidebar dialog as "About this Subspace", superseding 086 US1-AS2's label list and FR-031's "no per-level label variants" (spec amendment pending). S-08, S-09, S-10, S-13 and S-14 pin the FR-042 wording through `subspace-sidebar.helpers.ts › WIDGET_LABEL`; the L0 Layout dialog keeps "About this Space" through the L0 map in `sidebar-widgets.helpers.ts`.
 - **Confirmed unaffected:** the green 2026-10-22 nightly re-ran each of these against #10444:
   - `us1-default-rendering.spec.ts` (all six cases; L0 lists are unchanged)
   - `us2-admin-config.spec.ts › US2-AS1, AS2`
