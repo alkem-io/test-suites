@@ -1,0 +1,136 @@
+# Page snapshot
+
+```yaml
+- generic:
+  - generic:
+    - generic:
+      - generic:
+        - generic:
+          - link:
+            - /url: "#crd-main-content"
+            - text: Skip to content
+          - banner:
+            - generic:
+              - generic:
+                - generic:
+                  - generic:
+                    - link:
+                      - /url: /home
+                      - generic:
+                        - img
+                    - generic:
+                      - navigation:
+                        - list:
+                          - listitem:
+                            - generic: L
+                            - link:
+                              - /url: https://test-alkem.io/seed-space-applica-i3bfb
+                              - text: l0-seed-space-applica-i3bfb
+                          - listitem:
+                            - img
+                          - listitem:
+                            - generic: L
+                            - generic: l1-seed-space-applications-public-parent
+                  - navigation:
+                    - button:
+                      - img
+                    - button:
+                      - img
+                    - button:
+                      - img
+                    - button:
+                      - img
+                    - button:
+                      - generic:
+                        - generic:
+                          - img
+          - main:
+            - generic:
+              - generic:
+                - generic:
+                  - generic:
+                    - generic:
+                      - img
+                - generic:
+                  - generic:
+                    - generic:
+                      - heading [level=1]: l1-seed-space-applications-public-parent
+                      - generic:
+                        - paragraph: test taglinek2e2e
+              - main:
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic:
+                        - button:
+                          - img
+                          - text: Apply
+          - contentinfo:
+            - generic:
+              - generic:
+                - generic:
+                  - img
+                - generic: © 2026 Alkemio B.V.
+              - navigation:
+                - link:
+                  - /url: https://welcome.alkem.io/legal/terms/
+                  - text: Terms
+                - link:
+                  - /url: https://welcome.alkem.io/legal/privacy
+                  - text: Privacy
+                - link:
+                  - /url: https://welcome.alkem.io/legal/security
+                  - text: Security
+                - button: Support
+                - link:
+                  - /url: https://welcome.alkem.io
+                  - text: About
+              - generic:
+                - button:
+                  - img
+                  - generic: English
+    - region "Notifications alt+T"
+    - button:
+      - img
+  - dialog "l1-seed-space-applications-public-parent" [ref=e2]:
+    - generic [ref=e3]:
+      - generic [ref=e4]:
+        - img "You don't have access to this space." [ref=e6]:
+          - img [ref=e7]
+        - generic [ref=e10]:
+          - heading "l1-seed-space-applications-public-parent" [level=2] [ref=e11]
+          - paragraph [ref=e12]: test taglinek2e2e
+          - paragraph [ref=e13]: About This Space
+      - button "Close" [active] [ref=e14] [cursor=pointer]:
+        - img
+    - generic [ref=e16]:
+      - generic [ref=e18]:
+        - paragraph [ref=e20]: test descriptionldc93
+        - generic [ref=e22]:
+          - img [ref=e23]
+          - text: 3 members
+        - generic [ref=e28]:
+          - heading "Leads" [level=3] [ref=e29]
+          - list [ref=e30]:
+            - listitem [ref=e31]:
+              - link "admin alkemio admin alkemio" [ref=e32] [cursor=pointer]:
+                - /url: https://test-alkem.io/user/admin-alkemio
+                - img "admin alkemio" [ref=e34]
+                - generic [ref=e35]: admin alkemio
+      - button "Apply" [ref=e38] [cursor=pointer]:
+        - img
+        - text: Apply
+      - generic [ref=e39]:
+        - heading "Hosted by" [level=2] [ref=e40]
+        - generic [ref=e41]:
+          - link "seed-space-applica-hf277 seed-space-applica-hf277" [ref=e42] [cursor=pointer]:
+            - /url: https://test-alkem.io/organization/seed-space-applica-hf277
+            - img "seed-space-applica-hf277" [ref=e44]
+            - generic [ref=e46]: seed-space-applica-hf277
+          - link "Contact host" [ref=e48] [cursor=pointer]:
+            - /url: https://test-alkem.io/organization/seed-space-applica-hf277
+            - img [ref=e49]
+            - text: Contact host
+    - button [ref=e52] [cursor=pointer]:
+      - img
+```
