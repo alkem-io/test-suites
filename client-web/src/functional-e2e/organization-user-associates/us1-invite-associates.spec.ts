@@ -677,7 +677,24 @@ plainAssociateAS8Test.describe(
         await page.goto(
           `${baseUrl}/organization/${orgMain.nameID}/settings/associates`
         );
-        await expect(page).not.toHaveURL(/\/settings\/community/);
+        // The product sends a plain associate to the organization profile
+        // (observed live 2026-10-28). Pin that landing, not merely "somewhere
+        // other than one legacy URL": an admin persona stays on
+        // /settings/associates and must turn every line below red.
+        await expect(page).not.toHaveURL(/\/settings\/(associates|community)/, {
+          timeout: 15_000,
+        });
+        await expect(page).toHaveURL(
+          new RegExp(`/organization/${orgMain.nameID}/?$`)
+        );
+        await expect(
+          page.getByRole('heading', { name: 'Associates', exact: true })
+        ).toHaveCount(0);
+        await expect(
+          page.getByRole('heading', {
+            name: 'Pending applications & invitations',
+          })
+        ).toHaveCount(0);
       }
     );
   }

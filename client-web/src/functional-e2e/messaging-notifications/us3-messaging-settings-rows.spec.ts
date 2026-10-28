@@ -43,7 +43,8 @@ const directEmail = digestWindow('email', 'direct');
  *  - AS4: toggling email on a messaging row persists across reload and is
  *    honored (an email is actually delivered) for the next message.
  *  - AS5: the chat panel's settings shortcut lands on notification settings
- *    with both rows visible in one navigation.
+ *    with both rows visible once their (collapsed) group is expanded, and
+ *    a channel toggle on them persists across a reload.
  *
  * Selectors below were re-verified live against the running stack on
  * 2026-07-31 (not just read from source) — in particular the in-app switch's
@@ -133,6 +134,30 @@ async function openUserNotificationsGroup(page: Page) {
 function directRowEmailToggle(page: Page) {
   return page.locator(
     '[aria-label="Toggle Email notification for: Receive a notification when someone sends me a direct (1:1) chat message"]'
+  );
+}
+
+/**
+ * Puts the direct row's email channel into `checked` through the settings UI
+ * and proves it persisted across a reload. AS4 uses it to restore the
+ * recipient's mandated default (email OFF) after turning it on, so the
+ * serial walks after it start from a known state.
+ */
+async function setDirectRowEmail(page: Page, checked: boolean) {
+  const want = String(checked);
+  await page.goto(`${baseUrl}/user/me/settings/notifications`);
+  await openUserNotificationsGroup(page);
+  const emailToggle = directRowEmailToggle(page);
+  await expect(emailToggle).toHaveAttribute('aria-checked', /^(true|false)$/);
+  if ((await emailToggle.getAttribute('aria-checked')) !== want) {
+    await emailToggle.click();
+  }
+  await expect(emailToggle).toHaveAttribute('aria-checked', want);
+  await page.reload();
+  await openUserNotificationsGroup(page);
+  await expect(directRowEmailToggle(page)).toHaveAttribute(
+    'aria-checked',
+    want
   );
 }
 
@@ -427,7 +452,8 @@ test.describe(
       'US3-AS4: toggling email on a messaging row persists across reload and is honored for the next message',
       { tag: '@local-stack' },
       async ({ page, browser }) => {
-        test.setTimeout(digestTestTimeoutMs(directEmail));
+        // + 30 s for the `finally` that restores the row's default.
+        test.setTimeout(digestTestTimeoutMs(directEmail) + 30_000);
         requireRecipientFromAS1();
         await deleteMailSlurperMails();
         await loginViaCrd(page, recipientEmail, password, baseUrl);
@@ -438,63 +464,73 @@ test.describe(
         await expect(emailToggle).toHaveAttribute('aria-checked', 'false');
         await emailToggle.click();
         await expect(emailToggle).toHaveAttribute('aria-checked', 'true');
+        // From here on the recipient's direct-row email is ON; restore the
+        // mandated default whatever happens, so AS5 (and any re-run of the
+        // serial file on the same stack) never inherits it.
+        try {
+          await page.reload();
+          await openUserNotificationsGroup(page);
+          await expect(directRowEmailToggle(page)).toHaveAttribute(
+            'aria-checked',
+            'true'
+          );
 
-        await page.reload();
-        await openUserNotificationsGroup(page);
-        await expect(directRowEmailToggle(page)).toHaveAttribute(
-          'aria-checked',
-          'true'
-        );
-
-        // Honored for the next message: a fresh sender messages the
-        // recipient and an email is actually delivered (subject names the
-        // sender, never the message text — FR-008/FR-009).
-        const senderContext = await browser.newContext();
-        const senderPage = await senderContext.newPage();
-        const probeMessage = `US3-AS4 email-honored probe ${UniqueIDGenerator.getID()}`;
-        const { displayName: as4SenderDisplayName } =
-          await registerUniquePersona(
+          // Honored for the next message: a fresh sender messages the
+          // recipient and an email is actually delivered (subject names the
+          // sender, never the message text — FR-008/FR-009).
+          const senderContext = await browser.newContext();
+          const senderPage = await senderContext.newPage();
+          const probeMessage = `US3-AS4 email-honored probe ${UniqueIDGenerator.getID()}`;
+          const { displayName: as4SenderDisplayName } =
+            await registerUniquePersona(
+              senderPage,
+              'us3as4sender',
+              'Us3As4',
+              'Sender'
+            );
+          await sendDirectMessage(
             senderPage,
-            'us3as4sender',
-            'Us3As4',
-            'Sender'
+            recipientDisplayName,
+            probeMessage
           );
-        await sendDirectMessage(senderPage, recipientDisplayName, probeMessage);
 
-        // Poll bound covers `email:direct` quiet + sweep + settle, rather than a
-        // fixed 10 x 2s. The email is debounced, so the previous fixed ceiling
-        // would have expired before the digest was ever dispatched on any stack
-        // whose direct-email quiet period exceeded ~18s — including one running
-        // the production default.
-        let deliveredToRecipient:
-          | { subject: string; toAddresses: string[]; body: string }
-          | undefined;
-        const pollDeadline = Date.now() + directEmail.quietGraceMs;
-        do {
-          const [emailsData] = (await getMailsData()) as [
-            Array<{ subject: string; toAddresses: string[]; body: string }>,
-            number,
-          ];
-          deliveredToRecipient = emailsData.find(item =>
-            item.toAddresses.includes(recipientEmail)
-          );
-          if (deliveredToRecipient) break;
-          // eslint-disable-next-line no-restricted-syntax -- poll interval of a mailbox reader
-          await delay(2000);
-        } while (Date.now() < pollDeadline);
+          // Poll bound covers `email:direct` quiet + sweep + settle, rather than a
+          // fixed 10 x 2s. The email is debounced, so the previous fixed ceiling
+          // would have expired before the digest was ever dispatched on any stack
+          // whose direct-email quiet period exceeded ~18s — including one running
+          // the production default.
+          let deliveredToRecipient:
+            | { subject: string; toAddresses: string[]; body: string }
+            | undefined;
+          const pollDeadline = Date.now() + directEmail.quietGraceMs;
+          do {
+            const [emailsData] = (await getMailsData()) as [
+              Array<{ subject: string; toAddresses: string[]; body: string }>,
+              number,
+            ];
+            deliveredToRecipient = emailsData.find(item =>
+              item.toAddresses.includes(recipientEmail)
+            );
+            if (deliveredToRecipient) break;
+            // eslint-disable-next-line no-restricted-syntax -- poll interval of a mailbox reader
+            await delay(2000);
+          } while (Date.now() < pollDeadline);
 
-        expect(
-          deliveredToRecipient,
-          'email delivered to the recipient after enabling the row'
-        ).toBeDefined();
-        expect(deliveredToRecipient!.subject).toContain(as4SenderDisplayName);
-        expect(deliveredToRecipient!.body).not.toContain(probeMessage);
+          expect(
+            deliveredToRecipient,
+            'email delivered to the recipient after enabling the row'
+          ).toBeDefined();
+          expect(deliveredToRecipient!.subject).toContain(as4SenderDisplayName);
+          expect(deliveredToRecipient!.body).not.toContain(probeMessage);
 
-        await senderContext.close();
+          await senderContext.close();
+        } finally {
+          await setDirectRowEmail(page, false);
+        }
       }
     );
 
-    test("US3-AS5: the chat panel's settings shortcut lands on notification settings where both rows are available and working", async ({
+    test("US3-AS5: the chat panel's settings shortcut lands on notification settings with both rows visible", async ({
       page,
     }) => {
       requireRecipientFromAS1();
@@ -523,20 +559,29 @@ test.describe(
         )
       ).toBeVisible();
 
-      // Working, not just present: email on the direct row is OFF by default
-      // (AS1); switch it on, reload, and read it back on, then restore it.
+      // Working, not just present: flip the direct row's email channel to the
+      // opposite of whatever it currently reads, prove the flip survives a
+      // reload, then flip it back and prove that persists too. Reading the
+      // start state (rather than assuming AS1's default) keeps this
+      // independent of AS4, which also toggles this row in the local-stack
+      // runner; AS1 already pins the default itself.
       const emailToggle = directRowEmailToggle(page);
-      await expect(emailToggle).toHaveAttribute('aria-checked', 'false');
+      await expect(emailToggle).toHaveAttribute(
+        'aria-checked',
+        /^(true|false)$/
+      );
+      const initial = await emailToggle.getAttribute('aria-checked');
+      const flipped = initial === 'true' ? 'false' : 'true';
       await emailToggle.click();
-      await expect(emailToggle).toHaveAttribute('aria-checked', 'true');
+      await expect(emailToggle).toHaveAttribute('aria-checked', flipped);
       await page.reload();
       await openUserNotificationsGroup(page);
-      await expect(emailToggle).toHaveAttribute('aria-checked', 'true');
+      await expect(emailToggle).toHaveAttribute('aria-checked', flipped);
       await emailToggle.click();
-      await expect(emailToggle).toHaveAttribute('aria-checked', 'false');
+      await expect(emailToggle).toHaveAttribute('aria-checked', initial!);
       await page.reload();
       await openUserNotificationsGroup(page);
-      await expect(emailToggle).toHaveAttribute('aria-checked', 'false');
+      await expect(emailToggle).toHaveAttribute('aria-checked', initial!);
     });
   }
 );
