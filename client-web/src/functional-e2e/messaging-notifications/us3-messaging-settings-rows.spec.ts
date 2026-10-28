@@ -109,6 +109,27 @@ async function getMessagingRowSwitches(
   }, rowLabelFragment);
 }
 
+/**
+ * client-web#10437: the Notifications tab groups its rows into collapsible
+ * SettingsSection cards that start collapsed (body mounted but hidden). The
+ * two messaging rows live in the "User Notifications" group
+ * (contributorSettings `user.notifications.groups.user.title`), so every walk
+ * that reads or toggles them opens that group first via its `<h3><button>`
+ * trigger. The `<h3>` also carries the group's description, so its accessible
+ * name is "User Notifications Personalise alerts…" — matched by prefix, not
+ * exactly. A no-op when it is already open.
+ */
+async function openUserNotificationsGroup(page: Page) {
+  const trigger = page
+    .getByRole('heading', { level: 3, name: /^User Notifications/ })
+    .getByRole('button');
+  await expect(trigger).toBeVisible();
+  if ((await trigger.getAttribute('aria-expanded')) !== 'true') {
+    await trigger.click();
+  }
+  await expect(trigger).toHaveAttribute('aria-expanded', 'true');
+}
+
 function directRowEmailToggle(page: Page) {
   return page.locator(
     '[aria-label="Toggle Email notification for: Receive a notification when someone sends me a direct (1:1) chat message"]'
@@ -197,6 +218,7 @@ test.describe(
         await registerUniquePersona(page, 'us3recipient', 'Us3', 'Recipient'));
 
       await page.goto(`${baseUrl}/user/me/settings/notifications`);
+      await openUserNotificationsGroup(page);
       await expect(
         page.getByText(
           'Receive a notification when someone sends me a direct (1:1) chat message'
@@ -258,6 +280,7 @@ test.describe(
       // guards its externally-observable contract.
       await loginViaCrd(page, adminEmail, password, baseUrl);
       await page.goto(`${baseUrl}/user/me/settings/notifications`);
+      await openUserNotificationsGroup(page);
 
       await expect(
         page.getByText(
@@ -409,6 +432,7 @@ test.describe(
         await deleteMailSlurperMails();
         await loginViaCrd(page, recipientEmail, password, baseUrl);
         await page.goto(`${baseUrl}/user/me/settings/notifications`);
+        await openUserNotificationsGroup(page);
 
         const emailToggle = directRowEmailToggle(page);
         await expect(emailToggle).toHaveAttribute('aria-checked', 'false');
@@ -416,6 +440,7 @@ test.describe(
         await expect(emailToggle).toHaveAttribute('aria-checked', 'true');
 
         await page.reload();
+        await openUserNotificationsGroup(page);
         await expect(directRowEmailToggle(page)).toHaveAttribute(
           'aria-checked',
           'true'
@@ -480,15 +505,22 @@ test.describe(
       await page.getByRole('button', { name: 'Notification settings' }).click();
 
       await expect(page).toHaveURL(/\/user\/me\/settings\/notifications/);
+      // SC-007 / FR-019: the shortcut must reach the page with both rows
+      // VISIBLE in one navigation — no further click. Since client-web#10437
+      // the rows sit inside the "User Notifications" group, which starts
+      // collapsed and is not deep-linked by the shortcut, so this is asserted
+      // as written and not papered over by opening the group here.
       await expect(
         page.getByText(
           'Receive a notification when someone sends me a direct (1:1) chat message'
-        )
+        ),
+        'SC-007: the direct-message row is visible right after the shortcut, without opening a group'
       ).toBeVisible();
       await expect(
         page.getByText(
           'Receive a notification when someone posts in a group chat I am a member of'
-        )
+        ),
+        'SC-007: the group-message row is visible right after the shortcut, without opening a group'
       ).toBeVisible();
     });
   }

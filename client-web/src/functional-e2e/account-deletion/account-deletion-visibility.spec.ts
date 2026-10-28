@@ -2,6 +2,12 @@
 // story: client-web#10107, workspace#054 — the portable delta after test-suites#620.
 //
 // TC-16 — the Delete-account card is owner-only.
+//
+// client-web#10437 (spec 054 FR-001, amended 2026-10-23): the card moved from
+// the Security tab to the "Danger Zone" section at the end of the Account
+// tab (`AccountDangerZone.tsx`, mounted only for the profile owner). The
+// section starts collapsed, with its body mounted but hidden; the card title
+// is plain text now (no heading), the section heading is "Danger Zone".
 
 import { test, expect } from '@playwright/test';
 import {
@@ -61,26 +67,53 @@ test.describe('Delete-account card visibility (054 delta)', () => {
     );
 
     await expect(
-      adminPage.getByRole('heading', { name: 'Delete account' })
+      adminPage.getByRole('button', { name: 'Delete account' })
+    ).toHaveCount(0);
+
+    // Step 1b — the Account tab, where the card lives now, IS reachable for
+    // the admin (they may manage S's hosted resources), but the Danger Zone
+    // is mounted only for the owner: no section, no card, no trigger —
+    // next to a positive control that the tab itself rendered.
+    await adminPage.goto(`${baseUrl}/user/${subject.nameId}/settings/account`);
+    await expect(
+      adminPage.getByRole('heading', { name: 'Hosted Spaces', level: 3 })
+    ).toBeVisible({ timeout: 15000 });
+    await expect(
+      adminPage.getByRole('heading', { name: 'Danger Zone', level: 3 })
     ).toHaveCount(0);
     await expect(
       adminPage.getByRole('button', { name: 'Delete account' })
     ).toHaveCount(0);
     await adminContext.close();
 
-    // Step 2 — as S, in a fresh context, open their OWN security tab. The
-    // card IS present.
+    // Step 2 — as S, in a fresh context, open their OWN account tab. The
+    // Danger Zone section is there; opening it reveals the card.
     const subjectContext = await browser.newContext();
     const subjectPage = await subjectContext.newPage();
     try {
       await signIn(subjectPage, subject.email);
       await subjectPage.goto(
-        `${baseUrl}/user/${subject.nameId}/settings/security`
+        `${baseUrl}/user/${subject.nameId}/settings/account`
       );
 
+      const dangerZoneTrigger = subjectPage
+        .getByRole('heading', { name: 'Danger Zone', level: 3 })
+        .getByRole('button', { name: 'Danger Zone' });
+      await expect(dangerZoneTrigger).toBeVisible({ timeout: 15000 });
+      // Collapsed by default (the card is hidden, not absent) — it opens on
+      // the trigger, never on its own.
       await expect(
-        subjectPage.getByRole('heading', { name: 'Delete account' })
-      ).toBeVisible({ timeout: 15000 });
+        subjectPage.getByRole('button', { name: 'Delete account' })
+      ).toBeHidden();
+      await expect(dangerZoneTrigger).toHaveAttribute('aria-expanded', 'false');
+      await dangerZoneTrigger.click();
+      await expect(dangerZoneTrigger).toHaveAttribute('aria-expanded', 'true');
+
+      await expect(
+        subjectPage
+          .getByRole('paragraph')
+          .filter({ hasText: /^Delete account$/ })
+      ).toBeVisible();
       await expect(
         subjectPage.getByText(
           'Deleting your account is immediate and permanent. Your profile, settings, uploaded files, and sign-in credentials are removed, and this cannot be undone.'
