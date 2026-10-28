@@ -494,7 +494,7 @@ test.describe(
       }
     );
 
-    test("US3-AS5: the chat panel's settings shortcut lands on notification settings with both rows visible", async ({
+    test("US3-AS5: the chat panel's settings shortcut lands on notification settings where both rows are available and working", async ({
       page,
     }) => {
       requireRecipientFromAS1();
@@ -505,23 +505,38 @@ test.describe(
       await page.getByRole('button', { name: 'Notification settings' }).click();
 
       await expect(page).toHaveURL(/\/user\/me\/settings\/notifications/);
-      // SC-007 / FR-019: the shortcut must reach the page with both rows
-      // VISIBLE in one navigation — no further click. Since client-web#10437
-      // the rows sit inside the "User Notifications" group, which starts
-      // collapsed and is not deep-linked by the shortcut, so this is asserted
-      // as written and not papered over by opening the group here.
+      // SC-007 / FR-019: the shortcut reaches the notification settings and
+      // both messaging rows are there. Since client-web#10437 the rows sit in
+      // the "User Notifications" group, which starts collapsed — the user
+      // ruled (2026-10-28) that one more click to expand it is acceptable, so
+      // the walk opens the group and then proves the rows are usable: a
+      // channel toggle persists across a reload.
+      await openUserNotificationsGroup(page);
       await expect(
         page.getByText(
           'Receive a notification when someone sends me a direct (1:1) chat message'
-        ),
-        'SC-007: the direct-message row is visible right after the shortcut, without opening a group'
+        )
       ).toBeVisible();
       await expect(
         page.getByText(
           'Receive a notification when someone posts in a group chat I am a member of'
-        ),
-        'SC-007: the group-message row is visible right after the shortcut, without opening a group'
+        )
       ).toBeVisible();
+
+      // Working, not just present: email on the direct row is OFF by default
+      // (AS1); switch it on, reload, and read it back on, then restore it.
+      const emailToggle = directRowEmailToggle(page);
+      await expect(emailToggle).toHaveAttribute('aria-checked', 'false');
+      await emailToggle.click();
+      await expect(emailToggle).toHaveAttribute('aria-checked', 'true');
+      await page.reload();
+      await openUserNotificationsGroup(page);
+      await expect(emailToggle).toHaveAttribute('aria-checked', 'true');
+      await emailToggle.click();
+      await expect(emailToggle).toHaveAttribute('aria-checked', 'false');
+      await page.reload();
+      await openUserNotificationsGroup(page);
+      await expect(emailToggle).toHaveAttribute('aria-checked', 'false');
     });
   }
 );

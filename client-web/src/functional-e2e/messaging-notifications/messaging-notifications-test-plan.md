@@ -129,7 +129,7 @@ accumulates there one per night — worth fixing.
 | US3-AS2 | A pre-existing account loads notification settings without error, same defaults | `us3-…` › US3-AS2 |
 | US3-AS3 | Forcing the stored in-app flag on through the public API still produces no in-app notification — enforcement is at the platform boundary | `us3-…` › US3-AS3 |
 | US3-AS4 | Toggling email persists across reload and is honoured for the next message | `us3-…` › US3-AS4 |
-| US3-AS5 | The chat panel's settings shortcut lands on notification settings with both rows visible | `us3-…` › US3-AS5 — **red since client-web#10437** (2026-10-26): the shortcut still lands on `/user/me/settings/notifications`, but the rows now sit in the "User Notifications" group, which starts collapsed and is not deep-linked, so they are hidden until a second click. The assertion encodes SC-007 / FR-019 as written and is deliberately not relaxed; candidate product defect, to be filed and then pinned with `test.skip` |
+| US3-AS5 | The chat panel's settings shortcut lands on notification settings where both messaging rows are available and working | `us3-…` › US3-AS5 — since client-web#10437 the rows sit in the collapsed "User Notifications" group; the walk expands it (one extra click, ruled acceptable 2026-10-28) and proves a channel toggle persists across a reload |
 
 ### It-spec matrix (`server-api`)
 
