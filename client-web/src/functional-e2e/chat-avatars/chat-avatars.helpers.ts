@@ -333,8 +333,14 @@ export async function uploadProfileAvatar(person: TestPerson, variant: 'a' | 'b'
   await save.click();
   await expect(cropTitle).toHaveCount(0, { timeout: 30000 });
 
-  // The 128px avatar in the "Profile Picture" card now shows the uploaded image.
-  const settingsAvatar = page.locator('[data-slot="avatar"].size-32 [data-slot="avatar-image"]');
+  // The "Profile Picture" card (client-web#10437: a non-collapsible
+  // SettingsSection — `<section><h3>Profile Picture</h3>…`) now shows the
+  // uploaded image. Scoped by the card's heading rather than the avatar's size
+  // class, which changed from 128px to 96px in the same redesign.
+  const settingsAvatar = page
+    .locator('section')
+    .filter({ has: page.getByRole('heading', { name: 'Profile Picture', exact: true }) })
+    .locator('[data-slot="avatar-image"]');
   await expect(settingsAvatar).toBeVisible({ timeout: 30000 });
   const src = await settingsAvatar.getAttribute('src');
   expect(src, 'the uploaded profile picture should have a src').toBeTruthy();
@@ -610,6 +616,15 @@ export async function settledAvatarComposite(scope: Locator): Promise<{ imgSrcs:
 export async function avatarCellCount(scope: Locator): Promise<number> {
   const { imgSrcs, fallbackTexts } = await avatarComposite(scope);
   return imgSrcs.length + fallbackTexts.length;
+}
+
+/**
+ * The "+N" overflow tile of a group composite (client-web#10427: from five
+ * members on, GroupAvatar draws three faces and a fourth quarter counting the
+ * rest). Empty when the composite has no overflow tile.
+ */
+export async function overflowCountText(scope: Locator): Promise<string> {
+  return (await scope.getByText(/^\+\d+$/).allTextContents()).map(text => text.trim()).join(',');
 }
 
 // ────────────────────────────── cleanup ──────────────────────────────
