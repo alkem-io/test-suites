@@ -1,0 +1,6422 @@
+# server-api test inventory — raw seed for the behaviour knowledge base
+
+_Generated 2026-10-28 from `origin/develop` @ `df149442` by letting vitest **collect** every `server-api/src/functional-api/**/*.it-spec.ts` (`vitest.collect()` with globalSetup/setupFiles stripped, no server). Names are therefore the resolved ones: `test.each`/`describe.each` tables are expanded, template-literal names are filled in, multi-line names are whole. Titles say WHAT is asserted; the knowledge documents per area add WHY (the business rule) and drop the HOW. `[skip]` = `test.skip`/`describe.skip`, `[todo]` = `test.todo`._
+
+**234 files · 5121 cases · 78 skipped · 17 todo** (one row per distinct file+suite+name; a case that belongs to several vitest projects is listed once).
+
+
+## activity-logs  <sub>5 files · 55 cases · 3 skip · 0 todo</sub>
+
+
+### `activity-logs/challenge-activity-logs.it-spec.ts`
+- **Activity logs - Subspace**
+    - should return empty arrays
+    - should NOT return CALLOUT_PUBLISHED, when created
+    - should return MEMBER_JOINED, when user assigned from Admin or individually joined
+    - should return CALLOUT_PUBLISHED, POST_CREATED, POST_COMMENT, DISCUSSION_COMMENT, WHITEBOARD_CREATED [skip]
+- **Access to Activity logs - Subspace > DDT user privileges to Public Subspace activity logs of Private Space**
+    - User: "'admin'" get message: "undefined", when intend to access Public Subspace activity logs of a Private space
+    - User: "'space.admin'" get message: "undefined", when intend to access Public Subspace activity logs of a Private space
+    - User: "'space.member'" get message: "undefined", when intend to access Public Subspace activity logs of a Private space
+    - User: "'non.space'" get Error message: "'Authorization'", when intend to access Public Subspace activity logs of a Private space
+- **Access to Activity logs - Subspace > DDT user privileges to Public Subspace activity logs of Public Space**
+    - User: "'admin'" get message: "undefined", when intend to access Public Subspace activity logs of a Public space
+    - User: "'space.admin'" get message: "undefined", when intend to access Public Subspace activity logs of a Public space
+    - User: "'space.member'" get message: "undefined", when intend to access Public Subspace activity logs of a Public space
+    - User: "'non.space'" get message: "undefined", when intend to access Public Subspace activity logs of a Public space
+
+### `activity-logs/activity-log-on-transfer-conversion.it-spec.ts`
+- **Activity log follows a transferred callout**
+    - the callout activity exists in the source space before transfer (precondition)
+    - activity log queries for source and destination do not error
+    - the transferred callout activity appears in the destination space
+    - the transferred callout activity no longer appears in the source space
+- **Activity log follows an L1 space promoted to L0**
+    - the callout activity exists before promotion (precondition)
+    - activity log query does not error after promotion
+    - the activity remains readable on the promoted L0 collaboration
+- **Activity log after a callout is transferred to a private subspace**
+    - the space member sees the callout activity before transfer (precondition)
+    - reading the activity log as the space member does not error after transfer
+    - the moved callout activity is no longer shown to the space member
+
+### `activity-logs/opportunity-activity-logs.it-spec.ts`
+- **Activity logs - Subsubspace**
+    - should return empty arrays
+    - should NOT return CALLOUT_PUBLISHED, when created
+    - should return MEMBER_JOINED, when user assigned from Admin
+    - should return CALLOUT_PUBLISHED, POST_CREATED, POST_COMMENT, DISCUSSION_COMMENT, WHITEBOARD_CREATED [skip]
+- **Access to Activity logs - Subsubspace > DDT user privileges to Public Subsubspace activity logs of Private Space**
+    - User: "'admin'" get message: "undefined", when intend to access Public Subsubspace activity logs of a Private space
+    - User: "'space.admin'" get message: "undefined", when intend to access Public Subsubspace activity logs of a Private space
+    - User: "'space.member'" get message: "undefined", when intend to access Public Subsubspace activity logs of a Private space
+    - User: "'non.space'" get Error message: "'Authorization'", when intend to access Public Subsubspace activity logs of a Private space
+- **Access to Activity logs - Subsubspace > DDT user privileges to Public Subsubspace activity logs of Public Space**
+    - User: "'admin'" get message: "undefined", when intend to access Public Subsubspace activity logs of a Public space
+    - User: "'space.admin'" get message: "undefined", when intend to access Public Subsubspace activity logs of a Public space
+    - User: "'space.member'" get message: "undefined", when intend to access Public Subsubspace activity logs of a Public space
+    - User: "'non.space'" get message: "undefined", when intend to access Public Subsubspace activity logs of a Public space
+
+### `activity-logs/activity-feed.it-spec.ts`
+- **activityFeedGrouped — empty authorization scope (server#6640)**
+    - AF-01 — a user with no space memberships gets no grouped activity, even though private activity exists
+    - AF-02 — a member whose spaceIds filter excludes every space they hold gets no grouped activity
+    - AF-15 — the paginated feed is empty for a user who can read no collaboration
+- **activityFeed — excludeMyActivity (server#6561)**
+    - AF-11 — excludeMyActivity: no caller rows, page 1 full at the limit, paging continues without them
+- **activityFeed — excludeMyActivity (server#6561) > AF-12 — myActivity × excludeMyActivity decision table**
+    - AF-12 D1 (control) — neither flag: the whole scope, caller rows and others' rows
+    - AF-12 D2 — excludeMyActivity: false behaves as unset
+    - AF-12 D4 — myActivity: true returns exactly the caller's rows
+    - AF-12 D5 — myActivity: true with excludeMyActivity: true composes to an empty result, not an error
+- **activityFeed — excludeMyActivity (server#6561)**
+    - AF-14 — the grouped feed honours excludeMyActivity
+
+### `activity-logs/space-activity-logs.it-spec.ts`
+- **Activity logs - Space**
+    - should return only memberJoined
+    - should NOT return CALLOUT_PUBLISHED, when created
+    - should return MEMBER_JOINED, when user assigned from Admin or individually joined
+    - should return CALLOUT_PUBLISHED, POST_CREATED, POST_COMMENT, DISCUSSION_COMMENT, WHITEBOARD_CREATED [skip]
+- **Access to Activity logs - Space > DDT user privileges to Private Space activity logs**
+    - User: "'admin'" get message: "undefined", when intend to access Private space activity logs
+    - User: "'space.admin'" get message: "undefined", when intend to access Private space activity logs
+    - User: "'space.member'" get message: "undefined", when intend to access Private space activity logs
+    - User: "'non.space'" get Error message: "'Authorization'", when intend to access Private space activity logs
+- **Access to Activity logs - Space > DDT user privileges to Public Space activity logs**
+    - User: "'admin'" get message: "undefined", when intend to access Public space activity logs
+    - User: "'space.admin'" get message: "undefined", when intend to access Public space activity logs
+    - User: "'space.member'" get message: "undefined", when intend to access Public space activity logs
+    - User: "'non.space'" get message: "undefined", when intend to access Public space activity logs
+
+## callout  <sub>18 files · 394 cases · 15 skip · 0 todo</sub>
+
+
+### `callout/callouts.it-spec.ts`
+- **Callouts - CRUD > **
+    - should create callout on space coollaboration
+    - should update callout on space coollaboration
+    - should update callout visibility to Published
+- **Callouts - CRUD**
+    - should delete callout on space coollaboration
+- **Callouts - AUTH Space > DDT user privileges to create callout**
+    - User: "'admin'" get message: "'"data":{"createCalloutOnCalloutsSet"'", who intend to create callout
+    - User: "'space.admin'" get message: "'"data":{"createCalloutOnCalloutsSet"'", who intend to create callout
+- **Callouts - AUTH Space > DDT user NO privileges to create callout**
+    - User: "'non.space'" get message: "'errors'", who intend to create callout
+- **Callouts - AUTH Space > DDT user privileges to update callout**
+    - User: "'admin'" get message: "'"data":{"updateCallout"'", who intend to update callout
+    - User: "'space.admin'" get message: "'"data":{"updateCallout"'", who intend to update callout
+    - User: "'space.member'" get message: "'errors'", who intend to update callout
+    - User: "'non.space'" get message: "'errors'", who intend to update callout
+- **Callouts - AUTH Space > DDT user privileges to delete callout**
+    - User: "'admin'" get message: "'"data":{"deleteCallout"'", who intend to delete callout
+    - User: "'space.admin'" get message: "'"data":{"deleteCallout"'", who intend to delete callout
+    - User: "'space.member'" get message: "'errors'", who intend to delete callout
+    - User: "'non.space'" get message: "'errors'", who intend to delete callout
+- **Callouts - AUTH Subspace > DDT user privileges to create callout**
+    - User: "'space.admin'" get message: "'"data":{"createCalloutOnCalloutsSet"'", who intend to create callout
+    - User: "'subspace.admin'" get message: "'"data":{"createCalloutOnCalloutsSet"'", who intend to create callout
+    - User: "'subspace.member'" get message: "'"data":{"createCalloutOnCalloutsSet"'", who intend to create callout
+- **Callouts - AUTH Subspace > DDT user NO privileges to create callout**
+    - User: "'non.space'" get message: "'errors'", who intend to create callout
+- **Callouts - AUTH Subspace > DDT user privileges to update callout**
+    - User: "'space.admin'" get message: "'"data":{"updateCallout"'", who intend to update callout
+    - User: "'subspace.admin'" get message: "'"data":{"updateCallout"'", who intend to update callout
+    - User: "'subspace.member'" get message: "'errors'", who intend to update callout
+    - User: "'non.space'" get message: "'errors'", who intend to update callout
+- **Callouts - AUTH Subspace > DDT user privileges to delete callout**
+    - User: "'space.admin'" get message: "'"data":{"deleteCallout"'", who intend to delete callout
+    - User: "'subspace.admin'" get message: "'"data":{"deleteCallout"'", who intend to delete callout
+    - User: "'subspace.member'" get message: "'errors'", who intend to delete callout
+    - User: "'non.space'" get message: "'errors'", who intend to delete callout
+- **Callouts - AUTH Subsubspace > DDT user privileges to create callout**
+    - User: "'space.admin'" get message: "'"data":{"createCalloutOnCalloutsSet"'", who intend to create callout
+    - User: "'subspace.admin'" get message: "'"data":{"createCalloutOnCalloutsSet"'", who intend to create callout
+    - User: "'subsubspace.admin'" get message: "'"data":{"createCalloutOnCalloutsSet"'", who intend to create callout
+    - User: "'subspace.member'" get message: "'"data":{"createCalloutOnCalloutsSet"'", who intend to create callout
+    - User: "'subsubspace.member'" get message: "'"data":{"createCalloutOnCalloutsSet"'", who intend to create callout
+- **Callouts - AUTH Subsubspace > DDT user NO privileges to create callout**
+    - User: "'non.space'" get message: "'errors'", who intend to create callout
+- **Callouts - AUTH Subsubspace > DDT user privileges to update callout**
+    - User: "'space.admin'" get message: "'"data":{"updateCallout"'", who intend to update callout
+    - User: "'subspace.admin'" get message: "'"data":{"updateCallout"'", who intend to update callout
+    - User: "'subsubspace.admin'" get message: "'"data":{"updateCallout"'", who intend to update callout
+    - User: "'space.member'" get message: "'errors'", who intend to update callout
+    - User: "'subspace.member'" get message: "'errors'", who intend to update callout
+    - User: "'subsubspace.member'" get message: "'errors'", who intend to update callout
+    - User: "'non.space'" get message: "'errors'", who intend to update callout
+- **Callouts - AUTH Subsubspace > DDT user privileges to delete callout**
+    - User: "'space.admin'" get message: "'"data":{"deleteCallout"'", who intend to delete callout
+    - User: "'subspace.admin'" get message: "'"data":{"deleteCallout"'", who intend to delete callout
+    - User: "'subsubspace.admin'" get message: "'"data":{"deleteCallout"'", who intend to delete callout
+    - User: "'space.member'" get message: "'errors'", who intend to delete callout
+    - User: "'subspace.member'" get message: "'errors'", who intend to delete callout
+    - User: "'subsubspace.member'" get message: "'errors'", who intend to delete callout
+    - User: "'non.space'" get message: "'errors'", who intend to delete callout
+
+### `callout/form/form-placement-guards.it-spec.ts`
+- **Form placement — who can create a FORM callout**
+    - a member with create-callouts on cannot create a FORM callout
+    - positive control: the same member creates a NONE-framing callout
+    - a space admin creates a FORM callout whose question ids are UUIDs
+- **Form placement — the framing kind is fixed**
+    - a NONE callout cannot become a FORM
+    - a FORM callout cannot become a NONE callout
+    - positive control: the profile of a FORM callout can still be updated
+- **Form placement — carriers that build framings (only templates accept a FORM, R25)**
+    - a virtual contributor knowledge base cannot be seeded with a FORM callout
+    - positive control: the same knowledge base is created with a NONE callout
+    - a FORM callout cannot be added to an existing knowledge base (US1-AS3)
+    - a callout template carries a FORM definition (R25)
+    - positive control: a NONE callout template is created
+    - a subspace cannot be created with a FORM callout in its request
+    - positive control: a subspace is created with a NONE callout in its request
+- **Form placement — moving callouts**
+    - a FORM callout cannot be transferred and stays where it was
+    - positive control: a NONE callout moves between the same two sets
+- **Form placement — spaces holding a FORM callout**
+    - a template made from the space keeps the FORM callout (R25)
+    - a virtual contributor cannot be converted to a knowledge base while the space holds a FORM, and the space is left untouched
+
+### `callout/spaces-selection-account-scope.it-spec.ts`
+- **Spaces-collection CUSTOM selection — the account boundary**
+    - case 1 (AC4 / FR-003, create) — a foreign-account id is rejected and nothing is persisted
+    - case 2 (AC4 / FR-003b, update) — a NEWLY ADDED foreign id is rejected and the stored list is unchanged
+    - case 3 (AC7 / FR-003b) — an id that has LEFT the account is dropped silently, with no error
+    - case 4 (AC1 / FR-004a, FR-017) — a space under a DIFFERENT L0 of the same account and the host’s own L2 are accepted, persisted and rendered whole
+    - case 5 (AC2 / FR-010) — accountSpaces offers the account’s spaces at every level and never the foreign one
+    - case 6 (AC3 / FR-009) — accountSpaces is refused to an actor holding READ but not UPDATE on the host space
+    - case 7 (AC7 / US4, account transfer) — a space transferred out of the account drops out of the collection at read time, is not reported hidden, and is omitted on the next save
+    - case 8 (SEC-084-01, update) — a member cannot turn their own callout into a SPACES collection; the stored framing is unchanged
+    - case 9 (SEC-084-CW-01) — a viewer without UPDATE on the callout reads the mode but an empty selectedIds
+
+### `callout/contributors-collection/contributor-cards-visibility.it-spec.ts`
+- **FR-032 — PUBLIC space, user information "members only"**
+    - US2-AS2 — a member sees People as normal, enriched (positive control)
+    - SC-009 — anonymous: zero People cards and a People count of 0
+    - US2-AS2 — anonymous: Organizations and Virtual Contributors stay visible and enriched
+    - SC-009 — signed-in non-member: zero People cards and a People count of 0
+    - US2-AS2 — signed-in non-member: Organizations and Virtual Contributors stay visible and enriched
+- **FR-032 — PUBLIC space, user information follows space visibility**
+    - Edge case "Anonymous visitors of a public space" — anonymous sees the member's enriched card
+    - Edge case "Anonymous visitors of a public space" — signed-in non-member sees the member's enriched card
+- **FR-032 — PRIVATE space keeps its existing read rule**
+    - a member still reads every segment (positive control)
+    - anonymous is denied the callout with FORBIDDEN_POLICY for every segment
+    - signed-in non-member is denied the callout with FORBIDDEN_POLICY for every segment
+
+### `callout/contributors-collection/contributor-cards.it-spec.ts`
+- **Contributor card enrichment — null matrix**
+    - FR-028 — USER has no website/associatesCount, ORGANIZATION has no joinedDate and a numeric associatesCount, VIRTUAL_CONTRIBUTOR has all three null
+- **Contributor card enrichment — tagline and tags (FR-004 as amended 2026-09-28)**
+    - US1-AS3 — a user gets skills then keywords merged, case-duplicates kept once with the first spelling, blank tags dropped, no cap
+    - US1-AS3 — a user with no skills gets the keywords
+    - D-EMPTY — a user with no tags gets an empty list, not null
+    - FR-001 — the tagline is trimmed; a whitespace-only or absent tagline is null
+    - US1-AS3 — an organization gets keywords then capabilities merged and deduplicated; capabilities alone are used when keywords are empty; none ⇒ []
+    - US1-AS5 — a virtual contributor gets its tagline and keywords then capabilities merged (first spelling wins); an empty VC gets null and []
+- **Contributor card enrichment — website**
+    - US5 — a valid absolute URL passes through, spaced/upper-case is trimmed and otherwise kept, empty/hostile/schemeless are null
+- **Contributor card enrichment — join month**
+    - US4 — each member gets the first day (00:00 UTC) of the UTC month in which the member role was assigned
+- **Contributor card enrichment — associates count**
+    - D-ZERO — an organization with no associates reports 0, and so does its profile metric
+    - US1-AS4 — adding N associates raises the count by exactly N
+    - FR-030 — every fixture organization reports the same number as its profile associates metric
+
+### `callout/form/form-lifecycle.it-spec.ts`
+- **Form lifecycle — SINGLE response mode under concurrency**
+    - five parallel submits by one member store exactly one response
+    - withdrawing lets the member respond again
+    - switching to MULTIPLE lets the same member respond a second time
+    - MULTIPLE back to SINGLE is allowed while a member holds two responses, and keeps both
+    - under SINGLE a member holding two responses cannot submit a third
+    - withdrawing one of the two still blocks a new submit
+    - withdrawing the last one lets the member submit exactly one again
+- **Form lifecycle — visibility changes**
+    - widening ADMINS to MEMBERS with a response applies to that response; narrowing back takes it away
+    - positive control: the same widening is allowed while the Form has no response
+    - narrowing MEMBERS to ADMINS is allowed even with responses
+- **Form lifecycle — editing the definition under existing responses**
+    - a question type can change on a Form without responses
+- **Form lifecycle — editing the definition under existing responses > answer type changes while responses exist**
+    - short text -> single choice with 2 options succeeds and the old answer keeps its text
+    - a new submission must now answer that question with option ids
+    - single choice -> long text is rejected while options are still sent
+    - single choice -> long text without options succeeds and the old answer keeps its option label
+    - text -> choice with a single option is rejected
+- **Form lifecycle — editing the definition under existing responses**
+    - removing an answered question keeps its snapshot in the old response
+    - toggling required is allowed with responses and binds new submissions only
+    - a plain member cannot edit the definition
+- **Form lifecycle — closing and reopening**
+    - a closed Form still lets the author withdraw, rejects new responses, and accepts them again once reopened
+- **Form lifecycle — deleting the Post**
+    - the responses lookup fails once the Post is gone
+    - the response rows are removed with the Post
+- **Form lifecycle — who may delete which response**
+    - positive control: the response exists and the admin sees it
+    - 'a member of the unrelated space (admi…' cannot delete or withdraw it
+    - 'another member under MEMBERS visibili…' cannot delete or withdraw it
+    - 'the ex-admin creator' cannot delete or withdraw it
+    - 'Global Support where support-as-admin…' cannot delete or withdraw it
+    - a non-moderator gets the same refusal for an existing response id and an unknown one (FR-020, alkem-io/server#6591)
+    - the ex-admin creator cannot delete a response on their own Form either
+    - the ex-admin creator cannot delete their Form Post, and so its responses
+    - the parent space admin can delete it
+    - Global Admin can delete a response too
+- **Form lifecycle — an account deleted after responding**
+    - the response stays with its answers and no author
+
+### `callout/form/form-never-appears.it-spec.ts`
+- **Form response — never a contribution**
+    - the Form callout has no contributions and a zero count
+    - positive control: the POST callout shows the contribution with the marker
+    - the response exists and is readable, so the absence above is real
+- **Form response — never in the activity log**
+    - the control POST wrote exactly one new activity entry and the response none
+- **Form response — never in subscriptions**
+    - calloutPostCreated fires for the POST contribution and is refused for the Form callout
+- **Form response — unreachable from the schema**
+    - positive control: the lookup root is the only entry point
+    - Callout references no response type and exposes no response count
+    - CalloutFraming references no response type and exposes no response count
+    - CalloutForm references no response type and exposes no response count
+    - CalloutFormQuestion references no response type and exposes no response count
+    - CalloutPostCreated references no response type and exposes no response count
+    - ActivityCreatedSubscriptionResult references no response type and exposes no response count
+
+### `callout/form/form-presentation.it-spec.ts`
+- **Form presentation — title and description on create**
+    - both are stored trimmed and returned by lookup.callout
+    - without them both are null
+    - whitespace-only values are stored as null
+    - a 512-character title and a 2048-character description are stored
+    - an over-length 'title' is rejected
+    - an over-length 'description' is rejected
+- **Form presentation — editing title and description**
+    - an update that leaves both out keeps them
+    - a new value is set (trimmed) and the other field is unchanged
+    - an empty string clears the description
+    - an explicit null clears the title
+    - an over-length value on update is rejected and nothing changes
+    - both stay editable while the Form holds a response
+- **Form presentation — defaultCollapsed**
+    - defaults to false when the settings are left out
+    - defaults to false when other settings are given without it
+- **Form presentation — defaultCollapsed > on a Form created collapsed**
+    - create with true round-trips
+    - an update without it, or with null, leaves it unchanged
+    - an update toggles it
+    - it stays changeable while the Form holds a response, and null still leaves it unchanged
+- **Form presentation — never in a notification**
+    - the receipt for a titled Form names the Post, not the Form title or description
+
+### `callout/form/form-space-move.it-spec.ts`
+- **Form responses — a subspace moved under another space (R15)**
+    - before the move: A’s admin reads the responses, B’s admin cannot
+    - the move succeeds and keeps the Form on the moved subspace
+    - after the move: the ADMIN role’s stored parent credentials point at B, not A (alkem-io/server#6592) [skip]
+    - after the move: B’s admin reads every response and can moderate (alkem-io/server#6592) [skip]
+    - after the move: A’s admin no longer reads them (alkem-io/server#6592) [skip]
+    - after the move: the former subspace admin, whose role the move cleared, reads nothing
+    - after the move: the submitter still sees their own responses
+    - after the move: B’s admin deletes a response (moderation follows the new parent)
+    - after the move: A’s admin cannot delete the other response (alkem-io/server#6592) [skip]
+
+### `callout/form/form-submit-validation.it-spec.ts`
+- **Form submit — the positive control**
+    - a fully valid submission stores snapshots with the prompts and option labels
+    - a response with only the required answer is accepted
+- **Form submit — answer validation**
+    - rejects: 'required short text is empty'
+    - rejects: 'required short text is whitespace only'
+    - rejects: 'required short text is not answered a…'
+    - rejects: 'required single choice has no selecti…'
+    - rejects: 'required single choice is not answere…'
+    - rejects: 'required multiple choice has an empty…'
+    - rejects: 'short text is 513 characters'
+    - rejects: 'long text is 2049 characters'
+    - rejects: 'short text of 257 astral characters i…'
+    - rejects: 'an answer refers to an unknown questi…'
+    - rejects: 'the same question is answered twice'
+    - rejects: 'text is given for a choice question'
+    - rejects: 'option ids are given for a text quest…'
+    - rejects: 'an option id belongs to another quest…'
+    - rejects: 'an option id does not exist at all'
+    - rejects: 'two options are picked on a single ch…'
+    - rejects: 'the same option is picked twice on a …'
+    - accepts exactly '512 short-text characters'
+    - accepts exactly '2048 long-text characters'
+    - accepts exactly '256 astral characters (512 UTF-16 uni…'
+    - accepts exactly '1024 astral characters (2048 UTF-16 u…'
+- **Form submit — answers to removed questions and options (US2-AS3)**
+    - positive control: the edited Form accepts a valid response
+    - rejects an answer to a question that was removed
+    - rejects a choice of an option that was removed
+- **Form submit — state and access**
+    - a DRAFT callout rejects responses
+    - a closed Form rejects responses
+    - a user without CONTRIBUTE on the Post is forbidden
+    - an anonymous caller is forbidden
+- **Form submit — the acknowledged visibility**
+    - a widened Form rejects a response acknowledged against the old audience
+    - a widened Form that already holds a response rejects a response acknowledged against the old audience
+    - a narrowed Form still accepts a response acknowledged against the wider audience
+- **Form definition — limits**
+    - a new Form with '0 questions' is rejected
+    - a new Form with '51 questions' is rejected
+    - a new Form with 'a choice question with 1 option' is rejected
+    - a new Form with 'a choice question with 21 options' is rejected
+    - a new Form with 'duplicate option labels' is rejected
+    - a new Form with 'option labels that only differ by sur…' is rejected
+    - boundary control: a new Form with '50 questions' is accepted
+    - boundary control: a new Form with 'a choice question with 2 options' is accepted
+    - boundary control: a new Form with 'a choice question with 20 options' is accepted
+    - a new Form with 'an empty option label' is rejected as invalid input
+    - a new Form with 'a blank option label' is rejected as invalid input
+    - a new Form with 'an option label of 513 characters' is rejected as invalid input
+    - a new Form with 'a prompt of 513 characters' is rejected as invalid input
+    - a new Form with 'an explanation of 2049 characters' is rejected as invalid input
+    - a new Form with 'options on a text question' is rejected as invalid input
+    - boundary control: a new Form with 'an option label of 512 characters' is accepted
+    - boundary control: a new Form with 'a prompt of 512 characters' is accepted
+    - boundary control: a new Form with 'an explanation of 2048 characters' is accepted
+    - an update that names an unknown option id is rejected
+    - an update that names an unknown question id is rejected
+    - an update may not remove every question
+
+### `callout/form/form-visibility-matrix.it-spec.ts`
+- **Form responses — read scope per role > visibility 'ADMINS'**
+    - 'Global Admin'
+    - 'Global Support (flag off: no standing…'
+    - 'subspace admin'
+    - 'parent space admin'
+    - 'submitting member'
+    - 'other subspace member'
+    - 'parent space member (not a member of …'
+    - 'registered non-member'
+    - 'Platform Content Full Access'
+    - 'Platform Support (support-as-admin of…'
+    - 'Global Spaces Reader'
+    - 'Platform Spaces Reader'
+    - anonymous reads nothing
+- **Form responses — read scope per role > visibility 'MEMBERS'**
+    - 'Global Admin'
+    - 'Global Support (flag off: no standing…'
+    - 'subspace admin'
+    - 'parent space admin'
+    - 'submitting member'
+    - 'other subspace member'
+    - 'parent space member (not a member of …'
+    - 'registered non-member'
+    - 'Platform Content Full Access'
+    - 'Platform Support (support-as-admin of…'
+    - 'Global Spaces Reader'
+    - 'Platform Spaces Reader'
+    - anonymous reads nothing
+- **Form responses — read scope per role**
+    - positive control: the submitter sees exactly their own row, the subspace admin sees the same single row
+- **Form responses — who can delete another member’s response**
+    - 'Global Admin'
+    - 'Global Support (flag off: no standing…'
+    - 'subspace admin'
+    - 'parent space admin'
+    - 'other subspace member'
+    - 'parent space member (not a member of …'
+    - 'registered non-member'
+    - 'Platform Content Full Access'
+    - 'Platform Support (support-as-admin of…'
+    - 'Global Spaces Reader'
+    - 'Platform Spaces Reader'
+    - anonymous cannot delete another member’s response
+    - the author can always withdraw their own response
+- **Form responses — the ex-admin creator**
+    - reads only their own responses and cannot moderate
+    - cannot delete another member’s response
+    - positive control: the current subspace admin still reads the one response
+- **Form responses — a parent space member with inherited rights (US3-AS7, D-4)**
+    - submits to a Space-members Form of the subspace
+    - reads only their own response
+    - positive control: a member of the subspace reads that response
+- **Form responses — a private space**
+    - Global Support cannot read the Post, so the lookup is forbidden
+    - Global Admin reads every response
+    - positive control: the member who wrote the response sees it
+- **Form responses — a space that allows platform support as admin**
+    - Global Support reads every response and can moderate
+    - Global Support deletes another member’s response
+    - Global Support moderating through support-as-admin writes one id-only audit row as platform_support (R14)
+    - control: a registered non-member still reads nothing here
+- **Form responses — audit of platform-role moderation (R14, local Postgres)**
+    - 'Platform Content Full Access' deleting another member’s response writes one id-only audit row
+    - 'Global Admin' deleting another member’s response writes one id-only audit row
+    - 'a subspace admin moderating' writes no audit row
+    - 'the submitter withdrawing' writes no audit row
+
+### `callout/post/post-on-callout.it-spec.ts`
+- **Posts - Create**
+    - HM should create post on space callout
+    - GA should create post on space callout without setting nameId
+    - NON-SM should NOT create post on space callout
+    - ChA should create post on subspace callout
+    - GA should create post on subsubspace callout
+- **Posts - Update**
+    - HM should NOT update post created on space callout from GA
+    - NON-HM should NOT update post created on space callout from GA
+    - HA should update post created on space callout from GA
+    - GA should update post created on space callout from GA
+- **(file level)**
+    - HM should update post created on space callout from HM
+- **Posts - Delete**
+    - HM should NOT delete post created on space callout from GA
+    - HM should delete post created on space callout from Himself
+    - HM should delete post created on space callout from EM
+    - NON-EM should NOT delete post created on space callout created from HM
+    - ChA should delete post created on subspace callout from GA
+    - HA should delete post created on subspace callout from ChA
+    - ChA should delete post created on subsubspace callout from OM
+    - ChM should not delete post created on subspace callout from ChA
+    - OM should delete own post on subsubspace callout
+    - GA should delete own post on subsubspace callout
+- **Posts - Messages > Send Message - Post created by GA on Space callout**
+    - ChA should send comment on post created on subspace callout from GA
+    - HM should send comment on post created on space callout from GA
+    - NON-HM should NOT send comment on post created on space callout from GA
+- **Posts - Messages > Send Message - Post created by GA on Space callout > Messages - GA Send/Remove flow**
+    - GA should send comment on post created on space callout from GA
+    - GA should remove comment on post created on space callout from GA
+- **Posts - Messages > Delete Message - Post created by HM on Space callout**
+    - HM should NOT delete comment sent from GA
+    - NON-HM should NOT delete comment sent from GA
+    - GA should remove comment sent from GA
+    - HM should delete own comment
+- **Posts - References**
+    - HM should NOT add reference to post created on space callout from GA
+    - NON-HM should NOT add reference to post created on space callout from GA
+- **Posts - References > References - EA Create/Remove flow**
+    - HA should add reference to post created on space callout from GA
+    - HA should remove reference from post created EA
+
+### `callout/reactions/callout-reactions.it-spec.ts`
+- **US1 — React to a callout with a predefined emoji**
+    - US1-AS1 — member adds allowed emoji: summary shows total 1, that emoji slug, and myReactionEmoji
+    - US1-AS3 — two members with different emojis: total 2, both slugs present, NO per-emoji count field in response
+    - US1-AS4 — allow-list negatives: ASCII lookalikes and off-list values are rejected, nothing stored
+    - reaction-allow-list contract — allowedEmojis returns exactly the 7 predefined slugs
+    - US1-AS5 — member CAN react on a POST-only callout
+    - US1-AS5 — member CAN react on a WHITEBOARD-only callout
+    - US4-AS1 (API) — non-member cannot react on a published callout
+- **US2 — See who reacted and when**
+    - US2-AS1 — 3 reactors: who-reacted list returns name-resolvable users, emoji slugs, updatedDate, most recent first
+    - US2-AS4 — read-only viewer (global admin, no CONTRIBUTE needed for reads) can query summary and who-reacted list
+    - US2-AS3 (structure) — bounded list field never exceeds 100 entries
+- **US3 — Change or remove a reaction (swap, idempotent remove, concurrency)**
+    - US3-AS1 — swap keeps total constant and updates emoji + updatedDate
+    - US3-AS3 — double removeReactionFromCallout: both succeed, no error surfaced
+    - US3-AS4 — concurrent double-add from same user converges to exactly one reaction row
+    - US3-AS4 — add racing remove converges: total is 0 or 1, never double-counted
+- **US4 — Lifecycle + authorization edges**
+    - US4-AS2 — draft callout rejects react (published guard)
+    - US4-AS2 — template callout rejects react (lifecycle guard)
+    - US4-AS3 — deleting a callout removes all its reactions; no orphan rows observable via summary
+
+### `callout/lock-state/close-state-callouts.it-spec.ts`
+- **Callouts - Close State**
+    - Close callout that has not been published
+    - Close callout that has been published
+- **Callout - Close State - User Privileges Posts > Send Comment to Post - Callout Close State  > DDT Users sending messages to closed callout post**
+    - User: "'space.admin'" can send message to closed "'space'" callout post
+    - User: "'space.member'" can send message to closed "'space'" callout post
+    - User: "'subspace.admin'" can send message to closed "'subspace'" callout post
+    - User: "'subspace.member'" can send message to closed "'subspace'" callout post
+    - User: "'subsubspace.admin'" can send message to closed "'subsubspace'" callout post
+    - User: "'subsubspace.member'" can send message to closed "'subsubspace'" callout post
+    - User: "'non.space'" cannot send message to closed "'space'" callout post
+    - User: "'non.space'" cannot send message to closed "'subspace'" callout post
+    - User: "'non.space'" cannot send message to closed "'subsubspace'" callout post
+- **Callout - Close State - User Privileges Posts > Create Post - Callout Close State  > DDT Users create post to closed callout**
+    - User: "'space.admin'" get error when create post to closed "'space'" callout
+    - User: "'space.member'" get error when create post to closed "'space'" callout
+    - User: "'non.space'" get error when create post to closed "'space'" callout
+    - User: "'subspace.admin'" get error when create post to closed "'subspace'" callout
+    - User: "'subspace.member'" get error when create post to closed "'subspace'" callout
+    - User: "'non.space'" get error when create post to closed "'subspace'" callout
+    - User: "'subsubspace.admin'" get error when create post to closed "'subsubspace'" callout
+    - User: "'subsubspace.member'" get error when create post to closed "'subsubspace'" callout
+    - User: "'non.space'" get error when create post to closed "'subsubspace'" callout
+- **Callout - Close State - User Privileges Discussions > Discussion Callout - Close State  > DDT Users sending messages to closed discussion callout**
+    - User: "'space.admin'" get error when send code to closed "'space'" callout [skip]
+    - User: "'space.member'" get error when send code to closed "'space'" callout [skip]
+    - User: "'non.space'" get error when send code to closed "'space'" callout [skip]
+    - User: "'subspace.admin'" get error when send code to closed "'subspace'" callout [skip]
+    - User: "'subspace.member'" get error when send code to closed "'subspace'" callout [skip]
+    - User: "'non.space'" get error when send code to closed "'subspace'" callout [skip]
+    - User: "'subsubspace.admin'" get error when send code to closed "'subsubspace'" callout [skip]
+    - User: "'subsubspace.member'" get error when send code to closed "'subsubspace'" callout [skip]
+    - User: "'non.space'" get error when send code to closed "'subsubspace'" callout [skip]
+
+### `callout/spaces-collection/spaces-collection-card-variant.it-spec.ts`
+- **US2 — card-variant setting round-trips through the public API**
+    - case 1 — create EXPANDED (S5): read back EXPANDED; selection is {mode: AUTO, selectedIds: []}
+    - case 2 — default (S1): SPACES callout created with no spaces settings reads back COMPACT
+- **US2 — card-variant setting round-trips through the public API > case 3 — partial update (S4)**
+    - updating only commentsEnabled leaves cardVariant EXPANDED
+    - updating with spaces: {} leaves cardVariant EXPANDED and carries no GraphQL error (S2 / R-9)
+- **US2 — card-variant setting round-trips through the public API > case 4 — variant-only writes preserve a stored CUSTOM selection (S5)**
+    - toggle: EXPANDED updated to COMPACT reads back COMPACT; CUSTOM selection kept in order
+    - settings.framing.spaces: null leaves cardVariant EXPANDED and the CUSTOM selection intact
+    - settings.framing.selection: null leaves the CUSTOM selection intact
+    - selection: { selectedIds: null } with a variant change succeeds and keeps the stored list
+- **US2 — card-variant setting round-trips through the public API > case 6 — who may change the card variant**
+    - "'space.member'" is refused and the stored variant stays COMPACT
+    - "'non.space'" is refused and the stored variant stays COMPACT
+    - the space admin changes it and a fresh read shows EXPANDED
+    - a member can still read the variant they cannot change
+- **US2 — card-variant setting round-trips through the public API > case 5 — rejected off-kind (S3)**
+    - create NONE callout supplying spaces is rejected; no callout created
+    - create CONTRIBUTORS callout (with a valid contributors block) supplying spaces is rejected; no callout created
+    - update an existing NONE callout with spaces is rejected; re-read shows settings.framing.spaces null/undefined
+
+### `callout/transfer/transfer-callout-changed-flow.it-spec.ts`
+- **Transfer callout into a changed destination flow**
+    - the callout source state is not present in the changed destination flow (precondition)
+    - the transferred callout is visible in the destination
+    - the transferred callout lands on a valid destination flow state
+    - the transferred callout adopts the destination default flow state
+
+### `callout/transfer/transfer-callout-flow-state.it-spec.ts`
+- **Transfer callout - destination flow state matching > source state name absent in destination**
+    - source state is not one of the destination states (precondition)
+    - callout adopts the destination default flow state
+    - transferred callout is visible in the destination
+- **Transfer callout - destination flow state matching > source state name present in destination**
+    - source state is one of the destination states (precondition)
+    - callout keeps its matching flow state
+    - transferred callout is visible in the destination
+- **Transfer callout - destination flow state matching > source state name absent in destination (L0 space -> another L0 space L1 subspace)**
+    - source state is not one of the destination states (precondition)
+    - transferred callout is visible in the destination
+    - callout adopts the destination default flow state
+- **Transfer callout - destination flow state matching > cross-space transfer between two L1 subspaces (server#4970)**
+    - source state is one of the destination states (precondition)
+    - transferred callout is visible in the destination subspace
+    - callout keeps its matching flow state
+
+### `callout/transfer/transfer-callout-template-flow.it-spec.ts`
+- **Transfer callout into a template-changed destination flow**
+    - the destination flow was replaced with the custom template states (precondition)
+    - the callout source state is not present in the changed destination flow (precondition)
+    - the transferred callout is present in the destination callouts set
+    - the transferred callout lands on a valid destination flow state [skip]
+    - the transferred callout adopts the destination default flow state [skip]
+
+## account  <sub>2 files · 20 cases · 0 skip · 0 todo</sub>
+
+
+### `account/transfer-innovation-pack-to-account.it-spec.ts`
+- **Transfer innovation pack to Account**
+    - Global Admin transfer innovation pack from Organization account to User account without valid entitlements
+    - Support Admin cannot transfer an innovation pack (Slice B: transfers are Platform Resource Admin's); the pack stays
+    - BetaTester FAILS to transfer innovation pack from own account to another user account
+    - BetaTester FAILS to transfer innovation pack from own account to another user account without valid entitlements
+    - Registered user FAILS to transfer innovation pack from another account to its own account
+
+### `account/hosted-resources.it-spec.ts`
+- **hostedResources — viewer-scoped hosted resources**
+    - an associate who holds no Space role sees the ACCOUNT VC card and pack, not the HIDDEN ones, and the HIDDEN hub
+    - an organization admin gets the full view: the HIDDEN VC and pack are present and render
+    - an unrelated registered user sees the PUBLIC pack and the HIDDEN hub only; the store-listed ACCOUNT VC stays hidden
+    - an anonymous request gets hostedResources null and no error
+    - an unrelated registered user sees only a user account's PUBLIC pack and PUBLIC VC card: not its ACCOUNT or HIDDEN ones
+    - the owner of a user account sees their own PUBLIC, ACCOUNT and HIDDEN packs and VCs
+    - a hosted VC and a hosted hub are closed card types: id and profile, and id, nameID and profile
+    - a hosted hub offers no way into its account: selecting the hub's account is a validation error that returns no data
+    - the full account stays closed to an unrelated registered user
+    - a Platform Users Admin gets the full view of a user account, HIDDEN VC included, and still resolves the account
+    - a PLATFORM_LICENSE_MANAGER gets the full view of an organization account and still resolves the account
+    - a PLATFORM_RESOURCE_ADMIN gets the full view of an organization account and still resolves the account
+    - an associate's ACCOUNT VC card still renders when the same operation also reads a VC profile directly (direct VC profile first)
+    - an associate's ACCOUNT VC card still renders when the same operation also reads a VC profile directly (hosted cards first)
+    - once the associate role is removed, the former associate sees the PUBLIC pack and the hub only
+
+## calendar  <sub>2 files · 43 cases · 1 skip · 9 todo</sub>
+
+
+### `calendar/calendar-event-wholeday-timezone.it-spec.ts`
+- **Whole-day calendar events - export date correctness (server#6279)**
+    - A: a 3->4 Dec whole-day event exports DTSTART 20261203 and exclusive DTEND 20261205
+    - A: the Google and Outlook links carry the same picked dates
+    - B1: a single-day whole-day event is valid and covers exactly one day
+    - B2: a whole-day event across the year boundary exports correctly
+    - B3: a whole-day span across the EU spring-forward keeps an exact day count
+    - C1: a 23->25 July whole-day event covers exactly 3 days
+- **Whole-day calendar events - update semantics (server#6279)**
+    - D2: narrowing a 4-day whole-day event to a single day persists
+- **Timed calendar events - regression guards (server#6279)**
+    - E1: a timed event still exports a real UTC instant, not a DATE
+    - E5: a title-only edit leaves a timed event duration and start untouched
+
+### `calendar/calendar-event.it-spec.ts`
+- **Calendar Events - Create**
+    - should create a timed calendar event
+    - should create a whole-day calendar event
+    - should create a multi-day calendar event
+- **Calendar Events - Query, Update, Delete**
+    - should query calendar events for a space
+    - should query a single calendar event by ID
+    - should update a calendar event
+    - should delete a calendar event
+- **Calendar Events - Add to Calendar URLs**
+    - should return googleCalendarUrl for a timed event
+    - should return outlookCalendarUrl for a timed event
+    - should return icsDownloadUrl for a timed event
+    - should return calendar URLs for a whole-day event
+    - should contain correct location in Google Calendar URL
+- **Calendar Events - ICS Download**
+    - should redirect when accessed with Bearer token (session auth required) [skip]
+    - should download ICS file with correct content type [todo]
+    - should contain valid ICS structure [todo]
+    - should contain correct event data in ICS [todo]
+    - should contain location in ICS [todo]
+    - should strip markdown from description in ICS [todo]
+    - should use VALUE=DATE format for whole-day events [todo]
+    - should use datetime format for timed events [todo]
+- **Calendar Events - Authorization**
+    - should allow space admin to create calendar events
+    - should not allow non-member to create calendar events
+    - should allow unauthenticated ICS download (spec: User Story 3) [todo]
+    - should allow authenticated ICS download with session cookie [todo]
+- **Calendar Events - Event Types**
+    - should create calendar event with type EVENT
+    - should create calendar event with type MEETING
+    - should create calendar event with type DEADLINE
+    - should create calendar event with type MILESTONE
+    - should create calendar event with type TRAINING
+    - should create calendar event with type OTHER
+- **Calendar Events - Edge Cases**
+    - should handle event with no description
+    - should handle event with no location
+    - should handle event with moderately long title
+    - should handle event with special characters in description
+
+## communications  <sub>12 files · 123 cases · 7 skip · 0 todo</sub>
+
+
+### `communications/community-updates/updates.it-spec.ts`
+- **Communities > Community updates - read access**
+    - community updates - PRIVATE space - read access - sender / reader (member) / reader (not member)
+    - community updates - NOT PRIVATE space - read access - sender / reader (member) / reader (not member)
+- **Communities > Community updates - create / delete**
+    - should create community update
+    - should delete community update
+
+### `communications/conversations/conversation-member-removal.it-spec.ts`
+- **Removal revokes access (server#6329)**
+    - N-1 — MEMBER_REMOVED reaches the remaining and the removed member exactly once
+    - N-1b — the MEMBER_REMOVED payload reflects the post-removal state
+    - N-3 — a message sent after removal reaches the remaining member, never the removed one
+    - N-2 — removed member loses privileges, remaining member keeps them (DT)
+
+### `communications/conversations/conversation-subscriptions.it-spec.ts`
+- **Conversation Event Subscriptions > MEMBER_ADDED event**
+    - should receive MEMBER_ADDED event when a member is added to a group
+- **Conversation Event Subscriptions > MEMBER_REMOVED event**
+    - should receive MEMBER_REMOVED event when a member is removed
+    - should receive MEMBER_REMOVED event when a member leaves
+- **Conversation Event Subscriptions > CONVERSATION_UPDATED event**
+    - should receive CONVERSATION_UPDATED event when displayName changes
+    - should receive CONVERSATION_UPDATED event when avatarUrl changes
+- **Conversation Event Subscriptions > CONVERSATION_DELETED event**
+    - should receive CONVERSATION_DELETED event when all members leave
+    - should notify member via subscription before they leave
+
+### `communications/conversations/conversations.it-spec.ts`
+- **Create Conversation > Direct Conversations**
+    - should create a DIRECT conversation between two users
+    - should deduplicate DIRECT conversations with the same member
+    - should include both creator and member in DIRECT conversation members
+    - should have User actor types for DIRECT conversation members
+- **Create Conversation > Group Conversations**
+    - should create a GROUP conversation with multiple members
+    - should create a GROUP conversation with displayName and avatarUrl
+    - should NOT deduplicate GROUP conversations with the same members
+    - should auto-include creator in GROUP conversation members
+- **Create Conversation > Validation**
+    - should fail to create conversation with empty members array
+    - should fail to create conversation with invalid actorId
+    - should fail to create conversation when unauthenticated
+- **Update Conversation**
+    - should update displayName of a GROUP conversation
+    - should update avatarUrl of a GROUP conversation
+    - should update both displayName and avatarUrl
+    - should fail to update conversation by non-member
+- **Leave Conversation**
+    - should leave a GROUP conversation
+    - should fail to leave a conversation that does not exist
+- **Remove Conversation Member**
+    - should remove a member from a GROUP conversation
+    - should fail to remove member from non-existent conversation
+    - should fail to remove member by non-member user
+- **Query Conversations**
+    - should return a flat list of all conversations
+    - should include both DIRECT and GROUP conversations in flat list
+    - should return conversation members as Actor array
+    - should return conversation room with correct fields
+    - should show conversations from the perspective of each member
+- **Messaging in Conversations**
+    - should send a message to a conversation room
+    - should show message count after sending messages
+
+### `communications/conversations/delete-conversation.it-spec.ts`
+- **Delete Conversation > Implicit deletion — all members leave**
+    - should remove GROUP conversation when all members leave
+    - should remove GROUP conversation from remaining member after last member leaves
+- **Delete Conversation > deleteConversation mutation — authorization**
+    - should fail to delete conversation as GLOBAL_ADMIN (no delete privilege)
+    - should fail to delete conversation by non-member
+    - should fail to delete conversation when unauthenticated
+    - should fail to delete a non-existent conversation
+
+### `communications/conversations/conversation-member-removal-matrix.it-spec.ts`
+- **Removal revokes access — Matrix side (server#6329) [needs HARNESS_SYNAPSE_AS_TOKEN on a loopback Synapse (dev appservice token) — local stack only] > M-1 — the member leaves the Matrix room through their own account (DT: removal x leave)**
+    - M-1 ('remove') — C ends up left, by their own account; B and A are untouched [skip]
+    - M-1 ('leave') — C ends up left, by their own account; B and A are untouched [skip]
+- **Removal revokes access — Matrix side (server#6329) [needs HARNESS_SYNAPSE_AS_TOKEN on a loopback Synapse (dev appservice token) — local stack only]**
+    - M-2 — the removed member’s Matrix send is refused (ST: joined -> left) [skip]
+    - M-3 — messages after removal are absent from the removed member’s Matrix history [skip]
+
+### `communications/conversations/conversation-message-subscriptions.it-spec.ts`
+- **Conversation Message Subscriptions > MESSAGE_RECEIVED event**
+    - should receive MESSAGE_RECEIVED event when a message is sent
+    - should receive MESSAGE_RECEIVED event for other member messages
+- **Conversation Message Subscriptions > MESSAGE_REMOVED event**
+    - should receive MESSAGE_REMOVED event when a message is deleted
+
+### `communications/forum-discussions/forum-audit.it-spec.ts`
+- **Audit rows for forum-category and reconcile operations (N-9, local Postgres)**
+    - GA recategorising a post writes one operation_succeeded row; a title-only edit writes none
+    - GA reconcile dry run writes exactly one row keyed by its task id; this passes on any adapter version
+    - QA denied reconcile writes zero audit rows
+
+### `communications/forum-discussions/forum-hierarchy-reconcile.it-spec.ts`
+- **Reconcile authorization — legacy personas + anonymous (N-7)**
+    - anonymous is refused
+    - 'qa.user' is refused (FORBIDDEN_POLICY)
+    - 'global.support' is refused (FORBIDDEN_POLICY)
+    - 'global.license' is refused (FORBIDDEN_POLICY)
+    - GA dry run returns a task id and reaches a terminal status
+- **Reconcile default call — full-vocabulary report (N-8, adapter-skew probe)**
+    - a bare call is a dry-run report over all 9 parents, or fails loudly on a pre-v0.8.19 adapter
+- **Overlapping reconcile pass is refused, then released (N-10, local Redis)**
+    - a lease held by another owner refuses the pass; releasing it lets the next pass proceed
+- **Recategorise → drift → apply → converged (N-11, local + Matrix token, opt-in adapter)**
+    - a dry run reports the drift, apply converges Matrix, and a further dry run reports nothing left to do [skip]
+- **No forum/category space is in the public directory after the sync (N-12a, local, no token)**
+    - all 9 forum spaces resolve and report private both before and after adminCommunicationSyncSpaceHierarchy
+- **Sync retracts an already-published space (N-12b, local + Matrix token)**
+    - a space seeded public is private again after the sync [skip]
+- **Ghost edge: reported, kept by default, pruned on request (N-15, local + token, opt-in)**
+    - a deleted discussion leaves a ghost edge that a plain apply keeps and pruneUnknown removes [skip]
+
+### `communications/reactions/reactions.it-spec.ts`
+- **Reaction - Discussion messages**
+    - React on own message
+    - React on other user message
+    - Add multiple reaction to a message
+    - Should fail to add same reaction twice to a message
+    - Remove reaction on own message
+    - Remove reaction added by other user on own message
+
+### `communications/forum-discussions/platform-discussions.it-spec.ts`
+- **Platform discussions - CRUD operations**
+    - Create discussion
+    - Delete discussion
+    - Update discussion
+- **Discussion messages**
+    - Send message to discussion
+    - Create multiple messages in one discussion
+    - Delete message from discussion
+- **Authorization - Discussion / Messages > Discussions > DDT user privileges to create / update platform discussions**
+    - User: "'admin'" get message: "'Updated1'", who intend to update discussion created from "'admin'
+    - User: "'admin'" get message: "'Updated2'", who intend to update discussion created from "'qa.user'
+    - User: "'qa.user'" get ERROR message: "'Authorization: unable to grant \'plat…'", who intend to update discussion created from "'qa.user'
+    - User: "'qa.user'" get ERROR message: "'Authorization: unable to grant \'plat…'", who intend to update discussion created from "'admin'
+- **Authorization - Discussion / Messages > Discussions > DDT user privileges to create / delete platform discussions**
+    - User: "undefined" get message: "undefined", who intend to delete discussion created from "'admin'
+    - User: "undefined" get message: "undefined", who intend to delete discussion created from "'qa.user'
+    - User: "undefined" get message: "'Authorization: unable to grant \'plat…'", who intend to delete discussion created from "'qa.user'
+    - User: "undefined" get message: "'Authorization: unable to grant \'plat…'", who intend to delete discussion created from "'admin'
+- **Authorization - Discussion / Messages > Comments > DDT user privileges to create / delete comments on discussion created from GA**
+    - User: "'admin'" get message: "undefined", who intend to delete message created from "'admin'
+    - User: "'admin'" get message: "undefined", who intend to delete message created from "'qa.user'
+    - User: "'qa.user'" get message: "undefined", who intend to delete message created from "'qa.user'
+    - User: "'qa.user'" get ERROR message: "'Authorization: unable to grant \'dele…'", who intend to delete message created from "'admin'
+- **Authorization - Discussion / Messages > Comments > DDT user privileges to create / delete comments on discussion created from registered user**
+    - User: "'admin'" get message: "undefined", who intend to delete message created from "'admin'
+    - User: "'admin'" get message: "undefined", who intend to delete message created from "'qa.user'
+    - User: "'qa.user'" get message: "undefined", who intend to delete message created from "'qa.user'
+    - User: "'qa.user'" get ERROR message: "'Authorization: unable to grant \'dele…'", who intend to delete message created from "'admin'
+- **Forum category reorganisation - new categories + admin-only gate**
+    - Admin creates a discussion in the Newsletter category
+    - Admin creates a discussion in the Tips & Tricks category
+    - Non-admin creating into Newsletter is refused
+    - Non-admin creating into Releases is refused (gate is now set-driven, not a single literal)
+    - Non-admin creates a discussion in the Tips & Tricks category (public category)
+    - The active category list is a canonical-order subsequence led by the four target categories
+- **Forum category reorganisation - recategorise an existing post**
+    - Admin moves a post from Other to Tips & Tricks and the move round-trips
+    - Non-admin cannot recategorise a post (unchanged UPDATE privilege)
+    - Platform Support (holder of PLATFORM_FORUM_MANAGE) moves a post into Newsletter
+    - Recategorising a post keeps its comments and permalink (US2-AS7)
+- **Forum category reorganisation - remove-mutation safe negatives only**
+    - Non-admin cannot call the remove-category mutation, and the active list is unchanged
+    - Admin cannot remove a category that still holds a post; the count is in the error and the category stays active
+- **Forum-manage gate for legacy personas after 027 (N-3)**
+    - 'global.support' — create RELEASES='allowed', NEWSLETTER='allowed', TIPS_AND_TRICKS=allowed, remove HELP='FORUM_DISCUSSION_CATEGORY_NOT_EMPTY'
+    - 'global.license' — create RELEASES='FORBIDDEN_POLICY', NEWSLETTER='FORBIDDEN_POLICY', TIPS_AND_TRICKS=allowed, remove HELP='FORBIDDEN_POLICY'
+- **Inactive category is refused on create and move (N-4)**
+    - create and move into a retired category are refused; a live category still accepts
+- **Forum category drift — unknown stored values (N-5, N-6, local Postgres)**
+    - N-5: an unknown value appended to the active-list column is filtered from every read
+    - N-6: a discussion row with an unrecognised stored category reads as OTHER, and can still be recategorised
+- **Audit rows for the remove-category mutation (N-9, local Postgres)**
+    - GA removing a non-empty category writes one operation_failed row naming the category
+    - QA denied remove-category writes zero audit rows
+- **PLATFORM_OPERATIONS_ADMIN persona (N-13, local)**
+    - POA can reconcile but is not a forum manager (FR-012)
+
+### `communications/replies/reply.it-spec.ts`
+- **Reply - Discussion messages**
+    - Reply to own message
+    - Reply to message created by other user
+    - Should fail to delete message, when user raplied to a thread has been removed
+    - User replaying to other user message fail to delete the other user message
+    - Replies should not be deleted, when main message is removed
+    - Removing reply, removes reaction related to it
+
+## collabora  <sub>2 files · 23 cases · 0 skip · 0 todo</sub>
+
+
+### `collabora/collabora-editor-url.it-spec.ts`
+- **collaboraEditorUrl - resolves without waiting on analytics**
+    - returns the editor URL for a 'framing'-attached document
+    - returns the editor URL for a 'contribution'-attached document
+    - returns the editor URL for a document in an L2 subspace
+    - resolves a 'framing' document well inside the regression ceiling
+    - resolves a 'contribution' document well inside the regression ceiling
+    - resolves a 'L2 subspace' document well inside the regression ceiling
+    - issues an independent result per call, with no shared state
+- **collaboraEditorUrl - a document with no owning Space**
+    - opens normally even though attribution cannot resolve a Space
+- **collaboraEditorUrl - authorization**
+    - is refused without authentication
+    - is refused for a user with no access to the space
+    - is allowed for a space member
+- **collaboraServiceAvailable - the side-effect-free control**
+    - answers the health check without issuing a token
+- **replaceCollaboraDocument - publishes only after persistence**
+    - swaps the backing file and applies the new display name
+    - the document still opens after being replaced
+    - refuses a replacement that is not an allowed OfficeDocs format
+- **importCollaboraDocument - attaches an uploaded file**
+    - creates a contribution carrying the imported document
+    - the imported document opens through the editor URL
+    - derives the title from the filename when none is supplied
+
+### `collabora/collabora-template-isolation.it-spec.ts`
+- **document post templates - template and post content are independent**
+    - AC1: the template carries the uploaded content
+    - AC2: two posts from one template have three distinct files, all with the fixture content
+    - US2: the member's post gets a document that member can edit
+    - AC3: editing one post changes only that post
+    - AC6: a foreign source is refused, and nothing is persisted
+
+## configuration  <sub>2 files · 2 cases · 0 skip · 0 todo</sub>
+
+
+### `configuration/configuration.it-spec.ts`
+- **Platform configuration > Platform configuration can be loaded and defaults are OK**
+    - Full configuration defaults to be same as the one on alkemio.yml. 
+
+### `configuration/banner-visual-constraints.it-spec.ts`
+- **Platform configuration — BANNER visual constraints (10178)**
+    - TC-03 — defaultVisualTypeConstraints(BANNER) = 1200/120/6/6/10
+
+## contributor-management  <sub>16 files · 290 cases · 1 skip · 0 todo</sub>
+
+
+### `contributor-management/user/deleted-user-session-orphan.it-spec.ts`
+- **deleted user - orphaned bearer**
+    - SRA-G5 - an orphaned actor degrades identically to an anonymous caller
+    - SRA-R2 - no BAD_USER_INPUT or FORBIDDEN from the orphaned-token request
+    - SRA-R3 - a second user is untouched by the first user deletion
+    - SRA-E1 - a user with no identity reference deletes cleanly
+    - SRA-E2 - repeated deletion is an ordinary not-found, never a revocation error
+    - SRA-E3 - deletion with deleteIdentity false still succeeds
+    - SRA-N1 - no token material on the deletion response surface
+
+### `contributor-management/organization/organization-settings.it-spec.ts`
+- **Organization settings > DDT user WITH privileges to update organization settings**
+    - User: "'admin'" is able to update organization settings 
+    - User: "'space.member'" is able to update organization settings 
+    - User: "'organization.admin'" is able to update organization settings 
+- **Organization settings > DDT user WITHOUT privileges to update organization settings**
+    - User: "'non.space'" get message: "'Authorization: unable to grant \'upda…'", when intend to update organization settings 
+- **Organization settings > Unverified organization - domain match**
+    - don't assign new user to organization,domain setting enabled
+    - don't assign new user to organization, domain setting disabled
+    - don't assign new user with different domain to organization,domain setting enabled
+- **Organization settings > Verified organization - domain match**
+    - assign new user to organization,domain setting enabled
+    - don't assign new user to organization, domain setting disabled
+    - don't assign new user with different domain to organization,domain setting enabled
+- **Organization settings — allowSpaceInvitations (061)**
+    - a fresh organization reads allowSpaceInvitations as true by default
+    - allowSpaceInvitations round-trips false then true
+    - an update carrying only allowUsersMatchingDomainToJoin leaves allowSpaceInvitations unchanged
+    - an ASSOCIATE with no manager credential cannot update organization settings
+- **User notification settings — organisation invited to a Space (US2-AS6)**
+    - adminSpaceCommunityInvitation round-trips off then on
+- **Organization settings — allowApplications (062, US5-AS4/US6-AS1)**
+    - a fresh organization reads allowApplications as true by default
+    - allowApplications round-trips false then true
+    - an update carrying only allowUsersMatchingDomainToJoin leaves allowApplications unchanged (nullable input)
+    - an ASSOCIATE with no manager credential cannot update allowApplications (US5-AS4 API half)
+- **User notification settings — the five new associate rows (062, US6-AS1/AS3)**
+    - the five rows read on by default and round-trip off then on
+    - a user row SQL-stripped of the five keys reads all-on (@AfterLoad backstop, US6-AS3)
+
+### `contributor-management/user/delete-own-account.it-spec.ts`
+- **delete-own-account — US1 happy path**
+    - a fresh user with no blockers deletes successfully, is de-identified, and leaves one surviving self-initiated audit row
+- **delete-own-account — US2 per-kind blocker equivalence**
+    - 'ACCOUNT_SPACE' blocks self deletion until resolved
+    - 'ACCOUNT_VIRTUAL_CONTRIBUTOR' blocks self deletion until resolved
+    - 'ACCOUNT_INNOVATION_PACK' blocks self deletion until resolved
+    - 'ACCOUNT_INNOVATION_HUB' blocks self deletion until resolved
+    - a truncated blocker list caps at 25, flags truncated, and reports accurate per-kind totals
+- **delete-own-account — US4 sole organization owner**
+    - a sole owner is blocked on self, unblocked once a second owner exists, and an admin can delete a sole owner directly
+    - the admin branch deletes a sole organization owner directly (support-route pass-through, FR-023)
+- **delete-own-account — US3 session freshness gate**
+    - a session older than the privileged window is refused SESSION_REFRESH_REQUIRED and deletes nothing
+    - a session with missing, zeroed, or unparseable created_at fails closed
+    - silent token rotation and idle renewal do not count as re-authentication
+    - a freshly minted session (the re-auth round trip analogue) deletes successfully
+- **delete-own-account — US5 external subscription + post-commit legs**
+    - an active Wingback subscription does not block deletion and its id is captured in the primary audit row
+    - post-commit legs are recorded as their own audited outcomes
+    - admin-on-other deletion audits initiator_role platform_admin and applies no freshness gate
+    - no departed user email survives in any audit details or in-app notification payload
+
+### `contributor-management/user/account-deletion-portable.it-spec.ts`
+- **account deletion — portable delta (054)**
+    - TC-01 — a raw-API self-deletion cannot bypass the session-age gate
+    - TC-02 — the preflight answers over a bearer and reports the session as not fresh
+    - TC-05 — the admin blocked path keeps its pre-existing exception shape
+    - TC-18 — a plain user cannot delete another user (ratified by the QA lead)
+
+### `contributor-management/user/update-user.it-spec.ts`
+- **Update user**
+    - should update user "phone" only
+    - should update user "phone" and "location"
+    - should update user and be available in "users" query
+
+### `contributor-management/virtual-contributor/knowledge-base-access.it-spec.ts`
+- **Virtual Contributor ACCESS - All Public - Visibility Public / BoK / Public > VC knowledge privileges**
+    - User: "'non.space'" has this privileges: "[ 'READ', 'READ_ABOUT' ]" to spaceBasedVC
+    - User: "'space.admin'" has this privileges: "[ 'READ', 'READ_ABOUT' ]" to spaceBasedVC
+    - User: "'space.member'" has this privileges: "[ 'READ', 'READ_ABOUT' ]" to spaceBasedVC
+    - User: "'admin'" has this privileges: "[ 'CREATE', 'DELETE', …(4) ]" to spaceBasedVC
+    - User: "'beta.tester'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(6) ]" to spaceBasedVC
+    - User: "'non.space'" has this privileges: "[ 'READ', 'READ_ABOUT' ]" to knowledgeBasedVC
+    - User: "'space.admin'" has this privileges: "[ 'READ', 'READ_ABOUT' ]" to knowledgeBasedVC
+    - User: "'space.member'" has this privileges: "[ 'READ', 'READ_ABOUT' ]" to knowledgeBasedVC
+    - User: "'admin'" has this privileges: "[ 'CREATE', 'DELETE', …(4) ]" to knowledgeBasedVC
+    - User: "'beta.tester'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(6) ]" to knowledgeBasedVC
+- **Virtual Contributor ACCESS - All Public - Visibility Public / BoK / Public > VC knowledge base calloutSet**
+    - User: "'non.space'" has this privileges: "[ 'READ' ]" to spaceBasedVC
+    - User: "'space.admin'" has this privileges: "[ 'READ' ]" to spaceBasedVC
+    - User: "'space.member'" has this privileges: "[ 'READ' ]" to spaceBasedVC
+    - User: "'admin'" has this privileges: "[ 'CREATE', 'CREATE_CALLOUT', …(6) ]" to spaceBasedVC
+    - User: "'beta.tester'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(6) ]" to spaceBasedVC
+    - User: "'non.space'" has this privileges: "[ 'READ' ]" to knowledgeBasedVC
+    - User: "'space.admin'" has this privileges: "[ 'READ' ]" to knowledgeBasedVC
+    - User: "'space.member'" has this privileges: "[ 'READ' ]" to knowledgeBasedVC
+    - User: "'admin'" has this privileges: "[ 'CREATE', 'CREATE_CALLOUT', …(6) ]" to knowledgeBasedVC
+    - User: "'beta.tester'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(6) ]" to knowledgeBasedVC
+- **Virtual Contributor ACCESS - All Public - Visibility Public / BoK / Public > VC knowledge base storageBucket**
+    - User: "'non.space'" has this privileges: "[ 'READ' ]" to spaceBasedVC
+    - User: "'space.admin'" has this privileges: "[ 'READ' ]" to spaceBasedVC
+    - User: "'space.member'" has this privileges: "[ 'READ' ]" to spaceBasedVC
+    - User: "'admin'" has this privileges: "[ 'CREATE', 'DELETE', …(5) ]" to spaceBasedVC
+    - User: "'beta.tester'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(7) ]" to spaceBasedVC
+    - User: "'non.space'" has this privileges: "[ 'READ' ]" to knowledgeBasedVC
+    - User: "'space.admin'" has this privileges: "[ 'READ' ]" to knowledgeBasedVC
+    - User: "'space.member'" has this privileges: "[ 'READ' ]" to knowledgeBasedVC
+    - User: "'admin'" has this privileges: "[ 'CREATE', 'DELETE', …(5) ]" to knowledgeBasedVC
+    - User: "'beta.tester'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(7) ]" to knowledgeBasedVC
+- **Virtual Contributor Access - All Private - Visibility Private / BoK / Private > VC knowledge privileges**
+    - User: "'non.space'" has this privileges: "undefined" to spaceBasedVC
+    - User: "'space.admin'" has this privileges: "[ 'READ_ABOUT' ]" to spaceBasedVC
+    - User: "'space.member'" has this privileges: "[ 'READ_ABOUT' ]" to spaceBasedVC
+    - User: "'admin'" has this privileges: "[ 'CREATE', 'DELETE', …(4) ]" to spaceBasedVC
+    - User: "'beta.tester'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(6) ]" to spaceBasedVC
+    - User: "'non.space'" has this privileges: "undefined"  knowledgeBasedVC
+    - User: "'space.admin'" has this privileges: "[ 'READ_ABOUT' ]"  knowledgeBasedVC
+    - User: "'space.member'" has this privileges: "[ 'READ_ABOUT' ]"  knowledgeBasedVC
+    - User: "'admin'" has this privileges: "[ 'CREATE', 'DELETE', …(4) ]"  knowledgeBasedVC
+    - User: "'beta.tester'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(6) ]"  knowledgeBasedVC
+- **Virtual Contributor Access - All Private - Visibility Private / BoK / Private > VC knowledge base calloutSet**
+    - User: "'non.space'" has this privileges: "undefined" to spaceBasedVC
+    - User: "'space.admin'" has this privileges: "undefined" to spaceBasedVC
+    - User: "'space.member'" has this privileges: "undefined" to spaceBasedVC
+    - User: "'admin'" has this privileges: "[ 'CREATE', 'CREATE_CALLOUT', …(6) ]" to spaceBasedVC
+    - User: "'beta.tester'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(6) ]" to spaceBasedVC
+    - User: "'non.space'" has this privileges: "undefined" to knowledgeBasedVC
+    - User: "'space.admin'" has this privileges: "undefined" to knowledgeBasedVC
+    - User: "'space.member'" has this privileges: "undefined" to knowledgeBasedVC
+    - User: "'admin'" has this privileges: "[ 'CREATE', 'CREATE_CALLOUT', …(6) ]" to knowledgeBasedVC
+    - User: "'beta.tester'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(6) ]" to knowledgeBasedVC
+- **Virtual Contributor Access - All Private - Visibility Private / BoK / Private > VC knowledge base storageBucket**
+    - User: "'non.space'" has this privileges: "undefined" to spaceBasedVC
+    - User: "'space.admin'" has this privileges: "undefined" to spaceBasedVC
+    - User: "'space.member'" has this privileges: "undefined" to spaceBasedVC
+    - User: "'admin'" has this privileges: "[ 'CREATE', 'DELETE', …(5) ]" to spaceBasedVC
+    - User: "'beta.tester'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(7) ]" to spaceBasedVC
+    - User: "'non.space'" has this privileges: "undefined" to knowledgeBasedVC
+    - User: "'space.admin'" has this privileges: "[ 'READ' ]" to knowledgeBasedVC
+    - User: "'space.member'" has this privileges: "[ 'READ' ]" to knowledgeBasedVC
+    - User: "'admin'" has this privileges: "[ 'CREATE', 'DELETE', …(5) ]" to knowledgeBasedVC
+    - User: "'beta.tester'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(7) ]" to knowledgeBasedVC
+- **Virtual Contributor Access - All Private - Visibility Private / BoK / Public > VC knowledge privileges**
+    - User: "'non.space'" has this privileges: "undefined" to spaceBasedVC
+    - User: "'space.admin'" has this privileges: "[ 'READ', 'READ_ABOUT' ]" to spaceBasedVC
+    - User: "'space.member'" has this privileges: "[ 'READ', 'READ_ABOUT' ]" to spaceBasedVC
+    - User: "'admin'" has this privileges: "[ 'CREATE', 'DELETE', …(4) ]" to spaceBasedVC
+    - User: "'beta.tester'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(6) ]" to spaceBasedVC
+    - User: "'non.space'" has this privileges: "undefined"  knowledgeBasedVC
+    - User: "'space.admin'" has this privileges: "[ 'READ', 'READ_ABOUT' ]"  knowledgeBasedVC
+    - User: "'space.member'" has this privileges: "[ 'READ', 'READ_ABOUT' ]"  knowledgeBasedVC
+    - User: "'admin'" has this privileges: "[ 'CREATE', 'DELETE', …(4) ]"  knowledgeBasedVC
+    - User: "'beta.tester'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(6) ]"  knowledgeBasedVC
+- **Virtual Contributor Access - All Private - Visibility Private / BoK / Public > VC knowledge base calloutSet**
+    - User: "'non.space'" has this privileges: "undefined" to spaceBasedVC
+    - User: "'space.admin'" has this privileges: "[ 'READ' ]" to spaceBasedVC
+    - User: "'space.member'" has this privileges: "[ 'READ' ]" to spaceBasedVC
+    - User: "'admin'" has this privileges: "[ 'CREATE', 'CREATE_CALLOUT', …(6) ]" to spaceBasedVC
+    - User: "'beta.tester'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(6) ]" to spaceBasedVC
+    - User: "'non.space'" has this privileges: "undefined" to knowledgeBasedVC
+    - User: "'space.admin'" has this privileges: "[ 'READ' ]" to knowledgeBasedVC
+    - User: "'space.member'" has this privileges: "[ 'READ' ]" to knowledgeBasedVC
+    - User: "'admin'" has this privileges: "[ 'CREATE', 'CREATE_CALLOUT', …(6) ]" to knowledgeBasedVC
+    - User: "'beta.tester'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(6) ]" to knowledgeBasedVC
+- **Virtual Contributor Access - All Private - Visibility Private / BoK / Public > VC knowledge base storageBucket**
+    - User: "'non.space'" has this privileges: "undefined" to spaceBasedVC
+    - User: "'space.admin'" has this privileges: "[ 'READ' ]" to spaceBasedVC
+    - User: "'space.member'" has this privileges: "[ 'READ' ]" to spaceBasedVC
+    - User: "'admin'" has this privileges: "[ 'CREATE', 'DELETE', …(5) ]" to spaceBasedVC
+    - User: "'beta.tester'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(7) ]" to spaceBasedVC
+    - User: "'non.space'" has this privileges: "undefined" to knowledgeBasedVC
+    - User: "'space.admin'" has this privileges: "[ 'READ' ]" to knowledgeBasedVC
+    - User: "'space.member'" has this privileges: "[ 'READ' ]" to knowledgeBasedVC
+    - User: "'admin'" has this privileges: "[ 'CREATE', 'DELETE', …(5) ]" to knowledgeBasedVC
+    - User: "'beta.tester'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(7) ]" to knowledgeBasedVC
+- **Virtual Contributor Access - All Private - Visibility Public / BoK / Private > VC knowledge privileges**
+    - User: "'non.space'" has this privileges: "[ 'READ_ABOUT' ]" to spaceBasedVC
+    - User: "'space.admin'" has this privileges: "[ 'READ_ABOUT' ]" to spaceBasedVC
+    - User: "'space.member'" has this privileges: "[ 'READ_ABOUT' ]" to spaceBasedVC
+    - User: "'admin'" has this privileges: "[ 'CREATE', 'DELETE', …(4) ]" to spaceBasedVC
+    - User: "'beta.tester'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(6) ]" to spaceBasedVC
+    - User: "'non.space'" has this privileges: "[ 'READ_ABOUT' ]"  knowledgeBasedVC
+    - User: "'space.admin'" has this privileges: "[ 'READ_ABOUT' ]"  knowledgeBasedVC
+    - User: "'space.member'" has this privileges: "[ 'READ_ABOUT' ]"  knowledgeBasedVC
+    - User: "'admin'" has this privileges: "[ 'CREATE', 'DELETE', …(4) ]"  knowledgeBasedVC
+    - User: "'beta.tester'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(6) ]"  knowledgeBasedVC
+- **Virtual Contributor Access - All Private - Visibility Public / BoK / Private > VC knowledge base calloutSet**
+    - User: "'non.space'" has this privileges: "undefined" to spaceBasedVC
+    - User: "'space.admin'" has this privileges: "undefined" to spaceBasedVC
+    - User: "'space.member'" has this privileges: "undefined" to spaceBasedVC
+    - User: "'admin'" has this privileges: "[ 'CREATE', 'CREATE_CALLOUT', …(6) ]" to spaceBasedVC
+    - User: "'beta.tester'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(6) ]" to spaceBasedVC
+    - User: "'non.space'" has this privileges: "undefined" to knowledgeBasedVC
+    - User: "'space.admin'" has this privileges: "undefined" to knowledgeBasedVC
+    - User: "'space.member'" has this privileges: "undefined" to knowledgeBasedVC
+    - User: "'admin'" has this privileges: "[ 'CREATE', 'CREATE_CALLOUT', …(6) ]" to knowledgeBasedVC
+    - User: "'beta.tester'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(6) ]" to knowledgeBasedVC
+- **Virtual Contributor Access - All Private - Visibility Public / BoK / Private > VC knowledge base storageBucket**
+    - User: "'non.space'" has this privileges: "undefined" to spaceBasedVC
+    - User: "'space.admin'" has this privileges: "undefined" to spaceBasedVC
+    - User: "'space.member'" has this privileges: "undefined" to spaceBasedVC
+    - User: "'admin'" has this privileges: "[ 'CREATE', 'DELETE', …(5) ]" to spaceBasedVC
+    - User: "'beta.tester'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(7) ]" to spaceBasedVC
+    - User: "'non.space'" has this privileges: "[ 'READ' ]" to knowledgeBasedVC
+    - User: "'space.admin'" has this privileges: "[ 'READ' ]" to knowledgeBasedVC
+    - User: "'space.member'" has this privileges: "[ 'READ' ]" to knowledgeBasedVC
+    - User: "'admin'" has this privileges: "[ 'CREATE', 'DELETE', …(5) ]" to knowledgeBasedVC
+    - User: "'beta.tester'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(7) ]" to knowledgeBasedVC
+
+### `contributor-management/virtual-contributor/vc-access.it-spec.ts`
+- **Virtual Contributor ACCESS - All Public - Visibility Public / BoK / Public > Virtual contributor**
+    - User: "'non.space'" has this privileges: "[ 'READ', 'READ_ABOUT' ]" to spaceBasedVC
+    - User: "'space.admin'" has this privileges: "[ 'READ', 'READ_ABOUT' ]" to spaceBasedVC
+    - User: "'space.member'" has this privileges: "[ 'READ', 'READ_ABOUT' ]" to spaceBasedVC
+    - User: "'admin'" has this privileges: "[ 'CREATE', 'DELETE', …(5) ]" to spaceBasedVC
+    - User: "'beta.tester'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(6) ]" to spaceBasedVC
+    - User: "'non.space'" has this privileges: "[ 'READ', 'READ_ABOUT' ]" to knowledgeBasedVC
+    - User: "'space.admin'" has this privileges: "[ 'READ', 'READ_ABOUT' ]" to knowledgeBasedVC
+    - User: "'space.member'" has this privileges: "[ 'READ', 'READ_ABOUT' ]" to knowledgeBasedVC
+    - User: "'admin'" has this privileges: "[ 'CREATE', 'DELETE', …(5) ]" to knowledgeBasedVC
+    - User: "'beta.tester'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(6) ]" to knowledgeBasedVC
+- **Virtual Contributor ACCESS - All Public - Visibility Public / BoK / Public > VC storageBucket**
+    - User: "'non.space'" has this privileges: "[ 'READ' ]" to spaceBasedVC
+    - User: "'space.admin'" has this privileges: "[ 'READ' ]" to spaceBasedVC
+    - User: "'space.member'" has this privileges: "[ 'READ' ]" to spaceBasedVC
+    - User: "'admin'" has this privileges: "[ 'CREATE', 'DELETE', …(5) ]" to spaceBasedVC
+    - User: "'beta.tester'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(7) ]" to spaceBasedVC
+    - User: "'non.space'" has this privileges: "[ 'READ' ]" to knowledgeBasedVC
+    - User: "'space.admin'" has this privileges: "[ 'READ' ]" to knowledgeBasedVC
+    - User: "'space.member'" has this privileges: "[ 'READ' ]" to knowledgeBasedVC
+    - User: "'admin'" has this privileges: "[ 'CREATE', 'DELETE', …(5) ]" to knowledgeBasedVC
+    - User: "'beta.tester'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(7) ]" to knowledgeBasedVC
+- **Virtual Contributor Access - All Private - Visibility Private / BoK / Private > Virtualcontributor **
+    - User: "'non.space'" has this privileges: "undefined" to spaceBasedVC
+    - User: "'space.admin'" has this privileges: "[ 'READ', 'READ_ABOUT' ]" to spaceBasedVC
+    - User: "'space.member'" has this privileges: "[ 'READ', 'READ_ABOUT' ]" to spaceBasedVC
+    - User: "'admin'" has this privileges: "[ 'CREATE', 'DELETE', …(5) ]" to spaceBasedVC
+    - User: "'beta.tester'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(6) ]" to spaceBasedVC
+    - User: "'non.space'" has this privileges: "undefined" to knowledgeBasedVC
+    - User: "'space.admin'" has this privileges: "[ 'READ', 'READ_ABOUT' ]" to knowledgeBasedVC
+    - User: "'space.member'" has this privileges: "[ 'READ', 'READ_ABOUT' ]" to knowledgeBasedVC
+    - User: "'admin'" has this privileges: "[ 'CREATE', 'DELETE', …(5) ]" to knowledgeBasedVC
+    - User: "'beta.tester'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(6) ]" to knowledgeBasedVC
+- **Virtual Contributor Access - All Private - Visibility Private / BoK / Private > VC storageBucket**
+    - User: "'non.space'" has this privileges: "undefined" to spaceBasedVC
+    - User: "'space.admin'" has this privileges: "[ 'READ' ]" to spaceBasedVC
+    - User: "'space.member'" has this privileges: "[ 'READ' ]" to spaceBasedVC
+    - User: "'admin'" has this privileges: "[ 'CREATE', 'DELETE', …(5) ]" to spaceBasedVC
+    - User: "'beta.tester'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(7) ]" to spaceBasedVC
+    - User: "'non.space'" has this privileges: "undefined" to knowledgeBasedVC
+    - User: "'space.admin'" has this privileges: "[ 'READ' ]" to knowledgeBasedVC
+    - User: "'space.member'" has this privileges: "[ 'READ' ]" to knowledgeBasedVC
+    - User: "'admin'" has this privileges: "[ 'CREATE', 'DELETE', …(5) ]" to knowledgeBasedVC
+    - User: "'beta.tester'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(7) ]" to knowledgeBasedVC
+- **Virtual Contributor Access - All Private - Visibility Private / BoK / Public > Virtualcontributor **
+    - User: "'non.space'" has this privileges: "undefined" to spaceBasedVC
+    - User: "'space.admin'" has this privileges: "[ 'READ', 'READ_ABOUT' ]" to spaceBasedVC
+    - User: "'space.member'" has this privileges: "[ 'READ', 'READ_ABOUT' ]" to spaceBasedVC
+    - User: "'admin'" has this privileges: "[ 'CREATE', 'DELETE', …(5) ]" to spaceBasedVC
+    - User: "'beta.tester'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(6) ]" to spaceBasedVC
+    - User: "'non.space'" has this privileges: "undefined" to knowledgeBasedVC
+    - User: "'space.admin'" has this privileges: "[ 'READ', 'READ_ABOUT' ]" to knowledgeBasedVC
+    - User: "'space.member'" has this privileges: "[ 'READ', 'READ_ABOUT' ]" to knowledgeBasedVC
+    - User: "'admin'" has this privileges: "[ 'CREATE', 'DELETE', …(5) ]" to knowledgeBasedVC
+    - User: "'beta.tester'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(6) ]" to knowledgeBasedVC
+- **Virtual Contributor Access - All Private - Visibility Private / BoK / Public > VC storageBucket**
+    - User: "'non.space'" has this privileges: "undefined" to spaceBasedVC
+    - User: "'space.admin'" has this privileges: "[ 'READ' ]" to spaceBasedVC
+    - User: "'space.member'" has this privileges: "[ 'READ' ]" to spaceBasedVC
+    - User: "'admin'" has this privileges: "[ 'CREATE', 'DELETE', …(5) ]" to spaceBasedVC
+    - User: "'beta.tester'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(7) ]" to spaceBasedVC
+    - User: "'non.space'" has this privileges: "undefined" to knowledgeBasedVC
+    - User: "'space.admin'" has this privileges: "[ 'READ' ]" to knowledgeBasedVC
+    - User: "'space.member'" has this privileges: "[ 'READ' ]" to knowledgeBasedVC
+    - User: "'admin'" has this privileges: "[ 'CREATE', 'DELETE', …(5) ]" to knowledgeBasedVC
+    - User: "'beta.tester'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(7) ]" to knowledgeBasedVC
+- **Virtual Contributor Access - All Private - Visibility Public / BoK / Private > Virtualcontributor **
+    - User: "'non.space'" has this privileges: "[ 'READ', 'READ_ABOUT' ]" to spaceBasedVC
+    - User: "'space.admin'" has this privileges: "[ 'READ', 'READ_ABOUT' ]" to spaceBasedVC
+    - User: "'space.member'" has this privileges: "[ 'READ', 'READ_ABOUT' ]" to spaceBasedVC
+    - User: "'admin'" has this privileges: "[ 'CREATE', 'DELETE', …(5) ]" to spaceBasedVC
+    - User: "'beta.tester'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(6) ]" to spaceBasedVC
+    - User: "'non.space'" has this privileges: "[ 'READ', 'READ_ABOUT' ]" to knowledgeBasedVC
+    - User: "'space.admin'" has this privileges: "[ 'READ', 'READ_ABOUT' ]" to knowledgeBasedVC
+    - User: "'space.member'" has this privileges: "[ 'READ', 'READ_ABOUT' ]" to knowledgeBasedVC
+    - User: "'admin'" has this privileges: "[ 'CREATE', 'DELETE', …(5) ]" to knowledgeBasedVC
+    - User: "'beta.tester'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(6) ]" to knowledgeBasedVC
+- **Virtual Contributor Access - All Private - Visibility Public / BoK / Private > VC storageBucket**
+    - User: "'non.space'" has this privileges: "[ 'READ' ]" to spaceBasedVC
+    - User: "'space.admin'" has this privileges: "[ 'READ' ]" to spaceBasedVC
+    - User: "'space.member'" has this privileges: "[ 'READ' ]" to spaceBasedVC
+    - User: "'admin'" has this privileges: "[ 'CREATE', 'DELETE', …(5) ]" to spaceBasedVC
+    - User: "'beta.tester'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(7) ]" to spaceBasedVC
+    - User: "'non.space'" has this privileges: "[ 'READ' ]" to knowledgeBasedVC
+    - User: "'space.admin'" has this privileges: "[ 'READ' ]" to knowledgeBasedVC
+    - User: "'space.member'" has this privileges: "[ 'READ' ]" to knowledgeBasedVC
+    - User: "'admin'" has this privileges: "[ 'CREATE', 'DELETE', …(5) ]" to knowledgeBasedVC
+    - User: "'beta.tester'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(7) ]" to knowledgeBasedVC
+
+### `contributor-management/virtual-contributor/vc.it-spec.ts`
+- **Virtual Contributor**
+    - should not delete user who hosts an account
+    - should return invitations after virtual contributor is removed
+    - query virtual contributor data
+
+### `contributor-management/virtual-contributor/model-card/engine-types.it-spec.ts`
+- **Virtual Contributor Engine Types Model Card**
+    - should create virtual contributors with different engine types
+    - should have correct engine type in each model card
+    - should have different model card information for different engines
+    - should have different monitoring data for different engines
+    - should have Virtual Contributor model card for registered user access
+
+### `contributor-management/user/delete-user.it-spec.ts`
+- **Delete user**
+    - should delete created user
+    - should receive a message for deleting already deleted user
+    - should receive a message for deleting unexisting user
+    - should not get result for quering deleted user
+
+### `contributor-management/user/create-user.it-spec.ts`
+- **Create User**
+    - should create a user
+    - should throw error - same user is created twice
+    - should query created user
+    - should throw error - create user with LONG NAME
+    - should throw error - create user with invalid email
+
+### `contributor-management/organization/organization-owner.it-spec.ts`
+- **Organization Owner**
+    - should create organization owner
+    - should add same user as owner of 2 organization
+    - should remove user owner from organization
+    - should not remove the only owner of an organization
+    - should not return user credentials for removing user not owner of an Organization
+    - should not result in additional credential for assigning same organization owner twice
+
+### `contributor-management/organization/organization.it-spec.ts`
+- **Organization > create**
+    - should create
+    - should FAIL on breaking unique nameID
+    - should FAIL on breaking unique displayName
+- **Organization > update**
+    - should update
+    - should FAIL on breaking unique displayName
+- **Organization > delete**
+    - should delete
+    - should FAIL on unknown id
+
+### `contributor-management/user/delete-own-account.baseline.it-spec.ts`
+- **delete-own-account — T101 falsification gate (pre-repair stack only)**
+    - a plain user can call deleteUser on themselves, and it reports a post-commit error despite the account being gone [skip]
+
+### `contributor-management/virtual-contributor/model-card/model-card.it-spec.ts`
+- **Virtual Contributor Model Card**
+    - should create a virtual contributor with a model card
+    - should have correct space usage data in model card
+    - should have correct AI engine data in model card
+    - should have correct monitoring data in Virtual Contributor model card
+
+### `contributor-management/organization/organization-verification.it-spec.ts`
+- **Organization verification status**
+    - should update organization verification status, when set event: "'VERIFICATION_REQUEST'" to state: "'verificationPending'", nextEvents: "[ 'MANUALLY_VERIFY', 'REJECT' ]"
+    - should update organization verification status, when set event: "'REJECT'" to state: "'rejected'", nextEvents: "[ 'REOPEN', 'ARCHIVE' ]"
+    - should update organization verification status, when set event: "'REOPEN'" to state: "'notVerified'", nextEvents: "[ 'VERIFICATION_REQUEST' ]"
+    - should update organization verification status, when set event: "'ARCHIVE'" to state: "'archived'", nextEvents: "[]"
+
+## entitlements  <sub>7 files · 39 cases · 0 skip · 0 todo</sub>
+
+
+### `entitlements/innovation-packs-functional-entitlements.it-spec.ts`
+- **Functional tests - Innovation Pack > VC Campaign user innovation pack creation**
+    - User: VC campaign has license [ …(5) ] to creates an innovation pack with name: 'pack1-39029'
+    - User: VC campaign has license [ …(5) ] to creates an innovation pack with name: 'pack2-39029'
+    - User: VC campaign has license [ …(5) ] to creates an innovation pack with name: 'pack3-39029'
+    - Create a innovation pack over the license limit
+    - User: VC campaign has license [ …(5) ] to creates an innovation pack with name: 'pack1-667ee'
+    - User: VC campaign has license [ …(5) ] to creates an innovation pack with name: 'pack2-667ee'
+    - User: VC campaign has license [ …(5) ] to creates an innovation pack with name: 'pack3-667ee'
+
+### `entitlements/licenses-functional-entitlements.it-spec.ts`
+- **Functional tests - licenses updates > Space licenses**
+    - Add License Plus to space
+
+### `entitlements/memo-signing-entitlement.it-spec.ts`
+- **Memo signing — SPACE_FLAG_MEMO_SIGNING entitlement (server#6478)**
+    - a new space and its subspace carry the entitlement, disabled
+    - prepareMemoSigning is refused on the ENTITLEMENT while it is off ('space.admin', 'L0' memo)
+    - prepareMemoSigning is refused on the ENTITLEMENT while it is off ('space.member', 'L0' memo)
+    - prepareMemoSigning is refused on the ENTITLEMENT while it is off ('space.admin', 'L1' memo)
+    - granting the memo-signing plan to the L0 space enables it there and on the subspace
+    - with the entitlement on, the refusal moves to the identity gate ('space.admin', 'L0' memo)
+    - with the entitlement on, the refusal moves to the identity gate ('space.admin', 'L1' memo)
+    - revoking the plan closes the gate again
+
+### `entitlements/space-functional-entitlements.it-spec.ts`
+- **Functional tests - Space > VC Campaign user space creation**
+    - User: VC campaign has license [ …(5) ] to creates a space with name: 'space1-4795b'
+    - User: VC campaign has license [ …(5) ] to creates a space with name: 'space2-4795b'
+    - User: VC campaign has license [ …(5) ] to creates a space with name: 'space3-4795b'
+    - Create a space over the license limit
+    - Create a space after third over the license limit was removed
+    - User: VC campaign has license [ …(5) ] to creates a space with name: 'space1-479bf'
+    - User: VC campaign has license [ …(5) ] to creates a space with name: 'space2-479bf'
+    - User: VC campaign has license [ …(5) ] to creates a space with name: 'space3-479bf'
+
+### `entitlements/user-entitlements.it-spec.ts`
+- **Get User Account Authorization and License privileges **
+    - No licenses assigned
+    - VC campaign licenses assigned
+- **Get User Account Authorization and License privileges  > VC campaign Licenses cleanup**
+    - User with VC campaign licenses assigned and created Space, VC and Innovation Pack
+- **Get User Account Authorization and License privileges **
+    - Beta tester licenses assigned
+- **Get User Account Authorization and License privileges  > BetaTested Licenses cleanup**
+    - User with Beta tester licenses assigned and created Space, VC and Innovation Pack
+
+### `entitlements/organization-entitlements.it-spec.ts`
+- **Get Organization Account Authorization and License privileges **
+    - No licenses assigned
+    - User admin of Organization with accountLicensesPlus assigned
+- **Get Organization Account Authorization and License privileges  > Account license plus cleanup**
+    - User admin of Organization with accountLicensesPlus assigned and created Space, VC and Innovation Pack
+
+### `entitlements/vc-functional-entitlements.it-spec.ts`
+- **Functional tests - VC > VC Campaign user vc creation**
+    - User: VC campaign has license [ …(5) ] to creates a vc with name: 'vc1-548b0'
+    - User: VC campaign has license [ …(5) ] to creates a vc with name: 'vc2-548b0'
+    - User: VC campaign has license [ …(5) ] to creates a vc with name: 'vc3-548b0'
+    - Create a vc over the license limit
+    - User: VC campaign has license [ …(5) ] to creates a vc with name: 'vc1-aa7f1'
+    - User: VC campaign has license [ …(5) ] to creates a vc with name: 'vc2-aa7f1'
+    - User: VC campaign has license [ …(5) ] to creates a vc with name: 'vc3-aa7f1'
+
+## graphql-guard  <sub>4 files · 45 cases · 0 skip · 0 todo</sub>
+
+
+### `graphql-guard/graphql-guard-authorization.it-spec.ts`
+- **GraphQL Guard - Synchronous Authorization > Space-level authorization privileges**
+    - User: "'admin'" has correct space authorization privileges
+    - User: "'global.support'" has correct space authorization privileges
+    - User: "'space.admin'" has correct space authorization privileges
+    - User: "'space.member'" has correct space authorization privileges
+    - User: "'non.space'" has correct space authorization privileges
+- **GraphQL Guard - Synchronous Authorization > Space data integrity for authenticated users**
+    - Global admin can read full space data with nested fields
+    - Space admin has correct privileges
+    - Space member has limited privileges
+- **GraphQL Guard - Synchronous Authorization > Anonymous user access**
+    - Anonymous user cannot access private space data
+- **GraphQL Guard - Synchronous Authorization > Subspace-level authorization**
+    - Subspace admin can read subspace with full nested data
+    - Space member without subspace membership has restricted access
+    - Non-space member cannot access private subspace
+- **GraphQL Guard - Synchronous Authorization > Subsubspace-level authorization**
+    - Subsubspace admin can read subsubspace data
+    - Subsubspace member has read access with limited privileges
+- **GraphQL Guard - Synchronous Authorization > Cross-level authorization consistency**
+    - Global admin has consistent elevated access across all levels
+    - Non-space member has consistently no access to private hierarchy
+- **GraphQL Guard - Synchronous Authorization > Guard handles error responses correctly**
+    - Requesting a non-existent space returns error, not crash
+    - Forbidden access returns structured error with FORBIDDEN_POLICY code
+
+### `graphql-guard/graphql-guard-public-private-access.it-spec.ts`
+- **GraphQL Guard - Public/Private Space Access > Public space access**
+    - User: "'admin'" has correct privileges for public space
+    - User: "'space.admin'" has correct privileges for public space
+    - User: "'space.member'" has correct privileges for public space
+    - User: "'non.space'" has correct privileges for public space
+    - Non-member has read-only privileges for public space
+    - Anonymous user can read public space basic data
+- **GraphQL Guard - Public/Private Space Access > Private space access**
+    - User: "'space.admin'" has correct privileges for private space
+    - User: "'space.member'" has correct privileges for private space
+    - User: "'non.space'" has correct privileges for private space
+    - Non-member has only READ_ABOUT for private space
+    - Anonymous user cannot access private space data
+- **GraphQL Guard - Public/Private Space Access > Privacy toggle - immediate authorization update**
+    - Changing from public to private immediately restricts non-member access
+    - Member access remains consistent through privacy toggle
+
+### `graphql-guard/me-degradation-anonymous.it-spec.ts`
+- **me degradation - anonymous caller**
+    - SRA-G1 - anonymous me degrades across all seven guards instead of erroring
+    - SRA-G2 - degraded paginated field returns the contract empty page
+    - SRA-G3 - the nested conversations resolver degrades, not just its container
+    - SRA-G4 - authenticated behaviour is unchanged
+    - SRA-R1 - no BAD_USER_INPUT or FORBIDDEN from the anonymous me
+    - SRA-N2 - no existence oracle across bearer classes
+
+### `graphql-guard/graphql-guard-nested-queries.it-spec.ts`
+- **GraphQL Guard - Nested Query Data Integrity > Deep space hierarchy query (space -> subspace -> subsubspace)**
+    - GetSpaceData returns complete nested hierarchy for global admin
+    - GetSubspacesData returns nested subspace -> subsubspace with all auth fields
+    - Subspace page query returns complete nested data with collaboration
+- **GraphQL Guard - Nested Query Data Integrity > Concurrent queries from different users**
+    - Parallel requests from different users return correct user-specific authorization
+    - Parallel nested queries return correct data per role
+- **GraphQL Guard - Nested Query Data Integrity > Complete hierarchy data integrity at every nesting level**
+    - Every level in the hierarchy returns correct IDs and authorization
+- **GraphQL Guard - Nested Query Data Integrity > Spaces list query with guard on multiple top-level items**
+    - GetSpacesData returns a list of spaces without errors
+    - GetSpacesData as space member returns spaces list
+
+## innovation-pack  <sub>1 files · 1 cases · 0 skip · 0 todo</sub>
+
+
+### `innovation-pack/innovation-pack.it-spec.ts`
+- **Organization > Innovation pack library**
+    - Create
+
+## journey  <sub>36 files · 304 cases · 9 skip · 0 todo</sub>
+
+
+### `journey/space/space-classifications.it-spec.ts`
+- **Space classifications — authorization (FR-014a)**
+    - the Space admin can change the selection
+    - a plain member is denied every classification write with FORBIDDEN_POLICY, and nothing changes
+    - a non-member is denied every classification write with FORBIDDEN_POLICY, and nothing changes
+- **Space classifications — read surface (FR-010d, FR-017, FR-018b)**
+    - a hidden entry is still returned, with display=false and its selection, to anonymous and non-member readers
+    - entries are returned in addition order, and a removed-then-re-added entry moves to the end
+- **Space classifications — write rules (FR-002a, FR-011c, FR-012c)**
+    - an ad-hoc entry with +0 values is 'rejected'
+    - an ad-hoc entry with 1 values is 'accepted'
+    - an ad-hoc entry with 50 values is 'accepted'
+    - an ad-hoc entry with 51 values is 'rejected'
+    - a classification template with +0 values is 'rejected'
+    - a classification template with 1 values is 'accepted'
+    - a classification template with 50 values is 'accepted'
+    - a classification template with 51 values is 'rejected'
+    - a case/whitespace variant of an existing display label is rejected; the stored label keeps its casing
+    - narrowing multi→single with two values selected is rejected atomically and names the selection
+- **Space classifications — value ids (FR-002c, FR-010c, SC-007)**
+    - template ids are slugified, duplicate labels are suffixed, a label rename keeps the id
+    - an explicit id that duplicates another id in the set is rejected, never suffixed
+    - two Spaces that add the same template hold the template’s value ids verbatim and in order
+
+### `journey/space/space-platform-settings.it-spec.ts`
+- **Update space platform settings > Update space settings - functional**
+    - Update space settings
+- **Update space platform settings > Authorization - Update space platform settings > DDT role access to private Space**
+    - User: "'admin'", should have private Space privileges: "[ 'ACCOUNT_LICENSE_MANAGE', …(12) ]"
+    - User: "'global.support'", should have private Space privileges: "[ 'CREATE', 'CREATE_SUBSPACE', …(7) ]"
+    - User: "'global.license'", should have private Space privileges: "[ 'ACCOUNT_LICENSE_MANAGE', …(2) ]"
+    - User: "'space.admin'", should have private Space privileges: "[ 'CREATE', 'CREATE_SUBSPACE', …(9) ]"
+    - User: "'space.member'", should have private Space privileges: "[ 'READ', 'READ_ABOUT', …(2) ]"
+    - User: "'non.space'", should have private Space privileges: "[ 'READ_ABOUT' ]"
+- **Update space platform settings > Authorization - Update space platform settings > DDT role access to public Space**
+    - User: "'admin'", should have private Space privileges: "[ 'ACCOUNT_LICENSE_MANAGE', …(12) ]"
+    - User: "'global.support'", should have private Space privileges: "[ 'CREATE', 'CREATE_SUBSPACE', …(7) ]"
+    - User: "'global.license'", should have private Space privileges: "[ 'ACCOUNT_LICENSE_MANAGE', …(3) ]"
+    - User: "'space.admin'", should have private Space privileges: "[ 'CREATE', 'CREATE_SUBSPACE', …(9) ]"
+    - User: "'space.member'", should have private Space privileges: "[ 'READ', 'READ_ABOUT', …(2) ]"
+    - User: "'non.space'", should have private Space privileges: "[ Array(3) ]"
+- **Update space platform settings > DDT role WITH access to public archived Space**
+    - User role: "'admin'", have access to public archived Space [skip]
+    - User role: "'global.license'", have access to public archived Space [skip]
+    - User role: "'global.support'", have access to public archived Space [skip]
+- **Update space platform settings > DDT role WITHOUT access to public archived Space**
+    - User role: "'space.admin'", have NO access to public archived Space [skip]
+    - User role: "'space.member'", have NO access to public archived Space [skip]
+    - User role: "'non.space'", have NO access to public archived Space [skip]
+
+### `journey/space/space.it-spec.ts`
+- **Space entity**
+    - should create space
+    - should update space nameId
+    - should not update space nameId
+    - should remove space
+
+### `journey/subspace/create-subspace.it-spec.ts`
+- **Create subspace**
+    - should create a successfull subspace
+    - should remove a subspace
+    - should create 2 subspaces with different names and nameIDs [skip]
+- **Create subspace > DDT invalid NameID**
+    - should reject invalid nameId value: "'d'"
+    - should reject invalid nameId value: "'vvv,vvd'"
+    - should reject invalid nameId value: "'..-- d'"
+
+### `journey/subspace/flows-subspace.it-spec.ts`
+- **Flows subspace**
+    - should not result unassigned users to a subspace [skip]
+    - should  modify subspace name to allready existing subspace name and/or textId
+    - should creating 2 subspaces with same name
+    - should throw error - creating 2 subspaces with different name and same nameId
+
+### `journey/subspace/query-subspace-data.it-spec.ts`
+- **Query Subspace data**
+    - should query community through subspace
+    - should query subsubspace through subspace
+    - should create subsubspace and query the data
+    - should update a subspace
+
+### `journey/subspace/subspace-sidebar-positional.it-spec.ts`
+- **Subspace sidebar - positional reorder**
+    - reordering an L1 flow keeps every list at its position and returns every state
+    - a reorder naming only some phases of an L1 flow is rejected and changes nothing
+    - reordering an L0 flow keeps every list with its own tab
+- **Subspace sidebar - template flows follow their level**
+    - a template made from an L1 subspace reorders positionally
+    - a template made from an L0 space keeps every list with its own state
+- **Subspace sidebar - community and activity widgets**
+    - COMMUNITY and ACTIVITY round-trip on the first phase of an L1 flow
+    - a space member without update rights cannot write the subspace sidebar
+- **Subspace sidebar - deleting a phase**
+    - deleting the first phase of an L1 flow hands its list to the new first phase
+    - deleting a phase that is not first changes no other list on an L1 flow
+    - deleting the first tab of an L0 flow hands its list to no one
+
+### `journey/subspace/subspace-sorting-and-pinning.it-spec.ts`
+- **Subspace sorting and pinning > Pinning subspaces**
+    - should pin a subspace
+    - should unpin a subspace
+    - should be idempotent when pinning an already pinned subspace
+    - should be idempotent when unpinning an already unpinned subspace
+    - should pin multiple subspaces independently
+    - should persist pinned state across queries
+    - should return error when pinning with invalid parent spaceID
+    - should return error when pinning with invalid subspaceID
+- **Subspace sorting and pinning > Pinning authorization**
+    - should allow space admin to pin a subspace
+    - should allow global admin to pin a subspace
+    - should not allow space member to pin a subspace
+    - should not allow non-space member to pin a subspace
+- **Subspace sorting and pinning > Sort mode settings**
+    - should default to ALPHABETICAL sort mode
+    - should update sort mode to CUSTOM
+    - should update sort mode back to ALPHABETICAL
+    - should preserve sort mode when updating other settings
+- **Subspace sorting and pinning > Subspaces sort order**
+    - should update sort order of subspaces
+    - should persist sort order across queries
+    - should allow space admin to update sort order
+    - should not allow space member to update sort order
+- **Subspace sorting and pinning > Default values on new subspaces**
+    - should create subspace with pinned=false by default
+- **Subspace sorting and pinning > Combined pinning and sort order**
+    - should maintain pinned state after sort order update
+    - should maintain sort order after pinning
+
+### `journey/subsubspace/subsubspace_authorization.it-spec.ts`
+- **Subsubspace Admin**
+    - should create subsubspace admin
+    - should add same user as admin of 2 opportunities
+    - should be able one subsubspace admin to remove another admin from subsubspace
+    - should remove the only admin of an subsubspace
+
+### `journey/conversion/apply-template-l0-wholesale-replace.it-spec.ts`
+- **Apply template to an L0 - wholesale replacement (R-22)**
+    - the L0 originally has its own (platform-default) 4 phases (precondition)
+    - the two callouts were created into phase 3 and phase 4 of the original flow (precondition)
+    - the template state count is applied and none of the original L0 phase names remain
+    - both callouts are still present in the L0 calloutsSet after the template apply
+    - both callouts land on a valid state of the new flow
+
+### `journey/subsubspace/subsubspace.it-spec.ts`
+- **Opportunities**
+    - should create subsubspace and query the data
+    - should update subsubspace and query the data
+    - should remove subsubspace and query the data
+    - should throw an error for creating subsubspace with same name/NameId on different subspaces
+- **DDT should not create opportunities with same nameID within the same subspace**
+    - should expect: "'nameID":"opp-nameid-a'" for subsubspace creation with name: "'opp name a'" and nameID: "'opp-nameid-a'"
+    - should expect: "'Unable to create entity: the provided…'" for subsubspace creation with name: "'opp name b'" and nameID: "'opp-nameid-a'"
+
+### `journey/conversion/convert-L1-to-L0-basic.it-spec.ts`
+- **Convert L1 to L0 - basic**
+    - space level is promoted to L0
+    - collaboration is preserved (excluding profile urls)
+    - innovation flow states are carried over verbatim from the L1
+    - visibility is preserved
+    - about fields are preserved after same-L0 conversion
+    - about profile url points to the promoted L0 root after promotion
+    - account host org url points to the host organization after promotion
+    - innovationFlow profile url points to the promoted L0 root after promotion
+    - account host is preserved
+    - settings are preserved
+    - subspaces are preserved (excluding profile urls)
+    - community roleSet members are preserved
+    - community roleSet leads are preserved
+    - community roleSet admins are preserved
+    - parent L0 carried a Plus license before conversion
+    - promoted L0 has a Free license and does not inherit the parent Plus license
+    - replaced subspace license and its policy are deleted (server#6614)
+    - calendar events are preserved after conversion
+    - community updates messages are preserved after conversion
+- **Convert L1 to L0 - authorization**
+    - Space Admin cannot execute conversion
+    - Space Member cannot execute conversion
+
+### `journey/conversion/convert-L1-to-L0-url-resolver.it-spec.ts`
+- **Convert L1 to L0 - URL resolution cache**
+    - the L1 url resolves before conversion (precondition)
+    - the new L0 url resolves to the promoted space
+    - the old L1 url no longer resolves after promotion
+
+### `journey/conversion/move-L1-to-L0-applications-invitations.it-spec.ts`
+- **Move L1 to L0 - pre-existing applications and invitations**
+    - pending invitation is invalidated after cross-L0 move
+    - pending application is invalidated after cross-L0 move
+    - new invitation can be created after move
+    - new application can be submitted and approved after move
+
+### `journey/conversion/convert-L1-to-L0.it-spec.ts`
+- **Convert L1 to L0 - applications and invitations**
+    - visibility is preserved after conversion
+    - settings are preserved after conversion
+    - pending invitation is no longer available after conversion
+    - pending application is no longer available after conversion
+
+### `journey/conversion/convert-L1-to-L0-flow-states.it-spec.ts`
+- **Convert L1 to L0 - flow-state carry-over detail > currentStateID carried over when not the first state**
+    - promoted L0 currentState is the L1 chosen state, not the first state
+- **Convert L1 to L0 - flow-state carry-over detail > per-state settings (sidebar) carried over verbatim**
+    - a populated sidebar is carried over exactly, in order
+    - an explicitly empty sidebar stays empty — no default widget is re-populated
+    - other per-state settings are unchanged by promotion
+
+### `journey/conversion/convert-L1-to-L0-with-L2-to-L1.it-spec.ts`
+- **Convert L1 to L0 with cascading L2 to L1 > parent L1 promoted to L0**
+    - level is L0
+    - visibility is preserved
+    - about fields are preserved after same-L0 conversion to L0
+    - all entity profile urls are updated after promotion to L0
+    - account host is preserved
+    - settings are preserved
+    - community members are preserved
+    - subspaces are preserved (excluding profile urls)
+- **Convert L1 to L0 with cascading L2 to L1 > child L2 promoted to L1**
+    - level is L1
+    - visibility is preserved
+    - about fields are preserved after cascading conversion to L1
+    - all entity profile urls are updated after cascading promotion to L1
+    - account host is preserved
+    - settings are preserved
+    - community members are preserved
+    - subspaces are preserved (excluding profile urls)
+- **Convert L1 to L0 with cascading L2 to L1 > calendar events and community updates after cascade**
+    - calendar events on parent L1 are preserved after promotion to L0
+    - calendar events on child L2 are preserved after promotion to L1
+    - community updates on parent L1 are preserved after promotion to L0
+    - community updates on child L2 are preserved after promotion to L1
+- **Convert L1 to L0 with cascading L2 to L1 > pending invitations and applications after cascade**
+    - pending invitation on L1 is no longer available after conversion
+    - pending application on L1 is no longer available after conversion
+
+### `journey/conversion/convert-L2-to-L1.it-spec.ts`
+- **Convert L2 to L1 > basic properties after promotion**
+    - level is promoted to L1
+    - collaboration is preserved (excluding profile urls)
+    - innovation flow states are preserved
+    - the customized first-phase sidebar survives the promotion (086 U-2)
+    - visibility is preserved
+    - about fields are preserved after same-L0 conversion
+    - all entity profile urls are updated after promotion to L1
+    - account host is preserved
+    - settings are preserved
+    - community members are preserved
+    - community admins are preserved
+    - subspaces are preserved (excluding profile urls)
+- **Convert L2 to L1 > calendar events and community updates after promotion**
+    - calendar events are preserved after conversion
+    - community updates messages are preserved after conversion
+- **Convert L2 to L1 > pending invitations and applications after promotion**
+    - pending invitation is no longer available on the community roleSet
+    - pending application is no longer available on the community roleSet
+
+### `journey/conversion/move-L1-to-L0-authorization.it-spec.ts`
+- **Move L1 to L0 - authorization**
+    - Platform Resource Admin (the harness admin) can execute move
+    - authorization chain is rebuilt from target L0
+- **Move L1 to L0 - unauthorized roles**
+    - Space Admin cannot execute cross-L0 move
+    - Space Member cannot execute cross-L0 move
+    - Non-space member cannot execute cross-L0 move
+- **Move L1 to L0 - validation errors**
+    - cannot move to same parent L0
+    - cannot move with invalid spaceL1ID
+    - cannot move with invalid targetSpaceL0ID
+    - cannot move an L0 space (source must be L1)
+- **Move L1 to L0 - privacy recompute (platform-level anonymous access) > public source → private destination L0 revokes anonymous read**
+    - anonymous can read the public L1 BEFORE the move
+    - after moving into the private L0, anonymous access is revoked entirely
+- **Move L1 to L0 - privacy recompute (platform-level anonymous access) > private source → public destination L0 grants anonymous read**
+    - anonymous has no access to the public L1 under a private L0 BEFORE the move
+    - after moving into the public L0, anonymous can read (no stale lockout)
+
+### `journey/conversion/move-L1-to-L0-auto-invite.it-spec.ts`
+- **Move L1 to L0 - auto-invite disabled**
+    - no invitations created when autoInvite is false
+- **Move L1 to L0 - auto-invite enabled**
+    - auto-invite creates invitations for overlapping members
+
+### `journey/conversion/move-L1-to-L0-basic.it-spec.ts`
+- **Move L1 to L0 - basic**
+    - space level remains L1
+    - moved space appears in target L0 subspaces
+    - moved space no longer in source L0 subspaces
+    - collaboration is preserved (excluding profile urls)
+    - about fields are preserved or updated correctly after cross-L0 move
+    - all entity profile urls rebase to target L0 nameId after cross-L0 move
+    - L2 descendant entity profile urls rebase to target L0 nameId after cross-L0 move
+    - visibility/privacy is preserved
+    - settings are preserved
+    - L2 descendants move with parent
+    - L2 descendant level is unchanged
+    - L2 descendant collaboration is preserved (excluding profile urls)
+    - account is inherited from target L0
+    - license subscriptions inherited from target L0
+    - moved space is first in target L0 subspaces (sort order 0)
+
+### `journey/conversion/move-L1-to-L0-community.it-spec.ts`
+- **Move L1 to L0 - community roles cleared**
+    - all members are removed from moved space
+    - all leads are removed from moved space
+    - all admins are removed from moved space
+    - all member organizations are removed from moved space
+    - L2 descendant members are also cleared
+    - L2 descendant admins are also cleared
+
+### `journey/conversion/move-L1-to-L0-rooms.it-spec.ts`
+- **Move L1 to L0 - rooms and communication**
+    - callout discussion room messages are preserved
+    - updates room messages are preserved after cross-L0 move
+    - calendar events are preserved after cross-L0 move
+    - former member cannot access moved space rooms
+
+### `journey/conversion/move-L1-to-L2-applications-invitations.it-spec.ts`
+- **Move L1 to L2 - pre-existing applications and invitations**
+    - pending invitation is invalidated after cross-L0 move
+    - pending application is invalidated after cross-L0 move
+    - new invitation can be created after move
+    - new application can be submitted and approved after move
+
+### `journey/conversion/move-L1-to-L2-authorization.it-spec.ts`
+- **Move L1 to L2 - authorization**
+    - Platform Resource Admin (the harness admin) can execute move
+    - authorization chain is rebuilt from target L1
+- **Move L1 to L2 - unauthorized roles**
+    - Space Admin cannot execute cross-L0 move
+    - Space Member cannot execute cross-L0 move
+    - Non-space member cannot execute cross-L0 move
+- **Move L1 to L2 - validation errors**
+    - blocked when source L1 has L2 children (depth overflow)
+    - cannot target L1 in same L0 [skip]
+    - cannot move with invalid spaceL1ID
+    - cannot move with invalid targetSpaceL1ID
+    - cannot move an L0 space (source must be L1)
+- **Move L1 to L2 - privacy recompute (platform-level anonymous access) > public source → private destination chain revokes anonymous read**
+    - anonymous can read the public L1 BEFORE the move
+    - after demotion into the private chain, anonymous access is revoked entirely
+- **Move L1 to L2 - privacy recompute (platform-level anonymous access) > private source → public destination chain grants anonymous read**
+    - anonymous has no access to the public L1 under a private chain BEFORE the move
+    - after demotion into the public chain, anonymous can read (no stale lockout)
+
+### `journey/conversion/move-L1-to-L2-community.it-spec.ts`
+- **Move L1 to L2 - community roles cleared**
+    - all members are removed
+    - all leads are removed
+    - all admins are removed (key difference from same-L0 demotion)
+    - all member organizations are removed
+
+### `journey/conversion/move-L1-to-L2-rooms.it-spec.ts`
+- **Move L1 to L2 - rooms and communication**
+    - callout discussion room messages are preserved
+    - updates room messages are preserved after cross-L0 move to L2
+    - calendar events are preserved after cross-L0 move to L2
+    - former member cannot access moved space rooms
+
+### `journey/conversion/move-L2-to-L1-auto-invite.it-spec.ts`
+- **Move L2 to L1 - auto-invite disabled (US4-AS2)**
+    - no invitations created when autoInvite is false
+- **Move L2 to L1 - auto-invite enabled (US4-AS1)**
+    - auto-invite creates invitations for overlapping former members (FR-011)
+
+### `journey/conversion/move-L2-to-L1-basic.it-spec.ts`
+- **Move L2 to L1 - basic**
+    - space stays at level L2 after the move (US2-AS1 / S4)
+    - moved space appears in target L1 (B1) subspaces
+    - moved space no longer nested under source L1 (A1)
+    - collaboration content is preserved (excluding profile urls)
+    - about fields are preserved or updated correctly after cross-L0 move
+    - visibility/privacy is preserved
+    - settings are preserved
+    - account is inherited from target L0 (FR-005)
+    - license subscriptions inherited from target L0
+    - moved space is first among target L1 (B1) subspaces (sort order 0)
+- **Move L2 to L1 - rejections and authorization**
+    - rejects a non-admin caller — Space Admin (S9 / FR-012)
+    - rejects a non-admin caller — Non-space member (S9 / FR-012)
+    - rejects an L1 source — source must be L2 (S1)
+    - rejects an L0 source — source must be L2 (S1)
+    - rejects an L0 target — target must be L1 (S2)
+    - rejects an L2 target — target must be L1 (S2)
+    - rejects a same-L0 target — only cross-L0 supported (US2-AS3 / S3)
+    - rejects an invalid spaceL2ID
+    - rejects an invalid targetSpaceL1ID
+
+### `journey/conversion/move-L2-to-L1-community.it-spec.ts`
+- **Move L2 to L1 - community roles cleared**
+    - all members are removed (FR-004 / SC-002)
+    - all leads are removed (FR-004)
+    - all admins are removed — wipe-all, incl. admins (S5 / FR-004)
+    - all member organizations are removed (FR-004)
+
+### `journey/conversion/move-L2-to-L1-rooms.it-spec.ts`
+- **Move L2 to L1 - rooms and communication**
+    - callout discussion room messages are preserved
+    - calendar events are preserved after cross-L0 move
+    - updates (announcement) channel messages are preserved after cross-L0 move (FR-013)
+    - former member cannot access the moved space (FR-004 downstream)
+
+### `journey/conversion/move-vs-convert-comparison.it-spec.ts`
+- **Same-L0 vs Cross-L0 demotion comparison > Cross-L0 moveSpaceL1ToSpaceL2 removes admins**
+    - cross-L0: admins are REMOVED
+    - cross-L0: members are REMOVED
+    - cross-L0: account inherited from target L0
+    - cross-L0: profile url is updated after move
+- **Same-L0 vs Cross-L0 demotion comparison > Cross-L0 move revokes room memberships**
+    - cross-L0: updates room messages are preserved after move
+    - cross-L0: former member loses access
+
+### `journey/conversion/move-L2-to-L1-applications-invitations.it-spec.ts`
+- **Move L2 to L1 - pre-existing applications and invitations**
+    - pending invitation is invalidated after cross-L0 move (FR-004)
+    - pending application is invalidated after cross-L0 move (FR-004)
+    - new invitation can be created after move
+    - new application can be submitted and approved after move
+    - a wiped former L2 member cannot apply after the move (recomputed eligibility)
+
+### `journey/conversion/move-L1-to-L2-basic.it-spec.ts`
+- **Move L1 to L2 - basic**
+    - space level is demoted to L2
+    - moved space appears in target L1 subspaces
+    - moved space no longer in source L0 subspaces
+    - collaboration is preserved (excluding profile urls)
+    - about fields are preserved or updated correctly after cross-L0 move
+    - all entity profile urls reflect the new L2 hierarchy after cross-L0 move
+    - visibility/privacy is preserved
+    - settings are preserved
+    - account is inherited from target L0
+    - license subscriptions inherited from target L0
+    - moved space is first in target L1 subspaces (sort order 0)
+
+### `journey/conversion/move-L1-to-L2-auto-invite.it-spec.ts`
+- **Move L1 to L2 - auto-invite disabled**
+    - no invitations created when autoInvite is false
+- **Move L1 to L2 - auto-invite enabled**
+    - auto-invite creates invitations for overlapping members
+
+### `journey/conversion/move-L2-to-L1-authorization.it-spec.ts`
+- **Move L2 to L1 - platform-admin gate (FR-012 / S9)**
+    - Space Admin cannot execute the move
+    - Space Member cannot execute the move
+    - Non-space member cannot execute the move
+    - Platform Resource Admin (the harness admin) can execute the move; stays L2
+- **Move L2 to L1 - privacy recompute (FR-006 / US2-AS4 / SC-003 / S7) > public source → private destination chain revokes anonymous read**
+    - anonymous can read the public L2 BEFORE the move
+    - after moving into the private chain, anonymous access is revoked entirely (recomputed access)
+- **Move L2 to L1 - privacy recompute (FR-006 / US2-AS4 / SC-003 / S7) > private source → public destination chain grants anonymous read**
+    - anonymous has no access to the public L2 under a private chain BEFORE the move
+    - after moving into the public chain, anonymous can read (no stale lockout)
+
+## notifications  <sub>34 files · 225 cases · 2 skip · 6 todo</sub>
+
+
+### `notifications/organization/associates.it-spec.ts`
+- **Organization associate invitations — the invitee is told (US2-AS1)**
+    - the invitee gets exactly one email, one in-app row and (where the queue is observable) one push emit; the admins get nothing yet
+- **Organization associate invitations — the response is told to the other admins (US2-AS2/AS3/AS5)**
+    - ACCEPT notifies every admin (never the acceptor) and produces no "joined" for this acceptance
+    - accepting with a consumed Owner cap: the accepted email states Owner was not granted
+    - REJECT notifies the admins with "declined"
+- **Organization associate applications — the admins are told, the applicant is told the decision (US3-AS2/AS3/AS4)**
+    - applying notifies every ADMIN (note in body, not subject); ADMIN-not-associate included, OWNER-not-admin excluded
+    - APPROVE tells the applicant ("approved") and the OTHER admins ("joined", approver excluded); REJECT tells the applicant ("declined")
+    - US3-AS8: a zero-admin organization escalates to support; nobody gets an in-app row
+- **Domain-match join notifies the other admins (US4-AS1)**
+    - joining via the domain door notifies every admin ("joined"); the joiner gets nothing
+- **Notification settings mute the right event only (US6-AS2)**
+    - muting "someone applied to associate" on one admin: that admin gets nothing, the other admins are notified, no support escalation
+    - muting the invitee-side "invited to associate" setting suppresses the invitation email
+
+### `notifications/organization/associate-email-invitation.it-spec.ts`
+- **Organization email invitation — the unregistered invitee is emailed (US2-AS1, US2-AS7, US3-AS1)**
+    - one email on the organization template: subject names the organization only, body names the inviter, the offered role, the escaped message and the invitations link; no in-app row; resend sends exactly one more
+    - the Space external invitation in the same run still uses the Space template and subject
+
+### `notifications/platform/platform-admin-notification-routing.it-spec.ts`
+- **platform-admin notification routing**
+    - the matrix accounts for every role exactly once — routed to some event, or never a recipient
+    - RECEIVE_NOTIFICATIONS_ADMIN on the platform is held by exactly PLATFORM_LICENSE_MANAGER + PLATFORM_ROLES_ADMIN + PLATFORM_SUPPORT + PLATFORM_USERS_ADMIN
+- **platform-admin notification routing > PLATFORM_ADMIN_GLOBAL_ROLE_CHANGED**
+    - emailRecipients: resolves PLATFORM_ROLES_ADMIN and no other role holder
+    - inAppRecipients: resolves PLATFORM_ROLES_ADMIN and no other role holder
+    - pushRecipients: resolves PLATFORM_ROLES_ADMIN and no other role holder
+    - the acting operator is left out on every channel, and nobody else is
+- **platform-admin notification routing > USER_EMAIL_CHANGE_GLOBAL_ADMIN_NOTIFICATION**
+    - emailRecipients: resolves PLATFORM_USERS_ADMIN and no other role holder
+    - inAppRecipients: resolves PLATFORM_USERS_ADMIN and no other role holder
+    - pushRecipients: resolves PLATFORM_USERS_ADMIN and no other role holder
+    - the acting operator is left out on every channel, and nobody else is
+- **platform-admin notification routing > PLATFORM_ADMIN_USER_PROFILE_CREATED**
+    - emailRecipients: resolves PLATFORM_USERS_ADMIN and no other role holder
+    - inAppRecipients: resolves PLATFORM_USERS_ADMIN and no other role holder
+    - pushRecipients: resolves PLATFORM_USERS_ADMIN and no other role holder
+    - the acting operator is NOT left out, on any channel
+- **platform-admin notification routing > PLATFORM_ADMIN_USER_PROFILE_REMOVED**
+    - emailRecipients: resolves PLATFORM_USERS_ADMIN and no other role holder
+    - inAppRecipients: resolves PLATFORM_USERS_ADMIN and no other role holder
+    - pushRecipients: resolves PLATFORM_USERS_ADMIN and no other role holder
+    - the acting operator is left out on every channel, and nobody else is
+- **platform-admin notification routing > PLATFORM_ADMIN_SPACE_CREATED**
+    - emailRecipients: resolves PLATFORM_SUPPORT + PLATFORM_LICENSE_MANAGER and no other role holder
+    - inAppRecipients: resolves PLATFORM_SUPPORT + PLATFORM_LICENSE_MANAGER and no other role holder
+    - pushRecipients: resolves PLATFORM_SUPPORT + PLATFORM_LICENSE_MANAGER and no other role holder
+    - the acting operator is NOT left out, on any channel
+
+### `notifications/platform/registration.it-spec.ts`
+- **Notifications - User registration**
+    - User sign up - Platform Users Admin(1) gets notifications; no other role holder
+    - User sign up - Platform Users Admin(0) with the row switched off, nobody else either
+- **Notifications - User removal**
+    - User removed by Platform Users Admin - the acting operator(0) is left out, the other Users Admin(1) gets notifications
+    - User removed by the other Users Admin - Platform Users Admin(1) gets notifications, the acting operator(0) does not
+
+### `notifications/platform/space-creation.it-spec.ts`
+- **Notifications - Space creation**
+    - Space created - Platform Support(1), Platform License Manager(1) get notifications; no other role holder
+    - Space created - Platform Support(0), Platform License Manager(0) with the row switched off, nobody else either
+    - Space created - Platform Support(1) gets notifications, Platform License Manager(0) with its row switched off
+
+### `notifications/space/community/organization-invitations.it-spec.ts`
+- **Organization Space invitations — organization admins are notified (US2)**
+    - the ADMIN and the ADMIN-not-associate are each notified once; the OWNER-not-admin, a plain ASSOCIATE and the space admin get nothing (R17b)
+    - a sole admin who switched the notification off entirely receives nothing, and the support fallback does not fire
+    - an organization with no admins or owners escalates to the support address; nobody gets an in-app row
+    - an invitation to L2 lists every ancestor Space in the email body
+- **Organization Space invitations — the inviter learns the outcome (US4)**
+    - accepting notifies the inviter ("accepted") and the OTHER organization admin ("has joined") but never the acceptor, and NOT the generic "new member" notification
+    - declining notifies the inviter with "declined your invitation"
+    - an inviter who switched off "someone responded to my invitation" receives no outcome email on accept
+    - an inviter no longer a Space admin at decline time: mutation succeeds, nobody is notified of the outcome
+    - an inviter whose account no longer exists at decline time: mutation succeeds and the remaining Space admins are still told
+
+### `notifications/space/community/invitations.it-spec.ts`
+- **Notifications - invitations**
+    - non space user receive invitation for SPACE community from space admin
+    - non space user receive invitation for SPACE community from subspace admin
+    - non space user receive invitation for CHALLENGE community from subspace admin
+    - non space user don't receive invitation for CHALLENGE community from subsubspace admin
+    - space member receive invitation for CHALLENGE community from subsubspace admin
+    - non space user receive invitation for OPPORTUNITY community from subsubspace admin
+    - non space user doesn't receive invitation for SPACE community from space admin
+    - non space user doesn't receive invitation for CHALLENGE community from subspace admin, flag disabled
+
+### `notifications/space/community/user-invitation-outcomes.it-spec.ts`
+- **User Space invitations — the invitee is the actor (notifications#356)**
+    - UO-1 — user accepts an L0 invitation: every Space admin hears "accepted", nobody hears "joined", the invitee is welcomed
+    - UO-2 — user declines an L0 invitation: every Space admin hears "declined"
+    - UO-3 — user accepts an L1 invitation via invitedToParent: the L1 admin hears "accepted" (not "joined"), the L0 ancestor admins hear "joined" as normal
+
+### `notifications/space/community/application-approval-new-member.it-spec.ts`
+- **Notifications - approving an application (R40)**
+    - the admin who did NOT approve is still told; the new member gets their welcome
+
+### `notifications/space/collaboration/form-response.it-spec.ts`
+- **Form response notifications — a member responds**
+    - the subspace admin gets the admin email, the parent-space admin none, the member a receipt
+    - no mail carries the answer, and none is announced as a post contribution
+    - a Form whose responses are visible to members says so in the receipt
+- **Form response notifications — an admin responds**
+    - the admin gets only the receipt, no admin email about their own response
+- **Form response notifications — the admin row is off**
+    - the admin gets no admin email but the receipt still reaches the member
+- **Form response notifications — push**
+    - the subspace admin gets one push publish per active subscription
+
+### `notifications/messaging/conversation-messages-negative.it-spec.ts`
+- **Conversation-message notifications — negative matrix > Non-member never receives anything, even with the channel enabled (US2-AS3)**
+    - D (never invited) receives nothing while B (a real member) does
+- **Conversation-message notifications — negative matrix > Removed member stops receiving — membership re-read at send time (US2-AS4)**
+    - C receives one email while a member, zero more once removed
+- **Conversation-message notifications — negative matrix > Sender never notified of their own message (US1-AS4)**
+    - A (sender, email enabled) never appears as an email recipient
+- **Conversation-message notifications — negative matrix > A disabled channel produces zero emits for that channel while others proceed (US2-AS5)**
+    - B (push disabled) gets no push while C (default) still does
+- **Conversation-message notifications — negative matrix**
+    - VC/guidance-bot sender produces zero notifications (US4-AS1) — delegated, not fabricated here [skip]
+
+### `notifications/messaging/conversation-messages-positive.it-spec.ts`
+- **Conversation-message notifications — positive matrix > Default settings: push only, no email**
+    - direct message produces a push emit for the recipient and no email (US1-AS1)
+    - group message produces one push emit per non-sender member and no email (US2-AS1)
+- **Conversation-message notifications — positive matrix > Email opt-in (US1-AS2, US2-AS2)**
+    - direct message: exactly one email naming the sender, no message text, deep link + settings footer
+    - group message: exactly one email naming the conversation, no message text, deep link
+- **Conversation-message notifications — positive matrix > Hostile message content never leaks into email (US1-AS5, SC-004)**
+    - subject and body contain none of the message-derived text
+
+### `notifications/messaging/conversation-messages-digest.it-spec.ts`
+- **Conversation-message notifications — debounce & digest (R4) > US1-AS3 / SC-003: a burst inside one quiet period yields exactly ONE digest**
+    - zero emails before the quiet period elapses, then exactly one reporting a count of 5
+- **Conversation-message notifications — debounce & digest (R4) > US1-AS8: unread from two counterparts aggregates into ONE per-recipient email**
+    - ONE email lists both counterparts with their own counts, not one email per conversation
+- **Conversation-message notifications — debounce & digest (R4) > US2-AS6: unread in two groups aggregates into ONE email**
+    - ONE email lists both groups with their own counts
+- **Conversation-message notifications — debounce & digest (R4) > US2-AS7: the direct and group email tracks run on independent schedules**
+    - two emails arrive, each on its own track, and the direct one is not held back by the longer group window
+- **Conversation-message notifications — debounce & digest (R4) > US1-AS7 / SC-009: the max-delay cap bounds a debounce that never settles**
+    - an email still arrives within the max delay while messages keep resetting the quiet period
+
+### `notifications/messaging/conversation-messages-read-state.it-spec.ts`
+- **Conversation-message notifications — read state cancels the digest (US5) > US1-AS6 / SC-008: reading before the timer fires cancels every channel**
+    - send, read before the quiet period elapses, then zero emails AND zero push publishes
+- **Conversation-message notifications — read state cancels the digest (US5) > US5-AS4: reading two of three conversations leaves a digest naming only the third**
+    - the digest names only the unread conversation, with its count
+- **Conversation-message notifications — read state cancels the digest (US5) > US5-AS3: reading AFTER a digest was dispatched starts a fresh cycle**
+    - a message after the read receipt advances produces a NEW digest
+
+### `notifications/space/collaboration/callouts.it-spec.ts`
+- **Notifications - post**
+    - GA PUBLISH space callout - HM(7) get notifications
+    - GA PUBLISH space callout with 'sendNotification':'false' - HM(0) get notifications
+    - GA create DRAFT -> PUBLISHED -> DRAFT -> PUBLISHED space callout - HM(7) get notifications on PUBLISH event only
+    - HA create PUBLISHED space callout type: POST - HM(7) get notifications
+    - HA create PUBLISHED space callout type: WHITEBOARD - HM(7) get notifications [skip]
+    - HA create PUBLISHED subspace callout type: POST - CM(5) get notifications
+    - HA create PUBLISHED subspace callout type: POST with 'sendNotification':'false' - CM(0) get notifications
+    - OA create PUBLISHED subsubspace callout type: POST - OM(4) get notifications
+    - OA create PUBLISHED subsubspace callout type: POST with 'sendNotification':'false' - OM(0) get notifications
+    - OA create PUBLISHED subsubspace callout type: POST - 0 notifications - all roles with notifications disabled
+
+### `notifications/callout-reactions/callout-reaction-notifications.it-spec.ts`
+- **Emission invariants (US1/US4)**
+    - US1-AS1 — genuine new reaction notifies exactly the publisher in-app (single recipient)
+    - US1-AS2 — swap (re-add with different emoji) does NOT produce a new notification (R-1)
+    - US1-AS3 — idempotent re-add while reaction exists does NOT produce a new notification (R-1)
+    - US1-AS3 — remove does NOT produce a notification
+    - Edge case — remove then re-add is a genuine new reaction and DOES notify (spec Edge Cases)
+    - US1-AS4 — self-reaction (publisher reacts to own callout) produces zero notifications
+    - US1-AS5 — N distinct reactors produce N separate in-app rows (no aggregation in v1)
+- **Push emission (US1, FR-012)**
+    - genuine new reaction publishes exactly one push per active subscription of the publisher
+    - swap does NOT publish a push (R-1 invariant holds for push channel)
+- **Settings gating (US2)**
+    - US2-AS1 — defaults for globalAdmin: email ON (set in beforeAll), inApp ON, push ON
+    - US2-AS1 — FR-007 default triple for an unmodified user: email OFF, inApp ON, push ON
+    - US2-AS2 — inApp OFF: genuine reaction creates no in-app row for publisher
+    - US2-AS3 — email ON: genuine reaction sends email to publisher
+    - US2-AS5 — all channels OFF: genuine reaction produces nothing anywhere, and the reaction itself succeeds
+    - US2-AS4 — defend-on-read: settings query heals gracefully for existing user
+- **Volume control — email suppression (US3)**
+    - US3-AS1 — N reactions within the suppression window yield exactly ONE email
+    - US3-AS2 — after the window elapses, a new reaction produces a new leading email
+    - US3-AS3 — per-callout key isolation: two callouts in-window each produce exactly one email
+    - US3-AS7 — in-app rows are NOT suppressed during a burst (one row per genuine reaction)
+- **Publisher-resolution chain (US4/FR-002)**
+    - US4-AS1 — republish by another admin switches the recipient to the new publisher
+    - US4-AS4 — reaction mutation succeeds even if notification infrastructure is unreachable (fire-and-forget)
+- **Bounded redelivery (R-2 mitigation)**
+    - R-2 — happy-path consumption: a genuine reaction is received by the notifications service (email arrives)
+
+### `notifications/space/collaboration/wb-contributions.it-spec.ts`
+- **Notifications - whiteboard**
+    - GA create space whiteboard - GA(1), HA (2), HM(6) get notifications
+    - HA create space whiteboard - GA(1), HA (1), HM(6) get notifications
+    - HA create subspace whiteboard - GA(1), HA (1), CA(1), CM(3),  get notifications
+    - OM create subsubspace whiteboard - HA(2), CA(1), OA(2), OM(4), get notifications
+    - OA create subsubspace whiteboard - 0 notifications - all roles with notifications disabled
+
+### `notifications/space/collaboration/posts-comment.it-spec.ts`
+- **Notifications - post comments > GA create post on space  **
+    - GA create comment - GA(1) get notifications
+    - HM create comment - GA(1) get notifications
+- **Notifications - post comments > HM create post on space  **
+    - HM create comment - HM(1) get notifications
+    - HA create comment - HM(1) get notifications
+- **Notifications - post comments > CM create post on subspace  **
+    - CM create comment - CM(1) get notifications
+    - CA create comment - CM(1) get notifications
+- **Notifications - post comments > OM create post on subsubspace  **
+    - OM create comment - OM(1) get notifications
+    - CA create comment - OM(1) get notifications
+- **Notifications - post comments**
+    - OA create post on subsubspace and comment - 0 notifications - all roles with notifications disabled
+
+### `notifications/space/collaboration/post-contribution.it-spec.ts`
+- **Notifications - post**
+    - GA create space post - GA(1), HA (2), HM(6) get notifications
+    - HA create space post - GA(1), HA (1), HM(6) get notifications
+    - HA create subspace post - GA(1), HA (1), CA(1), CM(3),  get notifications
+    - OM create subsubspace post - HA(2), CA(1), OA(2), OM(4), get notifications
+    - OA create subsubspace post - 0 notifications - all roles with notifications disabled
+- **070 contribution notify switch**
+    - sendNotification false suppresses the member AND the admin contribution notification — the admin channel is suppressed by design, not drift
+    - sendNotification true notifies exactly as today — same recipients, same content as the omitted-flag path
+    - omitting sendNotification on the flag-aware mutation still notifies everyone — the wire default stays notify, pinned independently of the untouched legacy helper
+    - the activity log entry for the contribution is written even though sendNotification is false
+    - US2-AS2: sendNotification true on a DRAFT callout still notifies nobody — the publication rule outranks the switch
+    - US2-AS3: sendNotification true never overrides a recipient opt-out — the opted-out member gets nothing, everyone else is notified as today
+    - FR-006: sendNotification false suppresses a WHITEBOARD contribution too — the gate is uniform across contribution types, not Post-only
+
+### `notifications/messaging/messaging-shared-push-throttle-independence.it-spec.ts`
+- **Messaging digests never decrement the shared push throttle (US4-AS2, FR-012)**
+    - after a messaging digest push, a non-messaging push for the same user still publishes
+
+### `notifications/space/collaboration/callout-comments.it-spec.ts`
+- **Notifications - callout comments**
+    - GA create space callout comment - HM(7) get notifications
+    - HA create space callout comment - HM(7) get notifications
+    - HA create subspace callout comment - HM(5),  get notifications
+    - OM create subsubspace callout comment - HM(3), get notifications
+    - OA create subsubspace callout comment - 0 notifications - all roles with notifications disabled
+
+### `notifications/space/communication/user-to-community-leads-opportunity.it-spec.ts`
+- **Notifications - send messages to Private Space, Subsubspace Community Leads**
+    - NOT space member sends message to Subsubspace community (2 User Leads, 1 Org Lead) - 2 messages sent
+    - Subsubspace member send message to Subsubspace community (2 User Leads, 1 Org Lead) - 2 messages sent
+- **Notifications - send messages to Private Space, Public Subspace, Subsubspace with NO Community Leads**
+    - NOT space member sends message to Subspace community (0 User Leads, 0 Org Lead) - 0 messages sent
+
+### `notifications/user/user-to-user.it-spec.ts`
+- **Notifications - user to user messages**
+    - User 'A'(pref:true) send message to user 'B'(pref:true) - 2 messages are sent
+    - User 'A'(pref:true) send message to 2 users: 'B' and 'C'(pref:true) - 2 messages are sent
+    - User 'A'(pref:true) send message to 2 users: 'B'(pref:true) and 'C'(pref:false) - 1 messages are sent
+    - User 'A'(pref:true) send message to user 'B'(pref:false) - 1 messages are sent
+    - User 'A'(pref:false) send message to user 'B'(pref:true) - 1 messages are sent
+
+### `notifications/space/communication/user-to-community-leads-hub.it-spec.ts`
+- **Notifications - send messages to Private space hosts > Notifications - hosts (COMMUNICATION_MESSAGE pref: enabled)**
+    - NOT space member sends message to Space community (2 hosts) - 2 messages sent
+    - Space member send message to Space community (2 hosts) - 2 messages sent
+- **Notifications - send messages to Private space hosts > Notifications - hosts (COMMUNICATION_MESSAGE pref: disabled)**
+    - NOT space member sends message to Space community (2 hosts) - 0 messages sent
+    - Space member send message to Space community (2 hosts) - 0 messages sent
+- **Notifications - messages to Public space hosts > Notifications - hosts (COMMUNICATION_MESSAGE pref: enabled)**
+    - NOT space member sends message to Space community (2 hosts) - 2 messages sent
+    - Space member send message to Space community (2 hosts) - 2 messages sent
+- **Notifications - messages to Public space hosts > Notifications - hosts (COMMUNICATION_MESSAGE pref: disabled)**
+    - NOT space member sends message to Space community (2 hosts) - 0 messages sent
+    - Space member send message to Space community (2 hosts) - 0 messages sent
+- **Notifications - messages to Public space NO hosts**
+    - NOT space member sends message to Space community (0 hosts) - 0 messages sent
+    - Space member send message to Space community (0 hosts) - 0 messages sent
+
+### `notifications/platform/forum-discussions.it-spec.ts`
+- **Notifications - forum discussions**
+    - GA create forum discussion - GA(1), QA(1), GHA(1), HM(1) get notifications
+    - QA create forum discussion - GA(1), QA(1), GHA(1), HM(1) get notifications
+    - Recategorising a post sends no notification (US2-AS6)
+- **Notifications - forum discussions comment**
+    - GA send comment to own forum discussion - GA(1) get notifications
+    - GA send comment to forum discussion created by QA - QA(1) get notifications
+    - QA send comment to own forum discussion - QA(1) get notifications
+    - QA send comment to forum discussion created by GA - GA(1) get notifications
+- **Notifications - forum discussions comments reply**
+    - GA reply to own comment of own forum discussion - GA(1) get notifications
+    - GA reply to other comment to forum discussion created by QA - QA(1) get notifications
+    - QA reply to own comment of own forum discussion - QA(1) get notifications
+    - QA reply to other comment to forum discussion created by GA - GA(1) get notifications
+- **Notifications - no notifications triggered**
+    - GA create forum discussion - no one get notifications
+    - QA create forum discussion - no one get notifications
+    - GA send comment to own forum discussion - no notifications
+    - GA reply to won comment of forum discussion created by QA - no notifications
+    - GA reply to comment of forum discussion created by QA - no notifications
+
+### `notifications/messaging/conversation-messages-settings.it-spec.ts`
+- **Conversation-message notification settings (US3) > Defaults on a freshly registered account (US3-AS1)**
+    - both messaging rows are present with mandated defaults: email OFF, inApp OFF, push ON
+- **Conversation-message notification settings (US3) > Settings merge field-by-field (FR-017)**
+    - updating the direct row leaves the group row (and other user-notification rows) untouched
+- **Conversation-message notification settings (US3) > In-app is permanently OFF regardless of the stored preference (US3-AS3, FR-003)**
+    - forcing the stored inApp flag to true via updateUserSettings never produces an in-app notification
+
+### `notifications/user/mention-user.it-spec.ts`
+- **Notifications - Mention User > Callout discussion**
+    - GA mention HM in Space comments callout - 1 notification to HM is sent
+    - HM mention Non Space member in Space comments callout - 1 notification to NonHM is sent
+    - HM mention Non Space member and Space Admin in Space comments callout - 2 notification to NonHM and HA is sent
+    - Non Space member mention HM in Space comments callout - 0 notification to HM is sent
+    - GA mention HM in Subspace comments callout - 1 notification to HM is sent
+    - GA mention HM in Subsubspace comments callout - 1 notification to HM is sent
+- **Notifications - Mention User > Post comment**
+    - HA mention HM in Space post - 1 notification to HM is sent
+    - CA mention HM in Subspace post - 1 notification to HM is sent
+    - OA mention HM in Subsubspace post - 1 notification to HM is sent
+    - OA mention HM in Subsubspace post (preference disabled) - 0 notification to HM is sent
+
+### `notifications/space/communication/user-to-community-leads-challenge.it-spec.ts`
+- **Notifications - send messages to Private Space, Public Subspace Community Leads**
+    - NOT space member sends message to Subspace community (2 User Leads, 1 Org Lead) - 2 messages sent
+    - Space member send message to Subspace community (2 User Leads, 1 Org Lead) - 2 messages sent
+- **Notifications - send messages to Private Space, Private Subspace Community Leads**
+    - NOT space member sends message to Subspace community (2 User Leads, 1 Org Lead) - 2 messages sent
+    - Subspace member send message to Subspace community (2 User Leads, 1 Org Lead) - 2 messages sent
+- **Notifications - send messages to Private Space, Public Subspace NO Community Leads**
+    - NOT space member sends message to Subspace community (0 User Leads, 0 Org Lead) - 0 messages sent
+
+### `notifications/space/collaboration/community-updates.it-spec.ts`
+- **Notifications - updates**
+    - GA create space update - GA(1), HA (1), HM(6) get notifications
+    - HA create space update - GA(1), HA (1), HM(6) get notifications
+    - CA create subspace update - GA(1), HA (1), CA(1), CM(3),  get notifications
+    - OA create subsubspace update - GA(1), HA(1), CA(1), OA(1), OM(1), get notifications
+    - OA create subsubspace update - 0 notifications - all roles with notifications disabled
+
+### `notifications/space/community/join-community.it-spec.ts`
+- **Notifications - member join community**
+    - Non-space member join a Space - GA, HA and Joiner receive notifications
+    - Non-space member join a Subspace - GA, HA, CA and Joiner receive notifications
+    - Admin adds user to Space community - GA, HA and Joiner receive notifications
+    - no notification when Non-space member cannot join a Space - GA, EA and Joiner
+
+### `notifications/organization/user-to-organization.it-spec.ts`
+- **Notifications - user to organization messages**
+    - User 'A' sends message to Organization(both admins ORGANIZATION_MESSAGE:true) (3 admins) - 3 messages are sent
+    - User 'A' sends message to Organization (3 admins, one admin has ORGANIZATION_MESSAGE:false) - 2 messages are sent
+    - User 'A' sends message to Organization (3 admins, one admin has ORGANIZATION_MESSAGE:true and COMMUNICATION_MESSAGE:false) - 3 messages are sent
+
+### `notifications/space/community/external-invitations.it-spec.ts`
+- **Notifications - invitations**
+    - external user receive notifications
+    - external user receive notifications from subspace
+
+### `notifications/space/community/application.it-spec.ts`
+- **Notifications - applications**
+    - receive notification for non space user application to space- GA, EA
+    - receive notification for non space user application to subspace- GA, CA
+    - no notification for non space user application to space- GA, EA and Applicant
+
+### `notifications/organization/mention-organization.it-spec.ts`
+- **Notifications - Mention Organization (disabled since 2025-08-22, not migrated to user settings)**
+    - HM mention Organization in Space comments callout - 2 notification to Organization admins are sent [todo]
+    - GA mention Organization in Subspace comments callout - 2 notification to Organization admins are sent [todo]
+    - GA mention Organization in Subsubspace comments callout - 2 notification to Organization admins are sent [todo]
+    - HA mention Organization in Space post - 2 notification to Organization admins are sent [todo]
+    - HA mention Organization in Subsubspace post (preference disabled) - 2 notification to Organization admins are sent [todo]
+    - OA mention HM in Subsubspace post - 1 notification to HM is sent [todo]
+
+## language  <sub>2 files · 15 cases · 0 skip · 0 todo</sub>
+
+
+### `language/invitation-language-seeding.it-spec.ts`
+- **029 — language suggested on an invitation is seeded onto the new account**
+    - platform advertises an eligible language set and a default (US1/US5 precondition)
+    - US4 — a new user invited with a suggested language registers already set to it
+    - US5-AS6 — an invitation with no suggested language seeds nothing
+    - US4 — re-inviting the same address preserves the original suggestion
+    - US5-AS7 — the suggestion fans out onto both Invitation and PlatformInvitation
+    - SC-008 — a non-eligible language is rejected at compose time
+
+### `language/user-language-settings.it-spec.ts`
+- **029 — language is a per-user account setting**
+    - a new account starts with no language and an unanswered offer
+    - US1-AS2 — accepting: writing a language latches languageOfferAnswered
+    - US1-AS3 — declining: the answer is recorded without setting a language
+    - languageOfferAnswered is a one-way latch — it cannot be set back to false
+    - language: null is a no-op — a stored language is not cleared
+    - an unsupported language is rejected
+    - the platform default language is configured
+    - a different user cannot write this account language
+    - a seeded persona exposes its language settings
+
+## storage  <sub>9 files · 917 cases · 0 skip · 0 todo</sub>
+
+
+### `storage/uploads.it-spec.ts`
+- **Upload document > DDT upload all file types**
+    - Successful upload of file type: "'file-avif.avif'" on reference
+    - Successful upload of file type: "'file-gif.gif'" on reference
+    - Successful upload of file type: "'file-jpeg.jpeg'" on reference
+    - Successful upload of file type: "'file-jpg.jpg'" on reference
+    - Successful upload of file type: "'file-png.png'" on reference
+    - Successful upload of file type: "'file-svg.svg'" on reference
+    - Successful upload of file type: "'file-webp.webp'" on reference
+    - Successful upload of file type: "'doc.pdf'" on reference
+- **Upload document**
+    - DDT upload all file types
+    - upload same file twice
+    - delete pdf file
+    - read uploaded file
+    - fail to read file after document deletion
+    - read uploaded file after related reference is removed
+    - upload file bigger than 15 MB
+    - fail to upload .sql file
+    - file is available after releted reference is deleted
+- **Upload visual tests**
+    - upload visual
+    - upload same visual twice
+    - should not upload unsupported file type
+    - read uploaded visual
+- **Upload visual to innovation space**
+    - upload visual
+
+### `storage/auth/public-space-private-ch-document-auth.it-spec.ts`
+- **Public Space - Private Subspace - visual on profile > Access to Space Profile visual**
+    - User: "undefined" has this privileges: "[ 'READ' ]" to space subspace profile visual document
+    - User: "'non.space'" has this privileges: "[ 'READ' ]" to space subspace profile visual document
+    - User: "'admin'" has this privileges: "[ 'CREATE', 'DELETE', 'GRANT', …(3) ]" to space subspace profile visual document
+    - User: "'space.admin'" has this privileges: "[ 'CREATE', 'DELETE', 'GRANT', …(2) ]" to space subspace profile visual document
+    - User: "'space.member'" has this privileges: "[ 'READ' ]" to space subspace profile visual document
+    - User: "'subspace.admin'" has this privileges: "[ 'CREATE', 'DELETE', 'GRANT', …(2) ]" to space subspace profile visual document
+    - User: "'subspace.member'" has this privileges: "[ 'READ' ]" to space subspace profile visual document
+    - User: "undefined" has this privileges: "[ 'READ' ]" to space subspace profile storage bucket
+    - User: "'non.space'" has this privileges: "[ 'READ' ]" to space subspace profile storage bucket
+    - User: "'admin'" has this privileges: "[ 'CREATE', 'DELETE', …(6) ]" to space subspace profile storage bucket
+    - User: "'space.admin'" has this privileges: "[ 'CREATE', 'DELETE', …(5) ]" to space subspace profile storage bucket
+    - User: "'space.member'" has this privileges: "[ 'READ' ]" to space subspace profile storage bucket
+    - User: "'subspace.admin'" has this privileges: "[ 'CREATE', 'DELETE', …(5) ]" to space subspace profile storage bucket
+    - User: "'subspace.member'" has this privileges: "[ 'READ' ]" to space subspace profile storage bucket
+- **Public Space - Private Subspace - visual on profile > Access to Space Profile reference**
+    - User: "undefined" has this privileges: "[ 'READ' ]" to space subspace profile reference document
+    - User: "'non.space'" has this privileges: "[ 'READ' ]" to space subspace profile reference document
+    - User: "'admin'" has this privileges: "[ 'CREATE', 'DELETE', 'GRANT', …(3) ]" to space subspace profile reference document
+    - User: "'space.admin'" has this privileges: "[ 'CREATE', 'DELETE', 'GRANT', …(2) ]" to space subspace profile reference document
+    - User: "'space.member'" has this privileges: "[ 'READ' ]" to space subspace profile reference document
+    - User: "'subspace.admin'" has this privileges: "[ 'CREATE', 'DELETE', 'GRANT', …(2) ]" to space subspace profile reference document
+    - User: "'subspace.member'" has this privileges: "[ 'READ' ]" to space subspace profile reference document
+    - User: "undefined" has this privileges: "[ 'READ' ]" to space subspace profile storage bucket
+    - User: "'non.space'" has this privileges: "[ 'READ' ]" to space subspace profile storage bucket
+    - User: "'admin'" has this privileges: "[ 'CREATE', 'DELETE', …(6) ]" to space subspace profile storage bucket
+    - User: "'space.admin'" has this privileges: "[ 'CREATE', 'DELETE', …(5) ]" to space subspace profile storage bucket
+    - User: "'space.member'" has this privileges: "[ 'READ' ]" to space subspace profile storage bucket
+    - User: "'subspace.member'" has this privileges: "[ 'READ' ]" to space subspace profile storage bucket
+- **Public Space - Private Subspace - visual on profile > Access to Space About (space storage)**
+    - User: "undefined" has this privileges: "[ 'READ' ]" to space about (storageBucket) document
+    - User: "'non.space'" has this privileges: "[ 'READ' ]" to space about (storageBucket) document
+    - User: "'admin'" has this privileges: "[ 'CREATE', 'DELETE', 'GRANT', …(3) ]" to space about (storageBucket) document
+    - User: "'space.admin'" has this privileges: "[ 'CREATE', 'DELETE', 'GRANT', …(2) ]" to space about (storageBucket) document
+    - User: "'space.member'" has this privileges: "[ 'READ' ]" to space about (storageBucket) document
+    - User: "'subspace.admin'" has this privileges: "[ 'CREATE', 'DELETE', 'GRANT', …(2) ]" to space about (storageBucket) document
+    - User: "'subspace.member'" has this privileges: "[ 'READ' ]" to space about (storageBucket) document
+    - User: "undefined" has this privileges: "[ 'READ' ]" to space about storage bucket
+    - User: "'non.space'" has this privileges: "[ 'READ' ]" to space about storage bucket
+    - User: "'admin'" has this privileges: "[ 'CREATE', 'DELETE', …(6) ]" to space about storage bucket
+    - User: "'space.admin'" has this privileges: "[ 'CREATE', 'DELETE', …(5) ]" to space about storage bucket
+    - User: "'space.member'" has this privileges: "[ 'READ' ]" to space about storage bucket
+    - User: "'subspace.admin'" has this privileges: "[ 'CREATE', 'DELETE', …(5) ]" to space about storage bucket
+    - User: "'subspace.member'" has this privileges: "[ 'READ' ]" to space about storage bucket
+- **Public Space - Private Subspace - visual on profile > Access to Link collections**
+    - User: "undefined" has this privileges: "undefined" to space link collection callout (storageBucket) document
+    - User: "'non.space'" has this privileges: "undefined" to space link collection callout (storageBucket) document
+    - User: "'admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(5) ]" to space link collection callout (storageBucket) document
+    - User: "'space.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(4) ]" to space link collection callout (storageBucket) document
+    - User: "'space.member'" has this privileges: "undefined" to space link collection callout (storageBucket) document
+    - User: "'subspace.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(4) ]" to space link collection callout (storageBucket) document
+    - User: "'subspace.member'" has this privileges: "[ 'CONTRIBUTE', 'READ' ]" to space link collection callout (storageBucket) document
+    - User: "undefined" has this privileges: "undefined" to space link collection callout storage bucket
+    - User: "'non.space'" has this privileges: "undefined" to space link collection callout storage bucket
+    - User: "'admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(7) ]" to space link collection callout storage bucket
+    - User: "'space.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(6) ]" to space link collection callout storage bucket
+    - User: "'space.member'" has this privileges: "undefined" to space link collection callout storage bucket
+    - User: "'subspace.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(6) ]" to space link collection callout storage bucket
+    - User: "'subspace.member'" has this privileges: "[ 'CONTRIBUTE', 'FILE_UPLOAD', 'READ' ]" to space link collection callout storage bucket
+- **Public Space - Private Subspace - visual on profile > Access to Call for Posts Post Card visual(banner) documents**
+    - User: "undefined" has this privileges: "undefined" to space subspace visual for post of call for post  callout (storageBucket) document
+    - User: "'non.space'" has this privileges: "undefined" to space subspace visual for post of call for post  callout (storageBucket) document
+    - User: "'admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(5) ]" to space subspace visual for post of call for post  callout (storageBucket) document
+    - User: "'space.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(4) ]" to space subspace visual for post of call for post  callout (storageBucket) document
+    - User: "'space.member'" has this privileges: "undefined" to space subspace visual for post of call for post  callout (storageBucket) document
+    - User: "'subspace.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(4) ]" to space subspace visual for post of call for post  callout (storageBucket) document
+    - User: "'subspace.member'" has this privileges: "[ 'CONTRIBUTE', 'READ' ]" to space subspace visual for post of call for post  callout (storageBucket) document
+    - User: "undefined" has this privileges: "undefined" to space subspace post collection callout storage bucket
+    - User: "'non.space'" has this privileges: "undefined" to space subspace post collection callout storage bucket
+    - User: "'admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(7) ]" to space subspace post collection callout storage bucket
+    - User: "'space.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(6) ]" to space subspace post collection callout storage bucket
+    - User: "'space.member'" has this privileges: "undefined" to space subspace post collection callout storage bucket
+    - User: "'subspace.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(6) ]" to space subspace post collection callout storage bucket
+    - User: "'subspace.member'" has this privileges: "[ 'CONTRIBUTE', 'FILE_UPLOAD', 'READ' ]" to space subspace post collection callout storage bucket
+- **Public Space - Private Subspace - visual on profile > Access to Call for Posts Post Card reference documents**
+    - User: "undefined" has this privileges: "undefined" to space visual for post of call for post  callout (storageBucket) document
+    - User: "'non.space'" has this privileges: "undefined" to space visual for post of call for post  callout (storageBucket) document
+    - User: "'admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(5) ]" to space visual for post of call for post  callout (storageBucket) document
+    - User: "'space.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(4) ]" to space visual for post of call for post  callout (storageBucket) document
+    - User: "'space.member'" has this privileges: "undefined" to space visual for post of call for post  callout (storageBucket) document
+    - User: "'subspace.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(4) ]" to space visual for post of call for post  callout (storageBucket) document
+    - User: "'subspace.member'" has this privileges: "[ 'CONTRIBUTE', 'READ' ]" to space visual for post of call for post  callout (storageBucket) document
+    - User: "undefined" has this privileges: "undefined" to space post collection callout storage bucket
+    - User: "'non.space'" has this privileges: "undefined" to space post collection callout storage bucket
+    - User: "'admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(7) ]" to space post collection callout storage bucket
+    - User: "'space.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(6) ]" to space post collection callout storage bucket
+    - User: "'space.member'" has this privileges: "undefined" to space post collection callout storage bucket
+    - User: "'subspace.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(6) ]" to space post collection callout storage bucket
+    - User: "'subspace.member'" has this privileges: "[ 'CONTRIBUTE', 'FILE_UPLOAD', 'READ' ]" to space post collection callout storage bucket
+- **Public Space - Private Subspace - visual on profile > Access to Call for Whitaboards Whiteboard visual(banner) documents**
+    - User: "undefined" has this privileges: "undefined" to space subspace visual for whiteboard of call for whiteboards callout (storageBucket) document
+    - User: "'non.space'" has this privileges: "undefined" to space subspace visual for whiteboard of call for whiteboards callout (storageBucket) document
+    - User: "'admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(6) ]" to space subspace visual for whiteboard of call for whiteboards callout (storageBucket) document
+    - User: "'space.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(4) ]" to space subspace visual for whiteboard of call for whiteboards callout (storageBucket) document
+    - User: "'space.member'" has this privileges: "undefined" to space subspace visual for whiteboard of call for whiteboards callout (storageBucket) document
+    - User: "'subspace.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(4) ]" to space subspace visual for whiteboard of call for whiteboards callout (storageBucket) document
+    - User: "'subspace.member'" has this privileges: "[ 'CONTRIBUTE', 'READ' ]" to space subspace visual for whiteboard of call for whiteboards callout (storageBucket) document
+    - User: "undefined" has this privileges: "undefined" to space subspace whiteboard collection callout storage bucket
+    - User: "'non.space'" has this privileges: "undefined" to space subspace whiteboard collection callout storage bucket
+    - User: "'admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(8) ]" to space subspace whiteboard collection callout storage bucket
+    - User: "'space.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(6) ]" to space subspace whiteboard collection callout storage bucket
+    - User: "'space.member'" has this privileges: "undefined" to space subspace whiteboard collection callout storage bucket
+    - User: "'subspace.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(6) ]" to space subspace whiteboard collection callout storage bucket
+    - User: "'subspace.member'" has this privileges: "[ 'CONTRIBUTE', 'FILE_UPLOAD', 'READ' ]" to space subspace whiteboard collection callout storage bucket
+- **Public Space - Private Subspace - visual on profile > Access to Call for Posts Callout reference documents**
+    - User: "undefined" has this privileges: "undefined" to space subspace visual for post of call for post  callout (storageBucket) document
+    - User: "'non.space'" has this privileges: "undefined" to space subspace visual for post of call for post  callout (storageBucket) document
+    - User: "'admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(5) ]" to space subspace visual for post of call for post  callout (storageBucket) document
+    - User: "'space.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(4) ]" to space subspace visual for post of call for post  callout (storageBucket) document
+    - User: "'space.member'" has this privileges: "undefined" to space subspace visual for post of call for post  callout (storageBucket) document
+    - User: "'subspace.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(4) ]" to space subspace visual for post of call for post  callout (storageBucket) document
+    - User: "'subspace.member'" has this privileges: "[ 'CONTRIBUTE', 'READ' ]" to space subspace visual for post of call for post  callout (storageBucket) document
+    - User: "undefined" has this privileges: "undefined" to space subspace link collection callout storage bucket
+    - User: "'non.space'" has this privileges: "undefined" to space subspace link collection callout storage bucket
+    - User: "'admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(7) ]" to space subspace link collection callout storage bucket
+    - User: "'space.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(6) ]" to space subspace link collection callout storage bucket
+    - User: "'space.member'" has this privileges: "undefined" to space subspace link collection callout storage bucket
+    - User: "'subspace.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(6) ]" to space subspace link collection callout storage bucket
+    - User: "'subspace.member'" has this privileges: "[ 'CONTRIBUTE', 'FILE_UPLOAD', 'READ' ]" to space subspace link collection callout storage bucket
+- **Public Space - Private Subspace - visual on profile > Access to Call for Posts Callout visual(banner) documents**
+    - User: "undefined" has this privileges: "undefined" to space subspace visual for post of call for post  callout (storageBucket) document
+    - User: "'non.space'" has this privileges: "undefined" to space subspace visual for post of call for post  callout (storageBucket) document
+    - User: "'admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(5) ]" to space subspace visual for post of call for post  callout (storageBucket) document
+    - User: "'space.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(4) ]" to space subspace visual for post of call for post  callout (storageBucket) document
+    - User: "'space.member'" has this privileges: "undefined" to space subspace visual for post of call for post  callout (storageBucket) document
+    - User: "'subspace.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(4) ]" to space subspace visual for post of call for post  callout (storageBucket) document
+    - User: "'subspace.member'" has this privileges: "[ 'CONTRIBUTE', 'READ' ]" to space subspace visual for post of call for post  callout (storageBucket) document
+    - User: "undefined" has this privileges: "undefined" to subspace space link collection callout storage bucket
+    - User: "'non.space'" has this privileges: "undefined" to subspace space link collection callout storage bucket
+    - User: "'admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(7) ]" to subspace space link collection callout storage bucket
+    - User: "'space.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(6) ]" to subspace space link collection callout storage bucket
+    - User: "'space.member'" has this privileges: "undefined" to subspace space link collection callout storage bucket
+    - User: "'subspace.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(6) ]" to subspace space link collection callout storage bucket
+    - User: "'subspace.member'" has this privileges: "[ 'CONTRIBUTE', 'FILE_UPLOAD', 'READ' ]" to subspace space link collection callout storage bucket
+- **Public Space - Private Subspace - visual on profile > Access to Whiteboard Callout visual(banner) documents**
+    - User: "undefined" has this privileges: "undefined" to space subspace visual for whiteboard callout (storageBucket) document
+    - User: "'non.space'" has this privileges: "undefined" to space subspace visual for whiteboard callout (storageBucket) document
+    - User: "'admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(6) ]" to space subspace visual for whiteboard callout (storageBucket) document
+    - User: "'space.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(4) ]" to space subspace visual for whiteboard callout (storageBucket) document
+    - User: "'space.member'" has this privileges: "undefined" to space subspace visual for whiteboard callout (storageBucket) document
+    - User: "'subspace.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(4) ]" to space subspace visual for whiteboard callout (storageBucket) document
+    - User: "'subspace.member'" has this privileges: "[ 'CONTRIBUTE', 'READ' ]" to space subspace visual for whiteboard callout (storageBucket) document
+    - User: "undefined" has this privileges: "undefined" to space subspace whiteboard callout storage bucket
+    - User: "'non.space'" has this privileges: "undefined" to space subspace whiteboard callout storage bucket
+    - User: "'admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(8) ]" to space subspace whiteboard callout storage bucket
+    - User: "'space.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(6) ]" to space subspace whiteboard callout storage bucket
+    - User: "'space.member'" has this privileges: "undefined" to space subspace whiteboard callout storage bucket
+    - User: "'subspace.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(6) ]" to space subspace whiteboard callout storage bucket
+    - User: "'subspace.member'" has this privileges: "[ 'CONTRIBUTE', 'FILE_UPLOAD', 'READ' ]" to space subspace whiteboard callout storage bucket
+- **Public Space - Private Subspace - visual on profile > Access to WhiteboardRt Callout visual(banner) documents**
+    - User: "undefined" has this privileges: "undefined" to space subspace visual for whiteboardRt callout (storageBucket) document
+    - User: "'non.space'" has this privileges: "undefined" to space subspace visual for whiteboardRt callout (storageBucket) document
+    - User: "'admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(6) ]" to space subspace visual for whiteboardRt callout (storageBucket) document
+    - User: "'space.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(4) ]" to space subspace visual for whiteboardRt callout (storageBucket) document
+    - User: "'space.member'" has this privileges: "undefined" to space subspace visual for whiteboardRt callout (storageBucket) document
+    - User: "'subspace.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(4) ]" to space subspace visual for whiteboardRt callout (storageBucket) document
+    - User: "'subspace.member'" has this privileges: "[ 'CONTRIBUTE', 'READ' ]" to space subspace visual for whiteboardRt callout (storageBucket) document
+    - User: "undefined" has this privileges: "undefined" to space subspace whiteboardRt callout storage bucket
+    - User: "'non.space'" has this privileges: "undefined" to space subspace whiteboardRt callout storage bucket
+    - User: "'admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(8) ]" to space subspace whiteboardRt callout storage bucket
+    - User: "'space.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(6) ]" to space subspace whiteboardRt callout storage bucket
+    - User: "'space.member'" has this privileges: "undefined" to space subspace whiteboardRt callout storage bucket
+    - User: "'subspace.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(6) ]" to space subspace whiteboardRt callout storage bucket
+    - User: "'subspace.member'" has this privileges: "[ 'CONTRIBUTE', 'FILE_UPLOAD', 'READ' ]" to space subspace whiteboardRt callout storage bucket
+
+### `storage/auth/public-space-public-ch-document-auth.it-spec.ts`
+- **Public Space - Public Subspace - visual on profile > Access to Space Profile visual**
+    - User: "undefined" has this privileges: "[ 'READ' ]" to space subspace profile visual document
+    - User: "'non.space'" has this privileges: "[ 'READ' ]" to space subspace profile visual document
+    - User: "'admin'" has this privileges: "[ 'CREATE', 'DELETE', 'GRANT', …(3) ]" to space subspace profile visual document
+    - User: "'space.admin'" has this privileges: "[ 'CREATE', 'DELETE', 'GRANT', …(2) ]" to space subspace profile visual document
+    - User: "'space.member'" has this privileges: "[ 'READ' ]" to space subspace profile visual document
+    - User: "'subspace.admin'" has this privileges: "[ 'CREATE', 'DELETE', 'GRANT', …(2) ]" to space subspace profile visual document
+    - User: "'subspace.member'" has this privileges: "[ 'READ' ]" to space subspace profile visual document
+    - User: "undefined" has this privileges: "[ 'READ' ]" to space subspace profile storage bucket
+    - User: "'non.space'" has this privileges: "[ 'READ' ]" to space subspace profile storage bucket
+    - User: "'admin'" has this privileges: "[ 'CREATE', 'DELETE', …(6) ]" to space subspace profile storage bucket
+    - User: "'space.admin'" has this privileges: "[ 'CREATE', 'DELETE', …(5) ]" to space subspace profile storage bucket
+    - User: "'space.member'" has this privileges: "[ 'READ' ]" to space subspace profile storage bucket
+    - User: "'subspace.admin'" has this privileges: "[ 'CREATE', 'DELETE', …(5) ]" to space subspace profile storage bucket
+    - User: "'subspace.member'" has this privileges: "[ 'READ' ]" to space subspace profile storage bucket
+- **Public Space - Public Subspace - visual on profile > Access to Space Profile reference**
+    - User: "undefined" has this privileges: "[ 'READ' ]" to space subspace profile reference document
+    - User: "'non.space'" has this privileges: "[ 'READ' ]" to space subspace profile reference document
+    - User: "'admin'" has this privileges: "[ 'CREATE', 'DELETE', 'GRANT', …(3) ]" to space subspace profile reference document
+    - User: "'space.admin'" has this privileges: "[ 'CREATE', 'DELETE', 'GRANT', …(2) ]" to space subspace profile reference document
+    - User: "'space.member'" has this privileges: "[ 'READ' ]" to space subspace profile reference document
+    - User: "'subspace.admin'" has this privileges: "[ 'CREATE', 'DELETE', 'GRANT', …(2) ]" to space subspace profile reference document
+    - User: "'subspace.member'" has this privileges: "[ 'READ' ]" to space subspace profile reference document
+    - User: "undefined" has this privileges: "[ 'READ' ]" to space subspace profile storage bucket
+    - User: "'non.space'" has this privileges: "[ 'READ' ]" to space subspace profile storage bucket
+    - User: "'admin'" has this privileges: "[ 'CREATE', 'DELETE', …(6) ]" to space subspace profile storage bucket
+    - User: "'space.admin'" has this privileges: "[ 'CREATE', 'DELETE', …(5) ]" to space subspace profile storage bucket
+    - User: "'space.member'" has this privileges: "[ 'READ' ]" to space subspace profile storage bucket
+    - User: "'subspace.admin'" has this privileges: "[ 'CREATE', 'DELETE', …(5) ]" to space subspace profile storage bucket
+    - User: "'subspace.member'" has this privileges: "[ 'READ' ]" to space subspace profile storage bucket
+- **Public Space - Public Subspace - visual on profile > Access to Space About (space storage)**
+    - User: "undefined" has this privileges: "[ 'READ' ]" to space about (storageBucket) document
+    - User: "'non.space'" has this privileges: "[ 'READ' ]" to space about (storageBucket) document
+    - User: "'admin'" has this privileges: "[ 'CREATE', 'DELETE', 'GRANT', …(3) ]" to space about (storageBucket) document
+    - User: "'space.admin'" has this privileges: "[ 'CREATE', 'DELETE', 'GRANT', …(2) ]" to space about (storageBucket) document
+    - User: "'space.member'" has this privileges: "[ 'READ' ]" to space about (storageBucket) document
+    - User: "'subspace.admin'" has this privileges: "[ 'CREATE', 'DELETE', 'GRANT', …(2) ]" to space about (storageBucket) document
+    - User: "'subspace.member'" has this privileges: "[ 'READ' ]" to space about (storageBucket) document
+    - User: "undefined" has this privileges: "[ 'READ' ]" to space about storage bucket
+    - User: "'non.space'" has this privileges: "[ 'READ' ]" to space about storage bucket
+    - User: "'admin'" has this privileges: "[ 'CREATE', 'DELETE', …(6) ]" to space about storage bucket
+    - User: "'space.admin'" has this privileges: "[ 'CREATE', 'DELETE', …(5) ]" to space about storage bucket
+    - User: "'space.member'" has this privileges: "[ 'READ' ]" to space about storage bucket
+    - User: "'subspace.admin'" has this privileges: "[ 'CREATE', 'DELETE', …(5) ]" to space about storage bucket
+    - User: "'subspace.member'" has this privileges: "[ 'READ' ]" to space about storage bucket
+- **Public Space - Public Subspace - visual on profile > Access to Link collections**
+    - User: "undefined" has this privileges: "[ 'READ' ]" to space link collection callout (storageBucket) document
+    - User: "'non.space'" has this privileges: "[ 'READ' ]" to space link collection callout (storageBucket) document
+    - User: "'admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(5) ]" to space link collection callout (storageBucket) document
+    - User: "'space.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(4) ]" to space link collection callout (storageBucket) document
+    - User: "'space.member'" has this privileges: "[ 'CONTRIBUTE', 'READ' ]" to space link collection callout (storageBucket) document
+    - User: "'subspace.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(4) ]" to space link collection callout (storageBucket) document
+    - User: "'subspace.member'" has this privileges: "[ 'CONTRIBUTE', 'READ' ]" to space link collection callout (storageBucket) document
+    - User: "undefined" has this privileges: "[ 'READ' ]" to space link collection callout storage bucket
+    - User: "'non.space'" has this privileges: "[ 'READ' ]" to space link collection callout storage bucket
+    - User: "'admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(7) ]" to space link collection callout storage bucket
+    - User: "'space.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(6) ]" to space link collection callout storage bucket
+    - User: "'space.member'" has this privileges: "[ 'CONTRIBUTE', 'FILE_UPLOAD', 'READ' ]" to space link collection callout storage bucket
+    - User: "'subspace.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(6) ]" to space link collection callout storage bucket
+    - User: "'subspace.member'" has this privileges: "[ 'CONTRIBUTE', 'FILE_UPLOAD', 'READ' ]" to space link collection callout storage bucket
+- **Public Space - Public Subspace - visual on profile > Access to Call for Posts Post Card visual(banner) documents**
+    - User: "undefined" has this privileges: "[ 'READ' ]" to space subspace visual for post of call for post  callout (storageBucket) document
+    - User: "'non.space'" has this privileges: "[ 'READ' ]" to space subspace visual for post of call for post  callout (storageBucket) document
+    - User: "'admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(5) ]" to space subspace visual for post of call for post  callout (storageBucket) document
+    - User: "'space.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(4) ]" to space subspace visual for post of call for post  callout (storageBucket) document
+    - User: "'space.member'" has this privileges: "[ 'CONTRIBUTE', 'READ' ]" to space subspace visual for post of call for post  callout (storageBucket) document
+    - User: "'subspace.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(4) ]" to space subspace visual for post of call for post  callout (storageBucket) document
+    - User: "'subspace.member'" has this privileges: "[ 'CONTRIBUTE', 'READ' ]" to space subspace visual for post of call for post  callout (storageBucket) document
+    - User: "undefined" has this privileges: "[ 'READ' ]" to space subspace post collection callout storage bucket
+    - User: "'non.space'" has this privileges: "[ 'READ' ]" to space subspace post collection callout storage bucket
+    - User: "'admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(7) ]" to space subspace post collection callout storage bucket
+    - User: "'space.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(6) ]" to space subspace post collection callout storage bucket
+    - User: "'space.member'" has this privileges: "[ 'CONTRIBUTE', 'FILE_UPLOAD', 'READ' ]" to space subspace post collection callout storage bucket
+    - User: "'subspace.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(6) ]" to space subspace post collection callout storage bucket
+    - User: "'subspace.member'" has this privileges: "[ 'CONTRIBUTE', 'FILE_UPLOAD', 'READ' ]" to space subspace post collection callout storage bucket
+- **Public Space - Public Subspace - visual on profile > Access to Call for Posts Post Card reference documents**
+    - User: "undefined" has this privileges: "[ 'READ' ]" to space visual for post of call for post  callout (storageBucket) document
+    - User: "'non.space'" has this privileges: "[ 'READ' ]" to space visual for post of call for post  callout (storageBucket) document
+    - User: "'admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(5) ]" to space visual for post of call for post  callout (storageBucket) document
+    - User: "'space.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(4) ]" to space visual for post of call for post  callout (storageBucket) document
+    - User: "'space.member'" has this privileges: "[ 'CONTRIBUTE', 'READ' ]" to space visual for post of call for post  callout (storageBucket) document
+    - User: "'subspace.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(4) ]" to space visual for post of call for post  callout (storageBucket) document
+    - User: "'subspace.member'" has this privileges: "[ 'CONTRIBUTE', 'READ' ]" to space visual for post of call for post  callout (storageBucket) document
+    - User: "undefined" has this privileges: "[ 'READ' ]" to space post collection callout storage bucket
+    - User: "'non.space'" has this privileges: "[ 'READ' ]" to space post collection callout storage bucket
+    - User: "'admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(7) ]" to space post collection callout storage bucket
+    - User: "'space.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(6) ]" to space post collection callout storage bucket
+    - User: "'space.member'" has this privileges: "[ 'CONTRIBUTE', 'FILE_UPLOAD', 'READ' ]" to space post collection callout storage bucket
+    - User: "'subspace.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(6) ]" to space post collection callout storage bucket
+    - User: "'subspace.member'" has this privileges: "[ 'CONTRIBUTE', 'FILE_UPLOAD', 'READ' ]" to space post collection callout storage bucket
+- **Public Space - Public Subspace - visual on profile > Access to Call for Whitaboards Whiteboard visual(banner) documents**
+    - User: "undefined" has this privileges: "[ 'READ' ]" to space subspace visual for whiteboard of call for whiteboards callout (storageBucket) document
+    - User: "'non.space'" has this privileges: "[ 'READ' ]" to space subspace visual for whiteboard of call for whiteboards callout (storageBucket) document
+    - User: "'admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(6) ]" to space subspace visual for whiteboard of call for whiteboards callout (storageBucket) document
+    - User: "'space.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(4) ]" to space subspace visual for whiteboard of call for whiteboards callout (storageBucket) document
+    - User: "'space.member'" has this privileges: "[ 'CONTRIBUTE', 'READ' ]" to space subspace visual for whiteboard of call for whiteboards callout (storageBucket) document
+    - User: "'subspace.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(4) ]" to space subspace visual for whiteboard of call for whiteboards callout (storageBucket) document
+    - User: "'subspace.member'" has this privileges: "[ 'CONTRIBUTE', 'READ' ]" to space subspace visual for whiteboard of call for whiteboards callout (storageBucket) document
+    - User: "undefined" has this privileges: "[ 'READ' ]" to space subspace whiteboard collection callout storage bucket
+    - User: "'non.space'" has this privileges: "[ 'READ' ]" to space subspace whiteboard collection callout storage bucket
+    - User: "'admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(8) ]" to space subspace whiteboard collection callout storage bucket
+    - User: "'space.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(6) ]" to space subspace whiteboard collection callout storage bucket
+    - User: "'space.member'" has this privileges: "[ 'CONTRIBUTE', 'FILE_UPLOAD', 'READ' ]" to space subspace whiteboard collection callout storage bucket
+    - User: "'subspace.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(6) ]" to space subspace whiteboard collection callout storage bucket
+    - User: "'subspace.member'" has this privileges: "[ 'CONTRIBUTE', 'FILE_UPLOAD', 'READ' ]" to space subspace whiteboard collection callout storage bucket
+- **Public Space - Public Subspace - visual on profile > Access to Call for Posts Callout reference documents**
+    - User: "undefined" has this privileges: "[ 'READ' ]" to space subspace visual for post of call for post  callout (storageBucket) document
+    - User: "'non.space'" has this privileges: "[ 'READ' ]" to space subspace visual for post of call for post  callout (storageBucket) document
+    - User: "'admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(5) ]" to space subspace visual for post of call for post  callout (storageBucket) document
+    - User: "'space.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(4) ]" to space subspace visual for post of call for post  callout (storageBucket) document
+    - User: "'space.member'" has this privileges: "[ 'CONTRIBUTE', 'READ' ]" to space subspace visual for post of call for post  callout (storageBucket) document
+    - User: "'subspace.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(4) ]" to space subspace visual for post of call for post  callout (storageBucket) document
+    - User: "'subspace.member'" has this privileges: "[ 'CONTRIBUTE', 'READ' ]" to space subspace visual for post of call for post  callout (storageBucket) document
+    - User: "undefined" has this privileges: "[ 'READ' ]" to space subspace link collection callout storage bucket
+    - User: "'non.space'" has this privileges: "[ 'READ' ]" to space subspace link collection callout storage bucket
+    - User: "'admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(7) ]" to space subspace link collection callout storage bucket
+    - User: "'space.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(6) ]" to space subspace link collection callout storage bucket
+    - User: "'space.member'" has this privileges: "[ 'CONTRIBUTE', 'FILE_UPLOAD', 'READ' ]" to space subspace link collection callout storage bucket
+    - User: "'subspace.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(6) ]" to space subspace link collection callout storage bucket
+    - User: "'subspace.member'" has this privileges: "[ 'CONTRIBUTE', 'FILE_UPLOAD', 'READ' ]" to space subspace link collection callout storage bucket
+- **Public Space - Public Subspace - visual on profile > Access to Call for Posts Callout visual(banner) documents**
+    - User: "undefined" has this privileges: "[ 'READ' ]" to space subspace visual for post of call for post  callout (storageBucket) document
+    - User: "'non.space'" has this privileges: "[ 'READ' ]" to space subspace visual for post of call for post  callout (storageBucket) document
+    - User: "'admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(5) ]" to space subspace visual for post of call for post  callout (storageBucket) document
+    - User: "'space.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(4) ]" to space subspace visual for post of call for post  callout (storageBucket) document
+    - User: "'space.member'" has this privileges: "[ 'CONTRIBUTE', 'READ' ]" to space subspace visual for post of call for post  callout (storageBucket) document
+    - User: "'subspace.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(4) ]" to space subspace visual for post of call for post  callout (storageBucket) document
+    - User: "'subspace.member'" has this privileges: "[ 'CONTRIBUTE', 'READ' ]" to space subspace visual for post of call for post  callout (storageBucket) document
+    - User: "undefined" has this privileges: "[ 'READ' ]" to subspace space link collection callout storage bucket
+    - User: "'non.space'" has this privileges: "[ 'READ' ]" to subspace space link collection callout storage bucket
+    - User: "'admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(7) ]" to subspace space link collection callout storage bucket
+    - User: "'space.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(6) ]" to subspace space link collection callout storage bucket
+    - User: "'space.member'" has this privileges: "[ 'CONTRIBUTE', 'FILE_UPLOAD', 'READ' ]" to subspace space link collection callout storage bucket
+    - User: "'subspace.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(6) ]" to subspace space link collection callout storage bucket
+    - User: "'subspace.member'" has this privileges: "[ 'CONTRIBUTE', 'FILE_UPLOAD', 'READ' ]" to subspace space link collection callout storage bucket
+- **Public Space - Public Subspace - visual on profile > Access to Whiteboard Callout visual(banner) documents**
+    - User: "undefined" has this privileges: "[ 'READ' ]" to space subspace visual for whiteboard callout (storageBucket) document
+    - User: "'non.space'" has this privileges: "[ 'READ' ]" to space subspace visual for whiteboard callout (storageBucket) document
+    - User: "'admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(6) ]" to space subspace visual for whiteboard callout (storageBucket) document
+    - User: "'space.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(4) ]" to space subspace visual for whiteboard callout (storageBucket) document
+    - User: "'space.member'" has this privileges: "[ 'CONTRIBUTE', 'READ' ]" to space subspace visual for whiteboard callout (storageBucket) document
+    - User: "'subspace.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(4) ]" to space subspace visual for whiteboard callout (storageBucket) document
+    - User: "'subspace.member'" has this privileges: "[ 'CONTRIBUTE', 'READ' ]" to space subspace visual for whiteboard callout (storageBucket) document
+    - User: "undefined" has this privileges: "[ 'READ' ]" to space subspace whiteboard callout storage bucket
+    - User: "'non.space'" has this privileges: "[ 'READ' ]" to space subspace whiteboard callout storage bucket
+    - User: "'admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(8) ]" to space subspace whiteboard callout storage bucket
+    - User: "'space.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(6) ]" to space subspace whiteboard callout storage bucket
+    - User: "'space.member'" has this privileges: "[ 'CONTRIBUTE', 'FILE_UPLOAD', 'READ' ]" to space subspace whiteboard callout storage bucket
+    - User: "'subspace.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(6) ]" to space subspace whiteboard callout storage bucket
+    - User: "'subspace.member'" has this privileges: "[ 'CONTRIBUTE', 'FILE_UPLOAD', 'READ' ]" to space subspace whiteboard callout storage bucket
+- **Public Space - Public Subspace - visual on profile > Access to WhiteboardRt Callout visual(banner) documents**
+    - User: "undefined" has this privileges: "[ 'READ' ]" to space subspace visual for whiteboardRt callout (storageBucket) document
+    - User: "'non.space'" has this privileges: "[ 'READ' ]" to space subspace visual for whiteboardRt callout (storageBucket) document
+    - User: "'admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(6) ]" to space subspace visual for whiteboardRt callout (storageBucket) document
+    - User: "'space.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(4) ]" to space subspace visual for whiteboardRt callout (storageBucket) document
+    - User: "'space.member'" has this privileges: "[ 'CONTRIBUTE', 'READ' ]" to space subspace visual for whiteboardRt callout (storageBucket) document
+    - User: "'subspace.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(4) ]" to space subspace visual for whiteboardRt callout (storageBucket) document
+    - User: "'subspace.member'" has this privileges: "[ 'CONTRIBUTE', 'READ' ]" to space subspace visual for whiteboardRt callout (storageBucket) document
+    - User: "undefined" has this privileges: "[ 'READ' ]" to space subspace whiteboardRt callout storage bucket
+    - User: "'non.space'" has this privileges: "[ 'READ' ]" to space subspace whiteboardRt callout storage bucket
+    - User: "'admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(8) ]" to space subspace whiteboardRt callout storage bucket
+    - User: "'space.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(6) ]" to space subspace whiteboardRt callout storage bucket
+    - User: "'space.member'" has this privileges: "[ 'CONTRIBUTE', 'FILE_UPLOAD', 'READ' ]" to space subspace whiteboardRt callout storage bucket
+    - User: "'subspace.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(6) ]" to space subspace whiteboardRt callout storage bucket
+    - User: "'subspace.member'" has this privileges: "[ 'CONTRIBUTE', 'FILE_UPLOAD', 'READ' ]" to space subspace whiteboardRt callout storage bucket
+
+### `storage/auth/private-space-private-ch-document-auth.it-spec.ts`
+- **Private Space - Private Subspace - visual on profile > Access to Space Profile visual**
+    - User: "undefined" has this privileges: "undefined" to space subspace profile visual document
+    - User: "'non.space'" has this privileges: "undefined" to space subspace profile visual document
+    - User: "'admin'" has this privileges: "[ 'CREATE', 'DELETE', 'GRANT', …(3) ]" to space subspace profile visual document
+    - User: "'space.admin'" has this privileges: "[ 'CREATE', 'DELETE', 'GRANT', …(2) ]" to space subspace profile visual document
+    - User: "'space.member'" has this privileges: "[ 'READ' ]" to space subspace profile visual document
+    - User: "'subspace.admin'" has this privileges: "[ 'CREATE', 'DELETE', 'GRANT', …(2) ]" to space subspace profile visual document
+    - User: "'subspace.member'" has this privileges: "[ 'READ' ]" to space subspace profile visual document
+    - User: "undefined" has this privileges: "undefined" to space subspace profile storage bucket
+    - User: "'non.space'" has this privileges: "undefined" to space subspace profile storage bucket
+    - User: "'admin'" has this privileges: "[ 'CREATE', 'DELETE', …(6) ]" to space subspace profile storage bucket
+    - User: "'space.admin'" has this privileges: "[ 'CREATE', 'DELETE', …(5) ]" to space subspace profile storage bucket
+    - User: "'space.member'" has this privileges: "[ 'READ' ]" to space subspace profile storage bucket
+    - User: "'subspace.admin'" has this privileges: "[ 'CREATE', 'DELETE', …(5) ]" to space subspace profile storage bucket
+    - User: "'subspace.member'" has this privileges: "[ 'READ' ]" to space subspace profile storage bucket
+- **Private Space - Private Subspace - visual on profile > Access to Space Profile reference**
+    - User: "undefined" has this privileges: "undefined" to space subspace profile reference document
+    - User: "'non.space'" has this privileges: "undefined" to space subspace profile reference document
+    - User: "'admin'" has this privileges: "[ 'CREATE', 'DELETE', 'GRANT', …(3) ]" to space subspace profile reference document
+    - User: "'space.admin'" has this privileges: "[ 'CREATE', 'DELETE', 'GRANT', …(2) ]" to space subspace profile reference document
+    - User: "'space.member'" has this privileges: "[ 'READ' ]" to space subspace profile reference document
+    - User: "'subspace.admin'" has this privileges: "[ 'CREATE', 'DELETE', 'GRANT', …(2) ]" to space subspace profile reference document
+    - User: "'subspace.member'" has this privileges: "[ 'READ' ]" to space subspace profile reference document
+    - User: "undefined" has this privileges: "undefined" to space subspace profile storage bucket
+    - User: "'non.space'" has this privileges: "undefined" to space subspace profile storage bucket
+    - User: "'admin'" has this privileges: "[ 'CREATE', 'DELETE', …(6) ]" to space subspace profile storage bucket
+    - User: "'space.admin'" has this privileges: "[ 'CREATE', 'DELETE', …(5) ]" to space subspace profile storage bucket
+    - User: "'space.member'" has this privileges: "[ 'READ' ]" to space subspace profile storage bucket
+    - User: "'subspace.admin'" has this privileges: "[ 'CREATE', 'DELETE', …(5) ]" to space subspace profile storage bucket
+    - User: "'subspace.member'" has this privileges: "[ 'READ' ]" to space subspace profile storage bucket
+- **Private Space - Private Subspace - visual on profile > Access to Space About (space storage)**
+    - User: "undefined" has this privileges: "undefined" to space about (storageBucket) document
+    - User: "'non.space'" has this privileges: "undefined" to space about (storageBucket) document
+    - User: "'admin'" has this privileges: "[ 'CREATE', 'DELETE', 'GRANT', …(3) ]" to space about (storageBucket) document
+    - User: "'space.admin'" has this privileges: "[ 'CREATE', 'DELETE', 'GRANT', …(2) ]" to space about (storageBucket) document
+    - User: "'space.member'" has this privileges: "[ 'READ' ]" to space about (storageBucket) document
+    - User: "'subspace.admin'" has this privileges: "[ 'CREATE', 'DELETE', 'GRANT', …(2) ]" to space about (storageBucket) document
+    - User: "'subspace.member'" has this privileges: "[ 'READ' ]" to space about (storageBucket) document
+    - User: "undefined" has this privileges: "undefined" to space about storage bucket
+    - User: "'non.space'" has this privileges: "undefined" to space about storage bucket
+    - User: "'admin'" has this privileges: "[ 'CREATE', 'DELETE', …(6) ]" to space about storage bucket
+    - User: "'space.admin'" has this privileges: "[ 'CREATE', 'DELETE', …(5) ]" to space about storage bucket
+    - User: "'space.member'" has this privileges: "[ 'READ' ]" to space about storage bucket
+    - User: "'subspace.admin'" has this privileges: "[ 'CREATE', 'DELETE', …(5) ]" to space about storage bucket
+    - User: "'subspace.member'" has this privileges: "[ 'READ' ]" to space about storage bucket
+- **Private Space - Private Subspace - visual on profile > Access to Link collections**
+    - User: "undefined" has this privileges: "undefined" to space link collection callout (storageBucket) document
+    - User: "'non.space'" has this privileges: "undefined" to space link collection callout (storageBucket) document
+    - User: "'admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(5) ]" to space link collection callout (storageBucket) document
+    - User: "'space.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(4) ]" to space link collection callout (storageBucket) document
+    - User: "'space.member'" has this privileges: "undefined" to space link collection callout (storageBucket) document
+    - User: "'subspace.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(4) ]" to space link collection callout (storageBucket) document
+    - User: "'subspace.member'" has this privileges: "[ 'CONTRIBUTE', 'READ' ]" to space link collection callout (storageBucket) document
+    - User: "undefined" has this privileges: "undefined" to space link collection callout storage bucket
+    - User: "'non.space'" has this privileges: "undefined" to space link collection callout storage bucket
+    - User: "'admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(7) ]" to space link collection callout storage bucket
+    - User: "'space.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(6) ]" to space link collection callout storage bucket
+    - User: "'space.member'" has this privileges: "undefined" to space link collection callout storage bucket
+    - User: "'subspace.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(6) ]" to space link collection callout storage bucket
+    - User: "'subspace.member'" has this privileges: "[ 'CONTRIBUTE', 'FILE_UPLOAD', 'READ' ]" to space link collection callout storage bucket
+- **Private Space - Private Subspace - visual on profile > Access to Call for Posts Post Card visual(banner) documents**
+    - User: "undefined" has this privileges: "undefined" to space subspace visual for post of call for post  callout (storageBucket) document
+    - User: "'non.space'" has this privileges: "undefined" to space subspace visual for post of call for post  callout (storageBucket) document
+    - User: "'admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(5) ]" to space subspace visual for post of call for post  callout (storageBucket) document
+    - User: "'space.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(4) ]" to space subspace visual for post of call for post  callout (storageBucket) document
+    - User: "'space.member'" has this privileges: "undefined" to space subspace visual for post of call for post  callout (storageBucket) document
+    - User: "'subspace.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(4) ]" to space subspace visual for post of call for post  callout (storageBucket) document
+    - User: "'subspace.member'" has this privileges: "[ 'CONTRIBUTE', 'READ' ]" to space subspace visual for post of call for post  callout (storageBucket) document
+    - User: "undefined" has this privileges: "undefined" to space subspace post collection callout storage bucket
+    - User: "'non.space'" has this privileges: "undefined" to space subspace post collection callout storage bucket
+    - User: "'admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(7) ]" to space subspace post collection callout storage bucket
+    - User: "'space.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(6) ]" to space subspace post collection callout storage bucket
+    - User: "'space.member'" has this privileges: "undefined" to space subspace post collection callout storage bucket
+    - User: "'subspace.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(6) ]" to space subspace post collection callout storage bucket
+    - User: "'subspace.member'" has this privileges: "[ 'CONTRIBUTE', 'FILE_UPLOAD', 'READ' ]" to space subspace post collection callout storage bucket
+- **Private Space - Private Subspace - visual on profile > Access to Call for Posts Post Card reference documents**
+    - User: "undefined" has this privileges: "undefined" to space visual for post of call for post  callout (storageBucket) document
+    - User: "'non.space'" has this privileges: "undefined" to space visual for post of call for post  callout (storageBucket) document
+    - User: "'admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(5) ]" to space visual for post of call for post  callout (storageBucket) document
+    - User: "'space.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(4) ]" to space visual for post of call for post  callout (storageBucket) document
+    - User: "'space.member'" has this privileges: "undefined" to space visual for post of call for post  callout (storageBucket) document
+    - User: "'subspace.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(4) ]" to space visual for post of call for post  callout (storageBucket) document
+    - User: "'subspace.member'" has this privileges: "[ 'CONTRIBUTE', 'READ' ]" to space visual for post of call for post  callout (storageBucket) document
+    - User: "undefined" has this privileges: "undefined" to space post collection callout storage bucket
+    - User: "'non.space'" has this privileges: "undefined" to space post collection callout storage bucket
+    - User: "'admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(7) ]" to space post collection callout storage bucket
+    - User: "'space.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(6) ]" to space post collection callout storage bucket
+    - User: "'space.member'" has this privileges: "undefined" to space post collection callout storage bucket
+    - User: "'subspace.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(6) ]" to space post collection callout storage bucket
+    - User: "'subspace.member'" has this privileges: "[ 'CONTRIBUTE', 'FILE_UPLOAD', 'READ' ]" to space post collection callout storage bucket
+- **Private Space - Private Subspace - visual on profile > Access to Call for Whitaboards Whiteboard visual(banner) documents**
+    - User: "undefined" has this privileges: "undefined" to space subspace visual for whiteboard of call for whiteboards callout (storageBucket) document
+    - User: "'non.space'" has this privileges: "undefined" to space subspace visual for whiteboard of call for whiteboards callout (storageBucket) document
+    - User: "'admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(6) ]" to space subspace visual for whiteboard of call for whiteboards callout (storageBucket) document
+    - User: "'space.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(4) ]" to space subspace visual for whiteboard of call for whiteboards callout (storageBucket) document
+    - User: "'space.member'" has this privileges: "undefined" to space subspace visual for whiteboard of call for whiteboards callout (storageBucket) document
+    - User: "'subspace.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(4) ]" to space subspace visual for whiteboard of call for whiteboards callout (storageBucket) document
+    - User: "'subspace.member'" has this privileges: "[ 'CONTRIBUTE', 'READ' ]" to space subspace visual for whiteboard of call for whiteboards callout (storageBucket) document
+    - User: "undefined" has this privileges: "undefined" to space subspace whiteboard collection callout storage bucket
+    - User: "'non.space'" has this privileges: "undefined" to space subspace whiteboard collection callout storage bucket
+    - User: "'admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(8) ]" to space subspace whiteboard collection callout storage bucket
+    - User: "'space.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(6) ]" to space subspace whiteboard collection callout storage bucket
+    - User: "'space.member'" has this privileges: "undefined" to space subspace whiteboard collection callout storage bucket
+    - User: "'subspace.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(6) ]" to space subspace whiteboard collection callout storage bucket
+    - User: "'subspace.member'" has this privileges: "[ 'CONTRIBUTE', 'FILE_UPLOAD', 'READ' ]" to space subspace whiteboard collection callout storage bucket
+- **Private Space - Private Subspace - visual on profile > Access to Call for Posts Callout reference documents**
+    - User: "undefined" has this privileges: "undefined" to space subspace visual for post of call for post  callout (storageBucket) document
+    - User: "'non.space'" has this privileges: "undefined" to space subspace visual for post of call for post  callout (storageBucket) document
+    - User: "'admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(5) ]" to space subspace visual for post of call for post  callout (storageBucket) document
+    - User: "'space.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(4) ]" to space subspace visual for post of call for post  callout (storageBucket) document
+    - User: "'space.member'" has this privileges: "undefined" to space subspace visual for post of call for post  callout (storageBucket) document
+    - User: "'subspace.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(4) ]" to space subspace visual for post of call for post  callout (storageBucket) document
+    - User: "'subspace.member'" has this privileges: "[ 'CONTRIBUTE', 'READ' ]" to space subspace visual for post of call for post  callout (storageBucket) document
+    - User: "undefined" has this privileges: "undefined" to space subspace link collection callout storage bucket
+    - User: "'non.space'" has this privileges: "undefined" to space subspace link collection callout storage bucket
+    - User: "'admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(7) ]" to space subspace link collection callout storage bucket
+    - User: "'space.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(6) ]" to space subspace link collection callout storage bucket
+    - User: "'space.member'" has this privileges: "undefined" to space subspace link collection callout storage bucket
+    - User: "'subspace.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(6) ]" to space subspace link collection callout storage bucket
+    - User: "'subspace.member'" has this privileges: "[ 'CONTRIBUTE', 'FILE_UPLOAD', 'READ' ]" to space subspace link collection callout storage bucket
+- **Private Space - Private Subspace - visual on profile > Access to Call for Posts Callout visual(banner) documents**
+    - User: "undefined" has this privileges: "undefined" to space subspace visual for post of call for post  callout (storageBucket) document
+    - User: "'non.space'" has this privileges: "undefined" to space subspace visual for post of call for post  callout (storageBucket) document
+    - User: "'admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(5) ]" to space subspace visual for post of call for post  callout (storageBucket) document
+    - User: "'space.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(4) ]" to space subspace visual for post of call for post  callout (storageBucket) document
+    - User: "'space.member'" has this privileges: "undefined" to space subspace visual for post of call for post  callout (storageBucket) document
+    - User: "'subspace.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(4) ]" to space subspace visual for post of call for post  callout (storageBucket) document
+    - User: "'subspace.member'" has this privileges: "[ 'CONTRIBUTE', 'READ' ]" to space subspace visual for post of call for post  callout (storageBucket) document
+    - User: "undefined" has this privileges: "undefined" to subspace space link collection callout storage bucket
+    - User: "'non.space'" has this privileges: "undefined" to subspace space link collection callout storage bucket
+    - User: "'admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(7) ]" to subspace space link collection callout storage bucket
+    - User: "'space.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(6) ]" to subspace space link collection callout storage bucket
+    - User: "'space.member'" has this privileges: "undefined" to subspace space link collection callout storage bucket
+    - User: "'subspace.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(6) ]" to subspace space link collection callout storage bucket
+    - User: "'subspace.member'" has this privileges: "[ 'CONTRIBUTE', 'FILE_UPLOAD', 'READ' ]" to subspace space link collection callout storage bucket
+- **Private Space - Private Subspace - visual on profile > Access to Whiteboard Callout visual(banner) documents**
+    - User: "undefined" has this privileges: "undefined" to space subspace visual for whiteboard callout (storageBucket) document
+    - User: "'non.space'" has this privileges: "undefined" to space subspace visual for whiteboard callout (storageBucket) document
+    - User: "'admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(6) ]" to space subspace visual for whiteboard callout (storageBucket) document
+    - User: "'space.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(4) ]" to space subspace visual for whiteboard callout (storageBucket) document
+    - User: "'space.member'" has this privileges: "undefined" to space subspace visual for whiteboard callout (storageBucket) document
+    - User: "'subspace.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(4) ]" to space subspace visual for whiteboard callout (storageBucket) document
+    - User: "'subspace.member'" has this privileges: "[ 'CONTRIBUTE', 'READ' ]" to space subspace visual for whiteboard callout (storageBucket) document
+    - User: "undefined" has this privileges: "undefined" to space subspace whiteboard callout storage bucket
+    - User: "'non.space'" has this privileges: "undefined" to space subspace whiteboard callout storage bucket
+    - User: "'admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(8) ]" to space subspace whiteboard callout storage bucket
+    - User: "'space.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(6) ]" to space subspace whiteboard callout storage bucket
+    - User: "'space.member'" has this privileges: "undefined" to space subspace whiteboard callout storage bucket
+    - User: "'subspace.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(6) ]" to space subspace whiteboard callout storage bucket
+    - User: "'subspace.member'" has this privileges: "[ 'CONTRIBUTE', 'FILE_UPLOAD', 'READ' ]" to space subspace whiteboard callout storage bucket
+- **Private Space - Private Subspace - visual on profile > Access to WhiteboardRt Callout visual(banner) documents**
+    - User: "undefined" has this privileges: "undefined" to space subspace visual for whiteboardRt callout (storageBucket) document
+    - User: "'non.space'" has this privileges: "undefined" to space subspace visual for whiteboardRt callout (storageBucket) document
+    - User: "'admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(6) ]" to space subspace visual for whiteboardRt callout (storageBucket) document
+    - User: "'space.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(4) ]" to space subspace visual for whiteboardRt callout (storageBucket) document
+    - User: "'space.member'" has this privileges: "undefined" to space subspace visual for whiteboardRt callout (storageBucket) document
+    - User: "'subspace.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(4) ]" to space subspace visual for whiteboardRt callout (storageBucket) document
+    - User: "'subspace.member'" has this privileges: "[ 'CONTRIBUTE', 'READ' ]" to space subspace visual for whiteboardRt callout (storageBucket) document
+    - User: "undefined" has this privileges: "undefined" to space subspace whiteboardRt callout storage bucket
+    - User: "'non.space'" has this privileges: "undefined" to space subspace whiteboardRt callout storage bucket
+    - User: "'admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(8) ]" to space subspace whiteboardRt callout storage bucket
+    - User: "'space.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(6) ]" to space subspace whiteboardRt callout storage bucket
+    - User: "'space.member'" has this privileges: "undefined" to space subspace whiteboardRt callout storage bucket
+    - User: "'subspace.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(6) ]" to space subspace whiteboardRt callout storage bucket
+    - User: "'subspace.member'" has this privileges: "[ 'CONTRIBUTE', 'FILE_UPLOAD', 'READ' ]" to space subspace whiteboardRt callout storage bucket
+
+### `storage/auth/private-space-public-ch-document-auth.it-spec.ts`
+- **Private Space - Public Subspace - visual on profile > Access to Space Profile visual**
+    - User: "undefined" has this privileges: "undefined" to space subspace profile visual document
+    - User: "'non.space'" has this privileges: "undefined" to space subspace profile visual document
+    - User: "'admin'" has this privileges: "[ 'CREATE', 'DELETE', 'GRANT', …(3) ]" to space subspace profile visual document
+    - User: "'space.admin'" has this privileges: "[ 'CREATE', 'DELETE', 'GRANT', …(2) ]" to space subspace profile visual document
+    - User: "'space.member'" has this privileges: "[ 'READ' ]" to space subspace profile visual document
+    - User: "'subspace.admin'" has this privileges: "[ 'CREATE', 'DELETE', 'GRANT', …(2) ]" to space subspace profile visual document
+    - User: "'subspace.member'" has this privileges: "[ 'READ' ]" to space subspace profile visual document
+    - User: "undefined" has this privileges: "undefined" to space subspace profile storage bucket
+    - User: "'non.space'" has this privileges: "undefined" to space subspace profile storage bucket
+    - User: "'admin'" has this privileges: "[ 'CREATE', 'DELETE', …(6) ]" to space subspace profile storage bucket
+    - User: "'space.admin'" has this privileges: "[ 'CREATE', 'DELETE', …(5) ]" to space subspace profile storage bucket
+    - User: "'space.member'" has this privileges: "[ 'READ' ]" to space subspace profile storage bucket
+    - User: "'subspace.admin'" has this privileges: "[ 'CREATE', 'DELETE', …(5) ]" to space subspace profile storage bucket
+    - User: "'subspace.member'" has this privileges: "[ 'READ' ]" to space subspace profile storage bucket
+- **Private Space - Public Subspace - visual on profile > Access to Space Profile reference**
+    - User: "undefined" has this privileges: "undefined" to space subspace profile reference document
+    - User: "'non.space'" has this privileges: "undefined" to space subspace profile reference document
+    - User: "'admin'" has this privileges: "[ 'CREATE', 'DELETE', 'GRANT', …(3) ]" to space subspace profile reference document
+    - User: "'space.admin'" has this privileges: "[ 'CREATE', 'DELETE', 'GRANT', …(2) ]" to space subspace profile reference document
+    - User: "'space.member'" has this privileges: "[ 'READ' ]" to space subspace profile reference document
+    - User: "'subspace.admin'" has this privileges: "[ 'CREATE', 'DELETE', 'GRANT', …(2) ]" to space subspace profile reference document
+    - User: "'subspace.member'" has this privileges: "[ 'READ' ]" to space subspace profile reference document
+    - User: "undefined" has this privileges: "undefined" to space subspace profile storage bucket
+    - User: "'non.space'" has this privileges: "undefined" to space subspace profile storage bucket
+    - User: "'admin'" has this privileges: "[ 'CREATE', 'DELETE', …(6) ]" to space subspace profile storage bucket
+    - User: "'space.admin'" has this privileges: "[ 'CREATE', 'DELETE', …(5) ]" to space subspace profile storage bucket
+    - User: "'space.member'" has this privileges: "[ 'READ' ]" to space subspace profile storage bucket
+    - User: "'subspace.admin'" has this privileges: "[ 'CREATE', 'DELETE', …(5) ]" to space subspace profile storage bucket
+    - User: "'subspace.member'" has this privileges: "[ 'READ' ]" to space subspace profile storage bucket
+- **Private Space - Public Subspace - visual on profile > Access to Space About (space storage)**
+    - User: "undefined" has this privileges: "undefined" to space about (storageBucket) document
+    - User: "'non.space'" has this privileges: "undefined" to space about (storageBucket) document
+    - User: "'admin'" has this privileges: "[ 'CREATE', 'DELETE', 'GRANT', …(3) ]" to space about (storageBucket) document
+    - User: "'space.admin'" has this privileges: "[ 'CREATE', 'DELETE', 'GRANT', …(2) ]" to space about (storageBucket) document
+    - User: "'space.member'" has this privileges: "[ 'READ' ]" to space about (storageBucket) document
+    - User: "'subspace.admin'" has this privileges: "[ 'CREATE', 'DELETE', 'GRANT', …(2) ]" to space about (storageBucket) document
+    - User: "'subspace.member'" has this privileges: "[ 'READ' ]" to space about (storageBucket) document
+    - User: "undefined" has this privileges: "undefined" to space about storage bucket
+    - User: "'non.space'" has this privileges: "undefined" to space about storage bucket
+    - User: "'admin'" has this privileges: "[ 'CREATE', 'DELETE', …(6) ]" to space about storage bucket
+    - User: "'space.admin'" has this privileges: "[ 'CREATE', 'DELETE', …(5) ]" to space about storage bucket
+    - User: "'space.member'" has this privileges: "[ 'READ' ]" to space about storage bucket
+    - User: "'subspace.admin'" has this privileges: "[ 'CREATE', 'DELETE', …(5) ]" to space about storage bucket
+    - User: "'subspace.member'" has this privileges: "[ 'READ' ]" to space about storage bucket
+- **Private Space - Public Subspace - visual on profile > Access to Link collections**
+    - User: "undefined" has this privileges: "undefined" to space link collection callout (storageBucket) document
+    - User: "'non.space'" has this privileges: "undefined" to space link collection callout (storageBucket) document
+    - User: "'admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(5) ]" to space link collection callout (storageBucket) document
+    - User: "'space.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(4) ]" to space link collection callout (storageBucket) document
+    - User: "'space.member'" has this privileges: "[ 'CONTRIBUTE', 'READ' ]" to space link collection callout (storageBucket) document
+    - User: "'subspace.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(4) ]" to space link collection callout (storageBucket) document
+    - User: "'subspace.member'" has this privileges: "[ 'CONTRIBUTE', 'READ' ]" to space link collection callout (storageBucket) document
+    - User: "undefined" has this privileges: "undefined" to space link collection callout storage bucket
+    - User: "'non.space'" has this privileges: "undefined" to space link collection callout storage bucket
+    - User: "'admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(7) ]" to space link collection callout storage bucket
+    - User: "'space.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(6) ]" to space link collection callout storage bucket
+    - User: "'space.member'" has this privileges: "[ 'CONTRIBUTE', 'FILE_UPLOAD', 'READ' ]" to space link collection callout storage bucket
+    - User: "'subspace.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(6) ]" to space link collection callout storage bucket
+    - User: "'subspace.member'" has this privileges: "[ 'CONTRIBUTE', 'FILE_UPLOAD', 'READ' ]" to space link collection callout storage bucket
+- **Private Space - Public Subspace - visual on profile > Access to Call for Posts Post Card visual(banner) documents**
+    - User: "undefined" has this privileges: "undefined" to space subspace visual for post of call for post  callout (storageBucket) document
+    - User: "'non.space'" has this privileges: "undefined" to space subspace visual for post of call for post  callout (storageBucket) document
+    - User: "'admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(5) ]" to space subspace visual for post of call for post  callout (storageBucket) document
+    - User: "'space.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(4) ]" to space subspace visual for post of call for post  callout (storageBucket) document
+    - User: "'space.member'" has this privileges: "[ 'CONTRIBUTE', 'READ' ]" to space subspace visual for post of call for post  callout (storageBucket) document
+    - User: "'subspace.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(4) ]" to space subspace visual for post of call for post  callout (storageBucket) document
+    - User: "'subspace.member'" has this privileges: "[ 'CONTRIBUTE', 'READ' ]" to space subspace visual for post of call for post  callout (storageBucket) document
+    - User: "undefined" has this privileges: "undefined" to space subspace post collection callout storage bucket
+    - User: "'non.space'" has this privileges: "undefined" to space subspace post collection callout storage bucket
+    - User: "'admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(7) ]" to space subspace post collection callout storage bucket
+    - User: "'space.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(6) ]" to space subspace post collection callout storage bucket
+    - User: "'space.member'" has this privileges: "[ 'CONTRIBUTE', 'FILE_UPLOAD', 'READ' ]" to space subspace post collection callout storage bucket
+    - User: "'subspace.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(6) ]" to space subspace post collection callout storage bucket
+    - User: "'subspace.member'" has this privileges: "[ 'CONTRIBUTE', 'FILE_UPLOAD', 'READ' ]" to space subspace post collection callout storage bucket
+- **Private Space - Public Subspace - visual on profile > Access to Call for Posts Post Card reference documents**
+    - User: "undefined" has this privileges: "undefined" to space visual for post of call for post  callout (storageBucket) document
+    - User: "'non.space'" has this privileges: "undefined" to space visual for post of call for post  callout (storageBucket) document
+    - User: "'admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(5) ]" to space visual for post of call for post  callout (storageBucket) document
+    - User: "'space.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(4) ]" to space visual for post of call for post  callout (storageBucket) document
+    - User: "'space.member'" has this privileges: "[ 'CONTRIBUTE', 'READ' ]" to space visual for post of call for post  callout (storageBucket) document
+    - User: "'subspace.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(4) ]" to space visual for post of call for post  callout (storageBucket) document
+    - User: "'subspace.member'" has this privileges: "[ 'CONTRIBUTE', 'READ' ]" to space visual for post of call for post  callout (storageBucket) document
+    - User: "undefined" has this privileges: "undefined" to space post collection callout storage bucket
+    - User: "'non.space'" has this privileges: "undefined" to space post collection callout storage bucket
+    - User: "'admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(7) ]" to space post collection callout storage bucket
+    - User: "'space.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(6) ]" to space post collection callout storage bucket
+    - User: "'space.member'" has this privileges: "[ 'CONTRIBUTE', 'FILE_UPLOAD', 'READ' ]" to space post collection callout storage bucket
+    - User: "'subspace.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(6) ]" to space post collection callout storage bucket
+    - User: "'subspace.member'" has this privileges: "[ 'CONTRIBUTE', 'FILE_UPLOAD', 'READ' ]" to space post collection callout storage bucket
+- **Private Space - Public Subspace - visual on profile > Access to Call for Whitaboards Whiteboard visual(banner) documents**
+    - User: "undefined" has this privileges: "undefined" to space subspace visual for whiteboard of call for whiteboards callout (storageBucket) document
+    - User: "'non.space'" has this privileges: "undefined" to space subspace visual for whiteboard of call for whiteboards callout (storageBucket) document
+    - User: "'admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(6) ]" to space subspace visual for whiteboard of call for whiteboards callout (storageBucket) document
+    - User: "'space.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(4) ]" to space subspace visual for whiteboard of call for whiteboards callout (storageBucket) document
+    - User: "'space.member'" has this privileges: "[ 'CONTRIBUTE', 'READ' ]" to space subspace visual for whiteboard of call for whiteboards callout (storageBucket) document
+    - User: "'subspace.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(4) ]" to space subspace visual for whiteboard of call for whiteboards callout (storageBucket) document
+    - User: "'subspace.member'" has this privileges: "[ 'CONTRIBUTE', 'READ' ]" to space subspace visual for whiteboard of call for whiteboards callout (storageBucket) document
+    - User: "undefined" has this privileges: "undefined" to space subspace whiteboard collection callout storage bucket
+    - User: "'non.space'" has this privileges: "undefined" to space subspace whiteboard collection callout storage bucket
+    - User: "'admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(8) ]" to space subspace whiteboard collection callout storage bucket
+    - User: "'space.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(6) ]" to space subspace whiteboard collection callout storage bucket
+    - User: "'space.member'" has this privileges: "[ 'CONTRIBUTE', 'FILE_UPLOAD', 'READ' ]" to space subspace whiteboard collection callout storage bucket
+    - User: "'subspace.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(6) ]" to space subspace whiteboard collection callout storage bucket
+    - User: "'subspace.member'" has this privileges: "[ 'CONTRIBUTE', 'FILE_UPLOAD', 'READ' ]" to space subspace whiteboard collection callout storage bucket
+- **Private Space - Public Subspace - visual on profile > Access to Call for Posts Callout reference documents**
+    - User: "undefined" has this privileges: "undefined" to space subspace visual for post of call for post  callout (storageBucket) document
+    - User: "'non.space'" has this privileges: "undefined" to space subspace visual for post of call for post  callout (storageBucket) document
+    - User: "'admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(5) ]" to space subspace visual for post of call for post  callout (storageBucket) document
+    - User: "'space.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(4) ]" to space subspace visual for post of call for post  callout (storageBucket) document
+    - User: "'space.member'" has this privileges: "[ 'CONTRIBUTE', 'READ' ]" to space subspace visual for post of call for post  callout (storageBucket) document
+    - User: "'subspace.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(4) ]" to space subspace visual for post of call for post  callout (storageBucket) document
+    - User: "'subspace.member'" has this privileges: "[ 'CONTRIBUTE', 'READ' ]" to space subspace visual for post of call for post  callout (storageBucket) document
+    - User: "undefined" has this privileges: "undefined" to space subspace link collection callout storage bucket
+    - User: "'non.space'" has this privileges: "undefined" to space subspace link collection callout storage bucket
+    - User: "'admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(7) ]" to space subspace link collection callout storage bucket
+    - User: "'space.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(6) ]" to space subspace link collection callout storage bucket
+    - User: "'space.member'" has this privileges: "[ 'CONTRIBUTE', 'FILE_UPLOAD', 'READ' ]" to space subspace link collection callout storage bucket
+    - User: "'subspace.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(6) ]" to space subspace link collection callout storage bucket
+    - User: "'subspace.member'" has this privileges: "[ 'CONTRIBUTE', 'FILE_UPLOAD', 'READ' ]" to space subspace link collection callout storage bucket
+- **Private Space - Public Subspace - visual on profile > Access to Call for Posts Callout visual(banner) documents**
+    - User: "undefined" has this privileges: "undefined" to space subspace visual for post of call for post  callout (storageBucket) document
+    - User: "'non.space'" has this privileges: "undefined" to space subspace visual for post of call for post  callout (storageBucket) document
+    - User: "'admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(5) ]" to space subspace visual for post of call for post  callout (storageBucket) document
+    - User: "'space.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(4) ]" to space subspace visual for post of call for post  callout (storageBucket) document
+    - User: "'space.member'" has this privileges: "[ 'CONTRIBUTE', 'READ' ]" to space subspace visual for post of call for post  callout (storageBucket) document
+    - User: "'subspace.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(4) ]" to space subspace visual for post of call for post  callout (storageBucket) document
+    - User: "'subspace.member'" has this privileges: "[ 'CONTRIBUTE', 'READ' ]" to space subspace visual for post of call for post  callout (storageBucket) document
+    - User: "undefined" has this privileges: "undefined" to subspace space link collection callout storage bucket
+    - User: "'non.space'" has this privileges: "undefined" to subspace space link collection callout storage bucket
+    - User: "'admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(7) ]" to subspace space link collection callout storage bucket
+    - User: "'space.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(6) ]" to subspace space link collection callout storage bucket
+    - User: "'space.member'" has this privileges: "[ 'CONTRIBUTE', 'FILE_UPLOAD', 'READ' ]" to subspace space link collection callout storage bucket
+    - User: "'subspace.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(6) ]" to subspace space link collection callout storage bucket
+    - User: "'subspace.member'" has this privileges: "[ 'CONTRIBUTE', 'FILE_UPLOAD', 'READ' ]" to subspace space link collection callout storage bucket
+- **Private Space - Public Subspace - visual on profile > Access to Whiteboard Callout visual(banner) documents**
+    - User: "undefined" has this privileges: "undefined" to space subspace visual for whiteboard callout (storageBucket) document
+    - User: "'non.space'" has this privileges: "undefined" to space subspace visual for whiteboard callout (storageBucket) document
+    - User: "'admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(6) ]" to space subspace visual for whiteboard callout (storageBucket) document
+    - User: "'space.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(4) ]" to space subspace visual for whiteboard callout (storageBucket) document
+    - User: "'space.member'" has this privileges: "[ 'CONTRIBUTE', 'READ' ]" to space subspace visual for whiteboard callout (storageBucket) document
+    - User: "'subspace.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(4) ]" to space subspace visual for whiteboard callout (storageBucket) document
+    - User: "'subspace.member'" has this privileges: "[ 'CONTRIBUTE', 'READ' ]" to space subspace visual for whiteboard callout (storageBucket) document
+    - User: "undefined" has this privileges: "undefined" to space subspace whiteboard callout storage bucket
+    - User: "'non.space'" has this privileges: "undefined" to space subspace whiteboard callout storage bucket
+    - User: "'admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(8) ]" to space subspace whiteboard callout storage bucket
+    - User: "'space.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(6) ]" to space subspace whiteboard callout storage bucket
+    - User: "'space.member'" has this privileges: "[ 'CONTRIBUTE', 'FILE_UPLOAD', 'READ' ]" to space subspace whiteboard callout storage bucket
+    - User: "'subspace.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(6) ]" to space subspace whiteboard callout storage bucket
+    - User: "'subspace.member'" has this privileges: "[ 'CONTRIBUTE', 'FILE_UPLOAD', 'READ' ]" to space subspace whiteboard callout storage bucket
+- **Private Space - Public Subspace - visual on profile > Access to WhiteboardRt Callout visual(banner) documents**
+    - User: "undefined" has this privileges: "undefined" to space subspace visual for whiteboardRt callout (storageBucket) document
+    - User: "'non.space'" has this privileges: "undefined" to space subspace visual for whiteboardRt callout (storageBucket) document
+    - User: "'admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(6) ]" to space subspace visual for whiteboardRt callout (storageBucket) document
+    - User: "'space.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(4) ]" to space subspace visual for whiteboardRt callout (storageBucket) document
+    - User: "'space.member'" has this privileges: "[ 'CONTRIBUTE', 'READ' ]" to space subspace visual for whiteboardRt callout (storageBucket) document
+    - User: "'subspace.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(4) ]" to space subspace visual for whiteboardRt callout (storageBucket) document
+    - User: "'subspace.member'" has this privileges: "[ 'CONTRIBUTE', 'READ' ]" to space subspace visual for whiteboardRt callout (storageBucket) document
+    - User: "undefined" has this privileges: "undefined" to space subspace whiteboardRt callout storage bucket
+    - User: "'non.space'" has this privileges: "undefined" to space subspace whiteboardRt callout storage bucket
+    - User: "'admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(8) ]" to space subspace whiteboardRt callout storage bucket
+    - User: "'space.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(6) ]" to space subspace whiteboardRt callout storage bucket
+    - User: "'space.member'" has this privileges: "[ 'CONTRIBUTE', 'FILE_UPLOAD', 'READ' ]" to space subspace whiteboardRt callout storage bucket
+    - User: "'subspace.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(6) ]" to space subspace whiteboardRt callout storage bucket
+    - User: "'subspace.member'" has this privileges: "[ 'CONTRIBUTE', 'FILE_UPLOAD', 'READ' ]" to space subspace whiteboardRt callout storage bucket
+
+### `storage/auth/public-space-document-auth.it-spec.ts`
+- **Public Space - visual on profile > Access to Space Profile visual**
+    - User: "undefined" has this privileges: "[ 'READ' ]" to space profile visual document
+    - User: "'admin'" has this privileges: "[ 'CREATE', 'DELETE', 'GRANT', …(3) ]" to space profile visual document
+    - User: "'space.admin'" has this privileges: "[ 'CREATE', 'DELETE', 'GRANT', …(2) ]" to space profile visual document
+    - User: "'non.space'" has this privileges: "[ 'READ' ]" to space profile visual document
+    - User: "'space.member'" has this privileges: "[ 'READ' ]" to space profile visual document
+    - User: "undefined" has this privileges: "[ 'READ' ]" to space profile storage bucket
+    - User: "'admin'" has this privileges: "[ 'CREATE', 'DELETE', …(6) ]" to space profile storage bucket
+    - User: "'space.admin'" has this privileges: "[ 'CREATE', 'DELETE', …(5) ]" to space profile storage bucket
+    - User: "'non.space'" has this privileges: "[ 'READ' ]" to space profile storage bucket
+    - User: "'space.member'" has this privileges: "[ 'READ' ]" to space profile storage bucket
+- **Public Space - visual on profile > Access to Space Profile reference**
+    - User: "undefined" has this privileges: "[ 'READ' ]" to space profile reference document
+    - User: "'admin'" has this privileges: "[ 'CREATE', 'DELETE', 'GRANT', …(3) ]" to space profile reference document
+    - User: "'space.admin'" has this privileges: "[ 'CREATE', 'DELETE', 'GRANT', …(2) ]" to space profile reference document
+    - User: "'non.space'" has this privileges: "[ 'READ' ]" to space profile reference document
+    - User: "'space.member'" has this privileges: "[ 'READ' ]" to space profile reference document
+    - User: "undefined" has this privileges: "[ 'READ' ]" to space profile storage bucket
+    - User: "'admin'" has this privileges: "[ 'CREATE', 'DELETE', …(6) ]" to space profile storage bucket
+    - User: "'space.admin'" has this privileges: "[ 'CREATE', 'DELETE', …(5) ]" to space profile storage bucket
+    - User: "'non.space'" has this privileges: "[ 'READ' ]" to space profile storage bucket
+    - User: "'space.member'" has this privileges: "[ 'READ' ]" to space profile storage bucket
+- **Public Space - visual on profile > Access to Space About (space storage)**
+    - User: "undefined" has this privileges: "[ 'READ' ]" to space about (storageBucket) document
+    - User: "'admin'" has this privileges: "[ 'CREATE', 'DELETE', 'GRANT', …(3) ]" to space about (storageBucket) document
+    - User: "'space.admin'" has this privileges: "[ 'CREATE', 'DELETE', 'GRANT', …(2) ]" to space about (storageBucket) document
+    - User: "'non.space'" has this privileges: "[ 'READ' ]" to space about (storageBucket) document
+    - User: "'space.member'" has this privileges: "[ 'READ' ]" to space about (storageBucket) document
+    - User: "undefined" has this privileges: "[ 'READ' ]" to space about storage bucket
+    - User: "'admin'" has this privileges: "[ 'CREATE', 'DELETE', …(6) ]" to space about storage bucket
+    - User: "'space.admin'" has this privileges: "[ 'CREATE', 'DELETE', …(5) ]" to space about storage bucket
+    - User: "'non.space'" has this privileges: "[ 'READ' ]" to space about storage bucket
+    - User: "'space.member'" has this privileges: "[ 'READ' ]" to space about storage bucket
+- **Public Space - visual on profile > Access to Link collections**
+    - User: "undefined" has this privileges: "[ 'READ' ]" to space link collection callout (storageBucket) document
+    - User: "'admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(5) ]" to space link collection callout (storageBucket) document
+    - User: "'space.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(4) ]" to space link collection callout (storageBucket) document
+    - User: "'non.space'" has this privileges: "[ 'READ' ]" to space link collection callout (storageBucket) document
+    - User: "'space.member'" has this privileges: "[ 'CONTRIBUTE', 'READ' ]" to space link collection callout (storageBucket) document
+    - User: "undefined" has this privileges: "[ 'READ' ]" to space link collection callout storage bucket
+    - User: "'admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(7) ]" to space link collection callout storage bucket
+    - User: "'space.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(6) ]" to space link collection callout storage bucket
+    - User: "'non.space'" has this privileges: "[ 'READ' ]" to space link collection callout storage bucket
+    - User: "'space.member'" has this privileges: "[ 'CONTRIBUTE', 'FILE_UPLOAD', 'READ' ]" to space link collection callout storage bucket
+- **Public Space - visual on profile > Access to Call for Posts Post Card visual(banner) documents**
+    - User: "undefined" has this privileges: "[ 'READ' ]" to space visual for post of call for post  callout (storageBucket) document
+    - User: "'admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(5) ]" to space visual for post of call for post  callout (storageBucket) document
+    - User: "'space.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(4) ]" to space visual for post of call for post  callout (storageBucket) document
+    - User: "'non.space'" has this privileges: "[ 'READ' ]" to space visual for post of call for post  callout (storageBucket) document
+    - User: "'space.member'" has this privileges: "[ 'CONTRIBUTE', 'READ' ]" to space visual for post of call for post  callout (storageBucket) document
+    - User: "undefined" has this privileges: "[ 'READ' ]" to space post collection callout storage bucket
+    - User: "'admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(7) ]" to space post collection callout storage bucket
+    - User: "'space.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(6) ]" to space post collection callout storage bucket
+    - User: "'non.space'" has this privileges: "[ 'READ' ]" to space post collection callout storage bucket
+    - User: "'space.member'" has this privileges: "[ 'CONTRIBUTE', 'FILE_UPLOAD', 'READ' ]" to space post collection callout storage bucket
+- **Public Space - visual on profile > Access to Call for Posts Post Card reference documents**
+    - User: "undefined" has this privileges: "[ 'READ' ]" to space visual for post of call for post  callout (storageBucket) document
+    - User: "'admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(5) ]" to space visual for post of call for post  callout (storageBucket) document
+    - User: "'space.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(4) ]" to space visual for post of call for post  callout (storageBucket) document
+    - User: "'non.space'" has this privileges: "[ 'READ' ]" to space visual for post of call for post  callout (storageBucket) document
+    - User: "'space.member'" has this privileges: "[ 'CONTRIBUTE', 'READ' ]" to space visual for post of call for post  callout (storageBucket) document
+    - User: "undefined" has this privileges: "[ 'READ' ]" to space post collection callout storage bucket
+    - User: "'admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(7) ]" to space post collection callout storage bucket
+    - User: "'space.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(6) ]" to space post collection callout storage bucket
+    - User: "'non.space'" has this privileges: "[ 'READ' ]" to space post collection callout storage bucket
+    - User: "'space.member'" has this privileges: "[ 'CONTRIBUTE', 'FILE_UPLOAD', 'READ' ]" to space post collection callout storage bucket
+- **Public Space - visual on profile > Access to Call for Whitaboards Whiteboard visual(banner) documents**
+    - User: "undefined" has this privileges: "[ 'READ' ]" to space visual for whiteboard of call for whiteboards callout (storageBucket) document
+    - User: "'admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(6) ]" to space visual for whiteboard of call for whiteboards callout (storageBucket) document
+    - User: "'space.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(4) ]" to space visual for whiteboard of call for whiteboards callout (storageBucket) document
+    - User: "'non.space'" has this privileges: "[ 'READ' ]" to space visual for whiteboard of call for whiteboards callout (storageBucket) document
+    - User: "'space.member'" has this privileges: "[ 'CONTRIBUTE', 'READ' ]" to space visual for whiteboard of call for whiteboards callout (storageBucket) document
+    - User: "undefined" has this privileges: "[ 'READ' ]" to space whiteboard collection callout storage bucket
+    - User: "'admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(8) ]" to space whiteboard collection callout storage bucket
+    - User: "'space.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(6) ]" to space whiteboard collection callout storage bucket
+    - User: "'non.space'" has this privileges: "[ 'READ' ]" to space whiteboard collection callout storage bucket
+    - User: "'space.member'" has this privileges: "[ 'CONTRIBUTE', 'FILE_UPLOAD', 'READ' ]" to space whiteboard collection callout storage bucket
+- **Public Space - visual on profile > Access to Call for Posts Callout reference documents**
+    - User: "undefined" has this privileges: "[ 'READ' ]" to space visual for post of call for post  callout (storageBucket) document
+    - User: "'admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(5) ]" to space visual for post of call for post  callout (storageBucket) document
+    - User: "'space.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(4) ]" to space visual for post of call for post  callout (storageBucket) document
+    - User: "'non.space'" has this privileges: "[ 'READ' ]" to space visual for post of call for post  callout (storageBucket) document
+    - User: "'space.member'" has this privileges: "[ 'CONTRIBUTE', 'READ' ]" to space visual for post of call for post  callout (storageBucket) document
+    - User: "undefined" has this privileges: "[ 'READ' ]" to space link collection callout storage bucket
+    - User: "'admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(7) ]" to space link collection callout storage bucket
+    - User: "'space.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(6) ]" to space link collection callout storage bucket
+    - User: "'non.space'" has this privileges: "[ 'READ' ]" to space link collection callout storage bucket
+    - User: "'space.member'" has this privileges: "[ 'CONTRIBUTE', 'FILE_UPLOAD', 'READ' ]" to space link collection callout storage bucket
+- **Public Space - visual on profile > Access to Call for Posts Callout visual(banner) documents**
+    - User: "undefined" has this privileges: "[ 'READ' ]" to space visual for post of call for post  callout (storageBucket) document
+    - User: "'admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(5) ]" to space visual for post of call for post  callout (storageBucket) document
+    - User: "'space.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(4) ]" to space visual for post of call for post  callout (storageBucket) document
+    - User: "'non.space'" has this privileges: "[ 'READ' ]" to space visual for post of call for post  callout (storageBucket) document
+    - User: "'space.member'" has this privileges: "[ 'CONTRIBUTE', 'READ' ]" to space visual for post of call for post  callout (storageBucket) document
+    - User: "undefined" has this privileges: "[ 'READ' ]" to space link collection callout storage bucket
+    - User: "'admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(7) ]" to space link collection callout storage bucket
+    - User: "'space.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(6) ]" to space link collection callout storage bucket
+    - User: "'non.space'" has this privileges: "[ 'READ' ]" to space link collection callout storage bucket
+    - User: "'space.member'" has this privileges: "[ 'CONTRIBUTE', 'FILE_UPLOAD', 'READ' ]" to space link collection callout storage bucket
+- **Public Space - visual on profile > Access to Whiteboard Callout visual(banner) documents**
+    - User: "undefined" has this privileges: "[ 'READ' ]" to space visual for whiteboard callout (storageBucket) document
+    - User: "'admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(6) ]" to space visual for whiteboard callout (storageBucket) document
+    - User: "'space.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(4) ]" to space visual for whiteboard callout (storageBucket) document
+    - User: "'non.space'" has this privileges: "[ 'READ' ]" to space visual for whiteboard callout (storageBucket) document
+    - User: "'space.member'" has this privileges: "[ 'CONTRIBUTE', 'READ' ]" to space visual for whiteboard callout (storageBucket) document
+    - User: "undefined" has this privileges: "[ 'READ' ]" to space whiteboard callout storage bucket
+    - User: "'admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(8) ]" to space whiteboard callout storage bucket
+    - User: "'space.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(6) ]" to space whiteboard callout storage bucket
+    - User: "'non.space'" has this privileges: "[ 'READ' ]" to space whiteboard callout storage bucket
+    - User: "'space.member'" has this privileges: "[ 'CONTRIBUTE', 'FILE_UPLOAD', 'READ' ]" to space whiteboard callout storage bucket
+- **Public Space - visual on profile > Access to WhiteboardRt Callout visual(banner) documents**
+    - User: "undefined" has this privileges: "[ 'READ' ]" to space visual for whiteboardRt callout (storageBucket) document
+    - User: "'admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(6) ]" to space visual for whiteboardRt callout (storageBucket) document
+    - User: "'space.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(4) ]" to space visual for whiteboardRt callout (storageBucket) document
+    - User: "'non.space'" has this privileges: "[ 'READ' ]" to space visual for whiteboardRt callout (storageBucket) document
+    - User: "'space.member'" has this privileges: "[ 'CONTRIBUTE', 'READ' ]" to space visual for whiteboardRt callout (storageBucket) document
+    - User: "undefined" has this privileges: "[ 'READ' ]" to space whiteboardRt callout storage bucket
+    - User: "'admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(8) ]" to space whiteboardRt callout storage bucket
+    - User: "'space.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(6) ]" to space whiteboardRt callout storage bucket
+    - User: "'non.space'" has this privileges: "[ 'READ' ]" to space whiteboardRt callout storage bucket
+    - User: "'space.member'" has this privileges: "[ 'CONTRIBUTE', 'FILE_UPLOAD', 'READ' ]" to space whiteboardRt callout storage bucket
+
+### `storage/auth/private-space-document-auth.it-spec.ts`
+- **Private Space - visual on profile > Access to Space Profile visual**
+    - User: "undefined" has privileges: "[ 'READ' ]" (REST 200) on space profile visual document
+    - User: "'admin'" has privileges: "[ 'CREATE', 'DELETE', 'GRANT', …(3) ]" (REST 200) on space profile visual document
+    - User: "'space.admin'" has privileges: "[ 'CREATE', 'DELETE', 'GRANT', …(2) ]" (REST 200) on space profile visual document
+    - User: "'non.space'" has privileges: "[ 'READ' ]" (REST 200) on space profile visual document
+    - User: "'space.member'" has privileges: "[ 'READ' ]" (REST 200) on space profile visual document
+    - User: "undefined" has this privileges: "[ 'READ' ]" to space profile storage bucket
+    - User: "'admin'" has this privileges: "[ 'CREATE', 'DELETE', …(6) ]" to space profile storage bucket
+    - User: "'space.admin'" has this privileges: "[ 'CREATE', 'DELETE', …(5) ]" to space profile storage bucket
+    - User: "'non.space'" has this privileges: "[ 'READ' ]" to space profile storage bucket
+    - User: "'space.member'" has this privileges: "[ 'READ' ]" to space profile storage bucket
+- **Private Space - visual on profile > Access to Space Profile reference**
+    - User: "undefined" has privileges: "[ 'READ' ]" (REST 200) on space profile reference document
+    - User: "'admin'" has privileges: "[ 'CREATE', 'DELETE', 'GRANT', …(3) ]" (REST 200) on space profile reference document
+    - User: "'space.admin'" has privileges: "[ 'CREATE', 'DELETE', 'GRANT', …(2) ]" (REST 200) on space profile reference document
+    - User: "'non.space'" has privileges: "[ 'READ' ]" (REST 200) on space profile reference document
+    - User: "'space.member'" has privileges: "[ 'READ' ]" (REST 200) on space profile reference document
+    - User: "undefined" has this privileges: "[ 'READ' ]" to space profile storage bucket
+    - User: "'admin'" has this privileges: "[ 'CREATE', 'DELETE', …(6) ]" to space profile storage bucket
+    - User: "'space.admin'" has this privileges: "[ 'CREATE', 'DELETE', …(5) ]" to space profile storage bucket
+    - User: "'non.space'" has this privileges: "[ 'READ' ]" to space profile storage bucket
+    - User: "'space.member'" has this privileges: "[ 'READ' ]" to space profile storage bucket
+- **Private Space - visual on profile > Access to Space About (space storage)**
+    - User: "undefined" has privileges: "[ 'READ' ]" (REST 200) on space about document
+    - User: "'admin'" has privileges: "[ 'CREATE', 'DELETE', 'GRANT', …(3) ]" (REST 200) on space about document
+    - User: "'space.admin'" has privileges: "[ 'CREATE', 'DELETE', 'GRANT', …(2) ]" (REST 200) on space about document
+    - User: "'non.space'" has privileges: "[ 'READ' ]" (REST 200) on space about document
+    - User: "'space.member'" has privileges: "[ 'READ' ]" (REST 200) on space about document
+    - User: "undefined" has this privileges: "[ 'READ' ]" to space about storage bucket
+    - User: "'admin'" has this privileges: "[ 'CREATE', 'DELETE', …(6) ]" to space about storage bucket
+    - User: "'space.admin'" has this privileges: "[ 'CREATE', 'DELETE', …(5) ]" to space about storage bucket
+    - User: "'non.space'" has this privileges: "[ 'READ' ]" to space about storage bucket
+    - User: "'space.member'" has this privileges: "[ 'READ' ]" to space about storage bucket
+- **Private Space - visual on profile > Access to Link collections**
+    - User: "undefined" has privileges: "undefined" (REST 403) on space link collection callout document
+    - User: "'admin'" has privileges: "[ 'CONTRIBUTE', 'CREATE', …(5) ]" (REST 200) on space link collection callout document
+    - User: "'space.admin'" has privileges: "[ 'CONTRIBUTE', 'CREATE', …(4) ]" (REST 200) on space link collection callout document
+    - User: "'non.space'" has privileges: "undefined" (REST 403) on space link collection callout document
+    - User: "'space.member'" has privileges: "[ 'CONTRIBUTE', 'READ' ]" (REST 200) on space link collection callout document
+    - User: "undefined" has this privileges: "undefined" to space link collection callout storage bucket
+    - User: "'admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(7) ]" to space link collection callout storage bucket
+    - User: "'space.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(6) ]" to space link collection callout storage bucket
+    - User: "'non.space'" has this privileges: "undefined" to space link collection callout storage bucket
+    - User: "'space.member'" has this privileges: "[ 'CONTRIBUTE', 'FILE_UPLOAD', 'READ' ]" to space link collection callout storage bucket
+- **Private Space - visual on profile > Access to Call for Posts Post Card visual(banner) documents**
+    - User: "undefined" has privileges: "undefined" (REST 403) on post card visual document
+    - User: "'admin'" has privileges: "[ 'CONTRIBUTE', 'CREATE', …(5) ]" (REST 200) on post card visual document
+    - User: "'space.admin'" has privileges: "[ 'CONTRIBUTE', 'CREATE', …(4) ]" (REST 200) on post card visual document
+    - User: "'non.space'" has privileges: "undefined" (REST 403) on post card visual document
+    - User: "'space.member'" has privileges: "[ 'CONTRIBUTE', 'READ' ]" (REST 200) on post card visual document
+    - User: "undefined" has this privileges: "undefined" to space post collection callout storage bucket
+    - User: "'admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(7) ]" to space post collection callout storage bucket
+    - User: "'space.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(6) ]" to space post collection callout storage bucket
+    - User: "'non.space'" has this privileges: "undefined" to space post collection callout storage bucket
+    - User: "'space.member'" has this privileges: "[ 'CONTRIBUTE', 'FILE_UPLOAD', 'READ' ]" to space post collection callout storage bucket
+- **Private Space - visual on profile > Access to Call for Posts Post Card reference documents**
+    - User: "undefined" has privileges: "undefined" (REST 403) on post card reference document
+    - User: "'admin'" has privileges: "[ 'CONTRIBUTE', 'CREATE', …(5) ]" (REST 200) on post card reference document
+    - User: "'space.admin'" has privileges: "[ 'CONTRIBUTE', 'CREATE', …(4) ]" (REST 200) on post card reference document
+    - User: "'non.space'" has privileges: "undefined" (REST 403) on post card reference document
+    - User: "'space.member'" has privileges: "[ 'CONTRIBUTE', 'READ' ]" (REST 200) on post card reference document
+    - User: "undefined" has this privileges: "undefined" to space post collection callout storage bucket
+    - User: "'admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(7) ]" to space post collection callout storage bucket
+    - User: "'space.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(6) ]" to space post collection callout storage bucket
+    - User: "'non.space'" has this privileges: "undefined" to space post collection callout storage bucket
+    - User: "'space.member'" has this privileges: "[ 'CONTRIBUTE', 'FILE_UPLOAD', 'READ' ]" to space post collection callout storage bucket
+- **Private Space - visual on profile > Access to Call for Whitaboards Whiteboard visual(banner) documents**
+    - User: "undefined" has privileges: "undefined" (REST 403) on whiteboard collection callout document
+    - User: "'admin'" has privileges: "[ 'CONTRIBUTE', 'CREATE', …(6) ]" (REST 200) on whiteboard collection callout document
+    - User: "'space.admin'" has privileges: "[ 'CONTRIBUTE', 'CREATE', …(4) ]" (REST 200) on whiteboard collection callout document
+    - User: "'non.space'" has privileges: "undefined" (REST 403) on whiteboard collection callout document
+    - User: "'space.member'" has privileges: "[ 'CONTRIBUTE', 'READ' ]" (REST 200) on whiteboard collection callout document
+    - User: "undefined" has this privileges: "undefined" to space whiteboard collection callout storage bucket
+    - User: "'admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(8) ]" to space whiteboard collection callout storage bucket
+    - User: "'space.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(6) ]" to space whiteboard collection callout storage bucket
+    - User: "'non.space'" has this privileges: "undefined" to space whiteboard collection callout storage bucket
+    - User: "'space.member'" has this privileges: "[ 'CONTRIBUTE', 'FILE_UPLOAD', 'READ' ]" to space whiteboard collection callout storage bucket
+- **Private Space - visual on profile > Access to Call for Posts Callout reference documents**
+    - User: "undefined" has privileges: "undefined" (REST 403) on post callout reference document
+    - User: "'admin'" has privileges: "[ 'CONTRIBUTE', 'CREATE', …(5) ]" (REST 200) on post callout reference document
+    - User: "'space.admin'" has privileges: "[ 'CONTRIBUTE', 'CREATE', …(4) ]" (REST 200) on post callout reference document
+    - User: "'non.space'" has privileges: "undefined" (REST 403) on post callout reference document
+    - User: "'space.member'" has privileges: "[ 'CONTRIBUTE', 'READ' ]" (REST 200) on post callout reference document
+    - User: "undefined" has this privileges: "undefined" to space link collection callout storage bucket
+    - User: "'admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(7) ]" to space link collection callout storage bucket
+    - User: "'space.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(6) ]" to space link collection callout storage bucket
+    - User: "'non.space'" has this privileges: "undefined" to space link collection callout storage bucket
+    - User: "'space.member'" has this privileges: "[ 'CONTRIBUTE', 'FILE_UPLOAD', 'READ' ]" to space link collection callout storage bucket
+- **Private Space - visual on profile > Access to Call for Posts Callout visual(banner) documents**
+    - User: "undefined" has privileges: "undefined" (REST 403) on post callout visual document
+    - User: "'admin'" has privileges: "[ 'CONTRIBUTE', 'CREATE', …(5) ]" (REST 200) on post callout visual document
+    - User: "'space.admin'" has privileges: "[ 'CONTRIBUTE', 'CREATE', …(4) ]" (REST 200) on post callout visual document
+    - User: "'non.space'" has privileges: "undefined" (REST 403) on post callout visual document
+    - User: "'space.member'" has privileges: "[ 'CONTRIBUTE', 'READ' ]" (REST 200) on post callout visual document
+    - User: "undefined" has this privileges: "undefined" to space link collection callout storage bucket
+    - User: "'admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(7) ]" to space link collection callout storage bucket
+    - User: "'space.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(6) ]" to space link collection callout storage bucket
+    - User: "'non.space'" has this privileges: "undefined" to space link collection callout storage bucket
+    - User: "'space.member'" has this privileges: "[ 'CONTRIBUTE', 'FILE_UPLOAD', 'READ' ]" to space link collection callout storage bucket
+- **Private Space - visual on profile > Access to Whiteboard Callout visual(banner) documents**
+    - User: "undefined" has privileges: "undefined" (REST 403) on whiteboard callout document
+    - User: "'admin'" has privileges: "[ 'CONTRIBUTE', 'CREATE', …(6) ]" (REST 200) on whiteboard callout document
+    - User: "'space.admin'" has privileges: "[ 'CONTRIBUTE', 'CREATE', …(4) ]" (REST 200) on whiteboard callout document
+    - User: "'non.space'" has privileges: "undefined" (REST 403) on whiteboard callout document
+    - User: "'space.member'" has privileges: "[ 'CONTRIBUTE', 'READ' ]" (REST 200) on whiteboard callout document
+    - User: "undefined" has this privileges: "undefined" to space whiteboard callout storage bucket
+    - User: "'admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(8) ]" to space whiteboard callout storage bucket
+    - User: "'space.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(6) ]" to space whiteboard callout storage bucket
+    - User: "'non.space'" has this privileges: "undefined" to space whiteboard callout storage bucket
+    - User: "'space.member'" has this privileges: "[ 'CONTRIBUTE', 'FILE_UPLOAD', 'READ' ]" to space whiteboard callout storage bucket
+- **Private Space - visual on profile > Access to WhiteboardRt Callout visual(banner) documents**
+    - User: "undefined" has privileges: "undefined" (REST 403) on whiteboardRt callout document
+    - User: "'admin'" has privileges: "[ 'CONTRIBUTE', 'CREATE', …(6) ]" (REST 200) on whiteboardRt callout document
+    - User: "'space.admin'" has privileges: "[ 'CONTRIBUTE', 'CREATE', …(4) ]" (REST 200) on whiteboardRt callout document
+    - User: "'non.space'" has privileges: "undefined" (REST 403) on whiteboardRt callout document
+    - User: "'space.member'" has privileges: "[ 'CONTRIBUTE', 'READ' ]" (REST 200) on whiteboardRt callout document
+    - User: "undefined" has this privileges: "undefined" to space whiteboardRt callout storage bucket
+    - User: "'admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(8) ]" to space whiteboardRt callout storage bucket
+    - User: "'space.admin'" has this privileges: "[ 'CONTRIBUTE', 'CREATE', …(6) ]" to space whiteboardRt callout storage bucket
+    - User: "'non.space'" has this privileges: "undefined" to space whiteboardRt callout storage bucket
+    - User: "'space.member'" has this privileges: "[ 'CONTRIBUTE', 'FILE_UPLOAD', 'READ' ]" to space whiteboardRt callout storage bucket
+
+### `storage/auth/organization-document-auth.it-spec.ts`
+- **Organization - documents > Access to Organization Profile visual**
+    - User: "undefined" has this privileges: "[ 'READ' ]" to organization profile visual document
+    - User: "'non.space'" has this privileges: "[ 'READ' ]" to organization profile visual document
+    - User: "'admin'" has this privileges: "[ 'CREATE', 'DELETE', 'GRANT', …(5) ]" to organization profile visual document
+    - User: "'organization.admin'" has this privileges: "[ 'CREATE', 'DELETE', 'GRANT', …(4) ]" to organization profile visual document
+    - User: "'subspace.admin'" has this privileges: "[ 'CREATE', 'DELETE', 'GRANT', …(4) ]" to organization profile visual document
+    - User: "'space.member'" has this privileges: "[ 'READ' ]" to organization profile visual document
+    - User: "undefined" has this privileges: "[ 'READ' ]" to organization profile storage bucket
+    - User: "'non.space'" has this privileges: "[ 'READ' ]" to organization profile storage bucket
+    - User: "'admin'" has this privileges: "[ 'CREATE', 'DELETE', …(8) ]" to organization profile storage bucket
+    - User: "'organization.admin'" has this privileges: "[ 'CREATE', 'DELETE', …(7) ]" to organization profile storage bucket
+    - User: "'subspace.admin'" has this privileges: "[ 'CREATE', 'DELETE', …(7) ]" to organization profile storage bucket
+    - User: "'space.member'" has this privileges: "[ 'READ' ]" to organization profile storage bucket
+- **Organization - documents > Access to Organization Profile reference document**
+    - User: "undefined" has this privileges: "[ 'READ' ]" to organization reference document
+    - User: "'non.space'" has this privileges: "[ 'READ' ]" to organization reference document
+    - User: "'admin'" has this privileges: "[ 'CREATE', 'DELETE', 'GRANT', …(5) ]" to organization reference document
+    - User: "'organization.admin'" has this privileges: "[ 'CREATE', 'DELETE', 'GRANT', …(4) ]" to organization reference document
+    - User: "'subspace.admin'" has this privileges: "[ 'CREATE', 'DELETE', 'GRANT', …(4) ]" to organization reference document
+    - User: "'space.member'" has this privileges: "[ 'READ' ]" to organization reference document
+    - User: "undefined" has this privileges: "[ 'READ' ]" to organization profile reference storage bucket
+    - User: "'non.space'" has this privileges: "[ 'READ' ]" to organization profile reference storage bucket
+    - User: "'admin'" has this privileges: "[ 'CREATE', 'DELETE', …(8) ]" to organization profile reference storage bucket
+    - User: "'organization.admin'" has this privileges: "[ 'CREATE', 'DELETE', …(7) ]" to organization profile reference storage bucket
+    - User: "'subspace.admin'" has this privileges: "[ 'CREATE', 'DELETE', …(7) ]" to organization profile reference storage bucket
+    - User: "'space.member'" has this privileges: "[ 'READ' ]" to organization profile reference storage bucket
+- **Organization - documents > Access to Organization storage bucket**
+    - User: "undefined" has this privileges: "[ 'READ' ]" to organization description visual document
+    - User: "'non.space'" has this privileges: "[ 'READ' ]" to organization description visual document
+    - User: "'admin'" has this privileges: "[ 'CREATE', 'DELETE', 'GRANT', …(5) ]" to organization description visual document
+    - User: "'organization.admin'" has this privileges: "[ 'CREATE', 'DELETE', 'GRANT', …(4) ]" to organization description visual document
+    - User: "'subspace.admin'" has this privileges: "[ 'CREATE', 'DELETE', 'GRANT', …(4) ]" to organization description visual document
+    - User: "'space.member'" has this privileges: "[ 'READ' ]" to organization description visual document
+    - User: "undefined" has this privileges: "[ 'READ' ]" to organization description (storageBucket) document
+    - User: "'non.space'" has this privileges: "[ 'READ' ]" to organization description (storageBucket) document
+    - User: "'admin'" has this privileges: "[ 'CREATE', 'DELETE', …(8) ]" to organization description (storageBucket) document
+    - User: "'organization.admin'" has this privileges: "[ 'CREATE', 'DELETE', …(7) ]" to organization description (storageBucket) document
+    - User: "'subspace.admin'" has this privileges: "[ 'CREATE', 'DELETE', …(7) ]" to organization description (storageBucket) document
+    - User: "'space.member'" has this privileges: "[ 'READ' ]" to organization description (storageBucket) document
+
+### `storage/auth/user-document-auth.it-spec.ts`
+- **User - documents > Access to User Profile visual**
+    - User: "undefined" has this privileges: "[ 'READ' ]" to user profile visual document
+    - User: "'non.space'" has this privileges: "[ 'READ' ]" to user profile visual document
+    - User: "'admin'" has this privileges: "[ 'CREATE', 'DELETE', …(5) ]" to user profile visual document
+    - User: "'qa.user'" has this privileges: "[ 'CREATE', 'DELETE', 'READ', …(3) ]" to user profile visual document
+    - User: "undefined" has this privileges: "[ 'READ' ]" to user profile storage bucket
+    - User: "'non.space'" has this privileges: "[ 'READ' ]" to user profile storage bucket
+    - User: "'admin'" has this privileges: "[ 'CREATE', 'DELETE', …(7) ]" to user profile storage bucket
+    - User: "'qa.user'" has this privileges: "[ 'CREATE', 'DELETE', …(6) ]" to user profile storage bucket
+- **User - documents > Access to User Profile reference document**
+    - User: "undefined" has this privileges: "[ 'READ' ]" to user reference document
+    - User: "'non.space'" has this privileges: "[ 'READ' ]" to user reference document
+    - User: "'admin'" has this privileges: "[ 'CREATE', 'DELETE', …(5) ]" to user reference document
+    - User: "'qa.user'" has this privileges: "[ 'CREATE', 'DELETE', 'READ', …(3) ]" to user reference document
+    - User: "undefined" has this privileges: "[ 'READ' ]" to user profile reference storage bucket
+    - User: "'non.space'" has this privileges: "[ 'READ' ]" to user profile reference storage bucket
+    - User: "'admin'" has this privileges: "[ 'CREATE', 'DELETE', …(7) ]" to user profile reference storage bucket
+    - User: "'qa.user'" has this privileges: "[ 'CREATE', 'DELETE', …(6) ]" to user profile reference storage bucket
+- **User - documents > Access to User storage bucket**
+    - User: "undefined" has this privileges: "[ 'READ' ]" to user description visual document
+    - User: "'non.space'" has this privileges: "[ 'READ' ]" to user description visual document
+    - User: "'admin'" has this privileges: "[ 'CREATE', 'DELETE', …(5) ]" to user description visual document
+    - User: "'qa.user'" has this privileges: "[ 'CREATE', 'DELETE', 'READ', …(3) ]" to user description visual document
+    - User: "undefined" has this privileges: "[ 'READ' ]" to user description (storageBucket) document
+    - User: "'non.space'" has this privileges: "[ 'READ' ]" to user description (storageBucket) document
+    - User: "'admin'" has this privileges: "[ 'CREATE', 'DELETE', …(7) ]" to user description (storageBucket) document
+    - User: "'qa.user'" has this privileges: "[ 'CREATE', 'DELETE', …(6) ]" to user description (storageBucket) document
+
+## push-notifications  <sub>3 files · 65 cases · 14 skip · 0 todo</sub>
+
+
+### `push-notifications/push-notifications-settings.it-spec.ts`
+- **Push Notification Settings - All 28 events > Platform notification settings**
+    - should update push setting for platform.forumDiscussionCreated
+    - should update push setting for platform.forumDiscussionComment
+    - should update push setting for platform.admin.userProfileCreated
+    - should update push setting for platform.admin.userProfileRemoved
+    - should update push setting for platform.admin.spaceCreated
+    - should update push setting for platform.admin.userGlobalRoleChanged
+- **Push Notification Settings - All 28 events > Organization notification settings**
+    - should update push setting for organization.adminMessageReceived
+    - should update push setting for organization.adminMentioned
+- **Push Notification Settings - All 28 events > Space notification settings**
+    - should update push for space.admin.communityApplicationReceived
+    - should update push for space.admin.communityNewMember
+    - should update push for space.admin.communicationMessageReceived
+    - should update push for space.admin.collaborationCalloutContributionCreated
+    - should update push for space.communicationUpdates
+    - should update push for space.collaborationCalloutContributionCreated
+    - should update push for space.collaborationCalloutPostContributionComment
+    - should update push for space.collaborationCalloutComment
+    - should update push for space.collaborationCalloutPublished
+    - should update push for space.communityCalendarEvents
+    - should update push for space.collaborationPollVoteCastOnOwnPoll
+    - should update push for space.collaborationPollVoteCastOnPollIVotedOn
+    - should update push for space.collaborationPollModifiedOnPollIVotedOn
+    - should update push for space.collaborationPollVoteAffectedByOptionChange
+- **Push Notification Settings - All 28 events > User notification settings**
+    - should update push setting for user.mentioned
+    - should update push setting for user.commentReply
+    - should update push setting for user.messageReceived
+    - should update push for user.membership.spaceCommunityInvitationReceived
+    - should update push for user.membership.spaceCommunityJoined
+- **Push Notification Settings - All 28 events > Virtual Contributor notification settings**
+    - should update push for virtualContributor.adminSpaceCommunityInvitation
+- **Push Notification Settings - All 28 events > Push channel independence**
+    - should enable push while keeping email and inApp disabled
+    - should disable push while keeping email and inApp enabled
+    - should enable all three channels simultaneously
+
+### `push-notifications/push-subscriptions-lifecycle.it-spec.ts`
+- **Push Subscriptions - VAPID Public Key**
+    - should return a VAPID public key for authenticated user
+    - should return the same VAPID key for different users
+    - should return VAPID key for non-space member (authenticated user)
+- **Push Subscriptions - Subscribe**
+    - should create a new push subscription
+    - should update existing subscription when same endpoint is used
+    - should fail with invalid subscription data [skip]
+- **Push Subscriptions - Unsubscribe**
+    - should unsubscribe an existing push subscription
+    - should fail when unsubscribing with invalid subscription ID
+    - should not allow unsubscribing another users subscription
+- **Push Subscriptions - List (myPushSubscriptions)**
+    - should return no ACTIVE subscriptions for a user who has none
+    - should list all active subscriptions for the current user
+    - should not show other users subscriptions
+    - should not list unsubscribed subscriptions [skip]
+- **Push Subscriptions - Max subscriptions cap (10)**
+    - should replace oldest subscription when exceeding max limit of 10 [skip]
+- **Push Subscriptions - Subscription fields**
+    - should return correct fields on subscription creation
+    - should be accessible via myPushSubscriptions with all fields
+
+### `push-notifications/push-subscriptions-security.it-spec.ts`
+- **Push Subscriptions - Input Validation**
+    - should reject oversized p256dh key [skip]
+    - should reject oversized auth key [skip]
+    - should reject empty p256dh key [skip]
+    - should reject empty auth key [skip]
+    - should reject non-UUID subscriptionID on unsubscribe
+    - should reject SQL injection attempt in subscriptionID
+    - should reject special characters in endpoint [skip]
+- **Push Subscriptions - SSRF / Endpoint Validation**
+    - should reject internal network endpoint (localhost) [skip]
+    - should reject cloud metadata endpoint (AWS IMDS) [skip]
+    - should reject private IP range endpoint [skip]
+    - should reject non-HTTPS endpoint [skip]
+    - should reject file protocol endpoint [skip]
+- **Push Subscriptions - VAPID Key Security**
+    - should return a valid base64url-encoded VAPID public key
+    - should not expose VAPID private key in public key query
+- **Push Subscriptions - Authorization Edge Cases**
+    - should return identical error for unauthorized vs nonexistent subscription ID
+    - should not expose subscription details (endpoint, keys) in list query
+- **Push Subscriptions - Concurrent Subscription Cap**
+    - should enforce max 10 subscriptions under concurrent registration [skip]
+- **Push Subscriptions - Cross-User Endpoint Hijack**
+    - should not allow user A to hijack user B endpoint by subscribing to it
+
+## orphan-free-deletion  <sub>3 files · 12 cases · 0 skip · 0 todo</sub>
+
+
+### `orphan-free-deletion/callout-delete-owned-records.it-spec.ts`
+- **Orphan-free deletion - callouts (server#6614)**
+    - CD-1 - deleting a plain callout deletes its classification and tagset policies
+    - CD-2 - deleting a Tasks-board callout succeeds and removes its classification, including the board marker tagset
+
+### `orphan-free-deletion/group-a-delete-owned-records.it-spec.ts`
+- **Orphan-free deletion - group A policies (server#6614, #6678)**
+    - GA-1 - deleting an innovation-flow state deletes its policy
+    - GA-2 - deleting a POLL callout deletes the poll policy
+    - GA-3 - deleting a callout deletes its comments room policy and the room policy of its post contribution
+    - GA-4 - deleting a space deletes the policies of its guidelines, innovation flow and states, communication and updates room, templates manager, defaults, set and templates
+    - GA-5 - deleting a template deletes its policy, its profile policy and its content policies (callout and community-guidelines kinds)
+    - GA-6 - deleting a forum discussion deletes its policy and its comments room policy
+    - GA-7 - deleting an innovation pack deletes its policy, its templates set policy and the policies of a template in it
+    - GA-8 - deleting a user deletes its settings policy, and its pending application with its policy (control)
+
+### `orphan-free-deletion/space-delete-owned-records.it-spec.ts`
+- **Orphan-free deletion - spaces (server#6614)**
+    - SD-1 - deleting a space deletes its actor profile and storage bucket
+    - SD-2 - deleting a space whose bucket holds a document succeeds and removes the document policy and file
+
+## visual  <sub>2 files · 14 cases · 0 skip · 0 todo</sub>
+
+
+### `visual/banner-aspect-ratio.it-spec.ts`
+- **R71 banner aspect ratio — the CONSTANTS contract**
+    - BANNER is the adjustable type: the ratio range is 6..10
+    - AVATAR keeps a FIXED shape (min == max == 1)
+    - BANNER_WIDE keeps a FIXED shape (min == max == 10)
+    - CARD keeps a FIXED shape (min == max == 1.6)
+- **R71 banner aspect ratio — the STORED ROW (migration gate)**
+    - the space BANNER row carries the WIDENED bounds
+- **R71 banner aspect ratio — updateVisual boundaries**
+    - accepts the lower bound (6) and persists it
+    - accepts an interior value (8) and persists it
+    - accepts the upper bound (10) and persists it
+    - rejects just below the lower bound (5.9)
+    - rejects just above the upper bound (10.1)
+    - rejects far below (1)
+    - a rejected write leaves the stored ratio untouched
+
+### `visual/space-banner-constraints.it-spec.ts`
+- **Space BANNER visual constraints (10178)**
+    - TC-01 — BANNER visual reports minWidth 1200 / minHeight 120
+    - TC-02 — 1200×120 upload accepted; 1199×120 rejected
+
+## roleset  <sub>31 files · 308 cases · 3 skip · 0 todo</sub>
+
+
+### `roleset/associates/organization-associate-invitation.it-spec.ts`
+- **Organization associate invitations (US1)**
+    - US1-AS2: ADMIN invites [ASSOCIATE] → INVITED_TO_ROLE_SET, listed under the organization pending section
+    - US1-AS5: both an OWNER-not-exclusively-admin and an ADMIN-not-associate may offer any extra role (R1 — no inviter ceiling)
+    - US1-AS6 (081): an unknown email on an organization role set creates a platform invitation
+    - US1-AS4: already an associate / already invited / has an open application → typed outcomes, no second row
+    - US1-AS3: the extra-role caps (Admin max 6, Owner max 3) are enforced at invite time counting granted plus pending, and revoking a pending offer frees the next one
+    - US1-AS7: revoking a pending invitation removes it from the invitee's own pending list
+    - US1-AS8: a plain associate (no manager credential) cannot invite through the API
+- **Organization associate invitations — the invitee responds (US2)**
+    - US2-AS6: accepting [ADMIN] grants ASSOCIATE + ADMIN and the account-admin standing (R1, documented consequence)
+    - US2-AS5: accepting [OWNER] after the cap is reached grants ASSOCIATE only and reports the withheld role
+    - US2-AS3/AS7: REJECT leaves the invitee not-an-associate and a fresh invitation can be created afterwards
+    - US2-AS8: an offered role is withheld when the offerer has lost organization-admin standing by accept time (stale-authority re-check)
+    - US2-AS9 (090): a Platform Support invitation offering Admin is created and listed with its offer
+    - an associate-only persona cannot ACCEPT an invitation on someone else's behalf
+
+### `roleset/invitations/invitation-external.it-spec.ts`
+- **Invitations**
+    - should create external invitation
+    - should fail to create second external invitation from same community to same user
+    - should create second external invitation from same community to same user, after the first is deleted
+    - should create second external invitation from different community to same user
+
+### `roleset/invitations/invitation-subspace-admin.it-spec.ts`
+- **Subspace admin invitations - allowSubspaceAdminsToInviteMembers > flag = true (subspace admin allowed)**
+    - subspace admin can invite an external user to parent space
+    - subspace admin can invite a platform user to parent space
+- **Subspace admin invitations - allowSubspaceAdminsToInviteMembers > flag = false (subspace admin not allowed)**
+    - subspace admin cannot invite an external user to parent space
+    - subspace admin cannot invite a platform user to parent space
+
+### `roleset/hierarchy-parity/join-hierarchy-parity.it-spec.ts`
+- **Join hierarchy parity — direct-join combined flow (US4 / SC-015) > privacy combo: 'PUBLIC'/'PUBLIC'/'PUBLIC' (setting enabled)**
+    - grants full ancestry on direct join — space=PUBLIC/subspace=PUBLIC/subsubspace=PUBLIC
+- **Join hierarchy parity — direct-join combined flow (US4 / SC-015) > privacy combo: 'PUBLIC'/'PUBLIC'/'PRIVATE' (setting enabled)**
+    - grants full ancestry on direct join — space=PUBLIC/subspace=PUBLIC/subsubspace=PRIVATE
+- **Join hierarchy parity — direct-join combined flow (US4 / SC-015) > privacy combo: 'PUBLIC'/'PRIVATE'/'PUBLIC' (setting enabled)**
+    - does not grant full ancestry on direct join — space=PUBLIC/subspace=PRIVATE/subsubspace=PUBLIC
+- **Join hierarchy parity — direct-join combined flow (US4 / SC-015) > privacy combo: 'PUBLIC'/'PRIVATE'/'PRIVATE' (setting enabled)**
+    - does not grant full ancestry on direct join — space=PUBLIC/subspace=PRIVATE/subsubspace=PRIVATE
+- **Join hierarchy parity — direct-join combined flow (US4 / SC-015) > privacy combo: 'PRIVATE'/'PUBLIC'/'PUBLIC' (setting enabled)**
+    - does not grant full ancestry on direct join — space=PRIVATE/subspace=PUBLIC/subsubspace=PUBLIC
+- **Join hierarchy parity — direct-join combined flow (US4 / SC-015) > privacy combo: 'PRIVATE'/'PUBLIC'/'PRIVATE' (setting enabled)**
+    - does not grant full ancestry on direct join — space=PRIVATE/subspace=PUBLIC/subsubspace=PRIVATE
+- **Join hierarchy parity — direct-join combined flow (US4 / SC-015) > privacy combo: 'PRIVATE'/'PRIVATE'/'PUBLIC' (setting enabled)**
+    - does not grant full ancestry on direct join — space=PRIVATE/subspace=PRIVATE/subsubspace=PUBLIC
+- **Join hierarchy parity — direct-join combined flow (US4 / SC-015) > privacy combo: 'PRIVATE'/'PRIVATE'/'PRIVATE' (setting enabled)**
+    - does not grant full ancestry on direct join — space=PRIVATE/subspace=PRIVATE/subsubspace=PRIVATE
+- **Join hierarchy parity — direct-join combined flow (US4 / SC-015) > setting-disabled guard (SC-012)**
+    - whole chain public but allowSubspaceAdminsToInviteMembers disabled -> combined direct-join unavailable
+- **Join hierarchy parity — direct-join combined flow (US4 / SC-015) > behaviour preservation — parent member (SC-014 / FR-028)**
+    - a parent-member joining the open SubSub still joins successfully — pre-017 behaviour preserved
+- **Join hierarchy parity — direct-join combined flow (US4 / SC-015) > actor-relative reachability (ADR 0001 §7-8, join verb)**
+    - a member of the PRIVATE root can directly join the public open SubSub; the join grants the missing ancestry
+    - a stranger to the same PRIVATE-root hierarchy cannot directly join (generic negative cell)
+
+### `roleset/hierarchy-parity/invitation-hierarchy-parity.it-spec.ts`
+- **Invitation hierarchy parity — behaviour preservation (SC-008) > privacy combo: 'PUBLIC'/'PUBLIC'/'PUBLIC'**
+    - invite+accept into SubSub grants full ancestry irrespective of privacy — space=PUBLIC/subspace=PUBLIC/subsubspace=PUBLIC
+- **Invitation hierarchy parity — behaviour preservation (SC-008) > privacy combo: 'PUBLIC'/'PUBLIC'/'PRIVATE'**
+    - invite+accept into SubSub grants full ancestry irrespective of privacy — space=PUBLIC/subspace=PUBLIC/subsubspace=PRIVATE
+- **Invitation hierarchy parity — behaviour preservation (SC-008) > privacy combo: 'PUBLIC'/'PRIVATE'/'PUBLIC'**
+    - invite+accept into SubSub grants full ancestry irrespective of privacy — space=PUBLIC/subspace=PRIVATE/subsubspace=PUBLIC
+- **Invitation hierarchy parity — behaviour preservation (SC-008) > privacy combo: 'PUBLIC'/'PRIVATE'/'PRIVATE'**
+    - invite+accept into SubSub grants full ancestry irrespective of privacy — space=PUBLIC/subspace=PRIVATE/subsubspace=PRIVATE
+- **Invitation hierarchy parity — behaviour preservation (SC-008) > privacy combo: 'PRIVATE'/'PUBLIC'/'PUBLIC'**
+    - invite+accept into SubSub grants full ancestry irrespective of privacy — space=PRIVATE/subspace=PUBLIC/subsubspace=PUBLIC
+- **Invitation hierarchy parity — behaviour preservation (SC-008) > privacy combo: 'PRIVATE'/'PUBLIC'/'PRIVATE'**
+    - invite+accept into SubSub grants full ancestry irrespective of privacy — space=PRIVATE/subspace=PUBLIC/subsubspace=PRIVATE
+- **Invitation hierarchy parity — behaviour preservation (SC-008) > privacy combo: 'PRIVATE'/'PRIVATE'/'PUBLIC'**
+    - invite+accept into SubSub grants full ancestry irrespective of privacy — space=PRIVATE/subspace=PRIVATE/subsubspace=PUBLIC
+- **Invitation hierarchy parity — behaviour preservation (SC-008) > privacy combo: 'PRIVATE'/'PRIVATE'/'PRIVATE'**
+    - invite+accept into SubSub grants full ancestry irrespective of privacy — space=PRIVATE/subspace=PRIVATE/subsubspace=PRIVATE
+- **Invitation hierarchy parity — behaviour preservation (SC-008)**
+    - setting disabled does not block the invitation ancestor grant (unlike applications, invitations are not setting-gated)
+- **Invitation hierarchy parity — behaviour preservation (SC-008) > single-hop regression guard — the proven, already-working invitation path**
+    - inviting directly into the immediate parent (Sub) still grants Root ancestor membership, unchanged
+
+### `roleset/hierarchy-parity/application-hierarchy-parity.it-spec.ts`
+- **Application hierarchy parity — combined flow (FR-019/SC-009) > privacy combo: 'PUBLIC'/'PUBLIC'/'PUBLIC' (setting enabled)**
+    - grants full ancestry on approval — space=PUBLIC/subspace=PUBLIC/subsubspace=PUBLIC
+- **Application hierarchy parity — combined flow (FR-019/SC-009) > privacy combo: 'PUBLIC'/'PUBLIC'/'PRIVATE' (setting enabled)**
+    - grants full ancestry on approval — space=PUBLIC/subspace=PUBLIC/subsubspace=PRIVATE
+- **Application hierarchy parity — combined flow (FR-019/SC-009) > privacy combo: 'PUBLIC'/'PRIVATE'/'PUBLIC' (setting enabled)**
+    - does not grant full ancestry on approval — space=PUBLIC/subspace=PRIVATE/subsubspace=PUBLIC
+- **Application hierarchy parity — combined flow (FR-019/SC-009) > privacy combo: 'PUBLIC'/'PRIVATE'/'PRIVATE' (setting enabled)**
+    - does not grant full ancestry on approval — space=PUBLIC/subspace=PRIVATE/subsubspace=PRIVATE
+- **Application hierarchy parity — combined flow (FR-019/SC-009) > privacy combo: 'PRIVATE'/'PUBLIC'/'PUBLIC' (setting enabled)**
+    - does not grant full ancestry on approval — space=PRIVATE/subspace=PUBLIC/subsubspace=PUBLIC
+- **Application hierarchy parity — combined flow (FR-019/SC-009) > privacy combo: 'PRIVATE'/'PUBLIC'/'PRIVATE' (setting enabled)**
+    - does not grant full ancestry on approval — space=PRIVATE/subspace=PUBLIC/subsubspace=PRIVATE
+- **Application hierarchy parity — combined flow (FR-019/SC-009) > privacy combo: 'PRIVATE'/'PRIVATE'/'PUBLIC' (setting enabled)**
+    - does not grant full ancestry on approval — space=PRIVATE/subspace=PRIVATE/subsubspace=PUBLIC
+- **Application hierarchy parity — combined flow (FR-019/SC-009) > privacy combo: 'PRIVATE'/'PRIVATE'/'PRIVATE' (setting enabled)**
+    - does not grant full ancestry on approval — space=PRIVATE/subspace=PRIVATE/subsubspace=PRIVATE
+- **Application hierarchy parity — combined flow (FR-019/SC-009) > setting-disabled guard (US3 AS-2 / SC-005)**
+    - whole chain public but allowSubspaceAdminsToInviteMembers disabled -> combined flow unavailable
+- **Application hierarchy parity — combined flow (FR-019/SC-009) > reject guard (FR-007 / SC-004 / US3 AS-4)**
+    - REJECTed application on an all-public/setting-enabled hierarchy grants no membership at all
+
+### `roleset/associates/organization-associate-join.it-spec.ts`
+- **Organization live join door (US4)**
+    - US4-AS1: verified + domain match + switch on → ELIGIBLE_TO_JOIN, and joining makes the viewer an associate
+    - US4-AS6: an existing associate sees no join or apply action (ALREADY_ASSOCIATE)
+    - US4-AS5: a fresh registration with a matching domain auto-joins (registration path, unchanged)
+    - US4-AS2: switch off → ELIGIBLE_TO_APPLY, and a direct join call is refused (ROLESET_JOIN_NOT_ELIGIBLE)
+    - US4-AS3: an unverified organization with the switch on still refuses a direct join (verification gate)
+    - US4-AS4: a user whose domain does not match is refused
+
+### `roleset/user/user2.it-spec.ts`
+- **User roles**
+    - user role - assignment to 1 Organization, Space, Subspace, Subsubspace
+- **User roles > Extended scenario**
+    - user role - assignment to 2 Organizations, Spaces, Subspaces, Opportunities
+
+### `roleset/invitations/invitation-organization.it-spec.ts`
+- **Organization Space invitations — GATE 0 core roleset flow**
+    - GATE 0 — space admin invites an organization as Member; the org ADMIN sees and accepts it
+    - the org OWNER can also accept on behalf of the organization
+    - an ADMIN who is not an ASSOCIATE can also accept on behalf of the organization
+    - a Member + Lead invitation, once accepted, grants both roles
+    - an ASSOCIATE who is not an admin/owner cannot ACCEPT on the organization behalf
+    - a global admin cannot ACCEPT on the organization behalf, but can revoke the invitation
+    - REJECT leaves the organization out of the Space
+    - a global admin cannot REJECT on the organization behalf — only revoke (FR-010)
+- **Organization Space invitations — opt-out (allowSpaceInvitations)**
+    - an organization that opted out cannot be invited
+    - opting out AFTER a pending invitation leaves it listed and acceptable
+- **Organization Space invitations — invalid extra role**
+    - inviting an organization with the Admin extra role (policy forbids it) is rejected, nothing created
+- **Organization Space invitations — already member / already invited**
+    - inviting an already-invited organization returns ALREADY_INVITED_TO_ROLE_SET
+    - inviting an already-member organization returns ALREADY_MEMBER_OF_ROLE_SET
+- **Organization Space invitations — Lead role limit**
+    - two granted Lead organizations block a third Lead invitation
+    - one granted Lead plus one pending Lead invitation also blocks a third; revoking the pending one frees the slot
+- **Organization Space invitations — accept-time Lead downgrade**
+    - a pending Lead invitation is downgraded to Member if the Lead slots fill before acceptance
+- **Organization Space invitations — zero-admin organization notice**
+    - inviting an organization with no admins or owners still creates the invitation, with an informational notice
+- **Organization Space invitations — invitee actor-type validation**
+    - inviting a non-contributor actor (the Space itself) is rejected and does not wedge later invites/applications
+- **Organization Space invitations — the Space admin can manage the organization afterwards (R32)**
+    - promotes the accepted organization to Lead and demotes it again
+    - removes the accepted organization from the Space
+    - still cannot ADD an organization that is not already in the Space
+    - a Space member who is not an admin can do none of it
+
+### `roleset/hierarchy-parity/actor-reachability.it-spec.ts`
+- **Actor-relative reachability — combined flow (workspace#017 / ADR 0001)**
+    - a member of the PRIVATE root can apply directly to the public SubSub; approval grants the missing ancestry
+    - a stranger to the same PRIVATE-root hierarchy is still rejected (generic negative cell unchanged)
+
+### `roleset/associates/me-pending-partition.it-spec.ts`
+- **me query partition (US7-AS1, contract §5)**
+    - one Space invitation + one organization invitation + one organization application: the Space-shaped fields stay exact, the organization rows land only on the new fields
+    - US7-AS5 (organization side): deleting an organization with a pending application succeeds
+    - US7-AS4: removing an associate deletes their organization in-app notification rows
+
+### `roleset/invitations/invitation-contributors.it-spec.ts`
+- **Invitations**
+    - should create invitation
+    - should create space invitation, when previous was REJECTED and ARCHIVED
+    - should remove invitation
+    - should throw error for quering not existing invitation [skip]
+    - should throw error for creating the same invitation twice
+    - should return invitations after user is removed
+- **Invitations-flows**
+    - invitee is able to ACCEPT EXTRA ROLES invitation and access space data
+    - invitee is able to ACCEPT invitation and access space data
+    - invitee is able to REJECT and ARCHIVE invitation: no access to space data
+    - should return ALREADY_MEMBER result, when sending invitation to a member
+    - should fail to send invitation, when user has active application
+    - User with received invitation, cannot apply to the community
+- **Invitations - Authorization > DDT rights to change invitation state**
+    - User: "'non.space'", should get: "'accepted'" to update invitation of another user
+    - User: "'space.member'", should get Error: "'Authorization: unable to grant \'upda…'" to update invitation of another user
+    - User: "'qa.user'", should get Error: "'Authorization: unable to grant \'role…'" to update invitation of another user
+    - User: "'admin'", should get Error: "'Authorization: unable to grant \'role…'" to update invitation of another user
+    - User: "'global.support'", should get Error: "'Authorization: unable to grant \'role…'" to update invitation of another user
+    - User: "'space.admin'", should get Error: "'Authorization: unable to grant \'role…'" to update invitation of another user
+- **Invitations - Authorization > DDT users with rights to create invitation**
+    - User: "'admin'", should get: "undefined" to create invitation to another user
+    - User: "'global.support'", should get: "undefined" to create invitation to another user
+    - User: "'space.admin'", should get: "undefined" to create invitation to another user
+- **Invitations - Authorization > DDT users with NO rights to create invitation**
+    - User: "'global.license'", should get: "'Authorization: unable to grant \'role…'" to create invitation to another user
+    - User: "'space.member'", should get: "'Authorization: unable to grant \'role…'" to create invitation to another user
+    - User: "'qa.user'", should get: "'Authorization: unable to grant \'role…'" to create invitation to another user
+    - User: "'non.space'", should get: "'Authorization: unable to grant \'role…'" to create invitation to another user
+
+### `roleset/user/user.authorization.it-spec.ts`
+- **Verify ROLESET_ENTRY_ROLE_ASSIGN privilege > DDT role privilege to assign member to space**
+    - User: "'admin'", should have privileges: "[ …(9) ]" for space journey
+    - User: "'global.support'", should have privileges: "[ …(8) ]" for space journey
+    - User: "'space.admin'", should have privileges: "[ …(8) ]" for space journey
+    - User: "'beta.tester'", should have privileges: "[ …(8) ]" for space journey
+    - User: "'non.space'", should have privileges: "[ 'READ', 'ROLESET_ENTRY_ROLE_APPLY' ]" for space journey
+    - User: "'space.member'", should have privileges: "[ 'READ', 'ROLESET_ENTRY_ROLE_APPLY' ]" for space journey
+    - User: "'subspace.admin'", should have privileges: "[ …(4) ]" for space journey
+    - User: "'subspace.member'", should have privileges: "[ 'READ', 'ROLESET_ENTRY_ROLE_APPLY' ]" for space journey
+    - User: "'subsubspace.admin'", should have privileges: "[ 'READ', 'ROLESET_ENTRY_ROLE_APPLY' ]" for space journey
+    - User: "'subsubspace.member'", should have privileges: "[ 'READ', 'ROLESET_ENTRY_ROLE_APPLY' ]" for space journey
+- **Verify ROLESET_ENTRY_ROLE_ASSIGN privilege > DDT role privilege to assign member to subspace**
+    - User: "'admin'", should have privileges: "[ …(10) ]" for subspace journey
+    - User: "'global.support'", should have privileges: "[ …(9) ]" for subspace journey
+    - User: "'space.admin'", should have privileges: "[ …(9) ]" for subspace journey
+    - User: "'space.member'", should have privileges: "[ 'ROLESET_ENTRY_ROLE_APPLY' ]" for subspace journey
+    - User: "'subspace.admin'", should have privileges: "[ …(9) ]" for subspace journey
+    - User: "'subspace.member'", should have privileges: "[ 'READ', 'ROLESET_ENTRY_ROLE_APPLY' ]" for subspace journey
+    - User: "'subsubspace.admin'", should have privileges: "[ …(4) ]" for subspace journey
+    - User: "'subsubspace.member'", should have privileges: "[ 'READ', 'ROLESET_ENTRY_ROLE_APPLY' ]" for subspace journey
+- **Verify ROLESET_ENTRY_ROLE_ASSIGN privilege > DDT role privilege to assign member to subsubspace**
+    - User: "'admin'", should have privileges: "[ …(10) ]" for subsubspace journey
+    - User: "'global.support'", should have privileges: "[ …(8) ]" for subsubspace journey
+    - User: "'space.member'", should have privileges: "[]" for subsubspace journey
+    - User: "'subspace.admin'", should have privileges: "[ …(9) ]" for subsubspace journey
+    - User: "'subspace.member'", should have privileges: "[ 'ROLESET_ENTRY_ROLE_APPLY' ]" for subsubspace journey
+    - User: "'subsubspace.admin'", should have privileges: "[ …(9) ]" for subsubspace journey
+    - User: "'subsubspace.member'", should have privileges: "[ 'READ', 'ROLESET_ENTRY_ROLE_APPLY' ]" for subsubspace journey
+- **Direct user add to an L0 space is gone at Slice B**
+    - the L0 space admin cannot add a user as MEMBER directly; the role set is unchanged
+
+### `roleset/application/application.it-spec.ts`
+- **Application**
+    - should create application
+    - should create space application, when previous was REJECTED and ARCHIVED
+    - should throw error for creating the same application twice
+    - should remove application
+    - should throw error for APPROVING subspace application, when user is not space member [skip]
+    - User should not be able to approve own application
+    - should return applications after user is removed
+- **Application-flows**
+    - should create application on subspace
+    - should return correct membershipUser applications
+    - should return updated membershipUser applications
+    - should approve subspace application, when space application is APPROVED and applications are allowed
+    - should be able to remove subspace application, when space application is removed
+
+### `roleset/user/user.it-spec.ts`
+- **Assign / Remove users to community > Assign users**
+    - Assign user as member to space
+    - Assign user as member to subspace
+    - Assign user as member to subsubspace
+    - Assign user as lead to space
+    - Assign user as lead to subspace
+    - Assign user as lead to subsubspace
+- **Assign / Remove users to community > Remove users**
+    - Remove user as lead from subsubspace
+    - Remove user as lead from subspace
+    - Remove user as lead from space
+    - Remove user as member from subsubspace
+    - Remove user as member from subspace
+    - Remove user as member from space
+- **Available users > Space available users**
+    - Available members
+    - Available leads
+- **Available users > Subspace available users**
+    - Available members
+    - Available leads
+- **Available users > Subsubspace available users**
+    - Available members
+    - Available leads
+
+### `roleset/hierarchy-parity/removal-cascade.it-spec.ts`
+- **Removal cascade + re-application (workspace#017 regression guard)**
+    - removing the actor from an ancestor cascades to descendants and a fresh application succeeds
+
+### `roleset/user/user-edge2.it-spec.ts`
+- **Assign / Remove leads to community > Assign different users as lead to same community**
+    - Should assign second user as Space lead
+    - Should throw error for assigning third user as Space lead
+    - Should assign second user as Subspace lead
+    - Should throw error for assigning third user as Subspace lead
+    - Should assign second user as Subsubspace lead
+
+### `roleset/associates/pending-confidentiality.it-spec.ts`
+- **Pending-list confidentiality — organizations (US7-AS2, contract §6)**
+    - a plain registered user is refused; ORGANIZATION_ADMIN and ORGANIZATION_OWNER read the pending lists
+    - the applicant themself (a plain registered user) is still refused — applying grants no read on the lists
+    - Platform Support reads every pending list of an organisation (090 FR-011)
+- **Pending-list confidentiality — a PUBLIC Space (US7-AS3, deliberate R3 change)**
+    - a plain member is refused; a Space admin reads the pending lists
+    - a plain member is refused each of the three lists on its own
+    - a Space admin reads each of the three lists on its own
+    - with allowSubspaceAdminsToInviteMembers on, a subspace admin reads the Space invitations but is refused its applications
+    - an account admin of the hosting organization who is not a Space admin is refused — R46 (live-verified standing)
+- **Authorization reset runbook (US7-AS6, contract §11, R4)**
+    - stripping the stored APPLY rule reports APPLY_NOT_GRANTED; the per-organization reset loop restores ELIGIBLE_TO_APPLY
+
+### `roleset/associates/organization-associate-application.it-spec.ts`
+- **Organization associate applications (US3)**
+    - US3-AS1: a registered user applies with a note — application created
+    - contract §4 (discriminating): an existing ORGANIZATION_ASSOCIATE reads myMembershipStatus === MEMBER and is refused a duplicate application with ROLESET_ALREADY_MEMBER
+    - US3-AS5: switching allowApplications off refuses new applications (typed error, zero rows) but leaves an earlier pending application listed and approvable
+    - US3-AS3/AS4: APPROVE grants ASSOCIATE, REJECT does not and the applicant may apply again
+    - an associate-only persona cannot APPROVE an application
+    - US3-AS6: inviting an applicant with an open application is refused (ALREADY_HAS_OPEN_APPLICATION)
+    - US3-AS9: a pre-migration-shaped organization row reads allowApplications === true and the seeded question as optional
+
+### `roleset/associates/organization-associate-invitation-external.it-spec.ts`
+- **Invite an unregistered address to an organization (US1)**
+    - US1-AS2/US3-AS1: an unknown address becomes a platform invitation carrying the offered roles, the message and the language, listed as created by the admin, with exactly one email
+    - US1-AS4: inviting the same address again reports it as already invited — no second row, no second email
+    - US1-AS3: a registered user's stored address typed exactly is a normal invitation to that user — no email-invitation row
+    - US1-AS5: a mixed batch gives every invitee its own outcome — a picked user once, a new address, a registered address — and no role-limit outcome lands anywhere
+    - US1-AS7: revoking removes the row, a later sign-up finds no invitation, and re-inviting creates a fresh row and sends a new email
+    - US1-AS8: a plain associate and a registered non-admin are refused every email-invitation call; an ADMIN-not-associate and an OWNER are not
+    - US1-AS8 (090): Platform Support may invite, list, resend and revoke email invitations on an organisation
+    - boundary: a 128-character address is accepted and emailed
+- **Resend an organization email invitation (US3)**
+    - US3-AS1/AS3: one resend sends one email naming the resending admin and leaves the row unchanged; an immediate second resend is throttled and sends nothing; another invitation is independent
+    - US3-AS6: when the original inviter has been deleted another admin can still resend — the email goes out and the recorded inviter is unchanged
+- **Extra-role caps do not apply to an email invitee at invite time**
+    - US1-AS6: with six admins an email invitation offering Admin is still created and emailed, while the same offer to a registered user keeps the invite-time notice
+
+### `roleset/associates/organization-email-invitation-registration.it-spec.ts`
+- **An open invitation wins over the domain auto-join (US2)**
+    - US2-AS4: the organization is verified and its domain door is open
+    - US2-AS4/AS6/US4-AS2: registering with an invited same-domain address succeeds, does not auto-join, and leaves exactly one converted invitation carrying roles, inviter, message and language
+    - US2-AS3: accepting the converted invitation grants Associate + Admin
+    - control: an address on the same domain with no invitation is still auto-joined at registration
+    - US4-AS3: deleting the account erases every email-invitation record for the address, and registering the address again finds nothing
+- **A consumed invitation is never converted again (US4-AS4)**
+    - registering an address whose record is already consumed creates no invitation and no membership
+- **The offered Owner role is withheld at accept time when the cap is full (US2-AS5)**
+    - an Owner offer made by email is created; once the cap is full the invitee registers, accepts and becomes an associate only
+- **Deleting an organization removes its open email invitations (US4-AS6)**
+    - the platform invitation does not outlive its organization
+
+### `roleset/associates/support-org-community-actions.it-spec.ts`
+- **A-01 — repair an orphan by invitation: offer Admin, the invitee accepts (P1, use case)**
+    - A-01 — Support invites offering Admin, the offer is listed under Support, and on accept the invitee is Associate + Admin; two rows, attributed to Support
+- **A-02 — the offerer loses the Support credential before the accept (P1, state transition)**
+    - A-02 — the invitee is Associate without Admin, the withheld offer is reported and audited as standing_lost, attributed to Platform Support
+- **A-03 — the Owner cap at accept time: on the limit honoured, one over withheld (P2, boundary values)**
+    - A-03 — with two owners an Owner offer is honoured (3 of 3); with three owners at accept time it is withheld as role_limits
+- **A-04 — email-invitation audit rows carry no address (P2, use case; local stack only)**
+    - A-04 — invite, resend and revoke by email write three rows with no subject user and no address anywhere (local stack)
+- **A-05 — promote, demote and remove a member (P1, use case)**
+    - A-05 — each of the three calls takes effect and writes exactly one row, with the right outcome and action
+- **A-06 — application events, one row per state change (P1, state transition)**
+    - A-06 — approve adds the applicant with one row; reject, reopen, reject, archive leave four rows in order; an invalid event writes none
+- **A-07 — revoke a pending user invitation (P1, use case)**
+    - A-07 — Support revokes an invitation an organisation admin made: gone from both lists, one row on the invitee
+- **A-08 — the last owner cannot be removed, and no row is written (P2, boundary values)**
+    - A-08 — removing one of two owners works with one row; removing the last is refused with the minimum-limit error and no row
+- **A-09 — self-targeted Support actions are refused (P1, decision table)**
+    - A-09 — invite, own-address invite, self-approve, self-promote to Admin and Owner and removing an Admin role it does not hold are all refused with the self-target code; leaving the organisation works and writes no row
+- **A-10 — a self-offered Owner is withheld at accept (P2, state transition)**
+    - A-10 — an organisation admin who is also Support invites itself offering Owner, steps down, and on accept gets Associate only, audited as self_offer
+- **A-11 — organisation-admin actions write no Support row (P1, decision table)**
+    - A-11 — Support's promotion writes one row; the same actions by an organisation admin, and by an admin who is also Support, write none
+    - A-11 — an organisation admin's email invite, resend and revoke add no row to the organisation's trail: only Support's one row is there (local stack)
+- **A-12 — one invite call to two users writes one row per invitee (P1, use case; FR-015 per target, C-14)**
+    - A-12 — Support invites two registered users in one call: two pending invitations, and each invitee gains exactly one invite_user row naming its own invitation
+
+### `roleset/associates/support-org-community-scope.it-spec.ts`
+- **S-01 — the stored rules (P1, decision table)**
+    - S-01 — the organisation role set carries exactly the two Support rules, and nothing else for Support
+    - S-01 — invitation, email invitation and application carry the membership rule, never the (non-cascading) invite rule; the organisation, Space role set and platform carry none
+- **S-02 — who holds what: the 14 platform roles (P1, decision table)**
+    - S-02 — Platform Support (the platform-roles user and the shared persona) holds the two Support privileges and neither GRANT, ASSIGN nor org UPDATE
+    - S-02 — the organisation admin (control) holds invite, GRANT and ASSIGN but not the Support privilege; a plain registered user holds none
+    - S-02 — PLATFORM_CONTENT_FULL_ACCESS does not hold the Support privileges, GRANT or ASSIGN on the organisation role set
+    - S-02 — PLATFORM_ROLES_ADMIN does not hold the Support privileges, GRANT or ASSIGN on the organisation role set
+    - S-02 — PLATFORM_RESOURCE_ADMIN does not hold the Support privileges, GRANT or ASSIGN on the organisation role set
+    - S-02 — PLATFORM_SETTINGS_ADMIN does not hold the Support privileges, GRANT or ASSIGN on the organisation role set
+    - S-02 — PLATFORM_OPERATIONS_ADMIN does not hold the Support privileges, GRANT or ASSIGN on the organisation role set
+    - S-02 — PLATFORM_USERS_ADMIN does not hold the Support privileges, GRANT or ASSIGN on the organisation role set
+    - S-02 — PLATFORM_LICENSE_MANAGER does not hold the Support privileges, GRANT or ASSIGN on the organisation role set
+    - S-02 — PLATFORM_SPACES_READER does not hold the Support privileges, GRANT or ASSIGN on the organisation role set
+    - S-02 — PLATFORM_AUDIT_READER does not hold the Support privileges, GRANT or ASSIGN on the organisation role set
+    - S-02 — FEATURE_BETA_TESTER does not hold the Support privileges, GRANT or ASSIGN on the organisation role set
+    - S-02 — FEATURE_VIRTUAL_ASSISTANT does not hold the Support privileges, GRANT or ASSIGN on the organisation role set
+    - S-02 — FEATURE_ORGANIZATION_CREATOR does not hold the Support privileges, GRANT or ASSIGN on the organisation role set
+    - S-02 — FEATURE_VC_CAMPAIGN does not hold the Support privileges, GRANT or ASSIGN on the organisation role set
+- **S-03 — Support can never add anyone directly (P1, equivalence partitions)**
+    - S-03 — assigning Associate, Admin or Owner to a non-member is refused on the entry privilege, by both mutations, and nothing is written; the control (promoting a member) succeeds with one row
+- **S-04 — surfaces outside the Community tab stay closed to Support (P1, equivalence partitions)**
+    - S-04 — Support cannot change the application form, the organisation profile or its settings (each refused on UPDATE and left unchanged)
+    - S-04 — Support cannot drive the invitation lifecycle (REJECT on a pending, ARCHIVE on a rejected one): refused on UPDATE, state unchanged; revoking by delete is the allowed route
+- **S-05 — Content Full Access keeps exactly today's reach, no more (P1, decision table)**
+    - S-05 — Content Full Access cannot invite, resend, promote, remove or read the applications, and its APPROVE changes nothing; it can still revoke an invitation and reject an application (OP-6), unaudited
+- **S-06 — the reset is idempotent and keeps a pre-reset invitation revocable (P2, state transition)**
+    - S-06 — two resets leave the two Support rules unchanged (each exactly once) and the earlier invitation revocable by Support, with one audit row
+- **S-07 — an organisation not yet reset grants nothing until it is (P2, state transition; local stack only)**
+    - S-07 — before the reset the privilege is absent and invite, revoke and applications are refused with no audit row; after the reset all three work (local stack)
+
+### `roleset/invitations/invitation-external-resend.it-spec.ts`
+- **Resend a Space email invitation**
+    - US3-AS2/AS3: a Space admin resends once (one mail, record unchanged); an immediate second resend is throttled and sends nothing
+    - US3-AS5: a plain Space member cannot resend — authorization error, no mail
+    - US3-AS3: the cooldown belongs to the address on the role set — revoke and re-invite, then an immediate resend, is still throttled
+    - US3-AS5: an admin of a different space — invite privilege on another role set only — cannot resend this one: authorization error, no mail
+    - US3-AS5: an anonymous caller cannot resend — authorization error, no mail
+    - US3-AS4: once the address has registered the invitation is consumed — resend is refused (not throttled) and sends nothing
+
+### `roleset/organization/organization-edge.it-spec.ts`
+- **Assign / Remove organization to community > Assign organizations > Assign same organization as member to same community**
+    - Idempotent for Space - no duplicate created
+    - Idempotent for Subspace - no duplicate created
+    - Idempotent for Subsubspace - no duplicate created
+- **Assign / Remove organization to community > Assign organizations > Assign different organization as member to same community**
+    - Successfully assigned to Space
+    - Successfully assigned to Subspace
+    - Successfully assigned to Subsubspace
+- **Assign / Remove organization to community > Assign organizations > Assign same organization as lead to same community**
+    - Idempotent for Space - no duplicate created
+    - Idempotent for Subspace - no duplicate created
+    - Idempotent for Subsubspace - no duplicate created
+- **Assign / Remove organization to community > Assign organizations > Assign different organizations as lead to same community**
+    - Error is thrown for Space [skip]
+    - Two organizations assinged to Subspace
+    - Two organizations assinged to Subsubspace
+
+### `roleset/invitations/invitation-organization-subspace.it-spec.ts`
+- **Organization Space invitations — subspace ancestor chain (invitedToParent, spacesToJoinOnAccept)**
+    - space admin invites the organization to L2: invitedToParent is true and every ancestor Space is listed
+    - when the organization already belongs to L0, spacesToJoinOnAccept lists only L1 and L2
+    - an admin authorized only at L2 cannot invite into its parent (unchanged behavior)
+    - the inviting Space admin reads spacesToJoinOnAccept as null — denied without an error, no ancestor data leaked
+    - spacesToJoinOnAccept is not filtered per-ancestor: a private L0 root still appears in the invited organization admin's own read
+
+### `roleset/organization/organization-self-removal.it-spec.ts`
+- **@forge-acceptance Organization self-removal from a Space community**
+    - US3-AS3 associate-only of A is denied
+    - US3-AS4 admin of B is denied
+    - US3-AS5 unrelated user is denied
+    - US3-AS1 org admin removes A from S1
+    - US3-AS2 org owner removes A from S (cascade to S2)
+    - US3-AS6 space admin path unchanged
+    - US3-AS7 generic removeRole twin
+    - US3-AS7 generic removeRole: associate-only of A is denied (SC-002)
+    - US3-AS7 generic removeRole: unrelated user is denied (SC-002)
+    - US3-AS4 non-host: admin of host organization A cannot remove organization B
+    - US3-AS1 non-host: admin of organization B removes B from S
+    - FR-007 the self-removal grant does not stick to the Space role set
+    - US3-AS8 org admin cannot drop A's LEAD on its own; leaving as Member revokes Lead too
+
+### `roleset/user/user-edge.it-spec.ts`
+- **Assign / Remove users to community > Assign users > Assign same user as member to same community**
+    - Does not have any effect in Space
+    - Does not have any effect in Subspace
+    - Does not have any effect in Subsubspace
+- **Assign / Remove users to community > Assign users > Assign different users as member to same community**
+    - Successfully assigned to Space
+    - Successfully assigned to Subspace
+    - Successfully assigned to Subsubspace
+- **Assign / Remove users to community > Assign users > Assign same user as lead to same community**
+    - Does not have any effect in Space
+    - Does not have any effect in Subspace
+    - Does not have any effect in Subsubspace
+
+### `roleset/organization/organization.it-spec.ts`
+- **Assign / Remove organization to community > Assign organization**
+    - Assign organization as member to space
+    - Assign organization as member to subspace
+    - Assign organization as member to subsubspace
+    - Assign organization as lead to space
+    - Assign organization as lead to subspace
+    - Assign organization as lead to subsubspace
+- **Assign / Remove organization to community > Remove organization**
+    - Remove organization as member from subsubspace
+    - Remove organization as member from subspace
+    - Remove organization as member from space
+    - Remove organization as lead from subsubspace
+    - Remove organization as lead from subspace
+    - Remove organization as lead from space
+- **Direct organisation add is gone at Slice B**
+    - the harness admin cannot add a NEW organisation directly; the role set is unchanged
+
+### `roleset/organization/organization2.it-spec.ts`
+- **Organization role**
+    - Organization role - assignment to 1 Organization, Space, Subspace, Subsubspace
+
+### `roleset/application/application-lifecycle.it-spec.ts`
+- **Lifecycle > Update application entity state - positive path - REJECT**
+    - should update application, when set event: "'REJECT'" to state: "'rejected'", nextEvents: "[ 'REOPEN', 'ARCHIVE' ]"
+    - should update application, when set event: "'REOPEN'" to state: "'new'", nextEvents: "[ 'APPROVE', 'REJECT' ]"
+    - should update application, when set event: "'APPROVE'" to state: "'approved'", nextEvents: "[]"
+
+## templates  <sub>6 files · 62 cases · 2 skip · 0 todo</sub>
+
+
+### `templates/space/space-templates.it-spec.ts`
+- **Subspace templates - CRUD**
+    - Create subspace template
+    - Delete subspace template
+    - Update subspace template
+- **innovation flow state sidebar round-trip**
+    - save-as-template then apply onto a subspace carries every state sidebar verbatim, content and order, including empty
+    - apply-from-template onto an existing L0 Space replaces its flow wholesale: template states, order and sidebars arrive verbatim over the target values
+
+### `templates/post/post-templates.it-spec.ts`
+- **Post templates - CRUD**
+    - Create Post template
+    - Update Post template
+    - Delete Post template
+- **Post templates - Utilization in posts > Create post on all entities with newly created postTemplate**
+    - Create Post on Space
+    - Create Post on Subspace
+    - Create Post on Subsubspace
+- **Post templates - Utilization in posts > Update Post template already utilized by an post**
+    - Create post with existing post template, and update template defaultDescription, doesnt change the post description
+    - Update post to use the new post template type
+- **Post templates - Utilization in posts > Remove Post template already utilized by an post**
+    - Create post with existing post template, and remove the post template, doesnt change the post
+- **Post templates - CRUD Authorization > Post templates - Create > DDT user privileges to create space post template - positive**
+    - User: "'admin'" get message: "undefined", when intend to create space post template 
+    - User: "'space.admin'" get message: "undefined", when intend to create space post template 
+- **Post templates - CRUD Authorization > Post templates - Create > DDT user privileges to create space post template - negative**
+    - User: "'space.member'" get message: "'Authorization: unable to grant \'crea…'", when intend to create space post template 
+    - User: "'non.space'" get message: "'Authorization: unable to grant \'crea…'", when intend to create space post template 
+- **Post templates - CRUD Authorization > Post templates - Update > DDT user privileges to update space post template - positive**
+    - User: "'admin'" get message: "undefined", when intend to update space post template 
+    - User: "'space.admin'" get message: "undefined", when intend to update space post template 
+    - User: "'space.member'" get message: "'Authorization: unable to grant \'upda…'", when intend to update space post template 
+    - User: "'non.space'" get message: "'Authorization: unable to grant \'upda…'", when intend to update space post template 
+- **Post templates - CRUD Authorization > Post templates - Remove > DDT user privileges to remove space post template - positive**
+    - User: "'admin'" get message: "undefined", whe intend to remova space post template 
+    - User: "'space.admin'" get message: "undefined", whe intend to remova space post template 
+    - User: "'space.member'" get message: "'Authorization: unable to grant \'dele…'", whe intend to remova space post template 
+    - User: "'non.space'" get message: "'Authorization: unable to grant \'dele…'", whe intend to remova space post template 
+- **Post templates - Negative Scenarios**
+    - Delete non existent Post template
+
+### `templates/whiteboard/whiteboard-templates.it-spec.ts`
+- **WHITEBOARD templates - CRUD**
+    - Create Whiteboard template
+    - Delete Whiteboard template
+
+### `templates/callout/poll-form-callout-templates.it-spec.ts`
+- **R25 — a callout template carries a Poll (US5-AS5, FR-027)**
+    - createTemplate (CALLOUT) keeps the poll title, options in order and settings, with no votes
+- **R25 — a callout template carries a Form (US5-AS1/AS2, FR-025–FR-027)**
+    - createTemplate (CALLOUT) keeps the Form title, description, questions (types, options, required) and settings
+- **R25 — a template Form never accepts responses (US5-AS6, FR-027b)**
+    - submitCalloutFormResponse on a callout template Form is refused with FORM_TEMPLATE_NOT_RESPONDABLE
+    - positive control: the same definition on a live Post accepts the same answers from the same persona
+- **R25 — a template Form definition is edited by the template admin (FR-027b, R25d)**
+    - a space member (no UPDATE on the template) cannot edit the template Form, and it is left unchanged
+    - positive control: the template admin (space admin) edits the title, a question and a setting
+- **R25 — a Form callout template is removed like any template (server#6435)**
+    - deleteTemplate by the template admin removes the Form template: it can no longer be read
+
+### `templates/space/space-templates-poll-form.it-spec.ts`
+- **R25 — a space template keeps Poll and Form definitions only (FR-027)**
+    - the template content space holds the poll (title, options in order, settings) with no votes
+    - the template content space holds the Form (questions without the source ids, settings as-is) with no responses
+    - the template content space keeps the CLOSED Form with the other class of every setting, as-is
+    - positive control: the source keeps its vote, its CLOSED status and its response
+- **R25 — a Form inside a template content space never accepts responses (US5-AS6, FR-027b)**
+    - submitCalloutFormResponse on the template content-space Form is refused with FORM_TEMPLATE_NOT_RESPONDABLE
+    - positive control: the source Form accepts the same answers from the same persona
+    - a Form brought into a template by updateTemplateFromSpace is refused with FORM_TEMPLATE_NOT_RESPONDABLE
+- **R25 — a subspace created from the template (US5-AS3/AS5)**
+    - holds the poll with the same options, OPEN, 0 votes, and the Form with the same questions/settings, fresh ids, 0 responses
+    - positive control: the new poll takes a vote and the new Form takes a response (they are live, not templates)
+- **R25 — updateCollaborationFromSpaceTemplate adds the Poll and the Form**
+    - the target holds neither before the update (control)
+    - after the update the target holds an OPEN poll with no votes and a Form with fresh ids and no responses
+- **R25 — only the template may carry a Form into a new subspace (FR-027a)**
+    - a FORM in the create-subspace request itself is refused even when a template is used [skip]
+    - positive control: the same template with a NONE callout in the request creates the subspace with the template Form
+- **R25 — the other template carriers carry a Form (FR-027a, R25c)**
+    - createTemplateFromContentSpace copies the Form definition into the new template, never respondable
+    - createTemplate (SPACE) accepts a FORM in its own content space, as a never-respondable definition
+    - an L0 created from the template holds an OPEN poll with no votes and Forms as-is with fresh ids and no responses
+    - a FORM in the create-space (L0) request itself is refused even when a template is used [skip]
+
+### `templates/template-file-repair/template-file-repair.it-spec.ts`
+- **TF-1 — non-operations callers are refused**
+    - TF-1 row a — anonymous cannot run the repair
+    - TF-1 row b — registered user with no platform role cannot run the repair
+    - TF-1 row c — admin of the template's own space cannot run the repair
+    - TF-1 ctl — Platform Operations Admin is allowed (positive control)
+- **TF-2 — dry run reports the documented shape and changes nothing**
+    - TF-2 — counts: one template scanned, one with foreign files, nothing copied
+    - TF-2 — the foreign reference is reported with its documented fields, not copied
+    - TF-2 — the dead reference is reported as a missing file
+    - TF-2 — omitting dryRun is a dry run and reports exactly what run 1 did
+    - TF-2 — the template text is byte-for-byte unchanged (independent read-back)
+
+## pagination  <sub>2 files · 42 cases · 11 skip · 0 todo</sub>
+
+
+### `pagination/organization.it-spec.ts`
+- **Pagination - organization**
+    - query filtered organization and verify data
+- **Pagination - organization > Pagination with filter**
+    - Quering: "1" with filter: "{ displayName: 'org1' }", returns organizations: "'org1-email@test.io'","'org1-email@test.io'", and organizationsCount: "1" 
+    - Quering: "2" with filter: "{ contactEmail: 'email@test.io' }", returns organizations: "'org1-email@test.io'","'org2-email@test.io'", and organizationsCount: "2" 
+    - Quering: "11" with filter: "{ website: 'org' }", returns organizations: "'org1-email@test.io'","'org2-email@test.io'", and organizationsCount: "5" 
+    - Quering: "17" with filter: "{ nameID: 'org5', …(1) }", returns organizations: "'org4-email@test.io'","'org5-email@test.io'", and organizationsCount: "2" 
+    - Quering: "7" with filter: "{ nameID: '', domain: '', …(1) }", returns organizations: "'org1-email@test.io'","'org2-email@test.io'", and organizationsCount: "6" 
+    - Quering: "2" with filter: "{ nameID: '', domain: '', …(1) }", returns organizations: "''","'org1-email@test.io'", and organizationsCount: "2" 
+- **Pagination - organization > Pagination without filter**
+    - Quering: first: "11", last: "undefined", returns organizations: "'org1-email@test.io'","'org2-email@test.io'", and organizationsCount: "6" 
+    - Quering: first: "undefined", last: "17", returns organizations: "'org3-email@test.io'","'org4-email@test.io'", and organizationsCount: "6" 
+    - Quering: first: "7", last: "undefined", returns organizations: "'org4-email@test.io'","'org5-email@test.io'", and organizationsCount: "6" 
+    - Quering: first: "2", last: "undefined", returns organizations: "''","'org1-email@test.io'", and organizationsCount: "2" 
+- **Pagination - organization > Pagination with cursors**
+    - query organization with parameter: first: "1", after = startCursor  [skip]
+    - query organization with parameter: first: "2", after = startCursor  [skip]
+    - query organization with parameter: first: "1", after = endCursor  [skip]
+    - query organization with parameter: first: "2", after = endCursor  [skip]
+    - query organization with parameter: first: "4", after = endCursor  [skip]
+- **Pagination - organization > Invalid pagination queries**
+    - Quering: first: "1", last: "1", before: "undefined", after: "undefined" returns error: "'Using both "first" and "last" paramet…'" 
+    - Quering: first: "1", last: "undefined", before: "'71010bea-e4bd-464d-ab05-30dc4bb00dcb'", after: "undefined" returns error: "'Cursor "before" requires having "last…'" 
+    - Quering: first: "1", last: "1", before: "undefined", after: "'71010bea-e4bd-464d-ab05-30dc4bb00dcb'" returns error: "'Using both "first" and "last" paramet…'" 
+    - Quering: first: "undefined", last: "1", before: "undefined", after: "'71010bea-e4bd-464d-ab05-30dc4bb00dcb'" returns error: "'Cursor "after" requires having "first…'" 
+
+### `pagination/user.it-spec.ts`
+- **Pagination - user**
+    - query filtered user and verify data
+- **Pagination - user > Pagination with filter**
+    - Quering: "undefined" with filter: "{ firstName: 'not' }", returns users: "'notifications@alkem.io'","'notifications@alkem.io'", and userCount: "1" 
+    - Quering: "undefined" with filter: "{ email: 'admin@alkem.io' }", returns users: "'community.admin@alkem.io'","'admin@alkem.io'", and userCount: "2" 
+    - Quering: "undefined" with filter: "{ firstName: 'non' }", returns users: "'non.space@alkem.io'","'non.space@alkem.io'", and userCount: "1" 
+    - Quering: "undefined" with filter: "{ firstName: 'non', …(1) }", returns users: "'space.admin@alkem.io'","'non.space@alkem.io'", and userCount: "2" 
+    - Quering: "undefined" with filter: "{ firstName: 'non', …(3) }", returns users: "'qa.user@alkem.io'","'non.space@alkem.io'", and userCount: "4" 
+    - Quering: "undefined" with filter: "{ firstName: '', lastName: '', …(1) }", returns users: "'space.admin@alkem.io'","'admin@alkem.io'", and userCount: "12" 
+    - Quering: "undefined" with filter: "{ firstName: '', lastName: '', …(1) }", returns users: "'notifications@alkem.io'","'admin@alkem.io'", and userCount: "2" 
+- **Pagination - user > Pagination without filter**
+    - Quering: first: "11" and last: "undefined", returns users: "'non.space@alkem.io'","'non.space@alkem.io'", and userCount: "11" 
+    - Quering: first: "undefined" and last: "17", returns users: "'space.admin@alkem.io'","'non.space@alkem.io'", and userCount: "12" 
+    - Quering: first: "7" and last: "undefined", returns users: "'space.admin@alkem.io'","'admin@alkem.io'", and userCount: "7" 
+    - Quering: first: "2" and last: "undefined", returns users: "'notifications@alkem.io'","'admin@alkem.io'", and userCount: "2" 
+- **Pagination - user > Pagination with cursors**
+    - query users with parameter: first: "1", after = startCursor  [skip]
+    - query users with parameter: first: "2", after = startCursor  [skip]
+    - query users with parameter: first: "1", after = endCursor  [skip]
+    - query users with parameter: first: "2", after = endCursor  [skip]
+    - query users with parameter: first: "4", after = endCursor  [skip]
+    - query users with parameter: first: "12", after = endCursor  [skip]
+- **Pagination - user > Invalid pagination queries**
+    - Quering: first: "1", last: "1", before: "undefined", after: "undefined" returns error: "'Using both "first" and "last" paramet…'" 
+    - Quering: first: "1", last: "undefined", before: "'71010bea-e4bd-464d-ab05-30dc4bb00dcb'", after: "undefined" returns error: "'Cursor "before" requires having "last…'" 
+    - Quering: first: "1", last: "1", before: "undefined", after: "'71010bea-e4bd-464d-ab05-30dc4bb00dcb'" returns error: "'Using both "first" and "last" paramet…'" 
+    - Quering: first: "undefined", last: "1", before: "undefined", after: "'71010bea-e4bd-464d-ab05-30dc4bb00dcb'" returns error: "'Cursor "after" requires having "first…'" 
+
+## platform  <sub>1 files · 7 cases · 0 skip · 0 todo</sub>
+
+
+### `platform/mcp-api-keys-containment.it-spec.ts`
+- **MCP API key containment (US3, workspace#038-mcp-api-key-management)**
+    - US3-AS1: a caller authenticated only by an MCP key cannot mint another key
+    - US3-AS2: a caller authenticated only by an MCP key cannot list or revoke keys
+    - US3-AS3: the legacy /rest/mcp/api-keys routes return 404 on POST, GET and DELETE
+    - US3-AS4: a platform administrator lists a named user's keys with the same metadata, never a key value
+    - US3-AS5: a platform administrator revokes a key and the record shows an administrator acted
+    - US3-AS6: a platform administrator cannot reach keys through a userID that owns none
+    - US3-AS7: an ordinary user cannot list or revoke another user's keys
+
+## search  <sub>1 files · 39 cases · 10 skip · 0 todo</sub>
+
+
+### `search/search.it-spec.ts`
+- **Search > Search types**
+    - should search CONTRIBUTOR data
+    - should search JOURNEY data
+    - should search CONTRIBUTION data
+- **Search**
+    - should search with all filters applied
+    - should search by full user name
+    - should search with common word filter applied
+    - should search with location filter applied for all entities
+    - should search without filters [skip]
+    - should search term users only
+- **Search > Search negative scenarios**
+    - should throw limit error for too many terms
+    - should throw error for empty string search [skip]
+    - should not return any results for invalid term
+- **Search > Search filtered Space Data**
+    - should search JOURNEY data filtered space [skip]
+    - should search JOURNEY data filtered empty space
+- **Search > Search Archived Space Data**
+    - User: "'space.admin'" should not receive Space / Subspace / Subsubspace data
+    - User: "'space.member'" should not receive Space / Subspace / Subsubspace data
+    - User: "'non.space'" should not receive Space / Subspace / Subsubspace data
+    - GA get results for archived spaces
+- **Search > Search IN Public Space Private Subspace Data**
+    - User: "'space.admin'" should get "2" results for Subspace / Subsubspace data [skip]
+    - User: "'space.member'" should get "+0" results for Subspace / Subsubspace data [skip]
+    - User: "'subspace.admin'" should get "2" results for Subspace / Subsubspace data [skip]
+    - User: "'subspace.member'" should get "2" results for Subspace / Subsubspace data [skip]
+    - User: "'subsubspace.admin'" should get "2" results for Subspace / Subsubspace data [skip]
+    - User: "'subsubspace.member'" should get "2" results for Subspace / Subsubspace data [skip]
+    - User: "'non.space'" should get "+0" results for Subspace / Subsubspace data [skip]
+- **Search > Search Public Space Private Subspace Data**
+    - User: "'space.admin'" should get "3" results for Space /  Subspace / Subsubspace data
+    - User: "'space.member'" should get "1" results for Space /  Subspace / Subsubspace data
+    - User: "'subspace.admin'" should get "3" results for Space /  Subspace / Subsubspace data
+    - User: "'subspace.member'" should get "3" results for Space /  Subspace / Subsubspace data
+    - User: "'subsubspace.admin'" should get "3" results for Space /  Subspace / Subsubspace data
+    - User: "'subsubspace.member'" should get "3" results for Space /  Subspace / Subsubspace data
+    - User: "'non.space'" should get "1" results for Space /  Subspace / Subsubspace data
+- **Search > Search Private Space Private Subspace Data**
+    - User: "'space.admin'" should get "3" results for Space / Subspace / Subsubspace data
+    - User: "'space.member'" should get "1" results for Space / Subspace / Subsubspace data
+    - User: "'subspace.admin'" should get "3" results for Space / Subspace / Subsubspace data
+    - User: "'subspace.member'" should get "3" results for Space / Subspace / Subsubspace data
+    - User: "'subsubspace.admin'" should get "3" results for Space / Subspace / Subsubspace data
+    - User: "'subsubspace.member'" should get "3" results for Space / Subspace / Subsubspace data
+    - User: "'non.space'" should get "1" results for Space / Subspace / Subsubspace data
+
+## subscriptions  <sub>3 files · 5 cases · 0 skip · 0 todo</sub>
+
+
+### `subscriptions/aspect-comments.it-spec.ts`
+- **Post comments subscription > Space comments subscription **
+    - receives message after new comment is created - 3 sender / 3 receivers
+- **Post comments subscription > Subspace comments subscription **
+    - receives message after new comment is created - 3 sender / 3 receivers
+- **Post comments subscription > Subsubspace comments subscription **
+    - receives message after new comment is created - 3 sender / 3 receivers
+
+### `subscriptions/create-subspace.it-spec.ts`
+- **Create subspace subscription**
+    - receive newly created subspaces
+
+### `subscriptions/create-subsubspace.it-spec.ts`
+- **Create subsubspace subscription**
+    - receive newly created opportunities
+
+## platform-roles  <sub>30 files · 2071 cases · 0 skip · 2 todo</sub>
+
+
+### `platform-roles/roles/feature-organization-creator.it-spec.ts`
+- **FEATURE_ORGANIZATION_CREATOR > cannot**
+    - A1.assignPlatformRoleToUser#0
+    - A1.removePlatformRoleFromUser#1
+    - A1.grantCredentialToActor
+    - A1.revokeCredentialFromActor
+    - A2.assignPlatformRoleToUser
+    - A2.removePlatformRoleFromUser
+    - A2.assignPlatformRoleToOrganization
+    - A2.removePlatformRoleFromOrganization
+    - A3.authorizationPolicyResetOnPlatform
+    - A3.aiServerAuthorizationPolicyReset
+    - A3.authorizationPolicyResetOnUser
+    - A3.authorizationPolicyResetOnOrganization
+    - A3.authorizationPolicyResetOnAccount
+    - A3.licenseResetOnAccount
+    - A3.authorizationPolicyResetAll
+    - A3.authorizationPlatformRolesAccessReset
+    - A3.authorizationPolicyResetToGlobalAdminsAccess
+    - A3.resetLicenseOnAccounts
+    - A4.adminUserEmailChange
+    - A4.adminUserEmailChangeDriftResolve
+    - A5.deleteUser
+    - A5.adminIdentityDeleteKratosIdentity
+    - A5.adminUserAccountDelete
+    - A5.mcpApiKeys
+    - A5.adminRevokeMcpApiKey
+    - A6.deleteOrganization
+    - A7.updateInnovationPack
+    - A7.updateInnovationHub
+    - A7.createTemplate
+    - A7.createTemplateFromSpace
+    - A7.createTemplateFromContentSpace
+    - A7.updateTemplate
+    - A7.updateTemplateFromSpace
+    - A7.deleteTemplate
+    - A7.updateCallout
+    - A8.deleteCallout
+    - A8.deleteContribution
+    - A8.deleteSpace
+    - A8.deleteInnovationPack
+    - A8.deleteInnovationHub
+    - A8.updateCalloutPublishInfo
+    - A9.moveSpaceL1ToSpaceL0
+    - A9.moveSpaceL1ToSpaceL2
+    - A9.moveSpaceL2ToSpaceL1
+    - A9.convertSpaceL1ToSpaceL0
+    - A9.convertSpaceL2ToSpaceL1
+    - A9.convertSpaceL1ToSpaceL2
+    - A9.convertVirtualContributorToUseKnowledgeBase
+    - A9.moveContributionToCallout
+    - A9.transferCallout
+    - A9.transferInnovationHubToAccount
+    - A9.transferSpaceToAccount
+    - A9.transferInnovationPackToAccount
+    - A9.transferVirtualContributorToAccount
+    - A10.updatePlatformSettings
+    - A10.addIframeAllowedURL
+    - A10.removeIframeAllowedURL
+    - A10.addNotificationEmailToBlacklist
+    - A10.removeNotificationEmailFromBlacklist
+    - A10.setPlatformWellKnownVirtualContributor
+    - A11.cleanupCollections
+    - A11.updateAssistantActorCapabilities
+    - A11.adminInAppNotificationsPrune
+    - A11.adminUpdateContributorAvatars
+    - A11.adminUpdateGeoLocationData
+    - A11.adminSearchIngestFromScratch
+    - A11.migrateLegacyMemoContent
+    - A11.migrateLegacyWhiteboardContent
+    - A11.adminRepairTemplateFiles
+    - A11.refreshAllBodiesOfKnowledge
+    - A11.adminCommunicationEnsureAccessToCommunications
+    - A11.adminCommunicationRemoveOrphanedRoom
+    - A11.adminCommunicationUpdateRoomState
+    - A11.adminCommunicationMigrateOrphanedConversations
+    - A11.adminCommunicationSyncSpaceHierarchy
+    - A12.assignLicensePlanToAccount
+    - A12.assignLicensePlanToSpace
+    - A12.revokeLicensePlanFromAccount
+    - A12.revokeLicensePlanFromSpace
+    - A12.updateBaselineLicensePlanOnAccount
+    - A13.createLicensePlan
+    - A13.deleteLicensePlan
+    - A13.updateLicensePlan
+    - A13.adminLicensePolicyDeleteCredentialRule
+    - A13.adminLicensePolicyUpdateCredentialRule
+    - A13.adminLicensePolicyCreateCredentialRule
+    - A14.adminUpdateSpaceVisibility
+    - A15.getAccessPrivilegesForPlatformSupport
+    - A15.updateDiscussion
+    - A15.deleteDiscussion
+    - A15.adminForumRemoveDiscussionCategory
+    - A16.createPlatformRolesAccess
+    - A17.updateActorNameID
+    - A17.updateSpace.nameID
+    - A19.audit-log-analyze
+    - A19.latestUserEmailChangeAuditEntry
+    - A19.userEmailChangeAuditEntries
+    - A20.usersInRole
+    - A20.usersInRoles
+    - A20.organizationsInRole
+    - A20.organizationsInRoles
+    - A20.actorsWithCredential
+    - A20.usersWithAuthorizationCredential
+    - A20b.usersInRole
+    - A20b.usersInRoles
+    - A20b.organizationsInRole
+    - A20b.organizationsInRoles
+    - A20b.actorsWithCredential
+    - A20b.usersWithAuthorizationCredential
+    - A21.updateUser#0
+    - A21.updateUser#1
+    - A22.assignRoleToUser
+    - A22.assignRoleToVirtualContributor
+    - A22.assignRoleToOrganization
+    - A22.assignRoleToUser#org-entry
+    - A22.assignRoleToUser#org-elevated
+    - A23.inviteForEntryRoleOnRoleSet
+    - A23.resendPlatformInvitation
+    - A23.assignRoleToUser
+    - A23.removeRoleFromUser
+    - A23.eventOnApplication
+    - A23.eventOnApplication#reject
+    - A23.deleteInvitation
+    - A23.deletePlatformInvitation
+    - A23.applications
+- **FEATURE_ORGANIZATION_CREATOR > can**
+    - A6.createOrganization
+
+### `platform-roles/roles/platform-users-admin.it-spec.ts`
+- **PLATFORM_USERS_ADMIN > cannot**
+    - A1.assignPlatformRoleToUser#0
+    - A1.removePlatformRoleFromUser#1
+    - A1.grantCredentialToActor
+    - A1.revokeCredentialFromActor
+    - A3.authorizationPolicyResetOnPlatform
+    - A3.aiServerAuthorizationPolicyReset
+    - A3.authorizationPolicyResetOnUser
+    - A3.authorizationPolicyResetOnOrganization
+    - A3.authorizationPolicyResetOnAccount
+    - A3.licenseResetOnAccount
+    - A3.authorizationPolicyResetAll
+    - A3.authorizationPlatformRolesAccessReset
+    - A3.authorizationPolicyResetToGlobalAdminsAccess
+    - A3.resetLicenseOnAccounts
+    - A6.createOrganization
+    - A6.deleteOrganization
+    - A7.updateInnovationPack
+    - A7.updateInnovationHub
+    - A7.createTemplate
+    - A7.createTemplateFromSpace
+    - A7.createTemplateFromContentSpace
+    - A7.updateTemplate
+    - A7.updateTemplateFromSpace
+    - A7.deleteTemplate
+    - A7.updateCallout
+    - A8.deleteCallout
+    - A8.deleteContribution
+    - A8.deleteSpace
+    - A8.deleteInnovationPack
+    - A8.deleteInnovationHub
+    - A8.updateCalloutPublishInfo
+    - A9.moveSpaceL1ToSpaceL0
+    - A9.moveSpaceL1ToSpaceL2
+    - A9.moveSpaceL2ToSpaceL1
+    - A9.convertSpaceL1ToSpaceL0
+    - A9.convertSpaceL2ToSpaceL1
+    - A9.convertSpaceL1ToSpaceL2
+    - A9.convertVirtualContributorToUseKnowledgeBase
+    - A9.moveContributionToCallout
+    - A9.transferCallout
+    - A9.transferInnovationHubToAccount
+    - A9.transferSpaceToAccount
+    - A9.transferInnovationPackToAccount
+    - A9.transferVirtualContributorToAccount
+    - A10.updatePlatformSettings
+    - A10.addIframeAllowedURL
+    - A10.removeIframeAllowedURL
+    - A10.addNotificationEmailToBlacklist
+    - A10.removeNotificationEmailFromBlacklist
+    - A10.setPlatformWellKnownVirtualContributor
+    - A11.cleanupCollections
+    - A11.updateAssistantActorCapabilities
+    - A11.adminInAppNotificationsPrune
+    - A11.adminUpdateContributorAvatars
+    - A11.adminUpdateGeoLocationData
+    - A11.adminSearchIngestFromScratch
+    - A11.migrateLegacyMemoContent
+    - A11.migrateLegacyWhiteboardContent
+    - A11.adminRepairTemplateFiles
+    - A11.refreshAllBodiesOfKnowledge
+    - A11.adminCommunicationEnsureAccessToCommunications
+    - A11.adminCommunicationRemoveOrphanedRoom
+    - A11.adminCommunicationUpdateRoomState
+    - A11.adminCommunicationMigrateOrphanedConversations
+    - A11.adminCommunicationSyncSpaceHierarchy
+    - A12.assignLicensePlanToAccount
+    - A12.assignLicensePlanToSpace
+    - A12.revokeLicensePlanFromAccount
+    - A12.revokeLicensePlanFromSpace
+    - A12.updateBaselineLicensePlanOnAccount
+    - A13.createLicensePlan
+    - A13.deleteLicensePlan
+    - A13.updateLicensePlan
+    - A13.adminLicensePolicyDeleteCredentialRule
+    - A13.adminLicensePolicyUpdateCredentialRule
+    - A13.adminLicensePolicyCreateCredentialRule
+    - A14.adminUpdateSpaceVisibility
+    - A15.getAccessPrivilegesForPlatformSupport
+    - A15.updateDiscussion
+    - A15.deleteDiscussion
+    - A15.adminForumRemoveDiscussionCategory
+    - A16.createPlatformRolesAccess
+    - A17.updateActorNameID
+    - A17.updateSpace.nameID
+    - A19.audit-log-analyze
+    - A19.latestUserEmailChangeAuditEntry
+    - A19.userEmailChangeAuditEntries
+    - A20.usersInRole
+    - A20.usersInRoles
+    - A20.organizationsInRole
+    - A20.organizationsInRoles
+    - A20.actorsWithCredential
+    - A20.usersWithAuthorizationCredential
+    - A21.updateUser#0
+    - A21.updateUser#1
+    - A22.assignRoleToUser
+    - A22.assignRoleToVirtualContributor
+    - A22.assignRoleToOrganization
+    - A22.assignRoleToUser#org-entry
+    - A22.assignRoleToUser#org-elevated
+    - A23.inviteForEntryRoleOnRoleSet
+    - A23.resendPlatformInvitation
+    - A23.assignRoleToUser
+    - A23.removeRoleFromUser
+    - A23.eventOnApplication
+    - A23.eventOnApplication#reject
+    - A23.deleteInvitation
+    - A23.deletePlatformInvitation
+    - A23.applications
+- **PLATFORM_USERS_ADMIN > can**
+    - A2.assignPlatformRoleToUser
+    - A2.removePlatformRoleFromUser
+    - A2.assignPlatformRoleToOrganization
+    - A2.removePlatformRoleFromOrganization
+    - A4.adminUserEmailChange
+    - A4.adminUserEmailChangeDriftResolve
+    - A5.deleteUser
+    - A5.adminIdentityDeleteKratosIdentity
+    - A5.adminUserAccountDelete
+    - A5.mcpApiKeys
+    - A5.adminRevokeMcpApiKey
+    - A20b.usersInRole
+    - A20b.usersInRoles
+    - A20b.organizationsInRole
+    - A20b.organizationsInRoles
+    - A20b.actorsWithCredential
+    - A20b.usersWithAuthorizationCredential
+
+### `platform-roles/roles/feature-vc-campaign.it-spec.ts`
+- **FEATURE_VC_CAMPAIGN > cannot**
+    - A1.assignPlatformRoleToUser#0
+    - A1.removePlatformRoleFromUser#1
+    - A1.grantCredentialToActor
+    - A1.revokeCredentialFromActor
+    - A2.assignPlatformRoleToUser
+    - A2.removePlatformRoleFromUser
+    - A2.assignPlatformRoleToOrganization
+    - A2.removePlatformRoleFromOrganization
+    - A3.authorizationPolicyResetOnPlatform
+    - A3.aiServerAuthorizationPolicyReset
+    - A3.authorizationPolicyResetOnUser
+    - A3.authorizationPolicyResetOnOrganization
+    - A3.authorizationPolicyResetOnAccount
+    - A3.licenseResetOnAccount
+    - A3.authorizationPolicyResetAll
+    - A3.authorizationPlatformRolesAccessReset
+    - A3.authorizationPolicyResetToGlobalAdminsAccess
+    - A3.resetLicenseOnAccounts
+    - A4.adminUserEmailChange
+    - A4.adminUserEmailChangeDriftResolve
+    - A5.deleteUser
+    - A5.adminIdentityDeleteKratosIdentity
+    - A5.adminUserAccountDelete
+    - A5.mcpApiKeys
+    - A5.adminRevokeMcpApiKey
+    - A6.createOrganization
+    - A6.deleteOrganization
+    - A7.updateInnovationPack
+    - A7.updateInnovationHub
+    - A7.createTemplate
+    - A7.createTemplateFromSpace
+    - A7.createTemplateFromContentSpace
+    - A7.updateTemplate
+    - A7.updateTemplateFromSpace
+    - A7.deleteTemplate
+    - A7.updateCallout
+    - A8.deleteCallout
+    - A8.deleteContribution
+    - A8.deleteSpace
+    - A8.deleteInnovationPack
+    - A8.deleteInnovationHub
+    - A8.updateCalloutPublishInfo
+    - A9.moveSpaceL1ToSpaceL0
+    - A9.moveSpaceL1ToSpaceL2
+    - A9.moveSpaceL2ToSpaceL1
+    - A9.convertSpaceL1ToSpaceL0
+    - A9.convertSpaceL2ToSpaceL1
+    - A9.convertSpaceL1ToSpaceL2
+    - A9.convertVirtualContributorToUseKnowledgeBase
+    - A9.moveContributionToCallout
+    - A9.transferCallout
+    - A9.transferInnovationHubToAccount
+    - A9.transferSpaceToAccount
+    - A9.transferInnovationPackToAccount
+    - A9.transferVirtualContributorToAccount
+    - A10.updatePlatformSettings
+    - A10.addIframeAllowedURL
+    - A10.removeIframeAllowedURL
+    - A10.addNotificationEmailToBlacklist
+    - A10.removeNotificationEmailFromBlacklist
+    - A10.setPlatformWellKnownVirtualContributor
+    - A11.cleanupCollections
+    - A11.updateAssistantActorCapabilities
+    - A11.adminInAppNotificationsPrune
+    - A11.adminUpdateContributorAvatars
+    - A11.adminUpdateGeoLocationData
+    - A11.adminSearchIngestFromScratch
+    - A11.migrateLegacyMemoContent
+    - A11.migrateLegacyWhiteboardContent
+    - A11.adminRepairTemplateFiles
+    - A11.refreshAllBodiesOfKnowledge
+    - A11.adminCommunicationEnsureAccessToCommunications
+    - A11.adminCommunicationRemoveOrphanedRoom
+    - A11.adminCommunicationUpdateRoomState
+    - A11.adminCommunicationMigrateOrphanedConversations
+    - A11.adminCommunicationSyncSpaceHierarchy
+    - A12.assignLicensePlanToAccount
+    - A12.assignLicensePlanToSpace
+    - A12.revokeLicensePlanFromAccount
+    - A12.revokeLicensePlanFromSpace
+    - A12.updateBaselineLicensePlanOnAccount
+    - A13.createLicensePlan
+    - A13.deleteLicensePlan
+    - A13.updateLicensePlan
+    - A13.adminLicensePolicyDeleteCredentialRule
+    - A13.adminLicensePolicyUpdateCredentialRule
+    - A13.adminLicensePolicyCreateCredentialRule
+    - A14.adminUpdateSpaceVisibility
+    - A15.getAccessPrivilegesForPlatformSupport
+    - A15.updateDiscussion
+    - A15.deleteDiscussion
+    - A15.adminForumRemoveDiscussionCategory
+    - A16.createPlatformRolesAccess
+    - A17.updateActorNameID
+    - A17.updateSpace.nameID
+    - A19.audit-log-analyze
+    - A19.latestUserEmailChangeAuditEntry
+    - A19.userEmailChangeAuditEntries
+    - A20.usersInRole
+    - A20.usersInRoles
+    - A20.organizationsInRole
+    - A20.organizationsInRoles
+    - A20.actorsWithCredential
+    - A20.usersWithAuthorizationCredential
+    - A20b.usersInRole
+    - A20b.usersInRoles
+    - A20b.organizationsInRole
+    - A20b.organizationsInRoles
+    - A20b.actorsWithCredential
+    - A20b.usersWithAuthorizationCredential
+    - A21.updateUser#0
+    - A21.updateUser#1
+    - A22.assignRoleToUser
+    - A22.assignRoleToVirtualContributor
+    - A22.assignRoleToOrganization
+    - A22.assignRoleToUser#org-entry
+    - A22.assignRoleToUser#org-elevated
+    - A23.inviteForEntryRoleOnRoleSet
+    - A23.resendPlatformInvitation
+    - A23.assignRoleToUser
+    - A23.removeRoleFromUser
+    - A23.eventOnApplication
+    - A23.eventOnApplication#reject
+    - A23.deleteInvitation
+    - A23.deletePlatformInvitation
+    - A23.applications
+
+### `platform-roles/roles/platform-resource-admin.it-spec.ts`
+- **PLATFORM_RESOURCE_ADMIN > cannot**
+    - A1.assignPlatformRoleToUser#0
+    - A1.removePlatformRoleFromUser#1
+    - A1.grantCredentialToActor
+    - A1.revokeCredentialFromActor
+    - A2.assignPlatformRoleToUser
+    - A2.removePlatformRoleFromUser
+    - A2.assignPlatformRoleToOrganization
+    - A2.removePlatformRoleFromOrganization
+    - A3.authorizationPolicyResetOnPlatform
+    - A3.aiServerAuthorizationPolicyReset
+    - A3.authorizationPolicyResetOnUser
+    - A3.authorizationPolicyResetOnOrganization
+    - A3.authorizationPolicyResetOnAccount
+    - A3.licenseResetOnAccount
+    - A3.authorizationPolicyResetAll
+    - A3.authorizationPlatformRolesAccessReset
+    - A3.authorizationPolicyResetToGlobalAdminsAccess
+    - A3.resetLicenseOnAccounts
+    - A4.adminUserEmailChange
+    - A4.adminUserEmailChangeDriftResolve
+    - A5.deleteUser
+    - A5.adminIdentityDeleteKratosIdentity
+    - A5.adminUserAccountDelete
+    - A5.mcpApiKeys
+    - A5.adminRevokeMcpApiKey
+    - A6.createOrganization
+    - A6.deleteOrganization
+    - A7.updateInnovationPack
+    - A7.updateInnovationHub
+    - A7.createTemplate
+    - A7.createTemplateFromSpace
+    - A7.createTemplateFromContentSpace
+    - A7.updateTemplate
+    - A7.updateTemplateFromSpace
+    - A7.deleteTemplate
+    - A7.updateCallout
+    - A8.deleteCallout
+    - A8.deleteContribution
+    - A8.deleteSpace
+    - A8.deleteInnovationPack
+    - A8.deleteInnovationHub
+    - A10.updatePlatformSettings
+    - A10.addIframeAllowedURL
+    - A10.removeIframeAllowedURL
+    - A10.addNotificationEmailToBlacklist
+    - A10.removeNotificationEmailFromBlacklist
+    - A10.setPlatformWellKnownVirtualContributor
+    - A11.cleanupCollections
+    - A11.updateAssistantActorCapabilities
+    - A11.adminInAppNotificationsPrune
+    - A11.adminUpdateContributorAvatars
+    - A11.adminUpdateGeoLocationData
+    - A11.adminSearchIngestFromScratch
+    - A11.migrateLegacyMemoContent
+    - A11.migrateLegacyWhiteboardContent
+    - A11.adminRepairTemplateFiles
+    - A11.refreshAllBodiesOfKnowledge
+    - A11.adminCommunicationEnsureAccessToCommunications
+    - A11.adminCommunicationRemoveOrphanedRoom
+    - A11.adminCommunicationUpdateRoomState
+    - A11.adminCommunicationMigrateOrphanedConversations
+    - A11.adminCommunicationSyncSpaceHierarchy
+    - A12.assignLicensePlanToAccount
+    - A12.assignLicensePlanToSpace
+    - A12.revokeLicensePlanFromAccount
+    - A12.revokeLicensePlanFromSpace
+    - A12.updateBaselineLicensePlanOnAccount
+    - A13.createLicensePlan
+    - A13.deleteLicensePlan
+    - A13.updateLicensePlan
+    - A13.adminLicensePolicyDeleteCredentialRule
+    - A13.adminLicensePolicyUpdateCredentialRule
+    - A13.adminLicensePolicyCreateCredentialRule
+    - A14.adminUpdateSpaceVisibility
+    - A15.getAccessPrivilegesForPlatformSupport
+    - A15.updateDiscussion
+    - A15.deleteDiscussion
+    - A15.adminForumRemoveDiscussionCategory
+    - A16.createPlatformRolesAccess
+    - A17.updateActorNameID
+    - A17.updateSpace.nameID
+    - A19.audit-log-analyze
+    - A19.latestUserEmailChangeAuditEntry
+    - A19.userEmailChangeAuditEntries
+    - A20.usersInRole
+    - A20.usersInRoles
+    - A20.organizationsInRole
+    - A20.organizationsInRoles
+    - A20.actorsWithCredential
+    - A20.usersWithAuthorizationCredential
+    - A20b.usersInRole
+    - A20b.usersInRoles
+    - A20b.organizationsInRole
+    - A20b.organizationsInRoles
+    - A20b.actorsWithCredential
+    - A20b.usersWithAuthorizationCredential
+    - A21.updateUser#0
+    - A21.updateUser#1
+    - A22.assignRoleToUser
+    - A22.assignRoleToVirtualContributor
+    - A22.assignRoleToOrganization
+    - A22.assignRoleToUser#org-entry
+    - A22.assignRoleToUser#org-elevated
+    - A23.inviteForEntryRoleOnRoleSet
+    - A23.resendPlatformInvitation
+    - A23.assignRoleToUser
+    - A23.removeRoleFromUser
+    - A23.eventOnApplication
+    - A23.eventOnApplication#reject
+    - A23.deleteInvitation
+    - A23.deletePlatformInvitation
+    - A23.applications
+- **PLATFORM_RESOURCE_ADMIN > can**
+    - A8.updateCalloutPublishInfo
+    - A9.moveSpaceL1ToSpaceL0
+    - A9.moveSpaceL1ToSpaceL2
+    - A9.moveSpaceL2ToSpaceL1
+    - A9.convertSpaceL1ToSpaceL0
+    - A9.convertSpaceL2ToSpaceL1
+    - A9.convertSpaceL1ToSpaceL2
+    - A9.convertVirtualContributorToUseKnowledgeBase
+    - A9.moveContributionToCallout
+    - A9.transferCallout
+    - A9.transferInnovationHubToAccount
+    - A9.transferSpaceToAccount
+    - A9.transferInnovationPackToAccount
+    - A9.transferVirtualContributorToAccount
+
+### `platform-roles/roles/platform-settings-admin.it-spec.ts`
+- **PLATFORM_SETTINGS_ADMIN > cannot**
+    - A1.assignPlatformRoleToUser#0
+    - A1.removePlatformRoleFromUser#1
+    - A1.grantCredentialToActor
+    - A1.revokeCredentialFromActor
+    - A2.assignPlatformRoleToUser
+    - A2.removePlatformRoleFromUser
+    - A2.assignPlatformRoleToOrganization
+    - A2.removePlatformRoleFromOrganization
+    - A3.authorizationPolicyResetOnPlatform
+    - A3.aiServerAuthorizationPolicyReset
+    - A3.authorizationPolicyResetOnUser
+    - A3.authorizationPolicyResetOnOrganization
+    - A3.authorizationPolicyResetOnAccount
+    - A3.licenseResetOnAccount
+    - A3.authorizationPolicyResetAll
+    - A3.authorizationPlatformRolesAccessReset
+    - A3.authorizationPolicyResetToGlobalAdminsAccess
+    - A3.resetLicenseOnAccounts
+    - A4.adminUserEmailChange
+    - A4.adminUserEmailChangeDriftResolve
+    - A5.deleteUser
+    - A5.adminIdentityDeleteKratosIdentity
+    - A5.adminUserAccountDelete
+    - A5.mcpApiKeys
+    - A5.adminRevokeMcpApiKey
+    - A6.createOrganization
+    - A6.deleteOrganization
+    - A7.updateInnovationPack
+    - A7.updateInnovationHub
+    - A7.createTemplate
+    - A7.createTemplateFromSpace
+    - A7.createTemplateFromContentSpace
+    - A7.updateTemplate
+    - A7.updateTemplateFromSpace
+    - A7.deleteTemplate
+    - A7.updateCallout
+    - A8.deleteCallout
+    - A8.deleteContribution
+    - A8.deleteSpace
+    - A8.deleteInnovationPack
+    - A8.deleteInnovationHub
+    - A8.updateCalloutPublishInfo
+    - A9.moveSpaceL1ToSpaceL0
+    - A9.moveSpaceL1ToSpaceL2
+    - A9.moveSpaceL2ToSpaceL1
+    - A9.convertSpaceL1ToSpaceL0
+    - A9.convertSpaceL2ToSpaceL1
+    - A9.convertSpaceL1ToSpaceL2
+    - A9.convertVirtualContributorToUseKnowledgeBase
+    - A9.moveContributionToCallout
+    - A9.transferCallout
+    - A9.transferInnovationHubToAccount
+    - A9.transferSpaceToAccount
+    - A9.transferInnovationPackToAccount
+    - A9.transferVirtualContributorToAccount
+    - A11.cleanupCollections
+    - A11.updateAssistantActorCapabilities
+    - A11.adminInAppNotificationsPrune
+    - A11.adminUpdateContributorAvatars
+    - A11.adminUpdateGeoLocationData
+    - A11.adminSearchIngestFromScratch
+    - A11.migrateLegacyMemoContent
+    - A11.migrateLegacyWhiteboardContent
+    - A11.adminRepairTemplateFiles
+    - A11.refreshAllBodiesOfKnowledge
+    - A11.adminCommunicationEnsureAccessToCommunications
+    - A11.adminCommunicationRemoveOrphanedRoom
+    - A11.adminCommunicationUpdateRoomState
+    - A11.adminCommunicationMigrateOrphanedConversations
+    - A11.adminCommunicationSyncSpaceHierarchy
+    - A12.assignLicensePlanToAccount
+    - A12.assignLicensePlanToSpace
+    - A12.revokeLicensePlanFromAccount
+    - A12.revokeLicensePlanFromSpace
+    - A12.updateBaselineLicensePlanOnAccount
+    - A14.adminUpdateSpaceVisibility
+    - A15.getAccessPrivilegesForPlatformSupport
+    - A15.updateDiscussion
+    - A15.deleteDiscussion
+    - A15.adminForumRemoveDiscussionCategory
+    - A16.createPlatformRolesAccess
+    - A17.updateActorNameID
+    - A17.updateSpace.nameID
+    - A19.audit-log-analyze
+    - A19.latestUserEmailChangeAuditEntry
+    - A19.userEmailChangeAuditEntries
+    - A20.usersInRole
+    - A20.usersInRoles
+    - A20.organizationsInRole
+    - A20.organizationsInRoles
+    - A20.actorsWithCredential
+    - A20.usersWithAuthorizationCredential
+    - A20b.usersInRole
+    - A20b.usersInRoles
+    - A20b.organizationsInRole
+    - A20b.organizationsInRoles
+    - A20b.actorsWithCredential
+    - A20b.usersWithAuthorizationCredential
+    - A21.updateUser#0
+    - A21.updateUser#1
+    - A22.assignRoleToUser
+    - A22.assignRoleToVirtualContributor
+    - A22.assignRoleToOrganization
+    - A22.assignRoleToUser#org-entry
+    - A22.assignRoleToUser#org-elevated
+    - A23.inviteForEntryRoleOnRoleSet
+    - A23.resendPlatformInvitation
+    - A23.assignRoleToUser
+    - A23.removeRoleFromUser
+    - A23.eventOnApplication
+    - A23.eventOnApplication#reject
+    - A23.deleteInvitation
+    - A23.deletePlatformInvitation
+    - A23.applications
+- **PLATFORM_SETTINGS_ADMIN > can**
+    - A10.updatePlatformSettings
+    - A10.addIframeAllowedURL
+    - A10.removeIframeAllowedURL
+    - A10.addNotificationEmailToBlacklist
+    - A10.removeNotificationEmailFromBlacklist
+    - A10.setPlatformWellKnownVirtualContributor
+    - A13.createLicensePlan
+    - A13.deleteLicensePlan
+    - A13.updateLicensePlan
+    - A13.adminLicensePolicyDeleteCredentialRule
+    - A13.adminLicensePolicyUpdateCredentialRule
+    - A13.adminLicensePolicyCreateCredentialRule
+
+### `platform-roles/roles/feature-virtual-assistant.it-spec.ts`
+- **FEATURE_VIRTUAL_ASSISTANT > cannot**
+    - A1.assignPlatformRoleToUser#0
+    - A1.removePlatformRoleFromUser#1
+    - A1.grantCredentialToActor
+    - A1.revokeCredentialFromActor
+    - A2.assignPlatformRoleToUser
+    - A2.removePlatformRoleFromUser
+    - A2.assignPlatformRoleToOrganization
+    - A2.removePlatformRoleFromOrganization
+    - A3.authorizationPolicyResetOnPlatform
+    - A3.aiServerAuthorizationPolicyReset
+    - A3.authorizationPolicyResetOnUser
+    - A3.authorizationPolicyResetOnOrganization
+    - A3.authorizationPolicyResetOnAccount
+    - A3.licenseResetOnAccount
+    - A3.authorizationPolicyResetAll
+    - A3.authorizationPlatformRolesAccessReset
+    - A3.authorizationPolicyResetToGlobalAdminsAccess
+    - A3.resetLicenseOnAccounts
+    - A4.adminUserEmailChange
+    - A4.adminUserEmailChangeDriftResolve
+    - A5.deleteUser
+    - A5.adminIdentityDeleteKratosIdentity
+    - A5.adminUserAccountDelete
+    - A5.mcpApiKeys
+    - A5.adminRevokeMcpApiKey
+    - A6.createOrganization
+    - A6.deleteOrganization
+    - A7.updateInnovationPack
+    - A7.updateInnovationHub
+    - A7.createTemplate
+    - A7.createTemplateFromSpace
+    - A7.createTemplateFromContentSpace
+    - A7.updateTemplate
+    - A7.updateTemplateFromSpace
+    - A7.deleteTemplate
+    - A7.updateCallout
+    - A8.deleteCallout
+    - A8.deleteContribution
+    - A8.deleteSpace
+    - A8.deleteInnovationPack
+    - A8.deleteInnovationHub
+    - A8.updateCalloutPublishInfo
+    - A9.moveSpaceL1ToSpaceL0
+    - A9.moveSpaceL1ToSpaceL2
+    - A9.moveSpaceL2ToSpaceL1
+    - A9.convertSpaceL1ToSpaceL0
+    - A9.convertSpaceL2ToSpaceL1
+    - A9.convertSpaceL1ToSpaceL2
+    - A9.convertVirtualContributorToUseKnowledgeBase
+    - A9.moveContributionToCallout
+    - A9.transferCallout
+    - A9.transferInnovationHubToAccount
+    - A9.transferSpaceToAccount
+    - A9.transferInnovationPackToAccount
+    - A9.transferVirtualContributorToAccount
+    - A10.updatePlatformSettings
+    - A10.addIframeAllowedURL
+    - A10.removeIframeAllowedURL
+    - A10.addNotificationEmailToBlacklist
+    - A10.removeNotificationEmailFromBlacklist
+    - A10.setPlatformWellKnownVirtualContributor
+    - A11.cleanupCollections
+    - A11.updateAssistantActorCapabilities
+    - A11.adminInAppNotificationsPrune
+    - A11.adminUpdateContributorAvatars
+    - A11.adminUpdateGeoLocationData
+    - A11.adminSearchIngestFromScratch
+    - A11.migrateLegacyMemoContent
+    - A11.migrateLegacyWhiteboardContent
+    - A11.adminRepairTemplateFiles
+    - A11.refreshAllBodiesOfKnowledge
+    - A11.adminCommunicationEnsureAccessToCommunications
+    - A11.adminCommunicationRemoveOrphanedRoom
+    - A11.adminCommunicationUpdateRoomState
+    - A11.adminCommunicationMigrateOrphanedConversations
+    - A11.adminCommunicationSyncSpaceHierarchy
+    - A12.assignLicensePlanToAccount
+    - A12.assignLicensePlanToSpace
+    - A12.revokeLicensePlanFromAccount
+    - A12.revokeLicensePlanFromSpace
+    - A12.updateBaselineLicensePlanOnAccount
+    - A13.createLicensePlan
+    - A13.deleteLicensePlan
+    - A13.updateLicensePlan
+    - A13.adminLicensePolicyDeleteCredentialRule
+    - A13.adminLicensePolicyUpdateCredentialRule
+    - A13.adminLicensePolicyCreateCredentialRule
+    - A14.adminUpdateSpaceVisibility
+    - A15.getAccessPrivilegesForPlatformSupport
+    - A15.updateDiscussion
+    - A15.deleteDiscussion
+    - A15.adminForumRemoveDiscussionCategory
+    - A16.createPlatformRolesAccess
+    - A17.updateActorNameID
+    - A17.updateSpace.nameID
+    - A19.audit-log-analyze
+    - A19.latestUserEmailChangeAuditEntry
+    - A19.userEmailChangeAuditEntries
+    - A20.usersInRole
+    - A20.usersInRoles
+    - A20.organizationsInRole
+    - A20.organizationsInRoles
+    - A20.actorsWithCredential
+    - A20.usersWithAuthorizationCredential
+    - A20b.usersInRole
+    - A20b.usersInRoles
+    - A20b.organizationsInRole
+    - A20b.organizationsInRoles
+    - A20b.actorsWithCredential
+    - A20b.usersWithAuthorizationCredential
+    - A21.updateUser#0
+    - A21.updateUser#1
+    - A22.assignRoleToUser
+    - A22.assignRoleToVirtualContributor
+    - A22.assignRoleToOrganization
+    - A22.assignRoleToUser#org-entry
+    - A22.assignRoleToUser#org-elevated
+    - A23.inviteForEntryRoleOnRoleSet
+    - A23.resendPlatformInvitation
+    - A23.assignRoleToUser
+    - A23.removeRoleFromUser
+    - A23.eventOnApplication
+    - A23.eventOnApplication#reject
+    - A23.deleteInvitation
+    - A23.deletePlatformInvitation
+    - A23.applications
+
+### `platform-roles/roles/platform-audit-reader.it-spec.ts`
+- **PLATFORM_AUDIT_READER > cannot**
+    - A1.assignPlatformRoleToUser#0
+    - A1.removePlatformRoleFromUser#1
+    - A1.grantCredentialToActor
+    - A1.revokeCredentialFromActor
+    - A2.assignPlatformRoleToUser
+    - A2.removePlatformRoleFromUser
+    - A2.assignPlatformRoleToOrganization
+    - A2.removePlatformRoleFromOrganization
+    - A3.authorizationPolicyResetOnPlatform
+    - A3.aiServerAuthorizationPolicyReset
+    - A3.authorizationPolicyResetOnUser
+    - A3.authorizationPolicyResetOnOrganization
+    - A3.authorizationPolicyResetOnAccount
+    - A3.licenseResetOnAccount
+    - A3.authorizationPolicyResetAll
+    - A3.authorizationPlatformRolesAccessReset
+    - A3.authorizationPolicyResetToGlobalAdminsAccess
+    - A3.resetLicenseOnAccounts
+    - A4.adminUserEmailChange
+    - A4.adminUserEmailChangeDriftResolve
+    - A5.deleteUser
+    - A5.adminIdentityDeleteKratosIdentity
+    - A5.adminUserAccountDelete
+    - A5.mcpApiKeys
+    - A5.adminRevokeMcpApiKey
+    - A6.createOrganization
+    - A6.deleteOrganization
+    - A7.updateInnovationPack
+    - A7.updateInnovationHub
+    - A7.createTemplate
+    - A7.createTemplateFromSpace
+    - A7.createTemplateFromContentSpace
+    - A7.updateTemplate
+    - A7.updateTemplateFromSpace
+    - A7.deleteTemplate
+    - A7.updateCallout
+    - A8.deleteCallout
+    - A8.deleteContribution
+    - A8.deleteSpace
+    - A8.deleteInnovationPack
+    - A8.deleteInnovationHub
+    - A8.updateCalloutPublishInfo
+    - A9.moveSpaceL1ToSpaceL0
+    - A9.moveSpaceL1ToSpaceL2
+    - A9.moveSpaceL2ToSpaceL1
+    - A9.convertSpaceL1ToSpaceL0
+    - A9.convertSpaceL2ToSpaceL1
+    - A9.convertSpaceL1ToSpaceL2
+    - A9.convertVirtualContributorToUseKnowledgeBase
+    - A9.moveContributionToCallout
+    - A9.transferCallout
+    - A9.transferInnovationHubToAccount
+    - A9.transferSpaceToAccount
+    - A9.transferInnovationPackToAccount
+    - A9.transferVirtualContributorToAccount
+    - A10.updatePlatformSettings
+    - A10.addIframeAllowedURL
+    - A10.removeIframeAllowedURL
+    - A10.addNotificationEmailToBlacklist
+    - A10.removeNotificationEmailFromBlacklist
+    - A10.setPlatformWellKnownVirtualContributor
+    - A11.cleanupCollections
+    - A11.updateAssistantActorCapabilities
+    - A11.adminInAppNotificationsPrune
+    - A11.adminUpdateContributorAvatars
+    - A11.adminUpdateGeoLocationData
+    - A11.adminSearchIngestFromScratch
+    - A11.migrateLegacyMemoContent
+    - A11.migrateLegacyWhiteboardContent
+    - A11.adminRepairTemplateFiles
+    - A11.refreshAllBodiesOfKnowledge
+    - A11.adminCommunicationEnsureAccessToCommunications
+    - A11.adminCommunicationRemoveOrphanedRoom
+    - A11.adminCommunicationUpdateRoomState
+    - A11.adminCommunicationMigrateOrphanedConversations
+    - A11.adminCommunicationSyncSpaceHierarchy
+    - A12.assignLicensePlanToAccount
+    - A12.assignLicensePlanToSpace
+    - A12.revokeLicensePlanFromAccount
+    - A12.revokeLicensePlanFromSpace
+    - A12.updateBaselineLicensePlanOnAccount
+    - A13.createLicensePlan
+    - A13.deleteLicensePlan
+    - A13.updateLicensePlan
+    - A13.adminLicensePolicyDeleteCredentialRule
+    - A13.adminLicensePolicyUpdateCredentialRule
+    - A13.adminLicensePolicyCreateCredentialRule
+    - A14.adminUpdateSpaceVisibility
+    - A15.getAccessPrivilegesForPlatformSupport
+    - A15.updateDiscussion
+    - A15.deleteDiscussion
+    - A15.adminForumRemoveDiscussionCategory
+    - A16.createPlatformRolesAccess
+    - A17.updateActorNameID
+    - A17.updateSpace.nameID
+    - A21.updateUser#0
+    - A21.updateUser#1
+    - A22.assignRoleToUser
+    - A22.assignRoleToVirtualContributor
+    - A22.assignRoleToOrganization
+    - A22.assignRoleToUser#org-entry
+    - A22.assignRoleToUser#org-elevated
+    - A23.inviteForEntryRoleOnRoleSet
+    - A23.resendPlatformInvitation
+    - A23.assignRoleToUser
+    - A23.removeRoleFromUser
+    - A23.eventOnApplication
+    - A23.eventOnApplication#reject
+    - A23.deleteInvitation
+    - A23.deletePlatformInvitation
+    - A23.applications
+- **PLATFORM_AUDIT_READER > can**
+    - A19.audit-log-analyze
+    - A19.latestUserEmailChangeAuditEntry
+    - A19.userEmailChangeAuditEntries
+    - A20.usersInRole
+    - A20.usersInRoles
+    - A20.organizationsInRole
+    - A20.organizationsInRoles
+    - A20.actorsWithCredential
+    - A20.usersWithAuthorizationCredential
+    - A20b.usersInRole
+    - A20b.usersInRoles
+    - A20b.organizationsInRole
+    - A20b.organizationsInRoles
+    - A20b.actorsWithCredential
+    - A20b.usersWithAuthorizationCredential
+
+### `platform-roles/holder-lists.it-spec.ts`
+- **H1.partitioned-read**
+    - positive: PLATFORM_ROLES_ADMIN reads usersInRole of a Platform role and finds the known holder
+    - negative: PLATFORM_CONTENT_FULL_ACCESS is denied usersInRole of a Platform role
+    - negative: PLATFORM_RESOURCE_ADMIN is denied usersInRole of a Platform role
+    - negative: PLATFORM_SETTINGS_ADMIN is denied usersInRole of a Platform role
+    - negative: PLATFORM_OPERATIONS_ADMIN is denied usersInRole of a Platform role
+    - negative: PLATFORM_USERS_ADMIN is denied usersInRole of a Platform role
+    - negative: PLATFORM_SUPPORT is denied usersInRole of a Platform role
+    - negative: PLATFORM_LICENSE_MANAGER is denied usersInRole of a Platform role
+    - negative: PLATFORM_SPACES_READER is denied usersInRole of a Platform role
+    - positive: PLATFORM_AUDIT_READER reads usersInRole of a Platform role and finds the known holder
+    - negative: FEATURE_BETA_TESTER is denied usersInRole of a Platform role
+    - negative: FEATURE_VIRTUAL_ASSISTANT is denied usersInRole of a Platform role
+    - negative: FEATURE_ORGANIZATION_CREATOR is denied usersInRole of a Platform role
+    - negative: FEATURE_VC_CAMPAIGN is denied usersInRole of a Platform role
+    - positive: PLATFORM_ROLES_ADMIN reads usersInRoles of a Platform role and finds the known holder
+    - negative: PLATFORM_CONTENT_FULL_ACCESS is denied usersInRoles of a Platform role
+    - negative: PLATFORM_RESOURCE_ADMIN is denied usersInRoles of a Platform role
+    - negative: PLATFORM_SETTINGS_ADMIN is denied usersInRoles of a Platform role
+    - negative: PLATFORM_OPERATIONS_ADMIN is denied usersInRoles of a Platform role
+    - negative: PLATFORM_USERS_ADMIN is denied usersInRoles of a Platform role
+    - negative: PLATFORM_SUPPORT is denied usersInRoles of a Platform role
+    - negative: PLATFORM_LICENSE_MANAGER is denied usersInRoles of a Platform role
+    - negative: PLATFORM_SPACES_READER is denied usersInRoles of a Platform role
+    - positive: PLATFORM_AUDIT_READER reads usersInRoles of a Platform role and finds the known holder
+    - negative: FEATURE_BETA_TESTER is denied usersInRoles of a Platform role
+    - negative: FEATURE_VIRTUAL_ASSISTANT is denied usersInRoles of a Platform role
+    - negative: FEATURE_ORGANIZATION_CREATOR is denied usersInRoles of a Platform role
+    - negative: FEATURE_VC_CAMPAIGN is denied usersInRoles of a Platform role
+    - positive: PLATFORM_ROLES_ADMIN reads organizationsInRole of a Platform role and finds it empty
+    - negative: PLATFORM_CONTENT_FULL_ACCESS is denied organizationsInRole of a Platform role
+    - negative: PLATFORM_RESOURCE_ADMIN is denied organizationsInRole of a Platform role
+    - negative: PLATFORM_SETTINGS_ADMIN is denied organizationsInRole of a Platform role
+    - negative: PLATFORM_OPERATIONS_ADMIN is denied organizationsInRole of a Platform role
+    - negative: PLATFORM_USERS_ADMIN is denied organizationsInRole of a Platform role
+    - negative: PLATFORM_SUPPORT is denied organizationsInRole of a Platform role
+    - negative: PLATFORM_LICENSE_MANAGER is denied organizationsInRole of a Platform role
+    - negative: PLATFORM_SPACES_READER is denied organizationsInRole of a Platform role
+    - positive: PLATFORM_AUDIT_READER reads organizationsInRole of a Platform role and finds it empty
+    - negative: FEATURE_BETA_TESTER is denied organizationsInRole of a Platform role
+    - negative: FEATURE_VIRTUAL_ASSISTANT is denied organizationsInRole of a Platform role
+    - negative: FEATURE_ORGANIZATION_CREATOR is denied organizationsInRole of a Platform role
+    - negative: FEATURE_VC_CAMPAIGN is denied organizationsInRole of a Platform role
+    - positive: PLATFORM_ROLES_ADMIN reads organizationsInRoles of a Platform role and finds it empty
+    - negative: PLATFORM_CONTENT_FULL_ACCESS is denied organizationsInRoles of a Platform role
+    - negative: PLATFORM_RESOURCE_ADMIN is denied organizationsInRoles of a Platform role
+    - negative: PLATFORM_SETTINGS_ADMIN is denied organizationsInRoles of a Platform role
+    - negative: PLATFORM_OPERATIONS_ADMIN is denied organizationsInRoles of a Platform role
+    - negative: PLATFORM_USERS_ADMIN is denied organizationsInRoles of a Platform role
+    - negative: PLATFORM_SUPPORT is denied organizationsInRoles of a Platform role
+    - negative: PLATFORM_LICENSE_MANAGER is denied organizationsInRoles of a Platform role
+    - negative: PLATFORM_SPACES_READER is denied organizationsInRoles of a Platform role
+    - positive: PLATFORM_AUDIT_READER reads organizationsInRoles of a Platform role and finds it empty
+    - negative: FEATURE_BETA_TESTER is denied organizationsInRoles of a Platform role
+    - negative: FEATURE_VIRTUAL_ASSISTANT is denied organizationsInRoles of a Platform role
+    - negative: FEATURE_ORGANIZATION_CREATOR is denied organizationsInRoles of a Platform role
+    - negative: FEATURE_VC_CAMPAIGN is denied organizationsInRoles of a Platform role
+    - positive: PLATFORM_ROLES_ADMIN reads usersInRole of a Feature role and finds the known holder
+    - negative: PLATFORM_CONTENT_FULL_ACCESS is denied usersInRole of a Feature role
+    - negative: PLATFORM_RESOURCE_ADMIN is denied usersInRole of a Feature role
+    - negative: PLATFORM_SETTINGS_ADMIN is denied usersInRole of a Feature role
+    - negative: PLATFORM_OPERATIONS_ADMIN is denied usersInRole of a Feature role
+    - positive: PLATFORM_USERS_ADMIN reads usersInRole of a Feature role and finds the known holder
+    - negative: PLATFORM_SUPPORT is denied usersInRole of a Feature role
+    - negative: PLATFORM_LICENSE_MANAGER is denied usersInRole of a Feature role
+    - negative: PLATFORM_SPACES_READER is denied usersInRole of a Feature role
+    - positive: PLATFORM_AUDIT_READER reads usersInRole of a Feature role and finds the known holder
+    - negative: FEATURE_BETA_TESTER is denied usersInRole of a Feature role
+    - negative: FEATURE_VIRTUAL_ASSISTANT is denied usersInRole of a Feature role
+    - negative: FEATURE_ORGANIZATION_CREATOR is denied usersInRole of a Feature role
+    - negative: FEATURE_VC_CAMPAIGN is denied usersInRole of a Feature role
+    - positive: PLATFORM_ROLES_ADMIN reads usersInRoles of a Feature role and finds the known holder
+    - negative: PLATFORM_CONTENT_FULL_ACCESS is denied usersInRoles of a Feature role
+    - negative: PLATFORM_RESOURCE_ADMIN is denied usersInRoles of a Feature role
+    - negative: PLATFORM_SETTINGS_ADMIN is denied usersInRoles of a Feature role
+    - negative: PLATFORM_OPERATIONS_ADMIN is denied usersInRoles of a Feature role
+    - positive: PLATFORM_USERS_ADMIN reads usersInRoles of a Feature role and finds the known holder
+    - negative: PLATFORM_SUPPORT is denied usersInRoles of a Feature role
+    - negative: PLATFORM_LICENSE_MANAGER is denied usersInRoles of a Feature role
+    - negative: PLATFORM_SPACES_READER is denied usersInRoles of a Feature role
+    - positive: PLATFORM_AUDIT_READER reads usersInRoles of a Feature role and finds the known holder
+    - negative: FEATURE_BETA_TESTER is denied usersInRoles of a Feature role
+    - negative: FEATURE_VIRTUAL_ASSISTANT is denied usersInRoles of a Feature role
+    - negative: FEATURE_ORGANIZATION_CREATOR is denied usersInRoles of a Feature role
+    - negative: FEATURE_VC_CAMPAIGN is denied usersInRoles of a Feature role
+    - positive: PLATFORM_ROLES_ADMIN reads organizationsInRole of a Feature role and finds the known holder
+    - negative: PLATFORM_CONTENT_FULL_ACCESS is denied organizationsInRole of a Feature role
+    - negative: PLATFORM_RESOURCE_ADMIN is denied organizationsInRole of a Feature role
+    - negative: PLATFORM_SETTINGS_ADMIN is denied organizationsInRole of a Feature role
+    - negative: PLATFORM_OPERATIONS_ADMIN is denied organizationsInRole of a Feature role
+    - positive: PLATFORM_USERS_ADMIN reads organizationsInRole of a Feature role and finds the known holder
+    - negative: PLATFORM_SUPPORT is denied organizationsInRole of a Feature role
+    - negative: PLATFORM_LICENSE_MANAGER is denied organizationsInRole of a Feature role
+    - negative: PLATFORM_SPACES_READER is denied organizationsInRole of a Feature role
+    - positive: PLATFORM_AUDIT_READER reads organizationsInRole of a Feature role and finds the known holder
+    - negative: FEATURE_BETA_TESTER is denied organizationsInRole of a Feature role
+    - negative: FEATURE_VIRTUAL_ASSISTANT is denied organizationsInRole of a Feature role
+    - negative: FEATURE_ORGANIZATION_CREATOR is denied organizationsInRole of a Feature role
+    - negative: FEATURE_VC_CAMPAIGN is denied organizationsInRole of a Feature role
+    - positive: PLATFORM_ROLES_ADMIN reads organizationsInRoles of a Feature role and finds the known holder
+    - negative: PLATFORM_CONTENT_FULL_ACCESS is denied organizationsInRoles of a Feature role
+    - negative: PLATFORM_RESOURCE_ADMIN is denied organizationsInRoles of a Feature role
+    - negative: PLATFORM_SETTINGS_ADMIN is denied organizationsInRoles of a Feature role
+    - negative: PLATFORM_OPERATIONS_ADMIN is denied organizationsInRoles of a Feature role
+    - positive: PLATFORM_USERS_ADMIN reads organizationsInRoles of a Feature role and finds the known holder
+    - negative: PLATFORM_SUPPORT is denied organizationsInRoles of a Feature role
+    - negative: PLATFORM_LICENSE_MANAGER is denied organizationsInRoles of a Feature role
+    - negative: PLATFORM_SPACES_READER is denied organizationsInRoles of a Feature role
+    - positive: PLATFORM_AUDIT_READER reads organizationsInRoles of a Feature role and finds the known holder
+    - negative: FEATURE_BETA_TESTER is denied organizationsInRoles of a Feature role
+    - negative: FEATURE_VIRTUAL_ASSISTANT is denied organizationsInRoles of a Feature role
+    - negative: FEATURE_ORGANIZATION_CREATOR is denied organizationsInRoles of a Feature role
+    - negative: FEATURE_VC_CAMPAIGN is denied organizationsInRoles of a Feature role
+- **H2.mixed-request-fails-closed**
+    - negative: Users Admin naming a Feature AND a Platform role in one usersInRoles request gets an authorization error and zero rows
+    - negative: Users Admin naming a Feature AND a Platform role in one organizationsInRoles request gets an authorization error and zero rows
+- **H3.denied-read-writes-no-audit-record**
+    - negative: the caller’s audit record count is identical before and after a denied holder-list read
+
+### `platform-roles/coverage-guard.it-spec.ts`
+- **coverage guard**
+    - every capability that runs has an invocation in _support/groups
+    - every invocation belongs to a capability row
+    - every scenario’s spec file exists
+    - every scenario is described in its named file, where that file exists
+    - every described scenario id has a row in scenarios.data.ts, naming that file
+    - the shared role-user list (lib) names exactly the roles of the capability table
+    - every role has its spec file, with a `can` block exactly when the role has positives to run
+    - the committed platform-roles-test-plan.md is what the generator renders
+    - LIVE: the platform role-set offers exactly the 14 target roles plus REGISTERED
+
+### `platform-roles/roles/platform-support.it-spec.ts`
+- **PLATFORM_SUPPORT > cannot**
+    - A1.assignPlatformRoleToUser#0
+    - A1.removePlatformRoleFromUser#1
+    - A1.grantCredentialToActor
+    - A1.revokeCredentialFromActor
+    - A2.assignPlatformRoleToUser
+    - A2.removePlatformRoleFromUser
+    - A2.assignPlatformRoleToOrganization
+    - A2.removePlatformRoleFromOrganization
+    - A3.authorizationPolicyResetOnPlatform
+    - A3.aiServerAuthorizationPolicyReset
+    - A3.authorizationPolicyResetOnUser
+    - A3.authorizationPolicyResetOnOrganization
+    - A3.authorizationPolicyResetOnAccount
+    - A3.licenseResetOnAccount
+    - A3.authorizationPolicyResetAll
+    - A3.authorizationPlatformRolesAccessReset
+    - A3.authorizationPolicyResetToGlobalAdminsAccess
+    - A3.resetLicenseOnAccounts
+    - A4.adminUserEmailChange
+    - A4.adminUserEmailChangeDriftResolve
+    - A5.deleteUser
+    - A5.adminIdentityDeleteKratosIdentity
+    - A5.adminUserAccountDelete
+    - A5.mcpApiKeys
+    - A5.adminRevokeMcpApiKey
+    - A8.deleteCallout
+    - A8.deleteContribution
+    - A8.deleteSpace
+    - A8.deleteInnovationPack
+    - A8.deleteInnovationHub
+    - A8.updateCalloutPublishInfo
+    - A9.moveSpaceL1ToSpaceL0
+    - A9.moveSpaceL1ToSpaceL2
+    - A9.moveSpaceL2ToSpaceL1
+    - A9.convertSpaceL1ToSpaceL0
+    - A9.convertSpaceL2ToSpaceL1
+    - A9.convertSpaceL1ToSpaceL2
+    - A9.convertVirtualContributorToUseKnowledgeBase
+    - A9.moveContributionToCallout
+    - A9.transferCallout
+    - A9.transferInnovationHubToAccount
+    - A9.transferSpaceToAccount
+    - A9.transferInnovationPackToAccount
+    - A9.transferVirtualContributorToAccount
+    - A10.updatePlatformSettings
+    - A10.addIframeAllowedURL
+    - A10.removeIframeAllowedURL
+    - A10.addNotificationEmailToBlacklist
+    - A10.removeNotificationEmailFromBlacklist
+    - A10.setPlatformWellKnownVirtualContributor
+    - A11.cleanupCollections
+    - A11.updateAssistantActorCapabilities
+    - A11.adminInAppNotificationsPrune
+    - A11.adminUpdateContributorAvatars
+    - A11.adminUpdateGeoLocationData
+    - A11.adminSearchIngestFromScratch
+    - A11.migrateLegacyMemoContent
+    - A11.migrateLegacyWhiteboardContent
+    - A11.adminRepairTemplateFiles
+    - A11.refreshAllBodiesOfKnowledge
+    - A11.adminCommunicationEnsureAccessToCommunications
+    - A11.adminCommunicationRemoveOrphanedRoom
+    - A11.adminCommunicationUpdateRoomState
+    - A11.adminCommunicationMigrateOrphanedConversations
+    - A11.adminCommunicationSyncSpaceHierarchy
+    - A12.assignLicensePlanToAccount
+    - A12.assignLicensePlanToSpace
+    - A12.revokeLicensePlanFromAccount
+    - A12.revokeLicensePlanFromSpace
+    - A12.updateBaselineLicensePlanOnAccount
+    - A13.createLicensePlan
+    - A13.deleteLicensePlan
+    - A13.updateLicensePlan
+    - A13.adminLicensePolicyDeleteCredentialRule
+    - A13.adminLicensePolicyUpdateCredentialRule
+    - A13.adminLicensePolicyCreateCredentialRule
+    - A14.adminUpdateSpaceVisibility
+    - A16.createPlatformRolesAccess
+    - A17.updateActorNameID
+    - A17.updateSpace.nameID
+    - A19.audit-log-analyze
+    - A19.latestUserEmailChangeAuditEntry
+    - A19.userEmailChangeAuditEntries
+    - A20.usersInRole
+    - A20.usersInRoles
+    - A20.organizationsInRole
+    - A20.organizationsInRoles
+    - A20.actorsWithCredential
+    - A20.usersWithAuthorizationCredential
+    - A20b.usersInRole
+    - A20b.usersInRoles
+    - A20b.organizationsInRole
+    - A20b.organizationsInRoles
+    - A20b.actorsWithCredential
+    - A20b.usersWithAuthorizationCredential
+    - A21.updateUser#0
+    - A21.updateUser#1
+    - A22.assignRoleToUser
+    - A22.assignRoleToVirtualContributor
+    - A22.assignRoleToOrganization
+    - A22.assignRoleToUser#org-entry
+    - A22.assignRoleToUser#org-elevated
+- **PLATFORM_SUPPORT > can**
+    - A6.createOrganization
+    - A6.deleteOrganization
+    - A7.updateInnovationPack
+    - A7.updateInnovationHub
+    - A7.createTemplate
+    - A7.createTemplateFromSpace
+    - A7.createTemplateFromContentSpace
+    - A7.updateTemplate
+    - A7.updateTemplateFromSpace
+    - A7.deleteTemplate
+    - A7.updateCallout
+    - A15.getAccessPrivilegesForPlatformSupport
+    - A15.updateDiscussion
+    - A15.deleteDiscussion
+    - A23.inviteForEntryRoleOnRoleSet
+    - A23.resendPlatformInvitation
+    - A23.assignRoleToUser
+    - A23.removeRoleFromUser
+    - A23.eventOnApplication
+    - A23.eventOnApplication#reject
+    - A23.deleteInvitation
+    - A23.deletePlatformInvitation
+    - A23.applications
+
+### `platform-roles/audit-trail.it-spec.ts`
+- **T1.audit-reader-alone**
+    - positive: Audit Reader reads latestUserEmailChangeAuditEntry and gets the known record
+    - positive: Audit Reader reads userEmailChangeAuditEntries and gets the known record
+    - positive: Audit Reader reads the MCP tool analyze_audit_log, with email addresses masked
+    - negative: PLATFORM_ROLES_ADMIN is denied latestUserEmailChangeAuditEntry
+    - negative: PLATFORM_ROLES_ADMIN is denied userEmailChangeAuditEntries
+    - negative: PLATFORM_ROLES_ADMIN is refused by the MCP tool analyze_audit_log and gets no records
+    - negative: PLATFORM_CONTENT_FULL_ACCESS is denied latestUserEmailChangeAuditEntry
+    - negative: PLATFORM_CONTENT_FULL_ACCESS is denied userEmailChangeAuditEntries
+    - negative: PLATFORM_CONTENT_FULL_ACCESS is refused by the MCP tool analyze_audit_log and gets no records
+    - negative: PLATFORM_RESOURCE_ADMIN is denied latestUserEmailChangeAuditEntry
+    - negative: PLATFORM_RESOURCE_ADMIN is denied userEmailChangeAuditEntries
+    - negative: PLATFORM_RESOURCE_ADMIN is refused by the MCP tool analyze_audit_log and gets no records
+    - negative: PLATFORM_SETTINGS_ADMIN is denied latestUserEmailChangeAuditEntry
+    - negative: PLATFORM_SETTINGS_ADMIN is denied userEmailChangeAuditEntries
+    - negative: PLATFORM_SETTINGS_ADMIN is refused by the MCP tool analyze_audit_log and gets no records
+    - negative: PLATFORM_OPERATIONS_ADMIN is denied latestUserEmailChangeAuditEntry
+    - negative: PLATFORM_OPERATIONS_ADMIN is denied userEmailChangeAuditEntries
+    - negative: PLATFORM_OPERATIONS_ADMIN is refused by the MCP tool analyze_audit_log and gets no records
+    - negative: PLATFORM_USERS_ADMIN is denied latestUserEmailChangeAuditEntry
+    - negative: PLATFORM_USERS_ADMIN is denied userEmailChangeAuditEntries
+    - negative: PLATFORM_USERS_ADMIN is refused by the MCP tool analyze_audit_log and gets no records
+    - negative: PLATFORM_SUPPORT is denied latestUserEmailChangeAuditEntry
+    - negative: PLATFORM_SUPPORT is denied userEmailChangeAuditEntries
+    - negative: PLATFORM_SUPPORT is refused by the MCP tool analyze_audit_log and gets no records
+    - negative: PLATFORM_LICENSE_MANAGER is denied latestUserEmailChangeAuditEntry
+    - negative: PLATFORM_LICENSE_MANAGER is denied userEmailChangeAuditEntries
+    - negative: PLATFORM_LICENSE_MANAGER is refused by the MCP tool analyze_audit_log and gets no records
+    - negative: PLATFORM_SPACES_READER is denied latestUserEmailChangeAuditEntry
+    - negative: PLATFORM_SPACES_READER is denied userEmailChangeAuditEntries
+    - negative: PLATFORM_SPACES_READER is refused by the MCP tool analyze_audit_log and gets no records
+    - negative: FEATURE_BETA_TESTER is denied latestUserEmailChangeAuditEntry
+    - negative: FEATURE_BETA_TESTER is denied userEmailChangeAuditEntries
+    - negative: FEATURE_BETA_TESTER is refused by the MCP tool analyze_audit_log and gets no records
+    - negative: FEATURE_VIRTUAL_ASSISTANT is denied latestUserEmailChangeAuditEntry
+    - negative: FEATURE_VIRTUAL_ASSISTANT is denied userEmailChangeAuditEntries
+    - negative: FEATURE_VIRTUAL_ASSISTANT is refused by the MCP tool analyze_audit_log and gets no records
+    - negative: FEATURE_ORGANIZATION_CREATOR is denied latestUserEmailChangeAuditEntry
+    - negative: FEATURE_ORGANIZATION_CREATOR is denied userEmailChangeAuditEntries
+    - negative: FEATURE_ORGANIZATION_CREATOR is refused by the MCP tool analyze_audit_log and gets no records
+    - negative: FEATURE_VC_CAMPAIGN is denied latestUserEmailChangeAuditEntry
+    - negative: FEATURE_VC_CAMPAIGN is denied userEmailChangeAuditEntries
+    - negative: FEATURE_VC_CAMPAIGN is refused by the MCP tool analyze_audit_log and gets no records
+- **T2.trail-is-unwritable**
+    - negative: no mutation accepts or returns a platform audit entry
+
+### `platform-roles/roles/platform-spaces-reader.it-spec.ts`
+- **PLATFORM_SPACES_READER > cannot**
+    - A1.assignPlatformRoleToUser#0
+    - A1.removePlatformRoleFromUser#1
+    - A1.grantCredentialToActor
+    - A1.revokeCredentialFromActor
+    - A2.assignPlatformRoleToUser
+    - A2.removePlatformRoleFromUser
+    - A2.assignPlatformRoleToOrganization
+    - A2.removePlatformRoleFromOrganization
+    - A3.authorizationPolicyResetOnPlatform
+    - A3.aiServerAuthorizationPolicyReset
+    - A3.authorizationPolicyResetOnUser
+    - A3.authorizationPolicyResetOnOrganization
+    - A3.authorizationPolicyResetOnAccount
+    - A3.licenseResetOnAccount
+    - A3.authorizationPolicyResetAll
+    - A3.authorizationPlatformRolesAccessReset
+    - A3.authorizationPolicyResetToGlobalAdminsAccess
+    - A3.resetLicenseOnAccounts
+    - A4.adminUserEmailChange
+    - A4.adminUserEmailChangeDriftResolve
+    - A5.deleteUser
+    - A5.adminIdentityDeleteKratosIdentity
+    - A5.adminUserAccountDelete
+    - A5.mcpApiKeys
+    - A5.adminRevokeMcpApiKey
+    - A6.createOrganization
+    - A6.deleteOrganization
+    - A7.updateInnovationPack
+    - A7.updateInnovationHub
+    - A7.createTemplate
+    - A7.createTemplateFromSpace
+    - A7.createTemplateFromContentSpace
+    - A7.updateTemplate
+    - A7.updateTemplateFromSpace
+    - A7.deleteTemplate
+    - A7.updateCallout
+    - A8.deleteCallout
+    - A8.deleteContribution
+    - A8.deleteSpace
+    - A8.deleteInnovationPack
+    - A8.deleteInnovationHub
+    - A8.updateCalloutPublishInfo
+    - A9.moveSpaceL1ToSpaceL0
+    - A9.moveSpaceL1ToSpaceL2
+    - A9.moveSpaceL2ToSpaceL1
+    - A9.convertSpaceL1ToSpaceL0
+    - A9.convertSpaceL2ToSpaceL1
+    - A9.convertSpaceL1ToSpaceL2
+    - A9.convertVirtualContributorToUseKnowledgeBase
+    - A9.moveContributionToCallout
+    - A9.transferCallout
+    - A9.transferInnovationHubToAccount
+    - A9.transferSpaceToAccount
+    - A9.transferInnovationPackToAccount
+    - A9.transferVirtualContributorToAccount
+    - A10.updatePlatformSettings
+    - A10.addIframeAllowedURL
+    - A10.removeIframeAllowedURL
+    - A10.addNotificationEmailToBlacklist
+    - A10.removeNotificationEmailFromBlacklist
+    - A10.setPlatformWellKnownVirtualContributor
+    - A11.cleanupCollections
+    - A11.updateAssistantActorCapabilities
+    - A11.adminInAppNotificationsPrune
+    - A11.adminUpdateContributorAvatars
+    - A11.adminUpdateGeoLocationData
+    - A11.adminSearchIngestFromScratch
+    - A11.migrateLegacyMemoContent
+    - A11.migrateLegacyWhiteboardContent
+    - A11.adminRepairTemplateFiles
+    - A11.refreshAllBodiesOfKnowledge
+    - A11.adminCommunicationEnsureAccessToCommunications
+    - A11.adminCommunicationRemoveOrphanedRoom
+    - A11.adminCommunicationUpdateRoomState
+    - A11.adminCommunicationMigrateOrphanedConversations
+    - A11.adminCommunicationSyncSpaceHierarchy
+    - A12.assignLicensePlanToAccount
+    - A12.assignLicensePlanToSpace
+    - A12.revokeLicensePlanFromAccount
+    - A12.revokeLicensePlanFromSpace
+    - A12.updateBaselineLicensePlanOnAccount
+    - A13.createLicensePlan
+    - A13.deleteLicensePlan
+    - A13.updateLicensePlan
+    - A13.adminLicensePolicyDeleteCredentialRule
+    - A13.adminLicensePolicyUpdateCredentialRule
+    - A13.adminLicensePolicyCreateCredentialRule
+    - A14.adminUpdateSpaceVisibility
+    - A15.getAccessPrivilegesForPlatformSupport
+    - A15.updateDiscussion
+    - A15.deleteDiscussion
+    - A15.adminForumRemoveDiscussionCategory
+    - A17.updateActorNameID
+    - A17.updateSpace.nameID
+    - A19.audit-log-analyze
+    - A19.latestUserEmailChangeAuditEntry
+    - A19.userEmailChangeAuditEntries
+    - A20.usersInRole
+    - A20.usersInRoles
+    - A20.organizationsInRole
+    - A20.organizationsInRoles
+    - A20.actorsWithCredential
+    - A20.usersWithAuthorizationCredential
+    - A20b.usersInRole
+    - A20b.usersInRoles
+    - A20b.organizationsInRole
+    - A20b.organizationsInRoles
+    - A20b.actorsWithCredential
+    - A20b.usersWithAuthorizationCredential
+    - A21.updateUser#0
+    - A21.updateUser#1
+    - A22.assignRoleToUser
+    - A22.assignRoleToVirtualContributor
+    - A22.assignRoleToOrganization
+    - A22.assignRoleToUser#org-entry
+    - A22.assignRoleToUser#org-elevated
+    - A23.inviteForEntryRoleOnRoleSet
+    - A23.resendPlatformInvitation
+    - A23.assignRoleToUser
+    - A23.removeRoleFromUser
+    - A23.eventOnApplication
+    - A23.eventOnApplication#reject
+    - A23.deleteInvitation
+    - A23.deletePlatformInvitation
+    - A23.applications
+- **PLATFORM_SPACES_READER > can**
+    - A16.createPlatformRolesAccess
+
+### `platform-roles/roles/platform-operations-admin.it-spec.ts`
+- **PLATFORM_OPERATIONS_ADMIN > cannot**
+    - A1.assignPlatformRoleToUser#0
+    - A1.removePlatformRoleFromUser#1
+    - A1.grantCredentialToActor
+    - A1.revokeCredentialFromActor
+    - A2.assignPlatformRoleToUser
+    - A2.removePlatformRoleFromUser
+    - A2.assignPlatformRoleToOrganization
+    - A2.removePlatformRoleFromOrganization
+    - A4.adminUserEmailChange
+    - A4.adminUserEmailChangeDriftResolve
+    - A5.deleteUser
+    - A5.adminIdentityDeleteKratosIdentity
+    - A5.adminUserAccountDelete
+    - A5.mcpApiKeys
+    - A5.adminRevokeMcpApiKey
+    - A6.createOrganization
+    - A6.deleteOrganization
+    - A7.updateInnovationPack
+    - A7.updateInnovationHub
+    - A7.createTemplate
+    - A7.createTemplateFromSpace
+    - A7.createTemplateFromContentSpace
+    - A7.updateTemplate
+    - A7.updateTemplateFromSpace
+    - A7.deleteTemplate
+    - A7.updateCallout
+    - A8.deleteCallout
+    - A8.deleteContribution
+    - A8.deleteSpace
+    - A8.deleteInnovationPack
+    - A8.deleteInnovationHub
+    - A8.updateCalloutPublishInfo
+    - A9.moveSpaceL1ToSpaceL0
+    - A9.moveSpaceL1ToSpaceL2
+    - A9.moveSpaceL2ToSpaceL1
+    - A9.convertSpaceL1ToSpaceL0
+    - A9.convertSpaceL2ToSpaceL1
+    - A9.convertSpaceL1ToSpaceL2
+    - A9.convertVirtualContributorToUseKnowledgeBase
+    - A9.moveContributionToCallout
+    - A9.transferCallout
+    - A9.transferInnovationHubToAccount
+    - A9.transferSpaceToAccount
+    - A9.transferInnovationPackToAccount
+    - A9.transferVirtualContributorToAccount
+    - A10.updatePlatformSettings
+    - A10.addIframeAllowedURL
+    - A10.removeIframeAllowedURL
+    - A10.addNotificationEmailToBlacklist
+    - A10.removeNotificationEmailFromBlacklist
+    - A10.setPlatformWellKnownVirtualContributor
+    - A12.assignLicensePlanToAccount
+    - A12.assignLicensePlanToSpace
+    - A12.revokeLicensePlanFromAccount
+    - A12.revokeLicensePlanFromSpace
+    - A12.updateBaselineLicensePlanOnAccount
+    - A13.createLicensePlan
+    - A13.deleteLicensePlan
+    - A13.updateLicensePlan
+    - A13.adminLicensePolicyDeleteCredentialRule
+    - A13.adminLicensePolicyUpdateCredentialRule
+    - A13.adminLicensePolicyCreateCredentialRule
+    - A14.adminUpdateSpaceVisibility
+    - A15.getAccessPrivilegesForPlatformSupport
+    - A15.updateDiscussion
+    - A15.deleteDiscussion
+    - A15.adminForumRemoveDiscussionCategory
+    - A16.createPlatformRolesAccess
+    - A17.updateActorNameID
+    - A17.updateSpace.nameID
+    - A19.audit-log-analyze
+    - A19.latestUserEmailChangeAuditEntry
+    - A19.userEmailChangeAuditEntries
+    - A20.usersInRole
+    - A20.usersInRoles
+    - A20.organizationsInRole
+    - A20.organizationsInRoles
+    - A20.actorsWithCredential
+    - A20.usersWithAuthorizationCredential
+    - A20b.usersInRole
+    - A20b.usersInRoles
+    - A20b.organizationsInRole
+    - A20b.organizationsInRoles
+    - A20b.actorsWithCredential
+    - A20b.usersWithAuthorizationCredential
+    - A21.updateUser#0
+    - A21.updateUser#1
+    - A22.assignRoleToUser
+    - A22.assignRoleToVirtualContributor
+    - A22.assignRoleToOrganization
+    - A22.assignRoleToUser#org-entry
+    - A22.assignRoleToUser#org-elevated
+    - A23.inviteForEntryRoleOnRoleSet
+    - A23.resendPlatformInvitation
+    - A23.assignRoleToUser
+    - A23.removeRoleFromUser
+    - A23.eventOnApplication
+    - A23.eventOnApplication#reject
+    - A23.deleteInvitation
+    - A23.deletePlatformInvitation
+    - A23.applications
+- **PLATFORM_OPERATIONS_ADMIN > can**
+    - A3.authorizationPolicyResetOnUser
+    - A3.authorizationPolicyResetOnOrganization
+    - A3.authorizationPolicyResetOnAccount
+    - A3.licenseResetOnAccount
+    - A3.authorizationPolicyResetToGlobalAdminsAccess
+    - A11.cleanupCollections
+    - A11.adminUpdateContributorAvatars
+    - A11.adminRepairTemplateFiles
+    - A11.adminCommunicationEnsureAccessToCommunications
+    - A11.adminCommunicationRemoveOrphanedRoom
+    - A11.adminCommunicationUpdateRoomState
+
+### `platform-roles/roles/platform-license-manager.it-spec.ts`
+- **PLATFORM_LICENSE_MANAGER > cannot**
+    - A1.assignPlatformRoleToUser#0
+    - A1.removePlatformRoleFromUser#1
+    - A1.grantCredentialToActor
+    - A1.revokeCredentialFromActor
+    - A2.assignPlatformRoleToUser
+    - A2.removePlatformRoleFromUser
+    - A2.assignPlatformRoleToOrganization
+    - A2.removePlatformRoleFromOrganization
+    - A3.authorizationPolicyResetOnPlatform
+    - A3.aiServerAuthorizationPolicyReset
+    - A3.authorizationPolicyResetOnUser
+    - A3.authorizationPolicyResetOnOrganization
+    - A3.authorizationPolicyResetOnAccount
+    - A3.licenseResetOnAccount
+    - A3.authorizationPolicyResetAll
+    - A3.authorizationPlatformRolesAccessReset
+    - A3.authorizationPolicyResetToGlobalAdminsAccess
+    - A3.resetLicenseOnAccounts
+    - A4.adminUserEmailChange
+    - A4.adminUserEmailChangeDriftResolve
+    - A5.deleteUser
+    - A5.adminIdentityDeleteKratosIdentity
+    - A5.adminUserAccountDelete
+    - A5.mcpApiKeys
+    - A5.adminRevokeMcpApiKey
+    - A6.createOrganization
+    - A6.deleteOrganization
+    - A7.updateInnovationPack
+    - A7.updateInnovationHub
+    - A7.createTemplate
+    - A7.createTemplateFromSpace
+    - A7.createTemplateFromContentSpace
+    - A7.updateTemplate
+    - A7.updateTemplateFromSpace
+    - A7.deleteTemplate
+    - A7.updateCallout
+    - A8.deleteCallout
+    - A8.deleteContribution
+    - A8.deleteSpace
+    - A8.deleteInnovationPack
+    - A8.deleteInnovationHub
+    - A8.updateCalloutPublishInfo
+    - A9.moveSpaceL1ToSpaceL0
+    - A9.moveSpaceL1ToSpaceL2
+    - A9.moveSpaceL2ToSpaceL1
+    - A9.convertSpaceL1ToSpaceL0
+    - A9.convertSpaceL2ToSpaceL1
+    - A9.convertSpaceL1ToSpaceL2
+    - A9.convertVirtualContributorToUseKnowledgeBase
+    - A9.moveContributionToCallout
+    - A9.transferCallout
+    - A9.transferInnovationHubToAccount
+    - A9.transferSpaceToAccount
+    - A9.transferInnovationPackToAccount
+    - A9.transferVirtualContributorToAccount
+    - A10.updatePlatformSettings
+    - A10.addIframeAllowedURL
+    - A10.removeIframeAllowedURL
+    - A10.addNotificationEmailToBlacklist
+    - A10.removeNotificationEmailFromBlacklist
+    - A10.setPlatformWellKnownVirtualContributor
+    - A11.cleanupCollections
+    - A11.updateAssistantActorCapabilities
+    - A11.adminInAppNotificationsPrune
+    - A11.adminUpdateContributorAvatars
+    - A11.adminUpdateGeoLocationData
+    - A11.adminSearchIngestFromScratch
+    - A11.migrateLegacyMemoContent
+    - A11.migrateLegacyWhiteboardContent
+    - A11.adminRepairTemplateFiles
+    - A11.refreshAllBodiesOfKnowledge
+    - A11.adminCommunicationEnsureAccessToCommunications
+    - A11.adminCommunicationRemoveOrphanedRoom
+    - A11.adminCommunicationUpdateRoomState
+    - A11.adminCommunicationMigrateOrphanedConversations
+    - A11.adminCommunicationSyncSpaceHierarchy
+    - A13.createLicensePlan
+    - A13.deleteLicensePlan
+    - A13.updateLicensePlan
+    - A13.adminLicensePolicyDeleteCredentialRule
+    - A13.adminLicensePolicyUpdateCredentialRule
+    - A13.adminLicensePolicyCreateCredentialRule
+    - A15.getAccessPrivilegesForPlatformSupport
+    - A15.updateDiscussion
+    - A15.deleteDiscussion
+    - A15.adminForumRemoveDiscussionCategory
+    - A16.createPlatformRolesAccess
+    - A17.updateActorNameID
+    - A17.updateSpace.nameID
+    - A19.audit-log-analyze
+    - A19.latestUserEmailChangeAuditEntry
+    - A19.userEmailChangeAuditEntries
+    - A20.usersInRole
+    - A20.usersInRoles
+    - A20.organizationsInRole
+    - A20.organizationsInRoles
+    - A20.actorsWithCredential
+    - A20.usersWithAuthorizationCredential
+    - A20b.usersInRole
+    - A20b.usersInRoles
+    - A20b.organizationsInRole
+    - A20b.organizationsInRoles
+    - A20b.actorsWithCredential
+    - A20b.usersWithAuthorizationCredential
+    - A21.updateUser#0
+    - A21.updateUser#1
+    - A22.assignRoleToUser
+    - A22.assignRoleToVirtualContributor
+    - A22.assignRoleToOrganization
+    - A22.assignRoleToUser#org-entry
+    - A22.assignRoleToUser#org-elevated
+    - A23.inviteForEntryRoleOnRoleSet
+    - A23.resendPlatformInvitation
+    - A23.assignRoleToUser
+    - A23.removeRoleFromUser
+    - A23.eventOnApplication
+    - A23.eventOnApplication#reject
+    - A23.deleteInvitation
+    - A23.deletePlatformInvitation
+    - A23.applications
+- **PLATFORM_LICENSE_MANAGER > can**
+    - A12.assignLicensePlanToAccount
+    - A12.assignLicensePlanToSpace
+    - A12.revokeLicensePlanFromAccount
+    - A12.revokeLicensePlanFromSpace
+    - A12.updateBaselineLicensePlanOnAccount
+    - A14.adminUpdateSpaceVisibility
+
+### `platform-roles/roles/platform-content-full-access.it-spec.ts`
+- **PLATFORM_CONTENT_FULL_ACCESS > cannot**
+    - A1.assignPlatformRoleToUser#0
+    - A1.removePlatformRoleFromUser#1
+    - A1.grantCredentialToActor
+    - A1.revokeCredentialFromActor
+    - A2.assignPlatformRoleToUser
+    - A2.removePlatformRoleFromUser
+    - A2.assignPlatformRoleToOrganization
+    - A2.removePlatformRoleFromOrganization
+    - A3.authorizationPolicyResetOnPlatform
+    - A3.aiServerAuthorizationPolicyReset
+    - A3.authorizationPolicyResetOnUser
+    - A3.authorizationPolicyResetOnOrganization
+    - A3.authorizationPolicyResetOnAccount
+    - A3.licenseResetOnAccount
+    - A3.authorizationPolicyResetAll
+    - A3.authorizationPlatformRolesAccessReset
+    - A3.authorizationPolicyResetToGlobalAdminsAccess
+    - A3.resetLicenseOnAccounts
+    - A4.adminUserEmailChange
+    - A4.adminUserEmailChangeDriftResolve
+    - A5.deleteUser
+    - A5.adminIdentityDeleteKratosIdentity
+    - A5.adminUserAccountDelete
+    - A5.mcpApiKeys
+    - A5.adminRevokeMcpApiKey
+    - A6.createOrganization
+    - A9.moveSpaceL1ToSpaceL0
+    - A9.moveSpaceL1ToSpaceL2
+    - A9.moveSpaceL2ToSpaceL1
+    - A9.convertSpaceL1ToSpaceL0
+    - A9.convertSpaceL2ToSpaceL1
+    - A9.convertSpaceL1ToSpaceL2
+    - A9.convertVirtualContributorToUseKnowledgeBase
+    - A9.moveContributionToCallout
+    - A9.transferCallout
+    - A9.transferInnovationHubToAccount
+    - A9.transferSpaceToAccount
+    - A9.transferInnovationPackToAccount
+    - A9.transferVirtualContributorToAccount
+    - A10.updatePlatformSettings
+    - A10.addIframeAllowedURL
+    - A10.removeIframeAllowedURL
+    - A10.addNotificationEmailToBlacklist
+    - A10.removeNotificationEmailFromBlacklist
+    - A10.setPlatformWellKnownVirtualContributor
+    - A11.cleanupCollections
+    - A11.updateAssistantActorCapabilities
+    - A11.adminInAppNotificationsPrune
+    - A11.adminUpdateContributorAvatars
+    - A11.adminUpdateGeoLocationData
+    - A11.adminSearchIngestFromScratch
+    - A11.migrateLegacyMemoContent
+    - A11.migrateLegacyWhiteboardContent
+    - A11.adminRepairTemplateFiles
+    - A11.refreshAllBodiesOfKnowledge
+    - A11.adminCommunicationEnsureAccessToCommunications
+    - A11.adminCommunicationRemoveOrphanedRoom
+    - A11.adminCommunicationUpdateRoomState
+    - A11.adminCommunicationMigrateOrphanedConversations
+    - A11.adminCommunicationSyncSpaceHierarchy
+    - A12.assignLicensePlanToAccount
+    - A12.assignLicensePlanToSpace
+    - A12.revokeLicensePlanFromAccount
+    - A12.revokeLicensePlanFromSpace
+    - A12.updateBaselineLicensePlanOnAccount
+    - A13.createLicensePlan
+    - A13.deleteLicensePlan
+    - A13.updateLicensePlan
+    - A13.adminLicensePolicyDeleteCredentialRule
+    - A13.adminLicensePolicyUpdateCredentialRule
+    - A13.adminLicensePolicyCreateCredentialRule
+    - A14.adminUpdateSpaceVisibility
+    - A15.getAccessPrivilegesForPlatformSupport
+    - A15.updateDiscussion
+    - A15.deleteDiscussion
+    - A15.adminForumRemoveDiscussionCategory
+    - A17.updateActorNameID
+    - A17.updateSpace.nameID
+    - A19.audit-log-analyze
+    - A19.latestUserEmailChangeAuditEntry
+    - A19.userEmailChangeAuditEntries
+    - A20.usersInRole
+    - A20.usersInRoles
+    - A20.organizationsInRole
+    - A20.organizationsInRoles
+    - A20.actorsWithCredential
+    - A20.usersWithAuthorizationCredential
+    - A20b.usersInRole
+    - A20b.usersInRoles
+    - A20b.organizationsInRole
+    - A20b.organizationsInRoles
+    - A20b.actorsWithCredential
+    - A20b.usersWithAuthorizationCredential
+    - A21.updateUser#0
+    - A21.updateUser#1
+    - A22.assignRoleToUser
+    - A22.assignRoleToVirtualContributor
+    - A22.assignRoleToOrganization
+    - A22.assignRoleToUser#org-entry
+    - A22.assignRoleToUser#org-elevated
+    - A23.inviteForEntryRoleOnRoleSet
+    - A23.resendPlatformInvitation
+    - A23.assignRoleToUser
+    - A23.removeRoleFromUser
+    - A23.eventOnApplication
+    - A23.applications
+- **PLATFORM_CONTENT_FULL_ACCESS > can**
+    - A6.deleteOrganization
+    - A7.updateInnovationPack
+    - A7.updateInnovationHub
+    - A7.createTemplate
+    - A7.createTemplateFromSpace
+    - A7.createTemplateFromContentSpace
+    - A7.updateTemplate
+    - A7.updateTemplateFromSpace
+    - A7.deleteTemplate
+    - A7.updateCallout
+    - A8.deleteCallout
+    - A8.deleteContribution
+    - A8.deleteSpace
+    - A8.deleteInnovationPack
+    - A8.deleteInnovationHub
+    - A8.updateCalloutPublishInfo
+    - A16.createPlatformRolesAccess
+    - A23.eventOnApplication#reject
+    - A23.deleteInvitation
+    - A23.deletePlatformInvitation
+
+### `platform-roles/roles/platform-roles-admin.it-spec.ts`
+- **PLATFORM_ROLES_ADMIN > cannot**
+    - A1.grantCredentialToActor
+    - A1.revokeCredentialFromActor
+    - A3.authorizationPolicyResetOnPlatform
+    - A3.aiServerAuthorizationPolicyReset
+    - A3.authorizationPolicyResetOnUser
+    - A3.authorizationPolicyResetOnOrganization
+    - A3.authorizationPolicyResetOnAccount
+    - A3.licenseResetOnAccount
+    - A3.authorizationPolicyResetAll
+    - A3.authorizationPlatformRolesAccessReset
+    - A3.authorizationPolicyResetToGlobalAdminsAccess
+    - A3.resetLicenseOnAccounts
+    - A4.adminUserEmailChange
+    - A4.adminUserEmailChangeDriftResolve
+    - A5.deleteUser
+    - A5.adminIdentityDeleteKratosIdentity
+    - A5.adminUserAccountDelete
+    - A5.mcpApiKeys
+    - A5.adminRevokeMcpApiKey
+    - A6.createOrganization
+    - A6.deleteOrganization
+    - A7.updateInnovationPack
+    - A7.updateInnovationHub
+    - A7.createTemplate
+    - A7.createTemplateFromSpace
+    - A7.createTemplateFromContentSpace
+    - A7.updateTemplate
+    - A7.updateTemplateFromSpace
+    - A7.deleteTemplate
+    - A7.updateCallout
+    - A8.deleteCallout
+    - A8.deleteContribution
+    - A8.deleteSpace
+    - A8.deleteInnovationPack
+    - A8.deleteInnovationHub
+    - A8.updateCalloutPublishInfo
+    - A9.moveSpaceL1ToSpaceL0
+    - A9.moveSpaceL1ToSpaceL2
+    - A9.moveSpaceL2ToSpaceL1
+    - A9.convertSpaceL1ToSpaceL0
+    - A9.convertSpaceL2ToSpaceL1
+    - A9.convertSpaceL1ToSpaceL2
+    - A9.convertVirtualContributorToUseKnowledgeBase
+    - A9.moveContributionToCallout
+    - A9.transferCallout
+    - A9.transferInnovationHubToAccount
+    - A9.transferSpaceToAccount
+    - A9.transferInnovationPackToAccount
+    - A9.transferVirtualContributorToAccount
+    - A10.updatePlatformSettings
+    - A10.addIframeAllowedURL
+    - A10.removeIframeAllowedURL
+    - A10.addNotificationEmailToBlacklist
+    - A10.removeNotificationEmailFromBlacklist
+    - A10.setPlatformWellKnownVirtualContributor
+    - A11.cleanupCollections
+    - A11.updateAssistantActorCapabilities
+    - A11.adminInAppNotificationsPrune
+    - A11.adminUpdateContributorAvatars
+    - A11.adminUpdateGeoLocationData
+    - A11.adminSearchIngestFromScratch
+    - A11.migrateLegacyMemoContent
+    - A11.migrateLegacyWhiteboardContent
+    - A11.adminRepairTemplateFiles
+    - A11.refreshAllBodiesOfKnowledge
+    - A11.adminCommunicationEnsureAccessToCommunications
+    - A11.adminCommunicationRemoveOrphanedRoom
+    - A11.adminCommunicationUpdateRoomState
+    - A11.adminCommunicationMigrateOrphanedConversations
+    - A11.adminCommunicationSyncSpaceHierarchy
+    - A12.assignLicensePlanToAccount
+    - A12.assignLicensePlanToSpace
+    - A12.revokeLicensePlanFromAccount
+    - A12.revokeLicensePlanFromSpace
+    - A12.updateBaselineLicensePlanOnAccount
+    - A13.createLicensePlan
+    - A13.deleteLicensePlan
+    - A13.updateLicensePlan
+    - A13.adminLicensePolicyDeleteCredentialRule
+    - A13.adminLicensePolicyUpdateCredentialRule
+    - A13.adminLicensePolicyCreateCredentialRule
+    - A14.adminUpdateSpaceVisibility
+    - A15.getAccessPrivilegesForPlatformSupport
+    - A15.updateDiscussion
+    - A15.deleteDiscussion
+    - A15.adminForumRemoveDiscussionCategory
+    - A16.createPlatformRolesAccess
+    - A17.updateActorNameID
+    - A17.updateSpace.nameID
+    - A19.audit-log-analyze
+    - A19.latestUserEmailChangeAuditEntry
+    - A19.userEmailChangeAuditEntries
+    - A22.assignRoleToUser
+    - A22.assignRoleToVirtualContributor
+    - A22.assignRoleToOrganization
+    - A22.assignRoleToUser#org-entry
+    - A22.assignRoleToUser#org-elevated
+    - A23.inviteForEntryRoleOnRoleSet
+    - A23.resendPlatformInvitation
+    - A23.assignRoleToUser
+    - A23.removeRoleFromUser
+    - A23.eventOnApplication
+    - A23.eventOnApplication#reject
+    - A23.deleteInvitation
+    - A23.deletePlatformInvitation
+    - A23.applications
+- **PLATFORM_ROLES_ADMIN > can**
+    - A1.assignPlatformRoleToUser#0
+    - A1.removePlatformRoleFromUser#1
+    - A2.assignPlatformRoleToUser
+    - A2.removePlatformRoleFromUser
+    - A2.assignPlatformRoleToOrganization
+    - A2.removePlatformRoleFromOrganization
+    - A20.usersInRole
+    - A20.usersInRoles
+    - A20.organizationsInRole
+    - A20.organizationsInRoles
+    - A20.actorsWithCredential
+    - A20.usersWithAuthorizationCredential
+    - A20b.usersInRole
+    - A20b.usersInRoles
+    - A20b.organizationsInRole
+    - A20b.organizationsInRoles
+    - A20b.actorsWithCredential
+    - A20b.usersWithAuthorizationCredential
+    - A21.updateUser#0
+    - A21.updateUser#1
+
+### `platform-roles/roles/feature-beta-tester.it-spec.ts`
+- **FEATURE_BETA_TESTER > cannot**
+    - A1.assignPlatformRoleToUser#0
+    - A1.removePlatformRoleFromUser#1
+    - A1.grantCredentialToActor
+    - A1.revokeCredentialFromActor
+    - A2.assignPlatformRoleToUser
+    - A2.removePlatformRoleFromUser
+    - A2.assignPlatformRoleToOrganization
+    - A2.removePlatformRoleFromOrganization
+    - A3.authorizationPolicyResetOnPlatform
+    - A3.aiServerAuthorizationPolicyReset
+    - A3.authorizationPolicyResetOnUser
+    - A3.authorizationPolicyResetOnOrganization
+    - A3.authorizationPolicyResetOnAccount
+    - A3.licenseResetOnAccount
+    - A3.authorizationPolicyResetAll
+    - A3.authorizationPlatformRolesAccessReset
+    - A3.authorizationPolicyResetToGlobalAdminsAccess
+    - A3.resetLicenseOnAccounts
+    - A4.adminUserEmailChange
+    - A4.adminUserEmailChangeDriftResolve
+    - A5.deleteUser
+    - A5.adminIdentityDeleteKratosIdentity
+    - A5.adminUserAccountDelete
+    - A5.mcpApiKeys
+    - A5.adminRevokeMcpApiKey
+    - A6.createOrganization
+    - A6.deleteOrganization
+    - A7.updateInnovationPack
+    - A7.updateInnovationHub
+    - A7.createTemplate
+    - A7.createTemplateFromSpace
+    - A7.createTemplateFromContentSpace
+    - A7.updateTemplate
+    - A7.updateTemplateFromSpace
+    - A7.deleteTemplate
+    - A7.updateCallout
+    - A8.deleteCallout
+    - A8.deleteContribution
+    - A8.deleteSpace
+    - A8.deleteInnovationPack
+    - A8.deleteInnovationHub
+    - A8.updateCalloutPublishInfo
+    - A9.moveSpaceL1ToSpaceL0
+    - A9.moveSpaceL1ToSpaceL2
+    - A9.moveSpaceL2ToSpaceL1
+    - A9.convertSpaceL1ToSpaceL0
+    - A9.convertSpaceL2ToSpaceL1
+    - A9.convertSpaceL1ToSpaceL2
+    - A9.convertVirtualContributorToUseKnowledgeBase
+    - A9.moveContributionToCallout
+    - A9.transferCallout
+    - A9.transferInnovationHubToAccount
+    - A9.transferSpaceToAccount
+    - A9.transferInnovationPackToAccount
+    - A9.transferVirtualContributorToAccount
+    - A10.updatePlatformSettings
+    - A10.addIframeAllowedURL
+    - A10.removeIframeAllowedURL
+    - A10.addNotificationEmailToBlacklist
+    - A10.removeNotificationEmailFromBlacklist
+    - A10.setPlatformWellKnownVirtualContributor
+    - A11.cleanupCollections
+    - A11.updateAssistantActorCapabilities
+    - A11.adminInAppNotificationsPrune
+    - A11.adminUpdateContributorAvatars
+    - A11.adminUpdateGeoLocationData
+    - A11.adminSearchIngestFromScratch
+    - A11.migrateLegacyMemoContent
+    - A11.migrateLegacyWhiteboardContent
+    - A11.adminRepairTemplateFiles
+    - A11.refreshAllBodiesOfKnowledge
+    - A11.adminCommunicationEnsureAccessToCommunications
+    - A11.adminCommunicationRemoveOrphanedRoom
+    - A11.adminCommunicationUpdateRoomState
+    - A11.adminCommunicationMigrateOrphanedConversations
+    - A11.adminCommunicationSyncSpaceHierarchy
+    - A12.assignLicensePlanToAccount
+    - A12.assignLicensePlanToSpace
+    - A12.revokeLicensePlanFromAccount
+    - A12.revokeLicensePlanFromSpace
+    - A12.updateBaselineLicensePlanOnAccount
+    - A13.createLicensePlan
+    - A13.deleteLicensePlan
+    - A13.updateLicensePlan
+    - A13.adminLicensePolicyDeleteCredentialRule
+    - A13.adminLicensePolicyUpdateCredentialRule
+    - A13.adminLicensePolicyCreateCredentialRule
+    - A14.adminUpdateSpaceVisibility
+    - A15.getAccessPrivilegesForPlatformSupport
+    - A15.updateDiscussion
+    - A15.deleteDiscussion
+    - A15.adminForumRemoveDiscussionCategory
+    - A16.createPlatformRolesAccess
+    - A17.updateActorNameID
+    - A17.updateSpace.nameID
+    - A19.audit-log-analyze
+    - A19.latestUserEmailChangeAuditEntry
+    - A19.userEmailChangeAuditEntries
+    - A20.usersInRole
+    - A20.usersInRoles
+    - A20.organizationsInRole
+    - A20.organizationsInRoles
+    - A20.actorsWithCredential
+    - A20.usersWithAuthorizationCredential
+    - A20b.usersInRole
+    - A20b.usersInRoles
+    - A20b.organizationsInRole
+    - A20b.organizationsInRoles
+    - A20b.actorsWithCredential
+    - A20b.usersWithAuthorizationCredential
+    - A21.updateUser#0
+    - A21.updateUser#1
+    - A22.assignRoleToUser
+    - A22.assignRoleToVirtualContributor
+    - A22.assignRoleToOrganization
+    - A22.assignRoleToUser#org-entry
+    - A22.assignRoleToUser#org-elevated
+    - A23.inviteForEntryRoleOnRoleSet
+    - A23.resendPlatformInvitation
+    - A23.assignRoleToUser
+    - A23.removeRoleFromUser
+    - A23.eventOnApplication
+    - A23.eventOnApplication#reject
+    - A23.deleteInvitation
+    - A23.deletePlatformInvitation
+    - A23.applications
+
+### `platform-roles/rules/immediacy.it-spec.ts`
+- **I1.grant-revoke-next-request**
+    - positive: a grant works on the very next request, on a cache warm with "no role"
+    - negative: a revoke denies on the very next request, on a cache warm with the role — 3 times over
+
+### `platform-roles/rules/grantability.it-spec.ts`
+- **G1.every-role-round-trip > PLATFORM_ROLES_ADMIN**
+    - positive: grant adds exactly its privileges; revoke removes them and the holder entry
+    - positive: A20.usersInRole succeeds while the role is held
+    - negative: A20.usersInRole is denied at the root field after the revoke
+- **G1.every-role-round-trip > PLATFORM_CONTENT_FULL_ACCESS**
+    - positive: grant adds exactly its privileges; revoke removes them and the holder entry
+    - positive: A16.createPlatformRolesAccess succeeds while the role is held
+    - negative: A16.createPlatformRolesAccess is denied at the root field after the revoke
+- **G1.every-role-round-trip > PLATFORM_RESOURCE_ADMIN**
+    - positive: grant adds exactly its privileges; revoke removes them and the holder entry
+    - positive: A9.convertVirtualContributorToUseKnowledgeBase succeeds while the role is held
+    - negative: A9.convertVirtualContributorToUseKnowledgeBase is denied at the root field after the revoke
+- **G1.every-role-round-trip > PLATFORM_SETTINGS_ADMIN**
+    - positive: grant adds exactly its privileges; revoke removes them and the holder entry
+    - positive: A10.updatePlatformSettings succeeds while the role is held
+    - negative: A10.updatePlatformSettings is denied at the root field after the revoke
+- **G1.every-role-round-trip > PLATFORM_OPERATIONS_ADMIN**
+    - positive: grant adds exactly its privileges; revoke removes them and the holder entry
+    - positive: A11.adminCommunicationEnsureAccessToCommunications succeeds while the role is held
+    - negative: A11.adminCommunicationEnsureAccessToCommunications is denied at the root field after the revoke
+- **G1.every-role-round-trip > PLATFORM_USERS_ADMIN**
+    - positive: grant adds exactly its privileges; revoke removes them and the holder entry
+    - positive: A20b.usersInRole succeeds while the role is held
+    - negative: A20b.usersInRole is denied at the root field after the revoke
+- **G1.every-role-round-trip > PLATFORM_SUPPORT**
+    - positive: grant adds exactly its privileges; revoke removes them and the holder entry
+    - positive: A6.createOrganization succeeds while the role is held
+    - negative: A6.createOrganization is denied at the root field after the revoke
+- **G1.every-role-round-trip > PLATFORM_LICENSE_MANAGER**
+    - positive: grant adds exactly its privileges; revoke removes them and the holder entry
+    - positive: A14.adminUpdateSpaceVisibility succeeds while the role is held
+    - negative: A14.adminUpdateSpaceVisibility is denied at the root field after the revoke
+- **G1.every-role-round-trip > PLATFORM_SPACES_READER**
+    - positive: grant adds exactly its privileges; revoke removes them and the holder entry
+    - positive: A16.createPlatformRolesAccess succeeds while the role is held
+    - negative: A16.createPlatformRolesAccess is denied at the root field after the revoke
+- **G1.every-role-round-trip > PLATFORM_AUDIT_READER**
+    - positive: grant adds exactly its privileges; revoke removes them and the holder entry
+    - positive: A19.userEmailChangeAuditEntries succeeds while the role is held
+    - negative: A19.userEmailChangeAuditEntries is denied at the root field after the revoke
+- **G1.every-role-round-trip > FEATURE_BETA_TESTER**
+    - positive: grant adds exactly its privileges; revoke removes them and the holder entry
+- **G1.every-role-round-trip > FEATURE_VIRTUAL_ASSISTANT**
+    - positive: grant adds exactly its privileges; revoke removes them and the holder entry
+- **G1.every-role-round-trip > FEATURE_ORGANIZATION_CREATOR**
+    - positive: grant adds exactly its privileges; revoke removes them and the holder entry
+    - positive: A6.createOrganization succeeds while the role is held
+    - negative: A6.createOrganization is denied at the root field after the revoke
+- **G1.every-role-round-trip > FEATURE_VC_CAMPAIGN**
+    - positive: grant adds exactly its privileges; revoke removes them and the holder entry
+- **G2.organization-holder**
+    - positive: FEATURE_BETA_TESTER — grant lists the organization, revoke removes it
+    - positive: FEATURE_VIRTUAL_ASSISTANT — grant lists the organization, revoke removes it
+    - positive: FEATURE_ORGANIZATION_CREATOR — grant lists the organization, revoke removes it
+    - positive: FEATURE_VC_CAMPAIGN — grant lists the organization, revoke removes it
+    - positive: organization-subject audit record — the MCP audit tool filters by subjectUserId only; needs a subjectOrganizationId filter on the server [todo]
+
+### `platform-roles/audit-records.it-spec.ts`
+- **AR1.grant-revoke-recorded**
+    - positive: a grant and a revoke each leave one record naming operator, authorizing role and outcome
+- **AR2.self-affecting-predicate**
+    - positive: a rejected self-grant is returned by initiator = subject
+    - negative: a grant to another user is not returned
+
+### `platform-roles/rules/feature-roles.it-spec.ts`
+- **F1.beta-tester-entitlement**
+    - positive: the holder’s account reports the trial entitlement after the grant, not after the revoke
+    - negative: the holder cannot create an organization
+- **F2.virtual-assistant-access**
+    - positive: the holder has ACCESS_VIRTUAL_ASSISTANT on the platform policy
+    - negative: a registered user without the role does not
+- **F3.vc-campaign-entitlement**
+    - positive: the holder’s account reports the trial entitlement and myRoles lists the role
+    - negative: the role adds no privilege on the platform or the role-set policy
+
+### `platform-roles/rules/admin-notification-routing.it-spec.ts`
+- **N1.admin-notification-routing**
+    - user profile created → Users Admin only
+    - global role changed → Roles Admin only, minus the operator; a Feature-role grant emits nothing
+    - L0 space created → Support and License Manager only
+    - user profile removed → Users Admin only, minus the operator who removed
+
+### `platform-roles/rules/assignment-rules.it-spec.ts`
+- **R1.assigner-capability**
+    - positive: Users Admin grants a Feature role and the holder list shows the target
+    - negative: Users Admin grants a Platform role — refused by rule 1, target holds nothing
+    - negative: the refusal is recorded against the target
+- **R2.holder-kind**
+    - positive: FEATURE_BETA_TESTER granted to an organization shows in organizationsInRole
+    - positive: FEATURE_VIRTUAL_ASSISTANT granted to an organization shows in organizationsInRole
+    - positive: FEATURE_ORGANIZATION_CREATOR granted to an organization shows in organizationsInRole
+    - positive: FEATURE_VC_CAMPAIGN granted to an organization shows in organizationsInRole
+    - negative: PLATFORM_ROLES_ADMIN granted to an organization — refused for the holder kind, organization not listed
+    - negative: PLATFORM_CONTENT_FULL_ACCESS granted to an organization — refused for the holder kind, organization not listed
+    - negative: PLATFORM_RESOURCE_ADMIN granted to an organization — refused for the holder kind, organization not listed
+    - negative: PLATFORM_SETTINGS_ADMIN granted to an organization — refused for the holder kind, organization not listed
+    - negative: PLATFORM_OPERATIONS_ADMIN granted to an organization — refused for the holder kind, organization not listed
+    - negative: PLATFORM_USERS_ADMIN granted to an organization — refused for the holder kind, organization not listed
+    - negative: PLATFORM_SUPPORT granted to an organization — refused for the holder kind, organization not listed
+    - negative: PLATFORM_LICENSE_MANAGER granted to an organization — refused for the holder kind, organization not listed
+    - negative: PLATFORM_SPACES_READER granted to an organization — refused for the holder kind, organization not listed
+    - negative: PLATFORM_AUDIT_READER granted to an organization — refused for the holder kind, organization not listed
+    - negative: rejection audit record — the MCP audit tool filters by subjectUserId only, so an ORGANIZATION-subject record cannot be read without a server change [todo]
+- **R3.spaces-reader-service-account**
+    - positive: a service account is granted Spaces Reader and reads a private space
+    - negative: a human target — refused by rule 3, not a holder
+    - negative: the refusal is recorded against the target
+- **R4.audit-reader-exclusion**
+    - positive: an Audit Reader is granted a Feature role — the boundary of the exclusion
+    - negative: direction 1 — a PLATFORM_ROLES_ADMIN holder is refused Audit Reader, state unchanged
+    - negative: direction 1 — a PLATFORM_CONTENT_FULL_ACCESS holder is refused Audit Reader, state unchanged
+    - negative: direction 1 — a PLATFORM_RESOURCE_ADMIN holder is refused Audit Reader, state unchanged
+    - negative: direction 1 — a PLATFORM_SETTINGS_ADMIN holder is refused Audit Reader, state unchanged
+    - negative: direction 1 — a PLATFORM_OPERATIONS_ADMIN holder is refused Audit Reader, state unchanged
+    - negative: direction 1 — a PLATFORM_USERS_ADMIN holder is refused Audit Reader, state unchanged
+    - negative: direction 1 — a PLATFORM_SUPPORT holder is refused Audit Reader, state unchanged
+    - negative: direction 1 — a PLATFORM_LICENSE_MANAGER holder is refused Audit Reader, state unchanged
+    - negative: direction 1 — a PLATFORM_SPACES_READER holder is refused Audit Reader, state unchanged
+    - negative: direction 2 — an Audit Reader is refused PLATFORM_ROLES_ADMIN, state unchanged
+    - negative: direction 2 — an Audit Reader is refused PLATFORM_CONTENT_FULL_ACCESS, state unchanged
+    - negative: direction 2 — an Audit Reader is refused PLATFORM_RESOURCE_ADMIN, state unchanged
+    - negative: direction 2 — an Audit Reader is refused PLATFORM_SETTINGS_ADMIN, state unchanged
+    - negative: direction 2 — an Audit Reader is refused PLATFORM_OPERATIONS_ADMIN, state unchanged
+    - negative: direction 2 — an Audit Reader is refused PLATFORM_USERS_ADMIN, state unchanged
+    - negative: direction 2 — an Audit Reader is refused PLATFORM_SUPPORT, state unchanged
+    - negative: direction 2 — an Audit Reader is refused PLATFORM_LICENSE_MANAGER, state unchanged
+    - negative: direction 2 — an Audit Reader is refused PLATFORM_SPACES_READER, state unchanged
+    - negative: direction 1 — the refusal is recorded against the holder
+    - negative: direction 2 — the refusal is recorded against the Audit Reader
+- **R5.last-roles-admin**
+    - positive: with other holders present, revoking one Roles Admin succeeds
+- **R6.self-assignment**
+    - negative: a Roles Admin grants itself a Platform role — refused, myRoles unchanged
+    - negative: a Roles Admin grants itself a Feature role — refused, myRoles unchanged
+    - negative: a Roles Admin revokes its own role — refused, myRoles unchanged
+    - positive: the two-person path — a second Roles Admin grants the first the same role
+    - negative: a self-grant refusal is recorded against the acting admin itself
+
+### `platform-roles/role-integrity.it-spec.ts`
+- **X1.single-role-fixtures**
+    - positive: every role user’s myRoles is exactly [its role, REGISTERED]
+    - negative: no role user holds a privilege of another family at platform level
+- **L2.legacy-roles-gone**
+    - negative: RoleName lists none of the 10 legacy role names
+    - negative: AuthorizationCredential and CredentialType list none of the 10 legacy credentials
+    - negative: the god-mode privileges are gone and the assigner privilege is PLATFORM_ROLES_ASSIGN
+    - negative: zero stored credential rows of a retired type and zero retired role rows remain (SC-005 query, loopback Postgres)
+    - negative: the platform role-set offers only the 14 target roles and REGISTERED
+- **L3.retired-surfaces-gone**
+    - negative: none of the ten deleted mutations is offered; their successors are
+- **X2.root-cascade-limits**
+    - positive: holds DELETE on a space it has no membership in
+    - negative: cannot assign a role — neither a platform role nor a role in that space
+    - negative: cannot manage the forum — holds DELETE on the discussion, deleteDiscussion is refused, the discussion stays
+    - negative: cannot change visibility — holds UPDATE on the space, adminUpdateSpaceVisibility is refused, visibility stays ACTIVE
+
+### `platform-roles/rules/service-profile.it-spec.ts`
+- **S1.marker-owned-by-roles-admin**
+    - positive: Roles Admin sets then clears the marker; a cleared account can no longer be granted Spaces Reader
+    - positive: each marker change is recorded against the target
+    - negative: PLATFORM_CONTENT_FULL_ACCESS is denied at updateUser and the marker stays set
+    - negative: PLATFORM_RESOURCE_ADMIN is denied at updateUser and the marker stays set
+    - negative: PLATFORM_SETTINGS_ADMIN is denied at updateUser and the marker stays set
+    - negative: PLATFORM_OPERATIONS_ADMIN is denied at updateUser and the marker stays set
+    - negative: PLATFORM_USERS_ADMIN is denied at updateUser and the marker stays set
+    - negative: PLATFORM_SUPPORT is denied at updateUser and the marker stays set
+    - negative: PLATFORM_LICENSE_MANAGER is denied at updateUser and the marker stays set
+    - negative: PLATFORM_SPACES_READER is denied at updateUser and the marker stays set
+    - negative: PLATFORM_AUDIT_READER is denied at updateUser and the marker stays set
+    - negative: FEATURE_BETA_TESTER is denied at updateUser and the marker stays set
+    - negative: FEATURE_VIRTUAL_ASSISTANT is denied at updateUser and the marker stays set
+    - negative: FEATURE_ORGANIZATION_CREATOR is denied at updateUser and the marker stays set
+    - negative: FEATURE_VC_CAMPAIGN is denied at updateUser and the marker stays set
+
+### `platform-roles/rules/rename-nameid.it-spec.ts`
+- **A17.entity-admin-rename**
+    - positive: a user renames itself through updateActorNameID and reads the new nameID back
+    - positive: the space admin renames its space through updateSpace.nameID and reads it back
+    - negative: Content Full Access holds UPDATE on the space, is refused the protected nameID, and the nameID is unchanged
+    - negative: Platform Users Admin, who administers user records, is refused another user’s rename
+
+### `platform-roles/rules/organization-inheritance.it-spec.ts`
+- **organization inheritance > O1.admin-inherits-feature-role**
+    - positive: the organization is granted Feature Organization Creator → its admin holds CREATE_ORGANIZATION on the next request
+    - negative: an associate never inherits it; a demoted admin loses it on the next request
+- **organization inheritance > O2.no-platform-role-via-organization**
+    - negative: the admin of an organization holding every Feature role holds no Platform-role privilege on either policy
+
+### `platform-roles/exclusive/audit-platform-wide-action.it-spec.ts`
+- **AR2.self-affecting-predicate — platform-wide action**
+    - negative: a platform-wide reset writes nothing onto the trail of the operator who ran it
+
+### `platform-roles/exclusive/destructive-positives.it-spec.ts`
+- **platform-wide positives > A3.authorizationPolicyResetOnPlatform**
+    - positive: PLATFORM_OPERATIONS_ADMIN can
+- **platform-wide positives > A3.aiServerAuthorizationPolicyReset**
+    - positive: PLATFORM_OPERATIONS_ADMIN can
+- **platform-wide positives > A3.authorizationPolicyResetAll**
+    - positive: PLATFORM_OPERATIONS_ADMIN can
+- **platform-wide positives > A3.authorizationPlatformRolesAccessReset**
+    - positive: PLATFORM_OPERATIONS_ADMIN can
+- **platform-wide positives > A3.resetLicenseOnAccounts**
+    - positive: PLATFORM_OPERATIONS_ADMIN can
+- **platform-wide positives > A11.updateAssistantActorCapabilities**
+    - positive: PLATFORM_OPERATIONS_ADMIN can
+- **platform-wide positives > A11.adminInAppNotificationsPrune**
+    - positive: PLATFORM_OPERATIONS_ADMIN can
+- **platform-wide positives > A11.adminUpdateGeoLocationData**
+    - positive: PLATFORM_OPERATIONS_ADMIN can
+- **platform-wide positives > A11.adminSearchIngestFromScratch**
+    - positive: PLATFORM_OPERATIONS_ADMIN can
+- **platform-wide positives > A11.migrateLegacyMemoContent**
+    - positive: PLATFORM_OPERATIONS_ADMIN can
+- **platform-wide positives > A11.migrateLegacyWhiteboardContent**
+    - positive: PLATFORM_OPERATIONS_ADMIN can
+- **platform-wide positives > A11.refreshAllBodiesOfKnowledge**
+    - positive: PLATFORM_OPERATIONS_ADMIN can
+- **platform-wide positives > A11.adminCommunicationMigrateOrphanedConversations**
+    - positive: PLATFORM_OPERATIONS_ADMIN can
+- **platform-wide positives > A11.adminCommunicationSyncSpaceHierarchy**
+    - positive: PLATFORM_OPERATIONS_ADMIN can
+
+### `platform-roles/exclusive/last-roles-admin.it-spec.ts`
+- **R5.last-roles-admin**
+    - negative: revoking the last Roles Admin is refused by rule 5 and the holder stays
+    - negative: the refusal is recorded against the last holder
