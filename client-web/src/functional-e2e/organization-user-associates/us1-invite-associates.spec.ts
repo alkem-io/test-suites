@@ -447,7 +447,7 @@ orgAdminNotOwnerTest.describe(
       'an organization admin who is not a platform admin gets a name-or-email search, the suggested-language control (when the platform offers languages), a pre-filled message, and Associate locked plus Admin/Owner',
       async ({ page }) => {
         await page.goto(
-          `${baseUrl}/organization/${orgMain.nameID}/settings/community`
+          `${baseUrl}/organization/${orgMain.nameID}/settings/associates`
         );
         await page.getByRole('button', { name: 'Invite', exact: true }).click();
 
@@ -527,7 +527,7 @@ orgAdminNotOwnerTest.describe(
       'US1-AS2: inviting U1 as Associate and U2 as Associate + Owner with a message both show "Invitation sent"; both appear in Pending applications & invitations with the offered role, date and Revoke',
       async ({ page }) => {
         await page.goto(
-          `${baseUrl}/organization/${orgMain.nameID}/settings/community`
+          `${baseUrl}/organization/${orgMain.nameID}/settings/associates`
         );
 
         // U1 — Associate only.
@@ -595,7 +595,7 @@ orgAdminNotOwnerTest.describe(
       "US1-AS7: revoking U1's pending invitation removes it from the Associates pending list",
       async ({ page }) => {
         await page.goto(
-          `${baseUrl}/organization/${orgMain.nameID}/settings/community`
+          `${baseUrl}/organization/${orgMain.nameID}/settings/associates`
         );
         const row = page.getByRole('row', {
           name: new RegExp(as2Invitee1.displayName),
@@ -644,7 +644,7 @@ orgOwnerNotAdminTest.describe(
       'an organization OWNER who is not an ADMIN sees Associate/Admin/Owner all offerable',
       async ({ page }) => {
         await page.goto(
-          `${baseUrl}/organization/${orgMain.nameID}/settings/community`
+          `${baseUrl}/organization/${orgMain.nameID}/settings/associates`
         );
         await page.getByRole('button', { name: 'Invite', exact: true }).click();
         await page
@@ -675,9 +675,26 @@ plainAssociateAS8Test.describe(
       'navigating to the Associates settings tab does not land there',
       async ({ page }) => {
         await page.goto(
-          `${baseUrl}/organization/${orgMain.nameID}/settings/community`
+          `${baseUrl}/organization/${orgMain.nameID}/settings/associates`
         );
-        await expect(page).not.toHaveURL(/\/settings\/community/);
+        // The product sends a plain associate to the organization profile
+        // (observed live 2026-10-28). Pin that landing, not merely "somewhere
+        // other than one legacy URL": an admin persona stays on
+        // /settings/associates and must turn every line below red.
+        await expect(page).not.toHaveURL(/\/settings\/(associates|community)/, {
+          timeout: 15_000,
+        });
+        await expect(page).toHaveURL(
+          new RegExp(`/organization/${orgMain.nameID}/?$`)
+        );
+        await expect(
+          page.getByRole('heading', { name: 'Associates', exact: true })
+        ).toHaveCount(0);
+        await expect(
+          page.getByRole('heading', {
+            name: 'Pending applications & invitations',
+          })
+        ).toHaveCount(0);
       }
     );
   }

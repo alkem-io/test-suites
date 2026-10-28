@@ -33,6 +33,7 @@ import {
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import { NotificationEvent, RoleName } from '@alkemio/tests-lib/core/generated/alkemio-schema';
 import { createPersonaTest, ensurePersonaState } from '../fixtures/authenticated-session.fixture';
+import { openSettingsSection } from '../helpers/settings-section.helper';
 import {
   assignOrganizationAdmin,
   createTestOrganization,
@@ -549,6 +550,19 @@ spaceAdminTest.describe('US2-AS5 — a sole admin who muted every channel gets n
 
 const orgAdminSettingsTest = createPersonaTest('subspace.admin@alkem.io');
 
+/**
+ * client-web#10437: the Notifications tab groups its rows into collapsible
+ * SettingsSection cards that start collapsed (body mounted but hidden). The
+ * org-invited row lives in the "Organisation Notifications" group
+ * (contributorSettings `user.notifications.groups.organization.title`), so
+ * open that group via its `<h3><button>` trigger before reading the row. The
+ * `<h3>` also carries the group's description, so its accessible name is
+ * "Organisation Notifications Control alerts…" — matched by prefix.
+ */
+async function openOrganisationNotificationsGroup(page: Page) {
+  await openSettingsSection(page, /^Organisation Notifications/);
+}
+
 orgAdminSettingsTest.describe('US2-AS6 — the organization notification settings row renders, persists, and is honored', () => {
   orgAdminSettingsTest(
     'the "organisation invited to a Space" row shows with all three channels on; toggling email off persists across reload and suppresses the next email',
@@ -558,6 +572,7 @@ orgAdminSettingsTest.describe('US2-AS6 — the organization notification setting
       // default config's 30s per-test budget.
       orgAdminSettingsTest.setTimeout(120_000);
       await page.goto(`${baseUrl}/user/me/settings/notifications`);
+      await openOrganisationNotificationsGroup(page);
 
       const rowLabel = page.getByText('Receive a notification when an organisation I administer is invited to join a Space');
       await expect(rowLabel).toBeVisible();
@@ -582,6 +597,7 @@ orgAdminSettingsTest.describe('US2-AS6 — the organization notification setting
       // happens below.
       try {
         await page.reload();
+        await openOrganisationNotificationsGroup(page);
         await expect(
           page.getByRole('switch', {
             name: 'Toggle Email notification for: Receive a notification when an organisation I administer is invited to join a Space',
@@ -596,6 +612,7 @@ orgAdminSettingsTest.describe('US2-AS6 — the organization notification setting
         expect(notifications.some(n => n.payload.organization?.id === orgAS6.id)).toBe(true);
       } finally {
         await page.goto(`${baseUrl}/user/me/settings/notifications`);
+        await openOrganisationNotificationsGroup(page);
         const restore = page.getByRole('switch', {
           name: 'Toggle Email notification for: Receive a notification when an organisation I administer is invited to join a Space',
         });

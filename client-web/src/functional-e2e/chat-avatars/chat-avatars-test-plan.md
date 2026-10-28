@@ -115,7 +115,7 @@ independently asserted.
 | US2-AS1 | Group without a custom photo: the header composite equals the list row's, image for image and fallback for fallback (FR-002) | `us2-group-header-identity.spec.ts` › US2-AS1 |
 | US2-AS2 | Setting a group photo replaces the composite with the photo, in header and list alike | `us2-…` › US2-AS2 |
 | US2-AS3 | Changing the photo again updates both surfaces to the new image | `us2-…` › US2-AS3 |
-| US2-AS4 | More than four other participants → both surfaces show the same 4-avatar subset, same order | `us2-…` › US2-AS4 |
+| US2-AS4 | More than four other participants → both surfaces show the same capped composite (three faces + a "+N" tile since client-web#10427), same order | `us2-…` › US2-AS4 |
 | US3-AS1 | 1:1 header shows the other person's profile picture, identical to their list row, alongside their name (FR-001) | `us3-direct-thread-header-identity.spec.ts` › US3-AS1 |
 | US3-AS2 | 1:1 header for a person who never uploaded a picture uses the **same** treatment as their list row, and shows their identity rather than the other contact's | `us3-…` › US3-AS2 |
 | US3-AS3 | 1:1 message bubbles are untouched — no gutter, no avatar, no injected attribution, incoming or outgoing (FR-011) | `us3-…` › US3-AS3 |

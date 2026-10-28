@@ -11,7 +11,7 @@ import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/O
 /**
  * Shared fixtures and locators for the organization Membership tab walks
  * (Organization → Settings → Membership): the organization's Space and
- * Subspace membership cards, and leaving a Space on the organization's behalf.
+ * Subspace membership rows, and leaving a Space on the organization's behalf.
  *
  * The server-api request-params helpers live in another workspace package that
  * `client-web` cannot import, so the generated SDK client is used directly here,
@@ -36,15 +36,13 @@ export const COPY = {
   filterSubspaces: 'Subspaces',
   roleLead: 'Lead',
   roleMember: 'Member',
-  menuTrigger: 'More actions',
+  leaveAria: (name: string) => `Leave ${name}`,
   dialogTitle: 'Leave this membership?',
   dialogConfirm: 'Leave',
   dialogCancel: 'Cancel',
   success: 'Membership left',
   error: "Couldn't leave — try again",
 } as const;
-
-export type MembershipType = 'Space' | 'Subspace';
 
 export const membershipTabUrl = (base: string, orgNameId: string) =>
   `${base}/organization/${orgNameId}/settings/membership`;
@@ -262,32 +260,30 @@ export const makePersonaUserMember = async (
 // ---------------------------------------------------------------------------
 
 /**
- * Every membership card on the tab: a leaf card carrying the per-card menu.
- * The outer "Space Memberships" container is a card too and is excluded.
- * The cards expose no role or test id (client-web `MembershipsSection.tsx`),
- * so the CRD `Card` primitive's `data-slot` is the hook.
+ * Every membership row on the tab (client-web `MembershipsSection.tsx`, the
+ * list inside the "Space Memberships" section since client-web#10437): one
+ * list item per membership carrying its own "Leave {name}" button. The rows
+ * expose no role or test id, so that per-row Leave button is the hook; the
+ * outer section is a Radix Collapsible that starts open.
  */
-export const membershipCards = (page: Page): Locator =>
+export const membershipRows = (page: Page): Locator =>
   page
-    .locator('[data-slot="card"]')
-    .filter({ hasNot: page.locator('[data-slot="card"]') })
-    .filter({ has: page.getByRole('button', { name: COPY.menuTrigger }) });
+    .getByRole('listitem')
+    .filter({ has: page.getByRole('button', { name: /^Leave / }) });
 
-/** The card whose title is exactly `name`. */
-export const membershipCard = (page: Page, name: string): Locator =>
-  membershipCards(page).filter({
+/** The row whose name is exactly `name` (the name is the row's link to the Space). */
+export const membershipRow = (page: Page, name: string): Locator =>
+  membershipRows(page).filter({
     has: page.getByText(name, { exact: true }),
   });
 
-export const openCardMenu = async (card: Locator) => {
-  await card.getByRole('button', { name: COPY.menuTrigger }).click();
-};
+/** The row's name link — the way to open the Space from the tab. */
+export const viewRowLink = (page: Page, name: string): Locator =>
+  membershipRow(page, name).getByRole('link', { name, exact: true });
 
-export const viewMenuItem = (page: Page, type: MembershipType): Locator =>
-  page.getByRole('menuitem', { name: `View ${type}`, exact: true });
-
-export const leaveMenuItem = (page: Page, type: MembershipType): Locator =>
-  page.getByRole('menuitem', { name: `Leave ${type}`, exact: true });
+/** The row's "Leave {name}" button — opens the destructive confirmation. */
+export const leaveRowButton = (page: Page, name: string): Locator =>
+  page.getByRole('button', { name: COPY.leaveAria(name), exact: true });
 
 export const successToast = (page: Page): Locator =>
   page.getByText(COPY.success, { exact: true });
@@ -299,7 +295,7 @@ export const summaryLine = (page: Page, shown: number, total: number) =>
   page.getByText(COPY.summary(shown, total), { exact: true });
 
 /**
- * Opens the organization's Membership tab and waits until the grid has
+ * Opens the organization's Membership tab and waits until the list has
  * resolved. Retries the navigation because a role granted moments earlier can
  * still be invisible to the settings access guard.
  */

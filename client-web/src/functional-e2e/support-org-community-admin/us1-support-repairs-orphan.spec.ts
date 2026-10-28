@@ -86,7 +86,7 @@ supportTest.describe('W-01 — Support repairs an orphaned organisation: reach t
       await settingsLink.click();
 
       // FR-019/FR-022: the Community tab, alone, with no extra affordance.
-      await expect(page).toHaveURL(new RegExp(`/organization/${orphan.nameID}/settings/community$`));
+      await expect(page).toHaveURL(new RegExp(`/organization/${orphan.nameID}/settings/associates$`));
       await expect(page.getByRole('heading', { name: 'Pending applications & invitations' })).toBeVisible({
         timeout: 20_000,
       });
@@ -146,6 +146,6 @@ supportTest.describe('W-01 — Support sees the repaired organisation', () => {
     expect(held[RoleName.Associate]).toContain(inviteeId);
     expect(held[RoleName.Admin]).toContain(inviteeId);
     // And the page we were on is still the Community tab.
-    await expect(page).toHaveURL(settingsUrl(orphan, '/community'));
+    await expect(page).toHaveURL(settingsUrl(orphan, '/associates'));
   });
 });

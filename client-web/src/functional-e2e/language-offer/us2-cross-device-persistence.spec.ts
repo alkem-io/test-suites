@@ -19,6 +19,7 @@ import {
   gql,
 } from './helpers';
 import { MEMBER_STATE } from './authState';
+import { openSettingsSection } from '../helpers/settings-section.helper';
 
 // Settings language Select (UserSettingsTabView.tsx): SelectTrigger aria-label is
 // the localised "Interface language" (en) / "Interfacetaal" (nl) /
@@ -40,9 +41,15 @@ async function deriveUserSlug(page: Page): Promise<string> {
   return slug as string;
 }
 
+// client-web#10437: the Settings tab is a column of collapsible SettingsSection
+// cards and the "Language" one starts collapsed (`defaultOpen={false}`), its
+// body mounted but hidden. The section's `<h3><button>` trigger carries the
+// localised title — "Language" (en) / "Taal" (nl) / "Sprache" (de) — so, like
+// the Select above, match every rendering the account may be displayed in.
 async function gotoLanguageSettings(page: Page): Promise<void> {
   const slug = await deriveUserSlug(page);
   await page.goto(`${BASE_URL}/user/${slug}/settings/settings`);
+  await openSettingsSection(page, /^(Language|Taal|Sprache)$/, { timeout: 20_000 });
   await expect(languageSelectTrigger(page)).toBeVisible({ timeout: 20_000 });
 }
 

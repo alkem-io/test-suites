@@ -45,8 +45,9 @@ The Alkemio User Profile module provides comprehensive user account management f
 **Expected Results:**
 
 - User profile page loads successfully
-- "My profile" tab is active
-- Profile editing form is displayed
+- "Profile" tab is active (CRD name for "My profile")
+- The Identity section (open by default since client-web#10437) shows the
+  First Name / Last Name inputs
 - User must be logged in to access
 
 #### 1.3 Breadcrumb Navigation
@@ -80,25 +81,18 @@ The Alkemio User Profile module provides comprehensive user account management f
 2. Verify avatar image displays correctly
 3. Check if all form sections are visible
 
-**Expected Results:**
+**Expected Results** (client-web#10437 layout — collapsible `SettingsSection`
+cards; Identity open by default, the others opened by clicking their heading):
 
-- Profile avatar is displayed (shows placeholder if not set)
-- "Edit" button is visible next to avatar
-- All profile fields are visible:
-  - First Name (required, filled with current value)
-  - Last name (required, filled with current value)
-  - Full Name (required, filled with current value)
-  - Phone (optional)
-  - City (optional)
-  - Country (dropdown, optional)
-  - Tagline (optional)
-  - Bio (rich text editor)
-  - Skills (multi-select keywords)
-  - Keywords (multi-select)
-  - Social links: Linkedin, BlueSky, Github
-  - Mail (disabled, shows email)
-  - References section
-- "Save" button is visible at the bottom
+- Profile Picture card with the "Change Avatar" button
+- Identity: Display Name, First Name, Last Name (required), Email
+  (read-only, "Contact support to change email"), Phone (optional)
+- About You: Tagline, Location (City + Country combobox), Bio (rich text
+  editor), Skills, Keywords
+- Social Links: LinkedIn, Bluesky, GitHub
+- References: "Add another reference" / "No references yet"
+- No per-field save: the tab-wide "Unsaved changes" bar stays hidden while
+  nothing was edited
 
 #### 2.2 Edit Profile Avatar
 
@@ -126,17 +120,18 @@ The Alkemio User Profile module provides comprehensive user account management f
 2. Clear existing text and type "TestFirstName"
 3. Click in the "Last name" field
 4. Clear existing text and type "TestLastName"
-5. Verify "Full Name" field auto-updates or can be manually edited
-6. Click "Save"
+5. Click "Save changes" on the bottom "Unsaved changes" bar (client-web#10437:
+   edits are buffered per tab, there is no per-field save)
+6. Reload the page
 
 **Expected Results:**
 
 - Fields accept text input
-- Full Name may auto-populate from First + Last name
-- Required fields show validation indicators (\*)
-- Save button becomes enabled after changes
-- Success notification appears
-- Updated name displays in page banner and throughout application
+- The "Unsaved changes" bar appears on the first edit and counts the changed
+  fields ("1 unsaved change", "2 unsaved changes")
+- "Changes saved" toast appears and the bar slides away after saving
+- The new values are still shown after a reload (persisted server-side)
+- Cleanup restores the persona's original names the same way
 
 #### 2.4 Update Location Information
 

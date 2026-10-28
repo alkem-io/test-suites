@@ -58,7 +58,7 @@ const test = createPersonaTest('space.member@alkem.io');
 const admin = async (fn: (token: string | undefined) => Promise<any>): Promise<any> =>
   graphqlErrorWrapper(fn as any, TestUser.GLOBAL_ADMIN);
 
-type Seeded = { calloutUrl: string; title: string };
+type Seeded = { calloutUrl: string; calloutName: string; title: string };
 const seeded: Record<string, Seeded> = {};
 
 const createMemoCallout = async (
@@ -66,6 +66,7 @@ const createMemoCallout = async (
   title: string,
   markdown: string
 ): Promise<void> => {
+  const calloutName = `${key} ${uniqueId}`;
   const client = getGraphqlClient();
   const created = await admin(token =>
     client.CreateCalloutOnCalloutsSet(
@@ -73,7 +74,7 @@ const createMemoCallout = async (
         calloutData: {
           calloutsSetID: baseScenario.space.collaboration.calloutsSetId,
           framing: {
-            profile: { displayName: `${key} ${uniqueId}` },
+            profile: { displayName: calloutName },
             type: CalloutFramingType.Memo,
             memo: { markdown, profile: { displayName: title } },
           },
@@ -85,7 +86,7 @@ const createMemoCallout = async (
   );
   const calloutUrl = created.data?.createCalloutOnCalloutsSet?.framing?.profile?.url ?? '';
   if (!calloutUrl) throw new Error(`memo callout ${key} not created: ${JSON.stringify(created.error)}`);
-  seeded[key] = { calloutUrl, title };
+  seeded[key] = { calloutUrl, calloutName, title };
 };
 
 test.beforeAll(async () => {
@@ -143,9 +144,18 @@ test.afterAll(async () => {
 
 const openMemo = async (page: Page, key: string) => {
   await page.goto(seeded[key].calloutUrl);
-  await page.getByRole('button', { name: 'Open Memo' }).first().click();
-  const dialog = page.getByRole('dialog', { name: seeded[key].title });
-  await expect(dialog).toBeVisible({ timeout: 15_000 });
+  // The callout deep link opens the callout detail dialog (named after the
+  // callout). The memo must be opened from THAT dialog's "Open Memo" once it is
+  // up, never from the first matching button on the page: the space page
+  // behind it also lists the memo callouts with their own "Open Memo", and a
+  // memo opened from there mounts BELOW the (lazily arriving) callout dialog,
+  // which then hides it from assistive tech — nameless dialog, nameless
+  // "Download PDF" (nightlies 2026-10-22 and 2026-10-27 on test-alkem.io).
+  const calloutDialog = page.getByRole('dialog', { name: seeded[key].calloutName, exact: true });
+  await expect(calloutDialog).toBeVisible();
+  await calloutDialog.getByRole('button', { name: 'Open Memo' }).click();
+  const dialog = page.getByRole('dialog', { name: seeded[key].title, exact: true });
+  await expect(dialog).toBeVisible();
   return dialog;
 };
 

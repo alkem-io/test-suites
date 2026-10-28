@@ -202,7 +202,7 @@ async function applyToAssociateViaUi(page: Page, orgNameId: string, message: str
 }
 
 async function openAssociatesTab(page: Page, orgNameId: string) {
-  await page.goto(`${baseUrl}/organization/${orgNameId}/settings/community`);
+  await page.goto(`${baseUrl}/organization/${orgNameId}/settings/associates`);
   await expect(page.getByRole('heading', { name: 'Associates' })).toBeVisible({ timeout: 15_000 });
 }
 

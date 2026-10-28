@@ -14,6 +14,7 @@ import { CommunityGuidelinesTemplateForm } from './forms/template-form.models';
 import { fillCommunityGuidelinesForm } from './forms/community-guidelines-template-form';
 import { verifyCommunityGuidelinesTemplate } from './verify/community-guidelines-template-verify';
 import { sectionAddNewButton } from './section-helpers';
+import { openSettingsSection } from '@src/functional-e2e/helpers/settings-section.helper';
 
 // Create the authenticated fixture with a unique storage state name for this test suite
 const { test, setupAuthentication, teardownAuthentication } =
@@ -243,16 +244,23 @@ test.describe.serial('Community Guidelines Template', () => {
       `${baseUrl}/${baseScenario.space.nameId}/settings/community`
     );
 
-    // The "Community Guidelines" block is collapsed by default. The trigger is
-    // a button whose accessible name combines the heading + helper paragraph.
-    const guidelinesSection = page.getByRole('button', {
-      name: /^Community Guidelines/,
+    // Since client-web#10437 the Community tab is built from collapsible
+    // SettingsSection cards. "Community Guidelines" starts collapsed and is
+    // not even mounted until its `<h3><button>` trigger is clicked.
+    await openSettingsSection(page, 'Community Guidelines');
+
+    // The guidelines are previewed inline; editing (and the template actions)
+    // moved into a SettingsEditorDialog opened by "Edit Guidelines".
+    await page.getByRole('button', { name: 'Edit Guidelines' }).click();
+    const editorDialog = page.getByRole('dialog', {
+      name: 'Community Guidelines',
+      exact: true,
     });
-    await guidelinesSection.click();
+    await expect(editorDialog).toBeVisible();
 
     // Open the picker. If the block already had data (e.g. a previous run
     // applied a template), an alertdialog asks to confirm overwriting it.
-    await page.getByRole('button', { name: 'Use a template' }).click();
+    await editorDialog.getByRole('button', { name: 'Use a template' }).click();
     const replaceAlert = page.getByRole('alertdialog', {
       name: 'Replace the current guidelines?',
     });
@@ -272,17 +280,40 @@ test.describe.serial('Community Guidelines Template', () => {
     await item.getByRole('button', { name: 'Use template', exact: true }).click();
     await expect(pickerDialog).not.toBeVisible();
 
-    // The picker fills in the guidelines block inline. Verify the title input
-    // and rich-text body were populated from the template. Target the main
-    // title field by its placeholder - the reference rows also expose a "Title"
+    // The picker fills in the editor dialog. Verify the title input and the
+    // rich-text body were populated from the template. Target the main title
+    // field by its placeholder - the reference rows also expose a "Title"
     // textbox (placeholder "Reference title"), so the role+name match alone is
     // ambiguous once the template's references are applied.
     await expect(
-      page.getByPlaceholder('Name your community guidelines')
+      editorDialog.getByPlaceholder('Name your community guidelines')
     ).toHaveValue(templateData.guidelines.displayName);
+    await expect(
+      editorDialog.getByText(templateData.guidelines.description, { exact: true })
+    ).toBeVisible();
+
+    // Applying a template is itself the write (the picker runs the
+    // select-template mutation and clears the dialog's local buffer), so the
+    // dialog is not dirty and its Save stays disabled. Close it and read the
+    // persisted guidelines back through the inline preview: title, body and
+    // the reference links.
+    await expect(editorDialog.getByRole('button', { name: 'Save', exact: true })).toBeDisabled();
+    await editorDialog.getByRole('button', { name: 'Cancel', exact: true }).click();
+    await expect(editorDialog).not.toBeVisible();
+    await expect(
+      page.getByRole('heading', { name: templateData.guidelines.displayName, exact: true })
+    ).toBeVisible();
     await expect(
       page.getByText(templateData.guidelines.description, { exact: true })
     ).toBeVisible();
+    // 1.1 seeds two references and 1.2 adds a third; an empty list would make
+    // the loop below vacuous.
+    expect(templateData.guidelines.references?.length ?? 0).toBeGreaterThan(0);
+    for (const reference of templateData.guidelines.references ?? []) {
+      await expect(
+        page.getByRole('link', { name: reference.title, exact: true })
+      ).toHaveAttribute('href', reference.url);
+    }
   });
 
   // test('1.5 Delete Community Guidelines Template', async ({ page }) => {

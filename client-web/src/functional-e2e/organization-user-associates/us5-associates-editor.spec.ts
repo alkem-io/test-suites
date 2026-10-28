@@ -247,7 +247,7 @@ baseTest.afterAll(async () => {
 // ─── Page-level helpers ────────────────────────────────────────────────────
 
 async function openAssociatesTab(page: Page, orgNameId: string) {
-  await page.goto(`${baseUrl}/organization/${orgNameId}/settings/community`);
+  await page.goto(`${baseUrl}/organization/${orgNameId}/settings/associates`);
   await expect(page.getByRole('heading', { name: 'Associates' })).toBeVisible({ timeout: 15_000 });
 }
 
@@ -265,9 +265,9 @@ async function openRowEditor(page: Page, name: string) {
 // ─── US5-AS1 ────────────────────────────────────────────────────────────
 
 actorTest.describe('US5-AS1 — the retired Authorization URL lands on the Associates tab', () => {
-  actorTest('/settings/authorization redirects to /settings/community and shows the Associates card', async ({ page }) => {
+  actorTest('/settings/authorization redirects to /settings/associates and shows the Associates card', async ({ page }) => {
     await page.goto(`${baseUrl}/organization/${orgAdminCap.nameID}/settings/authorization`);
-    await expect(page).toHaveURL(new RegExp(`/organization/${orgAdminCap.nameID}/settings/community$`), {
+    await expect(page).toHaveURL(new RegExp(`/organization/${orgAdminCap.nameID}/settings/associates$`), {
       timeout: 15_000,
     });
     await expect(page.getByRole('heading', { name: 'Associates' })).toBeVisible({ timeout: 15_000 });
@@ -275,7 +275,7 @@ actorTest.describe('US5-AS1 — the retired Authorization URL lands on the Assoc
   });
 
   actorTest('the tab strip is Profile / Account / Associates / Membership / Invitations / Settings — no Authorisation tab', async ({ page }) => {
-    await page.goto(`${baseUrl}/organization/${orgAdminCap.nameID}/settings/community`);
+    await page.goto(`${baseUrl}/organization/${orgAdminCap.nameID}/settings/associates`);
     await expect(page.getByRole('heading', { name: 'Associates' })).toBeVisible({ timeout: 15_000 });
     // shell.tabs.org in contributorSettings.en.json; the strip renders each
     // entry as role="tab" (the breadcrumb above it also links "Settings", so

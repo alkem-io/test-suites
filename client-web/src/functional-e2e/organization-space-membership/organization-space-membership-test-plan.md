@@ -49,7 +49,7 @@ Levels are the 083 risk register's (workspace `specs/083-org-leave-space`,
 | R-3 | Leave acts on the wrong role set (parent instead of Subspace) | — | — | high | US2-AS3, US2-AS4, US3-AS1 |
 | R-4 | Leave leaves a Lead-without-Member behind (D-2 "Lead survives" was superseded by the server#6649 operator ruling: leaving is all-or-nothing) | — | — | medium | US2-AS5, US3-AS8 |
 | R-6 | A failed leave reports success | — | — | medium | US2-AS6 |
-| R-7 | "No memberships" flashes before the cards | — | — | medium | US1-AS9 |
+| R-7 | "No memberships" flashes before the rows | — | — | medium | US1-AS9 |
 | R-10 | The tab is reachable by non-admins | — | — | low | US1-AS7 |
 
 Elevated-risk triggers present: ☑ authorization change · ☐ migration · ☐ schema change (diff 0) · ☐ infra.
@@ -71,7 +71,7 @@ US3 rows in `server-api/src/functional-api/roleset/organization/organization-sel
 
 | Scenario | Covers | Automated by | Layer |
 |---|---|---|---|
-| US1-AS1 | Tab position; S/S1 cards with type and role badges; "Showing 2 of 2" | `us1-membership-tab.spec.ts` › US1-AS1 tab lists the Space and Subspace memberships | E2E |
+| US1-AS1 | Tab position; S/S1 rows with role badges, S1's link under S (no per-row kind label since client-web#10437); "Showing 2 of 2" | `us1-membership-tab.spec.ts` › US1-AS1 tab lists the Space and Subspace memberships | E2E |
 | US1-AS2 | Search; All / Spaces / Subspaces filter | › US1-AS2 search narrows by name and the filter splits Spaces from Subspaces | E2E |
 | US1-AS3 | Filtered empty state; Clear Filters resets | › US1-AS3 nothing matches → No memberships found, Clear Filters resets | E2E |
 | US1-AS4 | No memberships → caption only | › US1-AS4 organization with no memberships shows only the empty caption | E2E |
@@ -79,7 +79,7 @@ US3 rows in `server-api/src/functional-api/roleset/organization/organization-sel
 | US1-AS6 | View Space | › US1-AS6 View Space opens the Space | E2E |
 | US1-AS7 | Plain associate redirected | › US1-AS7 a plain associate is redirected to the public profile | E2E |
 | US1-AS8 | Breadcrumb, no raw keys — **partial**, see gaps; the title assertion is pinned with `test.skip` on client-web#10415 | › US1-AS8 breadcrumb names the tab; no raw i18n keys · › US1-AS8 the browser title names the tab (skipped) | E2E |
-| US1-AS9 | Skeleton while `OrganizationSettingsMemberships` is held; no empty caption | › US1-AS9 skeleton while loading, never the empty caption before the cards | E2E (request delayed, not faked) |
+| US1-AS9 | Skeleton while `OrganizationSettingsMemberships` is held; no empty caption | › US1-AS9 skeleton while loading, never the empty caption before the rows | E2E (request delayed, not faked) |
 | US2-AS1 | Dialog names S1; nothing sent; still Member | `us2-org-leaves-space.spec.ts` › US2-AS1 Leave Subspace opens a destructive confirmation naming the Subspace | E2E + API read |
 | US2-AS2 | Cancel changes nothing | › US2-AS2 Cancel changes nothing | E2E + API read |
 | US2-AS3 | Leave S1 only; toast within 3 s (SC-001) | › US2-AS3 confirming leaves only the Subspace chosen | E2E + API read |
@@ -112,8 +112,8 @@ US3 rows in `server-api/src/functional-api/roleset/organization/organization-sel
 |---|---|---|
 | US1-AS8 / FR-012 — copy in all six languages | Switching the UI language persists on the shared persona and would leak into parallel specs; locale assertions have no home here (`harness.md`) | client-web i18n key-parity unit test + manual release check |
 | US1-AS8 / FR-001 — browser title | Pre-existing race between the settings shell's "Profile" title and each tab's own title: [alkem-io/client-web#10415](https://github.com/alkem-io/client-web/issues/10415). The nightly of 2026-10-12 showed it losing after in-app tab navigation too, so the title walk is kept as a `test.skip` pin until the fix lands | client-web; un-skip (and add the cold-load assertion) once #10415 ships |
-| FR-016 — focus trapped in and returned from the Leave dialog; banner alt text; "Led by" group label | No accessibility harness (`harness.md`). The walks pin only the filter's `aria-pressed` and the menu trigger's accessible name | Manual a11y check; client-web `MembershipsSection.test.tsx` pins `aria-pressed` only |
-| C-5 — a Space the viewing admin cannot read is not listed (API leave still allowed) | Every walk makes the persona a user-Member so that its cards render; no case drops that read access | Manual, or a future walk with a non-member admin |
+| FR-016 — focus trapped in and returned from the Leave dialog; banner alt text; "Led by" group label | No accessibility harness (`harness.md`). The walks pin only the filter's `aria-pressed` and the per-row Leave button's accessible name ("Leave {name}") | Manual a11y check; client-web `MembershipsSection.test.tsx` pins `aria-pressed` only |
+| C-5 — a Space the viewing admin cannot read is not listed (API leave still allowed) | Every walk makes the persona a user-Member so that its rows render; no case drops that read access | Manual, or a future walk with a non-member admin |
 | Archived Spaces excluded from the tab | No scenario archives a Space with an organization member | Manual / server `rolesOrganization` tests |
 | SC-004 — the Space-side organization and invitation suites stay green | They run in the same `roleset` project, but 16 of them are red on develop after 027 Slice B (no holder of `roleset-entry-role-assign-organization`), independently of 083 | Fix tracked outside 083; rerun before release |
 | US2-AS6 — leave when the Space's community cannot be resolved (C-10) | Only the "removed meanwhile" failure is driven; making the community unresolvable mid-walk needs a read-access change the walk does not make | client-web `useOrgMembershipTabData.test.ts` › rejects without sending the mutation when the role set cannot be resolved, and refreshes the list |
