@@ -10,6 +10,7 @@ import {
   gutterRow,
   conversationRow,
   ensureConversationList,
+  matrixSendPath,
   messageColumn,
   openChatPanel,
   openConversation,
@@ -21,6 +22,7 @@ import {
   teardownAccounts,
   uploadProfileAvatar,
   visibleAuthorName,
+  type MatrixSendPath,
   type TestPerson,
 } from './chat-avatars.helpers';
 
@@ -57,6 +59,7 @@ const initialsOf = (name: string) =>
 test.describe('US1 — group thread sender avatars', { tag: ['@chat-avatars'] }, () => {
   let viewer: TestPerson, bella: TestPerson, charlie: TestPerson;
   let bellaAvatarSrc: string;
+  let sendPath: MatrixSendPath;
 
   test.beforeAll(async ({ browser }) => {
     test.setTimeout(600000);
@@ -73,6 +76,10 @@ test.describe('US1 — group thread sender avatars', { tag: ['@chat-avatars'] },
     // assigns every new account (AS1 vs AS5).
     bellaAvatarSrc = await uploadProfileAvatar(bella);
 
+    // Every scenario below types a message, so the whole file needs the
+    // browser → Matrix send path; probed once, applied per test in beforeEach.
+    sendPath = await matrixSendPath(viewer.page);
+
     await openChatPanel(viewer.page);
     await createConversation(viewer.page, [bella.displayName, charlie.displayName]);
 
@@ -82,6 +89,10 @@ test.describe('US1 — group thread sender avatars', { tag: ['@chat-avatars'] },
       await openChatPanel(person.page);
       await openConversation(person.page, [uid]);
     }
+  });
+
+  test.beforeEach(() => {
+    test.skip(!sendPath.reachable, sendPath.reachable ? undefined : sendPath.reason);
   });
 
   test.afterAll(async () => {

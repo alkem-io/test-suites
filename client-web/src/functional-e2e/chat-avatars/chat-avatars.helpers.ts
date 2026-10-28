@@ -492,6 +492,47 @@ export async function expectMessageReceived(page: Page, text: string): Promise<v
   await expect(messageColumn(page, text)).toHaveCount(1, { timeout: 30000 });
 }
 
+// ─────────────────────── environment precondition ───────────────────────
+
+export type MatrixSendPath = { reachable: true } | { reachable: false; reason: string };
+
+/**
+ * Whether the browser can reach the Matrix homeserver the client is built
+ * against. Since client-web#10365 the composer sends straight to Matrix
+ * (`window._env_.VITE_APP_MATRIX_HOMESERVER_URL`), so a homeserver the browser
+ * cannot resolve turns every send into the alert "Send was not confirmed" —
+ * an environment fact, not a product one. test-alkem.io has had no
+ * `matrix.` DNS record since 2026-10-21 (alkem-io/infrastructure-provisioning#51);
+ * ACC and the local stack resolve theirs.
+ *
+ * The probe runs from Node (no CORS) and only asks whether the host answers at
+ * all: any HTTP status counts as reachable, a transport failure (NXDOMAIN,
+ * refused, TLS, time-out) does not. An unset URL is reported reachable so the
+ * walk still runs — and still fails honestly — on a stack that is configured
+ * differently. Callers `test.skip` on `reachable === false`; the skip lifts
+ * itself the moment the record exists.
+ */
+export async function matrixSendPath(page: Page): Promise<MatrixSendPath> {
+  type EnvWindow = { _env_?: { VITE_APP_MATRIX_HOMESERVER_URL?: string } };
+  const homeserverUrl = await page.evaluate(
+    () => (window as unknown as EnvWindow)._env_?.VITE_APP_MATRIX_HOMESERVER_URL?.trim() ?? ''
+  );
+  if (!homeserverUrl) return { reachable: true };
+  try {
+    await fetch(`${homeserverUrl}/_matrix/client/versions`, { signal: AbortSignal.timeout(10000) });
+    return { reachable: true };
+  } catch (error) {
+    const { cause } = error as { cause?: { code?: string; message?: string } };
+    const why = cause?.code ?? cause?.message ?? (error as Error).message;
+    return {
+      reachable: false,
+      reason:
+        `Matrix homeserver ${homeserverUrl} is unreachable from this environment (${why}); ` +
+        'browser sends cannot be confirmed — alkem-io/infrastructure-provisioning#51',
+    };
+  }
+}
+
 // ─────────────────────── message-bubble selectors ───────────────────────
 // These map 1:1 onto ChatMessageBubble.tsx:
 //   <div class="flex items-start gap-2">           ← gutter row (group, incoming)

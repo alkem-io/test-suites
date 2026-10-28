@@ -120,6 +120,22 @@ independently asserted.
 | US3-AS2 | 1:1 header for a person who never uploaded a picture uses the **same** treatment as their list row, and shows their identity rather than the other contact's | `us3-…` › US3-AS2 |
 | US3-AS3 | 1:1 message bubbles are untouched — no gutter, no avatar, no injected attribution, incoming or outgoing (FR-011) | `us3-…` › US3-AS3 |
 
+## Environment precondition — the browser → Matrix send path
+
+Since client-web#10365 the composer sends straight to the Matrix homeserver the
+client is built against (`VITE_APP_MATRIX_HOMESERVER_URL`). Where the browser
+cannot reach that host every send ends in the alert "Send was not confirmed",
+whatever the product does — on **test-alkem.io** that has been the case since
+2026-10-21 because the zone has no `matrix.` A record
+(alkem-io/infrastructure-provisioning#51; ACC and the local stack resolve
+theirs). `chat-avatars.helpers.ts::matrixSendPath` probes
+`<homeserver>/_matrix/client/versions` from Node once per file and the walks
+that type a message — all of US1, and US3-AS3 — `test.skip` with that reason
+when the host does not answer at all (any HTTP status counts as reachable). The
+skip lifts itself the moment the record exists; US2 and US3-AS1/AS2 never send,
+so they run regardless. Added after nightly run 40707979543 (2026-10-28) so the
+nightly reads green/red on product behaviour only.
+
 ## Not covered — known gaps
 
 | Scenario | Why not automated end to end | Where it is covered instead |
