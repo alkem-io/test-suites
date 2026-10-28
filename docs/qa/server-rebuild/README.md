@@ -1,6 +1,6 @@
 # Server rebuild — QA tracker
 
-_One place for everything QA does for the move to the rebuilt server. Status is updated in this file; the reasoning lives in the documents it links. Last update: 2026-10-28 (W0 delivered)._
+_One place for everything QA does for the move to the rebuilt server. Status is updated in this file; the reasoning lives in the documents it links. Last update: 2026-10-28 (W0 delivered; W4 register seeded)._
 
 ## Documents
 
@@ -12,6 +12,8 @@ _One place for everything QA does for the move to the rebuilt server. Status is 
 | [`catalogue/README.md`](catalogue/README.md) | W0 output: the platform feature catalogue (57 features over the 298 root fields of the legacy schema) and the coverage matrix — API reach, UI verdict, harness use, specs and plans, where it lands in the new core, slice, verdict, gap | generated 2026-10-28; verdicts 14 full / 34 partial / 5 absent / 4 dead-by-design |
 | [`catalogue/root-fields.md`](catalogue/root-fields.md) | Appendix: every root field traced to its feature, lib operation, server-api areas and client-web specs | generated 2026-10-28 |
 | [`catalogue/_tools/`](catalogue/_tools/README.md) | How to regenerate the catalogue from a fresh schema and test-suites revision | done |
+| [`data-integrity/acc-defect-register.md`](data-integrity/acc-defect-register.md) | W4 step 1: the ACC data-defect register — ~90 signatures across all 7 databases with counts, likely origin and a proposed rebuild classification (vanishes / repair / expected loss / quarantine / repair now / ops / ruling); identifiers stripped | seeded 2026-10-28 from the ACC audit (v0.170.2); classifications proposed, decisions 8 and 11 open |
+| [`data-integrity/acc-audit-queries/`](data-integrity/acc-audit-queries/README.md) | The 41 read-only SQL probes behind the register, with the run recipe; outputs stay off-repo | stored 2026-10-28; environment-agnostic, PROD rerun pending |
 | [`knowledge/<area>.md`](knowledge/) | W1 output: one behaviour document per area (rule · why · actors · evidence · legacy status · new-core mapping) | 1 of 25 drafted (`entitlements.md`) |
 | [`client-net-audit/`](client-net-audit/README.md) | The 2026-10-14 client-web audit: 62 journeys, per-spec verdicts, harness-dependency inventory, Tier 0/1/2 backlog | done; the backlog feeds W2 |
 | `../qa-knowledge/coverage-map.md` | Story-level coverage with spec references, delivered work since 2026-09 | tracked separately, referenced by gap 11 |
@@ -24,7 +26,7 @@ _One place for everything QA does for the move to the rebuilt server. Status is 
 | W1 | Server behaviour knowledge base | no | 1 / 25 areas | extract `journey` and `callout` next (slices 4–5 territory) | review capacity (gap 8) |
 | W2 | Client-web net built now | no | not started | pre-work: fold 45 spec-local GraphQL documents into the lib, lib-owned enums, ESLint boundary, lib contract test | — (W0 confirmed the ranked 12; adds task boards and community guidelines as cheap cases) |
 | W3 | Dedicated validation environment | decisions now, build later | decisions open | decisions 1–4; isolation rules into `e2e-conventions.md` and ESLint; sweeper design | ops for the mail relay |
-| W4 | Migration and integrity kit | legacy half no, new half yes | not started | write the legacy-side layers 1–3 and 5; run the defect-signature probes on ACC for the pre-image | decisions 8, 10, 11 |
+| W4 | Migration and integrity kit | legacy half no, new half yes | register seeded (addendum step 1) | take the register's two pre-dry-run repairs (C1/C2 tree and URL defects, S1/S2 backup gap) to backend and ops; agree the V/R/E/Q classification (decisions 8, 11); write the legacy-side layers 1–3 and 5; PROD rerun of the probes by an operator | decisions 8, 10, 11, 12 |
 | W5 | Re-point the lib and the harness | yes | gated | send the harness-contract asks (decision 9) to the backend team now | the SDL and a running core |
 | W6 | Test-suites redesign | skeleton no, fill yes | not started | package skeleton after W2 pre-work lands | decision 13 |
 
@@ -57,6 +59,21 @@ _One place for everything QA does for the move to the rebuilt server. Status is 
 | subscriptions | 3 | 5 | | |
 | configuration | 2 | 2 | | |
 | innovation-pack | 1 | 1 | | |
+
+### W4 progress
+
+| Item | State |
+|---|---|
+| Addendum step 1 — defect register from what is known | seeded 2026-10-28: ACC audit, all 7 databases, ~90 signatures |
+| Addendum step 2 — classify each signature with the backend team | proposed per row; not yet agreed (decisions 8, 11) |
+| Addendum step 3 — run the probes on ACC / hand to an operator for PROD | ACC done 2026-10-28; PROD not run (no prod context) |
+| Pre-dry-run repairs the register exposes | C1 broken tree, C2 duplicate L0 nameIDs, S1/S2 offsite file-backup gap (719 + 938 blobs), A1 live escalation on ACC — none actioned, nothing filed |
+| Layer 1 inventory parity (legacy side) | not started |
+| Layer 2 identity and URL parity (legacy side) | not started |
+| Layer 3 content fidelity (legacy side) | not started; S1 means the file-hash list will show a known gap until the backfill |
+| Layer 5 state and settings parity (legacy side) | not started |
+| Layer 6 chat parity | tolerance list exists (P1–P3); kit not started |
+| Layers 4, 7 and all new-side halves | gated on the DDL / a running core |
 
 ### W2 progress
 
@@ -93,11 +110,11 @@ Full text and recommendations in [`plan.md` § Decisions](plan.md#decisions-need
 | 5 | Where the knowledge base lives | — | **taken**: `docs/qa/server-rebuild/knowledge/` | 2026-10-28 |
 | 6 | Server-api PRs #612 and #545 | — | open | |
 | 7 | Rebaseline rulings | product | open, per row | |
-| 8 | Expected-loss list | backend | open | |
+| 8 | Expected-loss list | backend | open — seed exists: every **V** and **E** row of the register with its count | |
 | 9 | Harness contract on the new core | backend | open — asks not yet sent | |
 | 10 | Dataset for the validation environment | DPO / legal | open | |
-| 11 | ETL quarantine contract | backend | open | |
-| 12 | Backup inventory for the new stores | ops | open | |
+| 11 | ETL quarantine contract | backend | open — concrete shapes to ask for: register rows B1, C1, E1/I1, F2, K1, L2, L5, P2 | |
+| 12 | Backup inventory for the new stores | ops | open — new input: the offsite file backup is missing 1.75 GB of 2026 blobs and most of 2023 (register S1, S2); repair precedes any cutover | |
 | 13 | Test-suites redesign scope | — | open | |
 | 14 | Cutover go/no-go ownership | — | open | |
 
@@ -126,6 +143,7 @@ Full text in [`plan.md` § Gaps](plan.md#gaps-found-in-the-plan-so-far).
 | 2026-10-14 | Client-web net audit written; Tier 0 registrations built |
 | 2026-10-27 | Plan written (lib-first draft superseded the same day); first inventory by regex; entitlements example |
 | 2026-10-28 | Inventory regenerated by vitest collection after the regex version was found truncating names; plan counts corrected; gap 11 added; everything consolidated here and committed on `qa/server-rebuild-qa-plan` (PR test-suites#693) |
+| 2026-10-28 | W4 register seeded from the ACC data-quality audit handed over by another session (all 7 databases, v0.170.2); identifiers stripped; the 41 probes stored under `data-integrity/acc-audit-queries/`; outputs and CSV dumps kept off-repo |
 | 2026-10-28 | W0 delivered: 298 root fields of `server` `develop` @ `eeecf9ddb` traced through lib, server-api and client-web on test-suites @ `015bfeea1`; 57 features with verdicts; gap 11 closed |
 
 ## How to update
