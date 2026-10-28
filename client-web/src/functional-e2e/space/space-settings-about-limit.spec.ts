@@ -39,6 +39,7 @@ const COPY = {
   countHint:
     'Formatting, images and links count toward the limit too, so this number may be higher than the text you see.',
   save: 'Save changes',
+  saving: 'Saving…',
   saved: 'Changes saved',
 } as const;
 
@@ -99,6 +100,57 @@ const saveButton = (page: Page, _field: Field): Locator =>
   page
     .getByRole('region', { name: 'Unsaved changes', exact: true })
     .getByRole('button', { name: COPY.save, exact: true });
+// The "Changes saved" toast and the bar's save-error alert are page-level
+// (the "Notifications" toaster region / `UnsavedChangesBar`), never inside an
+// editor's section. Both render a tick after the `updateSpace` response, so
+// callers check them after the persisted read, not straight after the click.
+const savedToast = (page: Page): Locator =>
+  page.getByText(COPY.saved, { exact: true });
+const barAlert = (page: Page): Locator =>
+  page
+    .getByRole('region', { name: 'Unsaved changes', exact: true })
+    .getByRole('alert');
+
+/**
+ * Clicks Save when the fix leaves it enabled and waits for the attempt to
+ * settle: the `updateSpace` round trip when one is sent, then the bar leaving
+ * "Saving…". A fix that refuses
+ * the click client-side sends nothing, so that branch ends at the bounded
+ * wait; one that disables Save never clicks. Either way the caller then reads
+ * the persisted value (first), which can no longer race an in-flight save.
+ */
+const saveIfEnabledAndSettle = async (
+  page: Page,
+  field: Field
+): Promise<void> => {
+  if (!(await saveButton(page, field).isEnabled())) return;
+  const saveRoundTrip = page
+    .waitForResponse(
+      res => /\bupdateSpace\b/.test(res.request().postData() ?? ''),
+      { timeout: 15_000 }
+    )
+    .catch(() => null); // no request is a valid outcome (client-side refusal)
+  await saveButton(page, field).click();
+  await saveRoundTrip;
+  // The bar stays "Saving…" through the post-save refetch; the toast fires
+  // once it leaves that state (clean → hidden, or dirty / save error).
+  await expect(
+    page
+      .getByRole('region', { name: 'Unsaved changes', exact: true })
+      .getByText(COPY.saving, { exact: true })
+  ).toHaveCount(0);
+};
+const expectPersistedLength = async (
+  field: Field,
+  expected: number
+): Promise<void> => {
+  await expect
+    .poll(async () => (await aboutLengths(scenario!.space.id))[field], {
+      message: `persisted ${field} length`,
+    })
+    .toBe(expected);
+};
+
 const tooltipWith = (page: Page, text: string): Locator =>
   page.getByRole('tooltip').filter({ hasText: text }).first();
 
@@ -226,12 +278,9 @@ test.describe('Space settings About — description limits (client-web#9972)', (
       section(page, 'what').getByText(COPY.overLimit, { exact: true })
     ).toBeVisible();
     // Whether the fix disables Save or refuses the click is its call; either way nothing persists.
-    if (await saveButton(page, 'what').isEnabled())
-      await saveButton(page, 'what').click();
-    await expect(
-      section(page, 'what').getByText(COPY.saved, { exact: true })
-    ).toHaveCount(0);
-    expect((await aboutLengths(scenario!.space.id)).what).toBe(before.what);
+    await saveIfEnabledAndSettle(page, 'what');
+    await expectPersistedLength('what', before.what);
+    await expect(savedToast(page)).toHaveCount(0);
   });
 
   test('AL-2 Why and Who: ring from 6,400 against 32,000, hint from 25,600', async ({
@@ -281,12 +330,9 @@ test.describe('Space settings About — description limits (client-web#9972)', (
     await expect(
       section(page, 'why').getByText(COPY.overLimit, { exact: true })
     ).toBeVisible();
-    if (await saveButton(page, 'why').isEnabled())
-      await saveButton(page, 'why').click();
-    await expect(
-      section(page, 'why').getByText(COPY.saved, { exact: true })
-    ).toHaveCount(0);
-    expect((await aboutLengths(scenario!.space.id)).why).toBe(before.why);
+    await saveIfEnabledAndSettle(page, 'why');
+    await expectPersistedLength('why', before.why);
+    await expect(savedToast(page)).toHaveCount(0);
 
     await editor(page, 'who').fill(textForCount(SERVER_WHY_WHO_LIMIT + 100));
     await expect(ring(page, 'who')).toHaveAccessibleName(
@@ -295,12 +341,10 @@ test.describe('Space settings About — description limits (client-web#9972)', (
     await expect(
       section(page, 'who').getByText(COPY.overLimit, { exact: true })
     ).toBeVisible();
-    if (await saveButton(page, 'who').isEnabled())
-      await saveButton(page, 'who').click();
+    await saveIfEnabledAndSettle(page, 'who');
+    await expectPersistedLength('who', before.who);
     await expect(section(page, 'who').getByRole('alert')).toHaveCount(0);
-    await expect(
-      section(page, 'who').getByText(COPY.saved, { exact: true })
-    ).toHaveCount(0);
-    expect((await aboutLengths(scenario!.space.id)).who).toBe(before.who);
+    await expect(barAlert(page)).toHaveCount(0);
+    await expect(savedToast(page)).toHaveCount(0);
   });
 });

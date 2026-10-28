@@ -21,8 +21,11 @@ export async function deleteSpaceByNameId(nameID: string): Promise<void> {
   let lookup = await lookupOnce();
   // A Space whose creation is still in flight (the walk failed mid-create)
   // exists but has no authorization policy yet, and the lookup answers
-  // AUTHORIZATION_INVALID_POLICY instead of the id; it settles within the
-  // create transaction. Poll until the lookup answers either way.
+  // AUTHORIZATION_INVALID_POLICY instead of the id. There is no create
+  // transaction: createSpace saves the Space and only then applies and saves
+  // its policies (server account.resolver.mutations.ts), so the window closes
+  // when that second pass finishes — or never, if it fails, which leaves the
+  // orphan server#6648 describes. Poll until the lookup answers either way.
   const creationInFlight = () => JSON.stringify(lookup.error ?? '').includes('AUTHORIZATION_INVALID_POLICY');
   if (creationInFlight()) {
     await expect
@@ -31,7 +34,10 @@ export async function deleteSpaceByNameId(nameID: string): Promise<void> {
           lookup = await lookupOnce();
           return creationInFlight();
         },
-        { timeout: 60_000, message: `Space '${nameID}' still mid-creation` }
+        {
+          timeout: 60_000,
+          message: `Space '${nameID}' still has no authorization policy after 60 s — an orphaned create (server#6648), not a slow one`,
+        }
       )
       .toBe(false);
   }

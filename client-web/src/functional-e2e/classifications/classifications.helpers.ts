@@ -15,7 +15,7 @@
  * - Template card preview:  "Preview: <name>"; card kebab "Template actions"
  * - Template delete:        alertdialog "Delete template?" → button "Delete template"
  *
- * Save model (client-web#10437, spec 045 Session 2026-10-22 superseding 024 FR-006a): every
+ * Save model (client-web#10437; workspace spec 024 Session 2026-10-22 amends FR-006a for the CRD client): every
  * classification add, removal, selection and display toggle on Settings → About is STAGED and
  * written only by the tab-wide "Save changes" bar. The UI helpers below therefore stage AND save
  * by default (`{ save: false }` keeps the change staged), and each Save is anchored on the

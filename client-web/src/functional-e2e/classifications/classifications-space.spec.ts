@@ -136,18 +136,18 @@ test.describe('SL-01 add + select roundtrip', () => {
   const V2 = 'e2e024 SL Two';
   const V3 = 'e2e024 SL Three';
 
-  test('SL-01 US1-AS2/AS4/AS8 — staged add written by the tab Save bar, authored order, persistence, sibling-safe deselect, same entry after reselection (FR-006a as superseded by 045 Session 2026-10-22, FR-002b/012a/012d, SC-002)', async ({
+  test('SL-01 US1-AS2/AS4/AS8 — staged add written by the tab Save bar, authored order, persistence, sibling-safe deselect, same entry after reselection (FR-006a as amended for the CRD client by 024 Session 2026-10-22, FR-002b/012a/012d, SC-002)', async ({
     page,
   }) => {
     test.setTimeout(120_000);
     test.info().annotations.push({
-      type: 'deviation',
+      type: 'info',
       description:
-        'Workspace spec 024 FR-006a (adds and selections commit immediately, no Save) is superseded by ' +
-        'client-web spec 045 Session 2026-10-22 / client-web#10437: every classification change on ' +
-        'Settings → About is staged and written by the tab-wide "Save changes" bar. FR-012a\'s ' +
-        'auto-expanding selector became an always-on chip row (every value as a chip; the ' +
-        'checkbox selector is opened from the kebab).',
+        'Workspace spec 024 Session 2026-10-22 (agents-hq#228, following client-web spec 045 / ' +
+        'client-web#10437) narrows FR-006a to the server: in the CRD client every classification ' +
+        'change on Settings → About is staged and written by the tab-wide "Save changes" bar. The ' +
+        'chip row showing every value (FR-012a\'s selector opened from the kebab) is 024\'s ' +
+        'amendment from agents-hq#202.',
     });
     await createTemplateApi(fixture, { name: TPL, values: [V1, V2, V3] });
     const card = entryCard(page, TPL);
@@ -302,9 +302,10 @@ test.describe('SL-02 duplicate guard', () => {
   }) => {
     test.setTimeout(150_000);
     test.info().annotations.push({
-      type: 'deviation',
+      type: 'info',
       description:
-        'Since client-web#10437 the picker checks the display label against what the Space will hold ' +
+        'Per 024 Session 2026-10-22 (FR-011b amendment, agents-hq#228), since client-web#10437 the ' +
+        'picker checks the display label against what the Space will hold ' +
         'after Save (no round trip): the conflict dialog is client-side. The server-side guard ' +
         '(FR-011b) is exercised through the UI at Save instead, with a label taken behind the client\'s back.',
     });
@@ -478,7 +479,7 @@ test.describe('SL-03 single-select cardinality', () => {
   }) => {
     test.setTimeout(120_000);
     test.info().annotations.push({
-      type: 'deviation',
+      type: 'info',
       description:
         'The 024 UI renders ARIA radios (Radix button[role=radio]), not native input[type=radio]; ' +
         'the checked-count probe reads aria-checked through getByRole("radio", { checked: true }).',
@@ -898,16 +899,17 @@ test.describe('SL-06 removal gate', () => {
   const KEEP = 'e2e024 SL Removal Keep';
   const VAL = 'e2e024 SL RemVal';
 
-  test('SL-06 REM-AS1 — removal is staged behind the tab Save bar, Discard is a no-op, Save destroys only the target; template and other Spaces untouched (FR-014, FR-014b as superseded by 045 Session 2026-10-22)', async ({
+  test('SL-06 REM-AS1 — removal is staged behind the tab Save bar, Discard is a no-op, Save destroys only the target; template and other Spaces untouched (FR-014, FR-014b as amended for the CRD client by 024 Session 2026-10-22)', async ({
     page,
     consoleGuard,
   }) => {
     test.setTimeout(150_000);
     test.info().annotations.push({
-      type: 'deviation',
+      type: 'info',
       description:
-        'FR-014b\'s "Remove this classification?" confirmation (naming the entry, warning there is no ' +
-        'undo) no longer exists: since client-web#10437 a removal is staged with the rest of the About ' +
+        'Per 024 Session 2026-10-22 (agents-hq#228), FR-014b\'s "Remove this classification?" ' +
+        'confirmation (naming the entry, warning there is no undo) is dropped in the CRD client: ' +
+        'since client-web#10437 a removal is staged with the rest of the About ' +
         'tab — the card leaves the list, the bar counts it, Discard restores it and only "Save changes" ' +
         'deletes. The gate is now the Save bar; the wording oracle has no equivalent.',
     });
