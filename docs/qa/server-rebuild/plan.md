@@ -1,6 +1,6 @@
 # Server rebuild — QA plan: preserve the knowledge, build the net, verify the migration
 
-_Revised 2026-10-27 (supersedes the lib-first draft of the same day). Sources: the architecture briefing "The Alkemio Rebuild" (Go core + file container, PostgreSQL, NATS/JetStream, Matrix direct, one SQL authorization verdict; deck dated 2026-09-22), test-suites `origin/develop` @ `df149442`, the 2026-10-14 client-web net audit (`client-web-migration-net-audit/`), and the raw server-api inventory regenerated 2026-10-28 by vitest collection (`server-behaviour-knowledge/_inventory.md`). The new core's repository is not visible yet (`alkem-io/server-go` is an empty placeholder), so everything that needs its schema is gated, and everything else starts now._
+_Revised 2026-10-27 (supersedes the lib-first draft of the same day). Sources: the architecture briefing "The Alkemio Rebuild" (Go core + file container, PostgreSQL, NATS/JetStream, Matrix direct, one SQL authorization verdict; deck dated 2026-09-22), test-suites `origin/develop` @ `df149442`, the 2026-10-14 client-web net audit (`client-net-audit/`), and the raw server-api inventory regenerated 2026-10-28 by vitest collection (`knowledge/_inventory.md`). The new core's repository is not visible yet (`alkem-io/server-go` is an empty placeholder), so everything that needs its schema is gated, and everything else starts now._
 
 ## The plan in one paragraph
 
@@ -25,7 +25,7 @@ The GraphQL surface is designed from scratch (31 queries, 84 intent mutations; `
 
 ## W1 — Server behaviour knowledge base (start now; done before slice 4 closes)
 
-**Goal.** One document per area under `docs/qa/server-behaviour-knowledge/`, each a table of behaviour rules: *ID · rule the platform guarantees · why (business reason, originating issue) · actors · evidence (spec › case) · legacy status*, followed by the constants the rules depend on (limits, plan names, error texts — the rebaseline candidates) and the "where this lands in the new core" paragraph. No mutation names, no fixtures, no request params. `entitlements.md` beside this plan is the worked example and the template.
+**Goal.** One document per area under `docs/qa/server-rebuild/knowledge/`, each a table of behaviour rules: *ID · rule the platform guarantees · why (business reason, originating issue) · actors · evidence (spec › case) · legacy status*, followed by the constants the rules depend on (limits, plan names, error texts — the rebaseline candidates) and the "where this lands in the new core" paragraph. No mutation names, no fixtures, no request params. `entitlements.md` beside this plan is the worked example and the template.
 
 **Why this shape.** A rule written as "a fourth innovation pack is refused and the entitlement leaves the available list" is checkable against any server, by a person or by a new test. The raw inventory of 5,121 resolved case titles (`_inventory.md`, collected by vitest so `test.each` tables and template names are expanded) is the seed and the completeness checklist, not the knowledge: a title says what a case is named for, not what it asserts, so each rule is extracted from the case body (the assertions, the error texts, the read-back) and the inventory is ticked off against it. Over half the rows are decision-table expansions: 1,749 platform-roles capability rows and 895 storage document-auth rows collapse into a handful of rules each, so the 752 describe groups are the better measure of distinct behaviours.
 
@@ -165,7 +165,7 @@ Option 1 keeps the net untouched and gives people real mail; option 2 is the fal
 | 2 | Mail on the new environment (W3) — with ops | relay split by recipient domain; build the `MailReader` abstraction anyway |
 | 3 | Harness marker and sweeper policy (W3) | `qa-` prefix + tag; sweep after 24 h; leaks reported |
 | 4 | Which suites are "exclusive" and leave the shared nightly (W3) | platform-roles, forum discussions, language-offer persona switches, account-deletion SQL/Redis specs |
-| 5 | Where the knowledge base lives (W1) | `test-suites/docs/qa/server-behaviour-knowledge/` (committed), one PR per slice window |
+| 5 | Where the knowledge base lives (W1) | `test-suites/docs/qa/server-rebuild/knowledge/` (committed), one PR per slice window |
 | 6 | Server-api PRs #612 and #545 | merge #612 (halves the legacy nightly it still runs); #545 only with its two assertions pinned live |
 | 7 | Rebaseline rulings (W1 register) — with product | per row, before W5 step 4 |
 | 8 | Expected-loss list (W4) — with the backend team | from the "verified dead" features and the ETL spec |
