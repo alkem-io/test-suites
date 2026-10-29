@@ -1,6 +1,6 @@
 # ACC data-defect register — W4 seed
 
-_Known data-defect signatures on the acceptance dataset, measured 2026-10-28 on v0.170.2 across all seven databases on the acceptance postgres server (alkemio, kratos, hydra, synapse, wopi, assistant, filebackup). Read-only audit; nothing filed, nothing written. Queries: [`acc-audit-queries/`](acc-audit-queries/README.md). Identifiers are stripped here; the local outputs hold the ids._
+_Known data-defect signatures on the acceptance dataset, measured 2026-10-28 on v0.170.2 across all seven databases on the acceptance postgres server (alkemio, kratos, hydra, synapse, wopi, assistant, filebackup). Read-only audit, nothing written. Six issues were filed in alkem-io/server on 2026-10-29 for the generators still producing bad data (#6726–#6731, marked per row); the rest stays unfiled by the user's choice. Queries: [`acc-audit-queries/`](acc-audit-queries/README.md). Identifiers are stripped here; the local outputs hold the ids._
 
 This is step 1 of the W4 addendum in [`../plan.md`](../plan.md#w4-addendum--data-quality-the-acceptance-dataset-and-the-production-data-we-may-not-see): the register the reconciliation runs net of. Each row is one signature with its count on ACC, its likely origin, and a **proposed** classification of what the rebuild does with it. The classification is a QA proposal until decision 8 (expected-loss list) and decision 11 (ETL quarantine contract) are taken with the backend team.
 
@@ -23,14 +23,14 @@ This is step 1 of the W4 addendum in [`../plan.md`](../plan.md#w4-addendum--data
 | # | Sev | Signature | ACC count | Likely origin | Proposed | Query |
 |---|---|---|---|---|---|---|
 | A1 | H | Subspace ADMIN role whose `parentCredentials` holds an **ancestor's** `space-member` credential, so every ancestor member is admin of the subspace (CRUD + GRANT, live in `authorization_policy`) | 147 roles (88 L1, 59 L2); 69 users; 1,492 user × subspace grants | 2022–mid-2023 legacy `community_policy`, copied verbatim by the 2024-09 roleSet migration; 3 L2s created in 2025 inherited it | **P** now (live escalation on ACC; draft issue held locally, unfiled; production unchecked) · **V** at the rebuild, provided the ETL never translates `parentCredentials` into grants | 03, 10, 12 |
-| A2 | H | Subspace role set whose member/lead/admin credential `resourceID` is **another space**: in 51 of 54 its own L2 child, 48 of them created within 60 s of the parent. Nobody holds membership on the space's own id; `communication.spaceID` empty on all 54 | 54 spaces (52 L1, 1 L0, 1 L2); 162 roles; 2025-07 → 2026-08, still occurring | Nested creation path (space template with subspaces, or create-subspace-with-child) writes the child's id into the parent's role credentials. Not yet reproduced | **R**: the ETL must key membership by role-set owner, not by the credential's `resourceID` · product defect to reproduce (W1 `journey` area) | 03, 10, 12 |
+| A2 | H | Subspace role set whose member/lead/admin credential `resourceID` is **another space**: in 51 of 54 its own L2 child, 48 of them created within 60 s of the parent. Nobody holds membership on the space's own id; `communication.spaceID` empty on all 54 | 54 spaces (52 L1, 1 L0, 1 L2); 162 roles; 2025-07 → 2026-08-31, none since | Shared-reference mutation in role creation on the nested (template-driven) creation path; **generator fixed by server#6467 in v0.167 (2026-09-11)**. Only the data repair of the 54 spaces remains (not filed) | **R**: the ETL must key membership by role-set owner, not by the credential's `resourceID` · product defect to reproduce (W1 `journey` area) | 03, 10, 12 |
 | A3 | H | `parentCredentials` whose `resourceID` is not an ancestor; L2 roles with 1 parent credential instead of 2, L1 with 2 | 414 roles | Downstream of A2 and of cross-level moves | **V** (parent credentials are not stored in the new model) | 03 |
-| A4 | M | Subspace member credential without the parent space's member credential; 121 of them also lack L0 membership | 246 (users 141, orgs 102); 100 created 2025, 42 in 2026 | Removal and move paths revoke upward but not downward (server#6710 family) | **ruling** then **R** (grant the parent) or **E** (drop the child) | 02, 10 |
+| A4 | M | Subspace member credential without the parent space's member credential; 121 of them also lack L0 membership | 246 (users 141, orgs 102); 123 in A2 families, 123 legacy ≤ 2025-03 | Fully explained: A2 (membership issued against the child id) plus legacy; not a live generator (server#6710 tracks the removal path) | **ruling** then **R** (grant the parent) or **E** (drop the child) | 02, 10 |
 | A5 | M | `space-admin` or `space-lead` without `space-member` on the same space | 67 (45 of them organisations) | Org lead assignment skips the entry role | **R** | 02 |
 | A6 | M | Organisation owner/admin credential without `organization-associate` | 757 credentials, 26 users | Legacy or seeding; entry-role rule not enforced for orgs | **R** | 02 |
 | A7 | M | `space-subspace-admin` without `space-admin` on the same space (73); L0 `space-admin` without `space-subspace-admin` (289) | 362 | Derived credential not maintained symmetrically | **V** (derived credentials disappear with the SQL verdict) | 02 |
 | A8 | M | `account-admin` held by someone who is neither the account's user nor an owner/admin of its organisation (7); org owner/admin lacking `account-admin` (2) | 9 | — | **R** | 02 |
-| A9 | M | `space-invitee` with no pending invitation (23) or actor already a member (31); pending invitations for members (22); pending applications for members (54); duplicate pending applications (3) / invitations (1) | 134 | Accept/decline flows leave the marker credential | **E** (stale `membership_request` rows dropped, counted) | 10, 11 |
+| A9 | M | `space-invitee` with no pending invitation (23) or actor already a member (31); pending invitations for members (22); pending applications for members (54); duplicate pending applications (3) / invitations (1) | 134 | `deleteInvitation` and REJECT never revoke `space-invitee`; only accept does (9 new in 2026) — **filed server#6731** | **E** (stale `membership_request` rows dropped, counted) | 10, 11 |
 
 ## B. Credential hygiene
 
@@ -47,7 +47,7 @@ This is step 1 of the W4 addendum in [`../plan.md`](../plan.md#w4-addendum--data
 | # | Sev | Signature | ACC count | Proposed | Query |
 |---|---|---|---|---|---|
 | C1 | H | Broken tree: one level-0 space **with** a parent (an L1), its two children with `levelZeroSpaceID` pointing at it; two L2 spaces under an L2 parent | 5 spaces | **R before the first dry run**, or **Q**: a tree ETL fails on first contact | 04, 10 |
-| C2 | H | Duplicate **L0** nameIDs (URL collision) ×3 pairs; duplicate sibling nameIDs ×2 pairs | 5 pairs | **R before the first dry run**: `resolve(url)` cannot be unique otherwise | 04 |
+| C2 | H | Duplicate **L0** nameIDs (URL collision) ×3 pairs; duplicate sibling nameIDs ×2 pairs. Uniqueness is check-then-write with no DB index for type space; pairs 4 ms – 8.6 s apart, so genuine concurrency — **filed server#6730** | 5 pairs | **R before the first dry run**: `resolve(url)` cannot be unique otherwise; the new schema needs the unique index | 04 |
 | C3 | M | Subspace visibility ≠ its L0's visibility | 11 | **R** | 04 |
 | C4 | L | Public subspace under a private parent (allowed by the model) | 441 | none; layer 4 sample | 04 |
 | C5 | M | L0 storage aggregator without parent (95), pointing at another account's aggregator (2), subspace aggregator parent ≠ parent space (1), aggregators with empty `type` (118) | 216 | **V** if the file container drops aggregators; confirm | 04, 10 |
@@ -67,7 +67,7 @@ This is step 1 of the W4 addendum in [`../plan.md`](../plan.md#w4-addendum--data
 | # | Sev | Signature | ACC count | Proposed | Query |
 |---|---|---|---|---|---|
 | E1 | M | Users with `authenticationID` NULL (11 from 2022–2023, 1 from 2025-12, 1 service profile 2026-09): no Kratos identity can be matched | 13 | **Q** (see I1, I2) | 07, 10 |
-| E2 | M | Organisations with zero owners (126, 40 with neither owner nor admin); zero associates (372 of 500) | 126 | **ruling** | 07 |
+| E2 | M | Organisations with zero owners (126, 40 with neither owner nor admin); zero associates (372 of 500). `createOrganization` grants the creator ASSOCIATE + ADMIN, never OWNER; 11 of 23 2026 orgs have no org credentials at all (created without actor context) — product gap, not filed | 126 | **ruling** | 07 |
 | E3 | M | Accounts referenced by no user and no organisation | 43 | **E** | 07 |
 | E4 | L | Orphan `user_settings` (2); active `mcp_api_key` for a deleted user (2); `organization_verification` without org (3) | 7 | **E** | 01 |
 | E5 | L | `ai_persona` rows with no virtual contributor (159); VCs whose `bodyOfKnowledgeID` points nowhere (10) | 169 | **E** / **Q** for the 10 | 07 |
@@ -77,7 +77,7 @@ This is step 1 of the W4 addendum in [`../plan.md`](../plan.md#w4-addendum--data
 
 | # | Sev | Signature | ACC count | Proposed | Query |
 |---|---|---|---|---|---|
-| F1 | M | Callouts with comments **enabled** but no comments room | 1,915 | **ruling**: lazily created thread on the new core, or a loss | 08 |
+| F1 | M | Callouts with comments **enabled** but no comments room; the 866 in real spaces are the Subspaces/Contributors collection callouts created by the 2026-07-08 migration, none since (one-off) | 1,915 | **ruling**: should collection callouts have comments (rooms missing) or not (flag wrong); then **R** or **V** | 08 |
 | F2 | M | `callout_framing` type ≠ attached content (94); `none` framing with content (2); contributions with no content or type mismatch (17) | 113 | **Q** | 08 |
 | F3 | L | Duplicate callout nameID inside one callouts set | 38 | **R** (URL uniqueness) | 08 |
 | F4 | M | Orphan `template_content_space` not referenced by any template, each carrying a collaboration, community and about | 310 of 465 | **E** | 06 |
@@ -93,7 +93,7 @@ This is step 1 of the W4 addendum in [`../plan.md`](../plan.md#w4-addendum--data
 |---|---|---|---|---|---|
 | G1 | M | Orphan `authorization_policy` rows: room 1,772, tagset 1,624, `context` 951 (dead type), template 795, visual 693, innovation-flow-state 682 … | ~9,400 of 348k; table 594 MB | **V** | 05 |
 | G2 | M | Policies referenced by more than one entity (cascade and reset side effects) | 578 | **V** | 05 |
-| G3 | M | `file.authorizationId` NULL | 3,129 | **V** | 05 |
+| G3 | L | `file.authorizationId` NULL — internal collaboration-snapshot (.ybin), Collabora preview and memo-signing preview files created via the internal bucket path; **by design** (2,901 in Aug 2026 alone) | 3,129 | none; note the volume for layer 3 | 05 |
 
 ## H. Housekeeping (alkemio)
 
@@ -134,7 +134,7 @@ This is step 1 of the W4 addendum in [`../plan.md`](../plan.md#w4-addendum--data
 
 | # | Sev | Signature | ACC count | Proposed | Query |
 |---|---|---|---|---|---|
-| L1 | M | `flow-state` tagset tags not in their `tagset_template.allowedValues` (template not updated on state rename); the state names still match in all but 14 | 1,100 (994 in real spaces) | **R**: the stage mapping must key on the flow's state names, never on the template | 14, 16 |
+| L1 | M | `flow-state` tagset tags not in their `tagset_template.allowedValues`: creating or deleting a flow state never updates the template (reproduced live on ACC as space admin) — **filed server#6729**; the state names still match in all but 14 | 1,100 (994 in real spaces) | **R**: the stage mapping must key on the flow's state names, never on the template | 14, 16 |
 | L2 | L | Callouts whose flow-state tag names a state that no longer exists in the flow | 14 | **Q** | 16 |
 | L3 | M | Published callouts without `publishedDate` (2024–2025, path fixed since); draft callouts carrying one | 1,159 / 130 | **R** (derive from status; drop on drafts) | 14 |
 | L4 | L | Callout sets with duplicate `sortOrder` values | 1,215 sets | **R** (deterministic order on import) | 16 |
@@ -183,10 +183,10 @@ Mapping used: Matrix user `@<alkemio actor id>:<matrix host>`; room alias `#<alk
 
 | # | Sev | Signature | ACC count | Proposed | Query |
 |---|---|---|---|---|---|
-| P1 | M | **Orphan Matrix rooms**: no alias at all (318; 238 from 2026, still 41 in 2026-10) or alias pointing at nothing in alkemio (109; 86 still have real members); 281 messages inside | 427 rooms | **E** for the rooms, counted in layer 6; product defect: entity deletion / rollback never removes the room (ongoing) | 23, 23b, 23c |
+| P1 | M | **Orphan Matrix rooms**: no alias at all (318; 238 from 2026, still 41 in 2026-10) or alias pointing at nothing in alkemio (109; 86 still have real members); 281 messages inside | 427 rooms | **E** for the rooms, counted in layer 6. Generator: `deleteRoom` removes the row then ignores a failed adapter delete — **filed server#6727** (84 of the 109 aliased orphans are one 2026-01 conversation batch; live leak ≈ 25, 8 in Oct 2026) | 23, 23b, 23c |
 | P2 | M | **Alkemio rooms with no Matrix room**: 6 group conversations (0 msgs) + 1 direct conversation with `messagesCount=1` | 7 | **Q** (a thread anchor with no room) | 23b, 29c |
 | P3 | L | `room.messagesCount` drift vs non-redacted `m.room.message` (90 under, 10 over) | 100 of 10,571 | **V** (counts derived); layer 6 tolerance = this list | 23b |
-| P4 | L–M | **Orphan Matrix accounts** for deleted actors (displayname kept, 65 still joined, 1,780 messages by deleted senders) | 84, ongoing | **P** (PII residue; deactivate on actor deletion) | 23c |
+| P4 | L–M | **Orphan Matrix accounts** for deleted actors (displayname kept, 65 still joined, 1,780 messages by deleted senders) | 84, ongoing | **P** (PII residue): actor deletion never deactivates the Matrix account although the adapter has the Synapse admin call — **filed server#6728** | 23c |
 | P5 | L | Pending `invite` memberships, 2,498 in `updates` rooms, 361 to actors that no longer exist | 2,504 | **ruling**: the AppService model changes at the rebuild | 23c |
 | P6 | L | Rooms with zero joined members (293 of them P1); `room_stats_current.joined_members` over-counted | 307 / 1,414 | **E** | 23 |
 | P7 | info | `threads` rows for purged rooms (142); redactions not censored (2) | 144 | **O** | 23 |
@@ -204,7 +204,7 @@ Mapping used: Matrix user `@<alkemio actor id>:<matrix host>`; room alias `#<alk
 
 | # | Sev | Signature | ACC count | Proposed | Query |
 |---|---|---|---|---|---|
-| S1 | **H** | **2026 blobs missing from the offsite backup**: distinct `externalID`s created 2026 (Jun 628, Aug 115, May 103, Apr 38) absent from `file_backup_object`; their outbox rows are `status=skipped`, `attempts=0`, no `lastError` (3,780 file rows); 668 file rows have no outbox row. Not a size threshold; mostly images and office documents | 719 blobs / 1,475 files / 1.75 GB | **P** before any cutover (decision 12 input): find the consumer's skip rule, backfill, then layer 3 proves every legacy hash is present | 27, 27b, 29, 29b |
+| S1 | **H** | **2026 files missing from storage itself**, not only from the backup: live file rows whose content is gone from the file store (sampled: 20 of 24 return "file not found on storage"; 0 of 14 backed-up controls). The backup consumer marked them `skipped` because the fetch returned 404, so the backup gap is the symptom. 332 of the blobs are dated 2026-06-12, the file-service #31 merge day. Loss mechanism not reproduced (dedup deletes behave today) | 719 blobs / 1,475 files / 1.75 GB | **filed server#6726** (file-service owns it). **P**: recover from any copy that exists, else these become an expected loss with the list of affected files; layer 3 proves every surviving legacy hash is present before any cutover (decision 12) | 27, 27b, 29, 29b |
 | S2 | M | 2023 blobs never backfilled (2024 and 2025 backfill ≈ 99 %) | 938 of 1,038 (149 MB) | **P** | 29 |
 | S3 | L | Outbox dead-letter: `invalid content hash: 46 chars, want 64` (legacy externalIDs) (5); file-service fetch failures (2) | 7 | **R**: the plan's hash-function match applies to legacy ids too | 27 |
 | S4 | info | Backup objects whose externalID no longer exists in alkemio (deleted files kept offsite) | 2,092 | **ruling** (retention) | 29 |
@@ -225,9 +225,9 @@ Space ↔ community/collaboration/about/license/storage links · L0 `accountId` 
 
 ## What the register changes in W4
 
-1. **Before the first dry run:** C1 and C2 must be repaired or excluded (the tree and URL layers fail on them); S1/S2 must be backfilled or every "legacy hash present" check in layer 3 reports a known gap of 719 + 938 blobs.
+1. **Before the first dry run:** C1 and C2 must be repaired or excluded (the tree and URL layers fail on them). S1 is data loss, not a backup gap: the 719 blobs are gone from storage on acceptance unless another copy exists; either they are recovered or they go on the expected-loss list as a named file list, and layer 3 must report them as known. S2 (2023 never backfilled) is still a backup backfill.
 2. **The expected-loss list (decision 8)** starts from every **V** and **E** row with its count: ~9,400 policies, ~8,100 activity rows, 427 Matrix rooms, 310 + 144 template sub-levels, 182 + 140 + 54 credentials, 373 lifecycle blobs, 1,825 communication ids.
 3. **The quarantine contract (decision 11)** has concrete shapes to ask for: B1, C1, E1/I1, F2, K1, L2, L5, P2.
 4. **Layer 6 (chat parity)** gets its tolerance list from P1–P3 instead of assuming zero drift.
-5. **Three product defects are live, not historical:** A2 (role credentials keyed on the child), P1 (rooms outlive their entity), F6 (files without bucket). They belong in the W1 documents as "legacy status: defective" and in W2's walks as negative checks.
+5. **Live generators, now filed:** P1 rooms outlive their entity (#6727), P4 Matrix accounts outlive their actor (#6728), L1 flow-state templates go stale (#6729), C2 duplicate handles under concurrency (#6730), A9 invitee credential never revoked on decline (#6731), S1 file content loss (#6726, mechanism unknown). A2 is no longer generated since v0.167; A4, B1, B2, F6 have no 2026 rows. The filed ones belong in the W1 documents as "legacy status: defective" and in W2's walks as negative checks.
 6. **Rerun on PROD** is the next measurement: the queries are environment-agnostic; an operator runs them and returns aggregates only.
