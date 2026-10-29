@@ -41,7 +41,6 @@ import {
   expectExactMailsAfter,
   notif,
   snapshotNotificationSettings,
-  waitForMailsCountAtLeast,
   waitForMailsWhere,
 } from '../../notification.helpers';
 
@@ -128,6 +127,21 @@ const clearHostOrgFromSpace = async () => {
 //
 // qaUser is deliberately NOT muted: it is the OWNER-not-ADMIN negative case
 // (R17b), and silencing it would make that assertion pass for the wrong reason.
+/**
+ * What a failed negative prints: `toHaveLength(0)` on raw MailSlurper items
+ * elides them as `[ { …(16) } ]`, which left the 2026-10-28 nightly red
+ * (run 40607376645) unattributable. Project to the two fields that identify
+ * a mail and assert `toEqual([])`, which prints them in the diff.
+ */
+const mailEvidence = (m: any) => ({
+  subject: m.subject,
+  to: m.toAddresses,
+});
+
+/** The invitation-outcome mails (`<org> accepted|declined the invitation to <Space>`). */
+const isOutcomeMail = (m: any) =>
+  /(accepted|declined) the invitation to /.test(m.subject ?? '');
+
 const PLATFORM_NOISE_PERSONA_IDS = (): string[] => [
   TestUserManager.users.globalAdmin.id,
   TestUserManager.users.globalSupportAdmin.id,
@@ -479,17 +493,26 @@ describe('Organization Space invitations — organization admins are notified (U
       // RabbitMQ consumer, so a single fixed delay can under-wait) rather than
       // trusting a fixed sleep that either reads too early or wastes time.
       // Use the full positive delivery bound as the negative grace so "no email"
-      // means "none will ever arrive" rather than "none has arrived yet".
-      const [mailItems] = await waitForMailsCountAtLeast(1, {
-        timeout: 18_000,
-      });
-      expect(mailItems).toHaveLength(0);
+      // means "none will ever arrive" rather than "none has arrived yet",
+      // scoped to what must NOT arrive: the invite to the muted sole admin,
+      // or the support fallback.
+      const forbidden = (m: any) =>
+        Boolean(m.toAddresses?.includes(TestUserManager.users.organizationAdmin.email)) ||
+        Boolean(m.toAddresses?.includes(supportEmail));
+      const [mailItems] = await waitForMailsWhere(
+        items => items.some(forbidden),
+        { timeout: 18_000 }
+      );
+      expect(mailItems.filter(forbidden).map(mailEvidence)).toEqual([]);
     } finally {
-      await updateUserSettings(TestUserManager.users.organizationAdmin.id, {
-        notification: {
-          organization: { adminSpaceCommunityInvitation: notif(true) },
-        },
-      });
+      assertCleanupSucceeded(
+        'updateUserSettings(organizationAdmin.adminSpaceCommunityInvitation: on)',
+        await updateUserSettings(TestUserManager.users.organizationAdmin.id, {
+          notification: {
+            organization: { adminSpaceCommunityInvitation: notif(true) },
+          },
+        })
+      );
     }
     // invId and orgE are torn down from afterAll (tracked fixtures).
   });
@@ -634,7 +657,10 @@ describe('Organization Space invitations — the inviter learns the outcome (US4
     // filters below count them as outcome mail — which is exactly how this test
     // failed: subspaceAdmin showed 2 mails, the "has joined" welcome plus its
     // own stale invitation. Same guard the demoted-inviter test below uses.
-    await waitForMailsCountAtLeast(2);
+    const inviteSubject = `Invitation for ${baseScenario.organization.profile.displayName} to join ${baseScenario.space.about.profile.displayName}`;
+    await waitForMailsWhere(
+      items => items.filter((m: any) => m.subject === inviteSubject).length >= 2
+    );
     await deleteMailSlurperMails();
     // 2 mails: one "accepted" outcome to the Space admin, and one "has joined"
     // welcome to the organization's OTHER admin. The organization has exactly
@@ -785,23 +811,36 @@ describe('Organization Space invitations — the inviter learns the outcome (US4
       );
 
       // Hold the full positive delivery bound as the negative grace, scoped to
-      // the mail that must NOT arrive: the accept also fans out "has joined"
-      // to the other org admin, and an unscoped "wait for 1" returned on that
-      // mail first, so the inviter check passed before an outcome mail could
-      // have landed.
-      const toMutedInviter = (m: any) =>
-        m.toAddresses?.includes(TestUserManager.users.spaceAdmin.email);
+      // the mail that must NOT arrive: an outcome mail ("accepted the
+      // invitation", the exact subject the accept test above pins) to the muted
+      // inviter. The accept also fans out "has joined" to the other org admin,
+      // and an unscoped "wait for 1" returned on that mail first, so the
+      // inviter check passed before an outcome mail could have landed. Scoped
+      // by subject too: spaceAdmin is a shared persona and receives
+      // space-level mail from any other producer on the stack (seen locally:
+      // "Welcome to the Community!" from a concurrent Playwright scenario).
+      const forbidden = (m: any) =>
+        isOutcomeMail(m) &&
+        Boolean(m.toAddresses?.includes(TestUserManager.users.spaceAdmin.email));
       const [mailItems] = await waitForMailsWhere(
-        items => items.some(toMutedInviter),
+        items => items.some(forbidden),
         { timeout: 18_000 }
       );
-      expect(mailItems.filter(toMutedInviter)).toHaveLength(0);
+      expect(mailItems.filter(forbidden).map(mailEvidence)).toEqual([]);
     } finally {
-      await updateUserSettings(TestUserManager.users.spaceAdmin.id, {
-        notification: {
-          space: { admin: { communityInvitationResponse: notif(true) } },
-        },
-      });
+      // Loud restore: a failed un-mute leaves the shared persona silenced for
+      // every later outcome positive in the file (seen locally 2026-10-29
+      // after a run under load: the next run's accept/decline positives got
+      // no inviter mail). assertCleanupSucceeded throws, so it cannot be
+      // mistaken for a product miss two tests later.
+      assertCleanupSucceeded(
+        'updateUserSettings(spaceAdmin.communityInvitationResponse: on)',
+        await updateUserSettings(TestUserManager.users.spaceAdmin.id, {
+          notification: {
+            space: { admin: { communityInvitationResponse: notif(true) } },
+          },
+        })
+      );
     }
   });
 
@@ -855,16 +894,16 @@ describe('Organization Space invitations — the inviter learns the outcome (US4
       expect(decline?.error).toBeUndefined();
 
       // Hold the full positive delivery bound as the negative grace, scoped to
-      // the outcome mails ("accepted"/"declined the invitation") that nobody
-      // may receive. An unscoped "wait for 1, expect 0" fails on any late
-      // invite mail or straggler instead — see waitForMailsWhere.
-      const isOutcomeMail = (m: any) =>
-        /(accepted|declined) the invitation to /.test(m.subject ?? '');
+      // what nobody may receive: an outcome mail ("accepted"/"declined the
+      // invitation") to anyone — the former inviter included. An unscoped
+      // "wait for 1, expect 0" fails on any late invite mail or straggler
+      // instead (see waitForMailsWhere), and "any mail to spaceAdmin" trips on
+      // space-level mail that shared persona gets from other producers.
       const [mailItems] = await waitForMailsWhere(
         items => items.some(isOutcomeMail),
         { timeout: 18_000 }
       );
-      expect(mailItems.filter(isOutcomeMail)).toHaveLength(0);
+      expect(mailItems.filter(isOutcomeMail).map(mailEvidence)).toEqual([]);
     } finally {
       await assignRoleToUser(
         TestUserManager.users.spaceAdmin.id,
@@ -913,15 +952,14 @@ describe('Organization Space invitations — the inviter learns the outcome (US4
       // invitation.createdBy alone, so a deleted inviter does not silence it —
       // which matters because the generic "a new member joined" notification is
       // suppressed for invitation-sourced memberships.
-      const [mailItems] = await waitForMailsCountAtLeast(1, {
-        timeout: 18_000,
-      });
-      const declinedMail = mailItems.find(
-        (m: any) =>
-          m.subject?.includes('declined the invitation') &&
-          m.toAddresses?.includes(TestUserManager.users.spaceAdmin.email)
+      const isDeclinedToSpaceAdmin = (m: any) =>
+        Boolean(m.subject?.includes('declined the invitation')) &&
+        Boolean(m.toAddresses?.includes(TestUserManager.users.spaceAdmin.email));
+      const [mailItems] = await waitForMailsWhere(
+        items => items.some(isDeclinedToSpaceAdmin),
+        { timeout: 18_000 }
       );
-      expect(declinedMail).toBeDefined();
+      expect(mailItems.find(isDeclinedToSpaceAdmin)).toBeDefined();
 
       invitationId = '';
     } finally {
