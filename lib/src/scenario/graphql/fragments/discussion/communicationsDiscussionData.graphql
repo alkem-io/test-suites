@@ -3,6 +3,7 @@ fragment CommunicationsDiscussionData on Discussion {
   profile {
     displayName
     description
+    url
   }
   category
   createdBy

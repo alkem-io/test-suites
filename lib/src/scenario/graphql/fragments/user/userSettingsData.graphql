@@ -1,5 +1,6 @@
 fragment userSettingsFragment on UserSettings {
   id
+  language
   communication {
     allowOtherUsersToSendMessages
     __typename

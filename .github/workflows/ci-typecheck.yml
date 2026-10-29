@@ -35,6 +35,14 @@ jobs:
       - name: Native TS7 typecheck — client-web (workspace#019-typescript-7-upgrade)
         run: pnpm --filter @alkemio/test-suite-client-web run typecheck:native
 
+      # The lib boundary (docs/qa/server-rebuild W2 pre-work): no generated
+      # imports and no spec-local GraphQL documents under client-web/src.
+      # Until here only the husky lint-staged hook ran ESLint on client-web,
+      # so a spec committed with --no-verify was never linted.
+      - name: ESLint — client-web lib boundary
+        working-directory: client-web
+        run: pnpm exec eslint "src/**/*.ts" "tests/**/*.ts"
+
       - name: Install load-testing dependencies
         working-directory: load-testing
         run: npm ci

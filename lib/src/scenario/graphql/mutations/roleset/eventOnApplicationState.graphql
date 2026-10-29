@@ -1,0 +1,3 @@
+mutation EventOnApplicationState($applicationID: UUID!, $eventName: String!) {
+  eventOnApplication(eventData: { applicationID: $applicationID, eventName: $eventName }) { id state }
+}

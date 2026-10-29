@@ -1,0 +1,20 @@
+query ReadTemplatesSetTemplates($templatesSetId: UUID!) {
+  lookup {
+    templatesSet(ID: $templatesSetId) {
+      id
+      templates {
+        id
+        profile { displayName description }
+        callout {
+          settings { contribution { allowedTypes } }
+          framing {
+            type
+            profile { description }
+            memo { id createdBy { id } authorization { myPrivileges } }
+            collaboraDocument { id documentType previewUrl }
+          }
+        }
+      }
+    }
+  }
+}

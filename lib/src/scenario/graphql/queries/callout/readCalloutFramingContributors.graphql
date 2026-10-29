@@ -1,0 +1,10 @@
+query ReadCalloutFramingContributors($calloutId: UUID!, $type: ActorType!) {
+  lookup {
+    callout(ID: $calloutId) {
+      id
+      framing {
+        contributors(type: $type) { id displayName roleLabel tagline tags joinedDate website associatesCount }
+      }
+    }
+  }
+}

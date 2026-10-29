@@ -1,0 +1,7 @@
+query ReadUserSpaceRoles($actorID: UUID!) {
+  rolesUser(rolesData: { actorID: $actorID }) {
+    spaces { spaceID displayName roles subspaces { displayName roles } }
+    invitations { id }
+    applications { id }
+  }
+}

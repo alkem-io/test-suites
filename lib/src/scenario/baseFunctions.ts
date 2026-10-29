@@ -1,3 +1,4 @@
+import { GraphqlActor } from "../utils/graphql.actor";
 import {
   CalloutVisibility,
   CommunityMembershipPolicy,
@@ -43,7 +44,7 @@ const getUniqueId = () => UniqueIDGenerator.getID();
 export const updateCalloutVisibility = async (
   calloutID: string,
   visibility: CalloutVisibility = CalloutVisibility.Draft,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN,
+  userRole: GraphqlActor = TestUser.GLOBAL_ADMIN,
   sendNotification?: boolean,
 ) => {
   const graphqlClient = getGraphqlClient();
@@ -68,7 +69,7 @@ const assignRoleToUserDirect = async (
   userID: string,
   roleSetID: string,
   role: RoleName,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN,
+  userRole: GraphqlActor = TestUser.GLOBAL_ADMIN,
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -112,7 +113,7 @@ export const assignRoleToUser = async (
   userID: string,
   roleSetID: string,
   role: RoleName,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN,
+  userRole: GraphqlActor = TestUser.GLOBAL_ADMIN,
 ) => {
   const result = await assignRoleToUserDirect(userID, roleSetID, role, userRole);
   const message = String(result?.error?.errors?.[0]?.message ?? "");
@@ -178,7 +179,7 @@ export const assignRoleToVirtualContributor = async (
   virtualContributorID: string,
   roleSetID: string,
   role: RoleName,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN,
+  userRole: GraphqlActor = TestUser.GLOBAL_ADMIN,
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -209,7 +210,7 @@ const assignRoleToOrganizationDirect = async (
   organizationID: string,
   roleSetID: string,
   role: RoleName,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN,
+  userRole: GraphqlActor = TestUser.GLOBAL_ADMIN,
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -234,7 +235,7 @@ export const removeRoleFromUser = async (
   userID: string,
   roleSetID: string,
   role: RoleName,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN,
+  userRole: GraphqlActor = TestUser.GLOBAL_ADMIN,
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -279,7 +280,7 @@ export const assignRoleToOrganization = async (
   organizationID: string,
   roleSetID: string,
   role: RoleName,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN,
+  userRole: GraphqlActor = TestUser.GLOBAL_ADMIN,
 ) => {
   // The direct helper THROWS on a GraphQL error (it always did); catch the
   // one refusal Slice B introduced and fall back, rethrow everything else.
@@ -313,7 +314,7 @@ export const assignRoleToOrganization = async (
 
 export const prepareMemoSigning = async (
   memoID: string,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN,
+  userRole: GraphqlActor = TestUser.GLOBAL_ADMIN,
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -327,7 +328,7 @@ export const prepareMemoSigning = async (
 /** The framing memo (id + profile) of a callout, via `lookup.callout`. */
 export const getCalloutFramingMemo = async (
   calloutID: string,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN,
+  userRole: GraphqlActor = TestUser.GLOBAL_ADMIN,
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -341,7 +342,7 @@ export const getCalloutFramingMemo = async (
 /** A space's license entitlements (`type`, `enabled`, `limit`), via `lookup.space`. */
 export const getSpaceLicenseEntitlements = async (
   spaceID: string,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN,
+  userRole: GraphqlActor = TestUser.GLOBAL_ADMIN,
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -378,7 +379,7 @@ export const createUser = async (
       description?: string;
     };
   },
-  userRole: TestUser = TestUser.GLOBAL_ADMIN,
+  userRole: GraphqlActor = TestUser.GLOBAL_ADMIN,
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -487,7 +488,7 @@ export const createCalloutOnCalloutsSet = async (
       };
     };
   },
-  userRole: TestUser = TestUser.GLOBAL_ADMIN,
+  userRole: GraphqlActor = TestUser.GLOBAL_ADMIN,
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -533,7 +534,7 @@ export const createWhiteboardCalloutOnCalloutsSet = async (
       sourceCalloutID?: string;
     };
   },
-  userRole: TestUser = TestUser.GLOBAL_ADMIN,
+  userRole: GraphqlActor = TestUser.GLOBAL_ADMIN,
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -565,7 +566,7 @@ export const createWhiteboardCalloutOnCalloutsSet = async (
 export const assignPlatformRole = async (
   actorID: string,
   roleName: RoleName,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN,
+  userRole: GraphqlActor = TestUser.GLOBAL_ADMIN,
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -588,7 +589,7 @@ export const createOrganization = async (
   domain?: string,
   website?: string,
   contactEmail?: string,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN,
+  userRole: GraphqlActor = TestUser.GLOBAL_ADMIN,
   options?: { tags?: string[] },
 ) => {
   const graphqlClient = getGraphqlClient();
@@ -649,7 +650,7 @@ export const createOrganizationOrAdopt = async (
   domain?: string,
   website?: string,
   contactEmail?: string,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN,
+  userRole: GraphqlActor = TestUser.GLOBAL_ADMIN,
   options?: { tags?: string[] },
 ) => {
   const created = await createOrganization(
@@ -710,7 +711,7 @@ export const createOrganizationOrAdopt = async (
 
 export const deleteOrganization = async (
   organizationId: string,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN,
+  userRole: GraphqlActor = TestUser.GLOBAL_ADMIN,
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -732,7 +733,7 @@ export const createSubspace = async (
   subspaceName: string,
   subspaceNameId: string,
   parentId: string,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN,
+  userRole: GraphqlActor = TestUser.GLOBAL_ADMIN,
   tagline?: string,
   addTutorialCallouts = false,
 ) => {
@@ -837,7 +838,7 @@ export const createSpaceBasicData = async (
   spaceNameId: string,
   accountID: string,
   addTutorialCallouts = false,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN,
+  userRole: GraphqlActor = TestUser.GLOBAL_ADMIN,
 ) => {
   const graphqlClient = getGraphqlClient();
   const spaceData: CreateSpaceOnAccountInput = {
@@ -888,7 +889,7 @@ export const updateSpaceSettings = async (
     };
   },
 
-  userRole: TestUser = TestUser.GLOBAL_ADMIN,
+  userRole: GraphqlActor = TestUser.GLOBAL_ADMIN,
 ) => {
   if (!spaceID) {
     throw new Error("Space ID is required");
@@ -960,7 +961,7 @@ export const getSpaceData = async (
 
 export const deleteSpace = async (
   spaceId: string,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN,
+  userRole: GraphqlActor = TestUser.GLOBAL_ADMIN,
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -979,7 +980,7 @@ export const deleteSpace = async (
 };
 
 export const getLicensePlans = async (
-  userRole: TestUser = TestUser.GLOBAL_ADMIN,
+  userRole: GraphqlActor = TestUser.GLOBAL_ADMIN,
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -1010,7 +1011,7 @@ export const getLicensePlanByName = async (licenseCredential: string) => {
 export const assignLicensePlanToAccount = async (
   accountId: string,
   licensePlanId: string,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN,
+  userRole: GraphqlActor = TestUser.GLOBAL_ADMIN,
 ) => {
   const res = await getLicensePlans();
   const licensingId = res.data?.platform.licensingFramework.id ?? "";
@@ -1036,7 +1037,7 @@ export const createInnovationPack = async (
   accountID: string,
   displayName: string,
   nameID: string,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN,
+  userRole: GraphqlActor = TestUser.GLOBAL_ADMIN,
   options?: { tags?: string[] },
 ) => {
   const graphqlClient = getGraphqlClient();
@@ -1072,7 +1073,7 @@ export const createTemplateOnTemplatesSet = async (
     calloutResponseTypes?: Array<"POST" | "WHITEBOARD" | "MEMO" | "LINK">;
     calloutAllowedContributors?: "MEMBERS" | "ADMINS" | "NONE";
   },
-  userRole: TestUser = TestUser.GLOBAL_ADMIN,
+  userRole: GraphqlActor = TestUser.GLOBAL_ADMIN,
 ) => {
   const graphqlClient = getGraphqlClient();
 
@@ -1286,7 +1287,7 @@ export const createVirtualContributor = async (
       description?: string;
     };
   },
-  userRole: TestUser = TestUser.GLOBAL_ADMIN,
+  userRole: GraphqlActor = TestUser.GLOBAL_ADMIN,
 ) => {
   const graphqlClient = getGraphqlClient();
 
@@ -1395,7 +1396,7 @@ export const createVirtualContributor = async (
 
 export const deleteVirtualContributor = async (
   virtualContributorId: string,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN,
+  userRole: GraphqlActor = TestUser.GLOBAL_ADMIN,
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -1420,7 +1421,7 @@ export const createPlatformDiscussion = async (
     description?: string;
     category?: ForumDiscussionCategory;
   },
-  userRole: TestUser = TestUser.GLOBAL_ADMIN,
+  userRole: GraphqlActor = TestUser.GLOBAL_ADMIN,
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -1448,7 +1449,7 @@ export const createPlatformDiscussion = async (
 
 export const deletePlatformDiscussion = async (
   discussionId: string,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN,
+  userRole: GraphqlActor = TestUser.GLOBAL_ADMIN,
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -1465,7 +1466,7 @@ export const deletePlatformDiscussion = async (
 };
 
 export const getPlatformForumId = async (
-  userRole: TestUser = TestUser.GLOBAL_ADMIN,
+  userRole: GraphqlActor = TestUser.GLOBAL_ADMIN,
 ): Promise<string> => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -1480,7 +1481,7 @@ export const getPlatformForumId = async (
 
 export const deleteInnovationPack = async (
   innovationPackId: string,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN,
+  userRole: GraphqlActor = TestUser.GLOBAL_ADMIN,
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -1499,7 +1500,7 @@ export const deleteInnovationPack = async (
 export const updateVirtualContributorVisibility = async (
   ID: string,
   visibility: { searchVisibility?: SearchVisibility; listedInStore?: boolean },
-  userRole: TestUser = TestUser.GLOBAL_ADMIN,
+  userRole: GraphqlActor = TestUser.GLOBAL_ADMIN,
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -1522,7 +1523,7 @@ export const updateVirtualContributorVisibility = async (
 export const updateInnovationPackVisibility = async (
   ID: string,
   visibility: { searchVisibility?: SearchVisibility; listedInStore?: boolean },
-  userRole: TestUser = TestUser.GLOBAL_ADMIN,
+  userRole: GraphqlActor = TestUser.GLOBAL_ADMIN,
 ) => {
   const graphqlClient = new GraphQLClient(
     testConfiguration.endPoints.graphql.private,
@@ -1551,7 +1552,7 @@ export const updateInnovationPackVisibility = async (
 export const triggerOrganizationVerification = async (
   organizationVerificationID: string,
   eventName = "MANUALLY_VERIFY",
-  userRole: TestUser = TestUser.GLOBAL_ADMIN,
+  userRole: GraphqlActor = TestUser.GLOBAL_ADMIN,
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -1573,7 +1574,7 @@ export const triggerOrganizationVerification = async (
 export const applyOrganizationVerificationSequence = async (
   organizationVerificationID: string,
   events: string[],
-  userRole: TestUser = TestUser.GLOBAL_ADMIN,
+  userRole: GraphqlActor = TestUser.GLOBAL_ADMIN,
 ) => {
   for (const eventName of events) {
     await triggerOrganizationVerification(

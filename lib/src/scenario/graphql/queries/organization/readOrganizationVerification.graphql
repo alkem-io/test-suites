@@ -1,0 +1,3 @@
+query ReadOrganizationVerification($organizationId: UUID!) {
+  organization(ID: $organizationId) { id verification { id status } }
+}

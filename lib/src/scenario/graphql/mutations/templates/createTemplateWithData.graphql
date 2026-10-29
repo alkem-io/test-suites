@@ -1,0 +1,3 @@
+mutation CreateTemplateWithData($templateData: CreateTemplateOnTemplatesSetInput!) {
+  createTemplate(templateData: $templateData) { id }
+}

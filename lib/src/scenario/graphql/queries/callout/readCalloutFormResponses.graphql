@@ -1,0 +1,10 @@
+query ReadCalloutFormResponses($formID: UUID!, $first: Int) {
+  lookup {
+    calloutFormResponses(formID: $formID, first: $first) {
+      canReadAll
+      canModerate
+      mine { id createdBy { id } answers { questionID prompt text } }
+      all { total responses { id createdBy { id profile { displayName } } answers { prompt text } } }
+    }
+  }
+}

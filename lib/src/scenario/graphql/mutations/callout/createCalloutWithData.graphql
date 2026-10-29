@@ -1,0 +1,13 @@
+mutation CreateCalloutWithData($calloutData: CreateCalloutOnCalloutsSetInput!) {
+  createCalloutOnCalloutsSet(calloutData: $calloutData) {
+    id
+    nameID
+    framing {
+      id
+      type
+      profile { id displayName url }
+      form { id questions { id prompt type options { id label } } }
+      collaboraDocument { id documentType previewUrl }
+    }
+  }
+}

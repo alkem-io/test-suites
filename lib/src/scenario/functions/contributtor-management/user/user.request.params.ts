@@ -1,11 +1,12 @@
-import { registerInKratosOrFail } from "@src/scenario/registration/register-in-kratos-or-fail";
-import { registerInAlkemioOrFail } from "@src/scenario/registration/register-in-alkemio-or-fail";
-import { verifyInKratosOrFail } from "@src/scenario/registration/verify-in-kratos-or-fail";
-import { UniqueIDGenerator } from "@src/utils/uniqueId";
-import { TestUser } from "@src/common/enums/test.user";
-import { getGraphqlClient } from "@src/utils/graphqlClient";
-import { graphqlErrorWrapper } from "@src/utils/graphql.wrapper";
-import { UpdateUserSettingsEntityInput } from "@src/core/generated/alkemio-schema";
+import { registerInKratosOrFail } from "../../../registration/register-in-kratos-or-fail";
+import { registerInAlkemioOrFail } from "../../../registration/register-in-alkemio-or-fail";
+import { verifyInKratosOrFail } from "../../../registration/verify-in-kratos-or-fail";
+import { UniqueIDGenerator } from "../../../../utils/uniqueId";
+import { TestUser } from "../../../../common/enums/test.user";
+import { getGraphqlClient } from "../../../../utils/graphqlClient";
+import { graphqlErrorWrapper, runAs } from "../../../../utils/graphql.wrapper";
+import { GraphqlActor } from "../../../../utils/graphql.actor";
+import { UpdateUserSettingsEntityInput } from "../../../../core/generated/alkemio-schema";
 
 export const registerVerifiedUser = async (
   email: string,
@@ -44,7 +45,7 @@ export const createUser = async (
       description?: string;
     };
   },
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: GraphqlActor = TestUser.GLOBAL_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -69,7 +70,7 @@ export const updateUser = async (
     location?: { country?: string; city?: string };
     description?: string;
   },
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: GraphqlActor = TestUser.GLOBAL_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -91,30 +92,17 @@ export const updateUser = async (
 
 export const deleteUser = async (
   userId: string,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN,
+  userRole: GraphqlActor = TestUser.GLOBAL_ADMIN,
   /** Also remove the Kratos identity — required for a disposable persona a
    * spec registered through the sign-up flow, or its email stays taken. */
   deleteIdentity = false
-) => {
-  const graphqlClient = getGraphqlClient();
-  const callback = (authToken: string | undefined) =>
-    graphqlClient.deleteUser(
-      {
-        deleteData: {
-          ID: userId,
-          deleteIdentity,
-        },
-      },
-      {
-        authorization: `Bearer ${authToken}`,
-      }
-    );
-
-  return graphqlErrorWrapper(callback, userRole);
-};
+) =>
+  runAs(userRole, (sdk, headers) =>
+    sdk.deleteUser({ deleteData: { ID: userId, deleteIdentity } }, headers)
+  );
 
 export const getUsersData = async (
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: GraphqlActor = TestUser.GLOBAL_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -129,7 +117,7 @@ export const getUsersData = async (
 
 export const getUserData = async (
   userId: string,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: GraphqlActor = TestUser.GLOBAL_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -146,7 +134,7 @@ export const getUserData = async (
 
 export const getUserByNameId = async (
   nameId: string,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: GraphqlActor = TestUser.GLOBAL_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -164,7 +152,7 @@ export const getUserByNameId = async (
 export const getUserPendingMemberships = async (
   fetchDetails: boolean,
   spaceId: string,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: GraphqlActor = TestUser.GLOBAL_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -180,29 +168,16 @@ export const getUserPendingMemberships = async (
 export const updateUserSettings = async (
   userID: string,
   settings: UpdateUserSettingsEntityInput,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
-) => {
-  const graphqlClient = getGraphqlClient();
-  const callback = (authToken: string | undefined) =>
-    graphqlClient.UpdateUserSettings(
-      {
-        settingsData: {
-          userID,
-          settings,
-        },
-      },
-      {
-        authorization: `Bearer ${authToken}`,
-      }
-    );
-
-  return graphqlErrorWrapper(callback, userRole);
-};
+  userRole: GraphqlActor = TestUser.GLOBAL_ADMIN
+) =>
+  runAs(userRole, (sdk, headers) =>
+    sdk.UpdateUserSettings({ settingsData: { userID, settings } }, headers)
+  );
 
 // export const updateUserSettings = async (
 //   userID: string,
 //   settings: UpdateUserSettingsEntityInput,
-//   userRole: TestUser = TestUser.GLOBAL_ADMIN
+//   userRole: GraphqlActor = TestUser.GLOBAL_ADMIN
 // ) => {
 //   const graphqlClient = getGraphqlClient();
 //   const callback = (authToken: string | undefined) =>
@@ -222,7 +197,7 @@ export const updateUserSettings = async (
 export const updateUserSettingCommunicationMessage = async (
   userID: string,
   value: boolean,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: GraphqlActor = TestUser.GLOBAL_ADMIN
 ) => {
   return updateUserSettings(
     userID,

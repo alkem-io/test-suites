@@ -1,0 +1,9 @@
+mutation CreateSpaceOnAccount($spaceData: CreateSpaceOnAccountInput!) {
+  createSpace(spaceData: $spaceData) {
+    id
+    nameID
+    about { profile { url } membership { roleSetID } }
+    community { roleSet { id } }
+    collaboration { id calloutsSet { id } }
+  }
+}

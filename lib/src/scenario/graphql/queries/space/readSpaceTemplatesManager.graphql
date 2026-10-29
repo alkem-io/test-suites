@@ -1,0 +1,9 @@
+query ReadSpaceTemplatesManager($spaceId: UUID!) {
+  lookup {
+    space(ID: $spaceId) {
+      id
+      templatesManager { templatesSet { id } }
+      about { profile { tagset { id } } }
+    }
+  }
+}

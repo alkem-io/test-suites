@@ -1,0 +1,7 @@
+mutation CreateContributionWithData($contributionData: CreateContributionOnCalloutInput!) {
+  createContributionOnCallout(contributionData: $contributionData) {
+    id
+    post { id profile { displayName } }
+    memo { id profile { storageBucket { id } } }
+  }
+}

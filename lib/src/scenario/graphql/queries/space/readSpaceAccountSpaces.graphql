@@ -1,0 +1,1 @@
+query ReadSpaceAccountSpaces($spaceId: UUID!) { lookup { space(ID: $spaceId) { id accountSpaces { id } } } }

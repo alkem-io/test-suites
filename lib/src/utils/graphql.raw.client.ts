@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { testConfiguration } from '../config/test.configuration';
+import { GraphqlActor, graphqlEndpointUrl, resolveActor } from './graphql.actor';
 
 /**
  * POST an inline GraphQL document to the private endpoint with arbitrary
@@ -52,6 +53,38 @@ export const postGraphqlRaw = async <TData>(
     { headers, validateStatus: () => true }
   );
 
+  return {
+    status: response.status,
+    body: response.data,
+    raw: JSON.stringify(response.data),
+  };
+};
+
+/**
+ * `postGraphqlRaw` for any `GraphqlActor`: the document goes to the endpoint
+ * the actor implies (bearer → non-interactive, cookie → session, anonymous →
+ * private or public) with the matching header. For the few lib-owned
+ * documents the generated SDK cannot carry (schema introspection, multipart
+ * uploads) and for callers that assert on the HTTP status itself.
+ */
+export const postGraphqlRawAs = async <TData>(
+  actor: GraphqlActor,
+  query: string,
+  variables?: Record<string, unknown>
+): Promise<RawGraphqlResponse<TData>> => {
+  const resolved = resolveActor(actor);
+  const response = await axios.post(
+    graphqlEndpointUrl(resolved.endpoint),
+    { query, variables },
+    {
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+        ...resolved.headers,
+      },
+      validateStatus: () => true,
+    }
+  );
   return {
     status: response.status,
     body: response.data,
