@@ -1,0 +1,148 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e2]:
+  - generic [ref=e5]:
+    - link "Skip to content" [ref=e6] [cursor=pointer]:
+      - /url: "#crd-main-content"
+    - banner [ref=e7]:
+      - generic [ref=e10]:
+        - generic [ref=e11]:
+          - link "Home" [ref=e12] [cursor=pointer]:
+            - /url: /home
+            - img "Alkemio" [ref=e14]
+          - navigation "breadcrumb" [ref=e22]:
+            - list [ref=e23]:
+              - listitem [ref=e24]:
+                - img [ref=e25]
+                - link "admin alkemio" [ref=e28] [cursor=pointer]:
+                  - /url: https://test-alkem.io/user/admin-alkemio
+              - listitem [ref=e29]:
+                - img [ref=e30]
+              - listitem [ref=e32]:
+                - link "Settings" [ref=e33] [cursor=pointer]:
+                  - /url: https://test-alkem.io/user/admin-alkemio/settings
+              - listitem [ref=e34]:
+                - img [ref=e35]
+              - listitem [ref=e37]:
+                - generic [ref=e38]: Profile
+        - navigation "Menu" [ref=e39]:
+          - button "Search" [ref=e40] [cursor=pointer]:
+            - img
+          - button "Messages" [ref=e41] [cursor=pointer]:
+            - img
+          - button "Notifications" [ref=e42] [cursor=pointer]:
+            - img
+          - button "Platform navigation" [ref=e43] [cursor=pointer]:
+            - img
+          - button "admin alkemio" [ref=e45] [cursor=pointer]:
+            - img "admin alkemio" [ref=e48]
+    - main [ref=e49]:
+      - generic [ref=e50]:
+        - generic [ref=e54]:
+          - heading "admin alkemio" [level=1] [ref=e58]
+          - tablist [ref=e59]:
+            - tab "Profile" [selected] [ref=e60] [cursor=pointer]:
+              - img [ref=e61]
+              - generic [ref=e64]: Profile
+            - tab "Account" [ref=e65] [cursor=pointer]:
+              - img [ref=e66]
+              - generic [ref=e69]: Account
+            - tab "Membership" [ref=e70] [cursor=pointer]:
+              - img [ref=e71]
+              - generic [ref=e76]: Membership
+            - tab "Organisations" [ref=e77] [cursor=pointer]:
+              - img [ref=e78]
+              - generic [ref=e81]: Organisations
+            - tab "Notifications" [ref=e82] [cursor=pointer]:
+              - img [ref=e83]
+              - generic [ref=e86]: Notifications
+            - tab "Settings" [ref=e87] [cursor=pointer]:
+              - img [ref=e88]
+              - generic [ref=e99]: Settings
+            - tab "Security" [ref=e100] [cursor=pointer]:
+              - img [ref=e101]
+              - generic [ref=e104]: Security
+        - generic [ref=e108]:
+          - generic [ref=e109]:
+            - generic [ref=e110]:
+              - heading "Identity" [level=3] [ref=e111]:
+                - button "Identity" [expanded] [ref=e112] [cursor=pointer]:
+                  - img [ref=e114]
+                  - generic [ref=e119]: Identity
+                  - img [ref=e120]
+              - generic [ref=e124]:
+                - generic [ref=e125]:
+                  - generic [ref=e126]: Display Name
+                  - textbox "Display Name" [ref=e128]: admin alkemio
+                  - paragraph [ref=e129]: How you'll appear across Alkemio.
+                - generic [ref=e130]:
+                  - generic [ref=e131]:
+                    - generic [ref=e132]: First Name
+                    - textbox "First Name" [ref=e134]: admin
+                    - paragraph [ref=e135]: Your given name.
+                  - generic [ref=e136]:
+                    - generic [ref=e137]: Last Name
+                    - textbox "Last Name" [ref=e139]: alkemio
+                    - paragraph [ref=e140]: Your family name.
+                - generic [ref=e141]:
+                  - generic [ref=e142]: Email
+                  - generic [ref=e143]:
+                    - img [ref=e144]
+                    - textbox "Email" [ref=e147]: admin@alkem.io
+                  - paragraph [ref=e148]: Contact support to change email
+            - heading "About You" [level=3] [ref=e150]:
+              - button "About You" [ref=e151] [cursor=pointer]:
+                - img [ref=e153]
+                - generic [ref=e158]: About You
+                - img [ref=e159]
+            - heading "Social Links" [level=3] [ref=e162]:
+              - button "Social Links" [ref=e163] [cursor=pointer]:
+                - img [ref=e165]
+                - generic [ref=e170]: Social Links
+                - img [ref=e171]
+            - heading "References" [level=3] [ref=e174]:
+              - button "References" [ref=e175] [cursor=pointer]:
+                - img [ref=e177]
+                - generic [ref=e181]: References
+                - img [ref=e182]
+          - generic [ref=e184]:
+            - heading "Profile Picture" [level=3] [ref=e185]:
+              - img [ref=e187]
+              - generic [ref=e192]: Profile Picture
+            - generic [ref=e194]:
+              - paragraph [ref=e197]: admin alkemio
+              - button "Change Avatar" [ref=e198] [cursor=pointer]
+              - paragraph [ref=e199]: "Recommended: 400×400px. JPG, PNG or GIF."
+      - region:
+        - generic:
+          - generic:
+            - generic:
+              - generic:
+                - generic: "0"
+                - paragraph: 0 unsaved changes
+              - generic:
+                - button: Discard
+                - button [disabled]: Save changes
+    - contentinfo [ref=e200]:
+      - generic [ref=e201]:
+        - generic [ref=e202]:
+          - img "Alkemio" [ref=e204]
+          - generic [ref=e210]: © 2026 Alkemio B.V.
+        - navigation "Footer" [ref=e211]:
+          - link "Terms" [ref=e212] [cursor=pointer]:
+            - /url: https://welcome.alkem.io/legal/terms/
+          - link "Privacy" [ref=e213] [cursor=pointer]:
+            - /url: https://welcome.alkem.io/legal/privacy
+          - link "Security" [ref=e214] [cursor=pointer]:
+            - /url: https://welcome.alkem.io/legal/security
+          - button "Support" [ref=e215] [cursor=pointer]
+          - link "About" [ref=e216] [cursor=pointer]:
+            - /url: https://welcome.alkem.io
+        - button "English" [ref=e218] [cursor=pointer]:
+          - img [ref=e219]
+          - generic [ref=e222]: English
+  - region "Notifications alt+T"
+  - button "Open chat" [ref=e223]:
+    - img [ref=e224]
+```
