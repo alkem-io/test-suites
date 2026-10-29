@@ -784,16 +784,18 @@ describe('Organization Space invitations — the inviter learns the outcome (US4
         TestUser.ORGANIZATION_ADMIN
       );
 
-      // Use the full positive delivery bound as the negative grace so "no email"
-      // means "none will ever arrive" rather than "none has arrived yet".
-      const [mailItems] = await waitForMailsCountAtLeast(1, {
-        timeout: 18_000,
-      });
-      expect(
-        mailItems.filter((m: any) =>
-          m.toAddresses?.includes(TestUserManager.users.spaceAdmin.email)
-        )
-      ).toHaveLength(0);
+      // Hold the full positive delivery bound as the negative grace, scoped to
+      // the mail that must NOT arrive: the accept also fans out "has joined"
+      // to the other org admin, and an unscoped "wait for 1" returned on that
+      // mail first, so the inviter check passed before an outcome mail could
+      // have landed.
+      const toMutedInviter = (m: any) =>
+        m.toAddresses?.includes(TestUserManager.users.spaceAdmin.email);
+      const [mailItems] = await waitForMailsWhere(
+        items => items.some(toMutedInviter),
+        { timeout: 18_000 }
+      );
+      expect(mailItems.filter(toMutedInviter)).toHaveLength(0);
     } finally {
       await updateUserSettings(TestUserManager.users.spaceAdmin.id, {
         notification: {
@@ -822,10 +824,15 @@ describe('Organization Space invitations — the inviter learns the outcome (US4
     // "notified once" test above; the OWNER is not notified, R17b) are
     // dispatched fire-and-forget (void promise,
     // role.set.resolver.mutations.membership.ts) and can still be in flight
-    // here. Wait for them to actually land before clearing the inbox —
+    // here. Wait for THOSE TWO to actually land before clearing the inbox —
     // otherwise they arrive AFTER deleteMailSlurperMails() below and are
-    // misread as stray outcome mail from the decline that follows.
-    await waitForMailsCountAtLeast(2);
+    // misread as stray outcome mail from the decline that follows. Scoped by
+    // subject: a straggler from the previous test's accept fan-out must not
+    // count as one of them (nightly 40607376645, 2026-10-28, got exactly that).
+    const inviteSubject = `Invitation for ${baseScenario.organization.profile.displayName} to join ${baseScenario.space.about.profile.displayName}`;
+    await waitForMailsWhere(
+      items => items.filter((m: any) => m.subject === inviteSubject).length >= 2
+    );
     await deleteMailSlurperMails();
 
     await removeRoleFromUser(
@@ -847,12 +854,17 @@ describe('Organization Space invitations — the inviter learns the outcome (US4
       );
       expect(decline?.error).toBeUndefined();
 
-      // Use the full positive delivery bound as the negative grace so "no email"
-      // means "none will ever arrive" rather than "none has arrived yet".
-      const [mailItems] = await waitForMailsCountAtLeast(1, {
-        timeout: 18_000,
-      });
-      expect(mailItems).toHaveLength(0);
+      // Hold the full positive delivery bound as the negative grace, scoped to
+      // the outcome mails ("accepted"/"declined the invitation") that nobody
+      // may receive. An unscoped "wait for 1, expect 0" fails on any late
+      // invite mail or straggler instead — see waitForMailsWhere.
+      const isOutcomeMail = (m: any) =>
+        /(accepted|declined) the invitation to /.test(m.subject ?? '');
+      const [mailItems] = await waitForMailsWhere(
+        items => items.some(isOutcomeMail),
+        { timeout: 18_000 }
+      );
+      expect(mailItems.filter(isOutcomeMail)).toHaveLength(0);
     } finally {
       await assignRoleToUser(
         TestUserManager.users.spaceAdmin.id,
