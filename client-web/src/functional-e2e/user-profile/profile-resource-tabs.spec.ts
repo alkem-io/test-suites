@@ -274,16 +274,19 @@ const visibilityOf = async (
   kind: 'innovationPack' | 'virtualContributor',
   id: string
 ): Promise<StoredVisibility> => {
-  if (kind === 'innovationPack') {
-    return must(
-      await readInnovationPackVisibility(id, TestUser.GLOBAL_ADMIN),
-      `read visibility of pack ${id}`
-    ).lookup.innovationPack!;
-  }
-  return must(
-    await readVirtualContributorVisibility(id, TestUser.GLOBAL_ADMIN),
-    `read visibility of VC ${id}`
-  ).lookup.virtualContributor!;
+  // The lib reads also select `id`; the precondition read-backs compare the
+  // whole object with toEqual, so project down to the two stored fields.
+  const { searchVisibility, listedInStore } =
+    kind === 'innovationPack'
+      ? must(
+          await readInnovationPackVisibility(id, TestUser.GLOBAL_ADMIN),
+          `read visibility of pack ${id}`
+        ).lookup.innovationPack!
+      : must(
+          await readVirtualContributorVisibility(id, TestUser.GLOBAL_ADMIN),
+          `read visibility of VC ${id}`
+        ).lookup.virtualContributor!;
+  return { searchVisibility, listedInStore };
 };
 
 /** The stored search visibility of a pack or VC. */
