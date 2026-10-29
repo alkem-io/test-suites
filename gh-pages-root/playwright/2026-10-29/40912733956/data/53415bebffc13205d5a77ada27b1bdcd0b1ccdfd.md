@@ -1,0 +1,214 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e2]:
+  - generic [ref=e5]:
+    - link "Skip to content" [ref=e6] [cursor=pointer]:
+      - /url: "#crd-main-content"
+    - banner [ref=e7]:
+      - generic [ref=e10]:
+        - generic [ref=e11]:
+          - link "Home" [ref=e12] [cursor=pointer]:
+            - /url: /home
+            - img "Alkemio" [ref=e14]
+          - navigation "breadcrumb" [ref=e22]:
+            - list [ref=e23]:
+              - listitem [ref=e24]:
+                - img [ref=e25]
+                - link "US3 SignupOrg 38057" [ref=e29] [cursor=pointer]:
+                  - /url: https://test-alkem.io/organization/signuporg38057
+              - listitem [ref=e30]:
+                - img [ref=e31]
+              - listitem [ref=e33]:
+                - link "Settings" [ref=e34] [cursor=pointer]:
+                  - /url: https://test-alkem.io/organization/signuporg38057/settings
+              - listitem [ref=e35]:
+                - img [ref=e36]
+              - listitem [ref=e38]:
+                - generic [ref=e39]: Associates
+        - navigation "Menu" [ref=e40]:
+          - button "Search" [ref=e41] [cursor=pointer]:
+            - img
+          - button "Messages" [ref=e42] [cursor=pointer]:
+            - img
+          - button "Notifications" [ref=e43] [cursor=pointer]:
+            - img
+            - generic [ref=e45]: 1 unread notifications
+          - button "Platform navigation" [ref=e46] [cursor=pointer]:
+            - img
+          - button "Us081BAdmin38057 E2E" [ref=e48] [cursor=pointer]:
+            - img "Us081BAdmin38057 E2E" [ref=e51]
+    - main [ref=e52]:
+      - generic [ref=e53]:
+        - generic [ref=e57]:
+          - heading "US3 SignupOrg 38057" [level=1] [ref=e61]
+          - tablist [ref=e62]:
+            - tab "Profile" [ref=e63] [cursor=pointer]:
+              - img [ref=e64]
+              - generic [ref=e67]: Profile
+            - tab "Account" [ref=e68] [cursor=pointer]:
+              - img [ref=e69]
+              - generic [ref=e72]: Account
+            - tab "Associates" [selected] [ref=e73] [cursor=pointer]:
+              - img [ref=e74]
+              - generic [ref=e79]: Associates
+            - tab "Membership" [ref=e80] [cursor=pointer]:
+              - img [ref=e81]
+              - generic [ref=e84]: Membership
+            - tab "Invitations" [ref=e85] [cursor=pointer]:
+              - img [ref=e86]
+              - generic [ref=e89]: Invitations
+            - tab "Settings" [ref=e90] [cursor=pointer]:
+              - img [ref=e91]
+              - generic [ref=e102]: Settings
+        - generic [ref=e106]:
+          - generic [ref=e107]:
+            - generic [ref=e108]:
+              - heading "Pending applications & invitations" [level=3] [ref=e109]
+              - generic [ref=e110]: "2"
+            - group "Filter by status" [ref=e111]:
+              - generic [ref=e112]: Filter by status
+              - button "Application received (0)" [pressed] [ref=e113] [cursor=pointer]
+              - button "Application approved (0)" [ref=e114] [cursor=pointer]
+              - button "Application rejected (0)" [ref=e115] [cursor=pointer]
+              - button "Invited (1)" [pressed] [ref=e116] [cursor=pointer]
+              - button "Invitation accepted (1)" [pressed] [ref=e117] [cursor=pointer]
+              - button "Invitation rejected (0)" [pressed] [ref=e118] [cursor=pointer]
+              - button "Invited (external) (0)" [pressed] [ref=e119] [cursor=pointer]
+            - table [ref=e122]:
+              - rowgroup [ref=e123]:
+                - row "Sort by Name Sort by Email Sort by Date Sort by Status Sort by Type Offered role Actions" [ref=e124]:
+                  - columnheader "Sort by Name" [ref=e125]:
+                    - button "Sort by Name" [ref=e126] [cursor=pointer]:
+                      - text: Name
+                      - img [ref=e127]
+                  - columnheader "Sort by Email" [ref=e130]:
+                    - button "Sort by Email" [ref=e131] [cursor=pointer]:
+                      - text: Email
+                      - img [ref=e132]
+                  - columnheader "Sort by Date" [ref=e135]:
+                    - button "Sort by Date" [ref=e136] [cursor=pointer]:
+                      - text: Date
+                      - img [ref=e137]
+                  - columnheader "Sort by Status" [ref=e139]:
+                    - button "Sort by Status" [ref=e140] [cursor=pointer]:
+                      - text: Status
+                      - img [ref=e141]
+                  - columnheader "Sort by Type" [ref=e144]:
+                    - button "Sort by Type" [ref=e145] [cursor=pointer]:
+                      - text: Type
+                      - img [ref=e146]
+                  - columnheader "Offered role" [ref=e149]
+                  - columnheader "Actions" [ref=e150]
+              - rowgroup [ref=e151]:
+                - row "New438057 E2E not accessible less than a minute ago Invited User Associate + Admin View invitation Revoke invitation" [ref=e152]:
+                  - cell "New438057 E2E" [ref=e153]:
+                    - link "New438057 E2E" [ref=e156] [cursor=pointer]:
+                      - /url: https://test-alkem.io/user/new438057-e2e
+                  - cell "not accessible" [ref=e157]
+                  - cell "less than a minute ago" [ref=e158]:
+                    - button "less than a minute ago" [ref=e159]
+                  - cell "Invited" [ref=e160]:
+                    - generic [ref=e161]: Invited
+                  - cell "User" [ref=e162]
+                  - cell "Associate + Admin" [ref=e163]
+                  - cell "View invitation Revoke invitation" [ref=e164]:
+                    - generic [ref=e165]:
+                      - button "View invitation" [ref=e166] [cursor=pointer]:
+                        - img
+                      - button "Revoke invitation" [ref=e167] [cursor=pointer]:
+                        - img
+                - row "New138057 E2E not accessible 1 minute ago Invitation accepted User Associate + Admin View invitation Remove from list" [ref=e168]:
+                  - cell "New138057 E2E" [ref=e169]:
+                    - link "New138057 E2E" [ref=e172] [cursor=pointer]:
+                      - /url: https://test-alkem.io/user/new138057-e2e
+                  - cell "not accessible" [ref=e173]
+                  - cell "1 minute ago" [ref=e174]:
+                    - button "1 minute ago" [ref=e175]
+                  - cell "Invitation accepted" [ref=e176]:
+                    - generic [ref=e177]: Invitation accepted
+                  - cell "User" [ref=e178]
+                  - cell "Associate + Admin" [ref=e179]
+                  - cell "View invitation Remove from list" [ref=e180]:
+                    - generic [ref=e181]:
+                      - button "View invitation" [ref=e182] [cursor=pointer]:
+                        - img
+                      - button "Remove from list" [ref=e183] [cursor=pointer]:
+                        - img
+          - generic [ref=e184]:
+            - generic [ref=e186]:
+              - generic [ref=e187]:
+                - img [ref=e188]
+                - generic [ref=e193]:
+                  - heading "Associates" [level=4] [ref=e194]
+                  - paragraph [ref=e195]: Everyone associated with this organisation — associates, admins and owners — with the ability to edit roles, invite new associates and manage pending applications & invitations.
+              - button "Invite" [ref=e197] [cursor=pointer]:
+                - img
+                - text: Invite
+            - list [ref=e199]:
+              - listitem [ref=e200]:
+                - generic [ref=e202]:
+                  - paragraph [ref=e203]: admin alkemio
+                  - paragraph [ref=e204]: not accessible
+                - generic [ref=e205]:
+                  - generic [ref=e206]: Associate
+                  - generic [ref=e207]: Admin
+                - button "Edit admin alkemio" [ref=e208] [cursor=pointer]:
+                  - img
+              - listitem [ref=e209]:
+                - generic [ref=e211]:
+                  - paragraph [ref=e212]: Control38057 E2E
+                  - paragraph [ref=e213]: control-38057@inv08138057.example.com
+                - generic [ref=e215]: Associate
+                - button "Edit Control38057 E2E" [ref=e216] [cursor=pointer]:
+                  - img
+              - listitem [ref=e217]:
+                - generic [ref=e219]:
+                  - paragraph [ref=e220]: New138057 E2E
+                  - paragraph [ref=e221]: not accessible
+                - generic [ref=e222]:
+                  - generic [ref=e223]: Associate
+                  - generic [ref=e224]: Admin
+                - button "Edit New138057 E2E" [ref=e225] [cursor=pointer]:
+                  - img
+              - listitem [ref=e226]:
+                - generic [ref=e228]:
+                  - paragraph [ref=e229]: Us081BAdmin38057 E2E
+                  - paragraph [ref=e230]: us081b-admin-38057@test.alkem.io
+                - generic [ref=e231]:
+                  - generic [ref=e232]: Associate
+                  - generic [ref=e233]: Admin
+                - button "Edit Us081BAdmin38057 E2E" [ref=e234] [cursor=pointer]:
+                  - img
+      - region:
+        - generic:
+          - generic:
+            - generic:
+              - generic:
+                - generic: "0"
+                - paragraph: 0 unsaved changes
+              - generic:
+                - button: Discard
+                - button [disabled]: Save changes
+    - contentinfo [ref=e235]:
+      - generic [ref=e236]:
+        - generic [ref=e237]:
+          - img "Alkemio" [ref=e239]
+          - generic [ref=e245]: © 2026 Alkemio B.V.
+        - navigation "Footer" [ref=e246]:
+          - link "Terms" [ref=e247] [cursor=pointer]:
+            - /url: https://welcome.alkem.io/legal/terms/
+          - link "Privacy" [ref=e248] [cursor=pointer]:
+            - /url: https://welcome.alkem.io/legal/privacy
+          - link "Security" [ref=e249] [cursor=pointer]:
+            - /url: https://welcome.alkem.io/legal/security
+          - button "Support" [ref=e250] [cursor=pointer]
+          - link "About" [ref=e251] [cursor=pointer]:
+            - /url: https://welcome.alkem.io
+        - button "English" [ref=e253] [cursor=pointer]:
+          - img [ref=e254]
+          - generic [ref=e257]: English
+  - region "Notifications alt+T"
+  - button "Open chat" [ref=e258]:
+    - img [ref=e259]
+```
