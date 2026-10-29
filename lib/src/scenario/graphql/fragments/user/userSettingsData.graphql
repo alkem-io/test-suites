@@ -137,6 +137,12 @@ fragment userSettingsFragment on UserSettings {
         push
         __typename
       }
+      collaborationCalloutReaction {
+        email
+        inApp
+        push
+        __typename
+      }
       communicationUpdates {
         email
         inApp

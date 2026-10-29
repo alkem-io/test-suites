@@ -30,7 +30,7 @@ import { TestScenarioConfig } from '@alkemio/tests-lib/scenario/config/test-scen
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import { TestScenarioFactory } from '@alkemio/tests-lib/scenario/TestScenarioFactory';
 import { TestUserManager, getGraphqlClient } from '@alkemio/tests-lib';
-import { CalendarEventType } from '@alkemio/tests-lib/core/generated/alkemio-schema';
+import { CalendarEventType } from '@alkemio/tests-lib';
 import { test, expect, Browser, BrowserContext } from '@playwright/test';
 import { ensurePersonaState } from '@src/functional-e2e/fixtures/authenticated-session.fixture';
 import { CalendarEventFormPage, dateLabelRe } from './pages/CalendarEventFormPage';

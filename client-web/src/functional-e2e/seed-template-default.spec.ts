@@ -6,7 +6,7 @@ import { TestUser } from '@alkemio/tests-lib/common/enums/test.user';
 import {
   CommunityMembershipPolicy,
   SpacePrivacyMode,
-} from '@alkemio/client-lib/dist/generated/graphql';
+} from '@alkemio/tests-lib';
 import { createAuthenticatedSessionFixture } from './fixtures/authenticated-session.fixture';
 import { expect } from '@playwright/test';
 

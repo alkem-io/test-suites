@@ -13,7 +13,7 @@ import { TestScenarioConfig } from '@alkemio/tests-lib/scenario/config/test-scen
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import { TestScenarioFactory } from '@alkemio/tests-lib/scenario/TestScenarioFactory';
 import { TestUserManager } from '@alkemio/tests-lib';
-import { RoleName } from '@alkemio/tests-lib/core/generated/graphql';
+import { RoleName } from '@alkemio/tests-lib';
 import { assignRoleToVirtualContributor } from '@alkemio/tests-lib/scenario/baseFunctions';
 import { expect } from '@playwright/test';
 import { createAuthenticatedSessionFixture } from '../fixtures/authenticated-session.fixture';

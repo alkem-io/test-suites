@@ -27,7 +27,7 @@
 // `fullyParallel`.
 
 import { expect, Page, test as baseTest } from '@playwright/test';
-import { RoleName } from '@alkemio/tests-lib/core/generated/alkemio-schema';
+import { readMyUser, RoleName } from '@alkemio/tests-lib';
 import { createPersonaTest } from '../fixtures/authenticated-session.fixture';
 import {
   assignUserRoleOnOrganization,
@@ -36,7 +36,6 @@ import {
   getUserIdsInRole,
   getUserToken,
   OrgFixture,
-  postGraphqlRaw,
   registerPersona,
   removeUserRoleOnOrganization,
   runSuffix,
@@ -44,7 +43,7 @@ import {
   TestUserManager,
 } from './organization-user-associates.helpers';
 import { getGraphqlClient } from '@alkemio/tests-lib';
-import { graphqlErrorWrapper } from '@alkemio/tests-lib/utils/graphql.wrapper';
+import { graphqlErrorWrapper } from '@alkemio/tests-lib';
 
 baseTest.describe.configure({ mode: 'serial' });
 
@@ -100,9 +99,9 @@ const adminOnlyName = `${adminOnlyLabel}-${runSuffix}`;
 
 async function userIdFor(email: string): Promise<string> {
   const bearerToken = await getUserToken(email);
-  const res = await postGraphqlRaw<{ me: { user: { id: string } } }>('query { me { user { id } } }', { bearerToken });
-  const id = res.body.data?.me.user.id;
-  if (!id) throw new Error(`Could not resolve user id for ${email}: ${JSON.stringify(res.body.errors)}`);
+  const res = await readMyUser({ bearerToken });
+  const id = res.data?.me.user?.id;
+  if (!id) throw new Error(`Could not resolve user id for ${email}: ${JSON.stringify(res.error?.errors)}`);
   return id;
 }
 

@@ -80,6 +80,12 @@ export const readCalloutSubspaces = (
   actor: GraphqlActor = TestUser.GLOBAL_ADMIN,
 ) => runAs(actor, (sdk, headers) => sdk.ReadCalloutSubspaces({ calloutId }, headers));
 
+/** The subspace ids (plus the withheld flag) a Spaces callout shows the actor — the ids-only control of a parity check. */
+export const readCalloutSubspaceIds = (
+  calloutId: string,
+  actor: GraphqlActor = TestUser.GLOBAL_ADMIN,
+) => runAs(actor, (sdk, headers) => sdk.ReadCalloutSubspaceIds({ calloutId }, headers));
+
 /** A callout's activity counter, contributions (posts) and per-type counts. */
 export const readCalloutContributions = (
   calloutId: string,

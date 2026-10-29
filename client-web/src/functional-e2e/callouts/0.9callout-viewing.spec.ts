@@ -9,7 +9,7 @@ import { TestUserManager, updateCalloutVisibility } from '@alkemio/tests-lib';
 import { expect } from '@playwright/test';
 import { createAuthenticatedSessionFixture } from '../fixtures/authenticated-session.fixture';
 import { CollaborationPage } from './pages';
-import { CalloutVisibility } from '@alkemio/tests-lib/core/generated/alkemio-schema';
+import { CalloutVisibility } from '@alkemio/tests-lib';
 
 const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 let calloutName = '';

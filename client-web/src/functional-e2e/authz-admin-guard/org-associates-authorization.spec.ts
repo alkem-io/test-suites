@@ -25,7 +25,7 @@
 // ../organization-user-associates/ (us1, us5); this file only owns the
 // authorization contract above.
 import { expect, Locator, Page } from '@playwright/test';
-import { RoleName } from '@alkemio/tests-lib/core/generated/alkemio-schema';
+import { RoleName } from '@alkemio/tests-lib';
 import { TestScenarioConfig } from '@alkemio/tests-lib/scenario/config/test-scenario-config';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import { TestScenarioFactory } from '@alkemio/tests-lib/scenario/TestScenarioFactory';

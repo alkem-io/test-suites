@@ -6,6 +6,7 @@ import type {
   UpdateInnovationFlowStateSettingsInput,
   UpdateInnovationFlowStatesSortOrderInput,
   UpdateSpaceInput,
+  UpdateSpaceSettingsInput,
 } from "../../../core/generated/alkemio-schema";
 import { GraphqlActor } from "../../../utils/graphql.actor";
 import { runAs } from "../../../utils/graphql.wrapper";
@@ -24,6 +25,26 @@ export const createSubspaceWithData = (
   runAs(actor, (sdk, headers) =>
     sdk.CreateSubspaceWithData({ subspaceData }, headers),
   );
+
+/**
+ * Create an L0 space from a full input and read back only its id — the one
+ * field the creating (non-platform-admin) user may select in the same
+ * mutation, since the new space's policies land a beat after the create.
+ */
+export const createSpaceOnAccountId = (
+  spaceData: CreateSpaceOnAccountInput,
+  actor: GraphqlActor = TestUser.GLOBAL_ADMIN,
+) => runAs(actor, (sdk, headers) => sdk.createSpace({ spaceData }, headers));
+
+/**
+ * Update a space's settings from a full input, exactly as given — no defaults
+ * are filled in for the blocks the caller omits (unlike `updateSpaceSettings`,
+ * which rewrites membership and collaboration with harness defaults).
+ */
+export const updateSpaceSettingsData = (
+  settingsData: UpdateSpaceSettingsInput,
+  actor: GraphqlActor = TestUser.GLOBAL_ADMIN,
+) => runAs(actor, (sdk, headers) => sdk.UpdateSpaceSettings({ settingsData }, headers));
 
 /** Update a space (about, profile, visibility …); returns the id only. */
 export const updateSpaceData = (

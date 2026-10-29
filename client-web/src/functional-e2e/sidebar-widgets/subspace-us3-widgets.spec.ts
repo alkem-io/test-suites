@@ -9,7 +9,7 @@
 import { test, expect, type BrowserContext, type Page } from '@playwright/test';
 import { TestUserManager } from '@alkemio/tests-lib';
 import { TestUser } from '@alkemio/tests-lib/common/enums/test.user';
-import { SidebarWidget } from '@alkemio/tests-lib/core/generated/alkemio-schema';
+import { SidebarWidget } from '@alkemio/tests-lib';
 import { L0_DEFAULT_SIDEBARS } from './sidebar-widgets.helpers';
 import {
   myPrivileges,

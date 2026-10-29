@@ -21,6 +21,7 @@
 // `describe.configure({ mode: 'serial' })` (the same serial discipline as the other organization walks).
 
 import { expect, test as baseTest, type Page } from '@playwright/test';
+import { readPlatformLanguageConfiguration } from '@alkemio/tests-lib';
 import { createPersonaTest } from '../fixtures/authenticated-session.fixture';
 import {
   adminToken,
@@ -41,7 +42,6 @@ import {
   mailsTo,
   openEmailAddresses,
   organizationInvitationSubject,
-  postGraphqlRaw,
   registerUserAtAddress,
   resendEmailInvitationRaw,
   RoleName,
@@ -168,12 +168,8 @@ baseTest.beforeAll(async () => {
   );
 
   // The language the dialog can suggest, read from the same config the dialog reads.
-  const language = await postGraphqlRaw<{
-    platform: {
-      configuration: { language: { eligible: string[]; default: string } };
-    };
-  }>('query { platform { configuration { language { eligible default } } } }');
-  const config = language.body.data?.platform.configuration.language;
+  const language = await readPlatformLanguageConfiguration();
+  const config = language.data?.platform.configuration.language;
   eligibleLanguage =
     config?.eligible.find(code => code !== config.default) ??
     config?.eligible[0];

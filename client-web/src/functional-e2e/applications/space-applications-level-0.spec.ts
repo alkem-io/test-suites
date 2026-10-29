@@ -15,7 +15,7 @@ import {
 } from '@alkemio/client-lib';
 import { loginViaCrd } from '../helpers/login.helper';
 import { enableApplicationNotifications } from '../helpers/notification-settings.helper';
-import { graphqlErrorWrapper } from '@alkemio/tests-lib/utils/graphql.wrapper';
+import { graphqlErrorWrapper } from '@alkemio/tests-lib';
 import {
   applyFlowSettled,
   expectNoApplyControl,

@@ -8,7 +8,7 @@
 // too, so a red case never cascades into the next file.
 import { test, expect, type BrowserContext, type Page } from '@playwright/test';
 import { TestUserManager } from '@alkemio/tests-lib';
-import { SidebarWidget } from '@alkemio/tests-lib/core/generated/alkemio-schema';
+import { SidebarWidget } from '@alkemio/tests-lib';
 import {
   columnOrder,
   keyboardDrag,

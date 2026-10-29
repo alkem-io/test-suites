@@ -16,7 +16,7 @@ import {
   getUserToken,
   TestScenarioFactory,
 } from '@alkemio/tests-lib';
-import { RoleName } from '@alkemio/tests-lib/core/generated/alkemio-schema';
+import { RoleName } from '@alkemio/tests-lib';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import { TestScenarioConfig } from '@alkemio/tests-lib/scenario/config/test-scenario-config';
 import {

@@ -1,6 +1,32 @@
 import { randomUUID } from 'node:crypto';
 import { expect, type Browser, type Page, test } from '@playwright/test';
+import {
+  assignRoleToUser,
+  CalloutFormQuestionType,
+  CalloutFormResponseMode,
+  CalloutFormResponseVisibility,
+  CalloutFormState,
+  CalloutFramingType,
+  CalloutVisibility,
+  createCalloutWithData,
+  createSpaceOnAccount,
+  createSubspaceWithData,
+  introspectSchemaFieldTypes,
+  readCalloutFormResponses,
+  readMyUser,
+  RoleName,
+  SpacePrivacyMode,
+  submitCalloutFormResponse,
+  updateCalloutForm,
+  updateCalloutVisibility,
+  type CalloutFormAnswerInput,
+  type CreateCalloutFormQuestionInput,
+  type CreateCalloutFormSettingsInput,
+  type GraphqlActor,
+  type GraphqlReturnWithError,
+} from '@alkemio/tests-lib';
 import { fillSecret } from '../helpers/login.helper';
+import { must } from '../helpers/lib-actor.helper';
 import fs from 'node:fs';
 import path from 'node:path';
 
@@ -57,7 +83,6 @@ const ADMIN_PASSWORD =
   process.env.AUTH_ADMIN_PASSWORD ||
   'password';
 const EVIDENCE_DIR = process.env.EVIDENCE_DIR || '';
-const GRAPHQL = `${BASE}/api/private/non-interactive/graphql`;
 // Per-run secret for the throwaway identities this walk provisions (override with
 // FORGE_PERSONA_PASSWORD); a fixed literal would leave them loginable after the run.
 const USER_PASSWORD =
@@ -98,39 +123,30 @@ async function mintToken(userEmail: string, password: string) {
   return token;
 }
 
-type GqlResult<T = any> = { data?: T; errors?: Array<any> };
-
-async function gql<T = any>(
-  userEmail: string,
-  query: string,
-  variables: Record<string, unknown> = {}
-): Promise<GqlResult<T>> {
-  const token = await mintToken(
-    userEmail,
-    userEmail === ADMIN_EMAIL ? ADMIN_PASSWORD : USER_PASSWORD
-  );
-  const res = await fetch(GRAPHQL, {
-    method: 'POST',
-    headers: {
-      'content-type': 'application/json',
-      authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify({ query, variables }),
-  });
-  return (await res.json()) as GqlResult<T>;
+/** The lib actor for one of this run's identities: its bearer, minted once. */
+async function actorFor(userEmail: string): Promise<GraphqlActor> {
+  return {
+    bearerToken: await mintToken(
+      userEmail,
+      userEmail === ADMIN_EMAIL ? ADMIN_PASSWORD : USER_PASSWORD
+    ),
+  };
 }
 
-async function must<T = any>(result: GqlResult<T>, what: string): Promise<T> {
-  expect(
-    result.errors,
-    `${what}: ${JSON.stringify(result.errors)}`
-  ).toBeUndefined();
-  return result.data as T;
-}
+type GqlError = {
+  message?: string;
+  extensions?: {
+    code?: string;
+    details?: { code?: string; questionIDs?: string[] };
+  };
+};
 
-const detailsCode = (result: GqlResult) =>
-  (result.errors?.[0]?.extensions?.details?.code ??
-    result.errors?.[0]?.extensions?.code) as string | undefined;
+const firstError = (result: GraphqlReturnWithError<unknown>) =>
+  (result.error?.errors as GqlError[] | undefined)?.[0];
+
+const detailsCode = (result: GraphqlReturnWithError<unknown>) =>
+  firstError(result)?.extensions?.details?.code ??
+  firstError(result)?.extensions?.code;
 
 async function createIdentity(userEmail: string, first: string, last: string) {
   const res = await fetch(`${KRATOS_ADMIN}/identities`, {
@@ -150,8 +166,8 @@ async function createIdentity(userEmail: string, first: string, last: string) {
 }
 
 async function meId(userEmail: string) {
-  const data = await must(await gql(userEmail, '{ me { user { id } } }'), 'me');
-  return data.me.user.id as string;
+  const data = must(await readMyUser(await actorFor(userEmail)), 'me');
+  return data.me.user!.id;
 }
 
 async function acceptCookies(page: Page) {
@@ -203,31 +219,16 @@ async function shot(page: Page, name: string) {
   }
 }
 
-const CREATE_FORM = `mutation ($d: CreateCalloutOnCalloutsSetInput!) {
-  createCalloutOnCalloutsSet(calloutData: $d) {
-    id
-    framing { type profile { url } form { id questions { id prompt type options { id label } } } }
-  }
-}`;
-const SUBMIT = `mutation ($d: SubmitCalloutFormResponseInput!) {
-  submitCalloutFormResponse(responseData: $d) { id createdBy { id } answers { questionID text selectedOptions { id label } } }
-}`;
-const UPDATE_FORM = `mutation ($d: UpdateCalloutFormInput!) {
-  updateCalloutForm(formData: $d) { id settings { visibility responseMode state } }
-}`;
-const LOOKUP = `query ($f: UUID!) {
-  lookup { calloutFormResponses(formID: $f, first: 50) {
-    canReadAll mine { id createdBy { id } answers { questionID text } }
-    all { total responses { id createdBy { id profile { displayName } } } }
-  } }
-}`;
-
 type FormFixture = {
   calloutId: string;
   url: string;
   formId: string;
   title: string;
-  q: Array<{ id: string; prompt: string; options: Array<{ id: string; label: string }> }>;
+  q: Array<{
+    id: string;
+    prompt: string;
+    options?: Array<{ id: string; label: string }> | null;
+  }>;
 };
 
 const fx = {
@@ -239,18 +240,23 @@ const fx = {
   ids: {} as Record<Persona, string>,
 };
 
-const FOUR_QUESTIONS = [
-  { prompt: 'What is your name?', explanation: 'Your full name', type: 'SHORT_TEXT', required: true },
-  { prompt: 'Tell us more', type: 'LONG_TEXT' },
+const FOUR_QUESTIONS: CreateCalloutFormQuestionInput[] = [
+  {
+    prompt: 'What is your name?',
+    explanation: 'Your full name',
+    type: CalloutFormQuestionType.ShortText,
+    required: true,
+  },
+  { prompt: 'Tell us more', type: CalloutFormQuestionType.LongText },
   {
     prompt: 'Pick one',
-    type: 'SINGLE_CHOICE',
+    type: CalloutFormQuestionType.SingleChoice,
     required: true,
     options: [{ label: 'Alpha' }, { label: 'Beta' }, { label: 'Gamma' }],
   },
   {
     prompt: 'Pick several',
-    type: 'MULTIPLE_CHOICE',
+    type: CalloutFormQuestionType.MultipleChoice,
     required: true,
     options: [{ label: 'One' }, { label: 'Two' }, { label: 'Three' }, { label: 'Four' }],
   },
@@ -261,47 +267,46 @@ async function createForm(
   calloutsSetID: string,
   title: string,
   opts: {
-    questions?: Array<Record<string, unknown>>;
-    settings?: Record<string, unknown>;
+    questions?: CreateCalloutFormQuestionInput[];
+    settings?: CreateCalloutFormSettingsInput;
     publish?: boolean;
     /** The optional Form title / description (R17), separate from the Post. */
     formTitle?: string;
     formDescription?: string;
   } = {}
 ): Promise<FormFixture> {
-  const created = (
-    await must(
-      await gql(owner, CREATE_FORM, {
-        d: {
-          calloutsSetID,
-          framing: {
-            type: 'FORM',
-            profile: { displayName: title, description: 'Form callout framing' },
-            form: {
-              title: opts.formTitle,
-              description: opts.formDescription,
-              questions: opts.questions ?? FOUR_QUESTIONS,
-              settings: opts.settings ?? {},
-            },
-          },
-          settings: {
-            visibility: 'DRAFT',
-            contribution: { enabled: false },
-            framing: { commentsEnabled: false },
+  const actor = await actorFor(owner);
+  const created = must(
+    await createCalloutWithData(
+      {
+        calloutsSetID,
+        framing: {
+          type: CalloutFramingType.Form,
+          profile: { displayName: title, description: 'Form callout framing' },
+          form: {
+            title: opts.formTitle,
+            description: opts.formDescription,
+            questions: opts.questions ?? FOUR_QUESTIONS,
+            settings: opts.settings ?? {},
           },
         },
-      }),
-      `create form ${title}`
-    )
+        settings: {
+          visibility: CalloutVisibility.Draft,
+          contribution: { enabled: false },
+          framing: { commentsEnabled: false },
+        },
+      },
+      actor
+    ),
+    `create form ${title}`
   ).createCalloutOnCalloutsSet;
   if (opts.publish !== false) {
-    await must(
-      await gql(
-        owner,
-        'mutation ($d: UpdateCalloutVisibilityInput!) { updateCalloutVisibility(calloutData: $d) { id } }',
-        {
-          d: { calloutID: created.id, visibility: 'PUBLISHED', sendNotification: false },
-        }
+    must(
+      await updateCalloutVisibility(
+        created.id,
+        CalloutVisibility.Published,
+        actor,
+        false
       ),
       'publish'
     );
@@ -309,34 +314,37 @@ async function createForm(
   return {
     calloutId: created.id,
     url: created.framing.profile.url,
-    formId: created.framing.form.id,
+    formId: created.framing.form!.id,
     title,
-    q: created.framing.form.questions,
+    q: created.framing.form!.questions,
   };
 }
 
-const validAnswers = (f: FormFixture, name = 'Mia') => [
+const validAnswers = (f: FormFixture, name = 'Mia'): CalloutFormAnswerInput[] => [
   { questionID: f.q[0].id, text: name },
-  { questionID: f.q[2].id, selectedOptionIDs: [f.q[2].options[0].id] },
+  { questionID: f.q[2].id, selectedOptionIDs: [f.q[2].options![0].id] },
   {
     questionID: f.q[3].id,
-    selectedOptionIDs: [f.q[3].options[0].id, f.q[3].options[2].id],
+    selectedOptionIDs: [f.q[3].options![0].id, f.q[3].options![2].id],
   },
 ];
 
-const submitApi = (
+const submitApi = async (
   who: Persona,
   f: FormFixture,
-  answers: Array<Record<string, unknown>>,
-  ack: 'ADMINS' | 'MEMBERS' = 'ADMINS'
+  answers: CalloutFormAnswerInput[],
+  ack: CalloutFormResponseVisibility = CalloutFormResponseVisibility.Admins
 ) =>
-  gql(personaEmail[who], SUBMIT, {
-    d: { formID: f.formId, acknowledgedVisibility: ack, answers },
-  });
+  submitCalloutFormResponse(
+    { formID: f.formId, acknowledgedVisibility: ack, answers },
+    await actorFor(personaEmail[who])
+  );
 
 const lookupAs = async (who: string, f: FormFixture) =>
-  (await must(await gql(who, LOOKUP, { f: f.formId }), 'lookup')).lookup
-    .calloutFormResponses;
+  must(
+    await readCalloutFormResponses(f.formId, await actorFor(who), 50),
+    'lookup'
+  ).lookup.calloutFormResponses;
 
 const dialogOf = (page: Page) => page.getByRole('dialog');
 const submitButton = (scope: ReturnType<typeof dialogOf> | Page) =>
@@ -385,89 +393,60 @@ test.describe(
         fx.ids[p] = await meId(personaEmail[p]);
       }
 
-      const me = await must(
-        await gql(ADMIN_EMAIL, '{ me { user { account { id } } } }'),
-        'admin account'
-      );
-      const space = (
-        await must(
-          await gql(
-            ADMIN_EMAIL,
-            `mutation ($d: CreateSpaceOnAccountInput!) {
-              createSpace(spaceData: $d) {
-                id about { profile { url } }
-                community { roleSet { id } }
-                collaboration { calloutsSet { id } }
-              }
-            }`,
-            {
-              d: {
-                accountID: me.me.user.account.id,
-                nameID: `us2-space-${RUN}`,
-                about: { profileData: { displayName: `US2 Space ${RUN}` } },
-                collaborationData: { calloutsSetData: {} },
-                settings: { privacy: { mode: 'PUBLIC' } },
-              },
-            }
-          ),
-          'create space'
-        )
+      const admin = await actorFor(ADMIN_EMAIL);
+      const me = must(await readMyUser(admin), 'admin account');
+      const space = must(
+        await createSpaceOnAccount(
+          {
+            accountID: me.me.user!.account!.id,
+            nameID: `us2-space-${RUN}`,
+            about: { profileData: { displayName: `US2 Space ${RUN}` } },
+            collaborationData: { calloutsSetData: {} },
+            settings: { privacy: { mode: SpacePrivacyMode.Public } },
+          },
+          admin
+        ),
+        'create space'
       ).createSpace;
       fx.spaceUrl = space.about.profile.url;
       fx.spaceCalloutsSetId = space.collaboration.calloutsSet.id;
-      const sub = (
-        await must(
-          await gql(
-            ADMIN_EMAIL,
-            `mutation ($d: CreateSubspaceInput!) {
-              createSubspace(subspaceData: $d) {
-                id
-                about { profile { url } }
-                community { roleSet { id } }
-                collaboration { calloutsSet { id } }
-              }
-            }`,
-            {
-              d: {
-                spaceID: space.id,
-                nameID: `us2-sub-${RUN}`,
-                about: { profileData: { displayName: SUB_NAME } },
-                collaborationData: { calloutsSetData: {} },
-                settings: {
-                  collaboration: {
-                    allowEventsFromSubspaces: true,
-                    allowGuestContributions: false,
-                    allowMembersToCreateCallouts: true,
-                    allowMembersToCreateSubspaces: false,
-                    allowMembersToVideoCall: false,
-                    inheritMembershipRights: true,
-                  },
-                },
+      const sub = must(
+        await createSubspaceWithData(
+          {
+            spaceID: space.id,
+            nameID: `us2-sub-${RUN}`,
+            about: { profileData: { displayName: SUB_NAME } },
+            collaborationData: { calloutsSetData: {} },
+            settings: {
+              collaboration: {
+                allowEventsFromSubspaces: true,
+                allowGuestContributions: false,
+                allowMembersToCreateCallouts: true,
+                allowMembersToCreateSubspaces: false,
+                allowMembersToVideoCall: false,
+                inheritMembershipRights: true,
               },
-            }
-          ),
-          'create subspace'
-        )
+            },
+          },
+          admin
+        ),
+        'create subspace'
       ).createSubspace;
       fx.subUrl = sub.about.profile.url;
       fx.subCalloutsSetId = sub.collaboration.calloutsSet.id;
       fx.subRoleSetId = sub.community.roleSet.id;
 
-      const assign = async (roleSetID: string, p: Persona, role: string) =>
+      const assign = async (roleSetID: string, p: Persona, role: RoleName) =>
         must(
-          await gql(
-            ADMIN_EMAIL,
-            'mutation ($d: AssignRoleOnRoleSetInput!) { assignRoleToUser(roleData: $d) { id } }',
-            { d: { actorID: fx.ids[p], role, roleSetID } }
-          ),
+          await assignRoleToUser(fx.ids[p], roleSetID, role, admin),
           `assign ${role} ${p}`
         );
       // a2 is an admin of the Subspace only; p is a member of nothing.
       for (const p of ['a2', 'm1', 'm2'] as Persona[]) {
-        await assign(space.community.roleSet.id, p, 'MEMBER');
-        await assign(sub.community.roleSet.id, p, 'MEMBER');
+        await assign(space.community.roleSet.id, p, RoleName.Member);
+        await assign(sub.community.roleSet.id, p, RoleName.Member);
       }
-      await assign(sub.community.roleSet.id, 'a2', 'ADMIN');
+      await assign(sub.community.roleSet.id, 'a2', RoleName.Admin);
 
       F = await createForm(personaEmail.a2, fx.subCalloutsSetId, `US2 Form ${RUN}`);
     });
@@ -550,7 +529,7 @@ test.describe(
 
       const good = validAnswers(F);
       const without = (i: number) => good.filter(a => a.questionID !== F.q[i].id);
-      const cases: Array<[string, Array<Record<string, unknown>>, string]> = [
+      const cases: Array<[string, CalloutFormAnswerInput[], string]> = [
         ['empty short text', [{ questionID: F.q[0].id, text: '' }, ...without(0)], F.q[0].id],
         ['whitespace short text', [{ questionID: F.q[0].id, text: '   ' }, ...without(0)], F.q[0].id],
         ['no radio', without(2), F.q[2].id],
@@ -560,7 +539,10 @@ test.describe(
         const res = await submitApi('m1', F, answers);
         expect(res.data?.submitCalloutFormResponse, label).toBeFalsy();
         expect(detailsCode(res), label).toBe('FORM_ANSWER_REQUIRED');
-        expect(res.errors?.[0]?.extensions?.details?.questionIDs, label).toEqual([qid]);
+        expect(
+          firstError(res)?.extensions?.details?.questionIDs,
+          label
+        ).toEqual([qid]);
       }
       expect((await lookupAs(personaEmail.m1, F)).mine).toHaveLength(0);
     });
@@ -570,7 +552,7 @@ test.describe(
       const good = validAnswers(F);
       const other = (i: number) => good.filter(a => a.questionID !== F.q[i].id);
       const ghost = '00000000-0000-4000-8000-000000000001';
-      const cases: Array<[string, Array<Record<string, unknown>>, string, string]> = [
+      const cases: Array<[string, CalloutFormAnswerInput[], string, string]> = [
         [
           '513-char short text',
           [{ questionID: F.q[0].id, text: MARK + 'x'.repeat(513 - MARK.length) }, ...other(0)],
@@ -588,7 +570,7 @@ test.describe(
           [
             {
               questionID: F.q[2].id,
-              selectedOptionIDs: [F.q[2].options[0].id, F.q[2].options[1].id],
+              selectedOptionIDs: [F.q[2].options![0].id, F.q[2].options![1].id],
             },
             ...other(2),
           ],
@@ -606,7 +588,10 @@ test.describe(
         const res = await submitApi('m1', F, answers);
         expect(res.data?.submitCalloutFormResponse, label).toBeFalsy();
         expect(detailsCode(res), label).toBe(code);
-        expect(res.errors?.[0]?.extensions?.details?.questionIDs, label).toEqual([qid]);
+        expect(
+          firstError(res)?.extensions?.details?.questionIDs,
+          label
+        ).toEqual([qid]);
         expect(JSON.stringify(res), `${label} must not echo the answer`).not.toContain(MARK);
       }
       expect((await lookupAs(personaEmail.m1, F)).mine).toHaveLength(0);
@@ -630,10 +615,10 @@ test.describe(
 
       const mine = (await lookupAs(personaEmail.m1, F)).mine;
       expect(mine).toHaveLength(1);
-      expect(mine[0].createdBy.id).toBe(fx.ids.m1);
+      expect(mine[0].createdBy?.id).toBe(fx.ids.m1);
       const all = await lookupAs(ADMIN_EMAIL, F);
       expect(all.all.total).toBe(1);
-      expect(all.all.responses[0].createdBy.id).toBe(fx.ids.m1);
+      expect(all.all.responses[0].createdBy?.id).toBe(fx.ids.m1);
     });
 
     test('US2-AS5 SINGLE mode: own response replaces the form; withdraw brings it back; resubmit works', async ({
@@ -677,10 +662,14 @@ test.describe(
     test('US2-AS6 MULTIPLE mode: a second, separate response is stored and listed', async ({
       browser,
     }) => {
-      await must(
-        await gql(personaEmail.a2, UPDATE_FORM, {
-          d: { formID: F.formId, settings: { responseMode: 'MULTIPLE' } },
-        }),
+      must(
+        await updateCalloutForm(
+          {
+            formID: F.formId,
+            settings: { responseMode: CalloutFormResponseMode.Multiple },
+          },
+          await actorFor(personaEmail.a2)
+        ),
         'switch to MULTIPLE'
       );
       const page = await signIn(browser, personaEmail.m1);
@@ -700,17 +689,22 @@ test.describe(
       await page.context().close();
       const mine = (await lookupAs(personaEmail.m1, F)).mine;
       expect(mine).toHaveLength(2);
-      expect(new Set(mine.map((r: any) => r.id)).size).toBe(2);
+      expect(new Set(mine.map(r => r.id)).size).toBe(2);
     });
 
     test('US2-AS7 own responses are always visible with Withdraw and never editable (Admins-only and Members)', async ({
       browser,
     }) => {
       const members = await createForm(personaEmail.a2, fx.subCalloutsSetId, `US2 Members ${RUN}`, {
-        settings: { visibility: 'MEMBERS' },
+        settings: { visibility: CalloutFormResponseVisibility.Members },
       });
-      await must(
-        await submitApi('m1', members, validAnswers(members, 'Members Mia'), 'MEMBERS'),
+      must(
+        await submitApi(
+          'm1',
+          members,
+          validAnswers(members, 'Members Mia'),
+          CalloutFormResponseVisibility.Members
+        ),
         'seed members response'
       );
       const page = await signIn(browser, personaEmail.m1);
@@ -729,15 +723,15 @@ test.describe(
         await page.keyboard.press('Escape');
       }
       // The API offers no way to change a stored response.
-      const schema = await must(
-        await gql(
-          personaEmail.m1,
-          '{ m: __type(name: "Mutation") { fields { name } } }'
-        ),
-        'schema'
+      const schema = await introspectSchemaFieldTypes(
+        await actorFor(personaEmail.m1)
       );
+      expect(schema.body.errors, 'schema').toBeUndefined();
+      const mutation = schema.body.data!.__schema.types.find(
+        t => t.name === 'Mutation'
+      )!;
       expect(
-        schema.m.fields.map((f: any) => f.name).filter((n: string) => /CalloutFormResponse/.test(n)).sort()
+        mutation.fields!.map(f => f.name).filter(n => /CalloutFormResponse/.test(n)).sort()
       ).toEqual(['deleteCalloutFormResponse', 'submitCalloutFormResponse']);
       await page.context().close();
     });
@@ -772,15 +766,9 @@ test.describe(
       await shot(page, 'US2-AS8-non-member-item');
       await page.context().close();
 
-      const res = await gql(personaEmail.p, SUBMIT, {
-        d: {
-          formID: spaceForm.formId,
-          acknowledgedVisibility: 'ADMINS',
-          answers: validAnswers(spaceForm),
-        },
-      });
+      const res = await submitApi('p', spaceForm, validAnswers(spaceForm));
       expect(res.data?.submitCalloutFormResponse).toBeFalsy();
-      expect(res.errors?.[0]?.extensions?.code).toBe('FORBIDDEN_POLICY');
+      expect(firstError(res)?.extensions?.code).toBe('FORBIDDEN_POLICY');
     });
 
     test('US2-AS9 a closed Form is read-only, the API rejects, withdraw still works; a draft Post is rejected', async ({
@@ -788,10 +776,11 @@ test.describe(
     }) => {
       // (a) closed, no response yet: read-only with the Closed state.
       const fresh = await createForm(personaEmail.a2, fx.subCalloutsSetId, `US2 Closed ${RUN}`);
-      await must(
-        await gql(personaEmail.a2, UPDATE_FORM, {
-          d: { formID: fresh.formId, settings: { state: 'CLOSED' } },
-        }),
+      must(
+        await updateCalloutForm(
+          { formID: fresh.formId, settings: { state: CalloutFormState.Closed } },
+          await actorFor(personaEmail.a2)
+        ),
         'close fresh'
       );
       const page = await signIn(browser, personaEmail.m1);
@@ -810,11 +799,12 @@ test.describe(
       // (b) closed with an existing response (default SINGLE mode): the member
       // still sees that the Form is closed, and withdraw still works.
       const closable = await createForm(personaEmail.a2, fx.subCalloutsSetId, `US2 Closable ${RUN}`);
-      await must(await submitApi('m1', closable, validAnswers(closable, 'Before close')), 'seed');
-      await must(
-        await gql(personaEmail.a2, UPDATE_FORM, {
-          d: { formID: closable.formId, settings: { state: 'CLOSED' } },
-        }),
+      must(await submitApi('m1', closable, validAnswers(closable, 'Before close')), 'seed');
+      must(
+        await updateCalloutForm(
+          { formID: closable.formId, settings: { state: CalloutFormState.Closed } },
+          await actorFor(personaEmail.a2)
+        ),
         'close'
       );
       await open(page, closable.url);
@@ -882,10 +872,14 @@ test.describe(
       await expect(dialog.getByText(NOTICE_ADMINS)).toBeVisible();
       await fillValid(dialog, 'Race Mia');
       // A2 widens the audience at zero responses.
-      await must(
-        await gql(personaEmail.a2, UPDATE_FORM, {
-          d: { formID: f.formId, settings: { visibility: 'MEMBERS' } },
-        }),
+      must(
+        await updateCalloutForm(
+          {
+            formID: f.formId,
+            settings: { visibility: CalloutFormResponseVisibility.Members },
+          },
+          await actorFor(personaEmail.a2)
+        ),
         'widen'
       );
       await submitButton(dialog).click();
@@ -908,15 +902,32 @@ test.describe(
 
       // API flavour: stale acknowledgement rejected, fresh one stored.
       const g = await createForm(personaEmail.a2, fx.subCalloutsSetId, `US2 Race API ${RUN}`);
-      await must(
-        await gql(personaEmail.a2, UPDATE_FORM, {
-          d: { formID: g.formId, settings: { visibility: 'MEMBERS' } },
-        }),
+      must(
+        await updateCalloutForm(
+          {
+            formID: g.formId,
+            settings: { visibility: CalloutFormResponseVisibility.Members },
+          },
+          await actorFor(personaEmail.a2)
+        ),
         'widen g'
       );
-      const stale = await submitApi('m1', g, validAnswers(g), 'ADMINS');
+      const stale = await submitApi(
+        'm1',
+        g,
+        validAnswers(g),
+        CalloutFormResponseVisibility.Admins
+      );
       expect(detailsCode(stale)).toBe('FORM_VISIBILITY_CHANGED');
-      await must(await submitApi('m1', g, validAnswers(g), 'MEMBERS'), 'fresh ack stored');
+      must(
+        await submitApi(
+          'm1',
+          g,
+          validAnswers(g),
+          CalloutFormResponseVisibility.Members
+        ),
+        'fresh ack stored'
+      );
     });
 
     test('US2-AS12 five parallel submits in SINGLE mode store exactly one response', async () => {
@@ -944,11 +955,15 @@ test.describe(
         formTitle,
         formDescription,
         questions: [
-          { prompt: 'What is your name?', type: 'SHORT_TEXT', required: true },
-          { prompt: 'Tell us more', type: 'LONG_TEXT' },
+          {
+            prompt: 'What is your name?',
+            type: CalloutFormQuestionType.ShortText,
+            required: true,
+          },
+          { prompt: 'Tell us more', type: CalloutFormQuestionType.LongText },
           {
             prompt: 'Pick one',
-            type: 'SINGLE_CHOICE',
+            type: CalloutFormQuestionType.SingleChoice,
             options: [{ label: 'Alpha' }, { label: 'Beta' }],
           },
         ],
@@ -994,10 +1009,11 @@ test.describe(
       await body(true);
 
       // "Collapsed by default" on: the Form first shows its header only.
-      await must(
-        await gql(personaEmail.a2, UPDATE_FORM, {
-          d: { formID: f.formId, settings: { defaultCollapsed: true } },
-        }),
+      must(
+        await updateCalloutForm(
+          { formID: f.formId, settings: { defaultCollapsed: true } },
+          await actorFor(personaEmail.a2)
+        ),
         'collapse by default'
       );
       await open(page, f.url);
@@ -1014,15 +1030,19 @@ test.describe(
       browser,
     }) => {
       const f = await createForm(personaEmail.a2, fx.subCalloutsSetId, `US2 Mode Switch ${RUN}`, {
-        settings: { responseMode: 'MULTIPLE' },
+        settings: { responseMode: CalloutFormResponseMode.Multiple },
       });
-      await must(await submitApi('m1', f, validAnswers(f, 'Mode First')), 'first response');
-      await must(await submitApi('m1', f, validAnswers(f, 'Mode Second')), 'second response');
+      must(await submitApi('m1', f, validAnswers(f, 'Mode First')), 'first response');
+      must(await submitApi('m1', f, validAnswers(f, 'Mode Second')), 'second response');
       // R19a: the switch is allowed although M1 holds two responses.
-      await must(
-        await gql(personaEmail.a2, UPDATE_FORM, {
-          d: { formID: f.formId, settings: { responseMode: 'SINGLE' } },
-        }),
+      must(
+        await updateCalloutForm(
+          {
+            formID: f.formId,
+            settings: { responseMode: CalloutFormResponseMode.Single },
+          },
+          await actorFor(personaEmail.a2)
+        ),
         'switch to SINGLE'
       );
       expect((await lookupAs(personaEmail.m1, f)).mine).toHaveLength(2);

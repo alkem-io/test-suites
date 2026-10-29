@@ -10,7 +10,7 @@ import { TestUser } from '@alkemio/tests-lib/common/enums/test.user';
 import {
   CommunityMembershipPolicy,
   SpacePrivacyMode,
-} from '@alkemio/client-lib/dist/generated/graphql';
+} from '@alkemio/tests-lib';
 
 const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 let baseScenario: OrganizationWithSpaceModel;

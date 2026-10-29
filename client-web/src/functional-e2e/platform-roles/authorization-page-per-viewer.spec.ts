@@ -15,13 +15,15 @@ import {
   getGraphqlClient,
   getUserToken,
   platformRoleEmail,
+  readMyPlatformRoles,
+  readMyUser,
   registerTestUser,
   seedPlatformRoleUsers,
-  testConfiguration,
   type SeededPlatformRoleUsers,
 } from '@alkemio/tests-lib';
-import { RoleName } from '@alkemio/tests-lib/core/generated/alkemio-schema';
+import { RoleName } from '@alkemio/tests-lib';
 import { createPersonaTest } from '../fixtures/authenticated-session.fixture';
+import { must } from '../helpers/lib-actor.helper';
 
 const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 
@@ -59,23 +61,10 @@ const prepared = new Map<string, Promise<Setup>>();
 
 const assignerHeaders = (s: Setup) => ({ authorization: `Bearer ${s.bootstrapToken}` });
 
-/** A small authenticated read, as the user whose token it is. */
-const read = async <T>(token: string, query: string): Promise<T> => {
-  const response = await fetch(testConfiguration.endPoints.graphql.private, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', authorization: `Bearer ${token}` },
-    body: JSON.stringify({ query }),
-  });
-  const body = await response.json();
-  if (!body.data) throw new Error(`read failed: ${JSON.stringify(body.errors ?? body).slice(0, 300)}`);
-  return body.data as T;
-};
-
 const normaliseSubject = async (s: Setup): Promise<void> => {
   const token = await getUserToken(`${s.subject.user}@alkem.io`);
-  const held = (
-    await read<{ platform: { roleSet: { myRoles: string[] } } }>(token, 'query { platform { roleSet { myRoles } } }')
-  ).platform.roleSet.myRoles;
+  const held = must(await readMyPlatformRoles({ bearerToken: token }), 'read subject platform roles').platform
+    .roleSet.myRoles;
   for (const role of held.filter(r => r !== 'REGISTERED')) {
     await getGraphqlClient().PlatformRolesRemoveRoleFromUser(
       { roleData: { actorID: s.subjectId, role: role as RoleName } },
@@ -91,7 +80,7 @@ const setup = (subject: Subject): Promise<Setup> => {
       const seeded = await seedPlatformRoleUsers();
       await registerTestUser(subject.user);
       const token = await getUserToken(`${subject.user}@alkem.io`);
-      const subjectId = (await read<{ me: { user: { id: string } } }>(token, 'query { me { user { id } } }')).me.user.id;
+      const subjectId = must(await readMyUser({ bearerToken: token }), 'read subject user').me.user!.id;
       const all = { ...seeded, subjectId, subject };
       await normaliseSubject(all);
       return all;

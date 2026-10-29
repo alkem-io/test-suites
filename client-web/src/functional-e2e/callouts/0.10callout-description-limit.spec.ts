@@ -18,11 +18,11 @@
 // and DL-1 pins the offset first so a change in serialisation fails loudly.
 
 import { expect, type Locator, type Page } from '@playwright/test';
-import { TestScenarioFactory, TestUser } from '@alkemio/tests-lib';
+import { readSpaceCalloutNames, TestScenarioFactory, TestUser } from '@alkemio/tests-lib';
 import type { TestScenarioConfig } from '@alkemio/tests-lib/scenario/config/test-scenario-config';
 import type { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
-import { adminGql } from '../contributors-callout/cards-fixture';
 import { createPersonaTest } from '../fixtures/authenticated-session.fixture';
+import { must } from '../helpers/lib-actor.helper';
 import { CollaborationPage } from './pages';
 
 const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
@@ -133,21 +133,11 @@ const expectNotBlocked = async (page: Page): Promise<void> => {
 };
 
 const calloutTitles = async (spaceId: string): Promise<string[]> => {
-  const data = await adminGql<{
-    lookup: {
-      space: {
-        collaboration: {
-          calloutsSet: {
-            callouts: { framing: { profile: { displayName: string } } }[];
-          };
-        };
-      };
-    };
-  }>(
-    'query($id: UUID!){ lookup { space(ID: $id) { collaboration { calloutsSet { callouts { framing { profile { displayName } } } } } } } }',
-    { id: spaceId }
+  const data = must(
+    await readSpaceCalloutNames(spaceId, TestUser.GLOBAL_ADMIN),
+    `read callouts of space ${spaceId}`
   );
-  return data.lookup.space.collaboration.calloutsSet.callouts.map(
+  return data.lookup.space!.collaboration.calloutsSet.callouts.map(
     c => c.framing.profile.displayName
   );
 };

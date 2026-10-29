@@ -14,6 +14,12 @@ export const readOrganizationProfileTagsets = (
     sdk.ReadOrganizationProfileTagsets({ organizationId }, headers),
   );
 
+/** The id behind an organization nameID (`lookupByName.organization`), or null when none exists. */
+export const getOrganizationIdByNameId = (
+  nameID: string,
+  actor: GraphqlActor = TestUser.GLOBAL_ADMIN,
+) => runAs(actor, (sdk, headers) => sdk.getOrganizationIdByNameId({ nameID }, headers));
+
 /** The organization's verification record (id + status). */
 export const readOrganizationVerification = (
   organizationId: string,

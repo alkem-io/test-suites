@@ -6,7 +6,7 @@
 // Layout dialog) is covered by us2-admin-config.spec.ts › US2-AS1.
 import { test, expect, type BrowserContext, type Page } from '@playwright/test';
 import { TestUserManager } from '@alkemio/tests-lib';
-import { SidebarWidget } from '@alkemio/tests-lib/core/generated/alkemio-schema';
+import { SidebarWidget } from '@alkemio/tests-lib';
 import { L0_DEFAULT_SIDEBARS, spaceSidebar } from './sidebar-widgets.helpers';
 import {
   DESKTOP_VIEWPORT,

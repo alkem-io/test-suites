@@ -74,8 +74,11 @@ const baseRestrictedSyntax = [
  */
 const NO_INLINE_DOCUMENT =
   'No inline GraphQL documents in a spec — put the document in the lib and call a named lib function (docs/e2e-conventions.md § Lib boundary).';
+// A document always carries a selection set, so the literal must contain a
+// `{` somewhere (the lookahead) — prose such as "clears the query (084)" in a
+// skip reason is not a document.
 const GRAPHQL_DOCUMENT_PATTERN =
-  '/(^|[^A-Za-z_])(query|mutation|subscription)\\s*([A-Za-z_][A-Za-z0-9_]*\\s*)?(\\(|\\{)/';
+  '/^(?=[\\s\\S]*\\{)[\\s\\S]*(^|[^A-Za-z_])(query|mutation|subscription)\\s*([A-Za-z_][A-Za-z0-9_]*\\s*)?(\\(|\\{)/';
 const GRAPHQL_ROOT_SELECTION_PATTERN = '/^\\s*\\{\\s*(me|lookup|lookupByName|platform|__type|__schema)\\b/';
 const libBoundarySyntax = [
   {

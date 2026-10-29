@@ -28,40 +28,33 @@ import {
   newFixtureTree,
   showMoreOf,
 } from './subspaces-callout.helpers';
-import { getUserToken, UniqueIDGenerator } from '@alkemio/tests-lib';
+import {
+  CalloutFramingType,
+  RoleName,
+  SpaceCollectionCardVariant,
+  SpacePrivacyMode,
+  createCalloutWithData,
+  createSpaceOnAccount,
+  createSubspaceWithData,
+  deleteSpace,
+  getUserToken,
+  readCalloutSubspaceIds,
+  readCalloutSubspaces,
+  readMyUser,
+  readSpaceAbout,
+  removeRoleFromUser,
+  UniqueIDGenerator,
+  updateSpaceData,
+  type GraphqlActor,
+} from '@alkemio/tests-lib';
+import { must } from '../helpers/lib-actor.helper';
 
 const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 const adminEmail = process.env.AUTH_TEST_HARNESS_EMAIL || 'admin@alkem.io';
 // A registered user with no role in the fixture space or its subspaces.
 const nonMemberEmail = 'non.space@alkem.io';
-// The non-interactive-login bearer (HS256) is only accepted on the private
-// non-interactive endpoint — same convention as every other raw-GraphQL
-// fixture setup in this suite (see subspaces-callout/us4-narrow-layout.spec.ts).
-const gqlEndpoint =
-  process.env.ALKEMIO_SERVER ||
-  'http://localhost:3000/api/private/non-interactive/graphql';
-// The public endpoint, hit with no credentials at all — the anonymous viewer.
-const publicGqlEndpoint = `${baseUrl}/api/public/graphql`;
-
-async function rawGql<T>(
-  query: string,
-  variables: Record<string, unknown>,
-  token?: string
-): Promise<T> {
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-  };
-  if (token) headers.Authorization = `Bearer ${token}`;
-  const res = await fetch(token ? gqlEndpoint : publicGqlEndpoint, {
-    method: 'POST',
-    headers,
-    body: JSON.stringify({ query, variables }),
-  });
-  const body = await res.json();
-  if (body.errors)
-    throw new Error(`GraphQL error: ${JSON.stringify(body.errors)}`);
-  return body.data as T;
-}
+// The anonymous viewer: no credentials at all, on the public endpoint.
+const anonymous: GraphqlActor = { anonymous: 'public' };
 
 const runSuffix = UniqueIDGenerator.getID();
 const SEARCH_BOX = 'input[placeholder="Search subspaces..."]';
@@ -151,6 +144,7 @@ let fixture: Fixture;
 // `beforeAll` that fails halfway still leaves a complete deletion list.
 const tree = newFixtureTree();
 let adminToken: string;
+const admin = (): GraphqlActor => ({ bearerToken: adminToken });
 
 const shortId = (label: string) => `${label}${runSuffix}`.slice(0, 24);
 
@@ -160,18 +154,9 @@ async function createSubspace(
   c: CardDef
 ): Promise<{ id: string; nameID: string }> {
   const nameID = shortId(c.label.toLowerCase());
-  const data = await rawGql<{
-    createSubspace: {
-      id: string;
-      nameID: string;
-      community: { roleSet: { id: string } };
-    };
-  }>(
-    `mutation ($subspaceData: CreateSubspaceInput!) {
-      createSubspace(subspaceData: $subspaceData) { id nameID community { roleSet { id } } }
-    }`,
-    {
-      subspaceData: {
+  const data = must(
+    await createSubspaceWithData(
+      {
         spaceID: spaceId,
         nameID,
         about: {
@@ -185,23 +170,26 @@ async function createSubspace(
           who: c.who,
         },
         collaborationData: { calloutsSetData: {} },
-        settings: { privacy: { mode: c.privacy ?? 'PUBLIC' } },
+        settings: {
+          privacy: {
+            mode: (c.privacy ?? 'PUBLIC') as SpacePrivacyMode,
+          },
+        },
       },
-    },
-    adminToken
+      admin()
+    ),
+    `createSubspace(${c.label})`
   );
   if (c.noLeads) {
     // createSubspace makes its creator a Lead; AS3 needs a subspace with none.
-    await rawGql(
-      'mutation ($roleData: RemoveRoleOnRoleSetInput!) { removeRoleFromUser(roleData: $roleData) { id } }',
-      {
-        roleData: {
-          actorID: adminUserId,
-          role: 'LEAD',
-          roleSetID: data.createSubspace.community.roleSet.id,
-        },
-      },
-      adminToken
+    must(
+      await removeRoleFromUser(
+        adminUserId,
+        data.createSubspace.community.roleSet.id,
+        RoleName.Lead,
+        admin()
+      ),
+      `remove LEAD on ${c.label}`
     );
   }
   tree.subspaceIds.push(data.createSubspace.id);
@@ -215,10 +203,12 @@ async function createSubspace(
     ...(c.what ? {} : { profile: { description: '' } }),
   };
   if (Object.keys(cleared).length > 0) {
-    await rawGql(
-      'mutation ($spaceData: UpdateSpaceInput!) { updateSpace(spaceData: $spaceData) { id } }',
-      { spaceData: { ID: data.createSubspace.id, about: cleared } },
-      adminToken
+    must(
+      await updateSpaceData(
+        { ID: data.createSubspace.id, about: cleared },
+        admin()
+      ),
+      `clear About of ${c.label}`
     );
   }
   return data.createSubspace;
@@ -229,18 +219,23 @@ async function createSpacesPost(
   title: string,
   cardVariant: 'EXPANDED' | 'COMPACT'
 ): Promise<string> {
-  const data = await rawGql<{ createCalloutOnCalloutsSet: { id: string } }>(
-    `mutation ($calloutData: CreateCalloutOnCalloutsSetInput!) {
-      createCalloutOnCalloutsSet(calloutData: $calloutData) { id }
-    }`,
-    {
-      calloutData: {
+  const data = must(
+    await createCalloutWithData(
+      {
         calloutsSetID: calloutsSetId,
-        framing: { type: 'SPACES', profile: { displayName: title } },
-        settings: { framing: { spaces: { cardVariant } } },
+        framing: {
+          type: CalloutFramingType.Spaces,
+          profile: { displayName: title },
+        },
+        settings: {
+          framing: {
+            spaces: { cardVariant: cardVariant as SpaceCollectionCardVariant },
+          },
+        },
       },
-    },
-    adminToken
+      admin()
+    ),
+    `createSpacesPost(${title})`
   );
   return data.createCalloutOnCalloutsSet.id;
 }
@@ -261,33 +256,25 @@ test.describe(
       test.setTimeout(240_000);
       adminToken = await getUserToken(adminEmail);
 
-      const me = await rawGql<{
-        me: { user: { id: string; account: { id: string } } };
-      }>('query { me { user { id account { id } } } }', {}, adminToken);
-      const accountID = me.me.user.account.id;
+      const me = must(await readMyUser(admin()), 'me');
+      const adminUserId = me.me.user!.id;
+      const accountID = me.me.user!.account!.id;
 
       const spaceNameId = shortId('us1crd');
-      const space = await rawGql<{
-        createSpace: {
-          id: string;
-          collaboration: { calloutsSet: { id: string } };
-        };
-      }>(
-        `mutation ($spaceData: CreateSpaceOnAccountInput!) {
-        createSpace(spaceData: $spaceData) { id collaboration { calloutsSet { id } } }
-      }`,
-        {
-          spaceData: {
+      const space = must(
+        await createSpaceOnAccount(
+          {
             accountID,
             nameID: spaceNameId,
             about: {
               profileData: { displayName: `US1 Expanded Cards ${runSuffix}` },
             },
             collaborationData: { calloutsSetData: {} },
-            settings: { privacy: { mode: 'PUBLIC' } },
+            settings: { privacy: { mode: SpacePrivacyMode.Public } },
           },
-        },
-        adminToken
+          admin()
+        ),
+        'createSpace'
       );
       const spaceId = space.createSpace.id;
       tree.spaceId = spaceId;
@@ -296,7 +283,7 @@ test.describe(
       const subspaceIds: string[] = [];
       const subspaceNameIds: Record<string, string> = {};
       for (const c of CARDS) {
-        const created = await createSubspace(spaceId, me.me.user.id, c);
+        const created = await createSubspace(spaceId, adminUserId, c);
         subspaceIds[subspaceIds.length] = created.id;
         subspaceNameIds[c.label] = created.nameID;
       }
@@ -322,12 +309,8 @@ test.describe(
       // contains subspaces), and every failure is reported rather than
       // swallowed: a public fixture tree left behind on the shared stack is
       // a defect of this file, not noise.
-      await deleteFixtureTree(tree, id =>
-        rawGql(
-          'mutation ($spaceID: UUID!) { deleteSpace(deleteData: { ID: $spaceID }) { id } }',
-          { spaceID: id },
-          adminToken
-        )
+      await deleteFixtureTree(tree, async id =>
+        must(await deleteSpace(id, admin()), `deleteSpace(${id})`)
       );
     });
 
@@ -664,13 +647,9 @@ test.describe(
     }) => {
       const epsilonId =
         fixture.subspaceIds[CARDS.findIndex(c => c.label === 'Epsilon')];
-      const viaCallout = `query ($calloutId: UUID!) { lookup { callout(ID: $calloutId) { framing { subspaces {
-      id about { why who profile { displayName tagline description } } } } } } }`;
-      const idsOnly =
-        'query ($calloutId: UUID!) { lookup { callout(ID: $calloutId) { framing { subspaces { id } } } } }';
-      const direct =
-        'query ($id: UUID!) { lookup { space(ID: $id) { id about { why who profile { displayName tagline description } } } } }';
-
+      // Three reads per viewer: the callout's subspaces with their About, the
+      // same list ids-only, and each subspace's About read directly. The direct
+      // read is projected onto the card's About fields before the comparison.
       type About = {
         why: string | null;
         who: string | null;
@@ -680,12 +659,32 @@ test.describe(
           description: string | null;
         };
       };
-      type ViaCallout = {
-        lookup: {
-          callout: { framing: { subspaces: { id: string; about: About }[] } };
+      const projectAbout = (a: {
+        why?: string | null;
+        who?: string | null;
+        profile: {
+          displayName: string;
+          tagline?: string | null;
+          description?: string | null;
         };
+      }): About => ({
+        why: a.why ?? null,
+        who: a.who ?? null,
+        profile: {
+          displayName: a.profile.displayName,
+          tagline: a.profile.tagline ?? null,
+          description: a.profile.description ?? null,
+        },
+      });
+      /** The direct About as this viewer reads it, or null when the read is refused. */
+      const directAbout = async (
+        id: string,
+        viewer: GraphqlActor
+      ): Promise<About | null> => {
+        const res = await readSpaceAbout(id, viewer);
+        if (res.error || !res.data?.lookup.space) return null;
+        return projectAbout(res.data.lookup.space.about);
       };
-      type Direct = { lookup: { space: { id: string; about: About } | null } };
 
       // What the admin can read directly is the reference for "filled": pair parity
       // (c) is about a field being WITHHELD by authorization, not about a field an
@@ -694,27 +693,31 @@ test.describe(
       // Three viewer classes: the admin (reads everything), a signed-in user
       // who is a member of nothing in this fixture, and the anonymous viewer.
       const nonMemberToken = await getUserToken(nonMemberEmail);
-      for (const token of [adminToken, nonMemberToken, undefined]) {
-        const full = await rawGql<ViaCallout>(
-          viaCallout,
-          { calloutId: fixture.expandedCalloutId },
-          token
+      const viewers: GraphqlActor[] = [
+        admin(),
+        { bearerToken: nonMemberToken },
+        anonymous,
+      ];
+      for (const viewer of viewers) {
+        const full = must(
+          await readCalloutSubspaces(fixture.expandedCalloutId, viewer),
+          'callout subspaces'
         );
-        const ids = await rawGql<ViaCallout>(
-          idsOnly,
-          { calloutId: fixture.expandedCalloutId },
-          token
+        const ids = must(
+          await readCalloutSubspaceIds(fixture.expandedCalloutId, viewer),
+          'callout subspace ids'
         );
-        const set = full.lookup.callout.framing.subspaces.map(s => s.id).sort();
+        const set = full.lookup.callout!.framing.subspaces.map(s => s.id).sort();
         // (a) the same subspace set whether or not About fields are selected
         expect(set).toEqual(
-          ids.lookup.callout.framing.subspaces.map(s => s.id).sort()
+          ids.lookup.callout!.framing.subspaces.map(s => s.id).sort()
         );
-        for (const s of full.lookup.callout.framing.subspaces) {
+        for (const raw of full.lookup.callout!.framing.subspaces) {
+          const s = { id: raw.id, about: projectAbout(raw.about) };
           // (b) every About field equals what the direct lookup returns to this viewer
-          const d = await rawGql<Direct>(direct, { id: s.id }, token);
-          expect(d.lookup.space?.about).toEqual(s.about);
-          if (token === adminToken) filledByAdmin.set(s.id, s.about);
+          const d = await directAbout(s.id, viewer);
+          expect(d).toEqual(s.about);
+          if (viewer === viewers[0]) filledByAdmin.set(s.id, s.about);
           // (c) pair parity — description/who present exactly where tagline/why are,
           // for every field the admin proves is filled (presence = a non-null value)
           const ref = filledByAdmin.get(s.id)!;
@@ -728,12 +731,8 @@ test.describe(
           }
         }
         // The private subspace: visible on the callout ⇔ readable directly
-        const directEps = await rawGql<Direct>(
-          direct,
-          { id: epsilonId },
-          token
-        ).catch(() => null);
-        expect(set.includes(epsilonId)).toBe(directEps?.lookup.space != null);
+        const directEps = await directAbout(epsilonId, viewer);
+        expect(set.includes(epsilonId)).toBe(directEps != null);
       }
 
       // Anonymous browser: the card shows Epsilon's About text exactly where the

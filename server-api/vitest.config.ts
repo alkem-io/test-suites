@@ -181,6 +181,10 @@ export default defineConfig({
           sequence: { groupOrder: 3 },
         },
       },
+      // The lib contract (docs/qa/server-rebuild W2 pre-work): names, shapes
+      // and one base-scenario round trip. The first thing that must go green
+      // on the rebuilt server; on demand, not part of `nightly`.
+      project('contract', ['src/contract/**/*.it-spec.ts']),
       project('graphql-guard', [
         'src/functional-api/graphql-guard/**/*.it-spec.ts',
       ]),

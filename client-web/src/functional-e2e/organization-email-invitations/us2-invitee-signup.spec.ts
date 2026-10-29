@@ -27,6 +27,7 @@ import {
   type BrowserContext,
   type Page,
 } from '@playwright/test';
+import { readPlatformLanguageConfiguration } from '@alkemio/tests-lib';
 import { createPersonaTest } from '../fixtures/authenticated-session.fixture';
 import {
   fillUpSignInPageElements,
@@ -46,7 +47,6 @@ import {
   listInvitations,
   openEmailAddresses,
   organizationInvitationSubject,
-  postGraphqlRaw,
   registerUserAtAddress,
   RoleName,
   runSuffix,
@@ -124,12 +124,8 @@ baseTest.beforeAll(async () => {
   );
   await assignUserRoleOnOrganization(org.roleSetId, admin.id, RoleName.Admin);
 
-  const language = await postGraphqlRaw<{
-    platform: {
-      configuration: { language: { eligible: string[]; default: string } };
-    };
-  }>('query { platform { configuration { language { eligible default } } } }');
-  const config = language.body.data?.platform.configuration.language;
+  const language = await readPlatformLanguageConfiguration();
+  const config = language.data?.platform.configuration.language;
   // The suggested language is pinned to Dutch when the stack offers it, so the Dutch-language assertion
   // can run; otherwise no language is seeded, the walk runs on English labels and only that one assertion skips.
   eligibleLanguage = config?.eligible.includes(DUTCH) ? DUTCH : undefined;

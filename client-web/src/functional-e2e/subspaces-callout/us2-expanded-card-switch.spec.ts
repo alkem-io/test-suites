@@ -31,11 +31,24 @@
 
 import { expect, type Page } from '@playwright/test';
 import {
+  CalloutFramingType,
+  CalloutSelectionMode,
+  SpaceCollectionCardVariant,
+  SpacePrivacyMode,
+  createCalloutWithData,
+  createSpaceOnAccount,
+  createSubspaceWithData,
+  deleteSpace,
   getUserToken,
   harnessPostgresConfigured,
   queryHarnessDb,
+  readCalloutFramingSettings,
+  readMyUser,
   UniqueIDGenerator,
+  type CreateCalloutOnCalloutsSetInput,
+  type GraphqlActor,
 } from '@alkemio/tests-lib';
+import { must } from '../helpers/lib-actor.helper';
 import { createPersonaTest } from '../fixtures/authenticated-session.fixture';
 import { chooseFramingChip } from '../helpers/callout-form.helper';
 import {
@@ -65,34 +78,9 @@ const test = createPersonaTest(adminEmail);
 // cookie. Capture is therefore off for this file; screenshot-on-failure (no
 // request/response bodies) stays as the safe minimum for triage.
 test.use({ trace: 'off', video: 'off' });
-// The non-interactive-login bearer (HS256) is only accepted on the private
-// non-interactive endpoint — same convention as every other raw-GraphQL
-// fixture setup in this suite (see subspaces-callout/us3-excerpt-safety.spec.ts).
-const gqlEndpoint =
-  process.env.ALKEMIO_SERVER ||
-  'http://localhost:3000/api/private/non-interactive/graphql';
 
 const EXPANDED_CARD_DESCRIPTION =
   "Shows the full card with the subspace's What, Why and Who - more context, more height.";
-
-async function rawGql<T>(
-  query: string,
-  variables: Record<string, unknown>,
-  token: string
-): Promise<T> {
-  const res = await fetch(gqlEndpoint, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify({ query, variables }),
-  });
-  const body = await res.json();
-  if (body.errors)
-    throw new Error(`GraphQL error: ${JSON.stringify(body.errors)}`);
-  return body.data as T;
-}
 
 const runSuffix = UniqueIDGenerator.getID();
 const shortId = (label: string) => `${label}${runSuffix}`.slice(0, 24);
@@ -110,18 +98,16 @@ let fixture: Fixture;
 // `beforeAll` that fails halfway still leaves a complete deletion list.
 const tree = newFixtureTree();
 let adminToken: string;
+const admin = (): GraphqlActor => ({ bearerToken: adminToken });
 
 async function createSubspace(
   spaceId: string,
   label: string,
   displayName: string
 ): Promise<string> {
-  const data = await rawGql<{ createSubspace: { id: string } }>(
-    `mutation ($subspaceData: CreateSubspaceInput!) {
-      createSubspace(subspaceData: $subspaceData) { id }
-    }`,
-    {
-      subspaceData: {
+  const data = must(
+    await createSubspaceWithData(
+      {
         spaceID: spaceId,
         nameID: shortId(label),
         about: {
@@ -131,10 +117,11 @@ async function createSubspace(
           },
         },
         collaborationData: { calloutsSetData: {} },
-        settings: { privacy: { mode: 'PUBLIC' } },
+        settings: { privacy: { mode: SpacePrivacyMode.Public } },
       },
-    },
-    adminToken
+      admin()
+    ),
+    `createSubspace(${displayName})`
   );
   tree.subspaceIds.push(data.createSubspace.id);
   return data.createSubspace.id;
@@ -142,45 +129,42 @@ async function createSubspace(
 
 async function createSubspacesPost(
   displayName: string,
-  settingsOverride?: Record<string, unknown>
+  settingsOverride?: CreateCalloutOnCalloutsSetInput['settings']
 ): Promise<string> {
-  const data = await rawGql<{ createCalloutOnCalloutsSet: { id: string } }>(
-    `mutation ($calloutData: CreateCalloutOnCalloutsSetInput!) {
-      createCalloutOnCalloutsSet(calloutData: $calloutData) { id }
-    }`,
-    {
-      calloutData: {
+  const data = must(
+    await createCalloutWithData(
+      {
         calloutsSetID: fixture.calloutsSetId,
-        framing: { type: 'SPACES', profile: { displayName } },
+        framing: { type: CalloutFramingType.Spaces, profile: { displayName } },
         ...(settingsOverride ? { settings: settingsOverride } : {}),
       },
-    },
-    adminToken
+      admin()
+    ),
+    `createSubspacesPost(${displayName})`
   );
   return data.createCalloutOnCalloutsSet.id;
 }
 
-async function readCalloutSettings(calloutId: string) {
-  return rawGql<{
-    lookup: {
-      callout: {
-        settings: {
-          framing: {
-            spaces: { cardVariant: string } | null;
-            selection: { mode: string; selectedIds: string[] };
-          };
+type CalloutSettingsRead = {
+  lookup: {
+    callout: {
+      settings: {
+        framing: {
+          spaces: { cardVariant: string } | null;
+          selection: { mode: string; selectedIds: string[] };
         };
       };
     };
-  }>(
-    `query ($id: UUID!) {
-      lookup { callout(ID: $id) {
-        settings { framing { spaces { cardVariant } selection { mode selectedIds } } }
-      } }
-    }`,
-    { id: calloutId },
-    adminToken
-  );
+  };
+};
+
+async function readCalloutSettings(
+  calloutId: string
+): Promise<CalloutSettingsRead> {
+  return must(
+    await readCalloutFramingSettings(calloutId, admin()),
+    `callout ${calloutId} settings`
+  ) as CalloutSettingsRead;
 }
 
 async function gotoFixtureSpace(page: Page) {
@@ -235,25 +219,13 @@ test.describe(
       test.setTimeout(120_000);
       adminToken = await getUserToken(adminEmail);
 
-      const me = await rawGql<{ me: { user: { account: { id: string } } } }>(
-        'query { me { user { account { id } } } }',
-        {},
-        adminToken
-      );
-      const accountID = me.me.user.account.id;
+      const me = must(await readMyUser(admin()), 'me');
+      const accountID = me.me.user!.account!.id;
 
       const spaceNameId = shortId(`us2crd${runSuffix}`);
-      const space = await rawGql<{
-        createSpace: {
-          id: string;
-          collaboration: { calloutsSet: { id: string } };
-        };
-      }>(
-        `mutation ($spaceData: CreateSpaceOnAccountInput!) {
-        createSpace(spaceData: $spaceData) { id collaboration { calloutsSet { id } } }
-      }`,
-        {
-          spaceData: {
+      const space = must(
+        await createSpaceOnAccount(
+          {
             accountID,
             nameID: spaceNameId,
             about: {
@@ -262,10 +234,11 @@ test.describe(
               },
             },
             collaborationData: { calloutsSetData: {} },
-            settings: { privacy: { mode: 'PUBLIC' } },
+            settings: { privacy: { mode: SpacePrivacyMode.Public } },
           },
-        },
-        adminToken
+          admin()
+        ),
+        'createSpace'
       );
 
       const spaceId = space.createSpace.id;
@@ -282,12 +255,8 @@ test.describe(
       // contains subspaces), and every failure is reported rather than
       // swallowed: a public fixture tree left behind on the shared stack is
       // a defect of this file, not noise.
-      await deleteFixtureTree(tree, id =>
-        rawGql(
-          'mutation ($spaceID: UUID!) { deleteSpace(deleteData: { ID: $spaceID }) { id } }',
-          { spaceID: id },
-          adminToken
-        )
+      await deleteFixtureTree(tree, async id =>
+        must(await deleteSpace(id, admin()), `deleteSpace(${id})`)
       );
     });
 
@@ -401,7 +370,7 @@ test.describe(
     }) => {
       const title = `US2 AS3 Toggle ${runSuffix}`;
       const calloutId = await createSubspacesPost(title, {
-        framing: { spaces: { cardVariant: 'EXPANDED' } },
+        framing: { spaces: { cardVariant: SpaceCollectionCardVariant.Expanded } },
       });
 
       await gotoFixtureSpace(page);
@@ -474,10 +443,10 @@ test.describe(
       const calloutId = await createSubspacesPost(title, {
         framing: {
           selection: {
-            mode: 'CUSTOM',
+            mode: CalloutSelectionMode.Custom,
             selectedIds: [fixture.alphaId, fixture.betaId],
           },
-          spaces: { cardVariant: 'COMPACT' },
+          spaces: { cardVariant: SpaceCollectionCardVariant.Compact },
         },
       });
 
@@ -603,7 +572,7 @@ test.describe(
       const title = `US2 AS7 TitleOnly ${runSuffix}`;
       const newTitle = `${title} (renamed)`;
       const calloutId = await createSubspacesPost(title, {
-        framing: { spaces: { cardVariant: 'EXPANDED' } },
+        framing: { spaces: { cardVariant: SpaceCollectionCardVariant.Expanded } },
       });
 
       await gotoFixtureSpace(page);

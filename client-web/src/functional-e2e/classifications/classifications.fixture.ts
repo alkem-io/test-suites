@@ -22,12 +22,20 @@
  */
 import type { Browser, BrowserContext, Page } from '@playwright/test';
 import {
+  addClassificationEntryFromTemplate,
+  ClassificationCardinality,
+  createClassificationTemplate,
   deleteOrganization,
   deleteSpace,
-  postGraphqlRaw,
+  readSpaceClassifications,
+  readSpaceTemplatesManager,
+  readTemplatesSetClassificationTemplates,
+  TemplateType,
   TestScenarioFactory,
-  TestUserManager,
   UniqueIDGenerator,
+  updateTagsetTags,
+  type GraphqlActor,
+  type GraphqlReturnWithError,
 } from '@alkemio/tests-lib';
 import { TestUser } from '@alkemio/tests-lib/common/enums/test.user';
 import type { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
@@ -75,56 +83,37 @@ export function spaceUrl(): string {
 }
 
 /* ------------------------------------------------------------------ */
-/* Raw GraphQL as a persona or anonymously                             */
+/* Lib results as the specs inspect them                               */
 /* ------------------------------------------------------------------ */
 
 export type GqlError = {
   message: string;
+  code?: string;
   extensions?: { code?: string; details?: Record<string, unknown> };
 };
 export type GqlResult<T> = { data: T | null; errors: GqlError[] };
 
-/** POST an inline document as `as` (a harness persona) or, when omitted, anonymously. */
-export async function gql<T>(
-  query: string,
-  variables: Record<string, unknown> = {},
-  as?: TestUser
-): Promise<GqlResult<T>> {
-  const bearerToken = as
-    ? TestUserManager.getUserModelByType(as).authToken
-    : undefined;
-  if (as && !bearerToken) {
-    throw new Error(`classifications: no auth token for persona ${as}`);
-  }
-  const res = await postGraphqlRaw<T>(query, { variables, bearerToken });
-  if (res.status !== 200 || typeof res.body !== 'object' || !res.body) {
-    throw new Error(
-      `GraphQL transport failure (HTTP ${res.status}): ${res.raw}`
-    );
-  }
+/** The lib actor a persona maps to; omitted = anonymous on the private endpoint. */
+const actorOf = (as?: TestUser): GraphqlActor => as ?? { anonymous: 'private' };
+
+/** A lib `{ data } | { error }` result as the `{ data, errors[] }` shape the negatives inspect. */
+export function toGqlResult<T>(result: GraphqlReturnWithError<T>): GqlResult<T> {
   return {
-    data: (res.body.data ?? null) as T | null,
-    errors: (res.body.errors ?? []) as unknown as GqlError[],
+    data: result.data ?? null,
+    errors: (result.error?.errors ?? []) as unknown as GqlError[],
   };
 }
 
-/** Same as `gql`, but a set-up step that must simply work. */
-export async function gqlOk<T>(
-  query: string,
-  variables: Record<string, unknown> = {},
-  as: TestUser = EDITOR
-): Promise<T> {
-  const { data, errors } = await gql<T>(query, variables, as);
+/** A set-up step that must simply work: the data, or a throw naming the errors. */
+export function okOr<T>(result: GraphqlReturnWithError<T>): T {
+  const { data, errors } = toGqlResult(result);
   if (errors.length > 0 || !data) {
     throw new Error(
-      `GraphQL set-up call failed: ${errors.map(e => `${e.extensions?.code}: ${e.message}`).join(' | ') || 'no data'}`
+      `GraphQL set-up call failed: ${errors.map(e => `${e.extensions?.code ?? e.code}: ${e.message}`).join(' | ') || 'no data'}`
     );
   }
   return data;
 }
-
-export const ENTRY_FIELDS =
-  'id displayLabel display sortOrder cardinality selectedValueIDs values { id label }';
 
 export type EntryRead = {
   id: string;
@@ -143,13 +132,11 @@ export async function readEntries(
 ): Promise<
   GqlResult<{ lookup: { space: { about: { classifications: EntryRead[] } } } }>
 > {
-  return gql(
-    `query ClassificationsRead($spaceId: UUID!) {
-      lookup { space(ID: $spaceId) { about { classifications { ${ENTRY_FIELDS} } } } }
-    }`,
-    { spaceId },
-    as
-  );
+  return toGqlResult(
+    await readSpaceClassifications(spaceId, actorOf(as))
+  ) as GqlResult<{
+    lookup: { space: { about: { classifications: EntryRead[] } } };
+  }>;
 }
 
 /** Entries as seen by the editor; throws on any error. */
@@ -174,17 +161,10 @@ export type TemplateRead = {
 export async function libraryTemplates(
   templatesSetId: string
 ): Promise<TemplateRead[]> {
-  const data = await gqlOk<{
-    lookup: { templatesSet: { classificationTemplates: TemplateRead[] } };
-  }>(
-    `query ClassificationTemplatesRead($id: UUID!) {
-      lookup { templatesSet(ID: $id) { classificationTemplates {
-        id profile { displayName } classification { cardinality values { id label } }
-      } } }
-    }`,
-    { id: templatesSetId }
+  const data = okOr(
+    await readTemplatesSetClassificationTemplates(templatesSetId, EDITOR)
   );
-  return data.lookup.templatesSet.classificationTemplates;
+  return data.lookup.templatesSet!.classificationTemplates as TemplateRead[];
 }
 
 /** Create a classification template in the Space library (set-up only — the UI create is covered by TL-04). */
@@ -197,29 +177,26 @@ export async function createTemplateApi(
     values: string[];
   }
 ): Promise<TemplateRead> {
-  const data = await gqlOk<{ createTemplate: TemplateRead }>(
-    `mutation ClassificationTemplateCreate($data: CreateTemplateOnTemplatesSetInput!) {
-      createTemplate(templateData: $data) {
-        id profile { displayName } classification { cardinality values { id label } }
-      }
-    }`,
-    {
-      data: {
+  const data = okOr(
+    await createClassificationTemplate(
+      {
         templatesSetID: fixture.templatesSetId,
-        type: 'CLASSIFICATION',
+        type: TemplateType.Classification,
         profileData: {
           displayName: spec.name,
           description:
             spec.description ?? `e2e024 fixture template ${spec.name}`,
         },
         classificationData: {
-          cardinality: spec.cardinality ?? 'MULTI_SELECT',
+          cardinality: (spec.cardinality ??
+            'MULTI_SELECT') as ClassificationCardinality,
           values: spec.values.map(label => ({ label })),
         },
       },
-    }
+      EDITOR
+    )
   );
-  return data.createTemplate;
+  return data.createTemplate as TemplateRead;
 }
 
 /** Step A through the API (set-up for cases that only read an entry). */
@@ -228,11 +205,11 @@ export async function addEntryApi(
   templateId: string,
   displayLabel?: string
 ): Promise<EntryRead> {
-  const data = await gqlOk<{ addClassificationEntryFromTemplate: EntryRead }>(
-    `mutation ClassificationEntryAdd($data: AddClassificationEntryFromTemplateInput!) {
-      addClassificationEntryFromTemplate(classificationData: $data) { ${ENTRY_FIELDS} }
-    }`,
-    { data: { spaceID: spaceId, templateID: templateId, displayLabel } }
+  const data = okOr(
+    await addClassificationEntryFromTemplate(
+      { spaceID: spaceId, templateID: templateId, displayLabel },
+      EDITOR
+    )
   );
   return data.addClassificationEntryFromTemplate;
 }
@@ -287,32 +264,18 @@ export async function seedClassificationsSpace(
   // receives the fixture and its afterAll has nothing to delete — so roll the
   // tree back here, then surface the original failure.
   try {
-    const ids = await gqlOk<{
-      lookup: {
-        space: {
-          templatesManager: { templatesSet: { id: string } };
-          about: { profile: { tagset: { id: string } | null } };
-        };
-      };
-    }>(
-      `query ClassificationsFixtureIds($spaceId: UUID!) {
-        lookup { space(ID: $spaceId) {
-          templatesManager { templatesSet { id } }
-          about { profile { tagset { id } } }
-        } }
-      }`,
-      { spaceId: fixture.spaceId },
-      TestUser.GLOBAL_ADMIN
+    const ids = okOr(
+      await readSpaceTemplatesManager(fixture.spaceId, TestUser.GLOBAL_ADMIN)
     );
-    fixture.templatesSetId = ids.lookup.space.templatesManager.templatesSet.id;
-    const tagsetId = ids.lookup.space.about.profile.tagset?.id;
+    fixture.templatesSetId =
+      ids.lookup.space!.templatesManager!.templatesSet!.id;
+    const tagsetId = ids.lookup.space!.about.profile.tagset?.id;
     if (!tagsetId) throw new Error('seeded Space About has no default tagset');
-    await gqlOk(
-      `mutation ClassificationsFixtureTags($data: UpdateTagsetInput!) {
-        updateTagset(updateData: $data) { id }
-      }`,
-      { data: { ID: tagsetId, tags: fixture.tags } },
-      TestUser.GLOBAL_ADMIN
+    okOr(
+      await updateTagsetTags(
+        { ID: tagsetId, tags: fixture.tags },
+        TestUser.GLOBAL_ADMIN
+      )
     );
   } catch (error) {
     try {

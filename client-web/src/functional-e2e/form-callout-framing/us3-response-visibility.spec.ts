@@ -1,6 +1,38 @@
 import { randomUUID } from 'node:crypto';
 import { expect, type Browser, type BrowserContext, type Page, test } from '@playwright/test';
+import {
+  assignRoleToUser,
+  CalloutAllowedActors,
+  CalloutContributionType,
+  CalloutFormQuestionType,
+  CalloutFormResponseMode,
+  CalloutFormResponseVisibility,
+  CalloutFramingType,
+  CalloutVisibility,
+  createCalloutWithData,
+  createContributionOnCallout,
+  createSpaceOnAccount,
+  createSubspaceWithData,
+  deleteCalloutFormResponse,
+  introspectSchemaFieldTypes,
+  readActivityLogOnCollaboration,
+  readCalloutContributions,
+  readCalloutFormResponses,
+  readMyNotifications,
+  readMyUser,
+  removeRoleFromUser,
+  RoleName,
+  SpacePrivacyMode,
+  submitCalloutFormResponse,
+  updateCalloutForm,
+  updateCalloutVisibility,
+  updateSpaceSettings,
+  type CreateCalloutFormQuestionInput,
+  type GraphqlActor,
+  type GraphqlReturnWithError,
+} from '@alkemio/tests-lib';
 import { fillSecret } from '../helpers/login.helper';
+import { must } from '../helpers/lib-actor.helper';
 
 /**
  * workspace#080-form-callout-framing — User Story 3 (P1): Control who can see
@@ -52,8 +84,6 @@ const ADMIN_PASSWORD =
   process.env.ALKEMIO_ADMIN_PASSWORD ||
   process.env.AUTH_ADMIN_PASSWORD ||
   'password';
-const GRAPHQL = `${BASE}/api/private/non-interactive/graphql`;
-const PUBLIC_GRAPHQL = `${BASE}/api/public/graphql`;
 // Per-run secret for the throwaway identities this walk provisions (override with
 // FORGE_PERSONA_PASSWORD); a fixed literal would leave them loginable after the run.
 const USER_PASSWORD =
@@ -94,47 +124,24 @@ async function mintToken(userEmail: string, password: string) {
   return token;
 }
 
-type GqlResult<T = any> = { data?: T; errors?: Array<any> };
-
-async function gql<T = any>(
-  who: Actor,
-  query: string,
-  variables: Record<string, unknown> = {}
-): Promise<GqlResult<T>> {
-  const token = await mintToken(
-    emailOf(who),
-    who === 'admin' ? ADMIN_PASSWORD : USER_PASSWORD
-  );
-  const res = await fetch(GRAPHQL, {
-    method: 'POST',
-    headers: {
-      'content-type': 'application/json',
-      authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify({ query, variables }),
-  });
-  return (await res.json()) as GqlResult<T>;
+/**
+ * The lib actor for one of this run's identities (its bearer, minted once),
+ * or the anonymous visitor on the public endpoint.
+ */
+async function actorFor(who: Actor | 'anonymous'): Promise<GraphqlActor> {
+  if (who === 'anonymous') return { anonymous: 'public' };
+  return {
+    bearerToken: await mintToken(
+      emailOf(who),
+      who === 'admin' ? ADMIN_PASSWORD : USER_PASSWORD
+    ),
+  };
 }
 
-async function gqlAnonymous<T = any>(
-  query: string,
-  variables: Record<string, unknown> = {}
-): Promise<GqlResult<T>> {
-  const res = await fetch(PUBLIC_GRAPHQL, {
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ query, variables }),
-  });
-  return (await res.json()) as GqlResult<T>;
-}
+type GqlError = { message?: string; extensions?: { code?: string } };
 
-async function must<T = any>(result: GqlResult<T>, what: string): Promise<T> {
-  expect(
-    result.errors,
-    `${what}: ${JSON.stringify(result.errors)}`
-  ).toBeUndefined();
-  return result.data as T;
-}
+const firstError = (result: GraphqlReturnWithError<unknown>) =>
+  (result.error?.errors as GqlError[] | undefined)?.[0];
 
 async function createIdentity(userEmail: string, first: string, last: string) {
   const res = await fetch(`${KRATOS_ADMIN}/identities`, {
@@ -158,8 +165,8 @@ async function createIdentity(userEmail: string, first: string, last: string) {
 }
 
 async function meId(who: Actor) {
-  const data = await must(await gql(who, '{ me { user { id } } }'), 'me');
-  return data.me.user.id as string;
+  const data = must(await readMyUser(await actorFor(who)), 'me');
+  return data.me.user!.id;
 }
 
 type Question = {
@@ -175,23 +182,27 @@ type FormFixture = {
   questions: Question[];
 };
 
-const QUESTIONS = () => [
+const QUESTIONS = (): CreateCalloutFormQuestionInput[] => [
   {
     prompt: 'What is your name?',
     explanation: 'Your full name',
-    type: 'SHORT_TEXT',
+    type: CalloutFormQuestionType.ShortText,
     required: true,
   },
-  { prompt: 'Tell us more', type: 'LONG_TEXT', required: false },
+  {
+    prompt: 'Tell us more',
+    type: CalloutFormQuestionType.LongText,
+    required: false,
+  },
   {
     prompt: 'Pick one',
-    type: 'SINGLE_CHOICE',
+    type: CalloutFormQuestionType.SingleChoice,
     required: false,
     options: [{ label: 'Alpha' }, { label: 'Beta' }, { label: 'Gamma' }],
   },
   {
     prompt: 'Pick several',
-    type: 'MULTIPLE_CHOICE',
+    type: CalloutFormQuestionType.MultipleChoice,
     required: false,
     options: [{ label: 'One' }, { label: 'Two' }, { label: 'Three' }],
   },
@@ -212,113 +223,81 @@ async function createForm(
   creator: Actor,
   calloutsSetID: string,
   displayName: string,
-  visibility: 'ADMINS' | 'MEMBERS'
+  visibility: CalloutFormResponseVisibility
 ): Promise<FormFixture> {
-  const created = await must(
-    await gql(
-      creator,
-      `mutation ($d: CreateCalloutOnCalloutsSetInput!) {
-        createCalloutOnCalloutsSet(calloutData: $d) {
-          id
-          framing { profile { url displayName } form { id questions { id prompt options { id label } } } }
-        }
-      }`,
+  const actor = await actorFor(creator);
+  const created = must(
+    await createCalloutWithData(
       {
-        d: {
-          calloutsSetID,
-          framing: {
-            type: 'FORM',
-            profile: { displayName, description: 'US3 form' },
-            form: {
-              questions: QUESTIONS(),
-              settings: { visibility, responseMode: 'SINGLE' },
-            },
-          },
-          settings: {
-            visibility: 'DRAFT',
-            contribution: { enabled: false },
-            framing: { commentsEnabled: false },
+        calloutsSetID,
+        framing: {
+          type: CalloutFramingType.Form,
+          profile: { displayName, description: 'US3 form' },
+          form: {
+            questions: QUESTIONS(),
+            settings: { visibility, responseMode: CalloutFormResponseMode.Single },
           },
         },
-      }
+        settings: {
+          visibility: CalloutVisibility.Draft,
+          contribution: { enabled: false },
+          framing: { commentsEnabled: false },
+        },
+      },
+      actor
     ),
     `create form ${displayName}`
   );
   const callout = created.createCalloutOnCalloutsSet;
-  await must(
-    await gql(
-      creator,
-      `mutation ($d: UpdateCalloutVisibilityInput!) {
-        updateCalloutVisibility(calloutData: $d) { id }
-      }`,
-      {
-        d: {
-          calloutID: callout.id,
-          visibility: 'PUBLISHED',
-          sendNotification: false,
-        },
-      }
+  must(
+    await updateCalloutVisibility(
+      callout.id,
+      CalloutVisibility.Published,
+      actor,
+      false
     ),
     `publish form ${displayName}`
   );
   return {
-    calloutId: callout.id as string,
-    url: callout.framing.profile.url as string,
+    calloutId: callout.id,
+    url: callout.framing.profile.url,
     title: displayName,
-    formId: callout.framing.form.id as string,
-    questions: callout.framing.form.questions as Question[],
+    formId: callout.framing.form!.id,
+    questions: callout.framing.form!.questions,
   };
 }
-
-const SUBMIT = `mutation ($d: SubmitCalloutFormResponseInput!) {
-  submitCalloutFormResponse(responseData: $d) { id }
-}`;
 
 async function submitName(
   who: Actor,
   form: FormFixture,
-  visibility: 'ADMINS' | 'MEMBERS',
+  visibility: CalloutFormResponseVisibility,
   text: string
 ) {
-  const data = await must(
-    await gql(who, SUBMIT, {
-      d: {
+  const data = must(
+    await submitCalloutFormResponse(
+      {
         formID: form.formId,
         acknowledgedVisibility: visibility,
         answers: [{ questionID: form.questions[0].id, text }],
       },
-    }),
+      await actorFor(who)
+    ),
     `submit as ${who}`
   );
-  return data.submitCalloutFormResponse.id as string;
+  return data.submitCalloutFormResponse.id;
 }
 
-const LOOKUP = `query ($f: UUID!) {
-  lookup {
-    calloutFormResponses(formID: $f, first: 50) {
-      canReadAll
-      canModerate
-      mine { id }
-      all { total responses { id answers { text } } }
-    }
-  }
-}`;
-
 async function lookupAs(who: Actor | 'anonymous', formId: string) {
-  const result =
-    who === 'anonymous'
-      ? await gqlAnonymous(LOOKUP, { f: formId })
-      : await gql(who, LOOKUP, { f: formId });
-  const view = (await must(result, `lookup as ${who}`)).lookup
-    .calloutFormResponses;
+  const view = must(
+    await readCalloutFormResponses(formId, await actorFor(who), 50),
+    `lookup as ${who}`
+  ).lookup.calloutFormResponses;
   return {
-    canReadAll: view.canReadAll as boolean,
-    canModerate: view.canModerate as boolean,
-    mine: (view.mine as unknown[]).length,
-    total: view.all.total as number,
-    texts: (view.all.responses as Array<{ answers: Array<{ text: string }> }>).map(
-      r => r.answers[0]?.text
-    ),
+    canReadAll: view.canReadAll,
+    canModerate: view.canModerate,
+    mine: view.mine.length,
+    total: view.all.total,
+    texts: view.all.responses.map(r => r.answers[0]?.text),
   };
 }
 
@@ -424,41 +403,25 @@ test.describe(
         fixture.userIds[who] = await meId(who);
       }
 
-      const me = await must(
-        await gql('admin', '{ me { user { account { id } } } }'),
-        'admin account'
-      );
-      const space = (
-        await must(
-          await gql(
-            'admin',
-            `mutation ($d: CreateSpaceOnAccountInput!) {
-              createSpace(spaceData: $d) {
-                id
-                about { profile { url } }
-                community { roleSet { id } }
-                collaboration { id calloutsSet { id } }
-              }
-            }`,
-            {
-              d: {
-                accountID: me.me.user.account.id,
-                nameID: `us3-space-${RUN}`,
-                about: { profileData: { displayName: `US3 Space ${RUN}` } },
-                collaborationData: { calloutsSetData: {} },
-              },
-            }
-          ),
-          'create space'
-        )
+      const admin = await actorFor('admin');
+      const me = must(await readMyUser(admin), 'admin account');
+      const space = must(
+        await createSpaceOnAccount(
+          {
+            accountID: me.me.user!.account!.id,
+            nameID: `us3-space-${RUN}`,
+            about: { profileData: { displayName: `US3 Space ${RUN}` } },
+            collaborationData: { calloutsSetData: {} },
+          },
+          admin
+        ),
+        'create space'
       ).createSpace;
-      await must(
-        await gql(
-          'admin',
-          `mutation ($d: UpdateSpaceSettingsInput!) {
-            updateSpaceSettings(settingsData: $d) { id settings { privacy { mode } } }
-          }`,
-          { d: { spaceID: space.id, settings: { privacy: { mode: 'PUBLIC' } } } }
+      must(
+        await updateSpaceSettings(
+          space.id,
+          { privacy: { mode: SpacePrivacyMode.Public } },
+          admin
         ),
         'make space public'
       );
@@ -466,71 +429,55 @@ test.describe(
       fixture.spaceCalloutsSetId = space.collaboration.calloutsSet.id;
       fixture.spaceCollaborationId = space.collaboration.id;
 
-      const subspace = (
-        await must(
-          await gql(
-            'admin',
-            `mutation ($d: CreateSubspaceInput!) {
-              createSubspace(subspaceData: $d) {
-                id
-                about { profile { url displayName } }
-                community { roleSet { id } }
-                collaboration { id calloutsSet { id } }
-              }
-            }`,
-            {
-              d: {
-                spaceID: space.id,
-                nameID: `us3-sub-${RUN}`,
-                about: { profileData: { displayName: `US3 Sub ${RUN}` } },
-                collaborationData: { calloutsSetData: {} },
-              },
-            }
-          ),
-          'create subspace'
-        )
+      const subspace = must(
+        await createSubspaceWithData(
+          {
+            spaceID: space.id,
+            nameID: `us3-sub-${RUN}`,
+            about: { profileData: { displayName: `US3 Sub ${RUN}` } },
+            collaborationData: { calloutsSetData: {} },
+          },
+          admin
+        ),
+        'create subspace'
       ).createSubspace;
       fixture.subUrl = subspace.about.profile.url;
       fixture.subCalloutsSetId = subspace.collaboration.calloutsSet.id;
       fixture.subRoleSetId = subspace.community.roleSet.id;
       fixture.subCollaborationId = subspace.collaboration.id;
 
-      const assign = async (roleSetID: string, who: Persona, role: string) =>
+      const assign = async (roleSetID: string, who: Persona, role: RoleName) =>
         must(
-          await gql(
-            'admin',
-            'mutation ($d: AssignRoleOnRoleSetInput!) { assignRoleToUser(roleData: $d) { id } }',
-            { d: { actorID: fixture.userIds[who], role, roleSetID } }
-          ),
+          await assignRoleToUser(fixture.userIds[who], roleSetID, role, admin),
           `assign ${role} ${who}`
         );
       // M1, M2, P, A2 are members of S; P is a member of S ONLY (inherits
       // contribute on Sub through inheritMembershipRights, on by default).
       for (const who of ['m1', 'm2', 'p', 'a2'] as Persona[]) {
-        await assign(space.community.roleSet.id, who, 'MEMBER');
+        await assign(space.community.roleSet.id, who, RoleName.Member);
       }
       for (const who of ['m1', 'm2', 'a2'] as Persona[]) {
-        await assign(fixture.subRoleSetId, who, 'MEMBER');
+        await assign(fixture.subRoleSetId, who, RoleName.Member);
       }
-      await assign(fixture.subRoleSetId, 'a2', 'ADMIN');
+      await assign(fixture.subRoleSetId, 'a2', RoleName.Admin);
 
       formAdmins = await createForm(
         'a2',
         fixture.subCalloutsSetId,
         `US3 Admins-only Form ${RUN}`,
-        'ADMINS'
+        CalloutFormResponseVisibility.Admins
       );
       formMembers = await createForm(
         'a2',
         fixture.subCalloutsSetId,
         `US3 Members Form ${RUN}`,
-        'MEMBERS'
+        CalloutFormResponseVisibility.Members
       );
       formSpace = await createForm(
         'admin',
         fixture.spaceCalloutsSetId,
         `US3 Space Members Form ${RUN}`,
-        'MEMBERS'
+        CalloutFormResponseVisibility.Members
       );
     });
 
@@ -583,7 +530,7 @@ test.describe(
     test('US3-AS2 Admins only: another member sees the questions, but no other response, no count, no View responses', async ({
       browser,
     }) => {
-      await submitName('m1', formAdmins, 'ADMINS', MARK.m1OnAdmins);
+      await submitName('m1', formAdmins, CalloutFormResponseVisibility.Admins, MARK.m1OnAdmins);
 
       const page = await signIn(browser, 'm2');
       const dialog = await openForm(page, formAdmins);
@@ -634,7 +581,7 @@ test.describe(
     test('US3-AS3 Space members on a public Space: anonymous visitor and non-member see no response', async ({
       browser,
     }) => {
-      await submitName('m1', formSpace, 'MEMBERS', MARK.m1OnSpace);
+      await submitName('m1', formSpace, CalloutFormResponseVisibility.Members, MARK.m1OnSpace);
 
       // Anonymous visitor.
       const anonContext = await browser.newContext({
@@ -692,14 +639,14 @@ test.describe(
       // R19b: visibility changes in both directions at any time and applies to
       // every response. A dedicated Form, so the shared Admins-only Form keeps
       // its audience for the later cases.
-      await submitName('m1', formMembers, 'MEMBERS', MARK.m1OnMembers);
+      await submitName('m1', formMembers, CalloutFormResponseVisibility.Members, MARK.m1OnMembers);
       const formWiden = await createForm(
         'a2',
         fixture.subCalloutsSetId,
         `US3 Widen Form ${RUN}`,
-        'ADMINS'
+        CalloutFormResponseVisibility.Admins
       );
-      await submitName('m1', formWiden, 'ADMINS', MARK.m1OnWiden);
+      await submitName('m1', formWiden, CalloutFormResponseVisibility.Admins, MARK.m1OnWiden);
       // Before: M2 (a Sub member) reads only own responses.
       expect(await lookupAs('m2', formWiden.formId)).toMatchObject({
         canReadAll: false,
@@ -788,23 +735,27 @@ test.describe(
 
       // API agrees: widening with a response is accepted.
       try {
-        const widenAttempt = await gql(
-          'a2',
-          'mutation ($d: UpdateCalloutFormInput!) { updateCalloutForm(formData: $d) { id settings { visibility } } }',
-          { d: { formID: formAdmins.formId, settings: { visibility: 'MEMBERS' } } }
+        const widenAttempt = await updateCalloutForm(
+          {
+            formID: formAdmins.formId,
+            settings: { visibility: CalloutFormResponseVisibility.Members },
+          },
+          await actorFor('a2')
         );
-        expect(widenAttempt.errors).toBeUndefined();
+        expect(widenAttempt.error?.errors).toBeUndefined();
         expect(widenAttempt.data?.updateCalloutForm.settings.visibility).toBe(
           'MEMBERS'
         );
       } finally {
         // Put the shared Form back to Admins only for the later cases, even
         // when the widening assertions fail (the suite runs serially).
-        await must(
-          await gql(
-            'a2',
-            'mutation ($d: UpdateCalloutFormInput!) { updateCalloutForm(formData: $d) { id } }',
-            { d: { formID: formAdmins.formId, settings: { visibility: 'ADMINS' } } }
+        must(
+          await updateCalloutForm(
+            {
+              formID: formAdmins.formId,
+              settings: { visibility: CalloutFormResponseVisibility.Admins },
+            },
+            await actorFor('a2')
           ),
           'narrow formAdmins back'
         );
@@ -814,7 +765,7 @@ test.describe(
     test('US3-AS5 the Space admin reads every response through View responses', async ({
       browser,
     }) => {
-      await submitName('m2', formAdmins, 'ADMINS', MARK.m2OnAdmins);
+      await submitName('m2', formAdmins, CalloutFormResponseVisibility.Admins, MARK.m2OnAdmins);
 
       const page = await signIn(browser, 'admin');
       const dialog = await openForm(page, formAdmins);
@@ -835,68 +786,54 @@ test.describe(
     }) => {
       // Control callout that DOES surface in feeds (Post contribution) so the
       // absence assertions below are not vacuous.
-      const control = await must(
-        await gql(
-          'a2',
-          `mutation ($d: CreateCalloutOnCalloutsSetInput!) {
-            createCalloutOnCalloutsSet(calloutData: $d) { id }
-          }`,
+      const a2 = await actorFor('a2');
+      const control = must(
+        await createCalloutWithData(
           {
-            d: {
-              calloutsSetID: fixture.subCalloutsSetId,
-              framing: {
-                type: 'NONE',
-                profile: {
-                  displayName: `US3 control callout ${RUN}`,
-                  description: 'control',
-                },
-              },
-              settings: {
-                visibility: 'DRAFT',
-                contribution: {
-                  enabled: true,
-                  allowedTypes: ['POST'],
-                  canAddContributions: 'MEMBERS',
-                },
+            calloutsSetID: fixture.subCalloutsSetId,
+            framing: {
+              type: CalloutFramingType.None,
+              profile: {
+                displayName: `US3 control callout ${RUN}`,
+                description: 'control',
               },
             },
-          }
+            settings: {
+              visibility: CalloutVisibility.Draft,
+              contribution: {
+                enabled: true,
+                allowedTypes: [CalloutContributionType.Post],
+                canAddContributions: CalloutAllowedActors.Members,
+              },
+            },
+          },
+          a2
         ),
         'create control callout'
       );
-      const controlId = control.createCalloutOnCalloutsSet.id as string;
-      await must(
-        await gql(
-          'a2',
-          'mutation ($d: UpdateCalloutVisibilityInput!) { updateCalloutVisibility(calloutData: $d) { id } }',
-          {
-            d: {
-              calloutID: controlId,
-              visibility: 'PUBLISHED',
-              sendNotification: false,
-            },
-          }
+      const controlId = control.createCalloutOnCalloutsSet.id;
+      must(
+        await updateCalloutVisibility(
+          controlId,
+          CalloutVisibility.Published,
+          a2,
+          false
         ),
         'publish control callout'
       );
-      await must(
-        await gql(
-          'm1',
-          `mutation ($d: CreateContributionOnCalloutInput!) {
-            createContributionOnCallout(contributionData: $d) { id }
-          }`,
+      must(
+        await createContributionOnCallout(
           {
-            d: {
-              calloutID: controlId,
-              type: 'POST',
-              post: {
-                profileData: {
-                  displayName: MARK.as6PostTitle,
-                  description: 'control post',
-                },
+            calloutID: controlId,
+            type: CalloutContributionType.Post,
+            post: {
+              profileData: {
+                displayName: MARK.as6PostTitle,
+                description: 'control post',
               },
             },
-          }
+          },
+          await actorFor('m1')
         ),
         'create control post'
       );
@@ -906,9 +843,9 @@ test.describe(
         'a2',
         fixture.subCalloutsSetId,
         `US3 AS6 marker form ${RUN}`,
-        'ADMINS'
+        CalloutFormResponseVisibility.Admins
       );
-      const responseId = await submitName('m1', form, 'ADMINS', MARK.as6Answer);
+      const responseId = await submitName('m1', form, CalloutFormResponseVisibility.Admins, MARK.as6Answer);
 
       const leaked = (value: unknown) => {
         const text = JSON.stringify(value) ?? '';
@@ -917,17 +854,11 @@ test.describe(
 
       // Contributions list + counts: the Form callout carries none, the control
       // callout does.
-      const CALLOUT = `query ($id: UUID!) {
-        lookup { callout(ID: $id) {
-          id activity
-          contributions { id post { profile { displayName } } }
-          contributionsCount { post whiteboard link memo collaboraDocument }
-        } }
-      }`;
       for (const who of ['admin', 'a2', 'm1'] as Actor[]) {
-        const formCallout = (
-          await must(await gql(who, CALLOUT, { id: form.calloutId }), 'form callout')
-        ).lookup.callout;
+        const formCallout = must(
+          await readCalloutContributions(form.calloutId, await actorFor(who)),
+          'form callout'
+        ).lookup.callout!;
         expect(formCallout.contributions, `contributions as ${who}`).toEqual([]);
         expect(formCallout.contributionsCount).toEqual({
           post: 0,
@@ -939,9 +870,10 @@ test.describe(
         expect(formCallout.activity).toBe(0);
         expect(leaked(formCallout)).toBe(false);
 
-        const controlCallout = (
-          await must(await gql(who, CALLOUT, { id: controlId }), 'control callout')
-        ).lookup.callout;
+        const controlCallout = must(
+          await readCalloutContributions(controlId, await actorFor(who)),
+          'control callout'
+        ).lookup.callout!;
         expect(controlCallout.contributions).toHaveLength(1);
         expect(controlCallout.contributionsCount.post).toBe(1);
       }
@@ -956,21 +888,13 @@ test.describe(
           // is present, then assert the response never reached the same log.
           let log: Array<{ type: string; description: string }> = [];
           await expect(async () => {
-            log = (
-              await must(
-                await gql(
-                  who,
-                  `query ($d: ActivityLogInput!) {
-                    activityLogOnCollaboration(queryData: $d) { id type description }
-                  }`,
-                  { d: { collaborationID, includeChild: true, limit: 200 } }
-                ),
-                `activity log ${name}/${who}`
-              )
-            ).activityLogOnCollaboration as Array<{
-              type: string;
-              description: string;
-            }>;
+            log = must(
+              await readActivityLogOnCollaboration(
+                { collaborationID, includeChild: true, limit: 200 },
+                await actorFor(who)
+              ),
+              `activity log ${name}/${who}`
+            ).activityLogOnCollaboration;
             expect(
               log.some(e => (e.description ?? '').includes(MARK.as6PostTitle)),
               `control Post is in the activity log ${name}/${who}`
@@ -983,11 +907,8 @@ test.describe(
       // In-app notification list: no answer text, no response id; the payload
       // type never carries a response.
       for (const who of ['a2', 'admin'] as Actor[]) {
-        const inApp = await must(
-          await gql(
-            who,
-            'query { me { notifications(first: 50) { inAppNotifications { id type payload { __typename } } } } }'
-          ),
+        const inApp = must(
+          await readMyNotifications(await actorFor(who), { first: 50 }),
           `in-app ${who}`
         );
         expect(leaked(inApp), `in-app ${who}`).toBe(false);
@@ -997,13 +918,9 @@ test.describe(
       // response view types themselves and Mutation — never from Callout,
       // CalloutFraming, CalloutForm, ActivityLogEntry*, InAppNotification* or
       // any Subscription result type.
-      const schema = await must(
-        await gql(
-          'admin',
-          '{ __schema { types { name fields { name type { kind name ofType { kind name ofType { kind name ofType { kind name } } } } } } } }'
-        ),
-        'introspection'
-      );
+      const schema = await introspectSchemaFieldTypes(await actorFor('admin'));
+      expect(schema.body.errors, 'introspection').toBeUndefined();
+      const schemaTypes = schema.body.data!.__schema.types;
       const unwrap = (t: any): string | null =>
         t?.name ?? (t?.ofType ? unwrap(t.ofType) : null);
       const responseTypes = new Set([
@@ -1012,7 +929,7 @@ test.describe(
         'PaginatedCalloutFormResponses',
       ]);
       const referencedFrom = new Set<string>();
-      for (const t of schema.__schema.types as Array<any>) {
+      for (const t of schemaTypes) {
         for (const f of t.fields ?? []) {
           if (responseTypes.has(unwrap(f.type) ?? '')) referencedFrom.add(t.name);
         }
@@ -1025,7 +942,7 @@ test.describe(
           'PaginatedCalloutFormResponses',
         ].sort()
       );
-      for (const t of schema.__schema.types as Array<any>) {
+      for (const t of schemaTypes) {
         const guarded =
           /^(Callout|CalloutFraming|CalloutForm|Subscription)$/.test(t.name) ||
           /^ActivityLogEntry/.test(t.name) ||
@@ -1122,24 +1039,19 @@ test.describe(
       browser,
     }) => {
       // A2 (still admin) submits one response of their own.
-      await submitName('a2', formAdmins, 'ADMINS', MARK.a2Own);
+      await submitName('a2', formAdmins, CalloutFormResponseVisibility.Admins, MARK.a2Own);
       expect(await lookupAs('a2', formAdmins.formId)).toMatchObject({
         canReadAll: true,
         canModerate: true,
       });
 
       // Demote A2 to plain member.
-      await must(
-        await gql(
-          'admin',
-          'mutation ($d: RemoveRoleOnRoleSetInput!) { removeRoleFromUser(roleData: $d) { id } }',
-          {
-            d: {
-              actorID: fixture.userIds.a2,
-              role: 'ADMIN',
-              roleSetID: fixture.subRoleSetId,
-            },
-          }
+      must(
+        await removeRoleFromUser(
+          fixture.userIds.a2,
+          fixture.subRoleSetId,
+          RoleName.Admin,
+          await actorFor('admin')
         ),
         'demote a2'
       );
@@ -1164,21 +1076,20 @@ test.describe(
         total: 1,
         texts: [MARK.a2Own],
       });
-      const all = await gql('admin', LOOKUP, { f: formAdmins.formId });
-      const others = (
-        await must(all, 'admin lookup')
-      ).lookup.calloutFormResponses.all.responses as Array<{
-        id: string;
-        answers: Array<{ text: string }>;
-      }>;
+      const all = await readCalloutFormResponses(
+        formAdmins.formId,
+        await actorFor('admin'),
+        50
+      );
+      const others = must(all, 'admin lookup').lookup.calloutFormResponses.all
+        .responses;
       const m1Response = others.find(r => r.answers[0]?.text === MARK.m1OnAdmins);
       expect(m1Response, "M1's response exists").toBeDefined();
-      const attempt = await gql(
-        'a2',
-        'mutation ($d: DeleteCalloutFormResponseInput!) { deleteCalloutFormResponse(deleteData: $d) { id } }',
-        { d: { responseID: m1Response!.id } }
+      const attempt = await deleteCalloutFormResponse(
+        m1Response!.id,
+        await actorFor('a2')
       );
-      expect(attempt.errors?.[0]?.extensions?.code).toBe('FORBIDDEN_POLICY');
+      expect(firstError(attempt)?.extensions?.code).toBe('FORBIDDEN_POLICY');
       expect((await lookupAs('admin', formAdmins.formId)).total).toBe(3);
     });
   }

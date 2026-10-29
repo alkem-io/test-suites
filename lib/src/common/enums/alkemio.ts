@@ -9,6 +9,7 @@
  */
 export {
   ActorType,
+  AiPersonaEngine,
   AuthorizationPrivilege,
   CalendarEventType,
   CalloutAllowedActors,
@@ -24,6 +25,7 @@ export {
   CollaboraDocumentType,
   CommunityMembershipPolicy,
   CommunityMembershipStatus,
+  ContributorCollectionView,
   ConversationCreationType,
   ForumDiscussionCategory,
   InnovationHubType,
@@ -43,5 +45,7 @@ export {
   SpacePrivacyMode,
   SpaceVisibility,
   TemplateType,
+  UserInformationVisibility,
+  VirtualContributorBodyOfKnowledgeType,
   VisualType,
 } from "../../core/generated/alkemio-schema";

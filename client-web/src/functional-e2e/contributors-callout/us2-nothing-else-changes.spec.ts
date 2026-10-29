@@ -18,15 +18,16 @@ import {
   TestUser,
   TestUserManager,
   UniqueIDGenerator,
+  readSpaceAbout,
 } from '@alkemio/tests-lib';
-import { RoleName } from '@alkemio/tests-lib/core/generated/alkemio-schema';
+import { RoleName } from '@alkemio/tests-lib';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import { assignRoleToUser } from '@alkemio/tests-lib/scenario/baseFunctions';
+import { must } from '../helpers/lib-actor.helper';
 import { loginViaCrd } from '../helpers/login.helper';
 import {
   ApiCard,
   CardsFixture,
-  adminGql,
   apiCards,
   createContributorsCalloutViaApi,
   setSpacePrivacy,
@@ -170,16 +171,10 @@ test.describe.serial('US2 — Everything else keeps working', () => {
     expect(
       people.filter(p => p.roleLabel === 'lead').map(p => p.displayName)
     ).toContain(LEA);
-    subspaceDisplayName = (
-      await adminGql<{
-        lookup: { space: { about: { profile: { displayName: string } } } };
-      }>(
-        'query($id: UUID!) { lookup { space(ID: $id) { about { profile { displayName } } } } }',
-        {
-          id: baseScenario.subspace.id,
-        }
-      )
-    ).lookup.space.about.profile.displayName;
+    subspaceDisplayName = must(
+      await readSpaceAbout(baseScenario.subspace.id),
+      'subspace about'
+    ).lookup.space!.about.profile.displayName;
   });
 
   test.afterAll(async () => {

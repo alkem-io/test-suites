@@ -5,6 +5,9 @@
  * to the lib.
  */
 export type {
+  CalloutFormAnswerInput,
+  CreateCalloutFormQuestionInput,
+  CreateCalloutFormSettingsInput,
   CreateCalloutOnCalloutsSetInput,
   CreateContributionOnCalloutInput,
   CreateSpaceOnAccountInput,
@@ -18,8 +21,10 @@ export type {
   SubmitCalloutFormResponseInput,
   UpdateCalloutEntityInput,
   UpdateCalloutFormInput,
+  UpdateCalloutFormQuestionInput,
   UpdateOrganizationInput,
   UpdateSpaceInput,
+  UpdateSpaceSettingsInput,
   UpdateUserInput,
   UpdateUserSettingsEntityInput,
   UpdateVirtualContributorInput,

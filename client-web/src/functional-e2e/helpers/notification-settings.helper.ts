@@ -1,9 +1,10 @@
-import { GraphQLClient } from 'graphql-request';
 import {
-  testConfiguration,
+  readUserSettings,
   TestUser,
   TestUserManager,
+  updateUserSettings,
 } from '@alkemio/tests-lib';
+import { must } from '../helpers/lib-actor.helper';
 
 /**
  * Notification-channel setup for UI walks that assert an in-app notification
@@ -17,10 +18,8 @@ import {
  * therefore set the channels it depends on itself, and put them back the way
  * it found them so it does not fight other suites.
  *
- * Talks to the private GraphQL endpoint directly (the generated SDK has no
- * read operation for another user's settings) using the global admin's bearer
- * token from `TestUserManager` — the same mechanism `graphqlErrorWrapper`
- * uses internally.
+ * Reads and writes another user's settings through the lib as the global
+ * admin persona (`readUserSettings` / `updateUserSettings`).
  */
 
 export type NotificationChannels = {
@@ -40,69 +39,31 @@ const ALL_CHANNELS_ON: NotificationChannels = {
   push: true,
 };
 
-const client = new GraphQLClient(testConfiguration.endPoints.graphql.private);
-
-const READ_APPLICATION_CHANNELS = `
-  query($id: UUID!) {
-    lookup {
-      user(ID: $id) {
-        settings {
-          notification {
-            space { admin { communityApplicationReceived { email inApp push } } }
-            user { membership { spaceCommunityJoined { email inApp push } } }
-          }
-        }
-      }
-    }
-  }`;
-
-const WRITE_APPLICATION_CHANNELS = `
-  mutation(
-    $id: UUID!
-    $received: NotificationSettingInput!
-    $joined: NotificationSettingInput!
-  ) {
-    updateUserSettings(
-      settingsData: {
-        userID: $id
-        settings: {
-          notification: {
-            space: { admin: { communityApplicationReceived: $received } }
-            user: { membership: { spaceCommunityJoined: $joined } }
-          }
-        }
-      }
-    ) { id }
-  }`;
-
-const adminHeaders = () => ({
-  authorization: `Bearer ${TestUserManager.getUserModelByType(TestUser.GLOBAL_ADMIN).authToken}`,
+/** The three channel flags of one setting, without the read-back's `__typename`. */
+const channels = (setting: NotificationChannels): NotificationChannels => ({
+  email: setting.email,
+  inApp: setting.inApp,
+  push: setting.push,
 });
+
+/** The user's notification matrix, read as the global admin. */
+const readNotificationSettings = async (userId: string) =>
+  must(
+    await readUserSettings(userId, TestUser.GLOBAL_ADMIN),
+    `read notification settings of ${userId}`
+  ).user.settings.notification;
 
 const readApplicationChannels = async (
   userId: string
 ): Promise<ApplicationNotificationChannels> => {
-  const data = await client.request<{
-    lookup: {
-      user: {
-        settings: {
-          notification: {
-            space: {
-              admin: { communityApplicationReceived: NotificationChannels };
-            };
-            user: {
-              membership: { spaceCommunityJoined: NotificationChannels };
-            };
-          };
-        };
-      };
-    };
-  }>(READ_APPLICATION_CHANNELS, { id: userId }, adminHeaders());
-  const notification = data.lookup.user.settings.notification;
+  const notification = await readNotificationSettings(userId);
   return {
-    communityApplicationReceived:
-      notification.space.admin.communityApplicationReceived,
-    spaceCommunityJoined: notification.user.membership.spaceCommunityJoined,
+    communityApplicationReceived: channels(
+      notification.space.admin.communityApplicationReceived
+    ),
+    spaceCommunityJoined: channels(
+      notification.user.membership.spaceCommunityJoined
+    ),
   };
 };
 
@@ -110,14 +71,23 @@ const writeApplicationChannels = async (
   userId: string,
   channels: ApplicationNotificationChannels
 ): Promise<void> => {
-  await client.request(
-    WRITE_APPLICATION_CHANNELS,
-    {
-      id: userId,
-      received: channels.communityApplicationReceived,
-      joined: channels.spaceCommunityJoined,
-    },
-    adminHeaders()
+  must(
+    await updateUserSettings(
+      userId,
+      {
+        notification: {
+          space: {
+            admin: {
+              communityApplicationReceived:
+                channels.communityApplicationReceived,
+            },
+          },
+          user: { membership: { spaceCommunityJoined: channels.spaceCommunityJoined } },
+        },
+      },
+      TestUser.GLOBAL_ADMIN
+    ),
+    `write application notification channels of ${userId}`
   );
 };
 
@@ -176,33 +146,6 @@ export const enableApplicationNotifications = async (
 
 // ─── Callout reactions ───────────────────────────────────────────────────────
 
-const READ_REACTION_CHANNELS = `
-  query($id: UUID!) {
-    lookup {
-      user(ID: $id) {
-        settings {
-          notification {
-            space { collaborationCalloutReaction { email inApp push } }
-          }
-        }
-      }
-    }
-  }`;
-
-const WRITE_REACTION_CHANNELS = `
-  mutation($id: UUID!, $reaction: NotificationSettingInput!) {
-    updateUserSettings(
-      settingsData: {
-        userID: $id
-        settings: {
-          notification: {
-            space: { collaborationCalloutReaction: $reaction }
-          }
-        }
-      }
-    ) { id }
-  }`;
-
 /**
  * Turn on every channel of `space.collaborationCalloutReaction`
  * ("someone reacted to a callout you published") for one user — the setting
@@ -214,22 +157,20 @@ export const enableCalloutReactionNotifications = async (
   userId: string
 ): Promise<() => Promise<void>> => {
   await TestUserManager.populateUserModelMap();
-  const data = await client.request<{
-    lookup: {
-      user: {
-        settings: {
-          notification: {
-            space: { collaborationCalloutReaction: NotificationChannels };
-          };
-        };
-      };
-    };
-  }>(READ_REACTION_CHANNELS, { id: userId }, adminHeaders());
-  const previous =
-    data.lookup.user.settings.notification.space.collaborationCalloutReaction;
-  const write = (reaction: NotificationChannels) =>
-    client.request(WRITE_REACTION_CHANNELS, { id: userId, reaction }, adminHeaders());
-  const restore = () => write(previous).then(() => undefined);
+  const previous = channels(
+    (await readNotificationSettings(userId)).space.collaborationCalloutReaction
+  );
+  const write = async (reaction: NotificationChannels) => {
+    must(
+      await updateUserSettings(
+        userId,
+        { notification: { space: { collaborationCalloutReaction: reaction } } },
+        TestUser.GLOBAL_ADMIN
+      ),
+      `write callout-reaction notification channels of ${userId}`
+    );
+  };
+  const restore = () => write(previous);
   try {
     await write(ALL_CHANNELS_ON);
   } catch (error) {

@@ -23,6 +23,18 @@ export const readMySessionRaw = (actor: GraphqlActor) =>
 export const readMyUser = (actor: GraphqlActor) =>
   runAs(actor, (sdk, headers) => sdk.ReadMyUser({}, headers));
 
+/**
+ * `me { id user { id } }` with the raw HTTP status and body — for a spec that
+ * asserts on the transport outcome AND on whether a user is still attached to
+ * the session (a revoked session answers 401, or 200 as an anonymous actor
+ * with no user).
+ */
+export const readMyUserRaw = (actor: GraphqlActor) =>
+  postGraphqlRawAs<{ me: { id: string; user: { id: string } | null } }>(
+    actor,
+    "{ me { id user { id } } }",
+  );
+
 /** The actor's own privileges on its user, with the display name. */
 export const readMyPrivileges = (actor: GraphqlActor) =>
   runAs(actor, (sdk, headers) => sdk.ReadMyPrivileges({}, headers));

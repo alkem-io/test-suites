@@ -17,6 +17,7 @@ import {
 import { TestUser } from "../common/enums/test.user";
 import {
   CreateSpaceOnAccountInput,
+  ForumDiscussionCategory,
   RoleName,
   TagsetReservedName,
   CalloutAllowedActors,
@@ -35,7 +36,6 @@ import {
   VirtualContributorInteractionMode,
   AiPersonaEngine,
   SearchVisibility,
-  ForumDiscussionCategory,
 } from "@alkemio/client-lib/dist/generated/graphql";
 import { GraphQLClient } from "graphql-request";
 import { testConfiguration } from "../config/test.configuration";

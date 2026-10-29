@@ -17,23 +17,27 @@
 // manually before writing this suite.
 
 import { expect, Page, test as baseTest } from '@playwright/test';
-import { GraphQLClient } from 'graphql-request';
 import {
+  assignRoleToUser,
   delay,
   deleteMailSlurperMails,
   getMailsData,
   getQueueStats,
   rabbitMqManagementConfigured,
-  testConfiguration,
+  readMyNotifications,
+  readRoleSetUsersInRole,
+  removeRoleFromUser,
   TestScenarioConfig,
   TestScenarioFactory,
   UniqueIDGenerator,
+  updateUserSettings,
   waitForQueuePublishIncrease,
 } from '@alkemio/tests-lib';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
-import { NotificationEvent, RoleName } from '@alkemio/tests-lib/core/generated/alkemio-schema';
+import { NotificationEvent, RoleName } from '@alkemio/tests-lib';
 import { createPersonaTest, ensurePersonaState } from '../fixtures/authenticated-session.fixture';
 import { openSettingsSection } from '../helpers/settings-section.helper';
+import { must } from '../helpers/lib-actor.helper';
 import {
   assignOrganizationAdmin,
   createTestOrganization,
@@ -62,76 +66,51 @@ const PUSH_NOTIFICATIONS_QUEUE = 'alkemio-push-notifications';
 // looks parallel-safe in isolation.
 baseTest.describe.configure({ mode: 'serial' });
 
-// ─── Raw GraphQL escape hatch ────────────────────────────────────────────
-// The generated SDK (`getGraphqlClient()`) only exposes operations that live
-// as named `.graphql` documents somewhere in the lib. `me.notifications`
-// (in-app read) and the roleSet admin lookup/removal used to build the
-// zero-admin fixture are not among them, so this suite talks to the same
-// endpoint directly via the underlying `graphql-request` client the SDK is
-// built on, using the fixed personas' own bearer tokens from
-// `TestUserManager` — the exact mechanism `graphqlErrorWrapper` uses
-// internally.
-const rawClient = new GraphQLClient(testConfiguration.endPoints.graphql.private);
-async function rawGql<T>(query: string, variables: Record<string, unknown>, userRole: TestUser): Promise<T> {
-  const token = TestUserManager.getUserModelByType(userRole).authToken;
-  return rawClient.request<T>(query, variables, { authorization: `Bearer ${token}` });
-}
+// ─── API reads/writes as the fixed personas ───────────────────────────────
+// `me.notifications` (in-app read), the roleSet admin lookup/removal used to
+// build the zero-admin fixture and the notification-settings toggle all go
+// through the lib's business-action functions as the persona itself; a
+// failed call stops the walk with the GraphQL errors (`must`).
 
 type OrgInvitedNotification = {
   id: string;
   type: string;
   state: string;
   payload: {
-    organization?: { id: string; profile: { displayName: string } };
-    space?: { id: string; nameID: string };
-    invitation?: { id: string };
+    organization?: { id: string; profile?: { displayName: string } | null } | null;
+    space?: { id: string; nameID: string } | null;
+    invitation?: { id: string } | null;
   };
 };
 
 async function getOrgInvitedNotifications(userRole: TestUser): Promise<OrgInvitedNotification[]> {
-  const data = await rawGql<{
-    me: { notifications: { total: number; inAppNotifications: OrgInvitedNotification[] } };
-  }>(
-    `query {
-      me {
-        notifications(filter: { types: [${NotificationEvent.OrganizationAdminSpaceCommunityInvitation}] }) {
-          total
-          inAppNotifications {
-            id
-            type
-            state
-            payload {
-              ... on InAppNotificationPayloadSpaceCommunityInvitation {
-                organization { id profile { displayName } }
-                space { id nameID }
-                invitation { id }
-              }
-            }
-          }
-        }
-      }
-    }`,
-    {},
-    userRole
+  const data = must(
+    await readMyNotifications(userRole, {
+      types: [NotificationEvent.OrganizationAdminSpaceCommunityInvitation],
+    }),
+    'me.notifications'
   );
-  return data.me.notifications.inAppNotifications;
+  return data.me.notifications.inAppNotifications.map(({ id, type, state, payload }) => ({
+    id,
+    type,
+    state,
+    payload:
+      payload.__typename === 'InAppNotificationPayloadSpaceCommunityInvitation'
+        ? { organization: payload.organization, space: payload.space, invitation: payload.invitation }
+        : {},
+  }));
 }
 
 async function getRoleSetAdminIds(roleSetId: string): Promise<string[]> {
-  const data = await rawGql<{ lookup: { roleSet: { admins: { id: string }[] } } }>(
-    'query($rs: UUID!) { lookup { roleSet(ID: $rs) { admins: usersInRole(role: ADMIN) { id } } } }',
-    { rs: roleSetId },
-    TestUser.GLOBAL_ADMIN
+  const data = must(
+    await readRoleSetUsersInRole(roleSetId, RoleName.Admin, TestUser.GLOBAL_ADMIN),
+    'lookup.roleSet.usersInRole(ADMIN)'
   );
-  return data.lookup.roleSet.admins.map(a => a.id);
+  return data.lookup.roleSet!.usersInRole.map(a => a.id);
 }
 
 async function removeAdmin(roleSetId: string, actorId: string): Promise<void> {
-  await rawGql(
-    'mutation($rs: UUID!, $a: UUID!) { removeRoleFromUser(roleData: { roleSetID: $rs, actorID: $a, role: ADMIN }) { id } }',
-    { rs: roleSetId, a: actorId },
-    TestUser.GLOBAL_ADMIN
-  );
+  must(await removeRoleFromUser(actorId, roleSetId, RoleName.Admin, TestUser.GLOBAL_ADMIN), 'removeRoleFromUser(ADMIN)');
 }
 
 async function setAdminSpaceCommunityInvitationSetting(
@@ -139,15 +118,13 @@ async function setAdminSpaceCommunityInvitationSetting(
   channels: { email: boolean; inApp: boolean; push: boolean },
   userRole: TestUser
 ): Promise<void> {
-  await rawGql(
-    `mutation($id: UUID!, $email: Boolean!, $inApp: Boolean!, $push: Boolean!) {
-      updateUserSettings(settingsData: {
-        userID: $id
-        settings: { notification: { organization: { adminSpaceCommunityInvitation: { email: $email, inApp: $inApp, push: $push } } } }
-      }) { id }
-    }`,
-    { id: userId, ...channels },
-    userRole
+  must(
+    await updateUserSettings(
+      userId,
+      { notification: { organization: { adminSpaceCommunityInvitation: channels } } },
+      userRole
+    ),
+    'updateUserSettings(adminSpaceCommunityInvitation)'
   );
 }
 
@@ -298,10 +275,9 @@ baseTest.beforeAll(async () => {
   );
 
   // AS7: subsubspace.member@alkem.io is a plain ASSOCIATE — never admin/owner.
-  await rawGql(
-    `mutation($rs: UUID!, $a: UUID!) { assignRoleToUser(roleData: { roleSetID: $rs, actorID: $a, role: ${RoleName.Associate} }) { id } }`,
-    { rs: orgAS7.roleSetId, a: orgAssociateId() },
-    TestUser.GLOBAL_ADMIN
+  must(
+    await assignRoleToUser(orgAssociateId(), orgAS7.roleSetId, RoleName.Associate, TestUser.GLOBAL_ADMIN),
+    'assignRoleToUser(ASSOCIATE)'
   );
 
   await deleteMailSlurperMails();

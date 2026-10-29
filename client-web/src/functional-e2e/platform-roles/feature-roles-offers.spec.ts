@@ -5,8 +5,14 @@
 // Roles are used as each other's negatives — no "plain" user is assumed, since
 // a shared plain user can pick up roles during manual testing.
 import { expect, type Page } from '@playwright/test';
-import { platformRoleEmail, seedPlatformRoleUsers } from '@alkemio/tests-lib';
+import {
+  platformRoleEmail,
+  readMyUser,
+  readPlatformVirtualAssistantAccess,
+  seedPlatformRoleUsers,
+} from '@alkemio/tests-lib';
 import { createPersonaTest } from '../fixtures/authenticated-session.fixture';
+import { must, sessionActor } from '../helpers/lib-actor.helper';
 
 const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 let seeded: Promise<unknown> | undefined;
@@ -14,17 +20,12 @@ const rolesAreSeeded = () => (seeded ??= seedPlatformRoleUsers());
 
 const campaignBanner = (page: Page) => page.getByText('Create your Virtual Contributor');
 const assistantButton = (page: Page) => page.getByRole('button', { name: 'Open the assistant' });
-const myProfileUrl = (page: Page) =>
-  page.evaluate(async () => {
-    const res = await fetch('/api/private/graphql', {
-      method: 'POST',
-      credentials: 'include',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ query: '{ me { user { profile { url } } } platform { virtualAssistantAccess } }' }),
-    });
-    const { data } = await res.json();
-    return { url: data.me.user.profile.url as string, assistant: data.platform.virtualAssistantAccess as boolean };
-  });
+const myProfileUrl = async (page: Page) => {
+  const actor = await sessionActor(page);
+  const me = must(await readMyUser(actor), 'read own profile url');
+  const platform = must(await readPlatformVirtualAssistantAccess(actor), 'read virtualAssistantAccess');
+  return { url: me.me.user!.profile!.url as string, assistant: platform.platform.virtualAssistantAccess as boolean };
+};
 
 const asVcCampaign = createPersonaTest(platformRoleEmail('FEATURE_VC_CAMPAIGN'));
 asVcCampaign.beforeEach(rolesAreSeeded);

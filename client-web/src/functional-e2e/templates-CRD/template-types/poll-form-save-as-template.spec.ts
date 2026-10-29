@@ -23,11 +23,11 @@ import {
   CalloutVisibility,
   CreateCalloutOnCalloutsSetInput,
   PollStatus,
-} from '@alkemio/tests-lib/core/generated/alkemio-schema';
+} from '@alkemio/tests-lib';
 import {
   graphqlErrorWrapper,
   GraphQLReturnType,
-} from '@alkemio/tests-lib/utils/graphql.wrapper';
+} from '@alkemio/tests-lib';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import { createAuthenticatedSessionFixture } from '@src/functional-e2e/fixtures/authenticated-session.fixture';
 import { acceptCookiesIfVisible } from '@src/functional-e2e/helpers/cookies.helper';

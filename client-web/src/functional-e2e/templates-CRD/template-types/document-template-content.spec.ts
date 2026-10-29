@@ -25,25 +25,34 @@ import { readFileSync } from 'node:fs';
 import * as nodePath from 'node:path';
 import { type Browser, expect, type Locator, type Page } from '@playwright/test';
 import {
+  CalloutFramingType,
+  TemplateType,
   TestScenarioFactory,
   TestUser,
   TestUserManager,
   UniqueIDGenerator,
+  assignLicensePlanToSpace,
+  createCalloutTemplateWithFile,
+  createCalloutWithData,
   createInnovationPack,
+  createSpaceOnAccountId,
   deleteInnovationPack,
+  deleteSpace,
   getLicensePlanByName,
   getUserToken,
+  readCalloutsSetCallouts,
+  readInnovationPackTemplatesSet,
+  readSpaceRefs,
+  readTemplatesSetTemplates,
 } from '@alkemio/tests-lib';
 import type { TestScenarioConfig } from '@alkemio/tests-lib/scenario/config/test-scenario-config';
 import type { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
-import { graphqlRequestAuth } from '@alkemio/tests-lib/utils/graphql.request';
-import { adminGql } from '../../contributors-callout/cards-fixture';
+import { must } from '../../helpers/lib-actor.helper';
 import { createPersonaTest, ensurePersonaState } from '../../fixtures/authenticated-session.fixture';
 import { fillTemplateForm } from './forms/template-form';
 import { sectionAddNewButton } from './section-helpers';
 
 const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
-const gqlEndpoint = process.env.ALKEMIO_SERVER || `${baseUrl}/api/private/non-interactive/graphql`;
 const ADMIN = 'admin@alkem.io';
 const SPACE_ADMIN = 'space.admin@alkem.io';
 const SPACE_MEMBER = 'space.member@alkem.io';
@@ -83,15 +92,13 @@ const toolbox = { packId: '', spaceId: '', spaceCalloutsSetId: '', calloutId: ''
 // ---------------------------------------------------------------------------
 // API helpers
 // ---------------------------------------------------------------------------
-type DocFields = { id: string; documentType: string; previewUrl: string | null };
+type DocFields = { id: string; documentType: string; previewUrl?: string | null };
 
 const entitle = async (spaceID: string): Promise<void> => {
   const plan = await getLicensePlanByName('SPACE_FEATURE_OFFICE_DOCUMENTS');
   const licensePlanID = plan[0]?.id;
   if (!licensePlanID) throw new Error('no SPACE_FEATURE_OFFICE_DOCUMENTS licence plan on this platform');
-  await adminGql('mutation($p: AssignLicensePlanToSpace!){ assignLicensePlanToSpace(planData: $p) { id } }', {
-    p: { spaceID, licensePlanID },
-  });
+  must(await assignLicensePlanToSpace(spaceID, licensePlanID), `entitle ${spaceID}`);
 };
 
 /** `createTemplate(file:)` over the GraphQL multipart spec, as the bearer of `token`. */
@@ -102,37 +109,25 @@ const createDocumentTemplate = async (
   filePath: string,
   mime: string
 ): Promise<{ id: string; doc: DocFields }> => {
-  const form = new FormData();
-  form.append(
-    'operations',
-    JSON.stringify({
-      query: `mutation($file: Upload, $t: CreateTemplateOnTemplatesSetInput!){ createTemplate(file: $file, templateData: $t) {
-        id callout { framing { collaboraDocument { id documentType previewUrl } } } } }`,
-      variables: {
-        file: null,
-        t: {
-          templatesSetID,
-          type: 'CALLOUT',
-          profileData: { displayName: name },
-          calloutData: { framing: { profile: { displayName: name }, type: 'COLLABORA_DOCUMENT', collaboraDocument: {} } },
-        },
-      },
-    })
+  const res = await createCalloutTemplateWithFile(
+    {
+      templatesSetID,
+      type: TemplateType.Callout,
+      profileData: { displayName: name },
+      calloutData: { framing: { profile: { displayName: name }, type: CalloutFramingType.CollaboraDocument, collaboraDocument: {} } },
+    },
+    { bytes: readFileSync(filePath), fileName: nodePath.basename(filePath), mimeType: mime },
+    { bearerToken: token }
   );
-  form.append('map', JSON.stringify({ '0': ['variables.file'] }));
-  form.append('0', new Blob([readFileSync(filePath)], { type: mime }), nodePath.basename(filePath));
-  const res = await fetch(gqlEndpoint, {
-    method: 'POST',
-    headers: { Authorization: `Bearer ${token}`, 'apollo-require-preflight': 'true', 'x-apollo-operation-name': 'true' },
-    body: form,
-  });
-  const body = await res.json();
+  const body = res.body;
   if (body.errors || !body.data?.createTemplate) throw new Error(`createTemplate(file): ${JSON.stringify(body.errors ?? body)}`);
-  return { id: body.data.createTemplate.id, doc: body.data.createTemplate.callout.framing.collaboraDocument };
+  const doc = body.data.createTemplate.callout?.framing.collaboraDocument;
+  if (!doc) throw new Error(`createTemplate(file): template "${name}" carries no document`);
+  return { id: body.data.createTemplate.id, doc };
 };
 
 /** sha256 of the bytes behind a Collabora previewUrl, read through the storage REST endpoint. */
-const bytesHash = async (previewUrl: string | null, token: string): Promise<string> => {
+const bytesHash = async (previewUrl: string | null | undefined, token: string): Promise<string> => {
   const fileID = previewUrl?.match(/\/api\/private\/wopi\/files\/([^/]+)\/preview$/)?.[1];
   if (!fileID) throw new Error(`not a Collabora preview URL: ${previewUrl}`);
   const res = await fetch(`${baseUrl}/api/private/rest/storage/document/${decodeURIComponent(fileID)}`, {
@@ -145,25 +140,15 @@ const bytesHash = async (previewUrl: string | null, token: string): Promise<stri
 };
 
 const templateDocByName = async (templatesSetID: string, name: string): Promise<DocFields> => {
-  const data = await adminGql<{
-    lookup: { templatesSet: { templates: { profile: { displayName: string }; callout: { framing: { collaboraDocument: DocFields | null } } | null }[] } };
-  }>(
-    'query($id: UUID!){ lookup { templatesSet(ID: $id) { templates { profile { displayName } callout { framing { collaboraDocument { id documentType previewUrl } } } } } } }',
-    { id: templatesSetID }
-  );
-  const t = data.lookup.templatesSet.templates.find(x => x.profile.displayName === name);
+  const data = must(await readTemplatesSetTemplates(templatesSetID), `templates of ${templatesSetID}`);
+  const t = data.lookup.templatesSet!.templates.find(x => x.profile.displayName === name);
   if (!t?.callout?.framing.collaboraDocument) throw new Error(`template "${name}" has no document`);
   return t.callout.framing.collaboraDocument;
 };
 
 const calloutDocByName = async (calloutsSetID: string, name: string): Promise<DocFields> => {
-  const data = await adminGql<{
-    lookup: { calloutsSet: { callouts: { framing: { profile: { displayName: string }; collaboraDocument: DocFields | null } }[] } };
-  }>(
-    'query($id: UUID!){ lookup { calloutsSet(ID: $id) { callouts { framing { profile { displayName } collaboraDocument { id documentType previewUrl } } } } } }',
-    { id: calloutsSetID }
-  );
-  const c = data.lookup.calloutsSet.callouts.find(x => x.framing.profile.displayName === name);
+  const data = must(await readCalloutsSetCallouts(calloutsSetID), `callouts of ${calloutsSetID}`);
+  const c = data.lookup.calloutsSet!.callouts.find(x => x.framing.profile.displayName === name);
   if (!c?.framing.collaboraDocument) throw new Error(`callout "${name}" has no document`);
   return c.framing.collaboraDocument;
 };
@@ -240,9 +225,7 @@ test.describe.serial('Document post templates — content travels into each post
       }
     };
     if (toolbox.spaceId)
-      await step('toolbox space', () =>
-        adminGql('mutation($d: DeleteSpaceInput!){ deleteSpace(deleteData: $d) { id } }', { d: { ID: toolbox.spaceId } })
-      );
+      await step('toolbox space', async () => must(await deleteSpace(toolbox.spaceId), 'deleteSpace'));
     if (toolbox.packId) await step('pack', async () => deleteInnovationPack(toolbox.packId));
     if (scenario) await step('scenario', () => TestScenarioFactory.cleanUpBaseScenario(scenario!));
     if (failures.length) throw new Error(`teardown left entities behind:\n${failures.join('\n')}`);
@@ -343,12 +326,8 @@ test.describe.serial('Document post templates — content travels into each post
     const pack = await createInnovationPack(orgAccountId, NAMES.pack, `dtpack${uid}`.toLowerCase().slice(0, 24));
     if (pack.error || !pack.data?.createInnovationPack?.id) throw new Error(`create pack: ${JSON.stringify(pack.error)}`);
     toolbox.packId = pack.data.createInnovationPack.id;
-    const packSet = (
-      await adminGql<{ lookup: { innovationPack: { templatesSet: { id: string } } } }>(
-        'query($id: UUID!){ lookup { innovationPack(ID: $id) { templatesSet { id } } } }',
-        { id: toolbox.packId }
-      )
-    ).lookup.innovationPack.templatesSet.id;
+    const packSet = must(await readInnovationPackTemplatesSet(toolbox.packId), 'pack templates set').lookup
+      .innovationPack!.templatesSet!.id;
     const packTemplate = await createDocumentTemplate(
       adminToken,
       packSet,
@@ -363,51 +342,36 @@ test.describe.serial('Document post templates — content travels into each post
     expect(foreignAccountId).not.toBe(orgAccountId);
     // Select only the id: the new space's policies land a beat after the create,
     // and reading `collaboration` back inside the same mutation is refused.
-    const created = await graphqlRequestAuth(
+    const created = await createSpaceOnAccountId(
       {
-        query: 'mutation($d: CreateSpaceOnAccountInput!){ createSpace(spaceData: $d) { id } }',
-        variables: {
-          d: {
-            accountID: foreignAccountId,
-            nameID: `dttool${uid}`.toLowerCase().slice(0, 24),
-            about: { profileData: { displayName: `DT toolbox space ${uid}` } },
-            collaborationData: { calloutsSetData: {}, addTutorialCallouts: false },
-          },
-        },
+        accountID: foreignAccountId,
+        nameID: `dttool${uid}`.toLowerCase().slice(0, 24),
+        about: { profileData: { displayName: `DT toolbox space ${uid}` } },
+        collaborationData: { calloutsSetData: {}, addTutorialCallouts: false },
       },
       TestUser.SPACE_ADMIN
     );
-    const space = created.body?.data?.createSpace;
-    if (!space) throw new Error(`create toolbox space: ${JSON.stringify(created.body?.errors)}`);
+    const space = created.data?.createSpace;
+    if (!space) throw new Error(`create toolbox space: ${JSON.stringify(created.error?.errors)}`);
     toolbox.spaceId = space.id;
-    toolbox.spaceCalloutsSetId = (
-      await adminGql<{ lookup: { space: { collaboration: { calloutsSet: { id: string } } } } }>(
-        'query($id: UUID!){ lookup { space(ID: $id) { collaboration { calloutsSet { id } } } } }',
-        { id: toolbox.spaceId }
-      )
-    ).lookup.space.collaboration.calloutsSet.id;
+    toolbox.spaceCalloutsSetId = must(await readSpaceRefs(toolbox.spaceId), 'toolbox space refs').lookup.space!
+      .collaboration.calloutsSet.id;
     await entitle(toolbox.spaceId);
 
     // Apply the PACK template there as that user (the client sends exactly this on "Use template → Post").
-    const applied = await graphqlRequestAuth(
+    const applied = await createCalloutWithData(
       {
-        query:
-          'mutation($c: CreateCalloutOnCalloutsSetInput!){ createCalloutOnCalloutsSet(calloutData: $c) { id framing { collaboraDocument { id documentType previewUrl } } } }',
-        variables: {
-          c: {
-            calloutsSetID: toolbox.spaceCalloutsSetId,
-            framing: {
-              profile: { displayName: NAMES.packPost },
-              type: 'COLLABORA_DOCUMENT',
-              collaboraDocument: { sourceCollaboraDocumentID: packTemplate.doc.id },
-            },
-          },
+        calloutsSetID: toolbox.spaceCalloutsSetId,
+        framing: {
+          profile: { displayName: NAMES.packPost },
+          type: CalloutFramingType.CollaboraDocument,
+          collaboraDocument: { sourceCollaboraDocumentID: packTemplate.doc.id },
         },
       },
       TestUser.SPACE_ADMIN
     );
-    expect(applied.body?.errors, 'the toolbox apply must not be refused').toBeUndefined();
-    const doc: DocFields | undefined = applied.body?.data?.createCalloutOnCalloutsSet?.framing?.collaboraDocument;
+    expect(applied.error?.errors, 'the toolbox apply must not be refused').toBeUndefined();
+    const doc: DocFields | undefined | null = applied.data?.createCalloutOnCalloutsSet?.framing?.collaboraDocument;
     expect(doc?.id).toBeTruthy();
     expect(doc!.id).not.toBe(packTemplate.doc.id);
     expect(await bytesHash(doc!.previewUrl, adminToken)).toBe(fixtureHash(FIXTURES.docx));
