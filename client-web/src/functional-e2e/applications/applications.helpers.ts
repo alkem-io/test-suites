@@ -182,20 +182,12 @@ export const applyFromSubspaceAboutDialog = async (
   const aboutDialog = page.getByRole('dialog').filter({
     has: page.getByRole('heading', { name: subspaceDisplayName, level: 2 }),
   });
-  // Either control is rendered once the dialog has resolved the viewer's
-  // standing; only then is "no pending application" a real observation.
-  await expect(
-    aboutDialog.getByRole('button', { name: /^(Apply|Application pending)$/ })
-  ).toBeVisible({ timeout: 15_000 });
-  if (
-    await aboutDialog
-      .getByRole('button', { name: 'Application pending' })
-      .isVisible()
-  ) {
-    return;
-  }
-
-  await aboutDialog.getByRole('button', { name: 'Apply' }).click();
+  // Both callers run on a scenario created for the test, so the viewer has
+  // never applied: anything but "Apply" here (e.g. "Application pending") is
+  // a product regression and must fail HERE, not three steps later.
+  const apply = aboutDialog.getByRole('button', { name: 'Apply' });
+  await expect(apply).toBeVisible({ timeout: 15_000 });
+  await apply.click();
 
   const questionnaire = page
     .getByRole('dialog')

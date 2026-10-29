@@ -131,10 +131,16 @@ whatever the product does — on **test-alkem.io** that has been the case since
 theirs). `chat-avatars.helpers.ts::matrixSendPath` probes
 `<homeserver>/_matrix/client/versions` from Node once per file and the walks
 that type a message — all of US1, and US3-AS3 — `test.skip` with that reason
-when the host does not answer at all (any HTTP status counts as reachable). The
-skip lifts itself the moment the record exists; US2 and US3-AS1/AS2 never send,
-so they run regardless. Added after nightly run 40707979543 (2026-10-28) so the
-nightly reads green/red on product behaviour only.
+**only when the host has no DNS record (`ENOTFOUND`)**. Any HTTP status, a
+refused connection, a bad certificate, a time-out or a malformed URL counts as
+reachable and the walk runs (and goes red) — those can be product or config
+regressions, a missing zone record cannot. US1 probes from a throw-away page
+before registering anyone, so a dead path costs seconds, not the full set-up.
+The skip lifts itself the moment the record exists; US2 and US3-AS1/AS2 never
+send, so they run regardless. Added after nightly run 40707979543 (2026-10-28)
+so the nightly reads green/red on product behaviour only. Until #51 is closed
+the P1 US1 walks run on no night on test-alkem.io: run them on ACC (where the
+probe answers) before signing off chat avatars.
 
 ## Not covered — known gaps
 

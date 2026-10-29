@@ -10,7 +10,7 @@ import {
   gutterRow,
   conversationRow,
   ensureConversationList,
-  matrixSendPath,
+  probeMatrixSendPath,
   messageColumn,
   openChatPanel,
   openConversation,
@@ -63,6 +63,14 @@ test.describe('US1 — group thread sender avatars', { tag: ['@chat-avatars'] },
 
   test.beforeAll(async ({ browser }) => {
     test.setTimeout(600000);
+
+    // Every scenario below types a message, so the whole file needs the
+    // browser → Matrix send path. Probe it before registering anyone: when it
+    // is dead every test skips in beforeEach, and the three sign-ups, the
+    // avatar upload and the group conversation would be set-up for nothing.
+    sendPath = await probeMatrixSendPath(browser);
+    if (!sendPath.reachable) return;
+
     const uid = UniqueIDGenerator.getID();
 
     // All three drive the UI, so all three need a session — created concurrently.
@@ -75,10 +83,6 @@ test.describe('US1 — group thread sender avatars', { tag: ['@chat-avatars'] },
     // Bella uploads a profile picture; Charlie keeps the one the platform
     // assigns every new account (AS1 vs AS5).
     bellaAvatarSrc = await uploadProfileAvatar(bella);
-
-    // Every scenario below types a message, so the whole file needs the
-    // browser → Matrix send path; probed once, applied per test in beforeEach.
-    sendPath = await matrixSendPath(viewer.page);
 
     await openChatPanel(viewer.page);
     await createConversation(viewer.page, [bella.displayName, charlie.displayName]);

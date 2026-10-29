@@ -522,14 +522,44 @@ export async function matrixSendPath(page: Page): Promise<MatrixSendPath> {
     await fetch(`${homeserverUrl}/_matrix/client/versions`, { signal: AbortSignal.timeout(10000) });
     return { reachable: true };
   } catch (error) {
-    const { cause } = error as { cause?: { code?: string; message?: string } };
-    const why = cause?.code ?? cause?.message ?? (error as Error).message;
+    // Only a missing DNS record is the environment's problem. A refused
+    // connection, a bad certificate, a time-out or a malformed URL could be a
+    // product/config regression (the client is built with this URL), so those
+    // run the walk and go red honestly instead of skipping.
+    const { cause } = error as { cause?: { code?: string } };
+    if (cause?.code !== 'ENOTFOUND') return { reachable: true };
+    let host = homeserverUrl;
+    try {
+      host = new URL(homeserverUrl).host;
+    } catch {
+      // keep the raw value in the reason
+    }
+    const ticket = host.endsWith('test-alkem.io')
+      ? ' — alkem-io/infrastructure-provisioning#51'
+      : '';
     return {
       reachable: false,
       reason:
-        `Matrix homeserver ${homeserverUrl} is unreachable from this environment (${why}); ` +
-        'browser sends cannot be confirmed — alkem-io/infrastructure-provisioning#51',
+        `Matrix homeserver ${host} has no DNS record (ENOTFOUND) from this environment; ` +
+        `browser sends cannot be confirmed${ticket}`,
     };
+  }
+}
+
+/**
+ * Same probe from a throw-away page at `BASE_URL`, for a `beforeAll` that
+ * wants to know BEFORE registering anyone whether the file's sends can be
+ * confirmed — the US1 set-up (three sign-ups, an avatar upload, a group
+ * conversation on three pages) is not worth running for eight skips.
+ */
+export async function probeMatrixSendPath(browser: Browser): Promise<MatrixSendPath> {
+  const context = await browser.newContext();
+  try {
+    const page = await context.newPage();
+    await page.goto(BASE_URL);
+    return await matrixSendPath(page);
+  } finally {
+    await context.close();
   }
 }
 
