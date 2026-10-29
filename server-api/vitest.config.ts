@@ -258,6 +258,14 @@ export default defineConfig({
         // locally, never nightly.
         [
           'src/functional-api/contributor-management/user/delete-own-account*.it-spec.ts',
+          // The Form "title/description never reach a notification" case: its
+          // positive control is ONE receipt mail, and the test cluster's
+          // MailSlurper drops a few mails per run mid-DATA (nightly 40792632135,
+          // 2026-10-29 01:09:55 UTC), which reads as a red for a rule the
+          // product has never broken. A MailSlurper replacement is in progress;
+          // put the file back on the nightly when it lands. Runs locally via
+          // `test:callouts`.
+          'src/functional-api/callout/form/form-presentation-receipt.it-spec.ts',
         ]
       ),
     ],
