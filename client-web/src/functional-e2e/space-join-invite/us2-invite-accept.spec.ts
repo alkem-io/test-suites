@@ -6,6 +6,7 @@ import { test, expect } from '@playwright/test';
 import {
   CommunityMembershipPolicy,
   readRoleSetInvitations,
+  readUserSettings,
   SpacePrivacyMode,
   TestScenarioFactory,
   TestUser,
@@ -42,18 +43,25 @@ import {
  *
  *   admin     `space.admin`               — invites from Community settings
  *   invitee   disposable, registered here — receives, accepts, opens the Space
- *   bystander `non.space`                 — not invited (negative control)
+ *   bystander disposable, registered here — not invited (negative control)
  *
- * The invitee is a fresh identity so its mailbox holds only this run's mail
- * and its notification settings are the platform defaults. Mail is read by
- * recipient and by this Space's run-unique subject; the inbox is never pruned.
+ * Both are fresh identities, so their mailboxes hold only this run's mail and
+ * their notification settings are the platform defaults. The bystander is NOT
+ * a harness persona on purpose: the server-api notification specs leave the
+ * personas with email channels off (on test-alkem.io `non.space` has
+ * "invitation received" email off), and a bystander the notifications service
+ * would never mail makes "no mail to the bystander" true whatever the server
+ * does. Mail is read by recipient and by this Space's run-unique subject; the
+ * inbox is never pruned.
  */
 const uid = UniqueIDGenerator.getID();
 const scenarioName = `w2-inv-${uid}`;
 const inviteeName = `W2 Invitee ${uid}`;
+const bystanderName = `W2 Bystander ${uid}`;
 
 let scenario: OrganizationWithSpaceModel | undefined;
 let invitee: { id: string; email: string } | undefined;
+let bystanderUser: { id: string; email: string } | undefined;
 let admin: PersonaPage | undefined;
 let inviteePage: PersonaPage | undefined;
 let bystander: PersonaPage | undefined;
@@ -73,8 +81,9 @@ test.beforeAll(async ({ browser }) => {
     },
   });
   invitee = await registerFixtureUser(inviteeName);
+  bystanderUser = await registerFixtureUser(bystanderName);
   admin = await openPersonaPage(browser, TestUserManager.users.spaceAdmin.email);
-  bystander = await openPersonaPage(browser, TestUserManager.users.nonSpaceMember.email);
+  bystander = await openPersonaPage(browser, bystanderUser.email);
 });
 
 // File level, so it also runs when a failure retires the worker mid-file.
@@ -86,8 +95,15 @@ test.afterAll(async () => {
     await teardownScenario(scenario);
   } finally {
     scenario = undefined;
-    if (invitee) await deleteFixtureUser(invitee.id);
+    const users = [invitee, bystanderUser].filter((u): u is { id: string; email: string } => !!u);
     invitee = undefined;
+    bystanderUser = undefined;
+    // Every disposable user is attempted, then any failure fails the hook.
+    const failures: string[] = [];
+    for (const user of users) {
+      await deleteFixtureUser(user.id).catch((e: Error) => failures.push(`${user.id}: ${e.message}`));
+    }
+    if (failures.length > 0) throw new Error(`disposable users left behind: ${failures.join('; ')}`);
   }
 });
 
@@ -128,7 +144,7 @@ test.describe('W2 journey 2 — invite an existing user, accept in the UI, open 
     const { lookup } = must(await readRoleSetInvitations(space().community.roleSetId), 'readRoleSetInvitations');
     const invitations = lookup.roleSet?.invitations ?? [];
     expect(invitations.filter(i => i.actor.id === invitee!.id).map(i => i.state)).toEqual(['invited']);
-    expect(invitations.some(i => i.actor.id === TestUserManager.users.nonSpaceMember.id)).toBe(false);
+    expect(invitations.some(i => i.actor.id === bystanderUser!.id)).toBe(false);
   });
 
   test('I2-2 exactly one invitation mail reaches the invitee, pointing at the invitations dialog; the bystander gets none', async () => {
@@ -145,8 +161,16 @@ test.describe('W2 journey 2 — invite an existing user, accept in the UI, open 
     expect(decodeMailBody(mails[0].body)).toContain(`href="${invitationsDialogUrl()}"`);
 
     // Negative, after the positive above has arrived: nothing with this
-    // Space's subject reached the persona who was not invited.
-    expect(await settledInvitationMails(TestUserManager.users.nonSpaceMember.email)).toHaveLength(0);
+    // Space's subject reached the persona who was not invited. It can only go
+    // red if the bystander would be mailed an invitation at all, so its
+    // "invitation received" email channel must be on (a fresh identity's
+    // default) — otherwise this zero would hold whatever the server did.
+    const { user } = must(await readUserSettings(bystanderUser!.id), 'readUserSettings(bystander)');
+    expect(
+      user.settings.notification.user.membership.spaceCommunityInvitationReceived.email,
+      'bystander invitation-received email channel'
+    ).toBe(true);
+    expect(await settledInvitationMails(bystanderUser!.email)).toHaveLength(0);
   });
 
   test('I2-3 the invitee sees the invitation, accepts it, becomes a MEMBER and opens the Space with its member-only callout', async ({ browser }) => {
@@ -201,8 +225,6 @@ test.describe('W2 journey 2 — invite an existing user, accept in the UI, open 
       flow.dispose();
     }
     await expect(contentFeed(page)).toHaveCount(0);
-    expect(await userIdsInRole(space().community.roleSetId)).not.toContain(
-      TestUserManager.users.nonSpaceMember.id
-    );
+    expect(await userIdsInRole(space().community.roleSetId)).not.toContain(bystanderUser!.id);
   });
 });

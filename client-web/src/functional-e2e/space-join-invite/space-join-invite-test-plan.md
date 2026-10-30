@@ -22,9 +22,11 @@ Every run seeds its own organization and Space through the lib (`TestScenarioFac
 | `non.space` | harness | 1 | the joiner |
 | `subspace.member` | harness | 1 | never joins — negative control |
 | `W2 Invitee <id>` | disposable, registered in `beforeAll` (Kratos self-service + verification mail + `registerInAlkemioOrFail`), deleted in `afterAll` | 2 | the invitee — a fresh mailbox and default notification settings |
-| `non.space` | harness | 2 | not invited — negative control |
+| `W2 Bystander <id>` | disposable, registered and deleted like the invitee | 2 | not invited — negative control; its "invitation received" email channel is asserted on before its zero is read |
 
 No harness persona is mutated: the only state a harness persona gains is a membership of this run's Space, which is deleted with it. The MailSlurper inbox is read by recipient and by the run-unique subject, never pruned.
+
+The journey-2 bystander is disposable on purpose. The server-api notification specs leave harness personas with email channels off (on `test-alkem.io`, `non.space` has `user.membership.spaceCommunityInvitationReceived.email = false`), and a bystander the notifications service would never mail makes "no invitation mail to the bystander" pass whatever the server does.
 
 ## Navigation
 
@@ -42,7 +44,7 @@ Techniques: **ST** state transition (non-member → member), **EP** equivalence 
 | J1-2 | `us1-join-open-space.spec.ts` | ST, UC | `joinRoleSet` answered clean; MEMBER read-back (poll); Space page with h1 + member-only callout, no About dialog | automated, green |
 | J1-3 | `us1-join-open-space.spec.ts` | EP, NC | member sees the callout after reload (positive); bystander on About with Join, no feed, no callout heading; MEMBER list holds the joiner and not the bystander | automated, green |
 | I2-1 | `us2-invite-accept.spec.ts` | UC | `inviteForEntryRoleOnRoleSet` answered clean; `Invitation sent` for the invitee; pending row Invited + Revoke; server invitation `invited` for the invitee, none for the bystander | automated, green |
-| I2-2 | `us2-invite-accept.spec.ts` | UC, NC | exactly one `Invitation to join <Space>` to the invitee once its box settles, its link is `/home?dialog=invitations`; none with that subject to the bystander (after the invitee's arrived) | automated, green |
+| I2-2 | `us2-invite-accept.spec.ts` | UC, NC | exactly one `Invitation to join <Space>` to the invitee once its box settles, its link is `/home?dialog=invitations`; the bystander's invitation-received email channel is on, and none with that subject reached it (after the invitee's arrived) | automated, green |
 | I2-3 | `us2-invite-accept.spec.ts` | ST, UC | before: About with Accept invitation, no feed; card and detail in Pending Memberships; `eventOnInvitation` answered clean; MEMBER read-back; invitation `accepted`; Space with the member-only callout | automated, green |
 | I2-4 | `us2-invite-accept.spec.ts` | EP, NC | invitee sees the callout after reload (positive); bystander's About dialog rendered and the apply flow settled, then no membership action at all (invitation-only), no feed, not a MEMBER | automated, green |
 
