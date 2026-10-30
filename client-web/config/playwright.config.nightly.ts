@@ -44,6 +44,17 @@ export default defineConfig(
         ],
       }),
       suite({ name: 'Public Space', testMatch: ['/public-space/*.spec.ts'] }),
+      // W2 journeys 1–4 (docs/qa/server-rebuild/plan.md § W2): the business
+      // writes of membership, structure and settings, walked in the browser.
+      suite({
+        name: 'Space join and invite',
+        testMatch: [
+          '/space-join-invite/us1-join-open-space.spec.ts',
+        ],
+        // Three signed-in contexts, a disposable registration and the
+        // invitation mail round trip.
+        tier: 'long',
+      }),
       suite({
         name: 'Support navigation',
         testMatch: [
