@@ -14,6 +14,7 @@ import {
 } from '@alkemio/client-lib';
 import { loginViaCrd } from '../helpers/login.helper';
 import { enableApplicationNotifications } from '../helpers/notification-settings.helper';
+import { applyFromSubspaceAboutDialog } from './applications.helpers';
 
 const password = process.env.AUTH_TEST_HARNESS_PASSWORD || 'change_me';
 const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
@@ -148,9 +149,15 @@ test.describe('Level 1 Subspace - Applications', () => {
         `**/${spaceNameId}/challenges/${subspaceNameId}/about`
       );
 
-      // 7. Verify Apply button is visible
-      const applyButton = page.getByRole('button', { name: 'Apply' });
-      await expect(applyButton).toBeVisible();
+      // 7. Verify the Apply button is visible — on the About dialog the route
+      // opens (the page body behind it carries a second Apply; scoping keeps
+      // the locator strict-mode safe while the dialog is still mounting).
+      const aboutDialog = page.getByRole('dialog').filter({
+        has: page.getByRole('heading', { name: subspaceName, level: 2 }),
+      });
+      await expect(
+        aboutDialog.getByRole('button', { name: 'Apply' })
+      ).toBeVisible();
     });
 
     test('1.2 Submit Application to Level 1 Subspace', async () => {
@@ -268,58 +275,16 @@ test.describe('Level 1 Subspace - Applications', () => {
       const spaceNameId = baseScenario.space.nameId;
       const subspaceNameId = baseScenario.subspace.nameId;
 
-      // Step 1: As Non-Space Member - Submit Application
-      const applicantPage = nonSpaceMemberPage;
-
-      // Navigate directly to the subspace about page using nameId
-      await applicantPage.goto(`${baseUrl}/${spaceNameId}/challenges/${subspaceNameId}/about`);
-
-      // Check if there's already a pending application (CRD shows a disabled
-      // "Application pending" button in place of the Apply button).
-      const applicationPending = applicantPage.getByRole('button', {
-        name: 'Application pending',
-      });
-      // Either control is rendered once the page has resolved the viewer's
-      // standing; only then is "no pending application" a real observation.
-      await expect(
-        applicantPage.getByRole('button', { name: /^(Apply|Application pending)$/ })
-      ).toBeVisible();
-      const isApplicationPending = await applicationPending.isVisible();
-
-      if (!isApplicationPending) {
-        // Click the "Apply" button only if no pending application exists
-        await applicantPage.getByRole('button', { name: 'Apply' }).click();
-
-        // Fill in the required questionnaire fields with test data
-        const requiredField = applicantPage.getByRole('textbox', {
-          name: 'What brings you here?',
-        });
-        await requiredField.fill(
-          'I am interested in collaborating on this subspace'
-        );
-
-        // Submit the application
-        const submitButton = applicantPage
-          .getByRole('dialog')
-          .last()
-          .getByRole('button', { name: 'Apply' });
-        await expect(submitButton).toBeEnabled();
-        await submitButton.click();
-
-        // Verify success confirmation appears (CRD "Application submitted")
-        const successHeading = applicantPage.getByRole('heading', {
-          name: 'Application submitted',
-          level: 2,
-        });
-        await expect(successHeading).toBeVisible();
-
-        // Close success dialog
-        const closeButton = applicantPage
-          .getByRole('dialog')
-          .filter({ hasText: 'Application submitted' })
-          .getByRole('button', { name: 'Close' });
-        await closeButton.click();
-      }
+      // Step 1: As Non-Space Member - Submit Application from the subspace
+      // About dialog (every step scoped to its own dialog — see the helper).
+      await nonSpaceMemberPage.goto(
+        `${baseUrl}/${spaceNameId}/challenges/${subspaceNameId}/about`
+      );
+      await applyFromSubspaceAboutDialog(
+        nonSpaceMemberPage,
+        baseScenario.subspace.about.profile.displayName,
+        'I am interested in collaborating on this subspace'
+      );
 
       // Step 2: As Subspace Admin - Navigate to Community Settings (CRD)
       const adminPage = subspaceAdminPage;
