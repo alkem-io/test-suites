@@ -1,0 +1,13 @@
+query ReadSpaceAbout($spaceId: UUID!) {
+  lookup {
+    space(ID: $spaceId) {
+      id
+      nameID
+      about {
+        why
+        who
+        profile { id displayName tagline description url tagset { id tags } }
+      }
+    }
+  }
+}

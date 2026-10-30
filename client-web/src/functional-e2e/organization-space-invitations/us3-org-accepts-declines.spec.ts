@@ -14,13 +14,20 @@
 
 import { expect, Page, test as baseTest } from '@playwright/test';
 import {
+  assignRoleToUser,
+  eventOnInvitation,
   getUserToken,
+  inviteForEntryRoleOnRoleSet,
+  readMyUser,
+  readRoleSetInvitations,
+  readRoleSetOrganizationsInRoles,
   TestScenarioConfig,
   TestScenarioFactory,
 } from '@alkemio/tests-lib';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
-import { RoleName } from '@alkemio/tests-lib/core/generated/alkemio-schema';
+import { RoleName } from '@alkemio/tests-lib';
 import { createPersonaTest } from '../fixtures/authenticated-session.fixture';
+import { must } from '../helpers/lib-actor.helper';
 import {
   assignOrganizationAdmin,
   assignOrgRole,
@@ -244,40 +251,23 @@ baseTest.afterAll(async () => {
   }
 });
 
-// ─── Raw helpers not covered by the generated SDK (`@alkemio/tests-lib`
-// exposes `createOrganization`/role mutations but not `me.user.id` lookup by
-// email, `assignRoleToUser` on an organization's OWN roleset, an invite that
-// carries `extraRoles`, or `organizationsInRoles` — plain `fetch` against the
-// same private GraphQL endpoint the generated SDK targets, using
-// `getUserToken` for the bearer, same convention as `graphqlErrorWrapper`). ───
-
-const gqlEndpoint = process.env.ALKEMIO_SERVER || 'http://localhost:3000/api/private/non-interactive/graphql';
-
-async function rawGql<T>(query: string, variables: Record<string, unknown>, token: string): Promise<T> {
-  const res = await fetch(gqlEndpoint, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-    body: JSON.stringify({ query, variables }),
-  });
-  const body = await res.json();
-  if (body.errors) throw new Error(`GraphQL error: ${JSON.stringify(body.errors)}`);
-  return body.data as T;
-}
+// ─── API helpers as the registered personas (`me.user.id` lookup by email,
+// `assignRoleToUser` on an organization's OWN roleset, an invite that carries
+// `extraRoles`, `organizationsInRoles` and the on-behalf accept) — lib
+// business-action functions run with the persona's own `{ bearerToken }` from
+// `getUserToken`; a failed call stops the walk with the GraphQL errors. ───
 
 async function getUserIdFor(email: string): Promise<string> {
   const token = await getUserToken(email);
-  const data = await rawGql<{ me: { user: { id: string } } }>('query { me { user { id } } }', {}, token);
-  return data.me.user.id;
+  const data = must(await readMyUser({ bearerToken: token }), 'me.user');
+  return data.me.user!.id;
 }
 
 async function assignOrgRoleOnOwnOrg(orgOwnRoleSetId: string, actorID: string, role: RoleName): Promise<void> {
   const adminToken = await getUserToken(adminEmail);
-  await rawGql(
-    `mutation($roleSetID: UUID!, $actorID: UUID!, $role: RoleName!) {
-      assignRoleToUser(roleData: { roleSetID: $roleSetID, actorID: $actorID, role: $role }) { id }
-    }`,
-    { roleSetID: orgOwnRoleSetId, actorID, role },
-    adminToken
+  must(
+    await assignRoleToUser(actorID, orgOwnRoleSetId, role, { bearerToken: adminToken }),
+    `assignRoleToUser(${role})`
   );
 }
 
@@ -291,30 +281,22 @@ async function inviteWithExtraRole(
   extraRoles: RoleName[]
 ): Promise<void> {
   const adminToken = await getUserToken(adminEmail);
-  await rawGql(
-    `mutation($roleSetID: UUID!, $orgID: UUID!, $welcomeMessage: String!, $extraRoles: [RoleName!]!) {
-      inviteForEntryRoleOnRoleSet(invitationData: {
-        roleSetID: $roleSetID, invitedActorIDs: [$orgID], invitedUserEmails: [],
-        welcomeMessage: $welcomeMessage, extraRoles: $extraRoles
-      }) { invitation { id } }
-    }`,
-    { roleSetID, orgID, welcomeMessage, extraRoles },
-    adminToken
+  must(
+    await inviteForEntryRoleOnRoleSet(
+      { roleSetId: roleSetID, invitedActorIds: [orgID], invitedUserEmails: [], welcomeMessage, extraRoles },
+      { bearerToken: adminToken }
+    ),
+    'inviteForEntryRoleOnRoleSet'
   );
 }
 
 async function organizationsInRole(roleSetID: string, role: RoleName): Promise<string[]> {
   const adminToken = await getUserToken(adminEmail);
-  const data = await rawGql<{
-    lookup: { roleSet: { organizationsInRoles: Array<{ role: string; organizations: Array<{ id: string }> }> } };
-  }>(
-    `query($id: UUID!, $roles: [RoleName!]!) {
-      lookup { roleSet(ID: $id) { organizationsInRoles(roles: $roles) { role organizations { id } } } }
-    }`,
-    { id: roleSetID, roles: [role] },
-    adminToken
+  const data = must(
+    await readRoleSetOrganizationsInRoles(roleSetID, [role], { bearerToken: adminToken }),
+    'lookup.roleSet.organizationsInRoles'
   );
-  const entry = data.lookup.roleSet.organizationsInRoles.find(r => r.role === role);
+  const entry = data.lookup.roleSet!.organizationsInRoles.find(r => r.role === role);
   return entry ? entry.organizations.map(o => o.id) : [];
 }
 
@@ -333,27 +315,14 @@ async function eventOnInvitationRaw(
   const adminToken = await getUserToken(adminEmail);
   // `Invitation` exposes the invited actor as the `actor` relation, not a raw
   // `invitedActorID` scalar — selecting the latter fails the whole query.
-  const data = await rawGql<{
-    lookup: { roleSet: { invitations: Array<{ id: string; actor: { id: string } }> } };
-  }>(
-    'query($id: UUID!) { lookup { roleSet(ID: $id) { invitations { id actor { id } } } } }',
-    { id: roleSetID },
-    adminToken
-  );
-  const invitationID = data.lookup.roleSet.invitations.find(inv => inv.actor.id === orgID)?.id;
+  const data = must(await readRoleSetInvitations(roleSetID, { bearerToken: adminToken }), 'lookup.roleSet.invitations');
+  const invitationID = data.lookup.roleSet!.invitations.find(inv => inv.actor.id === orgID)?.id;
   if (!invitationID) throw new Error(`No pending invitation for org ${orgID} on roleSet ${roleSetID}`);
-  try {
-    const result = await rawGql<{ eventOnInvitation: { id: string; state: string } }>(
-      `mutation($invitationID: UUID!, $eventName: String!) {
-        eventOnInvitation(eventData: { invitationID: $invitationID, eventName: $eventName }) { id state }
-      }`,
-      { invitationID, eventName },
-      token
-    );
-    return { state: result.eventOnInvitation.state };
-  } catch (e: unknown) {
-    return { error: String(e) };
+  const result = await eventOnInvitation(invitationID, eventName, { bearerToken: token });
+  if (result.error || !result.data) {
+    return { error: `GraphQL error: ${JSON.stringify(result.error?.errors ?? 'no data')}` };
   }
+  return { state: result.data.eventOnInvitation.state };
 }
 
 // ─── Page-level helpers (source-derived selectors — see

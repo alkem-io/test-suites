@@ -11,6 +11,10 @@
 // Run (from client-web/):  pnpm run test:classifications
 
 import { test as base, expect } from '@playwright/test';
+import {
+  readSpaceAbout,
+  updateClassificationEntrySelection,
+} from '@alkemio/tests-lib';
 import { ensurePersonaState } from '@src/functional-e2e/fixtures/authenticated-session.fixture';
 import {
   addEntryApi,
@@ -19,8 +23,8 @@ import {
   EDITOR,
   emailOf,
   entriesOf,
-  gqlOk,
   libraryTemplates,
+  okOr,
   openPersona,
   OUTSIDER,
   pinCrd,
@@ -726,17 +730,8 @@ test.describe('SL-04 About-page display', () => {
     });
 
     await test.step('SC-006: the Space Tags are byte-identical after the adds and the removal', async () => {
-      const data = await gqlOk<{
-        lookup: {
-          space: { about: { profile: { tagset: { tags: string[] } } } };
-        };
-      }>(
-        `query ClassificationsTags($spaceId: UUID!) {
-          lookup { space(ID: $spaceId) { about { profile { tagset { tags } } } } }
-        }`,
-        { spaceId: fixture.spaceId }
-      );
-      expect([...data.lookup.space.about.profile.tagset.tags].sort()).toEqual(
+      const data = okOr(await readSpaceAbout(fixture.spaceId, EDITOR));
+      expect([...data.lookup.space!.about.profile.tagset!.tags].sort()).toEqual(
         [...fixture.tags].sort()
       );
     });
@@ -766,16 +761,14 @@ test.describe('SL-05 show/hide toggle', () => {
         values: ['e2e024 SL Ctl V'],
       });
       const controlEntry = await addEntryApi(fixture.spaceId, control.id);
-      await gqlOk(
-        `mutation ClassificationsControlSelect($data: UpdateClassificationEntrySelectionInput!) {
-          updateClassificationEntrySelection(classificationData: $data) { id }
-        }`,
-        {
-          data: {
+      okOr(
+        await updateClassificationEntrySelection(
+          {
             classificationEntryID: controlEntry.id,
             selectedValueIDs: [controlEntry.values[0].id],
           },
-        }
+          EDITOR
+        )
       );
       await gotoSettingsAbout(page);
       await addTemplateToSpace(page, TPL);
@@ -1043,16 +1036,14 @@ test.describe('SL-07 viewer authorization negative (UI)', () => {
       values: [VAL],
     });
     const entry = await addEntryApi(fixture.spaceId, template.id);
-    await gqlOk(
-      `mutation ClassificationsViewerSelect($data: UpdateClassificationEntrySelectionInput!) {
-        updateClassificationEntrySelection(classificationData: $data) { id }
-      }`,
-      {
-        data: {
+    okOr(
+      await updateClassificationEntrySelection(
+        {
           classificationEntryID: entry.id,
           selectedValueIDs: [entry.values[0].id],
         },
-      }
+        EDITOR
+      )
     );
 
     const viewer = await openPersona(browser, VIEWER);

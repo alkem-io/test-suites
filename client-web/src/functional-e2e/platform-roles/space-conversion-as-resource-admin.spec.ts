@@ -3,9 +3,16 @@
 // Conversions & Transfers. Disposable scenario; the promoted space is deleted
 // by the scenario clean-up (it deletes by id, whatever the level).
 import { expect, test as base, type Page } from '@playwright/test';
-import { platformRoleEmail, seedPlatformRoleUsers, TestScenarioFactory, TestUserManager } from '@alkemio/tests-lib';
+import {
+  platformRoleEmail,
+  readSpaceLevelAndVisibility,
+  seedPlatformRoleUsers,
+  TestScenarioFactory,
+  TestUserManager,
+} from '@alkemio/tests-lib';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import { createPersonaTest } from '../fixtures/authenticated-session.fixture';
+import { must, sessionActor } from '../helpers/lib-actor.helper';
 
 const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 let scenario: OrganizationWithSpaceModel;
@@ -20,16 +27,9 @@ base.afterAll(async () => {
   if (scenario) await TestScenarioFactory.cleanUpBaseScenario(scenario).catch(() => undefined);
 });
 
-const levelOf = (page: Page, id: string) =>
-  page.evaluate(async (spaceId: string) => {
-    const res = await fetch('/api/private/graphql', {
-      method: 'POST',
-      credentials: 'include',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ query: `{ lookup { space(ID: "${spaceId}") { level } } }` }),
-    });
-    return (await res.json()).data.lookup.space.level as string;
-  }, id);
+const levelOf = async (page: Page, id: string) =>
+  must(await readSpaceLevelAndVisibility(id, await sessionActor(page)), 'read space level').lookup.space!
+    .level as string;
 
 const asResourceAdmin = createPersonaTest(platformRoleEmail('PLATFORM_RESOURCE_ADMIN'));
 asResourceAdmin('promotes a subspace to a top-level space (L1 → L0)', async ({ page }) => {

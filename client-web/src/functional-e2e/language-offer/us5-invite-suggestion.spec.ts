@@ -19,12 +19,15 @@
 
 import { test, expect, Page } from '@playwright/test';
 import {
+  deletePlatformInvitation,
+  readRoleSetPlatformInvitations,
   TestScenarioConfig,
   TestScenarioFactory,
 } from '@alkemio/tests-lib';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
-import { BASE_URL, gql, languageConfig } from './helpers';
+import { BASE_URL, languageConfig } from './helpers';
 import { ADMIN_STATE } from './authState';
+import { must, sessionActor } from '../helpers/lib-actor.helper';
 
 // Endonyms for the eligible language codes, as the Select renders them
 // (crd-common `languages.<code>`).
@@ -79,14 +82,11 @@ async function resolveSpace(_page: Page): Promise<{ nameId: string; roleSetId: s
  */
 async function readSuggestedLanguage(page: Page, email: string): Promise<string | null> {
   const { roleSetId } = await resolveSpace(page);
-  const data = await gql(
-    page.request,
-    `query ReadInvite($roleSetId: UUID!) {
-       lookup { roleSet(ID: $roleSetId) { platformInvitations { id email suggestedLanguage } } }
-     }`,
-    { roleSetId }
+  const data = must(
+    await readRoleSetPlatformInvitations(roleSetId, await sessionActor(page)),
+    'read the role set platform invitations'
   );
-  const invitations: Array<{ id: string; email: string; suggestedLanguage: string | null }> =
+  const invitations: Array<{ id: string; email: string; suggestedLanguage?: string | null }> =
     data?.lookup?.roleSet?.platformInvitations ?? [];
   const invite = invitations.find(i => i.email.toLowerCase() === email.toLowerCase());
   expect(invite, `no PlatformInvitation was persisted for ${email}`).toBeTruthy();
@@ -148,10 +148,9 @@ test.describe('US5 — inviter suggests Dutch (compose-time)', () => {
       if (createdInvitationIds.length > 0) {
         const ctx = await browser.newContext({ storageState: ADMIN_STATE });
         try {
+          const actor = await sessionActor(ctx);
           for (const id of createdInvitationIds) {
-            await gql(ctx.request, 'mutation Del($id: UUID!) { deletePlatformInvitation(deleteData: { ID: $id }) { id } }', {
-              id,
-            });
+            must(await deletePlatformInvitation(id, actor), `delete platform invitation ${id}`);
           }
         } finally {
           await ctx.close();
@@ -171,7 +170,7 @@ test.describe('US5 — inviter suggests Dutch (compose-time)', () => {
 
     // FR-014: the control offers exactly "No preference" + the eligible set the
     // server advertises — no more, no less.
-    const { eligible } = await languageConfig(page.request);
+    const { eligible } = await languageConfig(page);
     expect(eligible, 'this walk needs Dutch in the eligible set').toContain('nl');
     const expectedOptions = [NO_PREFERENCE_LABEL, ...eligible.map(code => LANGUAGE_ENDONYMS[code] ?? code)];
 

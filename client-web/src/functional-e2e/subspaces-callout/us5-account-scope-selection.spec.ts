@@ -37,16 +37,29 @@ import {
   TestUser,
   UniqueIDGenerator,
   assignRoleToUser,
+  createCalloutWithData,
+  createSpaceOnAccount,
+  createSubspaceWithData,
+  deleteSpace,
+  findUsersPaginated,
   getUserToken,
+  readCalloutFramingSettings,
+  readCalloutSubspaceIds,
+  readMyUser,
+  readSpaceAccountSpaces,
+  readUserIdByNameId,
+  transferSpaceToAccount,
+  updateBaselineLicensePlanOnAccount,
 } from '@alkemio/tests-lib';
 import {
+  CalloutFramingType,
+  CalloutSelectionMode,
   RoleName,
   SpacePrivacyMode,
-} from '@alkemio/tests-lib/core/generated/alkemio-schema';
+} from '@alkemio/tests-lib';
 import type { TestScenarioConfig } from '@alkemio/tests-lib/scenario/config/test-scenario-config';
 import type { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
-import { graphqlRequestAuth } from '@alkemio/tests-lib/utils/graphql.request';
-import { adminGql } from '../contributors-callout/cards-fixture';
+import { must } from '../helpers/lib-actor.helper';
 import {
   createPersonaTest,
   ensurePersonaState,
@@ -195,19 +208,15 @@ const createL0 = async (
   nameID: string,
   privacy: SpacePrivacyMode
 ): Promise<{ id: string; roleSetId: string }> => {
-  const data = await adminGql<{
-    createSpace: { id: string; community: { roleSet: { id: string } } };
-  }>(
-    'mutation($d: CreateSpaceOnAccountInput!){ createSpace(spaceData: $d) { id community { roleSet { id } } } }',
-    {
-      d: {
-        accountID: scenario!.organization.accountId,
-        nameID,
-        about: { profileData: { displayName } },
-        collaborationData: { calloutsSetData: {}, addTutorialCallouts: false },
-        settings: { privacy: { mode: privacy } },
-      },
-    }
+  const data = must(
+    await createSpaceOnAccount({
+      accountID: scenario!.organization.accountId,
+      nameID,
+      about: { profileData: { displayName } },
+      collaborationData: { calloutsSetData: {}, addTutorialCallouts: false },
+      settings: { privacy: { mode: privacy } },
+    }),
+    `createL0(${displayName})`
   );
   return {
     id: data.createSpace.id,
@@ -221,19 +230,15 @@ const createL1 = async (
   nameID: string,
   privacy: SpacePrivacyMode
 ): Promise<{ id: string; roleSetId: string }> => {
-  const data = await adminGql<{
-    createSubspace: { id: string; community: { roleSet: { id: string } } };
-  }>(
-    'mutation($d: CreateSubspaceInput!){ createSubspace(subspaceData: $d) { id community { roleSet { id } } } }',
-    {
-      d: {
-        spaceID: parentId,
-        nameID,
-        about: { profileData: { displayName } },
-        collaborationData: { calloutsSetData: {}, addTutorialCallouts: false },
-        settings: { privacy: { mode: privacy } },
-      },
-    }
+  const data = must(
+    await createSubspaceWithData({
+      spaceID: parentId,
+      nameID,
+      about: { profileData: { displayName } },
+      collaborationData: { calloutsSetData: {}, addTutorialCallouts: false },
+      settings: { privacy: { mode: privacy } },
+    }),
+    `createL1(${displayName})`
   );
   return {
     id: data.createSubspace.id,
@@ -245,15 +250,24 @@ const createSpacesPost = async (
   displayName: string,
   selection?: { mode: 'AUTO' | 'CUSTOM'; selectedIds: string[] }
 ): Promise<string> => {
-  const data = await adminGql<{ createCalloutOnCalloutsSet: { id: string } }>(
-    'mutation($c: CreateCalloutOnCalloutsSetInput!){ createCalloutOnCalloutsSet(calloutData: $c) { id } }',
-    {
-      c: {
-        calloutsSetID: scenario!.space.collaboration.calloutsSetId,
-        framing: { type: 'SPACES', profile: { displayName } },
-        ...(selection ? { settings: { framing: { selection } } } : {}),
-      },
-    }
+  const data = must(
+    await createCalloutWithData({
+      calloutsSetID: scenario!.space.collaboration.calloutsSetId,
+      framing: { type: CalloutFramingType.Spaces, profile: { displayName } },
+      ...(selection
+        ? {
+            settings: {
+              framing: {
+                selection: {
+                  mode: selection.mode as CalloutSelectionMode,
+                  selectedIds: selection.selectedIds,
+                },
+              },
+            },
+          }
+        : {}),
+    }),
+    `createSpacesPost(${displayName})`
   );
   return data.createCalloutOnCalloutsSet.id;
 };
@@ -261,28 +275,14 @@ const createSpacesPost = async (
 const selectionOf = async (
   calloutId: string
 ): Promise<{ mode: string; selectedIds: string[] }> =>
-  (
-    await adminGql<{
-      lookup: {
-        callout: {
-          settings: {
-            framing: { selection: { mode: string; selectedIds: string[] } };
-          };
-        };
-      };
-    }>(
-      'query($id: UUID!){ lookup { callout(ID: $id) { settings { framing { selection { mode selectedIds } } } } } }',
-      { id: calloutId }
-    )
-  ).lookup.callout.settings.framing.selection;
+  must(
+    await readCalloutFramingSettings(calloutId),
+    `selection of ${calloutId}`
+  ).lookup.callout!.settings.framing.selection!;
 
 const userIdByEmail = async (email: string): Promise<string> =>
-  (
-    await adminGql<{ usersPaginated: { users: { id: string }[] } }>(
-      'query($f: UserFilterInput){ usersPaginated(filter: $f, first: 1) { users { id } } }',
-      { f: { email } }
-    )
-  ).usersPaginated.users[0].id;
+  must(await findUsersPaginated({ email }, 1), `user ${email}`).usersPaginated
+    .users[0].id;
 
 const grantRole = async (
   email: string,
@@ -302,17 +302,13 @@ const renderedIdsFor = async (
   calloutId: string,
   as: TestUser
 ): Promise<{ ids: string[]; hidden: boolean }> => {
-  const res = await graphqlRequestAuth(
-    {
-      query:
-        'query($id: UUID!){ lookup { callout(ID: $id) { hasHiddenSpaces framing { subspaces { id } } } } }',
-      variables: { id: calloutId },
-    },
-    as
+  const res = must(
+    await readCalloutSubspaceIds(calloutId, as),
+    `subspaces of ${calloutId} as ${as}`
   );
-  const c = res.body.data.lookup.callout;
+  const c = res.lookup.callout!;
   return {
-    ids: c.framing.subspaces.map((s: { id: string }) => s.id),
+    ids: c.framing.subspaces.map(s => s.id),
     hidden: c.hasHiddenSpaces,
   };
 };
@@ -459,20 +455,12 @@ test.describe
     ids.B = b.id;
     roleSets.B = b.roleSetId;
     extra.subspaceIds.unshift(ids.B);
-    const adminId = (
-      await adminGql<{ lookupByName: { user: { id: string } } }>(
-        'query($e: String!){ lookupByName { user(NAMEID: $e) { id } } }',
-        { e: 'space-admin' }
-      ).catch(() => ({ lookupByName: { user: { id: '' } } }))
-    ).lookupByName.user.id;
+    const adminId =
+      (await readUserIdByNameId('space-admin')).data?.lookupByName.user ?? '';
     spaceAdminId =
       adminId ||
-      (
-        await adminGql<{ usersPaginated: { users: { id: string }[] } }>(
-          'query($f: UserFilterInput){ usersPaginated(filter: $f, first: 1) { users { id } } }',
-          { f: { email: ADMIN } }
-        )
-      ).usersPaginated.users[0].id;
+      must(await findUsersPaginated({ email: ADMIN }, 1), `user ${ADMIN}`)
+        .usersPaginated.users[0].id;
     const member = await assignRoleToUser(
       spaceAdminId,
       b.roleSetId,
@@ -512,9 +500,12 @@ test.describe
     // baseline plan is raised instead (ACCOUNT_LICENSE_MANAGE, held by the
     // global admin). Surfaced, not swallowed: without it `createL0` throws on
     // the entitlement.
-    await adminGql(
-      'mutation($u: UpdateBaselineLicensePlanOnAccount!){ updateBaselineLicensePlanOnAccount(updateData: $u) { id } }',
-      { u: { accountID: scenario.organization.accountId, spaceFree: 4 } }
+    must(
+      await updateBaselineLicensePlanOnAccount({
+        accountID: scenario.organization.accountId,
+        spaceFree: 4,
+      }),
+      'raise the baseline plan'
     );
     ids.D = (
       await createL0(NAMES.D, shortId('acctd'), SpacePrivacyMode.Public)
@@ -561,10 +552,7 @@ test.describe
     // space and the scenario organisation must still go.
     try {
       await deleteFixtureTree(extra, async id =>
-        adminGql(
-          'mutation($d: DeleteSpaceInput!){ deleteSpace(deleteData: $d) { id } }',
-          { d: { ID: id } }
-        )
+        must(await deleteSpace(id), `deleteSpace(${id})`)
       );
     } finally {
       if (scenario) await TestScenarioFactory.cleanUpBaseScenario(scenario);
@@ -767,30 +755,16 @@ test.describe
     });
     // SEC-084-CW-01: a viewer without UPDATE cannot diff selectedIds against the cards.
     const token = await getUserToken(MEMBER);
-    const res = await fetch(
-      process.env.ALKEMIO_SERVER ||
-        `${baseUrl}/api/private/non-interactive/graphql`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          query:
-            'query($id: UUID!){ lookup { callout(ID: $id) { settings { framing { selection { mode selectedIds } } } } } }',
-          variables: { id: callouts.mixed },
-        }),
-      }
-    );
-    const body = await res.json();
+    const res = await readCalloutFramingSettings(callouts.mixed, {
+      bearerToken: token,
+    });
     // The server redacts the LIST only (`selectedIds: []`) and keeps `mode`, so
     // the mode is the positive anchor: a failed or empty read cannot pass.
     expect(
-      body.errors,
-      `member API read: ${JSON.stringify(body).slice(0, 300)}`
+      res.error,
+      `member API read: ${JSON.stringify(res).slice(0, 300)}`
     ).toBeUndefined();
-    expect(body.data.lookup.callout.settings.framing.selection).toEqual({
+    expect(res.data!.lookup.callout!.settings.framing.selection).toEqual({
       mode: 'CUSTOM',
       selectedIds: [],
     });
@@ -802,19 +776,16 @@ test.describe
     test.setTimeout(120_000);
     // Server half first, as the anonymous actor: the flag must be raised and
     // the list empty, so a missing notice is the client's and not the server's.
-    const anon = await fetch(`${baseUrl}/api/public/graphql`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        query:
-          'query($id: UUID!){ lookup { callout(ID: $id) { hasHiddenSpaces framing { subspaces { id } } } } }',
-        variables: { id: callouts.withheld },
-      }),
+    const anon = await readCalloutSubspaceIds(callouts.withheld, {
+      anonymous: 'public',
     });
-    const anonBody = await anon.json();
+    const anonCallout = anon.data?.lookup?.callout;
     expect(
-      anonBody.data?.lookup?.callout,
-      `anonymous API read: ${JSON.stringify(anonBody).slice(0, 300)}`
+      anonCallout && {
+        hasHiddenSpaces: anonCallout.hasHiddenSpaces,
+        framing: anonCallout.framing,
+      },
+      `anonymous API read: ${JSON.stringify(anon).slice(0, 300)}`
     ).toEqual({
       hasHiddenSpaces: true,
       framing: { subspaces: [] },
@@ -841,30 +812,12 @@ test.describe
     // Server half first: the picker's candidate query, as the admin, before the membership change.
     const candidates = async (): Promise<string[]> => {
       const token = await getUserToken(ADMIN);
-      const res = await fetch(
-        process.env.ALKEMIO_SERVER ||
-          `${baseUrl}/api/private/non-interactive/graphql`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            query:
-              'query($id: UUID!){ lookup { space(ID: $id) { accountSpaces { id } } } }',
-            variables: { id: ids.A },
-          }),
-        }
-      );
-      const body = await res.json();
+      const res = await readSpaceAccountSpaces(ids.A, { bearerToken: token });
       expect(
-        body.errors,
-        `accountSpaces as the admin: ${JSON.stringify(body.errors ?? '').slice(0, 300)}`
+        res.error,
+        `accountSpaces as the admin: ${JSON.stringify(res.error?.errors ?? '').slice(0, 300)}`
       ).toBeUndefined();
-      return body.data.lookup.space.accountSpaces.map(
-        (s: { id: string }) => s.id
-      );
+      return res.data!.lookup.space!.accountSpaces.map(s => s.id);
     };
     const before = await candidates();
     expect(before, 'member of B → B and public B1 are candidates').toEqual(
@@ -1043,27 +996,17 @@ test.describe
           r.label
         ).toHaveLength(r.ids.length);
       } else {
-        const anon = await fetch(`${baseUrl}/api/public/graphql`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            query:
-              'query($id: UUID!){ lookup { callout(ID: $id) { hasHiddenSpaces framing { subspaces { id } } } } }',
-            variables: { id: callouts.matrix },
-          }),
+        const anon = await readCalloutSubspaceIds(callouts.matrix, {
+          anonymous: 'public',
         });
-        const body = await anon.json();
         expect(
-          body.errors,
-          `${r.label}: ${JSON.stringify(body.errors ?? '').slice(0, 300)}`
+          anon.error,
+          `${r.label}: ${JSON.stringify(anon.error?.errors ?? '').slice(0, 300)}`
         ).toBeUndefined();
-        expect(body.data.lookup.callout.hasHiddenSpaces, r.label).toBe(
-          r.hidden
-        );
+        const anonCallout = anon.data!.lookup.callout!;
+        expect(anonCallout.hasHiddenSpaces, r.label).toBe(r.hidden);
         expect(
-          body.data.lookup.callout.framing.subspaces.map(
-            (x: { id: string }) => x.id
-          ),
+          anonCallout.framing.subspaces.map(x => x.id),
           r.label
         ).toEqual(r.ids);
       }
@@ -1125,17 +1068,15 @@ test.describe
 
     // (b) D leaves the account: transferred to the host admin's OWN account,
     // where they keep READ on it — so READ cannot be what drops it below.
-    const target = await graphqlRequestAuth(
-      { query: '{ me { user { account { id } } } }' },
-      TestUser.SPACE_ADMIN
-    );
-    const targetAccountId: string = target.body.data.me.user.account.id;
+    const target = must(await readMyUser(TestUser.SPACE_ADMIN), 'me as the host admin');
+    const targetAccountId: string = target.me.user!.account!.id;
     expect(targetAccountId).not.toBe(scenario!.organization.accountId);
-    const moved = await adminGql<{
-      transferSpaceToAccount: { account: { id: string } };
-    }>(
-      'mutation($t: TransferAccountSpaceInput!){ transferSpaceToAccount(transferData: $t) { account { id } } }',
-      { t: { spaceID: ids.D, targetAccountID: targetAccountId } }
+    const moved = must(
+      await transferSpaceToAccount({
+        spaceID: ids.D,
+        targetAccountID: targetAccountId,
+      }),
+      `transfer ${ids.D}`
     );
     expect(moved.transferSpaceToAccount.account.id).toBe(targetAccountId);
     expect(

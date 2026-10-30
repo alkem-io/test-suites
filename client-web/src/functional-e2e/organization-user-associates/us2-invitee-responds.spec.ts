@@ -17,7 +17,7 @@
 // --workers=1 note in the test plan).
 
 import { expect, test as baseTest, type Page } from '@playwright/test';
-import { RoleName } from '@alkemio/tests-lib/core/generated/alkemio-schema';
+import { readMyUser, RoleName } from '@alkemio/tests-lib';
 import {
   assignUserRoleOnOrganization,
   cleanUpTestOrganizations,
@@ -27,7 +27,6 @@ import {
   getUserIdsInRole,
   getUserToken,
   inviteUserToOrganizationRaw,
-  postGraphqlRaw,
   registerPersona,
   removeUserRoleOnOrganization,
   runSuffix,
@@ -74,11 +73,9 @@ let adminDisplayName = ''; // the inviter, as the respond dialog names them (US2
 
 const userIdFor = async (email: string): Promise<string> => {
   const bearerToken = await getUserToken(email);
-  const res = await postGraphqlRaw<{ me: { user: { id: string } } }>('query { me { user { id } } }', {
-    bearerToken,
-  });
-  const id = res.body.data?.me.user.id;
-  if (!id) throw new Error(`no user for ${email}: ${res.raw}`);
+  const res = await readMyUser({ bearerToken });
+  const id = res.data?.me.user?.id;
+  if (!id) throw new Error(`no user for ${email}: ${JSON.stringify(res.error ?? res.data)}`);
   return id;
 };
 
@@ -104,12 +101,10 @@ baseTest.beforeAll(async () => {
   await assignUserRoleOnOrganization(orgO.roleSetId, adminId, RoleName.Admin);
 
   const adminToken = await getUserToken(adminEmail);
-  const adminMe = await postGraphqlRaw<{ me: { user: { profile: { displayName: string } } } }>(
-    'query { me { user { profile { displayName } } } }',
-    { bearerToken: adminToken }
-  );
-  adminDisplayName = adminMe.body.data?.me.user.profile.displayName ?? '';
-  if (!adminDisplayName) throw new Error(`no display name for ${adminEmail}: ${adminMe.raw}`);
+  const adminMe = await readMyUser({ bearerToken: adminToken });
+  adminDisplayName = adminMe.data?.me.user?.profile?.displayName ?? '';
+  if (!adminDisplayName)
+    throw new Error(`no display name for ${adminEmail}: ${JSON.stringify(adminMe.error ?? adminMe.data)}`);
   [accepterId, listAccepterId, withheldId] = await Promise.all([
     userIdFor(accepterEmail),
     userIdFor(listAccepterEmail),

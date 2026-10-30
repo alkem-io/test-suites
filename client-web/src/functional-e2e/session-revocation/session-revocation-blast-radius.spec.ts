@@ -21,6 +21,7 @@ import {
   openLoggedInSession,
   probeIdTokenHint,
   probePrivateGraphql,
+  probePrivateGraphqlMyUser,
   provisionDisposableUser,
   sessionCookieName,
 } from './session-revocation.helpers';
@@ -68,10 +69,7 @@ test.describe('Session revocation — blast radius and boundaries (server#6315)'
       // 401. Assert the first probe strictly, and the second as "not the
       // victim": either 401 or an anonymous actor with no user attached.
       expect((await probeIdTokenHint(victimSession.context)).status).toBe(401);
-      const victimMe = await probePrivateGraphql(
-        victimSession.context,
-        '{ me { id user { id } } }'
-      );
+      const victimMe = await probePrivateGraphqlMyUser(victimSession.context);
       expect([200, 401]).toContain(victimMe.status);
       if (victimMe.status === 200) {
         expect(victimMe.json?.data?.me?.id).toBe('me-');
@@ -85,9 +83,8 @@ test.describe('Session revocation — blast radius and boundaries (server#6315)'
       expect(bystanderHint.status).toBe(200);
       expect(bystanderHint.json?.id_token).toBeTruthy();
 
-      const bystanderMe = await probePrivateGraphql(
-        bystanderSession.context,
-        '{ me { user { id } } }'
+      const bystanderMe = await probePrivateGraphqlMyUser(
+        bystanderSession.context
       );
       expect(bystanderMe.status).toBe(200);
       expect(bystanderMe.json?.errors).toBeUndefined();
@@ -135,7 +132,7 @@ test.describe('Session revocation — blast radius and boundaries (server#6315)'
       // session leaves no Redis key at all (state (a) → anonymous 200), while
       // a lingering tombstone yields 401. What must never happen is the
       // revocation path turning an idempotent no-op into a server error.
-      const me = await probePrivateGraphql(session.context, '{ me { id } }');
+      const me = await probePrivateGraphql(session.context);
       expect(me.status).toBeLessThan(500);
       expect([200, 401]).toContain(me.status);
     } finally {
@@ -166,13 +163,9 @@ test.describe('Session revocation — blast radius and boundaries (server#6315)'
         },
       ]);
 
-      const withoutCookie = await probePrivateGraphql(
-        noCookieContext,
-        '{ me { id } }'
-      );
+      const withoutCookie = await probePrivateGraphql(noCookieContext);
       const withFabricatedCookie = await probePrivateGraphql(
-        fabricatedCookieContext,
-        '{ me { id } }'
+        fabricatedCookieContext
       );
 
       expect(withoutCookie.status).toBe(200);

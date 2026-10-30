@@ -4,6 +4,7 @@ import crossFetch from 'cross-fetch';
 import { testConfiguration } from '../config/test.configuration';
 import { getSdk, Sdk } from '../core/generated/graphql';
 import { GraphQLClient } from 'graphql-request';
+import { GraphqlEndpoint, graphqlEndpointUrl } from './graphql.actor';
 
 /**
  * Dedicated keep-alive agents for the GraphQL client — never the shared
@@ -54,4 +55,28 @@ export const getGraphqlClient = (): Sdk => {
     graphqlSdkClient = getSdk(graphqlClient);
   }
   return graphqlSdkClient;
+};
+
+/**
+ * One SDK per endpoint kind, lazily built on the same private keep-alive
+ * agents. `private` is the non-interactive bearer endpoint (the one
+ * `getGraphqlClient()` has always targeted); `session` is the BFF
+ * cookie-session endpoint a browser talks to; `public` is the anonymous one.
+ * Used by `runAs` so a lib function can act as a persona, a disposable
+ * user's bearer, a browser session or nobody — see `utils/graphql.actor.ts`.
+ */
+const sdkByEndpoint = new Map<GraphqlEndpoint, Sdk>();
+
+export const getGraphqlClientFor = (endpoint: GraphqlEndpoint): Sdk => {
+  if (endpoint === 'private') return getGraphqlClient();
+  let sdk = sdkByEndpoint.get(endpoint);
+  if (!sdk) {
+    sdk = getSdk(
+      new GraphQLClient(graphqlEndpointUrl(endpoint), {
+        fetch: fetchWithOwnAgent,
+      }),
+    );
+    sdkByEndpoint.set(endpoint, sdk);
+  }
+  return sdk;
 };

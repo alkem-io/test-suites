@@ -1,0 +1,2 @@
+# Session liveness probe: the smallest authenticated read there is.
+query ReadMySession { me { id } }

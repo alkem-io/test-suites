@@ -15,16 +15,30 @@
 // each case stands alone; RT-1 and MT-1 keep the browser authoring walk.
 
 import { expect, type Locator, type Page } from '@playwright/test';
-import { TestScenarioFactory, TestUser, UniqueIDGenerator, getLicensePlanByName, getUserToken } from '@alkemio/tests-lib';
+import {
+  CalloutAllowedActors,
+  CalloutContributionType,
+  CalloutFramingType,
+  TemplateType,
+  TestScenarioFactory,
+  TestUser,
+  UniqueIDGenerator,
+  assignLicensePlanToSpace,
+  createTemplateWithData,
+  getLicensePlanByName,
+  getUserToken,
+  readMyUser,
+  readTemplatesSetTemplates,
+  type CreateTemplateOnTemplatesSetInput,
+} from '@alkemio/tests-lib';
 import type { TestScenarioConfig } from '@alkemio/tests-lib/scenario/config/test-scenario-config';
 import type { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
-import { adminGql } from '../../contributors-callout/cards-fixture';
+import { must } from '../../helpers/lib-actor.helper';
 import { createPersonaTest } from '../../fixtures/authenticated-session.fixture';
 import { fillTemplateForm } from './forms/template-form';
 import { sectionAddNewButton } from './section-helpers';
 
 const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
-const gqlEndpoint = process.env.ALKEMIO_SERVER || `${baseUrl}/api/private/non-interactive/graphql`;
 const SPACE_ADMIN = 'space.admin@alkem.io';
 const test = createPersonaTest(SPACE_ADMIN);
 const uid = UniqueIDGenerator.getID();
@@ -51,65 +65,45 @@ let creatorId = '';
 // ---------------------------------------------------------------------------
 // API helpers
 // ---------------------------------------------------------------------------
-const gqlAs = async <T,>(token: string, query: string, variables: Record<string, unknown> = {}): Promise<T> => {
-  const res = await fetch(gqlEndpoint, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-    body: JSON.stringify({ query, variables }),
-  });
-  const body = (await res.json()) as { data?: T; errors?: unknown };
-  if (body.errors || !body.data) throw new Error(`GraphQL: ${JSON.stringify(body.errors ?? body)}`);
-  return body.data;
-};
-
 const entitle = async (spaceID: string): Promise<void> => {
   const plan = await getLicensePlanByName('SPACE_FEATURE_OFFICE_DOCUMENTS');
   const licensePlanID = plan[0]?.id;
   if (!licensePlanID) throw new Error('no SPACE_FEATURE_OFFICE_DOCUMENTS licence plan on this platform');
-  await adminGql('mutation($p: AssignLicensePlanToSpace!){ assignLicensePlanToSpace(planData: $p) { id } }', {
-    p: { spaceID, licensePlanID },
-  });
+  must(await assignLicensePlanToSpace(spaceID, licensePlanID), `entitle ${spaceID}`);
 };
 
-type TemplateRow = {
-  id: string;
-  profile: { displayName: string; description: string | null };
-  callout: {
-    settings: { contribution: { allowedTypes: string[] } };
-    framing: {
-      type: string;
-      profile: { description: string | null };
-      memo: { id: string; createdBy: { id: string } | null; authorization: { myPrivileges: string[] } | null } | null;
-    };
-  } | null;
-};
+type TemplateRow = NonNullable<
+  NonNullable<Awaited<ReturnType<typeof readTemplatesSetTemplates>>['data']>['lookup']['templatesSet']
+>['templates'][number];
 /** The template as the bearer of `token` sees it (privileges are per viewer). */
 const templateByName = async (token: string, name: string): Promise<TemplateRow> => {
-  const data = await gqlAs<{ lookup: { templatesSet: { templates: TemplateRow[] } } }>(
-    token,
-    `query($id: UUID!){ lookup { templatesSet(ID: $id) { templates { id profile { displayName description }
-      callout { settings { contribution { allowedTypes } }
-        framing { type profile { description } memo { id createdBy { id } authorization { myPrivileges } } } } } } } }`,
-    { id: scenario!.space.templateSetId }
+  const data = must(
+    await readTemplatesSetTemplates(scenario!.space.templateSetId, { bearerToken: token }),
+    'templates of the space library'
   );
-  const row = data.lookup.templatesSet.templates.find(t => t.profile.displayName === name);
+  const row = data.lookup.templatesSet!.templates.find(t => t.profile.displayName === name);
   if (!row) throw new Error(`template "${name}" not found`);
   return row;
 };
 
+type TemplateFraming = NonNullable<NonNullable<CreateTemplateOnTemplatesSetInput['calloutData']>['framing']>;
 /** createTemplate as the creator — the same mutation the template form sends. */
-const seedTemplate = async (name: string, framing: Record<string, unknown>, allowedTypes: string[]): Promise<void> => {
-  await gqlAs(creatorToken, 'mutation($t: CreateTemplateOnTemplatesSetInput!){ createTemplate(templateData: $t) { id } }', {
-    t: {
-      templatesSetID: scenario!.space.templateSetId,
-      type: 'CALLOUT',
-      profileData: { displayName: name },
-      calloutData: {
-        framing: { profile: { displayName: `${name} post` }, ...framing },
-        settings: { contribution: { enabled: true, allowedTypes, canAddContributions: 'MEMBERS', commentsEnabled: true } },
+const seedTemplate = async (name: string, framing: Omit<TemplateFraming, 'profile'>, allowedTypes: CalloutContributionType[]): Promise<void> => {
+  must(
+    await createTemplateWithData(
+      {
+        templatesSetID: scenario!.space.templateSetId,
+        type: TemplateType.Callout,
+        profileData: { displayName: name },
+        calloutData: {
+          framing: { profile: { displayName: `${name} post` }, ...framing },
+          settings: { contribution: { enabled: true, allowedTypes, canAddContributions: CalloutAllowedActors.Members, commentsEnabled: true } },
+        },
       },
-    },
-  });
+      { bearerToken: creatorToken }
+    ),
+    `seedTemplate(${name})`
+  );
 };
 
 // ---------------------------------------------------------------------------
@@ -186,10 +180,10 @@ test.describe('Collaboration-tool templates: round-trip of what the form saved',
     scenario = await TestScenarioFactory.createBaseScenario(scenarioConfig);
     await entitle(scenario.space.id);
     creatorToken = await getUserToken(SPACE_ADMIN);
-    creatorId = (await gqlAs<{ me: { user: { id: string } } }>(creatorToken, '{ me { user { id } } }')).me.user.id;
-    await seedTemplate(NAMES.docSeeded, { type: 'NONE' }, ['COLLABORA_DOCUMENT']);
-    await seedTemplate(NAMES.docEdit, { type: 'NONE' }, ['COLLABORA_DOCUMENT']);
-    await seedTemplate(NAMES.memoSeeded, { type: 'MEMO', memo: { profile: { displayName: `${NAMES.memoSeeded} memo` }, markdown: 'Seeded memo body.' } }, []);
+    creatorId = must(await readMyUser({ bearerToken: creatorToken }), 'me as the creator').me.user!.id;
+    await seedTemplate(NAMES.docSeeded, { type: CalloutFramingType.None }, [CalloutContributionType.CollaboraDocument]);
+    await seedTemplate(NAMES.docEdit, { type: CalloutFramingType.None }, [CalloutContributionType.CollaboraDocument]);
+    await seedTemplate(NAMES.memoSeeded, { type: CalloutFramingType.Memo, memo: { profile: { displayName: `${NAMES.memoSeeded} memo` }, markdown: 'Seeded memo body.' } }, []);
     // Preconditions the cases rest on: the server stored exactly what was sent.
     expect((await templateByName(creatorToken, NAMES.docSeeded)).callout?.settings.contribution.allowedTypes).toEqual(['COLLABORA_DOCUMENT']);
     expect((await templateByName(creatorToken, NAMES.memoSeeded)).callout?.framing.type).toBe('MEMO');

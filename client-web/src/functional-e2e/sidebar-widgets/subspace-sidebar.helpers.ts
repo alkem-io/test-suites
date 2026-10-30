@@ -8,16 +8,20 @@ import {
   type Locator,
   type Page,
 } from '@playwright/test';
-import { GraphQLClient } from 'graphql-request';
 import {
   assignRoleToUser,
   createSubspace,
   deleteOrganization,
   deleteSpace,
-  testConfiguration,
+  readSpaceInnovationFlowStates,
+  readSpaceMyPrivileges,
+  readSpaceRefs,
+  readSpaceSettings,
   TestScenarioFactory,
   TestUserManager,
   UniqueIDGenerator,
+  updateInnovationFlowStateSettings,
+  updateInnovationFlowStatesSortOrder,
   updateSpaceSettings,
 } from '@alkemio/tests-lib';
 import { TestUser } from '@alkemio/tests-lib/common/enums/test.user';
@@ -25,12 +29,11 @@ import {
   RoleName,
   SidebarWidget,
   SpacePrivacyMode,
-  type CommunityMembershipPolicy,
-} from '@alkemio/tests-lib/core/generated/alkemio-schema';
-import { graphqlErrorWrapper } from '@alkemio/tests-lib/utils/graphql.wrapper';
+} from '@alkemio/tests-lib';
 import type { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import { deleteFixtureTree } from '../subspaces-callout/subspaces-callout.helpers';
 import { grantCookieConsent } from '../helpers/cookies.helper';
+import { must as ok } from '../helpers/lib-actor.helper';
 import {
   baseUrl,
   WIDGET_LABEL as L0_WIDGET_LABEL,
@@ -51,37 +54,6 @@ export const WIDGET_LABEL: Record<SidebarWidget, string> = {
   ...L0_WIDGET_LABEL,
   [SidebarWidget.About]: 'About this Subspace',
 };
-
-const rawClient = new GraphQLClient(
-  testConfiguration.endPoints.graphql.private
-);
-const bearer = (authToken: string | undefined) =>
-  authToken ? { authorization: `Bearer ${authToken}` } : undefined;
-
-/** Fail the walk with the GraphQL errors instead of carrying on with half a fixture. */
-function ok<T>(
-  res: { data?: T; error?: { errors: unknown[] } },
-  what: string
-): T {
-  if (res.error || !res.data) {
-    throw new Error(`${what} failed: ${JSON.stringify(res.error)}`);
-  }
-  return res.data;
-}
-
-/** A raw GraphQL document as the given persona, failing loudly on any error. */
-export async function rawGql<T>(
-  document: string,
-  variables: Record<string, unknown>,
-  role: TestUser = TestUser.GLOBAL_ADMIN
-): Promise<T> {
-  const res = await graphqlErrorWrapper(
-    (t: string | undefined) =>
-      rawClient.rawRequest<T>(document, variables, bearer(t)),
-    role
-  );
-  return ok(res, document.trim().split('\n')[0]);
-}
 
 // ---------------------------------------------------------------------------
 // Vocabulary and defaults (spec 086 FR-009 positional lists, server#6683)
@@ -166,26 +138,15 @@ export type SubspaceFixture = {
   cleanupIds: string[];
 };
 
-const spaceRefDocument = `query SubspaceSidebarSpaceRef($id: UUID!) {
-  lookup { space(ID: $id) { id nameID community { roleSet { id } } } }
-}`;
-type SpaceRefData = {
-  lookup: {
-    space: {
-      id: string;
-      nameID: string;
-      community: { roleSet: { id: string } };
-    };
-  };
-};
-
 async function spaceRef(id: string, url: string): Promise<SubspaceRef> {
-  const data = await rawGql<SpaceRefData>(spaceRefDocument, { id });
+  const data = ok(await readSpaceRefs(id), 'readSpaceRefs');
+  const space = data.lookup.space;
+  if (!space) throw new Error(`readSpaceRefs returned no space for ${id}`);
   return {
     id,
-    nameId: data.lookup.space.nameID,
+    nameId: space.nameID,
     url,
-    roleSetId: data.lookup.space.community.roleSet.id,
+    roleSetId: space.community.roleSet.id,
   };
 }
 
@@ -305,42 +266,6 @@ async function addMembers(roleSetId: string) {
   }
 }
 
-const settingsDocument = `query SubspaceSidebarSettings($id: UUID!) {
-  lookup { space(ID: $id) { settings {
-    privacy { mode allowPlatformSupportAsAdmin }
-    membership { policy allowSubspaceAdminsToInviteMembers trustedOrganizations }
-    collaboration {
-      allowMembersToCreateCallouts allowMembersToCreateSubspaces inheritMembershipRights
-      allowEventsFromSubspaces allowMembersToVideoCall allowGuestContributions
-    }
-  } } }
-}`;
-type SettingsData = {
-  lookup: {
-    space: {
-      settings: {
-        privacy: {
-          mode: SpacePrivacyMode;
-          allowPlatformSupportAsAdmin: boolean;
-        };
-        membership: {
-          policy: CommunityMembershipPolicy;
-          allowSubspaceAdminsToInviteMembers: boolean;
-          trustedOrganizations: string[];
-        };
-        collaboration: {
-          allowMembersToCreateCallouts: boolean;
-          allowMembersToCreateSubspaces: boolean;
-          inheritMembershipRights: boolean;
-          allowEventsFromSubspaces: boolean;
-          allowMembersToVideoCall: boolean;
-          allowGuestContributions: boolean;
-        };
-      };
-    };
-  };
-};
-
 /**
  * Sets allowMembersToCreateSubspaces=false, sending every other stored setting back
  * unchanged: the lib's updateSpaceSettings fills each omitted field with its own default
@@ -352,9 +277,10 @@ type SettingsData = {
 export async function pinMembersCannotCreateSubspaces(
   spaceId: string
 ): Promise<void> {
-  const { settings } = (
-    await rawGql<SettingsData>(settingsDocument, { id: spaceId })
-  ).lookup.space;
+  const space = ok(await readSpaceSettings(spaceId), 'readSpaceSettings').lookup
+    .space;
+  if (!space) throw new Error(`readSpaceSettings returned no space for ${spaceId}`);
+  const { settings } = space;
   ok(
     await updateSpaceSettings(spaceId, {
       privacy: settings.privacy,
@@ -373,14 +299,8 @@ export async function myPrivileges(
   spaceId: string,
   role: TestUser
 ): Promise<string[]> {
-  const data = await rawGql<{
-    lookup: { space: { authorization: { myPrivileges: string[] } } };
-  }>(
-    'query SubspaceSidebarMyPrivileges($id: UUID!) { lookup { space(ID: $id) { authorization { myPrivileges } } } }',
-    { id: spaceId },
-    role
-  );
-  return data.lookup.space.authorization.myPrivileges;
+  const data = ok(await readSpaceMyPrivileges(spaceId, role), 'readSpaceMyPrivileges');
+  return data.lookup.space!.authorization!.myPrivileges!;
 }
 
 /**
@@ -437,23 +357,15 @@ export function rankStates<T extends { sortOrder: number; id: string }>(
   });
 }
 
-const phasesDocument = `query SubspaceSidebarPhases($id: UUID!) {
-  lookup { space(ID: $id) { collaboration { innovationFlow { id states {
-    id displayName sortOrder settings { visible sidebar descriptionDisplayMode } } } } } }
-}`;
-
 /** A space's flow id and its phases ranked by the first-state rule. */
 export async function readPhases(
   spaceId: string
 ): Promise<{ flowId: string; phases: PhaseState[] }> {
-  const data = await rawGql<{
-    lookup: {
-      space: {
-        collaboration: { innovationFlow: { id: string; states: PhaseState[] } };
-      };
-    };
-  }>(phasesDocument, { id: spaceId });
-  const flow = data.lookup.space.collaboration.innovationFlow;
+  const data = ok(
+    await readSpaceInnovationFlowStates(spaceId),
+    'readSpaceInnovationFlowStates'
+  );
+  const flow = data.lookup.space!.collaboration.innovationFlow;
   return { flowId: flow.id, phases: rankStates(flow.states) };
 }
 
@@ -472,10 +384,14 @@ export async function updatePhaseSettings(
     showPublishDetails?: boolean;
   }
 ): Promise<void> {
-  await rawGql(
-    `mutation SubspaceSidebarPhaseSettings($id: UUID!, $s: UpdateInnovationFlowStateSettingsInput) {
-      updateInnovationFlowState(stateData: { innovationFlowStateID: $id, settings: $s }) { id } }`,
-    { id: stateId, s: settings }
+  ok(
+    await updateInnovationFlowStateSettings(
+      stateId,
+      settings as NonNullable<
+        Parameters<typeof updateInnovationFlowStateSettings>[1]
+      >
+    ),
+    'updateInnovationFlowState(settings)'
   );
 }
 
@@ -486,10 +402,12 @@ export async function setPhaseOrder(
   flowId: string,
   stateIds: string[]
 ): Promise<void> {
-  await rawGql(
-    `mutation SubspaceSidebarSortOrder($d: UpdateInnovationFlowStatesSortOrderInput!) {
-      updateInnovationFlowStatesSortOrder(sortOrderData: $d) { id } }`,
-    { d: { innovationFlowID: flowId, stateIDs: stateIds } }
+  ok(
+    await updateInnovationFlowStatesSortOrder({
+      innovationFlowID: flowId,
+      stateIDs: stateIds,
+    }),
+    'updateInnovationFlowStatesSortOrder'
   );
 }
 

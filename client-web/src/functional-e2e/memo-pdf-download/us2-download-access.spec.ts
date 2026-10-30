@@ -6,7 +6,28 @@ import {
   type Page,
   test,
 } from '@playwright/test';
+import {
+  applyForEntryRoleOnRoleSet,
+  CalloutContributionType,
+  CalloutFramingType,
+  CalloutVisibility,
+  createCalloutWithData,
+  createContributionOnCallout,
+  createSpaceOnAccount,
+  deleteCallout,
+  deleteSpace,
+  deleteUser,
+  eventOnApplication,
+  readMemoDocuments,
+  readMyUser,
+  readSpaceRefs,
+  SpacePrivacyMode,
+  updateCalloutVisibility,
+  uploadFileOnStorageBucket,
+  type GraphqlActor,
+} from '@alkemio/tests-lib';
 import { grantCookieConsent } from '../helpers/cookies.helper';
+import { must } from '../helpers/lib-actor.helper';
 import { loginViaCrd } from '../helpers/login.helper';
 
 /**
@@ -68,7 +89,6 @@ const ADMIN_PASSWORD =
 // anonymous reads; the private one must be PRIVATE and not list the personas.
 const PUBLIC_SPACE_ID = process.env.US2_PUBLIC_SPACE_ID || '';
 const PRIVATE_SPACE_ID = process.env.US2_PRIVATE_SPACE_ID || '';
-const GRAPHQL = `${BASE}/api/private/non-interactive/graphql`;
 const PDF = (memoId: string) => `${BASE}/api/private/rest/memo/${memoId}/pdf`;
 // Per-run secret for the throwaway identities this walk provisions.
 const USER_PASSWORD =
@@ -120,31 +140,9 @@ async function mintToken(userEmail: string) {
   return token;
 }
 
-type GqlResult<T = any> = { data?: T; errors?: Array<any> };
-
-async function gql<T = any>(
-  userEmail: string,
-  query: string,
-  variables: Record<string, unknown> = {}
-): Promise<GqlResult<T>> {
-  const token = await mintToken(userEmail);
-  const res = await fetch(GRAPHQL, {
-    method: 'POST',
-    headers: {
-      'content-type': 'application/json',
-      authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify({ query, variables }),
-  });
-  return (await res.json()) as GqlResult<T>;
-}
-
-function must<T = any>(result: GqlResult<T>, what: string): T {
-  expect(
-    result.errors,
-    `${what}: ${JSON.stringify(result.errors)}`
-  ).toBeUndefined();
-  return result.data as T;
+/** The lib actor for one of this run's identities: its bearer, minted once. */
+async function actorFor(userEmail: string): Promise<GraphqlActor> {
+  return { bearerToken: await mintToken(userEmail) };
 }
 
 async function createIdentity(persona: Persona, first: string, last: string) {
@@ -169,9 +167,9 @@ async function createIdentity(persona: Persona, first: string, last: string) {
 /** Signs the persona in once over the API, which registers its Alkemio user. */
 async function registerAlkemioUser(persona: Persona) {
   created.userIds[persona] = must(
-    await gql(personaEmail[persona], '{ me { user { id } } }'),
+    await readMyUser(await actorFor(personaEmail[persona])),
     `${persona} me`
-  ).me.user.id as string;
+  ).me.user!.id;
 }
 
 /** Contexts opened by the walk; closed after every test, pass or fail. */
@@ -220,11 +218,6 @@ async function getPdf(page: Page, memoId: string) {
   return { status, contentType, body, headers, bytes };
 }
 
-const MEMO_FRAMING = `{
-  id
-  framing { type profile { url } memo { id profile { storageBucket { id } } } }
-}`;
-
 type MemoFixture = {
   calloutUrl: string;
   memoId: string;
@@ -238,22 +231,16 @@ type Container = {
   collaboration: { calloutsSet: { id: string } };
 };
 
-const CONTAINER_FIELDS =
-  'id community { roleSet { id } } collaboration { calloutsSet { id } }';
-
 /** A Space of the given privacy: an existing one (env id) or a freshly created one. */
 async function space(
   existingId: string,
-  privacy: 'PUBLIC' | 'PRIVATE'
+  privacy: SpacePrivacyMode
 ): Promise<Container> {
-  const lookup = async (id: string) => {
-    const r = await gql(
-      ADMIN_EMAIL,
-      `query ($id: UUID!) { lookup { space(ID: $id) { ${CONTAINER_FIELDS} } } }`,
-      { id }
-    );
-    expect(r.errors, 'space lookup').toBeUndefined();
-    return r.data.lookup.space as Container | null;
+  const admin = await actorFor(ADMIN_EMAIL);
+  const lookup = async (id: string): Promise<Container | null> => {
+    const r = await readSpaceRefs(id, admin);
+    expect(r.error?.errors, 'space lookup').toBeUndefined();
+    return r.data?.lookup.space ?? null;
   };
   if (existingId) {
     const found = await lookup(existingId);
@@ -263,26 +250,19 @@ async function space(
     ).not.toBeNull();
     return found!;
   }
-  const account = must(
-    await gql(ADMIN_EMAIL, '{ me { user { account { id } } } }'),
-    'admin account'
-  ).me.user.account.id as string;
+  const account = must(await readMyUser(admin), 'admin account').me.user!
+    .account!.id;
   const nameId = `us2-${privacy.toLowerCase()}-${RUN}`;
   const newSpace = must(
-    await gql(
-      ADMIN_EMAIL,
-      `mutation ($d: CreateSpaceOnAccountInput!) {
-        createSpace(spaceData: $d) { id }
-      }`,
+    await createSpaceOnAccount(
       {
-        d: {
-          accountID: account,
-          nameID: nameId,
-          about: { profileData: { displayName: nameId } },
-          collaborationData: { calloutsSetData: {} },
-          settings: { privacy: { mode: privacy } },
-        },
-      }
+        accountID: account,
+        nameID: nameId,
+        about: { profileData: { displayName: nameId } },
+        collaborationData: { calloutsSetData: {} },
+        settings: { privacy: { mode: privacy } },
+      },
+      admin
     ),
     `create ${privacy} space`
   ).createSpace;
@@ -302,53 +282,42 @@ async function createMemoCallout(
   markdown: string,
   publish = true
 ): Promise<MemoFixture> {
+  const admin = await actorFor(ADMIN_EMAIL);
   const callout = must(
-    await gql(
-      ADMIN_EMAIL,
-      `mutation ($d: CreateCalloutOnCalloutsSetInput!) {
-        createCalloutOnCalloutsSet(calloutData: $d) ${MEMO_FRAMING}
-      }`,
+    await createCalloutWithData(
       {
-        d: {
-          calloutsSetID: calloutsSetId,
-          framing: {
-            type: 'MEMO',
-            profile: { displayName: title, description: 'memo' },
-            memo: { markdown, profile: { displayName: title } },
-          },
-          settings: {
-            visibility: 'DRAFT',
-            contribution: { enabled: false },
-            framing: { commentsEnabled: false },
-          },
+        calloutsSetID: calloutsSetId,
+        framing: {
+          type: CalloutFramingType.Memo,
+          profile: { displayName: title, description: 'memo' },
+          memo: { markdown, profile: { displayName: title } },
         },
-      }
+        settings: {
+          visibility: CalloutVisibility.Draft,
+          contribution: { enabled: false },
+          framing: { commentsEnabled: false },
+        },
+      },
+      admin
     ),
     `create memo callout ${title}`
   ).createCalloutOnCalloutsSet;
   created.calloutIds.push(callout.id);
   if (publish) {
     must(
-      await gql(
-        ADMIN_EMAIL,
-        `mutation ($d: UpdateCalloutVisibilityInput!) {
-          updateCalloutVisibility(calloutData: $d) { id }
-        }`,
-        {
-          d: {
-            calloutID: callout.id,
-            visibility: 'PUBLISHED',
-            sendNotification: false,
-          },
-        }
+      await updateCalloutVisibility(
+        callout.id,
+        CalloutVisibility.Published,
+        admin,
+        false
       ),
       `publish ${title}`
     );
   }
   return {
     calloutUrl: callout.framing.profile.url,
-    memoId: callout.framing.memo.id,
-    bucketId: callout.framing.memo.profile.storageBucket.id,
+    memoId: callout.framing.memo!.id,
+    bucketId: callout.framing.memo!.profile.storageBucket.id,
   };
 }
 
@@ -367,91 +336,61 @@ async function createMemoContribution(
   contributor: string
 ): Promise<MemoFixture> {
   const callout = must(
-    await gql(
-      ADMIN_EMAIL,
-      `mutation ($d: CreateCalloutOnCalloutsSetInput!) {
-        createCalloutOnCalloutsSet(calloutData: $d) {
-          id
-          framing { profile { url } }
-        }
-      }`,
+    await createCalloutWithData(
       {
-        d: {
-          calloutsSetID: calloutsSetId,
-          framing: {
-            type: 'NONE',
-            profile: {
-              displayName: `${title} contributions`,
-              description: 'd',
-            },
+        calloutsSetID: calloutsSetId,
+        framing: {
+          type: CalloutFramingType.None,
+          profile: {
+            displayName: `${title} contributions`,
+            description: 'd',
           },
-          settings: {
-            visibility: 'PUBLISHED',
-            contribution: { enabled: true, allowedTypes: ['MEMO'] },
-            framing: { commentsEnabled: false },
-          },
-          sendNotification: false,
         },
-      }
+        settings: {
+          visibility: CalloutVisibility.Published,
+          contribution: {
+            enabled: true,
+            allowedTypes: [CalloutContributionType.Memo],
+          },
+          framing: { commentsEnabled: false },
+        },
+        sendNotification: false,
+      },
+      await actorFor(ADMIN_EMAIL)
     ),
     `create contributions callout ${title}`
   ).createCalloutOnCalloutsSet;
   created.calloutIds.push(callout.id);
   const contribution = must(
-    await gql(
-      contributor,
-      `mutation ($d: CreateContributionOnCalloutInput!) {
-        createContributionOnCallout(contributionData: $d) {
-          memo { id profile { storageBucket { id } } }
-        }
-      }`,
+    await createContributionOnCallout(
       {
-        d: {
-          calloutID: callout.id,
-          type: 'MEMO',
-          memo: { markdown, profile: { displayName: title } },
-        },
-      }
+        calloutID: callout.id,
+        type: CalloutContributionType.Memo,
+        memo: { markdown, profile: { displayName: title } },
+      },
+      await actorFor(contributor)
     ),
     `create memo contribution ${title}`
   ).createContributionOnCallout;
   return {
     calloutUrl: callout.framing.profile.url,
-    memoId: contribution.memo.id,
-    bucketId: contribution.memo.profile.storageBucket.id,
+    memoId: contribution.memo!.id,
+    bucketId: contribution.memo!.profile.storageBucket.id,
     title,
   };
 }
 
 async function uploadToBucket(bucketId: string) {
-  const token = await mintToken(ADMIN_EMAIL);
-  const form = new FormData();
-  form.append(
-    'operations',
-    JSON.stringify({
-      query: `mutation ($f: Upload!, $d: StorageBucketUploadFileInput!) {
-        uploadFileOnStorageBucket(file: $f, uploadData: $d) { id url }
-      }`,
-      variables: { f: null, d: { storageBucketId: bucketId } },
-    })
+  const res = await uploadFileOnStorageBucket(
+    bucketId,
+    { bytes: PNG_1X1, fileName: 'foreign.png', mimeType: 'image/png' },
+    await actorFor(ADMIN_EMAIL)
   );
-  form.append('map', JSON.stringify({ 0: ['variables.f'] }));
-  form.append(
-    '0',
-    new Blob([new Uint8Array(PNG_1X1)], { type: 'image/png' }),
-    'foreign.png'
-  );
-  const res = await fetch(GRAPHQL, {
-    method: 'POST',
-    headers: {
-      authorization: `Bearer ${token}`,
-      'apollo-require-preflight': 'true',
-    },
-    body: form,
-  });
-  const json = (await res.json()) as GqlResult;
-  return must(json, 'upload foreign image').uploadFileOnStorageBucket
-    .url as string;
+  expect(
+    res.body.errors,
+    `upload foreign image: ${JSON.stringify(res.body.errors)}`
+  ).toBeUndefined();
+  return res.body.data!.uploadFileOnStorageBucket.url;
 }
 
 /** Opens the callout dialog, then the framing memo inside it. */
@@ -487,17 +426,6 @@ async function openContributionMemo(page: Page, memo: MemoFixture) {
   });
 }
 
-async function adminMutation(
-  query: string,
-  variables: Record<string, unknown>,
-  what: string
-) {
-  const result = await gql(ADMIN_EMAIL, query, variables);
-  if (result.errors) {
-    throw new Error(`${what}: ${JSON.stringify(result.errors)}`);
-  }
-}
-
 async function deleteKratosIdentity(identityId: string) {
   const res = await fetch(`${KRATOS_ADMIN}/identities/${identityId}`, {
     method: 'DELETE',
@@ -526,22 +454,15 @@ async function teardown() {
       );
     }
   };
+  const admin = await actorFor(ADMIN_EMAIL);
   for (const id of created.calloutIds.splice(0).reverse()) {
-    await attempt(`delete callout ${id}`, () =>
-      adminMutation(
-        'mutation ($d: DeleteCalloutInput!) { deleteCallout(deleteData: $d) { id } }',
-        { d: { ID: id } },
-        'deleteCallout'
-      )
+    await attempt(`delete callout ${id}`, async () =>
+      must(await deleteCallout(id, admin), 'deleteCallout')
     );
   }
   for (const id of created.spaceIds.splice(0).reverse()) {
-    await attempt(`delete space ${id}`, () =>
-      adminMutation(
-        'mutation ($d: DeleteSpaceInput!) { deleteSpace(deleteData: $d) { id } }',
-        { d: { ID: id } },
-        'deleteSpace'
-      )
+    await attempt(`delete space ${id}`, async () =>
+      must(await deleteSpace(id, admin), 'deleteSpace')
     );
   }
   for (const persona of Object.keys(personaEmail) as Persona[]) {
@@ -551,12 +472,8 @@ async function teardown() {
     delete created.identityIds[persona];
     if (userId) {
       // deleteIdentity also removes the Kratos identity behind the user.
-      await attempt(`delete user ${persona}`, () =>
-        adminMutation(
-          'mutation ($d: DeleteUserInput!) { deleteUser(deleteData: $d) { id } }',
-          { d: { ID: userId, deleteIdentity: true } },
-          'deleteUser'
-        )
+      await attempt(`delete user ${persona}`, async () =>
+        must(await deleteUser(userId, admin, true), 'deleteUser')
       );
     } else if (identityId) {
       // The identity exists but its Alkemio user was never registered.
@@ -574,19 +491,9 @@ async function teardown() {
 /** The memo's stored documents and signed copies, read as the platform admin. */
 async function memoFootprint(memoId: string) {
   const memo = must(
-    await gql(
-      ADMIN_EMAIL,
-      `query ($id: UUID!) { lookup { memo(ID: $id) {
-        signatures { id }
-        profile { storageBucket { documents { id } } }
-      } } }`,
-      { id: memoId }
-    ),
+    await readMemoDocuments(memoId, await actorFor(ADMIN_EMAIL)),
     'memo footprint'
-  ).lookup.memo as {
-    signatures: { id: string }[];
-    profile: { storageBucket: { documents: { id: string }[] } };
-  };
+  ).lookup.memo!;
   return {
     documentIds: memo.profile.storageBucket.documents.map(d => d.id).sort(),
     signatureIds: memo.signatures.map(s => s.id),
@@ -644,7 +551,7 @@ test.describe(
       await registerAlkemioUser('outsider');
 
       // P is PUBLIC: an anonymous visitor may read its memo.
-      const spaceP = await space(PUBLIC_SPACE_ID, 'PUBLIC');
+      const spaceP = await space(PUBLIC_SPACE_ID, SpacePrivacyMode.Public);
       fixture.publicMemo = await createMemoCallout(
         spaceP.collaboration.calloutsSet.id,
         `Public memo ${RUN}`,
@@ -653,24 +560,19 @@ test.describe(
 
       // S is PRIVATE; the reader is a member (application, approved by the
       // admin), the outsider is not.
-      const spaceS = await space(PRIVATE_SPACE_ID, 'PRIVATE');
+      const spaceS = await space(PRIVATE_SPACE_ID, SpacePrivacyMode.Private);
       const applied = must(
-        await gql(
-          personaEmail.reader,
-          `mutation ($d: ApplyForEntryRoleOnRoleSetInput!) {
-            applyForEntryRoleOnRoleSet(applicationData: $d) { id }
-          }`,
-          { d: { roleSetID: spaceS.community.roleSet.id, questions: [] } }
+        await applyForEntryRoleOnRoleSet(
+          spaceS.community.roleSet.id,
+          await actorFor(personaEmail.reader)
         ),
         'reader applies to S'
       ).applyForEntryRoleOnRoleSet;
       must(
-        await gql(
-          ADMIN_EMAIL,
-          `mutation ($d: ApplicationEventInput!) {
-            eventOnApplication(eventData: $d) { id state }
-          }`,
-          { d: { applicationID: applied.id, eventName: 'APPROVE' } }
+        await eventOnApplication(
+          applied.id,
+          'APPROVE',
+          await actorFor(ADMIN_EMAIL)
         ),
         'admin approves the reader'
       );

@@ -14,36 +14,26 @@
 //   test.use({ locale: 'nl-NL' })  -> sets navigator.languages, which is exactly
 //   what detectBrowserLanguage() (navigator.languages[0], primary-subtag) reads.
 
-import { Page, expect, Locator, APIRequestContext } from '@playwright/test';
+import { Page, expect, Locator, BrowserContext } from '@playwright/test';
+import { readPlatformLanguageConfiguration } from '@alkemio/tests-lib';
+import { must, sessionActor } from '../helpers/lib-actor.helper';
 
 export const BASE_URL = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
-export const GRAPHQL_URL = process.env.ALKEMIO_GRAPHQL || `${BASE_URL}/graphql`;
-
-/**
- * Run a GraphQL operation on the caller's session. Pass `page.request` (or any
- * context's `request`) so the browser's cookies authenticate the call — the
- * walks use this to check the SERVER-side outcome of a UI action rather than
- * trusting on-screen feedback.
- */
-export async function gql(
-  api: APIRequestContext,
-  query: string,
-  variables?: Record<string, unknown>
-): Promise<Record<string, any>> {
-  const response = await api.post(GRAPHQL_URL, { data: { query, variables } });
-  const body = await response.json();
-  expect(body.errors, `GraphQL errors: ${JSON.stringify(body.errors)}`).toBeUndefined();
-  return body.data;
-}
 
 /**
  * The platform's eligible language set + default, straight from the Config query
- * the feature itself reads (anonymous-readable). Tests assert against this rather
- * than hard-coding 'nl', so an environment that widens the eligible set fails
- * loudly instead of silently under-asserting.
+ * the feature itself reads (anonymous-readable), asked on the caller's own
+ * browser session. Tests assert against this rather than hard-coding 'nl', so
+ * an environment that widens the eligible set fails loudly instead of silently
+ * under-asserting.
  */
-export async function languageConfig(api: APIRequestContext): Promise<{ eligible: string[]; default: string }> {
-  const data = await gql(api, '{ platform { configuration { language { eligible default } } } }');
+export async function languageConfig(
+  pageOrContext: Page | BrowserContext
+): Promise<{ eligible: string[]; default: string }> {
+  const data = must(
+    await readPlatformLanguageConfiguration(await sessionActor(pageOrContext)),
+    'read the platform language configuration'
+  );
   return data.platform.configuration.language;
 }
 

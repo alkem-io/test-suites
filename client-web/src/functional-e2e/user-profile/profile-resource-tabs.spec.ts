@@ -35,6 +35,15 @@ import {
   deleteVirtualContributor,
   getGraphqlClient,
   getLicensePlanByName,
+  readAccountResources,
+  readInnovationPackVisibility,
+  readOrganizationAccount,
+  readOrganizationRoleSet,
+  readOrganizationSpaceRoles,
+  readSpaceLevelAndVisibility,
+  readUserAccount,
+  readUserSpaceRoles,
+  readVirtualContributorVisibility,
   TestScenarioFactory,
   TestUser,
   UniqueIDGenerator,
@@ -48,14 +57,14 @@ import {
   SpaceLevel,
   SpacePrivacyMode,
   SpaceVisibility,
-} from '@alkemio/tests-lib/core/generated/alkemio-schema';
-import { graphqlErrorWrapper } from '@alkemio/tests-lib/utils/graphql.wrapper';
+} from '@alkemio/tests-lib';
+import { graphqlErrorWrapper } from '@alkemio/tests-lib';
 import type { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import {
-  adminGql,
   deleteFixtureUser,
   registerFixtureUser,
 } from '../contributors-callout/cards-fixture';
+import { must } from '../helpers/lib-actor.helper';
 import { deleteFixtureTree, newFixtureTree } from '../subspaces-callout/subspaces-callout.helpers';
 import { signIn } from '../account-deletion/account-deletion.helpers';
 import {
@@ -182,18 +191,16 @@ type SeededUser = {
 
 const seedUser = async (displayName: string): Promise<SeededUser> => {
   const { id, email } = await registerFixtureUser(displayName);
-  const data = await adminGql<{
-    lookup: { user: { nameID: string; account: { id: string } } };
-  }>(
-    'query($id: UUID!){ lookup { user(ID: $id) { nameID account { id } } } }',
-    { id }
+  const data = must(
+    await readUserAccount(id, TestUser.GLOBAL_ADMIN),
+    `read account of ${displayName}`
   );
   return {
     id,
     email,
     displayName,
-    nameID: data.lookup.user.nameID,
-    accountId: data.lookup.user.account.id,
+    nameID: data.lookup.user!.nameID,
+    accountId: data.lookup.user!.account!.id,
   };
 };
 
@@ -208,11 +215,16 @@ const rolesOf = async (
   kind: 'rolesUser' | 'rolesOrganization',
   actorID: string
 ): Promise<SpaceRoles[]> => {
-  const data = await adminGql<Record<string, { spaces: SpaceRoles[] }>>(
-    `query($id: UUID!){ ${kind}(rolesData: { actorID: $id }) { spaces { spaceID displayName roles subspaces { displayName roles } } } }`,
-    { id: actorID }
-  );
-  return data[kind].spaces;
+  if (kind === 'rolesUser') {
+    return must(
+      await readUserSpaceRoles(actorID, TestUser.GLOBAL_ADMIN),
+      `read space roles of user ${actorID}`
+    ).rolesUser.spaces;
+  }
+  return must(
+    await readOrganizationSpaceRoles(actorID, TestUser.GLOBAL_ADMIN),
+    `read space roles of organization ${actorID}`
+  ).rolesOrganization.spaces;
 };
 
 const hasRole = (roles: string[], role: string): boolean =>
@@ -221,19 +233,11 @@ const hasRole = (roles: string[], role: string): boolean =>
 const accountResources = async (
   accountId: string
 ): Promise<{ vcs: number; packs: number; hubs: number }> => {
-  const data = await adminGql<{
-    lookup: {
-      account: {
-        virtualContributors: unknown[];
-        innovationPacks: unknown[];
-        innovationHubs: unknown[];
-      };
-    };
-  }>(
-    'query($id: UUID!){ lookup { account(ID: $id) { virtualContributors { id } innovationPacks { id } innovationHubs { id } } } }',
-    { id: accountId }
+  const data = must(
+    await readAccountResources(accountId, TestUser.GLOBAL_ADMIN),
+    `read resources of account ${accountId}`
   );
-  const a = data.lookup.account;
+  const a = data.lookup.account!;
   return {
     vcs: a.virtualContributors.length,
     packs: a.innovationPacks.length,
@@ -242,29 +246,25 @@ const accountResources = async (
 };
 
 const spaceStillResolves = async (spaceId: string): Promise<boolean> => {
-  try {
-    const data = await adminGql<{ lookup: { space: { id: string } | null } }>(
-      'query($id: UUID!){ lookup { space(ID: $id) { id } } }',
-      { id: spaceId }
-    );
-    return !!data.lookup.space;
-  } catch (error) {
+  const result = await readSpaceLevelAndVisibility(spaceId, TestUser.GLOBAL_ADMIN);
+  if (result.error) {
     // Only "not found" means the Space is gone; any other failure is unknown.
-    if (error instanceof Error && error.message.includes('ENTITY_NOT_FOUND')) {
+    if (JSON.stringify(result.error.errors).includes('ENTITY_NOT_FOUND')) {
       return false;
     }
-    throw error;
+    throw new Error(
+      `lookup space ${spaceId} failed: ${JSON.stringify(result.error.errors)}`
+    );
   }
+  return !!result.data?.lookup.space;
 };
 
 const orgAccountId = async (orgId: string): Promise<string> => {
-  const data = await adminGql<{
-    lookup: { organization: { account: { id: string } } };
-  }>(
-    'query($id: UUID!){ lookup { organization(ID: $id) { account { id } } } }',
-    { id: orgId }
+  const data = must(
+    await readOrganizationAccount(orgId, TestUser.GLOBAL_ADMIN),
+    `read account of organization ${orgId}`
   );
-  return data.lookup.organization.account.id;
+  return data.lookup.organization!.account!.id;
 };
 
 type StoredVisibility = { searchVisibility: string; listedInStore: boolean };
@@ -274,11 +274,19 @@ const visibilityOf = async (
   kind: 'innovationPack' | 'virtualContributor',
   id: string
 ): Promise<StoredVisibility> => {
-  const data = await adminGql<Record<'lookup', Record<string, StoredVisibility>>>(
-    `query($id: UUID!){ lookup { ${kind}(ID: $id) { searchVisibility listedInStore } } }`,
-    { id }
-  );
-  return data.lookup[kind];
+  // The lib reads also select `id`; the precondition read-backs compare the
+  // whole object with toEqual, so project down to the two stored fields.
+  const { searchVisibility, listedInStore } =
+    kind === 'innovationPack'
+      ? must(
+          await readInnovationPackVisibility(id, TestUser.GLOBAL_ADMIN),
+          `read visibility of pack ${id}`
+        ).lookup.innovationPack!
+      : must(
+          await readVirtualContributorVisibility(id, TestUser.GLOBAL_ADMIN),
+          `read visibility of VC ${id}`
+        ).lookup.virtualContributor!;
+  return { searchVisibility, listedInStore };
 };
 
 /** The stored search visibility of a pack or VC. */
@@ -306,11 +314,11 @@ type HostedSpace = {
  * learns of — and `deleteOrganization` refuses an account that still hosts any.
  */
 const accountSpaceTrees = async (accountId: string) => {
-  const data = await adminGql<{ lookup: { account: { spaces: HostedSpace[] } } }>(
-    'query($id: UUID!){ lookup { account(ID: $id) { spaces { id level subspaces { id subspaces { id } } } } } }',
-    { id: accountId }
+  const data = must(
+    await readAccountResources(accountId, TestUser.GLOBAL_ADMIN),
+    `read hosted spaces of account ${accountId}`
   );
-  return data.lookup.account.spaces
+  return (data.lookup.account!.spaces as HostedSpace[])
     .filter(space => space.level === SpaceLevel.L0)
     .map(space => {
       const tree = newFixtureTree();
@@ -711,12 +719,10 @@ test.describe('Public profile resource tabs — organisation (client-web#10179)'
     orgD = { nameID: d.data!.createOrganization.nameID, displayName };
     // The org admin administers D as well, so PT-5o can view D as a viewer who
     // would see Other Resources if D owned anything.
-    const orgDRoleSetId = (
-      await adminGql<{ lookup: { organization: { roleSet: { id: string } } } }>(
-        'query($id: UUID!){ lookup { organization(ID: $id) { roleSet { id } } } }',
-        { id: orgDId }
-      )
-    ).lookup.organization.roleSet.id;
+    const orgDRoleSetId = must(
+      await readOrganizationRoleSet(orgDId, TestUser.GLOBAL_ADMIN),
+      'read role set of org D'
+    ).organization.roleSet.id;
     for (const role of [RoleName.Associate, RoleName.Admin]) {
       failOnError(
         `org admin ${role} of org D`,

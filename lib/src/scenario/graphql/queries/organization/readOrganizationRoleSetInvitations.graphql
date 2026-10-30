@@ -1,0 +1,3 @@
+query ReadOrganizationRoleSetInvitations($organizationId: UUID!) {
+  organization(ID: $organizationId) { id roleSet { id invitations { id } } }
+}

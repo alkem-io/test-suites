@@ -1,0 +1,9 @@
+mutation CreateSubspaceWithData($subspaceData: CreateSubspaceInput!) {
+  createSubspace(subspaceData: $subspaceData) {
+    id
+    nameID
+    about { profile { url displayName } membership { roleSetID } }
+    community { roleSet { id } }
+    collaboration { id calloutsSet { id } }
+  }
+}

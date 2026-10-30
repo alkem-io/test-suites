@@ -1,0 +1,3 @@
+mutation EventOnInvitationState($invitationID: UUID!, $eventName: String!) {
+  eventOnInvitation(eventData: { invitationID: $invitationID, eventName: $eventName }) { id state }
+}

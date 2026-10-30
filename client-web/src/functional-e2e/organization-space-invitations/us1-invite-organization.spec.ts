@@ -10,7 +10,7 @@ import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/O
 import {
   RoleName,
   RoleSetInvitationResultType,
-} from '@alkemio/tests-lib/core/generated/alkemio-schema';
+} from '@alkemio/tests-lib';
 import { createPersonaTest } from '../fixtures/authenticated-session.fixture';
 import {
   OrgFixture,

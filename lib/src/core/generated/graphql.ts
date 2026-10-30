@@ -45,23 +45,14 @@ export type Scalars = {
   Boolean: { input: boolean; output: boolean };
   Int: { input: number; output: number };
   Float: { input: number; output: number };
-  /** A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format. */
   DateTime: { input: Date; output: Date };
-  /** An Emoji. */
   Emoji: { input: any; output: any };
-  /** A representation of a Lifecycle Definition, based on XState. It is serialized JSON. */
   LifecycleDefinition: { input: any; output: any };
-  /** A markdown string. */
   Markdown: { input: any; output: any };
-  /** An identifier that originates from the underlying messaging platform. */
   MessageID: { input: any; output: any };
-  /** A human readable identifier, 3 <= length <= 28. Used for URL paths in clients. Characters allowed: a-z,A-Z,0-9. */
   NameID: { input: string; output: string };
-  /** Cursor used for paginating search results. */
   SearchCursor: { input: any; output: any };
-  /** A uuid identifier. Length 36 characters. */
   UUID: { input: string; output: string };
-  /** The `Upload` scalar type represents a file upload. */
   Upload: {
     input: import("graphql-upload").FileUpload;
     output: import("graphql-upload").FileUpload;
@@ -5138,6 +5129,16 @@ export type LookupQueryResultsWhiteboardArgs = {
   ID: Scalars["UUID"]["input"];
 };
 
+/** Credentials for one Matrix chat session belonging to the current user's own actor. */
+export type MatrixSessionCredentials = {
+  /** A LIVE Matrix access token for this session, returned once per mint. It is not stored by the platform and cannot be re-read. */
+  accessToken: Scalars["String"]["output"];
+  /** The Matrix device id Synapse generated for this session. A fresh device per mint. */
+  deviceId: Scalars["String"]["output"];
+  /** The actor's Matrix user id (MXID), e.g. `@uuid:matrix.host`. */
+  userId: Scalars["String"]["output"];
+};
+
 /** Metadata for one MCP API key. The key value itself is never exposed here. */
 export type McpApiKey = {
   createdDate: Scalars["DateTime"]["output"];
@@ -5812,6 +5813,8 @@ export type Mutation = {
   migrateLegacyMemoContent: CollaborationMigrationResult;
   /** Migrates pending legacy Whiteboard documents and independently normalizes every legacy Whiteboard contribution default, including defaults stored by Callout templates. Idempotent: repeated calls process only unmigrated documents and non-canonical defaults. */
   migrateLegacyWhiteboardContent: CollaborationMigrationResult;
+  /** Mint a Matrix access token for the current user's own chat session. Takes no subject: the actor is the authenticated caller. */
+  mintMatrixSession: MatrixSessionCredentials;
   /** Mint a new MCP API key for the current user. Returns the plaintext exactly once. */
   mintMcpApiKey: McpApiKeyMintResult;
   /** Moves the specified Contribution to another Callout. */
@@ -13275,6 +13278,7 @@ export type ResolversTypes = {
     }
   >;
   Markdown: ResolverTypeWrapper<SchemaTypes.Scalars["Markdown"]["output"]>;
+  MatrixSessionCredentials: ResolverTypeWrapper<SchemaTypes.MatrixSessionCredentials>;
   McpApiKey: ResolverTypeWrapper<SchemaTypes.McpApiKey>;
   McpApiKeyMintResult: ResolverTypeWrapper<SchemaTypes.McpApiKeyMintResult>;
   McpApiKeyOperation: SchemaTypes.McpApiKeyOperation;
@@ -15003,6 +15007,7 @@ export type ResolversParentTypes = {
     user?: SchemaTypes.Maybe<ResolversParentTypes["User"]>;
   };
   Markdown: SchemaTypes.Scalars["Markdown"]["output"];
+  MatrixSessionCredentials: SchemaTypes.MatrixSessionCredentials;
   McpApiKey: SchemaTypes.McpApiKey;
   McpApiKeyMintResult: SchemaTypes.McpApiKeyMintResult;
   MeAccountDeletionStatus: SchemaTypes.MeAccountDeletionStatus;
@@ -21032,6 +21037,16 @@ export interface MarkdownScalarConfig
   name: "Markdown";
 }
 
+export type MatrixSessionCredentialsResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["MatrixSessionCredentials"] = ResolversParentTypes["MatrixSessionCredentials"]
+> = {
+  accessToken?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
+  deviceId?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
+  userId?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
 export type McpApiKeyResolvers<
   ContextType = any,
   ParentType extends ResolversParentTypes["McpApiKey"] = ResolversParentTypes["McpApiKey"]
@@ -22430,6 +22445,11 @@ export type MutationResolvers<
   >;
   migrateLegacyWhiteboardContent?: Resolver<
     ResolversTypes["CollaborationMigrationResult"],
+    ParentType,
+    ContextType
+  >;
+  mintMatrixSession?: Resolver<
+    ResolversTypes["MatrixSessionCredentials"],
     ParentType,
     ContextType
   >;
@@ -28157,6 +28177,7 @@ export type Resolvers<ContextType = any> = {
   LookupMyPrivilegesQueryResults?: LookupMyPrivilegesQueryResultsResolvers<ContextType>;
   LookupQueryResults?: LookupQueryResultsResolvers<ContextType>;
   Markdown?: GraphQLScalarType;
+  MatrixSessionCredentials?: MatrixSessionCredentialsResolvers<ContextType>;
   McpApiKey?: McpApiKeyResolvers<ContextType>;
   McpApiKeyMintResult?: McpApiKeyMintResultResolvers<ContextType>;
   MeAccountDeletionStatus?: MeAccountDeletionStatusResolvers<ContextType>;
@@ -33411,7 +33432,7 @@ export type CommunicationsDiscussionDataFragment = {
   id: string;
   category: SchemaTypes.ForumDiscussionCategory;
   createdBy?: string | undefined;
-  profile: { displayName: string; description?: any | undefined };
+  profile: { displayName: string; description?: any | undefined; url: string };
   comments: {
     id: string;
     messagesCount: number;
@@ -50143,6 +50164,7 @@ export type UserDataFragment = {
   settings: {
     __typename: "UserSettings";
     id: string;
+    language?: string | undefined;
     communication: {
       __typename: "UserSettingsCommunication";
       allowOtherUsersToSendMessages: boolean;
@@ -50276,6 +50298,12 @@ export type UserDataFragment = {
           };
         };
         collaborationCalloutContributionCreated: {
+          __typename: "UserSettingsNotificationChannels";
+          email: boolean;
+          inApp: boolean;
+          push: boolean;
+        };
+        collaborationCalloutReaction: {
           __typename: "UserSettingsNotificationChannels";
           email: boolean;
           inApp: boolean;
@@ -50430,6 +50458,7 @@ export type UserDataLightFragment = {
 export type UserSettingsFragmentFragment = {
   __typename: "UserSettings";
   id: string;
+  language?: string | undefined;
   communication: {
     __typename: "UserSettingsCommunication";
     allowOtherUsersToSendMessages: boolean;
@@ -50563,6 +50592,12 @@ export type UserSettingsFragmentFragment = {
         };
       };
       collaborationCalloutContributionCreated: {
+        __typename: "UserSettingsNotificationChannels";
+        email: boolean;
+        inApp: boolean;
+        push: boolean;
+      };
+      collaborationCalloutReaction: {
         __typename: "UserSettingsNotificationChannels";
         email: boolean;
         inApp: boolean;
@@ -51139,6 +51174,7 @@ export type AssignRoleToUserMutation = {
     settings: {
       __typename: "UserSettings";
       id: string;
+      language?: string | undefined;
       communication: {
         __typename: "UserSettingsCommunication";
         allowOtherUsersToSendMessages: boolean;
@@ -51272,6 +51308,12 @@ export type AssignRoleToUserMutation = {
             };
           };
           collaborationCalloutContributionCreated: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
+          collaborationCalloutReaction: {
             __typename: "UserSettingsNotificationChannels";
             email: boolean;
             inApp: boolean;
@@ -51587,6 +51629,7 @@ export type AssignRoleToUserExtendedDataMutation = {
     settings: {
       __typename: "UserSettings";
       id: string;
+      language?: string | undefined;
       communication: {
         __typename: "UserSettingsCommunication";
         allowOtherUsersToSendMessages: boolean;
@@ -51720,6 +51763,12 @@ export type AssignRoleToUserExtendedDataMutation = {
             };
           };
           collaborationCalloutContributionCreated: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
+          collaborationCalloutReaction: {
             __typename: "UserSettingsNotificationChannels";
             email: boolean;
             inApp: boolean;
@@ -52487,6 +52536,7 @@ export type RemoveRoleFromUserMutation = {
     settings: {
       __typename: "UserSettings";
       id: string;
+      language?: string | undefined;
       communication: {
         __typename: "UserSettingsCommunication";
         allowOtherUsersToSendMessages: boolean;
@@ -52620,6 +52670,12 @@ export type RemoveRoleFromUserMutation = {
             };
           };
           collaborationCalloutContributionCreated: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
+          collaborationCalloutReaction: {
             __typename: "UserSettingsNotificationChannels";
             email: boolean;
             inApp: boolean;
@@ -52936,6 +52992,7 @@ export type RemoveRoleFromUserExtendedDataMutation = {
     settings: {
       __typename: "UserSettings";
       id: string;
+      language?: string | undefined;
       communication: {
         __typename: "UserSettingsCommunication";
         allowOtherUsersToSendMessages: boolean;
@@ -53069,6 +53126,12 @@ export type RemoveRoleFromUserExtendedDataMutation = {
             };
           };
           collaborationCalloutContributionCreated: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
+          collaborationCalloutReaction: {
             __typename: "UserSettingsNotificationChannels";
             email: boolean;
             inApp: boolean;
@@ -55182,6 +55245,57 @@ export type CreateContributionOnCalloutMutation = {
   };
 };
 
+export type CreateCalloutWithDataMutationVariables = SchemaTypes.Exact<{
+  calloutData: SchemaTypes.CreateCalloutOnCalloutsSetInput;
+}>;
+
+export type CreateCalloutWithDataMutation = {
+  createCalloutOnCalloutsSet: {
+    id: string;
+    nameID: string;
+    framing: {
+      id: string;
+      type: SchemaTypes.CalloutFramingType;
+      profile: { id: string; displayName: string; url: string };
+      form?:
+        | {
+            id: string;
+            questions: Array<{
+              id: string;
+              prompt: string;
+              type: SchemaTypes.CalloutFormQuestionType;
+              options?: Array<{ id: string; label: string }> | undefined;
+            }>;
+          }
+        | undefined;
+      collaboraDocument?:
+        | {
+            id: string;
+            documentType: SchemaTypes.CollaboraDocumentType;
+            previewUrl?: string | undefined;
+          }
+        | undefined;
+      memo?:
+        | { id: string; profile: { storageBucket: { id: string } } }
+        | undefined;
+    };
+  };
+};
+
+export type CreateContributionWithDataMutationVariables = SchemaTypes.Exact<{
+  contributionData: SchemaTypes.CreateContributionOnCalloutInput;
+}>;
+
+export type CreateContributionWithDataMutation = {
+  createContributionOnCallout: {
+    id: string;
+    post?: { id: string; profile: { displayName: string } } | undefined;
+    memo?:
+      | { id: string; profile: { storageBucket: { id: string } } }
+      | undefined;
+  };
+};
+
 export type CreateFormCalloutOnCalloutsSetMutationVariables =
   SchemaTypes.Exact<{
     calloutData: SchemaTypes.CreateCalloutOnCalloutsSetInput;
@@ -55340,6 +55454,44 @@ export type TransferCalloutMutation = {
   };
 };
 
+export type UpdateCalloutDataMutationVariables = SchemaTypes.Exact<{
+  calloutData: SchemaTypes.UpdateCalloutEntityInput;
+}>;
+
+export type UpdateCalloutDataMutation = { updateCallout: { id: string } };
+
+export type AddClassificationEntryFromTemplateMutationVariables =
+  SchemaTypes.Exact<{
+    classificationData: SchemaTypes.AddClassificationEntryFromTemplateInput;
+  }>;
+
+export type AddClassificationEntryFromTemplateMutation = {
+  addClassificationEntryFromTemplate: {
+    id: string;
+    displayLabel: string;
+    display: boolean;
+    sortOrder: number;
+    cardinality: SchemaTypes.ClassificationCardinality;
+    selectedValueIDs: Array<string>;
+    values: Array<{ id: string; label: string }>;
+  };
+};
+
+export type UpdateClassificationEntrySelectionMutationVariables =
+  SchemaTypes.Exact<{
+    classificationData: SchemaTypes.UpdateClassificationEntrySelectionInput;
+  }>;
+
+export type UpdateClassificationEntrySelectionMutation = {
+  updateClassificationEntrySelection: { id: string };
+};
+
+export type UpdateTagsetTagsMutationVariables = SchemaTypes.Exact<{
+  updateData: SchemaTypes.UpdateTagsetInput;
+}>;
+
+export type UpdateTagsetTagsMutation = { updateTagset: { id: string } };
+
 export type UpdateCollaborationFromSpaceTemplateMutationVariables =
   SchemaTypes.Exact<{
     updateData: SchemaTypes.UpdateCollaborationFromSpaceTemplateInput;
@@ -55405,7 +55557,11 @@ export type CreateDiscussionMutation = {
     id: string;
     category: SchemaTypes.ForumDiscussionCategory;
     createdBy?: string | undefined;
-    profile: { displayName: string; description?: any | undefined };
+    profile: {
+      displayName: string;
+      description?: any | undefined;
+      url: string;
+    };
     comments: {
       id: string;
       messagesCount: number;
@@ -55666,7 +55822,11 @@ export type UpdateDiscussionMutation = {
     id: string;
     category: SchemaTypes.ForumDiscussionCategory;
     createdBy?: string | undefined;
-    profile: { displayName: string; description?: any | undefined };
+    profile: {
+      displayName: string;
+      description?: any | undefined;
+      url: string;
+    };
     comments: {
       id: string;
       messagesCount: number;
@@ -91007,6 +91167,14 @@ export type UpdateInnovationFlowStateMutation = {
   updateInnovationFlowState: { id: string; displayName: string };
 };
 
+export type RevokeMyMcpApiKeyMutationVariables = SchemaTypes.Exact<{
+  keyID: SchemaTypes.Scalars["UUID"]["input"];
+}>;
+
+export type RevokeMyMcpApiKeyMutation = {
+  revokeMcpApiKey: { id: string; status: SchemaTypes.McpApiKeyStatus };
+};
+
 export type PrepareMemoSigningMutationVariables = SchemaTypes.Exact<{
   signingData: SchemaTypes.MemoSigningPrepareInput;
 }>;
@@ -91552,6 +91720,14 @@ export type UpdateOrganizationMutation = {
       | { myPrivileges?: Array<SchemaTypes.AuthorizationPrivilege> | undefined }
       | undefined;
   };
+};
+
+export type UpdateOrganizationDataMutationVariables = SchemaTypes.Exact<{
+  organizationData: SchemaTypes.UpdateOrganizationInput;
+}>;
+
+export type UpdateOrganizationDataMutation = {
+  updateOrganization: { id: string };
 };
 
 export type UpdateOrganizationSettingsMutationVariables = SchemaTypes.Exact<{
@@ -92286,6 +92462,14 @@ export type UpdateTemplateFromSpaceMutation = {
   updateTemplateFromSpace: { id: string };
 };
 
+export type RemovePlatformRoleMutationVariables = SchemaTypes.Exact<{
+  roleData: SchemaTypes.RemovePlatformRoleInput;
+}>;
+
+export type RemovePlatformRoleMutation = {
+  removePlatformRoleFromUser: { id: string };
+};
+
 export type AssignPlatformRoleToUserMutationVariables = SchemaTypes.Exact<{
   roleData: SchemaTypes.AssignPlatformRoleInput;
 }>;
@@ -92440,6 +92624,36 @@ export type DeleteReferenceMutationVariables = SchemaTypes.Exact<{
 
 export type DeleteReferenceMutation = { deleteReference: { id: string } };
 
+export type ApplyForEntryRoleOnRoleSetMutationVariables = SchemaTypes.Exact<{
+  applicationData: SchemaTypes.ApplyForEntryRoleOnRoleSetInput;
+}>;
+
+export type ApplyForEntryRoleOnRoleSetMutation = {
+  applyForEntryRoleOnRoleSet: {
+    id: string;
+    state: string;
+    actor: { id: string };
+  };
+};
+
+export type EventOnApplicationStateMutationVariables = SchemaTypes.Exact<{
+  applicationID: SchemaTypes.Scalars["UUID"]["input"];
+  eventName: SchemaTypes.Scalars["String"]["input"];
+}>;
+
+export type EventOnApplicationStateMutation = {
+  eventOnApplication: { id: string; state: string };
+};
+
+export type EventOnInvitationStateMutationVariables = SchemaTypes.Exact<{
+  invitationID: SchemaTypes.Scalars["UUID"]["input"];
+  eventName: SchemaTypes.Scalars["String"]["input"];
+}>;
+
+export type EventOnInvitationStateMutation = {
+  eventOnInvitation: { id: string; state: string };
+};
+
 export type AdminSearchIngestFromScratchMutationVariables = SchemaTypes.Exact<{
   [key: string]: never;
 }>;
@@ -92477,11 +92691,73 @@ export type UpdateSpaceSettingsMutation = {
   };
 };
 
+export type AssignLicensePlanToSpaceByIdMutationVariables = SchemaTypes.Exact<{
+  planData: SchemaTypes.AssignLicensePlanToSpace;
+}>;
+
+export type AssignLicensePlanToSpaceByIdMutation = {
+  assignLicensePlanToSpace: { id: string };
+};
+
 export type CreateSpaceMutationVariables = SchemaTypes.Exact<{
   spaceData: SchemaTypes.CreateSpaceOnAccountInput;
 }>;
 
 export type CreateSpaceMutation = { createSpace: { id: string } };
+
+export type CreateSpaceOnAccountMutationVariables = SchemaTypes.Exact<{
+  spaceData: SchemaTypes.CreateSpaceOnAccountInput;
+}>;
+
+export type CreateSpaceOnAccountMutation = {
+  createSpace: {
+    id: string;
+    nameID: string;
+    about: { profile: { url: string }; membership: { roleSetID: string } };
+    community: { roleSet: { id: string } };
+    collaboration: { id: string; calloutsSet: { id: string } };
+  };
+};
+
+export type CreateSubspaceWithDataMutationVariables = SchemaTypes.Exact<{
+  subspaceData: SchemaTypes.CreateSubspaceInput;
+}>;
+
+export type CreateSubspaceWithDataMutation = {
+  createSubspace: {
+    id: string;
+    nameID: string;
+    about: {
+      profile: { url: string; displayName: string };
+      membership: { roleSetID: string };
+    };
+    community: { roleSet: { id: string } };
+    collaboration: { id: string; calloutsSet: { id: string } };
+  };
+};
+
+export type UpdateCommunityGuidelinesDataMutationVariables = SchemaTypes.Exact<{
+  communityGuidelinesData: SchemaTypes.UpdateCommunityGuidelinesEntityInput;
+}>;
+
+export type UpdateCommunityGuidelinesDataMutation = {
+  updateCommunityGuidelines: { id: string };
+};
+
+export type UpdateInnovationFlowStatesSortOrderMutationVariables =
+  SchemaTypes.Exact<{
+    sortOrderData: SchemaTypes.UpdateInnovationFlowStatesSortOrderInput;
+  }>;
+
+export type UpdateInnovationFlowStatesSortOrderMutation = {
+  updateInnovationFlowStatesSortOrder: Array<{ id: string }>;
+};
+
+export type UpdateSpaceDataMutationVariables = SchemaTypes.Exact<{
+  spaceData: SchemaTypes.UpdateSpaceInput;
+}>;
+
+export type UpdateSpaceDataMutation = { updateSpace: { id: string } };
 
 export type CreateCalloutTemplateWithFramingMutationVariables =
   SchemaTypes.Exact<{
@@ -92544,6 +92820,23 @@ export type CreateCalloutTemplateWithFramingMutation = {
                 }
               | undefined;
           };
+        }
+      | undefined;
+  };
+};
+
+export type CreateClassificationTemplateMutationVariables = SchemaTypes.Exact<{
+  templateData: SchemaTypes.CreateTemplateOnTemplatesSetInput;
+}>;
+
+export type CreateClassificationTemplateMutation = {
+  createTemplate: {
+    id: string;
+    profile: { displayName: string };
+    classification?:
+      | {
+          cardinality: SchemaTypes.ClassificationCardinality;
+          values: Array<{ id: string; label: string }>;
         }
       | undefined;
   };
@@ -92622,6 +92915,12 @@ export type CreateTemplateFromSpaceMutation = {
       | undefined;
   };
 };
+
+export type CreateTemplateWithDataMutationVariables = SchemaTypes.Exact<{
+  templateData: SchemaTypes.CreateTemplateOnTemplatesSetInput;
+}>;
+
+export type CreateTemplateWithDataMutation = { createTemplate: { id: string } };
 
 export type CreateWhiteboardTemplateMutationVariables = SchemaTypes.Exact<{
   templatesSetId: SchemaTypes.Scalars["UUID"]["input"];
@@ -93109,6 +93408,7 @@ export type CreateUserMutation = {
     settings: {
       __typename: "UserSettings";
       id: string;
+      language?: string | undefined;
       communication: {
         __typename: "UserSettingsCommunication";
         allowOtherUsersToSendMessages: boolean;
@@ -93242,6 +93542,12 @@ export type CreateUserMutation = {
             };
           };
           collaborationCalloutContributionCreated: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
+          collaborationCalloutReaction: {
             __typename: "UserSettingsNotificationChannels";
             email: boolean;
             inApp: boolean;
@@ -93563,6 +93869,7 @@ export type UpdateUserMutation = {
     settings: {
       __typename: "UserSettings";
       id: string;
+      language?: string | undefined;
       communication: {
         __typename: "UserSettingsCommunication";
         allowOtherUsersToSendMessages: boolean;
@@ -93696,6 +94003,12 @@ export type UpdateUserMutation = {
             };
           };
           collaborationCalloutContributionCreated: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
+          collaborationCalloutReaction: {
             __typename: "UserSettingsNotificationChannels";
             email: boolean;
             inApp: boolean;
@@ -93836,6 +94149,12 @@ export type UpdateUserMutation = {
   };
 };
 
+export type UpdateUserProfileMutationVariables = SchemaTypes.Exact<{
+  userData: SchemaTypes.UpdateUserInput;
+}>;
+
+export type UpdateUserProfileMutation = { updateUser: { id: string } };
+
 export type UpdateUserSettingsMutationVariables = SchemaTypes.Exact<{
   settingsData: SchemaTypes.UpdateUserSettingsInput;
 }>;
@@ -93847,6 +94166,7 @@ export type UpdateUserSettingsMutation = {
     settings: {
       __typename: "UserSettings";
       id: string;
+      language?: string | undefined;
       communication: {
         __typename: "UserSettingsCommunication";
         allowOtherUsersToSendMessages: boolean;
@@ -93980,6 +94300,12 @@ export type UpdateUserSettingsMutation = {
             };
           };
           collaborationCalloutContributionCreated: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
+          collaborationCalloutReaction: {
             __typename: "UserSettingsNotificationChannels";
             email: boolean;
             inApp: boolean;
@@ -94173,6 +94499,19 @@ export type CreateVirtualContributorOnAccountMutation = {
   };
 };
 
+export type CreateVirtualContributorWithDataMutationVariables =
+  SchemaTypes.Exact<{
+    virtualContributorData: SchemaTypes.CreateVirtualContributorOnAccountInput;
+  }>;
+
+export type CreateVirtualContributorWithDataMutation = {
+  createVirtualContributor: {
+    id: string;
+    profile?: { url: string } | undefined;
+    knowledgeBase: { calloutsSet: { id: string } };
+  };
+};
+
 export type DeleteVirtualContributorOnAccountMutationVariables =
   SchemaTypes.Exact<{
     virtualContributorData: SchemaTypes.DeleteVirtualContributorInput;
@@ -94263,6 +94602,14 @@ export type UpdateVirtualContributorMutation = {
         }
       | undefined;
   };
+};
+
+export type UpdateVirtualContributorDataMutationVariables = SchemaTypes.Exact<{
+  virtualContributorData: SchemaTypes.UpdateVirtualContributorInput;
+}>;
+
+export type UpdateVirtualContributorDataMutation = {
+  updateVirtualContributor: { id: string };
 };
 
 export type UpdateVirtualContributorSettingsMutationVariables =
@@ -94880,6 +95227,56 @@ export type GetAccountMainEntitiesQuery = {
   };
 };
 
+export type ReadAccountResourcesQueryVariables = SchemaTypes.Exact<{
+  accountId: SchemaTypes.Scalars["UUID"]["input"];
+}>;
+
+export type ReadAccountResourcesQuery = {
+  lookup: {
+    account?:
+      | {
+          id: string;
+          virtualContributors: Array<{ id: string }>;
+          innovationPacks: Array<{ id: string }>;
+          innovationHubs: Array<{ id: string }>;
+          spaces: Array<{
+            id: string;
+            level: SchemaTypes.SpaceLevel;
+            subspaces: Array<{ id: string; subspaces: Array<{ id: string }> }>;
+          }>;
+        }
+      | undefined;
+  };
+};
+
+export type ReadInnovationPackTemplatesSetQueryVariables = SchemaTypes.Exact<{
+  innovationPackId: SchemaTypes.Scalars["UUID"]["input"];
+}>;
+
+export type ReadInnovationPackTemplatesSetQuery = {
+  lookup: {
+    innovationPack?:
+      | { id: string; templatesSet?: { id: string } | undefined }
+      | undefined;
+  };
+};
+
+export type ReadInnovationPackVisibilityQueryVariables = SchemaTypes.Exact<{
+  innovationPackId: SchemaTypes.Scalars["UUID"]["input"];
+}>;
+
+export type ReadInnovationPackVisibilityQuery = {
+  lookup: {
+    innovationPack?:
+      | {
+          id: string;
+          searchVisibility: SchemaTypes.SearchVisibility;
+          listedInStore: boolean;
+        }
+      | undefined;
+  };
+};
+
 export type GetActivityLogOnCollaborationQueryVariables = SchemaTypes.Exact<{
   queryData: SchemaTypes.ActivityLogInput;
 }>;
@@ -94887,72 +95284,84 @@ export type GetActivityLogOnCollaborationQueryVariables = SchemaTypes.Exact<{
 export type GetActivityLogOnCollaborationQuery = {
   activityLogOnCollaboration: Array<
     | {
+        id: string;
         collaborationID: string;
         description: string;
         type: SchemaTypes.ActivityEventType;
         triggeredBy: { id: string };
       }
     | {
+        id: string;
         collaborationID: string;
         description: string;
         type: SchemaTypes.ActivityEventType;
         triggeredBy: { id: string };
       }
     | {
+        id: string;
         collaborationID: string;
         description: string;
         type: SchemaTypes.ActivityEventType;
         triggeredBy: { id: string };
       }
     | {
+        id: string;
         collaborationID: string;
         description: string;
         type: SchemaTypes.ActivityEventType;
         triggeredBy: { id: string };
       }
     | {
+        id: string;
         collaborationID: string;
         description: string;
         type: SchemaTypes.ActivityEventType;
         triggeredBy: { id: string };
       }
     | {
+        id: string;
         collaborationID: string;
         description: string;
         type: SchemaTypes.ActivityEventType;
         triggeredBy: { id: string };
       }
     | {
+        id: string;
         collaborationID: string;
         description: string;
         type: SchemaTypes.ActivityEventType;
         triggeredBy: { id: string };
       }
     | {
+        id: string;
         collaborationID: string;
         description: string;
         type: SchemaTypes.ActivityEventType;
         triggeredBy: { id: string };
       }
     | {
+        id: string;
         collaborationID: string;
         description: string;
         type: SchemaTypes.ActivityEventType;
         triggeredBy: { id: string };
       }
     | {
+        id: string;
         collaborationID: string;
         description: string;
         type: SchemaTypes.ActivityEventType;
         triggeredBy: { id: string };
       }
     | {
+        id: string;
         collaborationID: string;
         description: string;
         type: SchemaTypes.ActivityEventType;
         triggeredBy: { id: string };
       }
     | {
+        id: string;
         collaborationID: string;
         description: string;
         type: SchemaTypes.ActivityEventType;
@@ -97132,6 +97541,260 @@ export type GetCalloutReactionsSummaryQuery = {
   };
 };
 
+export type ReadCalloutContributionsQueryVariables = SchemaTypes.Exact<{
+  calloutId: SchemaTypes.Scalars["UUID"]["input"];
+}>;
+
+export type ReadCalloutContributionsQuery = {
+  lookup: {
+    callout?:
+      | {
+          id: string;
+          activity: number;
+          contributions: Array<{
+            id: string;
+            post?: { id: string; profile: { displayName: string } } | undefined;
+          }>;
+          contributionsCount: {
+            post: number;
+            whiteboard: number;
+            link: number;
+            memo: number;
+            collaboraDocument: number;
+          };
+        }
+      | undefined;
+  };
+};
+
+export type ReadCalloutFormResponsesQueryVariables = SchemaTypes.Exact<{
+  formID: SchemaTypes.Scalars["UUID"]["input"];
+  first?: SchemaTypes.InputMaybe<SchemaTypes.Scalars["Int"]["input"]>;
+}>;
+
+export type ReadCalloutFormResponsesQuery = {
+  lookup: {
+    calloutFormResponses: {
+      canReadAll: boolean;
+      canModerate: boolean;
+      mine: Array<{
+        id: string;
+        createdBy?: { id: string } | undefined;
+        answers: Array<{
+          questionID: string;
+          prompt: string;
+          text?: string | undefined;
+        }>;
+      }>;
+      all: {
+        total: number;
+        responses: Array<{
+          id: string;
+          createdBy?:
+            | { id: string; profile?: { displayName: string } | undefined }
+            | undefined;
+          answers: Array<{ prompt: string; text?: string | undefined }>;
+        }>;
+      };
+    };
+  };
+};
+
+export type ReadCalloutFramingQueryVariables = SchemaTypes.Exact<{
+  calloutId: SchemaTypes.Scalars["UUID"]["input"];
+}>;
+
+export type ReadCalloutFramingQuery = {
+  lookup: {
+    callout?:
+      | {
+          id: string;
+          nameID: string;
+          framing: {
+            id: string;
+            type: SchemaTypes.CalloutFramingType;
+            profile: { id: string; displayName: string; url: string };
+            form?:
+              | {
+                  id: string;
+                  title?: string | undefined;
+                  description?: string | undefined;
+                  settings: { defaultCollapsed: boolean };
+                  questions: Array<{
+                    id: string;
+                    prompt: string;
+                    type: SchemaTypes.CalloutFormQuestionType;
+                    required: boolean;
+                    options?: Array<{ id: string; label: string }> | undefined;
+                  }>;
+                }
+              | undefined;
+            collaboraDocument?:
+              | {
+                  id: string;
+                  documentType: SchemaTypes.CollaboraDocumentType;
+                  previewUrl?: string | undefined;
+                }
+              | undefined;
+          };
+        }
+      | undefined;
+  };
+};
+
+export type ReadCalloutFramingContributorsQueryVariables = SchemaTypes.Exact<{
+  calloutId: SchemaTypes.Scalars["UUID"]["input"];
+  type: SchemaTypes.ActorType;
+}>;
+
+export type ReadCalloutFramingContributorsQuery = {
+  lookup: {
+    callout?:
+      | {
+          id: string;
+          framing: {
+            contributors: Array<{
+              id: string;
+              displayName: string;
+              roleLabel?: string | undefined;
+              tagline?: string | undefined;
+              tags?: Array<string> | undefined;
+              joinedDate?: Date | undefined;
+              website?: string | undefined;
+              associatesCount?: number | undefined;
+            }>;
+          };
+        }
+      | undefined;
+  };
+};
+
+export type ReadCalloutFramingSettingsQueryVariables = SchemaTypes.Exact<{
+  calloutId: SchemaTypes.Scalars["UUID"]["input"];
+}>;
+
+export type ReadCalloutFramingSettingsQuery = {
+  lookup: {
+    callout?:
+      | {
+          id: string;
+          settings: {
+            framing: {
+              selection?:
+                | {
+                    mode: SchemaTypes.CalloutSelectionMode;
+                    selectedIds: Array<string>;
+                  }
+                | undefined;
+              spaces?:
+                | { cardVariant: SchemaTypes.SpaceCollectionCardVariant }
+                | undefined;
+            };
+          };
+        }
+      | undefined;
+  };
+};
+
+export type ReadCalloutSubspaceIdsQueryVariables = SchemaTypes.Exact<{
+  calloutId: SchemaTypes.Scalars["UUID"]["input"];
+}>;
+
+export type ReadCalloutSubspaceIdsQuery = {
+  lookup: {
+    callout?:
+      | {
+          id: string;
+          hasHiddenSpaces: boolean;
+          framing: { subspaces: Array<{ id: string }> };
+        }
+      | undefined;
+  };
+};
+
+export type ReadCalloutSubspacesQueryVariables = SchemaTypes.Exact<{
+  calloutId: SchemaTypes.Scalars["UUID"]["input"];
+}>;
+
+export type ReadCalloutSubspacesQuery = {
+  lookup: {
+    callout?:
+      | {
+          id: string;
+          hasHiddenSpaces: boolean;
+          framing: {
+            subspaces: Array<{
+              id: string;
+              about: {
+                why?: any | undefined;
+                who?: any | undefined;
+                profile: {
+                  displayName: string;
+                  tagline?: string | undefined;
+                  description?: any | undefined;
+                };
+              };
+            }>;
+          };
+        }
+      | undefined;
+  };
+};
+
+export type ReadCalloutsSetCalloutsQueryVariables = SchemaTypes.Exact<{
+  calloutsSetId: SchemaTypes.Scalars["UUID"]["input"];
+}>;
+
+export type ReadCalloutsSetCalloutsQuery = {
+  lookup: {
+    calloutsSet?:
+      | {
+          id: string;
+          callouts: Array<{
+            id: string;
+            framing: {
+              type: SchemaTypes.CalloutFramingType;
+              profile: { displayName: string; url: string };
+              form?:
+                | {
+                    questions: Array<{
+                      prompt: string;
+                      type: SchemaTypes.CalloutFormQuestionType;
+                      required: boolean;
+                      options?: Array<{ label: string }> | undefined;
+                    }>;
+                  }
+                | undefined;
+              collaboraDocument?:
+                | {
+                    id: string;
+                    documentType: SchemaTypes.CollaboraDocumentType;
+                    previewUrl?: string | undefined;
+                  }
+                | undefined;
+            };
+          }>;
+        }
+      | undefined;
+  };
+};
+
+export type ReadMemoDocumentsQueryVariables = SchemaTypes.Exact<{
+  memoId: SchemaTypes.Scalars["UUID"]["input"];
+}>;
+
+export type ReadMemoDocumentsQuery = {
+  lookup: {
+    memo?:
+      | {
+          id: string;
+          signatures: Array<{ id: string }>;
+          profile: { storageBucket: { documents: Array<{ id: string }> } };
+        }
+      | undefined;
+  };
+};
+
 export type GetMeConversationsQueryVariables = SchemaTypes.Exact<{
   [key: string]: never;
 }>;
@@ -97174,7 +97837,11 @@ export type GetPlatformDiscussionsDataQuery = {
             id: string;
             category: SchemaTypes.ForumDiscussionCategory;
             createdBy?: string | undefined;
-            profile: { displayName: string; description?: any | undefined };
+            profile: {
+              displayName: string;
+              description?: any | undefined;
+              url: string;
+            };
             comments: {
               id: string;
               messagesCount: number;
@@ -97262,7 +97929,11 @@ export type GetPlatformDiscussionsDataByIdQuery = {
             id: string;
             category: SchemaTypes.ForumDiscussionCategory;
             createdBy?: string | undefined;
-            profile: { displayName: string; description?: any | undefined };
+            profile: {
+              displayName: string;
+              description?: any | undefined;
+              url: string;
+            };
             comments: {
               id: string;
               messagesCount: number;
@@ -101983,6 +102654,523 @@ export type LookupProfileVisualsQuery = {
   };
 };
 
+export type ReadMyAccountDeletionCanDeleteQueryVariables = SchemaTypes.Exact<{
+  [key: string]: never;
+}>;
+
+export type ReadMyAccountDeletionCanDeleteQuery = {
+  me: { accountDeletion: { canDelete: boolean } };
+};
+
+export type ReadMyLanguageSettingQueryVariables = SchemaTypes.Exact<{
+  [key: string]: never;
+}>;
+
+export type ReadMyLanguageSettingQuery = {
+  me: {
+    user?:
+      | { id: string; settings: { language?: string | undefined } }
+      | undefined;
+  };
+};
+
+export type ReadMyMcpApiKeysQueryVariables = SchemaTypes.Exact<{
+  [key: string]: never;
+}>;
+
+export type ReadMyMcpApiKeysQuery = {
+  me: {
+    mcpApiKeys: Array<{
+      id: string;
+      name: string;
+      status: SchemaTypes.McpApiKeyStatus;
+    }>;
+  };
+};
+
+export type ReadMyNotificationsQueryVariables = SchemaTypes.Exact<{
+  filter?: SchemaTypes.InputMaybe<SchemaTypes.NotificationEventsFilterInput>;
+  first?: SchemaTypes.InputMaybe<SchemaTypes.Scalars["Int"]["input"]>;
+}>;
+
+export type ReadMyNotificationsQuery = {
+  me: {
+    notifications: {
+      total: number;
+      inAppNotifications: Array<{
+        id: string;
+        type: SchemaTypes.NotificationEvent;
+        state: SchemaTypes.NotificationEventInAppState;
+        triggeredBy?: { id: string } | undefined;
+        payload:
+          | {
+              __typename: "InAppNotificationPayloadOrganizationAssociateActor";
+              type: SchemaTypes.NotificationEventPayload;
+              actor?: { id: string } | undefined;
+              organization?: { id: string } | undefined;
+            }
+          | {
+              __typename: "InAppNotificationPayloadOrganizationAssociateInvitation";
+              type: SchemaTypes.NotificationEventPayload;
+            }
+          | {
+              __typename: "InAppNotificationPayloadOrganizationMessageDirect";
+              type: SchemaTypes.NotificationEventPayload;
+            }
+          | {
+              __typename: "InAppNotificationPayloadOrganizationMessageRoom";
+              type: SchemaTypes.NotificationEventPayload;
+            }
+          | {
+              __typename: "InAppNotificationPayloadPlatformForumDiscussion";
+              type: SchemaTypes.NotificationEventPayload;
+            }
+          | {
+              __typename: "InAppNotificationPayloadPlatformGlobalRoleChange";
+              type: SchemaTypes.NotificationEventPayload;
+            }
+          | {
+              __typename: "InAppNotificationPayloadPlatformUser";
+              type: SchemaTypes.NotificationEventPayload;
+            }
+          | {
+              __typename: "InAppNotificationPayloadPlatformUserMessageRoom";
+              type: SchemaTypes.NotificationEventPayload;
+            }
+          | {
+              __typename: "InAppNotificationPayloadPlatformUserProfileRemoved";
+              type: SchemaTypes.NotificationEventPayload;
+            }
+          | {
+              __typename: "InAppNotificationPayloadSpace";
+              type: SchemaTypes.NotificationEventPayload;
+            }
+          | {
+              __typename: "InAppNotificationPayloadSpaceCollaborationCallout";
+              type: SchemaTypes.NotificationEventPayload;
+              callout: {
+                id: string;
+                framing: { profile: { url: string; displayName: string } };
+              };
+            }
+          | {
+              __typename: "InAppNotificationPayloadSpaceCollaborationCalloutComment";
+              type: SchemaTypes.NotificationEventPayload;
+            }
+          | {
+              __typename: "InAppNotificationPayloadSpaceCollaborationCalloutPostComment";
+              type: SchemaTypes.NotificationEventPayload;
+            }
+          | {
+              __typename: "InAppNotificationPayloadSpaceCollaborationCalloutReaction";
+              type: SchemaTypes.NotificationEventPayload;
+            }
+          | {
+              __typename: "InAppNotificationPayloadSpaceCollaborationPoll";
+              type: SchemaTypes.NotificationEventPayload;
+            }
+          | {
+              __typename: "InAppNotificationPayloadSpaceCommunicationMessageDirect";
+              type: SchemaTypes.NotificationEventPayload;
+            }
+          | {
+              __typename: "InAppNotificationPayloadSpaceCommunicationUpdate";
+              type: SchemaTypes.NotificationEventPayload;
+            }
+          | {
+              __typename: "InAppNotificationPayloadSpaceCommunityActor";
+              type: SchemaTypes.NotificationEventPayload;
+            }
+          | {
+              __typename: "InAppNotificationPayloadSpaceCommunityApplication";
+              type: SchemaTypes.NotificationEventPayload;
+            }
+          | {
+              __typename: "InAppNotificationPayloadSpaceCommunityCalendarEvent";
+              type: SchemaTypes.NotificationEventPayload;
+            }
+          | {
+              __typename: "InAppNotificationPayloadSpaceCommunityCalendarEventComment";
+              type: SchemaTypes.NotificationEventPayload;
+            }
+          | {
+              __typename: "InAppNotificationPayloadSpaceCommunityInvitation";
+              type: SchemaTypes.NotificationEventPayload;
+              organization?:
+                | { id: string; profile?: { displayName: string } | undefined }
+                | undefined;
+              space: { id: string; nameID: string };
+              invitation?: { id: string } | undefined;
+            }
+          | {
+              __typename: "InAppNotificationPayloadSpaceCommunityInvitationPlatform";
+              type: SchemaTypes.NotificationEventPayload;
+            }
+          | {
+              __typename: "InAppNotificationPayloadUserMessageDirect";
+              type: SchemaTypes.NotificationEventPayload;
+            }
+          | {
+              __typename: "InAppNotificationPayloadVirtualContributor";
+              type: SchemaTypes.NotificationEventPayload;
+            };
+      }>;
+    };
+  };
+};
+
+export type ReadMyNotificationsUnreadCountQueryVariables = SchemaTypes.Exact<{
+  [key: string]: never;
+}>;
+
+export type ReadMyNotificationsUnreadCountQuery = {
+  me: { notificationsUnreadCount: number };
+};
+
+export type ReadMyPlatformRolesQueryVariables = SchemaTypes.Exact<{
+  [key: string]: never;
+}>;
+
+export type ReadMyPlatformRolesQuery = {
+  platform: { roleSet: { myRoles: Array<SchemaTypes.RoleName> } };
+};
+
+export type ReadMyPrivilegesQueryVariables = SchemaTypes.Exact<{
+  [key: string]: never;
+}>;
+
+export type ReadMyPrivilegesQuery = {
+  me: {
+    user?:
+      | {
+          id: string;
+          profile?: { displayName: string } | undefined;
+          authorization?:
+            | {
+                myPrivileges?:
+                  | Array<SchemaTypes.AuthorizationPrivilege>
+                  | undefined;
+              }
+            | undefined;
+        }
+      | undefined;
+  };
+};
+
+export type ReadMySessionQueryVariables = SchemaTypes.Exact<{
+  [key: string]: never;
+}>;
+
+export type ReadMySessionQuery = { me: { id: string } };
+
+export type ReadMyUserQueryVariables = SchemaTypes.Exact<{
+  [key: string]: never;
+}>;
+
+export type ReadMyUserQuery = {
+  me: {
+    id: string;
+    user?:
+      | {
+          id: string;
+          nameID: string;
+          profile?:
+            | { id: string; displayName: string; url: string }
+            | undefined;
+          account?: { id: string } | undefined;
+        }
+      | undefined;
+  };
+};
+
+export type ReadMyUserSettingsQueryVariables = SchemaTypes.Exact<{
+  [key: string]: never;
+}>;
+
+export type ReadMyUserSettingsQuery = {
+  me: {
+    user?:
+      | {
+          id: string;
+          settings: {
+            __typename: "UserSettings";
+            id: string;
+            language?: string | undefined;
+            communication: {
+              __typename: "UserSettingsCommunication";
+              allowOtherUsersToSendMessages: boolean;
+            };
+            privacy: {
+              __typename: "UserSettingsPrivacy";
+              contributionRolesPubliclyVisible: boolean;
+            };
+            notification: {
+              __typename: "UserSettingsNotification";
+              platform: {
+                __typename: "UserSettingsNotificationPlatform";
+                admin: {
+                  __typename: "UserSettingsNotificationPlatformAdmin";
+                  userProfileRemoved: {
+                    __typename: "UserSettingsNotificationChannels";
+                    email: boolean;
+                    inApp: boolean;
+                    push: boolean;
+                  };
+                  userProfileCreated: {
+                    __typename: "UserSettingsNotificationChannels";
+                    email: boolean;
+                    inApp: boolean;
+                    push: boolean;
+                  };
+                  spaceCreated: {
+                    __typename: "UserSettingsNotificationChannels";
+                    email: boolean;
+                    inApp: boolean;
+                    push: boolean;
+                  };
+                  userGlobalRoleChanged: {
+                    __typename: "UserSettingsNotificationChannels";
+                    email: boolean;
+                    inApp: boolean;
+                    push: boolean;
+                  };
+                };
+                forumDiscussionComment: {
+                  __typename: "UserSettingsNotificationChannels";
+                  email: boolean;
+                  inApp: boolean;
+                  push: boolean;
+                };
+                forumDiscussionCreated: {
+                  __typename: "UserSettingsNotificationChannels";
+                  email: boolean;
+                  inApp: boolean;
+                  push: boolean;
+                };
+              };
+              organization: {
+                __typename: "UserSettingsNotificationOrganization";
+                adminMentioned: {
+                  __typename: "UserSettingsNotificationChannels";
+                  email: boolean;
+                  inApp: boolean;
+                  push: boolean;
+                };
+                adminMessageReceived: {
+                  __typename: "UserSettingsNotificationChannels";
+                  email: boolean;
+                  inApp: boolean;
+                  push: boolean;
+                };
+                adminSpaceCommunityInvitation: {
+                  __typename: "UserSettingsNotificationChannels";
+                  email: boolean;
+                  inApp: boolean;
+                  push: boolean;
+                };
+                adminAssociateInvitationResponse: {
+                  __typename: "UserSettingsNotificationChannels";
+                  email: boolean;
+                  inApp: boolean;
+                  push: boolean;
+                };
+                adminAssociateApplicationReceived: {
+                  __typename: "UserSettingsNotificationChannels";
+                  email: boolean;
+                  inApp: boolean;
+                  push: boolean;
+                };
+                adminAssociateJoined: {
+                  __typename: "UserSettingsNotificationChannels";
+                  email: boolean;
+                  inApp: boolean;
+                  push: boolean;
+                };
+              };
+              space: {
+                __typename: "UserSettingsNotificationSpace";
+                admin: {
+                  __typename: "UserSettingsNotificationSpaceAdmin";
+                  communityApplicationReceived: {
+                    __typename: "UserSettingsNotificationChannels";
+                    email: boolean;
+                    inApp: boolean;
+                    push: boolean;
+                  };
+                  collaborationCalloutContributionCreated: {
+                    __typename: "UserSettingsNotificationChannels";
+                    email: boolean;
+                    inApp: boolean;
+                    push: boolean;
+                  };
+                  communityInvitationResponse: {
+                    __typename: "UserSettingsNotificationChannels";
+                    email: boolean;
+                    inApp: boolean;
+                    push: boolean;
+                  };
+                  communityNewMember: {
+                    __typename: "UserSettingsNotificationChannels";
+                    email: boolean;
+                    inApp: boolean;
+                    push: boolean;
+                  };
+                  communicationMessageReceived: {
+                    __typename: "UserSettingsNotificationChannels";
+                    email: boolean;
+                    inApp: boolean;
+                    push: boolean;
+                  };
+                  collaborationCalloutFormResponseReceived: {
+                    __typename: "UserSettingsNotificationChannels";
+                    email: boolean;
+                    inApp: boolean;
+                    push: boolean;
+                  };
+                };
+                collaborationCalloutContributionCreated: {
+                  __typename: "UserSettingsNotificationChannels";
+                  email: boolean;
+                  inApp: boolean;
+                  push: boolean;
+                };
+                collaborationCalloutReaction: {
+                  __typename: "UserSettingsNotificationChannels";
+                  email: boolean;
+                  inApp: boolean;
+                  push: boolean;
+                };
+                communicationUpdates: {
+                  __typename: "UserSettingsNotificationChannels";
+                  email: boolean;
+                  inApp: boolean;
+                  push: boolean;
+                };
+                collaborationCalloutPublished: {
+                  __typename: "UserSettingsNotificationChannels";
+                  email: boolean;
+                  inApp: boolean;
+                  push: boolean;
+                };
+                collaborationCalloutComment: {
+                  __typename: "UserSettingsNotificationChannels";
+                  email: boolean;
+                  inApp: boolean;
+                  push: boolean;
+                };
+                collaborationCalloutPostContributionComment: {
+                  __typename: "UserSettingsNotificationChannels";
+                  email: boolean;
+                  inApp: boolean;
+                  push: boolean;
+                };
+                communityCalendarEvents: {
+                  __typename: "UserSettingsNotificationChannels";
+                  email: boolean;
+                  inApp: boolean;
+                  push: boolean;
+                };
+                collaborationPollVoteCastOnOwnPoll: {
+                  __typename: "UserSettingsNotificationChannels";
+                  email: boolean;
+                  inApp: boolean;
+                  push: boolean;
+                };
+                collaborationPollVoteCastOnPollIVotedOn: {
+                  __typename: "UserSettingsNotificationChannels";
+                  email: boolean;
+                  inApp: boolean;
+                  push: boolean;
+                };
+                collaborationPollModifiedOnPollIVotedOn: {
+                  __typename: "UserSettingsNotificationChannels";
+                  email: boolean;
+                  inApp: boolean;
+                  push: boolean;
+                };
+                collaborationPollVoteAffectedByOptionChange: {
+                  __typename: "UserSettingsNotificationChannels";
+                  email: boolean;
+                  inApp: boolean;
+                  push: boolean;
+                };
+              };
+              user: {
+                __typename: "UserSettingsNotificationUser";
+                membership: {
+                  __typename: "UserSettingsNotificationUserMembership";
+                  spaceCommunityInvitationReceived: {
+                    __typename: "UserSettingsNotificationChannels";
+                    email: boolean;
+                    inApp: boolean;
+                    push: boolean;
+                  };
+                  spaceCommunityJoined: {
+                    __typename: "UserSettingsNotificationChannels";
+                    email: boolean;
+                    inApp: boolean;
+                    push: boolean;
+                  };
+                  organizationAssociateInvitationReceived: {
+                    __typename: "UserSettingsNotificationChannels";
+                    email: boolean;
+                    inApp: boolean;
+                    push: boolean;
+                  };
+                  organizationAssociateApplicationDecided: {
+                    __typename: "UserSettingsNotificationChannels";
+                    email: boolean;
+                    inApp: boolean;
+                    push: boolean;
+                  };
+                };
+                mentioned: {
+                  __typename: "UserSettingsNotificationChannels";
+                  email: boolean;
+                  inApp: boolean;
+                  push: boolean;
+                };
+                commentReply: {
+                  __typename: "UserSettingsNotificationChannels";
+                  email: boolean;
+                  inApp: boolean;
+                  push: boolean;
+                };
+                messageReceived: {
+                  __typename: "UserSettingsNotificationChannels";
+                  email: boolean;
+                  inApp: boolean;
+                  push: boolean;
+                };
+                conversationMessageDirect: {
+                  __typename: "UserSettingsNotificationChannels";
+                  email: boolean;
+                  inApp: boolean;
+                  push: boolean;
+                };
+                conversationMessageGroup: {
+                  __typename: "UserSettingsNotificationChannels";
+                  email: boolean;
+                  inApp: boolean;
+                  push: boolean;
+                };
+              };
+              virtualContributor: {
+                __typename: "UserSettingsNotificationVirtualContributor";
+                adminSpaceCommunityInvitation: {
+                  __typename: "UserSettingsNotificationChannels";
+                  email: boolean;
+                  inApp: boolean;
+                  push: boolean;
+                };
+              };
+            };
+          };
+        }
+      | undefined;
+  };
+};
+
 export type GetCalloutFramingMemoQueryVariables = SchemaTypes.Exact<{
   calloutID: SchemaTypes.Scalars["UUID"]["input"];
 }>;
@@ -102621,6 +103809,123 @@ export type GetRolesOrganizationQuery = {
   };
 };
 
+export type ReadOrganizationAccountQueryVariables = SchemaTypes.Exact<{
+  organizationId: SchemaTypes.Scalars["UUID"]["input"];
+}>;
+
+export type ReadOrganizationAccountQuery = {
+  lookup: {
+    organization?:
+      | { id: string; account?: { id: string } | undefined }
+      | undefined;
+  };
+};
+
+export type ReadOrganizationProfileTagsetsQueryVariables = SchemaTypes.Exact<{
+  organizationId: SchemaTypes.Scalars["UUID"]["input"];
+}>;
+
+export type ReadOrganizationProfileTagsetsQuery = {
+  organization: {
+    id: string;
+    profile?:
+      | { tagsets?: Array<{ id: string; name: string }> | undefined }
+      | undefined;
+  };
+};
+
+export type ReadOrganizationRoleSetQueryVariables = SchemaTypes.Exact<{
+  organizationId: SchemaTypes.Scalars["UUID"]["input"];
+}>;
+
+export type ReadOrganizationRoleSetQuery = {
+  organization: {
+    id: string;
+    roleSet: { id: string; authorization?: { id: string } | undefined };
+  };
+};
+
+export type ReadOrganizationRoleSetApplicationsQueryVariables =
+  SchemaTypes.Exact<{
+    organizationId: SchemaTypes.Scalars["UUID"]["input"];
+  }>;
+
+export type ReadOrganizationRoleSetApplicationsQuery = {
+  organization: {
+    id: string;
+    roleSet: { id: string; applications: Array<{ id: string }> };
+  };
+};
+
+export type ReadOrganizationRoleSetInvitationsQueryVariables =
+  SchemaTypes.Exact<{
+    organizationId: SchemaTypes.Scalars["UUID"]["input"];
+  }>;
+
+export type ReadOrganizationRoleSetInvitationsQuery = {
+  organization: {
+    id: string;
+    roleSet: { id: string; invitations: Array<{ id: string }> };
+  };
+};
+
+export type ReadOrganizationRoleSetPendingQueryVariables = SchemaTypes.Exact<{
+  organizationId: SchemaTypes.Scalars["UUID"]["input"];
+}>;
+
+export type ReadOrganizationRoleSetPendingQuery = {
+  organization: {
+    id: string;
+    roleSet: {
+      id: string;
+      applications: Array<{ id: string }>;
+      invitations: Array<{ id: string }>;
+      platformInvitations: Array<{ id: string }>;
+    };
+  };
+};
+
+export type ReadOrganizationRoleSetPlatformInvitationsQueryVariables =
+  SchemaTypes.Exact<{
+    organizationId: SchemaTypes.Scalars["UUID"]["input"];
+  }>;
+
+export type ReadOrganizationRoleSetPlatformInvitationsQuery = {
+  organization: {
+    id: string;
+    roleSet: { id: string; platformInvitations: Array<{ id: string }> };
+  };
+};
+
+export type ReadOrganizationSpaceRolesQueryVariables = SchemaTypes.Exact<{
+  actorID: SchemaTypes.Scalars["UUID"]["input"];
+}>;
+
+export type ReadOrganizationSpaceRolesQuery = {
+  rolesOrganization: {
+    spaces: Array<{
+      spaceID: string;
+      displayName: string;
+      roles: Array<string>;
+      subspaces: Array<{ displayName: string; roles: Array<string> }>;
+    }>;
+  };
+};
+
+export type ReadOrganizationVerificationQueryVariables = SchemaTypes.Exact<{
+  organizationId: SchemaTypes.Scalars["UUID"]["input"];
+}>;
+
+export type ReadOrganizationVerificationQuery = {
+  organization: {
+    id: string;
+    verification: {
+      id: string;
+      status: SchemaTypes.OrganizationVerificationEnum;
+    };
+  };
+};
+
 export type OrganizationsPaginatedQueryVariables = SchemaTypes.Exact<{
   first?: SchemaTypes.InputMaybe<SchemaTypes.Scalars["Int"]["input"]>;
   last?: SchemaTypes.InputMaybe<SchemaTypes.Scalars["Int"]["input"]>;
@@ -103079,6 +104384,7 @@ export type UsersPaginatedQuery = {
       settings: {
         __typename: "UserSettings";
         id: string;
+        language?: string | undefined;
         communication: {
           __typename: "UserSettingsCommunication";
           allowOtherUsersToSendMessages: boolean;
@@ -103212,6 +104518,12 @@ export type UsersPaginatedQuery = {
               };
             };
             collaborationCalloutContributionCreated: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+              push: boolean;
+            };
+            collaborationCalloutReaction: {
               __typename: "UserSettingsNotificationChannels";
               email: boolean;
               inApp: boolean;
@@ -103616,6 +104928,50 @@ export type GetPlatformLicensePlansQuery = {
   };
 };
 
+export type ReadPlatformForumDiscussionsQueryVariables = SchemaTypes.Exact<{
+  [key: string]: never;
+}>;
+
+export type ReadPlatformForumDiscussionsQuery = {
+  platform: {
+    forum: {
+      id: string;
+      discussions?: Array<{ id: string; nameID: string }> | undefined;
+    };
+  };
+};
+
+export type ReadPlatformLanguageConfigurationQueryVariables =
+  SchemaTypes.Exact<{ [key: string]: never }>;
+
+export type ReadPlatformLanguageConfigurationQuery = {
+  platform: {
+    configuration: { language: { eligible: Array<string>; default: string } };
+  };
+};
+
+export type ReadPlatformServiceVersionsQueryVariables = SchemaTypes.Exact<{
+  [key: string]: never;
+}>;
+
+export type ReadPlatformServiceVersionsQuery = {
+  platform: {
+    metadata: {
+      services: Array<{
+        name?: string | undefined;
+        version?: string | undefined;
+      }>;
+    };
+  };
+};
+
+export type ReadPlatformVirtualAssistantAccessQueryVariables =
+  SchemaTypes.Exact<{ [key: string]: never }>;
+
+export type ReadPlatformVirtualAssistantAccessQuery = {
+  platform: { virtualAssistantAccess: boolean };
+};
+
 export type GetProfileDocumentsQueryVariables = SchemaTypes.Exact<{
   profileID: SchemaTypes.Scalars["UUID"]["input"];
 }>;
@@ -103692,6 +105048,74 @@ export type VapidPublicKeyQueryVariables = SchemaTypes.Exact<{
 }>;
 
 export type VapidPublicKeyQuery = { vapidPublicKey?: string | undefined };
+
+export type ReadRoleSetInvitationsQueryVariables = SchemaTypes.Exact<{
+  roleSetId: SchemaTypes.Scalars["UUID"]["input"];
+}>;
+
+export type ReadRoleSetInvitationsQuery = {
+  lookup: {
+    roleSet?:
+      | {
+          id: string;
+          invitations: Array<{
+            id: string;
+            state: string;
+            actor: { id: string };
+          }>;
+        }
+      | undefined;
+  };
+};
+
+export type ReadRoleSetOrganizationsInRolesQueryVariables = SchemaTypes.Exact<{
+  roleSetId: SchemaTypes.Scalars["UUID"]["input"];
+  roles: Array<SchemaTypes.RoleName> | SchemaTypes.RoleName;
+}>;
+
+export type ReadRoleSetOrganizationsInRolesQuery = {
+  lookup: {
+    roleSet?:
+      | {
+          id: string;
+          organizationsInRoles: Array<{
+            role: SchemaTypes.RoleName;
+            organizations: Array<{ id: string }>;
+          }>;
+        }
+      | undefined;
+  };
+};
+
+export type ReadRoleSetUsersInRoleQueryVariables = SchemaTypes.Exact<{
+  roleSetId: SchemaTypes.Scalars["UUID"]["input"];
+  role: SchemaTypes.RoleName;
+}>;
+
+export type ReadRoleSetUsersInRoleQuery = {
+  lookup: {
+    roleSet?: { id: string; usersInRole: Array<{ id: string }> } | undefined;
+  };
+};
+
+export type ReadRoleSetUsersInRolesQueryVariables = SchemaTypes.Exact<{
+  roleSetId: SchemaTypes.Scalars["UUID"]["input"];
+  roles: Array<SchemaTypes.RoleName> | SchemaTypes.RoleName;
+}>;
+
+export type ReadRoleSetUsersInRolesQuery = {
+  lookup: {
+    roleSet?:
+      | {
+          id: string;
+          usersInRoles: Array<{
+            role: SchemaTypes.RoleName;
+            users: Array<{ id: string }>;
+          }>;
+        }
+      | undefined;
+  };
+};
 
 export type SearchQueryVariables = SchemaTypes.Exact<{
   searchData: SchemaTypes.SearchInput;
@@ -118362,6 +119786,237 @@ export type GetSubspacesDataQuery = {
   };
 };
 
+export type ReadSpaceAboutQueryVariables = SchemaTypes.Exact<{
+  spaceId: SchemaTypes.Scalars["UUID"]["input"];
+}>;
+
+export type ReadSpaceAboutQuery = {
+  lookup: {
+    space?:
+      | {
+          id: string;
+          nameID: string;
+          about: {
+            why?: any | undefined;
+            who?: any | undefined;
+            profile: {
+              id: string;
+              displayName: string;
+              tagline?: string | undefined;
+              description?: any | undefined;
+              url: string;
+              tagset?: { id: string; tags: Array<string> } | undefined;
+            };
+          };
+        }
+      | undefined;
+  };
+};
+
+export type ReadSpaceAccountSpacesQueryVariables = SchemaTypes.Exact<{
+  spaceId: SchemaTypes.Scalars["UUID"]["input"];
+}>;
+
+export type ReadSpaceAccountSpacesQuery = {
+  lookup: {
+    space?: { id: string; accountSpaces: Array<{ id: string }> } | undefined;
+  };
+};
+
+export type ReadSpaceCalloutNamesQueryVariables = SchemaTypes.Exact<{
+  spaceId: SchemaTypes.Scalars["UUID"]["input"];
+}>;
+
+export type ReadSpaceCalloutNamesQuery = {
+  lookup: {
+    space?:
+      | {
+          id: string;
+          collaboration: {
+            calloutsSet: {
+              id: string;
+              callouts: Array<{
+                id: string;
+                framing: { profile: { displayName: string } };
+              }>;
+            };
+          };
+        }
+      | undefined;
+  };
+};
+
+export type ReadSpaceClassificationsQueryVariables = SchemaTypes.Exact<{
+  spaceId: SchemaTypes.Scalars["UUID"]["input"];
+}>;
+
+export type ReadSpaceClassificationsQuery = {
+  lookup: {
+    space?:
+      | {
+          id: string;
+          about: {
+            classifications: Array<{
+              id: string;
+              displayLabel: string;
+              display: boolean;
+              sortOrder: number;
+              cardinality: SchemaTypes.ClassificationCardinality;
+              selectedValueIDs: Array<string>;
+              values: Array<{ id: string; label: string }>;
+            }>;
+          };
+        }
+      | undefined;
+  };
+};
+
+export type ReadSpaceGuidelinesIdQueryVariables = SchemaTypes.Exact<{
+  spaceId: SchemaTypes.Scalars["UUID"]["input"];
+}>;
+
+export type ReadSpaceGuidelinesIdQuery = {
+  lookup: {
+    space?: { id: string; about: { guidelines: { id: string } } } | undefined;
+  };
+};
+
+export type ReadSpaceInnovationFlowStatesQueryVariables = SchemaTypes.Exact<{
+  spaceId: SchemaTypes.Scalars["UUID"]["input"];
+}>;
+
+export type ReadSpaceInnovationFlowStatesQuery = {
+  lookup: {
+    space?:
+      | {
+          id: string;
+          collaboration: {
+            innovationFlow: {
+              id: string;
+              states: Array<{
+                id: string;
+                displayName: string;
+                sortOrder: number;
+                settings: {
+                  visible: boolean;
+                  sidebar: Array<SchemaTypes.SidebarWidget>;
+                  descriptionDisplayMode: SchemaTypes.CalloutDescriptionDisplayMode;
+                };
+              }>;
+            };
+          };
+        }
+      | undefined;
+  };
+};
+
+export type ReadSpaceLevelAndVisibilityQueryVariables = SchemaTypes.Exact<{
+  spaceId: SchemaTypes.Scalars["UUID"]["input"];
+}>;
+
+export type ReadSpaceLevelAndVisibilityQuery = {
+  lookup: {
+    space?:
+      | {
+          id: string;
+          level: SchemaTypes.SpaceLevel;
+          visibility: SchemaTypes.SpaceVisibility;
+        }
+      | undefined;
+  };
+};
+
+export type ReadSpaceMyPrivilegesQueryVariables = SchemaTypes.Exact<{
+  spaceId: SchemaTypes.Scalars["UUID"]["input"];
+}>;
+
+export type ReadSpaceMyPrivilegesQuery = {
+  lookup: {
+    space?:
+      | {
+          id: string;
+          authorization?:
+            | {
+                myPrivileges?:
+                  | Array<SchemaTypes.AuthorizationPrivilege>
+                  | undefined;
+              }
+            | undefined;
+        }
+      | undefined;
+  };
+};
+
+export type ReadSpaceRefsQueryVariables = SchemaTypes.Exact<{
+  spaceId: SchemaTypes.Scalars["UUID"]["input"];
+}>;
+
+export type ReadSpaceRefsQuery = {
+  lookup: {
+    space?:
+      | {
+          id: string;
+          nameID: string;
+          level: SchemaTypes.SpaceLevel;
+          community: { roleSet: { id: string } };
+          about: { membership: { roleSetID: string } };
+          collaboration: { id: string; calloutsSet: { id: string } };
+        }
+      | undefined;
+  };
+};
+
+export type ReadSpaceSettingsQueryVariables = SchemaTypes.Exact<{
+  spaceId: SchemaTypes.Scalars["UUID"]["input"];
+}>;
+
+export type ReadSpaceSettingsQuery = {
+  lookup: {
+    space?:
+      | {
+          id: string;
+          settings: {
+            privacy: {
+              mode: SchemaTypes.SpacePrivacyMode;
+              allowPlatformSupportAsAdmin: boolean;
+            };
+            membership: {
+              policy: SchemaTypes.CommunityMembershipPolicy;
+              allowSubspaceAdminsToInviteMembers: boolean;
+              trustedOrganizations: Array<string>;
+            };
+            collaboration: {
+              allowMembersToCreateCallouts: boolean;
+              allowMembersToCreateSubspaces: boolean;
+              inheritMembershipRights: boolean;
+              allowEventsFromSubspaces: boolean;
+              allowMembersToVideoCall: boolean;
+              allowGuestContributions: boolean;
+            };
+          };
+        }
+      | undefined;
+  };
+};
+
+export type ReadSpaceTemplatesManagerQueryVariables = SchemaTypes.Exact<{
+  spaceId: SchemaTypes.Scalars["UUID"]["input"];
+}>;
+
+export type ReadSpaceTemplatesManagerQuery = {
+  lookup: {
+    space?:
+      | {
+          id: string;
+          templatesManager?:
+            | { templatesSet?: { id: string } | undefined }
+            | undefined;
+          about: { profile: { tagset?: { id: string } | undefined } };
+        }
+      | undefined;
+  };
+};
+
 export type GetUserRolesQueryVariables = SchemaTypes.Exact<{
   rolesData: SchemaTypes.RolesActorInput;
 }>;
@@ -118496,6 +120151,82 @@ export type GetWhiteboardTemplatesCountByTemplateSetIdQueryVariables =
 
 export type GetWhiteboardTemplatesCountByTemplateSetIdQuery = {
   lookup: { templatesSet?: { whiteboardTemplatesCount: number } | undefined };
+};
+
+export type ReadTemplatesSetClassificationTemplatesQueryVariables =
+  SchemaTypes.Exact<{
+    templatesSetId: SchemaTypes.Scalars["UUID"]["input"];
+  }>;
+
+export type ReadTemplatesSetClassificationTemplatesQuery = {
+  lookup: {
+    templatesSet?:
+      | {
+          id: string;
+          classificationTemplates: Array<{
+            id: string;
+            profile: { displayName: string };
+            classification?:
+              | {
+                  cardinality: SchemaTypes.ClassificationCardinality;
+                  values: Array<{ id: string; label: string }>;
+                }
+              | undefined;
+          }>;
+        }
+      | undefined;
+  };
+};
+
+export type ReadTemplatesSetTemplatesQueryVariables = SchemaTypes.Exact<{
+  templatesSetId: SchemaTypes.Scalars["UUID"]["input"];
+}>;
+
+export type ReadTemplatesSetTemplatesQuery = {
+  lookup: {
+    templatesSet?:
+      | {
+          id: string;
+          templates: Array<{
+            id: string;
+            profile: { displayName: string; description?: any | undefined };
+            callout?:
+              | {
+                  settings: {
+                    contribution: {
+                      allowedTypes: Array<SchemaTypes.CalloutContributionType>;
+                    };
+                  };
+                  framing: {
+                    type: SchemaTypes.CalloutFramingType;
+                    profile: { description?: any | undefined };
+                    memo?:
+                      | {
+                          id: string;
+                          createdBy?: { id: string } | undefined;
+                          authorization?:
+                            | {
+                                myPrivileges?:
+                                  | Array<SchemaTypes.AuthorizationPrivilege>
+                                  | undefined;
+                              }
+                            | undefined;
+                        }
+                      | undefined;
+                    collaboraDocument?:
+                      | {
+                          id: string;
+                          documentType: SchemaTypes.CollaboraDocumentType;
+                          previewUrl?: string | undefined;
+                        }
+                      | undefined;
+                  };
+                }
+              | undefined;
+          }>;
+        }
+      | undefined;
+  };
 };
 
 export type UrlResolverQueryVariables = SchemaTypes.Exact<{
@@ -118791,6 +120522,7 @@ export type GetUserDataQuery = {
     settings: {
       __typename: "UserSettings";
       id: string;
+      language?: string | undefined;
       communication: {
         __typename: "UserSettingsCommunication";
         allowOtherUsersToSendMessages: boolean;
@@ -118924,6 +120656,12 @@ export type GetUserDataQuery = {
             };
           };
           collaborationCalloutContributionCreated: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
+          collaborationCalloutReaction: {
             __typename: "UserSettingsNotificationChannels";
             email: boolean;
             inApp: boolean;
@@ -119096,6 +120834,7 @@ export type GetUserSettingsQuery = {
     settings: {
       __typename: "UserSettings";
       id: string;
+      language?: string | undefined;
       communication: {
         __typename: "UserSettingsCommunication";
         allowOtherUsersToSendMessages: boolean;
@@ -119229,6 +120968,12 @@ export type GetUserSettingsQuery = {
             };
           };
           collaborationCalloutContributionCreated: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
+          collaborationCalloutReaction: {
             __typename: "UserSettingsNotificationChannels";
             email: boolean;
             inApp: boolean;
@@ -119538,6 +121283,7 @@ export type GetUsersDataQuery = {
     settings: {
       __typename: "UserSettings";
       id: string;
+      language?: string | undefined;
       communication: {
         __typename: "UserSettingsCommunication";
         allowOtherUsersToSendMessages: boolean;
@@ -119671,6 +121417,12 @@ export type GetUsersDataQuery = {
             };
           };
           collaborationCalloutContributionCreated: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
+          collaborationCalloutReaction: {
             __typename: "UserSettingsNotificationChannels";
             email: boolean;
             inApp: boolean;
@@ -119936,6 +121688,56 @@ export type MeQueryQuery = {
   };
 };
 
+export type ReadUserAccountQueryVariables = SchemaTypes.Exact<{
+  userId: SchemaTypes.Scalars["UUID"]["input"];
+}>;
+
+export type ReadUserAccountQuery = {
+  lookup: {
+    user?:
+      | { id: string; nameID: string; account?: { id: string } | undefined }
+      | undefined;
+  };
+};
+
+export type ReadUserIdByNameIdQueryVariables = SchemaTypes.Exact<{
+  nameID: SchemaTypes.Scalars["NameID"]["input"];
+}>;
+
+export type ReadUserIdByNameIdQuery = {
+  lookupByName: { user?: string | undefined };
+};
+
+export type ReadUserProfileTagsetsQueryVariables = SchemaTypes.Exact<{
+  userId: SchemaTypes.Scalars["UUID"]["input"];
+}>;
+
+export type ReadUserProfileTagsetsQuery = {
+  user: {
+    id: string;
+    profile?:
+      | { tagsets?: Array<{ id: string; name: string }> | undefined }
+      | undefined;
+  };
+};
+
+export type ReadUserSpaceRolesQueryVariables = SchemaTypes.Exact<{
+  actorID: SchemaTypes.Scalars["UUID"]["input"];
+}>;
+
+export type ReadUserSpaceRolesQuery = {
+  rolesUser: {
+    spaces: Array<{
+      spaceID: string;
+      displayName: string;
+      roles: Array<string>;
+      subspaces: Array<{ displayName: string; roles: Array<string> }>;
+    }>;
+    invitations: Array<{ id: string }>;
+    applications: Array<{ id: string }>;
+  };
+};
+
 export type GetAiPersonaModelCardQueryVariables = SchemaTypes.Exact<{
   id: SchemaTypes.Scalars["UUID"]["input"];
 }>;
@@ -120060,6 +121862,40 @@ export type GetVirtualContributorWithModelCardQuery = {
                   | undefined;
               }
             | undefined;
+        }
+      | undefined;
+  };
+};
+
+export type ReadVirtualContributorProfileTagsetsQueryVariables =
+  SchemaTypes.Exact<{
+    virtualContributorId: SchemaTypes.Scalars["UUID"]["input"];
+  }>;
+
+export type ReadVirtualContributorProfileTagsetsQuery = {
+  lookup: {
+    virtualContributor?:
+      | {
+          id: string;
+          profile?:
+            | { tagsets?: Array<{ id: string; name: string }> | undefined }
+            | undefined;
+        }
+      | undefined;
+  };
+};
+
+export type ReadVirtualContributorVisibilityQueryVariables = SchemaTypes.Exact<{
+  virtualContributorId: SchemaTypes.Scalars["UUID"]["input"];
+}>;
+
+export type ReadVirtualContributorVisibilityQuery = {
+  lookup: {
+    virtualContributor?:
+      | {
+          id: string;
+          searchVisibility: SchemaTypes.SearchVisibility;
+          listedInStore: boolean;
         }
       | undefined;
   };
@@ -121182,6 +123018,7 @@ export const CommunicationsDiscussionDataFragmentDoc = gql`
     profile {
       displayName
       description
+      url
     }
     category
     createdBy
@@ -121822,6 +123659,7 @@ export const AgentDataFragmentDoc = gql`
 export const UserSettingsFragmentFragmentDoc = gql`
   fragment userSettingsFragment on UserSettings {
     id
+    language
     communication {
       allowOtherUsersToSendMessages
       __typename
@@ -121953,6 +123791,12 @@ export const UserSettingsFragmentFragmentDoc = gql`
           __typename
         }
         collaborationCalloutContributionCreated {
+          email
+          inApp
+          push
+          __typename
+        }
+        collaborationCalloutReaction {
           email
           inApp
           push
@@ -123042,6 +124886,73 @@ export const CreateContributionOnCalloutDocument = gql`
   }
   ${ContributionsDataFragmentDoc}
 `;
+export const CreateCalloutWithDataDocument = gql`
+  mutation CreateCalloutWithData(
+    $calloutData: CreateCalloutOnCalloutsSetInput!
+  ) {
+    createCalloutOnCalloutsSet(calloutData: $calloutData) {
+      id
+      nameID
+      framing {
+        id
+        type
+        profile {
+          id
+          displayName
+          url
+        }
+        form {
+          id
+          questions {
+            id
+            prompt
+            type
+            options {
+              id
+              label
+            }
+          }
+        }
+        collaboraDocument {
+          id
+          documentType
+          previewUrl
+        }
+        memo {
+          id
+          profile {
+            storageBucket {
+              id
+            }
+          }
+        }
+      }
+    }
+  }
+`;
+export const CreateContributionWithDataDocument = gql`
+  mutation CreateContributionWithData(
+    $contributionData: CreateContributionOnCalloutInput!
+  ) {
+    createContributionOnCallout(contributionData: $contributionData) {
+      id
+      post {
+        id
+        profile {
+          displayName
+        }
+      }
+      memo {
+        id
+        profile {
+          storageBucket {
+            id
+          }
+        }
+      }
+    }
+  }
+`;
 export const CreateFormCalloutOnCalloutsSetDocument = gql`
   mutation createFormCalloutOnCalloutsSet(
     $calloutData: CreateCalloutOnCalloutsSetInput!
@@ -123150,6 +125061,51 @@ export const TransferCalloutDocument = gql`
       settings {
         visibility
       }
+    }
+  }
+`;
+export const UpdateCalloutDataDocument = gql`
+  mutation UpdateCalloutData($calloutData: UpdateCalloutEntityInput!) {
+    updateCallout(calloutData: $calloutData) {
+      id
+    }
+  }
+`;
+export const AddClassificationEntryFromTemplateDocument = gql`
+  mutation AddClassificationEntryFromTemplate(
+    $classificationData: AddClassificationEntryFromTemplateInput!
+  ) {
+    addClassificationEntryFromTemplate(
+      classificationData: $classificationData
+    ) {
+      id
+      displayLabel
+      display
+      sortOrder
+      cardinality
+      selectedValueIDs
+      values {
+        id
+        label
+      }
+    }
+  }
+`;
+export const UpdateClassificationEntrySelectionDocument = gql`
+  mutation UpdateClassificationEntrySelection(
+    $classificationData: UpdateClassificationEntrySelectionInput!
+  ) {
+    updateClassificationEntrySelection(
+      classificationData: $classificationData
+    ) {
+      id
+    }
+  }
+`;
+export const UpdateTagsetTagsDocument = gql`
+  mutation UpdateTagsetTags($updateData: UpdateTagsetInput!) {
+    updateTagset(updateData: $updateData) {
+      id
     }
   }
 `;
@@ -123512,6 +125468,14 @@ export const UpdateInnovationFlowStateDocument = gql`
     }
   }
 `;
+export const RevokeMyMcpApiKeyDocument = gql`
+  mutation RevokeMyMcpApiKey($keyID: UUID!) {
+    revokeMcpApiKey(revokeData: { keyID: $keyID }) {
+      id
+      status
+    }
+  }
+`;
 export const PrepareMemoSigningDocument = gql`
   mutation PrepareMemoSigning($signingData: MemoSigningPrepareInput!) {
     prepareMemoSigning(signingData: $signingData) {
@@ -123551,6 +125515,13 @@ export const UpdateOrganizationDocument = gql`
     }
   }
   ${OrganizationDataFragmentDoc}
+`;
+export const UpdateOrganizationDataDocument = gql`
+  mutation UpdateOrganizationData($organizationData: UpdateOrganizationInput!) {
+    updateOrganization(organizationData: $organizationData) {
+      id
+    }
+  }
 `;
 export const UpdateOrganizationSettingsDocument = gql`
   mutation UpdateOrganizationSettings(
@@ -124265,6 +126236,13 @@ export const UpdateTemplateFromSpaceDocument = gql`
     }
   }
 `;
+export const RemovePlatformRoleDocument = gql`
+  mutation RemovePlatformRole($roleData: RemovePlatformRoleInput!) {
+    removePlatformRoleFromUser(roleData: $roleData) {
+      id
+    }
+  }
+`;
 export const AssignPlatformRoleToUserDocument = gql`
   mutation assignPlatformRoleToUser($roleData: AssignPlatformRoleInput!) {
     assignPlatformRoleToUser(roleData: $roleData) {
@@ -124407,6 +126385,39 @@ export const DeleteReferenceDocument = gql`
     }
   }
 `;
+export const ApplyForEntryRoleOnRoleSetDocument = gql`
+  mutation ApplyForEntryRoleOnRoleSet(
+    $applicationData: ApplyForEntryRoleOnRoleSetInput!
+  ) {
+    applyForEntryRoleOnRoleSet(applicationData: $applicationData) {
+      id
+      state
+      actor {
+        id
+      }
+    }
+  }
+`;
+export const EventOnApplicationStateDocument = gql`
+  mutation EventOnApplicationState($applicationID: UUID!, $eventName: String!) {
+    eventOnApplication(
+      eventData: { applicationID: $applicationID, eventName: $eventName }
+    ) {
+      id
+      state
+    }
+  }
+`;
+export const EventOnInvitationStateDocument = gql`
+  mutation EventOnInvitationState($invitationID: UUID!, $eventName: String!) {
+    eventOnInvitation(
+      eventData: { invitationID: $invitationID, eventName: $eventName }
+    ) {
+      id
+      state
+    }
+  }
+`;
 export const AdminSearchIngestFromScratchDocument = gql`
   mutation AdminSearchIngestFromScratch {
     adminSearchIngestFromScratch
@@ -124423,9 +126434,98 @@ export const UpdateSpaceSettingsDocument = gql`
   }
   ${SettingsDataFragmentDoc}
 `;
+export const AssignLicensePlanToSpaceByIdDocument = gql`
+  mutation AssignLicensePlanToSpaceById($planData: AssignLicensePlanToSpace!) {
+    assignLicensePlanToSpace(planData: $planData) {
+      id
+    }
+  }
+`;
 export const CreateSpaceDocument = gql`
   mutation createSpace($spaceData: CreateSpaceOnAccountInput!) {
     createSpace(spaceData: $spaceData) {
+      id
+    }
+  }
+`;
+export const CreateSpaceOnAccountDocument = gql`
+  mutation CreateSpaceOnAccount($spaceData: CreateSpaceOnAccountInput!) {
+    createSpace(spaceData: $spaceData) {
+      id
+      nameID
+      about {
+        profile {
+          url
+        }
+        membership {
+          roleSetID
+        }
+      }
+      community {
+        roleSet {
+          id
+        }
+      }
+      collaboration {
+        id
+        calloutsSet {
+          id
+        }
+      }
+    }
+  }
+`;
+export const CreateSubspaceWithDataDocument = gql`
+  mutation CreateSubspaceWithData($subspaceData: CreateSubspaceInput!) {
+    createSubspace(subspaceData: $subspaceData) {
+      id
+      nameID
+      about {
+        profile {
+          url
+          displayName
+        }
+        membership {
+          roleSetID
+        }
+      }
+      community {
+        roleSet {
+          id
+        }
+      }
+      collaboration {
+        id
+        calloutsSet {
+          id
+        }
+      }
+    }
+  }
+`;
+export const UpdateCommunityGuidelinesDataDocument = gql`
+  mutation UpdateCommunityGuidelinesData(
+    $communityGuidelinesData: UpdateCommunityGuidelinesEntityInput!
+  ) {
+    updateCommunityGuidelines(
+      communityGuidelinesData: $communityGuidelinesData
+    ) {
+      id
+    }
+  }
+`;
+export const UpdateInnovationFlowStatesSortOrderDocument = gql`
+  mutation UpdateInnovationFlowStatesSortOrder(
+    $sortOrderData: UpdateInnovationFlowStatesSortOrderInput!
+  ) {
+    updateInnovationFlowStatesSortOrder(sortOrderData: $sortOrderData) {
+      id
+    }
+  }
+`;
+export const UpdateSpaceDataDocument = gql`
+  mutation UpdateSpaceData($spaceData: UpdateSpaceInput!) {
+    updateSpace(spaceData: $spaceData) {
       id
     }
   }
@@ -124464,6 +126564,25 @@ export const CreateCalloutTemplateWithFramingDocument = gql`
   }
   ${PollDefinitionFragmentDoc}
   ${CalloutFormDetailsFragmentDoc}
+`;
+export const CreateClassificationTemplateDocument = gql`
+  mutation CreateClassificationTemplate(
+    $templateData: CreateTemplateOnTemplatesSetInput!
+  ) {
+    createTemplate(templateData: $templateData) {
+      id
+      profile {
+        displayName
+      }
+      classification {
+        cardinality
+        values {
+          id
+          label
+        }
+      }
+    }
+  }
 `;
 export const CreateTemplateDocument = gql`
   mutation CreateTemplate(
@@ -124556,6 +126675,15 @@ export const CreateTemplateFromSpaceDocument = gql`
         }
         level
       }
+    }
+  }
+`;
+export const CreateTemplateWithDataDocument = gql`
+  mutation CreateTemplateWithData(
+    $templateData: CreateTemplateOnTemplatesSetInput!
+  ) {
+    createTemplate(templateData: $templateData) {
+      id
     }
   }
 `;
@@ -124708,6 +126836,13 @@ export const UpdateUserDocument = gql`
   }
   ${UserDataFragmentDoc}
 `;
+export const UpdateUserProfileDocument = gql`
+  mutation UpdateUserProfile($userData: UpdateUserInput!) {
+    updateUser(userData: $userData) {
+      id
+    }
+  }
+`;
 export const UpdateUserSettingsDocument = gql`
   mutation UpdateUserSettings($settingsData: UpdateUserSettingsInput!) {
     updateUserSettings(settingsData: $settingsData) {
@@ -124791,6 +126926,23 @@ export const CreateVirtualContributorOnAccountDocument = gql`
     }
   }
 `;
+export const CreateVirtualContributorWithDataDocument = gql`
+  mutation CreateVirtualContributorWithData(
+    $virtualContributorData: CreateVirtualContributorOnAccountInput!
+  ) {
+    createVirtualContributor(virtualContributorData: $virtualContributorData) {
+      id
+      profile {
+        url
+      }
+      knowledgeBase {
+        calloutsSet {
+          id
+        }
+      }
+    }
+  }
+`;
 export const DeleteVirtualContributorOnAccountDocument = gql`
   mutation DeleteVirtualContributorOnAccount(
     $virtualContributorData: DeleteVirtualContributorInput!
@@ -124816,6 +126968,15 @@ export const UpdateVirtualContributorDocument = gql`
     }
   }
   ${ProfileDataFragmentDoc}
+`;
+export const UpdateVirtualContributorDataDocument = gql`
+  mutation UpdateVirtualContributorData(
+    $virtualContributorData: UpdateVirtualContributorInput!
+  ) {
+    updateVirtualContributor(virtualContributorData: $virtualContributorData) {
+      id
+    }
+  }
 `;
 export const UpdateVirtualContributorSettingsDocument = gql`
   mutation UpdateVirtualContributorSettings(
@@ -125104,9 +127265,61 @@ export const GetAccountMainEntitiesDocument = gql`
     }
   }
 `;
+export const ReadAccountResourcesDocument = gql`
+  query ReadAccountResources($accountId: UUID!) {
+    lookup {
+      account(ID: $accountId) {
+        id
+        virtualContributors {
+          id
+        }
+        innovationPacks {
+          id
+        }
+        innovationHubs {
+          id
+        }
+        spaces {
+          id
+          level
+          subspaces {
+            id
+            subspaces {
+              id
+            }
+          }
+        }
+      }
+    }
+  }
+`;
+export const ReadInnovationPackTemplatesSetDocument = gql`
+  query ReadInnovationPackTemplatesSet($innovationPackId: UUID!) {
+    lookup {
+      innovationPack(ID: $innovationPackId) {
+        id
+        templatesSet {
+          id
+        }
+      }
+    }
+  }
+`;
+export const ReadInnovationPackVisibilityDocument = gql`
+  query ReadInnovationPackVisibility($innovationPackId: UUID!) {
+    lookup {
+      innovationPack(ID: $innovationPackId) {
+        id
+        searchVisibility
+        listedInStore
+      }
+    }
+  }
+`;
 export const GetActivityLogOnCollaborationDocument = gql`
   query GetActivityLogOnCollaboration($queryData: ActivityLogInput!) {
     activityLogOnCollaboration(queryData: $queryData) {
+      id
       collaborationID
       triggeredBy {
         id
@@ -125618,6 +127831,244 @@ export const GetCalloutReactionsSummaryDocument = gql`
           emojis
           myReactionEmoji
           allowedEmojis
+        }
+      }
+    }
+  }
+`;
+export const ReadCalloutContributionsDocument = gql`
+  query ReadCalloutContributions($calloutId: UUID!) {
+    lookup {
+      callout(ID: $calloutId) {
+        id
+        activity
+        contributions {
+          id
+          post {
+            id
+            profile {
+              displayName
+            }
+          }
+        }
+        contributionsCount {
+          post
+          whiteboard
+          link
+          memo
+          collaboraDocument
+        }
+      }
+    }
+  }
+`;
+export const ReadCalloutFormResponsesDocument = gql`
+  query ReadCalloutFormResponses($formID: UUID!, $first: Int) {
+    lookup {
+      calloutFormResponses(formID: $formID, first: $first) {
+        canReadAll
+        canModerate
+        mine {
+          id
+          createdBy {
+            id
+          }
+          answers {
+            questionID
+            prompt
+            text
+          }
+        }
+        all {
+          total
+          responses {
+            id
+            createdBy {
+              id
+              profile {
+                displayName
+              }
+            }
+            answers {
+              prompt
+              text
+            }
+          }
+        }
+      }
+    }
+  }
+`;
+export const ReadCalloutFramingDocument = gql`
+  query ReadCalloutFraming($calloutId: UUID!) {
+    lookup {
+      callout(ID: $calloutId) {
+        id
+        nameID
+        framing {
+          id
+          type
+          profile {
+            id
+            displayName
+            url
+          }
+          form {
+            id
+            title
+            description
+            settings {
+              defaultCollapsed
+            }
+            questions {
+              id
+              prompt
+              type
+              required
+              options {
+                id
+                label
+              }
+            }
+          }
+          collaboraDocument {
+            id
+            documentType
+            previewUrl
+          }
+        }
+      }
+    }
+  }
+`;
+export const ReadCalloutFramingContributorsDocument = gql`
+  query ReadCalloutFramingContributors($calloutId: UUID!, $type: ActorType!) {
+    lookup {
+      callout(ID: $calloutId) {
+        id
+        framing {
+          contributors(type: $type) {
+            id
+            displayName
+            roleLabel
+            tagline
+            tags
+            joinedDate
+            website
+            associatesCount
+          }
+        }
+      }
+    }
+  }
+`;
+export const ReadCalloutFramingSettingsDocument = gql`
+  query ReadCalloutFramingSettings($calloutId: UUID!) {
+    lookup {
+      callout(ID: $calloutId) {
+        id
+        settings {
+          framing {
+            selection {
+              mode
+              selectedIds
+            }
+            spaces {
+              cardVariant
+            }
+          }
+        }
+      }
+    }
+  }
+`;
+export const ReadCalloutSubspaceIdsDocument = gql`
+  query ReadCalloutSubspaceIds($calloutId: UUID!) {
+    lookup {
+      callout(ID: $calloutId) {
+        id
+        hasHiddenSpaces
+        framing {
+          subspaces {
+            id
+          }
+        }
+      }
+    }
+  }
+`;
+export const ReadCalloutSubspacesDocument = gql`
+  query ReadCalloutSubspaces($calloutId: UUID!) {
+    lookup {
+      callout(ID: $calloutId) {
+        id
+        hasHiddenSpaces
+        framing {
+          subspaces {
+            id
+            about {
+              why
+              who
+              profile {
+                displayName
+                tagline
+                description
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+`;
+export const ReadCalloutsSetCalloutsDocument = gql`
+  query ReadCalloutsSetCallouts($calloutsSetId: UUID!) {
+    lookup {
+      calloutsSet(ID: $calloutsSetId) {
+        id
+        callouts {
+          id
+          framing {
+            type
+            profile {
+              displayName
+              url
+            }
+            form {
+              questions {
+                prompt
+                type
+                required
+                options {
+                  label
+                }
+              }
+            }
+            collaboraDocument {
+              id
+              documentType
+              previewUrl
+            }
+          }
+        }
+      }
+    }
+  }
+`;
+export const ReadMemoDocumentsDocument = gql`
+  query ReadMemoDocuments($memoId: UUID!) {
+    lookup {
+      memo(ID: $memoId) {
+        id
+        signatures {
+          id
+        }
+        profile {
+          storageBucket {
+            documents {
+              id
+            }
+          }
         }
       }
     }
@@ -126145,6 +128596,166 @@ export const LookupProfileVisualsDocument = gql`
     }
   }
 `;
+export const ReadMyAccountDeletionCanDeleteDocument = gql`
+  query ReadMyAccountDeletionCanDelete {
+    me {
+      accountDeletion {
+        canDelete
+      }
+    }
+  }
+`;
+export const ReadMyLanguageSettingDocument = gql`
+  query ReadMyLanguageSetting {
+    me {
+      user {
+        id
+        settings {
+          language
+        }
+      }
+    }
+  }
+`;
+export const ReadMyMcpApiKeysDocument = gql`
+  query ReadMyMcpApiKeys {
+    me {
+      mcpApiKeys {
+        id
+        name
+        status
+      }
+    }
+  }
+`;
+export const ReadMyNotificationsDocument = gql`
+  query ReadMyNotifications(
+    $filter: NotificationEventsFilterInput
+    $first: Int
+  ) {
+    me {
+      notifications(filter: $filter, first: $first) {
+        total
+        inAppNotifications {
+          id
+          type
+          state
+          triggeredBy {
+            id
+          }
+          payload {
+            __typename
+            type
+            ... on InAppNotificationPayloadSpaceCommunityInvitation {
+              organization {
+                id
+                profile {
+                  displayName
+                }
+              }
+              space {
+                id
+                nameID
+              }
+              invitation {
+                id
+              }
+            }
+            ... on InAppNotificationPayloadSpaceCollaborationCallout {
+              callout {
+                id
+                framing {
+                  profile {
+                    url
+                    displayName
+                  }
+                }
+              }
+            }
+            ... on InAppNotificationPayloadOrganizationAssociateActor {
+              actor {
+                id
+              }
+              organization {
+                id
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+`;
+export const ReadMyNotificationsUnreadCountDocument = gql`
+  query ReadMyNotificationsUnreadCount {
+    me {
+      notificationsUnreadCount
+    }
+  }
+`;
+export const ReadMyPlatformRolesDocument = gql`
+  query ReadMyPlatformRoles {
+    platform {
+      roleSet {
+        myRoles
+      }
+    }
+  }
+`;
+export const ReadMyPrivilegesDocument = gql`
+  query ReadMyPrivileges {
+    me {
+      user {
+        id
+        profile {
+          displayName
+        }
+        authorization {
+          myPrivileges
+        }
+      }
+    }
+  }
+`;
+export const ReadMySessionDocument = gql`
+  query ReadMySession {
+    me {
+      id
+    }
+  }
+`;
+export const ReadMyUserDocument = gql`
+  query ReadMyUser {
+    me {
+      id
+      user {
+        id
+        nameID
+        profile {
+          id
+          displayName
+          url
+        }
+        account {
+          id
+        }
+      }
+    }
+  }
+`;
+export const ReadMyUserSettingsDocument = gql`
+  query ReadMyUserSettings {
+    me {
+      user {
+        id
+        settings {
+          ...userSettingsFragment
+        }
+      }
+    }
+  }
+  ${UserSettingsFragmentFragmentDoc}
+`;
 export const GetCalloutFramingMemoDocument = gql`
   query GetCalloutFramingMemo($calloutID: UUID!) {
     lookup {
@@ -126252,6 +128863,128 @@ export const GetRolesOrganizationDocument = gql`
         nameID
         id
         roles
+      }
+    }
+  }
+`;
+export const ReadOrganizationAccountDocument = gql`
+  query ReadOrganizationAccount($organizationId: UUID!) {
+    lookup {
+      organization(ID: $organizationId) {
+        id
+        account {
+          id
+        }
+      }
+    }
+  }
+`;
+export const ReadOrganizationProfileTagsetsDocument = gql`
+  query ReadOrganizationProfileTagsets($organizationId: UUID!) {
+    organization(ID: $organizationId) {
+      id
+      profile {
+        tagsets {
+          id
+          name
+        }
+      }
+    }
+  }
+`;
+export const ReadOrganizationRoleSetDocument = gql`
+  query ReadOrganizationRoleSet($organizationId: UUID!) {
+    organization(ID: $organizationId) {
+      id
+      roleSet {
+        id
+        authorization {
+          id
+        }
+      }
+    }
+  }
+`;
+export const ReadOrganizationRoleSetApplicationsDocument = gql`
+  query ReadOrganizationRoleSetApplications($organizationId: UUID!) {
+    organization(ID: $organizationId) {
+      id
+      roleSet {
+        id
+        applications {
+          id
+        }
+      }
+    }
+  }
+`;
+export const ReadOrganizationRoleSetInvitationsDocument = gql`
+  query ReadOrganizationRoleSetInvitations($organizationId: UUID!) {
+    organization(ID: $organizationId) {
+      id
+      roleSet {
+        id
+        invitations {
+          id
+        }
+      }
+    }
+  }
+`;
+export const ReadOrganizationRoleSetPendingDocument = gql`
+  query ReadOrganizationRoleSetPending($organizationId: UUID!) {
+    organization(ID: $organizationId) {
+      id
+      roleSet {
+        id
+        applications {
+          id
+        }
+        invitations {
+          id
+        }
+        platformInvitations {
+          id
+        }
+      }
+    }
+  }
+`;
+export const ReadOrganizationRoleSetPlatformInvitationsDocument = gql`
+  query ReadOrganizationRoleSetPlatformInvitations($organizationId: UUID!) {
+    organization(ID: $organizationId) {
+      id
+      roleSet {
+        id
+        platformInvitations {
+          id
+        }
+      }
+    }
+  }
+`;
+export const ReadOrganizationSpaceRolesDocument = gql`
+  query ReadOrganizationSpaceRoles($actorID: UUID!) {
+    rolesOrganization(rolesData: { actorID: $actorID }) {
+      spaces {
+        spaceID
+        displayName
+        roles
+        subspaces {
+          displayName
+          roles
+        }
+      }
+    }
+  }
+`;
+export const ReadOrganizationVerificationDocument = gql`
+  query ReadOrganizationVerification($organizationId: UUID!) {
+    organization(ID: $organizationId) {
+      id
+      verification {
+        id
+        status
       }
     }
   }
@@ -126552,6 +129285,50 @@ export const GetPlatformLicensePlansDocument = gql`
   }
   ${LicensePlanDataFragmentDoc}
 `;
+export const ReadPlatformForumDiscussionsDocument = gql`
+  query ReadPlatformForumDiscussions {
+    platform {
+      forum {
+        id
+        discussions {
+          id
+          nameID
+        }
+      }
+    }
+  }
+`;
+export const ReadPlatformLanguageConfigurationDocument = gql`
+  query ReadPlatformLanguageConfiguration {
+    platform {
+      configuration {
+        language {
+          eligible
+          default
+        }
+      }
+    }
+  }
+`;
+export const ReadPlatformServiceVersionsDocument = gql`
+  query ReadPlatformServiceVersions {
+    platform {
+      metadata {
+        services {
+          name
+          version
+        }
+      }
+    }
+  }
+`;
+export const ReadPlatformVirtualAssistantAccessDocument = gql`
+  query ReadPlatformVirtualAssistantAccess {
+    platform {
+      virtualAssistantAccess
+    }
+  }
+`;
 export const GetProfileDocumentsDocument = gql`
   query GetProfileDocuments($profileID: UUID!) {
     lookup {
@@ -126606,6 +129383,67 @@ export const MyPushSubscriptionsDocument = gql`
 export const VapidPublicKeyDocument = gql`
   query VapidPublicKey {
     vapidPublicKey
+  }
+`;
+export const ReadRoleSetInvitationsDocument = gql`
+  query ReadRoleSetInvitations($roleSetId: UUID!) {
+    lookup {
+      roleSet(ID: $roleSetId) {
+        id
+        invitations {
+          id
+          state
+          actor {
+            id
+          }
+        }
+      }
+    }
+  }
+`;
+export const ReadRoleSetOrganizationsInRolesDocument = gql`
+  query ReadRoleSetOrganizationsInRoles(
+    $roleSetId: UUID!
+    $roles: [RoleName!]!
+  ) {
+    lookup {
+      roleSet(ID: $roleSetId) {
+        id
+        organizationsInRoles(roles: $roles) {
+          role
+          organizations {
+            id
+          }
+        }
+      }
+    }
+  }
+`;
+export const ReadRoleSetUsersInRoleDocument = gql`
+  query ReadRoleSetUsersInRole($roleSetId: UUID!, $role: RoleName!) {
+    lookup {
+      roleSet(ID: $roleSetId) {
+        id
+        usersInRole(role: $role) {
+          id
+        }
+      }
+    }
+  }
+`;
+export const ReadRoleSetUsersInRolesDocument = gql`
+  query ReadRoleSetUsersInRoles($roleSetId: UUID!, $roles: [RoleName!]!) {
+    lookup {
+      roleSet(ID: $roleSetId) {
+        id
+        usersInRoles(roles: $roles) {
+          role
+          users {
+            id
+          }
+        }
+      }
+    }
   }
 `;
 export const SearchDocument = gql`
@@ -126736,6 +129574,225 @@ export const GetSubspacesDataDocument = gql`
   }
   ${SubspaceL1DataFragmentDoc}
 `;
+export const ReadSpaceAboutDocument = gql`
+  query ReadSpaceAbout($spaceId: UUID!) {
+    lookup {
+      space(ID: $spaceId) {
+        id
+        nameID
+        about {
+          why
+          who
+          profile {
+            id
+            displayName
+            tagline
+            description
+            url
+            tagset {
+              id
+              tags
+            }
+          }
+        }
+      }
+    }
+  }
+`;
+export const ReadSpaceAccountSpacesDocument = gql`
+  query ReadSpaceAccountSpaces($spaceId: UUID!) {
+    lookup {
+      space(ID: $spaceId) {
+        id
+        accountSpaces {
+          id
+        }
+      }
+    }
+  }
+`;
+export const ReadSpaceCalloutNamesDocument = gql`
+  query ReadSpaceCalloutNames($spaceId: UUID!) {
+    lookup {
+      space(ID: $spaceId) {
+        id
+        collaboration {
+          calloutsSet {
+            id
+            callouts {
+              id
+              framing {
+                profile {
+                  displayName
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+`;
+export const ReadSpaceClassificationsDocument = gql`
+  query ReadSpaceClassifications($spaceId: UUID!) {
+    lookup {
+      space(ID: $spaceId) {
+        id
+        about {
+          classifications {
+            id
+            displayLabel
+            display
+            sortOrder
+            cardinality
+            selectedValueIDs
+            values {
+              id
+              label
+            }
+          }
+        }
+      }
+    }
+  }
+`;
+export const ReadSpaceGuidelinesIdDocument = gql`
+  query ReadSpaceGuidelinesId($spaceId: UUID!) {
+    lookup {
+      space(ID: $spaceId) {
+        id
+        about {
+          guidelines {
+            id
+          }
+        }
+      }
+    }
+  }
+`;
+export const ReadSpaceInnovationFlowStatesDocument = gql`
+  query ReadSpaceInnovationFlowStates($spaceId: UUID!) {
+    lookup {
+      space(ID: $spaceId) {
+        id
+        collaboration {
+          innovationFlow {
+            id
+            states {
+              id
+              displayName
+              sortOrder
+              settings {
+                visible
+                sidebar
+                descriptionDisplayMode
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+`;
+export const ReadSpaceLevelAndVisibilityDocument = gql`
+  query ReadSpaceLevelAndVisibility($spaceId: UUID!) {
+    lookup {
+      space(ID: $spaceId) {
+        id
+        level
+        visibility
+      }
+    }
+  }
+`;
+export const ReadSpaceMyPrivilegesDocument = gql`
+  query ReadSpaceMyPrivileges($spaceId: UUID!) {
+    lookup {
+      space(ID: $spaceId) {
+        id
+        authorization {
+          myPrivileges
+        }
+      }
+    }
+  }
+`;
+export const ReadSpaceRefsDocument = gql`
+  query ReadSpaceRefs($spaceId: UUID!) {
+    lookup {
+      space(ID: $spaceId) {
+        id
+        nameID
+        level
+        community {
+          roleSet {
+            id
+          }
+        }
+        about {
+          membership {
+            roleSetID
+          }
+        }
+        collaboration {
+          id
+          calloutsSet {
+            id
+          }
+        }
+      }
+    }
+  }
+`;
+export const ReadSpaceSettingsDocument = gql`
+  query ReadSpaceSettings($spaceId: UUID!) {
+    lookup {
+      space(ID: $spaceId) {
+        id
+        settings {
+          privacy {
+            mode
+            allowPlatformSupportAsAdmin
+          }
+          membership {
+            policy
+            allowSubspaceAdminsToInviteMembers
+            trustedOrganizations
+          }
+          collaboration {
+            allowMembersToCreateCallouts
+            allowMembersToCreateSubspaces
+            inheritMembershipRights
+            allowEventsFromSubspaces
+            allowMembersToVideoCall
+            allowGuestContributions
+          }
+        }
+      }
+    }
+  }
+`;
+export const ReadSpaceTemplatesManagerDocument = gql`
+  query ReadSpaceTemplatesManager($spaceId: UUID!) {
+    lookup {
+      space(ID: $spaceId) {
+        id
+        templatesManager {
+          templatesSet {
+            id
+          }
+        }
+        about {
+          profile {
+            tagset {
+              id
+            }
+          }
+        }
+      }
+    }
+  }
+`;
 export const GetUserRolesDocument = gql`
   query GetUserRoles($rolesData: RolesActorInput!) {
     rolesUser(rolesData: $rolesData) {
@@ -126827,6 +129884,71 @@ export const GetWhiteboardTemplatesCountByTemplateSetIdDocument = gql`
     lookup {
       templatesSet(ID: $templateSetId) {
         whiteboardTemplatesCount
+      }
+    }
+  }
+`;
+export const ReadTemplatesSetClassificationTemplatesDocument = gql`
+  query ReadTemplatesSetClassificationTemplates($templatesSetId: UUID!) {
+    lookup {
+      templatesSet(ID: $templatesSetId) {
+        id
+        classificationTemplates {
+          id
+          profile {
+            displayName
+          }
+          classification {
+            cardinality
+            values {
+              id
+              label
+            }
+          }
+        }
+      }
+    }
+  }
+`;
+export const ReadTemplatesSetTemplatesDocument = gql`
+  query ReadTemplatesSetTemplates($templatesSetId: UUID!) {
+    lookup {
+      templatesSet(ID: $templatesSetId) {
+        id
+        templates {
+          id
+          profile {
+            displayName
+            description
+          }
+          callout {
+            settings {
+              contribution {
+                allowedTypes
+              }
+            }
+            framing {
+              type
+              profile {
+                description
+              }
+              memo {
+                id
+                createdBy {
+                  id
+                }
+                authorization {
+                  myPrivileges
+                }
+              }
+              collaboraDocument {
+                id
+                documentType
+                previewUrl
+              }
+            }
+          }
+        }
       }
     }
   }
@@ -127052,6 +130174,60 @@ export const MeQueryDocument = gql`
   ${ApplicationDataFragmentDoc}
   ${InvitationDataFragmentDoc}
 `;
+export const ReadUserAccountDocument = gql`
+  query ReadUserAccount($userId: UUID!) {
+    lookup {
+      user(ID: $userId) {
+        id
+        nameID
+        account {
+          id
+        }
+      }
+    }
+  }
+`;
+export const ReadUserIdByNameIdDocument = gql`
+  query ReadUserIdByNameId($nameID: NameID!) {
+    lookupByName {
+      user(NAMEID: $nameID)
+    }
+  }
+`;
+export const ReadUserProfileTagsetsDocument = gql`
+  query ReadUserProfileTagsets($userId: UUID!) {
+    user(ID: $userId) {
+      id
+      profile {
+        tagsets {
+          id
+          name
+        }
+      }
+    }
+  }
+`;
+export const ReadUserSpaceRolesDocument = gql`
+  query ReadUserSpaceRoles($actorID: UUID!) {
+    rolesUser(rolesData: { actorID: $actorID }) {
+      spaces {
+        spaceID
+        displayName
+        roles
+        subspaces {
+          displayName
+          roles
+        }
+      }
+      invitations {
+        id
+      }
+      applications {
+        id
+      }
+    }
+  }
+`;
 export const GetAiPersonaModelCardDocument = gql`
   query GetAiPersonaModelCard($id: UUID!) {
     lookup {
@@ -127154,6 +130330,32 @@ export const GetVirtualContributorWithModelCardDocument = gql`
             description
           }
         }
+      }
+    }
+  }
+`;
+export const ReadVirtualContributorProfileTagsetsDocument = gql`
+  query ReadVirtualContributorProfileTagsets($virtualContributorId: UUID!) {
+    lookup {
+      virtualContributor(ID: $virtualContributorId) {
+        id
+        profile {
+          tagsets {
+            id
+            name
+          }
+        }
+      }
+    }
+  }
+`;
+export const ReadVirtualContributorVisibilityDocument = gql`
+  query ReadVirtualContributorVisibility($virtualContributorId: UUID!) {
+    lookup {
+      virtualContributor(ID: $virtualContributorId) {
+        id
+        searchVisibility
+        listedInStore
       }
     }
   }
@@ -127547,6 +130749,12 @@ const UpdateCalloutVisibilityDocumentString = print(
 const CreateContributionOnCalloutDocumentString = print(
   CreateContributionOnCalloutDocument
 );
+const CreateCalloutWithDataDocumentString = print(
+  CreateCalloutWithDataDocument
+);
+const CreateContributionWithDataDocumentString = print(
+  CreateContributionWithDataDocument
+);
 const CreateFormCalloutOnCalloutsSetDocumentString = print(
   CreateFormCalloutOnCalloutsSetDocument
 );
@@ -127563,6 +130771,14 @@ const CreatePollCalloutOnCalloutsSetDocumentString = print(
 );
 const UpdatePollStatusDocumentString = print(UpdatePollStatusDocument);
 const TransferCalloutDocumentString = print(TransferCalloutDocument);
+const UpdateCalloutDataDocumentString = print(UpdateCalloutDataDocument);
+const AddClassificationEntryFromTemplateDocumentString = print(
+  AddClassificationEntryFromTemplateDocument
+);
+const UpdateClassificationEntrySelectionDocumentString = print(
+  UpdateClassificationEntrySelectionDocument
+);
+const UpdateTagsetTagsDocumentString = print(UpdateTagsetTagsDocument);
 const UpdateCollaborationFromSpaceTemplateDocumentString = print(
   UpdateCollaborationFromSpaceTemplateDocument
 );
@@ -127632,6 +130848,7 @@ const UpdateInnovationFlowCurrentStateDocumentString = print(
 const UpdateInnovationFlowStateDocumentString = print(
   UpdateInnovationFlowStateDocument
 );
+const RevokeMyMcpApiKeyDocumentString = print(RevokeMyMcpApiKeyDocument);
 const PrepareMemoSigningDocumentString = print(PrepareMemoSigningDocument);
 const AuthorizationPolicyResetOnOrganizationDocumentString = print(
   AuthorizationPolicyResetOnOrganizationDocument
@@ -127639,6 +130856,9 @@ const AuthorizationPolicyResetOnOrganizationDocumentString = print(
 const CreateOrganizationDocumentString = print(CreateOrganizationDocument);
 const DeleteOrganizationDocumentString = print(DeleteOrganizationDocument);
 const UpdateOrganizationDocumentString = print(UpdateOrganizationDocument);
+const UpdateOrganizationDataDocumentString = print(
+  UpdateOrganizationDataDocument
+);
 const UpdateOrganizationSettingsDocumentString = print(
   UpdateOrganizationSettingsDocument
 );
@@ -127866,6 +131086,7 @@ const UpdatePlatformSettingsDocumentString = print(
 const UpdateTemplateFromSpaceDocumentString = print(
   UpdateTemplateFromSpaceDocument
 );
+const RemovePlatformRoleDocumentString = print(RemovePlatformRoleDocument);
 const AssignPlatformRoleToUserDocumentString = print(
   AssignPlatformRoleToUserDocument
 );
@@ -127890,17 +131111,46 @@ const CreateReferenceOnProfileDocumentString = print(
   CreateReferenceOnProfileDocument
 );
 const DeleteReferenceDocumentString = print(DeleteReferenceDocument);
+const ApplyForEntryRoleOnRoleSetDocumentString = print(
+  ApplyForEntryRoleOnRoleSetDocument
+);
+const EventOnApplicationStateDocumentString = print(
+  EventOnApplicationStateDocument
+);
+const EventOnInvitationStateDocumentString = print(
+  EventOnInvitationStateDocument
+);
 const AdminSearchIngestFromScratchDocumentString = print(
   AdminSearchIngestFromScratchDocument
 );
 const UpdateSpaceSettingsDocumentString = print(UpdateSpaceSettingsDocument);
+const AssignLicensePlanToSpaceByIdDocumentString = print(
+  AssignLicensePlanToSpaceByIdDocument
+);
 const CreateSpaceDocumentString = print(CreateSpaceDocument);
+const CreateSpaceOnAccountDocumentString = print(CreateSpaceOnAccountDocument);
+const CreateSubspaceWithDataDocumentString = print(
+  CreateSubspaceWithDataDocument
+);
+const UpdateCommunityGuidelinesDataDocumentString = print(
+  UpdateCommunityGuidelinesDataDocument
+);
+const UpdateInnovationFlowStatesSortOrderDocumentString = print(
+  UpdateInnovationFlowStatesSortOrderDocument
+);
+const UpdateSpaceDataDocumentString = print(UpdateSpaceDataDocument);
 const CreateCalloutTemplateWithFramingDocumentString = print(
   CreateCalloutTemplateWithFramingDocument
+);
+const CreateClassificationTemplateDocumentString = print(
+  CreateClassificationTemplateDocument
 );
 const CreateTemplateDocumentString = print(CreateTemplateDocument);
 const CreateTemplateFromSpaceDocumentString = print(
   CreateTemplateFromSpaceDocument
+);
+const CreateTemplateWithDataDocumentString = print(
+  CreateTemplateWithDataDocument
 );
 const CreateWhiteboardTemplateDocumentString = print(
   CreateWhiteboardTemplateDocument
@@ -127915,6 +131165,7 @@ const UpdateWhiteboardTemplateDocumentString = print(
 const CreateUserDocumentString = print(CreateUserDocument);
 const DeleteUserDocumentString = print(DeleteUserDocument);
 const UpdateUserDocumentString = print(UpdateUserDocument);
+const UpdateUserProfileDocumentString = print(UpdateUserProfileDocument);
 const UpdateUserSettingsDocumentString = print(UpdateUserSettingsDocument);
 const ConvertVirtualContributorToUseKnowledgeBaseDocumentString = print(
   ConvertVirtualContributorToUseKnowledgeBaseDocument
@@ -127922,11 +131173,17 @@ const ConvertVirtualContributorToUseKnowledgeBaseDocumentString = print(
 const CreateVirtualContributorOnAccountDocumentString = print(
   CreateVirtualContributorOnAccountDocument
 );
+const CreateVirtualContributorWithDataDocumentString = print(
+  CreateVirtualContributorWithDataDocument
+);
 const DeleteVirtualContributorOnAccountDocumentString = print(
   DeleteVirtualContributorOnAccountDocument
 );
 const UpdateVirtualContributorDocumentString = print(
   UpdateVirtualContributorDocument
+);
+const UpdateVirtualContributorDataDocumentString = print(
+  UpdateVirtualContributorDataDocument
 );
 const UpdateVirtualContributorSettingsDocumentString = print(
   UpdateVirtualContributorSettingsDocument
@@ -127968,6 +131225,13 @@ const LookupPlatformInvitationCreatedByDocumentString = print(
 );
 const GetAccountMainEntitiesDocumentString = print(
   GetAccountMainEntitiesDocument
+);
+const ReadAccountResourcesDocumentString = print(ReadAccountResourcesDocument);
+const ReadInnovationPackTemplatesSetDocumentString = print(
+  ReadInnovationPackTemplatesSetDocument
+);
+const ReadInnovationPackVisibilityDocumentString = print(
+  ReadInnovationPackVisibilityDocument
 );
 const GetActivityLogOnCollaborationDocumentString = print(
   GetActivityLogOnCollaborationDocument
@@ -128021,6 +131285,27 @@ const GetCalloutReactionsDocumentString = print(GetCalloutReactionsDocument);
 const GetCalloutReactionsSummaryDocumentString = print(
   GetCalloutReactionsSummaryDocument
 );
+const ReadCalloutContributionsDocumentString = print(
+  ReadCalloutContributionsDocument
+);
+const ReadCalloutFormResponsesDocumentString = print(
+  ReadCalloutFormResponsesDocument
+);
+const ReadCalloutFramingDocumentString = print(ReadCalloutFramingDocument);
+const ReadCalloutFramingContributorsDocumentString = print(
+  ReadCalloutFramingContributorsDocument
+);
+const ReadCalloutFramingSettingsDocumentString = print(
+  ReadCalloutFramingSettingsDocument
+);
+const ReadCalloutSubspaceIdsDocumentString = print(
+  ReadCalloutSubspaceIdsDocument
+);
+const ReadCalloutSubspacesDocumentString = print(ReadCalloutSubspacesDocument);
+const ReadCalloutsSetCalloutsDocumentString = print(
+  ReadCalloutsSetCalloutsDocument
+);
+const ReadMemoDocumentsDocumentString = print(ReadMemoDocumentsDocument);
 const GetMeConversationsDocumentString = print(GetMeConversationsDocument);
 const GetPlatformDiscussionsDataDocumentString = print(
   GetPlatformDiscussionsDataDocument
@@ -128065,6 +131350,22 @@ const GetSpaceLicenseSubscriptionsDocumentString = print(
   GetSpaceLicenseSubscriptionsDocument
 );
 const LookupProfileVisualsDocumentString = print(LookupProfileVisualsDocument);
+const ReadMyAccountDeletionCanDeleteDocumentString = print(
+  ReadMyAccountDeletionCanDeleteDocument
+);
+const ReadMyLanguageSettingDocumentString = print(
+  ReadMyLanguageSettingDocument
+);
+const ReadMyMcpApiKeysDocumentString = print(ReadMyMcpApiKeysDocument);
+const ReadMyNotificationsDocumentString = print(ReadMyNotificationsDocument);
+const ReadMyNotificationsUnreadCountDocumentString = print(
+  ReadMyNotificationsUnreadCountDocument
+);
+const ReadMyPlatformRolesDocumentString = print(ReadMyPlatformRolesDocument);
+const ReadMyPrivilegesDocumentString = print(ReadMyPrivilegesDocument);
+const ReadMySessionDocumentString = print(ReadMySessionDocument);
+const ReadMyUserDocumentString = print(ReadMyUserDocument);
+const ReadMyUserSettingsDocumentString = print(ReadMyUserSettingsDocument);
 const GetCalloutFramingMemoDocumentString = print(
   GetCalloutFramingMemoDocument
 );
@@ -128079,6 +131380,33 @@ const GetOrganizationIdByNameIdDocumentString = print(
 const GetOrganizationDataDocumentString = print(GetOrganizationDataDocument);
 const GetOrganizationsDataDocumentString = print(GetOrganizationsDataDocument);
 const GetRolesOrganizationDocumentString = print(GetRolesOrganizationDocument);
+const ReadOrganizationAccountDocumentString = print(
+  ReadOrganizationAccountDocument
+);
+const ReadOrganizationProfileTagsetsDocumentString = print(
+  ReadOrganizationProfileTagsetsDocument
+);
+const ReadOrganizationRoleSetDocumentString = print(
+  ReadOrganizationRoleSetDocument
+);
+const ReadOrganizationRoleSetApplicationsDocumentString = print(
+  ReadOrganizationRoleSetApplicationsDocument
+);
+const ReadOrganizationRoleSetInvitationsDocumentString = print(
+  ReadOrganizationRoleSetInvitationsDocument
+);
+const ReadOrganizationRoleSetPendingDocumentString = print(
+  ReadOrganizationRoleSetPendingDocument
+);
+const ReadOrganizationRoleSetPlatformInvitationsDocumentString = print(
+  ReadOrganizationRoleSetPlatformInvitationsDocument
+);
+const ReadOrganizationSpaceRolesDocumentString = print(
+  ReadOrganizationSpaceRolesDocument
+);
+const ReadOrganizationVerificationDocumentString = print(
+  ReadOrganizationVerificationDocument
+);
 const OrganizationsPaginatedDocumentString = print(
   OrganizationsPaginatedDocument
 );
@@ -128139,9 +131467,33 @@ const GetOrgVisualUriInnovationHubDocumentString = print(
 const GetPlatformLicensePlansDocumentString = print(
   GetPlatformLicensePlansDocument
 );
+const ReadPlatformForumDiscussionsDocumentString = print(
+  ReadPlatformForumDiscussionsDocument
+);
+const ReadPlatformLanguageConfigurationDocumentString = print(
+  ReadPlatformLanguageConfigurationDocument
+);
+const ReadPlatformServiceVersionsDocumentString = print(
+  ReadPlatformServiceVersionsDocument
+);
+const ReadPlatformVirtualAssistantAccessDocumentString = print(
+  ReadPlatformVirtualAssistantAccessDocument
+);
 const GetProfileDocumentsDocumentString = print(GetProfileDocumentsDocument);
 const MyPushSubscriptionsDocumentString = print(MyPushSubscriptionsDocument);
 const VapidPublicKeyDocumentString = print(VapidPublicKeyDocument);
+const ReadRoleSetInvitationsDocumentString = print(
+  ReadRoleSetInvitationsDocument
+);
+const ReadRoleSetOrganizationsInRolesDocumentString = print(
+  ReadRoleSetOrganizationsInRolesDocument
+);
+const ReadRoleSetUsersInRoleDocumentString = print(
+  ReadRoleSetUsersInRoleDocument
+);
+const ReadRoleSetUsersInRolesDocumentString = print(
+  ReadRoleSetUsersInRolesDocument
+);
 const SearchDocumentString = print(SearchDocument);
 const PrivateSpaceDataDocumentString = print(PrivateSpaceDataDocument);
 const GetSpaceDataDocumentString = print(GetSpaceDataDocument);
@@ -128153,6 +131505,33 @@ const GetSpacesFilteredByVisibilityWithAccessDocumentString = print(
 const GetSubspacePageDocumentString = print(GetSubspacePageDocument);
 const GetSpaceAboutDetailsDocumentString = print(GetSpaceAboutDetailsDocument);
 const GetSubspacesDataDocumentString = print(GetSubspacesDataDocument);
+const ReadSpaceAboutDocumentString = print(ReadSpaceAboutDocument);
+const ReadSpaceAccountSpacesDocumentString = print(
+  ReadSpaceAccountSpacesDocument
+);
+const ReadSpaceCalloutNamesDocumentString = print(
+  ReadSpaceCalloutNamesDocument
+);
+const ReadSpaceClassificationsDocumentString = print(
+  ReadSpaceClassificationsDocument
+);
+const ReadSpaceGuidelinesIdDocumentString = print(
+  ReadSpaceGuidelinesIdDocument
+);
+const ReadSpaceInnovationFlowStatesDocumentString = print(
+  ReadSpaceInnovationFlowStatesDocument
+);
+const ReadSpaceLevelAndVisibilityDocumentString = print(
+  ReadSpaceLevelAndVisibilityDocument
+);
+const ReadSpaceMyPrivilegesDocumentString = print(
+  ReadSpaceMyPrivilegesDocument
+);
+const ReadSpaceRefsDocumentString = print(ReadSpaceRefsDocument);
+const ReadSpaceSettingsDocumentString = print(ReadSpaceSettingsDocument);
+const ReadSpaceTemplatesManagerDocumentString = print(
+  ReadSpaceTemplatesManagerDocument
+);
 const GetUserRolesDocumentString = print(GetUserRolesDocument);
 const GetSpaceTemplatesCountByTemplateSetIdDocumentString = print(
   GetSpaceTemplatesCountByTemplateSetIdDocument
@@ -128163,6 +131542,12 @@ const TemplateCalloutFramingDocumentString = print(
 );
 const GetWhiteboardTemplatesCountByTemplateSetIdDocumentString = print(
   GetWhiteboardTemplatesCountByTemplateSetIdDocument
+);
+const ReadTemplatesSetClassificationTemplatesDocumentString = print(
+  ReadTemplatesSetClassificationTemplatesDocument
+);
+const ReadTemplatesSetTemplatesDocumentString = print(
+  ReadTemplatesSetTemplatesDocument
 );
 const UrlResolverDocumentString = print(UrlResolverDocument);
 const GetSubspaceApplicationsDocumentString = print(
@@ -128180,11 +131565,23 @@ const MeOrganizationPendingDocumentString = print(
   MeOrganizationPendingDocument
 );
 const MeQueryDocumentString = print(MeQueryDocument);
+const ReadUserAccountDocumentString = print(ReadUserAccountDocument);
+const ReadUserIdByNameIdDocumentString = print(ReadUserIdByNameIdDocument);
+const ReadUserProfileTagsetsDocumentString = print(
+  ReadUserProfileTagsetsDocument
+);
+const ReadUserSpaceRolesDocumentString = print(ReadUserSpaceRolesDocument);
 const GetAiPersonaModelCardDocumentString = print(
   GetAiPersonaModelCardDocument
 );
 const GetVirtualContributorWithModelCardDocumentString = print(
   GetVirtualContributorWithModelCardDocument
+);
+const ReadVirtualContributorProfileTagsetsDocumentString = print(
+  ReadVirtualContributorProfileTagsetsDocument
+);
+const ReadVirtualContributorVisibilityDocumentString = print(
+  ReadVirtualContributorVisibilityDocument
 );
 const VirtualContributorDocumentString = print(VirtualContributorDocument);
 const VirtualContributorKnowledgeBaseDocumentString = print(
@@ -129085,6 +132482,50 @@ export function getSdk(
         variables
       );
     },
+    CreateCalloutWithData(
+      variables: SchemaTypes.CreateCalloutWithDataMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.CreateCalloutWithDataMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.CreateCalloutWithDataMutation>(
+            CreateCalloutWithDataDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "CreateCalloutWithData",
+        "mutation",
+        variables
+      );
+    },
+    CreateContributionWithData(
+      variables: SchemaTypes.CreateContributionWithDataMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.CreateContributionWithDataMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.CreateContributionWithDataMutation>(
+            CreateContributionWithDataDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "CreateContributionWithData",
+        "mutation",
+        variables
+      );
+    },
     createFormCalloutOnCalloutsSet(
       variables: SchemaTypes.CreateFormCalloutOnCalloutsSetMutationVariables,
       requestHeaders?: GraphQLClientRequestHeaders
@@ -129257,6 +132698,94 @@ export function getSdk(
             { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "transferCallout",
+        "mutation",
+        variables
+      );
+    },
+    UpdateCalloutData(
+      variables: SchemaTypes.UpdateCalloutDataMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.UpdateCalloutDataMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.UpdateCalloutDataMutation>(
+            UpdateCalloutDataDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "UpdateCalloutData",
+        "mutation",
+        variables
+      );
+    },
+    AddClassificationEntryFromTemplate(
+      variables: SchemaTypes.AddClassificationEntryFromTemplateMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.AddClassificationEntryFromTemplateMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.AddClassificationEntryFromTemplateMutation>(
+            AddClassificationEntryFromTemplateDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "AddClassificationEntryFromTemplate",
+        "mutation",
+        variables
+      );
+    },
+    UpdateClassificationEntrySelection(
+      variables: SchemaTypes.UpdateClassificationEntrySelectionMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.UpdateClassificationEntrySelectionMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.UpdateClassificationEntrySelectionMutation>(
+            UpdateClassificationEntrySelectionDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "UpdateClassificationEntrySelection",
+        "mutation",
+        variables
+      );
+    },
+    UpdateTagsetTags(
+      variables: SchemaTypes.UpdateTagsetTagsMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.UpdateTagsetTagsMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.UpdateTagsetTagsMutation>(
+            UpdateTagsetTagsDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "UpdateTagsetTags",
         "mutation",
         variables
       );
@@ -130119,6 +133648,28 @@ export function getSdk(
         variables
       );
     },
+    RevokeMyMcpApiKey(
+      variables: SchemaTypes.RevokeMyMcpApiKeyMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.RevokeMyMcpApiKeyMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.RevokeMyMcpApiKeyMutation>(
+            RevokeMyMcpApiKeyDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "RevokeMyMcpApiKey",
+        "mutation",
+        variables
+      );
+    },
     PrepareMemoSigning(
       variables: SchemaTypes.PrepareMemoSigningMutationVariables,
       requestHeaders?: GraphQLClientRequestHeaders
@@ -130225,6 +133776,28 @@ export function getSdk(
             { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "updateOrganization",
+        "mutation",
+        variables
+      );
+    },
+    UpdateOrganizationData(
+      variables: SchemaTypes.UpdateOrganizationDataMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.UpdateOrganizationDataMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.UpdateOrganizationDataMutation>(
+            UpdateOrganizationDataDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "UpdateOrganizationData",
         "mutation",
         variables
       );
@@ -132033,6 +135606,28 @@ export function getSdk(
         variables
       );
     },
+    RemovePlatformRole(
+      variables: SchemaTypes.RemovePlatformRoleMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.RemovePlatformRoleMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.RemovePlatformRoleMutation>(
+            RemovePlatformRoleDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "RemovePlatformRole",
+        "mutation",
+        variables
+      );
+    },
     assignPlatformRoleToUser(
       variables: SchemaTypes.AssignPlatformRoleToUserMutationVariables,
       requestHeaders?: GraphQLClientRequestHeaders
@@ -132297,6 +135892,72 @@ export function getSdk(
         variables
       );
     },
+    ApplyForEntryRoleOnRoleSet(
+      variables: SchemaTypes.ApplyForEntryRoleOnRoleSetMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.ApplyForEntryRoleOnRoleSetMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.ApplyForEntryRoleOnRoleSetMutation>(
+            ApplyForEntryRoleOnRoleSetDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "ApplyForEntryRoleOnRoleSet",
+        "mutation",
+        variables
+      );
+    },
+    EventOnApplicationState(
+      variables: SchemaTypes.EventOnApplicationStateMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.EventOnApplicationStateMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.EventOnApplicationStateMutation>(
+            EventOnApplicationStateDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "EventOnApplicationState",
+        "mutation",
+        variables
+      );
+    },
+    EventOnInvitationState(
+      variables: SchemaTypes.EventOnInvitationStateMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.EventOnInvitationStateMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.EventOnInvitationStateMutation>(
+            EventOnInvitationStateDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "EventOnInvitationState",
+        "mutation",
+        variables
+      );
+    },
     AdminSearchIngestFromScratch(
       variables?: SchemaTypes.AdminSearchIngestFromScratchMutationVariables,
       requestHeaders?: GraphQLClientRequestHeaders
@@ -132341,6 +136002,28 @@ export function getSdk(
         variables
       );
     },
+    AssignLicensePlanToSpaceById(
+      variables: SchemaTypes.AssignLicensePlanToSpaceByIdMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.AssignLicensePlanToSpaceByIdMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.AssignLicensePlanToSpaceByIdMutation>(
+            AssignLicensePlanToSpaceByIdDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "AssignLicensePlanToSpaceById",
+        "mutation",
+        variables
+      );
+    },
     createSpace(
       variables: SchemaTypes.CreateSpaceMutationVariables,
       requestHeaders?: GraphQLClientRequestHeaders
@@ -132363,6 +136046,116 @@ export function getSdk(
         variables
       );
     },
+    CreateSpaceOnAccount(
+      variables: SchemaTypes.CreateSpaceOnAccountMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.CreateSpaceOnAccountMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.CreateSpaceOnAccountMutation>(
+            CreateSpaceOnAccountDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "CreateSpaceOnAccount",
+        "mutation",
+        variables
+      );
+    },
+    CreateSubspaceWithData(
+      variables: SchemaTypes.CreateSubspaceWithDataMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.CreateSubspaceWithDataMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.CreateSubspaceWithDataMutation>(
+            CreateSubspaceWithDataDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "CreateSubspaceWithData",
+        "mutation",
+        variables
+      );
+    },
+    UpdateCommunityGuidelinesData(
+      variables: SchemaTypes.UpdateCommunityGuidelinesDataMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.UpdateCommunityGuidelinesDataMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.UpdateCommunityGuidelinesDataMutation>(
+            UpdateCommunityGuidelinesDataDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "UpdateCommunityGuidelinesData",
+        "mutation",
+        variables
+      );
+    },
+    UpdateInnovationFlowStatesSortOrder(
+      variables: SchemaTypes.UpdateInnovationFlowStatesSortOrderMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.UpdateInnovationFlowStatesSortOrderMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.UpdateInnovationFlowStatesSortOrderMutation>(
+            UpdateInnovationFlowStatesSortOrderDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "UpdateInnovationFlowStatesSortOrder",
+        "mutation",
+        variables
+      );
+    },
+    UpdateSpaceData(
+      variables: SchemaTypes.UpdateSpaceDataMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.UpdateSpaceDataMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.UpdateSpaceDataMutation>(
+            UpdateSpaceDataDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "UpdateSpaceData",
+        "mutation",
+        variables
+      );
+    },
     CreateCalloutTemplateWithFraming(
       variables: SchemaTypes.CreateCalloutTemplateWithFramingMutationVariables,
       requestHeaders?: GraphQLClientRequestHeaders
@@ -132381,6 +136174,28 @@ export function getSdk(
             { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "CreateCalloutTemplateWithFraming",
+        "mutation",
+        variables
+      );
+    },
+    CreateClassificationTemplate(
+      variables: SchemaTypes.CreateClassificationTemplateMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.CreateClassificationTemplateMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.CreateClassificationTemplateMutation>(
+            CreateClassificationTemplateDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "CreateClassificationTemplate",
         "mutation",
         variables
       );
@@ -132425,6 +136240,28 @@ export function getSdk(
             { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "CreateTemplateFromSpace",
+        "mutation",
+        variables
+      );
+    },
+    CreateTemplateWithData(
+      variables: SchemaTypes.CreateTemplateWithDataMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.CreateTemplateWithDataMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.CreateTemplateWithDataMutation>(
+            CreateTemplateWithDataDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "CreateTemplateWithData",
         "mutation",
         variables
       );
@@ -132627,6 +136464,28 @@ export function getSdk(
         variables
       );
     },
+    UpdateUserProfile(
+      variables: SchemaTypes.UpdateUserProfileMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.UpdateUserProfileMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.UpdateUserProfileMutation>(
+            UpdateUserProfileDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "UpdateUserProfile",
+        "mutation",
+        variables
+      );
+    },
     UpdateUserSettings(
       variables: SchemaTypes.UpdateUserSettingsMutationVariables,
       requestHeaders?: GraphQLClientRequestHeaders
@@ -132693,6 +136552,28 @@ export function getSdk(
         variables
       );
     },
+    CreateVirtualContributorWithData(
+      variables: SchemaTypes.CreateVirtualContributorWithDataMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.CreateVirtualContributorWithDataMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.CreateVirtualContributorWithDataMutation>(
+            CreateVirtualContributorWithDataDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "CreateVirtualContributorWithData",
+        "mutation",
+        variables
+      );
+    },
     DeleteVirtualContributorOnAccount(
       variables: SchemaTypes.DeleteVirtualContributorOnAccountMutationVariables,
       requestHeaders?: GraphQLClientRequestHeaders
@@ -132733,6 +136614,28 @@ export function getSdk(
             { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "UpdateVirtualContributor",
+        "mutation",
+        variables
+      );
+    },
+    UpdateVirtualContributorData(
+      variables: SchemaTypes.UpdateVirtualContributorDataMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.UpdateVirtualContributorDataMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.UpdateVirtualContributorDataMutation>(
+            UpdateVirtualContributorDataDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "UpdateVirtualContributorData",
         "mutation",
         variables
       );
@@ -133063,6 +136966,72 @@ export function getSdk(
             { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "GetAccountMainEntities",
+        "query",
+        variables
+      );
+    },
+    ReadAccountResources(
+      variables: SchemaTypes.ReadAccountResourcesQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.ReadAccountResourcesQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.ReadAccountResourcesQuery>(
+            ReadAccountResourcesDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "ReadAccountResources",
+        "query",
+        variables
+      );
+    },
+    ReadInnovationPackTemplatesSet(
+      variables: SchemaTypes.ReadInnovationPackTemplatesSetQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.ReadInnovationPackTemplatesSetQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.ReadInnovationPackTemplatesSetQuery>(
+            ReadInnovationPackTemplatesSetDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "ReadInnovationPackTemplatesSet",
+        "query",
+        variables
+      );
+    },
+    ReadInnovationPackVisibility(
+      variables: SchemaTypes.ReadInnovationPackVisibilityQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.ReadInnovationPackVisibilityQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.ReadInnovationPackVisibilityQuery>(
+            ReadInnovationPackVisibilityDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "ReadInnovationPackVisibility",
         "query",
         variables
       );
@@ -133595,6 +137564,204 @@ export function getSdk(
         variables
       );
     },
+    ReadCalloutContributions(
+      variables: SchemaTypes.ReadCalloutContributionsQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.ReadCalloutContributionsQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.ReadCalloutContributionsQuery>(
+            ReadCalloutContributionsDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "ReadCalloutContributions",
+        "query",
+        variables
+      );
+    },
+    ReadCalloutFormResponses(
+      variables: SchemaTypes.ReadCalloutFormResponsesQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.ReadCalloutFormResponsesQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.ReadCalloutFormResponsesQuery>(
+            ReadCalloutFormResponsesDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "ReadCalloutFormResponses",
+        "query",
+        variables
+      );
+    },
+    ReadCalloutFraming(
+      variables: SchemaTypes.ReadCalloutFramingQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.ReadCalloutFramingQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.ReadCalloutFramingQuery>(
+            ReadCalloutFramingDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "ReadCalloutFraming",
+        "query",
+        variables
+      );
+    },
+    ReadCalloutFramingContributors(
+      variables: SchemaTypes.ReadCalloutFramingContributorsQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.ReadCalloutFramingContributorsQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.ReadCalloutFramingContributorsQuery>(
+            ReadCalloutFramingContributorsDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "ReadCalloutFramingContributors",
+        "query",
+        variables
+      );
+    },
+    ReadCalloutFramingSettings(
+      variables: SchemaTypes.ReadCalloutFramingSettingsQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.ReadCalloutFramingSettingsQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.ReadCalloutFramingSettingsQuery>(
+            ReadCalloutFramingSettingsDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "ReadCalloutFramingSettings",
+        "query",
+        variables
+      );
+    },
+    ReadCalloutSubspaceIds(
+      variables: SchemaTypes.ReadCalloutSubspaceIdsQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.ReadCalloutSubspaceIdsQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.ReadCalloutSubspaceIdsQuery>(
+            ReadCalloutSubspaceIdsDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "ReadCalloutSubspaceIds",
+        "query",
+        variables
+      );
+    },
+    ReadCalloutSubspaces(
+      variables: SchemaTypes.ReadCalloutSubspacesQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.ReadCalloutSubspacesQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.ReadCalloutSubspacesQuery>(
+            ReadCalloutSubspacesDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "ReadCalloutSubspaces",
+        "query",
+        variables
+      );
+    },
+    ReadCalloutsSetCallouts(
+      variables: SchemaTypes.ReadCalloutsSetCalloutsQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.ReadCalloutsSetCalloutsQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.ReadCalloutsSetCalloutsQuery>(
+            ReadCalloutsSetCalloutsDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "ReadCalloutsSetCallouts",
+        "query",
+        variables
+      );
+    },
+    ReadMemoDocuments(
+      variables: SchemaTypes.ReadMemoDocumentsQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.ReadMemoDocumentsQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.ReadMemoDocumentsQuery>(
+            ReadMemoDocumentsDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "ReadMemoDocuments",
+        "query",
+        variables
+      );
+    },
     GetMeConversations(
       variables?: SchemaTypes.GetMeConversationsQueryVariables,
       requestHeaders?: GraphQLClientRequestHeaders
@@ -134035,6 +138202,226 @@ export function getSdk(
         variables
       );
     },
+    ReadMyAccountDeletionCanDelete(
+      variables?: SchemaTypes.ReadMyAccountDeletionCanDeleteQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.ReadMyAccountDeletionCanDeleteQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.ReadMyAccountDeletionCanDeleteQuery>(
+            ReadMyAccountDeletionCanDeleteDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "ReadMyAccountDeletionCanDelete",
+        "query",
+        variables
+      );
+    },
+    ReadMyLanguageSetting(
+      variables?: SchemaTypes.ReadMyLanguageSettingQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.ReadMyLanguageSettingQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.ReadMyLanguageSettingQuery>(
+            ReadMyLanguageSettingDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "ReadMyLanguageSetting",
+        "query",
+        variables
+      );
+    },
+    ReadMyMcpApiKeys(
+      variables?: SchemaTypes.ReadMyMcpApiKeysQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.ReadMyMcpApiKeysQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.ReadMyMcpApiKeysQuery>(
+            ReadMyMcpApiKeysDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "ReadMyMcpApiKeys",
+        "query",
+        variables
+      );
+    },
+    ReadMyNotifications(
+      variables?: SchemaTypes.ReadMyNotificationsQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.ReadMyNotificationsQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.ReadMyNotificationsQuery>(
+            ReadMyNotificationsDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "ReadMyNotifications",
+        "query",
+        variables
+      );
+    },
+    ReadMyNotificationsUnreadCount(
+      variables?: SchemaTypes.ReadMyNotificationsUnreadCountQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.ReadMyNotificationsUnreadCountQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.ReadMyNotificationsUnreadCountQuery>(
+            ReadMyNotificationsUnreadCountDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "ReadMyNotificationsUnreadCount",
+        "query",
+        variables
+      );
+    },
+    ReadMyPlatformRoles(
+      variables?: SchemaTypes.ReadMyPlatformRolesQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.ReadMyPlatformRolesQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.ReadMyPlatformRolesQuery>(
+            ReadMyPlatformRolesDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "ReadMyPlatformRoles",
+        "query",
+        variables
+      );
+    },
+    ReadMyPrivileges(
+      variables?: SchemaTypes.ReadMyPrivilegesQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.ReadMyPrivilegesQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.ReadMyPrivilegesQuery>(
+            ReadMyPrivilegesDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "ReadMyPrivileges",
+        "query",
+        variables
+      );
+    },
+    ReadMySession(
+      variables?: SchemaTypes.ReadMySessionQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.ReadMySessionQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.ReadMySessionQuery>(
+            ReadMySessionDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "ReadMySession",
+        "query",
+        variables
+      );
+    },
+    ReadMyUser(
+      variables?: SchemaTypes.ReadMyUserQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.ReadMyUserQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.ReadMyUserQuery>(
+            ReadMyUserDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "ReadMyUser",
+        "query",
+        variables
+      );
+    },
+    ReadMyUserSettings(
+      variables?: SchemaTypes.ReadMyUserSettingsQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.ReadMyUserSettingsQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.ReadMyUserSettingsQuery>(
+            ReadMyUserSettingsDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "ReadMyUserSettings",
+        "query",
+        variables
+      );
+    },
     GetCalloutFramingMemo(
       variables: SchemaTypes.GetCalloutFramingMemoQueryVariables,
       requestHeaders?: GraphQLClientRequestHeaders
@@ -134207,6 +138594,204 @@ export function getSdk(
             { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "GetRolesOrganization",
+        "query",
+        variables
+      );
+    },
+    ReadOrganizationAccount(
+      variables: SchemaTypes.ReadOrganizationAccountQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.ReadOrganizationAccountQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.ReadOrganizationAccountQuery>(
+            ReadOrganizationAccountDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "ReadOrganizationAccount",
+        "query",
+        variables
+      );
+    },
+    ReadOrganizationProfileTagsets(
+      variables: SchemaTypes.ReadOrganizationProfileTagsetsQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.ReadOrganizationProfileTagsetsQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.ReadOrganizationProfileTagsetsQuery>(
+            ReadOrganizationProfileTagsetsDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "ReadOrganizationProfileTagsets",
+        "query",
+        variables
+      );
+    },
+    ReadOrganizationRoleSet(
+      variables: SchemaTypes.ReadOrganizationRoleSetQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.ReadOrganizationRoleSetQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.ReadOrganizationRoleSetQuery>(
+            ReadOrganizationRoleSetDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "ReadOrganizationRoleSet",
+        "query",
+        variables
+      );
+    },
+    ReadOrganizationRoleSetApplications(
+      variables: SchemaTypes.ReadOrganizationRoleSetApplicationsQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.ReadOrganizationRoleSetApplicationsQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.ReadOrganizationRoleSetApplicationsQuery>(
+            ReadOrganizationRoleSetApplicationsDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "ReadOrganizationRoleSetApplications",
+        "query",
+        variables
+      );
+    },
+    ReadOrganizationRoleSetInvitations(
+      variables: SchemaTypes.ReadOrganizationRoleSetInvitationsQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.ReadOrganizationRoleSetInvitationsQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.ReadOrganizationRoleSetInvitationsQuery>(
+            ReadOrganizationRoleSetInvitationsDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "ReadOrganizationRoleSetInvitations",
+        "query",
+        variables
+      );
+    },
+    ReadOrganizationRoleSetPending(
+      variables: SchemaTypes.ReadOrganizationRoleSetPendingQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.ReadOrganizationRoleSetPendingQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.ReadOrganizationRoleSetPendingQuery>(
+            ReadOrganizationRoleSetPendingDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "ReadOrganizationRoleSetPending",
+        "query",
+        variables
+      );
+    },
+    ReadOrganizationRoleSetPlatformInvitations(
+      variables: SchemaTypes.ReadOrganizationRoleSetPlatformInvitationsQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.ReadOrganizationRoleSetPlatformInvitationsQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.ReadOrganizationRoleSetPlatformInvitationsQuery>(
+            ReadOrganizationRoleSetPlatformInvitationsDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "ReadOrganizationRoleSetPlatformInvitations",
+        "query",
+        variables
+      );
+    },
+    ReadOrganizationSpaceRoles(
+      variables: SchemaTypes.ReadOrganizationSpaceRolesQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.ReadOrganizationSpaceRolesQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.ReadOrganizationSpaceRolesQuery>(
+            ReadOrganizationSpaceRolesDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "ReadOrganizationSpaceRoles",
+        "query",
+        variables
+      );
+    },
+    ReadOrganizationVerification(
+      variables: SchemaTypes.ReadOrganizationVerificationQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.ReadOrganizationVerificationQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.ReadOrganizationVerificationQuery>(
+            ReadOrganizationVerificationDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "ReadOrganizationVerification",
         "query",
         variables
       );
@@ -134695,6 +139280,94 @@ export function getSdk(
         variables
       );
     },
+    ReadPlatformForumDiscussions(
+      variables?: SchemaTypes.ReadPlatformForumDiscussionsQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.ReadPlatformForumDiscussionsQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.ReadPlatformForumDiscussionsQuery>(
+            ReadPlatformForumDiscussionsDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "ReadPlatformForumDiscussions",
+        "query",
+        variables
+      );
+    },
+    ReadPlatformLanguageConfiguration(
+      variables?: SchemaTypes.ReadPlatformLanguageConfigurationQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.ReadPlatformLanguageConfigurationQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.ReadPlatformLanguageConfigurationQuery>(
+            ReadPlatformLanguageConfigurationDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "ReadPlatformLanguageConfiguration",
+        "query",
+        variables
+      );
+    },
+    ReadPlatformServiceVersions(
+      variables?: SchemaTypes.ReadPlatformServiceVersionsQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.ReadPlatformServiceVersionsQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.ReadPlatformServiceVersionsQuery>(
+            ReadPlatformServiceVersionsDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "ReadPlatformServiceVersions",
+        "query",
+        variables
+      );
+    },
+    ReadPlatformVirtualAssistantAccess(
+      variables?: SchemaTypes.ReadPlatformVirtualAssistantAccessQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.ReadPlatformVirtualAssistantAccessQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.ReadPlatformVirtualAssistantAccessQuery>(
+            ReadPlatformVirtualAssistantAccessDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "ReadPlatformVirtualAssistantAccess",
+        "query",
+        variables
+      );
+    },
     GetProfileDocuments(
       variables: SchemaTypes.GetProfileDocumentsQueryVariables,
       requestHeaders?: GraphQLClientRequestHeaders
@@ -134757,6 +139430,94 @@ export function getSdk(
             { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "VapidPublicKey",
+        "query",
+        variables
+      );
+    },
+    ReadRoleSetInvitations(
+      variables: SchemaTypes.ReadRoleSetInvitationsQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.ReadRoleSetInvitationsQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.ReadRoleSetInvitationsQuery>(
+            ReadRoleSetInvitationsDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "ReadRoleSetInvitations",
+        "query",
+        variables
+      );
+    },
+    ReadRoleSetOrganizationsInRoles(
+      variables: SchemaTypes.ReadRoleSetOrganizationsInRolesQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.ReadRoleSetOrganizationsInRolesQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.ReadRoleSetOrganizationsInRolesQuery>(
+            ReadRoleSetOrganizationsInRolesDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "ReadRoleSetOrganizationsInRoles",
+        "query",
+        variables
+      );
+    },
+    ReadRoleSetUsersInRole(
+      variables: SchemaTypes.ReadRoleSetUsersInRoleQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.ReadRoleSetUsersInRoleQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.ReadRoleSetUsersInRoleQuery>(
+            ReadRoleSetUsersInRoleDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "ReadRoleSetUsersInRole",
+        "query",
+        variables
+      );
+    },
+    ReadRoleSetUsersInRoles(
+      variables: SchemaTypes.ReadRoleSetUsersInRolesQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.ReadRoleSetUsersInRolesQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.ReadRoleSetUsersInRolesQuery>(
+            ReadRoleSetUsersInRolesDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "ReadRoleSetUsersInRoles",
         "query",
         variables
       );
@@ -134959,6 +139720,248 @@ export function getSdk(
         variables
       );
     },
+    ReadSpaceAbout(
+      variables: SchemaTypes.ReadSpaceAboutQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.ReadSpaceAboutQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.ReadSpaceAboutQuery>(
+            ReadSpaceAboutDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "ReadSpaceAbout",
+        "query",
+        variables
+      );
+    },
+    ReadSpaceAccountSpaces(
+      variables: SchemaTypes.ReadSpaceAccountSpacesQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.ReadSpaceAccountSpacesQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.ReadSpaceAccountSpacesQuery>(
+            ReadSpaceAccountSpacesDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "ReadSpaceAccountSpaces",
+        "query",
+        variables
+      );
+    },
+    ReadSpaceCalloutNames(
+      variables: SchemaTypes.ReadSpaceCalloutNamesQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.ReadSpaceCalloutNamesQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.ReadSpaceCalloutNamesQuery>(
+            ReadSpaceCalloutNamesDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "ReadSpaceCalloutNames",
+        "query",
+        variables
+      );
+    },
+    ReadSpaceClassifications(
+      variables: SchemaTypes.ReadSpaceClassificationsQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.ReadSpaceClassificationsQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.ReadSpaceClassificationsQuery>(
+            ReadSpaceClassificationsDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "ReadSpaceClassifications",
+        "query",
+        variables
+      );
+    },
+    ReadSpaceGuidelinesId(
+      variables: SchemaTypes.ReadSpaceGuidelinesIdQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.ReadSpaceGuidelinesIdQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.ReadSpaceGuidelinesIdQuery>(
+            ReadSpaceGuidelinesIdDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "ReadSpaceGuidelinesId",
+        "query",
+        variables
+      );
+    },
+    ReadSpaceInnovationFlowStates(
+      variables: SchemaTypes.ReadSpaceInnovationFlowStatesQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.ReadSpaceInnovationFlowStatesQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.ReadSpaceInnovationFlowStatesQuery>(
+            ReadSpaceInnovationFlowStatesDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "ReadSpaceInnovationFlowStates",
+        "query",
+        variables
+      );
+    },
+    ReadSpaceLevelAndVisibility(
+      variables: SchemaTypes.ReadSpaceLevelAndVisibilityQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.ReadSpaceLevelAndVisibilityQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.ReadSpaceLevelAndVisibilityQuery>(
+            ReadSpaceLevelAndVisibilityDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "ReadSpaceLevelAndVisibility",
+        "query",
+        variables
+      );
+    },
+    ReadSpaceMyPrivileges(
+      variables: SchemaTypes.ReadSpaceMyPrivilegesQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.ReadSpaceMyPrivilegesQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.ReadSpaceMyPrivilegesQuery>(
+            ReadSpaceMyPrivilegesDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "ReadSpaceMyPrivileges",
+        "query",
+        variables
+      );
+    },
+    ReadSpaceRefs(
+      variables: SchemaTypes.ReadSpaceRefsQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.ReadSpaceRefsQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.ReadSpaceRefsQuery>(
+            ReadSpaceRefsDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "ReadSpaceRefs",
+        "query",
+        variables
+      );
+    },
+    ReadSpaceSettings(
+      variables: SchemaTypes.ReadSpaceSettingsQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.ReadSpaceSettingsQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.ReadSpaceSettingsQuery>(
+            ReadSpaceSettingsDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "ReadSpaceSettings",
+        "query",
+        variables
+      );
+    },
+    ReadSpaceTemplatesManager(
+      variables: SchemaTypes.ReadSpaceTemplatesManagerQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.ReadSpaceTemplatesManagerQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.ReadSpaceTemplatesManagerQuery>(
+            ReadSpaceTemplatesManagerDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "ReadSpaceTemplatesManager",
+        "query",
+        variables
+      );
+    },
     GetUserRoles(
       variables: SchemaTypes.GetUserRolesQueryVariables,
       requestHeaders?: GraphQLClientRequestHeaders
@@ -135065,6 +140068,50 @@ export function getSdk(
             { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "GetWhiteboardTemplatesCountByTemplateSetId",
+        "query",
+        variables
+      );
+    },
+    ReadTemplatesSetClassificationTemplates(
+      variables: SchemaTypes.ReadTemplatesSetClassificationTemplatesQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.ReadTemplatesSetClassificationTemplatesQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.ReadTemplatesSetClassificationTemplatesQuery>(
+            ReadTemplatesSetClassificationTemplatesDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "ReadTemplatesSetClassificationTemplates",
+        "query",
+        variables
+      );
+    },
+    ReadTemplatesSetTemplates(
+      variables: SchemaTypes.ReadTemplatesSetTemplatesQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.ReadTemplatesSetTemplatesQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.ReadTemplatesSetTemplatesQuery>(
+            ReadTemplatesSetTemplatesDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "ReadTemplatesSetTemplates",
         "query",
         variables
       );
@@ -135333,6 +140380,94 @@ export function getSdk(
         variables
       );
     },
+    ReadUserAccount(
+      variables: SchemaTypes.ReadUserAccountQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.ReadUserAccountQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.ReadUserAccountQuery>(
+            ReadUserAccountDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "ReadUserAccount",
+        "query",
+        variables
+      );
+    },
+    ReadUserIdByNameId(
+      variables: SchemaTypes.ReadUserIdByNameIdQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.ReadUserIdByNameIdQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.ReadUserIdByNameIdQuery>(
+            ReadUserIdByNameIdDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "ReadUserIdByNameId",
+        "query",
+        variables
+      );
+    },
+    ReadUserProfileTagsets(
+      variables: SchemaTypes.ReadUserProfileTagsetsQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.ReadUserProfileTagsetsQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.ReadUserProfileTagsetsQuery>(
+            ReadUserProfileTagsetsDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "ReadUserProfileTagsets",
+        "query",
+        variables
+      );
+    },
+    ReadUserSpaceRoles(
+      variables: SchemaTypes.ReadUserSpaceRolesQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.ReadUserSpaceRolesQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.ReadUserSpaceRolesQuery>(
+            ReadUserSpaceRolesDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "ReadUserSpaceRoles",
+        "query",
+        variables
+      );
+    },
     GetAiPersonaModelCard(
       variables: SchemaTypes.GetAiPersonaModelCardQueryVariables,
       requestHeaders?: GraphQLClientRequestHeaders
@@ -135373,6 +140508,50 @@ export function getSdk(
             { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "GetVirtualContributorWithModelCard",
+        "query",
+        variables
+      );
+    },
+    ReadVirtualContributorProfileTagsets(
+      variables: SchemaTypes.ReadVirtualContributorProfileTagsetsQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.ReadVirtualContributorProfileTagsetsQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.ReadVirtualContributorProfileTagsetsQuery>(
+            ReadVirtualContributorProfileTagsetsDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "ReadVirtualContributorProfileTagsets",
+        "query",
+        variables
+      );
+    },
+    ReadVirtualContributorVisibility(
+      variables: SchemaTypes.ReadVirtualContributorVisibilityQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.ReadVirtualContributorVisibilityQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.ReadVirtualContributorVisibilityQuery>(
+            ReadVirtualContributorVisibilityDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "ReadVirtualContributorVisibility",
         "query",
         variables
       );

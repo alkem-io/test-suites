@@ -5,19 +5,21 @@ import {
   getMailsData,
   getUserToken,
   harnessPostgresConfigured,
-  postGraphqlRaw,
   queryHarnessDb,
+  readMyUser,
+  readOrganizationVerification,
   registerInKratosOrFail,
   TestUser,
   TestUserManager,
+  updateOrganizationData,
   verifyInKratosOrFail,
 } from '@alkemio/tests-lib';
-import { RoleName } from '@alkemio/tests-lib/core/generated/alkemio-schema';
+import { RoleName } from '@alkemio/tests-lib';
 import type {
   InviteForEntryRoleOnRoleSetMutation,
   RoleSetApplicationsInvitationsQuery,
   RoleSetPendingPlatformInvitationsQuery,
-} from '@alkemio/tests-lib/core/generated/graphql';
+} from '@alkemio/tests-lib';
 import type { MailItem } from '@alkemio/tests-lib';
 import {
   assignUserRoleOnOrganization,
@@ -55,7 +57,6 @@ export {
   TestUser,
   TestUserManager,
   getUserToken,
-  postGraphqlRaw,
   type OrgFixture,
 };
 
@@ -121,16 +122,12 @@ export const registerUserAtAddress = async (
   }
   await verifyInKratosOrFail(email, verificationFlowId);
   const token = await getUserToken(email);
-  const me = await postGraphqlRaw<{
-    me: { user: { id: string; profile: { displayName: string } } };
-  }>('query { me { user { id profile { displayName } } } }', {
-    bearerToken: token,
-  });
-  const id = me.body.data?.me.user.id;
-  const displayName = me.body.data?.me.user.profile.displayName;
+  const me = await readMyUser({ bearerToken: token });
+  const id = me.data?.me.user?.id;
+  const displayName = me.data?.me.user?.profile?.displayName;
   if (!id || !displayName) {
     throw new Error(
-      `registerUserAtAddress(${email}) produced no user: ${me.raw}`
+      `registerUserAtAddress(${email}) produced no user: ${JSON.stringify(me.error ?? me.data)}`
     );
   }
   return { email, token, id, displayName, firstName };
@@ -157,45 +154,43 @@ export const createDomainJoinOrganization = async (
   const org = await createTestOrganization(label, runSuffix);
   const token = await adminToken();
 
-  const update = await postGraphqlRaw<{ updateOrganization: { id: string } }>(
-    `mutation($id: UUID!, $domain: String!) {
-      updateOrganization(organizationData: { ID: $id, domain: $domain }) { id }
-    }`,
-    { bearerToken: token, variables: { id: org.id, domain } }
+  const update = await updateOrganizationData(
+    { ID: org.id, domain },
+    { bearerToken: token }
   );
-  if ((update.body.errors ?? []).length > 0) {
-    throw new Error(`setting domain on ${org.id} failed: ${update.raw}`);
+  if (update.error) {
+    throw new Error(
+      `setting domain on ${org.id} failed: ${JSON.stringify(update.error.errors)}`
+    );
   }
 
   await setOrganizationMembershipSettings(org.id, {
     allowUsersMatchingDomainToJoin: true,
   });
 
-  const verification = await postGraphqlRaw<{
-    organization: { verification: { id: string } };
-  }>('query($id: UUID!) { organization(ID: $id) { verification { id } } }', {
+  const verification = await readOrganizationVerification(org.id, {
     bearerToken: token,
-    variables: { id: org.id },
   });
-  const verificationId = verification.body.data?.organization.verification.id;
+  const verificationId = verification.data?.organization.verification.id;
   if (!verificationId)
-    throw new Error(`no verification id for ${org.id}: ${verification.raw}`);
+    throw new Error(
+      `no verification id for ${org.id}: ${JSON.stringify(verification.error ?? verification.data)}`
+    );
   await applyOrganizationVerificationSequence(verificationId, [
     'VERIFICATION_REQUEST',
     'MANUALLY_VERIFY',
   ]);
 
-  const status = await postGraphqlRaw<{
-    organization: { verification: { status: string } };
-  }>(
-    'query($id: UUID!) { organization(ID: $id) { verification { status } } }',
-    { bearerToken: token, variables: { id: org.id } }
-  );
+  const status = await readOrganizationVerification(org.id, {
+    bearerToken: token,
+  });
   if (
-    status.body.data?.organization.verification.status !==
+    status.data?.organization.verification.status !==
     'VERIFIED_MANUAL_ATTESTATION'
   ) {
-    throw new Error(`organization ${org.id} is not verified: ${status.raw}`);
+    throw new Error(
+      `organization ${org.id} is not verified: ${JSON.stringify(status.error ?? status.data)}`
+    );
   }
   return org;
 };

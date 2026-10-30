@@ -1,0 +1,3 @@
+query ReadVirtualContributorProfileTagsets($virtualContributorId: UUID!) {
+  lookup { virtualContributor(ID: $virtualContributorId) { id profile { tagsets { id name } } } }
+}

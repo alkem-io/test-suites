@@ -15,7 +15,7 @@
 // Mail: the invitee is registered through the real sign-up flow, so run with
 // one worker (the shared MailSlurper inbox).
 import { expect, test as baseTest } from '@playwright/test';
-import { RoleName } from '@alkemio/tests-lib/core/generated/alkemio-schema';
+import { RoleName } from '@alkemio/tests-lib';
 import { createPersonaTest } from '../fixtures/authenticated-session.fixture';
 import {
   cleanUpTestOrganizations,

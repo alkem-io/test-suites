@@ -8,8 +8,14 @@ import {
   digestTestTimeoutMs,
   digestWindow,
   getMailsData,
+  readMyNotifications,
+  readMyNotificationsUnreadCount,
+  readMyUser,
   UniqueIDGenerator,
+  updateUserSettings,
+  type GraphqlReturnWithError,
 } from '@alkemio/tests-lib';
+import { sessionActor } from '../helpers/lib-actor.helper';
 import {
   baseUrl,
   password,
@@ -333,65 +339,47 @@ test.describe(
           'Sender'
         );
 
-        // Recipient's own session drives the public GraphQL API directly
-        // (same-origin fetch, authenticated via the session cookie) to force
-        // the stored preference on, bypassing the (correctly locked) settings
-        // UI, then to assert the in-app notification count/list afterward.
+        // Recipient's own session drives the session GraphQL API directly
+        // (the lib, as the recipient's browser-session actor — the same
+        // cookie-authenticated same-origin endpoint the page itself uses) to
+        // force the stored preference on, bypassing the (correctly locked)
+        // settings UI, then to assert the in-app notification count/list
+        // afterward.
         const recipientContext = await browser.newContext();
         const recipientPage = await recipientContext.newPage();
         await loginViaCrd(recipientPage, recipientEmail, password, baseUrl);
+        const recipient = await sessionActor(recipientPage);
 
         // Every caller below reads straight into `.data.…`, so a GraphQL error
         // would surface as an opaque TypeError on an undefined property — and
         // the in-app COUNT assertions further down would happily read a missing
         // field as "no notifications", i.e. pass for the wrong reason. Assert
         // the contract here, once, with the errors in the message.
-        const gql = async (
-          query: string,
-          variables?: Record<string, unknown>
-        ) => {
-          const result = await recipientPage.evaluate(
-            async ({ query, variables }) => {
-              const res = await fetch('/api/private/graphql', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                credentials: 'include',
-                body: JSON.stringify({ query, variables }),
-              });
-              return res.json();
-            },
-            { query, variables }
-          );
+        const gql = <T>(result: GraphqlReturnWithError<T>, what: string) => {
           expect(
-            result.errors,
-            `GraphQL errors for ${query.trim().slice(0, 60)}: ${JSON.stringify(
-              result.errors
-            )}`
+            result.error,
+            `GraphQL errors for ${what}: ${JSON.stringify(result.error?.errors)}`
           ).toBeUndefined();
           return result;
         };
 
-        const me = await gql('query { me { user { id } } }');
-        const userID = me.data.me.user.id;
+        const me = gql(await readMyUser(recipient), 'me.user');
+        const userID = me.data!.me.user!.id;
 
-        const forceUpdate = await gql(
-          `mutation Force($userID: UUID!, $settings: UpdateUserSettingsEntityInput!) {
-          updateUserSettings(settingsData: { userID: $userID, settings: $settings }) {
-            id
-            settings { notification { user { conversationMessageDirect { inApp } } } }
-          }
-        }`,
-          {
+        const forceUpdate = gql(
+          await updateUserSettings(
             userID,
-            settings: {
+            {
               notification: {
                 user: { conversationMessageDirect: { inApp: true } },
               },
             },
-          }
+            recipient
+          ),
+          'updateUserSettings(conversationMessageDirect)'
         );
         expect(
-          forceUpdate.data.updateUserSettings.settings.notification.user
+          forceUpdate.data!.updateUserSettings.settings.notification.user
             .conversationMessageDirect.inApp
         ).toBe(true);
 
@@ -426,15 +414,17 @@ test.describe(
           Math.max(directPush.maxDelayGraceMs, directEmail.maxDelayGraceMs)
         );
 
-        const notifCount = await gql(
-          'query { me { notificationsUnreadCount } }'
+        const notifCount = gql(
+          await readMyNotificationsUnreadCount(recipient),
+          'me.notificationsUnreadCount'
         );
-        expect(notifCount.data.me.notificationsUnreadCount).toBe(0);
+        expect(notifCount.data!.me.notificationsUnreadCount).toBe(0);
 
-        const notifList = await gql(
-          'query { me { notifications(first: 10) { inAppNotifications { id } } } }'
+        const notifList = gql(
+          await readMyNotifications(recipient, { first: 10 }),
+          'me.notifications(first: 10)'
         );
-        expect(notifList.data.me.notifications.inAppNotifications).toHaveLength(
+        expect(notifList.data!.me.notifications.inAppNotifications).toHaveLength(
           0
         );
 

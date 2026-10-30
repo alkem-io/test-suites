@@ -9,21 +9,37 @@
 // harness personas, which are never modified here.
 
 import {
-  registerInAlkemioOrFail,
-  registerInKratosOrFail,
-  TestUser,
-  verifyInKratosOrFail,
-} from '@alkemio/tests-lib';
-import { RoleName } from '@alkemio/tests-lib/core/generated/alkemio-schema';
-import {
+  ActorType,
+  CalloutFramingType,
+  ContributorCollectionView,
   assignRoleToOrganization,
   assignRoleToUser,
   assignRoleToVirtualContributor,
+  createCalloutWithData,
   createOrganization,
   deleteOrganization,
+  deleteUser,
+  findUsersPaginated,
+  getOrganizationIdByNameId,
+  readCalloutFramingContributors,
+  readOrganizationProfileTagsets,
+  readUserProfileTagsets,
+  readVirtualContributorProfileTagsets,
+  registerInAlkemioOrFail,
+  registerInKratosOrFail,
   removeRoleFromUser,
-} from '@alkemio/tests-lib/scenario/baseFunctions';
-import { graphqlRequestAuth } from '@alkemio/tests-lib/utils/graphql.request';
+  TestUser,
+  updateOrganizationData,
+  updateSpaceSettingsData,
+  updateUserProfile,
+  updateVirtualContributorData,
+  verifyInKratosOrFail,
+  type SpacePrivacyMode,
+  type UpdateSpaceSettingsInput,
+  type UserInformationVisibility,
+} from '@alkemio/tests-lib';
+import { RoleName } from '@alkemio/tests-lib';
+import { must } from '../helpers/lib-actor.helper';
 
 export type ContributorTypeName =
   | 'USER'
@@ -79,116 +95,118 @@ export const registerFixtureUser = async (
 
 /** Removes a `registerFixtureUser` user together with its Kratos identity. */
 export const deleteFixtureUser = async (id: string): Promise<void> => {
-  const { deleteUser } = await adminGql<{ deleteUser: { id: string } }>(
-    'mutation($d: DeleteUserInput!) { deleteUser(deleteData: $d) { id } }',
-    { d: { ID: id, deleteIdentity: true } }
+  const { deleteUser: deleted } = must(
+    await deleteUser(id, TestUser.GLOBAL_ADMIN, true),
+    `deleteUser(${id})`
   );
-  if (deleteUser.id !== id) throw new Error(`deleted ${deleteUser.id} instead of ${id}`);
-};
-
-/** Run a GraphQL document as the platform admin; throw on any error. */
-export const adminGql = async <T>(
-  query: string,
-  variables: Record<string, unknown>
-): Promise<T> => {
-  const res = await graphqlRequestAuth(
-    { query, variables },
-    TestUser.GLOBAL_ADMIN
-  );
-  // A refused request (rate limit, gateway error) may carry no GraphQL
-  // `errors` at all — treat anything but a 200 with `data` as a failure.
-  if (res.status !== 200 || res.body?.errors || !res.body?.data) {
-    throw new Error(
-      `GraphQL request failed (HTTP ${res.status}): ${JSON.stringify(res.body?.errors ?? res.text?.slice(0, 300))}`
-    );
-  }
-  return res.body.data as T;
+  if (deleted.id !== id) throw new Error(`deleted ${deleted.id} instead of ${id}`);
 };
 
 export const createContributorsCalloutViaApi = async (
   calloutsSetID: string,
   displayName: string
 ): Promise<string> =>
-  (
-    await adminGql<{ createCalloutOnCalloutsSet: { id: string } }>(
-      'mutation($c: CreateCalloutOnCalloutsSetInput!) { createCalloutOnCalloutsSet(calloutData: $c) { id } }',
-      {
-        c: {
-          calloutsSetID,
-          framing: { profile: { displayName }, type: 'CONTRIBUTORS' },
-          settings: {
-            framing: {
-              contributors: {
-                contributorTypes: [
-                  'USER',
-                  'ORGANIZATION',
-                  'VIRTUAL_CONTRIBUTOR',
-                ],
-                defaultContributorType: 'USER',
-                defaultView: 'LIST',
-              },
-            },
+  must(
+    await createCalloutWithData({
+      calloutsSetID,
+      framing: { profile: { displayName }, type: CalloutFramingType.Contributors },
+      settings: {
+        framing: {
+          contributors: {
+            contributorTypes: [
+              ActorType.User,
+              ActorType.Organization,
+              ActorType.VirtualContributor,
+            ],
+            defaultContributorType: ActorType.User,
+            defaultView: ContributorCollectionView.List,
           },
         },
-      }
-    )
+      },
+    }),
+    `createContributorsCallout(${displayName})`
   ).createCalloutOnCalloutsSet.id;
 
-export const setSpacePrivacy = (
+/** Only the privacy block is sent — the other settings blocks are left as they are. */
+export const setSpacePrivacy = async (
   spaceID: string,
   privacy: {
     mode?: 'PUBLIC' | 'PRIVATE';
     userInformationVisibility?: 'FOLLOW_SPACE_VISIBILITY' | 'MEMBERS_ONLY';
   }
-) =>
-  adminGql(
-    'mutation($d: UpdateSpaceSettingsInput!) { updateSpaceSettings(settingsData: $d) { id } }',
-    { d: { spaceID, settings: { privacy } } }
+) => {
+  const settingsData: UpdateSpaceSettingsInput = {
+    spaceID,
+    settings: {
+      privacy: {
+        mode: privacy.mode as SpacePrivacyMode | undefined,
+        userInformationVisibility: privacy.userInformationVisibility as
+          | UserInformationVisibility
+          | undefined,
+      },
+    },
+  };
+  return must(
+    await updateSpaceSettingsData(settingsData),
+    `setSpacePrivacy(${spaceID})`
   );
+};
 
 /** The enriched cards of one type, read as admin — the API-side oracle. */
 export const apiCards = async (
   calloutID: string,
   type: ContributorTypeName
 ): Promise<ApiCard[]> =>
-  (
-    await adminGql<{
-      lookup: { callout: { framing: { contributors: ApiCard[] } } };
-    }>(
-      `query($id: UUID!, $t: ActorType!) { lookup { callout(ID: $id) { framing {
-        contributors(type: $t) { id displayName roleLabel tagline tags joinedDate website associatesCount } } } } }`,
-      { id: calloutID, t: type }
-    )
-  ).lookup.callout.framing.contributors;
+  // The generated type labels the DateTime scalar as `Date` and absent fields
+  // as `undefined`; on the wire `joinedDate` is an ISO string and absent
+  // fields are `null` — the shape `ApiCard` records.
+  must(
+    await readCalloutFramingContributors(calloutID, type as ActorType),
+    `contributors(${type}) of ${calloutID}`
+  ).lookup.callout!.framing.contributors as unknown as ApiCard[];
 
-type TagsetHolder = { profile: { tagsets: { id: string; name: string }[] } };
+type Tagsets = { id: string; name: string }[];
 
 const PROFILE_OWNERS = {
   user: {
-    read: 'query($id: UUID!) { user(ID: $id) { profile { tagsets { id name } } } }',
-    pick: (d: unknown) => (d as { user: TagsetHolder }).user.profile.tagsets,
-    update:
-      'mutation($d: UpdateUserInput!) { updateUser(userData: $d) { id } }',
-    wrap: (ID: string, profileData: unknown) => ({ d: { ID, profileData } }),
+    tagsets: async (id: string): Promise<Tagsets> =>
+      must(await readUserProfileTagsets(id), `user ${id} tagsets`).user!.profile!
+        .tagsets!,
+    update: async (ID: string, profileData: ProfileData) =>
+      must(await updateUserProfile({ ID, profileData }), `updateUser ${ID}`),
   },
   organization: {
-    read: 'query($id: UUID!) { organization(ID: $id) { profile { tagsets { id name } } } }',
-    pick: (d: unknown) =>
-      (d as { organization: TagsetHolder }).organization.profile.tagsets,
-    update:
-      'mutation($d: UpdateOrganizationInput!) { updateOrganization(organizationData: $d) { id } }',
-    wrap: (ID: string, profileData: unknown) => ({ d: { ID, profileData } }),
+    tagsets: async (id: string): Promise<Tagsets> =>
+      must(
+        await readOrganizationProfileTagsets(id),
+        `organization ${id} tagsets`
+      ).organization!.profile!.tagsets!,
+    update: async (ID: string, profileData: ProfileData) =>
+      must(
+        await updateOrganizationData({ ID, profileData }),
+        `updateOrganization ${ID}`
+      ),
   },
   virtualContributor: {
-    read: 'query($id: UUID!) { lookup { virtualContributor(ID: $id) { profile { tagsets { id name } } } } }',
-    pick: (d: unknown) =>
-      (d as { lookup: { virtualContributor: TagsetHolder } }).lookup
-        .virtualContributor.profile.tagsets,
-    update:
-      'mutation($d: UpdateVirtualContributorInput!) { updateVirtualContributor(virtualContributorData: $d) { id } }',
-    wrap: (ID: string, profileData: unknown) => ({ d: { ID, profileData } }),
+    tagsets: async (id: string): Promise<Tagsets> =>
+      must(
+        await readVirtualContributorProfileTagsets(id),
+        `virtualContributor ${id} tagsets`
+      ).lookup.virtualContributor!.profile!.tagsets!,
+    update: async (ID: string, profileData: ProfileData) =>
+      must(
+        await updateVirtualContributorData({ ID, profileData }),
+        `updateVirtualContributor ${ID}`
+      ),
   },
 } as const;
+
+/** The profile update the three owners share (`UpdateProfileInput` shape). */
+type ProfileData = {
+  tagline?: string;
+  location?: { city?: string; country?: string };
+  tagsets?: { ID: string; tags: string[] }[];
+};
 
 /** Set tagline / tagsets / location on a user, organization or VC profile. */
 export const setProfile = async (
@@ -197,8 +215,8 @@ export const setProfile = async (
   seed: ProfileSeed
 ) => {
   const def = PROFILE_OWNERS[owner];
-  const tagsets = def.pick(await adminGql(def.read, { id }));
-  const profileData: Record<string, unknown> = {};
+  const tagsets = await def.tagsets(id);
+  const profileData: ProfileData = {};
   if (seed.tagline !== undefined) profileData.tagline = seed.tagline;
   if (seed.location) profileData.location = seed.location;
   if (seed.tags) {
@@ -208,7 +226,7 @@ export const setProfile = async (
       return { ID: tagset.id, tags };
     });
   }
-  await adminGql(def.update, def.wrap(id, profileData));
+  await def.update(id, profileData);
 };
 
 /**
@@ -312,18 +330,12 @@ export class CardsFixture {
 
   /** Track an organization that exists under `nameID` although its create reported a failure. */
   private async trackOrganizationByNameID(nameID: string): Promise<void> {
-    try {
-      const { lookupByName } = await adminGql<{
-        lookupByName: { organization: { id: string } | null };
-      }>(
-        'query($n: NameID!) { lookupByName { organization(NAMEID: $n) { id } } }',
-        { n: nameID }
-      );
-      const id = lookupByName.organization?.id;
-      if (id && !this.organizations.includes(id)) this.organizations.push(id);
-    } catch {
-      /* nothing committed under that nameID — the create error stands */
-    }
+    // `lookupByName.organization` is the id itself; an error or a null
+    // answer means nothing was committed under that nameID — the create
+    // error stands.
+    const lookup = await getOrganizationIdByNameId(nameID);
+    const id = lookup.data?.lookupByName.organization ?? undefined;
+    if (id && !this.organizations.includes(id)) this.organizations.push(id);
   }
 
   async virtualContributorMember(
@@ -351,16 +363,12 @@ export class CardsFixture {
         failures.push(`organization ${id}: ${JSON.stringify(res.error)}`);
     }
     // Retry twins: users carrying this run's token that were never tracked.
-    const { usersPaginated } = await adminGql<{
-      usersPaginated: {
-        users: { id: string; profile: { displayName: string } }[];
-      };
-    }>(
-      'query($f: String) { usersPaginated(first: 200, filter: { displayName: $f }) { users { id profile { displayName } } } }',
-      { f: this.runToken }
+    const { usersPaginated } = must(
+      await findUsersPaginated({ displayName: this.runToken }, 200),
+      `usersPaginated(${this.runToken})`
     );
     const twins = usersPaginated.users
-      .filter(u => u.profile.displayName.includes(this.runToken))
+      .filter(u => u.profile!.displayName.includes(this.runToken))
       .map(u => u.id)
       .filter(id => !this.users.includes(id));
     for (const id of [...this.users.splice(0), ...twins]) {

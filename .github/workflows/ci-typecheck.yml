@@ -35,6 +35,23 @@ jobs:
       - name: Native TS7 typecheck — client-web (workspace#019-typescript-7-upgrade)
         run: pnpm --filter @alkemio/test-suite-client-web run typecheck:native
 
+      # The lib boundary (docs/qa/server-rebuild W2 pre-work): no generated
+      # imports and no spec-local GraphQL documents under client-web/src.
+      # Until here only the husky lint-staged hook ran ESLint on client-web,
+      # so a spec committed with --no-verify was never linted.
+      - name: ESLint — client-web lib boundary
+        working-directory: client-web
+        run: pnpm exec eslint "src/**/*.ts" "tests/**/*.ts"
+
+      # ESLint cannot see a .graphql file; a document dropped under
+      # client-web/src would be a second schema boundary beside the lib.
+      - name: No GraphQL documents under client-web/src
+        run: |
+          if git ls-files client-web/src | grep -E '\.(graphql|gql)$'; then
+            echo "::error::GraphQL documents belong in lib/src/scenario/graphql/ behind a named lib function (client-web/docs/e2e-conventions.md § 2b)"
+            exit 1
+          fi
+
       - name: Install load-testing dependencies
         working-directory: load-testing
         run: npm ci

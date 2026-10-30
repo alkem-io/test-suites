@@ -1,0 +1,1 @@
+query ReadUserAccount($userId: UUID!) { lookup { user(ID: $userId) { id nameID account { id } } } }

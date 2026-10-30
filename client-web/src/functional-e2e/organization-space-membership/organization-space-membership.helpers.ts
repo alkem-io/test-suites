@@ -4,8 +4,8 @@ import {
   TestUser,
   TestUserManager,
 } from '@alkemio/tests-lib';
-import { graphqlErrorWrapper } from '@alkemio/tests-lib/utils/graphql.wrapper';
-import { RoleName } from '@alkemio/tests-lib/core/generated/alkemio-schema';
+import { graphqlErrorWrapper } from '@alkemio/tests-lib';
+import { RoleName } from '@alkemio/tests-lib';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 
 /**

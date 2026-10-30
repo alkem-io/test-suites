@@ -1,0 +1,3 @@
+query ReadMyPrivileges {
+  me { user { id profile { displayName } authorization { myPrivileges } } }
+}

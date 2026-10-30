@@ -1,0 +1,8 @@
+query ReadCalloutFramingSettings($calloutId: UUID!) {
+  lookup {
+    callout(ID: $calloutId) {
+      id
+      settings { framing { selection { mode selectedIds } spaces { cardVariant } } }
+    }
+  }
+}

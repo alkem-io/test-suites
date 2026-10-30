@@ -1,0 +1,10 @@
+query ReadCalloutContributions($calloutId: UUID!) {
+  lookup {
+    callout(ID: $calloutId) {
+      id
+      activity
+      contributions { id post { id profile { displayName } } }
+      contributionsCount { post whiteboard link memo collaboraDocument }
+    }
+  }
+}

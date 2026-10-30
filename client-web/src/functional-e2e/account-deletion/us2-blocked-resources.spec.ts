@@ -6,7 +6,7 @@
 // "Create Space" flow shows a "Capacity reached" dialog for a fresh account).
 // Seeding the "owns a Space" blocker therefore needs two admin-authenticated
 // steps before any space can exist on the subject's account:
-//   1. `assignPlatformRoleToUser(PLATFORM_BETA_TESTER)` — grants the
+//   1. `assignPlatformRoleToUser(FEATURE_BETA_TESTER)` — grants the
 //      `ACCOUNT_SPACE_FREE` entitlement (mirrors
 //      `server-api/src/functional-api/entitlements/user-entitlements.it-spec.ts`).
 //   2. `createSpace(spaceData:{accountID, ...})` as admin, targeting the
@@ -23,21 +23,25 @@
 // AS3 (the 25-item cap + truncation indicator), seeded with 26 Spaces.
 //
 // The raw-API-bypass half of AS1 ("the server-side refusal is authoritative
-// even if the user bypasses the in-app pre-check") is proven via
-// `page.request` — Playwright's `APIRequestContext` shares the browser
-// context's cookies, so this is a genuine same-session raw GraphQL call,
-// not a fabricated one.
+// even if the user bypasses the in-app pre-check") is proven with the browser
+// context's own session cookie (`sessionActor`) sent to the cookie-session
+// GraphQL endpoint, so this is a genuine same-session API call, not a
+// fabricated one.
 
-import { expect, test, type Page, type APIRequestContext } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
 import {
+  assignPlatformRole,
+  createSpaceOnAccount,
+  deleteSpace,
+  deleteUser,
   getUserToken,
-  postGraphqlRaw,
   queryHarnessDb,
+  RoleName,
   UniqueIDGenerator,
 } from '@alkemio/tests-lib';
+import { sessionActor } from '../helpers/lib-actor.helper';
 import {
   adminEmail,
-  baseUrl,
   deleteAccountTriggerButton,
   deleteUserQuietly,
   DisposableSubject,
@@ -45,10 +49,6 @@ import {
   navigateToSecurityTab,
   provisionSubject,
 } from './delete-account.helpers';
-
-// The cookie-authenticated (BFF session) GraphQL route — the same one
-// `session-revocation.helpers.ts` uses for its raw same-session calls.
-const graphqlUrl = `${baseUrl}/api/private/graphql`;
 
 const blockedDialog = (page: Page) =>
   page.getByRole('dialog', { name: /can.t delete your account yet/i });
@@ -59,15 +59,12 @@ const adminAssignBetaTester = async (
   adminToken: string,
   actorID: string
 ): Promise<void> => {
-  const res = await postGraphqlRaw(
-    `mutation Us2AssignBetaTester($actorID: UUID!) {
-      assignPlatformRoleToUser(roleData: { actorID: $actorID, role: PLATFORM_BETA_TESTER }) { id }
-    }`,
-    { bearerToken: adminToken, variables: { actorID } }
-  );
-  if (res.body.errors) {
+  const res = await assignPlatformRole(actorID, RoleName.FeatureBetaTester, {
+    bearerToken: adminToken,
+  });
+  if (res.error) {
     throw new Error(
-      `adminAssignBetaTester failed for ${actorID}: ${res.raw}`
+      `adminAssignBetaTester failed for ${actorID}: ${JSON.stringify(res.error.errors)}`
     );
   }
 };
@@ -78,20 +75,20 @@ const adminCreateSpace = async (
   nameID: string,
   displayName: string
 ): Promise<string> => {
-  const res = await postGraphqlRaw<{ createSpace: { id: string } }>(
-    `mutation Us2CreateSpace($accountID: UUID!, $nameID: NameID!, $displayName: String!) {
-      createSpace(spaceData: {
-        accountID: $accountID
-        nameID: $nameID
-        about: { profileData: { displayName: $displayName } }
-        collaborationData: { calloutsSetData: {} }
-      }) { id }
-    }`,
-    { bearerToken: adminToken, variables: { accountID, nameID, displayName } }
+  const res = await createSpaceOnAccount(
+    {
+      accountID,
+      nameID,
+      about: { profileData: { displayName } },
+      collaborationData: { calloutsSetData: {} },
+    },
+    { bearerToken: adminToken }
   );
-  const id = res.body.data?.createSpace.id;
+  const id = res.data?.createSpace.id;
   if (!id) {
-    throw new Error(`adminCreateSpace('${displayName}') failed: ${res.raw}`);
+    throw new Error(
+      `adminCreateSpace('${displayName}') failed: ${JSON.stringify(res.error?.errors ?? res)}`
+    );
   }
   return id;
 };
@@ -100,24 +97,15 @@ const adminDeleteSpace = async (
   adminToken: string,
   id: string
 ): Promise<void> => {
-  await postGraphqlRaw(
-    'mutation Us2DeleteSpace($id: UUID!) { deleteSpace(deleteData: { ID: $id }) { id } }',
-    { bearerToken: adminToken, variables: { id } }
-  );
+  await deleteSpace(id, { bearerToken: adminToken });
 };
 
-/** Raw same-session GraphQL call via the browser's own cookies — the
+/** Same-session `deleteUser` via the browser's own cookies — the
  * "user bypasses the in-app pre-check" half of AS1. */
 const rawDeleteUserViaBrowserSession = async (
-  request: APIRequestContext,
+  page: Page,
   deleteUserId: string
-) =>
-  request.post(graphqlUrl, {
-    data: {
-      query: 'mutation Us2RawBypass($id: UUID!) { deleteUser(deleteData: { ID: $id }) { id } }',
-      variables: { id: deleteUserId },
-    },
-  });
+) => deleteUser(deleteUserId, await sessionActor(page));
 
 test.describe(
   'Blocked by resources I still own',
@@ -174,11 +162,10 @@ test.describe(
       // server-side refusal is authoritative regardless of what the client
       // pre-check showed.
       const bypass = await rawDeleteUserViaBrowserSession(
-        blockedPage.request,
+        blockedPage,
         blockedSubject.userId
       );
-      const bypassBody = await bypass.json();
-      expect(bypassBody.errors?.[0]?.extensions?.code).toBe(
+      expect(bypass.error?.errors?.[0]?.code).toBe(
         'ACCOUNT_DELETION_BLOCKED'
       );
     });

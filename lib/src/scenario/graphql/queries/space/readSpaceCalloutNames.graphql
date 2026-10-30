@@ -1,0 +1,8 @@
+query ReadSpaceCalloutNames($spaceId: UUID!) {
+  lookup {
+    space(ID: $spaceId) {
+      id
+      collaboration { calloutsSet { id callouts { id framing { profile { displayName } } } } }
+    }
+  }
+}

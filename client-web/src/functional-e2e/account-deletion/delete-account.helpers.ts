@@ -10,8 +10,8 @@
 
 import { expect, type Page } from '@playwright/test';
 import {
+  deleteUser,
   getUserToken,
-  postGraphqlRaw,
   queryHarnessDb,
   registerInKratosOrFail,
   UniqueIDGenerator,
@@ -176,15 +176,7 @@ export const deleteUserQuietly = async (
   if (!userId) return;
   try {
     const token = adminToken ?? (await getSharedAdminToken());
-    await postGraphqlRaw(
-      `mutation DeleteAccountWalkTeardown($deleteData: DeleteUserInput!) {
-        deleteUser(deleteData: $deleteData) { id }
-      }`,
-      {
-        bearerToken: token,
-        variables: { deleteData: { ID: userId, deleteIdentity: true } },
-      }
-    );
+    await deleteUser(userId, { bearerToken: token }, true);
   } catch {
     // Subject already gone (the normal case), or the admin token could not
     // be minted during teardown — either way nothing useful is left to do.

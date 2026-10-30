@@ -1,6 +1,6 @@
 import { expect } from '@playwright/test';
 import { getGraphqlClient, TestUser } from '@alkemio/tests-lib';
-import { graphqlErrorWrapper } from '@alkemio/tests-lib/utils/graphql.wrapper';
+import { graphqlErrorWrapper } from '@alkemio/tests-lib';
 import { deleteSpace } from '@alkemio/tests-lib/scenario/baseFunctions';
 
 /**

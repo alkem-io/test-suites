@@ -18,12 +18,13 @@ import {
   TestScenarioFactory,
   TestUserManager,
   UniqueIDGenerator,
+  readCalloutFraming,
 } from '@alkemio/tests-lib';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
+import { must } from '../helpers/lib-actor.helper';
 import {
   ApiCard,
   CardsFixture,
-  adminGql,
   apiCards,
   createContributorsCalloutViaApi,
   setSpacePrivacy,
@@ -538,15 +539,11 @@ test.describe.serial('US1 — Recognise a contributor from the card', () => {
   }) => {
     const col = await openCollection(page);
     const feed = await cardRowSignature(col, P.long);
-    const { lookup } = await adminGql<{
-      lookup: { callout: { framing: { profile: { url: string } } } };
-    }>(
-      'query($id: UUID!) { lookup { callout(ID: $id) { framing { profile { url } } } } }',
-      {
-        id: calloutId,
-      }
+    const { lookup } = must(
+      await readCalloutFraming(calloutId),
+      `callout ${calloutId} framing url`
     );
-    await page.goto(lookup.callout.framing.profile.url);
+    await page.goto(lookup.callout!.framing.profile.url);
     const dialogRegion = page
       .getByRole('dialog')
       .getByRole('region', { name: 'Contributors', exact: true });

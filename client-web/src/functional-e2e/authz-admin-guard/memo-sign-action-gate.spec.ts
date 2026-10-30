@@ -9,7 +9,7 @@
 // the same contract lives in server-api entitlements/memo-signing-entitlement.
 import { expect } from '@playwright/test';
 import { getGraphqlClient, TestUser, UniqueIDGenerator } from '@alkemio/tests-lib';
-import { graphqlErrorWrapper } from '@alkemio/tests-lib/utils/graphql.wrapper';
+import { graphqlErrorWrapper } from '@alkemio/tests-lib';
 import { TestScenarioConfig } from '@alkemio/tests-lib/scenario/config/test-scenario-config';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import { TestScenarioFactory } from '@alkemio/tests-lib/scenario/TestScenarioFactory';
@@ -17,7 +17,7 @@ import {
   CalloutFramingType,
   CalloutVisibility,
   LicenseEntitlementType,
-} from '@alkemio/tests-lib/core/generated/alkemio-schema';
+} from '@alkemio/tests-lib';
 import { createPersonaTest } from '../fixtures/authenticated-session.fixture';
 
 const MEMO_SIGNING_PLAN_NAME = 'SPACE_FEATURE_MEMO_SIGNING';

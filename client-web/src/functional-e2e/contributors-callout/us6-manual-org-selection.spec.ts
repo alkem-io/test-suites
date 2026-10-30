@@ -20,12 +20,14 @@ import {
   TestUser,
   TestUserManager,
   UniqueIDGenerator,
+  readCalloutFramingSettings,
+  removeRoleFromOrganization,
 } from '@alkemio/tests-lib';
 import type { TestScenarioConfig } from '@alkemio/tests-lib/scenario/config/test-scenario-config';
 import type { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
-import { SpacePrivacyMode } from '@alkemio/tests-lib/core/generated/alkemio-schema';
+import { RoleName, SpacePrivacyMode } from '@alkemio/tests-lib';
+import { must } from '../helpers/lib-actor.helper';
 import {
-  adminGql,
   CardsFixture,
   createContributorsCalloutViaApi,
 } from './cards-fixture';
@@ -103,21 +105,11 @@ const selection = async (): Promise<{
   mode: string;
   selectedIds: string[];
 }> => {
-  const data = await adminGql<{
-    lookup: {
-      callout: {
-        settings: {
-          framing: { selection: { mode: string; selectedIds: string[] } };
-        };
-      };
-    };
-  }>(
-    'query($id: UUID!){ lookup { callout(ID: $id) { settings { framing { selection { mode selectedIds } } } } } }',
-    {
-      id: calloutId,
-    }
+  const data = must(
+    await readCalloutFramingSettings(calloutId),
+    `callout ${calloutId} selection`
   );
-  return data.lookup.callout.settings.framing.selection;
+  return data.lookup.callout!.settings.framing.selection!;
 };
 
 const openEdit = async (page: Page): Promise<ContributorsCalloutPage> => {
@@ -246,15 +238,13 @@ test.describe
     page,
   }) => {
     test.setTimeout(120_000);
-    await adminGql(
-      'mutation($d: RemoveRoleOnRoleSetInput!){ removeRoleFromOrganization(roleData: $d) { id } }',
-      {
-        d: {
-          actorID: orgId,
-          roleSetID: scenario!.space.community.roleSetId,
-          role: 'MEMBER',
-        },
-      }
+    must(
+      await removeRoleFromOrganization({
+        actorID: orgId,
+        roleSetID: scenario!.space.community.roleSetId,
+        role: RoleName.Member,
+      }),
+      `remove MEMBER from organisation ${orgId}`
     );
 
     const cc = await openEdit(page);

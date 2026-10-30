@@ -1,0 +1,3 @@
+query ReadRoleSetInvitations($roleSetId: UUID!) {
+  lookup { roleSet(ID: $roleSetId) { id invitations { id state actor { id } } } }
+}

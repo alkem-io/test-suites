@@ -1,9 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import Headers from "graphql-request";
-import { TestUserManager } from "../scenario/TestUserManager";
 import { LogManager } from "../scenario/LogManager";
-import { TestUser } from "../common/enums/test.user";
 import { describeError, isEnvFailure } from "./env-failure";
+import { GraphqlActor, resolveActor } from "./graphql.actor";
+import { getGraphqlClientFor } from "./graphqlClient";
+import type { Sdk } from "../core/generated/graphql";
 
 export type ErrorType = {
   response: {
@@ -69,19 +70,50 @@ const safeStringify = (value: unknown): string => {
 
 export const graphqlErrorWrapper = async <TData>(
   fn: (authToken: string | undefined) => GraphQLReturnType<TData>,
-  userRole?: TestUser,
+  userRole?: GraphqlActor,
 ): Promise<GraphqlReturnWithError<TData>> => {
-  let authToken = undefined;
-  if (userRole) {
-    const userModel = TestUserManager.getUserModelByType(userRole);
-    authToken = userModel.authToken;
+  let authToken: string | undefined = undefined;
+  if (userRole !== undefined) {
+    const resolved = resolveActor(userRole);
+    if (resolved.endpoint !== "private") {
+      // The legacy callbacks build their own bearer header against the
+      // non-interactive client; a cookie session or the public endpoint
+      // needs the endpoint-aware path.
+      throw new Error(
+        "graphqlErrorWrapper only carries persona/bearer actors — use runAs() for a cookie session or an anonymous call",
+      );
+    }
+    authToken = resolved.authToken;
   }
+  return executeWithRetry(() => fn(authToken), String(fn));
+};
+
+/**
+ * Run one generated-SDK operation as any `GraphqlActor` — the entry point
+ * every business-action function added for the W2 lib boundary uses. The
+ * callback receives the SDK bound to the actor's endpoint plus the request
+ * headers that authenticate the actor; it returns the same `{ data } |
+ * { error }` shape as `graphqlErrorWrapper`, with the same ENV_FAILURE retry.
+ */
+export const runAs = async <TData>(
+  actor: GraphqlActor,
+  fn: (sdk: Sdk, headers: Record<string, string>) => GraphQLReturnType<TData>,
+): Promise<GraphqlReturnWithError<TData>> => {
+  const resolved = resolveActor(actor);
+  const sdk = getGraphqlClientFor(resolved.endpoint);
+  return executeWithRetry(() => fn(sdk, resolved.headers), String(fn));
+};
+
+const executeWithRetry = async <TData>(
+  fn: () => GraphQLReturnType<TData>,
+  label: string,
+): Promise<GraphqlReturnWithError<TData>> => {
   const wrapperStartedAt = Date.now();
   for (let attempt = 1; ; attempt++) {
     const startedAt = Date.now();
     try {
-      LogManager.getLogger().info(`Executing request: ${fn}`);
-      return await fn(authToken);
+      LogManager.getLogger().info(`Executing request: ${label}`);
+      return await fn();
     } catch (error) {
       const err = error as ErrorType;
       if (!err.response || !err.response.errors) {
@@ -90,14 +122,14 @@ export const graphqlErrorWrapper = async <TData>(
         if (code === "ENV_FAILURE" && attempt < ENV_FAILURE_MAX_ATTEMPTS) {
           const delay = ENV_FAILURE_RETRY_BASE_MS * attempt;
           LogManager.getLogger().warn(
-            `[ENV_FAILURE] request failed after ${elapsedMs}ms (attempt ${attempt}/${ENV_FAILURE_MAX_ATTEMPTS}) — ${detail.split("\n")[0].slice(0, 300)}; retrying in ${delay}ms: '${fn}'`,
+            `[ENV_FAILURE] request failed after ${elapsedMs}ms (attempt ${attempt}/${ENV_FAILURE_MAX_ATTEMPTS}) — ${detail.split("\n")[0].slice(0, 300)}; retrying in ${delay}ms: '${label}'`,
           );
           await sleep(delay);
           continue;
         }
         const totalMs = Date.now() - wrapperStartedAt;
         LogManager.getLogger().error(
-          `[${code}] request failed on attempt ${attempt} (${elapsedMs}ms this attempt, ${totalMs}ms total incl. retries): '${fn}'`,
+          `[${code}] request failed on attempt ${attempt} (${elapsedMs}ms this attempt, ${totalMs}ms total incl. retries): '${label}'`,
         );
         LogManager.getLogger().error("Returned error:");
         LogManager.getLogger().error(
@@ -124,7 +156,7 @@ export const graphqlErrorWrapper = async <TData>(
         // objects as `[object Object]`, which hid the actual GraphQL errors of
         // the failed recovery lookups in the 2026-07-15 nightly (#563).
         LogManager.getLogger().error(safeStringify(badErrors));
-        LogManager.getLogger().error(`Unable to complete call '${fn}'`);
+        LogManager.getLogger().error(`Unable to complete call '${label}'`);
 
         //throw new Error(`GraphQL error: ${badErrors.map(e => e.message).join(', ')}`);
       }

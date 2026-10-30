@@ -16,11 +16,11 @@
 // `callouts/0.10callout-description-limit.spec.ts`.
 
 import { expect, type Locator, type Page } from '@playwright/test';
-import { TestScenarioFactory, TestUser } from '@alkemio/tests-lib';
+import { readSpaceAbout, TestScenarioFactory, TestUser } from '@alkemio/tests-lib';
 import type { TestScenarioConfig } from '@alkemio/tests-lib/scenario/config/test-scenario-config';
 import type { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
-import { adminGql } from '../contributors-callout/cards-fixture';
 import { createPersonaTest } from '../fixtures/authenticated-session.fixture';
+import { must } from '../helpers/lib-actor.helper';
 import { openSettingsSection } from '../helpers/settings-section.helper';
 
 const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
@@ -172,23 +172,11 @@ const expectTooltip = async (
 const aboutLengths = async (
   spaceId: string
 ): Promise<{ what: number; why: number; who: number }> => {
-  const data = await adminGql<{
-    lookup: {
-      space: {
-        about: {
-          why: string | null;
-          who: string | null;
-          profile: { description: string | null };
-        };
-      };
-    };
-  }>(
-    'query($id: UUID!){ lookup { space(ID: $id) { about { why who profile { description } } } } }',
-    {
-      id: spaceId,
-    }
+  const data = must(
+    await readSpaceAbout(spaceId, TestUser.GLOBAL_ADMIN),
+    `read about of space ${spaceId}`
   );
-  const a = data.lookup.space.about;
+  const a = data.lookup.space!.about;
   return {
     what: a.profile.description?.length ?? 0,
     why: a.why?.length ?? 0,

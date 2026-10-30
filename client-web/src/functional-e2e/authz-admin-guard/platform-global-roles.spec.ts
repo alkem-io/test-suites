@@ -16,7 +16,7 @@
 // the role it asked for (`expectRoleSelected`) and touches nothing otherwise.
 import { expect, type Page } from '@playwright/test';
 import { getGraphqlClient, TestUserManager } from '@alkemio/tests-lib';
-import { RoleName } from '@alkemio/tests-lib/core/generated/alkemio-schema';
+import { RoleName } from '@alkemio/tests-lib';
 import { createPersonaTest } from '../fixtures/authenticated-session.fixture';
 import { DENIED_TOAST } from './authz-admin-guard.helpers';
 

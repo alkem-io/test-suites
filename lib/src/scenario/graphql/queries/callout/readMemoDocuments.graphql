@@ -1,0 +1,3 @@
+query ReadMemoDocuments($memoId: UUID!) {
+  lookup { memo(ID: $memoId) { id signatures { id } profile { storageBucket { documents { id } } } } }
+}

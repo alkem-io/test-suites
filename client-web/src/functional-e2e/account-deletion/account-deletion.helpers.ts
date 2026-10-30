@@ -21,12 +21,28 @@ import { Page } from '@playwright/test';
 import { expect } from '@playwright/test';
 import axios from 'axios';
 import {
+  assignPlatformRole as assignPlatformRoleToUser,
+  AuthorizationPrivilege,
+  CalloutContributionType,
+  createContributionOnCallout,
+  deleteUser,
   getUserToken,
+  introspectEnumValues,
+  NotificationEvent,
   provisionTestIdentities,
+  readMyNotifications,
+  readMyPlatformRoles,
+  readMyPrivileges,
+  readMyUser,
+  readMyUserSettings,
   registerTestUser,
+  removePlatformRoleFromUser,
+  RoleName,
   testConfiguration,
+  updateUserSettings,
 } from '@alkemio/tests-lib';
 import type { PlatformRoleName } from '@alkemio/tests-lib';
+import { must } from '../helpers/lib-actor.helper';
 import {
   acceptAllCookiesButton,
   logInHeaderLink,
@@ -111,59 +127,31 @@ export const gotoUserSecuritySettings = async (
 /**
  * Create a Post contribution on a callout AS the given user's own bearer, so
  * the activity log's `triggeredBy` genuinely resolves to that user (never an
- * admin proxy). No generated-client wrapper exists for this in `@alkemio/
- * tests-lib` today (the same "raw document" situation the build sheet notes
- * for `accountDeletion`) — sent directly, matching the pattern already used
- * in `session-revocation.helpers.ts`.
+ * admin proxy).
  */
-const CREATE_POST_CONTRIBUTION_MUTATION = `
-  mutation createContributionOnCalloutForActivity($contributionData: CreateContributionOnCalloutInput!) {
-    createContributionOnCallout(contributionData: $contributionData) {
-      id
-      post {
-        id
-        profile {
-          displayName
-        }
-      }
-    }
-  }`;
-
 export const createPostContributionAsUser = async (
   token: string,
   calloutID: string,
   displayName: string
 ): Promise<{ postId: string; postDisplayName: string }> => {
-  const response = await axios.post(
-    testConfiguration.endPoints.graphql.private,
+  const response = await createContributionOnCallout(
     {
-      query: CREATE_POST_CONTRIBUTION_MUTATION,
-      variables: {
-        contributionData: {
-          calloutID,
-          type: 'POST',
-          post: {
-            profileData: { displayName },
-          },
-        },
+      calloutID,
+      type: CalloutContributionType.Post,
+      post: {
+        profileData: { displayName },
       },
     },
-    {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-      validateStatus: () => true,
-    }
+    { bearerToken: token }
   );
 
-  const errors = response.data?.errors;
+  const errors = response.error?.errors;
   if (errors?.length) {
     throw new Error(
       `createContributionOnCallout failed: ${JSON.stringify(errors)}`
     );
   }
-  const post = response.data?.data?.createContributionOnCallout?.post;
+  const post = response.data?.createContributionOnCallout?.post;
   if (!post?.id) {
     throw new Error(
       `createContributionOnCallout returned no post: ${JSON.stringify(response.data)}`
@@ -174,27 +162,17 @@ export const createPostContributionAsUser = async (
 
 /**
  * Resolve the Alkemio user id for the caller identified by `token` (via
- * `me { user { id } }`) — the smallest raw probe available, matching
+ * `me { user { id } }`) — the smallest probe available, matching
  * `session-revocation.helpers.ts::resolveAlkemioUserId`.
  */
 export const resolveUserIdFromToken = async (
   token: string
 ): Promise<string> => {
-  const response = await axios.post(
-    testConfiguration.endPoints.graphql.private,
-    { query: '{ me { user { id } } }' },
-    {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-      validateStatus: () => true,
-    }
-  );
-  const userId = response.data?.data?.me?.user?.id;
+  const response = await readMyUser({ bearerToken: token });
+  const userId = response.data?.me?.user?.id;
   if (!userId) {
     throw new Error(
-      `Unable to resolve user id from token (HTTP ${response.status}): ${JSON.stringify(response.data)}`
+      `Unable to resolve user id from token: ${JSON.stringify(response.error?.errors ?? response.data)}`
     );
   }
   return userId;
@@ -203,37 +181,8 @@ export const resolveUserIdFromToken = async (
 // --------------------------------------------------------------------------
 // TC-14 on the platform-role model. The profile-removed notification goes to
 // Platform Users Admin holders, minus the operator who removed the user — so
-// the walk needs two holders: one removes, the other looks. None of the
-// operations below has a generated client-web SDK method.
+// the walk needs two holders: one removes, the other looks.
 // --------------------------------------------------------------------------
-
-/** A bearer GraphQL call that throws on any GraphQL or transport error. */
-const gqlAs = async <T>(
-  token: string,
-  query: string,
-  variables: Record<string, unknown> = {}
-): Promise<T> => {
-  const response = await axios.post(
-    testConfiguration.endPoints.graphql.private,
-    { query, variables },
-    {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-      validateStatus: () => true,
-    }
-  );
-  const errors = response.data?.errors;
-  if (!response.data?.data || errors?.length) {
-    throw new Error(
-      `GraphQL request failed (HTTP ${response.status}): ${JSON.stringify(
-        errors ?? response.data
-      ).slice(0, 400)}`
-    );
-  }
-  return response.data.data as T;
-};
 
 /**
  * Fails — never skips — unless the server under test is on the platform-role
@@ -243,18 +192,10 @@ const gqlAs = async <T>(
  */
 export const requirePlatformRoleModel = async (): Promise<void> => {
   const endpoint = testConfiguration.endPoints.graphql.private;
-  const response = await axios.post(
-    endpoint,
-    { query: '{ __type(name: "RoleName") { enumValues { name } } }' },
-    {
-      headers: { 'Content-Type': 'application/json' },
-      validateStatus: () => true,
-    }
+  const response = await introspectEnumValues('RoleName');
+  const roles: string[] | undefined = response.body?.data?.__type?.enumValues?.map(
+    (value: { name: string }) => value.name
   );
-  const roles: string[] | undefined =
-    response.data?.data?.__type?.enumValues?.map(
-      (value: { name: string }) => value.name
-    );
   const problems = !roles
     ? [`its RoleName enum could not be read (HTTP ${response.status})`]
     : [
@@ -316,24 +257,20 @@ export const waitUntilUsable = async (email: string): Promise<UsableUser> => {
   for (;;) {
     try {
       const token = await getUserToken(email);
-      const { me } = await gqlAs<{
-        me: {
-          user: {
-            id: string;
-            profile: { displayName: string };
-            authorization: { myPrivileges: string[] | null };
-          };
-        };
-      }>(
-        token,
-        'query { me { user { id profile { displayName } authorization { myPrivileges } } } }'
+      const { me } = must(
+        await readMyPrivileges({ bearerToken: token }),
+        `read privileges of ${email}`
       );
-      if (!me.user.authorization.myPrivileges?.includes('UPDATE')) {
+      if (
+        !me.user?.authorization?.myPrivileges?.includes(
+          AuthorizationPrivilege.Update
+        )
+      ) {
         throw new Error('authorization not in place yet');
       }
       return {
         email,
-        displayName: me.user.profile.displayName,
+        displayName: me.user.profile!.displayName,
         userId: me.user.id,
         token,
       };
@@ -388,18 +325,20 @@ export const assignPlatformRole = async (
   actorID: string,
   role: PlatformRoleName
 ): Promise<void> => {
-  await gqlAs(
-    rolesAdminToken,
-    'mutation($roleData: AssignPlatformRoleInput!) { assignPlatformRoleToUser(roleData: $roleData) { id } }',
-    { roleData: { actorID, role } }
+  must(
+    await assignPlatformRoleToUser(actorID, role as RoleName, {
+      bearerToken: rolesAdminToken,
+    }),
+    `assign ${role} to ${actorID}`
   );
 };
 
 /** The platform roles the caller holds, `REGISTERED` aside. */
 const platformRolesOf = async (token: string): Promise<string[]> => {
-  const { platform } = await gqlAs<{
-    platform: { roleSet: { myRoles: string[] } };
-  }>(token, 'query { platform { roleSet { myRoles } } }');
+  const { platform } = must(
+    await readMyPlatformRoles({ bearerToken: token }),
+    'read own platform roles'
+  );
   return platform.roleSet.myRoles.filter(role => role !== 'REGISTERED');
 };
 
@@ -412,10 +351,11 @@ export const revokeAllPlatformRoles = async (
   user: Pick<UsableUser, 'userId' | 'token' | 'email'>
 ): Promise<void> => {
   for (const role of await platformRolesOf(user.token)) {
-    await gqlAs(
-      rolesAdminToken,
-      'mutation($roleData: RemovePlatformRoleInput!) { removePlatformRoleFromUser(roleData: $roleData) { id } }',
-      { roleData: { actorID: user.userId, role } }
+    must(
+      await removePlatformRoleFromUser(user.userId, role as RoleName, {
+        bearerToken: rolesAdminToken,
+      }),
+      `remove ${role} from ${user.email}`
     );
   }
   const left = await platformRolesOf(user.token);
@@ -459,10 +399,9 @@ export const deleteUserAs = async (
   token: string,
   userId: string
 ): Promise<void> => {
-  await gqlAs(
-    token,
-    'mutation($id: UUID!) { deleteUser(deleteData: { ID: $id, deleteIdentity: true }) { id } }',
-    { id: userId }
+  must(
+    await deleteUser(userId, { bearerToken: token }, true),
+    `delete user ${userId}`
   );
 };
 
@@ -476,21 +415,11 @@ export const deleteUserAs = async (
 export const getProfileRemovedInApp = async (
   token: string
 ): Promise<boolean> => {
-  const { me } = await gqlAs<{
-    me: {
-      user: {
-        settings: {
-          notification: {
-            platform: { admin: { userProfileRemoved: { inApp: boolean } } };
-          };
-        };
-      };
-    };
-  }>(
-    token,
-    'query { me { user { settings { notification { platform { admin { userProfileRemoved { inApp } } } } } } } }'
+  const { me } = must(
+    await readMyUserSettings({ bearerToken: token }),
+    'read own notification settings'
   );
-  return me.user.settings.notification.platform.admin.userProfileRemoved.inApp;
+  return me.user!.settings.notification.platform.admin.userProfileRemoved.inApp;
 };
 
 export const setProfileRemovedInApp = async (
@@ -498,19 +427,17 @@ export const setProfileRemovedInApp = async (
   userID: string,
   inApp: boolean
 ): Promise<void> => {
-  await gqlAs(
-    token,
-    'mutation($settingsData: UpdateUserSettingsInput!) { updateUserSettings(settingsData: $settingsData) { id } }',
-    {
-      settingsData: {
-        userID,
-        settings: {
-          notification: {
-            platform: { admin: { userProfileRemoved: { inApp } } },
-          },
+  must(
+    await updateUserSettings(
+      userID,
+      {
+        notification: {
+          platform: { admin: { userProfileRemoved: { inApp } } },
         },
       },
-    }
+      { bearerToken: token }
+    ),
+    `set userProfileRemoved.inApp=${inApp} for ${userID}`
   );
 };
 
@@ -523,18 +450,12 @@ export const profileRemovedNotificationsTriggeredBy = async (
   token: string,
   actorId: string
 ): Promise<string[]> => {
-  const { me } = await gqlAs<{
-    me: {
-      notifications: {
-        inAppNotifications: {
-          id: string;
-          triggeredBy: { id: string } | null;
-        }[];
-      };
-    };
-  }>(
-    token,
-    'query { me { notifications(filter: { types: [PLATFORM_ADMIN_USER_PROFILE_REMOVED] }) { inAppNotifications { id triggeredBy { id } } } } }'
+  const { me } = must(
+    await readMyNotifications(
+      { bearerToken: token },
+      { types: [NotificationEvent.PlatformAdminUserProfileRemoved] }
+    ),
+    'read own profile-removed notifications'
   );
   return me.notifications.inAppNotifications
     .filter(notification => notification.triggeredBy?.id === actorId)

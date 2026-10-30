@@ -11,14 +11,15 @@
 // spec source: specs/029-detect-signup-language/repos.yaml -> tracks (US2)
 
 import { test, expect, Page, Browser } from '@playwright/test';
+import { readMyLanguageSetting, updateUserSettings } from '@alkemio/tests-lib';
 import {
   BASE_URL,
   footerLanguageDutch,
   expectNoLanguageOffer,
   readLanguageStorage,
-  gql,
 } from './helpers';
 import { MEMBER_STATE } from './authState';
+import { must, sessionActor } from '../helpers/lib-actor.helper';
 import { openSettingsSection } from '../helpers/settings-section.helper';
 
 // Settings language Select (UserSettingsTabView.tsx): SelectTrigger aria-label is
@@ -79,19 +80,12 @@ async function setLanguageViaSettings(page: Page, endonym: string): Promise<void
 async function resetAccountLanguageToEnglish(browser: Browser): Promise<void> {
   const ctx = await browser.newContext({ storageState: MEMBER_STATE });
   try {
-    const me = await gql(ctx.request, '{ me { user { id settings { language } } } }');
+    const actor = await sessionActor(ctx);
+    const me = must(await readMyLanguageSetting(actor), 'read own language setting');
     const user = me?.me?.user;
     expect(user?.id, 'could not resolve the authenticated user for the language reset').toBeTruthy();
-    if (user.settings?.language === 'en') return;
-    await gql(
-      ctx.request,
-      `mutation ResetLanguage($userID: UUID!) {
-         updateUserSettings(settingsData: { userID: $userID, settings: { language: "en" } }) {
-           id settings { language }
-         }
-       }`,
-      { userID: user.id }
-    );
+    if (user!.settings?.language === 'en') return;
+    must(await updateUserSettings(user!.id, { language: 'en' }, actor), 'reset language to en');
   } finally {
     await ctx.close();
   }

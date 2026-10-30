@@ -19,7 +19,6 @@
     "lint:prod": "pnpm run typecheck:native && cross-env NODE_ENV=production eslint \"src/**/*.ts{,x}\" \"tests/**/*.ts\"",
     "lint:fix": "pnpm run typecheck:native && eslint \"src/**/*.ts{,x}\" \"tests/**/*.ts\" --fix",
     "typecheck:native": "tsc -p tsconfig.json --noEmit",
-    "codegen": "graphql-codegen --config codegen.ts",
     "stop-process": "fuser 4000/tcp -k",
     "test:auth-playwright": "playwright test",
     "test:classifications": "playwright test --config=config/playwright.config.classifications.ts",

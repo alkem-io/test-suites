@@ -4,9 +4,10 @@
 // (`platform.configuration.language`); the other four locales are covered by
 // a client-web unit test instead (D-F).
 import { expect } from '@playwright/test';
-import { TestUserManager } from '@alkemio/tests-lib';
+import { readMyUser, TestUserManager, updateUserSettings } from '@alkemio/tests-lib';
 import { createPersonaTest } from '../fixtures/authenticated-session.fixture';
-import { gql, languageConfig } from '../language-offer/helpers';
+import { must, sessionActor } from '../helpers/lib-actor.helper';
+import { languageConfig } from '../language-offer/helpers';
 
 const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 
@@ -43,41 +44,33 @@ test.beforeAll(async () => {
 test.afterEach(async ({ page }) => {
   // Restore to English so a failed run does not leave the persona stranded
   // in a non-default locale for the next run.
-  const me = await gql(page.request, '{ me { user { id } } }');
-  await gql(
-    page.request,
-    `mutation($userID: UUID!) {
-       updateUserSettings(settingsData: { userID: $userID, settings: { language: "en" } }) {
-         id
-       }
-     }`,
-    { userID: me.me.user.id }
+  const actor = await sessionActor(page);
+  const me = must(await readMyUser(actor), 'read own user');
+  must(
+    await updateUserSettings(me.me.user!.id, { language: 'en' }, actor),
+    'restore language to en'
   );
 });
 
 test('TC-E3 — forum category labels render correctly in every eligible locale (US4-AS1)', async ({
   page,
 }) => {
-  const { eligible } = await languageConfig(page.request);
+  const { eligible } = await languageConfig(page);
   const codes = Array.from(new Set(['en', ...eligible])).filter(
     code => code in LOCALE_LABELS
   );
   expect(codes.length).toBeGreaterThan(0);
 
-  const me = await gql(page.request, '{ me { user { id } } }');
-  const userId = me.me.user.id;
+  const actor = await sessionActor(page);
+  const me = must(await readMyUser(actor), 'read own user');
+  const userId = me.me.user!.id;
 
   for (const code of codes) {
     const expected = LOCALE_LABELS[code];
 
-    await gql(
-      page.request,
-      `mutation($userID: UUID!, $language: String!) {
-         updateUserSettings(settingsData: { userID: $userID, settings: { language: $language } }) {
-           id
-         }
-       }`,
-      { userID: userId, language: code }
+    must(
+      await updateUserSettings(userId, { language: code }, actor),
+      `set language to ${code}`
     );
 
     await page.goto(`${baseUrl}/forum`);

@@ -11,7 +11,7 @@
 // The API half of the same rules (what the server refuses, with which code) is in
 // server-api/src/functional-api/roleset/associates/support-org-community-*.it-spec.ts.
 import { expect, test as baseTest } from '@playwright/test';
-import { RoleName } from '@alkemio/tests-lib/core/generated/alkemio-schema';
+import { RoleName } from '@alkemio/tests-lib';
 import { createPersonaTest } from '../fixtures/authenticated-session.fixture';
 import {
   cleanUpTestOrganizations,

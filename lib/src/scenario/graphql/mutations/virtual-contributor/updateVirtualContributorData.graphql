@@ -1,0 +1,3 @@
+mutation UpdateVirtualContributorData($virtualContributorData: UpdateVirtualContributorInput!) {
+  updateVirtualContributor(virtualContributorData: $virtualContributorData) { id }
+}

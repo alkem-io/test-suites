@@ -21,13 +21,14 @@ import {
   TestScenarioFactory,
   TestUserManager,
   UniqueIDGenerator,
+  readSpaceAbout,
 } from '@alkemio/tests-lib';
-import { RoleName } from '@alkemio/tests-lib/core/generated/alkemio-schema';
+import { RoleName } from '@alkemio/tests-lib';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import { assignRoleToUser } from '@alkemio/tests-lib/scenario/baseFunctions';
+import { must } from '../helpers/lib-actor.helper';
 import {
   CardsFixture,
-  adminGql,
   apiCards,
   createContributorsCalloutViaApi,
   monthStartUtcIso,
@@ -150,14 +151,10 @@ test.describe.serial('US4 — See when a person joined this space', () => {
     subApiMonth = (await apiCards(subCalloutId, 'USER')).find(
       c => c.displayName === ADA
     )!.joinedDate!;
-    subspaceDisplayName = (
-      await adminGql<{
-        lookup: { space: { about: { profile: { displayName: string } } } };
-      }>(
-        'query($id: UUID!) { lookup { space(ID: $id) { about { profile { displayName } } } } }',
-        { id: baseScenario.subspace.id }
-      )
-    ).lookup.space.about.profile.displayName;
+    subspaceDisplayName = must(
+      await readSpaceAbout(baseScenario.subspace.id),
+      'subspace about'
+    ).lookup.space!.about.profile.displayName;
   });
 
   test.afterAll(async () => {

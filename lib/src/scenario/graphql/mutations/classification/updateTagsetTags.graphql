@@ -1,0 +1,1 @@
+mutation UpdateTagsetTags($updateData: UpdateTagsetInput!) { updateTagset(updateData: $updateData) { id } }

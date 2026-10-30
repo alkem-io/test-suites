@@ -23,35 +23,23 @@ import {
   newFixtureTree,
   showMoreOf,
 } from './subspaces-callout.helpers';
-import { getUserToken, UniqueIDGenerator } from '@alkemio/tests-lib';
+import {
+  CalloutFramingType,
+  SpaceCollectionCardVariant,
+  SpacePrivacyMode,
+  createCalloutWithData,
+  createSpaceOnAccount,
+  createSubspaceWithData,
+  deleteSpace,
+  getUserToken,
+  readMyUser,
+  UniqueIDGenerator,
+  type GraphqlActor,
+} from '@alkemio/tests-lib';
+import { must } from '../helpers/lib-actor.helper';
 
 const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 const adminEmail = process.env.AUTH_TEST_HARNESS_EMAIL || 'admin@alkem.io';
-// The non-interactive-login bearer (HS256) is only accepted on the private
-// non-interactive endpoint — same convention as every other raw-GraphQL
-// fixture setup in this suite (see organization-space-invitations specs).
-const gqlEndpoint =
-  process.env.ALKEMIO_SERVER ||
-  'http://localhost:3000/api/private/non-interactive/graphql';
-
-async function rawGql<T>(
-  query: string,
-  variables: Record<string, unknown>,
-  token: string
-): Promise<T> {
-  const res = await fetch(gqlEndpoint, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify({ query, variables }),
-  });
-  const body = await res.json();
-  if (body.errors)
-    throw new Error(`GraphQL error: ${JSON.stringify(body.errors)}`);
-  return body.data as T;
-}
 
 const runSuffix = UniqueIDGenerator.getID();
 
@@ -191,6 +179,7 @@ let fixture: Fixture;
 // `beforeAll` that fails halfway still leaves a complete deletion list.
 const tree = newFixtureTree();
 let adminToken: string;
+const admin = (): GraphqlActor => ({ bearerToken: adminToken });
 
 const shortId = (label: string) => `${label}${runSuffix}`.slice(0, 24);
 
@@ -202,20 +191,18 @@ async function createSubspace(
   why: string,
   who: string
 ): Promise<string> {
-  const data = await rawGql<{ createSubspace: { id: string } }>(
-    `mutation ($subspaceData: CreateSubspaceInput!) {
-      createSubspace(subspaceData: $subspaceData) { id }
-    }`,
-    {
-      subspaceData: {
+  const data = must(
+    await createSubspaceWithData(
+      {
         spaceID: spaceId,
         nameID: shortId(label),
         about: { profileData: { displayName, description: what }, why, who },
         collaborationData: { calloutsSetData: {} },
-        settings: { privacy: { mode: 'PUBLIC' } },
+        settings: { privacy: { mode: SpacePrivacyMode.Public } },
       },
-    },
-    adminToken
+      admin()
+    ),
+    `createSubspace(${displayName})`
   );
   tree.subspaceIds.push(data.createSubspace.id);
   return data.createSubspace.id;
@@ -240,35 +227,24 @@ test.describe(
       test.setTimeout(180_000);
       adminToken = await getUserToken(adminEmail);
 
-      const me = await rawGql<{ me: { user: { account: { id: string } } } }>(
-        'query { me { user { account { id } } } }',
-        {},
-        adminToken
-      );
-      const accountID = me.me.user.account.id;
+      const me = must(await readMyUser(admin()), 'me');
+      const accountID = me.me.user!.account!.id;
 
       const spaceNameId = shortId(`us3crd${runSuffix}`);
-      const space = await rawGql<{
-        createSpace: {
-          id: string;
-          collaboration: { calloutsSet: { id: string } };
-        };
-      }>(
-        `mutation ($spaceData: CreateSpaceOnAccountInput!) {
-        createSpace(spaceData: $spaceData) { id collaboration { calloutsSet { id } } }
-      }`,
-        {
-          spaceData: {
+      const space = must(
+        await createSpaceOnAccount(
+          {
             accountID,
             nameID: spaceNameId,
             about: {
               profileData: { displayName: `US3 Excerpt Safety ${runSuffix}` },
             },
             collaborationData: { calloutsSetData: {} },
-            settings: { privacy: { mode: 'PUBLIC' } },
+            settings: { privacy: { mode: SpacePrivacyMode.Public } },
           },
-        },
-        adminToken
+          admin()
+        ),
+        'createSpace'
       );
       const spaceId = space.createSpace.id;
       tree.spaceId = spaceId;
@@ -314,23 +290,23 @@ test.describe(
         ),
       ];
 
-      const callout = await rawGql<{
-        createCalloutOnCalloutsSet: { id: string };
-      }>(
-        `mutation ($calloutData: CreateCalloutOnCalloutsSetInput!) {
-        createCalloutOnCalloutsSet(calloutData: $calloutData) { id }
-      }`,
-        {
-          calloutData: {
+      const callout = must(
+        await createCalloutWithData(
+          {
             calloutsSetID: calloutsSetId,
             framing: {
-              type: 'SPACES',
+              type: CalloutFramingType.Spaces,
               profile: { displayName: 'Subspaces — expanded' },
             },
-            settings: { framing: { spaces: { cardVariant: 'EXPANDED' } } },
+            settings: {
+              framing: {
+                spaces: { cardVariant: SpaceCollectionCardVariant.Expanded },
+              },
+            },
           },
-        },
-        adminToken
+          admin()
+        ),
+        'createSpacesPost'
       );
 
       fixture = {
@@ -346,12 +322,8 @@ test.describe(
       // contains subspaces), and every failure is reported rather than
       // swallowed: a public fixture tree left behind on the shared stack is
       // a defect of this file, not noise.
-      await deleteFixtureTree(tree, id =>
-        rawGql(
-          'mutation ($spaceID: UUID!) { deleteSpace(deleteData: { ID: $spaceID }) { id } }',
-          { spaceID: id },
-          adminToken
-        )
+      await deleteFixtureTree(tree, async id =>
+        must(await deleteSpace(id, admin()), `deleteSpace(${id})`)
       );
     });
 
