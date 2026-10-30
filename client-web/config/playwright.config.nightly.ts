@@ -63,6 +63,16 @@ export default defineConfig(
         tier: 'extended',
       }),
       suite({
+        name: 'Space settings write',
+        testMatch: [
+          '/space-settings-write/us1-privacy.spec.ts',
+          '/space-settings-write/us2-membership-policy.spec.ts',
+          '/space-settings-write/us3-collaboration-toggles.spec.ts',
+        ],
+        // Each case: save in the admin context, reload in a second persona's.
+        tier: 'extended',
+      }),
+      suite({
         name: 'Support navigation',
         testMatch: [
           '/support-navigation/support-navigation.spec.ts',
