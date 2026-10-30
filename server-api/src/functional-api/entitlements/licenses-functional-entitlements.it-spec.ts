@@ -19,7 +19,7 @@ import {
 } from '@alkemio/tests-lib';
 import { getMyEntitlementsQuery } from './entitlements-request.params';
 import {
-  createSpaceBasicData,
+  createSpaceBasicDataOrFail,
   deleteSpace,
 } from '@functional-api/journey/space/space.request.params';
 import {
@@ -71,14 +71,16 @@ describe('Functional tests - licenses updates', () => {
         await getLicensePlanByName('SPACE_LICENSE_PLUS');
       const licensePlanIdSpacePlus = getLicensePlanSpacePlus[0].id;
 
-      const createSpace = await createSpaceBasicData(
+      // Resilient to the retry-after-commit race (see createSpaceBasicDataOrFail):
+      // a masked '' id here used to leave the space behind and assign the plan
+      // to nothing.
+      spaceId = await createSpaceBasicDataOrFail(
         spaceName,
         spaceName,
         TestUserManager.users.nonSpaceMember.accountId,
         true,
         TestUser.NON_SPACE_MEMBER
       );
-      spaceId = createSpace.data?.createSpace.id ?? '';
       const responseBeforePlus = await getMyEntitlementsQuery(
         TestUser.NON_SPACE_MEMBER
       );
@@ -98,28 +100,26 @@ describe('Functional tests - licenses updates', () => {
         TestUser.NON_SPACE_MEMBER
       );
 
-      // Assert
-      expect(
-        responseBeforePlus.data?.me.user?.account?.spaces[0].license
-          .entitlements
-      ).toEqual(
+      // Assert — pick the space this test created, never `spaces[0]`: the
+      // account keeps any space an earlier run failed to delete, and the
+      // order is not the creation order.
+      const entitlementsOf = (response: typeof responseBeforePlus) =>
+        response.data?.me.user?.account?.spaces.find(s => s.id === spaceId)
+          ?.license.entitlements;
+
+      expect(entitlementsOf(responseBeforePlus)).toEqual(
         expect.arrayContaining(
           accountVCCampaignLicenses1SpaceVCPack.spaces[0].license.entitlements
         )
       );
 
-      expect(
-        responseAfterPlus.data?.me.user?.account?.spaces[0].license.entitlements
-      ).toEqual(
+      expect(entitlementsOf(responseAfterPlus)).toEqual(
         expect.arrayContaining(
           accountVCCampaignLicenses1SpacePlus.spaces[0].license.entitlements
         )
       );
 
-      expect(
-        responseAfterRevokePlus.data?.me.user?.account?.spaces[0].license
-          .entitlements
-      ).toEqual(
+      expect(entitlementsOf(responseAfterRevokePlus)).toEqual(
         expect.arrayContaining(
           accountVCCampaignLicenses1SpaceVCPack.spaces[0].license.entitlements
         )

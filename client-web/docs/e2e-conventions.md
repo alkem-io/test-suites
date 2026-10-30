@@ -69,6 +69,62 @@ client-web/
   is for files whose cases genuinely build on one another (a multi-step user
   journey). Otherwise every case must pass on its own and after any other.
 
+## 2b. Lib boundary — the server is reached only through `@alkemio/tests-lib`
+
+The server is being rebuilt behind a new schema (`docs/qa/server-rebuild/`,
+workstream W2). The suite survives that only if a schema change touches ONE
+package: `lib/`. So a spec never carries a GraphQL document and never names
+the generated schema; ESLint fails the build on both
+(`no-restricted-imports`, `no-restricted-syntax` in `eslint.config.js`).
+
+- **Preconditions, teardown and read-backs go through a lib function named
+  after the business action** — `createSpaceOnAccount`, `readSpaceSettings`,
+  `submitCalloutFormResponse`, `readMyNotifications` — never through an
+  inline document (`rawGql`, `adminGql`, `gql`, `postGraphqlRaw(document)`,
+  `graphqlRequestAuth({query})`, a same-origin `fetch('/api/private/graphql')`
+  inside `page.evaluate`, `page.request.post(graphqlUrl)`). The function
+  lives in `lib/src/scenario/functions/<area>/`, its document in
+  `lib/src/scenario/graphql/`; a missing function is added there, with the
+  selection the spec needs, then `pnpm --filter @alkemio/tests-lib run codegen`
+  and `build`.
+- **The actor is explicit.** Every lib function takes a `GraphqlActor`: a
+  harness persona (`TestUser.GLOBAL_ADMIN`), a disposable user's bearer
+  (`{ bearerToken: await getUserToken(email) }`), the signed-in browser
+  session (`await sessionActor(page)` from `helpers/lib-actor.helper.ts` —
+  the same server-side view a `fetch` with credentials inside the page had),
+  or nobody (`{ anonymous: 'private' | 'public' }`) for a negative control.
+- **Results are `{ data } | { error }`.** Unwrap a set-up or read-back with
+  `must(result, 'what')` from `helpers/lib-actor.helper.ts` so a failure
+  stops the walk with the GraphQL errors; inspect `result.error?.errors`
+  (each carries `message` and `code`) for a negative. A spec that asserts on
+  the HTTP status itself uses the RAW variants (`readMySessionRaw`,
+  `deleteUserRaw`, `uploadFileOnStorageBucket`).
+- **No `.graphql` file under `client-web/src`, and no import that reaches
+  around the barrel** (a relative path into `lib/src`, any `core/generated`
+  module, `@alkemio/tests-lib/dist`). client-web has no codegen of its own;
+  CI fails on either.
+- **Enums and types come from the lib's own re-exports**
+  (`import { RoleName, SpacePrivacyMode } from '@alkemio/tests-lib'`;
+  `lib/src/common/enums/alkemio.ts`, `lib/src/common/types/schema.ts`),
+  never from `@alkemio/tests-lib/core/generated/*` or
+  `@alkemio/client-lib/dist/generated/*`. Add a missing enum to the lib
+  file; values stay the server's until the schema changes, and then only
+  that file changes.
+- **The only raw document a spec may keep is one that is deliberately
+  malformed or foreign** — a guard negative that proves the server rejects
+  it. Mark it `// eslint-disable-next-line no-restricted-syntax -- <why>` so
+  the reason is reviewed.
+- Direct generated-SDK calls (`graphqlErrorWrapper(t => getGraphqlClient()
+  .SomeOp(vars, …), role)`) use lib-owned documents and are tolerated for
+  now; they are the next thing to fold, not a pattern to extend.
+- `tests/` (forge-verify's machine-written walks) is not under this contract
+  yet.
+- The first thing that must go green on the new core is the lib contract
+  test: `pnpm -C server-api exec vitest run --project contract`
+  (`server-api/src/contract/lib-contract.it-spec.ts`) — it imports every
+  lib name the specs use, asserts names and shapes, and runs
+  `createBaseScenario` → read-backs → `cleanUpBaseScenario`.
+
 ## 3. Waiting — for conditions, never for time
 
 - **No `page.waitForTimeout`, no `delay()`.** ESLint fails the build on both.

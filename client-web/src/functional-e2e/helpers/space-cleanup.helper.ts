@@ -1,5 +1,6 @@
+import { expect } from '@playwright/test';
 import { getGraphqlClient, TestUser } from '@alkemio/tests-lib';
-import { graphqlErrorWrapper } from '@alkemio/tests-lib/utils/graphql.wrapper';
+import { graphqlErrorWrapper } from '@alkemio/tests-lib';
 import { deleteSpace } from '@alkemio/tests-lib/scenario/baseFunctions';
 
 /**
@@ -12,10 +13,34 @@ import { deleteSpace } from '@alkemio/tests-lib/scenario/baseFunctions';
  */
 export async function deleteSpaceByNameId(nameID: string): Promise<void> {
   const client = getGraphqlClient();
-  const lookup = await graphqlErrorWrapper(
-    (authToken: string | undefined) => client.getSpaceIdByNameId({ nameID }, { authorization: `Bearer ${authToken}` }),
-    TestUser.GLOBAL_ADMIN
-  );
+  const lookupOnce = () =>
+    graphqlErrorWrapper(
+      (authToken: string | undefined) => client.getSpaceIdByNameId({ nameID }, { authorization: `Bearer ${authToken}` }),
+      TestUser.GLOBAL_ADMIN
+    );
+  let lookup = await lookupOnce();
+  // A Space whose creation is still in flight (the walk failed mid-create)
+  // exists but has no authorization policy yet, and the lookup answers
+  // AUTHORIZATION_INVALID_POLICY instead of the id. There is no create
+  // transaction: createSpace saves the Space and only then applies and saves
+  // its policies (server account.resolver.mutations.ts), so the window closes
+  // when that second pass finishes — or never, if it fails, which leaves the
+  // orphan server#6648 describes. Poll until the lookup answers either way.
+  const creationInFlight = () => JSON.stringify(lookup.error ?? '').includes('AUTHORIZATION_INVALID_POLICY');
+  if (creationInFlight()) {
+    await expect
+      .poll(
+        async () => {
+          lookup = await lookupOnce();
+          return creationInFlight();
+        },
+        {
+          timeout: 60_000,
+          message: `Space '${nameID}' still has no authorization policy after 60 s — an orphaned create (server#6648), not a slow one`,
+        }
+      )
+      .toBe(false);
+  }
   if (lookup.error) {
     throw new Error(`could not look up Space '${nameID}': ${JSON.stringify(lookup.error)}`);
   }

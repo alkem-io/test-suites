@@ -1331,6 +1331,39 @@ The seed creates:
 
 ---
 
+#### 10.6 Create Callout with a Description over the Limit (client-web#9972)
+
+**User:** SPACE*ADMIN
+**Priority:** P1 — Release 78 story; before client-web#10422 the length was checked only on submit, with no counter, no live error and no sign the footer was blocked
+**Test file:** `0.10callout-description-limit.spec.ts` (DL-1 … DL-3) · nightly \_Callouts* suite
+
+**Steps:**
+
+1. Open the Create Callout dialog, type a title, paste a description that counts 50,100 characters
+2. Before any click: read the error under the editor, focus the progress ring, read the footer buttons
+3. Click Post, then Save Draft
+4. Shorten to 49,900 and Post
+5. Paste over the limit again and clear the title
+6. Thresholds (BVA, both sides of each boundary): 9,999 / 10,000 / 39,999 / 40,000 / 50,000 / 50,001
+
+**Expected Results:**
+
+- Live error "This text exceeds the length limits for this field." (`aria-live="polite"`) with no click; the ring's accessible name is `50,100/50,000 characters` and its tooltip adds the "formatting, images and links count too" line
+- Post and Save Draft stay **enabled**, dimmed, with `aria-describedby` → "Shorten the description to continue — it is over the length limit", also the tooltip
+- A click runs validation: the dialog stays, the error stays, no callout exists (API read)
+- Under the limit: error gone, no hint, Post creates the callout
+- Missing title wins: the hint becomes "Add a title to your Post to continue" while the description error is still shown
+- Ring hidden under 20 % of the limit, shown from 20 % without the hint line, hint line from 80 % (none at 39,999); exactly 50,000 is allowed, 50,001 shows the error and blocks the footer
+- After the under-limit Post, exactly one callout carries the title (the two over-limit clicks wrote nothing, not even late)
+
+**Notes:**
+
+- The count is the **markdown** length: a plain text run serialises with one trailing newline, so the counter reads typed + 1. The spec pins that offset first (DL-1) so a serialisation change fails loudly. A user who pastes exactly 50,000 visible characters is therefore over the limit by one; the tooltip's second line is the explanation the product gives.
+- Tooltips are opened by **focusing** the trigger, not hovering: re-hovering the same Radix trigger after a pointer leave did not reopen it reliably (2026-10-19).
+- The Space settings About _What_ / _Why_ / _Who_ editors are covered by `space/space-settings-about-limit.spec.ts` (AL-1, AL-2; nightly _Space_): ring thresholds per limit (What 50,000; Why / Who 32,000). **Observed and pinned, not ruled:** none of the three About editors shows a live error or blocks Save past its limit — What at 50,100 saves (server limit 65,568), Why at 32,100 saves, Who at 32,884 is refused by the server and the footer shows the error + Retry. The PR lists Why / Who as a follow-up and is silent on What. Not covered: the innovation-flow state description, the forum body and the VC knowledge base (client-web unit tests cover the limits passed to each); the title field's own red-on-blur and 128 counter were not delivered (Release 78 decision D5).
+
+---
+
 ## Testing Notes
 
 - **Authentication Required**: Most scenarios require authenticated users from the seed
@@ -1416,6 +1449,12 @@ Based on the comprehensive test plan above, the following scenarios are **P1 pri
 | --- | --------------------------------------- | ------ | ------------------------------- |
 | 23  | **8.1** - Post Collection Full Workflow | ✅     | `callout-full-workflow.spec.ts` |
 
+### **Error Handling (1 scenario)**
+
+| #   | Scenario                                                | Status | Test File                               |
+| --- | ------------------------------------------------------- | ------ | --------------------------------------- |
+| 24  | **10.6** - Description over the Limit (client-web#9972) | ✅     | `0.10callout-description-limit.spec.ts` |
+
 ---
 
 ### **P1 Implementation Summary**
@@ -1430,11 +1469,12 @@ Based on the comprehensive test plan above, the following scenarios are **P1 pri
 | Contributions          | 3      | 3              | 0          | 0                  |
 | Access Control         | 2      | 2              | 0          | 0                  |
 | Type-Specific          | 1      | 1              | 0          | 0                  |
-| **Total P1 Scenarios** | **28** | **28**         | **0**      | **0**              |
+| Error Handling         | 1      | 1              | 0          | 0                  |
+| **Total P1 Scenarios** | **29** | **29**         | **0**      | **0**              |
 
 **Test Files Location:** `client-web/src/functional-e2e/callouts/`
 
-**Total Test Files:** 9
+**Total Test Files:** 10
 
 - `callout-creation.spec.ts` - Tests 1.1-1.9 (9 tests: Post, Whiteboard, CTA, Memo + 4 collection types + member cannot create)
 - `callout-subspace-creation.spec.ts` - Tests 1.10, 1.11 (2 tests: Subspace creation + cannot create in parent)
@@ -1445,6 +1485,7 @@ Based on the comprehensive test plan above, the following scenarios are **P1 pri
 - `callout-contributions.spec.ts` - Tests 6.1, 6.2, 6.4
 - `callout-access-control.spec.ts` - Tests 7.1, 7.2
 - `callout-full-workflow.spec.ts` - Test 8.1
+- `0.10callout-description-limit.spec.ts` - Test 10.6 (3 tests: over the limit, missing title wins, ring thresholds; client-web#9972)
 
 ---
 
@@ -1533,13 +1574,14 @@ Based on the comprehensive test plan above, the following scenarios are **P1 pri
 53. **9.2** - Private Subspace Callouts - Non-Member Cannot View - P1 ❌
 54. **9.3** - Callout Discovery - Search/Filter - P3 ❌
 
-### Category 10: Error Handling and Edge Cases (5 scenarios)
+### Category 10: Error Handling and Edge Cases (6 scenarios)
 
 55. **10.1** - Create Callout with Missing Required Fields - P2 ❌
 56. **10.2** - Create Callout with Duplicate Name - P3 ❌
 57. **10.3** - Delete Callout with Active Comments - P2 ❌
 58. **10.4** - Session Timeout During Edit - P3 ❌
 59. **10.5** - Concurrent Edit Conflict - P3 ❌
+60. **10.6** - Create Callout with a Description over the Limit (client-web#9972) - P1 ✅ `0.10callout-description-limit.spec.ts`
 
 ---
 
@@ -1556,18 +1598,18 @@ Based on the comprehensive test plan above, the following scenarios are **P1 pri
 | 7. Callout Access Control by Role     | 5      | 2              | 0          | 3                  |
 | 8. Callout Types - Specific Behaviors | 4      | 1              | 0          | 3                  |
 | 9. Cross-Level Callout Visibility     | 3      | 0              | 0          | 3                  |
-| 10. Error Handling and Edge Cases     | 5      | 0              | 0          | 5                  |
-| **Total**                             | **59** | **28**         | **0**      | **31**             |
+| 10. Error Handling and Edge Cases     | 6      | 1              | 0          | 5                  |
+| **Total**                             | **60** | **29**         | **0**      | **31**             |
 
 **Test Files Location:** `client-web/src/functional-e2e/callouts/`
 
-**Total Test Files:** 9
+**Total Test Files:** 10
 
 ---
 
-**Total Test Scenarios: 59**
+**Total Test Scenarios: 60**
 
-- **P1 (Critical)**: 28 scenarios (28 implemented ✅)
+- **P1 (Critical)**: 29 scenarios (29 implemented ✅)
 - **P2 (Important)**: 23 scenarios (0 implemented)
 - **P3 (Nice to have)**: 8 scenarios (0 implemented)
 

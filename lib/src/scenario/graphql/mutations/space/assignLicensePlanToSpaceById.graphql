@@ -1,0 +1,3 @@
+mutation AssignLicensePlanToSpaceById($planData: AssignLicensePlanToSpace!) {
+  assignLicensePlanToSpace(planData: $planData) { id }
+}

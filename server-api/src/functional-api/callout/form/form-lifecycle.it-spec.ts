@@ -712,6 +712,33 @@ describe('Form lifecycle — who may delete which response', () => {
   const stillThere = async () =>
     (await idsSeenByAdmin(form)).includes(responseId);
 
+  /**
+   * The whole refusal a caller sees, so an id or a policy leaked through
+   * `extensions.details` (as the unknown-id path did before server#6591) is
+   * caught even when code and message match. Leaves out the per-error random
+   * `errorId` and the `stacktrace` that only non-production servers return,
+   * and masks the id the caller sent, which may be echoed back harmlessly.
+   */
+  const refusalAsSeen = (
+    result: Awaited<ReturnType<typeof deleteFormResponse>>,
+    sentId: string
+  ) => {
+    const { message, extensions = {} } = (result.error?.errors[0] ?? {}) as {
+      message?: string;
+      extensions?: Record<string, unknown>;
+    };
+    const visible = Object.fromEntries(
+      Object.entries(extensions).filter(
+        ([key]) => key !== 'errorId' && key !== 'stacktrace'
+      )
+    );
+    return JSON.parse(
+      JSON.stringify({ message, extensions: visible })
+        .split(sentId)
+        .join('<sent id>')
+    );
+  };
+
   test('positive control: the response exists and the admin sees it', async () => {
     expect(await stillThere()).toBe(true);
   });
@@ -739,15 +766,12 @@ describe('Form lifecycle — who may delete which response', () => {
 
   // FR-020: visibility is enforced on every path that returns a response's
   // existence. A caller who may not moderate must not learn, from the shape of
-  // the refusal, whether a guessed id is a real response. The server loads the
-  // response before authorizing, so today an unknown id answers
-  // ENTITY_NOT_FOUND and a real one FORBIDDEN_POLICY:
-  // https://github.com/alkem-io/server/issues/6591. Skipped until that fix
-  // lands — drop the `.skip` then; the case already pins the expected
-  // behaviour.
-  test.skip('a non-moderator gets the same refusal for an existing response id and an unknown one (FR-020, alkem-io/server#6591)', async () => {
+  // the refusal — its code, its message or its details — whether a guessed id
+  // is a real response (alkem-io/server#6591).
+  test('a non-moderator gets the same refusal for an existing response id and an unknown one (FR-020, alkem-io/server#6591)', async () => {
+    const unknownId = randomUUID();
     const unknown = await deleteFormResponse(
-      randomUUID(),
+      unknownId,
       TestUser.NON_SPACE_MEMBER
     );
     const existing = await deleteFormResponse(
@@ -757,7 +781,16 @@ describe('Form lifecycle — who may delete which response', () => {
 
     expect(unknown.error).toBeDefined();
     expect(existing.error).toBeDefined();
+    // A signed-in non-moderator: two identical UNAUTHENTICATED refusals from a
+    // failed login would otherwise pass this case.
+    expect(isForbiddenByPolicy(existing)).toBe(true);
     expect(errorClass(existing)).toBe(errorClass(unknown));
+    expect(existing.error?.errors[0]?.message).toBe(
+      unknown.error?.errors[0]?.message
+    );
+    expect(refusalAsSeen(existing, responseId)).toEqual(
+      refusalAsSeen(unknown, unknownId)
+    );
     expect(await stillThere()).toBe(true);
   });
 

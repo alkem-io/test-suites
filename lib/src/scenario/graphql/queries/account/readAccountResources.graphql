@@ -1,0 +1,11 @@
+query ReadAccountResources($accountId: UUID!) {
+  lookup {
+    account(ID: $accountId) {
+      id
+      virtualContributors { id }
+      innovationPacks { id }
+      innovationHubs { id }
+      spaces { id level subspaces { id subspaces { id } } }
+    }
+  }
+}

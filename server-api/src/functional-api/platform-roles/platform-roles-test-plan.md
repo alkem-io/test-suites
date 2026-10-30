@@ -2,7 +2,7 @@
 
 > **Status:** Built — QA-lead directive in-session 2026-09-18 (single delivery); awaiting review at PR · **Depth:** Deep (authorization change, cross-repo, release-train gated) · **Story:** alkem-io/server#4764 · Epic alkem-io/server#6320 · **Generated** from `capabilities.data.ts` + `scenarios.data.ts` — do not edit by hand
 
-The single Global Admin "god mode" is decomposed into 10 `Platform …` administration roles and 4 `Feature …` roles. This suite answers one question per role, in both directions: **can it do everything the acceptance criteria give it, and is it refused everything else.** It tracks **115 administrative capabilities** in 22 groups × **14 roles** = **142 positive** and **1454 negative** role-level checks, plus **30 rule scenarios** that a grid cannot express.
+The single Global Admin "god mode" is decomposed into 10 `Platform …` administration roles and 4 `Feature …` roles. This suite answers one question per role, in both directions: **can it do everything the acceptance criteria give it, and is it refused everything else.** It tracks **127 administrative capabilities** in 23 groups × **14 roles** = **155 positive** and **1609 negative** role-level checks, plus **30 rule scenarios** that a grid cannot express.
 
 **Slice B vocabulary.** The table names the surfaces as they exist after workspace#027 Slice B (server alkem-io/server#6582): `adminUpdateSpaceVisibility` for A14, the two A17 rename surfaces, and none of the deleted FR-021/FR-022 mutations. Each test user holds exactly one target role (scenario X1 proves it first, and L2 proves the legacy vocabulary is gone from the schema).
 
@@ -32,31 +32,31 @@ Phase 1 (`platform-roles`) runs the 14 role files and the read-only specs in par
 
 ## Coverage at a glance
 
-- Capabilities — positive: 92 automated · 14 exclusive · 7 not-applicable · 2 not-automated
-- Capabilities — negative: 114 automated · 1 not-automated
+- Capabilities — positive: 102 automated · 14 exclusive · 9 not-applicable · 2 not-automated
+- Capabilities — negative: 126 automated · 1 not-automated
 - Rule scenarios — positive: 22 automated · 6 not-applicable · 2 not-automated
 - Rule scenarios — negative: 25 automated · 1 exclusive · 1 not-applicable · 3 not-automated
 
 | Role | Spec file | Can (positive) | Cannot (negative) |
 |---|---|---|---|
-| PLATFORM_ROLES_ADMIN | `roles/platform-roles-admin.it-spec.ts` | 20 | 94 |
-| PLATFORM_CONTENT_FULL_ACCESS | `roles/platform-content-full-access.it-spec.ts` | 17 | 97 |
-| PLATFORM_RESOURCE_ADMIN | `roles/platform-resource-admin.it-spec.ts` | 14 | 100 |
-| PLATFORM_SETTINGS_ADMIN | `roles/platform-settings-admin.it-spec.ts` | 12 | 102 |
-| PLATFORM_OPERATIONS_ADMIN | `roles/platform-operations-admin.it-spec.ts` | 24 | 90 |
-| PLATFORM_USERS_ADMIN | `roles/platform-users-admin.it-spec.ts` | 17 | 97 |
-| PLATFORM_SUPPORT | `roles/platform-support.it-spec.ts` | 15 | 99 |
-| PLATFORM_LICENSE_MANAGER | `roles/platform-license-manager.it-spec.ts` | 6 | 108 |
-| PLATFORM_SPACES_READER | `roles/platform-spaces-reader.it-spec.ts` | 1 | 113 |
-| PLATFORM_AUDIT_READER | `roles/platform-audit-reader.it-spec.ts` | 15 | 99 |
-| FEATURE_BETA_TESTER | `roles/feature-beta-tester.it-spec.ts` | 0 | 114 |
-| FEATURE_VIRTUAL_ASSISTANT | `roles/feature-virtual-assistant.it-spec.ts` | 0 | 114 |
-| FEATURE_ORGANIZATION_CREATOR | `roles/feature-organization-creator.it-spec.ts` | 1 | 113 |
-| FEATURE_VC_CAMPAIGN | `roles/feature-vc-campaign.it-spec.ts` | 0 | 114 |
+| PLATFORM_ROLES_ADMIN | `roles/platform-roles-admin.it-spec.ts` | 20 | 106 |
+| PLATFORM_CONTENT_FULL_ACCESS | `roles/platform-content-full-access.it-spec.ts` | 20 | 106 |
+| PLATFORM_RESOURCE_ADMIN | `roles/platform-resource-admin.it-spec.ts` | 14 | 112 |
+| PLATFORM_SETTINGS_ADMIN | `roles/platform-settings-admin.it-spec.ts` | 12 | 114 |
+| PLATFORM_OPERATIONS_ADMIN | `roles/platform-operations-admin.it-spec.ts` | 25 | 101 |
+| PLATFORM_USERS_ADMIN | `roles/platform-users-admin.it-spec.ts` | 17 | 109 |
+| PLATFORM_SUPPORT | `roles/platform-support.it-spec.ts` | 24 | 102 |
+| PLATFORM_LICENSE_MANAGER | `roles/platform-license-manager.it-spec.ts` | 6 | 120 |
+| PLATFORM_SPACES_READER | `roles/platform-spaces-reader.it-spec.ts` | 1 | 125 |
+| PLATFORM_AUDIT_READER | `roles/platform-audit-reader.it-spec.ts` | 15 | 111 |
+| FEATURE_BETA_TESTER | `roles/feature-beta-tester.it-spec.ts` | 0 | 126 |
+| FEATURE_VIRTUAL_ASSISTANT | `roles/feature-virtual-assistant.it-spec.ts` | 0 | 126 |
+| FEATURE_ORGANIZATION_CREATOR | `roles/feature-organization-creator.it-spec.ts` | 1 | 125 |
+| FEATURE_VC_CAMPAIGN | `roles/feature-vc-campaign.it-spec.ts` | 0 | 126 |
 
 ## Allowed — verified against the requirements
 
-Checked 2026-09-18 against `spec.md` (§Target global role model, §Action → owning role) and `contracts/privilege-map.md`; the two rows later rulings changed were re-checked 2026-10-08 — A8 `updateCalloutPublishInfo` (Resource Admin a second owner, amendment 2026-10-07) and A22 (direct add, no owner, ruling 2026-10-08). **All 22 action families' owner sets match the spec exactly**, including the three declared exceptions (Content Full Access on A6 delete, A7 and the A16 read). The spec assigns owners per action FAMILY; per surface: **52** are named in the requirements, **56** are covered by their family's wording, **6** are backed by neither (⚠️), **1** contradict a requirement (❌).
+Checked 2026-09-18 against `spec.md` (§Target global role model, §Action → owning role) and `contracts/privilege-map.md`; the two rows later rulings changed were re-checked 2026-10-08 — A8 `updateCalloutPublishInfo` (Resource Admin a second owner, amendment 2026-10-07) and A22 (direct add, no owner, ruling 2026-10-08). **All 23 action families' owner sets match the spec exactly**, including the three declared exceptions (Content Full Access on A6 delete, A7 and the A16 read). The spec assigns owners per action FAMILY; per surface: **63** are named in the requirements, **57** are covered by their family's wording, **6** are backed by neither (⚠️), **1** contradict a requirement (❌).
 
 | Capability | Allowed today | Finding |
 |---|---|---|
@@ -64,11 +64,15 @@ Checked 2026-09-18 against `spec.md` (§Target global role model, §Action → o
 | ⚠️ `A9.convertVirtualContributorToUseKnowledgeBase` | resource admin | spec A9 is "move resources"; converting a VC body of knowledge is not a move and the contract A9 list omits it |
 | ⚠️ `A13.createLicensePlan` | settings admin | the spec gives Settings Admin the DEFINITION of license plans; the server census (a.row.surfaces.ts, A13) lists update / delete and the three rule mutations but omits this one - found in the manual pass of 2026-09-21. Gate: CREATE on the licensing framework. |
 | ⚠️ `A13.updateLicensePlan` | settings admin | PRODUCT BUG: LicensePlanService.update() saves the plan unchanged - the mutation reports success and nothing is applied (also on develop). The positive is RED until fixed |
-| ❌ `A16.createPlatformRolesAccess` | spaces reader, content full access | the server DELIBERATELY grants Platform Resource Admin READ on every space (space.service.platform.roles.access.ts); the requirements allow only Spaces Reader plus the Content Full Access exception. The negative for PLATFORM_RESOURCE_ADMIN is RED until product decides |
+| ❌ `A16.createPlatformRolesAccess` | spaces reader, content full access | Platform Resource Admin holds a NON-cascading READ on every space (the mover-only rule `spacePlatformResourceAdminRead`, QA ruling (b′): it resolves the space it moves, never its content). The oracle therefore reads the callouts under the collaboration, which only a cascading READ reaches - `space.collaboration { id }` alone is gated on the space READ and would wrongly show the mover as allowed (that was the standing red until 2026-10-23) |
 | ⚠️ `A20.actorsWithCredential` | roles admin, audit reader | spec A20 names four holder-list fields; this credential query is not among them |
 | ⚠️ `A20.usersWithAuthorizationCredential` | roles admin, audit reader | spec A20 names four holder-list fields; this credential query is not among them |
 | ⚠️ `A20b.actorsWithCredential` | users admin, roles admin, audit reader | spec A20b names four holder-list fields; this credential query is not among them |
 | ⚠️ `A20b.usersWithAuthorizationCredential` | users admin, roles admin, audit reader | spec A20b names four holder-list fields; this credential query is not among them |
+| ⚠️ `A23.eventOnApplication` | support | Content Full Access passes the resolver (UPDATE) and the lifecycle guard then refuses APPROVE (no GRANT) WITHOUT an error. Its negative is therefore judged on the state: no state change counts as the refusal |
+| ⚠️ `A23.eventOnApplication#reject` | support, content full access | Content Full Access: the root CRUD rule gives it UPDATE on every organisation record (090 OP-6) |
+| ⚠️ `A23.deleteInvitation` | support, content full access | Content Full Access: DELETE on every organisation record through the root CRUD rule (090 OP-6) |
+| ⚠️ `A23.deletePlatformInvitation` | support, content full access | Content Full Access: DELETE on every organisation record through the root CRUD rule (090 OP-6) |
 
 These rows are still tested as implemented — the finding is for product/spec owners to confirm or correct, and the table is where the answer gets recorded.
 
@@ -78,9 +82,9 @@ These rows are still tested as implemented — the finding is for product/spec o
 
 | Kind | Count | A passing positive means |
 |---|---|---|
-| **effect** | 65 | the call succeeded AND the effect is read back independently (entity gone / field changed / holder listed / resource on the target account) |
-| **returns-data** | 18 | the read returned KNOWN fixture data — an always-empty or always-null resolver fails |
-| **executed** | 21 | success payload only — maintenance jobs (resets, re-index, migrations) have no API-visible effect to read back; this is the honest limit |
+| **effect** | 72 | the call succeeded AND the effect is read back independently (entity gone / field changed / holder listed / resource on the target account) |
+| **returns-data** | 19 | the read returned KNOWN fixture data — an always-empty or always-null resolver fails |
+| **executed** | 23 | success payload only — maintenance jobs (resets, re-index, migrations) have no API-visible effect to read back; this is the honest limit |
 | **reached-resolver** | 3 | an external dependency is absent in test environments; the oracle is a NON-authorization error on the root field, proving the gate was passed |
 
 ## Capability → coverage
@@ -233,6 +237,7 @@ Spec: A11 · SC-002
 | `adminSearchIngestFromScratch` | operations admin | **executed** — returns its success payload with no error; a maintenance job has no API-visible effect to read back | 🟠 exclusive (on demand, never nightly) — drops and rebuilds the search index | ✅ automated |
 | `migrateLegacyMemoContent` | operations admin | **executed** — returns its success payload with no error; a maintenance job has no API-visible effect to read back | 🟠 exclusive (on demand, never nightly) — irreversible content migration | ✅ automated |
 | `migrateLegacyWhiteboardContent` | operations admin | **executed** — returns its success payload with no error; a maintenance job has no API-visible effect to read back | 🟠 exclusive (on demand, never nightly) — irreversible content migration | ✅ automated |
+| `adminRepairTemplateFiles` | operations admin | **executed** — an empty template list returns the all-zero dry-run report | ✅ automated | ✅ automated |
 | `refreshAllBodiesOfKnowledge` | operations admin | **executed** — returns its success payload with no error; a maintenance job has no API-visible effect to read back | 🟠 exclusive (on demand, never nightly) — re-ingests every body of knowledge | ✅ automated |
 | `adminCommunicationEnsureAccessToCommunications` | operations admin | **executed** — returns its success payload with no error; a maintenance job has no API-visible effect to read back | ✅ automated | ✅ automated |
 | `adminCommunicationRemoveOrphanedRoom` | operations admin | **executed** — returns true - the server treats an absent room as already removed | ✅ automated | ✅ automated |
@@ -290,7 +295,7 @@ Spec: A16 · FR-002 · FR-010
 
 | Capability | Allowed | Positive — must observe | Positive | Negative |
 |---|---|---|---|---|
-| `createPlatformRolesAccess` ❌ | spaces reader, *content full access* | **returns-data** — reads the collaboration of a PRIVATE space it is not a member of | ✅ automated | ✅ automated |
+| `createPlatformRolesAccess` ❌ | spaces reader, *content full access* | **returns-data** — reads the callouts of a PRIVATE space it is not a member of (the same set the host sees) | ✅ automated | ✅ automated |
 
 ### A17 — Rename an entity (nameID)
 
@@ -355,6 +360,24 @@ Spec: A22 · 061 R32 · alkem-io/server#6623
 | `assignRoleToUser` (a user as MEMBER of an L0 space - ROLESET_ENTRY_ROLE_ASSIGN) | **nobody** | — | — n/a — no global role may reach this surface - entry to an L0 space is by invitation; direct add below L0 stays with the subspace and ancestor admins (roleset/user) | ✅ automated |
 | `assignRoleToVirtualContributor` (a VC from ANOTHER account as MEMBER of an L0 space - ROLESET_ENTRY_ROLE_ASSIGN) | **nobody** | — | — n/a — no global role may reach this surface - a VC from another account enters by invitation | ✅ automated |
 | `assignRoleToOrganization` (an organization NOT yet in the space - ROLESET_ENTRY_ROLE_ASSIGN_ORGANIZATION) | **nobody** | — | — n/a — no global role may reach this surface - a new organization enters by invitation; one already in the space is managed with GRANT alone (roleset/invitations, R32) | ✅ automated |
+| `assignRoleToUser` (a user as ASSOCIATE of an organisation - ROLESET_ENTRY_ROLE_ASSIGN) | **nobody** | — | — n/a — no global role may reach this surface - joining an organisation is by invitation or application; only the organisation's own admins and owners add directly | ✅ automated |
+| `assignRoleToUser` (a non-associate as ADMIN of an organisation - ROLESET_ENTRY_ROLE_ASSIGN (a higher role is no side door in)) | **nobody** | — | — n/a — no global role may reach this surface - the consent split applies to every role for someone not yet in the entry role | ✅ automated |
+
+### A23 — Manage an organisation's people on its Community tab
+
+Spec: 090 · FR-005 · FR-009 · FR-011
+
+| Capability | Allowed | Positive — must observe | Positive | Negative |
+|---|---|---|---|---|
+| `inviteForEntryRoleOnRoleSet` (a user, as an organisation role set) | support | **effect** — the created invitation is in the organisation role set pending-invitations list, read as the caller | ✅ automated | ✅ automated |
+| `resendPlatformInvitation` (an email invitation of an organisation) | support | **executed** — success payload naming the invitation (the mail is 081 concern) | ✅ automated | ✅ automated |
+| `assignRoleToUser` (ADMIN to an existing associate of an organisation - GRANT) | support | **effect** — the target is in the ADMIN role of the organisation, read back | ✅ automated | ✅ automated |
+| `removeRoleFromUser` (ASSOCIATE of an organisation (removes the member)) | support | **effect** — the target is in no organisation role any more, read back | ✅ automated | ✅ automated |
+| `eventOnApplication` (APPROVE an application to an organisation) | support | **effect** — the application is approved and the applicant is an ASSOCIATE of the organisation, read back | ✅ automated | ✅ automated |
+| `eventOnApplication` (REJECT an application to an organisation) | support, *content full access* | **effect** — the application state is rejected, read back | ✅ automated | ✅ automated |
+| `deleteInvitation` (a pending user invitation of an organisation) | support, *content full access* | **effect** — the invitation no longer resolves (entity not found) | ✅ automated | ✅ automated |
+| `deletePlatformInvitation` (an email invitation of an organisation) | support, *content full access* | **effect** — the email invitation no longer resolves (entity not found) | ✅ automated | ✅ automated |
+| `applications` (RoleSet.applications of an organisation) | support | **returns-data** — the list contains the known pending application | ✅ automated | ✅ automated |
 
 ## Per role — what it can do, and what it is refused
 
@@ -392,7 +415,7 @@ One section per role, in the order of `roles/*.it-spec.ts`. **Can** lists every 
 | `A21.updateUser#0` (set serviceProfile) | owner | **effect** — serviceProfile has NO output field, so the marker is observed through its only visible effect: a set marker admits a Platform Spaces Reader grant |
 | `A21.updateUser#1` (clear serviceProfile) | owner | **effect** — serviceProfile has NO output field: a cleared marker makes the Platform Spaces Reader grant fail with the service-account rule |
 
-**Cannot (95)** — by group:
+**Cannot (107)** — by group:
 
 - **A1** Assign / revoke a Platform role: `grantCredentialToActor`, `revokeCredentialFromActor`
 - **A3** Authorization reset & license-entitlement reset: `authorizationPolicyResetOnPlatform`, `aiServerAuthorizationPolicyReset`, `authorizationPolicyResetOnUser`, `authorizationPolicyResetOnOrganization`, `authorizationPolicyResetOnAccount`, `licenseResetOnAccount`, `authorizationPolicyResetAll`, `authorizationPlatformRolesAccessReset`, `authorizationPolicyResetToGlobalAdminsAccess`, `resetLicenseOnAccounts`
@@ -403,7 +426,7 @@ One section per role, in the order of `roles/*.it-spec.ts`. **Can** lists every 
 - **A8** Delete content; set callout publisher: `deleteCallout`, `deleteContribution`, `deleteSpace`, `deleteInnovationPack`, `deleteInnovationHub`, `updateCalloutPublishInfo`
 - **A9** Move resources between accounts / space levels: `moveSpaceL1ToSpaceL0`, `moveSpaceL1ToSpaceL2`, `moveSpaceL2ToSpaceL1`, `convertSpaceL1ToSpaceL0`, `convertSpaceL2ToSpaceL1`, `convertSpaceL1ToSpaceL2`, `convertVirtualContributorToUseKnowledgeBase`, `moveContributionToCallout`, `transferCallout`, `transferInnovationHubToAccount`, `transferSpaceToAccount`, `transferInnovationPackToAccount`, `transferVirtualContributorToAccount`
 - **A10** Platform settings & configuration: `updatePlatformSettings`, `addIframeAllowedURL`, `removeIframeAllowedURL`, `addNotificationEmailToBlacklist`, `removeNotificationEmailFromBlacklist`, `setPlatformWellKnownVirtualContributor`
-- **A11** Operational machinery: `cleanupCollections`, `updateAssistantActorCapabilities`, `adminInAppNotificationsPrune`, `adminUpdateContributorAvatars`, `adminUpdateGeoLocationData`, `adminSearchIngestFromScratch`, `migrateLegacyMemoContent`, `migrateLegacyWhiteboardContent`, `refreshAllBodiesOfKnowledge`, `adminCommunicationEnsureAccessToCommunications`, `adminCommunicationRemoveOrphanedRoom`, `adminCommunicationUpdateRoomState`, `adminCommunicationMigrateOrphanedConversations`, `adminCommunicationSyncSpaceHierarchy`
+- **A11** Operational machinery: `cleanupCollections`, `updateAssistantActorCapabilities`, `adminInAppNotificationsPrune`, `adminUpdateContributorAvatars`, `adminUpdateGeoLocationData`, `adminSearchIngestFromScratch`, `migrateLegacyMemoContent`, `migrateLegacyWhiteboardContent`, `adminRepairTemplateFiles`, `refreshAllBodiesOfKnowledge`, `adminCommunicationEnsureAccessToCommunications`, `adminCommunicationRemoveOrphanedRoom`, `adminCommunicationUpdateRoomState`, `adminCommunicationMigrateOrphanedConversations`, `adminCommunicationSyncSpaceHierarchy`
 - **A12** License usage: `assignLicensePlanToAccount`, `assignLicensePlanToSpace`, `revokeLicensePlanFromAccount`, `revokeLicensePlanFromSpace`, `updateBaselineLicensePlanOnAccount`
 - **A13** License plan definition: `createLicensePlan`, `deleteLicensePlan`, `updateLicensePlan`, `adminLicensePolicyDeleteCredentialRule`, `adminLicensePolicyUpdateCredentialRule`, `adminLicensePolicyCreateCredentialRule`
 - **A14** Space visibility: `adminUpdateSpaceVisibility`
@@ -411,7 +434,8 @@ One section per role, in the order of `roles/*.it-spec.ts`. **Can** lists every 
 - **A16** Read across spaces (service accounts only): `createPlatformRolesAccess`
 - **A17** Rename an entity (nameID): `updateActorNameID`, `updateSpace.nameID` (protected `nameID` section of `updateSpace` (UPDATE_NAMEID))
 - **A19** Read the platform audit trail: `audit-log-analyze`, `latestUserEmailChangeAuditEntry`, `userEmailChangeAuditEntries`
-- **A22** Direct add without consent (invitation only): `assignRoleToUser` (a user as MEMBER of an L0 space - ROLESET_ENTRY_ROLE_ASSIGN), `assignRoleToVirtualContributor` (a VC from ANOTHER account as MEMBER of an L0 space - ROLESET_ENTRY_ROLE_ASSIGN), `assignRoleToOrganization` (an organization NOT yet in the space - ROLESET_ENTRY_ROLE_ASSIGN_ORGANIZATION)
+- **A22** Direct add without consent (invitation only): `assignRoleToUser` (a user as MEMBER of an L0 space - ROLESET_ENTRY_ROLE_ASSIGN), `assignRoleToVirtualContributor` (a VC from ANOTHER account as MEMBER of an L0 space - ROLESET_ENTRY_ROLE_ASSIGN), `assignRoleToOrganization` (an organization NOT yet in the space - ROLESET_ENTRY_ROLE_ASSIGN_ORGANIZATION), `assignRoleToUser` (a user as ASSOCIATE of an organisation - ROLESET_ENTRY_ROLE_ASSIGN), `assignRoleToUser` (a non-associate as ADMIN of an organisation - ROLESET_ENTRY_ROLE_ASSIGN (a higher role is no side door in))
+- **A23** Manage an organisation's people on its Community tab: `inviteForEntryRoleOnRoleSet` (a user, as an organisation role set), `resendPlatformInvitation` (an email invitation of an organisation), `assignRoleToUser` (ADMIN to an existing associate of an organisation - GRANT), `removeRoleFromUser` (ASSOCIATE of an organisation (removes the member)), `eventOnApplication` (APPROVE an application to an organisation), `eventOnApplication` (REJECT an application to an organisation), `deleteInvitation` (a pending user invitation of an organisation), `deletePlatformInvitation` (an email invitation of an organisation), `applications` (RoleSet.applications of an organisation)
 
 ### PLATFORM_CONTENT_FULL_ACCESS
 
@@ -420,7 +444,7 @@ One section per role, in the order of `roles/*.it-spec.ts`. **Can** lists every 
 - **Owns:** Full create / read / update / delete on all platform content. By the single accepted exception it also deletes an organization and edits an organization's packs, hubs and templates.
 - **Must not:** Role assignment - absolutely, itself included; settings; operations; user records; resource moves; the forum; space visibility; entity renames.
 
-**Can (17)**
+**Can (20)**
 
 | Capability | Reaches it as | A passing positive must observe |
 |---|---|---|
@@ -440,9 +464,12 @@ One section per role, in the order of `roles/*.it-spec.ts`. **Can** lists every 
 | `A8.deleteInnovationPack` | owner | **effect** — re-reading the deleted entity returns not-found |
 | `A8.deleteInnovationHub` | owner | **effect** — re-reading the deleted entity returns not-found |
 | `A8.updateCalloutPublishInfo` | owner | **effect** — publisher / published date changed on re-read |
-| `A16.createPlatformRolesAccess` | *accepted exception* | **returns-data** — reads the collaboration of a PRIVATE space it is not a member of |
+| `A16.createPlatformRolesAccess` | *accepted exception* | **returns-data** — reads the callouts of a PRIVATE space it is not a member of (the same set the host sees) |
+| `A23.eventOnApplication#reject` (REJECT an application to an organisation) | *accepted exception* | **effect** — the application state is rejected, read back |
+| `A23.deleteInvitation` (a pending user invitation of an organisation) | *accepted exception* | **effect** — the invitation no longer resolves (entity not found) |
+| `A23.deletePlatformInvitation` (an email invitation of an organisation) | *accepted exception* | **effect** — the email invitation no longer resolves (entity not found) |
 
-**Cannot (98)** — by group:
+**Cannot (107)** — by group:
 
 - **A1** Assign / revoke a Platform role: `assignPlatformRoleToUser`, `removePlatformRoleFromUser`, `grantCredentialToActor`, `revokeCredentialFromActor`
 - **A2** Assign / revoke a Feature role (user or organization): `assignPlatformRoleToUser`, `removePlatformRoleFromUser`, `assignPlatformRoleToOrganization`, `removePlatformRoleFromOrganization`
@@ -452,7 +479,7 @@ One section per role, in the order of `roles/*.it-spec.ts`. **Can** lists every 
 - **A6** Create / delete an organization: `createOrganization`
 - **A9** Move resources between accounts / space levels: `moveSpaceL1ToSpaceL0`, `moveSpaceL1ToSpaceL2`, `moveSpaceL2ToSpaceL1`, `convertSpaceL1ToSpaceL0`, `convertSpaceL2ToSpaceL1`, `convertSpaceL1ToSpaceL2`, `convertVirtualContributorToUseKnowledgeBase`, `moveContributionToCallout`, `transferCallout`, `transferInnovationHubToAccount`, `transferSpaceToAccount`, `transferInnovationPackToAccount`, `transferVirtualContributorToAccount`
 - **A10** Platform settings & configuration: `updatePlatformSettings`, `addIframeAllowedURL`, `removeIframeAllowedURL`, `addNotificationEmailToBlacklist`, `removeNotificationEmailFromBlacklist`, `setPlatformWellKnownVirtualContributor`
-- **A11** Operational machinery: `cleanupCollections`, `updateAssistantActorCapabilities`, `adminInAppNotificationsPrune`, `adminUpdateContributorAvatars`, `adminUpdateGeoLocationData`, `adminSearchIngestFromScratch`, `migrateLegacyMemoContent`, `migrateLegacyWhiteboardContent`, `refreshAllBodiesOfKnowledge`, `adminCommunicationEnsureAccessToCommunications`, `adminCommunicationRemoveOrphanedRoom`, `adminCommunicationUpdateRoomState`, `adminCommunicationMigrateOrphanedConversations`, `adminCommunicationSyncSpaceHierarchy`
+- **A11** Operational machinery: `cleanupCollections`, `updateAssistantActorCapabilities`, `adminInAppNotificationsPrune`, `adminUpdateContributorAvatars`, `adminUpdateGeoLocationData`, `adminSearchIngestFromScratch`, `migrateLegacyMemoContent`, `migrateLegacyWhiteboardContent`, `adminRepairTemplateFiles`, `refreshAllBodiesOfKnowledge`, `adminCommunicationEnsureAccessToCommunications`, `adminCommunicationRemoveOrphanedRoom`, `adminCommunicationUpdateRoomState`, `adminCommunicationMigrateOrphanedConversations`, `adminCommunicationSyncSpaceHierarchy`
 - **A12** License usage: `assignLicensePlanToAccount`, `assignLicensePlanToSpace`, `revokeLicensePlanFromAccount`, `revokeLicensePlanFromSpace`, `updateBaselineLicensePlanOnAccount`
 - **A13** License plan definition: `createLicensePlan`, `deleteLicensePlan`, `updateLicensePlan`, `adminLicensePolicyDeleteCredentialRule`, `adminLicensePolicyUpdateCredentialRule`, `adminLicensePolicyCreateCredentialRule`
 - **A14** Space visibility: `adminUpdateSpaceVisibility`
@@ -462,7 +489,8 @@ One section per role, in the order of `roles/*.it-spec.ts`. **Can** lists every 
 - **A20** Read Platform-role holder lists: `usersInRole`, `usersInRoles`, `organizationsInRole`, `organizationsInRoles`, `actorsWithCredential`, `usersWithAuthorizationCredential`
 - **A20b** Read Feature-role holder lists: `usersInRole`, `usersInRoles`, `organizationsInRole`, `organizationsInRoles`, `actorsWithCredential`, `usersWithAuthorizationCredential`
 - **A21** Set / clear the service-profile marker: `updateUser` (set serviceProfile), `updateUser` (clear serviceProfile)
-- **A22** Direct add without consent (invitation only): `assignRoleToUser` (a user as MEMBER of an L0 space - ROLESET_ENTRY_ROLE_ASSIGN), `assignRoleToVirtualContributor` (a VC from ANOTHER account as MEMBER of an L0 space - ROLESET_ENTRY_ROLE_ASSIGN), `assignRoleToOrganization` (an organization NOT yet in the space - ROLESET_ENTRY_ROLE_ASSIGN_ORGANIZATION)
+- **A22** Direct add without consent (invitation only): `assignRoleToUser` (a user as MEMBER of an L0 space - ROLESET_ENTRY_ROLE_ASSIGN), `assignRoleToVirtualContributor` (a VC from ANOTHER account as MEMBER of an L0 space - ROLESET_ENTRY_ROLE_ASSIGN), `assignRoleToOrganization` (an organization NOT yet in the space - ROLESET_ENTRY_ROLE_ASSIGN_ORGANIZATION), `assignRoleToUser` (a user as ASSOCIATE of an organisation - ROLESET_ENTRY_ROLE_ASSIGN), `assignRoleToUser` (a non-associate as ADMIN of an organisation - ROLESET_ENTRY_ROLE_ASSIGN (a higher role is no side door in))
+- **A23** Manage an organisation's people on its Community tab: `inviteForEntryRoleOnRoleSet` (a user, as an organisation role set), `resendPlatformInvitation` (an email invitation of an organisation), `assignRoleToUser` (ADMIN to an existing associate of an organisation - GRANT), `removeRoleFromUser` (ASSOCIATE of an organisation (removes the member)), `eventOnApplication` (APPROVE an application to an organisation), `applications` (RoleSet.applications of an organisation)
 
 ### PLATFORM_RESOURCE_ADMIN
 
@@ -490,7 +518,7 @@ One section per role, in the order of `roles/*.it-spec.ts`. **Can** lists every 
 | `A9.transferInnovationPackToAccount` | owner | **effect** — the resource reports the TARGET account on re-read |
 | `A9.transferVirtualContributorToAccount` | owner | **effect** — the resource reports the TARGET account on re-read |
 
-**Cannot (101)** — by group:
+**Cannot (113)** — by group:
 
 - **A1** Assign / revoke a Platform role: `assignPlatformRoleToUser`, `removePlatformRoleFromUser`, `grantCredentialToActor`, `revokeCredentialFromActor`
 - **A2** Assign / revoke a Feature role (user or organization): `assignPlatformRoleToUser`, `removePlatformRoleFromUser`, `assignPlatformRoleToOrganization`, `removePlatformRoleFromOrganization`
@@ -501,7 +529,7 @@ One section per role, in the order of `roles/*.it-spec.ts`. **Can** lists every 
 - **A7** Edit an organization-owned pack, hub or its templates: `updateInnovationPack`, `updateInnovationHub`, `createTemplate`, `createTemplateFromSpace`, `createTemplateFromContentSpace`, `updateTemplate`, `updateTemplateFromSpace`, `deleteTemplate`, `updateCallout`
 - **A8** Delete content; set callout publisher: `deleteCallout`, `deleteContribution`, `deleteSpace`, `deleteInnovationPack`, `deleteInnovationHub`
 - **A10** Platform settings & configuration: `updatePlatformSettings`, `addIframeAllowedURL`, `removeIframeAllowedURL`, `addNotificationEmailToBlacklist`, `removeNotificationEmailFromBlacklist`, `setPlatformWellKnownVirtualContributor`
-- **A11** Operational machinery: `cleanupCollections`, `updateAssistantActorCapabilities`, `adminInAppNotificationsPrune`, `adminUpdateContributorAvatars`, `adminUpdateGeoLocationData`, `adminSearchIngestFromScratch`, `migrateLegacyMemoContent`, `migrateLegacyWhiteboardContent`, `refreshAllBodiesOfKnowledge`, `adminCommunicationEnsureAccessToCommunications`, `adminCommunicationRemoveOrphanedRoom`, `adminCommunicationUpdateRoomState`, `adminCommunicationMigrateOrphanedConversations`, `adminCommunicationSyncSpaceHierarchy`
+- **A11** Operational machinery: `cleanupCollections`, `updateAssistantActorCapabilities`, `adminInAppNotificationsPrune`, `adminUpdateContributorAvatars`, `adminUpdateGeoLocationData`, `adminSearchIngestFromScratch`, `migrateLegacyMemoContent`, `migrateLegacyWhiteboardContent`, `adminRepairTemplateFiles`, `refreshAllBodiesOfKnowledge`, `adminCommunicationEnsureAccessToCommunications`, `adminCommunicationRemoveOrphanedRoom`, `adminCommunicationUpdateRoomState`, `adminCommunicationMigrateOrphanedConversations`, `adminCommunicationSyncSpaceHierarchy`
 - **A12** License usage: `assignLicensePlanToAccount`, `assignLicensePlanToSpace`, `revokeLicensePlanFromAccount`, `revokeLicensePlanFromSpace`, `updateBaselineLicensePlanOnAccount`
 - **A13** License plan definition: `createLicensePlan`, `deleteLicensePlan`, `updateLicensePlan`, `adminLicensePolicyDeleteCredentialRule`, `adminLicensePolicyUpdateCredentialRule`, `adminLicensePolicyCreateCredentialRule`
 - **A14** Space visibility: `adminUpdateSpaceVisibility`
@@ -512,7 +540,8 @@ One section per role, in the order of `roles/*.it-spec.ts`. **Can** lists every 
 - **A20** Read Platform-role holder lists: `usersInRole`, `usersInRoles`, `organizationsInRole`, `organizationsInRoles`, `actorsWithCredential`, `usersWithAuthorizationCredential`
 - **A20b** Read Feature-role holder lists: `usersInRole`, `usersInRoles`, `organizationsInRole`, `organizationsInRoles`, `actorsWithCredential`, `usersWithAuthorizationCredential`
 - **A21** Set / clear the service-profile marker: `updateUser` (set serviceProfile), `updateUser` (clear serviceProfile)
-- **A22** Direct add without consent (invitation only): `assignRoleToUser` (a user as MEMBER of an L0 space - ROLESET_ENTRY_ROLE_ASSIGN), `assignRoleToVirtualContributor` (a VC from ANOTHER account as MEMBER of an L0 space - ROLESET_ENTRY_ROLE_ASSIGN), `assignRoleToOrganization` (an organization NOT yet in the space - ROLESET_ENTRY_ROLE_ASSIGN_ORGANIZATION)
+- **A22** Direct add without consent (invitation only): `assignRoleToUser` (a user as MEMBER of an L0 space - ROLESET_ENTRY_ROLE_ASSIGN), `assignRoleToVirtualContributor` (a VC from ANOTHER account as MEMBER of an L0 space - ROLESET_ENTRY_ROLE_ASSIGN), `assignRoleToOrganization` (an organization NOT yet in the space - ROLESET_ENTRY_ROLE_ASSIGN_ORGANIZATION), `assignRoleToUser` (a user as ASSOCIATE of an organisation - ROLESET_ENTRY_ROLE_ASSIGN), `assignRoleToUser` (a non-associate as ADMIN of an organisation - ROLESET_ENTRY_ROLE_ASSIGN (a higher role is no side door in))
+- **A23** Manage an organisation's people on its Community tab: `inviteForEntryRoleOnRoleSet` (a user, as an organisation role set), `resendPlatformInvitation` (an email invitation of an organisation), `assignRoleToUser` (ADMIN to an existing associate of an organisation - GRANT), `removeRoleFromUser` (ASSOCIATE of an organisation (removes the member)), `eventOnApplication` (APPROVE an application to an organisation), `eventOnApplication` (REJECT an application to an organisation), `deleteInvitation` (a pending user invitation of an organisation), `deletePlatformInvitation` (an email invitation of an organisation), `applications` (RoleSet.applications of an organisation)
 
 ### PLATFORM_SETTINGS_ADMIN
 
@@ -538,7 +567,7 @@ One section per role, in the order of `roles/*.it-spec.ts`. **Can** lists every 
 | `A13.adminLicensePolicyUpdateCredentialRule` | owner | **effect** — the changed field is visible on re-read |
 | `A13.adminLicensePolicyCreateCredentialRule` | owner | **effect** — the new rule is present in the license policy read (then removed) |
 
-**Cannot (103)** — by group:
+**Cannot (115)** — by group:
 
 - **A1** Assign / revoke a Platform role: `assignPlatformRoleToUser`, `removePlatformRoleFromUser`, `grantCredentialToActor`, `revokeCredentialFromActor`
 - **A2** Assign / revoke a Feature role (user or organization): `assignPlatformRoleToUser`, `removePlatformRoleFromUser`, `assignPlatformRoleToOrganization`, `removePlatformRoleFromOrganization`
@@ -549,7 +578,7 @@ One section per role, in the order of `roles/*.it-spec.ts`. **Can** lists every 
 - **A7** Edit an organization-owned pack, hub or its templates: `updateInnovationPack`, `updateInnovationHub`, `createTemplate`, `createTemplateFromSpace`, `createTemplateFromContentSpace`, `updateTemplate`, `updateTemplateFromSpace`, `deleteTemplate`, `updateCallout`
 - **A8** Delete content; set callout publisher: `deleteCallout`, `deleteContribution`, `deleteSpace`, `deleteInnovationPack`, `deleteInnovationHub`, `updateCalloutPublishInfo`
 - **A9** Move resources between accounts / space levels: `moveSpaceL1ToSpaceL0`, `moveSpaceL1ToSpaceL2`, `moveSpaceL2ToSpaceL1`, `convertSpaceL1ToSpaceL0`, `convertSpaceL2ToSpaceL1`, `convertSpaceL1ToSpaceL2`, `convertVirtualContributorToUseKnowledgeBase`, `moveContributionToCallout`, `transferCallout`, `transferInnovationHubToAccount`, `transferSpaceToAccount`, `transferInnovationPackToAccount`, `transferVirtualContributorToAccount`
-- **A11** Operational machinery: `cleanupCollections`, `updateAssistantActorCapabilities`, `adminInAppNotificationsPrune`, `adminUpdateContributorAvatars`, `adminUpdateGeoLocationData`, `adminSearchIngestFromScratch`, `migrateLegacyMemoContent`, `migrateLegacyWhiteboardContent`, `refreshAllBodiesOfKnowledge`, `adminCommunicationEnsureAccessToCommunications`, `adminCommunicationRemoveOrphanedRoom`, `adminCommunicationUpdateRoomState`, `adminCommunicationMigrateOrphanedConversations`, `adminCommunicationSyncSpaceHierarchy`
+- **A11** Operational machinery: `cleanupCollections`, `updateAssistantActorCapabilities`, `adminInAppNotificationsPrune`, `adminUpdateContributorAvatars`, `adminUpdateGeoLocationData`, `adminSearchIngestFromScratch`, `migrateLegacyMemoContent`, `migrateLegacyWhiteboardContent`, `adminRepairTemplateFiles`, `refreshAllBodiesOfKnowledge`, `adminCommunicationEnsureAccessToCommunications`, `adminCommunicationRemoveOrphanedRoom`, `adminCommunicationUpdateRoomState`, `adminCommunicationMigrateOrphanedConversations`, `adminCommunicationSyncSpaceHierarchy`
 - **A12** License usage: `assignLicensePlanToAccount`, `assignLicensePlanToSpace`, `revokeLicensePlanFromAccount`, `revokeLicensePlanFromSpace`, `updateBaselineLicensePlanOnAccount`
 - **A14** Space visibility: `adminUpdateSpaceVisibility`
 - **A15** Support inside a flag-enabled space; manage the forum: `getAccessPrivilegesForPlatformSupport`, `updateDiscussion`, `deleteDiscussion`, `adminForumRemoveDiscussionCategory`
@@ -559,7 +588,8 @@ One section per role, in the order of `roles/*.it-spec.ts`. **Can** lists every 
 - **A20** Read Platform-role holder lists: `usersInRole`, `usersInRoles`, `organizationsInRole`, `organizationsInRoles`, `actorsWithCredential`, `usersWithAuthorizationCredential`
 - **A20b** Read Feature-role holder lists: `usersInRole`, `usersInRoles`, `organizationsInRole`, `organizationsInRoles`, `actorsWithCredential`, `usersWithAuthorizationCredential`
 - **A21** Set / clear the service-profile marker: `updateUser` (set serviceProfile), `updateUser` (clear serviceProfile)
-- **A22** Direct add without consent (invitation only): `assignRoleToUser` (a user as MEMBER of an L0 space - ROLESET_ENTRY_ROLE_ASSIGN), `assignRoleToVirtualContributor` (a VC from ANOTHER account as MEMBER of an L0 space - ROLESET_ENTRY_ROLE_ASSIGN), `assignRoleToOrganization` (an organization NOT yet in the space - ROLESET_ENTRY_ROLE_ASSIGN_ORGANIZATION)
+- **A22** Direct add without consent (invitation only): `assignRoleToUser` (a user as MEMBER of an L0 space - ROLESET_ENTRY_ROLE_ASSIGN), `assignRoleToVirtualContributor` (a VC from ANOTHER account as MEMBER of an L0 space - ROLESET_ENTRY_ROLE_ASSIGN), `assignRoleToOrganization` (an organization NOT yet in the space - ROLESET_ENTRY_ROLE_ASSIGN_ORGANIZATION), `assignRoleToUser` (a user as ASSOCIATE of an organisation - ROLESET_ENTRY_ROLE_ASSIGN), `assignRoleToUser` (a non-associate as ADMIN of an organisation - ROLESET_ENTRY_ROLE_ASSIGN (a higher role is no side door in))
+- **A23** Manage an organisation's people on its Community tab: `inviteForEntryRoleOnRoleSet` (a user, as an organisation role set), `resendPlatformInvitation` (an email invitation of an organisation), `assignRoleToUser` (ADMIN to an existing associate of an organisation - GRANT), `removeRoleFromUser` (ASSOCIATE of an organisation (removes the member)), `eventOnApplication` (APPROVE an application to an organisation), `eventOnApplication` (REJECT an application to an organisation), `deleteInvitation` (a pending user invitation of an organisation), `deletePlatformInvitation` (an email invitation of an organisation), `applications` (RoleSet.applications of an organisation)
 
 ### PLATFORM_OPERATIONS_ADMIN
 
@@ -568,7 +598,7 @@ One section per role, in the order of `roles/*.it-spec.ts`. **Can** lists every 
 - **Owns:** Operational machinery: authorization and license resets, search and AI re-ingest, migrations, notification prune, Matrix housekeeping.
 - **Must not:** Reading user personal data; email change or identity deletion; role assignment; content; settings; space visibility or structure.
 
-**Can (24)**
+**Can (25)**
 
 | Capability | Reaches it as | A passing positive must observe |
 |---|---|---|
@@ -590,6 +620,7 @@ One section per role, in the order of `roles/*.it-spec.ts`. **Can** lists every 
 | `A11.adminSearchIngestFromScratch` 🟠 | owner | **executed** — returns its success payload with no error; a maintenance job has no API-visible effect to read back |
 | `A11.migrateLegacyMemoContent` 🟠 | owner | **executed** — returns its success payload with no error; a maintenance job has no API-visible effect to read back |
 | `A11.migrateLegacyWhiteboardContent` 🟠 | owner | **executed** — returns its success payload with no error; a maintenance job has no API-visible effect to read back |
+| `A11.adminRepairTemplateFiles` | owner | **executed** — an empty template list returns the all-zero dry-run report |
 | `A11.refreshAllBodiesOfKnowledge` 🟠 | owner | **executed** — returns its success payload with no error; a maintenance job has no API-visible effect to read back |
 | `A11.adminCommunicationEnsureAccessToCommunications` | owner | **executed** — returns its success payload with no error; a maintenance job has no API-visible effect to read back |
 | `A11.adminCommunicationRemoveOrphanedRoom` | owner | **executed** — returns true - the server treats an absent room as already removed |
@@ -597,7 +628,7 @@ One section per role, in the order of `roles/*.it-spec.ts`. **Can** lists every 
 | `A11.adminCommunicationMigrateOrphanedConversations` 🟠 | owner | **executed** — returns its success payload with no error; a maintenance job has no API-visible effect to read back |
 | `A11.adminCommunicationSyncSpaceHierarchy` 🟠 | owner | **executed** — returns its success payload with no error; a maintenance job has no API-visible effect to read back |
 
-**Cannot (91)** — by group:
+**Cannot (102)** — by group:
 
 - **A1** Assign / revoke a Platform role: `assignPlatformRoleToUser`, `removePlatformRoleFromUser`, `grantCredentialToActor`, `revokeCredentialFromActor`
 - **A2** Assign / revoke a Feature role (user or organization): `assignPlatformRoleToUser`, `removePlatformRoleFromUser`, `assignPlatformRoleToOrganization`, `removePlatformRoleFromOrganization`
@@ -618,7 +649,8 @@ One section per role, in the order of `roles/*.it-spec.ts`. **Can** lists every 
 - **A20** Read Platform-role holder lists: `usersInRole`, `usersInRoles`, `organizationsInRole`, `organizationsInRoles`, `actorsWithCredential`, `usersWithAuthorizationCredential`
 - **A20b** Read Feature-role holder lists: `usersInRole`, `usersInRoles`, `organizationsInRole`, `organizationsInRoles`, `actorsWithCredential`, `usersWithAuthorizationCredential`
 - **A21** Set / clear the service-profile marker: `updateUser` (set serviceProfile), `updateUser` (clear serviceProfile)
-- **A22** Direct add without consent (invitation only): `assignRoleToUser` (a user as MEMBER of an L0 space - ROLESET_ENTRY_ROLE_ASSIGN), `assignRoleToVirtualContributor` (a VC from ANOTHER account as MEMBER of an L0 space - ROLESET_ENTRY_ROLE_ASSIGN), `assignRoleToOrganization` (an organization NOT yet in the space - ROLESET_ENTRY_ROLE_ASSIGN_ORGANIZATION)
+- **A22** Direct add without consent (invitation only): `assignRoleToUser` (a user as MEMBER of an L0 space - ROLESET_ENTRY_ROLE_ASSIGN), `assignRoleToVirtualContributor` (a VC from ANOTHER account as MEMBER of an L0 space - ROLESET_ENTRY_ROLE_ASSIGN), `assignRoleToOrganization` (an organization NOT yet in the space - ROLESET_ENTRY_ROLE_ASSIGN_ORGANIZATION), `assignRoleToUser` (a user as ASSOCIATE of an organisation - ROLESET_ENTRY_ROLE_ASSIGN), `assignRoleToUser` (a non-associate as ADMIN of an organisation - ROLESET_ENTRY_ROLE_ASSIGN (a higher role is no side door in))
+- **A23** Manage an organisation's people on its Community tab: `inviteForEntryRoleOnRoleSet` (a user, as an organisation role set), `resendPlatformInvitation` (an email invitation of an organisation), `assignRoleToUser` (ADMIN to an existing associate of an organisation - GRANT), `removeRoleFromUser` (ASSOCIATE of an organisation (removes the member)), `eventOnApplication` (APPROVE an application to an organisation), `eventOnApplication` (REJECT an application to an organisation), `deleteInvitation` (a pending user invitation of an organisation), `deletePlatformInvitation` (an email invitation of an organisation), `applications` (RoleSet.applications of an organisation)
 
 ### PLATFORM_USERS_ADMIN
 
@@ -649,7 +681,7 @@ One section per role, in the order of `roles/*.it-spec.ts`. **Can** lists every 
 | `A20b.actorsWithCredential` | owner | **returns-data** — the KNOWN single-role fixture holder is present in the result - an always-empty resolver must fail |
 | `A20b.usersWithAuthorizationCredential` | owner | **returns-data** — the KNOWN single-role fixture holder is present in the result - an always-empty resolver must fail |
 
-**Cannot (98)** — by group:
+**Cannot (110)** — by group:
 
 - **A1** Assign / revoke a Platform role: `assignPlatformRoleToUser`, `removePlatformRoleFromUser`, `grantCredentialToActor`, `revokeCredentialFromActor`
 - **A3** Authorization reset & license-entitlement reset: `authorizationPolicyResetOnPlatform`, `aiServerAuthorizationPolicyReset`, `authorizationPolicyResetOnUser`, `authorizationPolicyResetOnOrganization`, `authorizationPolicyResetOnAccount`, `licenseResetOnAccount`, `authorizationPolicyResetAll`, `authorizationPlatformRolesAccessReset`, `authorizationPolicyResetToGlobalAdminsAccess`, `resetLicenseOnAccounts`
@@ -659,7 +691,7 @@ One section per role, in the order of `roles/*.it-spec.ts`. **Can** lists every 
 - **A8** Delete content; set callout publisher: `deleteCallout`, `deleteContribution`, `deleteSpace`, `deleteInnovationPack`, `deleteInnovationHub`, `updateCalloutPublishInfo`
 - **A9** Move resources between accounts / space levels: `moveSpaceL1ToSpaceL0`, `moveSpaceL1ToSpaceL2`, `moveSpaceL2ToSpaceL1`, `convertSpaceL1ToSpaceL0`, `convertSpaceL2ToSpaceL1`, `convertSpaceL1ToSpaceL2`, `convertVirtualContributorToUseKnowledgeBase`, `moveContributionToCallout`, `transferCallout`, `transferInnovationHubToAccount`, `transferSpaceToAccount`, `transferInnovationPackToAccount`, `transferVirtualContributorToAccount`
 - **A10** Platform settings & configuration: `updatePlatformSettings`, `addIframeAllowedURL`, `removeIframeAllowedURL`, `addNotificationEmailToBlacklist`, `removeNotificationEmailFromBlacklist`, `setPlatformWellKnownVirtualContributor`
-- **A11** Operational machinery: `cleanupCollections`, `updateAssistantActorCapabilities`, `adminInAppNotificationsPrune`, `adminUpdateContributorAvatars`, `adminUpdateGeoLocationData`, `adminSearchIngestFromScratch`, `migrateLegacyMemoContent`, `migrateLegacyWhiteboardContent`, `refreshAllBodiesOfKnowledge`, `adminCommunicationEnsureAccessToCommunications`, `adminCommunicationRemoveOrphanedRoom`, `adminCommunicationUpdateRoomState`, `adminCommunicationMigrateOrphanedConversations`, `adminCommunicationSyncSpaceHierarchy`
+- **A11** Operational machinery: `cleanupCollections`, `updateAssistantActorCapabilities`, `adminInAppNotificationsPrune`, `adminUpdateContributorAvatars`, `adminUpdateGeoLocationData`, `adminSearchIngestFromScratch`, `migrateLegacyMemoContent`, `migrateLegacyWhiteboardContent`, `adminRepairTemplateFiles`, `refreshAllBodiesOfKnowledge`, `adminCommunicationEnsureAccessToCommunications`, `adminCommunicationRemoveOrphanedRoom`, `adminCommunicationUpdateRoomState`, `adminCommunicationMigrateOrphanedConversations`, `adminCommunicationSyncSpaceHierarchy`
 - **A12** License usage: `assignLicensePlanToAccount`, `assignLicensePlanToSpace`, `revokeLicensePlanFromAccount`, `revokeLicensePlanFromSpace`, `updateBaselineLicensePlanOnAccount`
 - **A13** License plan definition: `createLicensePlan`, `deleteLicensePlan`, `updateLicensePlan`, `adminLicensePolicyDeleteCredentialRule`, `adminLicensePolicyUpdateCredentialRule`, `adminLicensePolicyCreateCredentialRule`
 - **A14** Space visibility: `adminUpdateSpaceVisibility`
@@ -669,16 +701,17 @@ One section per role, in the order of `roles/*.it-spec.ts`. **Can** lists every 
 - **A19** Read the platform audit trail: `audit-log-analyze`, `latestUserEmailChangeAuditEntry`, `userEmailChangeAuditEntries`
 - **A20** Read Platform-role holder lists: `usersInRole`, `usersInRoles`, `organizationsInRole`, `organizationsInRoles`, `actorsWithCredential`, `usersWithAuthorizationCredential`
 - **A21** Set / clear the service-profile marker: `updateUser` (set serviceProfile), `updateUser` (clear serviceProfile)
-- **A22** Direct add without consent (invitation only): `assignRoleToUser` (a user as MEMBER of an L0 space - ROLESET_ENTRY_ROLE_ASSIGN), `assignRoleToVirtualContributor` (a VC from ANOTHER account as MEMBER of an L0 space - ROLESET_ENTRY_ROLE_ASSIGN), `assignRoleToOrganization` (an organization NOT yet in the space - ROLESET_ENTRY_ROLE_ASSIGN_ORGANIZATION)
+- **A22** Direct add without consent (invitation only): `assignRoleToUser` (a user as MEMBER of an L0 space - ROLESET_ENTRY_ROLE_ASSIGN), `assignRoleToVirtualContributor` (a VC from ANOTHER account as MEMBER of an L0 space - ROLESET_ENTRY_ROLE_ASSIGN), `assignRoleToOrganization` (an organization NOT yet in the space - ROLESET_ENTRY_ROLE_ASSIGN_ORGANIZATION), `assignRoleToUser` (a user as ASSOCIATE of an organisation - ROLESET_ENTRY_ROLE_ASSIGN), `assignRoleToUser` (a non-associate as ADMIN of an organisation - ROLESET_ENTRY_ROLE_ASSIGN (a higher role is no side door in))
+- **A23** Manage an organisation's people on its Community tab: `inviteForEntryRoleOnRoleSet` (a user, as an organisation role set), `resendPlatformInvitation` (an email invitation of an organisation), `assignRoleToUser` (ADMIN to an existing associate of an organisation - GRANT), `removeRoleFromUser` (ASSOCIATE of an organisation (removes the member)), `eventOnApplication` (APPROVE an application to an organisation), `eventOnApplication` (REJECT an application to an organisation), `deleteInvitation` (a pending user invitation of an organisation), `deletePlatformInvitation` (an email invitation of an organisation), `applications` (RoleSet.applications of an organisation)
 
 ### PLATFORM_SUPPORT
 
 **Platform Support** — `roles/platform-support.it-spec.ts`
 
-- **Owns:** The organization lifecycle (create and delete); editing an organization's packs, hubs and the templates inside; the platform forum; admin rights inside a space ONLY where that space enables the support flag.
-- **Must not:** Moving those resources; deleting the pack or hub itself; any space that has not enabled the flag; role assignment; settings; operations; user records.
+- **Owns:** The organization lifecycle (create and delete); editing an organization's packs, hubs and the templates inside; managing an organisation's people on its Community tab (invite, promote/demote, remove, approve/reject, revoke, resend), by consent only; the platform forum; admin rights inside a space ONLY where that space enables the support flag.
+- **Must not:** Moving those resources; deleting the pack or hub itself; any space that has not enabled the flag; platform role assignment; adding anyone to an organisation directly; any other organisation settings; operations; user records.
 
-**Can (15)**
+**Can (24)**
 
 | Capability | Reaches it as | A passing positive must observe |
 |---|---|---|
@@ -697,8 +730,17 @@ One section per role, in the order of `roles/*.it-spec.ts`. **Can** lists every 
 | `A15.updateDiscussion` | owner | **effect** — the discussion title changed on re-read |
 | `A15.deleteDiscussion` | owner | **effect** — the discussion is gone on re-read |
 | `A15.adminForumRemoveDiscussionCategory` ⛔ | owner | **effect** — the category is no longer among the forum discussion categories |
+| `A23.inviteForEntryRoleOnRoleSet` (a user, as an organisation role set) | owner | **effect** — the created invitation is in the organisation role set pending-invitations list, read as the caller |
+| `A23.resendPlatformInvitation` (an email invitation of an organisation) | owner | **executed** — success payload naming the invitation (the mail is 081 concern) |
+| `A23.assignRoleToUser` (ADMIN to an existing associate of an organisation - GRANT) | owner | **effect** — the target is in the ADMIN role of the organisation, read back |
+| `A23.removeRoleFromUser` (ASSOCIATE of an organisation (removes the member)) | owner | **effect** — the target is in no organisation role any more, read back |
+| `A23.eventOnApplication` (APPROVE an application to an organisation) | owner | **effect** — the application is approved and the applicant is an ASSOCIATE of the organisation, read back |
+| `A23.eventOnApplication#reject` (REJECT an application to an organisation) | owner | **effect** — the application state is rejected, read back |
+| `A23.deleteInvitation` (a pending user invitation of an organisation) | owner | **effect** — the invitation no longer resolves (entity not found) |
+| `A23.deletePlatformInvitation` (an email invitation of an organisation) | owner | **effect** — the email invitation no longer resolves (entity not found) |
+| `A23.applications` (RoleSet.applications of an organisation) | owner | **returns-data** — the list contains the known pending application |
 
-**Cannot (100)** — by group:
+**Cannot (103)** — by group:
 
 - **A1** Assign / revoke a Platform role: `assignPlatformRoleToUser`, `removePlatformRoleFromUser`, `grantCredentialToActor`, `revokeCredentialFromActor`
 - **A2** Assign / revoke a Feature role (user or organization): `assignPlatformRoleToUser`, `removePlatformRoleFromUser`, `assignPlatformRoleToOrganization`, `removePlatformRoleFromOrganization`
@@ -708,7 +750,7 @@ One section per role, in the order of `roles/*.it-spec.ts`. **Can** lists every 
 - **A8** Delete content; set callout publisher: `deleteCallout`, `deleteContribution`, `deleteSpace`, `deleteInnovationPack`, `deleteInnovationHub`, `updateCalloutPublishInfo`
 - **A9** Move resources between accounts / space levels: `moveSpaceL1ToSpaceL0`, `moveSpaceL1ToSpaceL2`, `moveSpaceL2ToSpaceL1`, `convertSpaceL1ToSpaceL0`, `convertSpaceL2ToSpaceL1`, `convertSpaceL1ToSpaceL2`, `convertVirtualContributorToUseKnowledgeBase`, `moveContributionToCallout`, `transferCallout`, `transferInnovationHubToAccount`, `transferSpaceToAccount`, `transferInnovationPackToAccount`, `transferVirtualContributorToAccount`
 - **A10** Platform settings & configuration: `updatePlatformSettings`, `addIframeAllowedURL`, `removeIframeAllowedURL`, `addNotificationEmailToBlacklist`, `removeNotificationEmailFromBlacklist`, `setPlatformWellKnownVirtualContributor`
-- **A11** Operational machinery: `cleanupCollections`, `updateAssistantActorCapabilities`, `adminInAppNotificationsPrune`, `adminUpdateContributorAvatars`, `adminUpdateGeoLocationData`, `adminSearchIngestFromScratch`, `migrateLegacyMemoContent`, `migrateLegacyWhiteboardContent`, `refreshAllBodiesOfKnowledge`, `adminCommunicationEnsureAccessToCommunications`, `adminCommunicationRemoveOrphanedRoom`, `adminCommunicationUpdateRoomState`, `adminCommunicationMigrateOrphanedConversations`, `adminCommunicationSyncSpaceHierarchy`
+- **A11** Operational machinery: `cleanupCollections`, `updateAssistantActorCapabilities`, `adminInAppNotificationsPrune`, `adminUpdateContributorAvatars`, `adminUpdateGeoLocationData`, `adminSearchIngestFromScratch`, `migrateLegacyMemoContent`, `migrateLegacyWhiteboardContent`, `adminRepairTemplateFiles`, `refreshAllBodiesOfKnowledge`, `adminCommunicationEnsureAccessToCommunications`, `adminCommunicationRemoveOrphanedRoom`, `adminCommunicationUpdateRoomState`, `adminCommunicationMigrateOrphanedConversations`, `adminCommunicationSyncSpaceHierarchy`
 - **A12** License usage: `assignLicensePlanToAccount`, `assignLicensePlanToSpace`, `revokeLicensePlanFromAccount`, `revokeLicensePlanFromSpace`, `updateBaselineLicensePlanOnAccount`
 - **A13** License plan definition: `createLicensePlan`, `deleteLicensePlan`, `updateLicensePlan`, `adminLicensePolicyDeleteCredentialRule`, `adminLicensePolicyUpdateCredentialRule`, `adminLicensePolicyCreateCredentialRule`
 - **A14** Space visibility: `adminUpdateSpaceVisibility`
@@ -718,7 +760,7 @@ One section per role, in the order of `roles/*.it-spec.ts`. **Can** lists every 
 - **A20** Read Platform-role holder lists: `usersInRole`, `usersInRoles`, `organizationsInRole`, `organizationsInRoles`, `actorsWithCredential`, `usersWithAuthorizationCredential`
 - **A20b** Read Feature-role holder lists: `usersInRole`, `usersInRoles`, `organizationsInRole`, `organizationsInRoles`, `actorsWithCredential`, `usersWithAuthorizationCredential`
 - **A21** Set / clear the service-profile marker: `updateUser` (set serviceProfile), `updateUser` (clear serviceProfile)
-- **A22** Direct add without consent (invitation only): `assignRoleToUser` (a user as MEMBER of an L0 space - ROLESET_ENTRY_ROLE_ASSIGN), `assignRoleToVirtualContributor` (a VC from ANOTHER account as MEMBER of an L0 space - ROLESET_ENTRY_ROLE_ASSIGN), `assignRoleToOrganization` (an organization NOT yet in the space - ROLESET_ENTRY_ROLE_ASSIGN_ORGANIZATION)
+- **A22** Direct add without consent (invitation only): `assignRoleToUser` (a user as MEMBER of an L0 space - ROLESET_ENTRY_ROLE_ASSIGN), `assignRoleToVirtualContributor` (a VC from ANOTHER account as MEMBER of an L0 space - ROLESET_ENTRY_ROLE_ASSIGN), `assignRoleToOrganization` (an organization NOT yet in the space - ROLESET_ENTRY_ROLE_ASSIGN_ORGANIZATION), `assignRoleToUser` (a user as ASSOCIATE of an organisation - ROLESET_ENTRY_ROLE_ASSIGN), `assignRoleToUser` (a non-associate as ADMIN of an organisation - ROLESET_ENTRY_ROLE_ASSIGN (a higher role is no side door in))
 
 ### PLATFORM_LICENSE_MANAGER
 
@@ -738,7 +780,7 @@ One section per role, in the order of `roles/*.it-spec.ts`. **Can** lists every 
 | `A12.updateBaselineLicensePlanOnAccount` | owner | **effect** — the baseline plan value changed on re-read |
 | `A14.adminUpdateSpaceVisibility` | owner | **effect** — the space reports the new visibility on re-read (restored after) |
 
-**Cannot (109)** — by group:
+**Cannot (121)** — by group:
 
 - **A1** Assign / revoke a Platform role: `assignPlatformRoleToUser`, `removePlatformRoleFromUser`, `grantCredentialToActor`, `revokeCredentialFromActor`
 - **A2** Assign / revoke a Feature role (user or organization): `assignPlatformRoleToUser`, `removePlatformRoleFromUser`, `assignPlatformRoleToOrganization`, `removePlatformRoleFromOrganization`
@@ -750,7 +792,7 @@ One section per role, in the order of `roles/*.it-spec.ts`. **Can** lists every 
 - **A8** Delete content; set callout publisher: `deleteCallout`, `deleteContribution`, `deleteSpace`, `deleteInnovationPack`, `deleteInnovationHub`, `updateCalloutPublishInfo`
 - **A9** Move resources between accounts / space levels: `moveSpaceL1ToSpaceL0`, `moveSpaceL1ToSpaceL2`, `moveSpaceL2ToSpaceL1`, `convertSpaceL1ToSpaceL0`, `convertSpaceL2ToSpaceL1`, `convertSpaceL1ToSpaceL2`, `convertVirtualContributorToUseKnowledgeBase`, `moveContributionToCallout`, `transferCallout`, `transferInnovationHubToAccount`, `transferSpaceToAccount`, `transferInnovationPackToAccount`, `transferVirtualContributorToAccount`
 - **A10** Platform settings & configuration: `updatePlatformSettings`, `addIframeAllowedURL`, `removeIframeAllowedURL`, `addNotificationEmailToBlacklist`, `removeNotificationEmailFromBlacklist`, `setPlatformWellKnownVirtualContributor`
-- **A11** Operational machinery: `cleanupCollections`, `updateAssistantActorCapabilities`, `adminInAppNotificationsPrune`, `adminUpdateContributorAvatars`, `adminUpdateGeoLocationData`, `adminSearchIngestFromScratch`, `migrateLegacyMemoContent`, `migrateLegacyWhiteboardContent`, `refreshAllBodiesOfKnowledge`, `adminCommunicationEnsureAccessToCommunications`, `adminCommunicationRemoveOrphanedRoom`, `adminCommunicationUpdateRoomState`, `adminCommunicationMigrateOrphanedConversations`, `adminCommunicationSyncSpaceHierarchy`
+- **A11** Operational machinery: `cleanupCollections`, `updateAssistantActorCapabilities`, `adminInAppNotificationsPrune`, `adminUpdateContributorAvatars`, `adminUpdateGeoLocationData`, `adminSearchIngestFromScratch`, `migrateLegacyMemoContent`, `migrateLegacyWhiteboardContent`, `adminRepairTemplateFiles`, `refreshAllBodiesOfKnowledge`, `adminCommunicationEnsureAccessToCommunications`, `adminCommunicationRemoveOrphanedRoom`, `adminCommunicationUpdateRoomState`, `adminCommunicationMigrateOrphanedConversations`, `adminCommunicationSyncSpaceHierarchy`
 - **A13** License plan definition: `createLicensePlan`, `deleteLicensePlan`, `updateLicensePlan`, `adminLicensePolicyDeleteCredentialRule`, `adminLicensePolicyUpdateCredentialRule`, `adminLicensePolicyCreateCredentialRule`
 - **A15** Support inside a flag-enabled space; manage the forum: `getAccessPrivilegesForPlatformSupport`, `updateDiscussion`, `deleteDiscussion`, `adminForumRemoveDiscussionCategory`
 - **A16** Read across spaces (service accounts only): `createPlatformRolesAccess`
@@ -759,7 +801,8 @@ One section per role, in the order of `roles/*.it-spec.ts`. **Can** lists every 
 - **A20** Read Platform-role holder lists: `usersInRole`, `usersInRoles`, `organizationsInRole`, `organizationsInRoles`, `actorsWithCredential`, `usersWithAuthorizationCredential`
 - **A20b** Read Feature-role holder lists: `usersInRole`, `usersInRoles`, `organizationsInRole`, `organizationsInRoles`, `actorsWithCredential`, `usersWithAuthorizationCredential`
 - **A21** Set / clear the service-profile marker: `updateUser` (set serviceProfile), `updateUser` (clear serviceProfile)
-- **A22** Direct add without consent (invitation only): `assignRoleToUser` (a user as MEMBER of an L0 space - ROLESET_ENTRY_ROLE_ASSIGN), `assignRoleToVirtualContributor` (a VC from ANOTHER account as MEMBER of an L0 space - ROLESET_ENTRY_ROLE_ASSIGN), `assignRoleToOrganization` (an organization NOT yet in the space - ROLESET_ENTRY_ROLE_ASSIGN_ORGANIZATION)
+- **A22** Direct add without consent (invitation only): `assignRoleToUser` (a user as MEMBER of an L0 space - ROLESET_ENTRY_ROLE_ASSIGN), `assignRoleToVirtualContributor` (a VC from ANOTHER account as MEMBER of an L0 space - ROLESET_ENTRY_ROLE_ASSIGN), `assignRoleToOrganization` (an organization NOT yet in the space - ROLESET_ENTRY_ROLE_ASSIGN_ORGANIZATION), `assignRoleToUser` (a user as ASSOCIATE of an organisation - ROLESET_ENTRY_ROLE_ASSIGN), `assignRoleToUser` (a non-associate as ADMIN of an organisation - ROLESET_ENTRY_ROLE_ASSIGN (a higher role is no side door in))
+- **A23** Manage an organisation's people on its Community tab: `inviteForEntryRoleOnRoleSet` (a user, as an organisation role set), `resendPlatformInvitation` (an email invitation of an organisation), `assignRoleToUser` (ADMIN to an existing associate of an organisation - GRANT), `removeRoleFromUser` (ASSOCIATE of an organisation (removes the member)), `eventOnApplication` (APPROVE an application to an organisation), `eventOnApplication` (REJECT an application to an organisation), `deleteInvitation` (a pending user invitation of an organisation), `deletePlatformInvitation` (an email invitation of an organisation), `applications` (RoleSet.applications of an organisation)
 
 ### PLATFORM_SPACES_READER
 
@@ -772,9 +815,9 @@ One section per role, in the order of `roles/*.it-spec.ts`. **Can** lists every 
 
 | Capability | Reaches it as | A passing positive must observe |
 |---|---|---|
-| `A16.createPlatformRolesAccess` | owner | **returns-data** — reads the collaboration of a PRIVATE space it is not a member of |
+| `A16.createPlatformRolesAccess` | owner | **returns-data** — reads the callouts of a PRIVATE space it is not a member of (the same set the host sees) |
 
-**Cannot (114)** — by group:
+**Cannot (126)** — by group:
 
 - **A1** Assign / revoke a Platform role: `assignPlatformRoleToUser`, `removePlatformRoleFromUser`, `grantCredentialToActor`, `revokeCredentialFromActor`
 - **A2** Assign / revoke a Feature role (user or organization): `assignPlatformRoleToUser`, `removePlatformRoleFromUser`, `assignPlatformRoleToOrganization`, `removePlatformRoleFromOrganization`
@@ -786,7 +829,7 @@ One section per role, in the order of `roles/*.it-spec.ts`. **Can** lists every 
 - **A8** Delete content; set callout publisher: `deleteCallout`, `deleteContribution`, `deleteSpace`, `deleteInnovationPack`, `deleteInnovationHub`, `updateCalloutPublishInfo`
 - **A9** Move resources between accounts / space levels: `moveSpaceL1ToSpaceL0`, `moveSpaceL1ToSpaceL2`, `moveSpaceL2ToSpaceL1`, `convertSpaceL1ToSpaceL0`, `convertSpaceL2ToSpaceL1`, `convertSpaceL1ToSpaceL2`, `convertVirtualContributorToUseKnowledgeBase`, `moveContributionToCallout`, `transferCallout`, `transferInnovationHubToAccount`, `transferSpaceToAccount`, `transferInnovationPackToAccount`, `transferVirtualContributorToAccount`
 - **A10** Platform settings & configuration: `updatePlatformSettings`, `addIframeAllowedURL`, `removeIframeAllowedURL`, `addNotificationEmailToBlacklist`, `removeNotificationEmailFromBlacklist`, `setPlatformWellKnownVirtualContributor`
-- **A11** Operational machinery: `cleanupCollections`, `updateAssistantActorCapabilities`, `adminInAppNotificationsPrune`, `adminUpdateContributorAvatars`, `adminUpdateGeoLocationData`, `adminSearchIngestFromScratch`, `migrateLegacyMemoContent`, `migrateLegacyWhiteboardContent`, `refreshAllBodiesOfKnowledge`, `adminCommunicationEnsureAccessToCommunications`, `adminCommunicationRemoveOrphanedRoom`, `adminCommunicationUpdateRoomState`, `adminCommunicationMigrateOrphanedConversations`, `adminCommunicationSyncSpaceHierarchy`
+- **A11** Operational machinery: `cleanupCollections`, `updateAssistantActorCapabilities`, `adminInAppNotificationsPrune`, `adminUpdateContributorAvatars`, `adminUpdateGeoLocationData`, `adminSearchIngestFromScratch`, `migrateLegacyMemoContent`, `migrateLegacyWhiteboardContent`, `adminRepairTemplateFiles`, `refreshAllBodiesOfKnowledge`, `adminCommunicationEnsureAccessToCommunications`, `adminCommunicationRemoveOrphanedRoom`, `adminCommunicationUpdateRoomState`, `adminCommunicationMigrateOrphanedConversations`, `adminCommunicationSyncSpaceHierarchy`
 - **A12** License usage: `assignLicensePlanToAccount`, `assignLicensePlanToSpace`, `revokeLicensePlanFromAccount`, `revokeLicensePlanFromSpace`, `updateBaselineLicensePlanOnAccount`
 - **A13** License plan definition: `createLicensePlan`, `deleteLicensePlan`, `updateLicensePlan`, `adminLicensePolicyDeleteCredentialRule`, `adminLicensePolicyUpdateCredentialRule`, `adminLicensePolicyCreateCredentialRule`
 - **A14** Space visibility: `adminUpdateSpaceVisibility`
@@ -796,7 +839,8 @@ One section per role, in the order of `roles/*.it-spec.ts`. **Can** lists every 
 - **A20** Read Platform-role holder lists: `usersInRole`, `usersInRoles`, `organizationsInRole`, `organizationsInRoles`, `actorsWithCredential`, `usersWithAuthorizationCredential`
 - **A20b** Read Feature-role holder lists: `usersInRole`, `usersInRoles`, `organizationsInRole`, `organizationsInRoles`, `actorsWithCredential`, `usersWithAuthorizationCredential`
 - **A21** Set / clear the service-profile marker: `updateUser` (set serviceProfile), `updateUser` (clear serviceProfile)
-- **A22** Direct add without consent (invitation only): `assignRoleToUser` (a user as MEMBER of an L0 space - ROLESET_ENTRY_ROLE_ASSIGN), `assignRoleToVirtualContributor` (a VC from ANOTHER account as MEMBER of an L0 space - ROLESET_ENTRY_ROLE_ASSIGN), `assignRoleToOrganization` (an organization NOT yet in the space - ROLESET_ENTRY_ROLE_ASSIGN_ORGANIZATION)
+- **A22** Direct add without consent (invitation only): `assignRoleToUser` (a user as MEMBER of an L0 space - ROLESET_ENTRY_ROLE_ASSIGN), `assignRoleToVirtualContributor` (a VC from ANOTHER account as MEMBER of an L0 space - ROLESET_ENTRY_ROLE_ASSIGN), `assignRoleToOrganization` (an organization NOT yet in the space - ROLESET_ENTRY_ROLE_ASSIGN_ORGANIZATION), `assignRoleToUser` (a user as ASSOCIATE of an organisation - ROLESET_ENTRY_ROLE_ASSIGN), `assignRoleToUser` (a non-associate as ADMIN of an organisation - ROLESET_ENTRY_ROLE_ASSIGN (a higher role is no side door in))
+- **A23** Manage an organisation's people on its Community tab: `inviteForEntryRoleOnRoleSet` (a user, as an organisation role set), `resendPlatformInvitation` (an email invitation of an organisation), `assignRoleToUser` (ADMIN to an existing associate of an organisation - GRANT), `removeRoleFromUser` (ASSOCIATE of an organisation (removes the member)), `eventOnApplication` (APPROVE an application to an organisation), `eventOnApplication` (REJECT an application to an organisation), `deleteInvitation` (a pending user invitation of an organisation), `deletePlatformInvitation` (an email invitation of an organisation), `applications` (RoleSet.applications of an organisation)
 
 ### PLATFORM_AUDIT_READER
 
@@ -825,7 +869,7 @@ One section per role, in the order of `roles/*.it-spec.ts`. **Can** lists every 
 | `A20b.actorsWithCredential` | owner | **returns-data** — the KNOWN single-role fixture holder is present in the result - an always-empty resolver must fail |
 | `A20b.usersWithAuthorizationCredential` | owner | **returns-data** — the KNOWN single-role fixture holder is present in the result - an always-empty resolver must fail |
 
-**Cannot (100)** — by group:
+**Cannot (112)** — by group:
 
 - **A1** Assign / revoke a Platform role: `assignPlatformRoleToUser`, `removePlatformRoleFromUser`, `grantCredentialToActor`, `revokeCredentialFromActor`
 - **A2** Assign / revoke a Feature role (user or organization): `assignPlatformRoleToUser`, `removePlatformRoleFromUser`, `assignPlatformRoleToOrganization`, `removePlatformRoleFromOrganization`
@@ -837,7 +881,7 @@ One section per role, in the order of `roles/*.it-spec.ts`. **Can** lists every 
 - **A8** Delete content; set callout publisher: `deleteCallout`, `deleteContribution`, `deleteSpace`, `deleteInnovationPack`, `deleteInnovationHub`, `updateCalloutPublishInfo`
 - **A9** Move resources between accounts / space levels: `moveSpaceL1ToSpaceL0`, `moveSpaceL1ToSpaceL2`, `moveSpaceL2ToSpaceL1`, `convertSpaceL1ToSpaceL0`, `convertSpaceL2ToSpaceL1`, `convertSpaceL1ToSpaceL2`, `convertVirtualContributorToUseKnowledgeBase`, `moveContributionToCallout`, `transferCallout`, `transferInnovationHubToAccount`, `transferSpaceToAccount`, `transferInnovationPackToAccount`, `transferVirtualContributorToAccount`
 - **A10** Platform settings & configuration: `updatePlatformSettings`, `addIframeAllowedURL`, `removeIframeAllowedURL`, `addNotificationEmailToBlacklist`, `removeNotificationEmailFromBlacklist`, `setPlatformWellKnownVirtualContributor`
-- **A11** Operational machinery: `cleanupCollections`, `updateAssistantActorCapabilities`, `adminInAppNotificationsPrune`, `adminUpdateContributorAvatars`, `adminUpdateGeoLocationData`, `adminSearchIngestFromScratch`, `migrateLegacyMemoContent`, `migrateLegacyWhiteboardContent`, `refreshAllBodiesOfKnowledge`, `adminCommunicationEnsureAccessToCommunications`, `adminCommunicationRemoveOrphanedRoom`, `adminCommunicationUpdateRoomState`, `adminCommunicationMigrateOrphanedConversations`, `adminCommunicationSyncSpaceHierarchy`
+- **A11** Operational machinery: `cleanupCollections`, `updateAssistantActorCapabilities`, `adminInAppNotificationsPrune`, `adminUpdateContributorAvatars`, `adminUpdateGeoLocationData`, `adminSearchIngestFromScratch`, `migrateLegacyMemoContent`, `migrateLegacyWhiteboardContent`, `adminRepairTemplateFiles`, `refreshAllBodiesOfKnowledge`, `adminCommunicationEnsureAccessToCommunications`, `adminCommunicationRemoveOrphanedRoom`, `adminCommunicationUpdateRoomState`, `adminCommunicationMigrateOrphanedConversations`, `adminCommunicationSyncSpaceHierarchy`
 - **A12** License usage: `assignLicensePlanToAccount`, `assignLicensePlanToSpace`, `revokeLicensePlanFromAccount`, `revokeLicensePlanFromSpace`, `updateBaselineLicensePlanOnAccount`
 - **A13** License plan definition: `createLicensePlan`, `deleteLicensePlan`, `updateLicensePlan`, `adminLicensePolicyDeleteCredentialRule`, `adminLicensePolicyUpdateCredentialRule`, `adminLicensePolicyCreateCredentialRule`
 - **A14** Space visibility: `adminUpdateSpaceVisibility`
@@ -845,7 +889,8 @@ One section per role, in the order of `roles/*.it-spec.ts`. **Can** lists every 
 - **A16** Read across spaces (service accounts only): `createPlatformRolesAccess`
 - **A17** Rename an entity (nameID): `updateActorNameID`, `updateSpace.nameID` (protected `nameID` section of `updateSpace` (UPDATE_NAMEID))
 - **A21** Set / clear the service-profile marker: `updateUser` (set serviceProfile), `updateUser` (clear serviceProfile)
-- **A22** Direct add without consent (invitation only): `assignRoleToUser` (a user as MEMBER of an L0 space - ROLESET_ENTRY_ROLE_ASSIGN), `assignRoleToVirtualContributor` (a VC from ANOTHER account as MEMBER of an L0 space - ROLESET_ENTRY_ROLE_ASSIGN), `assignRoleToOrganization` (an organization NOT yet in the space - ROLESET_ENTRY_ROLE_ASSIGN_ORGANIZATION)
+- **A22** Direct add without consent (invitation only): `assignRoleToUser` (a user as MEMBER of an L0 space - ROLESET_ENTRY_ROLE_ASSIGN), `assignRoleToVirtualContributor` (a VC from ANOTHER account as MEMBER of an L0 space - ROLESET_ENTRY_ROLE_ASSIGN), `assignRoleToOrganization` (an organization NOT yet in the space - ROLESET_ENTRY_ROLE_ASSIGN_ORGANIZATION), `assignRoleToUser` (a user as ASSOCIATE of an organisation - ROLESET_ENTRY_ROLE_ASSIGN), `assignRoleToUser` (a non-associate as ADMIN of an organisation - ROLESET_ENTRY_ROLE_ASSIGN (a higher role is no side door in))
+- **A23** Manage an organisation's people on its Community tab: `inviteForEntryRoleOnRoleSet` (a user, as an organisation role set), `resendPlatformInvitation` (an email invitation of an organisation), `assignRoleToUser` (ADMIN to an existing associate of an organisation - GRANT), `removeRoleFromUser` (ASSOCIATE of an organisation (removes the member)), `eventOnApplication` (APPROVE an application to an organisation), `eventOnApplication` (REJECT an application to an organisation), `deleteInvitation` (a pending user invitation of an organisation), `deletePlatformInvitation` (an email invitation of an organisation), `applications` (RoleSet.applications of an organisation)
 
 ### FEATURE_BETA_TESTER
 
@@ -856,7 +901,7 @@ One section per role, in the order of `roles/*.it-spec.ts`. **Can** lists every 
 
 **Can:** nothing in the capability table — this role owns no administrative capability. What it confers is proven by the Feature-role scenarios (F1–F3) below.
 
-**Cannot (115)** — by group:
+**Cannot (127)** — by group:
 
 - **A1** Assign / revoke a Platform role: `assignPlatformRoleToUser`, `removePlatformRoleFromUser`, `grantCredentialToActor`, `revokeCredentialFromActor`
 - **A2** Assign / revoke a Feature role (user or organization): `assignPlatformRoleToUser`, `removePlatformRoleFromUser`, `assignPlatformRoleToOrganization`, `removePlatformRoleFromOrganization`
@@ -868,7 +913,7 @@ One section per role, in the order of `roles/*.it-spec.ts`. **Can** lists every 
 - **A8** Delete content; set callout publisher: `deleteCallout`, `deleteContribution`, `deleteSpace`, `deleteInnovationPack`, `deleteInnovationHub`, `updateCalloutPublishInfo`
 - **A9** Move resources between accounts / space levels: `moveSpaceL1ToSpaceL0`, `moveSpaceL1ToSpaceL2`, `moveSpaceL2ToSpaceL1`, `convertSpaceL1ToSpaceL0`, `convertSpaceL2ToSpaceL1`, `convertSpaceL1ToSpaceL2`, `convertVirtualContributorToUseKnowledgeBase`, `moveContributionToCallout`, `transferCallout`, `transferInnovationHubToAccount`, `transferSpaceToAccount`, `transferInnovationPackToAccount`, `transferVirtualContributorToAccount`
 - **A10** Platform settings & configuration: `updatePlatformSettings`, `addIframeAllowedURL`, `removeIframeAllowedURL`, `addNotificationEmailToBlacklist`, `removeNotificationEmailFromBlacklist`, `setPlatformWellKnownVirtualContributor`
-- **A11** Operational machinery: `cleanupCollections`, `updateAssistantActorCapabilities`, `adminInAppNotificationsPrune`, `adminUpdateContributorAvatars`, `adminUpdateGeoLocationData`, `adminSearchIngestFromScratch`, `migrateLegacyMemoContent`, `migrateLegacyWhiteboardContent`, `refreshAllBodiesOfKnowledge`, `adminCommunicationEnsureAccessToCommunications`, `adminCommunicationRemoveOrphanedRoom`, `adminCommunicationUpdateRoomState`, `adminCommunicationMigrateOrphanedConversations`, `adminCommunicationSyncSpaceHierarchy`
+- **A11** Operational machinery: `cleanupCollections`, `updateAssistantActorCapabilities`, `adminInAppNotificationsPrune`, `adminUpdateContributorAvatars`, `adminUpdateGeoLocationData`, `adminSearchIngestFromScratch`, `migrateLegacyMemoContent`, `migrateLegacyWhiteboardContent`, `adminRepairTemplateFiles`, `refreshAllBodiesOfKnowledge`, `adminCommunicationEnsureAccessToCommunications`, `adminCommunicationRemoveOrphanedRoom`, `adminCommunicationUpdateRoomState`, `adminCommunicationMigrateOrphanedConversations`, `adminCommunicationSyncSpaceHierarchy`
 - **A12** License usage: `assignLicensePlanToAccount`, `assignLicensePlanToSpace`, `revokeLicensePlanFromAccount`, `revokeLicensePlanFromSpace`, `updateBaselineLicensePlanOnAccount`
 - **A13** License plan definition: `createLicensePlan`, `deleteLicensePlan`, `updateLicensePlan`, `adminLicensePolicyDeleteCredentialRule`, `adminLicensePolicyUpdateCredentialRule`, `adminLicensePolicyCreateCredentialRule`
 - **A14** Space visibility: `adminUpdateSpaceVisibility`
@@ -879,7 +924,8 @@ One section per role, in the order of `roles/*.it-spec.ts`. **Can** lists every 
 - **A20** Read Platform-role holder lists: `usersInRole`, `usersInRoles`, `organizationsInRole`, `organizationsInRoles`, `actorsWithCredential`, `usersWithAuthorizationCredential`
 - **A20b** Read Feature-role holder lists: `usersInRole`, `usersInRoles`, `organizationsInRole`, `organizationsInRoles`, `actorsWithCredential`, `usersWithAuthorizationCredential`
 - **A21** Set / clear the service-profile marker: `updateUser` (set serviceProfile), `updateUser` (clear serviceProfile)
-- **A22** Direct add without consent (invitation only): `assignRoleToUser` (a user as MEMBER of an L0 space - ROLESET_ENTRY_ROLE_ASSIGN), `assignRoleToVirtualContributor` (a VC from ANOTHER account as MEMBER of an L0 space - ROLESET_ENTRY_ROLE_ASSIGN), `assignRoleToOrganization` (an organization NOT yet in the space - ROLESET_ENTRY_ROLE_ASSIGN_ORGANIZATION)
+- **A22** Direct add without consent (invitation only): `assignRoleToUser` (a user as MEMBER of an L0 space - ROLESET_ENTRY_ROLE_ASSIGN), `assignRoleToVirtualContributor` (a VC from ANOTHER account as MEMBER of an L0 space - ROLESET_ENTRY_ROLE_ASSIGN), `assignRoleToOrganization` (an organization NOT yet in the space - ROLESET_ENTRY_ROLE_ASSIGN_ORGANIZATION), `assignRoleToUser` (a user as ASSOCIATE of an organisation - ROLESET_ENTRY_ROLE_ASSIGN), `assignRoleToUser` (a non-associate as ADMIN of an organisation - ROLESET_ENTRY_ROLE_ASSIGN (a higher role is no side door in))
+- **A23** Manage an organisation's people on its Community tab: `inviteForEntryRoleOnRoleSet` (a user, as an organisation role set), `resendPlatformInvitation` (an email invitation of an organisation), `assignRoleToUser` (ADMIN to an existing associate of an organisation - GRANT), `removeRoleFromUser` (ASSOCIATE of an organisation (removes the member)), `eventOnApplication` (APPROVE an application to an organisation), `eventOnApplication` (REJECT an application to an organisation), `deleteInvitation` (a pending user invitation of an organisation), `deletePlatformInvitation` (an email invitation of an organisation), `applications` (RoleSet.applications of an organisation)
 
 ### FEATURE_VIRTUAL_ASSISTANT
 
@@ -890,7 +936,7 @@ One section per role, in the order of `roles/*.it-spec.ts`. **Can** lists every 
 
 **Can:** nothing in the capability table — this role owns no administrative capability. What it confers is proven by the Feature-role scenarios (F1–F3) below.
 
-**Cannot (115)** — by group:
+**Cannot (127)** — by group:
 
 - **A1** Assign / revoke a Platform role: `assignPlatformRoleToUser`, `removePlatformRoleFromUser`, `grantCredentialToActor`, `revokeCredentialFromActor`
 - **A2** Assign / revoke a Feature role (user or organization): `assignPlatformRoleToUser`, `removePlatformRoleFromUser`, `assignPlatformRoleToOrganization`, `removePlatformRoleFromOrganization`
@@ -902,7 +948,7 @@ One section per role, in the order of `roles/*.it-spec.ts`. **Can** lists every 
 - **A8** Delete content; set callout publisher: `deleteCallout`, `deleteContribution`, `deleteSpace`, `deleteInnovationPack`, `deleteInnovationHub`, `updateCalloutPublishInfo`
 - **A9** Move resources between accounts / space levels: `moveSpaceL1ToSpaceL0`, `moveSpaceL1ToSpaceL2`, `moveSpaceL2ToSpaceL1`, `convertSpaceL1ToSpaceL0`, `convertSpaceL2ToSpaceL1`, `convertSpaceL1ToSpaceL2`, `convertVirtualContributorToUseKnowledgeBase`, `moveContributionToCallout`, `transferCallout`, `transferInnovationHubToAccount`, `transferSpaceToAccount`, `transferInnovationPackToAccount`, `transferVirtualContributorToAccount`
 - **A10** Platform settings & configuration: `updatePlatformSettings`, `addIframeAllowedURL`, `removeIframeAllowedURL`, `addNotificationEmailToBlacklist`, `removeNotificationEmailFromBlacklist`, `setPlatformWellKnownVirtualContributor`
-- **A11** Operational machinery: `cleanupCollections`, `updateAssistantActorCapabilities`, `adminInAppNotificationsPrune`, `adminUpdateContributorAvatars`, `adminUpdateGeoLocationData`, `adminSearchIngestFromScratch`, `migrateLegacyMemoContent`, `migrateLegacyWhiteboardContent`, `refreshAllBodiesOfKnowledge`, `adminCommunicationEnsureAccessToCommunications`, `adminCommunicationRemoveOrphanedRoom`, `adminCommunicationUpdateRoomState`, `adminCommunicationMigrateOrphanedConversations`, `adminCommunicationSyncSpaceHierarchy`
+- **A11** Operational machinery: `cleanupCollections`, `updateAssistantActorCapabilities`, `adminInAppNotificationsPrune`, `adminUpdateContributorAvatars`, `adminUpdateGeoLocationData`, `adminSearchIngestFromScratch`, `migrateLegacyMemoContent`, `migrateLegacyWhiteboardContent`, `adminRepairTemplateFiles`, `refreshAllBodiesOfKnowledge`, `adminCommunicationEnsureAccessToCommunications`, `adminCommunicationRemoveOrphanedRoom`, `adminCommunicationUpdateRoomState`, `adminCommunicationMigrateOrphanedConversations`, `adminCommunicationSyncSpaceHierarchy`
 - **A12** License usage: `assignLicensePlanToAccount`, `assignLicensePlanToSpace`, `revokeLicensePlanFromAccount`, `revokeLicensePlanFromSpace`, `updateBaselineLicensePlanOnAccount`
 - **A13** License plan definition: `createLicensePlan`, `deleteLicensePlan`, `updateLicensePlan`, `adminLicensePolicyDeleteCredentialRule`, `adminLicensePolicyUpdateCredentialRule`, `adminLicensePolicyCreateCredentialRule`
 - **A14** Space visibility: `adminUpdateSpaceVisibility`
@@ -913,7 +959,8 @@ One section per role, in the order of `roles/*.it-spec.ts`. **Can** lists every 
 - **A20** Read Platform-role holder lists: `usersInRole`, `usersInRoles`, `organizationsInRole`, `organizationsInRoles`, `actorsWithCredential`, `usersWithAuthorizationCredential`
 - **A20b** Read Feature-role holder lists: `usersInRole`, `usersInRoles`, `organizationsInRole`, `organizationsInRoles`, `actorsWithCredential`, `usersWithAuthorizationCredential`
 - **A21** Set / clear the service-profile marker: `updateUser` (set serviceProfile), `updateUser` (clear serviceProfile)
-- **A22** Direct add without consent (invitation only): `assignRoleToUser` (a user as MEMBER of an L0 space - ROLESET_ENTRY_ROLE_ASSIGN), `assignRoleToVirtualContributor` (a VC from ANOTHER account as MEMBER of an L0 space - ROLESET_ENTRY_ROLE_ASSIGN), `assignRoleToOrganization` (an organization NOT yet in the space - ROLESET_ENTRY_ROLE_ASSIGN_ORGANIZATION)
+- **A22** Direct add without consent (invitation only): `assignRoleToUser` (a user as MEMBER of an L0 space - ROLESET_ENTRY_ROLE_ASSIGN), `assignRoleToVirtualContributor` (a VC from ANOTHER account as MEMBER of an L0 space - ROLESET_ENTRY_ROLE_ASSIGN), `assignRoleToOrganization` (an organization NOT yet in the space - ROLESET_ENTRY_ROLE_ASSIGN_ORGANIZATION), `assignRoleToUser` (a user as ASSOCIATE of an organisation - ROLESET_ENTRY_ROLE_ASSIGN), `assignRoleToUser` (a non-associate as ADMIN of an organisation - ROLESET_ENTRY_ROLE_ASSIGN (a higher role is no side door in))
+- **A23** Manage an organisation's people on its Community tab: `inviteForEntryRoleOnRoleSet` (a user, as an organisation role set), `resendPlatformInvitation` (an email invitation of an organisation), `assignRoleToUser` (ADMIN to an existing associate of an organisation - GRANT), `removeRoleFromUser` (ASSOCIATE of an organisation (removes the member)), `eventOnApplication` (APPROVE an application to an organisation), `eventOnApplication` (REJECT an application to an organisation), `deleteInvitation` (a pending user invitation of an organisation), `deletePlatformInvitation` (an email invitation of an organisation), `applications` (RoleSet.applications of an organisation)
 
 ### FEATURE_ORGANIZATION_CREATOR
 
@@ -928,7 +975,7 @@ One section per role, in the order of `roles/*.it-spec.ts`. **Can** lists every 
 |---|---|---|
 | `A6.createOrganization` | owner | **effect** — the organization is readable by the returned id (then cleaned up) |
 
-**Cannot (114)** — by group:
+**Cannot (126)** — by group:
 
 - **A1** Assign / revoke a Platform role: `assignPlatformRoleToUser`, `removePlatformRoleFromUser`, `grantCredentialToActor`, `revokeCredentialFromActor`
 - **A2** Assign / revoke a Feature role (user or organization): `assignPlatformRoleToUser`, `removePlatformRoleFromUser`, `assignPlatformRoleToOrganization`, `removePlatformRoleFromOrganization`
@@ -940,7 +987,7 @@ One section per role, in the order of `roles/*.it-spec.ts`. **Can** lists every 
 - **A8** Delete content; set callout publisher: `deleteCallout`, `deleteContribution`, `deleteSpace`, `deleteInnovationPack`, `deleteInnovationHub`, `updateCalloutPublishInfo`
 - **A9** Move resources between accounts / space levels: `moveSpaceL1ToSpaceL0`, `moveSpaceL1ToSpaceL2`, `moveSpaceL2ToSpaceL1`, `convertSpaceL1ToSpaceL0`, `convertSpaceL2ToSpaceL1`, `convertSpaceL1ToSpaceL2`, `convertVirtualContributorToUseKnowledgeBase`, `moveContributionToCallout`, `transferCallout`, `transferInnovationHubToAccount`, `transferSpaceToAccount`, `transferInnovationPackToAccount`, `transferVirtualContributorToAccount`
 - **A10** Platform settings & configuration: `updatePlatformSettings`, `addIframeAllowedURL`, `removeIframeAllowedURL`, `addNotificationEmailToBlacklist`, `removeNotificationEmailFromBlacklist`, `setPlatformWellKnownVirtualContributor`
-- **A11** Operational machinery: `cleanupCollections`, `updateAssistantActorCapabilities`, `adminInAppNotificationsPrune`, `adminUpdateContributorAvatars`, `adminUpdateGeoLocationData`, `adminSearchIngestFromScratch`, `migrateLegacyMemoContent`, `migrateLegacyWhiteboardContent`, `refreshAllBodiesOfKnowledge`, `adminCommunicationEnsureAccessToCommunications`, `adminCommunicationRemoveOrphanedRoom`, `adminCommunicationUpdateRoomState`, `adminCommunicationMigrateOrphanedConversations`, `adminCommunicationSyncSpaceHierarchy`
+- **A11** Operational machinery: `cleanupCollections`, `updateAssistantActorCapabilities`, `adminInAppNotificationsPrune`, `adminUpdateContributorAvatars`, `adminUpdateGeoLocationData`, `adminSearchIngestFromScratch`, `migrateLegacyMemoContent`, `migrateLegacyWhiteboardContent`, `adminRepairTemplateFiles`, `refreshAllBodiesOfKnowledge`, `adminCommunicationEnsureAccessToCommunications`, `adminCommunicationRemoveOrphanedRoom`, `adminCommunicationUpdateRoomState`, `adminCommunicationMigrateOrphanedConversations`, `adminCommunicationSyncSpaceHierarchy`
 - **A12** License usage: `assignLicensePlanToAccount`, `assignLicensePlanToSpace`, `revokeLicensePlanFromAccount`, `revokeLicensePlanFromSpace`, `updateBaselineLicensePlanOnAccount`
 - **A13** License plan definition: `createLicensePlan`, `deleteLicensePlan`, `updateLicensePlan`, `adminLicensePolicyDeleteCredentialRule`, `adminLicensePolicyUpdateCredentialRule`, `adminLicensePolicyCreateCredentialRule`
 - **A14** Space visibility: `adminUpdateSpaceVisibility`
@@ -951,7 +998,8 @@ One section per role, in the order of `roles/*.it-spec.ts`. **Can** lists every 
 - **A20** Read Platform-role holder lists: `usersInRole`, `usersInRoles`, `organizationsInRole`, `organizationsInRoles`, `actorsWithCredential`, `usersWithAuthorizationCredential`
 - **A20b** Read Feature-role holder lists: `usersInRole`, `usersInRoles`, `organizationsInRole`, `organizationsInRoles`, `actorsWithCredential`, `usersWithAuthorizationCredential`
 - **A21** Set / clear the service-profile marker: `updateUser` (set serviceProfile), `updateUser` (clear serviceProfile)
-- **A22** Direct add without consent (invitation only): `assignRoleToUser` (a user as MEMBER of an L0 space - ROLESET_ENTRY_ROLE_ASSIGN), `assignRoleToVirtualContributor` (a VC from ANOTHER account as MEMBER of an L0 space - ROLESET_ENTRY_ROLE_ASSIGN), `assignRoleToOrganization` (an organization NOT yet in the space - ROLESET_ENTRY_ROLE_ASSIGN_ORGANIZATION)
+- **A22** Direct add without consent (invitation only): `assignRoleToUser` (a user as MEMBER of an L0 space - ROLESET_ENTRY_ROLE_ASSIGN), `assignRoleToVirtualContributor` (a VC from ANOTHER account as MEMBER of an L0 space - ROLESET_ENTRY_ROLE_ASSIGN), `assignRoleToOrganization` (an organization NOT yet in the space - ROLESET_ENTRY_ROLE_ASSIGN_ORGANIZATION), `assignRoleToUser` (a user as ASSOCIATE of an organisation - ROLESET_ENTRY_ROLE_ASSIGN), `assignRoleToUser` (a non-associate as ADMIN of an organisation - ROLESET_ENTRY_ROLE_ASSIGN (a higher role is no side door in))
+- **A23** Manage an organisation's people on its Community tab: `inviteForEntryRoleOnRoleSet` (a user, as an organisation role set), `resendPlatformInvitation` (an email invitation of an organisation), `assignRoleToUser` (ADMIN to an existing associate of an organisation - GRANT), `removeRoleFromUser` (ASSOCIATE of an organisation (removes the member)), `eventOnApplication` (APPROVE an application to an organisation), `eventOnApplication` (REJECT an application to an organisation), `deleteInvitation` (a pending user invitation of an organisation), `deletePlatformInvitation` (an email invitation of an organisation), `applications` (RoleSet.applications of an organisation)
 
 ### FEATURE_VC_CAMPAIGN
 
@@ -962,7 +1010,7 @@ One section per role, in the order of `roles/*.it-spec.ts`. **Can** lists every 
 
 **Can:** nothing in the capability table — this role owns no administrative capability. What it confers is proven by the Feature-role scenarios (F1–F3) below.
 
-**Cannot (115)** — by group:
+**Cannot (127)** — by group:
 
 - **A1** Assign / revoke a Platform role: `assignPlatformRoleToUser`, `removePlatformRoleFromUser`, `grantCredentialToActor`, `revokeCredentialFromActor`
 - **A2** Assign / revoke a Feature role (user or organization): `assignPlatformRoleToUser`, `removePlatformRoleFromUser`, `assignPlatformRoleToOrganization`, `removePlatformRoleFromOrganization`
@@ -974,7 +1022,7 @@ One section per role, in the order of `roles/*.it-spec.ts`. **Can** lists every 
 - **A8** Delete content; set callout publisher: `deleteCallout`, `deleteContribution`, `deleteSpace`, `deleteInnovationPack`, `deleteInnovationHub`, `updateCalloutPublishInfo`
 - **A9** Move resources between accounts / space levels: `moveSpaceL1ToSpaceL0`, `moveSpaceL1ToSpaceL2`, `moveSpaceL2ToSpaceL1`, `convertSpaceL1ToSpaceL0`, `convertSpaceL2ToSpaceL1`, `convertSpaceL1ToSpaceL2`, `convertVirtualContributorToUseKnowledgeBase`, `moveContributionToCallout`, `transferCallout`, `transferInnovationHubToAccount`, `transferSpaceToAccount`, `transferInnovationPackToAccount`, `transferVirtualContributorToAccount`
 - **A10** Platform settings & configuration: `updatePlatformSettings`, `addIframeAllowedURL`, `removeIframeAllowedURL`, `addNotificationEmailToBlacklist`, `removeNotificationEmailFromBlacklist`, `setPlatformWellKnownVirtualContributor`
-- **A11** Operational machinery: `cleanupCollections`, `updateAssistantActorCapabilities`, `adminInAppNotificationsPrune`, `adminUpdateContributorAvatars`, `adminUpdateGeoLocationData`, `adminSearchIngestFromScratch`, `migrateLegacyMemoContent`, `migrateLegacyWhiteboardContent`, `refreshAllBodiesOfKnowledge`, `adminCommunicationEnsureAccessToCommunications`, `adminCommunicationRemoveOrphanedRoom`, `adminCommunicationUpdateRoomState`, `adminCommunicationMigrateOrphanedConversations`, `adminCommunicationSyncSpaceHierarchy`
+- **A11** Operational machinery: `cleanupCollections`, `updateAssistantActorCapabilities`, `adminInAppNotificationsPrune`, `adminUpdateContributorAvatars`, `adminUpdateGeoLocationData`, `adminSearchIngestFromScratch`, `migrateLegacyMemoContent`, `migrateLegacyWhiteboardContent`, `adminRepairTemplateFiles`, `refreshAllBodiesOfKnowledge`, `adminCommunicationEnsureAccessToCommunications`, `adminCommunicationRemoveOrphanedRoom`, `adminCommunicationUpdateRoomState`, `adminCommunicationMigrateOrphanedConversations`, `adminCommunicationSyncSpaceHierarchy`
 - **A12** License usage: `assignLicensePlanToAccount`, `assignLicensePlanToSpace`, `revokeLicensePlanFromAccount`, `revokeLicensePlanFromSpace`, `updateBaselineLicensePlanOnAccount`
 - **A13** License plan definition: `createLicensePlan`, `deleteLicensePlan`, `updateLicensePlan`, `adminLicensePolicyDeleteCredentialRule`, `adminLicensePolicyUpdateCredentialRule`, `adminLicensePolicyCreateCredentialRule`
 - **A14** Space visibility: `adminUpdateSpaceVisibility`
@@ -985,7 +1033,8 @@ One section per role, in the order of `roles/*.it-spec.ts`. **Can** lists every 
 - **A20** Read Platform-role holder lists: `usersInRole`, `usersInRoles`, `organizationsInRole`, `organizationsInRoles`, `actorsWithCredential`, `usersWithAuthorizationCredential`
 - **A20b** Read Feature-role holder lists: `usersInRole`, `usersInRoles`, `organizationsInRole`, `organizationsInRoles`, `actorsWithCredential`, `usersWithAuthorizationCredential`
 - **A21** Set / clear the service-profile marker: `updateUser` (set serviceProfile), `updateUser` (clear serviceProfile)
-- **A22** Direct add without consent (invitation only): `assignRoleToUser` (a user as MEMBER of an L0 space - ROLESET_ENTRY_ROLE_ASSIGN), `assignRoleToVirtualContributor` (a VC from ANOTHER account as MEMBER of an L0 space - ROLESET_ENTRY_ROLE_ASSIGN), `assignRoleToOrganization` (an organization NOT yet in the space - ROLESET_ENTRY_ROLE_ASSIGN_ORGANIZATION)
+- **A22** Direct add without consent (invitation only): `assignRoleToUser` (a user as MEMBER of an L0 space - ROLESET_ENTRY_ROLE_ASSIGN), `assignRoleToVirtualContributor` (a VC from ANOTHER account as MEMBER of an L0 space - ROLESET_ENTRY_ROLE_ASSIGN), `assignRoleToOrganization` (an organization NOT yet in the space - ROLESET_ENTRY_ROLE_ASSIGN_ORGANIZATION), `assignRoleToUser` (a user as ASSOCIATE of an organisation - ROLESET_ENTRY_ROLE_ASSIGN), `assignRoleToUser` (a non-associate as ADMIN of an organisation - ROLESET_ENTRY_ROLE_ASSIGN (a higher role is no side door in))
+- **A23** Manage an organisation's people on its Community tab: `inviteForEntryRoleOnRoleSet` (a user, as an organisation role set), `resendPlatformInvitation` (an email invitation of an organisation), `assignRoleToUser` (ADMIN to an existing associate of an organisation - GRANT), `removeRoleFromUser` (ASSOCIATE of an organisation (removes the member)), `eventOnApplication` (APPROVE an application to an organisation), `eventOnApplication` (REJECT an application to an organisation), `deleteInvitation` (a pending user invitation of an organisation), `deletePlatformInvitation` (an email invitation of an organisation), `applications` (RoleSet.applications of an organisation)
 
 ## Rule scenarios
 
@@ -1058,6 +1107,6 @@ None open.
 
 ## What is genuinely proven
 
-Verified live against the 027 server, twice in a row with identical results — 2026-09-18 for the original rows, 2026-10-08 on server develop for the A8 and A22 rows the later rulings changed: **92 of 115 capabilities have an automated positive and 114 an automated negative**, run for all 14 roles — 142 positive and 1454 negative role-level checks in the table, of which the exclusive and not-automated rows are excluded from the default run. Every negative is a refusal AT THE AUTHORIZATION GATE (an authorization code on the gate path), never a validation error, a not-found, or a forbidden sub-field. Every positive observes what its row declares — an effect read back, known data returned, a success payload, or (5 rows) a non-authorization error proving the gate was passed.
+Verified live against the 027 server, twice in a row with identical results — 2026-09-18 for the original rows, 2026-10-08 on server develop for the A8 and A22 rows the later rulings changed: **102 of 127 capabilities have an automated positive and 126 an automated negative**, run for all 14 roles — 155 positive and 1609 negative role-level checks in the table, of which the exclusive and not-automated rows are excluded from the default run. Every negative is a refusal AT THE AUTHORIZATION GATE (an authorization code on the gate path), never a validation error, a not-found, or a forbidden sub-field. Every positive observes what its row declares — an effect read back, known data returned, a success payload, or (5 rows) a non-authorization error proving the gate was passed.
 
 Rule scenarios: 22 positive and 25 negative halves automated. **What is NOT proven:** anything that reads a role-assignment audit record (the MCP endpoint is disabled on the stack this was built against — those halves are visible `test.todo`s that switch on with `PLATFORM_ROLES_MCP=1` once the endpoint answers); the 14 platform-wide positives in the `exclusive` project, which are written and type-checked but have NEVER been executed; restart and fault-injection scenarios; and the UI.

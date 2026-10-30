@@ -6,8 +6,9 @@
 // = ASSOCIATE + ADMIN (factory default); `spaceMember` = ADMIN-not-associate;
 // `nonSpaceMember` = OWNER-not-admin; `betaTester` = associate-only (no manager
 // credential); `qaUser` = a registered user with no role on the organization;
-// `globalSupportAdmin` = platform support (holds the invite privilege
-// everywhere). Invitees are throwaway addresses under `alkemio.test` (the
+// `globalSupportAdmin` = platform support (holds the invite privilege on every
+// role set: through Slice B it was refused on organisations, workspace#090
+// gave it back the Community-tab reach there, by consent only). Invitees are throwaway addresses under `alkemio.test` (the
 // reserved `.test` TLD, RFC 2606); the registration and resend it-specs and
 // the walks use the equally reserved `example.com`.
 //
@@ -476,20 +477,44 @@ describe('Invite an unregistered address to an organization (US1)', () => {
     }
   });
 
-  test('US1-AS8 (Slice B): platform support can no longer invite on an organisation — refused at the gate', async () => {
-    // workspace#027 Slice B: ROLESET_ENTRY_ROLE_INVITE on organisation role
-    // sets stays with the organisation's own admins; Platform Support owns the
-    // organisation LIFECYCLE (create / delete / verification), not its
-    // membership. Through Slice A the legacy global-support cascade let it.
+  test('US1-AS8 (090): Platform Support may invite, list, resend and revoke email invitations on an organisation', async () => {
+    // workspace#027 Slice B refused Platform Support on organisation role sets;
+    // workspace#090 (server#6708) gives it the organisation admins' Community-tab
+    // reach again, by consent only (never a direct add), through the stored
+    // rules checked in support-org-community-scope.it-spec.ts. Audit rows for
+    // these four calls are checked locally in support-org-community-actions.
     const email = addr('as8-support');
     const res = await invite({
       emails: [email],
       as: TestUser.GLOBAL_SUPPORT_ADMIN,
     });
-    expect(String(res?.error?.errors?.[0]?.message)).toMatch(
-      /roleset-entry-role-invite/
+    expect(res?.error).toBeUndefined();
+    const created = getSingleInvitationResult(res);
+    expect(created?.type).toEqual(
+      RoleSetInvitationResultType.InvitedToPlatformAndRoleSet
     );
-    expect(res?.data).toBeUndefined();
+    const id = created!.platformInvitation!.id;
+
+    // The list the Community tab reads.
+    expect(
+      (await openList(TestUser.GLOBAL_SUPPORT_ADMIN)).map(p => p.id)
+    ).toContain(id);
+
+    // The first resend is allowed (a second within the cooldown is throttled).
+    const resend = await resendPlatformInvitation(
+      id,
+      TestUser.GLOBAL_SUPPORT_ADMIN
+    );
+    expect(resend?.error).toBeUndefined();
+    expect(resend?.data?.resendPlatformInvitation.id).toEqual(id);
+
+    const revoke = await deleteExternalInvitation(
+      id,
+      TestUser.GLOBAL_SUPPORT_ADMIN
+    );
+    expect(revoke?.error).toBeUndefined();
+    // Gone from the admin's list, not only from Support's.
+    expect((await openList()).map(p => p.id)).not.toContain(id);
   });
   test('boundary: a 128-character address is accepted and emailed', async () => {
     // 128 is the storage limit of the address. (A longer address is a known,

@@ -19,14 +19,16 @@ export class MyAccountPage {
   }
 
   get addSpaceButton() {
-    // CRD replaces the generic "Add" button with an explicit "Create Space"
-    // button in the Hosted Spaces section header.
-    return this.page.getByRole('button', { name: 'Create Space' });
+    // client-web#10437: the Hosted Spaces section (open by default) lists the
+    // hosted Space cards plus a dashed "Create New Space" tile — a
+    // `<button aria-label="Create new space">` (ContributorAccountView
+    // InlineCreateCard). The former header "Create Space" button is gone.
+    return this.page.getByRole('button', { name: 'Create new space', exact: true });
   }
 
   async openCreateSpaceDialog() {
     // Wait for the Hosted Spaces section to render before clicking, so the
-    // "Create Space" button is wired up (avoids a click that opens nothing).
+    // "Create new space" tile is wired up (avoids a click that opens nothing).
     await expect(this.hostedSpacesHeading).toBeVisible({ timeout: 15_000 });
     await this.addSpaceButton.waitFor({ state: 'visible', timeout: 15_000 });
     await this.addSpaceButton.click();

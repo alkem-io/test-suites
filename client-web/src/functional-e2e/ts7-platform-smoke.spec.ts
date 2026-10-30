@@ -9,6 +9,7 @@
 // NODE_ENV=development on the login-origin / id-token-hint code paths).
 
 import { test, expect } from '@playwright/test';
+import { readPlatformServiceVersions } from '@alkemio/tests-lib';
 import {
   navigateToLoginPageFromMenu,
 } from './authentication/login-page-objects';
@@ -21,9 +22,6 @@ import { expectSignedIn } from './my-dashboard/my-dashboard-page-objects';
 const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 const serverHealthUrl =
   process.env.ALKEMIO_SERVER_HEALTH_URL || 'http://localhost:4000/health/ready';
-const publicGraphqlUrl =
-  process.env.ALKEMIO_PUBLIC_GRAPHQL_URL ||
-  `${baseUrl}/api/public/graphql`;
 const adminEmail = process.env.AUTH_ADMIN_EMAIL || 'admin@alkem.io';
 const adminPassword = process.env.AUTH_TEST_HARNESS_PASSWORD || 'change_me';
 
@@ -51,21 +49,15 @@ test.describe(
       expect(body.status).toBe('ok');
     });
 
-    test('US2-AS2: unauthenticated platform-metadata query returns the platform version', async ({
-      request,
-    }) => {
-      const response = await request.post(publicGraphqlUrl, {
-        data: {
-          query:
-            '{ platform { metadata { services { name version } } } }',
-        },
-      });
-      expect(response.status()).toBe(200);
-      const body = await response.json();
-      const services = body?.data?.platform?.metadata?.services;
+    test('US2-AS2: unauthenticated platform-metadata query returns the platform version', async () => {
+      // Anonymous, on the PUBLIC GraphQL endpoint — the same request the
+      // walk made by hand before the lib carried it.
+      const response = await readPlatformServiceVersions({ anonymous: 'public' });
+      expect(response.status).toBe(200);
+      const services = response.data?.platform?.metadata?.services;
       expect(Array.isArray(services)).toBe(true);
-      expect(services.length).toBeGreaterThan(0);
-      expect(services[0].version).toMatch(/^\d+\.\d+\.\d+/);
+      expect(services!.length).toBeGreaterThan(0);
+      expect(services![0].version).toMatch(/^\d+\.\d+\.\d+/);
     });
 
     test('US2-AS3: login page renders and the local admin can sign in', async ({

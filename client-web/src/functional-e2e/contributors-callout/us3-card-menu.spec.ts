@@ -22,19 +22,20 @@ import {
   TestUserManager,
   UniqueIDGenerator,
   getGraphqlClient,
+  updateOrganizationData,
+  updateUserSettings,
 } from '@alkemio/tests-lib';
 import {
   RoleName,
   SpacePrivacyMode,
-} from '@alkemio/tests-lib/core/generated/graphql';
+} from '@alkemio/tests-lib';
 import {
   assignRoleToOrganization,
   assignRoleToVirtualContributor,
   assignRoleToUser,
 } from '@alkemio/tests-lib/scenario/baseFunctions';
-import { graphqlRequestAuth } from '@alkemio/tests-lib/utils/graphql.request';
 import { registerFixtureUser } from './cards-fixture';
-import { graphqlErrorWrapper } from '@alkemio/tests-lib/utils/graphql.wrapper';
+import { graphqlErrorWrapper } from '@alkemio/tests-lib';
 import { expect, type Route } from '@playwright/test';
 import { createAuthenticatedSessionFixture } from '../fixtures/authenticated-session.fixture';
 import { ContributorsCalloutPage } from './pages';
@@ -162,57 +163,30 @@ adminFixture.test.describe(
         );
       }
 
-      // Turn off receiving messages. Inlined (rather than importing the
-      // tests-lib helper of the same name) because that helper's module
-      // resolves its own internal `@src/*` imports against ITS package's
-      // tsconfig; pulled into client-web's compilation it collides with
-      // client-web's own `@src/*` alias.
-      const settingsResult = await graphqlRequestAuth(
-        {
-          operationName: 'DisableMessagingForUs3',
-          query: `mutation DisableMessagingForUs3($settingsData: UpdateUserSettingsInput!) {
-            updateUserSettings(settingsData: $settingsData) {
-              id
-              settings { communication { allowOtherUsersToSendMessages } }
-            }
-          }`,
-          variables: {
-            settingsData: {
-              userID: quietPersonaId,
-              settings: {
-                communication: { allowOtherUsersToSendMessages: false },
-              },
-            },
-          },
-        },
+      // Turn off receiving messages.
+      const settingsResult = await updateUserSettings(
+        quietPersonaId,
+        { communication: { allowOtherUsersToSendMessages: false } },
         TestUser.GLOBAL_ADMIN
       );
-      if (settingsResult.body.errors) {
+      if (settingsResult.error) {
         throw new Error(
-          `Unable to disable messaging for the quiet persona: ${JSON.stringify(settingsResult.body.errors)}`
+          `Unable to disable messaging for the quiet persona: ${JSON.stringify(settingsResult.error.errors)}`
         );
       }
 
       // A usable, absolute https website on the organisation card (AS7's
       // tab-stop order requires the website control to actually render).
-      const websiteResult = await graphqlRequestAuth(
+      const websiteResult = await updateOrganizationData(
         {
-          operationName: 'SetOrganizationWebsiteForUs3',
-          query: `mutation SetOrganizationWebsiteForUs3($organizationData: UpdateOrganizationInput!) {
-            updateOrganization(organizationData: $organizationData) { id website }
-          }`,
-          variables: {
-            organizationData: {
-              ID: baseScenario.organization.id,
-              website: ORG_WEBSITE,
-            },
-          },
+          ID: baseScenario.organization.id,
+          website: ORG_WEBSITE,
         },
         TestUser.GLOBAL_ADMIN
       );
-      if (websiteResult.body.errors) {
+      if (websiteResult.error) {
         throw new Error(
-          `Unable to set the organisation website: ${JSON.stringify(websiteResult.body.errors)}`
+          `Unable to set the organisation website: ${JSON.stringify(websiteResult.error.errors)}`
         );
       }
 

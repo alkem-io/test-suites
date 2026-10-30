@@ -7,7 +7,14 @@
 // The discussion is created by a Feature-role user and deleted through the API
 // at the end, whatever happened in between.
 import { expect, test as base, type Page } from '@playwright/test';
-import { platformRoleEmail, seedPlatformRoleUsers, TestUserManager } from '@alkemio/tests-lib';
+import {
+  deletePlatformDiscussion,
+  platformRoleEmail,
+  readPlatformForumDiscussions,
+  seedPlatformRoleUsers,
+  TestUser,
+  TestUserManager,
+} from '@alkemio/tests-lib';
 import { createPersonaTest } from '../fixtures/authenticated-session.fixture';
 
 const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
@@ -20,22 +27,10 @@ base.beforeAll(async () => {
 });
 base.afterAll(async () => {
   // Delete by title prefix as the bootstrap admin, so a failed test cannot leave it behind.
-  const gql = `${baseUrl}/api/private/non-interactive/graphql`;
-  const run = async (query: string, variables: Record<string, unknown> = {}) =>
-    (
-      await fetch(gql, {
-        method: 'POST',
-        headers: {
-          'content-type': 'application/json',
-          authorization: `Bearer ${TestUserManager.users.globalAdmin.authToken}`,
-        },
-        body: JSON.stringify({ query, variables }),
-      })
-    ).json();
-  const list = await run('{ platform { forum { discussions { id nameID } } } }');
+  const list = await readPlatformForumDiscussions(TestUser.GLOBAL_ADMIN);
   const mine: { id: string; nameID: string }[] = list.data?.platform.forum.discussions ?? [];
   for (const d of mine.filter(d => d.nameID.startsWith(title))) {
-    await run('mutation($id: UUID!) { deleteDiscussion(deleteData: { ID: $id }) { id } }', { id: d.id });
+    await deletePlatformDiscussion(d.id, TestUser.GLOBAL_ADMIN);
   }
 });
 

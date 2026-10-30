@@ -4,7 +4,14 @@
 // The post is created through the API (GA) and deleted through the API at
 // the end, whatever happened in between.
 import { expect } from '@playwright/test';
-import { TestUserManager } from '@alkemio/tests-lib';
+import {
+  createPlatformDiscussion,
+  deletePlatformDiscussion,
+  ForumDiscussionCategory,
+  readPlatformForumDiscussions,
+  TestUser,
+  TestUserManager,
+} from '@alkemio/tests-lib';
 import { createPersonaTest } from '../fixtures/authenticated-session.fixture';
 
 const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
@@ -12,50 +19,29 @@ const title = `forum-e2e-move-${Math.random().toString(36).slice(2, 7)}`;
 let discussionId = '';
 let permalink = '';
 
-const gql = async (query: string, variables: Record<string, unknown> = {}) => {
-  const res = await fetch(`${baseUrl}/api/private/non-interactive/graphql`, {
-    method: 'POST',
-    headers: {
-      'content-type': 'application/json',
-      authorization: `Bearer ${TestUserManager.users.globalAdmin.authToken}`,
-    },
-    body: JSON.stringify({ query, variables }),
-  });
-  return res.json();
-};
-
 const test = createPersonaTest('admin@alkem.io');
 
 test.beforeAll(async () => {
   await TestUserManager.populateUserModelMap();
-  const forumRes = await gql('{ platform { forum { id } } }');
+  const forumRes = await readPlatformForumDiscussions(TestUser.GLOBAL_ADMIN);
   const forumId = forumRes.data?.platform.forum.id;
-  const created = await gql(
-    `mutation($createData: ForumCreateDiscussionInput!) {
-       createDiscussion(createData: $createData) {
-         id
-         profile { url }
-       }
-     }`,
+  const created = await createPlatformDiscussion(
+    forumId ?? '',
     {
-      createData: {
-        forumID: forumId,
-        profile: { displayName: title, description: 'Created by the forum E2E suite.' },
-        category: 'HELP',
-      },
-    }
+      title,
+      description: 'Created by the forum E2E suite.',
+      category: ForumDiscussionCategory.Help,
+    },
+    TestUser.GLOBAL_ADMIN
   );
-  discussionId = created.data?.createDiscussion?.id;
-  permalink = created.data?.createDiscussion?.profile?.url;
+  discussionId = created.data?.createDiscussion?.id ?? '';
+  permalink = created.data?.createDiscussion?.profile?.url ?? '';
   expect(discussionId, 'API discussion creation must succeed').toBeTruthy();
 });
 
 test.afterAll(async () => {
   if (discussionId) {
-    await gql(
-      'mutation($id: UUID!) { deleteDiscussion(deleteData: { ID: $id }) { id } }',
-      { id: discussionId }
-    );
+    await deletePlatformDiscussion(discussionId, TestUser.GLOBAL_ADMIN);
   }
 });
 

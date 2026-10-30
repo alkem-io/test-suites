@@ -14,7 +14,7 @@ import {
   TestUserManager,
   updateSpaceSettings,
 } from '@alkemio/tests-lib';
-import { SpacePrivacyMode } from '@alkemio/tests-lib/core/generated/alkemio-schema';
+import { SpacePrivacyMode } from '@alkemio/tests-lib';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import { createPersonaTest } from '../fixtures/authenticated-session.fixture';
 

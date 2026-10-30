@@ -1,0 +1,3 @@
+query ReadVirtualContributorVisibility($virtualContributorId: UUID!) {
+  lookup { virtualContributor(ID: $virtualContributorId) { id searchVisibility listedInStore } }
+}

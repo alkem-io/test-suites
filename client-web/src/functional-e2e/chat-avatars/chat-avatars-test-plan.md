@@ -115,10 +115,32 @@ independently asserted.
 | US2-AS1 | Group without a custom photo: the header composite equals the list row's, image for image and fallback for fallback (FR-002) | `us2-group-header-identity.spec.ts` › US2-AS1 |
 | US2-AS2 | Setting a group photo replaces the composite with the photo, in header and list alike | `us2-…` › US2-AS2 |
 | US2-AS3 | Changing the photo again updates both surfaces to the new image | `us2-…` › US2-AS3 |
-| US2-AS4 | More than four other participants → both surfaces show the same 4-avatar subset, same order | `us2-…` › US2-AS4 |
+| US2-AS4 | More than four other participants → both surfaces show the same capped composite (three faces + a "+N" tile since client-web#10427), same order | `us2-…` › US2-AS4 |
 | US3-AS1 | 1:1 header shows the other person's profile picture, identical to their list row, alongside their name (FR-001) | `us3-direct-thread-header-identity.spec.ts` › US3-AS1 |
 | US3-AS2 | 1:1 header for a person who never uploaded a picture uses the **same** treatment as their list row, and shows their identity rather than the other contact's | `us3-…` › US3-AS2 |
 | US3-AS3 | 1:1 message bubbles are untouched — no gutter, no avatar, no injected attribution, incoming or outgoing (FR-011) | `us3-…` › US3-AS3 |
+
+## Environment precondition — the browser → Matrix send path
+
+Since client-web#10365 the composer sends straight to the Matrix homeserver the
+client is built against (`VITE_APP_MATRIX_HOMESERVER_URL`). Where the browser
+cannot reach that host every send ends in the alert "Send was not confirmed",
+whatever the product does — on **test-alkem.io** that has been the case since
+2026-10-21 because the zone has no `matrix.` A record
+(alkem-io/infrastructure-provisioning#51; ACC and the local stack resolve
+theirs). `chat-avatars.helpers.ts::matrixSendPath` probes
+`<homeserver>/_matrix/client/versions` from Node once per file and the walks
+that type a message — all of US1, and US3-AS3 — `test.skip` with that reason
+**only when the host has no DNS record (`ENOTFOUND`)**. Any HTTP status, a
+refused connection, a bad certificate, a time-out or a malformed URL counts as
+reachable and the walk runs (and goes red) — those can be product or config
+regressions, a missing zone record cannot. US1 probes from a throw-away page
+before registering anyone, so a dead path costs seconds, not the full set-up.
+The skip lifts itself the moment the record exists; US2 and US3-AS1/AS2 never
+send, so they run regardless. Added after nightly run 40707979543 (2026-10-28)
+so the nightly reads green/red on product behaviour only. Until #51 is closed
+the P1 US1 walks run on no night on test-alkem.io: run them on ACC (where the
+probe answers) before signing off chat avatars.
 
 ## Not covered — known gaps
 

@@ -10,8 +10,8 @@
 import { test, expect, type BrowserContext, type Page } from '@playwright/test';
 import { getGraphqlClient, TestUserManager } from '@alkemio/tests-lib';
 import { TestUser } from '@alkemio/tests-lib/common/enums/test.user';
-import { SidebarWidget } from '@alkemio/tests-lib/core/generated/alkemio-schema';
-import { graphqlErrorWrapper } from '@alkemio/tests-lib/utils/graphql.wrapper';
+import { SidebarWidget } from '@alkemio/tests-lib';
+import { graphqlErrorWrapper } from '@alkemio/tests-lib';
 import {
   L0_DEFAULT_SIDEBARS,
   WIDGET_LABEL,
@@ -28,6 +28,7 @@ import {
   widgets,
   type SidebarFixture,
 } from './sidebar-widgets.helpers';
+import { keyboardDrag } from './subspace-sidebar.helpers';
 
 // Admin sessions must never reach the public trace/video archive (see us2-expanded-card-switch).
 test.use({ trace: 'off', video: 'off' });
@@ -184,22 +185,19 @@ test.describe('@forge-acceptance US2 — admin sidebar configuration (Space Sett
     await dialog
       .getByRole('checkbox', { name: 'Toggle Upcoming Events' })
       .check();
-    // dnd-kit keyboard sensor: lift, one step up, drop — repeated until the row leads.
-    const handle = dialog.getByRole('button', {
-      name: 'Reorder Upcoming Events',
-    });
-    await expect
-      .poll(
-        async () => {
-          await handle.focus();
-          await admin.keyboard.press('Space');
-          await admin.keyboard.press('ArrowUp');
-          await admin.keyboard.press('Space');
-          return (await selectedWidgetLabels(dialog))[0];
-        },
-        { timeout: 20_000 }
-      )
-      .toBe(WIDGET_LABEL[SidebarWidget.Events]);
+    // dnd-kit keyboard sensor: lift, press ArrowUp a step at a time until the live region
+    // announces the row is over the first sortable (`intent`), drop. A blind
+    // Space/ArrowUp/Space burst drops the arrow pressed before dnd-kit has measured its
+    // droppables (red on every nightly since client-web#10444; plan U-1).
+    await keyboardDrag(
+      admin,
+      dialog.getByRole('button', { name: 'Reorder Upcoming Events' }),
+      'ArrowUp',
+      'intent'
+    );
+    expect((await selectedWidgetLabels(dialog))[0]).toBe(
+      WIDGET_LABEL[SidebarWidget.Events]
+    );
     const expected = [SidebarWidget.Events, ...L0_DEFAULT_SIDEBARS[1]];
     expect(await selectedWidgetLabels(dialog)).toEqual(labelsOf(expected));
     await dialog.getByRole('button', { name: 'Save' }).click();

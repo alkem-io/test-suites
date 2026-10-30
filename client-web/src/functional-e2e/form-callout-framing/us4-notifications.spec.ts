@@ -1,8 +1,31 @@
 import { randomUUID } from 'node:crypto';
 import { execSync } from 'node:child_process';
 import { expect, type Browser, type Page, test } from '@playwright/test';
-import { harnessPostgresConfigured, queryHarnessDb } from '@alkemio/tests-lib';
+import {
+  assignRoleToUser,
+  CalloutFormQuestionType,
+  CalloutFormResponseMode,
+  CalloutFormResponseVisibility,
+  CalloutFramingType,
+  CalloutVisibility,
+  createCalloutWithData,
+  createSpaceOnAccount,
+  createSubspaceWithData,
+  harnessPostgresConfigured,
+  queryHarnessDb,
+  readMyNotifications,
+  readMyUser,
+  RoleName,
+  SpacePrivacyMode,
+  submitCalloutFormResponse,
+  subscribeToPushNotifications,
+  updateCalloutVisibility,
+  type CreateCalloutFormQuestionInput,
+  type CreateCalloutFormSettingsInput,
+  type GraphqlActor,
+} from '@alkemio/tests-lib';
 import { fillSecret } from '../helpers/login.helper';
+import { must } from '../helpers/lib-actor.helper';
 
 /**
  * workspace#080-form-callout-framing — User Story 4 (P1): Notifications on
@@ -65,7 +88,6 @@ const RMQ_AUTH = `Basic ${Buffer.from(
 ).toString('base64')}`;
 const STOP_CMD = process.env.NOTIFICATIONS_STOP_CMD || '';
 const START_CMD = process.env.NOTIFICATIONS_START_CMD || '';
-const GRAPHQL = `${BASE}/api/private/non-interactive/graphql`;
 // Per-run secret for the throwaway identities this walk provisions (override with
 // FORGE_PERSONA_PASSWORD); a fixed literal would leave them loginable after the run.
 const USER_PASSWORD =
@@ -103,31 +125,14 @@ async function mintToken(userEmail: string, password: string) {
   return token;
 }
 
-type GqlResult<T = any> = { data?: T; errors?: Array<any> };
-
-async function gql<T = any>(
-  userEmail: string,
-  query: string,
-  variables: Record<string, unknown> = {}
-): Promise<GqlResult<T>> {
-  const token = await mintToken(
-    userEmail,
-    userEmail === ADMIN_EMAIL ? ADMIN_PASSWORD : USER_PASSWORD
-  );
-  const res = await fetch(GRAPHQL, {
-    method: 'POST',
-    headers: {
-      'content-type': 'application/json',
-      authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify({ query, variables }),
-  });
-  return (await res.json()) as GqlResult<T>;
-}
-
-function must<T = any>(result: GqlResult<T>, what: string): T {
-  expect(result.errors, `${what}: ${JSON.stringify(result.errors)}`).toBeUndefined();
-  return result.data as T;
+/** The lib actor for one of this run's identities: its bearer, minted once. */
+async function actorFor(userEmail: string): Promise<GraphqlActor> {
+  return {
+    bearerToken: await mintToken(
+      userEmail,
+      userEmail === ADMIN_EMAIL ? ADMIN_PASSWORD : USER_PASSWORD
+    ),
+  };
 }
 
 async function createIdentity(userEmail: string, first: string, last: string) {
@@ -148,8 +153,8 @@ async function createIdentity(userEmail: string, first: string, last: string) {
 }
 
 async function meId(userEmail: string) {
-  const data = must(await gql(userEmail, '{ me { user { id } } }'), 'me');
-  return data.me.user.id as string;
+  const data = must(await readMyUser(await actorFor(userEmail)), 'me');
+  return data.me.user!.id;
 }
 
 // ---------------------------------------------------------------------------
@@ -206,12 +211,20 @@ const fixture = {
   subRoleSetId: '',
 };
 
-const QUESTIONS = [
-  { prompt: 'What is your name?', type: 'SHORT_TEXT', required: true },
-  { prompt: 'Tell us more', type: 'LONG_TEXT', required: false },
+const QUESTIONS: CreateCalloutFormQuestionInput[] = [
+  {
+    prompt: 'What is your name?',
+    type: CalloutFormQuestionType.ShortText,
+    required: true,
+  },
+  {
+    prompt: 'Tell us more',
+    type: CalloutFormQuestionType.LongText,
+    required: false,
+  },
   {
     prompt: 'Pick one',
-    type: 'SINGLE_CHOICE',
+    type: CalloutFormQuestionType.SingleChoice,
     required: false,
     options: [{ label: 'Alpha' }, { label: 'Beta' }],
   },
@@ -227,95 +240,69 @@ type FormFixture = {
 
 async function createForm(
   name: string,
-  settings: Record<string, unknown>
+  settings: CreateCalloutFormSettingsInput
 ): Promise<FormFixture> {
+  const a2 = await actorFor(personaEmail.a2);
   const created = must(
-    await gql(
-      personaEmail.a2,
-      `mutation ($d: CreateCalloutOnCalloutsSetInput!) {
-        createCalloutOnCalloutsSet(calloutData: $d) {
-          id
-          framing { profile { url } form { id questions { id options { id } } } }
-        }
-      }`,
+    await createCalloutWithData(
       {
-        d: {
-          calloutsSetID: fixture.calloutsSetId,
-          sendNotification: false,
-          framing: {
-            type: 'FORM',
-            profile: { displayName: name, description: 'US4 form' },
-            form: { questions: QUESTIONS, settings },
-          },
-          settings: {
-            visibility: 'DRAFT',
-            contribution: { enabled: false },
-            framing: { commentsEnabled: false },
-          },
+        calloutsSetID: fixture.calloutsSetId,
+        sendNotification: false,
+        framing: {
+          type: CalloutFramingType.Form,
+          profile: { displayName: name, description: 'US4 form' },
+          form: { questions: QUESTIONS, settings },
         },
-      }
+        settings: {
+          visibility: CalloutVisibility.Draft,
+          contribution: { enabled: false },
+          framing: { commentsEnabled: false },
+        },
+      },
+      a2
     ),
     'create form'
   ).createCalloutOnCalloutsSet;
   must(
-    await gql(
-      personaEmail.a2,
-      `mutation ($d: UpdateCalloutVisibilityInput!) {
-        updateCalloutVisibility(calloutData: $d) { id }
-      }`,
-      {
-        d: {
-          calloutID: created.id,
-          visibility: 'PUBLISHED',
-          sendNotification: false,
-        },
-      }
+    await updateCalloutVisibility(
+      created.id,
+      CalloutVisibility.Published,
+      a2,
+      false
     ),
     'publish form'
   );
   return {
     name,
     url: created.framing.profile.url,
-    formId: created.framing.form.id,
+    formId: created.framing.form!.id,
     calloutId: created.id,
-    questions: created.framing.form.questions,
+    questions: created.framing.form!.questions,
   };
 }
 
 async function submit(persona: Persona, form: FormFixture, marker: string) {
   const [name, more, pick] = form.questions;
-  const result = await gql(
-    personaEmail[persona],
-    `mutation ($d: SubmitCalloutFormResponseInput!) {
-      submitCalloutFormResponse(responseData: $d) { id createdBy { id } }
-    }`,
+  const result = await submitCalloutFormResponse(
     {
-      d: {
-        formID: form.formId,
-        acknowledgedVisibility: 'ADMINS',
-        answers: [
-          { questionID: name.id, text: marker },
-          { questionID: more.id, text: `more ${marker}` },
-          { questionID: pick.id, selectedOptionIDs: [pick.options![0].id] },
-        ],
-      },
-    }
+      formID: form.formId,
+      acknowledgedVisibility: CalloutFormResponseVisibility.Admins,
+      answers: [
+        { questionID: name.id, text: marker },
+        { questionID: more.id, text: `more ${marker}` },
+        { questionID: pick.id, selectedOptionIDs: [pick.options![0].id] },
+      ],
+    },
+    await actorFor(personaEmail[persona])
   );
-  return must(result, `submit as ${persona}`).submitCalloutFormResponse.id as string;
+  return must(result, `submit as ${persona}`).submitCalloutFormResponse.id;
 }
 
 const inApp = async (persona: Persona) =>
   must(
-    await gql(
-      personaEmail[persona],
-      `{ me { notifications(first: 100) { inAppNotifications {
-          id type
-          triggeredBy { id }
-          payload { __typename ... on InAppNotificationPayloadSpaceCollaborationCallout {
-            callout { id framing { profile { url displayName } } }
-          } }
-      } } } }`
-    ),
+    await readMyNotifications(await actorFor(personaEmail[persona]), {
+      first: 100,
+    }),
     'in-app'
   ).me.notifications.inAppNotifications as Array<{
     id: string;
@@ -411,104 +398,75 @@ test.describe(
         fixture.userIds[p] = await meId(personaEmail[p]);
       }
 
-      const admin = ADMIN_EMAIL;
-      const account = must(
-        await gql(admin, '{ me { user { account { id } } } }'),
-        'account'
-      ).me.user.account.id as string;
+      const admin = await actorFor(ADMIN_EMAIL);
+      const account = must(await readMyUser(admin), 'account').me.user!
+        .account!.id;
       const space = must(
-        await gql(
-          admin,
-          `mutation ($d: CreateSpaceOnAccountInput!) {
-            createSpace(spaceData: $d) {
-              id about { membership { roleSetID } }
-            }
-          }`,
+        await createSpaceOnAccount(
           {
-            d: {
-              accountID: account,
-              nameID: `us4-space-${RUN}`,
-              about: { profileData: { displayName: SPACE_NAME } },
-              collaborationData: { calloutsSetData: {} },
-              settings: { privacy: { mode: 'PUBLIC' } },
-            },
-          }
+            accountID: account,
+            nameID: `us4-space-${RUN}`,
+            about: { profileData: { displayName: SPACE_NAME } },
+            collaborationData: { calloutsSetData: {} },
+            settings: { privacy: { mode: SpacePrivacyMode.Public } },
+          },
+          admin
         ),
         'create space'
       ).createSpace;
       const sub = must(
-        await gql(
-          admin,
-          `mutation ($d: CreateSubspaceInput!) {
-            createSubspace(subspaceData: $d) {
-              id
-              about { membership { roleSetID } }
-              collaboration { calloutsSet { id } }
-            }
-          }`,
+        await createSubspaceWithData(
           {
-            d: {
-              spaceID: space.id,
-              nameID: `us4-sub-${RUN}`,
-              about: { profileData: { displayName: SUB_NAME } },
-              collaborationData: { calloutsSetData: {} },
-            },
-          }
+            spaceID: space.id,
+            nameID: `us4-sub-${RUN}`,
+            about: { profileData: { displayName: SUB_NAME } },
+            collaborationData: { calloutsSetData: {} },
+          },
+          admin
         ),
         'create subspace'
       ).createSubspace;
       fixture.calloutsSetId = sub.collaboration.calloutsSet.id;
       fixture.subRoleSetId = sub.about.membership.roleSetID;
 
-      const assign = async (roleSetID: string, p: Persona, role: string) =>
+      const assign = async (roleSetID: string, p: Persona, role: RoleName) =>
         must(
-          await gql(
-            admin,
-            `mutation ($d: AssignRoleOnRoleSetInput!) {
-              assignRoleToUser(roleData: $d) { id }
-            }`,
-            { d: { actorID: fixture.userIds[p], role, roleSetID } }
-          ),
+          await assignRoleToUser(fixture.userIds[p], roleSetID, role, admin),
           `assign ${p} ${role}`
         );
-      const spaceRoleSet = space.about.membership.roleSetID as string;
+      const spaceRoleSet = space.about.membership.roleSetID;
       for (const p of ['sa', 'a2', 'm1'] as Persona[]) {
-        await assign(spaceRoleSet, p, 'MEMBER');
+        await assign(spaceRoleSet, p, RoleName.Member);
       }
-      await assign(spaceRoleSet, 'sa', 'ADMIN');
+      await assign(spaceRoleSet, 'sa', RoleName.Admin);
       for (const p of ['a2', 'm1'] as Persona[]) {
-        await assign(fixture.subRoleSetId, p, 'MEMBER');
+        await assign(fixture.subRoleSetId, p, RoleName.Member);
       }
-      await assign(fixture.subRoleSetId, 'a2', 'ADMIN');
+      await assign(fixture.subRoleSetId, 'a2', RoleName.Admin);
 
       // A2 (default settings) gets one active push subscription so the push
       // emit is a real, countable assertion.
       const uid = `us4-a2-${RUN}`;
       must(
-        await gql(
-          personaEmail.a2,
-          `mutation ($d: SubscribeToPushNotificationsInput!) {
-            subscribeToPushNotifications(subscriptionData: $d) { id status }
-          }`,
+        await subscribeToPushNotifications(
           {
-            d: {
-              endpoint: `https://fcm.googleapis.com/fcm/send/${uid}`,
-              p256dh: `BNcRdreALRFXTkOOUHK1EtK2wtaz5Ry4YfYCA_0QTpQtUbVlUls0VJXg7A8u-Ts1XbjhazAkj7I99e8p8REfXPQ-${uid}`,
-              auth: `tBHItJI5svbpC7htN-${uid.slice(0, 8)}`,
-              userAgent: 'us4-forge-acceptance',
-            },
-          }
+            endpoint: `https://fcm.googleapis.com/fcm/send/${uid}`,
+            p256dh: `BNcRdreALRFXTkOOUHK1EtK2wtaz5Ry4YfYCA_0QTpQtUbVlUls0VJXg7A8u-Ts1XbjhazAkj7I99e8p8REfXPQ-${uid}`,
+            auth: `tBHItJI5svbpC7htN-${uid.slice(0, 8)}`,
+            userAgent: 'us4-forge-acceptance',
+          },
+          await actorFor(personaEmail.a2)
         ),
         'push subscribe'
       );
 
       one = await createForm(`US4 Form One ${RUN}`, {
-        visibility: 'ADMINS',
-        responseMode: 'SINGLE',
+        visibility: CalloutFormResponseVisibility.Admins,
+        responseMode: CalloutFormResponseMode.Single,
       });
       multi = await createForm(`US4 Form Multi ${RUN}`, {
-        visibility: 'ADMINS',
-        responseMode: 'MULTIPLE',
+        visibility: CalloutFormResponseVisibility.Admins,
+        responseMode: CalloutFormResponseMode.Multiple,
       });
     });
 

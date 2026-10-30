@@ -12,7 +12,7 @@ import {
   UniqueIDGenerator,
 } from '@alkemio/tests-lib';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
-import { RoleName } from '@alkemio/tests-lib/core/generated/alkemio-schema';
+import { RoleName } from '@alkemio/tests-lib';
 import {
   createAuthenticatedSessionFixture,
   ensurePersonaState,
@@ -26,14 +26,13 @@ import {
   gotoMembershipTab,
   inviteAndAccept,
   makePersonaUserMember,
-  membershipCard,
-  membershipCards,
+  membershipRow,
+  membershipRows,
   membershipTabUrl,
-  openCardMenu,
   removeAllOrgSpaceRoles,
   removeOrgRoleIfHeld,
   summaryLine,
-  viewMenuItem,
+  viewRowLink,
 } from './organization-space-membership.helpers';
 
 /**
@@ -74,9 +73,9 @@ const scenarioConfig: TestScenarioConfig = {
 const spaceName = () => baseScenario!.space.about.profile.displayName;
 const subspaceName = () => baseScenario!.subspace.about.profile.displayName;
 
-const openTabWithCards = (page: Page, count: number) =>
+const openTabWithRows = (page: Page, count: number) =>
   gotoMembershipTab(page, baseScenario!.organization.nameId, async p => {
-    await expect(membershipCards(p)).toHaveCount(count, { timeout: 10_000 });
+    await expect(membershipRows(p)).toHaveCount(count, { timeout: 10_000 });
   });
 
 test.describe('Organization Membership tab — list, search, filter @forge-acceptance', () => {
@@ -87,7 +86,7 @@ test.describe('Organization Membership tab — list, search, filter @forge-accep
     test.setTimeout(180_000);
     baseScenario = await TestScenarioFactory.createBaseScenario(scenarioConfig);
     await clearHostLead(baseScenario);
-    // The persona must be able to READ S and S1, or their cards are hidden.
+    // The persona must be able to READ S and S1, or their rows are hidden.
     await makePersonaUserMember(baseScenario!.space.community.roleSetId, [
       baseScenario!.subspace.community.roleSetId,
     ]);
@@ -144,7 +143,7 @@ test.describe('Organization Membership tab — list, search, filter @forge-accep
   test('US1-AS1 tab lists the Space and Subspace memberships', async ({
     page,
   }) => {
-    await openTabWithCards(page, 2);
+    await openTabWithRows(page, 2);
 
     // The Membership tab sits between Associates and Invitations.
     const tabLabels = (
@@ -155,17 +154,26 @@ test.describe('Organization Membership tab — list, search, filter @forge-accep
     expect(tabLabels[membershipIndex - 1]).toBe(COPY.tabBefore);
     expect(tabLabels[membershipIndex + 1]).toBe(COPY.tabAfter);
 
-    const spaceCard = membershipCard(page, spaceName());
-    const subspaceCard = membershipCard(page, subspaceName());
-    await expect(spaceCard.getByText('Space', { exact: true })).toBeVisible();
+    // The rows carry no "Space"/"Subspace" label since client-web#10437; the
+    // kind shows in where the name links (S1 lives under S) and in the
+    // Spaces/Subspaces filter (US1-AS2).
+    const spaceRow = membershipRow(page, spaceName());
+    const subspaceRow = membershipRow(page, subspaceName());
+    await expect(viewRowLink(page, spaceName())).toHaveAttribute(
+      'href',
+      new RegExp(`/${baseScenario!.space.nameId}$`)
+    );
+    await expect(viewRowLink(page, subspaceName())).toHaveAttribute(
+      'href',
+      new RegExp(
+        `/${baseScenario!.space.nameId}/challenges/${baseScenario!.subspace.nameId}$`
+      )
+    );
     await expect(
-      subspaceCard.getByText('Subspace', { exact: true })
+      spaceRow.getByText(COPY.roleMember, { exact: true })
     ).toBeVisible();
     await expect(
-      spaceCard.getByText(COPY.roleMember, { exact: true })
-    ).toBeVisible();
-    await expect(
-      subspaceCard.getByText(COPY.roleMember, { exact: true })
+      subspaceRow.getByText(COPY.roleMember, { exact: true })
     ).toBeVisible();
     await expect(summaryLine(page, 2, 2)).toBeVisible();
   });
@@ -173,22 +181,22 @@ test.describe('Organization Membership tab — list, search, filter @forge-accep
   test('US1-AS2 search narrows by name and the filter splits Spaces from Subspaces', async ({
     page,
   }) => {
-    await openTabWithCards(page, 2);
+    await openTabWithRows(page, 2);
     const search = page.getByPlaceholder(COPY.searchPlaceholder);
 
     await search.fill(subspaceName());
-    await expect(membershipCards(page)).toHaveCount(1);
-    await expect(membershipCard(page, subspaceName())).toBeVisible();
+    await expect(membershipRows(page)).toHaveCount(1);
+    await expect(membershipRow(page, subspaceName())).toBeVisible();
     await expect(summaryLine(page, 1, 2)).toBeVisible();
 
     await search.fill('');
-    await expect(membershipCards(page)).toHaveCount(2);
+    await expect(membershipRows(page)).toHaveCount(2);
 
     await page
       .getByRole('button', { name: COPY.filterSubspaces, exact: true })
       .click();
-    await expect(membershipCards(page)).toHaveCount(1);
-    await expect(membershipCard(page, subspaceName())).toBeVisible();
+    await expect(membershipRows(page)).toHaveCount(1);
+    await expect(membershipRow(page, subspaceName())).toBeVisible();
     await expect(
       page.getByRole('button', { name: COPY.filterSubspaces, exact: true })
     ).toHaveAttribute('aria-pressed', 'true');
@@ -196,26 +204,26 @@ test.describe('Organization Membership tab — list, search, filter @forge-accep
     await page
       .getByRole('button', { name: COPY.filterSpaces, exact: true })
       .click();
-    await expect(membershipCards(page)).toHaveCount(1);
-    await expect(membershipCard(page, spaceName())).toBeVisible();
+    await expect(membershipRows(page)).toHaveCount(1);
+    await expect(membershipRow(page, spaceName())).toBeVisible();
 
     await page
       .getByRole('button', { name: COPY.filterAll, exact: true })
       .click();
-    await expect(membershipCards(page)).toHaveCount(2);
+    await expect(membershipRows(page)).toHaveCount(2);
   });
 
   test('US1-AS3 nothing matches → No memberships found, Clear Filters resets', async ({
     page,
   }) => {
-    await openTabWithCards(page, 2);
+    await openTabWithRows(page, 2);
     const search = page.getByPlaceholder(COPY.searchPlaceholder);
 
     await page
       .getByRole('button', { name: COPY.filterSpaces, exact: true })
       .click();
     await search.fill(`zz-no-such-space-${runSuffix}`);
-    await expect(membershipCards(page)).toHaveCount(0);
+    await expect(membershipRows(page)).toHaveCount(0);
     await expect(
       page.getByText(COPY.filteredEmptyTitle, { exact: true })
     ).toBeVisible();
@@ -227,16 +235,14 @@ test.describe('Organization Membership tab — list, search, filter @forge-accep
     await expect(
       page.getByRole('button', { name: COPY.filterAll, exact: true })
     ).toHaveAttribute('aria-pressed', 'true');
-    await expect(membershipCards(page)).toHaveCount(2);
+    await expect(membershipRows(page)).toHaveCount(2);
     await expect(summaryLine(page, 2, 2)).toBeVisible();
   });
 
   test('US1-AS6 View Space opens the Space', async ({ page }) => {
-    await openTabWithCards(page, 2);
-    const spaceCard = membershipCard(page, spaceName());
+    await openTabWithRows(page, 2);
 
-    await openCardMenu(spaceCard);
-    await viewMenuItem(page, 'Space').click();
+    await viewRowLink(page, spaceName()).click();
 
     await expect(page).toHaveURL(
       new RegExp(`/${baseScenario!.space.nameId}(?:[/?#]|$)`)
@@ -259,12 +265,12 @@ test.describe('Organization Membership tab — list, search, filter @forge-accep
         RoleName.Lead,
       ]);
 
-      await openTabWithCards(page, 3);
+      await openTabWithRows(page, 3);
       await expect(
-        membershipCard(page, leadName).getByText(COPY.roleLead, { exact: true })
+        membershipRow(page, leadName).getByText(COPY.roleLead, { exact: true })
       ).toBeVisible();
       await expect(
-        membershipCard(page, subspaceName()).getByText(COPY.roleMember, {
+        membershipRow(page, subspaceName()).getByText(COPY.roleMember, {
           exact: true,
         })
       ).toBeVisible();
@@ -317,7 +323,7 @@ test.describe('Organization Membership tab — list, search, filter @forge-accep
   // Known client-web defect — https://github.com/alkem-io/client-web/issues/10415
   // Today: the settings shell's "Profile" title and the tab's own title race,
   // and the tab loses even after in-app tab navigation — the nightly of
-  // 2026-10-12 read "(8) Profile | Alkemio" with the Membership cards already
+  // 2026-10-12 read "(8) Profile | Alkemio" with the Membership rows already
   // rendered, so the in-app-navigation workaround does not hold either.
   // Drop the .skip when the fix lands; the assertion is the acceptance oracle
   // and must not be softened.
@@ -325,10 +331,10 @@ test.describe('Organization Membership tab — list, search, filter @forge-accep
     page,
   }) => {
     test.setTimeout(90_000);
-    await openTabWithCards(page, 2);
+    await openTabWithRows(page, 2);
     await page.getByRole('tab', { name: COPY.tabAfter, exact: true }).click();
     await page.getByRole('tab', { name: COPY.tab, exact: true }).click();
-    await expect(membershipCards(page)).toHaveCount(2);
+    await expect(membershipRows(page)).toHaveCount(2);
     await expect(page).toHaveTitle(/Membership/);
   });
 
@@ -336,7 +342,7 @@ test.describe('Organization Membership tab — list, search, filter @forge-accep
     page,
   }) => {
     test.setTimeout(90_000);
-    await openTabWithCards(page, 2);
+    await openTabWithRows(page, 2);
     await expect(
       page
         .getByRole('navigation', { name: 'breadcrumb' })
@@ -355,7 +361,7 @@ test.describe('Organization Membership tab — list, search, filter @forge-accep
     // key-parity unit test plus a manual check (see the test plan).
   });
 
-  test('US1-AS9 skeleton while loading, never the empty caption before the cards', async ({
+  test('US1-AS9 skeleton while loading, never the empty caption before the rows', async ({
     page,
   }) => {
     let releaseRoles!: () => void;
@@ -388,7 +394,7 @@ test.describe('Organization Membership tab — list, search, filter @forge-accep
     await expect(page.getByText(COPY.empty, { exact: true })).toHaveCount(0);
 
     releaseRoles();
-    await expect(membershipCards(page)).toHaveCount(2, { timeout: 15_000 });
+    await expect(membershipRows(page)).toHaveCount(2, { timeout: 15_000 });
     await expect(page.getByText(COPY.empty, { exact: true })).toHaveCount(0);
     await page.unroute(/graphql/);
   });

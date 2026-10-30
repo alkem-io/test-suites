@@ -13,9 +13,10 @@
 
 import { test, expect, Page } from '@playwright/test';
 import {
+  deleteUser,
   getRecoveryLinkFor,
   getUserToken,
-  postGraphqlRaw,
+  readMyUser,
   registerInKratosOrFail,
   TestUser,
   UniqueIDGenerator,
@@ -82,24 +83,22 @@ test.describe('Authentication - Password Recovery Flows', () => {
     // First authenticated contact creates the Alkemio user; capture its id so
     // afterAll can remove user AND identity.
     const token = await getUserToken(recoveryEmail);
-    const me = await postGraphqlRaw<{ me: { user: { id: string } | null } }>(
-      '{ me { user { id } } }',
-      { bearerToken: token }
-    );
-    recoveryUserId = me.body.data?.me?.user?.id;
+    const me = await readMyUser({ bearerToken: token });
+    recoveryUserId = me.data?.me?.user?.id;
     expect(recoveryUserId, `Alkemio user for ${recoveryEmail}`).toBeTruthy();
   });
 
   test.afterAll(async () => {
     if (!recoveryUserId) return;
     // User AND Kratos identity, so the address is free for the next run.
-    const res = await postGraphqlRaw(
-      'mutation($id: UUID!) { deleteUser(deleteData: { ID: $id, deleteIdentity: true }) { id } }',
-      { variables: { id: recoveryUserId }, bearerToken: await getUserToken(TestUser.GLOBAL_ADMIN + '@alkem.io') }
+    const res = await deleteUser(
+      recoveryUserId,
+      { bearerToken: await getUserToken(TestUser.GLOBAL_ADMIN + '@alkem.io') },
+      true
     );
-    if (res.body.errors) {
+    if (res.error) {
       throw new Error(
-        `could not remove the disposable recovery identity ${recoveryEmail}: ${JSON.stringify(res.body.errors)}`
+        `could not remove the disposable recovery identity ${recoveryEmail}: ${JSON.stringify(res.error.errors)}`
       );
     }
   });

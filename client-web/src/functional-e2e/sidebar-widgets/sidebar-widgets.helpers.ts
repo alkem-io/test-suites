@@ -5,23 +5,24 @@ import {
   type Locator,
   type Page,
 } from '@playwright/test';
-import { GraphQLClient } from 'graphql-request';
 import {
   deleteOrganization,
   deleteSpace,
   getGraphqlClient,
-  testConfiguration,
+  readSpaceGuidelinesId,
   TestScenarioFactory,
   UniqueIDGenerator,
+  updateCommunityGuidelines,
 } from '@alkemio/tests-lib';
 import { TestUser } from '@alkemio/tests-lib/common/enums/test.user';
 import {
   CalendarEventType,
   SidebarWidget,
-} from '@alkemio/tests-lib/core/generated/alkemio-schema';
-import { graphqlErrorWrapper } from '@alkemio/tests-lib/utils/graphql.wrapper';
+} from '@alkemio/tests-lib';
+import { graphqlErrorWrapper } from '@alkemio/tests-lib';
 import type { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import { ensurePersonaState } from '../fixtures/authenticated-session.fixture';
+import { must as ok } from '../helpers/lib-actor.helper';
 import { deleteFixtureTree } from '../subspaces-callout/subspaces-callout.helpers';
 
 export const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
@@ -30,6 +31,8 @@ export const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 export const WIDGET_LABEL: Record<SidebarWidget, string> = {
   [SidebarWidget.Intent]: 'Intention & Leads',
   [SidebarWidget.About]: 'About this Space',
+  [SidebarWidget.Activity]: 'Recent Activity',
+  [SidebarWidget.Community]: 'Community',
   [SidebarWidget.CreatePost]: 'Add Post',
   [SidebarWidget.ApplicationButton]: 'Apply / Join',
   [SidebarWidget.CreateSubspace]: 'Create Subspace',
@@ -88,22 +91,8 @@ export const L0_DEFAULT_SIDEBARS: SidebarWidget[][] = [
 export const GENERIC_DEFAULT_SIDEBAR = L0_DEFAULT_SIDEBARS[3];
 export const TAB_NAMES = ['Home', 'Community', 'Subspaces', 'Knowledge'];
 
-const rawClient = new GraphQLClient(
-  testConfiguration.endPoints.graphql.private
-);
 const bearer = (authToken: string | undefined) =>
   authToken ? { authorization: `Bearer ${authToken}` } : undefined;
-
-/** Fail the walk with the GraphQL errors instead of carrying on with half a fixture. */
-function ok<T>(
-  res: { data?: T; error?: { errors: unknown[] } },
-  what: string
-): T {
-  if (res.error || !res.data) {
-    throw new Error(`${what} failed: ${JSON.stringify(res.error)}`);
-  }
-  return res.data;
-}
 
 export type SidebarFixture = {
   scenario: OrganizationWithSpaceModel;
@@ -199,39 +188,24 @@ export async function seedSidebarSpace(name: string): Promise<SidebarFixture> {
     'SendMessageToRoom (community update)'
   );
   const about = ok(
-    await graphqlErrorWrapper(
-      (t: string | undefined) =>
-        rawClient.rawRequest<{
-          lookup: { space: { about: { guidelines: { id: string } } } };
-        }>(
-          `query SidebarGuidelinesId($spaceId: UUID!) {
-            lookup { space(ID: $spaceId) { about { guidelines { id } } } }
-          }`,
-          { spaceId: scenario.space.id },
-          bearer(t)
-        ),
-      TestUser.GLOBAL_ADMIN
-    ),
+    await readSpaceGuidelinesId(scenario.space.id, TestUser.GLOBAL_ADMIN),
     'guidelines lookup'
   );
+  const guidelinesId = about.lookup.space?.about.guidelines?.id;
+  if (!guidelinesId) {
+    throw new Error(
+      `guidelines lookup returned no guidelines for space ${scenario.space.id}`
+    );
+  }
   ok(
-    await graphqlErrorWrapper(
-      (t: string | undefined) =>
-        rawClient.rawRequest(
-          `mutation SidebarGuidelines($data: UpdateCommunityGuidelinesEntityInput!) {
-            updateCommunityGuidelines(communityGuidelinesData: $data) { id }
-          }`,
-          {
-            data: {
-              communityGuidelinesID: about.lookup.space.about.guidelines.id,
-              profile: {
-                displayName: fixture.guidelinesTitle,
-                description: 'Be respectful and collaborative.',
-              },
-            },
-          },
-          bearer(t)
-        ),
+    await updateCommunityGuidelines(
+      {
+        communityGuidelinesID: guidelinesId,
+        profile: {
+          displayName: fixture.guidelinesTitle,
+          description: 'Be respectful and collaborative.',
+        },
+      },
       TestUser.GLOBAL_ADMIN
     ),
     'updateCommunityGuidelines'

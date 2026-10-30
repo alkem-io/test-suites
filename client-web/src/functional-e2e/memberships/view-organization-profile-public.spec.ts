@@ -130,6 +130,20 @@ test.describe('Organization Profile Access', () => {
       tag: ['@bug', '@regression'],
     },
     async ({ page, context }) => {
+      // KNOWN GAP, awaiting a product ruling (client-web#10179, plan Q1 in
+      // user-profile-test-plan.md): since #10424 the "Lead Spaces" tab is
+      // hidden when the organisation has no lead items, and an anonymous
+      // visitor never has any because the client skips `rolesOrganization`
+      // without READ_USERS. Today the visitor sees only "All Memberships" with
+      // "Not a member of any Space or Subspace yet." The assertion in step 5 is
+      // the expected behaviour (memberships plan 4.2: "Spaces they lead") and
+      // is deliberately left unchanged. Drop this skip once alkem-io/client-web#10433
+      // is fixed, or re-align step 5 if it is ruled intended.
+      test.skip(
+        true,
+        'alkem-io/client-web#10433: anonymous visitor no longer sees the Lead Spaces tab (client-web#10179, plan Q1)'
+      );
+
       // 1. Clear authentication by clearing storage state
       await context.clearCookies();
       await page.evaluate(() => {

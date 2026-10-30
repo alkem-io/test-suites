@@ -14,10 +14,16 @@
 // the exact defect surface `@AfterLoad` must default on read.
 
 import { expect, Page, test as baseTest } from '@playwright/test';
-import { harnessPostgresConfigured, registerTestUser, TestScenarioFactory } from '@alkemio/tests-lib';
+import {
+  applyForEntryRoleOnRoleSet,
+  harnessPostgresConfigured,
+  readMyUser,
+  registerTestUser,
+  TestScenarioFactory,
+} from '@alkemio/tests-lib';
 import type { TestScenarioConfig } from '@alkemio/tests-lib/scenario/config/test-scenario-config';
 import type { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
-import { RoleName } from '@alkemio/tests-lib/core/generated/alkemio-schema';
+import { RoleName } from '@alkemio/tests-lib';
 import { createPersonaTest } from '../fixtures/authenticated-session.fixture';
 import { getMailsData } from '@alkemio/tests-lib/utils/mailslurper.rest.requests';
 import {
@@ -31,7 +37,6 @@ import {
   getUserToken,
   inviteUserToOrganizationRaw,
   OrgFixture,
-  postGraphqlRaw,
   removeUserRoleOnOrganization,
   runSuffix,
   setOrganizationMembershipSettings,
@@ -91,13 +96,11 @@ let orgZ: OrgFixture; // AS8: zero ADMINs, one OWNER
 let orgQ: OrgFixture; // AS5: allowApplications off
 let orgP: OrgFixture; // AS9: settings jsonb stripped of allowApplications (premigration shape)
 
-const meUserIdQuery = 'query { me { user { id } } }';
-
 async function userIdFor(email: string): Promise<string> {
   const bearerToken = await getUserToken(email);
-  const res = await postGraphqlRaw<{ me: { user: { id: string } } }>(meUserIdQuery, { bearerToken });
-  const id = res.body.data?.me.user.id;
-  if (!id) throw new Error(`Could not resolve user id for ${email}: ${JSON.stringify(res.body.errors)}`);
+  const res = await readMyUser({ bearerToken });
+  const id = res.data?.me.user?.id;
+  if (!id) throw new Error(`Could not resolve user id for ${email}: ${JSON.stringify(res.error?.errors)}`);
   return id;
 }
 
@@ -202,7 +205,7 @@ async function applyToAssociateViaUi(page: Page, orgNameId: string, message: str
 }
 
 async function openAssociatesTab(page: Page, orgNameId: string) {
-  await page.goto(`${baseUrl}/organization/${orgNameId}/settings/community`);
+  await page.goto(`${baseUrl}/organization/${orgNameId}/settings/associates`);
   await expect(page.getByRole('heading', { name: 'Associates' })).toBeVisible({ timeout: 15_000 });
 }
 
@@ -375,11 +378,8 @@ viewerTest.describe('US3-AS5 — an organization with applications switched off 
     });
 
     const bearerToken = await getUserToken(viewerEmail);
-    const res = await postGraphqlRaw<{ applyForEntryRoleOnRoleSet: { id: string } }>(
-      'mutation($roleSetID: UUID!) { applyForEntryRoleOnRoleSet(applicationData: { roleSetID: $roleSetID, questions: [] }) { id } }',
-      { variables: { roleSetID: orgQ.roleSetId }, bearerToken }
-    );
-    expect((res.body.errors?.[0]?.extensions as { code?: string } | undefined)?.code).toBe('ROLESET_APPLICATIONS_NOT_ACCEPTED');
+    const res = await applyForEntryRoleOnRoleSet(orgQ.roleSetId, { bearerToken });
+    expect((res.error?.errors?.[0]?.extensions as { code?: string } | undefined)?.code).toBe('ROLESET_APPLICATIONS_NOT_ACCEPTED');
   });
 });
 
@@ -388,11 +388,8 @@ viewerTest.describe('US3-AS5 — an organization with applications switched off 
 baseTest.describe('US3-AS6 — inviting a user with a pending application is refused, not duplicated', () => {
   baseTest('the invite outcome is ALREADY_HAS_OPEN_APPLICATION; no invitation is created', async () => {
     const applicantToken = await getUserToken(applicantOpenEmail);
-    const applyRes = await postGraphqlRaw<{ applyForEntryRoleOnRoleSet: { id: string; actor: { id: string } } }>(
-      'mutation($roleSetID: UUID!) { applyForEntryRoleOnRoleSet(applicationData: { roleSetID: $roleSetID, questions: [] }) { id actor { id } } }',
-      { variables: { roleSetID: orgO.roleSetId }, bearerToken: applicantToken }
-    );
-    const applicantActorId = applyRes.body.data!.applyForEntryRoleOnRoleSet.actor.id;
+    const applyRes = await applyForEntryRoleOnRoleSet(orgO.roleSetId, { bearerToken: applicantToken });
+    const applicantActorId = applyRes.data!.applyForEntryRoleOnRoleSet.actor.id;
 
     const adminAToken = await getUserToken(adminAEmail);
     const outcome = await inviteUserToOrganizationRaw(

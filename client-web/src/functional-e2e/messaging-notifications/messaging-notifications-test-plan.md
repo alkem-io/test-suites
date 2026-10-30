@@ -36,6 +36,23 @@ pnpm exec vitest run src/functional-api/notifications/messaging
 
 `--workers=1` is a **requirement**, not a convenience — see *Isolation* below.
 
+### Nightly vs local-stack split
+
+The nightly cluster exports no `RABBITMQ_MANAGEMENT_*` env and runs the
+production digest windows, so every walk that reads the push publish counter
+or settles on a `MESSAGING_DIGEST_*` window is tagged `@local-stack` and left
+out of the nightly by `grepInvert` (see `docs/e2e-conventions.md` › Local-stack
+runner):
+
+| Runner | Cases |
+|---|---|
+| Nightly (`playwright.config.nightly.ts` › Messaging notifications) | US3-AS1, US3-AS2, US3-AS5 — the settings rows |
+| Local stack (`playwright.config.local-stack.ts` › Local stack — messaging digests) | US1-AS1…AS5, US2-AS1…AS5, US3-AS3, US3-AS4 — the whole three files, since the serial walks need their setup steps |
+
+The end-to-end proof that a browser-sent message still fires a notification is
+therefore a local-stack run, not a nightly one; the it-spec matrix below keeps
+the server-side contract under the nightly's `server-api` run.
+
 ### The nine digest variables must be set on BOTH sides
 
 `MESSAGING_DIGEST_*` (eight window variables plus the sweep interval — the
@@ -89,7 +106,8 @@ earlier ones' settings state.
 
 **Residual:** unlike the 033 walks, these do **not** delete the accounts they
 create. Each run leaves its personas behind; the run-unique naming is what keeps
-that from breaking the next run. Worth fixing if this suite joins the nightly.
+that from breaking the next run. US3 is in the nightly now, so its AS1 recipient
+accumulates there one per night — worth fixing.
 
 ## Scenario → test mapping
 
@@ -110,8 +128,8 @@ that from breaking the next run. Worth fixing if this suite joins the nightly.
 | US3-AS1 | A freshly registered account shows both rows at the mandated defaults: email OFF, push ON, in-app locked OFF with its caption | `us3-messaging-settings-rows.spec.ts` › US3-AS1 |
 | US3-AS2 | A pre-existing account loads notification settings without error, same defaults | `us3-…` › US3-AS2 |
 | US3-AS3 | Forcing the stored in-app flag on through the public API still produces no in-app notification — enforcement is at the platform boundary | `us3-…` › US3-AS3 |
-| US3-AS4 | Toggling email persists across reload and is honoured for the next message | `us3-…` › US3-AS4 |
-| US3-AS5 | The chat panel's settings shortcut lands on notification settings with both rows visible | `us3-…` › US3-AS5 |
+| US3-AS4 | Toggling email persists across reload and is honoured for the next message | `us3-…` › US3-AS4 — restores the row's default (email OFF) in a `finally`, so the serial walk after it never inherits the toggle |
+| US3-AS5 | The chat panel's settings shortcut lands on notification settings with both rows visible | `us3-…` › US3-AS5 — since client-web#10437 the rows sit in the collapsed "User Notifications" group; the walk expands it (one extra click, ruled acceptable 2026-10-28) and proves the rows work: the direct row's email toggle is flipped from whatever it reads and back, each state read back after a reload (independent of AS4, which also toggles it in the local-stack runner) |
 
 ### It-spec matrix (`server-api`)
 

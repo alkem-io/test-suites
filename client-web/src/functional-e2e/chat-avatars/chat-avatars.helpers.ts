@@ -333,8 +333,14 @@ export async function uploadProfileAvatar(person: TestPerson, variant: 'a' | 'b'
   await save.click();
   await expect(cropTitle).toHaveCount(0, { timeout: 30000 });
 
-  // The 128px avatar in the "Profile Picture" card now shows the uploaded image.
-  const settingsAvatar = page.locator('[data-slot="avatar"].size-32 [data-slot="avatar-image"]');
+  // The "Profile Picture" card (client-web#10437: a non-collapsible
+  // SettingsSection — `<section><h3>Profile Picture</h3>…`) now shows the
+  // uploaded image. Scoped by the card's heading rather than the avatar's size
+  // class, which changed from 128px to 96px in the same redesign.
+  const settingsAvatar = page
+    .locator('section')
+    .filter({ has: page.getByRole('heading', { name: 'Profile Picture', exact: true }) })
+    .locator('[data-slot="avatar-image"]');
   await expect(settingsAvatar).toBeVisible({ timeout: 30000 });
   const src = await settingsAvatar.getAttribute('src');
   expect(src, 'the uploaded profile picture should have a src').toBeTruthy();
@@ -424,7 +430,13 @@ export async function ensureConversationList(page: Page): Promise<void> {
   if (await back.isVisible().catch(() => false)) {
     await back.click();
   }
-  await expect(conversationRows(page).first()).toBeVisible({ timeout: 15000 });
+  // "List view reached" is either a row or the list's own empty state: since
+  // client-web#10434 (v0.169.1) hid the pinned guidance conversation, a fresh
+  // persona has no rows at all, and the old row-only wait timed out on every
+  // first createConversation (nightly 2026-10-20).
+  await expect(
+    conversationRows(page).first().or(chatPanel(page).getByText('No conversations yet'))
+  ).toBeVisible({ timeout: 15000 });
 }
 
 /** Every conversation row in the list view. */
@@ -478,6 +490,77 @@ export async function sendMessage(page: Page, text: string): Promise<void> {
 /** Waits for a message sent by someone else to arrive over the room subscription. */
 export async function expectMessageReceived(page: Page, text: string): Promise<void> {
   await expect(messageColumn(page, text)).toHaveCount(1, { timeout: 30000 });
+}
+
+// ─────────────────────── environment precondition ───────────────────────
+
+export type MatrixSendPath = { reachable: true } | { reachable: false; reason: string };
+
+/**
+ * Whether the browser can reach the Matrix homeserver the client is built
+ * against. Since client-web#10365 the composer sends straight to Matrix
+ * (`window._env_.VITE_APP_MATRIX_HOMESERVER_URL`), so a homeserver the browser
+ * cannot resolve turns every send into the alert "Send was not confirmed" —
+ * an environment fact, not a product one. test-alkem.io has had no
+ * `matrix.` DNS record since 2026-10-21 (alkem-io/infrastructure-provisioning#51);
+ * ACC and the local stack resolve theirs.
+ *
+ * The probe runs from Node (no CORS) and only asks whether the host answers at
+ * all: any HTTP status counts as reachable, a transport failure (NXDOMAIN,
+ * refused, TLS, time-out) does not. An unset URL is reported reachable so the
+ * walk still runs — and still fails honestly — on a stack that is configured
+ * differently. Callers `test.skip` on `reachable === false`; the skip lifts
+ * itself the moment the record exists.
+ */
+export async function matrixSendPath(page: Page): Promise<MatrixSendPath> {
+  type EnvWindow = { _env_?: { VITE_APP_MATRIX_HOMESERVER_URL?: string } };
+  const homeserverUrl = await page.evaluate(
+    () => (window as unknown as EnvWindow)._env_?.VITE_APP_MATRIX_HOMESERVER_URL?.trim() ?? ''
+  );
+  if (!homeserverUrl) return { reachable: true };
+  try {
+    await fetch(`${homeserverUrl}/_matrix/client/versions`, { signal: AbortSignal.timeout(10000) });
+    return { reachable: true };
+  } catch (error) {
+    // Only a missing DNS record is the environment's problem. A refused
+    // connection, a bad certificate, a time-out or a malformed URL could be a
+    // product/config regression (the client is built with this URL), so those
+    // run the walk and go red honestly instead of skipping.
+    const { cause } = error as { cause?: { code?: string } };
+    if (cause?.code !== 'ENOTFOUND') return { reachable: true };
+    let host = homeserverUrl;
+    try {
+      host = new URL(homeserverUrl).host;
+    } catch {
+      // keep the raw value in the reason
+    }
+    const ticket = host.endsWith('test-alkem.io')
+      ? ' — alkem-io/infrastructure-provisioning#51'
+      : '';
+    return {
+      reachable: false,
+      reason:
+        `Matrix homeserver ${host} has no DNS record (ENOTFOUND) from this environment; ` +
+        `browser sends cannot be confirmed${ticket}`,
+    };
+  }
+}
+
+/**
+ * Same probe from a throw-away page at `BASE_URL`, for a `beforeAll` that
+ * wants to know BEFORE registering anyone whether the file's sends can be
+ * confirmed — the US1 set-up (three sign-ups, an avatar upload, a group
+ * conversation on three pages) is not worth running for eight skips.
+ */
+export async function probeMatrixSendPath(browser: Browser): Promise<MatrixSendPath> {
+  const context = await browser.newContext();
+  try {
+    const page = await context.newPage();
+    await page.goto(BASE_URL);
+    return await matrixSendPath(page);
+  } finally {
+    await context.close();
+  }
 }
 
 // ─────────────────────── message-bubble selectors ───────────────────────
@@ -604,6 +687,25 @@ export async function settledAvatarComposite(scope: Locator): Promise<{ imgSrcs:
 export async function avatarCellCount(scope: Locator): Promise<number> {
   const { imgSrcs, fallbackTexts } = await avatarComposite(scope);
   return imgSrcs.length + fallbackTexts.length;
+}
+
+/**
+ * The "+N" overflow tile of a group composite (client-web#10427: from five
+ * members on, GroupAvatar draws three faces and a fourth quarter counting the
+ * rest). Empty when the composite has no overflow tile.
+ */
+export function overflowCountTile(scope: Locator): Locator {
+  return scope.getByText(/^\+\d+$/);
+}
+
+/**
+ * The overflow tile's text, asserted VISIBLE first: `textContent` alone would
+ * read a hidden tile and let a composite that users cannot see pass.
+ */
+export async function overflowCountText(scope: Locator): Promise<string> {
+  const tile = overflowCountTile(scope);
+  await expect(tile).toBeVisible();
+  return (await tile.allTextContents()).map(text => text.trim()).join(',');
 }
 
 // ────────────────────────────── cleanup ──────────────────────────────

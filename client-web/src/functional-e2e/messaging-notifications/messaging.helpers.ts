@@ -11,10 +11,14 @@ import {
   deleteMailSlurperMails,
   getMailsData,
   getQueueStats,
+  getUserToken,
   getVerificationLinkFor,
+  readMyConversations,
+  subscribeToPushNotifications,
   UniqueIDGenerator,
   waitForQueuePublishIncrease,
 } from '@alkemio/tests-lib';
+import { sessionActor } from '../helpers/lib-actor.helper';
 
 /**
  * Shared fixtures for the 034-messaging-notifications acceptance walks (US1,
@@ -130,28 +134,13 @@ export async function subscribeToPush(page: Page, label: string) {
     p256dh: `BNcRdreALRFXTkOOUHK1EtK2wtaz5Ry4YfYCA_0QTpQtUbVlUls0VJXg7A8u-Ts1XbjhazAkj7I99e8p8REfXPQ-${uniqueId}`,
     auth: `tBHItJI5svbpC7htN-${uniqueId.slice(0, 8)}`,
   };
-  const result = await page.evaluate(
-    async ({ subscriptionData }) => {
-      const res = await fetch('/api/private/graphql', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({
-          query: `
-            mutation SubscribeToPushNotifications($subscriptionData: SubscribeToPushNotificationsInput!) {
-              subscribeToPushNotifications(subscriptionData: $subscriptionData) { id status }
-            }
-          `,
-          variables: { subscriptionData },
-        }),
-      });
-      return res.json();
-    },
-    { subscriptionData }
+  const result = await subscribeToPushNotifications(
+    subscriptionData,
+    await sessionActor(page)
   );
-  if (result.errors) {
+  if (result.error) {
     throw new Error(
-      `subscribeToPushNotifications failed: ${JSON.stringify(result.errors)}`
+      `subscribeToPushNotifications failed: ${JSON.stringify(result.error.errors)}`
     );
   }
   if (!result.data?.subscribeToPushNotifications?.id) {
@@ -270,4 +259,27 @@ export async function settledPushDelta(
 /** Current cumulative publish count for the push queue — an emit baseline. */
 export async function pushPublishedTotal(): Promise<number> {
   return (await getQueueStats(PUSH_NOTIFICATIONS_QUEUE)).publishedTotal;
+}
+
+/**
+ * Display names of the conversations `email` can currently see, read through
+ * the API with that user's own token (`me.conversations`). The browser is not
+ * the oracle for "C no longer has the group": membership removal lands
+ * asynchronously (the member leaves the Matrix room, then the server persists
+ * the removal), so a UI read can only say what the page last rendered.
+ */
+export async function conversationNamesOf(email: string): Promise<string[]> {
+  const bearerToken = await getUserToken(email);
+  const result = await readMyConversations({ bearerToken });
+  // This read is the evidence that a removal landed, and US2-AS4 polls it
+  // with `.not.toContain`: a failed read that came back as `[]` would pass
+  // that poll at once. So anything but HTTP 200 with a conversations array
+  // throws; the status and the errors/body name the cause.
+  const conversations = result.data?.me?.conversations?.conversations;
+  if (result.status !== 200 || result.error || !conversations) {
+    throw new Error(
+      `me.conversations read failed for ${email} (HTTP ${result.status}): ${JSON.stringify(result.error?.errors ?? result.data).slice(0, 300)}`
+    );
+  }
+  return conversations.map(c => c.room.displayName);
 }

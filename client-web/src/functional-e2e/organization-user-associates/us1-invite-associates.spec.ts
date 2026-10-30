@@ -29,22 +29,26 @@
 
 import { expect, test as baseTest } from '@playwright/test';
 import {
+  applyForEntryRoleOnRoleSet,
   createOrganization,
   deleteOrganization,
   getGraphqlClient,
   getUserToken,
-  postGraphqlRaw,
+  inviteForEntryRoleOnRoleSet,
+  readMyPendingMemberships,
+  readMyUser,
+  readPlatformLanguageConfiguration,
   registerInKratosOrFail,
   TestUser,
   TestUserManager,
   UniqueIDGenerator,
   verifyInKratosOrFail,
 } from '@alkemio/tests-lib';
-import { graphqlErrorWrapper } from '@alkemio/tests-lib/utils/graphql.wrapper';
+import { graphqlErrorWrapper } from '@alkemio/tests-lib';
 import {
   RoleName,
   RoleSetInvitationResultType,
-} from '@alkemio/tests-lib/core/generated/alkemio-schema';
+} from '@alkemio/tests-lib';
 import { createPersonaTest } from '../fixtures/authenticated-session.fixture';
 
 const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
@@ -104,7 +108,8 @@ let as3OwnerOverflow: Persona; // AS3: offered Owner once the cap is full
  * usual entry point) only ever attaches a `TestUser` persona's cached bearer,
  * which cannot represent a freshly registered disposable user (same
  * rationale as us7-pending-lists-integrity.spec.ts / 054-delete-own-account),
- * so every call these personas make goes through `postGraphqlRaw`. */
+ * so every call these personas make goes through a lib function with their
+ * own `{ bearerToken }`. */
 const registerPersona = async (
   email: string,
   firstName: string
@@ -126,15 +131,13 @@ const registerPersona = async (
   }
   await verifyInKratosOrFail(email, verificationFlowId);
   const token = await getUserToken(email);
-  const meRes = await postGraphqlRaw<{
-    me: { user: { id: string; profile: { displayName: string } } };
-  }>('query { me { user { id profile { displayName } } } }', {
-    bearerToken: token,
-  });
-  const id = meRes.body.data?.me.user.id;
-  const displayName = meRes.body.data?.me.user.profile.displayName;
+  const meRes = await readMyUser({ bearerToken: token });
+  const id = meRes.data?.me.user?.id;
+  const displayName = meRes.data?.me.user?.profile?.displayName;
   if (!id || !displayName) {
-    throw new Error(`registerPersona(${email}) produced no user: ${meRes.raw}`);
+    throw new Error(
+      `registerPersona(${email}) produced no user: ${JSON.stringify(meRes.error ?? meRes.data)}`
+    );
   }
   return { email, token, id, displayName, firstName };
 };
@@ -325,21 +328,16 @@ baseTest.beforeAll(async () => {
   as4AlreadyInvitedInvitationId =
     preSeededInvite.data!.inviteForEntryRoleOnRoleSet![0]!.invitation!.id;
 
-  const preSeededApplication = await postGraphqlRaw<{
-    applyForEntryRoleOnRoleSet: { id: string };
-  }>(
-    'mutation($roleSetID: UUID!) { applyForEntryRoleOnRoleSet(applicationData: { roleSetID: $roleSetID, questions: [] }) { id } }',
-    {
-      bearerToken: as4OpenApplication.token,
-      variables: { roleSetID: orgMain.roleSetId },
-    }
+  const preSeededApplication = await applyForEntryRoleOnRoleSet(
+    orgMain.roleSetId,
+    { bearerToken: as4OpenApplication.token }
   );
   if (
-    (preSeededApplication.body.errors ?? []).length > 0 ||
-    !preSeededApplication.body.data?.applyForEntryRoleOnRoleSet.id
+    preSeededApplication.error ||
+    !preSeededApplication.data?.applyForEntryRoleOnRoleSet.id
   ) {
     throw new Error(
-      `AS4 pre-seed application failed: ${preSeededApplication.raw}`
+      `AS4 pre-seed application failed: ${JSON.stringify(preSeededApplication.error ?? preSeededApplication.data)}`
     );
   }
 
@@ -447,7 +445,7 @@ orgAdminNotOwnerTest.describe(
       'an organization admin who is not a platform admin gets a name-or-email search, the suggested-language control (when the platform offers languages), a pre-filled message, and Associate locked plus Admin/Owner',
       async ({ page }) => {
         await page.goto(
-          `${baseUrl}/organization/${orgMain.nameID}/settings/community`
+          `${baseUrl}/organization/${orgMain.nameID}/settings/associates`
         );
         await page.getByRole('button', { name: 'Invite', exact: true }).click();
 
@@ -474,11 +472,9 @@ orgAdminNotOwnerTest.describe(
 
         // The suggested-language control is offered whenever the platform offers
         // any language to suggest — read from the same config the dialog reads.
-        const languageRes = await postGraphqlRaw<{
-          platform: { configuration: { language: { eligible: string[] } } };
-        }>('query { platform { configuration { language { eligible } } } }');
+        const languageRes = await readPlatformLanguageConfiguration();
         const eligibleLanguages =
-          languageRes.body.data?.platform.configuration.language.eligible ?? [];
+          languageRes.data?.platform.configuration.language.eligible ?? [];
         await expect(
           page.getByLabel('Suggested language for invitee')
         ).toHaveCount(eligibleLanguages.length > 0 ? 1 : 0);
@@ -527,7 +523,7 @@ orgAdminNotOwnerTest.describe(
       'US1-AS2: inviting U1 as Associate and U2 as Associate + Owner with a message both show "Invitation sent"; both appear in Pending applications & invitations with the offered role, date and Revoke',
       async ({ page }) => {
         await page.goto(
-          `${baseUrl}/organization/${orgMain.nameID}/settings/community`
+          `${baseUrl}/organization/${orgMain.nameID}/settings/associates`
         );
 
         // U1 — Associate only.
@@ -595,7 +591,7 @@ orgAdminNotOwnerTest.describe(
       "US1-AS7: revoking U1's pending invitation removes it from the Associates pending list",
       async ({ page }) => {
         await page.goto(
-          `${baseUrl}/organization/${orgMain.nameID}/settings/community`
+          `${baseUrl}/organization/${orgMain.nameID}/settings/associates`
         );
         const row = page.getByRole('row', {
           name: new RegExp(as2Invitee1.displayName),
@@ -617,17 +613,13 @@ orgAdminNotOwnerTest.describe(
     baseTest(
       "US1-AS7 (invitee view): the revoked invitation is gone from U1's own pending organization invitations",
       async () => {
-        const res = await postGraphqlRaw<{
-          me: {
-            organizationInvitations: Array<{ organization: { id: string } }>;
-          };
-        }>('query { me { organizationInvitations { organization { id } } } }', {
+        const res = await readMyPendingMemberships({
           bearerToken: as2Invitee1.token,
         });
         // A failed read (field renamed, expired token) must not read as "gone":
         // the query has to succeed and return the list before its contents count.
-        expect(res.body.errors ?? []).toEqual([]);
-        const invitations = res.body.data?.me.organizationInvitations;
+        expect(res.error?.errors ?? []).toEqual([]);
+        const invitations = res.data?.me.organizationInvitations;
         expect(Array.isArray(invitations)).toBe(true);
         expect(invitations!.some(i => i.organization.id === orgMain.id)).toBe(
           false
@@ -644,7 +636,7 @@ orgOwnerNotAdminTest.describe(
       'an organization OWNER who is not an ADMIN sees Associate/Admin/Owner all offerable',
       async ({ page }) => {
         await page.goto(
-          `${baseUrl}/organization/${orgMain.nameID}/settings/community`
+          `${baseUrl}/organization/${orgMain.nameID}/settings/associates`
         );
         await page.getByRole('button', { name: 'Invite', exact: true }).click();
         await page
@@ -675,9 +667,26 @@ plainAssociateAS8Test.describe(
       'navigating to the Associates settings tab does not land there',
       async ({ page }) => {
         await page.goto(
-          `${baseUrl}/organization/${orgMain.nameID}/settings/community`
+          `${baseUrl}/organization/${orgMain.nameID}/settings/associates`
         );
-        await expect(page).not.toHaveURL(/\/settings\/community/);
+        // The product sends a plain associate to the organization profile
+        // (observed live 2026-10-28). Pin that landing, not merely "somewhere
+        // other than one legacy URL": an admin persona stays on
+        // /settings/associates and must turn every line below red.
+        await expect(page).not.toHaveURL(/\/settings\/(associates|community)/, {
+          timeout: 15_000,
+        });
+        await expect(page).toHaveURL(
+          new RegExp(`/organization/${orgMain.nameID}/?$`)
+        );
+        await expect(
+          page.getByRole('heading', { name: 'Associates', exact: true })
+        ).toHaveCount(0);
+        await expect(
+          page.getByRole('heading', {
+            name: 'Pending applications & invitations',
+          })
+        ).toHaveCount(0);
       }
     );
   }
@@ -858,30 +867,20 @@ baseTest.describe(
     baseTest(
       'inviteForEntryRoleOnRoleSet is refused with a forbidden-policy error',
       async () => {
-        const res = await postGraphqlRaw<{
-          inviteForEntryRoleOnRoleSet: unknown;
-        }>(
-          `mutation($roleSetID: UUID!, $actorID: UUID!) {
-        inviteForEntryRoleOnRoleSet(invitationData: {
-          roleSetID: $roleSetID
-          invitedActorIDs: [$actorID]
-          invitedUserEmails: []
-          extraRoles: []
-          welcomeMessage: "US1 AS8 probe"
-        }) { type }
-      }`,
+        const res = await inviteForEntryRoleOnRoleSet(
           {
-            bearerToken: plainAssociateAS8.token,
-            variables: {
-              roleSetID: orgMain.roleSetId,
-              actorID: as4AlreadyInvited.id,
-            },
-          }
+            roleSetId: orgMain.roleSetId,
+            invitedActorIds: [as4AlreadyInvited.id],
+            invitedUserEmails: [],
+            extraRoles: [],
+            welcomeMessage: 'US1 AS8 probe',
+          },
+          { bearerToken: plainAssociateAS8.token }
         );
-        expect(res.body.data).toBeFalsy();
-        const errors = res.body.errors ?? [];
+        expect(res.data).toBeFalsy();
+        const errors = res.error?.errors ?? [];
         expect(errors.length).toBeGreaterThan(0);
-        expect(res.raw).toMatch(/FORBIDDEN_POLICY/);
+        expect(JSON.stringify(res.error)).toMatch(/FORBIDDEN_POLICY/);
       }
     );
   }

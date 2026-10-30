@@ -16,29 +16,44 @@
 // `page`, run in one `beforeAll`-seeded fixture so the six scenarios can share
 // one organization/Space without re-deriving them six times.
 //
-// Two GraphQL operations this walk needs (`rolesUser.invitations/applications`
-// for an arbitrary actor, and an organization's roleSet authorization-policy
-// id) have no generated-SDK method yet — the same situation this repo's own
-// `postGraphqlRaw` was built for (account-deletion, chat-avatars). Used here
-// exactly as there: an inline document + a persona's bearer token.
+// Every read and every mutation a persona or the disposable identity makes
+// here goes through a lib business-action function with that actor (a
+// `TestUser` persona or the disposable user's `{ bearerToken }`); the
+// pending-list reads keep the one-field-per-read structure the gates need.
 
 import { test as baseTest, expect } from '@playwright/test';
 import {
+  applyForEntryRoleOnRoleSet,
   createOrganization,
   deleteOrganization,
   getGraphqlClient,
   getUserToken,
   harnessPostgresConfigured,
-  postGraphqlRaw,
   queryHarnessDb,
+  readMyAccountDeletionCanDelete,
+  readMyPendingMemberships,
+  readMyUser,
+  readOrganizationAssociateEligibility,
+  readOrganizationRoleSet,
+  readOrganizationRoleSetApplications,
+  readOrganizationRoleSetInvitations,
+  readOrganizationRoleSetPending,
+  readOrganizationRoleSetPlatformInvitations,
+  readRoleSetApplications,
+  readRoleSetInvitationIds,
+  readRoleSetPending,
+  readRoleSetPlatformInvitations,
+  readUserSpaceRoles,
   registerInKratosOrFail,
   TestScenarioFactory,
   TestUser,
   TestUserManager,
   UniqueIDGenerator,
   verifyInKratosOrFail,
+  type GraphqlActor,
+  type GraphqlReturnWithError,
 } from '@alkemio/tests-lib';
-import { graphqlErrorWrapper } from '@alkemio/tests-lib/utils/graphql.wrapper';
+import { graphqlErrorWrapper } from '@alkemio/tests-lib';
 import { getInAppActorIdsForType } from './organization-user-associates.helpers';
 import type { TestScenarioConfig } from '@alkemio/tests-lib/scenario/config/test-scenario-config';
 import type { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
@@ -46,7 +61,7 @@ import {
   NotificationEvent,
   RoleName,
   SpacePrivacyMode,
-} from '@alkemio/tests-lib/core/generated/alkemio-schema';
+} from '@alkemio/tests-lib';
 
 // One organization fixture per scenario that needs its own isolated state, so
 // scenarios never depend on one another's row counts — created once in
@@ -158,74 +173,29 @@ const applyToRoleSet = async (roleSetID: string, userRole: TestUser): Promise<st
   return id;
 };
 
-/** ID for a pending application/invitation *result* row is the wrapper `id`
- * on `OrganizationInvitationResult`/`OrganizationApplicationResult` — equal
- * to the underlying invitation/application id (data-model.md). */
-const ME_ORGANIZATION_PENDING_QUERY = `
-  query {
-    me {
-      communityInvitations { invitation { id } }
-      communityApplications { application { id } }
-      communityInvitationsCount
-      organizationInvitations { id organization { id nameID } }
-      organizationApplications { id organization { id nameID } }
-      organizationInvitationsCount
-    }
-  }`;
+// ID for a pending application/invitation *result* row on
+// `me.organizationInvitations/organizationApplications` is the wrapper `id`
+// on `OrganizationInvitationResult`/`OrganizationApplicationResult` — equal
+// to the underlying invitation/application id (data-model.md); the lib's
+// `readMyPendingMemberships` reads both the Space- and organization-shaped
+// surfaces in one round trip.
 
-/** `rolesUser.invitations/applications` (Space-shaped only, per US7) has no
- * generated-SDK selection yet — GetUserRoles.graphql only selects
- * spaces/organizations, not the pending arrays this scenario needs. */
-const ROLES_USER_PENDING_QUERY = `
-  query($actorID: UUID!) {
-    rolesUser(rolesData: { actorID: $actorID }) {
-      invitations { id }
-      applications { id }
-    }
-  }`;
-
-const ORGANIZATION_ROLESET_PENDING_QUERY = `
-  query($id: UUID!) {
-    organization(ID: $id) {
-      roleSet {
-        applications { id }
-        invitations { id }
-        platformInvitations { id }
-      }
-    }
-  }`;
-
-// One pending field per query. The three lists are non-null and gated
-// independently, so the combined query above nulls the whole role set on the
-// FIRST refusal and proves only that at least one field is gated. Each field's
-// gate is proven on its own here.
-const ORGANIZATION_PENDING_FIELD_QUERIES: Record<string, string> = {
-  applications: 'query($id: UUID!) { organization(ID: $id) { roleSet { applications { id } } } }',
-  invitations: 'query($id: UUID!) { organization(ID: $id) { roleSet { invitations { id } } } }',
-  platformInvitations: 'query($id: UUID!) { organization(ID: $id) { roleSet { platformInvitations { id } } } }',
+// One pending field per read. The three lists are non-null and gated
+// independently, so the combined read (`readOrganizationRoleSetPending` /
+// `readRoleSetPending`) nulls the whole role set on the FIRST refusal and
+// proves only that at least one field is gated. Each field's gate is proven
+// on its own here.
+type PendingFieldRead = (id: string, actor: GraphqlActor) => Promise<GraphqlReturnWithError<unknown>>;
+const ORGANIZATION_PENDING_FIELD_READS: Record<string, PendingFieldRead> = {
+  applications: readOrganizationRoleSetApplications,
+  invitations: readOrganizationRoleSetInvitations,
+  platformInvitations: readOrganizationRoleSetPlatformInvitations,
 };
-const SPACE_PENDING_FIELD_QUERIES: Record<string, string> = {
-  applications: 'query($id: UUID!) { lookup { roleSet(ID: $id) { applications { id } } } }',
-  invitations: 'query($id: UUID!) { lookup { roleSet(ID: $id) { invitations { id } } } }',
-  platformInvitations: 'query($id: UUID!) { lookup { roleSet(ID: $id) { platformInvitations { id } } } }',
+const SPACE_PENDING_FIELD_READS: Record<string, PendingFieldRead> = {
+  applications: readRoleSetApplications,
+  invitations: readRoleSetInvitationIds,
+  platformInvitations: readRoleSetPlatformInvitations,
 };
-
-const ORGANIZATION_ROLESET_AUTHORIZATION_ID_QUERY = `
-  query($id: UUID!) {
-    organization(ID: $id) {
-      roleSet { authorization { id } }
-    }
-  }`;
-
-const ORGANIZATION_ELIGIBILITY_QUERY = `
-  query($id: UUID!) {
-    organization(ID: $id) {
-      myAssociateEligibility { canApply canJoinDirectly reason }
-    }
-  }`;
-
-const bearerFor = (userRole: TestUser) =>
-  TestUserManager.getUserModelByType(userRole).authToken;
 
 const createTestOrganization = async (label: string): Promise<OrgFixture> => {
   const displayName = `US7 ${label} ${runSuffix}`;
@@ -303,20 +273,11 @@ baseTest.afterAll(async () => {
 
 baseTest.describe('US7-AS1 — the me/roles partition stays exact with organization rows present', () => {
   baseTest('Space lists, count and rolesUser read Space rows only, with an exact count', async () => {
-    const res = await postGraphqlRaw<{
-      me: {
-        communityInvitations: Array<{ invitation: { id: string } }>;
-        communityApplications: Array<{ application: { id: string } }>;
-        communityInvitationsCount: number;
-        organizationInvitations: Array<{ id: string; organization: { id: string } }>;
-        organizationApplications: Array<{ id: string; organization: { id: string } }>;
-        organizationInvitationsCount: number;
-      };
-    }>(ME_ORGANIZATION_PENDING_QUERY, { bearerToken: bearerFor(TestUser.SUBSUBSPACE_MEMBER) });
+    const res = await readMyPendingMemberships(TestUser.SUBSUBSPACE_MEMBER);
 
     expect(res.status).toBe(200);
-    expect(res.body.errors ?? []).toEqual([]);
-    const me = res.body.data!.me;
+    expect(res.error?.errors ?? []).toEqual([]);
+    const me = res.data!.me;
 
     // SUBSUBSPACE_MEMBER is a globally seeded persona shared with other specs
     // in the same run, so its lists may already carry unrelated rows: assert
@@ -342,90 +303,51 @@ baseTest.describe('US7-AS1 — the me/roles partition stays exact with organizat
 
     // rolesUser (platform-admin-only view of an arbitrary actor) shows the
     // same Space-only shape — the org invitation must NOT leak in here either.
-    const rolesRes = await postGraphqlRaw<{
-      rolesUser: { invitations: Array<{ id: string }>; applications: Array<{ id: string }> };
-    }>(ROLES_USER_PENDING_QUERY, {
-      bearerToken: bearerFor(TestUser.GLOBAL_ADMIN),
-      variables: { actorID: inviteeId() },
-    });
+    const rolesRes = await readUserSpaceRoles(inviteeId(), TestUser.GLOBAL_ADMIN);
     expect(rolesRes.status).toBe(200);
-    expect(rolesRes.body.errors ?? []).toEqual([]);
-    expect(rolesRes.body.data!.rolesUser.invitations.map(i => i.id)).toEqual([spaceInvitationId]);
-    expect(rolesRes.body.data!.rolesUser.applications).toEqual([]);
+    expect(rolesRes.error?.errors ?? []).toEqual([]);
+    expect(rolesRes.data!.rolesUser.invitations.map(i => i.id)).toEqual([spaceInvitationId]);
+    expect(rolesRes.data!.rolesUser.applications).toEqual([]);
   });
 });
 
 baseTest.describe('US7-AS2 — organization pending lists require ADMIN/OWNER standing', () => {
   baseTest('a plain registered user is refused; an org ADMIN (not associate) and the OWNER read them', async () => {
-    const denied = await postGraphqlRaw(ORGANIZATION_ROLESET_PENDING_QUERY, {
-      bearerToken: bearerFor(TestUser.NON_SPACE_MEMBER),
-      variables: { id: orgO.id },
-    });
-    expect(denied.body.errors?.[0]?.extensions).toMatchObject({ code: 'FORBIDDEN_POLICY' });
-    for (const [field, query] of Object.entries(ORGANIZATION_PENDING_FIELD_QUERIES)) {
-      const deniedField = await postGraphqlRaw(query, {
-        bearerToken: bearerFor(TestUser.NON_SPACE_MEMBER),
-        variables: { id: orgO.id },
-      });
-      expect(deniedField.body.errors?.[0]?.extensions, `${field} must be refused on its own`).toMatchObject({
+    const denied = await readOrganizationRoleSetPending(orgO.id, TestUser.NON_SPACE_MEMBER);
+    expect(denied.error?.errors?.[0]?.extensions).toMatchObject({ code: 'FORBIDDEN_POLICY' });
+    for (const [field, read] of Object.entries(ORGANIZATION_PENDING_FIELD_READS)) {
+      const deniedField = await read(orgO.id, TestUser.NON_SPACE_MEMBER);
+      expect(deniedField.error?.errors?.[0]?.extensions, `${field} must be refused on its own`).toMatchObject({
         code: 'FORBIDDEN_POLICY',
       });
     }
 
     for (const persona of [TestUser.GLOBAL_BETA_TESTER, TestUser.QA_USER]) {
-      const allowed = await postGraphqlRaw<{
-        organization: {
-          roleSet: { applications: unknown[]; invitations: Array<{ id: string }>; platformInvitations: unknown[] };
-        };
-      }>(ORGANIZATION_ROLESET_PENDING_QUERY, {
-        bearerToken: bearerFor(persona),
-        variables: { id: orgO.id },
-      });
-      expect(allowed.body.errors ?? []).toEqual([]);
-      expect(allowed.body.data!.organization.roleSet.invitations.map(i => i.id)).toContain(inviteeInvitationId);
+      const allowed = await readOrganizationRoleSetPending(orgO.id, persona);
+      expect(allowed.error?.errors ?? []).toEqual([]);
+      expect(allowed.data!.organization.roleSet.invitations.map(i => i.id)).toContain(inviteeInvitationId);
     }
   });
 });
 
 // The Space-side pending list has no `organization(ID)` parent — its
-// roleSet hangs off `lookup` directly — so it gets its own query string
-// rather than reusing ORGANIZATION_ROLESET_PENDING_QUERY.
-const SPACE_ROLESET_PENDING_QUERY = `
-  query($id: UUID!) {
-    lookup {
-      roleSet(ID: $id) {
-        applications { id }
-        invitations { id }
-        platformInvitations { id }
-      }
-    }
-  }`;
+// roleSet hangs off `lookup` directly — so it is read through the
+// lookup-rooted `readRoleSetPending` rather than `readOrganizationRoleSetPending`.
 
 baseTest.describe('US7-AS3 — the same GRANT gate applies to a public Space (deliberate R3 change)', () => {
   baseTest('a plain registered user (not a Space admin) is refused; the Space admin reads them', async () => {
-    const deniedSpace = await postGraphqlRaw(SPACE_ROLESET_PENDING_QUERY, {
-      bearerToken: bearerFor(TestUser.NON_SPACE_MEMBER),
-      variables: { id: spaceRoleSetId },
-    });
-    expect(deniedSpace.body.errors?.[0]?.extensions).toMatchObject({ code: 'FORBIDDEN_POLICY' });
-    for (const [field, query] of Object.entries(SPACE_PENDING_FIELD_QUERIES)) {
-      const deniedField = await postGraphqlRaw(query, {
-        bearerToken: bearerFor(TestUser.NON_SPACE_MEMBER),
-        variables: { id: spaceRoleSetId },
-      });
-      expect(deniedField.body.errors?.[0]?.extensions, `Space ${field} must be refused on its own`).toMatchObject({
+    const deniedSpace = await readRoleSetPending(spaceRoleSetId, TestUser.NON_SPACE_MEMBER);
+    expect(deniedSpace.error?.errors?.[0]?.extensions).toMatchObject({ code: 'FORBIDDEN_POLICY' });
+    for (const [field, read] of Object.entries(SPACE_PENDING_FIELD_READS)) {
+      const deniedField = await read(spaceRoleSetId, TestUser.NON_SPACE_MEMBER);
+      expect(deniedField.error?.errors?.[0]?.extensions, `Space ${field} must be refused on its own`).toMatchObject({
         code: 'FORBIDDEN_POLICY',
       });
     }
 
-    const allowedSpace = await postGraphqlRaw<{
-      lookup: { roleSet: { invitations: Array<{ id: string }> } };
-    }>(SPACE_ROLESET_PENDING_QUERY, {
-      bearerToken: bearerFor(TestUser.SPACE_ADMIN),
-      variables: { id: spaceRoleSetId },
-    });
-    expect(allowedSpace.body.errors ?? []).toEqual([]);
-    expect(allowedSpace.body.data!.lookup.roleSet.invitations.map(i => i.id)).toContain(spaceInvitationId);
+    const allowedSpace = await readRoleSetPending(spaceRoleSetId, TestUser.SPACE_ADMIN);
+    expect(allowedSpace.error?.errors ?? []).toEqual([]);
+    expect(allowedSpace.data!.lookup.roleSet!.invitations.map(i => i.id)).toContain(spaceInvitationId);
   });
 });
 
@@ -472,26 +394,17 @@ baseTest.describe('US7-AS5 — account deletion and organization deletion both c
     const { verificationFlowId } = await registerInKratosOrFail('US7Disposable', uniqueId, email);
     await verifyInKratosOrFail(email, verificationFlowId);
     const disposableToken = await getUserToken(email);
-    const meRes = await postGraphqlRaw<{ me: { user: { id: string } } }>(
-      'query { me { user { id } } }',
-      { bearerToken: disposableToken }
-    );
-    const disposableUserId = meRes.body.data?.me.user.id;
+    const meRes = await readMyUser({ bearerToken: disposableToken });
+    const disposableUserId = meRes.data?.me.user?.id;
     expect(disposableUserId).toBeTruthy();
 
     // One open application (org O) + one open invitation (org O2, invited by
     // a global admin — an org invitation is not self-servable). The
-    // generated SDK's `applyForEntryRole` is built for `graphqlErrorWrapper`,
-    // which only ever attaches a fixed `TestUser` persona's cached bearer —
-    // it cannot carry this freshly registered disposable identity's own
-    // token, so this one call goes through `postGraphqlRaw` instead (same
-    // rationale as the query helpers above).
-    const applyRaw = await postGraphqlRaw<{ applyForEntryRoleOnRoleSet: { id: string } }>(
-      'mutation($roleSetID: UUID!) { applyForEntryRoleOnRoleSet(applicationData: { roleSetID: $roleSetID, questions: [] }) { id } }',
-      { bearerToken: disposableToken, variables: { roleSetID: orgO.roleSetId } }
-    );
-    expect(applyRaw.body.errors ?? []).toEqual([]);
-    const disposableApplicationId = applyRaw.body.data!.applyForEntryRoleOnRoleSet.id;
+    // application is made as the freshly registered disposable identity
+    // itself, with its own bearer token as the actor.
+    const applyRaw = await applyForEntryRoleOnRoleSet(orgO.roleSetId, { bearerToken: disposableToken });
+    expect(applyRaw.error?.errors ?? []).toEqual([]);
+    const disposableApplicationId = applyRaw.data!.applyForEntryRoleOnRoleSet.id;
 
     const disposableInvitationId = await inviteToRoleSet(
       orgO2.roleSetId,
@@ -502,11 +415,8 @@ baseTest.describe('US7-AS5 — account deletion and organization deletion both c
 
     // Pre-flight: an open org application/invitation is never itself a
     // deletion blocker.
-    const preflight = await postGraphqlRaw<{ me: { accountDeletion: { canDelete: boolean } } }>(
-      'query { me { accountDeletion { canDelete } } }',
-      { bearerToken: disposableToken }
-    );
-    expect(preflight.body.data?.me.accountDeletion.canDelete).toBe(true);
+    const preflight = await readMyAccountDeletionCanDelete({ bearerToken: disposableToken });
+    expect(preflight.data?.me.accountDeletion.canDelete).toBe(true);
 
     const client = getGraphqlClient();
     const deleteRes = await graphqlErrorWrapper(
@@ -519,23 +429,13 @@ baseTest.describe('US7-AS5 — account deletion and organization deletion both c
     );
     expect(deleteRes.error).toBeUndefined();
 
-    const orgOPending = await postGraphqlRaw<{
-      organization: { roleSet: { applications: Array<{ id: string }> } };
-    }>(ORGANIZATION_ROLESET_PENDING_QUERY, {
-      bearerToken: bearerFor(TestUser.QA_USER),
-      variables: { id: orgO.id },
-    });
-    expect(orgOPending.body.data!.organization.roleSet.applications.map(a => a.id)).not.toContain(
+    const orgOPending = await readOrganizationRoleSetPending(orgO.id, TestUser.QA_USER);
+    expect(orgOPending.data!.organization.roleSet.applications.map(a => a.id)).not.toContain(
       disposableApplicationId
     );
 
-    const orgO2Pending = await postGraphqlRaw<{
-      organization: { roleSet: { invitations: Array<{ id: string }> } };
-    }>(ORGANIZATION_ROLESET_PENDING_QUERY, {
-      bearerToken: bearerFor(TestUser.GLOBAL_ADMIN),
-      variables: { id: orgO2.id },
-    });
-    expect(orgO2Pending.body.data!.organization.roleSet.invitations.map(i => i.id)).not.toContain(
+    const orgO2Pending = await readOrganizationRoleSetPending(orgO2.id, TestUser.GLOBAL_ADMIN);
+    expect(orgO2Pending.data!.organization.roleSet.invitations.map(i => i.id)).not.toContain(
       disposableInvitationId
     );
 
@@ -546,11 +446,9 @@ baseTest.describe('US7-AS5 — account deletion and organization deletion both c
     const deleteOrgRes = await deleteOrganization(orgToDelete.id);
     expect(deleteOrgRes.error).toBeUndefined();
 
-    const inviteeAfter = await postGraphqlRaw<{
-      me: { organizationApplications: Array<{ id: string }> };
-    }>(ME_ORGANIZATION_PENDING_QUERY, { bearerToken: bearerFor(TestUser.SUBSUBSPACE_MEMBER) });
-    expect(inviteeAfter.body.errors ?? []).toEqual([]);
-    expect(inviteeAfter.body.data!.me.organizationApplications.map(a => a.id)).not.toContain(
+    const inviteeAfter = await readMyPendingMemberships(TestUser.SUBSUBSPACE_MEMBER);
+    expect(inviteeAfter.error?.errors ?? []).toEqual([]);
+    expect(inviteeAfter.data!.me.organizationApplications.map(a => a.id)).not.toContain(
       orgDeleteApplicationId
     );
   });
@@ -563,21 +461,11 @@ baseTest.describe('US7-AS6 — the eligibility signal reflects the reset-loop wi
     // stored APPLY rule already bound — simulate a PRE-EXISTING organization
     // (created before the rule existed) by stripping the rule directly from
     // its stored authorization policy, exactly as a pre-deploy org would read.
-    const authIdRes = await postGraphqlRaw<{
-      organization: { roleSet: { authorization: { id: string } } };
-    }>(ORGANIZATION_ROLESET_AUTHORIZATION_ID_QUERY, {
-      bearerToken: bearerFor(TestUser.GLOBAL_ADMIN),
-      variables: { id: orgO3.id },
-    });
-    const authorizationId = authIdRes.body.data!.organization.roleSet.authorization.id;
+    const authIdRes = await readOrganizationRoleSet(orgO3.id, TestUser.GLOBAL_ADMIN);
+    const authorizationId = authIdRes.data!.organization.roleSet.authorization!.id;
 
-    const baseline = await postGraphqlRaw<{
-      organization: { myAssociateEligibility: { canApply: boolean; reason: string } };
-    }>(ORGANIZATION_ELIGIBILITY_QUERY, {
-      bearerToken: bearerFor(TestUser.NON_SPACE_MEMBER),
-      variables: { id: orgO3.id },
-    });
-    expect(baseline.body.data!.organization.myAssociateEligibility.reason).toBe('ELIGIBLE_TO_APPLY');
+    const baseline = await readOrganizationAssociateEligibility(orgO3.id, TestUser.NON_SPACE_MEMBER);
+    expect(baseline.data!.organization.myAssociateEligibility.reason).toBe('ELIGIBLE_TO_APPLY');
 
     await queryHarnessDb(
       `UPDATE authorization_policy
@@ -589,24 +477,16 @@ baseTest.describe('US7-AS6 — the eligibility signal reflects the reset-loop wi
       [authorizationId]
     );
 
-    const stripped = await postGraphqlRaw<{
-      organization: { myAssociateEligibility: { canApply: boolean; reason: string } };
-    }>(ORGANIZATION_ELIGIBILITY_QUERY, {
-      bearerToken: bearerFor(TestUser.NON_SPACE_MEMBER),
-      variables: { id: orgO3.id },
-    });
-    expect(stripped.body.data!.organization.myAssociateEligibility).toMatchObject({
+    const stripped = await readOrganizationAssociateEligibility(orgO3.id, TestUser.NON_SPACE_MEMBER);
+    expect(stripped.data!.organization.myAssociateEligibility).toMatchObject({
       canApply: false,
       reason: 'APPLY_NOT_GRANTED',
     });
 
     // The mutation-side gate matches the read-side signal — no exposure
     // through a stale client bypassing the disabled interface affordance.
-    const blockedApply = await postGraphqlRaw(
-      'mutation($roleSetID: UUID!) { applyForEntryRoleOnRoleSet(applicationData: { roleSetID: $roleSetID, questions: [] }) { id } }',
-      { bearerToken: bearerFor(TestUser.NON_SPACE_MEMBER), variables: { roleSetID: orgO3.roleSetId } }
-    );
-    expect(blockedApply.body.errors?.[0]?.extensions).toMatchObject({ code: 'FORBIDDEN_POLICY' });
+    const blockedApply = await applyForEntryRoleOnRoleSet(orgO3.roleSetId, TestUser.NON_SPACE_MEMBER);
+    expect(blockedApply.error?.errors?.[0]?.extensions).toMatchObject({ code: 'FORBIDDEN_POLICY' });
 
     const client = getGraphqlClient();
     const resetRes = await graphqlErrorWrapper(
@@ -619,13 +499,8 @@ baseTest.describe('US7-AS6 — the eligibility signal reflects the reset-loop wi
     );
     expect(resetRes.error).toBeUndefined();
 
-    const restored = await postGraphqlRaw<{
-      organization: { myAssociateEligibility: { canApply: boolean; reason: string } };
-    }>(ORGANIZATION_ELIGIBILITY_QUERY, {
-      bearerToken: bearerFor(TestUser.NON_SPACE_MEMBER),
-      variables: { id: orgO3.id },
-    });
-    expect(restored.body.data!.organization.myAssociateEligibility).toMatchObject({
+    const restored = await readOrganizationAssociateEligibility(orgO3.id, TestUser.NON_SPACE_MEMBER);
+    expect(restored.data!.organization.myAssociateEligibility).toMatchObject({
       canApply: true,
       reason: 'ELIGIBLE_TO_APPLY',
     });

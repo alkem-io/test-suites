@@ -1,4 +1,6 @@
 export * from "./common/enums/test.user";
+export * from "./common/enums/alkemio";
+export * from "./common/types/schema";
 export * from "./common/constants/privileges";
 export * from "./utils/delay";
 export * from "./utils/uniqueId";
@@ -11,6 +13,8 @@ export * from "./utils/subscriptions";
 export * from "./utils/graphql.authorization.header";
 export * from "./utils/get.document";
 export * from "./utils/graphql.raw.client";
+export * from "./utils/graphql.actor";
+export * from "./utils/graphql.wrapper";
 export * from "./utils/decode-jwt-unsafe";
 export * from "./utils/harness-redis.client";
 export * from "./utils/harness-db.client";
@@ -41,8 +45,22 @@ export * from "./scenario/platform-roles/harness-admin-roles";
 export * from "./scenario/membership/space-membership";
 export * from "./scenario/membership/space-organization-membership";
 export {
-  ConversationCreationType,
-  ActorType,
-  RoomType,
-  NotificationEvent,
-} from "./core/generated/alkemio-schema";
+  deleteUser,
+  getUserByNameId,
+  getUserData,
+  getUserPendingMemberships,
+  getUsersData,
+  registerVerifiedUser,
+  updateUser,
+  updateUserSettingCommunicationMessage,
+  updateUserSettings,
+} from "./scenario/functions/contributtor-management/user/user.request.params";
+export * from "./scenario/functions/me/me.request.params";
+export * from "./scenario/functions/platform/platform.request.params";
+export * from "./scenario/functions/user/user-lookup.request.params";
+export * from "./scenario/functions/organization/organization.request.params";
+export * from "./scenario/functions/account/account.request.params";
+export * from "./scenario/functions/space/space.request.params";
+export * from "./scenario/functions/roleset/roleset.request.params";
+export * from "./scenario/functions/callout/callout.request.params";
+export * from "./scenario/functions/templates/templates.request.params";

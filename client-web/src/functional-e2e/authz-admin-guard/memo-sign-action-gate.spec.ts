@@ -9,7 +9,7 @@
 // the same contract lives in server-api entitlements/memo-signing-entitlement.
 import { expect } from '@playwright/test';
 import { getGraphqlClient, TestUser, UniqueIDGenerator } from '@alkemio/tests-lib';
-import { graphqlErrorWrapper } from '@alkemio/tests-lib/utils/graphql.wrapper';
+import { graphqlErrorWrapper } from '@alkemio/tests-lib';
 import { TestScenarioConfig } from '@alkemio/tests-lib/scenario/config/test-scenario-config';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import { TestScenarioFactory } from '@alkemio/tests-lib/scenario/TestScenarioFactory';
@@ -17,7 +17,7 @@ import {
   CalloutFramingType,
   CalloutVisibility,
   LicenseEntitlementType,
-} from '@alkemio/tests-lib/core/generated/alkemio-schema';
+} from '@alkemio/tests-lib';
 import { createPersonaTest } from '../fixtures/authenticated-session.fixture';
 
 const MEMO_SIGNING_PLAN_NAME = 'SPACE_FEATURE_MEMO_SIGNING';
@@ -45,7 +45,9 @@ test.beforeAll(async () => {
   baseScenario = await TestScenarioFactory.createBaseScenario(scenarioConfig);
   const client = getGraphqlClient();
   const displayName = `memo sign gate ${uniqueId}`;
-  memoTitle = displayName;
+  // The memo's own title differs from the callout's so the memo dialog and the
+  // callout detail dialog (both named after their profile) stay distinguishable.
+  memoTitle = `${displayName} memo`;
   const created = await admin(token =>
     client.CreateCalloutOnCalloutsSet(
       {
@@ -54,7 +56,7 @@ test.beforeAll(async () => {
           framing: {
             profile: { displayName },
             type: CalloutFramingType.Memo,
-            memo: { markdown: `# ${displayName}`, profile: { displayName } },
+            memo: { markdown: `# ${displayName}`, profile: { displayName: memoTitle } },
           },
           settings: { visibility: CalloutVisibility.Published },
         },
@@ -97,10 +99,17 @@ test.afterAll(async () => {
 
 const openMemo = async (page: import('@playwright/test').Page) => {
   await page.goto(memoCalloutUrl);
-  await page.getByRole('button', { name: 'Open Memo' }).first().click();
-  const dialog = page.getByRole('dialog', { name: memoTitle });
+  // The callout deep link opens the callout detail dialog (named after the
+  // callout). Open the memo from THAT dialog's button once it is up — a memo
+  // opened from the space page's own "Open Memo" behind it mounts below the
+  // lazily arriving callout dialog and is hidden from assistive tech (nameless
+  // dialog, nameless "Sign memo"; nightlies 2026-10-22 and 2026-10-27).
+  const calloutDialog = page.getByRole('dialog', { name: `memo sign gate ${uniqueId}`, exact: true });
+  await expect(calloutDialog).toBeVisible({ timeout: 15_000 });
+  await calloutDialog.getByRole('button', { name: 'Open Memo' }).click();
+  const dialog = page.getByRole('dialog', { name: memoTitle, exact: true });
   await expect(dialog).toBeVisible({ timeout: 15_000 });
-  await expect(dialog.getByRole('button', { name: 'Close' })).toBeVisible();
+  await expect(dialog.getByRole('button', { name: 'Close', exact: true })).toBeVisible();
   return dialog;
 };
 

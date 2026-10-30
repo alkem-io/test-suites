@@ -1,6 +1,33 @@
 import { randomUUID } from 'node:crypto';
 import { expect, type Browser, type Page, test } from '@playwright/test';
+import {
+  assignRoleToUser,
+  CalloutFormQuestionType,
+  CalloutFormResponseMode,
+  CalloutFormResponseVisibility,
+  CalloutFramingType,
+  CalloutVisibility,
+  createCalloutWithData,
+  createSpaceOnAccount,
+  createSubspaceWithData,
+  deleteCalloutFormResponse,
+  deleteUser,
+  readCalloutFormResponses,
+  readMyUser,
+  RoleName,
+  SpacePrivacyMode,
+  submitCalloutFormResponse,
+  updateCalloutForm,
+  updateCalloutVisibility,
+  type CalloutFormAnswerInput,
+  type CreateCalloutFormQuestionInput,
+  type CreateCalloutFormSettingsInput,
+  type GraphqlActor,
+  type GraphqlReturnWithError,
+  type UpdateCalloutFormQuestionInput,
+} from '@alkemio/tests-lib';
 import { fillSecret } from '../helpers/login.helper';
+import { must } from '../helpers/lib-actor.helper';
 
 /**
  * workspace#080-form-callout-framing — User Story 4a (P1): Review responses.
@@ -36,7 +63,6 @@ const ADMIN_PASSWORD =
   process.env.ALKEMIO_ADMIN_PASSWORD ||
   process.env.AUTH_ADMIN_PASSWORD ||
   'password';
-const GRAPHQL = `${BASE}/api/private/non-interactive/graphql`;
 // Per-run secret for the throwaway identities this walk provisions (override with
 // FORGE_PERSONA_PASSWORD); a fixed literal would leave them loginable after the run.
 const USER_PASSWORD =
@@ -73,33 +99,20 @@ async function mintToken(userEmail: string, password: string) {
   return token;
 }
 
-type GqlResult<T = any> = { data?: T; errors?: Array<any> };
-
-async function gql<T = any>(
-  userEmail: string,
-  query: string,
-  variables: Record<string, unknown> = {},
-  password = USER_PASSWORD
-): Promise<GqlResult<T>> {
-  const token = await mintToken(
-    userEmail,
-    userEmail === ADMIN_EMAIL ? ADMIN_PASSWORD : password
-  );
-  const res = await fetch(GRAPHQL, {
-    method: 'POST',
-    headers: {
-      'content-type': 'application/json',
-      authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify({ query, variables }),
-  });
-  return (await res.json()) as GqlResult<T>;
+/** The lib actor for one of this run's identities: its bearer, minted once. */
+async function actorFor(userEmail: string): Promise<GraphqlActor> {
+  return {
+    bearerToken: await mintToken(
+      userEmail,
+      userEmail === ADMIN_EMAIL ? ADMIN_PASSWORD : USER_PASSWORD
+    ),
+  };
 }
 
-async function must<T = any>(result: GqlResult<T>, what: string): Promise<T> {
-  expect(result.errors, `${what}: ${JSON.stringify(result.errors)}`).toBeUndefined();
-  return result.data as T;
-}
+type GqlError = { message?: string; extensions?: { code?: string } };
+
+const firstError = (result: GraphqlReturnWithError<unknown>) =>
+  (result.error?.errors as GqlError[] | undefined)?.[0];
 
 async function createIdentity(userEmail: string, first: string, last: string) {
   const res = await fetch(`${KRATOS_ADMIN}/identities`, {
@@ -123,8 +136,8 @@ async function createIdentity(userEmail: string, first: string, last: string) {
 }
 
 async function meId(userEmail: string) {
-  const data = await must(await gql(userEmail, '{ me { user { id } } }'), 'me');
-  return data.me.user.id as string;
+  const data = must(await readMyUser(await actorFor(userEmail)), 'me');
+  return data.me.user!.id;
 }
 
 type Question = {
@@ -135,89 +148,68 @@ type Question = {
 
 async function createForm(
   displayName: string,
-  questions: Array<Record<string, unknown>>,
-  settings: Record<string, unknown> | undefined
+  questions: CreateCalloutFormQuestionInput[],
+  settings: CreateCalloutFormSettingsInput | undefined
 ) {
-  const created = await must(
-    await gql(
-      personaEmail.a2,
-      `mutation ($d: CreateCalloutOnCalloutsSetInput!) {
-        createCalloutOnCalloutsSet(calloutData: $d) {
-          id
-          framing { profile { url } form { id questions { id prompt options { id label } } } }
-        }
-      }`,
+  const a2 = await actorFor(personaEmail.a2);
+  const created = must(
+    await createCalloutWithData(
       {
-        d: {
-          calloutsSetID: fixture.calloutsSetId,
-          framing: {
-            type: 'FORM',
-            profile: { displayName, description: 'US4a form' },
-            form: { questions, settings },
-          },
-          settings: {
-            visibility: 'DRAFT',
-            contribution: { enabled: false },
-            framing: { commentsEnabled: false },
-          },
+        calloutsSetID: fixture.calloutsSetId,
+        framing: {
+          type: CalloutFramingType.Form,
+          profile: { displayName, description: 'US4a form' },
+          form: { questions, settings },
         },
-      }
+        settings: {
+          visibility: CalloutVisibility.Draft,
+          contribution: { enabled: false },
+          framing: { commentsEnabled: false },
+        },
+      },
+      a2
     ),
     'create form'
   );
   const callout = created.createCalloutOnCalloutsSet;
-  await must(
-    await gql(
-      personaEmail.a2,
-      `mutation ($d: UpdateCalloutVisibilityInput!) {
-        updateCalloutVisibility(calloutData: $d) { id }
-      }`,
-      {
-        d: {
-          calloutID: callout.id,
-          visibility: 'PUBLISHED',
-          sendNotification: false,
-        },
-      }
+  must(
+    await updateCalloutVisibility(
+      callout.id,
+      CalloutVisibility.Published,
+      a2,
+      false
     ),
     'publish form'
   );
   return {
-    url: callout.framing.profile.url as string,
-    formId: callout.framing.form.id as string,
-    questions: callout.framing.form.questions as Question[],
+    url: callout.framing.profile.url,
+    formId: callout.framing.form!.id,
+    questions: callout.framing.form!.questions as Question[],
   };
 }
-
-const SUBMIT = `mutation ($d: SubmitCalloutFormResponseInput!) {
-  submitCalloutFormResponse(responseData: $d) { id createdBy { id } }
-}`;
 
 async function submit(
   persona: Persona,
   formId: string,
-  visibility: 'ADMINS' | 'MEMBERS',
-  answers: Array<Record<string, unknown>>
+  visibility: CalloutFormResponseVisibility,
+  answers: CalloutFormAnswerInput[]
 ) {
-  const data = await must(
-    await gql(personaEmail[persona], SUBMIT, {
-      d: { formID: formId, acknowledgedVisibility: visibility, answers },
-    }),
+  const data = must(
+    await submitCalloutFormResponse(
+      { formID: formId, acknowledgedVisibility: visibility, answers },
+      await actorFor(personaEmail[persona])
+    ),
     `submit as ${persona}`
   );
-  return data.submitCalloutFormResponse.id as string;
+  return data.submitCalloutFormResponse.id;
 }
 
 const totalOf = async (persona: Persona, formId: string) => {
-  const data = await must(
-    await gql(
-      personaEmail[persona],
-      'query ($id: UUID!) { lookup { calloutFormResponses(formID: $id) { all { total } } } }',
-      { id: formId }
-    ),
+  const data = must(
+    await readCalloutFormResponses(formId, await actorFor(personaEmail[persona])),
     'total'
   );
-  return data.lookup.calloutFormResponses.all.total as number;
+  return data.lookup.calloutFormResponses.all.total;
 };
 
 async function signIn(browser: Browser, userEmail: string): Promise<Page> {
@@ -275,96 +267,79 @@ test.describe(
         fixture.userIds[p] = await meId(personaEmail[p]);
       }
 
-      const admin = ADMIN_EMAIL;
-      const me = await must(
-        await gql(admin, '{ me { user { account { id } } } }'),
-        'admin account'
-      );
-      const space = (
-        await must(
-          await gql(
-            admin,
-            `mutation ($d: CreateSpaceOnAccountInput!) {
-              createSpace(spaceData: $d) { id community { roleSet { id } } }
-            }`,
-            {
-              d: {
-                accountID: me.me.user.account.id,
-                nameID: `us4a-space-${RUN}`,
-                about: { profileData: { displayName: `US4a Space ${RUN}` } },
-                collaborationData: { calloutsSetData: {} },
-                settings: { privacy: { mode: 'PUBLIC' } },
-              },
-            }
-          ),
-          'create space'
-        )
+      const admin = await actorFor(ADMIN_EMAIL);
+      const me = must(await readMyUser(admin), 'admin account');
+      const space = must(
+        await createSpaceOnAccount(
+          {
+            accountID: me.me.user!.account!.id,
+            nameID: `us4a-space-${RUN}`,
+            about: { profileData: { displayName: `US4a Space ${RUN}` } },
+            collaborationData: { calloutsSetData: {} },
+            settings: { privacy: { mode: SpacePrivacyMode.Public } },
+          },
+          admin
+        ),
+        'create space'
       ).createSpace;
-      const sub = (
-        await must(
-          await gql(
-            admin,
-            `mutation ($d: CreateSubspaceInput!) {
-              createSubspace(subspaceData: $d) {
-                id
-                community { roleSet { id } }
-                collaboration { calloutsSet { id } }
-              }
-            }`,
-            {
-              d: {
-                spaceID: space.id,
-                nameID: `us4a-sub-${RUN}`,
-                about: { profileData: { displayName: `US4a Sub ${RUN}` } },
-                collaborationData: { calloutsSetData: {} },
-                settings: {
-                  collaboration: {
-                    allowEventsFromSubspaces: true,
-                    allowGuestContributions: false,
-                    allowMembersToCreateCallouts: true,
-                    allowMembersToCreateSubspaces: false,
-                    allowMembersToVideoCall: false,
-                    inheritMembershipRights: true,
-                  },
-                },
+      const sub = must(
+        await createSubspaceWithData(
+          {
+            spaceID: space.id,
+            nameID: `us4a-sub-${RUN}`,
+            about: { profileData: { displayName: `US4a Sub ${RUN}` } },
+            collaborationData: { calloutsSetData: {} },
+            settings: {
+              collaboration: {
+                allowEventsFromSubspaces: true,
+                allowGuestContributions: false,
+                allowMembersToCreateCallouts: true,
+                allowMembersToCreateSubspaces: false,
+                allowMembersToVideoCall: false,
+                inheritMembershipRights: true,
               },
-            }
-          ),
-          'create subspace'
-        )
+            },
+          },
+          admin
+        ),
+        'create subspace'
       ).createSubspace;
       fixture.calloutsSetId = sub.collaboration.calloutsSet.id;
 
-      const assign = async (roleSetID: string, p: Persona, role: string) =>
+      const assign = async (roleSetID: string, p: Persona, role: RoleName) =>
         must(
-          await gql(
-            admin,
-            'mutation ($d: AssignRoleOnRoleSetInput!) { assignRoleToUser(roleData: $d) { id } }',
-            { d: { actorID: fixture.userIds[p], role, roleSetID } }
-          ),
+          await assignRoleToUser(fixture.userIds[p], roleSetID, role, admin),
           `assign ${role} ${p}`
         );
       for (const p of ['a2', 'm1', 'm2', 'gone'] as Persona[]) {
-        await assign(space.community.roleSet.id, p, 'MEMBER');
-        await assign(sub.community.roleSet.id, p, 'MEMBER');
+        await assign(space.community.roleSet.id, p, RoleName.Member);
+        await assign(sub.community.roleSet.id, p, RoleName.Member);
       }
-      await assign(sub.community.roleSet.id, 'a2', 'ADMIN');
+      await assign(sub.community.roleSet.id, 'a2', RoleName.Admin);
 
       // Form One — 5 questions (the last is removed later), ADMINS, SINGLE.
       one = await createForm(
         'US4a Form One',
         [
-          { prompt: 'What is your name?', type: 'SHORT_TEXT', required: true },
-          { prompt: 'Tell us more', type: 'LONG_TEXT', required: false },
+          {
+            prompt: 'What is your name?',
+            type: CalloutFormQuestionType.ShortText,
+            required: true,
+          },
+          {
+            prompt: 'Tell us more',
+            type: CalloutFormQuestionType.LongText,
+            required: false,
+          },
           {
             prompt: 'Pick one',
-            type: 'SINGLE_CHOICE',
+            type: CalloutFormQuestionType.SingleChoice,
             required: false,
             options: [{ label: 'Alpha' }, { label: 'Beta' }, { label: 'Gamma' }],
           },
           {
             prompt: 'Pick several',
-            type: 'MULTIPLE_CHOICE',
+            type: CalloutFormQuestionType.MultipleChoice,
             required: false,
             options: [
               { label: 'One' },
@@ -373,14 +348,17 @@ test.describe(
               { label: 'Four' },
             ],
           },
-          { prompt: 'Dietary needs (to be removed)', type: 'SHORT_TEXT' },
+          {
+            prompt: 'Dietary needs (to be removed)',
+            type: CalloutFormQuestionType.ShortText,
+          },
         ],
         undefined
       );
       const [name, more, pick, several, diet] = one.questions;
       const opt = (q: Question, label: string) =>
         q.options!.find(o => o.label === label)!.id;
-      await submit('m1', one.formId, 'ADMINS', [
+      await submit('m1', one.formId, CalloutFormResponseVisibility.Admins, [
         { questionID: name.id, text: 'Mia Memberone' },
         { questionID: more.id, text: 'Loves pizza' },
         { questionID: pick.id, selectedOptionIDs: [opt(pick, 'Beta')] },
@@ -390,52 +368,47 @@ test.describe(
         },
         { questionID: diet.id, text: 'Vegan' },
       ]);
-      await submit('m2', one.formId, 'ADMINS', [
+      await submit('m2', one.formId, CalloutFormResponseVisibility.Admins, [
         { questionID: name.id, text: 'Max Membertwo' },
       ]);
-      await submit('gone', one.formId, 'ADMINS', [
+      await submit('gone', one.formId, CalloutFormResponseVisibility.Admins, [
         { questionID: name.id, text: 'Gina Goner' },
         { questionID: pick.id, selectedOptionIDs: [opt(pick, 'Gamma')] },
         { questionID: diet.id, text: 'Nuts allergy' },
       ]);
-      await submit('a2', one.formId, 'ADMINS', [
+      await submit('a2', one.formId, CalloutFormResponseVisibility.Admins, [
         { questionID: name.id, text: 'Ada Reviewer' },
         { questionID: several.id, selectedOptionIDs: [opt(several, 'Two')] },
       ]);
       // Remove the last question (its answers stay, under the snapshot prompt).
-      await must(
-        await gql(
-          personaEmail.a2,
-          'mutation ($d: UpdateCalloutFormInput!) { updateCalloutForm(formData: $d) { id } }',
+      must(
+        await updateCalloutForm(
           {
-            d: {
-              formID: one.formId,
-              questions: (
-                [
-                  [name, 'SHORT_TEXT', true],
-                  [more, 'LONG_TEXT', false],
-                  [pick, 'SINGLE_CHOICE', false],
-                  [several, 'MULTIPLE_CHOICE', false],
-                ] as Array<[Question, string, boolean]>
-              ).map(([q, type, required]) => ({
+            formID: one.formId,
+            questions: (
+              [
+                [name, CalloutFormQuestionType.ShortText, true],
+                [more, CalloutFormQuestionType.LongText, false],
+                [pick, CalloutFormQuestionType.SingleChoice, false],
+                [several, CalloutFormQuestionType.MultipleChoice, false],
+              ] as Array<[Question, CalloutFormQuestionType, boolean]>
+            ).map(
+              ([q, type, required]): UpdateCalloutFormQuestionInput => ({
                 id: q.id,
                 prompt: q.prompt,
                 type,
                 required,
                 options: q.options?.map(o => ({ id: o.id, label: o.label })),
-              })),
-            },
-          }
+              })
+            ),
+          },
+          await actorFor(personaEmail.a2)
         ),
         'remove question'
       );
       // The submitter deletes their account -> the response is anonymised.
-      await must(
-        await gql(
-          admin,
-          'mutation ($d: DeleteUserInput!) { deleteUser(deleteData: $d) { id } }',
-          { d: { ID: fixture.userIds.gone, deleteIdentity: true } }
-        ),
+      must(
+        await deleteUser(fixture.userIds.gone, admin, true),
         'delete account'
       );
     });
@@ -476,14 +449,18 @@ test.describe(
       const relabel = await createForm(
         'US4a Form Relabel',
         [
-          { prompt: 'Your name', type: 'SHORT_TEXT', required: true },
+          {
+            prompt: 'Your name',
+            type: CalloutFormQuestionType.ShortText,
+            required: true,
+          },
           {
             prompt: 'Pick one',
-            type: 'SINGLE_CHOICE',
+            type: CalloutFormQuestionType.SingleChoice,
             options: [{ label: 'Alpha' }, { label: 'Beta' }, { label: 'Gamma' }],
           },
         ],
-        { responseMode: 'MULTIPLE' }
+        { responseMode: CalloutFormResponseMode.Multiple }
       );
       const [who, pick] = relabel.questions;
       const beta = pick.options!.find(o => o.label === 'Beta')!.id;
@@ -491,33 +468,35 @@ test.describe(
         { questionID: who.id, text: name },
         { questionID: pick.id, selectedOptionIDs: [beta] },
       ];
-      await submit('m1', relabel.formId, 'ADMINS', answerWith('Mia Before'));
-      await must(
-        await gql(
-          personaEmail.a2,
-          'mutation ($d: UpdateCalloutFormInput!) { updateCalloutForm(formData: $d) { id } }',
+      await submit('m1', relabel.formId, CalloutFormResponseVisibility.Admins, answerWith('Mia Before'));
+      must(
+        await updateCalloutForm(
           {
-            d: {
-              formID: relabel.formId,
-              questions: [
-                { id: who.id, prompt: who.prompt, type: 'SHORT_TEXT', required: true },
-                {
-                  id: pick.id,
-                  prompt: pick.prompt,
-                  type: 'SINGLE_CHOICE',
-                  required: false,
-                  options: pick.options!.map(o => ({
-                    id: o.id,
-                    label: o.id === beta ? 'Beta RENAMED' : o.label,
-                  })),
-                },
-              ],
-            },
-          }
+            formID: relabel.formId,
+            questions: [
+              {
+                id: who.id,
+                prompt: who.prompt,
+                type: CalloutFormQuestionType.ShortText,
+                required: true,
+              },
+              {
+                id: pick.id,
+                prompt: pick.prompt,
+                type: CalloutFormQuestionType.SingleChoice,
+                required: false,
+                options: pick.options!.map(o => ({
+                  id: o.id,
+                  label: o.id === beta ? 'Beta RENAMED' : o.label,
+                })),
+              },
+            ],
+          },
+          await actorFor(personaEmail.a2)
         ),
         'relabel option'
       );
-      await submit('m2', relabel.formId, 'ADMINS', answerWith('Max After'));
+      await submit('m2', relabel.formId, CalloutFormResponseVisibility.Admins, answerWith('Max After'));
 
       const page = await signIn(browser, personaEmail.a2);
       await page.goto(relabel.url);
@@ -536,18 +515,22 @@ test.describe(
       many = await createForm(
         'US4a Form Many',
         [
-          { prompt: 'Attendee name', type: 'SHORT_TEXT', required: true },
+          {
+            prompt: 'Attendee name',
+            type: CalloutFormQuestionType.ShortText,
+            required: true,
+          },
           {
             prompt: 'Diet',
-            type: 'SINGLE_CHOICE',
+            type: CalloutFormQuestionType.SingleChoice,
             options: [{ label: 'Vegan' }, { label: 'Vegetarian' }, { label: 'Any' }],
           },
         ],
-        { responseMode: 'MULTIPLE' }
+        { responseMode: CalloutFormResponseMode.Multiple }
       );
       const [attendee, diet] = many.questions;
       for (let i = 1; i <= 120; i++) {
-        await submit('m1', many.formId, 'ADMINS', [
+        await submit('m1', many.formId, CalloutFormResponseVisibility.Admins, [
           { questionID: attendee.id, text: `Attendee ${String(i).padStart(3, '0')}` },
           { questionID: diet.id, selectedOptionIDs: [diet.options![i % 3].id] },
         ]);
@@ -620,14 +603,18 @@ test.describe(
       members = await createForm(
         'US4a Form Members',
         [
-          { prompt: 'Your name', type: 'SHORT_TEXT', required: true },
+          {
+            prompt: 'Your name',
+            type: CalloutFormQuestionType.ShortText,
+            required: true,
+          },
           {
             prompt: 'Colour',
-            type: 'SINGLE_CHOICE',
+            type: CalloutFormQuestionType.SingleChoice,
             options: [{ label: 'Red' }, { label: 'Blue' }],
           },
         ],
-        { visibility: 'MEMBERS' }
+        { visibility: CalloutFormResponseVisibility.Members }
       );
       const [who, colour] = members.questions;
       for (const [p, n, o] of [
@@ -635,7 +622,7 @@ test.describe(
         ['m2', 'Max Two', 1],
         ['a2', 'Ada Admin', 0],
       ] as Array<[Persona, string, number]>) {
-        membersResponses[p] = await submit(p, members.formId, 'MEMBERS', [
+        membersResponses[p] = await submit(p, members.formId, CalloutFormResponseVisibility.Members, [
           { questionID: who.id, text: n },
           { questionID: colour.id, selectedOptionIDs: [colour.options![o].id] },
         ]);
@@ -661,13 +648,12 @@ test.describe(
       await page.context().close();
 
       for (const target of ['m1', 'a2']) {
-        const res = await gql(
-          personaEmail.m2,
-          'mutation ($d: DeleteCalloutFormResponseInput!) { deleteCalloutFormResponse(deleteData: $d) { id } }',
-          { d: { responseID: membersResponses[target] } }
+        const res = await deleteCalloutFormResponse(
+          membersResponses[target],
+          await actorFor(personaEmail.m2)
         );
         expect(res.data ?? null).toBeNull();
-        expect(res.errors?.[0]?.extensions?.code).toBe('FORBIDDEN_POLICY');
+        expect(firstError(res)?.extensions?.code).toBe('FORBIDDEN_POLICY');
       }
       expect(await totalOf('a2', members.formId)).toBe(3);
     });

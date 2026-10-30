@@ -1,15 +1,12 @@
-import { getUserToken, postGraphqlRaw } from '@alkemio/tests-lib';
+import { getUserToken, readMyMcpApiKeys, revokeMyMcpApiKey } from '@alkemio/tests-lib';
 
 type McpKey = { id: string; name: string; status: string };
 
 const listMcpKeys = async (email: string): Promise<McpKey[]> => {
   const bearerToken = await getUserToken(email);
-  const list = await postGraphqlRaw<{ me: { mcpApiKeys: McpKey[] } }>(
-    '{ me { mcpApiKeys { id name status } } }',
-    { bearerToken }
-  );
-  if (list.body.errors) throw new Error(`mcpApiKeys read failed: ${JSON.stringify(list.body.errors)}`);
-  return list.body.data?.me.mcpApiKeys ?? [];
+  const list = await readMyMcpApiKeys({ bearerToken });
+  if (list.error) throw new Error(`mcpApiKeys read failed: ${JSON.stringify(list.error.errors)}`);
+  return list.data?.me.mcpApiKeys ?? [];
 };
 
 /**
@@ -41,11 +38,8 @@ export async function revokeMintedMcpKeys(
   );
   const failures: string[] = [];
   for (const key of mine) {
-    const res = await postGraphqlRaw(
-      'mutation($id: UUID!) { revokeMcpApiKey(revokeData: { keyID: $id }) { id status } }',
-      { bearerToken, variables: { id: key.id } }
-    );
-    if (res.body.errors) failures.push(`${key.name}: ${JSON.stringify(res.body.errors)}`);
+    const res = await revokeMyMcpApiKey(key.id, { bearerToken });
+    if (res.error) failures.push(`${key.name}: ${JSON.stringify(res.error.errors)}`);
   }
   if (failures.length > 0) {
     throw new Error(`could not revoke ${failures.length} minted MCP key(s):\n  ${failures.join('\n  ')}`);

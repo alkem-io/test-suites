@@ -27,6 +27,7 @@ import {
   type BrowserContext,
   type Page,
 } from '@playwright/test';
+import { readPlatformLanguageConfiguration } from '@alkemio/tests-lib';
 import { createPersonaTest } from '../fixtures/authenticated-session.fixture';
 import {
   fillUpSignInPageElements,
@@ -46,7 +47,6 @@ import {
   listInvitations,
   openEmailAddresses,
   organizationInvitationSubject,
-  postGraphqlRaw,
   registerUserAtAddress,
   RoleName,
   runSuffix,
@@ -67,12 +67,13 @@ const DUTCH_SKIP_REASON = `the stack does not list '${DUTCH}' as an eligible lan
 const labelsFor = (dutch: boolean) =>
   dutch
     ? {
-        section: 'Uitnodigingen als Geassocieerde',
-        offeredRole: 'Geassocieerde + Beheerder',
+        // Dutch copy as of client-web#10435 ("betrokkene" replaced "geassocieerde").
+        section: 'Uitnodigingen als betrokkene',
+        offeredRole: 'Betrokkene + Beheerder',
         detailTitle: (organization: string) =>
-          `Uitnodiging om te associëren met ${organization}`,
+          `Uitnodiging om betrokkene te worden bij ${organization}`,
         invitedBy: (name: string) => `Uitgenodigd door ${name}`,
-        associate: 'Geassocieerde',
+        associate: 'Betrokkene',
         admin: 'Beheerder',
       }
     : {
@@ -123,12 +124,8 @@ baseTest.beforeAll(async () => {
   );
   await assignUserRoleOnOrganization(org.roleSetId, admin.id, RoleName.Admin);
 
-  const language = await postGraphqlRaw<{
-    platform: {
-      configuration: { language: { eligible: string[]; default: string } };
-    };
-  }>('query { platform { configuration { language { eligible default } } } }');
-  const config = language.body.data?.platform.configuration.language;
+  const language = await readPlatformLanguageConfiguration();
+  const config = language.data?.platform.configuration.language;
   // The suggested language is pinned to Dutch when the stack offers it, so the Dutch-language assertion
   // can run; otherwise no language is seeded, the walk runs on English labels and only that one assertion skips.
   eligibleLanguage = config?.eligible.includes(DUTCH) ? DUTCH : undefined;
@@ -282,9 +279,9 @@ baseTest.describe(
         baseTest.skip(eligibleLanguage !== DUTCH, DUTCH_SKIP_REASON);
         const detail = inviteePage!.getByRole('dialog');
         await expect(detail).toContainText(
-          `Uitnodiging om te associëren met ${org.displayName}`
+          `Uitnodiging om betrokkene te worden bij ${org.displayName}`
         );
-        await expect(detail).toContainText('Geassocieerde + Beheerder');
+        await expect(detail).toContainText('Betrokkene + Beheerder');
       }
     );
 

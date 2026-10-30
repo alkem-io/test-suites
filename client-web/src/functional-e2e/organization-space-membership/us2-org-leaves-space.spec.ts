@@ -10,7 +10,7 @@ import {
   UniqueIDGenerator,
 } from '@alkemio/tests-lib';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
-import { RoleName } from '@alkemio/tests-lib/core/generated/alkemio-schema';
+import { RoleName } from '@alkemio/tests-lib';
 import { createAuthenticatedSessionFixture } from '../fixtures/authenticated-session.fixture';
 import {
   clearHostLead,
@@ -19,12 +19,10 @@ import {
   errorToast,
   gotoMembershipTab,
   inviteAndAccept,
-  leaveMenuItem,
+  leaveRowButton,
   makePersonaUserMember,
-  membershipCard,
-  membershipCards,
-  MembershipType,
-  openCardMenu,
+  membershipRow,
+  membershipRows,
   orgIsLeadOf,
   orgIsMemberOf,
   removeAllOrgSpaceRoles,
@@ -113,14 +111,13 @@ const leaveButton = (dialog: Locator): Locator =>
 const cancelBtn = (dialog: Locator): Locator =>
   dialog.getByRole('button', { name: COPY.dialogCancel, exact: true });
 
-const openTabWithCards = (page: Page, count: number) =>
+const openTabWithRows = (page: Page, count: number) =>
   gotoMembershipTab(page, baseScenario!.organization.nameId, async p => {
-    await expect(membershipCards(p)).toHaveCount(count, { timeout: 5_000 });
+    await expect(membershipRows(p)).toHaveCount(count, { timeout: 5_000 });
   });
 
-const startLeave = async (page: Page, name: string, type: MembershipType) => {
-  await openCardMenu(membershipCard(page, name));
-  await leaveMenuItem(page, type).click();
+const startLeave = async (page: Page, name: string) => {
+  await leaveRowButton(page, name).click();
   const dialog = dialogOf(page);
   await expect(dialog).toBeVisible();
   return dialog;
@@ -178,7 +175,7 @@ test.describe('Organization Membership tab — leave a Space', () => {
   test('US2-AS1 Leave Subspace opens a destructive confirmation naming the Subspace', async ({
     page,
   }) => {
-    await openTabWithCards(page, 4); // S, S1, S2, L
+    await openTabWithRows(page, 4); // S, S1, S2, L
 
     const removeRequests: string[] = [];
     page.on('request', request => {
@@ -188,7 +185,7 @@ test.describe('Organization Membership tab — leave a Space', () => {
       }
     });
 
-    const dialog = await startLeave(page, subspaceName(), 'Subspace');
+    const dialog = await startLeave(page, subspaceName());
 
     await expect(
       dialog.getByText(COPY.dialogTitle, { exact: true })
@@ -200,13 +197,13 @@ test.describe('Organization Membership tab — leave a Space', () => {
   });
 
   test('US2-AS2 Cancel changes nothing', async ({ page }) => {
-    await openTabWithCards(page, 4); // S, S1, S2, L
-    const dialog = await startLeave(page, subspaceName(), 'Subspace');
+    await openTabWithRows(page, 4); // S, S1, S2, L
+    const dialog = await startLeave(page, subspaceName());
 
     await cancelBtn(dialog).click();
 
     await expect(dialog).toBeHidden();
-    await expect(membershipCards(page)).toHaveCount(4);
+    await expect(membershipRows(page)).toHaveCount(4);
     expect(await orgIsMemberOf(subspaceRoleSetId(), orgId())).toBe(true);
     expect(await orgIsMemberOf(spaceRoleSetId(), orgId())).toBe(true);
   });
@@ -214,16 +211,16 @@ test.describe('Organization Membership tab — leave a Space', () => {
   test('US2-AS3 confirming leaves only the Subspace chosen', async ({
     page,
   }) => {
-    await openTabWithCards(page, 4); // S, S1, S2, L
-    const dialog = await startLeave(page, subspaceName(), 'Subspace');
+    await openTabWithRows(page, 4); // S, S1, S2, L
+    const dialog = await startLeave(page, subspaceName());
 
     await leaveButton(dialog).click();
 
     await expect(successToast(page)).toBeVisible({
       timeout: SUCCESS_TOAST_MS,
     });
-    await expect(membershipCard(page, subspaceName())).toHaveCount(0);
-    await expect(membershipCard(page, spaceName())).toBeVisible();
+    await expect(membershipRow(page, subspaceName())).toHaveCount(0);
+    await expect(membershipRow(page, spaceName())).toBeVisible();
     expect(await orgIsMemberOf(subspaceRoleSetId(), orgId())).toBe(false);
     expect(await orgIsMemberOf(spaceRoleSetId(), orgId())).toBe(true);
   });
@@ -234,19 +231,19 @@ test.describe('Organization Membership tab — leave a Space', () => {
     // Leaving S1 also ended S2 (shared cascade), and a Subspace invitation
     // re-seats the parent chain — so re-seed the whole chain.
     await seedOrgChain();
-    await openTabWithCards(page, 4); // S, S1, S2, L
-    await expect(membershipCard(page, subsubspaceName())).toBeVisible();
+    await openTabWithRows(page, 4); // S, S1, S2, L
+    await expect(membershipRow(page, subsubspaceName())).toBeVisible();
 
-    const dialog = await startLeave(page, spaceName(), 'Space');
+    const dialog = await startLeave(page, spaceName());
     await leaveButton(dialog).click();
 
     await expect(successToast(page)).toBeVisible({
       timeout: SUCCESS_TOAST_MS,
     });
-    await expect(membershipCard(page, spaceName())).toHaveCount(0);
-    await expect(membershipCard(page, subspaceName())).toHaveCount(0);
-    await expect(membershipCard(page, subsubspaceName())).toHaveCount(0);
-    await expect(membershipCards(page)).toHaveCount(1); // only L remains
+    await expect(membershipRow(page, spaceName())).toHaveCount(0);
+    await expect(membershipRow(page, subspaceName())).toHaveCount(0);
+    await expect(membershipRow(page, subsubspaceName())).toHaveCount(0);
+    await expect(membershipRows(page)).toHaveCount(1); // only L remains
     expect(await orgIsMemberOf(spaceRoleSetId(), orgId())).toBe(false);
     expect(await orgIsMemberOf(subspaceRoleSetId(), orgId())).toBe(false);
     expect(await orgIsMemberOf(subsubspaceRoleSetId(), orgId())).toBe(false);
@@ -263,12 +260,12 @@ test.describe('Organization Membership tab — leave a Space', () => {
     // Lead-without-Member.
     expect(await orgIsMemberOf(leadRoleSetId(), orgId())).toBe(true);
     expect(await orgIsLeadOf(leadRoleSetId(), orgId())).toBe(true);
-    await openTabWithCards(page, 1);
+    await openTabWithRows(page, 1);
     await expect(
-      membershipCard(page, leadName()).getByText(COPY.roleLead, { exact: true })
+      membershipRow(page, leadName()).getByText(COPY.roleLead, { exact: true })
     ).toBeVisible();
 
-    const dialog = await startLeave(page, leadName(), 'Space');
+    const dialog = await startLeave(page, leadName());
     await leaveButton(dialog).click();
 
     await expect(successToast(page)).toBeVisible({
@@ -276,8 +273,8 @@ test.describe('Organization Membership tab — leave a Space', () => {
     });
     expect(await orgIsMemberOf(leadRoleSetId(), orgId())).toBe(false);
     expect(await orgIsLeadOf(leadRoleSetId(), orgId())).toBe(false);
-    await expect(membershipCard(page, leadName())).toHaveCount(0);
-    await expect(membershipCards(page)).toHaveCount(0);
+    await expect(membershipRow(page, leadName())).toHaveCount(0);
+    await expect(membershipRows(page)).toHaveCount(0);
 
     // AS6 and AS7 count on L still being listed next to S: put the plain
     // membership back the only way a new organization can enter a Space.
@@ -289,31 +286,31 @@ test.describe('Organization Membership tab — leave a Space', () => {
     page,
   }) => {
     await ensureOrgMemberOf(orgId(), [spaceRoleSetId()]);
-    await openTabWithCards(page, 2); // S, L
+    await openTabWithRows(page, 2); // S, L
 
     // A Space admin removes the organization while the tab is open.
     await removeOrgRoleIfHeld(orgId(), spaceRoleSetId(), RoleName.Member);
     expect(await orgIsMemberOf(spaceRoleSetId(), orgId())).toBe(false);
-    await expect(membershipCard(page, spaceName())).toBeVisible(); // stale tab
+    await expect(membershipRow(page, spaceName())).toBeVisible(); // stale tab
 
-    const dialog = await startLeave(page, spaceName(), 'Space');
+    const dialog = await startLeave(page, spaceName());
     await leaveButton(dialog).click();
 
     await expect(errorToast(page)).toBeVisible({ timeout: 8_000 });
     await expect(dialog).toBeHidden();
     await expect(successToast(page)).toHaveCount(0);
     // The list refreshes to the actual memberships.
-    await expect(membershipCard(page, spaceName())).toHaveCount(0, {
+    await expect(membershipRow(page, spaceName())).toHaveCount(0, {
       timeout: 8_000,
     });
-    await expect(membershipCards(page)).toHaveCount(1);
+    await expect(membershipRows(page)).toHaveCount(1);
   });
 
   test('US2-AS7 a second submit is impossible while the leave is in flight', async ({
     page,
   }) => {
     await inviteAndAccept(orgId(), spaceRoleSetId(), TestUser.GLOBAL_ADMIN);
-    await openTabWithCards(page, 2); // S, L
+    await openTabWithRows(page, 2); // S, L
 
     let removeRequests = 0;
     await page.route('**/graphql', async route => {
@@ -326,7 +323,7 @@ test.describe('Organization Membership tab — leave a Space', () => {
     });
 
     try {
-      const dialog = await startLeave(page, spaceName(), 'Space');
+      const dialog = await startLeave(page, spaceName());
       await leaveButton(dialog).click();
 
       // The confirmed dialog itself stays open and non-interactive while the

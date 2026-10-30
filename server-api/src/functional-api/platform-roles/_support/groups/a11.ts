@@ -298,6 +298,26 @@ export const A11_GROUP: GroupModule<A11> = {
         expect(migrated).toBeLessThanOrEqual(total);
       },
     },
+    'A11.adminRepairTemplateFiles': {
+      gate: ['adminRepairTemplateFiles'],
+      call: (sdk, headers) =>
+        sdk.adminRepairTemplateFiles(
+          { repairData: { dryRun: true, templateIDs: [] } },
+          headers
+        ),
+      verify: async ({ data }) =>
+        expect(data).toEqual({
+          adminRepairTemplateFiles: {
+            dryRun: true,
+            templatesScanned: 0,
+            templatesWithForeignFiles: 0,
+            copiedReferences: 0,
+            references: [],
+            missingFiles: [],
+            failed: [],
+          },
+        }),
+    },
     'A11.refreshAllBodiesOfKnowledge': {
       gate: ['refreshAllBodiesOfKnowledge'],
       call: (sdk, headers) => sdk.refreshAllBodiesOfKnowledge({}, headers),

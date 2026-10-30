@@ -1934,3 +1934,44 @@ client-web/src/functional-e2e/templates-CRD/template-types/whiteboard-template.s
 3. Add permission enforcement tests
 4. Add template inheritance tests
 5. Implement template export/import tests
+
+---
+
+## Documents with content in post templates (client-web#10423)
+
+> **Status:** Approved — QA lead, in-session, 2026-10-19 · **Depth:** Light · **Story:** [client-web#10423](https://github.com/alkem-io/client-web/issues/10423) (epic alkemio#1843) · **Diff:** [server#6666](https://github.com/alkem-io/server/pull/6666) + [client-web#10429](https://github.com/alkem-io/client-web/pull/10429), merged 2026-10-15 (`workspace#085-document-post-templates`) · **API half:** [test-suites#674](https://github.com/alkem-io/test-suites/pull/674) (open; `server-api/collabora/collabora-template-isolation.it-spec.ts`, the byte-level isolation proof AC1/AC2/AC3/AC6)
+
+A template creator uploads a real file into a post template; every post created from it gets its own copy. The spec left two things to humans — the apply flow in a browser (R-12) and the innovation-pack route across accounts (R-11) — and persisted no browser walk at all. `templates-CRD/template-types/document-template-content.spec.ts` (nightly *Templates*) covers both.
+
+Fixtures: `server-api/.../storage/files-to-upload/doc.pdf` for the browser authoring walk (the spec's own choice) and `templates-CRD/fixtures/document-template.docx`, a 978-byte minimal OOXML document generated for this plan, for the seeded template the apply walks copy. Every byte assertion compares sha256 of the file on disk with the bytes behind the document's `previewUrl` (storage REST).
+
+| Case | Covers | Result 2026-10-19 (local stack, client-web `fa98c933b`, server `901f96281`) |
+| --- | --- | --- |
+| DT-1 | US1-S1 in the browser: Create collaboration-tool template → Document → upload `doc.pdf` → staged name + Remove file → Save → listed; API: `documentType` PDF derived from the file, bytes = fixture | green ×3 |
+| DT-2 | **R-12 / human check 2**: Add Post → Find Template → Use template (.docx template) → Document chip checked, title prefilled → Post; the post offers "Open Document"; API: a distinct document, WORDPROCESSING, bytes = fixture; the template unchanged | green ×3 |
+| DT-3 | AC2 in the browser: a plain member applies the same template; three distinct documents, all the fixture's bytes | green ×3 |
+| DT-4 | **R-11 / human check 4**: a document template in an innovation pack on the organisation's account, applied (API, the exact mutation the client sends) from a space on the `space.admin` user's own account by that user, who holds no role in the pack's owner — accepted, own copy, fixture bytes | green ×3 |
+
+Still manual: human check 1 (type in the real Collabora editor of a post, autosave, confirm the template and a sibling post are unchanged — AC3 proxies it with `replaceCollaboraDocument` in #674) and human check 3 (a real Word document keeps its formatting in Collabora; the generated fixture has one paragraph). Not covered: `.xlsx` / `.pptx` through the UI; the unentitled-space refusal (spec R-2, accepted as shipped behaviour); "Save as template" for document posts (out of scope by ruling).
+
+Finding for the delivery pipeline: the `collabora` vitest project that holds #674's four cases is not part of `test:nightly` (`--project nightly`), so once merged they run only when invoked by name.
+
+
+---
+
+## Collaboration-tool template round-trip (client-web#10443, server#6682)
+
+> **Status:** Approved — QA lead, in-session, 2026-10-19 · **Depth:** Light · **Found during:** Release 78 verification of client-web#10423 on dev (QA lead, 2026-10-19); neither defect belongs to a Release 78 story · **Spec:** `templates-CRD/template-types/collaboration-tool-template-roundtrip.spec.ts` (nightly Templates)
+
+What a Space admin saves in the collaboration-tool template form must come back when the template is used or edited, and the creator must be able to edit the content they put into it. Two gaps, both reproduced from a fresh scenario on the local stack and pinned with `test.skip` until the fixes land:
+
+| Case | Covers | Result 2026-10-19 (local stack, client-web `fa98c933b`, server `901f96281`) |
+| --- | --- | --- |
+| RT-1 | Template form → Responses = Documents → Save; API: `allowedTypes = ["COLLABORA_DOCUMENT"]` (the server stores it) | green |
+| RT-2 | Add Post → Find Template → Use template: title prefilled **and Responses = Documents** | red → **client-web#10443** (`calloutTemplateMapper` maps `CollaboraDocument → 'none'`; no chip checked) |
+| RT-3 | Preview → Edit template: Responses = Documents | red → **client-web#10443** (same mapper) |
+| RT-4 | Edit template → change the description → Save: the new description is read back from the server (the save happened), and `allowedTypes` is unchanged (no write-back loss) | green |
+| MT-1 | Template form → Add to post = Memo → Save; API as the creator: `memo.createdBy` = creator, `myPrivileges` ∋ `UPDATE_CONTENT` | red → **server#6682** (`createdBy` null: the template path creates the callout without a `userID`) |
+| MT-2 | Preview → Edit template → Open memo: the creator's editor is `contenteditable="true"` | red → **server#6682** (renders `contenteditable="false"`) |
+
+RT-2…RT-4 and MT-2 run on templates seeded by API as the same creator, so each case stands alone; RT-1 and MT-1 keep the browser authoring walk the QA lead followed on dev. Not a defect, recorded for the record: a post whose response type is Documents has no default document and no pre-populate control (client-web#10083 — documents are added to the published post), and the Documents chips are greyed out on a Space without `SPACE_FEATURE_OFFICE_DOCUMENTS` (the scenario is entitled in `beforeAll`).

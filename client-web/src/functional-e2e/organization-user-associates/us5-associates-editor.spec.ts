@@ -27,7 +27,7 @@
 // `fullyParallel`.
 
 import { expect, Page, test as baseTest } from '@playwright/test';
-import { RoleName } from '@alkemio/tests-lib/core/generated/alkemio-schema';
+import { readMyUser, RoleName } from '@alkemio/tests-lib';
 import { createPersonaTest } from '../fixtures/authenticated-session.fixture';
 import {
   assignUserRoleOnOrganization,
@@ -36,7 +36,6 @@ import {
   getUserIdsInRole,
   getUserToken,
   OrgFixture,
-  postGraphqlRaw,
   registerPersona,
   removeUserRoleOnOrganization,
   runSuffix,
@@ -44,7 +43,7 @@ import {
   TestUserManager,
 } from './organization-user-associates.helpers';
 import { getGraphqlClient } from '@alkemio/tests-lib';
-import { graphqlErrorWrapper } from '@alkemio/tests-lib/utils/graphql.wrapper';
+import { graphqlErrorWrapper } from '@alkemio/tests-lib';
 
 baseTest.describe.configure({ mode: 'serial' });
 
@@ -100,9 +99,9 @@ const adminOnlyName = `${adminOnlyLabel}-${runSuffix}`;
 
 async function userIdFor(email: string): Promise<string> {
   const bearerToken = await getUserToken(email);
-  const res = await postGraphqlRaw<{ me: { user: { id: string } } }>('query { me { user { id } } }', { bearerToken });
-  const id = res.body.data?.me.user.id;
-  if (!id) throw new Error(`Could not resolve user id for ${email}: ${JSON.stringify(res.body.errors)}`);
+  const res = await readMyUser({ bearerToken });
+  const id = res.data?.me.user?.id;
+  if (!id) throw new Error(`Could not resolve user id for ${email}: ${JSON.stringify(res.error?.errors)}`);
   return id;
 }
 
@@ -247,7 +246,7 @@ baseTest.afterAll(async () => {
 // ─── Page-level helpers ────────────────────────────────────────────────────
 
 async function openAssociatesTab(page: Page, orgNameId: string) {
-  await page.goto(`${baseUrl}/organization/${orgNameId}/settings/community`);
+  await page.goto(`${baseUrl}/organization/${orgNameId}/settings/associates`);
   await expect(page.getByRole('heading', { name: 'Associates' })).toBeVisible({ timeout: 15_000 });
 }
 
@@ -265,9 +264,9 @@ async function openRowEditor(page: Page, name: string) {
 // ─── US5-AS1 ────────────────────────────────────────────────────────────
 
 actorTest.describe('US5-AS1 — the retired Authorization URL lands on the Associates tab', () => {
-  actorTest('/settings/authorization redirects to /settings/community and shows the Associates card', async ({ page }) => {
+  actorTest('/settings/authorization redirects to /settings/associates and shows the Associates card', async ({ page }) => {
     await page.goto(`${baseUrl}/organization/${orgAdminCap.nameID}/settings/authorization`);
-    await expect(page).toHaveURL(new RegExp(`/organization/${orgAdminCap.nameID}/settings/community$`), {
+    await expect(page).toHaveURL(new RegExp(`/organization/${orgAdminCap.nameID}/settings/associates$`), {
       timeout: 15_000,
     });
     await expect(page.getByRole('heading', { name: 'Associates' })).toBeVisible({ timeout: 15_000 });
@@ -275,7 +274,7 @@ actorTest.describe('US5-AS1 — the retired Authorization URL lands on the Assoc
   });
 
   actorTest('the tab strip is Profile / Account / Associates / Membership / Invitations / Settings — no Authorisation tab', async ({ page }) => {
-    await page.goto(`${baseUrl}/organization/${orgAdminCap.nameID}/settings/community`);
+    await page.goto(`${baseUrl}/organization/${orgAdminCap.nameID}/settings/associates`);
     await expect(page.getByRole('heading', { name: 'Associates' })).toBeVisible({ timeout: 15_000 });
     // shell.tabs.org in contributorSettings.en.json; the strip renders each
     // entry as role="tab" (the breadcrumb above it also links "Settings", so

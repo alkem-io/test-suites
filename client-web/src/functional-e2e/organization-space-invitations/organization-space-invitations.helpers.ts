@@ -2,14 +2,14 @@ import {
   createOrganization,
   deleteOrganization,
   getGraphqlClient,
+  readRoleSetUsersInRole,
   TestUser,
   TestUserManager,
   UniqueIDGenerator,
   assignRoleToOrganization as libAssignRoleToOrganization,
 } from '@alkemio/tests-lib';
-import { graphqlErrorWrapper } from '@alkemio/tests-lib/utils/graphql.wrapper';
-import { graphqlRequestAuth } from '@alkemio/tests-lib/utils/graphql.request';
-import { RoleName } from '@alkemio/tests-lib/core/generated/alkemio-schema';
+import { graphqlErrorWrapper } from '@alkemio/tests-lib';
+import { RoleName } from '@alkemio/tests-lib';
 
 /**
  * Local GraphQL helpers for the organization-space-invitations acceptance
@@ -350,24 +350,8 @@ export const getOrganizationAdminIds = async (
   organizationRoleSetId: string,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ): Promise<string[]> => {
-  const requestParams = {
-    operationName: 'OrgRoleSetAdmins',
-    query: `
-      query OrgRoleSetAdmins($roleSetId: UUID!) {
-        lookup {
-          roleSet(ID: $roleSetId) {
-            id
-            usersInRole(role: ADMIN) { id }
-          }
-        }
-      }
-    `,
-    variables: { roleSetId: organizationRoleSetId },
-  };
-  const response = await graphqlRequestAuth(requestParams, userRole);
-  const users = response.body?.data?.lookup?.roleSet?.usersInRole as
-    | { id: string }[]
-    | undefined;
+  const response = await readRoleSetUsersInRole(organizationRoleSetId, RoleName.Admin, userRole);
+  const users = response.data?.lookup?.roleSet?.usersInRole;
   return (users ?? []).map(u => u.id);
 };
 

@@ -1,0 +1,1 @@
+query ReadSpaceGuidelinesId($spaceId: UUID!) { lookup { space(ID: $spaceId) { id about { guidelines { id } } } } }

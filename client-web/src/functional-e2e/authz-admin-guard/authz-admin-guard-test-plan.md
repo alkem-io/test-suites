@@ -38,7 +38,7 @@ Registered in the nightly config as project **Authz admin guard**.
 | 3.1 | Space Community boundary: a plain member gets no admin surface (no per-member Actions menu) | `space.member` | same |
 | 2.1, 2.2 | Org Associates: add / remove associate persists | `organization.admin` | `org-associates-authorization.spec.ts` |
 | 3.1–3.3 | Org Authorization: add / remove admin persists; Owner controls gated off for a non-owner admin | `organization.admin` | same |
-| 4.1, 4.2 | Org tabs as GLOBAL_SUPPORT: control is gated off with the tooltip, not offered, or enabled AND honoured — the outcome is recorded as a test annotation | `global.support` | same |
+| 4.1, 4.2 | Org Associates tab as GLOBAL_SUPPORT (workspace#090): the Invite control and the row editor's Admin switch are offered, enabled AND honoured by the server — "not offered" or "gated off" is now the regression (through Slice B it was the expected outcome). 4.1 invites a run-unique address and finds it in the pending table; the invitation is revoked in `afterAll` | `global.support` | same |
 | 4.1, 4.2 | Platform Global Roles: add / remove a user on `GLOBAL_COMMUNITY_READER`; persists; no denied toast | `admin` | `platform-global-roles.spec.ts` |
 | 4.3 | Platform Global Roles as GLOBAL_SUPPORT: admin area unreachable, or Add gated off with the tooltip | `global.support` | same |
 | 5.1 | Unverifiable: every read of this role set's authorization answered without `myPrivileges` → the Community tab lists no members and offers no Actions menu (READ is gone too); a reload without the fault restores it | `space.admin` + route fault | `unverifiable-and-denied.spec.ts` |

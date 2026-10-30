@@ -90,9 +90,9 @@ export const ROLE_SUMMARY: Record<
   },
   PLATFORM_SUPPORT: {
     name: 'Platform Support',
-    owns: "The organization lifecycle (create and delete); editing an organization's packs, hubs and the templates inside; the platform forum; admin rights inside a space ONLY where that space enables the support flag.",
+    owns: "The organization lifecycle (create and delete); editing an organization's packs, hubs and the templates inside; managing an organisation's people on its Community tab (invite, promote/demote, remove, approve/reject, revoke, resend), by consent only; the platform forum; admin rights inside a space ONLY where that space enables the support flag.",
     mustNot:
-      'Moving those resources; deleting the pack or hub itself; any space that has not enabled the flag; role assignment; settings; operations; user records.',
+      'Moving those resources; deleting the pack or hub itself; any space that has not enabled the flag; platform role assignment; adding anyone to an organisation directly; any other organisation settings; operations; user records.',
   },
   PLATFORM_LICENSE_MANAGER: {
     name: 'Platform License Manager',
@@ -188,7 +188,8 @@ export type CapabilityGroupId =
   | 'A20'
   | 'A20b'
   | 'A21'
-  | 'A22';
+  | 'A22'
+  | 'A23';
 
 export type CapabilityGroup = { title: string; spec: string };
 
@@ -257,6 +258,10 @@ export const CAPABILITY_GROUPS: Record<CapabilityGroupId, CapabilityGroup> = {
   A22: {
     title: 'Direct add without consent (invitation only)',
     spec: 'A22 · 061 R32 · alkem-io/server#6623',
+  },
+  A23: {
+    title: "Manage an organisation's people on its Community tab",
+    spec: '090 · FR-005 · FR-009 · FR-011',
   },
 };
 
@@ -1456,6 +1461,21 @@ export const CAPABILITIES: readonly Capability[] = [
     negative: { status: 'automated' },
   },
   {
+    id: 'A11.adminRepairTemplateFiles',
+    group: 'A11',
+    surface: 'adminRepairTemplateFiles',
+    kind: 'mutation',
+    owners: ['PLATFORM_OPERATIONS_ADMIN'],
+    acceptedExtra: [],
+    requirement: { basis: 'family' },
+    verifies: {
+      kind: 'executed',
+      oracle: 'an empty template list returns the all-zero dry-run report',
+    },
+    positive: { status: 'automated' },
+    negative: { status: 'automated' },
+  },
+  {
     id: 'A11.refreshAllBodiesOfKnowledge',
     group: 'A11',
     surface: 'refreshAllBodiesOfKnowledge',
@@ -1814,12 +1834,12 @@ export const CAPABILITIES: readonly Capability[] = [
     acceptedExtra: ['PLATFORM_CONTENT_FULL_ACCESS'],
     requirement: {
       basis: 'conflict',
-      note: 'the server DELIBERATELY grants Platform Resource Admin READ on every space (space.service.platform.roles.access.ts); the requirements allow only Spaces Reader plus the Content Full Access exception. The negative for PLATFORM_RESOURCE_ADMIN is RED until product decides',
+      note: 'Platform Resource Admin holds a NON-cascading READ on every space (the mover-only rule `spacePlatformResourceAdminRead`, QA ruling (b′): it resolves the space it moves, never its content). The oracle therefore reads the callouts under the collaboration, which only a cascading READ reaches - `space.collaboration { id }` alone is gated on the space READ and would wrongly show the mover as allowed (that was the standing red until 2026-10-23)',
     },
     verifies: {
       kind: 'returns-data',
       oracle:
-        'reads the collaboration of a PRIVATE space it is not a member of',
+        'reads the callouts of a PRIVATE space it is not a member of (the same set the host sees)',
     },
     positive: { status: 'automated' },
     negative: { status: 'automated' },
@@ -2235,6 +2255,210 @@ export const CAPABILITIES: readonly Capability[] = [
       reason:
         'no global role may reach this surface - a new organization enters by invitation; one already in the space is managed with GRANT alone (roleset/invitations, R32)',
     },
+    negative: { status: 'automated' },
+  },
+  // 090 (server#6692 / #6708) re-states the same ruling for ORGANISATIONS:
+  // Platform Support gained the Community-tab reach (A23) but never a direct add,
+  // so entering the entry role, or any role for someone not yet in it, still
+  // needs ROLESET_ENTRY_ROLE_ASSIGN, which only the organisation's own admins
+  // hold. The holder set is again EMPTY, so every cell is a denial.
+  {
+    id: 'A22.assignRoleToUser#org-entry',
+    group: 'A22',
+    surface: 'assignRoleToUser',
+    kind: 'mutation',
+    owners: [],
+    acceptedExtra: [],
+    variant:
+      'a user as ASSOCIATE of an organisation - ROLESET_ENTRY_ROLE_ASSIGN',
+    requirement: { basis: 'named' },
+    positive: {
+      status: 'not-applicable',
+      reason:
+        "no global role may reach this surface - joining an organisation is by invitation or application; only the organisation's own admins and owners add directly",
+    },
+    negative: { status: 'automated' },
+  },
+  {
+    id: 'A22.assignRoleToUser#org-elevated',
+    group: 'A22',
+    surface: 'assignRoleToUser',
+    kind: 'mutation',
+    owners: [],
+    acceptedExtra: [],
+    variant:
+      'a non-associate as ADMIN of an organisation - ROLESET_ENTRY_ROLE_ASSIGN (a higher role is no side door in)',
+    requirement: { basis: 'named' },
+    positive: {
+      status: 'not-applicable',
+      reason:
+        'no global role may reach this surface - the consent split applies to every role for someone not yet in the entry role',
+    },
+    negative: { status: 'automated' },
+  },
+  // ===== A23 — Manage an organisation's people on its Community tab (090) =====
+  // Platform Support does here what an organisation admin does on the
+  // Community tab, never a direct add (A22). Content Full Access reaches two of
+  // the nine through the root CRUD rule (090 OP-6): revoking an invitation and
+  // rejecting an application. Its APPROVE is NOT one of them: the resolver
+  // admits it on UPDATE and the lifecycle then refuses it for want of GRANT,
+  // WITHOUT an error (harness.md), so that negative is judged on the state.
+  {
+    id: 'A23.inviteForEntryRoleOnRoleSet',
+    group: 'A23',
+    surface: 'inviteForEntryRoleOnRoleSet',
+    kind: 'mutation',
+    owners: ['PLATFORM_SUPPORT'],
+    acceptedExtra: [],
+    variant: 'a user, as an organisation role set',
+    requirement: { basis: 'named' },
+    verifies: {
+      kind: 'effect',
+      oracle:
+        'the created invitation is in the organisation role set pending-invitations list, read as the caller',
+    },
+    positive: { status: 'automated' },
+    negative: { status: 'automated' },
+  },
+  {
+    id: 'A23.resendPlatformInvitation',
+    group: 'A23',
+    surface: 'resendPlatformInvitation',
+    kind: 'mutation',
+    owners: ['PLATFORM_SUPPORT'],
+    acceptedExtra: [],
+    variant: 'an email invitation of an organisation',
+    requirement: { basis: 'named' },
+    verifies: {
+      kind: 'executed',
+      oracle: 'success payload naming the invitation (the mail is 081 concern)',
+    },
+    positive: { status: 'automated' },
+    negative: { status: 'automated' },
+  },
+  {
+    id: 'A23.assignRoleToUser',
+    group: 'A23',
+    surface: 'assignRoleToUser',
+    kind: 'mutation',
+    owners: ['PLATFORM_SUPPORT'],
+    acceptedExtra: [],
+    variant: 'ADMIN to an existing associate of an organisation - GRANT',
+    requirement: { basis: 'named' },
+    verifies: {
+      kind: 'effect',
+      oracle: 'the target is in the ADMIN role of the organisation, read back',
+    },
+    positive: { status: 'automated' },
+    negative: { status: 'automated' },
+  },
+  {
+    id: 'A23.removeRoleFromUser',
+    group: 'A23',
+    surface: 'removeRoleFromUser',
+    kind: 'mutation',
+    owners: ['PLATFORM_SUPPORT'],
+    acceptedExtra: [],
+    variant: 'ASSOCIATE of an organisation (removes the member)',
+    requirement: { basis: 'named' },
+    verifies: {
+      kind: 'effect',
+      oracle: 'the target is in no organisation role any more, read back',
+    },
+    positive: { status: 'automated' },
+    negative: { status: 'automated' },
+  },
+  {
+    id: 'A23.eventOnApplication',
+    group: 'A23',
+    surface: 'eventOnApplication',
+    kind: 'mutation',
+    owners: ['PLATFORM_SUPPORT'],
+    acceptedExtra: [],
+    variant: 'APPROVE an application to an organisation',
+    requirement: {
+      basis: 'named',
+      note: 'Content Full Access passes the resolver (UPDATE) and the lifecycle guard then refuses APPROVE (no GRANT) WITHOUT an error. Its negative is therefore judged on the state: no state change counts as the refusal',
+    },
+    verifies: {
+      kind: 'effect',
+      oracle:
+        'the application is approved and the applicant is an ASSOCIATE of the organisation, read back',
+    },
+    positive: { status: 'automated' },
+    negative: { status: 'automated' },
+  },
+  {
+    id: 'A23.eventOnApplication#reject',
+    group: 'A23',
+    surface: 'eventOnApplication',
+    kind: 'mutation',
+    owners: ['PLATFORM_SUPPORT'],
+    acceptedExtra: ['PLATFORM_CONTENT_FULL_ACCESS'],
+    variant: 'REJECT an application to an organisation',
+    requirement: {
+      basis: 'named',
+      note: 'Content Full Access: the root CRUD rule gives it UPDATE on every organisation record (090 OP-6)',
+    },
+    verifies: {
+      kind: 'effect',
+      oracle: 'the application state is rejected, read back',
+    },
+    positive: { status: 'automated' },
+    negative: { status: 'automated' },
+  },
+  {
+    id: 'A23.deleteInvitation',
+    group: 'A23',
+    surface: 'deleteInvitation',
+    kind: 'mutation',
+    owners: ['PLATFORM_SUPPORT'],
+    acceptedExtra: ['PLATFORM_CONTENT_FULL_ACCESS'],
+    variant: 'a pending user invitation of an organisation',
+    requirement: {
+      basis: 'named',
+      note: 'Content Full Access: DELETE on every organisation record through the root CRUD rule (090 OP-6)',
+    },
+    verifies: {
+      kind: 'effect',
+      oracle: 'the invitation no longer resolves (entity not found)',
+    },
+    positive: { status: 'automated' },
+    negative: { status: 'automated' },
+  },
+  {
+    id: 'A23.deletePlatformInvitation',
+    group: 'A23',
+    surface: 'deletePlatformInvitation',
+    kind: 'mutation',
+    owners: ['PLATFORM_SUPPORT'],
+    acceptedExtra: ['PLATFORM_CONTENT_FULL_ACCESS'],
+    variant: 'an email invitation of an organisation',
+    requirement: {
+      basis: 'named',
+      note: 'Content Full Access: DELETE on every organisation record through the root CRUD rule (090 OP-6)',
+    },
+    verifies: {
+      kind: 'effect',
+      oracle: 'the email invitation no longer resolves (entity not found)',
+    },
+    positive: { status: 'automated' },
+    negative: { status: 'automated' },
+  },
+  {
+    id: 'A23.applications',
+    group: 'A23',
+    surface: 'applications',
+    kind: 'field',
+    owners: ['PLATFORM_SUPPORT'],
+    acceptedExtra: [],
+    variant: 'RoleSet.applications of an organisation',
+    requirement: { basis: 'named' },
+    verifies: {
+      kind: 'returns-data',
+      oracle: 'the list contains the known pending application',
+    },
+    positive: { status: 'automated' },
     negative: { status: 'automated' },
   },
 ];

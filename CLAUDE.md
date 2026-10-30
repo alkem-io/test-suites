@@ -86,12 +86,16 @@ its tier. **The rules every spec follows — self-seeding, no fixed waits, no
 
 ### GraphQL Code Generation
 
-Each package has its own codegen config (`codegen.ts`):
+`lib/` and `server-api/` each have their own codegen config (`codegen.ts`):
 ```bash
 pnpm --filter @alkemio/tests-lib run codegen
 pnpm --filter @alkemio/test-suite-server-api run codegen
-pnpm --filter @alkemio/test-suite-client-web run codegen
 ```
+
+`client-web/` has none on purpose: the lib is its only schema boundary
+(`client-web/docs/e2e-conventions.md` § 2b). A document a spec needs goes into
+`lib/src/scenario/graphql/` behind a named lib function; CI fails on any
+`.graphql` file under `client-web/src`.
 
 ## Environment Setup
 
@@ -172,11 +176,13 @@ Test timeout is 30 minutes (1,800,000 ms) for long-running integration tests.
 
 ### Client Web Tests (`client-web/src/functional-e2e/`)
 
-Playwright E2E tests organized by feature area: `account-deletion/`, `applications/`, `authentication/`, `callouts/`, `chat-avatars/`, `classifications/`, `contributors-callout/`, `default-template/`, `explore-platform/`, `form-callout-framing/`, `forum-categories/`, `identity-flows/`, `language-offer/`, `memberships/`, `messaging-notifications/`, `my-dashboard/`, `organization-email-invitations/`, `organization-space-invitations/`, `organization-space-membership/`, `organization-user-associates/`, `public-space/`, `sidebar-search/`, `sidebar-widgets/`, `space/`, `subspaces-callout/`, `support-navigation/`, `templates-CRD/`, `templates/`, `user-profile/`. Shared code lives in `fixtures/` and `helpers/`.
+Playwright E2E tests organized by feature area: `account-deletion/`, `applications/`, `authentication/`, `callouts/`, `chat-avatars/`, `classifications/`, `contributors-callout/`, `default-template/`, `explore-platform/`, `form-callout-framing/`, `forum-categories/`, `identity-flows/`, `language-offer/`, `memberships/`, `memo-pdf-download/`, `messaging-notifications/`, `my-dashboard/`, `organization-email-invitations/`, `organization-space-invitations/`, `organization-space-membership/`, `organization-user-associates/`, `public-space/`, `sidebar-search/`, `sidebar-widgets/`, `space/`, `subspaces-callout/`, `support-navigation/`, `support-org-community-admin/`, `templates-CRD/`, `templates/`, `user-profile/`. Shared code lives in `fixtures/` and `helpers/`.
 
 A new feature area is added by creating its directory alongside these and listing it here, with a `<area>-test-plan.md` **inside that directory** mapping business scenarios to the specs that cover them. Existing plans are split across three locations for historical reasons — `plans/`, the feature directory, and the `functional-e2e/` root — so look in all three before concluding an area has none; new plans go in the feature directory.
 
 `form-callout-framing/` (workspace#080) holds self-provisioning acceptance walks: they create throwaway identities through the Kratos **admin** API, so they need `KRATOS_ADMIN_URL` and `ALKEMIO_ADMIN_PASSWORD`. The default config ignores the folder; run them with `pnpm --filter @alkemio/test-suite-client-web run test:form-callout-framing`. Its plan, `form-callout-framing-test-plan.md`, also maps the `server-api` suites under `callout/form/` and `notifications/space/collaboration/form-response.it-spec.ts`.
+
+`memo-pdf-download/` holds the memo PDF download acceptance walks (workspace#087). Both read the downloaded PDF with poppler (`pdftotext`, `pdffonts`; install `poppler-utils`), and fail without it. The download walk (US1) runs nightly as the `Memo PDF download` project. The access walk (US2) provisions throwaway identities through the Kratos **admin** API (`KRATOS_ADMIN_URL`, `ALKEMIO_ADMIN_PASSWORD`), so the default config ignores the folder and the nightly does not list US2; run both with `pnpm --filter @alkemio/test-suite-client-web run test:memo-pdf-download`. Its plan is `memo-pdf-download-test-plan.md`.
 
 `messaging-notifications/` is the one area that does **not** use the session-based auth fixtures: its walks register every persona inline through the real sign-up flow, because they assert on notification-settings defaults for a brand-new account and on digest tracks that must start empty. Its shared fixtures live in `messaging-notifications/messaging.helpers.ts`.
 
@@ -193,7 +199,7 @@ Nine test personas with varying roles (see `agents.md`): Host, Facilitator, Comm
 
 - **Prettier**: single quotes, trailing commas (es5), 2-space indent, semicolons, arrow parens `avoid`
 - **ESLint**: auto-fix on pre-commit via lint-staged (root-level husky)
-- **server-api** uses ESLint 9.x flat config; **client-web** uses legacy `.eslintrc.js`
+- **server-api** and **client-web** both use ESLint 9.x flat config (`eslint.config.js`); client-web's also enforces the lib boundary and runs as a CI step
 
 ## Specification-Driven Development (SDD)
 

@@ -15,6 +15,8 @@ import {
   TestUserManager,
 } from '@alkemio/tests-lib';
 import { convertSpaceL2ToSpaceL1 } from './conversion.request.params';
+import { getInnovationFlowStatesWithIds } from '@functional-api/innovation-flow/innovation-flow.request.params';
+import { updateInnovationFlowStateSidebar } from '@functional-api/templates/space/space-template.request.params';
 import {
   getSpaceData,
   getSpaceCommunication,
@@ -53,10 +55,19 @@ import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/O
 import {
   CalendarEventType,
   RoleName,
+  SidebarWidget,
   SpaceLevel,
 } from '@alkemio/tests-lib/core/generated/alkemio-schema';
 
 let baseScenario: OrganizationWithSpaceModel;
+
+/** A list the positional default can be told apart from (workspace#086 plan U-2). */
+const CUSTOMIZED_L2_SIDEBAR = [
+  SidebarWidget.Community,
+  SidebarWidget.CreateSubspace,
+  SidebarWidget.SubspaceLinks,
+  SidebarWidget.Activity,
+];
 
 const scenarioConfig: TestScenarioConfig = {
   name: 'convert-l2-to-l1',
@@ -164,6 +175,21 @@ beforeAll(async () => {
   );
   applicationId = applicationData?.data?.applyForEntryRoleOnRoleSet?.id ?? '';
 
+  // workspace#086 (plan U-2): give the L2's first phase a non-default sidebar before the
+  // snapshot, so the whole-state equality below also catches a reset to the positional
+  // default on promotion (a default-only fixture would pass through such a reset).
+  const l2States = await getInnovationFlowStatesWithIds(
+    baseScenario.subsubspace.id
+  );
+  const l2FirstState = [
+    ...(l2States.data?.lookup.space?.collaboration.innovationFlow.states ?? []),
+  ].sort((a, b) => a.sortOrder - b.sortOrder)[0];
+  const sidebarRes = await updateInnovationFlowStateSidebar(
+    l2FirstState.id,
+    CUSTOMIZED_L2_SIDEBAR
+  );
+  expect(sidebarRes.error).toBeUndefined();
+
   // Capture state before conversion
   subsubspaceBefore = await getSpaceData(baseScenario.subsubspace.id);
 
@@ -195,6 +221,13 @@ describe('Convert L2 to L1', () => {
         subsubspaceBefore.data?.lookup.space?.collaboration.innovationFlow
           .states
       );
+    });
+
+    test('the customized first-phase sidebar survives the promotion (086 U-2)', () => {
+      const first = [...(promotedSpace?.collaboration.innovationFlow.states ?? [])].sort(
+        (a, b) => a.sortOrder - b.sortOrder
+      )[0];
+      expect(first?.settings.sidebar).toEqual(CUSTOMIZED_L2_SIDEBAR);
     });
 
     test('visibility is preserved', () => {

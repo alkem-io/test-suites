@@ -1,5 +1,6 @@
 fragment userSettingsFragment on UserSettings {
   id
+  language
   communication {
     allowOtherUsersToSendMessages
     __typename
@@ -131,6 +132,12 @@ fragment userSettingsFragment on UserSettings {
         __typename
       }
       collaborationCalloutContributionCreated {
+        email
+        inApp
+        push
+        __typename
+      }
+      collaborationCalloutReaction {
         email
         inApp
         push

@@ -3,8 +3,11 @@ import {
   deleteOrganization,
   getGraphqlClient,
   getUserToken,
-  postGraphqlRaw,
+  inviteForEntryRoleOnRoleSet,
   queryHarnessDb,
+  readMyNotifications,
+  readMyUser,
+  readOrganizationAssociateEligibility,
   registerTestUser,
   TestUser,
   TestUserManager,
@@ -12,8 +15,8 @@ import {
   assignRoleToUser as libAssignRoleToUser,
   removeRoleFromUser as libRemoveRoleFromUser,
 } from '@alkemio/tests-lib';
-import { graphqlErrorWrapper } from '@alkemio/tests-lib/utils/graphql.wrapper';
-import { RoleName } from '@alkemio/tests-lib/core/generated/alkemio-schema';
+import { graphqlErrorWrapper } from '@alkemio/tests-lib';
+import { NotificationEvent, RoleName } from '@alkemio/tests-lib';
 
 /**
  * Local GraphQL/DB helpers for the organization-user-associates acceptance
@@ -21,8 +24,10 @@ import { RoleName } from '@alkemio/tests-lib/core/generated/alkemio-schema';
  * organization-space-invitations (061) helper file one-for-one: `@alkemio/tests-lib`
  * has `createOrganization` and the generic role mutations, but not the
  * organization-settings / apply / invite-outcome shapes this feature's walks
- * need — so the generated SDK client (`getGraphqlClient()`) and `postGraphqlRaw`
- * are used directly here, same rationale as `organization-space-invitations.helpers.ts`.
+ * need — so the generated SDK client (`getGraphqlClient()`) is used directly
+ * here for those, same rationale as `organization-space-invitations.helpers.ts`;
+ * every read-back and every call a disposable persona makes goes through the
+ * lib's business-action functions with that persona's `{ bearerToken }`.
  */
 
 export type OrgFixture = {
@@ -109,10 +114,8 @@ export const deletePersonasByEmail = async (emails: string[]): Promise<string[]>
     let id: string | undefined;
     try {
       const bearerToken = await getUserToken(email);
-      const me = await postGraphqlRaw<{ me: { user: { id: string } } }>('query { me { user { id } } }', {
-        bearerToken,
-      });
-      id = me.body.data?.me.user.id;
+      const me = await readMyUser({ bearerToken });
+      id = me.data?.me.user?.id;
     } catch {
       // never registered (or already gone) — nothing to delete
     }
@@ -227,21 +230,14 @@ export const inviteUserToOrganizationRaw = async (
   bearerToken: string,
   extraRoles: RoleName[] = []
 ): Promise<{ type: string; invitationId: string | null }> => {
-  const res = await postGraphqlRaw<{
-    inviteForEntryRoleOnRoleSet: Array<{ type: string; invitation: { id: string } | null }>;
-  }>(
-    `mutation($roleSetID: UUID!, $invitedActorID: UUID!, $welcomeMessage: String!, $extraRoles: [RoleName!]!) {
-      inviteForEntryRoleOnRoleSet(invitationData: {
-        invitedActorIDs: [$invitedActorID], invitedUserEmails: [], roleSetID: $roleSetID,
-        welcomeMessage: $welcomeMessage, extraRoles: $extraRoles
-      }) { type invitation { id } }
-    }`,
-    { variables: { roleSetID, invitedActorID, welcomeMessage, extraRoles }, bearerToken }
+  const res = await inviteForEntryRoleOnRoleSet(
+    { roleSetId: roleSetID, invitedActorIds: [invitedActorID], invitedUserEmails: [], welcomeMessage, extraRoles },
+    { bearerToken }
   );
-  if ((res.body.errors ?? []).length > 0) {
-    throw new Error(`inviteUserToOrganizationRaw failed: ${JSON.stringify(res.body.errors)}`);
+  if (res.error) {
+    throw new Error(`inviteUserToOrganizationRaw failed: ${JSON.stringify(res.error.errors)}`);
   }
-  const outcome = res.body.data!.inviteForEntryRoleOnRoleSet[0];
+  const outcome = res.data!.inviteForEntryRoleOnRoleSet[0];
   return { type: outcome.type, invitationId: outcome.invitation?.id ?? null };
 };
 
@@ -264,61 +260,27 @@ export const getUserIdsInRole = async (
   return (res.data?.lookup.roleSet?.usersInRoles ?? []).flatMap(r => r.users.map(u => u.id));
 };
 
-const ELIGIBILITY_QUERY = `
-  query($id: UUID!) {
-    organization(ID: $id) { myAssociateEligibility { canApply canJoinDirectly reason } }
-  }`;
-
 export const getAssociateEligibility = async (
   organizationID: string,
   bearerToken: string
 ): Promise<{ canApply: boolean; canJoinDirectly: boolean; reason: string }> => {
-  const res = await postGraphqlRaw<{
-    organization: { myAssociateEligibility: { canApply: boolean; canJoinDirectly: boolean; reason: string } };
-  }>(ELIGIBILITY_QUERY, { variables: { id: organizationID }, bearerToken });
-  if ((res.body.errors ?? []).length > 0) {
-    throw new Error(`getAssociateEligibility failed: ${JSON.stringify(res.body.errors)}`);
+  const res = await readOrganizationAssociateEligibility(organizationID, { bearerToken });
+  if (res.error) {
+    throw new Error(`getAssociateEligibility failed: ${JSON.stringify(res.error.errors)}`);
   }
-  return res.body.data!.organization.myAssociateEligibility;
+  return res.data!.organization.myAssociateEligibility;
 };
-
-const IN_APP_NOTIFICATIONS_QUERY = `
-  query {
-    me { notifications { inAppNotifications { id type } } }
-  }`;
 
 /** Every in-app notification `type` currently on the given persona's list
  * (`inAppNotifications` takes no server-side type filter — filtered here). */
 export const getInAppNotificationTypes = async (email: string): Promise<string[]> => {
   const bearerToken = await getUserToken(email);
-  const res = await postGraphqlRaw<{ me: { notifications: { inAppNotifications: Array<{ id: string; type: string }> } } }>(
-    IN_APP_NOTIFICATIONS_QUERY,
-    { bearerToken }
-  );
-  if ((res.body.errors ?? []).length > 0) {
-    throw new Error(`getInAppNotificationTypes failed for ${email}: ${JSON.stringify(res.body.errors)}`);
+  const res = await readMyNotifications({ bearerToken });
+  if (res.error) {
+    throw new Error(`getInAppNotificationTypes failed for ${email}: ${JSON.stringify(res.error.errors)}`);
   }
-  return res.body.data!.me.notifications.inAppNotifications.map(n => n.type);
+  return res.data!.me.notifications.inAppNotifications.map(n => n.type);
 };
-
-const IN_APP_ASSOCIATE_ACTOR_QUERY = `
-  query GetOrgAssociateActorInAppNotifications($types: [NotificationEvent!]) {
-    me {
-      notifications(filter: { types: $types }) {
-        inAppNotifications {
-          id
-          type
-          payload {
-            type
-            ... on InAppNotificationPayloadOrganizationAssociateActor {
-              actor { id }
-              organization { id }
-            }
-          }
-        }
-      }
-    }
-  }`;
 
 /**
  * The ids of the actors carried by this persona's in-app rows of `type` for
@@ -337,23 +299,17 @@ export const getInAppActorIdsForType = async (
   organizationId: string
 ): Promise<string[]> => {
   const bearerToken = await getUserToken(email);
-  const res = await postGraphqlRaw<{
-    me: {
-      notifications: {
-        inAppNotifications: Array<{
-          type: string;
-          payload?: { actor?: { id: string } | null; organization?: { id: string } | null } | null;
-        }>;
-      };
-    };
-  }>(IN_APP_ASSOCIATE_ACTOR_QUERY, { bearerToken, variables: { types: [type] } });
-  if ((res.body.errors ?? []).length > 0) {
-    throw new Error(`getInAppActorIdsForType failed for ${email}: ${JSON.stringify(res.body.errors)}`);
+  const res = await readMyNotifications({ bearerToken }, { types: [type as NotificationEvent] });
+  if (res.error) {
+    throw new Error(`getInAppActorIdsForType failed for ${email}: ${JSON.stringify(res.error.errors)}`);
   }
-  return res.body.data!.me.notifications.inAppNotifications
-    .filter(n => n.payload?.organization?.id === organizationId)
-    .map(n => n.payload?.actor?.id)
-    .filter((id): id is string => Boolean(id));
+  return res.data!.me.notifications.inAppNotifications.flatMap(({ payload }) =>
+    payload.__typename === 'InAppNotificationPayloadOrganizationAssociateActor' &&
+    payload.organization?.id === organizationId &&
+    payload.actor?.id
+      ? [payload.actor.id]
+      : []
+  );
 };
 
 export const runSuffix = UniqueIDGenerator.getID();
@@ -367,4 +323,4 @@ export const registerPersona = async (label: string): Promise<string> => {
   return `${userName}@alkem.io`;
 };
 
-export { TestUserManager, TestUser, getUserToken, postGraphqlRaw };
+export { TestUserManager, TestUser, getUserToken };

@@ -6,7 +6,34 @@ import {
   type Page,
   test,
 } from '@playwright/test';
+import {
+  AiPersonaEngine,
+  assignRoleToUser,
+  CalloutFormQuestionType,
+  CalloutFormResponseVisibility,
+  CalloutFramingType,
+  CalloutVisibility,
+  convertVirtualContributorToUseKnowledgeBase,
+  createCalloutWithData,
+  createSpaceOnAccount,
+  createSubspaceWithData,
+  createVirtualContributorWithData,
+  readCalloutFormResponses,
+  readCalloutFraming,
+  readCalloutsSetCallouts,
+  readMyUser,
+  RoleName,
+  SpacePrivacyMode,
+  submitCalloutFormResponse,
+  updateCalloutData,
+  updateCalloutVisibility,
+  VirtualContributorBodyOfKnowledgeType,
+  type CreateCalloutFormQuestionInput,
+  type GraphqlActor,
+  type GraphqlReturnWithError,
+} from '@alkemio/tests-lib';
 import { fillSecret } from '../helpers/login.helper';
+import { must } from '../helpers/lib-actor.helper';
 
 /**
  * workspace#080-form-callout-framing — User Story 1 (P1): Create a Post with a Form.
@@ -69,7 +96,6 @@ const ADMIN_PASSWORD =
   process.env.ALKEMIO_ADMIN_PASSWORD ||
   process.env.AUTH_ADMIN_PASSWORD ||
   'password';
-const GRAPHQL = `${BASE}/api/private/non-interactive/graphql`;
 // Per-run secret for the throwaway identities this walk provisions (override with
 // FORGE_PERSONA_PASSWORD); a fixed literal would leave them loginable after the run.
 const USER_PASSWORD =
@@ -110,38 +136,26 @@ async function mintToken(userEmail: string, password: string) {
   return token;
 }
 
-type GqlResult<T = any> = { data?: T; errors?: Array<any> };
-
-async function gql<T = any>(
-  userEmail: string,
-  query: string,
-  variables: Record<string, unknown> = {}
-): Promise<GqlResult<T>> {
-  const token = await mintToken(
-    userEmail,
-    userEmail === ADMIN_EMAIL ? ADMIN_PASSWORD : USER_PASSWORD
-  );
-  const res = await fetch(GRAPHQL, {
-    method: 'POST',
-    headers: {
-      'content-type': 'application/json',
-      authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify({ query, variables }),
-  });
-  return (await res.json()) as GqlResult<T>;
+/** The lib actor for one of this run's identities: its bearer, minted once. */
+async function actorFor(userEmail: string): Promise<GraphqlActor> {
+  return {
+    bearerToken: await mintToken(
+      userEmail,
+      userEmail === ADMIN_EMAIL ? ADMIN_PASSWORD : USER_PASSWORD
+    ),
+  };
 }
 
-async function must<T = any>(result: GqlResult<T>, what: string): Promise<T> {
-  expect(
-    result.errors,
-    `${what}: ${JSON.stringify(result.errors)}`
-  ).toBeUndefined();
-  return result.data as T;
-}
+type GqlError = {
+  message?: string;
+  extensions?: { code?: string; details?: { code?: string } };
+};
 
-const detailsCode = (result: GqlResult) =>
-  result.errors?.[0]?.extensions?.details?.code as string | undefined;
+const firstError = (result: GraphqlReturnWithError<unknown>) =>
+  (result.error?.errors as GqlError[] | undefined)?.[0];
+
+const detailsCode = (result: GraphqlReturnWithError<unknown>) =>
+  firstError(result)?.extensions?.details?.code;
 
 async function createIdentity(userEmail: string, first: string, last: string) {
   const res = await fetch(`${KRATOS_ADMIN}/identities`, {
@@ -161,8 +175,8 @@ async function createIdentity(userEmail: string, first: string, last: string) {
 }
 
 async function meId(userEmail: string) {
-  const data = await must(await gql(userEmail, '{ me { user { id } } }'), 'me');
-  return data.me.user.id as string;
+  const data = must(await readMyUser(await actorFor(userEmail)), 'me');
+  return data.me.user!.id;
 }
 
 async function acceptCookies(page: Page) {
@@ -208,13 +222,6 @@ async function open(page: Page, url: string) {
   await page.goto(url);
   await acceptCookies(page);
 }
-
-const CREATE_FORM = `mutation ($d: CreateCalloutOnCalloutsSetInput!) {
-  createCalloutOnCalloutsSet(calloutData: $d) {
-    id
-    framing { type profile { url } form { id questions { id prompt } } }
-  }
-}`;
 
 const fixture = {
   subUrl: '',
@@ -317,152 +324,129 @@ test.describe(
         fixture.userIds[p] = await meId(personaEmail[p]);
       }
 
-      const me = await must(
-        await gql(ADMIN_EMAIL, '{ me { user { account { id } } } }'),
-        'admin account'
-      );
-      const space = (
-        await must(
-          await gql(
-            ADMIN_EMAIL,
-            `mutation ($d: CreateSpaceOnAccountInput!) {
-              createSpace(spaceData: $d) { id community { roleSet { id } } }
-            }`,
-            {
-              d: {
-                accountID: me.me.user.account.id,
-                nameID: `us1-space-${RUN}`,
-                about: { profileData: { displayName: `US1 Space ${RUN}` } },
-                collaborationData: { calloutsSetData: {} },
-                settings: { privacy: { mode: 'PUBLIC' } },
-              },
-            }
-          ),
-          'create space'
-        )
+      const admin = await actorFor(ADMIN_EMAIL);
+      const a2 = await actorFor(personaEmail.a2);
+      const m1 = await actorFor(personaEmail.m1);
+      const me = must(await readMyUser(admin), 'admin account');
+      const space = must(
+        await createSpaceOnAccount(
+          {
+            accountID: me.me.user!.account!.id,
+            nameID: `us1-space-${RUN}`,
+            about: { profileData: { displayName: `US1 Space ${RUN}` } },
+            collaborationData: { calloutsSetData: {} },
+            settings: { privacy: { mode: SpacePrivacyMode.Public } },
+          },
+          admin
+        ),
+        'create space'
       ).createSpace;
-      const sub = (
-        await must(
-          await gql(
-            ADMIN_EMAIL,
-            `mutation ($d: CreateSubspaceInput!) {
-              createSubspace(subspaceData: $d) {
-                id
-                about { profile { url } }
-                community { roleSet { id } }
-                collaboration { calloutsSet { id } }
-              }
-            }`,
-            {
-              d: {
-                spaceID: space.id,
-                nameID: `us1-sub-${RUN}`,
-                about: { profileData: { displayName: `US1 Sub ${RUN}` } },
-                collaborationData: { calloutsSetData: {} },
-                settings: {
-                  collaboration: {
-                    allowEventsFromSubspaces: true,
-                    allowGuestContributions: false,
-                    allowMembersToCreateCallouts: true,
-                    allowMembersToCreateSubspaces: false,
-                    allowMembersToVideoCall: false,
-                    inheritMembershipRights: true,
-                  },
-                },
+      const sub = must(
+        await createSubspaceWithData(
+          {
+            spaceID: space.id,
+            nameID: `us1-sub-${RUN}`,
+            about: { profileData: { displayName: `US1 Sub ${RUN}` } },
+            collaborationData: { calloutsSetData: {} },
+            settings: {
+              collaboration: {
+                allowEventsFromSubspaces: true,
+                allowGuestContributions: false,
+                allowMembersToCreateCallouts: true,
+                allowMembersToCreateSubspaces: false,
+                allowMembersToVideoCall: false,
+                inheritMembershipRights: true,
               },
-            }
-          ),
-          'create subspace'
-        )
+            },
+          },
+          admin
+        ),
+        'create subspace'
       ).createSubspace;
       fixture.subUrl = sub.about.profile.url;
       fixture.subCalloutsSetId = sub.collaboration.calloutsSet.id;
 
-      const assign = async (roleSetID: string, p: Persona, role: string) =>
+      const assign = async (roleSetID: string, p: Persona, role: RoleName) =>
         must(
-          await gql(
-            ADMIN_EMAIL,
-            'mutation ($d: AssignRoleOnRoleSetInput!) { assignRoleToUser(roleData: $d) { id } }',
-            { d: { actorID: fixture.userIds[p], role, roleSetID } }
-          ),
+          await assignRoleToUser(fixture.userIds[p], roleSetID, role, admin),
           `assign ${role} ${p}`
         );
       // a2 is an admin of the Subspace only: a plain member of the parent Space.
       for (const p of ['a2', 'm1', 'm2'] as Persona[]) {
-        await assign(space.community.roleSet.id, p, 'MEMBER');
-        await assign(sub.community.roleSet.id, p, 'MEMBER');
+        await assign(space.community.roleSet.id, p, RoleName.Member);
+        await assign(sub.community.roleSet.id, p, RoleName.Member);
       }
-      await assign(sub.community.roleSet.id, 'a2', 'ADMIN');
+      await assign(sub.community.roleSet.id, 'a2', RoleName.Admin);
 
       const publish = async (calloutId: string) =>
         must(
-          await gql(
-            personaEmail.a2,
-            `mutation ($d: UpdateCalloutVisibilityInput!) {
-              updateCalloutVisibility(calloutData: $d) { id }
-            }`,
-            {
-              d: {
-                calloutID: calloutId,
-                visibility: 'PUBLISHED',
-                sendNotification: false,
-              },
-            }
+          await updateCalloutVisibility(
+            calloutId,
+            CalloutVisibility.Published,
+            a2,
+            false
           ),
           'publish'
         );
       const createForm = async (
         displayName: string,
-        questions: Array<Record<string, unknown>>
+        questions: CreateCalloutFormQuestionInput[]
       ) => {
-        const created = (
-          await must(
-            await gql(personaEmail.a2, CREATE_FORM, {
-              d: {
-                calloutsSetID: fixture.subCalloutsSetId,
-                framing: {
-                  type: 'FORM',
-                  profile: { displayName, description: 'US1 form' },
-                  form: { questions },
-                },
-                settings: {
-                  visibility: 'DRAFT',
-                  contribution: { enabled: false },
-                  framing: { commentsEnabled: true },
-                },
+        const created = must(
+          await createCalloutWithData(
+            {
+              calloutsSetID: fixture.subCalloutsSetId,
+              framing: {
+                type: CalloutFramingType.Form,
+                profile: { displayName, description: 'US1 form' },
+                form: { questions },
               },
-            }),
-            `create form ${displayName}`
-          )
+              settings: {
+                visibility: CalloutVisibility.Draft,
+                contribution: { enabled: false },
+                framing: { commentsEnabled: true },
+              },
+            },
+            a2
+          ),
+          `create form ${displayName}`
         ).createCalloutOnCalloutsSet;
         await publish(created.id);
         return {
-          calloutId: created.id as string,
-          url: created.framing.profile.url as string,
-          formId: created.framing.form.id as string,
-          questions: created.framing.form.questions as Array<{
-            id: string;
-            prompt: string;
-          }>,
+          calloutId: created.id,
+          url: created.framing.profile.url,
+          formId: created.framing.form!.id,
+          questions: created.framing.form!.questions,
         };
       };
 
       const closable = await createForm(`US1 Closable ${RUN}`, [
-        { prompt: 'Closable question', type: 'SHORT_TEXT', required: true },
+        {
+          prompt: 'Closable question',
+          type: CalloutFormQuestionType.ShortText,
+          required: true,
+        },
       ]);
       closableUrl = closable.url;
 
       const edit = await createForm(`US1 Editable ${RUN}`, [
-        { prompt: 'Your name', type: 'SHORT_TEXT', required: true },
-        { prompt: 'Tell us about yourself', type: 'LONG_TEXT' },
+        {
+          prompt: 'Your name',
+          type: CalloutFormQuestionType.ShortText,
+          required: true,
+        },
+        {
+          prompt: 'Tell us about yourself',
+          type: CalloutFormQuestionType.LongText,
+        },
         {
           prompt: 'Preferred day',
-          type: 'SINGLE_CHOICE',
+          type: CalloutFormQuestionType.SingleChoice,
           options: [{ label: 'Monday' }, { label: 'Tuesday' }],
         },
         {
           prompt: 'Dietary needs',
-          type: 'MULTIPLE_CHOICE',
+          type: CalloutFormQuestionType.MultipleChoice,
           options: [{ label: 'Vegan' }, { label: 'Halal' }],
         },
       ]);
@@ -473,72 +457,69 @@ test.describe(
         questionIds: edit.questions.map(q => q.id),
       };
       // One member response so the definition edit runs against existing data.
-      await must(
-        await gql(
-          personaEmail.m1,
-          `mutation ($d: SubmitCalloutFormResponseInput!) {
-            submitCalloutFormResponse(responseData: $d) { id }
-          }`,
+      must(
+        await submitCalloutFormResponse(
           {
-            d: {
-              formID: edit.formId,
-              acknowledgedVisibility: 'ADMINS',
-              answers: [
-                { questionID: edit.questions[0].id, text: 'Mia Memberone' },
-                { questionID: edit.questions[1].id, text: 'Removed later' },
-              ],
-            },
-          }
+            formID: edit.formId,
+            acknowledgedVisibility: CalloutFormResponseVisibility.Admins,
+            answers: [
+              { questionID: edit.questions[0].id, text: 'Mia Memberone' },
+              { questionID: edit.questions[1].id, text: 'Removed later' },
+            ],
+          },
+          m1
         ),
         'seed response'
       );
 
       // AS10: a Form with a response, edited through the builder's header box.
       const pres = await createForm(`US1 Presentable ${RUN}`, [
-        { prompt: 'Presentable question', type: 'SHORT_TEXT', required: true },
+        {
+          prompt: 'Presentable question',
+          type: CalloutFormQuestionType.ShortText,
+          required: true,
+        },
       ]);
       presentable = { url: pres.url, calloutId: pres.calloutId };
-      await must(
-        await gql(
-          personaEmail.m1,
-          `mutation ($d: SubmitCalloutFormResponseInput!) {
-            submitCalloutFormResponse(responseData: $d) { id }
-          }`,
+      must(
+        await submitCalloutFormResponse(
           {
-            d: {
-              formID: pres.formId,
-              acknowledgedVisibility: 'ADMINS',
-              answers: [{ questionID: pres.questions[0].id, text: 'Present' }],
-            },
-          }
+            formID: pres.formId,
+            acknowledgedVisibility: CalloutFormResponseVisibility.Admins,
+            answers: [{ questionID: pres.questions[0].id, text: 'Present' }],
+          },
+          m1
         ),
         'seed presentable response'
       );
 
       // AS12: a Form whose default-collapsed setting is toggled in the UI.
       const coll = await createForm(`US1 Collapsible ${RUN}`, [
-        { prompt: 'Collapsible question', type: 'SHORT_TEXT', required: true },
+        {
+          prompt: 'Collapsible question',
+          type: CalloutFormQuestionType.ShortText,
+          required: true,
+        },
       ]);
       collapsible = { url: coll.url, calloutId: coll.calloutId };
 
       // AS13: a short-answer question answered by M1, then changed to a choice.
       const typ = await createForm(`US1 Typed ${RUN}`, [
-        { prompt: 'Your answer', type: 'SHORT_TEXT', required: true },
+        {
+          prompt: 'Your answer',
+          type: CalloutFormQuestionType.ShortText,
+          required: true,
+        },
       ]);
       typed = { url: typ.url, calloutId: typ.calloutId, formId: typ.formId };
-      await must(
-        await gql(
-          personaEmail.m1,
-          `mutation ($d: SubmitCalloutFormResponseInput!) {
-            submitCalloutFormResponse(responseData: $d) { id }
-          }`,
+      must(
+        await submitCalloutFormResponse(
           {
-            d: {
-              formID: typ.formId,
-              acknowledgedVisibility: 'ADMINS',
-              answers: [{ questionID: typ.questions[0].id, text: 'Mia text' }],
-            },
-          }
+            formID: typ.formId,
+            acknowledgedVisibility: CalloutFormResponseVisibility.Admins,
+            answers: [{ questionID: typ.questions[0].id, text: 'Mia text' }],
+          },
+          m1
         ),
         'seed typed response'
       );
@@ -577,45 +558,44 @@ test.describe(
       ).toBeVisible();
       await expect(visibleFormRadio(page)).toHaveCount(0);
 
-      const forbidden = await gql(personaEmail.m1, CREATE_FORM, {
-        d: {
+      const m1 = await actorFor(personaEmail.m1);
+      const forbidden = await createCalloutWithData(
+        {
           calloutsSetID: fixture.subCalloutsSetId,
           framing: {
-            type: 'FORM',
+            type: CalloutFramingType.Form,
             profile: { displayName: 'member form' },
-            form: { questions: [{ prompt: 'Q', type: 'SHORT_TEXT' }] },
+            form: {
+              questions: [
+                { prompt: 'Q', type: CalloutFormQuestionType.ShortText },
+              ],
+            },
           },
         },
-      });
-      expect(forbidden.errors?.[0]?.extensions?.code).toBe('FORBIDDEN_POLICY');
+        m1
+      );
+      expect(firstError(forbidden)?.extensions?.code).toBe('FORBIDDEN_POLICY');
 
-      const plain = await must(
-        await gql(
-          personaEmail.m1,
-          `mutation ($d: CreateCalloutOnCalloutsSetInput!) {
-            createCalloutOnCalloutsSet(calloutData: $d) { id }
-          }`,
+      const plain = must(
+        await createCalloutWithData(
           {
-            d: {
-              calloutsSetID: fixture.subCalloutsSetId,
-              framing: { type: 'NONE', profile: { displayName: 'm1 plain' } },
-              settings: { visibility: 'PUBLISHED' },
+            calloutsSetID: fixture.subCalloutsSetId,
+            framing: {
+              type: CalloutFramingType.None,
+              profile: { displayName: 'm1 plain' },
             },
-          }
+            settings: { visibility: CalloutVisibility.Published },
+          },
+          m1
         ),
         'member plain post'
       );
-      const switched = await gql(
-        personaEmail.m1,
-        `mutation ($d: UpdateCalloutEntityInput!) {
-          updateCallout(calloutData: $d) { id }
-        }`,
+      const switched = await updateCalloutData(
         {
-          d: {
-            ID: plain.createCalloutOnCalloutsSet.id,
-            framing: { type: 'FORM' },
-          },
-        }
+          ID: plain.createCalloutOnCalloutsSet.id,
+          framing: { type: CalloutFramingType.Form },
+        },
+        m1
       );
       expect(detailsCode(switched)).toBe('FORM_FRAMING_FIXED_KIND');
     });
@@ -623,43 +603,30 @@ test.describe(
     test('US1-AS3 a knowledge base refuses Form and a Form Space cannot be converted', async ({
       browser,
     }) => {
-      const account = (
-        await must(
-          await gql(ADMIN_EMAIL, '{ me { user { account { id } } } }'),
-          'admin account'
-        )
-      ).me.user.account.id as string;
-      const vc = (
-        await must(
-          await gql(
-            ADMIN_EMAIL,
-            `mutation ($d: CreateVirtualContributorOnAccountInput!) {
-              createVirtualContributor(virtualContributorData: $d) {
-                id
-                profile { url }
-                knowledgeBase { calloutsSet { id } }
-              }
-            }`,
-            {
-              d: {
-                accountID: account,
-                nameID: `us1-vc-${RUN}`,
-                profileData: { displayName: `US1 VC ${RUN}` },
-                aiPersona: { engine: 'GUIDANCE' },
-                bodyOfKnowledgeType: 'ALKEMIO_KNOWLEDGE_BASE',
-                knowledgeBaseData: {
-                  profile: { displayName: `US1 KB ${RUN}` },
-                  calloutsSetData: {},
-                },
-              },
-            }
-          ),
-          'create VC with KB'
-        )
+      const adminActor = await actorFor(ADMIN_EMAIL);
+      const account = must(await readMyUser(adminActor), 'admin account').me
+        .user!.account!.id;
+      const vc = must(
+        await createVirtualContributorWithData(
+          {
+            accountID: account,
+            nameID: `us1-vc-${RUN}`,
+            profileData: { displayName: `US1 VC ${RUN}` },
+            aiPersona: { engine: AiPersonaEngine.Guidance },
+            bodyOfKnowledgeType:
+              VirtualContributorBodyOfKnowledgeType.AlkemioKnowledgeBase,
+            knowledgeBaseData: {
+              profile: { displayName: `US1 KB ${RUN}` },
+              calloutsSetData: {},
+            },
+          },
+          adminActor
+        ),
+        'create VC with KB'
       ).createVirtualContributor;
 
       const admin = await signIn(browser, ADMIN_EMAIL, ADMIN_PASSWORD);
-      await open(admin, `${vc.profile.url}/knowledge-base`);
+      await open(admin, `${vc.profile!.url}/knowledge-base`);
       await admin
         .getByRole('button', { name: 'Add', exact: true })
         .first()
@@ -671,91 +638,82 @@ test.describe(
       ).toBeVisible();
       await expect(visibleFormRadio(admin)).toHaveCount(0);
 
-      const refused = await gql(ADMIN_EMAIL, CREATE_FORM, {
-        d: {
+      const refused = await createCalloutWithData(
+        {
           calloutsSetID: vc.knowledgeBase.calloutsSet.id,
           framing: {
-            type: 'FORM',
+            type: CalloutFramingType.Form,
             profile: { displayName: 'kb form' },
-            form: { questions: [{ prompt: 'Q', type: 'SHORT_TEXT' }] },
+            form: {
+              questions: [
+                { prompt: 'Q', type: CalloutFormQuestionType.ShortText },
+              ],
+            },
           },
         },
-      });
-      expect(refused.errors?.[0]?.message).toContain('COLLABORATION');
+        adminActor
+      );
+      expect(firstError(refused)?.message).toContain('COLLABORATION');
 
       // A Space that holds a Form Post cannot become a VC's knowledge base.
-      const source = (
-        await must(
-          await gql(
-            ADMIN_EMAIL,
-            `mutation ($d: CreateSpaceOnAccountInput!) {
-              createSpace(spaceData: $d) { id collaboration { calloutsSet { id } } }
-            }`,
-            {
-              d: {
-                accountID: account,
-                nameID: `us1-src-${RUN}`,
-                about: { profileData: { displayName: `US1 Source ${RUN}` } },
-                collaborationData: { calloutsSetData: {} },
-              },
-            }
-          ),
-          'create source space'
-        )
+      const source = must(
+        await createSpaceOnAccount(
+          {
+            accountID: account,
+            nameID: `us1-src-${RUN}`,
+            about: { profileData: { displayName: `US1 Source ${RUN}` } },
+            collaborationData: { calloutsSetData: {} },
+          },
+          adminActor
+        ),
+        'create source space'
       ).createSpace;
-      await must(
-        await gql(ADMIN_EMAIL, CREATE_FORM, {
-          d: {
+      must(
+        await createCalloutWithData(
+          {
             calloutsSetID: source.collaboration.calloutsSet.id,
             framing: {
-              type: 'FORM',
+              type: CalloutFramingType.Form,
               profile: { displayName: 'source form' },
-              form: { questions: [{ prompt: 'Q', type: 'SHORT_TEXT' }] },
+              form: {
+                questions: [
+                  { prompt: 'Q', type: CalloutFormQuestionType.ShortText },
+                ],
+              },
             },
-            settings: { visibility: 'PUBLISHED' },
+            settings: { visibility: CalloutVisibility.Published },
           },
-        }),
+          adminActor
+        ),
         'form post in source space'
       );
       const countCallouts = async () =>
-        (
-          await must(
-            await gql(
-              ADMIN_EMAIL,
-              'query ($id: UUID!) { lookup { calloutsSet(ID: $id) { callouts { id } } } }',
-              { id: source.collaboration.calloutsSet.id }
-            ),
-            'count callouts'
-          )
-        ).lookup.calloutsSet.callouts.length as number;
-      const before = await countCallouts();
-      const spaceVc = (
-        await must(
-          await gql(
-            ADMIN_EMAIL,
-            `mutation ($d: CreateVirtualContributorOnAccountInput!) {
-              createVirtualContributor(virtualContributorData: $d) { id }
-            }`,
-            {
-              d: {
-                accountID: account,
-                nameID: `us1-vc2-${RUN}`,
-                profileData: { displayName: `US1 VC Space ${RUN}` },
-                aiPersona: { engine: 'GUIDANCE' },
-                bodyOfKnowledgeType: 'ALKEMIO_SPACE',
-                bodyOfKnowledgeID: source.id,
-              },
-            }
+        must(
+          await readCalloutsSetCallouts(
+            source.collaboration.calloutsSet.id,
+            adminActor
           ),
-          'create VC over a space'
-        )
+          'count callouts'
+        ).lookup.calloutsSet!.callouts.length;
+      const before = await countCallouts();
+      const spaceVc = must(
+        await createVirtualContributorWithData(
+          {
+            accountID: account,
+            nameID: `us1-vc2-${RUN}`,
+            profileData: { displayName: `US1 VC Space ${RUN}` },
+            aiPersona: { engine: AiPersonaEngine.Guidance },
+            bodyOfKnowledgeType:
+              VirtualContributorBodyOfKnowledgeType.AlkemioSpace,
+            bodyOfKnowledgeID: source.id,
+          },
+          adminActor
+        ),
+        'create VC over a space'
       ).createVirtualContributor;
-      const converted = await gql(
-        ADMIN_EMAIL,
-        `mutation ($d: ConversionVcSpaceToVcKnowledgeBaseInput!) {
-          convertVirtualContributorToUseKnowledgeBase(conversionData: $d) { id }
-        }`,
-        { d: { virtualContributorID: spaceVc.id } }
+      const converted = await convertVirtualContributorToUseKnowledgeBase(
+        { virtualContributorID: spaceVc.id },
+        adminActor
       );
       expect(detailsCode(converted)).toBe('FORM_TRANSFER_NOT_ALLOWED');
       expect(await countCallouts()).toBe(before);
@@ -900,26 +858,19 @@ test.describe(
       // The published Form lists once on the feed even with comments enabled.
       const feedHeading = page.getByRole('heading', { name: BUILT_TITLE });
       await expect(feedHeading).toHaveCount(1);
-      const created = await must(
-        await gql(
-          personaEmail.a2,
-          `query ($id: UUID!) {
-            lookup { calloutsSet(ID: $id) { callouts { framing { type profile { displayName url } form { questions { prompt type required options { label } } } } } } }
-          }`,
-          { id: fixture.subCalloutsSetId }
+      const created = must(
+        await readCalloutsSetCallouts(
+          fixture.subCalloutsSetId,
+          await actorFor(personaEmail.a2)
         ),
         'read built form'
       );
-      const built = created.lookup.calloutsSet.callouts.find(
-        (c: any) => c.framing.profile.displayName === BUILT_TITLE
-      );
-      builtUrl = built.framing.profile.url as string;
+      const built = created.lookup.calloutsSet!.callouts.find(
+        c => c.framing.profile.displayName === BUILT_TITLE
+      )!;
+      builtUrl = built.framing.profile.url;
       expect(
-        built.framing.form.questions.map((q: any) => [
-          q.prompt,
-          q.type,
-          q.required,
-        ])
+        built.framing.form!.questions.map(q => [q.prompt, q.type, q.required])
       ).toEqual([
         ['Your name', 'SHORT_TEXT', true],
         ['Tell us about yourself', 'LONG_TEXT', false],
@@ -927,7 +878,7 @@ test.describe(
         ['Dietary needs', 'MULTIPLE_CHOICE', false],
       ]);
       expect(
-        built.framing.form.questions[2].options.map((o: any) => o.label)
+        built.framing.form!.questions[2].options!.map(o => o.label)
       ).toEqual(['Monday', 'Tuesday', 'Wednesday']);
     });
 
@@ -962,16 +913,17 @@ test.describe(
     });
 
     test('US1-AS7 the API rejects a Form without questions', async () => {
-      const rejected = await gql(personaEmail.a2, CREATE_FORM, {
-        d: {
+      const rejected = await createCalloutWithData(
+        {
           calloutsSetID: fixture.subCalloutsSetId,
           framing: {
-            type: 'FORM',
+            type: CalloutFramingType.Form,
             profile: { displayName: 'empty form' },
             form: { questions: [] },
           },
         },
-      });
+        await actorFor(personaEmail.a2)
+      );
       expect(detailsCode(rejected)).toBe('FORM_QUESTIONS_COUNT');
     });
 
@@ -1107,15 +1059,12 @@ test.describe(
 
       await expect
         .poll(async () => {
-          const result = await gql(
-            personaEmail.a2,
-            `query ($id: UUID!) {
-              lookup { callout(ID: $id) { framing { form { questions { prompt } } } } }
-            }`,
-            { id: editable.calloutId }
+          const result = await readCalloutFraming(
+            editable.calloutId,
+            await actorFor(personaEmail.a2)
           );
           return result.data?.lookup?.callout?.framing?.form?.questions?.map(
-            (q: any) => q.prompt
+            q => q.prompt
           );
         })
         .toEqual([
@@ -1126,20 +1075,16 @@ test.describe(
         ]);
 
       // Existing responses stay readable; the removed question keeps its snapshot prompt.
-      const responses = await must(
-        await gql(
-          personaEmail.a2,
-          `query ($f: UUID!) {
-            lookup { calloutFormResponses(formID: $f, first: 10) {
-              all { total responses { answers { prompt text } } }
-            } }
-          }`,
-          { f: editable.formId }
+      const responses = must(
+        await readCalloutFormResponses(
+          editable.formId,
+          await actorFor(personaEmail.a2),
+          10
         ),
         'read responses'
       );
-      const answers = responses.lookup.calloutFormResponses.all.responses[0]
-        .answers as Array<{ prompt: string; text: string }>;
+      const answers =
+        responses.lookup.calloutFormResponses.all.responses[0].answers;
       expect(answers).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
@@ -1199,12 +1144,12 @@ test.describe(
 
       await expect
         .poll(async () => {
-          const result = await gql(
-            personaEmail.a2,
-            'query ($id: UUID!) { lookup { callout(ID: $id) { framing { form { title description } } } } }',
-            { id: presentable.calloutId }
+          const result = await readCalloutFraming(
+            presentable.calloutId,
+            await actorFor(personaEmail.a2)
           );
-          return result.data?.lookup?.callout?.framing?.form;
+          const form = result.data?.lookup?.callout?.framing?.form;
+          return form && { title: form.title, description: form.description };
         })
         .toEqual({ title: formTitle, description: formDescription });
 
@@ -1227,10 +1172,9 @@ test.describe(
       await saveEdit(page);
       await expect
         .poll(async () => {
-          const result = await gql(
-            personaEmail.a2,
-            'query ($id: UUID!) { lookup { callout(ID: $id) { framing { form { title } } } } }',
-            { id: presentable.calloutId }
+          const result = await readCalloutFraming(
+            presentable.calloutId,
+            await actorFor(personaEmail.a2)
           );
           return result.data?.lookup?.callout?.framing?.form?.title;
         })
@@ -1452,10 +1396,9 @@ test.describe(
         await saveEdit(admin);
         await expect
           .poll(async () => {
-            const result = await gql(
-              personaEmail.a2,
-              'query ($id: UUID!) { lookup { callout(ID: $id) { framing { form { settings { defaultCollapsed } } } } } }',
-              { id: collapsible.calloutId }
+            const result = await readCalloutFraming(
+              collapsible.calloutId,
+              await actorFor(personaEmail.a2)
             );
             return result.data?.lookup?.callout?.framing?.form?.settings
               ?.defaultCollapsed;
@@ -1524,10 +1467,9 @@ test.describe(
       let questionId = '';
       await expect
         .poll(async () => {
-          const result = await gql(
-            personaEmail.a2,
-            'query ($id: UUID!) { lookup { callout(ID: $id) { framing { form { questions { id type options { id label } } } } } } }',
-            { id: typed.calloutId }
+          const result = await readCalloutFraming(
+            typed.calloutId,
+            await actorFor(personaEmail.a2)
           );
           const question =
             result.data?.lookup?.callout?.framing?.form?.questions?.[0];
@@ -1539,21 +1481,16 @@ test.describe(
       expect(options.map(o => o.label)).toEqual(['Yes', 'No']);
 
       // A new answer follows the new type.
-      await must(
-        await gql(
-          personaEmail.m2,
-          `mutation ($d: SubmitCalloutFormResponseInput!) {
-            submitCalloutFormResponse(responseData: $d) { id }
-          }`,
+      must(
+        await submitCalloutFormResponse(
           {
-            d: {
-              formID: typed.formId,
-              acknowledgedVisibility: 'ADMINS',
-              answers: [
-                { questionID: questionId, selectedOptionIDs: [options[0].id] },
-              ],
-            },
-          }
+            formID: typed.formId,
+            acknowledgedVisibility: CalloutFormResponseVisibility.Admins,
+            answers: [
+              { questionID: questionId, selectedOptionIDs: [options[0].id] },
+            ],
+          },
+          await actorFor(personaEmail.m2)
         ),
         'new-type answer'
       );

@@ -103,6 +103,10 @@ export default defineConfig({
       project('notifications-messaging', [
         'src/functional-api/notifications/messaging/**/*.it-spec.ts',
       ]),
+      // server#6614 / #6637 — owned records are removed with their owner.
+      project('orphan-free-deletion', [
+        'src/functional-api/orphan-free-deletion/**/*.it-spec.ts',
+      ]),
       project('organization', [
         'src/functional-api/contributor-management/organization/**/*.it-spec.ts',
       ]),
@@ -177,6 +181,10 @@ export default defineConfig({
           sequence: { groupOrder: 3 },
         },
       },
+      // The lib contract (docs/qa/server-rebuild W2 pre-work): names, shapes
+      // and one base-scenario round trip. The first thing that must go green
+      // on the rebuilt server; on demand, not part of `nightly`.
+      project('contract', ['src/contract/**/*.it-spec.ts']),
       project('graphql-guard', [
         'src/functional-api/graphql-guard/**/*.it-spec.ts',
       ]),
@@ -233,6 +241,15 @@ export default defineConfig({
           'src/functional-api/calendar/**/*.it-spec.ts',
           'src/functional-api/push-notifications/**/*.it-spec.ts',
           'src/functional-api/language/**/*.it-spec.ts',
+          'src/functional-api/orphan-free-deletion/**/*.it-spec.ts',
+          // workspace#085 + server#6360: the Collabora document surface. Both
+          // files need the server to reach wopi-service directly
+          // (`WOPI_SERVICE_URL`); through the gateway the token and
+          // lock-status routes answer 401. A wopi outage shows up as
+          // `collaboraEditorUrl` "Request failed with status code 500" and
+          // `replaceCollaboraDocument` "could not be checked for active edits"
+          // — environment, not product. Licence assignment is self-contained.
+          'src/functional-api/collabora/**/*.it-spec.ts',
         ],
         // 054-delete-own-account: these it-specs need loopback Redis/Postgres
         // and a matching local/CI `SESSION_SIGNING_KEY`
@@ -245,6 +262,14 @@ export default defineConfig({
         // locally, never nightly.
         [
           'src/functional-api/contributor-management/user/delete-own-account*.it-spec.ts',
+          // The Form "title/description never reach a notification" case: its
+          // positive control is ONE receipt mail, and the test cluster's
+          // MailSlurper drops a few mails per run mid-DATA (nightly 40792632135,
+          // 2026-10-29 01:09:55 UTC), which reads as a red for a rule the
+          // product has never broken. A MailSlurper replacement is in progress;
+          // put the file back on the nightly when it lands. Runs locally via
+          // `test:callouts`.
+          'src/functional-api/callout/form/form-presentation-receipt.it-spec.ts',
         ]
       ),
     ],

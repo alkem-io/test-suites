@@ -53,6 +53,10 @@ td{padding:7px 10px;border-bottom:1px solid var(--line);vertical-align:top}
 .badge{display:inline-block;font-size:11px;padding:1px 6px;border-radius:3px;line-height:1.5;margin-left:6px;vertical-align:1px;letter-spacing:.02em}
 .badge.prod{background:var(--prod-bg);color:var(--prod)}
 .badge.unl{background:var(--surface2);color:var(--ink3)}
+.bugs th button.sort{all:unset;cursor:pointer;display:inline-flex;align-items:center;gap:4px;padding:2px 0;color:inherit;font:inherit;letter-spacing:inherit;text-transform:inherit}
+.bugs th button.sort:hover{color:var(--ink)}
+.bugs th button.sort .arr{font-family:"IBM Plex Mono",monospace;font-size:10px;opacity:.35;letter-spacing:0}
+.bugs th[aria-sort] button.sort{color:var(--accent)}.bugs th[aria-sort] button.sort .arr{opacity:1}
 .bugs tbody tr:hover td{background:var(--surface)}
 .empty{padding:20px 10px;color:var(--ink3)}
 @media (max-width:640px){.bugs td.area,.bugs th.area{display:none}}
@@ -145,6 +149,21 @@ function chips(r){
   if(!h) h=BOARD_OK?'<span class="chip none" title="Not on the board, no PR, no release story">no signal</span>':'<span class="chip none" title="No PR, epic or release story; board membership not readable">no signal</span>';
   return h;
 }
+const PLAN_ORDER={pr_open:0,pr_merged:1,release:2,board:3,none:4};
+const COLS=[['repo','Repo',''],['n','#',''],['t','Title',''],['a','Area','area'],['pl','Where it stands','st'],['d','Age','num']];
+const SORT={k:null,dir:1};
+const KEY={repo:r=>r.repo,n:r=>r.n,t:r=>r.t.toLowerCase(),a:r=>r.a,pl:r=>PLAN_ORDER[r.pl],d:r=>r.d};
+function sortRows(g){
+  if(!SORT.k) return g;
+  const k=KEY[SORT.k];
+  return g.map((r,i)=>[r,i]).sort((x,y)=>{const a=k(x[0]),b=k(y[0]);const c=a<b?-1:a>b?1:0;return c?c*SORT.dir:x[1]-y[1]}).map(x=>x[0]);
+}
+function thead(){
+  let h='<thead><tr><th></th>';
+  for(const [k,label,cls] of COLS){const on=SORT.k===k;
+    h+=`<th${cls?` class="${cls}"`:''}${on?` aria-sort="${SORT.dir===1?'ascending':'descending'}"`:''}><button class="sort" type="button" data-sort="${k}" title="Sort by ${label.toLowerCase()}">${label}<span class="arr" aria-hidden="true">${on?(SORT.dir===1?'▲':'▼'):'↕'}</span></button></th>`;}
+  return h+'</tr></thead>';
+}
 function render(){
   const q=F.q.value.trim().toLowerCase();
   const rows=ROWS.filter(r=>(!F.sev.value||r.s===F.sev.value)&&(!F.area.value||r.a===F.area.value)&&(!F.repo.value||r.repo===F.repo.value)&&(!F.age.value||r.ab===F.age.value)&&(!F.flag.value||(F.flag.value==='prod'?r.p:F.flag.value==='unl'?!r.l:!r.asg))&&(!F.plan.value||r.pl===F.plan.value)&&(!q||r.t.toLowerCase().includes(q)||String(r.n).includes(q)));
@@ -152,8 +171,8 @@ function render(){
   let html='';
   for(const s of ['High','Medium','Low']){
     const g=rows.filter(r=>r.s===s); if(!g.length) continue;
-    html+=`<div class="sevhead ${s}"><h3>${s}</h3><span class="cnt">${g.length}</span><span class="def">${DEF[s]}</span></div><div class="scroll"><table class="bugs"><thead><tr><th></th><th>Repo</th><th>#</th><th>Title</th><th class="area">Area</th><th class="st">Where it stands</th><th class="num">Age</th></tr></thead><tbody>`;
-    for(const r of g){
+    html+=`<div class="sevhead ${s}"><h3>${s}</h3><span class="cnt">${g.length}</span><span class="def">${DEF[s]}</span></div><div class="scroll"><table class="bugs">${thead()}<tbody>`;
+    for(const r of sortRows(g)){
       html+=`<tr class="${r.d>365?'old':''}" data-k="${r.repo}/${r.n}"><td><button class="tg" type="button" aria-expanded="false" aria-label="Show body of #${r.n}" data-k="${r.repo}/${r.n}">+</button></td><td class="repo">${r.repo}</td><td class="n"><a href="${r.u}" target="_blank" rel="noopener">#${r.n}</a></td><td class="t"><a href="${r.u}" target="_blank" rel="noopener">${esc(r.t)}</a>${r.p?'<span class="badge prod">prod</span>':''}${r.l?'':'<span class="badge unl">no bug label</span>'}</td><td class="area">${esc(r.a)}</td><td class="st">${chips(r)}</td><td class="num age" title="opened ${r.c}">${ageText(r.d)}</td></tr>`;
     }
     html+='</tbody></table></div>';
@@ -161,7 +180,7 @@ function render(){
   $('#list').innerHTML=html||'<p class="empty">No open bugs match these filters.</p>';
 }
 Object.values(F).forEach(el=>el.addEventListener('input',render));
-$('#f-reset').addEventListener('click',()=>{Object.values(F).forEach(el=>el.value='');render()});
+$('#f-reset').addEventListener('click',()=>{Object.values(F).forEach(el=>el.value='');SORT.k=null;SORT.dir=1;render()});
 const BY={};ROWS.forEach(r=>BY[r.repo+'/'+r.n]=r);
 if(window.marked){marked.setOptions({gfm:true,breaks:true,headerIds:false,mangle:false});}
 function bodyHtml(r){
@@ -175,6 +194,8 @@ function bodyHtml(r){
   return tpl.innerHTML;
 }
 document.addEventListener('click',e=>{
+  const sb=e.target.closest('button.sort');
+  if(sb){const k=sb.dataset.sort;if(SORT.k===k){SORT.dir=-SORT.dir}else{SORT.k=k;SORT.dir=1}render();return;}
   const t=e.target.closest('button.tg');
   if(t){const tr=t.closest('tr');const open=t.getAttribute('aria-expanded')==='true';
     if(open){t.setAttribute('aria-expanded','false');t.textContent='+';const nx=tr.nextElementSibling;if(nx&&nx.classList.contains('body'))nx.remove();}

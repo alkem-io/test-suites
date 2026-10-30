@@ -1,15 +1,22 @@
-import { TestUser, TestUserManager, testConfiguration } from '@alkemio/tests-lib';
+import {
+  getDocument,
+  TestUser,
+  TestUserManager,
+  testConfiguration,
+} from '@alkemio/tests-lib';
 import {
   CalloutAllowedActors,
   CalloutContributionType,
   CalloutFramingType,
   CalloutVisibility,
   CollaboraDocumentType,
+  TemplateType,
 } from '@alkemio/tests-lib/core/generated/alkemio-schema';
 import {
   graphqlRequest,
   graphqlRequestAuth,
 } from '@alkemio/tests-lib/utils/graphql.request';
+import { createHash } from 'crypto';
 import { readFileSync, PathLike } from 'fs';
 import nodePath from 'path';
 
@@ -396,3 +403,199 @@ export const collaboraFixtures = {
     'image.png'
   ),
 };
+
+// --- 085-document-post-templates: document post templates ---
+// Template authoring (upload into a template) and template application
+// (copy-on-apply), plus the byte readers the isolation proof needs.
+
+/**
+ * `createTemplate` with a file — a CALLOUT template framed by a Collabora
+ * document populated from the uploaded bytes.
+ *
+ * `documentType` is deliberately absent from the input: on the upload path the
+ * type is derived from the file's sniffed MIME, so passing one would hide a
+ * regression in that derivation. The Template's own `id` comes back because
+ * AC6 reads it as another role through the shipped `GetTemplateById`.
+ */
+export const createCollaboraCalloutTemplate = async (
+  path: PathLike,
+  templatesSetID: string,
+  name: string,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) =>
+  graphqlUpload(
+    `mutation CreateCollaboraCalloutTemplate($file: Upload, $templateData: CreateTemplateOnTemplatesSetInput!) {
+      createTemplate(file: $file, templateData: $templateData) {
+        id
+        callout {
+          framing {
+            collaboraDocument {
+              id
+              documentType
+              previewUrl
+            }
+          }
+        }
+      }
+    }`,
+    {
+      templateData: {
+        templatesSetID,
+        type: TemplateType.Callout,
+        profileData: { displayName: name },
+        calloutData: {
+          framing: {
+            profile: { displayName: name },
+            type: CalloutFramingType.CollaboraDocument,
+            collaboraDocument: {},
+          },
+        },
+      },
+    },
+    path,
+    userRole
+  );
+
+/**
+ * Apply a document template: create a callout whose framing document is a copy
+ * of `sourceCollaboraDocumentID`.
+ *
+ * `framing.type` is load-bearing, not boilerplate. `createCalloutFraming`
+ * builds a `collaboraDocument` only inside
+ * `if (calloutFraming.type === CalloutFramingType.COLLABORA_DOCUMENT)`, so
+ * omitting it makes the create *succeed* with a null `collaboraDocument` — AC2
+ * would then fail on a null `previewUrl` rather than on distinctness, and AC6
+ * would *succeed* where it must be refused, reporting the feature's one
+ * authorization rule as broken when the harness is at fault.
+ */
+export const applyCollaboraTemplate = async (
+  calloutsSetID: string,
+  sourceCollaboraDocumentID: string,
+  displayName: string,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) =>
+  graphqlRequestAuth(
+    {
+      operationName: 'ApplyCollaboraTemplate',
+      query: `mutation ApplyCollaboraTemplate($calloutData: CreateCalloutOnCalloutsSetInput!) {
+        createCalloutOnCalloutsSet(calloutData: $calloutData) {
+          id
+          framing {
+            collaboraDocument { id previewUrl }
+          }
+        }
+      }`,
+      variables: {
+        calloutData: {
+          calloutsSetID,
+          framing: {
+            profile: { displayName },
+            type: CalloutFramingType.CollaboraDocument,
+            collaboraDocument: { sourceCollaboraDocumentID },
+          },
+        },
+      },
+    },
+    userRole
+  );
+
+/**
+ * Re-read the current `previewUrl` of the document framing a callout, and the
+ * reading role's privileges on that document.
+ *
+ * Keyed off the **callout**, not the document: nothing in the schema returns a
+ * `CollaboraDocument` by its own id. Required after every write, because
+ * `replaceCollaboraDocument` stages a new backing `Document`, re-points the FK
+ * and deletes the old row — a captured `previewUrl` then points at a deleted
+ * row and the byte fetch 404s.
+ */
+export const getCalloutCollaboraPreviewUrl = async (
+  calloutID: string,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) =>
+  graphqlRequestAuth(
+    {
+      operationName: 'CalloutCollaboraPreviewUrl',
+      query: `query CalloutCollaboraPreviewUrl($calloutID: UUID!) {
+        lookup {
+          callout(ID: $calloutID) {
+            framing {
+              collaboraDocument {
+                id
+                previewUrl
+                authorization { myPrivileges }
+              }
+            }
+          }
+        }
+      }`,
+      variables: { calloutID },
+    },
+    userRole
+  );
+
+/**
+ * The backing file ID a `previewUrl` names. Identity comparisons in the suite
+ * go through this (not the raw URL string), so two URLs that differ only in
+ * prefix or encoding but serve the same file cannot pass as "distinct".
+ */
+export const extractDocumentFileID = (previewUrl: string): string => {
+  const fileID = previewUrl.match(
+    /\/api\/private\/wopi\/files\/([^/]+)\/preview$/
+  )?.[1];
+  if (!fileID) {
+    throw new Error(`not a Collabora preview URL: ${previewUrl}`);
+  }
+  return decodeURIComponent(fileID);
+};
+
+/**
+ * The only byte reader in the suite: sha256 of a document's current content,
+ * fetched through the storage REST endpoint named by its `previewUrl`.
+ */
+export const fetchDocumentBytesHash = async (
+  previewUrl: string
+): Promise<string> => {
+  const fileID = extractDocumentFileID(previewUrl);
+
+  // getDocument (NOT getAuthDocument) — the latter is `async`, so awaiting it
+  // dispatches the request with superagent's DEFAULT parser and returns a
+  // Response you can no longer attach `.buffer`/`.parse` to. The parser must be
+  // attached BEFORE the request is awaited.
+  const token = TestUserManager.getUserModelByType(
+    TestUser.GLOBAL_ADMIN
+  ).authToken;
+  const res = await getDocument(fileID)
+    .set('Authorization', `Bearer ${token}`)
+    .buffer(true)
+    .parse((response, cb) => {
+      // superagent does NOT buffer application/vnd.* by default; without this
+      // res.body is {} and every hash is the hash of {}.
+      const chunks: Buffer[] = [];
+      response.on('data', (c: Buffer) => chunks.push(Buffer.from(c)));
+      response.on('end', () => cb(null, Buffer.concat(chunks)));
+    });
+
+  if (res.status < 200 || res.status >= 300) {
+    throw new Error(
+      `document fetch failed: ${res.status} ${String(res.body).slice(0, 200)}`
+    );
+  }
+  // The tautology guard: if the parser is ever lost, res.body silently becomes
+  // {} or a lossy utf8 string and EVERY AC1-AC6 comparison starts passing for
+  // the wrong reason. Assert the type before hashing.
+  if (!Buffer.isBuffer(res.body)) {
+    throw new Error(
+      'document fetch did not yield a Buffer — the binary parser was not applied'
+    );
+  }
+  return createHash('sha256').update(res.body).digest('hex');
+};
+
+/**
+ * sha256 of a fixture on disk. Every "bytes equal the fixture" assertion
+ * compares against this, never against a hash re-derived from another served
+ * response — that would be a tautology.
+ */
+export const fixtureHash = (absolutePath: PathLike): string =>
+  createHash('sha256').update(readFileSync(absolutePath)).digest('hex');

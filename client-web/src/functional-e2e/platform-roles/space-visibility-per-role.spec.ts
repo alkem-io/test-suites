@@ -8,12 +8,14 @@
 import { expect, test as base, type Page } from '@playwright/test';
 import {
   platformRoleEmail,
+  readSpaceLevelAndVisibility,
   seedPlatformRoleUsers,
   TestScenarioFactory,
   TestUserManager,
 } from '@alkemio/tests-lib';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import { createPersonaTest } from '../fixtures/authenticated-session.fixture';
+import { must, sessionActor } from '../helpers/lib-actor.helper';
 
 const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 let scenario: OrganizationWithSpaceModel;
@@ -34,16 +36,9 @@ base.afterAll(async () => {
 });
 
 /** The space's visibility as the server reports it to the signed-in user. */
-const visibilityOf = (page: Page) =>
-  page.evaluate(async (id: string) => {
-    const res = await fetch('/api/private/graphql', {
-      method: 'POST',
-      credentials: 'include',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ query: `{ lookup { space(ID: "${id}") { visibility } } }` }),
-    });
-    return (await res.json()).data.lookup.space.visibility as string;
-  }, scenario.space.id);
+const visibilityOf = async (page: Page) =>
+  must(await readSpaceLevelAndVisibility(scenario.space.id, await sessionActor(page)), 'read space visibility')
+    .lookup.space!.visibility as string;
 
 const asContentFullAccess = createPersonaTest(platformRoleEmail('PLATFORM_CONTENT_FULL_ACCESS'));
 asContentFullAccess('PLATFORM_CONTENT_FULL_ACCESS: is offered no visibility editor, and the visibility stays', async ({ page }) => {

@@ -52,6 +52,7 @@
     "test:activity-logs": "vitest run --project activity-logs --fileParallelism=false",
     "test:contributormanagement": "vitest run --project contributor-management --fileParallelism=false",
     "test:integration": "vitest run --project integration --fileParallelism=false",
+    "test:orphan-free-deletion": "vitest run --project orphan-free-deletion --fileParallelism=false",
     "test:storage": "vitest run --project storage --fileParallelism=false",
     "test:preferences": "vitest run --project preferences --poolOptions.threads.maxThreads=3",
     "test:pagination": "vitest run --project pagination --fileParallelism=false",
@@ -67,6 +68,7 @@
     "test:documents": "vitest run --project documents --fileParallelism=false",
     "test:configuration": "vitest run --project configuration --fileParallelism=false",
     "test:push-notifications": "vitest run --project push-notifications --fileParallelism=false",
+    "test:contract": "vitest run --project contract --fileParallelism=false",
     "test:graphql-guard:ui": "vitest --project graphql-guard --fileParallelism=false --ui",
     "innovation-pack-with-templates": "tsx ./src/functional-api/innovation-pack/innovation-pack-with-templates.ts",
     "validate-scenario-setup": "tsx ./src/scripts/validate-scenario-setup.ts"

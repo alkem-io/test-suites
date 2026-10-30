@@ -127,7 +127,7 @@ test.describe('Session revocation cascade over the BFF cookie (server#6315)', ()
 
   test('SRB-G2 — the GraphQL gate refuses too, with the right code', async () => {
     // Replay the STALE cookie: c1's own jar was cleared by SRB-G1's 401.
-    const result = await probePrivateGraphqlWithCookie(c1StaleCookie, '{ me { id } }');
+    const result = await probePrivateGraphqlWithCookie(c1StaleCookie);
     capturedWireBodies.push(result.text);
 
     // Wire-level 401, not just an errors envelope inside an HTTP 200:
@@ -170,7 +170,7 @@ test.describe('Session revocation cascade over the BFF cookie (server#6315)', ()
   });
 
   test('SRB-R2 — no anonymous 200 on the GraphQL path either', async () => {
-    const result = await probePrivateGraphqlWithCookie(c1StaleCookie, '{ me { id } }');
+    const result = await probePrivateGraphqlWithCookie(c1StaleCookie);
     capturedWireBodies.push(result.text);
 
     expect(result.status).toBe(401);
@@ -273,7 +273,7 @@ test.describe('Session revocation cascade over the BFF cookie (server#6315)', ()
     // this line — not the one above — is what proves `revoked_at` is a
     // timestamp compared against `created_at` rather than a permanent ban on
     // the subject.
-    const me = await probePrivateGraphql(c4.context, '{ me { id } }');
+    const me = await probePrivateGraphql(c4.context);
     expect(me.status).not.toBe(401);
     expect(me.status).toBe(200);
   });

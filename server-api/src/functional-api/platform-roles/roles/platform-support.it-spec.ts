@@ -9,11 +9,14 @@ import {
  * Platform Support
  *
  * OWNS: The organization lifecycle (create and delete); editing an
- * organization's packs, hubs and the templates inside; the platform forum; admin
+ * organization's packs, hubs and the templates inside; managing an
+ * organisation's people on its Community tab (invite, promote/demote, remove,
+ * approve/reject, revoke, resend), by consent only; the platform forum; admin
  * rights inside a space ONLY where that space enables the support flag.
  *
  * MUST NOT: Moving those resources; deleting the pack or hub itself; any space
- * that has not enabled the flag; role assignment; settings; operations; user
+ * that has not enabled the flag; platform role assignment; adding anyone to an
+ * organisation directly; any other organisation settings; operations; user
  * records.
  *
  * The capabilities behind the two blocks below come from

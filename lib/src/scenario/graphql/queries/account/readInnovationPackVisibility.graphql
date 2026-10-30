@@ -1,0 +1,3 @@
+query ReadInnovationPackVisibility($innovationPackId: UUID!) {
+  lookup { innovationPack(ID: $innovationPackId) { id searchVisibility listedInStore } }
+}

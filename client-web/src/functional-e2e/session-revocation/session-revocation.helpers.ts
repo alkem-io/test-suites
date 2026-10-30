@@ -13,15 +13,19 @@
 // every assertion below would degrade to "anonymous" and pass vacuously.
 
 import { APIResponse, Browser, BrowserContext, Page, request } from '@playwright/test';
-import axios from 'axios';
 import {
+  deleteUserRaw,
   getUserToken,
+  readMySessionRaw,
+  readMyUser,
+  readMyUserRaw,
   registerInKratosOrFail,
-  testConfiguration,
   UniqueIDGenerator,
   verifyInKratosOrFail,
+  type RawGraphqlResponse,
 } from '@alkemio/tests-lib';
 import { loginViaCrd } from '../helpers/login.helper';
+import { sessionActor } from '../helpers/lib-actor.helper';
 
 export const baseUrl = (
   process.env.ALKEMIO_BASE_URL || 'http://localhost:3000'
@@ -30,13 +34,12 @@ export const baseUrl = (
 export const password = process.env.AUTH_TEST_HARNESS_PASSWORD || 'change_me';
 
 /**
- * Cookie-borne GraphQL origin. Deliberately NOT `ALKEMIO_SERVER` /
- * `testConfiguration.endPoints.graphql.private` — that points at the
- * non-interactive bearer path, which carries no cookie semantics and never
- * consults the revocation marker. Bearer mutations (the admin deletion below)
- * use that endpoint; every cookie assertion uses this one.
+ * Cookie-borne GraphQL calls go through a `{ cookieHeader }` lib actor, which
+ * the lib sends to the session endpoint (`/api/private/graphql`) — deliberately
+ * NOT the non-interactive bearer path, which carries no cookie semantics and
+ * never consults the revocation marker. Bearer mutations (the admin deletion
+ * below) use the bearer path; every cookie assertion uses the session one.
  */
-export const privateGraphqlUrl = `${baseUrl}/api/private/graphql`;
 
 /** `@Controller('api/auth/oidc')` + `@Get('id-token-hint')`, oidc.controller.ts. */
 export const idTokenHintUrl = `${baseUrl}/api/auth/oidc/id-token-hint`;
@@ -85,6 +88,13 @@ const toProbeResult = async (response: APIResponse): Promise<ProbeResult> => {
   return { status: response.status(), text, json };
 };
 
+/** A lib RAW response (status + parsed body + serialised body) as a probe result. */
+const rawToProbeResult = <T>(response: RawGraphqlResponse<T>): ProbeResult => ({
+  status: response.status,
+  text: response.raw,
+  json: response.body,
+});
+
 /**
  * `GET /api/auth/oidc/id-token-hint` from the context's own session.
  * 200 `{id_token}` while the session lives, 401 `{"error":"unauthenticated"}`
@@ -98,23 +108,27 @@ export const probeIdTokenHint = async (
   );
 
 /**
- * `POST /api/private/graphql` from the context's own session.
+ * The session liveness read (`me { id }`) on the session GraphQL endpoint from
+ * the context's own cookie jar, as it is NOW — a jar the server has cleared
+ * sends no cookie and is served anonymously.
  *
- * `failOnStatusCode: false` is load-bearing: the assertion under test is the
- * *status*, and a throwing probe would turn the feature's core behaviour into
- * a harness error rather than an expectation.
+ * A RAW lib call never throws on a non-2xx, which is load-bearing: the
+ * assertion under test is the *status*, and a throwing probe would turn the
+ * feature's core behaviour into a harness error rather than an expectation.
  */
 export const probePrivateGraphql = async (
-  context: BrowserContext,
-  query: string
+  context: BrowserContext
 ): Promise<ProbeResult> =>
-  toProbeResult(
-    await context.request.post(privateGraphqlUrl, {
-      data: { query },
-      headers: { 'Content-Type': 'application/json' },
-      failOnStatusCode: false,
-    })
-  );
+  rawToProbeResult(await readMySessionRaw(await sessionActor(context)));
+
+/**
+ * `me { id user { id } }` from the context's own session — `probePrivateGraphql`
+ * plus whether a user is still attached to the session.
+ */
+export const probePrivateGraphqlMyUser = async (
+  context: BrowserContext
+): Promise<ProbeResult> =>
+  rawToProbeResult(await readMyUserRaw(await sessionActor(context)));
 
 /**
  * The session cookie of a context, as a `Cookie` request header value.
@@ -181,19 +195,13 @@ export const probeIdTokenHintWithCookie = (
     ctx.get(idTokenHintUrl, { failOnStatusCode: false, maxRedirects: 0 })
   );
 
-/** `POST /api/private/graphql` replaying a captured (possibly stale) session cookie. */
-export const probePrivateGraphqlWithCookie = (
-  cookieHeader: string,
-  query: string
-): Promise<ProbeResult> =>
-  probeWithCookie(cookieHeader, ctx =>
-    ctx.post(privateGraphqlUrl, {
-      data: { query },
-      headers: { 'Content-Type': 'application/json' },
-      failOnStatusCode: false,
-      maxRedirects: 0,
-    })
-  );
+/** The session liveness read (`me { id }`) replaying a captured (possibly stale) session cookie. */
+export const probePrivateGraphqlWithCookie = async (
+  cookieHeader: string
+): Promise<ProbeResult> => {
+  assertSecureProbeOrigin();
+  return rawToProbeResult(await readMySessionRaw({ cookieHeader }));
+};
 
 // --------------------------------------------------------------------------
 // Disposable subjects — these specs delete their subject, so a shared persona
@@ -238,23 +246,13 @@ export const provisionDisposableUser = async (
 
 const resolveAlkemioUserId = async (email: string): Promise<string> => {
   const token = await getUserToken(email);
-  const response = await axios.post(
-    testConfiguration.endPoints.graphql.private,
-    { query: '{ me { user { id } } }' },
-    {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-      validateStatus: () => true,
-    }
-  );
-  const userId = response.data?.data?.me?.user?.id;
+  const response = await readMyUser({ bearerToken: token });
+  const userId = response.data?.me?.user?.id;
   if (!userId) {
     throw new Error(
-      `Unable to resolve the Alkemio user id for '${email}' (HTTP ${
-        response.status
-      }): ${JSON.stringify(response.data)}`
+      `Unable to resolve the Alkemio user id for '${email}': ${JSON.stringify(
+        response.error?.errors ?? response.data
+      )}`
     );
   }
   return userId;
@@ -272,13 +270,6 @@ const getAdminToken = (): Promise<string> => {
   }
   return adminTokenPromise;
 };
-
-const DELETE_USER_MUTATION = `
-  mutation deleteUser($deleteData: DeleteUserInput!) {
-    deleteUser(deleteData: $deleteData) {
-      id
-    }
-  }`;
 
 export interface DeleteUserResult {
   status: number;
@@ -307,31 +298,10 @@ export const deleteUserAsGlobalAdmin = async (
   options: { deleteIdentity: boolean }
 ): Promise<DeleteUserResult> => {
   const token = await getAdminToken();
-  const response = await axios.post(
-    testConfiguration.endPoints.graphql.private,
-    {
-      query: DELETE_USER_MUTATION,
-      variables: {
-        deleteData: { ID: userId, deleteIdentity: options.deleteIdentity },
-      },
-    },
-    {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-      validateStatus: () => true,
-      transformResponse: [data => data],
-    }
-  );
-  const text = typeof response.data === 'string' ? response.data : '';
-  let body: any;
-  try {
-    body = JSON.parse(text);
-  } catch {
-    body = undefined;
-  }
-  return { status: response.status, text, body };
+  const response = await deleteUserRaw(userId, options.deleteIdentity, {
+    bearerToken: token,
+  });
+  return { status: response.status, text: response.raw, body: response.body };
 };
 
 /**
