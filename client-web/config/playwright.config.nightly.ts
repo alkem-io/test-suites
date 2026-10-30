@@ -50,6 +50,7 @@ export default defineConfig(
         name: 'Space join and invite',
         testMatch: [
           '/space-join-invite/us1-join-open-space.spec.ts',
+          '/space-join-invite/us2-invite-accept.spec.ts',
         ],
         // Three signed-in contexts, a disposable registration and the
         // invitation mail round trip.
