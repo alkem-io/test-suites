@@ -2,6 +2,7 @@ import { expect } from '@playwright/test';
 import { getGraphqlClient, TestUser } from '@alkemio/tests-lib';
 import { graphqlErrorWrapper } from '@alkemio/tests-lib';
 import { deleteSpace } from '@alkemio/tests-lib/scenario/baseFunctions';
+import { readSpaceSubspaceTree } from '@alkemio/tests-lib';
 
 /**
  * Deletes the Space with this nameID if it exists — the safety net for a walk
@@ -49,5 +50,42 @@ export async function deleteSpaceByNameId(nameID: string): Promise<void> {
   const res = await deleteSpace(id);
   if (res.error) {
     throw new Error(`could not delete leaked Space '${nameID}': ${JSON.stringify(res.error)}`);
+  }
+}
+
+/**
+ * Deletes a space and every subspace under it, leaves first — the server
+ * refuses `deleteSpace` on a space that still has subspaces ("contains 1
+ * subspaces"), so a walk that creates subspaces through the UI must remove
+ * them before its seeded L0 can go. `TestScenarioFactory.cleanUpBaseScenario`
+ * only knows the subspaces it created itself and logs (does not throw) when
+ * the L0 delete is refused, which leaks the L0 against the account's Space
+ * allowance. Idempotent: a space that is already gone is not an error.
+ * Throws with every failure listed, so a leak fails the hook loudly.
+ */
+export async function deleteSpaceTree(spaceId: string): Promise<void> {
+  if (!spaceId) return;
+  const tree = await readSpaceSubspaceTree(spaceId);
+  const root = tree.data?.lookup?.space;
+  if (!root) {
+    // Gone already (not-found), or unreadable — only the latter is a problem.
+    const notFound = JSON.stringify(tree.error ?? '').includes('ENTITY_NOT_FOUND');
+    if (tree.error && !notFound) {
+      throw new Error(`could not read the subspace tree of ${spaceId}: ${JSON.stringify(tree.error)}`);
+    }
+    return;
+  }
+  const ordered = [
+    ...root.subspaces.flatMap(l1 => l1.subspaces.map(l2 => l2.id)),
+    ...root.subspaces.map(l1 => l1.id),
+    root.id,
+  ];
+  const failures: string[] = [];
+  for (const id of ordered) {
+    const res = await deleteSpace(id);
+    if (res.error) failures.push(`${id}: ${JSON.stringify(res.error.errors ?? res.error)}`);
+  }
+  if (failures.length > 0) {
+    throw new Error(`deleteSpaceTree(${spaceId}) left spaces behind: ${failures.join('; ')}`);
   }
 }

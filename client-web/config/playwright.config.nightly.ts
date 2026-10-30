@@ -44,6 +44,34 @@ export default defineConfig(
         ],
       }),
       suite({ name: 'Public Space', testMatch: ['/public-space/*.spec.ts'] }),
+      // W2 journeys 1–4 (docs/qa/server-rebuild/plan.md § W2): the business
+      // writes of membership, structure and settings, walked in the browser.
+      suite({
+        name: 'Space join and invite',
+        testMatch: [
+          '/space-join-invite/us1-join-open-space.spec.ts',
+          '/space-join-invite/us2-invite-accept.spec.ts',
+        ],
+        // Three signed-in contexts, a disposable registration and the
+        // invitation mail round trip.
+        tier: 'long',
+      }),
+      suite({
+        name: 'Subspace create',
+        testMatch: ['/subspace-create/us1-create-subspace-l1-l2.spec.ts'],
+        // Two creates through the dialog, two contexts.
+        tier: 'extended',
+      }),
+      suite({
+        name: 'Space settings write',
+        testMatch: [
+          '/space-settings-write/us1-privacy.spec.ts',
+          '/space-settings-write/us2-membership-policy.spec.ts',
+          '/space-settings-write/us3-collaboration-toggles.spec.ts',
+        ],
+        // Each case: save in the admin context, reload in a second persona's.
+        tier: 'extended',
+      }),
       suite({
         name: 'Support navigation',
         testMatch: [

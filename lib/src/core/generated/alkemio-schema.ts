@@ -976,6 +976,7 @@ export type AuthenticationProviderConfig = {
 export type AuthenticationProviderConfigUnion = OryConfig;
 
 export enum AuthenticationType {
+  Apple = "APPLE",
   Cleverbase = "CLEVERBASE",
   Email = "EMAIL",
   Github = "GITHUB",
@@ -11114,7 +11115,7 @@ export type UserAuthenticationResult = {
   authenticatedAt?: Maybe<Scalars["DateTime"]["output"]>;
   /** When the Kratos Account for the user was created */
   createdAt?: Maybe<Scalars["DateTime"]["output"]>;
-  /** The Authentication Methods used for this User. One of email, linkedin, microsoft, github or unknown */
+  /** The Authentication Methods used for this User. One of apple, cleverbase, email, github, linkedin, microsoft, passkey or unknown */
   methods: Array<AuthenticationType>;
 };
 
@@ -111071,6 +111072,28 @@ export type ReadSpaceSettingsQuery = {
   };
 };
 
+export type ReadSpaceSubspaceTreeQueryVariables = Exact<{
+  spaceId: Scalars["UUID"]["input"];
+}>;
+
+export type ReadSpaceSubspaceTreeQuery = {
+  lookup: {
+    space?:
+      | {
+          id: string;
+          nameID: string;
+          level: SpaceLevel;
+          subspaces: Array<{
+            id: string;
+            nameID: string;
+            level: SpaceLevel;
+            subspaces: Array<{ id: string; nameID: string; level: SpaceLevel }>;
+          }>;
+        }
+      | undefined;
+  };
+};
+
 export type ReadSpaceTemplatesManagerQueryVariables = Exact<{
   spaceId: Scalars["UUID"]["input"];
 }>;
@@ -111084,6 +111107,29 @@ export type ReadSpaceTemplatesManagerQuery = {
             | { templatesSet?: { id: string } | undefined }
             | undefined;
           about: { profile: { tagset?: { id: string } | undefined } };
+        }
+      | undefined;
+  };
+};
+
+export type ReadSubspaceByNameIdQueryVariables = Exact<{
+  parentSpaceId: Scalars["UUID"]["input"];
+  nameID: Scalars["NameID"]["input"];
+}>;
+
+export type ReadSubspaceByNameIdQuery = {
+  lookup: {
+    space?:
+      | {
+          id: string;
+          level: SpaceLevel;
+          subspaceByNameID: {
+            id: string;
+            nameID: string;
+            level: SpaceLevel;
+            about: { profile: { displayName: string; url: string } };
+            community: { roleSet: { id: string } };
+          };
         }
       | undefined;
   };
