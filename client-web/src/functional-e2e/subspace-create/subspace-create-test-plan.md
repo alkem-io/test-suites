@@ -31,7 +31,7 @@ Techniques: **UC** use-case walk, **BVA**-style level boundary (L0 → L1 → L2
 | --- | --- | --- | --- |
 | S3-1 | UC | `createSubspace` answered clean; dialog closed; h1 = name; URL under `/<L0>/challenges/`; server: parent is L0, child level `L1`, display name as typed; the parent's Subspaces grid has a card linking to exactly that URL | automated, green |
 | S3-2 | UC, BVA | the same through the L1 page; URL under `/<L0>/challenges/<L1>/opportunities/`; server: parent is L1, child level `L2`; the L1 sidebar links to it | automated, green |
-| S3-3 | EP, NC | per subspace — admin (positive): page heading, `READ` in `myPrivileges`, read through the parent succeeds; non-member: "We are redirecting you..." dialog, no heading, the read through the parent refused with `FORBIDDEN_POLICY` | automated, green |
+| S3-3 | EP, NC | per subspace — admin (positive): page heading, `READ` in `myPrivileges`, read through the parent succeeds; non-member: "We are redirecting you..." dialog, no heading, the read through the parent AND the direct read of the subspace by id both refused with `FORBIDDEN_POLICY` | automated, green |
 
 ## Deliberately not covered here
 

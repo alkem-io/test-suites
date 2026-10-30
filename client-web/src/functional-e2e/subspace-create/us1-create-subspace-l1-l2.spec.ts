@@ -138,11 +138,11 @@ test.describe('W2 journey 3 — create a subspace (L1, then L2) through the UI',
     expect(l2.level).toBe(SpaceLevel.L2);
     expect(l2.about.profile.displayName).toBe(l2Name);
 
-    // The L1's sidebar lists it.
+    // The L1's sidebar lists it, linking to exactly that URL (as S3-1 pins for the L1 card).
     await page.goto(l1.url);
-    await expect(
-      page.getByRole('complementary', { name: 'SubSpace sidebar' }).getByRole('link', { name: new RegExp(l2Name) })
-    ).toBeVisible();
+    const link = page.getByRole('complementary', { name: 'SubSpace sidebar' }).getByRole('link', { name: new RegExp(l2Name) });
+    await expect(link).toBeVisible();
+    await expect(link).toHaveAttribute('href', url);
   });
 
   test('S3-3 both URLs resolve for the admin; a non-member of the private parent is turned away from both, and the server refuses them the read', async () => {
@@ -165,6 +165,12 @@ test.describe('W2 journey 3 — create a subspace (L1, then L2) through the UI',
       await expect(page.getByRole('heading', { name, level: 1, exact: true })).toHaveCount(0);
       const refused = await readSubspaceByNameId(parentId, sub.nameId, TestUser.NON_SPACE_MEMBER);
       expect(refused.error?.errors?.map(e => e.code), `non-member read of ${name}`).toContain('FORBIDDEN_POLICY');
+      // The read above is refused at the PARENT (subspaceByNameID needs READ on
+      // it), so it would hold even if the new subspace's own policy let anyone
+      // in. Read the subspace by its id too — the same call that gave the
+      // admin READ above.
+      const direct = await readSpaceMyPrivileges(sub.id, TestUser.NON_SPACE_MEMBER);
+      expect(direct.error?.errors?.map(e => e.code), `non-member direct read of ${name}`).toContain('FORBIDDEN_POLICY');
     }
   });
 });
