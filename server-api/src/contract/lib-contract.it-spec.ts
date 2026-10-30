@@ -30,6 +30,10 @@ import {
   readSpaceLevelAndVisibility,
   readSpaceRefs,
   readSpaceSettings,
+  readSpaceSubspaceTree,
+  readSubspaceByNameId,
+  joinRoleSet,
+  readRoleSetUsersInRole,
 } from '@alkemio/tests-lib';
 import type { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import { libBarrelExportNames, scanClientWebLibUsage } from './client-web-lib-usage';
@@ -172,6 +176,8 @@ const FUNCTIONS: string[] = [
   'readSpaceTemplatesManager',
   'readSpaceAccountSpaces',
   'readSpaceClassifications',
+  'readSubspaceByNameId',
+  'readSpaceSubspaceTree',
   'assignLicensePlanToSpace',
   'readRoleSetUsersInRole',
   'readRoleSetUsersInRoles',
@@ -181,6 +187,7 @@ const FUNCTIONS: string[] = [
   'readRoleSetInvitationIds',
   'readRoleSetPlatformInvitations',
   'readRoleSetPending',
+  'joinRoleSet',
   'applyForEntryRoleOnRoleSet',
   'inviteForEntryRoleOnRoleSet',
   'eventOnInvitation',
@@ -370,6 +377,30 @@ describe('@contract base scenario round trip', () => {
     const level = await readSpaceLevelAndVisibility(base.subspace.id);
     expect(level.data?.lookup.space?.level).toEqual(expect.any(String));
     expect(level.data?.lookup.space?.visibility).toEqual(expect.any(String));
+  });
+
+  test('space: the subspace reads back through its parent, and the tree lists it', async () => {
+    const sub = await readSubspaceByNameId(base.space.id, base.subspace.nameId);
+    expect(sub.error).toBeUndefined();
+    expect(sub.data?.lookup.space?.id).toBe(base.space.id);
+    expect(sub.data?.lookup.space?.subspaceByNameID.id).toBe(base.subspace.id);
+    expect(sub.data?.lookup.space?.subspaceByNameID.level).toEqual(expect.any(String));
+    expect(sub.data?.lookup.space?.subspaceByNameID.about.profile.url).toEqual(expect.any(String));
+
+    const tree = await readSpaceSubspaceTree(base.space.id);
+    expect(tree.error).toBeUndefined();
+    const l1 = tree.data?.lookup.space?.subspaces ?? [];
+    expect(l1.map(s => s.id)).toContain(base.subspace.id);
+    for (const s of l1) expect(Array.isArray(s.subspaces)).toBe(true);
+  });
+
+  test('role set: a user joins an open space as itself and reads back as a member', async () => {
+    const joiner = TestUserManager.users.nonSpaceMember.id;
+    const joined = await joinRoleSet(base.space.community.roleSetId, TestUser.NON_SPACE_MEMBER);
+    expect(joined.error).toBeUndefined();
+    expect(joined.data?.joinRoleSet.id).toBe(base.space.community.roleSetId);
+    const members = await readRoleSetUsersInRole(base.space.community.roleSetId, RoleName.Member);
+    expect(members.data?.lookup.roleSet?.usersInRole.map(u => u.id)).toContain(joiner);
   });
 
   test('callout: the seeded post callout reads back with its framing', async () => {

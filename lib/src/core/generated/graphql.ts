@@ -982,6 +982,7 @@ export type AuthenticationProviderConfig = {
 export type AuthenticationProviderConfigUnion = OryConfig;
 
 export enum AuthenticationType {
+  Apple = "APPLE",
   Cleverbase = "CLEVERBASE",
   Email = "EMAIL",
   Github = "GITHUB",
@@ -11120,7 +11121,7 @@ export type UserAuthenticationResult = {
   authenticatedAt?: Maybe<Scalars["DateTime"]["output"]>;
   /** When the Kratos Account for the user was created */
   createdAt?: Maybe<Scalars["DateTime"]["output"]>;
-  /** The Authentication Methods used for this User. One of email, linkedin, microsoft, github or unknown */
+  /** The Authentication Methods used for this User. One of apple, cleverbase, email, github, linkedin, microsoft, passkey or unknown */
   methods: Array<AuthenticationType>;
 };
 
@@ -119999,6 +120000,32 @@ export type ReadSpaceSettingsQuery = {
   };
 };
 
+export type ReadSpaceSubspaceTreeQueryVariables = SchemaTypes.Exact<{
+  spaceId: SchemaTypes.Scalars["UUID"]["input"];
+}>;
+
+export type ReadSpaceSubspaceTreeQuery = {
+  lookup: {
+    space?:
+      | {
+          id: string;
+          nameID: string;
+          level: SchemaTypes.SpaceLevel;
+          subspaces: Array<{
+            id: string;
+            nameID: string;
+            level: SchemaTypes.SpaceLevel;
+            subspaces: Array<{
+              id: string;
+              nameID: string;
+              level: SchemaTypes.SpaceLevel;
+            }>;
+          }>;
+        }
+      | undefined;
+  };
+};
+
 export type ReadSpaceTemplatesManagerQueryVariables = SchemaTypes.Exact<{
   spaceId: SchemaTypes.Scalars["UUID"]["input"];
 }>;
@@ -120012,6 +120039,29 @@ export type ReadSpaceTemplatesManagerQuery = {
             | { templatesSet?: { id: string } | undefined }
             | undefined;
           about: { profile: { tagset?: { id: string } | undefined } };
+        }
+      | undefined;
+  };
+};
+
+export type ReadSubspaceByNameIdQueryVariables = SchemaTypes.Exact<{
+  parentSpaceId: SchemaTypes.Scalars["UUID"]["input"];
+  nameID: SchemaTypes.Scalars["NameID"]["input"];
+}>;
+
+export type ReadSubspaceByNameIdQuery = {
+  lookup: {
+    space?:
+      | {
+          id: string;
+          level: SchemaTypes.SpaceLevel;
+          subspaceByNameID: {
+            id: string;
+            nameID: string;
+            level: SchemaTypes.SpaceLevel;
+            about: { profile: { displayName: string; url: string } };
+            community: { roleSet: { id: string } };
+          };
         }
       | undefined;
   };
@@ -129772,6 +129822,27 @@ export const ReadSpaceSettingsDocument = gql`
     }
   }
 `;
+export const ReadSpaceSubspaceTreeDocument = gql`
+  query ReadSpaceSubspaceTree($spaceId: UUID!) {
+    lookup {
+      space(ID: $spaceId) {
+        id
+        nameID
+        level
+        subspaces {
+          id
+          nameID
+          level
+          subspaces {
+            id
+            nameID
+            level
+          }
+        }
+      }
+    }
+  }
+`;
 export const ReadSpaceTemplatesManagerDocument = gql`
   query ReadSpaceTemplatesManager($spaceId: UUID!) {
     lookup {
@@ -129785,6 +129856,32 @@ export const ReadSpaceTemplatesManagerDocument = gql`
         about {
           profile {
             tagset {
+              id
+            }
+          }
+        }
+      }
+    }
+  }
+`;
+export const ReadSubspaceByNameIdDocument = gql`
+  query ReadSubspaceByNameId($parentSpaceId: UUID!, $nameID: NameID!) {
+    lookup {
+      space(ID: $parentSpaceId) {
+        id
+        level
+        subspaceByNameID(NAMEID: $nameID) {
+          id
+          nameID
+          level
+          about {
+            profile {
+              displayName
+              url
+            }
+          }
+          community {
+            roleSet {
               id
             }
           }
@@ -131529,9 +131626,13 @@ const ReadSpaceMyPrivilegesDocumentString = print(
 );
 const ReadSpaceRefsDocumentString = print(ReadSpaceRefsDocument);
 const ReadSpaceSettingsDocumentString = print(ReadSpaceSettingsDocument);
+const ReadSpaceSubspaceTreeDocumentString = print(
+  ReadSpaceSubspaceTreeDocument
+);
 const ReadSpaceTemplatesManagerDocumentString = print(
   ReadSpaceTemplatesManagerDocument
 );
+const ReadSubspaceByNameIdDocumentString = print(ReadSubspaceByNameIdDocument);
 const GetUserRolesDocumentString = print(GetUserRolesDocument);
 const GetSpaceTemplatesCountByTemplateSetIdDocumentString = print(
   GetSpaceTemplatesCountByTemplateSetIdDocument
@@ -139940,6 +140041,28 @@ export function getSdk(
         variables
       );
     },
+    ReadSpaceSubspaceTree(
+      variables: SchemaTypes.ReadSpaceSubspaceTreeQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.ReadSpaceSubspaceTreeQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.ReadSpaceSubspaceTreeQuery>(
+            ReadSpaceSubspaceTreeDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "ReadSpaceSubspaceTree",
+        "query",
+        variables
+      );
+    },
     ReadSpaceTemplatesManager(
       variables: SchemaTypes.ReadSpaceTemplatesManagerQueryVariables,
       requestHeaders?: GraphQLClientRequestHeaders
@@ -139958,6 +140081,28 @@ export function getSdk(
             { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "ReadSpaceTemplatesManager",
+        "query",
+        variables
+      );
+    },
+    ReadSubspaceByNameId(
+      variables: SchemaTypes.ReadSubspaceByNameIdQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.ReadSubspaceByNameIdQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.ReadSubspaceByNameIdQuery>(
+            ReadSubspaceByNameIdDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "ReadSubspaceByNameId",
         "query",
         variables
       );

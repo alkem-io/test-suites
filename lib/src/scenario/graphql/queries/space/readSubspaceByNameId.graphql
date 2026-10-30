@@ -1,0 +1,18 @@
+# One subspace looked up THROUGH its parent: a hit proves the parent edge,
+# `level` proves the depth. Used to read back a subspace created in the UI,
+# whose id the walk only learns from its URL.
+query ReadSubspaceByNameId($parentSpaceId: UUID!, $nameID: NameID!) {
+  lookup {
+    space(ID: $parentSpaceId) {
+      id
+      level
+      subspaceByNameID(NAMEID: $nameID) {
+        id
+        nameID
+        level
+        about { profile { displayName url } }
+        community { roleSet { id } }
+      }
+    }
+  }
+}
