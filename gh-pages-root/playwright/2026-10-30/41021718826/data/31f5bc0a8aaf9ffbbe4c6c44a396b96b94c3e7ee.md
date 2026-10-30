@@ -1,0 +1,414 @@
+# Page snapshot
+
+```yaml
+- generic:
+  - generic:
+    - generic:
+      - generic:
+        - generic:
+          - link:
+            - /url: "#crd-main-content"
+            - text: Skip to content
+          - banner:
+            - generic:
+              - generic:
+                - generic:
+                  - generic:
+                    - link:
+                      - /url: /home
+                      - generic:
+                        - img
+                    - generic:
+                      - navigation:
+                        - list:
+                          - listitem:
+                            - generic: L
+                            - generic: l0-comment-images-us1-5fa0e
+                  - navigation:
+                    - button:
+                      - img
+                    - button:
+                      - img
+                    - button:
+                      - img
+                      - generic: 1 unread notifications
+                    - button:
+                      - img
+                    - button:
+                      - generic:
+                        - generic:
+                          - img
+          - main:
+            - generic:
+              - generic:
+                - generic:
+                  - generic:
+                    - generic:
+                      - img
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic:
+                        - heading [level=1]: l0-comment-images-us1-5fa0e
+                      - generic:
+                        - paragraph: A home to go from here to there, together!
+              - generic:
+                - generic:
+                  - generic:
+                    - navigation:
+                      - generic:
+                        - tablist:
+                          - tab [selected]: Home
+                          - tab: Community
+                          - tab: Subspaces
+                          - tab: Knowledge
+                        - generic:
+                          - generic:
+                            - button:
+                              - img
+                            - button:
+                              - img
+                            - button:
+                              - img
+                            - link:
+                              - /url: https://meet.jit.si/comment-images-us1-5fa0e-d5ca355c-5281-4e04-a909-bfb779778c6d
+                              - img
+                            - button:
+                              - img
+                  - generic:
+                    - generic:
+                      - navigation:
+                        - generic:
+                          - generic:
+                            - paragraph: Space Leads
+                            - list:
+                              - listitem:
+                                - link:
+                                  - /url: https://test-alkem.io/user/admin-alkemio
+                                  - generic:
+                                    - generic:
+                                      - img
+                                    - generic:
+                                      - paragraph: admin alkemio
+                              - listitem:
+                                - link:
+                                  - /url: https://test-alkem.io/organization/comment-images-us1-48b30
+                                  - generic:
+                                    - generic:
+                                      - img
+                                    - generic:
+                                      - paragraph: comment-images-us1-48b30
+                        - button:
+                          - img
+                          - generic: About this Space
+                        - generic:
+                          - generic:
+                            - img
+                            - searchbox
+                        - generic:
+                          - generic:
+                            - generic:
+                              - heading [level=3]: Events
+                              - img
+                          - paragraph: No upcoming events
+                          - button: Show calendar
+                  - generic:
+                    - generic:
+                      - generic:
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic:
+                                - generic:
+                                  - paragraph: 🔍 A journey of discovery! Gather insights through research and observation.
+                      - region:
+                        - generic:
+                          - generic:
+                            - generic:
+                              - link:
+                                - /url: "#"
+                                - generic: Open Comment images posts us1 348e2
+                              - generic:
+                                - link:
+                                  - /url: https://test-alkem.io/user/admin-alkemio
+                                  - generic:
+                                    - img
+                                - generic:
+                                  - generic:
+                                    - link:
+                                      - /url: https://test-alkem.io/user/admin-alkemio
+                                      - text: admin alkemio
+                                    - generic: • Today
+                              - generic:
+                                - button:
+                                  - img
+                            - generic:
+                              - heading [level=3]:
+                                - link:
+                                  - /url: "#"
+                                  - text: Comment images posts us1 348e2
+                              - generic:
+                                - generic:
+                                  - paragraph: Contributions (1)
+                                  - button:
+                                    - img
+                                    - text: Add Post
+                                - generic:
+                                  - button:
+                                    - paragraph: Comment images post us1 348e2
+                                    - generic:
+                                      - generic:
+                                        - img
+                                      - generic: admin alkemio
+                                      - generic: • 10/30/2026
+                                    - generic:
+                                      - generic:
+                                        - paragraph: A post with its own comments.
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic:
+                                - link:
+                                  - /url: "#"
+                                  - generic: Open Comment images us1 348e2
+                                - generic:
+                                  - link:
+                                    - /url: https://test-alkem.io/user/admin-alkemio
+                                    - generic:
+                                      - img
+                                  - generic:
+                                    - generic:
+                                      - link:
+                                        - /url: https://test-alkem.io/user/admin-alkemio
+                                        - text: admin alkemio
+                                      - generic: • Today
+                                - generic:
+                                  - button:
+                                    - img
+                              - generic:
+                                - heading [level=3]:
+                                  - link:
+                                    - /url: "#"
+                                    - text: Comment images us1 348e2
+                              - generic:
+                                - generic:
+                                  - generic:
+                                    - button:
+                                      - img
+                                      - img
+                                      - generic: 3 Comments
+                                    - generic:
+                                      - generic:
+                                        - button:
+                                          - img
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic:
+                                - link:
+                                  - /url: "#"
+                                  - generic: Open 👋 Welcome to your space!
+                                - generic:
+                                  - link:
+                                    - /url: https://test-alkem.io/user/admin-alkemio
+                                    - generic:
+                                      - img
+                                  - generic:
+                                    - generic:
+                                      - link:
+                                        - /url: https://test-alkem.io/user/admin-alkemio
+                                        - text: admin alkemio
+                                      - generic: • Today
+                                - generic:
+                                  - button:
+                                    - img
+                              - generic:
+                                - heading [level=3]:
+                                  - link:
+                                    - /url: "#"
+                                    - text: 👋 Welcome to your space!
+                                - generic:
+                                  - generic:
+                                    - generic:
+                                      - generic:
+                                        - paragraph: An empty space for you to configure!.
+                              - generic:
+                                - generic:
+                                  - generic:
+                                    - button:
+                                      - img
+                                      - img
+                                      - generic: 0 Comments
+                                    - generic:
+                                      - generic:
+                                        - button:
+                                          - img
+          - contentinfo:
+            - generic:
+              - generic:
+                - generic:
+                  - img
+                - generic: © 2026 Alkemio B.V.
+              - navigation:
+                - link:
+                  - /url: https://welcome.alkem.io/legal/terms/
+                  - text: Terms
+                - link:
+                  - /url: https://welcome.alkem.io/legal/privacy
+                  - text: Privacy
+                - link:
+                  - /url: https://welcome.alkem.io/legal/security
+                  - text: Security
+                - button: Support
+                - link:
+                  - /url: https://welcome.alkem.io
+                  - text: About
+              - generic:
+                - button:
+                  - img
+                  - generic: English
+    - region "Notifications alt+T"
+    - button:
+      - img
+  - dialog:
+    - generic:
+      - generic:
+        - generic:
+          - heading [level=2]: Comment images posts us1 348e2
+          - paragraph:
+            - link:
+              - /url: https://test-alkem.io/user/admin-alkemio
+              - text: admin alkemio
+      - generic:
+        - button:
+          - img
+        - button:
+          - img
+        - button:
+          - img
+    - generic:
+      - generic:
+        - generic:
+          - heading [level=1]: Comment images posts us1 348e2
+          - link:
+            - /url: https://test-alkem.io/user/admin-alkemio
+            - generic:
+              - generic:
+                - img
+              - generic:
+                - paragraph: admin alkemio
+                - paragraph: Today
+        - generic:
+          - generic:
+            - heading [level=2]: Contributions
+            - generic: "1"
+          - generic:
+            - generic:
+              - generic:
+                - button:
+                  - paragraph: Comment images post us1 348e2
+                  - generic:
+                    - generic:
+                      - img
+                    - generic: admin alkemio
+                    - generic: • 10/30/2026
+                  - generic:
+                    - generic:
+                      - paragraph: A post with its own comments.
+                - button:
+                  - generic:
+                    - img
+                  - generic: Add Post
+          - region:
+            - generic:
+              - generic:
+                - link:
+                  - /url: https://test-alkem.io/user/admin-alkemio
+                  - generic:
+                    - img
+                - generic:
+                  - heading [level=3]: Comment images post us1 348e2
+                  - paragraph:
+                    - link:
+                      - /url: https://test-alkem.io/user/admin-alkemio
+                      - text: admin alkemio
+                    - text: • 1 minute ago
+              - generic:
+                - button:
+                  - img
+                - button:
+                  - img
+            - generic:
+              - generic:
+                - paragraph: A post with its own comments.
+        - generic:
+          - generic:
+            - heading [level=2]: Discussion
+            - generic: "1"
+          - generic:
+            - generic:
+              - generic:
+                - img
+              - generic:
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic:
+                        - textbox:
+                          - /placeholder: Add a comment...
+                  - generic:
+                    - button:
+                      - img
+                    - button:
+                      - img
+                    - button:
+                      - img
+                    - button [disabled]:
+                      - img
+          - generic:
+            - list:
+              - listitem:
+                - generic:
+                  - generic:
+                    - link:
+                      - /url: https://test-alkem.io/user/member348e2-walker
+                      - generic:
+                        - img
+                    - generic:
+                      - generic:
+                        - generic:
+                          - generic:
+                            - generic: Member348e2 Walker
+                            - generic: 1 minute ago
+                          - generic:
+                            - paragraph: as8 text mvuu2oxt
+                      - list:
+                        - listitem:
+                          - generic:
+                            - button:
+                              - img
+                            - link:
+                              - /url: https://test-alkem.io/api/private/rest/storage/file/by-reference?bucketId=a39bb04f-c41b-4201-bf53-bb22f534dc17&ref=ajvusVDSyFiKfLplLqzzxeDG
+                              - img
+                      - generic:
+                        - button:
+                          - img
+                        - button: Reply
+                        - button: Delete
+    - button:
+      - img
+  - dialog "Attachments" [ref=e3]:
+    - heading "Attachments" [level=2] [ref=e4]
+    - generic [ref=e6]:
+      - generic [ref=e7]:
+        - link "Download image" [ref=e8] [cursor=pointer]:
+          - /url: https://test-alkem.io/api/private/rest/storage/file/by-reference?bucketId=a39bb04f-c41b-4201-bf53-bb22f534dc17&ref=ajvusVDSyFiKfLplLqzzxeDG
+          - img
+        - button "Enter fullscreen" [active] [ref=e9] [cursor=pointer]:
+          - img
+      - region [ref=e10]:
+        - group [ref=e13]:
+          - 'img "Attached image: as8-mvuu2oxt.png"'
+    - button "Close" [ref=e14] [cursor=pointer]:
+      - img
+```
