@@ -7,6 +7,7 @@ import {
   ensureConversationList,
   expectMessageReceived,
   gutterRow,
+  matrixSendPath,
   messageColumn,
   openChatPanel,
   openConversation,
@@ -124,6 +125,11 @@ test.describe('US3 — direct (1:1) thread header identity', { tag: ['@chat-avat
   });
 
   test('US3-AS3: 1:1 message bubbles are unchanged — no avatars, incoming or outgoing', async () => {
+    // The only US3 scenario that types a message, so the only one that needs
+    // the browser → Matrix send path (AS1/AS2 read the header and list only).
+    const sendPath = await matrixSendPath(viewer.page);
+    test.skip(!sendPath.reachable, sendPath.reachable ? undefined : sendPath.reason);
+
     // Both sides open the thread themselves — this scenario does not depend on
     // which conversation an earlier test left open.
     await openConversation(viewer.page, [plain.displayName]);

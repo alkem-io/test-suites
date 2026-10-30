@@ -125983,6 +125983,7 @@ export const MyEntitlementsQueryDocument = gql`
             type
           }
           spaces {
+            id
             license {
               authorization {
                 myPrivileges
@@ -126030,7 +126031,6 @@ export const OrganizationEntitlementsQueryDocument = gql`
           type
         }
         spaces {
-          id
           license {
             authorization {
               myPrivileges

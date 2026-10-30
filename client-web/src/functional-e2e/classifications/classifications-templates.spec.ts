@@ -35,7 +35,9 @@ import {
   classificationTemplatesTrigger,
   deleteClassificationTemplate,
   dialogDismiss,
+  ensureEntrySelectorOpen,
   entryCard,
+  entryChips,
   entryKebab,
   entryLabelsInOrder,
   escapeRegExp,
@@ -47,9 +49,10 @@ import {
   pickerGroupCount,
   PLATFORM_GROUP,
   removeEntry,
+  saveSelection,
   SDG_VALUES,
   sectionTitleTexts,
-  selectionSaved,
+  selectedChips,
   SPACE_GROUP,
   templateCard,
   waitForAboutSettings,
@@ -682,15 +685,13 @@ test.describe('TL-05 snapshot independence', () => {
       await addTemplateToSpace(page, TEMPLATE);
       const entry = entryCard(page, TEMPLATE);
       await expect(entry).toContainText('Multi-select · 0 selected');
-      const saved = selectionSaved(page);
+      await ensureEntrySelectorOpen(page, TEMPLATE);
       await entry.getByRole('checkbox', { name: VAL1 }).check();
       await expect(entry).toContainText('Multi-select · 1 selected', {
         timeout: 20_000,
       });
-      await saved;
-      await expect(
-        entry.getByRole('list').getByText(VAL1, { exact: true })
-      ).toBeVisible();
+      await saveSelection(page);
+      await expect(selectedChips(page, TEMPLATE)).toHaveText([VAL1]);
       snapshot = snapshotOf(await readEntry());
       expect(snapshot?.selectedValueIDs).toHaveLength(1);
     });
@@ -728,11 +729,12 @@ test.describe('TL-05 snapshot independence', () => {
       const entry = entryCard(page, TEMPLATE);
       await expect(entry).toBeVisible();
       await expect(entry).toContainText('Multi-select · 1 selected');
-      await expect(
-        entry.getByRole('list').getByText(VAL1, { exact: true })
-      ).toBeVisible();
+      await expect(selectedChips(page, TEMPLATE)).toHaveText([VAL1]);
+      // The chip row offers exactly the original snapshot value set, as does the selector.
+      await expect(entryChips(page, TEMPLATE).getByRole('listitem')).toHaveText(
+        [VAL1, VAL2]
+      );
       await expect(entry.getByText(RENAMED)).toHaveCount(0);
-      // The selector offers exactly the original snapshot value set.
       await entryKebab(page, TEMPLATE).click();
       await page.getByRole('menuitem', { name: /Select values/ }).click();
       await expect(entry.getByRole('checkbox')).toHaveCount(2);
@@ -753,9 +755,7 @@ test.describe('TL-05 snapshot independence', () => {
       const entry = entryCard(page, TEMPLATE);
       await expect(entry).toBeVisible();
       await expect(entry).toContainText('Multi-select · 1 selected');
-      await expect(
-        entry.getByRole('list').getByText(VAL1, { exact: true })
-      ).toBeVisible();
+      await expect(selectedChips(page, TEMPLATE)).toHaveText([VAL1]);
       expect(snapshotOf(await readEntry())).toEqual(snapshot);
     });
 
@@ -765,23 +765,17 @@ test.describe('TL-05 snapshot independence', () => {
       await expect(entry).toBeVisible();
       await entryKebab(page, TEMPLATE).click();
       await page.getByRole('menuitem', { name: /Select values/ }).click();
-      const saved = selectionSaved(page);
       await entry.getByRole('checkbox', { name: VAL2 }).check();
       await expect(entry).toContainText('Multi-select · 2 selected', {
         timeout: 20_000,
       });
-      await saved;
+      await saveSelection(page);
       // The classic dangling-reference regression: the write must SURVIVE a hard reload.
       await page.reload();
       await waitForAboutSettings(page);
       const reloaded = entryCard(page, TEMPLATE);
       await expect(reloaded).toContainText('Multi-select · 2 selected');
-      await expect(
-        reloaded.getByRole('list').getByText(VAL1, { exact: true })
-      ).toBeVisible();
-      await expect(
-        reloaded.getByRole('list').getByText(VAL2, { exact: true })
-      ).toBeVisible();
+      await expect(selectedChips(page, TEMPLATE)).toHaveText([VAL1, VAL2]);
     });
 
     await test.step('stage 5 — remove the orphaned entry', async () => {

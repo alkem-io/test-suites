@@ -5,7 +5,11 @@ on:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    # Pinned: `ubuntu-latest` migrated to Ubuntu 26.04 on 2026-10-19 and
+    # `playwright install --with-deps` has no dependency list for 26.04 on
+    # Playwright 1.58.x (run 40482406834). Lift the pin once Playwright
+    # supports ubuntu26.04-x64.
+    runs-on: ubuntu-24.04
     permissions:
       contents: write
 

@@ -117,9 +117,13 @@ export const acceptInvitationRaw = async (invitationId: string, bearerToken: str
 export const settingsUrl = (org: Pick<OrgFixture, 'nameID'>, tail = ''): string =>
   `${baseUrl}/organization/${org.nameID}/settings${tail}`;
 
-/** The Community tab, once its heading has rendered (the guard shows a loader while privileges load). */
+/**
+ * The org Community tab (server#6692) — since client-web#10476 the Associates tab at
+ * `/settings/associates` (`/settings/community` redirects there) — once its heading has
+ * rendered (the guard shows a loader while privileges load).
+ */
 export const openCommunityTab = async (page: Page, org: Pick<OrgFixture, 'nameID'>): Promise<void> => {
-  await page.goto(settingsUrl(org, '/community'));
+  await page.goto(settingsUrl(org, '/associates'));
   await expect(page.getByRole('heading', { name: 'Pending applications & invitations' })).toBeVisible({
     timeout: 20_000,
   });

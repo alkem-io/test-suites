@@ -39,6 +39,7 @@ import {
   classificationTemplatesTrigger,
   collectGraphQLBodies,
   conflictDialog,
+  discardAboutChanges,
   ensureClassificationTemplatesSectionOpen,
   ensureEntrySelectorOpen,
   entryCard,
@@ -47,6 +48,7 @@ import {
   entryKebab,
   entryKebabDom,
   entryLabelsInOrder,
+  entryUnsavedBadge,
   forbiddenHeading,
   gotoAboutPage,
   gotoSettingsAbout,
@@ -56,12 +58,17 @@ import {
   operationResponse,
   pickerRow,
   pickerGroup,
-  removeConfirmDialog,
+  reloadSettingsAbout,
   removeEntry,
-  selectionSaved,
+  saveAboutChanges,
+  saveSelection,
+  selectedChips,
   SPACE_GROUP,
+  SUBSPACE_LIBRARY_GROUP,
   templatePreviewButton,
   toggleEntryDisplay,
+  unsavedChangesBar,
+  unsavedChangesCount,
   waitForGraphQLBody,
 } from './classifications.helpers';
 import {
@@ -129,10 +136,19 @@ test.describe('SL-01 add + select roundtrip', () => {
   const V2 = 'e2e024 SL Two';
   const V3 = 'e2e024 SL Three';
 
-  test('SL-01 US1-AS2/AS4/AS8 — immediate commit, authored order, persistence, sibling-safe deselect, same entry after reselection (FR-006a/002b/012a/012d, SC-002)', async ({
+  test('SL-01 US1-AS2/AS4/AS8 — staged add written by the tab Save bar, authored order, persistence, sibling-safe deselect, same entry after reselection (FR-006a as amended for the CRD client by 024 Session 2026-10-22, FR-002b/012a/012d, SC-002)', async ({
     page,
   }) => {
     test.setTimeout(120_000);
+    test.info().annotations.push({
+      type: 'info',
+      description:
+        'Workspace spec 024 Session 2026-10-22 (agents-hq#228, following client-web spec 045 / ' +
+        'client-web#10437) narrows FR-006a to the server: in the CRD client every classification ' +
+        'change on Settings → About is staged and written by the tab-wide "Save changes" bar. The ' +
+        'chip row showing every value (FR-012a\'s selector opened from the kebab) is 024\'s ' +
+        'amendment from agents-hq#202.',
+    });
     await createTemplateApi(fixture, { name: TPL, values: [V1, V2, V3] });
     const card = entryCard(page, TPL);
 
@@ -146,53 +162,67 @@ test.describe('SL-01 add + select roundtrip', () => {
       await expect(dialog).not.toBeVisible();
     });
 
-    await test.step('immediate commit: no Save button, 0-selected meta, auto-open selector', async () => {
+    await test.step('staged, not committed: "Unsaved" badge, bar counts 1, no entry on the API until Save changes', async () => {
       await expect(card).toBeVisible();
-      // FR-006a — nothing in the Classifications section buffers behind a Save.
+      await expect(entryUnsavedBadge(page, TPL)).toBeVisible();
+      // No per-section Save: the only commit point is the tab-wide bar.
       await expect(
         classificationsSection(page).getByRole('button', {
           name: 'Save',
           exact: true,
         })
       ).toHaveCount(0);
+      expect(await unsavedChangesCount(page)).toBe(1);
       await expect(card.getByText('Multi-select · 0 selected')).toBeVisible();
-      // FR-012a — the selector auto-expands.
-      await expect(card.locator('[role="checkbox"]')).toHaveCount(3);
+      expect(await entryByLabel(TPL)).toHaveLength(0);
+      await saveAboutChanges(page, ['AddClassificationEntryFromTemplate']);
+      await expect(entryUnsavedBadge(page, TPL)).toHaveCount(0);
+      expect(await entryByLabel(TPL)).toHaveLength(1);
+    });
+
+    await test.step('Step B prompt: every value as a dashed chip in authored order, none selected (FR-012a, FR-002b)', async () => {
+      await expect(entryChips(page, TPL).getByRole('listitem')).toHaveText([
+        V1,
+        V2,
+        V3,
+      ]);
+      await expect(card.getByRole('button', { name: /^Select / })).toHaveCount(
+        3
+      );
+      await expect(selectedChips(page, TPL)).toHaveCount(0);
+      await expect(card.getByText('No values selected yet')).toBeVisible();
+      // The checkbox selector is an alternative behind the kebab; it is not open by default.
+      await expect(card.locator('[role="checkbox"]')).toHaveCount(0);
     });
 
     await test.step('checkbox list is in authored order, never alphabetized (FR-002b)', async () => {
+      await ensureEntrySelectorOpen(page, TPL);
+      await expect(card.locator('[role="checkbox"]')).toHaveCount(3);
       await expect(card.locator('fieldset label')).toHaveText([V1, V2, V3]);
     });
 
     await test.step('reload: entry persists with 0 selected', async () => {
-      await page.reload();
-      await expect(classificationsSection(page)).toBeVisible({
-        timeout: 20_000,
-      });
+      await reloadSettingsAbout(page);
       await expect(card.getByText('Multi-select · 0 selected')).toBeVisible();
     });
 
-    await test.step('tick Three then One: meta transitions + authored-order chips', async () => {
-      // A 0-selected entry re-opens its selector on mount (FR-012a).
-      let saved = selectionSaved(page);
+    await test.step('tick Three then One: meta transitions + authored-order chips, written by one Save', async () => {
+      await ensureEntrySelectorOpen(page, TPL);
       await card.getByRole('checkbox', { name: V3 }).check();
       await expect(card.getByText('Multi-select · 1 selected')).toBeVisible();
-      await saved;
-      saved = selectionSaved(page);
       await card.getByRole('checkbox', { name: V1 }).check();
       await expect(card.getByText('Multi-select · 2 selected')).toBeVisible();
-      await saved;
-      // Chips render below the checkbox list, in authored order regardless of click order (FR-002b).
-      await expect(entryChips(page, TPL).locator('li')).toHaveText([V1, V3]);
+      // Selected chips render in authored order regardless of click order (FR-002b).
+      await expect(selectedChips(page, TPL)).toHaveText([V1, V3]);
+      // Both ticks are staged (one change on the entry) and written by one Save.
+      expect(await unsavedChangesCount(page)).toBe(1);
+      await saveSelection(page);
     });
 
     await test.step('reload: both selections survive', async () => {
-      await page.reload();
-      await expect(classificationsSection(page)).toBeVisible({
-        timeout: 20_000,
-      });
+      await reloadSettingsAbout(page);
       await expect(card.getByText('Multi-select · 2 selected')).toBeVisible();
-      await expect(entryChips(page, TPL).locator('li')).toHaveText([V1, V3]);
+      await expect(selectedChips(page, TPL)).toHaveText([V1, V3]);
     });
 
     // SC-002 / US1-AS8: the selection changes, the entry does not — same id, same sortOrder,
@@ -203,19 +233,14 @@ test.describe('SL-01 add + select roundtrip', () => {
     expect(positionBefore).toBeGreaterThanOrEqual(0);
 
     await test.step('chip × removes only its own value; the sibling survives a reload (FR-012d)', async () => {
-      // Server-ack barrier: the deselect renders optimistically.
-      const saved = selectionSaved(page);
       await card.getByRole('button', { name: `Deselect ${V1}` }).click();
       await expect(card.getByText('Multi-select · 1 selected')).toBeVisible();
-      await expect(entryChips(page, TPL).locator('li')).toHaveText([V3]);
-      await saved;
-      // An optimistic client render must not mask a full-replacement write that clobbered the sibling.
-      await page.reload();
-      await expect(classificationsSection(page)).toBeVisible({
-        timeout: 20_000,
-      });
+      await expect(selectedChips(page, TPL)).toHaveText([V3]);
+      await saveSelection(page);
+      // A staged client render must not mask a full-replacement write that clobbered the sibling.
+      await reloadSettingsAbout(page);
       await expect(card.getByText('Multi-select · 1 selected')).toBeVisible();
-      await expect(entryChips(page, TPL).locator('li')).toHaveText([V3]);
+      await expect(selectedChips(page, TPL)).toHaveText([V3]);
     });
 
     await test.step('SC-002: same entry id, sortOrder and position — Step A not repeated', async () => {
@@ -246,15 +271,12 @@ test.describe('SL-01 add + select roundtrip', () => {
     });
 
     await test.step('untick to zero is legal and persists (FR-012a)', async () => {
-      const saved = selectionSaved(page);
       await card.getByRole('checkbox', { name: V3 }).uncheck();
       await expect(card.getByText('Multi-select · 0 selected')).toBeVisible();
-      await saved;
-      await page.reload();
-      await expect(classificationsSection(page)).toBeVisible({
-        timeout: 20_000,
-      });
+      await saveSelection(page);
+      await reloadSettingsAbout(page);
       await expect(card.getByText('Multi-select · 0 selected')).toBeVisible();
+      await expect(selectedChips(page, TPL)).toHaveCount(0);
     });
 
     // Not asserted: "no layout shift while ticking" — bounding-box checks are a visual-QA concern.
@@ -271,14 +293,29 @@ test.describe('SL-02 duplicate guard', () => {
   const ALIAS = 'e2e024 SL Dup Alpha';
   const OURS = 'e2e024 SL Dup ';
   const VALUES = ['e2e024 SL Dup Zebra', 'e2e024 SL Dup Apple'];
+  // Outside the OURS prefix: the order/API checks above must not see it.
+  const SERVER_LABEL = 'e2e024 SL Server Taken';
 
-  test('SL-02 US1-AS6 — server-side conflict dialog, pre-seeded retry, case/whitespace variants, alias persistence (FR-011a/b/c, FR-018b)', async ({
+  test('SL-02 US1-AS6 — pick-time conflict dialog, pre-seeded retry, case/whitespace variants, alias persistence, server guard at Save (FR-011a/b/c, FR-018b)', async ({
     page,
     consoleGuard,
   }) => {
-    test.setTimeout(120_000);
-    // This scenario provokes server-side conflicts on purpose.
-    consoleGuard.allow.push(/already in use/i, /conflict/i, /duplicate/i);
+    test.setTimeout(150_000);
+    test.info().annotations.push({
+      type: 'info',
+      description:
+        'Per 024 Session 2026-10-22 (FR-011b amendment, agents-hq#228), since client-web#10437 the ' +
+        'picker checks the display label against what the Space will hold ' +
+        'after Save (no round trip): the conflict dialog is client-side. The server-side guard ' +
+        '(FR-011b) is exercised through the UI at Save instead, with a label taken behind the client\'s back.',
+    });
+    // This scenario provokes conflicts on purpose, one of them server-side.
+    consoleGuard.allow.push(
+      /already in use/i,
+      /already exists/i,
+      /conflict/i,
+      /duplicate/i
+    );
 
     await test.step('seed: template + first entry (0 selected)', async () => {
       await createTemplateApi(fixture, { name: TPL, values: VALUES });
@@ -291,16 +328,9 @@ test.describe('SL-02 duplicate guard', () => {
 
     const conflict = conflictDialog(page);
 
-    await test.step('second pick raises the server conflict dialog, pre-seeded (FR-011a/b)', async () => {
+    await test.step('second pick raises the conflict dialog at pick time, pre-seeded (FR-011a)', async () => {
       const dialog = await openPickerDialog(page);
-      // Anchor on the add response: a purely client-side duplicate check would show the
-      // same dialog without a round trip.
-      const attempted = operationResponse(
-        page,
-        'AddClassificationEntryFromTemplate'
-      );
       await pickerRow(page, dialog, TPL).click();
-      await attempted;
       await expect(conflict).toBeVisible();
       await expect(
         conflict.getByText(new RegExp(`labelled "${TPL}"`))
@@ -312,7 +342,7 @@ test.describe('SL-02 duplicate guard', () => {
 
     await test.step('case variant conflicts too (FR-011c)', async () => {
       // The description echoes the label of the LAST rejected attempt, so the new text
-      // only appears after the server rejected this variant.
+      // only appears once this variant has been rejected.
       await conflict.getByLabel('Display label').fill('e2e024 sl dup zulu');
       await conflict
         .getByRole('button', { name: 'Add with this label' })
@@ -324,25 +354,20 @@ test.describe('SL-02 duplicate guard', () => {
       await expect(entryKebabDom(page, TPL)).toHaveCount(1);
     });
 
-    await test.step('whitespace variant: server trim-then-conflict, no second entry (FR-011c)', async () => {
+    await test.step('whitespace variant: trim-then-conflict, no second entry (FR-011c)', async () => {
       await conflict.getByLabel('Display label').fill(`${TPL} `);
-      // The conflict dialog is ALREADY visible, so anchor on the server round trip.
-      const attempted = operationResponse(
-        page,
-        'AddClassificationEntryFromTemplate'
-      );
       await conflict
         .getByRole('button', { name: 'Add with this label' })
         .click();
-      await attempted;
       await expect(conflict).toBeVisible();
+      await expect(conflict.getByText(/labelled "e2e024 SL Dup Zulu "/)).toBeVisible();
       // Attribute prefix match catches a raw trailing-space entry AND a trimmed duplicate.
       await expect(
         page.locator(`button[aria-label^="Classification actions: ${TPL}"]`)
       ).toHaveCount(1);
     });
 
-    await test.step('accepted alias creates a second entry after the first (FR-018b)', async () => {
+    await test.step('accepted alias stages a second entry after the first; Save writes it (FR-018b)', async () => {
       await conflict.getByLabel('Display label').fill(ALIAS);
       await conflict
         .getByRole('button', { name: 'Add with this label' })
@@ -350,23 +375,25 @@ test.describe('SL-02 duplicate guard', () => {
       await expect(conflict).not.toBeVisible();
       const aliasCard = entryCard(page, ALIAS);
       await expect(aliasCard).toBeVisible();
+      await expect(entryUnsavedBadge(page, ALIAS)).toBeVisible();
       await expect(
         aliasCard.getByText('Multi-select · 0 selected')
       ).toBeVisible();
       // Same vocabulary, authored (not alphabetical) order.
-      await expect(aliasCard.locator('fieldset label')).toHaveText(VALUES);
+      await expect(entryChips(page, ALIAS).getByRole('listitem')).toHaveText(
+        VALUES
+      );
       // Addition order (Zulu, then Alpha) — alphabetical would be the reverse.
       const ours = (await entryLabelsInOrder(page)).filter(text =>
         text.startsWith(OURS)
       );
       expect(ours).toEqual([TPL, ALIAS]);
+      await saveAboutChanges(page, ['AddClassificationEntryFromTemplate']);
+      await expect(entryUnsavedBadge(page, ALIAS)).toHaveCount(0);
     });
 
     await test.step('reload: both entries persist, in order, original casing intact', async () => {
-      await page.reload();
-      await expect(classificationsSection(page)).toBeVisible({
-        timeout: 20_000,
-      });
+      await reloadSettingsAbout(page);
       await expect(entryKebab(page, TPL)).toHaveCount(1);
       await expect(entryKebab(page, ALIAS)).toHaveCount(1);
       const ours = (await entryLabelsInOrder(page)).filter(text =>
@@ -385,6 +412,56 @@ test.describe('SL-02 duplicate guard', () => {
       expect(ours.map(e => e.displayLabel)).toEqual([TPL, ALIAS]);
       expect(ours[1].values).toEqual(ours[0].values);
     });
+
+    await test.step('the server guard holds at Save (FR-011b): a label taken behind the client\'s back is rejected, the add stays staged', async () => {
+      // Taken through the API AFTER the page loaded, so the pick-time check cannot know it.
+      const template = (await libraryTemplates(fixture.templatesSetId)).find(
+        t => t.profile.displayName === TPL
+      );
+      await addEntryApi(fixture.spaceId, template?.id as string, SERVER_LABEL);
+      // Reach the retry field through the known client conflict, then retry with the taken label.
+      const dialog = await openPickerDialog(page);
+      await pickerRow(page, dialog, TPL).click();
+      await expect(conflict).toBeVisible();
+      await conflict.getByLabel('Display label').fill(SERVER_LABEL);
+      await conflict
+        .getByRole('button', { name: 'Add with this label' })
+        .click();
+      await expect(conflict).not.toBeVisible();
+      await expect(entryUnsavedBadge(page, SERVER_LABEL)).toBeVisible();
+      const attempted = operationResponse(
+        page,
+        'AddClassificationEntryFromTemplate'
+      );
+      await unsavedChangesBar(page)
+        .getByRole('button', { name: 'Save changes' })
+        .click();
+      await attempted;
+      // The tab reports the failed save; closing it keeps the add staged with the error on the bar.
+      const failed = page.getByRole('alertdialog', {
+        name: "Your changes couldn't be saved",
+      });
+      await expect(failed).toBeVisible({ timeout: 20_000 });
+      await failed.getByRole('button', { name: 'Close', exact: true }).click();
+      await expect(failed).toBeHidden();
+      const bar = unsavedChangesBar(page);
+      await expect(bar.getByRole('alert')).toContainText(
+        'That name is already in use'
+      );
+      // The refetch now also shows the API-made entry: two cards, exactly one of them unsaved.
+      const serverKebabs = page.getByRole('button', {
+        name: `Classification actions: ${SERVER_LABEL}`,
+        exact: true,
+      });
+      await expect(serverKebabs).toHaveCount(2);
+      await expect(page.getByText('Unsaved', { exact: true })).toHaveCount(1);
+      // Exactly one stored entry with that label — the API's, never ours.
+      expect(await entryByLabel(SERVER_LABEL)).toHaveLength(1);
+      await discardAboutChanges(page);
+      await expect(serverKebabs).toHaveCount(1);
+      await expect(page.getByText('Unsaved', { exact: true })).toHaveCount(0);
+      expect(await entryByLabel(SERVER_LABEL)).toHaveLength(1);
+    });
   });
 });
 
@@ -402,7 +479,7 @@ test.describe('SL-03 single-select cardinality', () => {
   }) => {
     test.setTimeout(120_000);
     test.info().annotations.push({
-      type: 'deviation',
+      type: 'info',
       description:
         'The 024 UI renders ARIA radios (Radix button[role=radio]), not native input[type=radio]; ' +
         'the checked-count probe reads aria-checked through getByRole("radio", { checked: true }).',
@@ -425,37 +502,35 @@ test.describe('SL-03 single-select cardinality', () => {
     });
 
     await test.step('the selector renders radios, not checkboxes (FR-012)', async () => {
+      await ensureEntrySelectorOpen(page, TPL);
       await expect(card.getByRole('radio')).toHaveCount(2);
       await expect(card.locator('[role="checkbox"]')).toHaveCount(0);
     });
 
     await test.step('pick Red: exactly one checked radio', async () => {
-      const saved = selectionSaved(page);
       await card.getByRole('radio', { name: RED }).check();
       await expect(card.getByText('Single-select · 1 selected')).toBeVisible();
       await expect(card.getByRole('radio', { checked: true })).toHaveCount(1);
       await expect(card.getByRole('radio', { name: RED })).toBeChecked();
-      await saved;
+      await saveSelection(page);
     });
 
     await test.step('pick Green: replaces Red, never appends', async () => {
-      const saved = selectionSaved(page);
+      // The post-save refetch re-renders the card with its selector collapsed again.
+      await ensureEntrySelectorOpen(page, TPL);
       await card.getByRole('radio', { name: GREEN }).check();
       await expect(card.getByRole('radio', { name: GREEN })).toBeChecked();
       await expect(card.getByRole('radio', { name: RED })).not.toBeChecked();
       await expect(card.getByRole('radio', { checked: true })).toHaveCount(1);
       await expect(card.getByText('Single-select · 1 selected')).toBeVisible();
-      await expect(entryChips(page, TPL).locator('li')).toHaveText([GREEN]);
-      await saved;
+      await expect(selectedChips(page, TPL)).toHaveText([GREEN]);
+      await saveSelection(page);
     });
 
     await test.step('reload: replacement persisted, still exactly one checked radio', async () => {
-      await page.reload();
-      await expect(classificationsSection(page)).toBeVisible({
-        timeout: 20_000,
-      });
+      await reloadSettingsAbout(page);
       await expect(card.getByText('Single-select · 1 selected')).toBeVisible();
-      await expect(entryChips(page, TPL).locator('li')).toHaveText([GREEN]);
+      await expect(selectedChips(page, TPL)).toHaveText([GREEN]);
       await ensureEntrySelectorOpen(page, TPL);
       await expect(card.getByRole('radio', { checked: true })).toHaveCount(1);
       await expect(card.getByRole('radio', { name: GREEN })).toBeChecked();
@@ -507,13 +582,10 @@ test.describe('SL-04 About-page display', () => {
       await gotoSettingsAbout(page);
       const cardA = entryCard(page, TPL_A);
       await ensureEntrySelectorOpen(page, TPL_A);
-      let saved = selectionSaved(page);
       await cardA.getByRole('checkbox', { name: A_VALUES[0] }).check();
-      await saved;
-      saved = selectionSaved(page);
       await cardA.getByRole('checkbox', { name: A_VALUES[1] }).check();
       await expect(cardA.getByText('Multi-select · 2 selected')).toBeVisible();
-      await saved;
+      await saveSelection(page);
       // Alpha stays at 0 selected on purpose (FR-018c).
     });
 
@@ -708,10 +780,10 @@ test.describe('SL-05 show/hide toggle', () => {
       await gotoSettingsAbout(page);
       await addTemplateToSpace(page, TPL);
       const card = entryCard(page, TPL);
-      const saved = selectionSaved(page);
+      await ensureEntrySelectorOpen(page, TPL);
       await card.getByRole('checkbox', { name: VALUES[0] }).check();
       await expect(card.getByText('Multi-select · 1 selected')).toBeVisible();
-      await saved;
+      await saveSelection(page);
     });
 
     await test.step("kebab wording is 'Show on the Space page' — never 'private'/'secret'", async () => {
@@ -724,16 +796,17 @@ test.describe('SL-05 show/hide toggle', () => {
       await expect(menu).not.toBeVisible();
     });
 
-    await test.step('toggle OFF: badge persists across reload BEFORE any persona switch', async () => {
-      await toggleEntryDisplay(page, TPL);
+    await test.step('toggle OFF: staged badge, written by Save, persists across reload BEFORE any persona switch', async () => {
+      await toggleEntryDisplay(page, TPL, { save: false });
       await expect(entryHiddenBadge(page, TPL)).toBeVisible();
       expect((await entryCard(page, TPL).textContent()) ?? '').not.toMatch(
         /private|secret/i
       );
-      await page.reload();
-      await expect(classificationsSection(page)).toBeVisible({
-        timeout: 20_000,
-      });
+      // Staged, not written: the API still says shown until Save changes.
+      expect((await entryByLabel(TPL))[0].display).toBe(true);
+      await saveAboutChanges(page, ['UpdateClassificationEntryDisplay']);
+      expect((await entryByLabel(TPL))[0].display).toBe(false);
+      await reloadSettingsAbout(page);
       await expect(entryHiddenBadge(page, TPL)).toBeVisible();
     });
 
@@ -795,10 +868,7 @@ test.describe('SL-05 show/hide toggle', () => {
       await gotoSettingsAbout(page);
       await toggleEntryDisplay(page, TPL);
       await expect(entryHiddenBadge(page, TPL)).toHaveCount(0);
-      await page.reload();
-      await expect(classificationsSection(page)).toBeVisible({
-        timeout: 20_000,
-      });
+      await reloadSettingsAbout(page);
       await expect(entryKebab(page, TPL)).toBeVisible();
       await expect(entryHiddenBadge(page, TPL)).toHaveCount(0);
     });
@@ -829,11 +899,20 @@ test.describe('SL-06 removal gate', () => {
   const KEEP = 'e2e024 SL Removal Keep';
   const VAL = 'e2e024 SL RemVal';
 
-  test('SL-06 REM-AS1 — confirmation names the entry + no-undo, cancel is a no-op, confirm destroys only the target; template and other Spaces untouched (FR-014, FR-014b)', async ({
+  test('SL-06 REM-AS1 — removal is staged behind the tab Save bar, Discard is a no-op, Save destroys only the target; template and other Spaces untouched (FR-014, FR-014b as amended for the CRD client by 024 Session 2026-10-22)', async ({
     page,
     consoleGuard,
   }) => {
     test.setTimeout(150_000);
+    test.info().annotations.push({
+      type: 'info',
+      description:
+        'Per 024 Session 2026-10-22 (agents-hq#228), FR-014b\'s "Remove this classification?" ' +
+        'confirmation (naming the entry, warning there is no undo) is dropped in the CRD client: ' +
+        'since client-web#10437 a removal is staged with the rest of the About ' +
+        'tab — the card leaves the list, the bar counts it, Discard restores it and only "Save changes" ' +
+        'deletes. The gate is now the Save bar; the wording oracle has no equivalent.',
+    });
     // The duplicate-retry seeding below provokes one intentional conflict.
     consoleGuard.allow.push(/already in use/i, /conflict/i, /duplicate/i);
     const template = await createTemplateApi(fixture, {
@@ -859,67 +938,48 @@ test.describe('SL-06 removal gate', () => {
         .click();
       await expect(conflict).not.toBeVisible();
       await expect(entryKebab(page, KEEP)).toBeVisible();
+      await saveAboutChanges(page, ['AddClassificationEntryFromTemplate']);
+      await expect(entryUnsavedBadge(page, KEEP)).toHaveCount(0);
     });
 
     const target = entryCard(page, TPL);
 
     await test.step('guard real data: select the value on the target entry', async () => {
       await ensureEntrySelectorOpen(page, TPL);
-      const saved = selectionSaved(page);
       await target.getByRole('checkbox', { name: VAL }).check();
       await expect(target.getByText('Multi-select · 1 selected')).toBeVisible();
-      await saved;
+      await saveSelection(page);
     });
 
-    await test.step('removal dialog names the entry, warns no-undo, does not commit on first click (FR-014b)', async () => {
-      const menu = await openEntryMenu(page, TPL);
-      await menu
-        .getByRole('menuitem', { name: 'Remove classification' })
-        .click();
-      const confirm = removeConfirmDialog(page);
-      await expect(confirm).toBeVisible();
-      await expect(confirm).toContainText(
-        `This removes "${TPL}" from this Space`
-      );
-      await expect(confirm).toContainText(/there is no undo/);
-      // No first-click commit — the entry is still there behind the dialog.
-      await expect(entryKebabDom(page, TPL)).toHaveCount(1);
-      await confirm.getByRole('button', { name: 'Cancel' }).click();
-      await expect(confirm).not.toBeVisible();
+    await test.step('Remove stages the removal: the card leaves the list, the bar counts it, nothing is written (FR-014b)', async () => {
+      await removeEntry(page, TPL, { save: false });
+      expect(await unsavedChangesCount(page)).toBe(1);
+      // No first-click commit — the entry is still stored, with its selection.
+      const [stored] = await entryByLabel(TPL);
+      expect(stored).toBeDefined();
+      expect(stored.selectedValueIDs).toHaveLength(1);
     });
 
-    await test.step('cancel is a no-op: both entries AND the live selection unchanged', async () => {
+    await test.step('Discard is a no-op: both entries AND the live selection unchanged', async () => {
+      await discardAboutChanges(page);
       await expect(entryKebab(page, TPL)).toHaveCount(1);
       await expect(entryKebab(page, KEEP)).toHaveCount(1);
       await expect(target.getByText('Multi-select · 1 selected')).toBeVisible();
+      await expect(selectedChips(page, TPL)).toHaveText([VAL]);
+      await ensureEntrySelectorOpen(page, TPL);
       await expect(target.getByRole('checkbox', { name: VAL })).toBeChecked();
     });
 
-    await test.step('the dialog also gates the 0-selected sibling ("even at 0 selected")', async () => {
-      const menu = await openEntryMenu(page, KEEP);
-      await menu
-        .getByRole('menuitem', { name: 'Remove classification' })
-        .click();
-      const confirm = removeConfirmDialog(page);
-      await expect(confirm).toBeVisible();
-      await expect(confirm).toContainText(
-        `This removes "${KEEP}" from this Space`
-      );
-      await confirm.getByRole('button', { name: 'Cancel' }).click();
-      await expect(confirm).not.toBeVisible();
+    await test.step('the gate also covers the 0-selected sibling ("even at 0 selected")', async () => {
+      await removeEntry(page, KEEP, { save: false });
+      expect(await unsavedChangesCount(page)).toBe(1);
+      expect(await entryByLabel(KEEP)).toHaveLength(1);
+      await discardAboutChanges(page);
       await expect(entryKebab(page, KEEP)).toHaveCount(1);
     });
 
-    await test.step('confirm destroys exactly the target entry and its selection', async () => {
-      const menu = await openEntryMenu(page, TPL);
-      await menu
-        .getByRole('menuitem', { name: 'Remove classification' })
-        .click();
-      const confirm = removeConfirmDialog(page);
-      await expect(confirm).toBeVisible();
-      await confirm
-        .getByRole('button', { name: 'Remove', exact: true })
-        .click();
+    await test.step('Save destroys exactly the target entry and its selection', async () => {
+      await removeEntry(page, TPL);
       await expect(entryKebab(page, TPL)).toHaveCount(0);
       // Sibling untouched.
       await expect(entryKebab(page, KEEP)).toHaveCount(1);
@@ -1109,15 +1169,23 @@ test.describe('SL-08 subspace picker', () => {
     const subspaceUrl = fixture.subspaceUrl as string;
     const subspaceId = fixture.subspaceId as string;
 
-    await test.step("the subspace picker lists the L0 library's template under This Space's library", async () => {
+    await test.step("the subspace picker lists the L0 library's template under The top-level space's library", async () => {
       await gotoSettingsAbout(page, subspaceUrl);
       const dialog = await openPickerDialog(page);
+      // Subspace wording (client-web#10490): the group is the top-level Space's library (FR-007a).
+      await expect(dialog.getByText(/add to this Subspace\./)).toBeVisible();
       await expect(
-        pickerGroup(dialog, SPACE_GROUP).getByText(TPL, { exact: true })
+        pickerGroup(dialog, SUBSPACE_LIBRARY_GROUP).getByText(TPL, {
+          exact: true,
+        })
       ).toBeVisible();
+      await expect(dialog.getByRole('heading', { name: SPACE_GROUP })).toHaveCount(
+        0
+      );
       await pickerRow(page, dialog, TPL).click();
       await expect(dialog).not.toBeVisible({ timeout: 20_000 });
       await expect(entryKebab(page, TPL)).toBeVisible({ timeout: 20_000 });
+      await saveAboutChanges(page, ['AddClassificationEntryFromTemplate']);
     });
 
     await test.step('the entry is on the subspace, not on its parent', async () => {

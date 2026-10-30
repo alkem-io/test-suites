@@ -3,16 +3,27 @@
  * relative to the file's own seeded Space (`classifications.fixture.ts`).
  *
  * Locators are role/label based against the CRD UI:
+ * - Section card:           `#classifications`, a collapsed-by-default SettingsSection whose
+ *                           `<h3><button>Classifications</button></h3>` trigger opens it
  * - Entry kebab:            "Classification actions: <label>"
  * - Entry meta line:        "Multi-select · N selected" / "Single-select · N selected"
- * - Chip deselect:          "Deselect <value label>"
+ * - Chips:                  every vocabulary value, authored order; selected = filled chip with a
+ *                           "Deselect <value label>" ×, unselected = dashed "Select <value label>"
  * - Picker dialog:          "Add a classification"; conflict dialog "That name is already in use"
- * - Removal confirm:        alertdialog "Remove this classification?"
+ * - Save bar:               region "Unsaved changes" → "Save changes" / "Discard" (→ alertdialog
+ *                           "Discard N unsaved changes?"); toast "Changes saved"
  * - Template card preview:  "Preview: <name>"; card kebab "Template actions"
  * - Template delete:        alertdialog "Delete template?" → button "Delete template"
+ *
+ * Save model (client-web#10437; workspace spec 024 Session 2026-10-22 amends FR-006a for the CRD client): every
+ * classification add, removal, selection and display toggle on Settings → About is STAGED and
+ * written only by the tab-wide "Save changes" bar. The UI helpers below therefore stage AND save
+ * by default (`{ save: false }` keeps the change staged), and each Save is anchored on the
+ * server ack of the mutation it is expected to issue.
  */
 import { expect, type Locator, type Page } from '@playwright/test';
 import { spaceUrl } from './classifications.fixture';
+import { openSettingsSection, settingsSectionTrigger } from '../helpers/settings-section.helper';
 
 export const SDG_VALUES = [
   '1 · No Poverty',
@@ -37,6 +48,8 @@ export const SDG_VALUES = [
 /** Picker group headings render as "<label> (<count>)" (CSS uppercases them; the DOM text keeps case). */
 export const PLATFORM_GROUP = /^Platform-wide \(\d+\)$/;
 export const SPACE_GROUP = /^This Space's library \(\d+\)$/;
+/** The same group as a subspace sees it (client-web#10490 — FR-007a: the L0 library). */
+export const SUBSPACE_LIBRARY_GROUP = /^The top-level space's library \(\d+\)$/;
 
 export function escapeRegExp(text: string): string {
   return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -90,10 +103,6 @@ export function operationResponse(page: Page, operationName: string) {
   });
 }
 
-/** The selection-write mutation the entry checkboxes/radios/chips commit through. */
-export const selectionSaved = (page: Page) =>
-  operationResponse(page, 'UpdateClassificationEntrySelection');
-
 /* ------------------------------------------------------------------ */
 /* Navigation                                                          */
 /* ------------------------------------------------------------------ */
@@ -104,13 +113,70 @@ export async function gotoSettingsAbout(page: Page, url: string = spaceUrl()) {
   await waitForAboutSettings(page);
 }
 
+/** The About tab has rendered and the Classifications section is open with its add button on screen. */
 export async function waitForAboutSettings(page: Page) {
   await expect(classificationsSection(page)).toBeVisible({ timeout: 20_000 });
-  await expect(
-    classificationsSection(page).getByRole('button', {
-      name: 'Add Classification',
-    })
-  ).toBeVisible({ timeout: 20_000 });
+  await ensureClassificationsSectionOpen(page);
+}
+
+/**
+ * Reload the About tab and re-open the Classifications section — the open state is not
+ * persisted. Callers save or discard first: a dirty tab arms a beforeunload prompt.
+ */
+export async function reloadSettingsAbout(page: Page) {
+  await page.reload();
+  await waitForAboutSettings(page);
+}
+
+/* ------------------------------------------------------------------ */
+/* The tab-wide unsaved-changes bar                                    */
+/* ------------------------------------------------------------------ */
+
+/** The bottom bar; aria-hidden (so absent from the role tree) while the tab is clean. */
+export function unsavedChangesBar(page: Page): Locator {
+  return page.getByRole('region', { name: 'Unsaved changes' });
+}
+
+/** The live "N unsaved change(s)" count of the bar (the paragraph, not the count badge beside it). */
+export async function unsavedChangesCount(page: Page): Promise<number> {
+  const text =
+    (await unsavedChangesBar(page)
+      .getByText(/^\d+ unsaved changes?$/)
+      .textContent()) ?? '';
+  const match = text.match(/^(\d+) unsaved change/);
+  if (!match) throw new Error(`Could not parse the unsaved-changes count from: "${text}"`);
+  return parseInt(match[1], 10);
+}
+
+/**
+ * Commit the tab's staged changes through "Save changes". `operations` are the GraphQL
+ * mutations this Save is expected to issue; each is armed BEFORE the click so the server
+ * ack — not the optimistic render — is the barrier. Then the bar retracts (the hook only
+ * drops a change from its buffer once the post-save refetch has landed) and the toast shows.
+ */
+export async function saveAboutChanges(page: Page, operations: string[] = []) {
+  const bar = unsavedChangesBar(page);
+  await expect(bar).toBeVisible();
+  const acks = operations.map(name => operationResponse(page, name));
+  await bar.getByRole('button', { name: 'Save changes' }).click();
+  await Promise.all(acks);
+  await expect(bar).toHaveCount(0, { timeout: 20_000 });
+  await expect(page.getByText('Changes saved').first()).toBeVisible({
+    timeout: 20_000,
+  });
+}
+
+/** Drop every staged change through Discard and its confirmation. */
+export async function discardAboutChanges(page: Page) {
+  const bar = unsavedChangesBar(page);
+  await bar.getByRole('button', { name: 'Discard', exact: true }).click();
+  const confirm = page.getByRole('alertdialog', {
+    name: /^Discard \d+ unsaved changes?\?$/,
+  });
+  await expect(confirm).toBeVisible();
+  await confirm.getByRole('button', { name: 'Discard', exact: true }).click();
+  await expect(confirm).toBeHidden();
+  await expect(bar).toHaveCount(0);
 }
 
 export async function gotoTemplatesSettings(page: Page) {
@@ -144,9 +210,30 @@ export async function gotoAboutPage(page: Page) {
 /* Settings → About: Classifications section + entry cards             */
 /* ------------------------------------------------------------------ */
 
-/** The Classifications FieldSection anchor on /settings/about. */
+/** The Classifications SettingsSection card on /settings/about (collapsed by default). */
 export function classificationsSection(page: Page): Locator {
   return page.locator('#classifications');
+}
+
+/** The section's `<h3><button>` collapsible trigger. */
+export function classificationsSectionTrigger(page: Page): Locator {
+  return settingsSectionTrigger(page, 'Classifications', { scope: classificationsSection(page) });
+}
+
+/**
+ * Open the Classifications section if it is collapsed. Retried through `toPass`: the tab can
+ * re-mount its sections after the first paint (a refetch), which resets the open state.
+ */
+export async function ensureClassificationsSectionOpen(page: Page) {
+  await expect(classificationsSectionTrigger(page)).toBeVisible({ timeout: 20_000 });
+  await expect(async () => {
+    await openSettingsSection(page, 'Classifications', { scope: classificationsSection(page), timeout: 3_000 });
+    await expect(
+      classificationsSection(page).getByRole('button', {
+        name: 'Add Classification',
+      })
+    ).toBeVisible({ timeout: 3_000 });
+  }).toPass({ intervals: [500, 1_000, 2_000], timeout: 20_000 });
 }
 
 export function entryKebab(page: Page, label: string): Locator {
@@ -173,9 +260,25 @@ export function entryCard(page: Page, label: string): Locator {
   return entryKebab(page, label).locator('xpath=../..');
 }
 
-/** The chips list inside an entry card (the only role=list in the card). */
+/**
+ * The chip list inside an entry card (the only role=list in the card): EVERY vocabulary
+ * value in authored order, selected ones as filled chips with a "Deselect <value>" ×,
+ * the rest as dashed "Select <value>" buttons (client-web#10437).
+ */
 export function entryChips(page: Page, label: string): Locator {
   return entryCard(page, label).getByRole('list');
+}
+
+/** Only the SELECTED chips of an entry card, in authored order. */
+export function selectedChips(page: Page, label: string): Locator {
+  return entryChips(page, label)
+    .getByRole('listitem')
+    .filter({ has: page.getByRole('button', { name: /^Deselect / }) });
+}
+
+/** The "Unsaved" badge an entry carries while its add is staged but not yet saved. */
+export function entryUnsavedBadge(page: Page, label: string): Locator {
+  return entryCard(page, label).getByText('Unsaved', { exact: true });
 }
 
 export function entryHiddenBadge(page: Page, label: string): Locator {
@@ -201,16 +304,29 @@ export async function openEntryMenu(
   return menu;
 }
 
-/** Toggle the "Show on the Space page" switch via the kebab menu (FR-010b). */
-export async function toggleEntryDisplay(page: Page, label: string) {
-  const saved = operationResponse(page, 'UpdateClassificationEntryDisplay');
+/**
+ * Toggle the "Show on the Space page" switch via the kebab menu (FR-010b). The toggle is
+ * staged; by default the helper then saves it, anchored on the display mutation's ack.
+ */
+export async function toggleEntryDisplay(
+  page: Page,
+  label: string,
+  { save = true }: { save?: boolean } = {}
+) {
   const menu = await openEntryMenu(page, label);
   // The switch row prevents the default menu close so the menu stays open —
   // dismiss it explicitly once the toggle has been clicked.
   await menu.getByRole('menuitem', { name: 'Show on the Space page' }).click();
-  await saved;
   await page.keyboard.press('Escape');
   await expect(menu).not.toBeVisible();
+  if (save) {
+    await saveAboutChanges(page, ['UpdateClassificationEntryDisplay']);
+  }
+}
+
+/** Save a staged value selection, anchored on the selection mutation's ack (FR-012d). */
+export async function saveSelection(page: Page) {
+  await saveAboutChanges(page, ['UpdateClassificationEntrySelection']);
 }
 
 /** Expand the entry's value selector if it is currently collapsed. */
@@ -269,30 +385,47 @@ export function conflictDialog(page: Page): Locator {
   return page.getByRole('dialog', { name: 'That name is already in use' });
 }
 
-/** Step A happy path: pick a template from the picker; the add commits immediately. */
-export async function addTemplateToSpace(page: Page, templateName: string) {
+/**
+ * Step A happy path: pick a template from the picker. The add is staged (the card carries an
+ * "Unsaved" badge); by default the helper then saves it, anchored on the add mutation's ack.
+ */
+export async function addTemplateToSpace(
+  page: Page,
+  templateName: string,
+  { save = true }: { save?: boolean } = {}
+) {
   const dialog = await openPickerDialog(page);
   await pickerRow(page, dialog, templateName).click();
   await expect(dialog).not.toBeVisible({ timeout: 20_000 });
   await expect(entryKebab(page, templateName)).toBeVisible({ timeout: 20_000 });
+  await expect(entryUnsavedBadge(page, templateName)).toBeVisible();
+  if (save) {
+    await saveAboutChanges(page, ['AddClassificationEntryFromTemplate']);
+    await expect(entryUnsavedBadge(page, templateName)).toHaveCount(0);
+  }
 }
 
 /* ------------------------------------------------------------------ */
 /* Entry removal (UI under test)                                       */
 /* ------------------------------------------------------------------ */
 
-export function removeConfirmDialog(page: Page): Locator {
-  return page.getByRole('alertdialog', { name: 'Remove this classification?' });
-}
-
-/** Remove an entry that is on screen, through the kebab and the confirmation. */
-export async function removeEntry(page: Page, label: string) {
+/**
+ * Remove an entry through the kebab. Since client-web#10437 there is no confirmation
+ * dialog: the removal is staged (the card leaves the list, Discard brings it back) and
+ * written by Save — which the helper does by default, anchored on the delete mutation's ack.
+ */
+export async function removeEntry(
+  page: Page,
+  label: string,
+  { save = true }: { save?: boolean } = {}
+) {
   const menu = await openEntryMenu(page, label);
   await menu.getByRole('menuitem', { name: 'Remove classification' }).click();
-  const dialog = removeConfirmDialog(page);
-  await expect(dialog).toBeVisible({ timeout: 15_000 });
-  await dialog.getByRole('button', { name: 'Remove', exact: true }).click();
   await expect(entryKebab(page, label)).toHaveCount(0, { timeout: 20_000 });
+  if (save) {
+    await saveAboutChanges(page, ['DeleteClassificationEntry']);
+    await expect(entryKebab(page, label)).toHaveCount(0);
+  }
 }
 
 /* ------------------------------------------------------------------ */

@@ -16,6 +16,7 @@ import {
 } from '@alkemio/client-lib';
 import { loginViaCrd } from '../helpers/login.helper';
 import { enableApplicationNotifications } from '../helpers/notification-settings.helper';
+import { applyFromSubspaceAboutDialog } from './applications.helpers';
 
 const password = process.env.AUTH_TEST_HARNESS_PASSWORD || 'change_me';
 const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
@@ -239,56 +240,16 @@ test.describe('Level 1 Subspace - Applications (Public Parent Space)', () => {
       const spaceNameId = baseScenario.space.nameId;
       const subspaceNameId = baseScenario.subspace.nameId;
 
-      // Step 1: As Non-Space Member - Submit Application to L1 subspace
-      const applicantPage = nonSpaceMemberPage;
-
-      await applicantPage.goto(`${baseUrl}/${spaceNameId}/challenges/${subspaceNameId}/about`);
-
-      // Check if there's already a pending application
-      const applicationPending = applicantPage.getByRole('button', {
-        name: 'Application pending',
-      });
-      // Either control is rendered once the page has resolved the viewer's
-      // standing; only then is "no pending application" a real observation.
-      await expect(
-        applicantPage.getByRole('button', { name: /^(Apply|Application pending)$/ })
-      ).toBeVisible();
-      const isApplicationPending = await applicationPending.isVisible();
-
-      if (!isApplicationPending) {
-        // Click the "Apply" button
-        await applicantPage.getByRole('button', { name: 'Apply' }).click();
-
-        // Fill in the required questionnaire fields
-        const requiredField = applicantPage.getByRole('textbox', {
-          name: 'What brings you here?',
-        });
-        await requiredField.fill(
-          'I want to contribute to this subspace as a non-parent-member'
-        );
-
-        // Submit the application
-        const submitButton = applicantPage
-          .getByRole('dialog')
-          .last()
-          .getByRole('button', { name: 'Apply' });
-        await expect(submitButton).toBeEnabled();
-        await submitButton.click();
-
-        // Verify success confirmation
-        const successHeading = applicantPage.getByRole('heading', {
-          name: 'Application submitted',
-          level: 2,
-        });
-        await expect(successHeading).toBeVisible();
-
-        // Close success dialog
-        const closeButton = applicantPage
-          .getByRole('dialog')
-          .filter({ hasText: 'Application submitted' })
-          .getByRole('button', { name: 'Close' });
-        await closeButton.click();
-      }
+      // Step 1: As Non-Space Member - Submit Application to the L1 subspace
+      // from its About dialog (every step scoped to its own dialog).
+      await nonSpaceMemberPage.goto(
+        `${baseUrl}/${spaceNameId}/challenges/${subspaceNameId}/about`
+      );
+      await applyFromSubspaceAboutDialog(
+        nonSpaceMemberPage,
+        baseScenario.subspace.about.profile.displayName,
+        'I want to contribute to this subspace as a non-parent-member'
+      );
 
       // Step 2: As Subspace Admin - Navigate to Community Settings
       const adminPage = subspaceAdminPage;

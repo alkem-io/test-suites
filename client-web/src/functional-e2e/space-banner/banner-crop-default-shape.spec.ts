@@ -12,6 +12,7 @@ import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/O
 import { TestScenarioConfig } from '@alkemio/tests-lib/scenario/config/test-scenario-config';
 import { SpacePage, SpaceSettingsPage } from '../space/pages';
 import { createAuthenticatedSessionFixture } from '../fixtures/authenticated-session.fixture';
+import { openSettingsSection } from '../helpers/settings-section.helper';
 
 const { test, setupAuthentication, teardownAuthentication } =
   createAuthenticatedSessionFixture({
@@ -50,10 +51,17 @@ async function completeCrop(page: Page, from = 0.15, to = 0.85): Promise<void> {
   await page.mouse.up();
 }
 
-/** The "Page Banner" field's Upload control, scoped via its own <h3> label. */
+/**
+ * The "Page Banner" field's empty upload tile. client-web#10437: the three
+ * visuals sit in one row inside the About tab's "Visuals" `SettingsSection`
+ * (collapsed by default — body in the DOM but hidden until its h3 trigger is
+ * clicked); the tile is a `<button aria-label="Upload page banner">`.
+ */
+async function openVisualsSection(page: Page): Promise<void> {
+  await openSettingsSection(page, 'Visuals', { timeout: 20_000 });
+}
 function pageBannerUploadButton(page: Page): Locator {
-  const heading = page.getByRole('heading', { name: 'Page Banner', exact: true });
-  return heading.locator('xpath=..').getByRole('button', { name: 'Upload' });
+  return page.getByRole('button', { name: 'Upload page banner', exact: true });
 }
 
 test.describe('First page-banner crop opens at the 10:1 default (10178)', () => {
@@ -79,6 +87,7 @@ test.describe('First page-banner crop opens at the 10:1 default (10178)', () => 
     await page.goto(`${baseUrl}/${baseScenario.space.nameId}/settings`);
     await expect(settingsPage.aboutTab).toBeVisible({ timeout: 20_000 });
     await settingsPage.aboutTab.click();
+    await openVisualsSection(page);
 
     const uploadButton = pageBannerUploadButton(page);
     await expect(uploadButton).toBeVisible({ timeout: 20_000 });

@@ -1,17 +1,11 @@
 import {
-  mailSinkConfigured,
   TestScenarioConfig,
   TestScenarioFactory,
   TestUser,
-  TestUserManager,
   UniqueIDGenerator,
 } from '@alkemio/tests-lib';
 import { CalloutFormResponseVisibility } from '@alkemio/tests-lib/core/generated/alkemio-schema';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
-import {
-  getMailsDataSettled,
-  MailItem,
-} from '../../notifications/notification.helpers';
 import {
   answersFor,
   createFormCallout,
@@ -28,8 +22,9 @@ import {
  * Presentation fields of the Form (R17/R18): the optional plain-text `title`
  * (<= 512) and `description` (<= 2048), trimmed with empty stored as null, and
  * the `settings.defaultCollapsed` flag (default false). All three stay editable
- * while the Form holds responses, and the title/description never reach a
- * notification (the Post's display name stays the reference).
+ * while the Form holds responses. The "title/description never reach a
+ * notification" case lives in `form-presentation-receipt.it-spec.ts`: it
+ * needs the mail sink and is kept off the nightly (see vitest.config.ts).
  *
  * Over-length is a DTO validation error: there is no Form reason code for it,
  * so the cases assert the rejection and the absence of `details.code`.
@@ -334,48 +329,4 @@ describe('Form presentation — defaultCollapsed', () => {
       expect(await collapsed()).toBe(false);
     });
   });
-});
-
-describe('Form presentation — never in a notification', () => {
-  test.skipIf(!mailSinkConfigured())(
-    'the receipt for a titled Form names the Post, not the Form title or description',
-    async () => {
-      const titleMarker = `form-title-${uniqueId}`;
-      const descriptionMarker = `form-description-${uniqueId}`;
-      const form = await newForm('mail', {
-        title: titleMarker,
-        description: descriptionMarker,
-      });
-      // Scope by the Post's display name, never by clearing the shared
-      // mailbox (other notification specs may be running).
-      const aboutForm = (mail: MailItem) =>
-        Boolean(mail.subject?.includes(form.displayName)) ||
-        Boolean(mail.body?.includes(titleMarker)) ||
-        Boolean(mail.body?.includes(descriptionMarker));
-
-      const memberEmail = TestUserManager.users.spaceMember.email;
-      const isReceipt = (mail: MailItem) =>
-        aboutForm(mail) &&
-        Boolean(mail.toAddresses?.includes(memberEmail)) &&
-        Boolean(mail.subject?.includes('was received'));
-
-      await respond(form);
-
-      // The receipt is always sent (no setting); any admin mail arrives with it.
-      // Wait for the receipt itself: an admin mail about the same Form can land
-      // first and would otherwise end the wait before the receipt arrives.
-      await getMailsDataSettled(1, { scope: isReceipt });
-      const [mails] = await getMailsDataSettled(1, { scope: aboutForm });
-      const receipts = mails.filter(isReceipt);
-      // Positive control: the receipt arrived and names the Post.
-      expect(receipts.length).toBeGreaterThanOrEqual(1);
-      for (const mail of mails) {
-        expect(mail.subject ?? '').toContain(form.displayName);
-        expect(mail.subject ?? '').not.toContain(titleMarker);
-        expect(mail.body ?? '').not.toContain(titleMarker);
-        expect(mail.subject ?? '').not.toContain(descriptionMarker);
-        expect(mail.body ?? '').not.toContain(descriptionMarker);
-      }
-    }
-  );
 });

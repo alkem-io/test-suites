@@ -208,6 +208,10 @@ export default defineConfig(
         // per role, US2 admin configuration round trips. Self-seeding, serial
         // per file, trace/video off at file level (admin sessions). US2-AS6 is
         // test.skip'ped pending alkem-io/server#6571 and stays last in its file.
+        // workspace#086 (subspace sidebar from the first phase): the
+        // subspace-*.spec.ts and l0-community-activity.spec.ts walks — each
+        // seeds its own Space → L1 → L2 and tears it down; the flow-changes
+        // file is serial (its last case replaces the subspace's flow).
         name: 'Sidebar widgets',
         testMatch: ['/sidebar-widgets/*.spec.ts'],
         tier: 'extended',

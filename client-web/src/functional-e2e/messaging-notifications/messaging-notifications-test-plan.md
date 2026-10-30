@@ -128,8 +128,8 @@ accumulates there one per night — worth fixing.
 | US3-AS1 | A freshly registered account shows both rows at the mandated defaults: email OFF, push ON, in-app locked OFF with its caption | `us3-messaging-settings-rows.spec.ts` › US3-AS1 |
 | US3-AS2 | A pre-existing account loads notification settings without error, same defaults | `us3-…` › US3-AS2 |
 | US3-AS3 | Forcing the stored in-app flag on through the public API still produces no in-app notification — enforcement is at the platform boundary | `us3-…` › US3-AS3 |
-| US3-AS4 | Toggling email persists across reload and is honoured for the next message | `us3-…` › US3-AS4 |
-| US3-AS5 | The chat panel's settings shortcut lands on notification settings with both rows visible | `us3-…` › US3-AS5 |
+| US3-AS4 | Toggling email persists across reload and is honoured for the next message | `us3-…` › US3-AS4 — restores the row's default (email OFF) in a `finally`, so the serial walk after it never inherits the toggle |
+| US3-AS5 | The chat panel's settings shortcut lands on notification settings with both rows visible | `us3-…` › US3-AS5 — since client-web#10437 the rows sit in the collapsed "User Notifications" group; the walk expands it (one extra click, ruled acceptable 2026-10-28) and proves the rows work: the direct row's email toggle is flipped from whatever it reads and back, each state read back after a reload (independent of AS4, which also toggles it in the local-stack runner) |
 
 ### It-spec matrix (`server-api`)
 

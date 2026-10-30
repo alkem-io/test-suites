@@ -9,6 +9,7 @@ import {
   ensureConversationList,
   openChatPanel,
   openConversation,
+  overflowCountText,
   panelHeader,
   registerAccounts,
   registerAndSignIn,
@@ -25,7 +26,8 @@ import {
  * "Recognize the group conversation from the thread header": the open thread's
  * header shows the same visual identity the conversation list row shows for
  * that group — the custom photo when one is set, otherwise the composite of up
- * to four participant avatars — and it updates the same way the list does.
+ * to four participant avatars (three faces + a "+N" tile from five participants
+ * on, since client-web#10427) — and it updates the same way the list does.
  *
  * Covers spec.md US2 AS1–AS4. Every registered user is deleted in afterAll.
  */
@@ -174,7 +176,7 @@ test.describe('US2 — group thread header identity', { tag: ['@chat-avatars'] }
     await viewer.page.screenshot({ path: testInfo.outputPath('us2-as3-list-row.png') });
   });
 
-  test('US2-AS4: with more than four other participants both surfaces show the same 4-avatar subset', async ({}, testInfo) => {
+  test('US2-AS4: with more than four other participants both surfaces show the same 3-face + "+N" composite', async ({}, testInfo) => {
     test.setTimeout(180000);
     const names = members.map(member => member.displayName);
     expect(names, 'AS4 needs five other participants').toHaveLength(5);
@@ -182,8 +184,14 @@ test.describe('US2 — group thread header identity', { tag: ['@chat-avatars'] }
     await createConversation(viewer.page, names);
 
     const header = await settledAvatarComposite(panelHeader(viewer.page));
-    // GroupAvatar caps the composite at four cells regardless of member count.
-    expect(header.imgSrcs.length + header.fallbackTexts.length).toBe(4);
+    // Spec 033 capped the composite at four faces; since client-web#10427
+    // (2026-10-19, "full group avatar") GroupAvatar draws THREE faces from
+    // five members on and spends the fourth quarter on a "+N" tile counting
+    // the rest — the viewer is excluded, so 5 other members → 3 faces + "+2".
+    // The subset is still a cap, still a fixed count, and must still match
+    // the list row exactly.
+    expect(header.imgSrcs.length + header.fallbackTexts.length).toBe(3);
+    expect(await overflowCountText(panelHeader(viewer.page))).toBe('+2');
     await viewer.page.screenshot({ path: testInfo.outputPath('us2-as4-header.png') });
 
     await ensureConversationList(viewer.page);
@@ -192,8 +200,9 @@ test.describe('US2 — group thread header identity', { tag: ['@chat-avatars'] }
     const listComposite = await settledAvatarComposite(row);
     await viewer.page.screenshot({ path: testInfo.outputPath('us2-as4-list-row.png') });
 
-    // Same subset, same order, on both surfaces.
+    // Same subset, same order, same overflow count, on both surfaces.
     expect(listComposite.imgSrcs).toEqual(header.imgSrcs);
     expect(listComposite.fallbackTexts).toEqual(header.fallbackTexts);
+    expect(await overflowCountText(row)).toBe('+2');
   });
 });

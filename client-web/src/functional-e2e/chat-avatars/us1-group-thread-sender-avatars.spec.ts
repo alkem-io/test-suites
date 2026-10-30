@@ -10,6 +10,7 @@ import {
   gutterRow,
   conversationRow,
   ensureConversationList,
+  probeMatrixSendPath,
   messageColumn,
   openChatPanel,
   openConversation,
@@ -21,6 +22,7 @@ import {
   teardownAccounts,
   uploadProfileAvatar,
   visibleAuthorName,
+  type MatrixSendPath,
   type TestPerson,
 } from './chat-avatars.helpers';
 
@@ -57,9 +59,18 @@ const initialsOf = (name: string) =>
 test.describe('US1 — group thread sender avatars', { tag: ['@chat-avatars'] }, () => {
   let viewer: TestPerson, bella: TestPerson, charlie: TestPerson;
   let bellaAvatarSrc: string;
+  let sendPath: MatrixSendPath;
 
   test.beforeAll(async ({ browser }) => {
     test.setTimeout(600000);
+
+    // Every scenario below types a message, so the whole file needs the
+    // browser → Matrix send path. Probe it before registering anyone: when it
+    // is dead every test skips in beforeEach, and the three sign-ups, the
+    // avatar upload and the group conversation would be set-up for nothing.
+    sendPath = await probeMatrixSendPath(browser);
+    if (!sendPath.reachable) return;
+
     const uid = UniqueIDGenerator.getID();
 
     // All three drive the UI, so all three need a session — created concurrently.
@@ -82,6 +93,10 @@ test.describe('US1 — group thread sender avatars', { tag: ['@chat-avatars'] },
       await openChatPanel(person.page);
       await openConversation(person.page, [uid]);
     }
+  });
+
+  test.beforeEach(() => {
+    test.skip(!sendPath.reachable, sendPath.reachable ? undefined : sendPath.reason);
   });
 
   test.afterAll(async () => {

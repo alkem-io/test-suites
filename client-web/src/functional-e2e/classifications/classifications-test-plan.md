@@ -7,7 +7,7 @@
   - `client-web/src/functional-e2e/classifications/classifications-templates.spec.ts` — template-side walks TL-01…08 (US1, US2, seed, out of scope).
   - `server-api/src/functional-api/journey/space/space-classifications.it-spec.ts` — the API contract: authorization, read surface, write rules, value ids.
   - Shared: `classifications.fixture.ts` (seed/teardown, personas, raw GraphQL), `classifications.helpers.ts` (page helpers), `console-guard.ts` (crash tripwire — not counted as coverage).
-- **Product under test when last run:** server `develop` @ `615817441` (0.167.0), client-web `develop` @ `2e576ee17` — both include server#6380 and client-web#10163.
+- **Product under test when last run:** server `develop` @ `eeecf9ddb` (0.170.2), client-web `develop` @ `4e5d8756e` (local stack, 2026-10-28) — both include server#6380, client-web#10163 and client-web#10437.
 - **Personas** (harness, `AUTH_TEST_HARNESS_PASSWORD`): `spaceAdmin` — the Space's own admin, the editor (FR-014a grants writes to whoever can edit the About; a platform admin would pass for the wrong reason); `spaceMember` — a plain member, the viewer; `nonSpaceMember` and an anonymous caller for the read-surface and denial cases.
 
 ## How to run
@@ -51,7 +51,7 @@ pnpm exec vitest run --project journey src/functional-api/journey/space/space-cl
 | US1-AS1 picker lists platform + top-level Space templates, distinguished, with descriptions, no create path | `classifications-templates.spec.ts › TL-03`                                       |
 | US1-AS2 picked entry persists with 0 selected                                                               | `classifications-space.spec.ts › SL-01`                                           |
 | US1-AS3 single-select: second value replaces the first                                                      | `classifications-space.spec.ts › SL-03`                                           |
-| US1-AS4 multi-select values persist on reload, no form save                                                 | `classifications-space.spec.ts › SL-01`                                           |
+| US1-AS4 multi-select values persist on reload (in the CRD client they persist once the tab-wide "Save changes" bar is clicked — 024 Session 2026-10-22 amends FR-006a, client-web#10437) | `classifications-space.spec.ts › SL-01`                                           |
 | US1-AS5 template rename/edit/delete leaves the entry byte-identical                                         | `classifications-templates.spec.ts › TL-05`                                       |
 | US1-AS6 duplicate label (incl. case/whitespace) rejected; alias succeeds                                    | `classifications-space.spec.ts › SL-02`; API: it-spec › write rules               |
 | US1-AS7 subspace picker offers the top-level library; entry attaches to the subspace                        | `classifications-space.spec.ts › SL-08`                                           |
@@ -64,7 +64,7 @@ pnpm exec vitest run --project journey src/functional-api/journey/space/space-cl
 | US3-AS2 hidden: editor badge, viewer absence, anonymous API still returns it with its flag                  | `classifications-space.spec.ts › SL-05`; API: it-spec › read surface              |
 | US3-AS4 zero-value entry: editor-only empty group                                                           | `classifications-space.spec.ts › SL-04`                                           |
 | US3-AS5 addition order; remove + re-add moves to the end                                                    | `classifications-space.spec.ts › SL-04`; API: it-spec › read surface              |
-| REM-AS1 confirmed, permanent removal; template and other Spaces untouched                                   | `classifications-space.spec.ts › SL-06`                                           |
+| REM-AS1 removal gated by the tab Save bar (staged → Discard restores, Save deletes; 024 Session 2026-10-22 drops the FR-014b confirmation in the CRD client, client-web#10437); template and other Spaces untouched | `classifications-space.spec.ts › SL-06`                                           |
 | FR-014a writes need the Space's edit right — UI affordances                                                 | `classifications-space.spec.ts › SL-07`                                           |
 | FR-014a writes need the Space's edit right — API denials (member, non-member, 6 mutations)                  | `space-classifications.it-spec.ts › authorization`                                |
 | FR-002a value-set bounds 0/1/50/51 (entry and template paths)                                               | `space-classifications.it-spec.ts › write rules`; client 0-values guard: `TL-04a` |

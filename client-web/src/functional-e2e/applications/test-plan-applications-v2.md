@@ -514,6 +514,7 @@ The Alkemio platform provides a multi-level space hierarchy (Space → Subspace 
 - **Applicant**: `${TestUser.NON_SPACE_MEMBER}@alkem.io` (same as Level 0, but must be Level 0 member first to see subspaces)
 - **Admin**: `${TestUser.SUBSPACE_ADMIN}@alkem.io` (admin of Level 1 & 2)
 - **Data Model**: Use `baseScenario.subspace` instead of `baseScenario.space`
+- **Applying in `beforeEach`**: `/challenges/{subspaceNameId}/about` renders **two** "Apply" buttons for a non-member — one in the page body and one in the About dialog the route opens on top of it, a beat later. Both Level-1 `beforeEach` hooks apply through `applications.helpers.ts::applyFromSubspaceAboutDialog`, which scopes every step to its own dialog (About → questionnaire → "Application submitted"). An unscoped `getByRole('button', { name: 'Apply' })` either hit the body button behind the dialog overlay or opened the questionnaire **under** the About dialog, where its fields are `aria-hidden` — the seven `beforeEach` time-outs of nightly run 40707979543 (2026-10-28). Never relax the scoping back to the page.
 
 #### 2.1 Reject Application to Level 1 Subspace
 
@@ -600,6 +601,8 @@ This suite covers the new flow introduced by PR #9986 and PR #10000: when a Leve
 - It shows "Application received" status
 
 ### 2. Subspace Application Management (Public Parent)
+
+The `beforeEach` applies through `applyFromSubspaceAboutDialog` for the same reason as the standard L1 suite (two Apply buttons on the `/about` route; see the note above).
 
 #### 2.1 Approve non-parent-member application to L1 Subspace
 
