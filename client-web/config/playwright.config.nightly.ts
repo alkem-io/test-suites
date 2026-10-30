@@ -57,6 +57,12 @@ export default defineConfig(
         tier: 'long',
       }),
       suite({
+        name: 'Subspace create',
+        testMatch: ['/subspace-create/us1-create-subspace-l1-l2.spec.ts'],
+        // Two creates through the dialog, two contexts.
+        tier: 'extended',
+      }),
+      suite({
         name: 'Support navigation',
         testMatch: [
           '/support-navigation/support-navigation.spec.ts',
