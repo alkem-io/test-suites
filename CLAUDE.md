@@ -86,12 +86,16 @@ its tier. **The rules every spec follows — self-seeding, no fixed waits, no
 
 ### GraphQL Code Generation
 
-Each package has its own codegen config (`codegen.ts`):
+`lib/` and `server-api/` each have their own codegen config (`codegen.ts`):
 ```bash
 pnpm --filter @alkemio/tests-lib run codegen
 pnpm --filter @alkemio/test-suite-server-api run codegen
-pnpm --filter @alkemio/test-suite-client-web run codegen
 ```
+
+`client-web/` has none on purpose: the lib is its only schema boundary
+(`client-web/docs/e2e-conventions.md` § 2b). A document a spec needs goes into
+`lib/src/scenario/graphql/` behind a named lib function; CI fails on any
+`.graphql` file under `client-web/src`.
 
 ## Environment Setup
 
@@ -195,7 +199,7 @@ Nine test personas with varying roles (see `agents.md`): Host, Facilitator, Comm
 
 - **Prettier**: single quotes, trailing commas (es5), 2-space indent, semicolons, arrow parens `avoid`
 - **ESLint**: auto-fix on pre-commit via lint-staged (root-level husky)
-- **server-api** uses ESLint 9.x flat config; **client-web** uses legacy `.eslintrc.js`
+- **server-api** and **client-web** both use ESLint 9.x flat config (`eslint.config.js`); client-web's also enforces the lib boundary and runs as a CI step
 
 ## Specification-Driven Development (SDD)
 

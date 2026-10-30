@@ -99,6 +99,10 @@ the generated schema; ESLint fails the build on both
   (each carries `message` and `code`) for a negative. A spec that asserts on
   the HTTP status itself uses the RAW variants (`readMySessionRaw`,
   `deleteUserRaw`, `uploadFileOnStorageBucket`).
+- **No `.graphql` file under `client-web/src`, and no import that reaches
+  around the barrel** (a relative path into `lib/src`, any `core/generated`
+  module, `@alkemio/tests-lib/dist`). client-web has no codegen of its own;
+  CI fails on either.
 - **Enums and types come from the lib's own re-exports**
   (`import { RoleName, SpacePrivacyMode } from '@alkemio/tests-lib'`;
   `lib/src/common/enums/alkemio.ts`, `lib/src/common/types/schema.ts`),

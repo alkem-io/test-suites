@@ -150,6 +150,13 @@ module.exports = [
                 'Do not reach the raw GraphQL wrappers from a spec; call a lib function named after the business action (graphqlErrorWrapper itself is exported by the barrel) — see docs/e2e-conventions.md § Lib boundary.',
             },
             {
+              // A relative path into the lib's source or a generated module,
+              // or the built package, is the same coupling by another route.
+              group: ['**/core/generated/**', '**/lib/src/**', '@alkemio/tests-lib/dist/**'],
+              message:
+                'Import from the lib barrel (@alkemio/tests-lib), never through a relative path into lib/src, a generated module, or the built dist — see docs/e2e-conventions.md § Lib boundary.',
+            },
+            {
               group: ['@alkemio/client-lib/dist/generated/*'],
               message:
                 "Import enums from the lib barrel (@alkemio/tests-lib), never from client-lib's generated module — see docs/e2e-conventions.md § Lib boundary.",

@@ -1,5 +1,0 @@
-query getUserData($userId: UUID!) {
-  user(ID: $userId) {
-    ...UserData
-  }
-}
