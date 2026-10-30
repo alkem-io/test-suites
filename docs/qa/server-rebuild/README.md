@@ -1,6 +1,6 @@
 # Server rebuild — QA tracker
 
-_One place for everything QA does for the move to the rebuilt server. Status is updated in this file; the reasoning lives in the documents it links. Last update: 2026-10-29 (W1 access matrix delivered; W2 pre-work delivered; W4 register updated)._
+_One place for everything QA does for the move to the rebuilt server. Status is updated in this file; the reasoning lives in the documents it links. Last update: 2026-10-30 (plan, catalogue and register merged to `develop` with #693; W2 pre-work merged with #696; W1 access matrix rebased onto `develop` on #695; journeys 1–4 specified)._
 
 ## Documents
 
@@ -26,10 +26,10 @@ _One place for everything QA does for the move to the rebuilt server. Status is 
 
 | # | Workstream | Needs the new server? | Status | Next action | Blocked by |
 |---|---|---|---|---|---|
-| W0 | Platform feature catalogue + coverage matrix (gap 11) | no | **delivered** 2026-10-28 | review the 57 verdicts; place the 5 absent features (CT-4 whiteboards, CT-8 task boards, SP-10 guidelines, AI-2, AI-3) and the 4 dead-by-design rows on the W2 list and the expected-loss list | lead review |
+| W0 | Platform feature catalogue + coverage matrix (gap 11) | no | **delivered** 2026-10-28 | review the 57 verdicts; place the 5 absent features (CT-4 whiteboards, CT-8 task boards, SP-10 guidelines; AI-2 and AI-3 parked with journey 9 while VCs are hidden in the client) and the 4 dead-by-design rows on the W2 list and the expected-loss list | lead review |
 | W1 | Server behaviour knowledge base | no | 1 / 25 areas + the access matrix (`platform-roles` + `storage` collapsed: 2,631 of 2,988 cases mapped to cells, 357 recorded as non-cell behaviour) | extract `journey` and `callout` next (slices 4–5 territory); route the matrix findings (F1 anonymous read on direct storage, F2–F5 register signatures) | review capacity (gap 8) |
-| W2 | Client-web net built now | no | pre-work delivered (PR test-suites#696, 2026-10-29) | journeys 1–4 next; separately: form-callout-framing walks must join-as-self (Slice B), unregistered account-deletion us1–us3 drifted off the Security tab | — (W0 confirmed the ranked 12; adds task boards and community guidelines as cheap cases) |
-| W1 | — access matrix (`platform-roles` + `storage` areas) | no | **delivered** 2026-10-29 (PR test-suites#695, branch `qa/w1-access-matrix`, base `qa/server-rebuild-qa-plan`) | lead review of the 11 cross-check findings; decide whether F1 is filed; the matrix's `data-dependent` cells need the register's id-level probes | lead review |
+| W1 | — access matrix (`platform-roles` + `storage` areas) | no | **delivered** 2026-10-29 (PR test-suites#695, branch `qa/w1-access-matrix`; rebased onto `develop` and re-signed 2026-10-30, awaiting review) | lead review of the 11 cross-check findings; decide whether F1 (anonymous read on a space's direct storage, whatever the privacy) is filed; the matrix's `data-dependent` cells need the register's id-level probes | lead review |
+| W2 | Client-web net built now | no | pre-work **merged** 2026-10-30 (PR test-suites#696, `e4b6af4b`) | journeys 1–4 (join, invite + accept, subspace create, space settings): session brief written 2026-10-30, build against the test cluster, one PR to `develop`; journey 9 (virtual contributor) parked while VCs are hidden in the client; separately: form-callout-framing walks must join-as-self (Slice B), unregistered account-deletion us1–us3 drifted off the Security tab | — (W0 confirmed the ranked 12; adds task boards and community guidelines as cheap cases) |
 | W3 | Dedicated validation environment | decisions now, build later | decisions open | decisions 1–4; isolation rules into `e2e-conventions.md` and ESLint; sweeper design | ops for the mail relay |
 | W4 | Migration and integrity kit | legacy half no, new half yes | register seeded (addendum step 1) | take the register's two pre-dry-run repairs (C1/C2 tree and URL defects, S1/S2 backup gap) to backend and ops; agree the V/R/E/Q classification (decisions 8, 11); write the legacy-side layers 1–3 and 5; PROD rerun of the probes by an operator | decisions 8, 10, 11, 12 |
 | W5 | Re-point the lib and the harness | yes | gated | send the harness-contract asks (decision 9) to the backend team now | the SDL and a running core |
@@ -84,23 +84,23 @@ _One place for everything QA does for the move to the rebuilt server. Status is 
 
 | Item | State |
 |---|---|
-| Pre-work: fold spec-local GraphQL into the lib (45 files) | **done** 2026-10-29 — PR test-suites#696: 316 documents in 63 files folded into 81 lib documents / 115 named functions (the inventory had grown from the audit's 42 files); zero raw documents left in client-web |
-| Pre-work: lib-owned enums (41 + 17 files) | **done** 2026-10-29 — PR test-suites#696: `lib/src/common/{enums,types}`; 77 import statements in 61 files re-pointed to the barrel |
-| Pre-work: ESLint boundary | **done** 2026-10-29 — PR test-suites#696: `no-restricted-imports` + `no-restricted-syntax` on `client-web/src/**`, blocking CI lint step; `tests/` (forge-verify walks) and the 33 direct generated-SDK calls still outside |
-| Pre-work: lib contract test | **done** 2026-10-29 — PR test-suites#696: `server-api/src/contract/lib-contract.it-spec.ts`, vitest project `contract`, 10 tests / 13 s + global setup |
-| Journey 1 — join an open Space | not started |
-| Journey 2 — invite an existing user, accept, open | not started |
-| Journey 3 — create a subspace through the UI | not started |
-| Journey 4 — change Space privacy / membership / collaboration settings | not started |
+| Pre-work: fold spec-local GraphQL into the lib (45 files) | **done** 2026-10-29, merged 2026-10-30 — PR test-suites#696: 316 documents in 63 files folded into 81 lib documents / 115 named functions (the inventory had grown from the audit's 42 files); zero raw documents left in client-web |
+| Pre-work: lib-owned enums (41 + 17 files) | **done** 2026-10-29, merged 2026-10-30 — PR test-suites#696: `lib/src/common/{enums,types}`; 77 import statements in 61 files re-pointed to the barrel |
+| Pre-work: ESLint boundary | **done** 2026-10-29, merged 2026-10-30 — PR test-suites#696: `no-restricted-imports` + `no-restricted-syntax` on `client-web/src/**`, blocking CI lint step; `tests/` (forge-verify walks) and the 33 direct generated-SDK calls still outside |
+| Pre-work: lib contract test | **done** 2026-10-29, merged 2026-10-30 — PR test-suites#696: `server-api/src/contract/lib-contract.it-spec.ts`, vitest project `contract`, 10 tests / 13 s + global setup |
+| Journey 1 — join an open Space | specified 2026-10-30 (session brief: oracle, personas, env recipe, registration); build not started |
+| Journey 2 — invite an existing user, accept, open | specified 2026-10-30 (session brief: oracle, personas, env recipe, registration); build not started |
+| Journey 3 — create a subspace through the UI | specified 2026-10-30 (session brief: oracle, personas, env recipe, registration); build not started |
+| Journey 4 — change Space privacy / membership / collaboration settings | specified 2026-10-30 (session brief: oracle, personas, env recipe, registration); build not started |
 | Journey 5 — whiteboard, memo, Collabora document | not started |
 | Journey 6 — flow state, reorder callouts, move a contribution | not started |
 | Journey 7 — edit Space about, own profile, organisation | not started |
 | Journey 8 — global and sidebar search | not started |
-| Journey 9 — virtual contributor | not started |
+| Journey 9 — virtual contributor | parked 2026-10-30: VCs are hidden in the client for now |
 | Journey 10 — message leads / organisation; notification settings | not started |
 | Journey 11 — upload file / reference; media gallery; attachment | not started |
 | Journey 12 — forum, innovation packs, admin organisations, mentions | not started |
-| Tier 0 registrations from the audit (smoke canary, platform roles, memberships, contributors callout 0.1) | built 2026-10-14, uncommitted in the working tree |
+| Tier 0 registrations from the audit (smoke canary, platform roles, memberships, contributors callout 0.1) | built 2026-10-14, still uncommitted in the main clone; parked — the nightly config has moved since and one change breaks the lib boundary, so redo them when journeys 1–4 land |
 
 ## Decisions
 
@@ -141,6 +141,23 @@ Full text in [`plan.md` § Gaps](plan.md#gaps-found-in-the-plan-so-far).
 | 10 | Email content review | open |
 | 11 | No platform feature catalogue, so no true gap analysis | **closed** 2026-10-28 by `catalogue/` (W0) |
 
+## Open items (2026-10-30)
+
+What is pending, in the order it blocks the rest. Decisions are in the table above; this is the work list.
+
+| # | Item | Owner | State |
+|---|---|---|---|
+| 1 | Review and merge PR test-suites#695 (access matrix); rule on finding F1 | QA lead · CTO | rebased onto `develop`, signed, awaiting review |
+| 2 | Build journeys 1–4 against the test cluster, register in the nightly | QA (separate session, brief ready) | not started |
+| 3 | Extract `journey` and `callout` rules by hand (W1) | QA | not started; review capacity is gap 8 |
+| 4 | Rulings on decisions 1–4 (environment, mail, markers, exclusivity), 8, 10–12 (loss list, dataset, quarantine, backups), 14 (go/no-go) | leadership meeting | open |
+| 5 | File loss on acceptance: cause and recovery (server#6726), then measure production | file-service owner · ops | filed, unowned |
+| 6 | Register repairs before any dry run: C1 broken tree, C2 duplicate handles (server#6730), A2 data repair (54 spaces), A1 escalation draft | backend · lead | unfiled except C2 |
+| 7 | PROD rerun of the 41 probes | operator with a prod context | not run |
+| 8 | Write the legacy-side reconciliation layers 1–3 and 5, capture the acceptance baseline (W4) | QA | not started |
+| 9 | Send the harness-contract asks (decision 9) to the backend team | QA lead | not sent |
+| 10 | Tier 0 registrations: redo on top of journeys 1–4; the 2026-10-14 copy stays parked in the main clone | QA | parked |
+
 ## Log
 
 | Date | What |
@@ -151,6 +168,7 @@ Full text in [`plan.md` § Gaps](plan.md#gaps-found-in-the-plan-so-far).
 | 2026-10-28 | W4 register seeded from the ACC data-quality audit handed over by another session (all 7 databases, v0.170.2); identifiers stripped; the 41 probes stored under `data-integrity/acc-audit-queries/`; outputs and CSV dumps kept off-repo |
 | 2026-10-29 | Register updated from the audit session's drills: S1 is file content loss on ACC, not a backup gap; A2 generator fixed in v0.167, data repair only; six server issues filed (#6726–#6731) for the live generators; F1/G3/E2 explained |
 | 2026-10-29 | W2 pre-work delivered on PR test-suites#696 (branch `qa/w2-prework-lib-boundary`): the lib is the only schema boundary for client-web — actor model (`GraphqlActor`/`runAs`), 81 documents + 115 functions, lib-owned enums/types, ESLint guard with a blocking CI step, lib contract test; 89 specs run live on the local stack, one fold red (fixed), the rest attributed pre-existing/env/interference |
+| 2026-10-30 | PR #693 (plan, inventory, catalogue, register, probes) and PR #696 (W2 pre-work) merged to `develop`; PR #695 rebased onto `develop` and re-signed; journeys 1–4 specified as a session brief; journey 9 and AI-2/AI-3 parked while VCs are hidden; open-items table added |
 | 2026-10-28 | W0 delivered: 298 root fields of `server` `develop` @ `eeecf9ddb` traced through lib, server-api and client-web on test-suites @ `015bfeea1`; 57 features with verdicts; gap 11 closed |
 | 2026-10-29 | W1 access matrix delivered: rules derived from `server` `develop` @ `eeecf9ddb` (18 settings variants, 237 resources, 42 roles), cross-checked against the ACC policy rows (aggregate dump, v0.170.2) and the `platform-roles` + `storage` suites (2,631 of 2,988 cases mapped, all agree); 11 findings in `access-matrix-crosscheck.md`, nothing filed |
 

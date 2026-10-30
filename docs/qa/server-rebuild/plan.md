@@ -72,7 +72,7 @@ The GraphQL surface is designed from scratch (31 queries, 84 intent mutations; `
 | 6 | Flow-state change of a post; reorder callouts; move a contribution | absent | position/state read-back, member view |
 | 7 | Edit Space about/tagline/tags; edit own profile; create and edit an organisation | absent / weak | reload + read-back, disposable identity |
 | 8 | Global search and sidebar search | absent (manual only) | own run-unique names found, others' not |
-| 9 | Virtual contributor: create on account, add to a Space, ask in a thread, get an answer | absent | VC reply row |
+| 9 | Virtual contributor: create on account, add to a Space, ask in a thread, get an answer | absent | VC reply row — **parked 2026-10-30** while VCs are hidden in the client; the API half stays in W1 |
 | 10 | Message community leads / an organisation; notification settings persist | toast only / partial | mail per recipient; settings after reload |
 | 11 | Upload a file / reference; media gallery; message attachment | absent | storage read-back, download gated by access |
 | 12 | Forum: create + reply nightly; innovation packs; admin organisations; mentions | manual / absent | row + mail |
