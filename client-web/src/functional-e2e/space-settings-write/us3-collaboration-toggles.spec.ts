@@ -33,12 +33,22 @@ import {
  * The member's view is read only once the Space's callout has rendered for
  * them — the positive control that makes a missing control an observation.
  *
- *   admin `space.admin` · member `space.member`
+ * Create Posts and Create Subspaces are privileges the server grants to
+ * MEMBERS (CreateCallout on the callouts set, CreateSubspace on the Space —
+ * the client renders the button from them). While each is on, a NON-MEMBER
+ * who can read the public Space must still not be given it: that is the
+ * regression where the toggle is granted to every reader instead of to the
+ * community. Video Calls has no such check: the client shows its link to any
+ * viewer with READ once the setting is on (`useVideoCall`), so what a
+ * non-member should see there is an open product question, not an oracle.
+ *
+ *   admin `space.admin` · member `space.member` · non-member `non.space`
  * The admin is never the oracle: an admin sees all three regardless.
  */
 let scenario: OrganizationWithSpaceModel | undefined;
 let admin: PersonaPage | undefined;
 let member: PersonaPage | undefined;
+let nonMember: PersonaPage | undefined;
 
 test.describe.configure({ mode: 'serial' });
 
@@ -46,21 +56,23 @@ test.beforeAll(async ({ browser }) => {
   scenario = await seedSettingsScenario('col');
   admin = await openPersonaPage(browser, TestUserManager.users.spaceAdmin.email);
   member = await openPersonaPage(browser, TestUserManager.users.spaceMember.email);
+  nonMember = await openPersonaPage(browser, TestUserManager.users.nonSpaceMember.email);
 });
 
 // File level, so it also runs when a failure retires the worker mid-file.
 test.afterAll(async () => {
   await admin?.close();
   await member?.close();
+  await nonMember?.close();
   await teardownScenario(scenario);
   scenario = undefined;
 });
 
 const space = () => scenario!.space;
 
-/** Opens the Space as the member on `tab`, waits for the feed, returns the page. */
-const memberOn = async (tab: 'Home' | 'Subspaces'): Promise<Page> => {
-  const page = member!.page;
+/** Opens the Space as `viewer` on `tab`, waits for the feed, returns the page. */
+const viewerOn = async (viewer: PersonaPage, tab: 'Home' | 'Subspaces'): Promise<Page> => {
+  const page = viewer.page;
   await page.goto(`${baseUrl}/${space().nameId}`);
   await expect(calloutHeading(page, space().collaboration.calloutPostDisplayName)).toBeVisible();
   if (tab !== 'Home') {
@@ -89,6 +101,8 @@ type Case = {
   seeded: boolean;
   tab: 'Home' | 'Subspaces';
   control: (page: Page) => Locator;
+  /** A members-only privilege: a non-member reader must not get the control while it is on. */
+  membersOnly: boolean;
 };
 
 const CASES: Case[] = [
@@ -102,6 +116,7 @@ const CASES: Case[] = [
       page
         .getByRole('navigation', { name: 'Space navigation tabs' })
         .getByRole('link', { name: 'Video Call', exact: true }),
+    membersOnly: false,
   },
   {
     id: 'C4-2',
@@ -110,6 +125,7 @@ const CASES: Case[] = [
     seeded: false,
     tab: 'Home',
     control: page => spaceSidebar(page).getByRole('button', { name: 'Add Post', exact: true }),
+    membersOnly: true,
   },
   {
     id: 'C4-3',
@@ -118,18 +134,25 @@ const CASES: Case[] = [
     seeded: false,
     tab: 'Subspaces',
     control: page => spaceSidebar(page).getByRole('button', { name: 'Create Subspace', exact: true }),
+    membersOnly: true,
   },
 ];
 
 const expectControl = async (c: Case, shown: boolean) => {
-  const page = await memberOn(c.tab);
+  const page = await viewerOn(member!, c.tab);
   if (shown) await expect(c.control(page)).toBeVisible();
   else await expect(c.control(page)).toHaveCount(0);
 };
 
+/** While the toggle is on: the non-member reads the Space (positive control) and has no control. */
+const expectNoControlForNonMember = async (c: Case) => {
+  const page = await viewerOn(nonMember!, c.tab);
+  await expect(c.control(page), `non-member "${c.label}" control`).toHaveCount(0);
+};
+
 test.describe('W2 journey 4 — collaboration toggles, changed in Space settings', () => {
   for (const c of CASES) {
-    test(`${c.id} "${c.label}" ${c.seeded ? 'off and on' : 'on and off'}: saved and read back each way, and the member's "${c.label}" control follows`, async () => {
+    test(`${c.id} "${c.label}" ${c.seeded ? 'off and on' : 'on and off'}: saved and read back each way, and the member's "${c.label}" control follows${c.membersOnly ? '; a non-member never gets it' : ''}`, async () => {
       // Precondition — the seeded value, on the server and in the member's view.
       expect((await serverSettings(space().id)).collaboration[c.field]).toBe(c.seeded);
       await expectControl(c, c.seeded);
@@ -137,6 +160,11 @@ test.describe('W2 journey 4 — collaboration toggles, changed in Space settings
       await flip(c.label, !c.seeded);
       expect((await serverSettings(space().id)).collaboration[c.field]).toBe(!c.seeded);
       await expectControl(c, !c.seeded);
+      if (c.membersOnly) {
+        // Members-only toggles are seeded off, so this is their "on" state.
+        expect(c.seeded, `${c.id} is checked for non-members in its on state`).toBe(false);
+        await expectNoControlForNonMember(c);
+      }
 
       await flip(c.label, c.seeded);
       expect((await serverSettings(space().id)).collaboration[c.field]).toBe(c.seeded);

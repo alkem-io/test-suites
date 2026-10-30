@@ -14,7 +14,7 @@ The admin changes ONE setting at a time in **Settings › Settings** and saves. 
 | --- | --- | --- |
 | `space.admin` | harness | seeded admin + member; changes the settings |
 | `space.member` | harness | seeded member — the oracle for privacy (positive control) and for the collaboration toggles |
-| `non.space` | harness | non-member — the oracle for privacy and membership policy |
+| `non.space` | harness | non-member — the oracle for privacy and membership policy, and the negative control for the members-only toggles |
 
 Each file seeds its own PUBLIC + OPEN Space with one published post callout (`seedSettingsScenario`), run-unique names, torn down by `teardownScenario` in a file-level `afterAll`. Every case restores the value it started from, or hands the next case a stated precondition, so the file reads top to bottom as one admin session.
 
@@ -35,8 +35,8 @@ Techniques: **ST** state transition over each setting's values, **EP** viewer pa
 | M4-2 | `us2-membership-policy.spec.ts` | ST, NC | applications → invitations: server `INVITATIONS`; non-member sidebar has none of the membership actions, read after the callout rendered and the apply flow's requests settled | automated, green |
 | M4-3 | `us2-membership-policy.spec.ts` | ST | invitations → open: server `OPEN`; Join back, no Apply | automated, green |
 | C4-1 | `us3-collaboration-toggles.spec.ts` | ST, NC | Video Calls off and on: `allowMembersToVideoCall` false/true each way, switch state after reload; the member's "Video Call" link gone/back | automated, green |
-| C4-2 | `us3-collaboration-toggles.spec.ts` | ST, NC | Create Posts on and off: `allowMembersToCreateCallouts`; the member's sidebar "Add Post" appears/disappears | automated, green |
-| C4-3 | `us3-collaboration-toggles.spec.ts` | ST, NC | Create Subspaces on and off: `allowMembersToCreateSubspaces`; the member's Subspaces-tab sidebar "Create Subspace" appears/disappears | automated, green |
+| C4-2 | `us3-collaboration-toggles.spec.ts` | ST, EP, NC | Create Posts on and off: `allowMembersToCreateCallouts`; the member's sidebar "Add Post" appears/disappears; while on, the non-member (who reads the public Space) has no "Add Post" | automated, green |
+| C4-3 | `us3-collaboration-toggles.spec.ts` | ST, EP, NC | Create Subspaces on and off: `allowMembersToCreateSubspaces`; the member's Subspaces-tab sidebar "Create Subspace" appears/disappears; while on, the non-member has no "Create Subspace" | automated, green |
 
 Every absence above is read only after the same viewer's page has rendered the Space's callout (and, for membership actions, after `applyFlowSettled`), and every control asserted absent is asserted present in the other direction of the same case.
 
@@ -44,6 +44,7 @@ Every absence above is read only after the same viewer's page has rendered the S
 
 - The switches with no plain-member view to observe: **Guest Contributions** (needs a shared whiteboard, journey 5 territory), **Subspace Events** (needs a subspace calendar event), **Alkemio Support** (needs the platform-support persona), **Subspace Membership** (`allowSubspaceAdminsToInviteMembers`, needs a subspace admin inviting), **Trusted Applicants** (needs a trusted organization), and the **User information visibility** radios. Their saves go through the same `updateSpaceSettings` path asserted here; their effects are not walked.
 - Settings on a subspace (L1/L2) — the same page, different inheritance rules.
+- What a non-member sees of **Video Calls**: the client shows the "Video Call" link to any viewer with READ once `allowMembersToVideoCall` is on (`useVideoCall` gates on READ, not on membership), so on a public Space a non-member is offered it. Whether that is intended is an open product question; C4-1 asserts only the member's view until it is answered.
 - Private + open "Join" on the About page is journey 1 (`space-join-invite/`).
 
 ## Known defects
