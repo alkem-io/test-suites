@@ -4,8 +4,11 @@
  * The first thing that must go green on the rebuilt server (docs/qa/
  * server-rebuild, W2 pre-work). It asserts NAMES and SHAPES, never server
  * constants: every exported name a client-web spec or helper imports from
- * `@alkemio/tests-lib` exists with the expected kind, every generated-SDK
- * operation the specs still call directly is a function, and one
+ * `@alkemio/tests-lib` exists with the expected kind, every enum member they
+ * reference exists, every generated-SDK operation the specs still call
+ * directly is a function — the last three read from client-web's own source
+ * (`client-web-lib-usage.ts`), so a new import is covered the day it lands —
+ * and one
  * `createBaseScenario` → one read-back per entity type → `cleanUpBaseScenario`
  * round trip works against the running stack in under a minute.
  *
@@ -29,6 +32,7 @@ import {
   readSpaceSettings,
 } from '@alkemio/tests-lib';
 import type { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
+import { libBarrelExportNames, scanClientWebLibUsage } from './client-web-lib-usage';
 
 const ROUND_TRIP_BUDGET_MS = 60_000;
 
@@ -228,42 +232,6 @@ const ENUM_MEMBERS: Record<string, string[]> = {
   RoleSetInvitationResultType: [],
 };
 
-/** Generated-SDK operations client-web still calls directly (client-net-audit § 3b). */
-const DIRECT_SDK_OPERATIONS: string[] = [
-  'AddReactionToCallout',
-  'applyForEntryRole',
-  'AssignLicensePlanToSpace',
-  'calloutFormResponses',
-  'calloutsSetFramingDefinitions',
-  'createFormCalloutOnCalloutsSet',
-  'createPollCalloutOnCalloutsSet',
-  'CreateCalendarEventOnCalendar',
-  'DeletePlatformInvitation',
-  'GetInnovationFlowStatesWithIds',
-  'GetRoleSetUsersInRoles',
-  'getSpaceInvitations',
-  'GetSpaceCalendarId',
-  'InvitationStateEvent',
-  'InviteForEntryRoleOnRoleSet',
-  'LookupPlatformInvitation',
-  'LookupPlatformInvitationCreatedBy',
-  'MeQuery',
-  'PlatformRolesAssignRoleToUser',
-  'PlatformRolesRemoveRoleFromUser',
-  'platformRoleSetUsersInRole',
-  'RemoveRoleFromOrganization',
-  'ResendPlatformInvitation',
-  'RevokeLicensePlanFromSpace',
-  'RoleSetApplicationsInvitations',
-  'RoleSetMembersList',
-  'RoleSetPendingPlatformInvitations',
-  'SendMessageToRoom',
-  'SubscribeToPushNotifications',
-  'UnsubscribeFromPushNotifications',
-  'UpdateInnovationFlowState',
-  'UpdateOrganizationSettings',
-  'updateUserServiceProfile',
-];
 
 const exportsOf = lib as unknown as Record<string, unknown>;
 
@@ -301,10 +269,47 @@ describe('@contract lib surface used by the client-web net', () => {
     expect(problems).toEqual([]);
   });
 
-  test('every generated-SDK operation the specs call directly is a function on the client', () => {
+});
+
+/**
+ * The same surface, derived from client-web's source rather than listed by
+ * hand: the lists above are the audit's floor, these follow the specs.
+ */
+describe('@contract lib surface as client-web/src uses it today', () => {
+  const usage = scanClientWebLibUsage();
+
+  test('the scan sees the suite (a scan that finds nothing must not pass)', () => {
+    expect(usage.filesScanned).toBeGreaterThan(100);
+    expect(usage.importedNames.size).toBeGreaterThan(100);
+    expect(usage.directSdkOperations.size).toBeGreaterThan(10);
+  });
+
+  test('every name client-web imports from the lib barrel is exported by it (values and types)', () => {
+    const exported = libBarrelExportNames();
+    const missing = [...usage.importedNames].filter(name => !exported.has(name)).sort();
+    expect(missing, `not exported by @alkemio/tests-lib: ${missing.join(', ')}`).toEqual([]);
+  });
+
+  test('every enum member client-web references on a lib-owned enum exists', () => {
+    const problems: string[] = [];
+    for (const [name, members] of usage.memberReferences) {
+      const value = exportsOf[name];
+      // Enums only: a plain object whose own values are all strings/numbers.
+      // Classes (TestScenarioFactory …) are functions and are skipped here.
+      if (!value || typeof value !== 'object') continue;
+      const entries = Object.values(value as Record<string, unknown>);
+      if (!entries.every(v => typeof v === 'string' || typeof v === 'number')) continue;
+      for (const member of members) {
+        if (!(member in (value as Record<string, unknown>))) problems.push(`${name}.${member}`);
+      }
+    }
+    expect(problems.sort()).toEqual([]);
+  });
+
+  test('every generated-SDK operation client-web calls directly is a function on the client', () => {
     const sdk = getGraphqlClient() as unknown as Record<string, unknown>;
-    const missing = DIRECT_SDK_OPERATIONS.filter(op => typeof sdk[op] !== 'function');
-    expect(missing).toEqual([]);
+    const missing = [...usage.directSdkOperations].filter(op => typeof sdk[op] !== 'function').sort();
+    expect(missing, `not on the generated SDK: ${missing.join(', ')}`).toEqual([]);
   });
 });
 
