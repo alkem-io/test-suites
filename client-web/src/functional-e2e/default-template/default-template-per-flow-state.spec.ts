@@ -354,7 +354,9 @@ test.describe('Default Template Per Flow State', () => {
 
       // Verify post creation
       await expect(addPostDialog).toBeHidden({ timeout: 10000 });
-      await expect(memberPage.getByText(uniquePostTitle)).toBeVisible({
+      await expect(
+        memberPage.getByRole('link', { name: uniquePostTitle, exact: true })
+      ).toBeVisible({
         timeout: 10000,
       });
 
