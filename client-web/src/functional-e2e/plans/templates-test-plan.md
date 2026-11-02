@@ -1963,7 +1963,7 @@ Finding for the delivery pipeline: the `collabora` vitest project that holds #67
 
 > **Status:** Approved — QA lead, in-session, 2026-10-19 · **Depth:** Light · **Found during:** Release 78 verification of client-web#10423 on dev (QA lead, 2026-10-19); neither defect belongs to a Release 78 story · **Spec:** `templates-CRD/template-types/collaboration-tool-template-roundtrip.spec.ts` (nightly Templates)
 
-What a Space admin saves in the collaboration-tool template form must come back when the template is used or edited, and the creator must be able to edit the content they put into it. Two gaps, both reproduced from a fresh scenario on the local stack and pinned with `test.skip` until the fixes land. The client-web#10443 pin on RT-2 and RT-3 was lifted by `workspace#096-collaboration-tool-template-with-documen` (client-web#10443 fixed); MT-1 and MT-2 stay pinned on server#6682:
+What a Space admin saves in the collaboration-tool template form must come back when the template is used or edited, and the creator must be able to edit the content they put into it. Two gaps were reproduced from a fresh scenario on the local stack and pinned with `test.skip` until their fixes landed; only MT-1 and MT-2 remain skipped. The client-web#10443 pin on RT-2 and RT-3 was lifted by `workspace#096-collaboration-tool-template-with-documen` (client-web#10443 fixed); MT-1 and MT-2 stay pinned on server#6682:
 
 | Case | Covers | Result 2026-10-19 (local stack, client-web `fa98c933b`, server `901f96281`) |
 | --- | --- | --- |
