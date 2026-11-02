@@ -19,8 +19,10 @@
 #   - the `env` list of ONE container in each of those two workloads (the
 #     shared kratos Secret and alkemio-config ConfigMap are never written —
 #     other workloads read them);
-#   - a Helm release `swarmail`, and in implicit-tls mode a Service
-#     `swarmail-smtps` and a TLS Secret `swarmail-trial-tls`;
+#   - a Helm release `swarmail` (published chart, configured only through its
+#     own values: `config` for SWARMAIL_* env, `tls.enabled`/`tls.secretName`
+#     for the certificate mount), and in implicit-tls mode a throwaway TLS
+#     Secret `swarmail-trial-tls`;
 #   - the Secret `swarmail-trial-snapshot`, which holds the exact prior env
 #     lists and is the ownership token: restore acts only when it exists and
 #     belongs to the calling run (or `--any-owner`), and deletes it last, only
@@ -32,7 +34,19 @@
 #
 # Inputs (env): TRIAL_OWNER (required), SWARMAIL_CHART_VERSION,
 #   SWARMAIL_IMAGE_TAG, SMTP_MODE (plain|implicit-tls), SHIM_PORT, SHIM_PATH,
-#   SHIM_CONFIG, SMTPS_PORT, SMTPS_CONFIG — see the workflow's inputs.
+#   SHIM_CONFIG — see the workflow's inputs.
+#
+# Swarmail features used (swarmail main, 58ad25b):
+#   - the MailSlurper service API (decision 0118, docs/guide/compat-shims.md),
+#     opt-in via SWARMAIL_MAILSLURPER_LISTEN: GET /mail[?pageNumber=N],
+#     GET /mail/{id}, GET /mailcount, DELETE /mail {"pruneCode":"all"} — one
+#     global view over every inbox. The chart neither declares nor publishes
+#     its port; the runner reaches it by port-forward to the Deployment,
+#     which needs neither.
+#   - implicit TLS (decision 0116, docs/guide/smtp.md § Implicit TLS):
+#     SWARMAIL_SMTP_IMPLICIT_TLS=true switches the existing SMTP listener
+#     (1025) to TLS-from-the-first-byte; it needs SWARMAIL_TLS_CERT/KEY,
+#     which the chart's tls.enabled sets from the mounted Secret.
 #
 # Secrets: env values are never printed. Logs carry env var NAMES and sha256
 # digests only; the snapshot lives in a cluster Secret, never in the log or
@@ -45,7 +59,6 @@ CHART="oci://ghcr.io/feedback-loop-ai/charts/swarmail"
 CHART_VERSION="${SWARMAIL_CHART_VERSION:-0.2.0}"
 SNAPSHOT="swarmail-trial-snapshot"
 TLS_SECRET="swarmail-trial-tls"
-SMTPS_SERVICE="swarmail-smtps"
 TRIAL_LABEL="app.kubernetes.io/part-of=swarmail-trial"
 COURIER="statefulset/kratos-courier"
 COURIER_CONTAINER="kratos-courier"
@@ -53,11 +66,11 @@ NOTIFICATIONS="deployment/alkemio-notifications-deployment"
 NOTIFICATIONS_CONTAINER="alkemio-notifications"
 ROLLOUT_TIMEOUT="${ROLLOUT_TIMEOUT:-300s}"
 SHIM_LOCAL_PORT="${SHIM_LOCAL_PORT:-4437}"
-# Every sender lands in Swarmail's `default` inbox: Kratos cannot AUTH over
+# Every sender lands in Swarmail's `default` inbox. The MailSlurper shim is a
+# global view, so this is tidiness, not visibility: Kratos cannot AUTH over
 # plain SMTP (Go's PLAIN auth refuses an unencrypted non-localhost link), so
 # in plain mode it sends without AUTH, which Swarmail files under `default`;
-# notifications AUTHs as `default` to match. Whether the MailSlurper shim
-# reads `default` or all inboxes merged, it sees both senders.
+# notifications AUTHs as `default` to match.
 INBOX="default"
 
 SMTP_MODE="${SMTP_MODE:-plain}"
@@ -65,8 +78,6 @@ SWARMAIL_IMAGE_TAG="${SWARMAIL_IMAGE_TAG:-main}"
 SHIM_PORT="${SHIM_PORT:-}"
 SHIM_PATH="${SHIM_PATH:-}"
 SHIM_CONFIG="${SHIM_CONFIG:-}"
-SMTPS_PORT="${SMTPS_PORT:-}"
-SMTPS_CONFIG="${SMTPS_CONFIG:-}"
 
 WORK="$(mktemp -d "${RUNNER_TEMP:-/tmp}/swarmail-trial.XXXXXX")"
 chmod 700 "$WORK"
@@ -140,17 +151,14 @@ validate_inputs() {
   [ -n "${TRIAL_OWNER:-}" ] || die "TRIAL_OWNER is not set"
   [[ "$SWARMAIL_IMAGE_TAG" =~ ^[A-Za-z0-9_][A-Za-z0-9_.-]{0,127}$ ]] || die "swarmail-image-tag '$SWARMAIL_IMAGE_TAG' is not a valid image tag"
   case "$SMTP_MODE" in plain|implicit-tls) ;; *) die "smtp-mode must be plain or implicit-tls" ;; esac
-  local p
-  for p in SHIM_PORT SMTPS_PORT; do
-    if ! [[ "${!p}" =~ ^[1-9][0-9]{0,4}$ ]] || (( ${!p} > 65535 )); then
-      die "$p '${!p}' is not a port number"
-    fi
-  done
+  if ! [[ "$SHIM_PORT" =~ ^[1-9][0-9]{0,4}$ ]] || (( SHIM_PORT > 65535 )); then
+    die "shim-port '$SHIM_PORT' is not a port number"
+  fi
   [[ "$SHIM_PATH" =~ ^/[A-Za-z0-9/_.-]*$ ]] || die "shim-path '$SHIM_PATH' must start with / and use only [A-Za-z0-9/_.-]"
   # KEY=VALUE pairs become `helm --set-string config.KEY=VALUE`: refuse
   # anything Helm would parse as more than one value (commas, brackets, ...).
   local kv
-  for kv in $SHIM_CONFIG $SMTPS_CONFIG; do
+  for kv in $SHIM_CONFIG; do
     [[ "$kv" =~ ^SWARMAIL_[A-Z0-9_]+=[A-Za-z0-9_.:/-]*$ ]] || die "config entry '$kv' must be SWARMAIL_NAME=value (value: [A-Za-z0-9_.:/-])"
   done
 }
@@ -186,7 +194,7 @@ preflight() {
     die "a Helm release '$RELEASE' already exists in $NS; this trial will not adopt or replace it"
   fi
   local r
-  for r in "deployment/$RELEASE" "service/$RELEASE" "service/$SMTPS_SERVICE" "secret/$TLS_SECRET"; do
+  for r in "deployment/$RELEASE" "service/$RELEASE" "secret/$TLS_SECRET"; do
     if exists "$r"; then die "$r already exists in $NS; this trial will not adopt or replace it"; fi
   done
   envtool "$COURIER" "$COURIER_CONTAINER" inspect > "$WORK/courier.json"
@@ -239,22 +247,18 @@ install() {
     # Throwaway self-signed pair, lives as long as the trial. Both clients
     # skip verification against MailSlurper today (skip_ssl_verify=true,
     # rejectUnauthorized=false) and keep doing so here.
-    openssl req -x509 -newkey rsa:2048 -nodes -days 2 -subj "/CN=$SMTPS_SERVICE" \
-      -addext "subjectAltName=DNS:$SMTPS_SERVICE,DNS:$SMTPS_SERVICE.$NS.svc,DNS:$RELEASE,DNS:$RELEASE.$NS.svc" \
+    openssl req -x509 -newkey rsa:2048 -nodes -days 2 -subj "/CN=$RELEASE" \
+      -addext "subjectAltName=DNS:$RELEASE,DNS:$RELEASE.$NS.svc,DNS:$RELEASE.$NS.svc.cluster.local" \
       -keyout "$WORK/tls.key" -out "$WORK/tls.crt" 2>/dev/null
     k create secret tls "$TLS_SECRET" --cert="$WORK/tls.crt" --key="$WORK/tls.key" >/dev/null
     k label secret "$TLS_SECRET" "$TRIAL_LABEL" >/dev/null
-    args+=(--set tls.enabled=true --set-string "tls.secretName=$TLS_SECRET")
-    read -r -a pairs <<< "$SMTPS_CONFIG"
-    for kv in "${pairs[@]}"; do args+=(--set-string "config.$kv"); done
+    # The chart mounts the Secret at /etc/swarmail/tls and sets
+    # SWARMAIL_TLS_CERT/KEY; implicit TLS then takes over the same 1025
+    # listener — no STARTTLS on it, no second port, no extra Service.
+    args+=(--set tls.enabled=true --set-string "tls.secretName=$TLS_SECRET"
+      --set-string config.SWARMAIL_SMTP_IMPLICIT_TLS=true)
   fi
   helm "${args[@]}"
-  if [ "$SMTP_MODE" = "implicit-tls" ]; then
-    # The 0.2.0 chart's Service carries 1025/1110/8025 only; the implicit-TLS
-    # listener gets its own Service, owned and removed by this trial.
-    k expose "deployment/$RELEASE" --name "$SMTPS_SERVICE" \
-      --port "$SMTPS_PORT" --target-port "$SMTPS_PORT" --labels "$TRIAL_LABEL"
-  fi
   k rollout status "deployment/$RELEASE" --timeout="$ROLLOUT_TIMEOUT"
   echo "swarmail running image $(k get "deployment/$RELEASE" -o jsonpath='{.spec.template.spec.containers[0].image}')"
 }
@@ -275,27 +279,37 @@ start_shim_forward() {
 }
 
 # Before anything is repointed: the suite cannot read mail without the shim,
-# so a missing shim (Swarmail #314 not on the image yet, or a wrong
-# shim-port/shim-path) stops the run here, with Kratos and notifications
-# untouched.
+# so a missing shim (an image older than swarmail 58ad25b, or a wrong
+# shim-port/shim-path/shim-config) stops the run here, with Kratos and
+# notifications untouched. It checks the two read shapes the suite relies
+# on — `GET <endpoint>` (getMailsData: mailItems, totalRecords) and
+# `GET <endpoint>?pageNumber=1` (admin-notification-routing: totalPages) —
+# and never DELETEs.
 probe_shim() {
   validate_inputs
   start_shim_forward
   # shellcheck disable=SC2016
   node -e '
-    const url = process.argv[1];
-    fetch(url).then(async r => {
+    const base = process.argv[1];
+    const check = async url => {
+      const r = await fetch(url, { headers: { Accept: "application/json" } });
       const t = await r.text();
-      if (!r.ok) { console.error(`${url} answered HTTP ${r.status}`); process.exit(1); }
+      if (!r.ok) throw new Error(`${url} answered HTTP ${r.status}: ${t.slice(0, 200)}`);
       let b;
-      try { b = JSON.parse(t); } catch { console.error(`${url} answered non-JSON`); process.exit(1); }
-      if (b === null || typeof b !== "object" || Array.isArray(b)) { console.error(`${url} answered JSON that is not an object`); process.exit(1); }
-      if (!("mailItems" in b) && !("totalRecords" in b))
-        console.log(`::warning::${url} answered an object without mailItems/totalRecords — check that the shim returns MailSlurper JSON`);
-      console.log(`shim ok at ${url}: totalRecords=${b.totalRecords ?? "absent"}`);
-    }).catch(e => { console.error(`${url}: ${e.message}`); process.exit(1); });
+      try { b = JSON.parse(t); } catch { throw new Error(`${url} answered non-JSON`); }
+      if (b === null || typeof b !== "object" || Array.isArray(b)) throw new Error(`${url} answered JSON that is not an object`);
+      for (const k of ["totalRecords", "totalPages"])
+        if (!Number.isInteger(b[k])) throw new Error(`${url} has no integer ${k}`);
+      if ("mailItems" in b && !Array.isArray(b.mailItems)) throw new Error(`${url} mailItems is not an array`);
+      return b;
+    };
+    (async () => {
+      const first = await check(base);
+      await check(`${base}?pageNumber=1`);
+      console.log(`shim ok at ${base}: totalRecords=${first.totalRecords}, totalPages=${first.totalPages}`);
+    })().catch(e => { console.error(e.message); process.exit(1); });
   ' "http://localhost:$SHIM_LOCAL_PORT$SHIM_PATH" \
-    || die "the MailSlurper shim is not answering on container port $SHIM_PORT path $SHIM_PATH (pending feedback-loop-ai/swarmail#314?)"
+    || die "the MailSlurper shim does not answer as the suite needs on container port $SHIM_PORT path $SHIM_PATH (image older than swarmail 58ad25b, or SWARMAIL_MAILSLURPER_LISTEN not set?)"
 }
 
 shim_endpoint() { echo "http://localhost:$SHIM_LOCAL_PORT$SHIM_PATH"; }
@@ -316,11 +330,14 @@ repoint() {
  {"name":"EMAIL_SMTP_PASSWORD","value":"x"}]
 EOF
   else
-    # Mirrors MailSlurper's own URI shape (smtps + legacy_ssl = implicit TLS).
-    uri="smtps://$INBOX:x@$SMTPS_SERVICE:$SMTPS_PORT/?skip_ssl_verify=true&legacy_ssl=true"
+    # MailSlurper's own URI shape (smtps = implicit TLS), pointed at
+    # Swarmail's 1025. Over TLS Kratos may AUTH, so it names the inbox.
+    uri="smtps://$INBOX:x@$RELEASE:1025/?skip_ssl_verify=true&legacy_ssl=true"
+    # notifications: nodemailer `secure: true` is implicit TLS from the first
+    # byte; rejectUnauthorized=false accepts the throwaway certificate.
     cat > "$WORK/notifications-ov.json" <<EOF
-[{"name":"EMAIL_SMTP_HOST","value":"$SMTPS_SERVICE"},
- {"name":"EMAIL_SMTP_PORT","value":"$SMTPS_PORT"},
+[{"name":"EMAIL_SMTP_HOST","value":"$RELEASE"},
+ {"name":"EMAIL_SMTP_PORT","value":"1025"},
  {"name":"EMAIL_SMTP_SECURE","value":"true"},
  {"name":"EMAIL_SMTP_USER","value":"$INBOX"},
  {"name":"EMAIL_SMTP_PASSWORD","value":"x"},
@@ -400,9 +417,9 @@ restore() {
   else
     echo "no Helm release $RELEASE"
   fi
-  k delete "service/$SMTPS_SERVICE" "secret/$TLS_SECRET" --ignore-not-found || rc=1
+  k delete "secret/$TLS_SECRET" --ignore-not-found || rc=1
   local r
-  for r in "deployment/$RELEASE" "service/$RELEASE" "service/$SMTPS_SERVICE" "secret/$TLS_SECRET"; do
+  for r in "deployment/$RELEASE" "service/$RELEASE" "secret/$TLS_SECRET"; do
     if exists "$r"; then echo "::error::$r still exists after restore" >&2; rc=1; fi
   done
 

@@ -15,8 +15,8 @@ run-name: >-
 #   - points Kratos's courier (statefulset/kratos-courier) and the
 #     notifications service (deployment/alkemio-notifications-deployment) at
 #     Swarmail by editing the env list of one container in each;
-#   - reads mail through Swarmail's MailSlurper-compatible API, port-forwarded
-#     to the runner like kratos-admin.
+#   - reads mail through Swarmail's MailSlurper service API (a global view
+#     over every inbox), port-forwarded to the runner like kratos-admin.
 # The exact prior env lists are recorded in the cluster before anything is
 # changed, and restored — then verified — in an always() step and again in a
 # separate backstop job, after which Swarmail is uninstalled. The mechanics
@@ -45,50 +45,37 @@ on:
         default: true
       swarmail-image-tag:
         description: >-
-          Tag of ghcr.io/feedback-loop-ai/swarmail. `main` until the
-          MailSlurper shim (#314) and implicit TLS (#313) are in a release.
+          Tag of ghcr.io/feedback-loop-ai/swarmail. Needs swarmail main at or
+          after 58ad25b (MailSlurper shim, decision 0118; implicit TLS,
+          decision 0116): `main`, or `sha-<full commit>` to pin one build.
           Pulled with pullPolicy Always.
         type: string
         default: main
       smtp-mode:
         description: >-
-          plain = smtp:// on Swarmail's 1025. implicit-tls = smtps:// like
-          MailSlurper's, needs Swarmail #313 (see smtps-port/smtps-config).
+          plain = smtp:// on Swarmail's 1025. implicit-tls = smtps:// on the
+          same 1025, as against MailSlurper today (SWARMAIL_SMTP_IMPLICIT_TLS
+          with a throwaway self-signed certificate).
         type: choice
         options: [plain, implicit-tls]
         default: plain
       shim-port:
         description: >-
-          PLACEHOLDER pending feedback-loop-ai/swarmail#314. Container port
-          that serves the MailSlurper API (4437 if the shim gets its own
-          listener; 8025 if it lands on the HTTP port under a prefix).
+          Container port of Swarmail's MailSlurper listener; must match the
+          port in shim-config.
         type: string
         default: "4437"
       shim-path:
-        description: >-
-          PLACEHOLDER pending #314. Path of the MailSlurper `mail` resource on
-          shim-port (MailSlurper itself: /mail).
+        description: Path of the MailSlurper `mail` resource on that listener.
         type: string
         default: /mail
       shim-config:
         description: >-
-          PLACEHOLDER pending #314. Space-separated SWARMAIL_*=value entries
-          that enable the shim, passed as chart `config`. Empty if the shim
-          needs no setting.
+          Space-separated SWARMAIL_*=value entries passed as chart `config`.
+          The default enables the MailSlurper listener (opt-in, off unless
+          set).
         type: string
         default: SWARMAIL_MAILSLURPER_LISTEN=0.0.0.0:4437
-      smtps-port:
-        description: >-
-          PLACEHOLDER pending feedback-loop-ai/swarmail#313. Container port of
-          the implicit-TLS SMTP listener (implicit-tls mode only).
-        type: string
-        default: "1465"
-      smtps-config:
-        description: >-
-          PLACEHOLDER pending #313. Space-separated SWARMAIL_*=value entries
-          that enable the implicit-TLS listener (implicit-tls mode only).
-        type: string
-        default: SWARMAIL_SMTPS_LISTEN=0.0.0.0:1465
       test-ref:
         description: >-
           Branch or tag in this repo holding the TEST CODE, as in the nightly.
@@ -114,8 +101,6 @@ env:
   SHIM_PORT: ${{ inputs.shim-port }}
   SHIM_PATH: ${{ inputs.shim-path }}
   SHIM_CONFIG: ${{ inputs.shim-config }}
-  SMTPS_PORT: ${{ inputs.smtps-port }}
-  SMTPS_CONFIG: ${{ inputs.smtps-config }}
 
 jobs:
   deploy-all-services:
@@ -247,7 +232,8 @@ jobs:
       - name: Install Swarmail beside MailSlurper
         run: bash .trial/.github/scripts/swarmail-trial.sh install
 
-      # Stops the run before any repoint when the shim is not there yet.
+      # Stops the run before any repoint when the shim does not answer the
+      # list shapes the suite reads.
       - name: Probe Swarmail's MailSlurper API shim
         run: bash .trial/.github/scripts/swarmail-trial.sh probe-shim
 
