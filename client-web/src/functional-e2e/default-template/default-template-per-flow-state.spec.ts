@@ -57,29 +57,51 @@ function getTemplateLibraryDialog(page: Page) {
 /**
  * Selects a template by display name inside the open "Use a template" dialog
  * and applies it. CRD: clicking a template card opens an in-dialog preview
- * with a "Use this template" button; clicking it (or the card's own "Use
- * template" button) applies the default and closes the dialog. There is no
- * MUI "Currently Selected Template" panel in CRD — the committed-state signal
- * is the dialog closing after the template is applied.
+ * with a "Use this template" button; clicking it applies the default and
+ * closes the dialog. There is no MUI "Currently Selected Template" panel in
+ * CRD — the helper returns once the assignment's response names the applied
+ * template.
  */
 async function selectTemplateInDialog(
   page: Page,
   templateName: string
 ): Promise<void> {
   const dialog = getTemplateLibraryDialog(page);
-  const card = dialog.getByRole('button', { name: templateName }).first();
-  await expect(card).toBeVisible({ timeout: 5000 });
-  await card.click();
-
-  // Apply via the preview's "Use this template" / the card's "Use template".
-  const useButton = page
-    .getByRole('button', { name: /use (this )?template/i })
+  // Exact accessible name of the card's title button. `.first()`: the same template can be
+  // listed under more than one source section (the test pack is account-owned and listed in
+  // the store); every such card carries the same template id, so any one of them previews it.
+  const card = dialog
+    .getByRole('button', { name: `Preview: ${templateName}`, exact: true })
     .first();
-  await expect(useButton).toBeVisible({ timeout: 5000 });
-  await useButton.click();
-
-  // CRD applies the default and dismisses the dialog (committed-state signal).
-  await expect(dialog).toBeHidden({ timeout: 5000 });
+  await expect(card).toBeVisible();
+  await card.click();
+  // The preview pane's control, and only that: the cards' "Use template" is named differently.
+  // It appears once the previewed content has loaded; no fallback to a card.
+  const useThisTemplate = dialog.getByRole('button', {
+    name: 'Use this template',
+    exact: true,
+  });
+  await expect(useThisTemplate).toBeVisible();
+  // The dialog closes before the assignment is sent, and the next case navigates this same
+  // page, so the committed-state signal is the assignment's response: it must succeed and
+  // name the template that was applied.
+  const assignment = page.waitForResponse(
+    response =>
+      response
+        .request()
+        .postData()
+        ?.includes(
+          '"operationName":"SetDefaultCalloutTemplateOnInnovationFlowState"'
+        ) ?? false
+  );
+  await useThisTemplate.click();
+  const body = await (await assignment).json();
+  expect(body.errors, 'the assignment was refused').toBeUndefined();
+  expect(
+    body.data.setDefaultCalloutTemplateOnInnovationFlowState
+      .defaultCalloutTemplate.profile.displayName
+  ).toBe(templateName);
+  await expect(dialog).toBeHidden();
 }
 
 /**
@@ -259,9 +281,8 @@ test.describe('Default Template Per Flow State', () => {
       // Open template-selection dialog
       await openTemplateLibraryDialog(page);
 
-      // Select "Alternative Post Template - Test" as the default. CRD applies
-      // the chosen template and dismisses the dialog (the committed-state
-      // signal — there is no MUI "Currently Selected Template" panel).
+      // Select "Alternative Post Template - Test" as the default; the helper
+      // applies it and waits for its assignment.
       await selectTemplateInDialog(page, 'Alternative Post Template - Test');
     });
 
@@ -275,20 +296,14 @@ test.describe('Default Template Per Flow State', () => {
       await openTemplateLibraryDialog(page);
 
       // Select a different template ("Default Post Template - Test") as the new
-      // default. CRD applies it and dismisses the dialog (committed-state
-      // signal); this is also the default test 4.1 verifies a member loads.
+      // default; the helper applies it and waits for its assignment. This is
+      // also the default test 4.1 verifies a member loads.
       await selectTemplateInDialog(page, 'Default Post Template - Test');
     });
   });
 
   test.describe('Template Auto-Loading for Members', () => {
-    // Known client-web defect — https://github.com/alkem-io/client-web/issues/10416
-    // Today: after 3.1 (Alternative) and 3.2 (Default) the member's Create Post
-    // dialog still pre-fills "Alternative Post Template - Test"; the API persists
-    // the second assignment (verified by mutation + read-back), so the client
-    // is at fault. Drop the .skip when the fix lands; the assertions below are
-    // the acceptance oracle and must not be softened.
-    test.skip('4.1 Default template is loaded when member creates a post (alkem-io/client-web#10416)', async ({
+    test('4.1 Default template is loaded when member creates a post (alkem-io/client-web#10416)', async ({
       browser,
     }) => {
       // Create new context and login as Space Member
