@@ -303,6 +303,9 @@ test.describe('Default Template Per Flow State', () => {
   });
 
   test.describe('Template Auto-Loading for Members', () => {
+    // Recorded cause of the stale default this case once showed: the previous selection clicked
+    // the first "Use template" control on the page, the first listed card's, so 3.1 and 3.2
+    // assigned the same template.
     test('4.1 Default template is loaded when member creates a post (alkem-io/client-web#10416)', async ({
       browser,
     }) => {
