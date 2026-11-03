@@ -105325,6 +105325,8 @@ export type SearchQueryVariables = SchemaTypes.Exact<{
 export type SearchQuery = {
   search: {
     spaceResults: {
+      total: number;
+      cursor?: any | undefined;
       results: Array<
         | { type: SchemaTypes.SearchResultType }
         | { type: SchemaTypes.SearchResultType }
@@ -129897,6 +129899,8 @@ export const SearchDocument = gql`
   query search($searchData: SearchInput!) {
     search(searchData: $searchData) {
       spaceResults {
+        total
+        cursor
         results {
           type
           ...SearchResultSpace

@@ -21,6 +21,8 @@ import { baseConfig, GENERATED_WALKS_DIR, LOCAL_STACK_TAG, suite } from './playw
  *     contribution-notify-switch US2-AS1 (task path)
  *   PLATFORM_INVITATION_RESEND_COOLDOWN_SECONDS (<= 120, set on the SERVER too):
  *     organization-email-invitations US3-AS3
+ *   Elasticsearch on the SERVER (ELASTICSEARCH_URL), re-ingested by the walk:
+ *     explore-platform search count
  *   RABBITMQ_MANAGEMENT_* plus the nine MESSAGING_DIGEST_* variables (same
  *   values on the SERVER, see the suite's test plan):
  *     messaging-notifications US1 and US2 (whole walks), US3-AS3 and US3-AS4
@@ -59,6 +61,14 @@ export default defineConfig(
         testMatch: ['/content-editing/us1-whiteboard-draw-reopen.spec.ts'],
         tier: 'extended',
         capture: 'off',
+      }),
+      suite({
+        // Spaces search count (server#3700): needs Elasticsearch, which the
+        // shared test cluster does not run; the walk re-ingests it.
+        name: 'Local stack — search',
+        testMatch: ['/explore-platform/explore-spaces-search-count.spec.ts'],
+        grep: LOCAL_STACK_TAG,
+        tier: 'extended',
       }),
       suite({
         name: 'Local stack — server env overrides',

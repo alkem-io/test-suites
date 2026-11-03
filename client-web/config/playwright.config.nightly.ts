@@ -116,6 +116,8 @@ export default defineConfig(
         testMatch: [
           '/explore-platform/explore-platform-anonymous.spec.ts',
           '/explore-platform/explore-platform-authenticated.spec.ts',
+          // @local-stack (Elasticsearch): excluded here, run by test:local-stack
+          '/explore-platform/explore-spaces-search-count.spec.ts',
         ],
       }),
       suite({

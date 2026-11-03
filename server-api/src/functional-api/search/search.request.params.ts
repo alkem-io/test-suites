@@ -108,3 +108,37 @@ export const searchContributors = async (
 
   return graphqlErrorWrapper(callback, userRole);
 };
+
+export const searchSpacesPage = async (
+  terms: string[],
+  userRole: TestUser = TestUser.GLOBAL_ADMIN,
+  options: {
+    size?: number;
+    cursor?: string;
+    types?: SearchResultType[];
+    searchInSpaceFilter?: string;
+  } = {}
+) => {
+  const {
+    size = 3,
+    cursor,
+    types = [SearchResultType.Space, SearchResultType.Subspace],
+    searchInSpaceFilter,
+  } = options;
+  const graphqlClient = await getGraphqlClient();
+  const callback = (authToken: string | undefined) =>
+    graphqlClient.search(
+      {
+        searchData: {
+          terms,
+          filters: [{ category: SearchCategory.Spaces, size, cursor, types }],
+          searchInSpaceFilter,
+        },
+      },
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+
+  return graphqlErrorWrapper(callback, userRole);
+};
