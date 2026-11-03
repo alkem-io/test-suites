@@ -50,7 +50,7 @@ on:
           decision 0116): `main`, or `sha-<full commit>` to pin one build.
           Pulled with pullPolicy Always.
         type: string
-        default: main
+        default: 0.3.0
       smtp-mode:
         description: >-
           plain = smtp:// on Swarmail's 1025. implicit-tls = smtps:// on the
@@ -94,7 +94,7 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  SWARMAIL_CHART_VERSION: "0.2.0"
+  SWARMAIL_CHART_VERSION: "0.3.0"
   TRIAL_OWNER: swarmail-trial-${{ github.run_id }}
   SWARMAIL_IMAGE_TAG: ${{ inputs.swarmail-image-tag }}
   SMTP_MODE: ${{ inputs.smtp-mode }}
