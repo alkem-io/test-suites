@@ -63,7 +63,8 @@ export const searchResponses = async (
           terms: terms,
           filters: [
             {
-              category: SearchCategory.Framings,
+              // Posts are indexed under CONTRIBUTIONS since server#6198.
+              category: SearchCategory.Contributions,
               size: 3,
               types: [SearchResultType.Post, SearchResultType.Whiteboard],
             },
