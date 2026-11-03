@@ -32,6 +32,7 @@ export const searchSpacesAndSubspaces = (
               category: SearchCategory.Spaces,
               size,
               types: [SearchResultType.Space, SearchResultType.Subspace],
+              countTotal: true,
             },
           ],
         },
