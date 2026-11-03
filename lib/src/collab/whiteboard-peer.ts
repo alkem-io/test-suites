@@ -53,7 +53,7 @@ const rt = (): Runtime => {
  *
  * Why it exists: whiteboard content has no GraphQL or DOM view (`Whiteboard`
  * has no `content` field, canvas pixels are not in the accessibility tree and
- * `window.h` exists only in dev builds), so the only build-agnostic oracle for
+ * `window.h` is never installed in client-web), so the only build-agnostic oracle for
  * what is stored in a board is a raw Yjs read. The peer connects as an actor,
  * can hold back inbound updates (to force a concurrent edit), writes raw keys,
  * and reads the raw `elements` map — never through the editor package's

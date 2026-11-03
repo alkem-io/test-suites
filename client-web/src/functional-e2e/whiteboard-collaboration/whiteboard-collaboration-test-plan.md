@@ -6,9 +6,11 @@
 
 ## How to run
 ```bash
-cd client-web && pnpm exec playwright test src/functional-e2e/whiteboard-collaboration/
+cd client-web && WHITEBOARD_COLLAB_FIXED=1 pnpm exec playwright test src/functional-e2e/whiteboard-collaboration/
+pnpm -C server-api exec vitest run --project contract src/contract/whiteboard-peer.it-spec.ts   # T-1 self-test
 ```
-- **Gate:** the target env's client-web must resolve `@excalidraw-yjs/excalidraw` ≥ 0.5.6 (M-2). Until then both walks are `test.skip` with a link to the client-web bump PR (house known-defect convention). Prove them locally first: client-web at `https://pkg.pr.new/@excalidraw-yjs/excalidraw@13` must be green, and at 0.5.5 must be **red** (non-vacuity).
+- **Gate:** the target env's client-web must resolve `@excalidraw-yjs/excalidraw` ≥ 0.5.6 (M-2). Until then both walks are `test.skip` (house known-defect convention). **`WHITEBOARD_COLLAB_FIXED=1` lifts the skip** for a local run against a build that has the fix (`https://pkg.pr.new/@excalidraw-yjs/excalidraw@13`, or an environment after the bump); the nightly leaves it unset, so the *Whiteboard collaboration* suite lists both walks as skipped. The client-web bump PR must drop the skip (delete `fixedBuildAvailable` use in the two specs and the flag). On a build at 0.5.5 the walks must be **red** (non-vacuity; see Regression guards).
+- Local stack recipe: `ALKEMIO_BASE_URL=http://localhost:3000`, `UI_HEADLESS=true`, the harness persona password (not the server admin password), no `KRATOS_ADMIN_URL`. The Node peer authenticates through the gateway with the persona's bearer (`TestUser`) plus an `Origin` equal to the app origin; it also accepts a browser `{ cookieHeader }`.
 - The Space needs the `SPACE_FEATURE_WHITEBOARD_MULTI_USER` licence plan, or every second connection is read-only. Run serially: one room per test.
 - The oracle is the Node peer's **raw** Y.Map read. There is no DOM or GraphQL view of canvas content (harness.md › Whiteboards).
 
@@ -32,7 +34,7 @@ Elevated-risk triggers present: [x] cross-repo contract (library → client-web;
 - **excalidraw-yjs, confirmed unaffected:** `Scene.native-yjs-history` (10), `Scene.native-yjs-collab` (8; different-property merge, origin-scoped undo), `multiplayerOutcomes` (6; (c) is the *causally later* same-property case, not the concurrent one), `historyLockstep` (1), `history.test.tsx` (27 + binding undo). None is invalidated.
 - **`Scene.multiplayerHistory.property` is blind to this defect.** It fuzzes concurrent same-key x/y edits with undo/redo, but reads *derived* elements, so a lost key never showed. After this PR's read-side defaults, a lost `x` reads as `0`, so it is permanently masked. Treated as partial (U-8).
 - **test-suites, proven absent (searched `origin/develop` be50109a):** `git grep -i "undo|redo|Control\+z"` has zero spec hits. Whiteboard specs are single-user (`templates-CRD/…/whiteboard-dialog.ts`) or render-only (`public-space/non-member-whiteboard-access.spec.ts`). `Whiteboard` has no `content` field, and no mutation input accepts raw content (server `schema.graphql`, since server#6399).
-- **client-web's own `e2e/specs/multiUserCollab.e2e.spec.ts` row 4:** two-user different-property merge, with no undo. It reads `window.h`, which exists only in dev builds. Prior art, not coverage.
+- **client-web's own `e2e/specs/multiUserCollab.e2e.spec.ts` row 4:** two-user different-property merge, with no undo. It reads `window.h`, which client-web never installs (the published bundle has no `MODE`). Prior art, not coverage.
 - **Reuse: 4 of 22 scenarios need no new test** (S1, which includes Scene-level peer convergence; S2; S3; single-user undo, which is covered at package level). The 22 are the 6 mapped rows, the 10 U-cases and the 6 gaps. **0 existing tests need updating.**
 
 ## Scenario → test mapping
@@ -41,9 +43,9 @@ Elevated-risk triggers present: [x] cross-repo contract (library → client-web;
 | S1 Concurrent lower-id undo leaves no required key empty | R1 | `Scene.undoConcurrentKeyLoss.test.ts` › test 1 | unit (owning repo) |
 | S2 A damaged arrow doc materialises | R2 | same › test 2 | unit (owning repo) |
 | S3 Plain undo restores keys exactly | R4 | same › test 3; `Scene.native-yjs-history` | unit (owning repo) |
-| S4 The incident, end to end: a peer with a lower id writes concurrently, the browser drags then presses Ctrl+Z, no participant crashes, raw keys survive, no extra undo step | R1, R4, R8 | planned — see build sheet WC-01 | system (UI + Node peer) |
-| S5 A damaged board opens: live arrival and fresh load | R2, R6 | planned — see build sheet WC-02 | system (UI + Node peer) |
-| Prerequisite: Node Yjs collab peer in the lib | all S4/S5 | planned — see build sheet T-1 | tooling |
+| S4 The incident, end to end: a peer with a lower id writes concurrently, the browser drags then presses Ctrl+Z, no participant crashes, raw keys survive, no extra undo step | R1, R4, R8 | `undo-races-peer-edit.spec.ts` › WC-01 a lower-id peer writes the arrow concurrently, then B undoes: no key is lost, nobody crashes | system (UI + Node peer) |
+| S5 A damaged board opens: live arrival and fresh load | R2, R6 | `damaged-board-loads.spec.ts` › WC-02 an arrow without points/height arrives live and on fresh loads: nobody crashes | system (UI + Node peer) |
+| Prerequisite: Node Yjs collab peer in the lib | all S4/S5 | `lib/src/collab/whiteboard-peer.ts` (`connectWhiteboardPeer`); self-test `server-api/src/contract/whiteboard-peer.it-spec.ts` › T-1a admission + empty raw doc, T-1b raw write → raw read, T-1c hold/release inbound, T-1d the multi-user negative | tooling |
 | Single-user undo/redo of create/move/resize/delete/text | R4 | `history.test.tsx`, `Scene.native-yjs-history` | unit (owning repo) |
 
 **Owning-repo hand-back (excalidraw-yjs package suite; not for test-suites):** U-1 redo after a repaired undo (P1) · U-2 the repair adds no History/UndoManager step, App-level lockstep (P1) · U-3 DT of peer id {lower, higher} × {concurrent, causally later} (P1) · U-9 pin the repaired values in test 1 (P1) · U-4 DT of type × required key for text/line/freedraw (P2) · U-5 optional-key undo still removes or nulls it (P2) · U-7 the repaired element's version strictly increases (P2) · U-8 raw-doc required-key invariant in the property test (P2) · U-10 a damaged *text* doc loads (P2) · U-6 an element tombstoned concurrently gets no repair (P3). The build sheet specifies each.
@@ -52,11 +54,19 @@ Elevated-risk triggers present: [x] cross-repo contract (library → client-web;
 - **WC-01** pins the 2026-11-03 incident. Root cause: `Y.UndoManager` refuses to restore a key when a concurrent peer item sits between, and that peer item had already lost the map-key conflict (the lower client id), so the key ends up with no value. It must be red on 0.5.5 and green on ≥ 0.5.6.
 - **WC-02** pins the read-side contract: a doc missing `points`/`height` renders for every participant.
 
+**What was run (2026-11-03, local stack, client-web on the PR build `@excalidraw-yjs/excalidraw@13`, commit 594ad98):**
+- **GREEN on the fixed build.** On the final specs WC-01 passed 3 of 3 and WC-02 3 of 3 (serial, `WHITEBOARD_COLLAB_FIXED=1`, `retries: 0`); the T-1 self-test T-1a–T-1d passed 4 of 4 on two runs. Without the flag both walks list as skipped.
+- **RED on 0.5.5 — NOT RUN. Pending the orchestrator's 0.5.5 run.** Until it is done nothing proves these walks fail on the unfixed build. WC-01 on 0.5.5 is expected to fail at E2/E3 (and E4/E5); WC-02 at E2/E3.
+- **Oracle checks that were run:** the "editor survived" matcher (`expectEditorAlive`) was exercised on synthetic pages and fails on an "Oops!" page and on a missing editor dialog. WC-01's E1 is a hard self-check: it fails as "race precondition not reached", never as a pass. On the fixed build the observed final state of X shows `width` restored while `points`/`height` kept the dragged shape, differing from the original and from P's concurrent value, which is the repaired outcome (a clean undo would have restored the original).
+- **What was NOT proven.** I could not crash the PR build with other malformed documents (an arrow with a non-array `points`, a text element with no text keys, an arrow with 10 style keys removed all rendered without an error page), so WC-02's crash oracle has only been exercised on synthetic pages, not on a real crash, until the 0.5.5 run. The damaged intermediate state could not be observed at a peer: undo and repair arrive as one transaction, so R6/Q1's "two frames" claim is **not** confirmed at the wire (the PR author should recheck).
+
 ## Not covered — known gaps
 | Scenario | Why not automated | Where it belongs |
 |---|---|---|
 | The race with two real browsers only (no harness peer) | **Rejected.** Browser client ids are random, so the peer is lower only half the time, and the concurrency window is below one round trip. Such a walk passes on 0.5.5 most of the time, so it cannot tell fixed from unfixed | WC-01 (T-1) instead |
 | The repaired state survives a room reload from storage | **Deferred.** No lever evicts a room or forces a reload from the blob store | deferred.md; X-1 by refresh |
+| WC-01 depends on how a reopened editor centres its content (it derives the grab point from the raw scene coordinates, then asserts through the pending-frame gate that the drag started) | **Known fragility.** If the editor's initial scroll changes, WC-01 fails at "B's first drag frame to arrive at P" with a message naming the cause, not as a false pass | a stable scene→screen mapping, if client-web ever exposes one |
+| Whether the Node peer is admitted by the TEST environment's gateway with a persona bearer (Q6) | **Not verified.** Proven on the local stack only (Traefik `alkemio-resolve` accepts the non-interactive bearer). Needs a run on the test env once the bump lands | the bump PR (lifts the skip, runs once on test) |
 | What the arrow looks like after a repaired undo (R5), elbow arrows, text being edited concurrently | **Exploratory.** Canvas pixels are not assertable, and the right outcome is a product question (Q2) | X-1 charter |
 | A mixed-version session: a 0.5.5 stale tab while a ≥ 0.5.6 user undoes (R6) | **Manual / exploratory.** Needs two client builds at once | X-1; release checklist §4 |
 | The incident board opens on PROD (R2) | **Manual.** Customer data, PROD only | M-1 → checklist §4 |

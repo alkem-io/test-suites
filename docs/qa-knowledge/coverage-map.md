@@ -332,6 +332,6 @@ _Searched 2026-11-03, branch `qa/excalidraw-yjs-13-undo-plan` off `origin/develo
 | Damaged doc (arrow missing `points`/`height`) materialises | Full at **package** level only | same file › test 2. A text element missing keys: **none** |
 | Single-user undo/redo semantics, origin-scoped undo, causally later remote value | Full at package level | `Scene.native-yjs-history.test.ts`, `Scene.native-yjs-collab.test.ts`, `packages/excalidraw/tests/{history,multiplayerOutcomes,historyLockstep}.test.tsx` |
 | Required-key presence under fuzzed multiplayer undo/redo | **Partial — blind**: compares derived elements | `Scene.multiplayerHistory.property.test.ts` |
-| client-web's own two-user merge walk | Prior art only (dev-build `window.h`, fixed waits, not run by test-suites) | client-web `e2e/specs/multiUserCollab.e2e.spec.ts` row 4 |
+| client-web's own two-user merge walk | Prior art only (`window.h`, which client-web never installs; fixed waits, not run by test-suites) | client-web `e2e/specs/multiUserCollab.e2e.spec.ts` row 4 |
 
 **Search again with:** `git grep -n -i -E "undo|redo|Control\+z|excalidraw|Drawing canvas|isMultiUser|collab/" <ref> -- client-web/src server-api/src lib/src ':!lib/src/core/generated'`, and in excalidraw-yjs `git grep -n -E "undoElements|redoElements|isRequiredElementKey" -- packages`.
