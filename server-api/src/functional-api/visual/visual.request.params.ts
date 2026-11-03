@@ -124,6 +124,58 @@ export const updateVisualAspectRatio = async (
   );
 };
 
+/** Set a visual's address and alternative text. */
+export const updateVisualUri = async (
+  visualID: string,
+  uri: string,
+  alternativeText: string,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  return graphqlRequestAuth(
+    {
+      operationName: 'UpdateVisualUri',
+      query: `mutation UpdateVisualUri($updateData: UpdateVisualInput!) {
+        updateVisual(updateData: $updateData) {
+          id
+          uri
+          alternativeText
+        }
+      }`,
+      variables: { updateData: { visualID, uri, alternativeText } },
+    },
+    userRole
+  );
+};
+
+/**
+ * A profile's visuals as STORED, alternative text included — the lib's
+ * `lookupProfileVisuals` does not select `alternativeText`.
+ */
+export const getProfileVisuals = async (
+  profileId: string,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  return graphqlRequestAuth(
+    {
+      operationName: 'ProfileVisualsStored',
+      query: `query ProfileVisualsStored($profileId: UUID!) {
+        lookup {
+          profile(ID: $profileId) {
+            visuals {
+              id
+              name
+              uri
+              alternativeText
+            }
+          }
+        }
+      }`,
+      variables: { profileId },
+    },
+    userRole
+  );
+};
+
 /**
  * A Space's activityScore (server#6326). Pass no `userRole` for an ANONYMOUS
  * request — that is the leak case the R71 risk profile calls out.
