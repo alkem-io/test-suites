@@ -198,7 +198,10 @@ jobs:
 
       - uses: actions/setup-node@v7
         with:
-          node-version: lts/*
+          # Pinned: lts/* moved to Node 26 when it became the active LTS
+          # (2026-10), and the Node 26 binary does not start on the
+          # arc-e2e-linux-x64 runner image (exit 127). Raise deliberately.
+          node-version: "24"
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
