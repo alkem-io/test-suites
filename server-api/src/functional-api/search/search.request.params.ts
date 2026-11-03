@@ -63,7 +63,8 @@ export const searchResponses = async (
           terms: terms,
           filters: [
             {
-              category: SearchCategory.Framings,
+              // Posts are indexed under CONTRIBUTIONS since server#6198.
+              category: SearchCategory.Contributions,
               size: 3,
               types: [SearchResultType.Post, SearchResultType.Whiteboard],
             },
@@ -96,6 +97,50 @@ export const searchContributors = async (
               category: SearchCategory.Contributors,
               size: 3,
               types: [SearchResultType.User, SearchResultType.Organization],
+            },
+          ],
+          searchInSpaceFilter,
+        },
+      },
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+
+  return graphqlErrorWrapper(callback, userRole);
+};
+
+export const searchSpacesPage = async (
+  terms: string[],
+  userRole: TestUser = TestUser.GLOBAL_ADMIN,
+  options: {
+    size?: number;
+    cursor?: string;
+    types?: SearchResultType[];
+    searchInSpaceFilter?: string;
+    countTotal?: boolean;
+  } = {}
+) => {
+  const {
+    size = 3,
+    cursor,
+    types = [SearchResultType.Space, SearchResultType.Subspace],
+    searchInSpaceFilter,
+    countTotal = true,
+  } = options;
+  const graphqlClient = await getGraphqlClient();
+  const callback = (authToken: string | undefined) =>
+    graphqlClient.search(
+      {
+        searchData: {
+          terms,
+          filters: [
+            {
+              category: SearchCategory.Spaces,
+              size,
+              cursor,
+              types,
+              countTotal,
             },
           ],
           searchInSpaceFilter,

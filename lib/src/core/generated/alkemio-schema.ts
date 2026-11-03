@@ -3797,7 +3797,7 @@ export type ISearchCategoryResult = {
   cursor?: Maybe<Scalars["SearchCursor"]["output"]>;
   /** The ranked search results for this category, sorted by relevance */
   results: Array<SearchResult>;
-  /** The total number of search results. Not implemented yet. */
+  /** The total number of results the requester may see in this category. Only computed for spaceResults when the SPACES filter sets `countTotal` and the search is not scoped to a Space; -1 otherwise, or when the count failed. Only the 1000 best ranked Space / Subspace matches are counted (and reachable by the cursor), so the total never exceeds 1000. */
   total: Scalars["Float"]["output"];
 };
 
@@ -8960,6 +8960,8 @@ export enum SearchCategory {
 export type SearchFilterInput = {
   /** Include this category in the search results. */
   category: SearchCategory;
+  /** Count the Space and Subspace results the requester may see among the 1000 best ranked matches, and paginate over them exactly (see `total`); lower ranked matches are neither counted nor reachable. Only honoured for the SPACES category in a search that is not scoped to a Space. Costs a scan of up to 1000 matches, so only ask for it when the total is shown. */
+  countTotal?: InputMaybe<Scalars["Boolean"]["input"]>;
   /** The cursor after which we want results (offset) - pass this from your previous search to request additional results. Useful for paginating results. */
   cursor?: InputMaybe<Scalars["SearchCursor"]["input"]>;
   /** How many results per category to return. Useful for paginating results. */
@@ -96674,6 +96676,8 @@ export type SearchQueryVariables = Exact<{
 export type SearchQuery = {
   search: {
     spaceResults: {
+      total: number;
+      cursor?: any | undefined;
       results: Array<
         | { type: SearchResultType }
         | { type: SearchResultType }

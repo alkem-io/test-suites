@@ -306,7 +306,7 @@ describe('Search', () => {
         callout: {
           id: baseScenario.subspace.collaboration.calloutPostCollectionId,
           framing: {
-            profile: { displayName: 'postCollectionCallout-search' },
+            profile: { displayName: 'postCollectionCallout-l1-search' },
           },
         },
         post: {
@@ -328,7 +328,7 @@ describe('Search', () => {
         callout: {
           id: baseScenario.subsubspace.collaboration.calloutPostCollectionId,
           framing: {
-            profile: { displayName: 'postCollectionCallout-search' },
+            profile: { displayName: 'postCollectionCallout-l2-search' },
           },
         },
         post: {
