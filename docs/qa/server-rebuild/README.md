@@ -1,6 +1,6 @@
 # Server rebuild — QA tracker
 
-_One place for everything QA does for the move to the rebuilt server. Status is updated in this file; the reasoning lives in the documents it links. Last update: 2026-10-29 (W2 pre-work delivered)._
+_One place for everything QA does for the move to the rebuilt server. Status is updated in this file; the reasoning lives in the documents it links. Last update: 2026-10-30 (W2 journeys 1–4 delivered)._
 
 ## Documents
 
@@ -83,10 +83,10 @@ _One place for everything QA does for the move to the rebuilt server. Status is 
 | Pre-work: lib-owned enums (41 + 17 files) | **done** 2026-10-29 — PR test-suites#696: `lib/src/common/{enums,types}`; 77 import statements in 61 files re-pointed to the barrel |
 | Pre-work: ESLint boundary | **done** 2026-10-29 — PR test-suites#696: `no-restricted-imports` + `no-restricted-syntax` on `client-web/src/**`, blocking CI lint step; `tests/` (forge-verify walks) and the 33 direct generated-SDK calls still outside |
 | Pre-work: lib contract test | **done** 2026-10-29 — PR test-suites#696: `server-api/src/contract/lib-contract.it-spec.ts`, vitest project `contract`, 10 tests / 13 s + global setup |
-| Journey 1 — join an open Space | not started |
-| Journey 2 — invite an existing user, accept, open | not started |
-| Journey 3 — create a subspace through the UI | not started |
-| Journey 4 — change Space privacy / membership / collaboration settings | not started |
+| Journey 1 — join an open Space | **done** 2026-10-30 — PR test-suites#697: `space-join-invite/us1-join-open-space.spec.ts`, nightly "Space join and invite"; 3 cases, 2/2 live runs green on test |
+| Journey 2 — invite an existing user, accept, open | **done** 2026-10-30 — PR test-suites#697: `space-join-invite/us2-invite-accept.spec.ts`, same project; 4 cases incl. mail per recipient, 2/2 live runs green on test |
+| Journey 3 — create a subspace through the UI | **done** 2026-10-30 — PR test-suites#697: `subspace-create/`, nightly "Subspace create"; 3 cases (L1, L2, non-member refused), 2/2 live runs green on test |
+| Journey 4 — change Space privacy / membership / collaboration settings | **done** 2026-10-30 — PR test-suites#697: `space-settings-write/`, nightly "Space settings write"; 8 cases (privacy, policy, 3 member-visible toggles), 2/2 live runs green on test |
 | Journey 5 — whiteboard, memo, Collabora document | not started |
 | Journey 6 — flow state, reorder callouts, move a contribution | not started |
 | Journey 7 — edit Space about, own profile, organisation | not started |
@@ -146,6 +146,7 @@ Full text in [`plan.md` § Gaps](plan.md#gaps-found-in-the-plan-so-far).
 | 2026-10-28 | W4 register seeded from the ACC data-quality audit handed over by another session (all 7 databases, v0.170.2); identifiers stripped; the 41 probes stored under `data-integrity/acc-audit-queries/`; outputs and CSV dumps kept off-repo |
 | 2026-10-29 | Register updated from the audit session's drills: S1 is file content loss on ACC, not a backup gap; A2 generator fixed in v0.167, data repair only; six server issues filed (#6726–#6731) for the live generators; F1/G3/E2 explained |
 | 2026-10-29 | W2 pre-work delivered on PR test-suites#696 (branch `qa/w2-prework-lib-boundary`): the lib is the only schema boundary for client-web — actor model (`GraphqlActor`/`runAs`), 81 documents + 115 functions, lib-owned enums/types, ESLint guard with a blocking CI step, lib contract test; 89 specs run live on the local stack, one fold red (fixed), the rest attributed pre-existing/env/interference |
+| 2026-10-30 | W2 journeys 1–4 delivered on PR test-suites#697 (branch `qa/w2-journeys-1-4`): join, invite + accept, subspace L1/L2 create, settings writes — 18 browser cases in three nightly projects, each with a lib read-back and a negative control; lib adds `joinRoleSet`, `readSubspaceByNameId`, `readSpaceSubspaceTree`; 18/18 in two live runs on test-alkem.io; harness finding: the factory cannot delete an L0 with UI-created subspaces (now `deleteSpaceTree`) |
 | 2026-10-28 | W0 delivered: 298 root fields of `server` `develop` @ `eeecf9ddb` traced through lib, server-api and client-web on test-suites @ `015bfeea1`; 57 features with verdicts; gap 11 closed |
 
 ## How to update

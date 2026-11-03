@@ -69,6 +69,34 @@ export const readSpaceSettings = (
 export const readSpaceMyPrivileges = (spaceId: string, actor: GraphqlActor) =>
   runAs(actor, (sdk, headers) => sdk.ReadSpaceMyPrivileges({ spaceId }, headers));
 
+/**
+ * A subspace read through its parent by nameID — id, nameID, level, display
+ * name and URL. A hit is the parent edge; `level` is the depth. Errors (or a
+ * null subspace) when the actor may not read it or it is not a child of that
+ * parent.
+ */
+export const readSubspaceByNameId = (
+  parentSpaceId: string,
+  nameID: string,
+  actor: GraphqlActor = TestUser.GLOBAL_ADMIN,
+) =>
+  runAs(actor, (sdk, headers) =>
+    sdk.ReadSubspaceByNameId({ parentSpaceId, nameID }, headers),
+  );
+
+/**
+ * A space and its two levels of subspaces (id, nameID, level) — the input a
+ * leaves-first teardown needs; the server refuses to delete a space that
+ * still has subspaces.
+ */
+export const readSpaceSubspaceTree = (
+  spaceId: string,
+  actor: GraphqlActor = TestUser.GLOBAL_ADMIN,
+) =>
+  runAs(actor, (sdk, headers) =>
+    sdk.ReadSpaceSubspaceTree({ spaceId }, headers),
+  );
+
 /** A space's about section: why/who, profile displayName/tagline/description/url and tags. */
 export const readSpaceAbout = (
   spaceId: string,

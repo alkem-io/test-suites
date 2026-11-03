@@ -117,3 +117,15 @@ export const eventOnApplication = (
   runAs(actor, (sdk, headers) =>
     sdk.EventOnApplicationState({ applicationID, eventName }, headers),
   );
+
+/**
+ * Join, as the actor itself, the entry role of a role set whose membership
+ * policy lets it in (OPEN, or a subspace whose parent it already belongs to).
+ * The server-side half of the UI "Join" button; since workspace#027 Slice B
+ * it is the only way an actor becomes a MEMBER of an L0 space without an
+ * invitation or an application. Uses the lib's `joinRoleSet` document.
+ */
+export const joinRoleSet = (roleSetID: string, actor: GraphqlActor) =>
+  runAs(actor, (sdk, headers) =>
+    sdk.joinRoleSet({ joinData: { roleSetID } }, headers),
+  );
