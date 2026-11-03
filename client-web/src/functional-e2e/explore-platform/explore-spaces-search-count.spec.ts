@@ -8,9 +8,10 @@
 // @local-stack: needs Elasticsearch (re-ingested here), which the shared test
 // cluster does not provide.
 
-import { expect, Page } from '@playwright/test';
+import { BrowserContext, expect, Page } from '@playwright/test';
 import {
   ingestSearchFromScratch,
+  searchIngestTimeoutMs,
   searchSpacesAndSubspaces,
   SpacePrivacyMode,
   TestScenarioConfig,
@@ -21,7 +22,10 @@ import {
   updateSpaceSettingsData,
 } from '@alkemio/tests-lib';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
-import { createAuthenticatedSessionFixture } from '../fixtures/authenticated-session.fixture';
+import {
+  createAuthenticatedSessionFixture,
+  ensurePersonaState,
+} from '../fixtures/authenticated-session.fixture';
 import { must } from '../helpers/lib-actor.helper';
 
 const { test, setupAuthentication, teardownAuthentication } =
@@ -79,7 +83,7 @@ const chooseFilter = async (page: Page, option: string) => {
 
 test.describe('Explore Spaces - search count', { tag: '@local-stack' }, () => {
   test.beforeAll(async ({ browser }) => {
-    test.setTimeout(180_000);
+    test.setTimeout(120_000 + searchIngestTimeoutMs());
     baseScenario = await TestScenarioFactory.createBaseScenario(scenarioConfig);
     expect(baseScenario.scenarioSetupSucceeded).toBeTruthy();
     await setSubspacePrivacy(SpacePrivacyMode.Public);
@@ -92,7 +96,7 @@ test.describe('Explore Spaces - search count', { tag: '@local-stack' }, () => {
         async () =>
           (await searchSpacesAndSubspaces([word])).data?.search.spaceResults
             .total,
-        { timeout: 120_000, intervals: [2_000] }
+        { timeout: searchIngestTimeoutMs(), intervals: [5_000] }
       )
       .toBe(3);
 
@@ -150,6 +154,43 @@ test.describe('Explore Spaces - search count', { tag: '@local-stack' }, () => {
       page.getByText(`Spaces matching “${word}”`, { exact: true })
     ).toBeVisible();
     await expect(page.getByText(/\d+ spaces? matching/)).toHaveCount(0);
+  });
+
+  test('hides a private Subspace under Public only', async ({ browser }) => {
+    // The admin sees the private Subspace, so Public only has something to
+    // hide; the non-member session above would not see it at all.
+    let adminContext: BrowserContext | undefined;
+    await setSubspacePrivacy(SpacePrivacyMode.Private);
+    try {
+      adminContext = await browser.newContext({
+        storageState: await ensurePersonaState(
+          browser,
+          TestUserManager.users.globalAdmin.email
+        ),
+      });
+      const adminPage = await adminContext.newPage();
+      await searchFor(adminPage);
+      // Positive control: all three are shown before filtering.
+      await expect(
+        adminPage.getByText(`3 spaces matching “${word}”`, { exact: true })
+      ).toBeVisible();
+      await expect(results(adminPage)).toHaveCount(3);
+
+      await chooseFilter(adminPage, 'Public only');
+
+      // The private Subspace is hidden (and, depending on how privacy is
+      // inherited, its own Subspace with it); the public Space stays.
+      await expect
+        .poll(() => results(adminPage).count(), { timeout: 10_000 })
+        .toBeLessThan(3);
+      expect(await results(adminPage).count()).toBeGreaterThanOrEqual(1);
+      await expect(
+        adminPage.getByText(`Spaces matching “${word}”`, { exact: true })
+      ).toBeVisible();
+    } finally {
+      await adminContext?.close();
+      await setSubspacePrivacy(SpacePrivacyMode.Public);
+    }
   });
 
   test('counts only what the user may see when a Subspace is private', async ({

@@ -6,16 +6,19 @@
  * a re-ingest, and the cursor is null on the last page.
  */
 import {
-  delay,
+  getGraphqlClient,
   TestScenarioConfig,
   TestScenarioFactory,
+  searchIngestTimeoutMs,
   TestUser,
   UniqueIDGenerator,
 } from '@alkemio/tests-lib';
 import {
+  SearchCategory,
   SearchResultType,
   SpacePrivacyMode,
 } from '@alkemio/tests-lib/core/generated/alkemio-schema';
+import { graphqlErrorWrapper } from '@alkemio/tests-lib/utils/graphql.wrapper';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import { updateSpaceSettings } from '../journey/space/space.request.params';
 import {
@@ -68,8 +71,32 @@ beforeAll(async () => {
   });
 
   await adminSearchIngestFromScratch();
-  await delay(15000);
-});
+  // The ingest runs on after the call returns: wait until it has indexed the
+  // three spaces, instead of a fixed sleep.
+  await waitForIndexedSpaces(allSpaceIds.length);
+}, 120_000 + searchIngestTimeoutMs());
+
+const waitForIndexedSpaces = async (
+  expected: number,
+  timeoutMs = searchIngestTimeoutMs(),
+  intervalMs = 5_000
+) => {
+  const deadline = Date.now() + timeoutMs;
+  let total: number | undefined;
+  while (Date.now() < deadline) {
+    const response = await searchSpacesPage(terms, TestUser.GLOBAL_ADMIN, {
+      size: expected,
+    });
+    total = response.data?.search.spaceResults.total;
+    if (total === expected) {
+      return;
+    }
+    await new Promise(resolve => setTimeout(resolve, intervalMs));
+  }
+  throw new Error(
+    `The search index did not reach ${expected} spaces for "${word}" within ${timeoutMs} ms (last total: ${total})`
+  );
+};
 
 afterAll(async () => {
   await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
@@ -141,6 +168,39 @@ describe('Search Spaces - total and pagination', () => {
     });
 
     expect(response.data?.search.spaceResults.total).toBe(-1);
+  });
+
+  test('does not count results unless countTotal is asked for', async () => {
+    const response = await searchSpacesPage(terms, TestUser.GLOBAL_ADMIN, {
+      size: 3,
+      countTotal: false,
+    });
+
+    expect(response.data?.search.spaceResults.total).toBe(-1);
+  });
+
+  test('rejects a second SPACES filter when countTotal is set', async () => {
+    const graphqlClient = await getGraphqlClient();
+    const response = await graphqlErrorWrapper(
+      (authToken: string | undefined) =>
+        graphqlClient.search(
+          {
+            searchData: {
+              terms,
+              filters: [
+                { category: SearchCategory.Spaces, size: 3, countTotal: true },
+                { category: SearchCategory.Spaces, size: 3 },
+              ],
+            },
+          },
+          { authorization: `Bearer ${authToken}` }
+        ),
+      TestUser.GLOBAL_ADMIN
+    );
+
+    expect(response.error?.errors[0].message).toContain(
+      'Only one SPACES filter is allowed when countTotal is set'
+    );
   });
 
   describe('Public Space, Private Subspace', () => {

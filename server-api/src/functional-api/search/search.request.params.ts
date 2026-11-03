@@ -118,6 +118,7 @@ export const searchSpacesPage = async (
     cursor?: string;
     types?: SearchResultType[];
     searchInSpaceFilter?: string;
+    countTotal?: boolean;
   } = {}
 ) => {
   const {
@@ -125,6 +126,7 @@ export const searchSpacesPage = async (
     cursor,
     types = [SearchResultType.Space, SearchResultType.Subspace],
     searchInSpaceFilter,
+    countTotal = true,
   } = options;
   const graphqlClient = await getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -132,7 +134,15 @@ export const searchSpacesPage = async (
       {
         searchData: {
           terms,
-          filters: [{ category: SearchCategory.Spaces, size, cursor, types }],
+          filters: [
+            {
+              category: SearchCategory.Spaces,
+              size,
+              cursor,
+              types,
+              countTotal,
+            },
+          ],
           searchInSpaceFilter,
         },
       },
