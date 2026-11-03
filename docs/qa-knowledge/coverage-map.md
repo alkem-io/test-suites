@@ -318,3 +318,20 @@ _Searched 2026-10-16, test-suites `develop` @ `b451c329`, server `origin/develop
 | Group-A own-policy leaks (13 delete paths), user-application cascade, failed creates         | **Product defect, unfixed on develop**: deferred, no tests                              | server#6614 fix areas 1 and 3                                                                                                                                                            |
 
 **Search again with:** `git grep -n -E "authorizationPolicy\(|lookup \{ (license|storageBucket|profile|document)\(|taskBoard|space\.profile|orphan-free-deletion" <ref> -- server-api/src client-web/src lib/src ':!lib/src/core/generated'`.
+
+## Whiteboard collaboration — undo, convergence, damaged documents (excalidraw-yjs#13)
+
+_Searched 2026-11-03, branch `qa/excalidraw-yjs-13-undo-plan` off `origin/develop` @ `be50109a` (test-suites); excalidraw-yjs `pr-13` @ `2f856b9b`; client-web `origin/develop` @ `a47c8b36d`. Plan: `client-web/src/functional-e2e/whiteboard-collaboration/whiteboard-collaboration-test-plan.md`._
+
+| Area | Status | Evidence |
+| --- | --- | --- |
+| Two-user (collaborative) whiteboard editing, convergence, presence, in test-suites | **None, proven absent** | `git grep -i -E "undo\|redo\|Control\+z"` has zero spec hits. Only single-user editor helpers (`templates-CRD/…/whiteboards/whiteboard-dialog.ts`) and render-only access (`public-space/non-member-whiteboard-access.spec.ts`). Manual: release checklist §3.2 |
+| Undo/redo in the whiteboard editor, any layer of test-suites | **None, proven absent** | same search |
+| Whiteboard content read-back or raw write from the harness | **Impossible today**: `Whiteboard` has no `content` field and no input takes content | server `schema.graphql`; see the harness.md standing gap |
+| Undo racing a concurrent same-key peer edit (lower peer id) | Full at **package** level only | excalidraw-yjs `packages/element/src/__tests__/Scene.undoConcurrentKeyLoss.test.ts` › test 1 (presence only; values unpinned) |
+| Damaged doc (arrow missing `points`/`height`) materialises | Full at **package** level only | same file › test 2. A text element missing keys: **none** |
+| Single-user undo/redo semantics, origin-scoped undo, causally later remote value | Full at package level | `Scene.native-yjs-history.test.ts`, `Scene.native-yjs-collab.test.ts`, `packages/excalidraw/tests/{history,multiplayerOutcomes,historyLockstep}.test.tsx` |
+| Required-key presence under fuzzed multiplayer undo/redo | **Partial — blind**: compares derived elements | `Scene.multiplayerHistory.property.test.ts` |
+| client-web's own two-user merge walk | Prior art only (dev-build `window.h`, fixed waits, not run by test-suites) | client-web `e2e/specs/multiUserCollab.e2e.spec.ts` row 4 |
+
+**Search again with:** `git grep -n -i -E "undo|redo|Control\+z|excalidraw|Drawing canvas|isMultiUser|collab/" <ref> -- client-web/src server-api/src lib/src ':!lib/src/core/generated'`, and in excalidraw-yjs `git grep -n -E "undoElements|redoElements|isRequiredElementKey" -- packages`.
