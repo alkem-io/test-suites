@@ -1,0 +1,420 @@
+name: Swarmail trial (server-api nightly with Swarmail as the mail sink)
+run-name: >-
+  Swarmail trial ${{ inputs.mode }} (swarmail:${{ inputs.swarmail-image-tag }},
+  ${{ inputs.smtp-mode }}, tests @ ${{ inputs.test-ref || github.ref_name }})
+
+# A one-off, operator-dispatched comparison run: the same server-api nightly
+# suite, on the same shared test cluster, with Swarmail
+# (https://github.com/feedback-loop-ai/swarmail) catching the mail instead of
+# MailSlurper. Nothing here runs on a schedule.
+#
+# For the duration of the run only, it
+#   - installs Swarmail with Helm (published chart, image tag from the input)
+#     beside MailSlurper in the `default` namespace — MailSlurper itself is
+#     not touched;
+#   - points Kratos's courier (statefulset/kratos-courier) and the
+#     notifications service (deployment/alkemio-notifications-deployment) at
+#     Swarmail by editing the env list of one container in each;
+#   - reads mail through Swarmail's MailSlurper service API (a global view
+#     over every inbox), port-forwarded to the runner like kratos-admin.
+# The exact prior env lists are recorded in the cluster before anything is
+# changed, and restored — then verified — in an always() step and again in a
+# separate backstop job, after which Swarmail is uninstalled. The mechanics
+# and guarantees are in .github/scripts/swarmail-trial.sh.
+#
+# Like the nightly, it must be dispatched from develop: the arc-e2e-linux-x64
+# runner group's workflow allowlist matches develop's definition.
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: >-
+          run = the trial. restore-only = repair: put Kratos's courier and
+          notifications back from the snapshot an interrupted trial left in
+          the cluster (secret/swarmail-trial-snapshot) and remove Swarmail;
+          takes no lock and runs no tests.
+        type: choice
+        options: [run, restore-only]
+        default: run
+      run-deploy-and-cleanup:
+        description: >-
+          Run the nightly's own deploy-all-services and database cleanup
+          first, so the comparison with a nightly is like for like.
+        type: boolean
+        default: true
+      swarmail-image-tag:
+        description: >-
+          Tag of ghcr.io/feedback-loop-ai/swarmail. Needs swarmail main at or
+          after 58ad25b (MailSlurper shim, decision 0118; implicit TLS,
+          decision 0116): `main`, or `sha-<full commit>` to pin one build.
+          Pulled with pullPolicy Always.
+        type: string
+        default: 0.3.0
+      smtp-mode:
+        description: >-
+          plain = smtp:// on Swarmail's 1025. implicit-tls = smtps:// on the
+          same 1025, as against MailSlurper today (SWARMAIL_SMTP_IMPLICIT_TLS
+          with a throwaway self-signed certificate).
+        type: choice
+        options: [plain, implicit-tls]
+        default: plain
+      shim-port:
+        description: >-
+          Container port of Swarmail's MailSlurper listener; must match the
+          port in shim-config.
+        type: string
+        default: "4437"
+      shim-path:
+        description: Path of the MailSlurper `mail` resource on that listener.
+        type: string
+        default: /mail
+      shim-config:
+        description: >-
+          Space-separated SWARMAIL_*=value entries passed as chart `config`.
+          The default enables the MailSlurper listener (opt-in, off unless
+          set).
+        type: string
+        default: SWARMAIL_MAILSLURPER_LISTEN=0.0.0.0:4437
+      test-ref:
+        description: >-
+          Branch or tag in this repo holding the TEST CODE, as in the nightly.
+          The cluster-changing script always comes from the dispatched ref.
+          Empty = the dispatched ref itself.
+        type: string
+        default: ""
+
+permissions:
+  contents: read
+
+# One trial at a time; a queued restore-only waits for a running trial
+# (whose own always() steps restore on cancel) instead of racing it.
+concurrency:
+  group: swarmail-trial
+  cancel-in-progress: false
+
+env:
+  SWARMAIL_CHART_VERSION: "0.3.0"
+  TRIAL_OWNER: swarmail-trial-${{ github.run_id }}
+  SWARMAIL_IMAGE_TAG: ${{ inputs.swarmail-image-tag }}
+  SMTP_MODE: ${{ inputs.smtp-mode }}
+  SHIM_PORT: ${{ inputs.shim-port }}
+  SHIM_PATH: ${{ inputs.shim-path }}
+  SHIM_CONFIG: ${{ inputs.shim-config }}
+
+jobs:
+  deploy-all-services:
+    if: inputs.mode == 'run' && inputs.run-deploy-and-cleanup
+    uses: ./.github/workflows/deploy-all-services.yml
+    secrets: inherit
+
+  # As in the nightly: take the shared test-cluster lock after our own
+  # deploys, hold it across cleanup-db, the trial and the restore.
+  acquire-lock:
+    needs: deploy-all-services
+    if: >-
+      !cancelled() && inputs.mode == 'run' &&
+      (needs.deploy-all-services.result == 'success' ||
+       needs.deploy-all-services.result == 'skipped')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install Kubectl
+        uses: azure/setup-kubectl@v5.1.0
+        with:
+          version: "v1.29.6"
+
+      - name: Set up Kubeconfig for Hetzner k3s
+        env:
+          KUBECONFIG_DATA: ${{ secrets.KUBECONFIG_SECRET_HETZNER_TEST }}
+        run: |
+          mkdir -p "$HOME/.kube"
+          printf '%s\n' "$KUBECONFIG_DATA" > "$HOME/.kube/config"
+          chmod 600 "$HOME/.kube/config"
+
+      - name: Acquire test-cluster deploy lock
+        run: |
+          chmod +x .github/scripts/test-cluster-lock.sh
+          .github/scripts/test-cluster-lock.sh acquire "$TRIAL_OWNER"
+
+  cleanup-db:
+    needs: acquire-lock
+    if: >-
+      !cancelled() && inputs.run-deploy-and-cleanup &&
+      needs.acquire-lock.result == 'success'
+    uses: ./.github/workflows/cleanup-database.yml
+    with:
+      postgres_db: alkemio
+    secrets: inherit
+
+  trial:
+    needs: [acquire-lock, cleanup-db]
+    if: >-
+      !cancelled() && needs.acquire-lock.result == 'success' &&
+      (needs.cleanup-db.result == 'success' || needs.cleanup-db.result == 'skipped')
+    runs-on: arc-e2e-linux-x64
+    permissions:
+      contents: write
+    steps:
+      # Same guard as the nightly: test-ref is unreviewed code on a
+      # self-hosted runner with secrets — branches and tags of this repo only.
+      - name: Validate test-ref
+        if: inputs.test-ref != ''
+        env:
+          TEST_REF: ${{ inputs.test-ref }}
+        run: |
+          case "$TEST_REF" in
+            */pull/*|refs/pull/*)
+              echo "::error::test-ref must not be a pull-request ref"; exit 1 ;;
+          esac
+          git ls-remote --exit-code --heads --tags \
+            "https://github.com/${GITHUB_REPOSITORY}.git" "$TEST_REF" \
+            || { echo "::error::test-ref '$TEST_REF' is not a branch or tag in ${GITHUB_REPOSITORY}"; exit 1; }
+
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.test-ref || github.ref }}
+
+      # The script that changes the cluster comes from the dispatched
+      # (trusted) ref, never from test-ref — as the lock script does.
+      # Checked out after the root checkout, whose clean would remove it.
+      - name: Checkout the trial script from the dispatched ref
+        uses: actions/checkout@v7
+        with:
+          path: .trial
+          sparse-checkout: .github/scripts/
+          sparse-checkout-cone-mode: false
+
+      - name: Checkout existing GitHub Pages content (gh-pages)
+        continue-on-error: true
+        uses: actions/checkout@v7
+        with:
+          ref: gh-pages
+          path: out
+          fetch-depth: 1
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: lts/*
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Kubectl
+        uses: azure/setup-kubectl@v5.1.0
+        with:
+          version: "v1.29.6"
+
+      - name: Install Helm
+        uses: azure/setup-helm@v5.0.1
+        with:
+          version: "v3.22.1"
+
+      - name: Set up Kubeconfig for Hetzner k3s
+        env:
+          KUBECONFIG_DATA: ${{ secrets.KUBECONFIG_SECRET_HETZNER_TEST }}
+        run: |
+          mkdir -p "$HOME/.kube"
+          printf '%s\n' "$KUBECONFIG_DATA" > "$HOME/.kube/config"
+          chmod 600 "$HOME/.kube/config"
+
+      # Refuses leftovers (an unrestored snapshot, an existing swarmail
+      # release/Service/Deployment) before anything is changed.
+      - name: Preflight
+        run: bash .trial/.github/scripts/swarmail-trial.sh preflight
+
+      - name: Record the courier and notifications env (snapshot)
+        run: bash .trial/.github/scripts/swarmail-trial.sh snapshot
+
+      - name: Install Swarmail beside MailSlurper
+        run: bash .trial/.github/scripts/swarmail-trial.sh install
+
+      # Stops the run before any repoint when the shim does not answer the
+      # list shapes the suite reads.
+      - name: Probe Swarmail's MailSlurper API shim
+        run: bash .trial/.github/scripts/swarmail-trial.sh probe-shim
+
+      - name: Point Kratos courier and notifications at Swarmail
+        run: bash .trial/.github/scripts/swarmail-trial.sh repoint
+
+      - name: Set run folder variables
+        run: |
+          echo "RUN_DATE=$(date +'%Y-%m-%d')" >> "$GITHUB_ENV"
+          echo "RUN_ID=${{ github.run_id }}" >> "$GITHUB_ENV"
+
+      # The nightly's environment, except MAIL_SLURPER_ENDPOINT: Swarmail's
+      # shim through a port-forward. A loopback http:// URL is the only
+      # plain-http endpoint the harness accepts (validateEndpointSchemes in
+      # lib/src/config/create-config-using-envvars.ts), and the shim has no
+      # ingress — exactly how kratos-admin is reached.
+      - name: Run server API nightly tests against Swarmail
+        id: server-api-tests
+        continue-on-error: true
+        env:
+          ALKEMIO_SERVER: ${{ vars.ALKEMIO_SERVER }}
+          ALKEMIO_SERVER_URL: ${{ vars.ALKEMIO_SERVER_URL }}
+          ALKEMIO_BASE_URL: ${{ vars.ALKEMIO_BASE_URL }}
+          ALKEMIO_SERVER_WS: ${{ vars.ALKEMIO_SERVER_WS }}
+          ALKEMIO_SERVER_REST: ${{ vars.ALKEMIO_SERVER_REST }}
+          KRATOS_ENDPOINT: ${{ vars.KRATOS_ENDPOINT }}
+          AUTH_TEST_HARNESS_PASSWORD: ${{ secrets.AUTH_TEST_HARNESS_PASSWORD }}
+          KRATOS_ADMIN_URL: http://localhost:4434
+          LOG_LEVEL: warn
+        run: |
+          set -uo pipefail
+          MAIL_SLURPER_ENDPOINT="$(bash .trial/.github/scripts/swarmail-trial.sh shim-endpoint)"
+          export MAIL_SLURPER_ENDPOINT
+          echo "MAIL_SLURPER_ENDPOINT=$MAIL_SLURPER_ENDPOINT"
+          kubectl port-forward -n default svc/kratos-admin 4434:80 > /tmp/kratos-admin-pf.log 2>&1 &
+          KRATOS_PF=$!
+          kubectl port-forward -n default deployment/swarmail "4437:$SHIM_PORT" > /tmp/swarmail-pf.log 2>&1 &
+          SHIM_PF=$!
+          trap 'kill $KRATOS_PF $SHIM_PF 2>/dev/null || true' EXIT
+          for log in /tmp/kratos-admin-pf.log /tmp/swarmail-pf.log; do
+            for _ in $(seq 1 20); do
+              grep -q "Forwarding from" "$log" && break
+              sleep 1
+            done
+            if ! grep -q "Forwarding from" "$log"; then
+              echo "port-forward failed: $log"; cat "$log"; exit 1
+            fi
+          done
+          pnpm --filter @alkemio/test-suite-server-api run test:nightly
+
+      # First thing after the suite: put the cluster back. Runs on failure
+      # and on cancel too; the backstop job below repeats it in case this
+      # runner is gone.
+      - name: Restore Kratos courier and notifications, uninstall Swarmail
+        if: always()
+        run: bash .trial/.github/scripts/swarmail-trial.sh restore
+
+      - name: Publish report to GitHub Pages
+        if: always() && steps.server-api-tests.outcome != 'skipped'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          AUTH_TEST_HARNESS_PASSWORD: ${{ secrets.AUTH_TEST_HARNESS_PASSWORD }}
+        run: |
+          bash scripts/publish-report.sh \
+            "server-api-swarmail" \
+            "Server API on Swarmail" \
+            "server-api/html-report" \
+            "${{ steps.server-api-tests.outcome }}"
+
+      - name: Fail job if server API tests failed
+        if: steps.server-api-tests.outcome == 'failure'
+        run: exit 1
+
+  deploy:
+    needs: trial
+    if: always() && inputs.mode == 'run' && needs.trial.result != 'skipped'
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    uses: ./.github/workflows/deploy-github-pages.yml
+    with:
+      ref: gh-pages
+      path: gh-pages-root
+
+  # Belt and braces: restore again from a fresh runner. A no-op when the
+  # trial's own restore step completed (the snapshot is gone); it acts only
+  # on a snapshot this run owns.
+  restore-backstop:
+    needs: [acquire-lock, trial]
+    if: always() && needs.acquire-lock.result == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: lts/*
+
+      - name: Install Kubectl
+        uses: azure/setup-kubectl@v5.1.0
+        with:
+          version: "v1.29.6"
+
+      - name: Install Helm
+        uses: azure/setup-helm@v5.0.1
+        with:
+          version: "v3.22.1"
+
+      - name: Set up Kubeconfig for Hetzner k3s
+        env:
+          KUBECONFIG_DATA: ${{ secrets.KUBECONFIG_SECRET_HETZNER_TEST }}
+        run: |
+          mkdir -p "$HOME/.kube"
+          printf '%s\n' "$KUBECONFIG_DATA" > "$HOME/.kube/config"
+          chmod 600 "$HOME/.kube/config"
+
+      - name: Restore Kratos courier and notifications, uninstall Swarmail
+        run: bash .github/scripts/swarmail-trial.sh restore
+
+  # Released only once the restore is verified. If it is not, the lock stays
+  # with this run until the lock's stale-TTL reclaim (60 min) rather than
+  # handing a half-restored cluster to the next deploy or nightly; dispatch
+  # mode=restore-only to repair.
+  release-lock:
+    needs: [acquire-lock, trial, restore-backstop]
+    if: >-
+      always() && needs.acquire-lock.result == 'success' &&
+      needs.restore-backstop.result == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install Kubectl
+        uses: azure/setup-kubectl@v5.1.0
+        with:
+          version: "v1.29.6"
+
+      - name: Set up Kubeconfig for Hetzner k3s
+        env:
+          KUBECONFIG_DATA: ${{ secrets.KUBECONFIG_SECRET_HETZNER_TEST }}
+        run: |
+          mkdir -p "$HOME/.kube"
+          printf '%s\n' "$KUBECONFIG_DATA" > "$HOME/.kube/config"
+          chmod 600 "$HOME/.kube/config"
+
+      - name: Release test-cluster deploy lock
+        run: |
+          chmod +x .github/scripts/test-cluster-lock.sh
+          .github/scripts/test-cluster-lock.sh release "$TRIAL_OWNER"
+
+  # mode=restore-only: repair after an interrupted trial. Restores from
+  # whichever run's snapshot is in the cluster.
+  restore-only:
+    if: inputs.mode == 'restore-only'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: lts/*
+
+      - name: Install Kubectl
+        uses: azure/setup-kubectl@v5.1.0
+        with:
+          version: "v1.29.6"
+
+      - name: Install Helm
+        uses: azure/setup-helm@v5.0.1
+        with:
+          version: "v3.22.1"
+
+      - name: Set up Kubeconfig for Hetzner k3s
+        env:
+          KUBECONFIG_DATA: ${{ secrets.KUBECONFIG_SECRET_HETZNER_TEST }}
+        run: |
+          mkdir -p "$HOME/.kube"
+          printf '%s\n' "$KUBECONFIG_DATA" > "$HOME/.kube/config"
+          chmod 600 "$HOME/.kube/config"
+
+      - name: Restore from the snapshot left in the cluster
+        run: bash .github/scripts/swarmail-trial.sh restore --any-owner
