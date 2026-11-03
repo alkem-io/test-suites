@@ -976,6 +976,7 @@ export type AuthenticationProviderConfig = {
 export type AuthenticationProviderConfigUnion = OryConfig;
 
 export enum AuthenticationType {
+  Apple = "APPLE",
   Cleverbase = "CLEVERBASE",
   Email = "EMAIL",
   Github = "GITHUB",
@@ -3796,7 +3797,7 @@ export type ISearchCategoryResult = {
   cursor?: Maybe<Scalars["SearchCursor"]["output"]>;
   /** The ranked search results for this category, sorted by relevance */
   results: Array<SearchResult>;
-  /** The total number of search results. Not implemented yet. */
+  /** The total number of results the requester may see in this category. Only computed for spaceResults, when the search is not scoped to a Space; -1 otherwise. */
   total: Scalars["Float"]["output"];
 };
 
@@ -11114,7 +11115,7 @@ export type UserAuthenticationResult = {
   authenticatedAt?: Maybe<Scalars["DateTime"]["output"]>;
   /** When the Kratos Account for the user was created */
   createdAt?: Maybe<Scalars["DateTime"]["output"]>;
-  /** The Authentication Methods used for this User. One of email, linkedin, microsoft, github or unknown */
+  /** The Authentication Methods used for this User. One of apple, cleverbase, email, github, linkedin, microsoft, passkey or unknown */
   methods: Array<AuthenticationType>;
 };
 
@@ -96673,6 +96674,8 @@ export type SearchQueryVariables = Exact<{
 export type SearchQuery = {
   search: {
     spaceResults: {
+      total: number;
+      cursor?: any | undefined;
       results: Array<
         | { type: SearchResultType }
         | { type: SearchResultType }
