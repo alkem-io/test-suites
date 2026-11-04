@@ -15,7 +15,8 @@ import { getWhiteboardEditorDialog } from '../templates-CRD/template-types/forms
  * Shared by the whiteboard-collaboration walks (excalidraw-yjs#13): the Space
  * seed, how a browser opens the editor, how it draws, and the "is the editor
  * still alive" oracle. The raw-document oracle is the Node peer in the lib
- * (`connectWhiteboardPeer`); nothing here reads canvas content.
+ * (`connectWhiteboardPeer`); the second angle on it is `editorElement`, the
+ * element as the editor's own scene holds it. Nothing here reads canvas pixels.
  */
 
 /**
@@ -94,6 +95,47 @@ export const openWhiteboardInEditor = async (page: Page, space: WhiteboardSpace)
 };
 
 export const canvasOf = (editor: Locator): Locator => editor.locator('canvas.excalidraw__canvas.interactive').first();
+
+/** The geometry of one element as the editor's scene holds it (after the library's read-side defaults). */
+export type EditorElement = {
+  id: string;
+  type: string;
+  isDeleted: boolean;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  points?: number[][];
+};
+
+/**
+ * One element as the EDITOR holds it — the second angle next to the raw document
+ * the Node peer reads: an update the peer sees in the doc is only "applied" once
+ * the editor's scene derived it. Canvas content has no DOM and client-web never
+ * installs the Excalidraw debug global, so this walks the React fiber of the
+ * interactive canvas up to the Excalidraw app instance and reads
+ * `scene.getElement(id)`. That is editor state, not a CSS or DOM accident; it is
+ * the same read on the dev and the production bundle (verified 2026-11-03/04 on
+ * the local stack and on acc). Undefined when the editor is not mounted or does
+ * not know the element.
+ */
+export const editorElement = (editor: Locator, id: string): Promise<EditorElement | undefined> =>
+  canvasOf(editor).evaluate((canvas, elementId) => {
+    const fiberKey = Object.keys(canvas).find(key => key.startsWith('__reactFiber$'));
+    type Fiber = { stateNode?: { scene?: { getElement?: (id: string) => unknown } }; return?: Fiber };
+    let fiber: Fiber | undefined = fiberKey ? (canvas as unknown as Record<string, Fiber>)[fiberKey] : undefined;
+    while (fiber) {
+      const app = fiber.stateNode;
+      if (app?.scene?.getElement) {
+        const element = app.scene.getElement(elementId) as Partial<EditorElement> | null | undefined;
+        if (!element) return undefined;
+        const { id, type, isDeleted, x, y, width, height, points } = element;
+        return { id, type, isDeleted, x, y, width, height, points } as EditorElement;
+      }
+      fiber = fiber.return;
+    }
+    throw new Error('editorElement: no Excalidraw app instance above the interactive canvas');
+  }, id);
 
 /** Collaborators other than yourself, as Excalidraw's UserList shows them (a class locator: canvas apps expose no role here). */
 export const collaboratorAvatars = (editor: Locator): Locator => editor.locator('.UserList .Avatar');

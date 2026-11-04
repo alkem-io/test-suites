@@ -240,6 +240,39 @@ describe('@contract T-1 whiteboard collaboration peer (scripted stand-in service
       await service.stop();
     }
   });
+
+  test('T-1i invalid transition: a write in the CLOSING window (close frame received, close event pending) rejects', async () => {
+    // The service sends a close frame but never reads the peer's reply: `ws` then holds the
+    // peer in CLOSING (its close timer is 30 s), so the window is wide open and deterministic.
+    const service = await fakeService(socket => {
+      socket.on('message', data => {
+        if (isSyncStep1(data as Buffer)) {
+          socket.send(FRAME.syncStep2Empty, () => {
+            socket.pause();
+            socket.close(1000, 'service going away');
+          });
+        }
+      });
+      socket.send(FRAME.admissionWrite);
+    });
+    try {
+      const peer = await connectWhiteboardPeer({
+        whiteboardId: 'wb-fake',
+        actor: { bearerToken: 'not-used' },
+        baseUrl: service.baseUrl,
+        connectTimeoutMs: 5_000,
+      });
+      await expect.poll(() => peer.socketState, { timeout: 5_000 }).toBe('closing');
+      expect(peer.endedReason, 'the close event has not fired yet').toBeUndefined();
+      await expect(peer.write(elements => elements.set('el-lost', new Map() as never))).rejects.toThrow(
+        /collab socket is closing; nothing sent/
+      );
+      await expect(peer.announce(`qa-${uniqueId}`)).rejects.toThrow(/collab socket is closing; nothing sent/);
+      expect(peer.rawElement('el-lost'), 'the rejected write did not touch the doc').toBeUndefined();
+    } finally {
+      await service.stop();
+    }
+  });
 });
 
 describe('@contract T-1 whiteboard collaboration peer (Space WITHOUT the multi-user plan)', () => {

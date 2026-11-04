@@ -113,6 +113,11 @@ const HEARTBEAT_REPLY_MS = 10_000;
 const DEFAULT_CONNECT_TIMEOUT_MS = 15_000;
 const DEFAULT_WAIT_TIMEOUT_MS = 15_000;
 const DEFAULT_WAIT_INTERVAL_MS = 50;
+// A write resolves once the frame left the local `ws` buffer (not: reached the
+// service). Polled on a timer, never with `setImmediate`, and bounded: far above
+// the drain time of one frame on any link the harness uses.
+const DRAIN_POLL_MS = 5;
+const DRAIN_TIMEOUT_MS = 10_000;
 
 const encodeFrame = (
   kind: number,
@@ -225,6 +230,20 @@ export class WhiteboardPeer {
     return this.ready;
   }
 
+  /** The socket's own state; `closing` is the window after a close frame and before the `close` event. */
+  get socketState(): "connecting" | "open" | "closing" | "closed" {
+    switch (this.ws.readyState) {
+      case WebSocket.CONNECTING:
+        return "connecting";
+      case WebSocket.OPEN:
+        return "open";
+      case WebSocket.CLOSING:
+        return "closing";
+      default:
+        return "closed";
+    }
+  }
+
   // ---- inbound control ------------------------------------------------------
 
   /** Queue inbound document updates instead of applying them. */
@@ -258,6 +277,7 @@ export class WhiteboardPeer {
     fn: (elements: Y.Map<Y.Map<unknown>>, yjs: typeof Y) => void,
   ): Promise<void> {
     this.assertOpen();
+    this.assertSocketOpen();
     if (this.access !== "write") {
       throw new Error(
         `peer has ${this.access ?? "no"} access${this.accessReason ? ` (${this.accessReason})` : ""}; cannot write`,
@@ -273,6 +293,7 @@ export class WhiteboardPeer {
   /** Publish an awareness state `{ user: { username } }`, as the editor does. */
   async announce(username: string): Promise<void> {
     this.assertOpen();
+    this.assertSocketOpen();
     const { encoding, awarenessProtocol } = rt();
     this.awareness.setLocalStateField("user", { username });
     this.send(
@@ -564,14 +585,41 @@ export class WhiteboardPeer {
   }
 
   private drained(): Promise<void> {
-    return new Promise<void>((resolve) => {
-      // `ws` queues sends in order; bufferedAmount 0 means the frame left.
+    return new Promise<void>((resolve, reject) => {
+      const deadline = Date.now() + DRAIN_TIMEOUT_MS;
+      // `ws` queues sends in order; bufferedAmount 0 means the frame left the
+      // local buffer — not that the service received it.
       const check = (): void => {
         if (this.ws.bufferedAmount === 0) resolve();
-        else setImmediate(check);
+        else if (this.ws.readyState !== WebSocket.OPEN)
+          reject(
+            new Error(
+              `collab socket ${this.socketState} with a frame still queued (${this.ws.bufferedAmount} bytes)`,
+            ),
+          );
+        else if (Date.now() >= deadline)
+          reject(
+            new Error(
+              `timed out after ${DRAIN_TIMEOUT_MS} ms waiting for a frame to leave the socket buffer`,
+            ),
+          );
+        else setTimeout(check, DRAIN_POLL_MS);
       };
       check();
     });
+  }
+
+  /**
+   * `closed` lags the socket: between a close frame and the `close` event the
+   * socket is CLOSING and `ws` drops sends silently. A write there must fail
+   * loudly, not "succeed" with nothing sent.
+   */
+  private assertSocketOpen(): void {
+    if (this.ws.readyState !== WebSocket.OPEN) {
+      throw new Error(
+        `collab socket is ${this.socketState}; nothing sent${this.endedReason ? ` (${this.endedReason})` : ""}`,
+      );
+    }
   }
 
   private assertOpen(): void {

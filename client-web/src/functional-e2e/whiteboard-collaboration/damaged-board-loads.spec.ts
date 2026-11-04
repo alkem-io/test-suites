@@ -23,6 +23,7 @@ import {
   closePeers,
   collectPageErrors,
   dragOnCanvas,
+  editorElement,
   expectEditorAlive,
   fixedBuildAvailable,
   openWhiteboardInEditor,
@@ -89,10 +90,16 @@ test.describe('WC-02 damaged board loads', () => {
     const editorC = await openWhiteboardInEditor(c.page, space);
 
     // Baseline: B and C see each other. P has NOT announced, so it has no avatar yet; its first
-    // announce, sent AFTER the damaged update, is the delivery gate for E2/E3 below (the service
-    // relays frames in arrival order, so an avatar that shows up proves the update was applied).
+    // announce, sent AFTER the damaged update, is the delivery gate for E2/E3 below. The avatar
+    // alone proves only that the awareness frame was applied, so each leg also reads the arrow
+    // from the editor's own scene (`editorElement`): the whole arrow here (positive control),
+    // the defaulted one after the damage.
     await waitForCollaborators(b.page, editorB, 1, 'B (before the damage)');
     await waitForCollaborators(c.page, editorC, 1, 'C (before the damage)');
+    await expect
+      .poll(async () => (await editorElement(editorC, arrowId))?.height, { message: 'C shows the whole arrow before the damage' })
+      .toBe(arrow.height);
+    expect((await editorElement(editorB, arrowId))?.points, 'B shows the whole arrow before the damage').toEqual(arrow.points);
 
     // 5. The incident state arrives live while B and C are open.
     await p.write(elements => {
@@ -116,12 +123,27 @@ test.describe('WC-02 damaged board loads', () => {
       expect(raw[key], `E1 raw arrow keeps ${key}`).toEqual(expect.any(Number));
     }
 
-    // E2, E3: both live editors survive the damaged state arriving. The avatar of P (announced
-    // after the write) is the proof that each page has received the damaged update.
+    // E2, E3: both live editors survive the damaged state arriving, and each has APPLIED it: the
+    // editor's own copy of the arrow now carries the read-side defaults (height 0, points from
+    // the width) instead of the drawn shape. The avatar of P (announced after the write) is the
+    // wait; the editor-side read is the proof.
+    const expectDamagedInEditor = async (editor: Parameters<typeof editorElement>[0], who: string): Promise<void> => {
+      await expect
+        .poll(async () => (await editorElement(editor, arrowId))?.height, { message: `${who}: the editor applied the damaged update (height defaulted)` })
+        .toBe(0);
+      const shown = await editorElement(editor, arrowId);
+      expect(shown?.isDeleted, `${who}: the damaged arrow is still a live element in the editor`).toBe(false);
+      expect(shown?.points, `${who}: the editor defaulted the missing points from the width`).toEqual([
+        [0, 0],
+        [raw.width, 0],
+      ]);
+    };
     await waitForCollaborators(c.page, editorC, 2, 'E2 C (live arrival)');
     await waitForCollaborators(b.page, editorB, 2, 'E3 B (live arrival)');
     await expectEditorAlive(c.page, 'E2 C (live arrival)');
     await expectEditorAlive(b.page, 'E3 B (live arrival)');
+    await expectDamagedInEditor(editorC, 'E2 C (live arrival)');
+    await expectDamagedInEditor(editorB, 'E3 B (live arrival)');
 
     // The fresh loads below must load a room that is still damaged: if a live editor wrote the
     // keys back (healed the doc), they would prove nothing about loading a damaged board.
@@ -138,6 +160,7 @@ test.describe('WC-02 damaged board loads', () => {
     const reopenedB = await openWhiteboardInEditor(b.page, space);
     await waitForCollaborators(b.page, reopenedB, 2, 'E4 B (fresh load)');
     await expectEditorAlive(b.page, 'E4 B (fresh load)');
+    await expectDamagedInEditor(reopenedB, 'E4 B (fresh load)');
 
     // 8. A third, fresh browser context of C loads the damaged board.
     const c2 = await openPersonaPage(browser, TestUserManager.users.spaceMember.email);
@@ -147,6 +170,7 @@ test.describe('WC-02 damaged board loads', () => {
     const editorC2 = await openWhiteboardInEditor(c2.page, space);
     await waitForCollaborators(c2.page, editorC2, 3, 'E5 C (fresh context)');
     await expectEditorAlive(c2.page, 'E5 C (fresh context)');
+    await expectDamagedInEditor(editorC2, 'E5 C (fresh context)');
 
     // Observation, not an assertion: reading never heals the stored document (R6).
     console.info('WC-02 observation: raw arrow after the fresh loads', JSON.stringify(d.rawElement(arrowId)));
