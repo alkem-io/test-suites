@@ -16,7 +16,6 @@ import {
   GraphqlActor,
   provisionTestIdentities,
   readMyUser,
-  registerInAlkemioOrFail,
   registerTestUser,
   testConfiguration,
   TestScenarioFactory,
@@ -34,6 +33,9 @@ import {
 
 const REFUSED = 'VISUAL_URI_NOT_ALLOWED';
 const OUTSIDE_HOST = 'https://host-you-control.example';
+// Inside the 120 s hook timeout, after the base scenario has been built.
+const READY_TIMEOUT_MS = 60_000;
+const READY_POLL_MS = 1_000;
 
 let baseScenario: OrganizationWithSpaceModel;
 // The avatar under test is a member's own: a user created for this run alone,
@@ -83,7 +85,9 @@ beforeAll(async () => {
 
   // The harness's two identity paths: the Kratos admin API where it is
   // reachable (CI), which sends no verification mail; self-service sign-up
-  // otherwise. The server creates the user on its first authenticated call.
+  // otherwise. A fresh identity can lag behind its platform user (login
+  // answers actor_id_missing, or `me` has no user yet), so sign-in is retried
+  // until the user is usable, within a bound.
   const userName = `visualuri.${UniqueIDGenerator.getID()}`;
   const email = `${userName}@alkem.io`;
   if (testConfiguration.endPoints.kratos.admin) {
@@ -91,11 +95,30 @@ beforeAll(async () => {
   } else {
     await registerTestUser(userName);
   }
-  ownerId = await registerInAlkemioOrFail(userName, userName, email);
-  owner = { bearerToken: await getUserToken(email) };
-  const me = await readMyUser(owner);
-  ownerProfileId = me.data?.me.user?.profile?.id ?? '';
-  expect(ownerProfileId, JSON.stringify(me.error)).not.toEqual('');
+  const deadline = Date.now() + READY_TIMEOUT_MS;
+  let lastFailure = '';
+  for (;;) {
+    try {
+      const actor = { bearerToken: await getUserToken(email) };
+      const me = await readMyUser(actor);
+      const user = me.data?.me.user;
+      if (user?.profile?.id) {
+        owner = actor;
+        ownerId = user.id;
+        ownerProfileId = user.profile.id;
+        break;
+      }
+      lastFailure = `me has no user: ${JSON.stringify(me.error ?? me.data)}`;
+    } catch (e) {
+      lastFailure = (e as Error).message;
+    }
+    if (Date.now() > deadline) {
+      throw new Error(
+        `${email} was registered but not usable within ${READY_TIMEOUT_MS / 1000}s; last failure: ${lastFailure}`
+      );
+    }
+    await new Promise(resolve => setTimeout(resolve, READY_POLL_MS));
+  }
 
   const avatar = (await readVisuals(ownerProfileId, owner)).find(
     v => v.name === 'AVATAR'
