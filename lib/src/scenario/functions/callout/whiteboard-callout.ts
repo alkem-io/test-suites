@@ -26,7 +26,7 @@ export const createWhiteboardFramedCallout = async (
   calloutsSetId: string,
   displayName: string,
   nameID: string,
-  actor: GraphqlActor = TestUser.GLOBAL_ADMIN,
+  actor: GraphqlActor = TestUser.GLOBAL_ADMIN
 ): Promise<{ calloutId: string; whiteboardId: string }> => {
   const created = await createCalloutWithData(
     {
@@ -39,14 +39,15 @@ export const createWhiteboardFramedCallout = async (
       },
       settings: { visibility: CalloutVisibility.Published },
     },
-    actor,
+    actor
   );
   const calloutId = created.data?.createCalloutOnCalloutsSet?.id;
-  if (!calloutId) return fail("create whiteboard callout", created.error?.errors);
+  if (!calloutId)
+    return fail("create whiteboard callout", created.error?.errors);
   const read = await readCalloutFramingWhiteboard(calloutId, actor);
-  const whiteboardId =
-    read.data?.lookup.callout?.framing.whiteboard?.id;
-  if (!whiteboardId) return fail("read the callout's whiteboard", read.error?.errors);
+  const whiteboardId = read.data?.lookup.callout?.framing.whiteboard?.id;
+  if (!whiteboardId)
+    return fail("read the callout's whiteboard", read.error?.errors);
   return { calloutId, whiteboardId: whiteboardId as string };
 };
 
@@ -57,23 +58,28 @@ export const createWhiteboardFramedCallout = async (
  */
 export const entitleSpaceForWhiteboardMultiUser = async (
   spaceId: string,
-  calloutId: string,
+  calloutId: string
 ): Promise<void> => {
-  const plan = await getLicensePlanByName("SPACE_FEATURE_WHITEBOARD_MULTI_USER");
+  const plan = await getLicensePlanByName(
+    "SPACE_FEATURE_WHITEBOARD_MULTI_USER"
+  );
   const licensePlanID = plan[0]?.id;
   if (!licensePlanID) {
     throw new Error(
-      "no SPACE_FEATURE_WHITEBOARD_MULTI_USER licence plan on this platform",
+      "no SPACE_FEATURE_WHITEBOARD_MULTI_USER licence plan on this platform"
     );
   }
   const assigned = await assignLicensePlanToSpace(spaceId, licensePlanID);
   if (assigned.error || !assigned.data) {
-    return fail("assign the multi-user whiteboard plan", assigned.error?.errors);
+    return fail(
+      "assign the multi-user whiteboard plan",
+      assigned.error?.errors
+    );
   }
   const read = await readCalloutFramingWhiteboard(calloutId);
   if (read.data?.lookup.callout?.framing.whiteboard?.isMultiUser !== true) {
     throw new Error(
-      "whiteboard.isMultiUser is not true after the licence plan was assigned",
+      "whiteboard.isMultiUser is not true after the licence plan was assigned"
     );
   }
 };
