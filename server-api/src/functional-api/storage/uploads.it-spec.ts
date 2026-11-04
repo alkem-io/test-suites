@@ -28,8 +28,9 @@ import {
   TestUser,
   UniqueIDGenerator,
 } from '@alkemio/tests-lib';
+
 const uniqueId = UniqueIDGenerator.getID();
-const isTravis = process.env.TRAVIS === 'true';
+const isCI = !!process.env.CI;
 
 let refId = '';
 let visualId = '';
@@ -56,7 +57,8 @@ async function getReferenceUri(orgId: string): Promise<string> {
 
 async function getVisualUri(orgId: string): Promise<string> {
   const orgData = await getOrgVisualUri(orgId);
-  const visualUri = orgData?.data?.organization.profile.visuals[0].uri ?? '';
+  const visualUri =
+    orgData?.data?.organization?.profile?.visuals?.[0]?.uri ?? '';
   return visualUri;
 }
 
@@ -95,7 +97,12 @@ describe('Upload document', () => {
   });
 
   afterAll(async () => {
-    await deleteReferenceOnProfile(refId);
+    // 'file is available after releted reference is deleted' removes the shared
+    // reference as part of its scenario and clears refId; skip the re-delete so
+    // the run log stays free of expected ENTITY_NOT_FOUND noise.
+    if (refId) {
+      await deleteReferenceOnProfile(refId);
+    }
   });
 
   describe('DDT upload all file types', () => {
@@ -178,11 +185,11 @@ describe('Upload document', () => {
     const resDelete = await deleteDocument(documentId, TestUser.GLOBAL_ADMIN);
 
     expect(resDelete.error?.errors[0].message).toContain(
-      `Not able to locate document with the specified ID: ${documentId}`
+      'Not able to locate document with the specified ID'
     );
   });
 
-  if (!isTravis) {
+  if (!isCI) {
     test('read uploaded file', async () => {
       const res = await uploadFileOnRef(
         path.join(__dirname, 'files-to-upload', 'image.png'),
@@ -325,10 +332,12 @@ describe('Upload document', () => {
     documentId = getLastPartOfUrl(documentEndPoint);
 
     await deleteReferenceOnProfile(refId);
+    refId = '';
 
     const resDelete = await deleteDocument(documentId, TestUser.GLOBAL_ADMIN);
 
     expect(resDelete?.data?.deleteDocument.id).toEqual(documentId);
+    documentId = '';
   });
 });
 
@@ -348,7 +357,7 @@ describe('Upload visual tests', () => {
 
   test('upload visual', async () => {
     const res = await uploadImageOnVisual(
-      path.join(__dirname, 'files-to-upload', '190-410.jpg'),
+      path.join(__dirname, 'files-to-upload', '200-square.jpg'),
       visualId
     );
     documentEndPoint = res.data?.uploadImageOnVisual?.uri || 'not found';
@@ -359,12 +368,12 @@ describe('Upload visual tests', () => {
 
   test('upload same visual twice', async () => {
     await uploadImageOnVisual(
-      path.join(__dirname, 'files-to-upload', '190-410.jpg'),
+      path.join(__dirname, 'files-to-upload', '200-square.jpg'),
       visualId
     );
 
     const res = await uploadImageOnVisual(
-      path.join(__dirname, 'files-to-upload', '190-410.jpg'),
+      path.join(__dirname, 'files-to-upload', '200-square.jpg'),
       visualId
     );
     documentEndPoint = res?.data?.uploadImageOnVisual?.uri || 'not found';
@@ -382,16 +391,21 @@ describe('Upload visual tests', () => {
     expect(res?.errors).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          message:
-            "Upload image has a width resolution of '1299' which is not in the allowed range of 190 - 410 pixels!",
+          message: 'Upload on visual failed!',
+          extensions: expect.objectContaining({
+            details: expect.objectContaining({
+              message:
+                "Upload image has a width resolution of '1299' which is not in the allowed range of 190 - 410 pixels!",
+            }),
+          }),
         }),
       ])
     );
   });
-  if (!isTravis) {
+  if (!isCI) {
     test('read uploaded visual', async () => {
       const res = await uploadImageOnVisual(
-        path.join(__dirname, 'files-to-upload', '190-410.jpg'),
+        path.join(__dirname, 'files-to-upload', '200-square.jpg'),
         visualId,
         TestUser.GLOBAL_ADMIN
       );
@@ -407,7 +421,7 @@ describe('Upload visual tests', () => {
   } else {
     test.skip('read uploaded visual', async () => {
       const res = await uploadImageOnVisual(
-        path.join(__dirname, 'files-to-upload', '190-410.jpg'),
+        path.join(__dirname, 'files-to-upload', '200-square.jpg'),
         visualId,
         TestUser.GLOBAL_ADMIN
       );

@@ -15,4 +15,5 @@ fragment SettingsData on SpaceSettings {
     allowEventsFromSubspaces
     allowMembersToVideoCall
   }
+  sortMode
 }

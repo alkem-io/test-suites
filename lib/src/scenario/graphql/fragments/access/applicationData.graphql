@@ -9,8 +9,12 @@ fragment ApplicationData on Application {
   questions {
     id
   }
-  contributor {
-    ...UserDataLight
+  actor {
+    id
+    profile {
+      id
+      displayName
+    }
   }
   authorization {
     myPrivileges

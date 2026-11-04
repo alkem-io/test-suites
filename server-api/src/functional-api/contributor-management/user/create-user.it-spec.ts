@@ -15,7 +15,12 @@ import {
   TestScenarioNoPreCreationConfig,
   UniqueIDGenerator,
 } from '@alkemio/tests-lib';
-import { createUser, deleteUser, getUserData } from './user.request.params';
+import {
+  createUser,
+  createUserDataOrFail,
+  deleteUser,
+  getUserData,
+} from './user.request.params';
 
 const uniqueId = UniqueIDGenerator.getID();
 
@@ -34,34 +39,36 @@ beforeEach(() => {
 
 describe('Create User', () => {
   afterEach(async () => {
-    await deleteUser(userId);
+    const a = await deleteUser(userId);
+    console.log('delete user response', a.error, a.data);
   });
 
   test('should create a user', async () => {
-    // Act
-    const response = await createUser({
+    // Act — resilient to the harness retry-after-commit race (test-suites#563)
+    const user = await createUserDataOrFail({
       profileData: { displayName: userName },
     });
-
-    userId = response?.data?.createUser.id ?? '';
+    userId = user.id;
 
     // Assert
-    expect(response?.data?.createUser?.profile.displayName).toEqual(userName);
-    expect(response?.data?.createUser?.authorization?.credentialRules).not.toBe(
-      ''
-    );
+    expect(user.profile?.displayName).toEqual(userName);
+    expect(user.authorization?.credentialRules?.length).toBeGreaterThan(0);
   });
 
   test('should throw error - same user is created twice', async () => {
     // Arrange
+    const email = 'testEmail' + uniqueId + '@alkemio.io';
+
     const response = await createUser({
       nameID: userName,
+      email: email,
     });
     userId = response?.data?.createUser.id ?? '';
 
     // Act
     const responseSecondTime = await createUser({
       nameID: userName,
+      email: email,
     });
 
     // Assert
@@ -72,11 +79,10 @@ describe('Create User', () => {
 
   test('should query created user', async () => {
     // Arrange
-    const response = await createUser({
+    const userData = await createUserDataOrFail({
       profileData: { displayName: userName },
     });
-    const userData = response?.data?.createUser;
-    userId = userData?.id ?? '';
+    userId = userData.id;
 
     // Act
     const { data } = await getUserData(userId);

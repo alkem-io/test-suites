@@ -1,0 +1,5 @@
+mutation assignPlatformRoleToOrganization($roleData: AssignPlatformRoleInput!) {
+  assignPlatformRoleToOrganization(roleData: $roleData) {
+    id
+  }
+}

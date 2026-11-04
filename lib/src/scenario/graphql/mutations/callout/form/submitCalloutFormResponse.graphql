@@ -1,0 +1,7 @@
+mutation submitCalloutFormResponse(
+  $responseData: SubmitCalloutFormResponseInput!
+) {
+  submitCalloutFormResponse(responseData: $responseData) {
+    ...CalloutFormResponseDetails
+  }
+}

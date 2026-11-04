@@ -1,0 +1,7 @@
+mutation CreateClassificationTemplate($templateData: CreateTemplateOnTemplatesSetInput!) {
+  createTemplate(templateData: $templateData) {
+    id
+    profile { displayName }
+    classification { cardinality values { id label } }
+  }
+}

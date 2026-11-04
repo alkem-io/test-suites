@@ -1,0 +1,6 @@
+mutation UpdateInnovationFlowState($stateData: UpdateInnovationFlowStateInput!) {
+  updateInnovationFlowState(stateData: $stateData) {
+    id
+    displayName
+  }
+}

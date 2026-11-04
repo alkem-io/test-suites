@@ -4,6 +4,40 @@
 
 Purpose: Provide a clear, area-based view of authentication testing with explicit scenario lists, automation status, file locations, and next priorities.
 
+> **CRD UI alignment (2026-06-01):** The authentication suites now target the new
+> **CRD** authentication screens (sign-in, sign-up, registration, recovery,
+> verify) — the MUI screens have been replaced. The migration is UI-only;
+> scenarios and behavioral assertions are unchanged, only selectors/navigation
+> were re-aligned. Key changes made during alignment:
+> - **Entry point:** the old `PersonIcon` avatar menu → `Log In | Sign Up` menu
+>   item no longer exists; navigation now uses the header **"Log in"** link
+>   (with a direct `/login` fallback for the post-logout SPA state).
+> - **Providers:** third-party buttons are now `Continue with <Provider>`
+>   (GitHub is present on the test env) — not the old `button[value="…"]`.
+> - **Field labels** keep the MUI-style `" *"` suffix, so those `getByLabel`
+>   selectors are unchanged. The recovery/verify screens label their email field
+>   `Email *` (no hyphen) vs sign-in's `E-Mail *`.
+> - **New-look dialog & new design:** after sign-in a one-time "A fresh new
+>   Alkemio is here" dialog overlays the page; the suite opts **into** the new
+>   design via "Take me to the new design" (`dismissNewLookDialog`). The
+>   authenticated shell is therefore the new CRD design, where: the user menu is
+>   the avatar/name button at the end of the header banner (`userMenuAvatar`),
+>   logout is **"Log out"** (was "Sign out"), and the authenticated
+>   "Access Restricted" page (route `/restricted`) offers a **"Go to Home"**
+>   button (was a "Return to Dashboard" link).
+> - **Behavior change (flagged):** signing in from the restricted-access prompt no
+>   longer returns to the requested page — CRD redirects to `/home`. The
+>   restricted sign-in test now asserts authenticated home; pending confirmation
+>   from the client-web team on `returnUrl` preservation.
+> - **Password recovery:** runs end-to-end on environments using the recovery
+>   **link** flow (e.g. the test env). The CRD set-password screen now rejects
+>   reusing the current password, so the test sets a temporary password, verifies
+>   the recovered session, then **restores** the shared default password (in a
+>   `finally`) so `non.space@alkem.io` stays usable by other suites. The local
+>   **code** flow additionally depends on `@alkemio/tests-lib` `getRecoveryCode`,
+>   which has a separate pre-existing bug — that branch runs once the lib is
+>   fixed. The long-standing `#8317` registration alternate path remains skipped.
+
 ## Test Locations
 
 - `client-web/src/functional-e2e/authentication/authentication-page-verification.spec.ts` — Page element verification (independent, parallel-safe)
@@ -140,7 +174,18 @@ Automation status: Restricted page entry covered; user menu and home sign up vis
 ## Notes & Maintenance
 
 - Known issue: Registration alternate path skipped (bug #8317)
+- Known issue: Password recovery local **code** flow depends on
+  `@alkemio/tests-lib` `getRecoveryCode` (lib/src/utils/emails.ts) which has a
+  pre-existing bug; the recovery test runs via the **link** flow on the test env
+  and exercises the code branch once the lib is fixed (out of scope for feature 005)
+- Note: CRD set-password rejects reusing the current password; the recovery test
+  sets a temp password then restores the shared default in a `finally`
+- Open question: CRD `returnUrl` preservation from the restricted-access sign-in
+  (redirects to `/home` instead of the requested page) — confirm with client-web
+- Note: the deprecated `authentication-flows.spec.ts` /
+  `authentication-critical-flows.spec.ts` are no longer present; their scenarios
+  live in the active independent suites referenced under "Test Locations"
 - Third-party OAuth: Availability only automated; full flows manual
 - Accessibility: Plan for axe-core + keyboard checks
-- Last Updated: December 12, 2025
+- Last Updated: June 1, 2026 (CRD authentication UI alignment — feature 005)
 - Next Review: After major authentication changes

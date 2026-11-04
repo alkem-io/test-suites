@@ -1,0 +1,5 @@
+mutation PlatformRolesDeleteLicensePlan($deleteData: DeleteLicensePlanInput!) {
+  deleteLicensePlan(deleteData: $deleteData) {
+    id
+  }
+}

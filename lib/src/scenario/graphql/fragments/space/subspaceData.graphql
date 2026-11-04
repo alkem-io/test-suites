@@ -1,6 +1,8 @@
 fragment SubspaceData on Space {
   id
   nameID
+  pinned
+  sortOrder
   about {
     ...SpaceAboutDetails
   }

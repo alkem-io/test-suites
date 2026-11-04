@@ -1,6 +1,7 @@
 # compiled output
-/dist
-/html-report
+dist
+node_modules
+html-report
 client-web/dist
 server-api/html-report
 server-api/dist
@@ -76,7 +77,7 @@ web_modules/
 /playwright/.cache/
 
 # local files
-client-web/.auth/
-
-# local files
 .auth/
+
+# Claude Code
+.claude/

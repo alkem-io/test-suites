@@ -1,16 +1,31 @@
+# Deliberately does NOT select `spacesToJoinOnAccept`: the server gates that
+# field to the invited actor's account admins, not to generic READ on the
+# invitation, so every non-invitee caller of this shared fragment (Space
+# admin listings, global admin listings) would be denied it. Select it only
+# in a document read by the invited actor's own admin — see meQuery.graphql.
 fragment InvitationData on Invitation {
   id
   state
   nextEvents
   isFinalized
+  createdDate
+  extraRoles
+  invitedToParent
+  welcomeMessage
+  suggestedLanguage
   lifecycle {
     id
   }
   createdBy {
     ...UserDataLight
   }
-  contributor {
-    ...UserDataLight
+  actor {
+    id
+    type
+    profile {
+      id
+      displayName
+    }
   }
   authorization {
     myPrivileges

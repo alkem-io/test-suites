@@ -1,85 +1,33 @@
-import { defineConfig, devices } from '@playwright/test';
-import dotenv from 'dotenv';
-import path from 'path';
+import { defineConfig } from '@playwright/test';
+import { baseConfig, resolveBrowser } from './config/playwright.shared';
 
 /**
- * Read environment variables from file.
- * https://github.com/motdotla/dotenv
+ * The interactive runner — what `pnpm exec playwright test <file>` uses while
+ * you develop a spec. Same browser presets, timeout tiers and artifact policy
+ * as the nightly (`config/playwright.shared.ts`); the only differences are
+ * that every spec under `src/functional-e2e` is in scope, and files may run in
+ * parallel (`PW_WORKERS`) because you choose which files to run.
+ *
+ * Suites with their own runner (an extra setup project, a stack precondition)
+ * are listed in `testIgnore` and run through `config/playwright.config.<suite>.ts`.
  */
-dotenv.config({ path: path.resolve(__dirname, '.env') });
+const { key, use } = resolveBrowser();
 
-/**
- * See https://playwright.dev/docs/test-configuration.
- */
 export default defineConfig({
-  testDir: './src/functional-e2e',
-  /* Run tests in files in parallel */
-  fullyParallel: true,
-  /* Fail the build on CI if you accidentally left test.only in the source code. */
-  forbidOnly: !!process.env.CI,
-  /* Retry on CI only */
-  retries: process.env.CI ? 2 : 0,
-  /* Opt out of parallel tests on CI. */
-  workers: process.env.CI ? 1 : undefined,
-  /* Reporter to use. See https://playwright.dev/docs/test-reporters */
-  reporter: 'html',
-  /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
-  use: {
-    /* Base URL to use in actions like `await page.goto('/')`. */
-    // baseURL: 'http://127.0.0.1:3000',
-
-    /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
-    trace: 'on-first-retry',
-    headless: process.env.UI_HEADLESS !== 'false',
-  },
-  timeout: 30000,
-
-  expect: {
-    timeout: 10 * 500,
-  },
-
-  /* Configure projects for major browsers */
-  projects: [
-    // {
-    //   name: 'chromium',
-    //   use: { ...devices['Desktop Chrome'] },
-    // },
-
-    // {
-    //   name: 'firefox',
-    //   use: { ...devices['Desktop Firefox'] },
-    // },
-
-    // {
-    //   name: 'webkit',
-    //   use: { ...devices['Desktop Safari'] },
-    // },
-
-    /* Test against mobile viewports. */
-    // {
-    //   name: 'Mobile Chrome',
-    //   use: { ...devices['Pixel 5'] },
-    // },
-    // {
-    //   name: 'Mobile Safari',
-    //   use: { ...devices['iPhone 12'] },
-    // },
-
-    /* Test against branded browsers. */
-    // {
-    //   name: 'Microsoft Edge',
-    //   use: { ...devices['Desktop Edge'], channel: 'msedge' },
-    // },
-    {
-      name: 'Google Chrome',
-      use: { ...devices['Desktop Chrome'], channel: 'chrome' },
-    },
+  ...baseConfig({
+    globalSetup: './config/global-setup.ts',
+    reportFolder: 'playwright-report',
+    projects: [{ name: key, use }],
+    parallelFiles: true,
+  }),
+  testIgnore: [
+    // Needs its own sign-in setup project: config/playwright.config.language-offer.ts
+    '**/language-offer/**',
+    // Needs a stack running the 027 server AND client: config/playwright.config.platform-roles.ts
+    '**/platform-roles/**',
+    // Needs the Kratos admin API and the admin password: config/playwright.config.form-callout-framing.ts
+    '**/form-callout-framing/**',
+    // Needs the Kratos admin API and a stack with the memo PDF export: config/playwright.config.memo-pdf-download.ts
+    '**/memo-pdf-download/**',
   ],
-
-  /* Run your local dev server before starting the tests */
-  // webServer: {
-  //   command: 'npm run start',
-  //   url: 'http://127.0.0.1:3000',
-  //   reuseExistingServer: !process.env.CI,
-  // },
 });

@@ -1,0 +1,5 @@
+query ReadOrganizationSpaceRoles($actorID: UUID!) {
+  rolesOrganization(rolesData: { actorID: $actorID }) {
+    spaces { spaceID displayName roles subspaces { displayName roles } }
+  }
+}

@@ -27,7 +27,6 @@ mutation CreateWhiteboardTemplate(
       profile {
         displayName
       }
-      content
     }
   }
 }

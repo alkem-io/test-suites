@@ -1,0 +1,5 @@
+mutation DeleteCalendarEvent($deleteData: DeleteCalendarEventInput!) {
+  deleteCalendarEvent(deleteData: $deleteData) {
+    id
+  }
+}

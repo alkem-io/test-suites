@@ -1,0 +1,19 @@
+query GetCalloutReactions($calloutId: UUID!) {
+  lookup {
+    callout(ID: $calloutId) {
+      id
+      reactions {
+        id
+        emoji
+        updatedDate
+        user {
+          id
+          nameID
+          profile {
+            displayName
+          }
+        }
+      }
+    }
+  }
+}

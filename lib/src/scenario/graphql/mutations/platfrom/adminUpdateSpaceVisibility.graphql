@@ -1,0 +1,7 @@
+mutation AdminUpdateSpaceVisibility($spaceId: UUID!, $visibility: SpaceVisibility!) {
+  adminUpdateSpaceVisibility(updateData: { spaceID: $spaceId, visibility: $visibility }) {
+    id
+    visibility
+    __typename
+  }
+}

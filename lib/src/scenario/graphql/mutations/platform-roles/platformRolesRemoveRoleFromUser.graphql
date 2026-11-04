@@ -1,0 +1,6 @@
+# Minimal selection ON PURPOSE — see platformRolesCreateOrganization.graphql.
+mutation PlatformRolesRemoveRoleFromUser($roleData: RemovePlatformRoleInput!) {
+  removePlatformRoleFromUser(roleData: $roleData) {
+    id
+  }
+}

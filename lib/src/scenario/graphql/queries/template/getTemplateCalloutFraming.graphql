@@ -1,0 +1,22 @@
+query templateCalloutFraming($templateId: UUID!) {
+  lookup {
+    template(ID: $templateId) {
+      id
+      type
+      callout {
+        id
+        isTemplate
+        framing {
+          id
+          type
+          poll {
+            ...PollDefinition
+          }
+          form {
+            ...CalloutFormDetails
+          }
+        }
+      }
+    }
+  }
+}

@@ -12,6 +12,7 @@ import {
   signUpButton,
 } from '../authentication/common-authentication-page-elements';
 
+import { fillSecret } from '../helpers/login.helper';
 // Registration Page Object
 
 export const verifyRegistrationPageElements = async (page: Page) => {
@@ -19,9 +20,9 @@ export const verifyRegistrationPageElements = async (page: Page) => {
   await expect(page.getByRole('heading', { name: 'Sign up' })).toBeVisible();
 
   // Form fields
-  await expect(page.locator('input[type="email"]')).toBeVisible();
-  await expect(page.getByLabel('First Name')).toBeVisible();
-  await expect(page.getByLabel('Last Name')).toBeVisible();
+  await expect(emailField(page)).toBeVisible();
+  await expect(firstNameField(page)).toBeVisible();
+  await expect(lastNameField(page)).toBeVisible();
 
   // Next button should be visible but initially disabled (until all fields filled)
   await expect(nextButton(page)).toBeVisible();
@@ -63,7 +64,7 @@ export const fillUpSignUpPasswordElements = async (
   page: Page
 ) => {
   await passwordField(page).click();
-  await passwordField(page).fill(password);
+  await fillSecret(passwordField(page), password);
 };
 
 export const pressSignUpButtonRegistrationPage = async (page: Page) => {

@@ -374,3 +374,17 @@
 //     });
 //   });
 // });
+
+// The whole suite above has been commented out since 2025-08-22 (the move of
+// notification preferences to user settings), and a file with no suite makes
+// vitest fail it with "No test suite found". Keep the gap VISIBLE instead:
+// skipped with the cases listed, so the report shows organization-mention
+// notifications as uncovered rather than the file as broken.
+describe.skip('Notifications - Mention Organization (disabled since 2025-08-22, not migrated to user settings)', () => {
+  test.todo('HM mention Organization in Space comments callout - 2 notification to Organization admins are sent');
+  test.todo('GA mention Organization in Subspace comments callout - 2 notification to Organization admins are sent');
+  test.todo('GA mention Organization in Subsubspace comments callout - 2 notification to Organization admins are sent');
+  test.todo('HA mention Organization in Space post - 2 notification to Organization admins are sent');
+  test.todo('HA mention Organization in Subsubspace post (preference disabled) - 2 notification to Organization admins are sent');
+  test.todo('OA mention HM in Subsubspace post - 1 notification to HM is sent');
+});

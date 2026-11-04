@@ -1,5 +1,11 @@
 # CLAUDE.md
 
+> **Workspace context.** This repo is part of the Alkemio polyrepo at
+> [alkem-io/agents-hq](https://github.com/alkem-io/agents-hq).
+> Cross-repo (vertical) feature specs live there under `specs/NNN-*/`. When
+> working on a `feat/NNN-...` branch in this repo, the matching workspace
+> spec is the single source of truth.
+
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Project Overview
@@ -9,7 +15,7 @@ Alkemio Test Suites — a QA automation monorepo for the Alkemio collaborative i
 | Package | Path | Framework | Module System | Node Version |
 |---------|------|-----------|---------------|--------------|
 | **@alkemio/tests-lib** | `lib/` | TypeScript library | CommonJS | 20.9.0 (Volta) |
-| **@alkemio/test-suite-server-api** | `server-api/` | Jest | ESM (`"type": "module"`) | 20.9.0 (Volta) |
+| **@alkemio/test-suite-server-api** | `server-api/` | Vitest | ESM (`"type": "module"`) | 20.9.0 (Volta) |
 | **@alkemio/test-suite-client-web** | `client-web/` | Playwright + Jest | CommonJS | >=20.9.0 |
 
 `testOld/` is deprecated legacy code — do not add to it.
@@ -38,7 +44,7 @@ pnpm --filter @alkemio/tests-lib run lint         # Type check + ESLint
 # Full nightly suite (single worker)
 pnpm --filter @alkemio/test-suite-server-api run test:nightly
 
-# Domain-specific suites (30+ available — see server-api/package.json scripts)
+# Domain-specific suites (27+ available — see server-api/package.json scripts)
 pnpm --filter @alkemio/test-suite-server-api run test:communications
 pnpm --filter @alkemio/test-suite-server-api run test:account
 pnpm --filter @alkemio/test-suite-server-api run test:search
@@ -46,40 +52,50 @@ pnpm --filter @alkemio/test-suite-server-api run test:templates
 # ... etc.
 
 # Run a single test file
-cd server-api && pnpm exec jest --config ./config/jest.config.mjs path/to/file.it-spec.ts
+cd server-api && pnpm exec vitest run path/to/file.it-spec.ts
 
 # Lint
 pnpm --filter @alkemio/test-suite-server-api run lint
 ```
 
-Test files use the `.it-spec.ts` suffix. Each domain has its own Jest config in `server-api/config/jest.config.*.mjs`.
+Test files use the `.it-spec.ts` suffix. All domain projects are defined in a single `server-api/vitest.config.ts`.
 
 ### Client Web Tests (client-web/)
 
 ```bash
 # Install Playwright browsers (required after fresh install)
-pnpm --filter @alkemio/test-suite-client-web exec playwright install
+pnpm --filter @alkemio/test-suite-client-web exec playwright install --with-deps chromium chrome
 
-# Playwright E2E tests (Chrome only)
-pnpm --filter @alkemio/test-suite-client-web run test:auth-playwright
+# The nightly configuration (every registered suite), or one suite of it
+pnpm --filter @alkemio/test-suite-client-web run test:nightly
+pnpm --filter @alkemio/test-suite-client-web run test:nightly --project=Callouts
 
-# Jest unit tests
-pnpm --filter @alkemio/test-suite-client-web run test
-
-# Run a specific Playwright test file
+# Run a specific Playwright test file (interactive runner)
 cd client-web && pnpm exec playwright test src/functional-e2e/path/to/file.spec.ts
+
+# Same suites on another browser / viewport (see config/playwright.shared.ts)
+PW_BROWSER=firefox pnpm --filter @alkemio/test-suite-client-web run test:nightly
 ```
 
-Test files use the `.spec.ts` suffix.
+Test files use the `.spec.ts` suffix. Every runner is built from
+`client-web/config/playwright.shared.ts` (browser presets via `PW_BROWSER`,
+timeout tiers, reporters, artifact policy); a suite declares only its files and
+its tier. **The rules every spec follows — self-seeding, no fixed waits, no
+`networkidle`, falsifiable assertions, shared personas never mutated — are in
+`client-web/docs/e2e-conventions.md`**; ESLint enforces the wait rules.
 
 ### GraphQL Code Generation
 
-Each package has its own codegen config (`codegen.ts`):
+`lib/` and `server-api/` each have their own codegen config (`codegen.ts`):
 ```bash
 pnpm --filter @alkemio/tests-lib run codegen
 pnpm --filter @alkemio/test-suite-server-api run codegen
-pnpm --filter @alkemio/test-suite-client-web run codegen
 ```
+
+`client-web/` has none on purpose: the lib is its only schema boundary
+(`client-web/docs/e2e-conventions.md` § 2b). A document a spec needs goes into
+`lib/src/scenario/graphql/` behind a named lib function; CI fails on any
+`.graphql` file under `client-web/src`.
 
 ## Environment Setup
 
@@ -92,6 +108,43 @@ Copy `.env.default` to `.env` in both `server-api/` and `client-web/`. Key varia
 - `MAIL_SLURPER_ENDPOINT` — Email testing service
 - `ALKEMIO_SERVER_WS` — WebSocket endpoint for subscriptions
 - `UI_HEADLESS` — Headless browser mode for Playwright (client-web only)
+- `RABBITMQ_MANAGEMENT_ENDPOINT` / `_USER` / `_PASSWORD` — RabbitMQ management HTTP API, used for EMIT-level assertions on internal queues with no GraphQL surface (`alkemio-push-notifications`)
+
+### Messaging digest windows (034-messaging-notifications)
+
+Messaging notifications are **debounced then digested** per
+`(recipient, channel, kind)` track — never sent on message arrival. The four
+windows are env-overridable so a test stack can run them at seconds scale, and
+the **same nine variables must be set on the SERVER under test and on the
+harness** or every messaging wait will be measured against the wrong window:
+
+| Variable | Test stack | Production in-code default |
+|---|---|---|
+| `MESSAGING_DIGEST_PUSH_DIRECT_QUIET_SECONDS` | 2 | 60 |
+| `MESSAGING_DIGEST_PUSH_DIRECT_MAX_DELAY_SECONDS` | 10 | 300 |
+| `MESSAGING_DIGEST_PUSH_GROUP_QUIET_SECONDS` | 3 | 300 |
+| `MESSAGING_DIGEST_PUSH_GROUP_MAX_DELAY_SECONDS` | 12 | 900 |
+| `MESSAGING_DIGEST_EMAIL_DIRECT_QUIET_SECONDS` | 4 | 300 |
+| `MESSAGING_DIGEST_EMAIL_DIRECT_MAX_DELAY_SECONDS` | 15 | 1800 |
+| `MESSAGING_DIGEST_EMAIL_GROUP_QUIET_SECONDS` | 6 | 1200 |
+| `MESSAGING_DIGEST_EMAIL_GROUP_MAX_DELAY_SECONDS` | 20 | 3600 |
+| `MESSAGING_DIGEST_SWEEP_INTERVAL_SECONDS` | 1 | 10 |
+
+Never hard-code a messaging wait. Derive it from
+`digestWindow(channel, kind)` (`lib/src/utils/messaging-digest-windows.ts`,
+re-exported from `@alkemio/tests-lib`), which returns the sleeps AND the
+per-test timeout:
+
+- `quietGraceMs` = `quiet + sweep + settle` — wait FOR a digest.
+- `maxDelayGraceMs` = `maxDelay + sweep + settle` — the strongest bound; use it
+  for every load-bearing **negative** assertion, so "no email arrived" means
+  "none will ever arrive" rather than "none has arrived *yet*".
+- `testTimeoutMs` / `digestTestTimeoutMs([...])` — per-test timeouts that scale
+  with the windows the test actually waits on.
+
+An unset variable falls back to the **production** default, never to the short
+test value — falling back the other way is how a negative test goes green for
+the wrong reason.
 
 ## Architecture
 
@@ -113,21 +166,30 @@ Key abstractions:
 
 ### Server API Tests (`server-api/src/functional-api/`)
 
-Jest integration tests organized by domain: `communications/`, `search/`, `account/`, `callout/`, `templates/`, `documents/`, `preferences/`, `roleset/`, `subscriptions/`, `innovation/`, etc.
+Vitest integration tests organized by domain: `communications/`, `search/`, `account/`, `callout/`, `templates/`, `documents/`, `preferences/`, `roleset/`, `subscriptions/`, `innovation/`, `language/`, etc.
 
-Path aliases: `@generated/*`, `@utils/*`, `@functional-api/*`, `@src/*`, `@common/*`.
+Path aliases: `@generated/*`, `@utils/*`, `@functional-api/*`, `@src/*`, `@common/*` — resolved via `resolve.alias` in `vitest.config.ts`.
 
-Global setup: `globalTestsSetup.ts` → `setupTests.ts` (WebSocket polyfill) → `jest.setup.ts` (jest-extended).
+Global setup: `globalTestsSetup.ts` (user registration) → `setupTests.ts` (WebSocket polyfill + custom matchers).
 
 Test timeout is 30 minutes (1,800,000 ms) for long-running integration tests.
 
 ### Client Web Tests (`client-web/src/functional-e2e/`)
 
-Playwright E2E tests organized by feature area: `explore-platform/`, `authentication/`, `my-dashboard/`, `memberships/`, `applications/`, `templates/`, `public-space/`, `user-profile/`, `support-navigation/`.
+Playwright E2E tests organized by feature area: `account-deletion/`, `applications/`, `authentication/`, `callouts/`, `chat-avatars/`, `classifications/`, `contributors-callout/`, `default-template/`, `explore-platform/`, `form-callout-framing/`, `forum-categories/`, `identity-flows/`, `language-offer/`, `memberships/`, `memo-pdf-download/`, `messaging-notifications/`, `my-dashboard/`, `organization-email-invitations/`, `organization-space-invitations/`, `organization-space-membership/`, `organization-user-associates/`, `public-space/`, `sidebar-search/`, `sidebar-widgets/`, `space/`, `space-join-invite/`, `space-settings-write/`, `subspace-create/`, `subspaces-callout/`, `support-navigation/`, `support-org-community-admin/`, `templates-CRD/`, `templates/`, `user-profile/`, `whiteboard-collaboration/`. Shared code lives in `fixtures/` and `helpers/`.
 
-- Chrome only (branded channel, not Chromium)
-- Session-based auth fixtures with storage state persistence in `.auth/`
-- CI: 1 worker, 2 retries; Local: parallel, no retries
+A new feature area is added by creating its directory alongside these and listing it here, with a `<area>-test-plan.md` **inside that directory** mapping business scenarios to the specs that cover them. Existing plans are split across three locations for historical reasons — `plans/`, the feature directory, and the `functional-e2e/` root — so look in all three before concluding an area has none; new plans go in the feature directory.
+
+`form-callout-framing/` (workspace#080) holds self-provisioning acceptance walks: they create throwaway identities through the Kratos **admin** API, so they need `KRATOS_ADMIN_URL` and `ALKEMIO_ADMIN_PASSWORD`. The default config ignores the folder; run them with `pnpm --filter @alkemio/test-suite-client-web run test:form-callout-framing`. Its plan, `form-callout-framing-test-plan.md`, also maps the `server-api` suites under `callout/form/` and `notifications/space/collaboration/form-response.it-spec.ts`.
+
+`memo-pdf-download/` holds the memo PDF download acceptance walks (workspace#087). Both read the downloaded PDF with poppler (`pdftotext`, `pdffonts`; install `poppler-utils`), and fail without it. The download walk (US1) runs nightly as the `Memo PDF download` project. The access walk (US2) provisions throwaway identities through the Kratos **admin** API (`KRATOS_ADMIN_URL`, `ALKEMIO_ADMIN_PASSWORD`), so the default config ignores the folder and the nightly does not list US2; run both with `pnpm --filter @alkemio/test-suite-client-web run test:memo-pdf-download`. Its plan is `memo-pdf-download-test-plan.md`.
+
+`messaging-notifications/` is the one area that does **not** use the session-based auth fixtures: its walks register every persona inline through the real sign-up flow, because they assert on notification-settings defaults for a brand-new account and on digest tracks that must start empty. Its shared fixtures live in `messaging-notifications/messaging.helpers.ts`.
+
+- Branded Chrome by default; `PW_BROWSER` switches the whole run to chromium / firefox / webkit / msedge / a mobile preset
+- Session-based auth fixtures with storage state persistence in `.auth/` (cookie consent is seeded into the session, so no banner in persona contexts)
+- CI: 1 worker, 2 retries; Local: parallel files in the interactive runner, no retries
+- Conventions and the definition of done: `client-web/docs/e2e-conventions.md`
 
 ### Test Personas
 
@@ -137,8 +199,17 @@ Nine test personas with varying roles (see `agents.md`): Host, Facilitator, Comm
 
 - **Prettier**: single quotes, trailing commas (es5), 2-space indent, semicolons, arrow parens `avoid`
 - **ESLint**: auto-fix on pre-commit via lint-staged (root-level husky)
-- **server-api** uses ESLint 9.x flat config; **client-web** uses legacy `.eslintrc.js`
+- **server-api** and **client-web** both use ESLint 9.x flat config (`eslint.config.js`); client-web's also enforces the lib boundary and runs as a CI step
 
 ## Specification-Driven Development (SDD)
 
 This repo follows SDD via the `.specify/` framework. New features must start with specification artifacts under `specs/NNN-feature-slug/` following the canonical workflow: constitution → specify → clarify → plan → checklist → tasks → analyze → implement. See `.specify/memory/constitution.md` for governance principles and quality gates.
+
+## Active Technologies
+- TypeScript ~5.7.3, Node.js 20.9.0 (Volta) + Vitest ^4.0.18, @vitest/ui ^4.0.18 (002-jest-to-vitest)
+- YAML (GitHub Actions workflow), Bash (shell steps) + Vitest HTML reporter (already configured), `deploy-github-pages.yml` reusable workflow, `pnpm/action-setup@v4`, `actions/setup-node@v6`, `actions/checkout@v5` (003-nightly-server-report)
+- `gh-pages` branch under `gh-pages-root/vitest/` directory (003-nightly-server-report)
+- Playwright Test (Chrome branded channel), `@alkemio/tests-lib` (MailSlurper helpers: `getVerificationLink`, `getRecoveryCode`, `getRecoveryLink`, `deleteMailSlurperMails`, `UniqueIDGenerator`, `delay`) (005-crd-auth-ui-tests)
+
+## Recent Changes
+- 002-jest-to-vitest: Migrated server-api from Jest to Vitest. Added Vitest ^4.0.18, @vitest/ui ^4.0.18. Path aliases resolved via `resolve.alias` in vitest.config.ts.

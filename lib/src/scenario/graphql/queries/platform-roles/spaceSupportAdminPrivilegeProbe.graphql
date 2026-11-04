@@ -1,0 +1,10 @@
+query spaceSupportAdminPrivilegeProbe($spaceId: UUID!) {
+  lookup {
+    space(ID: $spaceId) {
+      id
+      authorization {
+        myPrivileges
+      }
+    }
+  }
+}

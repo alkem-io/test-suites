@@ -1,9 +1,14 @@
-import { Page } from '@playwright/test';
+import { expect, Page } from '@playwright/test';
 
 // Authentication pages selectors
 
 // Form fields
+// NOTE: The CRD auth screens keep the MUI-style required-field label suffix
+// (" *"), so these getByLabel selectors remain valid after the migration.
 export const emailField = (page: Page) => page.getByLabel('E-Mail *');
+// The recovery screen labels its field "Email *" (no hyphen) — distinct from
+// the sign-in/sign-up "E-Mail *".
+export const recoveryEmailField = (page: Page) => page.getByLabel('Email *');
 export const passwordField = (page: Page) => page.getByLabel('Password *');
 export const firstNameField = (page: Page) => page.getByLabel('First Name *');
 export const lastNameField = (page: Page) => page.getByLabel('Last Name *');
@@ -23,18 +28,24 @@ export const continueButton = (page: Page) =>
   page.getByRole('button', { name: 'Continue' });
 export const nextButton = (page: Page) =>
   page.getByRole('button', { name: 'Next' });
+// CRD email-verification screen resend control.
+export const resendVerificationButton = (page: Page) =>
+  page.getByRole('button', { name: /resend verification email/i });
 
 // Common checkboxes
+// CRD sign-up terms checkbox has an accessible name beginning "I accept …".
 export const termsCheckbox = (page: Page) =>
-  page.locator('input[type="checkbox"]');
+  page.getByRole('checkbox', { name: /i accept/i });
 
 // Third-party authentication buttons
+// CRD renders these as "Continue with <Provider>" role=button (not the old
+// MUI Kratos button[value="…"] form controls).
 export const githubButton = (page: Page) =>
-  page.locator('button[value="github"]');
+  page.getByRole('button', { name: /continue with github/i });
 export const microsoftButton = (page: Page) =>
-  page.locator('button[value="microsoft"]');
+  page.getByRole('button', { name: /continue with microsoft/i });
 export const linkedinButton = (page: Page) =>
-  page.locator('button[value="linkedin"]');
+  page.getByRole('button', { name: /continue with linkedin/i });
 
 // Common links
 export const signInLink = (page: Page) =>
@@ -48,18 +59,26 @@ export const termsLink = (page: Page) =>
 export const forgotPasswordLink = (page: Page) =>
   page.getByRole('link', { name: /forgot password/i });
 
-// Specific exact links for restricted pages
+// Restricted-access pages. Two distinct CRD screens exist:
+// - Unauthenticated visitor → "Access Restricted" with a "Sign in / Sign up" link.
+// - Authenticated-but-unauthorized user → "Access Restricted" with a
+//   "Go to Home" button (new CRD design; route /restricted).
 export const signInSignUpLink = (page: Page) =>
   page.getByRole('link', { name: 'Sign in / Sign up', exact: true });
-export const returnToDashboardLink = (page: Page) =>
-  page.getByRole('link', { name: 'Return to Dashboard', exact: true });
+export const goToHomeButton = (page: Page) =>
+  page.getByRole('button', { name: 'Go to Home', exact: true });
 
 // Menu items
+// New CRD authenticated shell labels the logout action "Log out" (the old MUI
+// shell used "Sign out").
 export const logoutMenuItem = (page: Page) =>
-  page.getByRole('menuitem', { name: 'Sign out', exact: true });
+  page.getByRole('menuitem', { name: 'Log out', exact: true });
 
-// User menu
-export const userMenuAvatar = (page: Page) => page.getByAltText('User Menu');
+// User menu — the avatar/user button is the last control in the CRD header
+// banner (it carries the user's display name + "Beta" badge rather than a
+// stable alt text, so target it positionally within the banner).
+export const userMenuAvatar = (page: Page) =>
+  page.getByRole('banner').getByRole('button').last();
 
 // Page headings
 export const signInHeading = (page: Page) =>
@@ -71,10 +90,30 @@ export const welcomeHeading = (page: Page) =>
 
 // Cookie consent
 export const cookieConsentBanner = (page: Page) =>
-  page.getByText(
-    'By clicking "Accept All Cookies", you agree to the storing of cookies on your device to enhance site navigation and analyze site usage.'
-  );
+  // Anchor to a stable interaction hook (the accept button) rather than the
+  // consent prose, which varies by locale spelling ("analyze" vs "analyse").
+  page.getByRole('button', { name: /accept all cookies/i });
 export const acceptAllCookiesButton = (page: Page) =>
   page.getByRole('button', { name: 'Accept All Cookies', exact: true });
 export const cookieSettingsButton = (page: Page) =>
   page.getByRole('button', { name: 'settings', exact: true });
+
+// Header entry point (replaces the old PersonIcon avatar menu). The CRD app
+// header now exposes a direct "Log in" link that initiates the Kratos flow.
+export const logInHeaderLink = (page: Page) =>
+  page.getByRole('link', { name: 'Log in', exact: true });
+
+// The legacy MUI shell showed a one-time "A fresh new Alkemio is here" dialog
+// after sign-in ("Take me to the new design"). client-web removed it with the
+// MUI shell (alkem-io/client-web#9954, b5a03922b), so on a current client it
+// never renders. Waiting for it cost a fixed 8 s on EVERY sign-in that does not
+// show it — i.e. all of them. Kept as a no-wait guard for an older client: if
+// it is on screen when the caller's next condition wait has passed, click it.
+export const dismissNewLookDialog = async (page: Page): Promise<void> => {
+  const switchToNewDesign = page.getByRole('button', {
+    name: /take me to the new design/i,
+  });
+  if (!(await switchToNewDesign.isVisible())) return;
+  await switchToNewDesign.click();
+  await expect(switchToNewDesign).toBeHidden();
+};

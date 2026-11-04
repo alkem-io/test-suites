@@ -1,13 +1,18 @@
-import { CodegenConfig } from '@graphql-codegen/cli';
+import { CodegenConfig } from "@graphql-codegen/cli";
 
 const config: CodegenConfig = {
-  schema: 'http://localhost:3000/graphql',
-  documents: ['src/**/*.graphql'],
+  // Overridable so codegen can read a committed `schema.graphql` file offline
+  // (e.g. a sibling repo's worktree) instead of introspecting a live server —
+  // the same escape hatch client-web's codegen.yml already exposes.
+  schema:
+    process.env.CODEGEN_SCHEMA ||
+    "http://localhost:3000/api/private/non-interactive/graphql",
+  documents: ["src/**/*.graphql"],
   hooks: {
-    afterAllFileWrite: ['prettier --write'],
+    afterAllFileWrite: ["prettier --write"],
   },
   generates: {
-    'src/core/generated/alkemio-schema.ts': {
+    "src/core/generated/alkemio-schema.ts": {
       plugins: [
         {
           add: {
@@ -18,30 +23,30 @@ const config: CodegenConfig = {
             `,
           },
         },
-        'typescript',
-        'typescript-resolvers',
-        'typescript-operations',
+        "typescript",
+        "typescript-resolvers",
+        "typescript-operations",
       ],
       config: {
         skipTypename: true,
-        maybeValue: 'T | undefined',
+        maybeValue: "T | undefined",
         scalars: {
           Upload: "import('graphql-upload').FileUpload",
-          NameID: 'string',
-          UUID: 'string',
-          UUID_NAMEID: 'string',
-          UUID_NAMEID_EMAIL: 'string',
-          DID: 'string',
-          DateTime: 'Date',
-          JSON: 'string',
+          NameID: "string",
+          UUID: "string",
+          UUID_NAMEID: "string",
+          UUID_NAMEID_EMAIL: "string",
+          DID: "string",
+          DateTime: "Date",
+          JSON: "string",
         },
       },
     },
-    'src/core/generated/graphql.ts': {
-      preset: 'import-types',
+    "src/core/generated/graphql.ts": {
+      preset: "import-types",
       presetConfig: {
-        typesPath: './alkemio-schema',
-        importTypesNamespace: 'SchemaTypes',
+        typesPath: "./alkemio-schema",
+        importTypesNamespace: "SchemaTypes",
       },
       plugins: [
         {
@@ -53,25 +58,25 @@ const config: CodegenConfig = {
               `,
           },
         },
-        'typescript',
-        'typescript-resolvers',
-        'typescript-operations',
-        'typescript-graphql-request',
+        "typescript",
+        "typescript-resolvers",
+        "typescript-operations",
+        "typescript-graphql-request",
       ],
       config: {
-        maybeValue: 'T | undefined',
+        maybeValue: "T | undefined",
         rawRequest: true,
         preResolveTypes: true,
         skipTypename: true,
         scalars: {
           Upload: "import('graphql-upload').FileUpload",
-          NameID: 'string',
-          UUID: 'string',
-          UUID_NAMEID: 'string',
-          UUID_NAMEID_EMAIL: 'string',
-          DID: 'string',
-          DateTime: 'Date',
-          JSON: 'string',
+          NameID: "string",
+          UUID: "string",
+          UUID_NAMEID: "string",
+          UUID_NAMEID_EMAIL: "string",
+          DID: "string",
+          DateTime: "Date",
+          JSON: "string",
         },
       },
     },

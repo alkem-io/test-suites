@@ -1,0 +1,13 @@
+query GetCalloutReactionsSummary($calloutId: UUID!) {
+  lookup {
+    callout(ID: $calloutId) {
+      id
+      reactionsSummary {
+        total
+        emojis
+        myReactionEmoji
+        allowedEmojis
+      }
+    }
+  }
+}

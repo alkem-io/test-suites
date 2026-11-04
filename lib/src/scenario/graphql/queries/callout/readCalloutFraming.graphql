@@ -1,0 +1,21 @@
+query ReadCalloutFraming($calloutId: UUID!) {
+  lookup {
+    callout(ID: $calloutId) {
+      id
+      nameID
+      framing {
+        id
+        type
+        profile { id displayName url }
+        form {
+          id
+          title
+          description
+          settings { defaultCollapsed }
+          questions { id prompt type required options { id label } }
+        }
+        collaboraDocument { id documentType previewUrl }
+      }
+    }
+  }
+}

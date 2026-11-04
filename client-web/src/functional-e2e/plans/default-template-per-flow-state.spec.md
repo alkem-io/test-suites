@@ -595,3 +595,9 @@ The "Default Template Per Flow State" feature allows Space Admins to configure a
 - Performance testing of template loading
 - Template content validation (covered by template tests)
 - API-level testing (covered in server-api tests)
+
+## Known client-web defects, cases skipped until the fix lands
+
+| case | issue | today's behaviour |
+|---|---|---|
+| 4.1 Default template is loaded when member creates a post | [alkem-io/client-web#10416](https://github.com/alkem-io/client-web/issues/10416) | the second default-template assignment is not reflected for members; the first one keeps loading (API round-trips correctly) |

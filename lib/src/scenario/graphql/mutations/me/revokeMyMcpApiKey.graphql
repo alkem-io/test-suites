@@ -1,0 +1,3 @@
+mutation RevokeMyMcpApiKey($keyID: UUID!) {
+  revokeMcpApiKey(revokeData: { keyID: $keyID }) { id status }
+}

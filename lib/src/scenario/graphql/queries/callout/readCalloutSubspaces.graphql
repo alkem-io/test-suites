@@ -1,0 +1,9 @@
+query ReadCalloutSubspaces($calloutId: UUID!) {
+  lookup {
+    callout(ID: $calloutId) {
+      id
+      hasHiddenSpaces
+      framing { subspaces { id about { why who profile { displayName tagline description } } } }
+    }
+  }
+}

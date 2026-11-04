@@ -76,28 +76,47 @@ test.describe('User Membership Settings', () => {
       // 2. Verify URL changed to membership settings
       await expect(page).toHaveURL(/.*\/settings\/membership/);
 
-      // 3. Verify "My memberships" section is visible
-      // Membership cards display:
-      // - Space from baseScenario with member role
-      // - Space name: baseScenario.space.profile.displayName
-      // - "Leave" button available
-      const leaveBtn = page.getByRole('button', { name: 'Leave' }).first();
-      await expect(leaveBtn).toBeVisible({ timeout: 5000 });
+      const spaceName = baseScenario.space.about.profile.displayName;
+
+      // 3. Verify the "My Memberships" section is visible and shows the space.
+      // CRD: memberships are a searchable card grid; narrow to the one space
+      // so the per-card actions are unambiguous.
       await expect(
-        page.getByText(baseScenario.space.about.profile.displayName)
-      ).toBeVisible();
+        page.getByRole('heading', { name: /My Memberships/i })
+      ).toBeVisible({ timeout: 5000 });
 
-      // 4. leave community
-      await leaveBtn.click();
-      // confirm leave in modal
-      await page.getByRole('button', { name: 'Leave' }).first().click();
+      const search = page.getByPlaceholder('Search memberships...');
+      await search.fill(spaceName);
 
+      await expect(
+        page.getByRole('link', { name: spaceName }).first()
+      ).toBeVisible({ timeout: 5000 });
+
+      // 4. Leave the space.
+      // CRD flow change: the Leave action lives in the membership card's
+      // "More actions" (kebab) menu, then a confirmation alertdialog.
+      await page.getByRole('button', { name: 'More actions' }).first().click();
+      await page.getByRole('menuitem', { name: /Leave/i }).click();
+
+      // Confirm in the destructive alertdialog ("Leave this membership?").
+      const confirmDialog = page.getByRole('alertdialog');
+      await expect(confirmDialog).toBeVisible({ timeout: 5000 });
+      await confirmDialog.getByRole('button', { name: 'Leave' }).click();
+
+      // 5. Re-open membership settings and verify the space is gone.
       await page.goto(
         `${baseUrl}/user/${TestUserManager.users.spaceMember.nameId}/settings/membership`
       );
+      // With leftover memberships the search box exists (narrow to the space);
+      // if this was the last membership the page shows an empty state with no
+      // search box, so only fill it when present.
+      const leftoverSearch = page.getByPlaceholder('Search memberships...');
+      if (await leftoverSearch.isVisible({ timeout: 5000 }).catch(() => false)) {
+        await leftoverSearch.fill(spaceName);
+      }
 
       await expect(
-        page.getByText(baseScenario.space.about.profile.displayName)
+        page.getByRole('link', { name: spaceName })
       ).not.toBeVisible();
     }
   );

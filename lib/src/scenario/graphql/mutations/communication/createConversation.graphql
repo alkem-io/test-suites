@@ -1,0 +1,24 @@
+mutation CreateConversation(
+  $conversationData: CreateConversationInput!
+) {
+  createConversation(conversationData: $conversationData) {
+    id
+    createdDate
+    members {
+      id
+      nameID
+      type
+      profile {
+        id
+        displayName
+      }
+    }
+    room {
+      id
+      displayName
+      avatarUrl
+      type
+      messagesCount
+    }
+  }
+}

@@ -1,0 +1,23 @@
+query GetOrganizationRoleSetPending($roleSetId: UUID!) {
+  lookup {
+    roleSet(ID: $roleSetId) {
+      id
+      applications {
+        id
+        state
+        questions {
+          name
+          value
+        }
+      }
+      invitations {
+        id
+        state
+        extraRoles
+      }
+      platformInvitations {
+        id
+      }
+    }
+  }
+}

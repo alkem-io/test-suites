@@ -1,0 +1,5 @@
+mutation deleteContribution($deleteData: DeleteContributionInput!) {
+  deleteContribution(deleteData: $deleteData) {
+    id
+  }
+}

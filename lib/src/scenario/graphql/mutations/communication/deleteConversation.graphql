@@ -1,0 +1,5 @@
+mutation DeleteConversation($deleteData: DeleteConversationInput!) {
+  deleteConversation(deleteData: $deleteData) {
+    id
+  }
+}

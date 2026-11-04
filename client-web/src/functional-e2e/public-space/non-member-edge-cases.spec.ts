@@ -1,10 +1,11 @@
 // spec: client-web/src/functional-e2e/public-space/public-space-non-member-navigation-test-plan.md
 // seed: client-web/src/functional-e2e/seed-public-space.spec.ts
 
+import { aboutThisSpaceButton } from '../helpers/space-navigation.helper';
 import {
   CommunityMembershipPolicy,
   SpacePrivacyMode,
-} from '@alkemio/client-lib/dist/generated/graphql';
+} from '@alkemio/tests-lib';
 import { TestUser } from '@alkemio/tests-lib/common/enums/test.user';
 import { TestScenarioConfig } from '@alkemio/tests-lib/scenario/config/test-scenario-config';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
@@ -93,27 +94,36 @@ test.describe('Edge Cases and Error Handling', () => {
       page.getByRole('heading', { name: '👋 Welcome to your space!' })
     ).toBeVisible();
 
-    // Verify non-member message is shown
+    // CRD collapses the comment thread by default (020 callout-collapse).
+    // Expand it to surface the non-member gating message.
+    await page.getByRole('button', { name: /Expand comments/i }).click();
+
+    // Verify non-member message is shown (CRD rewords the gating copy)
     await expect(
       page.getByText(
-        "You can't reply to this discussion since you're not a member of this Space"
+        "You don't have permission to comment, reply or react here."
       )
     ).toBeVisible();
 
     // Verify navigation remains functional - click through tabs
     await page.getByRole('tab', { name: 'Subspaces' }).click();
+    // CRD renders subspaces as cards (link → article → heading) in a grid
+    // region; the card link is unnamed, so assert the subspace heading.
     await expect(
-      page.getByRole('link', { name: /Card banner:.*seed-public-space/ })
+      page
+        .getByRole('region', { name: 'Subspaces grid' })
+        .getByRole('heading', { name: /seed-public-space/ })
+        .first()
     ).toBeVisible();
 
     await page.getByRole('tab', { name: 'community' }).click();
     await expect(
-      page.getByRole('heading', { name: "Who's involved" })
+      page.getByText('The contributors to this Space!')
     ).toBeVisible();
 
     await page.getByRole('tab', { name: 'Home' }).click();
     await expect(
-      page.getByRole('button', { name: 'About this Space' })
+      aboutThisSpaceButton(page)
     ).toBeVisible();
   });
 
@@ -127,19 +137,13 @@ test.describe('Edge Cases and Error Handling', () => {
     // Navigate to Subspaces tab and enter a subspace
     await page.getByRole('tab', { name: 'Subspaces' }).click();
 
-    // Click on the subspace card to enter the public subspace - clicking on Card banner should be provided Space Avatar, which in my opinion is not correct
-    // await page
-    //   .getByRole('link', {
-    //     name: new RegExp(
-    //       `Card banner:.*${baseScenario.space.about.profile.displayName}`
-    //     ),
-    //   })
-    //   .click();
-
+    // Click on the subspace card to enter the public subspace. In CRD the
+    // subspace card is an unnamed link wrapping an article with the subspace
+    // heading; click the card via its heading.
     await page
-      .getByRole('link', {
-        name: `Avatar ${baseScenario.subspace.about.profile.displayName}`,
-      })
+      .getByRole('region', { name: 'Subspaces grid' })
+      .getByRole('heading', { name: /seed-public-space/ })
+      .first()
       .click();
 
     // Verify we are in the subspace
@@ -176,7 +180,7 @@ test.describe('Edge Cases and Error Handling', () => {
 
     // Verify space content is accessible while logged in
     await expect(
-      page.getByRole('button', { name: 'About this Space' })
+      aboutThisSpaceButton(page)
     ).toBeVisible();
 
     // Step 2: Simulate session expiry by clearing cookies/storage
@@ -197,18 +201,21 @@ test.describe('Edge Cases and Error Handling', () => {
 
     // Verify space content is still visible
     await expect(
-      page.getByRole('button', { name: 'About this Space' })
+      aboutThisSpaceButton(page)
     ).toBeVisible();
 
     // Step 4: Navigate between tabs after session expiry
     await page.getByRole('tab', { name: 'Subspaces' }).click();
     await expect(
-      page.getByRole('link', { name: /Card banner:.*seed-public-space/ })
+      page
+        .getByRole('region', { name: 'Subspaces grid' })
+        .getByRole('heading', { name: /seed-public-space/ })
+        .first()
     ).toBeVisible();
 
     await page.getByRole('tab', { name: 'community' }).click();
     await expect(
-      page.getByRole('heading', { name: "Who's involved" })
+      page.getByText('The contributors to this Space!')
     ).toBeVisible();
 
     // Verify user is not forcefully redirected to login
@@ -218,9 +225,16 @@ test.describe('Edge Cases and Error Handling', () => {
     // Try to access "Apply to Join" or similar member-only action
     await page.getByRole('tab', { name: 'Home' }).click();
 
+    // CRD moved the apply affordance out of the dashboard and into the About
+    // dialog; open it to surface the login-gated apply button.
+    await aboutThisSpaceButton(page).click();
+
     // Check if "Sign in to apply" button appears (indicating login required for private actions)
     await expect(
-      page.getByRole('button', { name: /Sign in to apply|Apply/i }).first()
+      page
+        .getByRole('dialog')
+        .getByRole('button', { name: /Sign in to apply|Apply/i })
+        .first()
     ).toBeVisible();
   });
 });

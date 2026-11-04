@@ -1,0 +1,16 @@
+query ReadCalloutsSetCallouts($calloutsSetId: UUID!) {
+  lookup {
+    calloutsSet(ID: $calloutsSetId) {
+      id
+      callouts {
+        id
+        framing {
+          type
+          profile { displayName url }
+          form { questions { prompt type required options { label } } }
+          collaboraDocument { id documentType previewUrl }
+        }
+      }
+    }
+  }
+}

@@ -1,5 +1,14 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { getGraphqlClient, TestUser } from '@alkemio/tests-lib';
+import {
+  getGraphqlClient,
+  TestUser,
+  testConfiguration,
+} from '@alkemio/tests-lib';
+import { GraphQLClient } from 'graphql-request';
+import {
+  InnovationFlowState,
+  SidebarWidget,
+} from '@alkemio/tests-lib/core/generated/alkemio-schema';
 import { templateDefaultInfo } from './space-template-testdata';
 import { getSpaceData } from '../../journey/space/space.request.params';
 import { graphqlErrorWrapper } from '@alkemio/tests-lib/utils/graphql.wrapper';
@@ -94,3 +103,91 @@ export const updateSpaceTemplate = async (
     );
   return graphqlErrorWrapper(callback, userRole);
 };
+
+export const updateCollaborationFromSpaceTemplate = async (
+  collaborationID: string,
+  spaceTemplateID: string,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN,
+  options: { addCallouts?: boolean; deleteExistingCallouts?: boolean } = {}
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string | undefined) =>
+    graphqlClient.UpdateCollaborationFromSpaceTemplate(
+      {
+        updateData: {
+          collaborationID,
+          spaceTemplateID,
+          ...options,
+        },
+      },
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+  return graphqlErrorWrapper(callback, userRole);
+};
+
+// --- Sidebar widget round-trip ---
+// The lib `UpdateInnovationFlowState` document selects only `id displayName`, and no lib
+// document reads a template's content-space flow states, so these two operations are raw
+// documents. Everything else in the round-trip uses the shared helpers in
+// `innovation-flow.request.params.ts`.
+const sidebarClient = new GraphQLClient(
+  testConfiguration.endPoints.graphql.private
+);
+const bearer = (authToken: string | undefined) =>
+  authToken ? { authorization: `Bearer ${authToken}` } : undefined;
+
+export type FlowStateSidebar = Pick<
+  InnovationFlowState,
+  'id' | 'displayName' | 'sortOrder'
+> & {
+  settings: { sidebar: SidebarWidget[] };
+};
+
+/** Wholesale-replaces one state's sidebar and returns the state as the mutation serializes it (FR-003). */
+export const updateInnovationFlowStateSidebar = async (
+  innovationFlowStateID: string,
+  sidebar: SidebarWidget[],
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) =>
+  graphqlErrorWrapper(
+    (authToken: string | undefined) =>
+      sidebarClient.rawRequest<{ updateInnovationFlowState: FlowStateSidebar }>(
+        `mutation UpdateInnovationFlowStateSidebar($stateData: UpdateInnovationFlowStateInput!) {
+          updateInnovationFlowState(stateData: $stateData) { id displayName sortOrder settings { sidebar } }
+        }`,
+        { stateData: { innovationFlowStateID, settings: { sidebar } } },
+        bearer(authToken)
+      ),
+    userRole
+  );
+
+/** A template's content-space flow states with their sidebars — the save-fidelity read. */
+export const getTemplateContentSpaceFlowStates = async (
+  templateId: string,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) =>
+  graphqlErrorWrapper(
+    (authToken: string | undefined) =>
+      sidebarClient.rawRequest<{
+        lookup: {
+          template: {
+            contentSpace: {
+              collaboration: {
+                innovationFlow: { id: string; states: FlowStateSidebar[] };
+              };
+            };
+          };
+        };
+      }>(
+        `query GetTemplateContentSpaceFlowStates($templateId: UUID!) {
+          lookup { template(ID: $templateId) { contentSpace { collaboration { innovationFlow {
+            id states { id displayName sortOrder settings { sidebar } }
+          } } } } }
+        }`,
+        { templateId },
+        bearer(authToken)
+      ),
+    userRole
+  );

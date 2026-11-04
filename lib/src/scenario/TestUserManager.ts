@@ -7,10 +7,25 @@ import { getGraphqlClient } from "../utils/graphqlClient";
 export class TestUserManager {
   private static userModelMapEmail: Map<string, UserModel>;
   private static userModelMapType: Map<string, UserModel>;
+  private static populated = false;
 
   public static users: TestUserModels;
 
+  /**
+   * Mints each core test user's token ONCE per run and caches it (the class is a
+   * module singleton under Vitest `isolate:false`). It used to re-mint every
+   * user on every scenario setup — a full Kratos native login flow per user per
+   * file (~users × files ≈ hundreds of logins). Under that load Kratos
+   * rate-limits (429), which the server maps to `invalid_credentials`, failing
+   * setups intermittently mid-run (test-suites#563). Non-interactive-login
+   * tokens live 4h — far longer than a run — so a single mint per user is safe.
+   * The `populated` flag flips only after a full pass, so a partial failure
+   * (e.g. an early rate-limit) is retried in full rather than left incomplete.
+   */
   public static async populateUserModelMap() {
+    if (this.populated) {
+      return;
+    }
     this.userModelMapEmail = new Map<string, UserModel>();
     this.userModelMapType = new Map<string, UserModel>();
 
@@ -31,6 +46,9 @@ export class TestUserManager {
     }
     // Finally ensure the exposed users field is populated
     this.populateUsers();
+
+    // Cache is complete — subsequent scenario setups reuse these tokens.
+    this.populated = true;
 
     // logElapsedTime('populateUserModels', start);
   }
@@ -89,6 +107,21 @@ export class TestUserManager {
     };
   }
 
+  /**
+   * Refreshes the cached UserModel for a given email by re-fetching
+   * the auth token and user data from the API.
+   * Use after deleting and re-registering a test user.
+   */
+  public static async refreshUserModel(email: string): Promise<UserModel> {
+    const userModel = this.userModelMapEmail.get(email);
+    if (!userModel) {
+      throw new Error(`UserModel with email ${email} not found`);
+    }
+    userModel.authToken = await getUserToken(email);
+    await this.populateUserModelFromApi(userModel);
+    return userModel;
+  }
+
   public static getUserModelByEmail(userEmail: string): UserModel {
     const userModel = this.userModelMapEmail.get(userEmail);
     if (!userModel) {
@@ -111,11 +144,11 @@ export class TestUserManager {
   ): Promise<void> {
     const userData = await this.getUserData(userModel.authToken);
     const userInfo = userData?.data?.me.user;
-    userModel.displayName = userInfo?.profile.displayName || "";
+    userModel.displayName = userInfo?.profile?.displayName || "";
     userModel.id = userInfo?.id || "";
-    userModel.profileId = userInfo?.profile.id || "";
+    userModel.profileId = userInfo?.profile?.id || "";
     userModel.nameId = userInfo?.nameID || "";
-    userModel.agentId = userInfo?.agent.id || "";
+    userModel.agentId = userInfo?.actor?.id || "";
     userModel.accountId = userInfo?.account?.id || "";
 
     const RoleNames = userData?.data?.platform?.roleSet.myRoles || [];

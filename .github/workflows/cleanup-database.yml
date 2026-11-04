@@ -21,9 +21,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Install Kubectl
-        uses: azure/setup-kubectl@v4.0.0
+        uses: azure/setup-kubectl@v5.1.0
         with:
-          version: "v1.29.6" # Ensure this matches the version used in your cluster
+          version: "v1.29.6"
 
       - name: Set up Kubeconfig for Hetzner k3s
         run: |
@@ -35,11 +35,34 @@ jobs:
       - name: Install PostgreSQL client
         run: sudo apt-get update && sudo apt-get install -y postgresql-client
 
-      - name: Port-forward and reset Postgres database
+      - name: Scale down services that hold database connections
+        run: |
+          set -euo pipefail
+          echo "Scaling down services that hold database connections..."
+          kubectl scale deployment/alkemio-server-deployment --replicas=0
+          kubectl scale deployment/alkemio-matrix-adapter-deployment --replicas=0
+          kubectl scale deployment/synapse-deployment --replicas=0
+          kubectl scale deployment/kratos --replicas=0
+          kubectl scale statefulset/kratos-courier --replicas=0
+          kubectl scale deployment/hydra --replicas=0
+          # oidc-service holds live connections to the kratos/hydra DBs too;
+          # leaving it up during the wipe left a mid-wipe outage window
+          # (test-suites#555). Tolerate its absence on envs that don't run it.
+          kubectl scale deployment/oidc-service --replicas=0 || true
+
+          kubectl rollout status deployment/alkemio-server-deployment --timeout=120s
+          kubectl rollout status deployment/alkemio-matrix-adapter-deployment --timeout=120s
+          kubectl rollout status deployment/synapse-deployment --timeout=120s
+          kubectl rollout status deployment/kratos --timeout=120s
+          kubectl rollout status statefulset/kratos-courier --timeout=120s
+          kubectl rollout status deployment/hydra --timeout=120s
+          kubectl rollout status deployment/oidc-service --timeout=120s || true
+          echo "All services scaled down."
+
+      - name: Port-forward and reset all Postgres databases
         env:
           POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
           POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
-          POSTGRES_DB: ${{ inputs.postgres_db }}
         run: |
           set -euo pipefail
 
@@ -65,15 +88,20 @@ jobs:
             echo "Port-forward did not become ready"; cat /tmp/port-forward.log; exit 1
           fi
 
-          # Drop all connections to the target database
-          echo "Terminating active connections to $POSTGRES_DB..."
-          PGPASSWORD="$POSTGRES_PASSWORD" psql -h 127.0.0.1 -p 5432 -U "$POSTGRES_USER" -d postgres -c \
-            "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = '$POSTGRES_DB' AND pid <> pg_backend_pid();"
+          # Discover all non-system databases
+          echo "Discovering user databases..."
+          DBS=$(PGPASSWORD="$POSTGRES_PASSWORD" psql -h 127.0.0.1 -p 5432 -U "$POSTGRES_USER" -d postgres -t -A -c \
+            "SELECT datname FROM pg_database WHERE datistemplate = false AND datname != 'postgres';")
 
-          # Drop and recreate the database
-          echo "Dropping and recreating database $POSTGRES_DB..."
-          PGPASSWORD="$POSTGRES_PASSWORD" psql -h 127.0.0.1 -p 5432 -U "$POSTGRES_USER" -d postgres -c "DROP DATABASE IF EXISTS \"$POSTGRES_DB\";"
-          PGPASSWORD="$POSTGRES_PASSWORD" psql -h 127.0.0.1 -p 5432 -U "$POSTGRES_USER" -d postgres -c "CREATE DATABASE \"$POSTGRES_DB\";"
+          echo "Databases to reset: $DBS"
+
+          for DB in $DBS; do
+            echo "Dropping and recreating database $DB..."
+            # WITH (FORCE) atomically terminates remaining connections and drops
+            # the database in one step (PostgreSQL 13+)
+            PGPASSWORD="$POSTGRES_PASSWORD" psql -h 127.0.0.1 -p 5432 -U "$POSTGRES_USER" -d postgres -c "DROP DATABASE IF EXISTS \"$DB\" WITH (FORCE);"
+            PGPASSWORD="$POSTGRES_PASSWORD" psql -h 127.0.0.1 -p 5432 -U "$POSTGRES_USER" -d postgres -c "CREATE DATABASE \"$DB\";"
+          done
 
 
   run-migration-and-boostrap:
@@ -81,20 +109,156 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Install Kubectl
-        uses: azure/setup-kubectl@v4.0.0
+        uses: azure/setup-kubectl@v5.1.0
         with:
-          version: "v1.29.6" # Ensure this matches the version used in your cluster
+          version: "v1.29.6"
 
       - name: Set up Kubeconfig for Hetzner k3s
         run: |
           mkdir -p $HOME/.kube  # Ensure the .kube directory exists
           echo "${{ secrets.KUBECONFIG_SECRET_HETZNER_TEST }}" > $HOME/.kube/config
           chmod 600 $HOME/.kube/config
+      # run Kratos migration on the fresh database, then restart the deployment
+      - name: Migrate and restart Kratos
+        run: |
+          KRATOS_MIGRATION_JOB="kratos-migration-job-${{ github.run_id }}"
+          KRATOS_IMAGE=$(kubectl get deployment kratos -o jsonpath='{.spec.template.spec.containers[0].image}')
+          echo "Using Kratos image: $KRATOS_IMAGE"
+
+          # Idempotent: the job name is keyed on github.run_id, so a re-run of a
+          # failed run collides with its own leftover job (a completed Job's spec
+          # is immutable, so `apply` errors). Delete any prior instance first.
+          kubectl delete job "$KRATOS_MIGRATION_JOB" --ignore-not-found --wait=true
+
+          kubectl apply -f - <<EOF
+          apiVersion: batch/v1
+          kind: Job
+          metadata:
+            name: $KRATOS_MIGRATION_JOB
+          spec:
+            ttlSecondsAfterFinished: 120
+            template:
+              spec:
+                restartPolicy: Never
+                containers:
+                  - name: kratos-migrate
+                    image: $KRATOS_IMAGE
+                    command: ["kratos"]
+                    args: ["migrate", "sql", "-e", "--yes"]
+                    env:
+                      - name: DSN
+                        valueFrom:
+                          secretKeyRef:
+                            name: kratos
+                            key: dsn
+          EOF
+
+          kubectl wait --for=condition=complete job/$KRATOS_MIGRATION_JOB --timeout=600s
+
+          # Scale back up (was scaled to 0 during DB cleanup)
+          kubectl scale deployment/kratos --replicas=1
+          kubectl scale statefulset/kratos-courier --replicas=1
+          kubectl rollout status deployment/kratos --timeout=600s
+          kubectl rollout status statefulset/kratos-courier --timeout=600s
+
+      # run Hydra migration on the fresh database, then restart the deployment
+      - name: Migrate and restart Hydra
+        run: |
+          HYDRA_MIGRATION_JOB="hydra-migration-job-${{ github.run_id }}"
+          HYDRA_IMAGE=$(kubectl get deployment hydra -o jsonpath='{.spec.template.spec.containers[0].image}')
+          echo "Using Hydra image: $HYDRA_IMAGE"
+
+          # Idempotent (see Kratos step): delete any leftover job from a re-run
+          # before re-creating, since a completed Job's spec is immutable.
+          kubectl delete job "$HYDRA_MIGRATION_JOB" --ignore-not-found --wait=true
+
+          kubectl apply -f - <<EOF
+          apiVersion: batch/v1
+          kind: Job
+          metadata:
+            name: $HYDRA_MIGRATION_JOB
+          spec:
+            ttlSecondsAfterFinished: 120
+            template:
+              spec:
+                restartPolicy: Never
+                containers:
+                  - name: hydra-migrate
+                    image: $HYDRA_IMAGE
+                    command: ["hydra"]
+                    args: ["migrate", "sql", "-e", "--yes"]
+                    env:
+                      - name: POSTGRES_USER
+                        valueFrom:
+                          configMapKeyRef:
+                            name: alkemio-config
+                            key: POSTGRES_USER
+                      - name: POSTGRES_PASSWORD
+                        valueFrom:
+                          configMapKeyRef:
+                            name: alkemio-config
+                            key: POSTGRES_PASSWORD
+                      - name: DSN
+                        value: "postgres://\$(POSTGRES_USER):\$(POSTGRES_PASSWORD)@postgres:5432/hydra?sslmode=disable"
+          EOF
+
+          kubectl wait --for=condition=complete job/$HYDRA_MIGRATION_JOB --timeout=600s
+
+          # Scale back up (was scaled to 0 during DB cleanup)
+          kubectl scale deployment/hydra --replicas=1
+          kubectl rollout status deployment/hydra --timeout=600s
+
+      # Wiping the hydra DB drops its OAuth2 client rows. hydra-maester only
+      # re-registers clients on OAuth2Client CR *change* events, so after a wipe
+      # it never reconciles the now-empty DB and the env comes back green at pod
+      # level with zero clients — every login dies with `invalid_client`,
+      # invisible to all health checks (test-suites#555). Force a reconcile and
+      # ASSERT clients exist before declaring the env ready.
+      - name: Restore Hydra OAuth2 clients (hydra-maester) and assert
+        run: |
+          set -euo pipefail
+          kubectl rollout restart deployment/hydra-hydra-maester
+          kubectl rollout status  deployment/hydra-hydra-maester --timeout=180s
+
+          echo "Asserting Hydra has registered OAuth2 clients (login health != pod health)..."
+          kubectl run hydra-client-check-${{ github.run_id }} \
+            --rm -i --restart=Never --image=curlimages/curl:8.10.1 -- \
+            sh -c '
+              for i in $(seq 1 30); do
+                n=$(curl -sf http://hydra-admin:4445/admin/clients | grep -o "client_id" | wc -l) || n=0
+                echo "  attempt $i: $n client(s)"
+                [ "$n" -ge 2 ] && exit 0
+                sleep 5
+              done
+              echo "Hydra OAuth2 clients not restored — login would be broken"; exit 1'
+
+      # Scale up dependencies before server migration: Synapse + matrix adapter
+      - name: Start Synapse and supporting services
+        run: |
+          kubectl scale deployment/synapse-deployment --replicas=1
+          kubectl rollout status deployment/synapse-deployment --timeout=600s
+
+          kubectl scale deployment/alkemio-matrix-adapter-deployment --replicas=1
+          kubectl scale deployment/alkemio-notifications-deployment --replicas=1
+          kubectl scale deployment/alkemio-file-service-deployment --replicas=1
+          # Restore oidc-service (scaled to 0 before the wipe)
+          kubectl scale deployment/oidc-service --replicas=1 || true
+          kubectl rollout status deployment/alkemio-matrix-adapter-deployment --timeout=600s
+          kubectl rollout status deployment/alkemio-notifications-deployment --timeout=600s
+          kubectl rollout status deployment/alkemio-file-service-deployment --timeout=600s
+          kubectl rollout status deployment/oidc-service --timeout=600s || true
+
       # apply the latest schema
       - name: Run migration job
         run: |
           # Define a unique job name based on the GitHub run ID
           MIGRATION_JOB_NAME="server-migration-job-${{ github.run_id }}"
+
+          # Idempotent: this job (created via --from=cronjob) has no
+          # ttlSecondsAfterFinished, so it never self-cleans — a re-run of a
+          # failed run hits `job already exists` on the create below. Delete any
+          # leftover instance first (test-suites#555).
+          kubectl delete job "$MIGRATION_JOB_NAME" --ignore-not-found --wait=true
 
           # Create the job from the cronjob
           kubectl create job --from=cronjob/server-migration $MIGRATION_JOB_NAME
@@ -110,11 +274,68 @@ jobs:
           fi
 
           echo "Migration job completed successfully."
-        # restart the server so it picks up the new database state and bootstraps
-      - name: Restart deployment
+        # Scale server back up so it picks up the new database state and bootstraps
+      - name: Start server deployment
         run: |
-          # Restart the deployment
-          kubectl rollout restart deployment/alkemio-server-deployment
-
-          # Wait for the deployment to complete successfully
+          kubectl scale deployment/alkemio-server-deployment --replicas=1
           kubectl rollout status deployment/alkemio-server-deployment --timeout=600s
+
+      # `rollout status` returning does NOT mean the API is answering: on a fresh
+      # DB the server does a multi-minute bootstrap (auth reset, platform/space
+      # seeding) before it listens — which produced ~500 ECONNRESET test
+      # failures in run 28944454812 (test-suites#555). Gate on a real GraphQL
+      # round-trip before returning.
+      #
+      # Probe the server's in-cluster ClusterIP service directly, NOT the public
+      # test-alkem.io URL. Two reasons: (1) test-alkem.io is unreachable from
+      # this ubuntu-latest runner, and (2) even from inside the cluster, curling
+      # the public hostname resolves to the external LoadBalancer IP and must
+      # hairpin-NAT back in — which is per-node flaky and returned HTTP 000 for
+      # a whole probe window while the server was healthy and listening (run
+      # 29004235896). The internal service has no DNS/hairpin dependency and is
+      # the meaningful signal here (is the server serving GraphQL); traefik
+      # itself is always up, so the external path follows once the server is.
+      - name: Wait for server API readiness
+        run: |
+          set -euo pipefail
+          echo "Probing alkemio-server-service:4000/graphql from inside the cluster..."
+          kubectl run api-readiness-check-${{ github.run_id }}-${{ github.run_attempt }} \
+            --rm -i --restart=Never --image=curlimages/curl:8.10.1 -- \
+            sh -c '
+              for i in $(seq 1 60); do
+                body=$(curl -s -m 8 -w "\n%{http_code}" -X POST http://alkemio-server-service:4000/graphql \
+                  -H "Content-Type: application/json" \
+                  --data "{\"query\":\"{ __typename }\"}") || body="000"
+                code=$(printf "%s" "$body" | tail -n1)
+                echo "  attempt $i: HTTP $code"
+                if [ "$code" = "200" ] && printf "%s" "$body" | grep -q "\"data\""; then
+                  echo "Server API ready after $i attempt(s)."
+                  exit 0
+                fi
+                sleep 5
+              done
+              echo "Server API not ready after 60 attempts"; exit 1'
+
+      # The wipe above drops and recreates EVERY user database, including the
+      # ones owned by services that run their schema migrations only at process
+      # start (wopi-service, assistant-service, file-backup-service). Those pods
+      # were never scaled down, so without a restart they keep serving against
+      # an empty schema until their next image change — and the deploy jobs
+      # fire BEFORE this wipe, so an image change does not help either. Seen
+      # 2026-10-22: wopi `relation "access_tokens" does not exist` on every
+      # token issuance since 2026-10-15, i.e. Collabora dead on test; the same
+      # for assistant-service and file-backup-service. Rolling them here makes
+      # each one re-run its migrations against the fresh database.
+      #
+      # MUST run after the server is up: assistant-service has an init
+      # container that blocks on alkemio-server-service:4000, so restarting it
+      # before "Start server deployment" never gets past Init:0/2 and the
+      # rollout hits its progress deadline (run 39788994424, 2026-10-22).
+      - name: Remigrate services that migrate at startup
+        run: |
+          for d in alkemio-wopi-service-deployment alkemio-assistant-service alkemio-file-backup-service-deployment; do
+            kubectl rollout restart deployment/$d
+          done
+          for d in alkemio-wopi-service-deployment alkemio-assistant-service alkemio-file-backup-service-deployment; do
+            kubectl rollout status deployment/$d --timeout=600s
+          done

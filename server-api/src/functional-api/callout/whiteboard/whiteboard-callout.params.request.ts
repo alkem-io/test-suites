@@ -1,6 +1,7 @@
-import { getGraphqlClient, TestUser } from '@alkemio/tests-lib';
+import { getGraphqlClient } from '@alkemio/tests-lib/utils/graphqlClient';
+import { TestUser } from '@alkemio/tests-lib/common/enums/test.user';
 import {
-  CalloutAllowedContributors,
+  CalloutAllowedActors,
   CalloutFramingType,
   CalloutVisibility,
 } from '@alkemio/tests-lib/core/generated/alkemio-schema';
@@ -24,9 +25,9 @@ export const createWhiteboardCallout = async (
               displayName,
               description: 'Whiteboard callout',
             },
+            // Since server#6399 CreateWhiteboardInput has no inline content;
+            // an empty whiteboard is created (seed via sourceWhiteboardID).
             whiteboard: {
-              content:
-                '{"type":"excalidraw","version":2,"source":"https://excalidraw.com","elements":[],"appState":{"gridSize":null,"viewBackgroundColor":"#ffffff"}}',
               profile: {
                 displayName: 'whiteboard',
               },
@@ -41,7 +42,7 @@ export const createWhiteboardCallout = async (
             contribution: {
               enabled: true,
               allowedTypes: [],
-              canAddContributions: CalloutAllowedContributors.Admins,
+              canAddContributions: CalloutAllowedActors.Admins,
               commentsEnabled: true,
             },
           },

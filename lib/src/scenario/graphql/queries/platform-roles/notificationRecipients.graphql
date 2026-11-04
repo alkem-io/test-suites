@@ -1,0 +1,16 @@
+query notificationRecipients($eventData: NotificationRecipientsInput!) {
+  notificationRecipients(eventData: $eventData) {
+    emailRecipients {
+      id
+    }
+    inAppRecipients {
+      id
+    }
+    pushRecipients {
+      id
+    }
+    triggeredBy {
+      id
+    }
+  }
+}

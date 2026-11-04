@@ -1,0 +1,36 @@
+import { describe } from 'vitest';
+import {
+  expectAllowed,
+  expectRefused,
+  runnableFor,
+} from '../_support/role-spec';
+
+/**
+ * Platform License Manager
+ *
+ * OWNS: License usage: assigns and revokes plans on accounts and spaces, sets
+ * the baseline plan, changes space visibility.
+ *
+ * MUST NOT: Defining plans (that is Settings Admin); everything else.
+ *
+ * The capabilities behind the two blocks below come from
+ * `../capabilities.data.ts`; the readable list for this role is generated into
+ * `../platform-roles-test-plan.md`, section "PLATFORM_LICENSE_MANAGER".
+ */
+const ROLE = 'PLATFORM_LICENSE_MANAGER';
+const { can, cannot } = runnableFor(ROLE);
+
+describe(ROLE, () => {
+  // Refused AT THE AUTHORIZATION GATE — a validation error, a not-found or a
+  // forbidden sub-field does not count. Negatives run first: they change no
+  // state, so a positive can never starve one of its target.
+  describe('cannot', () => {
+    for (const capability of cannot) expectRefused(ROLE, capability);
+  });
+
+  // Allowed, AND the effect each capability declares is read back
+  // (`verifies` in the table) — "no error" alone never passes.
+  describe('can', () => {
+    for (const capability of can) expectAllowed(ROLE, capability);
+  });
+});

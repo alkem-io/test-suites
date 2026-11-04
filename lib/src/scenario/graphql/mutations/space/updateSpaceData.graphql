@@ -1,0 +1,1 @@
+mutation UpdateSpaceData($spaceData: UpdateSpaceInput!) { updateSpace(spaceData: $spaceData) { id } }

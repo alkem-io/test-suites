@@ -79,22 +79,19 @@ test.describe('Organization Account Settings', () => {
         `${baseUrl}/organization/${baseScenario.organization.nameId}/settings/account`
       );
 
-      // 2. Verify modal or message about redirecting to closest parent
-      await expect(page.getByText(/We are redirecting you/i)).toBeVisible();
-
-      // 3. Verify option to navigate to parent space (about page)
-      const redirectButton = page.getByRole('button', {
-        name: /Go now/i,
-      });
-      await expect(redirectButton).toBeVisible();
-
-      // 4. Click redirect button and verify navigation to parent space about
-      await redirectButton.click();
-
-      // 5. Verify redirected to parent space URL
+      // 2. CRD flow change: a non-admin is redirected straight to the parent
+      // organization profile page (no intermediate "We are redirecting you"
+      // modal / "Go now" button). The behavioral outcome — denied access to
+      // the account settings, landed on the org profile — is unchanged.
       await expect(page).toHaveURL(
-        `${baseUrl}/organization/${baseScenario.organization.nameId}`
+        `${baseUrl}/organization/${baseScenario.organization.nameId}`,
+        { timeout: 10000 }
       );
+
+      // 3. Verify the account settings UI is NOT shown (no settings tabs).
+      await expect(
+        page.getByRole('tab', { name: 'Account' })
+      ).not.toBeVisible();
     }
   );
 });

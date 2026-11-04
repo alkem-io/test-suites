@@ -1,0 +1,23 @@
+query GetCalloutSpacesSettings($calloutId: UUID!) {
+  lookup {
+    callout(ID: $calloutId) {
+      id
+      framing {
+        id
+        type
+      }
+      settings {
+        framing {
+          commentsEnabled
+          spaces {
+            cardVariant
+          }
+          selection {
+            mode
+            selectedIds
+          }
+        }
+      }
+    }
+  }
+}

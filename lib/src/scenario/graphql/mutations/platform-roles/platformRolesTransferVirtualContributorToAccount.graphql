@@ -1,0 +1,5 @@
+mutation PlatformRolesTransferVirtualContributorToAccount($transferData: TransferAccountVirtualContributorInput!) {
+  transferVirtualContributorToAccount(transferData: $transferData) {
+    id
+  }
+}

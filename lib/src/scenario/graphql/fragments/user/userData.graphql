@@ -8,8 +8,13 @@ fragment UserData on User {
   account {
     ...AccountData
   }
-  agent {
+  actor {
     ...AgentData
+  }
+  credentials {
+    id
+    resourceID
+    type
   }
   profile {
     ...ProfileDataUser

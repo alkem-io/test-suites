@@ -13,8 +13,6 @@ import { RoleName } from '@alkemio/tests-lib/core/generated/alkemio-schema';
 
 let newOrgId = '';
 const newOrgNameId = 'ha-new-org-nameid';
-const errorMessage =
-  'Agent already has credential of this type on this resource';
 
 let baseScenario: OrganizationWithSpaceModel;
 const scenarioConfig: TestScenarioConfig = {
@@ -115,7 +113,7 @@ describe('Assign / Remove organization to community', () => {
       );
     });
     describe('Assign same organization as member to same community', () => {
-      test('Error is thrown for Space', async () => {
+      test('Idempotent for Space - no duplicate created', async () => {
         // Act
         const res = await assignRoleToOrganization(
           baseScenario.organization.id,
@@ -129,9 +127,9 @@ describe('Assign / Remove organization to community', () => {
         const data =
           getRoleSetMembers.data?.lookup.roleSet?.memberOrganizations;
 
-        // Assert
+        // Assert - operation is idempotent, no error, no duplicate
+        expect(res.error?.errors).toBeUndefined();
         expect(data).toHaveLength(1);
-        expect(res.error?.errors[0].message).toContain(errorMessage);
         expect(data).toEqual(
           expect.arrayContaining([
             expect.objectContaining({
@@ -140,7 +138,7 @@ describe('Assign / Remove organization to community', () => {
           ])
         );
       });
-      test('Error is thrown for Subspace', async () => {
+      test('Idempotent for Subspace - no duplicate created', async () => {
         // Act
         const res = await assignRoleToOrganization(
           baseScenario.organization.id,
@@ -154,9 +152,9 @@ describe('Assign / Remove organization to community', () => {
         const data =
           roleSetMembersList.data?.lookup.roleSet?.memberOrganizations;
 
-        // Assert
+        // Assert - operation is idempotent, no error, no duplicate
+        expect(res.error?.errors).toBeUndefined();
         expect(data).toHaveLength(1);
-        expect(res.error?.errors[0].message).toContain(errorMessage);
         expect(data).toEqual(
           expect.arrayContaining([
             expect.objectContaining({
@@ -165,7 +163,7 @@ describe('Assign / Remove organization to community', () => {
           ])
         );
       });
-      test('Error is thrown for Subsubspace', async () => {
+      test('Idempotent for Subsubspace - no duplicate created', async () => {
         // Act
         const res = await assignRoleToOrganization(
           baseScenario.organization.id,
@@ -179,9 +177,9 @@ describe('Assign / Remove organization to community', () => {
         const data =
           roleSetMembersList.data?.lookup.roleSet?.memberOrganizations;
 
-        // Assert
+        // Assert - operation is idempotent, no error, no duplicate
+        expect(res.error?.errors).toBeUndefined();
         expect(data).toHaveLength(1);
-        expect(res.error?.errors[0].message).toContain(errorMessage);
         expect(data).toEqual(
           expect.arrayContaining([
             expect.objectContaining({
@@ -267,7 +265,7 @@ describe('Assign / Remove organization to community', () => {
     });
 
     describe('Assign same organization as lead to same community', () => {
-      test('Error is thrown for Space', async () => {
+      test('Idempotent for Space - no duplicate created', async () => {
         // Act
         const res = await assignRoleToOrganization(
           baseScenario.organization.id,
@@ -280,9 +278,9 @@ describe('Assign / Remove organization to community', () => {
         );
         const data = roleSetMembersList.data?.lookup.roleSet?.leadOrganizations;
 
-        // Assert
+        // Assert - operation is idempotent, no error, no duplicate
+        expect(res.error?.errors).toBeUndefined();
         expect(data).toHaveLength(1);
-        expect(res.error?.errors[0].message).toContain(errorMessage);
         expect(data).toEqual(
           expect.arrayContaining([
             expect.objectContaining({
@@ -291,7 +289,7 @@ describe('Assign / Remove organization to community', () => {
           ])
         );
       });
-      test('Error is thrown for Subspace', async () => {
+      test('Idempotent for Subspace - no duplicate created', async () => {
         // Act
         const res = await assignRoleToOrganization(
           baseScenario.organization.id,
@@ -304,9 +302,9 @@ describe('Assign / Remove organization to community', () => {
         );
         const data = roleSetMembersList.data?.lookup.roleSet?.leadOrganizations;
 
-        // Assert
+        // Assert - operation is idempotent, no error, no duplicate
+        expect(res.error?.errors).toBeUndefined();
         expect(data).toHaveLength(1);
-        expect(res.error?.errors[0].message).toContain(errorMessage);
         expect(data).toEqual(
           expect.arrayContaining([
             expect.objectContaining({
@@ -315,7 +313,7 @@ describe('Assign / Remove organization to community', () => {
           ])
         );
       });
-      test('Error is thrown for Subsubspace', async () => {
+      test('Idempotent for Subsubspace - no duplicate created', async () => {
         // Act
         const res = await assignRoleToOrganization(
           baseScenario.organization.id,
@@ -328,9 +326,9 @@ describe('Assign / Remove organization to community', () => {
         );
         const data = roleSetMembersList.data?.lookup.roleSet?.leadOrganizations;
 
-        // Assert
+        // Assert - operation is idempotent, no error, no duplicate
+        expect(res.error?.errors).toBeUndefined();
         expect(data).toHaveLength(1);
-        expect(res.error?.errors[0].message).toContain(errorMessage);
         expect(data).toEqual(
           expect.arrayContaining([
             expect.objectContaining({
@@ -394,7 +392,8 @@ describe('Assign / Remove organization to community', () => {
 
         // Assert
         expect(data).toHaveLength(2);
-        expect(res.error?.errors[0].message).toContain(
+        expect(res.error?.errors?.[0]?.message).toBeDefined();
+        expect(res.error?.errors?.[0]?.message).toContain(
           "Max limit of organizations reached for role 'lead': 1, cannot assign new organization"
         );
         expect(data).not.toEqual(

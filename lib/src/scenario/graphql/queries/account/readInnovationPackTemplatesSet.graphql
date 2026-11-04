@@ -1,0 +1,3 @@
+query ReadInnovationPackTemplatesSet($innovationPackId: UUID!) {
+  lookup { innovationPack(ID: $innovationPackId) { id templatesSet { id } } }
+}

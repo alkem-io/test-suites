@@ -1,0 +1,298 @@
+Mutation	addClassificationEntryFromTemplate	ClassificationEntry!	Adds a Classification to a Space by copying a Classification Template (Step A).
+Mutation	addIframeAllowedURL	[String!]!	Adds an Iframe Allowed URL to the Platform Settings
+Mutation	addNotificationEmailToBlacklist	[String!]!	Adds a full email address to the platform notification blacklist
+Mutation	addPollOption	Poll!	Add a new option to a Poll. Requires UPDATE privilege, or CONTRIBUTE privilege when the poll setting allowContributorsAddOptions is enabled. The new option is appended with the next available sort order.
+Mutation	addReactionToCallout	Callout!	Adds or swaps the requesting user's single reaction on a Callout. Requires CONTRIBUTE on the Callout. The Callout must be published and not a template. The emoji must be on the platform allow-list.
+Mutation	addReactionToMessageInRoom	Reaction!	Add a reaction to a message from the specified Room.
+Mutation	addVisualToMediaGallery	Visual!	Adds a new visual to the specified media gallery.
+Mutation	adminCommunicationEnsureAccessToCommunications	Boolean!	Ensure all community members are registered for communications.
+Mutation	adminCommunicationMigrateOrphanedConversations	CommunicationAdminMigrateRoomsResult!	Create rooms for legacy conversations that were created without one (from lazy room creation era).
+Mutation	adminCommunicationReconcileForumHierarchy	String!	Reconcile the Matrix space hierarchy that mirrors the forum against the current forum/discussion state — report-first (dryRun defaults true), scoped to categories + the forum space, never a delete. Returns a task id; the pass runs asynchronously and the task completes with the summary.
+Mutation	adminCommunicationRemoveOrphanedRoom	Boolean!	Remove an orphaned room from messaging platform.
+Mutation	adminCommunicationSyncSpaceHierarchy	Boolean!	Synchronize all Alkemio spaces into the Matrix space hierarchy. Idempotent — safe to call multiple times.
+Mutation	adminCommunicationUpdateRoomState	Boolean!	Allow updating the state flags of a particular rule.
+Mutation	adminForumRemoveDiscussionCategory	Forum!	Removes one category from the platform Forum's active discussionCategories list. Refuses while any Discussion still carries the category. Idempotent for an already-absent category. The enum member is never removed. Requires PLATFORM_FORUM_MANAGE. Audited (PLATFORM_OPERATIONS).
+Mutation	adminIdentityDeleteKratosIdentity	Boolean!	Delete a Kratos identity by ID.
+Mutation	adminInAppNotificationsPrune	PruneInAppNotificationAdminResult!	Prunes InAppNotifications according to the platform defined criteria. The effects of the pruning are returned.
+Mutation	adminLicensePolicyCreateCredentialRule	LicensingCredentialBasedPolicyCredentialRule!	Creates a CredentialRule on the LicensePolicy.
+Mutation	adminLicensePolicyDeleteCredentialRule	LicensingCredentialBasedPolicyCredentialRule!	Deletes the specified LicensePolicy.
+Mutation	adminLicensePolicyUpdateCredentialRule	LicensingCredentialBasedPolicyCredentialRule!	Updates a CredentialRule on the LicensePolicy.
+Mutation	adminRepairTemplateFiles	AdminTemplateFileRepairResult!	Lists, and on request copies, the files templates reference but do not store. A file is copied only when the template's owner can read it. A dry run by default.
+Mutation	adminRevokeMcpApiKey	McpApiKey!	Platform Users Admin: revoke a named user's MCP API key. Idempotent.
+Mutation	adminSearchIngestFromScratch	String!	Ingests new data into Elasticsearch from scratch. This will delete all existing data and ingest new data from the source. This is an admin only operation.
+Mutation	adminUpdateContributorAvatars	Profile!	Update the Avatar on the Profile with the spedified profileID to be stored as a Document.
+Mutation	adminUpdateGeoLocationData	Boolean!	Updates the GeoLocation data where required on the platform.
+Mutation	adminUpdateSpaceVisibility	Space!	Update the visibility of the specified Space.
+Mutation	adminUserAccountDelete	User!	Remove the Kratos account associated with the specified User. Note: the Users profile on the platform is not deleted.
+Mutation	adminUserEmailChange	UserEmailChangeResult!	Change a user's login email synchronously, acting as a platform administrator. The admin is responsible for verifying the subject user's identity out-of-band — the platform does NOT send a confirmation message to the new mailbox and does NOT require the new mailbox to prove ownership. Validates uniqueness, commits Kratos → Alkemio with bounded retry, invalidates the subject's existing sessions, and sends a security-signal notification to the old address. Requires PLATFORM_USERS_ADMIN.
+Mutation	adminUserEmailChangeDriftResolve	UserEmailChangeResult!	Reconcile an outstanding drift-detected state for a subject user by force-aligning Alkemio and Kratos to a canonical email chosen by the admin. Requires PLATFORM_USERS_ADMIN.
+Mutation	aiServerAuthorizationPolicyReset	AiServer!	Reset the Authorization Policy on the specified AiServer.
+Mutation	aiServerCreateAiPersona	AiPersona!	Creates a new AiPersona on the aiServer.
+Mutation	aiServerDeleteAiPersona	AiPersona!	Deletes the specified AiPersona.
+Mutation	aiServerUpdateAiPersona	AiPersona!	Updates the specified AI Persona.
+Mutation	applyForEntryRoleOnRoleSet	Application!	Apply to join the specified RoleSet in the entry Role.
+Mutation	assignConversationMember	Boolean!	Assign a member to a group conversation. Returns true when the RPC is sent. Actual membership change arrives via MEMBER_ADDED subscription event.
+Mutation	assignLicensePlanToAccount	Account!	Assign the specified LicensePlan to an Account.
+Mutation	assignLicensePlanToSpace	Space!	Assign the specified LicensePlan to a Space.
+Mutation	assignPlatformRoleToOrganization	Organization!	Assigns an Organization to a role on the Platform.
+Mutation	assignPlatformRoleToUser	User!	Assigns a User to a role on the Platform.
+Mutation	assignRole	Actor!	Assigns an Actor (User, Organization, or Virtual Contributor) to a role in the specified RoleSet.
+Mutation	assignRoleToOrganization	Organization!	Assigns an Organization a Role in the specified Community.
+Mutation	assignRoleToUser	User!	Assigns a User to a role in the specified Community.
+Mutation	assignRoleToVirtualContributor	VirtualContributor!	Assigns a Virtual Contributor to a role in the specified Community.
+Mutation	assignUserToGroup	UserGroup!	Assigns a User as a member of the specified User Group.
+Mutation	authorizationPlatformRolesAccessReset	Boolean!	Ensure all access privileges for the platform roles are re-calculated
+Mutation	authorizationPolicyResetAll	String!	Reset the Authorization Policy on all entities
+Mutation	authorizationPolicyResetOnAccount	Account!	Reset the Authorization Policy on the specified Account.
+Mutation	authorizationPolicyResetOnOrganization	Organization!	Reset the Authorization Policy on the specified Organization.
+Mutation	authorizationPolicyResetOnPlatform	Platform!	Reset the Authorization Policy on the specified Platform.
+Mutation	authorizationPolicyResetOnUser	User!	Reset the Authorization policy on the specified User.
+Mutation	authorizationPolicyResetToGlobalAdminsAccess	Authorization!	Reset the specified Authorization Policy to global admin privileges
+Mutation	castPollVote	Poll!	Cast or update a vote on a Poll. Requires CONTRIBUTE privilege on the Poll (space member). If the calling user has already voted, their vote is REPLACED ENTIRELY with the new selection set.
+Mutation	cleanupCollections	MigrateEmbeddings!	Deletes collections nameID-...
+Mutation	continueMemoSigning	MemoSigningContinueResult!	Starts signing the prepared Memo copy.
+Mutation	convertSpaceL1ToSpaceL0	Space!	Move an L1 Space up in the hierarchy, to be a L0 Space.
+Mutation	convertSpaceL1ToSpaceL2	Space!	Move an L1 Space down in the hierarchy within the same L0 Space, to be a L2 Space.       Restrictions: the Space L1 must remain within the same L0 Space.       Roles: all user, organization and virtual contributor role assignments are removed, with       the exception of Admin role assignments for Users.
+Mutation	convertSpaceL2ToSpaceL1	Space!	Move an L2 Space up in the hierarchy, to be a L1 Space.
+Mutation	convertVirtualContributorToUseKnowledgeBase	VirtualContributor!	Convert a VC of type ALKEMIO_SPACE to be of type KNOWLEDGE_BASE. All Callouts from the Space currently being used are moved to the Knowledge Base. Note: only allowed for VCs using a Space within the same Account.
+Mutation	createCalloutOnCalloutsSet	Callout!	Create a new Callout on the CalloutsSet. When `file` is supplied alongside a COLLABORA_DOCUMENT framing, the new callout is framed with a Collabora document populated from the uploaded bytes (file-service-go sniffs MIME, validates format and size, and derives the document type; any documentType in the input is ignored on the upload path; displayName defaults from the filename when absent). When `file` is omitted, the existing blank-create behaviour applies and framing.collaboraDocument must specify both displayName and documentType.
+Mutation	createClassificationEntry	ClassificationEntry!	Creates a Classification on a Space ad hoc, without a Template (API-only).
+Mutation	createContributionOnCallout	CalloutContribution!	Create a new Contribution on the Callout.
+Mutation	createConversation	Conversation!	Create a new Conversation. Use type DIRECT for 1-on-1, GROUP for multi-party.
+Mutation	createDiscussion	Discussion!	Creates a new Discussion as part of this Forum.
+Mutation	createEventOnCalendar	CalendarEvent!	Create a new CalendarEvent on the Calendar.
+Mutation	createGroupOnCommunity	UserGroup!	Creates a new User Group in the specified Community.
+Mutation	createGroupOnOrganization	UserGroup!	Creates a new User Group for the specified Organization.
+Mutation	createInnovationHub	InnovationHub!	Create an Innovation Hub on the specified account
+Mutation	createInnovationPack	InnovationPack!	Creates a new InnovationPack on an Account.
+Mutation	createLicensePlan	LicensePlan!	Create a new LicensePlan on the Licensing.
+Mutation	createOrganization	Organization!	Creates a new Organization on the platform.
+Mutation	createReferenceOnProfile	Reference!	Creates a new Reference on the specified Profile.
+Mutation	createSpace	Space!	Creates a new Level Zero Space within the specified Account.
+Mutation	createStateOnInnovationFlow	InnovationFlowState!	Create a new State on the InnovationFlow.
+Mutation	createSubspace	Space!	Creates a new Subspace within the specified Space.
+Mutation	createTagsetOnProfile	Tagset!	Creates a new Tagset on the specified Profile
+Mutation	createTaskColumnOnCallout	Callout!	Add a column to a Tasks board Callout.
+Mutation	createTemplate	Template!	Creates a new Template on the specified TemplatesSet. When `file` is supplied alongside a COLLABORA_DOCUMENT callout framing, the template is framed with a Collabora document populated from the uploaded bytes (file-service-go sniffs MIME, validates format and size, and derives the document type; any documentType in the input is ignored on the upload path; displayName defaults from the filename when absent). When `file` is omitted, the existing behaviour applies.
+Mutation	createTemplateFromContentSpace	Template!	Creates a new Template on the specified TemplatesSet using the provided ContentSpace as content.
+Mutation	createTemplateFromSpace	Template!	Creates a new Template on the specified TemplatesSet using the provided Space as content.
+Mutation	createUser	User!	Creates a new User on the platform.
+Mutation	createVirtualContributor	VirtualContributor!	Creates a new VirtualContributor on an Account.
+Mutation	createWhiteboardDraftOnCalloutsSet	UUID!	Materializes a server-owned live Whiteboard draft for a Callout form. Content remains on the collaboration transport; GraphQL returns identifiers only.
+Mutation	createWhiteboardDraftOnTemplatesSet	UUID!	Materializes a server-owned live Whiteboard draft for a Template form. GraphQL returns identifiers only.
+Mutation	deleteApplication	Application!	Removes the specified Application.
+Mutation	deleteCalendarEvent	CalendarEvent!	Deletes the specified CalendarEvent.
+Mutation	deleteCallout	Callout!	Delete a Callout.
+Mutation	deleteCalloutFormResponse	DeletedCalloutFormResponse!	Delete a Form response. The member who submitted it can always withdraw it (also on a closed Form); otherwise the privilege to create callouts on the collection the Post is in (space admin) is required.
+Mutation	deleteClassificationEntry	ClassificationEntry!	Permanently removes a Classification from a Space. No template and no other Space is affected.
+Mutation	deleteCollaboraDocument	CollaboraDocument!	Deletes the specified CollaboraDocument.
+Mutation	deleteContribution	CalloutContribution!	Deletes a contribution.
+Mutation	deleteConversation	Conversation!	Deletes a Conversation. All members are notified via CONVERSATION_DELETED event.
+Mutation	deleteDiscussion	Discussion!	Deletes the specified Discussion.
+Mutation	deleteDocument	Document!	Deletes the specified Document.
+Mutation	deleteInnovationHub	InnovationHub!	Delete Innovation Hub.
+Mutation	deleteInnovationPack	InnovationPack!	Deletes the specified InnovationPack.
+Mutation	deleteInvitation	Invitation!	Removes the specified User invitation.
+Mutation	deleteLicensePlan	LicensePlan!	Deletes the specified LicensePlan.
+Mutation	deleteLink	Link!	Deletes the specified Link.
+Mutation	deleteMemo	Memo!	Deletes the specified Memo.
+Mutation	deleteOrganization	Organization!	Deletes the specified Organization.
+Mutation	deletePlatformInvitation	PlatformInvitation!	Removes the specified User platformInvitation.
+Mutation	deletePost	Post!	Deletes the specified Post.
+Mutation	deleteReference	Reference!	Deletes the specified Reference.
+Mutation	deleteSpace	Space!	Deletes the specified Space.
+Mutation	deleteStateOnInnovationFlow	InnovationFlowState!	Delete a  State on the InnovationFlow.
+Mutation	deleteStorageBucket	StorageBucket!	Deletes a Storage Bucket
+Mutation	deleteTaskColumnOnCallout	Callout!	Remove a column from a Tasks board Callout.
+Mutation	deleteTemplate	Template!	Deletes the specified Template.
+Mutation	deleteUser	User!	Deletes the specified User.
+Mutation	deleteUserGroup	UserGroup!	Deletes the specified User Group.
+Mutation	deleteVirtualContributor	VirtualContributor!	Deletes the specified VirtualContributor.
+Mutation	deleteVisualFromMediaGallery	Visual!	Deletes a visual from the specified media gallery.
+Mutation	deleteWhiteboard	Whiteboard!	Deletes the specified Whiteboard.
+Mutation	deleteWhiteboardDraft	UUID!	Idempotently discards a server-owned live Whiteboard draft through the canonical Whiteboard deletion path.
+Mutation	enablePushSubscription	PushSubscription!	Re-enable a previously disabled push notification subscription for the current user.
+Mutation	eventOnApplication	Application!	Trigger an event on the Application.
+Mutation	eventOnInvitation	Invitation!	Trigger an event on the Invitation.
+Mutation	eventOnOrganizationVerification	OrganizationVerification!	Trigger an event on the Organization Verification.
+Mutation	grantCredentialToActor	Credential!	Grant a credential to an Actor.
+Mutation	importCollaboraDocument	CalloutContribution!	Import an existing file as a CollaboraDocument contribution on the callout. file-service-go sniffs the MIME from content and rejects formats Collabora cannot edit.
+Mutation	inviteForEntryRoleOnRoleSet	[RoleSetInvitationResult!]!	Invite new Contributors or users by email to join the specified RoleSet in the Entry Role.
+Mutation	joinRoleSet	RoleSet!	Join the specified RoleSet using the entry Role, without going through an approval process.
+Mutation	leaveConversation	Boolean!	Leave a group conversation. Awaits the Matrix removal rather than reporting success merely because the RPC was sent: true means Matrix accepted it (the member leaves the room), and the membership is then removed asynchronously — observe MEMBER_REMOVED for completion. If the Matrix removal fails (rejected — e.g. the member is no longer in the Matrix room — or the RPC times out) this still returns true, because Alkemio is authoritative for its own membership and applies the removal locally instead; on that path the Matrix-side room membership may diverge until an operator reconciles it. If the last member leaves, the conversation is auto-deleted and a CONVERSATION_DELETED event follows.
+Mutation	licenseResetOnAccount	Account!	Reset the License with Entitlements on the specified Account.
+Mutation	markMessageAsReadInRoom	Boolean!	Marks a message as read for the current user.
+Mutation	markNotificationsAsRead	Boolean!	Mark notifications as read. If no filter is provided, marks all user notifications as read. If filter with types is provided, marks only those notification types as read.
+Mutation	markNotificationsAsUnread	Boolean!	Mark notifications as unread. If no filter is provided, marks all user notifications as unread. If filter with types is provided, marks only those notification types as unread.
+Mutation	migrateLegacyMemoContent	CollaborationMigrationResult!	Migrates all pending legacy memo content. Idempotent: repeated calls process only rows whose migrated marker is false.
+Mutation	migrateLegacyWhiteboardContent	CollaborationMigrationResult!	Migrates pending legacy Whiteboard documents and independently normalizes every legacy Whiteboard contribution default, including defaults stored by Callout templates. Idempotent: repeated calls process only unmigrated documents and non-canonical defaults.
+Mutation	mintMatrixSession	MatrixSessionCredentials!	Mint a Matrix access token for the current user's own chat session. Takes no subject: the actor is the authenticated caller.
+Mutation	mintMcpApiKey	McpApiKeyMintResult!	Mint a new MCP API key for the current user. Returns the plaintext exactly once.
+Mutation	moveContributionToCallout	CalloutContribution!	Moves the specified Contribution to another Callout.
+Mutation	moveSpaceL1ToSpaceL0	Space!	Move an L1 subspace to a different L0 space. The subspace remains at level 1       but changes parent. All content moves with it. All community memberships are cleared.       Requires platform admin privileges.
+Mutation	moveSpaceL1ToSpaceL2	Space!	Move an L1 subspace to become an L2 sub-subspace under a target L1 in a different L0 space.       The space is demoted from level 1 to level 2. All community roles are cleared.       Requires platform admin privileges.
+Mutation	moveSpaceL2ToSpaceL1	Space!	Move an L2 sub-subspace to become an L2 subspace under a target L1 in a different L0 space.       The subspace stays at level 2 but changes both its parent L1 and its top-level L0.       All community roles (including admins) are cleared and pending invitations dropped.       Platform access rules are recomputed from the new parent hierarchy.       Requires platform admin privileges.
+Mutation	moveTaskToColumn	CalloutContribution!	Moves a task to another column on its Tasks board. Authorized as MOVE_TASK on the parent Callout, so a board member can move any task.
+Mutation	prepareMemoSigning	MemoSigningPrepareResult!	Prepares an exact PDF preview for signing the specified Memo.
+Mutation	refreshAllBodiesOfKnowledge	Boolean!	Refresh the Bodies of Knowledge on All VCs
+Mutation	refreshVirtualContributorBodyOfKnowledge	Boolean!	Triggers a request to the backing AI Service to refresh the knowledge that is available to it.
+Mutation	registerDevicePushToken	Boolean!	Bind a native device push token (FCM on Android, APNs on iOS) to the current user. If the token is already bound to another user, it is rebound to the caller.
+Mutation	removeCommunityGuidelinesContent	CommunityGuidelines!	Empties the CommunityGuidelines.
+Mutation	removeConversationMember	Boolean!	Remove a member from a group conversation. Awaits the Matrix removal rather than reporting success merely because the RPC was sent: true means Matrix accepted it (the member leaves the room), and the membership is then removed asynchronously — observe MEMBER_REMOVED for completion. If the Matrix removal fails (rejected — e.g. the member is no longer in the Matrix room — or the RPC times out) this still returns true, because Alkemio is authoritative for its own membership and applies the removal locally instead; on that path the Matrix-side room membership may diverge until an operator reconciles it.
+Mutation	removeDefaultCalloutTemplateOnInnovationFlowState	InnovationFlowState!	Remove the default callout template from an InnovationFlowState.
+Mutation	removeIframeAllowedURL	[String!]!	Removes an Iframe Allowed URL from the Platform Settings
+Mutation	removeMessageOnRoom	MessageID!	Removes a message.
+Mutation	removeNotificationEmailFromBlacklist	[String!]!	Removes an email address from the platform notification blacklist
+Mutation	removePlatformRoleFromOrganization	Organization!	Removes an Organization from a Role on the Platform.
+Mutation	removePlatformRoleFromUser	User!	Removes a User from a Role on the Platform.
+Mutation	removePollOption	Poll!	Remove an option from a Poll. Requires UPDATE privilege. Poll must retain at least 2 options. Votes that selected this option are deleted and affected voters are notified.
+Mutation	removePollVote	Poll!	Remove the current user vote from a Poll. Requires CONTRIBUTE privilege on the Poll. If the user has not voted, returns a validation error.
+Mutation	removeReactionFromCallout	Callout!	Removes the requesting user's reaction from a Callout. Idempotent — no error when no reaction exists. Self-scoped; requires only authentication (not CONTRIBUTE). Returns the Callout only when the caller retains READ access on it.
+Mutation	removeReactionToMessageInRoom	Boolean!	Remove a reaction on a message from the specified Room.
+Mutation	removeRole	Actor!	Removes an Actor (User, Organization, or Virtual Contributor) from a role in the specified RoleSet.
+Mutation	removeRoleFromOrganization	Organization!	Removes an Organization from a Role in the specified Community.
+Mutation	removeRoleFromUser	User!	Removes a User from a Role in the specified Community.
+Mutation	removeRoleFromVirtualContributor	VirtualContributor!	Removes a Virtual from a Role in the specified Community.
+Mutation	removeUserFromGroup	UserGroup!	Removes the specified User from specified user group
+Mutation	reorderPollOptions	Poll!	Reorder Poll options. Requires UPDATE privilege. The provided list must contain exactly the same option IDs as the current poll options.
+Mutation	replaceCollaboraDocument	CollaboraDocument!	Replace the backing file of an existing CollaboraDocument in place, preserving its identity. Requires UPDATE on the document. The replacement must be an allowed OfficeDocs format, within the size cap, and the SAME document type as the current file. Refused while the document is being edited.
+Mutation	replaceWhiteboardContentFromSource	Whiteboard!	Replace a Whiteboard from another Whiteboard through the live collaboration room. Content and media are copied server-side; snapshot bytes never pass through GraphQL.
+Mutation	resendPlatformInvitation	PlatformInvitation!	Sends the invitation email of an open platform invitation again (Space or Organization role sets); throttled per role set and address, and counted against an hourly email budget.
+Mutation	resetConversationVc	Conversation!	Resets the interaction with the VC by recreating the room.
+Mutation	resetLicenseOnAccounts	Boolean!	Reset all license plans on Accounts
+Mutation	revokeCredentialFromActor	Boolean!	Revoke a credential from an Actor.
+Mutation	revokeLicensePlanFromAccount	Account!	Revokes the specified LicensePlan on an Account.
+Mutation	revokeLicensePlanFromSpace	Space!	Revokes the specified LicensePlan on a Space.
+Mutation	revokeMcpApiKey	McpApiKey!	Revoke one of the current user's own MCP API keys. Idempotent.
+Mutation	sendDirectMessageToUsers	[DirectMessageDeliveryResult!]!	Send a private (1:1) chat message to each of the given Users individually. Does NOT create a group conversation. Each recipient is processed independently and reported on; partial success is possible.
+Mutation	sendMessageReplyToRoom	Message!	Sends a reply to a message from the specified Room.
+Mutation	sendMessageToCommunityLeads	Boolean!	Send message to Community Leads.
+Mutation	sendMessageToOrganization	Boolean!	Send message to an Organization.
+Mutation	sendMessageToRoom	Message!	Sends an comment message. Returns the id of the new Update message.
+Mutation	sendMessageToUsers	Boolean!	Send message to multiple Users.
+Mutation	setDefaultCalloutTemplateOnInnovationFlowState	InnovationFlowState!	Set the default callout template for an InnovationFlowState.
+Mutation	setPlatformWellKnownVirtualContributor	PlatformWellKnownVirtualContributors!	Set the mapping of a well-known Virtual Contributor to a specific Virtual Contributor UUID.
+Mutation	submitCalloutFormResponse	CalloutFormResponse!	Submit a response to a Form. Requires CONTRIBUTE on the Post. The Post must be published and the Form open; a single-response Form rejects the submission while the member holds any response; a Form that is part of a template never accepts responses. acknowledgedVisibility is the audience the respondent was shown.
+Mutation	subscribeToPushNotifications	PushSubscription!	Subscribe the current user's device to push notifications. If the subscription endpoint already exists, it is updated. If the user has reached the maximum number of subscriptions (10), the oldest subscription is automatically replaced.
+Mutation	transferCallout	Callout!	Transfer the specified Callout from its current CalloutsSet to the target CalloutsSet. Note: this is experimental, and only for GlobalAdmins. The user that executes the transfer becomes the creator of the Callout.
+Mutation	transferInnovationHubToAccount	InnovationHub!	Transfer the specified InnovationHub to another Account.
+Mutation	transferInnovationPackToAccount	InnovationPack!	Transfer the specified Innovation Pack to another Account.
+Mutation	transferSpaceToAccount	Space!	Transfer the specified Space to another Account.
+Mutation	transferVirtualContributorToAccount	InnovationPack!	Transfer the specified Virtual Contributor to another Account.
+Mutation	unregisterDevicePushToken	Boolean!	Unbind a native device push token from the current user. Unknown tokens, and tokens bound to another user, are no-ops.
+Mutation	unsubscribeFromPushNotifications	PushSubscription!	Disable a push notification subscription for the current user. The subscription is retained but will not receive notifications until re-enabled.
+Mutation	updateActorNameID	Actor!	Update the nameID (URL path) of the specified Actor. A protected update: renaming repoints every inbound link to the entity.
+Mutation	updateApplicationFormOnRoleSet	RoleSet!	Update the Application Form used by this RoleSet.
+Mutation	updateAssistantActorCapabilities	VirtualAssistant!	Set the admin per-capability grant on the virtual-assistant actor, governing what it may do system-invoked (default read-only). Requires the platform-operations-admin privilege.
+Mutation	updateBaselineLicensePlanOnAccount	Account!	Update the baseline License Plan on the specified Account.
+Mutation	updateCalendarEvent	CalendarEvent!	Updates the specified CalendarEvent.
+Mutation	updateCallout	Callout!	Update a Callout.
+Mutation	updateCalloutForm	CalloutForm!	Update the definition and/or the settings of a Form. Requires the privilege to create callouts on the collection the Post is in (space admin), the same as creating a Form; for a Form in a standalone callout template, the privilege to update that template callout instead. Serialized against submissions.
+Mutation	updateCalloutPublishInfo	Callout!	Update the information describing the publishing of the specified Callout.
+Mutation	updateCalloutsSortOrder	[Callout!]!	Update the sortOrder field of the supplied Callouts to increase as per the order that they are provided in.
+Mutation	updateCalloutVisibility	Callout!	Update the visibility of the specified Callout.
+Mutation	updateClassificationEntry	ClassificationEntry!	Updates a Classification's definition — label, cardinality and/or value set (API-only).
+Mutation	updateClassificationEntryDisplay	ClassificationEntry!	Toggles a Classification's shown/hidden state on the Space's About page.
+Mutation	updateClassificationEntrySelection	ClassificationEntry!	Replaces the selected values of a Classification (Step B).
+Mutation	updateClassificationTagset	Tagset!	Updates a Tagset on a Classification.
+Mutation	updateCollaboraDocument	CollaboraDocument!	Updates the specified CollaboraDocument.
+Mutation	updateCollaborationFromSpaceTemplate	Collaboration!	Updates a Collaboration using the Space content from the specified Template. Behavior depends on parameter combinations: (1) Flow Only: deleteExistingCallouts=false, addCallouts=false - updates only InnovationFlow states; (2) Add Posts: deleteExistingCallouts=false, addCallouts=true - keeps existing and adds template callouts; (3) Replace All: deleteExistingCallouts=true, addCallouts=true - deletes existing then adds template callouts; (4) Delete Only: deleteExistingCallouts=true, addCallouts=false - deletes existing callouts and updates InnovationFlow states. Execution order: delete (if requested) → update flow states (always) → add (if requested).
+Mutation	updateCommunityGuidelines	CommunityGuidelines!	Updates the CommunityGuidelines.
+Mutation	updateContributionsSortOrder	[CalloutContribution!]!	Update the sortOrder field of the Contributions of s Callout.
+Mutation	updateConversation	Boolean!	Update a group conversation (display name, avatar). Returns true when the RPC is sent. Actual changes arrive via CONVERSATION_UPDATED subscription events. When both fields are provided, clients may receive separate update events for each.
+Mutation	updateDiscussion	Discussion!	Updates the specified Discussion.
+Mutation	updateDocument	Document!	Updates the specified Document.
+Mutation	updateInnovationFlow	InnovationFlow!	Updates the InnovationFlow.
+Mutation	updateInnovationFlowCurrentState	InnovationFlow!	Updates the InnovationFlow.
+Mutation	updateInnovationFlowState	InnovationFlowState!	Updates the specified InnovationFlowState.
+Mutation	updateInnovationFlowStatesSortOrder	[InnovationFlowState!]!	Update the sortOrder field of the supplied InnovationFlowStates to increase as per the order that they are provided in.
+Mutation	updateInnovationHub	InnovationHub!	Update Innovation Hub.
+Mutation	updateInnovationPack	InnovationPack!	Updates the InnovationPack.
+Mutation	updateLicensePlan	LicensePlan!	Updates the LicensePlan.
+Mutation	updateLink	Link!	Updates the specified Link.
+Mutation	updateMemo	Memo!	Updates the specified Memo.
+Mutation	updateNotificationState	NotificationEventInAppState!	Update notification state and return the notification.
+Mutation	updateOrganization	Organization!	Updates the specified Organization.
+Mutation	updateOrganizationSettings	Organization!	Updates one of the Setting on an Organization
+Mutation	updatePlatformSettings	PlatformSettings!	Updates one of the Setting on the Platform
+Mutation	updatePollOption	Poll!	Update the text of an existing Poll option. Requires UPDATE privilege. Votes that selected this option are deleted and affected voters are notified.
+Mutation	updatePollStatus	Poll!	Change the status of a Poll (OPEN ↔ CLOSED). Requires UPDATE privilege on the parent Callout. When a poll is CLOSED, all state-mutating operations are rejected. Idempotent: setting to current status succeeds without error.
+Mutation	updatePost	Post!	Updates the specified Post.
+Mutation	updateProfile	Profile!	Updates the specified Profile.
+Mutation	updateReference	Reference!	Updates the specified Reference.
+Mutation	updateSpace	Space!	Updates the Space.
+Mutation	updateSpaceSettings	Space!	Updates one of the Setting on a Space
+Mutation	updateSubspacePinned	Space!	Updates the pinned state of a Subspace within the specified Space. Returns the updated Subspace.
+Mutation	updateSubspacesSortOrder	[Space!]!	Update the sortOrder field of the supplied Subspaces to increase as per the order that they are provided in.
+Mutation	updateTagset	Tagset!	Updates the specified Tagset.
+Mutation	updateTaskColumnOnCallout	Callout!	Rename a column on a Tasks board Callout.
+Mutation	updateTaskColumnsSortOrderOnCallout	Callout!	Reorder the columns of a Tasks board Callout.
+Mutation	updateTemplate	Template!	Updates the specified Template.
+Mutation	updateTemplateContentSpace	TemplateContentSpace!	Updates the TemplateContentSpace.
+Mutation	updateTemplateDefault	TemplateDefault!	Updates the specified Template Defaults.
+Mutation	updateTemplateFromSpace	Template!	Updates the specified Space Content Template using the provided Space.
+Mutation	updateUser	User!	Updates the User.
+Mutation	updateUserGroup	UserGroup!	Updates the specified User Group.
+Mutation	updateUserSettings	User!	Updates one of the Setting on a User
+Mutation	updateVirtualContributor	VirtualContributor!	Updates the specified VirtualContributor.
+Mutation	updateVirtualContributorPlatformSettings	VirtualContributor!	Updates platform-level settings of a VirtualContributor (platform admins only).
+Mutation	updateVirtualContributorSettings	VirtualContributor!	Updates one of the Setting on an Virtual Contributor
+Mutation	updateVisual	Visual!	Updates the image URI, alternative text and/or display aspect ratio for the specified Visual.
+Mutation	updateWhiteboard	Whiteboard!	Updates the specified Whiteboard.
+Mutation	updateWhiteboardGuestAccess	UpdateWhiteboardGuestAccessResult!	Grants or revokes GLOBAL_GUEST permissions for a whiteboard using a single toggle.
+Mutation	uploadFileOnLink	Link!	Create a new Document on the Storage and return the value as part of the returned Link.
+Mutation	uploadFileOnReference	Reference!	Create a new Document on the Storage and return the value as part of the returned Reference.
+Mutation	uploadFileOnStorageBucket	StorageBucketUploadFileResult!	Create a new Document on the Storage and return the ID and public URL.
+Mutation	uploadImageOnVisual	Visual!	Uploads and sets an image for the specified Visual.
+Query	activityFeed	ActivityFeed!	Activity events related to the current user.
+Query	activityFeedGrouped	[ActivityLogEntry!]!	Activity events related to the current user grouped by Activity type and resource.
+Query	activityLogOnCollaboration	[ActivityLogEntry!]!	Retrieve the ActivityLog for the specified Collaboration
+Query	actor	ActorFull	Get an Actor by ID. Returns null if not found.
+Query	actorsWithCredential	[ActorFull!]!	All Actors that hold credentials matching the supplied criteria.
+Query	adminIdentitiesUnverified	[KratosIdentity!]!	Get all unverified identities from Kratos.
+Query	aiServer	AiServer!	Alkemio AiServer
+Query	collaboraEditorUrl	CollaboraEditorUrlResult!	Retrieves the editor URL for the specified CollaboraDocument.
+Query	collaboraServiceAvailable	Boolean!	Whether the WOPI save service backing this CollaboraDocument is currently reachable. A side-effect-free health check — unlike collaboraEditorUrl it issues no access token and records no analytics — used to surface a save-path outage in the editor.
+Query	exploreSpaces	[Space!]!	Active Spaces only, order by most active in the past X days.
+Query	inputCreator	InputCreatorQueryResults!	Allow creation of inputs based on existing entities in the domain model
+Query	lookup	LookupQueryResults!	Allow direct lookup of entities from the domain model
+Query	lookupByName	LookupByNameQueryResults!	Allow direct lookup of entities using their NameIDs
+Query	me	MeQueryResults!	Information about the current authenticated user
+Query	myPushSubscriptions	[PushSubscription!]!	Returns the current user's push notification subscriptions (active and disabled). Requires authentication.
+Query	notificationRecipients	NotificationRecipientResult!	The notificationRecipients for the provided event on the given entity.
+Query	organization	Organization!	A particular Organization
+Query	organizations	[Organization!]!	The Organizations on this platform
+Query	organizationsPaginated	PaginatedOrganization!	The Organizations on this platform in paginated format
+Query	platform	Platform!	Alkemio Platform
+Query	platformAdmin	PlatformAdminQueryResults!	Allow looking up of information for Platform administration.
+Query	platformCapabilities	[AssistantCapability!]!	The enumerable assistant capability surface (one per MCP tool), with each tool classified READ / WRITE_ADDITIVE / WRITE_DESTRUCTIVE.
+Query	restrictedSpaceNames	[String!]!	Get the list of restricted space names.
+Query	rolesOrganization	ActorRoles!	The roles that the specified Organization has.
+Query	rolesUser	ActorRoles!	The roles that that the specified User has.
+Query	rolesVirtualContributor	ActorRoles!	The roles that the specified VirtualContributor has.
+Query	search	ISearchResults!	Search the platform for terms supplied
+Query	signingAttempt	MemoSignature!	A Memo signing attempt belonging to the current actor.
+Query	spaces	[Space!]!	The Spaces on this platform; If accessed through an Innovation Hub will return ONLY the Spaces defined in it.
+Query	spacesPaginated	PaginatedSpaces!	The Spaces on this platform
+Query	task	Task!	Information about a specific task
+Query	tasks	[Task!]!	All tasks with filtering applied
+Query	urlResolver	UrlResolverQueryResults!	Allow resolving of a URL into a set of IDs.
+Query	user	User!	A particular user, identified by the ID or by email
+Query	users	[User!]!	The users who have profiles on this platform
+Query	usersPaginated	PaginatedUsers!	The users who have profiles on this platform
+Query	usersWithAuthorizationCredential	[User!]!	All Users that hold credentials matching the supplied criteria.
+Query	vapidPublicKey	String	Returns the VAPID public key needed by clients to subscribe to push notifications. Returns null if push notifications are not enabled on this server.
+Query	verifyMemoSignature	MemoSignatureVerificationStatus!	Checks the stored integrity of a signed Memo copy.
+Query	virtualContributor	VirtualContributor!	A particular VirtualContributor
+Query	virtualContributors	[VirtualContributor!]!	The VirtualContributors on this platform; only accessible to platform admins
+Subscription	activityCreated	ActivityCreatedSubscriptionResult!	
+Subscription	calloutPostCreated	CalloutPostCreated!	Receive new Update messages on Communities the currently authenticated User is a member of.
+Subscription	conversationEvents	ConversationEventSubscriptionResult!	Receive conversation events for the authenticated user. Includes conversation lifecycle (created, updated, deleted), messages (received, removed), membership changes (member added, removed), and read receipts.
+Subscription	forumDiscussionUpdated	Discussion!	Receive updates on Discussions
+Subscription	inAppNotificationReceived	InAppNotification!	New in-app notification received for the currently authenticated user.
+Subscription	notificationsUnreadCount	Int!	Counter of unread in-app notifications for the currently authenticated user.
+Subscription	pollOptionsChanged	PollOptionsChangedSubscriptionResult!	Subscribe to option changes on a specific Poll. Fires when options are added, removed, updated, or reordered. Always delivered regardless of resultsVisibility.
+Subscription	pollVoteUpdated	PollVoteUpdatedSubscriptionResult!	Subscribe to vote updates on a specific Poll. Fires when votes are cast or updated. When resultsVisibility = HIDDEN and the subscriber has not voted, events are suppressed.
+Subscription	roomEvents	RoomEventSubscriptionResult!	Receive Room event
+Subscription	subspaceCreated	SubspaceCreated!	Receive new Subspaces created on the Space.
+Subscription	virtualContributorUpdated	VirtualContributorUpdatedSubscriptionResult!	Receive updates on virtual contributors

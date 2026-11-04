@@ -1,0 +1,14 @@
+# The ids a fixture needs after creating a space: its role set, callouts set
+# and membership role set.
+query ReadSpaceRefs($spaceId: UUID!) {
+  lookup {
+    space(ID: $spaceId) {
+      id
+      nameID
+      level
+      community { roleSet { id } }
+      about { membership { roleSetID } }
+      collaboration { id calloutsSet { id } }
+    }
+  }
+}

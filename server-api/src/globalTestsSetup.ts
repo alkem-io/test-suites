@@ -1,85 +1,56 @@
-/* eslint-disable @typescript-eslint/no-require-imports */
-/* eslint-disable @typescript-eslint/no-explicit-any */
-// This is critical to be able to use TypeScript aliases in Jest tests
-require('tsconfig-paths/register');
-import { UiText } from '@ory/kratos-client';
 import {
+  ensureHarnessAdminRoles,
   LogManager,
-  registerInAlkemioOrFail,
-  registerInKratosOrFail,
+  provisionTestIdentities,
+  registerAllTestUsers,
   stringifyConfig,
   testConfiguration,
-  TestUser,
-  verifyInKratosOrFail,
+  verifyEnvPrerequisites,
 } from '@alkemio/tests-lib';
 
-module.exports = async () => {
+export default async function setup() {
+  console.log('[globalSetup] Starting global test setup...');
+
+  // Guard against duplicate invocations when Vitest projects inherit
+  // globalSetup from root config via extends: true (array merge semantics).
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  if ((globalThis as any).__alkemioGlobalSetupDone) return;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  (globalThis as any).__alkemioGlobalSetupDone = true;
+
   LogManager.getLogger().info(
     `\nLaunching tests using configuration: ${stringifyConfig(testConfiguration)}`
   );
 
-  if (!testConfiguration.registerUsers) return;
-
-  // get all user names to register
-  // exclude GLOBAL_ADMIN as he already is created and verified
-  // and it's used to create the the users
-  const userNames = Object.values(TestUser).filter(
-    x => x !== TestUser.GLOBAL_ADMIN
-  );
-  // running register flows in parallel brings 3x less waiting times
-  // NOTE: may require limit on amount of flows run in parallel
-
-  //DO NOT MAKE THIS PARALLEL AS NEW FLOW TRIES TO OVERRIDE OLD FLOWS RESULTING IN ERRORS
-  for (const username of userNames) {
-    try {
-      await userRegisterFlow(username);
-    } catch (error) {
-      LogManager.getLogger().error(
-        `Unable to register user ${username}: ${error}`
-      );
-    }
-  }
-};
-
-const getUserName = (userName: string): [string, string] => {
-  const [first, last] = userName.split('.');
-  return [first, last];
-};
-
-export const userRegisterFlow = async (userName: string) => {
-  const [firstName, lastName] = getUserName(userName);
-  const email = `${userName}@alkem.io`;
-  try {
-    await registerInKratosOrFail(firstName, lastName, email);
-
-    LogManager.getLogger().info(`User ${email} registered in Kratos`);
-  } catch (e: any) {
-    const errorMessages = (e as any).response?.data.ui.messages as UiText[];
-    const errorMessage =
-      errorMessages.map(x => x.text).join('\n') ?? 'Unknown error';
-    const userExists =
-      errorMessages.filter((x: { id: number }) => x.id === 4000007).length > 0;
-
-    if (userExists) {
-      LogManager.getLogger().warn(`User ${email} already registered in Kratos`);
-    } else {
-      throw new Error(errorMessage);
-    }
+  // Provision test-user identities (#565 Phase 2). When the Kratos admin API is
+  // reachable (CI, via an in-cluster port-forward → KRATOS_ADMIN_URL) upsert the
+  // identities deterministically through it — no self-service policy/HIBP checks,
+  // no "already exists" no-op, always the correct password. Otherwise (local dev,
+  // no admin access) fall back to self-service registration.
+  if (testConfiguration.endPoints.kratos.admin) {
+    await provisionTestIdentities();
+  } else if (testConfiguration.registerUsers) {
+    await registerAllTestUsers();
   }
 
-  await verifyInKratosOrFail(email);
-  LogManager.getLogger().info(`User ${email} verified`);
-  try {
-    await registerInAlkemioOrFail(firstName, lastName, email);
-    LogManager.getLogger().info(`User ${email} registered in Alkemio`);
-  } catch (e) {
-    const err = e as Error;
-    if (err.message.indexOf('already registered') > -1) {
-      LogManager.getLogger().warn(
-        `User ${email} already registered in Alkemio`
-      );
-    } else {
-      throw new Error(err.message);
-    }
-  }
-};
+  // Env-prerequisite gate (test-suites#565, Phase 1): prove the auth prerequisite
+  // is actually met by minting a real admin token BEFORE any scenario runs. A
+  // broken env (e.g. Kratos admin provisioned with a mismatched password) then
+  // aborts here with one clear message instead of cascading into every scenario
+  // failing 40+ minutes in. Runs even when registration is skipped (users are
+  // expected pre-seeded in that mode — verify they can authenticate).
+  await verifyEnvPrerequisites();
+
+  // workspace#027 Slice B: the bootstrap account is seeded with the four
+  // operational families only; the harness grants it the content, support,
+  // resource and licensing families through a second Platform Roles Admin.
+  // No-op on a Slice A stack or once done.
+  await ensureHarnessAdminRoles();
+
+  // Return a teardown function so Vitest can ensure a clean exit.
+  // The GraphQL client is stateless HTTP and WebSocket subscriptions are
+  // terminated in per-file afterAll hooks, so no global cleanup is needed.
+  return () => {
+    LogManager.getLogger().info('Global teardown complete');
+  };
+}

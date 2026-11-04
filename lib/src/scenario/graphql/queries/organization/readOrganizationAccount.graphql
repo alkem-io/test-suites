@@ -1,0 +1,3 @@
+query ReadOrganizationAccount($organizationId: UUID!) {
+  lookup { organization(ID: $organizationId) { id account { id } } }
+}

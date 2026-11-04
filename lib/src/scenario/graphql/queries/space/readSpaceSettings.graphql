@@ -1,0 +1,19 @@
+query ReadSpaceSettings($spaceId: UUID!) {
+  lookup {
+    space(ID: $spaceId) {
+      id
+      settings {
+        privacy { mode allowPlatformSupportAsAdmin }
+        membership { policy allowSubspaceAdminsToInviteMembers trustedOrganizations }
+        collaboration {
+          allowMembersToCreateCallouts
+          allowMembersToCreateSubspaces
+          inheritMembershipRights
+          allowEventsFromSubspaces
+          allowMembersToVideoCall
+          allowGuestContributions
+        }
+      }
+    }
+  }
+}

@@ -1,10 +1,11 @@
 // spec: client-web/src/functional-e2e/public-space/public-space-non-member-navigation-test-plan.md
 // seed: client-web/src/functional-e2e/seed-public-space.spec.ts
 
+import { aboutThisSpaceButton } from '../helpers/space-navigation.helper';
 import {
   CommunityMembershipPolicy,
   SpacePrivacyMode,
-} from '@alkemio/client-lib/dist/generated/graphql';
+} from '@alkemio/tests-lib';
 import { TestUser } from '@alkemio/tests-lib/common/enums/test.user';
 import { TestScenarioConfig } from '@alkemio/tests-lib/scenario/config/test-scenario-config';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
@@ -103,14 +104,19 @@ test.describe('Space Tab Navigation for Non-Members', () => {
     // Navigate to the public space as non-member (already authenticated)
     await page.goto(`${baseUrl}/${baseScenario.space.nameId}`);
 
-    // Verify presence of standard tabs
+    // Verify presence of standard tabs. CRD exposes four navigation tabs
+    // (Home, Community, Subspaces, Knowledge) inside the "Space navigation
+    // tabs" navigation; the legacy activity/videoCall/share "tabs" are now
+    // header affordances rendered as a button/link/button.
     await expect(page.getByRole('tab', { name: 'Home' })).toBeVisible();
     await expect(page.getByRole('tab', { name: 'community' })).toBeVisible();
     await expect(page.getByRole('tab', { name: 'Subspaces' })).toBeVisible();
     await expect(page.getByRole('tab', { name: 'Knowledge' })).toBeVisible();
-    await expect(page.getByRole('tab', { name: 'activity' })).toBeVisible();
-    await expect(page.getByRole('tab', { name: 'videoCall' })).toBeVisible();
-    await expect(page.getByRole('tab', { name: 'share' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Activity' })).toBeVisible();
+    await expect(
+      page.getByRole('link', { name: 'Video Call' })
+    ).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Share' })).toBeVisible();
 
     // Verify Home tab is selected by default
     await expect(page.getByRole('tab', { name: 'Home' })).toHaveAttribute(
@@ -136,7 +142,7 @@ test.describe('Space Tab Navigation for Non-Members', () => {
 
     // Verify About this Space button is visible
     await expect(
-      page.getByRole('button', { name: 'About this Space' })
+      aboutThisSpaceButton(page)
     ).toBeVisible();
   });
 
@@ -177,14 +183,19 @@ test.describe('Space Tab Navigation for Non-Members', () => {
     // Click on the Community tab
     await page.getByRole('tab', { name: 'community' }).click();
 
-    // Verify community tab content loads
+    // Verify community tab content loads. CRD replaces the MUI "Who's
+    // involved" heading with the contributors intro paragraph; the hard-coded
+    // "Community members grid" was removed (feature 008 / story
+    // client-web#9928), so community membership now surfaces via the "Space
+    // Leads" section in the space sidebar.
     await expect(
       page.getByText('The contributors to this Space!')
     ).toBeVisible();
 
-    // Verify Who's involved section is visible
     await expect(
-      page.getByRole('heading', { name: "Who's involved" })
+      page
+        .getByRole('navigation', { name: 'Space sidebar' })
+        .getByText('Space Leads')
     ).toBeVisible();
 
     // For non-members, they can see the community content

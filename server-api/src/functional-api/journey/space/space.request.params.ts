@@ -1,13 +1,17 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import {
-  SpaceVisibility,
   SpacePrivacyMode,
   CommunityMembershipPolicy,
 } from '@alkemio/client-lib';
-import { getGraphqlClient, TestUser } from '@alkemio/tests-lib';
+import { delay, getGraphqlClient, TestUser } from '@alkemio/tests-lib';
 import { UniqueIDGenerator } from '@alkemio/tests-lib';
-import { CreateSpaceOnAccountInput } from '@alkemio/tests-lib/core/generated/alkemio-schema';
+import {
+  CreateSpaceOnAccountInput,
+  SpaceSortMode,
+  SpaceVisibility,
+} from '@alkemio/tests-lib/core/generated/alkemio-schema';
 import { graphqlErrorWrapper } from '@alkemio/tests-lib/utils/graphql.wrapper';
+import { getAccountMainEntities } from '@functional-api/account/account.params.request';
 const uniqueId = UniqueIDGenerator.getID();
 
 export const spaceName = `testEcoName${uniqueId}`;
@@ -45,6 +49,110 @@ export const createSpaceBasicData = async (
     );
 
   return graphqlErrorWrapper(callback, userRole);
+};
+
+/**
+ * Account-space creation resilient to the ENV_FAILURE retry-after-commit race,
+ * mirroring `createSubspaceOrFail`.
+ *
+ * On a ~5s connection reset `graphqlErrorWrapper` retries the create, but the
+ * root space may already have committed (reserving the nameID), so the retry
+ * comes back as `nameID already taken` (BAD_USER_INPUT). The space *does* exist;
+ * recover it by looking it up under its owning account by nameID rather than
+ * failing a test for a create that actually succeeded (the 2026-07-15
+ * `space1-… already taken` entitlements failure, test-suites#563).
+ *
+ * A preflight lookup establishes provenance: we reject a nameID that already
+ * exists *before* creating, so the recovery only ever returns a space this call
+ * committed — never a pre-existing one, which would hide a genuine duplicate.
+ *
+ * The lookup POLLS: like subspaces, root-space creation is not atomic — the
+ * space row lands first and community/collaboration keep landing for ~30s, and
+ * while the space is half-built the `account.spaces` query nulls via non-null
+ * bubbling on a failing child resolver. We retry until it reads clean and, if it
+ * never does, throw with both the create error and the last lookup failure.
+ */
+const RECOVERY_LOOKUP_ATTEMPTS = 10;
+const RECOVERY_LOOKUP_DELAY_MS = 5000;
+export const createSpaceBasicDataOrFail = async (
+  spaceName: string,
+  spaceNameId: string,
+  accountID: string,
+  addTutorialCallouts = true,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+): Promise<string> => {
+  // Preflight for provenance: if the nameID is already on the account BEFORE we
+  // create, a later `already taken` is a GENUINE duplicate — not our own
+  // retry-after-commit — and the recovery below would wrongly return that
+  // pre-existing space, hiding the failure. Reject it up front so the recovery
+  // can trust that any `already taken` is our own committed-then-retried create.
+  // (Belt-and-suspenders for the nightly: nameIDs are run-unique on a per-run
+  // fresh DB and the single worker has no concurrent creator; a lookup that
+  // errors/half-reads fails open, since it cannot prove pre-existence.)
+  const preflight = await getAccountMainEntities(accountID, userRole);
+  const preflightSpaces = preflight.data?.lookup?.account?.spaces as
+    | Array<{ id: string; nameID: string }>
+    | undefined;
+  if (preflightSpaces?.some(s => s.nameID === spaceNameId)) {
+    throw new Error(
+      `Refusing to create space '${spaceName}': nameID '${spaceNameId}' already exists on account '${accountID}' before creation — genuine duplicate, not a retry-after-commit`
+    );
+  }
+
+  const response = await createSpaceBasicData(
+    spaceName,
+    spaceNameId,
+    accountID,
+    addTutorialCallouts,
+    userRole
+  );
+  const id = response.data?.createSpace?.id;
+  if (id) {
+    return id;
+  }
+
+  const alreadyTaken = response.error?.errors?.some(e =>
+    String((e as { message?: unknown }).message ?? '').includes(
+      'nameID is already taken'
+    )
+  );
+  const createDetail = response.error
+    ? JSON.stringify(response.error.errors)
+    : 'server returned no createSpace.id and no error';
+
+  if (alreadyTaken) {
+    let lastLookupDetail = '';
+    for (let attempt = 1; attempt <= RECOVERY_LOOKUP_ATTEMPTS; attempt++) {
+      const existing = await getAccountMainEntities(accountID, userRole);
+      const spaces = existing.data?.lookup?.account?.spaces as
+        | Array<{ id: string; nameID: string }>
+        | undefined;
+      if (existing.error || !spaces) {
+        // Half-built space (or a transient env failure): record why and retry.
+        lastLookupDetail = `lookup failed: ${JSON.stringify(
+          existing.error?.errors ?? 'no data'
+        )}`;
+      } else {
+        const match = spaces.find(s => s.nameID === spaceNameId);
+        if (match?.id) {
+          return match.id;
+        }
+        lastLookupDetail = `no space with nameID '${spaceNameId}' among [${spaces
+          .map(s => s.nameID)
+          .join(', ')}]`;
+      }
+      if (attempt < RECOVERY_LOOKUP_ATTEMPTS) {
+        await delay(RECOVERY_LOOKUP_DELAY_MS);
+      }
+    }
+    throw new Error(
+      `Failed to create space '${spaceName}' (nameID '${spaceNameId}', account '${accountID}'): create reported '${createDetail}' and the committed-create recovery did not stabilise after ${RECOVERY_LOOKUP_ATTEMPTS} lookups: ${lastLookupDetail}`
+    );
+  }
+
+  throw new Error(
+    `Failed to create space '${spaceName}' (nameID '${spaceNameId}', account '${accountID}'): ${createDetail}`
+  );
 };
 
 export const createSpaceAndGetData = async (
@@ -85,6 +193,24 @@ export const getSpaceData = async (
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
     graphqlClient.GetSpaceData(
+      {
+        spaceId,
+      },
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+
+  return graphqlErrorWrapper(callback, role);
+};
+
+export const getSpaceCommunication = async (
+  spaceId = spaceNameId,
+  role = TestUser.GLOBAL_ADMIN
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string | undefined) =>
+    graphqlClient.GetSpaceCommunication(
       {
         spaceId,
       },
@@ -170,23 +296,37 @@ export const deleteSpace = async (
   return graphqlErrorWrapper(callback, userRole);
 };
 
-export const updateSpacePlatformSettings = async (
+/**
+ * workspace#027 Slice B (FR-020): `updateSpacePlatformSettings` is gone.
+ * Visibility is `adminUpdateSpaceVisibility` (Platform License Manager's);
+ * the alias is a protected `nameID` on `updateSpace` (the space's own admins,
+ * `UPDATE_NAMEID`). Two surfaces, two helpers.
+ */
+export const updateSpaceVisibility = async (
   spaceId: string,
-  nameId: any,
   visibility: SpaceVisibility,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
-    graphqlClient.UpdateSpacePlatformSettings(
-      {
-        spaceId,
-        nameId,
-        visibility,
-      },
-      {
-        authorization: `Bearer ${authToken}`,
-      }
+    graphqlClient.AdminUpdateSpaceVisibility(
+      { spaceId, visibility },
+      { authorization: `Bearer ${authToken}` }
+    );
+
+  return graphqlErrorWrapper(callback, userRole);
+};
+
+export const updateSpaceNameId = async (
+  spaceId: string,
+  nameId: string,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string | undefined) =>
+    graphqlClient.UpdateSpaceNameId(
+      { spaceId, nameId },
+      { authorization: `Bearer ${authToken}` }
     );
 
   return graphqlErrorWrapper(callback, userRole);
@@ -213,6 +353,7 @@ export const updateSpaceSettings = async (
       allowMembersToVideoCall?: boolean;
       allowGuestContributions?: boolean;
     };
+    sortMode?: SpaceSortMode;
   },
 
   userRole: TestUser = TestUser.GLOBAL_ADMIN
@@ -232,11 +373,11 @@ export const updateSpaceSettings = async (
               // mode: settings?.privacy?.mode || SpacePrivacyMode.Private, // todo
               mode: settings?.privacy?.mode, // todo
               allowPlatformSupportAsAdmin:
-                settings?.privacy?.allowPlatformSupportAsAdmin || true,
+                settings?.privacy?.allowPlatformSupportAsAdmin ?? true,
             },
             membership: {
               allowSubspaceAdminsToInviteMembers:
-                settings?.membership?.allowSubspaceAdminsToInviteMembers ||
+                settings?.membership?.allowSubspaceAdminsToInviteMembers ??
                 true,
               policy:
                 settings?.membership?.policy || CommunityMembershipPolicy.Open,
@@ -256,6 +397,9 @@ export const updateSpaceSettings = async (
               allowGuestContributions:
                 settings?.collaboration?.allowGuestContributions ?? false,
             },
+            ...(settings?.sortMode !== undefined && {
+              sortMode: settings.sortMode,
+            }),
           }, // Add an empty object for the settings property
         },
       },
@@ -372,19 +516,19 @@ export const getSpacesFilteredByVisibilityNoAccess = async (
 };
 
 export const getUserRoleSpacesVisibility = async (
-  userID: string,
+  actorID: string,
   visibility: SpaceVisibility,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
-  if (userID.length !== 36) {
-    throw new Error(`Invalid user ID: ${userID}`);
+  if (actorID.length !== 36) {
+    throw new Error(`Invalid actor ID: ${actorID}`);
   }
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
     graphqlClient.GetUserRoles(
       {
         rolesData: {
-          userID,
+          actorID,
           filter: { visibilities: [visibility] },
         },
       },

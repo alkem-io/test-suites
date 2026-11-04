@@ -1,0 +1,7 @@
+mutation UpdateSpaceNameId($spaceId: UUID!, $nameId: NameID!) {
+  updateSpace(spaceData: { ID: $spaceId, nameID: $nameId }) {
+    id
+    nameID
+    __typename
+  }
+}

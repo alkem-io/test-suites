@@ -1,0 +1,41 @@
+# Reads the user's Space-shaped pending surfaces alongside the
+# organization-shaped ones in one round trip, so a test can assert the Space
+# count/list stay exact while the organization rows surface only on their own
+# fields.
+query MeOrganizationPending {
+  me {
+    communityInvitations {
+      invitation {
+        id
+      }
+    }
+    communityApplications {
+      application {
+        id
+      }
+    }
+    communityInvitationsCount
+    organizationInvitations {
+      id
+      invitation {
+        id
+        extraRoles
+      }
+      organization {
+        id
+        nameID
+      }
+    }
+    organizationApplications {
+      id
+      application {
+        id
+      }
+      organization {
+        id
+        nameID
+      }
+    }
+    organizationInvitationsCount
+  }
+}

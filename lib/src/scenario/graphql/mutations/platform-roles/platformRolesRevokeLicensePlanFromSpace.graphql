@@ -1,0 +1,5 @@
+mutation PlatformRolesRevokeLicensePlanFromSpace($planData: RevokeLicensePlanFromSpace!) {
+  revokeLicensePlanFromSpace(planData: $planData) {
+    id
+  }
+}

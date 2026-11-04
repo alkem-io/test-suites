@@ -1,0 +1,3 @@
+query ReadPlatformLanguageConfiguration {
+  platform { configuration { language { eligible default } } }
+}

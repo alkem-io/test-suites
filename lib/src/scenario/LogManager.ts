@@ -20,7 +20,7 @@ export class LogManager {
     return winston.createLogger({
       transports: [
         new winston.transports.Console({
-          level: 'error',
+          level: process.env.LOG_LEVEL ?? 'error',
           format: this.logFormat,
         }),
         new winston.transports.File({

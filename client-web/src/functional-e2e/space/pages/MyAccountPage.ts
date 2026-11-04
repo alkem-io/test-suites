@@ -12,15 +12,29 @@ export class MyAccountPage {
   }
 
   get hostedSpacesHeading() {
-    return this.page.getByRole('heading', { name: 'Hosted Spaces' });
+    // CRD nests "Create Space" / "Create New Space" inside the Hosted Spaces
+    // section heading, which leaves the heading's computed accessible name
+    // unreliable; assert the section via its stable label text instead.
+    return this.page.getByText('Hosted Spaces').first();
   }
 
   get addSpaceButton() {
-    return this.page.getByRole('button', { name: 'Add' }).first();
+    // client-web#10437: the Hosted Spaces section (open by default) lists the
+    // hosted Space cards plus a dashed "Create New Space" tile — a
+    // `<button aria-label="Create new space">` (ContributorAccountView
+    // InlineCreateCard). The former header "Create Space" button is gone.
+    return this.page.getByRole('button', { name: 'Create new space', exact: true });
   }
 
   async openCreateSpaceDialog() {
+    // Wait for the Hosted Spaces section to render before clicking, so the
+    // "Create new space" tile is wired up (avoids a click that opens nothing).
+    await expect(this.hostedSpacesHeading).toBeVisible({ timeout: 15_000 });
+    await this.addSpaceButton.waitFor({ state: 'visible', timeout: 15_000 });
     await this.addSpaceButton.click();
+    await expect(
+      this.page.getByRole('dialog', { name: 'Create new Space' })
+    ).toBeVisible({ timeout: 15_000 });
   }
 
   async verifyHostedSpacesVisible() {

@@ -1,7 +1,18 @@
 name: Manual Clean Up Environment and Trigger Tests
+run-name: Manual e2e (tests @ ${{ inputs.test-ref || github.ref_name }})
 
 on:
   workflow_dispatch:
+    inputs:
+      test-ref:
+        description: >-
+          Branch or tag in this repo holding the TEST CODE for the e2e job.
+          Dispatch from develop and point test-ref at a feature branch: the
+          workflow definition stays develop's, which is what the
+          arc-e2e-linux-x64 runner group's workflow allowlist matches on.
+          Empty = the dispatched ref itself.
+        required: false
+        default: ""
 
 jobs:
   cleanup-db:
@@ -10,13 +21,83 @@ jobs:
       postgres_db: alkemio
     secrets: inherit
 
-  trigger-e2e-tests-travis-ci:
+  run-e2e-tests:
     needs: cleanup-db
-    runs-on: ubuntu-latest
+    runs-on: arc-e2e-linux-x64
     steps:
-      - name: Run e2e Tests
-        uses: cmdbg/travis-ci-action@main
+      # test-ref is unreviewed code running on a self-hosted runner with
+      # inherited secrets, so constrain it before checkout: branches and tags
+      # in THIS repo only. refs/pull/*/head resolves in the base repo too,
+      # which would execute an outside fork's PR code here; bare SHAs are
+      # rejected for the same reason (a fork PR head SHA is reachable via the
+      # pull ref). First step in the job — nothing untrusted has run yet.
+      - name: Validate test-ref
+        if: inputs.test-ref != ''
         env:
-          TRAVIS_TOKEN: ${{ secrets.TRAVIS_TOKEN }}
-          TARGET_REPOSITORY: alkem-io/test-suites
-          TARGET_BRANCH: develop
+          TEST_REF: ${{ inputs.test-ref }}
+        run: |
+          case "$TEST_REF" in
+            */pull/*|refs/pull/*)
+              echo "::error::test-ref must not be a pull-request ref"; exit 1 ;;
+          esac
+          git ls-remote --exit-code --heads --tags \
+            "https://github.com/${GITHUB_REPOSITORY}.git" "$TEST_REF" \
+            || { echo "::error::test-ref '$TEST_REF' is not a branch or tag in ${GITHUB_REPOSITORY}"; exit 1; }
+
+      # The code under test — honors the test-ref dispatch input so a feature
+      # branch's tests can run under develop's reviewed workflow definition.
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.test-ref || github.ref }}
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v7
+        with:
+          # Pinned: lts/* moved to Node 26 when it became the active LTS
+          # (2026-10), and the Node 26 binary does not start on the
+          # arc-e2e-linux-x64 runner image (exit 127). Raise deliberately.
+          node-version: "24"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Kubectl
+        uses: azure/setup-kubectl@v5.1.0
+        with:
+          version: "v1.29.6"
+
+      - name: Set up Kubeconfig for Hetzner k3s
+        run: |
+          mkdir -p $HOME/.kube
+          echo "${{ secrets.KUBECONFIG_SECRET_HETZNER_TEST }}" > $HOME/.kube/config
+          chmod 600 $HOME/.kube/config
+
+      - name: Run server API nightly tests
+        env:
+          ALKEMIO_SERVER: ${{ vars.ALKEMIO_SERVER }}
+          ALKEMIO_SERVER_URL: ${{ vars.ALKEMIO_SERVER_URL }}
+          ALKEMIO_BASE_URL: ${{ vars.ALKEMIO_BASE_URL }}
+          ALKEMIO_SERVER_WS: ${{ vars.ALKEMIO_SERVER_WS }}
+          ALKEMIO_SERVER_REST: ${{ vars.ALKEMIO_SERVER_REST }}
+          KRATOS_ENDPOINT: ${{ vars.KRATOS_ENDPOINT }}
+          MAIL_SLURPER_ENDPOINT: ${{ vars.MAIL_SLURPER_ENDPOINT }}
+          AUTH_TEST_HARNESS_PASSWORD: ${{ secrets.AUTH_TEST_HARNESS_PASSWORD }}
+          # Deterministic Kratos provisioning (#565 Phase 2): the harness upserts
+          # test identities via the in-cluster admin API, port-forwarded below.
+          KRATOS_ADMIN_URL: http://localhost:4434
+        run: |
+          set -uo pipefail
+          # kratos-admin is ClusterIP (network-isolated); reach it via a
+          # port-forward that lives for the whole test run.
+          kubectl port-forward -n default svc/kratos-admin 4434:80 > /tmp/kratos-admin-pf.log 2>&1 &
+          PF_PID=$!
+          trap 'kill $PF_PID 2>/dev/null || true' EXIT
+          for i in $(seq 1 20); do
+            grep -q "Forwarding from" /tmp/kratos-admin-pf.log && break
+            sleep 1
+          done
+          if ! grep -q "Forwarding from" /tmp/kratos-admin-pf.log; then
+            echo "kratos-admin port-forward failed"; cat /tmp/kratos-admin-pf.log; exit 1
+          fi
+          pnpm --filter @alkemio/test-suite-server-api run test:nightly

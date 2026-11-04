@@ -11,6 +11,19 @@ query MeQuery {
     communityInvitations {
       invitation {
         ...InvitationData
+        # `me` is read as the invited actor's own account admin here, so
+        # (unlike the shared InvitationData fragment) this caller does hold
+        # the server's ROLESET_ENTRY_ROLE_INVITE_ACCEPT privilege for it.
+        # SpaceJoinPreview: a narrow {id, displayName, url} projection, NOT
+        # SpaceAbout — `id` is the SPACE id. The field intentionally exposes
+        # nothing else, so the invited organization's admins (who hold no READ
+        # on a private ancestor) cannot read its About content through the
+        # consent preview.
+        spacesToJoinOnAccept {
+          id
+          displayName
+          url
+        }
       }
       spacePendingMembershipInfo {
         id

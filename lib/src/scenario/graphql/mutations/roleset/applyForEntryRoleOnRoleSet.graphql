@@ -1,0 +1,3 @@
+mutation ApplyForEntryRoleOnRoleSet($applicationData: ApplyForEntryRoleOnRoleSetInput!) {
+  applyForEntryRoleOnRoleSet(applicationData: $applicationData) { id state actor { id } }
+}

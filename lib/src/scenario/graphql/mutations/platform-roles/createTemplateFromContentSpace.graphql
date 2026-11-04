@@ -1,0 +1,5 @@
+mutation createTemplateFromContentSpace($templateData: CreateTemplateFromContentSpaceOnTemplatesSetInput!) {
+  createTemplateFromContentSpace(templateData: $templateData) {
+    id
+  }
+}

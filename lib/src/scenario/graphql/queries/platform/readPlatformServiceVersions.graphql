@@ -1,0 +1,1 @@
+query ReadPlatformServiceVersions { platform { metadata { services { name version } } } }

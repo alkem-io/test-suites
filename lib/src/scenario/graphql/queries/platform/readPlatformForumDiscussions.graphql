@@ -1,0 +1,1 @@
+query ReadPlatformForumDiscussions { platform { forum { id discussions { id nameID } } } }

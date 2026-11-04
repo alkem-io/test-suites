@@ -1,8 +1,4 @@
-fragment AgentData on Agent {
+fragment AgentData on Actor {
   id
-  credentials {
-    id
-    resourceID
-    type
-  }
+  type
 }

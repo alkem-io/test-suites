@@ -1,0 +1,5 @@
+mutation adminUserEmailChangeDriftResolve($adminUserEmailChangeDriftResolveData: AdminUserEmailChangeDriftResolveInput!) {
+  adminUserEmailChangeDriftResolve(adminUserEmailChangeDriftResolveData: $adminUserEmailChangeDriftResolveData) {
+    success
+  }
+}

@@ -3,64 +3,39 @@ import request from 'supertest';
 import { getUserToken } from './get-user-token';
 import { testConfiguration } from '../../config/test.configuration';
 
+/**
+ * Ensures the user exists in Alkemio by authenticating (which triggers
+ * server-side auto-creation) and returns the Alkemio user ID.
+ */
 export const registerInAlkemioOrFail = async (
-  firstName: string,
-  lastName: string,
+  _firstName: string,
+  _lastName: string,
   email: string
 ) => {
-  const userResponse = await createUserNewRegistration(
-    firstName,
-    lastName,
-    email
-  );
+  const userToken = await getUserToken(email);
 
-  if (userResponse.body.errors) {
-    const errText = userResponse.body.errors
-      .map((x: any) => x.message)
-      .join('\n');
-
-    if (
-      errText.indexOf('nameID is already taken') > -1 ||
-      errText.indexOf('User profile with the specified email') > -1
-    ) {
-      throw new Error('User already exists');
-    } else {
-      const extensionCode = userResponse.body.errors.map(
-        (x: any) => x.extensions.code
-      );
-      throw new Error(
-        `Unable to register user in Alkemio for user '${email}:: ${extensionCode}: ${errText}`
-      );
-    }
-  }
-  return userResponse.body.data.createUserNewRegistration.id;
-};
-
-export const createUserNewRegistration = async (
-  firstName: string,
-  lastName: string,
-  userEmail: string
-) => {
-  const requestParams = {
-    operationName: null,
-    query: 'mutation createUserNewRegistration { createUserNewRegistration { id }}',
-    variables: {
-      userData: {
-        firstName,
-        lastName,
-        email: userEmail,
-        nameID: firstName + lastName,
-        displayName: firstName + ' ' + lastName,
-      },
-    },
-  };
-
-  const userToken = await getUserToken(userEmail);
-
-  return await request(testConfiguration.endPoints.graphql.private)
+  const response = await request(testConfiguration.endPoints.graphql.private)
     .post('')
-    .send({ ...requestParams })
+    .send({ query: '{ me { user { id } } }' })
     .set('Accept', 'application/json')
     .set('Authorization', `Bearer ${userToken}`);
+
+  if (response.body.errors) {
+    const errText = response.body.errors
+      .map((x: any) => x.message)
+      .join('\n');
+    throw new Error(
+      `Unable to get Alkemio user ID for '${email}': ${errText}`
+    );
+  }
+
+  const userId = response.body.data?.me?.user?.id;
+  if (!userId) {
+    throw new Error(
+      `User profile not found for '${email}' after authentication`
+    );
+  }
+
+  return userId;
 };
 

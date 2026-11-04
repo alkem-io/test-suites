@@ -1,0 +1,1 @@
+query ReadMyLanguageSetting { me { user { id settings { language } } } }

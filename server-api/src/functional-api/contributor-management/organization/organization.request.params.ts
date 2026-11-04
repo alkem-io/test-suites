@@ -5,6 +5,7 @@ import {
   CreateOrganizationInput,
   UpdateOrganizationSettingsEntityInput,
 } from '@alkemio/tests-lib/core/generated/alkemio-schema';
+import { eventOnOrganizationVerification } from './organization-verification.events.request.params';
 const uniqueId = UniqueIDGenerator.getID();
 export const organizationName = `testorghost${uniqueId}`;
 export const hostNameId = `testorghost${uniqueId}`;
@@ -152,5 +153,78 @@ export const updateOrganizationSettings = async (
       }
     );
 
+  return graphqlErrorWrapper(callback, userRole);
+};
+
+export const getOrganizationAssociateEligibility = async (
+  organizationId: string,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string | undefined) =>
+    graphqlClient.GetOrganizationAssociateEligibility(
+      {
+        organizationId,
+      },
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+  return graphqlErrorWrapper(callback, userRole);
+};
+
+/**
+ * Verifies an organization by manual attestation end to end (VERIFICATION_REQUEST
+ * then MANUALLY_VERIFY, as a global admin), the same lifecycle
+ * `organization.verification.service.lifecycle.ts` drives from the admin UI.
+ * The domain-join door (US4) is gated on this status, never on the domain
+ * alone (`organization.domain` is self-asserted, unverified, non-unique).
+ */
+export const verifyOrganizationManually = async (
+  organizationId: string
+): Promise<void> => {
+  const org = await getOrganizationData(organizationId);
+  const verificationId = org?.data?.organization?.verification?.id;
+  if (!verificationId) {
+    throw new Error(
+      `verifyOrganizationManually: no verification id for organization ${organizationId}`
+    );
+  }
+  // The wrapper resolves GraphQL failures as `{ error }` — it never rejects —
+  // so each transition MUST be inspected: an unverified organization keeps
+  // the domain-join door shut and every US4 assertion downstream would fail
+  // far from the cause.
+  for (const eventName of ['VERIFICATION_REQUEST', 'MANUALLY_VERIFY']) {
+    const res = await eventOnOrganizationVerification(
+      verificationId,
+      eventName
+    );
+    if (res?.error) {
+      throw new Error(
+        `verifyOrganizationManually: ${eventName} failed for organization ${organizationId} (verification ${verificationId}): ${JSON.stringify(
+          res.error.errors
+        )}`
+      );
+    }
+  }
+};
+
+// The per-organization authorization reset loop the release runbook binds
+// the stored APPLY rule with; there is no batch form
+// (`organization.resolver.mutations.ts:116`).
+export const authorizationPolicyResetOnOrganization = async (
+  organizationID: string,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string | undefined) =>
+    graphqlClient.AuthorizationPolicyResetOnOrganization(
+      {
+        organizationID,
+      },
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
   return graphqlErrorWrapper(callback, userRole);
 };

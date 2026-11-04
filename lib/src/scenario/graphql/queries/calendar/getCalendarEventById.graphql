@@ -1,0 +1,29 @@
+query GetCalendarEventById($eventId: UUID!) {
+  lookup {
+    calendarEvent(ID: $eventId) {
+      id
+      profile {
+        displayName
+        description
+        url
+        location {
+          city
+          country
+        }
+      }
+      type
+      wholeDay
+      multipleDays
+      startDate
+      durationMinutes
+      durationDays
+      googleCalendarUrl
+      outlookCalendarUrl
+      icsDownloadUrl
+      createdBy {
+        id
+        nameID
+      }
+    }
+  }
+}

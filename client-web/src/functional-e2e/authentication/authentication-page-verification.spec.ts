@@ -13,8 +13,8 @@ import {
   verifyVerificationPageWithSendAgainButtonElements,
 } from '../identity-flows/verify-page-objects';
 import {
-  continueButton,
-  emailField,
+  recoveryEmailField,
+  resendVerificationButton,
 } from './common-authentication-page-elements';
 import { UniqueIDGenerator } from '@alkemio/tests-lib';
 
@@ -54,9 +54,9 @@ test.describe('Authentication - Page Element Verification', () => {
     await navigateToVerificationPage(baseUrl, page);
     await verifyVerificationPageElements(page);
 
-    await emailField(page).click();
-    await emailField(page).fill(userEmail);
-    await continueButton(page).click();
+    await recoveryEmailField(page).click();
+    await recoveryEmailField(page).fill(userEmail);
+    await resendVerificationButton(page).click();
 
     await verifyVerificationPageWithSendAgainButtonElements(page);
   });

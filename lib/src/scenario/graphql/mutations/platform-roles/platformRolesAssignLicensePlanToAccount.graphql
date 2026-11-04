@@ -1,0 +1,5 @@
+mutation PlatformRolesAssignLicensePlanToAccount($planData: AssignLicensePlanToAccount!) {
+  assignLicensePlanToAccount(planData: $planData) {
+    id
+  }
+}

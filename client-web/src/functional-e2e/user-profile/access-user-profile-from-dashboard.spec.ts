@@ -1,42 +1,21 @@
 // spec: client-web/src/functional-e2e/user-profile-test-plan.md
 // Test: 1.1 Access User Profile from Dashboard
 
-import { delay } from '@alkemio/tests-lib';
-import { test, expect } from '@playwright/test';
-import { verifyMyDashboardWelcomeElement } from '../my-dashboard/my-dashboard-page-objects';
+import { expect } from '@playwright/test';
+import { expectSignedIn } from '../my-dashboard/my-dashboard-page-objects';
+import { createPersonaTest } from '../fixtures/authenticated-session.fixture';
 
-const password = process.env.AUTH_TEST_HARNESS_PASSWORD!;
 const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
+
+const test = createPersonaTest('admin@alkem.io');
 
 test.describe('Navigation and Access', () => {
   test('1.1 Access User Profile from Dashboard', async ({ page }) => {
-    // Navigate to home page
+    // Already authenticated as admin via the shared persona session; land on the
+    // home dashboard.
     await page.goto(baseUrl);
 
-    // Accept cookies
-    await page.getByRole('button', { name: 'Accept All Cookies' }).click();
-
-    // 1. Click the user icon in the top navigation bar
-    await page.getByTestId('PersonIcon').click({ timeout: 500 });
-    // Click login menu item
-    await page
-      .getByRole('menuitem', { name: 'Log In | Sign Up' })
-      .click({ timeout: 500 });
-
-    // Wait for login page
-    await page.waitForURL(/.*login.*/);
-
-    // Login
-    await page.getByRole('textbox', { name: 'E-Mail' }).fill('admin@alkem.io');
-    await page.getByRole('textbox', { name: 'Password' }).fill(password);
-    await page
-      .getByRole('button', { name: 'Sign in', exact: true })
-      .click({ timeout: 500 });
-
-    // Wait for dashboard
-    await page.waitForURL(/.*home.*/);
-
-    await verifyMyDashboardWelcomeElement(page);
+    await expectSignedIn(page);
 
     // 2. Click "My Account" from the dropdown menu
     await page.getByRole('link', { name: 'My Account' }).click();
@@ -45,22 +24,23 @@ test.describe('Navigation and Access', () => {
     await page.waitForURL(/.*\/user\/.*\/settings\/account/);
     await expect(page).toHaveURL(/.*\/user\/admin-alkemio\/settings\/account/);
 
-    // Verify user settings page loads with account tab active
-    await expect(page.getByRole('tab', { name: 'account' })).toBeVisible({
-      timeout: 500,
-    });
+    // Verify user settings page loads with account tab active. Use the default
+    // expect timeout rather than a 500ms one — the settings page is slower to
+    // render on the test env and the tight bound flaked there.
+    await expect(page.getByRole('tab', { name: 'account' })).toBeVisible();
 
     // Verify page banner displays user's avatar and name
     await expect(
       page.getByRole('heading', { name: 'admin alkemio', level: 1 })
     ).toBeVisible();
 
-    // 4. Verify all six tabs are visible
-    await expect(page.getByRole('tab', { name: 'My profile' })).toBeVisible();
+    // 4. Verify all settings tabs are visible. CRD renames "My profile" ->
+    // "Profile" and "organizations" -> "Organisations".
+    await expect(page.getByRole('tab', { name: 'Profile' })).toBeVisible();
     await expect(page.getByRole('tab', { name: 'account' })).toBeVisible();
     await expect(page.getByRole('tab', { name: 'membership' })).toBeVisible();
     await expect(
-      page.getByRole('tab', { name: 'organizations' })
+      page.getByRole('tab', { name: 'Organisations' })
     ).toBeVisible();
     await expect(
       page.getByRole('tab', { name: 'notifications' })

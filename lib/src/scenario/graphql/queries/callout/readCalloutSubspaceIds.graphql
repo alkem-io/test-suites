@@ -1,0 +1,12 @@
+# The subspace ids a Spaces callout shows the actor, with the withheld flag and
+# nothing else — the ids-only control a parity check compares against the
+# full `ReadCalloutSubspaces` selection.
+query ReadCalloutSubspaceIds($calloutId: UUID!) {
+  lookup {
+    callout(ID: $calloutId) {
+      id
+      hasHiddenSpaces
+      framing { subspaces { id } }
+    }
+  }
+}

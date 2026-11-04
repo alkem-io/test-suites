@@ -52,7 +52,6 @@ describe('Organization', () => {
         website,
         contactEmail
       );
-
       const data = res.data?.createOrganization;
       const testOrgId = data?.id ?? '';
 

@@ -1,0 +1,3 @@
+query ReadOrganizationProfileTagsets($organizationId: UUID!) {
+  organization(ID: $organizationId) { id profile { tagsets { id name } } }
+}

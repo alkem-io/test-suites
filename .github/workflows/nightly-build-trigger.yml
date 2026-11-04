@@ -1,28 +1,252 @@
 name: Nightly Clean Up Environment and Trigger Tests
+# Surface which test code a run actually exercised — dispatches with a
+# test-ref would otherwise be indistinguishable from plain nightlies in the
+# run list.
+run-name: Nightly (tests @ ${{ inputs.test-ref || github.ref_name }})
 
 on:
   schedule:
     - cron: "0 0 * * *" # Runs every day at midnight UTC
+  # Allow on-demand runs (verify a fix, reproduce a failure) — same pipeline,
+  # including the shared test-cluster deploy lock.
+  workflow_dispatch:
+    inputs:
+      test-ref:
+        description: >-
+          Branch or tag in this repo holding the TEST CODE for the e2e job.
+          Dispatch this workflow from develop and point test-ref at a feature
+          branch: the workflow definition — secret exposure, lock handling,
+          runner-group routing — stays develop's, which is what the
+          arc-e2e-linux-x64 runner group's workflow allowlist matches on.
+          Empty = the dispatched ref itself.
+        required: false
+        default: ""
 
 jobs:
+  deploy-all-services:
+    uses: ./.github/workflows/deploy-all-services.yml
+    secrets: inherit
+
+  # Take the shared test-cluster lock *after* our own service deploys finish, and
+  # hold it across cleanup-db + e2e so an ad-hoc `build-deploy-k8s-test-hetzner`
+  # dispatch can't roll the server pod / migrate the DB mid-run — which tore down
+  # the auth endpoint and cascaded a run to failure (test-suites#563). Acquiring
+  # after deploy-all-services is deadlock-free: the deploys we trigger run while
+  # the lock is still free.
+  acquire-lock:
+    needs: deploy-all-services
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install Kubectl
+        uses: azure/setup-kubectl@v5.1.0
+        with:
+          version: "v1.29.6"
+
+      - name: Set up Kubeconfig for Hetzner k3s
+        run: |
+          mkdir -p "$HOME/.kube"
+          echo "${{ secrets.KUBECONFIG_SECRET_HETZNER_TEST }}" > "$HOME/.kube/config"
+          chmod 600 "$HOME/.kube/config"
+
+      - name: Acquire test-cluster deploy lock
+        run: |
+          chmod +x .github/scripts/test-cluster-lock.sh
+          .github/scripts/test-cluster-lock.sh acquire "nightly-${{ github.run_id }}"
+
   cleanup-db:
+    needs: acquire-lock
     uses: ./.github/workflows/cleanup-database.yml
     with:
       postgres_db: alkemio
     secrets: inherit
 
-  deploy-all-services:
+  run-e2e-tests:
     needs: cleanup-db
-    uses: ./.github/workflows/deploy-all-services.yml
-    secrets: inherit
+    runs-on: arc-e2e-linux-x64
+    permissions:
+      contents: write
+    steps:
+      # test-ref is unreviewed code running on a self-hosted runner with
+      # inherited secrets, so constrain it before checkout: branches and tags
+      # in THIS repo only. refs/pull/*/head resolves in the base repo too,
+      # which would execute an outside fork's PR code here; bare SHAs are
+      # rejected for the same reason (a fork PR head SHA is reachable via the
+      # pull ref). First step in the job — nothing untrusted has run yet.
+      - name: Validate test-ref
+        if: inputs.test-ref != ''
+        env:
+          TEST_REF: ${{ inputs.test-ref }}
+        run: |
+          case "$TEST_REF" in
+            */pull/*|refs/pull/*)
+              echo "::error::test-ref must not be a pull-request ref"; exit 1 ;;
+          esac
+          git ls-remote --exit-code --heads --tags \
+            "https://github.com/${GITHUB_REPOSITORY}.git" "$TEST_REF" \
+            || { echo "::error::test-ref '$TEST_REF' is not a branch or tag in ${GITHUB_REPOSITORY}"; exit 1; }
 
-  trigger-e2e-tests-travis-ci:
-    needs: deploy-all-services
+      # The code under test — honors the test-ref dispatch input so a feature
+      # branch's tests (and their harness scripts, which are inseparable from
+      # them) can run under develop's reviewed workflow definition. The lock
+      # jobs deliberately do NOT honor test-ref: test-cluster-lock.sh always
+      # comes from the dispatched (trusted) ref. `inputs` is empty on schedule
+      # events, so nightlies fall through to their own ref.
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.test-ref || github.ref }}
+
+      # Pull the existing GitHub Pages site so we can append this run's report
+      # and keep a full history (incremental runs) across deployments.
+      - name: Checkout existing GitHub Pages content (gh-pages)
+        continue-on-error: true
+        uses: actions/checkout@v7
+        with:
+          ref: gh-pages
+          path: out
+          fetch-depth: 1
+
+      # Set before any step that can fail: the always() publish step reads
+      # RUN_DATE/RUN_ID, so an early failure (e.g. setup-node) must still
+      # leave them defined or the "skipped" report never reaches gh-pages.
+      - name: Set run folder variables
+        run: |
+          DATE=$(date +'%Y-%m-%d')
+          echo "RUN_DATE=$DATE" >> $GITHUB_ENV
+          echo "RUN_ID=${{ github.run_id }}" >> $GITHUB_ENV
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v7
+        with:
+          # Pinned: lts/* moved to Node 26 when it became the active LTS
+          # (2026-10), and the Node 26 binary does not start on the
+          # arc-e2e-linux-x64 runner image (exit 127). Raise deliberately.
+          node-version: "24"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Kubectl
+        uses: azure/setup-kubectl@v5.1.0
+        with:
+          version: "v1.29.6"
+
+      - name: Set up Kubeconfig for Hetzner k3s
+        run: |
+          mkdir -p $HOME/.kube
+          echo "${{ secrets.KUBECONFIG_SECRET_HETZNER_TEST }}" > $HOME/.kube/config
+          chmod 600 $HOME/.kube/config
+
+      # The stock oryd/mailslurper image loses mail at random (connection-pool
+      # leak + SQLite lock; see infra/mailslurper/README.md), which shows up as
+      # off-by-one recipient counts in the notification specs. Pin the patched
+      # build from this repo on the test cluster before the tests run. Done
+      # here rather than in dev-orchestration so the fix lives with the tests
+      # that need it; a no-op when the image is already current. If the
+      # rollout does not complete (e.g. the image cannot be pulled), roll
+      # back to whatever was running so the nightly still executes, and say so.
+      - name: Use the patched MailSlurper image on the test cluster
+        env:
+          MAILSLURPER_IMAGE: ghcr.io/alkem-io/test-suites/mailslurper:smtps-4c6aecc-p2
+        run: |
+          current=$(kubectl get deployment/mailslurper-deployment \
+            -o jsonpath='{.spec.template.spec.containers[?(@.name=="mailslurper")].image}')
+          if [ "$current" = "$MAILSLURPER_IMAGE" ]; then
+            echo "mailslurper already runs $MAILSLURPER_IMAGE"
+            exit 0
+          fi
+          echo "mailslurper runs '$current'; switching to $MAILSLURPER_IMAGE"
+          kubectl set image deployment/mailslurper-deployment "mailslurper=$MAILSLURPER_IMAGE"
+          if ! kubectl rollout status deployment/mailslurper-deployment --timeout=180s; then
+            echo "::warning::patched MailSlurper rollout failed; rolling back to '$current' — this run may lose mail"
+            kubectl rollout undo deployment/mailslurper-deployment
+            kubectl rollout status deployment/mailslurper-deployment --timeout=180s
+          fi
+
+      - name: Run server API nightly tests
+        id: server-api-tests
+        continue-on-error: true
+        env:
+          ALKEMIO_SERVER: ${{ vars.ALKEMIO_SERVER }}
+          ALKEMIO_SERVER_URL: ${{ vars.ALKEMIO_SERVER_URL }}
+          ALKEMIO_BASE_URL: ${{ vars.ALKEMIO_BASE_URL }}
+          ALKEMIO_SERVER_WS: ${{ vars.ALKEMIO_SERVER_WS }}
+          ALKEMIO_SERVER_REST: ${{ vars.ALKEMIO_SERVER_REST }}
+          KRATOS_ENDPOINT: ${{ vars.KRATOS_ENDPOINT }}
+          MAIL_SLURPER_ENDPOINT: ${{ vars.MAIL_SLURPER_ENDPOINT }}
+          AUTH_TEST_HARNESS_PASSWORD: ${{ secrets.AUTH_TEST_HARNESS_PASSWORD }}
+          # Deterministic Kratos provisioning (#565 Phase 2): the harness upserts
+          # test identities via the in-cluster admin API, port-forwarded below.
+          KRATOS_ADMIN_URL: http://localhost:4434
+          # Surface [ENV_FAILURE] retry warnings in CI stdout. The console
+          # transport defaults to error-only, which hid the silent
+          # retried-after-commit createSubspace failures behind cryptic
+          # 'nameID already taken' errors (2026-07-15 nightly, #563).
+          LOG_LEVEL: warn
+        run: |
+          set -uo pipefail
+          # kratos-admin is ClusterIP (network-isolated); reach it via a
+          # port-forward that lives for the whole test run.
+          kubectl port-forward -n default svc/kratos-admin 4434:80 > /tmp/kratos-admin-pf.log 2>&1 &
+          PF_PID=$!
+          trap 'kill $PF_PID 2>/dev/null || true' EXIT
+          for i in $(seq 1 20); do
+            grep -q "Forwarding from" /tmp/kratos-admin-pf.log && break
+            sleep 1
+          done
+          if ! grep -q "Forwarding from" /tmp/kratos-admin-pf.log; then
+            echo "kratos-admin port-forward failed"; cat /tmp/kratos-admin-pf.log; exit 1
+          fi
+          pnpm --filter @alkemio/test-suite-server-api run test:nightly
+
+      - name: Publish report to GitHub Pages
+        if: ${{ always() }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: |
+          bash scripts/publish-report.sh \
+            "server-api" \
+            "Server API" \
+            "server-api/html-report" \
+            "${{ steps.server-api-tests.outcome }}"
+
+      - name: Fail job if server API tests failed
+        if: ${{ steps.server-api-tests.outcome == 'failure' }}
+        run: exit 1
+
+  deploy:
+    if: ${{ always() }}
+    needs: run-e2e-tests
+    uses: ./.github/workflows/deploy-github-pages.yml
+    with:
+      ref: gh-pages
+      path: gh-pages-root
+
+  # Always release the lock after e2e — even on failure — so the next nightly or
+  # deploy isn't blocked until the stale-TTL reclaim (60 min). The gh-pages
+  # `deploy` job doesn't touch the test cluster, so it runs unlocked in parallel.
+  release-lock:
+    needs: [acquire-lock, run-e2e-tests]
+    if: always() && needs.acquire-lock.result == 'success'
     runs-on: ubuntu-latest
     steps:
-      - name: Run e2e Tests
-        uses: cmdbg/travis-ci-action@main
-        env:
-          TRAVIS_TOKEN: ${{ secrets.TRAVIS_TOKEN }}
-          TARGET_REPOSITORY: alkem-io/test-suites
-          TARGET_BRANCH: develop
+      - uses: actions/checkout@v7
+
+      - name: Install Kubectl
+        uses: azure/setup-kubectl@v5.1.0
+        with:
+          version: "v1.29.6"
+
+      - name: Set up Kubeconfig for Hetzner k3s
+        run: |
+          mkdir -p "$HOME/.kube"
+          echo "${{ secrets.KUBECONFIG_SECRET_HETZNER_TEST }}" > "$HOME/.kube/config"
+          chmod 600 "$HOME/.kube/config"
+
+      - name: Release test-cluster deploy lock
+        run: |
+          chmod +x .github/scripts/test-cluster-lock.sh
+          .github/scripts/test-cluster-lock.sh release "nightly-${{ github.run_id }}"

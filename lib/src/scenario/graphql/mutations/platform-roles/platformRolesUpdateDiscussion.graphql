@@ -1,0 +1,5 @@
+mutation PlatformRolesUpdateDiscussion($updateData: UpdateDiscussionInput!) {
+  updateDiscussion(updateData: $updateData) {
+    id
+  }
+}

@@ -2,7 +2,7 @@ import {
   createSpaceAndGetData,
   deleteSpace,
   getSpacesData,
-  updateSpacePlatformSettings,
+  updateSpaceNameId,
 } from './space.request.params';
 import {
   deleteOrganization,
@@ -13,7 +13,6 @@ import {
   TestScenarioNoPreCreationConfig,
   UniqueIDGenerator,
 } from '@alkemio/tests-lib';
-import { SpaceVisibility } from '@alkemio/tests-lib/core/generated/alkemio-schema';
 
 const uniqueId = UniqueIDGenerator.getID();
 
@@ -72,15 +71,13 @@ describe('Space entity', () => {
 
   test('should update space nameId', async () => {
     // Act
-    const response = await updateSpacePlatformSettings(
-      spaceId,
-      spaceNameId + 'b',
-      SpaceVisibility.Active
-    );
+    // workspace#027 Slice B (FR-020): the alias is a protected `nameID` on
+    // `updateSpace` — the space's own admin (the creator here) renames it.
+    const response = await updateSpaceNameId(spaceId, spaceNameId + 'b');
 
     // Assert
     expect(response.status).toBe(200);
-    expect(response.data?.updateSpacePlatformSettings?.nameID).toEqual(
+    expect(response.data?.updateSpace?.nameID).toEqual(
       spaceNameId + 'b'
     );
   });
@@ -95,11 +92,7 @@ describe('Space entity', () => {
     const spaceIdTwo = response?.data?.lookup?.space?.id ?? '';
 
     // Act
-    const responseUpdate = await updateSpacePlatformSettings(
-      spaceId,
-      spaceNameId + 'c',
-      SpaceVisibility.Active
-    );
+    const responseUpdate = await updateSpaceNameId(spaceId, spaceNameId + 'c');
 
     // Assert
     expect(responseUpdate.error?.errors[0].message).toContain(

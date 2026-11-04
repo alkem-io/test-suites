@@ -1,0 +1,17 @@
+fragment CalloutFormResponseDetails on CalloutFormResponse {
+  id
+  createdDate
+  createdBy {
+    id
+  }
+  answers {
+    questionID
+    prompt
+    type
+    text
+    selectedOptions {
+      id
+      label
+    }
+  }
+}

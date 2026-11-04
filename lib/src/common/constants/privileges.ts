@@ -44,43 +44,6 @@ export const sorted__create_read_readAbout_update_delete_grant = [
   "DELETE",
 ].sort();
 
-export const sorted__create_read_update_delete_grant_platformAdmin = [
-  "CREATE",
-  "GRANT",
-  ...readPrivilege,
-  "UPDATE",
-  "DELETE",
-  "PLATFORM_ADMIN",
-].sort();
-
-// export const sorted__create_read_update_delete_grant_platformAdmin_notificationsAdmin = [
-//   "CREATE",
-//   "GRANT",
-//   ...readPrivilege,
-//   "UPDATE",
-//   "DELETE",
-//   "PLATFORM_ADMIN",
-//   "RECEIVE_NOTIFICATIONS_ADMIN",
-// ].sort();
-
-export const sorted__create_read_update_delete_grant_platformAdmin_readAbout = [
-  ...sorted__create_read_update_delete_grant_platformAdmin,
-  "READ_ABOUT",
-].sort();
-
-export const sorted__create_read_update_delete_grant_platformAdmin_readAbout_notificationsAdmin =
-  [
-    ...sorted__create_read_update_delete_grant_platformAdmin,
-    "READ_ABOUT",
-    "RECEIVE_NOTIFICATIONS_ADMIN",
-  ].sort();
-
-export const sorted__create_read_update_delete_grant_platformAdmin_notificationsAdmin =
-  [
-    ...sorted__create_read_update_delete_grant_platformAdmin,
-    "RECEIVE_NOTIFICATIONS_ADMIN",
-  ].sort();
-
 export const sorted__create_read_update_delete_grant_readAbout = [
   ...sorted__create_read_update_delete_grant,
   "READ_ABOUT",
@@ -91,26 +54,10 @@ export const sorted__create_read_update_delete_grant_notificationsAdmin = [
   "RECEIVE_NOTIFICATIONS_ADMIN",
 ].sort();
 
-export const sorted__create_read_update_delete_grant_readUserPii_platformAdmin =
-  [
-    ...sorted__create_read_update_delete_grant,
-    "READ_USER_PII",
-    "PLATFORM_ADMIN",
-  ].sort();
-
 export const sorted__create_read_update_delete_grant_readUserPii = [
   ...sorted__create_read_update_delete_grant,
   "READ_USER_PII",
 ].sort();
-
-export const sorted__create_read_update_delete_grant_fileUpload_fileDelete_readUserPii_platformAdmin =
-  [
-    ...sorted__create_read_update_delete_grant,
-    "READ_USER_PII",
-    "FILE_UPLOAD",
-    "FILE_DELETE",
-    "PLATFORM_ADMIN",
-  ].sort();
 
 export const sorted__create_read_update_delete_grant_fileUpload_fileDelete_readUserPii =
   [
@@ -161,6 +108,15 @@ export const sorted__create_read_update_delete_grant_fileUp_fileDel = [
   "FILE_DELETE",
 ].sort();
 
+// workspace#027-platform-role-redesign (qual-ts-13): GLOBAL_ADMIN-only
+// variant — see `sorted__create_read_update_delete_grant_contribute_globalAdmin`
+// above for why a dedicated constant, not a widening of the shared one.
+export const sorted__create_read_update_delete_grant_fileUp_fileDel_globalAdmin =
+  [
+    ...sorted__create_read_update_delete_grant_fileUp_fileDel,
+    "PLATFORM_CONTENT_FULL_ACCESS",
+  ].sort();
+
 export const sorted__create_read_update_delete_grant_fileUp_fileDel_notificationsAdmin =
   [
     ...sorted__create_read_update_delete_grant,
@@ -198,27 +154,19 @@ export const sorted__create_read_readAbout_update_delete_grant_fileUp_fileDel =
     "FILE_DELETE",
   ].sort();
 
-export const sorted__create_read_update_delete_grant_fileUp_fileDel_platformAdmin =
-  [
-    ...sorted__create_read_update_delete_grant,
-    "FILE_UPLOAD",
-    "FILE_DELETE",
-    "PLATFORM_ADMIN",
-  ].sort();
-
-export const sorted__create_read_update_delete_grant_fileUp_fileDel_platformAdmin_notificationsAdmin =
-  [
-    ...sorted__create_read_update_delete_grant,
-    "FILE_UPLOAD",
-    "FILE_DELETE",
-    "PLATFORM_ADMIN",
-    "RECEIVE_NOTIFICATIONS_ADMIN",
-  ].sort();
-
 export const sorted__create_read_update_delete_grant_fileUp_fileDel_contribute =
   [
     ...sorted__create_read_update_delete_grant_fileUp_fileDel,
     "CONTRIBUTE",
+  ].sort();
+
+// workspace#027-platform-role-redesign (qual-ts-13): GLOBAL_ADMIN-only
+// variant — see `sorted__create_read_update_delete_grant_contribute_globalAdmin`
+// above for why a dedicated constant, not a widening of the shared one.
+export const sorted__create_read_update_delete_grant_fileUp_fileDel_contribute_globalAdmin =
+  [
+    ...sorted__create_read_update_delete_grant_fileUp_fileDel_contribute,
+    "PLATFORM_CONTENT_FULL_ACCESS",
   ].sort();
 
 export const sorted__create_read_readAbout_update_delete_grant_fileUp_fileDel_contribute =
@@ -288,6 +236,13 @@ export const sorted__create_read_update_delete_grant_addMember_apply_invite_addV
     "RECEIVE_NOTIFICATIONS_ADMIN",
   ].sort();
 
+// workspace#027-platform-role-redesign (qual-ts-13 correction): ONLY
+// GLOBAL_ADMIN inherits PLATFORM_CONTENT_FULL_ACCESS via the Slice A
+// root-rule cascade — GLOBAL_SUPPORT_ADMIN does NOT (server e47f9510e,
+// sec-server-3/corr-server-2 fix, removed GLOBAL_SUPPORT from the root
+// content-full-access credential rule). This constant is GLOBAL_ADMIN's;
+// GLOBAL_SUPPORT_ADMIN's own rows use the `_noContentFullAccess` variant
+// below instead of this one, even where both used to share it.
 export const sorted__create_read_update_delete_grant_addMember_apply_invite_addVC_accessVC_assignOrganization =
   [
     "CREATE",
@@ -297,6 +252,50 @@ export const sorted__create_read_update_delete_grant_addMember_apply_invite_addV
     "DELETE",
     "ROLESET_ENTRY_ROLE_ASSIGN",
     "ROLESET_ENTRY_ROLE_APPLY",
+    "ROLESET_ENTRY_ROLE_INVITE",
+    "COMMUNITY_ASSIGN_VC_FROM_ACCOUNT",
+    "ROLESET_ENTRY_ROLE_ASSIGN_ORGANIZATION",
+    "PLATFORM_CONTENT_FULL_ACCESS",
+  ].sort();
+
+// workspace#027-platform-role-redesign (qual-ts-13): GLOBAL_SUPPORT_ADMIN's
+// own expectation for the same shape — identical to the constant above MINUS
+// `PLATFORM_CONTENT_FULL_ACCESS` (see that constant's comment).
+export const sorted__create_read_update_delete_grant_addMember_apply_invite_addVC_accessVC_assignOrganization_noContentFullAccess =
+  [
+    "CREATE",
+    "GRANT",
+    ...readPrivilege,
+    "UPDATE",
+    "DELETE",
+    "ROLESET_ENTRY_ROLE_ASSIGN",
+    "ROLESET_ENTRY_ROLE_APPLY",
+    "ROLESET_ENTRY_ROLE_INVITE",
+    "COMMUNITY_ASSIGN_VC_FROM_ACCOUNT",
+    "ROLESET_ENTRY_ROLE_ASSIGN_ORGANIZATION",
+  ].sort();
+
+// Same as above WITHOUT ROLESET_ENTRY_ROLE_APPLY: since the combined-subspace-
+// application exposure fix (workspace#017, server#6232), a subspace role-set
+// only exposes APPLY to parent members or combined-flow-eligible users — the
+// blanket GLOBAL_REGISTERED grant was a false signal (the mutation rejected
+// non-parent-members) and was removed.
+//
+// workspace#027-platform-role-redesign (qual-ts-13): this constant's SOLE
+// consumer is the GLOBAL_SUPPORT_ADMIN row (user.authorization.it-spec.ts),
+// and server commit e47f9510e (sec-server-3/corr-server-2 fix) removed
+// GLOBAL_SUPPORT from the root content-full-access credential rule — it is
+// deliberately NOT a Slice A credential there (unlike GLOBAL_ADMIN). No
+// `PLATFORM_CONTENT_FULL_ACCESS` here; adding it was the qual-ts-13
+// regression this comment replaces.
+export const sorted__create_read_update_delete_grant_addMember_invite_addVC_accessVC_assignOrganization =
+  [
+    "CREATE",
+    "GRANT",
+    ...readPrivilege,
+    "UPDATE",
+    "DELETE",
+    "ROLESET_ENTRY_ROLE_ASSIGN",
     "ROLESET_ENTRY_ROLE_INVITE",
     "COMMUNITY_ASSIGN_VC_FROM_ACCOUNT",
     "ROLESET_ENTRY_ROLE_ASSIGN_ORGANIZATION",
@@ -456,6 +455,20 @@ export const sorted__create_read_update_delete_grant_contribute = [
   "CONTRIBUTE",
 ].sort();
 
+// workspace#027-platform-role-redesign (qual-ts-13): GLOBAL_ADMIN alone (NOT
+// GLOBAL_SUPPORT, NOT SPACE_ADMIN/SUBSPACE_ADMIN — this base constant above
+// is shared by all three in the storage-auth tables that consume it) also
+// carries PLATFORM_CONTENT_FULL_ACCESS on every root-inheriting entity
+// (user/organization/account/space/virtual-contributor/virtual-assistant)
+// since server e47f9510e reversed the root rule to full CRUD
+// (spec.md FR-004/FR-007(e)). A dedicated GLOBAL_ADMIN-only variant, rather
+// than widening the shared constant, so SPACE_ADMIN/SUBSPACE_ADMIN rows in
+// the SAME parameterised table are not incorrectly widened too.
+export const sorted__create_read_update_delete_grant_contribute_globalAdmin = [
+  ...sorted__create_read_update_delete_grant_contribute,
+  "PLATFORM_CONTENT_FULL_ACCESS",
+].sort();
+
 export const sorted__create_read_readAbout_update_delete_grant_contribute = [
   ...sorted__create_read_readAbout_update_delete_grant,
   "CONTRIBUTE",
@@ -495,53 +508,13 @@ export const sorted__create_read_readAbout_update_delete_grant_createSubspace_re
     "RECEIVE_NOTIFICATIONS_ADMIN",
   ].sort();
 
-export const sorted__create_read_update_delete_grant_authorizationReset_createSubspace_platformAdmin =
+// workspace#027 Slice B: `PLATFORM_ADMIN` no longer exists, so every
+// `_platformAdmin` variant that used to live here is gone with it.
+export const sorted__create_read_update_delete_grant_authorizationReset_createSubspace =
   [
     ...sorted__create_read_update_delete_grant,
     "AUTHORIZATION_RESET",
     "CREATE_SUBSPACE",
-    "PLATFORM_ADMIN",
-  ].sort();
-
-export const sorted__create_read_update_delete_grant_createSubspace_platformAdmin =
-  [
-    ...sorted__create_read_update_delete_grant,
-    "CREATE_SUBSPACE",
-    "PLATFORM_ADMIN",
-  ].sort();
-
-export const sorted__create_read_readAbout_update_delete_grant_createSubspace_platformAdmin =
-  [
-    ...sorted__create_read_readAbout_update_delete_grant,
-    "CREATE_SUBSPACE",
-    "PLATFORM_ADMIN",
-  ].sort();
-
-export const sorted__create_read_readAbout_update_delete_grant_createSubspace_platformAdmin_readLicense =
-  [
-    ...sorted__create_read_readAbout_update_delete_grant,
-    "CREATE_SUBSPACE",
-    "PLATFORM_ADMIN",
-    "READ_LICENSE",
-  ].sort();
-
-export const sorted__create_read_readAbout_update_delete_grant_createSubspace_platformAdmin_readLicense_notifications_notificationsAdmin =
-  [
-    ...sorted__create_read_readAbout_update_delete_grant,
-    "CREATE_SUBSPACE",
-    "PLATFORM_ADMIN",
-    "READ_LICENSE",
-    "RECEIVE_NOTIFICATIONS",
-    "RECEIVE_NOTIFICATIONS_ADMIN",
-  ].sort();
-
-export const sorted__create_read_readAbout_update_delete_grant_createSubspace_platformAdmin_readLicense_notificationsAdmin =
-  [
-    ...sorted__create_read_readAbout_update_delete_grant,
-    "CREATE_SUBSPACE",
-    "PLATFORM_ADMIN",
-    "READ_LICENSE",
-    "RECEIVE_NOTIFICATIONS_ADMIN",
   ].sort();
 
 export const sorted__create_read_update_delete_contribute_readAbout = [
@@ -575,6 +548,259 @@ export const sorted__create_read_update_delete_contribute_createCallout_readAbou
     "READ_ABOUT",
   ].sort();
 
+// workspace#027-platform-role-redesign (qual-ts-20 fix, 2026-07-30 corrective
+// wave): completing the qual-ts-13 GLOBAL_ADMIN sweep — server e47f9510e's
+// root rule grants CREATE/READ/UPDATE/DELETE/PLATFORM_CONTENT_FULL_ACCESS to
+// GLOBAL_ADMIN with `cascade: true`, so EVERY entity under a root-inheriting
+// tree (user/organization/account/space/virtual-contributor/
+// virtual-assistant) — not just the entity the cascading rule is declared
+// on — carries PLATFORM_CONTENT_FULL_ACCESS in GLOBAL_ADMIN's `myPrivileges`.
+// These dedicated GLOBAL_ADMIN-only variants (never a widening of the shared
+// constant, so sibling roles in the SAME parameterised table are not
+// incorrectly widened too) close the sweep for the knowledge-base,
+// user-document, organization-document and space-document auth suites.
+export const sorted__create_read_update_delete_grant_readAbout_globalAdmin = [
+  ...sorted__create_read_update_delete_grant_readAbout,
+  "PLATFORM_CONTENT_FULL_ACCESS",
+].sort();
+
+export const sorted__create_read_update_delete_grant_createCallout_transferAccept_transferOffer_globalAdmin =
+  [
+    ...sorted__create_read_update_delete_grant_createCallout_transferAccept_transferOffer,
+    "PLATFORM_CONTENT_FULL_ACCESS",
+  ].sort();
+
+export const sorted__create_read_update_delete_grant_fileDelete_fileUpload_globalAdmin =
+  [
+    ...sorted__create_read_update_delete_grant_fileDelete_fileUpload,
+    "PLATFORM_CONTENT_FULL_ACCESS",
+  ].sort();
+
+// The bootstrap admin (`admin@alkem.io`, the `GLOBAL_ADMIN` test user) is also
+// seeded with `platform-users-admin` (server c2384c320), which carries
+// READ_USER_SETTINGS on every user — so on a USER's documents it holds one more
+// privilege than the legacy global-admin credential alone would give it.
+export const sorted__create_read_update_delete_grant_readUserPii_globalAdmin =
+  [
+    ...sorted__create_read_update_delete_grant_readUserPii,
+    "PLATFORM_CONTENT_FULL_ACCESS",
+    "READ_USER_SETTINGS",
+  ].sort();
+
+export const sorted__create_read_update_delete_grant_fileUpload_fileDelete_readUserPii_globalAdmin =
+  [
+    ...sorted__create_read_update_delete_grant_fileUpload_fileDelete_readUserPii,
+    "PLATFORM_CONTENT_FULL_ACCESS",
+    "READ_USER_SETTINGS",
+  ].sort();
+
+// Organization, GLOBAL_ADMIN (Slice B: the former `_platformAdmin_…_globalAdmin`
+// variants minus the retired `PLATFORM_ADMIN`).
+export const sorted__create_read_update_delete_grant_notificationsAdmin_globalAdmin =
+  [
+    ...sorted__create_read_update_delete_grant_notificationsAdmin,
+    "PLATFORM_CONTENT_FULL_ACCESS",
+  ].sort();
+
+export const sorted__create_read_update_delete_grant_fileUp_fileDel_notificationsAdmin_globalAdmin =
+  [
+    ...sorted__create_read_update_delete_grant_fileUp_fileDel_notificationsAdmin,
+    "PLATFORM_CONTENT_FULL_ACCESS",
+  ].sort();
+
+// ---- workspace#027 Slice B — organisation / user profile documents -----------
+// Entity admins (organisation admins, the user on its own profile) hold
+// UPDATE_NAMEID (FR-020); the harness admin holds it on organisations it
+// administers but loses GRANT on user profiles (root rule without GRANT).
+export const sorted__create_read_update_delete_grant_notificationsAdmin_updateNameId_globalAdmin =
+  [
+    ...sorted__create_read_update_delete_grant_notificationsAdmin_globalAdmin,
+    "UPDATE_NAMEID",
+  ].sort();
+
+export const sorted__create_read_update_delete_grant_fileUp_fileDel_notificationsAdmin_updateNameId_globalAdmin =
+  [
+    ...sorted__create_read_update_delete_grant_fileUp_fileDel_notificationsAdmin_globalAdmin,
+    "UPDATE_NAMEID",
+  ].sort();
+
+export const sorted__create_read_update_delete_grant_notificationsAdmin_updateNameId =
+  [
+    ...sorted__create_read_update_delete_grant_notificationsAdmin,
+    "UPDATE_NAMEID",
+  ].sort();
+
+export const sorted__create_read_update_delete_grant_fileUp_fileDel_notificationsAdmin_updateNameId =
+  [
+    ...sorted__create_read_update_delete_grant_fileUp_fileDel_notificationsAdmin,
+    "UPDATE_NAMEID",
+  ].sort();
+
+export const sorted__create_read_update_delete_readUserPii_globalAdmin = [
+  ...sorted__create_read_update_delete_readUserPii,
+  "PLATFORM_CONTENT_FULL_ACCESS",
+].sort();
+
+export const sorted__create_read_update_delete_fileUpload_fileDelete_readUserPii_globalAdmin =
+  [
+    ...sorted__create_read_update_delete_fileUpload_fileDelete_readUserPii,
+    "PLATFORM_CONTENT_FULL_ACCESS",
+  ].sort();
+
+export const sorted__create_read_update_delete_readUserPii_updateNameId = [
+  ...sorted__create_read_update_delete_readUserPii,
+  "UPDATE_NAMEID",
+].sort();
+
+export const sorted__create_read_update_delete_fileUpload_fileDelete_readUserPii_updateNameId =
+  [
+    ...sorted__create_read_update_delete_fileUpload_fileDelete_readUserPii,
+    "UPDATE_NAMEID",
+  ].sort();
+
+
+// ---- workspace#027 Slice B — space privileges per platform family ----------
+// Harness admin (Content Full Access + the operational families) and a space
+// ADMIN hold UPDATE_NAMEID on a space (FR-020: renaming is the entity admin's);
+// Platform Support (support flag on) no longer carries ACCOUNT_LICENSE_MANAGE —
+// that is Platform License Manager's, who now gets it on every space.
+export const sorted__space_sliceB_harnessAdmin = [
+  ...sorted__create_read_readAbout_update_delete_grant,
+  "ACCOUNT_LICENSE_MANAGE",
+  "CREATE_SUBSPACE",
+  "PLATFORM_CONTENT_FULL_ACCESS",
+  "READ_LICENSE",
+  "RECEIVE_NOTIFICATIONS",
+  "RECEIVE_NOTIFICATIONS_ADMIN",
+  "UPDATE_NAMEID",
+].sort();
+
+export const sorted__space_sliceB_platformSupport_flagOn = [
+  ...sorted__create_read_readAbout_update_delete_grant,
+  "CREATE_SUBSPACE",
+  "READ_LICENSE",
+  "RECEIVE_NOTIFICATIONS_ADMIN",
+].sort();
+
+export const sorted__space_sliceB_spaceAdmin = [
+  ...sorted__create_read_readAbout_update_delete_grant,
+  "CREATE_SUBSPACE",
+  "READ_LICENSE",
+  "RECEIVE_NOTIFICATIONS",
+  "RECEIVE_NOTIFICATIONS_ADMIN",
+  "UPDATE_NAMEID",
+].sort();
+
+export const sorted__space_sliceB_licenseManager_private = [
+  "ACCOUNT_LICENSE_MANAGE",
+  "READ_ABOUT",
+  "READ_LICENSE",
+].sort();
+
+export const sorted__space_sliceB_licenseManager_public = [
+  ...sorted_read_readAbout_readLicense,
+  "ACCOUNT_LICENSE_MANAGE",
+].sort();
+
+// ---- workspace#027 Slice B — role-set privileges -----------------------------
+// No actor holds ROLESET_ENTRY_ROLE_ASSIGN on an L0 role set any more (the
+// global-admin/global-support rule is gone; subspaces keep it for parent
+// admins + platform roles with GRANT), and ROLESET_ENTRY_ROLE_ASSIGN_ORGANIZATION
+// is granted to nobody (organisations enter by invitation only).
+export const sorted__roleSet_sliceB_harnessAdmin_L0 = [
+  ...sorted__create_read_update_delete_grant,
+  "ROLESET_ENTRY_ROLE_APPLY",
+  "ROLESET_ENTRY_ROLE_INVITE",
+  "COMMUNITY_ASSIGN_VC_FROM_ACCOUNT",
+  "PLATFORM_CONTENT_FULL_ACCESS",
+].sort();
+
+export const sorted__roleSet_sliceB_harnessAdmin_subspace = [
+  ...sorted__create_read_update_delete_grant,
+  "ROLESET_ENTRY_ROLE_ASSIGN",
+  "ROLESET_ENTRY_ROLE_APPLY",
+  "ROLESET_ENTRY_ROLE_INVITE",
+  "COMMUNITY_ASSIGN_VC_FROM_ACCOUNT",
+  "PLATFORM_CONTENT_FULL_ACCESS",
+].sort();
+
+export const sorted__create_read_update_delete_grant_addMember_invite_addVC_accessVC =
+  [
+    ...sorted__create_read_update_delete_grant,
+    "ROLESET_ENTRY_ROLE_ASSIGN",
+    "ROLESET_ENTRY_ROLE_INVITE",
+    "COMMUNITY_ASSIGN_VC_FROM_ACCOUNT",
+  ].sort();
+
+// ---- workspace#027 Slice B — VC knowledge base ------------------------------
+// Content Full Access reaches content through the root cascade WITHOUT GRANT
+// (FR-004); the VC's owner (Feature Beta Tester here) holds UPDATE_NAMEID as
+// the entity admin (FR-020).
+export const sorted__create_read_update_delete_readAbout_globalAdmin = [
+  ...sorted__create_read_update_delete,
+  "READ_ABOUT",
+  "PLATFORM_CONTENT_FULL_ACCESS",
+].sort();
+
+export const sorted__create_read_update_delete_createCallout_transferAccept_transferOffer_globalAdmin =
+  [
+    ...sorted__create_read_update_delete,
+    "CREATE_CALLOUT",
+    "TRANSFER_RESOURCE_ACCEPT",
+    "TRANSFER_RESOURCE_OFFER",
+    "PLATFORM_CONTENT_FULL_ACCESS",
+  ].sort();
+
+export const sorted__create_read_update_delete_fileDelete_fileUpload_globalAdmin =
+  [
+    ...sorted__create_read_update_delete,
+    "FILE_DELETE",
+    "FILE_UPLOAD",
+    "PLATFORM_CONTENT_FULL_ACCESS",
+  ].sort();
+
+export const sorted__create_read_update_delete_contribute_readAbout_receiveNotifications_updateNameId =
+  [
+    ...sorted__create_read_update_delete_contribute_readAbout_receiveNotifications,
+    "UPDATE_NAMEID",
+  ].sort();
+
+export const sorted__create_read_update_delete_contribute_createCallout_receiveNotifications_updateNameId =
+  [
+    ...sorted__create_read_update_delete_contribute_createCallout_receiveNotifications,
+    "UPDATE_NAMEID",
+  ].sort();
+
+export const sorted__create_read_update_delete_contribute_fileDelete_fileUpload_receiveNotifications_updateNameId =
+  [
+    ...sorted__create_read_update_delete_contribute_fileDelete_fileUpload_receiveNotifications,
+    "UPDATE_NAMEID",
+  ].sort();
+
+export const sorted__create_read_update_delete_fileUp_fileDel_globalAdmin = [
+  ...sorted__create_read_update_delete,
+  "FILE_UPLOAD",
+  "FILE_DELETE",
+  "PLATFORM_CONTENT_FULL_ACCESS",
+].sort();
+
+export const sorted__create_read_update_delete_grant_globalAdmin = [
+  ...sorted__create_read_update_delete_grant,
+  "PLATFORM_CONTENT_FULL_ACCESS",
+].sort();
+
+export const sorted__create_read_update_delete_grant_contribute_updateContent_globalAdmin =
+  [
+    ...sorted__create_read_update_delete_grant_contribute_updateContent,
+    "PLATFORM_CONTENT_FULL_ACCESS",
+  ].sort();
+
+export const sorted__create_read_update_delete_grant_fileUp_fileDel_contribute_updateContent_globalAdmin =
+  [
+    ...sorted__create_read_update_delete_grant_fileUp_fileDel_contribute_updateContent,
+    "PLATFORM_CONTENT_FULL_ACCESS",
+  ].sort();
+
 export const sorted__create_read_update_delete_readAbout_fileDelete_fileUpload =
   [
     ...sorted__create_read_update_delete_grant,
@@ -591,3 +817,69 @@ export const sorted__create_read_update_delete_contribute_readAbout_fileDelete_f
     "FILE_DELETE",
     "FILE_UPLOAD",
   ].sort();
+
+// ---------------------------------------------------------------------------
+// workspace#027-platform-role-redesign (qual-ts-25 fix, 2026-07-31)
+//
+// The qual-ts-20 sweep above closed the four DOCUMENT/knowledge-base suites,
+// but four others still asserted the pre-feature arrays and go red the moment
+// Slice A deploys — confirmed live 2026-07-31 (17 failures across
+// `vc-access`, `space-platform-settings`, `graphql-guard-authorization` and
+// `graphql-guard-public-private-access`).
+//
+// TWO distinct deltas, which is why this needs three constants and not one:
+//
+//  1. VIRTUAL CONTRIBUTOR entities — purely ADDITIVE. `PLATFORM_ADMIN` is
+//     retained and `PLATFORM_CONTENT_FULL_ACCESS` joins it, same cascade as
+//     the qual-ts-20 batch.
+//
+//  2. SPACE entities — a SWAP, not an addition. Server T048/A14 re-anchored
+//     the space-visibility mutation off the `PLATFORM_ADMIN` catch-all onto
+//     `ACCOUNT_LICENSE_MANAGE` (`space.service.authorization.ts`), so
+//     `PLATFORM_ADMIN` LEAVES the array and `ACCOUNT_LICENSE_MANAGE` enters.
+//     GLOBAL_ADMIN additionally gains `PLATFORM_CONTENT_FULL_ACCESS`;
+//     GLOBAL_SUPPORT does NOT — it holds no content credential — so the two
+//     roles need separate constants rather than one shared widening.
+//
+// Written out in full rather than spread-from-the-old-name: `PLATFORM_ADMIN`
+// being ABSENT is the substance of the change, and a spread would hide it.
+// ---------------------------------------------------------------------------
+
+/** Virtual Contributor, GLOBAL_ADMIN — delta 1 (additive). */
+/** Space, GLOBAL_ADMIN — delta 2. Note: no `PLATFORM_ADMIN`. */
+export const sorted__create_read_readAbout_update_delete_grant_createSubspace_accountLicenseManage_readLicense_notifications_notificationsAdmin_globalAdmin =
+  [
+    ...sorted__create_read_readAbout_update_delete_grant,
+    "ACCOUNT_LICENSE_MANAGE",
+    "CREATE_SUBSPACE",
+    "PLATFORM_CONTENT_FULL_ACCESS",
+    "READ_LICENSE",
+    "RECEIVE_NOTIFICATIONS",
+    "RECEIVE_NOTIFICATIONS_ADMIN",
+  ].sort();
+
+/** Space, GLOBAL_SUPPORT — delta 2 without the content privilege. */
+export const sorted__create_read_readAbout_update_delete_grant_createSubspace_accountLicenseManage_readLicense_notificationsAdmin =
+  [
+    ...sorted__create_read_readAbout_update_delete_grant,
+    "ACCOUNT_LICENSE_MANAGE",
+    "CREATE_SUBSPACE",
+    "READ_LICENSE",
+    "RECEIVE_NOTIFICATIONS_ADMIN",
+  ].sort();
+
+// workspace#027 Slice B — the harness admin (Content Full Access + Support +
+// Resource Admin + License Manager + Operations Admin, no GRANT) reads other
+// users' settings on their profile documents and carries the Operations Admin
+// marker on virtual contributors.
+export const sorted__create_read_update_delete_readUserPii_readUserSettings_globalAdmin =
+  [...sorted__create_read_update_delete_readUserPii_globalAdmin, "READ_USER_SETTINGS"].sort();
+
+export const sorted__create_read_update_delete_fileUpload_fileDelete_readUserPii_readUserSettings_globalAdmin =
+  [
+    ...sorted__create_read_update_delete_fileUpload_fileDelete_readUserPii_globalAdmin,
+    "READ_USER_SETTINGS",
+  ].sort();
+
+export const sorted__create_read_update_delete_readAbout_opsAdmin_globalAdmin =
+  [...sorted__create_read_update_delete_readAbout_globalAdmin, "PLATFORM_OPERATIONS_ADMIN"].sort();

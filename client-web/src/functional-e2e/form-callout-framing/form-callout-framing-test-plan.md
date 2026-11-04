@@ -1,0 +1,184 @@
+# Test plan — Form callout framing (080)
+
+> **Status:** Implemented (test-suites#651). Mapping reconciled with the code on 2026-10-02 by the QA PR challenge (static; cases it added are marked *(added)*), then **run live on 2026-10-06** against `develop` with server#6567, notifications#613 and client-web#10362 merged — results under *Live runs* below. · **Story:** epic [alkemio#2005](https://github.com/alkem-io/alkemio/issues/2005), test sub-issue [test-suites#642](https://github.com/alkem-io/test-suites/issues/642) · **Spec:** `specs/080-form-callout-framing/` in `alkem-io/agents-hq` (source of truth for the US/AS/FR/SC/D/R ids below; it governs where the issues disagree) · **Build sheet:** that spec's `tasks/test-suites.md` (T301–T309)
+
+- **Suites:**
+  - `server-api/src/functional-api/callout/form/` — eight it-specs (`form-lifecycle`, `form-never-appears`, `form-placement-guards`, `form-presentation`, `form-presentation-receipt`, `form-space-move`, `form-submit-validation`, `form-visibility-matrix`) plus `form.request.params.ts`.
+  - `server-api/src/functional-api/notifications/space/collaboration/form-response.it-spec.ts` — MailSlurper.
+  - `client-web/src/functional-e2e/form-callout-framing/` — five `@forge-acceptance` walks, persisted from the /forge live verification. They provision their own Kratos identities, Space and Forms; they do not use the harness personas.
+  - R25 (Polls and Forms in templates) — see *R25 — Polls and Forms in templates* below: two it-specs under `server-api/src/functional-api/templates/` and two `templates-CRD` Playwright files (harness personas, session fixtures).
+
+## How to run
+
+```bash
+cd server-api
+pnpm exec vitest run --project callouts src/functional-api/callout/form
+pnpm exec vitest run --project notifications src/functional-api/notifications/space/collaboration/form-response.it-spec.ts
+
+cd ../client-web   # needs KRATOS_ADMIN_URL and ALKEMIO_ADMIN_PASSWORD
+UI_HEADLESS=true pnpm run test:form-callout-framing
+```
+
+- **Nightly:** the it-specs run through the `callout/**` glob and the explicit `form-response.it-spec.ts` entry of the server-api `nightly` project — **except `form-presentation-receipt.it-spec.ts`** (R17/R18 "title/description never reach a notification"), listed in that project's `exclude` since test-suites#694: its positive control is one receipt mail and the test cluster's MailSlurper drops a few mails per run mid-DATA (nightly 40792632135, 2026-10-29). It runs with `--project callouts` only until the MailSlurper replacement lands; then delete the exclude entry. The walks are **not** nightly; the default Playwright config ignores the folder.
+- **Local-only cases:** cases that read Postgres (`delete-rows`, the R14 audit rows) skip themselves unless `harnessPostgresConfigured()`; the push case skips without the RabbitMQ management API. Walk US4-AS6 (re-scoped to a consumer outage, see *Not covered*) needs `NOTIFICATIONS_STOP_CMD`/`_START_CMD`. Walk US4-AS8 needs the loopback harness Postgres.
+- **Walk credentials:** the walks sign the platform admin in with `ALKEMIO_ADMIN_PASSWORD`. On a harness stack the Global Admin *is* `admin@alkem.io`, so that value is the server-api `AUTH_TEST_HARNESS_PASSWORD` — not the server's `AUTH_ADMIN_PASSWORD`. A wrong value costs a 401 per file and then a login rate limit (429); `ALKEMIO_ADMIN_TOKEN` (a pre-minted bearer) skips the login altogether.
+- **Shared personas:** `form-visibility-matrix.it-spec.ts` registers four **disposable users** (`formpcfa.*`, `formpsupport.*`, `formgsreader.*`, `formpsreader.*`) for its platform-role cells, grants each its one platform role and deletes them in `afterAll`, so no shared harness persona changes while the file runs. The notification spec still switches settings rows of four shared personas (snapshot and restore), which files running in parallel can observe.
+- **Known server defects, cases skipped until the fix lands:** the cases are written against the expected behaviour and carry `test.skip` with the issue link in the title (operator decision 2026-10-06: skip rather than `test.fails`); drop the `.skip` when the server fix is on `develop`. [server#6592](https://github.com/alkem-io/server/issues/6592) (stale parent credentials after a cross-L0 move). [server#6591](https://github.com/alkem-io/server/issues/6591) (existence probe through `deleteCalloutFormResponse`) is fixed in [server#6665](https://github.com/alkem-io/server/pull/6665) (`2474ece4`, on `develop` 2026-10-15); its case is live since test-suites#673.
+- **Currently red, not skipped:** `server-api` form-visibility matrix, "Global Support reads every response and can moderate". Ruled 2026-10-08: in a Space with `allowPlatformSupportAsAdmin` on, Platform Support reads ALL responses like a space admin. Since platform-role redesign Slice B it can moderate but reads none; the case runs as a normal test and stays red until the server fix for [server#6621](https://github.com/alkem-io/server/issues/6621) is on `develop`.
+
+## Scenario → test
+
+Spec ids are the 080 spec's. "API" = `server-api/src/functional-api/callout/form/`; "walk" = this folder.
+
+| Scenario | Test |
+| --- | --- |
+| SC-003 read scope, role × visibility (mine, total, listed, canReadAll, canModerate) | API `form-visibility-matrix.it-spec.ts › Form responses — read scope per role` (12 roles × 2 visibilities + anonymous) |
+| SC-003 delete-others per role (under MEMBERS) | API `form-visibility-matrix.it-spec.ts › who can delete another member’s response` incl. *anonymous (added)* |
+| SC-003 Global Support with / without support-as-admin; GS cannot read a private Post | API `form-visibility-matrix.it-spec.ts › a private space`, `› a space that allows platform support as admin` |
+| US3-AS7 / D-4 parent-space member submits, reads own | API `form-visibility-matrix.it-spec.ts › a parent space member with inherited rights` *(added)*; walk `us3 › US3-AS7` |
+| US3-AS8 / FR-020d ex-admin creator: own only, no moderation, cannot delete the Post | API `form-visibility-matrix.it-spec.ts › the ex-admin creator`; `form-lifecycle.it-spec.ts › who may delete which response`; walk `us3 › US3-AS8` |
+| R14 audit of platform-role moderation (PCFA, GA and GS-as-admin audited — GS as `platform_support`, ruled 2026-10-06, [server#6622](https://github.com/alkem-io/server/issues/6622); space admin, owner not) | API `form-visibility-matrix.it-spec.ts › audit of platform-role moderation (R14, local Postgres)` *(added, local only)*; the GS-as-admin row in `› a space that allows platform support as admin` (local only) |
+| R15 moving a subspace under another space carries its Forms to the new ancestors' admins and away from the old | API `form-space-move.it-spec.ts` *(added, live)* — nine cells around `moveSpaceL1ToSpaceL0`; the four that pin the new and old parent admins (stored parent credentials, B's admin reads all, A's admin reads nothing, A's admin cannot delete) are `test.skip` on [server#6592](https://github.com/alkem-io/server/issues/6592) |
+| FR-020 the refusal of `deleteCalloutFormResponse` must not reveal whether a response id exists | API `form-lifecycle.it-spec.ts › who may delete which response › a non-moderator gets the same refusal…` *(added, live)* — enabled in test-suites#673 after [server#6665](https://github.com/alkem-io/server/pull/6665) fixed [server#6591](https://github.com/alkem-io/server/issues/6591); pins a signed-in non-moderator's `FORBIDDEN_POLICY` and compares the whole refusal (code, message, `details` and other extensions, minus `errorId`/`stacktrace`) for an unknown and a real id. The non-production `stacktrace` channel is tracked on [server#6663](https://github.com/alkem-io/server/issues/6663). |
+| US1-AS1/AS4/AS6/AS7a/AS9 builder, chip, publish, close/reopen, fixed chip | walk `us1` |
+| US1-AS2 / FR-001a member cannot create a Form; fixed kind both ways | API `form-placement-guards.it-spec.ts › who can create`, `› the framing kind is fixed`; walk `us1 › US1-AS2` |
+| US1-AS3 / FR-001b VC knowledge base: seeded, direct add, conversion | API `form-placement-guards.it-spec.ts › carriers…` incl. *direct add (added)*, `› spaces holding a FORM callout`; walk `us1 › US1-AS3` |
+| D-7 carriers, amended by R25: the subspace create request's own callouts, transfer, VC knowledge base and conversion still refuse a FORM; a callout template and a space template now carry one | API `form-placement-guards.it-spec.ts` (*a callout template carries a FORM definition (R25)*, *a template made from the space keeps the FORM callout (R25)* — flipped 2026-10-06; every refusal kept); the R25 carriers themselves: see the R25 section |
+| US1-AS5, FR-003, FR-007, D-16 caps and lengths (0/1/50/51 questions, 1/2/20/21 options, duplicate, blank/empty label, 512/513 prompt and label, 2048/2049 explanation, options on a text question) | API `form-submit-validation.it-spec.ts › Form definition — limits` (lengths, blank/empty, text-with-options *added*) |
+| FR-004a unknown question / option id on update | API `form-submit-validation.it-spec.ts › Form definition — limits` (option id *added*) |
+| US2-AS2/AS3/AS10, FR-009 answer validation, no echo | API `form-submit-validation.it-spec.ts › answer validation`, `› answers to removed questions and options` *(added)*; walk `us2` |
+| FR-008 BVA 512/513, 2048/2049, UTF-16 | API `form-submit-validation.it-spec.ts › answer validation` |
+| US2-AS9 / FR-016b draft and closed reject; US2-AS8 no CONTRIBUTE; anonymous | API `form-submit-validation.it-spec.ts › state and access`; walk `us2 › US2-AS8/AS9` |
+| US2-AS11 / FR-011 acknowledged visibility (widen rejected, narrow accepted) | API `form-submit-validation.it-spec.ts › the acknowledged visibility`; walk `us2 › US2-AS11` |
+| US2-AS5/AS6/AS12, FR-014, SC-008 single mode, race, withdraw → resubmit, mode switch | API `form-lifecycle.it-spec.ts › SINGLE response mode under concurrency`; walk `us2` |
+| US3-AS4 / FR-020b widen blocked after a response, narrow allowed | API `form-lifecycle.it-spec.ts › visibility changes`; walk `us3 › US3-AS4` |
+| FR-009a type lock; D-3 snapshots; R9 required toggle binds new submissions only | API `form-lifecycle.it-spec.ts › editing the definition…` (R9 half *added*); walk `us4a › relabelled option` |
+| R11 close / reopen, withdraw while closed | API `form-lifecycle.it-spec.ts › closing and reopening` |
+| FR-032 Post delete cascades | API `form-lifecycle.it-spec.ts › deleting the Post` (row count only where harness Postgres is configured) |
+| FR-030 deleted account → `createdBy` null, answers kept | API `form-lifecycle.it-spec.ts › an account deleted after responding`; walk `us4a › US4a-AS1` |
+| FR-020 / US3-AS6 never a contribution, never in activity, not reachable from the schema | API `form-never-appears.it-spec.ts`; walk `us3 › US3-AS6` (full schema guard incl. `InAppNotification*` and `*SubscriptionResult`) |
+| US4-AS1/AS2/AS4/AS5 email (pinned subjects, who-can-read sentence, submitter + link), parent admin none, admin-submitter receipt only, row off | `form-response.it-spec.ts`; walk `us4` (adds in-app and push) |
+| US4-AS3 / FR-023a no generic contribution mail, with the generic rows switched on | `form-response.it-spec.ts › no mail carries the answer…` |
+| US4-AS7 one admin notification per response | walk `us4 › US4-AS7` (3 submissions) |
+| US4a-AS1..AS4 review dialogs, 120 responses in pages of 50, confirm-delete, members read all | walk `us4a` |
+
+## R25 — Polls and Forms in templates (server#6435, 2026-10-06)
+
+Ruling R25 brings US5 into scope and amends D-7 / FR-027: callout templates and space templates carry a Poll's or a Form's **definition** (never votes, poll status or responses); (sub)spaces and collaborations built from a space template get an OPEN Poll with no votes and a Form with fresh question ids and no responses; a template Form never accepts a response. Build sheet: `tasks/test-suites.md` T316–T320.
+
+**Status:** authored 2026-10-06, static gates green. **Run live 2026-10-06** against server `fix/form-callout-framing` (a229b18c8) and client `fix/form-callout-framing` (1a1220830) on the local dev stack:
+
+| Suite | Result |
+|---|---|
+| API `templates/callout/poll-form-callout-templates` + `templates/space/space-templates-poll-form` | 17/17 passed |
+| API `callout/form/form-placement-guards` (incl. the two R25 flips) | 17/17 passed |
+| API `--project templates` (regression, all template specs) | 46/46 passed |
+| API `callout/form/*` (regression, the whole 080 Form suite) | 196 passed, 5 skipped |
+| Playwright `templates-CRD/…/poll-form-save-as-template` | 2/2 passed |
+| Playwright `templates-CRD/…/callout-tests` (incl. 58 Form, Poll 42–57) | 31 passed, 1 failed — *25 Memos*, unrelated to R25: its locator expects the edited memo title inside the card button, which the current develop card no longer renders there (reproduces alone; no R25 file touches contribution cards) |
+
+Two fixes found by the live run, both in the tests:
+- **The template-Form refusal cases need a persona that holds CONTRIBUTE.** On a template callout the Global Admin is refused at the privilege check before the template rule is reached. So the template (and the source Form copied into the space template) allow LINK contributions, which grant CONTRIBUTE to the template's creators, and the refusal is then the template rule's `FORM_TEMPLATE_NOT_RESPONDABLE`.
+- **The Form walk filled the wrong "Title" field.** The create-Post dialog now holds two "Title" text boxes, the Post's and the Form builder's. The walk now targets the Post title by its placeholder.
+
+**Run live 2026-10-08** (QA PR challenge, after merging `develop` @ `8467bc98`), local stack on server `develop` @ `87caca746` (includes server#6595) and client-web `develop` @ `b1095a408` (includes client-web#10382 and #10373):
+
+| Suite | Result |
+|---|---|
+| API R25 pair (24 cases: the 17 of 2026-10-06, then the CLOSED-Form and `updateTemplateFromSpace` cases, the four other carriers and template removal) | 24/24, twice (alone and in the project run) |
+| API `--project templates` | 53/53 |
+| API `callout/form/form-placement-guards` | 17/17 |
+| Playwright `poll-form-save-as-template` | 2/2, twice |
+| Playwright `callout-tests` (the whole template-editor matrix, 69 tests, one unfiltered run) | **69/69 passed (14.5 min).** That count includes the ten whiteboard-framing rows (3, 4, 11, 12, 19, 20, 27, 28, 35, 36), which carry `test.fail` (client-web#10283, no preview image) and failed as expected. Before the Memos fix, row 25 failed and the serial describe kept the 37 rows after it from running; the ten Memos-response rows (25–32) also passed as a group, 10/10 |
+
+Fixed in the tests by this challenge:
+- client-web#10373 moved the less-used chips behind menus. Framing chips are now picked from the strip or "More to add" (`selectFraming`), and response types from the strip or "More ways to respond" (`selectResponseType`, `forms/callout/collection/index.ts`; Memos is in the menu, and so is Whiteboards when the Tasks chip is shown). Both assert the chip is checked.
+- The Post `Title` locator is exact.
+- The pristine edit dialog closes with **Done** instead of `Cancel` (client-web#10243) for Poll 42–57.
+
+On 2026-10-06 the "31 passed, 1 failed" was the same truncation: rows after 25 (including Poll 42–57 and Form 58) did not run in that full run.
+
+Sabotage probes (worktree only, reverted): replacing the read-back Poll/Form definition with `null` (the pre-R25 "type POLL without the poll" regression) left five cases **green** before QA-CH-01 and turns them red after it.
+
+```bash
+cd server-api
+pnpm exec vitest run --project templates src/functional-api/templates/callout/poll-form-callout-templates.it-spec.ts src/functional-api/templates/space/space-templates-poll-form.it-spec.ts
+pnpm exec vitest run --project callouts src/functional-api/callout/form/form-placement-guards.it-spec.ts
+
+cd ../client-web
+UI_HEADLESS=true pnpm exec playwright test src/functional-e2e/templates-CRD/template-types/poll-form-save-as-template.spec.ts
+UI_HEADLESS=true pnpm exec playwright test src/functional-e2e/templates-CRD/template-types/callout-tests.spec.ts -g "58 Form"
+```
+
+"TPL" = `server-api/src/functional-api/templates/`; "CRD" = `client-web/src/functional-e2e/templates-CRD/template-types/`. Every negative has a positive control in the same describe.
+
+| Scenario | Test |
+| --- | --- |
+| US5-AS5 / FR-027 a callout template keeps a Poll: title, options in order, settings; no votes | API TPL `callout/poll-form-callout-templates.it-spec.ts › a callout template carries a Poll` (read back through `lookup.template`) |
+| US5-AS1/AS2 / FR-025–FR-027 a callout template keeps a Form: title, description, questions (types, options, required), settings | API TPL `callout/… › a callout template carries a Form` |
+| US5-AS6 / FR-027b a callout-template Form refuses responses (`FORM_TEMPLATE_NOT_RESPONDABLE`) | API TPL `callout/… › a template Form never accepts responses` (control: the same definition on a live Post accepts the same answers) |
+| FR-027b / R25d the template admin edits a template Form; a space member is refused and nothing changes | API TPL `callout/… › a template Form definition is edited by the template admin` |
+| US5-AS3/AS5 / FR-027 a space template from a space with a voted, then CLOSED Poll and an answered Form keeps both definitions, no votes, no responses, no source ids; the template poll is OPEN (status is never copied) | API TPL `space/space-templates-poll-form.it-spec.ts › a space template keeps Poll and Form definitions only` (control: the source keeps its vote, its CLOSED status and its response) |
+| FR-027 / server#6435 AC "settings (visibility, single/multiple, open/closed)" copied as-is: a second source Form holds the other class of every setting (ADMINS, SINGLE, CLOSED, expanded) and keeps it in the template, in a subspace created from it and after `updateCollaborationFromSpaceTemplate` — never reopened *(added 2026-10-08, QA-CH-02)* | API TPL `space/… › the template content space keeps the CLOSED Form with the other class of every setting, as-is`; the subspace and collaboration cases through `expectFreshCopies` |
+| US5-AS6 a Form inside a template content space refuses responses | API TPL `space/… › a Form inside a template content space never accepts responses` |
+| US5-AS6 / R25 template flag: a Form that reaches a template through `updateTemplateFromSpace` (the path server#6595 sec-server-1 fixed) refuses responses *(added 2026-10-08, QA-CH-04)* | API TPL `space/… › a Form brought into a template by updateTemplateFromSpace is refused with FORM_TEMPLATE_NOT_RESPONDABLE` (precondition: the template held no Form; control: the source Form accepts the same answers) |
+| US5-AS3/AS5 a subspace created from the template: Poll OPEN, same options, 0 votes; Form same questions/settings, fresh ids, 0 responses | API TPL `space/… › a subspace created from the template` (control: both take a vote / a response) |
+| R25c `updateCollaborationFromSpaceTemplate` (addCallouts) adds them the same way | API TPL `space/… › updateCollaborationFromSpaceTemplate adds the Poll and the Form` |
+| FR-027a a FORM in the create-subspace request itself stays refused, also with a template | API TPL `space/… › only the template may carry a Form into a new subspace` (control: same template + NONE callout); without a template: `form-placement-guards.it-spec.ts` |
+| FR-027a / R25c the other carriers: `createTemplateFromContentSpace` and `createTemplate` (SPACE, the request's own content space) carry a Form as a never-respondable definition; an **L0** created from the template gets the Poll OPEN with no votes and the Forms as-is with fresh ids and no responses, while a FORM in the L0 create request itself is refused (`FORM_FRAMING_NOT_ALLOWED`) *(added 2026-10-08, QA-CH-08)* | API TPL `space/… › the other template carriers carry a Form` (4 cases) |
+| server#6435 AC "removed like other Post templates": the template admin deletes a Form callout template and it no longer reads back (`ENTITY_NOT_FOUND`) *(added 2026-10-08, QA-CH-11)* | API TPL `callout/… › a Form callout template is removed like any template` (control: it reads back with its Form before the delete) |
+| US5-AS4 / FR-027a a template never places a Form in a VC knowledge base | **Partial** (story card [test-suites#661](https://github.com/alkem-io/test-suites/issues/661)). A FORM supplied in the VC request itself, a direct add and conversion stay refused: `form-placement-guards.it-spec.ts › carriers…` and `› spaces holding a FORM callout`. The R25 path itself — the platform knowledge-base template seeding a new VC, which now drops Form and Poll callouts — is **not covered** here (see *Not covered*) |
+| US5-AS2/AS5 / FR-026 save a Poll Post as a template from the Post menu; preview; start a Post from it (question/options prefilled, editable); the new poll takes a vote | walk CRD `poll-form-save-as-template.spec.ts › US5-AS5` |
+| US5-AS1/AS2 / FR-025/FR-026 save a Form Post as a template; preview lists "Questions" (numbered, type badges, "Required"); start a Post from it: the builder is prefilled with the title, description and every question's prompt, answer type, required flag and options, all editable; the published Form carries the whole definition and the non-default settings (Space members, multiple responses) — *2026-10-08, QA-CH-07*; the new Form takes a response | walk CRD `poll-form-save-as-template.spec.ts › US5-AS1/AS2` |
+| R25a the callout-template editor offers the Form framing | walk CRD `callout-tests.spec.ts › 58 Form` (create in the editor → preview → use → in-feed Form box) |
+
+## Not covered
+
+| Item | Why | Where it is pinned instead / what clears it |
+| --- | --- | --- |
+| R13 `mine` capped at the 50 newest, oldest first | Needs > 50 own responses: ~51 receipts plus admin mails per run into the shared nightly mailbox | server unit `callout.form.response.service.spec.ts`; add a system case only if the mail volume is accepted |
+| D-15 server clamp of `first` to 50 | Same fixture cost. The walk proves only that the client never asks for more than 50 | server unit + `lookup.resolver.fields.form.responses.spec.ts`; /forge gql-live "page clamp 50/55" |
+| SC-003 delete-others under ADMINS for every role | Moderation does not read visibility (D-12); the MEMBERS form is the stronger discriminator (readers with ALL still cannot delete) | Tracked advisory in the PR |
+| US4-AS6 / FR-024a dispatch failure never fails the submission | No infra lever makes the server's publish fail. The walk is **re-scoped** (its title says so): it stops the notifications *consumer* and proves at-least-once delivery after a restart, not the failure path | server unit (fire-and-forget + structured log) |
+| US4-AS8 / D-20 settings row that predates the feature | Needs a direct DB write | walk `us4 › US4-AS8`, loopback Postgres only; migration backfill is a release-ops SQL check |
+| FR-020 MCP resources, VC ingest, contribution reporter | No harness for those paths | Structural: responses are not contributions (R1) and are root-only (D-8, walk US3-AS6 schema guard) |
+| Search | Descoped by the operator on 2026-09-30 (`forge-run.md` 5d); not recorded in `spec.md` | — |
+| FR-016c no comments or reactions, FR-015a no edit, FR-016d not movable | No surface exists to call | Structural; walk `us4a › US4a-AS3` asserts no edit affordance |
+| Six-locale copy, "Deleted user" label in all locales | Locale assertions have no home here | client-web unit tests |
+| R25 US5-AS4: the platform knowledge-base template seeds a new VC without its Form and Poll callouts (server#6595 sec-server-2) — [test-suites#661](https://github.com/alkem-io/test-suites/issues/661) | The only lever is the platform-wide default knowledge-base template. Pointing it at a Form-holding template changes what every VC created on the stack receives, including other suites' VCs running in parallel. **Decision needed:** accept a local-only, serial case that swaps and restores the platform default, or leave it to the unit spec | server unit `platform.templates.service.spec.ts` |
+| R25 template flag, third path: a Form Post created directly in a template's callouts set — [server#6631](https://github.com/alkem-io/server/issues/6631) | Not reachable through the API: `createCalloutOnCalloutsSet` on a template content-space callouts set fails for every framing, NONE included, with `ENTITY_NOT_FOUND` "Unable to retrieve storage aggregator to use for CalloutsSet …" (reproduced 2026-10-08). **Decision needed** (QA-PF-01): is the path meant to exist? | server unit `callout.form.resolver.mutations.spec.ts` (collaboration `isTemplate` branch) |
+| R25e: Poll options edited in a callout template are saved; editing a template poll sends no vote notification and no contribution report | No case in this PR | server unit `poll.resolver.mutations.spec.ts` / `poll.service.spec.ts`; a system case needs an options edit on a template poll |
+| R25c "as built" carrier: the Platform Support (`PLATFORM_SUPPORT_ORG_RESOURCES`) branch of the template mutations carrying a Form | Isolating the branch needs the single-role Platform Support persona and an organization-owned innovation pack, both provisioned by the `platform-roles` suite (A7), which is not part of the `templates` project or nightly. The harness Global Admin holds Platform Support **plus** three content roles, so it cannot isolate the branch | A Form variant of A7's template cases in `platform-roles/_support/groups/a7.ts`; server unit `template.service.spec.ts` (`allowFormFraming` on template content-space creation) and `template.resolver.mutations.spec.ts` (the Support branch) |
+
+## Open questions (need a decision, not a test)
+
+- The receipt says "Only the admins of {subspace} can read your response", but FR-020c also lets the admins of every ancestor Space, Global Admin and Global Support read it, and R15 widens that set after a move. Is SC-005 ("never stored under a wider audience than the one shown") met?
+- ~~Platform Support in a Space that allows support-as-admin has no specified read scope or moderation outcome~~ — decided: it reads ALL responses like a space admin (2026-10-08, [server#6621](https://github.com/alkem-io/server/issues/6621)), and its moderation deletes are audited as `platform_support` (2026-10-06, [server#6622](https://github.com/alkem-io/server/issues/6622)).
+
+## Live runs (2026-10-06, `develop` after server#6567 · notifications#613 · client-web#10362, local compose stack, Chrome headless)
+
+### Run 1 — before this challenge's live fixes
+
+| Suite | Result |
+| --- | --- |
+| `server-api` `callout/form/` (6 files) | **191 / 191** — lifecycle 32, visibility matrix 57, submit validation 54, placement guards 17, presentation 19, never-appears 12; 102 s. Loopback Postgres cases ran (not skipped). |
+| `notifications/.../form-response.it-spec.ts` | **6 / 6**, 37 s (RabbitMQ management configured, push case ran) |
+| Form walks (`test:form-callout-framing`) | **46 passed, 1 skipped** (US4-AS6: no stop/start commands), 0 failed, 8.5 min |
+
+Reds and their attribution:
+- **Environment (mine):** the first walk attempt failed every file in `beforeAll` with `login admin@alkem.io` → 401, then 429. Cause: I exported the server's `AUTH_ADMIN_PASSWORD`; the harness Global Admin is `admin@alkem.io` with the server-api `AUTH_TEST_HARNESS_PASSWORD`. Rerun with that value plus a pre-minted `ALKEMIO_ADMIN_TOKEN`: green. No test change needed; documented under *Walk credentials* above.
+- **Product (new case):** the existence probe written for FR-020 went red live — filed as server#6591, case skipped until the fix lands. *(Fixed in server#6665, on `develop` 2026-10-15; case live since test-suites#673.)*
+- **Product (new case):** the R15 case went red live — the old parent's admin kept reading and could delete a response in the moved subspace, the new parent's admin read nothing; the stored ADMIN `parentCredentials` still named the old parent. Filed as server#6592, four cells skipped until the fix lands.
+- **Test:** none of the pre-existing cases needed a change to pass live.
+
+### Run 2 — after all fixes (QA-CH-14..17)
+
+| Suite | Result |
+| --- | --- |
+| `server-api` `callout/form/` (7 files, incl. the new `form-space-move.it-spec.ts`) | **201 / 201** — lifecycle 33, matrix 57 (disposable users; none left behind), submit validation 54, placement 17, presentation 19, never-appears 12, space move 9 (4 skipped on server#6592); 110 s. Lifecycle's probe was skipped on server#6591 at the time *(live since test-suites#673)*. |
+| `notifications/.../form-response.it-spec.ts` | **6 / 6**, 37 s |
+| Form walks | **44 passed, 1 failed (US4-AS7), 2 skipped** (AS6 by design; AS8 only because the serial file stops after a failure), 9.5 min. Rerun of the `us4` file alone: **7 / 7 passed, AS6 skipped** — AS7 and AS8 green. Net: 46 / 46 runnable walks green. |
+
+Reds and their attribution:
+- **Environment — the local MailSlurper, not the product and not the test:** AS7 submits three responses and polls for three admin mails; it saw one in 90 s. RabbitMQ's `alkemio-notifications` queue showed publish = deliver = ack (every event consumed), and the sink's container log recorded the mail writes in that window, but its REST listing never returned them; after the next burst the sink listed 127 mails of the 460+ writes it had logged since the last prune, with `Invalid HELO command` / `Connection … already exists` errors clustered in bursts (a known defect of this sink). The same file passed on an immediate rerun. No test change: the case is correct, the sink is lossy under load.
+- No product or test reds.

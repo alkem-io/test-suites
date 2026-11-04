@@ -19,15 +19,48 @@ export class SubscriptionClient {
    * @param payload Payload to send on subscription
    * @param user The user with whom the subscription will be made. This user is used for authorization
    * over the resource you are going to subscribe to so make sure this user has the sufficient privileges.
+   * @param options.recordErrors When true, an operation error the server answers the
+   * subscribe with (for example a refused subscription) is recorded and readable through
+   * `getErrors()` instead of being rethrown from the websocket handler as an uncaught exception.
+   * Use it to assert that a subscription is refused.
    * @return A promise which is resolved after the _connected_ state event is received.
    * This ensures messages are received as expected and in timely manner
    */
-  public subscribe(payload: SubscribePayload, user: TestUser): Promise<void> {
+  public async subscribe(
+    payload: SubscribePayload,
+    user: TestUser,
+    options: { recordErrors?: boolean } = {}
+  ): Promise<void> {
+    // Server FR-023: subscription auth is resolved at the WebSocket HTTP upgrade
+    // ONLY — `connectionParams` are deliberately ignored for credentials. So the
+    // Bearer token must travel as an `Authorization` header on the upgrade
+    // request, not inside connectionParams. The `ws` impl forwards constructor
+    // `options.headers` onto the upgrade request, so we subclass it to inject
+    // them. connectionParams are still sent (used server-side for non-auth
+    // telemetry only).
+    const connectionParams = await buildConnectionParams(user);
+    const authHeader = (connectionParams as { headers?: { authorization?: string } })
+      ?.headers?.authorization;
+    const BaseWebSocket = WebSocket as unknown as new (
+      address: string,
+      protocols?: string | string[],
+      options?: { headers?: Record<string, string> }
+    ) => unknown;
+    class AuthenticatedWebSocket extends (BaseWebSocket as any) {
+      constructor(address: string, protocols?: string | string[]) {
+        super(
+          address,
+          protocols,
+          authHeader ? { headers: { authorization: authHeader } } : undefined
+        );
+      }
+    }
+
     return new Promise<void>((res, rej) => {
       this.client = createClient({
         url: testConfiguration.endPoints.ws,
-        webSocketImpl: WebSocket,
-        connectionParams: async () => await buildConnectionParams(user),
+        webSocketImpl: AuthenticatedWebSocket,
+        connectionParams: async () => connectionParams,
       });
 
       this._terminateFn = this.client.subscribe(payload, {
@@ -42,6 +75,21 @@ export class SubscriptionClient {
         },
         error: err => {
           this.terminate();
+          if (options.recordErrors) {
+            const operationErrors = Array.isArray(err) ? err : [err];
+            this.errors.push(
+              ...operationErrors.map(
+                e =>
+                  new GraphQLError(
+                    (e as { message?: string })?.message ?? 'Subscription error'
+                  )
+              )
+            );
+            // A fatal close before ConnectionAck never emits `connected`: settle the
+            // pending subscribe() instead of hanging. No-op once already resolved.
+            rej(err);
+            return;
+          }
           throw new Error((err as Error).message);
         },
         complete: () => null,
@@ -73,6 +121,13 @@ export class SubscriptionClient {
     if (this.errors.length) {
       throw new Error('Unable to access messages due to errors received');
     }
+    return this._messages;
+  }
+  /**
+   * Returns every message received so far without throwing on recorded errors.
+   * Use it to assert that a refused subscription (`recordErrors`) delivered no payload.
+   */
+  public getReceivedMessages(): SubscriptionMessage[] {
     return this._messages;
   }
   /** Returns the latest received message */

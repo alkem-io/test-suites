@@ -1,0 +1,1817 @@
+{
+"_note": "Reviewed area + severity for issues that were on the page when it was first built (2026-09-16). Rules classify anything not listed here. Edit a row to override; delete the row to let the rules decide.",
+"issues": {
+"client-web/10010": {
+"a": "Users & profiles",
+"s": "Medium"
+},
+"client-web/10011": {
+"a": "Callouts, posts & contributions",
+"s": "Medium"
+},
+"client-web/10013": {
+"a": "UI, layout & mobile",
+"s": "Medium"
+},
+"client-web/10015": {
+"a": "Callouts, posts & contributions",
+"s": "Medium"
+},
+"client-web/10018": {
+"a": "Users & profiles",
+"s": "Medium"
+},
+"client-web/10066": {
+"a": "Callouts, posts & contributions",
+"s": "Medium"
+},
+"client-web/10067": {
+"a": "Community, roles & membership",
+"s": "Medium"
+},
+"client-web/10069": {
+"a": "Callouts, posts & contributions",
+"s": "Medium"
+},
+"client-web/10070": {
+"a": "Auth, identity & permissions",
+"s": "High"
+},
+"client-web/10072": {
+"a": "Virtual Contributors / AI",
+"s": "Medium"
+},
+"client-web/10076": {
+"a": "Calendar & events",
+"s": "Medium"
+},
+"client-web/10085": {
+"a": "Auth, identity & permissions",
+"s": "Medium"
+},
+"client-web/10125": {
+"a": "Virtual Contributors / AI",
+"s": "Medium"
+},
+"client-web/10126": {
+"a": "Files, storage & documents",
+"s": "Medium"
+},
+"client-web/10128": {
+"a": "Notifications",
+"s": "Medium"
+},
+"client-web/10129": {
+"a": "Files, storage & documents",
+"s": "Medium"
+},
+"client-web/10133": {
+"a": "Users & profiles",
+"s": "High"
+},
+"client-web/10134": {
+"a": "Callouts, posts & contributions",
+"s": "Medium"
+},
+"client-web/10137": {
+"a": "Callouts, posts & contributions",
+"s": "Medium"
+},
+"client-web/10142": {
+"a": "Chat, comments & messaging",
+"s": "Medium"
+},
+"client-web/10182": {
+"a": "Auth, identity & permissions",
+"s": "High"
+},
+"client-web/10191": {
+"a": "Auth, identity & permissions",
+"s": "Medium"
+},
+"client-web/10196": {
+"a": "Whiteboards",
+"s": "Medium"
+},
+"client-web/10216": {
+"a": "Spaces & subspaces",
+"s": "Medium"
+},
+"client-web/10220": {
+"a": "Virtual Contributors / AI",
+"s": "Medium"
+},
+"client-web/10221": {
+"a": "Other / unclassified",
+"s": "High"
+},
+"client-web/10223": {
+"a": "Chat, comments & messaging",
+"s": "High"
+},
+"client-web/10251": {
+"a": "Innovation flow & templates",
+"s": "Medium"
+},
+"client-web/10254": {
+"a": "UI, layout & mobile",
+"s": "Medium"
+},
+"client-web/10255": {
+"a": "Callouts, posts & contributions",
+"s": "High"
+},
+"client-web/10259": {
+"a": "Notifications",
+"s": "High"
+},
+"client-web/10260": {
+"a": "Whiteboards",
+"s": "Medium"
+},
+"client-web/10261": {
+"a": "Other / unclassified",
+"s": "Medium"
+},
+"client-web/10269": {
+"a": "Auth, identity & permissions",
+"s": "High"
+},
+"client-web/10274": {
+"a": "Whiteboards",
+"s": "Medium"
+},
+"client-web/10277": {
+"a": "Auth, identity & permissions",
+"s": "High"
+},
+"client-web/10281": {
+"a": "Whiteboards",
+"s": "Medium"
+},
+"client-web/10283": {
+"a": "Whiteboards",
+"s": "Medium"
+},
+"client-web/10284": {
+"a": "Chat, comments & messaging",
+"s": "High"
+},
+"client-web/10285": {
+"a": "Innovation flow & templates",
+"s": "Medium"
+},
+"client-web/10288": {
+"a": "Callouts, posts & contributions",
+"s": "Medium"
+},
+"client-web/10291": {
+"a": "Auth, identity & permissions",
+"s": "Medium"
+},
+"client-web/10292": {
+"a": "Users & profiles",
+"s": "Medium"
+},
+"client-web/10298": {
+"a": "Callouts, posts & contributions",
+"s": "Medium"
+},
+"client-web/10301": {
+"a": "Spaces & subspaces",
+"s": "Low"
+},
+"client-web/10309": {
+"a": "Callouts, posts & contributions",
+"s": "Medium"
+},
+"client-web/10311": {
+"a": "Auth, identity & permissions",
+"s": "Medium"
+},
+"client-web/10313": {
+"a": "Auth, identity & permissions",
+"s": "High"
+},
+"client-web/10314": {
+"a": "Chat, comments & messaging",
+"s": "Medium"
+},
+"client-web/10318": {
+"a": "Community, roles & membership",
+"s": "Medium"
+},
+"client-web/10319": {
+"a": "Notifications",
+"s": "Medium"
+},
+"client-web/10321": {
+"a": "Notifications",
+"s": "High"
+},
+"client-web/2269": {
+"a": "Infra, CI & deployment",
+"s": "Medium"
+},
+"client-web/2640": {
+"a": "Calendar & events",
+"s": "Medium"
+},
+"client-web/2751": {
+"a": "Spaces & subspaces",
+"s": "Medium"
+},
+"client-web/3287": {
+"a": "Callouts, posts & contributions",
+"s": "Medium"
+},
+"client-web/3296": {
+"a": "Spaces & subspaces",
+"s": "Medium"
+},
+"client-web/3375": {
+"a": "Community, roles & membership",
+"s": "Medium"
+},
+"client-web/3447": {
+"a": "Callouts, posts & contributions",
+"s": "Low"
+},
+"client-web/3468": {
+"a": "Callouts, posts & contributions",
+"s": "High"
+},
+"client-web/3561": {
+"a": "Users & profiles",
+"s": "High"
+},
+"client-web/3655": {
+"a": "Auth, identity & permissions",
+"s": "Medium"
+},
+"client-web/3903": {
+"a": "Chat, comments & messaging",
+"s": "Medium"
+},
+"client-web/3967": {
+"a": "Spaces & subspaces",
+"s": "Medium"
+},
+"client-web/3994": {
+"a": "Whiteboards",
+"s": "Medium"
+},
+"client-web/4277": {
+"a": "Community, roles & membership",
+"s": "Medium"
+},
+"client-web/4361": {
+"a": "Callouts, posts & contributions",
+"s": "Medium"
+},
+"client-web/4419": {
+"a": "UI, layout & mobile",
+"s": "Medium"
+},
+"client-web/4590": {
+"a": "Files, storage & documents",
+"s": "Medium"
+},
+"client-web/4762": {
+"a": "Innovation flow & templates",
+"s": "Medium"
+},
+"client-web/4816": {
+"a": "Callouts, posts & contributions",
+"s": "Medium"
+},
+"client-web/4973": {
+"a": "Performance & stability",
+"s": "Medium"
+},
+"client-web/4974": {
+"a": "Auth, identity & permissions",
+"s": "Medium"
+},
+"client-web/5028": {
+"a": "Callouts, posts & contributions",
+"s": "High"
+},
+"client-web/5091": {
+"a": "UI, layout & mobile",
+"s": "Medium"
+},
+"client-web/5092": {
+"a": "UI, layout & mobile",
+"s": "Medium"
+},
+"client-web/5187": {
+"a": "Callouts, posts & contributions",
+"s": "High"
+},
+"client-web/5193": {
+"a": "Innovation flow & templates",
+"s": "High"
+},
+"client-web/5231": {
+"a": "Chat, comments & messaging",
+"s": "Medium"
+},
+"client-web/5235": {
+"a": "Search & navigation",
+"s": "Medium"
+},
+"client-web/5294": {
+"a": "Callouts, posts & contributions",
+"s": "High"
+},
+"client-web/5312": {
+"a": "Auth, identity & permissions",
+"s": "Medium"
+},
+"client-web/5362": {
+"a": "Whiteboards",
+"s": "Medium"
+},
+"client-web/5430": {
+"a": "UI, layout & mobile",
+"s": "Medium"
+},
+"client-web/5476": {
+"a": "Whiteboards",
+"s": "High"
+},
+"client-web/5481": {
+"a": "Callouts, posts & contributions",
+"s": "Medium"
+},
+"client-web/5544": {
+"a": "Community, roles & membership",
+"s": "Medium"
+},
+"client-web/5549": {
+"a": "Whiteboards",
+"s": "Medium"
+},
+"client-web/5558": {
+"a": "Files, storage & documents",
+"s": "Medium"
+},
+"client-web/5603": {
+"a": "Whiteboards",
+"s": "Medium"
+},
+"client-web/5617": {
+"a": "API, GraphQL & MCP",
+"s": "Medium"
+},
+"client-web/5657": {
+"a": "Users & profiles",
+"s": "Medium"
+},
+"client-web/5664": {
+"a": "Whiteboards",
+"s": "High"
+},
+"client-web/5687": {
+"a": "Callouts, posts & contributions",
+"s": "Medium"
+},
+"client-web/5688": {
+"a": "Users & profiles",
+"s": "Medium"
+},
+"client-web/5725": {
+"a": "Localisation & content",
+"s": "Low"
+},
+"client-web/5726": {
+"a": "Infra, CI & deployment",
+"s": "High"
+},
+"client-web/5736": {
+"a": "UI, layout & mobile",
+"s": "Medium"
+},
+"client-web/5781": {
+"a": "Callouts, posts & contributions",
+"s": "Medium"
+},
+"client-web/5811": {
+"a": "Spaces & subspaces",
+"s": "Medium"
+},
+"client-web/5828": {
+"a": "Spaces & subspaces",
+"s": "Medium"
+},
+"client-web/5848": {
+"a": "Infra, CI & deployment",
+"s": "Medium"
+},
+"client-web/5849": {
+"a": "Auth, identity & permissions",
+"s": "Medium"
+},
+"client-web/5875": {
+"a": "Spaces & subspaces",
+"s": "Medium"
+},
+"client-web/5892": {
+"a": "Whiteboards",
+"s": "High"
+},
+"client-web/5939": {
+"a": "Community, roles & membership",
+"s": "Medium"
+},
+"client-web/5944": {
+"a": "Virtual Contributors / AI",
+"s": "Medium"
+},
+"client-web/6123": {
+"a": "Spaces & subspaces",
+"s": "Medium"
+},
+"client-web/6211": {
+"a": "Spaces & subspaces",
+"s": "Medium"
+},
+"client-web/6337": {
+"a": "Licensing & plans",
+"s": "Medium"
+},
+"client-web/6415": {
+"a": "UI, layout & mobile",
+"s": "High"
+},
+"client-web/6430": {
+"a": "Whiteboards",
+"s": "High"
+},
+"client-web/6459": {
+"a": "Users & profiles",
+"s": "Medium"
+},
+"client-web/6466": {
+"a": "Virtual Contributors / AI",
+"s": "Medium"
+},
+"client-web/6576": {
+"a": "Spaces & subspaces",
+"s": "High"
+},
+"client-web/6586": {
+"a": "Spaces & subspaces",
+"s": "Medium"
+},
+"client-web/6613": {
+"a": "Whiteboards",
+"s": "High"
+},
+"client-web/6616": {
+"a": "Users & profiles",
+"s": "High"
+},
+"client-web/6639": {
+"a": "Other / unclassified",
+"s": "Medium"
+},
+"client-web/6647": {
+"a": "Spaces & subspaces",
+"s": "Medium"
+},
+"client-web/6653": {
+"a": "Whiteboards",
+"s": "High"
+},
+"client-web/6686": {
+"a": "Notifications",
+"s": "Medium"
+},
+"client-web/6688": {
+"a": "Notifications",
+"s": "Medium"
+},
+"client-web/6713": {
+"a": "Auth, identity & permissions",
+"s": "Medium"
+},
+"client-web/6759": {
+"a": "Auth, identity & permissions",
+"s": "Medium"
+},
+"client-web/6774": {
+"a": "Other / unclassified",
+"s": "Medium"
+},
+"client-web/6822": {
+"a": "Virtual Contributors / AI",
+"s": "Medium"
+},
+"client-web/6833": {
+"a": "Innovation flow & templates",
+"s": "Medium"
+},
+"client-web/6834": {
+"a": "Spaces & subspaces",
+"s": "Medium"
+},
+"client-web/6841": {
+"a": "Users & profiles",
+"s": "High"
+},
+"client-web/6857": {
+"a": "Users & profiles",
+"s": "Medium"
+},
+"client-web/6889": {
+"a": "Other / unclassified",
+"s": "Medium"
+},
+"client-web/6891": {
+"a": "Spaces & subspaces",
+"s": "Medium"
+},
+"client-web/6897": {
+"a": "Virtual Contributors / AI",
+"s": "Medium"
+},
+"client-web/6900": {
+"a": "Innovation flow & templates",
+"s": "Medium"
+},
+"client-web/6925": {
+"a": "Search & navigation",
+"s": "Medium"
+},
+"client-web/6926": {
+"a": "Spaces & subspaces",
+"s": "Medium"
+},
+"client-web/6940": {
+"a": "Virtual Contributors / AI",
+"s": "Medium"
+},
+"client-web/6947": {
+"a": "Users & profiles",
+"s": "Medium"
+},
+"client-web/6962": {
+"a": "Users & profiles",
+"s": "Medium"
+},
+"client-web/6975": {
+"a": "Spaces & subspaces",
+"s": "Medium"
+},
+"client-web/7056": {
+"a": "Whiteboards",
+"s": "Medium"
+},
+"client-web/7064": {
+"a": "Files, storage & documents",
+"s": "Medium"
+},
+"client-web/7070": {
+"a": "Community, roles & membership",
+"s": "Medium"
+},
+"client-web/7082": {
+"a": "Whiteboards",
+"s": "High"
+},
+"client-web/7098": {
+"a": "Virtual Contributors / AI",
+"s": "Medium"
+},
+"client-web/7163": {
+"a": "Users & profiles",
+"s": "High"
+},
+"client-web/7177": {
+"a": "Spaces & subspaces",
+"s": "Medium"
+},
+"client-web/7195": {
+"a": "Innovation flow & templates",
+"s": "Medium"
+},
+"client-web/7199": {
+"a": "Innovation flow & templates",
+"s": "Medium"
+},
+"client-web/7229": {
+"a": "Innovation flow & templates",
+"s": "Medium"
+},
+"client-web/7241": {
+"a": "Spaces & subspaces",
+"s": "Medium"
+},
+"client-web/7272": {
+"a": "Other / unclassified",
+"s": "Medium"
+},
+"client-web/7315": {
+"a": "Notifications",
+"s": "High"
+},
+"client-web/7324": {
+"a": "Notifications",
+"s": "Medium"
+},
+"client-web/7407": {
+"a": "Callouts, posts & contributions",
+"s": "High"
+},
+"client-web/7456": {
+"a": "Markdown / rich text editor",
+"s": "Medium"
+},
+"client-web/7513": {
+"a": "Files, storage & documents",
+"s": "Medium"
+},
+"client-web/7520": {
+"a": "Innovation flow & templates",
+"s": "Medium"
+},
+"client-web/7527": {
+"a": "Community, roles & membership",
+"s": "Medium"
+},
+"client-web/7575": {
+"a": "Virtual Contributors / AI",
+"s": "Medium"
+},
+"client-web/7616": {
+"a": "Virtual Contributors / AI",
+"s": "Medium"
+},
+"client-web/7618": {
+"a": "Licensing & plans",
+"s": "Medium"
+},
+"client-web/7623": {
+"a": "Virtual Contributors / AI",
+"s": "High"
+},
+"client-web/7694": {
+"a": "Community, roles & membership",
+"s": "Medium"
+},
+"client-web/7709": {
+"a": "Spaces & subspaces",
+"s": "Medium"
+},
+"client-web/7780": {
+"a": "Users & profiles",
+"s": "High"
+},
+"client-web/7785": {
+"a": "Auth, identity & permissions",
+"s": "High"
+},
+"client-web/7791": {
+"a": "Innovation flow & templates",
+"s": "Medium"
+},
+"client-web/7806": {
+"a": "Virtual Contributors / AI",
+"s": "Medium"
+},
+"client-web/7818": {
+"a": "Innovation flow & templates",
+"s": "Medium"
+},
+"client-web/7820": {
+"a": "Performance & stability",
+"s": "High"
+},
+"client-web/7832": {
+"a": "Chat, comments & messaging",
+"s": "Low"
+},
+"client-web/7853": {
+"a": "API, GraphQL & MCP",
+"s": "High"
+},
+"client-web/7867": {
+"a": "Performance & stability",
+"s": "High"
+},
+"client-web/7869": {
+"a": "Licensing & plans",
+"s": "Medium"
+},
+"client-web/7880": {
+"a": "Virtual Contributors / AI",
+"s": "Medium"
+},
+"client-web/7894": {
+"a": "Spaces & subspaces",
+"s": "Medium"
+},
+"client-web/7905": {
+"a": "UI, layout & mobile",
+"s": "Medium"
+},
+"client-web/7906": {
+"a": "Spaces & subspaces",
+"s": "High"
+},
+"client-web/7913": {
+"a": "Spaces & subspaces",
+"s": "Medium"
+},
+"client-web/7915": {
+"a": "Callouts, posts & contributions",
+"s": "Medium"
+},
+"client-web/7917": {
+"a": "Spaces & subspaces",
+"s": "Medium"
+},
+"client-web/7921": {
+"a": "Community, roles & membership",
+"s": "Medium"
+},
+"client-web/7928": {
+"a": "Spaces & subspaces",
+"s": "Medium"
+},
+"client-web/7951": {
+"a": "Virtual Contributors / AI",
+"s": "Medium"
+},
+"client-web/7979": {
+"a": "Spaces & subspaces",
+"s": "Medium"
+},
+"client-web/8019": {
+"a": "Virtual Contributors / AI",
+"s": "Medium"
+},
+"client-web/8021": {
+"a": "Innovation flow & templates",
+"s": "High"
+},
+"client-web/8025": {
+"a": "Virtual Contributors / AI",
+"s": "High"
+},
+"client-web/8040": {
+"a": "Whiteboards",
+"s": "Medium"
+},
+"client-web/8044": {
+"a": "Whiteboards",
+"s": "Medium"
+},
+"client-web/8064": {
+"a": "Innovation flow & templates",
+"s": "High"
+},
+"client-web/8071": {
+"a": "Virtual Contributors / AI",
+"s": "Medium"
+},
+"client-web/8076": {
+"a": "Callouts, posts & contributions",
+"s": "High"
+},
+"client-web/8112": {
+"a": "API, GraphQL & MCP",
+"s": "Medium"
+},
+"client-web/8125": {
+"a": "Spaces & subspaces",
+"s": "Low"
+},
+"client-web/8140": {
+"a": "Licensing & plans",
+"s": "High"
+},
+"client-web/8169": {
+"a": "Callouts, posts & contributions",
+"s": "Medium"
+},
+"client-web/8170": {
+"a": "Whiteboards",
+"s": "Medium"
+},
+"client-web/8212": {
+"a": "Calendar & events",
+"s": "Medium"
+},
+"client-web/8213": {
+"a": "Virtual Contributors / AI",
+"s": "Medium"
+},
+"client-web/8246": {
+"a": "Notifications",
+"s": "Medium"
+},
+"client-web/8271": {
+"a": "Innovation flow & templates",
+"s": "Medium"
+},
+"client-web/8275": {
+"a": "Virtual Contributors / AI",
+"s": "Medium"
+},
+"client-web/8278": {
+"a": "Whiteboards",
+"s": "Medium"
+},
+"client-web/8292": {
+"a": "Auth, identity & permissions",
+"s": "Medium"
+},
+"client-web/8299": {
+"a": "Whiteboards",
+"s": "Medium"
+},
+"client-web/8304": {
+"a": "Spaces & subspaces",
+"s": "Medium"
+},
+"client-web/8341": {
+"a": "Markdown / rich text editor",
+"s": "Medium"
+},
+"client-web/8343": {
+"a": "Infra, CI & deployment",
+"s": "Medium"
+},
+"client-web/8350": {
+"a": "Innovation flow & templates",
+"s": "High"
+},
+"client-web/8363": {
+"a": "Community, roles & membership",
+"s": "Medium"
+},
+"client-web/8392": {
+"a": "Callouts, posts & contributions",
+"s": "High"
+},
+"client-web/8400": {
+"a": "Innovation flow & templates",
+"s": "Medium"
+},
+"client-web/8402": {
+"a": "Chat, comments & messaging",
+"s": "High"
+},
+"client-web/8406": {
+"a": "Spaces & subspaces",
+"s": "Medium"
+},
+"client-web/8441": {
+"a": "Callouts, posts & contributions",
+"s": "Medium"
+},
+"client-web/8446": {
+"a": "Callouts, posts & contributions",
+"s": "Medium"
+},
+"client-web/8448": {
+"a": "UI, layout & mobile",
+"s": "Low"
+},
+"client-web/8474": {
+"a": "Callouts, posts & contributions",
+"s": "Medium"
+},
+"client-web/8476": {
+"a": "Callouts, posts & contributions",
+"s": "High"
+},
+"client-web/8540": {
+"a": "Auth, identity & permissions",
+"s": "Medium"
+},
+"client-web/8553": {
+"a": "Callouts, posts & contributions",
+"s": "Medium"
+},
+"client-web/8557": {
+"a": "Innovation flow & templates",
+"s": "Medium"
+},
+"client-web/8585": {
+"a": "Files, storage & documents",
+"s": "Medium"
+},
+"client-web/8596": {
+"a": "Auth, identity & permissions",
+"s": "High"
+},
+"client-web/8606": {
+"a": "Auth, identity & permissions",
+"s": "High"
+},
+"client-web/8608": {
+"a": "Other / unclassified",
+"s": "Medium"
+},
+"client-web/8609": {
+"a": "Auth, identity & permissions",
+"s": "High"
+},
+"client-web/8612": {
+"a": "UI, layout & mobile",
+"s": "High"
+},
+"client-web/8632": {
+"a": "UI, layout & mobile",
+"s": "Medium"
+},
+"client-web/8635": {
+"a": "Users & profiles",
+"s": "Medium"
+},
+"client-web/8653": {
+"a": "Chat, comments & messaging",
+"s": "Medium"
+},
+"client-web/8671": {
+"a": "Chat, comments & messaging",
+"s": "Medium"
+},
+"client-web/8678": {
+"a": "Callouts, posts & contributions",
+"s": "Medium"
+},
+"client-web/8684": {
+"a": "Notifications",
+"s": "Medium"
+},
+"client-web/8686": {
+"a": "Files, storage & documents",
+"s": "Medium"
+},
+"client-web/8743": {
+"a": "Callouts, posts & contributions",
+"s": "Low"
+},
+"client-web/8752": {
+"a": "Chat, comments & messaging",
+"s": "High"
+},
+"client-web/8758": {
+"a": "Whiteboards",
+"s": "Medium"
+},
+"client-web/8775": {
+"a": "Search & navigation",
+"s": "Medium"
+},
+"client-web/8813": {
+"a": "Users & profiles",
+"s": "Low"
+},
+"client-web/8815": {
+"a": "Notifications",
+"s": "Medium"
+},
+"client-web/8816": {
+"a": "Innovation flow & templates",
+"s": "Medium"
+},
+"client-web/8824": {
+"a": "Virtual Contributors / AI",
+"s": "Medium"
+},
+"client-web/8825": {
+"a": "Virtual Contributors / AI",
+"s": "Medium"
+},
+"client-web/8826": {
+"a": "Notifications",
+"s": "High"
+},
+"client-web/8831": {
+"a": "Callouts, posts & contributions",
+"s": "Medium"
+},
+"client-web/8854": {
+"a": "Other / unclassified",
+"s": "Medium"
+},
+"client-web/8871": {
+"a": "Notifications",
+"s": "Medium"
+},
+"client-web/8882": {
+"a": "Users & profiles",
+"s": "Medium"
+},
+"client-web/8899": {
+"a": "Virtual Contributors / AI",
+"s": "Medium"
+},
+"client-web/8905": {
+"a": "Chat, comments & messaging",
+"s": "Medium"
+},
+"client-web/8910": {
+"a": "Chat, comments & messaging",
+"s": "Medium"
+},
+"client-web/8926": {
+"a": "Virtual Contributors / AI",
+"s": "Medium"
+},
+"client-web/8949": {
+"a": "Notifications",
+"s": "Medium"
+},
+"client-web/8970": {
+"a": "Callouts, posts & contributions",
+"s": "Medium"
+},
+"client-web/8973": {
+"a": "Infra, CI & deployment",
+"s": "Medium"
+},
+"client-web/8975": {
+"a": "Other / unclassified",
+"s": "Medium"
+},
+"client-web/8987": {
+"a": "Spaces & subspaces",
+"s": "Medium"
+},
+"client-web/8990": {
+"a": "UI, layout & mobile",
+"s": "Medium"
+},
+"client-web/9004": {
+"a": "Innovation flow & templates",
+"s": "Medium"
+},
+"client-web/9006": {
+"a": "Innovation flow & templates",
+"s": "Medium"
+},
+"client-web/9009": {
+"a": "Chat, comments & messaging",
+"s": "Medium"
+},
+"client-web/9058": {
+"a": "Callouts, posts & contributions",
+"s": "Medium"
+},
+"client-web/9075": {
+"a": "Auth, identity & permissions",
+"s": "Medium"
+},
+"client-web/9081": {
+"a": "Auth, identity & permissions",
+"s": "Medium"
+},
+"client-web/9093": {
+"a": "Virtual Contributors / AI",
+"s": "High"
+},
+"client-web/9094": {
+"a": "Innovation flow & templates",
+"s": "Medium"
+},
+"client-web/9118": {
+"a": "Auth, identity & permissions",
+"s": "Medium"
+},
+"client-web/9119": {
+"a": "Auth, identity & permissions",
+"s": "Low"
+},
+"client-web/9154": {
+"a": "Chat, comments & messaging",
+"s": "Medium"
+},
+"client-web/9155": {
+"a": "Spaces & subspaces",
+"s": "Medium"
+},
+"client-web/9159": {
+"a": "Other / unclassified",
+"s": "Medium"
+},
+"client-web/9214": {
+"a": "Auth, identity & permissions",
+"s": "High"
+},
+"client-web/9254": {
+"a": "Virtual Contributors / AI",
+"s": "Medium"
+},
+"client-web/9262": {
+"a": "Innovation flow & templates",
+"s": "High"
+},
+"client-web/9278": {
+"a": "Users & profiles",
+"s": "High"
+},
+"client-web/9280": {
+"a": "Callouts, posts & contributions",
+"s": "Medium"
+},
+"client-web/9288": {
+"a": "Callouts, posts & contributions",
+"s": "Medium"
+},
+"client-web/9291": {
+"a": "Virtual Contributors / AI",
+"s": "Medium"
+},
+"client-web/9300": {
+"a": "Callouts, posts & contributions",
+"s": "Low"
+},
+"client-web/9316": {
+"a": "Files, storage & documents",
+"s": "Medium"
+},
+"client-web/9317": {
+"a": "Files, storage & documents",
+"s": "Medium"
+},
+"client-web/9335": {
+"a": "Auth, identity & permissions",
+"s": "Medium"
+},
+"client-web/9344": {
+"a": "Callouts, posts & contributions",
+"s": "Medium"
+},
+"client-web/9345": {
+"a": "Innovation flow & templates",
+"s": "Medium"
+},
+"client-web/9346": {
+"a": "Auth, identity & permissions",
+"s": "Medium"
+},
+"client-web/9347": {
+"a": "Whiteboards",
+"s": "Medium"
+},
+"client-web/9352": {
+"a": "Virtual Contributors / AI",
+"s": "High"
+},
+"client-web/9353": {
+"a": "Callouts, posts & contributions",
+"s": "High"
+},
+"client-web/9356": {
+"a": "Auth, identity & permissions",
+"s": "Medium"
+},
+"client-web/9359": {
+"a": "Callouts, posts & contributions",
+"s": "Medium"
+},
+"client-web/9362": {
+"a": "UI, layout & mobile",
+"s": "Low"
+},
+"client-web/9380": {
+"a": "Callouts, posts & contributions",
+"s": "Medium"
+},
+"client-web/9392": {
+"a": "Auth, identity & permissions",
+"s": "Medium"
+},
+"client-web/9414": {
+"a": "Spaces & subspaces",
+"s": "High"
+},
+"client-web/9419": {
+"a": "Whiteboards",
+"s": "Medium"
+},
+"client-web/9425": {
+"a": "Chat, comments & messaging",
+"s": "Medium"
+},
+"client-web/9426": {
+"a": "Whiteboards",
+"s": "Medium"
+},
+"client-web/9447": {
+"a": "Chat, comments & messaging",
+"s": "Medium"
+},
+"client-web/9453": {
+"a": "Whiteboards",
+"s": "Medium"
+},
+"client-web/9455": {
+"a": "Whiteboards",
+"s": "Medium"
+},
+"client-web/9480": {
+"a": "Virtual Contributors / AI",
+"s": "Medium"
+},
+"client-web/9493": {
+"a": "Spaces & subspaces",
+"s": "Medium"
+},
+"client-web/9497": {
+"a": "Innovation flow & templates",
+"s": "Medium"
+},
+"client-web/9510": {
+"a": "Whiteboards",
+"s": "Medium"
+},
+"client-web/9511": {
+"a": "Virtual Contributors / AI",
+"s": "Medium"
+},
+"client-web/9520": {
+"a": "Auth, identity & permissions",
+"s": "Medium"
+},
+"client-web/9521": {
+"a": "Other / unclassified",
+"s": "Medium"
+},
+"client-web/9522": {
+"a": "Innovation flow & templates",
+"s": "Medium"
+},
+"client-web/9523": {
+"a": "Spaces & subspaces",
+"s": "Medium"
+},
+"client-web/9524": {
+"a": "Performance & stability",
+"s": "Medium"
+},
+"client-web/9527": {
+"a": "Chat, comments & messaging",
+"s": "High"
+},
+"client-web/9543": {
+"a": "Chat, comments & messaging",
+"s": "Medium"
+},
+"client-web/9557": {
+"a": "Auth, identity & permissions",
+"s": "Medium"
+},
+"client-web/9559": {
+"a": "Notifications",
+"s": "Medium"
+},
+"client-web/9563": {
+"a": "Chat, comments & messaging",
+"s": "High"
+},
+"client-web/9565": {
+"a": "Spaces & subspaces",
+"s": "Medium"
+},
+"client-web/9566": {
+"a": "Whiteboards",
+"s": "Medium"
+},
+"client-web/9587": {
+"a": "Files, storage & documents",
+"s": "Medium"
+},
+"client-web/9608": {
+"a": "Spaces & subspaces",
+"s": "Medium"
+},
+"client-web/9636": {
+"a": "Spaces & subspaces",
+"s": "Medium"
+},
+"client-web/9638": {
+"a": "Chat, comments & messaging",
+"s": "Medium"
+},
+"client-web/9742": {
+"a": "Chat, comments & messaging",
+"s": "Medium"
+},
+"client-web/9763": {
+"a": "Community, roles & membership",
+"s": "Medium"
+},
+"client-web/9774": {
+"a": "Notifications",
+"s": "Medium"
+},
+"client-web/9827": {
+"a": "Innovation flow & templates",
+"s": "Medium"
+},
+"client-web/9871": {
+"a": "Notifications",
+"s": "Medium"
+},
+"client-web/9873": {
+"a": "Search & navigation",
+"s": "Medium"
+},
+"client-web/9898": {
+"a": "UI, layout & mobile",
+"s": "Medium"
+},
+"client-web/9899": {
+"a": "Chat, comments & messaging",
+"s": "Low"
+},
+"client-web/9900": {
+"a": "Chat, comments & messaging",
+"s": "Low"
+},
+"client-web/9901": {
+"a": "Spaces & subspaces",
+"s": "Medium"
+},
+"client-web/9902": {
+"a": "Auth, identity & permissions",
+"s": "Medium"
+},
+"client-web/9914": {
+"a": "Virtual Contributors / AI",
+"s": "High"
+},
+"client-web/9916": {
+"a": "Licensing & plans",
+"s": "Medium"
+},
+"client-web/9921": {
+"a": "Chat, comments & messaging",
+"s": "Medium"
+},
+"client-web/9923": {
+"a": "Chat, comments & messaging",
+"s": "Medium"
+},
+"client-web/9927": {
+"a": "Chat, comments & messaging",
+"s": "Medium"
+},
+"client-web/9935": {
+"a": "Innovation flow & templates",
+"s": "Medium"
+},
+"client-web/9946": {
+"a": "Spaces & subspaces",
+"s": "High"
+},
+"client-web/9953": {
+"a": "Spaces & subspaces",
+"s": "Medium"
+},
+"client-web/9957": {
+"a": "Virtual Contributors / AI",
+"s": "Medium"
+},
+"client-web/9972": {
+"a": "Callouts, posts & contributions",
+"s": "High"
+},
+"client-web/9973": {
+"a": "Files, storage & documents",
+"s": "High"
+},
+"client-web/9976": {
+"a": "Whiteboards",
+"s": "Medium"
+},
+"client-web/9980": {
+"a": "Chat, comments & messaging",
+"s": "Medium"
+},
+"documentation/50": {
+"a": "Documentation",
+"s": "Medium"
+},
+"ecosystem-analytics/116": {
+"a": "Analytics",
+"s": "High"
+},
+"notifications/249": {
+"a": "Notifications",
+"s": "Medium"
+},
+"notifications/285": {
+"a": "Notifications",
+"s": "Medium"
+},
+"notifications/346": {
+"a": "Notifications",
+"s": "Medium"
+},
+"notifications/354": {
+"a": "Notifications",
+"s": "Medium"
+},
+"notifications/355": {
+"a": "Notifications",
+"s": "Medium"
+},
+"notifications/400": {
+"a": "Notifications",
+"s": "Medium"
+},
+"notifications/413": {
+"a": "Notifications",
+"s": "Medium"
+},
+"notifications/441": {
+"a": "Notifications",
+"s": "Medium"
+},
+"server/3040": {
+"a": "Community, roles & membership",
+"s": "Medium"
+},
+"server/3377": {
+"a": "Auth, identity & permissions",
+"s": "High"
+},
+"server/3527": {
+"a": "Users & profiles",
+"s": "Medium"
+},
+"server/3571": {
+"a": "API, GraphQL & MCP",
+"s": "Medium"
+},
+"server/3580": {
+"a": "Other / unclassified",
+"s": "Medium"
+},
+"server/3641": {
+"a": "Other / unclassified",
+"s": "Medium"
+},
+"server/3658": {
+"a": "Other / unclassified",
+"s": "Medium"
+},
+"server/3660": {
+"a": "Innovation flow & templates",
+"s": "Medium"
+},
+"server/3684": {
+"a": "Spaces & subspaces",
+"s": "High"
+},
+"server/3727": {
+"a": "Files, storage & documents",
+"s": "Medium"
+},
+"server/3937": {
+"a": "Auth, identity & permissions",
+"s": "Medium"
+},
+"server/3938": {
+"a": "Files, storage & documents",
+"s": "Medium"
+},
+"server/3982": {
+"a": "Community, roles & membership",
+"s": "Medium"
+},
+"server/4140": {
+"a": "Innovation flow & templates",
+"s": "Medium"
+},
+"server/4194": {
+"a": "Spaces & subspaces",
+"s": "Medium"
+},
+"server/4240": {
+"a": "API, GraphQL & MCP",
+"s": "High"
+},
+"server/4353": {
+"a": "Innovation flow & templates",
+"s": "Medium"
+},
+"server/4360": {
+"a": "Spaces & subspaces",
+"s": "Medium"
+},
+"server/4420": {
+"a": "Spaces & subspaces",
+"s": "Medium"
+},
+"server/4490": {
+"a": "Virtual Contributors / AI",
+"s": "Medium"
+},
+"server/4491": {
+"a": "Community, roles & membership",
+"s": "Medium"
+},
+"server/4495": {
+"a": "Callouts, posts & contributions",
+"s": "Medium"
+},
+"server/4546": {
+"a": "Callouts, posts & contributions",
+"s": "Medium"
+},
+"server/4557": {
+"a": "Other / unclassified",
+"s": "Medium"
+},
+"server/4566": {
+"a": "Files, storage & documents",
+"s": "Medium"
+},
+"server/4602": {
+"a": "Community, roles & membership",
+"s": "Medium"
+},
+"server/4630": {
+"a": "Auth, identity & permissions",
+"s": "Medium"
+},
+"server/4720": {
+"a": "Licensing & plans",
+"s": "Medium"
+},
+"server/4723": {
+"a": "Auth, identity & permissions",
+"s": "Medium"
+},
+"server/4728": {
+"a": "Licensing & plans",
+"s": "Medium"
+},
+"server/4729": {
+"a": "Infra, CI & deployment",
+"s": "Medium"
+},
+"server/4761": {
+"a": "Whiteboards",
+"s": "Medium"
+},
+"server/4765": {
+"a": "Licensing & plans",
+"s": "Medium"
+},
+"server/4816": {
+"a": "Infra, CI & deployment",
+"s": "High"
+},
+"server/4840": {
+"a": "Licensing & plans",
+"s": "Medium"
+},
+"server/4841": {
+"a": "Licensing & plans",
+"s": "Medium"
+},
+"server/4860": {
+"a": "Auth, identity & permissions",
+"s": "Medium"
+},
+"server/5080": {
+"a": "Files, storage & documents",
+"s": "Medium"
+},
+"server/5086": {
+"a": "Community, roles & membership",
+"s": "Medium"
+},
+"server/5114": {
+"a": "Spaces & subspaces",
+"s": "Medium"
+},
+"server/5126": {
+"a": "Chat, comments & messaging",
+"s": "Medium"
+},
+"server/5163": {
+"a": "Spaces & subspaces",
+"s": "Medium"
+},
+"server/5186": {
+"a": "Virtual Contributors / AI",
+"s": "Medium"
+},
+"server/5219": {
+"a": "Spaces & subspaces",
+"s": "Medium"
+},
+"server/5263": {
+"a": "UI, layout & mobile",
+"s": "Medium"
+},
+"server/5268": {
+"a": "Notifications",
+"s": "Medium"
+},
+"server/5274": {
+"a": "API, GraphQL & MCP",
+"s": "Medium"
+},
+"server/5339": {
+"a": "Spaces & subspaces",
+"s": "Medium"
+},
+"server/5365": {
+"a": "Callouts, posts & contributions",
+"s": "Medium"
+},
+"server/5368": {
+"a": "Other / unclassified",
+"s": "High"
+},
+"server/5428": {
+"a": "Notifications",
+"s": "High"
+},
+"server/5429": {
+"a": "Spaces & subspaces",
+"s": "Medium"
+},
+"server/5447": {
+"a": "Callouts, posts & contributions",
+"s": "Medium"
+},
+"server/5601": {
+"a": "Spaces & subspaces",
+"s": "Medium"
+},
+"server/5805": {
+"a": "Notifications",
+"s": "High"
+},
+"server/5818": {
+"a": "Chat, comments & messaging",
+"s": "High"
+},
+"server/5885": {
+"a": "Callouts, posts & contributions",
+"s": "Medium"
+},
+"server/5951": {
+"a": "Notifications",
+"s": "Medium"
+},
+"server/5961": {
+"a": "Performance & stability",
+"s": "Medium"
+},
+"server/5962": {
+"a": "Chat, comments & messaging",
+"s": "Medium"
+},
+"server/5978": {
+"a": "Chat, comments & messaging",
+"s": "Medium"
+},
+"server/6013": {
+"a": "API, GraphQL & MCP",
+"s": "Medium"
+},
+"server/6015": {
+"a": "Performance & stability",
+"s": "High"
+},
+"server/6082": {
+"a": "Performance & stability",
+"s": "Medium"
+},
+"server/6119": {
+"a": "Innovation flow & templates",
+"s": "Medium"
+},
+"server/6215": {
+"a": "Callouts, posts & contributions",
+"s": "Medium"
+},
+"server/6332": {
+"a": "API, GraphQL & MCP",
+"s": "High"
+},
+"server/6341": {
+"a": "Callouts, posts & contributions",
+"s": "Medium"
+},
+"server/6353": {
+"a": "Auth, identity & permissions",
+"s": "Medium"
+},
+"server/6362": {
+"a": "Auth, identity & permissions",
+"s": "Medium"
+},
+"server/6377": {
+"a": "API, GraphQL & MCP",
+"s": "Medium"
+},
+"server/6382": {
+"a": "Virtual Contributors / AI",
+"s": "Low"
+},
+"server/6385": {
+"a": "Virtual Contributors / AI",
+"s": "Medium"
+},
+"server/6402": {
+"a": "Files, storage & documents",
+"s": "Medium"
+},
+"server/6404": {
+"a": "Notifications",
+"s": "High"
+},
+"server/6457": {
+"a": "Whiteboards",
+"s": "Medium"
+},
+"server/6461": {
+"a": "Auth, identity & permissions",
+"s": "Medium"
+},
+"server/6462": {
+"a": "API, GraphQL & MCP",
+"s": "High"
+},
+"server/6463": {
+"a": "API, GraphQL & MCP",
+"s": "High"
+},
+"server/6464": {
+"a": "API, GraphQL & MCP",
+"s": "Low"
+},
+"server/6466": {
+"a": "API, GraphQL & MCP",
+"s": "Medium"
+},
+"server/6483": {
+"a": "Organisations",
+"s": "Medium"
+},
+"server/6492": {
+"a": "Whiteboards",
+"s": "Medium"
+},
+"server/6498": {
+"a": "Callouts, posts & contributions",
+"s": "High"
+},
+"server/6499": {
+"a": "Callouts, posts & contributions",
+"s": "Medium"
+},
+"server/6500": {
+"a": "Files, storage & documents",
+"s": "Medium"
+},
+"server/6501": {
+"a": "Callouts, posts & contributions",
+"s": "Medium"
+},
+"server/6514": {
+"a": "Innovation flow & templates",
+"s": "Medium"
+},
+"test-suites/299": {
+"a": "Test suites & QA",
+"s": "High"
+},
+"test-suites/555": {
+"a": "Test suites & QA",
+"s": "High"
+},
+"test-suites/563": {
+"a": "Test suites & QA",
+"s": "Medium"
+},
+"virtual-contributor/121": {
+"a": "Virtual Contributors / AI",
+"s": "High"
+},
+"virtual-contributor/82": {
+"a": "Virtual Contributors / AI",
+"s": "Medium"
+},
+"whiteboard-collaboration-service/11": {
+"a": "Whiteboards",
+"s": "Medium"
+}
+}
+}

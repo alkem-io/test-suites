@@ -1,0 +1,5 @@
+mutation PlatformRolesUpdateSpaceVisibility($updateData: AdminUpdateSpaceVisibilityInput!) {
+  adminUpdateSpaceVisibility(updateData: $updateData) {
+    id
+  }
+}

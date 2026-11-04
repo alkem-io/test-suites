@@ -1,0 +1,95 @@
+subscription ConversationEvents {
+  conversationEvents {
+    eventType
+    conversationCreated {
+      conversation {
+        id
+        members {
+          id
+          type
+          profile {
+            id
+            displayName
+          }
+        }
+        room {
+          id
+          displayName
+          avatarUrl
+          type
+        }
+      }
+      message {
+        id
+        message
+      }
+    }
+    conversationDeleted {
+      conversationID
+    }
+    conversationUpdated {
+      conversation {
+        id
+        members {
+          id
+          type
+        }
+        room {
+          id
+          displayName
+          avatarUrl
+          type
+        }
+      }
+    }
+    memberAdded {
+      conversation {
+        id
+        members {
+          id
+          type
+          profile {
+            id
+            displayName
+          }
+        }
+      }
+      addedMember {
+        id
+        type
+        profile {
+          id
+          displayName
+        }
+      }
+    }
+    memberRemoved {
+      conversation {
+        id
+        members {
+          id
+          type
+        }
+      }
+      removedMemberID
+    }
+    messageReceived {
+      roomId
+      message {
+        id
+        message
+        sender {
+          id
+        }
+      }
+    }
+    messageRemoved {
+      roomId
+      messageId
+    }
+    readReceiptUpdated {
+      roomId
+      lastReadEventId
+    }
+  }
+}

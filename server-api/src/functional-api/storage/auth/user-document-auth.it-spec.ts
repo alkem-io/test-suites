@@ -1,8 +1,9 @@
 import {
-  sorted__create_read_update_delete_fileUpload_fileDelete_readUserPii,
-  sorted__create_read_update_delete_grant_fileUpload_fileDelete_readUserPii,
-  sorted__create_read_update_delete_grant_readUserPii,
-  sorted__create_read_update_delete_readUserPii,
+  getAuthDocument,
+  sorted__create_read_update_delete_fileUpload_fileDelete_readUserPii_updateNameId,
+  sorted__create_read_update_delete_fileUpload_fileDelete_readUserPii_readUserSettings_globalAdmin,
+  sorted__create_read_update_delete_readUserPii_readUserSettings_globalAdmin,
+  sorted__create_read_update_delete_readUserPii_updateNameId,
   TestScenarioConfig,
   TestScenarioFactory,
   TestUser,
@@ -61,14 +62,14 @@ describe('User - documents', () => {
     // Arrange
     // The 'undefined' (unauthenticated) user has profile visual READ privileges by default as per discussion for GDPR
     test.each`
-      userRole                     | privileges
-      ${undefined}                 | ${['READ']}
-      ${TestUser.NON_SPACE_MEMBER} | ${['READ']}
-      ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_readUserPii}
-      ${TestUser.QA_USER}          | ${sorted__create_read_update_delete_readUserPii}
+      userRole                     | privileges                                                                         | expectedStatus
+      ${undefined}                 | ${['READ']} | ${200}
+      ${TestUser.NON_SPACE_MEMBER} | ${['READ']} | ${200}
+      ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_readUserPii_readUserSettings_globalAdmin} | ${200}
+      ${TestUser.QA_USER}          | ${sorted__create_read_update_delete_readUserPii_updateNameId} | ${200}
     `(
       'User: "$userRole" has this privileges: "$privileges" to user profile visual document',
-      async ({ userRole, privileges }) => {
+      async ({ userRole, privileges, expectedStatus }) => {
         const res = await getProfileDocuments(
           TestUserManager.users.qaUser.profileId,
           userRole
@@ -77,6 +78,9 @@ describe('User - documents', () => {
         const dataAuthorization = data?.authorization;
 
         expect(dataAuthorization?.myPrivileges?.sort()).toEqual(privileges);
+
+        const restResponse = await getAuthDocument(documentId, userRole);
+        expect(restResponse.status).toEqual(expectedStatus);
       }
     );
 
@@ -84,8 +88,8 @@ describe('User - documents', () => {
       userRole                     | privileges                                                                   | parentEntityType
       ${undefined}                 | ${['READ']}                                                                  | ${'USER'}
       ${TestUser.NON_SPACE_MEMBER} | ${['READ']}                                                                  | ${'USER'}
-      ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_fileUpload_fileDelete_readUserPii} | ${'USER'}
-      ${TestUser.QA_USER}          | ${sorted__create_read_update_delete_fileUpload_fileDelete_readUserPii}       | ${'USER'}
+      ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_fileUpload_fileDelete_readUserPii_readUserSettings_globalAdmin} | ${'USER'}
+      ${TestUser.QA_USER}          | ${sorted__create_read_update_delete_fileUpload_fileDelete_readUserPii_updateNameId}       | ${'USER'}
     `(
       'User: "$userRole" has this privileges: "$privileges" to user profile storage bucket',
       async ({ userRole, privileges, parentEntityType }) => {
@@ -129,14 +133,14 @@ describe('User - documents', () => {
     // Arrange
     // The 'undefined' (unauthenticated) user has profile reference docs READ privileges by default as per discussion for GDPR
     test.each`
-      userRole                     | privileges
-      ${undefined}                 | ${['READ']}
-      ${TestUser.NON_SPACE_MEMBER} | ${['READ']}
-      ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_readUserPii}
-      ${TestUser.QA_USER}          | ${sorted__create_read_update_delete_readUserPii}
+      userRole                     | privileges                                                                         | expectedStatus
+      ${undefined}                 | ${['READ']} | ${200}
+      ${TestUser.NON_SPACE_MEMBER} | ${['READ']} | ${200}
+      ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_readUserPii_readUserSettings_globalAdmin} | ${200}
+      ${TestUser.QA_USER}          | ${sorted__create_read_update_delete_readUserPii_updateNameId} | ${200}
     `(
       'User: "$userRole" has this privileges: "$privileges" to user reference document',
-      async ({ userRole, privileges }) => {
+      async ({ userRole, privileges, expectedStatus }) => {
         const res = await getProfileDocuments(
           TestUserManager.users.qaUser.profileId,
           userRole
@@ -145,6 +149,9 @@ describe('User - documents', () => {
         const dataAuthorization = data?.authorization;
 
         expect(dataAuthorization?.myPrivileges?.sort()).toEqual(privileges);
+
+        const restResponse = await getAuthDocument(documentId, userRole);
+        expect(restResponse.status).toEqual(expectedStatus);
       }
     );
 
@@ -152,8 +159,8 @@ describe('User - documents', () => {
       userRole                     | privileges                                                                   | parentEntityType
       ${undefined}                 | ${['READ']}                                                                  | ${'USER'}
       ${TestUser.NON_SPACE_MEMBER} | ${['READ']}                                                                  | ${'USER'}
-      ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_fileUpload_fileDelete_readUserPii} | ${'USER'}
-      ${TestUser.QA_USER}          | ${sorted__create_read_update_delete_fileUpload_fileDelete_readUserPii}       | ${'USER'}
+      ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_fileUpload_fileDelete_readUserPii_readUserSettings_globalAdmin} | ${'USER'}
+      ${TestUser.QA_USER}          | ${sorted__create_read_update_delete_fileUpload_fileDelete_readUserPii_updateNameId}       | ${'USER'}
     `(
       'User: "$userRole" has this privileges: "$privileges" to user profile reference storage bucket',
       async ({ userRole, privileges, parentEntityType }) => {
@@ -202,14 +209,14 @@ describe('User - documents', () => {
     // The 'undefined' (unauthenticated) user has profile storageBucket docs READ privileges by default as per discussion for GDPR
 
     test.each`
-      userRole                     | privileges
-      ${undefined}                 | ${['READ']}
-      ${TestUser.NON_SPACE_MEMBER} | ${['READ']}
-      ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_readUserPii}
-      ${TestUser.QA_USER}          | ${sorted__create_read_update_delete_readUserPii}
+      userRole                     | privileges                                                                         | expectedStatus
+      ${undefined}                 | ${['READ']} | ${200}
+      ${TestUser.NON_SPACE_MEMBER} | ${['READ']} | ${200}
+      ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_readUserPii_readUserSettings_globalAdmin} | ${200}
+      ${TestUser.QA_USER}          | ${sorted__create_read_update_delete_readUserPii_updateNameId} | ${200}
     `(
       'User: "$userRole" has this privileges: "$privileges" to user description visual document',
-      async ({ userRole, privileges }) => {
+      async ({ userRole, privileges, expectedStatus }) => {
         const res = await getProfileDocuments(
           TestUserManager.users.qaUser.profileId,
           userRole
@@ -218,6 +225,9 @@ describe('User - documents', () => {
         const dataAuthorization = data?.authorization;
 
         expect(dataAuthorization?.myPrivileges?.sort()).toEqual(privileges);
+
+        const restResponse = await getAuthDocument(documentId, userRole);
+        expect(restResponse.status).toEqual(expectedStatus);
       }
     );
 
@@ -225,8 +235,8 @@ describe('User - documents', () => {
       userRole                     | privileges                                                                   | parentEntityType
       ${undefined}                 | ${['READ']}                                                                  | ${'USER'}
       ${TestUser.NON_SPACE_MEMBER} | ${['READ']}                                                                  | ${'USER'}
-      ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_fileUpload_fileDelete_readUserPii} | ${'USER'}
-      ${TestUser.QA_USER}          | ${sorted__create_read_update_delete_fileUpload_fileDelete_readUserPii}       | ${'USER'}
+      ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_fileUpload_fileDelete_readUserPii_readUserSettings_globalAdmin} | ${'USER'}
+      ${TestUser.QA_USER}          | ${sorted__create_read_update_delete_fileUpload_fileDelete_readUserPii_updateNameId}       | ${'USER'}
     `(
       'User: "$userRole" has this privileges: "$privileges" to user description (storageBucket) document',
       async ({ userRole, privileges, parentEntityType }) => {

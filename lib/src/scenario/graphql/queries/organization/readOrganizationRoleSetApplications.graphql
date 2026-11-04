@@ -1,0 +1,5 @@
+# The organization-rooted pending lists are read one field per query on
+# purpose (see getRoleSetPendingApplications.graphql).
+query ReadOrganizationRoleSetApplications($organizationId: UUID!) {
+  organization(ID: $organizationId) { id roleSet { id applications { id } } }
+}

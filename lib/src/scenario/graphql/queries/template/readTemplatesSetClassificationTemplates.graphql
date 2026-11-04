@@ -1,0 +1,8 @@
+query ReadTemplatesSetClassificationTemplates($templatesSetId: UUID!) {
+  lookup {
+    templatesSet(ID: $templatesSetId) {
+      id
+      classificationTemplates { id profile { displayName } classification { cardinality values { id label } } }
+    }
+  }
+}

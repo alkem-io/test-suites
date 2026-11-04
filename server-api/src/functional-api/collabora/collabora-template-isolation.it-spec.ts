@@ -1,0 +1,394 @@
+import {
+  TestScenarioConfig,
+  TestScenarioFactory,
+  TestUser,
+  UniqueIDGenerator,
+} from '@alkemio/tests-lib';
+import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
+import {
+  AuthorizationPrivilege,
+  CollaboraDocumentType,
+  SpacePrivacyMode,
+} from '@alkemio/tests-lib/core/generated/alkemio-schema';
+import { getCalloutsData } from '@functional-api/callout/callouts.request.params';
+import { GetTemplateById } from '@functional-api/templates/template.request.params';
+import {
+  applyCollaboraTemplate,
+  collaboraFixtures,
+  createCollaboraCalloutTemplate,
+  extractDocumentFileID,
+  fetchDocumentBytesHash,
+  fixtureHash,
+  getCalloutCollaboraPreviewUrl,
+  replaceCollaboraDocument,
+} from './collabora.request.params';
+import {
+  assignLicensePlanToSpace,
+  getLicensePlanByName,
+} from '../license/license.params.request';
+
+/**
+ * Document post templates — template/post isolation (workspace#085).
+ *
+ * The byte-level acceptance criteria of `specs/085-document-post-templates`
+ * §5.1. A browser cannot hash a file, so this suite is the isolation proof:
+ * applying a document template copies the template's content into a new
+ * document that owns its own backing file, and editing that copy changes
+ * nothing else.
+ *
+ * Cases run in declaration order and depend on it — AC3 is the only content
+ * write, and AC1-AC2 capture the hashes it must not disturb. What this suite
+ * does and does not prove is documented in ./README.md.
+ */
+
+const uniqueId = UniqueIDGenerator.getID();
+
+/** Space A — holds the template and the posts. */
+const spaceAConfig: TestScenarioConfig = {
+  name: 'collabora-tpl-a',
+  space: {
+    collaboration: { addTutorialCallouts: false },
+    community: {
+      admins: [TestUser.SPACE_ADMIN],
+      members: [TestUser.SPACE_MEMBER, TestUser.SPACE_ADMIN],
+    },
+    settings: {
+      // Private so a non-member genuinely cannot read the template (AC6).
+      privacy: { mode: SpacePrivacyMode.Private },
+      // Load-bearing for AC2's member leg: without it SPACE_MEMBER has no
+      // CREATE_CALLOUT and the apply fails for a reason that is not FR-003.
+      collaboration: { allowMembersToCreateCallouts: true },
+    },
+  },
+};
+
+/**
+ * Space B — a second *entitled* space whose admin holds no role in A.
+ * Entitled on purpose, so AC6's refusal can only come from the source READ.
+ */
+const spaceBConfig: TestScenarioConfig = {
+  name: 'collabora-tpl-b',
+  space: {
+    collaboration: { addTutorialCallouts: false },
+    community: {
+      admins: [TestUser.NON_SPACE_MEMBER],
+      members: [TestUser.NON_SPACE_MEMBER],
+    },
+  },
+};
+
+let spaceA: OrganizationWithSpaceModel;
+let spaceB: OrganizationWithSpaceModel;
+
+/** The `createTemplate` response, asserted on by case 1. */
+let templateResponse: Awaited<
+  ReturnType<typeof createCollaboraCalloutTemplate>
+>;
+
+// Captured in beforeAll and reused by every case.
+let templateId = '';
+/** The slice of `createTemplate` this spec reads; asserted properly in AC1. */
+type CreatedCollaboraTemplate = {
+  id?: string;
+  callout?: {
+    framing?: {
+      collaboraDocument?: {
+        id?: string;
+        documentType?: string;
+        previewUrl?: string;
+      };
+    };
+  };
+};
+
+let templateDocumentId = '';
+let templatePreviewUrl = '';
+// Captured by AC2, asserted invariant by AC3.
+let postA1CalloutId = '';
+let postA1DocumentId = '';
+let postA2CalloutId = '';
+let postA2PreviewUrl = '';
+
+const importHash = fixtureHash(collaboraFixtures.import);
+const replacementHash = fixtureHash(collaboraFixtures.replacement);
+
+/**
+ * Collabora creates are gated behind the SPACE_FLAG_OFFICE_DOCUMENTS
+ * entitlement. Fails with the reason rather than skipping — a skip here is
+ * indistinguishable from a pass.
+ */
+const entitleSpace = async (spaceId: string): Promise<void> => {
+  const plan = await getLicensePlanByName('SPACE_FEATURE_OFFICE_DOCUMENTS');
+  const planId = plan[0]?.id ?? '';
+  if (!planId) {
+    throw new Error(
+      'No SPACE_FEATURE_OFFICE_DOCUMENTS license plan on this platform — document templates cannot be exercised here.'
+    );
+  }
+  await assignLicensePlanToSpace(spaceId, planId);
+};
+
+beforeAll(async () => {
+  spaceA = await TestScenarioFactory.createBaseScenario(spaceAConfig);
+  spaceB = await TestScenarioFactory.createBaseScenario(spaceBConfig);
+
+  await entitleSpace(spaceA.space.id);
+  await entitleSpace(spaceB.space.id);
+
+  templateResponse = await createCollaboraCalloutTemplate(
+    collaboraFixtures.import,
+    spaceA.space.templateSetId,
+    `collabora-template-${uniqueId}`
+  );
+
+  // Fail HERE, not three cases later. createCollaboraCalloutTemplate returns the
+  // GraphQL response and does not throw on `errors`; without this every later
+  // case runs with empty ids and reports a misleading cause — and AC6's
+  // `toContain(templateDocumentId)` against '' passes vacuously, which is the
+  // one outcome a persistence assertion must never have.
+  if (templateResponse.errors) {
+    throw new Error(
+      `template setup failed, aborting before the cases run: ${JSON.stringify(
+        templateResponse.errors
+      )}`
+    );
+  }
+  const setupTemplate = templateResponse.data?.createTemplate as
+    | CreatedCollaboraTemplate
+    | undefined;
+  const setupDocument = setupTemplate?.callout?.framing?.collaboraDocument;
+  if (!setupTemplate?.id || !setupDocument?.id || !setupDocument?.previewUrl) {
+    throw new Error(
+      'template setup returned no template id / Collabora document id / previewUrl — the later cases would assert against empty strings'
+    );
+  }
+  // AC6 reads the template as another role; with '' that read fails as
+  // BAD_USER_INPUT and the precondition would pass on a malformed id.
+  templateId = setupTemplate.id;
+  templateDocumentId = setupDocument.id;
+  templatePreviewUrl = setupDocument.previewUrl;
+});
+
+afterAll(async () => {
+  await TestScenarioFactory.cleanUpBaseScenario(spaceA);
+  await TestScenarioFactory.cleanUpBaseScenario(spaceB);
+});
+
+describe('document post templates - template and post content are independent', () => {
+  test('AC1: the template carries the uploaded content', async () => {
+    const template = templateResponse.data?.createTemplate as
+      | CreatedCollaboraTemplate
+      | undefined;
+    const document = template?.callout?.framing?.collaboraDocument;
+
+    expect(templateResponse.errors).toBeUndefined();
+    expect(template?.id).toEqual(expect.any(String));
+    expect(document?.id).toEqual(expect.any(String));
+    // No documentType was supplied: the .odt must be derived from the file.
+    expect(document?.documentType).toEqual(
+      CollaboraDocumentType.Wordprocessing
+    );
+    expect(document?.previewUrl).toEqual(expect.any(String));
+
+    await expect(fetchDocumentBytesHash(templatePreviewUrl)).resolves.toEqual(
+      importHash
+    );
+  });
+
+  test('AC2: two posts from one template have three distinct files, all with the fixture content', async () => {
+    // Precondition first, so a refusal below is attributable to the source
+    // READ (FR-003) and to nothing else.
+    const memberView = await getCalloutsData(
+      spaceA.space.collaboration.calloutsSetId,
+      undefined,
+      TestUser.SPACE_MEMBER
+    );
+    const memberPrivileges =
+      memberView.data?.lookup.calloutsSet?.authorization?.myPrivileges ?? [];
+    expect(memberPrivileges).toContain(AuthorizationPrivilege.CreateCallout);
+
+    const a1 = await applyCollaboraTemplate(
+      spaceA.space.collaboration.calloutsSetId,
+      templateDocumentId,
+      `collabora-post-a1-${uniqueId}`,
+      TestUser.SPACE_ADMIN
+    );
+    const a2 = await applyCollaboraTemplate(
+      spaceA.space.collaboration.calloutsSetId,
+      templateDocumentId,
+      `collabora-post-a2-${uniqueId}`,
+      TestUser.SPACE_MEMBER
+    );
+
+    expect(a1.body?.errors).toBeUndefined();
+    expect(a2.body?.errors).toBeUndefined();
+
+    const a1Callout = a1.body?.data?.createCalloutOnCalloutsSet;
+    const a2Callout = a2.body?.data?.createCalloutOnCalloutsSet;
+    const a1PreviewUrl = a1Callout?.framing?.collaboraDocument?.previewUrl;
+    const a2PreviewUrl = a2Callout?.framing?.collaboraDocument?.previewUrl;
+
+    expect(a1PreviewUrl).toEqual(expect.any(String));
+    expect(a2PreviewUrl).toEqual(expect.any(String));
+
+    // Three independent backing files: the copy owns its own bytes. Compare
+    // the file IDs the URLs name, not the URL strings — a prefix or encoding
+    // difference must not count as a distinct file.
+    expect(
+      new Set([
+        extractDocumentFileID(templatePreviewUrl),
+        extractDocumentFileID(a1PreviewUrl as string),
+        extractDocumentFileID(a2PreviewUrl as string),
+      ]).size
+    ).toEqual(3);
+
+    const templateHash = await fetchDocumentBytesHash(templatePreviewUrl);
+    const a1Hash = await fetchDocumentBytesHash(a1PreviewUrl as string);
+    const a2Hash = await fetchDocumentBytesHash(a2PreviewUrl as string);
+
+    expect(templateHash).toEqual(importHash);
+    expect(a1Hash).toEqual(importHash);
+    expect(a2Hash).toEqual(importHash);
+
+    postA1CalloutId = a1Callout?.id as string;
+    postA1DocumentId = a1Callout?.framing?.collaboraDocument?.id as string;
+    postA2CalloutId = a2Callout?.id as string;
+    postA2PreviewUrl = a2PreviewUrl as string;
+  });
+
+  test("US2: the member's post gets a document that member can edit", async () => {
+    // client-web#10423: "Creating a post from that template gives an editable
+    // document". A Collabora edit is authorized on UPDATE_CONTENT, and A2 is
+    // the post SPACE_MEMBER created in AC2.
+    const memberView = await getCalloutCollaboraPreviewUrl(
+      postA2CalloutId,
+      TestUser.SPACE_MEMBER
+    );
+
+    expect(memberView.body?.errors).toBeUndefined();
+    expect(
+      memberView.body?.data?.lookup?.callout?.framing?.collaboraDocument
+        ?.authorization?.myPrivileges
+    ).toContain(AuthorizationPrivilege.UpdateContent);
+  });
+
+  test('AC3: editing one post changes only that post', async () => {
+    const replaced = await replaceCollaboraDocument(
+      collaboraFixtures.replacement,
+      postA1DocumentId,
+      undefined,
+      TestUser.SPACE_ADMIN
+    );
+    expect(replaced.errors).toBeUndefined();
+
+    // A replace stages a new backing Document and deletes the old row, so A1's
+    // previewUrl has changed; the captured one now points at a deleted file.
+    const reread = await getCalloutCollaboraPreviewUrl(
+      postA1CalloutId,
+      TestUser.SPACE_ADMIN
+    );
+    const a1PreviewUrlAfter =
+      reread.body?.data?.lookup?.callout?.framing?.collaboraDocument
+        ?.previewUrl;
+    expect(a1PreviewUrlAfter).toEqual(expect.any(String));
+
+    await expect(
+      fetchDocumentBytesHash(a1PreviewUrlAfter as string)
+    ).resolves.toEqual(replacementHash);
+
+    // The template and A2 were not written, so their captured previewUrls are
+    // still valid — and their bytes must still be the fixture case 2 recorded.
+    await expect(fetchDocumentBytesHash(templatePreviewUrl)).resolves.toEqual(
+      importHash
+    );
+    await expect(fetchDocumentBytesHash(postA2PreviewUrl)).resolves.toEqual(
+      importHash
+    );
+  });
+
+  test('AC6: a foreign source is refused, and nothing is persisted', async () => {
+    // Precondition: B's admin cannot read A's template at all.
+    const foreignRead = await GetTemplateById(
+      templateId,
+      TestUser.NON_SPACE_MEMBER
+    );
+    const readableTemplate = foreignRead.data?.lookup.template;
+    if (readableTemplate) {
+      throw new Error(
+        `precondition failed: B's admin can read A's template ${templateId} — AC6 would prove nothing`
+      );
+    }
+    // The READ denial itself. A malformed id (BAD_USER_INPUT) or an unreachable
+    // server also returns no template, and must not satisfy the precondition.
+    const foreignReadError = foreignRead.error?.errors[0];
+    expect(foreignReadError?.code).toEqual('FORBIDDEN_POLICY');
+    expect(String(foreignReadError?.message)).toContain(templateId);
+
+    const beforeRead = await getCalloutsData(
+      spaceB.space.collaboration.calloutsSetId,
+      undefined,
+      TestUser.NON_SPACE_MEMBER
+    );
+    // No `?? []`: B's callouts set exists, so a read that comes back without
+    // one is a broken reader, and both legs of the comparison below would
+    // silently become the empty set — the attempt would then "persist
+    // nothing" no matter what it left behind.
+    const idsBefore = beforeRead.data!.lookup.calloutsSet!.callouts.map(
+      callout => callout.id
+    );
+
+    const attemptedName = `collabora-post-b-${uniqueId}`;
+    const refused = await applyCollaboraTemplate(
+      spaceB.space.collaboration.calloutsSetId,
+      templateDocumentId,
+      attemptedName,
+      TestUser.NON_SPACE_MEMBER
+    );
+
+    const errors: { message: string; extensions?: { code?: string } }[] =
+      refused.body?.errors ?? [];
+    const messages = errors.map(error => error.message).join(' | ');
+    const codes = errors.map(error => error.extensions?.code);
+    expect(refused.body?.data?.createCalloutOnCalloutsSet).toBeFalsy();
+    // The refusal is the source READ denial — by code and by privilege, since
+    // a not-found that echoes the id would satisfy the id check on its own.
+    expect(codes).toEqual(['FORBIDDEN_POLICY']);
+    expect(messages).toMatch(/unable to grant 'read' privilege/);
+    // It names the source document, not the destination and not the licence:
+    // B is entitled and its admin holds CREATE_CALLOUT on B.
+    expect(messages).toContain(templateDocumentId);
+    // The licence refusal is identified by its code; its message ("Office Docs
+    // is not enabled for this Collaboration.") never contains that string.
+    expect(codes).not.toContain('LICENSE_ENTITLEMENT_NOT_AVAILABLE');
+    expect(messages).not.toContain(spaceB.space.collaboration.calloutsSetId);
+
+    const afterRead = await getCalloutsData(
+      spaceB.space.collaboration.calloutsSetId,
+      undefined,
+      TestUser.NON_SPACE_MEMBER
+    );
+    const calloutsAfter = afterRead.data!.lookup.calloutsSet!.callouts;
+
+    // An id-set comparison, not toHaveLength(0): B is a fresh space, so zero
+    // is already true before the attempt and would pass either way.
+    expect(calloutsAfter.map(callout => callout.id).sort()).toEqual(
+      [...idsBefore].sort()
+    );
+    expect(
+      calloutsAfter.some(
+        callout => callout.framing.profile.displayName === attemptedName
+      )
+    ).toBe(false);
+
+    // Positive control in the same case: a reader that silently returns []
+    // cannot make the assertion above vacuous.
+    const controlRead = await getCalloutsData(
+      spaceA.space.collaboration.calloutsSetId,
+      undefined,
+      TestUser.SPACE_ADMIN
+    );
+    expect(
+      (controlRead.data?.lookup.calloutsSet?.callouts ?? []).length
+    ).toBeGreaterThan(0);
+  });
+});

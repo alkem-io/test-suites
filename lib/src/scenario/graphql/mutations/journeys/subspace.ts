@@ -10,7 +10,10 @@ export const createSubspace = async (
   subspaceNameId: string,
   parentId: string,
   userRole: TestUser = TestUser.GLOBAL_ADMIN,
-  tagline?: string
+  tagline?: string,
+  // Tutorial callouts are expensive (one Matrix room round-trip per callout)
+  // and almost no suite asserts them — default OFF; opt in per scenario.
+  addTutorialCallouts = false,
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -20,12 +23,13 @@ export const createSubspace = async (
           subspaceName,
           subspaceNameId,
           parentId,
-          tagline
+          tagline,
+          addTutorialCallouts,
         ),
       },
       {
         authorization: `Bearer ${authToken}`,
-      }
+      },
     );
 
   return graphqlErrorWrapper(callback, userRole);
@@ -35,7 +39,8 @@ export const subspaceVariablesData = (
   displayName: string,
   nameId: string,
   spaceId: string,
-  tagline?: string
+  tagline?: string,
+  addTutorialCallouts = false,
 ) => {
   const variables = {
     nameID: nameId,
@@ -55,7 +60,7 @@ export const subspaceVariablesData = (
       },
     },
     collaborationData: {
-      addTutorialCallouts: true,
+      addTutorialCallouts,
       calloutsSetData: {},
     },
   };

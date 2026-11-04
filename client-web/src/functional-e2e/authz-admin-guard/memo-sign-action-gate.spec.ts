@@ -1,0 +1,170 @@
+// Memo signing — the Sign action gate in the memo dialog (server#6478 +
+// client-web#10278, Release 75 verification rows 13 and 14; P13, P14).
+//
+// The "Sign memo" action renders only when the user has CONTRIBUTE, the space
+// inherits SPACE_FLAG_MEMO_SIGNING, AND the identity has a Cleverbase login
+// method. No harness persona has a Cleverbase method, so the action must be
+// absent BOTH with the entitlement off (the shipped default) and with it on —
+// the second case proves the identity gate holds on its own. The API side of
+// the same contract lives in server-api entitlements/memo-signing-entitlement.
+import { expect } from '@playwright/test';
+import { getGraphqlClient, TestUser, UniqueIDGenerator } from '@alkemio/tests-lib';
+import { graphqlErrorWrapper } from '@alkemio/tests-lib';
+import { TestScenarioConfig } from '@alkemio/tests-lib/scenario/config/test-scenario-config';
+import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
+import { TestScenarioFactory } from '@alkemio/tests-lib/scenario/TestScenarioFactory';
+import {
+  CalloutFramingType,
+  CalloutVisibility,
+  LicenseEntitlementType,
+} from '@alkemio/tests-lib';
+import { createPersonaTest } from '../fixtures/authenticated-session.fixture';
+
+const MEMO_SIGNING_PLAN_NAME = 'SPACE_FEATURE_MEMO_SIGNING';
+const uniqueId = UniqueIDGenerator.getID();
+
+const scenarioConfig: TestScenarioConfig = {
+  name: 'memo-sign-gate',
+  space: {
+    collaboration: { addTutorialCallouts: false, addPostCollectionCallout: false },
+    community: { admins: [TestUser.SPACE_ADMIN], members: [TestUser.SPACE_ADMIN] },
+  },
+};
+
+let baseScenario: OrganizationWithSpaceModel;
+let memoCalloutUrl = '';
+let memoTitle = '';
+let memoSigningPlanId = '';
+const test = createPersonaTest('space.admin@alkem.io');
+test.describe.configure({ mode: 'serial' });
+
+const admin = async (fn: (token: string | undefined) => Promise<any>): Promise<any> =>
+  graphqlErrorWrapper(fn as any, TestUser.GLOBAL_ADMIN);
+
+test.beforeAll(async () => {
+  baseScenario = await TestScenarioFactory.createBaseScenario(scenarioConfig);
+  const client = getGraphqlClient();
+  const displayName = `memo sign gate ${uniqueId}`;
+  // The memo's own title differs from the callout's so the memo dialog and the
+  // callout detail dialog (both named after their profile) stay distinguishable.
+  memoTitle = `${displayName} memo`;
+  const created = await admin(token =>
+    client.CreateCalloutOnCalloutsSet(
+      {
+        calloutData: {
+          calloutsSetID: baseScenario.space.collaboration.calloutsSetId,
+          framing: {
+            profile: { displayName },
+            type: CalloutFramingType.Memo,
+            memo: { markdown: `# ${displayName}`, profile: { displayName: memoTitle } },
+          },
+          settings: { visibility: CalloutVisibility.Published },
+        },
+      },
+      { authorization: `Bearer ${token}` }
+    )
+  );
+  memoCalloutUrl = created.data?.createCalloutOnCalloutsSet?.framing?.profile?.url ?? '';
+  if (!memoCalloutUrl) throw new Error(`memo callout not created: ${JSON.stringify(created.error)}`);
+  const plans = await admin(token => client.GetPlatformLicensePlans({}, { authorization: `Bearer ${token}` }));
+  memoSigningPlanId =
+    plans.data?.platform?.licensingFramework?.plans?.find((p: { name: string }) => p.name === MEMO_SIGNING_PLAN_NAME)?.id ?? '';
+  if (!memoSigningPlanId) throw new Error(`license plan ${MEMO_SIGNING_PLAN_NAME} not found`);
+});
+
+test.afterAll(async () => {
+  // `graphqlErrorWrapper` reports GraphQL failures as `{ error }` rather than
+  // throwing, so the revoke result is inspected; scenario cleanup still runs,
+  // and every teardown failure is reported together afterwards.
+  const failures: string[] = [];
+  if (memoSigningPlanId && baseScenario?.space?.id) {
+    const client = getGraphqlClient();
+    const plans = await admin(token => client.GetPlatformLicensePlans({}, { authorization: `Bearer ${token}` }));
+    const licensingID = plans.data?.platform?.licensingFramework?.id ?? '';
+    const revoked = await admin(token =>
+      client.RevokeLicensePlanFromSpace(
+        { planData: { spaceID: baseScenario.space.id, licensePlanID: memoSigningPlanId, licensingID } },
+        { authorization: `Bearer ${token}` }
+      )
+    );
+    if (revoked?.error) failures.push(`RevokeLicensePlanFromSpace: ${JSON.stringify(revoked.error)}`);
+  }
+  try {
+    await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
+  } catch (error) {
+    failures.push(`cleanUpBaseScenario: ${String(error)}`);
+  }
+  if (failures.length > 0) throw new Error(`memo-sign-action-gate teardown failed:\n${failures.join('\n')}`);
+});
+
+const openMemo = async (page: import('@playwright/test').Page) => {
+  await page.goto(memoCalloutUrl);
+  // The callout deep link opens the callout detail dialog (named after the
+  // callout). Open the memo from THAT dialog's button once it is up — a memo
+  // opened from the space page's own "Open Memo" behind it mounts below the
+  // lazily arriving callout dialog and is hidden from assistive tech (nameless
+  // dialog, nameless "Sign memo"; nightlies 2026-10-22 and 2026-10-27).
+  const calloutDialog = page.getByRole('dialog', { name: `memo sign gate ${uniqueId}`, exact: true });
+  await expect(calloutDialog).toBeVisible({ timeout: 15_000 });
+  await calloutDialog.getByRole('button', { name: 'Open Memo' }).click();
+  const dialog = page.getByRole('dialog', { name: memoTitle, exact: true });
+  await expect(dialog).toBeVisible({ timeout: 15_000 });
+  await expect(dialog.getByRole('button', { name: 'Close', exact: true })).toBeVisible();
+  return dialog;
+};
+
+test('13.1 With the entitlement off (shipped default) the memo dialog offers no Sign action', async ({ page }) => {
+  const dialog = await openMemo(page);
+  await expect(dialog.getByRole('button', { name: 'Sign memo' })).toHaveCount(0);
+  await expect(dialog.getByRole('button', { name: 'Signed copies' })).toHaveCount(0);
+});
+
+test('14.1 With the entitlement granted, the identity gate still hides the Sign action', async ({ page }) => {
+  const client = getGraphqlClient();
+  const assigned = await admin(token =>
+    client.AssignLicensePlanToSpace(
+      { planData: { spaceID: baseScenario.space.id, licensePlanID: memoSigningPlanId } },
+      { authorization: `Bearer ${token}` }
+    )
+  );
+  expect(assigned.error).toBeUndefined();
+  // The assignment is not visible to the UI the instant the mutation returns:
+  // the space's entitlements are resolved from the plan credentials and cached
+  // on the server side. The nightly of 2026-10-12 (and 2026-10-08) failed
+  // here with the gate rendered correctly in the failure screenshot — it had
+  // simply arrived after the assertion window. Wait for the entitlement to be
+  // reported through the API before the dialog is asked to render on it.
+  await expect
+    .poll(
+      async () => {
+        const license = await admin(token =>
+          client.GetSpaceLicenseEntitlements(
+            { spaceID: baseScenario.space.id },
+            { authorization: `Bearer ${token}` }
+          )
+        );
+        return (
+          license.data?.lookup?.space?.license?.entitlements?.find(
+            (e: { type: LicenseEntitlementType }) => e.type === LicenseEntitlementType.SpaceFlagMemoSigning
+          )?.enabled ?? false
+        );
+      },
+      {
+        timeout: 30_000,
+        message: 'SPACE_FLAG_MEMO_SIGNING never reported enabled after AssignLicensePlanToSpace',
+      }
+    )
+    .toBe(true);
+  const dialog = await openMemo(page);
+  // The memo itself still opens and is shareable…
+  await expect(dialog.getByRole('button', { name: 'Share' })).toBeVisible();
+  // …but signing is not USABLE by an identity without a Cleverbase method:
+  // since client-web#10305 (2026-09-14) the dialog shows a DISABLED "Sign memo"
+  // beside the guidance to link Cleverbase first, instead of hiding the action.
+  // The dialog resolves the entitlement in its own query, so the first look
+  // still gets the long window.
+  const sign = dialog.getByRole('button', { name: 'Sign memo' });
+  await expect(sign).toHaveCount(1, { timeout: 30_000 });
+  await expect(sign).toBeDisabled();
+  await expect(dialog.getByText('Link Cleverbase before signing.')).toBeVisible();
+});

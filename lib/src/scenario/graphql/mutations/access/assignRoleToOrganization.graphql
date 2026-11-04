@@ -1,6 +1,4 @@
-mutation AssignRoleToOrganization(
-  $roleData: AssignRoleOnRoleSetToOrganizationInput!
-) {
+mutation AssignRoleToOrganization($roleData: AssignRoleOnRoleSetInput!) {
   assignRoleToOrganization(roleData: $roleData) {
     ...OrganizationData
   }

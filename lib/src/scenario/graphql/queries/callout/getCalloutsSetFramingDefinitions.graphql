@@ -1,0 +1,29 @@
+# Every callout of a set with its Poll / Form definition (workspace#080, R25):
+# reads what a space template created in a (sub)space.
+query calloutsSetFramingDefinitions($calloutsSetId: UUID!) {
+  lookup {
+    calloutsSet(ID: $calloutsSetId) {
+      id
+      callouts {
+        id
+        isTemplate
+        settings {
+          visibility
+        }
+        framing {
+          id
+          type
+          profile {
+            displayName
+          }
+          poll {
+            ...PollDefinition
+          }
+          form {
+            ...CalloutFormDetails
+          }
+        }
+      }
+    }
+  }
+}

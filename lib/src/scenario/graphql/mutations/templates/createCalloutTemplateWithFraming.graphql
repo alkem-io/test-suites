@@ -1,0 +1,33 @@
+# A CALLOUT template whose read-back carries the Poll / Form definition
+# (workspace#080, R25). `CreateTemplate` selects only the whiteboard.
+mutation CreateCalloutTemplateWithFraming(
+  $templatesSetId: UUID!
+  $profileData: CreateProfileInput!
+  $calloutData: CreateCalloutInput!
+) {
+  createTemplate(
+    templateData: {
+      templatesSetID: $templatesSetId
+      profileData: $profileData
+      type: CALLOUT
+      calloutData: $calloutData
+    }
+  ) {
+    id
+    type
+    callout {
+      id
+      isTemplate
+      framing {
+        id
+        type
+        poll {
+          ...PollDefinition
+        }
+        form {
+          ...CalloutFormDetails
+        }
+      }
+    }
+  }
+}

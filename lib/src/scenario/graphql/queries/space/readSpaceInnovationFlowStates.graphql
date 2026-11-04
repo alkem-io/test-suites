@@ -1,0 +1,13 @@
+query ReadSpaceInnovationFlowStates($spaceId: UUID!) {
+  lookup {
+    space(ID: $spaceId) {
+      id
+      collaboration {
+        innovationFlow {
+          id
+          states { id displayName sortOrder settings { visible sidebar descriptionDisplayMode } }
+        }
+      }
+    }
+  }
+}

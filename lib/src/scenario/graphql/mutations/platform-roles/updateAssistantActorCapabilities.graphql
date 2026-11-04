@@ -1,0 +1,5 @@
+mutation updateAssistantActorCapabilities($grantData: GrantAssistantActorCapabilitiesInput!) {
+  updateAssistantActorCapabilities(grantData: $grantData) {
+    id
+  }
+}

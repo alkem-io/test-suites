@@ -1,0 +1,27 @@
+# One platform invitation by id. `createdBy` is deliberately NOT selected here:
+# it is non-null and its resolver fails once the inviter's account is gone —
+# read it with LookupPlatformInvitationCreatedBy when a test needs the inviter.
+query LookupPlatformInvitation($invitationId: UUID!) {
+  lookup {
+    platformInvitation(ID: $invitationId) {
+      id
+      email
+      profileCreated
+      createdDate
+      roleSetExtraRoles
+      welcomeMessage
+      suggestedLanguage
+    }
+  }
+}
+
+query LookupPlatformInvitationCreatedBy($invitationId: UUID!) {
+  lookup {
+    platformInvitation(ID: $invitationId) {
+      id
+      createdBy {
+        id
+      }
+    }
+  }
+}

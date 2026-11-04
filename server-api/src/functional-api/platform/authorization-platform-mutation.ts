@@ -4,7 +4,7 @@ import { graphqlErrorWrapper } from '@alkemio/tests-lib/utils/graphql.wrapper';
 import { graphqlRequestAuth } from '@alkemio/tests-lib/utils/graphql.request';
 import { RoleName } from '@alkemio/tests-lib/core/generated/alkemio-schema';
 export const assignPlatformRole = async (
-  contributorID: string,
+  actorID: string,
   roleName: RoleName,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
@@ -12,7 +12,7 @@ export const assignPlatformRole = async (
   const callback = (authToken: string | undefined) =>
     graphqlClient.assignPlatformRoleToUser(
       {
-        roleData: { contributorID, role: roleName },
+        roleData: { actorID, role: roleName },
       },
       {
         authorization: `Bearer ${authToken}`,
@@ -23,7 +23,7 @@ export const assignPlatformRole = async (
 };
 
 export const removePlatformRole = async (
-  contributorID: string,
+  actorID: string,
   roleName: RoleName,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
@@ -31,7 +31,7 @@ export const removePlatformRole = async (
   const callback = (authToken: string | undefined) =>
     graphqlClient.removePlatformRoleFromUser(
       {
-        roleData: { contributorID, role: roleName },
+        roleData: { actorID, role: roleName },
       },
       {
         authorization: `Bearer ${authToken}`,

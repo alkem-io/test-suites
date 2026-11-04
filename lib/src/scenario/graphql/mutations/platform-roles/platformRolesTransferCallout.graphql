@@ -1,0 +1,5 @@
+mutation PlatformRolesTransferCallout($transferData: TransferCalloutInput!) {
+  transferCallout(transferData: $transferData) {
+    id
+  }
+}

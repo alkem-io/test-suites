@@ -122,8 +122,10 @@ test.describe('Space/Subspace Settings Access Control', () => {
           .first()
       ).toBeVisible({ timeout: 3000 });
 
-      const closeIcon = page.locator('[data-testid="CloseIcon"]');
-      await expect(closeIcon).toBeVisible();
+      // CRD: the about/preview dialog exposes a "Close" button (replaces the
+      // legacy CloseIcon test id).
+      const closeButton = page.getByRole('button', { name: 'Close' });
+      await expect(closeButton).toBeVisible();
     }
   );
 

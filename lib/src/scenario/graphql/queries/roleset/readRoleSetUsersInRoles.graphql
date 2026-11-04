@@ -1,0 +1,3 @@
+query ReadRoleSetUsersInRoles($roleSetId: UUID!, $roles: [RoleName!]!) {
+  lookup { roleSet(ID: $roleSetId) { id usersInRoles(roles: $roles) { role users { id } } } }
+}

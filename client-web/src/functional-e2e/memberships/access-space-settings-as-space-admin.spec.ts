@@ -71,18 +71,21 @@ test.describe('Space/Subspace Settings Access Control', () => {
       // 1. Navigate to "Membership Test Space"
       await page.goto(`${baseUrl}/${baseScenario.space.nameId}`);
 
-      // 2. Access space settings
-      const settingsIcon = page.locator('[data-testid="SettingsOutlinedIcon"]');
-      await expect(settingsIcon).toBeVisible({ timeout: 5000 });
-      await settingsIcon.click();
+      // 2. Access space settings (CRD: settings entry is a link in the space
+      // banner with accessible name "Settings").
+      const settingsLink = page.getByRole('link', { name: 'Settings' });
+      await expect(settingsLink).toBeVisible({ timeout: 5000 });
+      await settingsLink.click();
 
       // 3. Verify navigated to settings page
       await expect(page).toHaveURL(
         new RegExp(`/${baseScenario.space.nameId}/settings`)
       );
 
-      // 4. Verify settings sections are available
-      await expect(page.getByText(/Layout/i)).toBeVisible();
+      // 4. Verify settings sections are available (CRD settings tabs)
+      await expect(
+        page.getByRole('tab', { name: /Layout/i })
+      ).toBeVisible({ timeout: 5000 });
     }
   );
 });

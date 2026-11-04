@@ -1,0 +1,23 @@
+diff --git a/pkg/mailslurper/SQLiteStorage.go b/pkg/mailslurper/SQLiteStorage.go
+index 27fbcaa..51883e0 100644
+--- a/pkg/mailslurper/SQLiteStorage.go
++++ b/pkg/mailslurper/SQLiteStorage.go
+@@ -41,6 +41,18 @@ Connect to the database
+ */
+ func (storage *SQLiteStorage) Connect() error {
+ 	db, err := sql.Open("sqlite3", storage.connectionInformation.Filename)
++
++	/*
++	 * SQLite allows one writer at a time, and database/sql opens as many
++	 * connections as there are concurrent callers. Under a burst of incoming
++	 * mail the writers collided ("database is locked") and the mail item was
++	 * dropped after the SMTP client had already been told 250 OK. A single
++	 * connection serializes access, which is what SQLite wants anyway.
++	 */
++	if db != nil {
++		db.SetMaxOpenConns(1)
++	}
++
+ 	storage.db = db
+ 	return errors.Wrapf(err, "Error connecting to %s", storage.connectionInformation.Filename)
+ }

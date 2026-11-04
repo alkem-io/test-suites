@@ -1,0 +1,5 @@
+mutation PlatformRolesCreateLicensePlan($planData: CreateLicensePlanOnLicensingFrameworkInput!) {
+  createLicensePlan(planData: $planData) {
+    id
+  }
+}

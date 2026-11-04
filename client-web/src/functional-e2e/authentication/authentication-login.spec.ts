@@ -4,7 +4,7 @@ import {
   fillUpSignInPageElements,
   pressSignInButtonSignInPage,
 } from '../identity-flows/signin-page-objects';
-import { verifyMyDashboardWelcomeElement } from '../my-dashboard/my-dashboard-page-objects';
+import { expectSignedIn } from '../my-dashboard/my-dashboard-page-objects';
 import {
   emailField,
   passwordField,
@@ -12,6 +12,7 @@ import {
   signInHeading,
   userMenuAvatar,
   logoutMenuItem,
+  logInHeaderLink,
 } from './common-authentication-page-elements';
 
 const password = process.env.AUTH_TEST_HARNESS_PASSWORD || 'change_me';
@@ -33,7 +34,7 @@ test.describe('Authentication - Login Flows', () => {
     await pressSignInButtonSignInPage(page);
 
     // Verify successful login by checking dashboard welcome message
-    await verifyMyDashboardWelcomeElement(page);
+    await expectSignedIn(page);
   });
 
   test('user successful authentication with regular user account', async ({
@@ -47,7 +48,7 @@ test.describe('Authentication - Login Flows', () => {
     await pressSignInButtonSignInPage(page);
 
     // Verify successful login by checking dashboard welcome message
-    await verifyMyDashboardWelcomeElement(page);
+    await expectSignedIn(page);
   });
 
   test('invalid credentials show error message', async ({ page }) => {
@@ -78,37 +79,36 @@ test.describe('Authentication - Login Flows', () => {
     await pressSignInButtonSignInPage(page);
 
     // Wait for sign-in to complete
-    await verifyMyDashboardWelcomeElement(page);
+    await expectSignedIn(page);
 
     // Logout via user menu
     await userMenuAvatar(page).click();
     await logoutMenuItem(page).click();
 
-    // Verify redirect to landing page by checking for sign-in option
-    const signInOption = page
-      .getByRole('link', { name: /sign up|sign in/i })
-      .or(page.getByRole('button', { name: /sign up|sign in/i }));
-    await expect(signInOption.first()).toBeVisible({ timeout: 5000 });
+    // Verify redirect to the logged-out landing page: the CRD header shows the
+    // "Log in" link. The SPA header can be slow to re-render it right after a
+    // client-side logout, so allow a generous timeout.
+    await expect(logInHeaderLink(page)).toBeVisible({ timeout: 15000 });
   });
 
   test('user can logout and re-authenticate', async ({ page }) => {
-    test.setTimeout(30000);
+    // Two full sign-in cycles plus a logout, each sign-in now waiting for the
+    // post-login redirect and dismissing the CRD "new look" dialog — needs more
+    // than the single-login budget.
+    test.setTimeout(60000);
 
     // First sign in
     await navigateToLoginPageFromMenu(baseUrl, page);
     await fillUpSignInPageElements('admin@alkem.io', password, page);
     await pressSignInButtonSignInPage(page);
-    await verifyMyDashboardWelcomeElement(page);
+    await expectSignedIn(page);
 
     // Logout
     await userMenuAvatar(page).click();
     await logoutMenuItem(page).click();
 
-    // Wait for logout to complete
-    const signInOption = page
-      .getByRole('link', { name: /sign up|sign in/i })
-      .or(page.getByRole('button', { name: /sign up|sign in/i }));
-    await expect(signInOption.first()).toBeVisible({ timeout: 5000 });
+    // Wait for logout to complete: the CRD header "Log in" link reappears.
+    await expect(logInHeaderLink(page)).toBeVisible({ timeout: 15000 });
 
     // Sign in again with same credentials
     await navigateToLoginPageFromMenu(baseUrl, page);
@@ -116,6 +116,6 @@ test.describe('Authentication - Login Flows', () => {
     await pressSignInButtonSignInPage(page);
 
     // Verify successful re-authentication
-    await verifyMyDashboardWelcomeElement(page);
+    await expectSignedIn(page);
   });
 });

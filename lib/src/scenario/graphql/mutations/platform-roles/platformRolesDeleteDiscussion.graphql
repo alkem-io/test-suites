@@ -1,0 +1,5 @@
+mutation PlatformRolesDeleteDiscussion($deleteData: DeleteDiscussionInput!) {
+  deleteDiscussion(deleteData: $deleteData) {
+    id
+  }
+}

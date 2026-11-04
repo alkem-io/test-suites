@@ -1,0 +1,10 @@
+query ReadSpaceClassifications($spaceId: UUID!) {
+  lookup {
+    space(ID: $spaceId) {
+      id
+      about {
+        classifications { id displayLabel display sortOrder cardinality selectedValueIDs values { id label } }
+      }
+    }
+  }
+}

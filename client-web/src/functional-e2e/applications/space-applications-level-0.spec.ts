@@ -1,17 +1,26 @@
 // spec: client-web/src/functional-e2e/applications/test-plan-applications-v2.md
 // seed: client-web/src/functional-e2e/applications/seed-applications.spec.ts
 
-import { test, expect, Page } from '@playwright/test';
+import { test, expect, Page, Locator } from '@playwright/test';
 import {
   TestScenarioFactory,
   TestUser,
   TestScenarioConfig,
+  getGraphqlClient,
 } from '@alkemio/tests-lib';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import {
   CommunityMembershipPolicy,
   SpacePrivacyMode,
 } from '@alkemio/client-lib';
+import { loginViaCrd } from '../helpers/login.helper';
+import { enableApplicationNotifications } from '../helpers/notification-settings.helper';
+import { graphqlErrorWrapper } from '@alkemio/tests-lib';
+import {
+  applyFlowSettled,
+  expectNoApplyControl,
+  setMembershipPolicy,
+} from './applications.helpers';
 
 const password = process.env.AUTH_TEST_HARNESS_PASSWORD || 'change_me';
 const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
@@ -40,64 +49,102 @@ test.describe('Level 0 Space - Applications', () => {
   let baseScenario: OrganizationWithSpaceModel;
   let nonSpaceMemberPage: Page;
   let spaceAdminPage: Page;
+  let restoreNotificationSettings: () => Promise<void>;
 
   test.beforeAll(async ({ browser }) => {
+    // Scenario creation + isolated non-member login can exceed the default 30s
+    // hook budget on the slower test env; give it headroom so the hook doesn't
+    // time out and fail the first test with a beforeAll error.
+    test.setTimeout(60_000);
     globalBaseScenario =
       await TestScenarioFactory.createBaseScenario(scenarioConfig);
     baseScenario = globalBaseScenario;
 
-    // Sign in as non-space member
-    nonSpaceMemberPage = await browser.newPage();
-    await nonSpaceMemberPage.goto(`${baseUrl}/login`);
-    await nonSpaceMemberPage
-      .getByRole('button', { name: 'Accept All Cookies' })
-      .click();
+    // The bell-dialog assertions below need the in-app channel ON for the
+    // applicant (joined / declined) and the admin (application received).
+    // Other suites leave these personas with in-app off, so set it here and
+    // put the previous values back in afterAll.
+    restoreNotificationSettings = await enableApplicationNotifications([
+      TestUser.NON_SPACE_MEMBER,
+      TestUser.SPACE_ADMIN,
+    ]);
 
-    await nonSpaceMemberPage
-      .getByRole('textbox', { name: 'E-Mail' })
-      .fill(`${TestUser.NON_SPACE_MEMBER}@alkem.io`);
-    await nonSpaceMemberPage
-      .getByRole('textbox', { name: 'Password' })
-      .fill(password);
-    await nonSpaceMemberPage
-      .getByRole('button', { name: 'Sign in', exact: true })
-      .click();
-    await nonSpaceMemberPage.waitForURL(/.*home.*/);
+    // Sign in as non-space member in an ISOLATED context (separate cookie jar
+    // from the admin) so the two CRD sessions don't bleed into each other.
+    nonSpaceMemberPage = await (await browser.newContext()).newPage();
+    await loginViaCrd(
+      nonSpaceMemberPage,
+      `${TestUser.NON_SPACE_MEMBER}@alkem.io`,
+      password
+    );
 
-    // Sign in as space admin
-    spaceAdminPage = await browser.newPage();
-    await spaceAdminPage.goto(`${baseUrl}/login`);
-    await spaceAdminPage
-      .getByRole('button', { name: 'Accept All Cookies' })
-      .click();
-
-    await spaceAdminPage
-      .getByRole('textbox', { name: 'E-Mail' })
-      .fill(`${TestUser.SPACE_ADMIN}@alkem.io`);
-    await spaceAdminPage
-      .getByRole('textbox', { name: 'Password' })
-      .fill(password);
-    await spaceAdminPage
-      .getByRole('button', { name: 'Sign in', exact: true })
-      .click();
-    await spaceAdminPage.waitForURL(/.*home.*/);
+    // Sign in as space admin in its own isolated context
+    spaceAdminPage = await (await browser.newContext()).newPage();
+    await loginViaCrd(
+      spaceAdminPage,
+      `${TestUser.SPACE_ADMIN}@alkem.io`,
+      password
+    );
   });
 
   test.afterAll(async () => {
+    await restoreNotificationSettings?.();
     await TestScenarioFactory.cleanUpBaseScenario(globalBaseScenario);
     await nonSpaceMemberPage.close();
     await spaceAdminPage.close();
   });
 
   test.describe('Space Discovery and Applications', () => {
+    test('1.0 Apply button is shown to a non-member on a public L0 space dashboard', async () => {
+      // Use a dedicated PUBLIC space so the non-member actually lands on the
+      // dashboard (private spaces redirect non-members to /about).
+      const publicScenarioConfig: TestScenarioConfig = {
+        name: 'seed-space-apps-public-dashboard',
+        space: {
+          collaboration: { addTutorialCallouts: false },
+          community: {
+            admins: [TestUser.SPACE_ADMIN],
+            members: [TestUser.SPACE_ADMIN],
+          },
+          settings: {
+            privacy: { mode: SpacePrivacyMode.Public },
+            membership: { policy: CommunityMembershipPolicy.Applications },
+          },
+        },
+      };
+
+      const publicScenario =
+        await TestScenarioFactory.createBaseScenario(publicScenarioConfig);
+
+      try {
+        const page = nonSpaceMemberPage;
+
+        // Navigate to the PUBLIC space dashboard (not /about)
+        await page.goto(`${baseUrl}/${publicScenario.space.nameId}`);
+
+        // PR #10000 removed the Apply button from the L0 dashboard; the
+        // per-tab sidebar widgets (client-web#10194, shipped in 0.163.0)
+        // brought it back as a sidebar action for non-members. A non-member
+        // landing on a public L0 dashboard must therefore see one enabled
+        // Apply button again.
+        const applyButton = page.getByRole('button', {
+          name: 'Apply',
+          exact: true,
+        });
+        await expect(applyButton).toBeVisible();
+        await expect(applyButton).toBeEnabled();
+        await expect(applyButton).toHaveCount(1);
+      } finally {
+        await TestScenarioFactory.cleanUpBaseScenario(publicScenario);
+      }
+    });
+
     test('1.1 Submit Application to Level 0 Space', async () => {
       const page = nonSpaceMemberPage;
       const spaceNameId = baseScenario.space.nameId;
 
       // 1. Navigate directly to Level 0 Space About page
-      await page.goto(`${baseUrl}/${spaceNameId}/about`, {
-        waitUntil: 'networkidle',
-      });
+      await page.goto(`${baseUrl}/${spaceNameId}/about`);
 
       // 2. Locate and click the "Apply" button
       await page.getByRole('button', { name: 'Apply' }).click();
@@ -111,7 +158,7 @@ test.describe('Level 0 Space - Applications', () => {
 
       // 4. Fill in questionnaire fields with test data
       const requiredField = page.getByRole('textbox', {
-        name: 'If you have a specific idea for how you\'d like to contribute, please share it below.',
+        name: "If you have a specific idea for how you'd like to contribute, please share it below.",
       });
       await requiredField.fill(
         'I am interested in collaborating on this space'
@@ -127,9 +174,10 @@ test.describe('Level 0 Space - Applications', () => {
       // 5. Submit the application
       await submitButton.click();
 
-      // 6. Verify success confirmation appears (popup/notification)
+      // 6. Verify success confirmation appears (CRD: "Application submitted"
+      // dialog, replacing the MUI "Thanks for applying to our community!").
       const successHeading = page.getByRole('heading', {
-        name: 'Thanks for applying to our community!',
+        name: 'Application submitted',
         level: 2,
       });
       await expect(successHeading).toBeVisible();
@@ -137,56 +185,67 @@ test.describe('Level 0 Space - Applications', () => {
       // Close success dialog
       const closeButton = page
         .getByRole('dialog')
-        .filter({ hasText: 'Thanks for applying' })
+        .filter({ hasText: 'Application submitted' })
         .getByRole('button', { name: 'Close' });
       await closeButton.click();
 
       // 7. Verify the application was submitted successfully
-      // Note: Based on manual testing, the UI currently allows re-applying,
-      // so we verify that the success message appeared, which confirms submission
       await expect(successHeading).not.toBeVisible();
+
+      // 8. 10419 IO-5: the just-submitted application flips the About dialog's
+      // action to the disabled "Application pending" (the optimistic
+      // `hasApplied` path), and "Apply" is gone.
+      const aboutDialog = page.getByRole('dialog').filter({
+        has: page.getByRole('heading', {
+          name: baseScenario.space.about.profile.displayName,
+          level: 2,
+        }),
+      });
+      const pendingButton = aboutDialog.getByRole('button', {
+        name: 'Application pending',
+        exact: true,
+      });
+      await expect(pendingButton).toBeVisible();
+      await expect(pendingButton).toBeDisabled();
+      await expect(
+        aboutDialog.getByRole('button', { name: 'Apply', exact: true })
+      ).toHaveCount(0);
     });
 
     test('1.2 View Pending Applications as Space Admin', async () => {
       const page = spaceAdminPage;
       const spaceName = baseScenario.space.about.profile.displayName;
 
-      // 1. Navigate to home page
-      await page.goto(`${baseUrl}/home`);
+      // 1-2. Navigate to the space (CRD opens settings via a banner link, not
+      // the MUI SettingsOutlinedIcon cog).
+      await page.goto(`${baseUrl}/${baseScenario.space.nameId}`);
 
-      // 2. Click on the Level 0 Space card to navigate to the space page
-      const spaceCard = page.locator('a', { hasText: spaceName });
-      await spaceCard.click();
-
-      // 3. Locate and click the space settings icon (cog icon)
-      const settingsButton = page.getByTestId('SettingsOutlinedIcon');
-      await expect(settingsButton).toBeVisible();
-      await settingsButton.click();
+      // 3. Open space settings via the CRD banner "Settings" link
+      const settingsLink = page.getByRole('link', { name: 'Settings' });
+      await expect(settingsLink).toBeVisible({ timeout: 15_000 });
+      await settingsLink.click();
 
       // 4. Verify navigation to space settings page
-      await page.waitForURL(`**/${baseScenario.space.nameId}/settings/**`);
+      await page.waitForURL(`**/${baseScenario.space.nameId}/settings**`);
 
-      // 5. Verify space-settings div is present
-      const spaceSettings = page.getByTestId('space-settings');
-      await expect(spaceSettings).toBeVisible();
-
-      // 6. Locate and click the "Community" tab
-      const communityTab = spaceSettings.getByRole('tab', {
-        name: 'Community',
-      });
+      // 5-6. Open the CRD "Community" settings tab
+      const communityTab = page.getByRole('tab', { name: 'Community' });
       await expect(communityTab).toBeVisible();
       await communityTab.click();
 
-      // 7. Verify "Pending applications & invitations" section is visible
-      const pendingSection = page.getByText(
-        'Pending applications & invitations'
-      );
-      await expect(pendingSection).toBeVisible();
+      // 7. Verify the pending-memberships section is visible (CRD renames
+      // "Pending applications & invitations" -> "Pending Memberships").
+      await expect(
+        page.getByRole('heading', { name: 'Pending Memberships' })
+      ).toBeVisible();
     });
   });
 
   test.describe('Application Management', () => {
     test.beforeEach(async () => {
+      // Per-test scenario creation + application submission exceeds the default
+      // 30s hook budget on the slower test env.
+      test.setTimeout(60_000);
       baseScenario =
         await TestScenarioFactory.createBaseScenario(scenarioConfig);
       const spaceName = baseScenario.space.about.profile.displayName;
@@ -197,14 +256,18 @@ test.describe('Level 0 Space - Applications', () => {
 
       // Navigate directly to the space about page using nameId
       // This avoids issues with the space not appearing on home page immediately
-      await applicantPage.goto(`${baseUrl}/${spaceNameId}/about`, {
-        waitUntil: 'networkidle',
-      });
+      await applicantPage.goto(`${baseUrl}/${spaceNameId}/about`);
 
-      // Check if there's already a pending application
-      const applicationPending = applicantPage
-        .locator('div')
-        .filter({ hasText: /^Application pending$/ });
+      // Check if there's already a pending application (CRD shows a disabled
+      // "Application pending" button in place of the Apply button).
+      const applicationPending = applicantPage.getByRole('button', {
+        name: 'Application pending',
+      });
+      // Either control is rendered once the page has resolved the viewer's
+      // standing; only then is "no pending application" a real observation.
+      await expect(
+        applicantPage.getByRole('button', { name: /^(Apply|Application pending)$/ })
+      ).toBeVisible();
       const isApplicationPending = await applicationPending.isVisible();
 
       if (!isApplicationPending) {
@@ -213,7 +276,7 @@ test.describe('Level 0 Space - Applications', () => {
 
         // Fill in the required questionnaire fields with test data
         const requiredField = applicantPage.getByRole('textbox', {
-          name: 'If you have a specific idea for how you\'d like to contribute, please share it below.',
+          name: "If you have a specific idea for how you'd like to contribute, please share it below.",
         });
         await requiredField.fill(
           'I am interested in collaborating on this space'
@@ -227,9 +290,9 @@ test.describe('Level 0 Space - Applications', () => {
         await expect(submitButton).toBeEnabled();
         await submitButton.click();
 
-        // Verify success confirmation appears
+        // Verify success confirmation appears (CRD "Application submitted")
         const successHeading = applicantPage.getByRole('heading', {
-          name: 'Thanks for applying to our community!',
+          name: 'Application submitted',
           level: 2,
         });
         await expect(successHeading).toBeVisible();
@@ -237,36 +300,28 @@ test.describe('Level 0 Space - Applications', () => {
         // Close success dialog
         const closeButton = applicantPage
           .getByRole('dialog')
-          .filter({ hasText: 'Thanks for applying' })
+          .filter({ hasText: 'Application submitted' })
           .getByRole('button', { name: 'Close' });
         await closeButton.click();
       }
 
-      // Step 2: As Space Admin - Navigate to Community Settings
+      // Step 2: As Space Admin - Navigate to Community Settings (CRD)
       const adminPage = spaceAdminPage;
 
-      // Navigate to home page
-      await adminPage.goto(`${baseUrl}/home`);
+      // Navigate to the space, open settings via the banner "Settings" link
+      await adminPage.goto(`${baseUrl}/${spaceNameId}`);
+      const settingsLink = adminPage.getByRole('link', { name: 'Settings' });
+      await expect(settingsLink).toBeVisible({ timeout: 15_000 });
+      await settingsLink.click();
+      await adminPage.waitForURL(`**/${baseScenario.space.nameId}/settings**`);
 
-      // Click on the Level 0 Space card to navigate to the space page
-      const adminSpaceCard = adminPage.locator('a', { hasText: spaceName });
-      await adminSpaceCard.click();
-
-      // Click the space settings icon (cog icon)
-      const settingsButton = adminPage.getByTestId('SettingsOutlinedIcon');
-      await expect(settingsButton).toBeVisible();
-      await settingsButton.click();
-
-      // Verify navigation to space settings page
-      await adminPage.waitForURL(`**/${baseScenario.space.nameId}/settings/**`);
-
-      // Click the "Community" tab
-      const spaceSettings = adminPage.getByTestId('space-settings');
-      const communityTab = spaceSettings.getByRole('tab', {
-        name: 'Community',
-      });
+      // Open the CRD "Community" settings tab
+      const communityTab = adminPage.getByRole('tab', { name: 'Community' });
       await expect(communityTab).toBeVisible();
       await communityTab.click();
+      await expect(
+        adminPage.getByRole('heading', { name: 'Pending Memberships' })
+      ).toBeVisible({ timeout: 15_000 });
     });
 
     test.afterEach(async () => {
@@ -276,29 +331,26 @@ test.describe('Level 0 Space - Applications', () => {
     test('2.1 Reject Application to Level 0 Space', async () => {
       const adminPage = spaceAdminPage;
 
-      // Locate the pending application from the non-space member
-      // The application is displayed in a MuiDataGrid with the applicant's display name
-      // Find the parent container using data-testid
-      const pendingSection = adminPage.getByTestId('communityMemberships');
-      const dataGrid = pendingSection.locator('.MuiDataGrid-root');
-      await expect(dataGrid).toBeVisible();
-
-      // Find the row containing the non-space member's application
-      const applicationRow = dataGrid.locator('role=row').last();
+      // Locate the pending application from the non-space member. CRD renders
+      // a semantic table (not a MUI DataGrid); find the application row by the
+      // applicant's name.
+      const applicationRow = adminPage
+        .getByRole('row')
+        .filter({ hasText: 'non space' });
       await expect(applicationRow).toBeVisible();
 
       await expect(applicationRow).toContainText('non space');
-      await expect(applicationRow).toContainText('Application Received');
+      await expect(applicationRow).toContainText('Application received');
 
-      // Click the reject button (icon button with aria-label="Reject application")
+      // Click the row's "Reject" action button (CRD: named button in the row).
       const rejectButton = applicationRow.getByRole('button', {
-        name: 'Reject application',
+        name: 'Reject',
       });
       await expect(rejectButton).toBeVisible();
       await rejectButton.click();
 
-      // Verify rejection confirmation dialog appears
-      const confirmDialog = adminPage.getByRole('dialog');
+      // Verify rejection confirmation appears (CRD uses a Radix alertdialog)
+      const confirmDialog = adminPage.getByRole('alertdialog');
       await expect(confirmDialog).toBeVisible();
 
       // Confirm the rejection action
@@ -316,7 +368,7 @@ test.describe('Level 0 Space - Applications', () => {
 
       // Click the notifications bell icon
       const notificationsBellIcon = applicantPage.getByRole('button', {
-        name: 'Notifications Button',
+        name: 'Notifications',
       });
       await expect(notificationsBellIcon).toBeVisible();
       await notificationsBellIcon.click();
@@ -330,19 +382,16 @@ test.describe('Level 0 Space - Applications', () => {
     test('2.2 Archive Application to Level 0 Space', async () => {
       const adminPage = spaceAdminPage;
 
-      // Locate the pending application from the non-space member
-      // The application is displayed in a MuiDataGrid with the applicant's display name
-      // Find the parent container using data-testid
-      const pendingSection = adminPage.getByTestId('communityMemberships');
-      const dataGrid = pendingSection.locator('.MuiDataGrid-root');
-      await expect(dataGrid).toBeVisible();
-
-      // Find the row containing the non-space member's application
-      const applicationRow = dataGrid.locator('role=row').last();
+      // Locate the pending application from the non-space member. CRD renders
+      // a semantic table (not a MUI DataGrid); find the application row by the
+      // applicant's name.
+      const applicationRow = adminPage
+        .getByRole('row')
+        .filter({ hasText: 'non space' });
       await expect(applicationRow).toBeVisible();
 
       await expect(applicationRow).toContainText('non space');
-      await expect(applicationRow).toContainText('Application Received');
+      await expect(applicationRow).toContainText('Application received');
 
       // Click the delete button (icon button with aria-label="Delete")
       const deleteButton = applicationRow.getByRole('button', {
@@ -351,13 +400,13 @@ test.describe('Level 0 Space - Applications', () => {
       await expect(deleteButton).toBeVisible();
       await deleteButton.click();
 
-      // Verify archive confirmation dialog appears
-      const confirmDialog = adminPage.getByRole('dialog');
+      // Verify archive/delete confirmation appears (CRD Radix alertdialog)
+      const confirmDialog = adminPage.getByRole('alertdialog');
       await expect(confirmDialog).toBeVisible();
 
-      // Confirm the archive action
+      // Confirm the archive/delete action
       const confirmButton = confirmDialog.getByRole('button', {
-        name: /archive/i,
+        name: /archive|delete|confirm|yes/i,
       });
       await confirmButton.click();
 
@@ -370,7 +419,7 @@ test.describe('Level 0 Space - Applications', () => {
 
       // Click the notifications bell icon
       const notificationsBellIcon = applicantPage.getByRole('button', {
-        name: 'Notifications Button',
+        name: 'Notifications',
       });
       await expect(notificationsBellIcon).toBeVisible();
       await notificationsBellIcon.click();
@@ -384,22 +433,23 @@ test.describe('Level 0 Space - Applications', () => {
     test('2.3 View and Approve Application to Level 0 Space', async () => {
       const adminPage = spaceAdminPage;
 
-      // Locate the pending application from the non-space member
-      // The application is displayed in a MuiDataGrid with the applicant's display name
-      // Find the parent container using data-testid
-      const pendingSection = adminPage.getByTestId('communityMemberships');
-      const dataGrid = pendingSection.locator('.MuiDataGrid-root');
-      await expect(dataGrid).toBeVisible();
-
-      // Find the row containing the non-space member's application
-      const applicationRow = dataGrid.locator('role=row').last();
+      // Locate the pending application from the non-space member. CRD renders
+      // a semantic table (not a MUI DataGrid); find the application row by the
+      // applicant's name.
+      const applicationRow = adminPage
+        .getByRole('row')
+        .filter({ hasText: 'non space' });
       await expect(applicationRow).toBeVisible();
 
       await expect(applicationRow).toContainText('non space');
-      await expect(applicationRow).toContainText('Application Received');
+      await expect(applicationRow).toContainText('Application received');
 
-      // Click the view button (Material UI eye icon - VisibilityOutlinedIcon)
-      const viewButton = applicationRow.getByTestId('VisibilityOutlinedIcon');
+      // Click the row's "View application" button (CRD: named button). In CRD
+      // this opens a READ-ONLY questionnaire/About preview with no action
+      // buttons; approval is performed via the in-row icon button afterwards.
+      const viewButton = applicationRow.getByRole('button', {
+        name: 'View application',
+      });
       await expect(viewButton).toBeVisible();
       await viewButton.click();
 
@@ -407,24 +457,39 @@ test.describe('Level 0 Space - Applications', () => {
       const questionnaireModal = adminPage.getByRole('dialog');
       await expect(questionnaireModal).toBeVisible();
 
-      // Verify the questionnaire responses are displayed
+      // Verify the questionnaire responses are displayed (read-only preview)
       await expect(questionnaireModal).toContainText(
         'I am interested in collaborating on this space'
       );
 
-      // Locate and click the "Approve" button at the bottom of the modal
-      const approveButton = questionnaireModal.getByRole('button', {
-        name: /approve/i,
+      // Close the read-only preview dialog
+      await questionnaireModal
+        .getByRole('button', { name: 'Close' })
+        .first()
+        .click();
+      await expect(questionnaireModal).not.toBeVisible();
+
+      // Approve via the in-row "Approve" icon button (CRD aria-label="Approve",
+      // a tick/checkmark). In CRD, approval is applied immediately with no
+      // confirmation dialog, and the application leaves the default
+      // "Application received" status filter.
+      const approveButton = applicationRow.getByRole('button', {
+        name: 'Approve',
       });
       await expect(approveButton).toBeVisible();
       await approveButton.click();
 
-      // Verify the modal closes
-      await expect(questionnaireModal).not.toBeVisible();
-
-      // Verify the application is removed from the pending list
-      await expect(applicationRow).toBeVisible();
-      await expect(applicationRow).toContainText('Application Approved');
+      // The approved application moves out of the default "received" filter.
+      // Switch to the "Application approved" status filter and verify the
+      // application now appears there with the approved status. (The applicant
+      // also joins Space Members, so scope the assertion to the membership row
+      // carrying the "Application approved" status.)
+      await adminPage
+        .getByRole('button', { name: /Application approved/i })
+        .click();
+      await expect(
+        applicationRow.filter({ hasText: 'Application approved' })
+      ).toBeVisible();
 
       // Verify notification is received by the applicant
       const applicantPage = nonSpaceMemberPage;
@@ -432,7 +497,7 @@ test.describe('Level 0 Space - Applications', () => {
 
       // Click the notifications bell icon
       const notificationsBellIcon = applicantPage.getByRole('button', {
-        name: 'Notifications Button',
+        name: 'Notifications',
       });
       await expect(notificationsBellIcon).toBeVisible();
       await notificationsBellIcon.click();
@@ -448,22 +513,23 @@ test.describe('Level 0 Space - Applications', () => {
     test('2.4 View and Reject Application to Level 0 Space', async () => {
       const adminPage = spaceAdminPage;
 
-      // Locate the pending application from the non-space member
-      // The application is displayed in a MuiDataGrid with the applicant's display name
-      // Find the parent container using data-testid
-      const pendingSection = adminPage.getByTestId('communityMemberships');
-      const dataGrid = pendingSection.locator('.MuiDataGrid-root');
-      await expect(dataGrid).toBeVisible();
-
-      // Find the row containing the non-space member's application
-      const applicationRow = dataGrid.locator('role=row').last();
+      // Locate the pending application from the non-space member. CRD renders
+      // a semantic table (not a MUI DataGrid); find the application row by the
+      // applicant's name.
+      const applicationRow = adminPage
+        .getByRole('row')
+        .filter({ hasText: 'non space' });
       await expect(applicationRow).toBeVisible();
 
       await expect(applicationRow).toContainText('non space');
-      await expect(applicationRow).toContainText('Application Received');
+      await expect(applicationRow).toContainText('Application received');
 
-      // Click the view button (Material UI eye icon - VisibilityOutlinedIcon)
-      const viewButton = applicationRow.getByTestId('VisibilityOutlinedIcon');
+      // Click the row's "View application" button (CRD: named button). In CRD
+      // this opens a READ-ONLY questionnaire/About preview with no action
+      // buttons; rejection is performed via the in-row icon button afterwards.
+      const viewButton = applicationRow.getByRole('button', {
+        name: 'View application',
+      });
       await expect(viewButton).toBeVisible();
       await viewButton.click();
 
@@ -471,37 +537,44 @@ test.describe('Level 0 Space - Applications', () => {
       const questionnaireModal = adminPage.getByRole('dialog');
       await expect(questionnaireModal).toBeVisible();
 
-      // Verify the questionnaire responses are displayed
+      // Verify the questionnaire responses are displayed (read-only preview)
       await expect(questionnaireModal).toContainText(
         'I am interested in collaborating on this space'
       );
 
-      // Locate and click the "Reject" button at the bottom of the modal
-      const rejectButton = questionnaireModal.getByRole('button', {
-        name: /reject/i,
+      // Close the read-only preview dialog
+      await questionnaireModal
+        .getByRole('button', { name: 'Close' })
+        .first()
+        .click();
+      await expect(questionnaireModal).not.toBeVisible();
+
+      // Reject via the in-row "Reject" icon button (CRD aria-label="Reject",
+      // an X), mirroring the working 2.1 reject-from-row pattern.
+      const rejectButton = applicationRow.getByRole('button', {
+        name: 'Reject',
       });
       await expect(rejectButton).toBeVisible();
       await rejectButton.click();
 
-      // Verify rejection confirmation dialog (if it appears)
-      // Some implementations may show a confirmation dialog, others may reject immediately
-      const possibleConfirmDialog = adminPage.getByRole('dialog').last();
-      const isConfirmDialogVisible = await possibleConfirmDialog.isVisible();
+      // Confirm the rejection in the CRD Radix alertdialog
+      const confirmDialog = adminPage.getByRole('alertdialog');
+      await expect(confirmDialog).toBeVisible();
+      const confirmButton = confirmDialog.getByRole('button', {
+        name: /confirm|reject|yes/i,
+      });
+      await confirmButton.click();
 
-      if (isConfirmDialogVisible) {
-        // If a confirmation dialog appears, confirm the rejection
-        const confirmButton = possibleConfirmDialog.getByRole('button', {
-          name: /archive/i,
-        });
-        if (await confirmButton.isVisible()) {
-          await confirmButton.click();
-        }
-      }
-
-      // Verify the modal closes
-      await expect(questionnaireModal).not.toBeVisible();
-      await expect(applicationRow).toBeVisible();
-      await expect(applicationRow).toContainText('Application Rejected');
+      // The rejected application moves out of the default "received" filter.
+      // Switch to the "Application rejected" status filter and verify the
+      // application now appears there with the rejected status.
+      await expect(applicationRow).not.toBeVisible();
+      await adminPage
+        .getByRole('button', { name: /Application rejected/i })
+        .click();
+      await expect(
+        applicationRow.filter({ hasText: 'Application rejected' })
+      ).toBeVisible();
 
       // Verify notification is received by the applicant
       const applicantPage = nonSpaceMemberPage;
@@ -509,7 +582,7 @@ test.describe('Level 0 Space - Applications', () => {
 
       // Click the notifications bell icon
       const notificationsBellIcon = applicantPage.getByRole('button', {
-        name: 'Notifications Button',
+        name: 'Notifications',
       });
       await expect(notificationsBellIcon).toBeVisible();
       await notificationsBellIcon.click();
@@ -528,7 +601,7 @@ test.describe('Level 0 Space - Applications', () => {
 
       // Click the notifications bell icon to check for new application notification
       const notificationsBellIconAdmin = adminPage.getByRole('button', {
-        name: 'Notifications Button',
+        name: 'Notifications',
       });
       await expect(notificationsBellIconAdmin).toBeVisible();
       await notificationsBellIconAdmin.click();
@@ -537,9 +610,11 @@ test.describe('Level 0 Space - Applications', () => {
       const notificationsPanelAdmin = adminPage.getByRole('dialog');
       await expect(notificationsPanelAdmin).toBeVisible();
       await expect(notificationsPanelAdmin).toContainText(/applied to join/i);
-      // Click on the notification to navigate to the community settings page
+      // Click on the notification to navigate to the community settings page.
+      // CRD renders each notification entry as a <button>, not an <a>.
       const applicationNotification = notificationsPanelAdmin
-        .locator('a', {
+        .getByRole('button')
+        .filter({
           hasText: new RegExp(
             `applied to join ${baseScenario.space.about.profile.displayName}`,
             'i'
@@ -548,48 +623,54 @@ test.describe('Level 0 Space - Applications', () => {
         .first();
       await applicationNotification.click();
 
-      // Verify navigation to space settings community page
-      await adminPage.waitForURL(`**/${baseScenario.space.nameId}/settings/**`);
+      // The notification deep-links the admin into the space context. From
+      // there, open the space's Community settings (the same path the
+      // application-management flow uses) to reach the applications data grid.
+      await adminPage.waitForURL(`**/${baseScenario.space.nameId}**`, {
+        waitUntil: 'commit',
+      });
+      const settingsLink = adminPage.getByRole('link', { name: 'Settings' });
+      await expect(settingsLink).toBeVisible({ timeout: 15_000 });
+      await settingsLink.click();
+      await adminPage.waitForURL(`**/${baseScenario.space.nameId}/settings**`);
+      const communityTab = adminPage.getByRole('tab', { name: 'Community' });
+      await expect(communityTab).toBeVisible();
+      await communityTab.click();
+      await expect(
+        adminPage.getByRole('heading', { name: 'Pending Memberships' })
+      ).toBeVisible({ timeout: 15_000 });
 
-      // Locate the pending application from the non-space member
-      // The application is displayed in a MuiDataGrid with the applicant's display name
-      // Find the parent container using data-testid
-      const pendingSection = adminPage.getByTestId('communityMemberships');
-      const dataGrid = pendingSection.locator('.MuiDataGrid-root');
-      await expect(dataGrid).toBeVisible();
-
-      // Find the row containing the non-space member's application
-      const applicationRow = dataGrid.locator('role=row').last();
+      // Locate the pending application from the non-space member. CRD renders
+      // a semantic table (not a MUI DataGrid); find the application row by the
+      // applicant's name.
+      const applicationRow = adminPage
+        .getByRole('row')
+        .filter({ hasText: 'non space' });
       await expect(applicationRow).toBeVisible();
 
       await expect(applicationRow).toContainText('non space');
-      await expect(applicationRow).toContainText('Application Received');
+      await expect(applicationRow).toContainText('Application received');
 
-      // Click the approve button directly from the data grid (Material UI check circle icon)
-      const approveButton = applicationRow.getByTestId(
-        'CheckCircleOutlineIcon'
-      );
+      // Click the in-row "Approve" icon button directly (CRD aria-label="Approve").
+      // Approval is applied immediately with no confirmation dialog, and the
+      // application leaves the default "Application received" status filter.
+      const approveButton = applicationRow.getByRole('button', {
+        name: 'Approve',
+      });
       await expect(approveButton).toBeVisible();
       await approveButton.click();
 
-      // Verify approval confirmation dialog (if it appears)
-      // Some implementations may show a confirmation dialog, others may approve immediately
-      const possibleConfirmDialog = adminPage.getByRole('dialog').last();
-      const isConfirmDialogVisible = await possibleConfirmDialog.isVisible();
-
-      if (isConfirmDialogVisible) {
-        // If a confirmation dialog appears, confirm the approval
-        const confirmButton = possibleConfirmDialog.getByRole('button', {
-          name: /approve/i,
-        });
-        if (await confirmButton.isVisible()) {
-          await confirmButton.click();
-        }
-      }
-
-      // Verify the application status changes to approved
-      await expect(applicationRow).toBeVisible();
-      await expect(applicationRow).toContainText('Application Approved');
+      // The approved application moves out of the default "received" filter.
+      // Switch to the "Application approved" status filter and verify the
+      // application now appears there with the approved status. (The applicant
+      // also joins Space Members, so scope the assertion to the membership row
+      // carrying the "Application approved" status.)
+      await adminPage
+        .getByRole('button', { name: /Application approved/i })
+        .click();
+      await expect(
+        applicationRow.filter({ hasText: 'Application approved' })
+      ).toBeVisible();
 
       // Verify notification is received by the applicant
       const applicantPage = nonSpaceMemberPage;
@@ -597,7 +678,7 @@ test.describe('Level 0 Space - Applications', () => {
 
       // Click the notifications bell icon
       const notificationsBellIcon = applicantPage.getByRole('button', {
-        name: 'Notifications Button',
+        name: 'Notifications',
       });
       await expect(notificationsBellIcon).toBeVisible();
       await notificationsBellIcon.click();
@@ -608,6 +689,279 @@ test.describe('Level 0 Space - Applications', () => {
       await expect(notificationsPanel).toContainText(
         /Welcome to the community/i
       );
+    });
+  });
+  // 10419 cases live in this (L0-named) file by the requester's choice; IO-2
+  // and IO-3 deliberately exercise L1 surfaces. Plan: test-plan-applications-v2.md
+  // "No dead-end apply control on invitation-only spaces (client-web#10419)".
+  test.describe('Invitation-only — no dead-end apply control (client-web#10419)', () => {
+    let fixture: OrganizationWithSpaceModel;
+
+    test.beforeAll(async () => {
+      // L0 + L1 creation.
+      test.setTimeout(60_000);
+      // No `settings.collaboration` on either level: the factory applies it in
+      // a later updateSpaceSettings call that resets membership.policy to OPEN.
+      fixture = await TestScenarioFactory.createBaseScenario({
+        name: 'apps-invitation-only',
+        space: {
+          collaboration: { addTutorialCallouts: false },
+          community: {
+            admins: [TestUser.SPACE_ADMIN],
+            members: [TestUser.SPACE_ADMIN],
+          },
+          settings: {
+            privacy: { mode: SpacePrivacyMode.Public },
+            membership: {
+              policy: CommunityMembershipPolicy.Invitations,
+              allowSubspaceAdminsToInviteMembers: true,
+            },
+          },
+          subspace: {
+            settings: {
+              privacy: { mode: SpacePrivacyMode.Public },
+              membership: { policy: CommunityMembershipPolicy.Invitations },
+            },
+          },
+        },
+      });
+    });
+
+    test.afterAll(async () => {
+      await TestScenarioFactory.cleanUpBaseScenario(fixture);
+    });
+
+    const aboutDialogOf = (page: Page, displayName: string) =>
+      page.getByRole('dialog').filter({
+        has: page.getByRole('heading', { name: displayName, level: 2 }),
+      });
+
+    // The sidebar (desktop) is mounted twice (a display:none drawer copy);
+    // role locators skip the hidden one.
+    const expectSidebarSettled = async (page: Page) => {
+      const sidebar = page.getByRole('navigation', { name: 'Space sidebar' });
+      await expect(
+        sidebar.getByRole('button', { name: 'About this Space' })
+      ).toBeVisible();
+      await expect(
+        sidebar.getByRole('status', { name: 'Loading membership status' })
+      ).toHaveCount(0);
+      return sidebar;
+    };
+
+    test('10419 IO-1 invitation-only L0: no apply control in the Space sidebar or the Space About dialog', async () => {
+      const page = nonSpaceMemberPage;
+      const { space } = fixture;
+      await setMembershipPolicy(space.id, CommunityMembershipPolicy.Invitations);
+
+      // Sidebar, on the plain page route (never while a dialog is open: the
+      // page behind a Radix dialog is aria-hidden and would pass vacuously).
+      const sidebarFlow = applyFlowSettled(page);
+      try {
+        await page.goto(`${baseUrl}/${space.nameId}`);
+        const sidebar = await expectSidebarSettled(page);
+        await sidebarFlow.settled();
+        await expectNoApplyControl(sidebar);
+      } finally {
+        sidebarFlow.dispose();
+      }
+
+      // Space About dialog.
+      const aboutFlow = applyFlowSettled(page);
+      try {
+        await page.goto(`${baseUrl}/${space.nameId}/about`);
+        const dialog = aboutDialogOf(page, space.about.profile.displayName);
+        await expect(dialog).toBeVisible();
+        await aboutFlow.settled();
+        await expectNoApplyControl(dialog);
+      } finally {
+        aboutFlow.dispose();
+      }
+    });
+
+    test('10419 IO-2 invitation-only L1 under invitation-only L0: no control on the subspace banner or in the Subspace About dialog', async () => {
+      const page = nonSpaceMemberPage;
+      const { space, subspace } = fixture;
+      // L0 first, then L1.
+      await setMembershipPolicy(space.id, CommunityMembershipPolicy.Invitations);
+      await setMembershipPolicy(
+        subspace.id,
+        CommunityMembershipPolicy.Invitations
+      );
+
+      const subspaceUrl = `${baseUrl}/${space.nameId}/challenges/${subspace.nameId}`;
+      const subspaceName = subspace.about.profile.displayName;
+
+      // Banner, on the plain page route (no dialog open).
+      const bannerFlow = applyFlowSettled(page, subspace.id);
+      try {
+        await page.goto(subspaceUrl);
+        await expect(
+          page,
+          'a non-member must land on the subspace page, not be redirected to /about'
+        ).not.toHaveURL(/\/about$/);
+        await expect(
+          page.getByRole('heading', { level: 1, name: subspaceName })
+        ).toBeVisible();
+        await expect(
+          page.getByRole('navigation', { name: 'Innovation flow phases' })
+        ).toBeVisible();
+        await bannerFlow.settled();
+        await expectNoApplyControl(page);
+      } finally {
+        bannerFlow.dispose();
+      }
+
+      // Subspace About dialog.
+      const aboutFlow = applyFlowSettled(page, subspace.id);
+      try {
+        await page.goto(`${subspaceUrl}/about`);
+        const dialog = aboutDialogOf(page, subspaceName);
+        await expect(dialog).toBeVisible();
+        await aboutFlow.settled();
+        await expectNoApplyControl(dialog);
+      } finally {
+        aboutFlow.dispose();
+      }
+    });
+
+    test('10419 IO-3 applications enabled: "Apply" shows on the subspace banner', async () => {
+      const page = nonSpaceMemberPage;
+      const { space, subspace } = fixture;
+      await setMembershipPolicy(space.id, CommunityMembershipPolicy.Applications);
+      await setMembershipPolicy(
+        subspace.id,
+        CommunityMembershipPolicy.Applications
+      );
+
+      const flow = applyFlowSettled(page, subspace.id);
+      try {
+        await page.goto(
+          `${baseUrl}/${space.nameId}/challenges/${subspace.nameId}`
+        );
+        await expect(page).not.toHaveURL(/\/about$/);
+        await expect(
+          page.getByRole('heading', {
+            level: 1,
+            name: subspace.about.profile.displayName,
+          })
+        ).toBeVisible();
+        await expect(
+          page.getByRole('navigation', { name: 'Innovation flow phases' })
+        ).toBeVisible();
+        await flow.settled();
+
+        // Not clicked: the parent-apply path opens a PreApplicationDialog,
+        // which is out of scope here.
+        const apply = page.getByRole('button', { name: 'Apply', exact: true });
+        await expect(apply).toBeVisible();
+        await expect(apply).toBeEnabled();
+        await expect(apply).toHaveCount(1);
+        await expect(
+          page.getByRole('button', { name: 'Apply not available', exact: true })
+        ).toHaveCount(0);
+      } finally {
+        flow.dispose();
+      }
+    });
+
+    test('10419 IO-4 a pending application keeps "Application pending", with applications enabled and after the space turns invitation-only', async () => {
+      // Own L0 (no subspace): the persona's application must not leak into
+      // the shared invitation-only fixture.
+      test.setTimeout(90_000);
+      const page = nonSpaceMemberPage;
+      const scenario = await TestScenarioFactory.createBaseScenario({
+        name: 'apps-pending-invitation-only',
+        space: {
+          collaboration: { addTutorialCallouts: false },
+          community: {
+            admins: [TestUser.SPACE_ADMIN],
+            members: [TestUser.SPACE_ADMIN],
+          },
+          settings: {
+            privacy: { mode: SpacePrivacyMode.Public },
+            membership: { policy: CommunityMembershipPolicy.Applications },
+          },
+        },
+      });
+
+      try {
+        const { space } = scenario;
+        const applied = await graphqlErrorWrapper(
+          token =>
+            getGraphqlClient().applyForEntryRole(
+              {
+                applicationData: {
+                  roleSetID: space.community.roleSetId,
+                  questions: [
+                    { name: 'Test Question 1', value: '10419 pending', sortOrder: 0 },
+                  ],
+                },
+              },
+              { authorization: `Bearer ${token}` }
+            ),
+          TestUser.NON_SPACE_MEMBER
+        );
+        // graphqlErrorWrapper can retry a committed mutation, so an
+        // "open application" error also means the application exists.
+        if (
+          !applied.data?.applyForEntryRoleOnRoleSet?.id &&
+          !/open application/i.test(JSON.stringify(applied.error))
+        ) {
+          throw new Error(
+            `Could not apply as ${TestUser.NON_SPACE_MEMBER}: ${JSON.stringify(applied.error)}`
+          );
+        }
+
+        const expectPendingOnly = async (scope: Locator) => {
+          const pending = scope.getByRole('button', {
+            name: 'Application pending',
+            exact: true,
+          });
+          await expect(pending).toBeVisible();
+          await expect(pending).toBeDisabled();
+          await expect(pending).toHaveCount(1);
+          await expect(
+            scope.getByRole('button', { name: 'Apply', exact: true })
+          ).toHaveCount(0);
+          await expect(
+            scope.getByRole('button', { name: 'Apply not available', exact: true })
+          ).toHaveCount(0);
+        };
+
+        const expectPendingOnBothSurfaces = async () => {
+          // Sidebar.
+          const sidebarFlow = applyFlowSettled(page);
+          try {
+            await page.goto(`${baseUrl}/${space.nameId}`);
+            const sidebar = await expectSidebarSettled(page);
+            await sidebarFlow.settled();
+            await expectPendingOnly(sidebar);
+          } finally {
+            sidebarFlow.dispose();
+          }
+          // Space About dialog.
+          const aboutFlow = applyFlowSettled(page);
+          try {
+            await page.goto(`${baseUrl}/${space.nameId}/about`);
+            const dialog = aboutDialogOf(page, space.about.profile.displayName);
+            await expect(dialog).toBeVisible();
+            await aboutFlow.settled();
+            await expectPendingOnly(dialog);
+          } finally {
+            aboutFlow.dispose();
+          }
+        };
+
+        // Row A: applications enabled.
+        await expectPendingOnBothSurfaces();
+
+        // Row B: the space turns invitation-only after the application.
+        await setMembershipPolicy(space.id, CommunityMembershipPolicy.Invitations);
+        await expectPendingOnBothSurfaces();
+      } finally {
+        await TestScenarioFactory.cleanUpBaseScenario(scenario);
+      }
     });
   });
 });

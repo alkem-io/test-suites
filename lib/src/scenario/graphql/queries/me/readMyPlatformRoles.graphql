@@ -1,0 +1,1 @@
+query ReadMyPlatformRoles { platform { roleSet { myRoles } } }

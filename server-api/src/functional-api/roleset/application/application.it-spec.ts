@@ -6,7 +6,10 @@ import {
   meQuery,
 } from './application.request.params';
 import { updateSpaceSettings } from '../../journey/space/space.request.params';
-import { deleteUser } from '../../contributor-management/user/user.request.params';
+import {
+  deleteUser,
+  reregisterUser,
+} from '../../contributor-management/user/user.request.params';
 import {
   assignRoleToUser,
   removeRoleFromUser,
@@ -14,7 +17,6 @@ import {
 import { eventOnRoleSetApplication } from '../roleset-events.request.params';
 import {
   delay,
-  registerInAlkemioOrFail,
   TestScenarioConfig,
   TestScenarioFactory,
   TestUser,
@@ -167,20 +169,24 @@ describe('Application', () => {
 
     // Assert
     expect(applicationDataTwo.error?.errors[0].message).toContain(
-      `Application not possible: An open application (ID: ${applicationId}) already exists for contributor ${TestUserManager.users.qaUser.id} on RoleSet: ${baseScenario.space.community.roleSetId}.`
+      'Application not possible: An open application already exists for actor'
     );
   });
 
   test('should remove application', async () => {
     // Arrange
+    // The pending-applications list is readable only by those who decide
+    // applications (GRANT holders), so it is counted as the platform admin,
+    // never as the applying QA_USER — a plain member's read is refused and
+    // the optional chains below would silently compare undefined to undefined.
     const applicationsBeforeCreateDelete =
       await getRoleSetInvitationsApplications(
-        baseScenario.space.community.roleSetId,
-        TestUser.QA_USER
+        baseScenario.space.community.roleSetId
       );
     const countAppBeforeCreateDelete =
       applicationsBeforeCreateDelete?.data?.lookup?.roleSet?.applications
         .length;
+    expect(countAppBeforeCreateDelete).toEqual(expect.any(Number));
     applicationData = await createApplication(
       baseScenario.space.community.roleSetId,
       TestUser.QA_USER
@@ -194,13 +200,13 @@ describe('Application', () => {
     const getApp = userAppsData?.data?.me?.communityApplications;
     const applicationsAfterCreateDelete =
       await getRoleSetInvitationsApplications(
-        baseScenario.space.community.roleSetId,
-        TestUser.QA_USER
+        baseScenario.space.community.roleSetId
       );
     const countAppAfterCreateDelete =
       applicationsAfterCreateDelete?.data?.lookup?.roleSet?.applications.length;
 
     // Assert
+    expect(countAppAfterCreateDelete).toEqual(expect.any(Number));
     expect(countAppAfterCreateDelete).toEqual(countAppBeforeCreateDelete);
     expect(getApp).not.toEqual(
       expect.arrayContaining([
@@ -272,6 +278,7 @@ describe('Application', () => {
     const countAppBeforeCreateDelete =
       applicationsBeforeCreateDelete?.data?.lookup?.roleSet?.applications
         .length;
+    expect(countAppBeforeCreateDelete).toEqual(expect.any(Number));
 
     applicationData = await createApplication(
       baseScenario.space.community.roleSetId,
@@ -291,8 +298,11 @@ describe('Application', () => {
       applicationsAfterCreateDelete?.data?.lookup?.roleSet?.applications.length;
 
     // Assert
+    expect(countAppAfterCreateDelete).toEqual(expect.any(Number));
     expect(countAppAfterCreateDelete).toEqual(countAppBeforeCreateDelete);
-    await registerInAlkemioOrFail('qa', 'user', 'qa.user@alkem.io');
+
+    // Fully re-register the user so subsequent tests work
+    await reregisterUser('qa.user@alkem.io', 'qa', 'user');
   });
 });
 

@@ -90,32 +90,38 @@ test.describe('Organization Profile Access', () => {
       });
       await expect(orgNameHeading).toBeVisible({ timeout: 2000 });
 
-      // Verify can bio and section
+      // Verify bio section (CRD org sidebar "Bio" block)
       await expect(
         page.getByRole('heading', { name: /Bio/i }).first()
       ).toBeVisible();
 
-      await expect(
-        page.getByRole('heading', { name: /Spaces we lead/i }).first()
-      ).toBeVisible();
+      // CRD: spaces are organised under resource tabs; the spaces the org
+      // leads live under the "Lead Spaces" tab.
+      const leadSpacesTab = page.getByRole('tab', { name: /Lead Spaces/i });
+      await expect(leadSpacesTab).toBeVisible();
+      await leadSpacesTab.click();
 
       // Verify the space created by this organization is displayed
       await expect(
         page.getByText(baseScenario.space.about.profile.displayName).first()
-      ).toBeVisible({ timeout: 2000 });
+      ).toBeVisible({ timeout: 5000 });
 
-      // Verify access to settings tabs
-      const settingsIcon = page.locator('[data-testid="SettingsOutlinedIcon"]');
-      await expect(settingsIcon).toBeVisible({ timeout: 2000 });
+      // Verify access to settings (CRD icon link with accessible name)
+      const settingsLink = page.getByRole('link', {
+        name: /Open organisation settings/i,
+      });
+      await expect(settingsLink).toBeVisible({ timeout: 2000 });
 
       // Navigate to settings and verify admin capabilities
-      await settingsIcon.click();
+      await settingsLink.click();
       await expect(page).toHaveURL(
         new RegExp(`/organization/${baseScenario.organization.nameId}/settings`)
       );
 
-      // Verify settings page content is visible
-      await expect(page.getByText(/Here you can edit.*/i)).toBeVisible();
+      // Verify settings page content is visible (CRD settings tabs)
+      await expect(
+        page.getByRole('tab', { name: /Profile/i }).first()
+      ).toBeVisible({ timeout: 5000 });
     }
   );
 });

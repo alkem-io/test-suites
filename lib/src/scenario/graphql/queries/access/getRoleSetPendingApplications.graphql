@@ -1,0 +1,16 @@
+# One pending list per query: the three RoleSet pending fields are non-null
+# and gated independently (applications on GRANT, invitations and
+# platformInvitations on ROLESET_ENTRY_ROLE_INVITE), so a single query that
+# selects all three nulls the whole role set on the first refusal and cannot
+# tell a mixed-permission caller's reads apart.
+query RoleSetPendingApplications($roleSetId: UUID!) {
+  lookup {
+    roleSet(ID: $roleSetId) {
+      id
+      applications {
+        id
+        state
+      }
+    }
+  }
+}

@@ -16,6 +16,7 @@ import {
 } from './pages';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import { createAuthenticatedSessionFixture } from '../fixtures/authenticated-session.fixture';
+import { deleteSpaceByNameId } from '../helpers/space-cleanup.helper';
 
 // Create the authenticated fixture with a unique storage state name for this test suite
 const { test, setupAuthentication, teardownAuthentication } =
@@ -32,6 +33,9 @@ const scenarioConfig: TestScenarioNoPreCreationConfig = {
 
 test.describe('CREATE Space Operations (Organization Account)', () => {
   test.beforeAll(async ({ browser }) => {
+    // Server-side scenario creation can approach the default 30s hook budget;
+    // give it headroom so a slow setup doesn't time out and cascade the file.
+    test.setTimeout(60_000);
     baseScenario =
       await TestScenarioFactory.createBaseScenarioOrganization(scenarioConfig);
     await setupAuthentication(
@@ -46,6 +50,20 @@ test.describe('CREATE Space Operations (Organization Account)', () => {
   });
   test.beforeEach(async ({ page }) => {
     await page.goto(baseUrl);
+  });
+
+  /** nameID of the Space the running test created through the UI; cleared
+   * once the test deleted it itself. */
+  let createdSpaceNameId: string | undefined;
+
+  // A walk that creates a Space and fails before its own UI deletion leaves
+  // the Space behind; three such leaks exhaust the account's free allowance
+  // and every later create shows "Capacity reached". Sweep through the API.
+  test.afterEach(async () => {
+    if (!createdSpaceNameId) return;
+    const nameId = createdSpaceNameId;
+    createdSpaceNameId = undefined;
+    await deleteSpaceByNameId(nameId);
   });
 
   test('1.1 Create Space from Organization - Happy Path (Valid Data)', async ({
@@ -87,7 +105,7 @@ test.describe('CREATE Space Operations (Organization Account)', () => {
     await createSpaceDialog.waitForHidden();
   });
 
-  test.skip('1.4 Create Space from Organization - With Tutorials Enabled', async ({
+  test('1.4 Create Space from Organization - With Tutorials Enabled', async ({
     page,
   }) => {
     const orgAccountPage = new OrganizationAccountPage(page, baseUrl);
@@ -99,6 +117,7 @@ test.describe('CREATE Space Operations (Organization Account)', () => {
     const uniqueId = Date.now().toString().slice(-6);
     const spaceName = `Tutorial Space ${uniqueId}`;
     const spaceUrl = `tutor-${uniqueId}`;
+    createdSpaceNameId = spaceUrl;
 
     // 1. Navigate to Organization Account
     await orgAccountPage.goto(baseScenario.organization.nameId);
@@ -127,11 +146,11 @@ test.describe('CREATE Space Operations (Organization Account)', () => {
     await createSpaceDialog.verifyCreateButtonEnabled();
     await createSpaceDialog.clickCreate();
 
-    // 8. Verify success dialog appears
+    // 8. The new Space is open (CRD routes straight to it; a success dialog,
+    // when shown, is dismissed).
+    await page.waitForURL(new RegExp(`.*/${spaceUrl}.*`));
     await spacePage.waitForSpaceReady();
-
-    // 9. Click GET STARTED to go to Space page
-    await spacePage.clickGetStarted();
+    await spacePage.dismissSuccessDialog();
 
     // 10. Verify tutorials are present on the Space page
     await spacePage.verifyTutorialsPresent(2);
@@ -139,6 +158,7 @@ test.describe('CREATE Space Operations (Organization Account)', () => {
     // 11. Cleanup: Navigate to Settings and delete the Space
     await spacePage.navigateToSettings();
     await spaceSettingsPage.deleteSpace();
+    createdSpaceNameId = undefined;
   });
 
   test('1.5 Create Space from Organization - Validation: Missing Required Fields (Title)', async ({
@@ -192,10 +212,9 @@ test.describe('CREATE Space Operations (Organization Account)', () => {
     // Try to enter a URL longer than 25 characters
     await createSpaceDialog.fillUrl('this-url-is-way-too-long-for-validation');
 
-    // Verify the character count indicator shows exceeded limit
-    await expect(createSpaceDialog.urlCharacterCount).toBeVisible();
-
-    // Check terms
+    // CRD no longer renders an "N / 25" URL character-count indicator
+    // (gap logged); the URL-length rule is enforced by keeping the Create
+    // button disabled. Check terms, then assert that gating.
     await createSpaceDialog.acceptTermsAndConditions();
 
     // Verify Create button remains disabled due to URL length validation
@@ -349,6 +368,7 @@ test.describe('CREATE Space Operations (Organization Account)', () => {
     const uniqueId = Date.now().toString().slice(-6);
     const spaceName = `Test Space ${uniqueId}`;
     const spaceUrl = `test-${uniqueId}`;
+    createdSpaceNameId = spaceUrl;
 
     // Navigate to Organization Account
     await orgAccountPage.goto(baseScenario.organization.nameId);
@@ -383,5 +403,6 @@ test.describe('CREATE Space Operations (Organization Account)', () => {
     // Cleanup: Delete the created Space
     await spacePage.navigateToSettings();
     await spaceSettingsPage.deleteSpace();
+    createdSpaceNameId = undefined;
   });
 });

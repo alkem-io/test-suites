@@ -73,10 +73,11 @@ describe('Functional tests - VC', () => {
       await TestScenarioFactory.createBaseScenarioEmpty(scenarioConfig);
       await assignPlatformRole(
         TestUserManager.users.nonSpaceMember.id,
-        RoleName.PlatformVcCampaign
+        RoleName.FeatureVcCampaign
       );
     });
     const allPrivileges = [
+      'ACCOUNT_AI_ASSISTANT_TOKENS_MONTH',
       'ACCOUNT_SPACE_FREE',
       'ACCOUNT_INNOVATION_HUB',
       'ACCOUNT_VIRTUAL_CONTRIBUTOR',
@@ -84,6 +85,7 @@ describe('Functional tests - VC', () => {
     ].sort();
 
     const withoutCreateVs = [
+      'ACCOUNT_AI_ASSISTANT_TOKENS_MONTH',
       'ACCOUNT_INNOVATION_HUB',
       'ACCOUNT_INNOVATION_PACK',
       'ACCOUNT_SPACE_FREE',
@@ -92,7 +94,7 @@ describe('Functional tests - VC', () => {
     afterAll(async () => {
       await removePlatformRole(
         TestUserManager.users.nonSpaceMember.id,
-        RoleName.PlatformVcCampaign
+        RoleName.FeatureVcCampaign
       );
     });
 

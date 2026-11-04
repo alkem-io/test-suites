@@ -1,0 +1,3 @@
+mutation UpdateInnovationFlowStatesSortOrder($sortOrderData: UpdateInnovationFlowStatesSortOrderInput!) {
+  updateInnovationFlowStatesSortOrder(sortOrderData: $sortOrderData) { id }
+}

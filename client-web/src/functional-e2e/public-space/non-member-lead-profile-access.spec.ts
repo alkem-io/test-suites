@@ -4,14 +4,24 @@
 import {
   CommunityMembershipPolicy,
   SpacePrivacyMode,
-} from '@alkemio/client-lib/dist/generated/graphql';
+} from '@alkemio/tests-lib';
 import { TestUser } from '@alkemio/tests-lib/common/enums/test.user';
 import { TestScenarioConfig } from '@alkemio/tests-lib/scenario/config/test-scenario-config';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import { TestScenarioFactory } from '@alkemio/tests-lib/scenario/TestScenarioFactory';
-import { expect } from '@playwright/test';
+import { expect, Page } from '@playwright/test';
 import { createAuthenticatedSessionFixture } from '../fixtures/authenticated-session.fixture';
 import { TestUserManager } from '@alkemio/tests-lib';
+
+// The hard-coded community members grid was removed (feature 008 / story
+// client-web#9928); space leads now render in the "Space Leads" section of the
+// CRD space sidebar. Their profile links use absolute hrefs
+// (http://localhost:3000/user/<id>), so match on a substring.
+const firstLeadUserLink = (page: Page) =>
+  page
+    .getByRole('navigation', { name: 'Space sidebar' })
+    .locator('a[href*="/user/"]')
+    .first();
 
 const { test, setupAuthentication, teardownAuthentication } =
   createAuthenticatedSessionFixture({
@@ -74,14 +84,19 @@ test.describe('Space Lead Profile Access', () => {
     // Navigate to the Community tab
     await page.getByRole('tab', { name: 'community' }).click();
 
-    // Verify community tab loads
+    // Verify community tab loads (CRD shows the contributors heading instead
+    // of the MUI "Who's involved" heading)
     await expect(
-      page.getByRole('heading', { name: "Who's involved" })
+      page.getByText('The contributors to this Space!')
     ).toBeVisible();
 
-    // Verify Contact the Leads button is visible
+    // CRD renders the Space Leads section in the space sidebar
+    const sidebar = page.getByRole('navigation', { name: 'Space sidebar' });
+    await expect(sidebar.getByText('Space Leads')).toBeVisible();
+
+    // Verify Contact Leads button is visible (CRD renames "Contact the Leads")
     await expect(
-      page.getByRole('button', { name: 'Contact the Leads' })
+      sidebar.getByRole('button', { name: 'Contact Leads' })
     ).toBeVisible();
   });
 
@@ -95,14 +110,13 @@ test.describe('Space Lead Profile Access', () => {
     // Navigate to the Community tab
     await page.getByRole('tab', { name: 'community' }).click();
 
-    // Verify Who's involved section is visible
+    // Verify community contributors section is visible (CRD heading)
     await expect(
-      page.getByRole('heading', { name: "Who's involved" })
+      page.getByText('The contributors to this Space!')
     ).toBeVisible();
 
-    // Wait for user profile links to appear in Who's involved section
-    // Links are in format: /user/admin-alkemio, /user/space-admin, etc.
-    const userLink = page.locator('a[href^="/user/"]').first();
+    // Space leads render in the CRD space-sidebar "Space Leads" section.
+    const userLink = firstLeadUserLink(page);
 
     // Wait for the user link to be visible
     await expect(userLink).toBeVisible({ timeout: 60_000 });
@@ -129,11 +143,12 @@ test.describe('Space Lead Profile Access', () => {
 
     await communityTab.click();
 
-    // Wait for and click on the first user profile link
-    const userLink = page.locator('a[href^="/user/"]').first();
+    // Wait for and click on the first lead profile link in the CRD space
+    // sidebar (the community members grid was removed — feature 008).
+    const userLink = firstLeadUserLink(page);
 
     // Wait for the user link to be visible
-    await expect(userLink).toBeVisible({ timeout: 3000 });
+    await expect(userLink).toBeVisible({ timeout: 10_000 });
     await userLink.click();
 
     // Wait for profile page to load
@@ -142,14 +157,14 @@ test.describe('Space Lead Profile Access', () => {
     // Verify user profile page loaded
     await expect(page).toHaveURL(/.*\/user\/.*/);
 
-    // Verify profile avatar is displayed (MUI Avatar component)
-    await expect(page.locator('.MuiAvatar-root img').first()).toBeVisible({
+    // Verify profile avatar image is displayed
+    await expect(page.getByRole('img').first()).toBeVisible({
       timeout: 5_000,
     });
 
     // Verify user's display name or username is visible
     // Profile should show the user's name prominently
-    await expect(page.locator('h1, h2, h3').first()).toBeVisible({
+    await expect(page.getByRole('heading').first()).toBeVisible({
       timeout: 5_000,
     });
 

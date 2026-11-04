@@ -1,0 +1,5 @@
+mutation updateUserServiceProfile($userData: UpdateUserInput!) {
+  updateUser(userData: $userData) {
+    id
+  }
+}

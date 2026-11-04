@@ -1,0 +1,31 @@
+# One in-app notification read for every spec: filter and page size are
+# variables, the payload selection is the union of what the specs assert on.
+query ReadMyNotifications($filter: NotificationEventsFilterInput, $first: Int) {
+  me {
+    notifications(filter: $filter, first: $first) {
+      total
+      inAppNotifications {
+        id
+        type
+        state
+        triggeredBy { id }
+        payload {
+          __typename
+          type
+          ... on InAppNotificationPayloadSpaceCommunityInvitation {
+            organization { id profile { displayName } }
+            space { id nameID }
+            invitation { id }
+          }
+          ... on InAppNotificationPayloadSpaceCollaborationCallout {
+            callout { id framing { profile { url displayName } } }
+          }
+          ... on InAppNotificationPayloadOrganizationAssociateActor {
+            actor { id }
+            organization { id }
+          }
+        }
+      }
+    }
+  }
+}

@@ -9,23 +9,31 @@ import {
   TestScenarioPlatformDiscussionConfig,
 } from "./config/test-scenario-config";
 import { TestUserManager } from "./TestUserManager";
+import {
+  ensureSpaceMembers,
+  registerSpaceRoleSet,
+} from "./membership/space-membership";
 import { UserModel } from "./models/UserModel";
 import { OrganizationModel } from "./models/OrganizationModel";
 import { LogManager } from "./LogManager";
 import {
-  CalloutAllowedContributors,
+  CalloutAllowedActors,
   CalloutVisibility,
   RoleName,
 } from "../core/generated/alkemio-schema";
 import { TestUser } from "../common/enums/test.user";
 import { UniqueIDGenerator } from "../utils/uniqueId";
+import { graphqlErrorWrapper } from "../utils/graphql.wrapper";
+import { getGraphqlClient } from "../utils/graphqlClient";
+import { describeError, isEnvFailure } from "../utils/env-failure";
+import { delay } from "../utils/delay";
 import {
   assignPlatformRole,
   assignRoleToUser,
   assignLicensePlanToAccount,
   getLicensePlanByName,
   createCalloutOnCalloutsSet,
-  createOrganization,
+  createOrganizationOrAdopt,
   createSpaceBasicData,
   createSubspace,
   createWhiteboardCalloutOnCalloutsSet,
@@ -55,7 +63,7 @@ import { SearchVisibility } from "@alkemio/client-lib/dist/generated/graphql";
 
 export class TestScenarioFactory {
   public static async createBaseScenarioEmpty(
-    scenarioConfig: TestScenarioConfig
+    scenarioConfig: TestScenarioConfig,
   ) {
     await TestUserManager.populateUserModelMap();
     await this.populateGlobalRoles();
@@ -64,15 +72,68 @@ export class TestScenarioFactory {
   }
 
   public static async createBaseScenario(
-    scenarioConfig: TestScenarioConfig
+    scenarioConfig: TestScenarioConfig,
   ): Promise<OrganizationWithSpaceModel> {
-    const result = await this.createBaseScenarioPrivate(scenarioConfig);
-    // logElapsedTime('createBaseScenario', start);
-    return result;
+    return this.withEnvFailureRetry(
+      () => this.createBaseScenarioPrivate(scenarioConfig),
+      `base scenario '${scenarioConfig.name}'`,
+    );
+  }
+
+  // Env-failure signatures + backoff for core scenario setup (test-suites#563).
+  private static readonly SETUP_MAX_ATTEMPTS = 2; // one retry
+  private static readonly SETUP_RETRY_BASE_MS = 3000;
+
+  /**
+   * Retries core scenario setup ONLY on environment failures (Matrix/RPC
+   * timeout, auth endpoint mid-roll, connection reset) — never on a product
+   * error, because setup makes no assertions, so any failure here is either
+   * infra flake (retry) or a genuine setup bug (surface it). A transient
+   * Synapse/adapter blip or a brief pod roll then recovers on the retry instead
+   * of failing the whole suite. If it still fails and the cause is
+   * environmental, the error is tagged `[ENV_FAILURE]` so the report shows it
+   * as environment noise, not a product regression.
+   */
+  private static async withEnvFailureRetry<T>(
+    fn: () => Promise<T>,
+    label: string,
+  ): Promise<T> {
+    let lastError: unknown;
+    for (let attempt = 1; attempt <= this.SETUP_MAX_ATTEMPTS; attempt++) {
+      try {
+        return await fn();
+      } catch (e) {
+        lastError = e;
+        if (isEnvFailure(e) && attempt < this.SETUP_MAX_ATTEMPTS) {
+          const wait = this.SETUP_RETRY_BASE_MS * attempt;
+          LogManager.getLogger().warn(
+            `[ENV_FAILURE] setup of ${label} failed (attempt ${attempt}/${this.SETUP_MAX_ATTEMPTS}); retrying in ${wait}ms — ${describeError(e)}`,
+          );
+          await delay(wait);
+          continue;
+        }
+        break;
+      }
+    }
+    if (isEnvFailure(lastError)) {
+      throw new Error(
+        `[ENV_FAILURE] setup of ${label} failed after ${this.SETUP_MAX_ATTEMPTS} attempt(s) — environment, not product: ${describeError(lastError)}`,
+      );
+    }
+    throw lastError;
   }
 
   public static async createBaseScenarioOrganization(
-    scenarioConfig: TestScenarioConfig
+    scenarioConfig: TestScenarioConfig,
+  ): Promise<OrganizationWithSpaceModel> {
+    return this.withEnvFailureRetry(
+      () => this.createBaseScenarioOrganizationPrivate(scenarioConfig),
+      `organization scenario '${scenarioConfig.name}'`,
+    );
+  }
+
+  private static async createBaseScenarioOrganizationPrivate(
+    scenarioConfig: TestScenarioConfig,
   ): Promise<OrganizationWithSpaceModel> {
     const baseScenario: OrganizationWithSpaceModel =
       this.createEmptyBaseScenario();
@@ -84,21 +145,24 @@ export class TestScenarioFactory {
       await this.createOrganization(
         baseScenario.name,
         baseScenario.organization,
-        scenarioConfig.organization
+        scenarioConfig.organization,
       );
       baseScenario.scenarioSetupSucceeded = true;
     } catch (e) {
       LogManager.getLogger().error(
-        `Unable to create organization scenario setup: ${e}`
+        `Unable to create organization scenario setup: ${e}`,
       );
-      process.exit(1);
+      // Throw (not process.exit): an exit kills the whole vitest worker,
+      // converting one transient failure into a silent mass-skip and hiding
+      // the root cause. A throw fails only this suite, with the cause attached.
+      throw new Error(`Unable to create organization scenario setup: ${e}`);
     }
 
     return baseScenario;
   }
 
   private static async createBaseScenarioPrivate(
-    scenarioConfig: TestScenarioConfig
+    scenarioConfig: TestScenarioConfig,
   ): Promise<OrganizationWithSpaceModel> {
     const baseScenario: OrganizationWithSpaceModel =
       this.createEmptyBaseScenario();
@@ -119,7 +183,7 @@ export class TestScenarioFactory {
       await this.createOrganization(
         baseScenario.name,
         baseScenario.organization,
-        organization
+        organization,
       );
       baseScenario.scenarioSetupSucceeded = true;
 
@@ -149,7 +213,10 @@ export class TestScenarioFactory {
         baseScenario.space,
         baseScenario.organization.accountId,
         baseScenario.name,
-        space.collaboration?.addTutorialCallouts ?? true
+        // Default OFF: tutorial callouts add one Matrix round-trip per
+        // callout to space creation (slow + proxy-timeout prone) and no suite
+        // asserts their content — opt in via collaboration.addTutorialCallouts.
+        space.collaboration?.addTutorialCallouts ?? false,
       );
 
       await this.populateSpace(space, baseScenario.space, baseScenario.name);
@@ -164,12 +231,12 @@ export class TestScenarioFactory {
         baseScenario.space.id,
         "l1-" + baseScenario.name,
         baseScenario.subspace,
-        subspace
+        subspace,
       );
       await this.populateSpace(
         subspace,
         baseScenario.subspace,
-        "l1-" + baseScenario.name
+        "l1-" + baseScenario.name,
       );
 
       const subsubspace = subspace.subspace;
@@ -182,19 +249,22 @@ export class TestScenarioFactory {
         baseScenario.subspace.id,
         "l2-" + baseScenario.name,
         baseScenario.subsubspace,
-        subsubspace
+        subsubspace,
       );
       await this.populateSpace(
         subsubspace,
         baseScenario.subsubspace,
-        "l2-" + baseScenario.name
+        "l2-" + baseScenario.name,
       );
-    } catch (e) {
+    } catch (e: any) {
       LogManager.getLogger().error(
-        `Unable to create core scenario setup: ${e}`
+        `Unable to create core scenario setup: ${e}`,
+        e?.stack,
       );
-      process.exit(1); // Exit the Jest process with an error code.
-      //throw new Error(`Unable to create core scenario setup: ${e}`);
+      // Throw (not process.exit): an exit kills the whole vitest worker,
+      // converting one transient failure into a silent mass-skip and hiding
+      // the root cause. A throw fails only this suite, with the cause attached.
+      throw new Error(`Unable to create core scenario setup: ${e}`);
     }
 
     return baseScenario;
@@ -202,7 +272,7 @@ export class TestScenarioFactory {
 
   private static async setupInnovationPack(
     config: TestScenarioInnovationPackConfig,
-    baseScenario: OrganizationWithSpaceModel
+    baseScenario: OrganizationWithSpaceModel,
   ): Promise<void> {
     try {
       const uniqueId = UniqueIDGenerator.getID();
@@ -232,7 +302,7 @@ export class TestScenarioFactory {
         await this.createOrganization(
           providerOrgModel.profile.displayName,
           providerOrgModel,
-          config.providerOrganization
+          config.providerOrganization,
         );
       }
 
@@ -247,7 +317,7 @@ export class TestScenarioFactory {
         packDisplayName,
         packNameId,
         undefined,
-        { tags: config.pack?.tags }
+        { tags: config.pack?.tags },
       );
 
       const packId = packRes.data?.createInnovationPack?.id || "";
@@ -294,8 +364,8 @@ export class TestScenarioFactory {
           if ("postDefaultDescription" in t && t.postDefaultDescription) {
             templateOptions.postDefaultDescription = t.postDefaultDescription;
           }
-          if ("whiteboardContent" in t && t.whiteboardContent) {
-            templateOptions.whiteboardContent = t.whiteboardContent;
+          if ("sourceWhiteboardID" in t && t.sourceWhiteboardID) {
+            templateOptions.sourceWhiteboardID = t.sourceWhiteboardID;
           }
           // Add callout-specific fields if present
           if ("calloutFramingType" in t && t.calloutFramingType) {
@@ -334,18 +404,21 @@ export class TestScenarioFactory {
       }
     } catch (e) {
       LogManager.getLogger().error(
-        `Unable to create innovation pack setup: ${e}`
+        `Unable to create innovation pack setup: ${e}`,
       );
-      process.exit(1);
+      // Throw (not process.exit): an exit kills the whole vitest worker,
+      // converting one transient failure into a silent mass-skip and hiding
+      // the root cause. A throw fails only this suite, with the cause attached.
+      throw new Error(`Unable to create innovation pack setup: ${e}`);
     }
   }
 
   private static async setupVirtualContributors(
     config: TestScenarioVirtualContributorsConfig,
-    baseScenario: OrganizationWithSpaceModel
+    baseScenario: OrganizationWithSpaceModel,
   ): Promise<void> {
     try {
-      const { createVirtualContributor } = await import("./baseFunctions");
+      const { createVirtualContributor } = await import("./baseFunctions.js");
 
       if (
         !config.virtualContributors ||
@@ -380,7 +453,7 @@ export class TestScenarioFactory {
         await this.createOrganization(
           hostOrgModel.profile.displayName,
           hostOrgModel,
-          config.hostOrganization
+          config.hostOrganization,
         );
         baseScenario.virtualContributorsHostOrganizationId = hostOrgModel.id;
       }
@@ -395,14 +468,14 @@ export class TestScenarioFactory {
       for (const vc of config.virtualContributors) {
         const result = await createVirtualContributor(
           hostOrgModel.accountId,
-          vc
+          vc,
         );
 
         if (!result.data?.createVirtualContributor) {
           LogManager.getLogger().warn(
             `Failed to create virtual contributor: ${JSON.stringify(
-              result.error
-            )}`
+              result.error,
+            )}`,
           );
           continue;
         }
@@ -431,22 +504,25 @@ export class TestScenarioFactory {
         }
 
         LogManager.getLogger().info(
-          `Created Virtual Contributor: ${vc.nameID || vc.profileDisplayName}`
+          `Created Virtual Contributor: ${vc.nameID || vc.profileDisplayName}`,
         );
       }
 
       baseScenario.virtualContributors = createdVCs;
     } catch (e) {
       LogManager.getLogger().error(
-        `Unable to create virtual contributors setup: ${e}`
+        `Unable to create virtual contributors setup: ${e}`,
       );
-      process.exit(1);
+      // Throw (not process.exit): an exit kills the whole vitest worker,
+      // converting one transient failure into a silent mass-skip and hiding
+      // the root cause. A throw fails only this suite, with the cause attached.
+      throw new Error(`Unable to create virtual contributors setup: ${e}`);
     }
   }
 
   private static async setupPlatformDiscussion(
     config: TestScenarioPlatformDiscussionConfig,
-    baseScenario: OrganizationWithSpaceModel
+    baseScenario: OrganizationWithSpaceModel,
   ): Promise<void> {
     try {
       let resolvedForumId =
@@ -461,19 +537,26 @@ export class TestScenarioFactory {
 
       if (!resolvedForumId) {
         LogManager.getLogger().warn(
-          "Skipping platform discussion creation: forum ID not provided, no env fallback, and platform forum lookup failed"
+          "Skipping platform discussion creation: forum ID not provided, no env fallback, and platform forum lookup failed",
         );
         return;
       }
 
+      // NEWSLETTER and TIPS_AND_TRICKS (060 forum category reorganisation)
+      // are not yet in the checked-in @alkemio/client-lib generated enum, but
+      // GraphQL enums travel by wire name, so a plain string cast round-trips
+      // correctly against a server that has them. See the identical pattern
+      // in `communications/forum-discussions/platform-discussions.it-spec.ts`.
       const categoryMap: Record<string, ForumDiscussionCategory> = {
         CHALLENGE_CENTRIC: ForumDiscussionCategory.ChallengeCentric,
         COMMUNITY_BUILDING: ForumDiscussionCategory.CommunityBuilding,
         HELP: ForumDiscussionCategory.Help,
+        NEWSLETTER: "NEWSLETTER" as ForumDiscussionCategory,
         OTHER: ForumDiscussionCategory.Other,
         PLATFORM_FUNCTIONALITIES:
           ForumDiscussionCategory.PlatformFunctionalities,
         RELEASES: ForumDiscussionCategory.Releases,
+        TIPS_AND_TRICKS: "TIPS_AND_TRICKS" as ForumDiscussionCategory,
       };
 
       const discussionRes = await createPlatformDiscussion(
@@ -481,11 +564,15 @@ export class TestScenarioFactory {
         {
           title: config.title,
           description: config.description,
+          // HELP is one of the four permanent target categories (060); the
+          // legacy default PLATFORM_FUNCTIONALITIES is a retirement
+          // candidate and must not be the harness's silent fallback
+          // (test-suites qa/forum-test-plan U-4).
           category: config.category
             ? categoryMap[config.category]
-            : ForumDiscussionCategory.PlatformFunctionalities,
+            : ForumDiscussionCategory.Help,
         },
-        config.userRole
+        config.userRole,
       );
 
       const discussionId = discussionRes.data?.createDiscussion?.id || "";
@@ -493,43 +580,53 @@ export class TestScenarioFactory {
       baseScenario.platformDiscussionId = discussionId;
     } catch (e) {
       LogManager.getLogger().error(
-        `Unable to create platform discussion setup: ${e}`
+        `Unable to create platform discussion setup: ${e}`,
       );
-      process.exit(1);
+      // Throw (not process.exit): an exit kills the whole vitest worker,
+      // converting one transient failure into a silent mass-skip and hiding
+      // the root cause. A throw fails only this suite, with the cause attached.
+      throw new Error(`Unable to create platform discussion setup: ${e}`);
     }
   }
 
+  /**
+   * workspace#027 Slice B: the three shared personas hold the TARGET roles that
+   * replaced their legacy twins (`global-license-manager` → Platform License
+   * Manager, `global-support` → Platform Support, `platform-beta-tester` →
+   * Feature Beta Tester). The persona names are kept — renaming `global.support`
+   * would touch every spec that names it — but what they reach is now exactly
+   * what the single-purpose role reaches, nothing inherited from the old model.
+   */
   private static async populateGlobalRoles(): Promise<void> {
     await this.checkAndAssignRoleNameToUser(
       TestUserManager.users.globalLicenseAdmin,
-      RoleName.GlobalLicenseManager
+      RoleName.PlatformLicenseManager,
     );
 
     await this.checkAndAssignRoleNameToUser(
       TestUserManager.users.globalSupportAdmin,
-      RoleName.GlobalSupport
+      RoleName.PlatformSupport,
     );
 
     await this.checkAndAssignRoleNameToUser(
       TestUserManager.users.betaTester,
-      RoleName.PlatformBetaTester
+      RoleName.FeatureBetaTester,
     );
   }
 
   private static async checkAndAssignRoleNameToUser(
     userModel: UserModel,
-    role: RoleName
+    role: RoleName,
   ): Promise<void> {
     const alreadyHasRole = userModel.RoleNames.includes(role);
     if (!alreadyHasRole) {
       if (userModel.id.length === 0) {
         // Missing user ID, cannot assign role
         LogManager.getLogger().error(
-          `User ID is missing for ${userModel.type}, cannot assign role ${role}`
+          `User ID is missing for ${userModel.type}, cannot assign role ${role}`,
         );
         throw new Error(
-          process.exit(1) // Exit the Jest process with an error code.
-          //`User ID is missing for ${userModel.type}, cannot assign role ${role}`
+          `User ID is missing for ${userModel.type}, cannot assign role ${role}`,
         );
       }
       await assignPlatformRole(userModel.id, role);
@@ -537,7 +634,7 @@ export class TestScenarioFactory {
   }
 
   public static async cleanUpBaseScenario(
-    baseScenario: OrganizationWithSpaceModel
+    baseScenario: OrganizationWithSpaceModel,
   ): Promise<void> {
     try {
       // Delete platform discussion if created
@@ -576,7 +673,7 @@ export class TestScenarioFactory {
           baseScenario.organization.id
       ) {
         await deleteOrganization(
-          baseScenario.virtualContributorsHostOrganizationId
+          baseScenario.virtualContributorsHostOrganizationId,
         );
       }
 
@@ -587,7 +684,7 @@ export class TestScenarioFactory {
           baseScenario.organization.id
       ) {
         await deleteOrganization(
-          baseScenario.innovationPack.providerOrganizationId
+          baseScenario.innovationPack.providerOrganizationId,
         );
       }
       if (
@@ -598,22 +695,54 @@ export class TestScenarioFactory {
       }
     } catch (e) {
       LogManager.getLogger().error(
-        `Unable to tear down core scenario setup for '${baseScenario.name}: ${e}`
+        `Unable to tear down core scenario setup for '${baseScenario.name}: ${e}`,
       );
-      throw new Error(
-        process.exit(1) // Exit the Jest process with an error code.
-        //`Unable to tear down core scenario setup for '${baseScenario.name}: ${e}`
-      );
+      // Log-and-continue: a teardown failure must neither kill the worker
+      // (process.exit) nor replace the in-flight test error (throw) — the
+      // test outcome is the signal; leaked fixtures are logged above.
     }
   }
 
   private static async populateSpace(
     spaceConfig: TestScenarioSpaceConfig,
     spaceModel: SpaceModel,
-    scenarioName: string
+    scenarioName: string,
   ): Promise<SpaceModel> {
     const roleSetID = spaceModel.community.roleSetId;
     const spaceCommunityConfig = spaceConfig.community;
+    // Slice B: seed the community FIRST, while the fresh space still has the
+    // server's default OPEN membership policy — members join themselves, so no
+    // policy toggle is ever needed here — and apply the configured settings
+    // (privacy, membership policy, collaboration) afterwards.
+    if (spaceCommunityConfig) {
+      if (spaceCommunityConfig.members) {
+        // Slice B: members JOIN as themselves, in parallel (see
+        // `ensureSpaceMembers`) — the harness admin can no longer add them.
+        await ensureSpaceMembers(
+          roleSetID,
+          spaceCommunityConfig.members.map(
+            (userName) => TestUserManager.getUserModelByType(userName).id,
+          ),
+          spaceModel.id,
+        );
+      }
+      if (spaceCommunityConfig.admins) {
+        await this.assignUsersByTypeToRole(
+          spaceCommunityConfig.admins,
+          RoleName.Admin,
+          roleSetID,
+        );
+      }
+
+      if (spaceCommunityConfig.leads) {
+        await this.assignUsersByTypeToRole(
+          spaceCommunityConfig.leads,
+          RoleName.Lead,
+          roleSetID,
+        );
+      }
+    }
+
     if (spaceConfig.settings) {
       if (spaceConfig.settings.privacy) {
         await updateSpaceSettings(spaceModel.id, {
@@ -629,7 +758,8 @@ export class TestScenarioFactory {
           membership: {
             policy: spaceConfig.settings.membership.policy,
             allowSubspaceAdminsToInviteMembers:
-              spaceConfig.settings.membership.allowSubspaceAdminsToInviteMembers,
+              spaceConfig.settings.membership
+                .allowSubspaceAdminsToInviteMembers,
             trustedOrganizations:
               spaceConfig.settings.membership.trustedOrganizations,
           },
@@ -654,30 +784,6 @@ export class TestScenarioFactory {
         });
       }
     }
-    if (spaceCommunityConfig) {
-      if (spaceCommunityConfig.members) {
-        await this.assignUsersByTypeToRole(
-          spaceCommunityConfig.members,
-          RoleName.Member,
-          roleSetID
-        );
-      }
-      if (spaceCommunityConfig.admins) {
-        await this.assignUsersByTypeToRole(
-          spaceCommunityConfig.admins,
-          RoleName.Admin,
-          roleSetID
-        );
-      }
-
-      if (spaceCommunityConfig.leads) {
-        await this.assignUsersByTypeToRole(
-          spaceCommunityConfig.leads,
-          RoleName.Lead,
-          roleSetID
-        );
-      }
-    }
     const spaceCollaborationConfig = spaceConfig.collaboration;
     if (spaceCollaborationConfig) {
       if (spaceCollaborationConfig.addPostCallout) {
@@ -690,7 +796,10 @@ export class TestScenarioFactory {
         await this.createLinkCollectionCalloutOnSpace(spaceModel, scenarioName);
       }
       if (spaceCollaborationConfig.addWhiteboardCollectionCallout) {
-        await this.createWhiteboardCollectionCalloutOnSpace(spaceModel, scenarioName);
+        await this.createWhiteboardCollectionCalloutOnSpace(
+          spaceModel,
+          scenarioName,
+        );
       }
       if (spaceCollaborationConfig.addWhiteboardCallout) {
         await this.createWhiteboardCalloutOnSpace(spaceModel, scenarioName);
@@ -702,7 +811,7 @@ export class TestScenarioFactory {
   private static async assignUsersByTypeToRole(
     userTypes: TestUser[],
     role: RoleName,
-    roleSetID: string
+    roleSetID: string,
   ): Promise<void> {
     const usersIdsToAssign: string[] = [];
     for (const userName of userTypes) {
@@ -717,7 +826,7 @@ export class TestScenarioFactory {
   private static async createOrganization(
     scenarioName: string,
     model: OrganizationModel,
-    orgConfig?: TestScenarioOrganizationConfig
+    orgConfig?: TestScenarioOrganizationConfig,
   ): Promise<OrganizationModel> {
     const uniqueId = UniqueIDGenerator.getID();
     const truncatedScenarioName = scenarioName.slice(0, 18);
@@ -725,10 +834,10 @@ export class TestScenarioFactory {
     const orgNameId = this.validateAndClean(`${orgName}`);
     if (!orgNameId) {
       throw new Error(
-        `Unable to create organization: Invalid hostNameId: ${orgNameId}`
+        `Unable to create organization: Invalid hostNameId: ${orgNameId}`,
       );
     }
-    const responseOrg = await createOrganization(
+    const responseOrg = await createOrganizationOrAdopt(
       orgName,
       orgNameId.toLowerCase().slice(0, 24),
       undefined,
@@ -736,12 +845,12 @@ export class TestScenarioFactory {
       undefined,
       undefined,
       undefined,
-      { tags: orgConfig?.tags }
+      { tags: orgConfig?.tags },
     );
 
     if (!responseOrg.data?.createOrganization) {
       throw new Error(
-        `Failed to create organization: ${JSON.stringify(responseOrg.error)}`
+        `Failed to create organization: ${JSON.stringify(responseOrg.error)}`,
       );
     }
 
@@ -750,41 +859,52 @@ export class TestScenarioFactory {
     model.id = orgResponseData.id ?? "";
     model.nameId = orgResponseData.nameID ?? "";
     model.roleSetId = orgResponseData.roleSet.id ?? "";
-    model.agentId = orgResponseData.agent.id ?? "";
+    model.agentId = orgResponseData.actor?.id ?? "";
     model.accountId = orgResponseData.account?.id ?? "";
     model.verificationId = orgResponseData.verification.id ?? "";
     model.profile = {
-      id: orgResponseData.profile.id ?? "",
-      displayName: orgResponseData.profile.displayName ?? "",
-      tagline: orgResponseData.profile.tagline ?? "",
+      id: orgResponseData.profile?.id ?? "",
+      displayName: orgResponseData.profile?.displayName ?? "",
+      tagline: orgResponseData.profile?.tagline ?? "",
     };
 
     if (orgConfig?.verification?.setVerified && model.verificationId) {
       const events = orgConfig.verification.events
         ? orgConfig.verification.events
         : orgConfig.verification.eventName
-        ? [orgConfig.verification.eventName]
-        : ["VERIFICATION_REQUEST", "MANUALLY_VERIFY"];
+          ? [orgConfig.verification.eventName]
+          : ["VERIFICATION_REQUEST", "MANUALLY_VERIFY"];
 
       await applyOrganizationVerificationSequence(model.verificationId, events);
     }
 
     const licensePlan = await getLicensePlanByName("ACCOUNT_LICENSE_PLUS");
-    if (licensePlan && licensePlan.length > 0) {
+    if (!licensePlan || licensePlan.length === 0) {
+      // Without this plan, accounts get `account-space-free: 0` and every
+      // subsequent createSpace is denied. Surface it rather than silently
+      // proceeding to a masked "Space ID is required" later (test-suites#563).
+      LogManager.getLogger().warn(
+        "[license] ACCOUNT_LICENSE_PLUS plan not found — accounts will lack the free-space entitlement and space creation will be denied",
+      );
+    } else {
       const licensePlanId = licensePlan[0].id;
-      if (model.accountId) {
-        await assignLicensePlanToAccount(model.accountId, licensePlanId);
-      }
-
-      const adminUser = TestUserManager.users.globalAdmin;
-      if (adminUser && adminUser.accountId) {
-        await assignLicensePlanToAccount(adminUser.accountId, licensePlanId);
-      }
-
-      const spaceAdmin = TestUserManager.users.spaceAdmin;
-      if (spaceAdmin && spaceAdmin.accountId) {
-        await assignLicensePlanToAccount(spaceAdmin.accountId, licensePlanId);
-      }
+      // Assign the free-space entitlement, and surface any failure — a swallowed
+      // assignment error is the upstream cause of the entitlement-denied cascade.
+      const assignPlan = async (label: string, accountId?: string) => {
+        if (!accountId) return;
+        const res = await assignLicensePlanToAccount(accountId, licensePlanId);
+        if (res?.error) {
+          LogManager.getLogger().warn(
+            `[license] failed to assign ACCOUNT_LICENSE_PLUS to ${label} account '${accountId}': ${JSON.stringify(res.error.errors)}`,
+          );
+        }
+      };
+      await assignPlan("organization", model.accountId);
+      await assignPlan(
+        "globalAdmin",
+        TestUserManager.users.globalAdmin?.accountId,
+      );
+      await assignPlan("spaceAdmin", TestUserManager.users.spaceAdmin?.accountId);
     }
 
     // Assign the organization admin user to the organization's roleSet as Member and Admin
@@ -793,13 +913,13 @@ export class TestScenarioFactory {
       await assignRoleToUser(
         organizationAdmin.id,
         model.roleSetId,
-        RoleName.Associate
+        RoleName.Associate,
       );
 
       await assignRoleToUser(
         organizationAdmin.id,
         model.roleSetId,
-        RoleName.Admin
+        RoleName.Admin,
       );
     }
 
@@ -820,32 +940,76 @@ export class TestScenarioFactory {
     spaceModel: SpaceModel,
     accountID: string,
     scenarioName: string,
-    addTutorialCallouts: boolean
+    addTutorialCallouts: boolean,
   ): Promise<SpaceModel> {
-    const uniqueId = UniqueIDGenerator.getID();
     const truncatedScenarioName = scenarioName.slice(0, 18);
-    const spaceName = `${truncatedScenarioName}-${uniqueId}`;
-    const spaceNameId = this.validateAndClean(`${spaceName.toLowerCase()}`);
-    if (!spaceNameId) {
-      throw new Error(`Unable to create space: Invalid nameId: ${spaceNameId}`);
+
+    // Create the root space, retrying a nameID collision with a fresh id.
+    // Under Vitest `pool: threads` the per-process UniqueIDGenerator counter can
+    // reset across files, so two files whose scenario names share the
+    // truncated-18 prefix (e.g. several `storage-auth-public…` scenarios) can
+    // draw the same short id and collide (test-suites#563). Any other failure is
+    // surfaced verbatim rather than masked (test-suites#577).
+    type CreateAttempt = {
+      spaceName: string;
+      res: Awaited<ReturnType<typeof TestScenarioFactory.createSpaceAndGetData>>;
+    };
+
+    // createSpaceAndGetData throws on a failed create (its de-masking throw,
+    // test-suites#577) with the GraphQL error detail in the message — so the
+    // collision arrives as a thrown Error, not as `res.error`. A collision has
+    // two causes, handled in order:
+    //   1. `graphqlErrorWrapper` retried the create after a connection-level
+    //      failure although the server had already committed it — the space
+    //      under that nameID is OURS. Adopt it (read it back by nameID) rather
+    //      than creating a twin that no teardown knows about.
+    //   2. A genuine clash with foreign data — retry with a fresh id.
+    // Anything else is rethrown verbatim.
+    let attempt: CreateAttempt | undefined;
+    for (let i = 0; i < 3; i++) {
+      let spaceName = "";
+      try {
+        const uniqueId = UniqueIDGenerator.getID();
+        spaceName = `${truncatedScenarioName}-${uniqueId}`;
+        const spaceNameId = this.validateAndClean(spaceName.toLowerCase());
+        if (!spaceNameId) {
+          throw new Error(
+            `Unable to create space: Invalid nameId: ${spaceNameId}`,
+          );
+        }
+        const res = await this.createSpaceAndGetData(
+          "l0-" + spaceName,
+          spaceNameId,
+          accountID,
+          addTutorialCallouts,
+        );
+        attempt = { spaceName, res };
+        break;
+      } catch (e) {
+        const message = e instanceof Error ? e.message : String(e);
+        if (!message.includes("already taken or restricted")) {
+          throw e;
+        }
+        const adopted = await this.adoptSpaceByNameId(spaceName, accountID);
+        if (adopted) {
+          attempt = { spaceName, res: adopted };
+          break;
+        }
+        if (i === 2) {
+          throw e;
+        }
+      }
     }
 
-    const responseRootSpace = await this.createSpaceAndGetData(
-      "l0-" + spaceName,
-      spaceNameId,
-      accountID,
-      addTutorialCallouts
-    );
-
-    if (!responseRootSpace.data?.lookup?.space) {
+    if (!attempt || !attempt.res.data?.lookup?.space) {
       throw new Error(
-        `Failed to create root space: ${JSON.stringify(
-          responseRootSpace.error
-        )}`
+        `Failed to create root space '${attempt?.spaceName ?? truncatedScenarioName}' (account '${accountID}'): ${JSON.stringify(
+          attempt?.res.error ?? {},
+        )}`,
       );
     }
 
-    const spaceData = responseRootSpace.data?.lookup?.space;
+    const spaceData = attempt.res.data.lookup.space;
     spaceModel.id = spaceData?.id ?? "";
     spaceModel.nameId = spaceData?.nameID ?? "";
     spaceModel.about = {
@@ -863,6 +1027,7 @@ export class TestScenarioFactory {
       spaceData?.collaboration.calloutsSet?.id ?? "";
     spaceModel.community.id = spaceData?.community?.id ?? "";
     spaceModel.community.roleSetId = spaceData?.community?.roleSet?.id ?? "";
+    registerSpaceRoleSet(spaceModel.community.roleSetId, spaceModel.id);
     spaceModel.templateSetId =
       spaceData?.templatesManager?.templatesSet?.id ?? "";
 
@@ -871,7 +1036,7 @@ export class TestScenarioFactory {
 
   private static async createPostCalloutOnSpace(
     spaceModel: SpaceModel,
-    scenarioName: string
+    scenarioName: string,
   ): Promise<SpaceModel> {
     const displayName = `${scenarioName} - post`;
     const createPostCallout = await createCalloutOnCalloutsSet(
@@ -884,13 +1049,13 @@ export class TestScenarioFactory {
           framing: { commentsEnabled: true },
           contribution: {
             allowedTypes: [CalloutContributionType.Link],
-            canAddContributions: CalloutAllowedContributors.Members,
+            canAddContributions: CalloutAllowedActors.Members,
             enabled: true,
             commentsEnabled: true,
           },
           visibility: CalloutVisibility.Published,
         },
-      }
+      },
     );
 
     const postCalloutData = createPostCallout.data?.createCalloutOnCalloutsSet;
@@ -905,7 +1070,7 @@ export class TestScenarioFactory {
 
   private static async createPostCollectionCalloutOnSpace(
     spaceModel: SpaceModel,
-    scenarioName: string
+    scenarioName: string,
   ): Promise<SpaceModel> {
     const displayName = `postCollectionCallout-${scenarioName}`;
     const callForPostCalloutData = await createCalloutOnCalloutsSet(
@@ -921,13 +1086,13 @@ export class TestScenarioFactory {
           //framing: { commentsEnabled: true },
           contribution: {
             allowedTypes: [CalloutContributionType.Post],
-            canAddContributions: CalloutAllowedContributors.Members,
+            canAddContributions: CalloutAllowedActors.Members,
             enabled: true,
             commentsEnabled: true,
           },
           visibility: CalloutVisibility.Published,
         },
-      }
+      },
     );
 
     spaceModel.collaboration.calloutPostCollectionId =
@@ -939,7 +1104,7 @@ export class TestScenarioFactory {
 
   private static async createLinkCollectionCalloutOnSpace(
     spaceModel: SpaceModel,
-    scenarioName: string
+    scenarioName: string,
   ): Promise<SpaceModel> {
     const displayName = `linkCollectionCallout-${scenarioName}`;
     const linkCollectionCalloutData = await createCalloutOnCalloutsSet(
@@ -954,13 +1119,13 @@ export class TestScenarioFactory {
         settings: {
           contribution: {
             allowedTypes: [CalloutContributionType.Link],
-            canAddContributions: CalloutAllowedContributors.Members,
+            canAddContributions: CalloutAllowedActors.Members,
             enabled: true,
             commentsEnabled: true,
           },
           visibility: CalloutVisibility.Published,
         },
-      }
+      },
     );
 
     spaceModel.collaboration.calloutLinkCollectionId =
@@ -972,41 +1137,44 @@ export class TestScenarioFactory {
 
   private static async createWhiteboardCollectionCalloutOnSpace(
     spaceModel: SpaceModel,
-    scenarioName: string
+    scenarioName: string,
   ): Promise<SpaceModel> {
     const displayName = `whiteboardCollectionCallout-${scenarioName}`;
-    const whiteboardCollectionCalloutData = await createWhiteboardCalloutOnCalloutsSet(
-      spaceModel.collaboration.calloutsSetId,
-      {
-        framing: {
-          profile: {
-            displayName,
-            description: `${displayName} - created as part of scenario setup for tests`,
+    const whiteboardCollectionCalloutData =
+      await createWhiteboardCalloutOnCalloutsSet(
+        spaceModel.collaboration.calloutsSetId,
+        {
+          framing: {
+            profile: {
+              displayName,
+              description: `${displayName} - created as part of scenario setup for tests`,
+            },
+          },
+          settings: {
+            contribution: {
+              allowedTypes: [CalloutContributionType.Whiteboard],
+              canAddContributions: CalloutAllowedActors.Members,
+              enabled: true,
+              commentsEnabled: true,
+            },
+            visibility: CalloutVisibility.Published,
           },
         },
-        settings: {
-          contribution: {
-            allowedTypes: [CalloutContributionType.Whiteboard],
-            canAddContributions: CalloutAllowedContributors.Members,
-            enabled: true,
-            commentsEnabled: true,
-          },
-          visibility: CalloutVisibility.Published,
-        },
-      },
-      TestUser.GLOBAL_ADMIN
-    );
+        TestUser.GLOBAL_ADMIN,
+      );
 
     spaceModel.collaboration.calloutWhiteboardCollectionId =
-      whiteboardCollectionCalloutData?.data?.createCalloutOnCalloutsSet?.id ?? "";
-    spaceModel.collaboration.calloutWhiteboardCollectionDisplayName = displayName;
+      whiteboardCollectionCalloutData?.data?.createCalloutOnCalloutsSet?.id ??
+      "";
+    spaceModel.collaboration.calloutWhiteboardCollectionDisplayName =
+      displayName;
 
     return spaceModel;
   }
 
   private static async createWhiteboardCalloutOnSpace(
     spaceModel: SpaceModel,
-    scenarioName: string
+    scenarioName: string,
   ): Promise<SpaceModel> {
     const displayName = `${scenarioName} - whiteboard callout`;
     const whiteboardCalloutData = await createWhiteboardCalloutOnCalloutsSet(
@@ -1025,7 +1193,7 @@ export class TestScenarioFactory {
           visibility: CalloutVisibility.Published,
         },
       },
-      TestUser.GLOBAL_ADMIN
+      TestUser.GLOBAL_ADMIN,
     );
 
     spaceModel.collaboration.calloutWhiteboardId =
@@ -1039,7 +1207,7 @@ export class TestScenarioFactory {
     parentSpaceID: string,
     subspaceName: string,
     targetModel: SpaceModel,
-    config?: TestScenarioSpaceConfig
+    config?: TestScenarioSpaceConfig,
   ): Promise<SpaceModel> {
     const uniqueId = UniqueIDGenerator.getID();
     const displayName = config?.about?.profile?.displayName ?? subspaceName;
@@ -1049,15 +1217,31 @@ export class TestScenarioFactory {
       `l1nameid${uniqueId}`,
       parentSpaceID,
       TestUser.GLOBAL_ADMIN,
-      tagline
+      tagline,
+      // Honour the per-subspace config (previously the config value was
+      // silently ignored — subspaces were hardcoded OFF with no opt-in path).
+      config?.collaboration?.addTutorialCallouts ?? false,
     );
 
     const subspaceData = responseSubspace.data?.createSubspace;
+    if (!subspaceData) {
+      // Surface the GraphQL error instead of handing back an empty model: an
+      // empty role-set id used to fail only later, as a silent role assignment
+      // (test-suites, 2026-10-07, while moving membership to self-join).
+      throw new Error(
+        `Failed to create subspace '${displayName}' under ${parentSpaceID}: ${JSON.stringify(responseSubspace.error ?? responseSubspace).slice(0, 400)}`,
+      );
+    }
     targetModel.id = subspaceData?.id ?? "";
     targetModel.nameId = subspaceData?.nameID ?? "";
     targetModel.community.id = subspaceData?.community?.id ?? "";
     targetModel.community.roleSetId =
       subspaceData?.community?.roleSet?.id ?? "";
+    registerSpaceRoleSet(
+      targetModel.community.roleSetId,
+      targetModel.id,
+      parentSpaceID,
+    );
     targetModel.communication.id =
       subspaceData?.community?.communication?.id ?? "";
     targetModel.communication.updatesId =
@@ -1077,7 +1261,7 @@ export class TestScenarioFactory {
 
   public static async assignUsersToMemberRole(
     roleSetId: string,
-    spaceLevel: 0 | 1 | 2
+    spaceLevel: 0 | 1 | 2,
   ): Promise<void> {
     const usersIdsToAssign: string[] = [];
     switch (spaceLevel) {
@@ -1093,9 +1277,60 @@ export class TestScenarioFactory {
         usersIdsToAssign.push(TestUserManager.users.subsubspaceAdmin.id);
         usersIdsToAssign.push(TestUserManager.users.subsubspaceMember.id);
     }
-    for (const userID of usersIdsToAssign) {
-      await assignRoleToUser(userID, roleSetId, RoleName.Member);
+    await ensureSpaceMembers(roleSetId, usersIdsToAssign);
+  }
+
+  /**
+   * Reads back a root space this process created a moment ago under
+   * `spaceName` (its nameID is the lower-cased name) — the recovery for a
+   * create that was committed server-side but reported as failed. Returns the
+   * same data `createSpaceAndGetData` returns, or `undefined` when the nameID
+   * is free or held by a space that is not ours.
+   *
+   * "Ours" means: hosted on the account this call created it in, under the
+   * display name this call sent. A space that fails either check is foreign
+   * (another file's scenario, a leftover of an earlier run): it is neither
+   * modified nor adopted, and the caller retries with a fresh id.
+   */
+  private static async adoptSpaceByNameId(
+    spaceName: string,
+    accountID: string,
+  ) {
+    const nameID = this.validateAndClean(spaceName.toLowerCase());
+    if (!nameID) return undefined;
+    const graphqlClient = getGraphqlClient();
+    const lookup = await graphqlErrorWrapper(
+      (authToken) =>
+        graphqlClient.getSpaceIdByNameId(
+          { nameID },
+          { authorization: `Bearer ${authToken}` },
+        ),
+      TestUser.GLOBAL_ADMIN,
+    );
+    const spaceId = lookup.data?.lookupByName?.space?.id;
+    if (!spaceId) return undefined;
+    const candidate = (await getSpaceData(spaceId)).data?.lookup?.space;
+    const ours =
+      candidate?.account?.id === accountID &&
+      candidate?.about?.profile?.displayName === `l0-${spaceName}`;
+    if (!ours) {
+      LogManager.getLogger().warn(
+        `[createRootSpace] '${nameID}' is held by a space that is not this call's (account or display name differ) — not adopted`,
+      );
+      return undefined;
     }
+    LogManager.getLogger().warn(
+      `[createRootSpace] '${nameID}' was already committed by an earlier attempt — adopted instead of re-created`,
+    );
+    const updated = await updateSpaceSettings(spaceId, {
+      privacy: { allowPlatformSupportAsAdmin: true },
+    });
+    if (updated.error) {
+      throw new Error(
+        `[createRootSpace] adopted '${nameID}' but the privacy update failed: ${JSON.stringify(updated.error)}`,
+      );
+    }
+    return getSpaceData(spaceId);
   }
 
   private static async createSpaceAndGetData(
@@ -1103,16 +1338,29 @@ export class TestScenarioFactory {
     spaceNameId: string,
     accountID: string,
     addTutorialCallouts: boolean,
-    role = TestUser.GLOBAL_ADMIN
+    role = TestUser.GLOBAL_ADMIN,
   ) {
     const response = await createSpaceBasicData(
       spaceName,
       spaceNameId,
       accountID,
       addTutorialCallouts,
-      role
+      role,
     );
-    const spaceId = response?.data?.createSpace.id ?? "";
+    const spaceId = response?.data?.createSpace?.id;
+    if (!spaceId) {
+      // Do NOT swallow the failure with `?? ""` — that turned a real
+      // createSpace error (e.g. an `account-space-free` entitlement denial)
+      // into a generic downstream "Space ID is required", masking the root
+      // cause across whole nightly cascades (test-suites#563). Surface the
+      // actual GraphQL error so the report shows *why* the space wasn't made.
+      const detail = response?.error
+        ? JSON.stringify(response.error.errors)
+        : "server returned no createSpace.id and no error";
+      throw new Error(
+        `Failed to create root space '${spaceName}' (nameID '${spaceNameId}', account '${accountID}'): ${detail}`,
+      );
+    }
     await updateSpaceSettings(spaceId, {
       privacy: { allowPlatformSupportAsAdmin: true },
     });

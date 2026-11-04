@@ -1,6 +1,7 @@
 // spec: client-web/src/functional-e2e/public-space/public-space-non-member-navigation-test-plan.md
 // seed: client-web/src/functional-e2e/seed-public-space.spec.ts
 
+import { aboutThisSpaceButton } from '../helpers/space-navigation.helper';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import { TestScenarioFactory } from '@alkemio/tests-lib/scenario/TestScenarioFactory';
 import { test, expect } from '@playwright/test';
@@ -9,7 +10,7 @@ import { TestUser } from '@alkemio/tests-lib/common/enums/test.user';
 import {
   CommunityMembershipPolicy,
   SpacePrivacyMode,
-} from '@alkemio/client-lib/dist/generated/graphql';
+} from '@alkemio/tests-lib';
 
 const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 let baseScenario: OrganizationWithSpaceModel;
@@ -60,11 +61,10 @@ test.describe('Public Space Discovery and Access', () => {
       'seed-public-space'
     );
 
-    // Verify space tagline is visible
+    // Verify space tagline is visible (CRD renders the tagline as a paragraph,
+    // no longer a heading)
     await expect(
-      page.getByRole('heading', {
-        name: 'A home to go from here to there, together!',
-      })
+      page.getByText('A home to go from here to there, together!')
     ).toBeVisible();
 
     // Verify all standard navigation tabs are visible (not blocked)
@@ -73,9 +73,12 @@ test.describe('Public Space Discovery and Access', () => {
     await expect(page.getByRole('tab', { name: 'Subspaces' })).toBeVisible();
     await expect(page.getByRole('tab', { name: 'Knowledge' })).toBeVisible();
 
-    // Verify Login/Sign Up option remains available (user not logged in)
+    // Verify Login/Sign Up option remains available (user not logged in).
+    // CRD moved the apply affordance out of the dashboard and into the About
+    // dialog; open it to surface the "Sign in to apply" button.
+    await aboutThisSpaceButton(page).click();
     await expect(
-      page.getByRole('button', { name: 'Sign in to apply' })
+      page.getByRole('dialog').getByRole('button', { name: 'Sign in to apply' })
     ).toBeVisible();
   });
 
@@ -88,24 +91,19 @@ test.describe('Public Space Discovery and Access', () => {
     // Navigate to the Community tab as anonymous user
     await page.getByRole('tab', { name: 'community' }).click();
 
-    // Verify community content is visible without login
+    // Verify community content is visible without login. The hard-coded
+    // "Community members grid" (with its All / Lead / Organisation filter
+    // toggle) was removed by the Contributors-callout work (feature 008 / story
+    // client-web#9928); the community tab's public intro heading remains the
+    // no-auth-wall content signal for an anonymous visitor.
     await expect(
       page.getByText('The contributors to this Space!')
     ).toBeVisible();
 
-    // Verify People/Organizations toggle is visible
-    await expect(page.getByText('People')).toBeVisible();
-    await expect(page.getByText('organizations')).toBeVisible();
-
-    // Anonymous users see login prompt for full member list
+    // The community tab is reachable without login (no auth wall blocks it);
+    // the anonymous header still exposes the Log in affordance.
     await expect(
-      page.getByRole('heading', {
-        name: 'Please log in to see all contributing users',
-      })
+      page.getByRole('link', { name: 'Log in' })
     ).toBeVisible();
-
-    // Verify Sign in and Sign up buttons are available
-    await expect(page.getByRole('button', { name: 'Sign in' })).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Sign up' })).toBeVisible();
   });
 });

@@ -163,3 +163,7 @@ Focus is on navigation correctness, page loading, and basic content presence, no
 - No Template Pack available in listing when expected.
 - Collaboration Tool fails to load or shows an error/blank screen.
 - Back navigation lands on incorrect page.
+
+## Dropped scenarios
+
+- **8. Explore Contributors page** (authenticated walk) — removed 2026-10-09. The `/contributors` page is retired: unlinked in the product and its `<main>` never renders. Not a defect to track; re-add only if the product reintroduces the page.

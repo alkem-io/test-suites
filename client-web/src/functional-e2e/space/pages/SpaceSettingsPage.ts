@@ -1,4 +1,5 @@
 import { Page, expect } from '@playwright/test';
+import { openSettingsSection } from '../../helpers/settings-section.helper';
 
 export class SpaceSettingsPage {
   constructor(private page: Page) {}
@@ -40,24 +41,21 @@ export class SpaceSettingsPage {
     return this.page.getByRole('tab', { name: 'account' });
   }
 
-  // Account tab elements
+  // Account tab elements. CRD renders delete under an Account-tab
+  // "Danger Zone" as a "Delete this Space" button.
   get deleteSpaceButton() {
-    return this.page.getByText('Delete this Space', { exact: true });
+    return this.page.getByRole('button', { name: 'Delete this Space' });
   }
 
-  // Delete dialog
+  // CRD confirmation is a Radix alertdialog "Delete Space" with no checkbox;
+  // a "Delete Space" button confirms (replacing the old checkbox + "Yes,
+  // delete" flow).
   get deleteDialog() {
-    return this.page.getByRole('dialog');
-  }
-
-  get deleteConfirmCheckbox() {
-    return this.page.getByRole('checkbox', {
-      name: 'Please check this box if you',
-    });
+    return this.page.getByRole('alertdialog', { name: 'Delete Space' });
   }
 
   get confirmDeleteButton() {
-    return this.page.getByRole('button', { name: 'Yes, delete' });
+    return this.deleteDialog.getByRole('button', { name: 'Delete Space' });
   }
 
   // Methods
@@ -68,11 +66,32 @@ export class SpaceSettingsPage {
 
   async deleteSpace() {
     await this.navigateToAccount();
+    // client-web#10437: "Danger Zone" is a collapsible `SettingsSection` that
+    // starts collapsed — its body (and the delete button) is in the DOM but
+    // hidden until the h3 trigger is clicked.
+    await openSettingsSection(this.page, 'Danger Zone');
+    await expect(this.deleteSpaceButton).toBeVisible();
     await this.deleteSpaceButton.click();
     await expect(this.deleteDialog).toBeVisible();
-    await this.deleteConfirmCheckbox.click();
+    // The client redirects as soon as the delete is sent; the server-side
+    // cascade (callouts, community, account bookkeeping) completes a moment
+    // later. Returning on the redirect alone let the next step load an
+    // account page that still referenced the half-deleted Space ("Could not
+    // load relation 'about' for Space", every capacity badge "Not
+    // available"). Wait for the mutation's own response, and for it to be
+    // error-free, before handing control back.
+    const deleted = this.page.waitForResponse(
+      response =>
+        response.url().includes('graphql') &&
+        (response.request().postData() ?? '').includes('deleteSpace'),
+      { timeout: 30_000 }
+    );
     await this.confirmDeleteButton.click();
-    // Wait for redirect after deletion
-    await this.page.waitForURL(/.*\/(home|spaces).*/);
+    const response = await deleted;
+    const body = (await response.json().catch(() => ({}))) as { errors?: unknown[] };
+    expect(body.errors, 'deleteSpace mutation errors').toBeUndefined();
+    await this.page.waitForURL(/.*\/(home|spaces|account).*/, {
+      timeout: 30_000,
+    });
   }
 }

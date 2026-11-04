@@ -1,4 +1,5 @@
 import { Page, expect } from '@playwright/test';
+import { fillSecret } from '../../helpers/login.helper';
 
 const password = process.env.AUTH_TEST_HARNESS_PASSWORD || 'change_me';
 
@@ -28,15 +29,37 @@ export class LoginPage {
   ) {
     await this.goto();
     await this.acceptCookies();
-    await this.page.getByTestId('PersonIcon').click();
-    await this.page.getByRole('menuitem', { name: 'Log In | Sign Up' }).click();
+    // CRD header exposes a direct "Log in" link. The click must happen in-SPA
+    // (a full-page visit to /login does NOT initialise the Kratos sign-in flow,
+    // so the form fields never render). Wait for the link to render before
+    // clicking to avoid racing the SPA header.
+    const loginLink = this.page.getByRole('link', {
+      name: 'Log in',
+      exact: true,
+    });
+    await loginLink.waitFor({ state: 'visible', timeout: 30_000 });
+    await loginLink.click();
     await this.page.waitForURL(/.*login.*/);
-    await this.page.getByRole('textbox', { name: 'E-Mail' }).fill(email);
+    const emailField = this.page.getByRole('textbox', { name: 'E-Mail' });
+    await emailField.waitFor({ state: 'visible', timeout: 30_000 });
+    await emailField.fill(email);
+    await fillSecret(
+      this.page.getByRole('textbox', { name: 'Password' }),
+      userPassword
+    );
     await this.page
-      .getByRole('textbox', { name: 'Password' })
-      .fill(userPassword);
-    await this.page.getByRole('button', { name: 'Sign in', exact: true }).click();
-    await this.page.waitForURL(/.*home.*/);
+      .getByRole('button', { name: 'Sign in', exact: true })
+      .click();
+    await this.page.waitForURL(/.*home.*/, { timeout: 30_000 });
+    // Handle the one-time "A fresh new Alkemio is here" dialog that overlays the
+    // shell after sign-in, opting into the new CRD design for consistency with
+    // the rest of the authentication suite.
+    const switchToNewDesign = this.page.getByRole('button', {
+      name: /take me to the new design/i,
+    });
+    if (await switchToNewDesign.isVisible({ timeout: 5000 }).catch(() => false)) {
+      await switchToNewDesign.click().catch(() => {});
+    }
   }
 
   // async isLoggedIn(): Promise<boolean> {

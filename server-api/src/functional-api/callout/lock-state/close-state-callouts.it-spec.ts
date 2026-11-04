@@ -18,7 +18,7 @@ import { sendMessageToRoom } from '@functional-api/communications/communication.
 import { UniqueIDGenerator } from '@alkemio/tests-lib';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import {
-  CalloutAllowedContributors,
+  CalloutAllowedActors,
   CalloutFramingType,
   CalloutVisibility,
 } from '@alkemio/tests-lib/core/generated/alkemio-schema';
@@ -209,7 +209,7 @@ describe('Callout - Close State - User Privileges Posts', () => {
           },
           contribution: {
             enabled: true,
-            canAddContributions: CalloutAllowedContributors.Admins,
+            canAddContributions: CalloutAllowedActors.Admins,
             commentsEnabled: true,
           },
         },
@@ -282,10 +282,10 @@ describe('Callout - Close State - User Privileges Posts', () => {
       );
 
       test.each`
-        userRole                     | message                                                                            | entity
-        ${TestUser.NON_SPACE_MEMBER} | ${"Authorization: unable to grant 'create-message' privilege: room send message:"} | ${'space'}
-        ${TestUser.NON_SPACE_MEMBER} | ${"Authorization: unable to grant 'create-message' privilege: room send message:"} | ${'subspace'}
-        ${TestUser.NON_SPACE_MEMBER} | ${"Authorization: unable to grant 'create-message' privilege: room send message:"} | ${'subsubspace'}
+        userRole                     | message                                                                                 | entity
+        ${TestUser.NON_SPACE_MEMBER} | ${"Authorization: unable to grant 'create-message' privilege: room message operation:"} | ${'space'}
+        ${TestUser.NON_SPACE_MEMBER} | ${"Authorization: unable to grant 'create-message' privilege: room message operation:"} | ${'subspace'}
+        ${TestUser.NON_SPACE_MEMBER} | ${"Authorization: unable to grant 'create-message' privilege: room message operation:"} | ${'subsubspace'}
       `(
         'User: "$userRole" cannot send message to closed "$entity" callout post',
         async ({ userRole, message, entity }) => {
@@ -317,13 +317,13 @@ describe('Callout - Close State - User Privileges Posts', () => {
       test.each`
         userRole                       | message                                                                                    | entity
         ${TestUser.SPACE_ADMIN}        | ${'"data":{"createContributionOnCallout"'}                                                 | ${'space'}
-        ${TestUser.SPACE_MEMBER}       | ${'"Only admins are allowed to contribute to Callout with id'}                             | ${'space'}
+        ${TestUser.SPACE_MEMBER}       | ${'Only admins are allowed to contribute to this Callout'}                                 | ${'space'}
         ${TestUser.NON_SPACE_MEMBER}   | ${"Authorization: unable to grant 'contribute' privilege: create contribution on callout"} | ${'space'}
         ${TestUser.SUBSPACE_ADMIN}     | ${'"data":{"createContributionOnCallout"'}                                                 | ${'subspace'}
-        ${TestUser.SUBSPACE_MEMBER}    | ${'"Only admins are allowed to contribute to Callout with id'}                             | ${'subspace'}
+        ${TestUser.SUBSPACE_MEMBER}    | ${'Only admins are allowed to contribute to this Callout'}                                 | ${'subspace'}
         ${TestUser.NON_SPACE_MEMBER}   | ${"Authorization: unable to grant 'contribute' privilege: create contribution on callout"} | ${'subspace'}
         ${TestUser.SUBSUBSPACE_ADMIN}  | ${'"data":{"createContributionOnCallout"'}                                                 | ${'subsubspace'}
-        ${TestUser.SUBSUBSPACE_MEMBER} | ${'"Only admins are allowed to contribute to Callout with id'}                             | ${'subsubspace'}
+        ${TestUser.SUBSUBSPACE_MEMBER} | ${'Only admins are allowed to contribute to this Callout'}                                 | ${'subsubspace'}
         ${TestUser.NON_SPACE_MEMBER}   | ${"Authorization: unable to grant 'contribute' privilege: create contribution on callout"} | ${'subsubspace'}
       `(
         'User: "$userRole" get error when create post to closed "$entity" callout',
@@ -369,7 +369,7 @@ describe.skip('Callout - Close State - User Privileges Discussions', () => {
           },
           contribution: {
             enabled: true,
-            canAddContributions: CalloutAllowedContributors.Admins,
+            canAddContributions: CalloutAllowedActors.Admins,
             commentsEnabled: true,
           },
         },

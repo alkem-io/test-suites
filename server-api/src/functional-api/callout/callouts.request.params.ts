@@ -1,7 +1,7 @@
 import { getGraphqlClient, TestUser } from '@alkemio/tests-lib';
 import { UniqueIDGenerator } from '@alkemio/tests-lib';
 import {
-  CalloutAllowedContributors,
+  CalloutAllowedActors,
   CalloutContributionType,
   CalloutFramingType,
   CalloutVisibility,
@@ -37,7 +37,7 @@ export const defaultCallout = {
     contribution: {
       enabled: true,
       allowedTypes: [CalloutContributionType.Post],
-      canAddContributions: CalloutAllowedContributors.Members,
+      canAddContributions: CalloutAllowedActors.Members,
       commentsEnabled: true,
     },
     framing: { commentsEnabled: true },
@@ -60,15 +60,14 @@ export const defaultWhiteboard = {
     contribution: {
       enabled: true,
       allowedTypes: [CalloutContributionType.Whiteboard],
-      canAddContributions: CalloutAllowedContributors.Members,
+      canAddContributions: CalloutAllowedActors.Members,
       commentsEnabled: true,
     },
     framing: { commentsEnabled: true },
   },
-  contributionDefaults: {
-    whiteboardContent:
-      '{"type":"excalidraw","version":2,"source":"https://excalidraw.com","elements":[],"appState":{"gridSize":null,"viewBackgroundColor":"#ffffff"}}',
-  },
+  // Since server#6399 whiteboardContent is server-internal: contribution
+  // defaults can only be seeded via sourceWhiteboardID / sourceCalloutID,
+  // omission gives an empty default whiteboard.
 };
 
 export const createCalloutOnCalloutsSet = async (
@@ -87,7 +86,7 @@ export const createCalloutOnCalloutsSet = async (
       contribution?: {
         enabled?: boolean;
         allowedTypes?: CalloutContributionType[];
-        canAddContributions?: CalloutAllowedContributors;
+        canAddContributions?: CalloutAllowedActors;
         commentsEnabled?: boolean;
       };
       framing?: { commentsEnabled: boolean };
@@ -102,6 +101,18 @@ export const createCalloutOnCalloutsSet = async (
         tagline?: string;
       };
     };
+
+    classification?: {
+      tagsets: {
+        name: TagsetReservedName;
+        tags?: string[];
+      }[];
+    };
+
+    // Creates the callout as a Tasks board (server#6614 CD-2). `{}` seeds the
+    // default columns. The server requires a POST-only contribution type,
+    // which `defaultCallout` already is.
+    taskBoard?: { columns?: string[] };
   },
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
@@ -182,13 +193,14 @@ export const createWhiteboardCalloutOnCalloutsSet = async (
       contribution?: {
         enabled?: true;
         allowedTypes?: CalloutContributionType[];
-        canAddContributions?: CalloutAllowedContributors;
+        canAddContributions?: CalloutAllowedActors;
         commentsEnabled?: true;
       };
       framing?: { commentsEnabled: true };
     };
     contributionDefaults?: {
-      whiteboardContent?: string;
+      sourceWhiteboardID?: string;
+      sourceCalloutID?: string;
     };
   },
   userRole: TestUser = TestUser.GLOBAL_ADMIN
@@ -237,7 +249,7 @@ export const updateCallout = async (
       contribution?: {
         enabled?: boolean;
         allowedTypes?: CalloutContributionType[];
-        canAddContributions?: CalloutAllowedContributors;
+        canAddContributions?: CalloutAllowedActors;
         commentsEnabled?: boolean;
       };
       framing?: { commentsEnabled: boolean };
@@ -304,6 +316,28 @@ export const deleteCallout = async (
     graphqlClient.deleteCallout(
       {
         calloutId,
+      },
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+
+  return graphqlErrorWrapper(callback, userRole);
+};
+
+export const transferCallout = async (
+  calloutID: string,
+  targetCalloutsSetID: string,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string | undefined) =>
+    graphqlClient.transferCallout(
+      {
+        transferData: {
+          calloutID,
+          targetCalloutsSetID,
+        },
       },
       {
         authorization: `Bearer ${authToken}`,

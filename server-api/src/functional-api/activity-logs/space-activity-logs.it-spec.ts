@@ -126,7 +126,10 @@ describe('Activity logs - Space', () => {
         expect.objectContaining({
           collaborationID: baseScenario.space.collaboration.id,
           description: `${TestUserManager.users.spaceAdmin.id}`,
-          triggeredBy: { id: TestUserManager.users.globalAdmin.id },
+          // Slice B: the harness admin can no longer add a member directly, so
+          // `assignRoleToUser(MEMBER)` makes the user JOIN as themself — the
+          // activity is triggered by the joining user, not by the admin.
+          triggeredBy: { id: TestUserManager.users.spaceAdmin.id },
           type: ActivityEventType.MemberJoined,
         }),
       ])

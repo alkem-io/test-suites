@@ -1,0 +1,19 @@
+query GetInnovationFlowStatesWithIds($spaceId: UUID!) {
+  lookup {
+    space(ID: $spaceId) {
+      collaboration {
+        innovationFlow {
+          id
+          states {
+            id
+            displayName
+            sortOrder
+            settings {
+              sidebar
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,11 @@
+query ReadMyUser {
+  me {
+    id
+    user {
+      id
+      nameID
+      profile { id displayName url }
+      account { id }
+    }
+  }
+}

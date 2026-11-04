@@ -1,0 +1,1 @@
+query ReadMyAccountDeletionCanDelete { me { accountDeletion { canDelete } } }

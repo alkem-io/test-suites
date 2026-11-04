@@ -1,0 +1,7 @@
+mutation CreateVirtualContributorWithData($virtualContributorData: CreateVirtualContributorOnAccountInput!) {
+  createVirtualContributor(virtualContributorData: $virtualContributorData) {
+    id
+    profile { url }
+    knowledgeBase { calloutsSet { id } }
+  }
+}

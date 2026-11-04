@@ -5,7 +5,7 @@ import { TestUser } from '@alkemio/tests-lib/common/enums/test.user';
 import { TestScenarioConfig } from '@alkemio/tests-lib/scenario/config/test-scenario-config';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import { TestScenarioFactory } from '@alkemio/tests-lib/scenario/TestScenarioFactory';
-import { delay, TestUserManager } from '@alkemio/tests-lib';
+import { TestUserManager } from '@alkemio/tests-lib';
 import { expect } from '@playwright/test';
 import { createAuthenticatedSessionFixture } from '../fixtures/authenticated-session.fixture';
 import { CollaborationPage } from './pages';
@@ -104,11 +104,10 @@ subspaceAdminFixture.test.describe.serial(
         );
 
         await collaborationPage.saveCallout();
-        await delay(1000); // Small delay to allow callout to appear
 
-        const isVisible =
-          await collaborationPage.isCalloutVisible(testCalloutName);
-        expect(isVisible).toBe(true);
+        await expect(
+          page.getByRole('heading', { name: testCalloutName, exact: true })
+        ).toBeVisible({ timeout: 15000 });
       }
     );
 

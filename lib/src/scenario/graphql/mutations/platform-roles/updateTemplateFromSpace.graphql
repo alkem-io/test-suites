@@ -1,0 +1,5 @@
+mutation updateTemplateFromSpace($updateData: UpdateTemplateFromSpaceInput!) {
+  updateTemplateFromSpace(updateData: $updateData) {
+    id
+  }
+}

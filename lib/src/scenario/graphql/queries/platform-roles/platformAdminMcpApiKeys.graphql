@@ -1,0 +1,7 @@
+query platformAdminMcpApiKeys($userID: UUID!) {
+  platformAdmin {
+    mcpApiKeys(userID: $userID) {
+      id
+    }
+  }
+}

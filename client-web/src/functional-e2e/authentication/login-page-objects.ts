@@ -1,4 +1,12 @@
 import { Page } from '@playwright/test';
+import {
+  acceptAllCookiesButton,
+  emailField,
+  firstNameField,
+  lastNameField,
+  logInHeaderLink,
+  termsCheckbox,
+} from './common-authentication-page-elements';
 
 // Sign In Page Object
 
@@ -7,8 +15,28 @@ export const navigateToLoginPageFromMenu = async (
   page: Page
 ) => {
   await page.goto(endPoint);
-  await page.getByTestId('PersonIcon').click();
-  await page.getByRole('menuitem', { name: 'Log In | Sign Up' }).click();
+  // Accept cookies first so the consent banner does not overlay the header link.
+  if (
+    await acceptAllCookiesButton(page)
+      .isVisible({ timeout: 3000 })
+      .catch(() => false)
+  ) {
+    await acceptAllCookiesButton(page).click();
+  }
+  // CRD header exposes a direct "Log in" link (the old PersonIcon avatar menu
+  // with the "Log In | Sign Up" menu item no longer exists). On a fresh visit
+  // this link is present; immediately after a client-side logout the SPA header
+  // can be slow to re-render it, so fall back to navigating to /login directly
+  // (same destination as the link's href).
+  if (
+    await logInHeaderLink(page)
+      .isVisible({ timeout: 5000 })
+      .catch(() => false)
+  ) {
+    await logInHeaderLink(page).click();
+  } else {
+    await page.goto(`${endPoint}/login`);
+  }
 };
 
 export const navigateToLoginPageFromSpace = async (
@@ -65,7 +93,7 @@ export const navigateToRegistrationFromAcceptTerms = async (
   page: Page
 ) => {
   await navigateToSignUpFromSignIn(endPoint, page);
-  await page.locator('input[type="checkbox"]').check();
+  await termsCheckbox(page).check();
 };
 
 export const navigateToRegistrationPage = async (
@@ -74,7 +102,7 @@ export const navigateToRegistrationPage = async (
 ) => {
   // Just navigate to sign up and accept terms - the form appears on the same page
   await navigateToSignUpFromSignIn(endPoint, page);
-  await page.locator('input[type="checkbox"]').check();
+  await termsCheckbox(page).check();
 };
 
 export const navigateToRegistrationFromSignUpFillFormAndContinue = async (
@@ -85,14 +113,14 @@ export const navigateToRegistrationFromSignUpFillFormAndContinue = async (
   lastName: string
 ) => {
   await navigateToSignUpFromSignIn(endPoint, page);
-  await page.locator('input[type="checkbox"]').check();
+  await termsCheckbox(page).check();
   // Fill all required fields before the Next button becomes enabled
-  await page.locator('input[type="email"]').click();
-  await page.locator('input[type="email"]').fill(email);
-  await page.getByLabel('First Name').click();
-  await page.getByLabel('First Name').fill(firstName);
-  await page.getByLabel('Last Name').click();
-  await page.getByLabel('Last Name').fill(lastName);
+  await emailField(page).click();
+  await emailField(page).fill(email);
+  await firstNameField(page).click();
+  await firstNameField(page).fill(firstName);
+  await lastNameField(page).click();
+  await lastNameField(page).fill(lastName);
   await page.getByRole('button', { name: 'Next' }).click({ timeout: 5000 });
 };
 
@@ -101,6 +129,6 @@ export const navigateToRegistrationFromSignUpAcceptTermsAndContinue = async (
   page: Page
 ) => {
   await navigateToSignUpFromSignIn(endPoint, page);
-  await page.locator('input[type="checkbox"]').check();
+  await termsCheckbox(page).check();
   await page.getByRole('button', { name: 'Next' }).click();
 };

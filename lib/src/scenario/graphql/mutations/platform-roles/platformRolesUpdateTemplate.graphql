@@ -1,0 +1,7 @@
+# Minimal selection ON PURPOSE: the shared `UpdateTemplate` document selects five
+# template-data fragments.
+mutation PlatformRolesUpdateTemplate($updateData: UpdateTemplateInput!) {
+  updateTemplate(updateData: $updateData) {
+    id
+  }
+}

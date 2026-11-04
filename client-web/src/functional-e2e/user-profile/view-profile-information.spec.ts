@@ -1,93 +1,85 @@
 // spec: client-web/src/functional-e2e/user-profile-test-plan.md
 // seed: seed-minimal.spec.js
 
-import { test, expect } from '@playwright/test';
+import { expect } from '@playwright/test';
+import { createPersonaTest } from '../fixtures/authenticated-session.fixture';
+import { UserProfileSettingsPage } from './user-profile-settings.page';
 
-const password = process.env.AUTH_TEST_HARNESS_PASSWORD!;
-const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
+const test = createPersonaTest('admin@alkem.io');
 
 test.describe('My Profile Tab - View and Edit', () => {
   test('View Profile Information', async ({ page }) => {
-    // Seed: Login
-    await page.goto(baseUrl);
-    await page.getByRole('button', { name: 'Accept All Cookies' }).click();
-    await page.getByTestId('PersonIcon').click();
-    await page.getByRole('menuitem', { name: 'Log In | Sign Up' }).click();
-    await page.waitForURL(/.*login.*/);
-    await page.getByRole('textbox', { name: 'E-Mail' }).fill('admin@alkem.io');
-    await page.getByRole('textbox', { name: 'Password' }).fill(password);
-    await page.getByRole('button', { name: 'Sign in', exact: true }).click();
-    await page.waitForURL(/.*home.*/);
+    const profile = new UserProfileSettingsPage(page);
 
-    // Navigate to My profile tab
-    await page.goto(
-      'http://localhost:3000/user/admin-alkemio/settings/profile'
-    );
+    // Already authenticated as admin via the shared persona session.
+    // Navigate to the Profile settings tab
+    await profile.goto('admin-alkemio');
 
-    // 1. Verify profile avatar is displayed
-    await expect(page.getByRole('img', { name: 'Not yet set' })).toBeVisible();
+    // client-web#10437 lays the tab out as collapsible SettingsSection cards:
+    //  - Identity (open by default): Display/First/Last Name, Email (read-only), Phone
+    //  - About You (collapsed): Tagline, Location (City + Country), Bio, Skills, Keywords
+    //  - Social Links (collapsed): LinkedIn / Bluesky / GitHub
+    //  - References (collapsed): the references editor
+    //  - Profile Picture: the fixed avatar card on the right
+    // Every field is a plain labelled input; the legacy "Full Name" field and
+    // the per-field inline editors no longer exist (edits are saved by the
+    // tab-wide "Save changes" bar — covered by update-basic-information).
 
-    // 2. Verify Edit button is visible next to avatar
-    await expect(page.getByRole('button', { name: 'Edit' })).toBeVisible();
+    // 1. Verify the avatar editor is displayed
+    await expect(page.getByRole('heading', { name: 'Profile Picture' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Change Avatar' })).toBeVisible();
 
-    // 3. Verify First Name textbox is visible
-    await expect(
-      page.getByRole('textbox', { name: 'First Name' })
-    ).toBeVisible();
+    // 2. Verify the identity fields are visible, in the open Identity section
+    await expect(profile.sectionTrigger('Identity')).toHaveAttribute('aria-expanded', 'true');
+    await expect(profile.field('Display Name')).toBeVisible();
+    await expect(profile.field('First Name')).toBeVisible();
+    await expect(profile.field('Last Name')).toBeVisible();
+    await expect(profile.field('Phone')).toBeVisible();
 
-    // 3. Verify Last name textbox is visible
-    await expect(
-      page.getByRole('textbox', { name: 'Last name' })
-    ).toBeVisible();
+    // 2. Email is shown read-only, with the "contact support" caption
+    await expect(profile.field('Email')).toBeVisible();
+    await expect(profile.field('Email')).toHaveAttribute('readonly', '');
+    await expect(page.getByText('Contact support to change email')).toBeVisible();
 
-    // 3. Verify Full Name textbox is visible
-    await expect(
-      page.getByRole('textbox', { name: 'Full Name' })
-    ).toBeVisible();
-
-    // 3. Verify Phone textbox is visible
-    await expect(page.getByRole('textbox', { name: 'Phone' })).toBeVisible();
+    // 3. About You starts collapsed — its fields are in the DOM but hidden
+    // until the section is opened.
+    await expect(profile.field('Tagline')).toBeHidden();
+    await profile.openSection('About You');
+    await expect(profile.field('Tagline')).toBeVisible();
 
     // 3. Verify City textbox is visible
-    await expect(page.getByRole('textbox', { name: 'City' })).toBeVisible();
+    await expect(profile.field('City')).toBeVisible();
 
-    // 3. Verify Country combobox is visible
-    await expect(page.getByRole('combobox', { name: 'Country' })).toBeVisible();
+    // 3. Verify the Country picker is visible (a combobox button under the
+    // "Location" legend, named by the selected country or its placeholder).
+    await expect(page.getByText('Location', { exact: true })).toBeVisible();
+    await expect(profile.countryCombobox).toBeVisible();
 
-    // 3. Verify Tagline textbox is visible
-    await expect(page.getByRole('textbox', { name: 'Tagline' })).toBeVisible();
+    // 3. Verify Bio rich-text editor is visible
+    await expect(page.getByRole('textbox', { name: 'Formatting toolbar' })).toBeVisible();
 
-    // 3. Verify Bio Markdown editor is visible
+    // 3. Verify Skills section input is visible
     await expect(
-      page.getByRole('textbox', { name: 'Markdown editor' })
+      page.getByRole('textbox', {
+        name: 'e.g. UX research, TypeScript, facilitation',
+      })
     ).toBeVisible();
 
-    // 3. Verify Skills combobox is visible
-    await expect(
-      page.getByRole('combobox', { name: 'Skills Keywords' })
-    ).toBeVisible();
+    // 3. Verify social link textboxes are visible (Social Links section)
+    await profile.openSection('Social Links');
+    await expect(profile.field('LinkedIn')).toBeVisible();
+    await expect(profile.field('Bluesky')).toBeVisible();
+    await expect(profile.field('GitHub')).toBeVisible();
 
-    // 3. Verify Linkedin textbox is visible
-    await expect(page.getByRole('textbox', { name: 'Linkedin' })).toBeVisible();
-
-    // 3. Verify BlueSky textbox is visible
-    await expect(page.getByRole('textbox', { name: 'BlueSky' })).toBeVisible();
-
-    // 3. Verify Github textbox is visible
-    await expect(page.getByRole('textbox', { name: 'Github' })).toBeVisible();
-
-    // 3. Verify Mail textbox is visible and disabled
-    await expect(page.getByRole('textbox', { name: 'Mail' })).toBeVisible();
-
-    // 3. Verify Add Reference button is visible
-    await expect(
-      page.getByRole('button', { name: 'Add Reference' })
-    ).toBeVisible();
+    // 3. Verify Add Reference button is visible (References section)
+    await profile.openSection('References');
+    await expect(page.getByRole('button', { name: 'Add another reference' })).toBeVisible();
 
     // 3. Verify References section shows no references message
     await expect(page.getByText('No references yet')).toBeVisible();
 
-    // 3. Verify Save button is visible at the bottom
-    await expect(page.getByRole('button', { name: 'Save' })).toBeVisible();
+    // Nothing above edited a field, so the tab must still be clean: the
+    // unsaved-changes bar stays hidden.
+    await expect(profile.unsavedChangesBar).toBeHidden();
   });
 });

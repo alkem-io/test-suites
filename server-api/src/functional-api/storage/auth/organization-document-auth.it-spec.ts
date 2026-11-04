@@ -1,8 +1,9 @@
 import {
-  sorted__create_read_update_delete_grant_fileUp_fileDel_notificationsAdmin,
-  sorted__create_read_update_delete_grant_fileUp_fileDel_platformAdmin_notificationsAdmin,
-  sorted__create_read_update_delete_grant_notificationsAdmin,
-  sorted__create_read_update_delete_grant_platformAdmin_notificationsAdmin,
+  getAuthDocument,
+  sorted__create_read_update_delete_grant_fileUp_fileDel_notificationsAdmin_updateNameId,
+  sorted__create_read_update_delete_grant_fileUp_fileDel_notificationsAdmin_updateNameId_globalAdmin,
+  sorted__create_read_update_delete_grant_notificationsAdmin_updateNameId,
+  sorted__create_read_update_delete_grant_notificationsAdmin_updateNameId_globalAdmin,
   TestScenarioConfig,
   TestScenarioFactory,
   TestUser,
@@ -75,16 +76,16 @@ describe('Organization - documents', () => {
 
     // Arrange
     test.each`
-      userRole                       | privileges
-      ${undefined}                   | ${['READ']}
-      ${TestUser.NON_SPACE_MEMBER}   | ${['READ']}
-      ${TestUser.GLOBAL_ADMIN}       | ${sorted__create_read_update_delete_grant_platformAdmin_notificationsAdmin}
-      ${TestUser.ORGANIZATION_ADMIN} | ${sorted__create_read_update_delete_grant_notificationsAdmin}
-      ${TestUser.SUBSPACE_ADMIN}     | ${sorted__create_read_update_delete_grant_notificationsAdmin}
-      ${TestUser.SPACE_MEMBER}       | ${['READ']}
+      userRole                       | privileges                                                                  | expectedStatus
+      ${undefined}                   | ${['READ']}                                                                 | ${200}
+      ${TestUser.NON_SPACE_MEMBER}   | ${['READ']}                                                                 | ${200}
+      ${TestUser.GLOBAL_ADMIN}       | ${sorted__create_read_update_delete_grant_notificationsAdmin_updateNameId_globalAdmin} | ${200}
+      ${TestUser.ORGANIZATION_ADMIN} | ${sorted__create_read_update_delete_grant_notificationsAdmin_updateNameId}               | ${200}
+      ${TestUser.SUBSPACE_ADMIN}     | ${sorted__create_read_update_delete_grant_notificationsAdmin_updateNameId}               | ${200}
+      ${TestUser.SPACE_MEMBER}       | ${['READ']}                                                                 | ${200}
     `(
       'User: "$userRole" has this privileges: "$privileges" to organization profile visual document',
-      async ({ userRole, privileges }) => {
+      async ({ userRole, privileges, expectedStatus }) => {
         const res = await getProfileDocuments(
           baseScenario.organization.profile.id,
           userRole
@@ -93,6 +94,9 @@ describe('Organization - documents', () => {
         const dataAuthorization = data?.authorization;
 
         expect(dataAuthorization?.myPrivileges?.sort()).toEqual(privileges);
+
+        const restResponse = await getAuthDocument(documentId, userRole);
+        expect(restResponse.status).toEqual(expectedStatus);
       }
     );
 
@@ -100,9 +104,9 @@ describe('Organization - documents', () => {
       userRole                       | privileges                                                                                 | parentEntityType
       ${undefined}                   | ${['READ']}                                                                                | ${'ORGANIZATION'}
       ${TestUser.NON_SPACE_MEMBER}   | ${['READ']}                                                                                | ${'ORGANIZATION'}
-      ${TestUser.GLOBAL_ADMIN}       | ${sorted__create_read_update_delete_grant_fileUp_fileDel_platformAdmin_notificationsAdmin} | ${'ORGANIZATION'}
-      ${TestUser.ORGANIZATION_ADMIN} | ${sorted__create_read_update_delete_grant_fileUp_fileDel_notificationsAdmin}               | ${'ORGANIZATION'}
-      ${TestUser.SUBSPACE_ADMIN}     | ${sorted__create_read_update_delete_grant_fileUp_fileDel_notificationsAdmin}               | ${'ORGANIZATION'}
+      ${TestUser.GLOBAL_ADMIN}       | ${sorted__create_read_update_delete_grant_fileUp_fileDel_notificationsAdmin_updateNameId_globalAdmin} | ${'ORGANIZATION'}
+      ${TestUser.ORGANIZATION_ADMIN} | ${sorted__create_read_update_delete_grant_fileUp_fileDel_notificationsAdmin_updateNameId}               | ${'ORGANIZATION'}
+      ${TestUser.SUBSPACE_ADMIN}     | ${sorted__create_read_update_delete_grant_fileUp_fileDel_notificationsAdmin_updateNameId}               | ${'ORGANIZATION'}
       ${TestUser.SPACE_MEMBER}       | ${['READ']}                                                                                | ${'ORGANIZATION'}
     `(
       'User: "$userRole" has this privileges: "$privileges" to organization profile storage bucket',
@@ -143,16 +147,16 @@ describe('Organization - documents', () => {
 
     // Arrange
     test.each`
-      userRole                       | privileges
-      ${undefined}                   | ${['READ']}
-      ${TestUser.NON_SPACE_MEMBER}   | ${['READ']}
-      ${TestUser.GLOBAL_ADMIN}       | ${sorted__create_read_update_delete_grant_platformAdmin_notificationsAdmin}
-      ${TestUser.ORGANIZATION_ADMIN} | ${sorted__create_read_update_delete_grant_notificationsAdmin}
-      ${TestUser.SUBSPACE_ADMIN}     | ${sorted__create_read_update_delete_grant_notificationsAdmin}
-      ${TestUser.SPACE_MEMBER}       | ${['READ']}
+      userRole                       | privileges                                                                  | expectedStatus
+      ${undefined}                   | ${['READ']}                                                                 | ${200}
+      ${TestUser.NON_SPACE_MEMBER}   | ${['READ']}                                                                 | ${200}
+      ${TestUser.GLOBAL_ADMIN}       | ${sorted__create_read_update_delete_grant_notificationsAdmin_updateNameId_globalAdmin} | ${200}
+      ${TestUser.ORGANIZATION_ADMIN} | ${sorted__create_read_update_delete_grant_notificationsAdmin_updateNameId}               | ${200}
+      ${TestUser.SUBSPACE_ADMIN}     | ${sorted__create_read_update_delete_grant_notificationsAdmin_updateNameId}               | ${200}
+      ${TestUser.SPACE_MEMBER}       | ${['READ']}                                                                 | ${200}
     `(
       'User: "$userRole" has this privileges: "$privileges" to organization reference document',
-      async ({ userRole, privileges }) => {
+      async ({ userRole, privileges, expectedStatus }) => {
         const res = await getProfileDocuments(
           baseScenario.organization.profile.id,
           userRole
@@ -161,6 +165,9 @@ describe('Organization - documents', () => {
         const dataAuthorization = data?.authorization;
 
         expect(dataAuthorization?.myPrivileges?.sort()).toEqual(privileges);
+
+        const restResponse = await getAuthDocument(documentId, userRole);
+        expect(restResponse.status).toEqual(expectedStatus);
       }
     );
 
@@ -168,9 +175,9 @@ describe('Organization - documents', () => {
       userRole                       | privileges                                                                                 | parentEntityType
       ${undefined}                   | ${['READ']}                                                                                | ${'ORGANIZATION'}
       ${TestUser.NON_SPACE_MEMBER}   | ${['READ']}                                                                                | ${'ORGANIZATION'}
-      ${TestUser.GLOBAL_ADMIN}       | ${sorted__create_read_update_delete_grant_fileUp_fileDel_platformAdmin_notificationsAdmin} | ${'ORGANIZATION'}
-      ${TestUser.ORGANIZATION_ADMIN} | ${sorted__create_read_update_delete_grant_fileUp_fileDel_notificationsAdmin}               | ${'ORGANIZATION'}
-      ${TestUser.SUBSPACE_ADMIN}     | ${sorted__create_read_update_delete_grant_fileUp_fileDel_notificationsAdmin}               | ${'ORGANIZATION'}
+      ${TestUser.GLOBAL_ADMIN}       | ${sorted__create_read_update_delete_grant_fileUp_fileDel_notificationsAdmin_updateNameId_globalAdmin} | ${'ORGANIZATION'}
+      ${TestUser.ORGANIZATION_ADMIN} | ${sorted__create_read_update_delete_grant_fileUp_fileDel_notificationsAdmin_updateNameId}               | ${'ORGANIZATION'}
+      ${TestUser.SUBSPACE_ADMIN}     | ${sorted__create_read_update_delete_grant_fileUp_fileDel_notificationsAdmin_updateNameId}               | ${'ORGANIZATION'}
       ${TestUser.SPACE_MEMBER}       | ${['READ']}                                                                                | ${'ORGANIZATION'}
     `(
       'User: "$userRole" has this privileges: "$privileges" to organization profile reference storage bucket',
@@ -206,7 +213,7 @@ describe('Organization - documents', () => {
       );
 
       const getDocId = await getProfileDocuments(
-        baseScenario.space.about.profile.id,
+        baseScenario.organization.profile.id,
         TestUser.GLOBAL_ADMIN
       );
 
@@ -216,16 +223,16 @@ describe('Organization - documents', () => {
 
     // Arrange
     test.each`
-      userRole                       | privileges
-      ${undefined}                   | ${['READ']}
-      ${TestUser.NON_SPACE_MEMBER}   | ${['READ']}
-      ${TestUser.GLOBAL_ADMIN}       | ${sorted__create_read_update_delete_grant_platformAdmin_notificationsAdmin}
-      ${TestUser.ORGANIZATION_ADMIN} | ${sorted__create_read_update_delete_grant_notificationsAdmin}
-      ${TestUser.SUBSPACE_ADMIN}     | ${sorted__create_read_update_delete_grant_notificationsAdmin}
-      ${TestUser.SPACE_MEMBER}       | ${['READ']}
+      userRole                       | privileges                                                                  | expectedStatus
+      ${undefined}                   | ${['READ']}                                                                 | ${200}
+      ${TestUser.NON_SPACE_MEMBER}   | ${['READ']}                                                                 | ${200}
+      ${TestUser.GLOBAL_ADMIN}       | ${sorted__create_read_update_delete_grant_notificationsAdmin_updateNameId_globalAdmin} | ${200}
+      ${TestUser.ORGANIZATION_ADMIN} | ${sorted__create_read_update_delete_grant_notificationsAdmin_updateNameId}               | ${200}
+      ${TestUser.SUBSPACE_ADMIN}     | ${sorted__create_read_update_delete_grant_notificationsAdmin_updateNameId}               | ${200}
+      ${TestUser.SPACE_MEMBER}       | ${['READ']}                                                                 | ${200}
     `(
       'User: "$userRole" has this privileges: "$privileges" to organization description visual document',
-      async ({ userRole, privileges }) => {
+      async ({ userRole, privileges, expectedStatus }) => {
         const res = await getProfileDocuments(
           baseScenario.organization.profile.id,
           userRole
@@ -234,6 +241,9 @@ describe('Organization - documents', () => {
         const dataAuthorization = data?.authorization;
 
         expect(dataAuthorization?.myPrivileges?.sort()).toEqual(privileges);
+
+        const restResponse = await getAuthDocument(documentId, userRole);
+        expect(restResponse.status).toEqual(expectedStatus);
       }
     );
 
@@ -241,9 +251,9 @@ describe('Organization - documents', () => {
       userRole                       | privileges                                                                                 | parentEntityType
       ${undefined}                   | ${['READ']}                                                                                | ${'ORGANIZATION'}
       ${TestUser.NON_SPACE_MEMBER}   | ${['READ']}                                                                                | ${'ORGANIZATION'}
-      ${TestUser.GLOBAL_ADMIN}       | ${sorted__create_read_update_delete_grant_fileUp_fileDel_platformAdmin_notificationsAdmin} | ${'ORGANIZATION'}
-      ${TestUser.ORGANIZATION_ADMIN} | ${sorted__create_read_update_delete_grant_fileUp_fileDel_notificationsAdmin}               | ${'ORGANIZATION'}
-      ${TestUser.SUBSPACE_ADMIN}     | ${sorted__create_read_update_delete_grant_fileUp_fileDel_notificationsAdmin}               | ${'ORGANIZATION'}
+      ${TestUser.GLOBAL_ADMIN}       | ${sorted__create_read_update_delete_grant_fileUp_fileDel_notificationsAdmin_updateNameId_globalAdmin} | ${'ORGANIZATION'}
+      ${TestUser.ORGANIZATION_ADMIN} | ${sorted__create_read_update_delete_grant_fileUp_fileDel_notificationsAdmin_updateNameId}               | ${'ORGANIZATION'}
+      ${TestUser.SUBSPACE_ADMIN}     | ${sorted__create_read_update_delete_grant_fileUp_fileDel_notificationsAdmin_updateNameId}               | ${'ORGANIZATION'}
       ${TestUser.SPACE_MEMBER}       | ${['READ']}                                                                                | ${'ORGANIZATION'}
     `(
       'User: "$userRole" has this privileges: "$privileges" to organization description (storageBucket) document',

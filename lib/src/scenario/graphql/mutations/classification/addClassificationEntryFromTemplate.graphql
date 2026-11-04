@@ -1,0 +1,5 @@
+mutation AddClassificationEntryFromTemplate($classificationData: AddClassificationEntryFromTemplateInput!) {
+  addClassificationEntryFromTemplate(classificationData: $classificationData) {
+    id displayLabel display sortOrder cardinality selectedValueIDs values { id label }
+  }
+}

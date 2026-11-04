@@ -9,10 +9,11 @@ import {
 import {
   createSpaceAndGetData,
   deleteSpace,
-  updateSpacePlatformSettings,
+  updateSpaceVisibility,
 } from '../../journey/space/space.request.params';
 import {
   createSubspace,
+  createUser,
   TestScenarioConfig,
   TestScenarioFactory,
   TestUser,
@@ -44,7 +45,6 @@ const uniqueId = UniqueIDGenerator.getID();
 let invitationId = '';
 let invitationData: any;
 
-const spaceNameId = 'appl-eco-nameid' + uniqueId;
 let vcSpaceId = '';
 let l1VCId = '';
 let vcLicensePlanId = '';
@@ -74,6 +74,13 @@ const scenarioConfig: TestScenarioConfig = {
         policy: CommunityMembershipPolicy.Applications,
       },
     },
+    // The last test reads the role-set's invitations AND applications as
+    // SPACE_ADMIN. Since server#6502 `RoleSet.applications` requires GRANT, so
+    // that user must really be this space's admin — it used to have no role here
+    // and only got away with it while the field was readable by anyone.
+    community: {
+      admins: [TestUser.SPACE_ADMIN],
+    },
   },
 };
 
@@ -90,9 +97,8 @@ beforeAll(async () => {
     vcLicensePlanId
   );
 
-  await updateSpacePlatformSettings(
+  await updateSpaceVisibility(
     baseScenario.space.id,
-    spaceNameId,
     SpaceVisibility.Active
   );
 
@@ -152,6 +158,12 @@ describe('Virtual Contributor', () => {
     expect(response.error?.errors[0].message).toContain(
       'Unable to delete User: account contains one or more resources'
     );
+    await createUser({
+      firstName: 'beta',
+      lastName: 'tester',
+      profileData: { displayName: 'beta tester' },
+      email: 'beta.tester@alkem.io',
+    });
   });
 
   test('should return invitations after virtual contributor is removed', async () => {

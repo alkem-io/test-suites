@@ -42,7 +42,8 @@ export const graphqlRequestAuth = async (
   } else {
     const userModel = TestUserManager.getUserModelByType(user);
     auth_token = userModel.authToken;
-    if (auth_token.length === 0) throw console.error(`Could not authenticate user ${user}`);
+    if (auth_token.length === 0)
+      throw new Error(`Could not authenticate user ${user}`);
   }
 
   LogManager.getLogger().info(`Executing request: ${requestParams.query}`);

@@ -1,0 +1,14 @@
+query calloutFormDefinition($calloutId: UUID!) {
+  lookup {
+    callout(ID: $calloutId) {
+      id
+      framing {
+        id
+        type
+        form {
+          ...CalloutFormDetails
+        }
+      }
+    }
+  }
+}

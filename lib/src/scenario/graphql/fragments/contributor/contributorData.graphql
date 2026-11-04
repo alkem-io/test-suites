@@ -1,6 +1,5 @@
-fragment ContributorData on Contributor {
+fragment ContributorData on Actor {
   id
-  nameID
   profile {
     ...ProfileData
   }

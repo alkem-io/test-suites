@@ -1,0 +1,3 @@
+mutation UpdateCommunityGuidelinesData($communityGuidelinesData: UpdateCommunityGuidelinesEntityInput!) {
+  updateCommunityGuidelines(communityGuidelinesData: $communityGuidelinesData) { id }
+}

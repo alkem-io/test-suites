@@ -27,13 +27,9 @@ import {
 } from '@functional-api/roleset/roles-request.params';
 import '@utils/array.matcher';
 
-const uniqueId = UniqueIDGenerator.getID();
-
 let organizationId = '';
 let organizationRoleSetId = '';
 const credentialsType = 'ORGANIZATION_OWNER';
-const organizationName = 'org-auth-org-name' + uniqueId;
-const hostNameId = 'org-auth-org-nameid' + uniqueId;
 let responseData: object;
 
 const scenarioConfig: TestScenarioNoPreCreationConfig = {
@@ -43,6 +39,9 @@ beforeAll(async () => {
   await TestScenarioFactory.createBaseScenarioEmpty(scenarioConfig);
 });
 beforeEach(async () => {
+  const uniqueId = UniqueIDGenerator.getID();
+  const organizationName = 'org-auth-org-name' + uniqueId;
+  const hostNameId = 'org-auth-org-nameid' + uniqueId;
   const request = await createOrganization(organizationName, hostNameId);
   organizationId = request.data?.createOrganization?.id ?? '';
   organizationRoleSetId = request.data?.createOrganization?.roleSet.id ?? '';
@@ -68,16 +67,17 @@ describe('Organization Owner', () => {
     );
 
     // Assert
-    expect(res?.data?.assignRoleToUser?.agent?.credentials).toContainObject(
+    expect(res?.data?.assignRoleToUser?.credentials).toContainObject(
       responseData
     );
   });
 
   test('should add same user as owner of 2 organization', async () => {
     // Arrange
+    const orgTwoUniqueId = UniqueIDGenerator.getID();
     const responseOrgTwo = await createOrganization(
-      `OrgTwoOwnerOne-${uniqueId}`,
-      `orgtwoownerone-${uniqueId}`
+      `OrgTwoOwnerOne-${orgTwoUniqueId}`,
+      `orgtwoownerone-${orgTwoUniqueId}`
     );
     const org2Data = responseOrgTwo.data?.createOrganization;
     const organizationIdTwo = org2Data?.id ?? '';
@@ -97,10 +97,10 @@ describe('Organization Owner', () => {
     );
 
     // Assert
-    expect(resOne?.data?.assignRoleToUser?.agent?.credentials).toContainObject(
+    expect(resOne?.data?.assignRoleToUser?.credentials).toContainObject(
       responseData
     );
-    expect(resTwo?.data?.assignRoleToUser?.agent?.credentials).toContainObject({
+    expect(resTwo?.data?.assignRoleToUser?.credentials).toContainObject({
       resourceID: organizationIdTwo,
       type: credentialsType,
     });
@@ -130,9 +130,9 @@ describe('Organization Owner', () => {
     );
 
     // Assert
-    expect(
-      res?.data?.removeRoleFromUser?.agent?.credentials
-    ).not.toContainObject(responseData);
+    expect(res?.data?.removeRoleFromUser?.credentials).not.toContainObject(
+      responseData
+    );
   });
 
   test('should not remove the only owner of an organization', async () => {
@@ -152,7 +152,7 @@ describe('Organization Owner', () => {
 
     // Assert
     expect(res?.error?.errors[0].message).toContain(
-      `Min limit of users reached for role 'owner': 1, cannot remove user from role on RoleSet: ${organizationRoleSetId}, type: organization`
+      "Min limit of users reached for role 'owner': 1, cannot remove user."
     );
   });
 
@@ -165,9 +165,9 @@ describe('Organization Owner', () => {
     );
 
     // Assert
-    expect(
-      res?.data?.removeRoleFromUser?.agent?.credentials
-    ).not.toContainObject(responseData);
+    expect(res?.data?.removeRoleFromUser?.credentials).not.toContainObject(
+      responseData
+    );
   });
 
   test('should not result in additional credential for assigning same organization owner twice', async () => {
@@ -178,8 +178,7 @@ describe('Organization Owner', () => {
       RoleName.Owner
     );
     const credentialsCount =
-      firstAssignmentResponse?.data?.assignRoleToUser?.agent?.credentials
-        ?.length || -999;
+      firstAssignmentResponse?.data?.assignRoleToUser?.credentials?.length ?? 0;
 
     // Act
     const secondAssignmentResponse = await assignRoleToUser(
@@ -188,8 +187,8 @@ describe('Organization Owner', () => {
       RoleName.Owner
     );
     const updatedCredentialsCount =
-      secondAssignmentResponse?.data?.assignRoleToUser?.agent?.credentials
-        ?.length || -999;
+      secondAssignmentResponse?.data?.assignRoleToUser?.credentials?.length ??
+      0;
 
     // Assert
     expect(updatedCredentialsCount).toEqual(credentialsCount);

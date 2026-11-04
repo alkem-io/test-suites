@@ -1,0 +1,30 @@
+query GetMeConversations {
+  me {
+    conversations {
+      conversations {
+        id
+        createdDate
+        members {
+          id
+          nameID
+          type
+          profile {
+            id
+            displayName
+          }
+        }
+        room {
+          id
+          displayName
+          avatarUrl
+          type
+          messagesCount
+          lastMessage {
+            id
+            message
+          }
+        }
+      }
+    }
+  }
+}

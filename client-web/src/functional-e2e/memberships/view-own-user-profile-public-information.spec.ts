@@ -75,29 +75,36 @@ test.describe('User Profile Membership Display', () => {
       });
       await expect(userNameHeading).toBeVisible({ timeout: 3000 });
 
+      // CRD: the public "Bio" section is the sidebar "About" block.
       await expect(
-        page.getByRole('heading', { name: /Bio/i }).first()
+        page.getByRole('heading', { name: /About/i }).first()
       ).toBeVisible();
 
-      await expect(
-        page.getByRole('heading', { name: /Spaces.*/i }).first()
-      ).toBeVisible();
+      // CRD: spaces are organised under resource tabs; the membership space
+      // lives under the "Member Of" tab.
+      const memberOfTab = page.getByRole('tab', { name: /Member Of/i });
+      await expect(memberOfTab).toBeVisible();
+      await memberOfTab.click();
 
       await expect(
         page.getByText(baseScenario.space.about.profile.displayName).first()
-      ).toBeVisible({ timeout: 2000 });
+      ).toBeVisible({ timeout: 5000 });
 
-      const settingsIcon = page.locator('[data-testid="SettingsOutlinedIcon"]');
-      await expect(settingsIcon).toBeVisible();
-      await settingsIcon.click();
+      // CRD: the settings entry point is an icon link with an accessible name.
+      const settingsLink = page.getByRole('link', {
+        name: /Open user settings/i,
+      });
+      await expect(settingsLink).toBeVisible();
+      await settingsLink.click();
 
       await expect(page).toHaveURL(
         new RegExp(`/user/${TestUserManager.users.spaceMember.nameId}/settings`)
       );
 
+      // CRD: the settings page exposes the contributor settings tabs.
       await expect(
-        page.getByText(/Here you can edit your profile details*/i)
-      ).toBeVisible();
+        page.getByRole('tab', { name: /Profile/i }).first()
+      ).toBeVisible({ timeout: 5000 });
     }
   );
 });

@@ -32,12 +32,15 @@ The Alkemio platform provides a multi-level space hierarchy (Space → Subspace 
 
 **Important:**
 
-- **Subspace Visibility**: Subspaces are only visible to **direct members of their parent space**. This means:
+- **Subspace Visibility**: Subspaces are visible to **direct members of their parent space** OR when the parent space is **public**. This means:
   - Non-members can only see Level 0 (root) spaces
   - Level 0 members can see Level 1 subspaces (but NOT Level 2)
   - Level 1 members can see Level 2 subsubspaces (but nothing deeper)
   - Once a user is a member of a space, they can find its direct child subspaces under the `Subspaces` section in the subheader navigation on the space page.
+  - **When a Level 0 space is public**, non-members can also see Level 1 subspaces and apply to them directly (see "Public Parent Space" section below).
 - **Membership is NOT Inherited**: Being a member of a space does NOT automatically make you a member of its child spaces (subspaces). Users must apply separately to each level and have their application approved by an admin for that specific space level. For example, being a member of Level 0 (Space) allows you to see Level 1 (Subspace) cards, but you still need to apply and be approved to become a member of Level 1.
+- **L0 Apply Button Location**: The About page (`/about`) always carries the Apply button for a Level 0 space. On a **public** L0 space the dashboard shows exactly one enabled Apply button to a non-member as well (per-tab sidebar widget, client-web#10194, since `0.163.0`). Non-members of a **private** space are redirected to `/about` automatically and never see the dashboard.
+- **Non-Parent-Member Subspace Applications**: When a Level 0 space is public and has `allowSubspaceAdminsToInviteMembers` enabled, users who are NOT members of the parent space can apply directly to Level 1 subspaces. The client trusts the server-granted `ROLESET_ENTRY_ROLE_APPLY` privilege instead of inferring eligibility from parent membership.
 
 ---
 
@@ -50,12 +53,39 @@ The Alkemio platform provides a multi-level space hierarchy (Space → Subspace 
 - For improved performance, sign in users once in `test.beforeAll()` or `test.beforeEach()` hooks and reuse the authenticated browser page/context across multiple tests within the same describe block, rather than signing in separately for each test.
 - Tests should create the base scenario using `TestScenarioFactory.createBaseScenario()` in `test.beforeAll()` and use the returned `baseScenario` object to access dynamic space properties (e.g., `baseScenario.space.about.profile.displayName`, `baseScenario.space.nameId`) instead of hardcoded values.
 - Remember to clean up the scenario in `test.afterAll()` using `TestScenarioFactory.cleanUpBaseScenario(baseScenario)`.
+- The 2.x cases assert an in-app notification in the bell dialog. The fixed personas are shared with the server-api suite, whose notification specs leave email + in-app switched OFF, and the nightly runs server-api before Playwright on the same database. Each spec therefore turns the two settings it depends on back ON in `test.beforeAll()` (`space.admin.communityApplicationReceived` for the admin, `user.membership.spaceCommunityJoined` for the applicant) via `enableApplicationNotifications()` from `helpers/notification-settings.helper.ts`, and restores the previous values in `test.afterAll()`. Do not rely on the server defaults.
 
 ---
 
 ## Level 0 (Space) Test Suite
 
 ### 1. Space Discovery and Privacy Indicators
+
+#### 1.0 Apply Button Shown to a Non-Member on a Public L0 Space Dashboard
+
+**Prerequisites:**
+
+- User is already signed in as `${TestUser.NON_SPACE_MEMBER}@alkem.io` (reuse authenticated page from previous test)
+
+**Steps:**
+
+1. Create a dedicated **public** Level 0 space (`publicScenario`, the shared `baseScenario` space is private and would redirect) and navigate to its dashboard (`publicScenario.space.nameId`, NOT `/about`)
+2. Verify exactly one enabled "Apply" button is visible on the dashboard (the sidebar action)
+
+**Expected Results:**
+
+- The dashboard renders for the non-member
+- One enabled Apply button is present, rendered by the per-tab sidebar widget
+- The About page (`/about`) keeps its own Apply button — 1.1 below still applies from there
+
+**Notes:**
+
+- History: PR #10000 removed the Apply button from the L0 dashboard, and this case originally
+  asserted its absence. client-web#10194 (per-tab sidebar widgets, shipped in `0.163.0`) brought it
+  back as a sidebar action for non-members, so the assertion was inverted on 10.09 during the
+  Release 75 verification. Keep this case in step with the sidebar-widget behaviour, not with #10000.
+- On a private space, `CrdSpaceProtectedRoutes` still redirects non-members to `/about`; that path
+  is not exercised here.
 
 #### 1.1 Submit Application to Level 0 Space
 
@@ -65,8 +95,8 @@ The Alkemio platform provides a multi-level space hierarchy (Space → Subspace 
 
 **Steps:**
 
-1. Navigate to Level 0 Space About page (use `baseScenario.space.nameId`)
-2. Locate and click the "Apply" button
+1. Navigate to Level 0 Space **About page** (use `baseScenario.space.nameId` + `/about`)
+2. Locate and click the "Apply" button on the About page
 3. Verify questionnaire modal/form appears
 4. Fill in questionnaire fields with test data:
    - Answer all required questions
@@ -128,7 +158,6 @@ The Alkemio platform provides a multi-level space hierarchy (Space → Subspace 
 **Steps:**
 
 1. **As Non-Space Member:**
-
    - Navigate to home page
    - Click on the Level 0 Space card
    - Click the "Apply" button
@@ -137,7 +166,6 @@ The Alkemio platform provides a multi-level space hierarchy (Space → Subspace 
    - Verify success confirmation appears
 
 2. **As Space Admin:**
-
    - Navigate to home page
    - Click on the Level 0 Space card to navigate to the space page
    - Click the space settings icon (cog icon)
@@ -179,7 +207,6 @@ The Alkemio platform provides a multi-level space hierarchy (Space → Subspace 
 **Steps:**
 
 1. **As Non-Space Member:**
-
    - Navigate to home page
    - Click on the Level 0 Space card
    - Click the "Apply" button
@@ -188,7 +215,6 @@ The Alkemio platform provides a multi-level space hierarchy (Space → Subspace 
    - Verify success confirmation appears
 
 2. **As Space Admin:**
-
    - Navigate to home page
    - Click on the Level 0 Space card to navigate to the space page
    - Click the space settings icon (cog icon)
@@ -230,7 +256,6 @@ The Alkemio platform provides a multi-level space hierarchy (Space → Subspace 
 **Steps:**
 
 1. **As Non-Space Member:**
-
    - Navigate to home page
    - Click on the Level 0 Space card
    - Click the "Apply" button
@@ -239,7 +264,6 @@ The Alkemio platform provides a multi-level space hierarchy (Space → Subspace 
    - Verify success confirmation appears
 
 2. **As Space Admin:**
-
    - Navigate to home page
    - Click on the Level 0 Space card to navigate to the space page
    - Click the space settings icon (cog icon)
@@ -287,7 +311,6 @@ The Alkemio platform provides a multi-level space hierarchy (Space → Subspace 
 **Steps:**
 
 1. **As Non-Space Member:**
-
    - Navigate to home page
    - Click on the Level 0 Space card
    - Click the "Apply" button
@@ -296,7 +319,6 @@ The Alkemio platform provides a multi-level space hierarchy (Space → Subspace 
    - Verify success confirmation appears
 
 2. **As Space Admin:**
-
    - Navigate to home page
    - Click on the Level 0 Space card to navigate to the space page
    - Click the space settings icon (cog icon)
@@ -346,7 +368,6 @@ The Alkemio platform provides a multi-level space hierarchy (Space → Subspace 
 **Steps:**
 
 1. **As Non-Space Member:**
-
    - Navigate to home page
    - Click on the Level 0 Space card
    - Click the "Apply" button
@@ -355,7 +376,6 @@ The Alkemio platform provides a multi-level space hierarchy (Space → Subspace 
    - Verify success confirmation appears
 
 2. **As Space Admin:**
-
    - Navigate to home page
    - Click the notifications bell icon (button with aria-label "Notifications Button")
    - Verify notification panel appears
@@ -494,6 +514,7 @@ The Alkemio platform provides a multi-level space hierarchy (Space → Subspace 
 - **Applicant**: `${TestUser.NON_SPACE_MEMBER}@alkem.io` (same as Level 0, but must be Level 0 member first to see subspaces)
 - **Admin**: `${TestUser.SUBSPACE_ADMIN}@alkem.io` (admin of Level 1 & 2)
 - **Data Model**: Use `baseScenario.subspace` instead of `baseScenario.space`
+- **Applying in `beforeEach`**: `/challenges/{subspaceNameId}/about` renders **two** "Apply" buttons for a non-member — one in the page body and one in the About dialog the route opens on top of it, a beat later. Both Level-1 `beforeEach` hooks apply through `applications.helpers.ts::applyFromSubspaceAboutDialog`, which scopes every step to its own dialog (About → questionnaire → "Application submitted"). An unscoped `getByRole('button', { name: 'Apply' })` either hit the body button behind the dialog overlay or opened the questionnaire **under** the About dialog, where its fields are `aria-hidden` — the seven `beforeEach` time-outs of nightly run 40707979543 (2026-10-28). Never relax the scoping back to the page.
 
 #### 2.1 Reject Application to Level 1 Subspace
 
@@ -514,3 +535,157 @@ Follow the same steps as Level 0 test 2.4, substituting Level 1 Subspace referen
 #### 2.5 Approve Application Directly from Data Grid
 
 Follow the same steps as Level 0 test 2.5, substituting Level 1 Subspace references and using the differences noted above. The admin will receive a notification about a new subspace application and can navigate directly to the subspace community settings to approve it.
+
+---
+
+## Level 1 Subspace — Public Parent Space Test Suite
+
+**Spec file:** `space-applications-level-1-public-parent.spec.ts`
+
+This suite covers the new flow introduced by PR #9986 and PR #10000: when a Level 0 space is **public** and has `allowSubspaceAdminsToInviteMembers` enabled, a user who is **NOT a member of the parent space** can apply directly to Level 1 subspaces. The client trusts the server-granted `ROLESET_ENTRY_ROLE_APPLY` privilege instead of checking parent membership.
+
+**Seed configuration:**
+
+- Level 0 Space: **Public**, Applications policy, `allowSubspaceAdminsToInviteMembers: true`
+- Level 1 Subspace: **Private**, Applications policy
+- Applicant (`NON_SPACE_MEMBER`): **NOT** a member of Level 0
+- Subspace Admin (`SUBSPACE_ADMIN`): Admin of Level 1
+
+### 1. Subspace Discovery via Public Parent
+
+#### 1.1 Non-parent-member can see L1 subspace card from public L0 space
+
+**Steps:**
+
+1. Navigate to the public L0 space as a non-member
+2. Click on the "Subspaces" tab
+3. Verify the L1 subspace card is visible
+4. Verify the "Private" indicator is shown on the subspace card
+
+**Expected Results:**
+
+- The non-member can see the L0 space dashboard (it's public)
+- The Subspaces tab is visible and clickable
+- The L1 subspace card is displayed in the Subspaces grid
+- The subspace card shows a "Private" label
+
+#### 1.2 Non-parent-member can apply to L1 subspace from About dialog
+
+**Steps:**
+
+1. Navigate to the L1 subspace About page
+2. Locate and click the "Apply" button on the About dialog
+3. Fill in the questionnaire fields
+4. Submit the application
+5. Verify success confirmation ("Application submitted") appears
+6. Close the success dialog
+
+**Expected Results:**
+
+- The About page/dialog is reachable despite the user not being a parent member
+- The "Apply" button is visible (server grants `ROLESET_ENTRY_ROLE_APPLY`)
+- The questionnaire opens and accepts answers
+- The application is submitted successfully
+- Success dialog confirms the submission
+
+#### 1.3 View Pending Application as Subspace Admin
+
+**Steps:**
+
+1. As subspace admin, navigate to subspace settings → Community tab
+2. Verify the pending application from the non-parent-member is listed
+
+**Expected Results:**
+
+- The application appears in the "Pending Memberships" section
+- It shows "Application received" status
+
+### 2. Subspace Application Management (Public Parent)
+
+The `beforeEach` applies through `applyFromSubspaceAboutDialog` for the same reason as the standard L1 suite (two Apply buttons on the `/about` route; see the note above).
+
+#### 2.1 Approve non-parent-member application to L1 Subspace
+
+Same as the standard L1 2.3 test, but the applicant is a non-parent-member. Verifies that the admin can view the questionnaire, approve the application, and the applicant receives a welcome notification.
+
+#### 2.2 Reject non-parent-member application to L1 Subspace
+
+Same as the standard L1 2.1 test, but the applicant is a non-parent-member. Verifies that the admin can reject the application and the applicant receives a declined notification.
+
+---
+
+<!-- ═════ Section added 2026-10-15 for client-web#10419, in the house plan format. The v2 content above is unchanged. ═════ -->
+
+# Test plan — No dead-end apply control on invitation-only spaces (client-web#10419)
+
+> **Status:** Approved · **Depth:** Light. The requester set this explicitly (`DEPTH=light`). One repo, no elevated-risk trigger, and the change removes a UI state rather than adding a surface · **Story:** [client-web#10419](https://github.com/alkem-io/client-web/issues/10419), fixed by [client-web#10401](https://github.com/alkem-io/client-web/pull/10401) (`f7f44c43`, merged 2026-10-12)
+
+#10401 hides `SpaceAboutApplyButton` whenever it would render only its disabled "Apply not available" fallback. It does this on four surfaces: the L0 Space sidebar, the Space About dialog, the subspace banner above the Innovation-flow tabs, and the Subspace About dialog. The decision goes through the new pure predicate `isApplyUnavailable`. The same PR also collapses three disagreeing copies of `isApplicationPending` into one enum-derived predicate: `{new, approving}`. Before this work, the hidden state had **no system coverage on any surface**, and no test anywhere in `test-suites` seeded an invitation-only community. Five new or extended cases in `space-applications-level-0.spec.ts`, which is already in the nightly, close the gaps. The predicate's full decision table stays at unit level, where the fix put it.
+
+## How to run
+
+```bash
+cd client-web   # env per docs/e2e-conventions.md §9 (.env + AUTH_TEST_HARNESS_PASSWORD; KRATOS_ADMIN_URL for member seeding)
+pnpm exec playwright test src/functional-e2e/applications/space-applications-level-0.spec.ts -g "10419"
+pnpm run test:nightly --project=Applications
+```
+
+Run the file serially, one worker. The Applications suite is not yet parallel-safe (conventions §8).
+
+## Risk
+
+| #   | Risk (in user terms)                                                                                                                                                                                                                                   | Likelihood                            | Impact | Level                                                                                                    | Drives           |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------- | ------ | -------------------------------------------------------------------------------------------------------- | ---------------- |
+| R1  | A user who does have a way in (Apply, Application pending, Accept invitation, Join, Sign in) loses the control. The cause would be the hide predicate firing in their state: it is a hand-written mirror of the button's cascade, so the two can drift | Medium                                | High   | **High**                                                                                                 | S5–S10, S12, S14 |
+| R2  | The dead-end "Apply not available" button returns on one of the four surfaces, either because a connector drops the predicate or because the button gains a branch the mirror lacks                                                                    | Low                                   | Medium | **Medium → P1** at the requester's priority (a regression would reproduce a filed, customer-visible bug) | S1–S4            |
+| R3  | A pending application is misread: `approving` shows nothing, or `archived`/`rejected` shows "pending"                                                                                                                                                  | Low (the UI only ever receives `new`) | Medium | Low                                                                                                      | S11              |
+| R4  | Subspace parent-path states (parent pending, join or apply to the parent, parent member) are wrongly hidden or shown                                                                                                                                   | Low                                   | Medium | Low                                                                                                      | S12              |
+
+Elevated-risk triggers present: none. ☐ migration · ☐ breaking contract · ☐ authorization/visibility (display only, server privileges unchanged) · ☐ cross-repo · ☐ infra · ☐ data-destructive · ☐ performance.
+Non-functional (light): **performance**: no new query, and the predicate is pure. **Security**: the server privilege stays the authority, and the client only stops rendering a disabled control. **Reliability**: the loading path is unchanged (placeholder in the sidebar, nothing elsewhere). **Compatibility**: the mobile drawer mounts the same connector. **Accessibility**: an `aria-disabled` dead end is removed. There is no a11y harness (`docs/qa-knowledge/harness.md`) and nothing new to check.
+
+## Existing coverage before this work
+
+Searched `test-suites` `develop` @ `663c61d9` (client-web, server-api, lib) by the copy "Apply not available", "Application pending", "Sign in to apply" and "Accept invitation", by `CommunityMembershipPolicy.Invitations`, by `applyForEntryRole` and by `ROLESET_ENTRY_ROLE_APPLY`. Also searched client-web `develop` @ `7a37d4c4b` (contains `f7f44c43`) for unit tests.
+
+- **Proven absent:** an invitation-only fixture anywhere (all three packages); any assertion that "Application pending" renders. The three `beforeEach` blocks only accept `/^(Apply|Application pending)$/`. Also absent: any apply assertion on the subspace banner. `public-space/non-member-subspace-navigation.spec.ts › 5.4` checks it under an `if` and can never fail.
+- **Unit (client-web):** `src/main/crdPages/space/isApplyUnavailable.test.ts` (13 rows: invitation-only, parent-member arm, and every "stays visible" state); `src/domain/community/applicationButton/isApplicationPending.test.ts` (every `ApplicationState`). No component or connector test exists, so the wiring into the four surfaces is unpinned.
+- **Reuse: 6 of 14 scenarios needed no new test.** **Existing tests needing update: 0.** No test asserts the removed copy or a non-`new` pending state. Confirmed unaffected: L0 `1.0`, `1.1`, Application Management `beforeEach`; L1 `1.1`, `1.2`; public-parent `1.2`; `explore-platform-authenticated.spec.ts › 2`; the anonymous "Sign in to apply" specs (the predicate never fires when signed out).
+
+## Scenario → test mapping
+
+| Scenario                                                                                                                                | Covers                                          | Automated by                                                                                                                 | Layer |
+| --------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- | ----- |
+| S1 Invitation-only L0, signed-in non-member, nothing pending → no apply control in the **Space sidebar**                                | #10419 expected, R2                             | `space-applications-level-0.spec.ts` › `Invitation-only — no dead-end apply control (client-web#10419) › 10419 IO-1 invitation-only L0: no apply control in the Space sidebar or the Space About dialog` | E2E   |
+| S2 Same state → no apply control in the **Space About** dialog                                                                          | #10419, R2                                      | `space-applications-level-0.spec.ts` › `… › 10419 IO-1 …` (Space About dialog half) | E2E   |
+| S3 Invitation-only L1 under an invitation-only L0, non-parent-member → no control on the **subspace banner**                            | #10419, R2                                      | `space-applications-level-0.spec.ts` › `… › 10419 IO-2 invitation-only L1 under invitation-only L0: no control on the subspace banner or in the Subspace About dialog` (banner half) | E2E   |
+| S4 Same state → no control in the **Subspace About** dialog                                                                             | #10419, R2                                      | `space-applications-level-0.spec.ts` › `… › 10419 IO-2 invitation-only L1 under invitation-only L0: no control on the subspace banner or in the Subspace About dialog` (Subspace About dialog half) | E2E   |
+| S5 Applications enabled → "Apply" in the L0 sidebar                                                                                     | R1                                              | `space-applications-level-0.spec.ts › 1.0`                                                                                   | E2E   |
+| S6 Applications enabled → "Apply" in Space About                                                                                        | R1                                              | `space-applications-level-0.spec.ts › 1.1`; `explore-platform-authenticated.spec.ts › 2`                                     | E2E   |
+| S7 Applications enabled → "Apply" in Subspace About                                                                                     | R1                                              | `space-applications-level-1.spec.ts › 1.2`; `…-public-parent.spec.ts › 1.2`                                                  | E2E   |
+| S8 Applications enabled → "Apply" on the **subspace banner**                                                                            | R1                                              | `space-applications-level-0.spec.ts` › `… › 10419 IO-3 applications enabled: "Apply" shows on the subspace banner` | E2E   |
+| S9 Server-state pending application (`new`) → "Application pending", applications enabled **and** after the space turns invitation-only | R1 (the issue's "would have seen nothing" case) | `space-applications-level-0.spec.ts` › `… › 10419 IO-4 a pending application keeps "Application pending", with applications enabled and after the space turns invitation-only` | E2E   |
+| S10 Just-submitted application (optimistic `hasApplied`) → "Application pending"                                                        | R1                                              | `space-applications-level-0.spec.ts` › `Space Discovery and Applications › 1.1 Submit Application to Level 0 Space` (extended, IO-5) | E2E   |
+| S11 Pending predicate: `new`/`approving` pending; `approved`/`rejected`/`archived` not                                                  | R3                                              | client-web `isApplicationPending.test.ts`                                                                                    | Unit  |
+| S12 Hide-predicate decision table: loading, signed out, member, invitation, join, pending, apply, parent arms                           | R1, R4                                          | client-web `isApplyUnavailable.test.ts`                                                                                      | Unit  |
+| S13 Anonymous → "Sign in to apply" still shows                                                                                          | R1                                              | `explore-platform-anonymous.spec.ts`; `public-space/anonymous-user-access-public-space.spec.ts` (applications-policy spaces) | E2E   |
+| S14 Invited user on an invitation-only space → "Accept invitation" still shows                                                          | R1                                              | unit only (S12); see gaps                                                                                                    | Unit  |
+
+### Regression guards
+
+- **IO-1 / IO-2** pin client-web#10419. Root cause: `SpaceAboutApplyButton` falls through to its disabled `about.applyDisabled` branch when no action is available, and all four consumers rendered it without a guard. Both cases must be red against `f7f44c43^`.
+- **Settle oracle (as built).** The sidebar and About dialog of an L0 issue no `ApplicationButton` request (the space is already in Apollo's cache), so `applyFlowSettled` waits for `UrlResolver` to finish, a `UserPendingMemberships` started after it, and nothing in flight; the subspace surfaces also wait for their own `ApplicationButton`. Shown able to see a control: with the L0 on APPLICATIONS the same IO-1 steps went red on `Apply` 3 of 3 times. **Not shown:** red against `f7f44c43^`. The local client already contains the fix, so IO-1 and IO-2 still need that one run on a pre-fix client.
+- **IO-4 (invitation-only row)** pins the interplay the issue calls out. Once the fallback is hidden, a pending applicant whose state the predicate misses sees _nothing_. The case is green before and after the fix and guards later drift.
+
+## Not covered — known gaps
+
+| Scenario                                                                     | Why not automated                                                                                                                                                          | Where it belongs                                                                                                                                                                 |
+| ---------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| S14 "Accept invitation" on an invitation-only space                          | Outside the requested scope. The predicate is unit-pinned (`canAcceptInvitation` short-circuits it)                                                                        | **Recommended P2 follow-up** in this spec: invite `NON_SPACE_MEMBER` on the IO fixture. This is the highest-impact neighbour of R1, because it is the only way into such a space |
+| S11 `approving` / `archived` / `rejected` in the UI                          | Unreachable. The button reads `me.communityApplications(states: ["new"])` (`UserPendingMemberships.graphql`), and `approving` is transient inside the approval transaction | Stays in client-web unit                                                                                                                                                         |
+| S12 parent arms (parent pending, join or apply to parent, parent-member arm) | Unit-pinned. The E2E wiring is identical to IO-2, and these are outside scope                                                                                              | client-web unit                                                                                                                                                                  |
+| Join (open policy); anonymous on invitation-only                             | Unit-pinned (S12); outside scope                                                                                                                                           | client-web unit                                                                                                                                                                  |
+| "Contact host" instead of the dead end (#7017)                               | Not built                                                                                                                                                                  | Product backlog. Plan a test once it exists                                                                                                                                      |
+| Mobile drawer copy of the sidebar                                            | Same connector and predicate                                                                                                                                               | `PW_BROWSER=mobile-chrome pnpm run test:nightly --project=Applications` if wanted. No checklist row proposed                                                                     |
+
+Proven end to end once the build sheet lands: on an invitation-only L0 and L1, a signed-in non-member with nothing pending sees no apply control on any of the four surfaces. On the same fixture shape, "Apply" appears on all four surfaces when applications are enabled, and a pending application keeps its label even after the space turns invitation-only. **Not proven end to end:** that an invited user still sees "Accept invitation", and the parent-path states on a subspace. Both rest on the client-web unit decision table alone. The behaviour change for `approving` and `archived` cannot be observed through the UI at all.

@@ -1,0 +1,3 @@
+mutation removeIframeAllowedURL($whitelistedURL: String!) {
+  removeIframeAllowedURL(whitelistedURL: $whitelistedURL)
+}

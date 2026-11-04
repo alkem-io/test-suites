@@ -1,0 +1,8 @@
+# All three organization-rooted pending lists in one read, for the case that
+# asserts they agree with the role-set-rooted ones.
+query ReadOrganizationRoleSetPending($organizationId: UUID!) {
+  organization(ID: $organizationId) {
+    id
+    roleSet { id applications { id } invitations { id } platformInvitations { id } }
+  }
+}

@@ -1,25 +1,68 @@
 export * from "./common/enums/test.user";
+export * from "./common/enums/alkemio";
+export * from "./common/types/schema";
 export * from "./common/constants/privileges";
 export * from "./utils/delay";
 export * from "./utils/uniqueId";
 export * from "./utils/emails";
 export * from "./utils/mailslurper.rest.requests";
+export * from "./utils/rabbitmq-management.rest.requests";
+export * from "./utils/messaging-digest-windows";
 export * from "./utils/graphqlClient";
-export * from "./utils/mailslurper.rest.requests";
 export * from "./utils/subscriptions";
 export * from "./utils/graphql.authorization.header";
 export * from "./utils/get.document";
+export * from "./utils/graphql.raw.client";
+export * from "./utils/graphql.actor";
+export * from "./utils/graphql.wrapper";
+export * from "./utils/decode-jwt-unsafe";
+export * from "./utils/harness-redis.client";
+export * from "./utils/harness-db.client";
+export * from "./utils/harness-synapse.client";
 export * from "./scenario/TestScenarioFactory";
 export * from "./scenario/baseFunctions";
 export * from "./scenario/TestSetupUtils";
+export * from "./scenario/fixtures/pngFixture";
 export * from "./scenario/LogManager";
 export * from "./scenario/TestUserManager";
 export * from "./scenario/config/test-scenario-config";
+export * from "./scenario/account-deletion.request.params";
 export * from "./scenario/registration/get-user-token";
 export * from "./scenario/registration/register-in-alkemio-or-fail";
 export * from "./scenario/registration/register-in-kratos-or-fail";
 export * from "./scenario/registration/send-kratos-flow";
 export * from "./scenario/registration/verify-in-kratos-or-fail";
+export * from "./scenario/registration/register-test-user";
+export * from "./scenario/registration/verify-env-prerequisites";
+export * from "./scenario/registration/provision-test-identities";
+export * from "./scenario/registration/mint-bff-session";
 export * from "./config/test.configuration";
 export * from "./config/alkemio-test-config";
 export * from "./config/create-config-using-envvars";
+export * from "./config/optional-infra";
+export * from "./scenario/platform-roles/platform-role-users";
+export * from "./scenario/platform-roles/harness-admin-roles";
+export * from "./scenario/membership/space-membership";
+export * from "./scenario/membership/space-organization-membership";
+export {
+  deleteUser,
+  getUserByNameId,
+  getUserData,
+  getUserPendingMemberships,
+  getUsersData,
+  registerVerifiedUser,
+  updateUser,
+  updateUserSettingCommunicationMessage,
+  updateUserSettings,
+} from "./scenario/functions/contributtor-management/user/user.request.params";
+export * from "./scenario/functions/me/me.request.params";
+export * from "./scenario/functions/platform/platform.request.params";
+export * from "./scenario/functions/user/user-lookup.request.params";
+export * from "./scenario/functions/organization/organization.request.params";
+export * from "./scenario/functions/account/account.request.params";
+export * from "./scenario/functions/space/space.request.params";
+export * from "./scenario/functions/roleset/roleset.request.params";
+export * from "./scenario/functions/callout/callout.request.params";
+export * from "./scenario/functions/callout/whiteboard-callout";
+export * from "./scenario/functions/templates/templates.request.params";
+export * from "./collab/whiteboard-peer";
