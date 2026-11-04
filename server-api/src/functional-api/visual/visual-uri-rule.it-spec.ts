@@ -12,32 +12,42 @@
 
 import {
   createPngFixture,
+  getUserToken,
+  GraphqlActor,
+  provisionTestIdentities,
   readMyUser,
+  registerTestUser,
+  testConfiguration,
   TestScenarioFactory,
   TestUser,
   UniqueIDGenerator,
 } from '@alkemio/tests-lib';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
-import { uploadImageOnVisual } from '@functional-api/storage/upload.params';
+import { deleteUser } from '@functional-api/contributor-management/user/user.request.params';
 import {
   getProfileVisuals,
   StoredVisual,
   updateVisualUri,
+  uploadPngOnVisual,
 } from './visual.request.params';
 
 const REFUSED = 'VISUAL_URI_NOT_ALLOWED';
 const OUTSIDE_HOST = 'https://host-you-control.example';
+// Inside the 120 s hook timeout, after the base scenario has been built.
+const READY_TIMEOUT_MS = 60_000;
+const READY_POLL_MS = 1_000;
 
-// The avatar under test is a member's own (US1-AS1): the non-space-member
-// persona's, which other suites only read. It acts as itself. Its original
-// picture is not restored afterwards: that is the generated default on an
-// outside host, which is exactly what updateVisual now refuses, so the
-// persona keeps this run's storage upload.
-const owner = TestUser.NON_SPACE_MEMBER;
-// A member with no right to update another member's avatar (US3-AS3).
-const nonOwner = TestUser.SPACE_MEMBER;
+// A member with no right to update another member's avatar.
+const nonOwner = TestUser.NON_SPACE_MEMBER;
 
 let baseScenario: OrganizationWithSpaceModel;
+// The avatar under test is a member's own: a user registered for this
+// invocation alone, acting as itself, so no concurrent copy of this file (it
+// is in both the `visual` and `nightly` projects) or other run on the stack
+// writes the avatar between an upload and its readback.
+let ownerEmail = '';
+let ownerId = '';
+let owner: GraphqlActor;
 let ownerProfileId = '';
 let avatarId = '';
 let uploadedUri = '';
@@ -49,9 +59,24 @@ const errorCode = (res: {
   body: { errors?: Array<Record<string, unknown>> };
 }) => (res.body.errors?.[0]?.extensions as { code?: string } | undefined)?.code;
 
+// The owner as a signed-in actor, or undefined while its identity or its
+// platform user is not usable yet (login answers actor_id_missing, or `me`
+// has no user).
+const signInOwner = async () => {
+  try {
+    const actor = { bearerToken: await getUserToken(ownerEmail) };
+    const user = (await readMyUser(actor)).data?.me.user;
+    return user?.profile?.id
+      ? { actor, id: user.id, profileId: user.profile.id }
+      : undefined;
+  } catch {
+    return undefined;
+  }
+};
+
 const readVisuals = async (
   profileId: string,
-  actor: TestUser
+  actor: GraphqlActor
 ): Promise<StoredVisual[]> => {
   const res = await getProfileVisuals(profileId, actor);
   expect(res.body.errors, JSON.stringify(res.body.errors)).toBeUndefined();
@@ -61,7 +86,7 @@ const readVisuals = async (
 const readVisual = async (
   profileId: string,
   visualId: string,
-  actor: TestUser
+  actor: GraphqlActor
 ): Promise<StoredVisual> => {
   const visual = (await readVisuals(profileId, actor)).find(
     v => v.id === visualId
@@ -78,23 +103,49 @@ beforeAll(async () => {
     space: {},
   });
 
-  ownerProfileId = (await readMyUser(owner)).data?.me.user?.profile?.id ?? '';
-  expect(ownerProfileId, 'the owner has no profile').not.toEqual('');
+  // The harness's two identity paths: the Kratos admin API where it is
+  // reachable (CI), which sends no verification mail; self-service sign-up
+  // otherwise. The email is kept before registering so teardown can find the
+  // user even when setup fails after this point.
+  const userName = `visualuri.${UniqueIDGenerator.getID()}`;
+  ownerEmail = `${userName}@alkem.io`;
+  if (testConfiguration.endPoints.kratos.admin) {
+    await provisionTestIdentities([userName]);
+  } else {
+    await registerTestUser(userName);
+  }
+  const deadline = Date.now() + READY_TIMEOUT_MS;
+  for (;;) {
+    const signedIn = await signInOwner();
+    if (signedIn) {
+      owner = signedIn.actor;
+      ownerId = signedIn.id;
+      ownerProfileId = signedIn.profileId;
+      break;
+    }
+    if (Date.now() > deadline) {
+      throw new Error(
+        `the registered owner was not usable within ${READY_TIMEOUT_MS / 1000}s`
+      );
+    }
+    await new Promise(resolve => setTimeout(resolve, READY_POLL_MS));
+  }
+
   const avatar = (await readVisuals(ownerProfileId, owner)).find(
     v => v.name === 'AVATAR'
   );
   avatarId = avatar?.id ?? '';
   expect(avatarId, 'the owner has no AVATAR visual').not.toEqual('');
 
-  // A fresh upload, never the creation-time picture: the accepted address is
-  // whatever the platform's storage produces on this stack.
-  const upload = await uploadImageOnVisual(
-    createPngFixture({ width: 200, height: 200 }),
+  // A fresh upload, never the registration-time picture: the accepted address
+  // is whatever the platform's storage produces on this stack.
+  const upload = await uploadPngOnVisual(
     avatarId,
+    createPngFixture({ width: 200, height: 200 }),
     owner
   );
-  expect(upload.errors, JSON.stringify(upload.errors)).toBeUndefined();
-  uploadedUri = upload.data?.uploadImageOnVisual?.uri ?? '';
+  expect(upload.body.errors, upload.raw).toBeUndefined();
+  uploadedUri = upload.body.data?.uploadImageOnVisual?.uri ?? '';
   expect(uploadedUri, 'upload returned no uri').not.toEqual('');
 
   spaceProfileId = baseScenario.space.about.profile.id;
@@ -107,7 +158,17 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
+  // A setup that failed before the owner was usable has no id yet: one more
+  // sign-in finds a user that became usable since. deleteUser also deletes the
+  // identity, and resolves with `error` instead of throwing, so it is checked
+  // after the scenario is cleaned up either way.
+  const id = ownerId || (ownerEmail ? (await signInOwner())?.id : undefined);
+  const deleted = id ? await deleteUser(id) : undefined;
   await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
+  expect(
+    deleted?.error,
+    `the disposable owner was left behind: ${JSON.stringify(deleted?.error)}`
+  ).toBeUndefined();
 });
 
 describe('updateVisual address rule — refused addresses on an avatar', () => {

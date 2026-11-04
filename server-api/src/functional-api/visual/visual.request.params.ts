@@ -1,4 +1,11 @@
-import { GraphqlActor, postGraphqlRawAs, TestUser } from '@alkemio/tests-lib';
+import {
+  GraphqlActor,
+  postGraphqlMultipartAs,
+  postGraphqlRawAs,
+  TestUser,
+} from '@alkemio/tests-lib';
+import { readFileSync } from 'fs';
+import path from 'path';
 import { graphqlRequestAuth } from '@alkemio/tests-lib/utils/graphql.request';
 
 /**
@@ -175,6 +182,30 @@ export const getProfileVisuals = async (
       }
     }`,
     { profileId }
+  );
+
+/**
+ * Upload a PNG onto a visual as any actor: `storage/upload.params`'s
+ * `uploadImageOnVisual` takes only a harness persona, which cannot act as a
+ * disposable user.
+ */
+export const uploadPngOnVisual = async (
+  visualID: string,
+  pngPath: string,
+  actor: GraphqlActor
+) =>
+  postGraphqlMultipartAs<{ uploadImageOnVisual: { id: string; uri: string } }>(
+    actor,
+    `mutation UploadPngOnVisual($file: Upload!, $uploadData: VisualUploadImageInput!) {
+      uploadImageOnVisual(file: $file, uploadData: $uploadData) { id uri }
+    }`,
+    { file: null, uploadData: { visualID } },
+    'variables.file',
+    {
+      bytes: readFileSync(pngPath),
+      fileName: path.basename(pngPath),
+      mimeType: 'image/png',
+    }
   );
 
 /**
