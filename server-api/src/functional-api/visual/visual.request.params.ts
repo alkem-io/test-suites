@@ -138,7 +138,7 @@ export const updateVisualUri = async (
   alternativeText: string,
   actor: GraphqlActor = TestUser.GLOBAL_ADMIN
 ) =>
-  postGraphqlRawAs<{ updateVisual: StoredVisual }>(
+  postGraphqlRawAs<{ updateVisual: Omit<StoredVisual, 'name'> }>(
     actor,
     `mutation UpdateVisualUri($updateData: UpdateVisualInput!) {
       updateVisual(updateData: $updateData) {
