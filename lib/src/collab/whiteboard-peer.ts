@@ -95,13 +95,21 @@ export type ConnectWhiteboardPeerOptions = {
   path?: string;
   /** Budget for dial + admission + initial sync. Default 15 s. */
   connectTimeoutMs?: number;
+  /**
+   * Idle time before the peer sends a heartbeat, as client-web does. Default
+   * 15 s; the self-test shortens it to observe the echo.
+   */
+  heartbeatIdleMs?: number;
 };
 
 export type WaitForOptions = { timeoutMs?: number; intervalMs?: number };
 
 const PEER_ORIGIN = Symbol("whiteboard-peer-local-write");
 const REMOTE_ORIGIN = Symbol("whiteboard-peer-remote");
+// client-web `unifiedCollabProvider.ts`: a heartbeat after 15 s idle, and the
+// session is dropped if its echo is not back within 10 s.
 const HEARTBEAT_IDLE_MS = 15_000;
+const HEARTBEAT_REPLY_MS = 10_000;
 const DEFAULT_CONNECT_TIMEOUT_MS = 15_000;
 const DEFAULT_WAIT_TIMEOUT_MS = 15_000;
 const DEFAULT_WAIT_INTERVAL_MS = 50;
@@ -132,6 +140,9 @@ const collabUrl = (options: ConnectWhiteboardPeerOptions): string => {
   return `${ws}${normalised}/${encodeURIComponent(options.whiteboardId)}?${params.toString()}`;
 };
 
+const sameBytes = (a: Uint8Array, b: Uint8Array): boolean =>
+  a.length === b.length && a.every((byte, i) => byte === b[i]);
+
 const toBytes = (data: WebSocket.RawData): Uint8Array => {
   if (Array.isArray(data)) return new Uint8Array(Buffer.concat(data));
   if (data instanceof ArrayBuffer) return new Uint8Array(data);
@@ -149,13 +160,20 @@ export class WhiteboardPeer {
   accessReason: string | undefined;
   /** Why the session ended, once it has. */
   endedReason: string | undefined;
+  /** Heartbeats the service echoed back (the liveness round trip). */
+  heartbeatsEchoed = 0;
 
   private readonly ws: WebSocket;
   private ready = false;
+  /** The socket is gone (closed by either side); no more writes. */
   private closed = false;
+  /** `close()` ran: awareness and doc destroyed. Independent of `closed`. */
+  private destroyed = false;
   private held = false;
   private queued: Uint8Array[] = [];
   private heartbeatTimer: NodeJS.Timeout | undefined;
+  /** The heartbeat sent and not echoed yet; at most one at a time. */
+  private heartbeatFrame: Uint8Array | undefined;
   private heartbeatSequence = 0;
   private settleConnect:
     | { resolve: () => void; reject: (error: Error) => void }
@@ -330,13 +348,17 @@ export class WhiteboardPeer {
     }
   }
 
-  /** Idempotent. Announces departure, closes the socket, destroys the doc. */
+  /**
+   * Idempotent. Announces departure, closes the socket, destroys the doc.
+   * Also after the service closed the socket first: the doc and its awareness
+   * (which runs an interval) are still destroyed.
+   */
   async close(): Promise<void> {
-    if (this.closed) return;
+    if (this.destroyed) return;
+    this.destroyed = true;
     this.closed = true;
     this.endedReason ??= "closed-by-peer";
-    if (this.heartbeatTimer) clearInterval(this.heartbeatTimer);
-    this.heartbeatTimer = undefined;
+    this.clearHeartbeat();
     this.doc.off("update", this.onDocUpdate);
     if (this.ws.readyState === WebSocket.OPEN) {
       if (this.awareness.getLocalState() !== null) {
@@ -385,8 +407,11 @@ export class WhiteboardPeer {
         case COLLAB_WIRE.CONTROL:
           this.handleControl(decoder);
           break;
+        case COLLAB_WIRE.HEARTBEAT:
+          this.receiveHeartbeat(bytes);
+          break;
         default:
-          // awareness, ephemeral, heartbeat echoes: nothing to do for the oracle
+          // awareness, ephemeral: nothing to do for the oracle
           break;
       }
     } catch (error) {
@@ -468,21 +493,49 @@ export class WhiteboardPeer {
   }
 
   private becomeReady(): void {
-    const { encoding } = rt();
     this.ready = true;
-    this.heartbeatTimer = setInterval(() => {
-      this.send(
-        encodeFrame(COLLAB_WIRE.HEARTBEAT, (e) =>
-          encoding.writeVarString(
-            e,
-            `${Date.now()}-${++this.heartbeatSequence}`,
-          ),
-        ),
-      );
-    }, HEARTBEAT_IDLE_MS);
-    this.heartbeatTimer.unref();
+    this.armHeartbeat(this.options.heartbeatIdleMs ?? HEARTBEAT_IDLE_MS);
     this.settleConnect?.resolve();
     this.settleConnect = undefined;
+  }
+
+  // Heartbeat, as client-web: one outstanding frame; the service echoes it
+  // byte for byte; no echo within HEARTBEAT_REPLY_MS drops the session.
+  private armHeartbeat(delayMs: number): void {
+    if (this.heartbeatTimer) clearTimeout(this.heartbeatTimer);
+    this.heartbeatTimer = setTimeout(() => {
+      if (this.heartbeatFrame) {
+        this.endedReason ??= "heartbeat-timeout";
+        this.ws.close(4000, "heartbeat-timeout");
+      } else this.sendHeartbeat();
+    }, delayMs);
+    this.heartbeatTimer.unref();
+  }
+
+  private sendHeartbeat(): void {
+    if (this.heartbeatFrame || this.ws.readyState !== WebSocket.OPEN) return;
+    this.heartbeatFrame = encodeFrame(COLLAB_WIRE.HEARTBEAT, (e) =>
+      rt().encoding.writeVarString(
+        e,
+        `${Date.now()}-${++this.heartbeatSequence}`,
+      ),
+    );
+    this.send(this.heartbeatFrame);
+    this.armHeartbeat(HEARTBEAT_REPLY_MS);
+  }
+
+  /** Only the echo of the outstanding heartbeat counts; anything else is ignored. */
+  private receiveHeartbeat(frame: Uint8Array): void {
+    if (!this.heartbeatFrame || !sameBytes(frame, this.heartbeatFrame)) return;
+    this.heartbeatFrame = undefined;
+    this.heartbeatsEchoed += 1;
+    this.armHeartbeat(this.options.heartbeatIdleMs ?? HEARTBEAT_IDLE_MS);
+  }
+
+  private clearHeartbeat(): void {
+    if (this.heartbeatTimer) clearTimeout(this.heartbeatTimer);
+    this.heartbeatTimer = undefined;
+    this.heartbeatFrame = undefined;
   }
 
   private handleClose(code: number, reason: Buffer): void {
@@ -495,8 +548,7 @@ export class WhiteboardPeer {
       );
     }
     this.closed = true;
-    if (this.heartbeatTimer) clearInterval(this.heartbeatTimer);
-    this.heartbeatTimer = undefined;
+    this.clearHeartbeat();
   }
 
   private fail(error: Error): void {
