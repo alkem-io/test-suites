@@ -1,299 +1,205 @@
 // spec: client-web/src/functional-e2e/contributors-crud/contributors-crud-test-plan.md
-// seed: client-web/src/functional-e2e/seed-contributors-crud.spec.ts
+// Story: alkem-io/alkemio#1699 (QA P1: Contributors - CRUD Full), section "Virtual Contributor".
 //
-// Test Suite 3: Virtual Contributor (VC) CRUD Tests
-// Covers: Creation, Knowledge management, Space interactions, Visibility, Deletion
+// Since alkem-io/client-web#10398 (shipped) VCs are paused: nobody can
+// create one, add one to a Space or mention one, while existing VCs stay
+// visible, editable and deletable. So the VCs here are seeded over the API on
+// the scenario organisation's account, the cases for the paused steps pin
+// the pause itself (they go red the day VCs come back, which is the signal
+// to restore the story's original flow), and every other case drives the UI
+// that still exists. Writes are proven by the reloaded page AND the API.
 
-import { expect, Page } from '@playwright/test';
-import { TestScenarioFactory } from '@alkemio/tests-lib/scenario/TestScenarioFactory';
-import { TestScenarioConfig } from '@alkemio/tests-lib/scenario/config/test-scenario-config';
-import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
-import { TestUserManager } from '@alkemio/tests-lib';
-import { TestUser } from '@alkemio/tests-lib/common/enums/test.user';
+import { test, expect } from '@playwright/test';
 import {
-  createVirtualContributor,
-  deleteVirtualContributor,
-} from '@alkemio/tests-lib/scenario/baseFunctions';
-import {
-  CommunityMembershipPolicy,
+  AiPersonaEngine,
+  createCalloutWithData,
+  createVirtualContributorWithData,
+  readCalloutContributions,
+  readCalloutsSetCallouts,
+  readVirtualContributor,
+  SearchVisibility,
+  TestUser,
+  TestUserManager,
+  updateVirtualContributorSettings,
+  updateVirtualContributorVisibility,
+  VirtualContributorBodyOfKnowledgeType,
   SpacePrivacyMode,
-} from '@alkemio/client-lib/dist/generated/graphql';
-import { createAuthenticatedSessionFixture } from '@src/functional-e2e/fixtures/authenticated-session.fixture';
+  CalloutFramingType,
+} from '@alkemio/tests-lib';
+import path from 'path';
+import type { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
+import { must } from '../helpers/lib-actor.helper';
+import {
+  openPersonaPage,
+  type PersonaPage,
+} from '../helpers/space-access.helper';
+import {
+  baseUrl,
+  deleteVcIfPresent,
+  escapeRegExp,
+  expectSettingsTabs,
+  orgSettingsUrl,
+  runId,
+  teardownScenario,
+  vcPausedNotice,
+} from './contributors-crud.helpers';
+import { TestScenarioFactory } from '@alkemio/tests-lib';
 
-const { test, setupAuthentication, teardownAuthentication, getSharedPage } =
-  createAuthenticatedSessionFixture({
-    storageStateName: 'vc-crud.json',
-    cleanupAfterTests: process.env.cleanupAfterTests === 'true',
-  });
+const RUN = runId();
+const documentFile = path.resolve(
+  __dirname,
+  '../../../../server-api/src/functional-api/storage/files-to-upload/doc.pdf'
+);
 
-const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
-let baseScenario: OrganizationWithSpaceModel;
-let createdVcId: string | null = null;
-let createdVcNameId: string | null = null;
-let createdVcDisplayName: string | null = null;
+type SeededVc = {
+  id: string;
+  nameId: string;
+  url: string;
+  name: string;
+  kbCalloutsSetId: string;
+};
 
-const scenarioConfig: TestScenarioConfig = {
-  name: 'vc-crud',
-  organization: {
-    verification: { setVerified: true },
-  },
-  space: {
-    about: {
-      profile: {
-        displayName: 'VC CRUD Test Space',
-        tagline: 'Space for testing Virtual Contributor CRUD operations',
-      },
-    },
-    collaboration: {
-      addTutorialCallouts: false,
-    },
-    community: {
-      admins: [TestUser.SPACE_ADMIN],
-      members: [
-        TestUser.SPACE_MEMBER,
-        TestUser.SPACE_ADMIN,
-        TestUser.GLOBAL_BETA_TESTER,
-      ],
-    },
-    settings: {
-      privacy: { mode: SpacePrivacyMode.Public },
-      membership: { policy: CommunityMembershipPolicy.Applications },
-    },
-  },
-  // Innovation Pack with templates for VC knowledge management
-  innovationPack: {
-    useBaseOrganization: true,
-    pack: {
-      displayName: 'VC CRUD Test Template Pack',
-      tags: ['vc', 'crud', 'test'],
-    },
-    visibility: { listedInStore: true, searchVisibility: 'PUBLIC' },
-    templates: [
+let scenario: OrganizationWithSpaceModel | undefined;
+let orgAdmin: PersonaPage | undefined;
+let member: PersonaPage | undefined;
+/** Additive cases only (knowledge, profile, mention, BoK visit). */
+let vcMain: SeededVc | undefined;
+/** 3.7 hides it. */
+let vcHidden: SeededVc | undefined;
+/** 3.9 deletes it. */
+let vcDoomed: SeededVc | undefined;
+/** A post seeded into vcMain's knowledge base for the BoK visit (3.8). */
+const seededPost = {
+  title: `Seeded knowledge ${RUN}`,
+  body: `Seeded body ${RUN}`,
+};
+
+/** A VC with its own knowledge base on the scenario organisation's account, visible to everyone. */
+const seedVc = async (label: string): Promise<SeededVc> => {
+  const name = `Crud VC ${label} ${RUN}`;
+  const nameId = `crud-vc-${label}-${RUN}`;
+  const vc = must(
+    await createVirtualContributorWithData(
       {
-        type: 'POST' as any,
-        profileDisplayName: 'Post Template - VC CRUD',
-        postDefaultDescription: 'Template for VC knowledge posts',
+        accountID: scenario!.organization.accountId,
+        nameID: nameId,
+        profileData: { displayName: name, description: `About ${name}` },
+        aiPersona: { engine: AiPersonaEngine.Guidance },
+        bodyOfKnowledgeType:
+          VirtualContributorBodyOfKnowledgeType.AlkemioKnowledgeBase,
+        knowledgeBaseData: {
+          profile: { displayName: `KB ${name}` },
+          calloutsSetData: {},
+        },
       },
-      {
-        type: 'COMMUNITY_GUIDELINES' as any,
-        profileDisplayName: 'Community Guidelines - VC CRUD',
+      TestUser.GLOBAL_ADMIN
+    ),
+    `create VC ${name}`
+  ).createVirtualContributor;
+  must(
+    await updateVirtualContributorVisibility(vc.id, {
+      searchVisibility: SearchVisibility.Public,
+    }),
+    `make ${name} public`
+  );
+  return {
+    id: vc.id,
+    nameId,
+    url: vc.profile!.url,
+    name,
+    kbCalloutsSetId: vc.knowledgeBase!.calloutsSet!.id,
+  };
+};
+
+test.beforeAll(async ({ browser }) => {
+  test.setTimeout(180_000);
+  scenario = await TestScenarioFactory.createBaseScenario({
+    name: `vc-crud-${RUN}`,
+    organization: { verification: { setVerified: true } },
+    space: {
+      collaboration: { addPostCallout: true, addTutorialCallouts: false },
+      community: {
+        admins: [TestUser.SPACE_ADMIN],
+        members: [TestUser.SPACE_MEMBER],
       },
-    ],
-  },
-  // Platform discussion for testing VC tagging
-  platformDiscussion: {
-    title: 'VC CRUD Test Discussion',
-    description: 'Discussion for testing Virtual Contributor tagging',
-    category: 'PLATFORM_FUNCTIONALITIES',
-  },
-};
-
-const openVirtualContributorProfile = async (
-  page: Page,
-  vcDisplayNameOverride?: string | null,
-  vcNameIdOverride?: string | null
-) => {
-  const targetDisplayName = vcDisplayNameOverride || createdVcDisplayName || '';
-  const targetSlug = vcNameIdOverride || createdVcNameId || '';
-
-  // Direct navigation if we already captured the slug
-  if (targetSlug) {
-    const slugVariants = [
-      `${baseUrl}/virtual-contributor/${targetSlug}`,
-      `${baseUrl}/vc/${targetSlug}`,
-    ];
-
-    for (const url of slugVariants) {
-      await page.goto(url);
-      const vcHeading = page.getByRole('heading', { level: 1 });
-      const headingVisible = await vcHeading
-        .isVisible({ timeout: 8000 })
-        .catch(() => false);
-      if (headingVisible) {
-        const text = (await vcHeading.textContent()) || '';
-        if (!createdVcDisplayName) {
-          createdVcDisplayName = text.trim();
-        }
-        createdVcNameId = targetSlug;
-        return;
-      }
-    }
-  }
-
-  const attemptOpenOnCurrentPage = async () => {
-    const currentUrl = page.url();
-    const headingLocator = page.getByRole('heading', { level: 1 });
-    const onVcPage = /\/((virtual-contributor)|vc)\//i.test(currentUrl);
-
-    const headingVisible = await headingLocator
-      .isVisible({ timeout: 1000 })
-      .catch(() => false);
-    if (onVcPage && headingVisible) {
-      const headingText = (
-        (await headingLocator.textContent()) || ''
-      ).toLowerCase();
-      const expectedText = (
-        targetDisplayName ||
-        createdVcDisplayName ||
-        ''
-      ).toLowerCase();
-      if (!expectedText || headingText.includes(expectedText)) {
-        return true;
-      }
-    }
-
-    const headingCandidates = [
-      page.getByRole('heading', { name: /virtual contributors/i }),
-      page.getByRole('heading', { name: /virtual contributor/i }),
-    ];
-
-    let sectionHeading = null;
-    for (const heading of headingCandidates) {
-      const visible = await heading
-        .isVisible({ timeout: 1000 })
-        .catch(() => false);
-      if (visible) {
-        sectionHeading = heading;
-        break;
-      }
-    }
-
-    const section = sectionHeading
-      ? sectionHeading.locator('..').locator('..')
-      : page.locator('body');
-
-    const vcLinkByName = section
-      .getByRole('link', { name: new RegExp(targetDisplayName || '', 'i') })
-      .first();
-    const vcLinkByHref = targetSlug
-      ? section.locator(`a[href*="${targetSlug}"]`).first()
-      : null;
-
-    const generalLinkByName = page
-      .getByRole('link', { name: new RegExp(targetDisplayName || '', 'i') })
-      .first();
-    const generalLinkByHref = targetSlug
-      ? page.locator(`a[href*="${targetSlug}"]`).first()
-      : null;
-
-    if (sectionHeading) {
-      await sectionHeading.scrollIntoViewIfNeeded().catch(() => {});
-    }
-
-    const linkCandidates = [
-      vcLinkByName,
-      vcLinkByHref,
-      generalLinkByName,
-      generalLinkByHref,
-    ].filter(Boolean) as any[];
-
-    for (const candidate of linkCandidates) {
-      await candidate.scrollIntoViewIfNeeded().catch(() => {});
-      const linkVisible = await candidate
-        .isVisible({ timeout: 1500 })
-        .catch(() => false);
-      if (!linkVisible) continue;
-
-      const href = (await candidate.getAttribute('href')) || '';
-      const hrefSlug = href.split('/').filter(Boolean).pop() || null;
-      if (hrefSlug) {
-        createdVcNameId = hrefSlug;
-      }
-
-      await candidate.click();
-      await page.waitForLoadState('domcontentloaded');
-
-      const nowOnVcPage = /\/((virtual-contributor)|vc)\//i.test(page.url());
-      const postClickHeading = page.getByRole('heading', { level: 1 });
-      const postClickVisible = await postClickHeading
-        .isVisible({ timeout: 15000 })
-        .catch(() => false);
-      if (nowOnVcPage && postClickVisible) {
-        const headingText = (
-          (await postClickHeading.textContent()) || ''
-        ).toLowerCase();
-        const expectedText = (
-          targetDisplayName ||
-          createdVcDisplayName ||
-          ''
-        ).toLowerCase();
-        if (!expectedText || headingText.includes(expectedText)) {
-          return true;
-        }
-      }
-
-      await page.goBack().catch(() => {});
-    }
-    return false;
-  };
-
-  const tryFindAndOpenFromPage = async (targetUrl: string) => {
-    await page.goto(targetUrl);
-    await page.waitForLoadState('domcontentloaded');
-    await page.waitForTimeout(500);
-
-    if (targetUrl.includes('/organization/')) {
-      const accountTab = page.getByRole('tab', { name: /account/i });
-      if (await accountTab.isVisible().catch(() => false)) {
-        await accountTab.click();
-      }
-    }
-
-    const searchInput = page.getByRole('textbox', { name: /search/i }).first();
-    if (await searchInput.isVisible().catch(() => false)) {
-      await searchInput.fill(targetDisplayName || targetSlug);
-      await page.waitForTimeout(300);
-    }
-
-    const opened = await attemptOpenOnCurrentPage();
-    return opened;
-  };
-
-  const openedFromCurrent = await attemptOpenOnCurrentPage();
-  if (openedFromCurrent) return;
-
-  const targetUrls = [
-    `${baseUrl}/organization/${baseScenario.organization.nameId}`,
-    `${baseUrl}/contributors`,
-  ];
-
-  for (let attempt = 0; attempt < 2; attempt++) {
-    for (const targetUrl of targetUrls) {
-      const found = await tryFindAndOpenFromPage(targetUrl);
-      if (found) return;
-    }
-    await page.waitForTimeout(2000);
-  }
-
-  throw new Error('Unable to find Virtual Contributor');
-};
-
-const openCreatedVirtualContributor = async (page: Page) => {
-  await openVirtualContributorProfile(page);
-};
-
-// Serial mode to ensure clean setup/teardown
-test.describe.configure({ mode: 'serial' });
-
-test.describe('Virtual Contributor CRUD Tests', () => {
-  test.beforeAll(async ({ browser }) => {
-    test.setTimeout(120_000);
-    baseScenario = await TestScenarioFactory.createBaseScenario(scenarioConfig);
-    expect(baseScenario.scenarioSetupSucceeded).toBeTruthy();
-
-    // Setup authentication for Organization Admin (for VC management)
-    await setupAuthentication(
-      browser,
-      TestUserManager.users.organizationAdmin.email
-    );
+      settings: { privacy: { mode: SpacePrivacyMode.Public } },
+    },
   });
+  expect(scenario.scenarioSetupSucceeded, 'VC scenario set up').toBe(true);
+  // The account's VC entitlement is 3 (ACCOUNT_LICENSE_PLUS): exactly these three.
+  vcMain = await seedVc('main');
+  vcHidden = await seedVc('hidden');
+  vcDoomed = await seedVc('doomed');
+  // The plan's BoK visit is by a non-member: open vcMain's knowledge base to
+  // users without access (the default keeps it closed to them).
+  must(
+    await updateVirtualContributorSettings({
+      virtualContributorID: vcMain.id,
+      settings: { privacy: { knowledgeBaseContentVisible: true } },
+    }),
+    'open vcMain knowledge base to non-members'
+  );
+  must(
+    await createCalloutWithData({
+      calloutsSetID: vcMain.kbCalloutsSetId,
+      framing: {
+        profile: {
+          displayName: seededPost.title,
+          description: seededPost.body,
+        },
+        type: CalloutFramingType.None,
+      },
+    }),
+    'seed a knowledge-base post'
+  );
+  orgAdmin = await openPersonaPage(
+    browser,
+    TestUserManager.users.organizationAdmin.email
+  );
+  member = await openPersonaPage(
+    browser,
+    TestUserManager.users.spaceMember.email
+  );
+});
 
-  test.afterAll(async () => {
-    test.setTimeout(30_000);
-    await teardownAuthentication();
-    await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
-  });
+// File level, so it also runs when a failure retires the worker mid-file.
+test.afterAll(async () => {
+  await orgAdmin?.close();
+  await member?.close();
+  // VCs block their account's deletion: remove them before the organisation.
+  for (const vc of [vcMain, vcHidden, vcDoomed])
+    await deleteVcIfPresent(vc?.id);
+  await teardownScenario(scenario);
+});
 
+const knowledgeFeed = (page: PersonaPage['page']) =>
+  page.getByRole('main').getByRole('region', { name: 'Space content feed' });
+
+/** Creates a post in a VC knowledge base through the page's Add → Create Post dialog. */
+const openCreatePost = async (page: PersonaPage['page'], vc: SeededVc) => {
+  await page.goto(`${vc.url}/knowledge-base`);
+  await expect(
+    page.getByRole('heading', { level: 1, name: 'Knowledge Base' })
+  ).toBeVisible();
+  await page
+    .getByRole('main')
+    .getByRole('button', { name: 'Add', exact: true })
+    .first()
+    .click();
+  const dialog = page.getByRole('dialog', { name: 'Create Post', exact: true });
+  await expect(dialog).toBeVisible();
+  return dialog;
+};
+
+const kbCalloutNamed = async (vc: SeededVc, title: string) =>
+  (
+    must(
+      await readCalloutsSetCallouts(vc.kbCalloutsSetId),
+      'knowledge-base callouts'
+    ).lookup.calloutsSet?.callouts ?? []
+  ).find(c => c.framing.profile.displayName === title);
+
+test.describe('Contributors CRUD — Virtual Contributor', () => {
   test.skip('3.0 Manually go through whole flow - all flows together', async ({
     page,
   }) => {
@@ -344,790 +250,341 @@ test.describe('Virtual Contributor CRUD Tests', () => {
     await page.getByRole('button', { name: 'Close' }).click();
   });
 
-  test('3.1 Create new Virtual Contributor with all required details', async ({
-    page,
+  test("3.1 creating a VC is paused (client-web#10398): the Account tab lists the host's VCs and shows the upgrade notice instead of a create action", async () => {
+    const page = orgAdmin!.page;
+    await page.goto(orgSettingsUrl(scenario!.organization.nameId, 'account'));
+    await page
+      .getByRole('heading', { level: 3, name: /^Virtual Contributors / })
+      .getByRole('button')
+      .click();
+    for (const vc of [vcMain!, vcHidden!, vcDoomed!]) {
+      await expect(
+        page.getByRole('main').getByRole('link', { name: vc.name, exact: true })
+      ).toBeVisible();
+    }
+    await expect(vcPausedNotice(page)).toBeVisible();
+    await expect(
+      page.getByRole('button', { name: 'Create new contributor', exact: true })
+    ).toHaveCount(0);
+    // Positive control: the same account still offers to create a template pack.
+    await page
+      .getByRole('heading', { level: 3, name: /^Template Packs / })
+      .getByRole('button')
+      .click();
+    await expect(
+      page.getByRole('button', { name: 'Create new pack', exact: true })
+    ).toBeVisible();
+  });
+
+  // Product finding QA-PF-01 — alkem-io/client-web#10125 (knowledge-base posts never render: CalloutDetails fails on the missing flow-state tagset)
+  test('3.2 the host adds a text post to the VC knowledge base; it is stored and listed there', async () => {
+    const page = orgAdmin!.page;
+    const title = `KB post ${RUN}`;
+    const dialog = await openCreatePost(page, vcMain!);
+    await dialog
+      .getByRole('textbox', { name: 'Title', exact: true })
+      .fill(title);
+    await dialog
+      .getByRole('textbox', { name: 'Write something...', exact: true })
+      .fill(`Knowledge text ${RUN}`);
+    await dialog.getByRole('button', { name: 'Post', exact: true }).click();
+    await expect(dialog).toBeHidden();
+
+    await expect
+      .poll(async () => (await kbCalloutNamed(vcMain!, title))?.id)
+      .toBeTruthy();
+    await page.reload();
+    await expect(
+      knowledgeFeed(page).getByRole('heading', { name: title, exact: true })
+    ).toBeVisible();
+  });
+
+  // Product finding QA-PF-01 — alkem-io/client-web#10125 (knowledge-base posts never render: CalloutDetails fails on the missing flow-state tagset)
+  test('3.3 the host adds a document to the VC knowledge base; it is stored as a file link and listed there', async () => {
+    const page = orgAdmin!.page;
+    const title = `KB document ${RUN}`;
+    const dialog = await openCreatePost(page, vcMain!);
+    await dialog
+      .getByRole('textbox', { name: 'Title', exact: true })
+      .fill(title);
+    await dialog
+      .getByRole('radio', { name: 'Links & Files', exact: true })
+      .click();
+    await dialog
+      .getByRole('button', { name: 'Add another link', exact: true })
+      .click();
+    // The pre-populated link row: its "Title" shares the post title's label, so go by placeholder.
+    await dialog
+      .getByPlaceholder('Link title', { exact: true })
+      .fill(`Document ${RUN}`);
+    const chooser = page.waitForEvent('filechooser');
+    await dialog
+      .getByRole('button', { name: 'Attach file', exact: true })
+      .click();
+    await (await chooser).setFiles(documentFile);
+    await expect(
+      dialog.getByRole('textbox', { name: 'URL', exact: true })
+    ).toHaveValue(/^https?:\/\/.+/);
+    await dialog.getByRole('button', { name: 'Post', exact: true }).click();
+    await expect(dialog).toBeHidden();
+
+    await expect
+      .poll(async () => (await kbCalloutNamed(vcMain!, title))?.id)
+      .toBeTruthy();
+    const callout = (await kbCalloutNamed(vcMain!, title))!;
+    const counts = must(
+      await readCalloutContributions(callout.id),
+      'document callout contributions'
+    ).lookup.callout!.contributionsCount;
+    expect(counts.link).toBe(1);
+    await page.reload();
+    await expect(
+      knowledgeFeed(page).getByRole('heading', { name: title, exact: true })
+    ).toBeVisible();
+  });
+
+  test('3.4 adding a VC to a Space is paused (client-web#10398): Space settings › Community lists its VCs and shows the upgrade notice instead of the add actions', async ({
+    browser,
   }) => {
-    test.setTimeout(120_000);
-    const unique = Date.now();
-    const vcDisplayName = `VC CRUD ${unique}`;
-    const vcSlug = `vc-crud-${unique}`.slice(0, 30).toLowerCase();
-
-    // 1. Go to Dashboard
-    await page.goto(`${baseUrl}/home`);
-    await expect(page).toHaveURL(/\/home/);
-    await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
-
-    // Handle cookies banner if present
-    const acceptCookies = page.getByRole('button', {
-      name: /accept all cookies/i,
-    });
-    if (await acceptCookies.isVisible().catch(() => false)) {
-      await acceptCookies.click();
-    }
-
-    // 2. Navigate to organization profile (associated organization)
-    await page.goto(
-      `${baseUrl}/organization/${baseScenario.organization.nameId}`
+    const admin = await openPersonaPage(
+      browser,
+      TestUserManager.users.spaceAdmin.email
     );
-    await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
-
-    // 3. Navigate to Settings tab
-    const settingsTab = page.getByRole('tab', { name: /settings/i });
-    const settingsLink = page.getByRole('link', { name: /settings/i }).first();
-    const settingsTabVisible = await settingsTab.isVisible().catch(() => false);
-    const settingsLinkVisible = await settingsLink
-      .isVisible()
-      .catch(() => false);
-    expect(settingsTabVisible || settingsLinkVisible).toBeTruthy();
-    if (settingsTabVisible) {
-      await settingsTab.click();
-    } else if (settingsLinkVisible) {
-      await settingsLink.click();
-    }
-    await page.waitForLoadState('domcontentloaded');
-
-    // 4. Navigate to Account page or look for VC creation
-    const accountTab = page.getByRole('tab', { name: /account/i });
-    await expect(accountTab).toBeVisible();
-    await accountTab.click();
-
-    // 5. Look for "Create new Virtual Contributor" button in VC section
-    const vcHeading = page.getByRole('heading', {
-      name: /virtual contributors/i,
-    });
-    await expect(vcHeading).toBeVisible();
-    const vcSection = vcHeading.locator(
-      'xpath=ancestor::*[self::section or self::div][.//button][1]'
-    );
-    const createButtonWithLabel = vcSection
-      .getByRole('button', { name: /virtual contributor|create/i })
-      .first();
-    const sectionAddButton = vcSection
-      .getByRole('button', { name: /add|create/i })
-      .first();
-    const createVCButton = (await createButtonWithLabel
-      .isVisible()
-      .catch(() => false))
-      ? createButtonWithLabel
-      : sectionAddButton;
-
-    await expect(createVCButton).toBeVisible({ timeout: 10000 });
-    await createVCButton.scrollIntoViewIfNeeded();
-    await createVCButton.click();
-
-    const creationDialog = page
-      .getByRole('dialog')
-      .filter({ has: page.getByRole('textbox', { name: /name/i }) })
-      .first();
-    const addKnowledgeDialog = page
-      .getByRole('dialog')
-      .filter({ has: page.getByRole('heading', { name: /add knowledge/i }) })
-      .first();
-
-    await page.waitForSelector('[role="dialog"]', { timeout: 15000 });
-
-    const knowledgeVisible = await addKnowledgeDialog
-      .isVisible({ timeout: 10000 })
-      .catch(() => false);
-    let creationVisible = await creationDialog
-      .isVisible({ timeout: knowledgeVisible ? 0 : 10000 })
-      .catch(() => false);
-
-    if (knowledgeVisible && !creationVisible) {
-      const knowledgeTitle = addKnowledgeDialog.getByRole('textbox', {
-        name: /post title/i,
-      });
-      if (await knowledgeTitle.isVisible().catch(() => false)) {
-        await knowledgeTitle.fill('VC CRUD seed knowledge');
-      }
-
-      const knowledgeEditor = addKnowledgeDialog
-        .getByRole('textbox', { name: /markdown editor|editor/i })
-        .first();
-      if (await knowledgeEditor.isVisible().catch(() => false)) {
-        await knowledgeEditor.fill('Seed knowledge for automated VC creation');
-      }
-
-      const addPostButton = addKnowledgeDialog.getByRole('button', {
-        name: /add post/i,
-      });
-      if (await addPostButton.isEnabled().catch(() => false)) {
-        await addPostButton.click();
-      }
-
-      const continueInKnowledge = addKnowledgeDialog.getByRole('button', {
-        name: /continue|next/i,
-      });
-      if (await continueInKnowledge.isVisible().catch(() => false)) {
-        await continueInKnowledge.click();
-      }
-      await addKnowledgeDialog.waitFor({ state: 'hidden', timeout: 15000 });
-      creationVisible = await creationDialog
-        .isVisible({ timeout: 10000 })
-        .catch(() => false);
-    }
-
-    const knowledgeStillVisible = await addKnowledgeDialog
-      .isVisible()
-      .catch(() => false);
-
-    if (!creationVisible || knowledgeStillVisible) {
-      throw new Error('VC creation dialog did not appear after clicking Add');
-    }
-
-    const nameField = creationDialog
-      .getByRole('textbox', { name: /name/i })
-      .first();
-    await expect(nameField).toBeVisible({ timeout: 15000 });
-    await nameField.fill(vcDisplayName);
-
-    const taglineField = creationDialog
-      .getByRole('textbox', { name: /tagline/i })
-      .first();
-    await expect(taglineField).toBeVisible({ timeout: 4000 });
-    await taglineField.fill('VC CRUD automated creation');
-
-    const descriptionEditor = creationDialog
-      .getByRole('textbox', { name: /markdown editor|description/i })
-      .first();
-    await expect(descriptionEditor).toBeVisible({ timeout: 4000 });
-    await descriptionEditor.fill('Seed knowledge for automated VC creation');
-
-    const knowledgeTypeButton = creationDialog
-      .getByRole('button', { name: /written knowledge/i })
-      .first();
-    await expect(knowledgeTypeButton).toBeVisible({ timeout: 4000 });
-    await knowledgeTypeButton.click();
-
-    const submitButton = creationDialog
-      .getByRole('button', { name: /create|save|submit/i })
-      .first();
-    await expect(submitButton).toBeVisible();
-    await submitButton.click();
-    // Complete post-create flow and land on the VC profile to capture the slug
-    const continueButton = page
-      .getByRole('button', { name: /continue/i })
-      .first();
-    if (await continueButton.isVisible().catch(() => false)) {
-      await continueButton.click();
-    }
-
-    const proceedWithoutMembership = page
-      .getByRole('button', { name: /proceed without membership/i })
-      .first();
-    if (await proceedWithoutMembership.isVisible().catch(() => false)) {
-      await proceedWithoutMembership.click();
-    }
-
-    const visitProfile = page
-      .getByRole('link', { name: /visit .*profile|open/i })
-      .first();
-    const visitProfileButton = page
-      .getByRole('button', { name: /visit|open/i })
-      .first();
-    const visitTarget = (await visitProfile.isVisible().catch(() => false))
-      ? visitProfile
-      : visitProfileButton;
-    if (await visitTarget.isVisible().catch(() => false)) {
-      await visitTarget.click();
-    }
-
-    const urlAfterCreation = new URL(page.url());
-    const pathParts = urlAfterCreation.pathname.split('/').filter(Boolean);
-    const lastSegment = pathParts.pop() || null;
-    if (lastSegment) {
-      createdVcNameId = lastSegment;
-      createdVcDisplayName = vcDisplayName;
-    }
-
-    createdVcNameId = createdVcNameId || vcSlug;
-    createdVcDisplayName = createdVcDisplayName || vcDisplayName;
-
     try {
-      const landingHeading = page.getByRole('heading', { level: 1 });
-      const onVcPage = /\/((virtual-contributor)|vc)\//i.test(page.url());
-      const headingVisible = await landingHeading
-        .isVisible({ timeout: 8000 })
-        .catch(() => false);
-
-      if (onVcPage && headingVisible) {
-        await expect(landingHeading).toContainText(vcDisplayName);
-        createdVcNameId = page.url().split('/').filter(Boolean).pop() || null;
-        createdVcDisplayName = vcDisplayName;
-        return;
-      }
-
-      // Navigate to organization account tab and click the VC card directly
+      const page = admin.page;
       await page.goto(
-        `${baseUrl}/organization/${baseScenario.organization.nameId}`
+        `${baseUrl}/${scenario!.space.nameId}/settings/community`
       );
-      const accountTabNav = page.getByRole('tab', { name: /account/i });
-      if (await accountTabNav.isVisible().catch(() => false)) {
-        await accountTabNav.click();
-      }
-
-      const vcCardHeading = page
-        .getByRole('heading', { name: new RegExp(vcDisplayName, 'i') })
-        .first();
-      await expect(vcCardHeading).toBeVisible({ timeout: 15000 });
-      const vcLink = vcCardHeading.locator('xpath=ancestor::a[1]');
-      if (await vcLink.isVisible({ timeout: 2000 }).catch(() => false)) {
-        await vcLink.click();
-      } else {
-        await vcCardHeading.click();
-      }
-
-      await expect(page).toHaveURL(/\/(virtual-contributor|vc)\//, {
-        timeout: 15000,
-      });
-      await expect(landingHeading).toBeVisible({ timeout: 15000 });
-      await expect(landingHeading).toContainText(vcDisplayName);
-      const hrefSlug = page.url().split('/').filter(Boolean).pop() || null;
-      createdVcNameId = hrefSlug || createdVcNameId;
-      createdVcDisplayName = vcDisplayName;
-    } catch (uiError) {
-      // API fallback to ensure the VC exists and capture the authoritative slug
-      let apiVc: any = null;
-      try {
-        const apiResult = await createVirtualContributor(
-          baseScenario.organization.id,
-          {
-            profileDisplayName: vcDisplayName,
-            profileDescription: 'VC CRUD automated creation',
-            nameID: createdVcNameId || vcSlug,
-          },
-          TestUser.GLOBAL_ADMIN
-        );
-        apiVc = apiResult?.data?.createVirtualContributor;
-      } catch (apiError) {
-        // ignore and handle below
-      }
-
-      if (!apiVc) {
-        throw uiError;
-      }
-
-      createdVcId = apiVc.id || null;
-      createdVcNameId = apiVc.nameID || createdVcNameId;
-      createdVcDisplayName = apiVc.profile?.displayName || vcDisplayName;
-
-      await page.goto(`${baseUrl}/virtual-contributor/${createdVcNameId}`);
-      await expect(page.getByRole('heading', { level: 1 })).toBeVisible({
-        timeout: 20000,
-      });
-      await expect(page.getByRole('heading', { level: 1 })).toContainText(
-        createdVcDisplayName
-      );
+      // Positive control: the members table of the same tab rendered.
+      await expect(
+        page.getByRole('heading', { level: 3, name: /^Space Members / })
+      ).toBeVisible();
+      await page
+        .getByRole('heading', { level: 3, name: /^Virtual Contributors / })
+        .getByRole('button')
+        .click();
+      await expect(vcPausedNotice(page)).toBeVisible();
+      await expect(
+        page.getByRole('button', {
+          name: 'Add Virtual Contributor',
+          exact: true,
+        })
+      ).toHaveCount(0);
+      await expect(
+        page.getByRole('button', {
+          name: 'Invite External Virtual Contributor',
+          exact: true,
+        })
+      ).toHaveCount(0);
+    } finally {
+      await admin.close();
     }
   });
 
-  test('3.2 Add text post knowledge to Virtual Contributor', async ({
-    page,
-  }) => {
-    expect(createdVcNameId).toBeTruthy();
-    await openCreatedVirtualContributor(page);
-
-    // 1. Verify Knowledge section heading is visible
-    const knowledgeSectionHeading = page.getByRole('heading', {
-      name: /body.*of.*knowledge|knowledge/i,
-      level: 2,
+  test('3.5 mentioning a VC is paused (client-web#10398): the comment box offers the VC as "Temporarily unavailable" and picking it inserts nothing', async () => {
+    const page = member!.page;
+    await page.goto(`${baseUrl}/${scenario!.space.nameId}`);
+    const callout = page
+      .getByRole('region', { name: 'Space content feed' })
+      .getByRole('heading', {
+        level: 3,
+        name: scenario!.space.collaboration.calloutPostDisplayName,
+        exact: true,
+      });
+    await expect(callout).toBeVisible();
+    await callout.click();
+    const dialog = page.getByRole('dialog', {
+      name: scenario!.space.collaboration.calloutPostDisplayName,
     });
-    await expect(knowledgeSectionHeading).toBeVisible({ timeout: 10000 });
+    const comment = dialog
+      .getByRole('textbox', { name: 'Add a comment...' })
+      .or(dialog.getByRole('combobox', { name: 'Add a comment...' }));
+    await expect(comment).toBeVisible();
 
-    // 2. Click Visit button to open the Body of Knowledge dialog
-    const visitBoK = page.getByRole('button', { name: /visit/i }).first();
-    await expect(visitBoK).toBeVisible({ timeout: 10000 });
-    await visitBoK.click();
-    await page.waitForLoadState('domcontentloaded');
+    // Positive control first: a user is offered and picking them inserts the mention.
+    await comment.click();
+    await comment.pressSequentially('@space');
+    const userOption = page
+      .getByRole('listbox')
+      .getByRole('option', { name: /^space admin/ });
+    await expect(userOption).toBeVisible();
+    await userOption.click();
+    await expect(comment).toHaveValue(/@space admin/);
 
-    // 3. Verify BoK dialog is open (by its title containing "Body Of Knowledge")
-    const bokDialogTitle = page.getByRole('heading', {
-      name: /body.*of.*knowledge/i,
-      level: 2,
+    await comment.fill('');
+    const typed = '@Crud VC main';
+    await comment.pressSequentially(typed);
+    const vcOption = page.getByRole('listbox').getByRole('option', {
+      name: new RegExp(`^${escapeRegExp(vcMain!.name)}`),
     });
-    await expect(bokDialogTitle).toBeVisible({ timeout: 10000 });
-
-    // 4. Click "Post" button to add text post knowledge
-    const postButton = page.getByRole('button', { name: /^post$/i });
-    await expect(postButton).toBeVisible({ timeout: 5000 });
-    await postButton.click();
-
-    // 5. Verify "Add Post" dialog appears
-    const addPostTitle = page.getByRole('heading', { name: /add post/i });
-    await expect(addPostTitle).toBeVisible({ timeout: 5000 });
-
-    // 6. Verify Title field is present
-    const titleField = page.getByRole('textbox', { name: /title/i });
-    await expect(titleField).toBeVisible({ timeout: 5000 });
-
-    // 7. Close the Add Post dialog using the Close button
-    const closeAddPostButton = page
-      .getByRole('dialog', { name: /add post/i })
-      .getByRole('button', { name: /close/i });
-    await expect(closeAddPostButton).toBeVisible({ timeout: 5000 });
-    await closeAddPostButton.click();
-
-    // 8. Verify Add Post dialog is closed (Title field no longer visible)
-    await expect(addPostTitle).not.toBeVisible({ timeout: 5000 });
-
-    // 9. Close the BoK dialog using Escape key
-    await page.keyboard.press('Escape');
-
-    // 10. Verify we're back on the VC profile
-    const vcProfileHeading = page.getByRole('heading', { level: 1 });
-    await expect(vcProfileHeading).toBeVisible({ timeout: 10000 });
-    await expect(vcProfileHeading).toContainText(createdVcDisplayName || '');
-  });
-
-  test('3.3 Add document knowledge to Virtual Contributor', async ({
-    page,
-  }) => {
-    expect(createdVcNameId).toBeTruthy();
-    await openCreatedVirtualContributor(page);
-
-    // 1. Verify Knowledge section heading is visible
-    const knowledgeSectionHeading = page.getByRole('heading', {
-      name: /body.*of.*knowledge|knowledge/i,
-      level: 2,
-    });
-    await expect(knowledgeSectionHeading).toBeVisible({ timeout: 10000 });
-
-    // 2. Click Visit button to open the Body of Knowledge dialog
-    const visitBoK = page.getByRole('button', { name: /visit/i }).first();
-    await expect(visitBoK).toBeVisible({ timeout: 10000 });
-    await visitBoK.click();
-    await page.waitForLoadState('domcontentloaded');
-
-    // 3. Verify BoK dialog is open
-    const bokDialogTitle = page.getByRole('heading', {
-      name: /body.*of.*knowledge/i,
-      level: 2,
-    });
-    await expect(bokDialogTitle).toBeVisible({ timeout: 10000 });
-
-    // 4. Click "Post" button to open the Add Post form
-    const postButton = page.getByRole('button', { name: /^post$/i });
-    await expect(postButton).toBeVisible({ timeout: 5000 });
-    await postButton.click();
-
-    // 5. Verify "Add Post" dialog appears
-    const addPostTitle = page.getByRole('heading', { name: /add post/i });
-    await expect(addPostTitle).toBeVisible({ timeout: 5000 });
-
-    // 6. Verify "Add Reference" button is present (for adding links/documents)
-    const addReferenceButton = page.getByRole('button', {
-      name: /add reference/i,
-    });
-    await expect(addReferenceButton).toBeVisible({ timeout: 5000 });
-
-    // 7. Close the Add Post dialog
-    const closeAddPostButton = page
-      .getByRole('dialog', { name: /add post/i })
-      .getByRole('button', { name: /close/i });
-    await expect(closeAddPostButton).toBeVisible({ timeout: 5000 });
-    await closeAddPostButton.click();
-
-    // 8. Verify Add Post dialog is closed
-    await expect(addPostTitle).not.toBeVisible({ timeout: 5000 });
-
-    // 9. Close the BoK dialog
-    await page.keyboard.press('Escape');
-
-    // 10. Verify we're back on the VC profile
-    const vcProfileHeading = page.getByRole('heading', { level: 1 });
-    await expect(vcProfileHeading).toBeVisible({ timeout: 10000 });
-    await expect(vcProfileHeading).toContainText(createdVcDisplayName || '');
-  });
-
-  test('3.4 Associate VC to Space and accept invitation', async ({
-    browser,
-  }) => {
-    expect(createdVcNameId).toBeTruthy();
-
-    // Start as Org Admin to locate the VC and its settings
-    await teardownAuthentication();
-    await setupAuthentication(
-      browser,
-      TestUserManager.users.organizationAdmin.email
-    );
-    let page = getSharedPage();
-    await openCreatedVirtualContributor(page);
-
-    const settingsTab = page.getByRole('tab', { name: /settings/i });
-    const settingsLink = page.getByRole('link', { name: /settings/i }).first();
-    const settingsTarget = (await settingsTab.isVisible().catch(() => false))
-      ? settingsTab
-      : settingsLink;
-    await expect(settingsTarget).toBeVisible();
-    await settingsTarget.click();
-
-    const membershipTab = page.getByRole('tab', { name: /membership/i });
-    await expect(membershipTab).toBeVisible();
-    await membershipTab.click();
-
-    // Switch to Global Admin (has Space admin rights) to invite VC from Space settings
-    await teardownAuthentication();
-    await setupAuthentication(browser, TestUserManager.users.globalAdmin.email);
-    page = getSharedPage();
-
-    await page.goto(`${baseUrl}/${baseScenario.space.nameId}`);
-    const spaceHeading = page.getByRole('heading', { level: 1 });
-    await expect(spaceHeading).toBeVisible({ timeout: 15000 });
-
-    // Community/Contributors tab
-    const contributorsTab = page.getByRole('tab', {
-      name: /community|contributors/i,
-    });
-    await expect(contributorsTab).toBeVisible({ timeout: 10000 });
-    await contributorsTab.click();
-
-    const addContributorButton = page
-      .getByRole('button', {
-        name: /add.*virtual contributor|add.*contributor|invite.*contributor/i,
-      })
-      .first();
-    await expect(addContributorButton).toBeVisible({ timeout: 10000 });
-    await addContributorButton.click();
-
-    const searchField = page.getByRole('textbox', {
-      name: /search|name|email|contributor/i,
-    });
-    await expect(searchField).toBeVisible({ timeout: 10000 });
-    await searchField.fill(createdVcDisplayName || createdVcNameId || '');
-
-    const vcOption = page
-      .getByRole('option', {
-        name: new RegExp(createdVcDisplayName || createdVcNameId || '', 'i'),
-      })
-      .first();
-    await expect(vcOption).toBeVisible({ timeout: 10000 });
+    await expect(vcOption).toBeVisible();
+    await expect(vcOption.getByText(/^Temporarily unavailable/)).toBeVisible();
     await vcOption.click();
-
-    const inviteButton = page.getByRole('button', {
-      name: /add|invite|send/i,
-    });
-    await expect(inviteButton).toBeVisible({ timeout: 10000 });
-    await inviteButton.click();
-
-    // Switch back to Org Admin to accept invitation in VC settings
-    await teardownAuthentication();
-    await setupAuthentication(
-      browser,
-      TestUserManager.users.organizationAdmin.email
-    );
-    page = getSharedPage();
-
-    await openCreatedVirtualContributor(page);
-    const settingsTabReturn = page.getByRole('tab', { name: /settings/i });
-    await expect(settingsTabReturn).toBeVisible({ timeout: 10000 });
-    await settingsTabReturn.click();
-
-    const membershipTabReturn = page.getByRole('tab', { name: /membership/i });
-    await expect(membershipTabReturn).toBeVisible({ timeout: 10000 });
-    await membershipTabReturn.click();
-
-    const pendingSection = page.getByText(/pending invitations/i);
-    await expect(pendingSection).toBeVisible({ timeout: 15000 });
-
-    const acceptButton = pendingSection.getByRole('button', {
-      name: /accept/i,
-    });
-    await expect(acceptButton).toBeVisible({ timeout: 10000 });
-    await acceptButton.click();
-
-    const membershipEntry = page.getByText(
-      new RegExp(baseScenario.space.nameId, 'i')
-    );
-    await expect(membershipEntry).toBeVisible({ timeout: 15000 });
+    await expect(comment).toHaveValue(typed);
   });
 
-  test('3.5 Tag Virtual Contributor with question in discussion', async ({
-    browser,
-  }) => {
-    expect(createdVcNameId).toBeTruthy();
-    // Switch to Space Member
-    await teardownAuthentication();
-    await setupAuthentication(browser, TestUserManager.users.spaceMember.email);
-    const page = getSharedPage();
-
-    // 1. Navigate to Space
-    await page.goto(`${baseUrl}/${baseScenario.space.nameId}`);
-    await expect(page.getByRole('tab', { name: 'Home' })).toBeVisible();
-
-    // 2. Navigate to Forum/Discussion (via Tools Menu)
-    await page.getByRole('button', { name: 'Tools Menu' }).click();
-    await page.waitForTimeout(500);
-    await page.getByRole('menuitem', { name: 'Alkemio Forum' }).click();
-
-    // 3. Verify forum page loads
-    await expect(page).toHaveURL(/\/forum/);
-    const acceptCookiesForum = page.getByRole('button', {
-      name: /accept all cookies/i,
+  test("3.6 a signed-in user reaches the VC profile from its host's profile; it shows the name, the host and the Body of Knowledge", async () => {
+    const page = member!.page;
+    await page.goto(`${baseUrl}/organization/${scenario!.organization.nameId}`);
+    await page
+      .getByRole('tablist', { name: 'Resource sections' })
+      .getByRole('tab', { name: 'Other Resources' })
+      .click();
+    // The resource card is a link named "<VC name> Virtual Contributor".
+    const card = page.getByRole('main').getByRole('link', {
+      name: `${vcMain!.name} Virtual Contributor`,
+      exact: true,
     });
-    if (await acceptCookiesForum.isVisible().catch(() => false)) {
-      await acceptCookiesForum.click();
-    }
+    await expect(card).toBeVisible();
+    await card.click();
+    await expect(page).toHaveURL(vcMain!.url);
     await expect(
-      page.getByRole('heading', {
-        name: /Welcome to the Alkemio Forum/i,
-        level: 1,
+      page.getByRole('heading', { level: 1, name: vcMain!.name, exact: true })
+    ).toBeVisible();
+    await expect(
+      page.getByRole('main').getByText(`About ${vcMain!.name}`, { exact: true })
+    ).toBeVisible();
+    await expect(
+      page.getByRole('main').getByRole('link', {
+        name: scenario!.organization.profile.displayName,
+        exact: true,
       })
-    ).toBeVisible();
-
-    const seeAllDiscussions = page.getByRole('link', {
-      name: /see all discussions/i,
-    });
-    if (await seeAllDiscussions.isVisible().catch(() => false)) {
-      await seeAllDiscussions.click();
-      await page.waitForLoadState('domcontentloaded');
-    }
-
-    // 4. Look for existing discussion card
-    const discussionHeading = page
-      .getByRole('heading', { name: /VC CRUD Test Discussion/i })
-      .first();
-    const discussionClickable = discussionHeading.locator(
-      'xpath=ancestor::a[1] | xpath=ancestor::button[1]'
+    ).toHaveAttribute(
+      'href',
+      `${baseUrl}/organization/${scenario!.organization.nameId}`
     );
-
-    const discussionVisible = await discussionHeading
-      .isVisible({ timeout: 10000 })
-      .catch(() => false);
-    if (!discussionVisible) {
-      await expect(
-        page.getByRole('heading', { name: /Welcome to the Alkemio Forum/i })
-      ).toBeVisible();
-      return;
-    }
-
-    if (
-      await discussionClickable.isVisible({ timeout: 2000 }).catch(() => false)
-    ) {
-      await discussionClickable.click();
-    } else {
-      await discussionHeading.click();
-    }
-    await page.waitForTimeout(1000);
-
-    // 5. Verify discussion heading is visible
-    const discussionHeadingDetail = page.getByRole('heading', {
-      name: /VC CRUD Test Discussion/i,
-    });
-    const detailVisible = await discussionHeadingDetail
-      .isVisible({ timeout: 5000 })
-      .catch(() => false);
-
-    if (!detailVisible) {
-      await expect(
-        page.getByRole('heading', { name: /Welcome to the Alkemio Forum/i })
-      ).toBeVisible();
-      return;
-    }
-
-    // 6. Look for comment/reply input
-    const commentInput = page.getByRole('textbox', {
-      name: /comment|reply|message/i,
-    });
-    await expect(commentInput).toBeVisible();
-
-    // 7. Type "@" to trigger mention
-    await commentInput.fill('@');
-    await page.waitForTimeout(500);
-
-    // 8. Look for VC in mention suggestions
-    const mentionSuggestions = page.locator('[role="listbox"], [role="menu"]');
-    await expect(mentionSuggestions).toBeVisible();
-
-    // Clear the input
-    await commentInput.clear();
-  });
-
-  test('3.6 Navigate to Virtual Contributor profile from mention', async ({
-    browser,
-  }) => {
-    expect(createdVcNameId).toBeTruthy();
-    // Ensure authentication as Space Member
-    await teardownAuthentication();
-    await setupAuthentication(browser, TestUserManager.users.spaceMember.email);
-    const page = getSharedPage();
-
-    // 1. Navigate to Contributors page
-    await page.goto(baseUrl);
-    await page.waitForURL('**/home');
-
-    // Open Tools Menu
-    await page.getByRole('button', { name: 'Tools Menu' }).click();
-    await page.waitForTimeout(500);
-
-    // Click Find contributors
-    await page.getByRole('menuitem', { name: 'Find contributors' }).click();
-
-    // 2. Verify Contributors page loads
-    await expect(page).toHaveURL(/\/contributors/);
     await expect(
-      page.getByRole('heading', { name: /contributor|talent/i, level: 1 })
+      page.getByRole('heading', { level: 3, name: 'Body of Knowledge' })
     ).toBeVisible();
-
-    // 3. Look for Virtual Contributors section
     await expect(
-      page.getByRole('heading', { name: 'Virtual Contributors' })
+      page.getByRole('main').getByRole('link', { name: 'Visit', exact: true })
+    ).toHaveAttribute('href', `${vcMain!.url}/knowledge-base`);
+    // The visitor does not administer the VC.
+    await expect(
+      page.getByRole('link', { name: 'Open virtual contributor settings' })
+    ).toHaveCount(0);
+  });
+
+  test('3.7 the host sets a VC to Hidden on its Settings tab; it is saved and survives a reload', async () => {
+    const page = orgAdmin!.page;
+    await page.goto(`${vcHidden!.url}/settings/settings`);
+    await expectSettingsTabs(page, ['Profile', 'Membership', 'Settings']);
+    const hidden = page.getByRole('radio', { name: /^Hidden / });
+    await expect(page.getByRole('radio', { name: /^Public / })).toBeChecked();
+    await hidden.click();
+    await expect(hidden).toBeChecked();
+    await expect
+      .poll(
+        async () =>
+          must(await readVirtualContributor(vcHidden!.id), 'VC visibility')
+            .lookup.virtualContributor?.searchVisibility
+      )
+      .toBe(SearchVisibility.Hidden);
+    await page.reload();
+    await expect(page.getByRole('radio', { name: /^Hidden / })).toBeChecked();
+  });
+
+  // Product finding QA-PF-02 — pending (the switch writes the opposite of its label: "Hide" ON sends knowledgeBaseContentVisible: true)
+  test('3.7b the host\'s "Hide knowledge-base content from non-members" switch reads ON exactly when the content is hidden, before and after a toggle', async () => {
+    const page = orgAdmin!.page;
+    const contentVisible = async () =>
+      must(await readVirtualContributor(vcHidden!.id), 'VC privacy').lookup
+        .virtualContributor?.settings.privacy.knowledgeBaseContentVisible;
+    const hide = page.getByRole('switch', {
+      name: 'Hide knowledge-base content from non-members',
+      exact: true,
+    });
+
+    await page.goto(`${vcHidden!.url}/settings/settings`);
+    const before = await contentVisible();
+    await expect(
+      hide,
+      `stored knowledgeBaseContentVisible=${before}`
+    ).toBeChecked({ checked: before === false });
+
+    await hide.click();
+    await expect.poll(contentVisible).toBe(!before);
+    await page.reload();
+    await expect(
+      hide,
+      `stored knowledgeBaseContentVisible=${!before}`
+    ).toBeChecked({ checked: before === true });
+  });
+
+  // Product finding QA-PF-01 — alkem-io/client-web#10125 (knowledge-base posts never render: CalloutDetails fails on the missing flow-state tagset)
+  test('3.8 a signed-in user visits the Body of Knowledge from the VC profile and reads the knowledge in it', async () => {
+    const page = member!.page;
+    await page.goto(vcMain!.url);
+    const visit = page
+      .getByRole('main')
+      .getByRole('link', { name: 'Visit', exact: true });
+    await expect(visit).toBeVisible();
+    await visit.click();
+    await expect(page).toHaveURL(`${vcMain!.url}/knowledge-base`);
+    await expect(
+      page.getByRole('heading', { level: 1, name: 'Knowledge Base' })
     ).toBeVisible();
-
-    // 4. Click the created VC card
-    const vcSection = page
-      .getByRole('heading', { name: 'Virtual Contributors' })
-      .locator('..');
-    let vcCard = vcSection.getByRole('link', {
-      name: new RegExp(createdVcDisplayName || '', 'i'),
+    // A visitor gets no authoring action.
+    await expect(
+      page.getByRole('main').getByRole('button', { name: 'Add', exact: true })
+    ).toHaveCount(0);
+    const post = knowledgeFeed(page).getByRole('heading', {
+      name: seededPost.title,
+      exact: true,
     });
-
-    const vcCardVisible = await vcCard
-      .first()
-      .isVisible({ timeout: 4000 })
-      .catch(() => false);
-
-    if (!vcCardVisible) {
-      await openCreatedVirtualContributor(page);
-    } else {
-      await expect(vcCard.first()).toBeVisible({ timeout: 12000 });
-      await vcCard.first().click();
-    }
-
-    // 5. Verify VC profile page
-    await expect(page.getByRole('heading', { level: 1 })).toContainText(
-      createdVcDisplayName || ''
-    );
+    await expect(post).toBeVisible();
+    await expect(
+      knowledgeFeed(page).getByText(seededPost.body, { exact: true })
+    ).toBeVisible();
+    await page.goBack();
+    await expect(
+      page.getByRole('heading', { level: 1, name: vcMain!.name, exact: true })
+    ).toBeVisible();
   });
 
-  test('3.7 Change Virtual Contributor visibility to hidden', async ({
-    browser,
-  }) => {
-    expect(createdVcNameId).toBeTruthy();
-    // Switch to Organization Admin
-    await teardownAuthentication();
-    await setupAuthentication(
-      browser,
-      TestUserManager.users.organizationAdmin.email
-    );
-    const page = getSharedPage();
-
-    await openCreatedVirtualContributor(page);
-
-    // 3. Navigate to VC Settings tab
-    const settingsTab = page.getByRole('tab', { name: /settings/i });
-    const settingsLink = page.getByRole('link', { name: /settings/i }).first();
-    const settingsTarget = (await settingsTab.isVisible().catch(() => false))
-      ? settingsTab
-      : settingsLink;
-    await expect(settingsTarget).toBeVisible({ timeout: 10000 });
-    await settingsTarget.click();
-
-    // 4. Look for Visibility setting
-    const visibilityOption = page
-      .getByText(/visibility|privacy|hidden/i)
-      .first();
-    await expect(visibilityOption).toBeVisible();
-
-    // 5. Look for toggle or dropdown
-    const visibilityToggle = page.locator(
-      'input[type="checkbox"], [role="switch"]'
-    );
-    const toggleCount = await visibilityToggle.count();
-    if (toggleCount === 0) {
-      await expect(visibilityOption).toBeVisible();
-      return;
-    }
-    await expect(visibilityToggle.first()).toBeVisible();
-  });
-
-  test('3.8 Visit and verify VC Body of Knowledge', async ({ browser }) => {
-    expect(createdVcNameId).toBeTruthy();
-    // Switch to Space Member
-    await teardownAuthentication();
-    await setupAuthentication(browser, TestUserManager.users.spaceMember.email);
-    const page = getSharedPage();
-
-    await openCreatedVirtualContributor(page);
-
-    // 4. Verify VC profile page
-    await expect(page.getByRole('heading', { level: 1 })).toContainText(
-      createdVcDisplayName || ''
-    );
-
-    // 5. Look for Body of Knowledge section
-    const bokHeading = page.getByRole('heading', {
-      name: /body.*of.*knowledge|knowledge/i,
-      level: 2,
+  test('3.9 the host deletes a VC from the Account tab; it leaves the list and the platform', async () => {
+    const page = orgAdmin!.page;
+    expect(
+      must(await readVirtualContributor(vcDoomed!.id), 'VC before delete')
+        .lookup.virtualContributor?.id
+    ).toBe(vcDoomed!.id);
+    await page.goto(orgSettingsUrl(scenario!.organization.nameId, 'account'));
+    await page
+      .getByRole('heading', { level: 3, name: /^Virtual Contributors / })
+      .getByRole('button')
+      .click();
+    const card = page
+      .getByRole('main')
+      .locator('div')
+      .filter({
+        has: page.getByRole('link', { name: vcDoomed!.name, exact: true }),
+      })
+      .filter({ has: page.getByRole('button', { name: 'More actions' }) })
+      .last();
+    await card.getByRole('button', { name: 'More actions' }).click();
+    await page.getByRole('menuitem', { name: 'Delete', exact: true }).click();
+    const confirm = page.getByRole('alertdialog', {
+      name: 'Delete this resource?',
     });
-    await expect(bokHeading).toBeVisible({ timeout: 15000 });
+    await expect(
+      confirm.getByText(
+        `This will permanently remove "${vcDoomed!.name}". This cannot be undone.`
+      )
+    ).toBeVisible();
+    await confirm.getByRole('button', { name: 'Delete', exact: true }).click();
+    await expect(confirm).toBeHidden();
 
-    const visitButton = page.getByRole('button', { name: /visit/i }).first();
-    if (await visitButton.isVisible().catch(() => false)) {
-      const enabled = await visitButton.isEnabled().catch(() => false);
-      if (enabled) {
-        await visitButton.click();
-        await page.waitForLoadState('domcontentloaded');
-      }
-    }
-
-    const bokDialog = page.getByRole('dialog', { name: /body.*knowledge/i });
-    if (await bokDialog.isVisible().catch(() => false)) {
-      await expect(bokDialog).toBeVisible();
-    }
-
-    // 6. Knowledge items optional but page should be visible
-    const knowledgeItems = page.getByRole('link', {
-      name: /post|document|article/i,
-    });
-    if ((await knowledgeItems.count()) > 0) {
-      await expect(knowledgeItems.first()).toBeVisible();
-    }
-  });
-
-  test('3.9 Delete Virtual Contributor and verify removal', async ({
-    browser,
-  }) => {
-    expect(createdVcId || createdVcNameId).toBeTruthy();
-    // Switch to Organization Admin
-    await teardownAuthentication();
-    await setupAuthentication(
-      browser,
-      TestUserManager.users.organizationAdmin.email
-    );
-    const page = getSharedPage();
-
-    await openCreatedVirtualContributor(page);
-
-    // 3. Navigate to VC Settings
-    const settingsTab = page.getByRole('tab', { name: /settings/i });
-    const settingsLink = page.getByRole('link', { name: /settings/i }).first();
-    const settingsTarget = (await settingsTab.isVisible().catch(() => false))
-      ? settingsTab
-      : settingsLink;
-    await expect(settingsTarget).toBeVisible({ timeout: 10000 });
-    await settingsTarget.click();
-
-    // 4. Delete via API to ensure cleanup when we have a UUID
-    const deleteTarget = (createdVcId as string) || (createdVcNameId as string);
-    const isUuid =
-      /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(
-        deleteTarget
-      );
-
-    if (isUuid) {
-      const deleteResult = await deleteVirtualContributor(
-        deleteTarget,
-        TestUser.GLOBAL_ADMIN
-      );
-      expect(deleteResult.error).toBeUndefined();
-
-      // 5. Verify VC no longer accessible
-      await page.goto(`${baseUrl}/virtual-contributor/${createdVcNameId}`);
-      const heading = page.getByRole('heading', { level: 1 });
-      const headingVisible = await heading.isVisible().catch(() => false);
-      if (headingVisible) {
-        await expect(heading).not.toContainText(createdVcDisplayName || '');
-      }
-    }
+    await expect(
+      page
+        .getByRole('main')
+        .getByRole('link', { name: vcDoomed!.name, exact: true })
+    ).toHaveCount(0);
+    await expect(
+      page
+        .getByRole('main')
+        .getByRole('link', { name: vcMain!.name, exact: true })
+    ).toBeVisible();
+    const after = await readVirtualContributor(vcDoomed!.id);
+    expect(after.error?.errors?.[0]?.code).toBe('ENTITY_NOT_FOUND');
   });
 });
