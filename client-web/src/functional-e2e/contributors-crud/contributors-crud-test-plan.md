@@ -2,7 +2,7 @@
 
 - **Story:** [alkem-io/alkemio#1699](https://github.com/alkem-io/alkemio/issues/1699) "QA P1: Contributors - CRUD Full" (epic #1696). No workspace spec.
 - **Suite:** `client-web/src/functional-e2e/contributors-crud/` — nightly project **"Contributors CRUD"**, tier `extended`. Shared set-up in `contributors-crud.helpers.ts`.
-- **Status:** rewritten against the CRD client (client-web `develop` @ `a47c8b36d`, server release-80 build) on 2026-11-04 and run twice through the nightly project on the local stack (≈ 4.8 min each): 23 green, 4 red on product defects (see *Known defects*), 1 skipped (3.0, recorded flow). Not yet run on `test-alkem.io`.
+- **Status:** rewritten against the CRD client (client-web `develop` @ `a47c8b36d`, server release-80 build) on 2026-11-04 and run twice through the nightly project on the local stack (≈ 4.8 min each): 23 green, 4 `test.skip` on product defects (3.2, 3.3, 3.8 → client-web#10125; 3.7b → QA-PF-02, issue pending — drop each skip when fixed), 1 skipped (3.0, recorded flow). Not yet run on `test-alkem.io`.
 
 ## Overview
 
@@ -63,14 +63,14 @@ Techniques: **UC** use-case walk with the postcondition read back, **ST** state 
 | 2.6 | › 2.6 the organisation admin turns off applications on the Settings tab | ST | `updateOrganizationSettings` answered; `allowApplications` false, `allowSpaceInvitations` untouched; unchecked after reload | green |
 | 3.0 | `virtual-contributor-crud.spec.ts` › 3.0 Manually go through whole flow | — | recorded click path without assertions | skipped (author's) |
 | 3.1 | › 3.1 creating a VC is paused (client-web#10398) | NC | Account tab lists the three VCs and the upgrade notice; no "Create new contributor"; "Create new pack" offered | green |
-| 3.2 | › 3.2 the host adds a text post to the VC knowledge base | UC | callout stored on the KB callouts set; post listed in the KB feed after reload | **red** — client-web#10125 |
-| 3.3 | › 3.3 the host adds a document to the VC knowledge base | UC | Links & Files post with an attached PDF: stored, one link contribution; listed in the KB feed | **red** — client-web#10125 |
+| 3.2 | › 3.2 the host adds a text post to the VC knowledge base | UC | callout stored on the KB callouts set; post listed in the KB feed after reload | **skipped** — client-web#10125 (red when unskipped) |
+| 3.3 | › 3.3 the host adds a document to the VC knowledge base | UC | Links & Files post with an attached PDF: stored, one link contribution; listed in the KB feed | **skipped** — client-web#10125 (red when unskipped) |
 | 3.4 | › 3.4 adding a VC to a Space is paused (client-web#10398) | NC | Space settings › Community: notice, no Add / Invite External VC buttons; members table rendered | green |
 | 3.5 | › 3.5 mentioning a VC is paused (client-web#10398) | NC | a user is offered and picking inserts the mention; the VC is offered as "Temporarily unavailable" and picking it changes nothing | green |
 | 3.6 | › 3.6 a signed-in user reaches the VC profile from its host's profile | UC | org profile › Other Resources › VC card → `/vc/<nameID>`: name, description, Host link, Body of Knowledge with Visit link, no settings link | green |
 | 3.7 | › 3.7 the host sets a VC to Hidden on its Settings tab | ST | `searchVisibility` HIDDEN in the API; Hidden radio after reload | green |
-| 3.7b | › 3.7b the "Hide knowledge-base content from non-members" switch reads ON exactly when the content is hidden | EG, ST | switch checked ⇔ `knowledgeBaseContentVisible` false, before and after a toggle | **red** — switch inverted (QA-PF-02) |
-| 3.8 | › 3.8 a signed-in user visits the Body of Knowledge from the VC profile | UC | Visit → KB page, no Add for a visitor; seeded post title and body listed; Back returns to the profile | **red** — client-web#10125 |
+| 3.7b | › 3.7b the "Hide knowledge-base content from non-members" switch reads ON exactly when the content is hidden | EG, ST | switch checked ⇔ `knowledgeBaseContentVisible` false, before and after a toggle | **skipped** — switch inverted (QA-PF-02, issue pending; red when unskipped) |
+| 3.8 | › 3.8 a signed-in user visits the Body of Knowledge from the VC profile | UC | Visit → KB page, no Add for a visitor; seeded post title and body listed; Back returns to the profile | **skipped** — client-web#10125 (red when unskipped) |
 | 3.9 | › 3.9 the host deletes a VC from the Account tab | UC, NC | confirm names the VC; card gone, other VC still listed; API lookup ENTITY_NOT_FOUND (present before) | green |
 
 ## Covered elsewhere (not duplicated here)
@@ -97,5 +97,5 @@ Techniques: **UC** use-case walk with the postcondition read back, **ST** state 
 | ID | Issue | Effect on this suite |
 | --- | --- | --- |
 | QA-PF-01 | [client-web#10125](https://github.com/alkem-io/client-web/issues/10125) — knowledge-base posts never render: `CalloutDetails` asks for the classification's `flow-state` tagset, which a knowledge-base callout does not have, and the server answers ENTITY_NOT_FOUND | 3.2, 3.3, 3.8 red at "listed in the KB feed" (their API halves pass) |
-| QA-PF-02 | pending — VC Settings: "Hide knowledge-base content from non-members" is bound to `knowledgeBaseContentVisible`, so ON exposes the content and OFF hides it | 3.7b red |
+| QA-PF-02 | pending — VC Settings: "Hide knowledge-base content from non-members" is bound to `knowledgeBaseContentVisible`, so ON exposes the content and OFF hides it | 3.7b skipped (red when unskipped) |
 | QA-PF-03 | pending — `/contributors` resolves on the server (`CONTRIBUTORS_EXPLORER`) but the CRD client has no route: endless "Loading" | none (no case uses it) |

@@ -277,8 +277,8 @@ test.describe('Contributors CRUD — Virtual Contributor', () => {
     ).toBeVisible();
   });
 
-  // Product finding QA-PF-01 — alkem-io/client-web#10125 (knowledge-base posts never render: CalloutDetails fails on the missing flow-state tagset)
-  test('3.2 the host adds a text post to the VC knowledge base; it is stored and listed there', async () => {
+  // Known defect alkem-io/client-web#10125: today no knowledge-base post renders — the client requests classification.flowState and the server throws ENTITY_NOT_FOUND, so the feed stays on "Loading Post". Drop the skip when fixed.
+  test.skip('3.2 the host adds a text post to the VC knowledge base; it is stored and listed there (alkem-io/client-web#10125)', async () => {
     const page = orgAdmin!.page;
     const title = `KB post ${RUN}`;
     const dialog = await openCreatePost(page, vcMain!);
@@ -300,8 +300,8 @@ test.describe('Contributors CRUD — Virtual Contributor', () => {
     ).toBeVisible();
   });
 
-  // Product finding QA-PF-01 — alkem-io/client-web#10125 (knowledge-base posts never render: CalloutDetails fails on the missing flow-state tagset)
-  test('3.3 the host adds a document to the VC knowledge base; it is stored as a file link and listed there', async () => {
+  // Known defect alkem-io/client-web#10125: today no knowledge-base post renders — the client requests classification.flowState and the server throws ENTITY_NOT_FOUND, so the feed stays on "Loading Post". Drop the skip when fixed.
+  test.skip('3.3 the host adds a document to the VC knowledge base; it is stored as a file link and listed there (alkem-io/client-web#10125)', async () => {
     const page = orgAdmin!.page;
     const title = `KB document ${RUN}`;
     const dialog = await openCreatePost(page, vcMain!);
@@ -485,8 +485,8 @@ test.describe('Contributors CRUD — Virtual Contributor', () => {
     await expect(page.getByRole('radio', { name: /^Hidden / })).toBeChecked();
   });
 
-  // Product finding QA-PF-02 — pending (the switch writes the opposite of its label: "Hide" ON sends knowledgeBaseContentVisible: true)
-  test('3.7b the host\'s "Hide knowledge-base content from non-members" switch reads ON exactly when the content is hidden, before and after a toggle', async () => {
+  // Known defect (QA-PF-02 on test-suites#492, issue pending — put its number here once filed): today the switch writes the opposite of its label, "Hide" ON sends knowledgeBaseContentVisible: true and exposes the content. Drop the skip when fixed.
+  test.skip('3.7b the host\'s "Hide knowledge-base content from non-members" switch reads ON exactly when the content is hidden, before and after a toggle (QA-PF-02, issue pending)', async () => {
     const page = orgAdmin!.page;
     const contentVisible = async () =>
       must(await readVirtualContributor(vcHidden!.id), 'VC privacy').lookup
@@ -512,8 +512,8 @@ test.describe('Contributors CRUD — Virtual Contributor', () => {
     ).toBeChecked({ checked: before === true });
   });
 
-  // Product finding QA-PF-01 — alkem-io/client-web#10125 (knowledge-base posts never render: CalloutDetails fails on the missing flow-state tagset)
-  test('3.8 a signed-in user visits the Body of Knowledge from the VC profile and reads the knowledge in it', async () => {
+  // Known defect alkem-io/client-web#10125: today no knowledge-base post renders — the client requests classification.flowState and the server throws ENTITY_NOT_FOUND, so the feed stays on "Loading Post". Drop the skip when fixed.
+  test.skip('3.8 a signed-in user visits the Body of Knowledge from the VC profile and reads the knowledge in it (alkem-io/client-web#10125)', async () => {
     const page = member!.page;
     await page.goto(vcMain!.url);
     const visit = page

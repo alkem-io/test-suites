@@ -257,7 +257,7 @@ _Established 2026-11-04 on test-suites#492 (`tests-1699` merged with `origin/dev
 | User profile update persists and is what others see; Account counts; Organisations tab; a notification channel and the DM setting persist; org deletion removes it from an associate's list | Full (UI + API) | `contributors-crud/user-crud.spec.ts` 1.2–1.7 |
 | Organisation created and deleted in Administration; profile update seen by anonymous and signed-in visitors; Account counts; remove an associate; grant / revoke Admin; a Settings switch persists | Full (UI + API) | `contributors-crud/organization-crud.spec.ts` |
 | VC create / add to Space / mention | **Paused** (client-web#10398). The pause itself is pinned | `virtual-contributor-crud.spec.ts` 3.1, 3.4, 3.5 |
-| VC knowledge base: add post / document, non-member visit | **Red** on client-web#10125 (stored, never rendered) | 3.2, 3.3, 3.8 |
+| VC knowledge base: add post / document, non-member visit | **Skipped** on client-web#10125 (stored, never rendered; `test.skip` until fixed) | 3.2, 3.3, 3.8 |
 | VC profile from the host profile; Hidden visibility; delete | Full (UI + API) | 3.6, 3.7, 3.9 |
 | VC "Hide knowledge-base content" switch semantics | **Red**, the switch is inverted | 3.7b |
 
