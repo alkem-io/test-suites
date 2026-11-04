@@ -366,6 +366,17 @@ export default defineConfig(
         tier: 'extended',
       }),
       suite({
+        // alkem-io/alkemio#1699 (QA P1: Contributors - CRUD Full): user,
+        // organisation and VC walks. Each file seeds its own organisation
+        // (and Space for the VC file), registers disposable users for every
+        // edit and seeds VCs over the API (creation is paused,
+        // client-web#10398). Known reds: VC 3.2 / 3.3 / 3.8 on
+        // client-web#10125 and VC 3.7b on the inverted knowledge-base switch.
+        name: 'Contributors CRUD',
+        testMatch: ['/contributors-crud/*.spec.ts'],
+        tier: 'extended',
+      }),
+      suite({
         // workspace#087 (memo PDF download, alkem-io/server#6660): US1 walks a
         // reader's download on a self-seeded Space with the harness personas.
         // Its content checks read the PDF with poppler (pdftotext, pdffonts),
