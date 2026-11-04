@@ -15,38 +15,49 @@
 
 import {
   createPngFixture,
+  getUserToken,
+  GraphqlActor,
+  readMyUser,
   TestScenarioFactory,
   TestUser,
-  TestUserManager,
   UniqueIDGenerator,
 } from '@alkemio/tests-lib';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
-import { uploadImageOnVisual } from '@functional-api/storage/upload.params';
-import { getProfileVisuals, updateVisualUri } from './visual.request.params';
+import {
+  deleteUser,
+  registerVerifiedUser,
+} from '@functional-api/contributor-management/user/user.request.params';
+import {
+  getProfileVisuals,
+  StoredVisual,
+  updateVisualUri,
+  uploadPngOnVisual,
+} from './visual.request.params';
 
 const REFUSED = 'VISUAL_URI_NOT_ALLOWED';
 const OUTSIDE_HOST = 'https://host-you-control.example';
 
-type StoredVisual = {
-  id: string;
-  name: string;
-  uri: string;
-  alternativeText?: string | null;
-};
-
 let baseScenario: OrganizationWithSpaceModel;
-let qaProfileId = '';
+// A user registered for this run alone, so no other suite or concurrent run
+// writes the avatar between an upload and its readback.
+let ownerId = '';
+let owner: GraphqlActor;
+let ownerProfileId = '';
 let avatarId = '';
 let uploadedUri = '';
 let spaceProfileId = '';
 let bannerId = '';
 let bannerUriBefore = '';
 
+const errorCode = (res: {
+  body: { errors?: Array<Record<string, unknown>> };
+}) => (res.body.errors?.[0]?.extensions as { code?: string } | undefined)?.code;
+
 const readVisuals = async (
   profileId: string,
-  userRole: TestUser
+  actor: GraphqlActor
 ): Promise<StoredVisual[]> => {
-  const res = await getProfileVisuals(profileId, userRole);
+  const res = await getProfileVisuals(profileId, actor);
   expect(res.body.errors, JSON.stringify(res.body.errors)).toBeUndefined();
   return res.body.data?.lookup?.profile?.visuals ?? [];
 };
@@ -54,9 +65,9 @@ const readVisuals = async (
 const readVisual = async (
   profileId: string,
   visualId: string,
-  userRole: TestUser
+  actor: GraphqlActor
 ): Promise<StoredVisual> => {
-  const visual = (await readVisuals(profileId, userRole)).find(
+  const visual = (await readVisuals(profileId, actor)).find(
     v => v.id === visualId
   );
   expect(visual, `visual ${visualId} not found on profile`).toBeDefined();
@@ -64,29 +75,36 @@ const readVisual = async (
 };
 
 beforeAll(async () => {
-  // The factory fills TestUserManager.users, so it runs before any user
-  // lookup. Its space is the BANNER source.
+  // The factory fills TestUserManager.users, so it runs before any persona
+  // is used. Its space is the BANNER source.
   baseScenario = await TestScenarioFactory.createBaseScenario({
     name: 'visual-uri-rule',
     space: {},
   });
 
-  qaProfileId = TestUserManager.users.qaUser.profileId;
-  const avatar = (await readVisuals(qaProfileId, TestUser.QA_USER)).find(
+  const uniqueId = UniqueIDGenerator.getID();
+  const email = `visual-uri-${uniqueId}@alkem.io`;
+  ownerId = await registerVerifiedUser(email, 'visualuri', `ln${uniqueId}`);
+  owner = { bearerToken: await getUserToken(email) };
+  const me = await readMyUser(owner);
+  ownerProfileId = me.data?.me.user?.profile?.id ?? '';
+  expect(ownerProfileId, JSON.stringify(me.error)).not.toEqual('');
+
+  const avatar = (await readVisuals(ownerProfileId, owner)).find(
     v => v.name === 'AVATAR'
   );
   avatarId = avatar?.id ?? '';
-  expect(avatarId, 'QA user has no AVATAR visual').not.toEqual('');
+  expect(avatarId, 'the new user has no AVATAR visual').not.toEqual('');
 
   // A fresh upload, never the registration-time picture: the accepted address
   // is whatever the platform's storage produces on this stack.
-  const upload = await uploadImageOnVisual(
-    createPngFixture({ width: 200, height: 200 }),
+  const upload = await uploadPngOnVisual(
     avatarId,
-    TestUser.QA_USER
+    createPngFixture({ width: 200, height: 200 }),
+    owner
   );
-  expect(upload.errors, JSON.stringify(upload.errors)).toBeUndefined();
-  uploadedUri = upload.data?.uploadImageOnVisual?.uri ?? '';
+  expect(upload.body.errors, upload.raw).toBeUndefined();
+  uploadedUri = upload.body.data?.uploadImageOnVisual?.uri ?? '';
   expect(uploadedUri, 'upload returned no uri').not.toEqual('');
 
   spaceProfileId = baseScenario.space.about.profile.id;
@@ -99,6 +117,7 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
+  if (ownerId) await deleteUser(ownerId);
   await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
 });
 
@@ -129,19 +148,11 @@ describe('updateVisual address rule — refused addresses on an avatar', () => {
   ])('%s is refused and the avatar is unchanged', async (_label, toUri) => {
     const uri = toUri(uploadedUri);
 
-    const res = await updateVisualUri(
-      avatarId,
-      uri,
-      'refused',
-      TestUser.QA_USER
-    );
+    const res = await updateVisualUri(avatarId, uri, 'refused', owner);
 
-    expect(
-      res.body.errors?.[0]?.extensions?.code,
-      JSON.stringify(res.body)
-    ).toBe(REFUSED);
+    expect(errorCode(res), res.raw).toBe(REFUSED);
     expect(res.body.data).toBeNull();
-    const stored = await readVisual(qaProfileId, avatarId, TestUser.QA_USER);
+    const stored = await readVisual(ownerProfileId, avatarId, owner);
     expect(stored.uri).toBe(uploadedUri);
   });
 });
@@ -150,15 +161,10 @@ describe('updateVisual address rule — accepted addresses', () => {
   test('US2-AS2 — the uploaded storage address is accepted with a new alternative text', async () => {
     const altText = `avatar-alt-${UniqueIDGenerator.getID()}`;
 
-    const res = await updateVisualUri(
-      avatarId,
-      uploadedUri,
-      altText,
-      TestUser.QA_USER
-    );
+    const res = await updateVisualUri(avatarId, uploadedUri, altText, owner);
 
-    expect(res.body.errors, JSON.stringify(res.body.errors)).toBeUndefined();
-    const stored = await readVisual(qaProfileId, avatarId, TestUser.QA_USER);
+    expect(res.body.errors, res.raw).toBeUndefined();
+    const stored = await readVisual(ownerProfileId, avatarId, owner);
     expect(stored.uri).toBe(uploadedUri);
     expect(stored.alternativeText).toBe(altText);
   });
@@ -175,10 +181,7 @@ describe('updateVisual address rule — no visual type is exempt', () => {
       TestUser.GLOBAL_ADMIN
     );
 
-    expect(
-      res.body.errors?.[0]?.extensions?.code,
-      JSON.stringify(res.body)
-    ).toBe(REFUSED);
+    expect(errorCode(res), res.raw).toBe(REFUSED);
     expect(res.body.data).toBeNull();
     const stored = await readVisual(
       spaceProfileId,
@@ -198,7 +201,7 @@ describe('updateVisual address rule — no visual type is exempt', () => {
       TestUser.GLOBAL_ADMIN
     );
 
-    expect(res.body.errors, JSON.stringify(res.body.errors)).toBeUndefined();
+    expect(res.body.errors, res.raw).toBeUndefined();
     const stored = await readVisual(
       spaceProfileId,
       bannerId,
@@ -218,13 +221,13 @@ describe('updateVisual address rule — rights are checked before the address', 
       TestUser.NON_SPACE_MEMBER
     );
 
-    const code = res.body.errors?.[0]?.extensions?.code;
-    expect(code, JSON.stringify(res.body)).not.toBe(REFUSED);
+    const code = errorCode(res);
+    expect(code, res.raw).not.toBe(REFUSED);
     // The code updateVisual's UPDATE check (grantAccessOrFail) throws today;
     // the same check's refusal is pinned as FORBIDDEN_POLICY by the
     // subspace sorting/pinning and sidebar-positional suites.
     expect(code).toBe('FORBIDDEN_POLICY');
-    const stored = await readVisual(qaProfileId, avatarId, TestUser.QA_USER);
+    const stored = await readVisual(ownerProfileId, avatarId, owner);
     expect(stored.uri).toBe(uploadedUri);
   });
 });

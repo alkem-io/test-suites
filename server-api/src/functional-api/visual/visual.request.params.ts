@@ -1,4 +1,11 @@
-import { TestUser } from '@alkemio/tests-lib';
+import {
+  GraphqlActor,
+  postGraphqlMultipartAs,
+  postGraphqlRawAs,
+  TestUser,
+} from '@alkemio/tests-lib';
+import { readFileSync } from 'fs';
+import path from 'path';
 import { graphqlRequestAuth } from '@alkemio/tests-lib/utils/graphql.request';
 
 /**
@@ -124,28 +131,31 @@ export const updateVisualAspectRatio = async (
   );
 };
 
+export type StoredVisual = {
+  id: string;
+  name: string;
+  uri: string;
+  alternativeText?: string | null;
+};
+
 /** Set a visual's address and alternative text. */
 export const updateVisualUri = async (
   visualID: string,
   uri: string,
   alternativeText: string,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
-) => {
-  return graphqlRequestAuth(
-    {
-      operationName: 'UpdateVisualUri',
-      query: `mutation UpdateVisualUri($updateData: UpdateVisualInput!) {
-        updateVisual(updateData: $updateData) {
-          id
-          uri
-          alternativeText
-        }
-      }`,
-      variables: { updateData: { visualID, uri, alternativeText } },
-    },
-    userRole
+  actor: GraphqlActor = TestUser.GLOBAL_ADMIN
+) =>
+  postGraphqlRawAs<{ updateVisual: StoredVisual }>(
+    actor,
+    `mutation UpdateVisualUri($updateData: UpdateVisualInput!) {
+      updateVisual(updateData: $updateData) {
+        id
+        uri
+        alternativeText
+      }
+    }`,
+    { updateData: { visualID, uri, alternativeText } }
   );
-};
 
 /**
  * A profile's visuals as STORED, alternative text included — the lib's
@@ -153,28 +163,50 @@ export const updateVisualUri = async (
  */
 export const getProfileVisuals = async (
   profileId: string,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
-) => {
-  return graphqlRequestAuth(
-    {
-      operationName: 'ProfileVisualsStored',
-      query: `query ProfileVisualsStored($profileId: UUID!) {
-        lookup {
-          profile(ID: $profileId) {
-            visuals {
-              id
-              name
-              uri
-              alternativeText
-            }
+  actor: GraphqlActor = TestUser.GLOBAL_ADMIN
+) =>
+  postGraphqlRawAs<{
+    lookup: { profile: { visuals: StoredVisual[] } | null };
+  }>(
+    actor,
+    `query ProfileVisualsStored($profileId: UUID!) {
+      lookup {
+        profile(ID: $profileId) {
+          visuals {
+            id
+            name
+            uri
+            alternativeText
           }
         }
-      }`,
-      variables: { profileId },
-    },
-    userRole
+      }
+    }`,
+    { profileId }
   );
-};
+
+/**
+ * Upload a PNG onto a visual as any actor: `storage/upload.params`'s
+ * `uploadImageOnVisual` takes only a harness persona, which cannot act as a
+ * disposable user.
+ */
+export const uploadPngOnVisual = async (
+  visualID: string,
+  pngPath: string,
+  actor: GraphqlActor
+) =>
+  postGraphqlMultipartAs<{ uploadImageOnVisual: { id: string; uri: string } }>(
+    actor,
+    `mutation UploadPngOnVisual($file: Upload!, $uploadData: VisualUploadImageInput!) {
+      uploadImageOnVisual(file: $file, uploadData: $uploadData) { id uri }
+    }`,
+    { file: null, uploadData: { visualID } },
+    'variables.file',
+    {
+      bytes: readFileSync(pngPath),
+      fileName: path.basename(pngPath),
+      mimeType: 'image/png',
+    }
+  );
 
 /**
  * A Space's activityScore (server#6326). Pass no `userRole` for an ANONYMOUS
