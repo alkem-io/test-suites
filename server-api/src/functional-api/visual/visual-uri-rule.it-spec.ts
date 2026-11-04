@@ -144,8 +144,14 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  if (ownerId) await deleteUser(ownerId);
+  // deleteUser resolves with `error` instead of throwing, so a failed delete
+  // is only seen if it is checked; the scenario is cleaned up either way.
+  const deleted = ownerId ? await deleteUser(ownerId) : undefined;
   await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
+  expect(
+    deleted?.error,
+    `owner ${ownerId} was left behind: ${JSON.stringify(deleted?.error)}`
+  ).toBeUndefined();
 });
 
 describe('updateVisual address rule — refused addresses on an avatar', () => {
