@@ -248,6 +248,19 @@ Owning-repo unit coverage (client-web #10444, runs in `ci-test.yml`), opened and
 
 **Not coverage:** client-web `e2e/specs/subspaceSidebar{Customize,Defaults,Widgets}.e2e.spec.ts`, 25 `@forge-acceptance` walks on hand-seeded `E2E_SIDEBAR_*` fixtures that no CI runs. They are good locator and copy evidence.
 
+## Contributors CRUD — user, organisation, VC (alkemio#1699)
+
+_Established 2026-11-04 on test-suites#492 (`tests-1699` merged with `origin/develop` @ `2663c58a`), against client-web `develop` @ `a47c8b36d` and the release-80 server. Plan: `client-web/src/functional-e2e/contributors-crud/contributors-crud-test-plan.md`._
+
+| Behaviour | Coverage | Where |
+| --- | --- | --- |
+| User profile update persists and is what others see; Account counts; Organisations tab; a notification channel and the DM setting persist; org deletion removes it from an associate's list | Full (UI + API) | `contributors-crud/user-crud.spec.ts` 1.2–1.7 |
+| Organisation created and deleted in Administration; profile update seen by anonymous and signed-in visitors; Account counts; remove an associate; grant / revoke Admin; a Settings switch persists | Full (UI + API) | `contributors-crud/organization-crud.spec.ts` |
+| VC create / add to Space / mention | **Paused** (client-web#10398). The pause itself is pinned | `virtual-contributor-crud.spec.ts` 3.1, 3.4, 3.5 |
+| VC knowledge base: add post / document, non-member visit | **Red** on client-web#10125 (stored, never rendered) | 3.2, 3.3, 3.8 |
+| VC profile from the host profile; Hidden visibility; delete | Full (UI + API) | 3.6, 3.7, 3.9 |
+| VC "Hide knowledge-base content" switch semantics | **Red**, the switch is inverted | 3.7b |
+
 ## How to search this area again
 
 `rg -n 'innovationFlow|minimumNumberOfStates|maximumNumberOfStates|L0_FIXED_INNOVATION|L0_MIN_INNOVATION' server-api/src/functional-api` — the conversion/callout-transfer/templates directories are the load-bearing ones; also check the server repo's own `*.spec.ts` unit suites before proposing a new system-level case, several risk-relevant assertions live there only.
