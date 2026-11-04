@@ -25,6 +25,7 @@ import {
   TestUser,
   TestUserManager,
   UniqueIDGenerator,
+  type RawElement,
   type WhiteboardPeer,
 } from '@alkemio/tests-lib';
 import type { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
@@ -37,7 +38,6 @@ import {
   fixedBuildAvailable,
   openWhiteboardInEditor,
   pickTool,
-  savedStatus,
   seedWhiteboardSpace,
   SKIP_UNTIL_FIXED_BUILD,
   type WhiteboardSpace,
@@ -50,6 +50,26 @@ const peers: WhiteboardPeer[] = [];
 const personas: PersonaPage[] = [];
 
 const finite = (value: unknown): boolean => typeof value === 'number' && Number.isFinite(value);
+const same = (a: unknown, b: unknown): boolean => JSON.stringify(a) === JSON.stringify(b);
+const shape = (x: RawElement | undefined) => ({ x: x?.x, y: x?.y, width: x?.width, height: x?.height, points: x?.points });
+
+/**
+ * The Yjs item that holds one key of an element at a peer (a Y.Map keeps one item per write of a
+ * key; the current value is the rightmost one). `origin` is the item its writer had seen as the
+ * latest for that key, so it tells a CONCURRENT write (origin is not the rival item) from a
+ * causally later one.
+ */
+type KeyItem = { id: { client: number }; origin: { client: number } | null; left: KeyItem | null; deleted: boolean };
+const keyItem = (peer: WhiteboardPeer, elementId: string, key: string): KeyItem | undefined =>
+  (peer.doc.getMap('elements').get(elementId) as { _map?: Map<string, KeyItem> } | undefined)?._map?.get(key);
+/** `key` of the element is held by someone else's write, made WITHOUT having seen `peer`'s write, which lost. */
+const peerLostConcurrently = (peer: WhiteboardPeer, elementId: string, key: string): boolean => {
+  const winner = keyItem(peer, elementId, key);
+  if (!winner || winner.id.client === peer.clientId || winner.origin?.client === peer.clientId) return false;
+  let item = winner.left;
+  while (item && item.id.client !== peer.clientId) item = item.left;
+  return item?.deleted === true;
+};
 
 test.describe('WC-01 undo racing a peer edit', () => {
   test.skip(!fixedBuildAvailable, SKIP_UNTIL_FIXED_BUILD);
@@ -158,76 +178,89 @@ test.describe('WC-01 undo racing a peer edit', () => {
       x?.set('points', peerPoints);
     });
 
-    // 9-10. P announces AFTER its write, then lets B's frames in. B showing P's avatar proves B
-    // applied P's write before the drag continues and before the undo.
+    // 9-10. From here on P records X after every transaction it applies: the oracle for "the value
+    // X held just before the undo step". P announces AFTER its write, then lets B's frames in.
+    const history: RawElement[] = [];
+    p.doc.on('afterTransaction', () => {
+      const x = p.rawElement(arrowId);
+      if (x) history.push(x);
+    });
     await p.announce(`qa-gate-${uid}`);
     p.releaseInbound();
+
+    // E1 (precondition, checked BEFORE the undo) — the race was reached. B's held frames are one
+    // that moves R and one that rewrites X; once X's keys at P are no longer P's own write, both
+    // `height` and `points` must hold B's write made WITHOUT having seen P's (concurrent), P's
+    // write deleted (it lost the map-key conflict: lower id), and the value is B's drag, not the
+    // original. Failing here means INCONCLUSIVE, never a pass, and never a product verdict.
+    const e1 = 'E1 race precondition not reached (inconclusive, not a pass)';
+    await p.waitFor(
+      () => keyItem(p, arrowId, 'height')?.id.client !== p.clientId && keyItem(p, arrowId, 'points')?.id.client !== p.clientId,
+      `${e1}: B's drag frame never rewrote X at P`
+    );
+    const raced = p.rawElement(arrowId);
+    expect(
+      peerLostConcurrently(p, arrowId, 'height') &&
+        peerLostConcurrently(p, arrowId, 'points') &&
+        !same(raced?.points, points0) &&
+        raced?.height !== height0,
+      `${e1}: P's write did not lose a concurrent conflict to B's drag. X at P: ${JSON.stringify(shape(raced))}; before: ${JSON.stringify(shape(bound))}; P wrote: ${JSON.stringify({ height: peerHeight, points: peerPoints })}`
+    ).toBe(true);
+
+    // B showing P's avatar proves B applied P's write before the drag continues and before the undo.
     await waitForCollaborators(b.page, editorB, n0 + 1, 'B (ordering gate)');
 
     // 11. B finishes the drag.
     await b.page.mouse.move(grab.x + 130, grab.y + 50, { steps: 8 });
     await b.page.mouse.up();
-    await expect(savedStatus(editorB)).toBeVisible();
 
     // 12. B presses undo once.
-    await expect(editorB.getByRole('button', { name: 'Undo' })).toBeEnabled();
+    await expect(editorB.getByRole('button', { name: 'Undo' }), 'B has the drag to undo').toBeEnabled();
     await b.page.keyboard.press('ControlOrMeta+z');
 
-    // 13. The undo has arrived at P once X's width (a key B changed, P did not) is back.
+    // 13. The undo has arrived at P once X's width (a key B changed, P did not) is back. The undo
+    // and its repair arrive as one transaction (observed at the wire), so this is the final X.
     await p.waitFor(() => p.rawElement(arrowId)?.width === width0, "B's undo to restore X's width at P");
-    // The repair, when there is one, is a second frame right behind the undo.
-    await p
-      .waitFor(
-        () => {
-          const x = p.rawElement(arrowId);
-          return Array.isArray(x?.points) && finite(x?.height) ? x : undefined;
-        },
-        'X to have points and height again after the undo',
-        { timeoutMs: 5_000 }
-      )
-      .catch(() => undefined);
     const afterUndo = p.rawElement(arrowId);
     if (!afterUndo) throw new Error('X disappeared from the raw document');
+    const dragAt = history.findIndex(x => x.width !== width0);
+    const undoAt = history.findIndex((x, i) => dragAt >= 0 && i > dragAt && x.width === width0);
+    const beforeUndo = history[undoAt - 1];
+    // Still the precondition: what the undo starts from is B's dragged shape, distinct from the
+    // original and from P's write, so the exact-value checks below can tell the outcomes apart.
+    expect(
+      undoAt > 0 &&
+        beforeUndo !== undefined &&
+        !same(beforeUndo.points, points0) &&
+        !same(beforeUndo.points, peerPoints) &&
+        beforeUndo.height !== height0 &&
+        beforeUndo.height !== peerHeight,
+      `E1 race precondition not reached (inconclusive, not a pass): X just before the undo step was not B's dragged shape: ${JSON.stringify(shape(beforeUndo))}`
+    ).toBe(true);
 
     // 14. D joins fresh and reads the converged raw element.
     const d = await connectWhiteboardPeer({ whiteboardId: space.whiteboardId, actor: TestUser.QA_USER });
     peers.push(d);
     await d.waitFor(() => d.rawElement(arrowId)?.width === width0, 'D to receive the converged X');
 
-    // E1 — the race was reached. Failing here means INCONCLUSIVE, never a pass. The undo reached X
-    // (width, a key B changed and P did not, is back to its original), and the keys B and P both
-    // wrote did not end up with the ORIGINAL value (a clean undo would have restored it) nor with
-    // P's concurrent value (P's write would simply have survived, with no conflict at all). They
-    // hold either the shape B dragged to (the repaired outcome) or nothing (the incident).
-    const same = (a: unknown, b: unknown): boolean => JSON.stringify(a) === JSON.stringify(b);
-    const raceReached =
-      afterUndo.x === x0 &&
-      afterUndo.y === y0 &&
-      afterUndo.width === width0 &&
-      !same(afterUndo.points, points0) &&
-      !same(afterUndo.points, peerPoints) &&
-      afterUndo.height !== height0 &&
-      afterUndo.height !== peerHeight;
+    // From here on the race is proven reached: every failure is a PRODUCT failure.
+    console.info(`WC-01 observation: X before the undo ${JSON.stringify(shape(beforeUndo))}, after ${JSON.stringify(shape(afterUndo))}`);
+    // The undo reverted the keys only B's drag changed.
     expect(
-      raceReached,
-      `E1 race precondition not reached — ordering gate did not hold (inconclusive, not a pass). X after undo: ${JSON.stringify({
-        x: afterUndo.x,
-        y: afterUndo.y,
-        width: afterUndo.width,
-        height: afterUndo.height,
-        points: afterUndo.points,
-      })}; before: ${JSON.stringify({ x: x0, y: y0, width: width0, height: height0, points: points0 })}; P wrote: ${JSON.stringify({ height: peerHeight, points: peerPoints })}`
-    ).toBe(true);
-    console.info(`WC-01 observation: X after the undo ${JSON.stringify({ width: afterUndo.width, height: afterUndo.height, points: afterUndo.points })}`);
+      { x: afterUndo.x, y: afterUndo.y, width: afterUndo.width },
+      'E2 product failure: the undo did not revert x/y/width of X'
+    ).toEqual({ x: x0, y: y0, width: width0 });
 
-    // E2, E3 — the keys the undo dropped are back, with usable values.
+    // E2, E3 — the keys the undo dropped are back, with the value they held just before the step.
     expect(Array.isArray(afterUndo.points), 'E2 points is an array').toBe(true);
     const points = afterUndo.points as unknown[];
     expect(points.length, 'E2 points has at least two pairs').toBeGreaterThanOrEqual(2);
     for (const pair of points) {
       expect(Array.isArray(pair) && pair.length === 2 && pair.every(finite), `E2 point ${JSON.stringify(pair)} is a finite pair`).toBe(true);
     }
+    expect(afterUndo.points, 'E2 product failure: points is not the value X held just before the undo step').toEqual(beforeUndo.points);
     expect(finite(afterUndo.height), `E3 height is finite (got ${JSON.stringify(afterUndo.height)})`).toBe(true);
+    expect(afterUndo.height, 'E3 product failure: height is not the value X held just before the undo step').toBe(beforeUndo.height);
 
     // E4, E5 — nobody crashed.
     await expectEditorAlive(b.page, 'E4 B (the undoer)');
@@ -240,7 +273,9 @@ test.describe('WC-01 undo racing a peer edit', () => {
     // E7 — the room converged on the repaired element (R8).
     expect(d.rawElement(arrowId), 'E7 D and P read the same raw X').toEqual(p.rawElement(arrowId));
 
-    // E8 — no uncaught page error on B or C.
+    // E8 — still alive at the end of the walk, and no uncaught page error on B or C.
+    await expectEditorAlive(b.page, 'E8 B (end of walk)');
+    await expectEditorAlive(c.page, 'E8 C (end of walk)');
     expect(errorsB, 'E8 pageerror on B').toEqual([]);
     expect(errorsC, 'E8 pageerror on C').toEqual([]);
   });

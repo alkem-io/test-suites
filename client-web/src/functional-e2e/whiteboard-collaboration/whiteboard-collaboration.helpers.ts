@@ -95,9 +95,6 @@ export const openWhiteboardInEditor = async (page: Page, space: WhiteboardSpace)
 
 export const canvasOf = (editor: Locator): Locator => editor.locator('canvas.excalidraw__canvas.interactive').first();
 
-/** The footer's save status; "Saved" means everything this session wrote reached the service. */
-export const savedStatus = (editor: Locator): Locator => editor.getByRole('status').filter({ hasText: /^Saved$/ });
-
 /** Collaborators other than yourself, as Excalidraw's UserList shows them (a class locator: canvas apps expose no role here). */
 export const collaboratorAvatars = (editor: Locator): Locator => editor.locator('.UserList .Avatar');
 

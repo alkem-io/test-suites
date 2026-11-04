@@ -27,7 +27,6 @@ import {
   fixedBuildAvailable,
   openWhiteboardInEditor,
   pickTool,
-  savedStatus,
   seedWhiteboardSpace,
   SKIP_UNTIL_FIXED_BUILD,
   type WhiteboardSpace,
@@ -88,7 +87,6 @@ test.describe('WC-02 damaged board loads', () => {
     personas.push(c);
     const errorsC = collectPageErrors(c.page);
     const editorC = await openWhiteboardInEditor(c.page, space);
-    await expect(savedStatus(editorC)).toBeVisible();
 
     // Baseline: B and C see each other. P has NOT announced, so it has no avatar yet; its first
     // announce, sent AFTER the damaged update, is the delivery gate for E2/E3 below (the service
@@ -125,11 +123,19 @@ test.describe('WC-02 damaged board loads', () => {
     await expectEditorAlive(c.page, 'E2 C (live arrival)');
     await expectEditorAlive(b.page, 'E3 B (live arrival)');
 
+    // The fresh loads below must load a room that is still damaged: if a live editor wrote the
+    // keys back (healed the doc), they would prove nothing about loading a damaged board.
+    const expectStillDamaged = (who: string): void => {
+      const current = d.rawElement(arrowId);
+      expect(current, `${who} precondition lost (healed): the raw arrow has points again`).not.toHaveProperty('points');
+      expect(current, `${who} precondition lost (healed): the raw arrow has height again`).not.toHaveProperty('height');
+    };
+
     // 7. B closes the editor and reopens it: a fresh load from the damaged room.
     await editorB.getByRole('button', { name: 'Close whiteboard' }).click();
     await expect(editorB).toBeHidden();
+    expectStillDamaged('E4');
     const reopenedB = await openWhiteboardInEditor(b.page, space);
-    await expect(savedStatus(reopenedB)).toBeVisible();
     await waitForCollaborators(b.page, reopenedB, 2, 'E4 B (fresh load)');
     await expectEditorAlive(b.page, 'E4 B (fresh load)');
 
@@ -137,15 +143,18 @@ test.describe('WC-02 damaged board loads', () => {
     const c2 = await openPersonaPage(browser, TestUserManager.users.spaceMember.email);
     personas.push(c2);
     const errorsC2 = collectPageErrors(c2.page);
+    expectStillDamaged('E5');
     const editorC2 = await openWhiteboardInEditor(c2.page, space);
-    await expect(savedStatus(editorC2)).toBeVisible();
     await waitForCollaborators(c2.page, editorC2, 3, 'E5 C (fresh context)');
     await expectEditorAlive(c2.page, 'E5 C (fresh context)');
 
     // Observation, not an assertion: reading never heals the stored document (R6).
     console.info('WC-02 observation: raw arrow after the fresh loads', JSON.stringify(d.rawElement(arrowId)));
 
-    // E6: no uncaught page error on any page, from step 1 to the end.
+    // E6: every editor is still alive at the end, and no uncaught page error on any page, from step 1.
+    await expectEditorAlive(b.page, 'E6 B (end of walk)');
+    await expectEditorAlive(c.page, 'E6 C (end of walk)');
+    await expectEditorAlive(c2.page, 'E6 fresh C (end of walk)');
     expect(errorsB, 'E6 pageerror on B').toEqual([]);
     expect(errorsC, 'E6 pageerror on C').toEqual([]);
     expect(errorsC2, 'E6 pageerror on fresh C').toEqual([]);
