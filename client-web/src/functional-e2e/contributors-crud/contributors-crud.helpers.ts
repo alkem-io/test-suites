@@ -16,7 +16,11 @@ import {
 } from '@alkemio/tests-lib';
 import type { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import { must } from '../helpers/lib-actor.helper';
-import { baseUrl, teardownScenario } from '../helpers/space-access.helper';
+import {
+  baseUrl,
+  expectMutationAnswered,
+  teardownScenario,
+} from '../helpers/space-access.helper';
 
 /**
  * Shared set-up, teardown and locators for the contributors CRUD walks
@@ -217,7 +221,11 @@ export const deleteOrganizationInAdmin = async (
   const confirm = page.getByRole('alertdialog', {
     name: `Delete ${displayName}?`,
   });
+  // The row leaves the list before the delete round trip has finished: wait
+  // for the mutation's answer, or a read-back right after races the delete.
+  const deleted = expectMutationAnswered(page, 'deleteOrganization');
   await confirm.getByRole('button', { name: 'Delete', exact: true }).click();
+  await deleted();
   await expect(confirm).toBeHidden();
   await expect(row).toHaveCount(0);
 };

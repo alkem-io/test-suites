@@ -30,6 +30,7 @@ import path from 'path';
 import type { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import { must } from '../helpers/lib-actor.helper';
 import {
+  expectMutationAnswered,
   openPersonaPage,
   type PersonaPage,
 } from '../helpers/space-access.helper';
@@ -571,7 +572,9 @@ test.describe('Contributors CRUD — Virtual Contributor', () => {
         `This will permanently remove "${vcDoomed!.name}". This cannot be undone.`
       )
     ).toBeVisible();
+    const deleted = expectMutationAnswered(page, 'deleteVirtualContributor');
     await confirm.getByRole('button', { name: 'Delete', exact: true }).click();
+    await deleted();
     await expect(confirm).toBeHidden();
 
     await expect(
