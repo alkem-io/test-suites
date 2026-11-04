@@ -65,6 +65,19 @@ export const readCalloutFraming = (
   actor: GraphqlActor = TestUser.GLOBAL_ADMIN,
 ) => runAs(actor, (sdk, headers) => sdk.ReadCalloutFraming({ calloutId }, headers));
 
+/**
+ * The whiteboard a whiteboard callout frames: its id (the collaboration
+ * document id), nameID and whether the Space entitles it to multi-user editing.
+ * NB the scenario's `calloutWhiteboardId` is the CALLOUT id despite its name.
+ */
+export const readCalloutFramingWhiteboard = (
+  calloutId: string,
+  actor: GraphqlActor = TestUser.GLOBAL_ADMIN,
+) =>
+  runAs(actor, (sdk, headers) =>
+    sdk.ReadCalloutFramingWhiteboard({ calloutId }, headers),
+  );
+
 /** A callout's framing settings: the selection mode/ids and the spaces card variant. */
 export const readCalloutFramingSettings = (
   calloutId: string,

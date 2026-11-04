@@ -378,6 +378,16 @@ export default defineConfig(
         tier: 'long',
         capture: 'off',
       }),
+      suite({
+        // alkem-io/excalidraw-yjs#13 (undo racing a peer edit drops required element keys).
+        // Both walks are skipped until the test env's client-web resolves
+        // @excalidraw-yjs/excalidraw >= 0.5.6 (WHITEBOARD_COLLAB_FIXED=1 runs them); lift the
+        // skip in the client-web bump PR. They drive a Node Yjs peer through /collab with the
+        // personas' bearers, two browser contexts and a held-inbound race.
+        name: 'Whiteboard collaboration',
+        testMatch: ['/whiteboard-collaboration/*.spec.ts'],
+        tier: 'extended',
+      }),
     ],
   })
 );

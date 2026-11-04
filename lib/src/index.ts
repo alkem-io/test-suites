@@ -63,4 +63,6 @@ export * from "./scenario/functions/account/account.request.params";
 export * from "./scenario/functions/space/space.request.params";
 export * from "./scenario/functions/roleset/roleset.request.params";
 export * from "./scenario/functions/callout/callout.request.params";
+export * from "./scenario/functions/callout/whiteboard-callout";
 export * from "./scenario/functions/templates/templates.request.params";
+export * from "./collab/whiteboard-peer";
