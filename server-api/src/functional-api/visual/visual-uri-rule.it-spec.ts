@@ -1,6 +1,3 @@
-// spec: workspace#098-bug-updatevisual-accepts-any-avatar-uri
-// story: server#6745
-//
 // updateVisual stores only an address the platform's own file storage
 // produced (or the empty address, meaning "no picture"), for every visual
 // type and every caller. Anything else is refused with VISUAL_URI_NOT_ALLOWED
@@ -15,33 +12,28 @@
 
 import {
   createPngFixture,
-  getUserToken,
-  GraphqlActor,
-  readMyUser,
   TestScenarioFactory,
   TestUser,
   UniqueIDGenerator,
 } from '@alkemio/tests-lib';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
-import {
-  deleteUser,
-  registerVerifiedUser,
-} from '@functional-api/contributor-management/user/user.request.params';
+import { uploadImageOnVisual } from '@functional-api/storage/upload.params';
 import {
   getProfileVisuals,
   StoredVisual,
   updateVisualUri,
-  uploadPngOnVisual,
 } from './visual.request.params';
 
 const REFUSED = 'VISUAL_URI_NOT_ALLOWED';
 const OUTSIDE_HOST = 'https://host-you-control.example';
 
+// The avatar under test is the scenario organization's: the organization is
+// created for this run alone and removed with the scenario, so no other suite
+// or concurrent run writes it between an upload and its readback. The factory
+// makes the organization-admin persona its admin, the member who may update it.
+const owner = TestUser.ORGANIZATION_ADMIN;
+
 let baseScenario: OrganizationWithSpaceModel;
-// A user registered for this run alone, so no other suite or concurrent run
-// writes the avatar between an upload and its readback.
-let ownerId = '';
-let owner: GraphqlActor;
 let ownerProfileId = '';
 let avatarId = '';
 let uploadedUri = '';
@@ -55,7 +47,7 @@ const errorCode = (res: {
 
 const readVisuals = async (
   profileId: string,
-  actor: GraphqlActor
+  actor: TestUser
 ): Promise<StoredVisual[]> => {
   const res = await getProfileVisuals(profileId, actor);
   expect(res.body.errors, JSON.stringify(res.body.errors)).toBeUndefined();
@@ -65,7 +57,7 @@ const readVisuals = async (
 const readVisual = async (
   profileId: string,
   visualId: string,
-  actor: GraphqlActor
+  actor: TestUser
 ): Promise<StoredVisual> => {
   const visual = (await readVisuals(profileId, actor)).find(
     v => v.id === visualId
@@ -76,35 +68,28 @@ const readVisual = async (
 
 beforeAll(async () => {
   // The factory fills TestUserManager.users, so it runs before any persona
-  // is used. Its space is the BANNER source.
+  // is used. Its organization owns the AVATAR, its space the BANNER.
   baseScenario = await TestScenarioFactory.createBaseScenario({
     name: 'visual-uri-rule',
     space: {},
   });
 
-  const uniqueId = UniqueIDGenerator.getID();
-  const email = `visual-uri-${uniqueId}@alkem.io`;
-  ownerId = await registerVerifiedUser(email, 'visualuri', `ln${uniqueId}`);
-  owner = { bearerToken: await getUserToken(email) };
-  const me = await readMyUser(owner);
-  ownerProfileId = me.data?.me.user?.profile?.id ?? '';
-  expect(ownerProfileId, JSON.stringify(me.error)).not.toEqual('');
-
+  ownerProfileId = baseScenario.organization.profile.id;
   const avatar = (await readVisuals(ownerProfileId, owner)).find(
     v => v.name === 'AVATAR'
   );
   avatarId = avatar?.id ?? '';
-  expect(avatarId, 'the new user has no AVATAR visual').not.toEqual('');
+  expect(avatarId, 'the organization has no AVATAR visual').not.toEqual('');
 
-  // A fresh upload, never the registration-time picture: the accepted address
-  // is whatever the platform's storage produces on this stack.
-  const upload = await uploadPngOnVisual(
-    avatarId,
+  // A fresh upload, never the creation-time picture: the accepted address is
+  // whatever the platform's storage produces on this stack.
+  const upload = await uploadImageOnVisual(
     createPngFixture({ width: 200, height: 200 }),
+    avatarId,
     owner
   );
-  expect(upload.body.errors, upload.raw).toBeUndefined();
-  uploadedUri = upload.body.data?.uploadImageOnVisual?.uri ?? '';
+  expect(upload.errors, JSON.stringify(upload.errors)).toBeUndefined();
+  uploadedUri = upload.data?.uploadImageOnVisual?.uri ?? '';
   expect(uploadedUri, 'upload returned no uri').not.toEqual('');
 
   spaceProfileId = baseScenario.space.about.profile.id;
@@ -117,7 +102,6 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  if (ownerId) await deleteUser(ownerId);
   await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
 });
 
