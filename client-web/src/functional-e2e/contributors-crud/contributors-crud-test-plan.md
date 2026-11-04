@@ -1,815 +1,101 @@
-# Contributors CRUD Test Plan
-
-**Issue:** #1696
-**Scope:** Full CRUD operations testing for User, Organization, and Virtual Contributor (VC)
-**Test Strategy:** Automated E2E tests using Playwright
-
-## Test Environment Setup
-
-**Seed Spec:** [seed-contributors-crud.spec.ts](./seed-contributors-crud.spec.ts)
-
-**Pre-conditions:**
-
-- Base scenario with verified organization
-- Public space with community members (Space Admin, Space Member, Beta Tester)
-- Innovation Pack with templates for VC knowledge management
-- Platform discussion for VC tagging
-- Multiple authenticated sessions for different user roles
-
-**Test Users (from agents.md):**
-
-- Global Admin (GA): Organization creation
-- Organization Admin: Organization management
-- Space Admin: Space-level operations
-- Space Member: Member-level interactions
-- Beta Tester: Feature testing
-
----
-
-## 1. User CRUD Tests
-
-### 1.1 User Registration
-
-**Test:** `User registers successfully with all required fields`
-
-**Reference:** Existing test pattern from 'user successful registration email accept terms and fill all required fields'
-
-**Steps:**
-
-1. Navigate to sign-up page
-2. Accept Terms of Use and Privacy Policy checkbox
-3. Fill in required fields:
-   - Email
-   - First Name
-   - Last Name
-   - Password
-4. Submit registration form
-5. Verify email confirmation sent
-6. Verify user account created
-
-**Expected Result:**
-
-- User account created successfully
-- Confirmation email sent
-- User can log in with credentials
-
-**Test Roles:** New user (anonymous → registered)
-
----
-
-### 1.2 User Profile - Update and Verify Display
-
-**Test:** `Update user profile and verify display for self and others`
-
-**Steps:**
-
-1. Log in as registered user
-2. Navigate to user profile
-3. Update profile fields:
-   - Display name
-   - Tagline
-   - Bio/Description
-4. Save changes
-5. Verify profile displays correctly in own view
-6. Log in as different user
-7. Navigate to updated user's profile
-8. Verify profile displays correctly for other users
-
-**Expected Result:**
-
-- Profile updates saved successfully
-- Changes visible in user's own profile view
-- Changes visible to other users
-- Avatar displays correctly
-- All fields render properly
-
-**Test Roles:** Space Member (profile owner), Space Admin (viewer)
-
----
-
-## Updated
-
-### 1.3 User Account Tab
-
-**Test:** `Verify account tab components and functionality`
-
-**Steps:**
-
-1. Log in as user
-2. Navigate to user profile → Account tab
-3. Verify account tab components visible:
-   - Hosted Spaces block
-   - Virtual Contributors block
-   - Template Packs block
-   - Custom Homepages block
-4. Verify number of used versus available entities (Spaces, VCs, Templates, Homepages)
-5. Verify editable fields can be modified
-
-**Expected Result:**
-
-- All account information displayed correctly
-  - Hosted Spaces block - 0/0
-  - Virtual Contributors block - 0/0
-  - Template Packs block - 0/0
-  - Custom Homepages block - 0/0
-- Read-only fields cannot be edited
-- Editable fields update successfully
-
-**Test Roles:** Space Member
-
----
-
-### 1.4 User Membership Tab
-
-**Test:** `Verify membership tab components`
-
-**Steps:**
-
-1. Log in as user
-2. Navigate to user profile → Membership tab
-3. Verify membership tab displays:
-   - List of Spaces user is member of
-   - List of Organizations user belongs to
-   - Membership roles for each Space/Organization
-4. Verify membership cards are clickable (navigate to Space/Org)
-5. Verify role badges display correctly
-
-**Expected Result:**
-
-- All memberships listed correctly
-- Roles displayed accurately - NOTE: roles are not displayed for spaces
-- Navigation to Spaces/Orgs works
-- Membership data is up to date
-
-**Test Roles:** Space Member, Space Admin (with multiple memberships)
-
----
-
-### 1.5 User Notifications Tab - Verify and Update
-
-**Test:** `Verify notifications tab and update notification preferences`
-
-**Steps:**
-
-1. Log in as user
-2. Navigate to user profile → Notifications tab
-3. Verify notifications tab components:
-   - Notification preferences list
-   - Categories (email, platform, etc.)
-4. Update notification preferences:
-   - Toggle one notification type from each category on the page
-5. Save changes
-6. Verify preferences saved
-7. Refresh page and verify persistence
-
-**Expected Result:**
-
-- All notification preferences displayed
-- Toggle switches work correctly
-- Changes save successfully
-- Preferences persist after refresh
-
-**Test Roles:** Space Member
-
----
-
-### 1.6 User Settings Tab - Verify and Update
-
-**Test:** `Verify settings tab components and update settings`
-
-**Steps:**
-
-1. Log in as user
-2. Navigate to user profile → Settings tab
-3. Verify settings tab components:
-   - Privacy settings
-4. Update settings:
-   - Change privacy setting
-5. Save changes
-6. Verify settings applied
-
-**Expected Result:**
-
-- All settings options displayed
-- Settings can be modified
-- Changes save successfully
-- Settings take effect immediately or after refresh
-
-**Test Roles:** Space Member
-
----
-
-### 1.7 Organization Deletion - User Membership Verification
-
-**Test:** `Delete organization and verify users no longer have it under memberships`
-
-**Steps:**
-
-1. Log in as Global Admin
-2. Navigate to organization profile
-3. Note users who are members of the organization
-4. Navigate to Global Administration / Organization
-5. Initiate organization deletion
-6. Confirm deletion
-7. Verify organization deleted successfully
-8. Log out
-9. Log in as user who was organization member (Space Member)
-10. Navigate to user profile → Membership tab
-11. Verify deleted organization no longer appears in memberships list
-12. Log in as different user who was organization admin (Organization Admin)
-13. Navigate to user profile → Membership tab
-14. Verify deleted organization no longer appears in memberships list
-
-**Expected Result:**
-
-- Organization deleted successfully by Global Admin
-- Organization removed from all users' membership lists
-- Multiple users verified to no longer show organization membership
-- Organization profile no longer accessible
-- Users can still access their profiles normally
-
-**Test Roles:** Global Admin (deleter), Space Member (verifier), Organization Admin (verifier)
-
----
-
-### 1.8 User Role-Based Testing
-
-**Test:** `Verify user profile behaviors across different user roles`
-
-**Steps:**
-
-1. Run profile update tests with Space Admin role
-2. Run profile update tests with Org Admin role
-3. Run profile update tests with Beta Tester role
-4. Run profile update tests with Space Member role
-5. Compare behaviors and permissions
-6. Verify role-specific features visible/hidden correctly
-
-**Expected Result:**
-
-- All roles can update their own profiles
-- Different roles see appropriate UI elements
-- Permissions respected across roles
-- No unauthorized access to restricted features
-
-**Test Roles:** Space Admin, Org Admin, Beta Tester, Space Member
-
----
-
-## 2. Organization CRUD Tests
-
-### 2.1 Organization Creation & Deletion (via Global Admin, isolated)
-
-**Test:** `Global Admin creates and deletes a throwaway organization`
-
-**Scope note:** Use a fresh org solely for create+delete; keep the base scenario org (from suite setup) intact for subsequent read/update tests.
-
-**Steps:**
-
-1. Log in as Global Admin
-2. Navigate to Global Administration → Organizations
-3. Click "Create Organization"
-4. Fill in organization details:
-   - Display Name
-   - NameID
-5. Submit creation form and land on the new org profile
-6. Navigate to Settings / danger zone for that org
-7. Delete the newly created organization (confirm if prompted)
-8. Attempt to access the deleted org URL and verify it is gone
-
-**Expected Result:**
-
-- Organization is created and reachable
-- Deletion succeeds in the same flow
-- Deleted org is no longer accessible/listed
-- Base scenario organization remains untouched for later tests
-
-**Test Roles:** Global Admin (creator & deleter)
-
----
-
-### 2.2 Organization Profile - Update and Verify Display
-
-**Test:** `Organization Admin updates profile and verifies display`
-
-**Steps:**
-
-1. Log in as Organization Admin
-2. Navigate to organization profile
-3. Update organization profile:
-   - Display name
-   - Tagline
-   - Description
-   - Logo/Avatar
-   - Website URL
-   - Social links
-   - Tags
-4. Save changes
-5. Verify profile displays correctly in admin view
-6. Log out and view as anonymous user
-7. Verify public profile displays correctly
-8. Log in as different user
-9. Verify profile displays correctly for other users
-
-**Expected Result:**
-
-- Profile updates saved successfully
-- Changes visible in admin view
-- Changes visible to public users
-- Changes visible to other authenticated users
-- All fields render properly
-
-**Test Roles:** Org Admin (editor), anonymous (viewer), Space Member (viewer)
-
----
-
-### 2.3 Organization Account Tab
-
-**Test:** `Verify organization account tab components`
-
-**Steps:**
-
-1. Log in as Organization Admin
-2. Navigate to organization profile → Account tab
-3. Verify account tab components:
-   - Hosted Spaces block
-   - Virtual Contributors block
-   - Template Packs block
-   - Custom Homepages block
-4. Verify read-only fields display correctly
-5. Verify editable fields can be modified
-
-**Expected Result:**
-
-- All account information displayed correctly
-  - Hosted Spaces block - 1/3
-  - Virtual Contributors block - 0/3
-  - Template Packs block - 0/3
-  - Custom Homepages block - 0/1
-- Read-only fields cannot be edited
-- Editable fields update successfully
-
-**Test Roles:** Org Admin
-
----
-
-### 2.4 Organization Community Tab - Assign and Remove Users
-
-**Test:** `Verify community tab and manage user assignments`
-
-**Steps:**
-
-1. Log in as Organization Admin
-2. Navigate to organization profile → Community tab
-3. Verify community tab components:
-   - List of organization members
-   - Member roles
-   - Add member button
-   - Member search/filter
-4. Assign new user to organization:
-   - Click "Add Member"
-   - Search for user (use Space Member)
-   - Select user
-   - Assign role
-   - Confirm assignment
-5. Verify user appears in members list
-6. Verify user role displayed correctly
-7. Remove user from organization:
-   - Select user in members list
-   - Click remove/delete
-   - Confirm removal
-8. Verify user removed from members list
-
-**Expected Result:**
-
-- Community tab displays all members correctly
-- User can be added successfully
-- User role assigned correctly
-- User appears in members list after assignment
-- User can be removed successfully
-- User disappears from members list after removal
-
-**Test Roles:** Org Admin (manager), Space Member (assignee)
-
----
-
-### 2.5 Organization Authorization Tab - Manage Permissions
-
-**Test:** `Verify authorization tab and manage user permissions`
-
-**Steps:**
-
-1. Log in as Organization Admin
-2. Navigate to organization profile → Authorization tab
-3. Verify authorization tab components:
-   - List of users with permissions
-   - Permission levels/roles
-   - Add authorization button
-4. Assign authorization to user:
-   - Add user as member to Organization (use Space Admin)
-   - Click "Add Authorization"
-   - Search for user (use Space Admin)
-   - Select user
-   - Assign permission level
-   - Confirm authorization
-5. Verify user appears in authorization list
-6. Verify permission level displayed correctly
-7. Remove authorization from user:
-   - Select user in authorization list
-   - Click remove/revoke
-   - Confirm removal
-8. Verify user removed from authorization list
-
-**Expected Result:**
-
-- Authorization tab displays all authorized users
-- User can be authorized successfully
-- Permission level assigned correctly
-- User appears in authorization list
-- User authorization can be revoked
-- User disappears from authorization list after revocation
-
-**Test Roles:** Org Admin (manager), Space Admin (assignee)
-
----
-
-### 2.6 Organization Settings Tab
-
-**Test:** `Verify organization settings tab components`
-
-**Steps:**
-
-1. Log in as Organization Admin
-2. Navigate to organization profile → Settings tab
-3. Verify settings tab components:
-   - Other organization settings
-4. Update 1 organization setting
-5. Save changes
-6. Verify settings applied
-
-**Expected Result:**
-
-- All settings options displayed
-- Settings can be modified by Org Admin
-- Changes save successfully
-- Settings take effect
-
-**Test Roles:** Org Admin
-
----
-
-## 3. Virtual Contributor (VC) CRUD Tests
-
-### 3.1 Virtual Contributor Creation
-
-**Test:** `Create new Virtual Contributor with all required details`
-
-**Steps:**
-
-1. Log in as Organization Admin
-2. Go to Dashboard
-3. Navigate to personal profile
-4. Navigate to associated organization profile
-5. Navigate to Settings tab
-6. Navigate to Account page
-7. Click "Create new Virtual Contributor"
-8. Fill in VC details:
-   - Upload avatar image
-   - Fill in name/display name
-   - Fill in description
-   - Choose knowledge type: "Written knowledge in text"
-9. Click "Create"
-10. Verify VC created successfully
-
-**Expected Result:**
-
-- VC creation form displays correctly
-- All fields can be filled
-- Avatar uploads successfully
-- VC created and visible in organization
-- VC profile accessible
-
-**Test Roles:** Org Admin
-
----
-
-### 3.2 Virtual Contributor - Add Knowledge (Post)
-
-**Test:** `Add text post knowledge to Virtual Contributor`
-
-**Steps:**
-
-1. Log in as Organization Admin
-2. Navigate to VC profile
-3. Navigate to Knowledge/Body of Knowledge (BoK) section
-4. Click "Add Post"
-5. Fill in post details:
-   - Change/add title
-   - Paste text content in post body
-   - Add formatting if available
-6. Click "Add Post" to save
-7. Verify post appears in VC knowledge base
-
-**Expected Result:**
-
-- Post creation form displays
-- Title and text can be entered
-- Post saves successfully
-- Post visible in VC Body of Knowledge
-- Post displays correctly with formatting
-
-**Test Roles:** Org Admin
-
----
-
-### 3.3 Virtual Contributor - Add Knowledge (Document)
-
-**Test:** `Add document knowledge to Virtual Contributor`
-
-**Steps:**
-
-1. Log in as Organization Admin
-2. Navigate to VC profile
-3. Navigate to Knowledge/BoK section
-4. Click "Add Document"
-5. Fill in document details:
-   - Give title/name
-   - Upload document file (PDF, DOCX, etc.)
-6. Click "Continue" or "Upload"
-7. Verify document uploads successfully
-8. Verify document appears in VC knowledge base
-
-**Expected Result:**
-
-- Document upload form displays
-- Title can be entered
-- Document file uploads successfully
-- Document visible in VC Body of Knowledge
-- Document can be downloaded/viewed
-
-**Test Roles:** Org Admin
-
----
-
-### 3.4 Virtual Contributor - Space Interaction Setup
-
-**Test:** `Associate VC to Space and accept invitation`
-
-**Steps:**
-
-1. Log in as Organization Admin
-2. Navigate to VC profile
-3. Navigate to VC Settings → Membership tab
-4. Switch to a Space admin-capable user (Space Admin or Global Admin)
-5. Navigate directly to the Space URL created in config (CRUD Test Space)
-6. In that Space, open Contributors (Community) and add/invite the VC created in 3.1
-7. Switch back to Organization Admin
-8. Return to VC Settings → Membership tab
-9. In Pending Invitations, accept the Space invitation for this VC
-10. Verify the Space now appears under Memberships (no longer in Pending Invitations)
-
-**Expected Result:**
-
-- VC can be invited to the Space from the Space page by a Space/Global Admin
-- Pending invitation for that Space appears in VC memberships
-- Accepting the invitation moves the Space to Memberships
-- VC is now associated with the Space and ready for interactions
-
-**Test Roles:** Org Admin
-
----
-
-### 3.5 Virtual Contributor - Tagging in Discussion
-
-**Test:** `Tag Virtual Contributor with question in discussion`
-
-**Steps:**
-
-1. Log in as Space Member
-2. Navigate to Space
-3. Navigate to Forum/Discussion
-4. Open existing discussion (from platform discussion in scenario)
-5. Create new comment/post
-6. Type "@" to trigger VC mention
-7. Search for and select VC
-8. Add question text after VC mention
-9. Post comment
-10. Verify VC tagged successfully
-11. Verify VC mention displays correctly
-12. (Optional) Check if VC responds based on knowledge
-
-**Expected Result:**
-
-- "@" mention triggers VC search
-- VC appears in mention suggestions
-- VC can be tagged in comment
-- Comment posts successfully
-- VC mention displays as link/badge
-- VC may generate response based on knowledge
-
-**Test Roles:** Space Member (tagger)
-
----
-
-### 3.6 Virtual Contributor - Profile Navigation
-
-**Test:** `Navigate to Virtual Contributor profile from mention`
-
-**Steps:**
-
-1. Log in as Space Member
-2. Navigate to discussion with VC mention (from previous test)
-3. Click on VC mention/link in comment
-4. Verify navigation to VC profile
-5. Verify VC profile displays:
-   - Name and avatar
-   - Description
-   - Associated organization
-   - Body of Knowledge section
-   - Interaction history (if visible)
-
-**Expected Result:**
-
-- VC mention is clickable
-- Clicking navigates to VC profile
-- VC profile displays correctly
-- All profile sections visible
-- Knowledge base accessible
-
-**Test Roles:** Space Member
-
----
-
-### 3.7 Virtual Contributor - Settings and Visibility
-
-**Test:** `Change Virtual Contributor visibility to hidden`
-
-**Steps:**
-
-1. Log in as Organization Admin
-2. Navigate to VC profile
-3. Navigate to VC Settings tab
-4. Find "Visibility" or "Privacy" setting
-5. Change visibility to "Hidden"
-6. Save settings
-7. Log out
-8. Log in as different user (Space Member)
-9. Attempt to navigate to VC profile
-10. Verify VC not visible/accessible
-11. Verify VC does not appear in search
-12. Verify VC does not appear in mention suggestions
-
-**Expected Result:**
-
-- Visibility setting can be changed to hidden
-- Setting saves successfully
-- Hidden VC not visible to other users
-- Hidden VC not searchable
-- Hidden VC not available for mentions
-- Org Admin can still access hidden VC
-
-**Test Roles:** Org Admin (editor), Space Member (verifier)
-
----
-
-### 3.8 Virtual Contributor - Body of Knowledge Access
-
-**Test:** `Visit and verify VC Body of Knowledge`
-
-**Steps:**
-
-1. Log in as Space Member
-2. Navigate to VC profile (ensure VC is public)
-3. Click on "Body of Knowledge" or "Visit BoK" section
-4. Verify BoK displays:
-   - All posts added previously
-   - All documents uploaded previously
-   - Knowledge organized by type/category
-   - Search/filter functionality (if available)
-5. Click on a post to read full content
-6. Verify post displays correctly
-7. Click on a document to download/view
-8. Verify document accessible
-9. Close BoK or navigate back
-
-**Expected Result:**
-
-- Body of Knowledge section accessible
-- All knowledge items displayed
-- Posts readable with full content
-- Documents downloadable/viewable
-- Navigation and UI work correctly
-- Knowledge properly categorized
-
-**Test Roles:** Space Member
-
----
-
-### 3.9 Virtual Contributor Deletion
-
-**Test:** `Delete Virtual Contributor and verify removal`
-
-**Steps:**
-
-1. Log in as Organization Admin
-2. Navigate to VC profile
-3. Navigate to VC Settings → Account/Danger Zone
-4. Click "Delete Virtual Contributor"
-5. Confirm deletion
-6. Verify VC deleted successfully
-7. Verify VC profile no longer accessible
-8. Navigate to organization profile
-9. Verify VC no longer listed in organization's VCs
-10. Navigate to Space where VC was mentioned
-11. Verify VC mentions show as deleted/unavailable
-12. Verify VC knowledge no longer accessible
-
-**Expected Result:**
-
-- VC can be deleted by Org Admin
-- Deletion confirmation required
-- VC removed from organization
-- VC profile inaccessible after deletion
-- VC mentions show as deleted
-- VC knowledge removed/archived
-
-**Test Roles:** Org Admin (deleter), Space Member (verifier)
-
----
-
-## Test Execution Strategy
-
-### Test Suite Organization
-
-1. **Suite 1: User CRUD** (8 tests)
-
-   - user-crud.spec.ts
-   - Covers registration, profile, tabs, deletion
-
-2. **Suite 2: Organization CRUD** (7 tests)
-
-   - organization-crud.spec.ts
-   - Covers creation, profile, community, authorization, deletion
-
-3. **Suite 3: Virtual Contributor CRUD** (9 tests)
-   - virtual-contributor-crud.spec.ts
-   - Covers creation, knowledge, interactions, visibility, deletion
-
-### Test Data Strategy
-
-- Use seed spec to create base scenario before each suite
-- Create dedicated test users for each role
-- Clean up test data after each suite completes
-- Use unique identifiers to avoid conflicts
-
-### Execution Order
-
-1. Run seed spec to create base scenario
-2. Run User CRUD tests (can run in parallel within suite)
-3. Run Organization CRUD tests (serial execution recommended)
-4. Run Virtual Contributor CRUD tests (serial execution recommended)
-5. Clean up all test data
-
-### Success Criteria
-
-- All 24 test cases pass
-- All CRUD operations verified
-- All user roles tested
-- No data leaks between tests
-- Proper cleanup after test execution
-
----
-
-## Notes and Considerations
-
-### User Registration
-
-- May require email verification flow
-- Consider using test email service or mock
-- Password requirements may vary
-
-### Organization Management
-
-- Global Admin should only create organization
-- All subsequent changes by Org Admin
-- Deletion may have cascading effects
-
-### Virtual Contributor
-
-- Knowledge management may have rate limits
-- File upload sizes may be restricted
-- VC responses may be async
-- Visibility changes may have caching delays
-
-### Cross-Test Dependencies
-
-- Some tests depend on previous test data
-- Consider using fixtures for shared state
-- Document test dependencies clearly
-
-### Performance Considerations
-
-- File uploads may be slow
-- Organization deletion may take time
-- Consider appropriate timeouts
-- Use parallel execution where safe
+# Test plan — Contributors CRUD: user, organisation, virtual contributor
+
+- **Story:** [alkem-io/alkemio#1699](https://github.com/alkem-io/alkemio/issues/1699) "QA P1: Contributors - CRUD Full" (epic #1696). No workspace spec.
+- **Suite:** `client-web/src/functional-e2e/contributors-crud/` — nightly project **"Contributors CRUD"**, tier `extended`. Shared set-up in `contributors-crud.helpers.ts`.
+- **Status:** rewritten against the CRD client (client-web `develop` @ `a47c8b36d`, server release-80 build) on 2026-11-04 and run twice through the nightly project on the local stack (≈ 4.8 min each): 23 green, 4 red on product defects (see *Known defects*), 1 skipped (3.0, recorded flow). Not yet run on `test-alkem.io`.
+
+## Overview
+
+The story walks each contributor type through create → read → update → delete. Every write here is checked from two angles: the reloaded page shows the new value, and the record read back over the API (`getUserData`, `readOrganization`, `readRoleSetUsersInRole`, `readVirtualContributor`, `readCalloutsSetCallouts`) holds it. "Toast shown" or "dialog closed" is never the oracle, and every absence is asserted next to a positive control on the same page.
+
+Virtual Contributors have been **paused** since [client-web#10398](https://github.com/alkem-io/client-web/issues/10398): nobody can create one, add one to a Space or mention one, while existing VCs stay visible, editable and deletable. The VC cases therefore seed their VCs over the API, the cases for the paused steps (3.1, 3.4, 3.5) pin the pause itself, and the rest drive the UI that still exists. When the pause is lifted, 3.1 / 3.4 / 3.5 go red. That is the signal to restore the story's create / invite / tag flow there.
+
+## Risks
+
+| Risk | Likelihood | Impact | Cases |
+| --- | --- | --- | --- |
+| A settings save looks successful but does not persist (buffered bar, optimistic toggles) | medium | high | 1.2, 1.5, 1.6, 2.2, 2.6, 3.7 |
+| Deleting an organisation leaves it in its associates' lists or on the platform | medium | high | 1.7, 2.1 |
+| Removing a role in the Associates editor leaves the credential (or removes the wrong one) | medium | high | 2.4, 2.5 |
+| Profile changes are not what other users see | low | medium | 1.2, 2.2, 3.6 |
+| Capacity counts on the Account tab disagree with the licence | low | medium | 1.3, 2.3 |
+| A paused VC action reappears without the reworked feature | low | medium | 3.1, 3.4, 3.5 |
+| Knowledge added to a VC is stored but not shown, or shown to the wrong audience | high (both reproduced) | high | 3.2, 3.3, 3.7b, 3.8 |
+
+## Personas and data
+
+| Persona | Kind | Role |
+| --- | --- | --- |
+| disposable `crud-*@alkem.io` | registered per file, deleted in `afterAll` | every user edit (profile, notifications, settings, associations) |
+| `admin` (global admin) | harness | creates and deletes organisations in Administration; seeds VCs |
+| `organization.admin` | harness | Associate + Admin of every scenario organisation (factory); org edits, VC host actions |
+| `space.member`, `space.admin`, `beta.tester` | harness | read-only viewers (1.2, 1.8, 2.2, 3.4–3.6, 3.8) |
+
+Each file seeds its own organisation (`createBaseScenarioOrganization`; the VC file adds a public Space with one post callout) with run-unique names. Teardown is in a file-level `afterAll`: disposable users and VCs first, then the scenario. The shared personas are never written to.
+
+## Navigation
+
+- User settings `/user/<nameID>/settings/{profile,account,membership,organizations,notifications,settings,security}`. Profile edits commit through the **Unsaved changes** bar; notification and settings switches save on toggle.
+- Organisation settings `/organization/<nameID>/settings/{profile,account,associates,membership,invitations,settings}`. The **Authorization** and **Community** tabs are retired: `/settings/authorization` lands on **Associates**, whose row editor (`Edit <name>`) holds the Associate / Admin / Owner switches and **Remove from organisation**.
+- Administration › Organisations `/admin/organizations`: **New organisation** form, search (server-side on display name), row **Delete** + confirm.
+- VC `/vc/<nameID>` (profile), `/vc/<nameID>/knowledge-base`, `/vc/<nameID>/settings/{profile,membership,settings}`. Host Account tab card → **More actions** → **Delete**.
+- `/contributors` (the old "Find contributors" page) has no CRD route. See *Known defects*.
+
+## Cases
+
+Techniques: **UC** use-case walk with the postcondition read back, **ST** state transition, **EP** viewer partition, **NC** negative with a positive control, **EG** error guessing.
+
+| ID | Spec › title | Technique | Oracle | Status |
+| --- | --- | --- | --- | --- |
+| 1.1 | `user-crud.spec.ts` › 1.1 a registered user gets a verification mail, signs in, and owns a profile carrying the names entered | UC | verification mail for that address; signed-in shell; API user with the entered first/last name; Profile tab shows them; user deleted | green |
+| 1.2 | › 1.2 a profile update is saved, survives a reload, and is what another signed-in user sees | UC, EP | Display Name + Tagline after reload and in `getUserData`; `space.member` sees both on `/user/<nameID>`, without a settings link | green |
+| 1.3 | › 1.3 the Account tab shows each resource block with used / available counts for an unlicensed user | EP | exactly Hosted Spaces 0/0, Virtual Contributors 0/0, Template Packs 0/0, Custom Homepages Not available, Danger Zone | green |
+| 1.4 | › 1.4 the Organisations tab lists exactly the organisation the user is associated with | UC | "Showing 1 of 1", one row linking to the org with the Associate badge | green |
+| 1.5 | › 1.5 toggling a notification channel saves it, and it survives a reload | ST | `space.collaborationCalloutPublished.email` flipped in the API; switch state after reload | green |
+| 1.6 | › 1.6 turning off direct messages on the Settings tab saves it | ST | `communication.allowOtherUsersToSendMessages` false; unchecked after reload | green |
+| 1.7 | › 1.7 once the platform admin deletes an organisation, its former associate no longer lists it | UC, NC | before: 2 of 2 incl. the doomed org; GA deletes in Administration; API lookup not found; after: 1 of 1, the scenario org still listed | green |
+| 1.8 | › 1.8 Space Admin / Org Admin / Beta Tester / Space Member: own settings on an editable Profile tab | EP | per role: the 7-tab strip, Display Name = their API name, name fields editable, Email read-only | green |
+| 2.1 | `organization-crud.spec.ts` › 2.1 the platform admin creates an organisation in Administration, and deleting it there removes it | UC | `createOrganization` answered; API nameID + display name; listed; deleted from the list; API lookup not found | green |
+| 2.2 | › 2.2 the organisation admin updates the profile; it survives a reload and is what anonymous and signed-in visitors see | UC, EP | Display Name, Tagline, Website after reload and in `readOrganization`; anonymous and `space.member` see name + tagline, no settings link | green |
+| 2.3 | › 2.3 the Account tab shows each resource block with used / available counts from the licence plan | EP | exactly Hosted Spaces 0/3, Virtual Contributors 0/3, Template Packs 0/3, Custom Homepages Not available | green |
+| 2.4 | › 2.4 the organisation admin removes an associate on the Associates tab | UC, NC | confirm dialog names the person; row gone, own admin row still there; API Associate list excludes them | green |
+| 2.5 | › 2.5 the organisation admin grants and then revokes Admin for an associate | ST | Admin badge on/off; API Admin list includes/excludes; Associate kept | green |
+| 2.6 | › 2.6 the organisation admin turns off applications on the Settings tab | ST | `updateOrganizationSettings` answered; `allowApplications` false, `allowSpaceInvitations` untouched; unchecked after reload | green |
+| 3.0 | `virtual-contributor-crud.spec.ts` › 3.0 Manually go through whole flow | — | recorded click path without assertions | skipped (author's) |
+| 3.1 | › 3.1 creating a VC is paused (client-web#10398) | NC | Account tab lists the three VCs and the upgrade notice; no "Create new contributor"; "Create new pack" offered | green |
+| 3.2 | › 3.2 the host adds a text post to the VC knowledge base | UC | callout stored on the KB callouts set; post listed in the KB feed after reload | **red** — client-web#10125 |
+| 3.3 | › 3.3 the host adds a document to the VC knowledge base | UC | Links & Files post with an attached PDF: stored, one link contribution; listed in the KB feed | **red** — client-web#10125 |
+| 3.4 | › 3.4 adding a VC to a Space is paused (client-web#10398) | NC | Space settings › Community: notice, no Add / Invite External VC buttons; members table rendered | green |
+| 3.5 | › 3.5 mentioning a VC is paused (client-web#10398) | NC | a user is offered and picking inserts the mention; the VC is offered as "Temporarily unavailable" and picking it changes nothing | green |
+| 3.6 | › 3.6 a signed-in user reaches the VC profile from its host's profile | UC | org profile › Other Resources › VC card → `/vc/<nameID>`: name, description, Host link, Body of Knowledge with Visit link, no settings link | green |
+| 3.7 | › 3.7 the host sets a VC to Hidden on its Settings tab | ST | `searchVisibility` HIDDEN in the API; Hidden radio after reload | green |
+| 3.7b | › 3.7b the "Hide knowledge-base content from non-members" switch reads ON exactly when the content is hidden | EG, ST | switch checked ⇔ `knowledgeBaseContentVisible` false, before and after a toggle | **red** — switch inverted (QA-PF-02) |
+| 3.8 | › 3.8 a signed-in user visits the Body of Knowledge from the VC profile | UC | Visit → KB page, no Add for a visitor; seeded post title and body listed; Back returns to the profile | **red** — client-web#10125 |
+| 3.9 | › 3.9 the host deletes a VC from the Account tab | UC, NC | confirm names the VC; card gone, other VC still listed; API lookup ENTITY_NOT_FOUND (present before) | green |
+
+## Covered elsewhere (not duplicated here)
+
+| Story step | Where |
+| --- | --- |
+| Registration with email verification and first sign-in | `authentication/authentication-registration.spec.ts` (nightly). 1.1 overlaps it and adds the created profile's names plus cleanup |
+| Membership tab lists the user's Spaces; leave a Space | `memberships/access-own-membership-settings.spec.ts` |
+| Notification rows persist across reload and are honoured (messaging rows) | `messaging-notifications/us3-messaging-settings-rows.spec.ts` |
+| Organisation community: invite an associate, invitee accepts / declines; Admin / Owner caps; retired Authorization URL | `organization-user-associates/us1-…`, `us2-…`, `us5-associates-editor.spec.ts` |
+| Organisation Account tab with a hosted Space (1/3) | `memberships/view-organization-account-settings-as-admin.spec.ts` |
+| Another user's settings are refused | `memberships/cannot-access-other-user-*-settings.spec.ts` |
+
+## Deliberately not covered here
+
+- **VC create wizard, avatar upload, invite to a Space and accept, tag with a question** (story VC steps 6–11, 21–22): not offered while VCs are paused (client-web#10398). 3.1 / 3.4 / 3.5 pin the pause instead.
+- **What "Hidden" does to other users** (3.7): the radio says "hidden from search". Whether it also removes the VC from the host's public resource list or its profile URL is not stated anywhere. Needs a product ruling before it can be asserted.
+- **Story step "Ideally, should be checked with different user roles"** beyond 1.8: the story names no behaviour that differs by role, so 1.8 pins only what every role must have (their own editable profile).
+- **Avatar / logo upload** on user and organisation profiles: same upload path as other storage suites; not walked.
+- Running on `test-alkem.io` (story AC "pass consistently on the test environment"): not yet done.
+
+## Known defects
+
+| ID | Issue | Effect on this suite |
+| --- | --- | --- |
+| QA-PF-01 | [client-web#10125](https://github.com/alkem-io/client-web/issues/10125) — knowledge-base posts never render: `CalloutDetails` asks for the classification's `flow-state` tagset, which a knowledge-base callout does not have, and the server answers ENTITY_NOT_FOUND | 3.2, 3.3, 3.8 red at "listed in the KB feed" (their API halves pass) |
+| QA-PF-02 | pending — VC Settings: "Hide knowledge-base content from non-members" is bound to `knowledgeBaseContentVisible`, so ON exposes the content and OFF hides it | 3.7b red |
+| QA-PF-03 | pending — `/contributors` resolves on the server (`CONTRIBUTORS_EXPLORER`) but the CRD client has no route: endless "Loading" | none (no case uses it) |
