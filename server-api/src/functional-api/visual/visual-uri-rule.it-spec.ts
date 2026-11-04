@@ -96,25 +96,22 @@ beforeAll(async () => {
     await registerTestUser(userName);
   }
   const deadline = Date.now() + READY_TIMEOUT_MS;
-  let lastFailure = '';
   for (;;) {
     try {
       const actor = { bearerToken: await getUserToken(email) };
-      const me = await readMyUser(actor);
-      const user = me.data?.me.user;
+      const user = (await readMyUser(actor)).data?.me.user;
       if (user?.profile?.id) {
         owner = actor;
         ownerId = user.id;
         ownerProfileId = user.profile.id;
         break;
       }
-      lastFailure = `me has no user: ${JSON.stringify(me.error ?? me.data)}`;
-    } catch (e) {
-      lastFailure = (e as Error).message;
+    } catch {
+      // Not usable yet; retried until the deadline.
     }
     if (Date.now() > deadline) {
       throw new Error(
-        `${email} was registered but not usable within ${READY_TIMEOUT_MS / 1000}s; last failure: ${lastFailure}`
+        `the registered owner was not usable within ${READY_TIMEOUT_MS / 1000}s`
       );
     }
     await new Promise(resolve => setTimeout(resolve, READY_POLL_MS));
