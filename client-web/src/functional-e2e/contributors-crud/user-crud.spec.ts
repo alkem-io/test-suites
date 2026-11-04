@@ -43,6 +43,7 @@ import {
   expectSettingsTabs,
   organizationIdByNameId,
   registerDisposableUser,
+  runCleanup,
   runId,
   seedOrganizationScenario,
   teardownScenario,
@@ -78,9 +79,11 @@ test.beforeAll(async ({ browser }) => {
 
 // File level, so it also runs when a failure retires the worker mid-file.
 test.afterAll(async () => {
-  await self?.close();
-  await deleteDisposableUser(user);
-  await teardownScenario(scenario);
+  await runCleanup([
+    ['close self', () => self?.close() ?? Promise.resolve()],
+    ['delete user', () => deleteDisposableUser(user)],
+    ['teardown scenario', () => teardownScenario(scenario)],
+  ]);
 });
 
 const myOrganisations = () =>

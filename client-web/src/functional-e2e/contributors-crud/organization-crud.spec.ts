@@ -34,6 +34,7 @@ import {
   organizationIdByNameId,
   orgSettingsUrl,
   registerDisposableUser,
+  runCleanup,
   runId,
   saveChanges,
   seedOrganizationScenario,
@@ -64,10 +65,12 @@ test.beforeAll(async ({ browser }) => {
 
 // File level, so it also runs when a failure retires the worker mid-file.
 test.afterAll(async () => {
-  await orgAdmin?.close();
-  await deleteDisposableUser(leaving);
-  await deleteDisposableUser(promoted);
-  await teardownScenario(scenario);
+  await runCleanup([
+    ['close orgAdmin', () => orgAdmin?.close() ?? Promise.resolve()],
+    ['delete leaving', () => deleteDisposableUser(leaving)],
+    ['delete promoted', () => deleteDisposableUser(promoted)],
+    ['teardown scenario', () => teardownScenario(scenario)],
+  ]);
 });
 
 const org = () => scenario!.organization;

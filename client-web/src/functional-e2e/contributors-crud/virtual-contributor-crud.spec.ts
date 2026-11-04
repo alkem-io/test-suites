@@ -40,6 +40,7 @@ import {
   escapeRegExp,
   expectSettingsTabs,
   orgSettingsUrl,
+  runCleanup,
   runId,
   teardownScenario,
   vcPausedNotice,
@@ -97,12 +98,18 @@ const seedVc = async (label: string): Promise<SeededVc> => {
     ),
     `create VC ${name}`
   ).createVirtualContributor;
-  must(
-    await updateVirtualContributorVisibility(vc.id, {
-      searchVisibility: SearchVisibility.Public,
-    }),
-    `make ${name} public`
-  );
+  try {
+    must(
+      await updateVirtualContributorVisibility(vc.id, {
+        searchVisibility: SearchVisibility.Public,
+      }),
+      `make ${name} public`
+    );
+  } catch (error) {
+    // Nothing tracks the id yet: a VC left behind blocks its account's deletion.
+    await deleteVcIfPresent(vc.id);
+    throw error;
+  }
   return {
     id: vc.id,
     nameId,
@@ -165,12 +172,15 @@ test.beforeAll(async ({ browser }) => {
 
 // File level, so it also runs when a failure retires the worker mid-file.
 test.afterAll(async () => {
-  await orgAdmin?.close();
-  await member?.close();
   // VCs block their account's deletion: remove them before the organisation.
-  for (const vc of [vcMain, vcHidden, vcDoomed])
-    await deleteVcIfPresent(vc?.id);
-  await teardownScenario(scenario);
+  await runCleanup([
+    ['close orgAdmin', () => orgAdmin?.close() ?? Promise.resolve()],
+    ['close member', () => member?.close() ?? Promise.resolve()],
+    ['delete vcMain', () => deleteVcIfPresent(vcMain?.id)],
+    ['delete vcHidden', () => deleteVcIfPresent(vcHidden?.id)],
+    ['delete vcDoomed', () => deleteVcIfPresent(vcDoomed?.id)],
+    ['teardown scenario', () => teardownScenario(scenario)],
+  ]);
 });
 
 const knowledgeFeed = (page: PersonaPage['page']) =>

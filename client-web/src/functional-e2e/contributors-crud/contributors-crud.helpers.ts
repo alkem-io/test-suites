@@ -149,6 +149,30 @@ export const deleteVcIfPresent = async (id: string | undefined) => {
   }
 };
 
+/**
+ * Runs cleanup steps in order, never skipping one because an earlier one
+ * threw; the failures are re-thrown together at the end. One failed
+ * `deleteUser` must not leave the organisation (or a VC that blocks its
+ * account's deletion) behind on a shared environment.
+ */
+export const runCleanup = async (
+  steps: Array<[what: string, step: () => Promise<unknown>]>
+): Promise<void> => {
+  const failures: string[] = [];
+  for (const [what, step] of steps) {
+    try {
+      await step();
+    } catch (error) {
+      failures.push(`${what}: ${error instanceof Error ? error.message : error}`);
+    }
+  }
+  if (failures.length > 0) {
+    throw new Error(
+      `cleanup: ${failures.length} of ${steps.length} steps failed\n${failures.join('\n')}`
+    );
+  }
+};
+
 // --------------------------------------------------------------- locators
 
 /** A settings tab in the user / organisation / VC settings shell. */
