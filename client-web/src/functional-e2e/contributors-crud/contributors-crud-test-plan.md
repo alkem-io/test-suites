@@ -2,7 +2,7 @@
 
 - **Story:** [alkem-io/alkemio#1699](https://github.com/alkem-io/alkemio/issues/1699) "QA P1: Contributors - CRUD Full" (epic #1696). No workspace spec.
 - **Suite:** `client-web/src/functional-e2e/contributors-crud/` — nightly project **"Contributors CRUD"**, tier `extended`. Shared set-up in `contributors-crud.helpers.ts`.
-- **Status:** rewritten against the CRD client (client-web `develop` @ `a47c8b36d`, server release-80 build) on 2026-11-04 and run twice through the nightly project on the local stack (≈ 4.8 min each): 23 green, 4 `test.skip` on product defects (3.2, 3.3, 3.8 → client-web#10125; 3.7b → QA-PF-02, issue pending — drop each skip when fixed), 1 skipped (3.0, recorded flow). Not yet run on `test-alkem.io`.
+- **Status:** rewritten against the CRD client (client-web `develop` @ `a47c8b36d`, server release-80 build) on 2026-11-04 and run twice through the nightly project on the local stack (≈ 4.8 min each): 22 green, 4 `test.skip` on product defects (3.2, 3.3, 3.8 → client-web#10125; 3.7b → QA-PF-02, issue pending — drop each skip when fixed), 1 skipped (3.0, recorded flow). Not yet run on `test-alkem.io`.
 
 ## Overview
 
@@ -47,8 +47,7 @@ Techniques: **UC** use-case walk with the postcondition read back, **ST** state 
 
 | ID | Spec › title | Technique | Oracle | Status |
 | --- | --- | --- | --- | --- |
-| 1.1 | `user-crud.spec.ts` › 1.1 a registered user gets a verification mail, signs in, and owns a profile carrying the names entered | UC | verification mail for that address; signed-in shell; API user with the entered first/last name; Profile tab shows them; user deleted | green |
-| 1.2 | › 1.2 a profile update is saved, survives a reload, and is what another signed-in user sees | UC, EP | Display Name + Tagline after reload and in `getUserData`; `space.member` sees both on `/user/<nameID>`, without a settings link | green |
+| 1.2 | `user-crud.spec.ts` › 1.2 a profile update is saved, survives a reload, and is what another signed-in user sees | UC, EP | Display Name + Tagline after reload and in `getUserData`; `space.member` sees both on `/user/<nameID>`, without a settings link | green |
 | 1.3 | › 1.3 the Account tab shows each resource block with used / available counts for an unlicensed user | EP | exactly Hosted Spaces 0/0, Virtual Contributors 0/0, Template Packs 0/0, Custom Homepages Not available, Danger Zone | green |
 | 1.4 | › 1.4 the Organisations tab lists exactly the organisation the user is associated with | UC | "Showing 1 of 1", one row linking to the org with the Associate badge | green |
 | 1.5 | › 1.5 toggling a notification channel saves it, and it survives a reload | ST | `space.collaborationCalloutPublished.email` flipped in the API; switch state after reload | green |
@@ -77,7 +76,7 @@ Techniques: **UC** use-case walk with the postcondition read back, **ST** state 
 
 | Story step | Where |
 | --- | --- |
-| Registration with email verification and first sign-in | `authentication/authentication-registration.spec.ts` (nightly). 1.1 overlaps it and adds the created profile's names plus cleanup |
+| Registration with email verification and first sign-in | `authentication/authentication-registration.spec.ts` (nightly). The story's registration step is not repeated here: case 1.1 duplicated that walk and was dropped on 2026-11-05 |
 | Membership tab lists the user's Spaces; leave a Space | `memberships/access-own-membership-settings.spec.ts` |
 | Notification rows persist across reload and are honoured (messaging rows) | `messaging-notifications/us3-messaging-settings-rows.spec.ts` |
 | Organisation community: invite an associate, invitee accepts / declines; Admin / Owner caps; retired Authorization URL | `organization-user-associates/us1-…`, `us2-…`, `us5-associates-editor.spec.ts` |

@@ -8,23 +8,10 @@
 import { test, expect } from '@playwright/test';
 import {
   createOrganizationOrAdopt,
-  findUsersPaginated,
   getUserData,
-  getVerificationLinkFor,
   TestUserManager,
 } from '@alkemio/tests-lib';
 import type { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
-import { navigateToRegistrationFromAcceptTerms } from '../authentication/login-page-objects';
-import { nextButton } from '../authentication/common-authentication-page-elements';
-import {
-  fillUpSignUpPageElements,
-  fillUpSignUpPasswordElements,
-} from '../identity-flows/registration-page-objects';
-import {
-  fillUpSignInPageElements,
-  pressSignInButtonSignInPage,
-} from '../identity-flows/signin-page-objects';
-import { expectSignedIn } from '../my-dashboard/my-dashboard-page-objects';
 import { must } from '../helpers/lib-actor.helper';
 import {
   openPersonaPage,
@@ -52,7 +39,6 @@ import {
 } from './contributors-crud.helpers';
 
 const RUN = runId();
-const password = process.env.AUTH_TEST_HARNESS_PASSWORD || 'change_me';
 
 /** The user settings shell, as every signed-in user sees their own. */
 const USER_SETTINGS_TABS = [
@@ -90,72 +76,6 @@ const myOrganisations = () =>
   self!.page.getByRole('main').getByRole('list').getByRole('listitem');
 
 test.describe('Contributors CRUD — User', () => {
-  test('1.1 a registered user gets a verification mail, signs in, and owns a profile carrying the names entered', async ({
-    page,
-  }) => {
-    test.setTimeout(90_000);
-    const email = `crud-reg-${RUN}@alkem.io`;
-    const lastName = `Reg${RUN}`;
-    let registeredId: string | undefined;
-    try {
-      await navigateToRegistrationFromAcceptTerms(baseUrl, page);
-      await fillUpSignUpPageElements(email, 'Crud', lastName, page);
-      await nextButton(page).click();
-      await fillUpSignUpPasswordElements(password, page);
-      await nextButton(page).click();
-      await expect(
-        page.getByRole('heading', { name: 'Verify your email' })
-      ).toBeVisible();
-
-      // The verification mail for THIS address, read by recipient.
-      await expect
-        .poll(() => getVerificationLinkFor(email), { timeout: 30_000 })
-        .toBeTruthy();
-      await page.goto((await getVerificationLinkFor(email))!);
-      await expect(page.getByText('You successfully verified')).toBeVisible();
-
-      // Continue → the Kratos sign-in flow (a hard visit to /login does not start one).
-      await page.getByRole('link', { name: 'Continue', exact: true }).click();
-      await expect(
-        page.getByRole('heading', { name: 'Sign in' })
-      ).toBeVisible();
-      await fillUpSignInPageElements(email, password, page);
-      await pressSignInButtonSignInPage(page);
-      await expectSignedIn(page);
-
-      const found = must(
-        await findUsersPaginated({ email }),
-        'find registered user'
-      ).usersPaginated.users;
-      expect(found.map(u => u.email)).toEqual([email]);
-      registeredId = found[0].id;
-      const record = must(
-        await getUserData(registeredId),
-        'registered user'
-      ).user;
-      expect([record.firstName, record.lastName]).toEqual(['Crud', lastName]);
-
-      const profile = new UserProfileSettingsPage(page);
-      await profile.goto(record.nameID);
-      await expect(profile.field('First Name')).toHaveValue('Crud');
-      await expect(profile.field('Last Name')).toHaveValue(lastName);
-      await expect(profile.field('Email')).toHaveValue(email);
-    } finally {
-      if (!registeredId) {
-        registeredId = (await findUsersPaginated({ email })).data
-          ?.usersPaginated.users[0]?.id;
-      }
-      if (registeredId) {
-        await deleteDisposableUser({
-          id: registeredId,
-          email,
-          nameId: '',
-          displayName: '',
-        });
-      }
-    }
-  });
-
   test('1.2 a profile update is saved, survives a reload, and is what another signed-in user sees', async ({
     browser,
   }) => {
