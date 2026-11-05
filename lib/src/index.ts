@@ -36,6 +36,7 @@ export * from "./scenario/registration/register-test-user";
 export * from "./scenario/registration/verify-env-prerequisites";
 export * from "./scenario/registration/provision-test-identities";
 export * from "./scenario/registration/mint-bff-session";
+export * from "./scenario/registration/ensure-authorization-policies";
 export * from "./config/test.configuration";
 export * from "./config/alkemio-test-config";
 export * from "./config/create-config-using-envvars";

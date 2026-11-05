@@ -10,6 +10,12 @@ export const createConfigUsingEnvVars = (): AlkemioTestConfig => {
   }
   const config: AlkemioTestConfig = {
     registerUsers: registerUsers,
+    authorizationReset: {
+      mode: parseAuthorizationResetMode(
+        process.env.AUTH_POLICY_RESET_ON_SETUP
+      ),
+      timeoutMs: Number(process.env.AUTH_POLICY_RESET_TIMEOUT_MS ?? '300000'),
+    },
     endPoints: {
       graphql: {
         private:
@@ -76,6 +82,20 @@ export const createConfigUsingEnvVars = (): AlkemioTestConfig => {
   };
   validateEndpointSchemes(config);
   return config;
+};
+
+const AUTHORIZATION_RESET_MODES = ['auto', 'always', 'off'] as const;
+
+const parseAuthorizationResetMode = (
+  raw: string | undefined
+): AlkemioTestConfig['authorizationReset']['mode'] => {
+  const value = (raw ?? 'off').trim().toLowerCase();
+  if ((AUTHORIZATION_RESET_MODES as readonly string[]).includes(value)) {
+    return value as AlkemioTestConfig['authorizationReset']['mode'];
+  }
+  throw new Error(
+    `AUTH_POLICY_RESET_ON_SETUP must be one of ${AUTHORIZATION_RESET_MODES.join(' | ')} (got '${raw}')`
+  );
 };
 
 /**
