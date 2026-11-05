@@ -1,7 +1,9 @@
 name: Swarmail trial (server-api nightly with Swarmail as the mail sink)
 run-name: >-
-  Swarmail trial ${{ inputs.mode }} (swarmail:${{ inputs.swarmail-image-tag }},
-  ${{ inputs.smtp-mode }}, tests @ ${{ inputs.test-ref || github.ref_name }})
+  Swarmail trial ${{ inputs.mode }} (${{ inputs.mail-backend == 'mailslurper'
+  && 'mailslurper baseline' || format('swarmail:{0}, {1}',
+  inputs.swarmail-image-tag, inputs.smtp-mode) }}, ${{ inputs.test-script }},
+  tests @ ${{ inputs.test-ref || github.ref_name }})
 
 # A one-off, operator-dispatched comparison run: the same server-api nightly
 # suite, on the same shared test cluster, with Swarmail
@@ -16,11 +18,20 @@ run-name: >-
 #     notifications service (deployment/alkemio-notifications-deployment) at
 #     Swarmail by editing the env list of one container in each;
 #   - reads mail through Swarmail's MailSlurper service API (a global view
-#     over every inbox), port-forwarded to the runner like kratos-admin.
+#     over every inbox), port-forwarded to the runner like kratos-admin, and
+#     hands the suite Swarmail's native HTTP API too (SWARMAIL_API_ENDPOINT),
+#     which the mail waits use to block on arrival instead of polling.
 # The exact prior env lists are recorded in the cluster before anything is
 # changed, and restored — then verified — in an always() step and again in a
 # separate backstop job, after which Swarmail is uninstalled. The mechanics
 # and guarantees are in .github/scripts/swarmail-trial.sh.
+#
+# mail-backend=mailslurper is the like-for-like baseline: the same job, test
+# script and test ref against the cluster's own MailSlurper with the nightly's
+# MAIL_SLURPER_ENDPOINT. Swarmail is never installed and Kratos/notifications
+# are never touched (so there is nothing to restore); the lock, the
+# deploy/cleanup and the lock release are unchanged. It exists for test
+# scripts the nightly never runs, which have no MailSlurper run to compare to.
 #
 # Like the nightly, it must be dispatched from develop: the arc-e2e-linux-x64
 # runner group's workflow allowlist matches develop's definition.
@@ -83,6 +94,23 @@ on:
           Empty = the dispatched ref itself.
         type: string
         default: ""
+      test-script:
+        description: >-
+          The server-api package.json script to run, e.g.
+          test:notifications:messaging. Must match ^test:[a-z0-9:-]+$ and
+          exist in server-api/package.json at test-ref. Default = the
+          nightly's own script.
+        type: string
+        default: test:nightly
+      mail-backend:
+        description: >-
+          swarmail = the trial. mailslurper = the baseline: the same tests
+          against the cluster's MailSlurper (the nightly's
+          MAIL_SLURPER_ENDPOINT); Swarmail is not installed and Kratos and
+          notifications are not touched.
+        type: choice
+        options: [swarmail, mailslurper]
+        default: swarmail
 
 permissions:
   contents: read
@@ -101,6 +129,10 @@ env:
   SHIM_PORT: ${{ inputs.shim-port }}
   SHIM_PATH: ${{ inputs.shim-path }}
   SHIM_CONFIG: ${{ inputs.shim-config }}
+  MAIL_BACKEND: ${{ inputs.mail-backend }}
+  # Runner-side port for Swarmail's native HTTP API (the chart's container
+  # port 8025, named `http`).
+  SWARMAIL_API_LOCAL_PORT: "8025"
 
 jobs:
   deploy-all-services:
@@ -203,6 +235,28 @@ jobs:
           # arc-e2e-linux-x64 runner image (exit 127). Raise deliberately.
           node-version: "24"
 
+      # Before anything touches the cluster. The name reaches the shell only
+      # through env, and only a test:* script that the test-ref checkout
+      # actually declares is ever run.
+      - name: Validate test-script
+        env:
+          TEST_SCRIPT: ${{ inputs.test-script }}
+        run: |
+          if ! [[ "$TEST_SCRIPT" =~ ^test:[a-z0-9:-]+$ ]]; then
+            echo "::error::test-script must match ^test:[a-z0-9:-]+\$"; exit 1
+          fi
+          # shellcheck disable=SC2016 # single quotes on purpose: this is JavaScript
+          node -e '
+            const fs = require("fs");
+            const name = process.argv[1];
+            const scripts = JSON.parse(fs.readFileSync("server-api/package.json", "utf8")).scripts ?? {};
+            if (!Object.prototype.hasOwnProperty.call(scripts, name)) {
+              console.error(`::error::test-script ${name} is not a script in server-api/package.json at this test-ref`);
+              process.exit(1);
+            }
+            console.log(`test-script ${name}: ${scripts[name]}`);
+          ' "$TEST_SCRIPT"
+
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
@@ -211,6 +265,7 @@ jobs:
         with:
           version: "v1.29.6"
 
+      # In both modes: preflight reads `helm status`.
       - name: Install Helm
         uses: azure/setup-helm@v5.0.1
         with:
@@ -225,35 +280,54 @@ jobs:
           chmod 600 "$HOME/.kube/config"
 
       # Refuses leftovers (an unrestored snapshot, an existing swarmail
-      # release/Service/Deployment) before anything is changed.
+      # release/Service/Deployment) before anything is changed. Read-only, so
+      # it runs for the mailslurper baseline too: there it proves no
+      # interrupted trial still has the senders on Swarmail, which would
+      # starve MailSlurper and void the baseline.
       - name: Preflight
         run: bash .trial/.github/scripts/swarmail-trial.sh preflight
 
       - name: Record the courier and notifications env (snapshot)
+        if: inputs.mail-backend == 'swarmail'
         run: bash .trial/.github/scripts/swarmail-trial.sh snapshot
 
       - name: Install Swarmail beside MailSlurper
+        if: inputs.mail-backend == 'swarmail'
         run: bash .trial/.github/scripts/swarmail-trial.sh install
 
       # Stops the run before any repoint when the shim does not answer the
       # list shapes the suite reads.
       - name: Probe Swarmail's MailSlurper API shim
+        if: inputs.mail-backend == 'swarmail'
         run: bash .trial/.github/scripts/swarmail-trial.sh probe-shim
 
       - name: Point Kratos courier and notifications at Swarmail
+        if: inputs.mail-backend == 'swarmail'
         run: bash .trial/.github/scripts/swarmail-trial.sh repoint
+
+      # Read-only. The nightly pins a patched MailSlurper image before its
+      # tests (the stock one loses mail); this run changes nothing, so it
+      # records which image the baseline actually ran against.
+      - name: Show the MailSlurper image the baseline runs against
+        if: inputs.mail-backend == 'mailslurper'
+        run: |
+          kubectl -n default get deployment/mailslurper-deployment \
+            -o jsonpath='{.spec.template.spec.containers[?(@.name=="mailslurper")].image}{"\n"}'
 
       - name: Set run folder variables
         run: |
           echo "RUN_DATE=$(date +'%Y-%m-%d')" >> "$GITHUB_ENV"
           echo "RUN_ID=${{ github.run_id }}" >> "$GITHUB_ENV"
 
-      # The nightly's environment, except MAIL_SLURPER_ENDPOINT: Swarmail's
-      # shim through a port-forward. A loopback http:// URL is the only
-      # plain-http endpoint the harness accepts (validateEndpointSchemes in
-      # lib/src/config/create-config-using-envvars.ts), and the shim has no
-      # ingress — exactly how kratos-admin is reached.
-      - name: Run server API nightly tests against Swarmail
+      # The nightly's environment, except MAIL_SLURPER_ENDPOINT on Swarmail:
+      # Swarmail's shim through a port-forward. A loopback http:// URL is the
+      # only plain-http endpoint the harness accepts (validateEndpointSchemes
+      # in lib/src/config/create-config-using-envvars.ts), and the shim has no
+      # ingress — exactly how kratos-admin is reached. Swarmail's native API
+      # (SWARMAIL_API_ENDPOINT) comes the same way; it is set only on
+      # Swarmail, so a mailslurper baseline keeps the suite's polling waits.
+      # On mailslurper the endpoint is the nightly's own variable.
+      - name: Run server API tests (${{ inputs.test-script }}) against ${{ inputs.mail-backend }}
         id: server-api-tests
         continue-on-error: true
         env:
@@ -263,20 +337,37 @@ jobs:
           ALKEMIO_SERVER_WS: ${{ vars.ALKEMIO_SERVER_WS }}
           ALKEMIO_SERVER_REST: ${{ vars.ALKEMIO_SERVER_REST }}
           KRATOS_ENDPOINT: ${{ vars.KRATOS_ENDPOINT }}
+          NIGHTLY_MAIL_SLURPER_ENDPOINT: ${{ vars.MAIL_SLURPER_ENDPOINT }}
           AUTH_TEST_HARNESS_PASSWORD: ${{ secrets.AUTH_TEST_HARNESS_PASSWORD }}
           KRATOS_ADMIN_URL: http://localhost:4434
           LOG_LEVEL: warn
+          TEST_SCRIPT: ${{ inputs.test-script }}
         run: |
           set -uo pipefail
-          MAIL_SLURPER_ENDPOINT="$(bash .trial/.github/scripts/swarmail-trial.sh shim-endpoint)"
+          kubectl port-forward -n default svc/kratos-admin 4434:80 > /tmp/kratos-admin-pf.log 2>&1 &
+          PF_PIDS="$!"
+          trap 'kill $PF_PIDS 2>/dev/null || true' EXIT
+          PF_LOGS="/tmp/kratos-admin-pf.log"
+          unset SWARMAIL_API_ENDPOINT
+          if [ "$MAIL_BACKEND" = "swarmail" ]; then
+            MAIL_SLURPER_ENDPOINT="$(bash .trial/.github/scripts/swarmail-trial.sh shim-endpoint)"
+            kubectl port-forward -n default deployment/swarmail "4437:$SHIM_PORT" > /tmp/swarmail-pf.log 2>&1 &
+            PF_PIDS="$PF_PIDS $!"
+            kubectl port-forward -n default deployment/swarmail "$SWARMAIL_API_LOCAL_PORT:8025" > /tmp/swarmail-api-pf.log 2>&1 &
+            PF_PIDS="$PF_PIDS $!"
+            PF_LOGS="$PF_LOGS /tmp/swarmail-pf.log /tmp/swarmail-api-pf.log"
+            SWARMAIL_API_ENDPOINT="http://localhost:$SWARMAIL_API_LOCAL_PORT"
+            export SWARMAIL_API_ENDPOINT
+            echo "SWARMAIL_API_ENDPOINT=$SWARMAIL_API_ENDPOINT"
+          else
+            MAIL_SLURPER_ENDPOINT="$NIGHTLY_MAIL_SLURPER_ENDPOINT"
+            if [ -z "$MAIL_SLURPER_ENDPOINT" ]; then
+              echo "::error::vars.MAIL_SLURPER_ENDPOINT is empty: the mailslurper baseline has no endpoint"; exit 1
+            fi
+          fi
           export MAIL_SLURPER_ENDPOINT
           echo "MAIL_SLURPER_ENDPOINT=$MAIL_SLURPER_ENDPOINT"
-          kubectl port-forward -n default svc/kratos-admin 4434:80 > /tmp/kratos-admin-pf.log 2>&1 &
-          KRATOS_PF=$!
-          kubectl port-forward -n default deployment/swarmail "4437:$SHIM_PORT" > /tmp/swarmail-pf.log 2>&1 &
-          SHIM_PF=$!
-          trap 'kill $KRATOS_PF $SHIM_PF 2>/dev/null || true' EXIT
-          for log in /tmp/kratos-admin-pf.log /tmp/swarmail-pf.log; do
+          for log in $PF_LOGS; do
             for _ in $(seq 1 20); do
               grep -q "Forwarding from" "$log" && break
               sleep 1
@@ -285,13 +376,43 @@ jobs:
               echo "port-forward failed: $log"; cat "$log"; exit 1
             fi
           done
-          pnpm --filter @alkemio/test-suite-server-api run test:nightly
+          if [ "$MAIL_BACKEND" = "swarmail" ]; then
+            # The waits fall back to polling on any API error, so an
+            # unreachable API would not fail the suite — it would silently
+            # measure the polling path. Stop here instead. The await answers
+            # 200 (inbox not empty) or 408 (timed out) when it exists.
+            # shellcheck disable=SC2016 # single quotes on purpose: this is JavaScript
+            node -e '
+              const base = process.argv[1];
+              const get = async path => {
+                const r = await fetch(base + path, { signal: AbortSignal.timeout(10000) });
+                const t = await r.text();
+                return { status: r.status, text: t };
+              };
+              (async () => {
+                const list = await get("/api/v1/inboxes");
+                if (list.status !== 200) throw new Error(`GET /api/v1/inboxes answered HTTP ${list.status}: ${list.text.slice(0, 200)}`);
+                const count = await get("/api/v1/inboxes/default/count");
+                if (count.status !== 200 || !Number.isInteger(JSON.parse(count.text).count))
+                  throw new Error(`GET /api/v1/inboxes/default/count answered HTTP ${count.status}: ${count.text.slice(0, 200)}`);
+                const wait = await get("/api/v1/inboxes/default/await?count=1&timeout_ms=1&limit=1");
+                if (wait.status !== 200 && wait.status !== 408)
+                  throw new Error(`GET /api/v1/inboxes/default/await answered HTTP ${wait.status}: ${wait.text.slice(0, 200)}`);
+                console.log(`swarmail API ok at ${base}: default inbox holds ${JSON.parse(count.text).count}`);
+              })().catch(e => { console.error(e.message); process.exit(1); });
+            ' "$SWARMAIL_API_ENDPOINT" || {
+              echo "::error::Swarmail's native API is not reachable at $SWARMAIL_API_ENDPOINT (deployment/swarmail container port 8025)"
+              cat /tmp/swarmail-api-pf.log
+              exit 1
+            }
+          fi
+          pnpm --filter @alkemio/test-suite-server-api run "$TEST_SCRIPT"
 
       # First thing after the suite: put the cluster back. Runs on failure
       # and on cancel too; the backstop job below repeats it in case this
-      # runner is gone.
+      # runner is gone. The mailslurper baseline changed nothing to restore.
       - name: Restore Kratos courier and notifications, uninstall Swarmail
-        if: always()
+        if: always() && inputs.mail-backend == 'swarmail'
         run: bash .trial/.github/scripts/swarmail-trial.sh restore
 
       - name: Publish report to GitHub Pages
@@ -300,12 +421,18 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_REPOSITORY: ${{ github.repository }}
           AUTH_TEST_HARNESS_PASSWORD: ${{ secrets.AUTH_TEST_HARNESS_PASSWORD }}
+          TEST_OUTCOME: ${{ steps.server-api-tests.outcome }}
         run: |
+          if [ "$MAIL_BACKEND" = "swarmail" ]; then
+            suite="server-api-swarmail"; label="Server API on Swarmail"
+          else
+            suite="server-api-swarmail-baseline"; label="Server API on MailSlurper (Swarmail trial baseline)"
+          fi
           bash scripts/publish-report.sh \
-            "server-api-swarmail" \
-            "Server API on Swarmail" \
+            "$suite" \
+            "$label" \
             "server-api/html-report" \
-            "${{ steps.server-api-tests.outcome }}"
+            "$TEST_OUTCOME"
 
       - name: Fail job if server API tests failed
         if: steps.server-api-tests.outcome == 'failure'
@@ -325,10 +452,13 @@ jobs:
 
   # Belt and braces: restore again from a fresh runner. A no-op when the
   # trial's own restore step completed (the snapshot is gone); it acts only
-  # on a snapshot this run owns.
+  # on a snapshot this run owns. The mailslurper baseline takes no snapshot,
+  # so it has nothing to back up and skips this job.
   restore-backstop:
     needs: [acquire-lock, trial]
-    if: always() && needs.acquire-lock.result == 'success'
+    if: >-
+      always() && needs.acquire-lock.result == 'success' &&
+      inputs.mail-backend == 'swarmail'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -361,12 +491,15 @@ jobs:
   # Released only once the restore is verified. If it is not, the lock stays
   # with this run until the lock's stale-TTL reclaim (60 min) rather than
   # handing a half-restored cluster to the next deploy or nightly; dispatch
-  # mode=restore-only to repair.
+  # mode=restore-only to repair. The mailslurper baseline changed nothing, so
+  # its skipped backstop releases like a verified one.
   release-lock:
     needs: [acquire-lock, trial, restore-backstop]
     if: >-
       always() && needs.acquire-lock.result == 'success' &&
-      needs.restore-backstop.result == 'success'
+      (needs.restore-backstop.result == 'success' ||
+       (inputs.mail-backend == 'mailslurper' &&
+        needs.restore-backstop.result == 'skipped'))
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
