@@ -50,11 +50,15 @@ const GRANT_ADDS: Record<
       'PLATFORM_ROLE_HOLDERS_READ',
     ],
   },
+  // workspace#095: the promote flag on spaces, packs and VCs is read and set
+  // through PLATFORM_PROMOTE_MANAGE, held by Content Full Access and License
+  // Manager only — platform policy, non-cascading, so the role set gains nothing.
   PLATFORM_CONTENT_FULL_ACCESS: {
     platform: [
       'CREATE',
       'DELETE',
       'PLATFORM_CONTENT_FULL_ACCESS',
+      'PLATFORM_PROMOTE_MANAGE',
       'READ',
       'UPDATE',
     ],
@@ -91,7 +95,11 @@ const GRANT_ADDS: Record<
   // The console lists (spaces / organizations / users) License Manager needs to
   // find what it licenses — server 553f1c1b6, 2026-09-18.
   PLATFORM_LICENSE_MANAGER: {
-    platform: ['PLATFORM_LICENSING_LISTS_READ', 'RECEIVE_NOTIFICATIONS_ADMIN'],
+    platform: [
+      'PLATFORM_LICENSING_LISTS_READ',
+      'PLATFORM_PROMOTE_MANAGE',
+      'RECEIVE_NOTIFICATIONS_ADMIN',
+    ],
     roleSet: [],
   },
   PLATFORM_SPACES_READER: { platform: [], roleSet: [] },
