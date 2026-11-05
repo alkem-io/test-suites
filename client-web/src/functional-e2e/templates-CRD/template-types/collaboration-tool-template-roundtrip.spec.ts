@@ -207,7 +207,6 @@ test.describe('Collaboration-tool templates: round-trip of what the form saved',
   });
 
   test('RT-2 — "Use template" preselects Documents as the response type', async ({ page }) => {
-    test.skip(true, 'alkem-io/client-web#10443: the template mapper maps COLLABORA_DOCUMENT to none, so Use template seeds Responses = None');
     test.setTimeout(120_000);
     const dialog = await useTemplateFromFeed(page, NAMES.docSeeded);
     await expect(dialog.getByRole('textbox', { name: 'Title', exact: true })).toHaveValue(`${NAMES.docSeeded} post`);
@@ -215,7 +214,6 @@ test.describe('Collaboration-tool templates: round-trip of what the form saved',
   });
 
   test('RT-3 — the template Edit dialog shows Documents as the response type', async ({ page }) => {
-    test.skip(true, 'alkem-io/client-web#10443: the Edit dialog loads through the same mapper and shows Responses = None');
     test.setTimeout(120_000);
     const dialog = await openEditTemplateDialog(page, NAMES.docSeeded);
     await expect(checkedChip(dialog, 'Responses')).toHaveAccessibleName('Documents');
