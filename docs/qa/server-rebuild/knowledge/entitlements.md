@@ -2,6 +2,8 @@
 
 _Extracted 2026-11-06 from three sources: server develop @ `eeecf9ddb` (Release/79) code + `schema.graphql`; the legacy server-api suite (`server-api/src/functional-api/entitlements/`, 7 files, 16 cases = 20 test blocks); the specs, issues and docs listed in § Sources. WHAT and WHY only — no mutations, fixtures or request params. Status legend: **proven** = a green legacy case asserts it; **untested** = code and/or spec only, no case; **disputed** = sources disagree, see § Findings; **unknown-why** = the rule holds but no source states the reason — the reviewer fills the why or writes "unknown, ask product". Evidence paths are relative to the server repo unless prefixed `test ›` or `spec ›`. Supersedes the 2026-10-27 template._
 
+_Review load: 13 findings · 10 unknown-why rows · 11 untested rows (gaps) · 30 constants to tick · 4 open questions. Manual points sit in five places: the Findings, the `unknown-why` rows, the `untested` rows (repeated under Gaps), the "product must rule?" column of the constants, and the Open questions._
+
 ## Behaviour rules
 
 | ID | Rule the platform guarantees | Why (business reason, origin) | Actors | Sources (code › file:line · test › spec › case · spec › path) | Status |
@@ -149,6 +151,15 @@ Behaviours the area has that neither reading nor tests pinned down:
 - Organisation-hosted spaces inheriting anything from the organisation's account plan (they do not — the space's own L0 credentials decide; still worth one case).
 - The L1→L0 conversion path (`journey/conversion/convert-L1-to-L0-basic.it-spec.ts` touches it) — which plans a converted space receives.
 - Audit rows for assign/revoke/baseline/definition actions.
+
+## Open questions (could not be determined from the three sources)
+
+Read-only extraction against the code, the tests and the specs; nothing below could be settled without a live stack or a source outside the three. Each needs a person to answer it or route it.
+
+1. **Which credential lets the harness assign plans.** The legacy cases assign plans as the `GLOBAL_ADMIN` persona and are green, but the gate is platform-license-manager only (ENT-47). Either the persona holds that role on the test stack or the gate is not what the code says. Check the persona's roles on the test cluster.
+2. **Other grant paths for the plus credential.** Only the direct `assignPlatformRoleToUser` path was read (ENT-01). Whether granting a feature role to an organisation, or accepting a platform invitation that carries VC Campaign (ENT-37), also issues `ACCOUNT_LICENSE_PLUS` is unread — see finding 12.
+3. **Is the order of `availableEntitlements` a contract?** The tests sort before comparing; the code gives no ordering guarantee. Decide whether the new core must preserve an order.
+4. **Live confirmation of finding 2.** That an expired plus trial keeps granting is a code reading; nobody has watched a trial cross its expiry on a running stack.
 
 ## Sources
 

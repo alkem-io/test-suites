@@ -2,6 +2,8 @@
 
 _Extracted 2026-11-06 from three sources: server develop @ `eeecf9ddb` (Release/79) code + `schema.graphql`; the legacy server-api suite (`server-api/src/functional-api/journey/`, 32 `.it-spec.ts` files, 304 cases, 9 skipped); the specs, issues and docs listed in § Sources. Scope: the L0 space, its subspaces (L1) and sub-subspaces (L2), their identity, creation, settings, visibility, the three same-L0 conversions and the three cross-L0 moves, deletion and reading. Membership, licensing, callouts and notifications are their own areas and are only touched where a lifecycle action changes them. WHAT and WHY only — no mutations, fixtures or request params. Status legend: **proven** = a green legacy case asserts it; **untested** = code and/or spec only, no case; **disputed** = sources disagree, see § Findings; **unknown-why** = the rule holds but no source states the reason — the reviewer fills the why or writes "unknown, ask product". Evidence paths are relative to the server repo unless prefixed `test ›` or `spec ›`. The extraction notes with every file:line are in `journey-dossier.md`._
 
+_Review load: 12 findings · 2 unknown-why rows · 8 untested rows (gaps) · 24 constants to tick · 4 open questions. Manual points sit in five places: the Findings, the `unknown-why` rows, the `untested` rows (repeated under Gaps), the "product must rule?" column of the constants, and the Open questions._
+
 ## Behaviour rules
 
 | ID | Rule the platform guarantees | Why (business reason, origin) | Actors | Sources (code › file:line · test › spec › case · spec › path) | Status |
@@ -173,6 +175,15 @@ Behaviours the area has that neither reading nor tests pinned down:
 - A subspace created by a non-member of the parent having no roles (JRN-13).
 - Profile references sent at creation being dropped (JRN-10) — rule or defect?
 - Templated subspaces at creation (an L0 template with subspaces creating L1s, and the "not below L2" stop).
+
+## Open questions (could not be determined from the three sources)
+
+Read-only extraction against the code, the tests and the specs; nothing below could be settled without a live stack or a source outside the three. Each needs a person to answer it or route it.
+
+1. **Support flag in the platform-settings scenario.** The expected support privileges in `space-platform-settings` match the flag-on list; whether the harness scenario sets `allowPlatformSupportAsAdmin` was not read (JRN-27, finding 12). Check the scenario factory.
+2. **Explore-spaces constants.** `EXPLORE_SPACES_LIMIT`, the activity-days window and the overfetch values were not read; the reading rules cite them by name only.
+3. **Parent credentials after a move.** Whether the in-memory role edits of `setParentRoleSetAndCredentials` are persisted on a move is unclear from the code; open server#6592 says they are not on live data (JRN-50, finding 8). Needs a live move and a read of the role rows.
+4. **Live confirmation of findings 1 and 10.** The updates-room count after the asynchronous recreate, and the unguarded `Space.subspaces` field on a private L0, are code readings only.
 
 ## Sources
 

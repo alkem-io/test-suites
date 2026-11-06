@@ -2,6 +2,8 @@
 
 _Extracted 2026-11-06 from three sources: server develop @ `eeecf9ddb` (Release/79) code + `schema.graphql`; the legacy server-api suite (`server-api/src/functional-api/callout/`, 18 files, 394 cases — 193 in the 11 non-form files, 201 in `form/`); the specs, issues and docs listed in § Sources. WHAT and WHY only — no mutations, fixtures or request params. Status legend: **proven** = a green legacy case asserts it; **untested** = code and/or spec only, no case; **disputed** = sources disagree, see § Findings; **unknown-why** = the rule holds but no source states the reason — the reviewer fills the why or writes "unknown, ask product". Evidence paths are relative to the server repo unless prefixed `test ›` or `spec ›`; `spec › 080`, `038r`, `070`, `076`, `077`, `084a`, `084s` are workspace specs present only on `agents-hq@origin/main` (the local clone is stale). "Post" is the user-facing word for a callout (021 FR-014); this table uses "callout" for the server object. The fact base with every file:line is `callout-dossier.md` beside this file._
 
+_Review load: 18 findings · 7 unknown-why rows · 22 untested rows (gaps) · 38 constants to tick · 5 open questions. Manual points sit in five places: the Findings, the `unknown-why` rows, the `untested` rows (repeated under Gaps), the "product must rule?" column of the constants, and the Open questions._
+
 ## Behaviour rules
 
 | ID | Rule the platform guarantees | Why (business reason, origin) | Actors | Sources (code › file:line · test › spec › case · spec › path) | Status |
@@ -222,6 +224,16 @@ Behaviours the area has that neither reading nor tests pinned down:
 - Template capture of collection callouts (ids stripped, variant kept).
 - Platform support on a template callout; publisher rewrite; audit rows for callout/contribution deletion and move.
 - Platform content-full-access contributing, reacting and deleting through the root cascade.
+
+## Open questions (could not be determined from the three sources)
+
+Read-only extraction against the code, the tests and the specs; nothing below could be settled without a live stack or a source outside the three. Each needs a person to answer it or route it.
+
+1. **Template capture of a collection callout.** CAL-69 (selection ids and map view stripped when a callout is saved as a template) rests on the specs alone; the code path that does the stripping was not found. Confirm it exists before the rule is signed.
+2. **Two case annotations may be stale.** `form-visibility-matrix` "reads every response and can moderate" is marked red until server#6621 is fixed, but the fix (server#6627) is in Release/79; and `spaces-selection-account-scope` was not confirmed green on the current stack. Run both.
+3. **Polls have no live case.** Every poll rule is from code only; nothing has exercised voting, option limits or the closed-poll refusal against a server. They are all untested and head the gaps list.
+4. **Harness admin credential set.** As in entitlements: which roles the `GLOBAL_ADMIN` persona holds decides whether some green cases prove the gate they appear to prove.
+5. **Eight workspace specs cited from `agents-hq@origin/main`.** The local workspace clone is behind; specs 038r, 070, 076, 077, 080, 084a, 084s and 085 were read from the remote. Pull the clone and re-check the citations.
 
 ## Sources
 

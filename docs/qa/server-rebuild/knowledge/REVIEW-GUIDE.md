@@ -25,12 +25,13 @@ You are the only person who knows whether the reason written there is the real b
 4. **Look at the constants table** underneath. Each value is a candidate for the new server to change. Tick the ones product must rule on in the "product must rule?" column.
 5. **Decide each finding.** A finding is a place where code, test and spec disagree, or where the code looks like a defect. One decision per finding: file it as a bug, record it as a rule, or drop it. Write the decision at the end of the finding.
 6. **Look at the gaps** at the bottom. Untested rules land there by themselves; add any behaviour you know the area has that neither the code reading nor the tests pinned down, or leave it.
+7. **Answer or route each open question.** The section before Sources lists what the three sources could not settle (a live check, a harness fact, a stale annotation). Answer it if you know, or write who will.
 
-That is the entire review. For entitlements it is under an hour. Edit the file in your editor and hand it back; the drafting agent commits it and moves the area to *signed* in the tracker's W1 table.
+That is the entire review. Every table opens with a one-line **review load** (findings, unknown-why rows, untested rows, constants, open questions) so you see the whole manual load before you start; those five places are the only ones that carry your signature. For entitlements it is under an hour. Edit the file in your editor and hand it back; the drafting agent commits it and moves the area to *signed* in the tracker's W1 table.
 
 ## Then it repeats
 
-The drafting agent produces the next area (journey, then callout, in the slice order given in `../plan.md` § W1) the same way. You spend twenty to sixty minutes per table doing steps 1 to 6. Twenty-five tables in total over the coming weeks. The tracker's "N of 25" counts tables that went through your signature.
+The drafting agent produces the next area (journey, then callout, in the slice order given in `../plan.md` § W1) the same way. You spend twenty to sixty minutes per table doing steps 1 to 7. Twenty-five tables in total over the coming weeks. The tracker's "N of 25" counts tables that went through your signature.
 
 ## The access matrix is different
 
