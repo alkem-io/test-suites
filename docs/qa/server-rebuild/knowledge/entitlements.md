@@ -62,6 +62,8 @@ Numbering note: ENT-20, 22, 35, 38 and 42 were folded into neighbours during dra
 
 ## Who may (role × action)
 
+_Role shorthands: **PLM** = Platform License Manager · **PCFA** = Platform Content Full Access · **PSA** = Platform Settings Admin · **POA** = Platform Operations Admin · **PRA** = Platform Resource Admin · **support** = Platform Support · **account holder** = the user whose account it is, or an admin of the organisation that owns it. Y = may, N = refused, – = not applicable. The evidence line under the table says where each cell comes from._
+
 | action | platform admin roles (which) | platform-license-manager | account admin / owner | space admin | space member | registered | anonymous |
 |---|---|---|---|---|---|---|---|
 | assign / revoke a plan on a space | N (PSA, PCFA, POA, support: N) | Y | N | N | N | N | N |
