@@ -39,7 +39,7 @@ _One place for everything QA does for the move to the rebuilt server. Status is 
 
 | Area | Files | Cases | Document | State |
 |---|---|---|---|---|
-| entitlements | 7 | 39 | `knowledge/entitlements.md` | drafted, needs lead review |
+| entitlements | 7 | 39 | `knowledge/entitlements.md` | **redone 2026-11-06 as the three-source pilot** (code + schema, tests, specs): 44 rules — 17 proven, 11 untested, 6 disputed, 10 unknown-why; who-may block 13 actions × 7 roles; 30 constants; 13 findings (free tier never issued, trial expiry never evaluated, any visitor reads any account licence, subspace plan assignment inert, enterprise plan grants nothing). The test-only draft had 6 of 16 entitlement types, 2 of 11 plans, 2 of 4 feature roles. Needs lead review per `knowledge/REVIEW-GUIDE.md` |
 | journey | 36 | 304 | | next |
 | callout | 18 | 394 | | next |
 | roleset | 31 | 308 | | |
@@ -149,7 +149,7 @@ What is pending, in the order it blocks the rest. Decisions are in the table abo
 |---|---|---|---|
 | 1 | Review and merge PR test-suites#695 (access matrix); rule on finding F1 | QA lead · CTO | rebased onto `develop`, signed, awaiting review |
 | 2 | Build journeys 1–4 against the test cluster, register in the nightly | QA (separate session, brief ready) | not started |
-| 3 | Extract `journey` and `callout` rules by hand (W1) | QA | not started; review capacity is gap 8 |
+| 3 | Lead review of the three-source `entitlements.md` pilot (sign why, decide 13 findings); then extract `journey` and `callout` on the same method (W1) | QA lead · QA | pilot drafted 2026-11-06; journey/callout not started; review capacity is gap 8 |
 | 4 | Rulings on decisions 1–4 (environment, mail, markers, exclusivity), 8, 10–12 (loss list, dataset, quarantine, backups), 14 (go/no-go) | leadership meeting | open |
 | 5 | File loss on acceptance: cause and recovery (server#6726), then measure production | file-service owner · ops | filed, unowned |
 | 6 | Register repairs before any dry run: C1 broken tree, C2 duplicate handles (server#6730), A2 data repair (54 spaces), A1 escalation draft | backend · lead | unfiled except C2 |
@@ -170,6 +170,7 @@ What is pending, in the order it blocks the rest. Decisions are in the table abo
 | 2026-10-29 | W2 pre-work delivered on PR test-suites#696 (branch `qa/w2-prework-lib-boundary`): the lib is the only schema boundary for client-web — actor model (`GraphqlActor`/`runAs`), 81 documents + 115 functions, lib-owned enums/types, ESLint guard with a blocking CI step, lib contract test; 89 specs run live on the local stack, one fold red (fixed), the rest attributed pre-existing/env/interference |
 | 2026-10-30 | PR #693 (plan, inventory, catalogue, register, probes) and PR #696 (W2 pre-work) merged to `develop`; PR #695 rebased onto `develop` and re-signed; journeys 1–4 specified as a session brief; journey 9 and AI-2/AI-3 parked while VCs are hidden; open-items table added |
 | 2026-10-28 | W0 delivered: 298 root fields of `server` `develop` @ `eeecf9ddb` traced through lib, server-api and client-web on test-suites @ `015bfeea1`; 57 features with verdicts; gap 11 closed |
+| 2026-11-06 | W1 method changed to three sources per area (server code + GraphQL schema = the universe, legacy tests = the proof, specs/issues = the why; disagreements become findings; a who-may role × action block per table; status proven/untested/disputed/unknown-why). `knowledge/REVIEW-GUIDE.md` added for the signing person. `entitlements.md` redone as the pilot: 44 rules, 13 findings — the test-only version had missed 10 of 16 entitlement types |
 | 2026-10-29 | W1 access matrix delivered: rules derived from `server` `develop` @ `eeecf9ddb` (18 settings variants, 237 resources, 42 roles), cross-checked against the ACC policy rows (aggregate dump, v0.170.2) and the `platform-roles` + `storage` suites (2,631 of 2,988 cases mapped, all agree); 11 findings in `access-matrix-crosscheck.md`, nothing filed |
 
 ## How to update
