@@ -96,8 +96,8 @@ Evidence: `knowledge.base.service.authorization.ts:289-354`; `virtual.contributo
 | Well-known kinds (2) | `CHAT_GUIDANCE`, `STEWARD_OWNERSHIP_EXPERT` | `virtual.contributor.well.known.ts`; `schema.graphql:1188` | |
 | Well-known storage shape | `platform.wellKnownVirtualContributors = {mappings:[{wellKnown, virtualContributorID}]}` | `…service.ts:34-40, 58-68`; migration `1773800000001` | |
 | Guidance feature flag | `platform.guidance_engine.enabled` default `true` (`GUIDANCE_ENGINE_ENABLED`); exposed as `GUIDENCE_ENGINE` | `alkemio.yml:782-783`; `config.service.ts:116-121` | |
-| Mention syntax | `[@…](http(s)://…/(user|organization|vc)/<nameid>)`; VC path segment `vc` | `room.mentions.service.ts:24-27`; `mention.interface.ts:2-4` | |
-| Thread id rule | `message.threadID || message.id`; conversations use the message id | `message.inbox.service.ts:457`; `vc.invocation.service.ts:323` | |
+| Mention syntax | `[@…](http(s)://…/(user\|organization\|vc)/<nameid>)`; VC path segment `vc` | `room.mentions.service.ts:24-27`; `mention.interface.ts:2-4` | |
+| Thread id rule | `message.threadID \|\| message.id`; conversations use the message id | `message.inbox.service.ts:457`; `vc.invocation.service.ts:323` | |
 | Attachment-only rule | no attachments → false; empty text → true; exactly one attachment whose display name equals the text → true | `attachment.only.message.ts:11-19` | |
 | Interaction record | `room.vcData.interactionsByThread[threadID] = {virtualContributorActorID, externalThreadId?}` | `room.entity.ts:28-45`; migration `1771000015000` | |
 | Reply formatting | sources as `- [title‖uri](uri)` lines; `\n##### Sources:` label and `*Sorry, no sources are available for this response*` only for room-level posts | `room.controller.service.ts:103-127` | |
