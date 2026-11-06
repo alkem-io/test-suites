@@ -1,4 +1,5 @@
 import {
+  ensureAuthorizationPolicies,
   ensureHarnessAdminRoles,
   LogManager,
   provisionTestIdentities,
@@ -46,6 +47,15 @@ export default async function setup() {
   // resource and licensing families through a second Platform Roles Admin.
   // No-op on a Slice A stack or once done.
   await ensureHarnessAdminRoles();
+
+  // Opt-in post-setup authorization reset (AUTH_POLICY_RESET_ON_SETUP, default
+  // off): `always` after a server upgrade that changed authorization rules,
+  // `auto` to reset only when the admin is denied a space read. Issues
+  // authorizationPolicyResetAll as the admin and waits for the server's reset
+  // task, so nobody has to remember the manual mutation. Runs AFTER the role
+  // grant above: a bootstrap admin lacking the content role is denied
+  // Space.settings for want of the role, not of a reset.
+  await ensureAuthorizationPolicies();
 
   // Return a teardown function so Vitest can ensure a clean exit.
   // The GraphQL client is stateless HTTP and WebSocket subscriptions are
