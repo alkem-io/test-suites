@@ -229,7 +229,7 @@ Behaviours the area has that neither reading nor tests pinned down:
 
 Read-only extraction against the code, the tests and the specs; nothing below could be settled without a live stack or a source outside the three. Each needs a person to answer it or route it.
 
-1. **Template capture of a collection callout.** CAL-69 (selection ids and map view stripped when a callout is saved as a template) rests on the specs alone; the code path that does the stripping was not found. Confirm it exists before the rule is signed.
+1. **Template capture of a collection callout — answered 2026-11-06 by the templates extraction.** The strip exists: `src/services/api/input-creator/input.creator.service.ts:800-859` resets `selection` to AUTO / `[]` and deletes the contributors `mapView`; `template.service.ts:790-807` strips `userInformationVisibility`. CAL-69 therefore stands on code + spec, status untested (no case). See `templates.md` TPL rules for template capture.
 2. **Two case annotations may be stale.** `form-visibility-matrix` "reads every response and can moderate" is marked red until server#6621 is fixed, but the fix (server#6627) is in Release/79; and `spaces-selection-account-scope` was not confirmed green on the current stack. Run both.
 3. **Polls have no live case.** Every poll rule is from code only; nothing has exercised voting, option limits or the closed-poll refusal against a server. They are all untested and head the gaps list.
 4. **Harness admin credential set.** As in entitlements: which roles the `GLOBAL_ADMIN` persona holds decides whether some green cases prove the gate they appear to prove.
