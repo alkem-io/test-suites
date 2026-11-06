@@ -181,7 +181,7 @@ Behaviours the area has that neither reading nor tests pinned down:
 Read-only extraction against the code, the tests and the specs; nothing below could be settled without a live stack or a source outside the three. Each needs a person to answer it or route it.
 
 1. **Support flag in the platform-settings scenario.** The expected support privileges in `space-platform-settings` match the flag-on list; whether the harness scenario sets `allowPlatformSupportAsAdmin` was not read (JRN-27, finding 12). Check the scenario factory.
-2. **Explore-spaces constants.** `EXPLORE_SPACES_LIMIT`, the activity-days window and the overfetch values were not read; the reading rules cite them by name only.
+2. **Explore-spaces constants — answered 2026-11-06 by the search extraction.** `src/domain/space/space/space.service.ts:113-124`: `EXPLORE_SPACES_LIMIT = 30`, `EXPLORE_SPACES_ACTIVITY_DAYS_OLD = 30`, `EXPLORE_SPACES_OVERFETCH_FACTOR = 3`, excluded activity type `CALLOUT_WHITEBOARD_CONTENT_MODIFIED`. Add them to the constants table on signing (product must rule: the 30-day window and the limit).
 3. **Parent credentials after a move.** Whether the in-memory role edits of `setParentRoleSetAndCredentials` are persisted on a move is unclear from the code; open server#6592 says they are not on live data (JRN-50, finding 8). Needs a live move and a read of the role rows.
 4. **Live confirmation of findings 1 and 10.** The updates-room count after the asynchronous recreate, and the unguarded `Space.subspaces` field on a private L0, are code readings only.
 
