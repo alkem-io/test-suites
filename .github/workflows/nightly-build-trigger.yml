@@ -199,6 +199,28 @@ jobs:
           if ! grep -q "Forwarding from" /tmp/kratos-admin-pf.log; then
             echo "kratos-admin port-forward failed"; cat /tmp/kratos-admin-pf.log; exit 1
           fi
+          # When Swarmail is the cluster's mail sink (dev-orchestration#117), the
+          # notification helpers wait on its native API instead of polling. That
+          # API (8025) is ClusterIP only, so reach it by port-forward. Without
+          # Swarmail, or if the forward fails, SWARMAIL_API_ENDPOINT stays unset
+          # and the helpers poll MAIL_SLURPER_ENDPOINT exactly as before.
+          SW_PID=
+          if kubectl -n default get deployment/swarmail > /dev/null 2>&1; then
+            kubectl port-forward -n default deployment/swarmail 18025:8025 > /tmp/swarmail-api-pf.log 2>&1 &
+            SW_PID=$!
+            trap 'kill $PF_PID $SW_PID 2>/dev/null || true' EXIT
+            for i in $(seq 1 20); do
+              grep -q "Forwarding from" /tmp/swarmail-api-pf.log && break
+              sleep 1
+            done
+            if grep -q "Forwarding from" /tmp/swarmail-api-pf.log; then
+              export SWARMAIL_API_ENDPOINT=http://localhost:18025
+              echo "SWARMAIL_API_ENDPOINT=$SWARMAIL_API_ENDPOINT"
+            else
+              echo "::warning::Swarmail API port-forward failed; mail waits fall back to polling"
+              cat /tmp/swarmail-api-pf.log
+            fi
+          fi
           pnpm --filter @alkemio/test-suite-server-api run test:nightly
 
       - name: Publish report to GitHub Pages
