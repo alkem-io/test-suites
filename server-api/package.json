@@ -35,6 +35,7 @@
     "test:nightly:ui": "vitest --project nightly --fileParallelism=false --ui",
     "test:search:ui": "vitest --project search --fileParallelism=false --ui",
     "test:communications": "vitest run --project communication --fileParallelism=false",
+    "test:notifications-messaging": "vitest run --project notifications --fileParallelism=false --testTimeout=300000 src/functional-api/notifications/messaging/",
     "test:notifications": "vitest run --project notifications --fileParallelism=false --exclude '**/messaging/**'",
     "test:notifications:ui": "vitest --project notifications --fileParallelism=false --ui",
     "test:notifications:callouts": "vitest run --project notifications-callouts --fileParallelism=false",
