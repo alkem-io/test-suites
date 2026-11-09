@@ -127,6 +127,20 @@ export const readCalloutsSetCallouts = (
     sdk.ReadCalloutsSetCallouts({ calloutsSetId }, headers),
   );
 
+/**
+ * The callouts of a callouts set as the actor sees them, each with whether it
+ * takes comments (`settings.framing.commentsEnabled`) and the posts
+ * contributed to it with their author — the read-back of what a callout made
+ * from a template carries and of who contributed to it.
+ */
+export const readCalloutsSetCalloutResponses = (
+  calloutsSetId: string,
+  actor: GraphqlActor = TestUser.GLOBAL_ADMIN,
+) =>
+  runAs(actor, (sdk, headers) =>
+    sdk.ReadCalloutsSetCalloutResponses({ calloutsSetId }, headers),
+  );
+
 /** The responses of a form as the actor sees them: own, all (when allowed) and the moderation flags. */
 export const readCalloutFormResponses = (
   formID: string,

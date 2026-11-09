@@ -23,6 +23,7 @@ import {
   TestUserManager,
   RoleName,
   readCalloutFraming,
+  readCalloutsSetCalloutResponses,
   readMyUser,
   readOrganizationRoleSet,
   readRoleSetUsersInRoles,
@@ -205,6 +206,7 @@ const FUNCTIONS: string[] = [
   'readCalloutContributions',
   'readCalloutFramingContributors',
   'readCalloutsSetCallouts',
+  'readCalloutsSetCalloutResponses',
   'readCalloutFormResponses',
   'readMemoDocuments',
   'readActivityLogOnCollaboration',
@@ -409,6 +411,25 @@ describe('@contract base scenario round trip', () => {
     expect(callout.data?.lookup.callout?.id).toBe(base.space.collaboration.calloutPostId);
     expect(callout.data?.lookup.callout?.framing.type).toEqual(expect.any(String));
     expect(callout.data?.lookup.callout?.framing.profile.url).toEqual(expect.any(String));
+  });
+
+  test('callouts set: each callout reads back with its comments setting and contributed posts', async () => {
+    const set = await readCalloutsSetCalloutResponses(base.space.collaboration.calloutsSetId);
+    expect(set.error).toBeUndefined();
+    expect(set.data?.lookup.calloutsSet?.id).toBe(base.space.collaboration.calloutsSetId);
+    const callouts = set.data?.lookup.calloutsSet?.callouts ?? [];
+    expect(
+      callouts.map(c => c.id),
+      'the seeded post callout is in its set'
+    ).toContain(base.space.collaboration.calloutPostId);
+    for (const callout of callouts) {
+      expect(callout.framing.profile.displayName).toEqual(expect.any(String));
+      expect(typeof callout.settings.framing.commentsEnabled).toBe('boolean');
+      expect(Array.isArray(callout.contributions)).toBe(true);
+      for (const contribution of callout.contributions) {
+        if (contribution.post) expect(contribution.post.profile.displayName).toEqual(expect.any(String));
+      }
+    }
   });
 
   test('organization: its role set reads back by id', async () => {
