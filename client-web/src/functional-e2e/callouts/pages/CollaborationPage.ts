@@ -39,6 +39,21 @@ export class CollaborationPage {
     return this.page.locator('[data-testid="callout-card"]');
   }
 
+  // The space's callout feed. Each rendered card carries one "Open {title}"
+  // link; a card that is still loading is a "Loading Post" status skeleton
+  // instead, so an absence read while skeletons are up is not an observation.
+  get contentFeed() {
+    return this.page.getByRole('region', { name: 'Space content feed' });
+  }
+
+  get feedCardOpenLinks() {
+    return this.contentFeed.getByRole('link', { name: /^Open / });
+  }
+
+  get feedLoadingSkeletons() {
+    return this.contentFeed.getByRole('status', { name: 'Loading Post' });
+  }
+
   // Callout types in creation dialog
   get postCollectionOption() {
     return this.page.getByRole('button', { name: /post.*collection/i });
@@ -149,6 +164,46 @@ export class CollaborationPage {
   // Callout details page
   get calloutDialog() {
     return this.page.getByRole('dialog');
+  }
+
+  /**
+   * One callout's detail dialog, by its title. What the dialog renders below
+   * the description is what the callout IS (probed against develop
+   * 2026-11-09): a whiteboard framing shows "Open Whiteboard", a memo framing
+   * "Open Memo", a CTA framing the link itself, and a callout that accepts
+   * responses a "Contributions" section with its typed add button. A plain
+   * post shows none of them. "Discussion" renders for every kind, so it is
+   * the positive control that the dialog body has rendered before an absence
+   * is read.
+   */
+  calloutDetailDialog(name: string) {
+    const dialog = this.page.getByRole('dialog', { name, exact: true });
+    return {
+      dialog,
+      discussionHeading: dialog.getByRole('heading', {
+        name: 'Discussion',
+        exact: true,
+      }),
+      openWhiteboardButton: dialog.getByRole('button', {
+        name: 'Open Whiteboard',
+        exact: true,
+      }),
+      openMemoButton: dialog.getByRole('button', {
+        name: 'Open Memo',
+        exact: true,
+      }),
+      contributionsHeading: dialog.getByRole('heading', {
+        name: 'Contributions',
+        exact: true,
+      }),
+      addContributionButton: (label: string) =>
+        dialog.getByRole('button', { name: label, exact: true }),
+      ctaLink: (linkText: string, url: string) =>
+        dialog.getByRole('link', {
+          name: `${linkText} (opens ${url} in a new tab)`,
+          exact: true,
+        }),
+    };
   }
 
   get contextualMenuButton() {
