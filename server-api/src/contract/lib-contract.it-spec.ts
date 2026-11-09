@@ -27,6 +27,7 @@ import {
   readOrganizationRoleSet,
   readRoleSetUsersInRoles,
   readSpaceAbout,
+  readSpaceByNameId,
   readSpaceLevelAndVisibility,
   readSpaceRefs,
   readSpaceSettings,
@@ -166,6 +167,7 @@ const FUNCTIONS: string[] = [
   'readSpaceSettings',
   'readSpaceMyPrivileges',
   'readSpaceAbout',
+  'readSpaceByNameId',
   'readSpaceRefs',
   'readSpaceCalloutNames',
   'readSpaceInnovationFlowStates',
@@ -377,6 +379,17 @@ describe('@contract base scenario round trip', () => {
     const level = await readSpaceLevelAndVisibility(base.subspace.id);
     expect(level.data?.lookup.space?.level).toEqual(expect.any(String));
     expect(level.data?.lookup.space?.visibility).toEqual(expect.any(String));
+  });
+
+  test('space: an L0 reads back by its nameID, with level, host account and about profile', async () => {
+    const byName = await readSpaceByNameId(base.space.nameId);
+    expect(byName.error).toBeUndefined();
+    const space = byName.data?.lookupByName.space;
+    expect(space?.id).toBe(base.space.id);
+    expect(space?.nameID).toBe(base.space.nameId);
+    expect(space?.level).toEqual(expect.any(String));
+    expect(space?.account.id).toEqual(expect.any(String));
+    expect(space?.about.profile.displayName).toEqual(expect.any(String));
   });
 
   test('space: the subspace reads back through its parent, and the tree lists it', async () => {
