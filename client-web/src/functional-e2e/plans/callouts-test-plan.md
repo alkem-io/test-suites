@@ -88,6 +88,8 @@ The seed creates:
 
 ### Category 1: Callout Creation
 
+> Automated by `callouts/0.5callout-creation.spec.ts` (spec ids 1.1–1.9 differ from the scenario ids below). What each case asserts, and the regression it guards: [Automated oracles](#automated-oracles--05-creation-and-06-deletion).
+
 #### 1.1 Create Post Collection Callout - As Space Admin
 
 **User:** SPACE_ADMIN
@@ -587,6 +589,8 @@ The seed creates:
 ---
 
 ### Category 4: Callout Deletion
+
+> 4.1 and 4.2 are automated by `callouts/0.6callout-deletion.spec.ts`; see [Automated oracles](#automated-oracles--05-creation-and-06-deletion).
 
 #### 4.1 Delete Callout - As Space Admin
 
@@ -1363,6 +1367,54 @@ The seed creates:
 - The Space settings About _What_ / _Why_ / _Who_ editors are covered by `space/space-settings-about-limit.spec.ts` (AL-1, AL-2; nightly _Space_): ring thresholds per limit (What 50,000; Why / Who 32,000). **Observed and pinned, not ruled:** none of the three About editors shows a live error or blocks Save past its limit — What at 50,100 saves (server limit 65,568), Why at 32,100 saves, Who at 32,884 is refused by the server and the footer shows the error + Retry. The PR lists Why / Who as a follow-up and is silent on What. Not covered: the innovation-flow state description, the forum body and the VC knowledge base (client-web unit tests cover the limits passed to each); the title field's own red-on-blur and 128 counter were not delivered (Release 78 decision D5).
 
 ---
+
+## Automated oracles — 0.5 creation and 0.6 deletion
+
+_W2 Tier 1 items 9–10 of the client-net audit (`docs/qa/server-rebuild/client-net-audit/README.md` §4), 2026-11-09, branch `qa/w2-tier1-callouts`._
+
+Before this change the 8 create cases asserted only the title heading, which a server that stored every callout as a plain post would pass, and 4.1 read the deleted title's absence straight after `goto`, before the feed had rendered. Both are now falsifiable.
+
+### 0.5 — every create proves what was stored, from two angles
+
+After the title heading (kept), each admin case calls `expectCalloutKind`:
+
+1. **UI** — opens the callout's detail dialog. "Discussion" renders for every kind and is the positive control that the dialog body is up; then the kind-specific affordance: "Open Whiteboard" (whiteboard framing), "Open Memo" (memo framing), the CTA link `"<text> (opens <url> in a new tab)"` with that `href`, or the "Contributions" section with the typed add button ("Add Post", "Add link or file", "Add memo", "Add whiteboard"). The affordances of the other kinds are asserted absent (count 0) after the control.
+2. **API** — `readCalloutsSetCalloutTypes(calloutsSetId, sessionActor(page))` (new lib read-back): exactly one stored callout with the title; `framing.type`; `settings.contribution.allowedTypes` (exact set); the framing whiteboard/memo present only for that framing; the framing link's `uri` and display name for the CTA, no link otherwise.
+
+| Case | Framing | Accepted contributions | Dialog affordance | Regression it guards |
+|---|---|---|---|---|
+| 1.1 Post | `NONE` | `[]` | none of the framing affordances, no Contributions | a plain post saved with a framing or responses it was not given |
+| 1.2 Whiteboard | `WHITEBOARD` + whiteboard id | `[]` | Open Whiteboard | the Whiteboard chip ignored (saved as a post) or the framing whiteboard not created |
+| 1.3 CTA | `LINK` + uri `https://example.com`, name "Learn More" | `[]` | the CTA link with that href | the CTA saved without its link, or with a wrong/rewritten URL or label |
+| 1.4 Memo | `MEMO` + memo id | `[]` | Open Memo | the Memo chip ignored or the framing memo not created |
+| 1.5 Posts collection | `NONE` | `[POST]` | Contributions + Add Post | the response type dropped or mapped to another type |
+| 1.6 Links & Files | `NONE` | `[LINK]` | Contributions + Add link or file | same, for links |
+| 1.7 Memos | `NONE` | `[MEMO]` | Contributions + Add memo | same, for memos |
+| 1.8 Whiteboards | `NONE` | `[WHITEBOARD]` | Contributions + Add whiteboard | same, for whiteboards |
+
+1.9 (member cannot create) is unchanged.
+
+### 0.6 — 4.1 deletion with a positive control
+
+1. **Before the delete:** the created callout is stored exactly once (lib `readCalloutsSetCallouts` as the admin; its id is kept); after a fresh `goto` the feed is **rendered** — the scenario's seeded post heading is visible AND no "Loading Post" status skeleton is left in the "Space content feed" region — and the new card's heading is visible; the rendered card count ("Open …" links in the feed) is taken.
+2. **After the delete** (the confirm dialog is waited hidden): fresh `goto`, the same rendered-feed guard, then the card count is exactly one less, the title is hidden, and the read-back no longer holds that id and holds exactly one callout fewer.
+
+The UI count is taken from the rendered feed, not from the API total: the feed lists only the current tab's callouts, while the set also holds the other flow states' (Contributors, Subspaces, Welcome). Regressions guarded: delete that does not persist (UI optimistic removal only), delete that removes the wrong or more than one callout, and a read before render (the skeleton false green).
+
+### Red-proofs (2026-11-09, local stack, one run each)
+
+| Oracle | Mutation | Result |
+|---|---|---|
+| 0.5 dialog (UI) | 1.2 expects a memo framing | **red** — "Open Whiteboard" expected count 0, received 1 |
+| 0.5 read-back: accepted types | 1.6 read-back only, expects `[POST]` | **red** — allowedTypes deep-equality diff |
+| 0.5 read-back: framing type | 1.4 read-back only, expects `NONE` | **red** — expected "NONE", received "MEMO" |
+| 0.6 UI count | delete cancelled (Escape instead of Confirm) | **red** — card count expected 2, received 3 |
+| 0.6 read-back | delete cancelled, UI after-oracles removed | **red** — the deleted id is still in the set |
+| old 0.6 oracle (develop) | delete cancelled | **green** — confirms the audit: the old `toBeHidden` right after `goto` passes with no deletion |
+
+### Constants asserted
+
+The framing/response types, the CTA uri and label are what the case chose. One rebaseline candidate: 1.1–1.4 assert `allowedTypes: []` for "no response chip selected" — whether that empty set is sent by the client or filled in by the server when the field is omitted was not traced; if the rebuilt server defaults differently, decide there whether the server or this oracle moves. The dialog strings ("Discussion", "Open Whiteboard", "Open Memo", "Contributions", the add-button labels, the CTA link's accessible name, "Loading Post", "Space content feed") are client-web i18n/aria strings — they move with a client change, not with the server rebuild.
 
 ## Testing Notes
 
