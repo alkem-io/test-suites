@@ -114,6 +114,8 @@ cards; Identity open by default, the others opened by clicking their heading):
 
 #### 2.3 Update Basic Information
 
+> **Automated:** `profile-editing/us2-own-profile.spec.ts` › G2-1 (moved from `user-profile/update-basic-information.spec.ts`; runs on a disposable identity, not the shared `admin`, and reads back with `getUserData`).
+
 **Steps:**
 
 1. Click in the "First Name" field
@@ -135,6 +137,8 @@ cards; Identity open by default, the others opened by clicking their heading):
 
 #### 2.4 Update Location Information
 
+> **Automated (city + country):** `profile-editing/us2-own-profile.spec.ts` › G2-2.
+
 **Steps:**
 
 1. In "City" field, type "Amsterdam"
@@ -151,6 +155,8 @@ cards; Identity open by default, the others opened by clicking their heading):
 - Location information updates on profile
 
 #### 2.5 Add Profile Description Fields
+
+> **Automated (bio):** `profile-editing/us2-own-profile.spec.ts` › G2-2. Tagline: `contributors-crud/user-crud.spec.ts` › 1.2.
 
 **Steps:**
 
@@ -170,6 +176,8 @@ cards; Identity open by default, the others opened by clicking their heading):
 - Bio displays with formatting on profile view
 
 #### 2.6 Add Skills and Keywords
+
+> **Automated:** `profile-editing/us2-own-profile.spec.ts` › G2-3.
 
 **Steps:**
 
@@ -458,6 +466,8 @@ cards; Identity open by default, the others opened by clicking their heading):
 - User can view organization memberships, spaces, etc.
 
 #### 5.3 Create New Organization
+
+> **Automated:** `profile-editing/us3-organisation-create-edit.spec.ts` › H1-1 (who is offered the section), H1-2 (the create dialog), H2-1 (editing it). A reference typed in the dialog: H1-3, skipped on a reproduced product defect.
 
 **Steps:**
 
