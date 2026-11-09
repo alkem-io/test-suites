@@ -127,6 +127,20 @@ export const readCalloutsSetCallouts = (
     sdk.ReadCalloutsSetCallouts({ calloutsSetId }, headers),
   );
 
+/**
+ * The callouts of a callouts set with what each one IS: its framing type, the
+ * framing whiteboard / memo / link it carries, and the contribution types it
+ * accepts — the read-back that tells a post from a whiteboard, a CTA or a
+ * collection, which the title alone cannot.
+ */
+export const readCalloutsSetCalloutTypes = (
+  calloutsSetId: string,
+  actor: GraphqlActor = TestUser.GLOBAL_ADMIN,
+) =>
+  runAs(actor, (sdk, headers) =>
+    sdk.ReadCalloutsSetCalloutTypes({ calloutsSetId }, headers),
+  );
+
 /** The responses of a form as the actor sees them: own, all (when allowed) and the moderation flags. */
 export const readCalloutFormResponses = (
   formID: string,

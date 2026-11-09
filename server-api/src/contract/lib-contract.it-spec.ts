@@ -23,6 +23,7 @@ import {
   TestUserManager,
   RoleName,
   readCalloutFraming,
+  readCalloutsSetCalloutTypes,
   readMyUser,
   readOrganizationRoleSet,
   readRoleSetUsersInRoles,
@@ -205,6 +206,7 @@ const FUNCTIONS: string[] = [
   'readCalloutContributions',
   'readCalloutFramingContributors',
   'readCalloutsSetCallouts',
+  'readCalloutsSetCalloutTypes',
   'readCalloutFormResponses',
   'readMemoDocuments',
   'readActivityLogOnCollaboration',
@@ -409,6 +411,24 @@ describe('@contract base scenario round trip', () => {
     expect(callout.data?.lookup.callout?.id).toBe(base.space.collaboration.calloutPostId);
     expect(callout.data?.lookup.callout?.framing.type).toEqual(expect.any(String));
     expect(callout.data?.lookup.callout?.framing.profile.url).toEqual(expect.any(String));
+  });
+
+  test('callouts set: each callout reads back with its framing type, framing content and accepted contribution types', async () => {
+    const set = await readCalloutsSetCalloutTypes(base.space.collaboration.calloutsSetId);
+    expect(set.error).toBeUndefined();
+    expect(set.data?.lookup.calloutsSet?.id).toBe(base.space.collaboration.calloutsSetId);
+    const callouts = set.data?.lookup.calloutsSet?.callouts ?? [];
+    const post = callouts.find(c => c.id === base.space.collaboration.calloutPostId);
+    expect(post, 'the seeded post callout is in its set').toBeDefined();
+    for (const callout of callouts) {
+      expect(callout.framing.type).toEqual(expect.any(String));
+      expect(callout.framing.profile.displayName).toEqual(expect.any(String));
+      expect(Array.isArray(callout.settings.contribution.allowedTypes)).toBe(true);
+      // Optional framing content: absent, or an object carrying its id.
+      for (const content of [callout.framing.whiteboard, callout.framing.memo, callout.framing.link]) {
+        if (content) expect(content.id).toEqual(expect.any(String));
+      }
+    }
   });
 
   test('organization: its role set reads back by id', async () => {

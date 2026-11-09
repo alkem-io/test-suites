@@ -97773,6 +97773,42 @@ export type ReadCalloutSubspacesQuery = {
   };
 };
 
+export type ReadCalloutsSetCalloutTypesQueryVariables = SchemaTypes.Exact<{
+  calloutsSetId: SchemaTypes.Scalars["UUID"]["input"];
+}>;
+
+export type ReadCalloutsSetCalloutTypesQuery = {
+  lookup: {
+    calloutsSet?:
+      | {
+          id: string;
+          callouts: Array<{
+            id: string;
+            framing: {
+              id: string;
+              type: SchemaTypes.CalloutFramingType;
+              profile: { id: string; displayName: string };
+              whiteboard?: { id: string } | undefined;
+              memo?: { id: string } | undefined;
+              link?:
+                | {
+                    id: string;
+                    uri: string;
+                    profile: { id: string; displayName: string };
+                  }
+                | undefined;
+            };
+            settings: {
+              contribution: {
+                allowedTypes: Array<SchemaTypes.CalloutContributionType>;
+              };
+            };
+          }>;
+        }
+      | undefined;
+  };
+};
+
 export type ReadCalloutsSetCalloutsQueryVariables = SchemaTypes.Exact<{
   calloutsSetId: SchemaTypes.Scalars["UUID"]["input"];
 }>;
@@ -128119,6 +128155,45 @@ export const ReadCalloutSubspacesDocument = gql`
     }
   }
 `;
+export const ReadCalloutsSetCalloutTypesDocument = gql`
+  query ReadCalloutsSetCalloutTypes($calloutsSetId: UUID!) {
+    lookup {
+      calloutsSet(ID: $calloutsSetId) {
+        id
+        callouts {
+          id
+          framing {
+            id
+            type
+            profile {
+              id
+              displayName
+            }
+            whiteboard {
+              id
+            }
+            memo {
+              id
+            }
+            link {
+              id
+              uri
+              profile {
+                id
+                displayName
+              }
+            }
+          }
+          settings {
+            contribution {
+              allowedTypes
+            }
+          }
+        }
+      }
+    }
+  }
+`;
 export const ReadCalloutsSetCalloutsDocument = gql`
   query ReadCalloutsSetCallouts($calloutsSetId: UUID!) {
     lookup {
@@ -131450,6 +131525,9 @@ const ReadCalloutSubspaceIdsDocumentString = print(
   ReadCalloutSubspaceIdsDocument
 );
 const ReadCalloutSubspacesDocumentString = print(ReadCalloutSubspacesDocument);
+const ReadCalloutsSetCalloutTypesDocumentString = print(
+  ReadCalloutsSetCalloutTypesDocument
+);
 const ReadCalloutsSetCalloutsDocumentString = print(
   ReadCalloutsSetCalloutsDocument
 );
@@ -137888,6 +137966,28 @@ export function getSdk(
             { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "ReadCalloutSubspaces",
+        "query",
+        variables
+      );
+    },
+    ReadCalloutsSetCalloutTypes(
+      variables: SchemaTypes.ReadCalloutsSetCalloutTypesQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.ReadCalloutsSetCalloutTypesQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.ReadCalloutsSetCalloutTypesQuery>(
+            ReadCalloutsSetCalloutTypesDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "ReadCalloutsSetCalloutTypes",
         "query",
         variables
       );
