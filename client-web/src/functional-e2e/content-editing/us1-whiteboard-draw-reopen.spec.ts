@@ -135,12 +135,17 @@ test.describe('W2 journey 5 — a whiteboard is drawn on, then reopened', () => 
     await page.keyboard.press('Escape'); // commits the text element
 
     // The oracle of record: the RAW document, as stored — exactly those two live elements.
+    // The text element enters the doc on the first keystroke and its value keeps
+    // syncing while later keystrokes are in flight, so wait for the whole marker,
+    // not just the element count (a remote env read "WB 34d" for "WB 34d3f").
+    // A server that drops trailing characters times out here, red.
     const live = await peer.waitFor(
       () => {
         const elements = peer.liveElements();
-        return elements.length === 2 && elements;
+        const textSynced = elements.some(el => el.type === 'text' && String(el.text) === MARKER);
+        return elements.length === 2 && textSynced && elements;
       },
-      'the rectangle and the text to reach the raw document'
+      'the rectangle and the whole marker text to reach the raw document'
     );
     const rects = live.filter(el => el.type === 'rectangle');
     const texts = live.filter(el => el.type === 'text');
