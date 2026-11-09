@@ -109,12 +109,10 @@ test.describe('My Profile Tab - View and Edit', () => {
       profile.unsavedChangesBar.getByText('2 unsaved changes', { exact: true })
     ).toBeVisible();
 
-    // Save through the bar; the "Changes saved" toast confirms the commit.
-    await profile.saveChanges();
-    // Let the toast leave, so the next case's "Changes saved" is its own.
-    await expect(page.getByText('Changes saved', { exact: true })).toBeHidden({
-      timeout: 15_000,
-    });
+    // Save through the bar; the server's answer and the "Changes saved" toast
+    // confirm the commit. saveWith parks the pointer so the toast can leave
+    // (a toast under a resting pointer never dismisses: red on test-alkem.io).
+    await saveWith(page, 'updateUser', '2 unsaved changes');
 
     // The values survive a reload, and the server holds them (first and last
     // name are user fields, not profile fields).
