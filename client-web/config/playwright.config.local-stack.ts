@@ -22,6 +22,8 @@ import { baseConfig, GENERATED_WALKS_DIR, LOCAL_STACK_TAG, suite } from './playw
  *   RABBITMQ_MANAGEMENT_* plus the nine MESSAGING_DIGEST_* variables (same
  *   values on the SERVER, see the suite's test plan):
  *     messaging-notifications US1 and US2 (whole walks), US3-AS3 and US3-AS4
+ *   IDLE_RELEASE_SECONDS=0 on the collaboration-service, and COLLAB_IDLE_RELEASE_SECONDS=0 here:
+ *     content-editing US1 E8-4 (the whole walk runs; the guard fails loudly without them)
  */
 export default defineConfig(
   baseConfig({
@@ -44,6 +46,16 @@ export default defineConfig(
         testDir: GENERATED_WALKS_DIR,
         testMatch: ['contribution-notify-switch.spec.ts'],
         tier: 'long',
+      }),
+      suite({
+        // W2 journey 5 E8-4 (a whiteboard's cold load after its room is released) needs
+        // IDLE_RELEASE_SECONDS=0 on the collaboration-service and COLLAB_IDLE_RELEASE_SECONDS=0 on
+        // this run. It sits in a serial walk whose earlier cases draw the board and record its
+        // element ids, so the whole file runs here (the nightly runs it without E8-4).
+        name: 'Local stack — collaboration room release',
+        testMatch: ['/content-editing/us1-whiteboard-draw-reopen.spec.ts'],
+        tier: 'extended',
+        capture: 'off',
       }),
       suite({
         name: 'Local stack — server env overrides',
