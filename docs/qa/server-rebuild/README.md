@@ -1,6 +1,6 @@
 # Server rebuild — QA tracker
 
-_One place for everything QA does for the move to the rebuilt server. Status is updated in this file; the reasoning lives in the documents it links. Last update: 2026-10-30 (W2 journeys 1–4 delivered)._
+_One place for everything QA does for the move to the rebuilt server. Status is updated in this file; the reasoning lives in the documents it links. Last update: 2026-11-09 (W2 journey 7 built)._
 
 ## Documents
 
@@ -89,7 +89,7 @@ _One place for everything QA does for the move to the rebuilt server. Status is 
 | Journey 4 — change Space privacy / membership / collaboration settings | **done** 2026-10-30 — PR test-suites#697: `space-settings-write/`, nightly "Space settings write"; 8 cases (privacy, policy, 3 member-visible toggles), 2/2 live runs green on test |
 | Journey 5 — whiteboard, memo, Collabora document | not started |
 | Journey 6 — flow state, reorder callouts, move a contribution | not started |
-| Journey 7 — edit Space about, own profile, organisation | not started |
+| Journey 7 — edit Space about, own profile, organisation | **built** 2026-11-09 on branch `qa/w2-journey-7` (uncommitted, no PR yet): `profile-editing/`, nightly "Profile editing" (tier extended); 9 cases (Space About name/tagline/What/Why and tags; own first/last name, bio, location, skills, keywords; non-admin organisation create, edit), 8 green in two live runs on the **local** stack, each oracle red-proofed; H1-3 (a reference typed in the create dialog is dropped) reproduced as a product defect and skipped (plan R-3, provisional ruling by the operator; QA lead to confirm); also re-aligns `user-profile/` page object + `view-profile-information` (City combobox, Phone moved) and moves `update-basic-information` into the suite (item 15) |
 | Journey 8 — global and sidebar search | not started |
 | Journey 9 — virtual contributor | not started |
 | Journey 10 — message leads / organisation; notification settings | not started |
@@ -147,6 +147,7 @@ Full text in [`plan.md` § Gaps](plan.md#gaps-found-in-the-plan-so-far).
 | 2026-10-29 | Register updated from the audit session's drills: S1 is file content loss on ACC, not a backup gap; A2 generator fixed in v0.167, data repair only; six server issues filed (#6726–#6731) for the live generators; F1/G3/E2 explained |
 | 2026-10-29 | W2 pre-work delivered on PR test-suites#696 (branch `qa/w2-prework-lib-boundary`): the lib is the only schema boundary for client-web — actor model (`GraphqlActor`/`runAs`), 81 documents + 115 functions, lib-owned enums/types, ESLint guard with a blocking CI step, lib contract test; 89 specs run live on the local stack, one fold red (fixed), the rest attributed pre-existing/env/interference |
 | 2026-10-30 | W2 journeys 1–4 delivered on PR test-suites#697 (branch `qa/w2-journeys-1-4`): join, invite + accept, subspace L1/L2 create, settings writes — 18 browser cases in three nightly projects, each with a lib read-back and a negative control; lib adds `joinRoleSet`, `readSubspaceByNameId`, `readSpaceSubspaceTree`; 18/18 in two live runs on test-alkem.io; harness finding: the factory cannot delete an L0 with UI-created subspaces (now `deleteSpaceTree`) |
+| 2026-11-09 | W2 journey 7 built on branch `qa/w2-journey-7` (not committed): `profile-editing/` — Space About, own profile, organisation create + edit, 9 cases; 8 green twice and red-proofed on the local stack, H1-3 skipped on a reproduced server defect (`createOrganization` replaces the caller's references with the default social links). Finding: `user-profile/view-profile-information` was already red on develop for two reasons, not one — City is a combobox (client-web#10499, predicted) and Phone moved from Identity to Social Links (not predicted); page object and spec re-aligned. Harness findings: a sonner toast under a resting pointer never dismisses and covers the save bar's button; `PW_BROWSER=chromium` was needed where branded Chrome is absent |
 | 2026-10-28 | W0 delivered: 298 root fields of `server` `develop` @ `eeecf9ddb` traced through lib, server-api and client-web on test-suites @ `015bfeea1`; 57 features with verdicts; gap 11 closed |
 
 ## How to update
