@@ -67,11 +67,12 @@ memberFixture.test.describe.serial('Callout Contributions - Member', () => {
 
       await collaborationPage.navigateToSpace(baseScenario.space.nameId);
 
-      expect(
-        collaborationPage.getCalloutByName(
+      // The member's feed shows the seeded collection (exact title).
+      await expect(
+        collaborationPage.feedCalloutHeading(
           baseScenario.space.collaboration.calloutPostCollectionDisplayName
         )
-      ).toBeDefined();
+      ).toBeVisible();
       await collaborationPage.clickCallout(
         baseScenario.space.collaboration.calloutPostCollectionDisplayName
       );

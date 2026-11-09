@@ -361,6 +361,8 @@ The seed creates:
 
 ### Category 2: Callout Viewing and Discovery
 
+> 2.1–2.3 are automated by `callouts/0.9callout-viewing.spec.ts`; what each asserts: [Automated oracles — publish and visibility](#automated-oracles--publish-and-visibility-07-09-01-02-04).
+
 #### 2.1 View Published Callout - As Space Member
 
 **User:** SPACE_MEMBER
@@ -479,6 +481,8 @@ The seed creates:
 ---
 
 ### Category 3: Callout Editing and Updates
+
+> 3.1–3.4 are automated by `callouts/0.7callout-editing.spec.ts`; see [Automated oracles — publish and visibility](#automated-oracles--publish-and-visibility-07-09-01-02-04).
 
 #### 3.1 Edit Callout Details - As Space Admin
 
@@ -832,6 +836,8 @@ The seed creates:
 
 ### Category 6: Callout Contributions
 
+> 6.1 (`callouts/0.4callout-contributions.spec.ts`): see [Automated oracles — publish and visibility](#automated-oracles--publish-and-visibility-07-09-01-02-04).
+
 #### 6.1 Add Post Contribution - As Space Member
 
 **User:** SPACE_MEMBER
@@ -979,6 +985,8 @@ The seed creates:
 ---
 
 ### Category 7: Callout Access Control by Role
+
+> 7.1/7.2 (`callouts/0.2callout-access-control.spec.ts`): see [Automated oracles — publish and visibility](#automated-oracles--publish-and-visibility-07-09-01-02-04).
 
 #### 7.1 Space Admin - Full Access
 
@@ -1415,6 +1423,52 @@ The UI count is taken from the rendered feed, not from the API total: the feed l
 ### Constants asserted
 
 The framing/response types, the CTA uri and label are what the case chose. One rebaseline candidate: 1.1–1.4 assert `allowedTypes: []` for "no response chip selected" — whether that empty set is sent by the client or filled in by the server when the field is omitted was not traced; if the rebuilt server defaults differently, decide there whether the server or this oracle moves. The dialog strings ("Discussion", "Open Whiteboard", "Open Memo", "Contributions", the add-button labels, the CTA link's accessible name, "Loading Post", "Space content feed") are client-web i18n/aria strings — they move with a client change, not with the server rebuild.
+
+## Automated oracles — publish and visibility (0.7, 0.9, 0.1, 0.2, 0.4)
+
+_W2 Tier 1 item 11 of the client-net audit (`docs/qa/server-rebuild/client-net-audit/README.md` §4), 2026-11-09, branch `qa/w2-tier1-callouts`._
+
+Before this change, a UI publish was proven in 0.1 only (the member could open the callout afterwards). In 0.7, 0.9 and 0.2 it was proven by nothing, or by "Publish is not in the menu", which also passes when the menu never opens. Three cases asserted `expect(promise).toBeDefined()`, which is always true. 0.9 2.2 ("draft hidden from a member") read the title's absence with only the Home tab as a control. That passes on a page that has not rendered the feed.
+
+**New lib read-back:** `readCalloutsSetCalloutVisibility(calloutsSetId, actor)` returns each callout's title and `settings.visibility`, as the actor may list them. Probed 2026-11-09: the server leaves a DRAFT out of a member's listing (admin 4 callouts, member 3 while one is a draft). Read as the member, the read-back is therefore the server-side half of "a member cannot see a draft". Specs use it through `helpers/callout-visibility.helper.ts › expectStoredCalloutVisibility`, which polls, because a UI publish answers after its confirm dialog has closed.
+
+**Rendered-feed guard:** `CollaborationPage.expectFeedRendered(knownTitle)` waits until a callout known to be listed is visible in the "Space content feed" region and no "Loading Post" skeleton is left. Cards below the fold stay skeletons until scrolled into view (4 cards on a 1080px viewport), so the guard scrolls each remaining skeleton into view until none is left.
+
+| Case | New oracle | Regression it guards |
+|---|---|---|
+| 0.7 3.1 | after save: stored under the new title as DRAFT, nothing under the old title; after the trailing publish: PUBLISHED | the edit not persisted, or persisted as a new callout; an edit that publishes; the unasserted publish not reaching the server |
+| 0.7 3.2 | `toBeDefined()` → the edited title's heading is visible in the feed after a fresh load | the 3.1 edit surviving only in the session cache |
+| 0.7 3.4 | before: stored DRAFT; the member (own browser context) sees the rendered feed without the draft, and the server does not list it for them. Menu positive control (Edit visible) before "Publish gone". After: PUBLISHED read-back as admin AND as the member; the member's rendered feed shows the callout, and it opens (Discussion heading) | the publish not reaching the server; a publish that the member still cannot see; a draft leaking to members before publish; a "Publish gone" check that passes on a closed menu |
+| 0.9 2.3 | the Draft flip moved before `goto` (it raced the feed query) + DRAFT read-back | the admin view being read before the draft state existed |
+| 0.9 2.1 (admin) | UI publish → PUBLISHED read-back, and the server lists it for SPACE_MEMBER | the unasserted UI publish (old oracle: the comment box, present on drafts too) |
+| 0.9 2.1 (member) | the member session's read-back says PUBLISHED | — (strengthens the existing "member sees it") |
+| 0.9 2.2 | positive control: the published sibling (the scenario now seeds `addPostCallout`) is visible and no skeleton is left; then the draft's heading count 0 in the feed, and the server does not list the draft for the member's session | a vacuous absence (feed not rendered); a draft that the server hands to members while the UI hides it |
+| 0.1 Step 1 | stored DRAFT; not listed for SPACE_MEMBER | a "Save Draft" that publishes |
+| 0.1 Step 2 | menu positive control (Edit) before "Publish gone"; PUBLISHED read-back | publish not persisted (the member step would only catch it later, as a click timeout) |
+| 0.1 Step 3 | the member sees the title in the feed and the server lists it as PUBLISHED for the member session | — (makes the existing implicit publish oracle explicit) |
+| 0.2 7.1 | the trailing (unasserted) publish → PUBLISHED read-back | the publish not persisted |
+| 0.2 7.2 | `toBeDefined()` → the member session's read-back lists the seeded callout as PUBLISHED | limited access that loses READ on published callouts |
+| 0.4 6.1 | `toBeDefined()` → the seeded collection's exact heading is visible in the member's feed | the collection not rendered for a member |
+
+0.9 also gained a file-level teardown: its admin block never cleans its own scenario, so a failing admin case would leak it.
+
+**Runs (local stack, 2026-11-09, files 0.1 / 0.2 / 0.4 / 0.7 / 0.9):** baseline on the unmodified code 18/18; after the change 18/18 twice. A first after-run was red once in 0.7 3.4: a below-the-fold "Loading Post" skeleton in the member's feed. That led to the scroll in `expectFeedRendered`, which was then green in every run.
+
+### Red-proofs — item 11 (2026-11-09, local stack, one run each)
+
+| Oracle | Mutation | Result |
+|---|---|---|
+| visibility read-back (0.7 3.4) | publish skipped (menu closed with Escape) | **red** — "the publish reached the server": expected `PUBLISHED`, received `DRAFT` |
+| rendered-feed positive control (0.9 2.2) | page opened on another tab of the space (`?tab=2`: the tab bar renders, the feed does not) | **red** — the published sibling's heading not found in "Space content feed" |
+| old 0.9 2.2 oracle (HEAD) | the same `?tab=2` mutation | **green** — confirms the audit: the Home tab plus `toBeHidden` passes with no feed on screen |
+| draft absent in the member's feed (0.9 2.2, UI) | callout left PUBLISHED, old `toBeHidden` removed | **red** — feed heading count expected 0, received 1 |
+| draft not listed for the member (0.9 2.2, API) | callout left PUBLISHED, both UI absences removed | **red** — "the server does not list the draft for the member": expected `undefined`, received `PUBLISHED` |
+
+(A first variant that opened `/home` was red on the OLD code too, because `/home` has no Home tab. It was replaced by the `?tab=2` pair above.)
+
+### Constants asserted — item 11
+
+The visibility values `DRAFT` / `PUBLISHED` come from the lib's `CalloutVisibility` enum. **Rebaseline candidate:** the server leaving a DRAFT out of a member's `calloutsSet.callouts` listing (rather than listing it with READ withheld, or erroring). 0.7 3.4, 0.9 2.2 and 0.1 Step 1 assert that absence. If the rebuilt server models draft visibility differently, decide there whether the server or these oracles move. "Loading Post", "Space content feed" and "Discussion" are client-web aria/i18n strings.
 
 ## Testing Notes
 

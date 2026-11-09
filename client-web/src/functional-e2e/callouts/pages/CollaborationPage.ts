@@ -54,6 +54,39 @@ export class CollaborationPage {
     return this.contentFeed.getByRole('status', { name: 'Loading Post' });
   }
 
+  /**
+   * The feed has finished rendering: a callout known to be listed for this
+   * viewer is on screen and no card is still a loading skeleton. Only after
+   * this is an absence in the feed an observation of the list rather than of
+   * a page that has not rendered yet.
+   */
+  async expectFeedRendered(knownCalloutName: string) {
+    await expect(
+      this.contentFeed.getByRole('heading', {
+        name: knownCalloutName,
+        exact: true,
+      })
+    ).toBeVisible();
+    // Cards below the fold stay "Loading Post" skeletons until scrolled into
+    // view (seen with 4 cards on a 1080px viewport), so bring each remaining
+    // skeleton into view until none is left.
+    await expect(async () => {
+      const remaining = await this.feedLoadingSkeletons.count();
+      if (remaining > 0) {
+        await this.feedLoadingSkeletons
+          .first()
+          .scrollIntoViewIfNeeded({ timeout: 2000 })
+          .catch(() => {});
+      }
+      expect(remaining, 'feed cards still loading').toBe(0);
+    }).toPass();
+  }
+
+  /** A callout's title heading inside the feed (exact). */
+  feedCalloutHeading(name: string) {
+    return this.contentFeed.getByRole('heading', { name, exact: true });
+  }
+
   // Callout types in creation dialog
   get postCollectionOption() {
     return this.page.getByRole('button', { name: /post.*collection/i });

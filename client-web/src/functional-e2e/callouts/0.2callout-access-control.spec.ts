@@ -10,10 +10,12 @@ import { TestScenarioConfig } from '@alkemio/tests-lib/scenario/config/test-scen
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import { TestScenarioFactory } from '@alkemio/tests-lib/scenario/TestScenarioFactory';
 import { createCalloutOnCalloutsSet } from '@alkemio/tests-lib/scenario/baseFunctions';
-import { TestUserManager } from '@alkemio/tests-lib';
+import { CalloutVisibility, TestUserManager } from '@alkemio/tests-lib';
 import { expect } from '@playwright/test';
 import { createAuthenticatedSessionFixture } from '../fixtures/authenticated-session.fixture';
 import { CollaborationPage } from './pages';
+import { sessionActor } from '../helpers/lib-actor.helper';
+import { expectStoredCalloutVisibility } from '../helpers/callout-visibility.helper';
 
 const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 
@@ -107,6 +109,15 @@ adminFixture.test.describe.serial('Callout Access Control', () => {
     await expect(collaborationPage.shareMenuItem).toBeVisible();
 
     await collaborationPage.publishCallout();
+
+    // The publish (unasserted before) reached the server.
+    await expectStoredCalloutVisibility(
+      baseScenario!.space.collaboration.calloutsSetId,
+      testCalloutName,
+      await sessionActor(page),
+      CalloutVisibility.Published,
+      'the publish reached the server'
+    );
   });
 });
 
@@ -168,7 +179,15 @@ memberFixture.test.describe.serial('Callout Access Control - Member', () => {
     const isAddVisible = await collaborationPage.isAddCalloutVisible();
     expect(isAddVisible).toBe(false);
 
-    expect(collaborationPage.getCalloutByName(memberCalloutName)).toBeDefined();
+    // The server lists the seeded callout for the member's own session as
+    // PUBLISHED: limited access still includes reading it.
+    await expectStoredCalloutVisibility(
+      baseScenario!.space.collaboration.calloutsSetId,
+      memberCalloutName,
+      await sessionActor(page),
+      CalloutVisibility.Published,
+      'the server lists the published callout for the member'
+    );
     await collaborationPage.clickCallout(memberCalloutName);
 
     await expect(collaborationPage.commentInput).toBeVisible();

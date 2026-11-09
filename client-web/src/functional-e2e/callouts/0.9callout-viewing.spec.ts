@@ -10,6 +10,8 @@ import { expect } from '@playwright/test';
 import { createAuthenticatedSessionFixture } from '../fixtures/authenticated-session.fixture';
 import { CollaborationPage } from './pages';
 import { CalloutVisibility } from '@alkemio/tests-lib';
+import { sessionActor } from '../helpers/lib-actor.helper';
+import { expectStoredCalloutVisibility } from '../helpers/callout-visibility.helper';
 
 const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 let calloutName = '';
@@ -25,6 +27,10 @@ const scenarioConfig: TestScenarioConfig = {
     collaboration: {
       addTutorialCallouts: false,
       addPostCollectionCallout: true, // Pre-create a post collection callout
+      // A published sibling that stays published throughout: the positive
+      // control that the member's feed has rendered before 2.2 reads the
+      // draft's absence.
+      addPostCallout: true,
     },
     community: {
       admins: [TestUser.SPACE_ADMIN],
@@ -68,12 +74,21 @@ adminFixture.test.describe.serial('Callout Viewing', () => {
       adminFixture.test.setTimeout(30_000);
       const collaborationPage = new CollaborationPage(page, baseUrl);
 
-      await collaborationPage.navigateToSpace(baseScenario!.space.nameId);
-
+      // The callout is a draft BEFORE the page loads (it used to be flipped
+      // after `goto`, racing the feed query).
       await updateCalloutVisibility(
         baseScenario!.space.collaboration.calloutPostCollectionId,
         CalloutVisibility.Draft
       );
+      await expectStoredCalloutVisibility(
+        baseScenario!.space.collaboration.calloutsSetId,
+        calloutName,
+        TestUser.SPACE_ADMIN,
+        CalloutVisibility.Draft,
+        'the callout is stored as a draft before the admin views it'
+      );
+
+      await collaborationPage.navigateToSpace(baseScenario!.space.nameId);
 
       await expect(page.getByRole('tab', { name: 'Home' })).toBeVisible({
         timeout: 10000,
@@ -107,6 +122,24 @@ adminFixture.test.describe.serial('Callout Viewing', () => {
       await collaborationPage.publishCallout();
 
       await expect(collaborationPage.commentInput).toBeVisible();
+
+      // The UI publish reached the server, and the server now lists the
+      // callout for the member too.
+      const calloutsSetId = baseScenario!.space.collaboration.calloutsSetId;
+      await expectStoredCalloutVisibility(
+        calloutsSetId,
+        calloutName,
+        await sessionActor(page),
+        CalloutVisibility.Published,
+        'the UI publish reached the server'
+      );
+      await expectStoredCalloutVisibility(
+        calloutsSetId,
+        calloutName,
+        TestUser.SPACE_MEMBER,
+        CalloutVisibility.Published,
+        'the server lists the published callout for the member'
+      );
     }
   );
 });
@@ -155,6 +188,13 @@ memberFixture.test.describe.serial('Callout Viewing - Member', () => {
       await collaborationPage.clickCallout(`${calloutName}`);
 
       await expect(collaborationPage.commentInput).toBeVisible();
+      await expectStoredCalloutVisibility(
+        baseScenario!.space.collaboration.calloutsSetId,
+        calloutName,
+        await sessionActor(page),
+        CalloutVisibility.Published,
+        'the member session lists the callout as published'
+      );
     }
   );
 
@@ -172,9 +212,37 @@ memberFixture.test.describe.serial('Callout Viewing - Member', () => {
       await expect(page.getByRole('tab', { name: 'Home' })).toBeVisible({
         timeout: 10000,
       });
+      // Positive control: the member sees the published sibling and no card
+      // is still loading — the feed has rendered, so the draft's absence
+      // below is an observation, not a page that has not loaded yet.
+      await collaborationPage.expectFeedRendered(
+        baseScenario!.space.collaboration.calloutPostDisplayName
+      );
       await expect(
         page.getByRole('heading', { name: `${calloutName}`, exact: true })
       ).toBeHidden({ timeout: 5000 });
+      await expect(
+        collaborationPage.feedCalloutHeading(calloutName)
+      ).toHaveCount(0);
+      // Server side: the member's session is not even given the draft.
+      await expectStoredCalloutVisibility(
+        baseScenario!.space.collaboration.calloutsSetId,
+        calloutName,
+        await sessionActor(page),
+        undefined,
+        'the server does not list the draft for the member'
+      );
     }
   );
+});
+
+// File-level teardown. The Member block normally cleans the shared scenario,
+// but a failing admin case restarts the worker (the Member block then seeds
+// and cleans a scenario of its own) and a `-g` filter can skip the Member
+// block entirely; either way the admin block's scenario would leak.
+adminFixture.test.afterAll(async () => {
+  if (baseScenario) {
+    await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
+    baseScenario = undefined;
+  }
 });

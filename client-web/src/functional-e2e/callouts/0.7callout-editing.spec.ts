@@ -1,10 +1,7 @@
 // spec: client-web/src/functional-e2e/plans/callouts-test-plan.md
 // seed: client-web/src/functional-e2e/seed-public-space.spec.ts
 
-import {
-  CommunityMembershipPolicy,
-  SpacePrivacyMode,
-} from '@alkemio/tests-lib';
+import { CalloutVisibility } from '@alkemio/tests-lib';
 import { TestUser } from '@alkemio/tests-lib/common/enums/test.user';
 import { TestScenarioConfig } from '@alkemio/tests-lib/scenario/config/test-scenario-config';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
@@ -13,7 +10,9 @@ import { TestUserManager } from '@alkemio/tests-lib';
 import { expect } from '@playwright/test';
 import { createAuthenticatedSessionFixture } from '../fixtures/authenticated-session.fixture';
 import { CollaborationPage } from './pages';
-import { time } from 'console';
+import { sessionActor } from '../helpers/lib-actor.helper';
+import { expectStoredCalloutVisibility } from '../helpers/callout-visibility.helper';
+import { openPersonaPage } from '../helpers/space-access.helper';
 
 const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 
@@ -114,6 +113,26 @@ adminFixture.test.describe.serial('Callout Editing', () => {
         timeout: 3000,
       });
 
+      // The edit reached the server: the callout is stored under the new
+      // title — still a DRAFT (editing must not publish) — and no longer
+      // under the original one.
+      const calloutsSetId = baseScenario!.space.collaboration.calloutsSetId;
+      const admin = await sessionActor(page);
+      await expectStoredCalloutVisibility(
+        calloutsSetId,
+        updatedName,
+        admin,
+        CalloutVisibility.Draft,
+        'the edited callout is stored under its new title, still a draft'
+      );
+      await expectStoredCalloutVisibility(
+        calloutsSetId,
+        currentCalloutName,
+        admin,
+        undefined,
+        'no callout is stored under the original title any more'
+      );
+
       // Update the current callout name for subsequent tests
       currentCalloutName = updatedName;
 
@@ -121,6 +140,13 @@ adminFixture.test.describe.serial('Callout Editing', () => {
       await collaborationPage.clickCallout(updatedName);
       await collaborationPage.openContextualMenu();
       await collaborationPage.publishCallout();
+      await expectStoredCalloutVisibility(
+        calloutsSetId,
+        updatedName,
+        admin,
+        CalloutVisibility.Published,
+        'the publish after the edit reached the server'
+      );
     }
   );
 
@@ -132,9 +158,11 @@ adminFixture.test.describe.serial('Callout Editing', () => {
 
       await collaborationPage.navigateToSpace(baseScenario!.space.nameId);
 
-      expect(
-        collaborationPage.getCalloutByName(currentCalloutName)
-      ).toBeDefined();
+      // After a fresh load the feed shows the callout under the title 3.1
+      // saved: the edit survived a reload, not only the session's cache.
+      await expect(
+        collaborationPage.feedCalloutHeading(currentCalloutName)
+      ).toBeVisible();
       await collaborationPage.clickCallout(currentCalloutName);
 
       // Verify settings button is available (admin can access settings)
@@ -145,10 +173,13 @@ adminFixture.test.describe.serial('Callout Editing', () => {
 
   adminFixture.test(
     '3.4 Publish Draft Callout - As Space Admin',
-    async ({ page }) => {
-      adminFixture.test.setTimeout(45_000);
+    async ({ page, browser }) => {
+      adminFixture.test.setTimeout(90_000);
       const collaborationPage = new CollaborationPage(page, baseUrl);
       const draftCalloutName = `Draft to Publish ${Date.now()}`;
+      const calloutsSetId = baseScenario!.space.collaboration.calloutsSetId;
+      const seededName =
+        baseScenario!.space.collaboration.calloutPostCollectionDisplayName;
 
       await collaborationPage.navigateToSpace(baseScenario!.space.nameId);
 
@@ -159,15 +190,80 @@ adminFixture.test.describe.serial('Callout Editing', () => {
         true
       );
 
-      await collaborationPage.clickCallout(draftCalloutName);
+      // Before the publish: stored as a DRAFT, and the server does not list
+      // it for the member at all.
+      await expectStoredCalloutVisibility(
+        calloutsSetId,
+        draftCalloutName,
+        await sessionActor(page),
+        CalloutVisibility.Draft,
+        'the new callout is stored as a draft'
+      );
 
-      await collaborationPage.openContextualMenu();
-      await expect(collaborationPage.publishMenuItem).toBeVisible();
+      // The member, in their own session, does not see the draft — read only
+      // after the feed has rendered (the seeded callout is on screen and no
+      // card is still loading), so the absence is an observation.
+      const member = await openPersonaPage(
+        browser,
+        TestUserManager.users.spaceMember.email
+      );
+      try {
+        const memberView = new CollaborationPage(member.page, baseUrl);
+        await memberView.navigateToSpace(baseScenario!.space.nameId);
+        await memberView.expectFeedRendered(seededName);
+        await expect(memberView.feedCalloutHeading(draftCalloutName)).toHaveCount(0);
+        await expectStoredCalloutVisibility(
+          calloutsSetId,
+          draftCalloutName,
+          await sessionActor(member.page),
+          undefined,
+          'the server does not list the draft for the member'
+        );
 
-      await collaborationPage.publishCallout();
+        await collaborationPage.clickCallout(draftCalloutName);
 
-      await collaborationPage.openContextualMenu();
-      await expect(collaborationPage.publishMenuItem).not.toBeVisible();
+        await collaborationPage.openContextualMenu();
+        await expect(collaborationPage.publishMenuItem).toBeVisible();
+
+        await collaborationPage.publishCallout();
+
+        // The menu is open again (Edit is shown) before Publish is read as
+        // gone, so the absence is not just a menu that never opened.
+        await collaborationPage.openContextualMenu();
+        await expect(collaborationPage.editButton).toBeVisible();
+        await expect(collaborationPage.publishMenuItem).not.toBeVisible();
+        await page.keyboard.press('Escape');
+
+        // The publish reached the server …
+        await expectStoredCalloutVisibility(
+          calloutsSetId,
+          draftCalloutName,
+          await sessionActor(page),
+          CalloutVisibility.Published,
+          'the publish reached the server'
+        );
+
+        // … and the member now sees the callout: listed for them by the
+        // server, shown in their feed, and it opens.
+        await expectStoredCalloutVisibility(
+          calloutsSetId,
+          draftCalloutName,
+          await sessionActor(member.page),
+          CalloutVisibility.Published,
+          'the server lists the published callout for the member'
+        );
+        await memberView.navigateToSpace(baseScenario!.space.nameId);
+        await memberView.expectFeedRendered(seededName);
+        await expect(
+          memberView.feedCalloutHeading(draftCalloutName)
+        ).toBeVisible();
+        await memberView.clickCallout(draftCalloutName);
+        await expect(
+          memberView.calloutDetailDialog(draftCalloutName).discussionHeading
+        ).toBeVisible();
+      } finally {
+        await member.close();
+      }
     }
   );
 });
