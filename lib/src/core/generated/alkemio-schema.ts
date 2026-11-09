@@ -89461,6 +89461,38 @@ export type GetCalloutReactionsSummaryQuery = {
   };
 };
 
+export type ReadCalloutCollaboraDocumentQueryVariables = Exact<{
+  calloutId: Scalars["UUID"]["input"];
+}>;
+
+export type ReadCalloutCollaboraDocumentQuery = {
+  lookup: {
+    callout?:
+      | {
+          id: string;
+          framing: {
+            id: string;
+            collaboraDocument?:
+              | {
+                  id: string;
+                  documentType: CollaboraDocumentType;
+                  previewUrl?: string | undefined;
+                  updatedDate: Date;
+                  authorization?:
+                    | {
+                        myPrivileges?:
+                          | Array<AuthorizationPrivilege>
+                          | undefined;
+                      }
+                    | undefined;
+                }
+              | undefined;
+          };
+        }
+      | undefined;
+  };
+};
+
 export type ReadCalloutContributionsQueryVariables = Exact<{
   calloutId: Scalars["UUID"]["input"];
 }>;
@@ -89725,6 +89757,28 @@ export type ReadMemoDocumentsQuery = {
           id: string;
           signatures: Array<{ id: string }>;
           profile: { storageBucket: { documents: Array<{ id: string }> } };
+        }
+      | undefined;
+  };
+};
+
+export type ReadWhiteboardStateQueryVariables = Exact<{
+  whiteboardId: Scalars["UUID"]["input"];
+}>;
+
+export type ReadWhiteboardStateQuery = {
+  lookup: {
+    whiteboard?:
+      | {
+          id: string;
+          updatedDate: Date;
+          isMultiUser: boolean;
+          previewSettings: { mode: WhiteboardPreviewMode };
+          profile: {
+            id: string;
+            visual?: { id: string; uri: string } | undefined;
+            preview?: { id: string; uri: string } | undefined;
+          };
         }
       | undefined;
   };
@@ -94957,6 +95011,27 @@ export type GetCalloutFramingMemoQuery = {
                 }
               | undefined;
           };
+        }
+      | undefined;
+  };
+};
+
+export type ReadMemoContentQueryVariables = Exact<{
+  memoId: Scalars["UUID"]["input"];
+}>;
+
+export type ReadMemoContentQuery = {
+  lookup: {
+    memo?:
+      | {
+          id: string;
+          markdown?: any | undefined;
+          updatedDate: Date;
+          isMultiUser: boolean;
+          contentUpdatePolicy: ContentUpdatePolicy;
+          authorization?:
+            | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
+            | undefined;
         }
       | undefined;
   };

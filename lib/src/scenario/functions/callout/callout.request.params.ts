@@ -143,6 +143,16 @@ export const readMemoDocuments = (
   actor: GraphqlActor = TestUser.GLOBAL_ADMIN,
 ) => runAs(actor, (sdk, headers) => sdk.ReadMemoDocuments({ memoId }, headers));
 
+/**
+ * A memo's last SAVED content: `markdown` is the stored checkpoint the server
+ * resolves through the memo's content pointer, not the live collaboration room.
+ * Also the update date, the multi-user flag and what the actor may do with it.
+ */
+export const readMemoContent = (
+  memoId: string,
+  actor: GraphqlActor = TestUser.GLOBAL_ADMIN,
+) => runAs(actor, (sdk, headers) => sdk.ReadMemoContent({ memoId }, headers));
+
 export const readActivityLogOnCollaboration = (
   queryData: ActivityLogInput,
   actor: GraphqlActor = TestUser.GLOBAL_ADMIN,

@@ -48,4 +48,5 @@ export {
   UserInformationVisibility,
   VirtualContributorBodyOfKnowledgeType,
   VisualType,
+  WhiteboardPreviewMode,
 } from "../../core/generated/alkemio-schema";

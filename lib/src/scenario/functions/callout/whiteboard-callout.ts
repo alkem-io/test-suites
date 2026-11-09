@@ -4,6 +4,7 @@ import {
   CalloutVisibility,
 } from "../../../core/generated/alkemio-schema";
 import type { GraphqlActor } from "../../../utils/graphql.actor";
+import { runAs } from "../../../utils/graphql.wrapper";
 import { getLicensePlanByName } from "../../baseFunctions";
 import { assignLicensePlanToSpace } from "../space/space.request.params";
 import {
@@ -83,3 +84,18 @@ export const entitleSpaceForWhiteboardMultiUser = async (
     );
   }
 };
+
+/**
+ * A whiteboard's server-side facts: `updatedDate` (moves on every persisted
+ * save), whether the Space entitles it to multi-user editing, its preview mode
+ * and the CARD visual's `uri` (the client uploads a fresh preview into it when
+ * the editor closes in AUTO mode). `Whiteboard` has no content field: the
+ * board's content is read by the peer (`connectWhiteboardPeer`), not here.
+ */
+export const readWhiteboardState = (
+  whiteboardId: string,
+  actor: GraphqlActor = TestUser.GLOBAL_ADMIN,
+) =>
+  runAs(actor, (sdk, headers) =>
+    sdk.ReadWhiteboardState({ whiteboardId }, headers),
+  );
