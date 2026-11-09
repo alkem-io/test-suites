@@ -14,7 +14,10 @@ import {
 } from '@alkemio/client-lib';
 import { loginViaCrd } from '../helpers/login.helper';
 import { enableApplicationNotifications } from '../helpers/notification-settings.helper';
-import { applyFromSubspaceAboutDialog } from './applications.helpers';
+import {
+  applicantNotificationEntry,
+  applyFromSubspaceAboutDialog,
+} from './applications.helpers';
 
 const password = process.env.AUTH_TEST_HARNESS_PASSWORD || 'change_me';
 const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
@@ -332,6 +335,8 @@ test.describe('Level 1 Subspace - Applications', () => {
       // Click the reject button
       const rejectButton = applicationRow.getByRole('button', {
         name: 'Reject',
+        // Exact: the row also carries "Reject and remove application" (client-web#10499).
+        exact: true,
       });
       await expect(rejectButton).toBeVisible();
       await rejectButton.click();
@@ -364,6 +369,10 @@ test.describe('Level 1 Subspace - Applications', () => {
       const notificationsPanel = applicantPage.getByRole('dialog');
       await expect(notificationsPanel).toBeVisible();
       await expect(notificationsPanel).toContainText(/declined/i);
+      // Scoped to THIS run's space: the persona's panel holds older entries.
+      await expect(
+        applicantNotificationEntry(notificationsPanel, 'declined', baseScenario.subspace.about.profile.displayName)
+      ).toBeVisible();
     });
 
     test('2.2 Archive Application to Level 1 Subspace', async () => {
@@ -382,7 +391,9 @@ test.describe('Level 1 Subspace - Applications', () => {
 
       // Click the delete button
       const deleteButton = applicationRow.getByRole('button', {
-        name: 'Delete',
+        // client-web#10499 renamed a new application's row "Delete" action.
+        name: 'Reject and remove application',
+        exact: true,
       });
       await expect(deleteButton).toBeVisible();
       await deleteButton.click();
@@ -415,6 +426,10 @@ test.describe('Level 1 Subspace - Applications', () => {
       const notificationsPanel = applicantPage.getByRole('dialog');
       await expect(notificationsPanel).toBeVisible();
       await expect(notificationsPanel).toContainText(/declined/i);
+      // Scoped to THIS run's space: the persona's panel holds older entries.
+      await expect(
+        applicantNotificationEntry(notificationsPanel, 'declined', baseScenario.subspace.about.profile.displayName)
+      ).toBeVisible();
     });
 
     test('2.3 View and Approve Application to Level 1 Subspace', async () => {
@@ -495,6 +510,10 @@ test.describe('Level 1 Subspace - Applications', () => {
       await expect(notificationsPanel).toContainText(
         /Welcome to the community/i
       );
+      // Scoped to THIS run's space: the persona's panel holds older entries.
+      await expect(
+        applicantNotificationEntry(notificationsPanel, 'approved', baseScenario.subspace.about.profile.displayName)
+      ).toBeVisible();
     });
 
     test('2.4 View and Reject Application to Level 1 Subspace', async () => {
@@ -540,6 +559,8 @@ test.describe('Level 1 Subspace - Applications', () => {
       // an X), mirroring the working 2.1 reject-from-row pattern.
       const rejectButton = applicationRow.getByRole('button', {
         name: 'Reject',
+        // Exact: the row also carries "Reject and remove application" (client-web#10499).
+        exact: true,
       });
       await expect(rejectButton).toBeVisible();
       await rejectButton.click();
@@ -578,6 +599,10 @@ test.describe('Level 1 Subspace - Applications', () => {
       const notificationsPanel = applicantPage.getByRole('dialog');
       await expect(notificationsPanel).toBeVisible();
       await expect(notificationsPanel).toContainText(/declined/i);
+      // Scoped to THIS run's space: the persona's panel holds older entries.
+      await expect(
+        applicantNotificationEntry(notificationsPanel, 'declined', baseScenario.subspace.about.profile.displayName)
+      ).toBeVisible();
     });
 
     test('2.5 Approve Application Directly from Data Grid', async () => {
@@ -679,6 +704,10 @@ test.describe('Level 1 Subspace - Applications', () => {
       await expect(notificationsPanel).toContainText(
         /Welcome to the community/i
       );
+      // Scoped to THIS run's space: the persona's panel holds older entries.
+      await expect(
+        applicantNotificationEntry(notificationsPanel, 'approved', baseScenario.subspace.about.profile.displayName)
+      ).toBeVisible();
     });
   });
 });

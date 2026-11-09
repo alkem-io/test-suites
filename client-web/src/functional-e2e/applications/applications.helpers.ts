@@ -219,3 +219,31 @@ export const expectNoApplyControl = async (scope: Locator | Page): Promise<void>
     ).toHaveCount(0);
   }
 };
+
+const escapeRegExp = (text: string): string =>
+  text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+/**
+ * The applicant's in-app notification about THIS space's application, inside
+ * an open bell panel. The applicant is a shared persona with notification
+ * history from earlier cases and earlier nights, so an unscoped `/declined/i`
+ * or `/Welcome to the community/i` on the panel proves nothing; the entry is
+ * matched by its full subject, which carries the run-unique space name
+ * (crd `components.inAppNotifications.type.*.subject`):
+ *
+ *   approved  `<space> - Welcome to the community!`   (USER_SPACE_COMMUNITY_JOINED)
+ *   declined  `<admin> declined your application to join <space>`
+ *             (USER_SPACE_COMMUNITY_APPLICATION_DECLINED)
+ */
+export const applicantNotificationEntry = (
+  panel: Locator,
+  outcome: 'approved' | 'declined',
+  spaceDisplayName: string
+): Locator => {
+  const space = escapeRegExp(spaceDisplayName);
+  const subject =
+    outcome === 'approved'
+      ? new RegExp(`${space} - Welcome to the community!`)
+      : new RegExp(`declined your application to join ${space}(?![\\w-])`);
+  return panel.getByRole('button').filter({ hasText: subject });
+};

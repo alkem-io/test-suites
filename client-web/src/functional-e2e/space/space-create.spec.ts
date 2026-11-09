@@ -3,8 +3,10 @@
 
 import { expect } from '@playwright/test';
 import {
+  readMyUser,
   TestScenarioFactory,
   TestScenarioNoPreCreationConfig,
+  TestUser,
   TestUserManager,
 } from '@alkemio/tests-lib';
 import {
@@ -16,6 +18,13 @@ import {
 } from './pages';
 import { createAuthenticatedSessionFixture } from '../fixtures/authenticated-session.fixture';
 import { deleteSpaceByNameId } from '../helpers/space-cleanup.helper';
+import { must } from '../helpers/lib-actor.helper';
+import { spaceTitle } from '../helpers/space-access.helper';
+import {
+  expectCreatedSpaceRecord,
+  expectSpaceGone,
+  expectTutorialCalloutsRendered,
+} from './space-create.helpers';
 
 // Create the authenticated fixture with a unique storage state name for this test suite
 const { test, setupAuthentication, teardownAuthentication } =
@@ -28,6 +37,8 @@ const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 const scenarioConfig: TestScenarioNoPreCreationConfig = {
   name: 'space-create',
 };
+/** The account a Space created from My Account must land on: the admin's own. */
+let adminAccountId: string;
 
 test.describe('CREATE Space Operations', () => {
   test.beforeAll(async ({ browser }) => {
@@ -35,6 +46,8 @@ test.describe('CREATE Space Operations', () => {
     // give it headroom so a slow setup doesn't time out and cascade the file.
     test.setTimeout(60_000);
     await TestScenarioFactory.createBaseScenarioEmpty(scenarioConfig);
+    adminAccountId = must(await readMyUser(TestUser.GLOBAL_ADMIN), 'readMyUser(admin)')
+      .me.user!.account!.id;
     await setupAuthentication(browser, TestUserManager.users.globalAdmin.email);
   });
   test.afterAll(async () => {
@@ -146,10 +159,23 @@ test.describe('CREATE Space Operations', () => {
     // 10. Verify tutorials are present on the Space page
     await spacePage.verifyTutorialsPresent(2);
 
+    // 10a. The page shows exactly the typed name, and the server stored it:
+    // an L0 on the admin's account, whose tutorial callouts (read back, not
+    // hard-coded) are the ones on the page.
+    await expect(spaceTitle(page, spaceName)).toBeVisible();
+    const spaceId = await expectCreatedSpaceRecord(spaceUrl, {
+      displayName: spaceName,
+      accountId: adminAccountId,
+    });
+    await expectTutorialCalloutsRendered(page, spaceId, 2);
+
     // 11. Cleanup: Navigate to Settings and delete the Space
     await spacePage.navigateToSettings();
     await spaceSettingsPage.deleteSpace();
     createdSpaceNameId = undefined;
+
+    // 12. The delete took: gone on the server, and its About route no longer resolves.
+    await expectSpaceGone(page, spaceUrl);
   });
 
   test('1.5 Create Space - Validation: Missing Required Fields (Title)', async ({
@@ -396,10 +422,31 @@ test.describe('CREATE Space Operations', () => {
 
     // Verify Space was created - check Space title is visible
     await spacePage.verifySpaceTitle(spaceName);
+    await expect(spaceTitle(page, spaceName)).toBeVisible();
+
+    // The server stored exactly what was typed (name AND tagline), as an L0
+    // on the admin's own account.
+    await expectCreatedSpaceRecord(spaceUrl, {
+      displayName: spaceName,
+      accountId: adminAccountId,
+      tagline: 'E2E test space for automated testing',
+    });
+
+    // My Account › Hosted Spaces lists it, linking to its URL.
+    await homePage.navigateToMyAccount();
+    await myAccountPage.verifyHostedSpacesVisible();
+    await expect(myAccountPage.hostedSpaceLink(spaceName)).toHaveAttribute(
+      'href',
+      new RegExp(`/${spaceUrl}$`)
+    );
 
     // Cleanup: Delete the created Space
+    await spacePage.goto(spaceUrl);
     await spacePage.navigateToSettings();
     await spaceSettingsPage.deleteSpace();
     createdSpaceNameId = undefined;
+
+    // The delete took: gone on the server, and its About route no longer resolves.
+    await expectSpaceGone(page, spaceUrl);
   });
 });

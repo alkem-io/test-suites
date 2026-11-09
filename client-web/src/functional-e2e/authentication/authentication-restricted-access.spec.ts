@@ -12,6 +12,8 @@ import {
   userMenuAvatar,
   welcomeHeading,
 } from './common-authentication-page-elements';
+import { expectSignedIn } from '../my-dashboard/my-dashboard-page-objects';
+import { TestUser } from '@alkemio/tests-lib';
 
 const password = process.env.AUTH_TEST_HARNESS_PASSWORD ?? '';
 const baseUrl = process.env.ALKEMIO_BASE_URL ?? 'http://localhost:3000';
@@ -72,6 +74,40 @@ test.describe('Authentication - Restricted Access', () => {
 
     // Verify "Go to Home" action is available for authenticated users without access
     await expect(goToHomeButton(page)).toBeVisible();
+  });
+
+  // Positive control for the bounce above: the same route, the same sign-in
+  // path, but a platform admin — who must be let in. Without it a server that
+  // stopped returning privileges altogether (everyone bounced) would leave the
+  // non-admin cases green.
+  test('platform admin accessing admin area is let in (positive control)', async ({
+    context,
+    page,
+  }) => {
+    await context.clearCookies();
+
+    await navigateToLoginPageFromMenu(baseUrl, page);
+    await fillUpSignInPageElements(
+      `${TestUser.GLOBAL_ADMIN}@alkem.io`,
+      password,
+      page
+    );
+    await pressSignInButtonSignInPage(page);
+    await expectSignedIn(page);
+
+    await page.goto(`${baseUrl}/admin/spaces`);
+
+    // The Administration page itself, on its Spaces tab …
+    await expect(
+      page.getByRole('heading', { name: 'Administration', level: 1, exact: true })
+    ).toBeVisible();
+    await expect(
+      page.getByRole('tab', { name: 'Spaces', exact: true })
+    ).toHaveAttribute('aria-selected', 'true');
+    await expect(page.getByRole('table')).toBeVisible();
+    // … and, with that page rendered, no restricted variant anywhere.
+    await expect(accessRestrictedHeading(page)).toHaveCount(0);
+    await expect(goToHomeButton(page)).toHaveCount(0);
   });
 
   test('regular user can return to dashboard from restricted page', async ({

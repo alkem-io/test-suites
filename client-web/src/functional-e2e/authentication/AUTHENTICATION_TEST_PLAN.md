@@ -90,7 +90,7 @@ Purpose: Provide a clear, area-based view of authentication testing with explici
   - Unauthenticated access to `/admin/spaces` → restricted page → sign-in link
   - Regular user (`non.space@alkem.io`) navigating to `/admin/spaces` → restricted page → return to dashboard
   - Attempt restricted page → then sign-in as regular user → restricted page → dashboard link
-  - Admin access to `/admin/spaces` (positive) — Not automated yet
+  - Admin access to `/admin/spaces` (positive control) — automated 2026-11-09: `authentication-restricted-access.spec.ts › platform admin accessing admin area is let in (positive control)`
   - Private space unauthenticated redirect — Not automated yet
 
 ### Third-Party Authentication (Availability Only)
@@ -130,14 +130,14 @@ Purpose: Provide a clear, area-based view of authentication testing with explici
 ## Automation Status Summary
 
 - Implemented: Page elements, Admin login, Registration + Verify + Sign-in, Password recovery, Cookie consent accept/persist, Restricted redirects (unauthenticated + unauthorized regular user), Logout + re-auth, Invalid credentials, Third-party buttons availability
-- Not Implemented: Cookie rejection, Admin positive access to `/admin/spaces`, Private space unauthenticated redirect, Registration error validations (existing email, invalid email, weak password), Space admin role scenarios, Accessibility automation
+- Implemented 2026-11-09 (W2 Tier 1 item 14): Admin positive access to `/admin/spaces`; registration read-back of the Alkemio user + profile and removal of every registered identity
+- Not Implemented: Cookie rejection, Private space unauthenticated redirect, Registration error validations (existing email, invalid email, weak password), Space admin role scenarios, Accessibility automation
 
 ---
 
 ## Next Priorities
 
 - High:
-  - Admin positive access to `/admin/spaces` (2.2.3)
   - Registration error handling (7.3, 7.4, 7.5)
 - Medium:
   - Private space unauthenticated redirect (2.1.2)
@@ -145,6 +145,29 @@ Purpose: Provide a clear, area-based view of authentication testing with explici
 - Low:
   - Cookie rejection path (1.3)
   - Accessibility automation (axe-core + snapshots)
+
+---
+
+## Server oracles added for the server rebuild (W2 Tier 1 item 14, 2026-11-09)
+
+Client-net audit rows A1 and A5 (`docs/qa/server-rebuild/client-net-audit/`).
+
+| Spec › case | New oracle | Regression it catches |
+|---|---|---|
+| `authentication-registration` › both cases | after the first sign-in: `readMyUser(<the new browser session>)` resolves a user whose profile displayName is `Test Alkemio`; `findUsersPaginated({ email })` as the platform admin returns the SAME user id with `email`, `firstName` `Test`, `lastName` `Alkemio` and that displayName | Kratos accepts the sign-up but the Alkemio user is not created, or created without the names from the form |
+| `authentication-registration` (file-level `afterAll`) | every address registered by the file is looked up and deleted with `deleteUser(id, admin, deleteIdentity: true)`; a refusal fails the hook | one leaked user + identity per case per run (two per nightly before) |
+| `authentication-restricted-access` › platform admin accessing admin area is let in (positive control) | same sign-in path and route as the non-admin bounce, as `admin@alkem.io`: the "Administration" h1, the Spaces tab selected and its table render; with that page rendered, no "Access Restricted" heading and no "Go to Home" | a server that stops returning privileges (everyone bounced) leaving the non-admin cases green |
+
+The registration file seeds no scenario, so the harness persona map is not populated; its admin reads use the platform admin's bearer token (`getUserToken`), as the recovery spec does.
+
+**Red-proofs (local stack, 2026-11-09):**
+
+| Mutation (temporary) | Red at |
+|---|---|
+| registration read-back expects lastName `AlkemioX` | `readMyUser` displayName: expected `Test AlkemioX`, received `Test Alkemio` (the file-level `afterAll` still removed the registered user: no teardown warning) |
+| the positive-control case signs in as `non.space` instead of the admin | "Administration" h1 not found (the user is bounced) |
+
+**Server constants now asserted (rebaseline candidates, decision 7):** the server composes a new user's profile displayName as `"<firstName> <lastName>"`.
 
 ---
 
