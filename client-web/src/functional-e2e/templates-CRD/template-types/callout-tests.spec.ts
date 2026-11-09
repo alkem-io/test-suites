@@ -19,6 +19,8 @@ import {
 import { verifyCalloutTemplateUsage } from './usage/callout-template.use';
 import { acceptCookiesIfVisible } from '@src/functional-e2e/helpers/cookies.helper';
 import { sectionAddNewButton } from './section-helpers';
+import { CalloutTemplateForm } from './forms/callout/callout-template-form.models';
+import { verifyMemberAddsPost } from './usage/contributions/callout-template.use.member';
 
 const { test, setupAuthentication, teardownAuthentication } =
   createAuthenticatedSessionFixture({
@@ -29,6 +31,9 @@ const { test, setupAuthentication, teardownAuthentication } =
 const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 
 let baseScenario: OrganizationWithSpaceModel;
+// Case 17's template data: 17m has the space member contribute to the callout
+// case 17 published from its template.
+let case17: CalloutTemplateForm | undefined;
 const scenarioConfig: TestScenarioConfig = {
   name: 'callout-none-template',
   space: {
@@ -104,7 +109,8 @@ const createAndVerifyCalloutTemplate = async (
   await verifyCalloutTemplateUsage(
     page,
     `${baseUrl}/${baseScenario.space.nameId}?tab=4`,
-    templateData
+    templateData,
+    baseScenario.space.collaboration.calloutsSetId
   );
 };
 
@@ -505,6 +511,21 @@ test.describe.serial('Callout Templates', () => {
     });
 
     await createAndVerifyCalloutTemplate(page, templateData);
+    case17 = templateData;
+  });
+
+  test('17m Member adds a post to the callout made from template 17', async ({
+    browser,
+  }) => {
+    if (!case17) {
+      throw new Error('17m needs case 17 (serial): its callout does not exist');
+    }
+    await verifyMemberAddsPost(
+      browser,
+      `${baseUrl}/${baseScenario.space.nameId}?tab=4`,
+      case17,
+      baseScenario.space.collaboration.calloutsSetId
+    );
   });
 
   test('17b Framing: None, Response: Posts, Comments: Disabled, Contrib: OFF, CommentsOnPosts: ON', async ({

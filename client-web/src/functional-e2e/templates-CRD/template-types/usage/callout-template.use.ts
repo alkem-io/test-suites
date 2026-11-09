@@ -6,11 +6,13 @@ import { verifyCalloutContributionPosts } from './contributions/callout-template
 import { verifyContributionSettings } from './contributions/callout-template.use.contributions';
 import { verifyCalloutContributionMemos } from './contributions/callout-template.use.memos';
 import { verifyCalloutContributionWhiteboards } from './contributions/callout-template.use.whiteboards';
+import { verifyCalloutCommentsSetting } from './callout-template.use.comments';
 
 export const verifyCalloutTemplateUsage = async (
   page: Page,
   url: string,
-  templateData: CalloutTemplateForm
+  templateData: CalloutTemplateForm,
+  calloutsSetId?: string
 ): Promise<void> => {
   // Navigate to the provided URL where the template will be used
   await page.goto(url);
@@ -234,6 +236,24 @@ export const verifyCalloutTemplateUsage = async (
   }
 
   await verifyCalloutContributions(page, calloutContainer, templateData);
+
+  // A callout with no response type: the comments setting is the only thing
+  // that tells a "Comments: Enabled" case from its "Disabled" twin (the
+  // contribution-settings check above returns early). Poll and Form framings
+  // are left out: their cases hold comments constant.
+  if (
+    calloutsSetId &&
+    templateData.responseOptions.type === 'none' &&
+    templateData.framing.type !== 'poll' &&
+    templateData.framing.type !== 'form'
+  ) {
+    await verifyCalloutCommentsSetting(
+      page,
+      calloutContainer,
+      templateData,
+      calloutsSetId
+    );
+  }
 };
 
 /**

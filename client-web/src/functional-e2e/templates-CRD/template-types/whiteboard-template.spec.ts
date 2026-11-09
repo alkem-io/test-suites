@@ -20,6 +20,10 @@ import { fillTemplateForm } from './forms/template-form';
 import { verifyOpenedTemplate } from './verify/verify-opened-template';
 import { openWhiteboardTemplate } from './verify/open-template';
 import { sectionAddNewButton } from './section-helpers';
+import {
+  deleteTemplateAndVerify,
+  seedDeleteControlTemplate,
+} from './delete-template';
 
 // Create the authenticated fixture with a unique storage state name for this test suite
 const { test, setupAuthentication, teardownAuthentication } =
@@ -31,6 +35,7 @@ const { test, setupAuthentication, teardownAuthentication } =
 const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 
 let baseScenario: OrganizationWithSpaceModel;
+let deleteControlName: string;
 const scenarioConfig: TestScenarioConfig = {
   name: 'whiteboard-template',
   space: {
@@ -55,6 +60,10 @@ const templateData: WhiteboardTemplateForm = {
 test.describe.serial('Whiteboard Templates', () => {
   test.beforeAll(async ({ browser, context }) => {
     baseScenario = await TestScenarioFactory.createBaseScenario(scenarioConfig);
+    // The template that must survive the delete case (its positive control).
+    deleteControlName = await seedDeleteControlTemplate(
+      baseScenario.space.templateSetId
+    );
     await setupAuthentication(browser, TestUserManager.users.spaceAdmin.email);
   });
   test.afterAll(async () => {
@@ -227,33 +236,12 @@ test.describe.serial('Whiteboard Templates', () => {
     await verifyOpenedTemplate(page, testTemplate);
   });
 
-  // test('1.4 Delete Whiteboard Template', async ({ page }) => {
-  //   // Find the template title and click on it to open the template
-  //   await page.getByRole('heading', { name: templateData.displayName }).click();
-
-  //   await page.getByRole('button', { name: 'Edit', exact: true }).click();
-
-  //   await page.getByRole('button', { name: 'Delete', exact: true }).click();
-
-  //   await expect(
-  //     page.getByText(
-  //       `Are you sure you want to delete the Template '${templateData.displayName}'?`,
-  //       { exact: true }
-  //     )
-  //   ).toBeVisible();
-
-  //   await page.getByRole('button', { name: 'Delete' }).click();
-
-  //   await expect(
-  //     page.getByRole('heading', { name: 'Warning' })
-  //   ).not.toBeVisible();
-
-  //   await expect(
-  //     page.getByRole('heading', { name: 'Edit Whiteboard Template' })
-  //   ).not.toBeVisible();
-
-  //   await expect(
-  //     page.getByRole('heading', { name: templateData.displayName, exact: true })
-  //   ).not.toBeVisible();
-  // });
+  test('1.4 Delete Whiteboard Template', async ({ page }) => {
+    await deleteTemplateAndVerify(
+      page,
+      baseScenario.space.templateSetId,
+      templateData.displayName,
+      deleteControlName
+    );
+  });
 });
