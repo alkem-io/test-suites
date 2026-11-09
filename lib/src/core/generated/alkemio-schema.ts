@@ -89710,6 +89710,28 @@ export type ReadCalloutsSetCalloutTypesQuery = {
   };
 };
 
+export type ReadCalloutsSetCalloutVisibilityQueryVariables = Exact<{
+  calloutsSetId: Scalars["UUID"]["input"];
+}>;
+
+export type ReadCalloutsSetCalloutVisibilityQuery = {
+  lookup: {
+    calloutsSet?:
+      | {
+          id: string;
+          callouts: Array<{
+            id: string;
+            framing: {
+              id: string;
+              profile: { id: string; displayName: string };
+            };
+            settings: { visibility: CalloutVisibility };
+          }>;
+        }
+      | undefined;
+  };
+};
+
 export type ReadCalloutsSetCalloutsQueryVariables = Exact<{
   calloutsSetId: Scalars["UUID"]["input"];
 }>;

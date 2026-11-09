@@ -141,6 +141,20 @@ export const readCalloutsSetCalloutTypes = (
     sdk.ReadCalloutsSetCalloutTypes({ calloutsSetId }, headers),
   );
 
+/**
+ * The callouts of a callouts set as the actor sees them, each with its title
+ * and its visibility (DRAFT / PUBLISHED) — the read-back that a UI publish
+ * reached the server, and, read as a member, which callouts the server lets
+ * that member list at all.
+ */
+export const readCalloutsSetCalloutVisibility = (
+  calloutsSetId: string,
+  actor: GraphqlActor = TestUser.GLOBAL_ADMIN,
+) =>
+  runAs(actor, (sdk, headers) =>
+    sdk.ReadCalloutsSetCalloutVisibility({ calloutsSetId }, headers),
+  );
+
 /** The responses of a form as the actor sees them: own, all (when allowed) and the moderation flags. */
 export const readCalloutFormResponses = (
   formID: string,

@@ -24,6 +24,8 @@ import {
   RoleName,
   readCalloutFraming,
   readCalloutsSetCalloutTypes,
+  readCalloutsSetCalloutVisibility,
+  CalloutVisibility,
   readMyUser,
   readOrganizationRoleSet,
   readRoleSetUsersInRoles,
@@ -207,6 +209,7 @@ const FUNCTIONS: string[] = [
   'readCalloutFramingContributors',
   'readCalloutsSetCallouts',
   'readCalloutsSetCalloutTypes',
+  'readCalloutsSetCalloutVisibility',
   'readCalloutFormResponses',
   'readMemoDocuments',
   'readActivityLogOnCollaboration',
@@ -428,6 +431,22 @@ describe('@contract base scenario round trip', () => {
       for (const content of [callout.framing.whiteboard, callout.framing.memo, callout.framing.link]) {
         if (content) expect(content.id).toEqual(expect.any(String));
       }
+    }
+  });
+
+  test('callouts set: each callout reads back with its title and visibility', async () => {
+    const set = await readCalloutsSetCalloutVisibility(base.space.collaboration.calloutsSetId);
+    expect(set.error).toBeUndefined();
+    expect(set.data?.lookup.calloutsSet?.id).toBe(base.space.collaboration.calloutsSetId);
+    const callouts = set.data?.lookup.calloutsSet?.callouts ?? [];
+    expect(
+      callouts.map(c => c.id),
+      'the seeded post callout is in its set'
+    ).toContain(base.space.collaboration.calloutPostId);
+    for (const callout of callouts) {
+      expect(callout.framing.profile.displayName).toEqual(expect.any(String));
+      // The enum's member names, not its values: the lib owns the mapping.
+      expect(Object.values(CalloutVisibility)).toContain(callout.settings.visibility);
     }
   });
 

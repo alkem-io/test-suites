@@ -97809,6 +97809,28 @@ export type ReadCalloutsSetCalloutTypesQuery = {
   };
 };
 
+export type ReadCalloutsSetCalloutVisibilityQueryVariables = SchemaTypes.Exact<{
+  calloutsSetId: SchemaTypes.Scalars["UUID"]["input"];
+}>;
+
+export type ReadCalloutsSetCalloutVisibilityQuery = {
+  lookup: {
+    calloutsSet?:
+      | {
+          id: string;
+          callouts: Array<{
+            id: string;
+            framing: {
+              id: string;
+              profile: { id: string; displayName: string };
+            };
+            settings: { visibility: SchemaTypes.CalloutVisibility };
+          }>;
+        }
+      | undefined;
+  };
+};
+
 export type ReadCalloutsSetCalloutsQueryVariables = SchemaTypes.Exact<{
   calloutsSetId: SchemaTypes.Scalars["UUID"]["input"];
 }>;
@@ -128194,6 +128216,28 @@ export const ReadCalloutsSetCalloutTypesDocument = gql`
     }
   }
 `;
+export const ReadCalloutsSetCalloutVisibilityDocument = gql`
+  query ReadCalloutsSetCalloutVisibility($calloutsSetId: UUID!) {
+    lookup {
+      calloutsSet(ID: $calloutsSetId) {
+        id
+        callouts {
+          id
+          framing {
+            id
+            profile {
+              id
+              displayName
+            }
+          }
+          settings {
+            visibility
+          }
+        }
+      }
+    }
+  }
+`;
 export const ReadCalloutsSetCalloutsDocument = gql`
   query ReadCalloutsSetCallouts($calloutsSetId: UUID!) {
     lookup {
@@ -131527,6 +131571,9 @@ const ReadCalloutSubspaceIdsDocumentString = print(
 const ReadCalloutSubspacesDocumentString = print(ReadCalloutSubspacesDocument);
 const ReadCalloutsSetCalloutTypesDocumentString = print(
   ReadCalloutsSetCalloutTypesDocument
+);
+const ReadCalloutsSetCalloutVisibilityDocumentString = print(
+  ReadCalloutsSetCalloutVisibilityDocument
 );
 const ReadCalloutsSetCalloutsDocumentString = print(
   ReadCalloutsSetCalloutsDocument
@@ -137988,6 +138035,28 @@ export function getSdk(
             { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "ReadCalloutsSetCalloutTypes",
+        "query",
+        variables
+      );
+    },
+    ReadCalloutsSetCalloutVisibility(
+      variables: SchemaTypes.ReadCalloutsSetCalloutVisibilityQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.ReadCalloutsSetCalloutVisibilityQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.ReadCalloutsSetCalloutVisibilityQuery>(
+            ReadCalloutsSetCalloutVisibilityDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "ReadCalloutsSetCalloutVisibility",
         "query",
         variables
       );
