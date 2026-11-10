@@ -86,16 +86,18 @@ export const entitleSpaceForWhiteboardMultiUser = async (
 };
 
 /**
- * A whiteboard's server-side facts: `updatedDate` (moves on every persisted
- * save), whether the Space entitles it to multi-user editing, its preview mode
- * and the CARD visual's `uri` (the client uploads a fresh preview into it when
- * the editor closes in AUTO mode). `Whiteboard` has no content field: the
- * board's content is read by the peer (`connectWhiteboardPeer`), not here.
+ * A whiteboard's server-side facts: `updatedDate` (moves when the collaboration
+ * service's save reaches the server), whether the Space entitles it to
+ * multi-user editing, its preview mode, and the `uri`s of its CARD and
+ * WHITEBOARD_PREVIEW visuals (the client uploads both when the editor closes in
+ * AUTO mode; the Space page card shows the WHITEBOARD_PREVIEW one). `Whiteboard`
+ * has no content field: the board's content is read by the peer
+ * (`connectWhiteboardPeer`), not here.
  */
 export const readWhiteboardState = (
   whiteboardId: string,
-  actor: GraphqlActor = TestUser.GLOBAL_ADMIN,
+  actor: GraphqlActor = TestUser.GLOBAL_ADMIN
 ) =>
   runAs(actor, (sdk, headers) =>
-    sdk.ReadWhiteboardState({ whiteboardId }, headers),
+    sdk.ReadWhiteboardState({ whiteboardId }, headers)
   );

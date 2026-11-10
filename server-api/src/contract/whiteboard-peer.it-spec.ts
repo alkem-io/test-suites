@@ -165,7 +165,9 @@ describe('@contract T-1 whiteboard collaboration peer (Space with the multi-user
     expect(peer.endedReason).toBeUndefined();
   });
 
-  test('T-1j positive: awaitDurable resolves once the service answers `persisted` to this peer, and the write is then in a fresh peer', async () => {
+  // The reader joins while the writer still holds the room, so it is served from the live room: this pins the barrier's
+  // answer and that the write is in the room, NOT a load from storage (that is E8-4's cold peer, and #545 at wire level).
+  test('T-1j positive: awaitDurable resolves once the service answers `persisted` to this peer (dirty room, then clean), and a second peer in the still-live room reads the write', async () => {
     const writer = await connect(TestUser.QA_USER);
     await writer.write((elements, Y) => {
       const element = new Y.Map<unknown>();

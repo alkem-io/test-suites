@@ -26,7 +26,11 @@ const LOCAL_SIGNATURE = 0x04034b50;
 /** One entry of a zip archive, read through the central directory (the local header may carry zero sizes). */
 const unzipEntry = (zip: Buffer, name: string): Buffer | undefined => {
   let eocd = -1;
-  for (let i = zip.length - 22; i >= Math.max(0, zip.length - 22 - 0xffff); i -= 1) {
+  for (
+    let i = zip.length - 22;
+    i >= Math.max(0, zip.length - 22 - 0xffff);
+    i -= 1
+  ) {
     if (zip.readUInt32LE(i) === EOCD_SIGNATURE) {
       eocd = i;
       break;
@@ -43,7 +47,11 @@ const unzipEntry = (zip: Buffer, name: string): Buffer | undefined => {
     const extraLength = zip.readUInt16LE(cursor + 30);
     const commentLength = zip.readUInt16LE(cursor + 32);
     const localOffset = zip.readUInt32LE(cursor + 42);
-    const entryName = zip.toString("utf8", cursor + 46, cursor + 46 + nameLength);
+    const entryName = zip.toString(
+      "utf8",
+      cursor + 46,
+      cursor + 46 + nameLength
+    );
     if (entryName === name) {
       if (zip.readUInt32LE(localOffset) !== LOCAL_SIGNATURE) return undefined;
       const dataStart =
@@ -71,14 +79,12 @@ const XML_ENTITIES: Record<string, string> = {
 
 /** Named XML entities and decimal / hexadecimal character references, in one pass. */
 const decodeEntities = (text: string): string =>
-  text.replace(
-    /&(?:lt|gt|amp|quot|apos|#\d+|#x[0-9a-fA-F]+);/g,
-    (entity) =>
-      entity.startsWith("&#x")
-        ? String.fromCodePoint(parseInt(entity.slice(3, -1), 16))
-        : entity.startsWith("&#")
-          ? String.fromCodePoint(parseInt(entity.slice(2, -1), 10))
-          : XML_ENTITIES[entity],
+  text.replace(/&(?:lt|gt|amp|quot|apos|#\d+|#x[0-9a-fA-F]+);/g, (entity) =>
+    entity.startsWith("&#x")
+      ? String.fromCodePoint(parseInt(entity.slice(3, -1), 16))
+      : entity.startsWith("&#")
+      ? String.fromCodePoint(parseInt(entity.slice(2, -1), 10))
+      : XML_ENTITIES[entity]
   );
 
 /** `<text:s/>` is one space; `<text:s text:c="N"/>` is N spaces. */
@@ -96,8 +102,8 @@ const odfParagraphs = (xml: string): string[] => {
           .replace(/<text:s(?:\s[^>]*)?\/>/g, odfSpaces)
           .replace(/<text:tab(?:\s[^>]*)?\/>/g, "\t")
           .replace(/<text:line-break(?:\s[^>]*)?\/>/g, "\n")
-          .replace(/<[^>]+>/g, ""),
-      ).trim(),
+          .replace(/<[^>]+>/g, "")
+      ).trim()
     );
   }
   return paragraphs;
@@ -136,7 +142,7 @@ export const officeDocumentParagraphs = (file: Buffer): string[] => {
   const word = unzipEntry(file, "word/document.xml");
   if (word) return wordParagraphs(word.toString("utf8"));
   throw new Error(
-    "not an office document (neither content.xml nor word/document.xml)",
+    "not an office document (neither content.xml nor word/document.xml)"
   );
 };
 
@@ -148,13 +154,13 @@ export const officeDocumentParagraphs = (file: Buffer): string[] => {
  */
 export const readOfficeDocumentText = async (
   previewUrl: string,
-  actor: GraphqlActor = TestUser.GLOBAL_ADMIN,
+  actor: GraphqlActor = TestUser.GLOBAL_ADMIN
 ): Promise<{ paragraphs: string[]; bytes: number }> => {
   const fileID = officeDocumentFileId(previewUrl);
   const base = testConfiguration.endPoints.server.replace(/\/$/, "");
   const response = await fetch(
     `${base}/api/private/rest/storage/document/${encodeURIComponent(fileID)}`,
-    { headers: resolveActor(actor).headers },
+    { headers: resolveActor(actor).headers }
   );
   if (!response.ok) {
     throw new Error(`office document fetch failed: ${response.status}`);

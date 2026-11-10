@@ -22,7 +22,7 @@ export type MemoFramedCallout = {
 export const createMemoFramedCallout = async (
   calloutsSetId: string,
   data: { displayName: string; memoTitle: string; markdown: string },
-  actor: GraphqlActor = TestUser.GLOBAL_ADMIN,
+  actor: GraphqlActor = TestUser.GLOBAL_ADMIN
 ): Promise<MemoFramedCallout> => {
   const created = await createCalloutWithData(
     {
@@ -40,14 +40,16 @@ export const createMemoFramedCallout = async (
       },
       settings: { visibility: CalloutVisibility.Published },
     },
-    actor,
+    actor
   );
   const callout = created.data?.createCalloutOnCalloutsSet;
   const memoId = callout?.framing.memo?.id;
   const calloutUrl = callout?.framing.profile.url;
   if (!callout?.id || !memoId || !calloutUrl) {
     throw new Error(
-      `create memo callout failed: ${JSON.stringify(created.error?.errors ?? "no memo in the response")}`,
+      `create memo callout failed: ${JSON.stringify(
+        created.error?.errors ?? "no memo in the response"
+      )}`
     );
   }
   return { calloutId: callout.id, memoId, calloutUrl };

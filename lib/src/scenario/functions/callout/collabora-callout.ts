@@ -33,35 +33,37 @@ const ENTITLEMENT_POLL_INTERVAL_MS = 500;
  * entitlement does not arrive within about 30 s.
  */
 export const entitleSpaceForOfficeDocuments = async (
-  spaceId: string,
+  spaceId: string
 ): Promise<void> => {
   const plan = await getLicensePlanByName(OFFICE_DOCUMENTS_PLAN);
   const licensePlanID = plan[0]?.id;
   if (!licensePlanID) {
     throw new Error(
-      `no ${OFFICE_DOCUMENTS_PLAN} licence plan on this platform`,
+      `no ${OFFICE_DOCUMENTS_PLAN} licence plan on this platform`
     );
   }
   const assigned = await assignLicensePlanToSpace(spaceId, licensePlanID);
   if (assigned.error || !assigned.data) {
     throw new Error(
-      `assign the office documents plan failed: ${JSON.stringify(assigned.error?.errors)}`,
+      `assign the office documents plan failed: ${JSON.stringify(
+        assigned.error?.errors
+      )}`
     );
   }
   for (let attempt = 0; attempt < ENTITLEMENT_POLL_ATTEMPTS; attempt += 1) {
     const read = await getSpaceLicenseEntitlements(spaceId);
     const enabled = read.data?.lookup.space?.license.entitlements.find(
       (entitlement: { type: LicenseEntitlementType; enabled: boolean }) =>
-        entitlement.type === LicenseEntitlementType.SpaceFlagOfficeDocuments,
+        entitlement.type === LicenseEntitlementType.SpaceFlagOfficeDocuments
     )?.enabled;
     if (enabled) return;
     // Bounded poll on the server's own entitlement read; the cache is not observable otherwise.
     await new Promise<void>((resolve) =>
-      setTimeout(resolve, ENTITLEMENT_POLL_INTERVAL_MS),
+      setTimeout(resolve, ENTITLEMENT_POLL_INTERVAL_MS)
     );
   }
   throw new Error(
-    "SPACE_FLAG_OFFICE_DOCUMENTS is not enabled on the Space after the plan was assigned",
+    "SPACE_FLAG_OFFICE_DOCUMENTS is not enabled on the Space after the plan was assigned"
   );
 };
 
@@ -77,7 +79,7 @@ export const createCollaboraFramedCallout = async (
     nameID: string;
     documentType: CollaboraDocumentType;
   },
-  actor: GraphqlActor = TestUser.GLOBAL_ADMIN,
+  actor: GraphqlActor = TestUser.GLOBAL_ADMIN
 ): Promise<CollaboraFramedCallout> => {
   const created = await createCalloutWithData(
     {
@@ -96,13 +98,16 @@ export const createCollaboraFramedCallout = async (
       },
       settings: { visibility: CalloutVisibility.Published },
     },
-    actor,
+    actor
   );
   const callout = created.data?.createCalloutOnCalloutsSet;
   const document = callout?.framing.collaboraDocument;
   if (!callout?.id || !document?.id || !document.previewUrl) {
     throw new Error(
-      `create collabora callout failed: ${JSON.stringify(created.error?.errors ?? "no document (with a previewUrl) in the response")}`,
+      `create collabora callout failed: ${JSON.stringify(
+        created.error?.errors ??
+          "no document (with a previewUrl) in the response"
+      )}`
     );
   }
   return {
@@ -121,8 +126,8 @@ export const createCollaboraFramedCallout = async (
  */
 export const readCalloutCollaboraDocument = (
   calloutId: string,
-  actor: GraphqlActor = TestUser.GLOBAL_ADMIN,
+  actor: GraphqlActor = TestUser.GLOBAL_ADMIN
 ) =>
   runAs(actor, (sdk, headers) =>
-    sdk.ReadCalloutCollaboraDocument({ calloutId }, headers),
+    sdk.ReadCalloutCollaboraDocument({ calloutId }, headers)
   );

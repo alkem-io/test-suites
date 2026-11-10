@@ -541,11 +541,10 @@ describe('@contract content editing readers (W2 journey 5): whiteboard, memo, Co
     expect(document?.documentType).toBe(lib.CollaboraDocumentType.Wordprocessing);
     expect(document?.previewUrl).toBe(created.previewUrl);
 
-    // A blank document nobody has saved is stored with zero bytes (observed 2026-11-09): no paragraphs, and the
-    // read itself succeeded (a failed fetch throws, so "empty" is never the result of a failed read).
+    // A blank document nobody has saved is stored with zero bytes (observed 2026-11-09 and 2026-11-10, local stack):
+    // no paragraphs, and the read itself succeeded (a failed fetch throws, so "empty" is never a failed read).
     const text = await lib.readOfficeDocumentText(created.previewUrl);
-    expect(text.bytes).toBeGreaterThanOrEqual(0);
-    expect(text.paragraphs.join('').trim()).toBe('');
+    expect(text).toEqual({ paragraphs: [], bytes: 0 });
     // negative control: a document id the platform does not hold is a thrown error, not "no paragraphs"
     await expect(
       lib.readOfficeDocumentText('/api/private/wopi/files/00000000-0000-4000-8000-000000000000/preview')
@@ -574,5 +573,22 @@ describe('@contract content editing readers (W2 journey 5): whiteboard, memo, Co
     expect(lib.officeDocumentParagraphs(Buffer.alloc(0)), 'an unsaved blank document has no paragraphs').toEqual([]);
     expect(() => lib.officeDocumentParagraphs(Buffer.from('this is not a zip archive at all'))).toThrow(/not an office document/);
     expect(() => lib.officeDocumentFileId('https://example.test/not-a-preview')).toThrow(/not a Collabora preview URL/);
+  });
+
+  test('LA-8 the rooms gauge reader takes collaboration_rooms_active from a /metrics exposition, and refuses one without it', () => {
+    const exposition = [
+      '# HELP collaboration_rooms_active Number of live in-memory document rooms.',
+      '# TYPE collaboration_rooms_active gauge',
+      'collaboration_rooms_active 3',
+      '# HELP collaboration_rooms_active_total_x a longer name that must not match',
+      'collaboration_rooms_active_total_x 9',
+    ].join('\n');
+    expect(lib.collaborationRoomsActiveOf(exposition)).toBe(3);
+    expect(lib.collaborationRoomsActiveOf('collaboration_rooms_active 0\n')).toBe(0);
+    // negative control: an exposition without the gauge is an error, never a count of 0
+    expect(() => lib.collaborationRoomsActiveOf('collaboration_rooms_active_total_x 9\n')).toThrow(
+      /carry no collaboration_rooms_active/
+    );
+    expect(typeof lib.readCollaborationRoomsActive).toBe('function');
   });
 });
