@@ -1,19 +1,19 @@
 {
  "out": "out/gh-pages-root/bug-triage/index.html",
- "snapshot": "2026-11-09",
- "open": 374,
+ "snapshot": "2026-11-10",
+ "open": 376,
  "high": 81,
- "medium": 286,
+ "medium": 288,
  "low": 7,
- "closed_history": 3307,
+ "closed_history": 3308,
  "planning": {
-  "none": 202,
-  "pr_merged": 34,
-  "board": 115,
-  "pr_open": 17,
+  "none": 200,
+  "pr_merged": 35,
+  "board": 117,
+  "pr_open": 18,
   "release": 6
  },
  "on_board": null,
  "board_readable": false,
- "kb": 817
+ "kb": 826
 }
