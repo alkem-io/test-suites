@@ -1,10 +1,12 @@
 import { expect, type Locator, type Page, type Request } from '@playwright/test';
 import {
+  readRoleSetApplications,
   type TestScenarioConfig,
   UniqueIDGenerator,
   updateSpaceSettings,
 } from '@alkemio/tests-lib';
 import { CommunityMembershipPolicy, SpacePrivacyMode } from '@alkemio/client-lib';
+import { must } from '../helpers/lib-actor.helper';
 
 /**
  * Shared helpers for the Applications area (client-web#10419 invitation-only
@@ -228,18 +230,6 @@ const escapeRegExp = (text: string): string =>
   text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 /**
- * The applicant's in-app notification about THIS space's application, inside
- * an open bell panel. The applicant is a shared persona with notification
- * history from earlier cases and earlier nights, so an unscoped `/declined/i`
- * or `/Welcome to the community/i` on the panel proves nothing; the entry is
- * matched by its full subject, which carries the run-unique space name
- * (crd `components.inAppNotifications.type.*.subject`):
- *
- *   approved  `<space> - Welcome to the community!`   (USER_SPACE_COMMUNITY_JOINED)
- *   declined  `<admin> declined your application to join <space>`
- *             (USER_SPACE_COMMUNITY_APPLICATION_DECLINED)
- */
-/**
  * `scenarioConfig` with a run-unique display name for its Level 1 subspace.
  * The scenario factory names a subspace `l1-<scenario name>` (fixed per file)
  * and puts the unique id only in its nameID, while the applicant's bell
@@ -269,6 +259,18 @@ export const withUniqueSubspaceName = (
   };
 };
 
+/**
+ * The applicant's in-app notification about THIS space's application, inside
+ * an open bell panel. The applicant is a shared persona with notification
+ * history from earlier cases and earlier nights, so an unscoped `/declined/i`
+ * or `/Welcome to the community/i` on the panel proves nothing; the entry is
+ * matched by its full subject, which carries the run-unique space name
+ * (crd `components.inAppNotifications.type.*.subject`):
+ *
+ *   approved  `<space> - Welcome to the community!`   (USER_SPACE_COMMUNITY_JOINED)
+ *   declined  `<admin> declined your application to join <space>`
+ *             (USER_SPACE_COMMUNITY_APPLICATION_DECLINED)
+ */
 export const applicantNotificationEntry = (
   panel: Locator,
   outcome: 'approved' | 'declined',
@@ -281,3 +283,16 @@ export const applicantNotificationEntry = (
       : new RegExp(`declined your application to join ${space}(?![\\w-])`);
   return panel.getByRole('button').filter({ hasText: subject });
 };
+
+/**
+ * The lifecycle state of every application on a role set, as the server holds
+ * it (read by the platform admin). Each Application Management case seeds a
+ * fresh space that one persona applies to, so the list is that application.
+ */
+export const applicationStates = async (roleSetId: string): Promise<string[]> =>
+  (
+    must(
+      await readRoleSetApplications(roleSetId),
+      `readRoleSetApplications(${roleSetId})`
+    ).lookup.roleSet?.applications ?? []
+  ).map(application => application.state ?? '');

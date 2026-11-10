@@ -26,6 +26,7 @@ import {
 } from '../helpers/space-access.helper';
 import {
   applicantNotificationEntry,
+  applicationStates,
   applyFlowSettled,
   expectNoApplyControl,
   setMembershipPolicy,
@@ -416,6 +417,10 @@ test.describe('Level 0 Space - Applications', () => {
         name: 'Reject and remove application',
         exact: true,
       });
+      // Server before the action: the one application on this role set is new.
+      const roleSetId = baseScenario.space.community.roleSetId;
+      expect(await applicationStates(roleSetId)).toEqual(['new']);
+
       await expect(deleteButton).toBeVisible();
       await deleteButton.click();
 
@@ -431,6 +436,14 @@ test.describe('Level 0 Space - Applications', () => {
 
       // Verify the application is removed from the pending list
       await expect(applicationRow).not.toBeVisible();
+
+      // Server: "Reject and remove application" is REJECT then ARCHIVE
+      // (client-web useCommunityTabData › pendingDelete), so the application
+      // ends archived; a plain Reject (2.1) sends REJECT only. The row leaves
+      // the pending list either way, so only the state tells the two apart.
+      await expect
+        .poll(() => applicationStates(roleSetId))
+        .toEqual(['archived']);
 
       // Verify notification is received by the applicant
       const applicantPage = nonSpaceMemberPage;

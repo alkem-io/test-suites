@@ -221,10 +221,11 @@ The Alkemio platform provides a multi-level space hierarchy (Space → Subspace 
    - Click the "Community" tab under `data-testid="space-settings"`
    - Locate the pending application from the non-space member in "Pending applications & invitations"
    - Click on the application to view details or locate the archive/delete action
-   - Click the "Delete" button/action for the application (archives the application)
+   - Click the row's "Reject and remove application" action (named "Delete" before client-web#10499; on a `new` application it sends REJECT then ARCHIVE)
    - Verify archive confirmation (dialog/notification)
    - Confirm the archive action
    - Verify the application is removed from the pending list
+   - Verify on the server that the application is now `archived` (it was `new` before the action; a plain Reject, 2.1, leaves it `rejected`)
 
 3. **Verify Notification as Non-Space Member:**
    - Navigate to home page
@@ -239,6 +240,7 @@ The Alkemio platform provides a multi-level space hierarchy (Space → Subspace 
 - Delete/Archive action/button is visible and accessible for the application
 - Archive confirmation dialog appears when deleting
 - After confirmation, the application is removed from pending list
+- The application's server state is `archived`
 - Application no longer appears in the pending applications list
 - Non-space member receives a notification about the declined application
 - Notification bell icon is accessible and clickable
@@ -446,7 +448,14 @@ L0 2.1–2.5 use the L0 name; L1 2.1–2.5 and L1-public-parent 2.1/2.2 use the 
 | scoped declined entry for `<space name>x` (another space) right after the old unscoped `/declined/i`, which passed on the same panel | L0 2.1 | `button` with `declined your application to join l0-seed-space-applica-…x` not found |
 | the Approve click removed | L0 2.6 | the MEMBER role-set read-back never contains the applicant (`expect.poll … toContain`) |
 
-**Server constants now asserted:** none new. The two subjects are client i18n strings (`crd/i18n/common` `components.inAppNotifications.type.*`), interpolated with server data (space display name).
+**2.2 "Archive" pinned on the server (QA challenge on #716, 2026-11-10).** After the locator repair, 2.2 asserted exactly what 2.1 asserts: the row leaves the "Application received" list, and the applicant gets a declined entry for this space. Both are also true of a plain Reject, so the case's own behaviour, the archive, was unpinned. L0 and L1 2.2 now read the role set's applications (`applications.helpers.ts › applicationStates`, lib `readRoleSetApplications`, platform admin):
+
+- before the action, `['new']`;
+- after the confirm, `['archived']`, polled.
+
+"Reject and remove application" sends REJECT then ARCHIVE (client-web `useCommunityTabData › pendingDelete`). Red-proof, local stack: with the plain "Reject" clicked in L0 2.2 instead, the poll went red, expected `["archived"]`, received `["rejected"]`.
+
+**Server constants now asserted:** the application lifecycle state names `new` / `archived` (2.2, rebaseline candidates). The two subjects are client i18n strings (`crd/i18n/common` `components.inAppNotifications.type.*`), interpolated with server data (space display name).
 
 **Pre-existing reds, not touched:** `10419 IO-2` and `IO-3` fail on the local stack (develop client) at `navigation "Innovation flow phases"` not found on the subspace page — red on the unmodified baseline too; out of scope here. On test-alkem.io (2026-11-09, two runs of the three application files) both are green, so the red belongs to the local client build, not to the specs.
 
