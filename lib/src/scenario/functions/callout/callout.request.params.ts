@@ -163,6 +163,16 @@ export const readCalloutsPlacement = (
     sdk.GetCalloutsOnCalloutsSetUsingClassification({ calloutsSetId }, headers),
   );
 
+/**
+ * A post (a post-type response) as the actor sees it, including the actor's
+ * privileges on it (e.g. MOVE_POST, which gates moving the response).
+ */
+export const readPost = (
+  postId: string,
+  actor: GraphqlActor = TestUser.GLOBAL_ADMIN,
+) =>
+  runAs(actor, (sdk, headers) => sdk.GetPostData({ postId }, headers));
+
 // ---------------------------------------------------------------------------
 // Multipart (Upload scalar) operations. The generated SDK posts JSON only, so
 // the two documents that carry a file go through the GraphQL multipart

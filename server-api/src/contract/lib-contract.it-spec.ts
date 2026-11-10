@@ -209,6 +209,7 @@ const FUNCTIONS: string[] = [
   'readMemoDocuments',
   'readActivityLogOnCollaboration',
   'readCalloutsPlacement',
+  'readPost',
   'uploadFileOnStorageBucket',
   'readTemplatesSetTemplates',
   'createTemplateWithData',
@@ -234,6 +235,7 @@ const ENUM_MEMBERS: Record<string, string[]> = {
   SpaceLevel: ['L0', 'L1', 'L2'],
   SpaceVisibility: ['Active', 'Archived', 'Demo'],
   TagsetReservedName: ['FlowState'],
+  AuthorizationPrivilege: ['MovePost', 'Update'],
   ActorType: ['User', 'Organization', 'VirtualContributor'],
   SidebarWidget: ['About', 'Community', 'Events', 'Activity'],
   NotificationEvent: ['OrganizationAdminSpaceCommunityInvitation'],
@@ -444,6 +446,8 @@ describe('@contract base scenario round trip', () => {
     }
     // Negative control: an unknown callouts set never yields a populated list.
     const unknown = await lib.readCalloutsPlacement('00000000-0000-4000-8000-000000000000');
-    expect(unknown.error !== undefined || !unknown.data?.lookup.calloutsSet).toBe(true);
+    expect(unknown.data?.lookup?.calloutsSet ?? null, JSON.stringify(unknown.error)).toBeNull();
+    // ...and not because the request never reached the server.
+    expect(unknown.error?.errors.map(e => e.code) ?? []).not.toContain('ENV_FAILURE');
   });
 });
