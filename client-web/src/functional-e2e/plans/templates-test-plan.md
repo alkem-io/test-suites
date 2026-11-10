@@ -778,11 +778,11 @@ Post templates provide ready-to-use structures for creating consistent posts acr
 
 #### 2.6 Delete Post Template
 
-> Automated by `post-template.spec.ts › 1.4`; see [Delete, comments and a member contribution](#delete-comments-and-a-member-contribution-w2-tier-1-item-16).
+> Automated by `post-template.spec.ts › 1.4`; see [Delete, comments and a member contribution](#delete-comments-and-a-member-contribution-w2-tier-1-item-16). "Existing posts created from template are unaffected" is **not covered**: the spec never creates a post from the template, and a post keeps no link to its template (the server's only references to a template are `template_default` and `innovation_flow_state.defaultCalloutTemplateId`), so a delete has no path to a post.
 
 **User:** SPACE_ADMIN
 **Priority:** P2
-**Test File:** To be implemented
+**Test File:** `post-template.spec.ts` - Test #1.4
 
 **Steps:**
 
@@ -934,11 +934,11 @@ Community Guidelines templates help establish consistent standards for community
 
 #### 3.6 Delete Community Guidelines Template
 
-> Automated by `community-guidelines-template.spec.ts › 1.5`; see [Delete, comments and a member contribution](#delete-comments-and-a-member-contribution-w2-tier-1-item-16).
+> Automated by `community-guidelines-template.spec.ts › 1.5`, including "existing applied guidelines are unaffected" (the guidelines 1.4 applied from the template still show their title, body and links after the delete); see [Delete, comments and a member contribution](#delete-comments-and-a-member-contribution-w2-tier-1-item-16).
 
 **User:** SPACE_ADMIN
 **Priority:** P2
-**Test File:** To be implemented
+**Test File:** `community-guidelines-template.spec.ts` - Test #1.5
 
 **Steps:**
 
@@ -1113,11 +1113,11 @@ Whiteboard templates provide pre-configured visual collaboration canvases with s
 
 #### 4.7 Delete Whiteboard Template
 
-> Automated by `whiteboard-template.spec.ts › 1.4`; see [Delete, comments and a member contribution](#delete-comments-and-a-member-contribution-w2-tier-1-item-16).
+> Automated by `whiteboard-template.spec.ts › 1.4`; see [Delete, comments and a member contribution](#delete-comments-and-a-member-contribution-w2-tier-1-item-16). "Existing whiteboards created from template are unaffected" is covered for what the harness can read: the whiteboard template 1.3 built from it is still stored and listed. Its canvas is not readable from the harness (server#6399).
 
 **User:** SPACE_ADMIN
 **Priority:** P2
-**Test File:** To be implemented
+**Test File:** `whiteboard-template.spec.ts` - Test #1.4
 
 **Steps:**
 
@@ -2003,6 +2003,7 @@ Regressions guarded: delete that does not persist (optimistic UI removal only); 
 
 `2`/`4`/`6`/`8` ("Comments: Enabled") used to assert exactly what their "Disabled" twins assert: `verifyContributionSettings`, the only place that read "Allow comments", returns early for `responseType: 'none'`. `usage/callout-template.use.comments.ts › verifyCalloutCommentsSetting` now runs for every case with no response type and a non-Poll/Form framing (1–8, 41):
 
+- **Feed:** the published callout's card offers "Expand comments" exactly when the template enabled comments (client-web `PostCard` draws no comments footer for a comments-off callout with no messages). The card's Settings menu is asserted first, so a missing thread is the setting, not an undrawn card. Added by the PR challenge (QA-CH-03).
 - **UI:** the published callout's Edit dialog, once its saved values are bound (the title box holds the callout's title) → More options → "Allow comments" is checked exactly when the template set it. The dialog is left with Escape.
 - **API:** new lib `readCalloutsSetCalloutResponses` (session actor): exactly one stored callout with that title, and `settings.framing.commentsEnabled` equals the template's choice.
 
@@ -2013,6 +2014,12 @@ Regression guarded: the template's comments flag lost on template save or on "Us
 New case `17m`, which runs right after `17` (Posts, members can add). `usage/contributions/callout-template.use.member.ts › verifyMemberAddsPost` opens a separate browser context as `space.member` (`openPersonaPage`; the shared persona is only read, never changed). The member sees case 17's callout and its "Add Post" button. The create dialog is pre-filled with the template's default response title. The member posts under a run-unique title, and the title renders in the card. The server (`readCalloutsSetCalloutResponses` as the member) stores exactly one post with that title on that callout, `createdBy` = the member's user id.
 
 Regression guarded: "Members can add" honoured only as a switch state. Before this case no member persona ever acted on a template-made callout.
+
+### 17cm: the member is refused on a Contrib: Admin callout
+
+New case `17cm`, right after `17c` (Posts, Admins can add ON, Members can add OFF). `verifyMemberCannotAddPost` opens `space.member` again. The member sees 17c's callout and its Settings menu (the card rendered) but no "Add Post" on it. The member's `createContributionOnCallout` is refused with `CALLOUT_CLOSED` "Only admins are allowed to contribute to this Callout" (server `callout.resolver.mutations.ts`); the same call by `space.admin` is accepted, so the call itself is valid. Read back as the member: the admin's post is stored, the member's is not.
+
+Regression guarded: "Members can add = OFF" not honoured (in the card or on the API). 17m alone only proved the ON row.
 
 ### Results (local stack, 2026-11-09)
 
@@ -2054,4 +2061,36 @@ After the last change, A is green twice (runs 3 and 4) and B twice (runs 1 and 2
 - The alert copy `Delete template?` / `“<name>” will be permanently deleted.` / `Delete template` and the kebab label `Template actions` are client-web i18n strings (`crd-templates`). They move with the client, not with the server rebuild.
 - **Rebaseline candidate:** `settings.framing.commentsEnabled` is the server field read for the comments setting. Under the rebuilt schema the read-back moves to wherever the flag lives.
 - Template delete removes only the target (`length − 1`). This is not a server constant, but it holds only while the space's templates set has no server-side default templates added or removed concurrently.
+
+### PR challenge (test-suites#715, 2026-11-10)
+
+Challenged against the audit's item 16 and this plan's delete sections, on the local stack (server `develop` `51eb90878`, client-web `develop` `907103f5f`). What the challenge changed:
+
+| ID | Finding | Change |
+|---|---|---|
+| QA-CH-01 | The `readCalloutsSetCalloutResponses` contract case checked types only, and its post check sat behind `if (contribution.post)` on a callout that takes links only, so it never ran | Seeds a Posts callout with comments OFF and one post by the admin; asserts `commentsEnabled` false (and true on the seeded post callout), the post title and `createdBy` = the admin |
+| QA-CH-02 | `verifyCalloutTemplateUsage` took `calloutsSetId` as optional and skipped the comments check without it | Required; the guard is gone |
+| QA-CH-03 | The comments check read the setting, not what a user sees | The feed card's "Expand comments" is asserted too (above) |
+| QA-CH-04 | Only the "Members can add = ON" row was exercised by a member | New case `17cm` (above) |
+| QA-CH-05 | The three delete sections expect "existing items created from the template are unaffected"; nothing pinned it | Community guidelines 1.5 re-reads the guidelines 1.4 applied (title, body, every link); whiteboard 1.4 requires the template 1.3 built from it to be stored and listed before and after; post: not covered, with the reason, in § 2.6 |
+| QA-CH-06 | § 2.6 / 3.6 / 4.7 still said "Test File: To be implemented" | Point at the cases |
+| QA-CH-07 | F-16-1's cause was not in the knowledge base | `docs/qa-knowledge/harness.md` (CRD template dialogs) |
+
+**F-16-1, reproduced independently.** A lib-only probe outside the specs (create a Post template, two concurrent `readTemplatesSetTemplates` loops while `deleteTemplate` runs as the global admin) failed 2–3 of ~20 reads in each of 5 of 5 attempts with `ENTITY_NOT_FOUND` "Could not load relation 'profile' for Template" at `lookup.templatesSet.templates[0].profile`; the delete itself succeeded and the next read was clean every time. Cause confirmed in the server source: `TemplateService.delete` deletes the profile, the authorization and the row without a transaction, and `template.profileId` is `ON DELETE SET NULL`. Attribution: product defect, minor; no case is affected while the specs wait for `deleteTemplate`.
+
+**Red-proofs added by the challenge (one run each, the file restored byte-identical after):**
+
+| Oracle | Mutation | Result |
+|---|---|---|
+| feed comments (case 2) | expected count inverted | **red** at `callout-template.use.comments.ts:37`: expected 0, received 1 |
+| feed comments (case 1) | expected count inverted | **red** at the same line: expected 1, received 0 |
+| 17cm card | member persona swapped for the admin | **red** at `callout-template.use.member.ts:140`: "Add Post" count expected 0, received 1 |
+| 17cm API refusal | admin persona, card check removed | **red** at `:168` "the member is refused": expected `["CALLOUT_CLOSED"]`, received `undefined` |
+| guidelines unaffected (CG 1.5) | 1.4 not run (no guidelines applied) | **red**: the guidelines heading not visible |
+| made-from-it kept (WB 1.4), before | 1.3 not run | **red** at `delete-template.ts:74`: its preview button not visible |
+| made-from-it kept (WB 1.4), after | the derived template also deleted right after the browser's delete | **red** at `delete-template.ts:115` "… is still stored" |
+| contract `commentsEnabled` | expected `true` | **red**: expected false to be true |
+| contract post author | expected the space admin | **red**: post author mismatch |
+
+**Runs after the challenge (local stack):** the full `Templates` project twice — run 1 95 passed + 4 skipped (21.6 min); run 2 stopped in the whiteboard file's `beforeAll`, where the unchanged `setupAuthentication` hung on `page.goto('/home')` until the 120 s hook timeout (environment, the stack answered normally right after; 90 passed, 4 did not run, nothing left behind); run 3 95 passed + 4 skipped (21.7 min). Timings in run 1: the delete cases 6.0 s (post), 8.3 s (community guidelines, incl. the guidelines re-read), 6.0 s (whiteboard); 17m 11.0 s; 17cm 5.9 s; cases 1–8 and 41 9–14 s each. The four skips are the recorded `collaboration-tool-template-roundtrip` defects (client-web#10443, server#6682). Contract project: 25/25.
 
