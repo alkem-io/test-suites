@@ -802,10 +802,10 @@ Applies to `0.4`/`0.14` (`organization-space-create.spec.ts`) and `1.4`/`1.14` (
 | 1.4, 1.14 | host `account.id` = the admin's own account (`readMyUser`) | Space created on the wrong account |
 | 0.4, 0.14 | host `account.id` = the ORGANIZATION's account (`readOrganizationAccount`), not the admin's | org-hosted create landing on the creating user's account |
 | 1.14, 0.14 | tagline read back = the typed tagline | optional create fields dropped |
-| 1.14 | My Account › Hosted Spaces has a card link named exactly the Space, `href` ending `/<nameID>` | account listing not showing the new Space |
+| 1.14 | My Account › Hosted Spaces has a card link named exactly the Space, `href` ending `/<nameID>`, looked up inside that section only (`hostedSpaceCardLink`: the section trigger's `aria-controls`) | account listing not showing the new Space, even when a same-named link shows elsewhere on the page |
 | 0.14 | the organization's Settings › Account › Hosted Spaces, same check | as above, org account |
 | 1.4, 0.4 | every tutorial heading on the landing tab is a callout name the server returns for that Space (`readSpaceCalloutNames`), and ≥ 2 are shown | `addTutorialCallouts` ignored, or the page rendering callouts that are not the Space's |
-| 1.4, 1.14, 0.4, 0.14 (after the UI delete) | `readSpaceByNameId` answers ENTITY_NOT_FOUND, and `/<nameID>/about` shows the client's "We are redirecting you..." not-found dialog | a delete that answers without errors but leaves the Space behind |
+| 1.4, 1.14, 0.4, 0.14 (after the UI delete) | `readSpaceByNameId` answers ENTITY_NOT_FOUND; the client leaves the Space's pages; then `/<nameID>/about` shows the client's "We are redirecting you..." not-found dialog | a delete that answers without errors but leaves the Space behind |
 
 **Cleanup.** The per-test `afterEach` sweep (`deleteSpaceByNameId`) now reads through the lib (`readSpaceByNameId`, no direct SDK call), treats ENTITY_NOT_FOUND as already gone, and deletes through `deleteSpaceTree` (leaves first; throws on any refusal), so a walk that fails between the UI create and the UI delete cannot leak the Space against the account's allowance.
 
@@ -822,6 +822,11 @@ Applies to `0.4`/`0.14` (`organization-space-create.spec.ts`) and `1.4`/`1.14` (
 | (unplanned) first run of the tutorial oracle as page = server | 1.4, 0.4 | server callout "Contributors" not on the landing tab — the oracle reads the server set; rewritten as page ⊆ server |
 
 The four red runs left their Spaces behind on purpose; the `afterEach` sweep removed them without error (`deleteSpaceByNameId` → `deleteSpaceTree`).
+
+**QA challenge on #716 (2026-11-10, local stack).**
+
+- *Post-delete race.* `SpaceSettingsPage.deleteSpace` returns on `waitForURL(/(home|spaces|account)/)`. That pattern already matches the Space's own `/<nameID>/settings/account`, so it can return before the client's redirect to `/home`. The `/about` visit in `expectSpaceGone` was then interrupted by that redirect: 1.14 went red once in two local runs (`page.goto: Navigation to "/<nameID>/about" is interrupted by another navigation to "/home"`). `expectSpaceGone` now waits until the URL has left `/<nameID>` before the visit. The page object is unchanged, because it is outside this PR.
+- *Hosted Spaces scope.* The card link was a page-wide `getByRole('link', { name, exact })`. It is now looked up inside the Hosted Spaces section content (`space-create.helpers.ts › hostedSpaceCardLink`). The two page-object copies were replaced by this one helper. Red-proof: pointing the helper at the "Virtual Contributors" section made 1.14 red (`element(s) not found` inside that section's content).
 
 **Server constants now asserted (rebaseline candidates, decision 7):** the ENTITY_NOT_FOUND error code on a missing nameID. Tutorial callout names are NOT hard-coded by the new oracle (read from the server); the pre-existing emoji-prefix pattern in `SpacePage.verifyTutorialsPresent` remains a server-content dependency, as before. "We are redirecting you..." is client copy, not a server constant.
 

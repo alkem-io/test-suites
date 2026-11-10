@@ -24,6 +24,7 @@ import {
   expectCreatedSpaceRecord,
   expectSpaceGone,
   expectTutorialCalloutsRendered,
+  hostedSpaceCardLink,
 } from './space-create.helpers';
 
 // Create the authenticated fixture with a unique storage state name for this test suite
@@ -439,7 +440,7 @@ test.describe('CREATE Space Operations (Organization Account)', () => {
     // The organization's Account › Hosted Spaces lists it, linking to its URL.
     await orgAccountPage.goto(baseScenario.organization.nameId);
     await orgAccountPage.verifyHostedSpacesVisible();
-    await expect(orgAccountPage.hostedSpaceLink(spaceName)).toHaveAttribute(
+    await expect(await hostedSpaceCardLink(page, spaceName)).toHaveAttribute(
       'href',
       new RegExp(`/${spaceUrl}$`)
     );

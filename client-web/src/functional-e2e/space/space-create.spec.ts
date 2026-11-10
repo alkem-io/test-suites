@@ -24,6 +24,7 @@ import {
   expectCreatedSpaceRecord,
   expectSpaceGone,
   expectTutorialCalloutsRendered,
+  hostedSpaceCardLink,
 } from './space-create.helpers';
 
 // Create the authenticated fixture with a unique storage state name for this test suite
@@ -46,8 +47,10 @@ test.describe('CREATE Space Operations', () => {
     // give it headroom so a slow setup doesn't time out and cascade the file.
     test.setTimeout(60_000);
     await TestScenarioFactory.createBaseScenarioEmpty(scenarioConfig);
-    adminAccountId = must(await readMyUser(TestUser.GLOBAL_ADMIN), 'readMyUser(admin)')
-      .me.user!.account!.id;
+    adminAccountId = must(
+      await readMyUser(TestUser.GLOBAL_ADMIN),
+      'readMyUser(admin)'
+    ).me.user!.account!.id;
     await setupAuthentication(browser, TestUserManager.users.globalAdmin.email);
   });
   test.afterAll(async () => {
@@ -435,7 +438,7 @@ test.describe('CREATE Space Operations', () => {
     // My Account › Hosted Spaces lists it, linking to its URL.
     await homePage.navigateToMyAccount();
     await myAccountPage.verifyHostedSpacesVisible();
-    await expect(myAccountPage.hostedSpaceLink(spaceName)).toHaveAttribute(
+    await expect(await hostedSpaceCardLink(page, spaceName)).toHaveAttribute(
       'href',
       new RegExp(`/${spaceUrl}$`)
     );

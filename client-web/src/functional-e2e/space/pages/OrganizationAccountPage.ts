@@ -39,15 +39,6 @@ export class OrganizationAccountPage {
     ).toBeVisible({ timeout: 15_000 });
   }
 
-  /**
-   * A hosted Space's card in the Hosted Spaces section: the card's named link
-   * (its display name, linking to `/<nameID>`). The card's image link carries
-   * no name, so the exact name matches the one titled link only.
-   */
-  hostedSpaceLink(spaceDisplayName: string) {
-    return this.page.getByRole('link', { name: spaceDisplayName, exact: true });
-  }
-
   async verifyHostedSpacesVisible() {
     await expect(this.hostedSpacesHeading).toBeVisible();
   }
