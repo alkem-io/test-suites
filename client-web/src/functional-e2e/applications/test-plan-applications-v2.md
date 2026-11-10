@@ -448,7 +448,7 @@ L0 2.1–2.5 use the L0 name; L1 2.1–2.5 and L1-public-parent 2.1/2.2 use the 
 
 **Server constants now asserted:** none new. The two subjects are client i18n strings (`crd/i18n/common` `components.inAppNotifications.type.*`), interpolated with server data (space display name).
 
-**Pre-existing reds, not touched:** `10419 IO-2` and `IO-3` fail on the local stack (develop client) at `navigation "Innovation flow phases"` not found on the subspace page — red on the unmodified baseline too; out of scope here.
+**Pre-existing reds, not touched:** `10419 IO-2` and `IO-3` fail on the local stack (develop client) at `navigation "Innovation flow phases"` not found on the subspace page — red on the unmodified baseline too; out of scope here. On test-alkem.io (2026-11-09, two runs of the three application files) both are green, so the red belongs to the local client build, not to the specs.
 
 ---
 

@@ -96,7 +96,7 @@ _One place for everything QA does for the move to the rebuilt server. Status is 
 | Journey 11 — upload file / reference; media gallery; attachment | not started |
 | Journey 12 — forum, innovation packs, admin organisations, mentions | not started |
 | Tier 0 registrations from the audit (smoke canary, platform roles, memberships, contributors callout 0.1) | built 2026-10-14, uncommitted in the working tree |
-| Tier 1 items 12–14 (space create, applications, authentication) | in progress — branch `qa/w2-tier1-space-access` |
+| Tier 1 items 12–14 (space create, applications, authentication) | PR test-suites#716 (branch `qa/w2-tier1-space-access`); local 2/2; test-alkem.io 54/54 in two runs (2026-11-09), nothing left behind |
 
 ## Decisions
 
@@ -148,7 +148,7 @@ Full text in [`plan.md` § Gaps](plan.md#gaps-found-in-the-plan-so-far).
 | 2026-10-29 | Register updated from the audit session's drills: S1 is file content loss on ACC, not a backup gap; A2 generator fixed in v0.167, data repair only; six server issues filed (#6726–#6731) for the live generators; F1/G3/E2 explained |
 | 2026-10-29 | W2 pre-work delivered on PR test-suites#696 (branch `qa/w2-prework-lib-boundary`): the lib is the only schema boundary for client-web — actor model (`GraphqlActor`/`runAs`), 81 documents + 115 functions, lib-owned enums/types, ESLint guard with a blocking CI step, lib contract test; 89 specs run live on the local stack, one fold red (fixed), the rest attributed pre-existing/env/interference |
 | 2026-10-30 | W2 journeys 1–4 delivered on PR test-suites#697 (branch `qa/w2-journeys-1-4`): join, invite + accept, subspace L1/L2 create, settings writes — 18 browser cases in three nightly projects, each with a lib read-back and a negative control; lib adds `joinRoleSet`, `readSubspaceByNameId`, `readSpaceSubspaceTree`; 18/18 in two live runs on test-alkem.io; harness finding: the factory cannot delete an L0 with UI-created subspaces (now `deleteSpaceTree`) |
-| 2026-11-09 | W2 Tier 1 items 12–14 on branch `qa/w2-tier1-space-access` (uncommitted): space create/delete read back by nameID (name, tagline, host account, Hosted Spaces row, ENTITY_NOT_FOUND + not-found route after delete) with the UI-create sweep through `deleteSpaceTree`; applicant bell assertions scoped to the run's space plus "approved applicant opens the Space" (membership read-back + member-only callout); registration reads back the Alkemio user and deletes every registered identity; restricted access gains the admin positive control. Lib adds `readSpaceByNameId`. Locator repair for client-web#10499 ("Reject and remove application") |
+| 2026-11-09 | W2 Tier 1 items 12–14 on PR test-suites#716 (branch `qa/w2-tier1-space-access`), 54/54 in two test-alkem.io runs: space create/delete read back by nameID (name, tagline, host account, Hosted Spaces row, ENTITY_NOT_FOUND + not-found route after delete) with the UI-create sweep through `deleteSpaceTree`; applicant bell assertions scoped to the run's space plus "approved applicant opens the Space" (membership read-back + member-only callout); registration reads back the Alkemio user and deletes every registered identity; restricted access gains the admin positive control. Lib adds `readSpaceByNameId`. Locator repair for client-web#10499 ("Reject and remove application") |
 | 2026-10-28 | W0 delivered: 298 root fields of `server` `develop` @ `eeecf9ddb` traced through lib, server-api and client-web on test-suites @ `015bfeea1`; 57 features with verdicts; gap 11 closed |
 
 ## How to update
