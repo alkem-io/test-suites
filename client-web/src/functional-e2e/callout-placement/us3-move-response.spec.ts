@@ -5,10 +5,12 @@
 
 import { test, expect } from '@playwright/test';
 import {
+  AuthorizationPrivilege,
   CalloutContributionType,
   createContributionOnCallout,
   readCalloutContributions,
   readMyUser,
+  readPost,
   TestUser,
   TestUserManager,
   UniqueIDGenerator,
@@ -53,6 +55,8 @@ let member: PersonaPage | undefined;
 let firstPhase = '';
 const ids: { S?: string; L?: string; T?: string; R?: string; R2?: string } = {};
 let memberName = '';
+/** The post behind R2: MC-2 reads the author's privileges on it. */
+let keptPostId = '';
 
 const source = `J6 source ${uid}`;
 const links = `J6 links ${uid}`;
@@ -60,8 +64,12 @@ const target = `J6 target ${uid}`;
 const movedReply = `J6 moved reply ${uid}`;
 const keptReply = `J6 kept reply ${uid}`;
 
-const reply = async (calloutID: string, displayName: string): Promise<string> =>
-  must(
+/** Seeds a response as the member; returns the contribution id and its post id. */
+const reply = async (
+  calloutID: string,
+  displayName: string
+): Promise<{ id: string; postId: string }> => {
+  const created = must(
     await createContributionOnCallout(
       {
         calloutID,
@@ -71,7 +79,11 @@ const reply = async (calloutID: string, displayName: string): Promise<string> =>
       TestUser.SPACE_MEMBER
     ),
     `createContributionOnCallout(${displayName})`
-  ).createContributionOnCallout.id;
+  ).createContributionOnCallout;
+  if (!created.post?.id)
+    throw new Error(`response ${displayName} was created without a post`);
+  return { id: created.id, postId: created.post.id };
+};
 
 test.beforeAll(async ({ browser }) => {
   test.setTimeout(240_000);
@@ -84,8 +96,10 @@ test.beforeAll(async ({ browser }) => {
     CalloutContributionType.Link,
   ]);
   ids.T = await seedPost(set, target, last.displayName);
-  ids.R = await reply(ids.S, movedReply);
-  ids.R2 = await reply(ids.S, keptReply);
+  ids.R = (await reply(ids.S, movedReply)).id;
+  const kept = await reply(ids.S, keptReply);
+  ids.R2 = kept.id;
+  keptPostId = kept.postId;
   const me = must(await readMyUser(TestUser.SPACE_MEMBER), 'readMyUser').me
     .user;
   memberName = me?.profile?.displayName ?? '';
@@ -179,9 +193,10 @@ test("MC-1 — admin moves the member's response to a post in another phase", as
     )
     .toEqual([keptReply]);
   const inTarget = await responsesOf(T, TestUser.SPACE_MEMBER);
-  // The same id, so it was re-parented, not deleted and created again.
-  expect(inTarget.filter(c => c.id === R).map(c => c.name)).toEqual([
-    movedReply,
+  // T started empty: exactly the moved response, once, with the same id, so it
+  // was re-parented, not deleted and created again, nor duplicated.
+  expect(inTarget.map(c => ({ id: c.id, name: c.name }))).toEqual([
+    { id: R, name: movedReply },
   ]);
 
   const viewer = member!.page;
@@ -213,6 +228,16 @@ test('MC-2 — the author is not offered the move on their own response', async 
   const S = ids.S!;
   const page = member!.page;
 
+  // The gate the dialog reads: the author may edit the response, not move it.
+  // Read first, because the page alone cannot prove the absence (see below).
+  const privileges =
+    must(
+      await readPost(keptPostId, TestUser.SPACE_MEMBER),
+      `readPost(${keptPostId})`
+    ).lookup.post?.authorization?.myPrivileges ?? [];
+  expect(privileges).toContain(AuthorizationPrivilege.Update);
+  expect(privileges).not.toContain(AuthorizationPrivilege.MovePost);
+
   await page.goto(`${baseUrl}/${space().nameId}`);
   await openPhaseTab(page, firstPhase);
   await renderFeed(page, [S]);
@@ -226,7 +251,10 @@ test('MC-2 — the author is not offered the move on their own response', async 
     .click();
 
   const dialog = page.getByRole('dialog', { name: 'Edit Post' });
-  // The pre-fill comes from the same `PostSettings` query that carries MOVE_POST.
+  // The pre-fill comes from the same `PostSettings` query that carries MOVE_POST,
+  // but "Post location" also waits for a second query (the sibling posts), so it
+  // can appear after the title. These absence checks back the read-back above;
+  // on their own they could pass before the section would have rendered.
   await expect(dialog.getByRole('textbox', { name: 'Title' })).toHaveValue(
     keptReply
   );
