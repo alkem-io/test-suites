@@ -20,7 +20,10 @@ import { verifyCalloutTemplateUsage } from './usage/callout-template.use';
 import { acceptCookiesIfVisible } from '@src/functional-e2e/helpers/cookies.helper';
 import { sectionAddNewButton } from './section-helpers';
 import { CalloutTemplateForm } from './forms/callout/callout-template-form.models';
-import { verifyMemberAddsPost } from './usage/contributions/callout-template.use.member';
+import {
+  verifyMemberAddsPost,
+  verifyMemberCannotAddPost,
+} from './usage/contributions/callout-template.use.member';
 
 const { test, setupAuthentication, teardownAuthentication } =
   createAuthenticatedSessionFixture({
@@ -31,9 +34,11 @@ const { test, setupAuthentication, teardownAuthentication } =
 const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 
 let baseScenario: OrganizationWithSpaceModel;
-// Case 17's template data: 17m has the space member contribute to the callout
-// case 17 published from its template.
+// Case 17's and 17c's template data: 17m has the space member contribute to
+// the callout case 17 published from its template; 17cm has the member refused
+// on 17c's (Contrib: Admin).
 let case17: CalloutTemplateForm | undefined;
+let case17c: CalloutTemplateForm | undefined;
 const scenarioConfig: TestScenarioConfig = {
   name: 'callout-none-template',
   space: {
@@ -173,6 +178,10 @@ const createAndVerifyCalloutTemplate = async (
 
 // Callout with references test:
 // |        |  41| None               | None             | Disabled         | N/A                | N/A                | N/A                |
+
+// Member-persona cases (space.member acts on a callout an earlier case made):
+//   17m  — on 17's callout (Members can add): adds a post, read back with its author.
+//   17cm — on 17c's callout (Contrib: Admin): no "Add Post", the API refuses (CALLOUT_CLOSED).
 
 // =========================================================================================================================================
 //   POLL FRAMING TESTS (Additional Content = Poll)
@@ -558,6 +567,21 @@ test.describe.serial('Callout Templates', () => {
     });
 
     await createAndVerifyCalloutTemplate(page, templateData);
+    case17c = templateData;
+  });
+
+  test('17cm Member cannot add a post to the callout made from template 17c (Contrib: Admin)', async ({
+    browser,
+  }) => {
+    if (!case17c) {
+      throw new Error('17cm needs case 17c (serial): its callout does not exist');
+    }
+    await verifyMemberCannotAddPost(
+      browser,
+      `${baseUrl}/${baseScenario.space.nameId}?tab=4`,
+      case17c,
+      baseScenario.space.collaboration.calloutsSetId
+    );
   });
 
   test('17d Framing: None, Response: Posts, Comments: Disabled, Contrib: ON, CommentsOnPosts: OFF', async ({

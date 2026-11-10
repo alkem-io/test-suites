@@ -1,6 +1,9 @@
 import { Browser, expect } from '@playwright/test';
 import {
+  CalloutContributionType,
+  createContributionOnCallout,
   readCalloutsSetCalloutResponses,
+  TestUser,
   TestUserManager,
   UniqueIDGenerator,
 } from '@alkemio/tests-lib';
@@ -86,6 +89,105 @@ export const verifyMemberAddsPost = async (
       .filter(p => p?.profile.displayName === memberPostTitle);
     expect(posts, 'the member post is stored once on that callout').toHaveLength(1);
     expect(posts[0]?.createdBy?.id, 'created by the member').toBe(memberUser.id);
+  } finally {
+    await member.close();
+  }
+};
+
+/**
+ * The other half of "Members can add": on a Posts callout made from a
+ * template whose "Members can add" is OFF and "Admins can add" ON
+ * (Contrib: Admin), the space MEMBER may read the callout but not add to it.
+ *
+ * Oracles: the member sees the callout (positive control for the page) but
+ * no "Add Post" on its card; the member's own createContributionOnCallout is
+ * refused with CALLOUT_CLOSED "Only admins are allowed to contribute to this
+ * Callout" (server `callout.resolver.mutations.ts`), while the same call by
+ * the space admin is accepted (positive control for the call); the server
+ * then holds the admin's post and not the member's.
+ */
+export const verifyMemberCannotAddPost = async (
+  browser: Browser,
+  url: string,
+  templateData: CalloutTemplateForm,
+  calloutsSetId: string
+): Promise<void> => {
+  if (
+    templateData.responseOptions.type !== 'posts' ||
+    !templateData.responseOptions.adminsCanAdd ||
+    templateData.responseOptions.membersCanAdd
+  ) {
+    throw new Error(
+      'verifyMemberCannotAddPost needs a Posts callout only admins can add to'
+    );
+  }
+  const member = await openPersonaPage(
+    browser,
+    TestUserManager.users.spaceMember.email
+  );
+  try {
+    const page = member.page;
+    await page.goto(url);
+
+    const title = page
+      .getByRole('region', { name: 'Space content feed' })
+      .getByRole('heading', { name: templateData.calloutTitle, exact: true });
+    await title.scrollIntoViewIfNeeded();
+    await expect(title).toBeVisible();
+    // Same card anchor as verifyMemberAddsPost.
+    const card = title.locator('xpath=ancestor::*[2]');
+    await expect(card.getByRole('button', { name: 'Settings' })).toBeVisible();
+    await expect(card.getByRole('button', { name: /^add post$/i })).toHaveCount(
+      0
+    );
+
+    const memberActor = await sessionActor(page);
+    const set = must(
+      await readCalloutsSetCalloutResponses(calloutsSetId, memberActor),
+      'read the callouts set as the member'
+    );
+    const callouts = (set.lookup.calloutsSet?.callouts ?? []).filter(
+      c => c.framing.profile.displayName === templateData.calloutTitle
+    );
+    expect(callouts, 'one stored callout made from the template').toHaveLength(1);
+    const calloutID = callouts[0].id;
+
+    const addPost = (displayName: string) => ({
+      calloutID,
+      type: CalloutContributionType.Post,
+      post: { profileData: { displayName } },
+    });
+    const memberTitle = `Member post ${UniqueIDGenerator.getID()}`;
+    const refused = await createContributionOnCallout(
+      addPost(memberTitle),
+      memberActor
+    );
+    expect(
+      refused.error?.errors.map(e => e.code),
+      'the member is refused'
+    ).toEqual(['CALLOUT_CLOSED']);
+    expect(refused.error?.errors[0].message).toContain(
+      'Only admins are allowed to contribute to this Callout'
+    );
+
+    const adminTitle = `Admin post ${UniqueIDGenerator.getID()}`;
+    must(
+      await createContributionOnCallout(
+        addPost(adminTitle),
+        TestUser.SPACE_ADMIN
+      ),
+      'the space admin adds a post to the same callout'
+    );
+
+    const after = must(
+      await readCalloutsSetCalloutResponses(calloutsSetId, memberActor),
+      'read back the callouts set as the member'
+    );
+    const titles = (after.lookup.calloutsSet?.callouts ?? [])
+      .filter(c => c.id === calloutID)
+      .flatMap(c => c.contributions.map(x => x.post?.profile.displayName));
+    expect(titles, "the admin's post is stored").toContain(adminTitle);
+    expect(titles, "the member's post is not").not.toContain(memberTitle);
   } finally {
     await member.close();
   }
