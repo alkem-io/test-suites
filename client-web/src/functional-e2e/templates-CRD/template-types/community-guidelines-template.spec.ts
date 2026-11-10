@@ -1,6 +1,6 @@
 // spec: templates/templates-test-plan.md#11
 
-import { expect } from '@playwright/test';
+import { expect, Page } from '@playwright/test';
 import {
   TestScenarioConfig,
   TestScenarioFactory,
@@ -63,6 +63,30 @@ const templateData: CommunityGuidelinesTemplateForm = {
       },
     ],
   },
+};
+
+/**
+ * The Space's persisted guidelines, as the Community settings preview shows
+ * them, hold what the template carried: title, body and every reference link.
+ */
+const expectAppliedGuidelines = async (page: Page): Promise<void> => {
+  await expect(
+    page.getByRole('heading', {
+      name: templateData.guidelines.displayName,
+      exact: true,
+    })
+  ).toBeVisible();
+  await expect(
+    page.getByText(templateData.guidelines.description, { exact: true })
+  ).toBeVisible();
+  // 1.1 seeds two references and 1.2 adds a third; an empty list would make
+  // the loop below vacuous.
+  expect(templateData.guidelines.references?.length ?? 0).toBeGreaterThan(0);
+  for (const reference of templateData.guidelines.references ?? []) {
+    await expect(
+      page.getByRole('link', { name: reference.title, exact: true })
+    ).toHaveAttribute('href', reference.url);
+  }
 };
 
 test.describe.serial('Community Guidelines Template', () => {
@@ -309,20 +333,7 @@ test.describe.serial('Community Guidelines Template', () => {
     await expect(editorDialog.getByRole('button', { name: 'Save', exact: true })).toBeDisabled();
     await editorDialog.getByRole('button', { name: 'Cancel', exact: true }).click();
     await expect(editorDialog).not.toBeVisible();
-    await expect(
-      page.getByRole('heading', { name: templateData.guidelines.displayName, exact: true })
-    ).toBeVisible();
-    await expect(
-      page.getByText(templateData.guidelines.description, { exact: true })
-    ).toBeVisible();
-    // 1.1 seeds two references and 1.2 adds a third; an empty list would make
-    // the loop below vacuous.
-    expect(templateData.guidelines.references?.length ?? 0).toBeGreaterThan(0);
-    for (const reference of templateData.guidelines.references ?? []) {
-      await expect(
-        page.getByRole('link', { name: reference.title, exact: true })
-      ).toHaveAttribute('href', reference.url);
-    }
+    await expectAppliedGuidelines(page);
   });
 
   test('1.5 Delete Community Guidelines Template', async ({ page }) => {
@@ -332,5 +343,12 @@ test.describe.serial('Community Guidelines Template', () => {
       templateData.displayName,
       deleteControlName
     );
+
+    // The guidelines 1.4 applied from this template are unaffected.
+    await page.goto(
+      `${baseUrl}/${baseScenario.space.nameId}/settings/community`
+    );
+    await openSettingsSection(page, 'Community Guidelines');
+    await expectAppliedGuidelines(page);
   });
 });

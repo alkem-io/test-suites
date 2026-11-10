@@ -10,7 +10,10 @@ import {
 import { createAuthenticatedSessionFixture } from '@src/functional-e2e/fixtures/authenticated-session.fixture';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import { randomBytes } from 'crypto';
-import { WhiteboardTemplateForm } from './forms/template-form.models';
+import {
+  TemplateForm,
+  WhiteboardTemplateForm,
+} from './forms/template-form.models';
 import {
   fillWhiteboardTemplateForm,
   fillWhiteboardWithWhiteboardTemplate,
@@ -36,6 +39,13 @@ const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 
 let baseScenario: OrganizationWithSpaceModel;
 let deleteControlName: string;
+// 1.3 builds this whiteboard template FROM `templateData`; 1.4 proves it
+// survives the deletion of its source.
+const madeFromTemplate: TemplateForm = {
+  displayName: 'Whiteboard Template With template inside',
+  description: 'This is a test, will not be saved.',
+  tags: [],
+};
 const scenarioConfig: TestScenarioConfig = {
   name: 'whiteboard-template',
   space: {
@@ -217,13 +227,8 @@ test.describe.serial('Whiteboard Templates', () => {
       dialog.getByRole('heading', { name: 'Create whiteboard template' })
     ).toBeVisible();
 
-    const testTemplate = {
-      displayName: 'Whiteboard Template With template inside',
-      description: 'This is a test, will not be saved.',
-      tags: [],
-    };
     // Fill the form:
-    await fillTemplateForm(page, testTemplate);
+    await fillTemplateForm(page, madeFromTemplate);
 
     await fillWhiteboardWithWhiteboardTemplate(page, templateData);
 
@@ -232,8 +237,8 @@ test.describe.serial('Whiteboard Templates', () => {
       page.getByRole('heading', { name: /^(Create|Edit) whiteboard template$/ })
     ).not.toBeVisible();
 
-    await openWhiteboardTemplate(page, testTemplate);
-    await verifyOpenedTemplate(page, testTemplate);
+    await openWhiteboardTemplate(page, madeFromTemplate);
+    await verifyOpenedTemplate(page, madeFromTemplate);
   });
 
   test('1.4 Delete Whiteboard Template', async ({ page }) => {
@@ -241,7 +246,8 @@ test.describe.serial('Whiteboard Templates', () => {
       page,
       baseScenario.space.templateSetId,
       templateData.displayName,
-      deleteControlName
+      deleteControlName,
+      [madeFromTemplate.displayName]
     );
   });
 });

@@ -56,19 +56,29 @@ export const seedDeleteControlTemplate = async (
  * Delete → "Delete template") and prove it is gone: from the server's
  * templates set (exactly one fewer, the control still there) and from the
  * list after a reload (the control's card visible first).
+ *
+ * `madeFromIt` names templates the spec made FROM the deleted one (the
+ * whiteboard spec's 1.3); each must still be stored and listed afterwards —
+ * the plan's "existing items created from the template are unaffected".
  */
 export const deleteTemplateAndVerify = async (
   page: Page,
   templatesSetId: string,
   name: string,
-  controlName: string
+  controlName: string,
+  madeFromIt: string[] = []
 ): Promise<void> => {
-  // Before: both cards are listed and the server holds the template once.
-  await expect(previewButton(page, controlName)).toBeVisible();
+  const kept = [controlName, ...madeFromIt];
+  // Before: every card is listed and the server holds the template once.
+  for (const keptName of kept) {
+    await expect(previewButton(page, keptName)).toBeVisible();
+  }
   await expect(previewButton(page, name)).toBeVisible();
   const before = await storedTemplateNames(page, templatesSetId);
   expect(before.filter(n => n === name), `"${name}" is stored once`).toHaveLength(1);
-  expect(before).toContain(controlName);
+  for (const keptName of kept) {
+    expect(before).toContain(keptName);
+  }
 
   // The card is the innermost list item holding the preview button (same
   // anchor as verifyTemplate); its kebab is named "Template actions".
@@ -98,15 +108,19 @@ export const deleteTemplateAndVerify = async (
   await expect(confirm).toBeHidden();
   await deleteAnswered();
 
-  // Server: the template is gone, exactly one fewer, the control stays.
+  // Server: the template is gone, exactly one fewer, the kept ones stay.
   const after = await storedTemplateNames(page, templatesSetId);
   expect(after.filter(n => n === name), `"${name}" is no longer stored`).toHaveLength(0);
-  expect(after).toContain(controlName);
+  for (const keptName of kept) {
+    expect(after, `"${keptName}" is still stored`).toContain(keptName);
+  }
   expect(after).toHaveLength(before.length - 1);
 
-  // UI after a reload: the list rendered (control card visible), then the
+  // UI after a reload: the list rendered (kept cards visible), then the
   // deleted card is absent.
   await page.reload();
-  await expect(previewButton(page, controlName)).toBeVisible();
+  for (const keptName of kept) {
+    await expect(previewButton(page, keptName)).toBeVisible();
+  }
   await expect(previewButton(page, name)).toHaveCount(0);
 };
