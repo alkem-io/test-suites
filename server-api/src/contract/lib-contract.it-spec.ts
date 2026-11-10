@@ -585,6 +585,9 @@ describe('@contract content editing readers (W2 journey 5): whiteboard, memo, Co
     ].join('\n');
     expect(lib.collaborationRoomsActiveOf(exposition)).toBe(3);
     expect(lib.collaborationRoomsActiveOf('collaboration_rooms_active 0\n')).toBe(0);
+    // Prometheus float and exponent forms of the same count
+    expect(lib.collaborationRoomsActiveOf('collaboration_rooms_active 3.0\n')).toBe(3);
+    expect(lib.collaborationRoomsActiveOf('collaboration_rooms_active 1e+00\n')).toBe(1);
     // negative control: an exposition without the gauge is an error, never a count of 0
     expect(() => lib.collaborationRoomsActiveOf('collaboration_rooms_active_total_x 9\n')).toThrow(
       /carry no collaboration_rooms_active/

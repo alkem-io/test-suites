@@ -6,7 +6,9 @@
  * room open), and say so.
  */
 
-const ROOMS_ACTIVE = /^collaboration_rooms_active (\d+)$/m;
+// Prometheus may print a gauge as `3`, `3.0` or `3e+00`; all read as the same count.
+const ROOMS_ACTIVE =
+  /^collaboration_rooms_active (\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)$/m;
 
 /** The `collaboration_rooms_active` value of a `/metrics` exposition; throws when the gauge is absent. */
 export const collaborationRoomsActiveOf = (exposition: string): number => {
