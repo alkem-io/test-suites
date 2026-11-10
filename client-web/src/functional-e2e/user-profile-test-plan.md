@@ -467,7 +467,7 @@ cards; Identity open by default, the others opened by clicking their heading):
 
 #### 5.3 Create New Organization
 
-> **Automated:** `profile-editing/us3-organisation-create-edit.spec.ts` › H1-1 (who is offered the section), H1-2 (the create dialog), H2-1 (editing it). A reference typed in the dialog: H1-3, skipped on a reproduced product defect.
+> **Automated:** `profile-editing/us3-organisation-create-edit.spec.ts` › H1-1 (who is offered the section), H1-2 (the create dialog), H2-1 (editing it). A description typed in the dialog: H1-2b, skipped on a reproduced client defect (R-7). A reference typed in the dialog: H1-3, skipped on a reproduced server defect.
 
 **Steps:**
 

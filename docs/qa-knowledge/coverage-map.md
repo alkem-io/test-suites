@@ -313,7 +313,7 @@ are load-bearing:
 
 ## Profile editing — Space About, own profile, organisation create/edit (W2 journey 7)
 
-_Searched 2026-11-09, branch `qa/w2-journey-7` off `origin/develop` @ `afbefaf2`, against client-web `develop` @ `907103f5f` and server `develop` @ `51eb90878`. Plan: `client-web/src/functional-e2e/profile-editing/profile-editing-test-plan.md` (Approved with provisional rulings; 8 of 9 cases built 2026-11-09, H1-3 skipped on a reproduced defect)._
+_Searched 2026-11-09, branch `qa/w2-journey-7` off `origin/develop` @ `afbefaf2`, against client-web `develop` @ `907103f5f` and server `develop` @ `51eb90878`. Plan: `client-web/src/functional-e2e/profile-editing/profile-editing-test-plan.md` (Approved with provisional rulings; 10 cases, 8 live: H1-3 skipped on a reproduced server defect, H1-2b on a reproduced client defect, R-7)._
 
 | Behaviour | Coverage | Where |
 | --- | --- | --- |
@@ -326,7 +326,7 @@ _Searched 2026-11-09, branch `qa/w2-journey-7` off `origin/develop` @ `afbefaf2`
 | User social links / references through the UI | **None** | gap |
 | Organisation created by the platform admin in Administration; deleted there | Full (UI + API) | `contributors-crud/organization-crud.spec.ts` › 2.1 |
 | Who may create an organisation (`CREATE_ORGANIZATION` = Platform Support + Feature Organization Creator) | Full at API level, **not nightly** (platform-roles projects) | server-api `platform-roles/roles/feature-organization-creator.it-spec.ts` (A6); UI `profile-editing/us3-organisation-create-edit.spec.ts` › H1-1 |
-| Organisation created from User Settings › Organisations (non-admin dialog) | **None** | `us3-organisation-create-edit.spec.ts` › H1-2; H1-3 built and skipped (product defect) |
+| Organisation created from User Settings › Organisations (non-admin dialog) | **None** | `us3-organisation-create-edit.spec.ts` › H1-2 (name ID, name, tagline, website, Admin + Associate). The description typed at create: H1-2b, built and skipped (client defect R-7); references: H1-3, built and skipped (server defect) |
 | Organisation name, tagline, website edit, seen anonymously | Full (UI + API) | `organization-crud.spec.ts` › 2.2 |
 | Organisation description, location, keywords, capabilities edit | Partial: API `contributor-management/organization/organization.it-spec` › "should update" (description, location; no tagsets) | `us3-organisation-create-edit.spec.ts` › H2-1 |
 
