@@ -1,31 +1,35 @@
 // spec: client-web/src/functional-e2e/profile-editing/profile-editing-test-plan.md
 // W2 journey 7 (docs/qa/server-rebuild/plan.md § W2), an organisation created
 // by a non-admin user: who is offered "Create Organisation" (H1-1), the create
-// dialog (H1-2), editing what the creator then owns (H2-1), and a reference
-// typed into the dialog (H1-3).
+// dialog (H1-2), editing what the creator then owns (H2-1), and two fields
+// the dialog loses today: the description (H1-2b, client defect R-7) and a
+// reference (H1-3, server defect R-3), each skipped with its record.
 //
 // The creator is a disposable user, granted Feature Organization Creator over
 // the API (the seeded `feature.orgcreator` persona would gain and lose an
 // Admin role every run). The file is SERIAL: H1-1 (grant) → H1-2 (create) →
-// H2-1 (edit the created organisation). H1-3 needs only H1-1. Organisations
+// H2-1 (edit the created organisation). H1-2b and H1-3 need only H1-1, and
+// each creates its own organisation after H1-2 has counted. Organisations
 // the walk creates in the browser are known only by the nameID it typed, so
 // each is recorded before it is submitted and deleted by that nameID, before
 // the user.
 
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect, type Locator, type Page } from '@playwright/test';
 import {
   assignPlatformRole,
   getUserToken,
   readMyPlatformRoles,
-  readRoleSetUsersInRole,
   RoleName,
   TestUserManager,
+  updateOrganizationData,
 } from '@alkemio/tests-lib';
 import { must } from '../helpers/lib-actor.helper';
 import { grantCookieConsent } from '../helpers/cookies.helper';
 import {
   addTags,
   baseUrl,
+  cityCombobox,
+  countryCombobox,
   createSectionTrigger,
   deleteDisposableUser,
   deleteOrganizationIfPresent,
@@ -38,6 +42,7 @@ import {
   orgKeywordsInput,
   organizationIdByNameId,
   orgSettingsUrl,
+  pickCountry,
   registerDisposableUser,
   chipButtons,
   runCleanup,
@@ -46,6 +51,7 @@ import {
   sorted,
   tagsOf,
   uid,
+  usersInOrgRole,
   type DisposableUser,
   type PersonaPage,
 } from './profile-editing.helpers';
@@ -72,12 +78,10 @@ test.beforeAll(async ({ browser }) => {
 test.afterAll(async () => {
   await runCleanup([
     ['close creator', () => creatorPage?.close() ?? Promise.resolve()],
-    ...createdNameIds.map(
-      (nameId): [string, () => Promise<unknown>] => [
-        `delete org ${nameId}`,
-        () => deleteOrganizationIfPresent(nameId),
-      ]
-    ),
+    ...createdNameIds.map((nameId): [string, () => Promise<unknown>] => [
+      `delete org ${nameId}`,
+      () => deleteOrganizationIfPresent(nameId),
+    ]),
     ['delete creator', () => deleteDisposableUser(creator)],
   ]);
 });
@@ -95,17 +99,45 @@ const EMPTY_STATE = "You're not associated with any organisations yet.";
 /** Expands "Create Organisation", clicks "New Organisation" and returns the dialog. */
 const openCreateDialog = async (page: Page) => {
   await openSettingsSection(page, 'Create Organisation');
-  await page.getByRole('button', { name: 'New Organisation', exact: true }).click();
+  await page
+    .getByRole('button', { name: 'New Organisation', exact: true })
+    .click();
   const dialog = newOrganisationDialog(page);
   await expect(dialog).toBeVisible();
   return dialog;
 };
 
+/**
+ * Opens the "New organisation" dialog and types the name ID and display name.
+ * The name ID is recorded BEFORE submitting: the browser creates the
+ * organisation, and only the name ID typed here identifies it for cleanup.
+ */
+const startCreate = async (page: Page, nameId: string, name: string) => {
+  await openOrganisationsTab(page, creator!.nameId);
+  const dialog = await openCreateDialog(page);
+  createdNameIds.push(nameId);
+  await dialog.getByRole('textbox', { name: 'Alias (name ID)' }).fill(nameId);
+  await dialog.getByRole('textbox', { name: 'Display name' }).fill(name);
+  return dialog;
+};
+
+/** Clicks Create, fails on a server refusal, and waits for the new organisation's page. */
+const submitCreate = async (page: Page, dialog: Locator, nameId: string) => {
+  const created = expectMutationAnswered(page, 'createOrganization');
+  await dialog
+    .getByRole('button', { name: 'Create organisation', exact: true })
+    .click();
+  await created();
+  await page.waitForURL(`**/organization/${nameId}`);
+};
+
 const nameIdOf = (suffix: string) => `w2-${suffix}-${RUN}`;
 const NAME_ID_1 = nameIdOf('org');
 const NAME_ID_2 = nameIdOf('org2');
+const NAME_ID_3 = nameIdOf('org3');
 const NAME_1 = `W2 Org ${RUN}`;
 const NAME_2 = `W2 Org Two ${RUN}`;
+const NAME_3 = `W2 Org Three ${RUN}`;
 
 test.describe('W2 journey 7 — an organisation created from User Settings', () => {
   test('H1-1 only a user holding Feature Organization Creator is offered "Create Organisation"', async () => {
@@ -139,31 +171,22 @@ test.describe('W2 journey 7 — an organisation created from User Settings', () 
     ).toBeVisible();
   });
 
-  test.skip('H1-2 the user creates an organisation in the dialog; every field is stored and the creator administers it (product defect, unfiled: the description is lost when Create is clicked before the editor\'s async markdown conversion resolves)', async () => {
+  test('H1-2 the user creates an organisation in the dialog; every field is stored and the creator administers it', async () => {
     const page = creatorPage!.page;
     const tagline = `Org tagline ${RUN}`;
-    const desc = `ORG DESC ${RUN}`;
     const website = `https://example.org/w2-${RUN}`;
 
-    await openOrganisationsTab(page, creator!.nameId);
-    const dialog = await openCreateDialog(page);
-
-    // Recorded before submitting: the browser creates the organisation, and
-    // only the nameID typed here identifies it for the cleanup.
-    createdNameIds.push(NAME_ID_1);
-    await dialog.getByRole('textbox', { name: 'Alias (name ID)' }).fill(NAME_ID_1);
-    await dialog.getByRole('textbox', { name: 'Display name' }).fill(NAME_1);
+    // No description is typed here: the dialog loses it today (R-7). That
+    // check is H1-2b, skipped with the defect record; everything else runs.
+    const dialog = await startCreate(page, NAME_ID_1, NAME_1);
     await dialog.getByRole('textbox', { name: 'Tagline' }).fill(tagline);
-    await dialog.getByRole('textbox', { name: 'Formatting toolbar' }).fill(desc);
     await dialog.getByRole('textbox', { name: 'Website' }).fill(website);
+    await submitCreate(page, dialog, NAME_ID_1);
 
-    const created = expectMutationAnswered(page, 'createOrganization');
-    await dialog.getByRole('button', { name: 'Create organisation', exact: true }).click();
-    await created();
-
-    await expect(page.getByText('Organisation created.', { exact: true })).toBeVisible();
+    await expect(
+      page.getByText('Organisation created.', { exact: true })
+    ).toBeVisible();
     await expect(dialog).toBeHidden();
-    await page.waitForURL(`**/organization/${NAME_ID_1}`);
     await expect(
       page.getByRole('heading', { level: 1, name: NAME_1, exact: true })
     ).toBeVisible();
@@ -181,16 +204,11 @@ test.describe('W2 journey 7 — an organisation created from User Settings', () 
       org.profile.tagline,
       org.website,
     ]).toEqual([NAME_ID_1, NAME_1, tagline, website]);
-    expect(org.profile.description).toContain(desc);
 
     // The server makes the creator Associate AND Admin.
     for (const role of [RoleName.Admin, RoleName.Associate]) {
-      const holders = must(
-        await readRoleSetUsersInRole(org.roleSet.id, role),
-        `usersInRole(${role})`
-      ).lookup.roleSet?.usersInRole;
       expect(
-        (holders ?? []).map(u => u.id),
+        await usersInOrgRole(org.roleSet.id, role),
         `creator holds ${role}`
       ).toContain(creator!.id);
     }
@@ -208,7 +226,7 @@ test.describe('W2 journey 7 — an organisation created from User Settings', () 
     ).toBeVisible();
   });
 
-  test.skip('H2-1 the creator edits description, location, keywords and capabilities; stored, reloaded, seen anonymously (blocked: edits the organisation H1-2 creates, and H1-2 is skipped on a product defect)', async ({
+  test('H2-1 the creator edits description, location, keywords and capabilities; stored, reloaded, seen anonymously', async ({
     browser,
   }) => {
     const page = creatorPage!.page;
@@ -220,24 +238,32 @@ test.describe('W2 journey 7 — an organisation created from User Settings', () 
 
     const id = await organizationIdByNameId(NAME_ID_1);
     expect(id, `H1-2 created ${NAME_ID_1}`).not.toBeNull();
+    // H1-2 types no description (R-7), so give the organisation one through
+    // the lib: "the old text is replaced" needs an old text.
+    must(
+      await updateOrganizationData({
+        ID: id!,
+        profileData: { description: desc },
+      }),
+      'seed description'
+    );
     const before = await serverOrganization(id!);
+    expect(before.profile.description?.trim()).toBe(desc);
     // The update-by-id path: both reserved tagsets exist and are empty.
     expect(tagsOf(before.profile.tagsets, 'keywords')).toEqual([]);
     expect(tagsOf(before.profile.tagsets, 'capabilities')).toEqual([]);
 
     await page.goto(orgSettingsUrl(NAME_ID_1, 'profile'));
     await openSettingsSection(page, 'About');
-    const location = page.getByRole('group', { name: 'Location' });
-    const city = location.getByRole('combobox', { name: 'City', exact: true });
-    const country = location.getByRole('combobox', { name: /^(?!City$)/ });
+    const description = page.getByRole('textbox', {
+      name: 'Formatting toolbar',
+    });
+    await expect(description).toContainText(desc);
 
-    await page.getByRole('textbox', { name: 'Formatting toolbar' }).fill(desc2);
-    await city.fill('Rotterdam');
-    await city.press('Escape');
-    await country.click();
-    await page.getByPlaceholder('Search country…').fill('Netherlands');
-    await page.getByRole('button', { name: 'Netherlands', exact: true }).click();
-    await expect(country).toContainText('Netherlands');
+    await description.fill(desc2);
+    await cityCombobox(page).fill('Rotterdam');
+    await cityCombobox(page).press('Escape');
+    await pickCountry(page, 'Netherlands');
     await addTags(orgKeywordsInput(page), [k1, k2]);
     await addTags(orgCapabilitiesInput(page), [c1]);
 
@@ -246,18 +272,22 @@ test.describe('W2 journey 7 — an organisation created from User Settings', () 
 
     await page.reload();
     await openSettingsSection(page, 'About');
-    await expect(page.getByRole('textbox', { name: 'Formatting toolbar' })).toContainText(desc2);
-    await expect(city).toHaveValue('Rotterdam');
-    await expect(country).toContainText('Netherlands');
+    await expect(description).toContainText(desc2);
+    await expect(cityCombobox(page)).toHaveValue('Rotterdam');
+    await expect(countryCombobox(page)).toContainText('Netherlands');
     for (const tag of [k1, k2, c1]) {
       await expect(chipButtons(page, tag)).toHaveCount(2);
     }
 
     const after = await serverOrganization(id!);
-    // The old text is replaced; desc2 present is the positive control.
+    // The old text is replaced: exactly the new paragraph is stored.
+    expect(after.profile.description?.trim()).toBe(desc2);
     expect(after.profile.description).toContain(desc2);
     expect(after.profile.description).not.toContain(desc);
-    expect(after.profile.location).toEqual({ city: 'Rotterdam', country: 'NL' });
+    expect(after.profile.location).toEqual({
+      city: 'Rotterdam',
+      country: 'NL',
+    });
     // Cross-wiring guard: keywords never land in capabilities, or the reverse.
     expect(tagsOf(after.profile.tagsets, 'keywords')).toEqual(sorted([k1, k2]));
     expect(tagsOf(after.profile.tagsets, 'capabilities')).toEqual([c1]);
@@ -275,7 +305,11 @@ test.describe('W2 journey 7 — an organisation created from User Settings', () 
         visitor
           .getByRole('listitem')
           .filter({
-            has: visitor.getByRole('heading', { level: 3, name: heading, exact: true }),
+            has: visitor.getByRole('heading', {
+              level: 3,
+              name: heading,
+              exact: true,
+            }),
           })
           .getByRole('list')
           .getByRole('listitem');
@@ -286,6 +320,32 @@ test.describe('W2 journey 7 — an organisation created from User Settings', () 
     } finally {
       await anonymous.close();
     }
+  });
+
+  // R-7 (ruling: client defect). REPRODUCED on test-alkem.io (2026-11-09, first
+  // run) and on the local stack (client-web 907103f5f) with the converter
+  // chunks delayed: the dialog's MarkdownEditor hands its value to the form
+  // only after `htmlToMarkdown()` resolves (`useMarkdownEditorState` ›
+  // `onUpdate`), and the converter lazy-loads its unified/rehype/remark
+  // pipeline on first use, so a Create clicked before then stores "". Every
+  // other field of the dialog is H1-2, live. Skipped, never `test.fail`: drop
+  // the skip when the client keeps the description. The defect is not filed
+  // yet (the plan carries the record); add the issue number to the title then.
+  test.skip("H1-2b a description typed in the create dialog is kept (reproduced client defect R-7, unfiled: the description is lost when Create is clicked before the editor's async markdown conversion resolves)", async () => {
+    const page = creatorPage!.page;
+    const desc = `ORG DESC CREATE ${RUN}`;
+
+    const dialog = await startCreate(page, NAME_ID_3, NAME_3);
+    await dialog
+      .getByRole('textbox', { name: 'Formatting toolbar' })
+      .fill(desc);
+    await submitCreate(page, dialog, NAME_ID_3);
+
+    const id = await organizationIdByNameId(NAME_ID_3);
+    expect(id).not.toBeNull();
+    expect((await serverOrganization(id!)).profile.description?.trim()).toBe(
+      desc
+    );
   });
 
   // R-3 (ruling: defect). REPRODUCED RED on the local stack (server 51eb90878):
@@ -301,26 +361,19 @@ test.describe('W2 journey 7 — an organisation created from User Settings', () 
     const refName = `Charter ${RUN}`;
     const refUri = `https://example.org/charter-${RUN}`;
 
-    await openOrganisationsTab(page, creator!.nameId);
-    const dialog = await openCreateDialog(page);
-    createdNameIds.push(NAME_ID_2);
-    await dialog.getByRole('textbox', { name: 'Alias (name ID)' }).fill(NAME_ID_2);
-    await dialog.getByRole('textbox', { name: 'Display name' }).fill(NAME_2);
+    const dialog = await startCreate(page, NAME_ID_2, NAME_2);
     await dialog.getByRole('button', { name: 'Add another reference' }).click();
     await dialog.getByRole('textbox', { name: 'Title' }).fill(refName);
     await dialog.getByRole('textbox', { name: 'URL' }).fill(refUri);
 
-    const created = expectMutationAnswered(page, 'createOrganization');
-    await dialog.getByRole('button', { name: 'Create organisation', exact: true }).click();
-    await created();
-    await page.waitForURL(`**/organization/${NAME_ID_2}`);
+    await submitCreate(page, dialog, NAME_ID_2);
 
     const id = await organizationIdByNameId(NAME_ID_2);
     expect(id).not.toBeNull();
     const references = (await serverOrganization(id!)).profile.references;
     // Positive control: the read returned the default social links, so the
     // list was read and is not merely empty.
-    expect((references ?? []).map(r => r.name).sort()).toEqual(
+    expect((references ?? []).map(r => r.name)).toEqual(
       expect.arrayContaining(['bsky', 'github', 'linkedin'])
     );
     expect(references).toEqual(

@@ -16,6 +16,42 @@ import { openSettingsSection, settingsSectionTrigger } from '../helpers/settings
 
 const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 
+// The Location fields (City + Country) are the same CRD component on the user,
+// organisation and Space settings tabs, so they are exported as functions too:
+// the organisation walks in `profile-editing/` use them without this class.
+
+/**
+ * The City field: since client-web#10499 a free-text
+ * `<input role="combobox" aria-label="City">` with suggestions, no longer a
+ * textbox, so a textbox lookup for "City" matches nothing.
+ */
+export const cityCombobox = (page: Page): Locator =>
+  page.getByRole('combobox', { name: 'City', exact: true });
+
+/**
+ * The Country picker: a `role="combobox"` button whose accessible name is the
+ * selected country or the "Select a country" placeholder (plus its nested
+ * "Clear country" button once set). Since client-web#10499 it is the SECOND
+ * combobox of the Location group, next to City, so it is found as the group's
+ * combobox that is not City.
+ */
+export const countryCombobox = (page: Page): Locator =>
+  page
+    .getByRole('group', { name: 'Location' })
+    .getByRole('combobox', { name: /^(?!City$)/ });
+
+/**
+ * Picks a country from the combobox's popover and proves it took. Asserts with
+ * `toContainText`: the trigger nests a "Clear country" button, so its
+ * accessible name is not just the country.
+ */
+export const pickCountry = async (page: Page, name: string) => {
+  await countryCombobox(page).click();
+  await page.getByPlaceholder('Search country…').fill(name);
+  await page.getByRole('button', { name, exact: true }).click();
+  await expect(countryCombobox(page)).toContainText(name);
+};
+
 /** The collapsible cards; the Profile Picture card on the right is fixed open and has no trigger. */
 export type ProfileSection = 'Identity' | 'About You' | 'Social Links' | 'References';
 
@@ -55,38 +91,18 @@ export class UserProfileSettingsPage {
     return this.page.getByRole('textbox', { name: label, exact: true });
   }
 
-  /**
-   * The City field (About You → Location): since client-web#10499 a free-text
-   * `<input role="combobox" aria-label="City">` with suggestions, no longer a
-   * textbox, so `field('City')` matches nothing.
-   */
+  /** About You → Location → City (see `cityCombobox`). */
   get cityCombobox(): Locator {
-    return this.page.getByRole('combobox', { name: 'City', exact: true });
+    return cityCombobox(this.page);
   }
 
-  /**
-   * The Country picker (About You → Location): a `role="combobox"` button whose
-   * accessible name is the selected country or the "Select a country"
-   * placeholder (plus its nested "Clear country" button once set). Since
-   * client-web#10499 it is the SECOND combobox of the tab, next to City, so it
-   * is found as the Location group's combobox that is not City.
-   */
+  /** About You → Location → Country (see `countryCombobox`). */
   get countryCombobox(): Locator {
-    return this.page
-      .getByRole('group', { name: 'Location' })
-      .getByRole('combobox', { name: /^(?!City$)/ });
+    return countryCombobox(this.page);
   }
 
-  /**
-   * Picks a country from the combobox's popover and proves it took. Asserts
-   * with `toContainText`: the trigger nests a "Clear country" button, so its
-   * accessible name is not just the country.
-   */
   async pickCountry(name: string) {
-    await this.countryCombobox.click();
-    await this.page.getByPlaceholder('Search country…').fill(name);
-    await this.page.getByRole('button', { name, exact: true }).click();
-    await expect(this.countryCombobox).toContainText(name);
+    await pickCountry(this.page, name);
   }
 
   async fillField(label: string, value: string) {
