@@ -7,7 +7,7 @@ There is no diff. The basis is the plan, the audit, and product source read at c
 ## How to run
 ```bash
 cd client-web && pnpm exec playwright test src/functional-e2e/callout-placement/
-pnpm run test:nightly --project="Callout placement"     # to register: tier extended
+pnpm run test:nightly --project="Callout placement"     # registered, tier extended
 pnpm -C ../server-api exec vitest run --project contract # LA-1/LA-2 shape cases (still in client-web)
 ```
 - No env beyond the standard nightly. Each file seeds its own PUBLIC + OPEN L0 Space. `space.admin` and `space.member` join through the factory, so `KRATOS_ADMIN_URL` is needed as for journeys 1–4.
@@ -51,11 +51,11 @@ Techniques: **ST** state transition · **BVA** list position (first/last) · **D
 |---|---|---|---|---|---|
 | FS-1 | Admin, Settings › Layout: Post actions › Move to › last phase, then Save changes | ST, EP | Row under the target column after reload. `readCalloutsPlacement`: the tag equals the target, and the post sorts after the destination's existing post. The member's target tab shows both in that order; the source tab shows the control post and not the moved one | `us1-post-flow-state.spec.ts` › FS-1 — admin moves a post to the last phase in Settings › Layout, and the member sees it there | UI + lib |
 | FS-2 | Admin renames the last phase (Edit Details) | ST, EG | The seeded post's tag equals the new name. The member's tab with the new name lists it, and no tab carries the old name | `us1-post-flow-state.spec.ts` › FS-2 — renaming the last phase keeps its posts in it | UI + lib |
-| RO-1 | Admin, post card › Settings › Move to Top on the lowest of three | BVA, EP | Feed order updates in place and after reload. `sortOrder` strictly ascending in the new order. Member sees the same order | `us2-reorder-posts.spec.ts` › RO-1 — Move to Top on the lowest of three posts, stored and seen by the member | UI + lib |
-| RO-2 | Admin › Move Down on the highest of three | BVA, EG | Adjacent swap in feed and read-back. A post in another phase keeps its exact `sortOrder` and tag. Member sees the swap | `us2-reorder-posts.spec.ts` › RO-2 — Move Down on the top post swaps it with the next and leaves other phases untouched | UI + lib |
+| RO-1 | Admin, post card › Settings › Move to Top on the lowest of three | BVA, EP | Boundary first: the tab's last post (found by stored order; a template post can be it) offers Move Up but not Move Down / Move to Bottom. Feed order updates in place and after reload. `sortOrder` strictly ascending in the new order. Member sees the same order | `us2-reorder-posts.spec.ts` › RO-1 — Move to Top on the lowest of three posts, stored and seen by the member | UI + lib |
+| RO-2 | Admin › Move Down on the highest of three | BVA, EG | The read-back shows it is the tab's first post, and its menu offers Move Down but not Move to Top / Move Up. Adjacent swap in feed and read-back. A post in another phase keeps its exact `sortOrder` and tag. Member sees the swap | `us2-reorder-posts.spec.ts` › RO-2 — Move Down on the top post swaps it with the next and leaves other phases untouched | UI + lib |
 | RO-3 | Member opens the same card menu | DT | Share is shown (positive control). No Move to Top/Up/Down/Bottom, Edit or Delete, read after the browser's `CalloutsSetAuthorization` answered | `us2-reorder-posts.spec.ts` › RO-3 — a member is not offered reorder, edit or delete on a post | UI |
 | MC-1 | Admin edits the member's response, Post location › target post (in another phase), Save | UC, ST, EP | Target list offers both post-collecting posts, not the link-collection one. "Response moved successfully.". `readCalloutContributions`: gone from the source (the sibling stays), present in the target with the same id. The member sees it under the target with their name | `us3-move-response.spec.ts` › MC-1 — admin moves the member's response to a post in another phase | UI + lib |
-| MC-2 | The author edits their own response | DT | The Edit Post title is pre-filled (positive control). There is no "Post location" | `us3-move-response.spec.ts` › MC-2 — the author is not offered the move on their own response | UI |
+| MC-2 | The author edits their own response | DT | `readPost` as the author: UPDATE held (positive control), MOVE_POST not. The Edit Post title is pre-filled (positive control). There is no "Post location" | `us3-move-response.spec.ts` › MC-2 — the author is not offered the move on their own response | UI |
 | — | Cross-space transfer keeps or adopts the phase | — | — | `callout/transfer/transfer-callout-flow-state.it-spec.ts` | covered (API) |
 | — | Phase column order, Layout | — | — | `sidebar-widgets/subspace-us1-customize.spec.ts` S-07…S-13 | covered |
 | — | Platform resource admin moves a response | — | — | `platform-roles` › `A9.moveContributionToCallout` | covered (API, manual runner) |
@@ -64,7 +64,7 @@ DT matrix: admin shows the Move items (RO-1/2) and the Post location (MC-1); the
 
 ### Regression guards
 - **FS-1:** `updateCallout` ignores the classification, or stores a tag that matches no phase, so the post vanishes from every tab. A sort update dropped when it arrives together with a phase change shows as the wrong position.
-- **FS-2:** phase rename without retagging posts (`tagsetService.updateTagsetsSelectedValue` today), so the posts are orphaned.
+- **FS-2:** pins the user outcome: after a phase rename the posts are still listed under the new name. The client also retags each post after the rename, so FS-2 does not isolate the server's own retag (`tagsetService.updateTagsetsSelectedValue`): it goes red only if both stop.
 - **RO-2:** `updateCalloutsSortOrder` gets only the active tab's ids. A server that renumbers the whole set, or rejects a partial list, turns this red.
 - **RO-3 / MC-2:** `UPDATE` on the callouts set, or `MOVE_POST`, granted to members or authors.
 - **MC-1:** move is copy+keep, delete+create (new id, author lost), or a no-op.
@@ -121,7 +121,7 @@ It does **not** prove:
 
 Built on the operator's go-ahead with every ruling at its provisional default (R-1…R-7). The plan status is unchanged: a human sets it.
 
-**Files.** `callout-placement.helpers.ts`, `us1-post-flow-state.spec.ts` (FS-1, FS-2), `us2-reorder-posts.spec.ts` (RO-1, RO-2, RO-3), `us3-move-response.spec.ts` (MC-1, MC-2). Lib: `readCalloutsPlacement` (LA-1) and `TagsetReservedName` (LA-2), with the contract cases in `lib-contract.it-spec.ts`. Registered as the nightly project `Callout placement`, tier `extended`.
+**Files.** `callout-placement.helpers.ts`, `us1-post-flow-state.spec.ts` (FS-1, FS-2), `us2-reorder-posts.spec.ts` (RO-1, RO-2, RO-3), `us3-move-response.spec.ts` (MC-1, MC-2). Lib: `readCalloutsPlacement` (LA-1), `TagsetReservedName` (LA-2) and `readPost` (LA-3, added by the QA challenge), with the contract entries in `lib-contract.it-spec.ts`. Registered as the nightly project `Callout placement`, tier `extended`.
 
 **Deviations from the build sheet.**
 - `expectMutationAnswered` appends the `(` itself, so the specs pass `updateCallout`, `updateCalloutsSortOrder`, `updateInnovationFlowState` and `moveContributionToCallout` without it. The sheet's `'updateCallout('` waits for a request that never matches and times out. `updateCallout` + `(` still does not match `updateCalloutsSortOrder(`.
@@ -129,7 +129,7 @@ Built on the operator's go-ahead with every ruling at its provisional default (R
 - FS-2 opens the dialog through `Column actions` › `Edit Details`, not the pencil. A column holds two buttons named `Edit Details` (the title pencil and the description pencil), so the pencil is ambiguous.
 - `postCard` matches the heading with `page.getByRole`, not `calloutHeading`: a `has` filter is resolved inside each card, and `calloutHeading` is rooted in the feed region.
 - The contract shape case also asserts that the seeded post is in the placement list, so the list cannot be empty and pass.
-- Local runs used `PW_BROWSER=chromium` (no branded Chrome on the machine) against the local `develop` stack. The nightly's `chrome` channel and test-alkem.io runs are still to do.
+- Local runs used `PW_BROWSER=chromium` (no branded Chrome on the machine) against the local `develop` stack. test-alkem.io (nightly config): 7/7 in two runs on 2026-11-09 and again in two runs on 2026-11-10 after the review fixes, with no Space, organisation or user left behind.
 
 **Red-proof (each oracle made to fail once, then restored).**
 
@@ -146,3 +146,12 @@ Built on the operator's go-ahead with every ruling at its provisional default (R
 **Product observations.**
 - RO-1: the feed reorders in place, before any reload, so the possible client defect (reorder only after reload) did not reproduce.
 - No product defect was found.
+
+## QA challenge (2026-11-10)
+
+Challenged on the local stack (server `51eb90878`, client-web `907103f5f`, chromium, headless). Every original oracle went red under an independent sabotage. Two findings were fixed test-side. No assertion was loosened.
+
+- **MC-2's absence check could pass too early.** "Post location" renders only when the author holds `MOVE_POST` **and** a second query, the sibling posts, has answered. That query runs after the `PostSettings` query that fills the title, so the pre-filled title does not prove the section has had its chance to render. Opened as the admin, the "Post location" `toHaveCount(0)` passed. Only the combobox check, a few milliseconds later, went red. Fix: `readPost` (LA-3) reads the author's privileges on the response's post first. UPDATE must be held (positive control) and MOVE_POST must not. The page checks stay as the user-visible half.
+- **BVA was labelled but not implemented.** RO-1 and RO-2 never asserted a list boundary. RO-2 now checks, through the read-back, that its post is the tab's first, and asserts Move to Top / Move Up absent next to Move Down. RO-1 finds the tab's last post by stored order (on a default L0 it is the template post "Welcome") and asserts Move Up shown, Move Down / Move to Bottom absent.
+- Red-proof of the new oracles: the read-back as the admin fails `not.toContain('MOVE_POST')`. The "last post" taken as the lowest seeded post fails on `Move Down`. The "first post" menu read on the second post fails on `Move to Top`.
+- Minor findings, also fixed: MC-1's target read-back compares the whole list, so a duplicated response goes red. RO-3 no longer waits for two animation frames; the `CalloutsSetAuthorization` response and the Share control already prove the menu has rendered. The LA-1 negative control asserts its two conditions separately, with the error in the failure message, and rejects a transport failure. The FS-2 regression guard no longer claims to isolate the server's retag. The coverage-map row for innovation-flow transitions keeps its *Where* and *Established* cells.

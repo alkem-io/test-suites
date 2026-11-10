@@ -27,6 +27,7 @@ import {
   seededHeadings,
   seedPlacementSpace,
   seedPost,
+  tabEnds,
 } from './callout-placement.helpers';
 
 /**
@@ -34,7 +35,8 @@ import {
  * lands on top, so the seeded order is A, B, C, but no case assumes it: every
  * case reads the stored order first and speaks of [x, y, z] (top to bottom).
  * A template post such as "Welcome" may sit below the seeded three in the same
- * tab, so the top/bottom boundary menu items are never asserted.
+ * tab, so the boundary cases (BVA) find the tab's first and last post through
+ * the stored order (`tabEnds`), never by assuming which post it is.
  *   admin `space.admin` · member `space.member`
  */
 const uid = UniqueIDGenerator.getID();
@@ -100,6 +102,23 @@ test('RO-1 — Move to Top on the lowest of three posts, stored and seen by the 
   await renderFeed(page, trio());
   await expect(seededHeadings(page, uid)).toHaveText([nx, ny, nz]);
 
+  // BVA, last position: the tab's last post can move up but not down.
+  const adminView = await placement(calloutsSetId(), TestUser.SPACE_ADMIN);
+  const { bottom } = tabEnds(adminView, firstPhase);
+  await renderFeed(page, [bottom]);
+  const lastMenu = await openPostMenu(page, get(adminView, bottom).name);
+  await expect(
+    lastMenu.getByRole('menuitem', { name: 'Move Up', exact: true })
+  ).toBeVisible();
+  for (const item of ['Move Down', 'Move to Bottom']) {
+    await expect(
+      lastMenu.getByRole('menuitem', { name: item, exact: true }),
+      item
+    ).toHaveCount(0);
+  }
+  await page.keyboard.press('Escape');
+  await expect(page.getByRole('menu')).toBeHidden();
+
   const menu = await openPostMenu(page, nz);
   await expect(
     menu.getByRole('menuitem', { name: 'Move to Top', exact: true })
@@ -141,6 +160,12 @@ test('RO-2 — Move Down on the top post swaps it with the next and leaves other
   const K = ids.K!;
   const K0 = { ...get(before, K) };
   const page = admin!.page;
+  // Every create lands on top, so the top seeded post is the tab's first post.
+  expect(
+    tabEnds(await placement(calloutsSetId(), TestUser.SPACE_ADMIN), firstPhase)
+      .top,
+    'the top seeded post is the first post of its tab'
+  ).toBe(x);
 
   await page.goto(`${baseUrl}/${space().nameId}`);
   await openPhaseTab(page, firstPhase);
@@ -151,6 +176,13 @@ test('RO-2 — Move Down on the top post swaps it with the next and leaves other
   await expect(
     menu.getByRole('menuitem', { name: 'Move Down', exact: true })
   ).toBeVisible();
+  // BVA, first position: the tab's first post can move down but not up.
+  for (const item of ['Move to Top', 'Move Up']) {
+    await expect(
+      menu.getByRole('menuitem', { name: item, exact: true }),
+      item
+    ).toHaveCount(0);
+  }
   const answered = expectMutationAnswered(page, 'updateCalloutsSortOrder');
   await menu.getByRole('menuitem', { name: 'Move Down', exact: true }).click();
   await answered();
@@ -187,12 +219,6 @@ test('RO-3 — a member is not offered reorder, edit or delete on a post', async
   await page.goto(`${baseUrl}/${space().nameId}`);
   await authorized;
   await openPhaseTab(page, firstPhase);
-  await page.evaluate(
-    () =>
-      new Promise<void>(resolve =>
-        requestAnimationFrame(() => requestAnimationFrame(() => resolve()))
-      )
-  );
   await renderFeed(page, trio());
   await expect(seededHeadings(page, uid)).toHaveText(names);
 

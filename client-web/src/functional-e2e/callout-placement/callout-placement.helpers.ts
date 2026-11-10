@@ -153,6 +153,23 @@ export const get = (map: Map<string, Placement>, id: string): Placement => {
   return found;
 };
 
+/**
+ * The first and last post of a phase's tab by stored order, whoever created
+ * them (a template post such as "Welcome" can be the last).
+ */
+export const tabEnds = (
+  map: Map<string, Placement>,
+  phaseName: string
+): { top: string; bottom: string } => {
+  const inTab = [...map]
+    .filter(([, p]) => p.phase === phaseName)
+    .sort(([, a], [, b]) => a.sortOrder - b.sortOrder)
+    .map(([id]) => id);
+  if (inTab.length < 2)
+    throw new Error(`phase ${phaseName} holds fewer than two posts`);
+  return { top: inTab[0], bottom: inTab[inTab.length - 1] };
+};
+
 /** The seeded posts' titles in the visible tab, in page order. */
 export const seededHeadings = (page: Page, uid: string): Locator =>
   contentFeed(page).getByRole('heading', {
