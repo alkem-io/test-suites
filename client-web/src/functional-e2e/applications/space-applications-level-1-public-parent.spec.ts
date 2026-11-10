@@ -18,6 +18,7 @@ import { loginViaCrd } from '../helpers/login.helper';
 import { enableApplicationNotifications } from '../helpers/notification-settings.helper';
 import {
   applicantNotificationEntry,
+  withUniqueSubspaceName,
   applyFromSubspaceAboutDialog,
 } from './applications.helpers';
 
@@ -69,7 +70,9 @@ test.describe('Level 1 Subspace - Applications (Public Parent Space)', () => {
 
   test.beforeAll(async ({ browser }) => {
     globalBaseScenario =
-      await TestScenarioFactory.createBaseScenario(scenarioConfig);
+      await TestScenarioFactory.createBaseScenario(
+        withUniqueSubspaceName(scenarioConfig)
+      );
     baseScenario = globalBaseScenario;
 
     // The bell-dialog assertions below need the in-app channel ON for the
@@ -239,7 +242,9 @@ test.describe('Level 1 Subspace - Applications (Public Parent Space)', () => {
   test.describe('Subspace Application Management (Public Parent)', () => {
     test.beforeEach(async () => {
       baseScenario =
-        await TestScenarioFactory.createBaseScenario(scenarioConfig);
+        await TestScenarioFactory.createBaseScenario(
+        withUniqueSubspaceName(scenarioConfig)
+      );
       const spaceNameId = baseScenario.space.nameId;
       const subspaceNameId = baseScenario.subspace.nameId;
 

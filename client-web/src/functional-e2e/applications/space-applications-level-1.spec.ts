@@ -16,6 +16,7 @@ import { loginViaCrd } from '../helpers/login.helper';
 import { enableApplicationNotifications } from '../helpers/notification-settings.helper';
 import {
   applicantNotificationEntry,
+  withUniqueSubspaceName,
   applyFromSubspaceAboutDialog,
 } from './applications.helpers';
 
@@ -71,7 +72,9 @@ test.describe('Level 1 Subspace - Applications', () => {
     // headroom so the hook doesn't time out and fail the first test.
     test.setTimeout(60_000);
     globalBaseScenario =
-      await TestScenarioFactory.createBaseScenario(scenarioConfig);
+      await TestScenarioFactory.createBaseScenario(
+        withUniqueSubspaceName(scenarioConfig)
+      );
     baseScenario = globalBaseScenario;
 
     // The bell-dialog assertions below need the in-app channel ON for the
@@ -274,7 +277,9 @@ test.describe('Level 1 Subspace - Applications', () => {
       // 30s hook budget on the slower test env.
       test.setTimeout(60_000);
       baseScenario =
-        await TestScenarioFactory.createBaseScenario(scenarioConfig);
+        await TestScenarioFactory.createBaseScenario(
+        withUniqueSubspaceName(scenarioConfig)
+      );
       const spaceNameId = baseScenario.space.nameId;
       const subspaceNameId = baseScenario.subspace.nameId;
 

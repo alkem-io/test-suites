@@ -433,7 +433,7 @@ The applicant (`non.space`) is a shared persona whose bell holds entries from ea
 - approved: `<space> - Welcome to the community!` (USER_SPACE_COMMUNITY_JOINED)
 - declined: `… declined your application to join <space>` (USER_SPACE_COMMUNITY_APPLICATION_DECLINED)
 
-L0 2.1–2.5 use the L0 name; L1 2.1–2.5 and L1-public-parent 2.1/2.2 use the subspace name. 2.2 ("Archive") now asserts a declined notification for THIS space: since client-web#10499 the row action on a new application is "Reject and remove application" (it rejects first), so the declined entry is the expected product behaviour, not an artefact.
+L0 2.1–2.5 use the L0 name; L1 2.1–2.5 and L1-public-parent 2.1/2.2 use the subspace name. The L0 name is run-unique from the scenario factory; the subspace name is not (the factory names it `l1-<scenario name>`, the same in every case and every night), so both L1 files create their scenarios through `withUniqueSubspaceName` (CodeRabbit on #716). Without it, a declined entry left by L1 2.1 satisfied the scoped check in 2.2 and 2.4. 2.2 ("Archive") now asserts a declined notification for THIS space: since client-web#10499 the row action on a new application is "Reject and remove application" (it rejects first), so the declined entry is the expected product behaviour, not an artefact.
 
 **Locator repairs in the same change (client-web#10499).** The row now carries "Reject" and "Reject and remove application"; the non-exact `name: 'Reject'` hit both (strict-mode red in 2.1/2.4 at every level on the local stack's develop client), and the row's "Delete" action is now "Reject and remove application". Both locators are now exact. Nothing was relaxed.
 

@@ -82,13 +82,19 @@ const expectAlkemioUserRegistered = async (
 test.afterAll(async () => {
   const failures: string[] = [];
   for (const email of registeredEmails.splice(0)) {
-    const user = await findAlkemioUser(email);
-    if (!user) {
-      console.warn(`[teardown] no Alkemio user for ${email}; its Kratos identity (if any) stays`);
-      continue;
+    // One failed lookup or token request must not abort the loop: the rest of
+    // the addresses are already spliced out and would never be retried.
+    try {
+      const user = await findAlkemioUser(email);
+      if (!user) {
+        console.warn(`[teardown] no Alkemio user for ${email}; its Kratos identity (if any) stays`);
+        continue;
+      }
+      const res = await deleteUser(user.id, await platformAdmin(), true);
+      if (res.error) failures.push(`${email}: ${JSON.stringify(res.error.errors ?? res.error)}`);
+    } catch (e) {
+      failures.push(`${email}: ${(e as Error).message}`);
     }
-    const res = await deleteUser(user.id, await platformAdmin(), true);
-    if (res.error) failures.push(`${email}: ${JSON.stringify(res.error.errors ?? res.error)}`);
   }
   if (failures.length > 0) {
     throw new Error(`could not remove registered identities: ${failures.join('; ')}`);

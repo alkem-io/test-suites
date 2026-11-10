@@ -1,5 +1,9 @@
 import { expect, type Locator, type Page, type Request } from '@playwright/test';
-import { updateSpaceSettings } from '@alkemio/tests-lib';
+import {
+  type TestScenarioConfig,
+  UniqueIDGenerator,
+  updateSpaceSettings,
+} from '@alkemio/tests-lib';
 import { CommunityMembershipPolicy, SpacePrivacyMode } from '@alkemio/client-lib';
 
 /**
@@ -235,6 +239,36 @@ const escapeRegExp = (text: string): string =>
  *   declined  `<admin> declined your application to join <space>`
  *             (USER_SPACE_COMMUNITY_APPLICATION_DECLINED)
  */
+/**
+ * `scenarioConfig` with a run-unique display name for its Level 1 subspace.
+ * The scenario factory names a subspace `l1-<scenario name>` (fixed per file)
+ * and puts the unique id only in its nameID, while the applicant's bell
+ * entries carry the display name: without this, an entry left by an earlier
+ * case or night would satisfy {@link applicantNotificationEntry}.
+ */
+export const withUniqueSubspaceName = (
+  scenarioConfig: TestScenarioConfig
+): TestScenarioConfig => {
+  const space = scenarioConfig.space ?? {};
+  const subspace = space.subspace ?? {};
+  return {
+    ...scenarioConfig,
+    space: {
+      ...space,
+      subspace: {
+        ...subspace,
+        about: {
+          ...subspace.about,
+          profile: {
+            ...subspace.about?.profile,
+            displayName: `l1-${scenarioConfig.name}-${UniqueIDGenerator.getID()}`,
+          },
+        },
+      },
+    },
+  };
+};
+
 export const applicantNotificationEntry = (
   panel: Locator,
   outcome: 'approved' | 'declined',
