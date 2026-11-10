@@ -52,19 +52,13 @@ async function readStoredCallouts(page: Page) {
  * The feed has finished rendering: a callout known to stay (the scenario's
  * seeded post) is on screen and no card is still a loading skeleton. Only
  * after this is a count or an absence an observation of the list rather
- * than of a page that has not rendered yet.
+ * than of a page that has not rendered yet. The page object scrolls any
+ * skeleton left below the fold into view first.
  */
-async function expectFeedRendered(
-  collaborationPage: CollaborationPage,
-  page: Page
-) {
-  await expect(
-    page.getByRole('heading', {
-      name: baseScenario!.space.collaboration.calloutPostDisplayName,
-      exact: true,
-    })
-  ).toBeVisible();
-  await expect(collaborationPage.feedLoadingSkeletons).toHaveCount(0);
+async function expectFeedRendered(collaborationPage: CollaborationPage) {
+  await collaborationPage.expectFeedRendered(
+    baseScenario!.space.collaboration.calloutPostDisplayName
+  );
 }
 
 const adminFixture = createAuthenticatedSessionFixture({
@@ -122,7 +116,7 @@ adminFixture.test.describe.serial('Callout Deletion', () => {
     expect(created, 'the created callout is stored once').toHaveLength(1);
     const deletedId = created[0].id;
     await collaborationPage.navigateToSpace(baseScenario!.space.nameId);
-    await expectFeedRendered(collaborationPage, page);
+    await expectFeedRendered(collaborationPage);
     await expect(
       page.getByRole('heading', { name: calloutToDelete, exact: true })
     ).toBeVisible();
@@ -144,7 +138,7 @@ adminFixture.test.describe.serial('Callout Deletion', () => {
 
     // The list has rendered (the seeded post is on screen, no skeleton left)
     // before the count and the absence are read: exactly one card fewer.
-    await expectFeedRendered(collaborationPage, page);
+    await expectFeedRendered(collaborationPage);
     await expect(collaborationPage.feedCardOpenLinks).toHaveCount(
       cardsBefore - 1
     );
