@@ -33,9 +33,13 @@ const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 const registeredEmails: string[] = [];
 
 /** The platform admin as a bearer: this file seeds no scenario, so the harness
- * persona map is not populated and the `TestUser` actor cannot resolve. */
+ * persona map is not populated and the `TestUser` actor cannot resolve. One
+ * sign-in per worker, reused by every read-back and the teardown. */
+let platformAdminToken: string | undefined;
 const platformAdmin = async () => ({
-  bearerToken: await getUserToken(`${TestUser.GLOBAL_ADMIN}@alkem.io`),
+  bearerToken: (platformAdminToken ??= await getUserToken(
+    `${TestUser.GLOBAL_ADMIN}@alkem.io`
+  )),
 });
 
 /** The Alkemio user behind an email, read by the platform admin (null if none). */

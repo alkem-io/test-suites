@@ -99,7 +99,11 @@ test.describe('Authentication - Restricted Access', () => {
 
     // The Administration page itself, on its Spaces tab …
     await expect(
-      page.getByRole('heading', { name: 'Administration', level: 1, exact: true })
+      page.getByRole('heading', {
+        name: 'Administration',
+        level: 1,
+        exact: true,
+      })
     ).toBeVisible();
     await expect(
       page.getByRole('tab', { name: 'Spaces', exact: true })
