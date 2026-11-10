@@ -8,7 +8,8 @@
 // The cases read their own starting state from the server and have no order.
 
 import { test, expect } from '@playwright/test';
-import { TestUserManager } from '@alkemio/tests-lib';
+import { TestUserManager, updateSpaceData } from '@alkemio/tests-lib';
+import { must } from '../helpers/lib-actor.helper';
 import type { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import {
   aboutDialog,
@@ -41,7 +42,10 @@ let admin: PersonaPage | undefined;
 test.beforeAll(async ({ browser }) => {
   test.setTimeout(120_000);
   scenario = await seedAboutSpace(RUN);
-  admin = await openPersonaPage(browser, TestUserManager.users.spaceAdmin.email);
+  admin = await openPersonaPage(
+    browser,
+    TestUserManager.users.spaceAdmin.email
+  );
 });
 
 // File level, so it also runs when a failure retires the worker mid-file.
@@ -62,11 +66,17 @@ test.describe('W2 journey 7 — a Space About, edited in Space Settings', () => 
     const newTagline = `Tagline ${RUN}`;
     const what = `WHAT ${RUN}`;
     const why = `WHY ${RUN}`;
+    const who = `WHO ${RUN}`;
+
+    // Who is the field this walk does NOT edit. The seed leaves it empty, and
+    // an empty Who cannot show that it was kept, so give it a value first.
+    must(await updateSpaceData({ ID: space().id, about: { who } }), 'seed Who');
 
     // Do not assume the seed's names or text: read the starting state.
     const before = await serverAbout(space().id);
     const oldName = before.profile.displayName;
     expect(oldName).not.toBe(newName);
+    expect(before.who).toBe(who);
 
     await openAboutTab(page, space().nameId);
     await spaceNameField(page).fill(newName);
@@ -86,13 +96,14 @@ test.describe('W2 journey 7 — a Space About, edited in Space Settings', () => 
     await expect(whatEditor(page)).toContainText(what);
     await expect(whyEditor(page)).toContainText(why);
 
-    // The server holds all four; an untouched field is not wiped.
+    // The server holds all four, exactly (one paragraph each, so the stored
+    // markdown is the typed text), and the untouched Who is not wiped.
     const after = await serverAbout(space().id);
     expect(after.profile.displayName).toBe(newName);
     expect(after.profile.tagline).toBe(newTagline);
-    expect(after.profile.description).toContain(what);
-    expect(after.why).toContain(why);
-    expect(after.who).toBe(before.who);
+    expect(after.profile.description?.trim()).toBe(what);
+    expect(after.why?.trim()).toBe(why);
+    expect(after.who).toBe(who);
 
     const viewer = await openPersonaPage(
       browser,
@@ -113,7 +124,7 @@ test.describe('W2 journey 7 — a Space About, edited in Space Settings', () => 
     }
   });
 
-  test('C2-2 Space tags are replaced, not merged, and the viewer sees exactly the stored set', async ({
+  test('C2-2 Space tags are replaced, not merged, cleared to none, and the viewer sees exactly the stored set', async ({
     browser,
   }) => {
     const page = admin!.page;
@@ -170,5 +181,12 @@ test.describe('W2 journey 7 — a Space About, edited in Space Settings', () => 
     } finally {
       await viewer.close();
     }
+
+    // C: removing every tag is a replace with the empty set, not "no update".
+    for (const tag of [...stored].reverse()) {
+      await removeLastTag(spaceTagsInput(page), tag);
+    }
+    await saveWith(page, 'updateSpace', '1 unsaved change');
+    expect((await serverAbout(space().id)).profile.tagset!.tags).toEqual([]);
   });
 });

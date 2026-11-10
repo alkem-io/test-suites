@@ -13,7 +13,7 @@
 // changes" bar. The proof of a save is the reloaded page and the read-back:
 // the toast alone could lie about persistence.
 
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect, type Browser, type Page } from '@playwright/test';
 import { getUserData, TestUserManager } from '@alkemio/tests-lib';
 import { must } from '../helpers/lib-actor.helper';
 import { UserProfileSettingsPage } from '../user-profile/user-profile-settings.page';
@@ -65,7 +65,7 @@ const serverUser = async () =>
 
 /** The user's public profile, seen by `space.member` (a read-only persona). */
 const withViewer = async (
-  browser: Parameters<Parameters<typeof test>[2]>[0]['browser'],
+  browser: Browser,
   body: (page: Page) => Promise<void>
 ) => {
   const viewer = await openPersonaPage(
@@ -154,16 +154,19 @@ test.describe('My Profile Tab - View and Edit', () => {
 
     const stored = (await serverUser()).profile;
     expect(stored?.location).toEqual({ city: 'Utrecht', country: 'NL' });
-    expect(stored?.description).toContain(bio);
+    // One paragraph, so the stored markdown is the typed text.
+    expect(stored?.description?.trim()).toBe(bio);
 
     await withViewer(browser, async viewerPage => {
       const main = viewerPage.getByRole('main');
-      await expect(main.getByText('Utrecht, NL', { exact: true })).toBeVisible();
+      await expect(
+        main.getByText('Utrecht, NL', { exact: true })
+      ).toBeVisible();
       await expect(main.getByText(bio)).toBeVisible();
     });
   });
 
-  test('G2-3 skills and keywords go to their own tagsets and are replaced, not merged', async ({
+  test('G2-3 skills and keywords go to their own tagsets and are replaced, not merged, down to none', async ({
     browser,
   }) => {
     const page = selfPage!.page;
@@ -231,5 +234,15 @@ test.describe('My Profile Tab - View and Edit', () => {
       await expect(chips('Skills')).toHaveText(inServerOrder('skills'));
       await expect(chips('Keywords')).toHaveText(inServerOrder('keywords'));
     });
+
+    // C: removing every skill stores the empty set, not "no update"; keywords
+    // stay untouched.
+    for (const tag of [...inServerOrder('skills')].reverse()) {
+      await removeLastTag(skills, tag);
+    }
+    await saveWith(page, 'updateUser', '1 unsaved change');
+    const afterClear = (await serverUser()).profile?.tagsets;
+    expect(tagsOf(afterClear, 'skills')).toEqual([]);
+    expect(tagsOf(afterClear, 'keywords')).toEqual([k1]);
   });
 });
