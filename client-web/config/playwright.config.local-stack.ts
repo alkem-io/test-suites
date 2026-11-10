@@ -7,9 +7,11 @@ import { baseConfig, GENERATED_WALKS_DIR, LOCAL_STACK_TAG, suite } from './playw
  *
  *   pnpm run test:local-stack
  *
- * Each case still guards its own precondition and skips with the reason when
- * the stack is not set up for it. The loopback-DB cases stand alone, so only
- * they are run from their files; the other two sit inside serial walks whose
+ * Each case still guards its own precondition when the stack is not set up
+ * for it: most skip with the reason, while content-editing E8-4 FAILS with the
+ * setup instruction (a skip there would hide that the cold load was never
+ * proven). The loopback-DB cases stand alone, so only
+ * they are run from their files; the others sit inside serial walks whose
  * earlier steps they need, so their whole file runs here. What they need on
  * top of the usual .env:
  *
