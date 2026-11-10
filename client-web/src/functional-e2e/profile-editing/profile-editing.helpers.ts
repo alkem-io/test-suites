@@ -23,7 +23,6 @@ import {
   orgSettingsUrl,
   registerDisposableUser,
   runCleanup,
-  saveChanges,
   unsavedChangesBar,
   userSettingsUrl,
   type DisposableUser,
@@ -33,9 +32,9 @@ import {
  * Shared set-up, locators and read-back wrappers for the profile-editing
  * walks (W2 journey 7, docs/qa/server-rebuild/plan.md § W2): a Space's About,
  * the signed-in user's own profile, and an organisation that user creates.
- * Every edit is checked three ways: the page after a reload, one read-back
- * through a named `@alkemio/tests-lib` function, and what a DIFFERENT viewer
- * is shown.
+ * Every edit is checked on the page after a reload and through one read-back
+ * by a named `@alkemio/tests-lib` function, and a field others can see also
+ * through what a DIFFERENT viewer is shown.
  */
 
 export {
@@ -49,19 +48,22 @@ export {
   orgSettingsUrl,
   registerDisposableUser,
   runCleanup,
-  saveChanges,
   unsavedChangesBar,
-  userSettingsUrl,
   type DisposableUser,
 };
 export {
   aboutDialog,
-  spaceTitle,
   teardownScenario,
   type PersonaPage,
 } from '../helpers/space-access.helper';
+export { usersInOrgRole } from '../contributors-crud/contributors-crud.helpers';
+export {
+  cityCombobox,
+  countryCombobox,
+  pickCountry,
+} from '../user-profile/user-profile-settings.page';
 
-/** One id per file run, taken at module scope: every name and nameID carries it. */
+/** A fresh run id. Each spec takes one at module scope, so every name and nameID of a file run carries it. */
 export const uid = (): string => UniqueIDGenerator.getID();
 
 export const sorted = (xs: ReadonlyArray<string>): string[] => [...xs].sort();
@@ -96,6 +98,12 @@ export const tagsOf = (
  * awaited so a refusal fails at the click with the server's message.
  * `mutationField` is `updateSpace` (About tab: it never matches
  * `updateSpaceSettings(`), `updateUser` or `updateOrganization`.
+ *
+ * A "Changes saved" toast sits over the bar's Save button, and a pointer
+ * resting on it pauses its dismissal. So a save first waits for an EARLIER
+ * save's toast to leave (a no-op on the first save of a page; without it this
+ * save's toast check would be vacuous), and parks the pointer after its own.
+ * The last save of a walk therefore never waits out a toast it does not need.
  */
 export const saveWith = async (
   page: Page,
@@ -103,25 +111,24 @@ export const saveWith = async (
   expectedCountText: string
 ): Promise<void> => {
   const bar = unsavedChangesBar(page);
+  const toast = page.getByText('Changes saved', { exact: true });
+  await expect(toast).toBeHidden({ timeout: 15_000 });
   await expect(bar.getByText(expectedCountText, { exact: true })).toBeVisible();
   const answered = expectMutationAnswered(page, mutationField);
   await bar.getByRole('button', { name: 'Save changes', exact: true }).click();
   await answered();
-  const toast = page.getByText('Changes saved', { exact: true });
   await expect(toast).toBeVisible();
   await expect(bar).toBeHidden();
-  // The toast sits over the bar's Save button and would make the NEXT save's
-  // "Changes saved" check vacuous: let it leave before the caller edits again.
-  // A pointer resting on the toast pauses its dismissal, so park it elsewhere.
   await page.mouse.move(0, 0);
-  await expect(toast).toBeHidden({ timeout: 15_000 });
 };
 
 // ------------------------------------------------------------- tags input
 
 /** The tag input, named by its placeholder (kept as the aria-label once chips exist). */
-export const tagsInput = (scope: Page | Locator, placeholder: string): Locator =>
-  scope.getByRole('textbox', { name: placeholder, exact: true });
+export const tagsInput = (
+  scope: Page | Locator,
+  placeholder: string
+): Locator => scope.getByRole('textbox', { name: placeholder, exact: true });
 
 /** Types each tag and presses Enter. */
 export const addTags = async (input: Locator, tags: string[]) => {
@@ -217,12 +224,18 @@ export const orgCapabilitiesInput = (scope: Page | Locator): Locator =>
 
 export const openOrganisationsTab = async (page: Page, nameId: string) => {
   await page.goto(userSettingsUrl(nameId, 'organizations'));
-  await expect(page.getByRole('tab', { name: 'Organisations', selected: true })).toBeVisible();
+  await expect(
+    page.getByRole('tab', { name: 'Organisations', selected: true })
+  ).toBeVisible();
 };
 
 /** The "Create Organisation" settings-section trigger (collapsed by default). */
 export const createSectionTrigger = (page: Page): Locator =>
-  page.getByRole('heading', { level: 3, name: 'Create Organisation', exact: true });
+  page.getByRole('heading', {
+    level: 3,
+    name: 'Create Organisation',
+    exact: true,
+  });
 
 export const newOrganisationDialog = (page: Page): Locator =>
   page.getByRole('dialog', { name: 'New organisation', exact: true });
