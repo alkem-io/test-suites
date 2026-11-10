@@ -521,6 +521,8 @@ describe('@contract content editing readers (W2 journey 5): whiteboard, memo, Co
     // negative control: the reader does not invent content for an id that is not a memo
     const unknown = await lib.readMemoContent('00000000-0000-4000-8000-000000000000');
     expect(unknown.data?.lookup.memo ?? null).toBeNull();
+    // the lookup's own refusal, not a transport failure (which also leaves no data)
+    expect(unknown.error?.errors.map(e => e.code)).toEqual(['ENTITY_NOT_FOUND']);
   });
 
   test('LA-5/LA-6/LA-7 Collabora: entitle, create, read back the document and its stored text', async () => {
@@ -560,6 +562,15 @@ describe('@contract content editing readers (W2 journey 5): whiteboard, memo, Co
       '<w:document><w:body><w:p><w:r><w:t>DOC </w:t></w:r><w:r><w:t xml:space="preserve">abc</w:t></w:r></w:p><w:p/><w:p><w:r><w:t>A &amp; B</w:t></w:r></w:p></w:body></w:document>'
     )), 8);
     expect(lib.officeDocumentParagraphs(docx)).toEqual(['DOC abc', '', 'A & B']);
+    // character references (decimal, hex, and an escaped one that must stay literal) and an ODT repeated-space run
+    const refs = zipOf('word/document.xml', Buffer.from(
+      '<w:document><w:body><w:p><w:r><w:t>A&#32;B&#x43;&amp;#32;</w:t></w:r></w:p></w:body></w:document>'
+    ), 0);
+    expect(lib.officeDocumentParagraphs(refs)).toEqual(['A BC&#32;']);
+    const spaces = zipOf('content.xml', Buffer.from(
+      '<office:text><text:p>a<text:s text:c="3"/>b<text:s/>c</text:p></office:text>'
+    ), 0);
+    expect(lib.officeDocumentParagraphs(spaces), 'text:c counts spaces').toEqual(['a   b c']);
     expect(lib.officeDocumentParagraphs(Buffer.alloc(0)), 'an unsaved blank document has no paragraphs').toEqual([]);
     expect(() => lib.officeDocumentParagraphs(Buffer.from('this is not a zip archive at all'))).toThrow(/not an office document/);
     expect(() => lib.officeDocumentFileId('https://example.test/not-a-preview')).toThrow(/not a Collabora preview URL/);

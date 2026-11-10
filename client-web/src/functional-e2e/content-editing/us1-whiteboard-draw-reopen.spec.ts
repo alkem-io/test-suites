@@ -236,14 +236,30 @@ test.describe('W2 journey 5 — a whiteboard is drawn on, then reopened', () => 
     async () => {
       // Without release-at-0 the room outlives its last member by the service's default (30 s), the fresh peer would be
       // served from memory, and a green here would prove nothing about storage.
-      if (process.env.COLLAB_IDLE_RELEASE_SECONDS !== '0') {
+      const metricsUrl = process.env.COLLAB_METRICS_URL;
+      if (process.env.COLLAB_IDLE_RELEASE_SECONDS !== '0' || !metricsUrl) {
         throw new Error(
-          'stack not set up for E8-4: set IDLE_RELEASE_SECONDS=0 on the collaboration-service and COLLAB_IDLE_RELEASE_SECONDS=0 here'
+          'stack not set up for E8-4: set IDLE_RELEASE_SECONDS=0 on the collaboration-service, and COLLAB_IDLE_RELEASE_SECONDS=0 plus COLLAB_METRICS_URL (its /metrics, e.g. http://localhost:4006/metrics) here'
         );
       }
+      // The service's own count of live rooms. Release is asynchronous (the room flushes, then tears down), so a peer
+      // that connects before it would join the warm room and read memory: the barrier is the count dropping.
+      const roomsActive = async (): Promise<number> => {
+        const response = await fetch(metricsUrl);
+        if (!response.ok) throw new Error(`collaboration metrics: ${response.status}`);
+        const value = /^collaboration_rooms_active (\d+)$/m.exec(await response.text())?.[1];
+        if (value === undefined) throw new Error('collaboration metrics carry no collaboration_rooms_active');
+        return Number(value);
+      };
+      // Positive control: the oracle peer still holds this board's room open.
+      const withRoom = await roomsActive();
+      expect(withRoom, 'the room of the board is live before the last member leaves').toBeGreaterThan(0);
       // E8-2 closed both editors gracefully; now the oracle peer leaves too: the room has no member left.
       await peer.close();
       peers.splice(peers.indexOf(peer), 1);
+      await expect
+        .poll(roomsActive, { message: 'the room is released (its final flush done) before the fresh peer connects' })
+        .toBe(withRoom - 1);
 
       const cold = await connectWhiteboardPeer({
         whiteboardId: seeded.whiteboardId!,

@@ -69,11 +69,21 @@ const XML_ENTITIES: Record<string, string> = {
   "&apos;": "'",
 };
 
+/** Named XML entities and decimal / hexadecimal character references, in one pass. */
 const decodeEntities = (text: string): string =>
   text.replace(
-    /&(?:lt|gt|amp|quot|apos);/g,
-    (entity) => XML_ENTITIES[entity],
+    /&(?:lt|gt|amp|quot|apos|#\d+|#x[0-9a-fA-F]+);/g,
+    (entity) =>
+      entity.startsWith("&#x")
+        ? String.fromCodePoint(parseInt(entity.slice(3, -1), 16))
+        : entity.startsWith("&#")
+          ? String.fromCodePoint(parseInt(entity.slice(2, -1), 10))
+          : XML_ENTITIES[entity],
   );
+
+/** `<text:s/>` is one space; `<text:s text:c="N"/>` is N spaces. */
+const odfSpaces = (element: string): string =>
+  " ".repeat(Number(/text:c="(\d+)"/.exec(element)?.[1] ?? 1));
 
 /** OpenDocument `content.xml`: `text:p` / `text:h` in document order. */
 const odfParagraphs = (xml: string): string[] => {
@@ -83,7 +93,7 @@ const odfParagraphs = (xml: string): string[] => {
     paragraphs.push(
       decodeEntities(
         (match[2] ?? "")
-          .replace(/<text:s(?:\s[^>]*)?\/>/g, " ")
+          .replace(/<text:s(?:\s[^>]*)?\/>/g, odfSpaces)
           .replace(/<text:tab(?:\s[^>]*)?\/>/g, "\t")
           .replace(/<text:line-break(?:\s[^>]*)?\/>/g, "\n")
           .replace(/<[^>]+>/g, ""),
