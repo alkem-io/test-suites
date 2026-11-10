@@ -12,7 +12,7 @@ export const verifyCalloutTemplateUsage = async (
   page: Page,
   url: string,
   templateData: CalloutTemplateForm,
-  calloutsSetId?: string
+  calloutsSetId: string
 ): Promise<void> => {
   // Navigate to the provided URL where the template will be used
   await page.goto(url);
@@ -242,7 +242,6 @@ export const verifyCalloutTemplateUsage = async (
   // contribution-settings check above returns early). Poll and Form framings
   // are left out: their cases hold comments constant.
   if (
-    calloutsSetId &&
     templateData.responseOptions.type === 'none' &&
     templateData.framing.type !== 'poll' &&
     templateData.framing.type !== 'form'

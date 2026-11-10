@@ -12,10 +12,13 @@ import { CalloutTemplateForm } from '../forms/callout/callout-template-form.mode
  * "Comments: Disabled" twin asserts (the contribution-settings check, which
  * also reads this switch, returns early when there is no response type).
  *
- * 1. UI — the callout's Edit dialog, once its saved values are bound (the
+ * 1. Feed — the card offers its comments thread ("Expand comments") exactly
+ *    when comments are on (client-web `PostCard`: a card with comments off
+ *    and no messages renders no comments footer at all).
+ * 2. UI — the callout's Edit dialog, once its saved values are bound (the
  *    title holds the callout's title), shows "Allow comments" in the state
  *    the template set.
- * 2. API — the stored callout's `settings.framing.commentsEnabled`.
+ * 3. API — the stored callout's `settings.framing.commentsEnabled`.
  */
 export const verifyCalloutCommentsSetting = async (
   page: Page,
@@ -23,7 +26,17 @@ export const verifyCalloutCommentsSetting = async (
   templateData: CalloutTemplateForm,
   calloutsSetId: string
 ): Promise<void> => {
-  await calloutContainer.getByRole('button', { name: 'Settings' }).click();
+  // The card rendered (its Settings menu is there), so a missing thread is
+  // the setting, not a card that never drew.
+  const settingsMenu = calloutContainer.getByRole('button', {
+    name: 'Settings',
+  });
+  await expect(settingsMenu).toBeVisible();
+  await expect(
+    calloutContainer.getByRole('button', { name: 'Expand comments' })
+  ).toHaveCount(templateData.commentsEnabled ? 1 : 0);
+
+  await settingsMenu.click();
   await page.getByRole('menuitem', { name: 'Edit' }).click();
 
   const editDialog = page.getByRole('dialog', { name: 'Edit Post' }).last();
