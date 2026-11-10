@@ -49,6 +49,8 @@ const uid = UniqueIDGenerator.getID();
 let scenario: OrganizationWithSpaceModel | undefined;
 let admin: PersonaPage | undefined;
 let member: PersonaPage | undefined;
+/** The phase the posts under test were seeded in; the bare Space URL may open another. */
+let firstPhase = '';
 const ids: { S?: string; L?: string; T?: string; R?: string; R2?: string } = {};
 let memberName = '';
 
@@ -75,6 +77,7 @@ test.beforeAll(async ({ browser }) => {
   test.setTimeout(240_000);
   scenario = await seedPlacementSpace('mc', uid);
   const { first, last } = await phases(scenario.space.id);
+  firstPhase = first.displayName;
   const set = scenario.space.collaboration.calloutsSetId;
   ids.S = await seedPost(set, source, first.displayName);
   ids.L = await seedPost(set, links, first.displayName, [
@@ -128,6 +131,7 @@ test("MC-1 — admin moves the member's response to a post in another phase", as
   const page = admin!.page;
 
   await page.goto(`${baseUrl}/${space().nameId}`);
+  await openPhaseTab(page, firstPhase);
   await renderFeed(page, [S]);
   await postCard(page, source)
     .getByRole('button', { name: new RegExp(`^${movedReply}`) })
@@ -182,6 +186,7 @@ test("MC-1 — admin moves the member's response to a post in another phase", as
 
   const viewer = member!.page;
   await viewer.goto(`${baseUrl}/${space().nameId}`);
+  await openPhaseTab(viewer, firstPhase);
   await renderFeed(viewer, [S]);
   // Positive control: the source post's responses rendered.
   await expect(
@@ -209,6 +214,7 @@ test('MC-2 — the author is not offered the move on their own response', async 
   const page = member!.page;
 
   await page.goto(`${baseUrl}/${space().nameId}`);
+  await openPhaseTab(page, firstPhase);
   await renderFeed(page, [S]);
   await postCard(page, source)
     .getByRole('button', { name: new RegExp(`^${keptReply}`) })

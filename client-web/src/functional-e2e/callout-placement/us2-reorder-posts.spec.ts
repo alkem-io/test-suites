@@ -18,6 +18,7 @@ import {
 } from '../helpers/space-access.helper';
 import {
   get,
+  openPhaseTab,
   openPostMenu,
   orderOf,
   phases,
@@ -40,12 +41,15 @@ const uid = UniqueIDGenerator.getID();
 let scenario: OrganizationWithSpaceModel | undefined;
 let admin: PersonaPage | undefined;
 let member: PersonaPage | undefined;
+/** The phase the posts under test were seeded in; the bare Space URL may open another. */
+let firstPhase = '';
 const ids: { A?: string; B?: string; C?: string; K?: string } = {};
 
 test.beforeAll(async ({ browser }) => {
   test.setTimeout(240_000);
   scenario = await seedPlacementSpace('ro', uid);
   const { first, last } = await phases(scenario.space.id);
+  firstPhase = first.displayName;
   const set = scenario.space.collaboration.calloutsSetId;
   ids.C = await seedPost(set, `J6 C ${uid}`, first.displayName);
   ids.B = await seedPost(set, `J6 B ${uid}`, first.displayName);
@@ -92,6 +96,7 @@ test('RO-1 — Move to Top on the lowest of three posts, stored and seen by the 
   const page = admin!.page;
 
   await page.goto(`${baseUrl}/${space().nameId}`);
+  await openPhaseTab(page, firstPhase);
   await renderFeed(page, trio());
   await expect(seededHeadings(page, uid)).toHaveText([nx, ny, nz]);
 
@@ -111,6 +116,7 @@ test('RO-1 — Move to Top on the lowest of three posts, stored and seen by the 
   // In place, before any reload (a client that only reorders after a reload is a defect).
   await expect(seededHeadings(page, uid)).toHaveText([nz, nx, ny]);
   await page.reload();
+  await openPhaseTab(page, firstPhase);
   await renderFeed(page, trio());
   await expect(seededHeadings(page, uid)).toHaveText([nz, nx, ny]);
 
@@ -121,6 +127,7 @@ test('RO-1 — Move to Top on the lowest of three posts, stored and seen by the 
 
   const viewer = member!.page;
   await viewer.goto(`${baseUrl}/${space().nameId}`);
+  await openPhaseTab(viewer, firstPhase);
   await renderFeed(viewer, trio());
   await expect(seededHeadings(viewer, uid)).toHaveText([nz, nx, ny]);
 });
@@ -136,6 +143,7 @@ test('RO-2 — Move Down on the top post swaps it with the next and leaves other
   const page = admin!.page;
 
   await page.goto(`${baseUrl}/${space().nameId}`);
+  await openPhaseTab(page, firstPhase);
   await renderFeed(page, trio());
   await expect(seededHeadings(page, uid)).toHaveText([nx, ny, nz]);
 
@@ -158,6 +166,7 @@ test('RO-2 — Move Down on the top post swaps it with the next and leaves other
 
   const viewer = member!.page;
   await viewer.goto(`${baseUrl}/${space().nameId}`);
+  await openPhaseTab(viewer, firstPhase);
   await renderFeed(viewer, trio());
   await expect(seededHeadings(viewer, uid)).toHaveText([ny, nx, nz]);
 });
@@ -177,6 +186,7 @@ test('RO-3 — a member is not offered reorder, edit or delete on a post', async
   );
   await page.goto(`${baseUrl}/${space().nameId}`);
   await authorized;
+  await openPhaseTab(page, firstPhase);
   await page.evaluate(
     () =>
       new Promise<void>(resolve =>

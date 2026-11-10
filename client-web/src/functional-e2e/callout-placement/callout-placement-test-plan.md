@@ -8,7 +8,7 @@ There is no diff. The basis is the plan, the audit, and product source read at c
 ```bash
 cd client-web && pnpm exec playwright test src/functional-e2e/callout-placement/
 pnpm run test:nightly --project="Callout placement"     # to register: tier extended
-pnpm -C server-api exec vitest run --project contract    # LA-1/LA-2 shape cases
+pnpm -C ../server-api exec vitest run --project contract # LA-1/LA-2 shape cases (still in client-web)
 ```
 - No env beyond the standard nightly. Each file seeds its own PUBLIC + OPEN L0 Space. `space.admin` and `space.member` join through the factory, so `KRATOS_ADMIN_URL` is needed as for journeys 1–4.
 - Files are independent, and so are the cases inside a file. Each case reads the current phase names and order at its start, and never assumes an earlier case ran.
