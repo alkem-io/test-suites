@@ -300,6 +300,30 @@ place; cite this file instead of rediscovering a gap.
   - Then `dialog` "Apply new template", with three radio options and an "Apply" button. Option 1 with existing posts asks for "Confirm Deletion".
 - **The `spaceSettings` i18n namespace has no locale-parity test** in client-web (the `space`, `auth`, `common` and `forum` namespaces have one). New Layout copy can ship untranslated without any red.
 
+### Posts: phase, order, moving a response (established 2026-11-09, W2 J6 design; client-web `907103f5f`, server `51eb90878`)
+
+- **The only UI path to change an existing post's phase is Settings › Layout.**
+  - Path: row `button 'Post actions'` (opacity 0 until hover/focus) › submenu `'Move to'` › the target column title. Dragging also works.
+  - Save goes through the page's "Unsaved changes" bar. The client then sends `updateCallout` (classification), then `updateCalloutsSortOrder` for every column whose list changed.
+  - "Move to" **appends** the post to the end of the destination.
+  - Phase **rename** is immediate. There are two entry points: the column's `button 'Edit Details'` pencil, or `Column actions` › `Edit Details`, which opens dialog `'Edit Details: Flow Phase'`.
+  - The server retags the posts on rename, and the client retags them again, one `updateCallout` per post.
+  - Rows carry `data-callout-id`. Columns are `[data-slot="card"]` filtered by `getByTitle(<phase>)`.
+- **Post order in the feed:**
+  - Path: card `button 'Settings'` › `Move to Top` / `Move Up` / `Move Down` / `Move to Bottom`.
+  - Shown only with `UPDATE` on the **callouts set** (admins), read from the `CalloutsSetAuthorization` query. While that query loads the items are hidden, so a member-absence check must wait for that response first.
+  - The client sends **only the active tab's** callout ids. The legacy server renumbers just those, from their minimum + 1.
+  - New posts are created at `min(sortOrder) − 1` (top). A template post such as "Welcome" can sit below seeded ones, so never assert the top/bottom boundary items.
+- **Feed cards render lazily** (`react-intersection-observer`, `triggerOnce`). Every item's wrapper `div` has `id=<calloutId>` even while it is a skeleton. Scroll each one into view before asserting the order of the `h3` titles.
+- **Moving a response:**
+  - Path: Edit Post dialog › "Post location" select. It lists the set's POST-accepting callouts in every phase.
+  - The select has **no accessible name** (unlinked `<Label>`). Locate it inside the dialog by its current value.
+  - The client gates it on `MOVE_POST` (post); the server checks `MOVE_CONTRIBUTION` (contribution). Both are granted to Space admins (with parents), platform resource admins and platform roles with UPDATE, **not** to the author.
+  - Only post responses have a move UI. Whiteboard, link and memo responses have none, though the server supports moving them.
+  - Response cards are `div role=button` whose name starts with the title and includes the author name.
+- **Lib read-back for placement:** the only document selecting a callout's `sortOrder` together with its `FLOW_STATE` tag is `getCalloutsOnCalloutsSetUsingClassification.graphql`. `baseFunctions.getCalloutsData` wraps it with a `TestUser`-only actor. The J6 plan adds `readCalloutsPlacement(calloutsSetId, actor)` over the same document.
+- **`TagsetReservedName` was not a lib-owned enum** on `afbefaf2` (needed to seed a post into a phase). J6 LA-2 adds it to `lib/src/common/enums/alkemio.ts`.
+
 ## Sidebar search widget (055) — designer notes, 2026-09-03
 
 > Written independently by the 055 design session and merged in as-is when the plan was committed as a record; entries may overlap with the sections above.

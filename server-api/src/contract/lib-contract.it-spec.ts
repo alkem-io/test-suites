@@ -224,6 +224,8 @@ const FUNCTIONS: string[] = [
   'officeDocumentParagraphs',
   'connectWhiteboardPeer',
   'readActivityLogOnCollaboration',
+  'readCalloutsPlacement',
+  'readPost',
   'uploadFileOnStorageBucket',
   'readTemplatesSetTemplates',
   'createTemplateWithData',
@@ -248,6 +250,8 @@ const ENUM_MEMBERS: Record<string, string[]> = {
   CalloutFramingType: ['None', 'Whiteboard', 'Memo', 'Link'],
   SpaceLevel: ['L0', 'L1', 'L2'],
   SpaceVisibility: ['Active', 'Archived', 'Demo'],
+  TagsetReservedName: ['FlowState'],
+  AuthorizationPrivilege: ['MovePost', 'Update'],
   ActorType: ['User', 'Organization', 'VirtualContributor'],
   SidebarWidget: ['About', 'Community', 'Events', 'Activity'],
   NotificationEvent: ['OrganizationAdminSpaceCommunityInvitation'],
@@ -445,6 +449,24 @@ describe('@contract base scenario round trip', () => {
       expect(entry.role).toEqual(expect.any(String));
       expect(Array.isArray(entry.users)).toBe(true);
     }
+  });
+
+  test('callouts set: placement lists each post with its sortOrder and phase tags', async () => {
+    const placement = await lib.readCalloutsPlacement(base.space.collaboration.calloutsSetId);
+    expect(placement.error).toBeUndefined();
+    const callouts = placement.data?.lookup.calloutsSet?.callouts;
+    expect(Array.isArray(callouts)).toBe(true);
+    expect(callouts?.map(c => c.id)).toContain(base.space.collaboration.calloutPostId);
+    for (const callout of callouts ?? []) {
+      expect(callout.id).toEqual(expect.any(String));
+      expect(callout.sortOrder).toEqual(expect.any(Number));
+      expect(Array.isArray(callout.classification?.flowState?.tags)).toBe(true);
+    }
+    // Negative control: an unknown callouts set never yields a populated list.
+    const unknown = await lib.readCalloutsPlacement('00000000-0000-4000-8000-000000000000');
+    expect(unknown.data?.lookup?.calloutsSet ?? null, JSON.stringify(unknown.error)).toBeNull();
+    // ...and not because the request never reached the server.
+    expect(unknown.error?.errors.map(e => e.code) ?? []).not.toContain('ENV_FAILURE');
   });
 });
 

@@ -44,6 +44,7 @@ export {
   SpaceLevel,
   SpacePrivacyMode,
   SpaceVisibility,
+  TagsetReservedName,
   TemplateType,
   UserInformationVisibility,
   VirtualContributorBodyOfKnowledgeType,

@@ -162,6 +162,14 @@ export default defineConfig(
         testMatch: ['/default-template/default-template-per-flow-state.spec.ts'],
       }),
       suite({
+        // W2 journey 6 (docs/qa/server-rebuild/plan.md § W2): a post's phase, post
+        // order and a response's post, changed in the browser and read back through
+        // the lib. One self-seeded L0 Space per file; admin + member contexts.
+        name: 'Callout placement',
+        testMatch: ['/callout-placement/*.spec.ts'],
+        tier: 'extended',
+      }),
+      suite({
         name: 'User Profile',
         testMatch: [
           '/user-profile/access-user-profile-from-dashboard.spec.ts',
