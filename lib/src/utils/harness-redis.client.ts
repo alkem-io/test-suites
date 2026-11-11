@@ -79,6 +79,8 @@ export type BffSessionPayload = {
   last_refreshed_at?: number | null;
   last_extended_at?: number | null;
   created_at: number;
+  /** The sign-in's assurance: `'aal2'` when a second factor was completed. */
+  acr?: 'aal1' | 'aal2' | null;
   client_id: string;
   request_context_cache?: { display_name?: string; email?: string } | null;
   terminated_at?: number | null;
@@ -238,6 +240,14 @@ export const redisSetNx = async (
 
 export const redisGet = async (key: string): Promise<string | null> => {
   return getHarnessRedisClient().get(key);
+};
+
+/** Deletes every key under `prefix`; returns how many went. `KEYS` for the
+ * reason `findBffSessionIdBySub` gives: loopback compose Redis only. */
+export const redisDeleteByPrefix = async (prefix: string): Promise<number> => {
+  const client = getHarnessRedisClient();
+  const keys = await client.keys(`${prefix}*`);
+  return keys.length === 0 ? 0 : client.del(...keys);
 };
 
 const COMPARE_AND_DELETE_LUA =

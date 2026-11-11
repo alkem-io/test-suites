@@ -181,6 +181,35 @@ export default defineConfig({
           sequence: { groupOrder: 3 },
         },
       },
+      // Second factor (Kratos MFA). On demand, never `nightly`: it needs a
+      // stack booted with the feature's Kratos values, loopback Redis/Postgres
+      // and the Kratos admin port. Files run one at a time because the rule
+      // switches are platform-wide. `*.measure.ts` files are one-off
+      // measurements, run by path (see their headers), never by this project.
+      {
+        extends: true as const,
+        test: {
+          name: 'second-factor',
+          include: ['src/functional-api/second-factor/**/*.it-spec.ts'],
+          globalSetup: [
+            './src/functional-api/second-factor/_support/global-setup.ts',
+          ],
+          fileParallelism: false,
+        },
+      },
+      // The second-factor one-off measurements, never a test run: each is run
+      // once by naming its file (command in its header).
+      {
+        extends: true as const,
+        test: {
+          name: 'second-factor-measure',
+          include: ['src/functional-api/second-factor/**/*.measure.ts'],
+          globalSetup: [
+            './src/functional-api/second-factor/_support/global-setup.ts',
+          ],
+          fileParallelism: false,
+        },
+      },
       // The lib contract (docs/qa/server-rebuild W2 pre-work): names, shapes
       // and one base-scenario round trip. The first thing that must go green
       // on the rebuilt server; on demand, not part of `nightly`.

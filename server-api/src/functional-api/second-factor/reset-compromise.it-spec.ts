@@ -1,0 +1,149 @@
+/**
+ * The reset with the password made unusable (D43, D46; US2-AS11 — the standing
+ * proof of research R31), the settings profile method switched off (D47,
+ * FR-024 — research R34) and the two-step sign-up that still works without it.
+ * Plan: ./second-factor-test-plan.md. Needs a stack with the feature's Kratos
+ * values, the Kratos admin port, loopback Redis/Postgres and the mail catcher.
+ */
+import { randomUUID } from 'crypto';
+import {
+  authenticationAuditRows,
+  changePasswordInBrowser,
+  clearAddressCounters,
+  deleteIdentity,
+  deleteThrowawayUser,
+  enrolTotp,
+  flowMessages,
+  getUserToken,
+  identitySessions,
+  loginWithPassword,
+  loginWithTotp,
+  passwordLogin,
+  postGraphqlRaw,
+  readIdentity,
+  recoverViaLink,
+  registerTwoStep,
+  resetSecondFactor,
+  updateSettings,
+  verifyInKratosOrFail,
+  whoami,
+} from '@alkemio/tests-lib';
+import { roleTokens, secondFactorCases } from './_support/cases';
+
+const throwawayUser = secondFactorCases();
+
+/** Kratos' "the provided credentials are invalid" message. */
+const INVALID_CREDENTIALS = /^4000006:/;
+
+describe('Second factor — reset after a compromise', () => {
+  test('US2-AS11 D43 D46 the password is made unusable, matches the outcome row, and is regained only through the emailed link', async () => {
+    const member = await throwawayUser('compromise');
+    const secret = await enrolTotp(
+      (await loginWithPassword(member.email)).sessionToken
+    );
+    await loginWithTotp(member.email, secret);
+    const passwordBefore = (await readIdentity(member.identityId)).credentials
+      ?.password?.updated_at;
+    expect(passwordBefore).toBeDefined();
+
+    const reset = await resetSecondFactor(
+      member.userId,
+      { bearerToken: roleTokens().support },
+      { invalidatePassword: true }
+    );
+    expect(reset.body.data?.adminResetUserSecondFactor.passwordInvalidated, reset.raw).toBe(true);
+
+    const rows = (await authenticationAuditRows({ userId: member.userId })).filter(r =>
+      r.outcome.startsWith('second_factor_reset_')
+    );
+    expect(rows.map(r => r.outcome)).toEqual([
+      'second_factor_reset_started',
+      'second_factor_reset_completed',
+    ]);
+    expect(rows[0].details).toMatchObject({ invalidatePassword: true });
+    const completed = rows[1].details as {
+      passwordInvalidated: boolean;
+      passwordLastChangedAt?: string;
+    };
+    expect(completed.passwordInvalidated).toBe(true);
+
+    await clearAddressCounters();
+    const oldPassword = await passwordLogin(member.email);
+    expect(oldPassword.status).toBe(400);
+    expect(flowMessages(oldPassword).some(m => INVALID_CREDENTIALS.test(m))).toBe(true);
+
+    const identity = await readIdentity(member.identityId);
+    expect(
+      Object.keys(identity.credentials ?? {}).filter(t =>
+        ['lookup_secret', 'totp', 'webauthn'].includes(t)
+      )
+    ).toEqual([]);
+    expect(await identitySessions(member.identityId)).toEqual([]);
+    const passwordAfterReset = identity.credentials?.password?.updated_at;
+    expect(Date.parse(passwordAfterReset!)).toBeGreaterThan(Date.parse(passwordBefore!));
+    expect(passwordAfterReset).toBe(completed.passwordLastChangedAt);
+
+    // No factor is left: the link's session may set a password straight away.
+    const newPassword = `Sf-${randomUUID()}`;
+    const { jar, settingsFlowId } = await recoverViaLink(member.identityId);
+    expect((await changePasswordInBrowser(jar, settingsFlowId, newPassword)).status).toBe(200);
+    const signedIn = await loginWithPassword(member.email, { password: newPassword });
+    expect((await whoami(signedIn.sessionToken)).status).toBe(200);
+
+    // The OG-3 check can fail: after the member's own change it no longer matches.
+    expect((await readIdentity(member.identityId)).credentials?.password?.updated_at).not.toBe(
+      completed.passwordLastChangedAt
+    );
+  });
+
+  test('D47 the settings profile method is refused and the identity’s addresses are unchanged', async () => {
+    const member = await throwawayUser('profile');
+    const before = await readIdentity(member.identityId);
+    const session = await loginWithPassword(member.email);
+
+    const answer = await updateSettings(session.sessionToken, {
+      method: 'profile',
+      traits: { ...before.traits, email: `sf.moved${randomUUID().slice(0, 8)}@alkem.io` },
+    });
+    expect(answer.status).toBe(404);
+
+    const after = await readIdentity(member.identityId);
+    expect(after.traits.email).toBe(before.traits.email);
+    expect(after.recovery_addresses?.map(a => a.value)).toEqual(
+      before.recovery_addresses?.map(a => a.value)
+    );
+    expect(after.verifiable_addresses?.map(a => a.value)).toEqual(
+      before.verifiable_addresses?.map(a => a.value)
+    );
+  });
+
+  test('D47 the two-step sign-up still creates an identity that verifies and signs in', async () => {
+    const email = `sf.signup${randomUUID().slice(0, 8)}@alkem.io`;
+    const { profileStep, passwordStep } = await registerTwoStep(email);
+    const identityId: string | undefined = passwordStep.body?.identity?.id;
+    try {
+      expect(profileStep.status, JSON.stringify(profileStep.body).slice(0, 300)).toBeLessThan(500);
+      expect(passwordStep.status, JSON.stringify(passwordStep.body).slice(0, 300)).toBe(200);
+      expect(identityId).toBeDefined();
+
+      await verifyInKratosOrFail(email);
+      expect((await readIdentity(identityId!)).verifiable_addresses?.[0]?.verified).toBe(true);
+      const session = await loginWithPassword(email);
+      expect((await whoami(session.sessionToken)).status).toBe(200);
+    } finally {
+      const token = await getUserToken(email).catch(() => undefined);
+      const me = token
+        ? await postGraphqlRaw<{ me: { user: { id: string } | null } }>(
+            'query { me { user { id } } }',
+            { bearerToken: token }
+          )
+        : undefined;
+      const userId = me?.body.data?.me?.user?.id;
+      if (userId && identityId) {
+        await deleteThrowawayUser({ userId, identityId }, roleTokens().usersAdmin);
+      } else if (identityId) {
+        await deleteIdentity(identityId);
+      }
+    }
+  });
+});

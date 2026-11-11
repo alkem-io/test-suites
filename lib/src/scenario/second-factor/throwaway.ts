@@ -1,0 +1,122 @@
+import { randomUUID } from 'crypto';
+import { RoleName } from '../../core/generated/alkemio-schema';
+import { postGraphqlRaw } from '../../utils/graphql.raw.client';
+import {
+  assignPlatformRole,
+  assignRoleToUser,
+  createOrganization,
+  deleteOrganization,
+} from '../baseFunctions';
+import { BOOTSTRAP_ROLES_ADMIN_EMAIL } from '../platform-roles/platform-role-users';
+import { getUserToken } from '../registration/get-user-token';
+import { createIdentity, deleteIdentity } from './kratos';
+
+/**
+ * Identities and organisations each spec creates for itself and deletes in
+ * `finally`: no shared persona is ever enrolled, covered or reset.
+ */
+export type ThrowawayUser = {
+  email: string;
+  identityId: string;
+  userId: string;
+  /** A non-interactive bearer — not a sign-in, never evaluated by the rule. */
+  token: string;
+};
+
+const ME = 'query { me { user { id } } }';
+
+/**
+ * A Kratos identity (verified email, harness password) and its platform user,
+ * which the server creates on the identity's first sign-in.
+ */
+export const createThrowawayUser = async (tag: string): Promise<ThrowawayUser> => {
+  const email = `sf.${tag}${randomUUID().slice(0, 8)}@alkem.io`;
+  const identityId = await createIdentity(email);
+  const token = await getUserToken(email);
+  const me = await postGraphqlRaw<{ me: { user: { id: string } | null } }>(ME, {
+    bearerToken: token,
+  });
+  const userId = me.body.data?.me?.user?.id;
+  if (!userId) {
+    throw new Error(
+      `second-factor: no platform user for ${email}: ${me.raw.slice(0, 300)}`
+    );
+  }
+  return { email, identityId, userId, token };
+};
+
+/** Deletes the platform user (and its identity) as Platform Users Admin. */
+export const deleteThrowawayUser = async (
+  user: Pick<ThrowawayUser, 'identityId' | 'userId'>,
+  usersAdminToken: string
+): Promise<void> => {
+  await postGraphqlRaw(
+    'mutation($id: UUID!) { deleteUser(deleteData: { ID: $id, deleteIdentity: true }) { id } }',
+    { variables: { id: user.userId }, bearerToken: usersAdminToken }
+  );
+  await deleteIdentity(user.identityId);
+};
+
+export type ThrowawayOrganization = { id: string; roleSetId: string };
+
+const must = <T>(
+  result: { data?: T; error?: { errors?: { message?: string }[] } },
+  step: string
+): T => {
+  if (!result.data) {
+    throw new Error(
+      `second-factor: ${step} failed: ${result.error?.errors?.[0]?.message ?? 'no data'}`
+    );
+  }
+  return result.data;
+};
+
+/**
+ * Runs `fn` on an organisation `admin` creates (and so owns and administers),
+ * with each of `associates` as its associate, and deletes it in `finally`.
+ * `admin` is first granted Feature Organization Creator, the role creation needs.
+ */
+export const withThrowawayOrganization = async <T>(
+  people: { admin: ThrowawayUser; associates: ThrowawayUser[] },
+  fn: (organization: ThrowawayOrganization) => Promise<T>
+): Promise<T> => {
+  const actor = { bearerToken: people.admin.token };
+  must(
+    await assignPlatformRole(
+      people.admin.userId,
+      RoleName.FeatureOrganizationCreator,
+      { bearerToken: await getUserToken(BOOTSTRAP_ROLES_ADMIN_EMAIL) }
+    ),
+    'grant Feature Organization Creator'
+  );
+  const nameID = `sf-${randomUUID().slice(0, 12)}`;
+  const created = must(
+    await createOrganization(
+      `Second factor ${nameID}`,
+      nameID,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      actor
+    ),
+    'create organisation'
+  ).createOrganization;
+  const organization = { id: created.id, roleSetId: created.roleSet.id };
+  try {
+    for (const associate of people.associates) {
+      must(
+        await assignRoleToUser(
+          associate.userId,
+          organization.roleSetId,
+          RoleName.Associate,
+          actor
+        ),
+        `make ${associate.email} an associate`
+      );
+    }
+    return await fn(organization);
+  } finally {
+    await deleteOrganization(organization.id, actor);
+  }
+};
