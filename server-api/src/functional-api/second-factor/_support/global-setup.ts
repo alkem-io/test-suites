@@ -8,7 +8,9 @@ import {
  * Once per run: clear the login proxy's per-address counters, seed the
  * single-role users the reset and rule cases act as, and clear again — their
  * sign-ins pass the proxy from the runner's address, and a successful sign-in
- * no longer clears it. Every case clears again in its own `beforeEach`.
+ * no longer clears it. Every case clears again in its own `beforeEach`, and the
+ * run clears once more when it ends: its sign-ins leave the runner's address
+ * counted, and the next suite on the same stack signs in from it too.
  */
 export type SecondFactorRunContext = {
   tokens: {
@@ -35,4 +37,7 @@ export default async function setup(project: TestProject) {
       settingsAdmin: tokens.PLATFORM_SETTINGS_ADMIN,
     },
   });
+  return async () => {
+    await clearAddressCounters();
+  };
 }
