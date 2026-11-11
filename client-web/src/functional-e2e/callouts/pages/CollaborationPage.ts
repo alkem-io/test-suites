@@ -236,6 +236,11 @@ export class CollaborationPage {
           name: `${linkText} (opens ${url} in a new tab)`,
           exact: true,
         }),
+      // Any CTA link: client-web CalloutLinkAction is the only element named
+      // "<text> (opens <url>)" / "<text> (opens <url> in a new tab)".
+      anyCtaLink: dialog.getByRole('link', {
+        name: /\(opens \S+( in a new tab)?\)$/,
+      }),
     };
   }
 
@@ -505,13 +510,14 @@ export class CollaborationPage {
 
   async publishCallout() {
     await this.publishMenuItem.click();
-    // CRD: publishing opens a "Publish this post?" alertdialog whose confirm
-    // button is "Publish" (a "Notify space members" switch defaults on).
-    if (
-      await this.confirmDialog.isVisible({ timeout: 5000 }).catch(() => false)
-    ) {
-      await this.confirmButton.click();
-    }
+    // CRD: Publish always opens a "Publish this post?" alertdialog whose
+    // confirm button is "Publish" (a "Notify space members" switch defaults
+    // on) — client-web CalloutSettingsConnector › CalloutVisibilityChangeDialog.
+    // Wait for it: `isVisible` does not wait, so a guard that skipped the
+    // confirm when the dialog had not rendered yet left the callout a draft.
+    await expect(this.confirmDialog).toBeVisible();
+    await this.confirmButton.click();
+    await expect(this.confirmDialog).toBeHidden();
   }
 
   async deleteCallout() {

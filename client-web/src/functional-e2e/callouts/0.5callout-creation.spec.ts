@@ -87,6 +87,8 @@ async function expectDialogShowsKind(
     const cta = view.ctaLink(expected.link.displayName, expected.link.uri);
     await expect(cta).toBeVisible();
     await expect(cta).toHaveAttribute('href', expected.link.uri);
+  } else {
+    await expect(view.anyCtaLink).toHaveCount(0);
   }
   if (expected.addContributionLabel) {
     await expect(view.contributionsHeading).toBeVisible();
