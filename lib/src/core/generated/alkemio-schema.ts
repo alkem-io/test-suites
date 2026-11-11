@@ -89740,6 +89740,62 @@ export type ReadCalloutsSetCalloutResponsesQuery = {
   };
 };
 
+export type ReadCalloutsSetCalloutTypesQueryVariables = Exact<{
+  calloutsSetId: Scalars["UUID"]["input"];
+}>;
+
+export type ReadCalloutsSetCalloutTypesQuery = {
+  lookup: {
+    calloutsSet?:
+      | {
+          id: string;
+          callouts: Array<{
+            id: string;
+            framing: {
+              id: string;
+              type: CalloutFramingType;
+              profile: { id: string; displayName: string };
+              whiteboard?: { id: string } | undefined;
+              memo?: { id: string } | undefined;
+              link?:
+                | {
+                    id: string;
+                    uri: string;
+                    profile: { id: string; displayName: string };
+                  }
+                | undefined;
+            };
+            settings: {
+              contribution: { allowedTypes: Array<CalloutContributionType> };
+            };
+          }>;
+        }
+      | undefined;
+  };
+};
+
+export type ReadCalloutsSetCalloutVisibilityQueryVariables = Exact<{
+  calloutsSetId: Scalars["UUID"]["input"];
+}>;
+
+export type ReadCalloutsSetCalloutVisibilityQuery = {
+  lookup: {
+    calloutsSet?:
+      | {
+          id: string;
+          callouts: Array<{
+            id: string;
+            framing: {
+              id: string;
+              profile: { id: string; displayName: string };
+            };
+            settings: { visibility: CalloutVisibility };
+          }>;
+        }
+      | undefined;
+  };
+};
+
 export type ReadCalloutsSetCalloutsQueryVariables = Exact<{
   calloutsSetId: Scalars["UUID"]["input"];
 }>;

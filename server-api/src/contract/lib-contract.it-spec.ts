@@ -23,6 +23,9 @@ import {
   TestUserManager,
   RoleName,
   readCalloutFraming,
+  readCalloutsSetCalloutTypes,
+  readCalloutsSetCalloutVisibility,
+  CalloutVisibility,
   readCalloutsSetCalloutResponses,
   readMyUser,
   readOrganizationRoleSet,
@@ -211,6 +214,8 @@ const FUNCTIONS: string[] = [
   'readCalloutContributions',
   'readCalloutFramingContributors',
   'readCalloutsSetCallouts',
+  'readCalloutsSetCalloutTypes',
+  'readCalloutsSetCalloutVisibility',
   'readCalloutsSetCalloutResponses',
   'readCalloutFormResponses',
   'readMemoDocuments',
@@ -446,6 +451,73 @@ describe('@contract base scenario round trip', () => {
     expect(callout.data?.lookup.callout?.id).toBe(base.space.collaboration.calloutPostId);
     expect(callout.data?.lookup.callout?.framing.type).toEqual(expect.any(String));
     expect(callout.data?.lookup.callout?.framing.profile.url).toEqual(expect.any(String));
+  });
+
+  test('callouts set: a callout reads back with its framing type, framing link and accepted contribution types', async () => {
+    // A CTA callout that accepts posts (every field 0.5 reads), beside the
+    // seeded post callout as the plain-framing control.
+    const title = `contract cta ${lib.UniqueIDGenerator.getID()}`;
+    const linkName = `contract link ${lib.UniqueIDGenerator.getID()}`;
+    const uri = 'https://example.com/contract-cta';
+    const created = await lib.createCalloutWithData({
+      calloutsSetID: base.space.collaboration.calloutsSetId,
+      framing: {
+        type: lib.CalloutFramingType.Link,
+        profile: { displayName: title },
+        link: { uri, profile: { displayName: linkName } },
+      },
+      settings: {
+        contribution: {
+          enabled: true,
+          allowedTypes: [lib.CalloutContributionType.Post],
+          canAddContributions: lib.CalloutAllowedActors.Members,
+        },
+        visibility: lib.CalloutVisibility.Published,
+      },
+    });
+    const ctaId = created.data?.createCalloutOnCalloutsSet.id;
+    expect(ctaId, 'seed the CTA callout').toEqual(expect.any(String));
+
+    const set = await readCalloutsSetCalloutTypes(base.space.collaboration.calloutsSetId);
+    expect(set.error).toBeUndefined();
+    expect(set.data?.lookup.calloutsSet?.id).toBe(base.space.collaboration.calloutsSetId);
+    const callouts = set.data?.lookup.calloutsSet?.callouts ?? [];
+
+    const cta = callouts.find(c => c.id === ctaId);
+    expect(cta?.framing.type).toBe(lib.CalloutFramingType.Link);
+    expect(cta?.framing.profile.displayName).toBe(title);
+    expect(cta?.framing.link?.uri).toBe(uri);
+    expect(cta?.framing.link?.profile.displayName).toBe(linkName);
+    expect(cta?.framing.whiteboard ?? null).toBeNull();
+    expect(cta?.framing.memo ?? null).toBeNull();
+    expect(cta?.settings.contribution.allowedTypes).toEqual([lib.CalloutContributionType.Post]);
+
+    const post = callouts.find(c => c.id === base.space.collaboration.calloutPostId);
+    expect(post?.framing.type).toBe(lib.CalloutFramingType.None);
+    expect(post?.framing.whiteboard ?? null).toBeNull();
+    expect(post?.framing.memo ?? null).toBeNull();
+    expect(post?.framing.link ?? null).toBeNull();
+  });
+
+  test('callouts set: a draft and a published callout read back with their title and visibility', async () => {
+    const title = `contract draft ${lib.UniqueIDGenerator.getID()}`;
+    const created = await lib.createCalloutWithData({
+      calloutsSetID: base.space.collaboration.calloutsSetId,
+      framing: { profile: { displayName: title } },
+      settings: { visibility: CalloutVisibility.Draft },
+    });
+    const draftId = created.data?.createCalloutOnCalloutsSet.id;
+    expect(draftId, 'seed the draft callout').toEqual(expect.any(String));
+
+    const set = await readCalloutsSetCalloutVisibility(base.space.collaboration.calloutsSetId);
+    expect(set.error).toBeUndefined();
+    expect(set.data?.lookup.calloutsSet?.id).toBe(base.space.collaboration.calloutsSetId);
+    const callouts = set.data?.lookup.calloutsSet?.callouts ?? [];
+    const draft = callouts.find(c => c.id === draftId);
+    expect(draft?.framing.profile.displayName).toBe(title);
+    expect(draft?.settings.visibility).toBe(CalloutVisibility.Draft);
+    const post = callouts.find(c => c.id === base.space.collaboration.calloutPostId);
+    expect(post?.settings.visibility, 'the seeded post callout is published').toBe(CalloutVisibility.Published);
   });
 
   test('callouts set: a callout reads back with its comments setting and its posts with their author', async () => {
