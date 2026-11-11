@@ -23,6 +23,7 @@ import {
   TestUserManager,
   RoleName,
   readCalloutFraming,
+  readCalloutsSetCalloutResponses,
   readMyUser,
   readOrganizationRoleSet,
   readRoleSetUsersInRoles,
@@ -208,6 +209,7 @@ const FUNCTIONS: string[] = [
   'readCalloutContributions',
   'readCalloutFramingContributors',
   'readCalloutsSetCallouts',
+  'readCalloutsSetCalloutResponses',
   'readCalloutFormResponses',
   'readMemoDocuments',
   // W2 journey 5 (content editing)
@@ -431,6 +433,46 @@ describe('@contract base scenario round trip', () => {
     expect(callout.data?.lookup.callout?.id).toBe(base.space.collaboration.calloutPostId);
     expect(callout.data?.lookup.callout?.framing.type).toEqual(expect.any(String));
     expect(callout.data?.lookup.callout?.framing.profile.url).toEqual(expect.any(String));
+  });
+
+  test('callouts set: a callout reads back with its comments setting and its posts with their author', async () => {
+    // A Posts callout with comments OFF (the seeded post callout has them ON),
+    // and one post on it by the admin: every field the client-web specs read.
+    const calloutTitle = `contract posts ${lib.UniqueIDGenerator.getID()}`;
+    const postTitle = `contract post ${lib.UniqueIDGenerator.getID()}`;
+    const created = await lib.createCalloutWithData({
+      calloutsSetID: base.space.collaboration.calloutsSetId,
+      framing: { profile: { displayName: calloutTitle } },
+      settings: {
+        framing: { commentsEnabled: false },
+        contribution: {
+          enabled: true,
+          allowedTypes: [lib.CalloutContributionType.Post],
+          canAddContributions: lib.CalloutAllowedActors.Members,
+        },
+        visibility: lib.CalloutVisibility.Published,
+      },
+    });
+    const calloutId = created.data?.createCalloutOnCalloutsSet.id;
+    expect(calloutId, 'seed the Posts callout').toEqual(expect.any(String));
+    const post = await lib.createContributionOnCallout({
+      calloutID: calloutId as string,
+      type: lib.CalloutContributionType.Post,
+      post: { profileData: { displayName: postTitle } },
+    });
+    expect(post.error, 'seed the post').toBeUndefined();
+
+    const set = await readCalloutsSetCalloutResponses(base.space.collaboration.calloutsSetId);
+    expect(set.error).toBeUndefined();
+    expect(set.data?.lookup.calloutsSet?.id).toBe(base.space.collaboration.calloutsSetId);
+    const callouts = set.data?.lookup.calloutsSet?.callouts ?? [];
+    const byId = (id: string) => callouts.find(c => c.id === id);
+    expect(byId(base.space.collaboration.calloutPostId)?.settings.framing.commentsEnabled, 'seeded post callout').toBe(true);
+    const seeded = byId(calloutId as string);
+    expect(seeded?.framing.profile.displayName).toBe(calloutTitle);
+    expect(seeded?.settings.framing.commentsEnabled).toBe(false);
+    expect(seeded?.contributions.map(c => c.post?.profile.displayName)).toEqual([postTitle]);
+    expect(seeded?.contributions[0]?.post?.createdBy?.id, 'post author').toBe(TestUserManager.users.globalAdmin.id);
   });
 
   test('organization: its role set reads back by id', async () => {

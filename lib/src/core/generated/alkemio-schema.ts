@@ -89708,6 +89708,38 @@ export type ReadCalloutSubspacesQuery = {
   };
 };
 
+export type ReadCalloutsSetCalloutResponsesQueryVariables = Exact<{
+  calloutsSetId: Scalars["UUID"]["input"];
+}>;
+
+export type ReadCalloutsSetCalloutResponsesQuery = {
+  lookup: {
+    calloutsSet?:
+      | {
+          id: string;
+          callouts: Array<{
+            id: string;
+            framing: {
+              id: string;
+              profile: { id: string; displayName: string };
+            };
+            settings: { framing: { commentsEnabled: boolean } };
+            contributions: Array<{
+              id: string;
+              post?:
+                | {
+                    id: string;
+                    profile: { id: string; displayName: string };
+                    createdBy?: { id: string } | undefined;
+                  }
+                | undefined;
+            }>;
+          }>;
+        }
+      | undefined;
+  };
+};
+
 export type ReadCalloutsSetCalloutsQueryVariables = Exact<{
   calloutsSetId: Scalars["UUID"]["input"];
 }>;

@@ -14,6 +14,10 @@ import { PostTemplateForm } from './forms/template-form.models';
 import { fillPostTemplateForm } from './forms/post-template-form';
 import { verifyPostTemplate } from './verify/post-template-verify';
 import { sectionAddNewButton } from './section-helpers';
+import {
+  deleteTemplateAndVerify,
+  seedDeleteControlTemplate,
+} from './delete-template';
 
 // Create the authenticated fixture with a unique storage state name for this test suite
 const { test, setupAuthentication, teardownAuthentication } =
@@ -25,6 +29,7 @@ const { test, setupAuthentication, teardownAuthentication } =
 const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 
 let baseScenario: OrganizationWithSpaceModel;
+let deleteControlName: string;
 const scenarioConfig: TestScenarioConfig = {
   name: 'post-template',
   space: {
@@ -50,6 +55,10 @@ const templateData: PostTemplateForm = {
 test.describe.serial('Post Templates', () => {
   test.beforeAll(async ({ browser, context }) => {
     baseScenario = await TestScenarioFactory.createBaseScenario(scenarioConfig);
+    // The template that must survive the delete case (its positive control).
+    deleteControlName = await seedDeleteControlTemplate(
+      baseScenario.space.templateSetId
+    );
     await setupAuthentication(browser, TestUserManager.users.spaceAdmin.email);
   });
   test.afterAll(async () => {
@@ -201,7 +210,12 @@ test.describe.serial('Post Templates', () => {
     await verifyPostTemplate(page, templateData);
   });
 
-  // test('1.4 Delete Post Template', async ({ page }) => {
-  //   // Delete flow not yet implemented for the redesigned Templates UI.
-  // });
+  test('1.4 Delete Post Template', async ({ page }) => {
+    await deleteTemplateAndVerify(
+      page,
+      baseScenario.space.templateSetId,
+      templateData.displayName,
+      deleteControlName
+    );
+  });
 });

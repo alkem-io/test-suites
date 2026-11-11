@@ -10,7 +10,10 @@ import {
 import { createAuthenticatedSessionFixture } from '@src/functional-e2e/fixtures/authenticated-session.fixture';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import { randomBytes } from 'crypto';
-import { WhiteboardTemplateForm } from './forms/template-form.models';
+import {
+  TemplateForm,
+  WhiteboardTemplateForm,
+} from './forms/template-form.models';
 import {
   fillWhiteboardTemplateForm,
   fillWhiteboardWithWhiteboardTemplate,
@@ -20,6 +23,10 @@ import { fillTemplateForm } from './forms/template-form';
 import { verifyOpenedTemplate } from './verify/verify-opened-template';
 import { openWhiteboardTemplate } from './verify/open-template';
 import { sectionAddNewButton } from './section-helpers';
+import {
+  deleteTemplateAndVerify,
+  seedDeleteControlTemplate,
+} from './delete-template';
 
 // Create the authenticated fixture with a unique storage state name for this test suite
 const { test, setupAuthentication, teardownAuthentication } =
@@ -31,6 +38,14 @@ const { test, setupAuthentication, teardownAuthentication } =
 const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 
 let baseScenario: OrganizationWithSpaceModel;
+let deleteControlName: string;
+// 1.3 builds this whiteboard template FROM `templateData`; 1.4 proves it
+// survives the deletion of its source.
+const madeFromTemplate: TemplateForm = {
+  displayName: 'Whiteboard Template With template inside',
+  description: 'This is a test, will not be saved.',
+  tags: [],
+};
 const scenarioConfig: TestScenarioConfig = {
   name: 'whiteboard-template',
   space: {
@@ -55,6 +70,10 @@ const templateData: WhiteboardTemplateForm = {
 test.describe.serial('Whiteboard Templates', () => {
   test.beforeAll(async ({ browser, context }) => {
     baseScenario = await TestScenarioFactory.createBaseScenario(scenarioConfig);
+    // The template that must survive the delete case (its positive control).
+    deleteControlName = await seedDeleteControlTemplate(
+      baseScenario.space.templateSetId
+    );
     await setupAuthentication(browser, TestUserManager.users.spaceAdmin.email);
   });
   test.afterAll(async () => {
@@ -208,13 +227,8 @@ test.describe.serial('Whiteboard Templates', () => {
       dialog.getByRole('heading', { name: 'Create whiteboard template' })
     ).toBeVisible();
 
-    const testTemplate = {
-      displayName: 'Whiteboard Template With template inside',
-      description: 'This is a test, will not be saved.',
-      tags: [],
-    };
     // Fill the form:
-    await fillTemplateForm(page, testTemplate);
+    await fillTemplateForm(page, madeFromTemplate);
 
     await fillWhiteboardWithWhiteboardTemplate(page, templateData);
 
@@ -223,37 +237,17 @@ test.describe.serial('Whiteboard Templates', () => {
       page.getByRole('heading', { name: /^(Create|Edit) whiteboard template$/ })
     ).not.toBeVisible();
 
-    await openWhiteboardTemplate(page, testTemplate);
-    await verifyOpenedTemplate(page, testTemplate);
+    await openWhiteboardTemplate(page, madeFromTemplate);
+    await verifyOpenedTemplate(page, madeFromTemplate);
   });
 
-  // test('1.4 Delete Whiteboard Template', async ({ page }) => {
-  //   // Find the template title and click on it to open the template
-  //   await page.getByRole('heading', { name: templateData.displayName }).click();
-
-  //   await page.getByRole('button', { name: 'Edit', exact: true }).click();
-
-  //   await page.getByRole('button', { name: 'Delete', exact: true }).click();
-
-  //   await expect(
-  //     page.getByText(
-  //       `Are you sure you want to delete the Template '${templateData.displayName}'?`,
-  //       { exact: true }
-  //     )
-  //   ).toBeVisible();
-
-  //   await page.getByRole('button', { name: 'Delete' }).click();
-
-  //   await expect(
-  //     page.getByRole('heading', { name: 'Warning' })
-  //   ).not.toBeVisible();
-
-  //   await expect(
-  //     page.getByRole('heading', { name: 'Edit Whiteboard Template' })
-  //   ).not.toBeVisible();
-
-  //   await expect(
-  //     page.getByRole('heading', { name: templateData.displayName, exact: true })
-  //   ).not.toBeVisible();
-  // });
+  test('1.4 Delete Whiteboard Template', async ({ page }) => {
+    await deleteTemplateAndVerify(
+      page,
+      baseScenario.space.templateSetId,
+      templateData.displayName,
+      deleteControlName,
+      [madeFromTemplate.displayName]
+    );
+  });
 });

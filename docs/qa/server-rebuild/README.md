@@ -95,6 +95,7 @@ _One place for everything QA does for the move to the rebuilt server. Status is 
 | Journey 10 — message leads / organisation; notification settings | not started |
 | Journey 11 — upload file / reference; media gallery; attachment | not started |
 | Journey 12 — forum, innovation packs, admin organisations, mentions | not started |
+| Tier 1 item 16 (templates-CRD delete, comments, member contribution) | in progress — branch `qa/w2-tier1-templates` |
 | Tier 0 registrations from the audit (smoke canary, platform roles, memberships, contributors callout 0.1) | built 2026-10-14, uncommitted in the working tree |
 
 ## Decisions
@@ -151,6 +152,7 @@ Full text in [`plan.md` § Gaps](plan.md#gaps-found-in-the-plan-so-far).
 | 2026-11-09 | W2 journey 5 on test-alkem.io: 7/7 in two runs (2.3 min each); the lib whiteboard peer authenticates on test; one test-side race fixed in E8-1 (raw text read before the last keystrokes synced over the remote link) |
 | 2026-11-09 | W2 journey 5 PR test-suites#711 opened; E8-4 green 2/2 on the local stack with the collaboration service at `IDLE_RELEASE_SECONDS=0`, and red with file-service paused (proves a load from storage) |
 | 2026-10-28 | W0 delivered: 298 root fields of `server` `develop` @ `eeecf9ddb` traced through lib, server-api and client-web on test-suites @ `015bfeea1`; 57 features with verdicts; gap 11 closed |
+| 2026-11-09 | W2 Tier 1 item 16 in progress on branch `qa/w2-tier1-templates`. Template delete is un-commented in the post, community-guidelines and whiteboard specs (lib-seeded control template, read-back, absence after a reload). Cases 1–8 assert the comments setting in the Edit dialog and over GraphQL (new lib `readCalloutsSetCalloutResponses`). New case 17m has `space.member` post to a template-made callout, with the author read back. The `test.fail` part of the item was already done by #682 |
 
 ## How to update
 
