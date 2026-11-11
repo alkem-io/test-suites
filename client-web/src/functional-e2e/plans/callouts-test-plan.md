@@ -1386,7 +1386,7 @@ Before this change the 8 create cases asserted only the title heading, which a s
 
 After the title heading (kept), each admin case calls `expectCalloutKind`:
 
-1. **UI** — opens the callout's detail dialog. "Discussion" renders for every kind and is the positive control that the dialog body is up; then the kind-specific affordance: "Open Whiteboard" (whiteboard framing), "Open Memo" (memo framing), the CTA link `"<text> (opens <url> in a new tab)"` with that `href`, or the "Contributions" section with the typed add button ("Add Post", "Add link or file", "Add memo", "Add whiteboard"). The affordances of the other kinds are asserted absent (count 0) after the control.
+1. **UI** — opens the callout's detail dialog. "Discussion" renders for every kind and is the positive control that the dialog body is up; then the kind-specific affordance: "Open Whiteboard" (whiteboard framing), "Open Memo" (memo framing), the CTA link `"<text> (opens <url> in a new tab)"` with that `href`, or the "Contributions" section with the typed add button ("Add Post", "Add link or file", "Add memo", "Add whiteboard"). The affordances of the other kinds are asserted absent (count 0) after the control, including any CTA link (the `"<text> (opens <url>…)"` name only `CalloutLinkAction` carries) for the non-CTA kinds.
 2. **API** — `readCalloutsSetCalloutTypes(calloutsSetId, sessionActor(page))` (new lib read-back): exactly one stored callout with the title; `framing.type`; `settings.contribution.allowedTypes` (exact set); the framing whiteboard/memo present only for that framing; the framing link's `uri` and display name for the CTA, no link otherwise.
 
 | Case | Framing | Accepted contributions | Dialog affordance | Regression it guards |
@@ -1438,11 +1438,11 @@ Before this change, a UI publish was proven in 0.1 only (the member could open t
 |---|---|---|
 | 0.7 3.1 | after save: stored under the new title as DRAFT, nothing under the old title; after the trailing publish: PUBLISHED | the edit not persisted, or persisted as a new callout; an edit that publishes; the unasserted publish not reaching the server |
 | 0.7 3.2 | `toBeDefined()` → the edited title's heading is visible in the feed after a fresh load | the 3.1 edit surviving only in the session cache |
-| 0.7 3.4 | before: stored DRAFT; the member (own browser context) sees the rendered feed without the draft, and the server does not list it for them. Menu positive control (Edit visible) before "Publish gone". After: PUBLISHED read-back as admin AND as the member; the member's rendered feed shows the callout, and it opens (Discussion heading) | the publish not reaching the server; a publish that the member still cannot see; a draft leaking to members before publish; a "Publish gone" check that passes on a closed menu |
+| 0.7 3.4 | before: stored DRAFT; the member (own browser context) sees the rendered feed without the draft, and the server lists the seeded callout for them as PUBLISHED but not the draft. Menu positive control (Edit visible) before "Publish gone". After: PUBLISHED read-back as admin AND as the member; the member's rendered feed shows the callout, and it opens (Discussion heading) | the publish not reaching the server; a publish that the member still cannot see; a draft leaking to members before publish; a "Publish gone" check that passes on a closed menu |
 | 0.9 2.3 | the Draft flip moved before `goto` (it raced the feed query) + DRAFT read-back | the admin view being read before the draft state existed |
 | 0.9 2.1 (admin) | UI publish → PUBLISHED read-back, and the server lists it for SPACE_MEMBER | the unasserted UI publish (old oracle: the comment box, present on drafts too) |
 | 0.9 2.1 (member) | the member session's read-back says PUBLISHED | — (strengthens the existing "member sees it") |
-| 0.9 2.2 | positive control: the published sibling (the scenario now seeds `addPostCallout`) is visible and no skeleton is left; then the draft's heading count 0 in the feed, and the server does not list the draft for the member's session | a vacuous absence (feed not rendered); a draft that the server hands to members while the UI hides it |
+| 0.9 2.2 | positive control: the published sibling (the scenario now seeds `addPostCallout`) is visible and no skeleton is left; then the draft's heading count 0 in the feed, and the member's server listing holds the published sibling as PUBLISHED (positive control) but not the draft | a vacuous absence (feed not rendered); a draft that the server hands to members while the UI hides it |
 | 0.1 Step 1 | stored DRAFT; not listed for SPACE_MEMBER | a "Save Draft" that publishes |
 | 0.1 Step 2 | menu positive control (Edit) before "Publish gone"; PUBLISHED read-back | publish not persisted (the member step would only catch it later, as a click timeout) |
 | 0.1 Step 3 | the member sees the title in the feed and the server lists it as PUBLISHED for the member session | — (makes the existing implicit publish oracle explicit) |
@@ -1469,6 +1469,23 @@ Before this change, a UI publish was proven in 0.1 only (the member could open t
 ### Constants asserted — item 11
 
 The visibility values `DRAFT` / `PUBLISHED` come from the lib's `CalloutVisibility` enum. **Rebaseline candidate:** the server leaving a DRAFT out of a member's `calloutsSet.callouts` listing (rather than listing it with READ withheld, or erroring). 0.7 3.4, 0.9 2.2 and 0.1 Step 1 assert that absence. If the rebuilt server models draft visibility differently, decide there whether the server or these oracles move. "Loading Post", "Space content feed" and "Discussion" are client-web aria/i18n strings.
+
+### Challenge fixes (QA PR challenge, 2026-11-11, local stack)
+
+- **`CollaborationPage.publishCallout` waits for its confirm.** It used to click "Publish" in the confirm only `if (confirmDialog.isVisible(…))`; `isVisible` does not wait, so when the alertdialog had not rendered yet the confirm was skipped and the callout stayed a draft. client-web always opens that dialog (`CalloutSettingsConnector` › `CalloutVisibilityChangeDialog`), so the helper now waits for it, confirms, and waits for it to close. With the read-backs above, the old guard would have shown up as an intermittent red in 0.1 / 0.2 / 0.7 / 0.9.
+- **Member-side absence has a same-test positive control** (0.7 3.4, 0.9 2.2): the member's listing holds the seeded published callout before the draft is read as not listed, so an empty listing (wrong actor, lost READ) cannot pass the negative. 0.1 Step 1 keeps its cross-step control (Step 3 reads the same persona's listing as PUBLISHED); its scenario seeds no published callout.
+- **0.5 non-CTA kinds assert no CTA link** in the dialog.
+- **Contract cases pin values, not shapes:** `readCalloutsSetCalloutTypes` seeds a CTA callout that accepts posts and reads back `LINK`, the link uri and name, no whiteboard/memo, `[POST]`, and `NONE` with no framing content for the seeded post; `readCalloutsSetCalloutVisibility` seeds a DRAFT and reads it back beside the PUBLISHED seeded post. The old cases checked types only, one of them behind `if (content)`.
+
+Runs: the five item-11 files plus 0.5 and 0.6, 29/29 in two runs after the fixes (Chromium, headless, local stack); contract 26/26.
+
+| Oracle | Mutation | Result |
+|---|---|---|
+| 0.5 no CTA link for non-CTA kinds | 1.3 (a CTA) run with no link expected | **red** — CTA link count expected 0, received 1 |
+| 0.9 2.2 member positive control | control reads a title that was not seeded | **red** — expected `PUBLISHED`, received `undefined` |
+| 0.9 2.1 (admin) publish read-back | publish skipped (Escape on the menu) | **red** — "the UI publish reached the server": expected `PUBLISHED`, received `DRAFT` |
+| contract: callout types | CTA expected `NONE` | **red** — received `LINK` |
+| contract: visibility | seeded draft expected `PUBLISHED` | **red** — received `DRAFT` |
 
 ## Testing Notes
 
