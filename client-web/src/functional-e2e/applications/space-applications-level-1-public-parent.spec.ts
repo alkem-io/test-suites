@@ -16,7 +16,11 @@ import {
 } from '@alkemio/client-lib';
 import { loginViaCrd } from '../helpers/login.helper';
 import { enableApplicationNotifications } from '../helpers/notification-settings.helper';
-import { applyFromSubspaceAboutDialog } from './applications.helpers';
+import {
+  applicantNotificationEntry,
+  withUniqueSubspaceName,
+  applyFromSubspaceAboutDialog,
+} from './applications.helpers';
 
 const password = process.env.AUTH_TEST_HARNESS_PASSWORD || 'change_me';
 const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
@@ -65,8 +69,9 @@ test.describe('Level 1 Subspace - Applications (Public Parent Space)', () => {
   let restoreNotificationSettings: () => Promise<void>;
 
   test.beforeAll(async ({ browser }) => {
-    globalBaseScenario =
-      await TestScenarioFactory.createBaseScenario(scenarioConfig);
+    globalBaseScenario = await TestScenarioFactory.createBaseScenario(
+      withUniqueSubspaceName(scenarioConfig)
+    );
     baseScenario = globalBaseScenario;
 
     // The bell-dialog assertions below need the in-app channel ON for the
@@ -235,8 +240,9 @@ test.describe('Level 1 Subspace - Applications (Public Parent Space)', () => {
 
   test.describe('Subspace Application Management (Public Parent)', () => {
     test.beforeEach(async () => {
-      baseScenario =
-        await TestScenarioFactory.createBaseScenario(scenarioConfig);
+      baseScenario = await TestScenarioFactory.createBaseScenario(
+        withUniqueSubspaceName(scenarioConfig)
+      );
       const spaceNameId = baseScenario.space.nameId;
       const subspaceNameId = baseScenario.subspace.nameId;
 
@@ -338,6 +344,10 @@ test.describe('Level 1 Subspace - Applications (Public Parent Space)', () => {
       await expect(notificationsPanel).toContainText(
         /Welcome to the community/i
       );
+      // Scoped to THIS run's space: the persona's panel holds older entries.
+      await expect(
+        applicantNotificationEntry(notificationsPanel, 'approved', baseScenario.subspace.about.profile.displayName)
+      ).toBeVisible();
     });
 
     test('2.2 Reject non-parent-member application to L1 Subspace', async () => {
@@ -353,6 +363,8 @@ test.describe('Level 1 Subspace - Applications (Public Parent Space)', () => {
       // Reject the application
       const rejectButton = applicationRow.getByRole('button', {
         name: 'Reject',
+        // Exact: the row also carries "Reject and remove application" (client-web#10499).
+        exact: true,
       });
       await expect(rejectButton).toBeVisible();
       await rejectButton.click();
@@ -381,6 +393,10 @@ test.describe('Level 1 Subspace - Applications (Public Parent Space)', () => {
       const notificationsPanel = applicantPage.getByRole('dialog');
       await expect(notificationsPanel).toBeVisible();
       await expect(notificationsPanel).toContainText(/declined/i);
+      // Scoped to THIS run's space: the persona's panel holds older entries.
+      await expect(
+        applicantNotificationEntry(notificationsPanel, 'declined', baseScenario.subspace.about.profile.displayName)
+      ).toBeVisible();
     });
   });
 });

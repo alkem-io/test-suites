@@ -119966,6 +119966,26 @@ export type ReadSpaceAccountSpacesQuery = {
   };
 };
 
+export type ReadSpaceByNameIdQueryVariables = SchemaTypes.Exact<{
+  nameID: SchemaTypes.Scalars["NameID"]["input"];
+}>;
+
+export type ReadSpaceByNameIdQuery = {
+  lookupByName: {
+    space?:
+      | {
+          id: string;
+          nameID: string;
+          level: SchemaTypes.SpaceLevel;
+          account: { id: string };
+          about: {
+            profile: { displayName: string; tagline?: string | undefined };
+          };
+        }
+      | undefined;
+  };
+};
+
 export type ReadSpaceCalloutNamesQueryVariables = SchemaTypes.Exact<{
   spaceId: SchemaTypes.Scalars["UUID"]["input"];
 }>;
@@ -129919,6 +129939,26 @@ export const ReadSpaceAccountSpacesDocument = gql`
     }
   }
 `;
+export const ReadSpaceByNameIdDocument = gql`
+  query ReadSpaceByNameId($nameID: NameID!) {
+    lookupByName {
+      space(NAMEID: $nameID) {
+        id
+        nameID
+        level
+        account {
+          id
+        }
+        about {
+          profile {
+            displayName
+            tagline
+          }
+        }
+      }
+    }
+  }
+`;
 export const ReadSpaceCalloutNamesDocument = gql`
   query ReadSpaceCalloutNames($spaceId: UUID!) {
     lookup {
@@ -131875,6 +131915,7 @@ const ReadSpaceAboutDocumentString = print(ReadSpaceAboutDocument);
 const ReadSpaceAccountSpacesDocumentString = print(
   ReadSpaceAccountSpacesDocument
 );
+const ReadSpaceByNameIdDocumentString = print(ReadSpaceByNameIdDocument);
 const ReadSpaceCalloutNamesDocumentString = print(
   ReadSpaceCalloutNamesDocument
 );
@@ -140240,6 +140281,28 @@ export function getSdk(
             { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "ReadSpaceAccountSpaces",
+        "query",
+        variables
+      );
+    },
+    ReadSpaceByNameId(
+      variables: SchemaTypes.ReadSpaceByNameIdQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.ReadSpaceByNameIdQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.ReadSpaceByNameIdQuery>(
+            ReadSpaceByNameIdDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "ReadSpaceByNameId",
         "query",
         variables
       );

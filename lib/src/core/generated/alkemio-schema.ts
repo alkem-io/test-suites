@@ -111042,6 +111042,26 @@ export type ReadSpaceAccountSpacesQuery = {
   };
 };
 
+export type ReadSpaceByNameIdQueryVariables = Exact<{
+  nameID: Scalars["NameID"]["input"];
+}>;
+
+export type ReadSpaceByNameIdQuery = {
+  lookupByName: {
+    space?:
+      | {
+          id: string;
+          nameID: string;
+          level: SpaceLevel;
+          account: { id: string };
+          about: {
+            profile: { displayName: string; tagline?: string | undefined };
+          };
+        }
+      | undefined;
+  };
+};
+
 export type ReadSpaceCalloutNamesQueryVariables = Exact<{
   spaceId: Scalars["UUID"]["input"];
 }>;

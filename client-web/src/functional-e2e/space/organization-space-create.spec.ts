@@ -3,6 +3,7 @@
 
 import { expect } from '@playwright/test';
 import {
+  readOrganizationAccount,
   TestScenarioFactory,
   TestScenarioNoPreCreationConfig,
   TestUserManager,
@@ -17,6 +18,14 @@ import {
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import { createAuthenticatedSessionFixture } from '../fixtures/authenticated-session.fixture';
 import { deleteSpaceByNameId } from '../helpers/space-cleanup.helper';
+import { must } from '../helpers/lib-actor.helper';
+import { spaceTitle } from '../helpers/space-access.helper';
+import {
+  expectCreatedSpaceRecord,
+  expectSpaceGone,
+  expectTutorialCalloutsRendered,
+  hostedSpaceCardLink,
+} from './space-create.helpers';
 
 // Create the authenticated fixture with a unique storage state name for this test suite
 const { test, setupAuthentication, teardownAuthentication } =
@@ -27,6 +36,8 @@ const { test, setupAuthentication, teardownAuthentication } =
 
 const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 let baseScenario: OrganizationWithSpaceModel;
+/** The account a Space created from the organization's settings must land on. */
+let orgAccountId: string;
 const scenarioConfig: TestScenarioNoPreCreationConfig = {
   name: 'org-space-create',
 };
@@ -38,6 +49,10 @@ test.describe('CREATE Space Operations (Organization Account)', () => {
     test.setTimeout(60_000);
     baseScenario =
       await TestScenarioFactory.createBaseScenarioOrganization(scenarioConfig);
+    orgAccountId = must(
+      await readOrganizationAccount(baseScenario.organization.id),
+      'readOrganizationAccount'
+    ).lookup.organization!.account!.id;
     await setupAuthentication(
       browser,
       TestUserManager.users.organizationAdmin.email
@@ -155,10 +170,23 @@ test.describe('CREATE Space Operations (Organization Account)', () => {
     // 10. Verify tutorials are present on the Space page
     await spacePage.verifyTutorialsPresent(2);
 
+    // 10a. The page shows exactly the typed name, and the server stored it:
+    // an L0 on the ORGANIZATION's account (not the admin's own), whose
+    // tutorial callouts (read back, not hard-coded) are the ones on the page.
+    await expect(spaceTitle(page, spaceName)).toBeVisible();
+    const spaceId = await expectCreatedSpaceRecord(spaceUrl, {
+      displayName: spaceName,
+      accountId: orgAccountId,
+    });
+    await expectTutorialCalloutsRendered(page, spaceId, 2);
+
     // 11. Cleanup: Navigate to Settings and delete the Space
     await spacePage.navigateToSettings();
     await spaceSettingsPage.deleteSpace();
     createdSpaceNameId = undefined;
+
+    // 12. The delete took: gone on the server, and its About route no longer resolves.
+    await expectSpaceGone(page, spaceUrl);
   });
 
   test('1.5 Create Space from Organization - Validation: Missing Required Fields (Title)', async ({
@@ -399,10 +427,31 @@ test.describe('CREATE Space Operations (Organization Account)', () => {
 
     // Verify Space was created - check Space title is visible
     await spacePage.verifySpaceTitle(spaceName);
+    await expect(spaceTitle(page, spaceName)).toBeVisible();
+
+    // The server stored exactly what was typed (name AND tagline), as an L0
+    // on the organization's account.
+    await expectCreatedSpaceRecord(spaceUrl, {
+      displayName: spaceName,
+      accountId: orgAccountId,
+      tagline: 'E2E test space for automated testing',
+    });
+
+    // The organization's Account › Hosted Spaces lists it, linking to its URL.
+    await orgAccountPage.goto(baseScenario.organization.nameId);
+    await orgAccountPage.verifyHostedSpacesVisible();
+    await expect(await hostedSpaceCardLink(page, spaceName)).toHaveAttribute(
+      'href',
+      new RegExp(`/${spaceUrl}$`)
+    );
 
     // Cleanup: Delete the created Space
+    await spacePage.goto(spaceUrl);
     await spacePage.navigateToSettings();
     await spaceSettingsPage.deleteSpace();
     createdSpaceNameId = undefined;
+
+    // The delete took: gone on the server, and its About route no longer resolves.
+    await expectSpaceGone(page, spaceUrl);
   });
 });
