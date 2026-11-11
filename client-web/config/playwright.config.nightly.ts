@@ -73,6 +73,21 @@ export default defineConfig(
         tier: 'extended',
       }),
       suite({
+        // W2 journey 5 (docs/qa/server-rebuild/plan.md § W2): edit a whiteboard, a
+        // memo and a Collabora document, then reopen. One self-seeded private Space
+        // per file; E8-4 (a cold load after the room is released) is
+        // `@local-stack`, so the nightly never lists it. The Collabora file needs
+        // CODE, wopi-service and the SPACE_FEATURE_OFFICE_DOCUMENTS plan, and the
+        // whiteboard file the Node peer admitted on /collab. Capture off: the
+        // walks hold admin sessions and the peer's bearers.
+        name: 'Content editing',
+        testMatch: ['/content-editing/*.spec.ts'],
+        tier: 'extended',
+        capture: 'off',
+        // A renamed control fails in seconds instead of burning the budget.
+        use: { actionTimeout: 15_000 },
+      }),
+      suite({
         name: 'Support navigation',
         testMatch: [
           '/support-navigation/support-navigation.spec.ts',
@@ -145,6 +160,14 @@ export default defineConfig(
       suite({
         name: 'Default Template Per Flow State',
         testMatch: ['/default-template/default-template-per-flow-state.spec.ts'],
+      }),
+      suite({
+        // W2 journey 6 (docs/qa/server-rebuild/plan.md § W2): a post's phase, post
+        // order and a response's post, changed in the browser and read back through
+        // the lib. One self-seeded L0 Space per file; admin + member contexts.
+        name: 'Callout placement',
+        testMatch: ['/callout-placement/*.spec.ts'],
+        tier: 'extended',
       }),
       suite({
         name: 'User Profile',
