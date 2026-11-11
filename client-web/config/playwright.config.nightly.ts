@@ -88,6 +88,23 @@ export default defineConfig(
         use: { actionTimeout: 15_000 },
       }),
       suite({
+        // W2 journey 7 (docs/qa/server-rebuild/plan.md § W2): edit a Space's
+        // About, your own profile, and an organisation you create. Every file
+        // self-seeds; profile and organisation edits run on disposable users
+        // registered through public Kratos (verification mail read by
+        // recipient) and deleted with their identity; organisations created in
+        // the UI are deleted by nameID.
+        name: 'Profile editing',
+        testMatch: [
+          '/profile-editing/us1-space-about.spec.ts',
+          '/profile-editing/us2-own-profile.spec.ts',
+          '/profile-editing/us3-organisation-create-edit.spec.ts',
+        ],
+        tier: 'extended',
+        // A renamed control fails in seconds instead of burning the budget.
+        use: { actionTimeout: 15_000 },
+      }),
+      suite({
         name: 'Support navigation',
         testMatch: [
           '/support-navigation/support-navigation.spec.ts',
@@ -174,7 +191,6 @@ export default defineConfig(
         testMatch: [
           '/user-profile/access-user-profile-from-dashboard.spec.ts',
           '/user-profile/direct-url-access-to-user-profile.spec.ts',
-          '/user-profile/update-basic-information.spec.ts',
           '/user-profile/view-profile-information.spec.ts',
           // workspace#038 (MCP API keys, alkem-io/alkemio#1984): mint + revoke
           // walks on the account's Security settings; self-cleaning.

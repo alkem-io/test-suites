@@ -326,6 +326,27 @@ are load-bearing:
 | A migration spec under `src/migrations/__tests__/`                                                                                                                                   | Asserts the text of its own SQL                                                                                                                                                                                               | 2026-09-02 · 10178, reconfirmed 055                               |
 | client-web `messaging-notifications/us2-group-message-notifications.spec.ts` › US2-AS4, and server-api `notifications/messaging/conversation-messages-negative.it-spec.ts` › US2-AS4 | They prove that a removed member stops being **notified**, not that their **access** is revoked. The client spec says so in its own scope warning                                                                             | 2026-10-15 · server#6329                                          |
 
+## Profile editing — Space About, own profile, organisation create/edit (W2 journey 7)
+
+_Searched 2026-11-09, branch `qa/w2-journey-7` off `origin/develop` @ `afbefaf2`, against client-web `develop` @ `907103f5f` and server `develop` @ `51eb90878`. Plan: `client-web/src/functional-e2e/profile-editing/profile-editing-test-plan.md` (Approved with provisional rulings; 10 cases, 8 live: H1-3 skipped on a reproduced server defect, H1-2b on a reproduced client defect, R-7)._
+
+| Behaviour | Coverage | Where |
+| --- | --- | --- |
+| Space About write through the UI (name, tagline, What, Why, Tags) | **None** before J7. `space-settings-about-limit` types into the editors but never saves a valid value; `classifications/*` seeds Space Tags through the lib and only reads them | `profile-editing/us1-space-about.spec.ts` › C2-1, C2-2 |
+| Space About Location / References writes | **None** (UI or API) | gap |
+| A member cannot edit a Space About | UI only, in **unregistered** `memberships/access-space-settings-as-space-member`; **no API it-spec found** for `updateSpace` About by a member | gap |
+| User Display Name + Tagline, seen by another user | Full (UI + API) | `contributors-crud/user-crud.spec.ts` › 1.2 |
+| User First/Last Name | Partial: `user-profile/update-basic-information` renames the **shared admin**, with no read-back | `profile-editing/us2-own-profile.spec.ts` › G2-1 (moved from `user-profile/update-basic-information`) |
+| User bio, location, skills, keywords through the UI | **None**. At API level: phone/location (`contributor-management/user/update-user`); tagsets only as seed data (`callout/contributors-collection/contributor-cards*`) | `profile-editing/us2-own-profile.spec.ts` › G2-2, G2-3 |
+| User social links / references through the UI | **None** | gap |
+| Organisation created by the platform admin in Administration; deleted there | Full (UI + API) | `contributors-crud/organization-crud.spec.ts` › 2.1 |
+| Who may create an organisation (`CREATE_ORGANIZATION` = Platform Support + Feature Organization Creator) | Full at API level, **not nightly** (platform-roles projects) | server-api `platform-roles/roles/feature-organization-creator.it-spec.ts` (A6); UI `profile-editing/us3-organisation-create-edit.spec.ts` › H1-1 |
+| Organisation created from User Settings › Organisations (non-admin dialog) | **None** | `us3-organisation-create-edit.spec.ts` › H1-2 (name ID, name, tagline, website, Admin + Associate). The description typed at create: H1-2b, built and skipped (client defect R-7); references: H1-3, built and skipped (server defect) |
+| Organisation name, tagline, website edit, seen anonymously | Full (UI + API) | `organization-crud.spec.ts` › 2.2 |
+| Organisation description, location, keywords, capabilities edit | Partial: API `contributor-management/organization/organization.it-spec` › "should update" (description, location; no tagsets) | `us3-organisation-create-edit.spec.ts` › H2-1 |
+
+**Search again with:** `git grep -n -E "settings/about|settings/profile|updateSpace\(|updateUser\(|updateOrganization\(|createOrganization|readSpaceAbout|getUserData|readOrganization|tagsets|Create Organisation" <ref> -- client-web/src server-api/src/functional-api lib/src/scenario ':!lib/src/core/generated'`.
+
 ## Orphan-free deletion: owned records and policies after a delete (server#6614 / #6637)
 
 _Searched 2026-10-16, test-suites `develop` @ `b451c329`, server `origin/develop` @ `1691e98e9` (contains the #6637 merge `08f088eaa`). Plan: `server-api/src/functional-api/orphan-free-deletion/orphan-free-deletion-test-plan.md` (Approved), plus the server#6614 addendum (Approved 2026-10-16; CV-1 built) in `journey/conversion/conversion-test-plan.md`._
