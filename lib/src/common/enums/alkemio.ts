@@ -44,8 +44,10 @@ export {
   SpaceLevel,
   SpacePrivacyMode,
   SpaceVisibility,
+  TagsetReservedName,
   TemplateType,
   UserInformationVisibility,
   VirtualContributorBodyOfKnowledgeType,
   VisualType,
+  WhiteboardPreviewMode,
 } from "../../core/generated/alkemio-schema";

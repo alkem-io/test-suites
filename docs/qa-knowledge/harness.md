@@ -300,6 +300,30 @@ place; cite this file instead of rediscovering a gap.
   - Then `dialog` "Apply new template", with three radio options and an "Apply" button. Option 1 with existing posts asks for "Confirm Deletion".
 - **The `spaceSettings` i18n namespace has no locale-parity test** in client-web (the `space`, `auth`, `common` and `forum` namespaces have one). New Layout copy can ship untranslated without any red.
 
+### Posts: phase, order, moving a response (established 2026-11-09, W2 J6 design; client-web `907103f5f`, server `51eb90878`)
+
+- **The only UI path to change an existing post's phase is Settings › Layout.**
+  - Path: row `button 'Post actions'` (opacity 0 until hover/focus) › submenu `'Move to'` › the target column title. Dragging also works.
+  - Save goes through the page's "Unsaved changes" bar. The client then sends `updateCallout` (classification), then `updateCalloutsSortOrder` for every column whose list changed.
+  - "Move to" **appends** the post to the end of the destination.
+  - Phase **rename** is immediate. There are two entry points: the column's `button 'Edit Details'` pencil, or `Column actions` › `Edit Details`, which opens dialog `'Edit Details: Flow Phase'`.
+  - The server retags the posts on rename, and the client retags them again, one `updateCallout` per post.
+  - Rows carry `data-callout-id`. Columns are `[data-slot="card"]` filtered by `getByTitle(<phase>)`.
+- **Post order in the feed:**
+  - Path: card `button 'Settings'` › `Move to Top` / `Move Up` / `Move Down` / `Move to Bottom`.
+  - Shown only with `UPDATE` on the **callouts set** (admins), read from the `CalloutsSetAuthorization` query. While that query loads the items are hidden, so a member-absence check must wait for that response first.
+  - The client sends **only the active tab's** callout ids. The legacy server renumbers just those, from their minimum + 1.
+  - New posts are created at `min(sortOrder) − 1` (top). A template post such as "Welcome" can sit below seeded ones, so never assert the top/bottom boundary items.
+- **Feed cards render lazily** (`react-intersection-observer`, `triggerOnce`). Every item's wrapper `div` has `id=<calloutId>` even while it is a skeleton. Scroll each one into view before asserting the order of the `h3` titles.
+- **Moving a response:**
+  - Path: Edit Post dialog › "Post location" select. It lists the set's POST-accepting callouts in every phase.
+  - The select has **no accessible name** (unlinked `<Label>`). Locate it inside the dialog by its current value.
+  - The client gates it on `MOVE_POST` (post); the server checks `MOVE_CONTRIBUTION` (contribution). Both are granted to Space admins (with parents), platform resource admins and platform roles with UPDATE, **not** to the author.
+  - Only post responses have a move UI. Whiteboard, link and memo responses have none, though the server supports moving them.
+  - Response cards are `div role=button` whose name starts with the title and includes the author name.
+- **Lib read-back for placement:** the only document selecting a callout's `sortOrder` together with its `FLOW_STATE` tag is `getCalloutsOnCalloutsSetUsingClassification.graphql`. `baseFunctions.getCalloutsData` wraps it with a `TestUser`-only actor. The J6 plan adds `readCalloutsPlacement(calloutsSetId, actor)` over the same document.
+- **`TagsetReservedName` was not a lib-owned enum** on `afbefaf2` (needed to seed a post into a phase). J6 LA-2 adds it to `lib/src/common/enums/alkemio.ts`.
+
 ## Sidebar search widget (055) — designer notes, 2026-09-03
 
 > Written independently by the 055 design session and merged in as-is when the plan was committed as a record; entries may overlap with the sections above.
@@ -464,3 +488,45 @@ expectInDocumentOrder`). Role and text locators match the DOM text and are unaff
   - **One drag move is two frames** (2026-11-04, WC-01): the first moves the dragged shape, the second rewrites the bound arrow. A peer that must race the arrow waits for its keys to change, not for the first frame. Concurrency is provable at the peer from the Yjs items: the winning item of a key was written without seeing the rival's if its `origin` is not the rival's item (`undo-races-peer-edit.spec.ts › peerLostConcurrently`).
   - **Heartbeat:** the peer mirrors client-web (one heartbeat after 15 s idle, the service echoes it byte for byte, no echo within 10 s ends the session as `heartbeat-timeout`); `heartbeatIdleMs` shortens the idle time (T-1f).
   - The peer is an ESM-first dependency set (`yjs`, `y-protocols`, `lib0`) used from a CommonJS lib: they are loaded with dynamic `import()`, types via `import type … with { "resolution-mode": "import" }`. Prettier 2 cannot parse that syntax, so `lib/.prettierignore` excludes `whiteboard-peer.ts` from `lib`'s `format` script (which still exits non-zero on its pre-existing `test/**/*.ts` glob: `lib` has no `test/` directory).
+
+### Persistence oracles for collaborative content: whiteboard, memo, Collabora (established 2026-11-09, W2 journey 5 plan; read from source, not run)
+
+- **collaboration-service save cadence.** Constants are in `internal/config/config.go`. The test deployment (dev-orchestration `11-collaboration-service-deployment.yml`, image `v0.0.4`, `replicas: 1`, `Recreate`) overrides neither.
+  - `SAVE_DEBOUNCE_MILLIS` (default 2000) is the time from the first unsaved edit to a persist.
+  - `IDLE_RELEASE_SECONDS` (default 30; `0` releases immediately) is how long an empty room lives before a final persist and release.
+  - A connect during that window is served from memory, not from storage. A cold load needs the release.
+- **Durability barrier.** The service answers "is this durable?" per request, which is better than inferring it.
+  - The client sends wire type `4` (DURABILITY_REQUEST) with a raw JSON body `{ "requestId": "<≤64 chars>" }`, with no length prefix, symmetric to how CONTROL bodies are read.
+  - The service answers with exactly one CONTROL `{ kind: 'persisted' | 'persist-failed', requestId }`.
+    - A clean room is answered immediately.
+    - A dirty room waits for the next successful persist into both stores.
+    - A read-only session gets `persist-failed` "this session is read-only", so the peer needs the multi-user plan.
+    - An unparseable body is answered with silence.
+  - The room-wide `{ kind: 'saved' }` broadcast is **not** an answer: it can be another editor's save.
+  - Present in `v0.0.4` (and in the local stack's `v0.0.3`). PR #545's `collab-ws.client.ts › requestDurability` uses it, and so does the lib peer since journey 5 (`WhiteboardPeer.awaitDurable`, LA-2).
+- **`Memo.markdown` is the stored checkpoint, not the live room.** The server resolves it from the snapshot at `memo.contentPointer` through a file-service loader (`memo.resolver.fields.ts`). So a poll on it is a real persistence read-back, with a budget of about `SAVE_DEBOUNCE_MILLIS`.
+  - `Whiteboard` has **no** such field. Its server-side save facts are `updatedDate` (expected to move on every persist: `saveCollaborationMetadata` is a QueryBuilder update. This is a code read that must be confirmed on the first run) and the CARD visual, which the client uploads on close in AUTO preview mode.
+- **Collabora saves bypass the Alkemio server.** COOL calls wopi-service `PutFile`, which goes straight to `fileSvc.WriteFile(token.FileID)` and **overwrites in place**.
+  - The fileID, and so `previewUrl` `/api/private/wopi/files/<fileID>/preview`, stays stable across saves.
+  - `CollaboraDocument.updatedDate` does **not** move on a save. Never use it as a save oracle.
+  - The content read-back is the storage REST `GET /api/private/rest/storage/document/<fileID>` (ODT bytes), then `content.xml`. COOL renders the document on canvas inside the iframe, so typed text is never in any DOM.
+- **Collabora UI facts (client-web).**
+  - The callout button is `Open Document`. The editor is `iframe[title="Document Editor"]`.
+  - The footer shows `Connected` once COOL posts `App_LoadingStatus: Document_Loaded`.
+  - The footer save status is an `<output>` (role status) reading `Saved` / `Saving…` / `Unsaved changes` / `Error saving`. It **starts at `Saved`**, so only an `Unsaved changes` → `Saved` transition means anything.
+  - Collabora (CODE `26.04.2.4.1`) is deployed on the test env through `base/third-party` plus the `31-collabora-ingress-route` on the app host (`/browser`, `/cool`, `/hosting/discovery`). This was read from config, not run-verified.
+- **`collabora` as a search term matches `collaboration`.** Use `rg -i 'collabora([^t]|$)'`.
+
+#### Run-verified on the local stack, 2026-11-09 (W2 journey 5 build). These supersede the source-read bullets above where they differ
+
+- **Verified as read.** `Whiteboard.updatedDate` moves when the room is persisted (E8-1 polls it past its pre-edit value). The barrier works on the local collaboration-service image `v0.0.3`: `persisted` to a write peer, `persist-failed` with `{ "error": "this session is read-only" }` to a read-only one (the field is `error`, not `reason`). `Memo.markdown` follows the typed paragraphs within the poll window and its `updatedDate` moves. The author's reopened whiteboard editor has Undo disabled (a fresh session).
+- **The Space page card shows the `WHITEBOARD_PREVIEW` visual, not the `CARD` one.** The client uploads both on close (and again on every later close, even a read-only reopen), and both uris change. `readWhiteboardState` selects both (`profile.visual(type: CARD)` and `preview: visual(type: WHITEBOARD_PREVIEW)`); the card `img` is the `Whiteboard` image inside the `Whiteboard Open Whiteboard` button. Compare it with the server's CURRENT preview uri on each poll, never with one read earlier.
+- **A blank WORDPROCESSING document is a zero-byte DOCX, and COOL saves DOCX.** The storage REST answers 200 with `application/vnd.openxmlformats-officedocument.wordprocessingml.document` and no bytes until the first save. The file name in COOL is `<title>.docx`. `readOfficeDocumentText` therefore reads DOCX (`word/document.xml`, `w:p`/`w:t`) and OpenDocument (`content.xml`) and returns `{ paragraphs: [], bytes: 0 }` for an empty file. A non-2xx still throws, so "no paragraphs" is never a failed read.
+- **client-web's Collabora footer is not a status role.** The CRD save chip is a plain `div` (`Saved` / `Saving…` / `Unsaved changes` / `Error saving`), and there is no "Connected" text at all. An `<output>` (role status) exists only for disconnected, reconnecting and terminal states. Locate the chip with `dialog.getByText('Unsaved changes', { exact: true })` inside the editor dialog (a full-screen Radix dialog named after the document). The only readiness signal is COOL's own status bar (`Page 1 of 1` inside the frame).
+- **CODE shows a "What's new" welcome modal once per browser profile**: `iframe.iframe-welcome-modal` (title `Welcome Dialog`) inside the editor frame, arriving after the load. It swallows keystrokes. Escape dismisses it and leaves the editor open. Every persona context is a fresh profile, so each one sees it.
+- **Ctrl+S is not load-bearing when the editor is then closed.** Closing the overlay makes COOL save: a run with no Ctrl+S, closing first, still left the typed paragraph in the stored file. Without Ctrl+S and without closing, the stored file stayed empty for the whole poll window. The oracle stands either way.
+- **Memo caret trap.** Clicking the editor root right after the dialog opens and pressing Control+End was seen to leave the caret at the document start (Enter plus typing then PREPENDED, run of 2026-11-09). `appendMemoParagraph` clicks the last paragraph, presses End and reads the DOM selection back before it presses any editing key.
+- **Local-stack fault, not a product finding: `collaboraEditorUrl` answers 401.** The host-run server has no `WOPI_SERVICE_URL`, so its default `http://localhost:3000` reaches wopi-service's `/wopi/token` through Traefik, where the forward-auth strips the trusted `X-Alkemio-Actor-Id` (wopi-service logs the 401 in microseconds). The server's own error is `AxiosError: Request failed with status code 401`, and the editor dialog says "The document editor is temporarily unavailable". The existing server-api `collabora-editor-url` suite is red on the same stack for the same reason. The fix is `WOPI_SERVICE_URL=http://localhost:<host port of alkemio_dev_wopi_service>` on the server (`docker port alkemio_dev_wopi_service`; it was 32783 that day, an ephemeral port). Calling wopi-service directly with the header returns the editor URL (the document id in the body is the FILE id from `previewUrl`, not the CollaboraDocument id).
+- **The local collaboration-service is `v0.0.3`, with the default 30 s idle release.** Cold load from storage was observed after 36 s of idle (a one-off script, not a case). E8-4 needs `IDLE_RELEASE_SECONDS=0`, which the stack does not set by default: it ran green with a compose override (2026-11-09, restored afterwards).
+- **A reopen inside the idle release is served by the live room, not storage** (2026-11-10, E8-2 with file-service paused before the reopen: still green). Once the room is released, the reopen needs storage (same pause after the release: the editor never became ready). A test that claims a load from storage must first see the room released.
+- **`collaboration_rooms_active` on the service's `/metrics`** (`http://localhost:4006/metrics` locally) counts live rooms service-wide, without labels: lib `readCollaborationRoomsActive`. It drops when a room's release (final flush, then teardown) completes, about 30 s after its last member left at the default setting.

@@ -97553,6 +97553,38 @@ export type GetCalloutReactionsSummaryQuery = {
   };
 };
 
+export type ReadCalloutCollaboraDocumentQueryVariables = SchemaTypes.Exact<{
+  calloutId: SchemaTypes.Scalars["UUID"]["input"];
+}>;
+
+export type ReadCalloutCollaboraDocumentQuery = {
+  lookup: {
+    callout?:
+      | {
+          id: string;
+          framing: {
+            id: string;
+            collaboraDocument?:
+              | {
+                  id: string;
+                  documentType: SchemaTypes.CollaboraDocumentType;
+                  previewUrl?: string | undefined;
+                  updatedDate: Date;
+                  authorization?:
+                    | {
+                        myPrivileges?:
+                          | Array<SchemaTypes.AuthorizationPrivilege>
+                          | undefined;
+                      }
+                    | undefined;
+                }
+              | undefined;
+          };
+        }
+      | undefined;
+  };
+};
+
 export type ReadCalloutContributionsQueryVariables = SchemaTypes.Exact<{
   calloutId: SchemaTypes.Scalars["UUID"]["input"];
 }>;
@@ -97854,6 +97886,28 @@ export type ReadMemoDocumentsQuery = {
           id: string;
           signatures: Array<{ id: string }>;
           profile: { storageBucket: { documents: Array<{ id: string }> } };
+        }
+      | undefined;
+  };
+};
+
+export type ReadWhiteboardStateQueryVariables = SchemaTypes.Exact<{
+  whiteboardId: SchemaTypes.Scalars["UUID"]["input"];
+}>;
+
+export type ReadWhiteboardStateQuery = {
+  lookup: {
+    whiteboard?:
+      | {
+          id: string;
+          updatedDate: Date;
+          isMultiUser: boolean;
+          previewSettings: { mode: SchemaTypes.WhiteboardPreviewMode };
+          profile: {
+            id: string;
+            visual?: { id: string; uri: string } | undefined;
+            preview?: { id: string; uri: string } | undefined;
+          };
         }
       | undefined;
   };
@@ -103253,6 +103307,31 @@ export type GetCalloutFramingMemoQuery = {
                 }
               | undefined;
           };
+        }
+      | undefined;
+  };
+};
+
+export type ReadMemoContentQueryVariables = SchemaTypes.Exact<{
+  memoId: SchemaTypes.Scalars["UUID"]["input"];
+}>;
+
+export type ReadMemoContentQuery = {
+  lookup: {
+    memo?:
+      | {
+          id: string;
+          markdown?: any | undefined;
+          updatedDate: Date;
+          isMultiUser: boolean;
+          contentUpdatePolicy: SchemaTypes.ContentUpdatePolicy;
+          authorization?:
+            | {
+                myPrivileges?:
+                  | Array<SchemaTypes.AuthorizationPrivilege>
+                  | undefined;
+              }
+            | undefined;
         }
       | undefined;
   };
@@ -127949,6 +128028,27 @@ export const GetCalloutReactionsSummaryDocument = gql`
     }
   }
 `;
+export const ReadCalloutCollaboraDocumentDocument = gql`
+  query ReadCalloutCollaboraDocument($calloutId: UUID!) {
+    lookup {
+      callout(ID: $calloutId) {
+        id
+        framing {
+          id
+          collaboraDocument {
+            id
+            documentType
+            previewUrl
+            updatedDate
+            authorization {
+              myPrivileges
+            }
+          }
+        }
+      }
+    }
+  }
+`;
 export const ReadCalloutContributionsDocument = gql`
   query ReadCalloutContributions($calloutId: UUID!) {
     lookup {
@@ -128235,6 +128335,31 @@ export const ReadMemoDocumentsDocument = gql`
             documents {
               id
             }
+          }
+        }
+      }
+    }
+  }
+`;
+export const ReadWhiteboardStateDocument = gql`
+  query ReadWhiteboardState($whiteboardId: UUID!) {
+    lookup {
+      whiteboard(ID: $whiteboardId) {
+        id
+        updatedDate
+        isMultiUser
+        previewSettings {
+          mode
+        }
+        profile {
+          id
+          visual(type: CARD) {
+            id
+            uri
+          }
+          preview: visual(type: WHITEBOARD_PREVIEW) {
+            id
+            uri
           }
         }
       }
@@ -128938,6 +129063,22 @@ export const GetCalloutFramingMemoDocument = gql`
               url
             }
           }
+        }
+      }
+    }
+  }
+`;
+export const ReadMemoContentDocument = gql`
+  query ReadMemoContent($memoId: UUID!) {
+    lookup {
+      memo(ID: $memoId) {
+        id
+        markdown
+        updatedDate
+        isMultiUser
+        contentUpdatePolicy
+        authorization {
+          myPrivileges
         }
       }
     }
@@ -131499,6 +131640,9 @@ const GetCalloutReactionsDocumentString = print(GetCalloutReactionsDocument);
 const GetCalloutReactionsSummaryDocumentString = print(
   GetCalloutReactionsSummaryDocument
 );
+const ReadCalloutCollaboraDocumentDocumentString = print(
+  ReadCalloutCollaboraDocumentDocument
+);
 const ReadCalloutContributionsDocumentString = print(
   ReadCalloutContributionsDocument
 );
@@ -131526,6 +131670,7 @@ const ReadCalloutsSetCalloutsDocumentString = print(
   ReadCalloutsSetCalloutsDocument
 );
 const ReadMemoDocumentsDocumentString = print(ReadMemoDocumentsDocument);
+const ReadWhiteboardStateDocumentString = print(ReadWhiteboardStateDocument);
 const GetMeConversationsDocumentString = print(GetMeConversationsDocument);
 const GetPlatformDiscussionsDataDocumentString = print(
   GetPlatformDiscussionsDataDocument
@@ -131589,6 +131734,7 @@ const ReadMyUserSettingsDocumentString = print(ReadMyUserSettingsDocument);
 const GetCalloutFramingMemoDocumentString = print(
   GetCalloutFramingMemoDocument
 );
+const ReadMemoContentDocumentString = print(ReadMemoContentDocument);
 const GetOrgReferenceUriDocumentString = print(GetOrgReferenceUriDocument);
 const GetOrgVisualUriDocumentString = print(GetOrgVisualUriDocument);
 const GetOrganizationAssociateEligibilityDocumentString = print(
@@ -137788,6 +137934,28 @@ export function getSdk(
         variables
       );
     },
+    ReadCalloutCollaboraDocument(
+      variables: SchemaTypes.ReadCalloutCollaboraDocumentQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.ReadCalloutCollaboraDocumentQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.ReadCalloutCollaboraDocumentQuery>(
+            ReadCalloutCollaboraDocumentDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "ReadCalloutCollaboraDocument",
+        "query",
+        variables
+      );
+    },
     ReadCalloutContributions(
       variables: SchemaTypes.ReadCalloutContributionsQueryVariables,
       requestHeaders?: GraphQLClientRequestHeaders
@@ -138026,6 +138194,28 @@ export function getSdk(
             { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "ReadMemoDocuments",
+        "query",
+        variables
+      );
+    },
+    ReadWhiteboardState(
+      variables: SchemaTypes.ReadWhiteboardStateQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.ReadWhiteboardStateQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.ReadWhiteboardStateQuery>(
+            ReadWhiteboardStateDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "ReadWhiteboardState",
         "query",
         variables
       );
@@ -138708,6 +138898,28 @@ export function getSdk(
             { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "GetCalloutFramingMemo",
+        "query",
+        variables
+      );
+    },
+    ReadMemoContent(
+      variables: SchemaTypes.ReadMemoContentQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.ReadMemoContentQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.ReadMemoContentQuery>(
+            ReadMemoContentDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "ReadMemoContent",
         "query",
         variables
       );
