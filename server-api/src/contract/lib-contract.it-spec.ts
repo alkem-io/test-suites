@@ -26,10 +26,12 @@ import {
   readCalloutsSetCalloutTypes,
   readCalloutsSetCalloutVisibility,
   CalloutVisibility,
+  readCalloutsSetCalloutResponses,
   readMyUser,
   readOrganizationRoleSet,
   readRoleSetUsersInRoles,
   readSpaceAbout,
+  readSpaceByNameId,
   readSpaceLevelAndVisibility,
   readSpaceRefs,
   readSpaceSettings,
@@ -38,6 +40,9 @@ import {
   joinRoleSet,
   readRoleSetUsersInRole,
 } from '@alkemio/tests-lib';
+import { readFileSync } from 'node:fs';
+import { deflateRawSync } from 'node:zlib';
+import nodePath from 'node:path';
 import type { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import { libBarrelExportNames, scanClientWebLibUsage } from './client-web-lib-usage';
 
@@ -169,6 +174,7 @@ const FUNCTIONS: string[] = [
   'readSpaceSettings',
   'readSpaceMyPrivileges',
   'readSpaceAbout',
+  'readSpaceByNameId',
   'readSpaceRefs',
   'readSpaceCalloutNames',
   'readSpaceInnovationFlowStates',
@@ -210,9 +216,25 @@ const FUNCTIONS: string[] = [
   'readCalloutsSetCallouts',
   'readCalloutsSetCalloutTypes',
   'readCalloutsSetCalloutVisibility',
+  'readCalloutsSetCalloutResponses',
   'readCalloutFormResponses',
   'readMemoDocuments',
+  // W2 journey 5 (content editing)
+  'readMemoContent',
+  'readWhiteboardState',
+  'createWhiteboardFramedCallout',
+  'entitleSpaceForWhiteboardMultiUser',
+  'createMemoFramedCallout',
+  'createCollaboraFramedCallout',
+  'entitleSpaceForOfficeDocuments',
+  'readCalloutCollaboraDocument',
+  'readOfficeDocumentText',
+  'officeDocumentFileId',
+  'officeDocumentParagraphs',
+  'connectWhiteboardPeer',
   'readActivityLogOnCollaboration',
+  'readCalloutsPlacement',
+  'readPost',
   'uploadFileOnStorageBucket',
   'readTemplatesSetTemplates',
   'createTemplateWithData',
@@ -237,11 +259,15 @@ const ENUM_MEMBERS: Record<string, string[]> = {
   CalloutFramingType: ['None', 'Whiteboard', 'Memo', 'Link'],
   SpaceLevel: ['L0', 'L1', 'L2'],
   SpaceVisibility: ['Active', 'Archived', 'Demo'],
+  TagsetReservedName: ['FlowState'],
+  AuthorizationPrivilege: ['MovePost', 'Update'],
   ActorType: ['User', 'Organization', 'VirtualContributor'],
   SidebarWidget: ['About', 'Community', 'Events', 'Activity'],
   NotificationEvent: ['OrganizationAdminSpaceCommunityInvitation'],
   CalendarEventType: ['Event'],
   RoleSetInvitationResultType: [],
+  WhiteboardPreviewMode: ['Auto', 'Custom', 'Fixed'],
+  CollaboraDocumentType: ['Wordprocessing'],
 };
 
 
@@ -384,6 +410,17 @@ describe('@contract base scenario round trip', () => {
     expect(level.data?.lookup.space?.visibility).toEqual(expect.any(String));
   });
 
+  test('space: an L0 reads back by its nameID, with level, host account and about profile', async () => {
+    const byName = await readSpaceByNameId(base.space.nameId);
+    expect(byName.error).toBeUndefined();
+    const space = byName.data?.lookupByName.space;
+    expect(space?.id).toBe(base.space.id);
+    expect(space?.nameID).toBe(base.space.nameId);
+    expect(space?.level).toEqual(expect.any(String));
+    expect(space?.account.id).toEqual(expect.any(String));
+    expect(space?.about.profile.displayName).toEqual(expect.any(String));
+  });
+
   test('space: the subspace reads back through its parent, and the tree lists it', async () => {
     const sub = await readSubspaceByNameId(base.space.id, base.subspace.nameId);
     expect(sub.error).toBeUndefined();
@@ -483,6 +520,46 @@ describe('@contract base scenario round trip', () => {
     expect(post?.settings.visibility, 'the seeded post callout is published').toBe(CalloutVisibility.Published);
   });
 
+  test('callouts set: a callout reads back with its comments setting and its posts with their author', async () => {
+    // A Posts callout with comments OFF (the seeded post callout has them ON),
+    // and one post on it by the admin: every field the client-web specs read.
+    const calloutTitle = `contract posts ${lib.UniqueIDGenerator.getID()}`;
+    const postTitle = `contract post ${lib.UniqueIDGenerator.getID()}`;
+    const created = await lib.createCalloutWithData({
+      calloutsSetID: base.space.collaboration.calloutsSetId,
+      framing: { profile: { displayName: calloutTitle } },
+      settings: {
+        framing: { commentsEnabled: false },
+        contribution: {
+          enabled: true,
+          allowedTypes: [lib.CalloutContributionType.Post],
+          canAddContributions: lib.CalloutAllowedActors.Members,
+        },
+        visibility: lib.CalloutVisibility.Published,
+      },
+    });
+    const calloutId = created.data?.createCalloutOnCalloutsSet.id;
+    expect(calloutId, 'seed the Posts callout').toEqual(expect.any(String));
+    const post = await lib.createContributionOnCallout({
+      calloutID: calloutId as string,
+      type: lib.CalloutContributionType.Post,
+      post: { profileData: { displayName: postTitle } },
+    });
+    expect(post.error, 'seed the post').toBeUndefined();
+
+    const set = await readCalloutsSetCalloutResponses(base.space.collaboration.calloutsSetId);
+    expect(set.error).toBeUndefined();
+    expect(set.data?.lookup.calloutsSet?.id).toBe(base.space.collaboration.calloutsSetId);
+    const callouts = set.data?.lookup.calloutsSet?.callouts ?? [];
+    const byId = (id: string) => callouts.find(c => c.id === id);
+    expect(byId(base.space.collaboration.calloutPostId)?.settings.framing.commentsEnabled, 'seeded post callout').toBe(true);
+    const seeded = byId(calloutId as string);
+    expect(seeded?.framing.profile.displayName).toBe(calloutTitle);
+    expect(seeded?.settings.framing.commentsEnabled).toBe(false);
+    expect(seeded?.contributions.map(c => c.post?.profile.displayName)).toEqual([postTitle]);
+    expect(seeded?.contributions[0]?.post?.createdBy?.id, 'post author').toBe(TestUserManager.users.globalAdmin.id);
+  });
+
   test('organization: its role set reads back by id', async () => {
     const org = await readOrganizationRoleSet(base.organization.id);
     expect(org.error).toBeUndefined();
@@ -499,5 +576,171 @@ describe('@contract base scenario round trip', () => {
       expect(entry.role).toEqual(expect.any(String));
       expect(Array.isArray(entry.users)).toBe(true);
     }
+  });
+
+  test('callouts set: placement lists each post with its sortOrder and phase tags', async () => {
+    const placement = await lib.readCalloutsPlacement(base.space.collaboration.calloutsSetId);
+    expect(placement.error).toBeUndefined();
+    const callouts = placement.data?.lookup.calloutsSet?.callouts;
+    expect(Array.isArray(callouts)).toBe(true);
+    expect(callouts?.map(c => c.id)).toContain(base.space.collaboration.calloutPostId);
+    for (const callout of callouts ?? []) {
+      expect(callout.id).toEqual(expect.any(String));
+      expect(callout.sortOrder).toEqual(expect.any(Number));
+      expect(Array.isArray(callout.classification?.flowState?.tags)).toBe(true);
+    }
+    // Negative control: an unknown callouts set never yields a populated list.
+    const unknown = await lib.readCalloutsPlacement('00000000-0000-4000-8000-000000000000');
+    expect(unknown.data?.lookup?.calloutsSet ?? null, JSON.stringify(unknown.error)).toBeNull();
+    // ...and not because the request never reached the server.
+    expect(unknown.error?.errors.map(e => e.code) ?? []).not.toContain('ENV_FAILURE');
+  });
+});
+
+/** A one-entry zip archive (no CRC: the reader does not check it), enough to unit-test the readers. */
+const zipOf = (name: string, data: Buffer, method: 0 | 8): Buffer => {
+  const nameBytes = Buffer.from(name);
+  const local = Buffer.alloc(30);
+  local.writeUInt32LE(0x04034b50, 0);
+  local.writeUInt16LE(method, 8);
+  local.writeUInt32LE(data.length, 18);
+  local.writeUInt32LE(data.length, 22);
+  local.writeUInt16LE(nameBytes.length, 26);
+  const central = Buffer.alloc(46);
+  central.writeUInt32LE(0x02014b50, 0);
+  central.writeUInt16LE(method, 10);
+  central.writeUInt32LE(data.length, 20);
+  central.writeUInt32LE(data.length, 24);
+  central.writeUInt16LE(nameBytes.length, 28);
+  const eocd = Buffer.alloc(22);
+  eocd.writeUInt32LE(0x06054b50, 0);
+  eocd.writeUInt16LE(1, 8);
+  eocd.writeUInt16LE(1, 10);
+  eocd.writeUInt32LE(46 + nameBytes.length, 12);
+  eocd.writeUInt32LE(30 + nameBytes.length + data.length, 16);
+  return Buffer.concat([local, nameBytes, data, central, nameBytes, eocd]);
+};
+
+describe('@contract content editing readers (W2 journey 5): whiteboard, memo, Collabora document', () => {
+  const uid = lib.UniqueIDGenerator.getID();
+  let base: OrganizationWithSpaceModel;
+  let calloutsSetId: string;
+
+  beforeAll(async () => {
+    base = await TestScenarioFactory.createBaseScenario({
+      name: `lib-contract-content-${uid}`,
+      space: { collaboration: { addTutorialCallouts: false, addPostCollectionCallout: false } },
+    });
+    calloutsSetId = base.space.collaboration.calloutsSetId;
+  }, ROUND_TRIP_BUDGET_MS);
+
+  afterAll(async () => {
+    if (base) await TestScenarioFactory.cleanUpBaseScenario(base);
+  }, ROUND_TRIP_BUDGET_MS);
+
+  test('LA-1 whiteboard state: updatedDate parses, isMultiUser is a boolean, the preview mode is a member of the enum', async () => {
+    const created = await lib.createWhiteboardFramedCallout(calloutsSetId, `contract WB ${uid}`, `contract-wb-${uid}`);
+    const state = await lib.readWhiteboardState(created.whiteboardId);
+    expect(state.error).toBeUndefined();
+    const whiteboard = state.data?.lookup.whiteboard;
+    expect(whiteboard?.id).toBe(created.whiteboardId);
+    expect(typeof whiteboard?.isMultiUser).toBe('boolean');
+    expect(Number.isNaN(Date.parse(String(whiteboard?.updatedDate)))).toBe(false);
+    expect(Object.values(lib.WhiteboardPreviewMode)).toContain(whiteboard?.previewSettings.mode);
+    // both visuals the client uploads on close are selected; a never-edited board may have no uri yet
+    expect(whiteboard?.profile.id).toEqual(expect.any(String));
+    for (const visual of [whiteboard?.profile.visual, whiteboard?.profile.preview]) {
+      expect(visual === null || visual === undefined || typeof visual.uri === 'string').toBe(true);
+    }
+  });
+
+  test('LA-3/LA-4 memo content: the seeded markdown reads back; an unknown memo is an error, not an empty memo', async () => {
+    const memo = await lib.createMemoFramedCallout(calloutsSetId, {
+      displayName: `contract memo callout ${uid}`,
+      memoTitle: `contract memo ${uid}`,
+      markdown: `contract ${uid}`,
+    });
+    expect(memo.calloutUrl).toEqual(expect.any(String));
+    const read = await lib.readMemoContent(memo.memoId);
+    expect(read.error).toBeUndefined();
+    expect(read.data?.lookup.memo?.id).toBe(memo.memoId);
+    expect(read.data?.lookup.memo?.markdown).toContain(`contract ${uid}`);
+    expect(Number.isNaN(Date.parse(String(read.data?.lookup.memo?.updatedDate)))).toBe(false);
+    expect(read.data?.lookup.memo?.authorization?.myPrivileges).toContain(lib.AuthorizationPrivilege.UpdateContent);
+    // negative control: the reader does not invent content for an id that is not a memo
+    const unknown = await lib.readMemoContent('00000000-0000-4000-8000-000000000000');
+    expect(unknown.data?.lookup.memo ?? null).toBeNull();
+    // the lookup's own refusal, not a transport failure (which also leaves no data)
+    expect(unknown.error?.errors.map(e => e.code)).toEqual(['ENTITY_NOT_FOUND']);
+  });
+
+  test('LA-5/LA-6/LA-7 Collabora: entitle, create, read back the document and its stored text', async () => {
+    await lib.entitleSpaceForOfficeDocuments(base.space.id);
+    const created = await lib.createCollaboraFramedCallout(calloutsSetId, {
+      displayName: `contract doc ${uid}`,
+      nameID: `contract-doc-${uid}`,
+      documentType: lib.CollaboraDocumentType.Wordprocessing,
+    });
+    expect(created.previewUrl).toMatch(/\/api\/private\/wopi\/files\/[^/]+\/preview$/);
+
+    const read = await lib.readCalloutCollaboraDocument(created.calloutId);
+    expect(read.error).toBeUndefined();
+    const document = read.data?.lookup.callout?.framing.collaboraDocument;
+    expect(document?.id).toBe(created.collaboraDocumentId);
+    expect(document?.documentType).toBe(lib.CollaboraDocumentType.Wordprocessing);
+    expect(document?.previewUrl).toBe(created.previewUrl);
+
+    // A blank document nobody has saved is stored with zero bytes (observed 2026-11-09 and 2026-11-10, local stack):
+    // no paragraphs, and the read itself succeeded (a failed fetch throws, so "empty" is never a failed read).
+    const text = await lib.readOfficeDocumentText(created.previewUrl);
+    expect(text).toEqual({ paragraphs: [], bytes: 0 });
+    // negative control: a document id the platform does not hold is a thrown error, not "no paragraphs"
+    await expect(
+      lib.readOfficeDocumentText('/api/private/wopi/files/00000000-0000-4000-8000-000000000000/preview')
+    ).rejects.toThrow(/office document fetch failed/);
+  });
+
+  test('LA-7 the reader parses an OpenDocument and a DOCX, and refuses something that is not an office document', () => {
+    const fixtures = nodePath.resolve(__dirname, '../functional-api/collabora/files-to-upload');
+    expect(lib.officeDocumentParagraphs(readFileSync(nodePath.join(fixtures, 'collabora-import.odt')))).toEqual([
+      'Alkemio test-suites Collabora import fixture.',
+    ]);
+    // a DOCX with a deflated word/document.xml: two paragraphs, one of them split into runs, one with an entity
+    const docx = zipOf('word/document.xml', deflateRawSync(Buffer.from(
+      '<w:document><w:body><w:p><w:r><w:t>DOC </w:t></w:r><w:r><w:t xml:space="preserve">abc</w:t></w:r></w:p><w:p/><w:p><w:r><w:t>A &amp; B</w:t></w:r></w:p></w:body></w:document>'
+    )), 8);
+    expect(lib.officeDocumentParagraphs(docx)).toEqual(['DOC abc', '', 'A & B']);
+    // character references (decimal, hex, and an escaped one that must stay literal) and an ODT repeated-space run
+    const refs = zipOf('word/document.xml', Buffer.from(
+      '<w:document><w:body><w:p><w:r><w:t>A&#32;B&#x43;&amp;#32;</w:t></w:r></w:p></w:body></w:document>'
+    ), 0);
+    expect(lib.officeDocumentParagraphs(refs)).toEqual(['A BC&#32;']);
+    const spaces = zipOf('content.xml', Buffer.from(
+      '<office:text><text:p>a<text:s text:c="3"/>b<text:s/>c</text:p></office:text>'
+    ), 0);
+    expect(lib.officeDocumentParagraphs(spaces), 'text:c counts spaces').toEqual(['a   b c']);
+    expect(lib.officeDocumentParagraphs(Buffer.alloc(0)), 'an unsaved blank document has no paragraphs').toEqual([]);
+    expect(() => lib.officeDocumentParagraphs(Buffer.from('this is not a zip archive at all'))).toThrow(/not an office document/);
+    expect(() => lib.officeDocumentFileId('https://example.test/not-a-preview')).toThrow(/not a Collabora preview URL/);
+  });
+
+  test('LA-8 the rooms gauge reader takes collaboration_rooms_active from a /metrics exposition, and refuses one without it', () => {
+    const exposition = [
+      '# HELP collaboration_rooms_active Number of live in-memory document rooms.',
+      '# TYPE collaboration_rooms_active gauge',
+      'collaboration_rooms_active 3',
+      '# HELP collaboration_rooms_active_total_x a longer name that must not match',
+      'collaboration_rooms_active_total_x 9',
+    ].join('\n');
+    expect(lib.collaborationRoomsActiveOf(exposition)).toBe(3);
+    expect(lib.collaborationRoomsActiveOf('collaboration_rooms_active 0\n')).toBe(0);
+    // Prometheus float and exponent forms of the same count
+    expect(lib.collaborationRoomsActiveOf('collaboration_rooms_active 3.0\n')).toBe(3);
+    expect(lib.collaborationRoomsActiveOf('collaboration_rooms_active 1e+00\n')).toBe(1);
+    // negative control: an exposition without the gauge is an error, never a count of 0
+    expect(() => lib.collaborationRoomsActiveOf('collaboration_rooms_active_total_x 9\n')).toThrow(
+      /carry no collaboration_rooms_active/
+    );
+    expect(typeof lib.readCollaborationRoomsActive).toBe('function');
   });
 });

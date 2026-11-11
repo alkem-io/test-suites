@@ -97,6 +97,17 @@ export const readSpaceSubspaceTree = (
     sdk.ReadSpaceSubspaceTree({ spaceId }, headers),
   );
 
+/**
+ * An L0 space read by its nameID (`lookupByName.space`): id, nameID, level,
+ * host account id and the about profile's display name + tagline — the
+ * server-side record of a space created through the UI, where the URL slug
+ * is all the walk knows. Errors (not-found) once the space is deleted.
+ */
+export const readSpaceByNameId = (
+  nameID: string,
+  actor: GraphqlActor = TestUser.GLOBAL_ADMIN,
+) => runAs(actor, (sdk, headers) => sdk.ReadSpaceByNameId({ nameID }, headers));
+
 /** A space's about section: why/who, profile displayName/tagline/description/url and tags. */
 export const readSpaceAbout = (
   spaceId: string,

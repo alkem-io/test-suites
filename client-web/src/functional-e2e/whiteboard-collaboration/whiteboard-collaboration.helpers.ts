@@ -106,6 +106,8 @@ export type EditorElement = {
   width: number;
   height: number;
   points?: number[][];
+  /** Text elements only (additive: read from the scene element's `text`). */
+  text?: string;
 };
 
 /**
@@ -129,8 +131,8 @@ export const editorElement = (editor: Locator, id: string): Promise<EditorElemen
       if (app?.scene?.getElement) {
         const element = app.scene.getElement(elementId) as Partial<EditorElement> | null | undefined;
         if (!element) return undefined;
-        const { id, type, isDeleted, x, y, width, height, points } = element;
-        return { id, type, isDeleted, x, y, width, height, points } as EditorElement;
+        const { id, type, isDeleted, x, y, width, height, points, text } = element;
+        return { id, type, isDeleted, x, y, width, height, points, text } as EditorElement;
       }
       fiber = fiber.return;
     }
