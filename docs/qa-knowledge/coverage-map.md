@@ -363,3 +363,24 @@ _Searched 2026-11-03, branch `qa/excalidraw-yjs-13-undo-plan` off `origin/develo
 | client-web's own two-user merge walk | Prior art only (`window.h`, which client-web never installs; fixed waits, not run by test-suites) | client-web `e2e/specs/multiUserCollab.e2e.spec.ts` row 4 |
 
 **Search again with:** `git grep -n -i -E "undo|redo|Control\+z|excalidraw|Drawing canvas|isMultiUser|collab/" <ref> -- client-web/src server-api/src lib/src ':!lib/src/core/generated'`, and in excalidraw-yjs `git grep -n -E "undoElements|redoElements|isRequiredElementKey" -- packages`.
+
+## Content editing — whiteboard, memo, Collabora document persistence (W2 journey 5)
+
+_Searched 2026-11-09, branch `qa/w2-journey-5` off `origin/develop` @ `afbefaf2` (test-suites). Product source read: client-web `f33325b2b`, server `0d276e485`, collaboration-service `v0.0.4`/`HEAD`, wopi-service `HEAD`. Plan: `client-web/src/functional-e2e/content-editing/content-editing-test-plan.md` (approved for build 2026-11-09; the table below is the state BEFORE the build, the plan's mapping is the state after)._
+
+| Area | Status | Evidence |
+| --- | --- | --- |
+| A browser-drawn whiteboard element is **durable**, or survives a reopen or a second session | **None** (proven absent). WC-01/02 draw and read the raw doc for the undo incident only, and are skip-gated | `whiteboard-collaboration/*.spec.ts`; planned J5 E8-1/E8-2 |
+| Whiteboard cold load from storage after the room is released | **None** merged. Wire level with raw Node writes in open PR #545 (cold rehydrate after a 35 s idle wait). Planned J5 E8-4 `@local-stack` | PR #545 `server-api/src/functional-api/collaboration/` |
+| Whiteboard card preview (`profile.visual(CARD).uri`) updated after editing | **None** | planned J5 E8-3 |
+| Whiteboard non-member is read-only | Partial (render plus no edit buttons, no content) | `public-space/non-member-whiteboard-access.spec.ts` › 3.3 |
+| `Memo.markdown` ("last saved content") read back after a UI edit | **None** (proven absent: `rg` over `server-api/src` and `lib/src/scenario/graphql` finds `markdown` only as a create input) | planned J5 E10-1 |
+| Memo live relay of typing to a second open editor | **Full** (concurrent only) | `memo-pdf-download/us1-download-memo-pdf.spec.ts` › US1-AS4 |
+| Memo reopened after the author left, and a member's write | **None** | planned J5 E10-2 |
+| Memo Sign action gate (entitlement, Cleverbase identity) | **Full** | `authz-admin-guard/memo-sign-action-gate.spec.ts` › 13.1, 14.1; server-api `entitlements/memo-signing-entitlement.it-spec.ts` |
+| Memo actually signed | **None**: deferred (no Cleverbase test identity) | deferred.md |
+| Collabora editor opened and typed into in a browser, and the saved file read back | **None** (proven absent). DT-2 only asserts that "Open Document" is visible; the isolation suite uses `replaceCollaboraDocument`, "not a live Collabora save" (its README) | `templates-CRD/template-types/document-template-content.spec.ts` › DT-2; planned J5 E9-1/E9-2 |
+| Collabora editor URL, authorization, import, replace, template byte isolation | **Full (API)** | server-api `collabora/collabora-editor-url.it-spec.ts`, `collabora-template-isolation.it-spec.ts` |
+| Create a Collabora document callout through the UI | **None** (audit E1, not journey 5) | `callouts/0.5callout-creation.spec.ts` does not create one |
+
+**Search again with:** `rg -n -i 'memo-sign|prepareMemoSigning|signatures|markdown' <dirs>`, `rg -n -i 'collabora([^t]|$)|wopi|Open Document|Document Editor|frameLocator' <dirs>`, `rg -n -i 'whiteboard|connectWhiteboardPeer|isMultiUser|updatedDate' <dirs>`, where `<dirs>` is `client-web/src server-api/src lib/src --glob '!**/generated/**'`. (`collabora` alone matches `collaboration`; keep the `[^t]`.)
