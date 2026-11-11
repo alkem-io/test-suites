@@ -27,6 +27,16 @@ export interface AlkemioTestConfig {
       password: string;
     };
   };
+  /** Post-setup `authorizationPolicyResetAll` (`scenario/registration/
+   * ensure-authorization-policies.ts`). `off` (default) never resets — the
+   * operator owns the policies; `always` resets unconditionally (after a
+   * server upgrade that changed authorization rules); `auto` resets only when
+   * the harness admin is denied a space read. The timeout bounds the wait for
+   * the server's asynchronous reset task. */
+  authorizationReset: {
+    mode: "auto" | "always" | "off";
+    timeoutMs: number;
+  };
   identities: {
     admin: {
       email: string;
