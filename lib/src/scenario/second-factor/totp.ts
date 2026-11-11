@@ -31,11 +31,10 @@ const base32Decode = (secret: string): Buffer => {
  */
 export const totpCode = (
   secret: string,
-  options?: { atMs?: number; stepOffset?: number }
+  options?: { stepOffset?: number }
 ): string => {
   const step =
-    Math.floor((options?.atMs ?? Date.now()) / 1000 / PERIOD_S) +
-    (options?.stepOffset ?? 0);
+    Math.floor(Date.now() / 1000 / PERIOD_S) + (options?.stepOffset ?? 0);
   const counter = Buffer.alloc(8);
   counter.writeBigUInt64BE(BigInt(step));
   const hmac = createHmac('sha1', base32Decode(secret)).update(counter).digest();

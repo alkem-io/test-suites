@@ -216,10 +216,9 @@ const completeSecondStep = async (
 /** Password, then a code computed from `secret` at the second step. */
 export const loginWithTotp = async (
   email: string,
-  secret: string,
-  options: { password?: string } = {}
+  secret: string
 ): Promise<NativeSession> => {
-  const first = await loginWithPassword(email, options);
+  const first = await loginWithPassword(email);
   return completeSecondStep(
     await startSecondStep(first.sessionToken),
     { method: 'totp', totp_code: totpCode(secret) },
@@ -547,10 +546,6 @@ export const registerTwoStep = async (
   return { profileStep, passwordStep };
 };
 
-/** Whoami for the jar's browser session. */
-export const browserWhoami = (jar: CookieJar): Promise<KratosAnswer> =>
-  browserCall(jar, 'GET', `${publicBase()}/sessions/whoami`);
-
 // ---------------------------------------------------------------- admin reads
 
 export type KratosIdentity = {
@@ -591,10 +586,7 @@ export const identitySessions = async (
 };
 
 /** Creates an active identity with the harness password and a verified email. */
-export const createIdentity = async (
-  email: string,
-  options: { withPassword?: boolean } = {}
-): Promise<string> => {
+export const createIdentity = async (email: string): Promise<string> => {
   const [first, last] = email.split('@')[0].split('.');
   const answer = await send('POST', `${adminBase()}/admin/identities`, {
     body: {
@@ -605,9 +597,7 @@ export const createIdentity = async (
         accepted_terms: true,
         name: { first, last: last ?? first },
       },
-      ...(options.withPassword === false
-        ? {}
-        : { credentials: { password: { config: { password: password() } } } }),
+      credentials: { password: { config: { password: password() } } },
       verifiable_addresses: [
         { value: email, verified: true, via: 'email', status: 'completed' },
       ],
