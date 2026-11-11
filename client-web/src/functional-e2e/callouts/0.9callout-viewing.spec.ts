@@ -224,11 +224,21 @@ memberFixture.test.describe.serial('Callout Viewing - Member', () => {
       await expect(
         collaborationPage.feedCalloutHeading(calloutName)
       ).toHaveCount(0);
-      // Server side: the member's session is not even given the draft.
+      // Server side: the member's session is given the published sibling
+      // (positive control: the listing is the member's, and not empty) but
+      // not the draft.
+      const member = await sessionActor(page);
+      await expectStoredCalloutVisibility(
+        baseScenario!.space.collaboration.calloutsSetId,
+        baseScenario!.space.collaboration.calloutPostDisplayName,
+        member,
+        CalloutVisibility.Published,
+        'the server lists the published sibling for the member'
+      );
       await expectStoredCalloutVisibility(
         baseScenario!.space.collaboration.calloutsSetId,
         calloutName,
-        await sessionActor(page),
+        member,
         undefined,
         'the server does not list the draft for the member'
       );

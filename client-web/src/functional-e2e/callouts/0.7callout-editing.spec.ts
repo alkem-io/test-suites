@@ -211,7 +211,18 @@ adminFixture.test.describe.serial('Callout Editing', () => {
         const memberView = new CollaborationPage(member.page, baseUrl);
         await memberView.navigateToSpace(baseScenario!.space.nameId);
         await memberView.expectFeedRendered(seededName);
-        await expect(memberView.feedCalloutHeading(draftCalloutName)).toHaveCount(0);
+        await expect(
+          memberView.feedCalloutHeading(draftCalloutName)
+        ).toHaveCount(0);
+        // The member's listing holds the seeded callout (positive control)
+        // but not the draft.
+        await expectStoredCalloutVisibility(
+          calloutsSetId,
+          seededName,
+          await sessionActor(member.page),
+          CalloutVisibility.Published,
+          'the server lists the seeded callout for the member'
+        );
         await expectStoredCalloutVisibility(
           calloutsSetId,
           draftCalloutName,
