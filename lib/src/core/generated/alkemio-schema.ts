@@ -89461,6 +89461,38 @@ export type GetCalloutReactionsSummaryQuery = {
   };
 };
 
+export type ReadCalloutCollaboraDocumentQueryVariables = Exact<{
+  calloutId: Scalars["UUID"]["input"];
+}>;
+
+export type ReadCalloutCollaboraDocumentQuery = {
+  lookup: {
+    callout?:
+      | {
+          id: string;
+          framing: {
+            id: string;
+            collaboraDocument?:
+              | {
+                  id: string;
+                  documentType: CollaboraDocumentType;
+                  previewUrl?: string | undefined;
+                  updatedDate: Date;
+                  authorization?:
+                    | {
+                        myPrivileges?:
+                          | Array<AuthorizationPrivilege>
+                          | undefined;
+                      }
+                    | undefined;
+                }
+              | undefined;
+          };
+        }
+      | undefined;
+  };
+};
+
 export type ReadCalloutContributionsQueryVariables = Exact<{
   calloutId: Scalars["UUID"]["input"];
 }>;
@@ -89676,6 +89708,94 @@ export type ReadCalloutSubspacesQuery = {
   };
 };
 
+export type ReadCalloutsSetCalloutResponsesQueryVariables = Exact<{
+  calloutsSetId: Scalars["UUID"]["input"];
+}>;
+
+export type ReadCalloutsSetCalloutResponsesQuery = {
+  lookup: {
+    calloutsSet?:
+      | {
+          id: string;
+          callouts: Array<{
+            id: string;
+            framing: {
+              id: string;
+              profile: { id: string; displayName: string };
+            };
+            settings: { framing: { commentsEnabled: boolean } };
+            contributions: Array<{
+              id: string;
+              post?:
+                | {
+                    id: string;
+                    profile: { id: string; displayName: string };
+                    createdBy?: { id: string } | undefined;
+                  }
+                | undefined;
+            }>;
+          }>;
+        }
+      | undefined;
+  };
+};
+
+export type ReadCalloutsSetCalloutTypesQueryVariables = Exact<{
+  calloutsSetId: Scalars["UUID"]["input"];
+}>;
+
+export type ReadCalloutsSetCalloutTypesQuery = {
+  lookup: {
+    calloutsSet?:
+      | {
+          id: string;
+          callouts: Array<{
+            id: string;
+            framing: {
+              id: string;
+              type: CalloutFramingType;
+              profile: { id: string; displayName: string };
+              whiteboard?: { id: string } | undefined;
+              memo?: { id: string } | undefined;
+              link?:
+                | {
+                    id: string;
+                    uri: string;
+                    profile: { id: string; displayName: string };
+                  }
+                | undefined;
+            };
+            settings: {
+              contribution: { allowedTypes: Array<CalloutContributionType> };
+            };
+          }>;
+        }
+      | undefined;
+  };
+};
+
+export type ReadCalloutsSetCalloutVisibilityQueryVariables = Exact<{
+  calloutsSetId: Scalars["UUID"]["input"];
+}>;
+
+export type ReadCalloutsSetCalloutVisibilityQuery = {
+  lookup: {
+    calloutsSet?:
+      | {
+          id: string;
+          callouts: Array<{
+            id: string;
+            framing: {
+              id: string;
+              profile: { id: string; displayName: string };
+            };
+            settings: { visibility: CalloutVisibility };
+          }>;
+        }
+      | undefined;
+  };
+};
+
 export type ReadCalloutsSetCalloutsQueryVariables = Exact<{
   calloutsSetId: Scalars["UUID"]["input"];
 }>;
@@ -89725,6 +89845,28 @@ export type ReadMemoDocumentsQuery = {
           id: string;
           signatures: Array<{ id: string }>;
           profile: { storageBucket: { documents: Array<{ id: string }> } };
+        }
+      | undefined;
+  };
+};
+
+export type ReadWhiteboardStateQueryVariables = Exact<{
+  whiteboardId: Scalars["UUID"]["input"];
+}>;
+
+export type ReadWhiteboardStateQuery = {
+  lookup: {
+    whiteboard?:
+      | {
+          id: string;
+          updatedDate: Date;
+          isMultiUser: boolean;
+          previewSettings: { mode: WhiteboardPreviewMode };
+          profile: {
+            id: string;
+            visual?: { id: string; uri: string } | undefined;
+            preview?: { id: string; uri: string } | undefined;
+          };
         }
       | undefined;
   };
@@ -94957,6 +95099,27 @@ export type GetCalloutFramingMemoQuery = {
                 }
               | undefined;
           };
+        }
+      | undefined;
+  };
+};
+
+export type ReadMemoContentQueryVariables = Exact<{
+  memoId: Scalars["UUID"]["input"];
+}>;
+
+export type ReadMemoContentQuery = {
+  lookup: {
+    memo?:
+      | {
+          id: string;
+          markdown?: any | undefined;
+          updatedDate: Date;
+          isMultiUser: boolean;
+          contentUpdatePolicy: ContentUpdatePolicy;
+          authorization?:
+            | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
+            | undefined;
         }
       | undefined;
   };
@@ -110932,6 +111095,26 @@ export type ReadSpaceAccountSpacesQueryVariables = Exact<{
 export type ReadSpaceAccountSpacesQuery = {
   lookup: {
     space?: { id: string; accountSpaces: Array<{ id: string }> } | undefined;
+  };
+};
+
+export type ReadSpaceByNameIdQueryVariables = Exact<{
+  nameID: Scalars["NameID"]["input"];
+}>;
+
+export type ReadSpaceByNameIdQuery = {
+  lookupByName: {
+    space?:
+      | {
+          id: string;
+          nameID: string;
+          level: SpaceLevel;
+          account: { id: string };
+          about: {
+            profile: { displayName: string; tagline?: string | undefined };
+          };
+        }
+      | undefined;
   };
 };
 

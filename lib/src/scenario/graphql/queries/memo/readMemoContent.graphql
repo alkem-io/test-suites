@@ -1,0 +1,12 @@
+query ReadMemoContent($memoId: UUID!) {
+  lookup {
+    memo(ID: $memoId) {
+      id
+      markdown
+      updatedDate
+      isMultiUser
+      contentUpdatePolicy
+      authorization { myPrivileges }
+    }
+  }
+}

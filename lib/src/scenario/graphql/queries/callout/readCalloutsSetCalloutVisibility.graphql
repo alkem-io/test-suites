@@ -1,0 +1,15 @@
+query ReadCalloutsSetCalloutVisibility($calloutsSetId: UUID!) {
+  lookup {
+    calloutsSet(ID: $calloutsSetId) {
+      id
+      callouts {
+        id
+        framing {
+          id
+          profile { id displayName }
+        }
+        settings { visibility }
+      }
+    }
+  }
+}
