@@ -127,6 +127,20 @@ export const readCalloutsSetCallouts = (
     sdk.ReadCalloutsSetCallouts({ calloutsSetId }, headers),
   );
 
+/**
+ * The callouts of a callouts set as the actor sees them, each with whether it
+ * takes comments (`settings.framing.commentsEnabled`) and the posts
+ * contributed to it with their author — the read-back of what a callout made
+ * from a template carries and of who contributed to it.
+ */
+export const readCalloutsSetCalloutResponses = (
+  calloutsSetId: string,
+  actor: GraphqlActor = TestUser.GLOBAL_ADMIN,
+) =>
+  runAs(actor, (sdk, headers) =>
+    sdk.ReadCalloutsSetCalloutResponses({ calloutsSetId }, headers),
+  );
+
 /** The responses of a form as the actor sees them: own, all (when allowed) and the moderation flags. */
 export const readCalloutFormResponses = (
   formID: string,
@@ -143,6 +157,16 @@ export const readMemoDocuments = (
   actor: GraphqlActor = TestUser.GLOBAL_ADMIN,
 ) => runAs(actor, (sdk, headers) => sdk.ReadMemoDocuments({ memoId }, headers));
 
+/**
+ * A memo's last SAVED content: `markdown` is the stored checkpoint the server
+ * resolves through the memo's content pointer, not the live collaboration room.
+ * Also the update date, the multi-user flag and what the actor may do with it.
+ */
+export const readMemoContent = (
+  memoId: string,
+  actor: GraphqlActor = TestUser.GLOBAL_ADMIN,
+) => runAs(actor, (sdk, headers) => sdk.ReadMemoContent({ memoId }, headers));
+
 export const readActivityLogOnCollaboration = (
   queryData: ActivityLogInput,
   actor: GraphqlActor = TestUser.GLOBAL_ADMIN,
@@ -150,6 +174,28 @@ export const readActivityLogOnCollaboration = (
   runAs(actor, (sdk, headers) =>
     sdk.GetActivityLogOnCollaboration({ queryData }, headers),
   );
+
+/**
+ * Where each post of a callouts set sits: its phase (FLOW_STATE tag) and
+ * position (sortOrder), as the actor sees them.
+ */
+export const readCalloutsPlacement = (
+  calloutsSetId: string,
+  actor: GraphqlActor = TestUser.GLOBAL_ADMIN,
+) =>
+  runAs(actor, (sdk, headers) =>
+    sdk.GetCalloutsOnCalloutsSetUsingClassification({ calloutsSetId }, headers),
+  );
+
+/**
+ * A post (a post-type response) as the actor sees it, including the actor's
+ * privileges on it (e.g. MOVE_POST, which gates moving the response).
+ */
+export const readPost = (
+  postId: string,
+  actor: GraphqlActor = TestUser.GLOBAL_ADMIN,
+) =>
+  runAs(actor, (sdk, headers) => sdk.GetPostData({ postId }, headers));
 
 // ---------------------------------------------------------------------------
 // Multipart (Upload scalar) operations. The generated SDK posts JSON only, so
