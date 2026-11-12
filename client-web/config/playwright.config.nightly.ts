@@ -438,6 +438,39 @@ export default defineConfig(
         testMatch: ['/whiteboard-collaboration/*.spec.ts'],
         tier: 'extended',
       }),
+      suite({
+        // W2 journey 12 (docs/qa/server-rebuild/plan.md § W2, audit J2/J3/E5):
+        // a disposable user starts a discussion in the browser, read back over
+        // the lib. The comment, thread-answer and mention cases go through the
+        // discussion's Matrix room and are @local-stack (grepInverted here;
+        // config/playwright.config.local-stack.ts runs them).
+        name: 'Forum discussions',
+        testMatch: ['/forum-discussions/*.spec.ts'],
+        tier: 'extended',
+        // A renamed control fails in seconds instead of burning the budget.
+        use: { actionTimeout: 15_000 },
+      }),
+      suite({
+        // W2 journey 12 (audit K2/L6): an organisation admin creates an
+        // innovation pack on the organisation's Account tab and edits it on
+        // the pack's settings page; the platform admin deletes it in
+        // Administration. Self-seeded organisation, read back over the lib.
+        name: 'Innovation packs',
+        testMatch: ['/innovation-packs/*.spec.ts'],
+        tier: 'extended',
+        // A renamed control fails in seconds instead of burning the budget.
+        use: { actionTimeout: 15_000 },
+      }),
+      suite({
+        // W2 journey 12 (audit L2/H5): the platform admin verifies and
+        // un-verifies, then edits, a self-seeded organisation in
+        // Administration > Organisations; read back over the lib.
+        name: 'Admin organisations',
+        testMatch: ['/admin-organizations/*.spec.ts'],
+        tier: 'extended',
+        // A renamed control fails in seconds instead of burning the budget.
+        use: { actionTimeout: 15_000 },
+      }),
     ],
   })
 );

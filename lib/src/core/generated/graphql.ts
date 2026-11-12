@@ -787,11 +787,32 @@ export type AdminTemplateMissingFileReference = {
   templateName: Scalars["String"]["output"];
 };
 
+export type AdminUpdateInnovationPackPromoteInput = {
+  /** The InnovationPack whose promote flag is to be set. */
+  innovationPackID: Scalars["UUID"]["input"];
+  /** True to list this InnovationPack first in the Innovation Library. */
+  promote: Scalars["Boolean"]["input"];
+};
+
+export type AdminUpdateSpacePromoteInput = {
+  /** True to list this Space first on Explore Spaces. */
+  promote: Scalars["Boolean"]["input"];
+  /** The Space (any level) whose promote flag is to be set. */
+  spaceID: Scalars["UUID"]["input"];
+};
+
 export type AdminUpdateSpaceVisibilityInput = {
   /** The Space whose visibility is to be updated. */
   spaceID: Scalars["UUID"]["input"];
   /** Visibility of the Space, only on L0 spaces. */
   visibility: SpaceVisibility;
+};
+
+export type AdminUpdateVirtualContributorPromoteInput = {
+  /** True to list this VirtualContributor first on the platform-wide listings. */
+  promote: Scalars["Boolean"]["input"];
+  /** The VirtualContributor whose promote flag is to be set. */
+  virtualContributorID: Scalars["UUID"]["input"];
 };
 
 export type AdminUserEmailChangeDriftResolveInput = {
@@ -1172,6 +1193,7 @@ export enum AuthorizationPrivilege {
   PlatformForumManage = "PLATFORM_FORUM_MANAGE",
   PlatformLicensingListsRead = "PLATFORM_LICENSING_LISTS_READ",
   PlatformOperationsAdmin = "PLATFORM_OPERATIONS_ADMIN",
+  PlatformPromoteManage = "PLATFORM_PROMOTE_MANAGE",
   PlatformRolesAssign = "PLATFORM_ROLES_ASSIGN",
   PlatformRoleHoldersRead = "PLATFORM_ROLE_HOLDERS_READ",
   PlatformSettingsAdmin = "PLATFORM_SETTINGS_ADMIN",
@@ -4245,6 +4267,8 @@ export type InnovationPack = {
   nameID: Scalars["NameID"]["output"];
   /** The Profile for this InnovationPack. */
   profile: Profile;
+  /** Whether this InnovationPack is platform-promoted (listed first). Null unless the caller may manage promotion (Platform Content Full Access or Platform License Manager). */
+  promote?: Maybe<Scalars["Boolean"]["output"]>;
   /** The InnovationPack provider. */
   provider: Actor;
   /** Visibility of the InnovationPack in searches. */
@@ -5615,8 +5639,14 @@ export type Mutation = {
   adminUpdateContributorAvatars: Profile;
   /** Updates the GeoLocation data where required on the platform. */
   adminUpdateGeoLocationData: Scalars["Boolean"]["output"];
+  /** Sets the platform-promote flag of an InnovationPack. Platform Content Full Access or Platform License Manager only. */
+  adminUpdateInnovationPackPromote: InnovationPack;
+  /** Sets the platform-promote flag of a Space (any level). Platform Content Full Access or Platform License Manager only. */
+  adminUpdateSpacePromote: Space;
   /** Update the visibility of the specified Space. */
   adminUpdateSpaceVisibility: Space;
+  /** Sets the platform-promote flag of a VirtualContributor. Platform Content Full Access or Platform License Manager only. */
+  adminUpdateVirtualContributorPromote: VirtualContributor;
   /** Remove the Kratos account associated with the specified User. Note: the Users profile on the platform is not deleted. */
   adminUserAccountDelete: User;
   /** Change a user's login email synchronously, acting as a platform administrator. The admin is responsible for verifying the subject user's identity out-of-band — the platform does NOT send a confirmation message to the new mailbox and does NOT require the new mailbox to prove ownership. Validates uniqueness, commits Kratos → Alkemio with bounded retry, invalidates the subject's existing sessions, and sends a security-signal notification to the old address. Requires PLATFORM_USERS_ADMIN. */
@@ -5891,6 +5921,8 @@ export type Mutation = {
   resetConversationVc: Conversation;
   /** Reset all license plans on Accounts */
   resetLicenseOnAccounts: Scalars["Boolean"]["output"];
+  /** Reset the current user’s app icon badge counter to zero. Called by the iOS app when it is opened. */
+  resetPushBadgeCount: Scalars["Boolean"]["output"];
   /** Revoke a credential from an Actor. */
   revokeCredentialFromActor: Scalars["Boolean"]["output"];
   /** Revokes the specified LicensePlan on an Account. */
@@ -6137,8 +6169,20 @@ export type MutationAdminUpdateContributorAvatarsArgs = {
   profileID: Scalars["UUID"]["input"];
 };
 
+export type MutationAdminUpdateInnovationPackPromoteArgs = {
+  promoteData: AdminUpdateInnovationPackPromoteInput;
+};
+
+export type MutationAdminUpdateSpacePromoteArgs = {
+  promoteData: AdminUpdateSpacePromoteInput;
+};
+
 export type MutationAdminUpdateSpaceVisibilityArgs = {
   updateData: AdminUpdateSpaceVisibilityInput;
+};
+
+export type MutationAdminUpdateVirtualContributorPromoteArgs = {
+  promoteData: AdminUpdateVirtualContributorPromoteInput;
 };
 
 export type MutationAdminUserAccountDeleteArgs = {
@@ -8381,6 +8425,8 @@ export type RelayPaginatedSpace = ActorFull & {
   platformAccess: PlatformRolesAccess;
   /** The profile for this Actor. */
   profile?: Maybe<Profile>;
+  /** Whether this Space is platform-promoted (listed first). Null unless the caller may manage promotion (Platform Content Full Access or Platform License Manager). */
+  promote?: Maybe<Scalars["Boolean"]["output"]>;
   /** The settings for this Space. */
   settings: SpaceSettings;
   /** The sort mode for subspaces of this Space: Alphabetical or Custom. Accessible without READ privilege. */
@@ -9268,6 +9314,8 @@ export type Space = ActorFull & {
   platformAccess: PlatformRolesAccess;
   /** The profile for this Actor. */
   profile?: Maybe<Profile>;
+  /** Whether this Space is platform-promoted (listed first). Null unless the caller may manage promotion (Platform Content Full Access or Platform License Manager). */
+  promote?: Maybe<Scalars["Boolean"]["output"]>;
   /** The settings for this Space. */
   settings: SpaceSettings;
   /** The sort mode for subspaces of this Space: Alphabetical or Custom. Accessible without READ privilege. */
@@ -11527,6 +11575,8 @@ export type VirtualContributor = ActorFull & {
   platformSettings: VirtualContributorPlatformSettings;
   /** The profile for this Actor. */
   profile?: Maybe<Profile>;
+  /** Whether this VirtualContributor is platform-promoted (listed first). Null unless the caller may manage promotion (Platform Content Full Access or Platform License Manager). */
+  promote?: Maybe<Scalars["Boolean"]["output"]>;
   /** Prompt graph definition for this Virtual Contributor. */
   promptGraphDefinition?: Maybe<PromptGraphDefinition>;
   /** The Virtual Contributor provider. */
@@ -12468,7 +12518,10 @@ export type ResolversTypes = {
   AdminTemplateFileRepairResult: ResolverTypeWrapper<SchemaTypes.AdminTemplateFileRepairResult>;
   AdminTemplateForeignFileReference: ResolverTypeWrapper<SchemaTypes.AdminTemplateForeignFileReference>;
   AdminTemplateMissingFileReference: ResolverTypeWrapper<SchemaTypes.AdminTemplateMissingFileReference>;
+  AdminUpdateInnovationPackPromoteInput: SchemaTypes.AdminUpdateInnovationPackPromoteInput;
+  AdminUpdateSpacePromoteInput: SchemaTypes.AdminUpdateSpacePromoteInput;
   AdminUpdateSpaceVisibilityInput: SchemaTypes.AdminUpdateSpaceVisibilityInput;
+  AdminUpdateVirtualContributorPromoteInput: SchemaTypes.AdminUpdateVirtualContributorPromoteInput;
   AdminUserEmailChangeDriftResolveInput: SchemaTypes.AdminUserEmailChangeDriftResolveInput;
   AdminUserEmailChangeInput: SchemaTypes.AdminUserEmailChangeInput;
   AiPersona: ResolverTypeWrapper<SchemaTypes.AiPersona>;
@@ -14326,7 +14379,10 @@ export type ResolversParentTypes = {
   AdminTemplateFileRepairResult: SchemaTypes.AdminTemplateFileRepairResult;
   AdminTemplateForeignFileReference: SchemaTypes.AdminTemplateForeignFileReference;
   AdminTemplateMissingFileReference: SchemaTypes.AdminTemplateMissingFileReference;
+  AdminUpdateInnovationPackPromoteInput: SchemaTypes.AdminUpdateInnovationPackPromoteInput;
+  AdminUpdateSpacePromoteInput: SchemaTypes.AdminUpdateSpacePromoteInput;
   AdminUpdateSpaceVisibilityInput: SchemaTypes.AdminUpdateSpaceVisibilityInput;
+  AdminUpdateVirtualContributorPromoteInput: SchemaTypes.AdminUpdateVirtualContributorPromoteInput;
   AdminUserEmailChangeDriftResolveInput: SchemaTypes.AdminUserEmailChangeDriftResolveInput;
   AdminUserEmailChangeInput: SchemaTypes.AdminUserEmailChangeInput;
   AiPersona: SchemaTypes.AiPersona;
@@ -20022,6 +20078,11 @@ export type InnovationPackResolvers<
   listedInStore?: Resolver<ResolversTypes["Boolean"], ParentType, ContextType>;
   nameID?: Resolver<ResolversTypes["NameID"], ParentType, ContextType>;
   profile?: Resolver<ResolversTypes["Profile"], ParentType, ContextType>;
+  promote?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes["Boolean"]>,
+    ParentType,
+    ContextType
+  >;
   provider?: Resolver<ResolversTypes["Actor"], ParentType, ContextType>;
   searchVisibility?: Resolver<
     ResolversTypes["SearchVisibility"],
@@ -21705,6 +21766,24 @@ export type MutationResolvers<
     ParentType,
     ContextType
   >;
+  adminUpdateInnovationPackPromote?: Resolver<
+    ResolversTypes["InnovationPack"],
+    ParentType,
+    ContextType,
+    RequireFields<
+      SchemaTypes.MutationAdminUpdateInnovationPackPromoteArgs,
+      "promoteData"
+    >
+  >;
+  adminUpdateSpacePromote?: Resolver<
+    ResolversTypes["Space"],
+    ParentType,
+    ContextType,
+    RequireFields<
+      SchemaTypes.MutationAdminUpdateSpacePromoteArgs,
+      "promoteData"
+    >
+  >;
   adminUpdateSpaceVisibility?: Resolver<
     ResolversTypes["Space"],
     ParentType,
@@ -21712,6 +21791,15 @@ export type MutationResolvers<
     RequireFields<
       SchemaTypes.MutationAdminUpdateSpaceVisibilityArgs,
       "updateData"
+    >
+  >;
+  adminUpdateVirtualContributorPromote?: Resolver<
+    ResolversTypes["VirtualContributor"],
+    ParentType,
+    ContextType,
+    RequireFields<
+      SchemaTypes.MutationAdminUpdateVirtualContributorPromoteArgs,
+      "promoteData"
     >
   >;
   adminUserAccountDelete?: Resolver<
@@ -22708,6 +22796,11 @@ export type MutationResolvers<
     RequireFields<SchemaTypes.MutationResetConversationVcArgs, "input">
   >;
   resetLicenseOnAccounts?: Resolver<
+    ResolversTypes["Boolean"],
+    ParentType,
+    ContextType
+  >;
+  resetPushBadgeCount?: Resolver<
     ResolversTypes["Boolean"],
     ParentType,
     ContextType
@@ -25066,6 +25159,11 @@ export type RelayPaginatedSpaceResolvers<
     ParentType,
     ContextType
   >;
+  promote?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes["Boolean"]>,
+    ParentType,
+    ContextType
+  >;
   settings?: Resolver<ResolversTypes["SpaceSettings"], ParentType, ContextType>;
   sortMode?: Resolver<ResolversTypes["SpaceSortMode"], ParentType, ContextType>;
   sortOrder?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
@@ -25780,6 +25878,11 @@ export type SpaceResolvers<
   >;
   profile?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["Profile"]>,
+    ParentType,
+    ContextType
+  >;
+  promote?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes["Boolean"]>,
     ParentType,
     ContextType
   >;
@@ -27710,6 +27813,11 @@ export type VirtualContributorResolvers<
   >;
   profile?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["Profile"]>,
+    ParentType,
+    ContextType
+  >;
+  promote?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes["Boolean"]>,
     ParentType,
     ContextType
   >;
@@ -95261,6 +95369,31 @@ export type ReadAccountResourcesQuery = {
   };
 };
 
+export type ReadInnovationPackQueryVariables = SchemaTypes.Exact<{
+  innovationPackId: SchemaTypes.Scalars["UUID"]["input"];
+}>;
+
+export type ReadInnovationPackQuery = {
+  lookup: {
+    innovationPack?:
+      | {
+          id: string;
+          nameID: string;
+          listedInStore: boolean;
+          searchVisibility: SchemaTypes.SearchVisibility;
+          provider: { id: string };
+          profile: {
+            id: string;
+            displayName: string;
+            description?: any | undefined;
+            url: string;
+            tagset?: { id: string; tags: Array<string> } | undefined;
+          };
+        }
+      | undefined;
+  };
+};
+
 export type ReadInnovationPackTemplatesSetQueryVariables = SchemaTypes.Exact<{
   innovationPackId: SchemaTypes.Scalars["UUID"]["input"];
 }>;
@@ -102912,6 +103045,14 @@ export type ReadMyNotificationsQuery = {
           | {
               __typename: "InAppNotificationPayloadPlatformUserMessageRoom";
               type: SchemaTypes.NotificationEventPayload;
+              user: { id: string };
+              messageDetails?:
+                | {
+                    message: string;
+                    room: { id: string };
+                    parent: { id: string; url: string };
+                  }
+                | undefined;
             }
           | {
               __typename: "InAppNotificationPayloadPlatformUserProfileRemoved";
@@ -127563,6 +127704,31 @@ export const ReadAccountResourcesDocument = gql`
     }
   }
 `;
+export const ReadInnovationPackDocument = gql`
+  query ReadInnovationPack($innovationPackId: UUID!) {
+    lookup {
+      innovationPack(ID: $innovationPackId) {
+        id
+        nameID
+        listedInStore
+        searchVisibility
+        provider {
+          id
+        }
+        profile {
+          id
+          displayName
+          description
+          url
+          tagset {
+            id
+            tags
+          }
+        }
+      }
+    }
+  }
+`;
 export const ReadInnovationPackTemplatesSetDocument = gql`
   query ReadInnovationPackTemplatesSet($innovationPackId: UUID!) {
     lookup {
@@ -129109,6 +129275,21 @@ export const ReadMyNotificationsDocument = gql`
               }
               organization {
                 id
+              }
+            }
+            ... on InAppNotificationPayloadPlatformUserMessageRoom {
+              user {
+                id
+              }
+              messageDetails {
+                message
+                room {
+                  id
+                }
+                parent {
+                  id
+                  url
+                }
               }
             }
           }
@@ -131741,6 +131922,7 @@ const GetAccountMainEntitiesDocumentString = print(
   GetAccountMainEntitiesDocument
 );
 const ReadAccountResourcesDocumentString = print(ReadAccountResourcesDocument);
+const ReadInnovationPackDocumentString = print(ReadInnovationPackDocument);
 const ReadInnovationPackTemplatesSetDocumentString = print(
   ReadInnovationPackTemplatesSetDocument
 );
@@ -137524,6 +137706,28 @@ export function getSdk(
             { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "ReadAccountResources",
+        "query",
+        variables
+      );
+    },
+    ReadInnovationPack(
+      variables: SchemaTypes.ReadInnovationPackQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.ReadInnovationPackQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.ReadInnovationPackQuery>(
+            ReadInnovationPackDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "ReadInnovationPack",
         "query",
         variables
       );
