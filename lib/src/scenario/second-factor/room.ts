@@ -54,6 +54,8 @@ export const postToRoom = async (
 export type RoomSubscription = {
   /** Message ids delivered on the subscription, in order. */
   messageIds: string[];
+  /** Operation errors the server sent on the subscription (FORBIDDEN, …). */
+  errors: string[];
   /** Resolves with the socket's close code once the server closes it. */
   closed: Promise<number>;
   /** The close code, once closed. */
@@ -76,6 +78,7 @@ export const subscribeToRoom = (
     }
   }
   const messageIds: string[] = [];
+  const errors: string[] = [];
   let code: number | undefined;
   let resolveClosed: (code: number) => void = () => undefined;
   const closed = new Promise<number>(resolve => (resolveClosed = resolve));
@@ -104,12 +107,15 @@ export const subscribeToRoom = (
           const id = result.data?.roomEvents?.message?.data?.id;
           if (id) messageIds.push(id);
         },
-        error: () => undefined,
+        error: error => {
+          errors.push(JSON.stringify(error).slice(0, 300));
+        },
         complete: () => undefined,
       }
     );
     const subscription: RoomSubscription = {
       messageIds,
+      errors,
       closed,
       closeCode: () => code,
       dispose: () => {
@@ -145,19 +151,21 @@ export const eventually = async (
 const REPOST_AFTER_MS = 3_000;
 
 /**
- * Resolves once a message `post` sends is delivered on `sub`, posting again
- * every few seconds until one is; rejects after `withinMs`. A subscription
- * resolves on the socket's ack, which can come before the server has
- * registered it, so the first message alone may be missed.
+ * Resolves once a message `post` sends is delivered on each of `subs`, posting
+ * again every few seconds until one is; rejects after `withinMs`. A
+ * subscription resolves on the socket's ack, which can come before the server
+ * has registered it, so the first message alone may be missed.
  */
 export const awaitLive = async (
-  sub: RoomSubscription,
+  subs: RoomSubscription | RoomSubscription[],
   post: () => Promise<string>,
   withinMs: number
 ): Promise<void> => {
+  const all = Array.isArray(subs) ? subs : [subs];
   const deadline = Date.now() + withinMs;
   const posted: string[] = [];
-  const delivered = () => posted.some(id => sub.messageIds.includes(id));
+  const delivered = () =>
+    all.every(sub => posted.some(id => sub.messageIds.includes(id)));
   while (Date.now() <= deadline) {
     posted.push(await post());
     await eventually(
@@ -167,7 +175,9 @@ export const awaitLive = async (
     ).catch(() => undefined);
     if (delivered()) return;
   }
+  const errors = all.flatMap(sub => sub.errors);
   throw new Error(
-    `second-factor: none of ${posted.length} messages was delivered within ${withinMs} ms`
+    `second-factor: none of ${posted.length} messages was delivered within ${withinMs} ms` +
+      (errors.length > 0 ? `; subscription errors: ${errors.join(' | ')}` : '')
   );
 };

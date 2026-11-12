@@ -16,6 +16,7 @@ import {
   flowMessages,
   getUserToken,
   identitySessions,
+  kratosErrorId,
   loginWithPassword,
   loginWithTotp,
   passwordLogin,
@@ -119,7 +120,27 @@ describe('Second factor — reset after a compromise', () => {
     const { profileStep, passwordStep } = await registerTwoStep(email);
     const identityId: string | undefined = passwordStep.body?.identity?.id;
     try {
-      expect(profileStep.status, JSON.stringify(profileStep.body).slice(0, 300)).toBeLessThan(500);
+      // The profile step was accepted as a step: Kratos answers with the
+      // flow's next screen (the password field) and no error. A refused
+      // profile method would leave the password step creating the identity
+      // in one go, which is not the product's sign-up.
+      const profileFlow = JSON.stringify(profileStep.body).slice(0, 300);
+      expect(kratosErrorId(profileStep), profileFlow).toBeUndefined();
+      expect(
+        (profileStep.body?.ui?.nodes ?? []).some(
+          (n: { attributes?: { name?: string } }) => n.attributes?.name === 'password'
+        ),
+        profileFlow
+      ).toBe(true);
+      expect(
+        [
+          ...(profileStep.body?.ui?.messages ?? []),
+          ...(profileStep.body?.ui?.nodes ?? []).flatMap(
+            (n: { messages?: unknown[] }) => n.messages ?? []
+          ),
+        ].filter((m: { type?: string }) => m.type === 'error'),
+        profileFlow
+      ).toEqual([]);
       expect(passwordStep.status, JSON.stringify(passwordStep.body).slice(0, 300)).toBe(200);
       expect(identityId).toBeDefined();
 

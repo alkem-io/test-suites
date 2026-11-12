@@ -52,6 +52,26 @@ const resetRows = async (userId: string) =>
     r.outcome.startsWith('second_factor_reset_')
   );
 
+/** The platform user id behind a role token. */
+const userIdOf = async (bearerToken: string): Promise<string> => {
+  const me = await postGraphqlRaw<{ me: { user: { id: string } } }>(
+    'query { me { user { id } } }',
+    { bearerToken }
+  );
+  return me.body.data!.me.user.id;
+};
+
+/** Each row names who reset the member, and under which role. */
+const expectInitiator = (
+  rows: { initiatorUserId: string | null; initiatorRole: string }[],
+  initiatorUserId: string,
+  initiatorRole: string
+) => {
+  for (const row of rows) {
+    expect(row).toMatchObject({ initiatorUserId, initiatorRole });
+  }
+};
+
 /** A room `member` can read, opened by `poster`, who posts into it. */
 const roomOf = (poster: ThrowawayUser, member: ThrowawayUser) =>
   createPrivateRoom({ bearerToken: poster.token }, [member.userId]);
@@ -132,6 +152,7 @@ describe('Second factor — support reset', () => {
         'second_factor_reset_started',
         'second_factor_reset_completed',
       ]);
+      expectInitiator(rows, await userIdOf(roleTokens().support), 'platform_support');
       expect(rows[0].correlationId).toBeTruthy();
       expect(rows[1].correlationId).toBe(rows[0].correlationId);
       expect(rows[0].details).toMatchObject({ invalidatePassword: false });
@@ -165,14 +186,20 @@ describe('Second factor — support reset', () => {
     );
     expect(allowed.body.data?.adminResetUserSecondFactor.removedCredentialTypes, allowed.raw).toContain('totp');
     expect(await credentialTypes(member.identityId)).not.toContain('totp');
+    const rows = await resetRows(member.userId);
+    expect(rows.map(r => r.outcome)).toEqual([
+      'second_factor_reset_started',
+      'second_factor_reset_completed',
+    ]);
+    expectInitiator(
+      rows,
+      await userIdOf(roleTokens().usersAdmin),
+      'platform_users_admin'
+    );
   });
 
   test('US2-AS7 a self-target and a user whose record links no identity are refused, with no row', async () => {
-    const supportMe = await postGraphqlRaw<{ me: { user: { id: string } } }>(
-      'query { me { user { id } } }',
-      { bearerToken: roleTokens().support }
-    );
-    const supportId = supportMe.body.data!.me.user.id;
+    const supportId = await userIdOf(roleTokens().support);
     const selfRowsBefore = (await resetRows(supportId)).length;
     const self = await resetSecondFactor(
       supportId,

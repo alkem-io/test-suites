@@ -18,6 +18,7 @@ import {
   startSecondStep,
   submitWrongTotp,
   type KratosAnswer,
+  type SecondStep,
 } from '@alkemio/tests-lib';
 import { secondFactorCases } from './_support/cases';
 
@@ -54,13 +55,27 @@ test('R16 Kratos’ own bound on wrong second-step codes, and whether a new flow
     }`
   );
 
-  const newFlow = await startSecondStep(step.sessionToken, 'kratos');
-  const [onNewFlow] = await submitWrongTotp({ ...newFlow, secret }, 1, { via: 'kratos' });
-  console.log(`[second-factor R16] new second-step flow: ${verdict(onNewFlow)}`);
-
-  const relogin = await directSecondStep(user.email);
-  const [afterRelogin] = await submitWrongTotp({ ...relogin, secret }, 1, { via: 'kratos' });
-  console.log(`[second-factor R16] fresh password login: ${verdict(afterRelogin)}`);
+  // A bound that ends the session or refuses a new flow is itself a verdict.
+  const wrongCodeAfter = async (open: () => Promise<SecondStep>): Promise<string> => {
+    try {
+      const [answer] = await submitWrongTotp({ ...(await open()), secret }, 1, {
+        via: 'kratos',
+      });
+      return verdict(answer);
+    } catch (error) {
+      return `no second step to submit to — ${String(error).slice(0, 300)}`;
+    }
+  };
+  console.log(
+    `[second-factor R16] new second-step flow: ${await wrongCodeAfter(() =>
+      startSecondStep(step.sessionToken, 'kratos')
+    )}`
+  );
+  console.log(
+    `[second-factor R16] fresh password login: ${await wrongCodeAfter(() =>
+      directSecondStep(user.email)
+    )}`
+  );
 
   // It ran to the end; nothing here is a pass or a fail of the product.
   expect(sent).toBeGreaterThan(0);

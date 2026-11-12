@@ -1,6 +1,7 @@
 import axios, { type AxiosResponse, type Method } from 'axios';
 import { assertLoopbackInternal } from '../../config/loopback-guard';
 import { testConfiguration } from '../../config/test.configuration';
+import { identityTraits } from '../registration/provision-test-identities';
 import { totpCode, wrongTotpCode } from './totp';
 
 /**
@@ -71,6 +72,8 @@ const send = async (
     },
     maxRedirects: 0,
     validateStatus: () => true,
+    // A hung Kratos or proxy fails the call, not the whole case's budget.
+    timeout: 15_000,
   });
   return {
     status: response.status,
@@ -528,8 +531,7 @@ export const registerTwoStep = async (
   );
   if (flow.status !== 200 || !flow.body?.id) fail('registration flow', flow);
   const action = `${publicBase()}/self-service/registration?flow=${encodeURIComponent(flow.body.id)}`;
-  const [first, last] = email.split('@')[0].split('.');
-  const traits = { email, accepted_terms: true, name: { first, last: last ?? first } };
+  const traits = identityTraits(email);
   const profileStep = await browserCall(jar, 'POST', action, {
     method: 'profile',
     traits,
@@ -609,16 +611,11 @@ export const identitySessions = async (
 
 /** Creates an active identity with the harness password and a verified email. */
 export const createIdentity = async (email: string): Promise<string> => {
-  const [first, last] = email.split('@')[0].split('.');
   const answer = await send('POST', `${adminBase()}/admin/identities`, {
     body: {
       schema_id: 'default',
       state: 'active',
-      traits: {
-        email,
-        accepted_terms: true,
-        name: { first, last: last ?? first },
-      },
+      traits: identityTraits(email),
       credentials: { password: { config: { password: password() } } },
       verifiable_addresses: [
         { value: email, verified: true, via: 'email', status: 'completed' },

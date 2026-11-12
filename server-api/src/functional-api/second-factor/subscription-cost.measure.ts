@@ -15,6 +15,7 @@
  * R22]` lines into the workspace plan's Performance / constraints note.
  */
 import {
+  awaitLive,
   clearAddressCounters,
   createPrivateRoom,
   eventually,
@@ -37,10 +38,10 @@ const DELIVERY_BOUND_MS = 120_000;
 /** Statements executed so far, or null when the database does not expose them. */
 const statementCount = async (): Promise<number | null> => {
   try {
-    const [row] = await queryHarnessDb<{ calls: string }>(
+    const [row] = await queryHarnessDb<{ calls: string | null }>(
       'SELECT sum(calls)::text AS calls FROM pg_stat_statements'
     );
-    return Number(row.calls);
+    return row.calls === null ? null : Number(row.calls);
   } catch {
     return null;
   }
@@ -66,11 +67,15 @@ test('R22 a hundred cookie sockets on one room under a rule in grace', async () 
         const { cookieHeader } = await mintBffSession(member.identityId, member.userId);
         sockets.push(await subscribeToRoom(cookieHeader, roomId));
       }
+      // Untimed: every socket is registered before the first measured post.
+      await awaitLive(sockets, () => postToRoom(roomId, 'warm-up', asAdmin), DELIVERY_BOUND_MS);
 
+      const measured: string[] = [];
       for (let n = 0; n < MESSAGES; n++) {
         const queriesBefore = await statementCount();
         const startedAt = Date.now();
         const id = await postToRoom(roomId, `measure ${n}`, asAdmin);
+        measured.push(id);
         await eventually(
           () => sockets.every(s => s.messageIds.includes(id)),
           DELIVERY_BOUND_MS,
@@ -88,7 +93,7 @@ test('R22 a hundred cookie sockets on one room under a rule in grace', async () 
       }
 
       for (const socket of sockets) {
-        expect(socket.messageIds).toHaveLength(MESSAGES);
+        expect(socket.messageIds).toEqual(expect.arrayContaining(measured));
       }
     } finally {
       for (const socket of sockets) socket.dispose();

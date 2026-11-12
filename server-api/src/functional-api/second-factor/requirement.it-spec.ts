@@ -109,8 +109,9 @@ describe('Second factor — the requirement', () => {
   test('US4-AS1 D25 D35 the platform rule, switched on in grace: audit rows, the read gate, a role holder covered', async () => {
     const saved = await savePlatformRule();
     const settingsAdmin = { bearerToken: roleTokens().settingsAdmin };
-    // The case switches the rule on from off. It never switches a rule off:
-    // on a stack where the rule is live, that would lift it for everyone.
+    // The case switches the rule on from off, and back off when it ends. It
+    // never starts from on: on a stack where the rule is live, switching it
+    // off would lift it for everyone.
     const current = await readPlatformSecurity(settingsAdmin);
     if (current.body.data?.platform.settings.security?.secondFactorRequiredForPlatformRoles) {
       throw new Error(
@@ -161,7 +162,15 @@ describe('Second factor — the requirement', () => {
         support.body.data!.me.user.id
       );
     } finally {
-      await restorePlatformRule(saved);
+      // Off again through the API, which records the transition. The SQL
+      // write is the fallback only, when that call fails: it records nothing.
+      const off = await setPlatformRule(false, settingsAdmin).catch(() => undefined);
+      if (
+        off?.body.data?.updatePlatformSettings.security
+          ?.secondFactorRequiredForPlatformRoles !== false
+      ) {
+        await restorePlatformRule(saved);
+      }
     }
   });
 
@@ -229,10 +238,6 @@ describe('Second factor — the requirement', () => {
         deadline: grace.deadline,
       });
 
-      // The session the late joiner holds before the grant, used once.
-      const late = await cookieOf(lateJoiner);
-      expect(await servedAs(late)).toBe(lateJoiner.userId);
-
       const session = await cookieOf(member, { createdAtEpochS: marker + 1 });
       const roomId = await createPrivateRoom(asAdmin, [member.userId]);
       const sub = await subscribeToRoom(session.cookieHeader, roomId);
@@ -292,7 +297,11 @@ describe('Second factor — the requirement', () => {
         await servedAs(await cookieOf(member, { createdAtEpochS: marker + 1, acr: 'aal2' }))
       ).toBe(member.userId);
 
-      // US4-AS5, D10: a late joiner is refused on the very next request.
+      // US4-AS5, D10: a late joiner is refused on the very next request. The
+      // session is served once right before the grant, so whatever the server
+      // remembers about it is fresh when the grant lands.
+      const late = await cookieOf(lateJoiner);
+      expect(await servedAs(late)).toBe(lateJoiner.userId);
       const joined = await assignOrganizationAssociate(org.roleSetId, lateJoiner.userId, asAdmin);
       expect(joined.body.errors, joined.raw).toBeUndefined();
       expect(joined.body.data?.assignRoleToUser.id).toBe(lateJoiner.userId);

@@ -2,7 +2,7 @@ import { afterEach, beforeEach, inject } from 'vitest';
 import {
   clearAddressCounters,
   createThrowawayUser,
-  deleteThrowawayUser,
+  deleteThrowawayUsers,
   type ThrowawayUser,
 } from '@alkemio/tests-lib';
 
@@ -20,14 +20,7 @@ export const secondFactorCases = (): ((tag: string) => Promise<ThrowawayUser>) =
     await clearAddressCounters();
   });
   afterEach(async () => {
-    // Every delete is attempted; the first failure is reported after them.
-    const failures: unknown[] = [];
-    while (made.length > 0) {
-      await deleteThrowawayUser(made.pop()!, roleTokens().usersAdmin).catch(
-        error => failures.push(error)
-      );
-    }
-    if (failures.length > 0) throw failures[0];
+    await deleteThrowawayUsers(made.splice(0).reverse(), roleTokens().usersAdmin);
   });
   return async tag => {
     const user = await createThrowawayUser(tag);

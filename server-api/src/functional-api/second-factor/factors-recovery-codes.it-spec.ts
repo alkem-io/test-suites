@@ -1,16 +1,17 @@
 /**
  * Recovery codes at Kratos and the emailed recovery link of an enrolled
- * identity (US2-AS1–AS3, AS9, AS10; D2, D31). Plan: ./second-factor-test-plan.md.
+ * identity (US2-AS1–AS3, AS9, AS10; D31). D2 is a one-off measurement
+ * (recovery-codes-only.measure.ts). Plan: ./second-factor-test-plan.md.
  * Needs a stack with the feature's Kratos values and the Kratos admin port.
  */
 import { randomUUID } from 'crypto';
 import {
   changePasswordInBrowser,
   createBrowserSettingsFlow,
-  createSettingsFlow,
   credentialTypes,
   disableRecoveryCodes,
   enrolTotp,
+  flowMessages,
   generateRecoveryCodes,
   identitySessions,
   kratosErrorId,
@@ -23,9 +24,7 @@ import {
   recoveryCodesOf,
   startSecondStep,
   submitLogin,
-  submitSettings,
   upgradeBrowserSessionWithTotp,
-  whoami,
   type KratosAnswer,
 } from '@alkemio/tests-lib';
 import { secondFactorCases } from './_support/cases';
@@ -57,29 +56,17 @@ const submitRecoveryCode = async (
   );
 };
 
+/**
+ * Kratos judged the recovery code and refused it: already used (4000012), no
+ * codes set up (4000014) or not valid (4000016) — not a flow, CSRF or server
+ * error that never reached the code.
+ */
+const isRecoveryCodeRefused = (answer: KratosAnswer): boolean =>
+  answer.status === 400 &&
+  answer.body?.session === undefined &&
+  flowMessages(answer).some(m => /^40000(12|14|16):/.test(m));
+
 describe('Second factor — recovery codes', () => {
-  test('D2 recovery codes with no other factor (recorded, neither answer asserted)', async () => {
-    const user = await throwawayUser('codesonly');
-    const session = await loginWithPassword(user.email);
-    const flowId = await createSettingsFlow(session.sessionToken);
-
-    const regenerate = await submitSettings(session.sessionToken, flowId, {
-      method: 'lookup_secret',
-      lookup_secret_regenerate: true,
-    });
-    const confirm = await submitSettings(session.sessionToken, flowId, {
-      method: 'lookup_secret',
-      lookup_secret_confirm: true,
-    });
-    const next = await whoami((await loginWithPassword(user.email)).sessionToken);
-    console.log(
-      `[second-factor D2] codes with no other factor: regenerate ${regenerate.status} ` +
-        `(${recoveryCodesOf(regenerate.body).length} codes), confirm ${confirm.status} ` +
-        `${kratosErrorId(confirm) ?? ''}; credentials [${(await credentialTypes(user.identityId)).join(', ')}]; ` +
-        `next password login whoami ${next.status} ${kratosErrorId(next) ?? next.body?.authenticator_assurance_level}`
-    );
-  });
-
   test('US2-AS1 codes are shown once; US2-AS2 a code signs in at aal2 and only once', async () => {
     const { user, codes, token } = await enrolledWithCodes('once');
     expect(codes.length).toBeGreaterThan(0);
@@ -94,8 +81,9 @@ describe('Second factor — recovery codes', () => {
     );
 
     const reused = await submitRecoveryCode(user.email, codes[0]);
-    expect(reused.status).not.toBe(200);
-    expect(reused.body?.session).toBeUndefined();
+    expect(isRecoveryCodeRefused(reused), JSON.stringify(reused.body).slice(0, 300)).toBe(true);
+    // Control: an unused code on the same kind of flow is accepted.
+    expect((await submitRecoveryCode(user.email, codes[1])).status).toBe(200);
   });
 
   test('US2-AS3 after regenerating, the previous codes fail and the new ones work', async () => {
@@ -105,7 +93,7 @@ describe('Second factor — recovery codes', () => {
     expect(fresh).not.toEqual(codes);
 
     const old = await submitRecoveryCode(user.email, codes[1]);
-    expect(old.status).not.toBe(200);
+    expect(isRecoveryCodeRefused(old), JSON.stringify(old.body).slice(0, 300)).toBe(true);
     const signedIn = await loginWithRecoveryCode(user.email, fresh[0]);
     expect(signedIn.session.authenticator_assurance_level).toBe('aal2');
   });
@@ -120,8 +108,7 @@ describe('Second factor — recovery codes', () => {
       'lookup_secret'
     );
     const refused = await submitRecoveryCode(user.email, codes[0]);
-    expect(refused.status).not.toBe(200);
-    expect(refused.body?.session).toBeUndefined();
+    expect(isRecoveryCodeRefused(refused), JSON.stringify(refused.body).slice(0, 300)).toBe(true);
   });
 
   test('US2-AS10 D31 the emailed link signs an enrolled identity in at aal1 only; the password changes after the second step', async () => {

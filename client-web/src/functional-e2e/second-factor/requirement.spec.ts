@@ -11,7 +11,7 @@ import {
   ageRuleSince,
   clearAddressCounters,
   createThrowawayUser,
-  deleteThrowawayUser,
+  deleteThrowawayUsers,
   errorCodes,
   readOrganization,
   readOrganizationSecondFactorRequired,
@@ -81,9 +81,7 @@ test.describe('US4 — an organisation requires a second factor', () => {
   });
 
   test.afterAll(async () => {
-    for (const user of [member, orgAdmin]) {
-      if (user) await deleteThrowawayUser(user, usersAdminToken);
-    }
+    await deleteThrowawayUsers([member, orgAdmin], usersAdminToken);
   });
 
   test.beforeEach(async () => {
@@ -173,6 +171,20 @@ test.describe('US4 — an organisation requires a second factor', () => {
             await expect(reminder).toHaveCount(0);
           } finally {
             await context.close();
+          }
+
+          // A new browser session shows it again: the dismissal lasts one session.
+          const next = await freshPage(browser);
+          try {
+            await submitPassword(next.page, member!.email);
+            await expectSignedIn(next.page);
+            await expect(
+              next.page
+                .getByRole('status')
+                .filter({ hasText: 'Set up two-step verification before' })
+            ).toBeVisible();
+          } finally {
+            await next.context.close();
           }
         });
 

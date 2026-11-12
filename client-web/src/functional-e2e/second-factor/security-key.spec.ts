@@ -3,18 +3,20 @@
 // Security keys as a second factor, and the passkey sign-in beside them, with
 // a CDP virtual authenticator standing in for the hardware (Chromium only).
 // A real hardware key is walked by a person on acceptance.
-import { expect, test } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
 import {
   authenticationAuditRows,
   clearAddressCounters,
   createThrowawayUser,
   credentialTypes,
-  deleteThrowawayUser,
+  deleteThrowawayUsers,
+  readSecondFactorRequirement,
   secondFactorCredentialsLeft,
   totpCode,
   type ThrowawayUser,
 } from '@alkemio/tests-lib';
 import { navigateToLoginPageFromMenu } from '../authentication/login-page-objects';
+import { sessionActor } from '../helpers/lib-actor.helper';
 import {
   COPY,
   addVirtualAuthenticator,
@@ -53,6 +55,12 @@ const observedKeyRows = async (user: ThrowawayUser): Promise<number> =>
       (row.details as { method?: string } | null)?.method === 'webauthn'
   ).length;
 
+/** The server's session carries the second factor, not only a sign-in. */
+const expectSecondFactorSession = async (page: Page) => {
+  const status = await readSecondFactorRequirement(await sessionActor(page));
+  expect(status.body.data?.me.secondFactorRequirement.satisfied).toBe(true);
+};
+
 /** Bounded as the API track's totp and lookup_secret rows are. */
 const ROW_BOUND = { timeout: 10_000, message: 'webauthn: settings hook did not run' };
 
@@ -67,7 +75,7 @@ test.describe('US3 — security keys', () => {
   });
 
   test.afterAll(async () => {
-    for (const user of users) await deleteThrowawayUser(user, usersAdminToken);
+    await deleteThrowawayUsers(users, usersAdminToken);
   });
 
   test.beforeEach(async () => {
@@ -116,6 +124,7 @@ test.describe('US3 — security keys', () => {
       await expect(secondStepCodeField(page)).toHaveCount(0);
       await useKey.click();
       await expectSignedIn(page);
+      await expectSecondFactorSession(page);
 
       // Remove the key again.
       await openSecurityTab(page, nameId);
@@ -182,6 +191,7 @@ test.describe('US3 — security keys', () => {
       await expect(secondStepHeading(page)).toBeVisible();
       await submitSecondStep(page, secondStepCodeField(page), totpCode(secret));
       await expectSignedIn(page);
+      await expectSecondFactorSession(page);
     } finally {
       await context.close();
     }

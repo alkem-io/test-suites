@@ -8,7 +8,7 @@ import {
 } from '../baseFunctions';
 import { BOOTSTRAP_ROLES_ADMIN_EMAIL } from '../platform-roles/platform-role-users';
 import { getUserToken } from '../registration/get-user-token';
-import { createIdentity } from './kratos';
+import { createIdentity, deleteIdentity } from './kratos';
 
 /**
  * Identities and organisations each spec creates for itself and deletes in
@@ -31,17 +31,23 @@ const ME = 'query { me { user { id } } }';
 export const createThrowawayUser = async (tag: string): Promise<ThrowawayUser> => {
   const email = `sf.${tag}${randomUUID().slice(0, 8)}@alkem.io`;
   const identityId = await createIdentity(email);
-  const token = await getUserToken(email);
-  const me = await postGraphqlRaw<{ me: { user: { id: string } | null } }>(ME, {
-    bearerToken: token,
-  });
-  const userId = me.body.data?.me?.user?.id;
-  if (!userId) {
-    throw new Error(
-      `second-factor: no platform user for ${email}: ${me.raw.slice(0, 300)}`
-    );
+  try {
+    const token = await getUserToken(email);
+    const me = await postGraphqlRaw<{ me: { user: { id: string } | null } }>(ME, {
+      bearerToken: token,
+    });
+    const userId = me.body.data?.me?.user?.id;
+    if (!userId) {
+      throw new Error(
+        `second-factor: no platform user for ${email}: ${me.raw.slice(0, 300)}`
+      );
+    }
+    return { email, identityId, userId, token };
+  } catch (error) {
+    // The caller never receives this identity, so nothing else deletes it.
+    await deleteIdentity(identityId);
+    throw error;
   }
-  return { email, identityId, userId, token };
 };
 
 /** Deletes the platform user and its identity as Platform Users Admin. */
@@ -58,6 +64,25 @@ export const deleteThrowawayUser = async (
       `second-factor: delete user ${user.userId} failed: ${deleted.raw.slice(0, 300)}`
     );
   }
+};
+
+/**
+ * Deletes every user in `users`, attempting each even when one fails, then
+ * rethrows the first failure.
+ */
+export const deleteThrowawayUsers = async (
+  users: (Pick<ThrowawayUser, 'userId'> | undefined)[],
+  usersAdminToken: string
+): Promise<void> => {
+  const failures: unknown[] = [];
+  for (const user of users) {
+    if (user) {
+      await deleteThrowawayUser(user, usersAdminToken).catch(error =>
+        failures.push(error)
+      );
+    }
+  }
+  if (failures.length > 0) throw failures[0];
 };
 
 export type ThrowawayOrganization = { id: string; roleSetId: string };

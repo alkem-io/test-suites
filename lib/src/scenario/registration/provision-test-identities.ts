@@ -35,6 +35,12 @@ const parseUserName = (userName: string): [string, string] => {
   return [first, last];
 };
 
+/** The identity traits the suites give `email` (name parsed from its local part). */
+export const identityTraits = (email: string) => {
+  const [first, last] = parseUserName(email.split('@')[0]);
+  return { email, accepted_terms: true, name: { first, last } };
+};
+
 export const provisionTestIdentities = async (
   userNames: readonly string[] = Object.values(TestUser)
 ): Promise<void> => {
@@ -56,12 +62,7 @@ export const provisionTestIdentities = async (
   let updated = 0;
   for (const userName of userNames) {
     const email = `${userName}@alkem.io`;
-    const [first, last] = parseUserName(userName);
-    const traits = {
-      email,
-      accepted_terms: true,
-      name: { first, last },
-    };
+    const traits = identityTraits(email);
     const credentials = { password: { config: { password } } };
 
     const { data: matches } = await identityApi.listIdentities({

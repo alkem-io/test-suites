@@ -198,6 +198,10 @@ export default defineConfig({
             './src/functional-api/second-factor/_support/global-setup.ts',
           ],
           fileParallelism: false,
+          // Last and alone in a multi-project run: its cases clear the
+          // per-address counters and count this address's sign-ins, so no
+          // other project may sign in from the same address meanwhile.
+          sequence: { groupOrder: 4 },
         },
       },
       // The second-factor one-off measurements, never a test run: each is run

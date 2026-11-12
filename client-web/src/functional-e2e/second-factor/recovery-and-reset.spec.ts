@@ -10,7 +10,7 @@ import {
   clearAddressCounters,
   createThrowawayUser,
   credentialTypes,
-  deleteThrowawayUser,
+  deleteThrowawayUsers,
   errorCodes,
   readSecondFactorRequirement,
   readSubjectMarker,
@@ -110,9 +110,7 @@ test.describe('US2 — recovery codes and the support reset', () => {
   });
 
   test.afterAll(async () => {
-    for (const user of [member, orgAdmin]) {
-      if (user) await deleteThrowawayUser(user, tokens.usersAdmin);
-    }
+    await deleteThrowawayUsers([member, orgAdmin], tokens.usersAdmin);
   });
 
   test.beforeEach(async () => {

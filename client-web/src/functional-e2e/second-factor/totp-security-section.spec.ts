@@ -109,7 +109,14 @@ test.describe('US1 — the authenticator app in Security', () => {
         secondStepCodeField(page),
         wrongTotpCode(secret)
       );
-      // Refused: still the second step, not signed in.
+      // Refused: the identity provider's verdict on the code, on the field or
+      // as an alert, and still the second step, not signed in.
+      await expect(
+        secondStepCodeField(page)
+          .and(page.locator('[aria-invalid="true"]'))
+          .or(page.getByRole('alert'))
+          .first()
+      ).toBeVisible();
       await expect(secondStepHeading(page)).toBeVisible();
       await expect(secondStepCodeField(page)).toBeVisible();
 
