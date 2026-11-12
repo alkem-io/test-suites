@@ -203,6 +203,7 @@ const FUNCTIONS: string[] = [
   'readRoleSetPlatformInvitations',
   'readRoleSetPending',
   'joinRoleSet',
+  'assignUserRoleOnRoleSet',
   'applyForEntryRoleOnRoleSet',
   'inviteForEntryRoleOnRoleSet',
   'eventOnInvitation',

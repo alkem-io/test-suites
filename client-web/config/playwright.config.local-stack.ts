@@ -33,6 +33,9 @@ import { baseConfig, GENERATED_WALKS_DIR, LOCAL_STACK_TAG, suite } from './playw
  *   IDLE_RELEASE_SECONDS=0 on the collaboration-service, and COLLAB_IDLE_RELEASE_SECONDS=0 plus
  *   COLLAB_METRICS_URL (the service's /metrics, e.g. http://localhost:4006/metrics) here:
  *     content-editing US1 E8-4 (the whole walk runs; the guard fails loudly without them)
+ *   Matrix (synapse + matrix-adapter) plus the nine MESSAGING_DIGEST_* variables
+ *   (same values on the SERVER):
+ *     contact-leads US3 (Space "Contact Leads": 1:1 chats + direct-message digest)
  */
 export default defineConfig(
   baseConfig({
@@ -105,6 +108,15 @@ export default defineConfig(
         name: 'Local stack — messaging digests',
         testMatch: ['/messaging-notifications/*.spec.ts'],
         tier: 'long',
+      }),
+      suite({
+        // W2 journey 10 (audit row F3): "Contact Leads" fans out 1:1 Matrix
+        // chats, which fail on the shared test cluster, and the oracle mail is
+        // the direct-message digest. The file is tagged at describe level.
+        name: 'Local stack — contact Space leads',
+        testMatch: ['/contact-leads/us3-contact-space-leads.spec.ts'],
+        tier: 'long',
+        use: { actionTimeout: 15_000 },
       }),
     ],
   })

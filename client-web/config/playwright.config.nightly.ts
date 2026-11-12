@@ -131,6 +131,24 @@ export default defineConfig(
         use: { actionTimeout: 15_000 },
       }),
       suite({
+        // W2 journey 10 (docs/qa/server-rebuild/plan.md § W2; audit rows F3,
+        // F4): message an organisation's admins (one mail per admin, none to
+        // an associate) and an organisation notification setting toggled in
+        // the UI that persists across reload and is honoured. Every user is a
+        // disposable identity; mail is read per recipient and run-unique
+        // subject. us3 (Space "Contact Leads", Matrix chat) is `@local-stack`
+        // and excluded here; config/playwright.config.local-stack.ts runs it.
+        name: 'Contact leads',
+        testMatch: [
+          '/contact-leads/us1-message-organisation.spec.ts',
+          '/contact-leads/us2-organisation-message-setting.spec.ts',
+          '/contact-leads/us3-contact-space-leads.spec.ts',
+        ],
+        tier: 'long',
+        // A renamed control fails in seconds instead of burning the budget.
+        use: { actionTimeout: 15_000 },
+      }),
+      suite({
         name: 'Support navigation',
         testMatch: [
           '/support-navigation/support-navigation.spec.ts',
