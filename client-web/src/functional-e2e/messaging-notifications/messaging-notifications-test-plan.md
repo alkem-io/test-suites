@@ -21,7 +21,8 @@ invisible when it happens, and easy to reintroduce with any hard-coded wait.
 
 ## How to run
 
-Needs a running app plus MailSlurper, the GraphQL API and the **RabbitMQ
+Needs a running app plus a mail sink (MailSlurper, or Swarmail behind the same
+MailSlurper-compatible API), the GraphQL API and the **RabbitMQ
 management API**, all reachable from `client-web/.env` / `server-api/.env`.
 
 ```bash
@@ -42,7 +43,19 @@ The nightly cluster exports no `RABBITMQ_MANAGEMENT_*` env and runs the
 production digest windows, so every walk that reads the push publish counter
 or settles on a `MESSAGING_DIGEST_*` window is tagged `@local-stack` and left
 out of the nightly by `grepInvert` (see `docs/e2e-conventions.md` › Local-stack
-runner):
+runner).
+
+Re-checked 2026-11-12 (W2 Tier 0 item 4) against the deploy config, not
+assumed: `dev-orchestration` (main) sets no `MESSAGING_DIGEST_*` anywhere, so
+the test cluster's server falls back to the defaults in `server/alkemio.yml`:
+direct email quiet 300 s / max 1800 s, group email 1200 s / 3600 s, direct push
+60 s / 300 s, group push 300 s / 900 s, sweep 10 s. The `long` tier allows
+180 s per test, and the shortest wait any digest case makes (direct push
+quiet + sweep + settle) is already 100 s before its max-delay settle of 340 s.
+The nightly workflow passes no `RABBITMQ_MANAGEMENT_*`. And every
+digest case sends a chat message, which needs Matrix, and Matrix has no DNS on the
+test cluster. So no case beyond the three settings-row walks is portable; the
+split below is unchanged:
 
 | Runner | Cases |
 |---|---|
@@ -97,10 +110,27 @@ the people-picker lookups locate a person by accessible name, and against a
 never-reset dev stack a fixed name resolves to a stale persona from an earlier
 run.
 
-**Why `--workers=1`.** These suites assert on two process-wide shared sinks: the
-MailSlurper inbox (cleared with `deleteMailSlurperMails()` between scenarios)
-and the queue's cumulative publish counter. Anything else publishing or
-emailing concurrently lands inside another scenario's delta. The files are also
+**Mail is read by recipient, never pruned.** The mail sink is one inbox shared
+with every other suite on the stack, so these walks no longer call
+`deleteMailSlurperMails()` and no longer count the whole inbox. Each scenario
+marks the mailboxes of the personas it makes a claim about right before its
+send and asserts only on what arrived for each of them since
+(`markMailboxes` / `newMailsOf` / `waitForNewMails` in `messaging.helpers.ts`,
+over the lib's `markMailbox` / `getMailsToSince` / `waitForMailsToSince`,
+`lib/src/utils/mailbox.ts`). The readers walk every page of the
+MailSlurper-compatible API, which both MailSlurper and Swarmail serve, and they
+throw rather than return an empty mailbox on a failed read or on an item
+without an id, so a "nothing arrived" claim cannot pass on a broken read.
+
+What the old whole-inbox counts claimed is kept by marking every persona the
+walk owns: "zero email" is zero to each of them (US1: A and B; US2: A, B, C
+and D), and "exactly one to B" also pins zero to everyone else in the walk. A
+mail to an address outside the walk is no longer observed. That is the price of
+not owning the inbox, and no acceptance scenario is about such an address.
+
+**Why `--workers=1`.** The push assertions still read one process-wide shared
+sink: the queue's cumulative publish counter. Anything else publishing
+concurrently lands inside another scenario's delta. The files are also
 `mode: 'serial'` — they share one conversation and later scenarios depend on
 earlier ones' settings state.
 
@@ -177,14 +207,14 @@ accumulates there one per night — worth fixing.
    "none has arrived *yet*". Per-test timeouts come from `testTimeoutMs` /
    `digestTestTimeoutMs([...])`, which scale with the windows the test waits on.
 
-2. **"Wait until N" cannot prove "exactly N".** `waitForMailsCountAtLeast` and
+2. **"Wait until N" cannot prove "exactly N".** `waitForNewMails` and
    `waitForQueuePublishIncrease` return at the first observation meeting the
    threshold. An exact-count or exact-delta assertion straight after one of them
    proves only *at least* N, sampled early — and under R4 a leaked recipient's
    digest is armed on **their own** track and fires on their own schedule, so it
    can land long after the intended one. Settle past the relevant track's
    `maxDelayGraceMs` and re-read first: that is what `settledPushDelta` and
-   `waitForMailsCountAtLeast`'s `settleMs` option are for.
+   `waitForNewMails`'s `settleMs` option are for.
 
 3. **The group email subject is a deliberate copy change.** An R4 group digest
    names the conversation, not the sender (`New message in {group}`). The
@@ -224,3 +254,34 @@ accumulates there one per night — worth fixing.
    missing trigger rather than on the property under test — which is how the
    shared-push-throttle independence check (US4-AS2/FR-012) spent its whole
    life failing without ever exercising a throttle.
+
+7. **A send must wait for the page's Matrix client.** Plain-text chat goes from
+   the browser straight to Synapse, so Send only works once the page has a
+   Matrix session. Before that, the client refuses with "Send was not
+   confirmed". `sendMessage` therefore waits for the page's first successful
+   `/_matrix/client/v3/sync`, armed before each navigation in `openChatPanel`.
+   That sync is an observable event, not a fixed wait. On the local develop
+   stack the session takes about 20 s: the local Synapse `homeserver.yaml` has
+   no `sso.client_whitelist`, so silent SSO never completes and the client
+   falls back to minting one. Acceptance and production set the whitelist in
+   the infra-ops Synapse configmap.
+
+8. **The Notifications tab starts collapsed** (client-web#10437). Every walk
+   that reads or toggles a messaging row first opens the "User Notifications"
+   group with `openSettingsSection`. Without that, the clicks fail, and the
+   "in-app never flips" negative passes vacuously.
+
+### Live run notes (local develop stack, 2026-11-12)
+
+- **Stack:** server `e120d25a1` restarted with the test-scale digest windows from
+  `CLAUDE.md`. The harness uses the same nine values.
+- **Nightly:** `Messaging notifications` (US3 settings rows), 3/3.
+- **Local-stack digests:** green except where the local environment breaks the
+  oracle. There are two known sources:
+  - **Global push counter:** `admin@alkem.io` holds a push subscription in the
+    local snapshot. Every persona registration sends it a platform-admin push,
+    so the push-queue counter can over-count by one when a registration lands
+    inside a measured window.
+  - **Lost emails:** local MailSlurper SMTP intermittently drops TLS connections.
+    A partly failed send is not retried (J10-D2 on #724), so the email
+    occasionally never arrives.

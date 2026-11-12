@@ -8,15 +8,18 @@ import {
 import { nextButton } from '../authentication/common-authentication-page-elements';
 import {
   delay,
-  deleteMailSlurperMails,
-  getMailsData,
+  getMailsToSince,
   getQueueStats,
   getUserToken,
   getVerificationLinkFor,
+  markMailbox,
   readMyConversations,
   subscribeToPushNotifications,
   UniqueIDGenerator,
+  waitForMailsToSince,
   waitForQueuePublishIncrease,
+  type MailboxMark,
+  type MailItem,
 } from '@alkemio/tests-lib';
 import { sessionActor } from '../helpers/lib-actor.helper';
 
@@ -80,11 +83,8 @@ export async function registerAndVerifyUser(
     lastName
   );
   await fillUpSignUpPasswordElements(password, page);
-  // Clear the mailbox immediately before triggering the verification email
-  // so getVerificationLink() below can't pick up a STALE token from a
-  // previously-registered user (Mailslurper is a shared inbox across all
-  // registrations in this run).
-  await deleteMailSlurperMails();
+  // No inbox wipe: the verification link is read by recipient, and the
+  // address is run-unique, so no other registration's token can match.
   await nextButton(page).click();
 
   await expect(
@@ -152,7 +152,27 @@ export async function subscribeToPush(page: Page, label: string) {
   }
 }
 
+/**
+ * Plain-text chat goes browser -> Synapse, so Send only works once the page's
+ * Matrix client exists; before that the client refuses with "Send was not
+ * confirmed". The client publishes its session right before its first sync,
+ * so that sync answering is the observable "chat is ready" event. Armed before
+ * each navigation (a reload builds a new client) and awaited by sendMessage.
+ */
+const matrixReady = new WeakMap<Page, Promise<unknown>>();
+const MATRIX_READY_TIMEOUT_MS = 60_000;
+function armMatrixReady(page: Page) {
+  matrixReady.set(
+    page,
+    page.waitForResponse(
+      r => r.url().includes('/_matrix/client/v3/sync') && r.ok(),
+      { timeout: MATRIX_READY_TIMEOUT_MS }
+    )
+  );
+}
+
 export async function openChatPanel(page: Page) {
+  armMatrixReady(page);
   await page.goto(`${baseUrl}/home`);
   await page.getByRole('button', { name: 'Open chat' }).click();
 }
@@ -163,20 +183,13 @@ export async function openConversationByName(page: Page, name: string) {
 }
 
 export async function sendMessage(page: Page, text: string) {
+  if (!matrixReady.has(page)) armMatrixReady(page);
+  await matrixReady.get(page);
   const messageBox = page.getByRole('textbox', { name: 'Add a comment...' });
   await messageBox.fill(text);
   await messageBox.press('Enter');
   await expect(page.getByText(text)).toBeVisible();
 }
-
-export const toAddressesOf = (mailItems: { toAddresses?: string[] }[]) =>
-  mailItems.flatMap(item => item.toAddresses ?? []);
-
-export type MailItem = {
-  toAddresses?: string[];
-  subject?: string;
-  body?: string;
-};
 
 export async function newContextPage(browser: Browser) {
   const context = await browser.newContext();
@@ -185,45 +198,61 @@ export async function newContextPage(browser: Browser) {
 }
 
 /**
- * Polls Mailslurper until at least `expectedCount` mails are present, then —
- * when `settleMs` is given — waits that much longer and RE-READS before
- * returning.
+ * The mailboxes of a walk's own personas, marked at one instant. The mail sink
+ * is shared with every other suite on the stack, so these walks never prune it
+ * and never count the whole inbox: every claim is "what arrived for THIS
+ * persona since the mark" (lib `markMailbox` / `getMailsToSince`), which also
+ * keeps each persona's own verification mail out of the count.
  *
- * The settle read is what makes an `expect(total).toBe(N)` caller meaningful.
- * Without it the helper returns the mailbox as sampled at the very first poll
- * that crossed the threshold, so a second, incorrect email that lands a moment
- * later is never observed and the suite proves "at least N, sampled early"
- * while the acceptance criterion says "exactly N". Under R4 that window is
- * wide: a leaked recipient's digest sits on their OWN track and can land a
- * full max-delay after the intended one, so `settleMs` should be that track's
- * `maxDelayGraceMs` — never a literal.
+ * Mark every persona the scenario makes a claim about — the intended recipient
+ * AND everyone who must get nothing — immediately before the send.
+ */
+export type Mailboxes = Record<string, MailboxMark>;
+
+export async function markMailboxes(
+  addresses: Record<string, string>
+): Promise<Mailboxes> {
+  const entries = await Promise.all(
+    Object.entries(addresses).map(
+      async ([who, address]) => [who, await markMailbox(address)] as const
+    )
+  );
+  return Object.fromEntries(entries);
+}
+
+/** New mail for every marked persona, read now. */
+export async function newMailsOf(
+  marks: Mailboxes
+): Promise<Record<string, MailItem[]>> {
+  const entries = await Promise.all(
+    Object.entries(marks).map(
+      async ([who, mark]) => [who, await getMailsToSince(mark)] as const
+    )
+  );
+  return Object.fromEntries(entries);
+}
+
+/**
+ * Polls `mark`'s recipient until at least `atLeast` mails have arrived since
+ * the mark, then — when `settleMs` is given — waits that much longer and
+ * RE-READS before returning (lib `waitForMailsToSince`).
+ *
+ * The settle read is what makes an "exactly N" caller meaningful. Without it
+ * the result is the mailbox as sampled at the very first poll that crossed the
+ * threshold, so a second, incorrect email that lands a moment later is never
+ * observed. Under R4 that window is wide: a wrongly-armed digest sits on its
+ * own track and can land a full max-delay after the intended one, so
+ * `settleMs` should be that track's `maxDelayGraceMs` — never a literal.
  *
  * Omit `settleMs` only where the caller performs its own settle + re-read
  * afterwards, or where the claim genuinely is "a new email arrived at all".
  */
-export async function waitForMailsCountAtLeast(
-  expectedCount: number,
-  {
-    timeout = 15_000,
-    interval = 1_000,
-    settleMs,
-  }: { timeout?: number; interval?: number; settleMs?: number } = {}
-): Promise<[MailItem[], number]> {
-  const start = Date.now();
-  let [mailItems, total] = (await getMailsData()) as [MailItem[], number];
-  while (total < expectedCount && Date.now() - start < timeout) {
-    // eslint-disable-next-line no-restricted-syntax -- poll interval of a mailbox reader
-    await delay(interval);
-    [mailItems, total] = (await getMailsData()) as [MailItem[], number];
-  }
-
-  if (settleMs !== undefined && total >= expectedCount) {
-    // eslint-disable-next-line no-restricted-syntax -- negative settle window: "exactly N mails" must outlast a late arrival
-    await delay(settleMs);
-    [mailItems, total] = (await getMailsData()) as [MailItem[], number];
-  }
-
-  return [mailItems, total];
+export async function waitForNewMails(
+  mark: MailboxMark,
+  atLeast: number,
+  { timeout, settleMs }: { timeout: number; settleMs?: number }
+): Promise<MailItem[]> {
+  return waitForMailsToSince(mark, { atLeast, timeoutMs: timeout, settleMs });
 }
 
 /**
@@ -231,7 +260,7 @@ export async function waitForMailsCountAtLeast(
  * `expectedIncrease` past `baseline`, then settles `settleMs` longer and
  * re-reads before returning the FINAL delta.
  *
- * Same discipline, same reason as `waitForMailsCountAtLeast`'s settle read:
+ * Same discipline, same reason as `waitForNewMails`'s settle read:
  * `waitForQueuePublishIncrease` returns at the first observation that meets
  * the threshold, so asserting the exact delta straight after it can only ever
  * prove "at least N". Claims of the form "the delta STAYS 1, proving the

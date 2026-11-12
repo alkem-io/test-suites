@@ -86,6 +86,12 @@ const FUNCTIONS: string[] = [
   'registerAllTestUsers',
   'getRecoveryLinkFor',
   'deleteMailSlurperMails',
+  // recipient-scoped mail readers (W2 Tier 0 item 4: messaging-notifications)
+  'getMailsTo',
+  'markMailbox',
+  'getMailsToSince',
+  'waitForMailsToSince',
+  'mailIsAddressedTo',
   'getQueueStats',
   'waitForQueuePublishIncrease',
   'rabbitMqManagementConfigured',
@@ -305,6 +311,17 @@ describe('@contract lib surface used by the client-web net', () => {
       }
     }
     expect(problems).toEqual([]);
+  });
+
+  test('mail readers match a recipient by address only: bare or `Name <addr>`, any case, never a near miss', () => {
+    const mail = (toAddresses?: string[]) => ({ subject: 's', body: 'b', toAddresses });
+    expect(lib.mailIsAddressedTo(mail(['b@alkem.io']), 'b@alkem.io')).toBe(true);
+    expect(lib.mailIsAddressedTo(mail(['Bee Recipient <B@Alkem.io>']), 'b@alkem.io')).toBe(true);
+    expect(lib.mailIsAddressedTo(mail(['a@alkem.io', 'b@alkem.io']), 'B@ALKEM.IO')).toBe(true);
+    expect(lib.mailIsAddressedTo(mail(['xb@alkem.io']), 'b@alkem.io')).toBe(false);
+    expect(lib.mailIsAddressedTo(mail(['b@alkem.io.evil']), 'b@alkem.io')).toBe(false);
+    expect(lib.mailIsAddressedTo(mail([]), 'b@alkem.io')).toBe(false);
+    expect(lib.mailIsAddressedTo(mail(undefined), 'b@alkem.io')).toBe(false);
   });
 
 });

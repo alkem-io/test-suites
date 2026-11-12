@@ -1,16 +1,17 @@
 import { test, expect, Page, Browser } from '@playwright/test';
 import { loginViaCrd } from '../helpers/login.helper';
+import { openSettingsSection } from '../helpers/settings-section.helper';
 import {
   delay,
-  deleteMailSlurperMails,
   digestTestTimeoutMs,
   digestWindow,
-  getMailsData,
   UniqueIDGenerator,
 } from '@alkemio/tests-lib';
 import {
   baseUrl,
+  markMailboxes,
   newContextPage,
+  newMailsOf,
   openChatPanel,
   password,
   pushPublishedTotal,
@@ -19,8 +20,7 @@ import {
   SETUP_TIMEOUT_MS,
   settledPushDelta,
   subscribeToPush,
-  toAddressesOf,
-  waitForMailsCountAtLeast,
+  waitForNewMails,
 } from './messaging.helpers';
 
 /**
@@ -35,10 +35,18 @@ import {
  * Ruling 3c) via the RabbitMQ management API (`alkemio-push-notifications`
  * cumulative publish counter) — never real browser delivery (no VAPID keys
  * in the acceptance overlay). Email content IS asserted directly against
- * Mailslurper, a real sink. Both A and B are given a synthetic push
+ * the mail sink (MailSlurper or Swarmail), a real sink. Both A and B are given a synthetic push
  * subscription up front so US1-AS4's sender-exclusion check is a real
  * candidate-list assertion (push delta stays 1, never 2) rather than an
  * accidental "nobody has a subscription anyway" pass.
+ *
+ * MAIL. The sink is shared with every other suite on the stack, so this walk
+ * never prunes it and never counts the whole inbox. Each scenario marks A's
+ * and B's mailboxes right before its send and asserts only on what arrived
+ * for each of them since (`markMailboxes` / `newMailsOf` / `waitForNewMails`
+ * in `messaging.helpers.ts`, over the lib's recipient-scoped readers). "Zero
+ * email" therefore means zero to EITHER participant, and "exactly one" means
+ * exactly one to B and none to A.
  *
  * Covers US1-AS1..AS5. Scenarios share one 1:1 conversation (A, B) and run
  * in order — later scenarios depend on earlier ones' state (in particular
@@ -155,8 +163,8 @@ test.describe(
 
     test('US1-AS1: default settings — A sends, B gets a push emit once the quiet period elapses, zero email', async () => {
       test.setTimeout(digestTestTimeoutMs([directPush, directEmail]));
-      await deleteMailSlurperMails();
 
+      const mailboxes = await markMailboxes({ a: userAEmail, b: userBEmail });
       const baseline = await pushPublishedTotal();
 
       await sendMessage(
@@ -178,19 +186,21 @@ test.describe(
       });
       expect(pushDelta).toBe(1);
 
-      const [, emailTotal] = await getMailsData();
-      expect(emailTotal).toBe(0);
+      const newMail = await newMailsOf(mailboxes);
+      expect(newMail.b, 'email to B under default settings').toHaveLength(0);
+      expect(newMail.a, 'email to A (the sender)').toHaveLength(0);
     });
 
     test('US1-AS2: B enables direct email — A sends, B receives exactly one email naming A, no content, deep link, settings link', async ({
       browser,
     }) => {
       test.setTimeout(digestTestTimeoutMs(directEmail));
-      await deleteMailSlurperMails();
 
       const { context: bContext, page: bPage } = await newContextPage(browser);
       await loginViaCrd(bPage, userBEmail, password, baseUrl);
       await bPage.goto(`${baseUrl}/user/me/settings/notifications`);
+      // Rows sit in collapsed groups (client-web#10437); messaging is under User Notifications.
+      await openSettingsSection(bPage, /^User Notifications/);
 
       // FR-003: the in-app cell is locked off regardless of intent — clicking
       // it must never flip its state.
@@ -207,6 +217,7 @@ test.describe(
 
       const probeMessage =
         'US1-AS2 direct message after B enabled direct email';
+      const mailboxes = await markMailboxes({ a: userAEmail, b: userBEmail });
       await sendMessage(aPage, probeMessage);
 
       // Poll bound covers `email:direct` quiet + sweep + settle; the settle then
@@ -214,14 +225,15 @@ test.describe(
       // from a stable inbox. Without it this would only prove "at least one,
       // sampled at the first poll that saw it" — a second, wrongly-addressed
       // digest sits on its own recipient's track and can land much later.
-      const [mailItems, total] = await waitForMailsCountAtLeast(1, {
+      const toB = await waitForNewMails(mailboxes.b, 1, {
         timeout: directEmail.quietGraceMs,
         settleMs: directEmail.maxDelayGraceMs,
       });
-      expect(total).toBe(1);
+      expect(toB, 'digests to B').toHaveLength(1);
+      // Read after B's settle, so A's own track has had the same bound.
+      expect((await newMailsOf(mailboxes)).a, 'email to A').toHaveLength(0);
 
-      const mail = mailItems.find(m => m.toAddresses?.includes(userBEmail));
-      expect(mail).toBeDefined();
+      const mail = toB[0];
       // Single-entry direct digest: A is the only counterpart, so A is named.
       // The COUNT is deliberately not pinned. These scenarios run serially
       // against one conversation and B never reads it, so by now B's unread
@@ -239,8 +251,8 @@ test.describe(
 
     test('US1-AS3: a burst of 5 messages produces NOTHING during the quiet period, then exactly one digest', async () => {
       test.setTimeout(digestTestTimeoutMs(directEmail, { cycles: 3 }));
-      await deleteMailSlurperMails();
 
+      const mailboxes = await markMailboxes({ a: userAEmail, b: userBEmail });
       for (let i = 1; i <= 5; i++) {
         await sendMessage(aPage, `US1-AS3 burst message ${i}`);
       }
@@ -253,31 +265,33 @@ test.describe(
       // advance it, so any email here means the pipeline sent on arrival.
       // eslint-disable-next-line no-restricted-syntax -- probe inside the quiet window: "nothing sent on arrival" (digestWindow constant)
       await delay(directEmail.preFireProbeMs);
-      const [, duringWindowTotal] = await getMailsData();
-      expect(duringWindowTotal).toBe(0);
+      const duringWindow = await newMailsOf(mailboxes);
+      expect(duringWindow.b, 'email to B inside the quiet period').toHaveLength(0);
+      expect(duringWindow.a, 'email to A inside the quiet period').toHaveLength(0);
 
       // Assert 2 — one digest, once the window does elapse.
-      const [, burstTotal] = await waitForMailsCountAtLeast(1, {
+      const burst = await waitForNewMails(mailboxes.b, 1, {
         timeout: directEmail.quietGraceMs,
       });
-      expect(burstTotal).toBe(1);
+      expect(burst, 'digests to B after the burst').toHaveLength(1);
 
       // Assert 3 — and only one. Settle to `email:direct`'s MAX-DELAY bound so a
       // per-message dispatch regression has every chance to reveal itself.
       // eslint-disable-next-line no-restricted-syntax -- negative settle window at the digest MAX-DELAY bound (digestWindow constant)
       await delay(directEmail.maxDelayGraceMs);
-      const [, settledTotal] = await getMailsData();
-      expect(settledTotal).toBe(1);
+      const settled = await newMailsOf(mailboxes);
+      expect(settled.b, 'digests to B once settled').toHaveLength(1);
+      expect(settled.a, 'email to A once settled').toHaveLength(0);
 
       // Assert 4 — a fresh message after the digest starts a new cycle. B has
       // not read the conversation, so its count keeps climbing; the assertion of
       // interest is that a NEW email arrives at all, not its exact count.
-      await deleteMailSlurperMails();
+      const nextCycle = await markMailboxes({ b: userBEmail });
       await sendMessage(aPage, 'US1-AS3 after the digest was dispatched');
-      const [, afterWindowTotal] = await waitForMailsCountAtLeast(1, {
+      const afterWindow = await waitForNewMails(nextCycle.b, 1, {
         timeout: directEmail.quietGraceMs,
       });
-      expect(afterWindowTotal).toBe(1);
+      expect(afterWindow, 'a new digest to B in the next cycle').toHaveLength(1);
     });
 
     test('US1-AS4: A never receives any notification for her own message', async () => {
@@ -290,8 +304,8 @@ test.describe(
       // direct tracks — so both have provably flushed.
       // eslint-disable-next-line no-restricted-syntax -- drains the previous scenario's track to its MAX-DELAY bound before a clean slate
       await delay(directEmail.maxDelayGraceMs);
-      await deleteMailSlurperMails();
 
+      const mailboxes = await markMailboxes({ a: userAEmail });
       const baseline = await pushPublishedTotal();
       await sendMessage(aPage, 'US1-AS4 A sends, A must get nothing at all');
 
@@ -312,8 +326,7 @@ test.describe(
       });
       expect(pushDelta).toBe(1);
 
-      const [mailItems] = await getMailsData();
-      expect(toAddressesOf(mailItems)).not.toContain(userAEmail);
+      expect((await newMailsOf(mailboxes)).a, 'email to A').toHaveLength(0);
     });
 
     test('US1-AS5: hostile message content (quotes, newlines, HTML-like markup) never appears in the email subject or body', async () => {
@@ -323,8 +336,8 @@ test.describe(
       // scenario's hostile message.
       // eslint-disable-next-line no-restricted-syntax -- drains the previous scenario's track to its MAX-DELAY bound before a clean slate
       await delay(directEmail.maxDelayGraceMs);
-      await deleteMailSlurperMails();
 
+      const mailboxes = await markMailboxes({ a: userAEmail, b: userBEmail });
       const marker = `HOSTILE${UniqueIDGenerator.getID()}`;
       const messageBox = aPage.getByRole('textbox', {
         name: 'Add a comment...',
@@ -343,13 +356,13 @@ test.describe(
       // Poll bound covers `email:direct` quiet + sweep + settle; the settle
       // re-reads at the MAX-DELAY bound so "exactly one" is read from a stable
       // inbox rather than at the first poll that saw an email.
-      const [mailItems, total] = await waitForMailsCountAtLeast(1, {
+      const toB = await waitForNewMails(mailboxes.b, 1, {
         timeout: directEmail.quietGraceMs,
         settleMs: directEmail.maxDelayGraceMs,
       });
-      expect(total).toBe(1);
-      const mail = mailItems.find(m => m.toAddresses?.includes(userBEmail));
-      expect(mail).toBeDefined();
+      expect(toB, 'digests to B').toHaveLength(1);
+      expect((await newMailsOf(mailboxes)).a, 'email to A').toHaveLength(0);
+      const mail = toB[0];
       expect(mail!.subject).not.toContain(marker);
       expect(mail!.body).not.toContain(marker);
       expect(mail!.body).not.toContain('<script>');
