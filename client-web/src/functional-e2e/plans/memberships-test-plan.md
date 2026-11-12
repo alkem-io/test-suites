@@ -1,8 +1,29 @@
 # Alkemio Memberships - Comprehensive Test Plan
 
-**Seed:** `./client-web/src/functional-e2e/seed-memberships.spec.ts`
+**Seed:** none — every spec seeds its own scenario in `beforeAll` and tears it down in a file-level `afterAll` (`helpers/space-access.helper.ts › teardownScenario`, which fails the hook on a leak). The `seed-memberships.spec.ts` referenced earlier does not exist.
+
+**Nightly:** the `Memberships` project in `client-web/config/playwright.config.nightly.ts` (tier `extended`), registered by W2 Tier 0 item 1 (`docs/qa/server-rebuild/client-net-audit/README.md` § 4).
 
 **GitHub Issue:** https://github.com/alkem-io/alkemio/issues/1698
+
+## Nightly readiness — W2 Tier 0 item 1 (2026-11-12)
+
+What changed so the 21 files could join the nightly (audit: `docs/qa/server-rebuild/client-net-audit/g2-spaces.md`, memberships sections). 23 cases listed, 1 skipped.
+
+| Spec | Change | Oracle now |
+| --- | --- | --- |
+| all 21 | Display names via `memberships.helpers.ts › uniqueName` (L1/L2 names were fixed literals that a leaked subspace from any earlier run also matched); hooks at file level; `teardownScenario` instead of `cleanUpBaseScenario` (a refused delete now fails the hook); enums from `@alkemio/tests-lib`; sub-tier `timeout: 2000–5000` overrides removed | — |
+| `access-own-membership-settings` (2.1, 2.3) | Leave is the row's `Leave <name>` button on develop (client-web#10437 removed the "More actions" menu); bare `isVisible().catch` negative replaced | Before: lib `readRoleSetUsersInRole` contains the user + row listed. Leave: `removeRoleFromUser` answered without errors. After: lib read-back no longer contains the user (polled) + after reload, once the list rendered ("Showing N of M" / empty caption), no row for the space |
+| `removed-member-cannot-access-previous-space` (13.3) | Same leave flow + L2 role-set read-back before/after | Unchanged access delta on the private L2 (`/about` + no-access image) |
+| `access-space-settings-as-space-member` (8.2) | Seeds a post callout | Positive control first: Space title + the post heading in the feed (member READ); then `Settings` link count 0 |
+| `view-home-dashboard-multiple-memberships` (7.2) | L1 by its unique name; the duplicated last assertion (repeat of the L0 check) dropped | L0 and L1 names both on `/home` |
+| `view-organization-account-settings-as-admin` (5.1, 5.3) | `getByText(/1\/3/).first()` → exactly one usage badge `^1/<n>$` (the fresh org hosts only the seeded Space; the limit is the environment's plan) | |
+| `cannot-access-other-user-account-settings` (3.3), `cannot-access-other-user-membership-settings` (2.5) | **Un-skipped.** The "[BUG]" skips expected the pre-CRD "We are redirecting you / Go now" interstitial; develop's `useUserSettingsAccessGuard` replaces the URL with the user's profile (same CRD flow as 5.2) | Exact redirect to `/user/<other>` + their h1 (positive) + no `Account` tab / no "Open user settings" link |
+| `view-another-user-profile-public-view` (1.2) | **Un-skipped.** "Pending product decision" was a test-side gap: SPACE_ADMIN is ADMIN of the seeded Space, so it lists under **Leading**, not "Member Of" (`useFilteredMemberships`); `rolesUser` needs only the platform `READ_USERS` every registered user holds | h1 + the Space under "Leading" + no settings link |
+| `view-own-account-settings` (3.1) | **Un-skipped.** "todo: the user should be a host" was a set-up gap: the global admin now creates a Space on SPACE_ADMIN's own account (deleted in `afterAll`). The pre-CRD intro text is gone on develop and no longer asserted | `/settings/account` + the four section titles + the created Space listed |
+| `view-organization-profile-public` › Unauthenticated (4.2) | Still `test.skip` on **alkem-io/client-web#10433** (open; `useOrganization` still skips `rolesOrganization` without `READ_USERS`). The expected step "the hosted Space is listed" is restored under the skip instead of being commented out | — |
+
+Not decided without a live run: after leaving the L2 (13.3) the user is still a member of the parent L1, yet the About preview was observed to offer no Apply/Join; the assertion stays out (comment in the spec) until a live run says whether that is a defect.
 
 ## Executive Summary
 
@@ -1451,20 +1472,20 @@ Based on the comprehensive test plan above, the following scenarios are **P1 pri
 | #   | Scenario                                                 | Status | Test File                                                                           |
 | --- | -------------------------------------------------------- | ------ | ----------------------------------------------------------------------------------- |
 | 1   | **1.1** - View Own User Profile - Public Information     | ✅     | `view-own-user-profile-public-information.spec.ts`                                  |
-| 2   | **1.2** - View Another User's Profile - Public View      | ✅     | `view-another-user-profile-public-view.spec.ts`                                     |
+| 2   | **1.2** - View Another User's Profile - Public View      | ✅     | `view-another-user-profile-public-view.spec.ts` ("Leading" tab; un-skipped 2026-11-12) |
 | 3   | **1.3** - View Unauthenticated User Profile              | ✅     | `view-unauthenticated-user-profile.spec.ts`                                         |
 | 4   | **2.1** - Access Own Membership Settings                 | ✅     | `access-own-membership-settings.spec.ts`                                            |
 | 5   | **2.2** - View All Membership Levels                     | ❌     | -                                                                                   |
-| 6   | **2.5** - Cannot Access Other User's Membership Settings | ⏸️     | `cannot-access-other-user-membership-settings.spec.ts` (blocked: client/server bug) |
-| 7   | **3.1** - View Own Account Settings                      | ⏸️     | `view-own-account-settings.spec.ts` (blocked: user should be a host)                |
-| 8   | **3.3** - Cannot Access Other User's Account Settings    | ⏸️     | `cannot-access-other-user-account-settings.spec.ts` (blocked: client/server bug)    |
+| 6   | **2.5** - Cannot Access Other User's Membership Settings | ✅     | `cannot-access-other-user-membership-settings.spec.ts` (CRD redirect; un-skipped 2026-11-12) |
+| 7   | **3.1** - View Own Account Settings                      | ✅     | `view-own-account-settings.spec.ts` (Space seeded on the user's account; un-skipped 2026-11-12) |
+| 8   | **3.3** - Cannot Access Other User's Account Settings    | ✅     | `cannot-access-other-user-account-settings.spec.ts` (CRD redirect; un-skipped 2026-11-12) |
 
 ### **Organization Management (7 scenarios)**
 
 | #   | Scenario                                                          | Status | Test File                                                                 |
 | --- | ----------------------------------------------------------------- | ------ | ------------------------------------------------------------------------- |
 | 9   | **4.1** - View Organization Profile - Public                      | ✅     | `view-organization-profile-public.spec.ts`                                |
-| 10  | **4.2** - View Organization Profile - Unauthenticated             | ✅     | `view-organization-profile-public.spec.ts` (combined with 4.1)            |
+| 10  | **4.2** - View Organization Profile - Unauthenticated             | ⏸️     | `view-organization-profile-public.spec.ts` (skipped on alkem-io/client-web#10433) |
 | 11  | **4.3** - View Organization Profile - As Admin                    | ✅     | `view-organization-profile-as-admin.spec.ts`                              |
 | 12  | **5.1** - View Organization Account Settings - As Admin           | ✅     | `view-organization-account-settings-as-admin.spec.ts`                     |
 | 13  | **5.2** - Cannot Access Organization Account Settings - Non-Admin | ✅     | `cannot-access-organization-account-settings-non-admin.spec.ts`           |
@@ -1565,13 +1586,13 @@ Based on the comprehensive test plan above, the following scenarios are **P1 pri
 5. **2.2** - View All Membership Levels - P1 ❌
 6. **2.3** - Leave a Space Membership - P2 ✅ `access-own-membership-settings.spec.ts` (combined with 2.1)
 7. **2.4** - View Pending Applications - P3 ❌
-8. **2.5** - Cannot Access Other User's Membership Settings - P1 ⏸️ `cannot-access-other-user-membership-settings.spec.ts`
+8. **2.5** - Cannot Access Other User's Membership Settings - P1 ✅ `cannot-access-other-user-membership-settings.spec.ts`
 
 ### Category 3: User Account Settings (3 scenarios)
 
-9. **3.1** - View Own Account Settings - P1 ⏸️ `view-own-account-settings.spec.ts`
+9. **3.1** - View Own Account Settings - P1 ✅ `view-own-account-settings.spec.ts`
 10. **3.2** - View Account with No Hosted Resources - P2 ❌
-11. **3.3** - Cannot Access Other User's Account Settings - P1 ⏸️ `cannot-access-other-user-account-settings.spec.ts`
+11. **3.3** - Cannot Access Other User's Account Settings - P1 ✅ `cannot-access-other-user-account-settings.spec.ts`
 
 ### Category 4: Organization Profile Access (3 scenarios)
 
