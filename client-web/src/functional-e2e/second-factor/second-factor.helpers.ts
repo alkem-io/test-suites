@@ -15,9 +15,7 @@ import {
 import { grantCookieConsent } from '../helpers/cookies.helper';
 import { must } from '../helpers/lib-actor.helper';
 import { navigateToLoginPageFromMenu } from '../authentication/login-page-objects';
-import {
-  fillUpSignInPageElements,
-} from '../identity-flows/signin-page-objects';
+import { fillUpSignInPageElements } from '../identity-flows/signin-page-objects';
 import {
   logoutMenuItem,
   logInHeaderLink,
@@ -248,16 +246,28 @@ export const addVirtualAuthenticator = async (page: Page): Promise<void> => {
   });
 };
 
+/** Chromium's errors for a host the page could not reach (the walks run on Chromium). */
+const UNREACHABLE = [
+  'ERR_CONNECTION_REFUSED',
+  'ERR_CONNECTION_RESET',
+  'ERR_CONNECTION_CLOSED',
+  'ERR_CONNECTION_TIMED_OUT',
+  'ERR_TIMED_OUT',
+  'ERR_NAME_NOT_RESOLVED',
+  'ERR_ADDRESS_UNREACHABLE',
+];
+
 /**
  * Every request of the page that failed at the network level — a host that
- * could not be reached, a refused connection. A request the browser itself
- * aborted (a navigation cancelling an in-flight fetch) is not a failure.
+ * could not be reached, a refused connection. A request the browser aborted (a
+ * navigation cancelling an in-flight fetch) or blocked on a response it did
+ * receive (ERR_BLOCKED_BY_RESPONSE: the host answered) is not such a failure.
  */
 export const failedRequests = (page: Page): string[] => {
   const failed: string[] = [];
   page.on('requestfailed', request => {
     const reason = request.failure()?.errorText ?? '';
-    if (!reason.includes('ERR_ABORTED')) {
+    if (UNREACHABLE.some(code => reason.includes(code))) {
       failed.push(`${request.method()} ${request.url()} (${reason})`);
     }
   });
