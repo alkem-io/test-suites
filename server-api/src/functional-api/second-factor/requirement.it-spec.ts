@@ -85,6 +85,7 @@ const restGet = (path: string, cookieHeader: string) =>
     headers: { Cookie: cookieHeader },
     maxRedirects: 0,
     validateStatus: () => true,
+    timeout: 15_000,
   });
 
 const REFUSAL_BODY = { statusCode: 403, error_code: 'second_factor_required' };
@@ -222,10 +223,9 @@ describe('Second factor — the requirement', () => {
         await eventually(() => sub.messageIds.includes(before), DELIVERY_BOUND_MS, 'delivery in grace');
         const memoPdf = `/api/private/rest/memo/${randomUUID()}/pdf`;
         const ics = `/api/private/rest/calendar/event/${randomUUID()}/ics`;
-        // Control: in grace, the same requests are answered by their routes.
-        for (const path of [memoPdf, ics]) {
-          expect(isRefusal(await restGet(path, session.cookieHeader)), path).toBe(false);
-        }
+        // Control: in grace, the same request is answered by its route. Not
+        // the ics route: for an unknown event it never answers at all.
+        expect(isRefusal(await restGet(memoPdf, session.cookieHeader))).toBe(false);
 
         // D26: no cache — the very next request sees the aged rule.
         await ageRuleSince({ organizationId: org.id }, 15);

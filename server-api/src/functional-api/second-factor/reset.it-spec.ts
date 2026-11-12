@@ -185,10 +185,14 @@ describe('Second factor — support reset', () => {
     // Created through the API, never signed in: no Kratos identity linked.
     // As the global admin: platform CREATE is not one of Platform Users
     // Admin's privileges.
-    const unlinked = await createUser({
-      email: `sf.unlinked${Date.now()}@alkem.io`,
-      profileData: { displayName: 'second factor unlinked' },
-    });
+    const asGlobalAdmin = { bearerToken: roleTokens().globalAdmin };
+    const unlinked = await createUser(
+      {
+        email: `sf.unlinked${Date.now()}@alkem.io`,
+        profileData: { displayName: 'second factor unlinked' },
+      },
+      asGlobalAdmin
+    );
     const unlinkedId = unlinked.data?.createUser.id;
     expect(unlinkedId, JSON.stringify(unlinked.error)).toBeDefined();
     try {
@@ -201,7 +205,7 @@ describe('Second factor — support reset', () => {
       expect(errorCodes(answer).length).toBeGreaterThan(0);
       expect(await resetRows(unlinkedId!)).toEqual([]);
     } finally {
-      await deleteUser(unlinkedId!);
+      await deleteUser(unlinkedId!, asGlobalAdmin);
     }
   });
 

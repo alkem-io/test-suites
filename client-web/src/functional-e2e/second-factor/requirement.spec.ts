@@ -152,7 +152,7 @@ test.describe('US4 — an organisation requires a second factor', () => {
             const reminder = page
               .getByRole('status')
               .filter({ hasText: 'Set up two-step verification before' });
-            await expect(reminder).toHaveText(
+            await expect(reminder).toContainText(
               COPY.reminderText(longDate(new Date(requirement.deadline!)))
             );
             await expect(

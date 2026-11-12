@@ -1,12 +1,16 @@
 import type { TestProject } from 'vitest/node';
 import {
   clearAddressCounters,
+  getUserToken,
   seedPlatformRoleUsers,
+  TestUser,
 } from '@alkemio/tests-lib';
 
 /**
  * Once per run: clear the login proxy's per-address counters, seed the
- * single-role users the reset and rule cases act as, and clear again — their
+ * single-role users the reset and rule cases act as, mint the global admin's
+ * token (platform CREATE, which no single platform role holds), and clear
+ * again — their
  * sign-ins pass the proxy from the runner's address, and a successful sign-in
  * no longer clears it. Every case clears again in its own `beforeEach`, and the
  * run clears once more when it ends: its sign-ins leave the runner's address
@@ -17,6 +21,7 @@ export type SecondFactorRunContext = {
     support: string;
     usersAdmin: string;
     settingsAdmin: string;
+    globalAdmin: string;
   };
 };
 
@@ -29,12 +34,14 @@ declare module 'vitest' {
 export default async function setup(project: TestProject) {
   await clearAddressCounters();
   const { tokens } = await seedPlatformRoleUsers();
+  const globalAdmin = await getUserToken(`${TestUser.GLOBAL_ADMIN}@alkem.io`);
   await clearAddressCounters();
   project.provide('secondFactor', {
     tokens: {
       support: tokens.PLATFORM_SUPPORT,
       usersAdmin: tokens.PLATFORM_USERS_ADMIN,
       settingsAdmin: tokens.PLATFORM_SETTINGS_ADMIN,
+      globalAdmin,
     },
   });
   return async () => {
