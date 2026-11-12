@@ -276,6 +276,21 @@ _Searched 2026-11-09, branch `qa/w2-journey-6` off test-suites `origin/develop` 
 
 **Search again with:** `rg -n -i "moveContributionToCallout|updateCalloutsSortOrder|updateContributionsSortOrder|Move to Top|Move Up|Post location|Post actions|'Move to'|classification" client-web/src server-api/src lib/src --glob '!**/generated/**'` and `rg -n 'updateInnovationFlowState\(' server-api/src --glob '*.it-spec.ts'` (renames: check whether callouts exist BEFORE the rename).
 
+## Task boards and community guidelines (W2 extras, test-suites#722)
+
+_Searched 2026-11-12, branch `qa/w2-extras-read-back` off test-suites `origin/develop` @ `ef405cc0`; product read at client-web `develop` @ `25ded1467`, server `develop` @ `e120d25a1`. Plans: `client-web/src/functional-e2e/task-boards/task-boards-test-plan.md`, `client-web/src/functional-e2e/community-guidelines/community-guidelines-test-plan.md`._
+
+| Behaviour | Coverage | Where |
+| --- | --- | --- |
+| Create a Tasks board (UI) | **None, proven absent** (now covered: `task-boards/us1-create-board-add-task` TB-1) | server-api `orphan-free-deletion/callout-delete-owned-records` CD-2 creates one over the API only to delete it |
+| Add a task to a column; move it across columns; reorder in a column (`moveTaskToColumn`, `updateContributionsSortOrder` on a board) | **None, proven absent** (now covered: TB-2, `us2-move-task` TB-3, TB-4) | — |
+| Who may move a task (MOVE_TASK) | **None, proven absent** (now covered: TB-5, UI + server refusal) | — |
+| Column administration (create/rename/delete/reorder columns) | **None** — still a gap | — |
+| Edit a Space's community guidelines by hand (title, body, links) | **None, proven absent** (now covered: `community-guidelines/us1-edit-guidelines` CG-1, CG-2) | applying a template: `templates-CRD/.../community-guidelines-template.spec.ts` 1.4/1.5 |
+| `removeCommunityGuidelinesContent` | **None**; no UI calls it | — |
+
+**Search again with:** `rg -n -i "task ?board|TaskColumn|moveTask|taskColumn|MOVE_TASK|communityGuidelines|community guidelines" client-web/src server-api/src lib/src --glob '!**/generated/**'`.
+
 ## How to search this area again
 
 `rg -n 'innovationFlow|minimumNumberOfStates|maximumNumberOfStates|L0_FIXED_INNOVATION|L0_MIN_INNOVATION' server-api/src/functional-api` — the conversion/callout-transfer/templates directories are the load-bearing ones; also check the server repo's own `*.spec.ts` unit suites before proposing a new system-level case, several risk-relevant assertions live there only.

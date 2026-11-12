@@ -50970,6 +50970,25 @@ export type UpdatePollStatusMutation = {
   updatePollStatus: { id: string; status: PollStatus };
 };
 
+export type MoveTaskToColumnMutationVariables = Exact<{
+  moveData: MoveTaskToColumnInput;
+}>;
+
+export type MoveTaskToColumnMutation = {
+  moveTaskToColumn: {
+    id: string;
+    sortOrder: number;
+    classification?:
+      | {
+          id: string;
+          tagsets?:
+            | Array<{ id: string; name: string; tags: Array<string> }>
+            | undefined;
+        }
+      | undefined;
+  };
+};
+
 export type TransferCalloutMutationVariables = Exact<{
   transferData: TransferCalloutInput;
 }>;
@@ -89850,6 +89869,69 @@ export type ReadMemoDocumentsQuery = {
   };
 };
 
+export type ReadTaskBoardQueryVariables = Exact<{
+  calloutId: Scalars["UUID"]["input"];
+}>;
+
+export type ReadTaskBoardQuery = {
+  lookup: {
+    callout?:
+      | {
+          id: string;
+          authorization?:
+            | {
+                id: string;
+                myPrivileges?: Array<AuthorizationPrivilege> | undefined;
+              }
+            | undefined;
+          framing: { id: string; profile: { id: string; displayName: string } };
+          settings: {
+            contribution: { allowedTypes: Array<CalloutContributionType> };
+          };
+          classification?:
+            | {
+                id: string;
+                tagsets?:
+                  | Array<{
+                      id: string;
+                      name: string;
+                      allowedValues: Array<string>;
+                      tags: Array<string>;
+                    }>
+                  | undefined;
+              }
+            | undefined;
+          taskColumnCounts?:
+            | Array<{ column: string; count: number }>
+            | undefined;
+          contributions: Array<{
+            id: string;
+            sortOrder: number;
+            classification?:
+              | {
+                  id: string;
+                  tagsets?:
+                    | Array<{ id: string; name: string; tags: Array<string> }>
+                    | undefined;
+                }
+              | undefined;
+            post?:
+              | {
+                  id: string;
+                  profile: {
+                    id: string;
+                    displayName: string;
+                    description?: any | undefined;
+                  };
+                  createdBy?: { id: string } | undefined;
+                }
+              | undefined;
+          }>;
+        }
+      | undefined;
+  };
+};
+
 export type ReadWhiteboardStateQueryVariables = Exact<{
   whiteboardId: Scalars["UUID"]["input"];
 }>;
@@ -111160,6 +111242,39 @@ export type ReadSpaceClassificationsQuery = {
               selectedValueIDs: Array<string>;
               values: Array<{ id: string; label: string }>;
             }>;
+          };
+        }
+      | undefined;
+  };
+};
+
+export type ReadSpaceCommunityGuidelinesQueryVariables = Exact<{
+  spaceId: Scalars["UUID"]["input"];
+}>;
+
+export type ReadSpaceCommunityGuidelinesQuery = {
+  lookup: {
+    space?:
+      | {
+          id: string;
+          about: {
+            id: string;
+            guidelines: {
+              id: string;
+              profile: {
+                id: string;
+                displayName: string;
+                description?: any | undefined;
+                references?:
+                  | Array<{
+                      id: string;
+                      name: string;
+                      uri: string;
+                      description?: string | undefined;
+                    }>
+                  | undefined;
+              };
+            };
           };
         }
       | undefined;

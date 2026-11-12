@@ -55453,6 +55453,25 @@ export type UpdatePollStatusMutation = {
   updatePollStatus: { id: string; status: SchemaTypes.PollStatus };
 };
 
+export type MoveTaskToColumnMutationVariables = SchemaTypes.Exact<{
+  moveData: SchemaTypes.MoveTaskToColumnInput;
+}>;
+
+export type MoveTaskToColumnMutation = {
+  moveTaskToColumn: {
+    id: string;
+    sortOrder: number;
+    classification?:
+      | {
+          id: string;
+          tagsets?:
+            | Array<{ id: string; name: string; tags: Array<string> }>
+            | undefined;
+        }
+      | undefined;
+  };
+};
+
 export type TransferCalloutMutationVariables = SchemaTypes.Exact<{
   transferData: SchemaTypes.TransferCalloutInput;
 }>;
@@ -97949,6 +97968,73 @@ export type ReadMemoDocumentsQuery = {
   };
 };
 
+export type ReadTaskBoardQueryVariables = SchemaTypes.Exact<{
+  calloutId: SchemaTypes.Scalars["UUID"]["input"];
+}>;
+
+export type ReadTaskBoardQuery = {
+  lookup: {
+    callout?:
+      | {
+          id: string;
+          authorization?:
+            | {
+                id: string;
+                myPrivileges?:
+                  | Array<SchemaTypes.AuthorizationPrivilege>
+                  | undefined;
+              }
+            | undefined;
+          framing: { id: string; profile: { id: string; displayName: string } };
+          settings: {
+            contribution: {
+              allowedTypes: Array<SchemaTypes.CalloutContributionType>;
+            };
+          };
+          classification?:
+            | {
+                id: string;
+                tagsets?:
+                  | Array<{
+                      id: string;
+                      name: string;
+                      allowedValues: Array<string>;
+                      tags: Array<string>;
+                    }>
+                  | undefined;
+              }
+            | undefined;
+          taskColumnCounts?:
+            | Array<{ column: string; count: number }>
+            | undefined;
+          contributions: Array<{
+            id: string;
+            sortOrder: number;
+            classification?:
+              | {
+                  id: string;
+                  tagsets?:
+                    | Array<{ id: string; name: string; tags: Array<string> }>
+                    | undefined;
+                }
+              | undefined;
+            post?:
+              | {
+                  id: string;
+                  profile: {
+                    id: string;
+                    displayName: string;
+                    description?: any | undefined;
+                  };
+                  createdBy?: { id: string } | undefined;
+                }
+              | undefined;
+          }>;
+        }
+      | undefined;
+  };
+};
+
 export type ReadWhiteboardStateQueryVariables = SchemaTypes.Exact<{
   whiteboardId: SchemaTypes.Scalars["UUID"]["input"];
 }>;
@@ -120092,6 +120178,39 @@ export type ReadSpaceClassificationsQuery = {
   };
 };
 
+export type ReadSpaceCommunityGuidelinesQueryVariables = SchemaTypes.Exact<{
+  spaceId: SchemaTypes.Scalars["UUID"]["input"];
+}>;
+
+export type ReadSpaceCommunityGuidelinesQuery = {
+  lookup: {
+    space?:
+      | {
+          id: string;
+          about: {
+            id: string;
+            guidelines: {
+              id: string;
+              profile: {
+                id: string;
+                displayName: string;
+                description?: any | undefined;
+                references?:
+                  | Array<{
+                      id: string;
+                      name: string;
+                      uri: string;
+                      description?: string | undefined;
+                    }>
+                  | undefined;
+              };
+            };
+          };
+        }
+      | undefined;
+  };
+};
+
 export type ReadSpaceGuidelinesIdQueryVariables = SchemaTypes.Exact<{
   spaceId: SchemaTypes.Scalars["UUID"]["input"];
 }>;
@@ -125322,6 +125441,22 @@ export const UpdatePollStatusDocument = gql`
     }
   }
 `;
+export const MoveTaskToColumnDocument = gql`
+  mutation MoveTaskToColumn($moveData: MoveTaskToColumnInput!) {
+    moveTaskToColumn(moveData: $moveData) {
+      id
+      sortOrder
+      classification {
+        id
+        tagsets {
+          id
+          name
+          tags
+        }
+      }
+    }
+  }
+`;
 export const TransferCalloutDocument = gql`
   mutation transferCallout($transferData: TransferCalloutInput!) {
     transferCallout(transferData: $transferData) {
@@ -128480,6 +128615,67 @@ export const ReadMemoDocumentsDocument = gql`
     }
   }
 `;
+export const ReadTaskBoardDocument = gql`
+  query ReadTaskBoard($calloutId: UUID!) {
+    lookup {
+      callout(ID: $calloutId) {
+        id
+        authorization {
+          id
+          myPrivileges
+        }
+        framing {
+          id
+          profile {
+            id
+            displayName
+          }
+        }
+        settings {
+          contribution {
+            allowedTypes
+          }
+        }
+        classification {
+          id
+          tagsets {
+            id
+            name
+            allowedValues
+            tags
+          }
+        }
+        taskColumnCounts {
+          column
+          count
+        }
+        contributions {
+          id
+          sortOrder
+          classification {
+            id
+            tagsets {
+              id
+              name
+              tags
+            }
+          }
+          post {
+            id
+            profile {
+              id
+              displayName
+              description
+            }
+            createdBy {
+              id
+            }
+          }
+        }
+      }
+    }
+  }
+`;
 export const ReadWhiteboardStateDocument = gql`
   query ReadWhiteboardState($whiteboardId: UUID!) {
     lookup {
@@ -130123,6 +130319,32 @@ export const ReadSpaceClassificationsDocument = gql`
     }
   }
 `;
+export const ReadSpaceCommunityGuidelinesDocument = gql`
+  query ReadSpaceCommunityGuidelines($spaceId: UUID!) {
+    lookup {
+      space(ID: $spaceId) {
+        id
+        about {
+          id
+          guidelines {
+            id
+            profile {
+              id
+              displayName
+              description
+              references {
+                id
+                name
+                uri
+                description
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+`;
 export const ReadSpaceGuidelinesIdDocument = gql`
   query ReadSpaceGuidelinesId($spaceId: UUID!) {
     lookup {
@@ -131284,6 +131506,7 @@ const CreatePollCalloutOnCalloutsSetDocumentString = print(
   CreatePollCalloutOnCalloutsSetDocument
 );
 const UpdatePollStatusDocumentString = print(UpdatePollStatusDocument);
+const MoveTaskToColumnDocumentString = print(MoveTaskToColumnDocument);
 const TransferCalloutDocumentString = print(TransferCalloutDocument);
 const UpdateCalloutDataDocumentString = print(UpdateCalloutDataDocument);
 const AddClassificationEntryFromTemplateDocumentString = print(
@@ -131835,6 +132058,7 @@ const ReadCalloutsSetCalloutsDocumentString = print(
   ReadCalloutsSetCalloutsDocument
 );
 const ReadMemoDocumentsDocumentString = print(ReadMemoDocumentsDocument);
+const ReadTaskBoardDocumentString = print(ReadTaskBoardDocument);
 const ReadWhiteboardStateDocumentString = print(ReadWhiteboardStateDocument);
 const GetMeConversationsDocumentString = print(GetMeConversationsDocument);
 const GetPlatformDiscussionsDataDocumentString = print(
@@ -132046,6 +132270,9 @@ const ReadSpaceCalloutNamesDocumentString = print(
 );
 const ReadSpaceClassificationsDocumentString = print(
   ReadSpaceClassificationsDocument
+);
+const ReadSpaceCommunityGuidelinesDocumentString = print(
+  ReadSpaceCommunityGuidelinesDocument
 );
 const ReadSpaceGuidelinesIdDocumentString = print(
   ReadSpaceGuidelinesIdDocument
@@ -133212,6 +133439,28 @@ export function getSdk(
             { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "updatePollStatus",
+        "mutation",
+        variables
+      );
+    },
+    MoveTaskToColumn(
+      variables: SchemaTypes.MoveTaskToColumnMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.MoveTaskToColumnMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.MoveTaskToColumnMutation>(
+            MoveTaskToColumnDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "MoveTaskToColumn",
         "mutation",
         variables
       );
@@ -138408,6 +138657,28 @@ export function getSdk(
         variables
       );
     },
+    ReadTaskBoard(
+      variables: SchemaTypes.ReadTaskBoardQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.ReadTaskBoardQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.ReadTaskBoardQuery>(
+            ReadTaskBoardDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "ReadTaskBoard",
+        "query",
+        variables
+      );
+    },
     ReadWhiteboardState(
       variables: SchemaTypes.ReadWhiteboardStateQueryVariables,
       requestHeaders?: GraphQLClientRequestHeaders
@@ -140516,6 +140787,28 @@ export function getSdk(
             { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "ReadSpaceClassifications",
+        "query",
+        variables
+      );
+    },
+    ReadSpaceCommunityGuidelines(
+      variables: SchemaTypes.ReadSpaceCommunityGuidelinesQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.ReadSpaceCommunityGuidelinesQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.ReadSpaceCommunityGuidelinesQuery>(
+            ReadSpaceCommunityGuidelinesDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "ReadSpaceCommunityGuidelines",
         "query",
         variables
       );

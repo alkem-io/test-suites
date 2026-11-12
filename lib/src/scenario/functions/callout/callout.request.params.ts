@@ -225,6 +225,28 @@ export const readPost = (
 ) =>
   runAs(actor, (sdk, headers) => sdk.GetPostData({ postId }, headers));
 
+/**
+ * A Tasks board as the server stores it: its ordered columns (the callout's
+ * reserved `task` tagset, `allowedValues`), the per-column counts, the
+ * contribution types it takes, the actor's privileges on it (MOVE_TASK,
+ * CONTRIBUTE …), and every task with its column (the contribution's `task`
+ * tag), its position (`sortOrder`, ascending) and its post title.
+ */
+export const readTaskBoard = (
+  calloutId: string,
+  actor: GraphqlActor = TestUser.GLOBAL_ADMIN,
+) => runAs(actor, (sdk, headers) => sdk.ReadTaskBoard({ calloutId }, headers));
+
+/** Move a task (a Tasks board contribution) to another column, as `actor`; returns its column tag and sortOrder. */
+export const moveTaskToColumn = (
+  contributionID: string,
+  column: string,
+  actor: GraphqlActor,
+) =>
+  runAs(actor, (sdk, headers) =>
+    sdk.MoveTaskToColumn({ moveData: { contributionID, column } }, headers),
+  );
+
 // ---------------------------------------------------------------------------
 // Multipart (Upload scalar) operations. The generated SDK posts JSON only, so
 // the two documents that carry a file go through the GraphQL multipart

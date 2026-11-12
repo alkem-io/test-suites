@@ -1,0 +1,21 @@
+# A Space's community guidelines as the actor may read them: title, body
+# (markdown) and related links.
+query ReadSpaceCommunityGuidelines($spaceId: UUID!) {
+  lookup {
+    space(ID: $spaceId) {
+      id
+      about {
+        id
+        guidelines {
+          id
+          profile {
+            id
+            displayName
+            description
+            references { id name uri description }
+          }
+        }
+      }
+    }
+  }
+}
