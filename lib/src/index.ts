@@ -6,6 +6,7 @@ export * from "./utils/delay";
 export * from "./utils/uniqueId";
 export * from "./utils/emails";
 export * from "./utils/mailslurper.rest.requests";
+export * from "./utils/mailbox";
 export * from "./utils/rabbitmq-management.rest.requests";
 export * from "./utils/messaging-digest-windows";
 export * from "./utils/office-document-text";

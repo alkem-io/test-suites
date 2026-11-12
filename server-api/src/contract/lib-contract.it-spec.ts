@@ -244,6 +244,8 @@ const FUNCTIONS: string[] = [
   'addClassificationEntryFromTemplate',
   'updateClassificationEntrySelection',
   'updateTagsetTags',
+  // workspace#080 Form walks (W2 Tier 0 item 6): disposable identities
+  'registerVerifiedUser',
 ];
 
 /** Classes and namespaces the specs construct or call statically. */

@@ -134,6 +134,24 @@ export default defineConfig(
         ],
       }),
       suite({
+        // workspace#080 (Form callout framing): build, submit, visibility, review
+        // and notification walks, ~48 cases. Every file registers disposable
+        // identities through public Kratos, joins them to its own Space and
+        // Subspace as themselves (Slice B), seeds through the lib and tears all
+        // of it down at file level. US4 waits on mail and in-app delivery with
+        // settle windows; its push, consumer-outage and DB-precondition cases
+        // are `@local-stack` (playwright.config.local-stack.ts).
+        name: 'Form callout framing',
+        testMatch: [
+          '/form-callout-framing/us1-create-form.spec.ts',
+          '/form-callout-framing/us2-submit-response.spec.ts',
+          '/form-callout-framing/us3-response-visibility.spec.ts',
+          '/form-callout-framing/us4-notifications.spec.ts',
+          '/form-callout-framing/us4a-review-responses.spec.ts',
+        ],
+        tier: 'long',
+      }),
+      suite({
         // `templates-CRD/` is the migrated, validated suite for the redesigned
         // Templates settings page (see templates-CRD/instructions.md).
         name: 'Templates',

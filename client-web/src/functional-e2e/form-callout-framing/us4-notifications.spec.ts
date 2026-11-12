@@ -1,8 +1,8 @@
-import { randomUUID } from 'node:crypto';
 import { execSync } from 'node:child_process';
 import { expect, type Browser, type Page, test } from '@playwright/test';
 import {
   assignRoleToUser,
+  getQueueStats,
   CalloutFormQuestionType,
   CalloutFormResponseMode,
   CalloutFormResponseVisibility,
@@ -13,6 +13,8 @@ import {
   createSubspaceWithData,
   harnessPostgresConfigured,
   queryHarnessDb,
+  rabbitMqManagementConfigured,
+  getMailsTo,
   readMyNotifications,
   readMyUser,
   RoleName,
@@ -22,78 +24,66 @@ import {
   updateCalloutVisibility,
   type CreateCalloutFormQuestionInput,
   type CreateCalloutFormSettingsInput,
-  type GraphqlActor,
 } from '@alkemio/tests-lib';
 import { fillSecret } from '../helpers/login.helper';
 import { must } from '../helpers/lib-actor.helper';
+import {
+  actorFor,
+  ADMIN_EMAIL,
+  FormFixtureLedger,
+  formRunId,
+  harnessPassword,
+  joinAsSelf,
+  loadHarnessPersonas,
+  openMembership,
+} from './form-callout-framing.helpers';
 
 /**
  * workspace#080-form-callout-framing — User Story 4 (P1): Notifications on
  * response submission.
  *
  * AS1  a member's submission notifies the (sub)space admins (email with the
- *      pinned subject, in-app linking to the Post, one push emit per active
- *      subscription); a parent-Space-only admin receives nothing.
+ *      pinned subject, in-app linking to the Post); a parent-Space-only admin
+ *      receives nothing. The push emit per active subscription is US4-AS1p.
  * AS2  the submitter gets ONE receipt (pinned subject) that states who can
  *      read the response, links to the Post and repeats none of the answers.
  * AS3  no generic "new contribution" notification, mail or in-app, to anyone.
  * AS4  the admin email / in-app text names the submitter and the Form, links to
  *      the Post and carries no answer text.
  * AS5  an admin who submits gets the receipt only — no admin notification (mail,
- *      in-app, push) for their own response.
- * AS6  (needs NOTIFICATIONS_STOP_CMD / NOTIFICATIONS_START_CMD) RE-SCOPED:
+ *      in-app) for their own response; push: US4-AS5p.
+ * AS6  (@local-stack: NOTIFICATIONS_STOP_CMD / NOTIFICATIONS_START_CMD) RE-SCOPED:
  *      the spec's "delivery fails" (FR-024a, the server's publish failing) has
  *      no infrastructure lever here and is covered by server unit tests. This
  *      walk proves the weaker, operational property instead: with the
  *      notifications CONSUMER stopped the submission still succeeds and the
  *      queued mails arrive once it is back (at-least-once delivery).
  * AS7  MULTIPLE mode, three submissions -> three admin emails (no batching).
- * AS8  (needs the loopback harness Postgres, POSTGRES_*) a user_settings row
+ * AS8  (@local-stack: the loopback harness Postgres, POSTGRES_*) a user_settings row
  *      stripped of the new key still gets
  *      notified with the all-on default and the settings page loads with the row.
  *
- * Self-contained: provisions its own Kratos identities (admin API), Space,
- * Subspace and Forms through the non-interactive GraphQL endpoint, and asserts
- * mails through the MailSlurper REST API. Nothing is shared with other specs and
- * no fixed sleeps are used (every wait is an `expect.poll` / `toPass`).
+ * AS1p/AS5p (@local-stack: RABBITMQ_MANAGEMENT_*) one push emit for a member's
+ *      submission to an admin with an active subscription; none for the admin's own.
  *
- * Environment (defaults suit the local forge stack):
- *   ALKEMIO_BASE_URL          http://localhost:3000
- *   KRATOS_ADMIN_URL          Kratos ADMIN base incl. /admin (required)
- *   MAIL_SLURPER_ENDPOINT     http://localhost:4437/mail
- *   ALKEMIO_ADMIN_EMAIL       admin@alkem.io
- *   ALKEMIO_ADMIN_PASSWORD    the platform admin's password
- *   RABBITMQ_MANAGEMENT_ENDPOINT / _USER / _PASSWORD   push-emit counting (optional)
- *   POSTGRES_*                AS8 only — the loopback-guarded harness database
- *   NOTIFICATIONS_STOP_CMD / NOTIFICATIONS_START_CMD   AS6 only
+ * Self-contained (form-callout-framing.helpers.ts): registers its own disposable
+ * identities through public Kratos, joins them to its own Space and Subspace as
+ * themselves, seeds the Forms through `@alkemio/tests-lib`, reads mail only
+ * through the lib's recipient-scoped reader (`getMailsTo`), and deletes all of
+ * it in a file-level `afterAll`. The nightly runs AS1-AS5 and AS7; the three
+ * `@local-stack` cases run with `pnpm run test:local-stack`, which also needs:
+ *   RABBITMQ_MANAGEMENT_ENDPOINT / _USER / _PASSWORD   AS1p/AS5p
+ *   POSTGRES_*                AS8 — the loopback-guarded harness database
+ *   NOTIFICATIONS_STOP_CMD / NOTIFICATIONS_START_CMD   AS6
  */
 
 const BASE = (process.env.ALKEMIO_BASE_URL || 'http://localhost:3000').replace(
   /\/$/,
   ''
 );
-const KRATOS_ADMIN = (process.env.KRATOS_ADMIN_URL || '').replace(/\/$/, '');
-const MAIL_API =
-  process.env.MAIL_SLURPER_ENDPOINT || 'http://localhost:4437/mail';
-const ADMIN_EMAIL = process.env.ALKEMIO_ADMIN_EMAIL || 'admin@alkem.io';
-const ADMIN_PASSWORD =
-  process.env.ALKEMIO_ADMIN_PASSWORD ||
-  process.env.AUTH_ADMIN_PASSWORD ||
-  'password';
-const RMQ = (process.env.RABBITMQ_MANAGEMENT_ENDPOINT || '').replace(/\/$/, '');
-const RMQ_AUTH = `Basic ${Buffer.from(
-  `${process.env.RABBITMQ_MANAGEMENT_USER || 'alkemio-admin'}:${
-    process.env.RABBITMQ_MANAGEMENT_PASSWORD || 'alkemio!'
-  }`
-).toString('base64')}`;
 const STOP_CMD = process.env.NOTIFICATIONS_STOP_CMD || '';
 const START_CMD = process.env.NOTIFICATIONS_START_CMD || '';
-// Per-run secret for the throwaway identities this walk provisions (override with
-// FORGE_PERSONA_PASSWORD); a fixed literal would leave them loginable after the run.
-const USER_PASSWORD =
-  process.env.FORGE_PERSONA_PASSWORD || `F080-${randomUUID()}-Aa1!`;
-
-const RUN = Date.now().toString(36);
+const RUN = formRunId();
 const SPACE_NAME = `US4 Space ${RUN}`;
 const SUB_NAME = `US4 Sub ${RUN}`;
 const email = (tag: string) => `us4-${tag}-${RUN}@alkem.io`;
@@ -105,60 +95,11 @@ const personaEmail: Record<Persona, string> = {
   sa: email('sa'),
 };
 
-const tokens = new Map<string, string>();
-
-async function mintToken(userEmail: string, password: string) {
-  const cached = tokens.get(userEmail);
-  if (cached) return cached;
-  let token = '';
-  // The endpoint is rate limited; retry with a bounded backoff.
-  await expect(async () => {
-    const res = await fetch(`${BASE}/api/auth/non-interactive-login`, {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ email: userEmail, password }),
-    });
-    expect(res.status, `login ${userEmail}`).toBe(201);
-    token = ((await res.json()) as { api_token: string }).api_token;
-  }).toPass({ intervals: [1_000, 5_000, 15_000], timeout: 120_000 });
-  tokens.set(userEmail, token);
-  return token;
-}
-
-/** The lib actor for one of this run's identities: its bearer, minted once. */
-async function actorFor(userEmail: string): Promise<GraphqlActor> {
-  return {
-    bearerToken: await mintToken(
-      userEmail,
-      userEmail === ADMIN_EMAIL ? ADMIN_PASSWORD : USER_PASSWORD
-    ),
-  };
-}
-
-async function createIdentity(userEmail: string, first: string, last: string) {
-  const res = await fetch(`${KRATOS_ADMIN}/identities`, {
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({
-      schema_id: 'default',
-      state: 'active',
-      traits: { email: userEmail, accepted_terms: true, name: { first, last } },
-      credentials: { password: { config: { password: USER_PASSWORD } } },
-      verifiable_addresses: [
-        { value: userEmail, verified: true, via: 'email', status: 'completed' },
-      ],
-    }),
-  });
-  expect(res.status, `kratos identity ${userEmail}`).toBe(201);
-}
-
-async function meId(userEmail: string) {
-  const data = must(await readMyUser(await actorFor(userEmail)), 'me');
-  return data.me.user!.id;
-}
+/** Every Space and user this file seeds; removed by the file-level afterAll. */
+const ledger = new FormFixtureLedger();
 
 // ---------------------------------------------------------------------------
-// MailSlurper
+// Mail (the lib's recipient-scoped reader; the sink is the lib's business)
 // ---------------------------------------------------------------------------
 
 type Mail = { id: string; subject: string; body: string; toAddresses: string[] };
@@ -170,15 +111,29 @@ const decode = (s: string) =>
     .replace(/&#39;/g, "'")
     .replace(/&amp;/g, '&');
 
-async function allMails(): Promise<Mail[]> {
-  const out: Mail[] = [];
-  for (let page = 1; ; page++) {
-    const res = await fetch(`${MAIL_API}?pageNumber=${page}`);
-    const json = (await res.json()) as { mailItems: Mail[]; totalPages: number };
-    out.push(...json.mailItems);
-    if (page >= json.totalPages) break;
-  }
-  return out.map(m => ({ ...m, subject: decode(m.subject) }));
+/**
+ * Everyone this file's Forms can notify: the Space and Subspace members and
+ * admins it seeded, and the platform admin who created both. Nobody else is a
+ * member, so "no mail to anyone" is "no mail to these addresses".
+ */
+const fixtureAddresses = () => [
+  personaEmail.a2,
+  personaEmail.m1,
+  personaEmail.sa,
+  ADMIN_EMAIL,
+];
+
+async function fixtureMails(): Promise<Mail[]> {
+  // One mail can name several fixture addresses; keep each mail once.
+  const byId = new Map<string, Awaited<ReturnType<typeof getMailsTo>>[number]>();
+  for (const address of fixtureAddresses())
+    for (const m of await getMailsTo(address)) byId.set(String(m.id), m);
+  return [...byId.values()].map(m => ({
+    id: String(m.id ?? ''),
+    subject: decode(m.subject ?? ''),
+    body: m.body ?? '',
+    toAddresses: m.toAddresses ?? [],
+  }));
 }
 
 const adminSubject = (form: string) =>
@@ -188,7 +143,7 @@ const receiptSubject = (form: string) =>
 
 /** Mails about one Form (subject carries the unique Form name). */
 const mailsAbout = async (form: string) =>
-  (await allMails()).filter(m => m.subject.includes(`"${form}"`));
+  (await fixtureMails()).filter(m => m.subject.includes(`"${form}"`));
 
 const to = (mails: Mail[], subject: string, address: string) =>
   mails.filter(
@@ -337,14 +292,8 @@ async function staysAt(
   }
 }
 
-async function pushPublished(): Promise<number | undefined> {
-  if (!RMQ) return undefined;
-  const res = await fetch(`${RMQ}/api/queues/%2F/alkemio-push-notifications`, {
-    headers: { authorization: RMQ_AUTH },
-  });
-  return ((await res.json()) as { message_stats?: { publish?: number } })
-    .message_stats?.publish ?? 0;
-}
+const PUSH_QUEUE = 'alkemio-push-notifications';
+const pushPublished = async () => (await getQueueStats(PUSH_QUEUE)).publishedTotal;
 
 async function signIn(browser: Browser, userEmail: string): Promise<Page> {
   const context = await browser.newContext({
@@ -361,7 +310,10 @@ async function signIn(browser: Browser, userEmail: string): Promise<Page> {
   await login.click();
   await page.waitForURL(/.*login.*/);
   await page.getByRole('textbox', { name: 'E-Mail' }).fill(userEmail);
-  await fillSecret(page.getByRole('textbox', { name: 'Password' }), USER_PASSWORD);
+  await fillSecret(
+    page.getByRole('textbox', { name: 'Password' }),
+    harnessPassword()
+  );
   await page.getByRole('button', { name: 'Sign in', exact: true }).click();
   await page.waitForURL(/.*home.*/, { timeout: 30_000 });
   const newDesign = page.getByRole('button', {
@@ -379,24 +331,23 @@ let submitterName = '';
 
 test.describe.configure({ mode: 'serial' });
 
+// File level, so it also runs when a failure retires the worker mid-file.
+test.afterAll(async () => {
+  await ledger.teardown();
+});
+
 test.describe(
   'US4 — notifications on response submission',
   { tag: ['@forge-acceptance'] },
   () => {
-    test.setTimeout(300_000);
-
     test.beforeAll(async () => {
-      expect(
-        KRATOS_ADMIN,
-        'KRATOS_ADMIN_URL (Kratos admin base incl. /admin) is required'
-      ).not.toBe('');
+      // Three self-registrations, each a verification-mail round trip.
+      test.setTimeout(300_000);
+      await loadHarnessPersonas();
       submitterName = `Mia Member${RUN}`;
-      await createIdentity(personaEmail.a2, 'Ada', `Subadmin${RUN}`);
-      await createIdentity(personaEmail.m1, 'Mia', `Member${RUN}`);
-      await createIdentity(personaEmail.sa, 'Sam', `Spaceadmin${RUN}`);
-      for (const p of ['a2', 'm1', 'sa'] as Persona[]) {
-        fixture.userIds[p] = await meId(personaEmail[p]);
-      }
+      fixture.userIds.a2 = await ledger.registerUser(personaEmail.a2, 'Ada', `Subadmin${RUN}`);
+      fixture.userIds.m1 = await ledger.registerUser(personaEmail.m1, 'Mia', `Member${RUN}`);
+      fixture.userIds.sa = await ledger.registerUser(personaEmail.sa, 'Sam', `Spaceadmin${RUN}`);
 
       const admin = await actorFor(ADMIN_EMAIL);
       const account = must(await readMyUser(admin), 'account').me.user!
@@ -408,12 +359,16 @@ test.describe(
             nameID: `us4-space-${RUN}`,
             about: { profileData: { displayName: SPACE_NAME } },
             collaborationData: { calloutsSetData: {} },
-            settings: { privacy: { mode: SpacePrivacyMode.Public } },
+            settings: {
+              privacy: { mode: SpacePrivacyMode.Public },
+              membership: openMembership('space'),
+            },
           },
           admin
         ),
         'create space'
       ).createSpace;
+      ledger.space(space.id);
       const sub = must(
         await createSubspaceWithData(
           {
@@ -421,6 +376,7 @@ test.describe(
             nameID: `us4-sub-${RUN}`,
             about: { profileData: { displayName: SUB_NAME } },
             collaborationData: { calloutsSetData: {} },
+            settings: { membership: openMembership('subspace') },
           },
           admin
         ),
@@ -434,14 +390,20 @@ test.describe(
           await assignRoleToUser(fixture.userIds[p], roleSetID, role, admin),
           `assign ${p} ${role}`
         );
+      // Slice B: membership is joined as self — the Space first, then the
+      // Subspace; ADMIN is granted on top. sa administers the Space only.
       const spaceRoleSet = space.about.membership.roleSetID;
-      for (const p of ['sa', 'a2', 'm1'] as Persona[]) {
-        await assign(spaceRoleSet, p, RoleName.Member);
-      }
+      await joinAsSelf(
+        spaceRoleSet,
+        (['sa', 'a2', 'm1'] as Persona[]).map(p => personaEmail[p]),
+        'the Space'
+      );
       await assign(spaceRoleSet, 'sa', RoleName.Admin);
-      for (const p of ['a2', 'm1'] as Persona[]) {
-        await assign(fixture.subRoleSetId, p, RoleName.Member);
-      }
+      await joinAsSelf(
+        fixture.subRoleSetId,
+        (['a2', 'm1'] as Persona[]).map(p => personaEmail[p]),
+        'the Subspace'
+      );
       await assign(fixture.subRoleSetId, 'a2', RoleName.Admin);
 
       // A2 (default settings) gets one active push subscription so the push
@@ -470,10 +432,9 @@ test.describe(
       });
     });
 
-    test('US4-AS1 admins are notified per default settings (email, in-app, push); a Space-only admin is not', async ({
+    test('US4-AS1 admins are notified per default settings (email, in-app); a Space-only admin is not', async ({
       browser,
     }) => {
-      const pushBefore = await pushPublished();
       const marker = `US4-SECRET-ANSWER-${RUN}`;
       await submit('m1', one, marker);
 
@@ -493,14 +454,6 @@ test.describe(
         .toBe(1);
       const [note] = await formInApp('a2', one.calloutId);
       expect(note.payload.callout!.framing.profile.url).toBe(one.url);
-
-      if (pushBefore !== undefined) {
-        await expect
-          .poll(async () => (await pushPublished())! - pushBefore, {
-            timeout: 30_000,
-          })
-          .toBe(1);
-      }
 
       // The parent-Space-only admin hears nothing: deliveries are asynchronous,
       // so hold both negatives over the settle window.
@@ -577,7 +530,6 @@ test.describe(
 
     test('US4-AS5 an admin who submits gets the receipt only', async () => {
       const inAppBefore = (await formInApp('a2', one.calloutId)).length;
-      const pushBefore = await pushPublished();
       const marker = `US4-A2-OWN-ANSWER-${RUN}`;
       await submit('a2', one, marker);
 
@@ -601,13 +553,11 @@ test.describe(
       // Read after the poll so a late admin mail to A2 is not missed.
       const about = await mailsAbout(one.name);
       expect(to(about, adminSubject(one.name), personaEmail.a2)).toHaveLength(1);
-      // In-app and push are asynchronous: hold the negative checks over a settle window.
-      await Promise.all([
-        staysAt(async () => (await formInApp('a2', one.calloutId)).length, inAppBefore),
-        pushBefore !== undefined
-          ? staysAt(async () => (await pushPublished())! - pushBefore, 0)
-          : undefined,
-      ]);
+      // In-app is asynchronous: hold the negative check over a settle window.
+      await staysAt(
+        async () => (await formInApp('a2', one.calloutId)).length,
+        inAppBefore
+      );
     });
 
     test('US4-AS7 MULTIPLE mode: three submissions -> three admin emails', async () => {
@@ -643,7 +593,9 @@ test.describe(
 
     // Re-scoped, see the header: this is a consumer OUTAGE, not FR-024a's
     // publish failure. It proves at-least-once delivery after a restart.
-    test('US4-AS6 (re-scoped: consumer outage, not a publish failure) with the notifications consumer stopped the submission succeeds and the queued mails arrive after restart', async () => {
+    // @local-stack: stopping the notifications consumer is a host command the
+    // shared test cluster does not offer.
+    test('US4-AS6 (re-scoped: consumer outage, not a publish failure) with the notifications consumer stopped the submission succeeds and the queued mails arrive after restart', { tag: '@local-stack' }, async () => {
       test.skip(
         !STOP_CMD || !START_CMD,
         'NOTIFICATIONS_STOP_CMD / NOTIFICATIONS_START_CMD not provided'
@@ -670,7 +622,11 @@ test.describe(
         .toBe(before + 1);
     });
 
-    test('US4-AS8 a settings row without the new key notifies with the all-on default and the settings page loads', async ({
+    // @local-stack: a settings row WITHOUT the new key cannot be produced
+    // through GraphQL (every write stores the whole notification object), so
+    // the precondition is written in the loopback harness Postgres, which the
+    // shared test cluster does not expose.
+    test('US4-AS8 a settings row without the new key notifies with the all-on default and the settings page loads', { tag: '@local-stack' }, async ({
       browser,
     }) => {
       // Through the loopback-guarded harness client only: it refuses any
@@ -715,6 +671,13 @@ test.describe(
 
       const page = await signIn(browser, personaEmail.a2);
       await page.goto(`${BASE}/user/me/settings/notifications`);
+      // The settings page folds each group into a collapsed section; the Form
+      // row lives under "Space Admin Notifications".
+      const adminSection = page.getByRole('button', {
+        name: /^Space Admin Notifications/,
+      });
+      await adminSection.click();
+      await expect(adminSection).toHaveAttribute('aria-expanded', 'true');
       const row = page
         .getByText(/submits a response to a Form in a Space you administer/i)
         .first();
@@ -727,6 +690,35 @@ test.describe(
         await expect(switches.nth(i)).toBeChecked();
       }
       await page.context().close();
+    });
+
+    // @local-stack: the emit is counted at the RabbitMQ management API, which
+    // the shared test cluster does not expose. Its own Form, so the mail
+    // counts of the cases above are untouched.
+    test('US4-AS1p/AS5p a member\'s submission emits one push for the subscribed admin; the admin\'s own submission emits none', { tag: '@local-stack' }, async () => {
+      test.skip(
+        !rabbitMqManagementConfigured(),
+        'RABBITMQ_MANAGEMENT_ENDPOINT is not configured'
+      );
+      const push = await createForm(`US4 Form Push ${RUN}`, {
+        visibility: CalloutFormResponseVisibility.Admins,
+        responseMode: CalloutFormResponseMode.Multiple,
+      });
+      const before = await pushPublished();
+      await submit('m1', push, `US4-PUSH-SECRET-${RUN}`);
+      await expect
+        .poll(async () => (await pushPublished()) - before, { timeout: 30_000 })
+        .toBe(1);
+      // Settle on the member's emit before the negative half starts.
+      await expect
+        .poll(async () => (await formInApp('a2', push.calloutId)).length, {
+          timeout: 30_000,
+        })
+        .toBe(1);
+      const afterMember = await pushPublished();
+      await submit('a2', push, `US4-PUSH-OWN-${RUN}`);
+      // RabbitMQ management stats lag by ~5 s: hold the negative over the window.
+      await staysAt(async () => (await pushPublished()) - afterMember, 0);
     });
   }
 );
