@@ -35,11 +35,9 @@ import {
   collectPageErrors,
   dragOnCanvas,
   expectEditorAlive,
-  fixedBuildAvailable,
   openWhiteboardInEditor,
   pickTool,
   seedWhiteboardSpace,
-  SKIP_UNTIL_FIXED_BUILD,
   type WhiteboardSpace,
   waitForCollaborators,
 } from './whiteboard-collaboration.helpers';
@@ -72,7 +70,6 @@ const peerLostConcurrently = (peer: WhiteboardPeer, elementId: string, key: stri
 };
 
 test.describe('WC-01 undo racing a peer edit', () => {
-  test.skip(!fixedBuildAvailable, SKIP_UNTIL_FIXED_BUILD);
   // A retry would hide a flaky ordering gate, which is exactly what this walk must not do.
   test.describe.configure({ retries: 0 });
 
