@@ -454,6 +454,11 @@ export const recoverViaLink = async (
     const next = new URL(location!, url);
     const flow = next.searchParams.get('flow');
     if (flow && !next.pathname.includes('/self-service/')) {
+      if (/\/(login|recovery|registration|verification|error)\b/.test(next.pathname)) {
+        throw new Error(
+          `second-factor: the recovery link led to ${next.pathname}, not a settings flow`
+        );
+      }
       return { jar, settingsFlowId: flow };
     }
     url = next.toString();

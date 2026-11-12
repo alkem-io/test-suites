@@ -1,7 +1,7 @@
 /**
- * A member's own change to their second factor is recorded (FR-023, D44,
- * D48; US2-AS12) — the standing proof of research R32 that Kratos' settings
- * hooks run for totp and lookup_secret. Plan: ./second-factor-test-plan.md.
+ * A member's own change to their second factor is recorded in the audit
+ * trail — the standing proof that Kratos' settings hooks run for totp and
+ * lookup_secret. Plan: ./second-factor-test-plan.md.
  * Needs this feature's kratos-webhooks build (KRATOS_WEBHOOKS_IMAGE): on the
  * released image the hook's route does not exist and the red is the
  * environment's. The webauthn hook is the browser track's (security-key.spec.ts).

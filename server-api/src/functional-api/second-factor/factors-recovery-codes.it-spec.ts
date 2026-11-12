@@ -1,6 +1,6 @@
 /**
  * Recovery codes at Kratos and the emailed recovery link of an enrolled
- * identity (US2-AS1–AS3, AS9, AS10; D31). D2 is a one-off measurement
+ * identity. Codes with no other factor are a one-off measurement
  * (recovery-codes-only.measure.ts). Plan: ./second-factor-test-plan.md.
  * Needs a stack with the feature's Kratos values and the Kratos admin port.
  */

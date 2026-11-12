@@ -1,7 +1,6 @@
 /**
  * The requirement: the platform and organisation rules, grace, refusal per
- * transport, and who is never evaluated (US4-AS1–AS10; D10, D21, D23, D25,
- * D26, D35). Plan: ./second-factor-test-plan.md.
+ * transport, and who is never evaluated. Plan: ./second-factor-test-plan.md.
  *
  * Every refusal or coverage read goes through a minted cookie session — a
  * harness bearer is not a sign-in and reads the empty status by design. The
@@ -111,9 +110,12 @@ describe('Second factor — the requirement', () => {
     const settingsAdmin = { bearerToken: roleTokens().settingsAdmin };
     // The case switches the rule on from off, and back off when it ends. It
     // never starts from on: on a stack where the rule is live, switching it
-    // off would lift it for everyone.
-    const current = await readPlatformSecurity(settingsAdmin);
-    if (current.body.data?.platform.settings.security?.secondFactorRequiredForPlatformRoles) {
+    // off would lift it for everyone. The stored value decides, not an API
+    // read that could fail or be gated.
+    const stored = saved.security as {
+      secondFactorRequiredForPlatformRoles?: boolean;
+    } | null;
+    if (stored?.secondFactorRequiredForPlatformRoles === true) {
       throw new Error(
         'second-factor: the platform rule is already on here; this case needs a stack where it is off'
       );
@@ -218,12 +220,12 @@ describe('Second factor — the requirement', () => {
       const asAdmin = { bearerToken: admin.token };
       expect((await setOrganizationRule(org.id, true, asAdmin)).body.errors).toBeUndefined();
 
-      // US4-AS3, AS9: in grace, covered and not yet satisfied.
+      // In grace, covered and not yet satisfied.
       const grace = await requirementOf(await cookieOf(member));
       expect(grace).toMatchObject({ covered: true, satisfied: false });
       expect(Date.parse(grace.deadline!)).toBeGreaterThan(Date.now());
 
-      // D21: a reset in grace does not shorten the grace.
+      // A reset in grace does not shorten the grace.
       const reset = await resetSecondFactor(
         member.userId,
         { bearerToken: roleTokens().support },
@@ -249,10 +251,10 @@ describe('Second factor — the requirement', () => {
         // the ics route: for an unknown event it never answers at all.
         expect(isRefusal(await restGet(memoPdf, session.cookieHeader))).toBe(false);
 
-        // D26: no cache — the very next request sees the aged rule.
+        // No cache — the very next request sees the aged rule.
         await ageRuleSince({ organizationId: org.id }, 15);
 
-        // US4-AS4, per transport.
+        // Refused on every transport.
         const me = await postGraphqlRawAs(session, 'query { me { id } }');
         expect(me.status).toBe(200);
         const error = me.body.errors?.[0]?.extensions as Record<string, unknown>;
@@ -283,7 +285,7 @@ describe('Second factor — the requirement', () => {
         expect(hint.status).toBe(200);
         expect(hint.data).toMatchObject({ second_factor_required: true, id_token: expect.any(String) });
 
-        // D23: the established subscription delivers nothing more and closes 4403.
+        // The established subscription delivers nothing more and closes 4403.
         const after = await postToRoom(roomId, 'after', asAdmin);
         await eventually(() => sub.closeCode() !== undefined, DELIVERY_BOUND_MS, 'socket close');
         expect(sub.closeCode()).toBe(4403);
@@ -292,12 +294,12 @@ describe('Second factor — the requirement', () => {
         sub.dispose();
       }
 
-      // US4-AS6: a sign-in that completed the second factor is not refused.
+      // A sign-in that completed the second factor is not refused.
       expect(
         await servedAs(await cookieOf(member, { createdAtEpochS: marker + 1, acr: 'aal2' }))
       ).toBe(member.userId);
 
-      // US4-AS5, D10: a late joiner is refused on the very next request. The
+      // A late joiner is refused on the very next request. The
       // session is served once right before the grant, so whatever the server
       // remembers about it is fresh when the grant lands.
       const late = await cookieOf(lateJoiner);
@@ -307,14 +309,14 @@ describe('Second factor — the requirement', () => {
       expect(joined.body.data?.assignRoleToUser.id).toBe(lateJoiner.userId);
       expect(await servedAs(late)).toBe('refused');
 
-      // US4-AS8: covered by no rule — never refused, enrolled or not.
+      // Covered by no rule — never refused, enrolled or not.
       for (const person of [uncovered, uncoveredEnrolled]) {
         const cookie = await cookieOf(person);
         expect(await servedAs(cookie), person.email).toBe(person.userId);
         expect((await requirementOf(cookie)).covered).toBe(false);
       }
 
-      // US4-AS10, SC-005: a non-interactive token is not a sign-in.
+      // A non-interactive token is not a sign-in.
       const token = { bearerToken: await getUserToken(member.email) };
       expect(await servedAs(token)).toBe(member.userId);
       expect(await requirementOf(token)).toEqual({

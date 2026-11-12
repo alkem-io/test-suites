@@ -15,6 +15,7 @@ import {
 } from '@alkemio/tests-lib';
 import { grantCookieConsent } from '../helpers/cookies.helper';
 import { must } from '../helpers/lib-actor.helper';
+import { fillSecret } from '../helpers/login.helper';
 import { navigateToLoginPageFromMenu } from '../authentication/login-page-objects';
 import { fillUpSignInPageElements } from '../identity-flows/signin-page-objects';
 import {
@@ -139,7 +140,7 @@ export const submitSecondStep = async (
   field: Locator,
   value: string
 ): Promise<void> => {
-  await field.fill(value);
+  await fillSecret(field, value);
   await Promise.all([
     page.waitForResponse(
       r =>
@@ -149,6 +150,22 @@ export const submitSecondStep = async (
     page.getByRole('button', { name: COPY.verify, exact: true }).click(),
   ]);
 };
+
+/**
+ * Arms a waiter for the next GraphQL answer that carries the member's
+ * second-factor requirement — the read the reminder renders from. Register it
+ * before the navigation that triggers the read.
+ */
+export const requirementRead = (page: Page) =>
+  page.waitForResponse(response => {
+    if (!response.url().includes('graphql') || !response.ok()) return false;
+    try {
+      const query: unknown = response.request().postDataJSON()?.query;
+      return typeof query === 'string' && query.includes('secondFactorRequirement');
+    } catch {
+      return false;
+    }
+  });
 
 /** Signed in: the authenticated header, and no "Log in" link. */
 export const expectSignedIn = async (page: Page): Promise<void> => {
@@ -219,9 +236,10 @@ export const shownAuthenticatorKey = async (page: Page): Promise<string> => {
 export const enrolAuthenticatorOnPage = async (page: Page): Promise<string> => {
   const authenticator = block(page, COPY.authenticatorTitle);
   const secret = await shownAuthenticatorKey(page);
-  await authenticator
-    .getByRole('textbox', { name: COPY.codeFromApp, exact: true })
-    .fill(totpCode(secret));
+  await fillSecret(
+    authenticator.getByRole('textbox', { name: COPY.codeFromApp, exact: true }),
+    totpCode(secret)
+  );
   await authenticator
     .getByRole('button', { name: COPY.confirm, exact: true })
     .click();

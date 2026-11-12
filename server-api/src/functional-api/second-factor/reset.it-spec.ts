@@ -1,6 +1,7 @@
 /**
- * The support reset of a member's second factor (US2-AS5, AS7; D6, D23, D24,
- * D37). Plan: ./second-factor-test-plan.md. Needs a stack with the feature's
+ * The support reset of a member's second factor: who may reset whom, what it
+ * removes and records, the session fence, and the subscriptions it ends.
+ * Plan: ./second-factor-test-plan.md. Needs a stack with the feature's
  * Kratos values, the Kratos admin port, loopback Redis/Postgres and Matrix
  * (the room). On a database older than the server slice,
  * `authorizationPolicyResetOnPlatform` must have run once, or the reset
@@ -136,7 +137,7 @@ describe('Second factor — support reset', () => {
       expect((await readMySessionRaw({ cookieHeader: minted.cookieHeader })).status).toBe(401);
       await expectClosedOnNextMessage(sub, roomId, poster, 4401);
 
-      // The fence (D24): only `created_at` differs between the two sessions.
+      // The fence: only `created_at` differs between the two sessions.
       const marker = await readSubjectMarker(member.identityId);
       const begunBefore = await mintBffSession(member.identityId, member.userId, {
         createdAtEpochS: marker - 1,
@@ -207,9 +208,14 @@ describe('Second factor — support reset', () => {
       { invalidatePassword: false }
     );
     expect(self.body.data?.adminResetUserSecondFactor).toBeFalsy();
-    // The self-target guard, not the privilege check (D6's case proves the
-    // support role holds the privilege).
+    // The self-target guard, not the privilege check (the role case above
+    // proves the support role holds the privilege).
     expect(errorCodes(self)).toEqual(['FORBIDDEN']);
+    expect(
+      (self.body.errors?.[0]?.extensions as { details?: { reason?: string } })
+        ?.details?.reason,
+      self.raw
+    ).toBe('self_target');
     expect((await resetRows(supportId)).length).toBe(selfRowsBefore);
 
     // Created through the API, never signed in: no Kratos identity linked.
@@ -225,6 +231,7 @@ describe('Second factor — support reset', () => {
     );
     const unlinkedId = unlinked.data?.createUser.id;
     expect(unlinkedId, JSON.stringify(unlinked.error)).toBeDefined();
+    let deleted: Awaited<ReturnType<typeof deleteUser>>;
     try {
       const answer = await resetSecondFactor(
         unlinkedId!,
@@ -235,7 +242,13 @@ describe('Second factor — support reset', () => {
       expect(errorCodes(answer)).toEqual(['ENTITY_NOT_FOUND']);
       expect(await resetRows(unlinkedId!)).toEqual([]);
     } finally {
-      await deleteUser(unlinkedId!, asGlobalAdmin);
+      deleted = await deleteUser(unlinkedId!, asGlobalAdmin);
+    }
+    // Checked after the case's own outcome, which a throw here would mask.
+    if (!deleted.data?.deleteUser?.id) {
+      throw new Error(
+        `second-factor: delete unlinked user ${unlinkedId} failed: ${JSON.stringify(deleted.error)}`
+      );
     }
   });
 

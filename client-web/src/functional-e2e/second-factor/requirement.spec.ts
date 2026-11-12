@@ -29,6 +29,7 @@ import {
   expectSignedIn,
   freshPage,
   nameIdOf,
+  requirementRead,
   roleTokens,
   submitPassword,
 } from './second-factor.helpers';
@@ -166,7 +167,11 @@ test.describe('US4 — an organisation requires a second factor', () => {
               .getByRole('button', { name: COPY.reminderDismiss, exact: true })
               .click();
             await expect(reminder).toHaveCount(0);
+            // The absence after a reload means something only once the read
+            // the reminder renders from has been answered.
+            const reread = requirementRead(page);
             await page.reload();
+            await reread;
             await expectSignedIn(page);
             await expect(reminder).toHaveCount(0);
           } finally {

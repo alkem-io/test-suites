@@ -1,7 +1,7 @@
 /**
- * The reset with the password made unusable (D43, D46; US2-AS11 — the standing
- * proof of research R31), the settings profile method switched off (D47,
- * FR-024 — research R34) and the two-step sign-up that still works without it.
+ * The reset with the password made unusable, the settings profile method
+ * switched off (so a session cannot change its own recovery address) and the
+ * two-step sign-up that still works without it.
  * Plan: ./second-factor-test-plan.md. Needs a stack with the feature's Kratos
  * values, the Kratos admin port, loopback Redis/Postgres and the mail catcher.
  */
@@ -88,7 +88,8 @@ describe('Second factor — reset after a compromise', () => {
     const signedIn = await loginWithPassword(member.email, { password: newPassword });
     expect((await whoami(signedIn.sessionToken)).status).toBe(200);
 
-    // The OG-3 check can fail: after the member's own change it no longer matches.
+    // The password-change check can fail: after the member's own change it no
+    // longer matches.
     expect((await readIdentity(member.identityId)).credentials?.password?.updated_at).not.toBe(
       completed.passwordLastChangedAt
     );

@@ -1,5 +1,5 @@
 /**
- * A ONE-OFF MEASUREMENT, not a test (D2, risk R33): what Kratos does with
+ * A ONE-OFF MEASUREMENT, not a test: what Kratos does with
  * recovery codes on an identity that has no other second factor. Neither
  * answer is asserted. Run once, by path — never by CI:
  *

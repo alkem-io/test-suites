@@ -1,5 +1,5 @@
 /**
- * A ONE-OFF MEASUREMENT, not a test (D28, D41 (a), OG-4 (b), risk R16): does
+ * A ONE-OFF MEASUREMENT, not a test: does
  * Kratos itself bound wrong codes at the second step, past the login proxy?
  * Run once, by path, in the verify phase — never by CI:
  *

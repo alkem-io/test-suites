@@ -1,6 +1,7 @@
 /**
- * Authenticator app at Kratos (US1, SC-004) and the login proxy's bounds on the
- * second step (D28, D34, D36, D41 (c)).
+ * Authenticator app at Kratos, an identity with no second factor, and the
+ * login proxy's bounds on the second step (its per-address count, the forged
+ * address headers it ignores, and the methods it does not evaluate).
  * Plan: ./second-factor-test-plan.md. Needs a stack with the feature's Kratos
  * values, the Kratos admin port, loopback Redis/Postgres, and — for the
  * re-login and forged-header case — this feature's kratos-webhooks build.
@@ -137,7 +138,7 @@ describe('Second factor — authenticator app', () => {
     }
   });
 
-  test('D41 (c) a code sent by GET, PUT or PATCH is not evaluated; POST still is', async () => {
+  test('D41 (c) a code sent by GET, PUT or PATCH is not evaluated, and the correct one signs nobody in; POST still is', async () => {
     const { user, secret } = await enrolled('methods');
     const first = await loginWithPassword(user.email);
     const step = await startSecondStep(first.sessionToken);
@@ -145,6 +146,15 @@ describe('Second factor — authenticator app', () => {
     for (const method of ['GET', 'PUT', 'PATCH'] as const) {
       const [answer] = await submitWrongTotp({ ...step, secret }, 1, { method });
       expect(isInvalidCodeVerdict(answer), `${method} answer`).toBe(false);
+      // An answer with no verdict could still come from an evaluation (a
+      // redirect, a rewritten body). A sign-in by the correct code cannot.
+      const correct = await submitLogin(
+        step.flowId,
+        { method: 'totp', totp_code: totpCode(secret) },
+        { sessionToken: step.sessionToken, method }
+      );
+      expect(correct.body?.session, `${method} correct code`).toBeUndefined();
+      expect(correct.body?.session_token, `${method} correct code`).toBeUndefined();
     }
 
     // Control: the same detector sees the verdict a POST gets.

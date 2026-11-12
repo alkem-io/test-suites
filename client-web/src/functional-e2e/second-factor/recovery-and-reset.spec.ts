@@ -22,6 +22,7 @@ import {
   type ThrowawayUser,
 } from '@alkemio/tests-lib';
 import { sessionActor } from '../helpers/lib-actor.helper';
+import { fillSecret } from '../helpers/login.helper';
 import {
   passwordField,
   signInButton,
@@ -273,9 +274,10 @@ test.describe('US2 — recovery codes and the support reset', () => {
           // A wrong code resumes on this page with the identity provider's
           // message, not on any other card.
           const authenticator = block(page, COPY.authenticatorTitle);
-          await authenticator
-            .getByRole('textbox', { name: COPY.codeFromApp, exact: true })
-            .fill(wrongTotpCode(await shownAuthenticatorKey(page)));
+          await fillSecret(
+            authenticator.getByRole('textbox', { name: COPY.codeFromApp, exact: true }),
+            wrongTotpCode(await shownAuthenticatorKey(page))
+          );
           await authenticator
             .getByRole('button', { name: COPY.confirm, exact: true })
             .click();
@@ -330,7 +332,7 @@ test.describe('US2 — recovery codes and the support reset', () => {
             satisfied: true,
           });
 
-          // Risk R3: nothing the page needed sat behind an unreachable host.
+          // Nothing the page needed sat behind an unreachable host.
           expect(failed).toEqual([]);
         } finally {
           await context.close();

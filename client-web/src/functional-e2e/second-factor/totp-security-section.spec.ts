@@ -110,11 +110,15 @@ test.describe('US1 — the authenticator app in Security', () => {
         wrongTotpCode(secret)
       );
       // Refused: the identity provider's verdict on the code, on the field or
-      // as an alert, and still the second step, not signed in.
+      // as an alert of the second step's form (never any alert on the page),
+      // and still the second step, not signed in.
+      const secondStepForm = page
+        .locator('form')
+        .filter({ has: secondStepCodeField(page) });
       await expect(
         secondStepCodeField(page)
           .and(page.locator('[aria-invalid="true"]'))
-          .or(page.getByRole('alert'))
+          .or(secondStepForm.getByRole('alert'))
           .first()
       ).toBeVisible();
       await expect(secondStepHeading(page)).toBeVisible();
@@ -127,10 +131,10 @@ test.describe('US1 — the authenticator app in Security', () => {
       // page they asked for, signed in.
       await expect(goToHomeButton(page)).toBeVisible();
 
-      // US1-AS7: the server's session carries the second factor.
+      // The server's session carries the second factor.
       expect(await requirementOf(page)).toMatchObject({ satisfied: true });
 
-      // FR-007: a refresh of the session keeps it.
+      // A refresh of the session keeps it.
       const refreshed = await page.request.get(
         `${baseUrl}/api/auth/oidc/refresh`,
         { failOnStatusCode: false }

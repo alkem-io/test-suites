@@ -45,6 +45,8 @@ export const createThrowawayUser = async (tag: string): Promise<ThrowawayUser> =
     return { email, identityId, userId, token };
   } catch (error) {
     // The caller never receives this identity, so nothing else deletes it.
+    // A platform user the server already created for it is left behind: a
+    // test-data leak on the runner's stack, never a false green.
     await deleteIdentity(identityId);
     throw error;
   }

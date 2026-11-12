@@ -1,5 +1,5 @@
 /**
- * A ONE-OFF MEASUREMENT, not a test (risk R22): what re-checking the session
+ * A ONE-OFF MEASUREMENT, not a test: what re-checking the session
  * before every event costs on a room with a hundred cookie sockets under an
  * organisation rule in grace. Run once, by path, in the verify phase — never
  * by CI:
@@ -7,7 +7,7 @@
  *   cd server-api && SECOND_FACTOR_MEASURE=1 pnpm exec vitest run --project second-factor-measure subscription-cost
  *
  * Records, per message, the wall time from the post to the hundredth delivery
- * (the number R22 is judged on: it includes the session, marker and actor
+ * (the number the cost is judged on: it includes the session, marker and actor
  * reads the query count does not show) and, when the database exposes
  * `pg_stat_statements` over the loopback connection, the statements executed
  * per delivered event; otherwise it says the count was not available. Asserts
