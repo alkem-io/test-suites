@@ -8,6 +8,7 @@ import {
 } from '../baseFunctions';
 import { BOOTSTRAP_ROLES_ADMIN_EMAIL } from '../platform-roles/platform-role-users';
 import { getUserToken } from '../registration/get-user-token';
+import { readServedUser } from './graphql';
 import { createIdentity, deleteIdentity } from './kratos';
 
 /**
@@ -22,8 +23,6 @@ export type ThrowawayUser = {
   token: string;
 };
 
-const ME = 'query { me { user { id } } }';
-
 /**
  * A Kratos identity (verified email, harness password) and its platform user,
  * which the server creates on the identity's first sign-in.
@@ -33,9 +32,7 @@ export const createThrowawayUser = async (tag: string): Promise<ThrowawayUser> =
   const identityId = await createIdentity(email);
   try {
     const token = await getUserToken(email);
-    const me = await postGraphqlRaw<{ me: { user: { id: string } | null } }>(ME, {
-      bearerToken: token,
-    });
+    const me = await readServedUser({ bearerToken: token });
     const userId = me.body.data?.me?.user?.id;
     if (!userId) {
       throw new Error(

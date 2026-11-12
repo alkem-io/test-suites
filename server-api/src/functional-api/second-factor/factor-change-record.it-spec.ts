@@ -54,6 +54,7 @@ const DETAILS_KEYS = ['method', 'observedAt', 'requestContext', 'sourceFlowId'];
 const expectRowShape = (row: AuthenticationAuditRow, user: ThrowawayUser) => {
   expect(row.subjectUserId).toBe(user.userId);
   expect(row.initiatorUserId).toBe(user.userId);
+  expect(row.initiatorRole).toBe('self');
   expect(JSON.stringify(row.details)).not.toContain(user.email);
   const keys = Object.keys(row.details ?? {});
   expect(keys).toEqual(expect.arrayContaining(['method', 'observedAt']));

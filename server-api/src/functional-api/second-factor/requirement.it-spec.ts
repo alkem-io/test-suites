@@ -28,6 +28,7 @@ import {
   platformRoleEmail,
   postGraphqlRawAs,
   postToRoom,
+  readOrganizationSecondFactorRequired,
   readPlatformSecurity,
   readSecondFactorRequirement,
   readServedUser,
@@ -94,12 +95,10 @@ const restGet = (path: string, cookieHeader: string) =>
   });
 
 const REFUSAL_BODY = { statusCode: 403, error_code: 'second_factor_required' };
-const isRefusal = (answer: { status: number; data: unknown }) =>
-  answer.status === 403 &&
-  (answer.data as { error_code?: string } | null)?.error_code ===
-    REFUSAL_BODY.error_code;
+// Platform-rooted only, and reader-dependent: myPrivileges is what tells
+// "served as anonymous" apart from "served as the member".
 const PLATFORM_ONLY =
-  'query { platform { configuration { defaultVisualTypeConstraints(type: BANNER) { minWidth maxWidth } } } }';
+  'query { platform { authorization { myPrivileges } configuration { defaultVisualTypeConstraints(type: BANNER) { minWidth maxWidth } } } }';
 
 describe('Second factor — the requirement', () => {
   test('US4-AS1 D25 D35 the platform rule, switched on in grace: audit rows, the read gate, a role holder covered', async () => {
@@ -155,6 +154,14 @@ describe('Second factor — the requirement', () => {
       const memberCookie = await cookieOf(member);
       const asMember = await readPlatformSecurity(memberCookie);
       expect(asMember.body.data?.platform.settings.security, asMember.raw).toBeNull();
+      // Nor may a plain member switch it: refused, no row, still on.
+      const byMember = await setPlatformRule(false, { bearerToken: member.token });
+      expect(errorCodes(byMember), byMember.raw).toContain('FORBIDDEN_POLICY');
+      expect(await ruleRows()).toHaveLength(rowsBefore + 1);
+      expect(
+        (await readPlatformSecurity(settingsAdmin)).body.data?.platform.settings
+          .security?.secondFactorRequiredForPlatformRoles
+      ).toBe(true);
       // The platform rule covers role holders only.
       expect((await requirementOf(memberCookie)).covered).toBe(false);
 
@@ -188,7 +195,7 @@ describe('Second factor — the requirement', () => {
     }
   });
 
-  test('US4-AS2 D25 the organisation rule covers owner, admin and associate; off uncovers; each transition is one row', async () => {
+  test('US4-AS2 D25 the organisation rule covers owner, admin and associate; only its admin switches it; off uncovers; each transition is one row', async () => {
     const admin = await throwawayUser('orgadmin');
     const associate = await throwawayUser('associate');
     await withThrowawayOrganization({ admin, associates: [associate] }, async org => {
@@ -215,6 +222,14 @@ describe('Second factor — the requirement', () => {
         expect(Date.parse(status.deadline!)).toBe(since + GRACE_MS);
         expect(status.satisfied).toBe(false);
       }
+
+      // An associate is covered but may not switch the rule: refused, no row, still on.
+      const byAssociate = await setOrganizationRule(org.id, false, {
+        bearerToken: associate.token,
+      });
+      expect(errorCodes(byAssociate), byAssociate.raw).toContain('FORBIDDEN_POLICY');
+      expect(await ruleRows(org.id)).toHaveLength(1);
+      expect(await readOrganizationSecondFactorRequired(org.id, asAdmin)).toBe(true);
 
       await setOrganizationRule(org.id, false, asAdmin);
       const rows = await ruleRows(org.id);
@@ -264,9 +279,16 @@ describe('Second factor — the requirement', () => {
         await awaitLive(sub, () => postToRoom(roomId, 'before', asAdmin), DELIVERY_BOUND_MS);
         const memoPdf = `/api/private/rest/memo/${randomUUID()}/pdf`;
         const ics = `/api/private/rest/calendar/event/${randomUUID()}/ics`;
-        // Control: in grace, the same request is answered by its route. Not
+        // Control: in grace, the same request is answered by its route — 404
+        // for an unknown memo, where a session it rejected would be 401. Not
         // the ics route: for an unknown event it never answers at all.
-        expect(isRefusal(await restGet(memoPdf, session.cookieHeader))).toBe(false);
+        expect((await restGet(memoPdf, session.cookieHeader)).status).toBe(404);
+        // Control: in grace, a platform-rooted document is served as the member.
+        const anonymous = await postGraphqlRawAs({ anonymous: 'private' }, PLATFORM_ONLY);
+        expect(anonymous.body.errors, anonymous.raw).toBeUndefined();
+        const inGrace = await postGraphqlRawAs(session, PLATFORM_ONLY);
+        expect(inGrace.body.errors, inGrace.raw).toBeUndefined();
+        expect(inGrace.body).not.toEqual(anonymous.body);
 
         // No cache — the very next request sees the aged rule.
         await ageRuleSince({ organizationId: org.id }, 15);
@@ -278,7 +300,6 @@ describe('Second factor — the requirement', () => {
         expect(error).toMatchObject({ code: 'SECOND_FACTOR_REQUIRED', numericCode: 11119 });
 
         const platformOnly = await postGraphqlRawAs(session, PLATFORM_ONLY);
-        const anonymous = await postGraphqlRawAs({ anonymous: 'private' }, PLATFORM_ONLY);
         expect(platformOnly.body.errors).toBeUndefined();
         expect(platformOnly.body).toEqual(anonymous.body);
 

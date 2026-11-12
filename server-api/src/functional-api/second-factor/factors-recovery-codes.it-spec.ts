@@ -26,6 +26,7 @@ import {
   startSecondStep,
   submitLogin,
   upgradeBrowserSessionWithTotp,
+  whoamiInBrowser,
   type KratosAnswer,
 } from '@alkemio/tests-lib';
 import { secondFactorCases } from './_support/cases';
@@ -114,7 +115,7 @@ describe('Second factor — recovery codes', () => {
     expect(isRecoveryCodeRefused(refused), JSON.stringify(refused.body).slice(0, 300)).toBe(true);
   });
 
-  test('US2-AS10 D31 the emailed link signs an enrolled identity in at aal1 only; the password changes after the second step', async () => {
+  test('US2-AS10 D31 the emailed link signs an enrolled identity in at aal1 only, which whoami refuses; the password changes after the second step', async () => {
     const { user, secret } = await enrolledWithCodes('link');
     const newPassword = `Sf-${randomUUID()}`;
 
@@ -124,6 +125,10 @@ describe('Second factor — recovery codes', () => {
       s.authentication_methods.some(m => /recovery/.test(m.method))
     );
     expect(recoverySession?.authenticator_assurance_level).toBe('aal1');
+    // And Kratos does not accept that aal1 session where aal2 is available.
+    const recoveryWhoami = await whoamiInBrowser(jar);
+    expect(recoveryWhoami.status).toBe(403);
+    expect(kratosErrorId(recoveryWhoami)).toBe('session_aal2_required');
 
     const refused = await changePasswordInBrowser(jar, settingsFlowId, newPassword);
     const owesSecondStep =
@@ -135,6 +140,7 @@ describe('Second factor — recovery codes', () => {
 
     const upgraded = await upgradeBrowserSessionWithTotp(jar, secret);
     expect(upgraded.status).toBe(200);
+    expect((await whoamiInBrowser(jar)).status).toBe(200);
     const flow = await createBrowserSettingsFlow(jar);
     expect(flow.status).toBe(200);
     const changed = await changePasswordInBrowser(jar, flow.body.id, newPassword);

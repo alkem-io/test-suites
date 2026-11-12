@@ -1,4 +1,4 @@
-// plan: second-factor-test-plan.md (US1)
+// plan: second-factor-test-plan.md
 //
 // The authenticator app, end to end in the browser: enrolled from Security,
 // asked for at the second sign-in step, reflected in the session the server

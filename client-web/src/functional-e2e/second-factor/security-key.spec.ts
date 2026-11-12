@@ -1,4 +1,4 @@
-// plan: second-factor-test-plan.md (US3)
+// plan: second-factor-test-plan.md
 //
 // Security keys as a second factor, and the passkey sign-in beside them, with
 // a CDP virtual authenticator standing in for the hardware (Chromium only).

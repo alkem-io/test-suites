@@ -12,6 +12,7 @@ import {
   enrolTotp,
   isInvalidCodeVerdict,
   getUserToken,
+  highestAddressCount,
   kratosErrorId,
   loginWithPassword,
   loginWithTotp,
@@ -30,9 +31,8 @@ const throwawayUser = secondFactorCases();
 
 const enrolled = async (tag: string) => {
   const user = await throwawayUser(tag);
-  const enrolling = await loginWithPassword(user.email);
-  const secret = await enrolTotp(enrolling.sessionToken);
-  return { user, secret, enrollingToken: enrolling.sessionToken };
+  const secret = await enrolTotp((await loginWithPassword(user.email)).sessionToken);
+  return { user, secret };
 };
 
 describe('Second factor — authenticator app', () => {
@@ -46,18 +46,6 @@ describe('Second factor — authenticator app', () => {
     const answer = await whoami(first.sessionToken);
     expect(answer.status).toBe(403);
     expect(kratosErrorId(answer)).toBe('session_aal2_required');
-  });
-
-  test('R11 what the enrolling session is worth (recorded, either answer accepted)', async () => {
-    const { enrollingToken } = await enrolled('enrolling');
-
-    const answer = await whoami(enrollingToken);
-    const found =
-      answer.status === 200
-        ? `200 ${answer.body?.authenticator_assurance_level}`
-        : `${answer.status} ${kratosErrorId(answer)}`;
-    console.log(`[second-factor R11] whoami for the enrolling session: ${found}`);
-    expect(['200 aal2', '403 session_aal2_required']).toContain(found);
   });
 
   test('US1-AS4 a wrong code is refused; the right one yields aal2 with totp; US1-AS6 after removal the password alone signs in', async () => {
@@ -123,6 +111,16 @@ describe('Second factor — authenticator app', () => {
       const answers = [...first.answers, ...second.answers];
       expect(answers).toHaveLength(max);
       expect(answers.map(a => a.status)).not.toContain(429);
+
+      // The window is fixed from the first count: had it lapsed mid-batch, or
+      // were the proxy's counters not in the harness Redis, the next answer
+      // would be a 400 that reads as a broken bound.
+      const counted = await highestAddressCount();
+      if (counted < max) {
+        throw new Error(
+          `environment: the login proxy's address counter holds ${counted}, not ${max} — its window lapsed mid-batch, or its Redis is not the harness's (REDIS_HOST)`
+        );
+      }
 
       const step = { ...second.step, secret };
       const [overBound] = await submitWrongTotp(step, 1, { headers: forged });

@@ -39,7 +39,8 @@ const DELIVERY_BOUND_MS = 120_000;
 const statementCount = async (): Promise<number | null> => {
   try {
     const [row] = await queryHarnessDb<{ calls: string | null }>(
-      'SELECT sum(calls)::text AS calls FROM pg_stat_statements'
+      `SELECT sum(calls)::text AS calls FROM pg_stat_statements
+        WHERE dbid = (SELECT oid FROM pg_database WHERE datname = current_database())`
     );
     return row.calls === null ? null : Number(row.calls);
   } catch {
@@ -88,7 +89,7 @@ test('R22 a hundred cookie sockets on one room under a rule in grace', async () 
             ? 'not available (pg_stat_statements not exposed)'
             : ((queriesAfter - queriesBefore) / SOCKETS).toFixed(1);
         console.log(
-          `[second-factor R22] message ${n}: ${wallMs} ms to the ${SOCKETS}th delivery; statements per delivered event: ${perEvent}`
+          `[second-factor R22] message ${n}: ${wallMs} ms to the ${SOCKETS}th delivery; statements per delivered event (the post's own included): ${perEvent}`
         );
       }
 

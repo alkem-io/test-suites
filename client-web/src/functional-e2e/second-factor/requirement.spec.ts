@@ -1,4 +1,4 @@
-// plan: second-factor-test-plan.md (US4)
+// plan: second-factor-test-plan.md
 //
 // An organisation's rule, as its members meet it in the browser: the switch in
 // the organisation's settings, the reminder in grace, the refusal once the
@@ -18,7 +18,6 @@ import {
   readSecondFactorRequirement,
   readServedUser,
   setOrganizationRule,
-  testConfiguration,
   withThrowawayOrganization,
   type ThrowawayUser,
 } from '@alkemio/tests-lib';
@@ -65,7 +64,7 @@ const memoPdfWithBearer = async (token: string) => {
   const api = await request.newContext();
   try {
     const response = await api.get(
-      `${testConfiguration.endPoints.rest.replace(/\/$/, '')}/memo/${randomUUID()}/pdf`,
+      `${baseUrl}/api/private/rest/memo/${randomUUID()}/pdf`,
       { headers: { Authorization: `Bearer ${token}` }, failOnStatusCode: false }
     );
     const text = await response.text();
@@ -243,10 +242,12 @@ test.describe('US4 — an organisation requires a second factor', () => {
             // Control: the same member's non-interactive token is never
             // evaluated, so the same requests are served — as the member, so a
             // token the server did not accept cannot pass for one it served.
+            // An accepted token on an unknown memo is answered by the route:
+            // 404, where a rejected token is 401 and the refusal 403.
             const control = await readServedUser({ bearerToken: member!.token });
             expect(errorCodes(control)).toEqual([]);
             expect(control.body.data?.me.user?.id).toBe(member!.userId);
-            expect((await memoPdfWithBearer(member!.token)).status).not.toBe(403);
+            expect((await memoPdfWithBearer(member!.token)).status).toBe(404);
           } finally {
             await context.close();
           }

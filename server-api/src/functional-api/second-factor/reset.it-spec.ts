@@ -151,6 +151,7 @@ describe('Second factor — support reset', () => {
         removedCredentialTypes: result!.removedCredentialTypes,
         sessionsRevoked: result!.sessionsRevoked,
         tokenRevocationFailedCount: expect.any(Number),
+        passwordInvalidated: false,
       });
       expect(JSON.stringify(rows.map(r => r.details))).not.toContain(member.email);
     } finally {

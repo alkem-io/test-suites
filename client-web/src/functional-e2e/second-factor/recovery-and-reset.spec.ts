@@ -1,4 +1,4 @@
-// plan: second-factor-test-plan.md (US2, US4-AS6)
+// plan: second-factor-test-plan.md
 //
 // Recovery codes in Security, signing in with one, and the support reset of a
 // member covered by an organisation rule whose deadline has passed: the next
@@ -240,11 +240,15 @@ test.describe('US2 — recovery codes and the support reset', () => {
 
         // A sign-in that begins in the marker's own second is rejected by the
         // reset's fence. The marker and the sign-in's start are both the
-        // SERVER's clock; one extra second covers a runner up to a second
-        // ahead of it (a port-forwarded cluster). A condition, bounded.
+        // server's clock; one extra second covers a runner up to a second
+        // ahead of it. A condition, bounded.
         const marker = await readSubjectMarker(member!.identityId);
         await expect
-          .poll(() => Math.floor(Date.now() / 1000), { timeout: 5_000 })
+          .poll(() => Math.floor(Date.now() / 1000), {
+            timeout: 5_000,
+            message:
+              "the runner's clock did not pass the reset's marker within 5 s: it is behind the stack's",
+          })
           .toBeGreaterThan(marker + 1);
 
         const { context, page } = await freshPage(browser);

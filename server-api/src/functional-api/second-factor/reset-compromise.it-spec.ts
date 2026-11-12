@@ -20,7 +20,7 @@ import {
   loginWithPassword,
   loginWithTotp,
   passwordLogin,
-  postGraphqlRaw,
+  readServedUser,
   readIdentity,
   recoverViaLink,
   registerTwoStep,
@@ -153,12 +153,7 @@ describe('Second factor — reset after a compromise', () => {
     } finally {
       try {
         const token = await getUserToken(email).catch(() => undefined);
-        const me = token
-          ? await postGraphqlRaw<{ me: { user: { id: string } | null } }>(
-              'query { me { user { id } } }',
-              { bearerToken: token }
-            )
-          : undefined;
+        const me = token ? await readServedUser({ bearerToken: token }) : undefined;
         const userId = me?.body.data?.me?.user?.id;
         if (userId) {
           await deleteThrowawayUser({ userId }, roleTokens().usersAdmin);

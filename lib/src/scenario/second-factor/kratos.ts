@@ -497,6 +497,10 @@ export const createBrowserSettingsFlow = (
 ): Promise<KratosAnswer> =>
   browserCall(jar, 'GET', `${publicBase()}/self-service/settings/browser`);
 
+/** `whoami` for the jar's session, raw. */
+export const whoamiInBrowser = (jar: CookieJar): Promise<KratosAnswer> =>
+  browserCall(jar, 'GET', `${publicBase()}/sessions/whoami`);
+
 /** Completes the second step in the browser jar with a code from `secret`. */
 export const upgradeBrowserSessionWithTotp = async (
   jar: CookieJar,
