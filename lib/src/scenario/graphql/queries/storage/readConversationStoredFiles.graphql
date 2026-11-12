@@ -1,0 +1,21 @@
+query ReadConversationStoredFiles($conversationId: UUID!) {
+  lookup {
+    conversation(ID: $conversationId) {
+      id
+      room {
+        id
+        messages {
+          id
+          message
+          attachments { displayName mimeType size }
+        }
+      }
+      storageBucket {
+        id
+        allowedMimeTypes
+        maxFileSize
+        documents { ...StoredDocument }
+      }
+    }
+  }
+}

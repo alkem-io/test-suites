@@ -347,6 +347,21 @@ _Searched 2026-11-09, branch `qa/w2-journey-7` off `origin/develop` @ `afbefaf2`
 
 **Search again with:** `git grep -n -E "settings/about|settings/profile|updateSpace\(|updateUser\(|updateOrganization\(|createOrganization|readSpaceAbout|getUserData|readOrganization|tagsets|Create Organisation" <ref> -- client-web/src server-api/src/functional-api lib/src/scenario ':!lib/src/core/generated'`.
 
+## File uploads — reference file, media gallery, message attachment (W2 journey 11)
+
+_Searched 2026-11-12, branch `qa/w2-journey-11` off `origin/develop` @ `ef405cc0`, against client-web `develop` @ `25ded1467` and server `develop` @ `e120d25a1`. Plan: `client-web/src/functional-e2e/file-uploads/file-uploads-test-plan.md` (Draft; 6 cases, MA-1/2 `@local-stack`)._
+
+| Behaviour | Coverage | Where |
+| --- | --- | --- |
+| Upload a file as a post reference through the UI, read back from storage | **None** before J11; API-only uploads in `server-api/…/storage/uploads.it-spec.ts` | `file-uploads/us1-reference-file.spec.ts` › RF-1 |
+| A refused file type on a reference | **None** in the UI | `us1-reference-file.spec.ts` › RF-2 |
+| Add an image to a media gallery, read back from storage | **None** at any level (`addVisualToMediaGallery` unreached, catalogue CT-9) | `file-uploads/us2-media-gallery.spec.ts` › MG-1, MG-2 |
+| Chat (conversation) attachment stored in the conversation bucket and served to members only | **None**. Comment images (`client-web/tests/comment-images-*`) send through the same media route, with no storage read-back | `file-uploads/us3-message-attachment.spec.ts` › MA-1, MA-2 (`@local-stack`) |
+| Download refused to a signed-in outsider | API matrix in `server-api/…/storage/auth/*`; UI-driven uploads: J11 | RF-1, MG-1, MA-1 |
+| Size limits, relocation on create, deletion of stored files | **None** in the UI | gap (plan § Not covered) |
+
+**Search again with:** `git grep -n -E "uploadFileOnStorageBucket|uploadImageOnVisual|addVisualToMediaGallery|messaging/media/upload|rest/storage/document|readCalloutStoredFiles|downloadStoredFile" <ref> -- client-web/src client-web/tests server-api/src lib/src/scenario ':!lib/src/core/generated'`.
+
 ## Orphan-free deletion: owned records and policies after a delete (server#6614 / #6637)
 
 _Searched 2026-10-16, test-suites `develop` @ `b451c329`, server `origin/develop` @ `1691e98e9` (contains the #6637 merge `08f088eaa`). Plan: `server-api/src/functional-api/orphan-free-deletion/orphan-free-deletion-test-plan.md` (Approved), plus the server#6614 addendum (Approved 2026-10-16; CV-1 built) in `journey/conversion/conversion-test-plan.md`._
