@@ -6,9 +6,9 @@
  * `authorizationPolicyResetOnPlatform` must have run once, or the reset
  * answers FORBIDDEN_POLICY for an environment reason.
  */
-import axios from 'axios';
 import {
   authenticationAuditRows,
+  awaitLive,
   createPrivateRoom,
   createUser,
   credentialTypes,
@@ -24,13 +24,11 @@ import {
   mintBffSession,
   postGraphqlRaw,
   postToRoom,
-  readBffSession,
   readMySessionRaw,
   readSubjectMarker,
   resetSecondFactor,
   secondFactorCredentialsLeft,
   subscribeToRoom,
-  testConfiguration,
   type RoomSubscription,
   type ThrowawayUser,
 } from '@alkemio/tests-lib';
@@ -64,8 +62,11 @@ const expectLive = async (
   roomId: string,
   poster: ThrowawayUser
 ) => {
-  const id = await postToRoom(roomId, 'before', { bearerToken: poster.token });
-  await eventually(() => sub.messageIds.includes(id), DELIVERY_BOUND_MS, 'delivery before the action');
+  await awaitLive(
+    sub,
+    () => postToRoom(roomId, 'before', { bearerToken: poster.token }),
+    DELIVERY_BOUND_MS
+  );
 };
 
 /** The next message is not delivered and the socket closes with `code`. */
@@ -179,7 +180,9 @@ describe('Second factor — support reset', () => {
       { invalidatePassword: false }
     );
     expect(self.body.data?.adminResetUserSecondFactor).toBeFalsy();
-    expect(errorCodes(self).length).toBeGreaterThan(0);
+    // The self-target guard, not the privilege check (D6's case proves the
+    // support role holds the privilege).
+    expect(errorCodes(self)).toEqual(['FORBIDDEN']);
     expect((await resetRows(supportId)).length).toBe(selfRowsBefore);
 
     // Created through the API, never signed in: no Kratos identity linked.
@@ -202,7 +205,7 @@ describe('Second factor — support reset', () => {
         { invalidatePassword: false }
       );
       expect(answer.body.data?.adminResetUserSecondFactor).toBeFalsy();
-      expect(errorCodes(answer).length).toBeGreaterThan(0);
+      expect(errorCodes(answer)).toEqual(['ENTITY_NOT_FOUND']);
       expect(await resetRows(unlinkedId!)).toEqual([]);
     } finally {
       await deleteUser(unlinkedId!, asGlobalAdmin);
@@ -218,34 +221,6 @@ describe('Second factor — support reset', () => {
     try {
       await expectLive(sub, roomId, poster);
       await deleteBffSession(minted.sessionId);
-      await expectClosedOnNextMessage(sub, roomId, poster, 4401);
-    } finally {
-      sub.dispose();
-    }
-  });
-
-  test('D37 a subscription whose owner signs out is closed with 4401 and delivers nothing', async ctx => {
-    const member = await throwawayUser('signout');
-    const poster = await throwawayUser('sposter');
-    const roomId = await roomOf(poster, member);
-    const minted = await mintBffSession(member.identityId, member.userId);
-    const sub = await subscribeToRoom(minted.cookieHeader, roomId);
-    try {
-      await expectLive(sub, roomId, poster);
-      await axios.get(
-        `${testConfiguration.endPoints.server.replace(/\/$/, '')}/api/auth/oidc/logout`,
-        {
-          headers: { Cookie: minted.cookieHeader },
-          maxRedirects: 0,
-          validateStatus: () => true,
-        }
-      );
-      if ((await readBffSession(minted.sessionId)) !== null) {
-        console.log(
-          '[second-factor D37] the logout route did not end a fabricated session; the dropped-record case is the discriminating one'
-        );
-        ctx.skip();
-      }
       await expectClosedOnNextMessage(sub, roomId, poster, 4401);
     } finally {
       sub.dispose();

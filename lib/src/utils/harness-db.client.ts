@@ -33,7 +33,7 @@ const getHarnessDbPool = (): Pool => {
       max: 5,
       connectionTimeoutMillis: 5_000,
       // Bounded, so a harness write that waits on a lock fails and says on
-      // what, instead of hanging a whole track (workspace#103 live round 2).
+      // what, instead of hanging a whole track.
       lock_timeout: 30_000,
       statement_timeout: 60_000,
       query_timeout: 65_000,
@@ -57,11 +57,12 @@ export const queryHarnessDb = async <T extends QueryResultRow = QueryResultRow>(
     const result = await getHarnessDbPool().query<T>(text, params);
     return result.rows;
   } catch (error) {
-    // 55P03 lock_not_available: name who held the lock and what it was doing.
+    // 55P03 lock_not_available: name who held the lock. Not its query text:
+    // the error reaches published reports.
     if ((error as { code?: string }).code === '55P03') {
       const holders = await getHarnessDbPool()
         .query(
-          `SELECT pid, application_name, state, xact_start, left(query, 200) AS query
+          `SELECT pid, application_name, state, xact_start
              FROM pg_stat_activity
             WHERE datname = current_database() AND pid <> pg_backend_pid()
               AND (state = 'idle in transaction' OR xact_start < now() - interval '25 seconds')`

@@ -1,3 +1,5 @@
+import { assertLoopbackInternal } from '../../config/loopback-guard';
+import { testConfiguration } from '../../config/test.configuration';
 import { queryHarnessDb } from '../../utils/harness-db.client';
 import {
   redisDeleteByPrefix,
@@ -21,9 +23,19 @@ const SUBJECT_MARKER_PREFIX = 'alkemio:subrevoked:';
  * longer clears its address, so without this the suites' own sign-ins (the
  * harness's Kratos logins and the server's non-interactive ones, all from the
  * runner's address) add up to the lockout threshold within one window.
+ *
+ * It clears every address, and that counter is the only bound on guessing a
+ * second-step code. So it runs only where the runner signs in through a
+ * loopback identity host, i.e. a stack of its own: a loopback Redis alone
+ * does not prove that, since a port-forward to a shared cluster's Redis is
+ * loopback too. A shared cluster needs the harness's explicit, logged override.
  */
-export const clearAddressCounters = (): Promise<number> =>
-  redisDeleteByPrefix(LOGIN_BACKOFF_IP_PREFIX);
+export const clearAddressCounters = (): Promise<number> => {
+  assertLoopbackInternal('Clearing every login-proxy address counter (KRATOS_ENDPOINT)', {
+    url: testConfiguration.endPoints.kratos.public,
+  });
+  return redisDeleteByPrefix(LOGIN_BACKOFF_IP_PREFIX);
+};
 
 /** The subject-revocation marker the server wrote for `sub`, epoch seconds. */
 export const readSubjectMarker = async (sub: string): Promise<number> => {

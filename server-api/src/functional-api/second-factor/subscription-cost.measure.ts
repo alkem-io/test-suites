@@ -4,7 +4,7 @@
  * organisation rule in grace. Run once, by path, in the verify phase — never
  * by CI:
  *
- *   cd server-api && pnpm exec vitest run --project second-factor-measure subscription-cost
+ *   cd server-api && SECOND_FACTOR_MEASURE=1 pnpm exec vitest run --project second-factor-measure subscription-cost
  *
  * Records, per message, the wall time from the post to the hundredth delivery
  * (the number R22 is judged on: it includes the session, marker and actor

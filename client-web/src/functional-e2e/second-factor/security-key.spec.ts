@@ -5,10 +5,12 @@
 // A real hardware key is walked by a person on acceptance.
 import { expect, test } from '@playwright/test';
 import {
+  authenticationAuditRows,
   clearAddressCounters,
   createThrowawayUser,
   credentialTypes,
   deleteThrowawayUser,
+  secondFactorCredentialsLeft,
   totpCode,
   type ThrowawayUser,
 } from '@alkemio/tests-lib';
@@ -42,6 +44,17 @@ const users: ThrowawayUser[] = [];
  */
 const PASSKEY = /passkey/i;
 const ADD_PASSKEY = 'Add passkey';
+
+/** The settings hook's record of a member's own security-key change. */
+const observedKeyRows = async (user: ThrowawayUser): Promise<number> =>
+  (await authenticationAuditRows({ userId: user.userId })).filter(
+    row =>
+      row.outcome === 'observed' &&
+      (row.details as { method?: string } | null)?.method === 'webauthn'
+  ).length;
+
+/** Bounded as the API track's totp and lookup_secret rows are. */
+const ROW_BOUND = { timeout: 10_000, message: 'webauthn: settings hook did not run' };
 
 test.describe('US3 — security keys', () => {
   test.skip(
@@ -88,6 +101,7 @@ test.describe('US3 — security keys', () => {
         keys.getByRole('button', { name: COPY.removeKey(keyName), exact: true })
       ).toBeVisible();
       expect(await credentialTypes(user.identityId)).toContain('webauthn');
+      await expect.poll(() => observedKeyRows(user), ROW_BOUND).toBe(1);
 
       await logOut(page);
       await submitPassword(page, user.email);
@@ -116,6 +130,10 @@ test.describe('US3 — security keys', () => {
       await expect(dialog).toBeHidden();
       await expect(keys.getByText(COPY.noKeys, { exact: true })).toBeVisible();
       await expect(keys.getByText(keyName, { exact: true })).toHaveCount(0);
+      expect(await secondFactorCredentialsLeft(user.identityId)).not.toContain(
+        'webauthn'
+      );
+      await expect.poll(() => observedKeyRows(user), ROW_BOUND).toBe(2);
     } finally {
       await context.close();
     }

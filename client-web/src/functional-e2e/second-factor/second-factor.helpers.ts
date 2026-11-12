@@ -9,6 +9,7 @@ import {
   readMyUser,
   seedPlatformRoleUsers,
   clearAddressCounters,
+  testConfiguration,
   totpCode,
   type ThrowawayUser,
 } from '@alkemio/tests-lib';
@@ -34,7 +35,8 @@ export const baseUrl = (
   process.env.ALKEMIO_BASE_URL || 'http://localhost:3000'
 ).replace(/\/$/, '');
 
-export const password = process.env.AUTH_TEST_HARNESS_PASSWORD || 'change_me';
+/** The harness password every throwaway identity is created with. */
+export const password = testConfiguration.identities.admin.password;
 
 export const COPY = {
   secondStepTitle: 'Two-step verification',

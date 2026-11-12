@@ -136,8 +136,8 @@ describe('Second factor — reset after a compromise', () => {
           )
         : undefined;
       const userId = me?.body.data?.me?.user?.id;
-      if (userId && identityId) {
-        await deleteThrowawayUser({ userId, identityId }, roleTokens().usersAdmin);
+      if (userId) {
+        await deleteThrowawayUser({ userId }, roleTokens().usersAdmin);
       } else if (identityId) {
         await deleteIdentity(identityId);
       }

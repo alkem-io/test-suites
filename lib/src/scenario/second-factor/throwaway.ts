@@ -8,7 +8,7 @@ import {
 } from '../baseFunctions';
 import { BOOTSTRAP_ROLES_ADMIN_EMAIL } from '../platform-roles/platform-role-users';
 import { getUserToken } from '../registration/get-user-token';
-import { createIdentity, deleteIdentity } from './kratos';
+import { createIdentity } from './kratos';
 
 /**
  * Identities and organisations each spec creates for itself and deletes in
@@ -44,16 +44,20 @@ export const createThrowawayUser = async (tag: string): Promise<ThrowawayUser> =
   return { email, identityId, userId, token };
 };
 
-/** Deletes the platform user (and its identity) as Platform Users Admin. */
+/** Deletes the platform user and its identity as Platform Users Admin. */
 export const deleteThrowawayUser = async (
-  user: Pick<ThrowawayUser, 'identityId' | 'userId'>,
+  user: Pick<ThrowawayUser, 'userId'>,
   usersAdminToken: string
 ): Promise<void> => {
-  await postGraphqlRaw(
+  const deleted = await postGraphqlRaw<{ deleteUser: { id: string } }>(
     'mutation($id: UUID!) { deleteUser(deleteData: { ID: $id, deleteIdentity: true }) { id } }',
     { variables: { id: user.userId }, bearerToken: usersAdminToken }
   );
-  await deleteIdentity(user.identityId);
+  if (!deleted.body.data?.deleteUser?.id) {
+    throw new Error(
+      `second-factor: delete user ${user.userId} failed: ${deleted.raw.slice(0, 300)}`
+    );
+  }
 };
 
 export type ThrowawayOrganization = { id: string; roleSetId: string };
@@ -123,6 +127,8 @@ export const withThrowawayOrganization = async <T>(
     'create organisation'
   ).createOrganization;
   const organization = { id: created.id, roleSetId: created.roleSet.id };
+  let result: T;
+  let deleted: Awaited<ReturnType<typeof deleteOrganization>>;
   try {
     for (const associate of people.associates) {
       const assigned = await assignOrganizationAssociate(
@@ -136,8 +142,11 @@ export const withThrowawayOrganization = async <T>(
         );
       }
     }
-    return await fn(organization);
+    result = await fn(organization);
   } finally {
-    await deleteOrganization(organization.id, actor);
+    deleted = await deleteOrganization(organization.id, actor);
   }
+  // Reported only when `fn` passed: a throw from `finally` would hide its error.
+  must(deleted, 'delete organisation');
+  return result;
 };

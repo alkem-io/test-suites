@@ -3,7 +3,7 @@
  * Kratos itself bound wrong codes at the second step, past the login proxy?
  * Run once, by path, in the verify phase — never by CI:
  *
- *   cd server-api && pnpm exec vitest run --project second-factor-measure kratos-bound
+ *   cd server-api && SECOND_FACTOR_MEASURE=1 pnpm exec vitest run --project second-factor-measure kratos-bound
  *
  * Needs `KRATOS_PUBLIC_DIRECT_URL` (Kratos' own public port, default
  * http://localhost:4433). It has no failing outcome: "no bound" is a result.

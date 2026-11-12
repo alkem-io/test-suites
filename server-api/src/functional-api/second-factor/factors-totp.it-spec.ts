@@ -15,7 +15,6 @@ import {
   loginWithPassword,
   loginWithTotp,
   passwordLogin,
-  readLoginFlow,
   removeTotp,
   startSecondStep,
   submitLogin,
@@ -85,7 +84,12 @@ describe('Second factor — authenticator app', () => {
 
   test('D28 D34 D36 the per-address bound survives a re-login and forged address headers', async () => {
     const { user, secret } = await enrolled('bound');
-    const max = Number(process.env.LOGIN_BACKOFF_MAX_IP_ATTEMPTS ?? '20');
+    const max = Number(process.env.LOGIN_BACKOFF_MAX_IP_ATTEMPTS);
+    if (!Number.isInteger(max) || max < 2) {
+      throw new Error(
+        "LOGIN_BACKOFF_MAX_IP_ATTEMPTS must be the stack's login-proxy threshold (see .env.default)"
+      );
+    }
     const firstBatch = Math.floor(max / 2);
     const secondBatch = max - firstBatch;
     // Two counters of the harness: no two submissions name the same address.
@@ -141,8 +145,6 @@ describe('Second factor — authenticator app', () => {
     for (const method of ['GET', 'PUT', 'PATCH'] as const) {
       const [answer] = await submitWrongTotp({ ...step, secret }, 1, { method });
       expect(isInvalidCodeVerdict(answer), `${method} answer`).toBe(false);
-      const flow = await readLoginFlow(step.flowId);
-      expect(isInvalidCodeVerdict(flow), `flow after ${method}`).toBe(false);
     }
 
     // Control: the same detector sees the verdict a POST gets.

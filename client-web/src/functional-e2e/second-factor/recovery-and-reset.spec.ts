@@ -287,13 +287,14 @@ test.describe('US2 — recovery codes and the support reset', () => {
           await expect(
             page.getByRole('heading', { name: COPY.pageTitle, exact: true })
           ).toBeVisible();
-          // The field-level error, or a form-level alert: whichever the
-          // identity provider attached its message to.
+          // The field-level error, or an alert of this form: whichever the
+          // identity provider attached its message to. Never any alert on
+          // the page.
           await expect(
             authenticator
               .getByRole('textbox', { name: COPY.codeFromApp, exact: true })
               .and(page.locator('[aria-invalid="true"]'))
-              .or(page.getByRole('alert'))
+              .or(authenticator.getByRole('alert'))
               .first()
           ).toBeVisible();
 

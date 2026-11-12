@@ -4,7 +4,7 @@
  * hooks run for totp and lookup_secret. Plan: ./second-factor-test-plan.md.
  * Needs this feature's kratos-webhooks build (KRATOS_WEBHOOKS_IMAGE): on the
  * released image the hook's route does not exist and the red is the
- * environment's. The webauthn hook is walked on acceptance (see the plan).
+ * environment's. The webauthn hook is the browser track's (security-key.spec.ts).
  */
 import {
   authenticationAuditRows,
@@ -48,10 +48,16 @@ const awaitObservedRows = async (
   }
 };
 
+/** Every key an observed row's details may carry: nothing names an address. */
+const DETAILS_KEYS = ['method', 'observedAt', 'requestContext', 'sourceFlowId'];
+
 const expectRowShape = (row: AuthenticationAuditRow, user: ThrowawayUser) => {
   expect(row.subjectUserId).toBe(user.userId);
   expect(row.initiatorUserId).toBe(user.userId);
   expect(JSON.stringify(row.details)).not.toContain(user.email);
+  const keys = Object.keys(row.details ?? {});
+  expect(keys).toEqual(expect.arrayContaining(['method', 'observedAt']));
+  expect(keys.filter(key => !DETAILS_KEYS.includes(key))).toEqual([]);
   const context = (row.details as { requestContext?: Record<string, unknown> })
     .requestContext;
   if (context !== undefined) {
@@ -78,8 +84,10 @@ describe('Second factor — a member’s own change is recorded', () => {
 
     await disableRecoveryCodes(secondFactor.sessionToken);
     expectRowShape((await awaitObservedRows(user, 'lookup_secret', 2))[1], user);
+    expect(await observedRows(user, 'lookup_secret')).toHaveLength(2);
 
     await removeTotp(secondFactor.sessionToken);
     expectRowShape((await awaitObservedRows(user, 'totp', 2))[1], user);
+    expect(await observedRows(user, 'totp')).toHaveLength(2);
   });
 });

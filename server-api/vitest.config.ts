@@ -201,18 +201,27 @@ export default defineConfig({
         },
       },
       // The second-factor one-off measurements, never a test run: each is run
-      // once by naming its file (command in its header).
-      {
-        extends: true as const,
-        test: {
-          name: 'second-factor-measure',
-          include: ['src/functional-api/second-factor/**/*.measure.ts'],
-          globalSetup: [
-            './src/functional-api/second-factor/_support/global-setup.ts',
-          ],
-          fileParallelism: false,
-        },
-      },
+      // once by naming its file (command in its header). Defined only when
+      // SECOND_FACTOR_MEASURE is set, so a bare `vitest run` never sends their
+      // hundred users and wrong codes at whatever stack is configured.
+      ...(process.env.SECOND_FACTOR_MEASURE
+        ? [
+            {
+              extends: true as const,
+              test: {
+                name: 'second-factor-measure',
+                include: ['src/functional-api/second-factor/**/*.measure.ts'],
+                testTimeout: 600_000,
+                // The cleanup deletes a hundred users one by one.
+                hookTimeout: 600_000,
+                globalSetup: [
+                  './src/functional-api/second-factor/_support/global-setup.ts',
+                ],
+                fileParallelism: false,
+              },
+            },
+          ]
+        : []),
       // The lib contract (docs/qa/server-rebuild W2 pre-work): names, shapes
       // and one base-scenario round trip. The first thing that must go green
       // on the rebuilt server; on demand, not part of `nightly`.

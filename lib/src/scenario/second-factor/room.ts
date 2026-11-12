@@ -141,3 +141,33 @@ export const eventually = async (
     await new Promise(r => setTimeout(r, 100));
   }
 };
+
+const REPOST_AFTER_MS = 3_000;
+
+/**
+ * Resolves once a message `post` sends is delivered on `sub`, posting again
+ * every few seconds until one is; rejects after `withinMs`. A subscription
+ * resolves on the socket's ack, which can come before the server has
+ * registered it, so the first message alone may be missed.
+ */
+export const awaitLive = async (
+  sub: RoomSubscription,
+  post: () => Promise<string>,
+  withinMs: number
+): Promise<void> => {
+  const deadline = Date.now() + withinMs;
+  const posted: string[] = [];
+  const delivered = () => posted.some(id => sub.messageIds.includes(id));
+  while (Date.now() <= deadline) {
+    posted.push(await post());
+    await eventually(
+      delivered,
+      Math.max(0, Math.min(REPOST_AFTER_MS, deadline - Date.now())),
+      'delivery'
+    ).catch(() => undefined);
+    if (delivered()) return;
+  }
+  throw new Error(
+    `second-factor: none of ${posted.length} messages was delivered within ${withinMs} ms`
+  );
+};

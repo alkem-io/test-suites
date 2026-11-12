@@ -1,4 +1,5 @@
 import axios, { type AxiosResponse, type Method } from 'axios';
+import { assertLoopbackInternal } from '../../config/loopback-guard';
 import { testConfiguration } from '../../config/test.configuration';
 import { totpCode, wrongTotpCode } from './totp';
 
@@ -23,12 +24,14 @@ export type Via = 'proxy' | 'kratos';
 
 const trim = (url: string) => url.replace(/\/$/, '');
 
-const publicBase = (via: Via = 'proxy'): string =>
-  trim(
-    via === 'proxy'
-      ? testConfiguration.endPoints.kratos.public
-      : (process.env.KRATOS_PUBLIC_DIRECT_URL ?? 'http://localhost:4433')
-  );
+const publicBase = (via: Via = 'proxy'): string => {
+  if (via === 'proxy') return trim(testConfiguration.endPoints.kratos.public);
+  const direct = process.env.KRATOS_PUBLIC_DIRECT_URL ?? 'http://localhost:4433';
+  assertLoopbackInternal('Kratos public port past the login proxy (KRATOS_PUBLIC_DIRECT_URL)', {
+    url: direct,
+  });
+  return trim(direct);
+};
 
 const adminBase = (): string => {
   const admin = testConfiguration.endPoints.kratos.admin;
@@ -37,6 +40,7 @@ const adminBase = (): string => {
       'second-factor: KRATOS_ADMIN_URL is not set — the suite reads credentials and deletes identities through the Kratos admin API'
     );
   }
+  assertLoopbackInternal('Kratos admin API (KRATOS_ADMIN_URL)', { url: admin });
   return trim(admin);
 };
 
@@ -271,12 +275,6 @@ export const submitWrongTotp = async (
   return answers;
 };
 
-/** The login flow as Kratos holds it now (its messages, its state). */
-export const readLoginFlow = (flowId: string): Promise<KratosAnswer> =>
-  send(
-    'GET',
-    `${publicBase()}/self-service/login/flows?id=${encodeURIComponent(flowId)}`
-  );
 
 export const whoami = (sessionToken: string): Promise<KratosAnswer> =>
   send('GET', `${publicBase()}/sessions/whoami`, { sessionToken });

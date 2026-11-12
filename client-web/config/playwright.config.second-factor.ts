@@ -15,6 +15,10 @@ import { baseConfig, suite } from './playwright.shared';
 // address (one counter at the login proxy) and the rule state is shared.
 // No screenshot, trace or video: the authenticator secret, its QR code and the
 // recovery codes are on screen in these walks, and reports get published.
+// For the same reason no page snapshot either: Playwright writes one into the
+// report (error-context) for every failing test that still has a page open.
+process.env.PLAYWRIGHT_NO_COPY_PROMPT = '1';
+
 export default defineConfig({
   ...baseConfig({
     globalSetup: './global-setup.second-factor.ts',
