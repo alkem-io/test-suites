@@ -326,6 +326,8 @@ place; cite this file instead of rediscovering a gap.
   - Response cards are `div role=button` whose name starts with the title and includes the author name.
 - **Lib read-back for placement:** the only document selecting a callout's `sortOrder` together with its `FLOW_STATE` tag is `getCalloutsOnCalloutsSetUsingClassification.graphql`. `baseFunctions.getCalloutsData` wraps it with a `TestUser`-only actor. The J6 plan adds `readCalloutsPlacement(calloutsSetId, actor)` over the same document.
 - **`TagsetReservedName` was not a lib-owned enum** on `afbefaf2` (needed to seed a post into a phase). J6 LA-2 adds it to `lib/src/common/enums/alkemio.ts`.
+- **API gates (2026-11-12, server `e120d25a1`):** lib `updateCalloutsSortOrder`, `updateContributionsSortOrder`, `moveContributionToCallout`, `readCalloutContributionsOrder`, `readContribution` (`lookup.contribution`, READ on the response's own policy) and `resolveContributionUrl` (url resolver; checks READ on the holding post first). Contribution `sortOrder` is renumbered 1..n, not from the minimum like posts. `UrlResolverResultState` / `UrlType` are not in the lib barrel; import them from `@alkemio/tests-lib/core/generated/alkemio-schema`.
+- **Run the `callouts` project serially** (`--fileParallelism=false`, as `test:callouts` does). Two files that both add `space.member` to a fresh Space can race the server's actor-context cache: a member request in flight during the other file's role assignment re-caches the persona's old credentials, and the member is refused READ on a published post (seen once, 2026-11-12).
 
 ### Profile, About and organisation edits (established 2026-11-09, W2 journey 7 design; client-web `907103f5f`, server `51eb90878`)
 

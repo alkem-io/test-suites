@@ -244,6 +244,13 @@ const FUNCTIONS: string[] = [
   'addClassificationEntryFromTemplate',
   'updateClassificationEntrySelection',
   'updateTagsetTags',
+  // W2 #713 follow-up (callout placement server-api)
+  'moveContributionToCallout',
+  'readCalloutContributionsOrder',
+  'readContribution',
+  'resolveContributionUrl',
+  'updateCalloutsSortOrder',
+  'updateContributionsSortOrder',
 ];
 
 /** Classes and namespaces the specs construct or call statically. */
