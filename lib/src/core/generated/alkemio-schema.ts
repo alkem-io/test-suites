@@ -89850,6 +89850,27 @@ export type ReadMemoDocumentsQuery = {
   };
 };
 
+export type ReadWhiteboardGuestAccessQueryVariables = Exact<{
+  whiteboardId: Scalars["UUID"]["input"];
+}>;
+
+export type ReadWhiteboardGuestAccessQuery = {
+  lookup: {
+    whiteboard?:
+      | {
+          id: string;
+          guestContributionsAllowed: boolean;
+          authorization?:
+            | {
+                id: string;
+                myPrivileges?: Array<AuthorizationPrivilege> | undefined;
+              }
+            | undefined;
+        }
+      | undefined;
+  };
+};
+
 export type ReadWhiteboardStateQueryVariables = Exact<{
   whiteboardId: Scalars["UUID"]["input"];
 }>;
@@ -94786,6 +94807,8 @@ export type ReadMyUserQuery = {
       | {
           id: string;
           nameID: string;
+          firstName: string;
+          lastName: string;
           profile?:
             | { id: string; displayName: string; url: string }
             | undefined;

@@ -87,7 +87,7 @@ Techniques: **UC** use-case walk · **EP** viewer partition (author / second per
 | Scenario | Why not automated | Where it belongs |
 |---|---|---|
 | Actually signing a memo | **Deferred.** No harness persona has a Cleverbase identity, and there is no signing stub; signing leaves through `continueMemoSigning.authorizeUrl` | deferred.md; release checklist (manual sign on ACC) |
-| Whiteboard guest share (E8 second half; the Guest Contributions toggle deferred here by `space-settings-write`) | **Out of this cut** (ruling L-6). Anonymous context, share dialog, guest name: a case of its own | follow-up J5b, P2 |
+| Whiteboard guest share (E8 second half; the Guest Contributions toggle deferred here by `space-settings-write`) | **Out of this cut** (ruling L-6). Anonymous context, share dialog, guest name: a case of its own | built as J5b: `whiteboard-guest-share/` |
 | Collabora text visible in the second browser | **Impossible as a DOM oracle.** COOL renders document tiles on canvas inside the iframe. E9-2's save-through-the-second-session is the falsifiable substitute | — |
 | Create a Collabora document through the UI | Audit E1 (callout creation), not journey 5 | journey-1 follow-up of `callouts/0.5` |
 | Cold load on the nightly cluster (idle release 30 s) | **Rejected as a fixed wait** under the conventions. Wire-level cold rehydrate is #545's | L-2 |

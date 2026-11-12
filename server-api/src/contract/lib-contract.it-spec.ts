@@ -232,6 +232,8 @@ const FUNCTIONS: string[] = [
   'officeDocumentFileId',
   'officeDocumentParagraphs',
   'connectWhiteboardPeer',
+  // W2 journey 5b (whiteboard guest share)
+  'readWhiteboardGuestAccess',
   'readActivityLogOnCollaboration',
   'readCalloutsPlacement',
   'readPost',
@@ -742,5 +744,45 @@ describe('@contract content editing readers (W2 journey 5): whiteboard, memo, Co
       /carry no collaboration_rooms_active/
     );
     expect(typeof lib.readCollaborationRoomsActive).toBe('function');
+  });
+});
+
+describe('@contract whiteboard guest share reader (W2 journey 5b)', () => {
+  const uid = lib.UniqueIDGenerator.getID();
+  let base: OrganizationWithSpaceModel;
+  let whiteboardId: string;
+
+  beforeAll(async () => {
+    base = await TestScenarioFactory.createBaseScenario({
+      name: `lib-contract-guest-${uid}`,
+      space: {
+        collaboration: { addTutorialCallouts: false, addPostCollectionCallout: false },
+        settings: { privacy: { mode: lib.SpacePrivacyMode.Private } },
+      },
+    });
+    ({ whiteboardId } = await lib.createWhiteboardFramedCallout(
+      base.space.collaboration.calloutsSetId,
+      `contract guest WB ${uid}`,
+      `contract-guest-wb-${uid}`
+    ));
+  }, ROUND_TRIP_BUDGET_MS);
+
+  afterAll(async () => {
+    if (base) await TestScenarioFactory.cleanUpBaseScenario(base);
+  }, ROUND_TRIP_BUDGET_MS);
+
+  test('LB-1 a new board is not shared: guestContributionsAllowed is false and the reader carries the actor\'s privileges', async () => {
+    const read = await lib.readWhiteboardGuestAccess(whiteboardId);
+    expect(read.error).toBeUndefined();
+    const whiteboard = read.data?.lookup.whiteboard;
+    expect(whiteboard?.id).toBe(whiteboardId);
+    expect(whiteboard?.guestContributionsAllowed).toBe(false);
+    expect(whiteboard?.authorization?.myPrivileges).toContain(lib.AuthorizationPrivilege.Read);
+  });
+
+  test('LB-2 the guest variant speaks as a guest: refused on a board that is not shared (FORBIDDEN_POLICY, not a transport failure)', async () => {
+    const asGuest = await lib.readWhiteboardGuestAccess(whiteboardId, { anonymous: 'private' }, `contract guest ${uid}`);
+    expect(asGuest.data?.lookup.whiteboard ?? null).toBeNull();
+    expect(asGuest.error?.errors.map(e => e.code)).toEqual(['FORBIDDEN_POLICY']);
   });
 });

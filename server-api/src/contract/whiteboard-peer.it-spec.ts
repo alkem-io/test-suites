@@ -76,7 +76,7 @@ const useWhiteboardSpace = (name: string, { entitled }: { entitled: boolean }) =
 };
 
 describe('@contract T-1 whiteboard collaboration peer (Space with the multi-user plan)', () => {
-  const { connect } = useWhiteboardSpace('wb-peer', { entitled: true });
+  const { state, connect } = useWhiteboardSpace('wb-peer', { entitled: true });
 
   test('T-1a a member is admitted with write access and reads an empty raw doc', async () => {
     const peer = await connect(TestUser.QA_USER);
@@ -190,6 +190,28 @@ describe('@contract T-1 whiteboard collaboration peer (Space with the multi-user
     await first;
     await peer.close();
     await expect(peer.awaitDurable()).rejects.toThrow(/peer is closed/);
+  });
+
+  test('T-1k remoteUsernames: a peer reads the names the other sessions announce, never its own', async () => {
+    const observer = await connect(TestUser.SPACE_ADMIN);
+    const other = await connect(TestUser.QA_USER);
+    await observer.announce(`observer-${uniqueId}`);
+    await other.announce(`other-${uniqueId}`);
+    await observer.waitFor(() => observer.remoteUsernames().includes(`other-${uniqueId}`), "the other session's name");
+    expect(observer.remoteUsernames(), 'its own announcement is not a remote name').not.toContain(`observer-${uniqueId}`);
+    await other.waitFor(() => other.remoteUsernames().includes(`observer-${uniqueId}`), "the observer's name");
+  });
+
+  test('T-1l guestName: an anonymous peer joining as a named guest is refused on a board that is not shared', async () => {
+    await expect(
+      connectWhiteboardPeer({
+        whiteboardId: state.whiteboardId,
+        actor: { anonymous: 'private' },
+        guestName: `contract guest ${uniqueId}`,
+        requireWrite: false,
+        connectTimeoutMs: 10_000,
+      })
+    ).rejects.toThrow();
   });
 });
 
