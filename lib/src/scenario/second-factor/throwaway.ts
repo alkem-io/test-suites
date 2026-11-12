@@ -63,6 +63,22 @@ export type ThrowawayOrganization = { id: string; roleSetId: string };
 const ASSIGN_ROLE_TO_USER =
   'mutation($d: AssignRoleOnRoleSetInput!) { assignRoleToUser(roleData: $d) { id } }';
 
+/**
+ * Makes `userId` an associate of the organisation behind `roleSetId`, as that
+ * organisation's admin. The raw answer is returned for the caller to assert on.
+ */
+export const assignOrganizationAssociate = (
+  roleSetId: string,
+  userId: string,
+  admin: { bearerToken: string }
+) =>
+  postGraphqlRaw<{ assignRoleToUser: { id: string } }>(ASSIGN_ROLE_TO_USER, {
+    variables: {
+      d: { actorID: userId, roleSetID: roleSetId, role: RoleName.Associate },
+    },
+    ...admin,
+  });
+
 const must = <T>(
   result: { data?: T; error?: { errors?: { message?: string }[] } },
   step: string
@@ -109,18 +125,10 @@ export const withThrowawayOrganization = async <T>(
   const organization = { id: created.id, roleSetId: created.roleSet.id };
   try {
     for (const associate of people.associates) {
-      const assigned = await postGraphqlRaw<{ assignRoleToUser: { id: string } }>(
-        ASSIGN_ROLE_TO_USER,
-        {
-          variables: {
-            d: {
-              actorID: associate.userId,
-              roleSetID: organization.roleSetId,
-              role: RoleName.Associate,
-            },
-          },
-          ...actor,
-        }
+      const assigned = await assignOrganizationAssociate(
+        organization.roleSetId,
+        associate.userId,
+        actor
       );
       if (!assigned.body.data?.assignRoleToUser) {
         throw new Error(

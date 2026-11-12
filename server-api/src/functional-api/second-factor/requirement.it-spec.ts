@@ -14,7 +14,7 @@ import { randomUUID } from 'crypto';
 import axios from 'axios';
 import {
   ageRuleSince,
-  assignRoleToUser,
+  assignOrganizationAssociate,
   authenticationAuditRows,
   createPrivateRoom,
   enrolTotp,
@@ -43,7 +43,6 @@ import {
   type GraphqlActor,
   type ThrowawayUser,
 } from '@alkemio/tests-lib';
-import { RoleName } from '@alkemio/tests-lib/core/generated/alkemio-schema';
 import { roleTokens, secondFactorCases } from './_support/cases';
 
 const throwawayUser = secondFactorCases();
@@ -274,9 +273,9 @@ describe('Second factor — the requirement', () => {
       expect(await refused(await cookieOf(member, { createdAtEpochS: marker + 1, acr: 'aal2' }))).toBe(false);
 
       // US4-AS5, D10: a late joiner is refused on the very next request.
-      expect(
-        (await assignRoleToUser(lateJoiner.userId, org.roleSetId, RoleName.Associate, asAdmin)).data
-      ).toBeDefined();
+      const joined = await assignOrganizationAssociate(org.roleSetId, lateJoiner.userId, asAdmin);
+      expect(joined.body.errors, joined.raw).toBeUndefined();
+      expect(joined.body.data?.assignRoleToUser.id).toBe(lateJoiner.userId);
       expect(await refused(late)).toBe(true);
 
       // US4-AS8: covered by no rule — never refused, enrolled or not.
