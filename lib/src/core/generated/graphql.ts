@@ -120306,6 +120306,20 @@ export type GetUserRolesQuery = {
   };
 };
 
+export type ReadTaskQueryVariables = SchemaTypes.Exact<{
+  id: SchemaTypes.Scalars["UUID"]["input"];
+}>;
+
+export type ReadTaskQuery = {
+  task: {
+    id: string;
+    status: SchemaTypes.TaskStatus;
+    errors?: Array<string> | undefined;
+    itemsCount?: number | undefined;
+    itemsDone?: number | undefined;
+  };
+};
+
 export type GetSpaceTemplatesCountByTemplateSetIdQueryVariables =
   SchemaTypes.Exact<{
     templateSetId: SchemaTypes.Scalars["UUID"]["input"];
@@ -130333,6 +130347,17 @@ export const GetUserRolesDocument = gql`
     }
   }
 `;
+export const ReadTaskDocument = gql`
+  query ReadTask($id: UUID!) {
+    task(id: $id) {
+      id
+      status
+      errors
+      itemsCount
+      itemsDone
+    }
+  }
+`;
 export const GetSpaceTemplatesCountByTemplateSetIdDocument = gql`
   query GetSpaceTemplatesCountByTemplateSetId($templateSetId: UUID!) {
     lookup {
@@ -132073,6 +132098,7 @@ const ReadSpaceTemplatesManagerDocumentString = print(
 );
 const ReadSubspaceByNameIdDocumentString = print(ReadSubspaceByNameIdDocument);
 const GetUserRolesDocumentString = print(GetUserRolesDocument);
+const ReadTaskDocumentString = print(ReadTaskDocument);
 const GetSpaceTemplatesCountByTemplateSetIdDocumentString = print(
   GetSpaceTemplatesCountByTemplateSetIdDocument
 );
@@ -140740,6 +140766,28 @@ export function getSdk(
             { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "GetUserRoles",
+        "query",
+        variables
+      );
+    },
+    ReadTask(
+      variables: SchemaTypes.ReadTaskQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.ReadTaskQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.ReadTaskQuery>(
+            ReadTaskDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "ReadTask",
         "query",
         variables
       );

@@ -63,10 +63,14 @@ export default defineConfig(
         capture: 'off',
       }),
       suite({
-        // Spaces search count (server#3700): needs Elasticsearch, which the
-        // shared test cluster does not run; the walk re-ingests it.
+        // Spaces search count (server#3700) and W2 journey 8 (global and
+        // sidebar search): need Elasticsearch, which the shared test cluster
+        // does not run; each file re-ingests it.
         name: 'Local stack — search',
-        testMatch: ['/explore-platform/explore-spaces-search-count.spec.ts'],
+        testMatch: [
+          '/explore-platform/explore-spaces-search-count.spec.ts',
+          '/search/us1-global-and-sidebar-search.spec.ts',
+        ],
         grep: LOCAL_STACK_TAG,
         tier: 'extended',
       }),
