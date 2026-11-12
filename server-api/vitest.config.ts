@@ -191,6 +191,9 @@ export default defineConfig({
         test: {
           name: 'second-factor',
           include: ['src/functional-api/second-factor/**/*.it-spec.ts'],
+          // Below the live track's budget, so a hung case reports itself.
+          testTimeout: 300_000,
+          hookTimeout: 300_000,
           globalSetup: [
             './src/functional-api/second-factor/_support/global-setup.ts',
           ],
