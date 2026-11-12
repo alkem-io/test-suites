@@ -198,9 +198,12 @@ export default defineConfig({
             './src/functional-api/second-factor/_support/global-setup.ts',
           ],
           fileParallelism: false,
-          // Last and alone in a multi-project run: its cases clear the
+          // Its files run last in a multi-project run: its cases clear the
           // per-address counters and count this address's sign-ins, so no
-          // other project may sign in from the same address meanwhile.
+          // other project may sign in from the same address meanwhile. Its
+          // global setup is not ordered: vitest runs every selected project's
+          // setup before any file, so a bare `vitest run` needs this
+          // project's preconditions too.
           sequence: { groupOrder: 4 },
         },
       },

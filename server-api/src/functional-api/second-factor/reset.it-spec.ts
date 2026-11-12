@@ -23,7 +23,6 @@ import {
   loginWithPassword,
   loginWithTotp,
   mintBffSession,
-  postGraphqlRaw,
   postToRoom,
   readMySessionRaw,
   readSubjectMarker,
@@ -33,7 +32,7 @@ import {
   type RoomSubscription,
   type ThrowawayUser,
 } from '@alkemio/tests-lib';
-import { roleTokens, secondFactorCases } from './_support/cases';
+import { roleTokens, secondFactorCases, userIdOf } from './_support/cases';
 
 const throwawayUser = secondFactorCases();
 const SECOND_FACTOR_TYPES = ['lookup_secret', 'totp', 'webauthn'];
@@ -52,15 +51,6 @@ const resetRows = async (userId: string) =>
   (await authenticationAuditRows({ userId })).filter(r =>
     r.outcome.startsWith('second_factor_reset_')
   );
-
-/** The platform user id behind a role token. */
-const userIdOf = async (bearerToken: string): Promise<string> => {
-  const me = await postGraphqlRaw<{ me: { user: { id: string } } }>(
-    'query { me { user { id } } }',
-    { bearerToken }
-  );
-  return me.body.data!.me.user.id;
-};
 
 /** Each row names who reset the member, and under which role. */
 const expectInitiator = (

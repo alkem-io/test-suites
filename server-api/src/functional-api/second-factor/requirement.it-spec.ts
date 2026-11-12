@@ -26,11 +26,11 @@ import {
   mintBffSessionForUser,
   platformConfigurationRowsNamingSecurity,
   platformRoleEmail,
-  postGraphqlRaw,
   postGraphqlRawAs,
   postToRoom,
   readPlatformSecurity,
   readSecondFactorRequirement,
+  readServedUser,
   readSubjectMarker,
   resetSecondFactor,
   restorePlatformRule,
@@ -43,7 +43,7 @@ import {
   type GraphqlActor,
   type ThrowawayUser,
 } from '@alkemio/tests-lib';
-import { roleTokens, secondFactorCases } from './_support/cases';
+import { roleTokens, secondFactorCases, userIdOf } from './_support/cases';
 
 const throwawayUser = secondFactorCases();
 const GRACE_MS = 14 * 24 * 60 * 60 * 1000;
@@ -71,10 +71,7 @@ const requirementOf = async (actor: GraphqlActor) => {
  * user it served: a session it rejected or read as anonymous is not "not refused".
  */
 const servedAs = async (actor: GraphqlActor): Promise<string | null> => {
-  const answer = await postGraphqlRawAs<{ me: { user: { id: string } | null } }>(
-    actor,
-    'query { me { user { id } } }'
-  );
+  const answer = await readServedUser(actor);
   return errorCodes(answer).includes('SECOND_FACTOR_REQUIRED')
     ? 'refused'
     : (answer.body.data?.me?.user?.id ?? null);
@@ -107,6 +104,7 @@ const PLATFORM_ONLY =
 describe('Second factor — the requirement', () => {
   test('US4-AS1 D25 D35 the platform rule, switched on in grace: audit rows, the read gate, a role holder covered', async () => {
     const saved = await savePlatformRule();
+    let restoredBySql = false;
     const settingsAdmin = { bearerToken: roleTokens().settingsAdmin };
     // The case switches the rule on from off, and back off when it ends. It
     // never starts from on: on a stack where the rule is live, switching it
@@ -130,13 +128,22 @@ describe('Second factor — the requirement', () => {
       expect(security?.secondFactorRequiredForPlatformRolesSince).toBeTruthy();
       const rows = await ruleRows();
       expect(rows).toHaveLength(rowsBefore + 1);
-      expect(rows.at(-1)!.details).toMatchObject({ scope: 'platform', from: false, to: true });
+      expect(rows.at(-1)!).toMatchObject({
+        initiatorUserId: await userIdOf(roleTokens().settingsAdmin),
+        initiatorRole: 'platform_settings_admin',
+        details: { scope: 'platform', from: false, to: true },
+      });
       expect(await platformConfigurationRowsNamingSecurity()).toBeGreaterThan(
         configurationBefore
       );
 
-      // On→on is no transition.
-      await setPlatformRule(true, settingsAdmin);
+      // On→on is accepted and is no transition.
+      const again = await setPlatformRule(true, settingsAdmin);
+      expect(again.body.errors, again.raw).toBeUndefined();
+      expect(
+        again.body.data?.updatePlatformSettings.security?.secondFactorRequiredForPlatformRoles,
+        again.raw
+      ).toBe(true);
       expect(await ruleRows()).toHaveLength(rowsBefore + 1);
 
       // The read gate.
@@ -145,24 +152,22 @@ describe('Second factor — the requirement', () => {
       const anonymous = await readPlatformSecurity({ anonymous: 'private' });
       expect(anonymous.body.data?.platform.settings.security, anonymous.raw).toBeNull();
       const member = await throwawayUser('reader');
-      const asMember = await readPlatformSecurity(await cookieOf(member));
+      const memberCookie = await cookieOf(member);
+      const asMember = await readPlatformSecurity(memberCookie);
       expect(asMember.body.data?.platform.settings.security, asMember.raw).toBeNull();
+      // The platform rule covers role holders only.
+      expect((await requirementOf(memberCookie)).covered).toBe(false);
 
       // A role holder's sign-in is covered, in grace.
-      const support = await postGraphqlRaw<{ me: { user: { id: string } } }>(
-        'query { me { user { id } } }',
-        { bearerToken: roleTokens().support }
-      );
+      const supportId = await userIdOf(roleTokens().support);
       const holder = await mintBffSessionForUser(
         platformRoleEmail('PLATFORM_SUPPORT'),
-        support.body.data!.me.user.id
+        supportId
       );
       const status = await requirementOf({ cookieHeader: holder.cookieHeader });
       expect(status.covered).toBe(true);
       expect(Date.parse(status.deadline!)).toBeGreaterThan(Date.now());
-      expect(await servedAs({ cookieHeader: holder.cookieHeader })).toBe(
-        support.body.data!.me.user.id
-      );
+      expect(await servedAs({ cookieHeader: holder.cookieHeader })).toBe(supportId);
     } finally {
       // Off again through the API, which records the transition. The SQL
       // write is the fallback only, when that call fails: it records nothing.
@@ -172,7 +177,14 @@ describe('Second factor — the requirement', () => {
           ?.secondFactorRequiredForPlatformRoles !== false
       ) {
         await restorePlatformRule(saved);
+        restoredBySql = true;
       }
+    }
+    // Checked after the case's own outcome, which a throw in `finally` would mask.
+    if (restoredBySql) {
+      throw new Error(
+        'second-factor: switching the platform rule off through the API failed; it was restored by SQL, so the audit trail has no off transition for this run'
+      );
     }
   });
 
@@ -186,8 +198,13 @@ describe('Second factor — the requirement', () => {
       expect(on.body.data?.updateOrganizationSettings.settings.security.secondFactorRequired, on.raw).toBe(true);
 
       const [switchedOn] = await ruleRows(org.id);
-      expect(switchedOn.subjectOrganizationId).toBe(org.id);
-      expect(switchedOn.details).toMatchObject({ scope: 'organization', from: false, to: true });
+      // The organisation's own admin holds no platform role: `self`.
+      expect(switchedOn).toMatchObject({
+        subjectOrganizationId: org.id,
+        initiatorUserId: admin.userId,
+        initiatorRole: 'self',
+        details: { scope: 'organization', from: false, to: true },
+      });
       const since = Date.parse((switchedOn.details as { since: string }).since);
       expect(since).toBeGreaterThanOrEqual(startedAt - SKEW_MS);
       expect(since).toBeLessThanOrEqual(Date.now() + SKEW_MS);

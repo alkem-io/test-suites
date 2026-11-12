@@ -7,6 +7,7 @@
 import { randomUUID } from 'crypto';
 import {
   changePasswordInBrowser,
+  clearAddressCounters,
   createBrowserSettingsFlow,
   credentialTypes,
   disableRecoveryCodes,
@@ -72,7 +73,8 @@ describe('Second factor — recovery codes', () => {
     expect(codes.length).toBeGreaterThan(0);
     const later = await readSettingsFlow(token);
     expect(later.status).toBe(200);
-    expect(recoveryCodesOf(later.body)).toEqual([]);
+    // Counts only: a failure message must not carry a live code.
+    expect(recoveryCodesOf(later.body).length).toBe(0);
 
     const signedIn = await loginWithRecoveryCode(user.email, codes[0]);
     expect(signedIn.session.authenticator_assurance_level).toBe('aal2');
@@ -90,7 +92,8 @@ describe('Second factor — recovery codes', () => {
     const { user, codes, token } = await enrolledWithCodes('regen');
 
     const fresh = await generateRecoveryCodes(token);
-    expect(fresh).not.toEqual(codes);
+    expect(fresh.length).toBeGreaterThan(0);
+    expect(fresh.filter(code => codes.includes(code)).length).toBe(0);
 
     const old = await submitRecoveryCode(user.email, codes[1]);
     expect(isRecoveryCodeRefused(old), JSON.stringify(old.body).slice(0, 300)).toBe(true);
@@ -140,6 +143,10 @@ describe('Second factor — recovery codes', () => {
     expect(
       (await passwordLogin(user.email, { password: newPassword })).status
     ).toBe(200);
-    expect((await passwordLogin(user.email)).status).not.toBe(200);
+    // Kratos itself judges the old password, not the login proxy's counter.
+    await clearAddressCounters();
+    const oldPassword = await passwordLogin(user.email);
+    expect(oldPassword.status).toBe(400);
+    expect(flowMessages(oldPassword).some(m => /^4000006:/.test(m))).toBe(true);
   });
 });

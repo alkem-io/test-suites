@@ -224,7 +224,8 @@ export const shownAuthenticatorKey = async (page: Page): Promise<string> => {
   const secret = ((await keyLine.textContent()) ?? '')
     .replace(/^Key:\s*/, '')
     .trim();
-  expect(secret).toMatch(/^[A-Z2-7]+=*$/);
+  // A boolean, so a failure message never carries the key.
+  expect(/^[A-Z2-7]+=*$/.test(secret)).toBe(true);
   return secret;
 };
 

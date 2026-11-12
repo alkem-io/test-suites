@@ -41,7 +41,7 @@ const awaitObservedRows = async (
     if (rows.length >= count) return rows;
     if (Date.now() > deadline) {
       throw new Error(
-        `${method}: settings hook did not run — ${rows.length} of ${count} 'observed' rows within ${ROW_BOUND_MS} ms (research R32)`
+        `${method}: settings hook did not run — ${rows.length} of ${count} 'observed' rows within ${ROW_BOUND_MS} ms`
       );
     }
     await new Promise(r => setTimeout(r, 250));

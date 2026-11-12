@@ -36,6 +36,13 @@ export const errorCodes = (response: RawGraphqlResponse<unknown>): string[] =>
     String((e.extensions as { code?: string } | undefined)?.code)
   );
 
+/** Who the server serves `actor` as: `me.user` is null for an anonymous read. */
+export const readServedUser = (actor: GraphqlActor) =>
+  postGraphqlRawAs<{ me: { user: { id: string } | null } }>(
+    actor,
+    'query { me { user { id } } }'
+  );
+
 export const readSecondFactorRequirement = (actor: GraphqlActor) =>
   postGraphqlRawAs<{ me: { secondFactorRequirement: SecondFactorRequirement } }>(
     actor,

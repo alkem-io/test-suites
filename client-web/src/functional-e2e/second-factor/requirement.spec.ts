@@ -16,6 +16,7 @@ import {
   readOrganization,
   readOrganizationSecondFactorRequired,
   readSecondFactorRequirement,
+  readServedUser,
   setOrganizationRule,
   testConfiguration,
   withThrowawayOrganization,
@@ -168,10 +169,10 @@ test.describe('US4 — an organisation requires a second factor', () => {
               .click();
             await expect(reminder).toHaveCount(0);
             // The absence after a reload means something only once the read
-            // the reminder renders from has been answered.
+            // the reminder renders from has been answered in full.
             const reread = requirementRead(page);
             await page.reload();
-            await reread;
+            await (await reread).finished();
             await expectSignedIn(page);
             await expect(reminder).toHaveCount(0);
           } finally {
@@ -240,11 +241,11 @@ test.describe('US4 — an organisation requires a second factor', () => {
             });
 
             // Control: the same member's non-interactive token is never
-            // evaluated, so the same requests are not refused.
-            const control = await readSecondFactorRequirement({
-              bearerToken: member!.token,
-            });
-            expect(errorCodes(control)).not.toContain('SECOND_FACTOR_REQUIRED');
+            // evaluated, so the same requests are served — as the member, so a
+            // token the server did not accept cannot pass for one it served.
+            const control = await readServedUser({ bearerToken: member!.token });
+            expect(errorCodes(control)).toEqual([]);
+            expect(control.body.data?.me.user?.id).toBe(member!.userId);
             expect((await memoPdfWithBearer(member!.token)).status).not.toBe(403);
           } finally {
             await context.close();

@@ -120,6 +120,7 @@ describe('Second factor — reset after a compromise', () => {
     const email = `sf.signup${randomUUID().slice(0, 8)}@alkem.io`;
     const { profileStep, passwordStep } = await registerTwoStep(email);
     const identityId: string | undefined = passwordStep.body?.identity?.id;
+    let cleanupError: unknown;
     try {
       // The profile step was accepted as a step: Kratos answers with the
       // flow's next screen (the password field) and no error. A refused
@@ -150,19 +151,27 @@ describe('Second factor — reset after a compromise', () => {
       const session = await loginWithPassword(email);
       expect((await whoami(session.sessionToken)).status).toBe(200);
     } finally {
-      const token = await getUserToken(email).catch(() => undefined);
-      const me = token
-        ? await postGraphqlRaw<{ me: { user: { id: string } | null } }>(
-            'query { me { user { id } } }',
-            { bearerToken: token }
-          )
-        : undefined;
-      const userId = me?.body.data?.me?.user?.id;
-      if (userId) {
-        await deleteThrowawayUser({ userId }, roleTokens().usersAdmin);
-      } else if (identityId) {
-        await deleteIdentity(identityId);
+      try {
+        const token = await getUserToken(email).catch(() => undefined);
+        const me = token
+          ? await postGraphqlRaw<{ me: { user: { id: string } | null } }>(
+              'query { me { user { id } } }',
+              { bearerToken: token }
+            )
+          : undefined;
+        const userId = me?.body.data?.me?.user?.id;
+        if (userId) {
+          await deleteThrowawayUser({ userId }, roleTokens().usersAdmin);
+        } else if (identityId) {
+          await deleteIdentity(identityId);
+        }
+      } catch (error) {
+        cleanupError = error;
       }
+    }
+    // Checked after the case's own outcome, which a throw in `finally` would mask.
+    if (cleanupError) {
+      throw cleanupError;
     }
   });
 });
