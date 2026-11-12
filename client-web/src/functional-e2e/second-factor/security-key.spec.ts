@@ -35,11 +35,13 @@ let usersAdminToken = '';
 const users: ThrowawayUser[] = [];
 
 /**
- * The passkey controls are rendered with the identity provider's own copy
- * ("… passkey"), which the client does not define for this feature; matched
- * on the word, which no other control of these screens carries.
+ * The passkey controls are rendered with the identity provider's own copy,
+ * which the client does not define for this feature. On the sign-in page the
+ * word names one control; in Settings the section trigger carries it too, so
+ * the add control is matched by its whole name there.
  */
 const PASSKEY = /passkey/i;
+const ADD_PASSKEY = 'Add passkey';
 
 test.describe('US3 — security keys', () => {
   test.skip(
@@ -122,7 +124,9 @@ test.describe('US3 — security keys', () => {
   test('US3-AS3 a passkey still signs in without a password; once an authenticator app is enrolled, the second step follows the passkey (risk R8)', async ({
     browser,
   }) => {
-    const user = await createThrowawayUser('passkey');
+    // The tag reaches the display name in the user menu: it must not carry
+    // the word the sign-in page's passkey control is matched on.
+    const user = await createThrowawayUser('pwless');
     users.push(user);
     const nameId = await nameIdOf(user);
 
@@ -132,7 +136,7 @@ test.describe('US3 — security keys', () => {
       await submitPassword(page, user.email);
       await expectSignedIn(page);
       await openSecurityTab(page, nameId);
-      await page.getByRole('button', { name: PASSKEY }).click();
+      await page.getByRole('button', { name: ADD_PASSKEY, exact: true }).click();
       await expect
         .poll(() => credentialTypes(user.identityId))
         .toContain('passkey');

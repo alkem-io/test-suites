@@ -28,6 +28,7 @@ import {
   readMySessionRaw,
   readSubjectMarker,
   resetSecondFactor,
+  secondFactorCredentialsLeft,
   subscribeToRoom,
   testConfiguration,
   type RoomSubscription,
@@ -107,8 +108,7 @@ describe('Second factor — support reset', () => {
       );
       expect(result!.passwordInvalidated).toBe(false);
 
-      const after = await credentialTypes(member.identityId);
-      expect(after.filter(t => SECOND_FACTOR_TYPES.includes(t))).toEqual([]);
+      expect(await secondFactorCredentialsLeft(member.identityId)).toEqual([]);
       expect(await identitySessions(member.identityId)).toEqual([]);
 
       // Tombstoned: answered as signed out on its next request.
@@ -183,14 +183,12 @@ describe('Second factor — support reset', () => {
     expect((await resetRows(supportId)).length).toBe(selfRowsBefore);
 
     // Created through the API, never signed in: no Kratos identity linked.
-    const usersAdmin = { bearerToken: roleTokens().usersAdmin };
-    const unlinked = await createUser(
-      {
-        email: `sf.unlinked${Date.now()}@alkem.io`,
-        profileData: { displayName: 'second factor unlinked' },
-      },
-      usersAdmin
-    );
+    // As the global admin: platform CREATE is not one of Platform Users
+    // Admin's privileges.
+    const unlinked = await createUser({
+      email: `sf.unlinked${Date.now()}@alkem.io`,
+      profileData: { displayName: 'second factor unlinked' },
+    });
     const unlinkedId = unlinked.data?.createUser.id;
     expect(unlinkedId, JSON.stringify(unlinked.error)).toBeDefined();
     try {
@@ -203,7 +201,7 @@ describe('Second factor — support reset', () => {
       expect(errorCodes(answer).length).toBeGreaterThan(0);
       expect(await resetRows(unlinkedId!)).toEqual([]);
     } finally {
-      await deleteUser(unlinkedId!, usersAdmin);
+      await deleteUser(unlinkedId!);
     }
   });
 

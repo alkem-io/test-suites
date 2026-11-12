@@ -124,7 +124,7 @@ test.describe('US1 — the authenticator app in Security', () => {
       expect(await requirementOf(page)).toMatchObject({ satisfied: true });
 
       // FR-007: a refresh of the session keeps it.
-      const refreshed = await page.request.post(
+      const refreshed = await page.request.get(
         `${baseUrl}/api/auth/oidc/refresh`,
         { failOnStatusCode: false }
       );

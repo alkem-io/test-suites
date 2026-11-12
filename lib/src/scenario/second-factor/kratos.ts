@@ -572,6 +572,30 @@ export const readIdentity = async (
 export const credentialTypes = async (identityId: string): Promise<string[]> =>
   Object.keys((await readIdentity(identityId)).credentials ?? {}).sort();
 
+/**
+ * The second-factor credential types the identity still holds, sorted. A
+ * `webauthn` entry holding no key (only the identity's passkey identifier)
+ * is none: there is nothing left to sign in with.
+ */
+export const secondFactorCredentialsLeft = async (
+  identityId: string
+): Promise<string[]> => {
+  const answer = await send(
+    'GET',
+    `${adminBase()}/admin/identities/${identityId}?include_credential=webauthn`
+  );
+  if (answer.status !== 200) fail(`read identity ${identityId}`, answer);
+  const credentials: Record<string, { config?: { credentials?: unknown[] } }> =
+    answer.body.credentials ?? {};
+  return ['lookup_secret', 'totp', 'webauthn']
+    .filter(type => type in credentials)
+    .filter(
+      type =>
+        type !== 'webauthn' ||
+        (credentials.webauthn.config?.credentials?.length ?? 0) > 0
+    );
+};
+
 /** The identity's active Kratos sessions. */
 export const identitySessions = async (
   identityId: string

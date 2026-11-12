@@ -3,7 +3,6 @@ import { RoleName } from '../../core/generated/alkemio-schema';
 import { postGraphqlRaw } from '../../utils/graphql.raw.client';
 import {
   assignPlatformRole,
-  assignRoleToUser,
   createOrganization,
   deleteOrganization,
 } from '../baseFunctions';
@@ -59,6 +58,11 @@ export const deleteThrowawayUser = async (
 
 export type ThrowawayOrganization = { id: string; roleSetId: string };
 
+// Selects only the id: the shared document's UserData reads the assignee's
+// settings, which an organisation admin may not read.
+const ASSIGN_ROLE_TO_USER =
+  'mutation($d: AssignRoleOnRoleSetInput!) { assignRoleToUser(roleData: $d) { id } }';
+
 const must = <T>(
   result: { data?: T; error?: { errors?: { message?: string }[] } },
   step: string
@@ -105,15 +109,24 @@ export const withThrowawayOrganization = async <T>(
   const organization = { id: created.id, roleSetId: created.roleSet.id };
   try {
     for (const associate of people.associates) {
-      must(
-        await assignRoleToUser(
-          associate.userId,
-          organization.roleSetId,
-          RoleName.Associate,
-          actor
-        ),
-        `make ${associate.email} an associate`
+      const assigned = await postGraphqlRaw<{ assignRoleToUser: { id: string } }>(
+        ASSIGN_ROLE_TO_USER,
+        {
+          variables: {
+            d: {
+              actorID: associate.userId,
+              roleSetID: organization.roleSetId,
+              role: RoleName.Associate,
+            },
+          },
+          ...actor,
+        }
       );
+      if (!assigned.body.data?.assignRoleToUser) {
+        throw new Error(
+          `second-factor: make ${associate.email} an associate failed: ${assigned.raw.slice(0, 300)}`
+        );
+      }
     }
     return await fn(organization);
   } finally {

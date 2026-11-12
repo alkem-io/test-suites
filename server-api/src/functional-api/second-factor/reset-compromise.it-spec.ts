@@ -24,6 +24,7 @@ import {
   recoverViaLink,
   registerTwoStep,
   resetSecondFactor,
+  secondFactorCredentialsLeft,
   updateSettings,
   verifyInKratosOrFail,
   whoami,
@@ -73,11 +74,7 @@ describe('Second factor — reset after a compromise', () => {
     expect(flowMessages(oldPassword).some(m => INVALID_CREDENTIALS.test(m))).toBe(true);
 
     const identity = await readIdentity(member.identityId);
-    expect(
-      Object.keys(identity.credentials ?? {}).filter(t =>
-        ['lookup_secret', 'totp', 'webauthn'].includes(t)
-      )
-    ).toEqual([]);
+    expect(await secondFactorCredentialsLeft(member.identityId)).toEqual([]);
     expect(await identitySessions(member.identityId)).toEqual([]);
     const passwordAfterReset = identity.credentials?.password?.updated_at;
     expect(Date.parse(passwordAfterReset!)).toBeGreaterThan(Date.parse(passwordBefore!));
