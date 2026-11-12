@@ -29,7 +29,10 @@ const myProfileUrl = async (page: Page) => {
 
 const asVcCampaign = createPersonaTest(platformRoleEmail('FEATURE_VC_CAMPAIGN'));
 asVcCampaign.beforeEach(rolesAreSeeded);
-asVcCampaign('FEATURE_VC_CAMPAIGN: the dashboard shows the Virtual Contributor campaign', async ({ page }) => {
+// Skipped while Virtual Contributors are switched off in the client
+// (client-web#10398: isVcCampaignTargeted is hard-wired to false). Un-skip when
+// that TEMP gate is restored.
+asVcCampaign.skip('FEATURE_VC_CAMPAIGN: the dashboard shows the Virtual Contributor campaign (client-web#10398)', async ({ page }) => {
   await page.goto(`${baseUrl}/home`);
   await expect(campaignBanner(page)).toBeVisible({ timeout: 20_000 });
   await expect(page.getByRole('button', { name: 'Create Virtual Contributor' })).toBeVisible();
