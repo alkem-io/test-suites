@@ -24,6 +24,9 @@ import { baseConfig, GENERATED_WALKS_DIR, LOCAL_STACK_TAG, suite } from './playw
  *   RABBITMQ_MANAGEMENT_* plus the nine MESSAGING_DIGEST_* variables (same
  *   values on the SERVER, see the suite's test plan):
  *     messaging-notifications US1 and US2 (whole walks), US3-AS3 and US3-AS4
+ *   HARNESS_POSTGRES_* (audit rows, subscription seed) and HARNESS_REDIS_*
+ *   (ageing a real session past the privileged window):
+ *     account-deletion US1-AS5, US1-AS6 and US3 (whole walk)
  *   IDLE_RELEASE_SECONDS=0 on the collaboration-service, and COLLAB_IDLE_RELEASE_SECONDS=0 plus
  *   COLLAB_METRICS_URL (the service's /metrics, e.g. http://localhost:4006/metrics) here:
  *     content-editing US1 E8-4 (the whole walk runs; the guard fails loudly without them)
@@ -59,6 +62,16 @@ export default defineConfig(
         testMatch: ['/content-editing/us1-whiteboard-draw-reopen.spec.ts'],
         tier: 'extended',
         capture: 'off',
+      }),
+      suite({
+        // W2 Tier 0 item 3: US1-AS5 (audit row) needs AS1–AS3 of its serial
+        // walk, so us1 runs whole here; US3 is tagged as a whole (Redis).
+        name: 'Local stack — account deletion',
+        testMatch: [
+          '/account-deletion/us1-delete-own-account.spec.ts',
+          '/account-deletion/us3-reauth-freshness.spec.ts',
+        ],
+        tier: 'long',
       }),
       suite({
         name: 'Local stack — server env overrides',

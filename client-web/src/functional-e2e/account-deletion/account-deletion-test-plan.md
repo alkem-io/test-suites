@@ -15,7 +15,7 @@
 > #620**. My first pass missed #620 because it searched `origin/develop` only, having fetched only
 > that ref; open PRs and other remote heads were never enumerated. Lesson recorded in `harness.md`.
 
-A user can now delete their own account from Settings → Security, behind a typed-display-name
+A user can now delete their own account from Settings → Account › Danger Zone (Security until client-web#10437), behind a typed-display-name
 confirm and a **15-minute session-age gate** (a session-*age* check, not re-authentication — the
 server never sees a credential). `deleteUser` keeps its frozen signature; self-ness is derived
 server-side from `actorContext.actorID === deleteData.ID`. The self branch forces `deleteIdentity`,
@@ -30,6 +30,42 @@ Postgres, Redis session-store manipulation, BFF session minting) that lift three
 plan therefore keeps a small delta of cases that are (a) portable — they run wherever the suite runs,
 including nightly — or (b) simply untouched by #620: the client-side fallout of the removed GraphQL
 fields, the sentinel in a real feed, the card's visibility rules, and the escalation negative.
+
+## Amendment 2026-11-12 — W2 Tier 0 item 3: us1/us2/us3 run nightly
+
+`docs/qa/server-rebuild/client-net-audit/README.md` § 4 item 3 (and the W2 row "unregistered
+account-deletion us1–us3 drifted off the Security tab"). The three #620 walks are now in the
+nightly `Account deletion` project, rewritten so the cluster can serve them; only the cases that
+genuinely need a database or a session store stay behind `@local-stack`
+(`config/playwright.config.local-stack.ts` › *Local stack — account deletion*).
+
+- **Location.** Since client-web#10437 the card is in the collapsed **Danger Zone** at the end of
+  the **Account** tab (avatar menu → *My Account* → expand *Danger Zone*). The walks no longer go
+  to the Security tab, and the blocked dialog's *Manage my account resources* link now points at
+  the same tab, so US2-AS2 checks the link target and the blocker in the resources list instead of
+  a URL change.
+- **Provisioning.** `provisionSubject` registers through public Kratos (verification mail read by
+  recipient, `registerVerifiedUser`) and reads id, account and display name with `readMyUser`. No
+  SQL.
+- **Oracles.** "Deleted" / "nothing deleted" is the platform admin's `lookup.user`
+  (`readUserAccount`: resolves, or `ENTITY_NOT_FOUND`), with a positive control before every
+  deletion; US2 adds the subject's own pre-flight (`readMyAccountDeletionCanDelete` over its
+  browser session) and keeps the `ACCOUNT_DELETION_BLOCKED` code of the raw bypass (the
+  client-actionable contract). The vacuous "no error text right after the click" checks are gone.
+- **Teardown** is file-level and strict: already-deleted (`ENTITY_NOT_FOUND`) is the only tolerated
+  failure, every seeded Space is deleted before its owner, and a failure fails the hook.
+- **Run-unique names** for every seeded Space (`UniqueIDGenerator`).
+
+| Case | Nightly | Why not, if not |
+|---|---|---|
+| US1-AS1 – AS4 | yes | — |
+| US1-AS5 audit row | `@local-stack` | the audit trail has no GraphQL read surface (loopback Postgres) |
+| US1-AS6 subscription | `@local-stack` | `externalSubscriptionID` can only be seeded by SQL (no mutation since workspace#027 FR-021) |
+| US2-AS1 – AS5 | yes | — |
+| US3-AS1/AS2, AS3 | `@local-stack` | ageing a real session past 15 min needs the session store (loopback Redis) |
+
+Rows TC-10, TC-12, TC-13 and D-5 below are therefore **portable** now; D-1, D-2, D-3 and D-4
+stay loopback. Not yet run against test-alkem.io: see the open items in the W2 status.
 
 ## How to run
 
