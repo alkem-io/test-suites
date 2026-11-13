@@ -255,7 +255,8 @@ export const shownAuthenticatorKey = async (page: Page): Promise<string> => {
   await expect(
     authenticator.getByRole('img', { name: COPY.qrAlt, exact: true })
   ).toBeVisible();
-  const keyLine = authenticator.getByText(/^Key:\s/);
+  // first(): a strict read that matched twice would print the key.
+  const keyLine = authenticator.getByText(/^Key:\s/).first();
   const secret = ((await keyLine.textContent()) ?? '')
     .replace(/^Key:\s*/, '')
     .trim();

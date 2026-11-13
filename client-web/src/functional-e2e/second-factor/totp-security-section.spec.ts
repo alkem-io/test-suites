@@ -212,7 +212,9 @@ test.describe('US1 — the authenticator app in Security', () => {
       await expect(
         authenticator.getByRole('button', { name: COPY.confirm, exact: true })
       ).toBeVisible();
-      expect(await credentialTypes(user!.identityId)).not.toContain('totp');
+      await expect
+        .poll(() => credentialTypes(user!.identityId))
+        .not.toContain('totp');
     } finally {
       await signedIn.context.close();
     }

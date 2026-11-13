@@ -26,6 +26,7 @@ import {
   block,
   enrolAuthenticatorOnPage,
   expectSignedIn,
+  expectStaysAbsent,
   freshPage,
   logOut,
   nameIdOf,
@@ -126,7 +127,10 @@ test.describe('US3 — security keys', () => {
         exact: true,
       });
       await expect(useKey).toBeVisible();
-      await expect(secondStepCodeField(page)).toHaveCount(0);
+      await expectStaysAbsent(
+        secondStepCodeField(page),
+        'a code field was offered to an identity holding only a key'
+      );
       await useKey.click();
       await expectSignedIn(page);
       await expectSecondFactorSession(page);
@@ -153,9 +157,9 @@ test.describe('US3 — security keys', () => {
       await expect(dialog).toBeHidden();
       await expect(keys.getByText(COPY.noKeys, { exact: true })).toBeVisible();
       await expect(keys.getByText(keyName, { exact: true })).toHaveCount(0);
-      expect(await secondFactorCredentialsLeft(user.identityId)).not.toContain(
-        'webauthn'
-      );
+      await expect
+        .poll(() => secondFactorCredentialsLeft(user.identityId))
+        .not.toContain('webauthn');
       await expect.poll(() => observedKeyRows(user), ROW_BOUND).toBe(2);
     } finally {
       await context.close();
