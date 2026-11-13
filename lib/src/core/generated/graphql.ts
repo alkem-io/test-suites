@@ -54974,6 +54974,14 @@ export type UpdateCalloutVisibilityMutation = {
   };
 };
 
+export type UpdateCalloutsSortOrderMutationVariables = SchemaTypes.Exact<{
+  sortOrderData: SchemaTypes.UpdateCalloutsSortOrderInput;
+}>;
+
+export type UpdateCalloutsSortOrderMutation = {
+  updateCalloutsSortOrder: Array<{ id: string; sortOrder: number }>;
+};
+
 export type CreateContributionOnCalloutMutationVariables = SchemaTypes.Exact<{
   contributionData: SchemaTypes.CreateContributionOnCalloutInput;
 }>;
@@ -55255,6 +55263,14 @@ export type CreateContributionOnCalloutMutation = {
         }
       | undefined;
   };
+};
+
+export type UpdateContributionsSortOrderMutationVariables = SchemaTypes.Exact<{
+  sortOrderData: SchemaTypes.UpdateContributionCalloutsSortOrderInput;
+}>;
+
+export type UpdateContributionsSortOrderMutation = {
+  updateContributionsSortOrder: Array<{ id: string; sortOrder: number }>;
 };
 
 export type CreateCalloutWithDataMutationVariables = SchemaTypes.Exact<{
@@ -97611,6 +97627,18 @@ export type ReadCalloutContributionsQuery = {
   };
 };
 
+export type ReadCalloutContributionsOrderQueryVariables = SchemaTypes.Exact<{
+  calloutId: SchemaTypes.Scalars["UUID"]["input"];
+}>;
+
+export type ReadCalloutContributionsOrderQuery = {
+  lookup: {
+    callout?:
+      | { id: string; contributions: Array<{ id: string; sortOrder: number }> }
+      | undefined;
+  };
+};
+
 export type ReadCalloutFormResponsesQueryVariables = SchemaTypes.Exact<{
   formID: SchemaTypes.Scalars["UUID"]["input"];
   first?: SchemaTypes.InputMaybe<SchemaTypes.Scalars["Int"]["input"]>;
@@ -97928,6 +97956,34 @@ export type ReadCalloutsSetCalloutsQuery = {
                 | undefined;
             };
           }>;
+        }
+      | undefined;
+  };
+};
+
+export type ReadContributionQueryVariables = SchemaTypes.Exact<{
+  contributionId: SchemaTypes.Scalars["UUID"]["input"];
+}>;
+
+export type ReadContributionQuery = {
+  lookup: {
+    contribution?:
+      | {
+          id: string;
+          authorization?:
+            | {
+                myPrivileges?:
+                  | Array<SchemaTypes.AuthorizationPrivilege>
+                  | undefined;
+              }
+            | undefined;
+          post?:
+            | {
+                id: string;
+                nameID: string;
+                profile: { displayName: string; url: string };
+              }
+            | undefined;
         }
       | undefined;
   };
@@ -120499,6 +120555,30 @@ export type ReadTemplatesSetTemplatesQuery = {
   };
 };
 
+export type ResolveContributionUrlQueryVariables = SchemaTypes.Exact<{
+  url: SchemaTypes.Scalars["String"]["input"];
+}>;
+
+export type ResolveContributionUrlQuery = {
+  urlResolver: {
+    state: SchemaTypes.UrlResolverResultState;
+    type: SchemaTypes.UrlType;
+    space?:
+      | {
+          id: string;
+          collaboration: {
+            calloutsSet: {
+              id: string;
+              calloutId?: string | undefined;
+              contributionId?: string | undefined;
+              postId?: string | undefined;
+            };
+          };
+        }
+      | undefined;
+  };
+};
+
 export type UrlResolverQueryVariables = SchemaTypes.Exact<{
   url: SchemaTypes.Scalars["String"]["input"];
 }>;
@@ -125146,6 +125226,16 @@ export const UpdateCalloutVisibilityDocument = gql`
   }
   ${CalloutDataFragmentDoc}
 `;
+export const UpdateCalloutsSortOrderDocument = gql`
+  mutation UpdateCalloutsSortOrder(
+    $sortOrderData: UpdateCalloutsSortOrderInput!
+  ) {
+    updateCalloutsSortOrder(sortOrderData: $sortOrderData) {
+      id
+      sortOrder
+    }
+  }
+`;
 export const CreateContributionOnCalloutDocument = gql`
   mutation CreateContributionOnCallout(
     $contributionData: CreateContributionOnCalloutInput!
@@ -125155,6 +125245,16 @@ export const CreateContributionOnCalloutDocument = gql`
     }
   }
   ${ContributionsDataFragmentDoc}
+`;
+export const UpdateContributionsSortOrderDocument = gql`
+  mutation UpdateContributionsSortOrder(
+    $sortOrderData: UpdateContributionCalloutsSortOrderInput!
+  ) {
+    updateContributionsSortOrder(sortOrderData: $sortOrderData) {
+      id
+      sortOrder
+    }
+  }
 `;
 export const CreateCalloutWithDataDocument = gql`
   mutation CreateCalloutWithData(
@@ -128153,6 +128253,19 @@ export const ReadCalloutContributionsDocument = gql`
     }
   }
 `;
+export const ReadCalloutContributionsOrderDocument = gql`
+  query ReadCalloutContributionsOrder($calloutId: UUID!) {
+    lookup {
+      callout(ID: $calloutId) {
+        id
+        contributions {
+          id
+          sortOrder
+        }
+      }
+    }
+  }
+`;
 export const ReadCalloutFormResponsesDocument = gql`
   query ReadCalloutFormResponses($formID: UUID!, $first: Int) {
     lookup {
@@ -128455,6 +128568,26 @@ export const ReadCalloutsSetCalloutsDocument = gql`
               documentType
               previewUrl
             }
+          }
+        }
+      }
+    }
+  }
+`;
+export const ReadContributionDocument = gql`
+  query ReadContribution($contributionId: UUID!) {
+    lookup {
+      contribution(ID: $contributionId) {
+        id
+        authorization {
+          myPrivileges
+        }
+        post {
+          id
+          nameID
+          profile {
+            displayName
+            url
           }
         }
       }
@@ -130467,6 +130600,25 @@ export const ReadTemplatesSetTemplatesDocument = gql`
     }
   }
 `;
+export const ResolveContributionUrlDocument = gql`
+  query ResolveContributionUrl($url: String!) {
+    urlResolver(url: $url) {
+      state
+      type
+      space {
+        id
+        collaboration {
+          calloutsSet {
+            id
+            calloutId
+            contributionId
+            postId
+          }
+        }
+      }
+    }
+  }
+`;
 export const UrlResolverDocument = gql`
   query UrlResolver($url: String!) {
     urlResolver(url: $url) {
@@ -131260,8 +131412,14 @@ const UpdateCalloutDocumentString = print(UpdateCalloutDocument);
 const UpdateCalloutVisibilityDocumentString = print(
   UpdateCalloutVisibilityDocument
 );
+const UpdateCalloutsSortOrderDocumentString = print(
+  UpdateCalloutsSortOrderDocument
+);
 const CreateContributionOnCalloutDocumentString = print(
   CreateContributionOnCalloutDocument
+);
+const UpdateContributionsSortOrderDocumentString = print(
+  UpdateContributionsSortOrderDocument
 );
 const CreateCalloutWithDataDocumentString = print(
   CreateCalloutWithDataDocument
@@ -131805,6 +131963,9 @@ const ReadCalloutCollaboraDocumentDocumentString = print(
 const ReadCalloutContributionsDocumentString = print(
   ReadCalloutContributionsDocument
 );
+const ReadCalloutContributionsOrderDocumentString = print(
+  ReadCalloutContributionsOrderDocument
+);
 const ReadCalloutFormResponsesDocumentString = print(
   ReadCalloutFormResponsesDocument
 );
@@ -131834,6 +131995,7 @@ const ReadCalloutsSetCalloutVisibilityDocumentString = print(
 const ReadCalloutsSetCalloutsDocumentString = print(
   ReadCalloutsSetCalloutsDocument
 );
+const ReadContributionDocumentString = print(ReadContributionDocument);
 const ReadMemoDocumentsDocumentString = print(ReadMemoDocumentsDocument);
 const ReadWhiteboardStateDocumentString = print(ReadWhiteboardStateDocument);
 const GetMeConversationsDocumentString = print(GetMeConversationsDocument);
@@ -132084,6 +132246,9 @@ const ReadTemplatesSetClassificationTemplatesDocumentString = print(
 );
 const ReadTemplatesSetTemplatesDocumentString = print(
   ReadTemplatesSetTemplatesDocument
+);
+const ResolveContributionUrlDocumentString = print(
+  ResolveContributionUrlDocument
 );
 const UrlResolverDocumentString = print(UrlResolverDocument);
 const GetSubspaceApplicationsDocumentString = print(
@@ -132996,6 +133161,28 @@ export function getSdk(
         variables
       );
     },
+    UpdateCalloutsSortOrder(
+      variables: SchemaTypes.UpdateCalloutsSortOrderMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.UpdateCalloutsSortOrderMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.UpdateCalloutsSortOrderMutation>(
+            UpdateCalloutsSortOrderDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "UpdateCalloutsSortOrder",
+        "mutation",
+        variables
+      );
+    },
     CreateContributionOnCallout(
       variables: SchemaTypes.CreateContributionOnCalloutMutationVariables,
       requestHeaders?: GraphQLClientRequestHeaders
@@ -133014,6 +133201,28 @@ export function getSdk(
             { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "CreateContributionOnCallout",
+        "mutation",
+        variables
+      );
+    },
+    UpdateContributionsSortOrder(
+      variables: SchemaTypes.UpdateContributionsSortOrderMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.UpdateContributionsSortOrderMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.UpdateContributionsSortOrderMutation>(
+            UpdateContributionsSortOrderDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "UpdateContributionsSortOrder",
         "mutation",
         variables
       );
@@ -138144,6 +138353,28 @@ export function getSdk(
         variables
       );
     },
+    ReadCalloutContributionsOrder(
+      variables: SchemaTypes.ReadCalloutContributionsOrderQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.ReadCalloutContributionsOrderQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.ReadCalloutContributionsOrderQuery>(
+            ReadCalloutContributionsOrderDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "ReadCalloutContributionsOrder",
+        "query",
+        variables
+      );
+    },
     ReadCalloutFormResponses(
       variables: SchemaTypes.ReadCalloutFormResponsesQueryVariables,
       requestHeaders?: GraphQLClientRequestHeaders
@@ -138382,6 +138613,28 @@ export function getSdk(
             { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "ReadCalloutsSetCallouts",
+        "query",
+        variables
+      );
+    },
+    ReadContribution(
+      variables: SchemaTypes.ReadContributionQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.ReadContributionQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.ReadContributionQuery>(
+            ReadContributionDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "ReadContribution",
         "query",
         variables
       );
@@ -140868,6 +141121,28 @@ export function getSdk(
             { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "ReadTemplatesSetTemplates",
+        "query",
+        variables
+      );
+    },
+    ResolveContributionUrl(
+      variables: SchemaTypes.ResolveContributionUrlQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.ResolveContributionUrlQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.ResolveContributionUrlQuery>(
+            ResolveContributionUrlDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "ResolveContributionUrl",
         "query",
         variables
       );

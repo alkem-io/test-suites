@@ -251,6 +251,13 @@ const FUNCTIONS: string[] = [
   'addClassificationEntryFromTemplate',
   'updateClassificationEntrySelection',
   'updateTagsetTags',
+  // W2 #713 follow-up (callout placement server-api)
+  'moveContributionToCallout',
+  'readCalloutContributionsOrder',
+  'readContribution',
+  'resolveContributionUrl',
+  'updateCalloutsSortOrder',
+  'updateContributionsSortOrder',
   // workspace#080 Form walks (W2 Tier 0 item 6): disposable identities
   'registerVerifiedUser',
 ];
