@@ -73,14 +73,14 @@ DT matrix: admin shows the Move items (RO-1/2) and the Post location (MC-1); the
 | Scenario | Why not automated | Where it belongs |
 |---|---|---|
 | Reorder by dragging rows inside a Layout column | **Manual/none.** Same `updateCalloutsSortOrder` contract as RO-1, through dnd-kit (harness: US2-AS3 flake) | client unit tests (`countLayoutChanges`, `layoutMapper`) |
-| Sort responses inside a post (Sort contributions dialog) | **Out of J6** (E6 is posts). Drag-only dialog, `updateContributionsSortOrder` untested at any level | follow-up case, P3 |
+| Sort responses inside a post (Sort contributions dialog) | **Out of J6** (E6 is posts). Drag-only dialog. The API is covered since 2026-11-12: CS-1 admin reorder read back, CS-2 member refused, CS-3 a foreign response id refused | API: `server-api/src/functional-api/callout/placement/callout-placement-authorization.it-spec.ts`; the dialog: follow-up case, P3 |
 | Move a whiteboard / link / memo response | **No UI.** Only the post response dialog has Post location; the server supports all types | ruling R-5 |
-| Member calls `updateCalloutsSortOrder` / `moveContributionToCallout` / `updateCallout` (phase) directly | Pure API negatives do not belong in Playwright (audit § 2.8) | server-api `callout/`; W1 callout behaviour doc |
+| Member calls `updateCalloutsSortOrder` / `moveContributionToCallout` / `updateCallout` (phase) directly | Pure API negatives do not belong in Playwright (audit § 2.8) | **Covered 2026-11-12** in `server-api/src/functional-api/callout/placement/callout-placement-authorization.it-spec.ts`: PO-1, MV-1, PH-1 (FORBIDDEN_POLICY, nothing changed), each with a Space-admin control (PO-1c, MV-1c, PH-1c) |
 | Cross-set or wrong-type move refused | Unreachable from the UI (the list is same-set and POST-only) | server unit tests; W1 |
-| Moved response keeps the **source** post's authorization (no policy reset in the move path) | Unproven premise; needs a draft target to observe | EXP-1, below |
+| Moved response keeps the **source** post's authorization (no policy reset in the move path) | **Proven 2026-11-12 (EXP-1, API):** a member still reads a response moved into a draft post by id. Candidate security defect, unfiled (test-suites#724) | `server-api/src/functional-api/callout/move/moved-response-draft-access.it-spec.ts`: EXP1-3/EXP1-4 skipped on the defect; EXP1-1/EXP1-2 (url routes refused) and EXP1-C (control) run |
 | Partial Layout save | Needs fault injection | EXP-2, below |
 
-**Charters.** *EXP-1 (30 min):* move a response into a **draft** post, then, as a member, open the response's old and new URLs. *EXP-2 (30 min):* throttle the network and kill the tab mid-save in Layout with a phase move plus a reorder; check what members see.
+**Charters.** *EXP-1 (30 min):* move a response into a **draft** post, then, as a member, open the response's old and new URLs. **Run 2026-11-12 through the API** (see below). *EXP-2 (30 min):* throttle the network and kill the tab mid-save in Layout with a phase move plus a reorder; check what members see.
 
 **Non-functional.**
 - *Performance:* a phase rename retags every post twice (the client cascade plus the server cascade), one request per post. Not measured, and no case. Flag it for a phase with more than 50 posts.
@@ -112,9 +112,9 @@ DT matrix: admin shows the Move items (RO-1/2) and the Post location (MC-1); the
 - a member, including a response's author, is not offered the reorder or the move.
 
 It does **not** prove:
-- that the server refuses those writes when a member calls them directly (server-api);
-- drag-and-drop reordering, or response sorting;
-- what happens to a moved response's access rules.
+- that the server refuses those writes when a member calls them directly (server-api covers it since 2026-11-12, see the gap rows);
+- drag-and-drop reordering, or the response sorting dialog;
+- that a moved response takes its new post's access rules: EXP-1 showed it does not (see the gap rows).
 
 
 ## Build notes (2026-11-09)
@@ -155,3 +155,21 @@ Challenged on the local stack (server `51eb90878`, client-web `907103f5f`, chrom
 - **BVA was labelled but not implemented.** RO-1 and RO-2 never asserted a list boundary. RO-2 now checks, through the read-back, that its post is the tab's first, and asserts Move to Top / Move Up absent next to Move Down. RO-1 finds the tab's last post by stored order (on a default L0 it is the template post "Welcome") and asserts Move Up shown, Move Down / Move to Bottom absent.
 - Red-proof of the new oracles: the read-back as the admin fails `not.toContain('MOVE_POST')`. The "last post" taken as the lowest seeded post fails on `Move Down`. The "first post" menu read on the second post fails on `Move to Top`.
 - Minor findings, also fixed: MC-1's target read-back compares the whole list, so a duplicated response goes red. RO-3 no longer waits for two animation frames; the `CalloutsSetAuthorization` response and the Share control already prove the menu has rendered. The LA-1 negative control asserts its two conditions separately, with the error in the failure message, and rejects a transport failure. The FS-2 regression guard no longer claims to isolate the server's retag. The coverage-map row for innovation-flow transitions keeps its *Where* and *Established* cells.
+
+
+## Server-api follow-up (2026-11-12)
+
+The API gates J6 deferred (test-suites#713) and the EXP-1 charter, on the local stack (server develop `e120d25a1`). `space.admin` is the positive control, `space.member` (also the author of every response) the refused member.
+
+| ID | Call | Guard (server) | Oracle | Control |
+|---|---|---|---|---|
+| PO-1 | member `updateCalloutsSortOrder` (reverse three posts) | UPDATE on the callouts set | `FORBIDDEN_POLICY`; every `sortOrder` unchanged (`readCalloutsPlacement`) | PO-1c: admin, the stored order equals the reversed list |
+| PH-1 | member `updateCallout` with the FLOW_STATE tagset set to the last phase | UPDATE on the callout | `FORBIDDEN_POLICY`; phase and `sortOrder` unchanged | PH-1c: admin, phase is the last phase |
+| MV-1 | member (the author) `moveContributionToCallout` | MOVE_CONTRIBUTION on the response | `FORBIDDEN_POLICY`; still in the source, not in the target | MV-1c: admin, gone from the source with the same id, the sibling stays, present in the target |
+| CS-1 | admin `updateContributionsSortOrder` (reverse three responses) | UPDATE on the callout | stored order (`readCalloutContributionsOrder`) equals the reversed list | — (it is the positive) |
+| CS-2 | member `updateContributionsSortOrder` | UPDATE on the callout | `FORBIDDEN_POLICY`; order unchanged | CS-1 |
+| CS-3 | admin, list ending with a response id from another post | the service's lookup | `ENTITY_NOT_FOUND`; neither post's order changes | CS-1 |
+| EXP1-0…2 | admin moves a response into a draft post; member resolves the new and old url | READ on the holding post (url resolver) | new url `Forbidden`, no contribution id; old url resolves to the source post only | EXP1-C: setting a post to draft hides its responses by id |
+| EXP1-3/4 | member `lookup.contribution` / `lookup.post` on the moved response | READ on the response's / post's own policy | expected `FORBIDDEN_POLICY` | **skipped**: the member reads both, holding READ + CONTRIBUTE |
+
+Red-proof: PO-1, PH-1, MV-1 and CS-2 run as the admin all go red, and PO-1c run as the member goes red. Files run serially (`--fileParallelism=false`, as `test:callouts` does): in a parallel run the shared `space.member` persona's cached credentials raced a fresh membership once.

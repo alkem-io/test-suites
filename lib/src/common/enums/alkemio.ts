@@ -31,6 +31,7 @@ export {
   InnovationHubType,
   LicenseEntitlementType,
   McpApiKeyStatus,
+  MimeType,
   NotificationEvent,
   NotificationEventInAppState,
   OrganizationVerificationEnum,

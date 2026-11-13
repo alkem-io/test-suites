@@ -1,0 +1,26 @@
+query ReadCalloutStoredFiles($calloutId: UUID!) {
+  lookup {
+    callout(ID: $calloutId) {
+      id
+      framing {
+        id
+        type
+        profile {
+          id
+          url
+          references { id name uri description }
+          storageBucket {
+            id
+            allowedMimeTypes
+            maxFileSize
+            documents { ...StoredDocument }
+          }
+        }
+        mediaGallery {
+          id
+          visuals { id name uri alternativeText sortOrder }
+        }
+      }
+    }
+  }
+}
