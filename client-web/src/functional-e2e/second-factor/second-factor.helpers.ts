@@ -79,8 +79,9 @@ export const COPY = {
   removeKeyTitle: (name: string) => `Remove the security key "${name}"?`,
   reminderAction: 'Set it up',
   reminderDismiss: 'Dismiss',
+  reminderPrefix: 'Use two-step verification by',
   reminderText: (deadline: string) =>
-    `Set up two-step verification before ${deadline}. After that date you cannot use Alkemio until you do.`,
+    `Use two-step verification by ${deadline}: set it up, or sign in again with it if you already have. After that date you cannot use Alkemio without it.`,
   orgRuleSwitch: 'Require two-step verification for members',
   orgRuleTurnOffConfirm: 'Stop requiring',
 } as const;
