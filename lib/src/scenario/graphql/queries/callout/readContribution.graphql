@@ -1,0 +1,18 @@
+query ReadContribution($contributionId: UUID!) {
+  lookup {
+    contribution(ID: $contributionId) {
+      id
+      authorization {
+        myPrivileges
+      }
+      post {
+        id
+        nameID
+        profile {
+          displayName
+          url
+        }
+      }
+    }
+  }
+}

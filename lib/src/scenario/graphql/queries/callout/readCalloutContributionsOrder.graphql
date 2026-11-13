@@ -1,0 +1,11 @@
+query ReadCalloutContributionsOrder($calloutId: UUID!) {
+  lookup {
+    callout(ID: $calloutId) {
+      id
+      contributions {
+        id
+        sortOrder
+      }
+    }
+  }
+}

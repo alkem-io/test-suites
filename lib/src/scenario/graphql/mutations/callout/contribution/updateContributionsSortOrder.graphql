@@ -1,0 +1,8 @@
+mutation UpdateContributionsSortOrder(
+  $sortOrderData: UpdateContributionCalloutsSortOrderInput!
+) {
+  updateContributionsSortOrder(sortOrderData: $sortOrderData) {
+    id
+    sortOrder
+  }
+}

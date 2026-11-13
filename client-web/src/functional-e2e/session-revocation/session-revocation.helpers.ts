@@ -1,28 +1,34 @@
-// plan: docs/qa/6315-session-revocation-test-plan.md (Stream B, §4.2)
+// plan: client-web/src/functional-e2e/session-revocation/session-revocation-test-plan.md
+//       (scenarios from docs/qa/6315-session-revocation-test-plan.md, Stream B)
 //
-// Stream B helpers — the OIDC/BFF revocation cascade observed over a REAL
-// `alkemio_session` cookie.
+// Helpers for the session-revocation walks: what happens to a signed-in
+// browser session when its account is deleted.
 //
-// Why this module exists at all: `alkemio:subrevoked:<sub>` is read by exactly
-// one caller, `CookieSessionStrategy`. That code path is reachable only from a
-// cookie-authenticated request, and the only place in this monorepo that holds
-// a genuine `alkemio_session` is a Playwright `BrowserContext`. `context.request`
-// shares that context's cookie jar, so an API call made through it carries the
-// same session the browser holds — which is the whole mechanism these specs
-// rest on. Never construct a bare `APIRequestContext`: it has no cookies and
-// every assertion below would degrade to "anonymous" and pass vacuously.
+// W2 Tier 0 item 2 (docs/qa/server-rebuild/client-net-audit/README.md § 4):
+// every oracle here is a GraphQL outcome read through `@alkemio/tests-lib`, or
+// what the user sees in the browser. Nothing depends on a Kratos `error_code`,
+// on the session cookie's name or wire format, on the anonymous actor's id, or
+// on the BFF's `id-token-hint` route (which the client resolves on the identity
+// subdomain, not the app origin).
+//
+// The credential under test is the browser context's cookie jar, snapshotted
+// as a lib actor (`sessionActor`). A snapshot taken before the deletion and
+// replayed afterwards is the "stale session" — whatever the server names its
+// cookies. The lib sends it on its own HTTP client, so a probe never changes
+// the browser's jar; only the browser's own requests do.
 
-import { APIResponse, Browser, BrowserContext, Page, request } from '@playwright/test';
+import type { Browser, BrowserContext, Page } from '@playwright/test';
+import { expect } from '@playwright/test';
 import {
   deleteUserRaw,
   getUserToken,
-  readMySessionRaw,
   readMyUser,
   readMyUserRaw,
   registerInKratosOrFail,
+  testConfiguration,
   UniqueIDGenerator,
   verifyInKratosOrFail,
-  type RawGraphqlResponse,
+  type GraphqlActor,
 } from '@alkemio/tests-lib';
 import { loginViaCrd } from '../helpers/login.helper';
 import { sessionActor } from '../helpers/lib-actor.helper';
@@ -33,180 +39,101 @@ export const baseUrl = (
 
 export const password = process.env.AUTH_TEST_HARNESS_PASSWORD || 'change_me';
 
-/**
- * Cookie-borne GraphQL calls go through a `{ cookieHeader }` lib actor, which
- * the lib sends to the session endpoint (`/api/private/graphql`) — deliberately
- * NOT the non-interactive bearer path, which carries no cookie semantics and
- * never consults the revocation marker. Bearer mutations (the admin deletion
- * below) use the bearer path; every cookie assertion uses the session one.
- */
-
-/** `@Controller('api/auth/oidc')` + `@Get('id-token-hint')`, oidc.controller.ts. */
-export const idTokenHintUrl = `${baseUrl}/api/auth/oidc/id-token-hint`;
-
-/** Server default (`OIDC_SESSION_COOKIE_NAME:alkemio_session` in alkemio.yml). */
-export const sessionCookieName =
-  process.env.OIDC_SESSION_COOKIE_NAME || 'alkemio_session';
-
 const ADMIN_EMAIL = process.env.AUTH_TEST_HARNESS_EMAIL || 'admin@alkem.io';
 
 /**
- * Substrings that must never appear on the wire once a session is revoked.
- * FR-021 / SC-006 (response slice) and GDPR Art. 17 — the PII half of the
- * tombstone rationale, asserted where it is actually observable.
+ * Substrings that must never appear on the wire once a session is revoked
+ * (FR-021 / SC-006, response slice). Generic token names only: an absence
+ * check on a server-internal key name would pass vacuously once it is renamed.
  */
 export const TOKEN_MATERIAL_MARKERS = [
   'id_token',
   'access_token',
   'refresh_token',
-  'alkemio_session',
-  'alkemio:sid:',
-  'alkemio:sub:',
-  'terminated_at',
 ];
 
 // --------------------------------------------------------------------------
-// Probes — every one of these goes through the browser context's cookie jar.
+// The credential and what the server makes of it
 // --------------------------------------------------------------------------
 
-export interface ProbeResult {
+/**
+ * The browser context's credential as it is NOW, as a lib actor. Taken before
+ * a deletion and replayed after it, it is the stale session.
+ */
+export const credentialOf = (context: BrowserContext): Promise<GraphqlActor> =>
+  sessionActor(context);
+
+export interface WhoAmI {
   status: number;
-  /** Raw body. Kept so negative assertions can scan the literal wire bytes. */
-  text: string;
-  /** Parsed body, or `undefined` when the body was not JSON. */
-  json: any;
+  /** The user the server attached to this credential, or null for none. */
+  userId: string | null;
+  /** The GraphQL errors, if any. */
+  errors: { message?: string; extensions?: { code?: string } }[];
+  /** Whether `me` resolved at all. */
+  meResolved: boolean;
+  /** The serialised body, for leak scans. */
+  raw: string;
 }
 
-const toProbeResult = async (response: APIResponse): Promise<ProbeResult> => {
-  const text = await response.text();
-  let json: any;
-  try {
-    json = JSON.parse(text);
-  } catch {
-    json = undefined;
-  }
-  return { status: response.status(), text, json };
+/**
+ * `me { id user { id } }` on the session GraphQL endpoint, as `actor`. Never
+ * throws on a non-2xx: the status is part of what is asserted.
+ */
+export const whoAmI = async (actor: GraphqlActor): Promise<WhoAmI> => {
+  const response = await readMyUserRaw(actor);
+  const body = response.body as
+    | {
+        data?: { me?: { id: string; user: { id: string } | null } | null };
+        errors?: WhoAmI['errors'];
+      }
+    | undefined;
+  return {
+    status: response.status,
+    userId: body?.data?.me?.user?.id ?? null,
+    errors: body?.errors ?? [],
+    meResolved: Boolean(body?.data?.me),
+    raw: response.raw,
+  };
 };
 
-/** A lib RAW response (status + parsed body + serialised body) as a probe result. */
-const rawToProbeResult = <T>(response: RawGraphqlResponse<T>): ProbeResult => ({
-  status: response.status,
-  text: response.raw,
-  json: response.body,
-});
-
-/**
- * `GET /api/auth/oidc/id-token-hint` from the context's own session.
- * 200 `{id_token}` while the session lives, 401 `{"error":"unauthenticated"}`
- * once it is torn down or tombstoned.
- */
-export const probeIdTokenHint = async (
-  context: BrowserContext
-): Promise<ProbeResult> =>
-  toProbeResult(
-    await context.request.get(idTokenHintUrl, { failOnStatusCode: false })
-  );
-
-/**
- * The session liveness read (`me { id }`) on the session GraphQL endpoint from
- * the context's own cookie jar, as it is NOW — a jar the server has cleared
- * sends no cookie and is served anonymously.
- *
- * A RAW lib call never throws on a non-2xx, which is load-bearing: the
- * assertion under test is the *status*, and a throwing probe would turn the
- * feature's core behaviour into a harness error rather than an expectation.
- */
-export const probePrivateGraphql = async (
-  context: BrowserContext
-): Promise<ProbeResult> =>
-  rawToProbeResult(await readMySessionRaw(await sessionActor(context)));
-
-/**
- * `me { id user { id } }` from the context's own session — `probePrivateGraphql`
- * plus whether a user is still attached to the session.
- */
-export const probePrivateGraphqlMyUser = async (
-  context: BrowserContext
-): Promise<ProbeResult> =>
-  rawToProbeResult(await readMyUserRaw(await sessionActor(context)));
-
-/**
- * The session cookie of a context, as a `Cookie` request header value.
- *
- * Why it exists: on the FIRST request a revoked session makes, the server
- * answers 401 AND clears the cookie on that response (AuthInterceptor —
- * otherwise the browser is locked out of `/login`). A Playwright context
- * honours that clear, so every later probe from the same context is
- * cookie-less and legitimately ANONYMOUS. The property #6315 fences —
- * "a stale cookie must never yield an anonymous 200" — can therefore only be
- * asserted by REPLAYING the captured cookie explicitly, which is what the
- * `*WithCookie` probes below do.
- */
-export const captureSessionCookie = async (
-  context: BrowserContext
-): Promise<string> => {
-  const cookie = (await context.cookies()).find(
-    c => c.name === sessionCookieName
-  );
-  if (!cookie) {
-    throw new Error(
-      `captureSessionCookie: no '${sessionCookieName}' cookie in the context`
-    );
-  }
-  return `${cookie.name}=${cookie.value}`;
+/** The credential is accepted and resolves to exactly this user. */
+export const expectResolvesTo = (who: WhoAmI, userId: string, what: string) => {
+  expect(who.status, `${what}: HTTP status`).toBe(200);
+  expect(who.errors, `${what}: GraphQL errors`).toEqual([]);
+  expect(who.userId, `${what}: the user behind the session`).toBe(userId);
 };
 
 /**
- * The replayed cookie is a live credential until the revocation lands. It is
- * only ever sent to `baseUrl`, which must be HTTPS unless it is a loopback
- * host (the local stack), and the probes never follow redirects — so the
- * cookie cannot be forwarded to a destination the test did not name.
+ * The credential is REFUSED: an HTTP 401 with a GraphQL error and nothing
+ * resolved. This is the server#6315 property — an ended session is loudly
+ * refused, never silently served as an anonymous visitor (which is what a
+ * `destroy()`-instead-of-tombstone regression produces).
  */
-const assertSecureProbeOrigin = (): void => {
-  const { protocol, hostname } = new URL(baseUrl);
-  const loopback = ['localhost', '127.0.0.1', '::1', '[::1]'].includes(hostname);
-  if (protocol !== 'https:' && !loopback) {
-    throw new Error(
-      `Refusing to replay a session cookie over ${protocol} to ${hostname}: ALKEMIO_BASE_URL must be https:// or loopback`
-    );
-  }
+export const expectRefused = (who: WhoAmI, what: string) => {
+  expect(who.status, `${what}: must not be a silent 200`).not.toBe(200);
+  expect(who.status, `${what}: HTTP status`).toBe(401);
+  expect(who.errors.length, `${what}: GraphQL errors`).toBeGreaterThan(0);
+  expect(who.meResolved, `${what}: \`me\` must not resolve`).toBe(false);
+  expect(who.userId, `${what}: no user`).toBeNull();
 };
 
-const probeWithCookie = async (
-  cookieHeader: string,
-  send: (ctx: Awaited<ReturnType<typeof request.newContext>>) => Promise<APIResponse>
-): Promise<ProbeResult> => {
-  assertSecureProbeOrigin();
-  const ctx = await request.newContext({
-    extraHTTPHeaders: { cookie: cookieHeader },
-  });
-  try {
-    return await toProbeResult(await send(ctx));
-  } finally {
-    await ctx.dispose();
+/**
+ * Whatever the server does with this credential, it is not this user and not
+ * a server error: refused (401), or an anonymous visitor (200, no user).
+ */
+export const expectNotTheUser = (who: WhoAmI, userId: string, what: string) => {
+  expect(who.status, `${what}: no server error`).toBeLessThan(500);
+  expect([200, 401], `${what}: HTTP status`).toContain(who.status);
+  expect(who.userId, `${what}: must not resolve to the user`).not.toBe(userId);
+  if (who.status === 200) {
+    expect(who.errors, `${what}: anonymous read has no errors`).toEqual([]);
+    expect(who.userId, `${what}: anonymous`).toBeNull();
   }
-};
-
-/** `GET id-token-hint` replaying a captured (possibly stale) session cookie. */
-export const probeIdTokenHintWithCookie = (
-  cookieHeader: string
-): Promise<ProbeResult> =>
-  probeWithCookie(cookieHeader, ctx =>
-    ctx.get(idTokenHintUrl, { failOnStatusCode: false, maxRedirects: 0 })
-  );
-
-/** The session liveness read (`me { id }`) replaying a captured (possibly stale) session cookie. */
-export const probePrivateGraphqlWithCookie = async (
-  cookieHeader: string
-): Promise<ProbeResult> => {
-  assertSecureProbeOrigin();
-  return rawToProbeResult(await readMySessionRaw({ cookieHeader }));
 };
 
 // --------------------------------------------------------------------------
-// Disposable subjects — these specs delete their subject, so a shared persona
-// is never acceptable. Deleting `space.member@alkem.io` would poison every
-// other suite in the monorepo.
+// Disposable subjects — these walks delete their subject, so a shared
+// persona is never acceptable.
 // --------------------------------------------------------------------------
 
 export interface DisposableUser {
@@ -218,12 +145,10 @@ export interface DisposableUser {
 }
 
 /**
- * Provision a verified, disposable Kratos identity and resolve the Alkemio
- * user row it maps to.
- *
- * The Alkemio user is created server-side on first authentication, so minting
- * the subject's own non-interactive bearer and reading `me { user { id } }`
- * both triggers that creation and yields the id the deletion needs.
+ * A verified, disposable Kratos identity (public registration + its own
+ * verification mail, read by recipient) and the Alkemio user it maps to.
+ * Minting the subject's own bearer and reading `me { user { id } }` both
+ * creates that user and yields its id.
  */
 export const provisionDisposableUser = async (
   label = 'srb'
@@ -240,26 +165,27 @@ export const provisionDisposableUser = async (
   );
   await verifyInKratosOrFail(email, verificationFlowId);
 
-  const userId = await resolveAlkemioUserId(email);
+  const userId = await currentUserIdOf(email);
+  if (!userId) {
+    throw new Error(`No Alkemio user appeared for '${email}' after sign-up`);
+  }
   return { email, firstName, lastName, userId };
 };
 
-const resolveAlkemioUserId = async (email: string): Promise<string> => {
+/** The Alkemio user an email signs in as right now, or null when none. */
+const currentUserIdOf = async (email: string): Promise<string | null> => {
   const token = await getUserToken(email);
   const response = await readMyUser({ bearerToken: token });
-  const userId = response.data?.me?.user?.id;
-  if (!userId) {
+  if (response.error) {
     throw new Error(
-      `Unable to resolve the Alkemio user id for '${email}': ${JSON.stringify(
-        response.error?.errors ?? response.data
-      )}`
+      `readMyUser for '${email}' failed: ${JSON.stringify(response.error.errors)}`
     );
   }
-  return userId;
+  return response.data?.me?.user?.id ?? null;
 };
 
 // --------------------------------------------------------------------------
-// Deletion — this stream's own `deleteUser`, deliberately not the shared one.
+// Deletion
 // --------------------------------------------------------------------------
 
 let adminTokenPromise: Promise<string> | undefined;
@@ -278,20 +204,11 @@ export interface DeleteUserResult {
 }
 
 /**
- * Delete a user as global admin, with `deleteIdentity` under the caller's
- * control.
- *
- * The shared `deleteUser` helper
- * (`server-api/.../user.request.params.ts`) hardcodes `deleteIdentity: true`,
- * which destroys the Kratos identity as a side effect. SRB-E2 re-logs the same
- * email in after the revocation, so it needs the identity to survive — with
- * the shared helper that scenario would fail at the login form for a reason
- * that has nothing to do with the behaviour under test. The shared helper is
- * read-only for this stream, so the variant lives here.
- *
- * Sent over the non-interactive bearer path on purpose: the deletion is
- * out-of-band admin traffic and must not disturb the subject's cookie session,
- * which is the thing being measured.
+ * Delete a user as the platform admin, over the bearer path, with
+ * `deleteIdentity` under the caller's control. Out-of-band admin traffic: it
+ * must not touch the subject's browser session, which is what is measured.
+ * SRB-E2 signs the same email in again afterwards, so the cascade keeps the
+ * identity (`deleteIdentity: false`); every other walk removes it.
  */
 export const deleteUserAsGlobalAdmin = async (
   userId: string,
@@ -305,18 +222,50 @@ export const deleteUserAsGlobalAdmin = async (
 };
 
 /**
- * Best-effort teardown. Already-deleted is the expected outcome for most
- * subjects here, so nothing is thrown — a cleanup failure must not mask the
- * verdict of the test that just ran.
+ * Teardown: delete the user (with its sign-in identity) unless a walk already
+ * did. "Already gone" (`ENTITY_NOT_FOUND`) is the expected outcome after a
+ * green walk; anything else fails the hook, because a leaked user is a leaked
+ * fixture on a shared environment.
  */
-export const deleteUserQuietly = async (userId?: string): Promise<void> => {
+export const deleteUserIfPresent = async (userId?: string): Promise<void> => {
   if (!userId) return;
+  const deletion = await deleteUserAsGlobalAdmin(userId, {
+    deleteIdentity: true,
+  });
+  const errors: { extensions?: { code?: string } }[] =
+    deletion.body?.errors ?? [];
+  if (errors.length === 0 && deletion.status === 200) return;
+  if (errors.every(e => e.extensions?.code === 'ENTITY_NOT_FOUND')) return;
+  throw new Error(
+    `teardown: deleting user ${userId} failed (HTTP ${deletion.status}): ${deletion.text}`
+  );
+};
+
+/**
+ * Teardown for a subject whose Alkemio user was deleted with its identity
+ * KEPT and then signed in again (SRB-E2): remove whatever user that email
+ * signs in as now, together with the identity. Without the Kratos admin API
+ * this is the only way to remove the identity; if no user can be resolved,
+ * say so — the identity is left behind.
+ */
+export const deleteEverythingFor = async (
+  subject?: DisposableUser
+): Promise<void> => {
+  if (!subject) return;
+  let userId: string | null;
   try {
-    await deleteUserAsGlobalAdmin(userId, { deleteIdentity: true });
-  } catch {
-    // Subject already gone, or the admin token could not be minted during
-    // teardown. Either way there is nothing useful left to do.
+    userId = await currentUserIdOf(subject.email);
+  } catch (error) {
+    throw new Error(
+      `teardown: the Kratos identity of a disposable subject may be left behind — it no longer signs in (${(error as Error).message})`
+    );
   }
+  if (!userId) {
+    throw new Error(
+      'teardown: the Kratos identity of a disposable subject is left behind — it signs in as no user'
+    );
+  }
+  await deleteUserIfPresent(userId);
 };
 
 // --------------------------------------------------------------------------
@@ -328,14 +277,20 @@ export interface LoggedInSession {
   page: Page;
 }
 
+/** The banner control only a signed-in visitor gets. */
+export const notificationsButton = (page: Page) =>
+  page
+    .getByRole('banner')
+    .getByRole('button', { name: 'Notifications', exact: true });
+
+export const logInHeaderLink = (page: Page) =>
+  page.getByRole('link', { name: 'Log in', exact: true });
+
 /**
- * Log an email in through the real SPA form in its OWN browser context, so the
- * OIDC callback mints a genuine `alkemio_session` and indexes it under the
- * subject.
- *
- * Explicitly NOT `createPersonaTest` / `ensurePersonaState`: that cache is
- * keyed by email and shared across the whole run, and these subjects get
- * deleted. Each call here is a distinct sid, which is also what SRB-E1 needs.
+ * Sign an email in through the real SPA form in its OWN browser context, so
+ * each call is a distinct server session (SRB-E1 needs three). Never the
+ * persona storage-state cache: it is keyed by email and these subjects get
+ * deleted. Waits for the signed-in banner, not for a URL.
  */
 export const openLoggedInSession = async (
   browser: Browser,
@@ -344,17 +299,27 @@ export const openLoggedInSession = async (
   const context = await browser.newContext();
   const page = await context.newPage();
   await loginViaCrd(page, email, password, baseUrl);
+  await expect(notificationsButton(page)).toBeVisible();
   return { context, page };
 };
 
-/**
- * Close every context, tolerating failures. Leaked contexts hold live sessions
- * and confuse the next run, so this runs unconditionally in `afterAll`.
- */
+/** Close every context. Leaked contexts hold live sessions. */
 export const closeSessions = async (
   ...sessions: (LoggedInSession | undefined)[]
 ): Promise<void> => {
   for (const session of sessions) {
-    await session?.context.close().catch(() => {});
+    await session?.context.close();
   }
 };
+
+/**
+ * The cookies that carry a signed-in session on the server
+ * origin: the HttpOnly cookies a signed-in context holds there. Derived, not
+ * hard-coded, so SRB-N2 forges whatever the server under test actually uses.
+ */
+export const sessionCookies = async (
+  context: BrowserContext
+): Promise<{ name: string; value: string }[]> =>
+  (await context.cookies(testConfiguration.endPoints.server)).filter(
+    cookie => cookie.httpOnly
+  );

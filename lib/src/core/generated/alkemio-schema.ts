@@ -50541,6 +50541,14 @@ export type UpdateCalloutVisibilityMutation = {
   };
 };
 
+export type UpdateCalloutsSortOrderMutationVariables = Exact<{
+  sortOrderData: UpdateCalloutsSortOrderInput;
+}>;
+
+export type UpdateCalloutsSortOrderMutation = {
+  updateCalloutsSortOrder: Array<{ id: string; sortOrder: number }>;
+};
+
 export type CreateContributionOnCalloutMutationVariables = Exact<{
   contributionData: CreateContributionOnCalloutInput;
 }>;
@@ -50774,6 +50782,14 @@ export type CreateContributionOnCalloutMutation = {
         }
       | undefined;
   };
+};
+
+export type UpdateContributionsSortOrderMutationVariables = Exact<{
+  sortOrderData: UpdateContributionCalloutsSortOrderInput;
+}>;
+
+export type UpdateContributionsSortOrderMutation = {
+  updateContributionsSortOrder: Array<{ id: string; sortOrder: number }>;
 };
 
 export type CreateCalloutWithDataMutationVariables = Exact<{
@@ -89538,6 +89554,18 @@ export type ReadCalloutContributionsQuery = {
   };
 };
 
+export type ReadCalloutContributionsOrderQueryVariables = Exact<{
+  calloutId: Scalars["UUID"]["input"];
+}>;
+
+export type ReadCalloutContributionsOrderQuery = {
+  lookup: {
+    callout?:
+      | { id: string; contributions: Array<{ id: string; sortOrder: number }> }
+      | undefined;
+  };
+};
+
 export type ReadCalloutFormResponsesQueryVariables = Exact<{
   formID: Scalars["UUID"]["input"];
   first?: InputMaybe<Scalars["Int"]["input"]>;
@@ -89848,6 +89876,30 @@ export type ReadCalloutsSetCalloutsQuery = {
                 | undefined;
             };
           }>;
+        }
+      | undefined;
+  };
+};
+
+export type ReadContributionQueryVariables = Exact<{
+  contributionId: Scalars["UUID"]["input"];
+}>;
+
+export type ReadContributionQuery = {
+  lookup: {
+    contribution?:
+      | {
+          id: string;
+          authorization?:
+            | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
+            | undefined;
+          post?:
+            | {
+                id: string;
+                nameID: string;
+                profile: { displayName: string; url: string };
+              }
+            | undefined;
         }
       | undefined;
   };
@@ -111664,6 +111716,30 @@ export type ReadTemplatesSetTemplatesQuery = {
                 }
               | undefined;
           }>;
+        }
+      | undefined;
+  };
+};
+
+export type ResolveContributionUrlQueryVariables = Exact<{
+  url: Scalars["String"]["input"];
+}>;
+
+export type ResolveContributionUrlQuery = {
+  urlResolver: {
+    state: UrlResolverResultState;
+    type: UrlType;
+    space?:
+      | {
+          id: string;
+          collaboration: {
+            calloutsSet: {
+              id: string;
+              calloutId?: string | undefined;
+              contributionId?: string | undefined;
+              postId?: string | undefined;
+            };
+          };
         }
       | undefined;
   };
