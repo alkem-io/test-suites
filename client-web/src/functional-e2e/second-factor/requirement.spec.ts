@@ -119,9 +119,28 @@ test.describe('US4 — an organisation requires a second factor', () => {
               exact: true,
             });
             await expect(ruleSwitch).toBeChecked();
+            const confirmTurnOff = page.getByRole('button', {
+              name: COPY.orgRuleTurnOffConfirm,
+              exact: true,
+            });
+
+            // Turning the rule off asks first; dismissing the question keeps it.
+            await ruleSwitch.click();
+            await expect(confirmTurnOff).toBeVisible();
+            await page.keyboard.press('Escape');
+            await expect(confirmTurnOff).toHaveCount(0);
+            await page.reload();
+            await expect(ruleSwitch).toBeChecked();
+            expect(
+              await readOrganizationSecondFactorRequired(
+                organization.id,
+                adminActor
+              )
+            ).toBe(true);
 
             for (const next of [false, true]) {
               await ruleSwitch.click();
+              if (!next) await confirmTurnOff.click();
               await expect
                 .poll(() =>
                   readOrganizationSecondFactorRequired(organization.id, adminActor)

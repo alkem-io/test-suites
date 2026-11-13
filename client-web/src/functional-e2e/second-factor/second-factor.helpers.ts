@@ -82,6 +82,7 @@ export const COPY = {
   reminderText: (deadline: string) =>
     `Set up two-step verification before ${deadline}. After that date you cannot use Alkemio until you do.`,
   orgRuleSwitch: 'Require two-step verification for members',
+  orgRuleTurnOffConfirm: 'Stop requiring',
 } as const;
 
 /** A fresh browser session with cookie consent granted up front. */
