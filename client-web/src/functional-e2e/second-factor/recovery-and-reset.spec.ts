@@ -176,6 +176,10 @@ test.describe('US2 — recovery codes and the support reset', () => {
         .getByRole('button', { name: COPY.removeRecovery, exact: true })
         .click();
       await expect(dialog).toBeHidden();
+      // The identity, not only the screen: the confirm removed the codes.
+      expect(await credentialTypes(member!.identityId)).not.toContain(
+        'lookup_secret'
+      );
       await expect(
         recovery.getByRole('button', { name: COPY.generate, exact: true })
       ).toBeEnabled();

@@ -150,6 +150,8 @@ export type AuthenticationAuditRow = {
 export const authenticationAuditRows = (subject: {
   userId?: string;
   organizationId?: string;
+  outcome?: string;
+  scope?: string;
 }): Promise<AuthenticationAuditRow[]> =>
   queryHarnessDb<AuthenticationAuditRow>(
     `SELECT outcome, details, "correlationId", "subjectUserId",
@@ -158,8 +160,15 @@ export const authenticationAuditRows = (subject: {
       WHERE category = 'authentication'
         AND ($1::uuid IS NULL OR "subjectUserId" = $1::uuid)
         AND ($2::uuid IS NULL OR "subjectOrganizationId" = $2::uuid)
+        AND ($3::text IS NULL OR outcome = $3::text)
+        AND ($4::text IS NULL OR details::jsonb->>'scope' = $4::text)
       ORDER BY "createdDate" ASC`,
-    [subject.userId ?? null, subject.organizationId ?? null]
+    [
+      subject.userId ?? null,
+      subject.organizationId ?? null,
+      subject.outcome ?? null,
+      subject.scope ?? null,
+    ]
   );
 
 /** How many `platform_configuration` rows record a value naming `security`

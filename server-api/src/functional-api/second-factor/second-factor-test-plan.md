@@ -7,7 +7,7 @@
 ## How to run
 
 ```bash
-cd server-api && pnpm exec vitest run --project second-factor
+pnpm --filter @alkemio/test-suite-server-api run test:second-factor
 # then, not at the same time (they share the runner's address and its counter):
 cd client-web && pnpm exec playwright test -c config/playwright.config.second-factor.ts
 ```
@@ -64,13 +64,13 @@ The repository's root setup signs in before this project's setup first clears th
 
 ## Measurements (run once, by path; never a pass or a fail)
 
-These rows are the only evidence for Kratos' own bound on second-step codes (R16), the subscription cost (R22), recovery codes with no other factor (R33) and what the enrolling session is worth (R11). The `second-factor` project has no asserting case for any of them, so a pass of that project is no evidence that they are mitigated. While a row reads **Not run**, its risk is unmeasured.
+These rows are the only evidence for Kratos' own bound on second-step codes (R16), the subscription cost (R22), recovery codes with no other factor (R33) and what the enrolling session is worth (research R11). The `second-factor` project has no asserting case for any of them, so a pass of that project is no evidence that they are mitigated. While a row reads **Not run**, its risk is unmeasured.
 
 | Measurement | Run | Result |
 |---|---|---|
 | R16 / OG-4 (b): Kratos' own bound on wrong second-step codes past the proxy, then a new flow and a fresh login | `SECOND_FACTOR_MEASURE=1 pnpm exec vitest run --project second-factor-measure kratos-bound` | **Not run.** OG-4 (b) has no input and is unmet until this row holds the count (or "none within 100"), the new flow's verdict and the re-login's verdict. A limit that a new flow or a re-login escapes counts as no bound |
 | D2 / R33: recovery codes requested with no other factor: Kratos' answers, the credentials left, and what the next password login owes | `SECOND_FACTOR_MEASURE=1 pnpm exec vitest run --project second-factor-measure recovery-codes-only` | **Not run.** To record: the `[second-factor D2]` line |
-| R11: what whoami answers for the session that enrolled an authenticator (403 `session_aal2_required` or 200 aal2; the helpers hold for both) | `SECOND_FACTOR_MEASURE=1 pnpm exec vitest run --project second-factor-measure enrolling-session` | **Not run.** To record: the `[second-factor R11]` line |
+| Research R11: what whoami answers for the session that enrolled an authenticator (403 `session_aal2_required` or 200 aal2; the helpers hold for both) | `SECOND_FACTOR_MEASURE=1 pnpm exec vitest run --project second-factor-measure enrolling-session` | **Not run.** To record: the `[second-factor R11]` line |
 | R22: a hundred cookie sockets on one room under a rule in grace, ten messages | `SECOND_FACTOR_MEASURE=1 pnpm exec vitest run --project second-factor-measure subscription-cost` | **Not run.** To record: wall time per publish and statements per delivered event (or "not available"), which also go into the workspace plan's Performance note |
 
 ## Open for a person
@@ -79,7 +79,7 @@ No item here is accepted, and none drops out of the release risk table until a p
 
 | Item | What is open |
 |---|---|
-| The four measurements above | Each reads **Not run**. The delivery ledger cites `track:second-factor-api` against R16, R22, R11 and R33, but that project asserts none of them. Until the rows are recorded, or a person corrects the ledger or accepts the gap, those risks are unmeasured. |
+| The four measurements above | Each reads **Not run**. The delivery ledger cites `track:second-factor-api` against R16, R22 and R33, but that project asserts none of them, nor what research R11 asks. Until the rows are recorded, or a person corrects the ledger or accepts the gap, those risks are unmeasured. |
 | The API and browser tracks themselves | No live run is recorded against this head, nor against the two heads before it, which rewrote the assertions on the per-address bound, the fence, the refresh swap and the rule's teardown. A ledger row that cites either track cites an older head until both are run here (API first, then browser) and the head, the images and the pass counts are recorded. That includes the per-address bound's reading of the proxy's stored counter, which assumes a plain number. |
 | Clearing every address's counter | The clear refuses a non-loopback identity host, but it cannot tell a stack of the runner's own from a shared cluster port-forwarded to loopback. No documented path leads there any more, but nothing stops it. |
 | Where the tracks run | The workspace spec (OG-1, research R26, T004) orders both tracks run on dev/test/sandbox; this plan rules a shared cluster out, because every case clears every sender's counter there. A person rules, and then either the spec or this plan changes. |
@@ -92,7 +92,7 @@ No item here is accepted, and none drops out of the release risk table until a p
 - **T001 (the `otpauth` dependency) was dropped.** `lib/src/scenario/second-factor/totp.ts` computes RFC 6238 codes with Node's `crypto` (HMAC-SHA1, six digits, thirty-second steps, Kratos' defaults) in about forty lines. A wrong implementation cannot pass: Kratos checks every code it produces, and every enrolment and sign-in case uses one.
 - **T007's per-method flow read was replaced.** Instead of reading the flow after each `GET`/`PUT`/`PATCH` submission, `factors-totp` › D41 (c) sends the correct code by that method and asserts that no session comes back: a sign-in is the discriminating signal that an evaluation happened, whatever the answer's shape.
 - **T002's documents are inline, not generated.** `lib/src/scenario/second-factor/graphql.ts` sends them raw so the cases can assert on the HTTP status and on `errors[].extensions.code`, which the generated SDK's error wrapper hides. The cost: a schema change surfaces on a live run, not at codegen, and the cross-repo contract check does not cover this surface either: a rename on the server passes both.
-- **The R11 and D2 observations moved out of the it-specs (T005, T008).** They log what Kratos answers and assert nothing, so they live in `enrolling-session.measure.ts` and `recovery-codes-only.measure.ts`, run only under `SECOND_FACTOR_MEASURE`. A green `second-factor` run therefore records neither; their rows under *Measurements* are the record.
+- **The research R11 and D2 observations moved out of the it-specs (T007, T010).** They log what Kratos answers and assert nothing, so they live in `enrolling-session.measure.ts` and `recovery-codes-only.measure.ts`, run only under `SECOND_FACTOR_MEASURE`. A green `second-factor` run therefore records neither; their rows under *Measurements* are the record.
 
 ## Not covered here — known gaps
 
@@ -102,7 +102,7 @@ No item here is accepted, and none drops out of the release risk table until a p
 | US2-AS6 | The intent row cannot be written, so no marker is written. Not reproducible from outside | server T021 |
 | D43 / D46 window inside one reset | A factor or a password set between two of the server's own calls needs a write inside the reset | server T021b |
 | D43 reset of an identity with no password | The admin API accepts a password-less identity, but such an identity cannot sign in, so the server never creates its platform user. A reset needs a user whose record links the identity | server T021a / T021 unit tests |
-| US1-AS3 (R23, R24) | The 15-minute privileged window cannot be aged from outside Kratos without a fixed wait | client-web T008 unit test and the acceptance walk |
+| US1-AS3 (R23, R24) | It is the Security page's privileged-session handling, a browser flow. The verification run's acceptance walk automated it by ageing the member's Kratos sessions over SQL, but that walk was not persisted to this repository | client-web T008 unit test and the acceptance walk |
 | US4-AS7 — a federated sign-in under a rule | The harness has no federated identity provider, and nothing in the session records how the person signed in (D18) | The `acr: null` cases of `requirement` stand for it; a person walks a federated sign-in on acceptance |
 | D37 after the BFF logout route | The route's effect on a session the harness fabricates was never shown, so a case on it skipped itself rather than discriminate. The browser track signs out but holds no subscription while it does, so it is no evidence for this either. This repository proves only that a dropped session record ends the subscription | `reset` › D37 (record gone) for the dropped record; the sign-out route ending the subscription is the server's graphql-ws unit case and the acceptance walk |
 | ICS refusal control in grace | `GET /api/private/rest/calendar/event/<unknown uuid>/ics` never answered on the last live run (the case reached its 300 s timeout), so no in-grace answer can be compared with the refusal. A regression in the refusal itself goes red as the request's 15 s timeout, not as a status mismatch. Not reproduced or filed yet | Nowhere: a server finding for a person to reproduce and file |

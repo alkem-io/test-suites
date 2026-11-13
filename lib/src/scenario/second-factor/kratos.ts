@@ -55,26 +55,36 @@ const send = async (
     headers?: Record<string, string>;
   } = {}
 ): Promise<KratosAnswer> => {
-  const response: AxiosResponse = await axios.request({
-    method,
-    url,
-    data: options.body,
-    headers: {
-      Accept: 'application/json',
-      ...(options.body !== undefined
-        ? { 'Content-Type': 'application/json' }
-        : {}),
-      ...(options.sessionToken
-        ? { 'X-Session-Token': options.sessionToken }
-        : {}),
-      ...(options.cookie ? { Cookie: options.cookie } : {}),
-      ...options.headers,
-    },
-    maxRedirects: 0,
-    validateStatus: () => true,
-    // A hung Kratos or proxy fails the call, not the whole case's budget.
-    timeout: 15_000,
-  });
+  let response: AxiosResponse;
+  try {
+    response = await axios.request({
+      method,
+      url,
+      data: options.body,
+      headers: {
+        Accept: 'application/json',
+        ...(options.body !== undefined
+          ? { 'Content-Type': 'application/json' }
+          : {}),
+        ...(options.sessionToken
+          ? { 'X-Session-Token': options.sessionToken }
+          : {}),
+        ...(options.cookie ? { Cookie: options.cookie } : {}),
+        ...options.headers,
+      },
+      maxRedirects: 0,
+      validateStatus: () => true,
+      // A hung Kratos or proxy fails the call, not the whole case's budget.
+      timeout: 15_000,
+    });
+  } catch (e) {
+    // A transport error's config carries the body (the harness password) and
+    // the session token; a red names the call and the code, never the config.
+    const code = axios.isAxiosError(e) ? e.code : undefined;
+    throw new Error(
+      `second-factor: ${method} ${new URL(url).pathname} failed in transport: ${code ?? 'unknown error'}`
+    );
+  }
   return {
     status: response.status,
     body: response.data,

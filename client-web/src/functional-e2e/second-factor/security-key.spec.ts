@@ -133,7 +133,8 @@ test.describe('US3 — security keys', () => {
       // bound first, so a late duplicate of its row cannot stand in for the
       // removal's: a held count, not a wait for a condition.
       const left = enrolled + ROW_BOUND.timeout - Date.now();
-      if (left > 0) await new Promise(r => setTimeout(r, left));
+      // eslint-disable-next-line no-restricted-syntax -- ROW_BOUND.timeout: the enrolment's row count is held until the hook's bound has passed
+      if (left > 0) await page.waitForTimeout(left);
       expect(
         await observedKeyRows(user),
         'webauthn: a row written after the bound, which would count for the removal'

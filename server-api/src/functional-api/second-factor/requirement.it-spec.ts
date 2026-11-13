@@ -79,13 +79,12 @@ const servedAs = async (actor: GraphqlActor): Promise<string | null> => {
     : (answer.body.data?.me?.user?.id ?? null);
 };
 
-const ruleRows = async (organizationId?: string) =>
-  (await authenticationAuditRows({ organizationId })).filter(
-    r =>
-      r.outcome === 'configuration_changed' &&
-      (r.details as { scope?: string }).scope ===
-        (organizationId ? 'organization' : 'platform')
-  );
+const ruleRows = (organizationId?: string) =>
+  authenticationAuditRows({
+    organizationId,
+    outcome: 'configuration_changed',
+    scope: organizationId ? 'organization' : 'platform',
+  });
 
 const restGet = (path: string, cookieHeader: string) =>
   axios.get(`${server()}${path}`, {

@@ -16,6 +16,7 @@ import {
 import { grantCookieConsent } from '../helpers/cookies.helper';
 import { must } from '../helpers/lib-actor.helper';
 import { fillSecret } from '../helpers/login.helper';
+import { openSettingsSection } from '../helpers/settings-section.helper';
 import { navigateToLoginPageFromMenu } from '../authentication/login-page-objects';
 import { fillUpSignInPageElements } from '../identity-flows/signin-page-objects';
 import {
@@ -194,19 +195,7 @@ export const openSecurityTab = async (
   await page.goto(
     `${baseUrl}/user/${nameId}/settings/security#two-step-verification`
   );
-  const heading = page.getByRole('heading', {
-    name: COPY.sectionTitle,
-    exact: true,
-  });
-  await expect(heading).toBeVisible();
-  // A collapsible settings section wraps its title in a trigger button.
-  const trigger = heading.getByRole('button');
-  if (
-    (await trigger.count()) > 0 &&
-    (await trigger.getAttribute('aria-expanded')) !== 'true'
-  ) {
-    await trigger.click();
-  }
+  await openSettingsSection(page, COPY.sectionTitle);
   return block(page, COPY.authenticatorTitle);
 };
 

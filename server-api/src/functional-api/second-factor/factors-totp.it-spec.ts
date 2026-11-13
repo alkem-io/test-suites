@@ -132,11 +132,11 @@ describe('Second factor — authenticator app', () => {
       // submission: a re-login cleared the address (product), unless the
       // window the first batch counted in has passed (environment).
       const counters = await addressCounters();
-      if (windowLapsed()) {
-        throw new Error(
-          `environment: the proxy's fixed window lapsed before the counter was read (${max} submissions took too long on this stack) — rerun on a faster stack`
+      const lapsed = (when: string) =>
+        new Error(
+          `environment: the proxy's fixed window lapsed before ${when} (${max} submissions took too long on this stack) — rerun on a faster stack`
         );
-      }
+      if (windowLapsed()) throw lapsed('the counter was read');
       if (counters.length === 0) {
         throw new Error(
           "environment: the harness Redis (REDIS_HOST) holds no login_backoff:ip:* key — it is not the login proxy's Redis"
@@ -159,12 +159,18 @@ describe('Second factor — authenticator app', () => {
 
       const step = { ...second.step, secret };
       const [overBound] = await submitWrongTotp(step, 1, { headers: forged });
+      if (overBound.status !== 429 && windowLapsed()) {
+        throw lapsed('the submission over the bound');
+      }
       expect(overBound.status).toBe(429);
       const correct = await submitLogin(
         step.flowId,
         { method: 'totp', totp_code: totpCode(secret) },
         { sessionToken: step.sessionToken, headers: forged() }
       );
+      if (correct.status !== 429 && windowLapsed()) {
+        throw lapsed('the correct code');
+      }
       expect(correct.status).toBe(429);
     } finally {
       await clearAddressCounters();

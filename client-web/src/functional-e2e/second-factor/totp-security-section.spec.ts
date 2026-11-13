@@ -114,6 +114,15 @@ test.describe('US1 — the authenticator app in Security', () => {
       await page.getByRole('button', { name: 'Sign in', exact: true }).click();
 
       await expect(secondStepHeading(page)).toBeVisible();
+      const secondStepForm = page
+        .locator('form')
+        .filter({ has: secondStepCodeField(page) });
+      // Before the wrong code, the form carries neither verdict, so either
+      // one after it is the answer to that code.
+      await expect(secondStepForm.getByRole('alert')).toHaveCount(0);
+      await expect(
+        secondStepCodeField(page).and(page.locator('[aria-invalid="true"]'))
+      ).toHaveCount(0);
       await submitSecondStep(
         page,
         secondStepCodeField(page),
@@ -122,9 +131,6 @@ test.describe('US1 — the authenticator app in Security', () => {
       // Refused: the identity provider's verdict on the code, on the field or
       // as an alert of the second step's form (never any alert on the page),
       // and still the second step, not signed in.
-      const secondStepForm = page
-        .locator('form')
-        .filter({ has: secondStepCodeField(page) });
       await expect(
         secondStepCodeField(page)
           .and(page.locator('[aria-invalid="true"]'))
