@@ -116,6 +116,21 @@ describe('Search Spaces - total and pagination', () => {
     expect(spaceResults?.cursor ?? null).toBeNull();
   });
 
+  // Control for the Private Subspace rows below: the same non-member sees all
+  // three while every space is public, so their 1 there comes from the privacy
+  // change, not from Subspaces being hidden from non-members altogether.
+  test('a non-member is told about all three results while every space is public', async () => {
+    const response = await searchSpacesPage(terms, TestUser.NON_SPACE_MEMBER, {
+      size: 3,
+    });
+    const spaceResults = response.data?.search.spaceResults;
+
+    expect(spaceResults?.total).toBe(3);
+    expect(spaceIds(spaceResults?.results).sort()).toEqual(
+      [...allSpaceIds].sort()
+    );
+  });
+
   test('pages through the results with the cursor, returning each result once', async () => {
     const first = await searchSpacesPage(terms, TestUser.GLOBAL_ADMIN, {
       size: 2,

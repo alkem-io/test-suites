@@ -44,6 +44,8 @@ const scenarioConfig: TestScenarioConfig = {
   space: {
     collaboration: { addTutorialCallouts: false },
     settings: { privacy: { mode: SpacePrivacyMode.Public } },
+    // A member of the Space only, so "My Spaces" keeps one card of three.
+    community: { members: [TestUser.SPACE_MEMBER] },
     subspace: {
       subspace: {},
     },
@@ -154,6 +156,38 @@ test.describe('Explore Spaces - search count', { tag: '@local-stack' }, () => {
       page.getByText(`Spaces matching “${word}”`, { exact: true })
     ).toBeVisible();
     await expect(page.getByText(/\d+ spaces? matching/)).toHaveCount(0);
+  });
+
+  test('names the terms without a number while Membership filters the results', async ({
+    browser,
+  }) => {
+    // space.member belongs to the Space only: under "My Spaces" one card of
+    // three is left, so the server's total (3) would be wrong there.
+    const memberContext = await browser.newContext({
+      storageState: await ensurePersonaState(
+        browser,
+        TestUserManager.users.spaceMember.email
+      ),
+    });
+    try {
+      const memberPage = await memberContext.newPage();
+      await searchFor(memberPage);
+      // Positive control: the member is counted all three before filtering.
+      await expect(
+        memberPage.getByText(`3 spaces matching “${word}”`, { exact: true })
+      ).toBeVisible();
+      await expect(results(memberPage)).toHaveCount(3);
+
+      await chooseFilter(memberPage, 'My Spaces');
+
+      await expect(results(memberPage)).toHaveCount(1);
+      await expect(
+        memberPage.getByText(`Spaces matching “${word}”`, { exact: true })
+      ).toBeVisible();
+      await expect(memberPage.getByText(/\d+ spaces? matching/)).toHaveCount(0);
+    } finally {
+      await memberContext.close();
+    }
   });
 
   test('hides a private Subspace under Public only', async ({ browser }) => {
