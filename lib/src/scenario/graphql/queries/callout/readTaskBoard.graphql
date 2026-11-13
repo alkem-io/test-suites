@@ -1,0 +1,22 @@
+# A Tasks board as the server stores it: the ordered columns (the callout's
+# reserved `task` tagset, allowedValues), the per-column counts, the
+# contribution types it takes, the actor's privileges on it, and every task
+# with its column (the contribution's `task` tag) and position (sortOrder).
+query ReadTaskBoard($calloutId: UUID!) {
+  lookup {
+    callout(ID: $calloutId) {
+      id
+      authorization { id myPrivileges }
+      framing { id profile { id displayName } }
+      settings { contribution { allowedTypes } }
+      classification { id tagsets { id name allowedValues tags } }
+      taskColumnCounts { column count }
+      contributions {
+        id
+        sortOrder
+        classification { id tagsets { id name tags } }
+        post { id profile { id displayName description } createdBy { id } }
+      }
+    }
+  }
+}

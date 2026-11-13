@@ -86,6 +86,12 @@ const FUNCTIONS: string[] = [
   'registerAllTestUsers',
   'getRecoveryLinkFor',
   'deleteMailSlurperMails',
+  // recipient-scoped mail readers (W2 Tier 0 item 4: messaging-notifications)
+  'getMailsTo',
+  'markMailbox',
+  'getMailsToSince',
+  'waitForMailsToSince',
+  'mailIsAddressedTo',
   'getQueueStats',
   'waitForQueuePublishIncrease',
   'rabbitMqManagementConfigured',
@@ -133,6 +139,7 @@ const FUNCTIONS: string[] = [
   'readPlatformServiceVersions',
   'readPlatformVirtualAssistantAccess',
   'readPlatformForumDiscussions',
+  'readPlatformDiscussion',
   'removePlatformRoleFromUser',
   'deletePlatformInvitation',
   'introspectEnumValues',
@@ -159,6 +166,7 @@ const FUNCTIONS: string[] = [
   'removeRoleFromOrganization',
   'readAccountResources',
   'readInnovationPackVisibility',
+  'readInnovationPack',
   'readInnovationPackTemplatesSet',
   'updateBaselineLicensePlanOnAccount',
   'transferSpaceToAccount',
@@ -197,6 +205,7 @@ const FUNCTIONS: string[] = [
   'readRoleSetPlatformInvitations',
   'readRoleSetPending',
   'joinRoleSet',
+  'assignUserRoleOnRoleSet',
   'applyForEntryRoleOnRoleSet',
   'inviteForEntryRoleOnRoleSet',
   'eventOnInvitation',
@@ -237,6 +246,14 @@ const FUNCTIONS: string[] = [
   'readActivityLogOnCollaboration',
   'readCalloutsPlacement',
   'readPost',
+  // W2 journey 11 (file uploads)
+  'readCalloutStoredFiles',
+  'readStoredDocument',
+  'storedDocumentIdOf',
+  'downloadStoredFile',
+  'readConversationStoredFiles',
+  'createConversation',
+  'leaveConversation',
   'uploadFileOnStorageBucket',
   'readTemplatesSetTemplates',
   'createTemplateWithData',
@@ -246,6 +263,19 @@ const FUNCTIONS: string[] = [
   'addClassificationEntryFromTemplate',
   'updateClassificationEntrySelection',
   'updateTagsetTags',
+  // W2 #713 follow-up (callout placement server-api)
+  'moveContributionToCallout',
+  'readCalloutContributionsOrder',
+  'readContribution',
+  'resolveContributionUrl',
+  'updateCalloutsSortOrder',
+  'updateContributionsSortOrder',
+  // workspace#080 Form walks (W2 Tier 0 item 6): disposable identities
+  'registerVerifiedUser',
+  // W2 extras (test-suites#722): task boards (CT-8), community guidelines (SP-10)
+  'readTaskBoard',
+  'moveTaskToColumn',
+  'readSpaceCommunityGuidelines',
 ];
 
 /** Classes and namespaces the specs construct or call statically. */
@@ -258,11 +288,13 @@ const ENUM_MEMBERS: Record<string, string[]> = {
   SpacePrivacyMode: ['Public', 'Private'],
   CommunityMembershipPolicy: ['Open', 'Applications', 'Invitations'],
   CalloutVisibility: ['Published', 'Draft'],
-  CalloutFramingType: ['None', 'Whiteboard', 'Memo', 'Link'],
+  CalloutFramingType: ['None', 'Whiteboard', 'Memo', 'Link', 'MediaGallery'],
+  MimeType: ['Pdf', 'Png'],
+  ConversationCreationType: ['Direct', 'Group'],
   SpaceLevel: ['L0', 'L1', 'L2'],
   SpaceVisibility: ['Active', 'Archived', 'Demo'],
   TagsetReservedName: ['FlowState'],
-  AuthorizationPrivilege: ['MovePost', 'Update'],
+  AuthorizationPrivilege: ['MovePost', 'Update', 'MoveTask', 'Contribute'],
   ActorType: ['User', 'Organization', 'VirtualContributor'],
   SidebarWidget: ['About', 'Community', 'Events', 'Activity'],
   NotificationEvent: ['OrganizationAdminSpaceCommunityInvitation'],
@@ -307,6 +339,17 @@ describe('@contract lib surface used by the client-web net', () => {
       }
     }
     expect(problems).toEqual([]);
+  });
+
+  test('mail readers match a recipient by address only: bare or `Name <addr>`, any case, never a near miss', () => {
+    const mail = (toAddresses?: string[]) => ({ subject: 's', body: 'b', toAddresses });
+    expect(lib.mailIsAddressedTo(mail(['b@alkem.io']), 'b@alkem.io')).toBe(true);
+    expect(lib.mailIsAddressedTo(mail(['Bee Recipient <B@Alkem.io>']), 'b@alkem.io')).toBe(true);
+    expect(lib.mailIsAddressedTo(mail(['a@alkem.io', 'b@alkem.io']), 'B@ALKEM.IO')).toBe(true);
+    expect(lib.mailIsAddressedTo(mail(['xb@alkem.io']), 'b@alkem.io')).toBe(false);
+    expect(lib.mailIsAddressedTo(mail(['b@alkem.io.evil']), 'b@alkem.io')).toBe(false);
+    expect(lib.mailIsAddressedTo(mail([]), 'b@alkem.io')).toBe(false);
+    expect(lib.mailIsAddressedTo(mail(undefined), 'b@alkem.io')).toBe(false);
   });
 
 });
@@ -596,6 +639,35 @@ describe('@contract base scenario round trip', () => {
     expect(unknown.data?.lookup?.calloutsSet ?? null, JSON.stringify(unknown.error)).toBeNull();
     // ...and not because the request never reached the server.
     expect(unknown.error?.errors.map(e => e.code) ?? []).not.toContain('ENV_FAILURE');
+  });
+
+  test('storage: a file uploaded to a callout bucket reads back as a document and downloads byte for byte', async () => {
+    const calloutId = base.space.collaboration.calloutPostId;
+    const before = await lib.readCalloutStoredFiles(calloutId);
+    expect(before.error).toBeUndefined();
+    const bucket = before.data?.lookup.callout?.framing.profile.storageBucket;
+    expect(bucket?.id).toEqual(expect.any(String));
+    expect(Array.isArray(before.data?.lookup.callout?.framing.profile.references)).toBe(true);
+    const bytes = Buffer.from(`%PDF-1.4\n% lib contract ${Date.now()}\n%%EOF\n`);
+    const upload = await lib.uploadFileOnStorageBucket(bucket!.id, {
+      bytes,
+      fileName: 'lib-contract.pdf',
+      mimeType: 'application/pdf',
+    });
+    const url = upload.body.data?.uploadFileOnStorageBucket.url ?? '';
+    expect(url, upload.raw).toMatch(/\/rest\/storage\/document\//);
+    const document = await lib.readStoredDocument(lib.storedDocumentIdOf(url));
+    expect(document.data?.lookup.document).toMatchObject({ url, mimeType: lib.MimeType.Pdf, size: bytes.length });
+    const after = await lib.readCalloutStoredFiles(calloutId);
+    expect(after.data?.lookup.callout?.framing.profile.storageBucket?.documents.map(d => d.url)).toContain(url);
+    const served = await lib.downloadStoredFile(url, TestUser.GLOBAL_ADMIN);
+    expect(served.status).toBe(200);
+    expect(served.contentType).toBe('application/pdf');
+    expect(served.bytes.equals(bytes)).toBe(true);
+    // Negative control: a document that does not exist is not served (the RAW reader returns, never throws).
+    const missing = await lib.downloadStoredFile(url.replace(/[0-9a-f-]{36}$/i, '00000000-0000-4000-8000-000000000000'), TestUser.GLOBAL_ADMIN);
+    expect(missing.status).toBeGreaterThanOrEqual(400);
+    expect(() => lib.storedDocumentIdOf('https://example.org/not-a-document')).toThrow();
   });
 });
 

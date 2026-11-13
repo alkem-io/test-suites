@@ -36,7 +36,7 @@ Elevated-risk triggers present: [x] cross-repo contract · [x] data-destructive 
 ## Existing coverage before this work
 Searched test-suites `origin/develop` @ `afbefaf2` (commands in `docs/qa-knowledge/coverage-map.md` › Content editing). Every row below came from an opened file.
 - **Whiteboard.**
-  - `whiteboard-collaboration/` WC-01 and WC-02 draw in a browser and read the raw doc through `connectWhiteboardPeer`. They pin the undo race and a damaged board. They are skip-gated (`WHITEBOARD_COLLAB_FIXED`) and never assert storage or reopen.
+  - `whiteboard-collaboration/` WC-01 and WC-02 draw in a browser and read the raw doc through `connectWhiteboardPeer`. They pin the undo race and a damaged board. They ran skip-gated until 2026-11-12 (gate lifted, W2 #711 L-5) and never assert storage or reopen.
   - `public-space/non-member-whiteboard-access` 3.1–3.4 check render and read-only for a non-member, with no content oracle.
   - `templates-CRD/whiteboard-template` 1.3 shows a template inside a whiteboard, with no content oracle.
   - **No case reopens a board, or proves it is durable.**
@@ -119,7 +119,7 @@ The original rulings follow, unchanged.
 - **L-2.** Cold load: (a) E8-4 `@local-stack` with `IDLE_RELEASE_SECONDS=0` (recommended), (b) rely on #545's wire-level cold rehydrate on the nightly, (c) a 35 s constant-derived wait in the nightly, which breaks § 3.
 - **L-3.** Signing is deferred, and the gate is already covered. J5 adds nothing for E10 "sign".
 - **L-4.** #545 keeps the wire matrix. Rebase its private `collab-ws.client.ts` onto the lib peer, which gains `awaitDurable` here, so that the schema boundary has one wire client.
-- **L-5.** Run WC-01/02 once on test: client-web `develop` resolves `@excalidraw-yjs/excalidraw` 0.5.6 since `cd2d50419` (2026-11-06). That one run also verifies the peer's auth on test, which E8 needs.
+- **L-5. Done 2026-11-12.** The `WHITEBOARD_COLLAB_FIXED` gate is removed: client-web `develop`, and the test cluster deployed from it, resolves `@excalidraw-yjs/excalidraw` 0.5.6. WC-01/02 passed 2/2 twice on the local develop stack. The peer's auth on test was proven by the E8 runs.
 - **L-6.** Is guest share in J5 or in J5b?
 - **L-7.** Office text extraction: a small zip reader on `node:zlib` (recommended, no new dependency) or adding `fflate` to the lib.
 
@@ -193,6 +193,6 @@ The E9 red-proofs ran in the probe (editor URL minted around KD-1), not on the c
 - The `/metrics` reader moved into the lib (`readCollaborationRoomsActive`, `collaborationRoomsActiveOf`; contract case LA-8).
 - **For W5 (not changed here):** `templates-CRD/template-types/document-template-content.spec.ts` builds the storage REST URL itself (`/api/private/rest/storage/document/<fileID>`) next to the lib's `readOfficeDocumentText`; one builder should own it.
 
-**Not changed.** The WC-01/WC-02 skip gate (`WHITEBOARD_COLLAB_FIXED`) is untouched: client-web `develop` resolves `@excalidraw-yjs/excalidraw` 0.5.6, so the gate can be lifted, but that is a separate item. The Node peer's admission on `test-alkem.io` was proven by the two green test runs of E8-1 to E8-3 (it was the open question when this note was first written).
+**Later (2026-11-12):** the WC-01/WC-02 skip gate (`WHITEBOARD_COLLAB_FIXED`) was lifted separately (L-5). The Node peer's admission on `test-alkem.io` was proven by the two green test runs of E8-1 to E8-3 (it was the open question when this note was first written).
 
 **What this will prove, and what it will not.** When green, the suite will prove the following for all three editors on the deployed stack: a browser edit is stored where the platform keeps it, and a later session gets it back, both for the author and for a colleague. For the whiteboard, the storage half rests on the collaboration-service's own `persisted` answer, and the cold reload is proven only on the local stack (E8-4) or at the wire level (#545). In the nightly, the reopens of the whiteboard and the memo are served by the still-live room (idle release 30 s), so they prove that a fresh session gets the room's content, not that it is loaded from storage; the memo's storage proof is its `markdown` read, the document's is its stored bytes. **Signing a memo stays unproven end to end. It is one of the three things this journey names, and no test covers it.**

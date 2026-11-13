@@ -43,6 +43,7 @@ base.afterAll(async () => {
 });
 
 const settingsTabs = (page: Page) => page.getByRole('tab', { name: /^(Layout|Community|Templates|Account)$/ });
+const spaceName = (page: Page) => page.getByRole('textbox', { name: 'Space Name' });
 const restricted = (page: Page) => page.getByRole('heading', { name: 'Access Restricted', level: 1 });
 
 const asSupport = createPersonaTest(platformRoleEmail('PLATFORM_SUPPORT'));
@@ -65,7 +66,8 @@ asSupport.describe('PLATFORM_SUPPORT inside a private space', () => {
     await expect(page.getByRole('link', { name: 'Settings' })).toBeVisible({ timeout: 20_000 });
     await page.goto(`${baseUrl}/${scenario.space.nameId}/settings`);
     await expect(page.getByRole('tab', { name: 'Community' })).toBeVisible({ timeout: 20_000 });
-    await expect(page.getByRole('button', { name: 'Edit space name' })).toBeVisible();
+    // The About tab edits in place: an editable Space Name field is the admin control.
+    await expect(spaceName(page)).toBeEditable({ timeout: 15_000 });
   });
 
   asSupport('flag switched OFF again: the admin controls are gone on the next load', async ({ page }) => {
@@ -81,5 +83,5 @@ asResourceAdmin('PLATFORM_RESOURCE_ADMIN: no space settings, whatever the suppor
   await page.goto(`${baseUrl}/${scenario.space.nameId}/settings`);
   await expect(restricted(page).or(page.getByRole('heading', { name: 'About' }))).toBeVisible({ timeout: 20_000 });
   await expect(settingsTabs(page)).toHaveCount(0);
-  await expect(page.getByRole('button', { name: 'Edit space name' })).toHaveCount(0);
+  await expect(spaceName(page)).toHaveCount(0);
 });
