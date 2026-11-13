@@ -45,6 +45,17 @@ export default defineConfig(
         tier: 'extended',
       }),
       suite({
+        // W2 Tier 0 item 2 (client-net-audit § 4): A7 session revocation
+        // (server#6315). Disposable identities registered and deleted in the
+        // files; oracles are lib GraphQL read-backs + the signed-out UI. Mail
+        // only in beforeAll; cases are multi-context walks. Capture off: the
+        // walks replay session credentials.
+        name: 'Session revocation',
+        testMatch: ['/session-revocation/*.spec.ts'],
+        tier: 'extended',
+        capture: 'off',
+      }),
+      suite({
         name: 'Space',
         testMatch: [
           '/space/organization-space-create.spec.ts',
@@ -333,6 +344,12 @@ export default defineConfig(
           '/account-deletion/profile-removed-notification.spec.ts',
           '/account-deletion/former-member-activity.spec.ts',
           '/account-deletion/account-deletion-visibility.spec.ts',
+          // W2 Tier 0 item 3: the UI self-deletion walks, GraphQL read-backs
+          // instead of SQL/Redis; their DB/Redis cases are `@local-stack`, so
+          // us3 (all `@local-stack`) contributes no nightly case.
+          '/account-deletion/us1-delete-own-account.spec.ts',
+          '/account-deletion/us2-blocked-resources.spec.ts',
+          '/account-deletion/us3-reauth-freshness.spec.ts',
         ],
         tier: 'long',
       }),
