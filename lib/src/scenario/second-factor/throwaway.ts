@@ -6,6 +6,7 @@ import {
   createOrganization,
   deleteOrganization,
 } from '../baseFunctions';
+import { deleteUser } from '../functions/contributtor-management/user/user.request.params';
 import { BOOTSTRAP_ROLES_ADMIN_EMAIL } from '../platform-roles/platform-role-users';
 import { getUserToken } from '../registration/get-user-token';
 import { readServedUser } from './graphql';
@@ -54,15 +55,12 @@ export const deleteThrowawayUser = async (
   user: Pick<ThrowawayUser, 'userId'>,
   usersAdminToken: string
 ): Promise<void> => {
-  const deleted = await postGraphqlRaw<{ deleteUser: { id: string } }>(
-    'mutation($id: UUID!) { deleteUser(deleteData: { ID: $id, deleteIdentity: true }) { id } }',
-    { variables: { id: user.userId }, bearerToken: usersAdminToken }
+  const deleted = await deleteUser(
+    user.userId,
+    { bearerToken: usersAdminToken },
+    true
   );
-  if (!deleted.body.data?.deleteUser?.id) {
-    throw new Error(
-      `second-factor: delete user ${user.userId} failed: ${deleted.raw.slice(0, 300)}`
-    );
-  }
+  must(deleted, `delete user ${user.userId}`);
 };
 
 /**

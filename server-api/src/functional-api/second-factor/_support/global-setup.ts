@@ -2,7 +2,11 @@ import type { TestProject } from 'vitest/node';
 import {
   clearAddressCounters,
   getUserToken,
+  platformRuleOn,
+  restorePlatformRule,
+  savePlatformRule,
   seedPlatformRoleUsers,
+  setPlatformRule,
   TestUser,
 } from '@alkemio/tests-lib';
 
@@ -32,6 +36,10 @@ declare module 'vitest' {
 }
 
 export default async function setup(project: TestProject) {
+  // The rule case switches the platform rule off again in its own `finally`;
+  // a worker killed before then leaves it on, with a deadline for every
+  // platform-role holder. The run's end switches it off when the run found it off.
+  const ruleAtStart = await savePlatformRule();
   await clearAddressCounters();
   const { tokens } = await seedPlatformRoleUsers();
   const globalAdmin = await getUserToken(`${TestUser.GLOBAL_ADMIN}@alkem.io`);
@@ -45,6 +53,22 @@ export default async function setup(project: TestProject) {
     },
   });
   return async () => {
-    await clearAddressCounters();
+    try {
+      if (platformRuleOn(ruleAtStart) || !platformRuleOn(await savePlatformRule())) {
+        return;
+      }
+      const off = await setPlatformRule(false, {
+        bearerToken: tokens.PLATFORM_SETTINGS_ADMIN,
+      }).catch(() => undefined);
+      const byApi =
+        off?.body.data?.updatePlatformSettings.security
+          ?.secondFactorRequiredForPlatformRoles === false;
+      if (!byApi) await restorePlatformRule(ruleAtStart);
+      throw new Error(
+        `second-factor: the run ended with the platform rule on, which it found off; it was switched off ${byApi ? 'through the API' : 'by SQL, which records no off transition'}`
+      );
+    } finally {
+      await clearAddressCounters();
+    }
   };
 }

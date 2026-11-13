@@ -1,6 +1,6 @@
 /**
  * A ONE-OFF MEASUREMENT, not a test: what whoami answers for the session that
- * enrolled an authenticator (R11). Either answer is a product behaviour; the
+ * enrolled an authenticator. Either answer is a product behaviour; the
  * helpers hold for both. Run once, by path — never by CI:
  *
  *   cd server-api && SECOND_FACTOR_MEASURE=1 pnpm exec vitest run --project second-factor-measure enrolling-session

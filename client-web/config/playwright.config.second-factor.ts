@@ -17,6 +17,9 @@ import { baseConfig, suite } from './playwright.shared';
 // recovery codes are on screen in these walks, and reports get published.
 // For the same reason no page snapshot either: Playwright writes one into the
 // report (error-context) for every failing test that still has a page open.
+// That switch is internal to Playwright, read as of @playwright/test 1.58.2:
+// after an upgrade, check that a failing walk's report holds no error-context
+// attachment before trusting it.
 process.env.PLAYWRIGHT_NO_COPY_PROMPT = '1';
 
 export default defineConfig({

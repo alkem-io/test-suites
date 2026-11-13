@@ -3,8 +3,8 @@ import { testConfiguration } from '../../config/test.configuration';
 import { queryHarnessDb } from '../../utils/harness-db.client';
 import {
   redisDeleteByPrefix,
+  redisEntriesByPrefix,
   redisGet,
-  redisValuesByPrefix,
 } from '../../utils/harness-redis.client';
 
 /**
@@ -38,9 +38,18 @@ export const clearAddressCounters = (): Promise<number> => {
   return redisDeleteByPrefix(LOGIN_BACKOFF_IP_PREFIX);
 };
 
-/** The login proxy's per-address counts, one per address key it holds. */
-export const addressCounts = async (): Promise<number[]> =>
-  (await redisValuesByPrefix(LOGIN_BACKOFF_IP_PREFIX)).map(Number);
+/**
+ * The login proxy's per-address counters: the address each key names and the
+ * raw value it holds. The value is left uninterpreted, so a stored shape the
+ * caller does not expect shows in its failure message as it was read.
+ */
+export const addressCounters = async (): Promise<
+  { address: string; value: string | null }[]
+> =>
+  (await redisEntriesByPrefix(LOGIN_BACKOFF_IP_PREFIX)).map(({ key, value }) => ({
+    address: key.slice(LOGIN_BACKOFF_IP_PREFIX.length),
+    value,
+  }));
 
 /** The subject-revocation marker the server wrote for `sub`, epoch seconds. */
 export const readSubjectMarker = async (sub: string): Promise<number> => {
@@ -93,6 +102,11 @@ export const savePlatformRule = async (): Promise<SavedPlatformRule> => {
   }
   return { security: rows[0].security };
 };
+
+/** Whether a saved block has the platform rule switched on. */
+export const platformRuleOn = (saved: SavedPlatformRule): boolean =>
+  (saved.security as { secondFactorRequiredForPlatformRoles?: boolean } | null)
+    ?.secondFactorRequiredForPlatformRoles === true;
 
 /** Writes the saved block back by SQL — works when no admin session is left. */
 export const restorePlatformRule = async (

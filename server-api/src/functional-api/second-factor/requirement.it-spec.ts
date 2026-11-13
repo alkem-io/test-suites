@@ -26,6 +26,7 @@ import {
   mintBffSessionForUser,
   platformConfigurationRowsNamingSecurity,
   platformRoleEmail,
+  platformRuleOn,
   postGraphqlRawAs,
   postToRoom,
   readOrganizationSecondFactorRequired,
@@ -109,10 +110,7 @@ describe('Second factor — the requirement', () => {
     // never starts from on: on a stack where the rule is live, switching it
     // off would lift it for everyone. The stored value decides, not an API
     // read that could fail or be gated.
-    const stored = saved.security as {
-      secondFactorRequiredForPlatformRoles?: boolean;
-    } | null;
-    if (stored?.secondFactorRequiredForPlatformRoles === true) {
+    if (platformRuleOn(saved)) {
       throw new Error(
         'second-factor: the platform rule is already on here; this case needs a stack where it is off'
       );
@@ -132,6 +130,10 @@ describe('Second factor — the requirement', () => {
         initiatorRole: 'platform_settings_admin',
         details: { scope: 'platform', from: false, to: true },
       });
+      expect(
+        Date.parse((rows.at(-1)!.details as { since: string }).since),
+        'the row records the switch-on time the mutation returned'
+      ).toBe(Date.parse(security!.secondFactorRequiredForPlatformRolesSince!));
       expect(await platformConfigurationRowsNamingSecurity()).toBeGreaterThan(
         configurationBefore
       );

@@ -7,7 +7,7 @@
  * re-login and forged-header case — this feature's kratos-webhooks build.
  */
 import {
-  addressCounts,
+  addressCounters,
   clearAddressCounters,
   credentialTypes,
   enrolTotp,
@@ -28,6 +28,8 @@ import {
 import { secondFactorCases } from './_support/cases';
 
 const throwawayUser = secondFactorCases();
+const FORGED_TRUE_CLIENT_IP = '198.18.';
+const FORGED_FORWARDED_FOR = '198.19.';
 
 const enrolled = async (tag: string) => {
   const user = await throwawayUser(tag);
@@ -81,13 +83,14 @@ describe('Second factor — authenticator app', () => {
     }
     const firstBatch = Math.floor(max / 2);
     const secondBatch = max - firstBatch;
-    // Two counters of the harness: no two submissions name the same address.
+    // No two submissions name the same address, and each header has its own
+    // range, so a key the proxy holds says which header it trusted.
     let n = 0;
     const forged = () => {
       n++;
       return {
-        'True-Client-Ip': `198.18.${n >> 8}.${n & 255}`,
-        'X-Forwarded-For': `198.19.${n >> 8}.${n & 255}`,
+        'True-Client-Ip': `${FORGED_TRUE_CLIENT_IP}${n >> 8}.${n & 255}`,
+        'X-Forwarded-For': `${FORGED_FORWARDED_FOR}${n >> 8}.${n & 255}`,
       };
     };
 
@@ -116,21 +119,32 @@ describe('Second factor — authenticator app', () => {
         `submission ${early + 1} of ${max} answered 429: the stack's threshold is lower than LOGIN_BACKOFF_MAX_IP_ATTEMPTS=${max}, or the proxy counts a submission more than once`
       ).toBe(-1);
 
-      // Only "no counter at all" belongs to the environment. A key per forged
-      // address (D36) or a count the re-login cut short (D34) is the product.
-      const counts = await addressCounts();
-      if (counts.length === 0) {
+      // Whose red each outcome is. No counter at all: the harness reads
+      // another Redis (environment). Keys in the forged X-Forwarded-For range:
+      // the edge in front of the proxy passes a sender's header through
+      // (environment). Keys in the forged True-Client-Ip range: the proxy
+      // trusts a header any sender sets (product). A count short of every
+      // submission: a re-login cleared the address (product), or the fixed
+      // window lapsed mid-run.
+      const counters = await addressCounters();
+      if (counters.length === 0) {
         throw new Error(
           "environment: the harness Redis (REDIS_HOST) holds no login_backoff:ip:* key — it is not the login proxy's Redis"
         );
       }
+      const addresses = counters.map(c => c.address);
       expect(
-        counts.length,
-        `D36: the proxy keyed ${counts.length} addresses — it counts the forged True-Client-Ip / X-Forwarded-For`
-      ).toBe(1);
+        addresses.filter(a => a.startsWith(FORGED_FORWARDED_FOR)),
+        `R32, the environment's red, not the product's: the edge passes a sender's X-Forwarded-For through, so the per-address bound may not be cited behind it. Keys: ${addresses.join(', ')}`
+      ).toEqual([]);
       expect(
-        counts[0],
-        `D34: the address counter holds ${counts[0]} after ${max} submissions — the re-login cleared it (or its fixed window lapsed mid-run)`
+        addresses,
+        `D36: the proxy keyed ${addresses.length} addresses — it counts the forged True-Client-Ip`
+      ).toHaveLength(1);
+      const [{ value }] = counters;
+      expect(
+        Number(value),
+        `D34: the address counter holds '${value}' after ${max} submissions — the re-login cleared it (or its fixed window lapsed mid-run). A value that is not a plain number is the harness misreading the proxy's stored shape, not the product`
       ).toBe(max);
 
       const step = { ...second.step, secret };

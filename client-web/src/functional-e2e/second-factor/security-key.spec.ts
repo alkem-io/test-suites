@@ -108,7 +108,9 @@ test.describe('US3 — security keys', () => {
       await expect(
         keys.getByRole('button', { name: COPY.removeKey(keyName), exact: true })
       ).toBeVisible();
-      expect(await credentialTypes(user.identityId)).toContain('webauthn');
+      expect(await secondFactorCredentialsLeft(user.identityId)).toContain(
+        'webauthn'
+      );
       await expect.poll(() => observedKeyRows(user), ROW_BOUND).toBe(1);
 
       await logOut(page);

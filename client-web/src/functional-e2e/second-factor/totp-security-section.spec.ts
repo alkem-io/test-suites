@@ -9,6 +9,9 @@ import {
   createThrowawayUser,
   credentialTypes,
   deleteThrowawayUser,
+  findBffSessionIdBySub,
+  mutateBffSession,
+  readBffSession,
   readSecondFactorRequirement,
   totpCode,
   wrongTotpCode,
@@ -134,12 +137,29 @@ test.describe('US1 — the authenticator app in Security', () => {
       // The server's session carries the second factor.
       expect(await requirementOf(page)).toMatchObject({ satisfied: true });
 
-      // A refresh of the session keeps it.
+      // A refresh of the session keeps it. The stored token is made due
+      // first, so the route has to go to the identity provider instead of
+      // answering from a token that is still fresh, and the swapped token
+      // shows that it did.
+      const sessionId = await findBffSessionIdBySub(user!.identityId);
+      const before = await readBffSession(sessionId);
+      expect(before, 'the browser session in the store').not.toBeNull();
+      await mutateBffSession(sessionId, stored => ({
+        ...stored,
+        expires_at: Math.floor(Date.now() / 1000) - 1,
+      }));
       const refreshed = await page.request.get(
         `${baseUrl}/api/auth/oidc/refresh`,
         { failOnStatusCode: false }
       );
       expect(refreshed.status()).toBe(204);
+      const after = await readBffSession(sessionId);
+      expect(after?.access_token, 'the session in the store after the refresh').toEqual(
+        expect.any(String)
+      );
+      expect(after!.access_token, 'the refresh swapped the stored access token').not.toBe(
+        before!.access_token
+      );
       expect(await requirementOf(page)).toMatchObject({ satisfied: true });
     } finally {
       await context.close();

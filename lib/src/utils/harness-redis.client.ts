@@ -250,13 +250,14 @@ export const redisDeleteByPrefix = async (prefix: string): Promise<number> => {
   return keys.length === 0 ? 0 : client.del(...keys);
 };
 
-/** The values of every key under `prefix` (loopback compose Redis only). */
-export const redisValuesByPrefix = async (
+/** Every key under `prefix` with its value (loopback compose Redis only). */
+export const redisEntriesByPrefix = async (
   prefix: string
-): Promise<(string | null)[]> => {
+): Promise<{ key: string; value: string | null }[]> => {
   const client = getHarnessRedisClient();
   const keys = await client.keys(`${prefix}*`);
-  return keys.length === 0 ? [] : client.mget(...keys);
+  const values = keys.length === 0 ? [] : await client.mget(...keys);
+  return keys.map((key, i) => ({ key, value: values[i] }));
 };
 
 const COMPARE_AND_DELETE_LUA =
