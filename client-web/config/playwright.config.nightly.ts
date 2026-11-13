@@ -176,6 +176,16 @@ export default defineConfig(
         ],
       }),
       suite({
+        // workspace#027 platform roles (W2 Tier 0 item 5): each file seeds the
+        // 14 single-role users through `seedPlatformRoleUsers()` (Kratos admin
+        // API when KRATOS_ADMIN_URL is set, self-service registration
+        // otherwise) and refuses to run if any of them holds a second role.
+        // The old "needs the 027 stack" gate is gone: Slice B is on develop.
+        name: 'Platform roles',
+        testMatch: ['/platform-roles/*.spec.ts'],
+        tier: 'extended',
+      }),
+      suite({
         name: 'Applications',
         testMatch: [
           '/applications/space-applications-level-0.spec.ts',
