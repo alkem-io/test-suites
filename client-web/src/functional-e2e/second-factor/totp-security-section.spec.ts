@@ -118,8 +118,9 @@ test.describe('US1 — the authenticator app in Security', () => {
       const secondStepForm = page
         .locator('form')
         .filter({ has: secondStepCodeField(page) });
-      // Before the wrong code, the form carries neither verdict, so either
-      // one after it is the answer to that code.
+      // Once the field is rendered and before the wrong code, the form carries
+      // neither verdict, so either one after it is the answer to that code.
+      await expect(secondStepCodeField(page)).toBeVisible();
       await expect(secondStepForm.getByRole('alert')).toHaveCount(0);
       await expect(
         secondStepCodeField(page).and(page.locator('[aria-invalid="true"]'))

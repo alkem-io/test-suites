@@ -100,7 +100,7 @@ const generateCodes = async (
   ).toBeVisible();
   // Shown once: once confirmed, neither the notice nor the codes are on screen.
   await expect(recovery.getByText(COPY.shownOnce, { exact: true })).toHaveCount(0);
-  await expect(recovery.getByText(codes[0], { exact: true })).toHaveCount(0);
+  await expect(recovery.getByRole('listitem')).toHaveCount(0);
   return codes;
 };
 
@@ -282,13 +282,11 @@ test.describe('US2 — recovery codes and the support reset', () => {
           const verdict = codeField
             .and(page.locator('[aria-invalid="true"]'))
             .or(authenticator.getByRole('alert'));
-          // Before the wrong code, the block carries neither verdict, so either
-          // one after it is the answer to that code.
+          // Once the block is rendered and before the wrong code, it carries
+          // neither verdict, so either one after it is the answer to that code.
+          const key = await shownAuthenticatorKey(page);
           await expect(verdict).toHaveCount(0);
-          await fillSecret(
-            codeField,
-            wrongTotpCode(await shownAuthenticatorKey(page))
-          );
+          await fillSecret(codeField, wrongTotpCode(key));
           await authenticator
             .getByRole('button', { name: COPY.confirm, exact: true })
             .click();

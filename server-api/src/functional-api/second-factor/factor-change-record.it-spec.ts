@@ -23,11 +23,9 @@ const throwawayUser = secondFactorCases();
 const ROW_BOUND_MS = 10_000;
 
 const observedRows = async (user: ThrowawayUser, method: string) =>
-  (await authenticationAuditRows({ userId: user.userId })).filter(
-    r =>
-      r.outcome === 'observed' &&
-      (r.details as { method?: string } | null)?.method === method
-  );
+  (
+    await authenticationAuditRows({ userId: user.userId, outcome: 'observed' })
+  ).filter(r => (r.details as { method?: string } | null)?.method === method);
 
 /** Polls loopback SQL until `count` rows for `method` exist, within the bound. */
 const awaitObservedRows = async (

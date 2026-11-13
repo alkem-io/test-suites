@@ -49,10 +49,10 @@ const ADD_PASSKEY = 'Add passkey';
 
 /** The settings hook's record of a member's own security-key change. */
 const observedKeyRows = async (user: ThrowawayUser): Promise<number> =>
-  (await authenticationAuditRows({ userId: user.userId })).filter(
-    row =>
-      row.outcome === 'observed' &&
-      (row.details as { method?: string } | null)?.method === 'webauthn'
+  (
+    await authenticationAuditRows({ userId: user.userId, outcome: 'observed' })
+  ).filter(
+    row => (row.details as { method?: string } | null)?.method === 'webauthn'
   ).length;
 
 /** The server's session carries the second factor, not only a sign-in. */
