@@ -176,6 +176,28 @@ const errorCodes = (res: {
   error?: { errors: Array<Record<string, unknown>> };
 }) => (res.error?.errors ?? []).map(e => e.code);
 
+/** The server's lowercase privilege names, as they appear in a denial message. */
+const UPDATE = 'update';
+const MOVE_CONTRIBUTION = 'move-contribution';
+
+/**
+ * The refusal names the privilege the gate checks. Every grantAccessOrFail
+ * denial carries FORBIDDEN_POLICY, including a READ refusal of a member persona
+ * whose cached credentials are stale (harness.md, callouts serial note), so the
+ * code alone cannot tell "not allowed to change" from "not a member". The
+ * message is `Authorization: unable to grant '<privilege>' privilege: ...`
+ * (server authorization.service.ts; precedent: roleset/associates
+ * support-org-community.helpers.ts › expectForbidden).
+ */
+const expectRefusedOn = (
+  res: { error?: { errors: Array<Record<string, unknown>> } },
+  privilege: string
+) => {
+  expect(String(res.error?.errors[0]?.message)).toMatch(
+    new RegExp(`Authorization: unable to grant '${privilege}' privilege`)
+  );
+};
+
 beforeAll(async () => {
   baseScenario = await TestScenarioFactory.createBaseScenario(scenarioConfig);
   calloutsSetId = baseScenario.space.collaboration.calloutsSetId;
@@ -215,6 +237,7 @@ describe('Post order: updateCalloutsSortOrder', () => {
     );
 
     expect(errorCodes(res)).toEqual(['FORBIDDEN_POLICY']);
+    expectRefusedOn(res, UPDATE);
     expect(res.data?.updateCalloutsSortOrder).toBeUndefined();
     const after = await placement();
     for (const id of posts) {
@@ -268,6 +291,7 @@ describe("A post's phase: updateCallout with a FLOW_STATE classification", () =>
     );
 
     expect(errorCodes(res)).toEqual(['FORBIDDEN_POLICY']);
+    expectRefusedOn(res, UPDATE);
     const after = placementOf(await placement(), memberTarget);
     expect(after.phase).toBe(firstPhase);
     expect(after.sortOrder).toBe(before.sortOrder);
@@ -311,6 +335,7 @@ describe('Moving a response: moveContributionToCallout', () => {
     );
 
     expect(errorCodes(res)).toEqual(['FORBIDDEN_POLICY']);
+    expectRefusedOn(res, MOVE_CONTRIBUTION);
     expect(await responsesOf(source)).toContain(memberResponse);
     expect(await responsesOf(target)).not.toContain(memberResponse);
   });
@@ -371,6 +396,7 @@ describe('Response order inside a post: updateContributionsSortOrder', () => {
     );
 
     expect(errorCodes(res)).toEqual(['FORBIDDEN_POLICY']);
+    expectRefusedOn(res, UPDATE);
     expect(await responseOrder(post)).toEqual(before);
   });
 

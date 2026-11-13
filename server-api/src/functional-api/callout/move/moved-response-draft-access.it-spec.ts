@@ -208,7 +208,9 @@ describe('EXP-1 a response moved into a draft post', () => {
   // member still holds READ + CONTRIBUTE on it and reads it by id. Reproduced
   // 2026-11-12 on the local stack (server develop e120d25a1). Unfiled; tracked
   // for the QA lead in https://github.com/alkem-io/test-suites/issues/724
-  test.skip('EXP1-3 the member cannot look the moved response up by its id', async () => {
+  // (EXP-1 record). Drop the skip when fixed; once the server issue is filed,
+  // put its number in the title in place of #724.
+  test.skip('EXP1-3 the member cannot look the moved response up by its id (alkem-io/test-suites#724)', async () => {
     const res = await readContribution(
       moved.contributionId,
       TestUser.SPACE_MEMBER
@@ -222,7 +224,9 @@ describe('EXP-1 a response moved into a draft post', () => {
   // member still holds READ + CONTRIBUTE on it and reads it by id. Reproduced
   // 2026-11-12 on the local stack (server develop e120d25a1). Unfiled; tracked
   // for the QA lead in https://github.com/alkem-io/test-suites/issues/724
-  test.skip("EXP1-4 the member cannot look the moved response's post up by its id", async () => {
+  // (EXP-1 record). Drop the skip when fixed; once the server issue is filed,
+  // put its number in the title in place of #724.
+  test.skip("EXP1-4 the member cannot look the moved response's post up by its id (alkem-io/test-suites#724)", async () => {
     const res = await readPost(moved.postId, TestUser.SPACE_MEMBER);
     expect(errorCodes(res)).toContain('FORBIDDEN_POLICY');
     expect(res.data?.lookup.post).toBeFalsy();
