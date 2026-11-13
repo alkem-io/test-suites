@@ -245,6 +245,11 @@ const FUNCTIONS: string[] = [
   'readWhiteboardGuestAccess',
   'readActivityLogOnCollaboration',
   'readCalloutsPlacement',
+  'ingestSearchFromScratch',
+  'searchSpacesAndSubspaces',
+  'searchCallouts',
+  'readTask',
+  'searchIngestTimeoutMs',
   'readPost',
   // W2 journey 11 (file uploads)
   'readCalloutStoredFiles',

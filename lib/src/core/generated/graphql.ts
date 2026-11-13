@@ -120771,6 +120771,20 @@ export type StoredDocumentFragment = {
   temporaryLocation: boolean;
 };
 
+export type ReadTaskQueryVariables = SchemaTypes.Exact<{
+  id: SchemaTypes.Scalars["UUID"]["input"];
+}>;
+
+export type ReadTaskQuery = {
+  task: {
+    id: string;
+    status: SchemaTypes.TaskStatus;
+    errors?: Array<string> | undefined;
+    itemsCount?: number | undefined;
+    itemsDone?: number | undefined;
+  };
+};
+
 export type GetSpaceTemplatesCountByTemplateSetIdQueryVariables =
   SchemaTypes.Exact<{
     templateSetId: SchemaTypes.Scalars["UUID"]["input"];
@@ -131126,6 +131140,17 @@ export const ReadStoredDocumentDocument = gql`
   }
   ${StoredDocumentFragmentDoc}
 `;
+export const ReadTaskDocument = gql`
+  query ReadTask($id: UUID!) {
+    task(id: $id) {
+      id
+      status
+      errors
+      itemsCount
+      itemsDone
+    }
+  }
+`;
 export const GetSpaceTemplatesCountByTemplateSetIdDocument = gql`
   query GetSpaceTemplatesCountByTemplateSetId($templateSetId: UUID!) {
     lookup {
@@ -132911,6 +132936,7 @@ const ReadConversationStoredFilesDocumentString = print(
   ReadConversationStoredFilesDocument
 );
 const ReadStoredDocumentDocumentString = print(ReadStoredDocumentDocument);
+const ReadTaskDocumentString = print(ReadTaskDocument);
 const GetSpaceTemplatesCountByTemplateSetIdDocumentString = print(
   GetSpaceTemplatesCountByTemplateSetIdDocument
 );
@@ -141845,6 +141871,28 @@ export function getSdk(
             { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "ReadStoredDocument",
+        "query",
+        variables
+      );
+    },
+    ReadTask(
+      variables: SchemaTypes.ReadTaskQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.ReadTaskQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.ReadTaskQuery>(
+            ReadTaskDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "ReadTask",
         "query",
         variables
       );

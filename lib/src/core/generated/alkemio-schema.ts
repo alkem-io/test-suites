@@ -111801,6 +111801,20 @@ export type StoredDocumentFragment = {
   temporaryLocation: boolean;
 };
 
+export type ReadTaskQueryVariables = Exact<{
+  id: Scalars["UUID"]["input"];
+}>;
+
+export type ReadTaskQuery = {
+  task: {
+    id: string;
+    status: TaskStatus;
+    errors?: Array<string> | undefined;
+    itemsCount?: number | undefined;
+    itemsDone?: number | undefined;
+  };
+};
+
 export type GetSpaceTemplatesCountByTemplateSetIdQueryVariables = Exact<{
   templateSetId: Scalars["UUID"]["input"];
 }>;
