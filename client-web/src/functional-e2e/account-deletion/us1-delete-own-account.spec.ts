@@ -6,8 +6,9 @@
 // cookie-authenticated session), deletes its own account in the browser:
 // AS1 (card on the Account tab's Danger Zone, immediate/permanent copy) → AS2
 // (a mismatched typed name keeps the confirm disabled) → AS3 (the exact name
-// enables it; confirming signs the user out and the user is gone) → AS4 (the
-// old credentials never sign in again). Serial: AS3 is a one-way door.
+// enables it; confirming signs the user out and the user is gone — on this
+// device and on a second one, whose session is refused) → AS4 (the old
+// credentials never sign in again). Serial: AS3 is a one-way door.
 //
 // W2 Tier 0 item 3: the outcome is read back over GraphQL (`lookup.user` as
 // the platform admin answers ENTITY_NOT_FOUND), not from Postgres. Two cases
@@ -19,9 +20,19 @@
 //    since the Wingback integration was removed, workspace#027 FR-021).
 
 import { expect, test, type BrowserContext, type Page } from '@playwright/test';
-import { queryHarnessDb, UniqueIDGenerator } from '@alkemio/tests-lib';
+import {
+  queryHarnessDb,
+  UniqueIDGenerator,
+  type GraphqlActor,
+} from '@alkemio/tests-lib';
 import { acceptCookiesIfVisible } from '../helpers/cookies.helper';
+import { sessionActor } from '../helpers/lib-actor.helper';
 import { fillSecret } from '../helpers/login.helper';
+import {
+  expectRefused,
+  expectResolvesTo,
+  whoAmI,
+} from '../session-revocation/session-revocation.helpers';
 import {
   baseUrl,
   confirmDeleteButton,
@@ -43,12 +54,14 @@ import {
 let cleanSubject: DisposableSubject | undefined;
 let subSubject: DisposableSubject | undefined;
 let cleanContext: BrowserContext | undefined;
+let otherDeviceContext: BrowserContext | undefined;
 let subContext: BrowserContext | undefined;
 
 // File level, so it also runs when a failure retires the worker mid-file.
 test.afterAll(async () => {
   await runTeardown([
     ['close clean context', async () => cleanContext?.close()],
+    ['close other-device context', async () => otherDeviceContext?.close()],
     ['close subscription context', async () => subContext?.close()],
     // No-ops once AS3 / AS6 deleted them — the normal outcome.
     [
@@ -69,14 +82,25 @@ test.describe(
     test.describe.configure({ mode: 'serial' });
 
     let cleanPage: Page;
+    /** The subject's session on a second device, snapshotted before AS3. */
+    let otherDevice: GraphqlActor;
 
     test.beforeAll(async ({ browser }) => {
-      // Registration + verification mail + one SPA sign-in.
+      // Registration + verification mail + two SPA sign-ins.
       test.setTimeout(180_000);
       cleanSubject = await provisionSubject('us1clean');
       cleanContext = await browser.newContext();
       cleanPage = await cleanContext.newPage();
       await loginAsSubject(cleanPage, cleanSubject.email);
+
+      // "Signed out on this and all other devices" (US1-AS3): a second,
+      // independent sign-in that the deleting page never touches.
+      otherDeviceContext = await browser.newContext();
+      await loginAsSubject(
+        await otherDeviceContext.newPage(),
+        cleanSubject.email
+      );
+      otherDevice = await sessionActor(otherDeviceContext);
     });
 
     test('US1-AS1: the Delete-account card states that deletion is immediate and permanent', async () => {
@@ -102,9 +126,14 @@ test.describe(
       await expect(confirmButton).toBeDisabled();
     });
 
-    test('US1-AS3: the exact typed name enables confirm; the account is deleted and the user signed out', async () => {
-      // Positive control for the read-back below.
+    test('US1-AS3: the exact typed name enables confirm; the account is deleted and the user signed out on every device', async () => {
+      // Positive controls for the read-backs below.
       expect(await userExists(cleanSubject!.userId)).toBe(true);
+      expectResolvesTo(
+        await whoAmI(otherDevice),
+        cleanSubject!.userId,
+        'the other device before the deletion'
+      );
 
       await typedNameField(cleanPage).fill(cleanSubject!.displayName);
       const confirmButton = confirmDeleteButton(cleanPage);
@@ -117,6 +146,16 @@ test.describe(
 
       // And the platform no longer holds the user.
       expect(await userExists(cleanSubject!.userId)).toBe(false);
+
+      // The other device is signed out too. This page went through /logout,
+      // which ends only its own session; the second session ends only if the
+      // self-deletion revoked it. Same oracle as the admin-deletion cascade
+      // (session-revocation-test-plan.md, R2): refused, never served as an
+      // anonymous visitor.
+      expectRefused(
+        await whoAmI(otherDevice),
+        'the other device after the self-deletion'
+      );
     });
 
     test('US1-AS4: the deleted account can never sign in again', async ({

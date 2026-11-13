@@ -58,7 +58,7 @@ genuinely need a database or a session store stay behind `@local-stack`
 
 | Case | Nightly | Why not, if not |
 |---|---|---|
-| US1-AS1 – AS4 | yes | — |
+| US1-AS1 – AS4 | yes | — (AS3 also signs the subject in on a second device and asserts that session is refused after the self-deletion: the "all other devices" half of 054 US1-AS3, added by the #729 review) |
 | US1-AS5 audit row | `@local-stack` | the audit trail has no GraphQL read surface (loopback Postgres) |
 | US1-AS6 subscription | `@local-stack` | `externalSubscriptionID` can only be seeded by SQL (no mutation since workspace#027 FR-021) |
 | US2-AS1 – AS5 | yes | — |

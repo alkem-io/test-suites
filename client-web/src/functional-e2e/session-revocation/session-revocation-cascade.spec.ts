@@ -185,6 +185,19 @@ test.describe('Session revocation cascade (server#6315)', () => {
     // the deleted user.
     const now = await whoAmI(await credentialOf(c1!.context));
     expect(now.userId).not.toBe(subject.userId);
+    // …nor anyone else. The identity was kept (SRB-E2), so a refresh or
+    // consent grant that survived the deletion would silently sign the reload
+    // in as a NEW user — a different id, which the line above cannot see.
+    // Refused (revoked cookie still in the jar) or anonymous (client cleared
+    // it) are the only acceptable answers.
+    expect(
+      [200, 401],
+      'the reloaded credential: refused or anonymous'
+    ).toContain(now.status);
+    expect(
+      now.userId,
+      'the reloaded credential resolves to no user'
+    ).toBeNull();
   });
 
   // KNOWN DEFECT (recorded on test-suites#724, SRB-G3): after the deletion the
