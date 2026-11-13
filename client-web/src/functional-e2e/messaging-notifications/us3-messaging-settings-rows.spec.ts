@@ -4,10 +4,8 @@ import { acceptCookiesIfVisible } from '../helpers/cookies.helper';
 import { openSettingsSection } from '../helpers/settings-section.helper';
 import {
   delay,
-  deleteMailSlurperMails,
   digestTestTimeoutMs,
   digestWindow,
-  getMailsData,
   readMyNotifications,
   readMyNotificationsUnreadCount,
   readMyUser,
@@ -18,9 +16,13 @@ import {
 import { sessionActor } from '../helpers/lib-actor.helper';
 import {
   baseUrl,
+  armMatrixReady,
+  markMailboxes,
   password,
   registerAndVerifyUser,
+  sendMessage,
   SETUP_TIMEOUT_MS,
+  waitForNewMails,
 } from './messaging.helpers';
 
 // 034 / Operator Ruling R4: nothing is dispatched on message arrival, so the
@@ -188,6 +190,10 @@ async function sendDirectMessage(
   toDisplayName: string,
   message: string
 ) {
+  // Send works only once this page's Matrix client has synced (plan note 7);
+  // AS3 and AS4 send from a freshly signed-in sender, so arm the wait before
+  // the navigation that builds the client. `sendMessage` awaits it.
+  armMatrixReady(fromPage);
   await fromPage.goto(`${baseUrl}/home`);
   // A context that has never dismissed the consent banner keeps it pinned to
   // the bottom of the viewport at z-1500, where it intercepts the chat FAB's
@@ -203,12 +209,8 @@ async function sendDirectMessage(
   await fromPage.getByRole('button', { name: toDisplayName }).click();
   await fromPage.getByRole('button', { name: 'Start chat' }).click();
 
-  const messageBox = fromPage.getByRole('textbox', {
-    name: 'Add a comment...',
-  });
-  await messageBox.fill(message);
-  await messageBox.press('Enter');
-  await expect(fromPage.getByText(message)).toBeVisible();
+  // Same fill, Enter and "the message is shown" check as before, after the wait.
+  await sendMessage(fromPage, message);
 }
 
 test.describe(
@@ -238,7 +240,6 @@ test.describe(
       page,
     }) => {
       test.setTimeout(SETUP_TIMEOUT_MS);
-      await deleteMailSlurperMails();
       ({ email: recipientEmail, displayName: recipientDisplayName } =
         await registerUniquePersona(page, 'us3recipient', 'Us3', 'Recipient'));
 
@@ -331,7 +332,6 @@ test.describe(
       async ({ page, browser }) => {
         test.setTimeout(digestTestTimeoutMs([directPush, directEmail]));
         requireRecipientFromAS1();
-        await deleteMailSlurperMails();
         const { displayName: senderDisplayName } = await registerUniquePersona(
           page,
           'us3sender',
@@ -439,7 +439,6 @@ test.describe(
         // + 30 s for the `finally` that restores the row's default.
         test.setTimeout(digestTestTimeoutMs(directEmail) + 30_000);
         requireRecipientFromAS1();
-        await deleteMailSlurperMails();
         await loginViaCrd(page, recipientEmail, password, baseUrl);
         await page.goto(`${baseUrl}/user/me/settings/notifications`);
         await openUserNotificationsGroup(page);
@@ -472,6 +471,10 @@ test.describe(
               'Us3As4',
               'Sender'
             );
+          // Mark the recipient's mailbox right before the send: the sink is
+          // shared and never pruned, and the recipient already holds its own
+          // verification mail, so only what arrives after this counts.
+          const mailboxes = await markMailboxes({ recipient: recipientEmail });
           await sendDirectMessage(
             senderPage,
             recipientDisplayName,
@@ -483,22 +486,11 @@ test.describe(
           // would have expired before the digest was ever dispatched on any stack
           // whose direct-email quiet period exceeded ~18s — including one running
           // the production default.
-          let deliveredToRecipient:
-            | { subject: string; toAddresses: string[]; body: string }
-            | undefined;
-          const pollDeadline = Date.now() + directEmail.quietGraceMs;
-          do {
-            const [emailsData] = (await getMailsData()) as [
-              Array<{ subject: string; toAddresses: string[]; body: string }>,
-              number,
-            ];
-            deliveredToRecipient = emailsData.find(item =>
-              item.toAddresses.includes(recipientEmail)
-            );
-            if (deliveredToRecipient) break;
-            // eslint-disable-next-line no-restricted-syntax -- poll interval of a mailbox reader
-            await delay(2000);
-          } while (Date.now() < pollDeadline);
+          const [deliveredToRecipient] = await waitForNewMails(
+            mailboxes.recipient,
+            1,
+            { timeout: directEmail.quietGraceMs }
+          );
 
           expect(
             deliveredToRecipient,

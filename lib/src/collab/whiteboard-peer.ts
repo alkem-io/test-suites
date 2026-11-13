@@ -87,6 +87,12 @@ export type ConnectWhiteboardPeerOptions = {
   clientId?: number;
   /** Reject unless the service admits the peer with write access. Default true. */
   requireWrite?: boolean;
+  /**
+   * Join as a named guest, as the public route's browser does: the name goes
+   * in the URL's `guestName` (client-web `UnifiedCollabProvider`), and with an
+   * `{ anonymous }` actor the gateway turns it into a GLOBAL_GUEST identity.
+   */
+  guestName?: string;
   /** Document kind in the URL. Default `whiteboard`. */
   type?: "whiteboard" | "memo";
   /** Override the origin the URL and `Origin` header are derived from. */
@@ -145,6 +151,7 @@ const collabUrl = (options: ConnectWhiteboardPeerOptions): string => {
   );
   const ws = base.replace(/^http/, "ws");
   const params = new URLSearchParams({ type: options.type ?? "whiteboard" });
+  if (options.guestName) params.set("guestName", options.guestName);
   return `${ws}${normalised}/${encodeURIComponent(options.whiteboardId)}?${params.toString()}`;
 };
 
@@ -320,6 +327,23 @@ export class WhiteboardPeer {
       ),
     );
     await this.drained();
+  }
+
+  /**
+   * The names the OTHER sessions in the room present themselves under (their
+   * awareness `user.username`, what the editor labels their cursor and avatar
+   * with), sorted. The service relays awareness; a session that left is
+   * removed when its removal (or the protocol's 30 s timeout) arrives.
+   */
+  remoteUsernames(): string[] {
+    const names: string[] = [];
+    this.awareness.getStates().forEach((state, clientId) => {
+      if (clientId === this.clientId) return;
+      const username = (state as { user?: { username?: unknown } }).user
+        ?.username;
+      if (typeof username === "string") names.push(username);
+    });
+    return names.sort();
   }
 
   // ---- raw reads ------------------------------------------------------------
@@ -509,8 +533,17 @@ export class WhiteboardPeer {
         case COLLAB_WIRE.HEARTBEAT:
           this.receiveHeartbeat(bytes);
           break;
+        case COLLAB_WIRE.AWARENESS:
+          // Other sessions' presence (`{ user: { username } }`): the name each
+          // collaborator is shown under. Read by `remoteUsernames`.
+          rt().awarenessProtocol.applyAwarenessUpdate(
+            this.awareness,
+            decoding.readVarUint8Array(decoder),
+            REMOTE_ORIGIN,
+          );
+          break;
         default:
-          // awareness, ephemeral: nothing to do for the oracle
+          // ephemeral: nothing to do for the oracle
           break;
       }
     } catch (error) {

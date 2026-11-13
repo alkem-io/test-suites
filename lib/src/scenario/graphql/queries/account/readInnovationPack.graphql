@@ -1,0 +1,26 @@
+# One innovation pack as the server holds it: what the pack create dialog and
+# the pack settings page write (name, description, tags, store listing,
+# search visibility) and who provides it.
+query ReadInnovationPack($innovationPackId: UUID!) {
+  lookup {
+    innovationPack(ID: $innovationPackId) {
+      id
+      nameID
+      listedInStore
+      searchVisibility
+      provider {
+        id
+      }
+      profile {
+        id
+        displayName
+        description
+        url
+        tagset {
+          id
+          tags
+        }
+      }
+    }
+  }
+}

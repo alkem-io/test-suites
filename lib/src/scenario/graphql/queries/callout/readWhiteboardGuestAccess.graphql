@@ -1,0 +1,12 @@
+query ReadWhiteboardGuestAccess($whiteboardId: UUID!) {
+  lookup {
+    whiteboard(ID: $whiteboardId) {
+      id
+      guestContributionsAllowed
+      authorization {
+        id
+        myPrivileges
+      }
+    }
+  }
+}
