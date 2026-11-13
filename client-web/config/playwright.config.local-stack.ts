@@ -36,6 +36,8 @@ import { baseConfig, GENERATED_WALKS_DIR, LOCAL_STACK_TAG, suite } from './playw
  *   Matrix (synapse + matrix-adapter) plus the nine MESSAGING_DIGEST_* variables
  *   (same values on the SERVER):
  *     contact-leads US3 (Space "Contact Leads": 1:1 chats + direct-message digest)
+ *   Synapse and the matrix-adapter of the local quickstart (nothing else):
+ *     forum-discussions J3-1, J3-2, E5-1 (both files run whole)
  */
 export default defineConfig(
   baseConfig({
@@ -118,6 +120,16 @@ export default defineConfig(
         name: 'Local stack — messaging digests',
         testMatch: ['/messaging-notifications/*.spec.ts'],
         tier: 'long',
+      }),
+      suite({
+        // W2 journey 12: forum comments, thread answers and mentions are sent
+        // through the discussion's Matrix room and their notifications ride
+        // the inbound Matrix event, which the shared test cluster does not
+        // deliver (plan R-1). The comment cases build on US1's discussion, so
+        // both files run whole here.
+        name: 'Local stack — forum comments',
+        testMatch: ['/forum-discussions/*.spec.ts'],
+        tier: 'extended',
       }),
       suite({
         // W2 journey 10 (audit row F3): "Contact Leads" fans out 1:1 Matrix

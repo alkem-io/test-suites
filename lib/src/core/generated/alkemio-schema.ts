@@ -87347,6 +87347,31 @@ export type ReadAccountResourcesQuery = {
   };
 };
 
+export type ReadInnovationPackQueryVariables = Exact<{
+  innovationPackId: Scalars["UUID"]["input"];
+}>;
+
+export type ReadInnovationPackQuery = {
+  lookup: {
+    innovationPack?:
+      | {
+          id: string;
+          nameID: string;
+          listedInStore: boolean;
+          searchVisibility: SearchVisibility;
+          provider: { id: string };
+          profile: {
+            id: string;
+            displayName: string;
+            description?: any | undefined;
+            url: string;
+            tagset?: { id: string; tags: Array<string> } | undefined;
+          };
+        }
+      | undefined;
+  };
+};
+
 export type ReadInnovationPackTemplatesSetQueryVariables = Exact<{
   innovationPackId: Scalars["UUID"]["input"];
 }>;
@@ -94880,6 +94905,14 @@ export type ReadMyNotificationsQuery = {
           | {
               __typename: "InAppNotificationPayloadPlatformUserMessageRoom";
               type: NotificationEventPayload;
+              user: { id: string };
+              messageDetails?:
+                | {
+                    message: string;
+                    room: { id: string };
+                    parent: { id: string; url: string };
+                  }
+                | undefined;
             }
           | {
               __typename: "InAppNotificationPayloadPlatformUserProfileRemoved";

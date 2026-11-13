@@ -95404,6 +95404,31 @@ export type ReadAccountResourcesQuery = {
   };
 };
 
+export type ReadInnovationPackQueryVariables = SchemaTypes.Exact<{
+  innovationPackId: SchemaTypes.Scalars["UUID"]["input"];
+}>;
+
+export type ReadInnovationPackQuery = {
+  lookup: {
+    innovationPack?:
+      | {
+          id: string;
+          nameID: string;
+          listedInStore: boolean;
+          searchVisibility: SchemaTypes.SearchVisibility;
+          provider: { id: string };
+          profile: {
+            id: string;
+            displayName: string;
+            description?: any | undefined;
+            url: string;
+            tagset?: { id: string; tags: Array<string> } | undefined;
+          };
+        }
+      | undefined;
+  };
+};
+
 export type ReadInnovationPackTemplatesSetQueryVariables = SchemaTypes.Exact<{
   innovationPackId: SchemaTypes.Scalars["UUID"]["input"];
 }>;
@@ -103162,6 +103187,14 @@ export type ReadMyNotificationsQuery = {
           | {
               __typename: "InAppNotificationPayloadPlatformUserMessageRoom";
               type: SchemaTypes.NotificationEventPayload;
+              user: { id: string };
+              messageDetails?:
+                | {
+                    message: string;
+                    room: { id: string };
+                    parent: { id: string; url: string };
+                  }
+                | undefined;
             }
           | {
               __typename: "InAppNotificationPayloadPlatformUserProfileRemoved";
@@ -128040,6 +128073,31 @@ export const ReadAccountResourcesDocument = gql`
     }
   }
 `;
+export const ReadInnovationPackDocument = gql`
+  query ReadInnovationPack($innovationPackId: UUID!) {
+    lookup {
+      innovationPack(ID: $innovationPackId) {
+        id
+        nameID
+        listedInStore
+        searchVisibility
+        provider {
+          id
+        }
+        profile {
+          id
+          displayName
+          description
+          url
+          tagset {
+            id
+            tags
+          }
+        }
+      }
+    }
+  }
+`;
 export const ReadInnovationPackTemplatesSetDocument = gql`
   query ReadInnovationPackTemplatesSet($innovationPackId: UUID!) {
     lookup {
@@ -129680,6 +129738,21 @@ export const ReadMyNotificationsDocument = gql`
               }
               organization {
                 id
+              }
+            }
+            ... on InAppNotificationPayloadPlatformUserMessageRoom {
+              user {
+                id
+              }
+              messageDetails {
+                message
+                room {
+                  id
+                }
+                parent {
+                  id
+                  url
+                }
               }
             }
           }
@@ -132446,6 +132519,7 @@ const GetAccountMainEntitiesDocumentString = print(
   GetAccountMainEntitiesDocument
 );
 const ReadAccountResourcesDocumentString = print(ReadAccountResourcesDocument);
+const ReadInnovationPackDocumentString = print(ReadInnovationPackDocument);
 const ReadInnovationPackTemplatesSetDocumentString = print(
   ReadInnovationPackTemplatesSetDocument
 );
@@ -138313,6 +138387,28 @@ export function getSdk(
             { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "ReadAccountResources",
+        "query",
+        variables
+      );
+    },
+    ReadInnovationPack(
+      variables: SchemaTypes.ReadInnovationPackQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.ReadInnovationPackQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.ReadInnovationPackQuery>(
+            ReadInnovationPackDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "ReadInnovationPack",
         "query",
         variables
       );
