@@ -24,6 +24,9 @@ import { baseConfig, GENERATED_WALKS_DIR, LOCAL_STACK_TAG, suite } from './playw
  *   RABBITMQ_MANAGEMENT_* plus the nine MESSAGING_DIGEST_* variables (same
  *   values on the SERVER, see the suite's test plan):
  *     messaging-notifications US1 and US2 (whole walks), US3-AS3 and US3-AS4
+ *   RABBITMQ_MANAGEMENT_* (US4-AS1p/AS5p), HARNESS POSTGRES_* (US4-AS8) and
+ *   NOTIFICATIONS_STOP_CMD / NOTIFICATIONS_START_CMD (US4-AS6):
+ *     form-callout-framing US4 (each guard skips with its reason when unset)
  *   HARNESS_POSTGRES_* (audit rows, subscription seed) and HARNESS_REDIS_*
  *   (ageing a real session past the privileged window):
  *     account-deletion US1-AS5, US1-AS6 and US3 (whole walk)
@@ -62,6 +65,14 @@ export default defineConfig(
         testMatch: ['/content-editing/us1-whiteboard-draw-reopen.spec.ts'],
         tier: 'extended',
         capture: 'off',
+      }),
+      suite({
+        // workspace#080: US4's three tagged cases stand alone on the file's
+        // beforeAll fixture (each measures from its own baseline), so only they run.
+        name: 'Local stack — form response notifications',
+        testMatch: ['/form-callout-framing/us4-notifications.spec.ts'],
+        grep: LOCAL_STACK_TAG,
+        tier: 'long',
       }),
       suite({
         // W2 Tier 0 item 3: US1-AS5 (audit row) needs AS1–AS3 of its serial

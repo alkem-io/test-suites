@@ -5,7 +5,7 @@
 - **Suites:**
   - `server-api/src/functional-api/callout/form/` — eight it-specs (`form-lifecycle`, `form-never-appears`, `form-placement-guards`, `form-presentation`, `form-presentation-receipt`, `form-space-move`, `form-submit-validation`, `form-visibility-matrix`) plus `form.request.params.ts`.
   - `server-api/src/functional-api/notifications/space/collaboration/form-response.it-spec.ts` — MailSlurper.
-  - `client-web/src/functional-e2e/form-callout-framing/` — five `@forge-acceptance` walks, persisted from the /forge live verification. They provision their own Kratos identities, Space and Forms; they do not use the harness personas.
+  - `client-web/src/functional-e2e/form-callout-framing/` — five `@forge-acceptance` walks, persisted from the /forge live verification, on the shared fixture `form-callout-framing.helpers.ts`. Since W2 Tier 0 item 6 (docs/qa/server-rebuild/client-net-audit § 4) they reach the server only through `@alkemio/tests-lib`: each file registers **disposable** identities through public Kratos (`registerVerifiedUser`, verification link read by recipient — no Kratos admin API, no admin password), the personas **join as themselves** (`joinRoleSet`; the walks' Spaces and Subspaces are created with an OPEN membership policy, since workspace#027 Slice B lets no actor assign MEMBER on an L0), the harness Global Admin creates the Spaces and grants ADMIN on top, mail is read through the lib's recipient-scoped `getMailsTo` (`lib/src/utils/mailbox.ts`, shared with messaging-notifications), and a **file-level `afterAll`** deletes every VC, Space tree and user (with its Kratos identity) the file seeded, failing loudly on a leak.
   - R25 (Polls and Forms in templates) — see *R25 — Polls and Forms in templates* below: two it-specs under `server-api/src/functional-api/templates/` and two `templates-CRD` Playwright files (harness personas, session fixtures).
 
 ## How to run
@@ -15,13 +15,15 @@ cd server-api
 pnpm exec vitest run --project callouts src/functional-api/callout/form
 pnpm exec vitest run --project notifications src/functional-api/notifications/space/collaboration/form-response.it-spec.ts
 
-cd ../client-web   # needs KRATOS_ADMIN_URL and ALKEMIO_ADMIN_PASSWORD
-UI_HEADLESS=true pnpm run test:form-callout-framing
+cd ../client-web   # the usual harness .env; no Kratos admin API, no admin password
+UI_HEADLESS=true pnpm run test:form-callout-framing      # = test:nightly --project="Form callout framing"
+UI_HEADLESS=true pnpm run test:local-stack --project="Local stack — form response notifications"   # US4-AS1p/AS5p, AS6, AS8
 ```
 
-- **Nightly:** the it-specs run through the `callout/**` glob and the explicit `form-response.it-spec.ts` entry of the server-api `nightly` project — **except `form-presentation-receipt.it-spec.ts`** (R17/R18 "title/description never reach a notification"), listed in that project's `exclude` since test-suites#694: its positive control is one receipt mail and the test cluster's MailSlurper drops a few mails per run mid-DATA (nightly 40792632135, 2026-10-29). It runs with `--project callouts` only until the MailSlurper replacement lands; then delete the exclude entry. The walks are **not** nightly; the default Playwright config ignores the folder.
-- **Local-only cases:** cases that read Postgres (`delete-rows`, the R14 audit rows) skip themselves unless `harnessPostgresConfigured()`; the push case skips without the RabbitMQ management API. Walk US4-AS6 (re-scoped to a consumer outage, see *Not covered*) needs `NOTIFICATIONS_STOP_CMD`/`_START_CMD`. Walk US4-AS8 needs the loopback harness Postgres.
-- **Walk credentials:** the walks sign the platform admin in with `ALKEMIO_ADMIN_PASSWORD`. On a harness stack the Global Admin *is* `admin@alkem.io`, so that value is the server-api `AUTH_TEST_HARNESS_PASSWORD` — not the server's `AUTH_ADMIN_PASSWORD`. A wrong value costs a 401 per file and then a login rate limit (429); `ALKEMIO_ADMIN_TOKEN` (a pre-minted bearer) skips the login altogether.
+- **Nightly:** the it-specs run through the `callout/**` glob and the explicit `form-response.it-spec.ts` entry of the server-api `nightly` project — **except `form-presentation-receipt.it-spec.ts`** (R17/R18 "title/description never reach a notification"), listed in that project's `exclude` since test-suites#694: its positive control is one receipt mail and the test cluster's MailSlurper drops a few mails per run mid-DATA (nightly 40792632135, 2026-10-29). It runs with `--project callouts` only until the MailSlurper replacement lands; then delete the exclude entry. The walks run in the client-web nightly as the **`Form callout framing`** project (tier `long`, placed after `Callouts`; 45 cases); the three `@local-stack` cases of `us4` are excluded there and run with the local-stack runner.
+- **Local-only cases:** cases that read Postgres (`delete-rows`, the R14 audit rows) skip themselves unless `harnessPostgresConfigured()`; the push case skips without the RabbitMQ management API. Three walk cases are tagged **`@local-stack`** (nightly `grepInvert`; `config/playwright.config.local-stack.ts › Local stack — form response notifications`), each keeping its own skip guard: **US4-AS1p/AS5p** (the push emit, split out of AS1/AS5 where it was silently skipped without `RABBITMQ_MANAGEMENT_*`; its own Form, so the mail counts of AS1–AS7 are untouched), **US4-AS6** (stops the notifications consumer with `NOTIFICATIONS_STOP_CMD`/`_START_CMD`) and **US4-AS8** (a `user_settings` row without the new key cannot be written through GraphQL — every write stores the whole object — so the precondition is a loopback-Postgres write; the oracle is mail + in-app + the settings page).
+- **Walk credentials:** every identity — the disposable personas and the harness Global Admin (`admin@alkem.io`, used as `TestUser.GLOBAL_ADMIN` and signed in for US1-AS3 and US3-AS5/AS6) — signs in with `AUTH_TEST_HARNESS_PASSWORD`. `KRATOS_ADMIN_URL`, `ALKEMIO_ADMIN_PASSWORD`, `ALKEMIO_ADMIN_TOKEN` and `FORGE_PERSONA_PASSWORD` are no longer read.
+- **Mail scope (US4):** the walk reads only the mail of the addresses its fixture can notify (a2, m1, sa and the platform admin who created the Space and Subspace). Nobody else is a member, so US4-AS3's and US4-AS7's "no generic / no answer-bearing mail to anyone" is the same claim over those addresses. The reader looks at the newest 10 pages (500 mails) of the shared sink.
 - **Shared personas:** `form-visibility-matrix.it-spec.ts` registers four **disposable users** (`formpcfa.*`, `formpsupport.*`, `formgsreader.*`, `formpsreader.*`) for its platform-role cells, grants each its one platform role and deletes them in `afterAll`, so no shared harness persona changes while the file runs. The notification spec still switches settings rows of four shared personas (snapshot and restore), which files running in parallel can observe.
 - **Known server defects, cases skipped until the fix lands:** the cases are written against the expected behaviour and carry `test.skip` with the issue link in the title (operator decision 2026-10-06: skip rather than `test.fails`); drop the `.skip` when the server fix is on `develop`. [server#6592](https://github.com/alkem-io/server/issues/6592) (stale parent credentials after a cross-L0 move). [server#6591](https://github.com/alkem-io/server/issues/6591) (existence probe through `deleteCalloutFormResponse`) is fixed in [server#6665](https://github.com/alkem-io/server/pull/6665) (`2474ece4`, on `develop` 2026-10-15); its case is live since test-suites#673.
 - **Currently red, not skipped:** `server-api` form-visibility matrix, "Global Support reads every response and can moderate". Ruled 2026-10-08: in a Space with `allowPlatformSupportAsAdmin` on, Platform Support reads ALL responses like a space admin. Since platform-role redesign Slice B it can moderate but reads none; the case runs as a normal test and stays red until the server fix for [server#6621](https://github.com/alkem-io/server/issues/6621) is on `develop`.
@@ -57,7 +59,7 @@ Spec ids are the 080 spec's. "API" = `server-api/src/functional-api/callout/form
 | FR-032 Post delete cascades | API `form-lifecycle.it-spec.ts › deleting the Post` (row count only where harness Postgres is configured) |
 | FR-030 deleted account → `createdBy` null, answers kept | API `form-lifecycle.it-spec.ts › an account deleted after responding`; walk `us4a › US4a-AS1` |
 | FR-020 / US3-AS6 never a contribution, never in activity, not reachable from the schema | API `form-never-appears.it-spec.ts`; walk `us3 › US3-AS6` (full schema guard incl. `InAppNotification*` and `*SubscriptionResult`) |
-| US4-AS1/AS2/AS4/AS5 email (pinned subjects, who-can-read sentence, submitter + link), parent admin none, admin-submitter receipt only, row off | `form-response.it-spec.ts`; walk `us4` (adds in-app and push) |
+| US4-AS1/AS2/AS4/AS5 email (pinned subjects, who-can-read sentence, submitter + link), parent admin none, admin-submitter receipt only, row off | `form-response.it-spec.ts`; walk `us4` (adds in-app; push in `US4-AS1p/AS5p`, `@local-stack`) |
 | US4-AS3 / FR-023a no generic contribution mail, with the generic rows switched on | `form-response.it-spec.ts › no mail carries the answer…` |
 | US4-AS7 one admin notification per response | walk `us4 › US4-AS7` (3 submissions) |
 | US4a-AS1..AS4 review dialogs, 120 responses in pages of 50, confirm-delete, members read all | walk `us4a` |
@@ -140,7 +142,7 @@ UI_HEADLESS=true pnpm exec playwright test src/functional-e2e/templates-CRD/temp
 | D-15 server clamp of `first` to 50 | Same fixture cost. The walk proves only that the client never asks for more than 50 | server unit + `lookup.resolver.fields.form.responses.spec.ts`; /forge gql-live "page clamp 50/55" |
 | SC-003 delete-others under ADMINS for every role | Moderation does not read visibility (D-12); the MEMBERS form is the stronger discriminator (readers with ALL still cannot delete) | Tracked advisory in the PR |
 | US4-AS6 / FR-024a dispatch failure never fails the submission | No infra lever makes the server's publish fail. The walk is **re-scoped** (its title says so): it stops the notifications *consumer* and proves at-least-once delivery after a restart, not the failure path | server unit (fire-and-forget + structured log) |
-| US4-AS8 / D-20 settings row that predates the feature | Needs a direct DB write | walk `us4 › US4-AS8`, loopback Postgres only; migration backfill is a release-ops SQL check |
+| US4-AS8 / D-20 settings row that predates the feature | Needs a direct DB write | walk `us4 › US4-AS8` (`@local-stack`), loopback Postgres only; migration backfill is a release-ops SQL check |
 | FR-020 MCP resources, VC ingest, contribution reporter | No harness for those paths | Structural: responses are not contributions (R1) and are root-only (D-8, walk US3-AS6 schema guard) |
 | Search | Descoped by the operator on 2026-09-30 (`forge-run.md` 5d); not recorded in `spec.md` | — |
 | FR-016c no comments or reactions, FR-015a no edit, FR-016d not movable | No surface exists to call | Structural; walk `us4a › US4a-AS3` asserts no edit affordance |
@@ -182,3 +184,34 @@ Reds and their attribution:
 Reds and their attribution:
 - **Environment — the local MailSlurper, not the product and not the test:** AS7 submits three responses and polls for three admin mails; it saw one in 90 s. RabbitMQ's `alkemio-notifications` queue showed publish = deliver = ack (every event consumed), and the sink's container log recorded the mail writes in that window, but its REST listing never returned them; after the next burst the sink listed 127 mails of the 460+ writes it had logged since the last prune, with `Invalid HELO command` / `Connection … already exists` errors clustered in bursts (a known defect of this sink). The same file passed on an immediate rerun. No test change: the case is correct, the sink is lossy under load.
 - No product or test reds.
+
+## W2 Tier 0 item 6 — portable fixtures and the nightly (2026-11-12, static)
+
+What changed in the five walks; no assertion was removed or loosened.
+
+| Before | After |
+| --- | --- |
+| Identities created through the Kratos **admin** API (`POST /identities`, per-run password), bearers minted with a hand-rolled `fetch` to `non-interactive-login`, the admin signed in with `ALKEMIO_ADMIN_PASSWORD` | `FormFixtureLedger.registerUser` → lib `registerVerifiedUser` (public sign-up + recipient-scoped verification link), bearers from lib `getUserToken`, everyone on `AUTH_TEST_HARNESS_PASSWORD`; the admin is `TestUser.GLOBAL_ADMIN` |
+| MEMBER assigned by the admin's bearer (`assignRoleToUser`) — refused on an L0 since Slice B, and the lib's join fallback only fires for the `TestUser.GLOBAL_ADMIN` persona | each persona **joins as itself** (`joinAsSelf` → lib `joinRoleSet`) on an OPEN Space, then the OPEN Subspace; ADMIN granted on top by `TestUser.GLOBAL_ADMIN` |
+| no teardown: every run leaked its users, two or three Spaces and (US1) two VCs | file-level `afterAll` → `ledger.teardown()`: VCs, then Space trees leaves first, then users with their Kratos identity; every step runs and the failures are thrown together |
+| US4 read the whole MailSlurper REST listing (`MAIL_SLURPER_ENDPOINT`) | lib `getMailsTo(address)` per fixture address, de-duplicated by mail id |
+| US4 push asserts silently skipped without `RABBITMQ_MANAGEMENT_ENDPOINT`; AS6/AS8 conditional skips inside the walk | push split into `US4-AS1p/AS5p`; AS1p/AS5p, AS6 and AS8 tagged `@local-stack` |
+| describe-level `test.setTimeout(300 s / 420 s)` per case | tier `long` (180 s) per case; the larger budget only on each `beforeAll`; US3's sign-in retry bounded to 150 s |
+
+**Needs a live run before the nightly can be trusted:** none of this has run. First run against the test cluster: confirm (1) a self-joined member's Subspace join is accepted on an OPEN Subspace, (2) the Global Admin still becomes ADMIN of the Space/Subspace it creates under Slice B (US4-AS5 expects 2 admin mails to it; US3-AS5/AS6 read every response as it), (3) the per-case durations fit the 180 s tier, and (4) the shared sink delivers within the poll budgets (its losses under load are recorded above).
+
+### Live run notes (local develop stack, 2026-11-12, server `e120d25a1`, client-web `25ded1467`)
+
+- Nightly project `Form callout framing`: 45/45 in two consecutive runs, after fixing four drifts:
+  - The Form chip is now behind "More to add". The negatives open the menu, with Poll as their positive control.
+  - The edit-mode lock is shown by the aria-disabled "More to add" button.
+  - The response-visibility notice moved to the footer row (client-web#10382).
+  - A member's switch to Form is now refused by the shared admin-only guard (server#6667), so the test expects `FORBIDDEN_POLICY` plus a read-back of the unchanged framing.
+- Earlier red US4 mail runs were local-environment only. The snapshot database sends each admin mail to hundreds of admins, and MailSlurper SMTP timed out on about 40% of sends.
+- `Local stack — form response notifications`:
+  - US4-AS8 passes after expanding the collapsed "Space Admin Notifications" section on the settings page.
+  - US4-AS1p counts 2 push emits instead of 1 on this stack. The second recipient is `admin@alkem.io`, which holds a push subscription in the local snapshot and, as a global admin, receives space-admin pushes. The extra emit comes from local data, not the product. Run it on a stack where no other admin is push-subscribed.
+
+### QA PR challenge (2026-11-13, static — not run)
+
+- **US4-AS1p red re-attributed: test, not environment.** `admin@alkem.io` creates the Subspace, so it holds the Subspace ADMIN role (server `SpaceService.assignUserToRoles`) and is a legitimate recipient of the Form-response push whenever it has a push subscription — the second emit was correct product behaviour, and the global queue counter cannot tell recipients apart. US4-AS5 already counts this admin's mails. Fix: `us4` `beforeAll` pins the Global Admin's `space.admin.collaborationCalloutFormResponseReceived` row to email + in-app on, push off (`helpers/notification-settings.helper.ts › pinFormResponseNotifications`), and the file-level `afterAll` restores it. That also keeps US4-AS5's "two admin mails to the Global Admin" independent of what earlier suites left on the shared persona. Needs a local-stack rerun of AS1p and a nightly run of AS5.
