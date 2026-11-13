@@ -202,8 +202,8 @@ export default defineConfig({
           // per-address counters and count this address's sign-ins, so no
           // other project may sign in from the same address meanwhile. Its
           // global setup is not ordered: vitest runs every selected project's
-          // setup before any file, so a bare `vitest run` needs this
-          // project's preconditions too.
+          // setup before any file, which is why `pnpm test` deselects this
+          // project and only `test:second-factor` selects it.
           sequence: { groupOrder: 4 },
         },
       },

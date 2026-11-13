@@ -27,7 +27,7 @@
     "lint:fix": "pnpm run typecheck:native && eslint --no-error-on-unmatched-pattern 'src/**/*.ts' 'src/**/*.tsx' --fix",
     "typecheck:native": "cross-env NODE_OPTIONS=\"--max-old-space-size=8192\" tsc -p tsconfig.json --noEmit",
     "codegen": "graphql-codegen --config codegen.ts",
-    "test": "vitest run",
+    "test": "vitest run --project '!second-factor'",
     "stop-process": "fuser 4000/tcp -k",
     "test:watch": "vitest",
     "test:debug": "vitest run --inspect-brk --fileParallelism=false",
