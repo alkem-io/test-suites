@@ -203,8 +203,8 @@ export default defineConfig({
           // other project may sign in from the same address meanwhile. Its
           // global setup is not ordered: vitest runs every selected project's
           // setup before any file, which is why `test`, `test:watch` and
-          // `test:debug` deselect this project and only `test:second-factor`
-          // selects it.
+          // `test:debug` deselect this project and `second-factor-measure`
+          // (`!second-factor*`), and only `test:second-factor` selects it.
           sequence: { groupOrder: 4 },
         },
       },
