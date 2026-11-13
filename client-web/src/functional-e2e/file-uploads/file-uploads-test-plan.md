@@ -7,7 +7,7 @@ There is no diff. The basis is the plan, the audit, and product source read at c
 Every case has the same three-part oracle, through named `@alkemio/tests-lib` functions:
 1. **Record.** The server holds a document for the upload with the expected MIME type (`MimeType` enum), size and end location (`temporaryLocation: false`). Readers: `readCalloutStoredFiles`, `readStoredDocument`, `readConversationStoredFiles`.
 2. **Bytes.** The URL the server hands out serves the upload. `downloadStoredFile` checks the HTTP 200, the `Content-Type`, the size, and byte equality for documents. For images, file-service canonicalises the bytes (EXIF rotation, metadata strip; server `visual.service`), so the check is the served pixel dimensions against the upload's, plus the served size against the stored size.
-3. **Access.** A signed-in user without access to the container (`non.space`) is refused the same URL, and the refusal carries none of the file.
+3. **Access.** A member of the container who did **not** upload the file is served it; the uploader alone proves nothing, because every non-conversation document grants its creator access (server `document.service.authorization.ts`, creator rule). A signed-in user without access to the container (`non.space`) is refused the same URL with file-service's authorization denial, **403** (any other 4xx is a refusal for the wrong reason), and the refusal carries none of the file.
 
 Uploads carry run-unique bytes, so a stale or deduplicated file cannot pass: a marker in the PDF text, and a run-derived pixel size for images.
 
@@ -18,9 +18,9 @@ pnpm exec playwright test --config=config/playwright.config.nightly.ts --project
 pnpm run test:local-stack --project="Local stack — message attachments"                         # MA-1/2 (@local-stack)
 pnpm -C ../server-api exec vitest run --project contract                                          # lib shape case for the storage readers
 ```
-- RF and MG each seed their own **private** L0 Space (`w2-j11-<area>-<uid>`), with `space.admin` as admin and member. Teardown is `teardownScenario` in a file-level `afterAll`.
+- RF and MG each seed their own **private** L0 Space (`w2-j11-<area>-<uid>`), with `space.admin` as admin and member and `space.member` as a plain member. Teardown is `teardownScenario` in a file-level `afterAll`.
 - MA registers two disposable users (`contributors-crud.helpers` › `registerDisposableUser`) and creates a two-member **GROUP** conversation over the API as the sender. A DIRECT conversation can be neither left nor deleted by anyone (`leaveConversation` → BAD_USER_INPUT; no actor holds DELETE). It would outlive the run. Teardown: both members leave, the walk polls until the conversation is gone, then both users are deleted with their Kratos identities.
-- `non.space` is used read-only, as the refused downloader. No persona is mutated.
+- `space.member` is used read-only, as the member who did not upload. `non.space` is used read-only, as the refused downloader. No persona is mutated.
 - MA needs the browser to reach the Matrix homeserver: chat goes browser → Matrix. The shared test cluster has no reachable homeserver (`chat-avatars.helpers` › `matrixSendPath`, alkem-io/infrastructure-provisioning#51), so MA is tagged `@local-stack`. The nightly drops it (`grepInvert`), and `config/playwright.config.local-stack.ts` runs it. On a stack whose homeserver does not answer, each case skips with the probe's reason.
 
 ## Risk
@@ -44,23 +44,23 @@ Searched test-suites `origin/develop` @ `ef405cc0`; every row below comes from a
 - **Reuse.** The `chat-avatars` helpers (`openChatPanel`, `openConversation`, `chatPanel`, `matrixSendPath`) and `contributors-crud.helpers` › `registerDisposableUser` are reused. **0 existing tests need updating.**
 
 ## Personas and data
-`space.admin` acts in RF and MG. MA's sender and recipient are disposable users. `non.space` is the outsider, used read-only. Data per file: one private Space with two posts (framing NONE for RF, MEDIA_GALLERY for MG), or one two-member group conversation (MA). Files are generated in memory per run (`file-uploads.helpers` › `pdfPayload`, `executablePayload`; the lib's `createPngFixture` for images), so no fixture file is committed.
+`space.admin` acts in RF and MG; `space.member` only downloads. MA's sender and recipient are disposable users. `non.space` is the outsider, used read-only. Data per file: one private Space with two posts (framing NONE for RF, MEDIA_GALLERY for MG), or one two-member group conversation (MA). Files are generated in memory per run (`file-uploads.helpers` › `pdfPayload`, `executablePayload`; the lib's `createPngFixture` for images), so no fixture file is committed.
 
 ## Scenario → test mapping
 Techniques: **EP** file-type partition (accepted / refused) · **DT** viewer × access · **UC** use-case walk · **EG** error guess (temporary location, canonicalisation).
 
 | ID | Scenario | Technique | Oracle | Automated by | Layer |
 |---|---|---|---|---|---|
-| RF-1 | Space admin, Edit Post › More options › Add another reference › Attach file (PDF), Save | UC, DT, EG | The row fills with the returned `/rest/storage/document/<id>` URL and the file's base name. Record: the reference `{name, uri}`, and exactly one document in the post's bucket with that URL, file name, `PDF`, the byte size and `temporaryLocation: false`. Bytes: identical, `application/pdf`. Access: `non.space` refused (4xx). The reloaded post links the reference to the stored URL | `us1-reference-file.spec.ts` › RF-1 | UI + lib |
+| RF-1 | Space admin, Edit Post › More options › Add another reference › Attach file (PDF), Save | UC, DT, EG | The row fills with the returned `/rest/storage/document/<id>` URL and the file's base name. Record: the reference `{name, uri}`, and exactly one document in the post's bucket with that URL, file name, `PDF`, the byte size and `temporaryLocation: false`. Bytes: identical, `application/pdf`, served to `space.admin` (uploader) and `space.member` (did not upload). Access: `non.space` refused (403). The reloaded post links the reference to the stored URL | `us1-reference-file.spec.ts` › RF-1 | UI + lib |
 | RF-2 | Same row, a Windows executable is attached | EP | The bucket policy (read back) does not list its type. The browser's upload answers with GraphQL errors, the toast "Error occurred while uploading the file" shows, the URL stays empty, and the bucket stays empty. Positive control: a PDF on the same row uploads. After Discard, only that control is stored | `us1-reference-file.spec.ts` › RF-2 | UI + lib |
-| MG-1 | Space admin opens a media-gallery post, Add images (PNG) | UC, DT, EG | `addVisualToMediaGallery` and the upload answer without errors, and the image shows with its alt text. Record: exactly one visual with that alt text; its document (`readStoredDocument` by the id in the visual's URI) is `PNG` and `temporaryLocation: false`. Bytes: `image/png`, size = stored size, pixel size = uploaded. Access: `non.space` refused | `us2-media-gallery.spec.ts` › MG-1 | UI + lib |
+| MG-1 | Space admin opens a media-gallery post, Add images (PNG) | UC, DT, EG | `addVisualToMediaGallery` and the upload answer without errors, and the image shows with its alt text. Record: exactly one visual with that alt text; its document (`readStoredDocument` by the id in the visual's URI) is `PNG` and `temporaryLocation: false`. Bytes: `image/png`, size = stored size, pixel size = uploaded, served to `space.admin` (uploader) and `space.member` (did not upload). Access: `non.space` refused (403) | `us2-media-gallery.spec.ts` › MG-1 | UI + lib |
 | MG-2 | Same gallery affordance, a text file | EP | Warning "Unsupported file type"; the read-back shows no visual. Positive control: a PNG then goes through and is the only visual | `us2-media-gallery.spec.ts` › MG-2 | UI + lib |
-| MA-1 | Sender attaches a PDF in the conversation and sends it; the recipient opens the thread | UC, DT | The staged chip shows, the messaging media upload answers 200, and the chip clears. Record (polled; the server places the file when the message event returns from Matrix): exactly one document in the conversation bucket, with the file name, `PDF`, the size and `temporaryLocation: false`; the room's messages carry exactly that attachment. Bytes: identical for the recipient. Access: `non.space` refused. The recipient's fresh thread offers "Download <name>": its link reads this conversation's bucket, serves the recipient the identical bytes, and is refused to `non.space` | `us3-message-attachment.spec.ts` › MA-1 (`@local-stack`) | UI + lib |
+| MA-1 | Sender attaches a PDF in the conversation and sends it; the recipient opens the thread | UC, DT | The staged chip shows, the messaging media upload answers 200, and the chip clears. Record (polled; the server places the file when the message event returns from Matrix): exactly one document in the conversation bucket, with the file name, `PDF`, the size and `temporaryLocation: false`; the room's messages carry exactly that attachment. Bytes: identical for the recipient. Access: `non.space` refused (403). The recipient's fresh thread offers "Download <name>": its link reads this conversation's bucket, serves the recipient the identical bytes, and is refused to `non.space` | `us3-message-attachment.spec.ts` › MA-1 (`@local-stack`) | UI + lib |
 | MA-2 | Sender attaches a Windows executable | EP | Alert "<name> has an unsupported file type.", nothing staged. Positive control: a PDF stages and is removed. No request reached the media upload route, and the bucket count is unchanged | `us3-message-attachment.spec.ts` › MA-2 (`@local-stack`) | UI + lib |
 | — | API upload / document-access matrix | — | — | `server-api/…/storage/**` | covered (API) |
 | — | Image comments (paste, drop, pick, limits) | — | — | `client-web/tests/comment-images-us*` | covered (UI) |
 
-DT matrix: a member of the container (the Space admin; the conversation's recipient) gets the bytes. A signed-in outsider (`non.space`) is refused, in RF-1, MG-1 and MA-1 (both the document URL and the UI's link).
+DT matrix: a member of the container who did not upload the file (`space.member`; the conversation's recipient) gets the bytes, and so does the uploader (`space.admin`), whose access comes from the creator rule and so cannot stand in for a member. Conversation attachments carry no creator rule, so MA-1's recipient is the member row. A signed-in outsider (`non.space`) is refused with 403, in RF-1, MG-1 and MA-1 (both the document URL and the UI's link).
 
 ### Regression guards
 - **RF-1:** the reference saved with a URL but no document behind it; a document left in temporary storage; a download serving other or truncated bytes or the wrong type; private-Space files downloadable by any signed-in user.
@@ -77,6 +77,7 @@ DT matrix: a member of the container (the Space admin; the conversation's recipi
 | Media-gallery video | Same affordance; video fixtures are heavy | follow-up, P3 |
 | Deleting a reference or gallery image removes the stored document | No read-back of deletion exists anywhere (coverage map, orphan-free deletion) | orphan-free deletion area |
 | Chat attachment on the shared test cluster | Environment: no reachable Matrix homeserver from the browser | `@local-stack` until infrastructure-provisioning#51 |
+| Server-side type refusal for a media-gallery visual and a chat attachment | MG-2 and MA-2 prove only that the **client** refuses before sending (warning / alert, no visual, no upload request). Whether the server or file-service would refuse a `.txt` visual or an `.exe` on `/rest/messaging/media/upload` is unproven, and it matters because the rebuild moves uploads straight to the file container. Only RF-2 exercises a server refusal (the callout bucket's `allowedMimeTypes`) | server-api storage: an upload of a refused type to a gallery visual and to the messaging media route |
 
 **Non-functional.**
 - *Security:* access is covered for one outsider per case. The full privilege matrix stays in server-api `storage/auth`.
@@ -100,10 +101,14 @@ DT matrix: a member of the container (the Space admin; the conversation's recipi
 - a Space admin's browser can attach a document to a post and add an image to a gallery;
 - a chat member's browser can send a document (local stack);
 - the server records each upload, in its end location;
-- each URL serves the upload (identical bytes for documents; same type and pixel size for images) to a member, and refuses an outsider;
-- the platform refuses an executable reference or chat attachment, and a non-image gallery item, without storing anything.
+- each URL serves the upload (identical bytes for documents; same type and pixel size for images), and refuses a signed-in outsider with 403;
+- each URL is served to a member who did not upload it (RF-1, MG-1: `space.member`; MA-1: the recipient), not only to the uploader;
+- the **server** refuses an executable as a post reference without storing anything;
+- the **client** refuses an executable chat attachment and a non-image gallery item before anything is sent, and nothing is stored.
 
 It does **not** prove:
+- that the server refuses a non-image gallery visual or an executable chat attachment (only the client is exercised; see *Not covered*);
+- that RF and MG pass on test-alkem.io (not yet run; see *Build notes*);
 - server-side size limits;
 - relocation from the temporary area on create;
 - deletion of stored files.
@@ -113,6 +118,10 @@ It does **not** prove:
 **Files.** `file-uploads.helpers.ts`, `us1-reference-file.spec.ts`, `us2-media-gallery.spec.ts`, `us3-message-attachment.spec.ts`. Lib (`lib/src/scenario/functions/storage/stored-files.ts`, documents in `lib/src/scenario/graphql/queries/storage/`): `readCalloutStoredFiles`, `readStoredDocument`, `storedDocumentIdOf`, `downloadStoredFile` (RAW), `readConversationStoredFiles`, `createConversation`, `leaveConversation`. The `MimeType` enum is re-exported, and each new name and enum member is listed in `lib-contract.it-spec.ts`, with one storage shape case. The generated lib types were regenerated from server `develop`'s committed `schema.graphql`, which also brings in develop's platform-promote additions. Registered as nightly project `File uploads` (tier `extended`) and local-stack project `Local stack — message attachments`.
 
 **Local runs** (local develop stack: server `e120d25a1`, client-web `25ded1467`; branded Chrome, headless), 2026-11-12. Run 1: `File uploads` 4/4, local stack 2/2. Run 2: `File uploads` 4/4, local stack 2/2. Both Spaces were removed in each run, and the group conversation and both users were removed with it. test-alkem.io has not been run yet (#721 asks for two green runs there for RF/MG).
+
+**CI precedent for REST content reads.** RF-1, MG-1 and MA-1 read file bytes over the storage REST route (`downloadStoredFile`). The house precedent skips such reads on CI: `server-api/…/storage/uploads.it-spec.ts` gates `read uploaded file` / `read uploaded visual` on `!process.env.CI` (`docs/qa-knowledge/harness.md`, "Document content reads … are skipped on CI"), and the reason was never recorded. The nightly `File uploads` project runs these reads from the CI runner against test-alkem.io, so the two test-alkem.io runs #721 asks for are the first proof that this works there. If they fail on the REST read, record the cause here before changing any oracle.
+
+**QA challenge fixes (2026-11-13, static only, not yet run).** The positive download in RF-1 and MG-1 is repeated as `space.member`, now a plain member of the seeded Space, because the uploader is served by the document's creator rule and cannot show that members are. `expectDownloadRefused` now requires 403 (file-service `serveAuthorizedDocument`) instead of any 4xx. Neither change has run on a stack, and neither has its own red-proof yet. If `space.member` is refused, that is a product finding (members cannot open a file attached to a post), not a test to loosen.
 
 **Red-proof (each oracle made to fail once, then restored).**
 

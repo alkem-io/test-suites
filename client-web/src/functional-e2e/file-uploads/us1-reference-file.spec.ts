@@ -37,7 +37,8 @@ import {
  * One private Space, two posts (framing NONE), each case edits its own post:
  *   RF-1 "J11 reference <uid>"   gets a PDF reference
  *   RF-2 "J11 rejected <uid>"    is offered an executable
- * actor `space.admin` (Space admin) · outsider `non.space` (read-only use)
+ * actor `space.admin` (Space admin) · member `space.member` (downloads only)
+ * · outsider `non.space` (read-only use)
  */
 const uid = UniqueIDGenerator.getID();
 let scenario: OrganizationWithSpaceModel | undefined;
@@ -166,8 +167,11 @@ test('RF-1 — the space admin attaches a PDF to a post as a reference; storage 
     },
   ]);
 
-  // Read-back 2: the URL serves the uploaded bytes to a member of the Space.
+  // Read-back 2: the URL serves the uploaded bytes to the uploader and to a
+  // plain member who did not upload it (the uploader alone is served by the
+  // document's creator rule, whatever the Space grants).
   await expectServesExactly(servedUrl, payload, TestUser.SPACE_ADMIN);
+  await expectServesExactly(servedUrl, payload, TestUser.SPACE_MEMBER);
   // Read-back 3: a signed-in user outside the private Space is refused it.
   await expectDownloadRefused(servedUrl, payload, TestUser.NON_SPACE_MEMBER);
 

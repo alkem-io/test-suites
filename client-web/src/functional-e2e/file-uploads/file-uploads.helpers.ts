@@ -96,7 +96,13 @@ export const executablePayload = (
   ]),
 });
 
-/** A PRIVATE, invitation-only L0 Space with `space.admin` as its admin, nothing seeded in it. */
+/**
+ * A PRIVATE, invitation-only L0 Space with `space.admin` as its admin and
+ * `space.member` as a plain member, nothing seeded in it. The uploader is
+ * served its own document by the document's creator rule (server
+ * `document.service.authorization.ts`), so only a member who did not upload
+ * proves the Space's member access reaches the file.
+ */
 export const seedUploadSpace = (
   area: string,
   uid: string
@@ -107,7 +113,7 @@ export const seedUploadSpace = (
       collaboration: {},
       community: {
         admins: [TestUser.SPACE_ADMIN],
-        members: [TestUser.SPACE_ADMIN],
+        members: [TestUser.SPACE_ADMIN, TestUser.SPACE_MEMBER],
       },
       settings: {
         privacy: { mode: SpacePrivacyMode.Private },
@@ -188,8 +194,13 @@ export const expectServesExactly = async (
 };
 
 /**
- * The negative half: `actor` (no access to the container) is refused the URL,
- * and is not handed the bytes in a "successful" error page either.
+ * The negative half: `actor` (no access to the container) is refused the URL
+ * with the authorization denial, and is not handed the bytes in a
+ * "successful" error page either. file-service answers 403 "insufficient
+ * privileges" on both the document route and the by-reference route
+ * (`public_handler.go › serveAuthorizedDocument`). A 401 (no actor identity),
+ * 404 (no such document) or 400 (bad by-reference query) is a refusal for the
+ * wrong reason, so the status is exact.
  */
 export const expectDownloadRefused = async (
   url: string,
@@ -199,12 +210,8 @@ export const expectDownloadRefused = async (
   const refused = await downloadStoredFile(url, actor);
   expect(
     refused.status,
-    `download of ${payload.name} by an outsider`
-  ).toBeGreaterThanOrEqual(400);
-  expect(
-    refused.status,
-    `download of ${payload.name} by an outsider`
-  ).toBeLessThan(500);
+    `download of ${payload.name} by an outsider is the authorization denial`
+  ).toBe(403);
   expect(
     refused.bytes.includes(payload.buffer),
     'the refusal carries none of the file'
@@ -218,11 +225,9 @@ export const openCalloutDialog = async (
   title: string
 ): Promise<Locator> => {
   await page.goto(url);
-  const dialog = page
-    .getByRole('dialog')
-    .filter({
-      has: page.getByRole('heading', { level: 1, name: title, exact: true }),
-    });
+  const dialog = page.getByRole('dialog').filter({
+    has: page.getByRole('heading', { level: 1, name: title, exact: true }),
+  });
   await expect(dialog).toBeVisible({ timeout: 30_000 });
   return dialog;
 };

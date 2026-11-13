@@ -41,7 +41,8 @@ import {
  * One private Space, two media-gallery posts, each case uses its own:
  *   MG-1 "J11 gallery <uid>"   gets one PNG
  *   MG-2 "J11 refused <uid>"   is offered a text file, then a PNG (control)
- * actor `space.admin` (Space admin) · outsider `non.space` (read-only use)
+ * actor `space.admin` (Space admin) · member `space.member` (downloads only)
+ * · outsider `non.space` (read-only use)
  */
 const uid = UniqueIDGenerator.getID();
 let scenario: OrganizationWithSpaceModel | undefined;
@@ -151,12 +152,20 @@ test('MG-1 — the space admin adds an image to a media gallery; storage serves 
     temporaryLocation: false,
   });
 
-  // Read-back 2: the image URL serves the uploaded image to a member.
+  // Read-back 2: the image URL serves the uploaded image to the uploader and
+  // to a plain member who did not upload it (the uploader alone is served by
+  // the document's creator rule, whatever the Space grants).
   await expectServesImage(
     imageUrl,
     payload,
     stored!.size,
     TestUser.SPACE_ADMIN
+  );
+  await expectServesImage(
+    imageUrl,
+    payload,
+    stored!.size,
+    TestUser.SPACE_MEMBER
   );
   // Read-back 3: a signed-in user outside the private Space is refused it.
   await expectDownloadRefused(imageUrl, payload, TestUser.NON_SPACE_MEMBER);
