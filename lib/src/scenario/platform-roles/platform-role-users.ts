@@ -102,11 +102,13 @@ const roleNameOf = (role: PlatformRoleName): RoleName =>
  * refuses to continue if any of them holds anything else — every "this role is
  * refused" assertion, API or UI, rests on that.
  *
- * Idempotent and cheap once seeded: 15 sign-ins and 15 reads, no writes.
+ * Idempotent and cheap once seeded: 15 sign-ins and 15 reads, no writes, and
+ * no registration traffic on either provisioning path.
  */
 export const seedPlatformRoleUsers =
   async (): Promise<SeededPlatformRoleUsers> => {
     const sdk = getGraphqlClient();
+    const signedIn: Partial<Record<PlatformRoleName, string>> = {};
 
     // Same two paths as the root setup: the Kratos ADMIN API where it is
     // reachable (CI), self-service registration otherwise. The root setup
@@ -114,8 +116,16 @@ export const seedPlatformRoleUsers =
     if (testConfiguration.endPoints.kratos.admin) {
       await provisionTestIdentities(Object.values(PLATFORM_ROLE_USERS));
     } else if (testConfiguration.registerUsers) {
-      for (const userName of Object.values(PLATFORM_ROLE_USERS)) {
-        await registerTestUser(userName);
+      // Register only a user who cannot sign in yet. `registerTestUser` on an
+      // EXISTING identity still opens a fresh verification flow (a mail into
+      // the shared MailSlurper inbox plus a >=1 s poll) — 14 of them on every
+      // call, and the nightly calls this once per spec file (QA-CH-01, #727).
+      for (const role of PLATFORM_ROLE_NAMES) {
+        try {
+          signedIn[role] = await getUserToken(platformRoleEmail(role));
+        } catch {
+          await registerTestUser(PLATFORM_ROLE_USERS[role]);
+        }
       }
     }
 
@@ -132,7 +142,8 @@ export const seedPlatformRoleUsers =
     const contaminated: string[] = [];
 
     for (const role of PLATFORM_ROLE_NAMES) {
-      tokens[role] = await getUserToken(platformRoleEmail(role));
+      tokens[role] =
+        signedIn[role] ?? (await getUserToken(platformRoleEmail(role)));
       let me = await whoAmI(tokens[role]);
       userIds[role] = me.id;
 

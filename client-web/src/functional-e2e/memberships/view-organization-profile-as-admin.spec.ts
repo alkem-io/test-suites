@@ -1,26 +1,22 @@
 // spec: client-web/src/functional-e2e/plans/memberships-test-plan.md
-// seed: client-web/src/functional-e2e/seed-memberships.spec.ts
 
 import { expect } from '@playwright/test';
 import {
-  TestUser,
   TestScenarioFactory,
+  TestUser,
   TestUserManager,
+  type TestScenarioConfig,
 } from '@alkemio/tests-lib';
-import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
-import { TestScenarioConfig } from '@alkemio/tests-lib/scenario/config/test-scenario-config';
-import {
-  CommunityMembershipPolicy,
-  SpacePrivacyMode,
-} from '@alkemio/client-lib';
+import type { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import { createAuthenticatedSessionFixture } from '../fixtures/authenticated-session.fixture';
+import { baseUrl, teardownScenario } from '../helpers/space-access.helper';
+import { uniqueName } from './memberships.helpers';
 
 const { test, setupAuthentication, teardownAuthentication } =
   createAuthenticatedSessionFixture({
     storageStateName: 'view-org-profile-as-admin.json',
     cleanupAfterTests: process.env.cleanupAfterTests === 'true',
   });
-const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 
 let baseScenario: OrganizationWithSpaceModel;
 
@@ -35,7 +31,7 @@ const scenarioConfig: TestScenarioConfig = {
   space: {
     about: {
       profile: {
-        displayName: 'Membership Test Space',
+        displayName: uniqueName('Membership Test Space'),
         tagline: 'Testing space memberships',
       },
     },
@@ -49,23 +45,26 @@ const scenarioConfig: TestScenarioConfig = {
   },
 };
 
-test.describe('Organization Profile Access', () => {
-  test.beforeAll(async ({ browser }) => {
-    test.setTimeout(60_000);
-    baseScenario = await TestScenarioFactory.createBaseScenario(scenarioConfig);
-    // Login as ORGANIZATION_ADMIN
-    await setupAuthentication(
-      browser,
-      TestUserManager.users.organizationAdmin.email
-    );
-  });
+test.beforeAll(async ({ browser }) => {
+  test.setTimeout(60_000);
+  baseScenario = await TestScenarioFactory.createBaseScenario(scenarioConfig);
+  // Login as ORGANIZATION_ADMIN
+  await setupAuthentication(
+    browser,
+    TestUserManager.users.organizationAdmin.email
+  );
+});
 
-  test.afterAll(async () => {
-    test.setTimeout(45_000);
+// File level, so it also runs when a failure retires the worker mid-file.
+test.afterAll(async () => {
+  try {
     await teardownAuthentication();
-    await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
-  });
+  } finally {
+    await teardownScenario(baseScenario);
+  }
+});
 
+test.describe('Organization Profile Access', () => {
   // same as member test
   test(
     'View Organization Profile - As Admin',
@@ -88,7 +87,7 @@ test.describe('Organization Profile Access', () => {
         level: 1,
         name: new RegExp(baseScenario.organization.profile.displayName, 'i'),
       });
-      await expect(orgNameHeading).toBeVisible({ timeout: 2000 });
+      await expect(orgNameHeading).toBeVisible();
 
       // Verify bio section (CRD org sidebar "Bio" block)
       await expect(
@@ -104,13 +103,13 @@ test.describe('Organization Profile Access', () => {
       // Verify the space created by this organization is displayed
       await expect(
         page.getByText(baseScenario.space.about.profile.displayName).first()
-      ).toBeVisible({ timeout: 5000 });
+      ).toBeVisible();
 
       // Verify access to settings (CRD icon link with accessible name)
       const settingsLink = page.getByRole('link', {
         name: /Open organisation settings/i,
       });
-      await expect(settingsLink).toBeVisible({ timeout: 2000 });
+      await expect(settingsLink).toBeVisible();
 
       // Navigate to settings and verify admin capabilities
       await settingsLink.click();
@@ -121,7 +120,7 @@ test.describe('Organization Profile Access', () => {
       // Verify settings page content is visible (CRD settings tabs)
       await expect(
         page.getByRole('tab', { name: /Profile/i }).first()
-      ).toBeVisible({ timeout: 5000 });
+      ).toBeVisible();
     }
   );
 });

@@ -347,6 +347,21 @@ _Searched 2026-11-09, branch `qa/w2-journey-7` off `origin/develop` @ `afbefaf2`
 
 **Search again with:** `git grep -n -E "settings/about|settings/profile|updateSpace\(|updateUser\(|updateOrganization\(|createOrganization|readSpaceAbout|getUserData|readOrganization|tagsets|Create Organisation" <ref> -- client-web/src server-api/src/functional-api lib/src/scenario ':!lib/src/core/generated'`.
 
+## Contact leads — message an organisation or a Space's leads; organisation notification setting (W2 journey 10)
+
+_Searched 2026-11-12, branch `qa/w2-journey-10` off `origin/develop` @ `ef405cc0`, against client-web `develop` and server `develop` @ `e120d25a1`. Plan: `client-web/src/functional-e2e/contact-leads/contact-leads-test-plan.md` (6 cases, 5 live; M1-2 skipped on reproduced server defect J10-D1; C3-1/C3-2 `@local-stack`)._
+
+| Behaviour | Coverage | Where |
+| --- | --- | --- |
+| Message an organisation from its page; one mail per admin, none to an associate, one sender copy | Toast only (`contributors-callout/us3-card-menu` US3-AS3); API with all-inbox counts (`notifications/organization/user-to-organization.it-spec.ts`) | `contact-leads/us1-message-organisation.spec.ts` › M1-1 |
+| An admin who is not an associate gets the organisation message | **None**; reproduced defect J10-D1 | `us1-message-organisation.spec.ts` › M1-2 (skipped) |
+| "Receive direct messages to my organisation" email toggled in the UI persists across reload, reads back, is honoured, toggles back | **None** (US2-AS6 in `organization-space-invitations` covers a different row on a shared persona) | `contact-leads/us2-organisation-message-setting.spec.ts` › N1-1..N1-3 |
+| Space "Contact Leads" → one 1:1 chat per lead, none to a non-lead | **None** end to end (client and server unit tests only) | `contact-leads/us3-contact-space-leads.spec.ts` › C3-1 (`@local-stack`) |
+| Direct-message digest mail per lead after Contact Leads | **None** | `us3-contact-space-leads.spec.ts` › C3-2 (`@local-stack`) |
+| Legacy lead email (`sendMessageToCommunityLeads`) | API only; **no UI caller left** | server-api `notifications/space/communication/user-to-community-leads-*.it-spec.ts` |
+
+**Search again with:** `git grep -n -E "sendMessageToOrganization|sendMessageToCommunityLeads|sendDirectMessageToUsers|Contact Leads|adminMessageReceived|sent a message to your" <ref> -- client-web/src server-api/src/functional-api lib/src/scenario ':!lib/src/core/generated'`.
+
 ## Orphan-free deletion: owned records and policies after a delete (server#6614 / #6637)
 
 _Searched 2026-10-16, test-suites `develop` @ `b451c329`, server `origin/develop` @ `1691e98e9` (contains the #6637 merge `08f088eaa`). Plan: `server-api/src/functional-api/orphan-free-deletion/orphan-free-deletion-test-plan.md` (Approved), plus the server#6614 addendum (Approved 2026-10-16; CV-1 built) in `journey/conversion/conversion-test-plan.md`._
@@ -374,7 +389,7 @@ _Searched 2026-11-03, branch `qa/excalidraw-yjs-13-undo-plan` off `origin/develo
 
 | Area | Status | Evidence |
 | --- | --- | --- |
-| Two-user (collaborative) whiteboard editing, convergence, presence, in test-suites | **Partial (2026-11-04), skip-gated** | `whiteboard-collaboration/undo-races-peer-edit.spec.ts` › WC-01 (two browsers + Node peer, convergence E7, presence as the ordering gate) and `damaged-board-loads.spec.ts` › WC-02. Both are `test.skip` until the environment client-web resolves `@excalidraw-yjs/excalidraw` >= 0.5.6; `WHITEBOARD_COLLAB_FIXED=1` lifts it. General two-user editing beyond these two incidents: none; manual: release checklist §3.2 |
+| Two-user (collaborative) whiteboard editing, convergence, presence, in test-suites | **Partial (2026-11-04); skip gate lifted 2026-11-12** | `whiteboard-collaboration/undo-races-peer-edit.spec.ts` › WC-01 (two browsers + Node peer, convergence E7, presence as the ordering gate) and `damaged-board-loads.spec.ts` › WC-02. Both are `test.skip` until the environment client-web resolves `@excalidraw-yjs/excalidraw` >= 0.5.6; `WHITEBOARD_COLLAB_FIXED=1` lifts it. General two-user editing beyond these two incidents: none; manual: release checklist §3.2 |
 | Undo/redo in the whiteboard editor, any layer of test-suites | **Partial (2026-11-04), skip-gated** | WC-01: one undo of a drag racing a lower-id peer, the repaired values, no extra undo step, redo enabled (E6). Plain single-user undo/redo: none in test-suites (package level only) |
 | Whiteboard content read-back or raw write from the harness | **Full (2026-11-04)** through the Node Yjs peer, not GraphQL (`Whiteboard` still has no `content` field and no input takes content) | `lib/src/collab/whiteboard-peer.ts` › `connectWhiteboardPeer` (`rawElement`, `liveElements`, `write`, hold/release inbound); self-test `server-api/src/contract/whiteboard-peer.it-spec.ts` › T-1a–T-1h (contract project, on demand) |
 | Undo racing a concurrent same-key peer edit (lower peer id) | Full at **package** level only | excalidraw-yjs `packages/element/src/__tests__/Scene.undoConcurrentKeyLoss.test.ts` › test 1 (presence only; values unpinned) |
