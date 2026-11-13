@@ -192,19 +192,21 @@ export const logOut = async (page: Page): Promise<void> => {
 };
 
 /**
- * On /second-factor: one notice, and the refusal never reached a toast — held
- * for as long as a positive check would have waited for the toast to mount.
+ * How long an absence is held. The client has no product constant for when a
+ * toast or the reminder mounts, so the window is the budget a positive check
+ * of the same element would have been given: shorter, and an absence could
+ * pass only because the element had not mounted yet.
  */
-export const expectRefusalPage = async (page: Page): Promise<void> => {
-  await page.waitForURL(url => url.pathname === '/second-factor');
-  await expect(
-    page.getByRole('heading', { name: COPY.pageTitle, exact: true })
-  ).toBeVisible();
-  await expect(page.getByText(COPY.pageRequired, { exact: true })).toHaveCount(1);
-  const toasted = await page
-    .getByText(COPY.refusalToast, { exact: true })
+const ABSENCE_HOLD_MS = TIERS.long.expect;
+
+/** Fails with `message` if `locator` becomes visible within the hold. */
+export const expectStaysAbsent = async (
+  locator: Locator,
+  message: string
+): Promise<void> => {
+  const appeared = await locator
     .first()
-    .waitFor({ state: 'visible', timeout: TIERS.long.expect })
+    .waitFor({ state: 'visible', timeout: ABSENCE_HOLD_MS })
     .then(
       () => true,
       (error: unknown) => {
@@ -212,7 +214,20 @@ export const expectRefusalPage = async (page: Page): Promise<void> => {
         throw error;
       }
     );
-  expect(toasted, 'the second-factor refusal reached a toast').toBe(false);
+  expect(appeared, message).toBe(false);
+};
+
+/** On /second-factor: one notice, and the refusal never reached a toast. */
+export const expectRefusalPage = async (page: Page): Promise<void> => {
+  await page.waitForURL(url => url.pathname === '/second-factor');
+  await expect(
+    page.getByRole('heading', { name: COPY.pageTitle, exact: true })
+  ).toBeVisible();
+  await expect(page.getByText(COPY.pageRequired, { exact: true })).toHaveCount(1);
+  await expectStaysAbsent(
+    page.getByText(COPY.refusalToast, { exact: true }),
+    'the second-factor refusal reached a toast'
+  );
 };
 
 /** The user's own Security tab, scrolled to the two-step section. */

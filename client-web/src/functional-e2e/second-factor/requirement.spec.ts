@@ -6,7 +6,7 @@
 // presented as a bearer by a refused sign-in. Always an organisation rule on a
 // throwaway organisation — never the platform rule.
 import { randomUUID } from 'crypto';
-import { errors, expect, request, test } from '@playwright/test';
+import { expect, request, test } from '@playwright/test';
 import {
   ageRuleSince,
   clearAddressCounters,
@@ -21,7 +21,6 @@ import {
   withThrowawayOrganization,
   type ThrowawayUser,
 } from '@alkemio/tests-lib';
-import { TIERS } from '../../../config/playwright.shared';
 import { must, sessionActor } from '../helpers/lib-actor.helper';
 import { welcomeHeading } from '../authentication/common-authentication-page-elements';
 import {
@@ -29,6 +28,7 @@ import {
   baseUrl,
   expectRefusalPage,
   expectSignedIn,
+  expectStaysAbsent,
   freshPage,
   getQuietly,
   nameIdOf,
@@ -181,23 +181,15 @@ test.describe('US4 — an organisation requires a second factor', () => {
               .click();
             await expect(reminder).toHaveCount(0);
             // The absence after a reload means something only once the read
-            // the reminder renders from has been answered in full, and only
-            // if it holds for as long as a positive check would have waited
-            // for the reminder to come back.
+            // the reminder renders from has been answered in full.
             const reread = requirementRead(page);
             await page.reload();
             await (await reread).finished();
             await expectSignedIn(page);
-            const cameBack = await reminder
-              .waitFor({ state: 'visible', timeout: TIERS.long.expect })
-              .then(
-                () => true,
-                (error: unknown) => {
-                  if (error instanceof errors.TimeoutError) return false;
-                  throw error;
-                }
-              );
-            expect(cameBack, 'the dismissed reminder came back after a reload').toBe(false);
+            await expectStaysAbsent(
+              reminder,
+              'the dismissed reminder came back after a reload'
+            );
           } finally {
             await context.close();
           }

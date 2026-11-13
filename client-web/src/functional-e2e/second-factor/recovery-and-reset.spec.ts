@@ -98,8 +98,9 @@ const generateCodes = async (
   await expect(
     recovery.getByText(COPY.recoveryActive, { exact: true })
   ).toBeVisible();
-  // Shown once: once confirmed, the codes are no longer on screen.
+  // Shown once: once confirmed, neither the notice nor the codes are on screen.
   await expect(recovery.getByText(COPY.shownOnce, { exact: true })).toHaveCount(0);
+  await expect(recovery.getByText(codes[0], { exact: true })).toHaveCount(0);
   return codes;
 };
 
