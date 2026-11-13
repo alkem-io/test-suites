@@ -186,32 +186,27 @@ export default defineConfig({
       // and the Kratos admin port. Files run one at a time because the rule
       // switches are platform-wide. `*.measure.ts` files are one-off
       // measurements, run by path (see their headers), never by this project.
-      // Defined only when SECOND_FACTOR_TRACK is set (`test:second-factor`
-      // sets it): its global setup clears every address's sign-in counters,
-      // so a bare `vitest run` must not select it.
-      ...(process.env.SECOND_FACTOR_TRACK
-        ? [
-            {
-              extends: true as const,
-              test: {
-                name: 'second-factor',
-                include: ['src/functional-api/second-factor/**/*.it-spec.ts'],
-                // Below the live track's budget, so a hung case reports itself.
-                testTimeout: 300_000,
-                hookTimeout: 300_000,
-                globalSetup: [
-                  './src/functional-api/second-factor/_support/global-setup.ts',
-                ],
-                fileParallelism: false,
-                // Its files run last in a multi-project run: its cases clear
-                // the per-address counters and count this address's sign-ins,
-                // so no other project may sign in from the same address
-                // meanwhile.
-                sequence: { groupOrder: 4 },
-              },
-            },
-          ]
-        : []),
+      {
+        extends: true as const,
+        test: {
+          name: 'second-factor',
+          include: ['src/functional-api/second-factor/**/*.it-spec.ts'],
+          // Below the live track's budget, so a hung case reports itself.
+          testTimeout: 300_000,
+          hookTimeout: 300_000,
+          globalSetup: [
+            './src/functional-api/second-factor/_support/global-setup.ts',
+          ],
+          fileParallelism: false,
+          // Its files run last in a multi-project run: its cases clear the
+          // per-address counters and count this address's sign-ins, so no
+          // other project may sign in from the same address meanwhile. Its
+          // global setup is not ordered: vitest runs every selected project's
+          // setup before any file, so a bare `vitest run` needs this
+          // project's preconditions too.
+          sequence: { groupOrder: 4 },
+        },
+      },
       // The second-factor one-off measurements, never a test run: each is run
       // once by naming its file (command in its header). Defined only when
       // SECOND_FACTOR_MEASURE is set, so a bare `vitest run` never sends their
