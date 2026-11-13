@@ -261,6 +261,23 @@ export default defineConfig(
         tier: 'extended',
       }),
       suite({
+        // W2 extras (test-suites#722, catalogue CT-8): a Tasks board created,
+        // added to and moved on in the browser, read back through the lib.
+        // One self-seeded public L0 Space per file; admin, member and
+        // non-member contexts.
+        name: 'Task boards',
+        testMatch: ['/task-boards/*.spec.ts'],
+        tier: 'extended',
+      }),
+      suite({
+        // W2 extras (test-suites#722, catalogue SP-10): a Space's community
+        // guidelines edited in Space Settings, reloaded, read back through the
+        // lib and seen by a member. One self-seeded L0 Space.
+        name: 'Community guidelines',
+        testMatch: ['/community-guidelines/*.spec.ts'],
+        tier: 'extended',
+      }),
+      suite({
         name: 'User Profile',
         testMatch: [
           '/user-profile/access-user-profile-from-dashboard.spec.ts',

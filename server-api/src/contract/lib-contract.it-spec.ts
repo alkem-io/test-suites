@@ -260,6 +260,10 @@ const FUNCTIONS: string[] = [
   'updateContributionsSortOrder',
   // workspace#080 Form walks (W2 Tier 0 item 6): disposable identities
   'registerVerifiedUser',
+  // W2 extras (test-suites#722): task boards (CT-8), community guidelines (SP-10)
+  'readTaskBoard',
+  'moveTaskToColumn',
+  'readSpaceCommunityGuidelines',
 ];
 
 /** Classes and namespaces the specs construct or call statically. */
@@ -276,7 +280,7 @@ const ENUM_MEMBERS: Record<string, string[]> = {
   SpaceLevel: ['L0', 'L1', 'L2'],
   SpaceVisibility: ['Active', 'Archived', 'Demo'],
   TagsetReservedName: ['FlowState'],
-  AuthorizationPrivilege: ['MovePost', 'Update'],
+  AuthorizationPrivilege: ['MovePost', 'Update', 'MoveTask', 'Contribute'],
   ActorType: ['User', 'Organization', 'VirtualContributor'],
   SidebarWidget: ['About', 'Community', 'Events', 'Activity'],
   NotificationEvent: ['OrganizationAdminSpaceCommunityInvitation'],
