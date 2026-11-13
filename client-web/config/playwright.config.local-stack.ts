@@ -66,6 +66,14 @@ export default defineConfig(
         tier: 'long',
       }),
       suite({
+        // The cluster ingress does not route /health/ready, so the canary's
+        // readiness case runs here only.
+        name: 'Local stack — platform readiness',
+        testMatch: ['/ts7-platform-smoke.spec.ts'],
+        grep: LOCAL_STACK_TAG,
+        tier: 'standard',
+      }),
+      suite({
         // workspace#034 (conversation-message notifications, notifications#522):
         // queue counters plus MESSAGING_DIGEST_* windows. US1/US2 are tagged at
         // describe level; US3's tagged AS3/AS4 sit inside a serial walk that

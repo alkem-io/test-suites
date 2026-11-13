@@ -23,6 +23,15 @@ export default defineConfig(
     reportFolder: 'playwright-report',
     projects: [
       suite({
+        // Migration canary (W2 Tier 0 item 8): listed first so a server that
+        // cannot answer an anonymous metadata query or sign the admin in is
+        // seen before any longer suite starts. The readiness case is
+        // `@local-stack` (the cluster ingress does not route /health/ready).
+        name: 'Platform smoke',
+        testMatch: ['/ts7-platform-smoke.spec.ts'],
+        tier: 'standard',
+      }),
+      suite({
         name: 'Authentication',
         testMatch: [
           '/authentication/authentication-page-verification.spec.ts',
@@ -389,12 +398,11 @@ export default defineConfig(
       suite({
         // workspace#077 (richer contributor cards, client-web#10316): every
         // file seeds its own public Space through the API. The shipped
-        // 0.1contributors-callout.spec.ts is deliberately NOT listed: its
-        // cleanup lives only in the Member block, so any Admin-block failure
-        // leaks a Space, an Organization and a VC. List it once its cleanup
-        // moves to file level.
+        // 0.1 is the only UI create/edit/delete of the contributors framing
+        // (W2 Tier 0 item 7); its scenario is cleaned up at file level.
         name: 'Contributors callout',
         testMatch: [
+          '/contributors-callout/0.1contributors-callout.spec.ts',
           '/contributors-callout/us1-card-content.spec.ts',
           '/contributors-callout/us2-nothing-else-changes.spec.ts',
           '/contributors-callout/us3-card-menu.spec.ts',
