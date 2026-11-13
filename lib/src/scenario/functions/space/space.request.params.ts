@@ -168,6 +168,15 @@ export const updateCommunityGuidelines = (
     sdk.UpdateCommunityGuidelinesData({ communityGuidelinesData }, headers),
   );
 
+/** A Space's community guidelines as `actor` may read them: title, body (markdown) and related links. */
+export const readSpaceCommunityGuidelines = (
+  spaceId: string,
+  actor: GraphqlActor = TestUser.GLOBAL_ADMIN,
+) =>
+  runAs(actor, (sdk, headers) =>
+    sdk.ReadSpaceCommunityGuidelines({ spaceId }, headers),
+  );
+
 /** The space's templates-set id and its about-profile tagset id. */
 export const readSpaceTemplatesManager = (
   spaceId: string,

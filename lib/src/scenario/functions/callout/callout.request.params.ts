@@ -225,6 +225,109 @@ export const readPost = (
 ) =>
   runAs(actor, (sdk, headers) => sdk.GetPostData({ postId }, headers));
 
+/**
+ * A Tasks board as the server stores it: its ordered columns (the callout's
+ * reserved `task` tagset, `allowedValues`), the per-column counts, the
+ * contribution types it takes, the actor's privileges on it (MOVE_TASK,
+ * CONTRIBUTE …), and every task with its column (the contribution's `task`
+ * tag), its position (`sortOrder`, ascending) and its post title.
+ */
+export const readTaskBoard = (
+  calloutId: string,
+  actor: GraphqlActor = TestUser.GLOBAL_ADMIN,
+) => runAs(actor, (sdk, headers) => sdk.ReadTaskBoard({ calloutId }, headers));
+
+/** Move a task (a Tasks board contribution) to another column, as `actor`; returns its column tag and sortOrder. */
+export const moveTaskToColumn = (
+  contributionID: string,
+  column: string,
+  actor: GraphqlActor,
+) =>
+  runAs(actor, (sdk, headers) =>
+    sdk.MoveTaskToColumn({ moveData: { contributionID, column } }, headers),
+  );
+
+/**
+ * Reorder posts: the given callouts get ascending `sortOrder` in the order
+ * passed, renumbered from the lowest current value among them. Gated on
+ * UPDATE on the callouts set. Returns each callout's id and new sortOrder.
+ */
+export const updateCalloutsSortOrder = (
+  calloutsSetID: string,
+  calloutIDs: string[],
+  actor: GraphqlActor = TestUser.GLOBAL_ADMIN,
+) =>
+  runAs(actor, (sdk, headers) =>
+    sdk.UpdateCalloutsSortOrder(
+      { sortOrderData: { calloutsSetID, calloutIDs } },
+      headers,
+    ),
+  );
+
+/**
+ * Reorder the responses of one post: the given contributions get
+ * `sortOrder` 1..n in the order passed. Gated on UPDATE on the callout
+ * (MOVE_TASK on a Tasks board).
+ */
+export const updateContributionsSortOrder = (
+  calloutID: string,
+  contributionIDs: string[],
+  actor: GraphqlActor = TestUser.GLOBAL_ADMIN,
+) =>
+  runAs(actor, (sdk, headers) =>
+    sdk.UpdateContributionsSortOrder(
+      { sortOrderData: { calloutID, contributionIDs } },
+      headers,
+    ),
+  );
+
+/** Move a response to another post of the same callouts set. Gated on MOVE_CONTRIBUTION on the response. */
+export const moveContributionToCallout = (
+  contributionID: string,
+  calloutID: string,
+  actor: GraphqlActor = TestUser.GLOBAL_ADMIN,
+) =>
+  runAs(actor, (sdk, headers) =>
+    sdk.moveContributionToCallout(
+      { moveContributionData: { contributionID, calloutID } },
+      headers,
+    ),
+  );
+
+/** A post's responses with their `sortOrder`, as the actor sees them. */
+export const readCalloutContributionsOrder = (
+  calloutId: string,
+  actor: GraphqlActor = TestUser.GLOBAL_ADMIN,
+) =>
+  runAs(actor, (sdk, headers) =>
+    sdk.ReadCalloutContributionsOrder({ calloutId }, headers),
+  );
+
+/**
+ * One response looked up by id (`lookup.contribution`, gated on READ on the
+ * response itself): the actor's privileges on it and its post's url.
+ */
+export const readContribution = (
+  contributionId: string,
+  actor: GraphqlActor = TestUser.GLOBAL_ADMIN,
+) =>
+  runAs(actor, (sdk, headers) =>
+    sdk.ReadContribution({ contributionId }, headers),
+  );
+
+/**
+ * What a response's url resolves to for the actor: the resolver state
+ * (Resolved / Forbidden / NotFound) and the callout, contribution and post ids
+ * it reached.
+ */
+export const resolveContributionUrl = (
+  url: string,
+  actor: GraphqlActor = TestUser.GLOBAL_ADMIN,
+) =>
+  runAs(actor, (sdk, headers) =>
+    sdk.ResolveContributionUrl({ url }, headers),
+  );
+
 // ---------------------------------------------------------------------------
 // Multipart (Upload scalar) operations. The generated SDK posts JSON only, so
 // the two documents that carry a file go through the GraphQL multipart

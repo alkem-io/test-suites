@@ -1,26 +1,32 @@
-// spec: client-web/src/functional-e2e/plans/memberships-test-plan.md
-// seed: client-web/src/functional-e2e/seed-memberships.spec.ts
+// spec: client-web/src/functional-e2e/plans/memberships-test-plan.md (2.1 + 2.3)
 
 import { expect } from '@playwright/test';
 import {
-  TestUser,
-  TestScenarioFactory,
-  TestUserManager,
-} from '@alkemio/tests-lib';
-import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
-import { TestScenarioConfig } from '@alkemio/tests-lib/scenario/config/test-scenario-config';
-import {
   CommunityMembershipPolicy,
   SpacePrivacyMode,
-} from '@alkemio/client-lib';
+  TestScenarioFactory,
+  TestUser,
+  TestUserManager,
+  type TestScenarioConfig,
+} from '@alkemio/tests-lib';
+import type { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import { createAuthenticatedSessionFixture } from '../fixtures/authenticated-session.fixture';
+import {
+  teardownScenario,
+  userIdsInRole,
+} from '../helpers/space-access.helper';
+import {
+  leaveMembership,
+  membershipRow,
+  openMembershipSettings,
+  uniqueName,
+} from './memberships.helpers';
 
 const { test, setupAuthentication, teardownAuthentication } =
   createAuthenticatedSessionFixture({
     storageStateName: 'my-feature-test.json',
     cleanupAfterTests: process.env.cleanupAfterTests === 'true',
   });
-const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 
 let baseScenario: OrganizationWithSpaceModel;
 
@@ -29,7 +35,7 @@ const scenarioConfig: TestScenarioConfig = {
   space: {
     about: {
       profile: {
-        displayName: 'Membership Test Space',
+        displayName: uniqueName('Membership Test Space'),
         tagline: 'Testing space memberships',
       },
     },
@@ -49,75 +55,55 @@ const scenarioConfig: TestScenarioConfig = {
   },
 };
 
-test.describe('User Membership Settings', () => {
-  test.beforeAll(async ({ browser }) => {
-    test.setTimeout(60_000);
-    baseScenario = await TestScenarioFactory.createBaseScenario(scenarioConfig);
-    await setupAuthentication(browser, TestUserManager.users.spaceMember.email);
-  });
+test.beforeAll(async ({ browser }) => {
+  test.setTimeout(60_000);
+  baseScenario = await TestScenarioFactory.createBaseScenario(scenarioConfig);
+  await setupAuthentication(browser, TestUserManager.users.spaceMember.email);
+});
 
-  test.afterAll(async () => {
-    test.setTimeout(45_000);
+// File level, so it also runs when a failure retires the worker mid-file.
+test.afterAll(async () => {
+  try {
     await teardownAuthentication();
-    await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
-  });
+  } finally {
+    await teardownScenario(baseScenario);
+  }
+});
 
+test.describe('User Membership Settings', () => {
   test(
     'Access Own Membership Settings',
     {
       tag: ['@regression'],
     },
     async ({ page }) => {
-      // 1. Navigate to own membership settings
-      await page.goto(
-        `${baseUrl}/user/${TestUserManager.users.spaceMember.nameId}/settings/membership`
-      );
-
-      // 2. Verify URL changed to membership settings
-      await expect(page).toHaveURL(/.*\/settings\/membership/);
-
+      const member = TestUserManager.users.spaceMember;
       const spaceName = baseScenario.space.about.profile.displayName;
+      const roleSetId = baseScenario.space.community.roleSetId;
+      expect(member.id, 'space.member id resolved').not.toBe('');
 
-      // 3. Verify the "My Memberships" section is visible and shows the space.
-      // CRD: memberships are a searchable card grid; narrow to the one space
-      // so the per-card actions are unambiguous.
-      await expect(
-        page.getByRole('heading', { name: /My Memberships/i })
-      ).toBeVisible({ timeout: 5000 });
+      // Precondition (server): the seeded membership exists.
+      expect(await userIdsInRole(roleSetId)).toContain(member.id);
 
-      const search = page.getByPlaceholder('Search memberships...');
-      await search.fill(spaceName);
+      // 1. Own membership settings render, and list the seeded space
+      //    (positive control for the absence asserted after the leave).
+      await openMembershipSettings(page, member.nameId);
+      await expect(page).toHaveURL(/\/settings\/membership$/);
+      await expect(membershipRow(page, spaceName)).toHaveCount(1);
 
-      await expect(
-        page.getByRole('link', { name: spaceName }).first()
-      ).toBeVisible({ timeout: 5000 });
+      // 2. Leave it: the row's "Leave <name>" button, then the destructive
+      //    confirmation; the browser's removeRoleFromUser must answer cleanly.
+      await leaveMembership(page, spaceName);
 
-      // 4. Leave the space.
-      // CRD flow change: the Leave action lives in the membership card's
-      // "More actions" (kebab) menu, then a confirmation alertdialog.
-      await page.getByRole('button', { name: 'More actions' }).first().click();
-      await page.getByRole('menuitem', { name: /Leave/i }).click();
+      // 3. Server: the user no longer holds MEMBER on the space's role set.
+      await expect
+        .poll(() => userIdsInRole(roleSetId))
+        .not.toContain(member.id);
 
-      // Confirm in the destructive alertdialog ("Leave this membership?").
-      const confirmDialog = page.getByRole('alertdialog');
-      await expect(confirmDialog).toBeVisible({ timeout: 5000 });
-      await confirmDialog.getByRole('button', { name: 'Leave' }).click();
-
-      // 5. Re-open membership settings and verify the space is gone.
-      await page.goto(
-        `${baseUrl}/user/${TestUserManager.users.spaceMember.nameId}/settings/membership`
-      );
-      // With leftover memberships the search box exists (narrow to the space);
-      // if this was the last membership the page shows an empty state with no
-      // search box, so only fill it when present.
-      const leftoverSearch = page.getByPlaceholder('Search memberships...');
-      if (await leftoverSearch.isVisible({ timeout: 5000 }).catch(() => false)) {
-        await leftoverSearch.fill(spaceName);
-      }
-
-      await expect(
-        page.getByRole('link', { name: spaceName })
-      ).not.toBeVisible();
+      // 4. UI, after a reload: once the list has rendered (summary or empty
+      //    caption), the space is no longer in it.
+      await openMembershipSettings(page, member.nameId);
+      await expect(membershipRow(page, spaceName)).toHaveCount(0);
     }
   );
 });

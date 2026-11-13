@@ -50627,6 +50627,14 @@ export type UpdateCalloutVisibilityMutation = {
   };
 };
 
+export type UpdateCalloutsSortOrderMutationVariables = Exact<{
+  sortOrderData: UpdateCalloutsSortOrderInput;
+}>;
+
+export type UpdateCalloutsSortOrderMutation = {
+  updateCalloutsSortOrder: Array<{ id: string; sortOrder: number }>;
+};
+
 export type CreateContributionOnCalloutMutationVariables = Exact<{
   contributionData: CreateContributionOnCalloutInput;
 }>;
@@ -50862,6 +50870,14 @@ export type CreateContributionOnCalloutMutation = {
   };
 };
 
+export type UpdateContributionsSortOrderMutationVariables = Exact<{
+  sortOrderData: UpdateContributionCalloutsSortOrderInput;
+}>;
+
+export type UpdateContributionsSortOrderMutation = {
+  updateContributionsSortOrder: Array<{ id: string; sortOrder: number }>;
+};
+
 export type CreateCalloutWithDataMutationVariables = Exact<{
   calloutData: CreateCalloutOnCalloutsSetInput;
 }>;
@@ -51054,6 +51070,25 @@ export type UpdatePollStatusMutationVariables = Exact<{
 
 export type UpdatePollStatusMutation = {
   updatePollStatus: { id: string; status: PollStatus };
+};
+
+export type MoveTaskToColumnMutationVariables = Exact<{
+  moveData: MoveTaskToColumnInput;
+}>;
+
+export type MoveTaskToColumnMutation = {
+  moveTaskToColumn: {
+    id: string;
+    sortOrder: number;
+    classification?:
+      | {
+          id: string;
+          tagsets?:
+            | Array<{ id: string; name: string; tags: Array<string> }>
+            | undefined;
+        }
+      | undefined;
+  };
 };
 
 export type TransferCalloutMutationVariables = Exact<{
@@ -89630,6 +89665,18 @@ export type ReadCalloutContributionsQuery = {
   };
 };
 
+export type ReadCalloutContributionsOrderQueryVariables = Exact<{
+  calloutId: Scalars["UUID"]["input"];
+}>;
+
+export type ReadCalloutContributionsOrderQuery = {
+  lookup: {
+    callout?:
+      | { id: string; contributions: Array<{ id: string; sortOrder: number }> }
+      | undefined;
+  };
+};
+
 export type ReadCalloutFormResponsesQueryVariables = Exact<{
   formID: Scalars["UUID"]["input"];
   first?: InputMaybe<Scalars["Int"]["input"]>;
@@ -89945,6 +89992,30 @@ export type ReadCalloutsSetCalloutsQuery = {
   };
 };
 
+export type ReadContributionQueryVariables = Exact<{
+  contributionId: Scalars["UUID"]["input"];
+}>;
+
+export type ReadContributionQuery = {
+  lookup: {
+    contribution?:
+      | {
+          id: string;
+          authorization?:
+            | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
+            | undefined;
+          post?:
+            | {
+                id: string;
+                nameID: string;
+                profile: { displayName: string; url: string };
+              }
+            | undefined;
+        }
+      | undefined;
+  };
+};
+
 export type ReadMemoDocumentsQueryVariables = Exact<{
   memoId: Scalars["UUID"]["input"];
 }>;
@@ -89956,6 +90027,69 @@ export type ReadMemoDocumentsQuery = {
           id: string;
           signatures: Array<{ id: string }>;
           profile: { storageBucket: { documents: Array<{ id: string }> } };
+        }
+      | undefined;
+  };
+};
+
+export type ReadTaskBoardQueryVariables = Exact<{
+  calloutId: Scalars["UUID"]["input"];
+}>;
+
+export type ReadTaskBoardQuery = {
+  lookup: {
+    callout?:
+      | {
+          id: string;
+          authorization?:
+            | {
+                id: string;
+                myPrivileges?: Array<AuthorizationPrivilege> | undefined;
+              }
+            | undefined;
+          framing: { id: string; profile: { id: string; displayName: string } };
+          settings: {
+            contribution: { allowedTypes: Array<CalloutContributionType> };
+          };
+          classification?:
+            | {
+                id: string;
+                tagsets?:
+                  | Array<{
+                      id: string;
+                      name: string;
+                      allowedValues: Array<string>;
+                      tags: Array<string>;
+                    }>
+                  | undefined;
+              }
+            | undefined;
+          taskColumnCounts?:
+            | Array<{ column: string; count: number }>
+            | undefined;
+          contributions: Array<{
+            id: string;
+            sortOrder: number;
+            classification?:
+              | {
+                  id: string;
+                  tagsets?:
+                    | Array<{ id: string; name: string; tags: Array<string> }>
+                    | undefined;
+                }
+              | undefined;
+            post?:
+              | {
+                  id: string;
+                  profile: {
+                    id: string;
+                    displayName: string;
+                    description?: any | undefined;
+                  };
+                  createdBy?: { id: string } | undefined;
+                }
+              | undefined;
+          }>;
         }
       | undefined;
   };
@@ -111285,6 +111419,39 @@ export type ReadSpaceClassificationsQuery = {
   };
 };
 
+export type ReadSpaceCommunityGuidelinesQueryVariables = Exact<{
+  spaceId: Scalars["UUID"]["input"];
+}>;
+
+export type ReadSpaceCommunityGuidelinesQuery = {
+  lookup: {
+    space?:
+      | {
+          id: string;
+          about: {
+            id: string;
+            guidelines: {
+              id: string;
+              profile: {
+                id: string;
+                displayName: string;
+                description?: any | undefined;
+                references?:
+                  | Array<{
+                      id: string;
+                      name: string;
+                      uri: string;
+                      description?: string | undefined;
+                    }>
+                  | undefined;
+              };
+            };
+          };
+        }
+      | undefined;
+  };
+};
+
 export type ReadSpaceGuidelinesIdQueryVariables = Exact<{
   spaceId: Scalars["UUID"]["input"];
 }>;
@@ -111485,6 +111652,130 @@ export type GetUserRolesQuery = {
   };
 };
 
+export type ReadCalloutStoredFilesQueryVariables = Exact<{
+  calloutId: Scalars["UUID"]["input"];
+}>;
+
+export type ReadCalloutStoredFilesQuery = {
+  lookup: {
+    callout?:
+      | {
+          id: string;
+          framing: {
+            id: string;
+            type: CalloutFramingType;
+            profile: {
+              id: string;
+              url: string;
+              references?:
+                | Array<{
+                    id: string;
+                    name: string;
+                    uri: string;
+                    description?: string | undefined;
+                  }>
+                | undefined;
+              storageBucket: {
+                id: string;
+                allowedMimeTypes: Array<string>;
+                maxFileSize: number;
+                documents: Array<{
+                  id: string;
+                  displayName: string;
+                  mimeType: MimeType;
+                  size: number;
+                  url: string;
+                  temporaryLocation: boolean;
+                }>;
+              };
+            };
+            mediaGallery?:
+              | {
+                  id: string;
+                  visuals: Array<{
+                    id: string;
+                    name: VisualType;
+                    uri: string;
+                    alternativeText?: string | undefined;
+                    sortOrder?: number | undefined;
+                  }>;
+                }
+              | undefined;
+          };
+        }
+      | undefined;
+  };
+};
+
+export type ReadConversationStoredFilesQueryVariables = Exact<{
+  conversationId: Scalars["UUID"]["input"];
+}>;
+
+export type ReadConversationStoredFilesQuery = {
+  lookup: {
+    conversation?:
+      | {
+          id: string;
+          room: {
+            id: string;
+            messages: Array<{
+              id: any;
+              message: any;
+              attachments: Array<{
+                displayName: string;
+                mimeType?: string | undefined;
+                size?: number | undefined;
+              }>;
+            }>;
+          };
+          storageBucket?:
+            | {
+                id: string;
+                allowedMimeTypes: Array<string>;
+                maxFileSize: number;
+                documents: Array<{
+                  id: string;
+                  displayName: string;
+                  mimeType: MimeType;
+                  size: number;
+                  url: string;
+                  temporaryLocation: boolean;
+                }>;
+              }
+            | undefined;
+        }
+      | undefined;
+  };
+};
+
+export type ReadStoredDocumentQueryVariables = Exact<{
+  documentId: Scalars["UUID"]["input"];
+}>;
+
+export type ReadStoredDocumentQuery = {
+  lookup: {
+    document?:
+      | {
+          id: string;
+          displayName: string;
+          mimeType: MimeType;
+          size: number;
+          url: string;
+          temporaryLocation: boolean;
+        }
+      | undefined;
+  };
+};
+
+export type StoredDocumentFragment = {
+  id: string;
+  displayName: string;
+  mimeType: MimeType;
+  size: number;
+  url: string;
+  temporaryLocation: boolean;
+};
+
 export type GetSpaceTemplatesCountByTemplateSetIdQueryVariables = Exact<{
   templateSetId: Scalars["UUID"]["input"];
 }>;
@@ -111668,6 +111959,30 @@ export type ReadTemplatesSetTemplatesQuery = {
                 }
               | undefined;
           }>;
+        }
+      | undefined;
+  };
+};
+
+export type ResolveContributionUrlQueryVariables = Exact<{
+  url: Scalars["String"]["input"];
+}>;
+
+export type ResolveContributionUrlQuery = {
+  urlResolver: {
+    state: UrlResolverResultState;
+    type: UrlType;
+    space?:
+      | {
+          id: string;
+          collaboration: {
+            calloutsSet: {
+              id: string;
+              calloutId?: string | undefined;
+              contributionId?: string | undefined;
+              postId?: string | undefined;
+            };
+          };
         }
       | undefined;
   };

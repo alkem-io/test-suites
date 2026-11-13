@@ -1,19 +1,18 @@
 // spec: client-web/src/functional-e2e/plans/memberships-test-plan.md
-// seed: client-web/src/functional-e2e/seed-memberships.spec.ts
 
 import { expect } from '@playwright/test';
 import {
-  TestUser,
-  TestScenarioFactory,
-  TestUserManager,
-} from '@alkemio/tests-lib';
-import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
-import { TestScenarioConfig } from '@alkemio/tests-lib/scenario/config/test-scenario-config';
-import {
   CommunityMembershipPolicy,
   SpacePrivacyMode,
-} from '@alkemio/client-lib';
+  TestScenarioFactory,
+  TestUser,
+  TestUserManager,
+  type TestScenarioConfig,
+} from '@alkemio/tests-lib';
+import type { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import { createAuthenticatedSessionFixture } from '../fixtures/authenticated-session.fixture';
+import { baseUrl, teardownScenario } from '../helpers/space-access.helper';
+import { uniqueName } from './memberships.helpers';
 import { signInSignUpLink } from '../authentication/common-authentication-page-elements';
 
 const { test, setupAuthentication, teardownAuthentication } =
@@ -21,7 +20,6 @@ const { test, setupAuthentication, teardownAuthentication } =
     storageStateName: 'access-private-subspace-in-private-space.json',
     cleanupAfterTests: process.env.cleanupAfterTests === 'true',
   });
-const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 
 let baseScenario: OrganizationWithSpaceModel;
 
@@ -30,7 +28,7 @@ const scenarioConfig: TestScenarioConfig = {
   space: {
     about: {
       profile: {
-        displayName: 'Private Space for Membership Tests',
+        displayName: uniqueName('Private Space for Membership Tests'),
         tagline: 'Testing private space with private subspace',
       },
     },
@@ -50,7 +48,7 @@ const scenarioConfig: TestScenarioConfig = {
     subspace: {
       about: {
         profile: {
-          displayName: 'Private Subspace in Private Space',
+          displayName: uniqueName('Private Subspace in Private Space'),
           tagline: 'Testing nested private subspace access',
         },
       },
@@ -71,22 +69,25 @@ const scenarioConfig: TestScenarioConfig = {
   },
 };
 
-test.describe('Space/Subspace Settings Access Control', () => {
-  test.beforeAll(async ({ browser }) => {
-    test.setTimeout(60_000);
-    baseScenario = await TestScenarioFactory.createBaseScenario(scenarioConfig);
-    await setupAuthentication(
-      browser,
-      TestUserManager.users.nonSpaceMember.email
-    );
-  });
+test.beforeAll(async ({ browser }) => {
+  test.setTimeout(60_000);
+  baseScenario = await TestScenarioFactory.createBaseScenario(scenarioConfig);
+  await setupAuthentication(
+    browser,
+    TestUserManager.users.nonSpaceMember.email
+  );
+});
 
-  test.afterAll(async () => {
-    test.setTimeout(45_000);
+// File level, so it also runs when a failure retires the worker mid-file.
+test.afterAll(async () => {
+  try {
     await teardownAuthentication();
-    await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
-  });
+  } finally {
+    await teardownScenario(baseScenario);
+  }
+});
 
+test.describe('Space/Subspace Settings Access Control', () => {
   test(
     'Access Private Subspace in Private Space - As Non-Member',
     {
@@ -120,7 +121,7 @@ test.describe('Space/Subspace Settings Access Control', () => {
             name: baseScenario.space.nameId,
           })
           .first()
-      ).toBeVisible({ timeout: 3000 });
+      ).toBeVisible();
 
       // CRD: the about/preview dialog exposes a "Close" button (replaces the
       // legacy CloseIcon test id).
@@ -132,7 +133,7 @@ test.describe('Space/Subspace Settings Access Control', () => {
   test(
     'Access Private Subspace in Private Space - Unauthenticated',
     {
-      tag: ['@regrerssion'],
+      tag: ['@regression'],
     },
     async ({ page, context }) => {
       // 1. Clear authentication by creating new context
@@ -144,9 +145,7 @@ test.describe('Space/Subspace Settings Access Control', () => {
       );
 
       // 3. Verify "Access Restricted" page is displayed
-      await expect(page.getByText(/Access Restricted/i)).toBeVisible({
-        timeout: 3000,
-      });
+      await expect(page.getByText(/Access Restricted/i)).toBeVisible();
 
       // 4. Verify "Sign in / Sign up" button is available
       const signInButton = signInSignUpLink(page);
