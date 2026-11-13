@@ -143,6 +143,17 @@ export default defineConfig(
         use: { actionTimeout: 15_000 },
       }),
       suite({
+        // W2 journey 8 (docs/qa/server-rebuild/plan.md § W2): global search and
+        // the Space sidebar's per-tab search find this run's names and no other
+        // run's. Every case is @local-stack (Elasticsearch, which the test
+        // cluster does not run), so the nightly excludes them all until it
+        // does; `test:local-stack` runs them ("Local stack — search").
+        name: 'Search',
+        testMatch: ['/search/us1-global-and-sidebar-search.spec.ts'],
+        // One fixture, one index rebuild, then five walks.
+        tier: 'extended',
+      }),
+      suite({
         // W2 journey 10 (docs/qa/server-rebuild/plan.md § W2; audit rows F3,
         // F4): message an organisation's admins (one mail per admin, none to
         // an associate) and an organisation notification setting toggled in
@@ -172,6 +183,8 @@ export default defineConfig(
         testMatch: [
           '/explore-platform/explore-platform-anonymous.spec.ts',
           '/explore-platform/explore-platform-authenticated.spec.ts',
+          // @local-stack (Elasticsearch): excluded here, run by test:local-stack
+          '/explore-platform/explore-spaces-search-count.spec.ts',
         ],
       }),
       suite({
