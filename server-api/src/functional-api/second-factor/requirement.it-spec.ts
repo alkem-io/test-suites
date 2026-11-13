@@ -332,10 +332,14 @@ describe('Second factor — the requirement', () => {
         sub.dispose();
       }
 
-      // A sign-in that completed the second factor is not refused.
+      // A sign-in that completed the second factor is not refused; one that
+      // reached only aal1 is.
       expect(
         await servedAs(await cookieOf(member, { createdAtEpochS: marker + 1, acr: 'aal2' }))
       ).toBe(member.userId);
+      expect(
+        await servedAs(await cookieOf(member, { createdAtEpochS: marker + 1, acr: 'aal1' }))
+      ).toBe('refused');
 
       // A late joiner is refused on the very next request. The
       // session is served once right before the grant, so whatever the server

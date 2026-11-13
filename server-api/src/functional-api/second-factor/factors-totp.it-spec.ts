@@ -7,12 +7,12 @@
  * re-login and forged-header case — this feature's kratos-webhooks build.
  */
 import {
+  addressCounts,
   clearAddressCounters,
   credentialTypes,
   enrolTotp,
   isInvalidCodeVerdict,
   getUserToken,
-  highestAddressCount,
   kratosErrorId,
   loginWithPassword,
   loginWithTotp,
@@ -110,17 +110,28 @@ describe('Second factor — authenticator app', () => {
       const second = await loginThenWrongCodes(secondBatch);
       const answers = [...first.answers, ...second.answers];
       expect(answers).toHaveLength(max);
-      expect(answers.map(a => a.status)).not.toContain(429);
+      const early = answers.findIndex(a => a.status === 429);
+      expect(
+        early,
+        `submission ${early + 1} of ${max} answered 429: the stack's threshold is lower than LOGIN_BACKOFF_MAX_IP_ATTEMPTS=${max}, or the proxy counts a submission more than once`
+      ).toBe(-1);
 
-      // The window is fixed from the first count: had it lapsed mid-batch, or
-      // were the proxy's counters not in the harness Redis, the next answer
-      // would be a 400 that reads as a broken bound.
-      const counted = await highestAddressCount();
-      if (counted < max) {
+      // Only "no counter at all" belongs to the environment. A key per forged
+      // address (D36) or a count the re-login cut short (D34) is the product.
+      const counts = await addressCounts();
+      if (counts.length === 0) {
         throw new Error(
-          `environment: the login proxy's address counter holds ${counted}, not ${max} — its window lapsed mid-batch, or its Redis is not the harness's (REDIS_HOST)`
+          "environment: the harness Redis (REDIS_HOST) holds no login_backoff:ip:* key — it is not the login proxy's Redis"
         );
       }
+      expect(
+        counts.length,
+        `D36: the proxy keyed ${counts.length} addresses — it counts the forged True-Client-Ip / X-Forwarded-For`
+      ).toBe(1);
+      expect(
+        counts[0],
+        `D34: the address counter holds ${counts[0]} after ${max} submissions — the re-login cleared it (or its fixed window lapsed mid-run)`
+      ).toBe(max);
 
       const step = { ...second.step, secret };
       const [overBound] = await submitWrongTotp(step, 1, { headers: forged });

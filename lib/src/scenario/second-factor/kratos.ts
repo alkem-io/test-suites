@@ -82,10 +82,14 @@ const send = async (
   };
 };
 
+// Messages and the error only: a flow's nodes carry an authenticator key and
+// recovery codes.
 const fail = (step: string, answer: KratosAnswer): never => {
-  throw new Error(
-    `second-factor: ${step} answered ${answer.status}: ${JSON.stringify(answer.body).slice(0, 600)}`
-  );
+  const error = answer.body?.error;
+  const detail = error
+    ? `${error.id ?? error.code}: ${error.reason ?? error.message}`
+    : flowMessages(answer).join('; ');
+  throw new Error(`second-factor: ${step} answered ${answer.status}: ${detail}`);
 };
 
 /** Kratos' error id on an error answer (`session_aal2_required`, …). */

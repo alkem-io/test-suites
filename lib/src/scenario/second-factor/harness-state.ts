@@ -38,14 +38,9 @@ export const clearAddressCounters = (): Promise<number> => {
   return redisDeleteByPrefix(LOGIN_BACKOFF_IP_PREFIX);
 };
 
-/** The highest per-address count the login proxy holds (0 when none). */
-export const highestAddressCount = async (): Promise<number> =>
-  Math.max(
-    0,
-    ...(await redisValuesByPrefix(LOGIN_BACKOFF_IP_PREFIX))
-      .map(Number)
-      .filter(Number.isFinite)
-  );
+/** The login proxy's per-address counts, one per address key it holds. */
+export const addressCounts = async (): Promise<number[]> =>
+  (await redisValuesByPrefix(LOGIN_BACKOFF_IP_PREFIX)).map(Number);
 
 /** The subject-revocation marker the server wrote for `sub`, epoch seconds. */
 export const readSubjectMarker = async (sub: string): Promise<number> => {

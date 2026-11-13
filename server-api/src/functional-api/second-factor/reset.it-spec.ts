@@ -127,16 +127,20 @@ describe('Second factor — support reset', () => {
       expect((await readMySessionRaw({ cookieHeader: minted.cookieHeader })).status).toBe(401);
       await expectClosedOnNextMessage(sub, roomId, poster, 4401);
 
-      // The fence: only `created_at` differs between the two sessions.
+      // The fence: only `created_at` differs between the sessions. A session
+      // begun in the marker's own second is not later than it, so it is fenced.
       const marker = await readSubjectMarker(member.identityId);
-      const begunBefore = await mintBffSession(member.identityId, member.userId, {
-        createdAtEpochS: marker - 1,
-      });
-      const begunAfter = await mintBffSession(member.identityId, member.userId, {
-        createdAtEpochS: marker + 1,
-      });
-      expect((await readMySessionRaw({ cookieHeader: begunBefore.cookieHeader })).status).toBe(401);
-      expect((await readMySessionRaw({ cookieHeader: begunAfter.cookieHeader })).status).toBe(200);
+      const begunAt = async (createdAtEpochS: number) =>
+        (
+          await readMySessionRaw({
+            cookieHeader: (
+              await mintBffSession(member.identityId, member.userId, { createdAtEpochS })
+            ).cookieHeader,
+          })
+        ).status;
+      expect(await begunAt(marker - 1)).toBe(401);
+      expect(await begunAt(marker)).toBe(401);
+      expect(await begunAt(marker + 1)).toBe(200);
 
       const rows = await resetRows(member.userId);
       expect(rows.map(r => r.outcome)).toEqual([
