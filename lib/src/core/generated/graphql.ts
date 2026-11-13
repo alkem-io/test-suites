@@ -98224,6 +98224,29 @@ export type ReadTaskBoardQuery = {
   };
 };
 
+export type ReadWhiteboardGuestAccessQueryVariables = SchemaTypes.Exact<{
+  whiteboardId: SchemaTypes.Scalars["UUID"]["input"];
+}>;
+
+export type ReadWhiteboardGuestAccessQuery = {
+  lookup: {
+    whiteboard?:
+      | {
+          id: string;
+          guestContributionsAllowed: boolean;
+          authorization?:
+            | {
+                id: string;
+                myPrivileges?:
+                  | Array<SchemaTypes.AuthorizationPrivilege>
+                  | undefined;
+              }
+            | undefined;
+        }
+      | undefined;
+  };
+};
+
 export type ReadWhiteboardStateQueryVariables = SchemaTypes.Exact<{
   whiteboardId: SchemaTypes.Scalars["UUID"]["input"];
 }>;
@@ -103333,6 +103356,8 @@ export type ReadMyUserQuery = {
       | {
           id: string;
           nameID: string;
+          firstName: string;
+          lastName: string;
           profile?:
             | { id: string; displayName: string; url: string }
             | undefined;
@@ -129109,6 +129134,20 @@ export const ReadTaskBoardDocument = gql`
     }
   }
 `;
+export const ReadWhiteboardGuestAccessDocument = gql`
+  query ReadWhiteboardGuestAccess($whiteboardId: UUID!) {
+    lookup {
+      whiteboard(ID: $whiteboardId) {
+        id
+        guestContributionsAllowed
+        authorization {
+          id
+          myPrivileges
+        }
+      }
+    }
+  }
+`;
 export const ReadWhiteboardStateDocument = gql`
   query ReadWhiteboardState($whiteboardId: UUID!) {
     lookup {
@@ -129806,6 +129845,8 @@ export const ReadMyUserDocument = gql`
       user {
         id
         nameID
+        firstName
+        lastName
         profile {
           id
           displayName
@@ -132619,6 +132660,9 @@ const ReadCalloutsSetCalloutsDocumentString = print(
 const ReadContributionDocumentString = print(ReadContributionDocument);
 const ReadMemoDocumentsDocumentString = print(ReadMemoDocumentsDocument);
 const ReadTaskBoardDocumentString = print(ReadTaskBoardDocument);
+const ReadWhiteboardGuestAccessDocumentString = print(
+  ReadWhiteboardGuestAccessDocument
+);
 const ReadWhiteboardStateDocumentString = print(ReadWhiteboardStateDocument);
 const GetMeConversationsDocumentString = print(GetMeConversationsDocument);
 const GetPlatformDiscussionsDataDocumentString = print(
@@ -139355,6 +139399,28 @@ export function getSdk(
             { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "ReadTaskBoard",
+        "query",
+        variables
+      );
+    },
+    ReadWhiteboardGuestAccess(
+      variables: SchemaTypes.ReadWhiteboardGuestAccessQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.ReadWhiteboardGuestAccessQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.ReadWhiteboardGuestAccessQuery>(
+            ReadWhiteboardGuestAccessDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "ReadWhiteboardGuestAccess",
         "query",
         variables
       );

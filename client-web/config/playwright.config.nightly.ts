@@ -114,6 +114,18 @@ export default defineConfig(
         use: { actionTimeout: 15_000 },
       }),
       suite({
+        // W2 journey 5b (follow-up of journey 5, ruling L-6): a whiteboard shared
+        // with guests — the Space's Guest Contributions gate, the share dialog's
+        // link, an anonymous guest drawing on the public route, a signed-in user
+        // shown anonymised, and the revocation. Capture off: admin sessions and
+        // the peer's bearer.
+        name: 'Whiteboard guest share',
+        testMatch: ['/whiteboard-guest-share/*.spec.ts'],
+        tier: 'extended',
+        capture: 'off',
+        use: { actionTimeout: 15_000 },
+      }),
+      suite({
         // W2 journey 7 (docs/qa/server-rebuild/plan.md § W2): edit a Space's
         // About, your own profile, and an organisation you create. Every file
         // self-seeds; profile and organisation edits run on disposable users
