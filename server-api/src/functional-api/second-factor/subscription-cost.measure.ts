@@ -82,7 +82,9 @@ test('R22 a hundred cookie sockets on one room under a rule in grace', async () 
           DELIVERY_BOUND_MS,
           `delivery of message ${n} to every socket`
         );
-        const wallMs = Date.now() - startedAt;
+        // From the arrivals, not from the poll that saw the last of them.
+        const wallMs =
+          Math.max(...sockets.map(s => s.arrivedAt.get(id)!)) - startedAt;
         const queriesAfter = await statementCount();
         const perEvent =
           queriesBefore === null || queriesAfter === null

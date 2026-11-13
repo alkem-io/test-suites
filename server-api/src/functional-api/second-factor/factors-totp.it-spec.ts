@@ -8,6 +8,7 @@
  */
 import {
   addressCounters,
+  addressCountersExpireAt,
   clearAddressCounters,
   credentialTypes,
   enrolTotp,
@@ -110,6 +111,10 @@ describe('Second factor — authenticator app', () => {
     await clearAddressCounters();
     try {
       const first = await loginThenWrongCodes(firstBatch);
+      // The window the counting started in: past it, a short count or a
+      // missing key is the stack's slowness, not the product.
+      const windowEnd = await addressCountersExpireAt();
+      const windowLapsed = () => windowEnd !== null && Date.now() >= windowEnd;
       const second = await loginThenWrongCodes(secondBatch);
       const answers = [...first.answers, ...second.answers];
       expect(answers).toHaveLength(max);
@@ -124,9 +129,14 @@ describe('Second factor — authenticator app', () => {
       // the edge in front of the proxy passes a sender's header through
       // (environment). Keys in the forged True-Client-Ip range: the proxy
       // trusts a header any sender sets (product). A count short of every
-      // submission: a re-login cleared the address (product), or the fixed
-      // window lapsed mid-run.
+      // submission: a re-login cleared the address (product), unless the
+      // window the first batch counted in has passed (environment).
       const counters = await addressCounters();
+      if (windowLapsed()) {
+        throw new Error(
+          `environment: the proxy's fixed window lapsed before the counter was read (${max} submissions took too long on this stack) — rerun on a faster stack`
+        );
+      }
       if (counters.length === 0) {
         throw new Error(
           "environment: the harness Redis (REDIS_HOST) holds no login_backoff:ip:* key — it is not the login proxy's Redis"
@@ -144,7 +154,7 @@ describe('Second factor — authenticator app', () => {
       const [{ value }] = counters;
       expect(
         Number(value),
-        `D34: the address counter holds '${value}' after ${max} submissions — the re-login cleared it (or its fixed window lapsed mid-run). A value that is not a plain number is the harness misreading the proxy's stored shape, not the product`
+        `D34: the address counter holds '${value}' after ${max} submissions within one window — the re-login cleared it. A value that is not a plain number is the harness misreading the proxy's stored shape, not the product`
       ).toBe(max);
 
       const step = { ...second.step, secret };

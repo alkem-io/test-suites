@@ -3,7 +3,12 @@
 // The authenticator app, end to end in the browser: enrolled from Security,
 // asked for at the second sign-in step, reflected in the session the server
 // holds, and removed again.
-import { expect, test, type Page } from '@playwright/test';
+import {
+  expect,
+  test,
+  type BrowserContext,
+  type Page,
+} from '@playwright/test';
 import {
   clearAddressCounters,
   createThrowawayUser,
@@ -47,8 +52,10 @@ let user: ThrowawayUser | undefined;
 let nameId = '';
 let secret = '';
 
-const requirementOf = async (page: Page) => {
-  const response = await readSecondFactorRequirement(await sessionActor(page));
+const requirementOf = async (pageOrContext: Page | BrowserContext) => {
+  const response = await readSecondFactorRequirement(
+    await sessionActor(pageOrContext)
+  );
   expect(response.status).toBe(200);
   return response.body.data!.me.secondFactorRequirement;
 };
@@ -140,7 +147,9 @@ test.describe('US1 — the authenticator app in Security', () => {
       // A refresh of the session keeps it. The stored token is made due
       // first, so the route has to go to the identity provider instead of
       // answering from a token that is still fresh, and the swapped token
-      // shows that it did.
+      // shows that it did. The page is closed first: no request of its own
+      // can rewrite the stored session between the read and the write.
+      await page.close();
       const sessionId = await findBffSessionIdBySub(user!.identityId);
       const before = await readBffSession(sessionId);
       expect(before, 'the browser session in the store').not.toBeNull();
@@ -148,19 +157,19 @@ test.describe('US1 — the authenticator app in Security', () => {
         ...stored,
         expires_at: Math.floor(Date.now() / 1000) - 1,
       }));
-      const refreshed = await page.request.get(
+      const refreshed = await context.request.get(
         `${baseUrl}/api/auth/oidc/refresh`,
         { failOnStatusCode: false }
       );
       expect(refreshed.status()).toBe(204);
       const after = await readBffSession(sessionId);
-      expect(after?.access_token, 'the session in the store after the refresh').toEqual(
-        expect.any(String)
-      );
-      expect(after!.access_token, 'the refresh swapped the stored access token').not.toBe(
-        before!.access_token
-      );
-      expect(await requirementOf(page)).toMatchObject({ satisfied: true });
+      // Compared outside the matcher: a red must not print a live token.
+      expect(
+        typeof after?.access_token === 'string' &&
+          after.access_token !== before!.access_token,
+        'the refresh swapped the stored access token'
+      ).toBe(true);
+      expect(await requirementOf(context)).toMatchObject({ satisfied: true });
     } finally {
       await context.close();
     }

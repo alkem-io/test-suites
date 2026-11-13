@@ -54,6 +54,8 @@ export const postToRoom = async (
 export type RoomSubscription = {
   /** Message ids delivered on the subscription, in order. */
   messageIds: string[];
+  /** When each message id arrived, epoch milliseconds. */
+  arrivedAt: Map<string, number>;
   /** Operation errors the server sent on the subscription (FORBIDDEN, …). */
   errors: string[];
   /** Resolves with the socket's close code once the server closes it. */
@@ -78,6 +80,7 @@ export const subscribeToRoom = (
     }
   }
   const messageIds: string[] = [];
+  const arrivedAt = new Map<string, number>();
   const errors: string[] = [];
   let code: number | undefined;
   let resolveClosed: (code: number) => void = () => undefined;
@@ -105,7 +108,10 @@ export const subscribeToRoom = (
       {
         next: result => {
           const id = result.data?.roomEvents?.message?.data?.id;
-          if (id) messageIds.push(id);
+          if (id) {
+            arrivedAt.set(id, Date.now());
+            messageIds.push(id);
+          }
         },
         error: error => {
           errors.push(JSON.stringify(error).slice(0, 300));
@@ -115,6 +121,7 @@ export const subscribeToRoom = (
     );
     const subscription: RoomSubscription = {
       messageIds,
+      arrivedAt,
       errors,
       closed,
       closeCode: () => code,

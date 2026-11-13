@@ -112,6 +112,7 @@ test.describe('US3 — security keys', () => {
         'webauthn'
       );
       await expect.poll(() => observedKeyRows(user), ROW_BOUND).toBe(1);
+      const enrolled = Date.now();
 
       await logOut(page);
       await submitPassword(page, user.email);
@@ -128,7 +129,15 @@ test.describe('US3 — security keys', () => {
       await expectSignedIn(page);
       await expectSecondFactorSession(page);
 
-      // Remove the key again.
+      // Remove the key again. The enrolment's count is held for the whole
+      // bound first, so a late duplicate of its row cannot stand in for the
+      // removal's: a held count, not a wait for a condition.
+      const left = enrolled + ROW_BOUND.timeout - Date.now();
+      if (left > 0) await new Promise(r => setTimeout(r, left));
+      expect(
+        await observedKeyRows(user),
+        'webauthn: a row written after the bound, which would count for the removal'
+      ).toBe(1);
       await openSecurityTab(page, nameId);
       await keys
         .getByRole('button', { name: COPY.removeKey(keyName), exact: true })

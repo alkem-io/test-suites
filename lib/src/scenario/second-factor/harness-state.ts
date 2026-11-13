@@ -5,6 +5,7 @@ import {
   redisDeleteByPrefix,
   redisEntriesByPrefix,
   redisGet,
+  redisPttl,
 } from '../../utils/harness-redis.client';
 
 /**
@@ -51,6 +52,19 @@ export const addressCounters = async (): Promise<
     value,
   }));
 
+/**
+ * When the first of the proxy's address counters expires, epoch milliseconds,
+ * or null when none is held with an expiry. Read while a run is counting, it
+ * tells a fixed window that lapsed mid-run from a counter the product cleared.
+ */
+export const addressCountersExpireAt = async (): Promise<number | null> => {
+  const keys = await redisEntriesByPrefix(LOGIN_BACKOFF_IP_PREFIX);
+  const left = (await Promise.all(keys.map(({ key }) => redisPttl(key)))).filter(
+    ms => ms > 0
+  );
+  return left.length === 0 ? null : Date.now() + Math.min(...left);
+};
+
 /** The subject-revocation marker the server wrote for `sub`, epoch seconds. */
 export const readSubjectMarker = async (sub: string): Promise<number> => {
   const raw = await redisGet(SUBJECT_MARKER_PREFIX + sub);
@@ -79,13 +93,14 @@ export const ageRuleSince = async (
           '{security,secondFactorRequiredSince}',
           to_jsonb(to_char((now() - make_interval(days => $2::int)) AT TIME ZONE 'UTC',
                            'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"')))
-      WHERE id = $1 AND settings ? 'security'
+      WHERE id = $1
+        AND (settings #> '{security,secondFactorRequired}') = 'true'::jsonb
       RETURNING id`,
     [target.organizationId, days]
   );
   if (rows.length !== 1) {
     throw new Error(
-      `second-factor: organisation ${target.organizationId} has no stored security block to age — switch its rule on first`
+      `second-factor: organisation ${target.organizationId} does not have its rule switched on in its stored settings — switch it on first`
     );
   }
 };

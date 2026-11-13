@@ -48,6 +48,25 @@ const awaitObservedRows = async (
   }
 };
 
+/**
+ * Holds `count` rows for `method` until the bound has passed since `since`,
+ * the end of the change that wrote the last of them. Without it a late
+ * duplicate of that row would stand in for the next change's missing one.
+ */
+const holdObservedRows = async (
+  user: ThrowawayUser,
+  method: string,
+  count: number,
+  since: number
+): Promise<void> => {
+  const left = since + ROW_BOUND_MS - Date.now();
+  if (left > 0) await new Promise(r => setTimeout(r, left));
+  expect(
+    (await observedRows(user, method)).length,
+    `${method}: a row written after the bound, which would count for the next change`
+  ).toBe(count);
+};
+
 /** Every key an observed row's details may carry: nothing names an address. */
 const DETAILS_KEYS = ['method', 'observedAt', 'requestContext', 'sourceFlowId'];
 
@@ -74,19 +93,22 @@ describe('Second factor — a member’s own change is recorded', () => {
     const secret = await enrolTotp(
       (await loginWithPassword(user.email)).sessionToken
     );
+    const enrolled = Date.now();
     const [enrolment] = await awaitObservedRows(user, 'totp', 1);
     expect(await observedRows(user, 'totp')).toHaveLength(1);
     expectRowShape(enrolment, user);
 
     const secondFactor = await loginWithTotp(user.email, secret);
     await generateRecoveryCodes(secondFactor.sessionToken);
+    const generated = Date.now();
     expectRowShape((await awaitObservedRows(user, 'lookup_secret', 1))[0], user);
-    expect(await observedRows(user, 'lookup_secret')).toHaveLength(1);
+    await holdObservedRows(user, 'lookup_secret', 1, generated);
 
     await disableRecoveryCodes(secondFactor.sessionToken);
     expectRowShape((await awaitObservedRows(user, 'lookup_secret', 2))[1], user);
     expect(await observedRows(user, 'lookup_secret')).toHaveLength(2);
 
+    await holdObservedRows(user, 'totp', 1, enrolled);
     await removeTotp(secondFactor.sessionToken);
     expectRowShape((await awaitObservedRows(user, 'totp', 2))[1], user);
     expect(await observedRows(user, 'totp')).toHaveLength(2);

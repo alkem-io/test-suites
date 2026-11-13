@@ -242,6 +242,10 @@ export const redisGet = async (key: string): Promise<string | null> => {
   return getHarnessRedisClient().get(key);
 };
 
+/** Milliseconds `key` has left (-1: no expiry, -2: no key). */
+export const redisPttl = async (key: string): Promise<number> =>
+  getHarnessRedisClient().pttl(key);
+
 /** Deletes every key under `prefix`; returns how many went. `KEYS` for the
  * reason `findBffSessionIdBySub` gives: loopback compose Redis only. */
 export const redisDeleteByPrefix = async (prefix: string): Promise<number> => {
