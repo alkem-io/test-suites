@@ -267,14 +267,29 @@ _Searched 2026-11-09, branch `qa/w2-journey-6` off test-suites `origin/develop` 
 
 | Behaviour | Coverage | Where |
 | --- | --- | --- |
-| An existing post's phase changed (`updateCallout` with `classification`), any level | **None, proven absent** (now covered: `callout-placement/us1-post-flow-state` FS-1) | only cross-space transfers touch a post's phase: `callout/transfer/transfer-callout-flow-state`, `-changed-flow` |
+| An existing post's phase changed (`updateCallout` with `classification`), any level | **None, proven absent** (now covered: `callout-placement/us1-post-flow-state` FS-1; API: a member is refused, PH-1, admin control PH-1c, in `server-api/…/callout/placement/callout-placement-authorization.it-spec.ts`, 2026-11-12) | only cross-space transfers touch a post's phase: `callout/transfer/transfer-callout-flow-state`, `-changed-flow` |
 | Posts keep their phase when the phase is renamed | **None, proven absent** (now covered: FS-2). `-changed-flow` renames before the callout exists | server: `innovation.flow.service › updateInnovationFlowState` cascades tags; no system test |
-| Post order (`updateCalloutsSortOrder`), any level of test-suites | **None, proven absent** (now covered: `callout-placement/us2-reorder-posts` RO-1/RO-2/RO-3) | server unit: `callouts.set.service.spec › updateCalloutsSortOrder`; client unit: `deriveCalloutMenuVisibility.test` |
-| Moving a response (`moveContributionToCallout`) | **Partial**: API only, platform resource admin, manual runner (`platform-roles` › `A9.moveContributionToCallout`); no UI walk, no space-admin or author case (UI walks now covered: `callout-placement/us3-move-response` MC-1/MC-2) | server unit: `callout.contribution.move.service.spec` (type rules, same-set rule, task boards) |
-| Response order inside a post (`updateContributionsSortOrder`, Sort contributions dialog) | **None, proven absent**; not in J6 | — |
+| Post order (`updateCalloutsSortOrder`), any level of test-suites | **None, proven absent** (now covered: `callout-placement/us2-reorder-posts` RO-1/RO-2/RO-3; API: a member is refused, PO-1, admin control PO-1c, in `server-api/…/callout/placement/callout-placement-authorization.it-spec.ts`, 2026-11-12) | server unit: `callouts.set.service.spec › updateCalloutsSortOrder`; client unit: `deriveCalloutMenuVisibility.test` |
+| Moving a response (`moveContributionToCallout`) | **Partial**: API only, platform resource admin, manual runner (`platform-roles` › `A9.moveContributionToCallout`); no UI walk, no space-admin or author case (UI walks now covered: `callout-placement/us3-move-response` MC-1/MC-2; API: the member-author is refused, MV-1, Space-admin control MV-1c, in `server-api/…/callout/placement/callout-placement-authorization.it-spec.ts`; a response moved into a draft post stays readable to members by id, EXP-1 defect: the expected refusal is written as EXP1-3/EXP1-4 and skipped on test-suites#724, so no running test pins it yet, in `server-api/…/callout/move/moved-response-draft-access.it-spec.ts`, 2026-11-12) | server unit: `callout.contribution.move.service.spec` (type rules, same-set rule, task boards) |
+| Response order inside a post (`updateContributionsSortOrder`, Sort contributions dialog) | **API covered 2026-11-12**: CS-1 admin reorder read back, CS-2 member refused, CS-3 foreign response id refused, in `server-api/…/callout/placement/callout-placement-authorization.it-spec.ts`. The drag-only dialog: none | — |
 | Phase-column order on Settings › Layout | Full | `sidebar-widgets/subspace-us1-customize.spec.ts` S-07…S-13 |
 
-**Search again with:** `rg -n -i "moveContributionToCallout|updateCalloutsSortOrder|updateContributionsSortOrder|Move to Top|Move Up|Post location|Post actions|'Move to'|classification" client-web/src server-api/src lib/src --glob '!**/generated/**'` and `rg -n 'updateInnovationFlowState\(' server-api/src --glob '*.it-spec.ts'` (renames: check whether callouts exist BEFORE the rename).
+**Search again with:** `rg -n -i "moveContributionToCallout|updateCalloutsSortOrder|updateContributionsSortOrder|readContribution|Move to Top|Move Up|Post location|Post actions|'Move to'|classification" client-web/src server-api/src lib/src --glob '!**/generated/**'` and `rg -n 'updateInnovationFlowState\(' server-api/src --glob '*.it-spec.ts'` (renames: check whether callouts exist BEFORE the rename).
+
+## Task boards and community guidelines (W2 extras, test-suites#722)
+
+_Searched 2026-11-12, branch `qa/w2-extras-read-back` off test-suites `origin/develop` @ `ef405cc0`; product read at client-web `develop` @ `25ded1467`, server `develop` @ `e120d25a1`. Plans: `client-web/src/functional-e2e/task-boards/task-boards-test-plan.md`, `client-web/src/functional-e2e/community-guidelines/community-guidelines-test-plan.md`._
+
+| Behaviour | Coverage | Where |
+| --- | --- | --- |
+| Create a Tasks board (UI) | **None, proven absent** (now covered: `task-boards/us1-create-board-add-task` TB-1) | server-api `orphan-free-deletion/callout-delete-owned-records` CD-2 creates one over the API only to delete it |
+| Add a task to a column; move it across columns; reorder in a column (`moveTaskToColumn`, `updateContributionsSortOrder` on a board) | **None, proven absent** (now covered: TB-2, `us2-move-task` TB-3, TB-4) | — |
+| Who may move a task (MOVE_TASK) | **None, proven absent** (now covered: TB-5, UI + server refusal) | — |
+| Column administration (create/rename/delete/reorder columns) | **None** — still a gap | — |
+| Edit a Space's community guidelines by hand (title, body, links) | **None, proven absent** (now covered: `community-guidelines/us1-edit-guidelines` CG-1, CG-2) | applying a template: `templates-CRD/.../community-guidelines-template.spec.ts` 1.4/1.5 |
+| `removeCommunityGuidelinesContent` | **None**; no UI calls it | — |
+
+**Search again with:** `rg -n -i "task ?board|TaskColumn|moveTask|taskColumn|MOVE_TASK|communityGuidelines|community guidelines" client-web/src server-api/src lib/src --glob '!**/generated/**'`.
 
 ## How to search this area again
 
@@ -347,6 +362,21 @@ _Searched 2026-11-09, branch `qa/w2-journey-7` off `origin/develop` @ `afbefaf2`
 
 **Search again with:** `git grep -n -E "settings/about|settings/profile|updateSpace\(|updateUser\(|updateOrganization\(|createOrganization|readSpaceAbout|getUserData|readOrganization|tagsets|Create Organisation" <ref> -- client-web/src server-api/src/functional-api lib/src/scenario ':!lib/src/core/generated'`.
 
+## Contact leads — message an organisation or a Space's leads; organisation notification setting (W2 journey 10)
+
+_Searched 2026-11-12, branch `qa/w2-journey-10` off `origin/develop` @ `ef405cc0`, against client-web `develop` and server `develop` @ `e120d25a1`. Plan: `client-web/src/functional-e2e/contact-leads/contact-leads-test-plan.md` (6 cases, 5 live; M1-2 skipped on reproduced server defect J10-D1; C3-1/C3-2 `@local-stack`)._
+
+| Behaviour | Coverage | Where |
+| --- | --- | --- |
+| Message an organisation from its page; one mail per admin, none to an associate, one sender copy | Toast only (`contributors-callout/us3-card-menu` US3-AS3); API with all-inbox counts (`notifications/organization/user-to-organization.it-spec.ts`) | `contact-leads/us1-message-organisation.spec.ts` › M1-1 |
+| An admin who is not an associate gets the organisation message | **None**; reproduced defect J10-D1 | `us1-message-organisation.spec.ts` › M1-2 (skipped) |
+| "Receive direct messages to my organisation" email toggled in the UI persists across reload, reads back, is honoured, toggles back | **None** (US2-AS6 in `organization-space-invitations` covers a different row on a shared persona) | `contact-leads/us2-organisation-message-setting.spec.ts` › N1-1..N1-3 |
+| Space "Contact Leads" → one 1:1 chat per lead, none to a non-lead | **None** end to end (client and server unit tests only) | `contact-leads/us3-contact-space-leads.spec.ts` › C3-1 (`@local-stack`) |
+| Direct-message digest mail per lead after Contact Leads | **None** | `us3-contact-space-leads.spec.ts` › C3-2 (`@local-stack`) |
+| Legacy lead email (`sendMessageToCommunityLeads`) | API only; **no UI caller left** | server-api `notifications/space/communication/user-to-community-leads-*.it-spec.ts` |
+
+**Search again with:** `git grep -n -E "sendMessageToOrganization|sendMessageToCommunityLeads|sendDirectMessageToUsers|Contact Leads|adminMessageReceived|sent a message to your" <ref> -- client-web/src server-api/src/functional-api lib/src/scenario ':!lib/src/core/generated'`.
+
 ## File uploads — reference file, media gallery, message attachment (W2 journey 11)
 
 _Searched 2026-11-12, branch `qa/w2-journey-11` off `origin/develop` @ `ef405cc0`, against client-web `develop` @ `25ded1467` and server `develop` @ `e120d25a1`. Plan: `client-web/src/functional-e2e/file-uploads/file-uploads-test-plan.md` (Draft; 6 cases, MA-1/2 `@local-stack`)._
@@ -389,7 +419,7 @@ _Searched 2026-11-03, branch `qa/excalidraw-yjs-13-undo-plan` off `origin/develo
 
 | Area | Status | Evidence |
 | --- | --- | --- |
-| Two-user (collaborative) whiteboard editing, convergence, presence, in test-suites | **Partial (2026-11-04), skip-gated** | `whiteboard-collaboration/undo-races-peer-edit.spec.ts` › WC-01 (two browsers + Node peer, convergence E7, presence as the ordering gate) and `damaged-board-loads.spec.ts` › WC-02. Both are `test.skip` until the environment client-web resolves `@excalidraw-yjs/excalidraw` >= 0.5.6; `WHITEBOARD_COLLAB_FIXED=1` lifts it. General two-user editing beyond these two incidents: none; manual: release checklist §3.2 |
+| Two-user (collaborative) whiteboard editing, convergence, presence, in test-suites | **Partial (2026-11-04); skip gate lifted 2026-11-12** | `whiteboard-collaboration/undo-races-peer-edit.spec.ts` › WC-01 (two browsers + Node peer, convergence E7, presence as the ordering gate) and `damaged-board-loads.spec.ts` › WC-02. Both are `test.skip` until the environment client-web resolves `@excalidraw-yjs/excalidraw` >= 0.5.6; `WHITEBOARD_COLLAB_FIXED=1` lifts it. General two-user editing beyond these two incidents: none; manual: release checklist §3.2 |
 | Undo/redo in the whiteboard editor, any layer of test-suites | **Partial (2026-11-04), skip-gated** | WC-01: one undo of a drag racing a lower-id peer, the repaired values, no extra undo step, redo enabled (E6). Plain single-user undo/redo: none in test-suites (package level only) |
 | Whiteboard content read-back or raw write from the harness | **Full (2026-11-04)** through the Node Yjs peer, not GraphQL (`Whiteboard` still has no `content` field and no input takes content) | `lib/src/collab/whiteboard-peer.ts` › `connectWhiteboardPeer` (`rawElement`, `liveElements`, `write`, hold/release inbound); self-test `server-api/src/contract/whiteboard-peer.it-spec.ts` › T-1a–T-1h (contract project, on demand) |
 | Undo racing a concurrent same-key peer edit (lower peer id) | Full at **package** level only | excalidraw-yjs `packages/element/src/__tests__/Scene.undoConcurrentKeyLoss.test.ts` › test 1 (presence only; values unpinned) |

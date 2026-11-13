@@ -86,6 +86,12 @@ const FUNCTIONS: string[] = [
   'registerAllTestUsers',
   'getRecoveryLinkFor',
   'deleteMailSlurperMails',
+  // recipient-scoped mail readers (W2 Tier 0 item 4: messaging-notifications)
+  'getMailsTo',
+  'markMailbox',
+  'getMailsToSince',
+  'waitForMailsToSince',
+  'mailIsAddressedTo',
   'getQueueStats',
   'waitForQueuePublishIncrease',
   'rabbitMqManagementConfigured',
@@ -197,6 +203,7 @@ const FUNCTIONS: string[] = [
   'readRoleSetPlatformInvitations',
   'readRoleSetPending',
   'joinRoleSet',
+  'assignUserRoleOnRoleSet',
   'applyForEntryRoleOnRoleSet',
   'inviteForEntryRoleOnRoleSet',
   'eventOnInvitation',
@@ -252,6 +259,19 @@ const FUNCTIONS: string[] = [
   'addClassificationEntryFromTemplate',
   'updateClassificationEntrySelection',
   'updateTagsetTags',
+  // W2 #713 follow-up (callout placement server-api)
+  'moveContributionToCallout',
+  'readCalloutContributionsOrder',
+  'readContribution',
+  'resolveContributionUrl',
+  'updateCalloutsSortOrder',
+  'updateContributionsSortOrder',
+  // workspace#080 Form walks (W2 Tier 0 item 6): disposable identities
+  'registerVerifiedUser',
+  // W2 extras (test-suites#722): task boards (CT-8), community guidelines (SP-10)
+  'readTaskBoard',
+  'moveTaskToColumn',
+  'readSpaceCommunityGuidelines',
 ];
 
 /** Classes and namespaces the specs construct or call statically. */
@@ -270,7 +290,7 @@ const ENUM_MEMBERS: Record<string, string[]> = {
   SpaceLevel: ['L0', 'L1', 'L2'],
   SpaceVisibility: ['Active', 'Archived', 'Demo'],
   TagsetReservedName: ['FlowState'],
-  AuthorizationPrivilege: ['MovePost', 'Update'],
+  AuthorizationPrivilege: ['MovePost', 'Update', 'MoveTask', 'Contribute'],
   ActorType: ['User', 'Organization', 'VirtualContributor'],
   SidebarWidget: ['About', 'Community', 'Events', 'Activity'],
   NotificationEvent: ['OrganizationAdminSpaceCommunityInvitation'],
@@ -315,6 +335,17 @@ describe('@contract lib surface used by the client-web net', () => {
       }
     }
     expect(problems).toEqual([]);
+  });
+
+  test('mail readers match a recipient by address only: bare or `Name <addr>`, any case, never a near miss', () => {
+    const mail = (toAddresses?: string[]) => ({ subject: 's', body: 'b', toAddresses });
+    expect(lib.mailIsAddressedTo(mail(['b@alkem.io']), 'b@alkem.io')).toBe(true);
+    expect(lib.mailIsAddressedTo(mail(['Bee Recipient <B@Alkem.io>']), 'b@alkem.io')).toBe(true);
+    expect(lib.mailIsAddressedTo(mail(['a@alkem.io', 'b@alkem.io']), 'B@ALKEM.IO')).toBe(true);
+    expect(lib.mailIsAddressedTo(mail(['xb@alkem.io']), 'b@alkem.io')).toBe(false);
+    expect(lib.mailIsAddressedTo(mail(['b@alkem.io.evil']), 'b@alkem.io')).toBe(false);
+    expect(lib.mailIsAddressedTo(mail([]), 'b@alkem.io')).toBe(false);
+    expect(lib.mailIsAddressedTo(mail(undefined), 'b@alkem.io')).toBe(false);
   });
 
 });

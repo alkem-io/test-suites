@@ -312,6 +312,12 @@ Shared precondition for all SRA scenarios: the standard global setup has run
 
 ### 2.2 Stream B — the revocation cascade over the real session cookie (client-web, Playwright)
 
+> **Amended 2026-11-12 (W2 Tier 0 item 2).** The Stream B specs now run nightly (project
+> *Session revocation*) with every oracle restated as a GraphQL outcome through the lib or a UI
+> outcome: no `id-token-hint`, no `error_code`, no cookie name or format, no `me-`. The current
+> mapping is `client-web/src/functional-e2e/session-revocation/session-revocation-test-plan.md`;
+> the scenario text below is the original specification.
+
 Shared precondition for all SRB scenarios: a **disposable** verified Kratos
 identity, provisioned in-spec (never a shared persona — these tests delete their
 subject). Log it in through the real SPA form so a genuine `alkemio_session` is

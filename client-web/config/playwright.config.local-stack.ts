@@ -24,9 +24,18 @@ import { baseConfig, GENERATED_WALKS_DIR, LOCAL_STACK_TAG, suite } from './playw
  *   RABBITMQ_MANAGEMENT_* plus the nine MESSAGING_DIGEST_* variables (same
  *   values on the SERVER, see the suite's test plan):
  *     messaging-notifications US1 and US2 (whole walks), US3-AS3 and US3-AS4
+ *   RABBITMQ_MANAGEMENT_* (US4-AS1p/AS5p), HARNESS POSTGRES_* (US4-AS8) and
+ *   NOTIFICATIONS_STOP_CMD / NOTIFICATIONS_START_CMD (US4-AS6):
+ *     form-callout-framing US4 (each guard skips with its reason when unset)
+ *   HARNESS_POSTGRES_* (audit rows, subscription seed) and HARNESS_REDIS_*
+ *   (ageing a real session past the privileged window):
+ *     account-deletion US1-AS5, US1-AS6 and US3 (whole walk)
  *   IDLE_RELEASE_SECONDS=0 on the collaboration-service, and COLLAB_IDLE_RELEASE_SECONDS=0 plus
  *   COLLAB_METRICS_URL (the service's /metrics, e.g. http://localhost:4006/metrics) here:
  *     content-editing US1 E8-4 (the whole walk runs; the guard fails loudly without them)
+ *   Matrix (synapse + matrix-adapter) plus the nine MESSAGING_DIGEST_* variables
+ *   (same values on the SERVER):
+ *     contact-leads US3 (Space "Contact Leads": 1:1 chats + direct-message digest)
  */
 export default defineConfig(
   baseConfig({
@@ -71,9 +80,35 @@ export default defineConfig(
         tier: 'extended',
       }),
       suite({
+        // workspace#080: US4's three tagged cases stand alone on the file's
+        // beforeAll fixture (each measures from its own baseline), so only they run.
+        name: 'Local stack — form response notifications',
+        testMatch: ['/form-callout-framing/us4-notifications.spec.ts'],
+        grep: LOCAL_STACK_TAG,
+        tier: 'long',
+      }),
+      suite({
+        // W2 Tier 0 item 3: US1-AS5 (audit row) needs AS1–AS3 of its serial
+        // walk, so us1 runs whole here; US3 is tagged as a whole (Redis).
+        name: 'Local stack — account deletion',
+        testMatch: [
+          '/account-deletion/us1-delete-own-account.spec.ts',
+          '/account-deletion/us3-reauth-freshness.spec.ts',
+        ],
+        tier: 'long',
+      }),
+      suite({
         name: 'Local stack — server env overrides',
         testMatch: ['/organization-email-invitations/us3-resend.spec.ts'],
         tier: 'long',
+      }),
+      suite({
+        // The cluster ingress does not route /health/ready, so the canary's
+        // readiness case runs here only.
+        name: 'Local stack — platform readiness',
+        testMatch: ['/ts7-platform-smoke.spec.ts'],
+        grep: LOCAL_STACK_TAG,
+        tier: 'standard',
       }),
       suite({
         // workspace#034 (conversation-message notifications, notifications#522):
@@ -83,6 +118,15 @@ export default defineConfig(
         name: 'Local stack — messaging digests',
         testMatch: ['/messaging-notifications/*.spec.ts'],
         tier: 'long',
+      }),
+      suite({
+        // W2 journey 10 (audit row F3): "Contact Leads" fans out 1:1 Matrix
+        // chats, which fail on the shared test cluster, and the oracle mail is
+        // the direct-message digest. The file is tagged at describe level.
+        name: 'Local stack — contact Space leads',
+        testMatch: ['/contact-leads/us3-contact-space-leads.spec.ts'],
+        tier: 'long',
+        use: { actionTimeout: 15_000 },
       }),
     ],
   })

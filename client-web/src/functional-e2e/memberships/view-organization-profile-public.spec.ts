@@ -1,26 +1,24 @@
 // spec: client-web/src/functional-e2e/plans/memberships-test-plan.md
-// seed: client-web/src/functional-e2e/seed-memberships.spec.ts
 
 import { expect } from '@playwright/test';
 import {
-  TestUser,
-  TestScenarioFactory,
-  TestUserManager,
-} from '@alkemio/tests-lib';
-import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
-import { TestScenarioConfig } from '@alkemio/tests-lib/scenario/config/test-scenario-config';
-import {
   CommunityMembershipPolicy,
   SpacePrivacyMode,
-} from '@alkemio/client-lib';
+  TestScenarioFactory,
+  TestUser,
+  TestUserManager,
+  type TestScenarioConfig,
+} from '@alkemio/tests-lib';
+import type { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import { createAuthenticatedSessionFixture } from '../fixtures/authenticated-session.fixture';
+import { baseUrl, teardownScenario } from '../helpers/space-access.helper';
+import { uniqueName } from './memberships.helpers';
 
 const { test, setupAuthentication, teardownAuthentication } =
   createAuthenticatedSessionFixture({
     storageStateName: 'view-org-profile-public.json',
     cleanupAfterTests: process.env.cleanupAfterTests === 'true',
   });
-const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 
 let baseScenario: OrganizationWithSpaceModel;
 
@@ -35,7 +33,7 @@ const scenarioConfig: TestScenarioConfig = {
   space: {
     about: {
       profile: {
-        displayName: 'Membership Test Space',
+        displayName: uniqueName('Membership Test Space'),
         tagline: 'Testing space memberships',
       },
     },
@@ -59,23 +57,26 @@ const scenarioConfig: TestScenarioConfig = {
   },
 };
 
-test.describe('Organization Profile Access', () => {
-  test.beforeAll(async ({ browser }) => {
-    test.setTimeout(60_000);
-    baseScenario = await TestScenarioFactory.createBaseScenario(scenarioConfig);
-    // Login as NON_SPACE_MEMBER who is not an org member
-    await setupAuthentication(
-      browser,
-      TestUserManager.users.nonSpaceMember.email
-    );
-  });
+test.beforeAll(async ({ browser }) => {
+  test.setTimeout(60_000);
+  baseScenario = await TestScenarioFactory.createBaseScenario(scenarioConfig);
+  // Login as NON_SPACE_MEMBER who is not an org member
+  await setupAuthentication(
+    browser,
+    TestUserManager.users.nonSpaceMember.email
+  );
+});
 
-  test.afterAll(async () => {
-    test.setTimeout(45_000);
+// File level, so it also runs when a failure retires the worker mid-file.
+test.afterAll(async () => {
+  try {
     await teardownAuthentication();
-    await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
-  });
+  } finally {
+    await teardownScenario(baseScenario);
+  }
+});
 
+test.describe('Organization Profile Access', () => {
   test(
     'View Organization Profile - Public (Authenticated Non-Admin)',
     {
@@ -97,7 +98,7 @@ test.describe('Organization Profile Access', () => {
         level: 1,
         name: new RegExp(baseScenario.organization.profile.displayName, 'i'),
       });
-      await expect(orgNameHeading).toBeVisible({ timeout: 2000 });
+      await expect(orgNameHeading).toBeVisible();
 
       // 4. Verify Bio section is visible (CRD org sidebar "Bio" block)
       await expect(
@@ -114,7 +115,7 @@ test.describe('Organization Profile Access', () => {
       // 6. Verify the space created by this organization is displayed
       await expect(
         page.getByText(baseScenario.space.about.profile.displayName).first()
-      ).toBeVisible({ timeout: 5000 });
+      ).toBeVisible();
 
       // 7. Verify Settings entry point is NOT visible (non-member, no admin access)
       const settingsLink = page.getByRole('link', {
@@ -166,7 +167,7 @@ test.describe('Organization Profile Access', () => {
         level: 1,
         name: new RegExp(baseScenario.organization.profile.displayName, 'i'),
       });
-      await expect(orgNameHeading).toBeVisible({ timeout: 2000 });
+      await expect(orgNameHeading).toBeVisible();
 
       // 5. Verify sections (CRD org sidebar "Bio" block + resource tabs)
       await expect(
@@ -177,11 +178,15 @@ test.describe('Organization Profile Access', () => {
         page.getByRole('tab', { name: /Lead Spaces/i }).first()
       ).toBeVisible();
 
-      // [BUG] no spaces available even the public ones
-      // 6. Verify the space created by this organization is displayed
-      // await expect(
-      //   page.getByText(baseScenario.space.about.profile.displayName).first()
-      // ).toBeVisible({ timeout: 2000 });
+      // 6. The space the organisation hosts is listed (the expected
+      //    behaviour; pinned by the skip above on alkem-io/client-web#10433).
+      await page
+        .getByRole('tab', { name: /Lead Spaces/i })
+        .first()
+        .click();
+      await expect(
+        page.getByText(baseScenario.space.about.profile.displayName).first()
+      ).toBeVisible();
     }
   );
 });

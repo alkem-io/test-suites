@@ -181,3 +181,49 @@ export const enableCalloutReactionNotifications = async (
   }
   return restore;
 };
+
+// ─── Form responses (workspace#080) ─────────────────────────────────────────
+
+/**
+ * Pin the channels of `space.admin.collaborationCalloutFormResponseReceived`
+ * ("someone submits a response to a Form in a Space you administer") for one
+ * user to `pinned`. Same contract as `enableCalloutReactionNotifications`:
+ * reads first, returns a restore function for `afterAll`.
+ *
+ * For the Global Admin persona that creates a walk's Subspace: the creator
+ * holds the Subspace ADMIN role (server `SpaceService.assignUserToRoles`), so
+ * it is a legitimate recipient of every Form-response admin notification, and
+ * its row on a shared stack is whatever the last suite left there.
+ */
+export const pinFormResponseNotifications = async (
+  userId: string,
+  pinned: NotificationChannels
+): Promise<() => Promise<void>> => {
+  const previous = channels(
+    (await readNotificationSettings(userId)).space.admin
+      .collaborationCalloutFormResponseReceived
+  );
+  const write = async (row: NotificationChannels) => {
+    must(
+      await updateUserSettings(
+        userId,
+        {
+          notification: {
+            space: { admin: { collaborationCalloutFormResponseReceived: row } },
+          },
+        },
+        TestUser.GLOBAL_ADMIN
+      ),
+      `write form-response notification channels of ${userId}`
+    );
+  };
+  const restore = () => write(previous);
+  try {
+    await write(pinned);
+  } catch (error) {
+    // The server may have committed the write although the response failed.
+    await restore().catch(() => undefined);
+    throw error;
+  }
+  return restore;
+};
