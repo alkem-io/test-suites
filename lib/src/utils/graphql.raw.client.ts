@@ -73,18 +73,30 @@ export const postGraphqlRawAs = async <TData>(
   variables?: Record<string, unknown>
 ): Promise<RawGraphqlResponse<TData>> => {
   const resolved = resolveActor(actor);
-  const response = await axios.post(
-    graphqlEndpointUrl(resolved.endpoint),
-    { query, variables },
-    {
-      headers: {
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
-        ...resolved.headers,
-      },
-      validateStatus: () => true,
-    }
-  );
+  const url = graphqlEndpointUrl(resolved.endpoint);
+  let response;
+  try {
+    response = await axios.post(
+      url,
+      { query, variables },
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+          ...resolved.headers,
+        },
+        validateStatus: () => true,
+        timeout: 60_000,
+      }
+    );
+  } catch (e) {
+    // A transport error's config carries the actor's bearer or cookie: name
+    // the endpoint and the code, never the config.
+    const code = axios.isAxiosError(e) ? e.code : undefined;
+    throw new Error(
+      `POST ${url} failed in transport: ${code ?? 'unknown error'}`
+    );
+  }
   return {
     status: response.status,
     body: response.data,

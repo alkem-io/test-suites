@@ -332,7 +332,9 @@ describe('Second factor — the requirement', () => {
 
         const hint = await restGet('/api/auth/oidc/id-token-hint', session.cookieHeader);
         expect(hint.status).toBe(200);
-        expect(hint.data).toMatchObject({ second_factor_required: true, id_token: expect.any(String) });
+        // Never the whole body in a failure message: it holds the id token.
+        expect(hint.data?.second_factor_required).toBe(true);
+        expect(typeof hint.data?.id_token).toBe('string');
 
         // The established subscription delivers nothing more and closes 4403.
         const after = await postToRoom(roomId, 'after', asAdmin);
