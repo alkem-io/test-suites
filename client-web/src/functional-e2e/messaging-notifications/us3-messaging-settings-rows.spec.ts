@@ -16,9 +16,11 @@ import {
 import { sessionActor } from '../helpers/lib-actor.helper';
 import {
   baseUrl,
+  armMatrixReady,
   markMailboxes,
   password,
   registerAndVerifyUser,
+  sendMessage,
   SETUP_TIMEOUT_MS,
   waitForNewMails,
 } from './messaging.helpers';
@@ -188,6 +190,10 @@ async function sendDirectMessage(
   toDisplayName: string,
   message: string
 ) {
+  // Send works only once this page's Matrix client has synced (plan note 7);
+  // AS3 and AS4 send from a freshly signed-in sender, so arm the wait before
+  // the navigation that builds the client. `sendMessage` awaits it.
+  armMatrixReady(fromPage);
   await fromPage.goto(`${baseUrl}/home`);
   // A context that has never dismissed the consent banner keeps it pinned to
   // the bottom of the viewport at z-1500, where it intercepts the chat FAB's
@@ -203,12 +209,8 @@ async function sendDirectMessage(
   await fromPage.getByRole('button', { name: toDisplayName }).click();
   await fromPage.getByRole('button', { name: 'Start chat' }).click();
 
-  const messageBox = fromPage.getByRole('textbox', {
-    name: 'Add a comment...',
-  });
-  await messageBox.fill(message);
-  await messageBox.press('Enter');
-  await expect(fromPage.getByText(message)).toBeVisible();
+  // Same fill, Enter and "the message is shown" check as before, after the wait.
+  await sendMessage(fromPage, message);
 }
 
 test.describe(

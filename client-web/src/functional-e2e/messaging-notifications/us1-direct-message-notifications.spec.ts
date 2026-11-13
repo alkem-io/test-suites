@@ -46,7 +46,8 @@ import {
  * for each of them since (`markMailboxes` / `newMailsOf` / `waitForNewMails`
  * in `messaging.helpers.ts`, over the lib's recipient-scoped readers). "Zero
  * email" therefore means zero to EITHER participant, and "exactly one" means
- * exactly one to B and none to A.
+ * exactly one to B and none to A. A's own direct email is OFF until US1-AS4
+ * turns it on, so "none to A" can only fail from AS4 on.
  *
  * Covers US1-AS1..AS5. Scenarios share one 1:1 conversation (A, B) and run
  * in order — later scenarios depend on earlier ones' state (in particular
@@ -294,10 +295,26 @@ test.describe(
       expect(afterWindow, 'a new digest to B in the next cycle').toHaveLength(1);
     });
 
-    test('US1-AS4: A never receives any notification for her own message', async () => {
+    test('US1-AS4: A never receives any notification for her own message', async ({
+      browser,
+    }) => {
       test.setTimeout(
         digestTestTimeoutMs([directPush, directEmail], { cycles: 3 })
       );
+      // A's direct email must be ON for "no email to A" to be able to fail:
+      // it defaults OFF (FR-002), so with it off a broken sender exclusion
+      // (FR-005) would still send A nothing. Push is already on for A (setup).
+      const { context: aSettingsContext, page: aSettingsPage } =
+        await newContextPage(browser);
+      await loginViaCrd(aSettingsPage, userAEmail, password, baseUrl);
+      await aSettingsPage.goto(`${baseUrl}/user/me/settings/notifications`);
+      await openSettingsSection(aSettingsPage, /^User Notifications/);
+      const aEmailToggle = directEmailToggle(aSettingsPage);
+      await expect(aEmailToggle).toHaveAttribute('aria-checked', 'false');
+      await aEmailToggle.click();
+      await expect(aEmailToggle).toHaveAttribute('aria-checked', 'true');
+      await aSettingsContext.close();
+
       // Drain the tracks AS3's last send armed, so this scenario starts from a
       // clean slate and its counts are attributable to its own message. Grace
       // covers `email:direct` at its MAX-DELAY bound — the slower of the two

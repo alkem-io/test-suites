@@ -128,6 +128,19 @@ and D), and "exactly one to B" also pins zero to everyone else in the walk. A
 mail to an address outside the walk is no longer observed. That is the price of
 not owning the inbox, and no acceptance scenario is about such an address.
 
+A "zero email to X" check can only fail when X's email channel is on. US1-AS4
+therefore turns on A's direct email before A sends, so the sender-exclusion
+claim (FR-005) covers email as well as push. The checks on US2's A and C, and
+on D before US2-AS3, run with email off. They are kept, but they are not
+evidence about recipients; D's check in US2-AS3, with D's email on, is.
+
+US3's `sendDirectMessage` arms the Matrix wait (note 7) before it navigates,
+then sends through `sendMessage`, as US1 and US2 do. The wait has a no-op
+rejection handler. Without it, a page that opens the chat panel and closes
+without sending (D in US2-AS3) would reject the wait with nothing listening,
+and Playwright would fail the running test. `sendMessage` still awaits the wait
+and fails on a timeout.
+
 **Why `--workers=1`.** The push assertions still read one process-wide shared
 sink: the queue's cumulative publish counter. Anything else publishing
 concurrently lands inside another scenario's delta. The files are also

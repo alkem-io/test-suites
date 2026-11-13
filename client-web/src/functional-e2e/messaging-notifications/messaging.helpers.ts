@@ -158,17 +158,22 @@ export async function subscribeToPush(page: Page, label: string) {
  * confirmed". The client publishes its session right before its first sync,
  * so that sync answering is the observable "chat is ready" event. Armed before
  * each navigation (a reload builds a new client) and awaited by sendMessage.
+ *
+ * A page that is armed but never sends (US2-AS3 opens D's panel only to read
+ * it) closes with the wait still pending, which rejects it. Unobserved, that
+ * rejection is an unhandled one and Playwright fails whichever test is running.
+ * The no-op handler only marks it observed: `sendMessage` awaits the same
+ * promise and still fails on a timeout or a closed page.
  */
 const matrixReady = new WeakMap<Page, Promise<unknown>>();
 const MATRIX_READY_TIMEOUT_MS = 60_000;
-function armMatrixReady(page: Page) {
-  matrixReady.set(
-    page,
-    page.waitForResponse(
-      r => r.url().includes('/_matrix/client/v3/sync') && r.ok(),
-      { timeout: MATRIX_READY_TIMEOUT_MS }
-    )
+export function armMatrixReady(page: Page) {
+  const ready = page.waitForResponse(
+    r => r.url().includes('/_matrix/client/v3/sync') && r.ok(),
+    { timeout: MATRIX_READY_TIMEOUT_MS }
   );
+  ready.catch(() => {});
+  matrixReady.set(page, ready);
 }
 
 export async function openChatPanel(page: Page) {
