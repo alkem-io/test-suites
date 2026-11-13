@@ -142,8 +142,9 @@ test.describe('W2 journey 10 — message an organisation', () => {
   // gets no mail, although the composer says "Delivered to the organisation's
   // administrators" and every other organisation-admin event resolves by
   // admin standing (061 R17b). Reproduced 2026-11-12 on the local stack.
-  // Drop the skip when fixed; put the issue number in the title once filed.
-  test.skip('M1-2 an admin who is not an associate also gets exactly one mail (defect J10-D1, not filed)', async () => {
+  // Recorded on alkem-io/test-suites#724 (not yet filed against server); swap
+  // the link for the server issue once filed. Drop the skip when fixed.
+  test.skip('M1-2 an admin who is not an associate also gets exactly one mail (defect J10-D1, alkem-io/test-suites#724)', async () => {
     expect(
       (await orgMessageChannels(adminOnly!.id)).email,
       'admin-only email channel'

@@ -44,7 +44,7 @@ Techniques: **UC** use-case walk · **EP** recipient partition (admin+associate 
 | ID | Scenario | Technique | Oracle | Automated by | Layer |
 |---|---|---|---|---|---|
 | M1-1 | A user messages an organisation from its page | UC, EP, NC | `sendMessageToOrganization` answered without errors; toast "Your message has been sent."; admins A and B (Associate + Admin) each have **exactly one** mail with subject `<sender> sent a message to your organization` whose body contains the run-unique text; the sender has exactly one `You have sent a message to <org>!` and no admin mail; the associate (not admin) has none. Every recipient's org-message email channel is read back as on first (`readUserSettings`), so each negative is falsifiable | `us1-message-organisation.spec.ts` › M1-1 | UI + lib + mail |
-| M1-2 | An admin who is not an associate is mailed too | EP, EG | exactly one mail to the admin-only user. **Reproduced red** (J10-D1) | `us1-message-organisation.spec.ts` › M1-2 (**`test.skip`**, J10-D1) | UI + mail |
+| M1-2 | An admin who is not an associate is mailed too | EP, EG | exactly one mail to the admin-only user. **Reproduced red** (J10-D1) | `us1-message-organisation.spec.ts` › M1-2 (**`test.skip`**, J10-D1, alkem-io/test-suites#724) | UI + mail |
 | N1-1 | An admin switches the email channel of "Receive direct messages to my organisation" off | ST | server value read first (on); switch checked → unchecked; `readUserSettings` polls to email off; after reload the switch is unchecked and In-App unchanged; read-back equals the before-state with only `email` flipped | `us2-organisation-message-setting.spec.ts` › N1-1 | UI + lib |
 | N1-2 | The stored "off" is honoured | NC | the next UI message to the organisation gives the other admin (settings untouched) exactly one mail; the admin who switched email off has none | `us2-organisation-message-setting.spec.ts` › N1-2 | UI + mail |
 | N1-3 | The admin switches it back on | ST | unchecked → checked; server email on; after reload checked; read-back equals the before-state exactly | `us2-organisation-message-setting.spec.ts` › N1-3 | UI + lib |
@@ -63,7 +63,7 @@ Techniques: **UC** use-case walk · **EP** recipient partition (admin+associate 
 ## Not covered — known gaps
 | Scenario | Why not automated | Where it belongs |
 |---|---|---|
-| An admin who is not an associate gets the organisation message (M1-2) | **Built and skipped**: reproduced product defect J10-D1 (below). Not filed | server fix, then drop the skip |
+| An admin who is not an associate gets the organisation message (M1-2) | **Built and skipped**: reproduced product defect J10-D1 (below), recorded on alkem-io/test-suites#724, not filed against server | server fix, then drop the skip |
 | The legacy "message the community leads" email from the UI | No UI caller exists any more (the CRD sidebar opens chats). API coverage exists | server-api; product to decide whether to delete the mutation |
 | Contact Leads on the shared test cluster | Matrix fails there for environmental reasons, so C3-* are `@local-stack` | nightly once the cluster's Matrix works; then drop the tag |
 | A lead who disabled direct messages ("Not reached" in the confirmation) | `BLOCKED_NO_CONSENT` path; server unit tests cover it | follow-up case in C3 |
@@ -81,7 +81,7 @@ Techniques: **UC** use-case walk · **EP** recipient partition (admin+associate 
 - *Cause (code read):* `notification.recipients.service.ts` resolves `ORGANIZATION_ADMIN_MESSAGE` and `ORGANIZATION_ADMIN_MENTIONED` with `getOrganizationCredentialCriteria` (ORGANIZATION_ASSOCIATE credentials, then filtered by RECEIVE_NOTIFICATIONS_ADMIN), while the other organisation-admin events use `getOrganizationAdminCredentialCriteria` (admin standing, 061 R17b). The criteria date from server#5285 (2025-08-22).
 - *Reach:* an Admin who is not an Associate exists whenever the admin role is granted without (or after removing) the associate role; the API allows it and `organization-space-invitations` US2-AS3 relies on that topology. Likely also affects "my organisation was mentioned" (same criteria, not run).
 - *Evidence:* local stack 2026-11-12, M1-1 run with the M1-2 recipient in place; redacted record (no addresses kept here).
-- *Pinned by:* M1-2 (`test.skip`). Put the issue number into its title when filed.
+- *Pinned by:* M1-2 (`test.skip`, titled with alkem-io/test-suites#724). Swap in the server issue number when filed.
 
 **J10-D2 — A notification event with a partial delivery failure drops the failed recipients' mails without retry** (notifications, `develop` @ `220befb`; reliability, to confirm severity with the QA lead)
 - *Observed:* local stack 2026-11-12, run 7 of M1-1. The server handed the notifications service both admins (event payload lists A and B); B's mail was delivered, A's never was. The service log shows `notifme reported status=error: {"email":"Client network socket disconnected before secure TLS connection was established"}` for that send and no retry.
