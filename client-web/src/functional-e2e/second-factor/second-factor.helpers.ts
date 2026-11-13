@@ -7,6 +7,7 @@ import {
   type BrowserContext,
   type Locator,
   type Page,
+  type Request,
 } from '@playwright/test';
 import {
   readMyUser,
@@ -344,29 +345,47 @@ const IDENTITY_ROUTES = '/ory/';
  * it did receive (ERR_BLOCKED_BY_RESPONSE: the host answered) is not such a
  * failure. The refusal that routes a session to /second-factor is a GraphQL
  * answer of 200, so it is not counted; neither is an identity provider answer.
+ *
+ * `sent` lists the same-origin requests seen with /second-factor as their
+ * Referer: if none is, the referer is not reaching the listener and `failed`
+ * proves nothing about the page's own requests.
  */
-export const failedRequests = (page: Page): string[] => {
+export const refusalPageRequests = (
+  page: Page
+): { failed: string[]; sent: string[] } => {
   const failed: string[] = [];
+  const sent: string[] = [];
   const origin = new URL(baseUrl).origin;
+  const watched = (url: URL) =>
+    url.origin === origin && !url.pathname.startsWith(IDENTITY_ROUTES);
+  // A same-origin request carries the page it was sent from as its Referer.
+  const fromRefusalPage = (request: Request) => {
+    const referer = request.headers().referer;
+    return !!referer && new URL(referer).pathname === '/second-factor';
+  };
+  page.on('request', request => {
+    const url = new URL(request.url());
+    if (watched(url) && fromRefusalPage(request)) {
+      sent.push(`${request.method()} ${url.pathname}`);
+    }
+  });
   page.on('requestfailed', request => {
     const reason = request.failure()?.errorText ?? '';
     if (UNREACHABLE.some(code => reason.includes(code))) {
-      failed.push(`${request.method()} ${request.url()} (${reason})`);
+      const url = new URL(request.url());
+      failed.push(
+        `${request.method()} ${url.origin}${url.pathname} (${reason})`
+      );
     }
   });
   page.on('response', response => {
     if (response.status() !== 401 && response.status() !== 403) return;
     const url = new URL(response.url());
-    if (url.origin !== origin || url.pathname.startsWith(IDENTITY_ROUTES)) return;
+    if (!watched(url)) return;
     const request = response.request();
-    // A same-origin request carries the page it was sent from as its Referer.
-    const referer = request.headers().referer;
-    if (
-      url.pathname === '/second-factor' ||
-      (referer && new URL(referer).pathname === '/second-factor')
-    ) {
+    if (url.pathname === '/second-factor' || fromRefusalPage(request)) {
       failed.push(`${request.method()} ${url.pathname} (${response.status()})`);
     }
   });
-  return failed;
+  return { failed, sent };
 };

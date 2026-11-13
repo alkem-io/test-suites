@@ -35,7 +35,7 @@ import {
   enrolAuthenticatorOnPage,
   expectRefusalPage,
   expectSignedIn,
-  failedRequests,
+  refusalPageRequests,
   freshPage,
   nameIdOf,
   openSecurityTab,
@@ -258,7 +258,7 @@ test.describe('US2 — recovery codes and the support reset', () => {
           .toBeGreaterThan(marker + 1);
 
         const { context, page } = await freshPage(browser);
-        const failed = failedRequests(page);
+        const watch = refusalPageRequests(page);
         try {
           await submitPassword(page, member!.email);
           await expectRefusalPage(page);
@@ -336,8 +336,10 @@ test.describe('US2 — recovery codes and the support reset', () => {
           });
 
           // Nothing the page needed sat behind an unreachable host or was
-          // refused from behind the edge.
-          expect(failed).toEqual([]);
+          // refused from behind the edge — and the page's own requests were
+          // seen, so that answer covers them.
+          expect(watch.sent).not.toEqual([]);
+          expect(watch.failed).toEqual([]);
         } finally {
           await context.close();
         }

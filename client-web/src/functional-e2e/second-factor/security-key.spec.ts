@@ -162,7 +162,7 @@ test.describe('US3 — security keys', () => {
     }
   });
 
-  test('US2-AS5 a support reset removes a security key, so a stolen key no longer signs in', async ({
+  test('US2-AS5 a support reset removes a security key', async ({
     browser,
   }) => {
     const user = await createThrowawayUser('resetkey');
