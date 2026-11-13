@@ -19,7 +19,7 @@ What changed so the 21 files could join the nightly (audit: `docs/qa/server-rebu
 | `view-home-dashboard-multiple-memberships` (7.2) | L1 by its unique name; the duplicated last assertion (repeat of the L0 check) dropped | L0 and L1 names both on `/home` |
 | `view-organization-account-settings-as-admin` (5.1, 5.3) | `getByText(/1\/3/).first()` → exactly one usage badge `^1/<n>$` (the fresh org hosts only the seeded Space; the limit is the environment's plan) | |
 | `cannot-access-other-user-account-settings` (3.3), `cannot-access-other-user-membership-settings` (2.5) | **Un-skipped.** The "[BUG]" skips expected the pre-CRD "We are redirecting you / Go now" interstitial; develop's `useUserSettingsAccessGuard` replaces the URL with the user's profile (same CRD flow as 5.2) | Exact redirect to `/user/<other>` + their h1 (positive) + no `Account` tab / no "Open user settings" link |
-| `view-another-user-profile-public-view` (1.2) | **Un-skipped.** "Pending product decision" was a test-side gap: SPACE_ADMIN is ADMIN of the seeded Space, so it lists under **Leading**, not "Member Of" (`useFilteredMemberships`); `rolesUser` needs only the platform `READ_USERS` every registered user holds | h1 + the Space under "Leading" + no settings link |
+| `view-another-user-profile-public-view` (1.2) | **Un-skipped.** The case found nothing because of a test-side gap: SPACE_ADMIN is ADMIN of the seeded Space, so the Space lists under **Leading**, not "Member Of" (`useFilteredMemberships`), and `rolesUser` needs only the platform `READ_USERS` every registered user holds. The product question the skip named (should other users see a user's memberships at all?) is **still open**. The assertion is the provisional default; see the 1.2 amendment | h1 + the Space under "Leading" + no settings link |
 | `view-own-account-settings` (3.1) | **Un-skipped.** "todo: the user should be a host" was a set-up gap: the global admin now creates a Space on SPACE_ADMIN's own account (deleted in `afterAll`). The pre-CRD intro text is gone on develop and no longer asserted | `/settings/account` + the four section titles + the created Space listed |
 | `view-organization-profile-public` › Unauthenticated (4.2) | Still `test.skip` on **alkem-io/client-web#10433** (open; `useOrganization` still skips `rolesOrganization` without `READ_USERS`). The expected step "the hosted Space is listed" is restored under the skip instead of being commented out | — |
 
@@ -103,9 +103,11 @@ The seed creates:
 - Profile information is displayed (avatar, name, tagline, bio, skills)
 - Social links are visible (if set)
 - Public contributions are visible
-- Membership information is **not** shown on public profile
-- Settings tabs are **not** visible to viewing user
+- ~~Membership information is **not** shown on public profile~~ — superseded, see the amendment below
+- ~~Settings tabs are **not** visible to viewing user~~ — superseded, see the amendment below
 - URL structure: `/user/space.member`
+
+> **Amended 2026-11-13 (provisional, needs the QA lead's ruling — test-suites#724):** the two struck bullets contradict what `view-own-user-profile-public-information.spec.ts` pins and what client-web develop renders. The user's own Space is listed under the **Member Of** tab (the CRD `ProfileResourceTabStrip`: `Leading` / `Member Of` / `Other Resources`), and the owner gets the **Open user settings** link, which opens `/user/<nameId>/settings`. The spec asserts that behaviour; the struck text is kept until the ruling.
 
 #### 1.2 View Another User's Profile - Public View
 
@@ -123,8 +125,10 @@ The seed creates:
 - Basic information visible: name, avatar, tagline, bio, location
 - No "Settings" or "Membership" tabs visible
 - No access to private information
-- Cannot see the user's memberships or organizations
+- ~~Cannot see the user's memberships or organizations~~ — superseded, see the amendment below
 - Cannot access `/user/space.admin/settings/*` routes
+
+> **Amended 2026-11-13 (provisional, needs the QA lead's ruling — test-suites#724):** since the 2026-11-12 un-skip, `view-another-user-profile-public-view.spec.ts` asserts the **opposite** of the struck bullet. Another registered user sees SPACE_ADMIN's Space under the **Leading** tab: `rolesUser` needs only the platform `READ_USERS`, and `useFilteredMemberships` files ADMIN/LEAD roles under Leading. The public profile also lists the user's hosted VCs, Template Packs and Custom Homepages under **Other Resources** (`UserResourceSections`). The skip this replaced read "pending product decision (privacy-by-design vs bug)". The un-skip settles which tab the Space appears under. It does **not** settle whether the platform should show a user's memberships to other users. Until the ruling, the spec pins the current behaviour as the provisional default. If the ruling is privacy-by-design, the spec flips and a product defect is filed.
 
 #### 1.3 View Unauthenticated User Profile
 
@@ -137,10 +141,12 @@ The seed creates:
 
 **Expected Results:**
 
-- Public profile information is visible
+- ~~Public profile information is visible~~ — superseded, see the amendment below
 - No settings or private tabs available
 - Login prompt may appear for restricted content
 - Only publicly shared information is displayed
+
+> **Amended 2026-11-13 (provisional, needs the QA lead's ruling — test-suites#724):** `view-unauthenticated-user-profile.spec.ts` asserts that an anonymous visitor gets the **Access Restricted** page on `/user/<nameId>`, not a public profile. The struck bullet and the spec cannot both hold. The spec pins current develop behaviour; the ruling decides which one is intended.
 
 ---
 
@@ -243,9 +249,11 @@ The seed creates:
 **Expected Results:**
 
 - Access is denied with 403 Forbidden or redirected
-- Error message: "You don't have permission to view this page"
-- User is redirected to their own settings or home page
-- Privacy of membership information is maintained
+- ~~Error message: "You don't have permission to view this page"~~ — superseded, see the amendment below
+- ~~User is redirected to their own settings or home page~~ — superseded, see the amendment below
+- Privacy of membership information is maintained — **open**, see the amendment below
+
+> **Amended 2026-11-13 (provisional, needs the QA lead's ruling — test-suites#724):** on client-web develop, `useUserSettingsAccessGuard` sends a non-owner to **the other user's public profile** (`navigate(profileUrl, { replace: true })`), with no message. `cannot-access-other-user-membership-settings.spec.ts` pins that: an exact redirect to `/user/<other>`, their h1, no `Account` tab and no "Open user settings" link. The guard runs client-side. No API-level case pins a server denial (see the 2.5 / 3.3 row of `docs/qa-knowledge/deferred.md`). The page it lands on lists the user's memberships (1.2 amendment), so "privacy of membership information" is **not** what this case proves. It proves only that the settings shell is not shown. Whether that privacy claim stands is part of the 1.2 ruling.
 
 ---
 
@@ -301,9 +309,11 @@ The seed creates:
 **Expected Results:**
 
 - Access denied (403 Forbidden)
-- Redirected to own settings or home
-- Cannot view another user's hosted resources
+- ~~Redirected to own settings or home~~ — superseded, see the amendment below
+- Cannot view another user's hosted resources — **open**, see the amendment below
 - Privacy protection is enforced
+
+> **Amended 2026-11-13 (provisional, needs the QA lead's ruling — test-suites#724):** the client guard sends a non-owner to **the other user's public profile**, the same way as in 2.5. `cannot-access-other-user-account-settings.spec.ts` pins that redirect, plus the absence of the settings shell. That public profile lists the user's hosted Virtual Contributors, Template Packs and Custom Homepages under **Other Resources** (`UserResourceSections`), so "cannot view another user's hosted resources" does not hold for those resource types today, and this case does not prove it. Hosted *Spaces* are listed only on the account settings tab, which the redirect hides. A server-side denial of another user's `account` is not pinned at API level (`docs/qa-knowledge/deferred.md`).
 
 ---
 
