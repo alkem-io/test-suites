@@ -65,6 +65,14 @@ import {
 const uid = newUid();
 const GUEST_NAME = `Guest ${uid}`;
 const MARKER = `GUEST ${uid}`;
+/**
+ * A refusal by the board's policy: exactly one error, `FORBIDDEN_POLICY` (server `lookup.whiteboard` →
+ * `grantAccessOrFail(READ)`; contract LB-2). A transport failure, `ENTITY_NOT_FOUND` or an internal error is not it.
+ */
+const FORBIDDEN_POLICY_REFUSAL = {
+  refused: true,
+  errors: [expect.stringMatching(/^FORBIDDEN_POLICY: /)],
+};
 
 let scenario: OrganizationWithSpaceModel | undefined;
 let seeded: SeededContent;
@@ -178,6 +186,10 @@ test.describe('W2 journey 5b — a whiteboard shared with guests', () => {
       asGuest.refused,
       `a guest reads the board: ${JSON.stringify(asGuest)}`
     ).toBe(true);
+    // The refusal is the authorization denial (`lookup.whiteboard` → `grantAccessOrFail` READ), not any failure.
+    expect(asGuest, 'the guest is refused by the board policy').toEqual(
+      FORBIDDEN_POLICY_REFUSAL
+    );
   });
 
   // KD-1: a board that is not shared is refused by the server as FORBIDDEN_POLICY ("Authorization: unable to grant
@@ -232,6 +244,15 @@ test.describe('W2 journey 5b — a whiteboard shared with guests', () => {
       refused: false,
       guestContributionsAllowed: true,
     });
+    // 057 US2-AS1: the share admits NAMED guests only. The same anonymous read without a guest name holds neither
+    // GLOBAL_GUEST nor GLOBAL_REGISTERED, so the shared board still refuses it (the named read above is the control).
+    const unnamed = await guestAccessAs(whiteboardId(), {
+      anonymous: 'private',
+    });
+    expect(
+      unnamed,
+      `an anonymous visitor with no guest name reads the shared board: ${JSON.stringify(unnamed)}`
+    ).toEqual(FORBIDDEN_POLICY_REFUSAL);
   });
 
   // KD-2: the collaboration service authorises the room join through authorization-evaluation-service, which caches
@@ -286,7 +307,7 @@ test.describe('W2 journey 5b — a whiteboard shared with guests', () => {
     ).toHaveCount(0);
   });
 
-  test('G-4 the guest draws: the drawing is in the stored document, and a member sees it in a fresh session', async ({
+  test("G-4 the guest draws: the drawing is in the stored document, a member sees it in a fresh session, and a second guest's edit reaches the first guest", async ({
     browser,
   }) => {
     const page = guest!.page;
@@ -357,8 +378,52 @@ test.describe('W2 journey 5b — a whiteboard shared with guests', () => {
       wireGuest.rawElement(textId)?.text,
       'and reads the stored board'
     ).toBe(MARKER);
+
+    // 057 US1-AS3: two named guests on one board (the browser guest and this wire guest) both stay connected and
+    // receive each other's edits. The wire guest moves the browser guest's rectangle; the browser guest's own
+    // editor applies the move.
+    expect(
+      geometry(wireGuest.rawElement(rectId)),
+      "the wire guest holds the browser guest's rectangle"
+    ).toEqual(geometry(rectRaw));
+    const movedX = Number(rectRaw!.x) + 120;
+    await wireGuest.write(elements => {
+      elements.get(rectId)?.set('x', movedX);
+    });
+    await expect
+      .poll(async () => (await editorElement(editor, rectId))?.x, {
+        message: "the browser guest's editor applies the other guest's move",
+      })
+      .toBe(movedX);
+    await expectEditorAlive(page, 'the browser guest');
+    expect(wireGuest.socketState, 'the wire guest is still connected').toBe(
+      'open'
+    );
     await wireGuest.close();
     peers.splice(peers.indexOf(wireGuest), 1);
+
+    // 057 US2-AS1 at the room: the same anonymous connect WITHOUT a guest name is not let in, seconds after the
+    // named one was (the positive control above).
+    const unnamed = await connectWhiteboardPeer({
+      whiteboardId: whiteboardId(),
+      actor: { anonymous: 'private' },
+      requireWrite: false,
+      connectTimeoutMs: 10_000,
+    }).then(
+      admitted => {
+        peers.push(admitted);
+        return `admitted with ${admitted.access} access`;
+      },
+      (error: Error) => `refused (${error.message})`
+    );
+    expect(
+      unnamed,
+      'an anonymous connect with no guest name is refused the shared room'
+    ).toMatch(/^refused/);
+    expect(
+      unnamed,
+      'refused by the room, not by a gateway failure'
+    ).not.toMatch(/HTTP 5\d\d/);
   });
 
   /**
@@ -460,6 +525,9 @@ test.describe('W2 journey 5b — a whiteboard shared with guests', () => {
       asGuest.refused,
       `a guest reads the board: ${JSON.stringify(asGuest)}`
     ).toBe(true);
+    expect(asGuest, 'the revoked guest is refused by the board policy').toEqual(
+      FORBIDDEN_POLICY_REFUSAL
+    );
 
     // The guest's own session, same link: refused, not read-only (no editor at all).
     const guestPage = guest!.page;
