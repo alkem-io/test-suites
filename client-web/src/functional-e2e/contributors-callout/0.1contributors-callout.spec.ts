@@ -65,6 +65,16 @@ const memberFixture = createAuthenticatedSessionFixture({
 // exactly one `region "Contributors"` exists on the page at a time.
 const MAIN = `Contributors ${Date.now()}`;
 
+// File-level teardown: it runs once after both blocks, whichever of them
+// failed. With the cleanup inside the Member block, an Admin-block failure
+// skipped the Member block and leaked the Space, the organisation and the VC.
+adminFixture.test.afterAll(async () => {
+  if (baseScenario) {
+    await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
+    baseScenario = undefined;
+  }
+});
+
 adminFixture.test.describe.serial('Contributors Callout - Admin', () => {
   adminFixture.test.beforeAll(async ({ browser }) => {
     adminFixture.test.setTimeout(60_000);
@@ -104,7 +114,15 @@ adminFixture.test.describe.serial('Contributors Callout - Admin', () => {
       await cc.navigateToSpace(baseScenario!.space.nameId);
       await expect(cc.addCalloutButton).toBeVisible();
       await cc.openCreateForm();
-      await expect(cc.framingContributorsOption).toBeVisible();
+      // The chip strip folds Contributors behind "More to add" (client-web
+      // `FramingChipStrip`), so the offer is a menu item, not a surface chip.
+      await page
+        .getByRole('dialog')
+        .getByRole('button', { name: 'More to add' })
+        .click();
+      await expect(
+        page.getByRole('menuitem', { name: 'Contributors', exact: true })
+      ).toBeVisible();
     }
   );
 
@@ -185,7 +203,9 @@ adminFixture.test.describe.serial('Contributors Callout - Admin', () => {
       // The VC segment hides the Map control and lists the member VC.
       await col.switchType('Virtual Contributors');
       await expect(col.viewToggle('Map')).toHaveCount(0);
-      await expect(col.contributorCard(VC_NAME)).toBeVisible();
+      // A VC card names its profile on two links (avatar + title), so the
+      // card is found as the grid item holding them, as in us6.
+      await expect(col.cardFor(VC_NAME)).toBeVisible();
       await expect(col.emptyState()).toHaveCount(0);
     }
   );
@@ -326,10 +346,6 @@ memberFixture.test.describe.serial('Contributors Callout - Member', () => {
   memberFixture.test.afterAll(async () => {
     memberFixture.test.setTimeout(30_000);
     await memberFixture.teardownAuthentication();
-    if (baseScenario) {
-      await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
-      baseScenario = undefined;
-    }
   });
 
   // AC — the Contributors callout is admin-only; a member cannot create callouts

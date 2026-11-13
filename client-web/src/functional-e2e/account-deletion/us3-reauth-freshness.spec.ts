@@ -1,185 +1,159 @@
-// Durable regression cover for the delete-own-account acceptance walk
-// covering the "re-authentication for a stale session" story (US3-AS1..AS3).
+// plan: client-web/src/functional-e2e/account-deletion/account-deletion-test-plan.md
+// (US3 — re-authentication for a stale session; D-1 / D-2)
 //
-// A genuinely REAL session, aged in place — never a fabricated one. The
-// subject logs in through the real Kratos self-service flow exactly like
-// every other walk in this area, then the ONE session that login produced
-// is located in Redis by its Kratos identity `sub`
-// (`findBffSessionIdBySub`, `@alkemio/tests-lib`) and its `created_at`
-// rewritten to just past the 15-minute privileged window
-// (`ageBffSessionCreatedAt`). This proves the freshness gate keys off the
-// SAME session the browser is holding, not a stand-in for it — and, unlike
-// `mint-bff-session.ts`'s fabrication primitive, never writes a payload
-// that did not originate from a real sign-in.
+// `@local-stack` as a whole (W2 Tier 0 item 3): the only way to make a REAL
+// browser session older than the 15-minute privileged window without waiting
+// 15 minutes is to age its record in the server's session store
+// (`findBffSessionIdBySub` + `ageBffSessionCreatedAt`, loopback Redis via
+// HARNESS_REDIS_*). The shared test cluster offers neither Redis nor a clock
+// override, so the nightly never lists these cases; the local-stack runner
+// does. Everything else is portable: the outcome is read back over GraphQL
+// (`lookup.user` as the platform admin), not from the audit table, and the
+// walk starts on the Account tab's Danger Zone (client-web#10437).
 //
-// One subject (`staleSubject`) carries the whole flow on a single
-// continuously authenticated page, in fixed order: clicking "Delete
-// account" on the aged session never reaches the confirm dialog at all —
-// the freshness check runs in the pre-flight, BEFORE either dialog opens
-// (data-model.md §9), so the client routes straight to the identity
-// provider's real re-authentication round trip via the OIDC BFF login route
-// (nothing is deleted) → a REAL re-login completes it → back on the
-// Security tab the confirm dialog auto-opens with the typed-name field
-// cleared (never auto-executed) → type and confirm → deletion succeeds on
-// the now-fresh session — hence `serial` mode for this file, the same
-// reason us1/us2 use it.
+// One subject, one signed-in page, fixed order: on the aged session "Delete
+// account" never opens a dialog — the pre-flight finds the session stale and
+// the client ends the Kratos SSO session and sends the browser to a real
+// sign-in (nothing is deleted) → a real sign-in completes it → back on the
+// Account tab the confirm dialog reopens with the typed name CLEARED (never
+// auto-executed) → type and confirm → deleted.
 //
-// US3-AS4 (SSO-only identities never see a password prompt) and AS5/AS6
-// (fail-closed on missing/unparseable `created_at`, silent-refresh does not
-// count) have no browser-observable difference from this flow's happy path
-// and no SSO-only harness identity to drive them with — both are proven at
-// the it-spec level instead (delete-own-account.it-spec.ts, T305).
+// US3-AS4 (SSO-only identities) and AS5/AS6 (fail-closed on a missing or
+// unparseable `created_at`; silent refresh does not count) have no browser-
+// observable difference here and are proven at the it-spec level.
 
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test, type BrowserContext, type Page } from '@playwright/test';
 import {
   ageBffSessionCreatedAt,
   decodeJwtPayloadUnsafe,
   findBffSessionIdBySub,
   getUserToken,
 } from '@alkemio/tests-lib';
+import { fillSecret } from '../helpers/login.helper';
 import {
   confirmDeleteButton,
   deleteAccountTriggerButton,
-  deleteUserQuietly,
+  deleteSubjectIfPresent,
   DisposableSubject,
-  getAuditRowsFor,
   harnessPassword,
   loginAsSubject,
   logInHeaderLink,
-  navigateToSecurityTab,
+  openDeleteAccountSection,
   PRIVILEGED_SESSION_WINDOW_S,
   provisionSubject,
+  runTeardown,
   typedNameField,
+  userExists,
 } from './delete-account.helpers';
-import { fillSecret } from '../helpers/login.helper';
 
 /**
- * Ages the REAL BFF session the browser is currently holding for `subject`
- * to just past the privileged window. Resolves the Kratos identity id via a
- * throwaway non-interactive bearer (never used for auth — only its `sub`
- * claim is read, same technique `mintBffSessionForUser` uses), then finds
- * that identity's session in Redis by `sub` rather than reading the
- * browser's own signed cookie — no dependency on the cookie's wire encoding
- * or signing scheme, only on Redis holding the session the login produced.
+ * Ages the session the browser holds for `subject` to just past the
+ * privileged window. The Kratos `sub` comes from a throwaway non-interactive
+ * bearer (only its claim is read); the session is found in the store by that
+ * `sub`, so nothing depends on the cookie's encoding.
  */
 const ageCurrentBrowserSessionFor = async (
   subject: DisposableSubject
 ): Promise<void> => {
-  const nonInteractiveToken = await getUserToken(subject.email);
-  const kratosSub = decodeJwtPayloadUnsafe(nonInteractiveToken).sub;
+  const kratosSub = decodeJwtPayloadUnsafe(
+    await getUserToken(subject.email)
+  ).sub;
   if (typeof kratosSub !== 'string' || kratosSub.length === 0) {
-    throw new Error(
-      `ageCurrentBrowserSessionFor: no 'sub' claim on the non-interactive token for '${subject.email}'`
-    );
+    throw new Error('ageCurrentBrowserSessionFor: no sub claim on the bearer');
   }
   const sessionId = await findBffSessionIdBySub(kratosSub);
-  const staleCreatedAtEpochS =
-    Math.floor(Date.now() / 1000) - (PRIVILEGED_SESSION_WINDOW_S + 60);
-  await ageBffSessionCreatedAt(sessionId, staleCreatedAtEpochS);
+  await ageBffSessionCreatedAt(
+    sessionId,
+    Math.floor(Date.now() / 1000) - (PRIVILEGED_SESSION_WINDOW_S + 60)
+  );
 };
 
+/** The sign-in form the re-authentication round trip lands on. */
+const passwordField = (page: Page) =>
+  page.getByRole('textbox', { name: 'Password' });
+
 /**
- * Completes the identity provider's real re-authentication round trip.
- * `useDeleteAccount`'s `redirectToReauth` sends the browser through the OIDC
- * BFF login route (`/api/auth/oidc/login`, `prompt: 'login'`) rather than
- * any Kratos-native `?refresh=true` settings-flow redirect — that mechanism
- * belongs to the Settings flow's own privileged-session handling and is
- * explicitly not what this hook uses. The round trip may hop through more
- * than one intermediate URL before landing on the sign-in form, so this
- * waits on the form's own locator rather than any particular URL shape; the
- * identity's email may arrive pre-filled and read-only (a "confirm it's
- * you" prompt) or as a normal editable field depending on flow
- * configuration — filling it only when present keeps this robust to either
- * shape rather than asserting one.
+ * Completes the identity provider's sign-in. The client ends the Kratos SSO
+ * session first, so a real form is shown; the email may come pre-filled and
+ * read-only ("confirm it's you") or empty, depending on flow configuration.
  */
-const completeReauthenticationPrompt = async (
+const completeReauthentication = async (
   page: Page,
   subject: DisposableSubject
 ): Promise<void> => {
-  const passwordField = page.getByRole('textbox', { name: 'Password *' });
-  await expect(passwordField).toBeVisible({ timeout: 20_000 });
-
-  const emailField = page.getByRole('textbox', { name: 'E-Mail *' });
-  if (await emailField.isVisible().catch(() => false)) {
+  await expect(passwordField(page)).toBeVisible();
+  const emailField = page.getByRole('textbox', { name: 'E-Mail' });
+  // The form is rendered (password visible), so a count is not a race.
+  if ((await emailField.count()) > 0 && (await emailField.isEditable())) {
     await emailField.fill(subject.email);
   }
-  await fillSecret(passwordField, harnessPassword);
+  await fillSecret(passwordField(page), harnessPassword);
   await page.getByRole('button', { name: 'Sign in', exact: true }).click();
 };
 
+let staleSubject: DisposableSubject | undefined;
+let staleContext: BrowserContext | undefined;
+
+// File level, so it also runs when a failure retires the worker mid-file.
+test.afterAll(async () => {
+  await runTeardown([
+    ['close context', async () => staleContext?.close()],
+    // A no-op once AS3 deleted the subject — the normal outcome.
+    ['delete subject', () => deleteSubjectIfPresent(staleSubject?.userId)],
+  ]);
+});
+
 test.describe(
   'Re-authentication for a stale session',
-  { tag: '@forge-acceptance' },
+  // Needs loopback Redis to age a real session (see the file header).
+  { tag: ['@forge-acceptance', '@local-stack'] },
   () => {
-    // The whole flow shares one aged-then-refreshed session in a fixed
-    // order — see the file header.
     test.describe.configure({ mode: 'serial' });
 
-    let staleSubject: DisposableSubject;
-    let staleContext: Awaited<ReturnType<import('@playwright/test').Browser['newContext']>>;
     let stalePage: Page;
 
     test.beforeAll(async ({ browser }) => {
       test.setTimeout(180_000);
       staleSubject = await provisionSubject('us3stale');
-
       staleContext = await browser.newContext();
       stalePage = await staleContext.newPage();
       await loginAsSubject(stalePage, staleSubject.email);
-      await navigateToSecurityTab(stalePage);
+      await openDeleteAccountSection(stalePage);
       await ageCurrentBrowserSessionFor(staleSubject);
     });
 
-    test.afterAll(async () => {
-      await staleContext?.close().catch(() => {});
-      await deleteUserQuietly(staleSubject?.userId);
-    });
-
-    test('US3-AS1/AS2: a stale session is refused, nothing is deleted, and the client routes to real re-authentication', async () => {
-      test.setTimeout(60_000);
-
-      // Freshness routing happens BEFORE either dialog ever opens
-      // (data-model.md §9): the pre-flight's `sessionFresh` flag sends a
-      // stale session straight to the OIDC BFF login route, so the confirm
-      // dialog's typed-name field never mounts here — asserting the
-      // departure from the Security tab, not any dialog content, is the
-      // only signal the shipped connector actually produces.
+    test('US3-AS1/AS2: a stale session is sent to a real sign-in, nothing is deleted, and the confirm reopens empty', async () => {
       await deleteAccountTriggerButton(stalePage).click();
-      await stalePage.waitForURL(
-        url => !url.pathname.endsWith('/settings/security'),
-        { timeout: 20_000 }
+
+      // The pre-flight found the session stale: no dialog, the browser left
+      // the Account tab for the sign-in form.
+      await expect(passwordField(stalePage)).toBeVisible();
+      expect(new URL(stalePage.url()).pathname).not.toMatch(
+        /\/settings\/account$/
       );
+      await expect(typedNameField(stalePage)).toHaveCount(0);
 
-      // Nothing was deleted: no primary audit row for this subject yet.
-      const rowsBeforeReauth = await getAuditRowsFor(staleSubject.userId);
-      expect(
-        rowsBeforeReauth.filter(row => row.outcome === 'account_deleted')
-      ).toHaveLength(0);
+      // Nothing was deleted.
+      expect(await userExists(staleSubject!.userId)).toBe(true);
 
-      await completeReauthenticationPrompt(stalePage, staleSubject);
+      await completeReauthentication(stalePage, staleSubject!);
 
-      // Back on the Security tab: the confirm dialog auto-reopens with the
-      // typed-name field CLEARED — the deletion is never auto-executed on
-      // the freshly re-authenticated session.
-      const reopenedField = typedNameField(stalePage);
-      await expect(reopenedField).toBeVisible({ timeout: 20_000 });
-      await expect(reopenedField).toHaveValue('');
+      // Back on the Account tab: the confirm dialog reopens with the typed
+      // name cleared — never auto-executed on the fresh session.
+      await stalePage.waitForURL(/\/settings\/account/);
+      await expect(typedNameField(stalePage)).toBeVisible();
+      await expect(typedNameField(stalePage)).toHaveValue('');
+      expect(await userExists(staleSubject!.userId)).toBe(true);
     });
 
-    test('US3-AS3: confirming again on the freshly re-authenticated session completes deletion', async () => {
-      test.setTimeout(30_000);
-
-      await typedNameField(stalePage).fill(staleSubject.displayName);
+    test('US3-AS3: confirming on the freshly re-authenticated session deletes the account', async () => {
+      await typedNameField(stalePage).fill(staleSubject!.displayName);
       const confirmButton = confirmDeleteButton(stalePage);
       await expect(confirmButton).toBeEnabled();
       await confirmButton.click();
 
-      await expect(
-        stalePage.getByText(/Couldn't delete your account/i)
-      ).toHaveCount(0);
-      await expect(logInHeaderLink(stalePage)).toBeVisible({
-        timeout: 15_000,
-      });
+      await expect(logInHeaderLink(stalePage)).toBeVisible();
+      expect(await userExists(staleSubject!.userId)).toBe(false);
     });
   }
 );

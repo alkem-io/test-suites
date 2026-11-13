@@ -23,6 +23,15 @@ export default defineConfig(
     reportFolder: 'playwright-report',
     projects: [
       suite({
+        // Migration canary (W2 Tier 0 item 8): listed first so a server that
+        // cannot answer an anonymous metadata query or sign the admin in is
+        // seen before any longer suite starts. The readiness case is
+        // `@local-stack` (the cluster ingress does not route /health/ready).
+        name: 'Platform smoke',
+        testMatch: ['/ts7-platform-smoke.spec.ts'],
+        tier: 'standard',
+      }),
+      suite({
         name: 'Authentication',
         testMatch: [
           '/authentication/authentication-page-verification.spec.ts',
@@ -34,6 +43,17 @@ export default defineConfig(
         ],
         // Registration and recovery wait for mail round trips.
         tier: 'extended',
+      }),
+      suite({
+        // W2 Tier 0 item 2 (client-net-audit § 4): A7 session revocation
+        // (server#6315). Disposable identities registered and deleted in the
+        // files; oracles are lib GraphQL read-backs + the signed-out UI. Mail
+        // only in beforeAll; cases are multi-context walks. Capture off: the
+        // walks replay session credentials.
+        name: 'Session revocation',
+        testMatch: ['/session-revocation/*.spec.ts'],
+        tier: 'extended',
+        capture: 'off',
       }),
       suite({
         name: 'Space',
@@ -70,6 +90,12 @@ export default defineConfig(
           '/space-settings-write/us3-collaboration-toggles.spec.ts',
         ],
         // Each case: save in the admin context, reload in a second persona's.
+        tier: 'extended',
+      }),
+      // W2 Tier 0 item 1 (docs/qa/server-rebuild/client-net-audit/README.md § 4): user self-leave + lost access, private-L2 gates, profiles, dashboard; leave walks span two pages.
+      suite({
+        name: 'Memberships',
+        testMatch: ['/memberships/*.spec.ts'],
         tier: 'extended',
       }),
       suite({
@@ -185,6 +211,16 @@ export default defineConfig(
         ],
       }),
       suite({
+        // workspace#027 platform roles (W2 Tier 0 item 5): each file seeds the
+        // 14 single-role users through `seedPlatformRoleUsers()` (Kratos admin
+        // API when KRATOS_ADMIN_URL is set, self-service registration
+        // otherwise) and refuses to run if any of them holds a second role.
+        // The old "needs the 027 stack" gate is gone: Slice B is on develop.
+        name: 'Platform roles',
+        testMatch: ['/platform-roles/*.spec.ts'],
+        tier: 'extended',
+      }),
+      suite({
         name: 'Applications',
         testMatch: [
           '/applications/space-applications-level-0.spec.ts',
@@ -194,7 +230,9 @@ export default defineConfig(
       }),
       suite({
         name: 'Default Template Per Flow State',
-        testMatch: ['/default-template/default-template-per-flow-state.spec.ts'],
+        testMatch: [
+          '/default-template/default-template-per-flow-state.spec.ts',
+        ],
       }),
       suite({
         // W2 journey 6 (docs/qa/server-rebuild/plan.md § W2): a post's phase, post
@@ -270,7 +308,9 @@ export default defineConfig(
         // in-app setting the API notification specs leave off on the shared
         // personas cannot reach these walks.
         name: 'Messaging notifications',
-        testMatch: ['/messaging-notifications/us3-messaging-settings-rows.spec.ts'],
+        testMatch: [
+          '/messaging-notifications/us3-messaging-settings-rows.spec.ts',
+        ],
         tier: 'long',
       }),
       suite({
@@ -322,6 +362,12 @@ export default defineConfig(
           '/account-deletion/profile-removed-notification.spec.ts',
           '/account-deletion/former-member-activity.spec.ts',
           '/account-deletion/account-deletion-visibility.spec.ts',
+          // W2 Tier 0 item 3: the UI self-deletion walks, GraphQL read-backs
+          // instead of SQL/Redis; their DB/Redis cases are `@local-stack`, so
+          // us3 (all `@local-stack`) contributes no nightly case.
+          '/account-deletion/us1-delete-own-account.spec.ts',
+          '/account-deletion/us2-blocked-resources.spec.ts',
+          '/account-deletion/us3-reauth-freshness.spec.ts',
         ],
         tier: 'long',
       }),
@@ -407,12 +453,11 @@ export default defineConfig(
       suite({
         // workspace#077 (richer contributor cards, client-web#10316): every
         // file seeds its own public Space through the API. The shipped
-        // 0.1contributors-callout.spec.ts is deliberately NOT listed: its
-        // cleanup lives only in the Member block, so any Admin-block failure
-        // leaks a Space, an Organization and a VC. List it once its cleanup
-        // moves to file level.
+        // 0.1 is the only UI create/edit/delete of the contributors framing
+        // (W2 Tier 0 item 7); its scenario is cleaned up at file level.
         name: 'Contributors callout',
         testMatch: [
+          '/contributors-callout/0.1contributors-callout.spec.ts',
           '/contributors-callout/us1-card-content.spec.ts',
           '/contributors-callout/us2-nothing-else-changes.spec.ts',
           '/contributors-callout/us3-card-menu.spec.ts',
@@ -447,11 +492,10 @@ export default defineConfig(
         capture: 'off',
       }),
       suite({
-        // alkem-io/excalidraw-yjs#13 (undo racing a peer edit drops required element keys).
-        // Both walks are skipped until the test env's client-web resolves
-        // @excalidraw-yjs/excalidraw >= 0.5.6 (WHITEBOARD_COLLAB_FIXED=1 runs them); lift the
-        // skip in the client-web bump PR. They drive a Node Yjs peer through /collab with the
-        // personas' bearers, two browser contexts and a held-inbound race.
+        // alkem-io/excalidraw-yjs#13 (undo racing a peer edit drops required element keys),
+        // fixed in @excalidraw-yjs/excalidraw 0.5.6, which client-web develop resolves since
+        // cd2d50419. They drive a Node Yjs peer through /collab with the personas' bearers,
+        // two browser contexts and a held-inbound race.
         name: 'Whiteboard collaboration',
         testMatch: ['/whiteboard-collaboration/*.spec.ts'],
         tier: 'extended',

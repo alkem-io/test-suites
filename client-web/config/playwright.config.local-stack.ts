@@ -27,6 +27,9 @@ import { baseConfig, GENERATED_WALKS_DIR, LOCAL_STACK_TAG, suite } from './playw
  *   RABBITMQ_MANAGEMENT_* (US4-AS1p/AS5p), HARNESS POSTGRES_* (US4-AS8) and
  *   NOTIFICATIONS_STOP_CMD / NOTIFICATIONS_START_CMD (US4-AS6):
  *     form-callout-framing US4 (each guard skips with its reason when unset)
+ *   HARNESS_POSTGRES_* (audit rows, subscription seed) and HARNESS_REDIS_*
+ *   (ageing a real session past the privileged window):
+ *     account-deletion US1-AS5, US1-AS6 and US3 (whole walk)
  *   IDLE_RELEASE_SECONDS=0 on the collaboration-service, and COLLAB_IDLE_RELEASE_SECONDS=0 plus
  *   COLLAB_METRICS_URL (the service's /metrics, e.g. http://localhost:4006/metrics) here:
  *     content-editing US1 E8-4 (the whole walk runs; the guard fails loudly without them)
@@ -72,9 +75,27 @@ export default defineConfig(
         tier: 'long',
       }),
       suite({
+        // W2 Tier 0 item 3: US1-AS5 (audit row) needs AS1–AS3 of its serial
+        // walk, so us1 runs whole here; US3 is tagged as a whole (Redis).
+        name: 'Local stack — account deletion',
+        testMatch: [
+          '/account-deletion/us1-delete-own-account.spec.ts',
+          '/account-deletion/us3-reauth-freshness.spec.ts',
+        ],
+        tier: 'long',
+      }),
+      suite({
         name: 'Local stack — server env overrides',
         testMatch: ['/organization-email-invitations/us3-resend.spec.ts'],
         tier: 'long',
+      }),
+      suite({
+        // The cluster ingress does not route /health/ready, so the canary's
+        // readiness case runs here only.
+        name: 'Local stack — platform readiness',
+        testMatch: ['/ts7-platform-smoke.spec.ts'],
+        grep: LOCAL_STACK_TAG,
+        tier: 'standard',
       }),
       suite({
         // workspace#034 (conversation-message notifications, notifications#522):
