@@ -81,6 +81,12 @@ export default defineConfig(
         // Each case: save in the admin context, reload in a second persona's.
         tier: 'extended',
       }),
+      // W2 Tier 0 item 1 (docs/qa/server-rebuild/client-net-audit/README.md § 4): user self-leave + lost access, private-L2 gates, profiles, dashboard; leave walks span two pages.
+      suite({
+        name: 'Memberships',
+        testMatch: ['/memberships/*.spec.ts'],
+        tier: 'extended',
+      }),
       suite({
         // W2 journey 5 (docs/qa/server-rebuild/plan.md § W2): edit a whiteboard, a
         // memo and a Collabora document, then reopen. One self-seeded private Space
@@ -195,7 +201,9 @@ export default defineConfig(
       }),
       suite({
         name: 'Default Template Per Flow State',
-        testMatch: ['/default-template/default-template-per-flow-state.spec.ts'],
+        testMatch: [
+          '/default-template/default-template-per-flow-state.spec.ts',
+        ],
       }),
       suite({
         // W2 journey 6 (docs/qa/server-rebuild/plan.md § W2): a post's phase, post
@@ -271,7 +279,9 @@ export default defineConfig(
         // in-app setting the API notification specs leave off on the shared
         // personas cannot reach these walks.
         name: 'Messaging notifications',
-        testMatch: ['/messaging-notifications/us3-messaging-settings-rows.spec.ts'],
+        testMatch: [
+          '/messaging-notifications/us3-messaging-settings-rows.spec.ts',
+        ],
         tier: 'long',
       }),
       suite({

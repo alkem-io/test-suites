@@ -1,20 +1,15 @@
 // spec: client-web/src/functional-e2e/plans/memberships-test-plan.md
-// seed: client-web/src/functional-e2e/seed-memberships.spec.ts
 
 import { expect, test } from '@playwright/test';
 import {
-  TestUser,
   TestScenarioFactory,
+  TestUser,
   TestUserManager,
+  type TestScenarioConfig,
 } from '@alkemio/tests-lib';
-import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
-import { TestScenarioConfig } from '@alkemio/tests-lib/scenario/config/test-scenario-config';
-import {
-  CommunityMembershipPolicy,
-  SpacePrivacyMode,
-} from '@alkemio/client-lib';
-
-const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
+import type { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
+import { baseUrl, teardownScenario } from '../helpers/space-access.helper';
+import { uniqueName } from './memberships.helpers';
 
 let baseScenario: OrganizationWithSpaceModel;
 
@@ -23,7 +18,7 @@ const scenarioConfig: TestScenarioConfig = {
   space: {
     about: {
       profile: {
-        displayName: 'Membership Test Space',
+        displayName: uniqueName('Membership Test Space'),
         tagline: 'Testing space memberships',
       },
     },
@@ -37,17 +32,17 @@ const scenarioConfig: TestScenarioConfig = {
   },
 };
 
+test.beforeAll(async () => {
+  test.setTimeout(60_000);
+  baseScenario = await TestScenarioFactory.createBaseScenario(scenarioConfig);
+});
+
+// File level, so it also runs when a failure retires the worker mid-file.
+test.afterAll(async () => {
+  await teardownScenario(baseScenario);
+});
+
 test.describe('User Profile Membership Display', () => {
-  test.beforeAll(async () => {
-    test.setTimeout(60_000);
-    baseScenario = await TestScenarioFactory.createBaseScenario(scenarioConfig);
-  });
-
-  test.afterAll(async () => {
-    test.setTimeout(45_000);
-    await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
-  });
-
   test(
     'View Unauthenticated User Profile',
     {
@@ -58,9 +53,7 @@ test.describe('User Profile Membership Display', () => {
         `${baseUrl}/user/${TestUserManager.users.spaceMember.nameId}`
       );
 
-      await expect(page.getByText(/Access Restricted/i)).toBeVisible({
-        timeout: 3000,
-      });
+      await expect(page.getByText(/Access Restricted/i)).toBeVisible();
     }
   );
 });
