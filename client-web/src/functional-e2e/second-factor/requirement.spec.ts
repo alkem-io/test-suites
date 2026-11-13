@@ -6,7 +6,7 @@
 // presented as a bearer by a refused sign-in. Always an organisation rule on a
 // throwaway organisation — never the platform rule.
 import { randomUUID } from 'crypto';
-import { errors, expect, request, test, type Page } from '@playwright/test';
+import { errors, expect, request, test } from '@playwright/test';
 import {
   ageRuleSince,
   clearAddressCounters,
@@ -27,8 +27,10 @@ import { welcomeHeading } from '../authentication/common-authentication-page-ele
 import {
   COPY,
   baseUrl,
+  expectRefusalPage,
   expectSignedIn,
   freshPage,
+  getQuietly,
   nameIdOf,
   requirementRead,
   roleTokens,
@@ -50,23 +52,14 @@ const longDate = (date: Date): string => {
   return `${month} ${day}${suffix}, ${date.getFullYear()}`;
 };
 
-/** On /second-factor: one notice, and the refusal never reached a toast. */
-const expectRefusalPage = async (page: Page): Promise<void> => {
-  await page.waitForURL(url => url.pathname === '/second-factor');
-  await expect(
-    page.getByRole('heading', { name: COPY.pageTitle, exact: true })
-  ).toBeVisible();
-  await expect(page.getByText(COPY.pageRequired, { exact: true })).toHaveCount(1);
-  await expect(page.getByText(COPY.refusalToast, { exact: true })).toHaveCount(0);
-};
-
 /** `GET /rest/memo/:id/pdf` with only a bearer — no cookie, no storage state. */
 const memoPdfWithBearer = async (token: string) => {
   const api = await request.newContext();
   try {
-    const response = await api.get(
+    const response = await getQuietly(
+      api,
       `${baseUrl}/api/private/rest/memo/${randomUUID()}/pdf`,
-      { headers: { Authorization: `Bearer ${token}` }, failOnStatusCode: false }
+      { Authorization: `Bearer ${token}` }
     );
     const text = await response.text();
     return { status: response.status(), text };
@@ -245,9 +238,9 @@ test.describe('US4 — an organisation requires a second factor', () => {
             await submitPassword(page, member!.email);
             await expectRefusalPage(page);
 
-            const hint = await page.request.get(
-              `${baseUrl}/api/auth/oidc/id-token-hint`,
-              { failOnStatusCode: false }
+            const hint = await getQuietly(
+              page.request,
+              `${baseUrl}/api/auth/oidc/id-token-hint`
             );
             expect(hint.status()).toBe(200);
             const body = (await hint.json()) as {

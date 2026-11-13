@@ -76,7 +76,7 @@ const verdictOf = (answer: KratosAnswer): string =>
   `${answer.status} ${JSON.stringify(flowMessages(answer))}`;
 
 describe('Second factor — recovery codes', () => {
-  test('US2-AS1 codes are shown once; US2-AS2 a code signs in at aal2 and only once', async () => {
+  test('US2-AS1 a later settings flow does not include the codes; US2-AS2 a code signs in at aal2 and only once', async () => {
     const { user, codes, token } = await enrolledWithCodes('once');
     expect(codes.length).toBeGreaterThan(0);
     const later = await readSettingsFlow(token);

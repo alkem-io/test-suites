@@ -86,13 +86,23 @@ const ruleRows = (organizationId?: string) =>
     scope: organizationId ? 'organization' : 'platform',
   });
 
-const restGet = (path: string, cookieHeader: string) =>
-  axios.get(`${server()}${path}`, {
-    headers: { Cookie: cookieHeader },
-    maxRedirects: 0,
-    validateStatus: () => true,
-    timeout: 15_000,
-  });
+const restGet = async (path: string, cookieHeader: string) => {
+  try {
+    return await axios.get(`${server()}${path}`, {
+      headers: { Cookie: cookieHeader },
+      maxRedirects: 0,
+      validateStatus: () => true,
+      timeout: 15_000,
+    });
+  } catch (e) {
+    // A transport error's config carries the session cookie: name the call
+    // and the code, never the config.
+    const code = axios.isAxiosError(e) ? e.code : undefined;
+    throw new Error(
+      `second-factor: GET ${path} failed in transport: ${code ?? 'unknown error'}`
+    );
+  }
+};
 
 const REFUSAL_BODY = { statusCode: 403, error_code: 'second_factor_required' };
 // Platform-rooted only, and reader-dependent: myPrivileges is what tells

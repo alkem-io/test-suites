@@ -95,11 +95,19 @@ describe('Second factor — authenticator app', () => {
       };
     };
 
+    // The end of the window the counting started in, read once, right after
+    // the submission that creates the key: past it, a short count or a
+    // missing key is the stack's slowness, not the product.
+    let windowEnd: number | null | undefined;
+    const windowLapsed = () =>
+      windowEnd !== null && windowEnd !== undefined && Date.now() >= windowEnd;
+
     /** A password login, then `size - 1` wrong codes at its second step. */
     const loginThenWrongCodes = async (size: number) => {
       // A fresh native flow carries nothing over: the re-login's new jar.
       const login = await passwordLogin(user.email, { headers: forged() });
       expect(login.status).toBe(200);
+      if (windowEnd === undefined) windowEnd = await addressCountersExpireAt();
       const step = await startSecondStep(login.body.session_token);
       const wrong = await submitWrongTotp({ ...step, secret }, size - 1, {
         headers: forged,
@@ -111,10 +119,6 @@ describe('Second factor — authenticator app', () => {
     await clearAddressCounters();
     try {
       const first = await loginThenWrongCodes(firstBatch);
-      // The window the counting started in: past it, a short count or a
-      // missing key is the stack's slowness, not the product.
-      const windowEnd = await addressCountersExpireAt();
-      const windowLapsed = () => windowEnd !== null && Date.now() >= windowEnd;
       const second = await loginThenWrongCodes(secondBatch);
       const answers = [...first.answers, ...second.answers];
       expect(answers).toHaveLength(max);

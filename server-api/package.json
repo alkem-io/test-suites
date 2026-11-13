@@ -61,7 +61,7 @@
     "test:platform-roles:exclusive": "vitest run --project platform-roles-exclusive --fileParallelism=false",
     "test:platform-roles:plan": "tsx src/functional-api/platform-roles/generate-test-plan.ts",
     "test:second-factor": "vitest run --project second-factor",
-    "test:language":"vitest run --project language --fileParallelism=false",
+    "test:language": "vitest run --project language --fileParallelism=false",
     "test:subscriptions": "vitest run --project subscriptions --fileParallelism=false",
     "test:templates": "vitest run --project templates --fileParallelism=false",
     "test:visual": "vitest run --project visual --fileParallelism=false",

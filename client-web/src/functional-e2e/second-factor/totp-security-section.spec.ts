@@ -35,6 +35,7 @@ import {
   enrolAuthenticatorOnPage,
   expectSignedIn,
   freshPage,
+  getQuietly,
   nameIdOf,
   openSecurityTab,
   password,
@@ -163,9 +164,9 @@ test.describe('US1 — the authenticator app in Security', () => {
         ...stored,
         expires_at: Math.floor(Date.now() / 1000) - 1,
       }));
-      const refreshed = await context.request.get(
-        `${baseUrl}/api/auth/oidc/refresh`,
-        { failOnStatusCode: false }
+      const refreshed = await getQuietly(
+        context.request,
+        `${baseUrl}/api/auth/oidc/refresh`
       );
       expect(refreshed.status()).toBe(204);
       const after = await readBffSession(sessionId);

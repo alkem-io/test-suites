@@ -33,6 +33,7 @@ import {
   baseUrl,
   block,
   enrolAuthenticatorOnPage,
+  expectRefusalPage,
   expectSignedIn,
   failedRequests,
   freshPage,
@@ -259,16 +260,7 @@ test.describe('US2 — recovery codes and the support reset', () => {
         const failed = failedRequests(page);
         try {
           await submitPassword(page, member!.email);
-          await page.waitForURL(url => url.pathname === '/second-factor');
-          await expect(
-            page.getByRole('heading', { name: COPY.pageTitle, exact: true })
-          ).toBeVisible();
-          await expect(
-            page.getByText(COPY.pageRequired, { exact: true })
-          ).toHaveCount(1);
-          await expect(
-            page.getByText(COPY.refusalToast, { exact: true })
-          ).toHaveCount(0);
+          await expectRefusalPage(page);
 
           // The rest of the platform is refused: a page sends the session
           // back here, and the API answers with the refusal code.
@@ -282,8 +274,18 @@ test.describe('US2 — recovery codes and the support reset', () => {
           // A wrong code resumes on this page with the identity provider's
           // message, not on any other card.
           const authenticator = block(page, COPY.authenticatorTitle);
+          const codeField = authenticator.getByRole('textbox', {
+            name: COPY.codeFromApp,
+            exact: true,
+          });
+          const verdict = codeField
+            .and(page.locator('[aria-invalid="true"]'))
+            .or(authenticator.getByRole('alert'));
+          // Before the wrong code, the block carries neither verdict, so either
+          // one after it is the answer to that code.
+          await expect(verdict).toHaveCount(0);
           await fillSecret(
-            authenticator.getByRole('textbox', { name: COPY.codeFromApp, exact: true }),
+            codeField,
             wrongTotpCode(await shownAuthenticatorKey(page))
           );
           await authenticator
@@ -298,13 +300,7 @@ test.describe('US2 — recovery codes and the support reset', () => {
           // The field-level error, or an alert of this form: whichever the
           // identity provider attached its message to. Never any alert on
           // the page.
-          await expect(
-            authenticator
-              .getByRole('textbox', { name: COPY.codeFromApp, exact: true })
-              .and(page.locator('[aria-invalid="true"]'))
-              .or(authenticator.getByRole('alert'))
-              .first()
-          ).toBeVisible();
+          await expect(verdict.first()).toBeVisible();
 
           const enrolledSecret = await enrolAuthenticatorOnPage(page);
           await expect(

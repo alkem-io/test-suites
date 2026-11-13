@@ -1,5 +1,8 @@
 import {
+  errors,
   expect,
+  type APIRequestContext,
+  type APIResponse,
   type Browser,
   type BrowserContext,
   type Locator,
@@ -13,6 +16,7 @@ import {
   totpCode,
   type ThrowawayUser,
 } from '@alkemio/tests-lib';
+import { TIERS } from '../../../config/playwright.shared';
 import { grantCookieConsent } from '../helpers/cookies.helper';
 import { must } from '../helpers/lib-actor.helper';
 import { fillSecret } from '../helpers/login.helper';
@@ -187,6 +191,30 @@ export const logOut = async (page: Page): Promise<void> => {
   await expect(logInHeaderLink(page)).toBeVisible();
 };
 
+/**
+ * On /second-factor: one notice, and the refusal never reached a toast — held
+ * for as long as a positive check would have waited for the toast to mount.
+ */
+export const expectRefusalPage = async (page: Page): Promise<void> => {
+  await page.waitForURL(url => url.pathname === '/second-factor');
+  await expect(
+    page.getByRole('heading', { name: COPY.pageTitle, exact: true })
+  ).toBeVisible();
+  await expect(page.getByText(COPY.pageRequired, { exact: true })).toHaveCount(1);
+  const toasted = await page
+    .getByText(COPY.refusalToast, { exact: true })
+    .first()
+    .waitFor({ state: 'visible', timeout: TIERS.long.expect })
+    .then(
+      () => true,
+      (error: unknown) => {
+        if (error instanceof errors.TimeoutError) return false;
+        throw error;
+      }
+    );
+  expect(toasted, 'the second-factor refusal reached a toast').toBe(false);
+};
+
 /** The user's own Security tab, scrolled to the two-step section. */
 export const openSecurityTab = async (
   page: Page,
@@ -256,6 +284,26 @@ export const addVirtualAuthenticator = async (page: Page): Promise<void> => {
       automaticPresenceSimulation: true,
     },
   });
+};
+
+/**
+ * A GET that never throws on status. A transport error is rethrown with the
+ * path and Playwright's first line only: its call log lists the request's
+ * headers, which carry the session cookie or the bearer.
+ */
+export const getQuietly = async (
+  api: APIRequestContext,
+  url: string,
+  headers?: Record<string, string>
+): Promise<APIResponse> => {
+  try {
+    return await api.get(url, { headers, failOnStatusCode: false });
+  } catch (error) {
+    const reason = (error instanceof Error ? error.message : '').split('\n')[0];
+    throw new Error(
+      `second-factor: GET ${new URL(url).pathname} failed in transport: ${reason}`
+    );
+  }
 };
 
 /** Chromium's errors for a host the page could not reach (the walks run on Chromium). */
