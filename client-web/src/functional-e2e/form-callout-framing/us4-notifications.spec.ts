@@ -27,6 +27,7 @@ import {
 } from '@alkemio/tests-lib';
 import { fillSecret } from '../helpers/login.helper';
 import { must } from '../helpers/lib-actor.helper';
+import { pinFormResponseNotifications } from '../helpers/notification-settings.helper';
 import {
   actorFor,
   ADMIN_EMAIL,
@@ -328,12 +329,18 @@ async function signIn(browser: Browser, userEmail: string): Promise<Page> {
 let one: FormFixture;
 let multi: FormFixture;
 let submitterName = '';
+/** Puts the Global Admin's Form-response row back; set by beforeAll. */
+let restoreAdminFormRow: (() => Promise<void>) | undefined;
 
 test.describe.configure({ mode: 'serial' });
 
 // File level, so it also runs when a failure retires the worker mid-file.
 test.afterAll(async () => {
-  await ledger.teardown();
+  try {
+    await restoreAdminFormRow?.();
+  } finally {
+    await ledger.teardown();
+  }
 });
 
 test.describe(
@@ -350,8 +357,18 @@ test.describe(
       fixture.userIds.sa = await ledger.registerUser(personaEmail.sa, 'Sam', `Spaceadmin${RUN}`);
 
       const admin = await actorFor(ADMIN_EMAIL);
-      const account = must(await readMyUser(admin), 'account').me.user!
-        .account!.id;
+      const adminUser = must(await readMyUser(admin), 'account').me.user!;
+      const account = adminUser.account!.id;
+      // The Global Admin creates the Subspace, so it holds its ADMIN role and
+      // is a legitimate recipient of every admin notification below (US4-AS5
+      // counts its mails). Its row on a shared stack is whatever the last
+      // suite left there, so pin it: email and in-app on, push OFF, so that
+      // the one push subscription US4-AS1p/AS5p counts is A2's.
+      restoreAdminFormRow = await pinFormResponseNotifications(adminUser.id, {
+        email: true,
+        inApp: true,
+        push: false,
+      });
       const space = must(
         await createSpaceOnAccount(
           {
@@ -694,7 +711,9 @@ test.describe(
 
     // @local-stack: the emit is counted at the RabbitMQ management API, which
     // the shared test cluster does not expose. Its own Form, so the mail
-    // counts of the cases above are untouched.
+    // counts of the cases above are untouched. The queue counter is global:
+    // the only other Subspace admin (the Global Admin, its creator) has push
+    // pinned OFF in beforeAll, so "exactly one" is A2's emit on any stack.
     test('US4-AS1p/AS5p a member\'s submission emits one push for the subscribed admin; the admin\'s own submission emits none', { tag: '@local-stack' }, async () => {
       test.skip(
         !rabbitMqManagementConfigured(),

@@ -211,3 +211,7 @@ What changed in the five walks; no assertion was removed or loosened.
 - `Local stack — form response notifications`:
   - US4-AS8 passes after expanding the collapsed "Space Admin Notifications" section on the settings page.
   - US4-AS1p counts 2 push emits instead of 1 on this stack. The second recipient is `admin@alkem.io`, which holds a push subscription in the local snapshot and, as a global admin, receives space-admin pushes. The extra emit comes from local data, not the product. Run it on a stack where no other admin is push-subscribed.
+
+### QA PR challenge (2026-11-13, static — not run)
+
+- **US4-AS1p red re-attributed: test, not environment.** `admin@alkem.io` creates the Subspace, so it holds the Subspace ADMIN role (server `SpaceService.assignUserToRoles`) and is a legitimate recipient of the Form-response push whenever it has a push subscription — the second emit was correct product behaviour, and the global queue counter cannot tell recipients apart. US4-AS5 already counts this admin's mails. Fix: `us4` `beforeAll` pins the Global Admin's `space.admin.collaborationCalloutFormResponseReceived` row to email + in-app on, push off (`helpers/notification-settings.helper.ts › pinFormResponseNotifications`), and the file-level `afterAll` restores it. That also keeps US4-AS5's "two admin mails to the Global Admin" independent of what earlier suites left on the shared persona. Needs a local-stack rerun of AS1p and a nightly run of AS5.
