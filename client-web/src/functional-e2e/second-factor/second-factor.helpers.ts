@@ -332,18 +332,40 @@ const UNREACHABLE = [
   'ERR_ADDRESS_UNREACHABLE',
 ];
 
+/** The identity provider's own routes; its answers are what the walk drives. */
+const IDENTITY_ROUTES = '/ory/';
+
 /**
  * Every request of the page that failed at the network level — a host that
- * could not be reached, a refused connection. A request the browser aborted (a
- * navigation cancelling an in-flight fetch) or blocked on a response it did
- * receive (ERR_BLOCKED_BY_RESPONSE: the host answered) is not such a failure.
+ * could not be reached, a refused connection — and every same-origin request
+ * /second-factor sent (or its own load) that was answered 401 or 403: something
+ * the refusal page needs, refused from behind the edge. A request the browser
+ * aborted (a navigation cancelling an in-flight fetch) or blocked on a response
+ * it did receive (ERR_BLOCKED_BY_RESPONSE: the host answered) is not such a
+ * failure. The refusal that routes a session to /second-factor is a GraphQL
+ * answer of 200, so it is not counted; neither is an identity provider answer.
  */
 export const failedRequests = (page: Page): string[] => {
   const failed: string[] = [];
+  const origin = new URL(baseUrl).origin;
   page.on('requestfailed', request => {
     const reason = request.failure()?.errorText ?? '';
     if (UNREACHABLE.some(code => reason.includes(code))) {
       failed.push(`${request.method()} ${request.url()} (${reason})`);
+    }
+  });
+  page.on('response', response => {
+    if (response.status() !== 401 && response.status() !== 403) return;
+    const url = new URL(response.url());
+    if (url.origin !== origin || url.pathname.startsWith(IDENTITY_ROUTES)) return;
+    const request = response.request();
+    // A same-origin request carries the page it was sent from as its Referer.
+    const referer = request.headers().referer;
+    if (
+      url.pathname === '/second-factor' ||
+      (referer && new URL(referer).pathname === '/second-factor')
+    ) {
+      failed.push(`${request.method()} ${url.pathname} (${response.status()})`);
     }
   });
   return failed;

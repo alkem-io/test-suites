@@ -335,7 +335,8 @@ test.describe('US2 — recovery codes and the support reset', () => {
             satisfied: true,
           });
 
-          // Nothing the page needed sat behind an unreachable host.
+          // Nothing the page needed sat behind an unreachable host or was
+          // refused from behind the edge.
           expect(failed).toEqual([]);
         } finally {
           await context.close();

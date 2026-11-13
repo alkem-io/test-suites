@@ -1,6 +1,6 @@
 import { randomUUID } from 'crypto';
 import { RoleName } from '../../core/generated/alkemio-schema';
-import { postGraphqlRaw } from '../../utils/graphql.raw.client';
+import { postGraphqlRawAs } from '../../utils/graphql.raw.client';
 import {
   assignPlatformRole,
   createOrganization,
@@ -45,7 +45,8 @@ export const createThrowawayUser = async (tag: string): Promise<ThrowawayUser> =
     // The caller never receives this identity, so nothing else deletes it.
     // A platform user the server already created for it is left behind: a
     // test-data leak on the runner's stack, never a false green.
-    await deleteIdentity(identityId);
+    // A failed delete must not replace the reason the user was not made.
+    await deleteIdentity(identityId).catch(() => undefined);
     throw error;
   }
 };
@@ -98,12 +99,11 @@ export const assignOrganizationAssociate = (
   userId: string,
   admin: { bearerToken: string }
 ) =>
-  postGraphqlRaw<{ assignRoleToUser: { id: string } }>(ASSIGN_ROLE_TO_USER, {
-    variables: {
-      d: { actorID: userId, roleSetID: roleSetId, role: RoleName.Associate },
-    },
-    ...admin,
-  });
+  postGraphqlRawAs<{ assignRoleToUser: { id: string } }>(
+    admin,
+    ASSIGN_ROLE_TO_USER,
+    { d: { actorID: userId, roleSetID: roleSetId, role: RoleName.Associate } }
+  );
 
 const must = <T>(
   result: { data?: T; error?: { errors?: { message?: string }[] } },

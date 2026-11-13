@@ -10,7 +10,9 @@ import {
   createThrowawayUser,
   credentialTypes,
   deleteThrowawayUsers,
+  errorCodes,
   readSecondFactorRequirement,
+  resetSecondFactor,
   secondFactorCredentialsLeft,
   totpCode,
   type ThrowawayUser,
@@ -35,7 +37,7 @@ import {
   submitSecondStep,
 } from './second-factor.helpers';
 
-let usersAdminToken = '';
+let tokens: { support: string; usersAdmin: string };
 const users: ThrowawayUser[] = [];
 
 /**
@@ -71,11 +73,11 @@ test.describe('US3 — security keys', () => {
   );
 
   test.beforeAll(async () => {
-    usersAdminToken = (await roleTokens()).usersAdmin;
+    tokens = await roleTokens();
   });
 
   test.afterAll(async () => {
-    await deleteThrowawayUsers(users, usersAdminToken);
+    await deleteThrowawayUsers(users, tokens.usersAdmin);
   });
 
   test.beforeEach(async () => {
@@ -158,6 +160,47 @@ test.describe('US3 — security keys', () => {
     } finally {
       await context.close();
     }
+  });
+
+  test('US2-AS5 a support reset removes a security key, so a stolen key no longer signs in', async ({
+    browser,
+  }) => {
+    const user = await createThrowawayUser('resetkey');
+    users.push(user);
+    const nameId = await nameIdOf(user);
+    const keyName = `Lost key ${user.identityId.slice(0, 8)}`;
+
+    const { context, page } = await freshPage(browser);
+    try {
+      await addVirtualAuthenticator(page);
+      await submitPassword(page, user.email);
+      await expectSignedIn(page);
+      await openSecurityTab(page, nameId);
+      const keys = block(page, COPY.securityKeysTitle);
+      await keys
+        .getByRole('textbox', { name: COPY.keyName, exact: true })
+        .fill(keyName);
+      await keys.getByRole('button', { name: COPY.addKey, exact: true }).click();
+      await expect(keys.getByText(keyName, { exact: true })).toBeVisible();
+      // Before the reset the identity holds the key, so its absence after
+      // the reset is the reset's doing.
+      expect(await secondFactorCredentialsLeft(user.identityId)).toContain(
+        'webauthn'
+      );
+    } finally {
+      await context.close();
+    }
+
+    const reset = await resetSecondFactor(
+      user.userId,
+      { bearerToken: tokens.support },
+      { invalidatePassword: false }
+    );
+    expect(errorCodes(reset)).toEqual([]);
+    expect(
+      reset.body.data?.adminResetUserSecondFactor.removedCredentialTypes
+    ).toContain('webauthn');
+    expect(await secondFactorCredentialsLeft(user.identityId)).toEqual([]);
   });
 
   test('US3-AS3 a passkey still signs in without a password; once an authenticator app is enrolled, the second step follows the passkey (risk R8)', async ({
