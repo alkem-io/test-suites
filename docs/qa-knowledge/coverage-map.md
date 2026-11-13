@@ -347,6 +347,21 @@ _Searched 2026-11-09, branch `qa/w2-journey-7` off `origin/develop` @ `afbefaf2`
 
 **Search again with:** `git grep -n -E "settings/about|settings/profile|updateSpace\(|updateUser\(|updateOrganization\(|createOrganization|readSpaceAbout|getUserData|readOrganization|tagsets|Create Organisation" <ref> -- client-web/src server-api/src/functional-api lib/src/scenario ':!lib/src/core/generated'`.
 
+## Contact leads — message an organisation or a Space's leads; organisation notification setting (W2 journey 10)
+
+_Searched 2026-11-12, branch `qa/w2-journey-10` off `origin/develop` @ `ef405cc0`, against client-web `develop` and server `develop` @ `e120d25a1`. Plan: `client-web/src/functional-e2e/contact-leads/contact-leads-test-plan.md` (6 cases, 5 live; M1-2 skipped on reproduced server defect J10-D1; C3-1/C3-2 `@local-stack`)._
+
+| Behaviour | Coverage | Where |
+| --- | --- | --- |
+| Message an organisation from its page; one mail per admin, none to an associate, one sender copy | Toast only (`contributors-callout/us3-card-menu` US3-AS3); API with all-inbox counts (`notifications/organization/user-to-organization.it-spec.ts`) | `contact-leads/us1-message-organisation.spec.ts` › M1-1 |
+| An admin who is not an associate gets the organisation message | **None**; reproduced defect J10-D1 | `us1-message-organisation.spec.ts` › M1-2 (skipped) |
+| "Receive direct messages to my organisation" email toggled in the UI persists across reload, reads back, is honoured, toggles back | **None** (US2-AS6 in `organization-space-invitations` covers a different row on a shared persona) | `contact-leads/us2-organisation-message-setting.spec.ts` › N1-1..N1-3 |
+| Space "Contact Leads" → one 1:1 chat per lead, none to a non-lead | **None** end to end (client and server unit tests only) | `contact-leads/us3-contact-space-leads.spec.ts` › C3-1 (`@local-stack`) |
+| Direct-message digest mail per lead after Contact Leads | **None** | `us3-contact-space-leads.spec.ts` › C3-2 (`@local-stack`) |
+| Legacy lead email (`sendMessageToCommunityLeads`) | API only; **no UI caller left** | server-api `notifications/space/communication/user-to-community-leads-*.it-spec.ts` |
+
+**Search again with:** `git grep -n -E "sendMessageToOrganization|sendMessageToCommunityLeads|sendDirectMessageToUsers|Contact Leads|adminMessageReceived|sent a message to your" <ref> -- client-web/src server-api/src/functional-api lib/src/scenario ':!lib/src/core/generated'`.
+
 ## Orphan-free deletion: owned records and policies after a delete (server#6614 / #6637)
 
 _Searched 2026-10-16, test-suites `develop` @ `b451c329`, server `origin/develop` @ `1691e98e9` (contains the #6637 merge `08f088eaa`). Plan: `server-api/src/functional-api/orphan-free-deletion/orphan-free-deletion-test-plan.md` (Approved), plus the server#6614 addendum (Approved 2026-10-16; CV-1 built) in `journey/conversion/conversion-test-plan.md`._
