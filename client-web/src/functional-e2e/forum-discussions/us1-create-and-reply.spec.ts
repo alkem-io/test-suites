@@ -91,11 +91,18 @@ test('J2-1 a registered user starts a discussion; the server stores its title, b
   await dialog
     .getByRole('combobox', { name: 'Category *', exact: true })
     .click();
-  // A non-admin is not offered the admin-only categories (Releases, Newsletter).
-  await expect(
-    page.getByRole('option', { name: 'Releases', exact: true })
-  ).toHaveCount(0);
-  await page.getByRole('option', { name: 'Q&A', exact: true }).click();
+  // A non-admin is not offered the admin-only categories (client-web
+  // forumDataMapper ADMIN_ONLY_CATEGORIES: Releases, Newsletter). Positive
+  // control first: the open list offers Q&A, so the absences below are read
+  // from a rendered list, not from one that has not mounted yet.
+  const qa = page.getByRole('option', { name: 'Q&A', exact: true });
+  await expect(qa).toBeVisible();
+  for (const adminOnly of ['Releases', 'Newsletter'])
+    await expect(
+      page.getByRole('option', { name: adminOnly, exact: true }),
+      `the admin-only category "${adminOnly}" is not offered to a non-admin`
+    ).toHaveCount(0);
+  await qa.click();
   const editor = dialog.locator('[contenteditable="true"]');
   await editor.click();
   await page.keyboard.type(BODY);
