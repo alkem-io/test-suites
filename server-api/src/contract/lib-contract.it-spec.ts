@@ -242,6 +242,14 @@ const FUNCTIONS: string[] = [
   'readActivityLogOnCollaboration',
   'readCalloutsPlacement',
   'readPost',
+  // W2 journey 11 (file uploads)
+  'readCalloutStoredFiles',
+  'readStoredDocument',
+  'storedDocumentIdOf',
+  'downloadStoredFile',
+  'readConversationStoredFiles',
+  'createConversation',
+  'leaveConversation',
   'uploadFileOnStorageBucket',
   'readTemplatesSetTemplates',
   'createTemplateWithData',
@@ -276,7 +284,9 @@ const ENUM_MEMBERS: Record<string, string[]> = {
   SpacePrivacyMode: ['Public', 'Private'],
   CommunityMembershipPolicy: ['Open', 'Applications', 'Invitations'],
   CalloutVisibility: ['Published', 'Draft'],
-  CalloutFramingType: ['None', 'Whiteboard', 'Memo', 'Link'],
+  CalloutFramingType: ['None', 'Whiteboard', 'Memo', 'Link', 'MediaGallery'],
+  MimeType: ['Pdf', 'Png'],
+  ConversationCreationType: ['Direct', 'Group'],
   SpaceLevel: ['L0', 'L1', 'L2'],
   SpaceVisibility: ['Active', 'Archived', 'Demo'],
   TagsetReservedName: ['FlowState'],
@@ -625,6 +635,35 @@ describe('@contract base scenario round trip', () => {
     expect(unknown.data?.lookup?.calloutsSet ?? null, JSON.stringify(unknown.error)).toBeNull();
     // ...and not because the request never reached the server.
     expect(unknown.error?.errors.map(e => e.code) ?? []).not.toContain('ENV_FAILURE');
+  });
+
+  test('storage: a file uploaded to a callout bucket reads back as a document and downloads byte for byte', async () => {
+    const calloutId = base.space.collaboration.calloutPostId;
+    const before = await lib.readCalloutStoredFiles(calloutId);
+    expect(before.error).toBeUndefined();
+    const bucket = before.data?.lookup.callout?.framing.profile.storageBucket;
+    expect(bucket?.id).toEqual(expect.any(String));
+    expect(Array.isArray(before.data?.lookup.callout?.framing.profile.references)).toBe(true);
+    const bytes = Buffer.from(`%PDF-1.4\n% lib contract ${Date.now()}\n%%EOF\n`);
+    const upload = await lib.uploadFileOnStorageBucket(bucket!.id, {
+      bytes,
+      fileName: 'lib-contract.pdf',
+      mimeType: 'application/pdf',
+    });
+    const url = upload.body.data?.uploadFileOnStorageBucket.url ?? '';
+    expect(url, upload.raw).toMatch(/\/rest\/storage\/document\//);
+    const document = await lib.readStoredDocument(lib.storedDocumentIdOf(url));
+    expect(document.data?.lookup.document).toMatchObject({ url, mimeType: lib.MimeType.Pdf, size: bytes.length });
+    const after = await lib.readCalloutStoredFiles(calloutId);
+    expect(after.data?.lookup.callout?.framing.profile.storageBucket?.documents.map(d => d.url)).toContain(url);
+    const served = await lib.downloadStoredFile(url, TestUser.GLOBAL_ADMIN);
+    expect(served.status).toBe(200);
+    expect(served.contentType).toBe('application/pdf');
+    expect(served.bytes.equals(bytes)).toBe(true);
+    // Negative control: a document that does not exist is not served (the RAW reader returns, never throws).
+    const missing = await lib.downloadStoredFile(url.replace(/[0-9a-f-]{36}$/i, '00000000-0000-4000-8000-000000000000'), TestUser.GLOBAL_ADMIN);
+    expect(missing.status).toBeGreaterThanOrEqual(400);
+    expect(() => lib.storedDocumentIdOf('https://example.org/not-a-document')).toThrow();
   });
 });
 

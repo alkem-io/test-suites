@@ -261,6 +261,17 @@ export default defineConfig(
         tier: 'extended',
       }),
       suite({
+        // W2 journey 11 (docs/qa/server-rebuild/plan.md § W2): a file reference,
+        // a media-gallery image and a chat attachment uploaded in the browser and
+        // read back from storage (document record, served bytes and MIME type, an
+        // outsider refused). One self-seeded private Space per file. The chat
+        // attachment cases are @local-stack (Matrix chat fails on test by
+        // environment), so the nightly runs the reference and gallery walks only.
+        name: 'File uploads',
+        testMatch: ['/file-uploads/*.spec.ts'],
+        tier: 'long',
+      }),
+      suite({
         // W2 extras (test-suites#722, catalogue CT-8): a Tasks board created,
         // added to and moved on in the browser, read back through the lib.
         // One self-seeded public L0 Space per file; admin, member and

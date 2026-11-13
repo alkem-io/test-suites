@@ -70,6 +70,16 @@ export default defineConfig(
         capture: 'off',
       }),
       suite({
+        // W2 journey 11 N4 (message attachments): chat goes browser → Matrix, which
+        // the shared test cluster cannot offer (no reachable homeserver), so the
+        // nightly drops these tagged cases. Each skips with the probe's reason
+        // when the local homeserver does not answer.
+        name: 'Local stack — message attachments',
+        testMatch: ['/file-uploads/us3-message-attachment.spec.ts'],
+        grep: LOCAL_STACK_TAG,
+        tier: 'extended',
+      }),
+      suite({
         // workspace#080: US4's three tagged cases stand alone on the file's
         // beforeAll fixture (each measures from its own baseline), so only they run.
         name: 'Local stack — form response notifications',

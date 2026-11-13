@@ -71,3 +71,4 @@ export * from "./scenario/functions/callout/collabora-callout";
 export * from "./scenario/functions/templates/templates.request.params";
 export * from "./collab/whiteboard-peer";
 export * from "./collab/collaboration-metrics";
+export * from "./scenario/functions/storage/stored-files";
