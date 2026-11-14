@@ -74,6 +74,8 @@ config/playwright-report-language-offer/
 config/playwright-report-platform-roles/
 config/playwright-report-form-callout-framing/
 /playwright-report-memo-pdf-download/
+# second-factor run report (throwaway); passwords and codes go through fillSecret
+/playwright-report-second-factor/
 
 # 024 classifications acceptance run report (throwaway)
 config/playwright-report-classifications/

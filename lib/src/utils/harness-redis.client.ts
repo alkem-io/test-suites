@@ -79,6 +79,8 @@ export type BffSessionPayload = {
   last_refreshed_at?: number | null;
   last_extended_at?: number | null;
   created_at: number;
+  /** The sign-in's assurance: `'aal2'` when a second factor was completed. */
+  acr?: 'aal1' | 'aal2' | null;
   client_id: string;
   request_context_cache?: { display_name?: string; email?: string } | null;
   terminated_at?: number | null;
@@ -238,6 +240,28 @@ export const redisSetNx = async (
 
 export const redisGet = async (key: string): Promise<string | null> => {
   return getHarnessRedisClient().get(key);
+};
+
+/** Milliseconds `key` has left (-1: no expiry, -2: no key). */
+export const redisPttl = async (key: string): Promise<number> =>
+  getHarnessRedisClient().pttl(key);
+
+/** Deletes every key under `prefix`; returns how many went. `KEYS` for the
+ * reason `findBffSessionIdBySub` gives: loopback compose Redis only. */
+export const redisDeleteByPrefix = async (prefix: string): Promise<number> => {
+  const client = getHarnessRedisClient();
+  const keys = await client.keys(`${prefix}*`);
+  return keys.length === 0 ? 0 : client.del(...keys);
+};
+
+/** Every key under `prefix` with its value (loopback compose Redis only). */
+export const redisEntriesByPrefix = async (
+  prefix: string
+): Promise<{ key: string; value: string | null }[]> => {
+  const client = getHarnessRedisClient();
+  const keys = await client.keys(`${prefix}*`);
+  const values = keys.length === 0 ? [] : await client.mget(...keys);
+  return keys.map((key, i) => ({ key, value: values[i] }));
 };
 
 const COMPARE_AND_DELETE_LUA =
