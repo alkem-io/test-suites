@@ -1,26 +1,22 @@
 // spec: client-web/src/functional-e2e/plans/memberships-test-plan.md
-// seed: client-web/src/functional-e2e/seed-memberships.spec.ts
 
 import { expect } from '@playwright/test';
 import {
-  TestUser,
   TestScenarioFactory,
+  TestUser,
   TestUserManager,
+  type TestScenarioConfig,
 } from '@alkemio/tests-lib';
-import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
-import { TestScenarioConfig } from '@alkemio/tests-lib/scenario/config/test-scenario-config';
-import {
-  CommunityMembershipPolicy,
-  SpacePrivacyMode,
-} from '@alkemio/client-lib';
+import type { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import { createAuthenticatedSessionFixture } from '../fixtures/authenticated-session.fixture';
+import { baseUrl, teardownScenario } from '../helpers/space-access.helper';
+import { uniqueName } from './memberships.helpers';
 
 const { test, setupAuthentication, teardownAuthentication } =
   createAuthenticatedSessionFixture({
     storageStateName: 'view-home-dashboard-multiple.json',
     cleanupAfterTests: process.env.cleanupAfterTests === 'true',
   });
-const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 
 let baseScenario: OrganizationWithSpaceModel;
 
@@ -29,7 +25,7 @@ const scenarioConfig: TestScenarioConfig = {
   space: {
     about: {
       profile: {
-        displayName: 'Membership Test Space',
+        displayName: uniqueName('Membership Test Space'),
         tagline: 'Testing space memberships',
       },
     },
@@ -44,7 +40,7 @@ const scenarioConfig: TestScenarioConfig = {
     subspace: {
       about: {
         profile: {
-          displayName: 'Subspace for Membership Tests',
+          displayName: uniqueName('Subspace for Membership Tests'),
           tagline: 'Testing subspace memberships',
         },
       },
@@ -59,19 +55,22 @@ const scenarioConfig: TestScenarioConfig = {
   },
 };
 
-test.describe('Home Dashboard Membership Display', () => {
-  test.beforeAll(async ({ browser }) => {
-    test.setTimeout(60_000);
-    baseScenario = await TestScenarioFactory.createBaseScenario(scenarioConfig);
-    await setupAuthentication(browser, TestUserManager.users.spaceAdmin.email);
-  });
+test.beforeAll(async ({ browser }) => {
+  test.setTimeout(60_000);
+  baseScenario = await TestScenarioFactory.createBaseScenario(scenarioConfig);
+  await setupAuthentication(browser, TestUserManager.users.spaceAdmin.email);
+});
 
-  test.afterAll(async () => {
-    test.setTimeout(45_000);
+// File level, so it also runs when a failure retires the worker mid-file.
+test.afterAll(async () => {
+  try {
     await teardownAuthentication();
-    await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
-  });
+  } finally {
+    await teardownScenario(baseScenario);
+  }
+});
 
+test.describe('Home Dashboard Membership Display', () => {
   test(
     'View Home Dashboard - Multiple Memberships',
     {
@@ -84,22 +83,16 @@ test.describe('Home Dashboard Membership Display', () => {
       // 2. Verify home dashboard loads successfully
       await expect(page).toHaveURL(/.*\/home/);
 
-      // 3. Verify shows memberships at all levels
-      // Space (L0) - with Admin badge
-      await expect(
-        page.getByText(baseScenario.space.about.profile.displayName).first()
-      ).toBeVisible({ timeout: 2000 });
+      // 3. Both levels are listed, each by its run-unique display name
+      //    (`.first()` only because a card may repeat its own name, e.g. in
+      //    the banner alt text; no other space can carry it). L0, admin:
+      const spaceName = baseScenario.space.about.profile.displayName;
+      await expect(page.getByText(spaceName).first()).toBeVisible();
 
-      // 4. Subspace (L1) - with Lead badge
-      await expect(
-        page.getByText(baseScenario.subspace.about.profile.displayName).first()
-      ).toBeVisible({ timeout: 2000 });
-
-      // 5. Verify each membership is clickable to navigate
-      const spaceCard = page
-        .locator(`text=${baseScenario.space.about.profile.displayName}`)
-        .first();
-      await expect(spaceCard).toBeVisible();
+      // 4. L1, where the user is lead. Unique name: an earlier run's leaked
+      //    subspace can no longer satisfy this.
+      const subspaceName = baseScenario.subspace.about.profile.displayName;
+      await expect(page.getByText(subspaceName).first()).toBeVisible();
     }
   );
 });

@@ -24,6 +24,14 @@ query ReadMyNotifications($filter: NotificationEventsFilterInput, $first: Int) {
             actor { id }
             organization { id }
           }
+          ... on InAppNotificationPayloadPlatformUserMessageRoom {
+            user { id }
+            messageDetails {
+              message
+              room { id }
+              parent { id url }
+            }
+          }
         }
       }
     }

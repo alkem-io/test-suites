@@ -24,6 +24,19 @@ export const readInnovationPackVisibility = (
     sdk.ReadInnovationPackVisibility({ innovationPackId }, headers),
   );
 
+/**
+ * One innovation pack as the server holds it: name, description, tags, store
+ * listing, search visibility and provider. Answers ENTITY_NOT_FOUND once the
+ * pack is deleted.
+ */
+export const readInnovationPack = (
+  innovationPackId: string,
+  actor: GraphqlActor = TestUser.GLOBAL_ADMIN,
+) =>
+  runAs(actor, (sdk, headers) =>
+    sdk.ReadInnovationPack({ innovationPackId }, headers),
+  );
+
 export const readInnovationPackTemplatesSet = (
   innovationPackId: string,
   actor: GraphqlActor = TestUser.GLOBAL_ADMIN,

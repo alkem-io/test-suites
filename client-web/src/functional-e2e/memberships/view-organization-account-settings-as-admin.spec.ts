@@ -1,26 +1,22 @@
 // spec: client-web/src/functional-e2e/plans/memberships-test-plan.md
-// seed: client-web/src/functional-e2e/seed-memberships.spec.ts
 
 import { expect } from '@playwright/test';
 import {
-  TestUser,
   TestScenarioFactory,
+  TestUser,
   TestUserManager,
+  type TestScenarioConfig,
 } from '@alkemio/tests-lib';
-import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
-import { TestScenarioConfig } from '@alkemio/tests-lib/scenario/config/test-scenario-config';
-import {
-  CommunityMembershipPolicy,
-  SpacePrivacyMode,
-} from '@alkemio/client-lib';
+import type { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import { createAuthenticatedSessionFixture } from '../fixtures/authenticated-session.fixture';
+import { baseUrl, teardownScenario } from '../helpers/space-access.helper';
+import { uniqueName } from './memberships.helpers';
 
 const { test, setupAuthentication, teardownAuthentication } =
   createAuthenticatedSessionFixture({
     storageStateName: 'view-org-account-settings-admin.json',
     cleanupAfterTests: process.env.cleanupAfterTests === 'true',
   });
-const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 
 let baseScenario: OrganizationWithSpaceModel;
 
@@ -35,7 +31,7 @@ const scenarioConfig: TestScenarioConfig = {
   space: {
     about: {
       profile: {
-        displayName: 'Membership Test Space',
+        displayName: uniqueName('Membership Test Space'),
         tagline: 'Testing space memberships',
       },
     },
@@ -48,22 +44,25 @@ const scenarioConfig: TestScenarioConfig = {
   },
 };
 
-test.describe('Organization Account Settings', () => {
-  test.beforeAll(async ({ browser }) => {
-    test.setTimeout(60_000);
-    baseScenario = await TestScenarioFactory.createBaseScenario(scenarioConfig);
-    await setupAuthentication(
-      browser,
-      TestUserManager.users.organizationAdmin.email
-    );
-  });
+test.beforeAll(async ({ browser }) => {
+  test.setTimeout(60_000);
+  baseScenario = await TestScenarioFactory.createBaseScenario(scenarioConfig);
+  await setupAuthentication(
+    browser,
+    TestUserManager.users.organizationAdmin.email
+  );
+});
 
-  test.afterAll(async () => {
-    test.setTimeout(45_000);
+// File level, so it also runs when a failure retires the worker mid-file.
+test.afterAll(async () => {
+  try {
     await teardownAuthentication();
-    await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
-  });
+  } finally {
+    await teardownScenario(baseScenario);
+  }
+});
 
+test.describe('Organization Account Settings', () => {
   test(
     'View Organization Account Settings - As Admin',
     {
@@ -89,11 +88,13 @@ test.describe('Organization Account Settings', () => {
       // 4. Verify "Membership Test Space" is listed in Hosted Spaces
       await expect(
         page.getByText(baseScenario.space.about.profile.displayName).first()
-      ).toBeVisible({ timeout: 2000 });
+      ).toBeVisible();
 
-      // 5. Verify shows organization's resource quotas and usage
-      // await expect(page.getByText(/\d+\/\d+/).first()).toBeVisible();
-      await expect(page.getByText(/1\/3/).first()).toBeVisible();
+      // 5. Usage badges ("{usage}/{limit}"): the fresh organisation hosts
+      //    exactly the seeded space and nothing else, so exactly one badge
+      //    reads 1/<limit> (the limit is the environment's plan, not asserted).
+      //    A space not counted would leave every badge at 0/<limit>.
+      await expect(page.getByText(/^1\/\d+$/)).toHaveCount(1);
     }
   );
 });

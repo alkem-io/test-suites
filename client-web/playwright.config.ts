@@ -27,8 +27,6 @@ export default defineConfig({
     '**/platform-roles/**',
     // Needs the feature's Kratos values, Kratos admin and loopback Redis/Postgres: config/playwright.config.second-factor.ts
     '**/second-factor/**',
-    // Needs the Kratos admin API and the admin password: config/playwright.config.form-callout-framing.ts
-    '**/form-callout-framing/**',
     // Needs the Kratos admin API and a stack with the memo PDF export: config/playwright.config.memo-pdf-download.ts
     '**/memo-pdf-download/**',
   ],

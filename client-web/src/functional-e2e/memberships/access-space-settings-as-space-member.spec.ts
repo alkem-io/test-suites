@@ -1,26 +1,29 @@
 // spec: client-web/src/functional-e2e/plans/memberships-test-plan.md
-// seed: client-web/src/functional-e2e/seed-memberships.spec.ts
 
 import { expect } from '@playwright/test';
 import {
-  TestUser,
-  TestScenarioFactory,
-  TestUserManager,
-} from '@alkemio/tests-lib';
-import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
-import { TestScenarioConfig } from '@alkemio/tests-lib/scenario/config/test-scenario-config';
-import {
   CommunityMembershipPolicy,
   SpacePrivacyMode,
-} from '@alkemio/client-lib';
+  TestScenarioFactory,
+  TestUser,
+  TestUserManager,
+  type TestScenarioConfig,
+} from '@alkemio/tests-lib';
+import type { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import { createAuthenticatedSessionFixture } from '../fixtures/authenticated-session.fixture';
+import {
+  baseUrl,
+  calloutHeading,
+  spaceTitle,
+  teardownScenario,
+} from '../helpers/space-access.helper';
+import { uniqueName } from './memberships.helpers';
 
 const { test, setupAuthentication, teardownAuthentication } =
   createAuthenticatedSessionFixture({
     storageStateName: 'access-space-settings-member.json',
     cleanupAfterTests: process.env.cleanupAfterTests === 'true',
   });
-const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 
 let baseScenario: OrganizationWithSpaceModel;
 
@@ -29,12 +32,14 @@ const scenarioConfig: TestScenarioConfig = {
   space: {
     about: {
       profile: {
-        displayName: 'Membership Test Space',
+        displayName: uniqueName('Membership Test Space'),
         tagline: 'Testing space memberships',
       },
     },
     collaboration: {
       addTutorialCallouts: false,
+      // A published post: what a member can read, the positive control.
+      addPostCallout: true,
     },
     community: {
       admins: [TestUser.SPACE_ADMIN],
@@ -49,35 +54,46 @@ const scenarioConfig: TestScenarioConfig = {
   },
 };
 
-test.describe('Space/Subspace Settings Access Control', () => {
-  test.beforeAll(async ({ browser }) => {
-    test.setTimeout(60_000);
-    baseScenario = await TestScenarioFactory.createBaseScenario(scenarioConfig);
-    await setupAuthentication(browser, TestUserManager.users.spaceMember.email);
-  });
+test.beforeAll(async ({ browser }) => {
+  test.setTimeout(60_000);
+  baseScenario = await TestScenarioFactory.createBaseScenario(scenarioConfig);
+  await setupAuthentication(browser, TestUserManager.users.spaceMember.email);
+});
 
-  test.afterAll(async () => {
-    test.setTimeout(45_000);
+// File level, so it also runs when a failure retires the worker mid-file.
+test.afterAll(async () => {
+  try {
     await teardownAuthentication();
-    await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
-  });
+  } finally {
+    await teardownScenario(baseScenario);
+  }
+});
 
+test.describe('Space/Subspace Settings Access Control', () => {
   test(
     'Access Space Settings - As Space Member',
     {
       tag: ['@regression'],
     },
     async ({ page }) => {
-      // 1. Navigate to "Membership Test Space"
-      await page.goto(`${baseUrl}/${baseScenario.space.nameId}`);
+      const space = baseScenario.space;
+      // 1. Open the space as a member.
+      await page.goto(`${baseUrl}/${space.nameId}`);
 
-      // 2. Verify settings entry point is not visible to member
-      // CRD: settings entry is a link in the space banner with accessible
-      // name "Settings"; a plain member must not see it.
-      const settingsLink = page.getByRole('link', { name: 'Settings' });
-      await expect(settingsLink).not.toBeVisible();
+      // 2. Positive control: the page has resolved the member's standing —
+      //    the title renders and the member reads the seeded post, which only
+      //    a viewer with READ on the content gets.
+      await expect(
+        spaceTitle(page, space.about.profile.displayName)
+      ).toBeVisible();
+      await expect(
+        calloutHeading(page, space.collaboration.calloutPostDisplayName)
+      ).toBeVisible();
 
-      // todo: not enught
+      // 3. The settings entry point (CRD: banner link "Settings") is absent
+      //    for a plain member. (The admin's positive is
+      //    access-space-settings-as-space-admin.spec.ts.)
+      await expect(page.getByRole('link', { name: 'Settings' })).toHaveCount(0);
     }
   );
 });

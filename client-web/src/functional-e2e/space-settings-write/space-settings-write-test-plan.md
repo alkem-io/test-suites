@@ -42,7 +42,7 @@ Every absence above is read only after the same viewer's page has rendered the S
 
 ## Deliberately not covered here
 
-- The switches with no plain-member view to observe: **Guest Contributions** (needs a shared whiteboard, journey 5 territory), **Subspace Events** (needs a subspace calendar event), **Alkemio Support** (needs the platform-support persona), **Subspace Membership** (`allowSubspaceAdminsToInviteMembers`, needs a subspace admin inviting), **Trusted Applicants** (needs a trusted organization), and the **User information visibility** radios. Their saves go through the same `updateSpaceSettings` path asserted here; their effects are not walked.
+- The switches with no plain-member view to observe: **Guest Contributions** (needs a shared whiteboard: walked in `whiteboard-guest-share/`, W2 journey 5b), **Subspace Events** (needs a subspace calendar event), **Alkemio Support** (needs the platform-support persona), **Subspace Membership** (`allowSubspaceAdminsToInviteMembers`, needs a subspace admin inviting), **Trusted Applicants** (needs a trusted organization), and the **User information visibility** radios. Their saves go through the same `updateSpaceSettings` path asserted here; their effects are not walked.
 - Settings on a subspace (L1/L2) — the same page, different inheritance rules.
 - What a non-member sees of **Video Calls**: the client shows the "Video Call" link to any viewer with READ once `allowMembersToVideoCall` is on (`useVideoCall` gates on READ, not on membership), so on a public Space a non-member is offered it. Whether that is intended is an open product question; C4-1 asserts only the member's view until it is answered.
 - Private + open "Join" on the About page is journey 1 (`space-join-invite/`).

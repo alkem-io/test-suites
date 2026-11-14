@@ -101,3 +101,34 @@ export const readWhiteboardState = (
   runAs(actor, (sdk, headers) =>
     sdk.ReadWhiteboardState({ whiteboardId }, headers)
   );
+
+/**
+ * Whether a whiteboard is shared with guests, as `actor` (optionally speaking
+ * as a guest) is allowed to see it: `guestContributionsAllowed` (the board's
+ * guest rule is in place: GLOBAL_GUEST and GLOBAL_REGISTERED hold READ,
+ * UPDATE_CONTENT and CONTRIBUTE) and the actor's own privileges on it
+ * (`PUBLIC_SHARE` is what offers the guest toggle in the share dialog; the
+ * server grants it to Space admins only while the Space allows guest
+ * contributions).
+ *
+ * `guestName` speaks as the public route's browser does: an anonymous request
+ * carrying the base64 `x-guest-name` header, which the server turns into a
+ * GLOBAL_GUEST actor. With it, an `{ anonymous }` actor reads what a guest
+ * reads; a refused read is `{ error }` (the lookup needs READ).
+ */
+export const readWhiteboardGuestAccess = (
+  whiteboardId: string,
+  actor: GraphqlActor = TestUser.GLOBAL_ADMIN,
+  guestName?: string
+) =>
+  runAs(actor, (sdk, headers) =>
+    sdk.ReadWhiteboardGuestAccess(
+      { whiteboardId },
+      guestName
+        ? {
+            ...headers,
+            "x-guest-name": Buffer.from(guestName, "utf8").toString("base64"),
+          }
+        : headers
+    )
+  );

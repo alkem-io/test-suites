@@ -19,17 +19,6 @@ import { getWhiteboardEditorDialog } from '../templates-CRD/template-types/forms
  * element as the editor's own scene holds it. Nothing here reads canvas pixels.
  */
 
-/**
- * The walks need a client-web that resolves `@excalidraw-yjs/excalidraw` >= 0.5.6
- * (alkem-io/excalidraw-yjs#13 released and bumped, checklist item M-2). On an
- * environment without it WC-01 and WC-02 are RED by design — they pin the
- * incident. Set WHITEBOARD_COLLAB_FIXED=1 to run them against a build that has
- * the fix (a local stack with the PR build, or an environment after the bump).
- */
-export const fixedBuildAvailable = process.env.WHITEBOARD_COLLAB_FIXED === '1';
-export const SKIP_UNTIL_FIXED_BUILD =
-  'the environment client-web still resolves @excalidraw-yjs/excalidraw 0.5.5; the walks pin the fix of alkem-io/excalidraw-yjs#13 (client-web bump PR not opened yet). Run with WHITEBOARD_COLLAB_FIXED=1 against a >= 0.5.6 build';
-
 export type WhiteboardSpace = {
   scenario: OrganizationWithSpaceModel;
   calloutId: string;

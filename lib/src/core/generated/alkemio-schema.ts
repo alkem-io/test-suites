@@ -781,11 +781,32 @@ export type AdminTemplateMissingFileReference = {
   templateName: Scalars["String"]["output"];
 };
 
+export type AdminUpdateInnovationPackPromoteInput = {
+  /** The InnovationPack whose promote flag is to be set. */
+  innovationPackID: Scalars["UUID"]["input"];
+  /** True to list this InnovationPack first in the Innovation Library. */
+  promote: Scalars["Boolean"]["input"];
+};
+
+export type AdminUpdateSpacePromoteInput = {
+  /** True to list this Space first on Explore Spaces. */
+  promote: Scalars["Boolean"]["input"];
+  /** The Space (any level) whose promote flag is to be set. */
+  spaceID: Scalars["UUID"]["input"];
+};
+
 export type AdminUpdateSpaceVisibilityInput = {
   /** The Space whose visibility is to be updated. */
   spaceID: Scalars["UUID"]["input"];
   /** Visibility of the Space, only on L0 spaces. */
   visibility: SpaceVisibility;
+};
+
+export type AdminUpdateVirtualContributorPromoteInput = {
+  /** True to list this VirtualContributor first on the platform-wide listings. */
+  promote: Scalars["Boolean"]["input"];
+  /** The VirtualContributor whose promote flag is to be set. */
+  virtualContributorID: Scalars["UUID"]["input"];
 };
 
 export type AdminUserEmailChangeDriftResolveInput = {
@@ -1166,6 +1187,7 @@ export enum AuthorizationPrivilege {
   PlatformForumManage = "PLATFORM_FORUM_MANAGE",
   PlatformLicensingListsRead = "PLATFORM_LICENSING_LISTS_READ",
   PlatformOperationsAdmin = "PLATFORM_OPERATIONS_ADMIN",
+  PlatformPromoteManage = "PLATFORM_PROMOTE_MANAGE",
   PlatformRolesAssign = "PLATFORM_ROLES_ASSIGN",
   PlatformRoleHoldersRead = "PLATFORM_ROLE_HOLDERS_READ",
   PlatformSettingsAdmin = "PLATFORM_SETTINGS_ADMIN",
@@ -4239,6 +4261,8 @@ export type InnovationPack = {
   nameID: Scalars["NameID"]["output"];
   /** The Profile for this InnovationPack. */
   profile: Profile;
+  /** Whether this InnovationPack is platform-promoted (listed first). Null unless the caller may manage promotion (Platform Content Full Access or Platform License Manager). */
+  promote?: Maybe<Scalars["Boolean"]["output"]>;
   /** The InnovationPack provider. */
   provider: Actor;
   /** Visibility of the InnovationPack in searches. */
@@ -5609,8 +5633,14 @@ export type Mutation = {
   adminUpdateContributorAvatars: Profile;
   /** Updates the GeoLocation data where required on the platform. */
   adminUpdateGeoLocationData: Scalars["Boolean"]["output"];
+  /** Sets the platform-promote flag of an InnovationPack. Platform Content Full Access or Platform License Manager only. */
+  adminUpdateInnovationPackPromote: InnovationPack;
+  /** Sets the platform-promote flag of a Space (any level). Platform Content Full Access or Platform License Manager only. */
+  adminUpdateSpacePromote: Space;
   /** Update the visibility of the specified Space. */
   adminUpdateSpaceVisibility: Space;
+  /** Sets the platform-promote flag of a VirtualContributor. Platform Content Full Access or Platform License Manager only. */
+  adminUpdateVirtualContributorPromote: VirtualContributor;
   /** Remove the Kratos account associated with the specified User. Note: the Users profile on the platform is not deleted. */
   adminUserAccountDelete: User;
   /** Change a user's login email synchronously, acting as a platform administrator. The admin is responsible for verifying the subject user's identity out-of-band — the platform does NOT send a confirmation message to the new mailbox and does NOT require the new mailbox to prove ownership. Validates uniqueness, commits Kratos → Alkemio with bounded retry, invalidates the subject's existing sessions, and sends a security-signal notification to the old address. Requires PLATFORM_USERS_ADMIN. */
@@ -5885,6 +5915,8 @@ export type Mutation = {
   resetConversationVc: Conversation;
   /** Reset all license plans on Accounts */
   resetLicenseOnAccounts: Scalars["Boolean"]["output"];
+  /** Reset the current user’s app icon badge counter to zero. Called by the iOS app when it is opened. */
+  resetPushBadgeCount: Scalars["Boolean"]["output"];
   /** Revoke a credential from an Actor. */
   revokeCredentialFromActor: Scalars["Boolean"]["output"];
   /** Revokes the specified LicensePlan on an Account. */
@@ -6131,8 +6163,20 @@ export type MutationAdminUpdateContributorAvatarsArgs = {
   profileID: Scalars["UUID"]["input"];
 };
 
+export type MutationAdminUpdateInnovationPackPromoteArgs = {
+  promoteData: AdminUpdateInnovationPackPromoteInput;
+};
+
+export type MutationAdminUpdateSpacePromoteArgs = {
+  promoteData: AdminUpdateSpacePromoteInput;
+};
+
 export type MutationAdminUpdateSpaceVisibilityArgs = {
   updateData: AdminUpdateSpaceVisibilityInput;
+};
+
+export type MutationAdminUpdateVirtualContributorPromoteArgs = {
+  promoteData: AdminUpdateVirtualContributorPromoteInput;
 };
 
 export type MutationAdminUserAccountDeleteArgs = {
@@ -8375,6 +8419,8 @@ export type RelayPaginatedSpace = ActorFull & {
   platformAccess: PlatformRolesAccess;
   /** The profile for this Actor. */
   profile?: Maybe<Profile>;
+  /** Whether this Space is platform-promoted (listed first). Null unless the caller may manage promotion (Platform Content Full Access or Platform License Manager). */
+  promote?: Maybe<Scalars["Boolean"]["output"]>;
   /** The settings for this Space. */
   settings: SpaceSettings;
   /** The sort mode for subspaces of this Space: Alphabetical or Custom. Accessible without READ privilege. */
@@ -9262,6 +9308,8 @@ export type Space = ActorFull & {
   platformAccess: PlatformRolesAccess;
   /** The profile for this Actor. */
   profile?: Maybe<Profile>;
+  /** Whether this Space is platform-promoted (listed first). Null unless the caller may manage promotion (Platform Content Full Access or Platform License Manager). */
+  promote?: Maybe<Scalars["Boolean"]["output"]>;
   /** The settings for this Space. */
   settings: SpaceSettings;
   /** The sort mode for subspaces of this Space: Alphabetical or Custom. Accessible without READ privilege. */
@@ -11521,6 +11569,8 @@ export type VirtualContributor = ActorFull & {
   platformSettings: VirtualContributorPlatformSettings;
   /** The profile for this Actor. */
   profile?: Maybe<Profile>;
+  /** Whether this VirtualContributor is platform-promoted (listed first). Null unless the caller may manage promotion (Platform Content Full Access or Platform License Manager). */
+  promote?: Maybe<Scalars["Boolean"]["output"]>;
   /** Prompt graph definition for this Virtual Contributor. */
   promptGraphDefinition?: Maybe<PromptGraphDefinition>;
   /** The Virtual Contributor provider. */
@@ -12446,7 +12496,10 @@ export type ResolversTypes = {
   AdminTemplateFileRepairResult: ResolverTypeWrapper<AdminTemplateFileRepairResult>;
   AdminTemplateForeignFileReference: ResolverTypeWrapper<AdminTemplateForeignFileReference>;
   AdminTemplateMissingFileReference: ResolverTypeWrapper<AdminTemplateMissingFileReference>;
+  AdminUpdateInnovationPackPromoteInput: AdminUpdateInnovationPackPromoteInput;
+  AdminUpdateSpacePromoteInput: AdminUpdateSpacePromoteInput;
   AdminUpdateSpaceVisibilityInput: AdminUpdateSpaceVisibilityInput;
+  AdminUpdateVirtualContributorPromoteInput: AdminUpdateVirtualContributorPromoteInput;
   AdminUserEmailChangeDriftResolveInput: AdminUserEmailChangeDriftResolveInput;
   AdminUserEmailChangeInput: AdminUserEmailChangeInput;
   AiPersona: ResolverTypeWrapper<AiPersona>;
@@ -14208,7 +14261,10 @@ export type ResolversParentTypes = {
   AdminTemplateFileRepairResult: AdminTemplateFileRepairResult;
   AdminTemplateForeignFileReference: AdminTemplateForeignFileReference;
   AdminTemplateMissingFileReference: AdminTemplateMissingFileReference;
+  AdminUpdateInnovationPackPromoteInput: AdminUpdateInnovationPackPromoteInput;
+  AdminUpdateSpacePromoteInput: AdminUpdateSpacePromoteInput;
   AdminUpdateSpaceVisibilityInput: AdminUpdateSpaceVisibilityInput;
+  AdminUpdateVirtualContributorPromoteInput: AdminUpdateVirtualContributorPromoteInput;
   AdminUserEmailChangeDriftResolveInput: AdminUserEmailChangeDriftResolveInput;
   AdminUserEmailChangeInput: AdminUserEmailChangeInput;
   AiPersona: AiPersona;
@@ -19538,6 +19594,7 @@ export type InnovationPackResolvers<
   listedInStore?: Resolver<ResolversTypes["Boolean"], ParentType, ContextType>;
   nameID?: Resolver<ResolversTypes["NameID"], ParentType, ContextType>;
   profile?: Resolver<ResolversTypes["Profile"], ParentType, ContextType>;
+  promote?: Resolver<Maybe<ResolversTypes["Boolean"]>, ParentType, ContextType>;
   provider?: Resolver<ResolversTypes["Actor"], ParentType, ContextType>;
   searchVisibility?: Resolver<
     ResolversTypes["SearchVisibility"],
@@ -21091,11 +21148,32 @@ export type MutationResolvers<
     ParentType,
     ContextType
   >;
+  adminUpdateInnovationPackPromote?: Resolver<
+    ResolversTypes["InnovationPack"],
+    ParentType,
+    ContextType,
+    RequireFields<MutationAdminUpdateInnovationPackPromoteArgs, "promoteData">
+  >;
+  adminUpdateSpacePromote?: Resolver<
+    ResolversTypes["Space"],
+    ParentType,
+    ContextType,
+    RequireFields<MutationAdminUpdateSpacePromoteArgs, "promoteData">
+  >;
   adminUpdateSpaceVisibility?: Resolver<
     ResolversTypes["Space"],
     ParentType,
     ContextType,
     RequireFields<MutationAdminUpdateSpaceVisibilityArgs, "updateData">
+  >;
+  adminUpdateVirtualContributorPromote?: Resolver<
+    ResolversTypes["VirtualContributor"],
+    ParentType,
+    ContextType,
+    RequireFields<
+      MutationAdminUpdateVirtualContributorPromoteArgs,
+      "promoteData"
+    >
   >;
   adminUserAccountDelete?: Resolver<
     ResolversTypes["User"],
@@ -21938,6 +22016,11 @@ export type MutationResolvers<
     RequireFields<MutationResetConversationVcArgs, "input">
   >;
   resetLicenseOnAccounts?: Resolver<
+    ResolversTypes["Boolean"],
+    ParentType,
+    ContextType
+  >;
+  resetPushBadgeCount?: Resolver<
     ResolversTypes["Boolean"],
     ParentType,
     ContextType
@@ -24073,6 +24156,7 @@ export type RelayPaginatedSpaceResolvers<
     ContextType
   >;
   profile?: Resolver<Maybe<ResolversTypes["Profile"]>, ParentType, ContextType>;
+  promote?: Resolver<Maybe<ResolversTypes["Boolean"]>, ParentType, ContextType>;
   settings?: Resolver<ResolversTypes["SpaceSettings"], ParentType, ContextType>;
   sortMode?: Resolver<ResolversTypes["SpaceSortMode"], ParentType, ContextType>;
   sortOrder?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
@@ -24773,6 +24857,7 @@ export type SpaceResolvers<
     ContextType
   >;
   profile?: Resolver<Maybe<ResolversTypes["Profile"]>, ParentType, ContextType>;
+  promote?: Resolver<Maybe<ResolversTypes["Boolean"]>, ParentType, ContextType>;
   settings?: Resolver<ResolversTypes["SpaceSettings"], ParentType, ContextType>;
   sortMode?: Resolver<ResolversTypes["SpaceSortMode"], ParentType, ContextType>;
   sortOrder?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
@@ -26591,6 +26676,7 @@ export type VirtualContributorResolvers<
     ContextType
   >;
   profile?: Resolver<Maybe<ResolversTypes["Profile"]>, ParentType, ContextType>;
+  promote?: Resolver<Maybe<ResolversTypes["Boolean"]>, ParentType, ContextType>;
   promptGraphDefinition?: Resolver<
     Maybe<ResolversTypes["PromptGraphDefinition"]>,
     ParentType,
@@ -50541,6 +50627,14 @@ export type UpdateCalloutVisibilityMutation = {
   };
 };
 
+export type UpdateCalloutsSortOrderMutationVariables = Exact<{
+  sortOrderData: UpdateCalloutsSortOrderInput;
+}>;
+
+export type UpdateCalloutsSortOrderMutation = {
+  updateCalloutsSortOrder: Array<{ id: string; sortOrder: number }>;
+};
+
 export type CreateContributionOnCalloutMutationVariables = Exact<{
   contributionData: CreateContributionOnCalloutInput;
 }>;
@@ -50776,6 +50870,14 @@ export type CreateContributionOnCalloutMutation = {
   };
 };
 
+export type UpdateContributionsSortOrderMutationVariables = Exact<{
+  sortOrderData: UpdateContributionCalloutsSortOrderInput;
+}>;
+
+export type UpdateContributionsSortOrderMutation = {
+  updateContributionsSortOrder: Array<{ id: string; sortOrder: number }>;
+};
+
 export type CreateCalloutWithDataMutationVariables = Exact<{
   calloutData: CreateCalloutOnCalloutsSetInput;
 }>;
@@ -50968,6 +51070,25 @@ export type UpdatePollStatusMutationVariables = Exact<{
 
 export type UpdatePollStatusMutation = {
   updatePollStatus: { id: string; status: PollStatus };
+};
+
+export type MoveTaskToColumnMutationVariables = Exact<{
+  moveData: MoveTaskToColumnInput;
+}>;
+
+export type MoveTaskToColumnMutation = {
+  moveTaskToColumn: {
+    id: string;
+    sortOrder: number;
+    classification?:
+      | {
+          id: string;
+          tagsets?:
+            | Array<{ id: string; name: string; tags: Array<string> }>
+            | undefined;
+        }
+      | undefined;
+  };
 };
 
 export type TransferCalloutMutationVariables = Exact<{
@@ -87226,6 +87347,31 @@ export type ReadAccountResourcesQuery = {
   };
 };
 
+export type ReadInnovationPackQueryVariables = Exact<{
+  innovationPackId: Scalars["UUID"]["input"];
+}>;
+
+export type ReadInnovationPackQuery = {
+  lookup: {
+    innovationPack?:
+      | {
+          id: string;
+          nameID: string;
+          listedInStore: boolean;
+          searchVisibility: SearchVisibility;
+          provider: { id: string };
+          profile: {
+            id: string;
+            displayName: string;
+            description?: any | undefined;
+            url: string;
+            tagset?: { id: string; tags: Array<string> } | undefined;
+          };
+        }
+      | undefined;
+  };
+};
+
 export type ReadInnovationPackTemplatesSetQueryVariables = Exact<{
   innovationPackId: Scalars["UUID"]["input"];
 }>;
@@ -89519,6 +89665,18 @@ export type ReadCalloutContributionsQuery = {
   };
 };
 
+export type ReadCalloutContributionsOrderQueryVariables = Exact<{
+  calloutId: Scalars["UUID"]["input"];
+}>;
+
+export type ReadCalloutContributionsOrderQuery = {
+  lookup: {
+    callout?:
+      | { id: string; contributions: Array<{ id: string; sortOrder: number }> }
+      | undefined;
+  };
+};
+
 export type ReadCalloutFormResponsesQueryVariables = Exact<{
   formID: Scalars["UUID"]["input"];
   first?: InputMaybe<Scalars["Int"]["input"]>;
@@ -89834,6 +89992,30 @@ export type ReadCalloutsSetCalloutsQuery = {
   };
 };
 
+export type ReadContributionQueryVariables = Exact<{
+  contributionId: Scalars["UUID"]["input"];
+}>;
+
+export type ReadContributionQuery = {
+  lookup: {
+    contribution?:
+      | {
+          id: string;
+          authorization?:
+            | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
+            | undefined;
+          post?:
+            | {
+                id: string;
+                nameID: string;
+                profile: { displayName: string; url: string };
+              }
+            | undefined;
+        }
+      | undefined;
+  };
+};
+
 export type ReadMemoDocumentsQueryVariables = Exact<{
   memoId: Scalars["UUID"]["input"];
 }>;
@@ -89845,6 +90027,90 @@ export type ReadMemoDocumentsQuery = {
           id: string;
           signatures: Array<{ id: string }>;
           profile: { storageBucket: { documents: Array<{ id: string }> } };
+        }
+      | undefined;
+  };
+};
+
+export type ReadTaskBoardQueryVariables = Exact<{
+  calloutId: Scalars["UUID"]["input"];
+}>;
+
+export type ReadTaskBoardQuery = {
+  lookup: {
+    callout?:
+      | {
+          id: string;
+          authorization?:
+            | {
+                id: string;
+                myPrivileges?: Array<AuthorizationPrivilege> | undefined;
+              }
+            | undefined;
+          framing: { id: string; profile: { id: string; displayName: string } };
+          settings: {
+            contribution: { allowedTypes: Array<CalloutContributionType> };
+          };
+          classification?:
+            | {
+                id: string;
+                tagsets?:
+                  | Array<{
+                      id: string;
+                      name: string;
+                      allowedValues: Array<string>;
+                      tags: Array<string>;
+                    }>
+                  | undefined;
+              }
+            | undefined;
+          taskColumnCounts?:
+            | Array<{ column: string; count: number }>
+            | undefined;
+          contributions: Array<{
+            id: string;
+            sortOrder: number;
+            classification?:
+              | {
+                  id: string;
+                  tagsets?:
+                    | Array<{ id: string; name: string; tags: Array<string> }>
+                    | undefined;
+                }
+              | undefined;
+            post?:
+              | {
+                  id: string;
+                  profile: {
+                    id: string;
+                    displayName: string;
+                    description?: any | undefined;
+                  };
+                  createdBy?: { id: string } | undefined;
+                }
+              | undefined;
+          }>;
+        }
+      | undefined;
+  };
+};
+
+export type ReadWhiteboardGuestAccessQueryVariables = Exact<{
+  whiteboardId: Scalars["UUID"]["input"];
+}>;
+
+export type ReadWhiteboardGuestAccessQuery = {
+  lookup: {
+    whiteboard?:
+      | {
+          id: string;
+          guestContributionsAllowed: boolean;
+          authorization?:
+            | {
+                id: string;
+                myPrivileges?: Array<AuthorizationPrivilege> | undefined;
+              }
+            | undefined;
         }
       | undefined;
   };
@@ -94660,6 +94926,14 @@ export type ReadMyNotificationsQuery = {
           | {
               __typename: "InAppNotificationPayloadPlatformUserMessageRoom";
               type: NotificationEventPayload;
+              user: { id: string };
+              messageDetails?:
+                | {
+                    message: string;
+                    room: { id: string };
+                    parent: { id: string; url: string };
+                  }
+                | undefined;
             }
           | {
               __typename: "InAppNotificationPayloadPlatformUserProfileRemoved";
@@ -94786,6 +95060,8 @@ export type ReadMyUserQuery = {
       | {
           id: string;
           nameID: string;
+          firstName: string;
+          lastName: string;
           profile?:
             | { id: string; displayName: string; url: string }
             | undefined;
@@ -111166,6 +111442,39 @@ export type ReadSpaceClassificationsQuery = {
   };
 };
 
+export type ReadSpaceCommunityGuidelinesQueryVariables = Exact<{
+  spaceId: Scalars["UUID"]["input"];
+}>;
+
+export type ReadSpaceCommunityGuidelinesQuery = {
+  lookup: {
+    space?:
+      | {
+          id: string;
+          about: {
+            id: string;
+            guidelines: {
+              id: string;
+              profile: {
+                id: string;
+                displayName: string;
+                description?: any | undefined;
+                references?:
+                  | Array<{
+                      id: string;
+                      name: string;
+                      uri: string;
+                      description?: string | undefined;
+                    }>
+                  | undefined;
+              };
+            };
+          };
+        }
+      | undefined;
+  };
+};
+
 export type ReadSpaceGuidelinesIdQueryVariables = Exact<{
   spaceId: Scalars["UUID"]["input"];
 }>;
@@ -111366,6 +111675,130 @@ export type GetUserRolesQuery = {
   };
 };
 
+export type ReadCalloutStoredFilesQueryVariables = Exact<{
+  calloutId: Scalars["UUID"]["input"];
+}>;
+
+export type ReadCalloutStoredFilesQuery = {
+  lookup: {
+    callout?:
+      | {
+          id: string;
+          framing: {
+            id: string;
+            type: CalloutFramingType;
+            profile: {
+              id: string;
+              url: string;
+              references?:
+                | Array<{
+                    id: string;
+                    name: string;
+                    uri: string;
+                    description?: string | undefined;
+                  }>
+                | undefined;
+              storageBucket: {
+                id: string;
+                allowedMimeTypes: Array<string>;
+                maxFileSize: number;
+                documents: Array<{
+                  id: string;
+                  displayName: string;
+                  mimeType: MimeType;
+                  size: number;
+                  url: string;
+                  temporaryLocation: boolean;
+                }>;
+              };
+            };
+            mediaGallery?:
+              | {
+                  id: string;
+                  visuals: Array<{
+                    id: string;
+                    name: VisualType;
+                    uri: string;
+                    alternativeText?: string | undefined;
+                    sortOrder?: number | undefined;
+                  }>;
+                }
+              | undefined;
+          };
+        }
+      | undefined;
+  };
+};
+
+export type ReadConversationStoredFilesQueryVariables = Exact<{
+  conversationId: Scalars["UUID"]["input"];
+}>;
+
+export type ReadConversationStoredFilesQuery = {
+  lookup: {
+    conversation?:
+      | {
+          id: string;
+          room: {
+            id: string;
+            messages: Array<{
+              id: any;
+              message: any;
+              attachments: Array<{
+                displayName: string;
+                mimeType?: string | undefined;
+                size?: number | undefined;
+              }>;
+            }>;
+          };
+          storageBucket?:
+            | {
+                id: string;
+                allowedMimeTypes: Array<string>;
+                maxFileSize: number;
+                documents: Array<{
+                  id: string;
+                  displayName: string;
+                  mimeType: MimeType;
+                  size: number;
+                  url: string;
+                  temporaryLocation: boolean;
+                }>;
+              }
+            | undefined;
+        }
+      | undefined;
+  };
+};
+
+export type ReadStoredDocumentQueryVariables = Exact<{
+  documentId: Scalars["UUID"]["input"];
+}>;
+
+export type ReadStoredDocumentQuery = {
+  lookup: {
+    document?:
+      | {
+          id: string;
+          displayName: string;
+          mimeType: MimeType;
+          size: number;
+          url: string;
+          temporaryLocation: boolean;
+        }
+      | undefined;
+  };
+};
+
+export type StoredDocumentFragment = {
+  id: string;
+  displayName: string;
+  mimeType: MimeType;
+  size: number;
+  url: string;
+  temporaryLocation: boolean;
+};
+
 export type GetSpaceTemplatesCountByTemplateSetIdQueryVariables = Exact<{
   templateSetId: Scalars["UUID"]["input"];
 }>;
@@ -111549,6 +111982,30 @@ export type ReadTemplatesSetTemplatesQuery = {
                 }
               | undefined;
           }>;
+        }
+      | undefined;
+  };
+};
+
+export type ResolveContributionUrlQueryVariables = Exact<{
+  url: Scalars["String"]["input"];
+}>;
+
+export type ResolveContributionUrlQuery = {
+  urlResolver: {
+    state: UrlResolverResultState;
+    type: UrlType;
+    space?:
+      | {
+          id: string;
+          collaboration: {
+            calloutsSet: {
+              id: string;
+              calloutId?: string | undefined;
+              contributionId?: string | undefined;
+              postId?: string | undefined;
+            };
+          };
         }
       | undefined;
   };
