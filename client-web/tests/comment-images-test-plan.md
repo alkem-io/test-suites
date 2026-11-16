@@ -27,7 +27,7 @@ pnpm --filter @alkemio/test-suite-client-web run test:nightly --project="Comment
 | Scenario | Covers | Automated by |
 |---|---|---|
 | US1-AS1 | Pasting an image stages a removable chip, uploads nothing, and enables Send (the chip is then removed and a text-only comment sent as a barrier: it is the only `sendMessageToRoom` call, and no upload request was made) | `comment-images-us1-add.spec.ts` › US1-AS1 |
-| US1-AS2 | Text + image posts one comment: one row holding both the text and the picture (the picture in that row's own attachment list, nothing else nested in the row), the picture beneath the text, no filename line; the picture opens full size in a new tab | `us1-…` › US1-AS2 |
+| US1-AS2 | Text + image posts one comment: one row holding both the text and the picture (the picture in that row's own attachment list, nothing else nested in the row), the picture beneath the text, no filename line; the picture opens in the media viewer, which shows the stored PNG (client-web#10510 replaced the new tab) | `us1-…` › US1-AS2 |
 | US1-AS3 | Image + text produce exactly one new comment row carrying the text and the picture (checked on screen, and as exactly one `sendMessageToRoom` call whose message is the text and which carries the one attachment) | `us1-…` › US1-AS3 |
 | US1-AS4 | An image with no text posts an image-only comment rendered inline | `us1-…` › US1-AS4 |
 | US1-AS5 | The image button opens an images-only picker by mouse, Enter and Space; dragging shows the hint; a drop stages | `us1-…` › US1-AS5 |
