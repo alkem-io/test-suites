@@ -110,7 +110,7 @@ independently asserted.
 | US1-AS4 | Own messages unchanged: right-aligned, no avatar, no name, no gutter, no `sr-only` (FR-010) | `us1-…` › US1-AS4 |
 | US1-AS5 | A sender who never uploaded a picture gets the **same** treatment in the gutter as in the conversation identity (FR-009) | `us1-…` › US1-AS5 |
 | US1-AS6 | A run continuation hides the name visually but keeps it in the DOM, `sr-only`, for assistive technology (FR-008) | `us1-…` › US1-AS6 |
-| US1-AS7 | A reaction lands on its own bubble inside an indented run and not on the neighbouring one; the timestamp stays in the same column (FR-012) | `us1-…` › US1-AS7 |
+| US1-AS7 | A reaction lands on its own bubble inside an indented run and not on the neighbouring one. FR-012's timestamp check is gone: since client-web#10583 a message's time is a tooltip on its bubble, not a line in the column | `us1-…` › US1-AS7 |
 | US1-AS8 | A **live** message from the current run's sender joins it; one from anyone else starts a new run — no reload, subscription push only | `us1-…` › US1-AS8 |
 | US2-AS1 | Group without a custom photo: the header composite equals the list row's, image for image and fallback for fallback (FR-002) | `us2-group-header-identity.spec.ts` › US2-AS1 |
 | US2-AS2 | Setting a group photo replaces the composite with the photo, in header and list alike | `us2-…` › US2-AS2 |

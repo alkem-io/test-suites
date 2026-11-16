@@ -73,7 +73,7 @@ test.describe('US1 — group thread sender avatars', { tag: ['@chat-avatars'] },
 
     const uid = UniqueIDGenerator.getID();
 
-    // All three drive the UI, so all three need a session — created concurrently.
+    // All three drive the UI, so all three need a session.
     [viewer, bella, charlie] = await registerAndSignInAll(browser, [
       { email: `chatavatars1-viewer-${uid}@alkem.io`, firstName: `Viewer${uid}`, lastName: 'Reader' },
       { email: `chatavatars1-bella-${uid}@alkem.io`, firstName: `Bella${uid}`, lastName: 'Sender' },
@@ -257,8 +257,6 @@ test.describe('US1 — group thread sender avatars', { tag: ['@chat-avatars'] },
     await expect(reactionPills(column)).toHaveCount(1, { timeout: 20000 });
     // The pill belongs to this bubble alone — the run head above it is untouched.
     await expect(reactionPills(runHead)).toHaveCount(0);
-    // The timestamp stays inside the same column too (FR-012).
-    await expect(column.locator('span.text-caption').last()).toBeVisible();
   });
 
   test('US1-AS8: a live message joins the open run; a different sender starts a new one', async () => {

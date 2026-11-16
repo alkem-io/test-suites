@@ -20,7 +20,14 @@
 //     the pre-existing `createPngFixture(variant)` call sites in this file
 //     unchanged.
 
-import { expect, type Browser, type BrowserContext, type Locator, type Page } from '@playwright/test';
+import {
+  expect,
+  type Browser,
+  type BrowserContext,
+  type Locator,
+  type Page,
+  type Response,
+} from '@playwright/test';
 import {
   createPngFixture as createSizedPngFixture,
   getGraphqlClient,
@@ -166,16 +173,84 @@ async function completeSignUp(page: Page, { email, firstName, lastName }: Person
   await expect(page.getByText('You successfully verified your email address.')).toBeVisible({ timeout: 20000 });
 }
 
-/** Signs in through the login form. */
+/**
+ * Signs in through the login form and returns once the chat session is up.
+ *
+ * `/oauth2/auth` is rate-limited per source address (HTTP 429 from the
+ * ingress, before the request reaches the identity provider). A sign-in
+ * passes through it three times, and the chat's silent sign-on, which the
+ * client starts as soon as the dashboard loads, three more. A request that is
+ * refused leaves the browser on the refusal with its one-time verifier
+ * unspent, so reloading that address resumes the flow.
+ */
 async function signInThroughUi(page: Page, email: string): Promise<void> {
-  await page.goto(BASE_URL);
-  await acceptCookiesIfPresent(page);
-  await page.getByRole('link', { name: /log in/i }).click();
-  await expect(page).toHaveURL(/\/login/, { timeout: 30000 });
-  await page.getByLabel('E-Mail *').fill(email);
-  await fillSecret(page.getByLabel('Password *'), PASSWORD);
-  await page.getByRole('button', { name: 'Sign in', exact: true }).click();
-  await expect(page).toHaveURL(`${BASE_URL}/home`, { timeout: 40000 });
+  let refused = false;
+  const onResponse = (response: Response) => {
+    const request = response.request();
+    if (
+      response.status() === 429 &&
+      request.isNavigationRequest() &&
+      request.frame() === page.mainFrame() &&
+      new URL(response.url()).pathname === '/oauth2/auth'
+    )
+      refused = true;
+  };
+  page.on('response', onResponse);
+  try {
+    await page.goto(BASE_URL);
+    await acceptCookiesIfPresent(page);
+    await page.getByRole('link', { name: /log in/i }).click();
+    await expect(page).toHaveURL(/\/login/, { timeout: 30000 });
+    await page.getByLabel('E-Mail *').fill(email);
+    await fillSecret(page.getByLabel('Password *'), PASSWORD);
+    const chatSession = chatSessionStarted(page);
+    await page.getByRole('button', { name: 'Sign in', exact: true }).click();
+    await expect(async () => {
+      if (refused) {
+        refused = false;
+        await page.reload();
+      }
+      await expect(page).toHaveURL(`${BASE_URL}/home`, { timeout: 10000 });
+    }).toPass({ timeout: 120000, intervals: [5000, 10000] });
+    await chatSession;
+  } finally {
+    page.off('response', onResponse);
+  }
+}
+
+/**
+ * Resolves on the page's first successful Matrix sync, which is when it can
+ * send and receive chat messages. Resolves at once where the client is built
+ * without a homeserver. A silent sign-on that was refused (see
+ * `signInThroughUi`) falls back to a slower path in the client, hence the
+ * long wait.
+ */
+function chatSessionStarted(page: Page): Promise<void> {
+  type EnvWindow = { _env_?: { VITE_APP_MATRIX_HOMESERVER_URL?: string } };
+  const started = page
+    .evaluate(() => (window as unknown as EnvWindow)._env_?.VITE_APP_MATRIX_HOMESERVER_URL?.trim() ?? '')
+    .then(async homeserverUrl => {
+      if (!homeserverUrl) return;
+      await page.waitForResponse(
+        response => response.ok() && response.url().startsWith(`${homeserverUrl}/_matrix/client/v3/sync`),
+        { timeout: 90000 }
+      );
+    });
+  // Awaited by the caller after the sign-in; a sign-in that fails first must
+  // not leave this rejection unhandled.
+  started.catch(() => undefined);
+  return started;
+}
+
+/**
+ * Runs sign-ins one after another, however many callers ask at once: each one
+ * spends most of what the `/oauth2/auth` limit allows in a burst.
+ */
+let lastSignIn: Promise<unknown> = Promise.resolve();
+function oneSignInAtATime<T>(signIn: () => Promise<T>): Promise<T> {
+  const turn = lastSignIn.then(signIn, signIn);
+  lastSignIn = turn.catch(() => undefined);
+  return turn;
 }
 
 /** Reads the signed-in user's URL slug from the dashboard's "My Account" link. */
@@ -242,7 +317,7 @@ export async function registerAndSignIn(browser: Browser, spec: PersonSpec): Pro
   try {
     const page = await context.newPage();
     await completeSignUp(page, spec);
-    await signInThroughUi(page, spec.email);
+    await oneSignInAtATime(() => signInThroughUi(page, spec.email));
 
     // Record the account BEFORE the last fallible step: once the server has
     // materialised the user it must be deletable even if reading the slug fails.
@@ -270,7 +345,7 @@ export async function registerAccounts(browser: Browser, specs: PersonSpec[]): P
   return Promise.all(specs.map(spec => registerAccount(browser, spec)));
 }
 
-/** Creates accounts AND signs each one in, all concurrently. */
+/** Creates accounts concurrently and signs each one in, one sign-in at a time. */
 export async function registerAndSignInAll(browser: Browser, specs: PersonSpec[]): Promise<TestPerson[]> {
   return Promise.all(specs.map(spec => registerAndSignIn(browser, spec)));
 }
