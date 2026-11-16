@@ -25,10 +25,14 @@ import { secondFactorCases } from './_support/cases';
 const throwawayUser = secondFactorCases();
 const LIMIT = 100;
 
-const verdict = (answer: KratosAnswer) =>
-  isInvalidCodeVerdict(answer)
-    ? 'code invalid, try again (no bound)'
-    : `refused: ${answer.status} ${JSON.stringify(answer.body?.error ?? answer.body?.ui?.messages ?? '').slice(0, 200)}`;
+// A server error or no answer at all is not a bound: only a 4xx refusal is.
+const inconclusive = (answer: KratosAnswer) => !answer.status || answer.status >= 500;
+
+const verdict = (answer: KratosAnswer) => {
+  if (isInvalidCodeVerdict(answer)) return 'code invalid, try again (no bound)';
+  const detail = `${answer.status} ${JSON.stringify(answer.body?.error ?? answer.body?.ui?.messages ?? '').slice(0, 200)}`;
+  return inconclusive(answer) ? `inconclusive, not a bound: ${detail}` : `refused: ${detail}`;
+};
 
 const directSecondStep = async (email: string) => {
   const login = await passwordLogin(email, { via: 'kratos' });
@@ -47,13 +51,13 @@ test('R16 Kratos’ own bound on wrong second-step codes, and whether a new flow
     sent++;
     if (!isInvalidCodeVerdict(last)) break;
   }
-  console.log(
-    `[second-factor R16] bound: ${
-      last && !isInvalidCodeVerdict(last)
-        ? `Kratos refused the flow after ${sent} wrong codes — ${verdict(last)}`
-        : `none within ${LIMIT}`
-    }`
-  );
+  let outcome = `none within ${LIMIT}`;
+  if (last && !isInvalidCodeVerdict(last)) {
+    outcome = inconclusive(last)
+      ? `inconclusive: the run stopped after ${sent} wrong codes on a server error — ${verdict(last)}`
+      : `Kratos refused the flow after ${sent} wrong codes — ${verdict(last)}`;
+  }
+  console.log(`[second-factor R16] bound: ${outcome}`);
 
   // A bound that ends the session or refuses a new flow is itself a verdict.
   const wrongCodeAfter = async (open: () => Promise<SecondStep>): Promise<string> => {

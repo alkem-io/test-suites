@@ -90,6 +90,11 @@ export const subscribeToRoom = (
     url: testConfiguration.endPoints.ws,
     webSocketImpl: CookieWebSocket,
     lazy: false,
+    // The default prints the raw error, whose failed upgrade request carries the cookie.
+    onNonLazyError: error => {
+      const { code, message } = (error ?? {}) as { code?: number; message?: string };
+      errors.push(`connection: ${code ?? message ?? 'failed'}`);
+    },
     retryAttempts: 0,
     shouldRetry: () => false,
     on: {
@@ -180,7 +185,8 @@ export const awaitLive = async (
       Math.max(0, Math.min(REPOST_AFTER_MS, deadline - Date.now())),
       'delivery'
     ).catch(() => undefined);
-    if (delivered()) return;
+    // A delivery seen only after the deadline (a slow post) is not within it.
+    if (delivered() && Date.now() <= deadline) return;
   }
   const errors = all.flatMap(sub => sub.errors);
   throw new Error(
