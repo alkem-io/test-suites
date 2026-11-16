@@ -5,17 +5,15 @@ on:
 
 jobs:
   test:
-    # Pinned: `ubuntu-latest` migrated to Ubuntu 26.04 on 2026-10-19 and
-    # `playwright install --with-deps` has no dependency list for 26.04 on
-    # Playwright 1.58.x (run 40482406834). Lift the pin once Playwright
-    # supports ubuntu26.04-x64.
-    runs-on: ubuntu-24.04
+    # The ARC e2e lane (Scaleway platform-compute-v3, 4–6 vCPU), shared with
+    # the server-api nightly. Its image, ghcr.io/alkem-io/test-suites/e2e-runner
+    # (infra/e2e-runner), already holds the browsers, their system libraries
+    # and poppler: the pods run without privilege escalation, so this job
+    # cannot sudo. The runner group alkemio-e2e-ci only admits this workflow
+    # from develop.
+    runs-on: arc-e2e-linux-x64
     permissions:
       contents: write
-
-    #container:
-    # it is recommended to match the image version with the installed playwright version
-    #      image: mcr.microsoft.com/playwright:v1.57.0-noble
 
     steps:
       - uses: actions/checkout@v7
@@ -39,16 +37,19 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Install Playwright Browsers
-        # The nightly config pins channel: 'chrome' (branded Chrome, matching the
-        # interactive config), so install that channel explicitly — the default
-        # `playwright install` only provisions the bundled Chromium.
-        run: pnpm --filter @alkemio/test-suite-client-web exec playwright install --with-deps chromium chrome
-
-      - name: Install poppler-utils
-        # The Memo PDF download suite reads each downloaded PDF with pdftotext
-        # and pdffonts; its content checks fail (by design) without them.
-        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends poppler-utils
+      - name: Check the runner image's browser tooling
+        # `playwright install chromium` is a no-op when the image matches the
+        # lockfile, and downloads the new build without root when a Playwright
+        # bump got ahead of the image (move the lane to the new image tag then:
+        # only the system libraries cannot be topped up here). Branded Chrome
+        # (the nightly's channel: 'chrome') and poppler (Memo PDF download)
+        # must already be in the image; fail now rather than hours in.
+        run: |
+          set -euo pipefail
+          pnpm --filter @alkemio/test-suite-client-web exec playwright install chromium
+          google-chrome --version
+          pdftotext -v 2>&1 | head -1
+          pdffonts -v 2>&1 | head -1
 
       - name: Set run folder variables
         run: |
