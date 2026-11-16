@@ -50,13 +50,13 @@ The architect classified every row of the acceptance database by the rules of th
 |---|---|---|---|---|---|---|---|---|---|
 | <a id="c1"></a>C1 | Organizations without an owner | valid | 127 organizations (architect 125) | E2, K1 | [MB-7](#mb-7) | Keep all, change nothing. An organization without an owner is valid data. Product decides for the 40 nobody can act for | accepted | C1 G1–G11 | T10 |
 | <a id="c2"></a>C2 | Users without a login binding | valid | 13 users | E1, I1, I2 | [ID-1](#id-1), [ID-4](#id-4) | Keep all 13. Users are never deleted. The impact is settled later from production counts and team knowledge | accepted | C2 G1–G7 | T11 |
-| <a id="c3"></a>C3 | Virtual contributor conversation bindings | valid | 515 bindings in 237 rooms | — | [AI-1](#ai-1), [CT-3](#ct-3) | Rewrite 428 old ids, remove 25 bindings that name no virtual contributor, keep the rest. 362 bindings sit on thread ids the chat server no longer has | proposed | C3 G1–G6 | T12 |
-| <a id="c4"></a>C4 | Credential hygiene | valid | 13,119 credentials | A7, B1, B3, B4, B5, K4 | [LI-1](#li-1), [MB-4](#mb-4), [MB-8](#mb-8), [AI-1](#ai-1) | Keep every credential with a holder. Merge 179 exact second copies (repair rehearsed). Lapsed plus trials stay and are tracked | proposed | C4 G1–G20 | T13–T16 |
-| <a id="c5"></a>C5 | Missing creator and author attribution | valid | 123 person ids that name nobody, in 17 columns | F8, F9, M5 | [CT-1](#ct-1), [CT-12](#ct-12), [CM-4](#cm-4), [ID-4](#id-4) | Keep every row and every stored id. A placeholder is a display rule of the new server, not a rewrite of the data | proposed | C5 G1–G13 | T17, T18 |
-| <a id="c6"></a>C6 | File contents missing from storage | not classified | 730 stored files on 1,501 file rows; 729 with no off-site copy | C5, M1, S1, S2 | [CT-9](#ct-9), [CT-6](#ct-6) | Keep every file row and link. Counted from a listing of the acceptance file store on 2026-11-16, which matches the architect | proposed | C6 G1–G12, volume check | T19–T21 |
-| <a id="c7"></a>C7 | URL handles: invalid, reserved, duplicate and colliding names | valid | 66 handles fail the new rule | C2, E6 | [SP-11](#sp-11), [SP-7](#sp-7), [CT-1](#ct-1) | Keep every handle; a rename breaks an address with no redirect. One callout with no handle gets one (repair rehearsed) | proposed | C7 G1–G13 | T22, T23 |
-| <a id="c8"></a>C8 | Role definitions scoped to the wrong space | not classified | 162 definitions in 54 spaces | A1, A2, A3, A4 | [MB-4](#mb-4), [SP-4](#sp-4), [SP-5](#sp-5) | Repair in five steps that go together, so that nobody loses a role (rehearsed). One-entry parent lists on second-level subspaces are a live generator and are tracked | proposed | C8 G1–G15 | T24–T26 |
-| <a id="c9"></a>C9 | Other visible inconsistencies | valid | see the parts | F7, L5, M2 | [SP-2](#sp-2), [SP-8](#sp-8), [CT-2](#ct-2), [MB-7](#mb-7) | Keep all. Phase problems are for the space admins, who are informed. Never delete "test data" by a name pattern | proposed | C9 G1–G15 | T27–T29 |
+| <a id="c3"></a>C3 | Virtual contributor conversation bindings | valid | 515 bindings in 237 rooms | — | [AI-1](#ai-1), [CT-3](#ct-3) | Rewrite 428 old ids, remove 25 bindings that name no virtual contributor, keep the rest. 362 bindings sit on thread ids the chat server no longer has | accepted | C3 G1–G6 | T12 |
+| <a id="c4"></a>C4 | Credential hygiene | valid | 13,119 credentials | A7, B1, B3, B4, B5, K4 | [LI-1](#li-1), [MB-4](#mb-4), [MB-8](#mb-8), [AI-1](#ai-1) | Keep every credential with a holder. Merge 179 exact second copies (repair rehearsed). Lapsed plus trials stay and are tracked | accepted | C4 G1–G20 | T13–T16 |
+| <a id="c5"></a>C5 | Missing creator and author attribution | valid | 123 person ids that name nobody, in 17 columns | F8, F9, M5 | [CT-1](#ct-1), [CT-12](#ct-12), [CM-4](#cm-4), [ID-4](#id-4) | Keep every row and every stored id. A placeholder is a display rule of the new server, not a rewrite of the data | accepted | C5 G1–G13 | T17, T18 |
+| <a id="c6"></a>C6 | File contents missing from storage | not classified | 730 stored files on 1,501 file rows; 729 with no off-site copy | C5, M1, S1, S2 | [CT-9](#ct-9), [CT-6](#ct-6) | Keep every file row and link. Counted from a listing of the acceptance file store on 2026-11-16, which matches the architect | accepted | C6 G1–G12, volume check | T19–T21 |
+| <a id="c7"></a>C7 | URL handles: invalid, reserved, duplicate and colliding names | valid | 66 handles fail the new rule | C2, E6 | [SP-11](#sp-11), [SP-7](#sp-7), [CT-1](#ct-1) | Keep every handle; a rename breaks an address with no redirect. One callout with no handle gets one (repair rehearsed) | accepted | C7 G1–G13 | T22, T23 |
+| <a id="c8"></a>C8 | Role definitions scoped to the wrong space | not classified | 162 definitions in 54 spaces | A1, A2, A3, A4 | [MB-4](#mb-4), [SP-4](#sp-4), [SP-5](#sp-5) | Repair in five steps that go together, so that nobody loses a role (rehearsed). One-entry parent lists on second-level subspaces are a live generator and are tracked | accepted | C8 G1–G15 | T24–T26 |
+| <a id="c9"></a>C9 | Other visible inconsistencies | valid | see the parts | F7, L5, M2 | [SP-2](#sp-2), [SP-8](#sp-8), [CT-2](#ct-2), [MB-7](#mb-7) | Keep all. Phase problems are for the space admins, who are informed. Never delete "test data" by a name pattern | accepted | C9 G1–G15 | T27–T29 |
 
 ## By feature
 
@@ -86,7 +86,7 @@ Account deletion and admin identity operations
 | Finding | Ruling | Status |
 |---|---|---|
 | [C2](#c2) Users without a login binding | Keep all 13. Users are never deleted. The impact is settled later from production counts and team knowledge | accepted |
-| [C5](#c5) Missing creator and author attribution | Keep every row and every stored id. A placeholder is a display rule of the new server, not a rewrite of the data | proposed |
+| [C5](#c5) Missing creator and author attribution | Keep every row and every stored id. A placeholder is a display rule of the new server, not a rewrite of the data | accepted |
 
 ### ID-6
 
@@ -103,7 +103,7 @@ Space profile, about, tagline, tags, visuals and banner
 | Finding | Ruling | Status |
 |---|---|---|
 | [A5](#a5) Profiles, tags, locations, visuals and references with no owner | Reject or follow the owner. A profile that a live row still names is a repair, not a reject | accepted |
-| [C9](#c9) Other visible inconsistencies | Keep all. Phase problems are for the space admins, who are informed. Never delete "test data" by a name pattern | proposed |
+| [C9](#c9) Other visible inconsistencies | Keep all. Phase problems are for the space admins, who are informed. Never delete "test data" by a name pattern | accepted |
 
 ### SP-4
 
@@ -112,7 +112,7 @@ Subspaces (L1, L2): create, pin, sort, sidebar
 | Finding | Ruling | Status |
 |---|---|---|
 | [B2](#b2) Spaces with an inconsistent hierarchy or a forbidden name | Repair 7 (leftover parent pointer, 6 twins on one handle; rehearsed). Keep and track 2 sub-subspaces on a fourth level and 2 spaces on a restricted word | accepted |
-| [C8](#c8) Role definitions scoped to the wrong space | Repair in five steps that go together, so that nobody loses a role (rehearsed). One-entry parent lists on second-level subspaces are a live generator and are tracked | proposed |
+| [C8](#c8) Role definitions scoped to the wrong space | Repair in five steps that go together, so that nobody loses a role (rehearsed). One-entry parent lists on second-level subspaces are a live generator and are tracked | accepted |
 
 ### SP-5
 
@@ -121,7 +121,7 @@ Move or convert a subspace between levels and parents
 | Finding | Ruling | Status |
 |---|---|---|
 | [B2](#b2) Spaces with an inconsistent hierarchy or a forbidden name | Repair 7 (leftover parent pointer, 6 twins on one handle; rehearsed). Keep and track 2 sub-subspaces on a fourth level and 2 spaces on a restricted word | accepted |
-| [C8](#c8) Role definitions scoped to the wrong space | Repair in five steps that go together, so that nobody loses a role (rehearsed). One-entry parent lists on second-level subspaces are a live generator and are tracked | proposed |
+| [C8](#c8) Role definitions scoped to the wrong space | Repair in five steps that go together, so that nobody loses a role (rehearsed). One-entry parent lists on second-level subspaces are a live generator and are tracked | accepted |
 
 ### SP-6
 
@@ -143,7 +143,7 @@ Admin: space visibility, licence, nameID
 | Finding | Ruling | Status |
 |---|---|---|
 | [B2](#b2) Spaces with an inconsistent hierarchy or a forbidden name | Repair 7 (leftover parent pointer, 6 twins on one handle; rehearsed). Keep and track 2 sub-subspaces on a fourth level and 2 spaces on a restricted word | accepted |
-| [C7](#c7) URL handles: invalid, reserved, duplicate and colliding names | Keep every handle; a rename breaks an address with no redirect. One callout with no handle gets one (repair rehearsed) | proposed |
+| [C7](#c7) URL handles: invalid, reserved, duplicate and colliding names | Keep every handle; a rename breaks an address with no redirect. One callout with no handle gets one (repair rehearsed) | accepted |
 
 ### SP-8
 
@@ -154,7 +154,7 @@ Innovation flow and states (stages), default callout templates per state
 | [A3](#a3) Space structure with no owner | Reject with the credentials, notifications and invitations that name it. The chat server rooms need their own step. 8 of the leftovers come from failed space creations (server#6596, fixed) | accepted |
 | [B1](#b1) Duplicate or empty names where the old system requires unique ones | Repair, never delete. 10 phase tags that match no phase move to the current phase of their flow (repair rehearsed). 3 duplicate guidance chats are kept. The other repairs have no repair file yet | accepted |
 | [B4](#b4) Values outside the allowed vocabulary | Repair five of six parts to the value the server writes today. Invitations to people who are not registered are always kept. Phase names with a comma are left to the space admins, who are informed | accepted |
-| [C9](#c9) Other visible inconsistencies | Keep all. Phase problems are for the space admins, who are informed. Never delete "test data" by a name pattern | proposed |
+| [C9](#c9) Other visible inconsistencies | Keep all. Phase problems are for the space admins, who are informed. Never delete "test data" by a name pattern | accepted |
 
 ### SP-9
 
@@ -179,7 +179,7 @@ URL resolution and lookups (nameID, legacy URLs)
 | Finding | Ruling | Status |
 |---|---|---|
 | [B2](#b2) Spaces with an inconsistent hierarchy or a forbidden name | Repair 7 (leftover parent pointer, 6 twins on one handle; rehearsed). Keep and track 2 sub-subspaces on a fourth level and 2 spaces on a restricted word | accepted |
-| [C7](#c7) URL handles: invalid, reserved, duplicate and colliding names | Keep every handle; a rename breaks an address with no redirect. One callout with no handle gets one (repair rehearsed) | proposed |
+| [C7](#c7) URL handles: invalid, reserved, duplicate and colliding names | Keep every handle; a rename breaks an address with no redirect. One callout with no handle gets one (repair rehearsed) | accepted |
 
 ### SP-13
 
@@ -213,8 +213,8 @@ Roles: assign and remove for users, organisations, VCs; leave; access loss
 | Finding | Ruling | Status |
 |---|---|---|
 | [A8](#a8) Credentials with no holder or pointing at deleted things | Reject. No live role definition uses a deleted id | accepted |
-| [C4](#c4) Credential hygiene | Keep every credential with a holder. Merge 179 exact second copies (repair rehearsed). Lapsed plus trials stay and are tracked | proposed |
-| [C8](#c8) Role definitions scoped to the wrong space | Repair in five steps that go together, so that nobody loses a role (rehearsed). One-entry parent lists on second-level subspaces are a live generator and are tracked | proposed |
+| [C4](#c4) Credential hygiene | Keep every credential with a holder. Merge 179 exact second copies (repair rehearsed). Lapsed plus trials stay and are tracked | accepted |
+| [C8](#c8) Role definitions scoped to the wrong space | Repair in five steps that go together, so that nobody loses a role (rehearsed). One-entry parent lists on second-level subspaces are a live generator and are tracked | accepted |
 
 ### MB-7
 
@@ -224,7 +224,7 @@ Organisations: create, edit, verify, settings, associates, domain match
 |---|---|---|
 | [A11](#a11) Small leftovers | Reject. 3 keys of the web assistant that looked orphaned are valid and kept | accepted |
 | [C1](#c1) Organizations without an owner | Keep all, change nothing. An organization without an owner is valid data. Product decides for the 40 nobody can act for | accepted |
-| [C9](#c9) Other visible inconsistencies | Keep all. Phase problems are for the space admins, who are informed. Never delete "test data" by a name pattern | proposed |
+| [C9](#c9) Other visible inconsistencies | Keep all. Phase problems are for the space admins, who are informed. Never delete "test data" by a name pattern | accepted |
 
 ### MB-8
 
@@ -233,7 +233,7 @@ Platform roles and credentials
 | Finding | Ruling | Status |
 |---|---|---|
 | [A8](#a8) Credentials with no holder or pointing at deleted things | Reject. No live role definition uses a deleted id | accepted |
-| [C4](#c4) Credential hygiene | Keep every credential with a holder. Merge 179 exact second copies (repair rehearsed). Lapsed plus trials stay and are tracked | proposed |
+| [C4](#c4) Credential hygiene | Keep every credential with a holder. Merge 179 exact second copies (repair rehearsed). Lapsed plus trials stay and are tracked | accepted |
 
 ### MB-9
 
@@ -252,8 +252,8 @@ Callouts: create per type, edit, publish, visibility, sort, transfer, forms
 |---|---|---|
 | [B1](#b1) Duplicate or empty names where the old system requires unique ones | Repair, never delete. 10 phase tags that match no phase move to the current phase of their flow (repair rehearsed). 3 duplicate guidance chats are kept. The other repairs have no repair file yet | accepted |
 | [B3](#b3) Content that contradicts its declared type | Repair 95, keep 3, leave out 17 empty responses. No whiteboard is removed. On production every part is read row by row first | accepted |
-| [C5](#c5) Missing creator and author attribution | Keep every row and every stored id. A placeholder is a display rule of the new server, not a rewrite of the data | proposed |
-| [C7](#c7) URL handles: invalid, reserved, duplicate and colliding names | Keep every handle; a rename breaks an address with no redirect. One callout with no handle gets one (repair rehearsed) | proposed |
+| [C5](#c5) Missing creator and author attribution | Keep every row and every stored id. A placeholder is a display rule of the new server, not a rewrite of the data | accepted |
+| [C7](#c7) URL handles: invalid, reserved, duplicate and colliding names | Keep every handle; a rename breaks an address with no redirect. One callout with no handle gets one (repair rehearsed) | accepted |
 
 ### CT-2
 
@@ -262,7 +262,7 @@ Contributions: posts, links, whiteboards, memos on callouts; move and reorder
 | Finding | Ruling | Status |
 |---|---|---|
 | [B3](#b3) Content that contradicts its declared type | Repair 95, keep 3, leave out 17 empty responses. No whiteboard is removed. On production every part is read row by row first | accepted |
-| [C9](#c9) Other visible inconsistencies | Keep all. Phase problems are for the space admins, who are informed. Never delete "test data" by a name pattern | proposed |
+| [C9](#c9) Other visible inconsistencies | Keep all. Phase problems are for the space admins, who are informed. Never delete "test data" by a name pattern | accepted |
 
 ### CT-3
 
@@ -271,7 +271,7 @@ Comments, replies, reactions, mentions, read marks (rooms)
 | Finding | Ruling | Status |
 |---|---|---|
 | [A10](#a10) Activity entries, rooms and conversations of deleted owners | Reject 911 activity entries, repair 3. Reject 47 room rows; the rooms behind them on the chat server need a separate step | accepted |
-| [C3](#c3) Virtual contributor conversation bindings | Rewrite 428 old ids, remove 25 bindings that name no virtual contributor, keep the rest. 362 bindings sit on thread ids the chat server no longer has | proposed |
+| [C3](#c3) Virtual contributor conversation bindings | Rewrite 428 old ids, remove 25 bindings that name no virtual contributor, keep the rest. 362 bindings sit on thread ids the chat server no longer has | accepted |
 
 ### CT-4
 
@@ -292,7 +292,7 @@ Collabora (office) documents
 | [A6](#a6) Storage, files and documents with no owner | Reject, except 29 files that 16 live whiteboards show: those are repaired. A stored file is never deleted because a rejected row names it | accepted |
 | [B3](#b3) Content that contradicts its declared type | Repair 95, keep 3, leave out 17 empty responses. No whiteboard is removed. On production every part is read row by row first | accepted |
 | [B5](#b5) Files breaking their bucket limits | Keep all 7. Three checks are open: a running server, production counts, bucket limits on import | accepted |
-| [C6](#c6) File contents missing from storage | Keep every file row and link. Counted from a listing of the acceptance file store on 2026-11-16, which matches the architect | proposed |
+| [C6](#c6) File contents missing from storage | Keep every file row and link. Counted from a listing of the acceptance file store on 2026-11-16, which matches the architect | accepted |
 
 ### CT-9
 
@@ -303,7 +303,7 @@ Files, references, media gallery, storage buckets and document access
 | [A6](#a6) Storage, files and documents with no owner | Reject, except 29 files that 16 live whiteboards show: those are repaired. A stored file is never deleted because a rejected row names it | accepted |
 | [B4](#b4) Values outside the allowed vocabulary | Repair five of six parts to the value the server writes today. Invitations to people who are not registered are always kept. Phase names with a comma are left to the space admins, who are informed | accepted |
 | [B5](#b5) Files breaking their bucket limits | Keep all 7. Three checks are open: a running server, production counts, bucket limits on import | accepted |
-| [C6](#c6) File contents missing from storage | Keep every file row and link. Counted from a listing of the acceptance file store on 2026-11-16, which matches the architect | proposed |
+| [C6](#c6) File contents missing from storage | Keep every file row and link. Counted from a listing of the acceptance file store on 2026-11-16, which matches the architect | accepted |
 
 ### CT-10
 
@@ -320,7 +320,7 @@ Activity log and activity feed
 | Finding | Ruling | Status |
 |---|---|---|
 | [A10](#a10) Activity entries, rooms and conversations of deleted owners | Reject 911 activity entries, repair 3. Reject 47 room rows; the rooms behind them on the chat server need a separate step | accepted |
-| [C5](#c5) Missing creator and author attribution | Keep every row and every stored id. A placeholder is a display rule of the new server, not a rewrite of the data | proposed |
+| [C5](#c5) Missing creator and author attribution | Keep every row and every stored id. A placeholder is a display rule of the new server, not a rewrite of the data | accepted |
 
 ### CT-14
 
@@ -355,7 +355,7 @@ Notifications: in-app inbox, email, settings, blacklist, recipients
 
 | Finding | Ruling | Status |
 |---|---|---|
-| [C5](#c5) Missing creator and author attribution | Keep every row and every stored id. A placeholder is a display rule of the new server, not a rewrite of the data | proposed |
+| [C5](#c5) Missing creator and author attribution | Keep every row and every stored id. A placeholder is a display rule of the new server, not a rewrite of the data | accepted |
 
 ### CM-6
 
@@ -374,8 +374,8 @@ Virtual contributors: create, settings, knowledge base, platform well-known, rol
 |---|---|---|
 | [A1](#a1) Leftover migration backup tables | Reject by table. Exception: keep the one table that maps 450 old virtual contributor ids in room thread data until those are rewritten (C3) | accepted |
 | [A7](#a7) AI personas, virtual contributors and knowledge bases with no owner | Reject the 159 personas and 3 knowledge bases. Keep the 10 virtual contributors whose knowledge source is gone, unchanged, and track them | accepted |
-| [C3](#c3) Virtual contributor conversation bindings | Rewrite 428 old ids, remove 25 bindings that name no virtual contributor, keep the rest. 362 bindings sit on thread ids the chat server no longer has | proposed |
-| [C4](#c4) Credential hygiene | Keep every credential with a holder. Merge 179 exact second copies (repair rehearsed). Lapsed plus trials stay and are tracked | proposed |
+| [C3](#c3) Virtual contributor conversation bindings | Rewrite 428 old ids, remove 25 bindings that name no virtual contributor, keep the rest. 362 bindings sit on thread ids the chat server no longer has | accepted |
+| [C4](#c4) Credential hygiene | Keep every credential with a holder. Merge 179 exact second copies (repair rehearsed). Lapsed plus trials stay and are tracked | accepted |
 
 ### AI-2
 
@@ -393,7 +393,7 @@ License plans, assignments, entitlements, credential rules
 |---|---|---|
 | [A2](#a2) Accounts and licences that belong to nobody | Reject, after the guards read 0. 2 accounts carry an outside subscription id: look up the billing record first | accepted |
 | [B4](#b4) Values outside the allowed vocabulary | Repair five of six parts to the value the server writes today. Invitations to people who are not registered are always kept. Phase names with a comma are left to the space admins, who are informed | accepted |
-| [C4](#c4) Credential hygiene | Keep every credential with a holder. Merge 179 exact second copies (repair rehearsed). Lapsed plus trials stay and are tracked | proposed |
+| [C4](#c4) Credential hygiene | Keep every credential with a holder. Merge 179 exact second copies (repair rehearsed). Lapsed plus trials stay and are tracked | accepted |
 
 ### OP-1
 
