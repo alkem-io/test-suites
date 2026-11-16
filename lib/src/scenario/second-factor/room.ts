@@ -97,6 +97,8 @@ export const subscribeToRoom = (
     },
     retryAttempts: 0,
     shouldRetry: () => false,
+    // An upgrade that is never acknowledged closes the socket (4504), which rejects the startup below.
+    connectionAckWaitTimeout: 10_000,
     on: {
       closed: event => {
         code = (event as { code: number }).code;
