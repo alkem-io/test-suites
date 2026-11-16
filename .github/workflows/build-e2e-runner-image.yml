@@ -1,0 +1,114 @@
+name: Build e2e runner image
+
+# Builds infra/e2e-runner (actions-runner + Playwright browsers, branded Chrome
+# and poppler) for the ARC e2e lane and publishes it to this repository's
+# package registry. See infra/e2e-runner/README.md.
+#
+# The tag is derived, never hand-bumped: pw<playwright>-runner<runner>, with
+# the Playwright version read from pnpm-lock.yaml. A lockfile change that does
+# not move Playwright finds the tag already published and pushes nothing.
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [develop]
+    paths:
+      - 'infra/e2e-runner/**'
+      - 'pnpm-lock.yaml'
+      - '.github/workflows/build-e2e-runner-image.yml'
+  pull_request:
+    paths:
+      - 'infra/e2e-runner/**'
+      - '.github/workflows/build-e2e-runner-image.yml'
+
+env:
+  IMAGE: ghcr.io/alkem-io/test-suites/e2e-runner
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Resolve versions and tag
+        id: meta
+        run: |
+          set -euo pipefail
+          PW=$(grep -oP '^  playwright@\K[0-9][0-9.]*(?=:)' pnpm-lock.yaml | sort -u)
+          if [ -z "$PW" ] || [ "$(wc -l <<<"$PW")" -ne 1 ]; then
+            echo "::error::expected exactly one playwright version in pnpm-lock.yaml, got: ${PW:-none}"
+            exit 1
+          fi
+          RUNNER=$(grep -oP '^ARG RUNNER_IMAGE=\S+:\K[0-9.]+(?=@)' infra/e2e-runner/Dockerfile)
+          TAG="pw${PW}-runner${RUNNER}"
+          echo "playwright=$PW" >> "$GITHUB_OUTPUT"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "Image: $IMAGE:$TAG"
+
+      - name: Log in to GHCR
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # Tags are immutable once the lane pins them: an existing tag is never
+      # overwritten. Change the Dockerfile → bump nothing by hand; a new
+      # runner or Playwright version yields a new tag.
+      - name: Skip if this tag is already published
+        id: exists
+        if: github.event_name != 'pull_request'
+        run: |
+          if docker manifest inspect "$IMAGE:${{ steps.meta.outputs.tag }}" >/dev/null 2>&1; then
+            echo "Already published: $IMAGE:${{ steps.meta.outputs.tag }}"
+            echo "published=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: docker/setup-buildx-action@v3
+        if: steps.exists.outputs.published != 'true'
+
+      - name: Build
+        if: steps.exists.outputs.published != 'true'
+        uses: docker/build-push-action@v6
+        with:
+          context: infra/e2e-runner
+          load: true
+          build-args: PLAYWRIGHT_VERSION=${{ steps.meta.outputs.playwright }}
+          tags: ${{ env.IMAGE }}:${{ steps.meta.outputs.tag }}
+
+      # Run it the way the lane does (uid 1001, no privilege escalation, no
+      # capabilities) and prove both browser channels launch and poppler is
+      # there. Pushing an image that cannot start a browser would only surface
+      # three hours into a nightly.
+      - name: Smoke test as the lane runs it
+        if: steps.exists.outputs.published != 'true'
+        run: |
+          docker run --rm --user 1001:1001 --security-opt no-new-privileges --cap-drop ALL \
+            --entrypoint bash "$IMAGE:${{ steps.meta.outputs.tag }}" -c '
+              set -euo pipefail
+              export PATH=/home/runner/externals/node24/bin:$PATH
+              pdftotext -v 2>&1 | head -1
+              cd "$(mktemp -d)"
+              npm init -y >/dev/null
+              npm i --silent "playwright@${{ steps.meta.outputs.playwright }}"
+              node -e "
+                const { chromium } = require(\"playwright\");
+                (async () => {
+                  for (const o of [{}, { channel: \"chrome\" }]) {
+                    const b = await chromium.launch(o);
+                    const p = await b.newPage();
+                    await p.setContent(\"<h1>ok</h1>\");
+                    if (await p.textContent(\"h1\") !== \"ok\") throw new Error(\"render failed\");
+                    console.log(o.channel || \"chromium\", b.version(), \"ok\");
+                    await b.close();
+                  }
+                })().catch(e => { console.error(e); process.exit(1); });
+              "'
+
+      - name: Publish
+        if: github.event_name != 'pull_request' && steps.exists.outputs.published != 'true'
+        run: docker push "$IMAGE:${{ steps.meta.outputs.tag }}"
