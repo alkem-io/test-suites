@@ -88,6 +88,8 @@ The seed creates:
 
 ### Category 1: Callout Creation
 
+> Automated by `callouts/0.5callout-creation.spec.ts` (spec ids 1.1–1.9 differ from the scenario ids below). What each case asserts, and the regression it guards: [Automated oracles](#automated-oracles--05-creation-and-06-deletion).
+
 #### 1.1 Create Post Collection Callout - As Space Admin
 
 **User:** SPACE_ADMIN
@@ -359,6 +361,8 @@ The seed creates:
 
 ### Category 2: Callout Viewing and Discovery
 
+> 2.1–2.3 are automated by `callouts/0.9callout-viewing.spec.ts`; what each asserts: [Automated oracles — publish and visibility](#automated-oracles--publish-and-visibility-07-09-01-02-04).
+
 #### 2.1 View Published Callout - As Space Member
 
 **User:** SPACE_MEMBER
@@ -478,6 +482,8 @@ The seed creates:
 
 ### Category 3: Callout Editing and Updates
 
+> 3.1–3.4 are automated by `callouts/0.7callout-editing.spec.ts`; see [Automated oracles — publish and visibility](#automated-oracles--publish-and-visibility-07-09-01-02-04).
+
 #### 3.1 Edit Callout Details - As Space Admin
 
 **User:** SPACE_ADMIN
@@ -587,6 +593,8 @@ The seed creates:
 ---
 
 ### Category 4: Callout Deletion
+
+> 4.1 and 4.2 are automated by `callouts/0.6callout-deletion.spec.ts`; see [Automated oracles](#automated-oracles--05-creation-and-06-deletion).
 
 #### 4.1 Delete Callout - As Space Admin
 
@@ -828,6 +836,8 @@ The seed creates:
 
 ### Category 6: Callout Contributions
 
+> 6.1 (`callouts/0.4callout-contributions.spec.ts`): see [Automated oracles — publish and visibility](#automated-oracles--publish-and-visibility-07-09-01-02-04).
+
 #### 6.1 Add Post Contribution - As Space Member
 
 **User:** SPACE_MEMBER
@@ -975,6 +985,8 @@ The seed creates:
 ---
 
 ### Category 7: Callout Access Control by Role
+
+> 7.1/7.2 (`callouts/0.2callout-access-control.spec.ts`): see [Automated oracles — publish and visibility](#automated-oracles--publish-and-visibility-07-09-01-02-04).
 
 #### 7.1 Space Admin - Full Access
 
@@ -1363,6 +1375,117 @@ The seed creates:
 - The Space settings About _What_ / _Why_ / _Who_ editors are covered by `space/space-settings-about-limit.spec.ts` (AL-1, AL-2; nightly _Space_): ring thresholds per limit (What 50,000; Why / Who 32,000). **Observed and pinned, not ruled:** none of the three About editors shows a live error or blocks Save past its limit — What at 50,100 saves (server limit 65,568), Why at 32,100 saves, Who at 32,884 is refused by the server and the footer shows the error + Retry. The PR lists Why / Who as a follow-up and is silent on What. Not covered: the innovation-flow state description, the forum body and the VC knowledge base (client-web unit tests cover the limits passed to each); the title field's own red-on-blur and 128 counter were not delivered (Release 78 decision D5).
 
 ---
+
+## Automated oracles — 0.5 creation and 0.6 deletion
+
+_W2 Tier 1 items 9–10 of the client-net audit (`docs/qa/server-rebuild/client-net-audit/README.md` §4), 2026-11-09, branch `qa/w2-tier1-callouts`._
+
+Before this change the 8 create cases asserted only the title heading, which a server that stored every callout as a plain post would pass, and 4.1 read the deleted title's absence straight after `goto`, before the feed had rendered. Both are now falsifiable.
+
+### 0.5 — every create proves what was stored, from two angles
+
+After the title heading (kept), each admin case calls `expectCalloutKind`:
+
+1. **UI** — opens the callout's detail dialog. "Discussion" renders for every kind and is the positive control that the dialog body is up; then the kind-specific affordance: "Open Whiteboard" (whiteboard framing), "Open Memo" (memo framing), the CTA link `"<text> (opens <url> in a new tab)"` with that `href`, or the "Contributions" section with the typed add button ("Add Post", "Add link or file", "Add memo", "Add whiteboard"). The affordances of the other kinds are asserted absent (count 0) after the control, including any CTA link (the `"<text> (opens <url>…)"` name only `CalloutLinkAction` carries) for the non-CTA kinds.
+2. **API** — `readCalloutsSetCalloutTypes(calloutsSetId, sessionActor(page))` (new lib read-back): exactly one stored callout with the title; `framing.type`; `settings.contribution.allowedTypes` (exact set); the framing whiteboard/memo present only for that framing; the framing link's `uri` and display name for the CTA, no link otherwise.
+
+| Case | Framing | Accepted contributions | Dialog affordance | Regression it guards |
+|---|---|---|---|---|
+| 1.1 Post | `NONE` | `[]` | none of the framing affordances, no Contributions | a plain post saved with a framing or responses it was not given |
+| 1.2 Whiteboard | `WHITEBOARD` + whiteboard id | `[]` | Open Whiteboard | the Whiteboard chip ignored (saved as a post) or the framing whiteboard not created |
+| 1.3 CTA | `LINK` + uri `https://example.com`, name "Learn More" | `[]` | the CTA link with that href | the CTA saved without its link, or with a wrong/rewritten URL or label |
+| 1.4 Memo | `MEMO` + memo id | `[]` | Open Memo | the Memo chip ignored or the framing memo not created |
+| 1.5 Posts collection | `NONE` | `[POST]` | Contributions + Add Post | the response type dropped or mapped to another type |
+| 1.6 Links & Files | `NONE` | `[LINK]` | Contributions + Add link or file | same, for links |
+| 1.7 Memos | `NONE` | `[MEMO]` | Contributions + Add memo | same, for memos |
+| 1.8 Whiteboards | `NONE` | `[WHITEBOARD]` | Contributions + Add whiteboard | same, for whiteboards |
+
+1.9 (member cannot create) is unchanged.
+
+### 0.6 — 4.1 deletion with a positive control
+
+1. **Before the delete:** the created callout is stored exactly once (lib `readCalloutsSetCallouts` as the admin; its id is kept); after a fresh `goto` the feed is **rendered** — the scenario's seeded post heading is visible AND no "Loading Post" status skeleton is left in the "Space content feed" region — and the new card's heading is visible; the rendered card count ("Open …" links in the feed) is taken.
+2. **After the delete** (the confirm dialog is waited hidden): fresh `goto`, the same rendered-feed guard, then the card count is exactly one less, the title is hidden, and the read-back no longer holds that id and holds exactly one callout fewer.
+
+The UI count is taken from the rendered feed, not from the API total: the feed lists only the current tab's callouts, while the set also holds the other flow states' (Contributors, Subspaces, Welcome). Regressions guarded: delete that does not persist (UI optimistic removal only), delete that removes the wrong or more than one callout, and a read before render (the skeleton false green).
+
+### Red-proofs (2026-11-09, local stack, one run each)
+
+| Oracle | Mutation | Result |
+|---|---|---|
+| 0.5 dialog (UI) | 1.2 expects a memo framing | **red** — "Open Whiteboard" expected count 0, received 1 |
+| 0.5 read-back: accepted types | 1.6 read-back only, expects `[POST]` | **red** — allowedTypes deep-equality diff |
+| 0.5 read-back: framing type | 1.4 read-back only, expects `NONE` | **red** — expected "NONE", received "MEMO" |
+| 0.6 UI count | delete cancelled (Escape instead of Confirm) | **red** — card count expected 2, received 3 |
+| 0.6 read-back | delete cancelled, UI after-oracles removed | **red** — the deleted id is still in the set |
+| old 0.6 oracle (develop) | delete cancelled | **green** — confirms the audit: the old `toBeHidden` right after `goto` passes with no deletion |
+
+### Constants asserted
+
+The framing/response types, the CTA uri and label are what the case chose. One rebaseline candidate: 1.1–1.4 assert `allowedTypes: []` for "no response chip selected" — whether that empty set is sent by the client or filled in by the server when the field is omitted was not traced; if the rebuilt server defaults differently, decide there whether the server or this oracle moves. The dialog strings ("Discussion", "Open Whiteboard", "Open Memo", "Contributions", the add-button labels, the CTA link's accessible name, "Loading Post", "Space content feed") are client-web i18n/aria strings — they move with a client change, not with the server rebuild.
+
+## Automated oracles — publish and visibility (0.7, 0.9, 0.1, 0.2, 0.4)
+
+_W2 Tier 1 item 11 of the client-net audit (`docs/qa/server-rebuild/client-net-audit/README.md` §4), 2026-11-09, branch `qa/w2-tier1-callouts`._
+
+Before this change, a UI publish was proven in 0.1 only (the member could open the callout afterwards). In 0.7, 0.9 and 0.2 it was proven by nothing, or by "Publish is not in the menu", which also passes when the menu never opens. Three cases asserted `expect(promise).toBeDefined()`, which is always true. 0.9 2.2 ("draft hidden from a member") read the title's absence with only the Home tab as a control. That passes on a page that has not rendered the feed.
+
+**New lib read-back:** `readCalloutsSetCalloutVisibility(calloutsSetId, actor)` returns each callout's title and `settings.visibility`, as the actor may list them. Probed 2026-11-09: the server leaves a DRAFT out of a member's listing (admin 4 callouts, member 3 while one is a draft). Read as the member, the read-back is therefore the server-side half of "a member cannot see a draft". Specs use it through `helpers/callout-visibility.helper.ts › expectStoredCalloutVisibility`, which polls, because a UI publish answers after its confirm dialog has closed.
+
+**Rendered-feed guard:** `CollaborationPage.expectFeedRendered(knownTitle)` waits until a callout known to be listed is visible in the "Space content feed" region and no "Loading Post" skeleton is left. Cards below the fold stay skeletons until scrolled into view (4 cards on a 1080px viewport), so the guard scrolls each remaining skeleton into view until none is left.
+
+| Case | New oracle | Regression it guards |
+|---|---|---|
+| 0.7 3.1 | after save: stored under the new title as DRAFT, nothing under the old title; after the trailing publish: PUBLISHED | the edit not persisted, or persisted as a new callout; an edit that publishes; the unasserted publish not reaching the server |
+| 0.7 3.2 | `toBeDefined()` → the edited title's heading is visible in the feed after a fresh load | the 3.1 edit surviving only in the session cache |
+| 0.7 3.4 | before: stored DRAFT; the member (own browser context) sees the rendered feed without the draft, and the server lists the seeded callout for them as PUBLISHED but not the draft. Menu positive control (Edit visible) before "Publish gone". After: PUBLISHED read-back as admin AND as the member; the member's rendered feed shows the callout, and it opens (Discussion heading) | the publish not reaching the server; a publish that the member still cannot see; a draft leaking to members before publish; a "Publish gone" check that passes on a closed menu |
+| 0.9 2.3 | the Draft flip moved before `goto` (it raced the feed query) + DRAFT read-back | the admin view being read before the draft state existed |
+| 0.9 2.1 (admin) | UI publish → PUBLISHED read-back, and the server lists it for SPACE_MEMBER | the unasserted UI publish (old oracle: the comment box, present on drafts too) |
+| 0.9 2.1 (member) | the member session's read-back says PUBLISHED | — (strengthens the existing "member sees it") |
+| 0.9 2.2 | positive control: the published sibling (the scenario now seeds `addPostCallout`) is visible and no skeleton is left; then the draft's heading count 0 in the feed, and the member's server listing holds the published sibling as PUBLISHED (positive control) but not the draft | a vacuous absence (feed not rendered); a draft that the server hands to members while the UI hides it |
+| 0.1 Step 1 | stored DRAFT; not listed for SPACE_MEMBER | a "Save Draft" that publishes |
+| 0.1 Step 2 | menu positive control (Edit) before "Publish gone"; PUBLISHED read-back | publish not persisted (the member step would only catch it later, as a click timeout) |
+| 0.1 Step 3 | the member sees the title in the feed and the server lists it as PUBLISHED for the member session | — (makes the existing implicit publish oracle explicit) |
+| 0.2 7.1 | the trailing (unasserted) publish → PUBLISHED read-back | the publish not persisted |
+| 0.2 7.2 | `toBeDefined()` → the member session's read-back lists the seeded callout as PUBLISHED | limited access that loses READ on published callouts |
+| 0.4 6.1 | `toBeDefined()` → the seeded collection's exact heading is visible in the member's feed | the collection not rendered for a member |
+
+0.9 also gained a file-level teardown: its admin block never cleans its own scenario, so a failing admin case would leak it.
+
+**Runs (local stack, 2026-11-09, files 0.1 / 0.2 / 0.4 / 0.7 / 0.9):** baseline on the unmodified code 18/18; after the change 18/18 twice. A first after-run was red once in 0.7 3.4: a below-the-fold "Loading Post" skeleton in the member's feed. That led to the scroll in `expectFeedRendered`, which was then green in every run.
+
+### Red-proofs — item 11 (2026-11-09, local stack, one run each)
+
+| Oracle | Mutation | Result |
+|---|---|---|
+| visibility read-back (0.7 3.4) | publish skipped (menu closed with Escape) | **red** — "the publish reached the server": expected `PUBLISHED`, received `DRAFT` |
+| rendered-feed positive control (0.9 2.2) | page opened on another tab of the space (`?tab=2`: the tab bar renders, the feed does not) | **red** — the published sibling's heading not found in "Space content feed" |
+| old 0.9 2.2 oracle (HEAD) | the same `?tab=2` mutation | **green** — confirms the audit: the Home tab plus `toBeHidden` passes with no feed on screen |
+| draft absent in the member's feed (0.9 2.2, UI) | callout left PUBLISHED, old `toBeHidden` removed | **red** — feed heading count expected 0, received 1 |
+| draft not listed for the member (0.9 2.2, API) | callout left PUBLISHED, both UI absences removed | **red** — "the server does not list the draft for the member": expected `undefined`, received `PUBLISHED` |
+
+(A first variant that opened `/home` was red on the OLD code too, because `/home` has no Home tab. It was replaced by the `?tab=2` pair above.)
+
+### Constants asserted — item 11
+
+The visibility values `DRAFT` / `PUBLISHED` come from the lib's `CalloutVisibility` enum. **Rebaseline candidate:** the server leaving a DRAFT out of a member's `calloutsSet.callouts` listing (rather than listing it with READ withheld, or erroring). 0.7 3.4, 0.9 2.2 and 0.1 Step 1 assert that absence. If the rebuilt server models draft visibility differently, decide there whether the server or these oracles move. "Loading Post", "Space content feed" and "Discussion" are client-web aria/i18n strings.
+
+### Challenge fixes (QA PR challenge, 2026-11-11, local stack)
+
+- **`CollaborationPage.publishCallout` waits for its confirm.** It used to click "Publish" in the confirm only `if (confirmDialog.isVisible(…))`; `isVisible` does not wait, so when the alertdialog had not rendered yet the confirm was skipped and the callout stayed a draft. client-web always opens that dialog (`CalloutSettingsConnector` › `CalloutVisibilityChangeDialog`), so the helper now waits for it, confirms, and waits for it to close. With the read-backs above, the old guard would have shown up as an intermittent red in 0.1 / 0.2 / 0.7 / 0.9.
+- **Member-side absence has a same-test positive control** (0.7 3.4, 0.9 2.2): the member's listing holds the seeded published callout before the draft is read as not listed, so an empty listing (wrong actor, lost READ) cannot pass the negative. 0.1 Step 1 keeps its cross-step control (Step 3 reads the same persona's listing as PUBLISHED); its scenario seeds no published callout.
+- **0.5 non-CTA kinds assert no CTA link** in the dialog.
+- **Contract cases pin values, not shapes:** `readCalloutsSetCalloutTypes` seeds a CTA callout that accepts posts and reads back `LINK`, the link uri and name, no whiteboard/memo, `[POST]`, and `NONE` with no framing content for the seeded post; `readCalloutsSetCalloutVisibility` seeds a DRAFT and reads it back beside the PUBLISHED seeded post. The old cases checked types only, one of them behind `if (content)`.
+
+Runs: the five item-11 files plus 0.5 and 0.6, 29/29 in two runs after the fixes (Chromium, headless, local stack); contract 26/26.
+
+| Oracle | Mutation | Result |
+|---|---|---|
+| 0.5 no CTA link for non-CTA kinds | 1.3 (a CTA) run with no link expected | **red** — CTA link count expected 0, received 1 |
+| 0.9 2.2 member positive control | control reads a title that was not seeded | **red** — expected `PUBLISHED`, received `undefined` |
+| 0.9 2.1 (admin) publish read-back | publish skipped (Escape on the menu) | **red** — "the UI publish reached the server": expected `PUBLISHED`, received `DRAFT` |
+| contract: callout types | CTA expected `NONE` | **red** — received `LINK` |
+| contract: visibility | seeded draft expected `PUBLISHED` | **red** — received `DRAFT` |
 
 ## Testing Notes
 

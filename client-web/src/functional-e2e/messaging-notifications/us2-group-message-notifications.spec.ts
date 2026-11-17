@@ -1,17 +1,18 @@
 import { test, expect, Page } from '@playwright/test';
 import { loginViaCrd } from '../helpers/login.helper';
+import { openSettingsSection } from '../helpers/settings-section.helper';
 import {
   delay,
-  deleteMailSlurperMails,
   digestTestTimeoutMs,
   digestWindow,
-  getMailsData,
   UniqueIDGenerator,
 } from '@alkemio/tests-lib';
 import {
   baseUrl,
   conversationNamesOf,
+  markMailboxes,
   newContextPage,
+  newMailsOf,
   openChatPanel,
   openConversationByName,
   password,
@@ -21,8 +22,7 @@ import {
   SETUP_TIMEOUT_MS,
   settledPushDelta,
   subscribeToPush,
-  toAddressesOf,
-  waitForMailsCountAtLeast,
+  waitForNewMails,
 } from './messaging.helpers';
 
 /**
@@ -37,7 +37,14 @@ import {
  * Ruling 3c) via the RabbitMQ management API (`alkemio-push-notifications`
  * cumulative publish counter) — never real browser delivery (no VAPID keys
  * in the acceptance overlay). Email content IS asserted directly against
- * Mailslurper, a real sink.
+ * the mail sink (MailSlurper or Swarmail), a real sink.
+ *
+ * MAIL. The sink is shared with every other suite on the stack, so this walk
+ * never prunes it and never counts the whole inbox. Each mail scenario marks
+ * all four personas' mailboxes (A, B, C, D) right before its send and asserts
+ * only on what arrived for each since (`markMailboxes` / `newMailsOf` /
+ * `waitForNewMails` in `messaging.helpers.ts`). "Zero email" means zero to
+ * any of the four; "exactly one to B" also pins zero to A, C and D.
  *
  * Covers US2-AS1..AS5. Scenarios share one group conversation (A, B, C) and
  * run in order — later scenarios depend on earlier ones' state.
@@ -111,6 +118,12 @@ test.describe(
     let userBEmail: string;
     let userCEmail: string;
     let userDEmail: string;
+    const everyone = () => ({
+      a: userAEmail,
+      b: userBEmail,
+      c: userCEmail,
+      d: userDEmail,
+    });
     // A's display name is no longer asserted on: an R4 group digest names the
     // CONVERSATION, not the sender (data-model 9.1), so the subject carries G's
     // name rather than A's.
@@ -169,7 +182,6 @@ test.describe(
       page,
     }) => {
       test.setTimeout(digestTestTimeoutMs([groupPush, groupEmail]));
-      await deleteMailSlurperMails();
 
       await loginViaCrd(page, userAEmail, password, baseUrl);
       await openChatPanel(page);
@@ -195,6 +207,7 @@ test.describe(
         timeout: 10_000,
       });
 
+      const mailboxes = await markMailboxes(everyone());
       const baseline = await pushPublishedTotal();
 
       await sendMessage(page, 'US2-AS1 default-settings group message from A');
@@ -216,19 +229,22 @@ test.describe(
       await snap(page, 'US2-AS1-after-send');
       expect(delta).toBe(2);
 
-      const [, emailTotal] = await getMailsData();
-      expect(emailTotal).toBe(0);
+      const newMail = await newMailsOf(mailboxes);
+      for (const who of ['a', 'b', 'c', 'd']) {
+        expect(newMail[who], `email to ${who.toUpperCase()}`).toHaveLength(0);
+      }
     });
 
     test('US2-AS2: B enables group email — A sends, B receives exactly one email naming G, no content, deep link', async ({
       browser,
     }) => {
       test.setTimeout(digestTestTimeoutMs(groupEmail));
-      await deleteMailSlurperMails();
 
       const { context: bContext, page: bPage } = await newContextPage(browser);
       await loginViaCrd(bPage, userBEmail, password, baseUrl);
       await bPage.goto(`${baseUrl}/user/me/settings/notifications`);
+      // Rows sit in collapsed groups (client-web#10437); messaging is under User Notifications.
+      await openSettingsSection(bPage, /^User Notifications/);
       const emailToggle = groupEmailToggle(bPage);
       await expect(emailToggle).toHaveAttribute('aria-checked', 'false');
       await emailToggle.click();
@@ -239,6 +255,7 @@ test.describe(
       const { context: aContext, page: aPage } = await newContextPage(browser);
       await loginViaCrd(aPage, userAEmail, password, baseUrl);
       await openConversationByName(aPage, groupName);
+      const mailboxes = await markMailboxes(everyone());
       await sendMessage(
         aPage,
         'US2-AS2 group message after B enabled group email'
@@ -250,13 +267,17 @@ test.describe(
       // first poll that saw it" — a second, wrongly-addressed digest (C, or A
       // for her own message) sits on that recipient's own track and can land
       // long after B's.
-      const [mailItems, total] = await waitForMailsCountAtLeast(1, {
+      const toB = await waitForNewMails(mailboxes.b, 1, {
         timeout: groupEmail.quietGraceMs,
         settleMs: groupEmail.maxDelayGraceMs,
       });
-      expect(total).toBe(1);
+      expect(toB, 'digests to B').toHaveLength(1);
+      const others = await newMailsOf(mailboxes);
+      for (const who of ['a', 'c', 'd']) {
+        expect(others[who], `email to ${who.toUpperCase()}`).toHaveLength(0);
+      }
 
-      const mail = mailItems.find(m => m.toAddresses?.includes(userBEmail));
+      const mail = toB[0];
       await snap(aPage, 'US2-AS2-after-send');
       expect(mail).toBeDefined();
       // R4 group digests report CONVERSATIONS, not senders — a digest can span
@@ -281,13 +302,14 @@ test.describe(
       browser,
     }) => {
       test.setTimeout(digestTestTimeoutMs(groupEmail, { cycles: 3 }));
-      await deleteMailSlurperMails();
 
       // D has the channel enabled too — proves absence is membership-driven,
       // not merely "D never opted in" (mirrors test-suites:T004 negative matrix).
       const { context: dContext, page: dPage } = await newContextPage(browser);
       await loginViaCrd(dPage, userDEmail, password, baseUrl);
       await dPage.goto(`${baseUrl}/user/me/settings/notifications`);
+      // Rows sit in collapsed groups (client-web#10437); messaging is under User Notifications.
+      await openSettingsSection(dPage, /^User Notifications/);
       const dEmailToggle = groupEmailToggle(dPage);
       await expect(dEmailToggle).toHaveAttribute('aria-checked', 'false');
       await dEmailToggle.click();
@@ -311,18 +333,18 @@ test.describe(
       // digest has provably flushed and this scenario starts from a clean track.
       // eslint-disable-next-line no-restricted-syntax -- drains the previous scenario's track to its MAX-DELAY bound before a clean slate
       await delay(groupEmail.maxDelayGraceMs);
-      await deleteMailSlurperMails();
 
       const { context: aContext, page: aPage } = await newContextPage(browser);
       await loginViaCrd(aPage, userAEmail, password, baseUrl);
       await openConversationByName(aPage, groupName);
+      const mailboxes = await markMailboxes(everyone());
       await sendMessage(aPage, 'US2-AS3 D is not a member of this group');
 
       // Poll bound covers `email:group` quiet + sweep + settle for B's digest.
-      const [, total] = await waitForMailsCountAtLeast(1, {
+      const toB = await waitForNewMails(mailboxes.b, 1, {
         timeout: groupEmail.quietGraceMs,
       });
-      expect(total).toBe(1);
+      expect(toB, 'digests to B').toHaveLength(1);
 
       // NEGATIVE — D's absence is the point of this scenario. If D were wrongly
       // armed, D's digest would be on D's OWN track and could land well after
@@ -331,11 +353,12 @@ test.describe(
       // nothing about D.
       // eslint-disable-next-line no-restricted-syntax -- negative settle window at the digest MAX-DELAY bound (digestWindow constant)
       await delay(groupEmail.maxDelayGraceMs);
-      const [mailItems, settledTotal] = await getMailsData();
+      const settled = await newMailsOf(mailboxes);
       await snap(aPage, 'US2-AS3-after-send');
-      expect(settledTotal).toBe(1);
-      expect(toAddressesOf(mailItems)).toContain(userBEmail);
-      expect(toAddressesOf(mailItems)).not.toContain(userDEmail);
+      expect(settled.b, 'digests to B once settled').toHaveLength(1);
+      expect(settled.d, 'email to D (never a member)').toHaveLength(0);
+      expect(settled.a, 'email to A (the sender)').toHaveLength(0);
+      expect(settled.c, 'email to C (email off)').toHaveLength(0);
       await aContext.close();
     });
 
@@ -463,6 +486,8 @@ test.describe(
       const { context: bContext, page: bPage } = await newContextPage(browser);
       await loginViaCrd(bPage, userBEmail, password, baseUrl);
       await bPage.goto(`${baseUrl}/user/me/settings/notifications`);
+      // Rows sit in collapsed groups (client-web#10437); messaging is under User Notifications.
+      await openSettingsSection(bPage, /^User Notifications/);
       const pushToggle = groupPushToggle(bPage);
       await expect(pushToggle).toHaveAttribute('aria-checked', 'true');
       await pushToggle.click();

@@ -1,5 +1,5 @@
 import { defineConfig } from '@playwright/test';
-import { baseConfig, GENERATED_WALKS_DIR, suite } from './playwright.shared';
+import { baseConfig, GENERATED_WALKS_DIR, selectLane, suite } from './playwright.shared';
 
 /**
  * The nightly runner: every suite that is green against a freshly deployed
@@ -13,17 +13,36 @@ import { baseConfig, GENERATED_WALKS_DIR, suite } from './playwright.shared';
  *   PW_BROWSER=firefox pnpm run test:nightly     # same suites, another browser
  *   pnpm run test:nightly --project=Callouts     # one suite
  *
- * Files run one at a time (`workers: 1` unless PW_WORKERS says otherwise):
- * several suites still share the harness personas and the one MailSlurper
- * inbox. Raising the worker count is a per-suite audit, not a config flip.
+ * Every suite is in one of two lanes (see `Lane` in playwright.shared.ts and
+ * docs/e2e-conventions.md › Suite parallelism). A suite is `serial` unless it
+ * says `lane: 'parallel'`; a serial suite, or the serial part split off a
+ * suite ("<name> — serial"), carries a `Serial:` line with the reason. The
+ * nightly workflow runs the lanes as two runs:
+ *
+ *   PW_LANE=serial   PW_WORKERS=1 pnpm run test:nightly
+ *   PW_LANE=parallel PW_WORKERS=3 pnpm run test:nightly
+ *
+ * Without PW_LANE every suite runs, one file at a time unless PW_WORKERS says
+ * otherwise. `--project="Templates*"` picks a suite with its split-off parts.
  */
 export default defineConfig(
   baseConfig({
     globalSetup: './global-setup.ts',
     reportFolder: 'playwright-report',
-    projects: [
+    projects: selectLane([
+      suite({
+        // Migration canary (W2 Tier 0 item 8): listed first so a server that
+        // cannot answer an anonymous metadata query or sign the admin in is
+        // seen before any longer suite starts. The readiness case is
+        // `@local-stack` (the cluster ingress does not route /health/ready).
+        // Serial: the canary; it runs first, before anything else starts.
+        name: 'Platform smoke',
+        testMatch: ['/ts7-platform-smoke.spec.ts'],
+        tier: 'standard',
+      }),
       suite({
         name: 'Authentication',
+        lane: 'parallel',
         testMatch: [
           '/authentication/authentication-page-verification.spec.ts',
           '/authentication/authentication-login.spec.ts',
@@ -36,6 +55,20 @@ export default defineConfig(
         tier: 'extended',
       }),
       suite({
+        // W2 Tier 0 item 2 (client-net-audit § 4): A7 session revocation
+        // (server#6315). Disposable identities registered and deleted in the
+        // files; oracles are lib GraphQL read-backs + the signed-out UI. Mail
+        // only in beforeAll; cases are multi-context walks. Capture off: the
+        // walks replay session credentials.
+        name: 'Session revocation',
+        lane: 'parallel',
+        testMatch: ['/session-revocation/*.spec.ts'],
+        tier: 'extended',
+        capture: 'off',
+      }),
+      suite({
+        // Serial: space-create creates Spaces in the browser on the admin's own
+        // account, whose free allowance (3) other suites' Spaces count against.
         name: 'Space',
         testMatch: [
           '/space/organization-space-create.spec.ts',
@@ -43,15 +76,145 @@ export default defineConfig(
           '/space/space-settings-about-limit.spec.ts',
         ],
       }),
-      suite({ name: 'Public Space', testMatch: ['/public-space/*.spec.ts'] }),
+      suite({
+        name: 'Public Space',
+        lane: 'parallel',
+        testMatch: ['/public-space/*.spec.ts'],
+      }),
+      // W2 journeys 1–4 (docs/qa/server-rebuild/plan.md § W2): the business
+      // writes of membership, structure and settings, walked in the browser.
+      suite({
+        // Serial: us2 counts invitation mails with a reader that sees only the
+        // newest 50 mails of the sink.
+        name: 'Space join and invite',
+        testMatch: [
+          '/space-join-invite/us1-join-open-space.spec.ts',
+          '/space-join-invite/us2-invite-accept.spec.ts',
+        ],
+        // Three signed-in contexts, a disposable registration and the
+        // invitation mail round trip.
+        tier: 'long',
+      }),
+      suite({
+        name: 'Subspace create',
+        lane: 'parallel',
+        testMatch: ['/subspace-create/us1-create-subspace-l1-l2.spec.ts'],
+        // Two creates through the dialog, two contexts.
+        tier: 'extended',
+      }),
+      suite({
+        name: 'Space settings write',
+        lane: 'parallel',
+        testMatch: [
+          '/space-settings-write/us1-privacy.spec.ts',
+          '/space-settings-write/us2-membership-policy.spec.ts',
+          '/space-settings-write/us3-collaboration-toggles.spec.ts',
+        ],
+        // Each case: save in the admin context, reload in a second persona's.
+        tier: 'extended',
+      }),
+      // W2 Tier 0 item 1 (docs/qa/server-rebuild/client-net-audit/README.md § 4): user self-leave + lost access, private-L2 gates, profiles, dashboard; leave walks span two pages.
+      suite({
+        name: 'Memberships',
+        lane: 'parallel',
+        // Left to "Memberships — serial", below.
+        testIgnore: [
+          '/memberships/view-home-dashboard-authenticated-user.spec.ts',
+          '/memberships/view-home-dashboard-multiple-memberships.spec.ts',
+          '/memberships/view-own-account-settings.spec.ts',
+        ],
+        testMatch: ['/memberships/*.spec.ts'],
+        tier: 'extended',
+      }),
+      suite({
+        // Serial: The two dashboard files expect their Space among a shared
+        // persona's capped "Recent Spaces"; view-own-account-settings hosts a
+        // Space on the shared space admin's own account.
+        name: 'Memberships — serial',
+        testMatch: [
+          '/memberships/view-home-dashboard-authenticated-user.spec.ts',
+          '/memberships/view-home-dashboard-multiple-memberships.spec.ts',
+          '/memberships/view-own-account-settings.spec.ts',
+        ],
+        tier: 'extended',
+      }),
+      suite({
+        // W2 journey 5 (docs/qa/server-rebuild/plan.md § W2): edit a whiteboard, a
+        // memo and a Collabora document, then reopen. One self-seeded private Space
+        // per file; E8-4 (a cold load after the room is released) is
+        // `@local-stack`, so the nightly never lists it. The Collabora file needs
+        // CODE, wopi-service and the SPACE_FEATURE_OFFICE_DOCUMENTS plan, and the
+        // whiteboard file the Node peer admitted on /collab. Capture off: the
+        // walks hold admin sessions and the peer's bearers.
+        name: 'Content editing',
+        lane: 'parallel',
+        testMatch: ['/content-editing/*.spec.ts'],
+        tier: 'extended',
+        capture: 'off',
+        // A renamed control fails in seconds instead of burning the budget.
+        use: { actionTimeout: 15_000 },
+      }),
+      suite({
+        // W2 journey 5b (follow-up of journey 5, ruling L-6): a whiteboard shared
+        // with guests — the Space's Guest Contributions gate, the share dialog's
+        // link, an anonymous guest drawing on the public route, a signed-in user
+        // shown anonymised, and the revocation. Capture off: admin sessions and
+        // the peer's bearer.
+        name: 'Whiteboard guest share',
+        lane: 'parallel',
+        testMatch: ['/whiteboard-guest-share/*.spec.ts'],
+        tier: 'extended',
+        capture: 'off',
+        use: { actionTimeout: 15_000 },
+      }),
+      suite({
+        // W2 journey 7 (docs/qa/server-rebuild/plan.md § W2): edit a Space's
+        // About, your own profile, and an organisation you create. Every file
+        // self-seeds; profile and organisation edits run on disposable users
+        // registered through public Kratos (verification mail read by
+        // recipient) and deleted with their identity; organisations created in
+        // the UI are deleted by nameID.
+        name: 'Profile editing',
+        lane: 'parallel',
+        testMatch: [
+          '/profile-editing/us1-space-about.spec.ts',
+          '/profile-editing/us2-own-profile.spec.ts',
+          '/profile-editing/us3-organisation-create-edit.spec.ts',
+        ],
+        tier: 'extended',
+        // A renamed control fails in seconds instead of burning the budget.
+        use: { actionTimeout: 15_000 },
+      }),
+      suite({
+        // W2 journey 10 (docs/qa/server-rebuild/plan.md § W2; audit rows F3,
+        // F4): message an organisation's admins (one mail per admin, none to
+        // an associate) and an organisation notification setting toggled in
+        // the UI that persists across reload and is honoured. Every user is a
+        // disposable identity; mail is read per recipient and run-unique
+        // subject. us3 (Space "Contact Leads", Matrix chat) is `@local-stack`
+        // and excluded here; config/playwright.config.local-stack.ts runs it.
+        name: 'Contact leads',
+        lane: 'parallel',
+        testMatch: [
+          '/contact-leads/us1-message-organisation.spec.ts',
+          '/contact-leads/us2-organisation-message-setting.spec.ts',
+          '/contact-leads/us3-contact-space-leads.spec.ts',
+        ],
+        tier: 'long',
+        // A renamed control fails in seconds instead of burning the budget.
+        use: { actionTimeout: 15_000 },
+      }),
       suite({
         name: 'Support navigation',
+        lane: 'parallel',
         testMatch: [
           '/support-navigation/support-navigation.spec.ts',
           '/support-navigation/support-navigation-additional.spec.ts',
         ],
       }),
       suite({
+        // Serial: creates a forum discussion (a mail to every user) and a store-
+        // listed innovation pack.
         name: 'Explore platform',
         testMatch: [
           '/explore-platform/explore-platform-anonymous.spec.ts',
@@ -60,6 +223,7 @@ export default defineConfig(
       }),
       suite({
         name: 'Callouts',
+        lane: 'parallel',
         testMatch: [
           '/callouts/0.1callout-full-workflow.spec.ts',
           '/callouts/0.2callout-access-control.spec.ts',
@@ -74,9 +238,48 @@ export default defineConfig(
         ],
       }),
       suite({
+        // workspace#080 (Form callout framing): build, submit, visibility, review
+        // and notification walks, ~48 cases. Every file registers disposable
+        // identities through public Kratos, joins them to its own Space and
+        // Subspace as themselves (Slice B), seeds through the lib and tears all
+        // of it down at file level. US4 waits on mail and in-app delivery with
+        // settle windows; its push, consumer-outage and DB-precondition cases
+        // are `@local-stack` (playwright.config.local-stack.ts).
+        name: 'Form callout framing',
+        lane: 'parallel',
+        // Left to "Form callout framing — serial", below.
+        testIgnore: [
+          '/form-callout-framing/us4-notifications.spec.ts',
+        ],
+        testMatch: [
+          '/form-callout-framing/us1-create-form.spec.ts',
+          '/form-callout-framing/us2-submit-response.spec.ts',
+          '/form-callout-framing/us3-response-visibility.spec.ts',
+          '/form-callout-framing/us4-notifications.spec.ts',
+          '/form-callout-framing/us4a-review-responses.spec.ts',
+        ],
+        tier: 'long',
+      }),
+      suite({
+        // Serial: us4 pins the admin's own Form-response notification settings
+        // and counts the admin's mails.
+        name: 'Form callout framing — serial',
+        testMatch: [
+          '/form-callout-framing/us4-notifications.spec.ts',
+        ],
+        tier: 'long',
+      }),
+      suite({
         // `templates-CRD/` is the migrated, validated suite for the redesigned
         // Templates settings page (see templates-CRD/instructions.md).
         name: 'Templates',
+        lane: 'parallel',
+        // document-template-content is left to "Templates — serial", and
+        // callout-tests to the four "Templates — collaboration tools" suites.
+        testIgnore: [
+          '/templates-CRD/template-types/document-template-content.spec.ts',
+          '/templates-CRD/template-types/callout-tests.spec.ts',
+        ],
         testMatch: [
           '/templates-CRD/template-types/callout-tests.spec.ts',
           '/templates-CRD/template-types/community-guidelines-template.spec.ts',
@@ -94,9 +297,56 @@ export default defineConfig(
         tier: 'extended',
       }),
       suite({
+        // Serial: document-template-content hosts a Space on the shared space
+        // admin's own account. callout-tests runs as the four "Templates —
+        // collaboration tools" suites below.
+        name: 'Templates — serial',
+        testMatch: [
+          '/templates-CRD/template-types/document-template-content.spec.ts',
+        ],
+        tier: 'extended',
+      }),
+      // callout-tests.spec.ts is one serial walk of 71 template cases (about
+      // 16 minutes). Each suite below runs one group of its rows, on its own
+      // seeded Space, so the four groups can run at the same time. The groups
+      // follow the file's matrix (1–16 and 41: no response, links and files,
+      // references; 17–24: posts; 25–40: memos and whiteboards; 42–58: polls
+      // and the form). 17m and 17cm stay with 17 and 17c, whose posts they
+      // act on.
+      suite({
+        name: 'Templates — collaboration tools 1–16, 41',
+        lane: 'parallel',
+        testMatch: ['/templates-CRD/template-types/callout-tests.spec.ts'],
+        grep: /Callout Templates (?:[1-9]|1[0-6]|41)[a-z]* /,
+        tier: 'extended',
+      }),
+      suite({
+        name: 'Templates — collaboration tools 17–24',
+        lane: 'parallel',
+        testMatch: ['/templates-CRD/template-types/callout-tests.spec.ts'],
+        grep: /Callout Templates (?:1[7-9]|2[0-4])[a-z]* /,
+        tier: 'extended',
+      }),
+      suite({
+        name: 'Templates — collaboration tools 25–40',
+        lane: 'parallel',
+        testMatch: ['/templates-CRD/template-types/callout-tests.spec.ts'],
+        grep: /Callout Templates (?:2[5-9]|3[0-9]|40)[a-z]* /,
+        tier: 'extended',
+      }),
+      suite({
+        name: 'Templates — collaboration tools 42–58',
+        lane: 'parallel',
+        testMatch: ['/templates-CRD/template-types/callout-tests.spec.ts'],
+        grep: /Callout Templates (?:4[2-9]|5[0-8])[a-z]* /,
+        tier: 'extended',
+      }),
+      suite({
         // workspace#085-authz-admin-guard (client-web#9537): the four admin
         // role surfaces as real personas, the fail-closed/denied paths, and the
         // memo Sign action gate (#6478 / #10278).
+        // Serial: platform-global-roles grants the shared QA persona a platform
+        // role.
         name: 'Authz admin guard',
         testMatch: [
           '/authz-admin-guard/space-community-role-changes.spec.ts',
@@ -107,6 +357,20 @@ export default defineConfig(
         ],
       }),
       suite({
+        // workspace#027 platform roles (W2 Tier 0 item 5): each file seeds the
+        // 14 single-role users through `seedPlatformRoleUsers()` (Kratos admin
+        // API when KRATOS_ADMIN_URL is set, self-service registration
+        // otherwise) and refuses to run if any of them holds a second role.
+        // The old "needs the 027 stack" gate is gone: Slice B is on develop.
+        // Serial: creates a forum discussion (a mail to every user) and changes
+        // who holds platform roles.
+        name: 'Platform roles',
+        testMatch: ['/platform-roles/*.spec.ts'],
+        tier: 'extended',
+      }),
+      suite({
+        // Serial: every file switches shared personas' notification settings on
+        // and restores what it read.
         name: 'Applications',
         testMatch: [
           '/applications/space-applications-level-0.spec.ts',
@@ -115,15 +379,60 @@ export default defineConfig(
         ],
       }),
       suite({
+        // Serial: publishes a store-listed innovation pack under fixed names and
+        // picks it by name.
         name: 'Default Template Per Flow State',
-        testMatch: ['/default-template/default-template-per-flow-state.spec.ts'],
+        testMatch: [
+          '/default-template/default-template-per-flow-state.spec.ts',
+        ],
       }),
       suite({
+        // W2 journey 6 (docs/qa/server-rebuild/plan.md § W2): a post's phase, post
+        // order and a response's post, changed in the browser and read back through
+        // the lib. One self-seeded L0 Space per file; admin + member contexts.
+        name: 'Callout placement',
+        lane: 'parallel',
+        testMatch: ['/callout-placement/*.spec.ts'],
+        tier: 'extended',
+      }),
+      suite({
+        // W2 journey 11 (docs/qa/server-rebuild/plan.md § W2): a file reference,
+        // a media-gallery image and a chat attachment uploaded in the browser and
+        // read back from storage (document record, served bytes and MIME type, an
+        // outsider refused). One self-seeded private Space per file. The chat
+        // attachment cases are @local-stack (Matrix chat fails on test by
+        // environment), so the nightly runs the reference and gallery walks only.
+        name: 'File uploads',
+        lane: 'parallel',
+        testMatch: ['/file-uploads/*.spec.ts'],
+        tier: 'long',
+      }),
+      suite({
+        // W2 extras (test-suites#722, catalogue CT-8): a Tasks board created,
+        // added to and moved on in the browser, read back through the lib.
+        // One self-seeded public L0 Space per file; admin, member and
+        // non-member contexts.
+        name: 'Task boards',
+        lane: 'parallel',
+        testMatch: ['/task-boards/*.spec.ts'],
+        tier: 'extended',
+      }),
+      suite({
+        // W2 extras (test-suites#722, catalogue SP-10): a Space's community
+        // guidelines edited in Space Settings, reloaded, read back through the
+        // lib and seen by a member. One self-seeded L0 Space.
+        name: 'Community guidelines',
+        lane: 'parallel',
+        testMatch: ['/community-guidelines/*.spec.ts'],
+        tier: 'extended',
+      }),
+      suite({
+        // Serial: the MCP key files count the admin's whole key list; profile-
+        // resource-tabs creates an innovation hub and public packs.
         name: 'User Profile',
         testMatch: [
           '/user-profile/access-user-profile-from-dashboard.spec.ts',
           '/user-profile/direct-url-access-to-user-profile.spec.ts',
-          '/user-profile/update-basic-information.spec.ts',
           '/user-profile/view-profile-information.spec.ts',
           // workspace#038 (MCP API keys, alkem-io/alkemio#1984): mint + revoke
           // walks on the account's Security settings; self-cleaning.
@@ -137,6 +446,7 @@ export default defineConfig(
       suite({
         // workspace#060 (forum category reorganisation): recategorise through
         // the edit dialog, locale labels. API-seeded discussion, deleted after.
+        // Serial: creates a forum discussion (a mail to every user).
         name: 'Forum categories',
         testMatch: ['/forum-categories/*.spec.ts'],
       }),
@@ -145,6 +455,7 @@ export default defineConfig(
         // timezone is pinned per test context, so this is valid against the
         // UTC test cluster.
         name: 'Timeline',
+        lane: 'parallel',
         testMatch: ['/timeline/*.spec.ts'],
       }),
       suite({
@@ -153,11 +464,13 @@ export default defineConfig(
         // drives a different `locale` per file, so sessions come from this
         // setup project (one sign-in per persona, persisted to `.auth/`) and
         // the specs opt in with `test.use({ storageState })`.
+        // Serial: with Language offer, which depends on it.
         name: 'Language offer setup',
         testMatch: ['/language-offer/auth.setup.ts'],
         tier: 'extended',
       }),
       suite({
+        // Serial: us2 switches the shared non-member persona to Dutch.
         name: 'Language offer',
         testMatch: ['/language-offer/*.spec.ts'],
         dependencies: ['Language offer setup'],
@@ -169,6 +482,8 @@ export default defineConfig(
         // Feature 033 (chat avatars): every scenario is a multi-user round
         // trip through the live chat room (send on one session, wait for the
         // subscription push on another); US2 uploads and crops photos too.
+        // Serial: three browser sign-ins per file and live chat round trips; not
+        // yet run beside other suites.
         name: 'Chat avatars',
         testMatch: ['/chat-avatars/*.spec.ts'],
         tier: 'long',
@@ -185,7 +500,10 @@ export default defineConfig(
         // in-app setting the API notification specs leave off on the shared
         // personas cannot reach these walks.
         name: 'Messaging notifications',
-        testMatch: ['/messaging-notifications/us3-messaging-settings-rows.spec.ts'],
+        lane: 'parallel',
+        testMatch: [
+          '/messaging-notifications/us3-messaging-settings-rows.spec.ts',
+        ],
         tier: 'long',
       }),
       suite({
@@ -193,13 +511,27 @@ export default defineConfig(
         // file seeds its own public Space through the API and deletes it in
         // afterAll; fixtures carry up to seven subspaces.
         name: 'Subspaces callout',
+        lane: 'parallel',
+        // Left to "Subspaces callout — serial", below.
+        testIgnore: [
+          '/subspaces-callout/us5-account-scope-selection.spec.ts',
+        ],
         testMatch: ['/subspaces-callout/*.spec.ts'],
+        tier: 'extended',
+      }),
+      suite({
+        // Serial: us5 transfers a Space to the shared space admin's own account.
+        name: 'Subspaces callout — serial',
+        testMatch: [
+          '/subspaces-callout/us5-account-scope-selection.spec.ts',
+        ],
         tier: 'extended',
       }),
       suite({
         // client-web#10178 (space banner): the crop walk uploads a generated
         // PNG and drives the crop dialog.
         name: 'Space banner',
+        lane: 'parallel',
         testMatch: ['/space-banner/*.spec.ts'],
         tier: 'extended',
       }),
@@ -213,6 +545,7 @@ export default defineConfig(
         // seeds its own Space → L1 → L2 and tears it down; the flow-changes
         // file is serial (its last case replaces the subspace's flow).
         name: 'Sidebar widgets',
+        lane: 'parallel',
         testMatch: ['/sidebar-widgets/*.spec.ts'],
         tier: 'extended',
       }),
@@ -222,6 +555,7 @@ export default defineConfig(
         // Space and deleting it in afterAll. TL-01 carries two deliberate soft
         // reds pending a product decision (see classifications-test-plan.md).
         name: 'Classifications',
+        lane: 'parallel',
         testMatch: ['/classifications/*.spec.ts'],
         tier: 'extended',
         // A renamed control fails in seconds instead of burning the budget.
@@ -233,10 +567,31 @@ export default defineConfig(
         // (disposable Kratos identities registered and deleted in the spec);
         // the API-level cases live in server-api's `nightly` vitest project.
         name: 'Account deletion',
+        lane: 'parallel',
+        // Left to "Account deletion — serial", below.
+        testIgnore: [
+          '/account-deletion/profile-removed-notification.spec.ts',
+        ],
         testMatch: [
           '/account-deletion/profile-removed-notification.spec.ts',
           '/account-deletion/former-member-activity.spec.ts',
           '/account-deletion/account-deletion-visibility.spec.ts',
+          // W2 Tier 0 item 3: the UI self-deletion walks, GraphQL read-backs
+          // instead of SQL/Redis; their DB/Redis cases are `@local-stack`, so
+          // us3 (all `@local-stack`) contributes no nightly case.
+          '/account-deletion/us1-delete-own-account.spec.ts',
+          '/account-deletion/us2-blocked-resources.spec.ts',
+          '/account-deletion/us3-reauth-freshness.spec.ts',
+        ],
+        tier: 'long',
+      }),
+      suite({
+        // Serial: profile-removed-notification grants a platform role to a fixed
+        // pool user and changes the notification settings of a seeded platform-
+        // role user.
+        name: 'Account deletion — serial',
+        testMatch: [
+          '/account-deletion/profile-removed-notification.spec.ts',
         ],
         tier: 'long',
       }),
@@ -245,6 +600,7 @@ export default defineConfig(
         // acceptance walks in `tests/`, outside the hand-authored tree, so
         // they survive re-runs without colliding with these suites.
         name: 'Callout reactions',
+        lane: 'parallel',
         testDir: GENERATED_WALKS_DIR,
         testMatch: ['callout-reactions.spec.ts'],
         tier: 'extended',
@@ -252,6 +608,8 @@ export default defineConfig(
       suite({
         // Feature 041 (callout reaction notifications): negative assertions
         // hold a multi-sample settle window on top of the positive poll.
+        // Serial: switches the admin's own notification settings and reads the
+        // admin's notification panel.
         name: 'Callout reaction notifications',
         testDir: GENERATED_WALKS_DIR,
         testMatch: ['callout-reaction-notifications.spec.ts'],
@@ -261,13 +619,29 @@ export default defineConfig(
         // Feature 061 (organization space invitations): full SPA invite flows
         // plus negative mail-window polls (`assertNoMailTo`).
         name: 'Organization space invitations',
+        lane: 'parallel',
+        // Left to "Organization space invitations — serial", below.
+        testIgnore: [
+          '/organization-space-invitations/us2-org-admins-notified.spec.ts',
+        ],
         testMatch: ['/organization-space-invitations/*.spec.ts'],
+        tier: 'long',
+      }),
+      suite({
+        // Serial: us2 empties the mail sink, rewrites shared personas'
+        // notification settings and reads the push publish counter.
+        name: 'Organization space invitations — serial',
+        testMatch: [
+          '/organization-space-invitations/us2-org-admins-notified.spec.ts',
+        ],
         tier: 'long',
       }),
       suite({
         // Feature 062 (organization user associates): every file registers
         // several Kratos identities through the shared MailSlurper inbox, so
         // the files stay serial (worker count + describe.configure).
+        // Serial: us7 asserts a shared persona's exact pending invitations and
+        // applications; the files register through the shared inbox.
         name: 'Organization user associates',
         testMatch: ['/organization-user-associates/*.spec.ts'],
         tier: 'long',
@@ -275,6 +649,8 @@ export default defineConfig(
       suite({
         // workspace#081 (organization email invitations): mail-driven sign-up
         // and resend windows.
+        // Serial: counts mails with a reader that sees only the newest 50 mails of
+        // the sink.
         name: 'Organization email invitations',
         testMatch: ['/organization-email-invitations/*.spec.ts'],
         tier: 'long',
@@ -287,6 +663,8 @@ export default defineConfig(
         // Its API half runs with server-api's roleset project; its
         // email-invitation audit reads (SQL) skip themselves where Postgres is
         // not loopback.
+        // Serial: written for one worker (Kratos sign-up); not yet run beside
+        // other suites.
         name: 'Support org community admin',
         testMatch: ['/support-org-community-admin/*.spec.ts'],
         tier: 'long',
@@ -296,6 +674,7 @@ export default defineConfig(
         // seeds its own scenario (invite + accept) and retries navigation until
         // the settings guard sees freshly granted roles.
         name: 'Organization space membership',
+        lane: 'parallel',
         testMatch: ['/organization-space-membership/*.spec.ts'],
         tier: 'long',
       }),
@@ -303,6 +682,8 @@ export default defineConfig(
         // Feature 070 (contribution notify switch): forge-verify walk, asserts
         // at the RabbitMQ publish counter when RABBITMQ_MANAGEMENT_* is set
         // (`rabbitMqManagementConfigured`) and skips those checks otherwise.
+        // Serial: reads the server-wide push publish counter where RabbitMQ
+        // management is configured.
         name: 'Contribution notify switch',
         testDir: GENERATED_WALKS_DIR,
         testMatch: ['contribution-notify-switch.spec.ts'],
@@ -315,19 +696,37 @@ export default defineConfig(
         // upload goes through the messaging media route, so the target
         // environment must have chat image uploads working.
         name: 'Comment images',
+        lane: 'parallel',
+        // Left to "Comment images — serial", below.
+        testIgnore: [
+          'comment-images-us3-access.spec.ts',
+        ],
         testDir: GENERATED_WALKS_DIR,
         testMatch: ['comment-images-us*.spec.ts'],
         tier: 'extended',
       }),
       suite({
+        // Serial: us3 creates a forum discussion (a mail to every user).
+        name: 'Comment images — serial',
+        testDir: GENERATED_WALKS_DIR,
+        testMatch: [
+          'comment-images-us3-access.spec.ts',
+        ],
+        tier: 'extended',
+      }),
+      suite({
         // workspace#077 (richer contributor cards, client-web#10316): every
         // file seeds its own public Space through the API. The shipped
-        // 0.1contributors-callout.spec.ts is deliberately NOT listed: its
-        // cleanup lives only in the Member block, so any Admin-block failure
-        // leaks a Space, an Organization and a VC. List it once its cleanup
-        // moves to file level.
+        // 0.1 is the only UI create/edit/delete of the contributors framing
+        // (W2 Tier 0 item 7); its scenario is cleaned up at file level.
         name: 'Contributors callout',
+        lane: 'parallel',
+        // Left to "Contributors callout — serial", below.
+        testIgnore: [
+          '/contributors-callout/us3-card-menu.spec.ts',
+        ],
         testMatch: [
+          '/contributors-callout/0.1contributors-callout.spec.ts',
           '/contributors-callout/us1-card-content.spec.ts',
           '/contributors-callout/us2-nothing-else-changes.spec.ts',
           '/contributors-callout/us3-card-menu.spec.ts',
@@ -335,6 +734,26 @@ export default defineConfig(
           '/contributors-callout/us5-organisation-website.spec.ts',
           '/contributors-callout/us6-manual-org-selection.spec.ts',
         ],
+        tier: 'extended',
+      }),
+      suite({
+        // Serial: us3 opens a direct-message panel between two shared personas.
+        name: 'Contributors callout — serial',
+        testMatch: [
+          '/contributors-callout/us3-card-menu.spec.ts',
+        ],
+        tier: 'extended',
+      }),
+      suite({
+        // alkem-io/alkemio#1699 (QA P1: Contributors - CRUD Full): user,
+        // organisation and VC walks. Each file seeds its own organisation
+        // (and Space for the VC file), registers disposable users for every
+        // edit and seeds VCs over the API (creation is paused,
+        // client-web#10398). Known reds: VC 3.2 / 3.3 / 3.8 on
+        // client-web#10125 and VC 3.7b on the inverted knowledge-base switch.
+        name: 'Contributors CRUD',
+        lane: 'parallel',
+        testMatch: ['/contributors-crud/*.spec.ts'],
         tier: 'extended',
       }),
       suite({
@@ -346,10 +765,57 @@ export default defineConfig(
         // API, which this workflow does not expose: run it with
         // `pnpm run test:memo-pdf-download`. Capture off: admin sessions.
         name: 'Memo PDF download',
+        lane: 'parallel',
         testMatch: ['/memo-pdf-download/us1-download-memo-pdf.spec.ts'],
         tier: 'long',
         capture: 'off',
       }),
-    ],
+      suite({
+        // alkem-io/excalidraw-yjs#13 (undo racing a peer edit drops required element keys),
+        // fixed in @excalidraw-yjs/excalidraw 0.5.6, which client-web develop resolves since
+        // cd2d50419. They drive a Node Yjs peer through /collab with the personas' bearers,
+        // two browser contexts and a held-inbound race.
+        name: 'Whiteboard collaboration',
+        lane: 'parallel',
+        testMatch: ['/whiteboard-collaboration/*.spec.ts'],
+        tier: 'extended',
+      }),
+      suite({
+        // W2 journey 12 (docs/qa/server-rebuild/plan.md § W2, audit J2/J3/E5):
+        // a disposable user starts a discussion in the browser, read back over
+        // the lib. The comment, thread-answer and mention cases go through the
+        // discussion's Matrix room and are @local-stack (grepInverted here;
+        // config/playwright.config.local-stack.ts runs them).
+        // Serial: creates a forum discussion (a mail to every user).
+        name: 'Forum discussions',
+        testMatch: ['/forum-discussions/*.spec.ts'],
+        tier: 'extended',
+        // A renamed control fails in seconds instead of burning the budget.
+        use: { actionTimeout: 15_000 },
+      }),
+      suite({
+        // W2 journey 12 (audit K2/L6): an organisation admin creates an
+        // innovation pack on the organisation's Account tab and edits it on
+        // the pack's settings page; the platform admin deletes it in
+        // Administration. Self-seeded organisation, read back over the lib.
+        // Serial: lists an innovation pack in the platform store.
+        name: 'Innovation packs',
+        testMatch: ['/innovation-packs/*.spec.ts'],
+        tier: 'extended',
+        // A renamed control fails in seconds instead of burning the budget.
+        use: { actionTimeout: 15_000 },
+      }),
+      suite({
+        // W2 journey 12 (audit L2/H5): the platform admin verifies and
+        // un-verifies, then edits, a self-seeded organisation in
+        // Administration > Organisations; read back over the lib.
+        name: 'Admin organisations',
+        lane: 'parallel',
+        testMatch: ['/admin-organizations/*.spec.ts'],
+        tier: 'extended',
+        // A renamed control fails in seconds instead of burning the budget.
+        use: { actionTimeout: 15_000 },
+      }),
+    ]),
   })
 );

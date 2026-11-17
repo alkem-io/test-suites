@@ -54,7 +54,7 @@ test.describe('US3 — direct (1:1) thread header identity', { tag: ['@chat-avat
     uid = UniqueIDGenerator.getID();
 
     // The viewer drives the walk, `pictured` uploads a picture and `plain`
-    // answers in AS3 — all three need a session, created concurrently.
+    // answers in AS3 — all three need a session.
     [viewer, pictured, plain] = await registerAndSignInAll(browser, [
       { email: `chatavatars3-viewer-${uid}@alkem.io`, firstName: `Viewer3${uid}`, lastName: 'Reader' },
       { email: `chatavatars3-pictured-${uid}@alkem.io`, firstName: `Pia3${uid}`, lastName: 'Pictured' },

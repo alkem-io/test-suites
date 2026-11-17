@@ -7,9 +7,11 @@ import { baseConfig, GENERATED_WALKS_DIR, LOCAL_STACK_TAG, suite } from './playw
  *
  *   pnpm run test:local-stack
  *
- * Each case still guards its own precondition and skips with the reason when
- * the stack is not set up for it. The loopback-DB cases stand alone, so only
- * they are run from their files; the other two sit inside serial walks whose
+ * Each case still guards its own precondition when the stack is not set up
+ * for it: most skip with the reason, while content-editing E8-4 FAILS with the
+ * setup instruction (a skip there would hide that the cold load was never
+ * proven). The loopback-DB cases stand alone, so only
+ * they are run from their files; the others sit inside serial walks whose
  * earlier steps they need, so their whole file runs here. What they need on
  * top of the usual .env:
  *
@@ -22,6 +24,20 @@ import { baseConfig, GENERATED_WALKS_DIR, LOCAL_STACK_TAG, suite } from './playw
  *   RABBITMQ_MANAGEMENT_* plus the nine MESSAGING_DIGEST_* variables (same
  *   values on the SERVER, see the suite's test plan):
  *     messaging-notifications US1 and US2 (whole walks), US3-AS3 and US3-AS4
+ *   RABBITMQ_MANAGEMENT_* (US4-AS1p/AS5p), HARNESS POSTGRES_* (US4-AS8) and
+ *   NOTIFICATIONS_STOP_CMD / NOTIFICATIONS_START_CMD (US4-AS6):
+ *     form-callout-framing US4 (each guard skips with its reason when unset)
+ *   HARNESS_POSTGRES_* (audit rows, subscription seed) and HARNESS_REDIS_*
+ *   (ageing a real session past the privileged window):
+ *     account-deletion US1-AS5, US1-AS6 and US3 (whole walk)
+ *   IDLE_RELEASE_SECONDS=0 on the collaboration-service, and COLLAB_IDLE_RELEASE_SECONDS=0 plus
+ *   COLLAB_METRICS_URL (the service's /metrics, e.g. http://localhost:4006/metrics) here:
+ *     content-editing US1 E8-4 (the whole walk runs; the guard fails loudly without them)
+ *   Matrix (synapse + matrix-adapter) plus the nine MESSAGING_DIGEST_* variables
+ *   (same values on the SERVER):
+ *     contact-leads US3 (Space "Contact Leads": 1:1 chats + direct-message digest)
+ *   Synapse and the matrix-adapter of the local quickstart (nothing else):
+ *     forum-discussions J3-1, J3-2, E5-1 (both files run whole)
  */
 export default defineConfig(
   baseConfig({
@@ -46,9 +62,55 @@ export default defineConfig(
         tier: 'long',
       }),
       suite({
+        // W2 journey 5 E8-4 (a whiteboard's cold load after its room is released) needs
+        // IDLE_RELEASE_SECONDS=0 on the collaboration-service and COLLAB_IDLE_RELEASE_SECONDS=0 plus
+        // COLLAB_METRICS_URL on this run. It sits in a serial walk whose earlier cases draw the board and record its
+        // element ids, so the whole file runs here (the nightly runs it without E8-4).
+        name: 'Local stack — collaboration room release',
+        testMatch: ['/content-editing/us1-whiteboard-draw-reopen.spec.ts'],
+        tier: 'extended',
+        capture: 'off',
+      }),
+      suite({
+        // W2 journey 11 N4 (message attachments): chat goes browser → Matrix, which
+        // the shared test cluster cannot offer (no reachable homeserver), so the
+        // nightly drops these tagged cases. Each skips with the probe's reason
+        // when the local homeserver does not answer.
+        name: 'Local stack — message attachments',
+        testMatch: ['/file-uploads/us3-message-attachment.spec.ts'],
+        grep: LOCAL_STACK_TAG,
+        tier: 'extended',
+      }),
+      suite({
+        // workspace#080: US4's three tagged cases stand alone on the file's
+        // beforeAll fixture (each measures from its own baseline), so only they run.
+        name: 'Local stack — form response notifications',
+        testMatch: ['/form-callout-framing/us4-notifications.spec.ts'],
+        grep: LOCAL_STACK_TAG,
+        tier: 'long',
+      }),
+      suite({
+        // W2 Tier 0 item 3: US1-AS5 (audit row) needs AS1–AS3 of its serial
+        // walk, so us1 runs whole here; US3 is tagged as a whole (Redis).
+        name: 'Local stack — account deletion',
+        testMatch: [
+          '/account-deletion/us1-delete-own-account.spec.ts',
+          '/account-deletion/us3-reauth-freshness.spec.ts',
+        ],
+        tier: 'long',
+      }),
+      suite({
         name: 'Local stack — server env overrides',
         testMatch: ['/organization-email-invitations/us3-resend.spec.ts'],
         tier: 'long',
+      }),
+      suite({
+        // The cluster ingress does not route /health/ready, so the canary's
+        // readiness case runs here only.
+        name: 'Local stack — platform readiness',
+        testMatch: ['/ts7-platform-smoke.spec.ts'],
+        grep: LOCAL_STACK_TAG,
+        tier: 'standard',
       }),
       suite({
         // workspace#034 (conversation-message notifications, notifications#522):
@@ -58,6 +120,25 @@ export default defineConfig(
         name: 'Local stack — messaging digests',
         testMatch: ['/messaging-notifications/*.spec.ts'],
         tier: 'long',
+      }),
+      suite({
+        // W2 journey 12: forum comments, thread answers and mentions are sent
+        // through the discussion's Matrix room and their notifications ride
+        // the inbound Matrix event, which the shared test cluster does not
+        // deliver (plan R-1). The comment cases build on US1's discussion, so
+        // both files run whole here.
+        name: 'Local stack — forum comments',
+        testMatch: ['/forum-discussions/*.spec.ts'],
+        tier: 'extended',
+      }),
+      suite({
+        // W2 journey 10 (audit row F3): "Contact Leads" fans out 1:1 Matrix
+        // chats, which fail on the shared test cluster, and the oracle mail is
+        // the direct-message digest. The file is tagged at describe level.
+        name: 'Local stack — contact Space leads',
+        testMatch: ['/contact-leads/us3-contact-space-leads.spec.ts'],
+        tier: 'long',
+        use: { actionTimeout: 15_000 },
       }),
     ],
   })

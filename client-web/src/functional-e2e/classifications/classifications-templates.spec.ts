@@ -930,7 +930,9 @@ test.describe('TL-07 out-of-scope negatives', () => {
     await expect(
       page.getByRole('heading', { name: 'Explore Spaces' })
     ).toBeVisible({ timeout: 30_000 });
-    await page.getByRole('button', { name: 'Filters' }).click();
+    // Anchored at the start: while the list is still empty the page also shows
+    // "Clear all filters", which a loose "Filters" matches as a second button.
+    await page.getByRole('button', { name: /^Filters/ }).click();
     const filters = page.getByRole('menu');
     await expect(filters).toBeVisible();
     await expect(filters).toContainText(/membership/i);

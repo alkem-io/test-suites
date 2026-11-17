@@ -1,0 +1,18 @@
+# A space with its two levels of subspaces (ids + nameIDs) — what a teardown
+# needs to delete a tree leaves-first, since the server refuses to delete a
+# space that still has subspaces.
+query ReadSpaceSubspaceTree($spaceId: UUID!) {
+  lookup {
+    space(ID: $spaceId) {
+      id
+      nameID
+      level
+      subspaces {
+        id
+        nameID
+        level
+        subspaces { id nameID level }
+      }
+    }
+  }
+}

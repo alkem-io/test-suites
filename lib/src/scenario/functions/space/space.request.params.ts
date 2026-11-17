@@ -69,6 +69,45 @@ export const readSpaceSettings = (
 export const readSpaceMyPrivileges = (spaceId: string, actor: GraphqlActor) =>
   runAs(actor, (sdk, headers) => sdk.ReadSpaceMyPrivileges({ spaceId }, headers));
 
+/**
+ * A subspace read through its parent by nameID — id, nameID, level, display
+ * name and URL. A hit is the parent edge; `level` is the depth. Errors (or a
+ * null subspace) when the actor may not read it or it is not a child of that
+ * parent.
+ */
+export const readSubspaceByNameId = (
+  parentSpaceId: string,
+  nameID: string,
+  actor: GraphqlActor = TestUser.GLOBAL_ADMIN,
+) =>
+  runAs(actor, (sdk, headers) =>
+    sdk.ReadSubspaceByNameId({ parentSpaceId, nameID }, headers),
+  );
+
+/**
+ * A space and its two levels of subspaces (id, nameID, level) — the input a
+ * leaves-first teardown needs; the server refuses to delete a space that
+ * still has subspaces.
+ */
+export const readSpaceSubspaceTree = (
+  spaceId: string,
+  actor: GraphqlActor = TestUser.GLOBAL_ADMIN,
+) =>
+  runAs(actor, (sdk, headers) =>
+    sdk.ReadSpaceSubspaceTree({ spaceId }, headers),
+  );
+
+/**
+ * An L0 space read by its nameID (`lookupByName.space`): id, nameID, level,
+ * host account id and the about profile's display name + tagline — the
+ * server-side record of a space created through the UI, where the URL slug
+ * is all the walk knows. Errors (not-found) once the space is deleted.
+ */
+export const readSpaceByNameId = (
+  nameID: string,
+  actor: GraphqlActor = TestUser.GLOBAL_ADMIN,
+) => runAs(actor, (sdk, headers) => sdk.ReadSpaceByNameId({ nameID }, headers));
+
 /** A space's about section: why/who, profile displayName/tagline/description/url and tags. */
 export const readSpaceAbout = (
   spaceId: string,
@@ -127,6 +166,15 @@ export const updateCommunityGuidelines = (
 ) =>
   runAs(actor, (sdk, headers) =>
     sdk.UpdateCommunityGuidelinesData({ communityGuidelinesData }, headers),
+  );
+
+/** A Space's community guidelines as `actor` may read them: title, body (markdown) and related links. */
+export const readSpaceCommunityGuidelines = (
+  spaceId: string,
+  actor: GraphqlActor = TestUser.GLOBAL_ADMIN,
+) =>
+  runAs(actor, (sdk, headers) =>
+    sdk.ReadSpaceCommunityGuidelines({ spaceId }, headers),
   );
 
 /** The space's templates-set id and its about-profile tagset id. */

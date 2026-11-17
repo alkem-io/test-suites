@@ -16,14 +16,15 @@ test.describe('My Profile Tab - View and Edit', () => {
     await profile.goto('admin-alkemio');
 
     // client-web#10437 lays the tab out as collapsible SettingsSection cards:
-    //  - Identity (open by default): Display/First/Last Name, Email (read-only), Phone
+    //  - Identity (open by default): Display/First/Last Name, Email (read-only)
     //  - About You (collapsed): Tagline, Location (City + Country), Bio, Skills, Keywords
-    //  - Social Links (collapsed): LinkedIn / Bluesky / GitHub
+    //  - Social Links (collapsed): Phone (moved here by client-web#10499, spec 097
+    //    FR-021a: contact details sit with the social links), LinkedIn / Bluesky / GitHub
     //  - References (collapsed): the references editor
     //  - Profile Picture: the fixed avatar card on the right
     // Every field is a plain labelled input; the legacy "Full Name" field and
     // the per-field inline editors no longer exist (edits are saved by the
-    // tab-wide "Save changes" bar — covered by update-basic-information).
+    // tab-wide "Save changes" bar — covered by profile-editing/us2-own-profile).
 
     // 1. Verify the avatar editor is displayed
     await expect(page.getByRole('heading', { name: 'Profile Picture' })).toBeVisible();
@@ -34,7 +35,6 @@ test.describe('My Profile Tab - View and Edit', () => {
     await expect(profile.field('Display Name')).toBeVisible();
     await expect(profile.field('First Name')).toBeVisible();
     await expect(profile.field('Last Name')).toBeVisible();
-    await expect(profile.field('Phone')).toBeVisible();
 
     // 2. Email is shown read-only, with the "contact support" caption
     await expect(profile.field('Email')).toBeVisible();
@@ -47,8 +47,8 @@ test.describe('My Profile Tab - View and Edit', () => {
     await profile.openSection('About You');
     await expect(profile.field('Tagline')).toBeVisible();
 
-    // 3. Verify City textbox is visible
-    await expect(profile.field('City')).toBeVisible();
+    // 3. Verify the City field is visible (a combobox since client-web#10499)
+    await expect(profile.cityCombobox).toBeVisible();
 
     // 3. Verify the Country picker is visible (a combobox button under the
     // "Location" legend, named by the selected country or its placeholder).
@@ -67,6 +67,7 @@ test.describe('My Profile Tab - View and Edit', () => {
 
     // 3. Verify social link textboxes are visible (Social Links section)
     await profile.openSection('Social Links');
+    await expect(profile.field('Phone')).toBeVisible();
     await expect(profile.field('LinkedIn')).toBeVisible();
     await expect(profile.field('Bluesky')).toBeVisible();
     await expect(profile.field('GitHub')).toBeVisible();

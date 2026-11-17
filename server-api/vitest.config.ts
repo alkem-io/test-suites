@@ -181,6 +181,55 @@ export default defineConfig({
           sequence: { groupOrder: 3 },
         },
       },
+      // Second factor (Kratos MFA). On demand, never `nightly`: it needs a
+      // stack booted with the feature's Kratos values, loopback Redis/Postgres
+      // and the Kratos admin port. Files run one at a time because the rule
+      // switches are platform-wide. `*.measure.ts` files are one-off
+      // measurements, run by path (see their headers), never by this project.
+      {
+        extends: true as const,
+        test: {
+          name: 'second-factor',
+          include: ['src/functional-api/second-factor/**/*.it-spec.ts'],
+          // Below the live track's budget, so a hung case reports itself.
+          testTimeout: 300_000,
+          hookTimeout: 300_000,
+          globalSetup: [
+            './src/functional-api/second-factor/_support/global-setup.ts',
+          ],
+          fileParallelism: false,
+          // Its files run last in a multi-project run: its cases clear the
+          // per-address counters and count this address's sign-ins, so no
+          // other project may sign in from the same address meanwhile. Its
+          // global setup is not ordered: vitest runs every selected project's
+          // setup before any file, which is why `test`, `test:watch` and
+          // `test:debug` deselect this project and `second-factor-measure`
+          // (`!second-factor*`), and only `test:second-factor` selects it.
+          sequence: { groupOrder: 4 },
+        },
+      },
+      // The second-factor one-off measurements, never a test run: each is run
+      // once by naming its file (command in its header). Defined only when
+      // SECOND_FACTOR_MEASURE is set, so a bare `vitest run` never sends their
+      // hundred users and wrong codes at whatever stack is configured.
+      ...(process.env.SECOND_FACTOR_MEASURE
+        ? [
+            {
+              extends: true as const,
+              test: {
+                name: 'second-factor-measure',
+                include: ['src/functional-api/second-factor/**/*.measure.ts'],
+                testTimeout: 600_000,
+                // The cleanup deletes a hundred users one by one.
+                hookTimeout: 600_000,
+                globalSetup: [
+                  './src/functional-api/second-factor/_support/global-setup.ts',
+                ],
+                fileParallelism: false,
+              },
+            },
+          ]
+        : []),
       // The lib contract (docs/qa/server-rebuild W2 pre-work): names, shapes
       // and one base-scenario round trip. The first thing that must go green
       // on the rebuilt server; on demand, not part of `nightly`.

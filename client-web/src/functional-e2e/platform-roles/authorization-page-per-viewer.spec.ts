@@ -250,7 +250,10 @@ asUsersAdmin.describe('Authorization page — Platform Users Admin', () => {
 const asAuditReader = createPersonaTest(platformRoleEmail('PLATFORM_AUDIT_READER'));
 
 asAuditReader.describe('Authorization page — Platform Audit Reader', () => {
-  asAuditReader.beforeEach(async () => void (await seedPlatformRoleUsers()));
+  // Once per worker, like the other blocks' `setup`: a fresh seed per test
+  // re-ran 15 sign-ins four times over for nothing (QA-CH-01, #727).
+  let seeded: Promise<unknown> | undefined;
+  asAuditReader.beforeEach(async () => void (await (seeded ??= seedPlatformRoleUsers())));
 
   asAuditReader('is read-only: the notice is shown and nothing can be added', async ({ page }) => {
     await page.goto(`${baseUrl}/admin/authorization`);
