@@ -216,7 +216,8 @@ All runners share `config/playwright.shared.ts`:
 | `PW_BROWSER`       | `chrome` `chromium` `firefox` `webkit` `msedge` `mobile-chrome` `mobile-safari` | `chrome`  |
 | `PW_VIEWPORT`      | `<w>x<h>` (desktop presets only)                                    | `1920x1080` |
 | `PW_WORKERS`       | integer                                                             | `1`       |
-| `PW_RETRIES`       | integer                                                             | `0` local, `2` CI |
+| `PW_RETRIES`       | integer                                                             | `0` local, `1` CI |
+| `PW_LANE`          | `parallel` `serial` (nightly only)                                  | every suite |
 | `UI_HEADLESS`      | `false` to watch                                                    | headless  |
 | `ALKEMIO_BASE_URL` | the app under test                                                  | `http://localhost:3000` |
 
@@ -239,11 +240,30 @@ reads as "the stack is not set up for this", never as a flake.
 
 ### Suite parallelism
 
-The nightly runs files one at a time. A suite may be run with `PW_WORKERS > 1`
-only when **every** file in the run: self-seeds and tears down; never mutates a
-shared persona; reads mail by recipient; and never prunes the inbox. The
-Authentication, Applications and Templates suites do not qualify yet. When they
-do, raise the worker count in CI and leave the config alone.
+Every suite in `config/playwright.config.nightly.ts` is in one of two lanes,
+and the nightly workflow runs them as two runs of that config:
+
+- **`serial`** (the default): one file at a time, `PW_LANE=serial PW_WORKERS=1`.
+- **`parallel`**: several files at once, `PW_LANE=parallel PW_WORKERS=3`. Tests
+  inside a file still run in order.
+
+A suite may be marked `lane: 'parallel'` only when **every** file it lists:
+
+1. seeds what it uses under run-unique names and deletes it at file level;
+2. never changes a harness persona's own state (profile, settings, platform
+   roles); adding a persona to a Space the file created is fine;
+3. asserts only on what it seeded, never on a list or count other suites change
+   while it runs (a persona's Spaces, pending invitations, notifications, an
+   unfiltered admin or explore list);
+4. changes nothing platform-wide (platform settings, forum, platform
+   templates, licence plans);
+5. reads mail by recipient, never prunes the sink, and counts mails by
+   recipient and subject. Some mails go to every user ("New discussion
+   created"), so a count by recipient alone is not enough;
+6. reads no server-wide counter (the push-notification publish count).
+
+The reason a suite is `serial` is written next to it in the config. Fix that
+reason, then move the suite; do not raise the worker count of the serial lane.
 
 ## 9. Local runs
 

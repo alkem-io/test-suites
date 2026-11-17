@@ -190,6 +190,13 @@ export const openMemo = async (
  * paragraph and pressing End, and the selection is READ BACK before any key that edits: a click on the editor
  * root right after the dialog opens was seen (2026-11-09, local stack) landing before the collaborative content
  * had settled, which left the caret at the start of the document and made "Enter + type" prepend instead of append.
+ *
+ * The read-back covers the EDITOR's selection as well as the browser's. On its first focus ProseMirror starts a
+ * 20 ms timer that writes its own selection back into the page when the two differ. With several files running
+ * at once the click's selection can reach the editor after that timer: the page then shows the caret at the end
+ * while the editor still holds the start, and the timer moves the caret back there (seen 2026-11-17, three
+ * workers: the browser's selection read "end" 9 ms before Enter landed at the start). Once the editor itself
+ * holds the end, the timer can only write the end.
  */
 export const appendMemoParagraph = async (
   page: Page,
@@ -199,21 +206,45 @@ export const appendMemoParagraph = async (
   await expect(async () => {
     await editor.getByRole('paragraph').last().click();
     await page.keyboard.press('End');
-    const caretAtEnd = await editor.evaluate(root => {
+    const caret = await editor.evaluate(root => {
       const selection = root.ownerDocument.getSelection();
       const last = root.querySelector('p:last-of-type');
       const node = selection?.anchorNode ?? null;
-      return Boolean(
+      const inPage = Boolean(
         selection?.isCollapsed &&
         last &&
         node &&
         last.contains(node) &&
         selection.anchorOffset === (node.textContent ?? '').length
       );
+      // Tiptap puts its editor on the ProseMirror root element.
+      const state = (
+        root as unknown as {
+          editor?: {
+            state: {
+              doc: { lastChild: { content: { size: number } } | null };
+              selection: {
+                empty: boolean;
+                $anchor: { parent: unknown; parentOffset: number };
+              };
+            };
+          };
+        }
+      ).editor?.state;
+      const lastBlock = state?.doc.lastChild;
+      const inEditor = Boolean(
+        state &&
+        lastBlock &&
+        state.selection.empty &&
+        state.selection.$anchor.parent === lastBlock &&
+        state.selection.$anchor.parentOffset === lastBlock.content.size
+      );
+      return { inPage, inEditor };
     });
-    expect(caretAtEnd, 'the caret sits at the end of the last paragraph').toBe(
-      true
-    );
+    expect(
+      caret,
+      'the caret sits at the end of the last paragraph, in the page and in the editor'
+    ).toEqual({ inPage: true, inEditor: true });
   }).toPass();
   await page.keyboard.press('Enter');
   await page.keyboard.type(text);

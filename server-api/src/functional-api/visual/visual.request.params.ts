@@ -1,4 +1,11 @@
-import { TestUser } from '@alkemio/tests-lib';
+import {
+  GraphqlActor,
+  postGraphqlMultipartAs,
+  postGraphqlRawAs,
+  TestUser,
+} from '@alkemio/tests-lib';
+import { readFileSync } from 'fs';
+import path from 'path';
 import { graphqlRequestAuth } from '@alkemio/tests-lib/utils/graphql.request';
 
 /**
@@ -123,6 +130,83 @@ export const updateVisualAspectRatio = async (
     userRole
   );
 };
+
+export type StoredVisual = {
+  id: string;
+  name: string;
+  uri: string;
+  alternativeText?: string | null;
+};
+
+/** Set a visual's address and alternative text. */
+export const updateVisualUri = async (
+  visualID: string,
+  uri: string,
+  alternativeText: string,
+  actor: GraphqlActor = TestUser.GLOBAL_ADMIN
+) =>
+  postGraphqlRawAs<{ updateVisual: Omit<StoredVisual, 'name'> }>(
+    actor,
+    `mutation UpdateVisualUri($updateData: UpdateVisualInput!) {
+      updateVisual(updateData: $updateData) {
+        id
+        uri
+        alternativeText
+      }
+    }`,
+    { updateData: { visualID, uri, alternativeText } }
+  );
+
+/**
+ * A profile's visuals as STORED, alternative text included — the lib's
+ * `lookupProfileVisuals` does not select `alternativeText`.
+ */
+export const getProfileVisuals = async (
+  profileId: string,
+  actor: GraphqlActor = TestUser.GLOBAL_ADMIN
+) =>
+  postGraphqlRawAs<{
+    lookup: { profile: { visuals: StoredVisual[] } | null };
+  }>(
+    actor,
+    `query ProfileVisualsStored($profileId: UUID!) {
+      lookup {
+        profile(ID: $profileId) {
+          visuals {
+            id
+            name
+            uri
+            alternativeText
+          }
+        }
+      }
+    }`,
+    { profileId }
+  );
+
+/**
+ * Upload a PNG onto a visual as any actor: `storage/upload.params`'s
+ * `uploadImageOnVisual` takes only a harness persona, which cannot act as a
+ * disposable user.
+ */
+export const uploadPngOnVisual = async (
+  visualID: string,
+  pngPath: string,
+  actor: GraphqlActor
+) =>
+  postGraphqlMultipartAs<{ uploadImageOnVisual: { id: string; uri: string } }>(
+    actor,
+    `mutation UploadPngOnVisual($file: Upload!, $uploadData: VisualUploadImageInput!) {
+      uploadImageOnVisual(file: $file, uploadData: $uploadData) { id uri }
+    }`,
+    { file: null, uploadData: { visualID } },
+    'variables.file',
+    {
+      bytes: readFileSync(pngPath),
+      fileName: path.basename(pngPath),
+      mimeType: 'image/png',
+    }
+  );
 
 /**
  * A Space's activityScore (server#6326). Pass no `userRole` for an ANONYMOUS
