@@ -566,8 +566,17 @@ const SWARMAIL_MAX_AWAIT_COUNT = 250;
  * one read per idle slice, against the MailSlurper path's read every second.
  */
 const SWARMAIL_AWAIT_SLICE_MS = 5_000;
-/** Client-side bound on one API call, on top of the wait it asked for. */
+/** Client-side bound on one count call; never past the caller's deadline. */
 const SWARMAIL_REQUEST_MARGIN_MS = 10_000;
+/**
+ * The await asks Swarmail to answer this much before the caller's deadline,
+ * so its 408 normally arrives before the client-side abort at the deadline.
+ */
+const SWARMAIL_AWAIT_HEADROOM_MS = 250;
+
+/** True when `error` is the abort of an `AbortSignal.timeout`. */
+const isTimeout = (error: unknown): boolean =>
+  error instanceof Error && error.name === 'TimeoutError';
 
 const swarmailApiEndpoint = (): string | undefined => {
   const endpoint = process.env.SWARMAIL_API_ENDPOINT?.trim();
@@ -583,12 +592,23 @@ const reportSwarmailFallback = (kind: string, detail: string): void => {
   );
 };
 
-/** Exact count of Swarmail's `default` inbox, or undefined if unavailable. */
-const swarmailInboxCount = async (api: string): Promise<number | undefined> => {
+/**
+ * Exact count of Swarmail's `default` inbox, or undefined if unavailable or
+ * if `deadline` leaves no time. The request is bounded by the remaining wait,
+ * not only by SWARMAIL_REQUEST_MARGIN_MS, so a count never outlives the wait
+ * it serves; running out of time is not a fallback and is not reported.
+ */
+const swarmailInboxCount = async (
+  api: string,
+  deadline: number
+): Promise<number | undefined> => {
+  const remaining = deadline - Date.now();
+  if (remaining <= 0) return undefined;
+  const bound = Math.min(SWARMAIL_REQUEST_MARGIN_MS, remaining);
   try {
     const response = await fetch(
       `${api}/api/v1/inboxes/${SWARMAIL_INBOX}/count`,
-      { signal: AbortSignal.timeout(SWARMAIL_REQUEST_MARGIN_MS) }
+      { signal: AbortSignal.timeout(bound) }
     );
     if (!response.ok) {
       await response.body?.cancel();
@@ -601,6 +621,8 @@ const swarmailInboxCount = async (api: string): Promise<number | undefined> => {
     }
     reportSwarmailFallback('count', 'count answered without an integer count');
   } catch (error) {
+    if (isTimeout(error) && bound < SWARMAIL_REQUEST_MARGIN_MS)
+      return undefined;
     reportSwarmailFallback('count', `count failed: ${String(error)}`);
   }
   return undefined;
@@ -624,20 +646,27 @@ const swarmailAwaitInboxCount = async (
     );
     return false;
   }
-  const timeoutMs = Math.min(
+  // The whole call, server wait and transfer, stays inside `waitMs`: the
+  // client aborts at the end of the budget (or of one slice), and Swarmail is
+  // asked to answer SWARMAIL_AWAIT_HEADROOM_MS before that.
+  const budgetMs = Math.min(
     Math.max(Math.ceil(waitMs), 1),
     SWARMAIL_AWAIT_SLICE_MS
   );
+  const timeoutMs = Math.max(budgetMs - SWARMAIL_AWAIT_HEADROOM_MS, 1);
   try {
     const response = await fetch(
       `${api}/api/v1/inboxes/${SWARMAIL_INBOX}/await?count=${target}&timeout_ms=${timeoutMs}&limit=1`,
-      { signal: AbortSignal.timeout(timeoutMs + SWARMAIL_REQUEST_MARGIN_MS) }
+      { signal: AbortSignal.timeout(budgetMs) }
     );
     // Only the status matters: the caller re-reads through getMailsData.
     await response.body?.cancel();
     if (response.status === 200 || response.status === 408) return true;
     reportSwarmailFallback('await', `await answered HTTP ${response.status}`);
   } catch (error) {
+    // The budget ran out before Swarmail's answer arrived: the wait was spent
+    // waiting, so the caller re-reads; this is not a fallback.
+    if (isTimeout(error)) return true;
     reportSwarmailFallback('await', `await failed: ${String(error)}`);
   }
   return false;
@@ -662,7 +691,7 @@ const waitForMailsWhereOnSwarmail = async (
     // over or incremented: a test can wipe the mailbox (DELETE via the shim),
     // so the count is not monotonic (see SWARMAIL_AWAIT_SLICE_MS for a wipe
     // that lands while an await is parked).
-    const seen = await swarmailInboxCount(api);
+    const seen = await swarmailInboxCount(api, deadline);
     const last = await getMailsData();
     const remaining = deadline - Date.now();
     if (isSatisfied(last[0] ?? [], last[1]) || remaining <= 0) {
@@ -835,7 +864,11 @@ export const drainMailbox = async ({
   quietMs = 4_000,
   timeout = 30_000,
   interval = 1_000,
-}: { quietMs?: number; timeout?: number; interval?: number } = {}): Promise<void> => {
+}: {
+  quietMs?: number;
+  timeout?: number;
+  interval?: number;
+} = {}): Promise<void> => {
   const start = Date.now();
   let [, lastTotal] = await getMailsData();
   let quietSince = Date.now();
