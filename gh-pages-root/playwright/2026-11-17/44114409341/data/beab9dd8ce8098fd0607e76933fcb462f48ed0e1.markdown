@@ -1,0 +1,146 @@
+# Page snapshot
+
+```yaml
+- generic:
+  - generic:
+    - generic:
+      - generic:
+        - generic:
+          - link:
+            - /url: "#crd-main-content"
+            - text: Skip to content
+          - banner:
+            - generic:
+              - generic:
+                - generic:
+                  - generic:
+                    - link:
+                      - /url: /home
+                      - generic:
+                        - img
+                    - generic:
+                      - navigation:
+                        - list:
+                          - listitem:
+                            - generic: L
+                            - generic: l0-comment-images-us3-5ac69
+                  - navigation:
+                    - button:
+                      - img
+                    - button:
+                      - img
+                    - button:
+                      - img
+                    - button:
+                      - img
+                    - button:
+                      - generic:
+                        - generic:
+                          - img
+          - main:
+            - generic:
+              - generic:
+                - generic:
+                  - generic:
+                    - generic:
+                      - img
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic:
+                        - heading [level=1]: l0-comment-images-us3-5ac69
+                      - generic:
+                        - paragraph: A home to go from here to there, together!
+              - generic:
+                - generic:
+                  - generic:
+                    - navigation:
+                      - generic:
+                        - tablist:
+                          - tab [selected]: Dashboard
+                          - tab: Community
+                          - tab: Subspaces
+                          - tab: Knowledge Base
+                        - generic:
+                          - generic:
+                            - button:
+                              - img
+                            - button:
+                              - img
+                            - button:
+                              - img
+                            - button:
+                              - img
+          - contentinfo:
+            - generic:
+              - generic:
+                - generic:
+                  - img
+                - generic: © 2026 Alkemio B.V.
+              - navigation:
+                - link:
+                  - /url: https://welcome.alkem.io/legal/terms/
+                  - text: Terms
+                - link:
+                  - /url: https://welcome.alkem.io/legal/privacy
+                  - text: Privacy
+                - link:
+                  - /url: https://welcome.alkem.io/legal/security
+                  - text: Security
+                - button: Support
+                - link:
+                  - /url: https://welcome.alkem.io
+                  - text: About
+              - generic:
+                - button:
+                  - img
+                  - generic: English
+    - region "Notifications alt+T"
+    - button:
+      - img
+  - dialog "l0-comment-images-us3-5ac69" [ref=e2]:
+    - generic [ref=e3]:
+      - generic [ref=e4]:
+        - img "You don't have access to this space." [ref=e6]:
+          - img [ref=e7]
+        - generic [ref=e10]:
+          - heading "l0-comment-images-us3-5ac69" [level=2] [ref=e11]
+          - paragraph [ref=e12]: A home to go from here to there, together!
+          - paragraph [ref=e13]: About This Space
+      - button "Close" [active] [ref=e14] [cursor=pointer]:
+        - img
+    - generic [ref=e16]:
+      - generic [ref=e18]:
+        - generic [ref=e20]:
+          - img [ref=e21]
+          - text: 4 members
+        - generic [ref=e26]:
+          - heading "Leads" [level=3] [ref=e27]
+          - list [ref=e28]:
+            - listitem [ref=e29]:
+              - link "admin alkemio admin alkemio" [ref=e30] [cursor=pointer]:
+                - /url: https://test-alkem.io/user/admin-alkemio
+                - img "admin alkemio" [ref=e32]
+                - generic [ref=e33]: admin alkemio
+            - listitem [ref=e34]:
+              - link "comment-images-us3-44a59 comment-images-us3-44a59" [ref=e35] [cursor=pointer]:
+                - /url: https://test-alkem.io/organization/comment-images-us3-44a59
+                - img "comment-images-us3-44a59" [ref=e37]
+                - generic [ref=e38]: comment-images-us3-44a59
+      - button "Join" [ref=e41] [cursor=pointer]:
+        - img
+        - text: Join
+      - generic [ref=e42]:
+        - heading "Hosted by" [level=2] [ref=e43]
+        - generic [ref=e44]:
+          - link "comment-images-us3-44a59 comment-images-us3-44a59" [ref=e45] [cursor=pointer]:
+            - /url: https://test-alkem.io/organization/comment-images-us3-44a59
+            - img "comment-images-us3-44a59" [ref=e47]
+            - generic [ref=e49]: comment-images-us3-44a59
+          - link "Contact host" [ref=e51] [cursor=pointer]:
+            - /url: https://test-alkem.io/organization/comment-images-us3-44a59
+            - img [ref=e52]
+            - text: Contact host
+    - button [ref=e55] [cursor=pointer]:
+      - img
+```
