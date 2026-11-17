@@ -2,6 +2,14 @@ name: Nightly Playwright
 
 on:
   workflow_dispatch:
+    inputs:
+      parallel_workers:
+        description: >-
+          How many spec files of the parallel lane run at once. 1 runs
+          everything one file at a time, as before.
+        type: choice
+        options: ['1', '2', '3', '4']
+        default: '3'
 
 jobs:
   test:
@@ -57,8 +65,14 @@ jobs:
           echo "RUN_DATE=$DATE" >> $GITHUB_ENV
           echo "RUN_ID=${{ github.run_id }}" >> $GITHUB_ENV
 
-      - name: Run Playwright tests
-        id: playwright
+      # The nightly is two runs of the same configuration (see `Lane` in
+      # client-web/config/playwright.shared.ts). The serial lane holds the
+      # suites that share state with other suites, and starts with the
+      # platform smoke check. The parallel lane holds the suites that only
+      # touch what they seed. Each run writes a blob report; the two are
+      # merged into the one HTML report below.
+      - name: Run Playwright tests (serial lane)
+        id: serial
         continue-on-error: true
         env:
           ALKEMIO_BASE_URL: ${{ vars.ALKEMIO_BASE_URL }}
@@ -69,7 +83,40 @@ jobs:
           KRATOS_ENDPOINT: ${{ vars.KRATOS_ENDPOINT }}
           MAIL_SLURPER_ENDPOINT: ${{ vars.MAIL_SLURPER_ENDPOINT }}
           AUTH_TEST_HARNESS_PASSWORD: ${{ secrets.AUTH_TEST_HARNESS_PASSWORD }}
+          PW_LANE: serial
+          PW_WORKERS: '1'
+          PW_BLOB_REPORT: serial
         run: pnpm --filter @alkemio/test-suite-client-web run test:nightly
+
+      - name: Run Playwright tests (parallel lane)
+        id: parallel
+        continue-on-error: true
+        env:
+          ALKEMIO_BASE_URL: ${{ vars.ALKEMIO_BASE_URL }}
+          ALKEMIO_SERVER: ${{ vars.ALKEMIO_SERVER }}
+          ALKEMIO_SERVER_REST: ${{ vars.ALKEMIO_SERVER_REST }}
+          ALKEMIO_SERVER_URL: ${{ vars.ALKEMIO_SERVER_URL }}
+          ALKEMIO_SERVER_WS: ${{ vars.ALKEMIO_SERVER_WS }}
+          KRATOS_ENDPOINT: ${{ vars.KRATOS_ENDPOINT }}
+          MAIL_SLURPER_ENDPOINT: ${{ vars.MAIL_SLURPER_ENDPOINT }}
+          AUTH_TEST_HARNESS_PASSWORD: ${{ secrets.AUTH_TEST_HARNESS_PASSWORD }}
+          PW_LANE: parallel
+          PW_WORKERS: ${{ inputs.parallel_workers }}
+          PW_BLOB_REPORT: parallel
+        run: pnpm --filter @alkemio/test-suite-client-web run test:nightly
+
+      - name: Merge the two lanes into one report
+        if: ${{ always() }}
+        env:
+          PLAYWRIGHT_HTML_OUTPUT_DIR: playwright-report
+          PLAYWRIGHT_HTML_OPEN: never
+        run: |
+          set -euo pipefail
+          mkdir -p client-web/blob-report/merged
+          # Whatever lanes wrote a report: a lane that crashed must not cost
+          # the other lane's results.
+          find client-web/blob-report/serial client-web/blob-report/parallel -name '*.zip' -exec cp {} client-web/blob-report/merged/ \; 2>/dev/null || true
+          pnpm --filter @alkemio/test-suite-client-web exec playwright merge-reports --reporter html blob-report/merged
 
       - name: Publish report to GitHub Pages
         if: ${{ always() }}
@@ -85,10 +132,10 @@ jobs:
             "playwright" \
             "Playwright" \
             "client-web/playwright-report" \
-            "${{ steps.playwright.outcome }}"
+            "${{ steps.serial.outcome == 'success' && steps.parallel.outcome == 'success' && 'success' || 'failure' }}"
 
       - name: Fail job if Playwright tests failed
-        if: ${{ steps.playwright.outcome == 'failure' }}
+        if: ${{ steps.serial.outcome != 'success' || steps.parallel.outcome != 'success' }}
         run: exit 1
 
   deploy:
