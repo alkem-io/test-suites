@@ -1,43 +1,45 @@
-// Shared scaffolding for the delete-own-account acceptance walks
-// (US1 `us1-delete-own-account.spec.ts`, US2 `us2-blocked-resources.spec.ts`,
-// US3 `us3-reauth-freshness.spec.ts`). Provisioning a disposable subject,
-// logging in through the real SPA form, and reaching the Security tab are
-// identical across every walk in this area — extracted here once so a
-// client-web UI change (avatar-menu label, header layout, the Security tab
-// route, ...) is fixed in one place instead of drifting silently between
-// files (test-suites/CLAUDE.md: "Shared code lives in `fixtures/` and
-// `helpers/`").
+// Shared scaffolding for the delete-own-account walks (US1
+// `us1-delete-own-account.spec.ts`, US2 `us2-blocked-resources.spec.ts`, US3
+// `us3-reauth-freshness.spec.ts`).
+//
+// W2 Tier 0 item 3: subjects are provisioned and read back through named
+// `@alkemio/tests-lib` functions only — public Kratos registration with the
+// subject's own verification mail, then `readMyUser` / `readUserAccount`. No
+// SQL, so everything here runs on the shared test cluster. The audit-row
+// reader (`getAuditRowsFor`) is the one exception and is used only by
+// `@local-stack` cases.
+//
+// Since client-web#10437 (054 FR-001 amended 2026-10-23) the Delete-account
+// card lives in the collapsed "Danger Zone" section at the end of the user
+// settings **Account** tab, not on the Security tab.
 
 import { expect, type Page } from '@playwright/test';
 import {
   deleteUser,
   getUserToken,
   queryHarnessDb,
-  registerInKratosOrFail,
+  readMyUser,
+  readUserAccount,
+  registerVerifiedUser,
   UniqueIDGenerator,
-  verifyInKratosOrFail,
 } from '@alkemio/tests-lib';
-import { acceptCookiesIfVisible } from '../helpers/cookies.helper';
 import { testConfiguration } from '@src/config/test.configuration';
-import { fillSecret } from '../helpers/login.helper';
+import { userMenuAvatar } from '../authentication/common-authentication-page-elements';
+import { must } from '../helpers/lib-actor.helper';
+import { openSettingsSection } from '../helpers/settings-section.helper';
+import { signIn } from './account-deletion.helpers';
 
 export const baseUrl = (
   process.env.ALKEMIO_BASE_URL || 'http://localhost:3000'
 ).replace(/\/$/, '');
 
-// `registerInKratosOrFail` submits the harness admin password
-// (`testConfiguration.identities.admin.password`) for every identity it
-// creates — read the same config value (not a second env-var mirror with its
-// own fallback) so the UI login step below authenticates with the password
-// Kratos actually stored.
+// `registerInKratosOrFail` stores the harness admin password for every
+// identity it creates; sign in with the same config value.
 export const harnessPassword = testConfiguration.identities.admin.password;
 export const adminEmail = process.env.AUTH_ADMIN_EMAIL || 'admin@alkem.io';
 
-/** contracts/deleteuser-self-branch.md §2 — 15-minute privileged window,
- * mirrored here (not imported — client-web has no dependency on the
- * server's source tree) so the US3 walk can age a real session "just
- * outside" it without a magic number. Same constant, same rationale, as
- * `server-api/.../delete-own-account.request.params.ts`. */
+/** contracts/deleteuser-self-branch.md §2 — the 15-minute privileged window,
+ * mirrored so US3 can age a real session "just outside" it. */
 export const PRIVILEGED_SESSION_WINDOW_S = 15 * 60;
 
 export interface DisposableSubject {
@@ -47,100 +49,60 @@ export interface DisposableSubject {
   accountId: string;
 }
 
-type SubjectRow = { id: string; accountId: string; displayName: string };
-
 /**
- * The Alkemio `User`/`Account`/`Profile` rows are created by the Kratos
- * verification webhook asynchronously — polled by email rather than resolved
- * over a bearer token, since `/api/auth/non-interactive-login` is an
- * opt-in dev/CI feature flag this walk must not depend on being enabled.
- */
-const resolveSubjectRow = async (email: string): Promise<SubjectRow> => {
-  let row: SubjectRow | undefined;
-  await expect
-    .poll(
-      async () => {
-        const rows = await queryHarnessDb<SubjectRow>(
-          `SELECT u.id, u."accountID" AS "accountId", p."displayName" AS "displayName"
-           FROM "user" u
-           JOIN actor a ON a.id = u.id
-           JOIN profile p ON p.id = a."profileId"
-           WHERE u.email = $1`,
-          [email]
-        );
-        row = rows[0];
-        return Boolean(row);
-      },
-      {
-        message: `resolveSubjectRow: no Alkemio user row appeared for '${email}' after registration + verification`,
-        intervals: [500],
-        timeout: 10_000,
-      }
-    )
-    .toBe(true);
-  return row!;
-};
-
-/**
- * Registers + email-verifies a fresh disposable identity through the real
- * Kratos self-service flow, then resolves the Alkemio user/account ids and
- * displayed name once the verification webhook has materialized them.
+ * Registers + verifies a fresh disposable identity through public Kratos (its
+ * own verification mail, read by recipient), lets its first sign-in create
+ * the Alkemio user, and reads back the id, account and the display name the
+ * typed-name confirm requires.
  */
 export const provisionSubject = async (
   label: string
 ): Promise<DisposableSubject> => {
   const uniqueId = UniqueIDGenerator.getID();
   const email = `del-${label}-${uniqueId}@test.alkem.io`;
-  const firstName = `Del${uniqueId}`;
-  const lastName = `${label}Fixture`;
-
-  const { verificationFlowId } = await registerInKratosOrFail(
-    firstName,
-    lastName,
-    email
+  const userId = await registerVerifiedUser(
+    email,
+    `Del${uniqueId}`,
+    `${label}Fixture`
   );
-  await verifyInKratosOrFail(email, verificationFlowId);
-
-  const row = await resolveSubjectRow(email);
-
+  const { me } = must(
+    await readMyUser({ bearerToken: await getUserToken(email) }),
+    `read the new subject ${label}`
+  );
+  const user = me.user;
+  if (!user || user.id !== userId || !user.account?.id || !user.profile) {
+    throw new Error(`provisionSubject(${label}): incomplete user read back`);
+  }
   return {
     email,
-    displayName: row.displayName,
-    userId: row.id,
-    accountId: row.accountId,
+    displayName: user.profile.displayName,
+    userId,
+    accountId: user.account.id,
   };
 };
 
-/** Signs `email` in through the real SPA sign-in form — never a fabricated
- * cookie — so the session the delete flow gates on is genuinely fresh. */
-export const loginAsSubject = async (
-  page: Page,
-  email: string
-): Promise<void> => {
-  await page.goto(baseUrl);
-  await acceptCookiesIfVisible(page);
-  await page.getByRole('link', { name: 'Log in', exact: true }).click();
-  await page.waitForURL(/.*login.*/);
-  await page.getByRole('textbox', { name: 'E-Mail *' }).fill(email);
-  await fillSecret(
-    page.getByRole('textbox', { name: 'Password *' }),
-    harnessPassword
-  );
-  await page.getByRole('button', { name: 'Sign in', exact: true }).click();
-  await page.waitForURL(/.*home.*/, { timeout: 30_000 });
-};
+/** Signs `email` in through the real SPA form in `page`'s own context, so
+ * the session the delete flow gates on is genuinely fresh. */
+export const loginAsSubject = (page: Page, email: string): Promise<void> =>
+  signIn(page, email, harnessPassword);
 
-/** Reaches the Security tab purely through the CRD UI a real user takes —
- * avatar menu → "My Account" (the owner-settings entry point, distinct from
- * "My Profile"'s public-style view) → the "Security" tab — never a
- * hand-built `/user/<nameID>/settings/security` URL. */
-export const navigateToSecurityTab = async (page: Page): Promise<void> => {
-  await page.getByRole('banner').getByRole('button').last().click();
-  await page.getByRole('menuitem', { name: 'My Account' }).click();
-  await page.getByRole('tab', { name: 'Security', exact: true }).click();
+/**
+ * Reaches the Delete-account card the way a user does: header avatar menu →
+ * "My Account" (the settings Account tab) → expand "Danger Zone". Idempotent:
+ * an already-open section stays open.
+ */
+export const openDeleteAccountSection = async (page: Page): Promise<void> => {
+  await userMenuAvatar(page).click();
+  await page.getByRole('menuitem', { name: 'My Account', exact: true }).click();
+  await page.waitForURL(/\/settings\/account(\?|$)/);
   await expect(
-    page.getByRole('heading', { name: 'Delete account', level: 4 })
-  ).toBeVisible({ timeout: 15_000 });
+    page
+      .getByRole('main')
+      .getByRole('tablist')
+      .getByRole('tab', { name: 'Account', exact: true })
+  ).toHaveAttribute('aria-selected', 'true');
+  await openSettingsSection(page, /^Danger Zone/);
+  await expect(deleteAccountTriggerButton(page)).toBeVisible();
 };
 
 export const deleteAccountTriggerButton = (page: Page) =>
@@ -151,9 +113,13 @@ export const confirmDeleteButton = (page: Page) =>
   page.getByRole('button', { name: 'Delete my account', exact: true });
 export const logInHeaderLink = (page: Page) =>
   page.getByRole('link', { name: 'Log in', exact: true });
+export const notificationsButton = (page: Page) =>
+  page
+    .getByRole('banner')
+    .getByRole('button', { name: 'Notifications', exact: true });
 
 let adminTokenPromise: Promise<string> | undefined;
-const getSharedAdminToken = (): Promise<string> => {
+export const getAdminToken = (): Promise<string> => {
   if (!adminTokenPromise) {
     adminTokenPromise = getUserToken(adminEmail);
   }
@@ -161,27 +127,67 @@ const getSharedAdminToken = (): Promise<string> => {
 };
 
 /**
- * Best-effort teardown via the admin bearer path — a no-op once the
- * subject's own in-flow deletion has already run. Never masks a test
- * failure: swallows its own errors.
- *
- * Accepts an already-minted admin token so a describe block that resolved
- * one for its own admin-authenticated fixtures (US2's space seeding, say)
- * doesn't mint a second; omit it to use the lazily-minted shared one.
+ * Whether the platform still holds this user, read by the platform admin:
+ * `lookup.user` resolves it (true) or answers ENTITY_NOT_FOUND (false). Any
+ * other answer is an error, never a silent "gone".
  */
-export const deleteUserQuietly = async (
-  userId?: string,
-  adminToken?: string
+export const userExists = async (userId: string): Promise<boolean> => {
+  const result = await readUserAccount(userId, {
+    bearerToken: await getAdminToken(),
+  });
+  if (result.data?.lookup?.user?.id === userId) return true;
+  const codes = (result.error?.errors ?? []).map(e => e.code);
+  if (codes.length > 0 && codes.every(code => code === 'ENTITY_NOT_FOUND')) {
+    return false;
+  }
+  throw new Error(
+    `userExists(${userId}): unexpected answer ${JSON.stringify(result.error?.errors ?? result.data)}`
+  );
+};
+
+/**
+ * Teardown: delete the subject with its sign-in identity unless the walk
+ * already did. ENTITY_NOT_FOUND (deleted by the walk) is the expected outcome
+ * after a green run; anything else fails the hook — a leaked user is a leaked
+ * fixture on a shared environment.
+ */
+export const deleteSubjectIfPresent = async (
+  userId?: string
 ): Promise<void> => {
   if (!userId) return;
-  try {
-    const token = adminToken ?? (await getSharedAdminToken());
-    await deleteUser(userId, { bearerToken: token }, true);
-  } catch {
-    // Subject already gone (the normal case), or the admin token could not
-    // be minted during teardown — either way nothing useful is left to do.
+  const result = await deleteUser(
+    userId,
+    { bearerToken: await getAdminToken() },
+    true
+  );
+  if (!result.error) return;
+  if (result.error.errors.every(e => e.code === 'ENTITY_NOT_FOUND')) return;
+  throw new Error(
+    `teardown: deleting subject ${userId} failed: ${JSON.stringify(result.error.errors)}`
+  );
+};
+
+/**
+ * Runs every teardown step and fails once at the end if any did, so one
+ * failure never hides (or skips) the others.
+ */
+export const runTeardown = async (
+  steps: Array<[what: string, step: () => Promise<unknown>]>
+): Promise<void> => {
+  const failures: string[] = [];
+  for (const [what, step] of steps) {
+    try {
+      await step();
+    } catch (error) {
+      failures.push(`${what}: ${(error as Error).message}`);
+    }
+  }
+  if (failures.length > 0) {
+    throw new Error(`teardown failed:\n${failures.join('\n')}`);
   }
 };
+
+// --- @local-stack only ------------------------------------------------------
 
 export type AuditRow = {
   category: string;
@@ -190,9 +196,12 @@ export type AuditRow = {
   details: Record<string, unknown> | null;
 };
 
-export const getAuditRowsFor = (
-  subjectUserId: string
-): Promise<AuditRow[]> =>
+/**
+ * The account-deletion audit rows for a subject. The audit trail has no
+ * GraphQL read surface, so this needs loopback Postgres (HARNESS_POSTGRES_*):
+ * only `@local-stack` cases call it.
+ */
+export const getAuditRowsFor = (subjectUserId: string): Promise<AuditRow[]> =>
   queryHarnessDb<AuditRow>(
     `SELECT category, "initiatorRole", outcome, details
      FROM platform_audit_entry

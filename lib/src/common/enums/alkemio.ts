@@ -31,6 +31,7 @@ export {
   InnovationHubType,
   LicenseEntitlementType,
   McpApiKeyStatus,
+  MimeType,
   NotificationEvent,
   NotificationEventInAppState,
   OrganizationVerificationEnum,
@@ -44,8 +45,10 @@ export {
   SpaceLevel,
   SpacePrivacyMode,
   SpaceVisibility,
+  TagsetReservedName,
   TemplateType,
   UserInformationVisibility,
   VirtualContributorBodyOfKnowledgeType,
   VisualType,
+  WhiteboardPreviewMode,
 } from "../../core/generated/alkemio-schema";

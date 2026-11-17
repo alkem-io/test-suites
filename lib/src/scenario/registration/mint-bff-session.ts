@@ -47,11 +47,16 @@ export type MintedBffSession = {
  * compose stack (both fall back to the same committed `alkemio.yml`
  * placeholder), and deliberately never true for a real deployed environment,
  * which this flow must never be pointed at.
+ *
+ * `createdAtEpochS` is the sign-in's START, not its completion: the server
+ * rejects a session whose `created_at` is at or before its subject's
+ * revocation marker. `acr` is the sign-in's assurance as the server stores it
+ * (`null` or `'aal1'`: password alone; `'aal2'`: a second factor completed).
  */
 export const mintBffSession = async (
   kratosIdentityId: string,
   alkemioActorId: string,
-  options?: { createdAtEpochS?: number }
+  options?: { createdAtEpochS?: number; acr?: 'aal1' | 'aal2' | null }
 ): Promise<MintedBffSession> => {
   // Writing directly into the session store is equivalent to minting a
   // valid login for ANY actor id the caller supplies, with no audit trail —
@@ -100,6 +105,7 @@ export const mintBffSession = async (
     last_refreshed_at: null,
     last_extended_at: null,
     created_at: createdAtEpochS,
+    acr: options?.acr ?? null,
     client_id: webClientId,
     request_context_cache: null,
     terminated_at: null,
@@ -127,7 +133,7 @@ export const mintBffSession = async (
 export const mintBffSessionForUser = async (
   email: string,
   alkemioActorId: string,
-  options?: { createdAtEpochS?: number }
+  options?: Parameters<typeof mintBffSession>[2]
 ): Promise<MintedBffSession> => {
   const nonInteractiveToken = await getUserToken(email);
   const kratosIdentityId = decodeJwtPayloadUnsafe(nonInteractiveToken).sub;

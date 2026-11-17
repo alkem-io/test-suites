@@ -1,26 +1,33 @@
 // spec: client-web/src/functional-e2e/plans/memberships-test-plan.md
-// seed: client-web/src/functional-e2e/seed-memberships.spec.ts
 
 import { expect } from '@playwright/test';
 import {
-  TestUser,
-  TestScenarioFactory,
-  TestUserManager,
-} from '@alkemio/tests-lib';
-import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
-import { TestScenarioConfig } from '@alkemio/tests-lib/scenario/config/test-scenario-config';
-import {
   CommunityMembershipPolicy,
   SpacePrivacyMode,
-} from '@alkemio/client-lib';
+  TestScenarioFactory,
+  TestUser,
+  TestUserManager,
+  type TestScenarioConfig,
+} from '@alkemio/tests-lib';
+import type { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import { createAuthenticatedSessionFixture } from '../fixtures/authenticated-session.fixture';
+import {
+  baseUrl,
+  teardownScenario,
+  userIdsInRole,
+} from '../helpers/space-access.helper';
+import {
+  leaveMembership,
+  membershipRow,
+  openMembershipSettings,
+  uniqueName,
+} from './memberships.helpers';
 
 const { test, setupAuthentication, teardownAuthentication } =
   createAuthenticatedSessionFixture({
     storageStateName: 'removed-member-cannot-access.json',
     cleanupAfterTests: process.env.cleanupAfterTests === 'true',
   });
-const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 
 let baseScenario: OrganizationWithSpaceModel;
 
@@ -29,7 +36,7 @@ const scenarioConfig: TestScenarioConfig = {
   space: {
     about: {
       profile: {
-        displayName: 'Membership Test Space',
+        displayName: uniqueName('Membership Test Space'),
         tagline: 'Testing space memberships',
       },
     },
@@ -55,7 +62,7 @@ const scenarioConfig: TestScenarioConfig = {
     subspace: {
       about: {
         profile: {
-          displayName: 'Subspace for Membership Tests',
+          displayName: uniqueName('Subspace for Membership Tests'),
           tagline: 'Testing subspace memberships',
         },
       },
@@ -80,7 +87,7 @@ const scenarioConfig: TestScenarioConfig = {
       subspace: {
         about: {
           profile: {
-            displayName: 'Subsubspace for Membership Tests',
+            displayName: uniqueName('Subsubspace for Membership Tests'),
             tagline: 'Testing subsubspace memberships',
           },
         },
@@ -103,26 +110,29 @@ const scenarioConfig: TestScenarioConfig = {
   },
 };
 
-test.describe('Security & Permissions', () => {
-  test.beforeAll(async ({ browser }) => {
-    test.setTimeout(60_000);
-    baseScenario = await TestScenarioFactory.createBaseScenario(scenarioConfig);
-    await setupAuthentication(
-      browser,
-      TestUserManager.users.subsubspaceMember.email
-    );
-  });
+test.beforeAll(async ({ browser }) => {
+  test.setTimeout(60_000);
+  baseScenario = await TestScenarioFactory.createBaseScenario(scenarioConfig);
+  await setupAuthentication(
+    browser,
+    TestUserManager.users.subsubspaceMember.email
+  );
+});
 
-  test.afterAll(async () => {
-    test.setTimeout(45_000);
+// File level, so it also runs when a failure retires the worker mid-file.
+test.afterAll(async () => {
+  try {
     await teardownAuthentication();
-    await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
-  });
+  } finally {
+    await teardownScenario(baseScenario);
+  }
+});
 
+test.describe('Security & Permissions', () => {
   test(
     'Removed Member Cannot Access Previous Space',
     {
-      tag: ['@bug', '@regression'],
+      tag: ['@regression'],
     },
     async ({ page }) => {
       // 1. Navigate to the private subsubspace as a member
@@ -140,47 +150,35 @@ test.describe('Security & Permissions', () => {
             name: baseScenario.subsubspace.about.profile.displayName,
           })
           .first()
-      ).toBeVisible({ timeout: 5000 });
+      ).toBeVisible();
 
       // 3. Verify can participate in collaboration
       // CRD: full member access exposes the "Community" view (replaces the
       // legacy "contributors" affordance).
       await expect(
         page.getByRole('button', { name: 'Community', exact: true }).first()
-      ).toBeVisible({ timeout: 5000 });
+      ).toBeVisible();
 
-      // 4. Navigate to user membership settings
-      await page.goto(
-        `${baseUrl}/user/${TestUserManager.users.subsubspaceMember.nameId}/settings/membership`
-      );
-      await expect(page).toHaveURL(/.*\/settings\/membership/);
+      // 4. Precondition (server): the user holds MEMBER on the L2 role set.
+      const member = TestUserManager.users.subsubspaceMember;
+      const l2RoleSetId = baseScenario.subsubspace.community.roleSetId;
+      expect(member.id, 'subsubspace.member id resolved').not.toBe('');
+      expect(await userIdsInRole(l2RoleSetId)).toContain(member.id);
 
-      // 5. Leave the subsubspace community
-      // CRD: memberships are a searchable card grid; narrow to the subsubspace
-      // so the per-card actions are unambiguous.
-      const subsubspaceName = baseScenario.subsubspace.about.profile.displayName;
-      const search = page.getByPlaceholder('Search memberships...');
-      await search.fill(subsubspaceName);
+      // 5. Own membership settings list the subsubspace (positive control).
+      const subsubspaceName =
+        baseScenario.subsubspace.about.profile.displayName;
+      await openMembershipSettings(page, member.nameId);
+      await expect(membershipRow(page, subsubspaceName)).toHaveCount(1);
 
-      const subsubspaceCardLink = page
-        .getByRole('link', { name: subsubspaceName })
-        .first();
-      await expect(subsubspaceCardLink).toBeVisible({ timeout: 5000 });
+      // 6. Leave it through the row's "Leave <name>" button + confirmation.
+      await leaveMembership(page, subsubspaceName);
 
-      // CRD flow change: the Leave action lives in the card's "More actions"
-      // (kebab) menu, then a confirmation alertdialog.
-      await page.getByRole('button', { name: 'More actions' }).first().click();
-      await page.getByRole('menuitem', { name: /Leave/i }).click();
-
-      // 6. Confirm leaving in the destructive alertdialog.
-      const confirmDialog = page.getByRole('alertdialog');
-      await expect(confirmDialog).toBeVisible({ timeout: 5000 });
-      await confirmDialog.getByRole('button', { name: 'Leave' }).click();
-
-      // 7. Wait for the leave action to complete
-      await expect(
-        page.getByRole('link', { name: subsubspaceName })
-      ).not.toBeVisible({ timeout: 5000 });
+      // 7. Server: MEMBER on the L2 role set is gone; the UI drops the row.
+      await expect
+        .poll(() => userIdsInRole(l2RoleSetId))
+        .not.toContain(member.id);
+      await expect(membershipRow(page, subsubspaceName)).toHaveCount(0);
 
       // 8. Navigate back to the private subsubspace
       await page.goto(
@@ -200,9 +198,12 @@ test.describe('Security & Permissions', () => {
             name: baseScenario.subsubspace.about.profile.displayName,
           })
           .first()
-      ).toBeVisible({ timeout: 3000 });
+      ).toBeVisible();
 
-      // [BUG]? no apply/join button shown
+      // Not asserted, undecided without a live run: the user is still a
+      // member of the parent L1, yet the About preview was observed to offer
+      // no Apply/Join after the leave, while a non-member of L1 previewing
+      // the same L2 does get one (access-private-subsubspace-as-non-member).
       // 11. Verify Apply/Join button is now visible (since user is no longer a member)
       // await expect(
       //   page.getByRole('button', { name: /Apply|Join|Sign in/i })
@@ -214,7 +215,9 @@ test.describe('Security & Permissions', () => {
       // access to this space." (the icon's alt text is the stable hook; there
       // is no literal "Private" label on this preview surface).
       await expect(
-        page.getByRole('img', { name: /don't have access to this space/i }).first()
+        page
+          .getByRole('img', { name: /don't have access to this space/i })
+          .first()
       ).toBeVisible();
     }
   );

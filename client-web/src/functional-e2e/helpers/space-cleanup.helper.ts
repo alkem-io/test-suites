@@ -1,8 +1,6 @@
 import { expect } from '@playwright/test';
-import { getGraphqlClient, TestUser } from '@alkemio/tests-lib';
-import { graphqlErrorWrapper } from '@alkemio/tests-lib';
 import { deleteSpace } from '@alkemio/tests-lib/scenario/baseFunctions';
-import { readSpaceSubspaceTree } from '@alkemio/tests-lib';
+import { readSpaceByNameId, readSpaceSubspaceTree } from '@alkemio/tests-lib';
 
 /**
  * Deletes the Space with this nameID if it exists — the safety net for a walk
@@ -13,12 +11,7 @@ import { readSpaceSubspaceTree } from '@alkemio/tests-lib';
  * error.
  */
 export async function deleteSpaceByNameId(nameID: string): Promise<void> {
-  const client = getGraphqlClient();
-  const lookupOnce = () =>
-    graphqlErrorWrapper(
-      (authToken: string | undefined) => client.getSpaceIdByNameId({ nameID }, { authorization: `Bearer ${authToken}` }),
-      TestUser.GLOBAL_ADMIN
-    );
+  const lookupOnce = () => readSpaceByNameId(nameID);
   let lookup = await lookupOnce();
   // A Space whose creation is still in flight (the walk failed mid-create)
   // exists but has no authorization policy yet, and the lookup answers
@@ -42,15 +35,15 @@ export async function deleteSpaceByNameId(nameID: string): Promise<void> {
       )
       .toBe(false);
   }
+  // Never created (the walk failed before the server saw the create).
+  if (JSON.stringify(lookup.error ?? '').includes('ENTITY_NOT_FOUND')) return;
   if (lookup.error) {
     throw new Error(`could not look up Space '${nameID}': ${JSON.stringify(lookup.error)}`);
   }
   const id = lookup.data?.lookupByName?.space?.id;
   if (!id) return;
-  const res = await deleteSpace(id);
-  if (res.error) {
-    throw new Error(`could not delete leaked Space '${nameID}': ${JSON.stringify(res.error)}`);
-  }
+  // Leaves first, and a refusal throws: a leak must fail the hook loudly.
+  await deleteSpaceTree(id);
 }
 
 /**

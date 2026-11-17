@@ -1,0 +1,6 @@
+mutation UpdateCalloutsSortOrder($sortOrderData: UpdateCalloutsSortOrderInput!) {
+  updateCalloutsSortOrder(sortOrderData: $sortOrderData) {
+    id
+    sortOrder
+  }
+}

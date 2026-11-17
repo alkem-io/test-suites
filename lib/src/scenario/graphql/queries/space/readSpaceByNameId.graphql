@@ -1,0 +1,11 @@
+query ReadSpaceByNameId($nameID: NameID!) {
+  lookupByName {
+    space(NAMEID: $nameID) {
+      id
+      nameID
+      level
+      account { id }
+      about { profile { displayName tagline } }
+    }
+  }
+}

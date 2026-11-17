@@ -1,0 +1,19 @@
+query ReadCalloutsSetCalloutTypes($calloutsSetId: UUID!) {
+  lookup {
+    calloutsSet(ID: $calloutsSetId) {
+      id
+      callouts {
+        id
+        framing {
+          id
+          type
+          profile { id displayName }
+          whiteboard { id }
+          memo { id }
+          link { id uri profile { id displayName } }
+        }
+        settings { contribution { allowedTypes } }
+      }
+    }
+  }
+}

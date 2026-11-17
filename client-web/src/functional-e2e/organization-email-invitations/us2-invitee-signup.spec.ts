@@ -404,7 +404,7 @@ adminTest.describe(
         await expect(converted).toBeVisible({ timeout: 20_000 });
         await expect(converted).toContainText('Associate + Admin');
         await expect(
-          converted.getByRole('button', { name: 'Delete' })
+          converted.getByRole('button', { name: 'Revoke invitation' })
         ).toBeVisible();
         // A converted invitation is a regular one: there is nothing to resend.
         await expect(

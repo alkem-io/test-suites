@@ -14,7 +14,12 @@ import {
 } from '@alkemio/client-lib';
 import { loginViaCrd } from '../helpers/login.helper';
 import { enableApplicationNotifications } from '../helpers/notification-settings.helper';
-import { applyFromSubspaceAboutDialog } from './applications.helpers';
+import {
+  applicantNotificationEntry,
+  applicationStates,
+  withUniqueSubspaceName,
+  applyFromSubspaceAboutDialog,
+} from './applications.helpers';
 
 const password = process.env.AUTH_TEST_HARNESS_PASSWORD || 'change_me';
 const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
@@ -67,8 +72,9 @@ test.describe('Level 1 Subspace - Applications', () => {
     // exceed the default 30s hook budget on the slower test env; give it
     // headroom so the hook doesn't time out and fail the first test.
     test.setTimeout(60_000);
-    globalBaseScenario =
-      await TestScenarioFactory.createBaseScenario(scenarioConfig);
+    globalBaseScenario = await TestScenarioFactory.createBaseScenario(
+      withUniqueSubspaceName(scenarioConfig)
+    );
     baseScenario = globalBaseScenario;
 
     // The bell-dialog assertions below need the in-app channel ON for the
@@ -270,8 +276,9 @@ test.describe('Level 1 Subspace - Applications', () => {
       // Per-test scenario creation + application submission exceeds the default
       // 30s hook budget on the slower test env.
       test.setTimeout(60_000);
-      baseScenario =
-        await TestScenarioFactory.createBaseScenario(scenarioConfig);
+      baseScenario = await TestScenarioFactory.createBaseScenario(
+        withUniqueSubspaceName(scenarioConfig)
+      );
       const spaceNameId = baseScenario.space.nameId;
       const subspaceNameId = baseScenario.subspace.nameId;
 
@@ -332,6 +339,8 @@ test.describe('Level 1 Subspace - Applications', () => {
       // Click the reject button
       const rejectButton = applicationRow.getByRole('button', {
         name: 'Reject',
+        // Exact: the row also carries "Reject and remove application" (client-web#10499).
+        exact: true,
       });
       await expect(rejectButton).toBeVisible();
       await rejectButton.click();
@@ -364,6 +373,10 @@ test.describe('Level 1 Subspace - Applications', () => {
       const notificationsPanel = applicantPage.getByRole('dialog');
       await expect(notificationsPanel).toBeVisible();
       await expect(notificationsPanel).toContainText(/declined/i);
+      // Scoped to THIS run's space: the persona's panel holds older entries.
+      await expect(
+        applicantNotificationEntry(notificationsPanel, 'declined', baseScenario.subspace.about.profile.displayName)
+      ).toBeVisible();
     });
 
     test('2.2 Archive Application to Level 1 Subspace', async () => {
@@ -382,8 +395,14 @@ test.describe('Level 1 Subspace - Applications', () => {
 
       // Click the delete button
       const deleteButton = applicationRow.getByRole('button', {
-        name: 'Delete',
+        // client-web#10499 renamed a new application's row "Delete" action.
+        name: 'Reject and remove application',
+        exact: true,
       });
+      // Server before the action: the one application on this role set is new.
+      const roleSetId = baseScenario.subspace.community.roleSetId;
+      expect(await applicationStates(roleSetId)).toEqual(['new']);
+
       await expect(deleteButton).toBeVisible();
       await deleteButton.click();
 
@@ -400,6 +419,14 @@ test.describe('Level 1 Subspace - Applications', () => {
       // Verify the application is removed from the pending list
       await expect(applicationRow).not.toBeVisible();
 
+      // Server: "Reject and remove application" is REJECT then ARCHIVE
+      // (client-web useCommunityTabData › pendingDelete), so the application
+      // ends archived; a plain Reject (2.1) sends REJECT only. The row leaves
+      // the pending list either way, so only the state tells the two apart.
+      await expect
+        .poll(() => applicationStates(roleSetId))
+        .toEqual(['archived']);
+
       // Verify notification is received by the applicant
       const applicantPage = nonSpaceMemberPage;
       await applicantPage.goto(`${baseUrl}/home`);
@@ -415,6 +442,10 @@ test.describe('Level 1 Subspace - Applications', () => {
       const notificationsPanel = applicantPage.getByRole('dialog');
       await expect(notificationsPanel).toBeVisible();
       await expect(notificationsPanel).toContainText(/declined/i);
+      // Scoped to THIS run's space: the persona's panel holds older entries.
+      await expect(
+        applicantNotificationEntry(notificationsPanel, 'declined', baseScenario.subspace.about.profile.displayName)
+      ).toBeVisible();
     });
 
     test('2.3 View and Approve Application to Level 1 Subspace', async () => {
@@ -495,6 +526,10 @@ test.describe('Level 1 Subspace - Applications', () => {
       await expect(notificationsPanel).toContainText(
         /Welcome to the community/i
       );
+      // Scoped to THIS run's space: the persona's panel holds older entries.
+      await expect(
+        applicantNotificationEntry(notificationsPanel, 'approved', baseScenario.subspace.about.profile.displayName)
+      ).toBeVisible();
     });
 
     test('2.4 View and Reject Application to Level 1 Subspace', async () => {
@@ -540,6 +575,8 @@ test.describe('Level 1 Subspace - Applications', () => {
       // an X), mirroring the working 2.1 reject-from-row pattern.
       const rejectButton = applicationRow.getByRole('button', {
         name: 'Reject',
+        // Exact: the row also carries "Reject and remove application" (client-web#10499).
+        exact: true,
       });
       await expect(rejectButton).toBeVisible();
       await rejectButton.click();
@@ -578,6 +615,10 @@ test.describe('Level 1 Subspace - Applications', () => {
       const notificationsPanel = applicantPage.getByRole('dialog');
       await expect(notificationsPanel).toBeVisible();
       await expect(notificationsPanel).toContainText(/declined/i);
+      // Scoped to THIS run's space: the persona's panel holds older entries.
+      await expect(
+        applicantNotificationEntry(notificationsPanel, 'declined', baseScenario.subspace.about.profile.displayName)
+      ).toBeVisible();
     });
 
     test('2.5 Approve Application Directly from Data Grid', async () => {
@@ -679,6 +720,10 @@ test.describe('Level 1 Subspace - Applications', () => {
       await expect(notificationsPanel).toContainText(
         /Welcome to the community/i
       );
+      // Scoped to THIS run's space: the persona's panel holds older entries.
+      await expect(
+        applicantNotificationEntry(notificationsPanel, 'approved', baseScenario.subspace.about.profile.displayName)
+      ).toBeVisible();
     });
   });
 });

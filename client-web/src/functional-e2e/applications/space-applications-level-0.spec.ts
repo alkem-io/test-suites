@@ -6,6 +6,7 @@ import {
   TestScenarioFactory,
   TestUser,
   TestScenarioConfig,
+  TestUserManager,
   getGraphqlClient,
 } from '@alkemio/tests-lib';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
@@ -17,6 +18,15 @@ import { loginViaCrd } from '../helpers/login.helper';
 import { enableApplicationNotifications } from '../helpers/notification-settings.helper';
 import { graphqlErrorWrapper } from '@alkemio/tests-lib';
 import {
+  aboutDialog,
+  calloutHeading,
+  contentFeed,
+  spaceTitle,
+  userIdsInRole,
+} from '../helpers/space-access.helper';
+import {
+  applicantNotificationEntry,
+  applicationStates,
   applyFlowSettled,
   expectNoApplyControl,
   setMembershipPolicy,
@@ -30,6 +40,8 @@ const scenarioConfig: TestScenarioConfig = {
   space: {
     collaboration: {
       addTutorialCallouts: false,
+      // A published post callout is the member-only content 2.6 opens.
+      addPostCallout: true,
     },
     community: {
       admins: [TestUser.SPACE_ADMIN],
@@ -345,6 +357,8 @@ test.describe('Level 0 Space - Applications', () => {
       // Click the row's "Reject" action button (CRD: named button in the row).
       const rejectButton = applicationRow.getByRole('button', {
         name: 'Reject',
+        // Exact: the row also carries "Reject and remove application" (client-web#10499).
+        exact: true,
       });
       await expect(rejectButton).toBeVisible();
       await rejectButton.click();
@@ -377,6 +391,10 @@ test.describe('Level 0 Space - Applications', () => {
       const notificationsPanel = applicantPage.getByRole('dialog');
       await expect(notificationsPanel).toBeVisible();
       await expect(notificationsPanel).toContainText(/declined/i);
+      // Scoped to THIS run's space: the persona's panel holds older entries.
+      await expect(
+        applicantNotificationEntry(notificationsPanel, 'declined', baseScenario.space.about.profile.displayName)
+      ).toBeVisible();
     });
 
     test('2.2 Archive Application to Level 0 Space', async () => {
@@ -395,8 +413,14 @@ test.describe('Level 0 Space - Applications', () => {
 
       // Click the delete button (icon button with aria-label="Delete")
       const deleteButton = applicationRow.getByRole('button', {
-        name: 'Delete',
+        // client-web#10499 renamed a new application's row "Delete" action.
+        name: 'Reject and remove application',
+        exact: true,
       });
+      // Server before the action: the one application on this role set is new.
+      const roleSetId = baseScenario.space.community.roleSetId;
+      expect(await applicationStates(roleSetId)).toEqual(['new']);
+
       await expect(deleteButton).toBeVisible();
       await deleteButton.click();
 
@@ -413,6 +437,14 @@ test.describe('Level 0 Space - Applications', () => {
       // Verify the application is removed from the pending list
       await expect(applicationRow).not.toBeVisible();
 
+      // Server: "Reject and remove application" is REJECT then ARCHIVE
+      // (client-web useCommunityTabData › pendingDelete), so the application
+      // ends archived; a plain Reject (2.1) sends REJECT only. The row leaves
+      // the pending list either way, so only the state tells the two apart.
+      await expect
+        .poll(() => applicationStates(roleSetId))
+        .toEqual(['archived']);
+
       // Verify notification is received by the applicant
       const applicantPage = nonSpaceMemberPage;
       await applicantPage.goto(`${baseUrl}/home`);
@@ -428,6 +460,10 @@ test.describe('Level 0 Space - Applications', () => {
       const notificationsPanel = applicantPage.getByRole('dialog');
       await expect(notificationsPanel).toBeVisible();
       await expect(notificationsPanel).toContainText(/declined/i);
+      // Scoped to THIS run's space: the persona's panel holds older entries.
+      await expect(
+        applicantNotificationEntry(notificationsPanel, 'declined', baseScenario.space.about.profile.displayName)
+      ).toBeVisible();
     });
 
     test('2.3 View and Approve Application to Level 0 Space', async () => {
@@ -508,6 +544,10 @@ test.describe('Level 0 Space - Applications', () => {
       await expect(notificationsPanel).toContainText(
         /Welcome to the community/i
       );
+      // Scoped to THIS run's space: the persona's panel holds older entries.
+      await expect(
+        applicantNotificationEntry(notificationsPanel, 'approved', baseScenario.space.about.profile.displayName)
+      ).toBeVisible();
     });
 
     test('2.4 View and Reject Application to Level 0 Space', async () => {
@@ -553,6 +593,8 @@ test.describe('Level 0 Space - Applications', () => {
       // an X), mirroring the working 2.1 reject-from-row pattern.
       const rejectButton = applicationRow.getByRole('button', {
         name: 'Reject',
+        // Exact: the row also carries "Reject and remove application" (client-web#10499).
+        exact: true,
       });
       await expect(rejectButton).toBeVisible();
       await rejectButton.click();
@@ -591,6 +633,10 @@ test.describe('Level 0 Space - Applications', () => {
       const notificationsPanel = applicantPage.getByRole('dialog');
       await expect(notificationsPanel).toBeVisible();
       await expect(notificationsPanel).toContainText(/declined/i);
+      // Scoped to THIS run's space: the persona's panel holds older entries.
+      await expect(
+        applicantNotificationEntry(notificationsPanel, 'declined', baseScenario.space.about.profile.displayName)
+      ).toBeVisible();
     });
 
     test('2.5 Approve Application Directly from Data Grid', async () => {
@@ -689,6 +735,58 @@ test.describe('Level 0 Space - Applications', () => {
       await expect(notificationsPanel).toContainText(
         /Welcome to the community/i
       );
+      // Scoped to THIS run's space: the persona's panel holds older entries.
+      await expect(
+        applicantNotificationEntry(notificationsPanel, 'approved', baseScenario.space.about.profile.displayName)
+      ).toBeVisible();
+    });
+
+    test('2.6 The approved applicant can then open the Space and read its member-only content', async () => {
+      const adminPage = spaceAdminPage;
+      const applicantPage = nonSpaceMemberPage;
+      const space = baseScenario.space;
+      const spaceName = space.about.profile.displayName;
+      const calloutName = space.collaboration.calloutPostDisplayName;
+      const applicantId = TestUserManager.users.nonSpaceMember.id;
+
+      // Before the decision (positive control for the delta): the applicant
+      // is not a member, and the private Space opens on its About dialog
+      // with no content feed.
+      expect(await userIdsInRole(space.community.roleSetId)).not.toContain(
+        applicantId
+      );
+      await applicantPage.goto(`${baseUrl}/${space.nameId}`);
+      await expect(aboutDialog(applicantPage, spaceName)).toBeVisible();
+      await expect(applicantPage).toHaveURL(
+        new RegExp(`/${space.nameId}/about$`)
+      );
+      await expect(contentFeed(applicantPage)).toHaveCount(0);
+
+      // The admin approves the application in the data grid.
+      const applicationRow = adminPage
+        .getByRole('row')
+        .filter({ hasText: 'non space' });
+      await expect(applicationRow).toContainText('Application received');
+      await applicationRow.getByRole('button', { name: 'Approve' }).click();
+      await adminPage
+        .getByRole('button', { name: /Application approved/i })
+        .click();
+      await expect(
+        applicationRow.filter({ hasText: 'Application approved' })
+      ).toBeVisible();
+
+      // Server: the applicant now holds MEMBER on the Space's role set.
+      await expect
+        .poll(() => userIdsInRole(space.community.roleSetId))
+        .toContain(applicantId);
+
+      // UI: the same persona now opens the Space itself — title and the
+      // member-only callout — and is no longer sent to its About dialog.
+      await applicantPage.goto(`${baseUrl}/${space.nameId}`);
+      await expect(spaceTitle(applicantPage, spaceName)).toBeVisible();
+      await expect(calloutHeading(applicantPage, calloutName)).toBeVisible();
+      await expect(applicantPage).toHaveURL(new RegExp(`/${space.nameId}$`));
+      await expect(aboutDialog(applicantPage, spaceName)).toHaveCount(0);
     });
   });
   // 10419 cases live in this (L0-named) file by the requester's choice; IO-2

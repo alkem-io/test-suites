@@ -1,4 +1,3 @@
-import { randomUUID } from 'node:crypto';
 import { expect, type Browser, type Page, test } from '@playwright/test';
 import {
   assignRoleToUser,
@@ -22,11 +21,20 @@ import {
   type CalloutFormAnswerInput,
   type CreateCalloutFormQuestionInput,
   type CreateCalloutFormSettingsInput,
-  type GraphqlActor,
   type GraphqlReturnWithError,
 } from '@alkemio/tests-lib';
 import { fillSecret } from '../helpers/login.helper';
 import { must } from '../helpers/lib-actor.helper';
+import {
+  actorFor,
+  ADMIN_EMAIL,
+  FormFixtureLedger,
+  formRunId,
+  harnessPassword,
+  joinAsSelf,
+  loadHarnessPersonas,
+  openMembership,
+} from './form-callout-framing.helpers';
 import fs from 'node:fs';
 import path from 'node:path';
 
@@ -61,34 +69,23 @@ import path from 'node:path';
  * AS14 (R19a) SINGLE after MULTIPLE: a member holding two responses sees both with
  *      Withdraw and no Submit until both are withdrawn; then one submit is stored.
  *
- * Self-contained: provisions its own Kratos identities (admin API), Space, Subspace
- * and Forms through the non-interactive GraphQL endpoint, then walks the real UI.
+ * Self-contained (form-callout-framing.helpers.ts): registers its own disposable
+ * identities through public Kratos, joins them to its own Space and Subspace as
+ * themselves, seeds the Forms through `@alkemio/tests-lib`, walks the real UI,
+ * and deletes all of it in a file-level `afterAll`. Needs only the harness .env
+ * (ALKEMIO_BASE_URL, the server and Kratos public endpoints,
+ * AUTH_TEST_HARNESS_PASSWORD, the mail sink).
  *
- * Environment (defaults suit the local forge stack):
- *   ALKEMIO_BASE_URL        http://localhost:3000
- *   KRATOS_ADMIN_URL        Kratos ADMIN base incl. /admin, e.g. http://localhost:32841/admin
- *   ALKEMIO_ADMIN_EMAIL     admin@alkem.io
- *   ALKEMIO_ADMIN_PASSWORD  the platform admin's password
- *   EVIDENCE_DIR            optional folder to also write decisive screenshots to
+ * Optional: EVIDENCE_DIR, a folder to also write decisive screenshots to.
  */
 
 const BASE = (process.env.ALKEMIO_BASE_URL || 'http://localhost:3000').replace(
   /\/$/,
   ''
 );
-const KRATOS_ADMIN = (process.env.KRATOS_ADMIN_URL || '').replace(/\/$/, '');
-const ADMIN_EMAIL = process.env.ALKEMIO_ADMIN_EMAIL || 'admin@alkem.io';
-const ADMIN_PASSWORD =
-  process.env.ALKEMIO_ADMIN_PASSWORD ||
-  process.env.AUTH_ADMIN_PASSWORD ||
-  'password';
 const EVIDENCE_DIR = process.env.EVIDENCE_DIR || '';
-// Per-run secret for the throwaway identities this walk provisions (override with
-// FORGE_PERSONA_PASSWORD); a fixed literal would leave them loginable after the run.
-const USER_PASSWORD =
-  process.env.FORGE_PERSONA_PASSWORD || `F080-${randomUUID()}-Aa1!`;
 
-const RUN = Date.now().toString(36);
+const RUN = formRunId();
 const email = (tag: string) => `us2-${tag}-${RUN}@alkem.io`;
 
 type Persona = 'a2' | 'm1' | 'm2' | 'p';
@@ -103,35 +100,8 @@ const SUB_NAME = `US2 Sub ${RUN}`;
 const NOTICE_ADMINS = `Only the admins of ${SUB_NAME} can see your response`;
 const NOTICE_MEMBERS = `Members of ${SUB_NAME} can see your response`;
 
-const tokens = new Map<string, string>();
-
-async function mintToken(userEmail: string, password: string) {
-  const cached = tokens.get(userEmail);
-  if (cached) return cached;
-  let token = '';
-  // The endpoint is rate limited; retry with a bounded backoff instead of sleeping.
-  await expect(async () => {
-    const res = await fetch(`${BASE}/api/auth/non-interactive-login`, {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ email: userEmail, password }),
-    });
-    expect(res.status, `login ${userEmail}`).toBe(201);
-    token = ((await res.json()) as { api_token: string }).api_token;
-  }).toPass({ intervals: [1_000, 5_000, 15_000], timeout: 120_000 });
-  tokens.set(userEmail, token);
-  return token;
-}
-
-/** The lib actor for one of this run's identities: its bearer, minted once. */
-async function actorFor(userEmail: string): Promise<GraphqlActor> {
-  return {
-    bearerToken: await mintToken(
-      userEmail,
-      userEmail === ADMIN_EMAIL ? ADMIN_PASSWORD : USER_PASSWORD
-    ),
-  };
-}
+/** Every Space and user this file seeds; removed by the file-level afterAll. */
+const ledger = new FormFixtureLedger();
 
 type GqlError = {
   message?: string;
@@ -148,28 +118,6 @@ const detailsCode = (result: GraphqlReturnWithError<unknown>) =>
   firstError(result)?.extensions?.details?.code ??
   firstError(result)?.extensions?.code;
 
-async function createIdentity(userEmail: string, first: string, last: string) {
-  const res = await fetch(`${KRATOS_ADMIN}/identities`, {
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({
-      schema_id: 'default',
-      state: 'active',
-      traits: { email: userEmail, accepted_terms: true, name: { first, last } },
-      credentials: { password: { config: { password: USER_PASSWORD } } },
-      verifiable_addresses: [
-        { value: userEmail, verified: true, via: 'email', status: 'completed' },
-      ],
-    }),
-  });
-  expect(res.status, `kratos identity ${userEmail}`).toBe(201);
-}
-
-async function meId(userEmail: string) {
-  const data = must(await readMyUser(await actorFor(userEmail)), 'me');
-  return data.me.user!.id;
-}
-
 async function acceptCookies(page: Page) {
   const accept = page.getByRole('button', { name: /accept all cookies/i });
   await accept
@@ -180,8 +128,7 @@ async function acceptCookies(page: Page) {
 
 async function signIn(
   browser: Browser,
-  userEmail: string,
-  password = USER_PASSWORD
+  userEmail: string
 ): Promise<Page> {
   const context = await browser.newContext({
     viewport: { width: 1500, height: 1500 },
@@ -193,7 +140,10 @@ async function signIn(
   await login.click();
   await page.waitForURL(/.*login.*/);
   await page.getByRole('textbox', { name: 'E-Mail' }).fill(userEmail);
-  await fillSecret(page.getByRole('textbox', { name: 'Password' }), password);
+  await fillSecret(
+    page.getByRole('textbox', { name: 'Password' }),
+    harnessPassword()
+  );
   await page.getByRole('button', { name: 'Sign in', exact: true }).click();
   await page.waitForURL(/.*home.*/, { timeout: 30_000 });
   const newDesign = page.getByRole('button', {
@@ -372,26 +322,23 @@ let F: FormFixture; // main SINGLE form on the Subspace (AS1-AS6)
 
 test.describe.configure({ mode: 'serial' });
 
+// File level, so it also runs when a failure retires the worker mid-file.
+test.afterAll(async () => {
+  await ledger.teardown();
+});
+
 test.describe(
   'US2 — submit a response to a Form',
   { tag: ['@forge-acceptance'] },
   () => {
-    test.setTimeout(300_000);
-
     test.beforeAll(async () => {
+      // Four self-registrations, each a verification-mail round trip.
       test.setTimeout(300_000);
-      expect(
-        KRATOS_ADMIN,
-        'KRATOS_ADMIN_URL must point at the Kratos admin API (e.g. http://localhost:32841/admin)'
-      ).not.toBe('');
-
-      await createIdentity(personaEmail.a2, 'Ada', 'Admin');
-      await createIdentity(personaEmail.m1, 'Mia', 'Memberone');
-      await createIdentity(personaEmail.m2, 'Max', 'Membertwo');
-      await createIdentity(personaEmail.p, 'Pia', 'Outsider');
-      for (const p of ['a2', 'm1', 'm2', 'p'] as Persona[]) {
-        fx.ids[p] = await meId(personaEmail[p]);
-      }
+      await loadHarnessPersonas();
+      fx.ids.a2 = await ledger.registerUser(personaEmail.a2, 'Ada', 'Admin');
+      fx.ids.m1 = await ledger.registerUser(personaEmail.m1, 'Mia', 'Memberone');
+      fx.ids.m2 = await ledger.registerUser(personaEmail.m2, 'Max', 'Membertwo');
+      fx.ids.p = await ledger.registerUser(personaEmail.p, 'Pia', 'Outsider');
 
       const admin = await actorFor(ADMIN_EMAIL);
       const me = must(await readMyUser(admin), 'admin account');
@@ -402,12 +349,16 @@ test.describe(
             nameID: `us2-space-${RUN}`,
             about: { profileData: { displayName: `US2 Space ${RUN}` } },
             collaborationData: { calloutsSetData: {} },
-            settings: { privacy: { mode: SpacePrivacyMode.Public } },
+            settings: {
+              privacy: { mode: SpacePrivacyMode.Public },
+              membership: openMembership('space'),
+            },
           },
           admin
         ),
         'create space'
       ).createSpace;
+      ledger.space(space.id);
       fx.spaceUrl = space.about.profile.url;
       fx.spaceCalloutsSetId = space.collaboration.calloutsSet.id;
       const sub = must(
@@ -418,6 +369,7 @@ test.describe(
             about: { profileData: { displayName: SUB_NAME } },
             collaborationData: { calloutsSetData: {} },
             settings: {
+              membership: openMembership('subspace'),
               collaboration: {
                 allowEventsFromSubspaces: true,
                 allowGuestContributions: false,
@@ -436,17 +388,15 @@ test.describe(
       fx.subCalloutsSetId = sub.collaboration.calloutsSet.id;
       fx.subRoleSetId = sub.community.roleSet.id;
 
-      const assign = async (roleSetID: string, p: Persona, role: RoleName) =>
-        must(
-          await assignRoleToUser(fx.ids[p], roleSetID, role, admin),
-          `assign ${role} ${p}`
-        );
+      // Slice B: membership is joined as self — the Space first, then the Subspace.
       // a2 is an admin of the Subspace only; p is a member of nothing.
-      for (const p of ['a2', 'm1', 'm2'] as Persona[]) {
-        await assign(space.community.roleSet.id, p, RoleName.Member);
-        await assign(sub.community.roleSet.id, p, RoleName.Member);
-      }
-      await assign(sub.community.roleSet.id, 'a2', RoleName.Admin);
+      const members = (['a2', 'm1', 'm2'] as Persona[]).map(p => personaEmail[p]);
+      await joinAsSelf(space.community.roleSet.id, members, 'the Space');
+      await joinAsSelf(sub.community.roleSet.id, members, 'the Subspace');
+      must(
+        await assignRoleToUser(fx.ids.a2, sub.community.roleSet.id, RoleName.Admin, admin),
+        'assign ADMIN a2'
+      );
 
       F = await createForm(personaEmail.a2, fx.subCalloutsSetId, `US2 Form ${RUN}`);
     });
@@ -981,11 +931,13 @@ test.describe(
             .getByRole('heading', { name: formTitle, exact: true })
         ).toBeVisible();
         await expect(dialog.getByText('3 questions', { exact: true })).toBeVisible();
-        await expect(dialog.getByText(NOTICE_ADMINS)).toBeVisible();
         await expect(dialog.getByText(formDescription)).toBeVisible();
       };
+      // The visibility notice sits in the footer row beside Submit Form
+      // (client-web#10382), so it collapses with the questions and footer.
       const body = async (visible: boolean) => {
         const state = visible ? 'toBeVisible' : 'toBeHidden';
+        await expect(dialog.getByText(NOTICE_ADMINS))[state]();
         await expect(dialog.getByRole('textbox', { name: /What is your name/ }))[state]();
         await expect(dialog.getByRole('radio', { name: 'Beta' }))[state]();
         await expect(submitButton(dialog))[state]();

@@ -1,0 +1,15 @@
+query ReadCalloutFramingWhiteboard($calloutId: UUID!) {
+  lookup {
+    callout(ID: $calloutId) {
+      id
+      framing {
+        id
+        whiteboard {
+          id
+          nameID
+          isMultiUser
+        }
+      }
+    }
+  }
+}
