@@ -73,6 +73,17 @@ const searchFor = async (page: Page) => {
 const results = (page: Page) =>
   page.getByRole('list', { name: 'spaces', exact: true }).getByRole('listitem');
 
+/** The result card titled with the Space's display name (its <h3>). */
+const card = (page: Page, displayName: string) =>
+  results(page).getByRole('heading', {
+    level: 3,
+    name: displayName,
+    exact: true,
+  });
+
+const l0Name = () => baseScenario.space.about.profile.displayName;
+const l1Name = () => baseScenario.subspace.about.profile.displayName;
+
 const chooseFilter = async (page: Page, option: string) => {
   await page.getByRole('button', { name: /filters/i }).click();
   const menu = page.getByRole('menu');
@@ -209,15 +220,15 @@ test.describe('Explore Spaces - search count', { tag: '@local-stack' }, () => {
         adminPage.getByText(`3 spaces matching “${word}”`, { exact: true })
       ).toBeVisible();
       await expect(results(adminPage)).toHaveCount(3);
+      await expect(card(adminPage, l1Name())).toBeVisible();
 
       await chooseFilter(adminPage, 'Public only');
 
-      // The private Subspace is hidden (and, depending on how privacy is
-      // inherited, its own Subspace with it); the public Space stays.
-      await expect
-        .poll(() => results(adminPage).count(), { timeout: 10_000 })
-        .toBeLessThan(3);
-      expect(await results(adminPage).count()).toBeGreaterThanOrEqual(1);
+      // The private Subspace is hidden and the public Space stays. Its own
+      // Subspace may go with it, depending on how privacy is inherited, so
+      // that card is not asserted either way.
+      await expect(card(adminPage, l1Name())).toHaveCount(0);
+      await expect(card(adminPage, l0Name())).toBeVisible();
       await expect(
         adminPage.getByText(`Spaces matching “${word}”`, { exact: true })
       ).toBeVisible();
@@ -245,6 +256,8 @@ test.describe('Explore Spaces - search count', { tag: '@local-stack' }, () => {
         page.getByText(`1 space matching “${word}”`, { exact: true })
       ).toBeVisible();
       await expect(results(page)).toHaveCount(1);
+      // The one card is the public Space, not the private Subspace.
+      await expect(card(page, l0Name())).toBeVisible();
       await expect(
         page.getByRole('button', { name: /load more/i })
       ).toHaveCount(0);

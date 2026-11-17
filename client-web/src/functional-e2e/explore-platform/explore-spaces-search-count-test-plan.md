@@ -57,8 +57,8 @@ partitioning; BVA = page size at and below the number of results.
 | UI-02 | P2 | DT | Type "Subspaces only" → "2 spaces matching" and two cards | same | counts only Subspaces when Type is "Subspaces only" |
 | UI-03 | P2 | DT | Privacy "Public only" → "Spaces matching “word”", no number, cards still shown | same | names the terms without a number while Privacy filters the results |
 | UI-05 | P2 | DT | `space.member` (Space only), Membership "My Spaces" → one card, "Spaces matching “word”", no number | same | names the terms without a number while Membership filters the results |
-| UI-03a | P2 | DT | Admin, private Subspace, "Public only" → fewer cards, no number | same | hides a private Subspace under Public only |
-| UI-04 | P1 | DT | Private Subspace: non-member sees "1 space matching", one card, no Load more; the admin's API total stays 3 | same | counts only what the user may see when a Subspace is private |
+| UI-03a | P2 | DT | Admin, private Subspace, "Public only" → the Subspace card gone, the Space card kept, no number | same | hides a private Subspace under Public only |
+| UI-04 | P1 | DT | Private Subspace: non-member sees "1 space matching", one card (the Space), no Load more; the admin's API total stays 3 | same | counts only what the user may see when a Subspace is private |
 
 ## Not covered
 
