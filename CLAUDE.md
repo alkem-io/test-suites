@@ -204,7 +204,7 @@ A new feature area is added by creating its directory alongside these and listin
 
 - Branded Chrome by default; `PW_BROWSER` switches the whole run to chromium / firefox / webkit / msedge / a mobile preset
 - Session-based auth fixtures with storage state persistence in `.auth/` (cookie consent is seeded into the session, so no banner in persona contexts)
-- CI: 1 worker, 2 retries; Local: parallel files in the interactive runner, no retries
+- CI: two lanes (`serial` with 1 worker, `parallel` with 3; see `client-web/docs/e2e-conventions.md` › Suite parallelism), 1 retry; Local: parallel files in the interactive runner, no retries
 - Conventions and the definition of done: `client-web/docs/e2e-conventions.md`
 
 ### Test Personas
