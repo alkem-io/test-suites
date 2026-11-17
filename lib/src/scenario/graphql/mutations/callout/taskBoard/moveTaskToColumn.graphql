@@ -1,0 +1,7 @@
+mutation MoveTaskToColumn($moveData: MoveTaskToColumnInput!) {
+  moveTaskToColumn(moveData: $moveData) {
+    id
+    sortOrder
+    classification { id tagsets { id name tags } }
+  }
+}

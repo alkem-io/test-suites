@@ -6,10 +6,10 @@
 
 ## How to run
 ```bash
-cd client-web && WHITEBOARD_COLLAB_FIXED=1 pnpm exec playwright test src/functional-e2e/whiteboard-collaboration/
+cd client-web && pnpm exec playwright test src/functional-e2e/whiteboard-collaboration/
 pnpm -C server-api exec vitest run --project contract src/contract/whiteboard-peer.it-spec.ts   # T-1 self-test
 ```
-- **Gate:** the target env's client-web must resolve `@excalidraw-yjs/excalidraw` ≥ 0.5.6 (M-2). Until then both walks are `test.skip` (house known-defect convention). **`WHITEBOARD_COLLAB_FIXED=1` lifts the skip** for a local run against a build that has the fix (`https://pkg.pr.new/@excalidraw-yjs/excalidraw@13`, or an environment after the bump); the nightly leaves it unset, so the *Whiteboard collaboration* suite lists both walks as skipped. The client-web bump PR must drop the skip (delete `fixedBuildAvailable` use in the two specs and the flag). On a build at 0.5.5 the walks must be **red** (non-vacuity; see Regression guards).
+- **Gate (lifted 2026-11-12, W2 #711 L-5):** the walks need a client-web that resolves `@excalidraw-yjs/excalidraw` ≥ 0.5.6. client-web `develop` does since `cd2d50419` (2026-11-06), and the test cluster's client-web is deployed from `develop` (deploy run of `25ded146`, 2026-11-12). The `WHITEBOARD_COLLAB_FIXED` skip is gone, and both walks run in the *Whiteboard collaboration* nightly suite. On a build at 0.5.5 the walks must be **red** (non-vacuity; see Regression guards).
 - Local stack recipe: `ALKEMIO_BASE_URL=http://localhost:3000`, `UI_HEADLESS=true`, the harness persona password (not the server admin password), no `KRATOS_ADMIN_URL`. The Node peer authenticates through the gateway with the persona's bearer (`TestUser`) plus an `Origin` equal to the app origin; it also accepts a browser `{ cookieHeader }`.
 - The Space needs the `SPACE_FEATURE_WHITEBOARD_MULTI_USER` licence plan, or every second connection is read-only. Run serially: one room per test.
 - The oracle is the Node peer's **raw** Y.Map read. There is no DOM or GraphQL view of canvas content (harness.md › Whiteboards).

@@ -2,20 +2,26 @@ name: Nightly Playwright
 
 on:
   workflow_dispatch:
+    inputs:
+      parallel_workers:
+        description: >-
+          How many spec files of the parallel lane run at once. 1 runs
+          everything one file at a time, as before.
+        type: choice
+        options: ['1', '2', '3', '4']
+        default: '3'
 
 jobs:
   test:
-    # Pinned: `ubuntu-latest` migrated to Ubuntu 26.04 on 2026-10-19 and
-    # `playwright install --with-deps` has no dependency list for 26.04 on
-    # Playwright 1.58.x (run 40482406834). Lift the pin once Playwright
-    # supports ubuntu26.04-x64.
-    runs-on: ubuntu-24.04
+    # The ARC e2e lane (Scaleway platform-compute-v3, 4–6 vCPU), shared with
+    # the server-api nightly. Its image, ghcr.io/alkem-io/test-suites/e2e-runner
+    # (infra/e2e-runner), already holds the browsers, their system libraries
+    # and poppler: the pods run without privilege escalation, so this job
+    # cannot sudo. The runner group alkemio-e2e-ci only admits this workflow
+    # from develop.
+    runs-on: arc-e2e-linux-x64
     permissions:
       contents: write
-
-    #container:
-    # it is recommended to match the image version with the installed playwright version
-    #      image: mcr.microsoft.com/playwright:v1.57.0-noble
 
     steps:
       - uses: actions/checkout@v7
@@ -39,16 +45,19 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Install Playwright Browsers
-        # The nightly config pins channel: 'chrome' (branded Chrome, matching the
-        # interactive config), so install that channel explicitly — the default
-        # `playwright install` only provisions the bundled Chromium.
-        run: pnpm --filter @alkemio/test-suite-client-web exec playwright install --with-deps chromium chrome
-
-      - name: Install poppler-utils
-        # The Memo PDF download suite reads each downloaded PDF with pdftotext
-        # and pdffonts; its content checks fail (by design) without them.
-        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends poppler-utils
+      - name: Check the runner image's browser tooling
+        # `playwright install chromium` is a no-op when the image matches the
+        # lockfile, and downloads the new build without root when a Playwright
+        # bump got ahead of the image (move the lane to the new image tag then:
+        # only the system libraries cannot be topped up here). Branded Chrome
+        # (the nightly's channel: 'chrome') and poppler (Memo PDF download)
+        # must already be in the image; fail now rather than hours in.
+        run: |
+          set -euo pipefail
+          pnpm --filter @alkemio/test-suite-client-web exec playwright install chromium
+          google-chrome --version
+          pdftotext -v 2>&1 | head -1
+          pdffonts -v 2>&1 | head -1
 
       - name: Set run folder variables
         run: |
@@ -56,8 +65,14 @@ jobs:
           echo "RUN_DATE=$DATE" >> $GITHUB_ENV
           echo "RUN_ID=${{ github.run_id }}" >> $GITHUB_ENV
 
-      - name: Run Playwright tests
-        id: playwright
+      # The nightly is two runs of the same configuration (see `Lane` in
+      # client-web/config/playwright.shared.ts). The serial lane holds the
+      # suites that share state with other suites, and starts with the
+      # platform smoke check. The parallel lane holds the suites that only
+      # touch what they seed. Each run writes a blob report; the two are
+      # merged into the one HTML report below.
+      - name: Run Playwright tests (serial lane)
+        id: serial
         continue-on-error: true
         env:
           ALKEMIO_BASE_URL: ${{ vars.ALKEMIO_BASE_URL }}
@@ -68,7 +83,40 @@ jobs:
           KRATOS_ENDPOINT: ${{ vars.KRATOS_ENDPOINT }}
           MAIL_SLURPER_ENDPOINT: ${{ vars.MAIL_SLURPER_ENDPOINT }}
           AUTH_TEST_HARNESS_PASSWORD: ${{ secrets.AUTH_TEST_HARNESS_PASSWORD }}
+          PW_LANE: serial
+          PW_WORKERS: '1'
+          PW_BLOB_REPORT: serial
         run: pnpm --filter @alkemio/test-suite-client-web run test:nightly
+
+      - name: Run Playwright tests (parallel lane)
+        id: parallel
+        continue-on-error: true
+        env:
+          ALKEMIO_BASE_URL: ${{ vars.ALKEMIO_BASE_URL }}
+          ALKEMIO_SERVER: ${{ vars.ALKEMIO_SERVER }}
+          ALKEMIO_SERVER_REST: ${{ vars.ALKEMIO_SERVER_REST }}
+          ALKEMIO_SERVER_URL: ${{ vars.ALKEMIO_SERVER_URL }}
+          ALKEMIO_SERVER_WS: ${{ vars.ALKEMIO_SERVER_WS }}
+          KRATOS_ENDPOINT: ${{ vars.KRATOS_ENDPOINT }}
+          MAIL_SLURPER_ENDPOINT: ${{ vars.MAIL_SLURPER_ENDPOINT }}
+          AUTH_TEST_HARNESS_PASSWORD: ${{ secrets.AUTH_TEST_HARNESS_PASSWORD }}
+          PW_LANE: parallel
+          PW_WORKERS: ${{ inputs.parallel_workers }}
+          PW_BLOB_REPORT: parallel
+        run: pnpm --filter @alkemio/test-suite-client-web run test:nightly
+
+      - name: Merge the two lanes into one report
+        if: ${{ always() }}
+        env:
+          PLAYWRIGHT_HTML_OUTPUT_DIR: playwright-report
+          PLAYWRIGHT_HTML_OPEN: never
+        run: |
+          set -euo pipefail
+          mkdir -p client-web/blob-report/merged
+          # Whatever lanes wrote a report: a lane that crashed must not cost
+          # the other lane's results.
+          find client-web/blob-report/serial client-web/blob-report/parallel -name '*.zip' -exec cp {} client-web/blob-report/merged/ \; 2>/dev/null || true
+          pnpm --filter @alkemio/test-suite-client-web exec playwright merge-reports --reporter html blob-report/merged
 
       - name: Publish report to GitHub Pages
         if: ${{ always() }}
@@ -84,10 +132,10 @@ jobs:
             "playwright" \
             "Playwright" \
             "client-web/playwright-report" \
-            "${{ steps.playwright.outcome }}"
+            "${{ steps.serial.outcome == 'success' && steps.parallel.outcome == 'success' && 'success' || 'failure' }}"
 
       - name: Fail job if Playwright tests failed
-        if: ${{ steps.playwright.outcome == 'failure' }}
+        if: ${{ steps.serial.outcome != 'success' || steps.parallel.outcome != 'success' }}
         run: exit 1
 
   deploy:

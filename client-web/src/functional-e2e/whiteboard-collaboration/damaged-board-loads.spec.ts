@@ -25,11 +25,9 @@ import {
   dragOnCanvas,
   editorElement,
   expectEditorAlive,
-  fixedBuildAvailable,
   openWhiteboardInEditor,
   pickTool,
   seedWhiteboardSpace,
-  SKIP_UNTIL_FIXED_BUILD,
   type WhiteboardSpace,
   waitForCollaborators,
 } from './whiteboard-collaboration.helpers';
@@ -40,7 +38,6 @@ const peers: WhiteboardPeer[] = [];
 const personas: PersonaPage[] = [];
 
 test.describe('WC-02 damaged board loads', () => {
-  test.skip(!fixedBuildAvailable, SKIP_UNTIL_FIXED_BUILD);
   test.describe.configure({ retries: 0 });
 
   test.beforeAll(async () => {

@@ -46,7 +46,8 @@ PW_BROWSER=firefox pnpm run test:nightly --project="Public Space"               
 | `PW_BROWSER` | `chrome` `chromium` `firefox` `webkit` `msedge` `mobile-chrome` `mobile-safari` | `chrome` |
 | `PW_VIEWPORT` | `<w>x<h>` (desktop presets) | `1920x1080` |
 | `PW_WORKERS` | integer | `1` |
-| `PW_RETRIES` | integer | `0` locally, `2` on CI |
+| `PW_RETRIES` | integer | `0` locally, `1` on CI |
+| `PW_LANE` | `parallel` `serial` (nightly only) | every suite |
 | `UI_HEADLESS` | `false` to watch | headless |
 
 `KRATOS_ADMIN_URL` (optional): since workspace#027 Slice B no actor can assign

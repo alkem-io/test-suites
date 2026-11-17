@@ -18,7 +18,13 @@ import path from 'path';
  *   PW_VIEWPORT    "<width>x<height>" for desktop browsers (default 1920x1080)
  *   PW_WORKERS     worker count (default 1 — see `SUITE PARALLELISM` in
  *                  docs/e2e-conventions.md before raising it)
- *   PW_RETRIES     retries per test (default: 0 locally, 2 on CI)
+ *   PW_LANE        parallel | serial: run only the suites of that lane
+ *                  (default: every suite). See `Lane` below.
+ *   PW_RETRIES     retries per test (default: 0 locally, 1 on CI)
+ *   PW_BLOB_REPORT a name: write a blob report
+ *                  `blob-report/<name>/<name>.zip` instead of the HTML
+ *                  report, for `playwright merge-reports` to join the runs of
+ *                  several lanes into one report
  *   UI_HEADLESS    "false" to watch the browser (headless otherwise)
  *   ALKEMIO_BASE_URL  the app under test (default http://localhost:3000)
  *
@@ -119,6 +125,56 @@ export const TIERS = {
 export type Tier = keyof typeof TIERS;
 
 // ---------------------------------------------------------------------------
+// Lanes
+// ---------------------------------------------------------------------------
+
+/**
+ * Whether a suite's files may run while files of other suites run.
+ *
+ *   serial   — the default. The suite changes or reads something other suites
+ *              share: a harness persona's own state, platform-wide state, the
+ *              whole mail sink, a server-wide counter. It runs with one worker.
+ *   parallel — every file seeds what it uses under run-unique names, deletes
+ *              it at file level, reads mail by recipient, and asserts only on
+ *              what it seeded. Checked file by file against
+ *              docs/e2e-conventions.md › Suite parallelism before the suite
+ *              is marked.
+ *
+ * A lane is a claim about the suite, not a setting of the run: PW_LANE picks
+ * which lane a run takes, PW_WORKERS how many files of it run at once.
+ */
+export type Lane = 'parallel' | 'serial';
+
+export function laneOf(project: Project): Lane {
+  return (project.metadata as { lane?: Lane } | undefined)?.lane ?? 'serial';
+}
+
+/**
+ * The projects PW_LANE asks for; all of them when it is unset. A project and
+ * the projects it depends on must be in one lane, or the dependency would run
+ * again in the other lane's run.
+ */
+export function selectLane(projects: Project[]): Project[] {
+  const byName = new Map(projects.map(project => [project.name, project]));
+  for (const project of projects) {
+    for (const name of project.dependencies ?? []) {
+      const dependency = byName.get(name);
+      if (dependency && laneOf(dependency) !== laneOf(project)) {
+        throw new Error(
+          `"${project.name}" (${laneOf(project)}) depends on "${name}" (${laneOf(dependency)}): put both in one lane`
+        );
+      }
+    }
+  }
+  const lane = process.env.PW_LANE;
+  if (!lane) return projects;
+  if (lane !== 'parallel' && lane !== 'serial') {
+    throw new Error(`PW_LANE="${lane}" must be "parallel" or "serial"`);
+  }
+  return projects.filter(project => laneOf(project) === lane);
+}
+
+// ---------------------------------------------------------------------------
 // Projects
 // ---------------------------------------------------------------------------
 
@@ -127,9 +183,13 @@ export type SuiteOptions = {
   name: string;
   /** Spec globs relative to `testDir`. */
   testMatch: string | RegExp | (string | RegExp)[];
+  /** Spec globs to leave out of `testMatch` (a file that runs in another lane). */
+  testIgnore?: string | RegExp | (string | RegExp)[];
   /** Defaults to `src/functional-e2e`; forge-generated walks pass `GENERATED_WALKS_DIR`. */
   testDir?: string;
   tier?: Tier;
+  /** Defaults to `serial`; see `Lane` for what `parallel` promises. */
+  lane?: Lane;
   /** Project names this suite depends on (e.g. a persona sign-in `setup` project). */
   dependencies?: string[];
   /** Per-suite overrides of the browser `use` — a different viewport, a locale… */
@@ -154,8 +214,10 @@ export function suite(options: SuiteOptions): Project {
     name: options.name,
     testDir: options.testDir ?? FUNCTIONAL_E2E_DIR,
     testMatch: options.testMatch,
+    testIgnore: options.testIgnore,
     dependencies: options.dependencies,
     grep: options.grep,
+    metadata: { lane: options.lane ?? 'serial' },
     timeout: tier.timeout,
     expect: { timeout: tier.expect },
     use: { ...browserUse, ...capture, ...options.use },
@@ -203,12 +265,26 @@ export function baseConfig(options: BaseConfigOptions): PlaywrightTestConfig {
   const tier = TIERS[options.tier ?? 'standard'];
   const workers = Number(process.env.PW_WORKERS) || 1;
   const retries =
-    process.env.PW_RETRIES !== undefined ? Number(process.env.PW_RETRIES) : IS_CI ? 2 : 0;
+    process.env.PW_RETRIES !== undefined ? Number(process.env.PW_RETRIES) : IS_CI ? 1 : 0;
   // Playwright resolves an explicit reporter folder against the CONFIG file's
   // directory; the runners live in config/, but the publish step and
   // .gitignore expect client-web/<folder>. Anchor both at the package root.
   const packageRoot = path.resolve(__dirname, '..');
   const reportFolder = path.resolve(packageRoot, options.reportFolder ?? 'playwright-report');
+  const blobName = process.env.PW_BLOB_REPORT;
+  // A folder per name: the blob reporter empties its folder when a run starts,
+  // so two runs writing to one folder would leave only the second report.
+  const report: NonNullable<PlaywrightTestConfig['reporter']> = blobName
+    ? [
+        [
+          'blob',
+          {
+            outputDir: path.resolve(packageRoot, 'blob-report', blobName),
+            fileName: `${blobName}.zip`,
+          },
+        ],
+      ]
+    : [['html', { open: 'never', outputFolder: reportFolder }]];
   return {
     testDir: FUNCTIONAL_E2E_DIR,
     outputDir: path.resolve(packageRoot, 'test-results'),
@@ -222,9 +298,7 @@ export function baseConfig(options: BaseConfigOptions): PlaywrightTestConfig {
     // per project whether it runs only the tagged cases or their whole file
     // (a tagged case inside a serial walk needs the walk's earlier steps).
     ...(options.localStackOnly ? {} : { grepInvert: LOCAL_STACK_TAG }),
-    reporter: IS_CI
-      ? [['github'], ['html', { open: 'never', outputFolder: reportFolder }]]
-      : [['list'], ['html', { open: 'never', outputFolder: reportFolder }]],
+    reporter: [[IS_CI ? 'github' : 'list'], ...report],
     timeout: tier.timeout,
     expect: { timeout: tier.expect },
     use: {

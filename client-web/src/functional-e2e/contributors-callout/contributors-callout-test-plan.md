@@ -20,7 +20,7 @@ cd ../client-web
 UI_HEADLESS=true pnpm exec playwright test src/functional-e2e/contributors-callout --workers=1
 ```
 
-Nightly: the API specs run in the `nightly` vitest project (`callout/**` glob). The five `us*` walks run as the **`Contributors callout`** project of `config/playwright.config.nightly.ts` (60 s / 10 s budgets). The shipped `0.1contributors-callout.spec.ts` is **not** in the nightly yet: its scenario cleanup lives only in its Member block, so a failure in the Admin block leaks a Space, an Organization and a VC — and it is red on QA-PF-01 today. Add it once its cleanup moves to file level (decision for the suite owner).
+Nightly: the API specs run in the `nightly` vitest project (`callout/**` glob). The five `us*` walks run as the **`Contributors callout`** project of `config/playwright.config.nightly.ts` (60 s / 10 s budgets). The shipped `0.1contributors-callout.spec.ts` joined the nightly on 2026-11-12 (W2 Tier 0 item 7): its scenario cleanup is now a file-level `afterAll` (a red mid-Admin-block left nothing behind on test-alkem.io), 1.1 opens the "More to add" menu where the Contributors chip now lives, and 1.4 (QA-PF-01) finds the VC card with `cardFor` because the card names its profile on two links (avatar + title).
 
 ## Risk
 
@@ -39,7 +39,7 @@ Nightly: the API specs run in the `nightly` vitest project (`callout/**` glob). 
 
 | Area                                                                                                                                           | Where                                                                                                                                                                     |
 | ---------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Create / edit the Contributors post, type switch with counts, name search, empty states, List/Map, member cannot create (features 008/009/025) | `0.1contributors-callout.spec.ts` — kept, not in the nightly (see How to run); red on QA-PF-01 (test 1.4 finds two exact-name links) and leaks its scenario when it fails |
+| Create / edit the Contributors post, type switch with counts, name search, empty states, List/Map, member cannot create (features 008/009/025) | `0.1contributors-callout.spec.ts` — in the nightly since 2026-11-12 (W2 Tier 0 item 7); QA-PF-01 resolved test-side (1.4 uses `cardFor`); file-level cleanup |
 | `ContributorCollectionItem` before 077 (identity, role, location)                                                                              | `server-api/.../visual/*` (create helper only)                                                                                                                            |
 
 ## Scenario → test mapping

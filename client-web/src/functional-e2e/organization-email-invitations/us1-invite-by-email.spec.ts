@@ -318,7 +318,9 @@ adminTest.describe(
         await expect(row).toBeVisible({ timeout: 15_000 });
         await expect(row).toContainText('Invited (external)');
         await expect(row).toContainText('Associate + Admin');
-        await expect(row.getByRole('button', { name: 'Delete' })).toBeVisible();
+        await expect(
+          row.getByRole('button', { name: 'Revoke invitation' })
+        ).toBeVisible();
         await expect(
           row.getByRole('button', { name: 'Resend invitation email' })
         ).toBeVisible();
@@ -380,10 +382,14 @@ adminTest.describe(
         );
         const row = pendingRow(page, chainEmail);
         await expect(row).toBeVisible({ timeout: 15_000 });
-        await row.getByRole('button', { name: 'Delete' }).click();
+        await row.getByRole('button', { name: 'Revoke invitation' }).click();
         // Revoking destroys a pending invitation, so it is confirmed: answer the
         // dialog explicitly rather than asserting on a table that is inert behind it.
-        await page.getByRole('button', { name: 'Revoke invitation' }).click();
+        // The row's button and the dialog's share a name, hence the scope.
+        await page
+          .getByRole('alertdialog')
+          .getByRole('button', { name: 'Revoke invitation' })
+          .click();
         await expect(pendingRow(page, chainEmail)).toHaveCount(0, {
           timeout: 15_000,
         });

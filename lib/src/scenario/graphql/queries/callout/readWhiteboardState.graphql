@@ -1,0 +1,15 @@
+query ReadWhiteboardState($whiteboardId: UUID!) {
+  lookup {
+    whiteboard(ID: $whiteboardId) {
+      id
+      updatedDate
+      isMultiUser
+      previewSettings { mode }
+      profile {
+        id
+        visual(type: CARD) { id uri }
+        preview: visual(type: WHITEBOARD_PREVIEW) { id uri }
+      }
+    }
+  }
+}

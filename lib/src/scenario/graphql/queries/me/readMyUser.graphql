@@ -4,6 +4,8 @@ query ReadMyUser {
     user {
       id
       nameID
+      firstName
+      lastName
       profile { id displayName url }
       account { id }
     }

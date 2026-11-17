@@ -76,7 +76,7 @@ const useWhiteboardSpace = (name: string, { entitled }: { entitled: boolean }) =
 };
 
 describe('@contract T-1 whiteboard collaboration peer (Space with the multi-user plan)', () => {
-  const { connect } = useWhiteboardSpace('wb-peer', { entitled: true });
+  const { state, connect } = useWhiteboardSpace('wb-peer', { entitled: true });
 
   test('T-1a a member is admitted with write access and reads an empty raw doc', async () => {
     const peer = await connect(TestUser.QA_USER);
@@ -163,6 +163,55 @@ describe('@contract T-1 whiteboard collaboration peer (Space with the multi-user
     // Two round trips: only a consumed echo re-arms the idle timer, so a second heartbeat proves it.
     await peer.waitFor(() => peer.heartbeatsEchoed >= 2, 'two heartbeat echoes from the service');
     expect(peer.endedReason).toBeUndefined();
+  });
+
+  // The reader joins while the writer still holds the room, so it is served from the live room: this pins the barrier's
+  // answer and that the write is in the room, NOT a load from storage (that is E8-4's cold peer, and #545 at wire level).
+  test('T-1j positive: awaitDurable resolves once the service answers `persisted` to this peer (dirty room, then clean), and a second peer in the still-live room reads the write', async () => {
+    const writer = await connect(TestUser.QA_USER);
+    await writer.write((elements, Y) => {
+      const element = new Y.Map<unknown>();
+      element.set('type', 'rectangle');
+      element.set('x', 42);
+      elements.set('el-durable', element);
+    });
+    await writer.awaitDurable();
+    // once more on a now-clean room: answered at once, and the barrier is reusable (one outstanding at a time)
+    await writer.awaitDurable();
+    const reader = await connect(TestUser.SPACE_ADMIN);
+    const raw = await reader.waitFor(() => reader.rawElement('el-durable'), 'the durable element to reach a fresh peer');
+    expect(raw).toEqual({ type: 'rectangle', x: 42 });
+  });
+
+  test('T-1j invalid transitions: a second concurrent request is refused locally, and a closed peer cannot ask', async () => {
+    const peer = await connect(TestUser.QA_USER);
+    const first = peer.awaitDurable();
+    await expect(peer.awaitDurable()).rejects.toThrow(/still pending/);
+    await first;
+    await peer.close();
+    await expect(peer.awaitDurable()).rejects.toThrow(/peer is closed/);
+  });
+
+  test('T-1k remoteUsernames: a peer reads the names the other sessions announce, never its own', async () => {
+    const observer = await connect(TestUser.SPACE_ADMIN);
+    const other = await connect(TestUser.QA_USER);
+    await observer.announce(`observer-${uniqueId}`);
+    await other.announce(`other-${uniqueId}`);
+    await observer.waitFor(() => observer.remoteUsernames().includes(`other-${uniqueId}`), "the other session's name");
+    expect(observer.remoteUsernames(), 'its own announcement is not a remote name').not.toContain(`observer-${uniqueId}`);
+    await other.waitFor(() => other.remoteUsernames().includes(`observer-${uniqueId}`), "the observer's name");
+  });
+
+  test('T-1l guestName: an anonymous peer joining as a named guest is refused on a board that is not shared', async () => {
+    await expect(
+      connectWhiteboardPeer({
+        whiteboardId: state.whiteboardId,
+        actor: { anonymous: 'private' },
+        guestName: `contract guest ${uniqueId}`,
+        requireWrite: false,
+        connectTimeoutMs: 10_000,
+      })
+    ).rejects.toThrow();
   });
 });
 
@@ -287,5 +336,12 @@ describe('@contract T-1 whiteboard collaboration peer (Space WITHOUT the multi-u
     expect(second.access).toBe('read');
     expect(second.accessReason).toBe('multi-user-not-allowed');
     await expect(second.write(() => undefined)).rejects.toThrow(/read access/);
+  });
+
+  test('T-1j negative control: a read-only peer is refused by the barrier (so a peer that resolves on any control frame cannot pass the positive)', async () => {
+    await connect(TestUser.QA_USER);
+    const readOnly = await connect(TestUser.SPACE_ADMIN, { requireWrite: false });
+    expect(readOnly.access).toBe('read');
+    await expect(readOnly.awaitDurable({ timeoutMs: 10_000 })).rejects.toThrow(/failed: this session is read-only/);
   });
 });

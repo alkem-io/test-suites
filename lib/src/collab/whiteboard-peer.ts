@@ -87,6 +87,12 @@ export type ConnectWhiteboardPeerOptions = {
   clientId?: number;
   /** Reject unless the service admits the peer with write access. Default true. */
   requireWrite?: boolean;
+  /**
+   * Join as a named guest, as the public route's browser does: the name goes
+   * in the URL's `guestName` (client-web `UnifiedCollabProvider`), and with an
+   * `{ anonymous }` actor the gateway turns it into a GLOBAL_GUEST identity.
+   */
+  guestName?: string;
   /** Document kind in the URL. Default `whiteboard`. */
   type?: "whiteboard" | "memo";
   /** Override the origin the URL and `Origin` header are derived from. */
@@ -104,6 +110,8 @@ export type ConnectWhiteboardPeerOptions = {
 
 export type WaitForOptions = { timeoutMs?: number; intervalMs?: number };
 
+export type AwaitDurableOptions = { timeoutMs?: number };
+
 const PEER_ORIGIN = Symbol("whiteboard-peer-local-write");
 const REMOTE_ORIGIN = Symbol("whiteboard-peer-remote");
 // client-web `unifiedCollabProvider.ts`: a heartbeat after 15 s idle, and the
@@ -113,6 +121,7 @@ const HEARTBEAT_REPLY_MS = 10_000;
 const DEFAULT_CONNECT_TIMEOUT_MS = 15_000;
 const DEFAULT_WAIT_TIMEOUT_MS = 15_000;
 const DEFAULT_WAIT_INTERVAL_MS = 50;
+const DEFAULT_DURABLE_TIMEOUT_MS = 30_000;
 // A write resolves once the frame left the local `ws` buffer (not: reached the
 // service). Polled on a timer, never with `setImmediate`, and bounded: far above
 // the drain time of one frame on any link the harness uses.
@@ -142,6 +151,7 @@ const collabUrl = (options: ConnectWhiteboardPeerOptions): string => {
   );
   const ws = base.replace(/^http/, "ws");
   const params = new URLSearchParams({ type: options.type ?? "whiteboard" });
+  if (options.guestName) params.set("guestName", options.guestName);
   return `${ws}${normalised}/${encodeURIComponent(options.whiteboardId)}?${params.toString()}`;
 };
 
@@ -180,6 +190,16 @@ export class WhiteboardPeer {
   /** The heartbeat sent and not echoed yet; at most one at a time. */
   private heartbeatFrame: Uint8Array | undefined;
   private heartbeatSequence = 0;
+  /** The durability request sent and not answered yet; the service refuses a second one. */
+  private durability:
+    | {
+        requestId: string;
+        resolve: () => void;
+        reject: (error: Error) => void;
+        timer: NodeJS.Timeout;
+      }
+    | undefined;
+  private durabilitySequence = 0;
   private settleConnect:
     | { resolve: () => void; reject: (error: Error) => void }
     | undefined;
@@ -309,6 +329,23 @@ export class WhiteboardPeer {
     await this.drained();
   }
 
+  /**
+   * The names the OTHER sessions in the room present themselves under (their
+   * awareness `user.username`, what the editor labels their cursor and avatar
+   * with), sorted. The service relays awareness; a session that left is
+   * removed when its removal (or the protocol's 30 s timeout) arrives.
+   */
+  remoteUsernames(): string[] {
+    const names: string[] = [];
+    this.awareness.getStates().forEach((state, clientId) => {
+      if (clientId === this.clientId) return;
+      const username = (state as { user?: { username?: unknown } }).user
+        ?.username;
+      if (typeof username === "string") names.push(username);
+    });
+    return names.sort();
+  }
+
   // ---- raw reads ------------------------------------------------------------
 
   /** One element exactly as stored (`Y.Map#toJSON`), or undefined. */
@@ -370,6 +407,68 @@ export class WhiteboardPeer {
   }
 
   /**
+   * The durability barrier: resolves once the collaboration service answers
+   * `persisted` to THIS peer's own request, i.e. the room's state (which holds
+   * every update this peer has sent or seen) is in both stores. Wire contract:
+   * one frame, the varUint `DURABILITY_REQUEST` (4) and the raw UTF-8 JSON
+   * `{ requestId }` with no length prefix; the service answers with exactly one
+   * CONTROL frame `{ kind: 'persisted' | 'persist-failed', requestId }`. The
+   * room-wide `{ kind: 'saved' }` broadcast is NOT an answer: it can report
+   * another editor's save.
+   *
+   * - A clean room is answered at once (the live doc equals storage).
+   * - A dirty room parks until the next successful persist, within the
+   *   service's `SAVE_DEBOUNCE_MILLIS` (default 2000).
+   * - A read-only session is refused: `persist-failed` "this session is
+   *   read-only", so the peer must be admitted `write` (the multi-user plan).
+   * - An unparseable request is answered with silence, so the timeout is the
+   *   only signal then.
+   *
+   * Rejects on `persist-failed` (with the service's reason), on the session
+   * ending, and after `timeoutMs` (default 30 s). One request at a time per peer.
+   */
+  async awaitDurable(options: AwaitDurableOptions = {}): Promise<void> {
+    this.assertOpen();
+    this.assertSocketOpen();
+    if (this.durability) {
+      throw new Error(
+        `durability request ${this.durability.requestId} is still pending; the service refuses a second one`,
+      );
+    }
+    const timeoutMs = options.timeoutMs ?? DEFAULT_DURABLE_TIMEOUT_MS;
+    const requestId = `${this.clientId}-${++this.durabilitySequence}`;
+    await new Promise<void>((resolve, reject) => {
+      const timer = setTimeout(() => {
+        this.durability = undefined;
+        reject(
+          new Error(
+            `durability request ${requestId} unanswered after ${timeoutMs} ms`,
+          ),
+        );
+      }, timeoutMs);
+      this.durability = { requestId, resolve, reject, timer };
+      const { encoding } = rt();
+      this.send(
+        encodeFrame(COLLAB_WIRE.DURABILITY_REQUEST, (e) =>
+          encoding.writeUint8Array(
+            e,
+            new TextEncoder().encode(JSON.stringify({ requestId })),
+          ),
+        ),
+      );
+    });
+  }
+
+  private settleDurability(error?: Error): void {
+    const pending = this.durability;
+    if (!pending) return;
+    clearTimeout(pending.timer);
+    this.durability = undefined;
+    if (error) pending.reject(error);
+    else pending.resolve();
+  }
+
+  /**
    * Idempotent. Announces departure, closes the socket, destroys the doc.
    * Also after the service closed the socket first: the doc and its awareness
    * (which runs an interval) are still destroyed.
@@ -380,6 +479,9 @@ export class WhiteboardPeer {
     this.closed = true;
     this.endedReason ??= "closed-by-peer";
     this.clearHeartbeat();
+    this.settleDurability(
+      new Error("peer closed before durability was confirmed"),
+    );
     this.doc.off("update", this.onDocUpdate);
     if (this.ws.readyState === WebSocket.OPEN) {
       if (this.awareness.getLocalState() !== null) {
@@ -431,8 +533,17 @@ export class WhiteboardPeer {
         case COLLAB_WIRE.HEARTBEAT:
           this.receiveHeartbeat(bytes);
           break;
+        case COLLAB_WIRE.AWARENESS:
+          // Other sessions' presence (`{ user: { username } }`): the name each
+          // collaborator is shown under. Read by `remoteUsernames`.
+          rt().awarenessProtocol.applyAwarenessUpdate(
+            this.awareness,
+            decoding.readVarUint8Array(decoder),
+            REMOTE_ORIGIN,
+          );
+          break;
         default:
-          // awareness, ephemeral: nothing to do for the oracle
+          // ephemeral: nothing to do for the oracle
           break;
       }
     } catch (error) {
@@ -451,6 +562,9 @@ export class WhiteboardPeer {
       reason?: string;
       code?: string;
       disposition?: string;
+      requestId?: string;
+      /** The service's reason on `persist-failed`. */
+      error?: string;
     };
     try {
       message = JSON.parse(text);
@@ -481,6 +595,20 @@ export class WhiteboardPeer {
       );
     } else if (message.kind === "session-end") {
       this.endedReason = message.code ?? message.disposition ?? "session-end";
+      this.settleDurability(
+        new Error(`session ended (${this.endedReason}) before durability was confirmed`),
+      );
+    } else if (
+      (message.kind === "persisted" || message.kind === "persist-failed") &&
+      message.requestId === this.durability?.requestId
+    ) {
+      if (message.kind === "persisted") this.settleDurability();
+      else
+        this.settleDurability(
+          new Error(
+            `durability request ${message.requestId} failed: ${String(message.error ?? message.reason ?? "persist-failed")}`,
+          ),
+        );
     }
   }
 
@@ -570,6 +698,9 @@ export class WhiteboardPeer {
     }
     this.closed = true;
     this.clearHeartbeat();
+    this.settleDurability(
+      new Error(`session ended (${this.endedReason}) before durability was confirmed`),
+    );
   }
 
   private fail(error: Error): void {

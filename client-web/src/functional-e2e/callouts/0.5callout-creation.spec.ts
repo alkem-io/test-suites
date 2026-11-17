@@ -2,8 +2,9 @@
 // seed: client-web/src/functional-e2e/seed-public-space.spec.ts
 
 import {
-  CommunityMembershipPolicy,
-  SpacePrivacyMode,
+  CalloutContributionType,
+  CalloutFramingType,
+  readCalloutsSetCalloutTypes,
 } from '@alkemio/tests-lib';
 import { TestUser } from '@alkemio/tests-lib/common/enums/test.user';
 import { TestScenarioConfig } from '@alkemio/tests-lib/scenario/config/test-scenario-config';
@@ -13,7 +14,9 @@ import { createCalloutOnCalloutsSet } from '@alkemio/tests-lib/scenario/baseFunc
 import { TestUserManager } from '@alkemio/tests-lib';
 import { expect } from '@playwright/test';
 import { createAuthenticatedSessionFixture } from '../fixtures/authenticated-session.fixture';
+import { must, sessionActor } from '../helpers/lib-actor.helper';
 import { CollaborationPage } from './pages';
+import type { Page } from '@playwright/test';
 
 const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 
@@ -38,6 +41,120 @@ const scenarioConfig: TestScenarioConfig = {
 };
 
 let baseScenario: OrganizationWithSpaceModel | undefined;
+
+/**
+ * What a created callout must BE, not only be called. The title heading the
+ * cases always asserted is blind to the kind: a server (or client) that saved
+ * every callout as a plain post would pass it. Each case now asserts the kind
+ * twice — in the callout's detail dialog (what the user gets) and over
+ * GraphQL as the acting admin (what the server stored).
+ */
+type ExpectedKind = {
+  framing: CalloutFramingType;
+  /** Contribution types the callout accepts; [] = no responses. */
+  allowedTypes: CalloutContributionType[];
+  /** CTA only: the link the framing carries. */
+  link?: { displayName: string; uri: string };
+  /** Collections only: the typed add button in the Contributions section. */
+  addContributionLabel?: string;
+};
+
+/** UI: open the callout and read what its dialog renders for that kind. */
+async function expectDialogShowsKind(
+  collaborationPage: CollaborationPage,
+  page: Page,
+  name: string,
+  expected: ExpectedKind
+) {
+  await collaborationPage.clickCallout(name);
+  const view = collaborationPage.calloutDetailDialog(name);
+  await expect(view.dialog).toBeVisible();
+  // Positive control: the dialog body has rendered, so the counts below are
+  // observations and not a read of a half-rendered dialog.
+  await expect(view.discussionHeading).toBeVisible();
+
+  if (expected.framing === CalloutFramingType.Whiteboard) {
+    await expect(view.openWhiteboardButton).toBeVisible();
+  } else {
+    await expect(view.openWhiteboardButton).toHaveCount(0);
+  }
+  if (expected.framing === CalloutFramingType.Memo) {
+    await expect(view.openMemoButton).toBeVisible();
+  } else {
+    await expect(view.openMemoButton).toHaveCount(0);
+  }
+  if (expected.link) {
+    const cta = view.ctaLink(expected.link.displayName, expected.link.uri);
+    await expect(cta).toBeVisible();
+    await expect(cta).toHaveAttribute('href', expected.link.uri);
+  } else {
+    await expect(view.anyCtaLink).toHaveCount(0);
+  }
+  if (expected.addContributionLabel) {
+    await expect(view.contributionsHeading).toBeVisible();
+    await expect(
+      view.addContributionButton(expected.addContributionLabel)
+    ).toBeVisible();
+  } else {
+    await expect(view.contributionsHeading).toHaveCount(0);
+  }
+
+  await page.keyboard.press('Escape');
+  await expect(view.dialog).toBeHidden();
+}
+
+/** API: the stored framing type, framing content and accepted contribution types. */
+async function expectStoredKind(
+  page: Page,
+  calloutsSetId: string,
+  name: string,
+  expected: ExpectedKind
+) {
+  const set = must(
+    await readCalloutsSetCalloutTypes(calloutsSetId, await sessionActor(page)),
+    'read back the callouts set'
+  );
+  const matches = (set.lookup.calloutsSet?.callouts ?? []).filter(
+    c => c.framing.profile.displayName === name
+  );
+  expect(matches, `exactly one stored callout titled "${name}"`).toHaveLength(
+    1
+  );
+  const [callout] = matches;
+  expect(callout.framing.type).toBe(expected.framing);
+  expect([...callout.settings.contribution.allowedTypes].sort()).toEqual(
+    [...expected.allowedTypes].sort()
+  );
+  expect(Boolean(callout.framing.whiteboard?.id)).toBe(
+    expected.framing === CalloutFramingType.Whiteboard
+  );
+  expect(Boolean(callout.framing.memo?.id)).toBe(
+    expected.framing === CalloutFramingType.Memo
+  );
+  if (expected.link) {
+    expect(callout.framing.link?.uri).toBe(expected.link.uri);
+    expect(callout.framing.link?.profile.displayName).toBe(
+      expected.link.displayName
+    );
+  } else {
+    expect(callout.framing.link).toBeFalsy();
+  }
+}
+
+async function expectCalloutKind(
+  collaborationPage: CollaborationPage,
+  page: Page,
+  name: string,
+  expected: ExpectedKind
+) {
+  await expectDialogShowsKind(collaborationPage, page, name, expected);
+  await expectStoredKind(
+    page,
+    baseScenario!.space.collaboration.calloutsSetId,
+    name,
+    expected
+  );
+}
 
 const adminFixture = createAuthenticatedSessionFixture({
   storageStateName: 'callout-creation-admin.json',
@@ -83,6 +200,11 @@ adminFixture.test.describe.serial('Callout Creation', () => {
 
       const calloutCard = await collaborationPage.getCalloutByName(calloutName);
       await expect(calloutCard).toBeVisible();
+
+      await expectCalloutKind(collaborationPage, page, calloutName, {
+        framing: CalloutFramingType.None,
+        allowedTypes: [],
+      });
     }
   );
 
@@ -103,6 +225,11 @@ adminFixture.test.describe.serial('Callout Creation', () => {
 
       const calloutCard = await collaborationPage.getCalloutByName(calloutName);
       await expect(calloutCard).toBeVisible();
+
+      await expectCalloutKind(collaborationPage, page, calloutName, {
+        framing: CalloutFramingType.Whiteboard,
+        allowedTypes: [],
+      });
     }
   );
 
@@ -125,6 +252,12 @@ adminFixture.test.describe.serial('Callout Creation', () => {
 
       const calloutCard = await collaborationPage.getCalloutByName(calloutName);
       await expect(calloutCard).toBeVisible();
+
+      await expectCalloutKind(collaborationPage, page, calloutName, {
+        framing: CalloutFramingType.Link,
+        allowedTypes: [],
+        link: { displayName: 'Learn More', uri: 'https://example.com' },
+      });
     }
   );
 
@@ -145,6 +278,11 @@ adminFixture.test.describe.serial('Callout Creation', () => {
 
       const calloutCard = await collaborationPage.getCalloutByName(calloutName);
       await expect(calloutCard).toBeVisible();
+
+      await expectCalloutKind(collaborationPage, page, calloutName, {
+        framing: CalloutFramingType.Memo,
+        allowedTypes: [],
+      });
     }
   );
 
@@ -166,6 +304,12 @@ adminFixture.test.describe.serial('Callout Creation', () => {
 
       const calloutCard = await collaborationPage.getCalloutByName(calloutName);
       await expect(calloutCard).toBeVisible();
+
+      await expectCalloutKind(collaborationPage, page, calloutName, {
+        framing: CalloutFramingType.None,
+        allowedTypes: [CalloutContributionType.Post],
+        addContributionLabel: 'Add Post',
+      });
     }
   );
 
@@ -186,6 +330,12 @@ adminFixture.test.describe.serial('Callout Creation', () => {
 
       const calloutCard = await collaborationPage.getCalloutByName(calloutName);
       await expect(calloutCard).toBeVisible();
+
+      await expectCalloutKind(collaborationPage, page, calloutName, {
+        framing: CalloutFramingType.None,
+        allowedTypes: [CalloutContributionType.Link],
+        addContributionLabel: 'Add link or file',
+      });
     }
   );
 
@@ -206,6 +356,12 @@ adminFixture.test.describe.serial('Callout Creation', () => {
 
       const calloutCard = await collaborationPage.getCalloutByName(calloutName);
       await expect(calloutCard).toBeVisible();
+
+      await expectCalloutKind(collaborationPage, page, calloutName, {
+        framing: CalloutFramingType.None,
+        allowedTypes: [CalloutContributionType.Memo],
+        addContributionLabel: 'Add memo',
+      });
     }
   );
 
@@ -226,6 +382,12 @@ adminFixture.test.describe.serial('Callout Creation', () => {
 
       const calloutCard = await collaborationPage.getCalloutByName(calloutName);
       await expect(calloutCard).toBeVisible();
+
+      await expectCalloutKind(collaborationPage, page, calloutName, {
+        framing: CalloutFramingType.None,
+        allowedTypes: [CalloutContributionType.Whiteboard],
+        addContributionLabel: 'Add whiteboard',
+      });
     }
   );
 });
@@ -278,4 +440,15 @@ memberFixture.test.describe.serial('Callout Creation - Member', () => {
       expect(isAddVisible).toBe(false);
     }
   );
+});
+
+// File-level teardown. The Member block normally cleans the shared scenario,
+// but a failing admin case restarts the worker (the Member block then seeds
+// and cleans a scenario of its own) and a `-g` filter can skip the Member
+// block entirely; either way the admin block's scenario would leak.
+adminFixture.test.afterAll(async () => {
+  if (baseScenario) {
+    await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
+    baseScenario = undefined;
+  }
 });
