@@ -643,12 +643,17 @@ export async function probeMatrixSendPath(browser: Browser): Promise<MatrixSendP
 
 // ─────────────────────── message-bubble selectors ───────────────────────
 // These map 1:1 onto ChatMessageBubble.tsx:
-//   <div class="flex items-start gap-2">           ← gutter row (group, incoming)
-//     <div class="flex w-8 ...">[Avatar?]</div>    ← avatar gutter cell
-//     <div class="group flex flex-col ...">        ← message column
-//       <span ...><span class="truncate">name</span></span>   ← run-head name
-//       <span class="sr-only">name</span>                     ← continuation attribution
-//       ...bubble, reactions, timestamp
+//   <div data-chat-message>                         ← message row (ChatThreadView)
+//     <span class="sr-only">exact time</span>       ← the time, for screen readers
+//     <div class="flex items-start gap-2">          ← gutter row (group, incoming)
+//       <div class="flex w-8 ...">[Avatar?]</div>   ← avatar gutter cell
+//       <div class="group flex flex-col ...">       ← message column
+//         <span ...><span class="truncate">name</span></span>  ← run-head name
+//         <span class="sr-only">name</span>                    ← continuation attribution
+//         <div tabindex="0">text</div>              ← bubble, the time tooltip's trigger
+//         ...reactions
+// Since client-web#10442 the time is not a line in the column; since #10583 it
+// is a tooltip opened from the bubble itself.
 
 /** The message column for `text`. One per message. */
 export function messageColumn(page: Page, text: string): Locator {
@@ -681,6 +686,16 @@ export function visibleAuthorName(column: Locator): Locator {
 /** The screen-reader-only sender attribution carried by run continuations. */
 export function srOnlyAuthorName(column: Locator): Locator {
   return column.locator('span.sr-only');
+}
+
+/** The message's bubble: the box that opens its time tooltip on hover or focus. */
+export function messageBubble(column: Locator, text: string): Locator {
+  return column.locator('div[tabindex="0"]').filter({ hasText: text });
+}
+
+/** The message's exact time as its own row announces it to screen readers. */
+export function messageExactTime(page: Page, text: string): Locator {
+  return chatPanel(page).locator('[data-chat-message]').filter({ hasText: text }).locator(':scope > span.sr-only');
 }
 
 /** A reaction count pill inside this message's own column. */
