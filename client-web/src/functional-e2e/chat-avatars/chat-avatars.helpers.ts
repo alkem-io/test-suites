@@ -20,7 +20,14 @@
 //     the pre-existing `createPngFixture(variant)` call sites in this file
 //     unchanged.
 
-import { expect, type Browser, type BrowserContext, type Locator, type Page } from '@playwright/test';
+import {
+  expect,
+  type Browser,
+  type BrowserContext,
+  type Locator,
+  type Page,
+  type Response,
+} from '@playwright/test';
 import {
   createPngFixture as createSizedPngFixture,
   getGraphqlClient,
@@ -166,16 +173,85 @@ async function completeSignUp(page: Page, { email, firstName, lastName }: Person
   await expect(page.getByText('You successfully verified your email address.')).toBeVisible({ timeout: 20000 });
 }
 
-/** Signs in through the login form. */
+/**
+ * Signs in through the login form and returns once the chat session is up.
+ *
+ * `/oauth2/auth` is rate-limited per source address (HTTP 429 from the
+ * ingress, before the request reaches the identity provider). A sign-in
+ * passes through it three times, and the chat's silent sign-on, which the
+ * client starts as soon as the dashboard loads, three more. A request that is
+ * refused leaves the browser on the refusal with its one-time verifier
+ * unspent, so reloading that address resumes the flow.
+ */
 async function signInThroughUi(page: Page, email: string): Promise<void> {
-  await page.goto(BASE_URL);
-  await acceptCookiesIfPresent(page);
-  await page.getByRole('link', { name: /log in/i }).click();
-  await expect(page).toHaveURL(/\/login/, { timeout: 30000 });
-  await page.getByLabel('E-Mail *').fill(email);
-  await fillSecret(page.getByLabel('Password *'), PASSWORD);
-  await page.getByRole('button', { name: 'Sign in', exact: true }).click();
-  await expect(page).toHaveURL(`${BASE_URL}/home`, { timeout: 40000 });
+  let refused = false;
+  let syncUrl: string | undefined;
+  let synced = false;
+  const onResponse = (response: Response) => {
+    if (syncUrl && response.ok() && response.url().startsWith(syncUrl)) synced = true;
+    const request = response.request();
+    if (
+      response.status() === 429 &&
+      request.isNavigationRequest() &&
+      request.frame() === page.mainFrame() &&
+      new URL(response.url()).pathname === '/oauth2/auth'
+    )
+      refused = true;
+  };
+  page.on('response', onResponse);
+  try {
+    await page.goto(BASE_URL);
+    await acceptCookiesIfPresent(page);
+    syncUrl = await chatSyncUrl(page);
+    await page.getByRole('link', { name: /log in/i }).click();
+    await expect(page).toHaveURL(/\/login/, { timeout: 30000 });
+    await page.getByLabel('E-Mail *').fill(email);
+    await fillSecret(page.getByLabel('Password *'), PASSWORD);
+    await page.getByRole('button', { name: 'Sign in', exact: true }).click();
+    await expect(async () => {
+      if (refused) {
+        refused = false;
+        await page.reload();
+      }
+      await expect(page).toHaveURL(`${BASE_URL}/home`, { timeout: 10000 });
+    }).toPass({ timeout: 120000, intervals: [5000, 10000] });
+    // The chat session: the page's first successful Matrix sync, which is
+    // when it can send and receive messages. Counted from the dashboard, not
+    // from the click, so a sign-in that had to be resumed keeps the whole
+    // wait. A silent sign-on that was refused falls back to a slower path in
+    // the client, hence its length.
+    if (syncUrl)
+      await expect
+        .poll(() => synced, { message: `no successful Matrix sync for ${email}`, timeout: 90000 })
+        .toBe(true);
+  } finally {
+    page.off('response', onResponse);
+  }
+}
+
+/**
+ * The address of the page's Matrix sync, or nothing where no chat session can
+ * start: a client built without a homeserver, or a homeserver with no DNS
+ * record (see `matrixSendPath`), where the walks that do not send still run.
+ */
+async function chatSyncUrl(page: Page): Promise<string | undefined> {
+  type EnvWindow = { _env_?: { VITE_APP_MATRIX_HOMESERVER_URL?: string } };
+  const homeserverUrl = await page.evaluate(
+    () => (window as unknown as EnvWindow)._env_?.VITE_APP_MATRIX_HOMESERVER_URL?.trim() ?? ''
+  );
+  if (!homeserverUrl || !(await matrixSendPath(page)).reachable) return undefined;
+  return `${homeserverUrl}/_matrix/client/v3/sync`;
+}
+
+/**
+ * Runs sign-ins one after another, however many callers ask at once: each one
+ * spends most of what the `/oauth2/auth` limit allows in a burst.
+ */
+let lastSignIn: Promise<unknown> = Promise.resolve();
+function oneSignInAtATime<T>(signIn: () => Promise<T>): Promise<T> {
+  const turn = lastSignIn.then(signIn, signIn);
+  lastSignIn = turn.catch(() => undefined);
+  return turn;
 }
 
 /** Reads the signed-in user's URL slug from the dashboard's "My Account" link. */
@@ -242,16 +318,18 @@ export async function registerAndSignIn(browser: Browser, spec: PersonSpec): Pro
   try {
     const page = await context.newPage();
     await completeSignUp(page, spec);
-    await signInThroughUi(page, spec.email);
 
-    // Record the account BEFORE the last fallible step: once the server has
-    // materialised the user it must be deletable even if reading the slug fails.
+    // Record the account BEFORE the fallible steps: once the server has
+    // materialised the user it must be deletable even if the sign-in or
+    // reading the slug fails.
     const account: TestAccount = {
       email: spec.email,
       displayName: `${spec.firstName} ${spec.lastName}`,
       id: await registerInAlkemioOrFail(spec.firstName, spec.lastName, spec.email),
     };
     createdAccounts.push(account);
+
+    await oneSignInAtATime(() => signInThroughUi(page, spec.email));
 
     return { ...account, context, page, slug: await readSettingsSlug(page) };
   } catch (error) {
@@ -270,7 +348,7 @@ export async function registerAccounts(browser: Browser, specs: PersonSpec[]): P
   return Promise.all(specs.map(spec => registerAccount(browser, spec)));
 }
 
-/** Creates accounts AND signs each one in, all concurrently. */
+/** Creates accounts concurrently and signs each one in, one sign-in at a time. */
 export async function registerAndSignInAll(browser: Browser, specs: PersonSpec[]): Promise<TestPerson[]> {
   return Promise.all(specs.map(spec => registerAndSignIn(browser, spec)));
 }
@@ -565,12 +643,17 @@ export async function probeMatrixSendPath(browser: Browser): Promise<MatrixSendP
 
 // ─────────────────────── message-bubble selectors ───────────────────────
 // These map 1:1 onto ChatMessageBubble.tsx:
-//   <div class="flex items-start gap-2">           ← gutter row (group, incoming)
-//     <div class="flex w-8 ...">[Avatar?]</div>    ← avatar gutter cell
-//     <div class="group flex flex-col ...">        ← message column
-//       <span ...><span class="truncate">name</span></span>   ← run-head name
-//       <span class="sr-only">name</span>                     ← continuation attribution
-//       ...bubble, reactions, timestamp
+//   <div data-chat-message>                         ← message row (ChatThreadView)
+//     <span class="sr-only">exact time</span>       ← the time, for screen readers
+//     <div class="flex items-start gap-2">          ← gutter row (group, incoming)
+//       <div class="flex w-8 ...">[Avatar?]</div>   ← avatar gutter cell
+//       <div class="group flex flex-col ...">       ← message column
+//         <span ...><span class="truncate">name</span></span>  ← run-head name
+//         <span class="sr-only">name</span>                    ← continuation attribution
+//         <div tabindex="0">text</div>              ← bubble, the time tooltip's trigger
+//         ...reactions
+// Since client-web#10442 the time is not a line in the column; since #10583 it
+// is a tooltip opened from the bubble itself.
 
 /** The message column for `text`. One per message. */
 export function messageColumn(page: Page, text: string): Locator {
@@ -603,6 +686,16 @@ export function visibleAuthorName(column: Locator): Locator {
 /** The screen-reader-only sender attribution carried by run continuations. */
 export function srOnlyAuthorName(column: Locator): Locator {
   return column.locator('span.sr-only');
+}
+
+/** The message's bubble: the box that opens its time tooltip on hover or focus. */
+export function messageBubble(column: Locator, text: string): Locator {
+  return column.locator('div[tabindex="0"]').filter({ hasText: text });
+}
+
+/** The message's exact time as its own row announces it to screen readers. */
+export function messageExactTime(page: Page, text: string): Locator {
+  return chatPanel(page).locator('[data-chat-message]').filter({ hasText: text }).locator(':scope > span.sr-only');
 }
 
 /** A reaction count pill inside this message's own column. */

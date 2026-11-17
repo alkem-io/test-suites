@@ -7,6 +7,8 @@ import {
   expectMessageReceived,
   expectVisuallyHidden,
   gutterAvatar,
+  messageBubble,
+  messageExactTime,
   gutterRow,
   conversationRow,
   ensureConversationList,
@@ -73,7 +75,7 @@ test.describe('US1 — group thread sender avatars', { tag: ['@chat-avatars'] },
 
     const uid = UniqueIDGenerator.getID();
 
-    // All three drive the UI, so all three need a session — created concurrently.
+    // All three drive the UI, so all three need a session.
     [viewer, bella, charlie] = await registerAndSignInAll(browser, [
       { email: `chatavatars1-viewer-${uid}@alkem.io`, firstName: `Viewer${uid}`, lastName: 'Reader' },
       { email: `chatavatars1-bella-${uid}@alkem.io`, firstName: `Bella${uid}`, lastName: 'Sender' },
@@ -257,8 +259,35 @@ test.describe('US1 — group thread sender avatars', { tag: ['@chat-avatars'] },
     await expect(reactionPills(column)).toHaveCount(1, { timeout: 20000 });
     // The pill belongs to this bubble alone — the run head above it is untouched.
     await expect(reactionPills(runHead)).toHaveCount(0);
-    // The timestamp stays inside the same column too (FR-012).
-    await expect(column.locator('span.text-caption').last()).toBeVisible();
+
+    // ...and so does its time (FR-012). Since client-web#10442 the time is a
+    // tooltip opened from the bubble itself (#10583), not a line in the column.
+    // The tooltip reads this message's own time, the one its row announces to
+    // screen readers...
+    const tooltip = viewer.page.locator('[data-slot="tooltip-content"]');
+    await viewer.page.mouse.move(0, 0);
+    await expect(tooltip).toHaveCount(0);
+    const exactTime = messageExactTime(viewer.page, 'AS7 charlie carries on');
+    await expect(exactTime).toHaveText(/\d[:.]\d\d/);
+    const bubble = messageBubble(column, 'AS7 charlie carries on');
+    await bubble.hover();
+    await expect(tooltip).toHaveCount(1);
+    await expect(viewer.page.getByRole('tooltip')).toHaveText((await exactTime.textContent()) ?? '');
+    // ...and it sits flush against THIS bubble at its leading edge: one anchored
+    // to the run head would be a bubble's height higher, one anchored to the
+    // full-width row (client-web#10582) would start at the avatar gutter.
+    const offsetFromBubble = async () => {
+      const [tip, box] = [await tooltip.boundingBox(), await bubble.boundingBox()];
+      if (!tip || !box) return 'not laid out';
+      const within = (distance: number) => (Math.abs(distance) <= 2 ? 'flush' : Math.round(distance));
+      return {
+        vertical: within(Math.min(Math.abs(box.y - (tip.y + tip.height)), Math.abs(tip.y - (box.y + box.height)))),
+        leadingEdge: within(tip.x - box.x),
+      };
+    };
+    await expect
+      .poll(offsetFromBubble, { message: 'the time tooltip is not attached to the reacted-to bubble' })
+      .toEqual({ vertical: 'flush', leadingEdge: 'flush' });
   });
 
   test('US1-AS8: a live message joins the open run; a different sender starts a new one', async () => {
