@@ -79,14 +79,22 @@ const GRANT_ADDS: Record<
     platform: ['AUTHORIZATION_RESET', 'PLATFORM_OPERATIONS_ADMIN'],
     roleSet: [],
   },
+  // Resetting a member's second factor is gated by PLATFORM_SECOND_FACTOR_RESET,
+  // held by Users Admin and Support only — platform policy, non-cascading, so
+  // the role set gains nothing.
   PLATFORM_USERS_ADMIN: {
-    platform: ['PLATFORM_USERS_ADMIN', 'RECEIVE_NOTIFICATIONS_ADMIN'],
+    platform: [
+      'PLATFORM_SECOND_FACTOR_RESET',
+      'PLATFORM_USERS_ADMIN',
+      'RECEIVE_NOTIFICATIONS_ADMIN',
+    ],
     roleSet: ['FEATURE_ROLE_ASSIGN', 'FEATURE_ROLE_HOLDERS_READ'],
   },
   PLATFORM_SUPPORT: {
     platform: [
       'CREATE_ORGANIZATION',
       'PLATFORM_FORUM_MANAGE',
+      'PLATFORM_SECOND_FACTOR_RESET',
       'PLATFORM_SUPPORT_LISTS_READ',
       'RECEIVE_NOTIFICATIONS_ADMIN',
     ],
