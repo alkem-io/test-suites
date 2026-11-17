@@ -279,6 +279,7 @@ place; cite this file instead of rediscovering a gap.
 ### Subspace page, Settings › Layout and dnd-kit (established 2026-10-26, 086 design, client-web `f028c891`)
 
 - **The test env has no Elasticsearch.** dev-orchestration `origin/main` @ `18dad22`, `01-alkemio-platform/overlays/test/alkemio/config/01-elastic-configMap-overlay.yml`, sets `ELASTICSEARCH_URL: ""`. This was read from config, not run-verified. Any search assertion, UI or API, cannot pass nightly there. Tag it `@local-stack` and run it on a compose stack with ES.
+- **Search on a local stack (established 2026-11-12, W2 journey 8).** A from-scratch ingest (`ingestSearchFromScratch`) of the local develop copy takes about 4.5 minutes, and nothing is searchable until the aliases swap at its end, so a fixed short poll always times out. Wait on the ingest task (`readTask(<id>).status` → `COMPLETED`), bounded by `searchIngestTimeoutMs()` (`SEARCH_INGEST_TIMEOUT_MS`, default 360 000). Overlapping ingests race (server#6382): one that started earlier can finish later and swap in an index without your fixtures, so check the fixtures after the task completes and re-ingest once on a miss (`search/search.helpers.ts › ingestAndWaitUntilFound`). Each ingest swaps the index for everyone on that backend: run one search file at a time.
 - **Subspace page locators:**
   - Sidebar: `complementary` "SubSpace sidebar".
   - Quick actions: `navigation` "Quick Actions", with buttons Community / Events / Recent Activity / Post Index. The collapsed rail has icon buttons with the same names.

@@ -341,6 +341,20 @@ are load-bearing:
 | A migration spec under `src/migrations/__tests__/`                                                                                                                                   | Asserts the text of its own SQL                                                                                                                                                                                               | 2026-09-02 · 10178, reconfirmed 055                               |
 | client-web `messaging-notifications/us2-group-message-notifications.spec.ts` › US2-AS4, and server-api `notifications/messaging/conversation-messages-negative.it-spec.ts` › US2-AS4 | They prove that a removed member stops being **notified**, not that their **access** is revoked. The client spec says so in its own scope warning                                                                             | 2026-10-15 · server#6329                                          |
 
+## Search — global overlay and Space sidebar search (W2 journey 8)
+
+_Searched 2026-11-12, test-suites `origin/develop` @ `ef405cc0` with #700 rebased on it, against client-web `origin/develop` @ `25ded1467` and server `origin/develop` @ `e120d25a1`. Plan: `client-web/src/functional-e2e/search/search-test-plan.md`._
+
+| Behaviour | Before | After (uncommitted, `qa/w2-journey-8`) |
+|---|---|---|
+| Global search overlay (header Search): own Spaces found, another run's not | none | GS-1 (`@local-stack`) |
+| Global search, Posts category | none | GS-2 (`@local-stack`) |
+| Global search scoped to the current Space, widened to the platform | API only (`search.it-spec.ts`, `searchInSpaceFilter`) | GS-3 (`@local-stack`) |
+| Sidebar search: this tab's post only, count, clear | presence of the box only (`sidebar-widgets/us1`, `space-settings-write/us3`) | SB-1, SB-2 (`@local-stack`) |
+| `searchInFlowStateFilter` (API) | none | SB-1, SB-2 read-back via lib `searchCallouts` |
+
+**Search again with:** `git grep -n -E "search\(|searchInFlowStateFilter|FlowStateSearch|Platform Search|Search posts" <ref> -- server-api/src client-web/src lib/src ':!lib/src/core/generated'`.
+
 ## Profile editing — Space About, own profile, organisation create/edit (W2 journey 7)
 
 _Searched 2026-11-09, branch `qa/w2-journey-7` off `origin/develop` @ `afbefaf2`, against client-web `develop` @ `907103f5f` and server `develop` @ `51eb90878`. Plan: `client-web/src/functional-e2e/profile-editing/profile-editing-test-plan.md` (Approved with provisional rulings; 10 cases, 8 live: H1-3 skipped on a reproduced server defect, H1-2b on a reproduced client defect, R-7)._

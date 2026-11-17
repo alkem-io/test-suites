@@ -1,0 +1,9 @@
+query ReadTask($id: UUID!) {
+  task(id: $id) {
+    id
+    status
+    errors
+    itemsCount
+    itemsDone
+  }
+}

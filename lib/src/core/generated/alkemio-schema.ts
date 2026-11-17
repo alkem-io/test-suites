@@ -97144,6 +97144,8 @@ export type SearchQueryVariables = Exact<{
 export type SearchQuery = {
   search: {
     spaceResults: {
+      total: number;
+      cursor?: any | undefined;
       results: Array<
         | { type: SearchResultType }
         | { type: SearchResultType }
@@ -111797,6 +111799,20 @@ export type StoredDocumentFragment = {
   size: number;
   url: string;
   temporaryLocation: boolean;
+};
+
+export type ReadTaskQueryVariables = Exact<{
+  id: Scalars["UUID"]["input"];
+}>;
+
+export type ReadTaskQuery = {
+  task: {
+    id: string;
+    status: TaskStatus;
+    errors?: Array<string> | undefined;
+    itemsCount?: number | undefined;
+    itemsDone?: number | undefined;
+  };
 };
 
 export type GetSpaceTemplatesCountByTemplateSetIdQueryVariables = Exact<{
