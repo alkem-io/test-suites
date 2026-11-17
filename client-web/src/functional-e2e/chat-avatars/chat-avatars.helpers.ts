@@ -185,7 +185,10 @@ async function completeSignUp(page: Page, { email, firstName, lastName }: Person
  */
 async function signInThroughUi(page: Page, email: string): Promise<void> {
   let refused = false;
+  let syncUrl: string | undefined;
+  let synced = false;
   const onResponse = (response: Response) => {
+    if (syncUrl && response.ok() && response.url().startsWith(syncUrl)) synced = true;
     const request = response.request();
     if (
       response.status() === 429 &&
@@ -199,11 +202,11 @@ async function signInThroughUi(page: Page, email: string): Promise<void> {
   try {
     await page.goto(BASE_URL);
     await acceptCookiesIfPresent(page);
+    syncUrl = await chatSyncUrl(page);
     await page.getByRole('link', { name: /log in/i }).click();
     await expect(page).toHaveURL(/\/login/, { timeout: 30000 });
     await page.getByLabel('E-Mail *').fill(email);
     await fillSecret(page.getByLabel('Password *'), PASSWORD);
-    const chatSession = chatSessionStarted(page);
     await page.getByRole('button', { name: 'Sign in', exact: true }).click();
     await expect(async () => {
       if (refused) {
@@ -212,34 +215,32 @@ async function signInThroughUi(page: Page, email: string): Promise<void> {
       }
       await expect(page).toHaveURL(`${BASE_URL}/home`, { timeout: 10000 });
     }).toPass({ timeout: 120000, intervals: [5000, 10000] });
-    await chatSession;
+    // The chat session: the page's first successful Matrix sync, which is
+    // when it can send and receive messages. Counted from the dashboard, not
+    // from the click, so a sign-in that had to be resumed keeps the whole
+    // wait. A silent sign-on that was refused falls back to a slower path in
+    // the client, hence its length.
+    if (syncUrl)
+      await expect
+        .poll(() => synced, { message: `no successful Matrix sync for ${email}`, timeout: 90000 })
+        .toBe(true);
   } finally {
     page.off('response', onResponse);
   }
 }
 
 /**
- * Resolves on the page's first successful Matrix sync, which is when it can
- * send and receive chat messages. Resolves at once where the client is built
- * without a homeserver. A silent sign-on that was refused (see
- * `signInThroughUi`) falls back to a slower path in the client, hence the
- * long wait.
+ * The address of the page's Matrix sync, or nothing where no chat session can
+ * start: a client built without a homeserver, or a homeserver with no DNS
+ * record (see `matrixSendPath`), where the walks that do not send still run.
  */
-function chatSessionStarted(page: Page): Promise<void> {
+async function chatSyncUrl(page: Page): Promise<string | undefined> {
   type EnvWindow = { _env_?: { VITE_APP_MATRIX_HOMESERVER_URL?: string } };
-  const started = page
-    .evaluate(() => (window as unknown as EnvWindow)._env_?.VITE_APP_MATRIX_HOMESERVER_URL?.trim() ?? '')
-    .then(async homeserverUrl => {
-      if (!homeserverUrl) return;
-      await page.waitForResponse(
-        response => response.ok() && response.url().startsWith(`${homeserverUrl}/_matrix/client/v3/sync`),
-        { timeout: 90000 }
-      );
-    });
-  // Awaited by the caller after the sign-in; a sign-in that fails first must
-  // not leave this rejection unhandled.
-  started.catch(() => undefined);
-  return started;
+  const homeserverUrl = await page.evaluate(
+    () => (window as unknown as EnvWindow)._env_?.VITE_APP_MATRIX_HOMESERVER_URL?.trim() ?? ''
+  );
+  if (!homeserverUrl || !(await matrixSendPath(page)).reachable) return undefined;
+  return `${homeserverUrl}/_matrix/client/v3/sync`;
 }
 
 /**
@@ -317,16 +318,18 @@ export async function registerAndSignIn(browser: Browser, spec: PersonSpec): Pro
   try {
     const page = await context.newPage();
     await completeSignUp(page, spec);
-    await oneSignInAtATime(() => signInThroughUi(page, spec.email));
 
-    // Record the account BEFORE the last fallible step: once the server has
-    // materialised the user it must be deletable even if reading the slug fails.
+    // Record the account BEFORE the fallible steps: once the server has
+    // materialised the user it must be deletable even if the sign-in or
+    // reading the slug fails.
     const account: TestAccount = {
       email: spec.email,
       displayName: `${spec.firstName} ${spec.lastName}`,
       id: await registerInAlkemioOrFail(spec.firstName, spec.lastName, spec.email),
     };
     createdAccounts.push(account);
+
+    await oneSignInAtATime(() => signInThroughUi(page, spec.email));
 
     return { ...account, context, page, slug: await readSettingsSlug(page) };
   } catch (error) {
