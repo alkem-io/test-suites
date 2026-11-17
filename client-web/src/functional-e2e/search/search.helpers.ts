@@ -19,7 +19,7 @@ import {
 } from '@alkemio/tests-lib';
 import type { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import { must } from '../helpers/lib-actor.helper';
-import { spaceSidebar } from '../helpers/space-access.helper';
+import { spaceSidebar, teardownScenario } from '../helpers/space-access.helper';
 
 /**
  * Shared steps for W2 journey 8 (docs/qa/server-rebuild/plan.md § W2): the
@@ -49,17 +49,29 @@ export const seedSearchSpace = async (
       ...(withSubspace ? { subspace: { collaboration: {} } } : {}),
     },
   });
-  expect(scenario.scenarioSetupSucceeded, `seed the Space "${word}"`).toBe(
-    true
-  );
-  if (withSubspace) {
-    must(
-      await updateSpaceSettingsData({
-        spaceID: scenario.subspace.id,
-        settings: { privacy: { mode: SpacePrivacyMode.Public } },
-      }),
-      `make the subspace of "${word}" public`
+  // The caller never receives the scenario if the rest of the setup fails, so
+  // remove what was created here before rethrowing.
+  try {
+    expect(scenario.scenarioSetupSucceeded, `seed the Space "${word}"`).toBe(
+      true
     );
+    if (withSubspace) {
+      must(
+        await updateSpaceSettingsData({
+          spaceID: scenario.subspace.id,
+          settings: { privacy: { mode: SpacePrivacyMode.Public } },
+        }),
+        `make the subspace of "${word}" public`
+      );
+    }
+  } catch (setupError) {
+    await teardownScenario(scenario).catch(cleanupError =>
+      console.warn(
+        `[teardown] could not remove the partial seed "${word}":`,
+        cleanupError
+      )
+    );
+    throw setupError;
   }
   return scenario;
 };
