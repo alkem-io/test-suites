@@ -17,6 +17,7 @@
  */
 
 import {
+  ensureSpaceMembers,
   TestScenarioConfig,
   TestScenarioFactory,
   UniqueIDGenerator,
@@ -35,6 +36,7 @@ import {
 
 import {
   createUserDataOrFail,
+  registerVerifiedUser,
   deleteUser,
 } from '../../contributor-management/user/user.request.params';
 
@@ -175,6 +177,13 @@ const createUserOrFail = async (key: string) =>
     })
   ).id;
 
+const registerMemberOrFail = (key: string) =>
+  registerVerifiedUser(
+    `cc-${key}-${uniqueId}@alkem.io`,
+    'CC',
+    `${key} ${uniqueId}`
+  );
+
 beforeAll(async () => {
   baseScenario = await TestScenarioFactory.createBaseScenario(scenarioConfig);
   const spaceRoleSetID = baseScenario.space.community.roleSetId;
@@ -191,14 +200,12 @@ beforeAll(async () => {
   calloutID = calloutRes.body.data.createCalloutOnCalloutsSet.id;
 
   // ---- Users -----------------------------------------------------------
-  users.merged = await createUserOrFail('merged');
-  users.keywordsOnly = await createUserOrFail('keywords-only');
-  users.empty = await createUserOrFail('empty');
+  // Slice B: members join as themselves, so they need a login of their own.
+  users.merged = await registerMemberOrFail('merged');
+  users.keywordsOnly = await registerMemberOrFail('keywords-only');
+  users.empty = await registerMemberOrFail('empty');
   memberAssignedFrom = new Date();
-  for (const id of Object.values(users)) {
-    const res = await assignRoleToUser(id, spaceRoleSetID, RoleName.Member);
-    expect(res.error, JSON.stringify(res.error)).toBeUndefined();
-  }
+  await ensureSpaceMembers(spaceRoleSetID, Object.values(users));
   memberAssignedTo = new Date();
   await setUserProfileOrFail(users.merged, {
     tagline: `  ${TAGLINE}  `,

@@ -6,6 +6,7 @@ import type {
 } from "../../../core/generated/alkemio-schema";
 import { GraphqlActor } from "../../../utils/graphql.actor";
 import { runAs } from "../../../utils/graphql.wrapper";
+import { postGraphqlRawAs } from "../../../utils/graphql.raw.client";
 
 export const readRoleSetUsersInRole = (
   roleSetId: string,
@@ -117,3 +118,55 @@ export const eventOnApplication = (
   runAs(actor, (sdk, headers) =>
     sdk.EventOnApplicationState({ applicationID, eventName }, headers),
   );
+
+/**
+ * Join, as the actor itself, the entry role of a role set whose membership
+ * policy lets it in (OPEN, or a subspace whose parent it already belongs to).
+ * The server-side half of the UI "Join" button; since workspace#027 Slice B
+ * it is the only way an actor becomes a MEMBER of an L0 space without an
+ * invitation or an application. Uses the lib's `joinRoleSet` document.
+ */
+export const joinRoleSet = (roleSetID: string, actor: GraphqlActor) =>
+  runAs(actor, (sdk, headers) =>
+    sdk.joinRoleSet({ joinData: { roleSetID } }, headers),
+  );
+
+/**
+ * Assign `role` to a user on a role set AS `actor`, selecting only the user's
+ * id. `assignRoleToUser` (baseFunctions) selects the whole user, including
+ * fields only a platform admin may read (its settings), so an organisation's
+ * own admin, who holds the assign, gets a refusal back for a write that
+ * succeeded. This is the call an organisation admin makes in the product.
+ */
+export const assignUserRoleOnRoleSetDocument = `
+  mutation assignUserRoleOnRoleSet($roleData: AssignRoleOnRoleSetInput!) {
+    assignRoleToUser(roleData: $roleData) {
+      id
+    }
+  }
+`;
+
+export const assignUserRoleOnRoleSet = async (
+  userId: string,
+  roleSetId: string,
+  role: RoleName,
+  actor: GraphqlActor,
+): Promise<
+  | { data: { assignRoleToUser: { id: string } }; error?: undefined }
+  | { data?: undefined; error: { errors: Array<Record<string, unknown>> } }
+> => {
+  const response = await postGraphqlRawAs<{
+    assignRoleToUser: { id: string };
+  }>(actor, assignUserRoleOnRoleSetDocument, {
+    roleData: { actorID: userId, roleSetID: roleSetId, role },
+  });
+  const { data, errors } = response.body ?? {};
+  if (errors?.length || !data) {
+    return {
+      error: {
+        errors: errors ?? [{ message: `HTTP ${response.status}: ${response.raw.slice(0, 200)}` }],
+      },
+    };
+  }
+  return { data };
+};

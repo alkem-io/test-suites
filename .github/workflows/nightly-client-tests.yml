@@ -2,21 +2,220 @@ name: Nightly Playwright
 
 on:
   workflow_dispatch:
+    inputs:
+      parallel_workers:
+        description: >-
+          How many spec files of the parallel lane run at once in each of its
+          jobs. 1 runs them one file at a time.
+        type: choice
+        options: ['1', '2', '3', '4']
+        default: '3'
+      parallel_shards:
+        description: >-
+          How many jobs the parallel lane is split over. 2 uses both runner
+          pods of the e2e lane at once; 1 runs it in one job, as before.
+        type: choice
+        options: ['1', '2']
+        default: '2'
+
+# The nightly is one configuration run in two lanes (see `Lane` in
+# client-web/config/playwright.shared.ts):
+#
+#   serial    one job, one file at a time. The suites that share state with
+#             other suites; it starts with the platform smoke check. Nothing
+#             else may run on the cluster beside it.
+#   parallel  the suites that only touch what they seed, several files at a
+#             time, split over `parallel_shards` jobs that run at once.
+#
+# So the order is: serial, then every parallel job, then the report.
+#
+# Each job writes a Playwright blob report and the report job merges them into
+# the one HTML report. The blobs travel as workflow artifacts. This repository
+# is public and a blob holds traces and videos of signed-in sessions, so a job
+# uploads its blob only after scripts/blob-crypt.mjs encrypted it with the
+# BLOB_REPORT_KEY secret, and the artifacts are kept for one day.
+#
+# Every job runs on the ARC e2e lane (Scaleway platform-compute-v3, 4–6 vCPU,
+# two pods, shared with the server-api nightly). Its image,
+# ghcr.io/alkem-io/test-suites/e2e-runner (infra/e2e-runner), already holds the
+# browsers, their system libraries and poppler: the pods run without privilege
+# escalation, so a job cannot sudo. The runner group alkemio-e2e-ci only admits
+# this workflow from develop.
+
+env:
+  NODE_VERSION: 20.19.6
 
 jobs:
-  test:
-    # Pinned: `ubuntu-latest` migrated to Ubuntu 26.04 on 2026-10-19 and
-    # `playwright install --with-deps` has no dependency list for 26.04 on
-    # Playwright 1.58.x (run 40482406834). Lift the pin once Playwright
-    # supports ubuntu26.04-x64.
-    runs-on: ubuntu-24.04
+  serial:
+    name: serial lane
+    runs-on: arc-e2e-linux-x64
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Check the runner image's browser tooling
+        # `playwright install chromium` is a no-op when the image matches the
+        # lockfile, and downloads the new build without root when a Playwright
+        # bump got ahead of the image (move the lane to the new image tag then:
+        # only the system libraries cannot be topped up here). Branded Chrome
+        # (the nightly's channel: 'chrome') and poppler (Memo PDF download)
+        # must already be in the image; fail now rather than hours in.
+        run: |
+          set -euo pipefail
+          pnpm --filter @alkemio/test-suite-client-web exec playwright install chromium
+          google-chrome --version
+          pdftotext -v 2>&1 | head -1
+          pdffonts -v 2>&1 | head -1
+
+      - name: Check the report key
+        # Every job needs it to hand over its report. Find out now, not after
+        # an hour of tests.
+        env:
+          BLOB_REPORT_KEY: ${{ secrets.BLOB_REPORT_KEY }}
+        run: |
+          if [ "${#BLOB_REPORT_KEY}" -lt 32 ]; then
+            echo "::error::The BLOB_REPORT_KEY secret is missing or shorter than 32 characters."
+            exit 1
+          fi
+
+      - name: Run Playwright tests (serial lane)
+        id: tests
+        continue-on-error: true
+        env:
+          ALKEMIO_BASE_URL: ${{ vars.ALKEMIO_BASE_URL }}
+          ALKEMIO_SERVER: ${{ vars.ALKEMIO_SERVER }}
+          ALKEMIO_SERVER_REST: ${{ vars.ALKEMIO_SERVER_REST }}
+          ALKEMIO_SERVER_URL: ${{ vars.ALKEMIO_SERVER_URL }}
+          ALKEMIO_SERVER_WS: ${{ vars.ALKEMIO_SERVER_WS }}
+          KRATOS_ENDPOINT: ${{ vars.KRATOS_ENDPOINT }}
+          MAIL_SLURPER_ENDPOINT: ${{ vars.MAIL_SLURPER_ENDPOINT }}
+          AUTH_TEST_HARNESS_PASSWORD: ${{ secrets.AUTH_TEST_HARNESS_PASSWORD }}
+          PW_LANE: serial
+          PW_WORKERS: '1'
+          PW_BLOB_REPORT: serial
+        run: pnpm --filter @alkemio/test-suite-client-web run test:nightly
+
+      - name: Encrypt the blob report
+        if: ${{ always() }}
+        env:
+          BLOB_REPORT_KEY: ${{ secrets.BLOB_REPORT_KEY }}
+        run: |
+          set -euo pipefail
+          mkdir -p encrypted
+          # A run that crashed before the reporter wrote leaves no blob: the
+          # report job then merges what the other jobs wrote.
+          if [ -f client-web/blob-report/serial/serial.zip ]; then
+            node scripts/blob-crypt.mjs encrypt client-web/blob-report/serial/serial.zip encrypted/serial.zip.enc
+          fi
+
+      - name: Upload the encrypted blob report
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: blob-serial
+          path: encrypted/
+          if-no-files-found: ignore
+          retention-days: 1
+
+      - name: Fail the job if a test failed
+        if: ${{ steps.tests.outcome != 'success' }}
+        run: exit 1
+
+  parallel:
+    name: parallel lane (${{ matrix.shard }} of ${{ inputs.parallel_shards }})
+    # After the serial lane, whatever its result: its suites must not share
+    # the cluster with these, and a red serial lane is no reason to skip them.
+    needs: serial
+    if: ${{ !cancelled() }}
+    runs-on: arc-e2e-linux-x64
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: ${{ fromJSON(inputs.parallel_shards == '2' && '[1, 2]' || '[1]') }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Check the runner image's browser tooling
+        run: |
+          set -euo pipefail
+          pnpm --filter @alkemio/test-suite-client-web exec playwright install chromium
+          google-chrome --version
+          pdftotext -v 2>&1 | head -1
+          pdffonts -v 2>&1 | head -1
+
+      - name: Run Playwright tests (parallel lane, ${{ matrix.shard }} of ${{ inputs.parallel_shards }})
+        id: tests
+        continue-on-error: true
+        env:
+          ALKEMIO_BASE_URL: ${{ vars.ALKEMIO_BASE_URL }}
+          ALKEMIO_SERVER: ${{ vars.ALKEMIO_SERVER }}
+          ALKEMIO_SERVER_REST: ${{ vars.ALKEMIO_SERVER_REST }}
+          ALKEMIO_SERVER_URL: ${{ vars.ALKEMIO_SERVER_URL }}
+          ALKEMIO_SERVER_WS: ${{ vars.ALKEMIO_SERVER_WS }}
+          KRATOS_ENDPOINT: ${{ vars.KRATOS_ENDPOINT }}
+          MAIL_SLURPER_ENDPOINT: ${{ vars.MAIL_SLURPER_ENDPOINT }}
+          AUTH_TEST_HARNESS_PASSWORD: ${{ secrets.AUTH_TEST_HARNESS_PASSWORD }}
+          PW_LANE: parallel
+          PW_WORKERS: ${{ inputs.parallel_workers }}
+          PW_BLOB_REPORT: parallel-${{ matrix.shard }}
+        run: >-
+          pnpm --filter @alkemio/test-suite-client-web run test:nightly
+          --shard=${{ matrix.shard }}/${{ inputs.parallel_shards }}
+
+      - name: Encrypt the blob report
+        if: ${{ always() }}
+        env:
+          BLOB_REPORT_KEY: ${{ secrets.BLOB_REPORT_KEY }}
+          BLOB: parallel-${{ matrix.shard }}
+        run: |
+          set -euo pipefail
+          mkdir -p encrypted
+          if [ -f "client-web/blob-report/$BLOB/$BLOB.zip" ]; then
+            node scripts/blob-crypt.mjs encrypt "client-web/blob-report/$BLOB/$BLOB.zip" "encrypted/$BLOB.zip.enc"
+          fi
+
+      - name: Upload the encrypted blob report
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: blob-parallel-${{ matrix.shard }}
+          path: encrypted/
+          if-no-files-found: ignore
+          retention-days: 1
+
+      - name: Fail the job if a test failed
+        if: ${{ steps.tests.outcome != 'success' }}
+        run: exit 1
+
+  report:
+    name: report
+    # Whatever the lanes did: failures still publish a report.
+    needs: [serial, parallel]
+    if: ${{ !cancelled() }}
+    runs-on: arc-e2e-linux-x64
     permissions:
       contents: write
-
-    #container:
-    # it is recommended to match the image version with the installed playwright version
-    #      image: mcr.microsoft.com/playwright:v1.57.0-noble
-
     steps:
       - uses: actions/checkout@v7
 
@@ -34,21 +233,10 @@ jobs:
 
       - uses: actions/setup-node@v7
         with:
-          node-version: 20.19.6
+          node-version: ${{ env.NODE_VERSION }}
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
-
-      - name: Install Playwright Browsers
-        # The nightly config pins channel: 'chrome' (branded Chrome, matching the
-        # interactive config), so install that channel explicitly — the default
-        # `playwright install` only provisions the bundled Chromium.
-        run: pnpm --filter @alkemio/test-suite-client-web exec playwright install --with-deps chromium chrome
-
-      - name: Install poppler-utils
-        # The Memo PDF download suite reads each downloaded PDF with pdftotext
-        # and pdffonts; its content checks fail (by design) without them.
-        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends poppler-utils
 
       - name: Set run folder variables
         run: |
@@ -56,19 +244,30 @@ jobs:
           echo "RUN_DATE=$DATE" >> $GITHUB_ENV
           echo "RUN_ID=${{ github.run_id }}" >> $GITHUB_ENV
 
-      - name: Run Playwright tests
-        id: playwright
-        continue-on-error: true
+      - name: Download the encrypted blob reports
+        uses: actions/download-artifact@v4
+        with:
+          pattern: blob-*
+          path: encrypted
+          merge-multiple: true
+
+      - name: Merge the lanes into one report
         env:
-          ALKEMIO_BASE_URL: ${{ vars.ALKEMIO_BASE_URL }}
-          ALKEMIO_SERVER: ${{ vars.ALKEMIO_SERVER }}
-          ALKEMIO_SERVER_REST: ${{ vars.ALKEMIO_SERVER_REST }}
-          ALKEMIO_SERVER_URL: ${{ vars.ALKEMIO_SERVER_URL }}
-          ALKEMIO_SERVER_WS: ${{ vars.ALKEMIO_SERVER_WS }}
-          KRATOS_ENDPOINT: ${{ vars.KRATOS_ENDPOINT }}
-          MAIL_SLURPER_ENDPOINT: ${{ vars.MAIL_SLURPER_ENDPOINT }}
-          AUTH_TEST_HARNESS_PASSWORD: ${{ secrets.AUTH_TEST_HARNESS_PASSWORD }}
-        run: pnpm --filter @alkemio/test-suite-client-web run test:nightly
+          BLOB_REPORT_KEY: ${{ secrets.BLOB_REPORT_KEY }}
+          PLAYWRIGHT_HTML_OUTPUT_DIR: playwright-report
+          PLAYWRIGHT_HTML_OPEN: never
+        run: |
+          set -euo pipefail
+          mkdir -p client-web/blob-report/merged
+          # Whatever jobs wrote a report: a job that crashed must not cost the
+          # other jobs' results.
+          shopt -s nullglob
+          for encrypted in encrypted/*.zip.enc; do
+            name=$(basename "$encrypted" .enc)
+            node scripts/blob-crypt.mjs decrypt "$encrypted" "client-web/blob-report/merged/$name"
+          done
+          ls client-web/blob-report/merged
+          pnpm --filter @alkemio/test-suite-client-web exec playwright merge-reports --reporter html blob-report/merged
 
       - name: Publish report to GitHub Pages
         if: ${{ always() }}
@@ -84,16 +283,16 @@ jobs:
             "playwright" \
             "Playwright" \
             "client-web/playwright-report" \
-            "${{ steps.playwright.outcome }}"
+            "${{ needs.serial.result == 'success' && needs.parallel.result == 'success' && 'success' || 'failure' }}"
 
-      - name: Fail job if Playwright tests failed
-        if: ${{ steps.playwright.outcome == 'failure' }}
+      - name: Fail the run if a lane failed
+        if: ${{ needs.serial.result != 'success' || needs.parallel.result != 'success' }}
         run: exit 1
 
   deploy:
     # deploy regardless of test outcome so failures still publish reports
     if: ${{ always() }}
-    needs: test
+    needs: report
     uses: ./.github/workflows/deploy-github-pages.yml
     with:
       ref: gh-pages

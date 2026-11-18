@@ -1,0 +1,17 @@
+query ReadCalloutCollaboraDocument($calloutId: UUID!) {
+  lookup {
+    callout(ID: $calloutId) {
+      id
+      framing {
+        id
+        collaboraDocument {
+          id
+          documentType
+          previewUrl
+          updatedDate
+          authorization { myPrivileges }
+        }
+      }
+    }
+  }
+}

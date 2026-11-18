@@ -1,0 +1,17 @@
+query ResolveContributionUrl($url: String!) {
+  urlResolver(url: $url) {
+    state
+    type
+    space {
+      id
+      collaboration {
+        calloutsSet {
+          id
+          calloutId
+          contributionId
+          postId
+        }
+      }
+    }
+  }
+}

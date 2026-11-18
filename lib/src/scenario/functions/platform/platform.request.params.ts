@@ -28,6 +28,20 @@ export const readPlatformForumDiscussions = (
   actor: GraphqlActor = TestUser.GLOBAL_ADMIN,
 ) => runAs(actor, (sdk, headers) => sdk.ReadPlatformForumDiscussions({}, headers));
 
+/**
+ * One forum discussion with its author (`createdBy`), title, description,
+ * category and its comment room: every message with its sender, text and
+ * `threadID` (a top-level comment's threadID is its own id or null; a reply
+ * carries its parent's id).
+ */
+export const readPlatformDiscussion = (
+  discussionId: string,
+  actor: GraphqlActor = TestUser.GLOBAL_ADMIN,
+) =>
+  runAs(actor, (sdk, headers) =>
+    sdk.GetPlatformDiscussionsDataById({ discussionId }, headers),
+  );
+
 /** Remove a platform role from a user. The counterpart of `assignPlatformRole`. */
 export const removePlatformRoleFromUser = (
   actorID: string,

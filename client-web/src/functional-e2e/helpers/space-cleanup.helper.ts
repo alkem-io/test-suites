@@ -1,7 +1,6 @@
 import { expect } from '@playwright/test';
-import { getGraphqlClient, TestUser } from '@alkemio/tests-lib';
-import { graphqlErrorWrapper } from '@alkemio/tests-lib';
 import { deleteSpace } from '@alkemio/tests-lib/scenario/baseFunctions';
+import { readSpaceByNameId, readSpaceSubspaceTree } from '@alkemio/tests-lib';
 
 /**
  * Deletes the Space with this nameID if it exists — the safety net for a walk
@@ -12,12 +11,7 @@ import { deleteSpace } from '@alkemio/tests-lib/scenario/baseFunctions';
  * error.
  */
 export async function deleteSpaceByNameId(nameID: string): Promise<void> {
-  const client = getGraphqlClient();
-  const lookupOnce = () =>
-    graphqlErrorWrapper(
-      (authToken: string | undefined) => client.getSpaceIdByNameId({ nameID }, { authorization: `Bearer ${authToken}` }),
-      TestUser.GLOBAL_ADMIN
-    );
+  const lookupOnce = () => readSpaceByNameId(nameID);
   let lookup = await lookupOnce();
   // A Space whose creation is still in flight (the walk failed mid-create)
   // exists but has no authorization policy yet, and the lookup answers
@@ -41,13 +35,50 @@ export async function deleteSpaceByNameId(nameID: string): Promise<void> {
       )
       .toBe(false);
   }
+  // Never created (the walk failed before the server saw the create).
+  if (JSON.stringify(lookup.error ?? '').includes('ENTITY_NOT_FOUND')) return;
   if (lookup.error) {
     throw new Error(`could not look up Space '${nameID}': ${JSON.stringify(lookup.error)}`);
   }
   const id = lookup.data?.lookupByName?.space?.id;
   if (!id) return;
-  const res = await deleteSpace(id);
-  if (res.error) {
-    throw new Error(`could not delete leaked Space '${nameID}': ${JSON.stringify(res.error)}`);
+  // Leaves first, and a refusal throws: a leak must fail the hook loudly.
+  await deleteSpaceTree(id);
+}
+
+/**
+ * Deletes a space and every subspace under it, leaves first — the server
+ * refuses `deleteSpace` on a space that still has subspaces ("contains 1
+ * subspaces"), so a walk that creates subspaces through the UI must remove
+ * them before its seeded L0 can go. `TestScenarioFactory.cleanUpBaseScenario`
+ * only knows the subspaces it created itself and logs (does not throw) when
+ * the L0 delete is refused, which leaks the L0 against the account's Space
+ * allowance. Idempotent: a space that is already gone is not an error.
+ * Throws with every failure listed, so a leak fails the hook loudly.
+ */
+export async function deleteSpaceTree(spaceId: string): Promise<void> {
+  if (!spaceId) return;
+  const tree = await readSpaceSubspaceTree(spaceId);
+  const root = tree.data?.lookup?.space;
+  if (!root) {
+    // Gone already (not-found), or unreadable — only the latter is a problem.
+    const notFound = JSON.stringify(tree.error ?? '').includes('ENTITY_NOT_FOUND');
+    if (tree.error && !notFound) {
+      throw new Error(`could not read the subspace tree of ${spaceId}: ${JSON.stringify(tree.error)}`);
+    }
+    return;
+  }
+  const ordered = [
+    ...root.subspaces.flatMap(l1 => l1.subspaces.map(l2 => l2.id)),
+    ...root.subspaces.map(l1 => l1.id),
+    root.id,
+  ];
+  const failures: string[] = [];
+  for (const id of ordered) {
+    const res = await deleteSpace(id);
+    if (res.error) failures.push(`${id}: ${JSON.stringify(res.error.errors ?? res.error)}`);
+  }
+  if (failures.length > 0) {
+    throw new Error(`deleteSpaceTree(${spaceId}) left spaces behind: ${failures.join('; ')}`);
   }
 }

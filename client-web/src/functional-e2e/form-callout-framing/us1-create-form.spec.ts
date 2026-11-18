@@ -1,4 +1,3 @@
-import { randomUUID } from 'node:crypto';
 import {
   expect,
   type Browser,
@@ -29,18 +28,28 @@ import {
   updateCalloutVisibility,
   VirtualContributorBodyOfKnowledgeType,
   type CreateCalloutFormQuestionInput,
-  type GraphqlActor,
   type GraphqlReturnWithError,
 } from '@alkemio/tests-lib';
 import { fillSecret } from '../helpers/login.helper';
 import { must } from '../helpers/lib-actor.helper';
+import {
+  actorFor,
+  ADMIN_EMAIL,
+  FormFixtureLedger,
+  formRunId,
+  harnessPassword,
+  joinAsSelf,
+  loadHarnessPersonas,
+  openMembership,
+} from './form-callout-framing.helpers';
 
 /**
  * workspace#080-form-callout-framing — User Story 1 (P1): Create a Post with a Form.
  *
  * AS1  a Subspace-only admin is offered the Form chip in the create-Post dialog.
  * AS2  a member who may create Posts gets no Form chip; the API refuses to create a
- *      Form (FORBIDDEN_POLICY) and to switch a Post to one (FORM_FRAMING_FIXED_KIND).
+ *      Form and to switch a Post to one (both FORBIDDEN_POLICY: the shared
+ *      admin-only framing guard, server#6667); the Post keeps its framing.
  * AS3  a VC knowledge base offers no Form chip and refuses a Form; converting a Space
  *      that holds a Form Post into a knowledge base is rejected before any callout
  *      moves (FORM_TRANSFER_NOT_ALLOWED, callout count unchanged).
@@ -74,34 +83,20 @@ import { must } from '../helpers/lib-actor.helper';
  *      hint, saves, and View responses shows the old text answer and the new
  *      option answer in the same column.
  *
- * Self-contained: provisions its own Kratos identities (admin API), Space, Subspace,
- * Virtual Contributor and Forms through the non-interactive GraphQL endpoint, then
- * walks the real UI.
- *
- * Environment (defaults suit the local forge stack):
- *   ALKEMIO_BASE_URL        http://localhost:3000
- *   KRATOS_ADMIN_URL        Kratos ADMIN base incl. /admin, e.g. http://localhost:32841/admin
- *   ALKEMIO_ADMIN_EMAIL     admin@alkem.io
- *   ALKEMIO_ADMIN_PASSWORD  the platform admin's password
- *   ALKEMIO_ADMIN_TOKEN     (optional) a pre-minted admin bearer; skips the admin login
+ * Self-contained (form-callout-framing.helpers.ts): registers its own disposable
+ * identities through public Kratos, joins them to its own Space and Subspace as
+ * themselves, seeds the Virtual Contributors and Forms through
+ * `@alkemio/tests-lib`, walks the real UI, and deletes all of it in a file-level
+ * `afterAll`. Needs only the harness .env (ALKEMIO_BASE_URL, the server and
+ * Kratos public endpoints, AUTH_TEST_HARNESS_PASSWORD, the mail sink).
  */
 
 const BASE = (process.env.ALKEMIO_BASE_URL || 'http://localhost:3000').replace(
   /\/$/,
   ''
 );
-const KRATOS_ADMIN = (process.env.KRATOS_ADMIN_URL || '').replace(/\/$/, '');
-const ADMIN_EMAIL = process.env.ALKEMIO_ADMIN_EMAIL || 'admin@alkem.io';
-const ADMIN_PASSWORD =
-  process.env.ALKEMIO_ADMIN_PASSWORD ||
-  process.env.AUTH_ADMIN_PASSWORD ||
-  'password';
-// Per-run secret for the throwaway identities this walk provisions (override with
-// FORGE_PERSONA_PASSWORD); a fixed literal would leave them loginable after the run.
-const USER_PASSWORD =
-  process.env.FORGE_PERSONA_PASSWORD || `F080-${randomUUID()}-Aa1!`;
 
-const RUN = Date.now().toString(36);
+const RUN = formRunId();
 const email = (tag: string) => `us1-${tag}-${RUN}@alkem.io`;
 
 type Persona = 'a2' | 'm1' | 'm2';
@@ -111,40 +106,8 @@ const personaEmail: Record<Persona, string> = {
   m2: email('m2'),
 };
 
-const tokens = new Map<string, string>();
-// Optional: reuse an already-minted admin bearer so a busy login-backoff (429) on the
-// shared admin identifier cannot stall the run.
-if (process.env.ALKEMIO_ADMIN_TOKEN) {
-  tokens.set(ADMIN_EMAIL, process.env.ALKEMIO_ADMIN_TOKEN);
-}
-
-async function mintToken(userEmail: string, password: string) {
-  const cached = tokens.get(userEmail);
-  if (cached) return cached;
-  let token = '';
-  // The endpoint is rate limited; retry with a bounded backoff instead of sleeping.
-  await expect(async () => {
-    const res = await fetch(`${BASE}/api/auth/non-interactive-login`, {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ email: userEmail, password }),
-    });
-    expect(res.status, `login ${userEmail}`).toBe(201);
-    token = ((await res.json()) as { api_token: string }).api_token;
-  }).toPass({ intervals: [1_000, 5_000, 15_000], timeout: 120_000 });
-  tokens.set(userEmail, token);
-  return token;
-}
-
-/** The lib actor for one of this run's identities: its bearer, minted once. */
-async function actorFor(userEmail: string): Promise<GraphqlActor> {
-  return {
-    bearerToken: await mintToken(
-      userEmail,
-      userEmail === ADMIN_EMAIL ? ADMIN_PASSWORD : USER_PASSWORD
-    ),
-  };
-}
+/** Every Space, VC and user this file seeds; removed by the file-level afterAll. */
+const ledger = new FormFixtureLedger();
 
 type GqlError = {
   message?: string;
@@ -156,28 +119,6 @@ const firstError = (result: GraphqlReturnWithError<unknown>) =>
 
 const detailsCode = (result: GraphqlReturnWithError<unknown>) =>
   firstError(result)?.extensions?.details?.code;
-
-async function createIdentity(userEmail: string, first: string, last: string) {
-  const res = await fetch(`${KRATOS_ADMIN}/identities`, {
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({
-      schema_id: 'default',
-      state: 'active',
-      traits: { email: userEmail, accepted_terms: true, name: { first, last } },
-      credentials: { password: { config: { password: USER_PASSWORD } } },
-      verifiable_addresses: [
-        { value: userEmail, verified: true, via: 'email', status: 'completed' },
-      ],
-    }),
-  });
-  expect(res.status, `kratos identity ${userEmail}`).toBe(201);
-}
-
-async function meId(userEmail: string) {
-  const data = must(await readMyUser(await actorFor(userEmail)), 'me');
-  return data.me.user!.id;
-}
 
 async function acceptCookies(page: Page) {
   const accept = page.getByRole('button', { name: /accept all cookies/i });
@@ -192,8 +133,7 @@ const openContexts: BrowserContext[] = [];
 
 async function signIn(
   browser: Browser,
-  userEmail: string,
-  password = USER_PASSWORD
+  userEmail: string
 ): Promise<Page> {
   const context = await browser.newContext({
     viewport: { width: 1500, height: 1300 },
@@ -206,7 +146,10 @@ async function signIn(
   await login.click();
   await page.waitForURL(/.*login.*/);
   await page.getByRole('textbox', { name: 'E-Mail' }).fill(userEmail);
-  await fillSecret(page.getByRole('textbox', { name: 'Password' }), password);
+  await fillSecret(
+    page.getByRole('textbox', { name: 'Password' }),
+    harnessPassword()
+  );
   await page.getByRole('button', { name: 'Sign in', exact: true }).click();
   await page.waitForURL(/.*home.*/, { timeout: 30_000 });
   const newDesign = page.getByRole('button', {
@@ -299,30 +242,50 @@ const questionOptions = (scope: ReturnType<Page['getByRole']>, n: number) =>
 const visibleFormRadio = (page: Page) =>
   page.getByRole('dialog').getByRole('radio', { name: 'Form', exact: true });
 
+// The framing chip strip keeps only Whiteboard, Memo and Media Gallery on the
+// surface; every other framing type, Form included, is a menu item behind
+// "More to add" (client-web `FramingChipStrip`). A chip picked from the menu
+// joins the row as the checked radio.
+const moreToAdd = (page: Page) =>
+  page.getByRole('dialog').getByRole('button', { name: 'More to add' });
+const formMenuItem = (page: Page) =>
+  page.getByRole('menuitem', { name: 'Form', exact: true });
+/** Opens "More to add"; Poll in the menu is the positive control. */
+const openMoreToAdd = async (page: Page) => {
+  await moreToAdd(page).click();
+  await expect(
+    page.getByRole('menuitem', { name: 'Poll', exact: true })
+  ).toBeVisible();
+};
+const chooseForm = async (page: Page) => {
+  await openMoreToAdd(page);
+  await formMenuItem(page).click();
+  await expect(visibleFormRadio(page)).toHaveAttribute('aria-checked', 'true');
+};
+
 test.describe.configure({ mode: 'serial' });
+
+// File level, so it also runs when a failure retires the worker mid-file.
+test.afterAll(async () => {
+  await ledger.teardown();
+});
 
 test.describe(
   'US1 — create a Post with a Form',
   { tag: ['@forge-acceptance'] },
   () => {
-    test.setTimeout(300_000);
-
     test.afterEach(async () => {
       await Promise.all(openContexts.splice(0).map(context => context.close()));
     });
 
     test.beforeAll(async () => {
-      expect(
-        KRATOS_ADMIN,
-        'KRATOS_ADMIN_URL must point at the Kratos admin API (e.g. http://localhost:32841/admin)'
-      ).not.toBe('');
-
-      await createIdentity(personaEmail.a2, 'Ada', 'Admin');
-      await createIdentity(personaEmail.m1, 'Mia', 'Memberone');
-      await createIdentity(personaEmail.m2, 'Max', 'Membertwo');
-      for (const p of ['a2', 'm1', 'm2'] as Persona[]) {
-        fixture.userIds[p] = await meId(personaEmail[p]);
-      }
+      // Three self-registrations (each a verification-mail round trip) and a
+      // Space with five Forms: larger than one case's tier.
+      test.setTimeout(300_000);
+      await loadHarnessPersonas();
+      fixture.userIds.a2 = await ledger.registerUser(personaEmail.a2, 'Ada', 'Admin');
+      fixture.userIds.m1 = await ledger.registerUser(personaEmail.m1, 'Mia', 'Memberone');
+      fixture.userIds.m2 = await ledger.registerUser(personaEmail.m2, 'Max', 'Membertwo');
 
       const admin = await actorFor(ADMIN_EMAIL);
       const a2 = await actorFor(personaEmail.a2);
@@ -335,12 +298,16 @@ test.describe(
             nameID: `us1-space-${RUN}`,
             about: { profileData: { displayName: `US1 Space ${RUN}` } },
             collaborationData: { calloutsSetData: {} },
-            settings: { privacy: { mode: SpacePrivacyMode.Public } },
+            settings: {
+              privacy: { mode: SpacePrivacyMode.Public },
+              membership: openMembership('space'),
+            },
           },
           admin
         ),
         'create space'
       ).createSpace;
+      ledger.space(space.id);
       const sub = must(
         await createSubspaceWithData(
           {
@@ -349,6 +316,7 @@ test.describe(
             about: { profileData: { displayName: `US1 Sub ${RUN}` } },
             collaborationData: { calloutsSetData: {} },
             settings: {
+              membership: openMembership('subspace'),
               collaboration: {
                 allowEventsFromSubspaces: true,
                 allowGuestContributions: false,
@@ -366,17 +334,20 @@ test.describe(
       fixture.subUrl = sub.about.profile.url;
       fixture.subCalloutsSetId = sub.collaboration.calloutsSet.id;
 
-      const assign = async (roleSetID: string, p: Persona, role: RoleName) =>
-        must(
-          await assignRoleToUser(fixture.userIds[p], roleSetID, role, admin),
-          `assign ${role} ${p}`
-        );
+      // Slice B: membership is joined as self — the Space first, then the Subspace.
       // a2 is an admin of the Subspace only: a plain member of the parent Space.
-      for (const p of ['a2', 'm1', 'm2'] as Persona[]) {
-        await assign(space.community.roleSet.id, p, RoleName.Member);
-        await assign(sub.community.roleSet.id, p, RoleName.Member);
-      }
-      await assign(sub.community.roleSet.id, 'a2', RoleName.Admin);
+      const members = (['a2', 'm1', 'm2'] as Persona[]).map(p => personaEmail[p]);
+      await joinAsSelf(space.community.roleSet.id, members, 'the Space');
+      await joinAsSelf(sub.community.roleSet.id, members, 'the Subspace');
+      must(
+        await assignRoleToUser(
+          fixture.userIds.a2,
+          sub.community.roleSet.id,
+          RoleName.Admin,
+          admin
+        ),
+        'assign ADMIN a2'
+      );
 
       const publish = async (calloutId: string) =>
         must(
@@ -534,12 +505,8 @@ test.describe(
         .getByRole('button', { name: /add post/i })
         .first()
         .click();
-      await expect(visibleFormRadio(page)).toBeVisible();
-      await expect(
-        page
-          .getByRole('dialog')
-          .getByRole('radio', { name: 'Poll', exact: true })
-      ).toBeVisible();
+      await openMoreToAdd(page);
+      await expect(formMenuItem(page)).toBeVisible();
     });
 
     test('US1-AS2 a member is not offered Form and the server refuses it', async ({
@@ -551,12 +518,10 @@ test.describe(
         .getByRole('button', { name: /add post/i })
         .first()
         .click();
-      await expect(
-        page
-          .getByRole('dialog')
-          .getByRole('radio', { name: 'Poll', exact: true })
-      ).toBeVisible();
+      await openMoreToAdd(page);
+      await expect(formMenuItem(page)).toHaveCount(0);
       await expect(visibleFormRadio(page)).toHaveCount(0);
+      await page.keyboard.press('Escape');
 
       const m1 = await actorFor(personaEmail.m1);
       const forbidden = await createCalloutWithData(
@@ -597,7 +562,18 @@ test.describe(
         },
         m1
       );
-      expect(detailsCode(switched)).toBe('FORM_FRAMING_FIXED_KIND');
+      // The member's switch is refused by the shared admin-only framing guard
+      // (server#6667, SEC-084-01), which runs before the fixed-kind check; the
+      // admin path to FORM_FRAMING_FIXED_KIND is covered by server-api
+      // form-placement-guards. The Post keeps its framing.
+      expect(firstError(switched)?.extensions?.code).toBe('FORBIDDEN_POLICY');
+      const after = await readCalloutFraming(
+        plain.createCalloutOnCalloutsSet.id,
+        await actorFor(personaEmail.a2)
+      );
+      expect(after.data?.lookup?.callout?.framing?.type).toBe(
+        CalloutFramingType.None
+      );
     });
 
     test('US1-AS3 a knowledge base refuses Form and a Form Space cannot be converted', async ({
@@ -624,8 +600,9 @@ test.describe(
         ),
         'create VC with KB'
       ).createVirtualContributor;
+      ledger.vc(vc.id);
 
-      const admin = await signIn(browser, ADMIN_EMAIL, ADMIN_PASSWORD);
+      const admin = await signIn(browser, ADMIN_EMAIL);
       await open(admin, `${vc.profile!.url}/knowledge-base`);
       await admin
         .getByRole('button', { name: 'Add', exact: true })
@@ -636,6 +613,8 @@ test.describe(
           .getByRole('dialog')
           .getByRole('radio', { name: 'Posts', exact: true })
       ).toBeVisible();
+      // A knowledge base offers no framing at all: no chip row, no menu.
+      await expect(moreToAdd(admin)).toHaveCount(0);
       await expect(visibleFormRadio(admin)).toHaveCount(0);
 
       const refused = await createCalloutWithData(
@@ -668,6 +647,7 @@ test.describe(
         ),
         'create source space'
       ).createSpace;
+      ledger.space(source.id);
       must(
         await createCalloutWithData(
           {
@@ -711,6 +691,7 @@ test.describe(
         ),
         'create VC over a space'
       ).createVirtualContributor;
+      ledger.vc(spaceVc.id);
       const converted = await convertVirtualContributorToUseKnowledgeBase(
         { virtualContributorID: spaceVc.id },
         adminActor
@@ -729,7 +710,7 @@ test.describe(
         .first()
         .click();
       const dialog = page.getByRole('dialog');
-      await visibleFormRadio(page).click();
+      await chooseForm(page);
       await dialog
         .getByRole('textbox', { name: 'Title', exact: true })
         .fill(BUILT_TITLE);
@@ -997,9 +978,12 @@ test.describe(
       await dialog
         .getByRole('radio', { name: 'Form', exact: true })
         .click({ force: true });
-      await dialog
-        .getByRole('radio', { name: 'Poll', exact: true })
-        .click({ force: true });
+      // The other framing types sit behind "More to add", locked in edit mode:
+      // the trigger is aria-disabled and opening it shows no menu.
+      const more = dialog.getByRole('button', { name: 'More to add' });
+      await expect(more).toHaveAttribute('aria-disabled', 'true');
+      await more.click({ force: true });
+      await expect(page.getByRole('menuitem')).toHaveCount(0);
       await expect(dialog.getByRole('radio', { checked: true })).toHaveCount(1);
       await expect(
         dialog.getByRole('radio', { name: 'Form', exact: true })
@@ -1203,7 +1187,7 @@ test.describe(
         .first()
         .click();
       const dialog = page.getByRole('dialog');
-      await visibleFormRadio(page).click();
+      await chooseForm(page);
       await dialog.getByRole('button', { name: /add question/i }).click();
       await questionField(dialog, 1).fill('First prompt');
       await questionField(dialog, 2).fill('Second prompt');

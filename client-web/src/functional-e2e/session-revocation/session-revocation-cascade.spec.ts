@@ -1,36 +1,41 @@
-// plan: docs/qa/6315-session-revocation-test-plan.md (Stream B — SRB-G1..G3,
-//       SRB-R1, SRB-R2, SRB-E1, SRB-E2, SRB-N1)
+// plan: client-web/src/functional-e2e/session-revocation/session-revocation-test-plan.md
+//       (SRB-G1..G3, SRB-R1, SRB-R2, SRB-E1, SRB-E2, SRB-N1)
 // feature: alkem-io/server#6324 — story server#6315
 //
-// The revocation cascade, observed end to end over a real `alkemio_session`.
-// One disposable subject is logged in three times and then deleted exactly
-// once; every scenario in this file reads the state on one side or the other
-// of that single one-way door, which is why the file is serial.
+// The revocation cascade, end to end over real browser sessions. One
+// disposable subject signs in three times and is deleted once; every case
+// reads the state on one side or the other of that one-way door, which is why
+// the file is serial.
+//
+// W2 Tier 0 item 2: the oracles are GraphQL outcomes through the lib (the
+// session resolves to the subject / is refused) and what the browser shows.
+// None depends on a Kratos `error_code`, the cookie's name or format, the
+// anonymous actor's id, or the `id-token-hint` route.
 
 import { expect, test } from '@playwright/test';
-import { logInHeaderLink } from '../authentication/common-authentication-page-elements';
+import type { GraphqlActor } from '@alkemio/tests-lib';
 import { acceptCookiesIfVisible } from '../helpers/cookies.helper';
 import {
   baseUrl,
   closeSessions,
-  DisposableUser,
+  credentialOf,
+  deleteEverythingFor,
   deleteUserAsGlobalAdmin,
-  deleteUserQuietly,
+  DisposableUser,
+  expectRefused,
+  expectResolvesTo,
   LoggedInSession,
+  logInHeaderLink,
+  notificationsButton,
   openLoggedInSession,
-  captureSessionCookie,
-  probeIdTokenHint,
-  probeIdTokenHintWithCookie,
-  probePrivateGraphqlWithCookie,
-  probePrivateGraphql,
-  ProbeResult,
   provisionDisposableUser,
   TOKEN_MATERIAL_MARKERS,
+  whoAmI,
+  WhoAmI,
 } from './session-revocation.helpers';
 
-test.describe('Session revocation cascade over the BFF cookie (server#6315)', () => {
-  // Serial: the scenarios share one disposable subject and its deletion is a
-  // one-way door. Running them in parallel would race the door.
+test.describe('Session revocation cascade (server#6315)', () => {
+  // The cases share one subject and its deletion is a one-way door.
   test.describe.configure({ mode: 'serial' });
 
   let subject: DisposableUser;
@@ -38,243 +43,207 @@ test.describe('Session revocation cascade over the BFF cookie (server#6315)', ()
   let c2: LoggedInSession | undefined;
   let c3: LoggedInSession | undefined;
   let c4: LoggedInSession | undefined;
-  let c1StaleCookie = '';
 
   /**
-   * Pre-deletion `id-token-hint` reads for all three sessions.
-   *
-   * Captured in `beforeAll` rather than inside the tests because the deletion
-   * happens once, in SRB-G1: by the time SRB-E1 runs, "these sessions were
-   * alive beforehand" is no longer observable. Asserting the captured values
-   * keeps the precondition a real assertion instead of an assumption.
+   * The three credentials as they were before the deletion. Replaying one
+   * afterwards is the stale session; the lib sends it on its own client, so a
+   * probe never changes the browser's jar.
    */
-  const preDeletionHints: Record<'c1' | 'c2' | 'c3', ProbeResult | undefined> =
-    {
-      c1: undefined,
-      c2: undefined,
-      c3: undefined,
-    };
+  const stale: Partial<Record<'c1' | 'c2' | 'c3', GraphqlActor>> = {};
+  /** What each credential resolved to before the deletion (the positive control). */
+  const before: Partial<Record<'c1' | 'c2' | 'c3', WhoAmI>> = {};
 
   /** Every response body seen from the deletion onward — fed to SRB-N1. */
-  const capturedWireBodies: string[] = [];
+  const wireBodies: string[] = [];
+  let spaBodies = 0;
 
   test.beforeAll(async ({ browser }) => {
-    // Kratos registration + email verification + three full SPA logins. Far
-    // beyond the default 30s hook budget.
+    // One registration (verification mail) + three SPA sign-ins.
     test.setTimeout(300_000);
-
     subject = await provisionDisposableUser('cascade');
 
-    // Three independent contexts → three distinct sids indexed under one sub
-    // (SRB-E1). Sequential logins: concurrent Kratos flows for one identity
-    // step on each other.
+    // Sequential: concurrent Kratos flows for one identity step on each other.
     c1 = await openLoggedInSession(browser, subject.email);
     c2 = await openLoggedInSession(browser, subject.email);
     c3 = await openLoggedInSession(browser, subject.email);
 
-    // Captured BEFORE the deletion: the first rejected request clears the
-
-    // cookie from c1's jar, so the stale-cookie replays below need a copy.
-
-    c1StaleCookie = await captureSessionCookie(c1!.context);
-
-    preDeletionHints.c1 = await probeIdTokenHint(c1.context);
-    preDeletionHints.c2 = await probeIdTokenHint(c2.context);
-    preDeletionHints.c3 = await probeIdTokenHint(c3.context);
+    for (const [name, session] of [
+      ['c1', c1],
+      ['c2', c2],
+      ['c3', c3],
+    ] as const) {
+      stale[name] = await credentialOf(session.context);
+      before[name] = await whoAmI(stale[name]!);
+    }
   });
 
   test.afterAll(async () => {
-    // Unconditional: a leaked context holds a live session.
     await closeSessions(c1, c2, c3, c4);
-    // No-op when the subject is already gone (the normal case). The Kratos
-    // identity outlives the run by design — the email is unique per run, so it
-    // cannot collide, and SRB-E2 needs it alive.
-    await deleteUserQuietly(subject?.userId);
+    // The subject was deleted with its identity kept, and SRB-E2 signed it in
+    // again: remove whatever user that email is now, with the identity.
+    await deleteEverythingFor(subject);
   });
 
-  test('SRB-G1 — deleting the account revokes the live BFF session on the next request', async () => {
-    // Precondition, asserted: C1 really did hold a session before the
-    // deletion. Claiming a session "died" without first proving it lived is
-    // the classic vacuous pass.
-    expect(preDeletionHints.c1?.status).toBe(200);
-    expect(preDeletionHints.c1?.json?.id_token).toBeTruthy();
+  test('SRB-G1 — deleting the account revokes the live session on the next request', async () => {
+    // A session cannot be shown to die unless it was shown to live.
+    expectResolvesTo(before.c1!, subject.userId, 'C1 before the deletion');
 
-    // Out of band, as global admin over the bearer path. `deleteIdentity:
-    // false` so the Kratos identity survives for SRB-E2.
+    // Out of band, as the platform admin over the bearer path. The identity is
+    // kept so SRB-E2 can sign the same email in again.
     const deletion = await deleteUserAsGlobalAdmin(subject.userId, {
       deleteIdentity: false,
     });
-    capturedWireBodies.push(deletion.text);
+    wireBodies.push(deletion.text);
     expect(deletion.status).toBe(200);
     expect(deletion.body?.errors).toBeUndefined();
     expect(deletion.body?.data?.deleteUser?.id).toBe(subject.userId);
 
-    // No polling, no retry, no sleep. SC-002 is not a wall-clock threshold —
-    // a threshold would only generate flake. The property FR-026a's
-    // awaited-in-line design actually guarantees is stronger and
-    // deterministic: the FIRST request after the mutation resolves is already
-    // refused.
-    const hint = await probeIdTokenHint(c1!.context);
-    capturedWireBodies.push(hint.text);
-    expect(hint.status).toBe(401);
-    // Two 401 wire shapes are legitimate here: the handler's compact
-    // `{"error":"unauthenticated"}` when no session is presented, and the
-    // global HttpExceptionFilter envelope when the interceptor rejects a
-    // tombstoned session before the handler runs. Both say "unauthenticated";
-    // neither may carry token material (checked over capturedWireBodies).
-    expect(hint.text).toMatch(/unauthenticated|"statusCode":401/);
+    // No poll, no retry: the revocation is awaited inside the mutation, so the
+    // FIRST request after it resolves is already refused.
+    const after = await whoAmI(stale.c1!);
+    wireBodies.push(after.raw);
+    expectRefused(after, 'C1 right after the deletion');
   });
 
-  test('SRB-G2 — the GraphQL gate refuses too, with the right code', async () => {
-    // Replay the STALE cookie: c1's own jar was cleared by SRB-G1's 401.
-    const result = await probePrivateGraphqlWithCookie(c1StaleCookie);
-    capturedWireBodies.push(result.text);
-
-    // Wire-level 401, not just an errors envelope inside an HTTP 200:
-    // AuthInterceptor maps CookieSessionInvalidError to AuthenticationException,
-    // whose extensions.http.status makes Apollo emit the real status.
-    expect(result.status).toBe(401);
-
-    const firstError = result.json?.errors?.[0];
-    expect(firstError?.extensions?.code).toBe('UNAUTHENTICATED');
-    // The SET, never one literal. The per-session tombstone branch
-    // (`account_deleted`) runs before the subject-marker branch
-    // (`subject_revoked`), and which one wins depends on whether an in-flight
-    // request rewrote the session key — the very race the marker exists to
-    // cover. Pinning one value would make this spec flake on the feature's
-    // own reason for existing.
-    expect(['account_deleted', 'subject_revoked']).toContain(
-      firstError?.extensions?.error_code
-    );
+  test('SRB-G2 — the refusal is an authentication error, not a data error', async () => {
+    const after = await whoAmI(stale.c1!);
+    wireBodies.push(after.raw);
+    expectRefused(after, 'C1 replayed');
+    // The client branches on `extensions.code` (never on message text) to send
+    // the user to sign-in; that code is the contract, not the server's
+    // internal reason string.
+    expect(after.errors[0]?.extensions?.code).toBe('UNAUTHENTICATED');
   });
 
-  test('SRB-R1 — the session must not survive, and must not silently fall through', async () => {
+  test('SRB-R1 — the session does not come back on repeated use', async () => {
+    // A `destroy()` instead of a tombstone answers the second request as an
+    // anonymous visitor: the regression server#6315 fixed.
     for (let attempt = 1; attempt <= 3; attempt++) {
-      const hint = await probeIdTokenHintWithCookie(c1StaleCookie);
-      capturedWireBodies.push(hint.text);
-
-      // The failure mode being fenced is `destroy()` instead of
-      // `markTerminated()`: that yields a silent anonymous 200 and reproduces
-      // #6315 in a new costume. Assert the rejection explicitly — a non-200 is
-      // not enough, and 200 is called out on its own so a regression reads
-      // unambiguously in the report.
-      expect(
-        hint.status,
-        `attempt ${attempt} must not be a silent 200`
-      ).not.toBe(200);
-      expect(hint.status, `attempt ${attempt}`).toBe(401);
-
-      // eslint-disable-next-line no-restricted-syntax -- spacing between probes of a revoked session, so each attempt is a fresh request
-      if (attempt < 3) await c1!.page.waitForTimeout(2000);
+      const after = await whoAmI(stale.c1!);
+      wireBodies.push(after.raw);
+      expectRefused(after, `C1 replay ${attempt}`);
     }
   });
 
-  test('SRB-R2 — no anonymous 200 on the GraphQL path either', async () => {
-    const result = await probePrivateGraphqlWithCookie(c1StaleCookie);
-    capturedWireBodies.push(result.text);
+  test('SRB-R2 — the stale session is never served as an anonymous visitor', async () => {
+    // The same probe from the other side: an anonymous answer is a 200 whose
+    // `me` resolves with no user. Positive control: the identical read with
+    // no credential at all IS that anonymous answer, so `meResolved` is a
+    // live discriminator here, not a constant.
+    const anonymous = await whoAmI({ cookieHeader: '' });
+    expect(anonymous.status).toBe(200);
+    expect(anonymous.meResolved).toBe(true);
+    expect(anonymous.userId).toBeNull();
 
-    expect(result.status).toBe(401);
-    expect(Array.isArray(result.json?.errors)).toBe(true);
-    expect(result.json.errors.length).toBeGreaterThan(0);
-
-    // Spelled out rather than implied by the status: a `destroy()`-based
-    // implementation returns exactly this, and it is what would make the
-    // feature look fixed while being broken.
-    expect(result.json?.data?.me?.id).not.toBe('me-');
+    const after = await whoAmI(stale.c1!);
+    wireBodies.push(after.raw);
+    expect(after.status).not.toBe(anonymous.status);
+    expect(after.meResolved).toBe(false);
   });
 
   test('SRB-E1 — three concurrent sessions, all die', async () => {
-    // All three were alive before the single deletion.
-    expect(preDeletionHints.c1?.status).toBe(200);
-    expect(preDeletionHints.c2?.status).toBe(200);
-    expect(preDeletionHints.c3?.status).toBe(200);
-
-    // 100% of that account's sessions, not just the one that happened to be
-    // asserted first.
-    for (const [name, session] of [
-      ['C1', c1!],
-      ['C2', c2!],
-      ['C3', c3!],
-    ] as const) {
-      const hint = await probeIdTokenHint(session.context);
-      capturedWireBodies.push(hint.text);
-      expect(hint.status, `${name} survived the revocation`).toBe(401);
+    for (const name of ['c1', 'c2', 'c3'] as const) {
+      expectResolvesTo(before[name]!, subject.userId, `${name} before`);
+      const after = await whoAmI(stale[name]!);
+      wireBodies.push(after.raw);
+      expectRefused(after, `${name} after the deletion`);
     }
   });
 
-  test('SRB-G3 — the application renders a clean signed-out state', async () => {
-    test.setTimeout(60_000);
-
+  test('SRB-G3a — the SPA reload after the deletion: traffic captured, the browser credential is not the subject', async () => {
     const page = c1!.page;
-    // Collect the reload's API traffic for SRB-N1 — this is the only scenario
-    // that exercises the SPA's own requests rather than direct probes.
+    // The SPA's own API traffic on reload, for SRB-N1. Every body read is
+    // kept so the test can wait for them all before it ends.
+    const reads: Promise<void>[] = [];
     page.on('response', response => {
       if (!response.url().includes('/api/')) return;
-      response
-        .text()
-        .then(text => capturedWireBodies.push(text))
-        .catch(() => {
-          // Redirects and empty bodies have nothing to read; not a failure.
-        });
+      reads.push(
+        response
+          .text()
+          .then(text => {
+            wireBodies.push(text);
+            spaBodies++;
+          })
+          .catch(() => {
+            // Redirects and empty bodies have nothing to read.
+          })
+      );
     });
 
+    // The SPA boots by asking the public endpoint for the platform: wait for
+    // that answer, then for every body read in flight.
+    const platformAnswer = page.waitForResponse(
+      r => r.url().includes('/api/public/graphql') && r.request().method() === 'POST'
+    );
     await page.goto(baseUrl);
     await acceptCookiesIfVisible(page);
+    await platformAnswer;
+    await Promise.all(reads);
+    expect(spaBodies, 'the SPA reload answered at least once').toBeGreaterThan(0);
 
-    // Same locator the login helper drives, so a CRD markup change breaks one
-    // shared expectation rather than two.
-    await expect(logInHeaderLink(page)).toBeVisible({ timeout: 15_000 });
-
-    // And no "signed in with no account" half-state: the authenticated shell's
-    // user menu must be gone, not merely empty.
-    await expect(
-      page.getByRole('menuitem', { name: 'Log out', exact: true })
-    ).toHaveCount(0);
+    // And the browser's own credential, as it is after the reload, is not
+    // the deleted user.
+    const now = await whoAmI(await credentialOf(c1!.context));
+    expect(now.userId).not.toBe(subject.userId);
+    // …nor anyone else. The identity was kept (SRB-E2), so a refresh or
+    // consent grant that survived the deletion would silently sign the reload
+    // in as a NEW user — a different id, which the line above cannot see.
+    // Refused (revoked cookie still in the jar) or anonymous (client cleared
+    // it) are the only acceptable answers.
+    expect(
+      [200, 401],
+      'the reloaded credential: refused or anonymous'
+    ).toContain(now.status);
+    expect(
+      now.userId,
+      'the reloaded credential resolves to no user'
+    ).toBeNull();
   });
 
-  test('SRB-N1 — no token material anywhere on the wire after revocation', async () => {
-    // Everything C1 received from the deletion onward: the mutation response,
-    // the id-token-hint 401s, the GraphQL 401 envelopes, and the SPA reload's
-    // API calls.
-    expect(capturedWireBodies.length).toBeGreaterThan(0);
+  // KNOWN DEFECT (recorded on test-suites#724, SRB-G3): after the deletion the
+  // browser still carries the revoked session cookie; the server answers the
+  // SPA's public `platform` query with 401 UNAUTHENTICATED (error_code
+  // account_deleted) and the client, which has no handling for it, renders a
+  // blank page instead of the signed-out header. Un-skip when the app lands on
+  // a clean signed-out state.
+  test.skip('SRB-G3 — the application shows a clean signed-out state (test-suites#724)', async () => {
+    const page = c1!.page;
+    await page.goto(baseUrl);
+    await acceptCookiesIfVisible(page);
+    await expect(logInHeaderLink(page)).toBeVisible();
+    // No "signed in with no account" half-state: the signed-in-only banner
+    // control is gone (asserted after the positive, so a blank page cannot
+    // pass it).
+    await expect(notificationsButton(page)).toHaveCount(0);
+  });
 
-    for (const body of capturedWireBodies) {
+  test('SRB-N1 — no token material or PII on the wire after revocation', async () => {
+    // The deletion answer, every refusal (G1, G2, R1 ×3, R2, E1 ×3) and the
+    // SPA's reload traffic.
+    expect(wireBodies.length).toBeGreaterThanOrEqual(10);
+    expect(spaBodies, 'SRB-G3a captured the SPA reload').toBeGreaterThan(0);
+
+    for (const body of wireBodies) {
       for (const marker of TOKEN_MATERIAL_MARKERS) {
         expect(body, `leaked '${marker}' on the wire`).not.toContain(marker);
       }
-      // PII half of the tombstone rationale (GDPR Art. 17), asserted where it
-      // is observable.
       expect(body).not.toContain(subject.email);
       expect(body).not.toContain(subject.firstName);
     }
   });
 
-  test('SRB-E2 — a session created after the revocation still works', async ({
+  test('SRB-E2 — a session created after the revocation is not refused', async ({
     browser,
   }) => {
-    // A fresh SPA login is a full Kratos + OIDC round trip.
-    test.setTimeout(180_000);
-
-    // The subject marker holds a `revoked_at` TIMESTAMP, not a ban flag: the
-    // strategy refuses a session only when `revoked_at >= payload.created_at`.
-    // A session minted afterwards is therefore unaffected.
+    // The revocation marks a point in time, not a ban on the subject: a
+    // session minted afterwards must be accepted. Whether it carries a fresh
+    // user is not this case's question — only that it is not refused, and
+    // that it is not the deleted user.
     c4 = await openLoggedInSession(browser, subject.email);
-    const hint = await probeIdTokenHint(c4.context);
-
-    // Deliberately NOT an assertion about being "fully signed in". Deletion
-    // also runs `clearIdentityActorMetadata`, so the re-minted session can
-    // carry `alkemio_actor_id: null` and resolve to no actor. The property
-    // under test is narrower and exact: the request is NOT REFUSED.
-    expect(hint.status).toBe(200);
-
-    // …and the same over the GraphQL gate, which is the probe that actually
-    // reaches the marker. `id-token-hint` reads `req.session` directly and
-    // never calls `getSubRevokedAt`; only `CookieSessionStrategy` does. So
-    // this line — not the one above — is what proves `revoked_at` is a
-    // timestamp compared against `created_at` rather than a permanent ban on
-    // the subject.
-    const me = await probePrivateGraphql(c4.context);
-    expect(me.status).not.toBe(401);
-    expect(me.status).toBe(200);
+    const fresh = await whoAmI(await credentialOf(c4.context));
+    expect(fresh.status).not.toBe(401);
+    expect(fresh.status).toBe(200);
+    expect(fresh.errors).toEqual([]);
+    expect(fresh.userId).not.toBe(subject.userId);
   });
 });

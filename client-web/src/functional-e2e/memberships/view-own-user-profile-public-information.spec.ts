@@ -1,26 +1,22 @@
 // spec: client-web/src/functional-e2e/plans/memberships-test-plan.md
-// seed: client-web/src/functional-e2e/seed-memberships.spec.ts
 
 import { expect } from '@playwright/test';
 import {
-  TestUser,
   TestScenarioFactory,
+  TestUser,
   TestUserManager,
+  type TestScenarioConfig,
 } from '@alkemio/tests-lib';
-import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
-import { TestScenarioConfig } from '@alkemio/tests-lib/scenario/config/test-scenario-config';
-import {
-  CommunityMembershipPolicy,
-  SpacePrivacyMode,
-} from '@alkemio/client-lib';
+import type { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import { createAuthenticatedSessionFixture } from '../fixtures/authenticated-session.fixture';
+import { baseUrl, teardownScenario } from '../helpers/space-access.helper';
+import { uniqueName } from './memberships.helpers';
 
 const { test, setupAuthentication, teardownAuthentication } =
   createAuthenticatedSessionFixture({
     storageStateName: 'view-own-user-profile-public.json',
     cleanupAfterTests: process.env.cleanupAfterTests === 'true',
   });
-const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 
 let baseScenario: OrganizationWithSpaceModel;
 
@@ -29,7 +25,7 @@ const scenarioConfig: TestScenarioConfig = {
   space: {
     about: {
       profile: {
-        displayName: 'Membership Test Space',
+        displayName: uniqueName('Membership Test Space'),
         tagline: 'Testing space memberships',
       },
     },
@@ -42,19 +38,22 @@ const scenarioConfig: TestScenarioConfig = {
   },
 };
 
-test.describe('User Profile Membership Display', () => {
-  test.beforeAll(async ({ browser }) => {
-    test.setTimeout(60_000);
-    baseScenario = await TestScenarioFactory.createBaseScenario(scenarioConfig);
-    await setupAuthentication(browser, TestUserManager.users.spaceMember.email);
-  });
+test.beforeAll(async ({ browser }) => {
+  test.setTimeout(60_000);
+  baseScenario = await TestScenarioFactory.createBaseScenario(scenarioConfig);
+  await setupAuthentication(browser, TestUserManager.users.spaceMember.email);
+});
 
-  test.afterAll(async () => {
-    test.setTimeout(45_000);
+// File level, so it also runs when a failure retires the worker mid-file.
+test.afterAll(async () => {
+  try {
     await teardownAuthentication();
-    await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
-  });
+  } finally {
+    await teardownScenario(baseScenario);
+  }
+});
 
+test.describe('User Profile Membership Display', () => {
   test(
     'View Own User Profile - Public Information',
     {
@@ -73,7 +72,7 @@ test.describe('User Profile Membership Display', () => {
         level: 1,
         name: new RegExp(TestUserManager.users.spaceMember.displayName, 'i'),
       });
-      await expect(userNameHeading).toBeVisible({ timeout: 3000 });
+      await expect(userNameHeading).toBeVisible();
 
       // CRD: the public "Bio" section is the sidebar "About" block.
       await expect(
@@ -88,7 +87,7 @@ test.describe('User Profile Membership Display', () => {
 
       await expect(
         page.getByText(baseScenario.space.about.profile.displayName).first()
-      ).toBeVisible({ timeout: 5000 });
+      ).toBeVisible();
 
       // CRD: the settings entry point is an icon link with an accessible name.
       const settingsLink = page.getByRole('link', {
@@ -104,7 +103,7 @@ test.describe('User Profile Membership Display', () => {
       // CRD: the settings page exposes the contributor settings tabs.
       await expect(
         page.getByRole('tab', { name: /Profile/i }).first()
-      ).toBeVisible({ timeout: 5000 });
+      ).toBeVisible();
     }
   );
 });

@@ -533,13 +533,205 @@ export const conversationMessageGroupDigestSubject = (
   conversationCount: number
 ) => `${totalMessages} new messages in ${conversationCount} conversations`;
 
+// ---------------------------------------------------------------------------
+// Swarmail — event-driven mail waits
+//
+// The Swarmail trial (.github/workflows/swarmail-trial.yml) exports
+// SWARMAIL_API_ENDPOINT, Swarmail's native HTTP API, beside
+// MAIL_SLURPER_ENDPOINT (its MailSlurper-compatible shim). When it is set the
+// mail waits below block on Swarmail's `await` instead of sleeping between
+// reads; when it is unset (MailSlurper) they poll exactly as before.
+//
+// The predicates still run on the `getMailsData` read, unchanged: Swarmail is
+// only asked WHEN to read again. What that relies on:
+// - every Alkemio mail lands in Swarmail's `default` inbox (the trial points
+//   Kratos's courier and the notifications service there);
+// - `GET /api/v1/inboxes/default/count` is the exact count, and
+//   `GET /api/v1/inboxes/default/await?count=N&timeout_ms=T` answers 200 as
+//   soon as the inbox holds at least N mails, 408 once T ms pass. T above
+//   60000 and N above 250 are refused with 400, never clamped;
+// - an SMTP 250 from Swarmail means the mail is already queryable.
+// Any API failure degrades to one poll interval of sleep, never to a harness
+// error, and is reported once on the console.
+// ---------------------------------------------------------------------------
+
+const SWARMAIL_INBOX = 'default';
+const SWARMAIL_MAX_AWAIT_COUNT = 250;
+/**
+ * Longest single await, well under Swarmail's 60 s cap. The await wakes on
+ * the inbox GROWING past the count read before it; a mailbox wiped while it
+ * is parked (count 3 → 0 → 1) never reaches that count, so without a slice a
+ * wipe would cost the rest of the budget (the read at the deadline is still
+ * correct — only late). The slice bounds that to 5 s; it costs one count and
+ * one read per idle slice, against the MailSlurper path's read every second.
+ */
+const SWARMAIL_AWAIT_SLICE_MS = 5_000;
+/** Client-side bound on one count call; never past the caller's deadline. */
+const SWARMAIL_REQUEST_MARGIN_MS = 10_000;
+/**
+ * The await asks Swarmail to answer this much before the caller's deadline,
+ * so its 408 normally arrives before the client-side abort at the deadline.
+ */
+const SWARMAIL_AWAIT_HEADROOM_MS = 250;
+
+/** True when `error` is the abort of an `AbortSignal.timeout`. */
+const isTimeout = (error: unknown): boolean =>
+  error instanceof Error && error.name === 'TimeoutError';
+
+const swarmailApiEndpoint = (): string | undefined => {
+  const endpoint = process.env.SWARMAIL_API_ENDPOINT?.trim();
+  return endpoint ? endpoint.replace(/\/+$/, '') : undefined;
+};
+
+const swarmailFallbacksReported = new Set<string>();
+const reportSwarmailFallback = (kind: string, detail: string): void => {
+  if (swarmailFallbacksReported.has(kind)) return;
+  swarmailFallbacksReported.add(kind);
+  console.warn(
+    `[swarmail] ${detail} — this mail wait polls instead (reported once per kind)`
+  );
+};
+
+/**
+ * Exact count of Swarmail's `default` inbox, or undefined if unavailable or
+ * if `deadline` leaves no time. The request is bounded by the remaining wait,
+ * not only by SWARMAIL_REQUEST_MARGIN_MS, so a count never outlives the wait
+ * it serves; running out of time is not a fallback and is not reported.
+ */
+const swarmailInboxCount = async (
+  api: string,
+  deadline: number
+): Promise<number | undefined> => {
+  const remaining = deadline - Date.now();
+  if (remaining <= 0) return undefined;
+  const bound = Math.min(SWARMAIL_REQUEST_MARGIN_MS, remaining);
+  try {
+    const response = await fetch(
+      `${api}/api/v1/inboxes/${SWARMAIL_INBOX}/count`,
+      { signal: AbortSignal.timeout(bound) }
+    );
+    if (!response.ok) {
+      await response.body?.cancel();
+      reportSwarmailFallback('count', `count answered HTTP ${response.status}`);
+      return undefined;
+    }
+    const { count } = (await response.json()) as { count?: unknown };
+    if (typeof count === 'number' && Number.isInteger(count) && count >= 0) {
+      return count;
+    }
+    reportSwarmailFallback('count', 'count answered without an integer count');
+  } catch (error) {
+    if (isTimeout(error) && bound < SWARMAIL_REQUEST_MARGIN_MS)
+      return undefined;
+    reportSwarmailFallback('count', `count failed: ${String(error)}`);
+  }
+  return undefined;
+};
+
+/**
+ * Blocks until Swarmail's `default` inbox holds at least `target` mails or
+ * `waitMs` pass (capped at one slice), whichever is first. Returns true when
+ * Swarmail did the waiting — either outcome — and false when it could not,
+ * so the caller sleeps one poll interval instead.
+ */
+const swarmailAwaitInboxCount = async (
+  api: string,
+  target: number,
+  waitMs: number
+): Promise<boolean> => {
+  if (target > SWARMAIL_MAX_AWAIT_COUNT) {
+    reportSwarmailFallback(
+      'cap',
+      `the default inbox already holds ${target - 1} mails, past await's count cap of ${SWARMAIL_MAX_AWAIT_COUNT}`
+    );
+    return false;
+  }
+  // The whole call, server wait and transfer, stays inside `waitMs`: the
+  // client aborts at the end of the budget (or of one slice), and Swarmail is
+  // asked to answer SWARMAIL_AWAIT_HEADROOM_MS before that.
+  const budgetMs = Math.min(
+    Math.max(Math.ceil(waitMs), 1),
+    SWARMAIL_AWAIT_SLICE_MS
+  );
+  const timeoutMs = Math.max(budgetMs - SWARMAIL_AWAIT_HEADROOM_MS, 1);
+  try {
+    const response = await fetch(
+      `${api}/api/v1/inboxes/${SWARMAIL_INBOX}/await?count=${target}&timeout_ms=${timeoutMs}&limit=1`,
+      { signal: AbortSignal.timeout(budgetMs) }
+    );
+    // Only the status matters: the caller re-reads through getMailsData.
+    await response.body?.cancel();
+    if (response.status === 200 || response.status === 408) return true;
+    reportSwarmailFallback('await', `await answered HTTP ${response.status}`);
+  } catch (error) {
+    // The budget ran out before Swarmail's answer arrived: the wait was spent
+    // waiting, so the caller re-reads; this is not a fallback.
+    if (isTimeout(error)) return true;
+    reportSwarmailFallback('await', `await failed: ${String(error)}`);
+  }
+  return false;
+};
+
+/**
+ * `waitForMailsWhere` on Swarmail: read and check as on MailSlurper, but
+ * instead of sleeping `interval`, block until the inbox grows past what the
+ * read saw (or the budget is spent), then read and check again.
+ */
+const waitForMailsWhereOnSwarmail = async (
+  api: string,
+  isSatisfied: (mailItems: MailItem[], total: number) => boolean,
+  timeout: number,
+  interval: number
+): Promise<Awaited<ReturnType<typeof getMailsData>>> => {
+  const deadline = Date.now() + timeout;
+  for (;;) {
+    // Count BEFORE the read: a mail landing between the two lifts the inbox
+    // past `seen`, so the await returns at once instead of waiting for a
+    // further mail that may never come. Re-read on every pass, never carried
+    // over or incremented: a test can wipe the mailbox (DELETE via the shim),
+    // so the count is not monotonic (see SWARMAIL_AWAIT_SLICE_MS for a wipe
+    // that lands while an await is parked).
+    const seen = await swarmailInboxCount(api, deadline);
+    const last = await getMailsData();
+    const remaining = deadline - Date.now();
+    if (isSatisfied(last[0] ?? [], last[1]) || remaining <= 0) {
+      return last;
+    }
+    const awaited =
+      seen !== undefined &&
+      (await swarmailAwaitInboxCount(api, seen + 1, remaining));
+    if (!awaited) {
+      await delay(Math.min(interval, remaining));
+    }
+  }
+};
+
+/**
+ * Default settle after a POSITIVE mail read (the expected mails have landed;
+ * wait a little longer and re-read so an exact-count assertion still sees a
+ * leaked extra). The settle covers two things on MailSlurper: late or leaked
+ * mails from Alkemio's asynchronous notification pipeline, and MailSlurper
+ * storing a mail some time after it answered the sender's 250. On Swarmail
+ * the second part is gone — its 250 means the mail is already queryable — so
+ * only the pipeline part is kept, at 1000 ms. A caller that passes its own
+ * `settleMs` keeps it on both backends. Never use this for a NEGATIVE window
+ * (`quietMs`, `maxDelayGraceMs`, drainMailbox's quiet): those prove absence
+ * and keep their full length everywhere.
+ */
+const SWARMAIL_POSITIVE_SETTLE_MS = 1_000;
+const positiveSettleMs = (mailSlurperDefaultMs: number): number =>
+  swarmailApiEndpoint()
+    ? Math.min(mailSlurperDefaultMs, SWARMAIL_POSITIVE_SETTLE_MS)
+    : mailSlurperDefaultMs;
+
 /**
  * Polls Mailslurper until at least `expectedCount` mails are present, or the
  * timeout elapses (message send → email delivery crosses Matrix + the
  * notifications-service RabbitMQ consumer, so a single fixed delay is
  * flakier than a short poll). Returns the last-observed `[mailItems, total]`
  * tuple either way — callers assert on it, so a timeout is a normal
- * (informative) test failure rather than a thrown harness error.
+ * (informative) test failure rather than a thrown harness error. On Swarmail
+ * the same loop waits on arrival instead of polling (`waitForMailsWhere`).
  */
 export const waitForMailsCountAtLeast = async (
   expectedCount: number,
@@ -564,6 +756,11 @@ export const waitForMailsCountAtLeast = async (
  *   the whole delivery bound", never "none yet". `waitForMailsCountAtLeast(1)`
  *   + `toHaveLength(0)` cannot express that: it passes vacuously when
  *   nothing at all lands and still returns early on an unrelated mail.
+ *
+ * With SWARMAIL_API_ENDPOINT set, the sleep between reads becomes a wait on
+ * Swarmail for the next mail, with the same timeout semantics: it returns
+ * once satisfied, or after reading again once the whole `timeout` is spent.
+ * A negative quiet window therefore still lasts its full length.
  */
 export type { MailItem };
 
@@ -574,6 +771,16 @@ export const waitForMailsWhere = async (
     interval = 1_000,
   }: { timeout?: number; interval?: number } = {}
 ): Promise<Awaited<ReturnType<typeof getMailsData>>> => {
+  const swarmailApi = swarmailApiEndpoint();
+  if (swarmailApi) {
+    return waitForMailsWhereOnSwarmail(
+      swarmailApi,
+      isSatisfied,
+      timeout,
+      interval
+    );
+  }
+
   const start = Date.now();
   let last = await getMailsData();
 
@@ -606,6 +813,9 @@ export const waitForMailsWhere = async (
  *
  * Returns the same `[mailItems, total]` tuple as `getMailsData`, restricted to
  * the in-scope mails, so existing assertions keep working unchanged.
+ *
+ * The default `settleMs` is 1000 ms on Swarmail (`positiveSettleMs`); the
+ * `quietMs` window is the same on both backends.
  */
 export const getMailsDataSettled = async (
   expectedCount: number,
@@ -613,7 +823,7 @@ export const getMailsDataSettled = async (
     scope,
     timeout = 15_000,
     quietMs = 5_000,
-    settleMs = 1_500,
+    settleMs = positiveSettleMs(1_500),
   }: {
     scope?: (mail: MailItem) => boolean;
     timeout?: number;
@@ -654,7 +864,11 @@ export const drainMailbox = async ({
   quietMs = 4_000,
   timeout = 30_000,
   interval = 1_000,
-}: { quietMs?: number; timeout?: number; interval?: number } = {}): Promise<void> => {
+}: {
+  quietMs?: number;
+  timeout?: number;
+  interval?: number;
+} = {}): Promise<void> => {
   const start = Date.now();
   let [, lastTotal] = await getMailsData();
   let quietSince = Date.now();
@@ -678,13 +892,14 @@ export const drainMailbox = async ({
  * that lands a moment after the target count is first reached (e.g. a
  * regression that also notifies a non-member or the sender) would never be
  * observed, and the first-hit read that `waitForMailsCountAtLeast` alone
- * returns would let the leak pass silently.
+ * returns would let the leak pass silently. The default `settleMs` is
+ * 1000 ms on Swarmail (`positiveSettleMs`); an explicit one is kept as given.
  */
 export const expectExactMailsAfter = async (
   action: () => Promise<unknown>,
   expectedCount: number,
   {
-    settleMs = 3_000,
+    settleMs = positiveSettleMs(3_000),
     timeout = 15_000,
     interval = 1_000,
   }: { settleMs?: number; timeout?: number; interval?: number } = {}
