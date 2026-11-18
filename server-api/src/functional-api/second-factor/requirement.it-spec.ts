@@ -1,6 +1,7 @@
 /**
  * The requirement: the platform and organisation rules, grace, refusal per
- * transport, and who is never evaluated. Plan: ./second-factor-test-plan.md.
+ * transport, who is never evaluated, and the two ways a covered member keeps
+ * to pass the second step (D55). Plan: ./second-factor-test-plan.md.
  *
  * Every refusal or coverage read goes through a minted cookie session — a
  * harness bearer is not a sign-in and reads the empty status by design. The
@@ -17,11 +18,14 @@ import {
   authenticationAuditRows,
   awaitLive,
   createPrivateRoom,
+  disableRecoveryCodes,
   enrolTotp,
   errorCodes,
   eventually,
+  generateRecoveryCodes,
   getUserToken,
   loginWithPassword,
+  loginWithTotp,
   mintBffSession,
   mintBffSessionForUser,
   platformConfigurationRowsNamingSecurity,
@@ -37,6 +41,7 @@ import {
   resetSecondFactor,
   restorePlatformRule,
   savePlatformRule,
+  secondFactorCredentialsLeft,
   setOrganizationRule,
   setPlatformRule,
   subscribeToRoom,
@@ -61,6 +66,33 @@ const cookieOf = async (
   cookieHeader: (await mintBffSession(user.identityId, user.userId, options))
     .cookieHeader,
 });
+
+/**
+ * A second-factor cookie session for `user` whose sign-in counted `ways` ways
+ * to pass the second step (D55). The server's `/callback` reads that count from
+ * Kratos; the harness cannot drive that sign-in, so the count is the case's
+ * statement about the account, which every case checks against Kratos admin
+ * before it mints one.
+ */
+const signedInWithWays = (user: ThrowawayUser, ways: number) =>
+  cookieOf(user, { acr: 'aal2', secondFactorWays: ways });
+
+/** An authenticator app, enrolled on a password session; its secret. */
+const enrolAuthenticator = async (user: ThrowawayUser): Promise<string> =>
+  enrolTotp((await loginWithPassword(user.email)).sessionToken);
+
+/**
+ * An authenticator app and recovery codes: two ways. Returns the second-factor
+ * Kratos session that generated the codes, which may remove them again.
+ */
+const enrolAuthenticatorAndCodes = async (
+  user: ThrowawayUser
+): Promise<string> => {
+  const secret = await enrolAuthenticator(user);
+  const { sessionToken } = await loginWithTotp(user.email, secret);
+  await generateRecoveryCodes(sessionToken);
+  return sessionToken;
+};
 
 const requirementOf = async (actor: GraphqlActor) => {
   const answer = await readSecondFactorRequirement(actor);
@@ -346,7 +378,9 @@ describe('Second factor — the requirement', () => {
       }
 
       // A sign-in that completed the second factor is not refused; one that
-      // reached only aal1 is.
+      // reached only aal1 is. Neither session holds a count of the ways to
+      // pass the second step, so both are checked as before D55 (the D55
+      // cases below).
       expect(
         await servedAs(await cookieOf(member, { createdAtEpochS: marker + 1, acr: 'aal2' }))
       ).toBe(member.userId);
@@ -378,6 +412,143 @@ describe('Second factor — the requirement', () => {
         covered: false,
         deadline: null,
         satisfied: false,
+        secondWayNeeded: false,
+      });
+    });
+  });
+
+  test('D55 one way: in grace a second way is needed, past the deadline refused; a password sign-in, a session with no count and an uncovered member are not asked for one', async () => {
+    const admin = await throwawayUser('waysadmin');
+    const member = await throwawayUser('oneway');
+    const uncovered = await throwawayUser('uncoveredoneway');
+    await enrolAuthenticator(member);
+    await enrolAuthenticator(uncovered);
+    for (const person of [member, uncovered]) {
+      expect(await secondFactorCredentialsLeft(person.identityId), person.email).toEqual([
+        'totp',
+      ]);
+    }
+
+    await withThrowawayOrganization({ admin, associates: [member] }, async org => {
+      const asAdmin = { bearerToken: admin.token };
+      expect((await setOrganizationRule(org.id, true, asAdmin)).body.errors).toBeUndefined();
+
+      // In grace: covered, signed in with the second step, one way counted.
+      const oneWay = await signedInWithWays(member, 1);
+      const grace = await requirementOf(oneWay);
+      expect(grace).toMatchObject({ covered: true, satisfied: false, secondWayNeeded: true });
+      expect(Date.parse(grace.deadline!)).toBeGreaterThan(Date.now());
+      expect(await servedAs(oneWay)).toBe(member.userId);
+
+      // Only a second-factor sign-in is asked for a second way: the password
+      // alone still owes the second step itself.
+      expect(
+        await requirementOf(await cookieOf(member, { acr: 'aal1', secondFactorWays: 1 }))
+      ).toMatchObject({ covered: true, satisfied: false, secondWayNeeded: false });
+
+      // A session written before the count was recorded is checked as before.
+      const uncounted = await cookieOf(member, { acr: 'aal2' });
+      expect(await requirementOf(uncounted)).toMatchObject({
+        covered: true,
+        satisfied: true,
+        secondWayNeeded: false,
+      });
+
+      await ageRuleSince({ organizationId: org.id }, 15);
+
+      // Past the deadline, the very next request of the same session is
+      // refused with the existing refusal, and so is a fresh one-way sign-in.
+      const me = await postGraphqlRawAs(oneWay, 'query { me { id } }');
+      expect(me.status).toBe(200);
+      expect(me.body.errors?.[0]?.extensions as Record<string, unknown>).toMatchObject({
+        code: 'SECOND_FACTOR_REQUIRED',
+        numericCode: 11119,
+      });
+      expect(await servedAs(await signedInWithWays(member, 1))).toBe('refused');
+      // Control: the rule refuses for the count, not for the second step.
+      expect(await servedAs(uncounted)).toBe(member.userId);
+
+      // Covered by no rule: one way changes nothing. `satisfied` is whether
+      // the sign-in would meet a rule, so one way reads false here as well.
+      const uncoveredOneWay = await signedInWithWays(uncovered, 1);
+      expect(await servedAs(uncoveredOneWay)).toBe(uncovered.userId);
+      expect(await requirementOf(uncoveredOneWay)).toEqual({
+        covered: false,
+        deadline: null,
+        satisfied: false,
+        secondWayNeeded: false,
+      });
+    });
+  });
+
+  test('D55 two ways satisfy: an authenticator app and recovery codes meet the rule in grace and are not refused past the deadline', async () => {
+    const admin = await throwawayUser('waysadmin');
+    const member = await throwawayUser('twoways');
+    await enrolAuthenticatorAndCodes(member);
+    expect(await secondFactorCredentialsLeft(member.identityId)).toEqual([
+      'lookup_secret',
+      'totp',
+    ]);
+
+    await withThrowawayOrganization({ admin, associates: [member] }, async org => {
+      const asAdmin = { bearerToken: admin.token };
+      expect((await setOrganizationRule(org.id, true, asAdmin)).body.errors).toBeUndefined();
+
+      const twoWays = await signedInWithWays(member, 2);
+      expect(await requirementOf(twoWays)).toMatchObject({
+        covered: true,
+        satisfied: true,
+        secondWayNeeded: false,
+      });
+
+      await ageRuleSince({ organizationId: org.id }, 15);
+
+      expect(await servedAs(twoWays)).toBe(member.userId);
+      // Control: the rule is in force here. Two ways without the second step
+      // at sign-in are refused.
+      expect(
+        await servedAs(await cookieOf(member, { acr: 'aal1', secondFactorWays: 2 }))
+      ).toBe('refused');
+    });
+  });
+
+  test('D55 removing one of two ways: the session that counted two keeps its count; the next sign-in counts one and needs a second way again', async () => {
+    const admin = await throwawayUser('waysadmin');
+    const member = await throwawayUser('removeway');
+    const kratosSession = await enrolAuthenticatorAndCodes(member);
+    expect(await secondFactorCredentialsLeft(member.identityId)).toEqual([
+      'lookup_secret',
+      'totp',
+    ]);
+
+    await withThrowawayOrganization({ admin, associates: [member] }, async org => {
+      const asAdmin = { bearerToken: admin.token };
+      expect((await setOrganizationRule(org.id, true, asAdmin)).body.errors).toBeUndefined();
+
+      const before = await signedInWithWays(member, 2);
+      expect(await requirementOf(before)).toMatchObject({
+        covered: true,
+        satisfied: true,
+        secondWayNeeded: false,
+      });
+
+      await disableRecoveryCodes(kratosSession);
+      expect(await secondFactorCredentialsLeft(member.identityId)).toEqual(['totp']);
+
+      // The ways are counted once per sign-in and kept on the session, never
+      // read per request: the earlier session still holds two.
+      expect(await requirementOf(before)).toMatchObject({
+        covered: true,
+        satisfied: true,
+        secondWayNeeded: false,
+      });
+
+      // Signing in again counts the one way left.
+      const after = await signedInWithWays(member, 1);
+      expect(await requirementOf(after)).toMatchObject({
+        covered: true,
+        satisfied: false,
+        secondWayNeeded: true,
       });
     });
   });

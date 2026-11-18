@@ -10,6 +10,7 @@ import {
   type Request,
 } from '@playwright/test';
 import {
+  readBffSession,
   readMyUser,
   seedPlatformRoleUsers,
   clearAddressCounters,
@@ -27,6 +28,7 @@ import { fillUpSignInPageElements } from '../identity-flows/signin-page-objects'
 import {
   logoutMenuItem,
   logInHeaderLink,
+  passwordField,
   signInButton,
   userMenuAvatar,
 } from '../authentication/common-authentication-page-elements';
@@ -56,6 +58,8 @@ export const COPY = {
   pageRequired:
     'Your account requires two-step verification. Set up a second factor below to continue.',
   pageEnrolled: 'Your second factor is set up. Sign in again to continue.',
+  pageSecondWay:
+    'Your account needs a second way to pass the second step: an authenticator app, another security key, or recovery codes. Add one below, then sign in again.',
   signInAgain: 'Sign in again',
   refusalToast: 'Two-step verification is required for your account.',
   sectionTitle: 'Two-step verification',
@@ -64,6 +68,12 @@ export const COPY = {
   codeFromApp: 'Code from the app',
   confirm: 'Confirm',
   authenticatorActive: 'Your authenticator app is active.',
+  secondWayNeeded:
+    'Your account needs a second way to pass the second step: an authenticator app, another security key, or recovery codes. Add one below, then sign in again.',
+  secondWayAdded:
+    'Your second way to pass the second step is set up. Sign in again so it counts.',
+  secondWaySuggested:
+    'Two-step verification is on. Now add a second way to pass the second step (an authenticator app, another security key, or recovery codes), so you can still sign in if you lose this one.',
   remove: 'Remove',
   removeAuthenticatorTitle: 'Remove the authenticator app?',
   recoveryTitle: 'Recovery codes',
@@ -88,9 +98,46 @@ export const COPY = {
   reminderPrefix: 'Use two-step verification by',
   reminderText: (deadline: string) =>
     `Use two-step verification by ${deadline}: set it up, or sign in again with it if you already have. After that date you cannot use Alkemio without it.`,
+  reminderSecondWayAction: 'Add one',
+  reminderSecondWayPrefix: 'Add a second way to pass the second step by',
+  reminderSecondWayText: (deadline: string) =>
+    `Add a second way to pass the second step by ${deadline}: an authenticator app, another security key, or recovery codes. Then sign in again. After that date you cannot use Alkemio with one way only.`,
   orgRuleSwitch: 'Require two-step verification for members',
   orgRuleTurnOffConfirm: 'Stop requiring',
 } as const;
+
+/**
+ * What the server keeps for this browser's own session: the sign-in's `acr`
+ * and how many ways to pass the second step it counted (D55, read from Kratos
+ * at sign-in). Read over loopback Redis by the session id in the browser's
+ * signed cookie, so it is this sign-in's record and no other's. Only those
+ * two fields leave this function: the record holds live tokens.
+ */
+export const storedSignIn = async (
+  pageOrContext: Page | BrowserContext
+): Promise<{ acr: string | null; ways: number | null }> => {
+  const context =
+    'context' in pageOrContext ? pageOrContext.context() : pageOrContext;
+  const { sessionCookieName } = testConfiguration.oidc;
+  const cookie = (
+    await context.cookies(testConfiguration.endPoints.server)
+  ).find(c => c.name === sessionCookieName);
+  expect(
+    cookie !== undefined,
+    `the browser holds no ${sessionCookieName} cookie`
+  ).toBe(true);
+  // express-session's value: `s:<id>.<signature>`, URI-encoded.
+  const value = decodeURIComponent(cookie!.value);
+  expect(value.startsWith('s:'), 'the session cookie is not a signed one').toBe(
+    true
+  );
+  const stored = await readBffSession(value.slice(2, value.lastIndexOf('.')));
+  expect(
+    stored !== null,
+    'the server holds no session for the browser cookie'
+  ).toBe(true);
+  return { acr: stored!.acr ?? null, ways: stored!.second_factor_ways ?? null };
+};
 
 /** A fresh browser session with cookie consent granted up front. */
 export const freshPage = async (
@@ -169,7 +216,9 @@ export const requirementRead = (page: Page) =>
     if (!response.url().includes('graphql') || !response.ok()) return false;
     try {
       const query: unknown = response.request().postDataJSON()?.query;
-      return typeof query === 'string' && query.includes('secondFactorRequirement');
+      return (
+        typeof query === 'string' && query.includes('secondFactorRequirement')
+      );
     } catch {
       return false;
     }
@@ -218,17 +267,43 @@ export const expectStaysAbsent = async (
   expect(appeared, message).toBe(false);
 };
 
-/** On /second-factor: one notice, and the refusal never reached a toast. */
-export const expectRefusalPage = async (page: Page): Promise<void> => {
+/**
+ * On /second-factor: one notice — `pageRequired` for a member with no second
+ * factor, `pageSecondWay` for one with a single way (D55) — and the refusal
+ * never reached a toast.
+ */
+export const expectRefusalPage = async (
+  page: Page,
+  notice: string = COPY.pageRequired
+): Promise<void> => {
   await page.waitForURL(url => url.pathname === '/second-factor');
   await expect(
     page.getByRole('heading', { name: COPY.pageTitle, exact: true })
   ).toBeVisible();
-  await expect(page.getByText(COPY.pageRequired, { exact: true })).toHaveCount(1);
+  await expect(page.getByText(notice, { exact: true })).toHaveCount(1);
   await expectStaysAbsent(
     page.getByText(COPY.refusalToast, { exact: true }),
     'the second-factor refusal reached a toast'
   );
+};
+
+/**
+ * "Sign in again" from /second-factor, with both steps. The identity provider
+ * may still hold the first-step session and ask for the code alone.
+ */
+export const signInAgainFromRefusalPage = async (
+  page: Page,
+  email: string,
+  secret: string
+): Promise<void> => {
+  await page.getByRole('link', { name: COPY.signInAgain, exact: true }).click();
+  await expect(passwordField(page).or(secondStepCodeField(page))).toBeVisible();
+  if (await passwordField(page).isVisible()) {
+    await fillUpSignInPageElements(email, password, page);
+    await signInButton(page).click();
+  }
+  await expect(secondStepHeading(page)).toBeVisible();
+  await submitSecondStep(page, secondStepCodeField(page), totpCode(secret));
 };
 
 /** The user's own Security tab, scrolled to the two-step section. */
@@ -281,6 +356,62 @@ export const enrolAuthenticatorOnPage = async (page: Page): Promise<string> => {
     .getByRole('button', { name: COPY.confirm, exact: true })
     .click();
   return secret;
+};
+
+/**
+ * Generates recovery codes in the two-step section on screen (Security, or
+ * the /second-factor page) and confirms them; returns the codes shown. In
+ * Chromium it also copies them, and sees the button say so.
+ */
+export const generateRecoveryCodesOnPage = async (
+  page: Page,
+  context: BrowserContext,
+  browserName: string,
+  // On /second-factor a confirmed second way makes the page "enrolled", which no
+  // longer renders the enrolment UI: the caller asserts the page's enrolled copy.
+  { onRefusalPage = false }: { onRefusalPage?: boolean } = {}
+): Promise<string[]> => {
+  const recovery = block(page, COPY.recoveryTitle);
+  await recovery
+    .getByRole('button', { name: COPY.generate, exact: true })
+    .click();
+  await expect(
+    recovery.getByText(COPY.shownOnce, { exact: true })
+  ).toBeVisible();
+  const codes = (await recovery.getByRole('listitem').allTextContents()).map(
+    c => c.trim()
+  );
+  expect(codes.length).toBeGreaterThan(0);
+  if (browserName === 'chromium') {
+    await context.grantPermissions(['clipboard-read', 'clipboard-write'], {
+      origin: baseUrl,
+    });
+    await recovery
+      .getByRole('button', { name: COPY.copy, exact: true })
+      .click();
+    await expect(
+      recovery.getByRole('button', { name: COPY.copied, exact: true })
+    ).toBeVisible();
+  }
+  await recovery
+    .getByRole('button', { name: COPY.savedCodes, exact: true })
+    .click();
+  if (onRefusalPage) {
+    await expect(
+      page.getByText(COPY.pageEnrolled, { exact: true })
+    ).toBeVisible();
+    await expect(recovery).toHaveCount(0);
+    return codes;
+  }
+  await expect(
+    recovery.getByText(COPY.recoveryActive, { exact: true })
+  ).toBeVisible();
+  // Shown once: once confirmed, neither the notice nor the codes are on screen.
+  await expect(recovery.getByText(COPY.shownOnce, { exact: true })).toHaveCount(
+    0
+  );
+  await expect(recovery.getByRole('listitem')).toHaveCount(0);
+  return codes;
 };
 
 /**
