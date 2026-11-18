@@ -245,7 +245,9 @@ and the nightly workflow runs them as two runs of that config:
 
 - **`serial`** (the default): one file at a time, `PW_LANE=serial PW_WORKERS=1`.
 - **`parallel`**: several files at once, `PW_LANE=parallel PW_WORKERS=3`. Tests
-  inside a file still run in order.
+  inside a file still run in order. The workflow splits this lane over two
+  jobs that run at the same time (`--shard=1/2`, `--shard=2/2`), each with
+  that many workers, after the serial lane has finished.
 
 A suite may be marked `lane: 'parallel'` only when **every** file it lists:
 
