@@ -1,0 +1,31 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e2]:
+  - status "Loading" [ref=e5]:
+    - img [ref=e6]
+  - region "Notifications alt+T":
+    - list:
+      - listitem [ref=e8]:
+        - button "Close notification" [ref=e9] [cursor=pointer]:
+          - img [ref=e10]
+        - img [ref=e14]
+        - generic [ref=e16]:
+          - generic [ref=e17]: "Could not load relation 'about' for Space for the given key:"
+          - generic [ref=e18]:
+            - generic [ref=e19]: "Error Code: 10101"
+            - link "Contact Support" [ref=e20] [cursor=pointer]:
+              - /url: mailto:support@alkem.io?subject=Support%20Request%20-%20Error%2010101&body=Hello%2C%0A%0AI%20encountered%20an%20error%20while%20using%20Alkemio.%0A%0AError%20Code%3A%2010101%0A%0APlease%20help%20me%20resolve%20this%20issue.%0A%0AThank%20you.
+      - listitem [ref=e21]:
+        - button "Close notification" [ref=e22] [cursor=pointer]:
+          - img [ref=e23]
+        - img [ref=e27]
+        - generic [ref=e29]:
+          - generic [ref=e30]: Couldn't find what you were looking for.
+          - generic [ref=e31]:
+            - generic [ref=e32]: "Error Code: 10101"
+            - link "Contact Support" [ref=e33] [cursor=pointer]:
+              - /url: mailto:support@alkem.io?subject=Support%20Request%20-%20Error%2010101&body=Hello%2C%0A%0AI%20encountered%20an%20error%20while%20using%20Alkemio.%0A%0AError%20Code%3A%2010101%0A%0APlease%20help%20me%20resolve%20this%20issue.%0A%0AThank%20you.
+  - button "Open chat" [ref=e34]:
+    - img [ref=e35]
+```
