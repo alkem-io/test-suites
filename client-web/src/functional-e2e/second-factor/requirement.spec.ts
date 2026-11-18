@@ -142,7 +142,9 @@ test.describe('US4 — an organisation requires a second factor', () => {
       { admin: orgAdmin!, associates: [member!] },
       async organization => {
         expect(
-          errorCodes(await setOrganizationRule(organization.id, true, adminActor))
+          errorCodes(
+            await setOrganizationRule(organization.id, true, adminActor)
+          )
         ).toEqual([]);
         const orgNameId = must(
           await readOrganization(organization.id, adminActor),
@@ -186,7 +188,10 @@ test.describe('US4 — an organisation requires a second factor', () => {
               if (!next) await confirmTurnOff.click();
               await expect
                 .poll(() =>
-                  readOrganizationSecondFactorRequired(organization.id, adminActor)
+                  readOrganizationSecondFactorRequired(
+                    organization.id,
+                    adminActor
+                  )
                 )
                 .toBe(next);
               await page.reload();
@@ -208,7 +213,10 @@ test.describe('US4 — an organisation requires a second factor', () => {
               await sessionActor(page)
             );
             const requirement = status.body.data!.me.secondFactorRequirement;
-            expect(requirement).toMatchObject({ covered: true, satisfied: false });
+            expect(requirement).toMatchObject({
+              covered: true,
+              satisfied: false,
+            });
 
             const reminder = page
               .getByRole('status')
@@ -217,7 +225,10 @@ test.describe('US4 — an organisation requires a second factor', () => {
               COPY.reminderText(longDate(new Date(requirement.deadline!)))
             );
             await expect(
-              reminder.getByRole('link', { name: COPY.reminderAction, exact: true })
+              reminder.getByRole('link', {
+                name: COPY.reminderAction,
+                exact: true,
+              })
             ).toHaveAttribute(
               'href',
               new RegExp(
@@ -309,7 +320,9 @@ test.describe('US4 — an organisation requires a second factor', () => {
             // token the server did not accept cannot pass for one it served.
             // An accepted token on an unknown memo is answered by the route:
             // 404, where a rejected token is 401 and the refusal 403.
-            const control = await readServedUser({ bearerToken: member!.token });
+            const control = await readServedUser({
+              bearerToken: member!.token,
+            });
             expect(errorCodes(control)).toEqual([]);
             expect(control.body.data?.me.user?.id).toBe(member!.userId);
             expect((await memoPdfWithBearer(member!.token)).status).toBe(404);
@@ -470,7 +483,9 @@ test.describe('US4 — an organisation requires a second factor', () => {
           );
           expect(errorCodes(refused)).toContain('SECOND_FACTOR_REQUIRED');
 
-          await generateRecoveryCodesOnPage(page, context, browserName);
+          await generateRecoveryCodesOnPage(page, context, browserName, {
+            onRefusalPage: true,
+          });
           await expect(
             page.getByText(COPY.pageEnrolled, { exact: true })
           ).toBeVisible();

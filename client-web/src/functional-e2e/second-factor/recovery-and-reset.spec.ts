@@ -181,7 +181,9 @@ test.describe('US2 — recovery codes and the support reset', () => {
         .click();
       await submitSecondStep(page, secondStepRecoveryField(page), codes[0]);
       await expectSignedIn(page);
-      const status = await readSecondFactorRequirement(await sessionActor(page));
+      const status = await readSecondFactorRequirement(
+        await sessionActor(page)
+      );
       expect(status.body.data?.me.secondFactorRequirement.satisfied).toBe(true);
     } finally {
       await context.close();
@@ -258,7 +260,8 @@ test.describe('US2 — recovery codes and the support reset', () => {
             .getByRole('button', { name: COPY.confirm, exact: true })
             .click();
           await page.waitForURL(
-            url => url.pathname === '/second-factor' && url.searchParams.has('flow')
+            url =>
+              url.pathname === '/second-factor' && url.searchParams.has('flow')
           );
           await expect(
             page.getByRole('heading', { name: COPY.pageTitle, exact: true })
@@ -284,7 +287,9 @@ test.describe('US2 — recovery codes and the support reset', () => {
           expect(await credentialTypes(member!.identityId)).toContain('totp');
 
           // The second way: recovery codes, in the same section.
-          await generateRecoveryCodesOnPage(page, context, browserName);
+          await generateRecoveryCodesOnPage(page, context, browserName, {
+            onRefusalPage: true,
+          });
           await expect(
             page.getByText(COPY.pageEnrolled, { exact: true })
           ).toBeVisible();

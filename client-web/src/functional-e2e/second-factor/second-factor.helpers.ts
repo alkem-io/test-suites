@@ -119,15 +119,23 @@ export const storedSignIn = async (
   const context =
     'context' in pageOrContext ? pageOrContext.context() : pageOrContext;
   const { sessionCookieName } = testConfiguration.oidc;
-  const cookie = (await context.cookies(testConfiguration.endPoints.server)).find(
-    c => c.name === sessionCookieName
-  );
-  expect(cookie !== undefined, `the browser holds no ${sessionCookieName} cookie`).toBe(true);
+  const cookie = (
+    await context.cookies(testConfiguration.endPoints.server)
+  ).find(c => c.name === sessionCookieName);
+  expect(
+    cookie !== undefined,
+    `the browser holds no ${sessionCookieName} cookie`
+  ).toBe(true);
   // express-session's value: `s:<id>.<signature>`, URI-encoded.
   const value = decodeURIComponent(cookie!.value);
-  expect(value.startsWith('s:'), 'the session cookie is not a signed one').toBe(true);
+  expect(value.startsWith('s:'), 'the session cookie is not a signed one').toBe(
+    true
+  );
   const stored = await readBffSession(value.slice(2, value.lastIndexOf('.')));
-  expect(stored !== null, 'the server holds no session for the browser cookie').toBe(true);
+  expect(
+    stored !== null,
+    'the server holds no session for the browser cookie'
+  ).toBe(true);
   return { acr: stored!.acr ?? null, ways: stored!.second_factor_ways ?? null };
 };
 
@@ -208,7 +216,9 @@ export const requirementRead = (page: Page) =>
     if (!response.url().includes('graphql') || !response.ok()) return false;
     try {
       const query: unknown = response.request().postDataJSON()?.query;
-      return typeof query === 'string' && query.includes('secondFactorRequirement');
+      return (
+        typeof query === 'string' && query.includes('secondFactorRequirement')
+      );
     } catch {
       return false;
     }
@@ -356,13 +366,18 @@ export const enrolAuthenticatorOnPage = async (page: Page): Promise<string> => {
 export const generateRecoveryCodesOnPage = async (
   page: Page,
   context: BrowserContext,
-  browserName: string
+  browserName: string,
+  // On /second-factor a confirmed second way makes the page "enrolled", which no
+  // longer renders the enrolment UI: the caller asserts the page's enrolled copy.
+  { onRefusalPage = false }: { onRefusalPage?: boolean } = {}
 ): Promise<string[]> => {
   const recovery = block(page, COPY.recoveryTitle);
   await recovery
     .getByRole('button', { name: COPY.generate, exact: true })
     .click();
-  await expect(recovery.getByText(COPY.shownOnce, { exact: true })).toBeVisible();
+  await expect(
+    recovery.getByText(COPY.shownOnce, { exact: true })
+  ).toBeVisible();
   const codes = (await recovery.getByRole('listitem').allTextContents()).map(
     c => c.trim()
   );
@@ -371,7 +386,9 @@ export const generateRecoveryCodesOnPage = async (
     await context.grantPermissions(['clipboard-read', 'clipboard-write'], {
       origin: baseUrl,
     });
-    await recovery.getByRole('button', { name: COPY.copy, exact: true }).click();
+    await recovery
+      .getByRole('button', { name: COPY.copy, exact: true })
+      .click();
     await expect(
       recovery.getByRole('button', { name: COPY.copied, exact: true })
     ).toBeVisible();
@@ -379,11 +396,20 @@ export const generateRecoveryCodesOnPage = async (
   await recovery
     .getByRole('button', { name: COPY.savedCodes, exact: true })
     .click();
+  if (onRefusalPage) {
+    await expect(
+      page.getByText(COPY.pageEnrolled, { exact: true })
+    ).toBeVisible();
+    await expect(recovery).toHaveCount(0);
+    return codes;
+  }
   await expect(
     recovery.getByText(COPY.recoveryActive, { exact: true })
   ).toBeVisible();
   // Shown once: once confirmed, neither the notice nor the codes are on screen.
-  await expect(recovery.getByText(COPY.shownOnce, { exact: true })).toHaveCount(0);
+  await expect(recovery.getByText(COPY.shownOnce, { exact: true })).toHaveCount(
+    0
+  );
   await expect(recovery.getByRole('listitem')).toHaveCount(0);
   return codes;
 };
