@@ -169,6 +169,14 @@ test.describe('US1 — the authenticator app in Security', () => {
         secondWayNeeded: false,
       });
 
+      // A second way, added by this session after its sign-in was counted:
+      // a refresh must keep the count it took then, not count again.
+      await openSecurityTab(page, nameId);
+      await generateRecoveryCodesOnPage(page, context, browserName);
+      expect(await credentialTypes(user!.identityId)).toEqual(
+        expect.arrayContaining(['totp', 'lookup_secret'])
+      );
+
       // A refresh of the session keeps it. The stored token is made due
       // first, so the route has to go to the identity provider instead of
       // answering from a token that is still fresh, and the swapped token
@@ -194,7 +202,8 @@ test.describe('US1 — the authenticator app in Security', () => {
           after.access_token !== before!.access_token,
         'the refresh swapped the stored access token'
       ).toBe(true);
-      // The refresh kept the second factor and the count it took at sign-in.
+      // The refresh kept the second factor and the count it took at sign-in,
+      // though the member now holds two ways.
       expect({ acr: after?.acr, ways: after?.second_factor_ways }).toEqual({
         acr: 'aal2',
         ways: 1,
@@ -203,27 +212,8 @@ test.describe('US1 — the authenticator app in Security', () => {
       await context.close();
     }
 
-    // A second way, then a sign-in that counts it: the session reads
-    // satisfied through the signed-in browser.
-    const adding = await freshPage(browser);
-    try {
-      await submitPassword(adding.page, user!.email);
-      await expect(secondStepHeading(adding.page)).toBeVisible();
-      await submitSecondStep(
-        adding.page,
-        secondStepCodeField(adding.page),
-        totpCode(secret)
-      );
-      await expectSignedIn(adding.page);
-      await openSecurityTab(adding.page, nameId);
-      await generateRecoveryCodesOnPage(adding.page, adding.context, browserName);
-      expect(await credentialTypes(user!.identityId)).toEqual(
-        expect.arrayContaining(['totp', 'lookup_secret'])
-      );
-    } finally {
-      await adding.context.close();
-    }
-
+    // A sign-in that counts the second way: the session reads satisfied
+    // through the signed-in browser.
     const again = await freshPage(browser);
     try {
       await submitPassword(again.page, user!.email);
