@@ -81,6 +81,12 @@ export type BffSessionPayload = {
   created_at: number;
   /** The sign-in's assurance: `'aal2'` when a second factor was completed. */
   acr?: 'aal1' | 'aal2' | null;
+  /**
+   * How many ways to pass the second step the identity held at sign-in, as
+   * the server's `/callback` counts and keeps them (workspace#103 D55).
+   * Absent on a session written before the server recorded it.
+   */
+  second_factor_ways?: number;
   client_id: string;
   request_context_cache?: { display_name?: string; email?: string } | null;
   terminated_at?: number | null;
