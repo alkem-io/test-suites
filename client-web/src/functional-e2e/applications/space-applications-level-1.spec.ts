@@ -272,9 +272,6 @@ test.describe('Level 1 Subspace - Applications', () => {
 
   test.describe('Subspace Application Management', () => {
     test.beforeEach(async () => {
-      // Per-test scenario creation + application submission exceeds the default
-      // 30s hook budget on the slower test env.
-      test.setTimeout(60_000);
       baseScenario = await TestScenarioFactory.createBaseScenario(
         withUniqueSubspaceName(scenarioConfig)
       );

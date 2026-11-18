@@ -385,8 +385,11 @@ export default defineConfig(
         // Each file makes sure the two application notification settings of
         // the personas it uses are on (the server default) and leaves them on,
         // so the files can run beside each other.
+        // `long`: the 2.x walks wait up to 60 s for a notification to reach
+        // the bell, after seeding a Space and applying in the same test.
         name: 'Applications',
         lane: 'parallel',
+        tier: 'long',
         testMatch: [
           '/applications/space-applications-level-0.spec.ts',
           '/applications/space-applications-level-1.spec.ts',

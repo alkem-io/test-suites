@@ -1,4 +1,4 @@
-import { expect, test, type Locator, type Page, type Request } from '@playwright/test';
+import { expect, type Locator, type Page, type Request } from '@playwright/test';
 import {
   readRoleSetApplications,
   type TestScenarioConfig,
@@ -238,17 +238,16 @@ const NOTIFICATION_WAIT_MS = 60_000;
  * other files run. So the page is loaded and the bell opened again until the
  * entry is there, instead of opening it once and hoping.
  *
- * The wait is added to the test's own budget: a 2.x case has already spent
- * most of its 60 s on seeding, applying and deciding, so without this the
- * test timeout, not this wait, would end it, and the failure would not name
- * the missing entry. The click is bounded so a stuck attempt is retried.
+ * The suite runs on the `long` tier so this wait fits inside the test's
+ * budget after seeding, applying and deciding; on a shorter tier the test
+ * timeout would end the case before the wait could name the missing entry.
+ * The click is bounded so a stuck attempt is retried.
  */
 const openBellShowing = async (
   page: Page,
   entry: (panel: Locator) => Locator,
   what: string
 ): Promise<Locator> => {
-  test.setTimeout(test.info().timeout + NOTIFICATION_WAIT_MS);
   const panel = page.getByRole('dialog');
   await expect(async () => {
     await page.goto(`${BASE_URL}/home`);

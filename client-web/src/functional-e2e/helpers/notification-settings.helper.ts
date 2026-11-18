@@ -15,8 +15,14 @@ import { must } from '../helpers/lib-actor.helper';
  * `beforeAll` and never switch them back. The nightly runs server-api before
  * Playwright on the same database, so a UI spec that relies on the server
  * defaults (all channels on) finds "No notifications" instead. A UI spec must
- * therefore set the channels it depends on itself, and put them back the way
- * it found them so it does not fight other suites.
+ * therefore set the channels it depends on itself.
+ *
+ * Two contracts live here. The callout-reaction and form-response helpers
+ * return a restore function: their suites run in the serial lane and put the
+ * channels back the way they found them. `ensureApplicationNotifications`
+ * does not restore: it sets the server default (on) and leaves it, because
+ * the Applications files run beside each other on the same personas
+ * (e2e-conventions §8 › Suite parallelism, rule 2).
  *
  * Reads and writes another user's settings through the lib as the global
  * admin persona (`readUserSettings` / `updateUserSettings`).
