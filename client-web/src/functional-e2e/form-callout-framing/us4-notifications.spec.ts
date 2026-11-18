@@ -14,7 +14,7 @@ import {
   harnessPostgresConfigured,
   queryHarnessDb,
   rabbitMqManagementConfigured,
-  getMailsTo,
+  getMailsToAny,
   readMyNotifications,
   readMyUser,
   RoleName,
@@ -70,7 +70,7 @@ import {
  * Self-contained (form-callout-framing.helpers.ts): registers its own disposable
  * identities through public Kratos, joins them to its own Space and Subspace as
  * themselves, seeds the Forms through `@alkemio/tests-lib`, reads mail only
- * through the lib's recipient-scoped reader (`getMailsTo`), and deletes all of
+ * through the lib's recipient-scoped reader (`getMailsToAny`), and deletes all of
  * it in a file-level `afterAll`. The nightly runs AS1-AS5 and AS7; the three
  * `@local-stack` cases run with `pnpm run test:local-stack`, which also needs:
  *   RABBITMQ_MANAGEMENT_ENDPOINT / _USER / _PASSWORD   AS1p/AS5p
@@ -88,6 +88,13 @@ const RUN = formRunId();
 const SPACE_NAME = `US4 Space ${RUN}`;
 const SUB_NAME = `US4 Sub ${RUN}`;
 const email = (tag: string) => `us4-${tag}-${RUN}@alkem.io`;
+/**
+ * How long a poll waits for a notification mail. One poll reads every page of
+ * the sink, so the budget has to cover a few such reads, not only the delivery.
+ */
+const MAIL_WAIT_MS = 120_000;
+/** A case's own budget: two mail waits (US4-AS5) and the settle windows. */
+const CASE_TIMEOUT_MS = 300_000;
 
 type Persona = 'a2' | 'm1' | 'sa';
 const personaEmail: Record<Persona, string> = {
@@ -125,11 +132,10 @@ const fixtureAddresses = () => [
 ];
 
 async function fixtureMails(): Promise<Mail[]> {
-  // One mail can name several fixture addresses; keep each mail once.
-  const byId = new Map<string, Awaited<ReturnType<typeof getMailsTo>>[number]>();
-  for (const address of fixtureAddresses())
-    for (const m of await getMailsTo(address)) byId.set(String(m.id), m);
-  return [...byId.values()].map(m => ({
+  // One pass over the sink for all four addresses. Reading it once per address
+  // made a single poll take most of a minute against a full sink (2000 mails,
+  // 40 pages), so a mail that had arrived was seen only on the second poll.
+  return (await getMailsToAny(fixtureAddresses())).map(m => ({
     id: String(m.id ?? ''),
     subject: decode(m.subject ?? ''),
     body: m.body ?? '',
@@ -347,6 +353,8 @@ test.describe(
   'US4 — notifications on response submission',
   { tag: ['@forge-acceptance'] },
   () => {
+    test.describe.configure({ timeout: CASE_TIMEOUT_MS });
+
     test.beforeAll(async () => {
       // Three self-registrations, each a verification-mail round trip.
       test.setTimeout(300_000);
@@ -460,7 +468,7 @@ test.describe(
           async () =>
             to(await mailsAbout(one.name), adminSubject(one.name), personaEmail.a2)
               .length,
-          { timeout: 60_000 }
+          { timeout: MAIL_WAIT_MS }
         )
         .toBe(1);
 
@@ -555,7 +563,7 @@ test.describe(
           async () =>
             to(await mailsAbout(one.name), receiptSubject(one.name), personaEmail.a2)
               .length,
-          { timeout: 60_000 }
+          { timeout: MAIL_WAIT_MS }
         )
         .toBe(1);
       // The other Sub admin (the platform admin, creator of the Sub) is told; A2 is not.
@@ -564,7 +572,7 @@ test.describe(
           async () =>
             to(await mailsAbout(one.name), adminSubject(one.name), ADMIN_EMAIL)
               .length,
-          { timeout: 60_000 }
+          { timeout: MAIL_WAIT_MS }
         )
         .toBe(2);
       // Read after the poll so a late admin mail to A2 is not missed.
@@ -586,7 +594,7 @@ test.describe(
           async () =>
             to(await mailsAbout(multi.name), adminSubject(multi.name), personaEmail.a2)
               .length,
-          { timeout: 90_000 }
+          { timeout: MAIL_WAIT_MS }
         )
         .toBe(3);
       await expect
@@ -634,7 +642,7 @@ test.describe(
           async () =>
             to(await mailsAbout(multi.name), adminSubject(multi.name), personaEmail.a2)
               .length,
-          { timeout: 120_000 }
+          { timeout: MAIL_WAIT_MS }
         )
         .toBe(before + 1);
     });
@@ -677,7 +685,7 @@ test.describe(
           async () =>
             to(await mailsAbout(multi.name), adminSubject(multi.name), personaEmail.a2)
               .length,
-          { timeout: 60_000 }
+          { timeout: MAIL_WAIT_MS }
         )
         .toBe(before + 1);
       await expect
