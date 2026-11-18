@@ -3,8 +3,9 @@
 // Recovery codes in Security, signing in with one, and the support reset of a
 // member covered by an organisation rule whose deadline has passed: the next
 // sign-in lands on /second-factor, which is the only thing the session can
-// reach until a factor is set up and the member signs in again.
-import { expect, test, type BrowserContext, type Page } from '@playwright/test';
+// reach until two ways to pass the second step are set up (D55) and the
+// member signs in again.
+import { expect, test, type Page } from '@playwright/test';
 import {
   ageRuleSince,
   clearAddressCounters,
@@ -35,6 +36,7 @@ import {
   enrolAuthenticatorOnPage,
   expectRefusalPage,
   expectSignedIn,
+  generateRecoveryCodesOnPage,
   refusalPageRequests,
   freshPage,
   nameIdOf,
@@ -45,6 +47,7 @@ import {
   secondStepHeading,
   secondStepRecoveryField,
   shownAuthenticatorKey,
+  storedSignIn,
   submitPassword,
   submitSecondStep,
 } from './second-factor.helpers';
@@ -66,42 +69,6 @@ const signInWithCode = async (page: Page): Promise<void> => {
   await submitSecondStep(page, secondStepCodeField(page), totpCode(secret));
   await expectSignedIn(page);
   await openSecurityTab(page, nameId);
-};
-
-/** Generates codes in Security and confirms them; returns the codes shown. */
-const generateCodes = async (
-  page: Page,
-  context: BrowserContext,
-  browserName: string
-): Promise<string[]> => {
-  const recovery = recoveryBlock(page);
-  await recovery
-    .getByRole('button', { name: COPY.generate, exact: true })
-    .click();
-  await expect(recovery.getByText(COPY.shownOnce, { exact: true })).toBeVisible();
-  const codes = (await recovery.getByRole('listitem').allTextContents()).map(
-    c => c.trim()
-  );
-  expect(codes.length).toBeGreaterThan(0);
-  if (browserName === 'chromium') {
-    await context.grantPermissions(['clipboard-read', 'clipboard-write'], {
-      origin: baseUrl,
-    });
-    await recovery.getByRole('button', { name: COPY.copy, exact: true }).click();
-    await expect(
-      recovery.getByRole('button', { name: COPY.copied, exact: true })
-    ).toBeVisible();
-  }
-  await recovery
-    .getByRole('button', { name: COPY.savedCodes, exact: true })
-    .click();
-  await expect(
-    recovery.getByText(COPY.recoveryActive, { exact: true })
-  ).toBeVisible();
-  // Shown once: once confirmed, neither the notice nor the codes are on screen.
-  await expect(recovery.getByText(COPY.shownOnce, { exact: true })).toHaveCount(0);
-  await expect(recovery.getByRole('listitem')).toHaveCount(0);
-  return codes;
 };
 
 test.describe('US2 — recovery codes and the support reset', () => {
@@ -161,7 +128,7 @@ test.describe('US2 — recovery codes and the support reset', () => {
         )
       ).toBeVisible();
 
-      await generateCodes(page, context, browserName);
+      await generateRecoveryCodesOnPage(page, context, browserName);
       expect(await credentialTypes(member!.identityId)).toContain(
         'lookup_secret'
       );
@@ -201,7 +168,11 @@ test.describe('US2 — recovery codes and the support reset', () => {
     const setup = await freshPage(browser);
     try {
       await signInWithCode(setup.page);
-      codes = await generateCodes(setup.page, setup.context, browserName);
+      codes = await generateRecoveryCodesOnPage(
+        setup.page,
+        setup.context,
+        browserName
+      );
     } finally {
       await setup.context.close();
     }
@@ -222,8 +193,9 @@ test.describe('US2 — recovery codes and the support reset', () => {
     }
   });
 
-  test('US2-AS8/US4-AS6 after a reset past the organisation deadline, sign-in lands on /second-factor; enrolling there and signing in again opens the platform', async ({
+  test('US2-AS8/US4-AS6 after a reset past the organisation deadline, sign-in lands on /second-factor; enrolling there asks for a second way (D55); with two, signing in again opens the platform', async ({
     browser,
+    browserName,
   }) => {
     await withThrowawayOrganization(
       { admin: orgAdmin!, associates: [member!] },
@@ -302,10 +274,31 @@ test.describe('US2 — recovery codes and the support reset', () => {
           await expect(verdict.first()).toBeVisible();
 
           const enrolledSecret = await enrolAuthenticatorOnPage(page);
+          // One way is not enough under the rule (D55): the page asks for a
+          // second and keeps the settings flow on screen, with "Sign in
+          // again" still offered beside it.
+          await expect(
+            page.getByText(COPY.pageSecondWay, { exact: true })
+          ).toBeVisible();
+          await expect(
+            page.getByText(COPY.pageEnrolled, { exact: true })
+          ).toHaveCount(0);
+          await expect(
+            page.getByRole('link', { name: COPY.signInAgain, exact: true })
+          ).toBeVisible();
+          expect(await credentialTypes(member!.identityId)).toContain('totp');
+
+          // The second way: recovery codes, in the same section.
+          await generateRecoveryCodesOnPage(page, context, browserName);
           await expect(
             page.getByText(COPY.pageEnrolled, { exact: true })
           ).toBeVisible();
-          expect(await credentialTypes(member!.identityId)).toContain('totp');
+          await expect(
+            page.getByText(COPY.pageSecondWay, { exact: true })
+          ).toHaveCount(0);
+          expect(await credentialTypes(member!.identityId)).toEqual(
+            expect.arrayContaining(['totp', 'lookup_secret'])
+          );
 
           // "Sign in again" with both steps. The identity provider may still
           // hold the first-step session and ask for the code alone.
@@ -333,7 +326,10 @@ test.describe('US2 — recovery codes and the support reset', () => {
           expect(status.body.data?.me.secondFactorRequirement).toMatchObject({
             covered: true,
             satisfied: true,
+            secondWayNeeded: false,
           });
+          // The count the server took at this sign-in: the app and the codes.
+          expect(await storedSignIn(page)).toEqual({ acr: 'aal2', ways: 2 });
 
           // Nothing the page needed sat behind an unreachable host or was
           // refused from behind the edge — and the page's own requests were
