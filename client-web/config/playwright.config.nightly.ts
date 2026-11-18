@@ -382,9 +382,11 @@ export default defineConfig(
         tier: 'extended',
       }),
       suite({
-        // Serial: every file switches shared personas' notification settings on
-        // and restores what it read.
+        // Each file makes sure the two application notification settings of
+        // the personas it uses are on (the server default) and leaves them on,
+        // so the files can run beside each other.
         name: 'Applications',
+        lane: 'parallel',
         testMatch: [
           '/applications/space-applications-level-0.spec.ts',
           '/applications/space-applications-level-1.spec.ts',

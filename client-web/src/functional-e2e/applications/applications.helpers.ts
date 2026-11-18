@@ -226,6 +226,33 @@ export const expectNoApplyControl = async (scope: Locator | Page): Promise<void>
   }
 };
 
+const BASE_URL = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
+
+/** How long a walk waits for an in-app notification to reach the bell. */
+const NOTIFICATION_WAIT_MS = 60_000;
+
+/**
+ * Opens the bell on the home page and returns its panel once `entry` is in
+ * it. The panel lists what had arrived when it was opened, and a notification
+ * is delivered a moment after the action that causes it, later still while
+ * other files run. So the page is loaded and the bell opened again until the
+ * entry is there, instead of opening it once and hoping.
+ */
+const openBellShowing = async (
+  page: Page,
+  entry: (panel: Locator) => Locator,
+  what: string
+): Promise<Locator> => {
+  const panel = page.getByRole('dialog');
+  await expect(async () => {
+    await page.goto(`${BASE_URL}/home`);
+    await page.getByRole('button', { name: 'Notifications' }).click();
+    await expect(panel).toBeVisible();
+    await expect(entry(panel), what).toBeVisible({ timeout: 5_000 });
+  }).toPass({ timeout: NOTIFICATION_WAIT_MS });
+  return panel;
+};
+
 const escapeRegExp = (text: string): string =>
   text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
@@ -282,6 +309,48 @@ export const applicantNotificationEntry = (
       ? new RegExp(`${space} - Welcome to the community!`)
       : new RegExp(`declined your application to join ${space}(?![\\w-])`);
   return panel.getByRole('button').filter({ hasText: subject });
+};
+
+/** Opens the applicant's bell and waits for THIS space's entry in it. */
+export const expectApplicantNotified = async (
+  page: Page,
+  outcome: 'approved' | 'declined',
+  spaceDisplayName: string
+): Promise<void> => {
+  await openBellShowing(
+    page,
+    panel => applicantNotificationEntry(panel, outcome, spaceDisplayName),
+    `the applicant's "${outcome}" notification for ${spaceDisplayName}`
+  );
+};
+
+/**
+ * Opens the admin's bell and returns the "applied to join" entry of THIS
+ * space, matched by its run-unique name: the admin persona is shared, so the
+ * newest "applied to join" entry may belong to another file's Space.
+ */
+export const adminApplicationNotification = async (
+  page: Page,
+  spaceDisplayName: string
+): Promise<Locator> => {
+  const entry = (panel: Locator) =>
+    panel
+      .getByRole('button')
+      .filter({
+        // Case-insensitive, and nothing asserted about what follows the name:
+        // the entry's text runs straight on into its timestamp.
+        hasText: new RegExp(
+          `applied to join ${escapeRegExp(spaceDisplayName)}`,
+          'i'
+        ),
+      })
+      .first();
+  const panel = await openBellShowing(
+    page,
+    entry,
+    `the admin's "applied to join" notification for ${spaceDisplayName}`
+  );
+  return entry(panel);
 };
 
 /**

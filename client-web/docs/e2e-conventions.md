@@ -251,7 +251,10 @@ A suite may be marked `lane: 'parallel'` only when **every** file it lists:
 
 1. seeds what it uses under run-unique names and deletes it at file level;
 2. never changes a harness persona's own state (profile, settings, platform
-   roles); adding a persona to a Space the file created is fine;
+   roles); adding a persona to a Space the file created is fine. One write is
+   allowed: setting a persona's notification channel to the server default
+   (on) and leaving it there. Putting an earlier value back would switch the
+   channel off under a file that is still running;
 3. asserts only on what it seeded, never on a list or count other suites change
    while it runs (a persona's Spaces, pending invitations, notifications, an
    unfiltered admin or explore list);
