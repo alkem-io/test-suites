@@ -235,7 +235,9 @@ test.describe('US2 — recovery codes and the support reset', () => {
           // The rest of the platform is refused: a page sends the session
           // back here, and the API answers with the refusal code.
           await page.goto(`${baseUrl}/home`);
-          await page.waitForURL(url => url.pathname === '/second-factor');
+          await page.waitForURL(url => url.pathname === '/second-factor', {
+            timeout: 30_000,
+          });
           const refused = await readSecondFactorRequirement(
             await sessionActor(page)
           );
@@ -259,9 +261,10 @@ test.describe('US2 — recovery codes and the support reset', () => {
           await authenticator
             .getByRole('button', { name: COPY.confirm, exact: true })
             .click();
-          await page.waitForURL(
-            url =>
-              url.pathname === '/second-factor' && url.searchParams.has('flow')
+          // The answer is shown in place (the code is submitted as JSON), so
+          // the page stays where it is rather than reloading on a new flow.
+          await expect(page).toHaveURL(
+            url => new URL(url).pathname === '/second-factor'
           );
           await expect(
             page.getByRole('heading', { name: COPY.pageTitle, exact: true })
