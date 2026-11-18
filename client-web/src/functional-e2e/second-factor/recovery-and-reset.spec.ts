@@ -25,11 +25,6 @@ import {
 import { sessionActor } from '../helpers/lib-actor.helper';
 import { fillSecret } from '../helpers/login.helper';
 import {
-  passwordField,
-  signInButton,
-} from '../authentication/common-authentication-page-elements';
-import { fillUpSignInPageElements } from '../identity-flows/signin-page-objects';
-import {
   COPY,
   baseUrl,
   block,
@@ -41,12 +36,12 @@ import {
   freshPage,
   nameIdOf,
   openSecurityTab,
-  password,
   roleTokens,
   secondStepCodeField,
   secondStepHeading,
   secondStepRecoveryField,
   shownAuthenticatorKey,
+  signInAgainFromRefusalPage,
   storedSignIn,
   submitPassword,
   submitSecondStep,
@@ -300,24 +295,7 @@ test.describe('US2 — recovery codes and the support reset', () => {
             expect.arrayContaining(['totp', 'lookup_secret'])
           );
 
-          // "Sign in again" with both steps. The identity provider may still
-          // hold the first-step session and ask for the code alone.
-          await page
-            .getByRole('link', { name: COPY.signInAgain, exact: true })
-            .click();
-          await expect(
-            passwordField(page).or(secondStepCodeField(page))
-          ).toBeVisible();
-          if (await passwordField(page).isVisible()) {
-            await fillUpSignInPageElements(member!.email, password, page);
-            await signInButton(page).click();
-          }
-          await expect(secondStepHeading(page)).toBeVisible();
-          await submitSecondStep(
-            page,
-            secondStepCodeField(page),
-            totpCode(enrolledSecret)
-          );
+          await signInAgainFromRefusalPage(page, member!.email, enrolledSecret);
           await expectSignedIn(page);
           expect(new URL(page.url()).pathname).not.toBe('/second-factor');
           const status = await readSecondFactorRequirement(

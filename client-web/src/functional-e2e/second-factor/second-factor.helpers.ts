@@ -28,6 +28,7 @@ import { fillUpSignInPageElements } from '../identity-flows/signin-page-objects'
 import {
   logoutMenuItem,
   logInHeaderLink,
+  passwordField,
   signInButton,
   userMenuAvatar,
 } from '../authentication/common-authentication-page-elements';
@@ -67,6 +68,10 @@ export const COPY = {
   codeFromApp: 'Code from the app',
   confirm: 'Confirm',
   authenticatorActive: 'Your authenticator app is active.',
+  secondWayNeeded:
+    'Your account needs a second way to pass the second step: an authenticator app, another security key, or recovery codes. Add one below, then sign in again.',
+  secondWayAdded:
+    'Your second way to pass the second step is set up. Sign in again so it counts.',
   secondWaySuggested:
     'Two-step verification is on. Now add a second way to pass the second step (an authenticator app, another security key, or recovery codes), so you can still sign in if you lose this one.',
   remove: 'Remove',
@@ -93,6 +98,10 @@ export const COPY = {
   reminderPrefix: 'Use two-step verification by',
   reminderText: (deadline: string) =>
     `Use two-step verification by ${deadline}: set it up, or sign in again with it if you already have. After that date you cannot use Alkemio without it.`,
+  reminderSecondWayAction: 'Add one',
+  reminderSecondWayPrefix: 'Add a second way to pass the second step by',
+  reminderSecondWayText: (deadline: string) =>
+    `Add a second way to pass the second step by ${deadline}: an authenticator app, another security key, or recovery codes. Then sign in again. After that date you cannot use Alkemio with one way only.`,
   orgRuleSwitch: 'Require two-step verification for members',
   orgRuleTurnOffConfirm: 'Stop requiring',
 } as const;
@@ -248,17 +257,43 @@ export const expectStaysAbsent = async (
   expect(appeared, message).toBe(false);
 };
 
-/** On /second-factor: one notice, and the refusal never reached a toast. */
-export const expectRefusalPage = async (page: Page): Promise<void> => {
+/**
+ * On /second-factor: one notice — `pageRequired` for a member with no second
+ * factor, `pageSecondWay` for one with a single way (D55) — and the refusal
+ * never reached a toast.
+ */
+export const expectRefusalPage = async (
+  page: Page,
+  notice: string = COPY.pageRequired
+): Promise<void> => {
   await page.waitForURL(url => url.pathname === '/second-factor');
   await expect(
     page.getByRole('heading', { name: COPY.pageTitle, exact: true })
   ).toBeVisible();
-  await expect(page.getByText(COPY.pageRequired, { exact: true })).toHaveCount(1);
+  await expect(page.getByText(notice, { exact: true })).toHaveCount(1);
   await expectStaysAbsent(
     page.getByText(COPY.refusalToast, { exact: true }),
     'the second-factor refusal reached a toast'
   );
+};
+
+/**
+ * "Sign in again" from /second-factor, with both steps. The identity provider
+ * may still hold the first-step session and ask for the code alone.
+ */
+export const signInAgainFromRefusalPage = async (
+  page: Page,
+  email: string,
+  secret: string
+): Promise<void> => {
+  await page.getByRole('link', { name: COPY.signInAgain, exact: true }).click();
+  await expect(passwordField(page).or(secondStepCodeField(page))).toBeVisible();
+  if (await passwordField(page).isVisible()) {
+    await fillUpSignInPageElements(email, password, page);
+    await signInButton(page).click();
+  }
+  await expect(secondStepHeading(page)).toBeVisible();
+  await submitSecondStep(page, secondStepCodeField(page), totpCode(secret));
 };
 
 /** The user's own Security tab, scrolled to the two-step section. */
