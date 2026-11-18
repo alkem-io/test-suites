@@ -1,0 +1,83 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e2]:
+  - generic [ref=e5]:
+    - link "Skip to content" [ref=e6] [cursor=pointer]:
+      - /url: "#crd-main-content"
+    - banner [ref=e7]:
+      - generic [ref=e10]:
+        - generic [ref=e11]:
+          - link "Home" [ref=e12] [cursor=pointer]:
+            - /url: /home
+            - img "Alkemio" [ref=e14]
+          - navigation "breadcrumb" [ref=e22]:
+            - list [ref=e23]:
+              - listitem [ref=e24]:
+                - generic [ref=e25]: L
+                - generic [ref=e26]: l0-space-banner-crop-47052
+        - navigation "Menu" [ref=e27]:
+          - button "Search" [ref=e28] [cursor=pointer]:
+            - img
+          - button "Messages" [ref=e29] [cursor=pointer]:
+            - img
+          - button "Notifications" [ref=e30] [cursor=pointer]:
+            - img
+          - button "Platform navigation" [ref=e31] [cursor=pointer]:
+            - img
+          - button "admin alkemio" [ref=e33] [cursor=pointer]:
+            - img "admin alkemio" [ref=e36]
+    - main [ref=e37]:
+      - generic [ref=e38]:
+        - generic [ref=e39]:
+          - img "Space banner for l0-space-banner-crop-47052" [ref=e43]
+          - generic [ref=e46]:
+            - heading "l0-space-banner-crop-47052" [level=1] [ref=e48]
+            - paragraph [ref=e50]: A home to go from here to there, together!
+        - generic [ref=e52]:
+          - navigation "Space navigation tabs" [ref=e54]:
+            - generic [ref=e55]:
+              - tablist [ref=e57]:
+                - tab "Home" [selected] [ref=e58] [cursor=pointer]
+                - tab "Community" [ref=e59] [cursor=pointer]
+                - tab "Subspaces" [ref=e60] [cursor=pointer]
+                - tab "Knowledge" [ref=e61] [cursor=pointer]
+              - generic [ref=e63]:
+                - button "About this Space" [ref=e64] [cursor=pointer]:
+                  - img
+                - button "Activity" [ref=e65] [cursor=pointer]:
+                  - img
+                - button "Expand to full width" [ref=e66] [cursor=pointer]:
+                  - img
+                - link "Video Call" [ref=e67] [cursor=pointer]:
+                  - /url: https://meet.jit.si/space-banner-crop-47052-9df23de4-15c2-4a5a-bad2-6ad5c8d96117
+                  - img
+                - button "Share" [ref=e68] [cursor=pointer]:
+                  - img
+                - link "Settings" [ref=e69] [cursor=pointer]:
+                  - /url: https://test-alkem.io/space-banner-crop-47052/settings
+                  - img
+          - status "Loading" [ref=e71]:
+            - img [ref=e72]
+    - contentinfo [ref=e74]:
+      - generic [ref=e75]:
+        - generic [ref=e76]:
+          - img "Alkemio" [ref=e78]
+          - generic [ref=e84]: © 2026 Alkemio B.V.
+        - navigation "Footer" [ref=e85]:
+          - link "Terms" [ref=e86] [cursor=pointer]:
+            - /url: https://welcome.alkem.io/legal/terms/
+          - link "Privacy" [ref=e87] [cursor=pointer]:
+            - /url: https://welcome.alkem.io/legal/privacy
+          - link "Security" [ref=e88] [cursor=pointer]:
+            - /url: https://welcome.alkem.io/legal/security
+          - button "Support" [ref=e89] [cursor=pointer]
+          - link "About" [ref=e90] [cursor=pointer]:
+            - /url: https://welcome.alkem.io
+        - button "English" [ref=e92] [cursor=pointer]:
+          - img [ref=e93]
+          - generic [ref=e96]: English
+  - region "Notifications alt+T"
+  - button "Open chat" [ref=e97]:
+    - img [ref=e98]
+```
