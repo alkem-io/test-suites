@@ -15,8 +15,14 @@ import { must } from '../helpers/lib-actor.helper';
  * `beforeAll` and never switch them back. The nightly runs server-api before
  * Playwright on the same database, so a UI spec that relies on the server
  * defaults (all channels on) finds "No notifications" instead. A UI spec must
- * therefore set the channels it depends on itself, and put them back the way
- * it found them so it does not fight other suites.
+ * therefore set the channels it depends on itself.
+ *
+ * Two contracts live here. The callout-reaction and form-response helpers
+ * return a restore function: their suites run in the serial lane and put the
+ * channels back the way they found them. `ensureApplicationNotifications`
+ * does not restore: it sets the server default (on) and leaves it, because
+ * the Applications files run beside each other on the same personas
+ * (e2e-conventions §8 › Suite parallelism, rule 2).
  *
  * Reads and writes another user's settings through the lib as the global
  * admin persona (`readUserSettings` / `updateUserSettings`).
@@ -53,20 +59,6 @@ const readNotificationSettings = async (userId: string) =>
     `read notification settings of ${userId}`
   ).user.settings.notification;
 
-const readApplicationChannels = async (
-  userId: string
-): Promise<ApplicationNotificationChannels> => {
-  const notification = await readNotificationSettings(userId);
-  return {
-    communityApplicationReceived: channels(
-      notification.space.admin.communityApplicationReceived
-    ),
-    spaceCommunityJoined: channels(
-      notification.user.membership.spaceCommunityJoined
-    ),
-  };
-};
-
 const writeApplicationChannels = async (
   userId: string,
   channels: ApplicationNotificationChannels
@@ -92,56 +84,29 @@ const writeApplicationChannels = async (
 };
 
 /**
- * Turn on every channel of the two settings the application walks assert on
- * — `space.admin.communityApplicationReceived` (admin sees "applied to join")
- * and `user.membership.spaceCommunityJoined` (applicant sees "Welcome to the
- * community" / "declined") — for the given personas.
+ * Make sure every channel of the two settings the application walks assert on
+ * is on for the given personas: `space.admin.communityApplicationReceived`
+ * (admin sees "applied to join") and `user.membership.spaceCommunityJoined`
+ * (applicant sees "Welcome to the community" / "declined").
  *
- * Reads every persona's current values first, then writes; if any write
- * fails, the values already written are rolled back before the error is
- * rethrown, so a failed `beforeAll` cannot leave the shared personas
- * half-modified.
- *
- * Returns a restore function that writes the previous values back; call it
- * from `afterAll`.
+ * "On" is the server default, so this puts the personas back where a fresh
+ * account starts. It is NOT restored afterwards, and that is what lets the
+ * Applications files run beside each other: they share these personas, and a
+ * file that put "off" back on its way out would silence the notifications of
+ * a file still running. Writing "on" twice is harmless.
  */
-export const enableApplicationNotifications = async (
+export const ensureApplicationNotifications = async (
   roles: TestUser[]
-): Promise<() => Promise<void>> => {
+): Promise<void> => {
   await TestUserManager.populateUserModelMap();
-
-  const previous = await Promise.all(
-    roles.map(async role => {
-      const userId = TestUserManager.getUserModelByType(role).id;
-      return { userId, channels: await readApplicationChannels(userId) };
-    })
-  );
-
-  const restore = async () => {
-    await Promise.all(
-      previous.map(({ userId, channels }) =>
-        writeApplicationChannels(userId, channels)
-      )
-    );
-  };
-
-  const writes = await Promise.allSettled(
-    previous.map(({ userId }) =>
-      writeApplicationChannels(userId, {
+  await Promise.all(
+    roles.map(role =>
+      writeApplicationChannels(TestUserManager.getUserModelByType(role).id, {
         communityApplicationReceived: ALL_CHANNELS_ON,
         spaceCommunityJoined: ALL_CHANNELS_ON,
       })
     )
   );
-  const failed = writes.find(
-    (w): w is PromiseRejectedResult => w.status === 'rejected'
-  );
-  if (failed) {
-    await restore();
-    throw failed.reason;
-  }
-
-  return restore;
 };
 
 // ─── Callout reactions ───────────────────────────────────────────────────────
@@ -149,9 +114,8 @@ export const enableApplicationNotifications = async (
 /**
  * Turn on every channel of `space.collaborationCalloutReaction`
  * ("someone reacted to a callout you published") for one user — the setting
- * the callout-reaction walks assert on in the bell dialog. Same contract as
- * `enableApplicationNotifications`: reads first, returns a restore function
- * for `afterAll`.
+ * the callout-reaction walks assert on in the bell dialog. Reads first and
+ * returns a restore function for `afterAll`.
  */
 export const enableCalloutReactionNotifications = async (
   userId: string

@@ -15,9 +15,9 @@ import {
   SpacePrivacyMode,
 } from '@alkemio/client-lib';
 import { loginViaCrd } from '../helpers/login.helper';
-import { enableApplicationNotifications } from '../helpers/notification-settings.helper';
+import { ensureApplicationNotifications } from '../helpers/notification-settings.helper';
 import {
-  applicantNotificationEntry,
+  expectApplicantNotified,
   withUniqueSubspaceName,
   applyFromSubspaceAboutDialog,
 } from './applications.helpers';
@@ -66,7 +66,6 @@ test.describe('Level 1 Subspace - Applications (Public Parent Space)', () => {
   let baseScenario: OrganizationWithSpaceModel;
   let nonSpaceMemberPage: Page;
   let subspaceAdminPage: Page;
-  let restoreNotificationSettings: () => Promise<void>;
 
   test.beforeAll(async ({ browser }) => {
     globalBaseScenario = await TestScenarioFactory.createBaseScenario(
@@ -76,9 +75,9 @@ test.describe('Level 1 Subspace - Applications (Public Parent Space)', () => {
 
     // The bell-dialog assertions below need the in-app channel ON for the
     // applicant (joined / declined) and the admin (application received).
-    // Other suites leave these personas with in-app off, so set it here and
-    // put the previous values back in afterAll.
-    restoreNotificationSettings = await enableApplicationNotifications([
+    // Other suites leave these personas with in-app off, so set it here. It is
+    // left on: see ensureApplicationNotifications.
+    await ensureApplicationNotifications([
       TestUser.NON_SPACE_MEMBER,
       TestUser.SUBSPACE_ADMIN,
     ]);
@@ -102,7 +101,6 @@ test.describe('Level 1 Subspace - Applications (Public Parent Space)', () => {
   });
 
   test.afterAll(async () => {
-    await restoreNotificationSettings?.();
     await TestScenarioFactory.cleanUpBaseScenario(globalBaseScenario);
     await nonSpaceMemberPage.close();
     await subspaceAdminPage.close();
@@ -329,25 +327,8 @@ test.describe('Level 1 Subspace - Applications (Public Parent Space)', () => {
         applicationRow.filter({ hasText: 'Application approved' })
       ).toBeVisible();
 
-      // Verify notification is received by the applicant
-      const applicantPage = nonSpaceMemberPage;
-      await applicantPage.goto(`${baseUrl}/home`);
-
-      const notificationsBellIcon = applicantPage.getByRole('button', {
-        name: 'Notifications',
-      });
-      await expect(notificationsBellIcon).toBeVisible();
-      await notificationsBellIcon.click();
-
-      const notificationsPanel = applicantPage.getByRole('dialog');
-      await expect(notificationsPanel).toBeVisible();
-      await expect(notificationsPanel).toContainText(
-        /Welcome to the community/i
-      );
-      // Scoped to THIS run's space: the persona's panel holds older entries.
-      await expect(
-        applicantNotificationEntry(notificationsPanel, 'approved', baseScenario.subspace.about.profile.displayName)
-      ).toBeVisible();
+      // The applicant's bell shows this Space's entry (opened again until it has arrived).
+      await expectApplicantNotified(nonSpaceMemberPage, 'approved', baseScenario.subspace.about.profile.displayName);
     });
 
     test('2.2 Reject non-parent-member application to L1 Subspace', async () => {
@@ -380,23 +361,8 @@ test.describe('Level 1 Subspace - Applications (Public Parent Space)', () => {
       // Verify the application is removed from the pending list
       await expect(applicationRow).not.toBeVisible();
 
-      // Verify notification is received by the applicant
-      const applicantPage = nonSpaceMemberPage;
-      await applicantPage.goto(`${baseUrl}/home`);
-
-      const notificationsBellIcon = applicantPage.getByRole('button', {
-        name: 'Notifications',
-      });
-      await expect(notificationsBellIcon).toBeVisible();
-      await notificationsBellIcon.click();
-
-      const notificationsPanel = applicantPage.getByRole('dialog');
-      await expect(notificationsPanel).toBeVisible();
-      await expect(notificationsPanel).toContainText(/declined/i);
-      // Scoped to THIS run's space: the persona's panel holds older entries.
-      await expect(
-        applicantNotificationEntry(notificationsPanel, 'declined', baseScenario.subspace.about.profile.displayName)
-      ).toBeVisible();
+      // The applicant's bell shows this Space's entry (opened again until it has arrived).
+      await expectApplicantNotified(nonSpaceMemberPage, 'declined', baseScenario.subspace.about.profile.displayName);
     });
   });
 });

@@ -53,7 +53,8 @@ The Alkemio platform provides a multi-level space hierarchy (Space → Subspace 
 - For improved performance, sign in users once in `test.beforeAll()` or `test.beforeEach()` hooks and reuse the authenticated browser page/context across multiple tests within the same describe block, rather than signing in separately for each test.
 - Tests should create the base scenario using `TestScenarioFactory.createBaseScenario()` in `test.beforeAll()` and use the returned `baseScenario` object to access dynamic space properties (e.g., `baseScenario.space.about.profile.displayName`, `baseScenario.space.nameId`) instead of hardcoded values.
 - Remember to clean up the scenario in `test.afterAll()` using `TestScenarioFactory.cleanUpBaseScenario(baseScenario)`.
-- The 2.x cases assert an in-app notification in the bell dialog. The fixed personas are shared with the server-api suite, whose notification specs leave email + in-app switched OFF, and the nightly runs server-api before Playwright on the same database. Each spec therefore turns the two settings it depends on back ON in `test.beforeAll()` (`space.admin.communityApplicationReceived` for the admin, `user.membership.spaceCommunityJoined` for the applicant) via `enableApplicationNotifications()` from `helpers/notification-settings.helper.ts`, and restores the previous values in `test.afterAll()`. Do not rely on the server defaults.
+- The 2.x cases assert an in-app notification in the bell dialog. The fixed personas are shared with the server-api suite, whose notification specs leave email + in-app switched OFF, and the nightly runs server-api before Playwright on the same database. Each spec therefore makes sure the two settings it depends on are ON in `test.beforeAll()` (`space.admin.communityApplicationReceived` for the admin, `user.membership.spaceCommunityJoined` for the applicant) via `ensureApplicationNotifications()` from `helpers/notification-settings.helper.ts`. ON is the server default and the settings are left ON: there is nothing to restore in `test.afterAll()`, and restoring would switch them off under another Applications file still running (conventions §8 › Suite parallelism, rule 2). Do not skip the call and rely on the server defaults.
+- The bell is read through `expectApplicantNotified` / `adminApplicationNotification` (`applications.helpers.ts`), which load the home page and open the bell again until THIS Space's entry is there, for up to 60 s. The suite runs on the `long` tier so that wait fits in the test's budget.
 
 ---
 
@@ -430,7 +431,7 @@ The Alkemio platform provides a multi-level space hierarchy (Space → Subspace 
 
 ### Applicant bell assertions scoped to the Space (W2 Tier 1 item 13, 2026-11-09)
 
-The applicant (`non.space`) is a shared persona whose bell holds entries from earlier cases and earlier nights, so the unscoped `toContainText(/declined/i)` / `/Welcome to the community/i` passed on history (client-net audit § 2, B5). Each is kept and followed by a scoped one (`applications.helpers.ts › applicantNotificationEntry`): a notification button whose text is the full subject carrying THIS run's space name —
+The applicant (`non.space`) is a shared persona whose bell holds entries from earlier cases and earlier nights, so the unscoped `toContainText(/declined/i)` / `/Welcome to the community/i` passed on history (client-net audit § 2, B5). Each was followed by a scoped one (`applications.helpers.ts › applicantNotificationEntry`), and since test-suites#749 the scoped one alone remains (it implies the unscoped text): a notification button whose text is the full subject carrying THIS run's space name —
 
 - approved: `<space> - Welcome to the community!` (USER_SPACE_COMMUNITY_JOINED)
 - declined: `… declined your application to join <space>` (USER_SPACE_COMMUNITY_APPLICATION_DECLINED)
@@ -439,7 +440,7 @@ L0 2.1–2.5 use the L0 name; L1 2.1–2.5 and L1-public-parent 2.1/2.2 use the 
 
 **Locator repairs in the same change (client-web#10499).** The row now carries "Reject" and "Reject and remove application"; the non-exact `name: 'Reject'` hit both (strict-mode red in 2.1/2.4 at every level on the local stack's develop client), and the row's "Delete" action is now "Reject and remove application". Both locators are now exact. Nothing was relaxed.
 
-**No new shared-persona mutation.** The new case changes only `non.space`'s membership of this run's own Space, which is deleted with it; the existing snapshot → enable → restore of in-app channels (`enableApplicationNotifications`) is untouched and nothing was added to it.
+**No new shared-persona mutation.** The new case changes only `non.space`'s membership of this run's own Space, which is deleted with it; the snapshot → enable → restore of in-app channels that existed at the time (`enableApplicationNotifications`) was untouched and nothing was added to it. test-suites#749 later replaced it with `ensureApplicationNotifications`, which leaves the channels on (see Test Optimization Notes).
 
 **Red-proofs (local stack, 2026-11-09):**
 
@@ -680,7 +681,7 @@ pnpm exec playwright test src/functional-e2e/applications/space-applications-lev
 pnpm run test:nightly --project=Applications
 ```
 
-Run the file serially, one worker. The Applications suite is not yet parallel-safe (conventions §8).
+The suite is in the parallel lane (conventions §8 › Suite parallelism): the three files can run side by side, `PW_LANE=parallel PW_WORKERS=3 pnpm run test:nightly --project=Applications`.
 
 ## Risk
 

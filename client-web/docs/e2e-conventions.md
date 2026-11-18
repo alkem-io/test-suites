@@ -57,7 +57,9 @@ client-web/
   disposable identity (`registerInKratosOrFail` + `verifyInKratosOrFail`) and
   deletes it (`deleteUser(id, GLOBAL_ADMIN, true)`). If a persona's setting
   must be changed, snapshot → change → restore in `afterAll`
-  (`helpers/notification-settings.helper.ts` is the pattern).
+  (`helpers/notification-settings.helper.ts` is the pattern). One exception,
+  §8 › Suite parallelism, rule 2: a notification channel set to the server
+  default (on) is left on and not restored (`ensureApplicationNotifications`).
 - **Do not depend on environment state** you did not create: not "the first
   space the admin administers", not "a public space exists", not "the inbox is
   empty". Create the space; search for your own name; read mail by recipient.
@@ -253,7 +255,10 @@ A suite may be marked `lane: 'parallel'` only when **every** file it lists:
 
 1. seeds what it uses under run-unique names and deletes it at file level;
 2. never changes a harness persona's own state (profile, settings, platform
-   roles); adding a persona to a Space the file created is fine;
+   roles); adding a persona to a Space the file created is fine. One write is
+   allowed: setting a persona's notification channel to the server default
+   (on) and leaving it there. Putting an earlier value back would switch the
+   channel off under a file that is still running;
 3. asserts only on what it seeded, never on a list or count other suites change
    while it runs (a persona's Spaces, pending invitations, notifications, an
    unfiltered admin or explore list);
@@ -291,6 +296,6 @@ self-seeded walk that adds members fails at setup.
 - [ ] Self-seeding and self-cleaning; passes alone and after any other file.
 - [ ] Zero fixed waits, zero `networkidle`; `pnpm run lint` is clean.
 - [ ] Every assertion would go red on the regression it guards (reviewer: name the regression for each).
-- [ ] No shared persona mutated; no inbox pruned.
+- [ ] No shared persona mutated (only exception: §8 › Suite parallelism, rule 2); no inbox pruned.
 - [ ] Test plan updated beside the spec.
 - [ ] Ran green locally against the current `develop` server + client, headless.
