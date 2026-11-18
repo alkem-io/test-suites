@@ -88,6 +88,7 @@ const FUNCTIONS: string[] = [
   'deleteMailSlurperMails',
   // recipient-scoped mail readers (W2 Tier 0 item 4: messaging-notifications)
   'getMailsTo',
+  'getMailsToAny',
   'markMailbox',
   'getMailsToSince',
   'waitForMailsToSince',

@@ -52,16 +52,31 @@ const readPage = async (
   };
 };
 
-/** Every mail in the sink addressed to `address`, across all pages. */
-export const getMailsTo = async (address: string): Promise<MailItem[]> => {
+/**
+ * Every mail in the sink addressed to at least one of `addresses`, across all
+ * pages, each mail once. One pass over the sink whatever the number of
+ * addresses: a caller that polls for several recipients reads the sink once
+ * per poll, not once per recipient.
+ */
+export const getMailsToAny = async (
+  addresses: readonly string[]
+): Promise<MailItem[]> => {
   const out: MailItem[] = [];
   for (let page = 1; page <= MAX_PAGES; page++) {
     const { items, totalPages } = await readPage(page);
-    out.push(...items.filter((mail) => mailIsAddressedTo(mail, address)));
+    out.push(
+      ...items.filter((mail) =>
+        addresses.some((address) => mailIsAddressedTo(mail, address))
+      )
+    );
     if (page >= totalPages || items.length === 0) break;
   }
   return out;
 };
+
+/** Every mail in the sink addressed to `address`, across all pages. */
+export const getMailsTo = (address: string): Promise<MailItem[]> =>
+  getMailsToAny([address]);
 
 const mailIdOf = (mail: MailItem): string => {
   const id = mail.id;
