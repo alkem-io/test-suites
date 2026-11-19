@@ -1,0 +1,136 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e2]:
+  - generic [ref=e5]:
+    - link "Skip to content" [ref=e6] [cursor=pointer]:
+      - /url: "#crd-main-content"
+    - banner [ref=e7]:
+      - generic [ref=e10]:
+        - generic [ref=e11]:
+          - link "Home" [ref=e12] [cursor=pointer]:
+            - /url: /home
+            - img "Alkemio" [ref=e14]
+          - navigation "breadcrumb" [ref=e22]:
+            - list [ref=e23]:
+              - listitem [ref=e24]:
+                - generic [ref=e25]: L
+                - generic [ref=e26]: l0-apps-pending-invit-rb1d3
+        - navigation "Menu" [ref=e27]:
+          - button "Search" [ref=e28] [cursor=pointer]:
+            - img
+          - button "Messages" [ref=e29] [cursor=pointer]:
+            - img
+          - button "Notifications" [ref=e30] [cursor=pointer]:
+            - img
+          - button "Platform navigation" [ref=e31] [cursor=pointer]:
+            - img
+          - button "non space" [ref=e33] [cursor=pointer]:
+            - img "non space" [ref=e36]
+    - main [ref=e37]:
+      - generic [ref=e38]:
+        - generic [ref=e39]:
+          - img "Space banner for l0-apps-pending-invit-rb1d3" [ref=e43]
+          - generic [ref=e46]:
+            - heading "l0-apps-pending-invit-rb1d3" [level=1] [ref=e48]
+            - paragraph [ref=e50]: A home to go from here to there, together!
+        - generic [ref=e52]:
+          - navigation "Space navigation tabs" [ref=e54]:
+            - generic [ref=e55]:
+              - tablist [ref=e57]:
+                - tab "Home" [selected] [ref=e58] [cursor=pointer]
+                - tab "Community" [ref=e59] [cursor=pointer]
+                - tab "Subspaces" [ref=e60] [cursor=pointer]
+                - tab "Knowledge" [ref=e61] [cursor=pointer]
+              - generic [ref=e63]:
+                - button "About this Space" [ref=e64] [cursor=pointer]:
+                  - img
+                - button "Activity" [ref=e65] [cursor=pointer]:
+                  - img
+                - button "Expand to full width" [ref=e66] [cursor=pointer]:
+                  - img
+                - link "Video Call" [ref=e67] [cursor=pointer]:
+                  - /url: https://meet.jit.si/apps-pending-invit-rb1d3-6cedd476-a063-400a-9a33-2035d42c0905
+                  - img
+                - button "Share" [ref=e68] [cursor=pointer]:
+                  - img
+          - navigation "Space sidebar" [ref=e71]:
+            - generic [ref=e73]:
+              - paragraph [ref=e74]: Space Leads
+              - list [ref=e75]:
+                - listitem [ref=e76]:
+                  - link "admin alkemio admin alkemio" [ref=e77] [cursor=pointer]:
+                    - /url: https://test-alkem.io/user/admin-alkemio
+                    - generic [ref=e78]:
+                      - img "admin alkemio" [ref=e80]
+                      - paragraph [ref=e82]: admin alkemio
+                - listitem [ref=e83]:
+                  - link "apps-pending-invit-q5086 apps-pending-invit-q5086" [ref=e84] [cursor=pointer]:
+                    - /url: https://test-alkem.io/organization/apps-pending-invit-q5086
+                    - generic [ref=e85]:
+                      - img "apps-pending-invit-q5086" [ref=e87]
+                      - paragraph [ref=e89]: apps-pending-invit-q5086
+            - button "About this Space" [ref=e90] [cursor=pointer]:
+              - img
+              - generic [ref=e91]: About this Space
+            - generic [ref=e93]:
+              - img
+              - searchbox "Search posts" [ref=e94]
+            - button "Apply" [ref=e96] [cursor=pointer]:
+              - img
+              - text: Apply
+            - generic [ref=e97]:
+              - generic [ref=e99]:
+                - heading "Events" [level=3] [ref=e100]
+                - img [ref=e101]
+              - paragraph [ref=e103]: No upcoming events
+              - button "Show calendar" [ref=e104] [cursor=pointer]
+          - generic [ref=e106]:
+            - paragraph [ref=e113]: 🔍 A journey of discovery! Gather insights through research and observation.
+            - region "Space content feed" [ref=e114]:
+              - generic [ref=e117]:
+                - generic [ref=e118]:
+                  - link "Open 👋 Welcome to your space!" [ref=e119] [cursor=pointer]:
+                    - /url: "#"
+                    - generic [ref=e120]: Open 👋 Welcome to your space!
+                  - generic [ref=e121]:
+                    - link "admin alkemio" [ref=e122] [cursor=pointer]:
+                      - /url: https://test-alkem.io/user/admin-alkemio
+                      - img "admin alkemio" [ref=e124]
+                    - generic [ref=e126]:
+                      - link "admin alkemio" [ref=e127] [cursor=pointer]:
+                        - /url: https://test-alkem.io/user/admin-alkemio
+                      - generic [ref=e128]: • Today
+                  - button "Settings" [ref=e130] [cursor=pointer]:
+                    - img
+                - generic [ref=e131]:
+                  - heading "👋 Welcome to your space!" [level=3] [ref=e132]:
+                    - link "👋 Welcome to your space!" [ref=e133] [cursor=pointer]:
+                      - /url: "#"
+                  - paragraph [ref=e138]: An empty space for you to configure!.
+                - button "Expand comments" [ref=e142] [cursor=pointer]:
+                  - img [ref=e143]
+                  - img [ref=e145]
+                  - generic [ref=e147]: 0 Comments
+    - contentinfo [ref=e148]:
+      - generic [ref=e149]:
+        - generic [ref=e150]:
+          - img "Alkemio" [ref=e152]
+          - generic [ref=e158]: © 2026 Alkemio B.V.
+        - navigation "Footer" [ref=e159]:
+          - link "Terms" [ref=e160] [cursor=pointer]:
+            - /url: https://welcome.alkem.io/legal/terms/
+          - link "Privacy" [ref=e161] [cursor=pointer]:
+            - /url: https://welcome.alkem.io/legal/privacy
+          - link "Security" [ref=e162] [cursor=pointer]:
+            - /url: https://welcome.alkem.io/legal/security
+          - button "Support" [ref=e163] [cursor=pointer]
+          - link "About" [ref=e164] [cursor=pointer]:
+            - /url: https://welcome.alkem.io
+        - button "English" [ref=e166] [cursor=pointer]:
+          - img [ref=e167]
+          - generic [ref=e170]: English
+  - region "Notifications alt+T"
+  - button "Open chat" [ref=e171]:
+    - img [ref=e172]
+```
