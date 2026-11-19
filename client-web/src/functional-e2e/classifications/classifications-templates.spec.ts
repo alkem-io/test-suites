@@ -940,15 +940,30 @@ test.describe('TL-07 out-of-scope negatives', () => {
     await page.keyboard.press('Escape');
     await expect(filters).toBeHidden();
 
-    // This Space's card, located by name via the Explore search: it must render, and carry no chips.
-    const spaceSearch = page.getByPlaceholder(/^Search spaces/);
-    await expect(spaceSearch).toBeVisible({ timeout: 15_000 });
-    await spaceSearch.fill(spaceName);
-    await expect(
-      page.getByRole('heading', { name: spaceName, exact: true }).first()
-    ).toBeVisible({
-      timeout: 20_000,
+    // This Space's card on Explore: it must render, and carry no chips.
+    //
+    // Explore lists every Space on the platform a page at a time, so more
+    // pages are loaded until the card is there. Typing the name in the search
+    // box found nothing by itself (a term only counts once it is committed,
+    // and a committed term goes to the search backend, which the test cluster
+    // lacks): the card was found only while it happened to be on the first
+    // page, which stops being true when other files create Spaces.
+    await expect(page.getByPlaceholder(/^Search spaces/)).toBeVisible({
+      timeout: 15_000,
     });
+    const card = page
+      .getByRole('heading', { name: spaceName, exact: true })
+      .first();
+    const loadMore = page.getByRole('button', {
+      name: 'Load More',
+      exact: true,
+    });
+    await expect(async () => {
+      if (!(await card.isVisible()) && (await loadMore.isVisible())) {
+        await loadMore.click();
+      }
+      await expect(card).toBeVisible({ timeout: 2_000 });
+    }).toPass({ timeout: 90_000 });
     await expect(page.getByText(VALUE)).toHaveCount(0);
     await expect(page.getByText(TEMPLATE)).toHaveCount(0);
 
