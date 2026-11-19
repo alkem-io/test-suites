@@ -2,7 +2,7 @@
 
 _What the platform does today for the public configuration document that the web client reads when it starts: feature switches, locations, monitoring addresses, the upload limit, languages, the sign-in provider and the limits for images and videos: what it does, why, who may, and what is still to answer. The layout is the three-section one of `communications.md`: **1. Rules**, **2. Rights**, **3. Open questions**, with the evidence in an **Appendix**._
 
-_Open questions per owner: Product Lead 2 · Technical Lead 3 · Quality Lead 7 · Service Operations Lead 1 · Architecture Lead 1. By state: 7 open · 7 with a suggested answer. Proof of the 13 rules: 6 proven by a test · 7 untested (Appendix A)._
+_Open questions per owner: Product Lead 1 · Technical Lead 4 · Quality Lead 7 · Service Operations Lead 1 · Architecture Lead 1. By state: 7 open · 7 with a suggested answer. Proof of the 13 rules: 6 proven by a test · 7 untested (Appendix A)._
 
 **How to read it**
 
@@ -59,18 +59,17 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 ### Product Lead
 
-[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 2 to answer
+[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 1 to answer
 
 **To answer**
 
 | ID | Area | Type | Question | Owner | Proposed answer | State |
 |---|---|---|---|---|---|---|
-| Q-CFG-04 | Document | decision | Why does this rule exist? No source says why the switches are only advice for the client, or which of them should also change what the server does. | Product Lead | — | open |
 | CONST | All | decision | 12 constants are blank in "product must rule?" (Appendix E). Which of them must product rule on? | Product Lead (Technical Lead and Security Lead rule on the engineering and security values) | — | open |
 
 ### Technical Lead
 
-[Technical Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Technical%20Lead.md) · Delivery (Anton) · 3 to answer, 3 also involved
+[Technical Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Technical%20Lead.md) · Delivery (Anton) · 4 to answer, 3 also involved
 
 **To answer**
 
@@ -79,6 +78,7 @@ _One section per role, so each owner reads only their own part. **To answer** li
 | F5 | Document | defect | A monitoring address that is not set is published as "0", and the case pins that. A client that treats "0" as an address would try to reach it. | Technical Lead | Publish an empty value (or allow the field to be empty) and rebaseline the case. | suggested |
 | F7 | Document | check | The sign-in provider block still describes Ory Kratos and was not changed by the newer sign-in work (server PR #6143). Does the web client still read it at start-up, or is the block dead? Decide before the new core carries it over. | Technical Lead, then Architecture Lead | — | open |
 | OQ2 | Document | check | What does the web client read from this document at start-up, and does it hard-code any of it? Client code was not checked. The answer decides F6 and F7. | Technical Lead | — | open |
+| Q-CFG-04 | Document | decision | Why does this rule exist? No source says why the switches are only advice for the client, or which of them should also change what the server does. | Technical Lead | — | open |
 
 **Also involved**
 

@@ -2,7 +2,7 @@
 
 _What the server does today for the web AI assistant: who may use it, the monthly budget it reports, the assistant actor and what it may do, how the assistant acts for a user, and how its key is set up: what it does, why, who may, and what is still to answer. The conversation itself (history, confirmation, reply language, metering) lives in the private assistant service and is not covered here; see OQ1. It follows the three-section layout accepted in the product review of `communications.md` (alkem-io/test-suites#717): **1. Rules**, **2. Rights**, **3. Open questions**, with the evidence in an **Appendix**. Product has not reviewed this file yet._
 
-_Open questions per owner: Product Lead 3 · Technical Lead 5 · Quality Lead 3 · Security Lead 2 · Service Operations Lead 4 · Architecture Lead 1. By state: 15 open · 3 with a suggested answer. Proof of the 18 rules: 4 proven by a test · 14 untested (Appendix A)._
+_Open questions per owner: Product Lead 2 · Technical Lead 6 · Quality Lead 3 · Security Lead 2 · Service Operations Lead 4 · Architecture Lead 1. By state: 15 open · 3 with a suggested answer. Proof of the 18 rules: 4 proven by a test · 14 untested (Appendix A)._
 
 **How to read it**
 
@@ -90,7 +90,7 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 ### Product Lead
 
-[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 3 to answer
+[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 2 to answer
 
 **To answer**
 
@@ -98,11 +98,10 @@ _One section per role, so each owner reads only their own part. **To answer** li
 |---|---|---|---|---|---|---|
 | F4b | Budget | decision | The free tier is never issued, so a user without a plan gets the assistant service's own default instead of the signed-off 1M free allowance. Is that meant? | Product Lead | — | open |
 | OQ4b | Access | decision | Is the Feature Virtual Assistant role meant to stay granted by an admin, or to become an offer like VC Campaign? | Product Lead | — | open |
-| Q-AST-17 | Acting for a user | decision | Why does this rule exist: MCP is off by default, yet the assistant's key is still set up at start? No source states the reason. | Product Lead (Technical Lead knows the configuration) | — | open |
 
 ### Technical Lead
 
-[Technical Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Technical%20Lead.md) · Delivery (Anton) · 5 to answer, 2 also involved
+[Technical Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Technical%20Lead.md) · Delivery (Anton) · 6 to answer, 1 also involved
 
 **To answer**
 
@@ -113,13 +112,13 @@ _One section per role, so each owner reads only their own part. **To answer** li
 | F3 | Abilities | contract | The server's marking of tools as read or write disagrees with the written contract. Update the contract (and the assistant service's copy) to the code, or the code to the contract? And does the parity test exist on both sides? | Technical Lead | — | open |
 | OQ1 | Assistant service | check | The conversation rules (history and retention, confirmation, proposal lifetime, reply language, links, per-minute limits, metering) live in the private assistant-service repo, which was not read. Do its own tests cover them? | Technical Lead | — | open |
 | CONST | All | decision | 16 constants are still blank in "product must rule?" (Appendix E): mostly security settings and wire shapes. | Technical Lead, Security Lead | — | open |
+| Q-AST-17 | Acting for a user | decision | Why does this rule exist: MCP is off by default, yet the assistant's key is still set up at start? No source states the reason. | Technical Lead | — | open |
 
 **Also involved**
 
 | ID | Area | Type | Question | Owner | Proposed answer | State |
 |---|---|---|---|---|---|---|
 | OQ6 | Abilities | test | Is the parity test for the tool marking present on the assistant-service side, and what does the server-side test compare against? | Quality Lead (Technical Lead for the assistant-service side) | — | open |
-| Q-AST-17 | Acting for a user | decision | Why does this rule exist: MCP is off by default, yet the assistant's key is still set up at start? No source states the reason. | Product Lead (Technical Lead knows the configuration) | — | open |
 
 ### Quality Lead
 

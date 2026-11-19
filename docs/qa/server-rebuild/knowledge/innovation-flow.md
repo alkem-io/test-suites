@@ -2,7 +2,7 @@
 
 _What the platform does today for a space's innovation flow: its states (the phases, shown as the space's tabs), how they are added, renamed, deleted, ordered and made current, the settings of each state (visibility, post presentation, sidebar), how callouts are filed under a state, the default post template per state, and how a flow travels through templates and conversions. It says what the server does, why, who may, and what is still to answer. The file has three sections, **1. Rules**, **2. Rights** and **3. Open questions**, with the evidence in an **Appendix**._
 
-_Open questions per owner: Product Lead 3 · Technical Lead 8 · Quality Lead 6 · Incident Lead 1. By state: 12 open · 6 with a suggested answer. Proof of the 27 rules: 16 proven by a test · 11 untested (Appendix A)._
+_Open questions per owner: Product Lead 2 · Technical Lead 9 · Quality Lead 6 · Incident Lead 1. By state: 12 open · 6 with a suggested answer. Proof of the 27 rules: 16 proven by a test · 11 untested (Appendix A)._
 
 **How to read it**
 
@@ -114,19 +114,18 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 ### Product Lead
 
-[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 3 to answer
+[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 2 to answer
 
 **To answer**
 
 | ID | Area | Type | Question | Owner | Proposed answer | State |
 |---|---|---|---|---|---|---|
 | F5 | Callouts | decision | Which state should a new post land in when none is chosen: the first state, or the current state? Today it depends on when the flow was last renamed or replaced. | Product Lead, then Technical Lead | — | open |
-| Q-FLW-27 | Reading | decision | Why does this rule exist? Whoever may add states also gets an "update innovation flow" right that nothing checks; no source states the reason. (F8 asks whether to drop it.) | Product Lead | — | open |
 | CONST | All | decision | 18 of the 24 constants are still blank in "product must rule?" (Appendix E). Which of them must product rule on? | Product Lead (Technical Lead and Security Lead for the rows pre-filled with their name) | — | open |
 
 ### Technical Lead
 
-[Technical Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Technical%20Lead.md) · Delivery (Anton) · 8 to answer, 4 also involved
+[Technical Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Technical%20Lead.md) · Delivery (Anton) · 9 to answer, 4 also involved
 
 **To answer**
 
@@ -140,6 +139,7 @@ _One section per role, so each owner reads only their own part. **To answer** li
 | F9 | States | defect | The server accepts a state with an empty name; only the web form checks it. A tab with no name cannot be addressed, and the name is what callouts are filed under. | Technical Lead | Add a server-side rule that the name is not empty. | suggested |
 | OQ4 | Model | check | On acceptance there are 2 duplicate state names, 4 duplicate positions and 10 flows with more than 8 states. Are they older than the checks, or is there a path that gets round them (template import, migration)? | Technical Lead | — | open |
 | OQ5 | Templates | spec | What happens when a space is created from a template with 9 states? One source says the extra states are cut (TPL-27), spec 104 FR-009 says it is refused. Applying a template to an existing space is settled: refused. | Technical Lead | — | open |
+| Q-FLW-27 | Reading | decision | Why does this rule exist? Whoever may add states also gets an "update innovation flow" right that nothing checks; no source states the reason. (F8 asks whether to drop it.) | Technical Lead | — | open |
 
 **Also involved**
 

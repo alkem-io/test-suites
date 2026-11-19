@@ -2,7 +2,7 @@
 
 _What the platform does today for users, organisations and virtual contributors as contributors: how they come into being, their profiles and settings, who sees their personal data, organisation verification, model cards, renaming and deletion: what it does, why, who may, and what is still to answer. Membership of Spaces and organisations, invitations, licensing and notifications have their own files. The layout is the one piloted in `communications.md`: **1. Rules**, **2. Rights**, **3. Open questions**, with the evidence in an **Appendix**._
 
-_Open questions per owner: Product Lead 15 · Technical Lead 4 · Quality Lead 6 · Security Lead 2 · Incident Lead 2 · Architecture Lead 1. By state: 25 open · 5 with a suggested answer. Proof of the 54 rules: 34 proven by a test · 20 untested (Appendix A)._
+_Open questions per owner: Product Lead 13 · Technical Lead 6 · Quality Lead 6 · Security Lead 2 · Incident Lead 2 · Architecture Lead 1. By state: 25 open · 5 with a suggested answer. Proof of the 54 rules: 34 proven by a test · 20 untested (Appendix A)._
 
 **How to read it**
 
@@ -188,7 +188,7 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 ### Product Lead
 
-[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 15 to answer
+[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 13 to answer
 
 **To answer**
 
@@ -202,8 +202,6 @@ _One section per role, so each owner reads only their own part. **To answer** li
 | F13 | Users | decision | Creating a user directly gives a profile with no way to sign in (13 on acceptance); every throw-away user of the test suite is made this way. Is this a product feature, or a test convenience to retire? | Product Lead (Quality Lead: the test harness relies on it) | — | open |
 | OQ4 | Users | spec | Specs 027, 054, 061, 062 and 090 exist only on the main branch of agents-hq, and the client-web profile test plan is the only written statement of what a profile edit must do. Does that plan count as the why for CM-16 and CM-19? | Product Lead | — | open |
 | Q-CM-02 | Users | decision | Why does this rule exist? No source states the reason. Why may a profile be created directly, without a sign-in identity? (F13 asks whether to keep it.) | Product Lead | — | open |
-| Q-CM-05 | Users | decision | Why does this rule exist? No source states the reason. Are 128 characters for names and 65,568 for a description the limits product wants, or only the widths of the database columns? | Product Lead | — | open |
-| Q-CM-09 | Users | decision | Why does this rule exist? No source states the reason. Why does every new user get a chat with the guidance assistant, and should it be made again when it fails? | Product Lead | — | open |
 | Q-CM-15 | Users | decision | Why does this rule exist? No source states the reason. Why are the sign-in methods of a user shown to the user and Platform Users Admins only? | Product Lead | — | open |
 | Q-CM-47 | Virtual contributors | decision | Why does this rule exist? No source states the reason. The code suggests the setting lets an owner show the assistant without showing what it was taught; no spec says so. Is that the intent? | Product Lead | — | open |
 | Q-CM-52 | Virtual contributors | decision | Why does this rule exist? No source states the reason. The model card comes from server#5142; no spec states what it must tell a user. Are the fixed answers on the card the ones product wants? | Product Lead | — | open |
@@ -212,7 +210,7 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 ### Technical Lead
 
-[Technical Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Technical%20Lead.md) · Delivery (Anton) · 4 to answer, 9 also involved
+[Technical Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Technical%20Lead.md) · Delivery (Anton) · 6 to answer, 9 also involved
 
 **To answer**
 
@@ -222,6 +220,8 @@ _One section per role, so each owner reads only their own part. **To answer** li
 | F5 | Users | defect | There are two ways to rename: the protected one, and the ordinary update of a user or virtual contributor, which Platform Content Full Access may use although spec 027 says no platform role may rename. Take the URL name out of the ordinary update (a breaking change), or protect it there too? | Technical Lead (Security Lead confirms the access rule) | — | open |
 | F10 | Users | defect | The chat account stays active after a user, organisation or virtual contributor is deleted: 84 such accounts and 1,780 messages by deleted senders on acceptance (server#6728, open). | Technical Lead (DPO Lead consulted: the chat identity of a deleted person survives) | Keep it as the tracked defect until the follow-up of spec 054 lands. | suggested |
 | F12 | Users | defect | An organisation whose domain was saved with capital letters never auto-joins anyone. | Technical Lead | Store the domain in lower case. | suggested |
+| Q-CM-05 | Users | decision | Why does this rule exist? No source states the reason. Are 128 characters for names and 65,568 for a description the limits product wants, or only the widths of the database columns? | Technical Lead | — | open |
+| Q-CM-09 | Users | decision | Why does this rule exist? No source states the reason. Why does every new user get a chat with the guidance assistant, and should it be made again when it fails? | Technical Lead | — | open |
 
 **Also involved**
 

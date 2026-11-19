@@ -2,7 +2,7 @@
 
 _What the platform does today for an innovation pack in the library: how it is created and owned, who sees it, how it is listed, moved and deleted, and what is still to answer. The templates inside a pack are in `templates.md`; the pack allowance is in `entitlements.md`. The layout is that of `communications.md`: **1. Rules**, **2. Rights**, **3. Open questions**, with the evidence in an **Appendix**. Product has not reviewed this file yet._
 
-_Open questions per owner: Product Lead 8 · Technical Lead 2 · Quality Lead 6 · Security Lead 1. By state: 15 open · 2 with a suggested answer. Proof of the 15 rules: 5 proven by a test · 10 untested (Appendix A)._
+_Open questions per owner: Product Lead 7 · Technical Lead 3 · Quality Lead 6 · Security Lead 1. By state: 15 open · 2 with a suggested answer. Proof of the 15 rules: 5 proven by a test · 10 untested (Appendix A)._
 
 **How to read it**
 
@@ -78,7 +78,7 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 ### Product Lead
 
-[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 8 to answer
+[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 7 to answer
 
 **To answer**
 
@@ -89,13 +89,12 @@ _One section per role, so each owner reads only their own part. **To answer** li
 | F5 | Ownership | decision | Moving a pack ignores the target account's pack allowance, and a test enshrines that. Intended, because a move is not a creation, or a gap in the limit? | Product Lead | — | open |
 | OQ3 | Ownership | decision | Is it intended that a pack's name id is unique across the whole platform? Spaces and templates keep theirs unique within a smaller scope. Which does the new alias rule follow? | Product Lead (Architecture Lead writes the alias rule) | — | open |
 | OQ4 | Visibility | decision | Does the web client rely on the library's default order, most templates first? The paged lists use the order of creation instead. Which does the new core keep? | Product Lead (Technical Lead checks what the client uses) | — | open |
-| Q-IPK-02 | Ownership | decision | Why does this rule exist? No source says why a pack's name id must be unique across all packs and lower case. (OQ3 asks whether it is intended.) | Product Lead | — | open |
 | Q-IPK-03 | Ownership | decision | Why does this rule exist? No source says why a new pack always starts listed in the store and visible to its account only. (F3 asks whether to change it.) | Product Lead | — | open |
 | CONST | All | decision | 9 of the 15 constants are blank in "product must rule?" (Appendix E). Which of them must product rule on? | Product Lead (Technical Lead and Security Lead rule on the rest) | — | open |
 
 ### Technical Lead
 
-[Technical Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Technical%20Lead.md) · Delivery (Anton) · 2 to answer, 2 also involved
+[Technical Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Technical%20Lead.md) · Delivery (Anton) · 3 to answer, 2 also involved
 
 **To answer**
 
@@ -103,6 +102,7 @@ _One section per role, so each owner reads only their own part. **To answer** li
 |---|---|---|---|---|---|---|
 | F4 | Visibility | defect | The library's "number of templates" leaves out classification templates, so a pack that holds only those (the platform's own pack) sorts last with 0. Count all six kinds? | Technical Lead | Count all six kinds. | suggested |
 | F7 | Visibility | tidy-up | A stale log line says the library ignores its query options, while it honours them. Delete the line? | Technical Lead | Delete the log, so operators do not read the wrong contract. | suggested |
+| Q-IPK-02 | Ownership | decision | Why does this rule exist? No source says why a pack's name id must be unique across all packs and lower case. (OQ3 asks whether it is intended.) | Technical Lead | — | open |
 
 **Also involved**
 
@@ -145,7 +145,7 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 ### Architecture Lead
 
-[Architecture Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Architecture%20Lead.md) · Delivery (Anton) · 0 to answer, 1 also involved
+[Architecture Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Architecture%20Lead.md) · Delivery (Anton) · 1 also involved
 
 **Also involved**
 

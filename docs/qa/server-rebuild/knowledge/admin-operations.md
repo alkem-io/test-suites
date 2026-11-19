@@ -2,7 +2,7 @@
 
 _What the platform does today for the work of its operators: resetting stored access rules, the tasks that track long jobs, the operational actions of the Platform Operations Admin, the scheduled background jobs, the audit trail and who reads it, and the lists of the admin console: what it does, why, who may, and what is still to answer. It follows the three-section layout accepted in the product review of `communications.md` (alkem-io/test-suites#717): **1. Rules**, **2. Rights**, **3. Open questions**, with the evidence in an **Appendix**. Product has not reviewed this file yet._
 
-_Open questions per owner: Product Lead 4 · Technical Lead 11 · Quality Lead 3 · Security Lead 4 · Service Operations Lead 2. By state: 19 open · 5 with a suggested answer. Proof of the 45 rules: 11 proven by a test · 34 untested (Appendix A)._
+_Open questions per owner: Product Lead 3 · Technical Lead 12 · Quality Lead 3 · Security Lead 4 · Service Operations Lead 2. By state: 19 open · 5 with a suggested answer. Proof of the 45 rules: 11 proven by a test · 34 untested (Appendix A)._
 
 **How to read it**
 
@@ -155,7 +155,7 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 ### Product Lead
 
-[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 4 to answer, 1 also involved
+[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 3 to answer, 1 also involved
 
 **To answer**
 
@@ -164,7 +164,6 @@ _One section per role, so each owner reads only their own part. **To answer** li
 | F11b | Audit | decision | The Audit Reader has no screen. Is that acceptable for release? (Same decision as OQ7.) | Product Lead | — | open |
 | OQ7 | Console | decision | The Operations Admin has no section in the admin console and the Audit Reader has no audit screen (open since 2026-09-21). Is that the intended shape for release? | Product Lead | — | open |
 | Q-OPS-29 | Operations | decision | Why does this rule exist: every operational action is API-only, with no section or button in the admin console? No source states the reason. | Product Lead | — | open |
-| Q-OPS-35 | Scheduled | decision | Why does this rule exist: links to entities come from a short-lived cache? No source states the reason. | Product Lead (Technical Lead knows the cache) | — | open |
 
 **Also involved**
 
@@ -174,7 +173,7 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 ### Technical Lead
 
-[Technical Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Technical%20Lead.md) · Delivery (Anton) · 11 to answer, 4 also involved
+[Technical Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Technical%20Lead.md) · Delivery (Anton) · 12 to answer, 3 also involved
 
 **To answer**
 
@@ -191,6 +190,7 @@ _One section per role, so each owner reads only their own part. **To answer** li
 | OQ5 | Scheduled | check | What refreshes the "last active" date of a push subscription? It decides whether the 30-day clean-up can delete a subscription that is still in use (belongs with CM-5). | Technical Lead | — | open |
 | OQ6 | Reset | check | Does the all-accounts licence reset finish inside one request on acceptance-size data? It has no task and no batching. | Technical Lead (Service Operations Lead can measure it on acceptance) | — | open |
 | CONST | All | decision | 27 constants are still blank in "product must rule?" (Appendix E): engineering limits, schedules, wire shapes and audit settings. | Technical Lead, Security Lead (Product Lead for the retention values) | — | open |
+| Q-OPS-35 | Scheduled | decision | Why does this rule exist: links to entities come from a short-lived cache? No source states the reason. | Technical Lead | — | open |
 
 **Also involved**
 
@@ -199,7 +199,6 @@ _One section per role, so each owner reads only their own part. **To answer** li
 | F4 | Audit | decision | Operations audit rows always say "platform admin", while spec 027 FR-025 says no record may imply a broader role than the one that allowed the action. Record the real role, or amend FR-025 so that operations rows are a permanent exception? | Security Lead (Technical Lead implements) | — | open |
 | F5 | Tasks | risk | Task status can be read by anyone, visitors included, and the result lines carry ids of accounts, organisations and users. | Security Lead (Technical Lead fixes) | Allow it only to holders of the operational right (or to the task's creator), and remove the ids from the result lines. | suggested |
 | F11a | Audit | decision | Audit rows about an organisation cannot be read by a reviewer through any API, because the MCP tool searches by user only. | Security Lead (Technical Lead adds the filter) | Add a filter on the subject organisation (one field). | suggested |
-| Q-OPS-35 | Scheduled | decision | Why does this rule exist: links to entities come from a short-lived cache? No source states the reason. | Product Lead (Technical Lead knows the cache) | — | open |
 
 ### Quality Lead
 

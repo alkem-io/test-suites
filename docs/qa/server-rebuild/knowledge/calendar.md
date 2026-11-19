@@ -2,7 +2,7 @@
 
 _What the platform does today for the calendar every space carries and its events: creating, reading, updating and deleting them, whole-day and timed dates, the Google, Outlook and ICS exports, subspace events showing on the parent calendar, and the notifications and activity an event produces. It says what the server does, why, who may, and what is still to answer. The file has three sections, **1. Rules**, **2. Rights** and **3. Open questions**, with the evidence in an **Appendix**._
 
-_Open questions per owner: Product Lead 8 · Technical Lead 4 · Quality Lead 4 · Architecture Lead 1. By state: 15 open · 2 with a suggested answer. Proof of the 25 rules: 12 proven by a test · 13 untested (Appendix A)._
+_Open questions per owner: Product Lead 7 · Technical Lead 5 · Quality Lead 4 · Architecture Lead 1. By state: 15 open · 2 with a suggested answer. Proof of the 25 rules: 12 proven by a test · 13 untested (Appendix A)._
 
 **How to read it**
 
@@ -111,7 +111,7 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 ### Product Lead
 
-[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 8 to answer
+[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 7 to answer
 
 **To answer**
 
@@ -121,14 +121,13 @@ _One section per role, so each owner reads only their own part. **To answer** li
 | F3 | Reading | decision | Subspace events show on the parent calendar one level up only: a top-level space shows the events of its direct subspaces, and nothing from deeper levels. Is one level the product rule? | Product Lead | — | open |
 | F7 | Lifecycle | decision | A creator who has left the community can still update and delete the events they created. Is that intended? | Product Lead | — | open |
 | OQ3 | Dates | decision | Is Europe/Amsterdam the intended time-zone hint in the ICS file for every customer? It is fixed in the code and no spec states it. | Product Lead (Service Operations Lead for the per-environment side) | — | open |
-| Q-EVT-04 | Creating | decision | Why does this rule exist? An event's name identifier is unique within its calendar; no source states the reason. | Product Lead | — | open |
 | Q-EVT-11 | Reading | decision | Why does this rule exist? An event reports the subspace it belongs to; no source states the reason beyond a schema note. | Product Lead | — | open |
 | Q-EVT-25 | Lifecycle | decision | Why does this rule exist? When the creator's account is gone the event still shows and nobody inherits the creator's rights; no source states the reason. (F8 asks what to do with the left-over id.) | Product Lead | — | open |
 | CONST | All | decision | 22 of the 27 constants are still blank in "product must rule?" (Appendix E). Which of them must product rule on? | Product Lead (Technical Lead and Security Lead for the rows pre-filled with their name) | — | open |
 
 ### Technical Lead
 
-[Technical Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Technical%20Lead.md) · Delivery (Anton) · 4 to answer, 1 also involved
+[Technical Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Technical%20Lead.md) · Delivery (Anton) · 5 to answer, 1 also involved
 
 **To answer**
 
@@ -138,6 +137,7 @@ _One section per role, so each owner reads only their own part. **To answer** li
 | F5 | Reading | tidy-up | One way of reading a single event through its calendar checks only the right to read the calendar, not the event. Harmless today, but inconsistent with the other two ways. Align it or drop the field? | Technical Lead | — | open |
 | F8 | Lifecycle | decision | When a creator's account is deleted, the event keeps the id of the deleted user and the creator rule that goes with it (server#4529). Leave it as cosmetic, or clear it when the user is deleted? | Technical Lead | — | open |
 | OQ4 | Dates | check | Does the notification for a new event use the same date check as the links and the ICS file? If so, F4 applies there too. The file was not found during the extraction. | Technical Lead | — | open |
+| Q-EVT-04 | Creating | decision | Why does this rule exist? An event's name identifier is unique within its calendar; no source states the reason. | Technical Lead | — | open |
 
 **Also involved**
 

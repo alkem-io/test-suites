@@ -2,7 +2,7 @@
 
 _What the platform does today for templates: the libraries they live in, the six kinds of template, saving a space as a template, applying a template, creating a space from one, default templates, the templates the platform seeds, and the file repair: what it does, why, who may, and what is still to answer. The file follows the three-section layout of `communications.md`: **1. Rules**, **2. Rights**, **3. Open questions**, with the evidence in an **Appendix**. Innovation packs are in `innovation-pack.md`, plans and limits in `entitlements.md`, and what a callout template shares with a live callout in `callout.md`._
 
-_Open questions per owner: Product Lead 12 · Technical Lead 4 · Quality Lead 9 · Security Lead 1 · Architecture Lead 1. By state: 21 open · 6 with a suggested answer. Proof of the 35 rules: 19 proven by a test · 16 untested (Appendix A)._
+_Open questions per owner: Product Lead 11 · Technical Lead 5 · Quality Lead 9 · Security Lead 1 · Architecture Lead 1. By state: 21 open · 6 with a suggested answer. Proof of the 35 rules: 19 proven by a test · 16 untested (Appendix A)._
 
 **How to read it**
 
@@ -136,7 +136,7 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 ### Product Lead
 
-[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 12 to answer, 1 also involved
+[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 11 to answer, 1 also involved
 
 **To answer**
 
@@ -146,7 +146,6 @@ _One section per role, so each owner reads only their own part. **To answer** li
 | F5 | Saving a space | decision | A callout template can carry an office document, but office-document callouts are dropped when a space is saved as a template. Record this as a limitation, or schedule the lift (epic #1843)? | Product Lead | — | open |
 | F6 | Saving a space | decision | The space content inside a template always has office documents switched on, also when the space it came from has no such plan. The plan is checked only when the template is used. Fine as it is, or should a template take the plan of the space it was saved from? | Product Lead | — | open |
 | F9 | Reading | decision | Who may browse the platform's own template library? Today only Platform Content Full Access can read its templates. Is it an admin-only backstage, or a library people can browse? | Product Lead | — | open |
-| Q-TPL-03 | Libraries | decision | Why does this rule exist? No source states the reason. Name ids are unique per library and made from the display name when left out. | Product Lead | — | open |
 | Q-TPL-05 | Libraries | decision | Why does this rule exist? No source states the reason. Templates are listed in alphabetical order. | Product Lead | — | open |
 | Q-TPL-22 | Saving a space | decision | Why does this rule exist? No source states the reason. The space content inside a template has a fixed licence (see also F6). | Product Lead | — | open |
 | Q-TPL-23 | Saving a space | decision | Why does this rule exist? No source states the reason. Whoever may read or edit a template may read or edit the space content inside it. | Product Lead | — | open |
@@ -163,7 +162,7 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 ### Technical Lead
 
-[Technical Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Technical%20Lead.md) · Delivery (Anton) · 4 to answer, 4 also involved
+[Technical Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Technical%20Lead.md) · Delivery (Anton) · 5 to answer, 4 also involved
 
 **To answer**
 
@@ -173,6 +172,7 @@ _One section per role, so each owner reads only their own part. **To answer** li
 | F10 | Callout templates | defect | A callout template with a whiteboard framing shows no preview (client-web#10283). Who owns it? | Technical Lead | Route to the client-web owner. | suggested |
 | F11 | Libraries | decision | An update that sends content of the wrong kind is ignored silently, except classification data, which is refused. Refuse every wrong-kind content (one rule), or document that it is ignored? | Technical Lead | — | open |
 | OQ5 | Callout templates | check | Is the missing whiteboard preview of F10 a server or a client fault? The code read could not tell; it needs the client owner or a live capture. | Technical Lead | — | open |
+| Q-TPL-03 | Libraries | decision | Why does this rule exist? No source states the reason. Name ids are unique per library and made from the display name when left out. | Technical Lead | — | open |
 
 **Also involved**
 

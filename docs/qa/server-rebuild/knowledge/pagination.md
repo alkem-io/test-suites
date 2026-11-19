@@ -2,7 +2,7 @@
 
 _What the platform does today when a long list is served in pages: the one paging contract every such list shares (page size, markers, order, page info, refusals) and the facts per list: users, organisations, spaces, the platform-admin lists, in-app notifications, role-set candidates, the Innovation Library, the activity feed and form responses. What a list contains belongs to the file of that resource; only the paging is here. The file follows the three-section layout accepted in the product review of `communications.md` (alkem-io/test-suites#717): **1. Rules**, **2. Rights**, **3. Open questions**, with the evidence in an **Appendix**._
 
-_Open questions per owner: Product Lead 3 · Technical Lead 6 · Quality Lead 5 · Architecture Lead 1. By state: 8 open · 7 with a suggested answer. Proof of the 19 rules: 7 proven by a test · 12 untested (Appendix A)._
+_Open questions per owner: Product Lead 2 · Technical Lead 7 · Quality Lead 5 · Architecture Lead 1. By state: 8 open · 7 with a suggested answer. Proof of the 19 rules: 7 proven by a test · 12 untested (Appendix A)._
 
 **How to read it**
 
@@ -74,14 +74,13 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 ### Product Lead
 
-[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 3 to answer, 1 also involved
+[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 2 to answer, 1 also involved
 
 **To answer**
 
 | ID | Area | Type | Question | Owner | Proposed answer | State |
 |---|---|---|---|---|---|---|
 | F7 | Lists | decision | Organisations and active top-level spaces can be listed by anyone, with no check per item, so a private top-level space still appears in the list. Is it intended that the existence of private spaces is visible? | Product Lead (Security Lead owns the risk if it stays) | — | open |
-| Q-PAG-01 | Lists | decision | Why does this rule exist? The only note is "organisation profiles are public"; no source states that visitors are meant to page through all organisations (PAG-11). | Product Lead | — | open |
 | CONST | All | decision | 13 of the 16 constants are still blank in "product must rule?" (Appendix E). Which must product rule on? | Product Lead (Technical Lead for engineering limits and wire shapes) | — | open |
 
 **Also involved**
@@ -92,7 +91,7 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 ### Technical Lead
 
-[Technical Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Technical%20Lead.md) · Delivery (Anton) · 6 to answer, 3 also involved
+[Technical Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Technical%20Lead.md) · Delivery (Anton) · 7 to answer, 3 also involved
 
 **To answer**
 
@@ -104,6 +103,7 @@ _One section per role, so each owner reads only their own part. **To answer** li
 | F5 | Contract | tidy-up | The message says that mixing forward and backward paging is "discouraged", but the request is refused. Is the wording to be corrected? | Technical Lead | Rebaseline the text when it changes; not a change in behaviour. | suggested |
 | OQ1 | Contract | check | Is server#3571 still open, and do the 11 skipped marker cases still apply to today's engine? (Feeds F1, F2 and F4.) | Technical Lead | — | open |
 | OQ3 | Contract | tidy-up | The type `RelayStylePaginatedSpace` is defined, but nothing that returns it was found. A dead type, or a consumer that was not read? | Technical Lead | — | open |
+| Q-PAG-01 | Lists | decision | Why does this rule exist? The only note is "organisation profiles are public"; no source states that visitors are meant to page through all organisations (PAG-11). | Technical Lead | — | open |
 
 **Also involved**
 

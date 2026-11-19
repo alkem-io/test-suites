@@ -2,7 +2,7 @@
 
 _What the platform does today for activity: which actions write an activity entry and what it carries, the log of one space, the two platform feeds (paginated and grouped), "my spaces" and the membership ordering driven by the same entries, and what happens to entries on transfers, moves and deletions: what it does, why, who may, and what is still to answer. The file follows the three-section layout of `communications.md`: **1. Rules**, **2. Rights**, **3. Open questions**, with the evidence in an **Appendix**._
 
-_Open questions per owner: Product Lead 10 · Technical Lead 5 · Quality Lead 6 · Service Operations Lead 1 · Architecture Lead 2. By state: 19 open · 5 with a suggested answer. Proof of the 49 rules: 21 proven by a test · 28 untested (Appendix A)._
+_Open questions per owner: Product Lead 9 · Technical Lead 6 · Quality Lead 6 · Service Operations Lead 1 · Architecture Lead 2. By state: 19 open · 5 with a suggested answer. Proof of the 49 rules: 21 proven by a test · 28 untested (Appendix A)._
 
 **How to read it**
 
@@ -125,7 +125,7 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 ### Product Lead
 
-[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 10 to answer
+[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 9 to answer
 
 **To answer**
 
@@ -138,13 +138,12 @@ _One section per role, so each owner reads only their own part. **To answer** li
 | Q-ACT-13 | Writing | decision | Why does this rule exist? No source states the reason. Deleting a comment hides its entry, writes no "comment removed" entry and pushes nothing live (the code carries "todo" comments). | Product Lead | — | open |
 | Q-ACT-15 | Writing | decision | Why does this rule exist? No source states the reason. Entry text is cut to 128 characters. | Product Lead | — | open |
 | Q-ACT-24 | Reading | decision | Why does this rule exist? No source states the reason. Entries come newest first; the only stated reason is "a timeline". | Product Lead | — | open |
-| Q-ACT-61 | Feeds | decision | Why does this rule exist? No source states the reason. Is a short page with a misleading total acceptable when some entries cannot be shown? | Product Lead | — | open |
 | Q-ACT-71 | My spaces | decision | Why does this rule exist? No source states the reason. The membership list is ordered by recent activity: own first, then others', then the rest. | Product Lead | — | open |
 | CONST | All | decision | 16 constants are still blank in "product must rule?" (Appendix E). Which of them must product rule on? | Product Lead (Technical Lead rules on the rows pre-filled with that role) | — | open |
 
 ### Technical Lead
 
-[Technical Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Technical%20Lead.md) · Delivery (Anton) · 5 to answer, 4 also involved
+[Technical Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Technical%20Lead.md) · Delivery (Anton) · 6 to answer, 4 also involved
 
 **To answer**
 
@@ -155,6 +154,7 @@ _One section per role, so each owner reads only their own part. **To answer** li
 | F5 | Feeds | defect | The grouped feed accepts a list of types to exclude but ignores it. Implement it, or remove it from the grouped input? | Technical Lead | — | open |
 | F6 | Feeds | risk | Neither feed limits the size a caller may ask for. Cap it? | Technical Lead (Security Lead sets the limit) | Cap it and make the cap a rebaseline constant; a 100-row cap already exists for the refetch loop. | suggested |
 | F7 | My spaces | defect | Entries hidden after a comment was deleted still drive "my spaces" and the membership ordering, while the log, both feeds and the MCP tool leave them out. | Technical Lead | One visibility rule for every reader. | suggested |
+| Q-ACT-61 | Feeds | decision | Why does this rule exist? No source states the reason. Is a short page with a misleading total acceptable when some entries cannot be shown? | Technical Lead | — | open |
 
 **Also involved**
 

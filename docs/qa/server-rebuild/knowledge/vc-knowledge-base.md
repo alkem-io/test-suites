@@ -2,7 +2,7 @@
 
 _What the platform does today for a virtual contributor beyond its profile: its knowledge base, reading in its knowledge and the "ready" state, its settings, the well-known virtual contributors and the guidance chat, calling a virtual contributor in a room, the Space feature that allows virtual contributors, conversion and transfer. Profile, visibility, create, update and delete are CM-45 to CM-54 in `contributor-management.md` and are only cross-referenced here. What it does, why, who may, and what is still to answer. The file has three sections: **1. Rules**, **2. Rights**, **3. Open questions**, with the evidence in an **Appendix**._
 
-_Open questions per owner: Product Lead 14 · Technical Lead 8 · Quality Lead 1 · Security Lead 1 · Incident Lead 1 · Service Operations Lead 2 · Architecture Lead 1. By state: 26 open · 2 with a suggested answer. Proof of the 39 rules: 13 proven by a test · 26 untested (Appendix A)._
+_Open questions per owner: Product Lead 11 · Technical Lead 11 · Quality Lead 1 · Security Lead 1 · Incident Lead 1 · Service Operations Lead 2 · Architecture Lead 1. By state: 26 open · 2 with a suggested answer. Proof of the 39 rules: 13 proven by a test · 26 untested (Appendix A)._
 
 **How to read it**
 
@@ -139,7 +139,7 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 ### Product Lead
 
-[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 14 to answer, 2 also involved
+[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 11 to answer, 2 also involved
 
 **To answer**
 
@@ -154,10 +154,7 @@ _One section per role, so each owner reads only their own part. **To answer** li
 | CONST | All | decision | 25 constants are blank in "product must rule?" (Appendix E). Which of them must product rule on? Among them are the default names, the three guidance websites and the texts users see. | Product Lead (Technical Lead for engineering limits and wire shapes) | — | open |
 | Q-VCK-02 | Knowledge base | decision | Why does a knowledge base get the name "Knowledge Base" and, for the knowledge-base kind, the default callouts? No source states a reason. | Product Lead | — | open |
 | Q-VCK-10 | Body of knowledge | decision | Why does the Guidance virtual contributor ignore its own source of knowledge and read three fixed websites? No source states a reason. (F10 asks where the list should live.) | Product Lead | — | open |
-| Q-VCK-12 | Body of knowledge | decision | Why is the ready state the only change of a virtual contributor that is pushed live? No source states a reason. | Product Lead | — | open |
-| Q-VCK-25 | Well-known | decision | Why does the configuration report whether the guidance engine is on, when the server refuses nothing if it is off? No source states a reason. | Product Lead | — | open |
 | Q-VCK-33 | Rooms | decision | Why is an answer formatted this way: sources as links, and the "Sorry, no sources are available" line only on a new message? No source states a reason. | Product Lead | — | open |
-| Q-VCK-34 | Rooms | decision | Why does a room list which virtual contributor answers in which thread, and why do chats never record it? No source states a reason. | Product Lead | — | open |
 | Q-VCK-35 | Rooms | decision | Why can a virtual contributor be added to a chat without any consent check? The only reason found is a code comment: a virtual contributor has no messaging preference. | Product Lead | — | open |
 
 **Also involved**
@@ -169,7 +166,7 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 ### Technical Lead
 
-[Technical Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Technical%20Lead.md) · Delivery (Anton) · 8 to answer, 5 also involved
+[Technical Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Technical%20Lead.md) · Delivery (Anton) · 11 to answer, 5 also involved
 
 **To answer**
 
@@ -183,6 +180,9 @@ _One section per role, so each owner reads only their own part. **To answer** li
 | F11 | Well-known | decision | A well-known link can be set but never cleared. Add a way to clear it, or accept? | Technical Lead | — | open |
 | OQ1 | Rooms | check | Does the AI engine use what the server sends and stores (the context id, data-access mode, interaction modes, prompt-graph definition)? The engine code was not read. Someone who knows the engine must say which are live. | Technical Lead | — | open |
 | OQ7 | Body of knowledge | check | Can the web client ask for a knowledge refresh at all, and how does a new virtual contributor get its knowledge read in for the first time? Nothing in the server does it at creation. | Technical Lead | — | open |
+| Q-VCK-12 | Body of knowledge | decision | Why is the ready state the only change of a virtual contributor that is pushed live? No source states a reason. | Technical Lead | — | open |
+| Q-VCK-25 | Well-known | decision | Why does the configuration report whether the guidance engine is on, when the server refuses nothing if it is off? No source states a reason. | Technical Lead | — | open |
+| Q-VCK-34 | Rooms | decision | Why does a room list which virtual contributor answers in which thread, and why do chats never record it? No source states a reason. | Technical Lead | — | open |
 
 **Also involved**
 

@@ -2,7 +2,7 @@
 
 _What the platform does today for live updates pushed to the browser (GraphQL subscriptions): how the connection is signed in, how updates reach every copy of the server, and for each of the 11 kinds of update who may follow it and what reaches whom. This area is recorded, then retired: the rebuild drops GraphQL subscriptions (catalogue OP-3), so the rules are written down to make the retirement explicit. Chat events, room message rules and notification content are in their own files and are only referred to. The file follows the three-section layout: **1. Rules**, **2. Rights**, **3. Open questions**, with the evidence in an **Appendix**._
 
-_Open questions per owner: Product Lead 4 · Technical Lead 7 · Quality Lead 4 · Security Lead 2 · Architecture Lead 1. By state: 15 open · 3 with a suggested answer. Proof of the 22 rules: 4 proven by a test · 18 untested (Appendix A)._
+_Open questions per owner: Product Lead 2 · Technical Lead 9 · Quality Lead 4 · Security Lead 2 · Architecture Lead 1. By state: 15 open · 3 with a suggested answer. Proof of the 22 rules: 4 proven by a test · 18 untested (Appendix A)._
 
 **How to read it**
 
@@ -78,7 +78,7 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 ### Product Lead
 
-[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 4 to answer, 1 also involved
+[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 2 to answer, 1 also involved
 
 **To answer**
 
@@ -86,8 +86,6 @@ _One section per role, so each owner reads only their own part. **To answer** li
 |---|---|---|---|---|---|---|
 | F3 | Reach | decision | Posts on a draft callout are sent to its followers. Today only people who may read the draft get them: admins and the creator. Should a draft's posts be sent at all? | Product Lead | — | open |
 | F6 | Housekeeping | decision | A deleted comment stays in a live activity feed until reload. Accept until retirement? | Product Lead (Quality Lead: the polling check must see hidden entries disappear on the next poll) | Accept until retirement; note it for the polling check. | suggested |
-| Q-SUB-04 | Connection | decision | Why does this rule exist? No source says why the older protocol is still served (see F7). | Product Lead (Technical Lead knows the history) | — | open |
-| Q-SUB-19 | Housekeeping | decision | Why does this rule exist? No source says why update ids are random and not unique (see F9). | Product Lead (Technical Lead knows the history) | — | open |
 
 **Also involved**
 
@@ -97,7 +95,7 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 ### Technical Lead
 
-[Technical Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Technical%20Lead.md) · Delivery (Anton) · 7 to answer, 3 also involved
+[Technical Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Technical%20Lead.md) · Delivery (Anton) · 9 to answer, 1 also involved
 
 **To answer**
 
@@ -110,14 +108,14 @@ _One section per role, so each owner reads only their own part. **To answer** li
 | OQ1 | Connection | check | Where is the spec text "FR-023 (WS addendum)" of server PR #6143? It is needed to confirm the why of SUB-01. | Technical Lead | — | open |
 | OQ4 | All | check | Which live updates does the current web client still use? The retirement note needs the list. | Technical Lead | — | open |
 | CONST | All | decision | 13 constants are still blank in "product must rule?" (Appendix E): wire shapes, error texts and event kinds for the Technical Lead; the session close for the Security Lead. | Technical Lead, Security Lead | — | open |
+| Q-SUB-04 | Connection | decision | Why does this rule exist? No source says why the older protocol is still served (see F7). | Technical Lead | — | open |
+| Q-SUB-19 | Housekeeping | decision | Why does this rule exist? No source says why update ids are random and not unique (see F9). | Technical Lead | — | open |
 
 **Also involved**
 
 | ID | Area | Type | Question | Owner | Proposed answer | State |
 |---|---|---|---|---|---|---|
 | F2 | Reach | risk | A visitor can follow a public Space's activity live, with people's names, but cannot query the same activity. Align the two, or accept it until live updates are retired? | Security Lead (Technical Lead aligns if not accepted) | — | open |
-| Q-SUB-04 | Connection | decision | Why does this rule exist? No source says why the older protocol is still served (see F7). | Product Lead (Technical Lead knows the history) | — | open |
-| Q-SUB-19 | Housekeeping | decision | Why does this rule exist? No source says why update ids are random and not unique (see F9). | Product Lead (Technical Lead knows the history) | — | open |
 
 ### Quality Lead
 

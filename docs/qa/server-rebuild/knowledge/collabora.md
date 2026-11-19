@@ -2,7 +2,7 @@
 
 _What the platform does today for office documents edited with Collabora, as the main content of a callout or as a contribution: the kinds, the three ways a document is created, opening it in the editor, who may edit, rename, replace and delete it, its preview, and the records it writes. The office-documents licence (ENT-32) and the callout rules are in `entitlements.md` and `callout.md` and are only cross-referenced here. What it does, why, who may, and what is still to answer. The file has three sections: **1. Rules**, **2. Rights**, **3. Open questions**, with the evidence in an **Appendix**._
 
-_Open questions per owner: Product Lead 7 · Technical Lead 5 · Quality Lead 6 · Service Operations Lead 1. By state: 15 open · 4 with a suggested answer. Proof of the 23 rules: 14 proven by a test · 9 untested (Appendix A)._
+_Open questions per owner: Product Lead 6 · Technical Lead 6 · Quality Lead 6 · Service Operations Lead 1. By state: 15 open · 4 with a suggested answer. Proof of the 23 rules: 14 proven by a test · 9 untested (Appendix A)._
 
 **How to read it**
 
@@ -98,7 +98,7 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 ### Product Lead
 
-[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 7 to answer
+[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 6 to answer
 
 **To answer**
 
@@ -110,11 +110,10 @@ _One section per role, so each owner reads only their own part. **To answer** li
 | F7 | Rights | decision | Someone who uploaded a document and then left the Space can still replace or delete it, but can no longer edit it. Keep the creator's rights (as for posts and whiteboards, CAL-29), or drop them when membership ends? | Product Lead (Security Lead for the access risk) | — | open |
 | F9 | Editing | decision | When a replace succeeds but the rename that follows fails, the user is told it worked and sees the old title. Show a warning, or accept that the user renames again? | Product Lead | — | open |
 | CONST | All | decision | 23 constants are blank in "product must rule?" (Appendix E). Which of them must product rule on? Among them are the file formats, the 15 MB limit and the error texts users see. | Product Lead (Technical Lead for engineering limits and wire shapes) | — | open |
-| Q-OFD-12 | Opening | decision | Why does every open get its own editor access, with nothing shared between two opens? No source states a reason. | Product Lead | — | open |
 
 ### Technical Lead
 
-[Technical Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Technical%20Lead.md) · Delivery (Anton) · 5 to answer, 3 also involved
+[Technical Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Technical%20Lead.md) · Delivery (Anton) · 6 to answer, 3 also involved
 
 **To answer**
 
@@ -125,6 +124,7 @@ _One section per role, so each owner reads only their own part. **To answer** li
 | F5 | Editing | decision | The rules for a document name (not blank, at least 3 characters, a maximum length) are checked only in the web client; the server saves any name. Add the check on the server, or accept the client as the only gate? | Technical Lead | — | open |
 | F8 | Editing | risk | When the save service does not offer the "is someone editing?" check at all, replace goes ahead without it. A wrongly routed save service then silently switches the guard off. Accept this as a deployment condition, or refuse in that case too? | Technical Lead (Service Operations Lead if it is accepted as a deployment condition) | — | open |
 | OQ1 | Records | check | The save service (wopi-service) code was not read. Someone with the repository should confirm OFD-19 and OFD-21 against it: preview access checks, session windows, and leaving out guests. | Technical Lead | — | open |
+| Q-OFD-12 | Opening | decision | Why does every open get its own editor access, with nothing shared between two opens? No source states a reason. | Technical Lead | — | open |
 
 **Also involved**
 
@@ -151,7 +151,7 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 ### Security Lead
 
-[Security Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Security%20Lead.md) · Delivery (Valentin) · 0 to answer, 2 also involved
+[Security Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Security%20Lead.md) · Delivery (Valentin) · 2 also involved
 
 **Also involved**
 

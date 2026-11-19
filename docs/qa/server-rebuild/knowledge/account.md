@@ -2,7 +2,7 @@
 
 _What the platform does today for accounts: the account every user and organisation has, who administers it, what it hosts (spaces, virtual contributors, innovation packs, innovation hubs), how those are shown on a profile, transfers between accounts, and the account's part in deletion: what it does, why, who may, and what is still to answer. The file follows the three-section layout of `communications.md`: **1. Rules**, **2. Rights**, **3. Open questions**, with the evidence in an **Appendix**. Plans, limits and subscriptions are in `entitlements.md` and are only referred to here as `ENT-nn`._
 
-_Open questions per owner: Product Lead 6 · Technical Lead 5 · Quality Lead 3 · Security Lead 1 · Service Operations Lead 1. By state: 15 open · 1 with a suggested answer. Proof of the 19 rules: 11 proven by a test · 8 untested (Appendix A)._
+_Open questions per owner: Product Lead 5 · Technical Lead 6 · Quality Lead 3 · Security Lead 1 · Service Operations Lead 1. By state: 15 open · 1 with a suggested answer. Proof of the 19 rules: 11 proven by a test · 8 untested (Appendix A)._
 
 **How to read it**
 
@@ -104,7 +104,7 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 ### Product Lead
 
-[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 6 to answer, 1 also involved
+[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 5 to answer, 1 also involved
 
 **To answer**
 
@@ -113,7 +113,6 @@ _One section per role, so each owner reads only their own part. **To answer** li
 | F4 | Transfers | decision | A transfer does not check the target account's licence limits, while creating does. Is a transfer a way around the allowance? And what happens to an account that ends up over its limit: read-only, archived, or only unable to create? | Product Lead | — | open |
 | F6 | Visibility | decision | The right to read a user's personal data decides who sees the full hosted list, so admins of a space the user is in and admins of their organisation see hidden items. Spec 089 calls it "the wrong concept, kept for no-regression". Keep it, or narrow the full view to the user and platform roles when hosted spaces (#6695) land? | Product Lead (DPO Lead consulted) | — | open |
 | F7 | Transfers | decision | A space created on an organisation's account gets the organisation as member and lead. A space transferred to an organisation's account does not. Should it, and should the previous host organisation lose its seat? | Product Lead | — | open |
-| Q-ACC-02 | Host | decision | Why does this rule exist? No source states the reason. An account with no host shows no host and logs a warning instead of failing. | Product Lead | — | open |
 | Q-ACC-10 | Visibility | decision | Why does this rule exist? No source states the reason. New virtual contributors, packs and hubs start with visibility "account" and listed in the library. | Product Lead | — | open |
 | CONST | All | decision | 16 of the 18 constants are still blank in "product must rule?" (Appendix E). Which of them must product rule on before the rebuild? | Product Lead (Technical Lead and Security Lead for the rows pre-filled with their role) | — | open |
 
@@ -125,7 +124,7 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 ### Technical Lead
 
-[Technical Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Technical%20Lead.md) · Delivery (Anton) · 5 to answer, 1 also involved
+[Technical Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Technical%20Lead.md) · Delivery (Anton) · 6 to answer, 1 also involved
 
 **To answer**
 
@@ -136,6 +135,7 @@ _One section per role, so each owner reads only their own part. **To answer** li
 | F5 | Reset | defect | An account reset skips broken items and leaves their old access rules in place. On acceptance 1,018 files, 872 storage buckets and 2,000 tagsets still name retired credentials. Accept it (harmless while nobody holds those credentials), or make the reset report what it skipped so operators can repair it? | Technical Lead (Security Lead accepts the risk if it stays) | — | open |
 | F8 | Reset | tidy-up | The account authorization reset refuses with a message that says "Space" (copy-paste). Fix the text now, or let it go with the rebuild? | Technical Lead | — | open |
 | OQ4 | Transfers | check | Does any screen in the web app let an account admin transfer a resource, or only the Platform Resource Admin? It decides whether customers can reach F4. | Technical Lead | — | open |
+| Q-ACC-02 | Host | decision | Why does this rule exist? No source states the reason. An account with no host shows no host and logs a warning instead of failing. | Technical Lead | — | open |
 
 **Also involved**
 

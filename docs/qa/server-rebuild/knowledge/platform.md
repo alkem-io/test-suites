@@ -2,7 +2,7 @@
 
 _What the platform does today at its root: the service versions, the latest release post, the platform settings, the well-known virtual contributors, the platform authorization reset, the forum root, and the containment of a leaked MCP API key: what it does, why, who may, and what is still to answer. The file follows the three-section layout of `communications.md`: **1. Rules**, **2. Rights**, **3. Open questions**, with the evidence in an **Appendix**. The forum's own rules are in `communications.md`, the public configuration in `configuration.md`, and licensing in `entitlements.md`. The full life cycle of MCP API keys is not covered here, only the seven containment cases._
 
-_Open questions per owner: Product Lead 5 · Technical Lead 7 · Quality Lead 5 · Security Lead 2 · Service Operations Lead 2. By state: 17 open · 4 with a suggested answer. Proof of the 22 rules: 5 proven by a test · 17 untested (Appendix A)._
+_Open questions per owner: Product Lead 1 · Technical Lead 11 · Quality Lead 5 · Security Lead 2 · Service Operations Lead 2. By state: 17 open · 4 with a suggested answer. Proof of the 22 rules: 5 proven by a test · 17 untested (Appendix A)._
 
 **How to read it**
 
@@ -114,21 +114,17 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 ### Product Lead
 
-[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 5 to answer
+[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 1 to answer
 
 **To answer**
 
 | ID | Area | Type | Question | Owner | Proposed answer | State |
 |---|---|---|---|---|---|---|
-| Q-PLT-02 | Root | decision | Why does this rule exist? No source states the reason. The platform publishes its service versions to anyone. | Product Lead | — | open |
-| Q-PLT-07 | Root | decision | Why does this rule exist? No source states the reason. The platform picks the innovation hub from the web address the request came in on. | Product Lead | — | open |
-| Q-PLT-12 | Settings | decision | Why does this rule exist? No source states the reason. Adding a listed embed address and removing an unlisted one both succeed without change (the e-mail blacklist refuses both). | Product Lead | — | open |
-| Q-PLT-14 | Settings | decision | Why does this rule exist? No source states the reason. The server keeps two lists it never uses itself; the spec only assumes that other services read them. | Product Lead | — | open |
 | CONST | All | decision | 17 of the 21 constants are still blank in "product must rule?" (Appendix E). Which of them must product rule on before the rebuild? | Product Lead (Technical Lead and Security Lead for the rows pre-filled with their role) | — | open |
 
 ### Technical Lead
 
-[Technical Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Technical%20Lead.md) · Delivery (Anton) · 7 to answer, 2 also involved
+[Technical Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Technical%20Lead.md) · Delivery (Anton) · 11 to answer, 2 also involved
 
 **To answer**
 
@@ -141,6 +137,10 @@ _One section per role, so each owner reads only their own part. **To answer** li
 | F8 | Root | decision | The latest release post is named to anyone without checking who may read it. Nothing leaks today because the forum is public. Accept it, or make it follow the post's access rules so a future private forum does not surprise? | Technical Lead | — | open |
 | F9 | Forum | tidy-up | The forum's access rules set a cascade flag on the wrong rule. The discussion tests are green, so nothing seems to depend on it. | Technical Lead | Route to `communications.md`, which owns the forum (its F14 is the same point). | suggested |
 | OQ2 | Settings | check | Does the notifications service read the blacklist? It is outside the server; spec 019 assumes it. (Same check as F3.) | Technical Lead | — | open |
+| Q-PLT-02 | Root | decision | Why does this rule exist? No source states the reason. The platform publishes its service versions to anyone. | Technical Lead | — | open |
+| Q-PLT-07 | Root | decision | Why does this rule exist? No source states the reason. The platform picks the innovation hub from the web address the request came in on. | Technical Lead | — | open |
+| Q-PLT-12 | Settings | decision | Why does this rule exist? No source states the reason. Adding a listed embed address and removing an unlisted one both succeed without change (the e-mail blacklist refuses both). | Technical Lead | — | open |
+| Q-PLT-14 | Settings | decision | Why does this rule exist? No source states the reason. The server keeps two lists it never uses itself; the spec only assumes that other services read them. | Technical Lead | — | open |
 
 **Also involved**
 

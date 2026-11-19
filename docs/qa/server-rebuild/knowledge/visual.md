@@ -2,7 +2,7 @@
 
 _What the platform does today for images on profiles: the image slots every profile carries (avatar, banner, card, wide banner, whiteboard preview, media-gallery image and video), their allowed formats and sizes, what an upload does to the image, the adjustable banner shape, and default and copied-in avatars: what it does, why, who may, and what is still to answer. The file follows the three-section layout of `communications.md`: **1. Rules**, **2. Rights**, **3. Open questions**, with the evidence in an **Appendix**._
 
-_Open questions per owner: Product Lead 3 · Technical Lead 5 · Quality Lead 6 · Security Lead 2 · Service Operations Lead 1. By state: 12 open · 5 with a suggested answer. Proof of the 18 rules: 8 proven by a test · 10 untested (Appendix A)._
+_Open questions per owner: Product Lead 2 · Technical Lead 6 · Quality Lead 6 · Security Lead 2 · Service Operations Lead 1. By state: 12 open · 5 with a suggested answer. Proof of the 18 rules: 8 proven by a test · 10 untested (Appendix A)._
 
 **How to read it**
 
@@ -99,14 +99,13 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 ### Product Lead
 
-[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 3 to answer, 1 also involved
+[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 2 to answer, 1 also involved
 
 **To answer**
 
 | ID | Area | Type | Question | Owner | Proposed answer | State |
 |---|---|---|---|---|---|---|
 | Q-VIS-01 | Kinds | decision | Why does this rule exist? No source states the reason. No spec states which image slots each kind of profile gets. | Product Lead | — | open |
-| Q-VIS-17 | Galleries | decision | Why does this rule exist? No source states the reason. A slot cannot be deleted on its own, its address is at most 2048 characters and its alternative text at most 120. | Product Lead | — | open |
 | CONST | All | decision | 20 constants are still blank in "product must rule?" (Appendix E). Which of them must product rule on? | Product Lead (Technical Lead and Security Lead rule on the rows pre-filled with their role) | — | open |
 
 **Also involved**
@@ -117,7 +116,7 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 ### Technical Lead
 
-[Technical Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Technical%20Lead.md) · Delivery (Anton) · 5 to answer, 2 also involved
+[Technical Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Technical%20Lead.md) · Delivery (Anton) · 6 to answer, 2 also involved
 
 **To answer**
 
@@ -128,6 +127,7 @@ _One section per role, so each owner reads only their own part. **To answer** li
 | F5 | Avatars | tidy-up | Copied-in avatars are always declared PNG and stored without a file extension, whatever they are. | Technical Lead | Harmless today; tidy when the file container owns typing. | suggested |
 | F6 | Upload | tidy-up | Two error texts embed the uploaded values, against the repo rule, and two legacy cases pin parts of them. | Technical Lead (Quality Lead rebaselines the two cases) | Not a behaviour change: rebaseline those assertions when the messages are cleaned. | suggested |
 | OQ5 | Shape | spec | There is no workspace spec for the adjustable banner; its whys come from two issues and migration comments. Is a retrospective spec wanted before the new core rebuilds it? | Technical Lead (Product Lead confirms the banner behaviour) | — | open |
+| Q-VIS-17 | Galleries | decision | Why does this rule exist? No source states the reason. A slot cannot be deleted on its own, its address is at most 2048 characters and its alternative text at most 120. | Technical Lead | — | open |
 
 **Also involved**
 

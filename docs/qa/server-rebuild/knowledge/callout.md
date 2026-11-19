@@ -2,7 +2,7 @@
 
 _What the platform does today for callouts: creating and framing them, their settings, publishing and closing, contributions, posts and comments, Forms, polls, reactions, the Contributors and Subspaces collections, transfer, deletion and reading: what it does, why, who may, and what is still to answer. The layout is the three-section one of `communications.md`: **1. Rules**, **2. Rights**, **3. Open questions**, with the evidence in an **Appendix**._
 
-_Open questions per owner: Product Lead 14 · Technical Lead 4 · Quality Lead 8 · Security Lead 1 · Architecture Lead 4. By state: 22 open · 9 with a suggested answer. Proof of the 77 rules: 45 proven by a test · 32 untested (Appendix A)._
+_Open questions per owner: Product Lead 10 · Technical Lead 8 · Quality Lead 8 · Security Lead 1 · Architecture Lead 4. By state: 22 open · 9 with a suggested answer. Proof of the 77 rules: 45 proven by a test · 32 untested (Appendix A)._
 
 **How to read it**
 
@@ -234,7 +234,7 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 ### Product Lead
 
-[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 14 to answer, 1 also involved
+[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 10 to answer, 1 also involved
 
 **To answer**
 
@@ -246,10 +246,6 @@ _One section per role, so each owner reads only their own part. **To answer** li
 | F11 | Transfer | decision | A flow phase's "allow new callouts" switch is stored and shown, but the server never enforces it. Enforce it, or record it as a hint for the client, like "visible"? | Product Lead, then Technical Lead | — | open |
 | F13 | Polls | spec | Server spec 038 FR-009 says a vote holds at most 10 selections. The code limits a poll to 10 options and a vote only by the poll's own maximum, where 0 means no limit. Which is intended? | Product Lead (Technical Lead then amends the spec or the code) | — | open |
 | F15 | Settings | decision | A callout created without settings is published by the server, while the web client always starts in draft. Anything other than the web client therefore creates published callouts. Which default is right? | Product Lead | — | open |
-| Q-CAL-03 | Creation | decision | Why does this rule exist? No source gives the reason the content of a framing must match its kind. | Product Lead | — | open |
-| Q-CAL-06 | Creation | decision | Why does this rule exist? No source gives the reason a short name must be unique and a new callout is placed first. | Product Lead | — | open |
-| Q-CAL-11 | Settings | decision | Why does this rule exist? No source gives the reason the server's own defaults are published, comments on, no contributions. See also F15. | Product Lead | — | open |
-| Q-CAL-18 | Settings | decision | Why does this rule exist? No source gives the reason ordering works by sending the whole list. | Product Lead | — | open |
 | Q-CAL-25 | Publishing | decision | Why does this rule exist? No source gives the reason the activity number counts contributions on one callout and comments on another. | Product Lead | — | open |
 | Q-CAL-33 | Contributions | decision | Why does this rule exist? No source gives the reason a contribution can be moved only within the same Space and lands in the first column of a tasks board. | Product Lead | — | open |
 | Q-CAL-39 | Links | decision | Why does this rule exist? No source gives the reason a link has these edit, delete and file rights. | Product Lead | — | open |
@@ -263,7 +259,7 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 ### Technical Lead
 
-[Technical Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Technical%20Lead.md) · Delivery (Anton) · 4 to answer, 4 also involved
+[Technical Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Technical%20Lead.md) · Delivery (Anton) · 8 to answer, 4 also involved
 
 **To answer**
 
@@ -273,6 +269,10 @@ _One section per role, so each owner reads only their own part. **To answer** li
 | F5 | Transfer | defect | A transferred callout is left on a flow phase that no longer exists when the destination's flow was replaced by a template (server#4970, client-web#9353). | Technical Lead | A defect, already filed; the two cases stay skipped until it is fixed. | suggested |
 | F6 | Forms | defect | After a Subspace moves under another top-level Space, the new parent's admins can delete Form responses but cannot read them, and the old parent's admins still can read them (server#6592; 4 test cells skipped). | Technical Lead (Security Lead: the old parent's admins still read responses) | A defect, filed as server#6592. | suggested |
 | F18 | Collections | risk | In automatic mode the Subspaces list is not filtered per viewer: one Subspace that a viewer may not see could empty the whole list for everyone. Not reproduced. Open a follow-up ticket, or accept the risk? | Technical Lead | — | open |
+| Q-CAL-03 | Creation | decision | Why does this rule exist? No source gives the reason the content of a framing must match its kind. | Technical Lead | — | open |
+| Q-CAL-06 | Creation | decision | Why does this rule exist? No source gives the reason a short name must be unique and a new callout is placed first. | Technical Lead | — | open |
+| Q-CAL-11 | Settings | decision | Why does this rule exist? No source gives the reason the server's own defaults are published, comments on, no contributions. See also F15. | Technical Lead | — | open |
+| Q-CAL-18 | Settings | decision | Why does this rule exist? No source gives the reason ordering works by sending the whole list. | Technical Lead | — | open |
 
 **Also involved**
 

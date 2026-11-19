@@ -2,7 +2,7 @@
 
 _What the platform does today for entitlements and licences: how allowances are worked out, account plans, space plans, space features, feature roles, limits, and who reads and manages licences: what it does, why, who may, and what is still to answer. The layout is that of `communications.md`: **1. Rules**, **2. Rights**, **3. Open questions**, with the evidence in an **Appendix**._
 
-_Open questions per owner: Product Lead 16 · Technical Lead 3 · Quality Lead 5 · Security Lead 1 · Architecture Lead 3. By state: 22 open · 6 with a suggested answer. Proof of the 44 rules: 18 proven by a test · 26 untested (Appendix A)._
+_Open questions per owner: Product Lead 13 · Technical Lead 6 · Quality Lead 5 · Security Lead 1 · Architecture Lead 3. By state: 22 open · 6 with a suggested answer. Proof of the 44 rules: 18 proven by a test · 26 untested (Appendix A)._
 
 **How to read it**
 
@@ -140,7 +140,7 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 ### Product Lead
 
-[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 16 to answer, 1 also involved
+[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 13 to answer, 1 also involved
 
 **To answer**
 
@@ -154,12 +154,9 @@ _One section per role, so each owner reads only their own part. **To answer** li
 | F13 | Space features | decision | Virtual contributor access for organisations is switched off in the code "for now". Are virtual contributors ever members of an organisation? | Product Lead | — | open |
 | CONST | All | decision | The "product must rule?" column is blank for 22 of the 27 constants (Appendix E). Which must product rule on before the rebuild? | Product Lead (Technical Lead and Security Lead for the rows pre-filled with their role) | — | open |
 | Q-ENT-12 | How allowances work | decision | Why does this rule exist? No source states a reason. Why does a space count against its highest tier only? | Product Lead | — | open |
-| Q-ENT-14 | How allowances work | decision | Why does this rule exist? No source states a reason. Why is a licence stored and recalculated on events, not read fresh? | Product Lead | — | open |
-| Q-ENT-18 | Account plans | decision | Why does this rule exist? No source states a reason. Why is a plan refused on the other kind of target? | Product Lead | — | open |
 | Q-ENT-23 | Space plans | decision | Why does this rule exist? No source states a reason. What should premium give beyond plus? | Product Lead | — | open |
 | Q-ENT-30 | Space features | decision | Why does this rule exist? No source states a reason. Why is giving a virtual contributor a role tied to a space feature? | Product Lead | — | open |
 | Q-ENT-31 | Space features | decision | Why does this rule exist? No source states a reason. Why are template and standalone whiteboards and memos never multi-user? | Product Lead | — | open |
-| Q-ENT-40 | Limits | decision | Why does this rule exist? No source states a reason. Why does the limit also apply to Platform Content Full Access? | Product Lead | — | open |
 | Q-ENT-45 | Reading | decision | Why does this rule exist? No source states a reason. Who should be able to read a space's licence? | Product Lead | — | open |
 | Q-ENT-46 | Reading | decision | Why does this rule exist? No source states a reason. A code comment says "for now". Should every registered user see the plans and what they give? | Product Lead | — | open |
 
@@ -171,7 +168,7 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 ### Technical Lead
 
-[Technical Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Technical%20Lead.md) · Delivery (Anton) · 3 to answer, 3 also involved
+[Technical Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Technical%20Lead.md) · Delivery (Anton) · 6 to answer, 3 also involved
 
 **To answer**
 
@@ -180,6 +177,9 @@ _One section per role, so each owner reads only their own part. **To answer** li
 | F3 | Space plans | decision | A plan given to a subspace is accepted but does nothing. Must the server refuse it, or is the web app the gate, as spec 083 describes? | Technical Lead | — | open |
 | F7 | Limits | tidy-up | The "limit reached" message contains the account id, against the server's own rule for error messages. Three tests pin the exact text. | Technical Lead (Quality Lead rebaselines the three cases) | When the message is cleaned, rebaseline the three cases; the red is not a change in behaviour. | suggested |
 | F11 | How allowances work | tidy-up | A code comment calls the AI token values placeholders; the migration says they were signed off on 2026-06-17. | Technical Lead | Trust the migration; fix the comment. | suggested |
+| Q-ENT-14 | How allowances work | decision | Why does this rule exist? No source states a reason. Why is a licence stored and recalculated on events, not read fresh? | Technical Lead | — | open |
+| Q-ENT-18 | Account plans | decision | Why does this rule exist? No source states a reason. Why is a plan refused on the other kind of target? | Technical Lead | — | open |
+| Q-ENT-40 | Limits | decision | Why does this rule exist? No source states a reason. Why does the limit also apply to Platform Content Full Access? | Technical Lead | — | open |
 
 **Also involved**
 

@@ -2,7 +2,7 @@
 
 _What the platform does today when a user, an organisation, a space, an account or one of their owned records is deleted: what is removed with it (profile, files, access policies, roles, rooms, sign-in identity, sessions), what is kept, what is refused, what is audited, and where left-overs ("orphans") are known to stay behind. It says what the server does, why, who may, and what is still to answer. The file has three sections, **1. Rules**, **2. Rights** and **3. Open questions**, with the evidence in an **Appendix**._
 
-_Open questions per owner: Product Lead 5 · Technical Lead 6 · Quality Lead 3 · Security Lead 1 · Incident Lead 2 · Service Operations Lead 1. By state: 14 open · 4 with a suggested answer. Proof of the 21 rules: 13 proven by a test · 8 untested (Appendix A)._
+_Open questions per owner: Product Lead 4 · Technical Lead 7 · Quality Lead 3 · Security Lead 1 · Incident Lead 2 · Service Operations Lead 1. By state: 14 open · 4 with a suggested answer. Proof of the 21 rules: 13 proven by a test · 8 untested (Appendix A)._
 
 **How to read it**
 
@@ -99,7 +99,7 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 ### Product Lead
 
-[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 5 to answer
+[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 4 to answer
 
 **To answer**
 
@@ -108,12 +108,11 @@ _One section per role, so each owner reads only their own part. **To answer** li
 | F1 | Users | decision | A deleted user keeps their chat identity: 84 left-over Matrix accounts on acceptance, 65 still in rooms, 1,780 messages by deleted senders (server#6728). Spec 054 left this out of version 1 on purpose. Is the follow-up scheduled, and is this accepted until it ships? | Product Lead (DPO Lead consulted) | Until it ships, the help page keeps saying that the chat identity persists (054 FR-024). | suggested |
 | OQ2 | Users | check | Is the follow-up story for removing a deleted user's chat identity on the board, or is server#6728 only the defect? (Feeds F1.) | Product Lead | — | open |
 | Q-DEL-11 | Spaces | decision | Why does this rule exist? A space with subspaces cannot be deleted until each subspace is deleted; no source states the reason. | Product Lead | — | open |
-| Q-DEL-19 | Owned records | decision | Why does this rule exist? Deleting an innovation pack or hub removes what it owns; no source states the reason. | Product Lead | — | open |
 | CONST | All | decision | All 21 constants are still blank in "product must rule?" (Appendix E). Which of them must product rule on? | Product Lead (Technical Lead and Security Lead for the rows pre-filled with their name) | — | open |
 
 ### Technical Lead
 
-[Technical Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Technical%20Lead.md) · Delivery (Anton) · 6 to answer, 3 also involved
+[Technical Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Technical%20Lead.md) · Delivery (Anton) · 7 to answer, 3 also involved
 
 **To answer**
 
@@ -125,6 +124,7 @@ _One section per role, so each owner reads only their own part. **To answer** li
 | F9 | Spaces | tidy-up | The refusal text for deleting a space contains the space id, against the repository rule, and the organisation refusal has a grammar slip ("account contain"). | Technical Lead | Treat them as rebaseline rows when cleaned; they are not behaviour changes. | suggested |
 | OQ1 | Users | check | Is the old way of deleting a user (before the current all-at-once deletion) still reachable? The old service method still exists and no caller was found, but the search was not exhaustive. If something calls it, DEL-02, DEL-03 and DEL-07 do not hold on that path. | Technical Lead | — | open |
 | OQ5 | Users | check | What removes a deleted user's chats, notifications and MCP API keys? A code comment says they go "via cascade"; the database schema was not read. | Technical Lead | — | open |
+| Q-DEL-19 | Owned records | decision | Why does this rule exist? Deleting an innovation pack or hub removes what it owns; no source states the reason. | Technical Lead | — | open |
 
 **Also involved**
 

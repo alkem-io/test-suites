@@ -2,7 +2,7 @@
 
 _What the platform does today for the life of a Space: the top-level Space (L0), its Subspaces (L1) and sub-subspaces (L2), their URL names, creation, settings, visibility, the three conversions inside one top-level Space, the three moves to another top-level Space ("cross-L0"), deletion and reading. Membership, licensing, callouts and notifications have their own files and appear here only where a lifecycle action changes them. The file follows the three-section layout: **1. Rules**, **2. Rights**, **3. Open questions**, with the evidence in an **Appendix**._
 
-_Open questions per owner: Product Lead 9 · Technical Lead 3 · Quality Lead 5 · Security Lead 3 · Incident Lead 1. By state: 17 open · 4 with a suggested answer. Proof of the 64 rules: 48 proven by a test · 16 untested (Appendix A)._
+_Open questions per owner: Product Lead 8 · Technical Lead 4 · Quality Lead 5 · Security Lead 3 · Incident Lead 1. By state: 17 open · 4 with a suggested answer. Proof of the 64 rules: 48 proven by a test · 16 untested (Appendix A)._
 
 **How to read it**
 
@@ -184,7 +184,7 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 ### Product Lead
 
-[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 9 to answer
+[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 8 to answer
 
 **To answer**
 
@@ -195,14 +195,13 @@ _One section per role, so each owner reads only their own part. **To answer** li
 | F9 | Visibility | decision | Is it intended that admins and members lose all access to an archived Space, reading included? Six skipped cases still expect them to keep full rights; today's code gives them nothing. | Product Lead (Quality Lead rebaselines the six cases) | — | open |
 | F12 | Settings | decision | The web client offers "allow platform support as admin" on every Subspace, but the server reads the switch on the top-level Space only. Remove it from Subspaces, or make it work there? | Product Lead | — | open |
 | OQ2 | Reading | decision | "Explore Spaces" shows at most 30 Spaces and looks at the activity of the last 30 days. Does product confirm both numbers? They then go into the constants table. | Product Lead | — | open |
-| Q-JRN-10 | Creation | decision | Why does this rule exist? Profile references sent when a Space is created are dropped: is that a rule or a defect? | Product Lead | — | open |
 | Q-JRN-13 | Creation | decision | Why does this rule exist? A Subspace created by someone who is not a member of the parent Space starts with no member, lead or admin at all. | Product Lead | — | open |
 | Q-JRN-29 | Visibility | decision | Why does this rule exist? No source says why the platform lists are ordered this way, beyond "dashboards show live Spaces first". | Product Lead | — | open |
 | CONST | All | decision | 21 constants are still blank in "product must rule?" (Appendix E): defaults, name rules, limits and error texts for the Product Lead; gates and audit values for the Security Lead; the rest for the Technical Lead. | Product Lead, Technical Lead, Security Lead | — | open |
 
 ### Technical Lead
 
-[Technical Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Technical%20Lead.md) · Delivery (Anton) · 3 to answer, 6 also involved
+[Technical Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Technical%20Lead.md) · Delivery (Anton) · 4 to answer, 6 also involved
 
 **To answer**
 
@@ -211,6 +210,7 @@ _One section per role, so each owner reads only their own part. **To answer** li
 | F3 | Levels | defect | The three conversions and plain Subspace creation do not check levels: a top-level Space can be given to a conversion, a fourth level can be created, and a Subspace with children can be pushed down a level. The moves check all of this. | Technical Lead | File as a defect: hard checks on all six operations, and refuse creation below the third level. | suggested |
 | F5 | Moves | decision | The two Subspace moves are not done in one step, although spec 083 FR-010 says they must be. Accept the risk formally and amend spec 083, or schedule the fix? | Technical Lead | — | open |
 | F7 | Identity | defect | Two Spaces created at the same moment can get the same URL name: the check is not backed by the database (server#6730, open). When is it fixed: now, or with the rebuild? | Technical Lead | — | open |
+| Q-JRN-10 | Creation | decision | Why does this rule exist? Profile references sent when a Space is created are dropped: is that a rule or a defect? | Technical Lead | — | open |
 
 **Also involved**
 

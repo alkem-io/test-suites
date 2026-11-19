@@ -2,7 +2,7 @@
 
 _What the platform does today for memos: creating them, editing and who may edit, memos in collections, signing through Cleverbase, PDF download, and memos in templates: what it does, why, who may, and what is still to answer. Licensing rules are in `entitlements.md` (ENT-06, ENT-31) and callout-level rules in `callout.md`. The layout is that of `communications.md`: **1. Rules**, **2. Rights**, **3. Open questions**, with the evidence in an **Appendix**._
 
-_Open questions per owner: Product Lead 7 · Technical Lead 6 · Quality Lead 3 · Security Lead 1 · Architecture Lead 1. By state: 12 open · 6 with a suggested answer. Proof of the 35 rules: 14 proven by a test · 21 untested (Appendix A)._
+_Open questions per owner: Product Lead 6 · Technical Lead 7 · Quality Lead 3 · Security Lead 1 · Architecture Lead 1. By state: 12 open · 6 with a suggested answer. Proof of the 35 rules: 14 proven by a test · 21 untested (Appendix A)._
 
 **How to read it**
 
@@ -122,7 +122,7 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 ### Product Lead
 
-[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 7 to answer
+[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 6 to answer
 
 **To answer**
 
@@ -132,13 +132,12 @@ _One section per role, so each owner reads only their own part. **To answer** li
 | F4 | Collections | decision | Adding a memo to a collection has no right of its own: the general contribute right decides. Should each kind of contribution have its own right? The same question is finding F1 in `callout.md`. | Product Lead (Architecture Lead models the answer in the new core) | The ruling on the callout finding carries here. | suggested |
 | CONST | All | decision | The "product must rule?" column is blank for 24 of the 27 constants (Appendix E). Which must product rule on before the rebuild? | Product Lead (Technical Lead and Security Lead for the rows pre-filled with their role) | — | open |
 | Q-MEM-02 | Creation | decision | Why does this rule exist? No source states a reason. Why does every new memo start open to contributors, with no choice at creation? | Product Lead | — | open |
-| Q-MEM-06 | Editing | decision | Why does this rule exist? No source states a reason. The whiteboard twin is Q-WBD-10. | Product Lead | — | open |
 | Q-MEM-11 | Editing | decision | Why does this rule exist? No source states a reason. Who uses the report of memo contributors? | Product Lead | — | open |
 | Q-MEM-17 | Deletion | decision | Why does this rule exist? No source states a reason. A ruling on what the creator field should show for a deleted user is pending (31 memos on acceptance). | Product Lead | — | open |
 
 ### Technical Lead
 
-[Technical Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Technical%20Lead.md) · Delivery (Anton) · 6 to answer, 3 also involved
+[Technical Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Technical%20Lead.md) · Delivery (Anton) · 7 to answer, 3 also involved
 
 **To answer**
 
@@ -150,6 +149,7 @@ _One section per role, so each owner reads only their own part. **To answer** li
 | OQ4 | Collections | check | Where are memos indexed for search, as server spec 016 FR-012 asks? It was not found in this area. | Technical Lead | — | open |
 | OQ5 | Templates | check | Can a memo exist outside a space today? Server#6686 says such memos can be downloaded, but no screen and no test tool creates one, so MEM-34 is read from the code only. | Technical Lead | — | open |
 | OQ6 | PDF download | spec | Spec 087 exists only on the main branch of agents-hq and its FR-002 predates the ruling on anonymous visitors. | Technical Lead | The same fix as F3. | suggested |
+| Q-MEM-06 | Editing | decision | Why does this rule exist? No source states a reason. The whiteboard twin is Q-WBD-10. | Technical Lead | — | open |
 
 **Also involved**
 

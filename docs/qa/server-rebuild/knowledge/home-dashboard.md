@@ -2,7 +2,7 @@
 
 _What the platform does today for the home dashboard and the top navigation: a person's own data under "me" (spaces and memberships with their ordering, pending invitations and applications, notification counts, chats), the dashboard data kept elsewhere (a space's activity score, the activity-view and home-space settings), how addresses are resolved, and the home page itself: what it does, why, who may, and what is still to answer. The file follows the three-section layout of `communications.md`: **1. Rules**, **2. Rights**, **3. Open questions**, with the evidence in an **Appendix**._
 
-_Open questions per owner: Product Lead 6 · Technical Lead 5 · Quality Lead 6 · Architecture Lead 1. By state: 17 open · 1 with a suggested answer. Proof of the 28 rules: 12 proven by a test · 16 untested (Appendix A)._
+_Open questions per owner: Product Lead 5 · Technical Lead 6 · Quality Lead 6 · Architecture Lead 1. By state: 17 open · 1 with a suggested answer. Proof of the 28 rules: 12 proven by a test · 16 untested (Appendix A)._
 
 **How to read it**
 
@@ -99,7 +99,7 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 ### Product Lead
 
-[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 6 to answer
+[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 5 to answer
 
 **To answer**
 
@@ -109,12 +109,11 @@ _One section per role, so each owner reads only their own part. **To answer** li
 | F3 | Me | decision | The unread badge counts notifications the person can no longer see. Keep it (the badge means "something happened"), or align it with the visible list? The new core computes counts at read and needs one answer. | Product Lead | — | open |
 | F6 | Me | decision | Without a filter, the pending lists and their counts include finished rows, while spec 024 counts "pending" rows. Should the server return only open rows by default, or is the client's filter the contract? What does the count mean in the new core's single request list? | Product Lead (Architecture Lead for the new list) | — | open |
 | OQ6 | Me | decision | Same decision as F1: is the drop of subspace-only memberships from the tree intended? Nobody wrote that case, and the memberships plan marks the section "to be redesigned". | Product Lead | — | open |
-| Q-HOME-23 | Addresses | decision | Why does this rule exist? No source states the reason. Any unknown first word in an address is treated as a space name (the code only says "Assumption is that everything else is a Space!"). | Product Lead (Architecture Lead writes the grammar of the new resolver) | — | open |
 | CONST | All | decision | 13 constants are still blank in "product must rule?" (Appendix E). Which of them must product rule on? | Product Lead (Technical Lead rules on the rows pre-filled with that role) | — | open |
 
 ### Technical Lead
 
-[Technical Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Technical%20Lead.md) · Delivery (Anton) · 5 to answer, 1 also involved
+[Technical Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Technical%20Lead.md) · Delivery (Anton) · 6 to answer, 1 also involved
 
 **To answer**
 
@@ -125,6 +124,7 @@ _One section per role, so each owner reads only their own part. **To answer** li
 | F5 | Addresses | decision | Six reserved words (about, profile, contact, landing, identity, flows) cannot be resolved. Are they live routes in the client, so the resolver must answer them, or only reserved names? | Technical Lead (Quality Lead checks the client first, OQ3) | — | open |
 | F7 | Other data | defect | A space's activity score gives an error for a space the caller cannot read, which blanks the object around it. Its 7-day window is fixed, while the explore ranking takes the window from the caller. The test that covered it is missing. | Technical Lead (Quality Lead writes the missing test, OQ5) | Return 0 or nothing for unreadable spaces, fix the window in one place, and write the missing test. | suggested |
 | F9 | Other data | decision | The client lets a person pin only a top-level space as home (spec 024 FR-004); the server accepts any space the person holds a role in. Enforce top-level on the server, or record the client as the gate? | Technical Lead | — | open |
+| Q-HOME-23 | Addresses | decision | Why does this rule exist? No source states the reason. Any unknown first word in an address is treated as a space name (the code only says "Assumption is that everything else is a Space!"). | Technical Lead (Architecture Lead writes the grammar of the new resolver) | — | open |
 
 **Also involved**
 
@@ -169,7 +169,7 @@ _One section per role, so each owner reads only their own part. **To answer** li
 | ID | Area | Type | Question | Owner | Proposed answer | State |
 |---|---|---|---|---|---|---|
 | F6 | Me | decision | Without a filter, the pending lists and their counts include finished rows, while spec 024 counts "pending" rows. Should the server return only open rows by default, or is the client's filter the contract? What does the count mean in the new core's single request list? | Product Lead (Architecture Lead for the new list) | — | open |
-| Q-HOME-23 | Addresses | decision | Why does this rule exist? No source states the reason. Any unknown first word in an address is treated as a space name (the code only says "Assumption is that everything else is a Space!"). | Product Lead (Architecture Lead writes the grammar of the new resolver) | — | open |
+| Q-HOME-23 | Addresses | decision | Why does this rule exist? No source states the reason. Any unknown first word in an address is treated as a space name (the code only says "Assumption is that everything else is a Space!"). | Technical Lead (Architecture Lead writes the grammar of the new resolver) | — | open |
 
 ## Appendix
 

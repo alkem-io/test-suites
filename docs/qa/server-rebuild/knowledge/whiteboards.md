@@ -2,7 +2,7 @@
 
 _What the platform does today for whiteboards: creating them, editing and who may edit, guest access, drafts, previews, deletion, and whiteboards in templates and collections: what it does, why, who may, and what is still to answer. Licensing rules are in `entitlements.md` (ENT-06, ENT-31) and callout-level rules in `callout.md`. The layout is that of `communications.md`: **1. Rules**, **2. Rights**, **3. Open questions**, with the evidence in an **Appendix**._
 
-_Open questions per owner: Product Lead 10 · Technical Lead 7 · Quality Lead 5 · Security Lead 1 · Architecture Lead 1. By state: 21 open · 3 with a suggested answer. Proof of the 36 rules: 6 proven by a test · 30 untested (Appendix A)._
+_Open questions per owner: Product Lead 7 · Technical Lead 10 · Quality Lead 5 · Security Lead 1 · Architecture Lead 1. By state: 21 open · 3 with a suggested answer. Proof of the 36 rules: 6 proven by a test · 30 untested (Appendix A)._
 
 **How to read it**
 
@@ -133,7 +133,7 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 ### Product Lead
 
-[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 10 to answer, 1 also involved
+[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 7 to answer, 1 also involved
 
 **To answer**
 
@@ -143,12 +143,9 @@ _One section per role, so each owner reads only their own part. **To answer** li
 | F7 | Preview | decision | The preview setting is an instruction to the web app; the server does not enforce it. Should the preview be something the server guarantees? | Product Lead | — | open |
 | CONST | All | decision | The "product must rule?" column is blank for 24 of the 27 constants (Appendix E). Which must product rule on before the rebuild? | Product Lead (Technical Lead and Security Lead for the rows pre-filled with their role) | — | open |
 | Q-WBD-02 | Creation | decision | Why does this rule exist? No source states a reason. Why does every new whiteboard start open to contributors, with no choice at creation? | Product Lead | — | open |
-| Q-WBD-03 | Creation | decision | Why does this rule exist? No source states a reason. Why must the identifier be unique within the callout? | Product Lead | — | open |
 | Q-WBD-09 | Editing | decision | Why does this rule exist? No source states a reason. Why these three edit settings, and why does the creator keep their rights after leaving the space? | Product Lead | — | open |
-| Q-WBD-10 | Editing | decision | Why does this rule exist? No source states a reason. Why does a template or draft whiteboard keep its old rights until later? | Product Lead | — | open |
 | Q-WBD-17 | Editing | decision | Why does this rule exist? No source states a reason. Who uses the report of whiteboard contributors? | Product Lead | — | open |
 | Q-WBD-31 | Deletion | decision | Why does this rule exist? No source states a reason. A ruling on what the creator field should show for a deleted user is pending (576 whiteboards on acceptance). | Product Lead | — | open |
-| Q-WBD-33 | Reading | decision | Why does this rule exist? No source states a reason. Why these two link shapes? | Product Lead | — | open |
 
 **Also involved**
 
@@ -158,7 +155,7 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 ### Technical Lead
 
-[Technical Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Technical%20Lead.md) · Delivery (Anton) · 7 to answer, 2 also involved
+[Technical Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Technical%20Lead.md) · Delivery (Anton) · 10 to answer, 2 also involved
 
 **To answer**
 
@@ -171,6 +168,9 @@ _One section per role, so each owner reads only their own part. **To answer** li
 | OQ1 | Guest access | check | Does changing a space's guest setting recalculate the rights of every whiteboard in it? (Feeds F2.) | Technical Lead | — | open |
 | OQ3 | Editing | check | Is the old live-sync queue of spec 006 still declared or consumed anywhere? (Feeds F3.) | Technical Lead (Service Operations Lead checks the environments) | — | open |
 | OQ6 | Editing | check | Is there a size limit on a whiteboard? The server has none; if one exists it is in the collaboration service. Acceptance data has 2 whiteboards above 1 MB and 173 empty ones. | Technical Lead (Product Lead rules on the value if a limit is wanted) | — | open |
+| Q-WBD-03 | Creation | decision | Why does this rule exist? No source states a reason. Why must the identifier be unique within the callout? | Technical Lead | — | open |
+| Q-WBD-10 | Editing | decision | Why does this rule exist? No source states a reason. Why does a template or draft whiteboard keep its old rights until later? | Technical Lead | — | open |
+| Q-WBD-33 | Reading | decision | Why does this rule exist? No source states a reason. Why these two link shapes? | Technical Lead | — | open |
 
 **Also involved**
 

@@ -2,7 +2,7 @@
 
 _What the platform does today for a Space's community guidelines: one record per Space with a title, a text, links and an image; who edits it, who sees it, how it is emptied, how templates feed it, and what happens to it with the Space: what it does, why, who may, and what is still to answer. Guidelines templates as templates are in `templates.md`. The layout is the three-section one of `communications.md`: **1. Rules**, **2. Rights**, **3. Open questions**, with the evidence in an **Appendix**._
 
-_Open questions per owner: Product Lead 7 · Technical Lead 1 · Quality Lead 2 · Service Operations Lead 1. By state: 11 open · 0 with a suggested answer. Proof of the 13 rules: 5 proven by a test · 8 untested (Appendix A)._
+_Open questions per owner: Product Lead 5 · Technical Lead 3 · Quality Lead 2 · Service Operations Lead 1. By state: 11 open · 0 with a suggested answer. Proof of the 13 rules: 5 proven by a test · 8 untested (Appendix A)._
 
 **How to read it**
 
@@ -86,7 +86,7 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 ### Product Lead
 
-[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 7 to answer
+[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 5 to answer
 
 **To answer**
 
@@ -95,20 +95,20 @@ _One section per role, so each owner reads only their own part. **To answer** li
 | F1 | Who sees them | decision | The guidelines of a private Space can be read by everyone, also by people who are not signed in. Is that intended, or should only the people who can read the Space, plus those with a pending invitation or application, see them? | Product Lead (Security Lead accepts the risk if they stay public) | — | open |
 | F2 | One record | decision | A new Subspace does not always start with empty guidelines: when the parent Space's template for Subspaces carries guidelines, every new Subspace gets a copy. Is that intended? | Product Lead | — | open |
 | OQ3 | Who sees them | check | Is there a product source that says guidelines are public? No spec, issue or decision record states it; server PR #3716 was not read and may carry the reason. | Product Lead (Technical Lead reads server PR #3716) | — | open |
-| Q-CGL-11 | Lifecycle | decision | Why does this rule exist? No source says why the link to the guidelines leads to the Space's community page. | Product Lead | — | open |
-| Q-CGL-12 | Lifecycle | decision | Why does this rule exist? No source says why guidelines can be looked up on their own, apart from their Space. | Product Lead | — | open |
 | Q-CGL-13 | Editing | decision | Why does this rule exist? Spec 027 covers the family of Space-admin actions, not guidelines by name. Does its reason apply here? | Product Lead | — | open |
 | CONST | All | decision | 11 constants are blank in "product must rule?" (Appendix E). Which of them must product rule on? | Product Lead (Technical Lead and Security Lead rule on the engineering and access values) | — | open |
 
 ### Technical Lead
 
-[Technical Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Technical%20Lead.md) · Delivery (Anton) · 1 to answer, 3 also involved
+[Technical Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Technical%20Lead.md) · Delivery (Anton) · 3 to answer, 3 also involved
 
 **To answer**
 
 | ID | Area | Type | Question | Owner | Proposed answer | State |
 |---|---|---|---|---|---|---|
 | OQ1 | Templates | check | Which operation does the web client run for "Use a template" on guidelines? The server has no apply action of its own for guidelines. Confirm in client-web before a library function is written for it. | Technical Lead | — | open |
+| Q-CGL-11 | Lifecycle | decision | Why does this rule exist? No source says why the link to the guidelines leads to the Space's community page. | Technical Lead | — | open |
+| Q-CGL-12 | Lifecycle | decision | Why does this rule exist? No source says why guidelines can be looked up on their own, apart from their Space. | Technical Lead | — | open |
 
 **Also involved**
 

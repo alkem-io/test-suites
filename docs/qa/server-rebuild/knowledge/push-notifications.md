@@ -2,7 +2,7 @@
 
 _What the platform does today for push notifications: the push switch on every notification setting, browser subscriptions, the per-person limit, delivery, and push to the phone app: what it does, why, who may, and what is still to answer. Which kinds of notification exist and who receives them is in `notifications.md`. The layout is the one piloted in `communications.md`: **1. Rules**, **2. Rights**, **3. Open questions**, with the evidence in an **Appendix**._
 
-_Open questions per owner: Product Lead 7 · Technical Lead 3 · Quality Lead 5 · Security Lead 2 · Service Operations Lead 2. By state: 19 open · 0 with a suggested answer. Proof of the 19 rules: 8 proven by a test · 11 untested (Appendix A)._
+_Open questions per owner: Product Lead 5 · Technical Lead 5 · Quality Lead 5 · Security Lead 2 · Service Operations Lead 2. By state: 19 open · 0 with a suggested answer. Proof of the 19 rules: 8 proven by a test · 11 untested (Appendix A)._
 
 **How to read it**
 
@@ -78,7 +78,7 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 ### Product Lead
 
-[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 7 to answer
+[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 5 to answer
 
 **To answer**
 
@@ -87,14 +87,12 @@ _One section per role, so each owner reads only their own part. **To answer** li
 | F3 | Subscriptions | decision | Should a person's list show the subscriptions they switched off? The server shows them; a skipped test expects them hidden. | Product Lead (Quality Lead then un-skips or rewrites the case) | — | open |
 | F5 | Channel | decision | On push only, the acting admin is not told about the sign-up or the Space they caused. This is decided with finding F3 of `notifications.md`. | Product Lead | — | open |
 | F6 | Channel | decision | Eight older kinds of push open the home page instead of a target (user message, organisation message, mention and sender copy, role changed, user registered, user removed, welcome). Give each a target, or accept it for kinds with no natural target? | Product Lead (Technical Lead makes the change) | — | open |
-| Q-PSH-07 | Channel | decision | Why does this rule exist? The only reason found is a switch for environments without push credentials. Must the new core keep a platform-wide off switch? | Product Lead | — | open |
-| Q-PSH-14 | Subscriptions | decision | Why 30 days? No source states why a subscription is deleted after 30 days without a successful send. | Product Lead | — | open |
 | Q-PSH-19 | Operations | decision | Why does this rule exist? It records how push is tested and signed on acceptance, not something a user sees. Is it a rule the new core must keep, or only a note for testers? | Product Lead | — | open |
 | CONST | All | decision | 18 constants have no answer yet in "product must rule?" (Appendix E). Which must product rule on? "Rules on it" proposes a role per row. | Product Lead (Technical Lead and Security Lead rule on their own rows) | — | open |
 
 ### Technical Lead
 
-[Technical Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Technical%20Lead.md) · Delivery (Anton) · 3 to answer, 4 also involved
+[Technical Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Technical%20Lead.md) · Delivery (Anton) · 5 to answer, 4 also involved
 
 **To answer**
 
@@ -103,6 +101,8 @@ _One section per role, so each owner reads only their own part. **To answer** li
 | F4 | Subscriptions | tidy-up | The retry setting does nothing: every failed push is dropped at the first attempt. Remove the setting or build the retry? | Technical Lead | — | open |
 | OQ1 | Subscriptions | check | Is the subscribe request checked anywhere else? Read the validation list line by line before F1 is filed. | Technical Lead | — | open |
 | OQ5 | Phones | spec | Spec 088 (what a tap on a push opens in the app) is listed without a readable text. Where is it, and what should a tap open? | Technical Lead | — | open |
+| Q-PSH-07 | Channel | decision | Why does this rule exist? The only reason found is a switch for environments without push credentials. Must the new core keep a platform-wide off switch? | Technical Lead | — | open |
+| Q-PSH-14 | Subscriptions | decision | Why 30 days? No source states why a subscription is deleted after 30 days without a successful send. | Technical Lead | — | open |
 
 **Also involved**
 

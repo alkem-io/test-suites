@@ -2,7 +2,7 @@
 
 _What the platform does today at the door of its API: how it works out who the caller is, how each field is protected, what "me" returns to a caller without an account, the endpoints and their limits, and the shape of errors. Which role holds which right is in the access matrix and the platform-roles table, and is only cross-referenced here. What it does, why, who may, and what is still to answer. The file has three sections: **1. Rules**, **2. Rights**, **3. Open questions**, with the evidence in an **Appendix**._
 
-_Open questions per owner: Product Lead 5 · Technical Lead 4 · Quality Lead 4 · Security Lead 4 · Service Operations Lead 3 · Architecture Lead 2. By state: 17 open · 5 with a suggested answer. Proof of the 32 rules: 16 proven by a test · 16 untested (Appendix A)._
+_Open questions per owner: Product Lead 2 · Technical Lead 7 · Quality Lead 4 · Security Lead 4 · Service Operations Lead 3 · Architecture Lead 2. By state: 17 open · 5 with a suggested answer. Proof of the 32 rules: 16 proven by a test · 16 untested (Appendix A)._
 
 **How to read it**
 
@@ -101,7 +101,7 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 ### Product Lead
 
-[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 5 to answer, 1 also involved
+[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 2 to answer, 1 also involved
 
 **To answer**
 
@@ -109,9 +109,6 @@ _One section per role, so each owner reads only their own part. **To answer** li
 |---|---|---|---|---|---|---|
 | F9 | Field gate | check | Visitors and non-members can read the About card of a private top-level Space. This is by design and owned by the Space rules; it is listed so nobody reads the test title as a failed refusal. Is the cross-reference enough? | Product Lead | No ruling needed here: cross-reference to the Space (journey) rules. | suggested |
 | CONST | All | decision | 27 constants are blank in "product must rule?" (Appendix E). Which of them must product rule on? Most are engineering and security limits. | Product Lead (Technical Lead and Security Lead for engineering and security limits) | — | open |
-| Q-GQL-12 | Field gate | decision | Why can every caller list their own rights on every item? No source states a reason. | Product Lead | — | open |
-| Q-GQL-15 | Field gate | decision | Why is an item with missing or empty access rules refused outright? No source states a reason. | Product Lead | — | open |
-| Q-GQL-30 | Endpoints | decision | Why are there three addresses for one endpoint? No source states a reason; the split dates from a sign-in chain that was retired. (F4 asks what to do with them.) | Product Lead | — | open |
 
 **Also involved**
 
@@ -121,7 +118,7 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 ### Technical Lead
 
-[Technical Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Technical%20Lead.md) · Delivery (Anton) · 4 to answer, 4 also involved
+[Technical Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Technical%20Lead.md) · Delivery (Anton) · 7 to answer, 4 also involved
 
 **To answer**
 
@@ -131,6 +128,9 @@ _One section per role, so each owner reads only their own part. **To answer** li
 | F8 | Caller | tidy-up | docs/Guest-Users.md describes a query and a sign-in strategy that no longer exist. Fix the document? | Technical Lead | Fix the doc; the behaviour stands. | suggested |
 | OQ5 | Caller | spec | Where is the OIDC sign-in spec? The code cites FR-023, FR-024b, FR-025 and T042b from server PR #6143, but the spec is not in the server repo. Until it is found, the why of GQL-01, 02, 03, 08 and 43 rests on code comments. | Technical Lead | — | open |
 | OQ6 | me | check | Does the web client depend on the "me" id being exactly "me-" for a caller without an account? Confirm before the new core changes it. | Technical Lead | — | open |
+| Q-GQL-12 | Field gate | decision | Why can every caller list their own rights on every item? No source states a reason. | Technical Lead | — | open |
+| Q-GQL-15 | Field gate | decision | Why is an item with missing or empty access rules refused outright? No source states a reason. | Technical Lead | — | open |
+| Q-GQL-30 | Endpoints | decision | Why are there three addresses for one endpoint? No source states a reason; the split dates from a sign-in chain that was retired. (F4 asks what to do with them.) | Technical Lead | — | open |
 
 **Also involved**
 

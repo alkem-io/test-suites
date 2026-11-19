@@ -2,7 +2,7 @@
 
 _What the platform does today around the AI engines behind virtual contributors: the one AI server record and who may touch it, the persona of each virtual contributor and its secrets, the engines and how a question reaches them, the history sent along, the answer coming back, reading knowledge in, maintenance and limits: what it does, why, who may, and what is still to answer. The engine itself is out of scope. The layout is the one piloted in `communications.md`: **1. Rules**, **2. Rights**, **3. Open questions**, with the evidence in an **Appendix**._
 
-_Open questions per owner: Product Lead 10 · Technical Lead 5 · Quality Lead 2 · Security Lead 3 · Incident Lead 1 · Service Operations Lead 3. By state: 20 open · 4 with a suggested answer. Proof of the 20 rules: 4 proven by a test · 16 untested (Appendix A)._
+_Open questions per owner: Product Lead 3 · Technical Lead 12 · Quality Lead 2 · Security Lead 3 · Incident Lead 1 · Service Operations Lead 3. By state: 20 open · 4 with a suggested answer. Proof of the 20 rules: 4 proven by a test · 16 untested (Appendix A)._
 
 **How to read it**
 
@@ -89,20 +89,13 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 ### Product Lead
 
-[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 10 to answer, 1 also involved
+[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 3 to answer, 1 also involved
 
 **To answer**
 
 | ID | Area | Type | Question | Owner | Proposed answer | State |
 |---|---|---|---|---|---|---|
 | F6 | Personas | decision | After a change of engine or prompt the virtual contributor keeps its old knowledge. When must the knowledge be read in again? | Product Lead (Technical Lead builds it) | — | open |
-| Q-AIP-01 | AI server | decision | Why does this rule exist? No source states the reason. Why is there one AI server record that anyone can fetch? | Product Lead | — | open |
-| Q-AIP-06 | Personas | decision | Why does this rule exist? No source states the reason. The code calls it a workaround. Should a persona simply follow its virtual contributor? | Product Lead | — | open |
-| Q-AIP-08 | Personas | decision | Why does this rule exist? No source states the reason. Why are the settings merged and the prompt replaced? (Reading the knowledge in again is F6.) | Product Lead | — | open |
-| Q-AIP-12 | Engines | decision | Why does this rule exist? No source states the reason. Why 30 messages, and why do only some engines get the history and the callout or post description? | Product Lead | — | open |
-| Q-AIP-13 | Engines | decision | Why does this rule exist? No source states the reason. The only reason found is a naming habit of the chat adapter (see F7). | Product Lead | — | open |
-| Q-AIP-14 | Engines | decision | Why does this rule exist? No source states the reason. Why do "expert" personas fall back on a built-in prompt graph, and why does a read also show it for "libra-flow"? | Product Lead | — | open |
-| Q-AIP-16 | Engines | decision | Why does this rule exist? No source states the reason. Why does the server act on the answer only as the question instructed? | Product Lead | — | open |
 | Q-AIP-19 | Limits | decision | Why does this rule exist? No source states the reason. Is it intended that questions to a virtual contributor have no token, request or cost limit? (OQ5 checks for limits elsewhere.) | Product Lead | — | open |
 | CONST | All | decision | 17 constants have no answer yet in "product must rule?" (Appendix E). Which must product rule on? "Rules on it" proposes a role per row. | Product Lead (Technical Lead and Security Lead rule on their own rows) | — | open |
 
@@ -114,7 +107,7 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 ### Technical Lead
 
-[Technical Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Technical%20Lead.md) · Delivery (Anton) · 5 to answer, 6 also involved
+[Technical Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Technical%20Lead.md) · Delivery (Anton) · 12 to answer, 6 also involved
 
 **To answer**
 
@@ -125,6 +118,13 @@ _One section per role, so each owner reads only their own part. **To answer** li
 | F7 | Engines | decision | A message counts as "the assistant's" when its sender id starts with `@virtualcontributor`: that is any virtual contributor, not only the one asked, and it depends on a naming habit. Accept it as a convention, or mark messages by the kind of sender? | Technical Lead | — | open |
 | OQ2 | Engines | check | Does the engine use everything the server sends: the language, the context, the interaction id, the request to read knowledge in, the prompt-graph override? The engine code was not read. | Technical Lead | — | open |
 | OQ5 | Limits | check | Is there any limit on virtual contributor usage outside the server (in the engine, at the AI provider)? The server has none, and product may believe there is one. | Technical Lead (Product Lead decides whether a limit is needed) | — | open |
+| Q-AIP-01 | AI server | decision | Why does this rule exist? No source states the reason. Why is there one AI server record that anyone can fetch? | Technical Lead | — | open |
+| Q-AIP-06 | Personas | decision | Why does this rule exist? No source states the reason. The code calls it a workaround. Should a persona simply follow its virtual contributor? | Technical Lead | — | open |
+| Q-AIP-08 | Personas | decision | Why does this rule exist? No source states the reason. Why are the settings merged and the prompt replaced? (Reading the knowledge in again is F6.) | Technical Lead | — | open |
+| Q-AIP-12 | Engines | decision | Why does this rule exist? No source states the reason. Why 30 messages, and why do only some engines get the history and the callout or post description? | Technical Lead | — | open |
+| Q-AIP-13 | Engines | decision | Why does this rule exist? No source states the reason. The only reason found is a naming habit of the chat adapter (see F7). | Technical Lead | — | open |
+| Q-AIP-14 | Engines | decision | Why does this rule exist? No source states the reason. Why do "expert" personas fall back on a built-in prompt graph, and why does a read also show it for "libra-flow"? | Technical Lead | — | open |
+| Q-AIP-16 | Engines | decision | Why does this rule exist? No source states the reason. Why does the server act on the answer only as the question instructed? | Technical Lead | — | open |
 
 **Also involved**
 
