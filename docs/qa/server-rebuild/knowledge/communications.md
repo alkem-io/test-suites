@@ -159,49 +159,21 @@ No other platform role may run W12. ¹² Their own session only, on a first-part
 
 ## 3. Open questions
 
-_One queue. **State**: open · suggested (an answer is proposed and the owner confirms it) · change decided (decided, differs from today's server, not shipped yet). The full text of each finding, with code lines and data, is in Appendix C under the same id._
+_One section per role, so each owner reads only their own part. **To answer** lists the questions the role owns. **Also involved** repeats questions another role owns where this role has a part; the Owner cell says which part. A question shared by two roles therefore appears under both. **State**: open · suggested (an answer is proposed and the owner confirms it) · change decided (decided, differs from today's server, not shipped yet). The full text of each finding, with code lines and data, is in Appendix C under the same id._
 
-| Owner | Circle (holder) | Items |
-|---|---|---|
-| [Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) | Strategy › Product (Simone); Denise decides on her behalf | F1b, F2b, F5, F6b, F7, Q-COM-15, Q-COM-17, Q-COM-34, Q-COM-45, Q-COM-55, Q-COM-66, Q-PLACEHOLDER |
-| [Technical Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Technical%20Lead.md) | Delivery (Anton) | F3, F10, F11, F14, F15, F16, F4-fu, G2, CONST, Q-COM-03 |
-| [Quality Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Quality%20Lead.md) | Delivery (Evgeni), with the QA Engineer as the doer | F8, F9, F12-fu, OQ5, OQ6, OQ7, GAPS |
-| [Security Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Security%20Lead.md) | Delivery (Valentin) | F6a, F13, W18 |
-| [Incident Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Enablement/Sub-circles/Incident%20Response/Roles/Incident%20Lead.md) | Enablement › Incident Response (Neil, Simone) | F1a, F2a |
-| [Service Operations Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Sub-circles/Operational%20Services/Roles/Service%20Operations%20Lead.md) | Delivery › Operational Services (Valentin) | OQ1, OQ8 |
-| [Architecture Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Architecture%20Lead.md) | Delivery (Anton) | OQ2 |
+### Product Lead
+
+[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 12 to answer, 1 also involved
+
+**To answer**
 
 | ID | Area | Type | Question | Owner | Proposed answer | State |
 |---|---|---|---|---|---|---|
-| F1a | Behind | defect | A chat can exist in Alkemio with no Matrix room behind it (7 on ACC; the cause is still live). Is that an incident or a backlog defect? Then: fail the creation, or roll the row back (server#6694). | Incident Lead, then Technical Lead | — | open |
 | F1b | Chat | decision | What does a user see in a chat that has no Matrix room? | Product Lead | Tell the user something went wrong with this chat and that messages can't be sent or received. A UI issue needs creating. | suggested |
-| F2a | Behind | defect | Deleted rooms can stay alive in Matrix (427 orphan rooms holding 281 messages; the cause is still live). Incident with a retention side, or backlog defect? Then: record and retry, or delete in Matrix first (server#6727). | Incident Lead, then Technical Lead | — | open |
 | F2b | Comments | decision | What does a user see when a deletion did not complete? | Product Lead | Inform the user. | suggested |
-| F3 | Updates | defect | The space id passed to Matrix is empty for every community created since 2024-04-30 (1,825 rows, server#6594). Which value belongs there, is the backfill done now or at migration, and does space-level membership matter for comment rooms? | Technical Lead (Service Operations Lead answers OQ8 first) | — | open |
 | F5 | Forum | decision | Discussion privacy field: build it or drop it? | Product Lead, then Technical Lead | Keep it in the server until it is decided how to expose it in the client. | suggested |
-| F6a | Comments | risk | An admin's deletion runs in Matrix as the original author, so the audit trail names the wrong person. Accepted for now, or to be closed? | Security Lead (Architecture Lead designs the fix if closed) | — | open |
 | F6b | Comments | decision | What does a user see after deleting something? | Product Lead | "Deleted. It may take a moment before it's removed everywhere." Needs a UI change. | suggested |
 | F7 | Chat | decision | The "allow messages" setting behaves three ways: refused on a direct chat and on adding to a group, silently left out when a group is created. One behaviour for all? Is a group creator told who was left out? | Product Lead (DPO Lead consulted; Technical Lead aligns the three paths) | Prevent rather than refuse: people who can't be messaged can't be selected in the member picker and have no message button. Needs UI rework. | suggested |
-| F8 | Comments | test | The case "Removing reply, removes reaction related to it" checks only that the reply is gone. Re-title it, or read the reactions back. | Quality Lead | — | open |
-| F9 | Forum | test | "Platform Support … moves a post into Newsletter" runs as the harness admin. Switch it to the support persona. | Quality Lead | — | open |
-| F10 | Behind | defect | The forum repair accepts out-of-range input, and an unknown task id returns a stack trace (recorded under server#6663). | Technical Lead (Security Lead owns server#6663) | — | open |
-| F11 | Behind | defect | The orphaned-room tool treats every live chat, comment and forum room as an orphan (server#6689). Redefine "in use", and confirm the tool is in no runbook. | Technical Lead, Service Operations Lead | Must not be run until this is fixed. | open |
-| F13 | Forum | decision | Forum discussion rooms are listed in the Synapse public directory. Keep or retract? (Open question 4 is the same decision.) | Security Lead, then Technical Lead | No: forum discussions should not be findable there. The forum belongs in Alkemio and Element is for chats. This is about consistency, not secrecy. | suggested |
-| F14 | Forum | tidy-up | The forum create rule is mislabelled and a cascade flag sits on the wrong variable; harmless today. Tidy now, or let it go with the rebuild? | Technical Lead | — | open |
-| F15 | Behind | tidy-up | The legacy `conversation` room kind is never created any more. Has the migration run on every environment, so the kind can be retired? | Technical Lead (Service Operations Lead confirms) | — | open |
-| F16 | Chat | spec | Server spec 040 FR-014 is stale: amend it to what the code does since server#6573. | Technical Lead | — | open |
-| F4-fu | Chat | follow-up | F4 is decided (nobody deletes a chat). Retire the `deleteConversation` mutation and amend 040 FR-018. | Technical Lead | — | open |
-| F12-fu | Updates | follow-up | F12 is decided (the updates channel starts empty). The journey case "updates room messages are preserved after cross-L0 move" asserts the opposite and must be corrected; the two room-name shapes can be unified. | Quality Lead (test), Technical Lead (naming) | — | open |
-| G2 | Comments | contract | What happens when someone posts in a room they were never added to in Matrix: joined automatically, refused, or sent as the bot? | Technical Lead | — | open |
-| OQ1 | Behind | check | Which matrix-adapter version runs on the test cluster and on ACC, and is it at or after v0.8.23? | Service Operations Lead | — | open |
-| OQ2 | Comments | decision | Must message and reaction lists come back in a fixed order from the new core? | Architecture Lead; Product Lead confirms the suggestion | Comments, updates and chat are always shown in time order; users can't reorder them. The server sorts by time. | suggested |
-| OQ5 | Behind | test | 16 cases have never run on a shared environment. Does a local-stack lane join the nightly? | Quality Lead (Service Operations Lead provides the lane) | — | open |
-| OQ6 | Updates | test | Is a space member really refused when posting an update? One live call, then pin it as a case (G1). | Quality Lead | — | open |
-| OQ7 | Behind | test | Does the harness admin on the test cluster hold the credential set every "admin may" cell assumes? | Quality Lead | — | open |
-| OQ8 | Updates | check | On the test cluster, is a member of a 2025-created space joined to its Matrix space, or only to its rooms? (Feeds F3.) | Service Operations Lead | — | open |
-| GAPS | All | test | 23 rules have no test and 14 behaviours were never pinned down (Appendix D). Which get a case before the acceptance checklist is drawn from this file? | Quality Lead | — | open |
-| CONST | All | decision | 21 constants are still blank in "product must rule?" (Appendix E): engineering limits, wire shapes and security limits. | Technical Lead, Security Lead | — | open |
-| Q-COM-03 | Comments | check | Does 32,784 characters always fit Matrix's 64 KiB event limit? With emoji or non-Latin text a message can take up to 4 bytes per character. | Technical Lead | — | open |
 | Q-COM-15 | Chat | decision | What are the rules for mentions in chats? Today they are switched off. | Product Lead | May be enabled once the rules are defined. | open |
 | Q-COM-17 | Comments | decision | Should messages from virtual contributors and organisations show in activity and trigger notifications? Today they do not, as a side effect in the code. | Product Lead | — | open |
 | Q-COM-34 | Forum | decision | Can authors edit or delete their own discussion? | Product Lead | Yes: authors edit their own discussion, and delete it while nobody else has commented. After that only the forum team removes it. Moving between categories stays with the forum team. A mistake can then be undone without asking support, and other people's contributions are not lost. This matches comments, which authors can already delete (COM-04). | suggested |
@@ -209,7 +181,127 @@ _One queue. **State**: open · suggested (an answer is proposed and the owner co
 | Q-COM-55 | Chat | decision | Once group admins exist, do renaming a group and changing its picture become admin-only? | Product Lead | — | open (waits for group admins) |
 | Q-COM-66 | Chat | decision | When the Guidance chat returns, should other virtual contributors get "Clear chat" too? Today the web app offers it only in the Guidance assistant, which is disabled; the server allows a reset with any virtual contributor. | Product Lead | — | open |
 | Q-PLACEHOLDER | Comments | decision | What stands in for an attachment-only message in notifications? Today a single image icon. | Product Lead | "🖼️ Image" for images and "📎 File" for other attachments, translated in all six languages. | suggested |
+
+**Also involved**
+
+| ID | Area | Type | Question | Owner | Proposed answer | State |
+|---|---|---|---|---|---|---|
+| OQ2 | Comments | decision | Must message and reaction lists come back in a fixed order from the new core? | Architecture Lead; Product Lead confirms the suggestion | Comments, updates and chat are always shown in time order; users can't reorder them. The server sorts by time. | suggested |
+
+### Technical Lead
+
+[Technical Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Technical%20Lead.md) · Delivery (Anton) · 10 to answer, 7 also involved
+
+**To answer**
+
+| ID | Area | Type | Question | Owner | Proposed answer | State |
+|---|---|---|---|---|---|---|
+| F3 | Updates | defect | The space id passed to Matrix is empty for every community created since 2024-04-30 (1,825 rows, server#6594). Which value belongs there, is the backfill done now or at migration, and does space-level membership matter for comment rooms? | Technical Lead (Service Operations Lead answers OQ8 first) | — | open |
+| F10 | Behind | defect | The forum repair accepts out-of-range input, and an unknown task id returns a stack trace (recorded under server#6663). | Technical Lead (Security Lead owns server#6663) | — | open |
+| F11 | Behind | defect | The orphaned-room tool treats every live chat, comment and forum room as an orphan (server#6689). Redefine "in use", and confirm the tool is in no runbook. | Technical Lead, Service Operations Lead | Must not be run until this is fixed. | open |
+| F14 | Forum | tidy-up | The forum create rule is mislabelled and a cascade flag sits on the wrong variable; harmless today. Tidy now, or let it go with the rebuild? | Technical Lead | — | open |
+| F15 | Behind | tidy-up | The legacy `conversation` room kind is never created any more. Has the migration run on every environment, so the kind can be retired? | Technical Lead (Service Operations Lead confirms) | — | open |
+| F16 | Chat | spec | Server spec 040 FR-014 is stale: amend it to what the code does since server#6573. | Technical Lead | — | open |
+| F4-fu | Chat | follow-up | F4 is decided (nobody deletes a chat). Retire the `deleteConversation` mutation and amend 040 FR-018. | Technical Lead | — | open |
+| G2 | Comments | contract | What happens when someone posts in a room they were never added to in Matrix: joined automatically, refused, or sent as the bot? | Technical Lead | — | open |
+| CONST | All | decision | 21 constants are still blank in "product must rule?" (Appendix E): engineering limits, wire shapes and security limits. | Technical Lead, Security Lead | — | open |
+| Q-COM-03 | Comments | check | Does 32,784 characters always fit Matrix's 64 KiB event limit? With emoji or non-Latin text a message can take up to 4 bytes per character. | Technical Lead | — | open |
+
+**Also involved**
+
+| ID | Area | Type | Question | Owner | Proposed answer | State |
+|---|---|---|---|---|---|---|
+| F1a | Behind | defect | A chat can exist in Alkemio with no Matrix room behind it (7 on ACC; the cause is still live). Is that an incident or a backlog defect? Then: fail the creation, or roll the row back (server#6694). | Incident Lead, then Technical Lead | — | open |
+| F2a | Behind | defect | Deleted rooms can stay alive in Matrix (427 orphan rooms holding 281 messages; the cause is still live). Incident with a retention side, or backlog defect? Then: record and retry, or delete in Matrix first (server#6727). | Incident Lead, then Technical Lead | — | open |
+| F5 | Forum | decision | Discussion privacy field: build it or drop it? | Product Lead, then Technical Lead | Keep it in the server until it is decided how to expose it in the client. | suggested |
+| F7 | Chat | decision | The "allow messages" setting behaves three ways: refused on a direct chat and on adding to a group, silently left out when a group is created. One behaviour for all? Is a group creator told who was left out? | Product Lead (DPO Lead consulted; Technical Lead aligns the three paths) | Prevent rather than refuse: people who can't be messaged can't be selected in the member picker and have no message button. Needs UI rework. | suggested |
+| F13 | Forum | decision | Forum discussion rooms are listed in the Synapse public directory. Keep or retract? (Open question 4 is the same decision.) | Security Lead, then Technical Lead | No: forum discussions should not be findable there. The forum belongs in Alkemio and Element is for chats. This is about consistency, not secrecy. | suggested |
+| F12-fu | Updates | follow-up | F12 is decided (the updates channel starts empty). The journey case "updates room messages are preserved after cross-L0 move" asserts the opposite and must be corrected; the two room-name shapes can be unified. | Quality Lead (test), Technical Lead (naming) | — | open |
 | W18 | Behind | risk | Are the Matrix session limits right: own session only, no API tokens, 10 per minute, audited? | Security Lead, with Technical Lead | — | open |
+
+### Quality Lead
+
+[Quality Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Quality%20Lead.md) · Delivery (Evgeni), with the QA Engineer as the doer · 7 to answer
+
+**To answer**
+
+| ID | Area | Type | Question | Owner | Proposed answer | State |
+|---|---|---|---|---|---|---|
+| F8 | Comments | test | The case "Removing reply, removes reaction related to it" checks only that the reply is gone. Re-title it, or read the reactions back. | Quality Lead | — | open |
+| F9 | Forum | test | "Platform Support … moves a post into Newsletter" runs as the harness admin. Switch it to the support persona. | Quality Lead | — | open |
+| F12-fu | Updates | follow-up | F12 is decided (the updates channel starts empty). The journey case "updates room messages are preserved after cross-L0 move" asserts the opposite and must be corrected; the two room-name shapes can be unified. | Quality Lead (test), Technical Lead (naming) | — | open |
+| OQ5 | Behind | test | 16 cases have never run on a shared environment. Does a local-stack lane join the nightly? | Quality Lead (Service Operations Lead provides the lane) | — | open |
+| OQ6 | Updates | test | Is a space member really refused when posting an update? One live call, then pin it as a case (G1). | Quality Lead | — | open |
+| OQ7 | Behind | test | Does the harness admin on the test cluster hold the credential set every "admin may" cell assumes? | Quality Lead | — | open |
+| GAPS | All | test | 23 rules have no test and 14 behaviours were never pinned down (Appendix D). Which get a case before the acceptance checklist is drawn from this file? | Quality Lead | — | open |
+
+### Security Lead
+
+[Security Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Security%20Lead.md) · Delivery (Valentin) · 3 to answer, 2 also involved
+
+**To answer**
+
+| ID | Area | Type | Question | Owner | Proposed answer | State |
+|---|---|---|---|---|---|---|
+| F6a | Comments | risk | An admin's deletion runs in Matrix as the original author, so the audit trail names the wrong person. Accepted for now, or to be closed? | Security Lead (Architecture Lead designs the fix if closed) | — | open |
+| F13 | Forum | decision | Forum discussion rooms are listed in the Synapse public directory. Keep or retract? (Open question 4 is the same decision.) | Security Lead, then Technical Lead | No: forum discussions should not be findable there. The forum belongs in Alkemio and Element is for chats. This is about consistency, not secrecy. | suggested |
+| W18 | Behind | risk | Are the Matrix session limits right: own session only, no API tokens, 10 per minute, audited? | Security Lead, with Technical Lead | — | open |
+
+**Also involved**
+
+| ID | Area | Type | Question | Owner | Proposed answer | State |
+|---|---|---|---|---|---|---|
+| F10 | Behind | defect | The forum repair accepts out-of-range input, and an unknown task id returns a stack trace (recorded under server#6663). | Technical Lead (Security Lead owns server#6663) | — | open |
+| CONST | All | decision | 21 constants are still blank in "product must rule?" (Appendix E): engineering limits, wire shapes and security limits. | Technical Lead, Security Lead | — | open |
+
+### Incident Lead
+
+[Incident Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Enablement/Sub-circles/Incident%20Response/Roles/Incident%20Lead.md) · Enablement › Incident Response (Neil, Simone) · 2 to answer
+
+**To answer**
+
+| ID | Area | Type | Question | Owner | Proposed answer | State |
+|---|---|---|---|---|---|---|
+| F1a | Behind | defect | A chat can exist in Alkemio with no Matrix room behind it (7 on ACC; the cause is still live). Is that an incident or a backlog defect? Then: fail the creation, or roll the row back (server#6694). | Incident Lead, then Technical Lead | — | open |
+| F2a | Behind | defect | Deleted rooms can stay alive in Matrix (427 orphan rooms holding 281 messages; the cause is still live). Incident with a retention side, or backlog defect? Then: record and retry, or delete in Matrix first (server#6727). | Incident Lead, then Technical Lead | — | open |
+
+### Service Operations Lead
+
+[Service Operations Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Sub-circles/Operational%20Services/Roles/Service%20Operations%20Lead.md) · Delivery › Operational Services (Valentin) · 2 to answer, 4 also involved
+
+**To answer**
+
+| ID | Area | Type | Question | Owner | Proposed answer | State |
+|---|---|---|---|---|---|---|
+| OQ1 | Behind | check | Which matrix-adapter version runs on the test cluster and on ACC, and is it at or after v0.8.23? | Service Operations Lead | — | open |
+| OQ8 | Updates | check | On the test cluster, is a member of a 2025-created space joined to its Matrix space, or only to its rooms? (Feeds F3.) | Service Operations Lead | — | open |
+
+**Also involved**
+
+| ID | Area | Type | Question | Owner | Proposed answer | State |
+|---|---|---|---|---|---|---|
+| F3 | Updates | defect | The space id passed to Matrix is empty for every community created since 2024-04-30 (1,825 rows, server#6594). Which value belongs there, is the backfill done now or at migration, and does space-level membership matter for comment rooms? | Technical Lead (Service Operations Lead answers OQ8 first) | — | open |
+| F11 | Behind | defect | The orphaned-room tool treats every live chat, comment and forum room as an orphan (server#6689). Redefine "in use", and confirm the tool is in no runbook. | Technical Lead, Service Operations Lead | Must not be run until this is fixed. | open |
+| F15 | Behind | tidy-up | The legacy `conversation` room kind is never created any more. Has the migration run on every environment, so the kind can be retired? | Technical Lead (Service Operations Lead confirms) | — | open |
+| OQ5 | Behind | test | 16 cases have never run on a shared environment. Does a local-stack lane join the nightly? | Quality Lead (Service Operations Lead provides the lane) | — | open |
+
+### Architecture Lead
+
+[Architecture Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Architecture%20Lead.md) · Delivery (Anton) · 1 to answer, 1 also involved
+
+**To answer**
+
+| ID | Area | Type | Question | Owner | Proposed answer | State |
+|---|---|---|---|---|---|---|
+| OQ2 | Comments | decision | Must message and reaction lists come back in a fixed order from the new core? | Architecture Lead; Product Lead confirms the suggestion | Comments, updates and chat are always shown in time order; users can't reorder them. The server sorts by time. | suggested |
+
+**Also involved**
+
+| ID | Area | Type | Question | Owner | Proposed answer | State |
+|---|---|---|---|---|---|---|
+| F6a | Comments | risk | An admin's deletion runs in Matrix as the original author, so the audit trail names the wrong person. Accepted for now, or to be closed? | Security Lead (Architecture Lead designs the fix if closed) | — | open |
+
+### Decided
 
 **Decided and moved to Rules**
 
