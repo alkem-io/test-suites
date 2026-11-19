@@ -25,11 +25,29 @@ The GraphQL surface is designed from scratch (31 queries, 84 intent mutations; `
 
 ## W1 — Server behaviour knowledge base (start now; done before slice 4 closes)
 
-**Goal.** One document per area under `docs/qa/server-rebuild/knowledge/`, each a table of behaviour rules: *ID · rule the platform guarantees · why (business reason, originating issue) · actors · evidence (spec › case) · legacy status*, followed by the constants the rules depend on (limits, plan names, error texts — the rebaseline candidates) and the "where this lands in the new core" paragraph. No mutation names, no fixtures, no request params. `entitlements.md` beside this plan is the worked example and the template.
+**Goal.** One document per area under `docs/qa/server-rebuild/knowledge/`, in three sections plus an appendix (the layout product proposed in test-suites#717 and piloted on `communications.md`):
+
+1. **Rules.** *ID · rule in one or two plain sentences · why: business · why: product (the user story) · why: technical · decided by*. A rule with something open ends with a bold marker that points at section 3: *(open: id)*, *(defect: id)* or *(defect in part: id)*.
+2. **Rights.** Role × action for the feature's actions, drawn from the access matrix and the area's own gates, one table per sub-area, conditions as footnotes.
+3. **Open questions.** Every finding, open question and routed gap as one row, grouped per owning role (Product Lead, Technical Lead, Quality Lead, Security Lead, Incident Lead, Service Operations Lead, Architecture Lead), each with the questions it answers and the ones it is also involved in.
+
+The **appendix** keeps the evidence: the exact behaviour per rule with actors, sources (code › file:line · test › spec › case · spec › path) and proof; the rights evidence; the findings and questions in full; the test gaps; the constants the rules depend on (limits, plan names, error texts — the rebaseline candidates); the "where this lands in the new core" paragraph; and how the file was made. No mutation names, no fixtures, no request params in sections 1–3. `communications.md` is the template; `knowledge/REVIEW-GUIDE.md` says what each reader does with a file.
+
+**Proof and markers.** Proof sits in the appendix: *proven* — a green legacy case asserts the rule; *untested* — the code and/or a spec states it, no case does. Untested rows are the gaps list, and the gaps list is the backlog for the new net. What used to be the statuses *disputed* and *unknown-why* is now an open question with a marker on the rule. Every rule is logged as the server behaves today; a decision that changes that behaviour stays in section 3 as *change decided* until it ships. Hard rules (rules no new feature may change) are not marked yet; a later version adds "(hard rule)" after the why that makes it so.
 
 **Why this shape.** A rule written as "a fourth innovation pack is refused and the entitlement leaves the available list" is checkable against any server, by a person or by a new test. The raw inventory of 5,121 resolved case titles (`_inventory.md`, collected by vitest so `test.each` tables and template names are expanded) is the seed and the completeness checklist, not the knowledge: a title says what a case is named for, not what it asserts, so each rule is extracted from the case body (the assertions, the error texts, the read-back) and the inventory is ticked off against it. Over half the rows are decision-table expansions: 1,749 platform-roles capability rows and 895 storage document-auth rows collapse into a handful of rules each, so the 752 describe groups are the better measure of distinct behaviours.
 
-**Method.** Per area: read the specs, the area's test plan if it exists, and the request-params helpers; write the rules; the QA lead reviews each table (an agent drafts, a person signs the `why` column). Areas with an existing house test plan go first because the purpose is already written down. Then order by the rebuild's slices, so each area's rules are ready when the slice that reimplements them is reviewed:
+**Method — three sources per area, each with its own job.**
+
+1. **The server code gives the universe.** Enums, seeded definitions (plans, templates, role definitions), the credential and privilege rules, the builders that compute effective state, and the GraphQL schema (the public contract the client and the new core both honour). This is where the full list of behaviours comes from, so a table cannot inherit a hole the legacy suite had. The access matrix (`platform-roles` + `storage`) was built this way; every area now follows it.
+2. **The legacy tests give the proof.** A rule with a green case is a guarantee we can show today (proof *proven*). A rule the code states and no case asserts is *untested* and goes straight to the gaps. Each rule is read from the case body — set-up, assertions, error texts, read-backs — never from the title; the inventory of 5,121 resolved case titles (`_inventory.md`, collected by vitest so `test.each` tables and template names are expanded) is the completeness checklist only.
+3. **Specs and issues give the why.** The workspace specs (`agents-hq/specs/*`), each sibling repo's `specs/`, ADRs, and the originating GitHub issue or PR. The why columns and "decided by" cite them. Where none exists the why is "—", the rule gets a question for its owner, and product fills the business why and the user story in its review; an agent never invents a business reason.
+
+Where the three disagree the disagreement is recorded as a numbered finding (the way F1 was found), never silently resolved towards the code — code can encode a defect. Findings are the only rows that need a product ruling.
+
+**Who may.** Each table carries a role × action block for the feature's actions (Y / N / –, with the evidence line), taken from the access matrix cells for the area's resources plus the area's own gates. It is what makes a feature legible at a glance: the rules say what the platform does, the block says who can and cannot exercise them.
+
+Per area: an agent drafts from the three sources; the QA lead reviews each table per the review guide (signs the *why* column, decides the findings, ticks the constants product must rule on). Areas with an existing house test plan go first because the purpose is already written down. Then order by the rebuild's slices, so each area's rules are ready when the slice that reimplements them is reviewed:
 
 | Slice window | Areas (cases) | Why in this order |
 |---|---|---|
@@ -40,7 +58,7 @@ The GraphQL surface is designed from scratch (31 queries, 84 intent mutations; `
 
 **Output besides the documents.** (a) A single `rebaseline-register.md` collecting every constant from every area, with a ruling column for product. (b) A `gaps.md` of rules the legacy suite never covered but the area obviously has (each example document ends with three). (c) A cross-reference from each rule to the deck's concept, so the new core's capability ledger (165 rows) can be checked against the rules rather than the other way round.
 
-**Effort.** 25 areas; the big four (journey, callout, roleset, notifications) are a day each with an agent drafting and the lead reviewing; the rest half a day each. Two to three weeks of calendar time alongside W2.
+**Effort.** 25 areas; the big four (journey, callout, roleset, notifications) are a day each with an agent drafting from the three sources and the lead reviewing; the rest half a day each. Two to three weeks of calendar time alongside W2. The pilot on the three-source method is `entitlements.md` (redone 2026-11-06): the test-only version had 6 of 16 entitlement types, 2 of 11 seeded plans and 2 of 4 feature roles.
 
 ## W2 — The client-web net, built now (start now; green on the legacy nightly before the schema lands)
 
@@ -72,7 +90,7 @@ The GraphQL surface is designed from scratch (31 queries, 84 intent mutations; `
 | 6 | Flow-state change of a post; reorder callouts; move a contribution | absent | position/state read-back, member view |
 | 7 | Edit Space about/tagline/tags; edit own profile; create and edit an organisation | absent / weak | reload + read-back, disposable identity |
 | 8 | Global search and sidebar search | absent (manual only) | own run-unique names found, others' not |
-| 9 | Virtual contributor: create on account, add to a Space, ask in a thread, get an answer | absent | VC reply row |
+| 9 | Virtual contributor: create on account, add to a Space, ask in a thread, get an answer | absent | VC reply row — **parked 2026-10-30** while VCs are hidden in the client; the API half stays in W1 |
 | 10 | Message community leads / an organisation; notification settings persist | toast only / partial | mail per recipient; settings after reload |
 | 11 | Upload a file / reference; media gallery; message attachment | absent | storage read-back, download gated by access |
 | 12 | Forum: create + reply nightly; innovation packs; admin organisations; mentions | manual / absent | row + mail |
