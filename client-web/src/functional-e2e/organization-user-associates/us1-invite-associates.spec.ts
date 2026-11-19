@@ -574,7 +574,7 @@ orgAdminNotOwnerTest.describe(
         await expect(row1).toContainText('Associate');
         await expect(row1).not.toContainText('Associate +');
         await expect(
-          row1.getByRole('button', { name: 'Delete' })
+          row1.getByRole('button', { name: 'Revoke invitation' })
         ).toBeVisible();
 
         const row2 = page.getByRole('row', {
@@ -582,7 +582,7 @@ orgAdminNotOwnerTest.describe(
         });
         await expect(row2).toContainText('Associate + Owner');
         await expect(
-          row2.getByRole('button', { name: 'Delete' })
+          row2.getByRole('button', { name: 'Revoke invitation' })
         ).toBeVisible();
       }
     );
@@ -597,11 +597,15 @@ orgAdminNotOwnerTest.describe(
           name: new RegExp(as2Invitee1.displayName),
         });
         await expect(row).toBeVisible();
-        await row.getByRole('button', { name: 'Delete' }).click();
+        await row.getByRole('button', { name: 'Revoke invitation' }).click();
         // Revoking destroys a pending invitation, so it is confirmed. Answer the
         // dialog explicitly: while it is open the table behind it is inert, so a
         // bare row-count assertion would pass without the revoke ever happening.
-        await page.getByRole('button', { name: 'Revoke invitation' }).click();
+        // The row's button and the dialog's share a name, hence the scope.
+        await page
+          .getByRole('alertdialog')
+          .getByRole('button', { name: 'Revoke invitation' })
+          .click();
         await expect(
           page.getByRole('row', { name: new RegExp(as2Invitee1.displayName) })
         ).toHaveCount(0, {

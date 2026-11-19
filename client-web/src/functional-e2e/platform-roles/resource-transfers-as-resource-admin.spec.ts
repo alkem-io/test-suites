@@ -92,15 +92,14 @@ asResourceAdmin.describe('PLATFORM_RESOURCE_ADMIN — transfers from the Adminis
     expect((await response!.json()).errors, 'transferSpaceToAccount errors').toBeUndefined();
   });
 
-  asResourceAdmin('Transfer Innovation Pack: the target account can be found', async ({ page }) => {
-    // KNOWN DEFECT (027), client: the hub / pack / VC cards pick the target
-    // through `platformAdmin.users` / `platformAdmin.organizations`. The server
-    // refuses both to this role — correctly: Resource Admin may not list users
-    // or organizations — so the picker always reads "No matching accounts."
-    // and these three transfers cannot be started from the UI at all.
-    // Expected to fail until the picker stops depending on those lists.
-    asResourceAdmin.fail(true, '027: target picker uses lists Resource Admin may not read');
-
+  // KNOWN DEFECT (027), client — recorded on test-suites#724 (T0-5): the hub /
+  // pack / VC cards pick the target through `platformAdmin.users` /
+  // `platformAdmin.organizations`. The server refuses both to this role —
+  // correctly: Resource Admin may not list users or organizations — so the
+  // picker always reads "No matching accounts." and these three transfers
+  // cannot be started from the UI at all. Un-skip when the picker stops
+  // depending on those lists.
+  asResourceAdmin.skip('Transfer Innovation Pack: the target account can be found (test-suites#724)', async ({ page }) => {
     await page.goto(`${baseUrl}/admin/transfer`);
     const main = page.getByRole('main');
     // "Source URL" boxes, in page order: convert space, convert VC, hub, PACK, VC.

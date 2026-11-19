@@ -114,3 +114,12 @@ export const removeRoleFromOrganization = (
   runAs(actor, (sdk, headers) =>
     sdk.RemoveRoleFromOrganization({ roleData }, headers),
   );
+
+/** The organization's profile, settings, account and associates (`OrganizationData` fragment). */
+export const readOrganization = (
+  organizationId: string,
+  actor: GraphqlActor = TestUser.GLOBAL_ADMIN,
+) =>
+  runAs(actor, (sdk, headers) =>
+    sdk.getOrganizationData({ organizationId }, headers),
+  );

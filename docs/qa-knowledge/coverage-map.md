@@ -248,6 +248,49 @@ Owning-repo unit coverage (client-web #10444, runs in `ci-test.yml`), opened and
 
 **Not coverage:** client-web `e2e/specs/subspaceSidebar{Customize,Defaults,Widgets}.e2e.spec.ts`, 25 `@forge-acceptance` walks on hand-seeded `E2E_SIDEBAR_*` fixtures that no CI runs. They are good locator and copy evidence.
 
+## Contributors CRUD — user, organisation, VC (alkemio#1699)
+
+_Established 2026-11-04 on test-suites#492 (`tests-1699` merged with `origin/develop` @ `2663c58a`), against client-web `develop` @ `a47c8b36d` and the release-80 server. Plan: `client-web/src/functional-e2e/contributors-crud/contributors-crud-test-plan.md`._
+
+| Behaviour | Coverage | Where |
+| --- | --- | --- |
+| User profile update persists and is what others see; Account counts; Organisations tab; a notification channel and the DM setting persist; org deletion removes it from an associate's list | Full (UI + API) | `contributors-crud/user-crud.spec.ts` 1.2–1.7 |
+| Organisation created and deleted in Administration; profile update seen by anonymous and signed-in visitors; Account counts; remove an associate; grant / revoke Admin; a Settings switch persists | Full (UI + API) | `contributors-crud/organization-crud.spec.ts` |
+| VC create / add to Space / mention | **Paused** (client-web#10398). The pause itself is pinned | `virtual-contributor-crud.spec.ts` 3.1, 3.4, 3.5 |
+| VC knowledge base: add post / document, non-member visit | **Skipped** on client-web#10125 (stored, never rendered; `test.skip` until fixed) | 3.2, 3.3, 3.8 |
+| VC profile from the host profile; Hidden visibility; delete | Full (UI + API) | 3.6, 3.7, 3.9 |
+| VC "Hide knowledge-base content" switch semantics | **Red**, the switch is inverted | 3.7b |
+
+## Callout placement — a post's phase, post order, moving a response (W2 journey 6)
+
+_Searched 2026-11-09, branch `qa/w2-journey-6` off test-suites `origin/develop` @ `afbefaf2`; product read at client-web `origin/develop` @ `907103f5f`, server `origin/develop` @ `51eb90878`. Plan: `client-web/src/functional-e2e/callout-placement/callout-placement-test-plan.md` (Draft)._
+
+| Behaviour | Coverage | Where |
+| --- | --- | --- |
+| An existing post's phase changed (`updateCallout` with `classification`), any level | **None, proven absent** (now covered: `callout-placement/us1-post-flow-state` FS-1; API: a member is refused, PH-1, admin control PH-1c, in `server-api/…/callout/placement/callout-placement-authorization.it-spec.ts`, 2026-11-12) | only cross-space transfers touch a post's phase: `callout/transfer/transfer-callout-flow-state`, `-changed-flow` |
+| Posts keep their phase when the phase is renamed | **None, proven absent** (now covered: FS-2). `-changed-flow` renames before the callout exists | server: `innovation.flow.service › updateInnovationFlowState` cascades tags; no system test |
+| Post order (`updateCalloutsSortOrder`), any level of test-suites | **None, proven absent** (now covered: `callout-placement/us2-reorder-posts` RO-1/RO-2/RO-3; API: a member is refused, PO-1, admin control PO-1c, in `server-api/…/callout/placement/callout-placement-authorization.it-spec.ts`, 2026-11-12) | server unit: `callouts.set.service.spec › updateCalloutsSortOrder`; client unit: `deriveCalloutMenuVisibility.test` |
+| Moving a response (`moveContributionToCallout`) | **Partial**: API only, platform resource admin, manual runner (`platform-roles` › `A9.moveContributionToCallout`); no UI walk, no space-admin or author case (UI walks now covered: `callout-placement/us3-move-response` MC-1/MC-2; API: the member-author is refused, MV-1, Space-admin control MV-1c, in `server-api/…/callout/placement/callout-placement-authorization.it-spec.ts`; a response moved into a draft post stays readable to members by id, EXP-1 defect: the expected refusal is written as EXP1-3/EXP1-4 and skipped on test-suites#724, so no running test pins it yet, in `server-api/…/callout/move/moved-response-draft-access.it-spec.ts`, 2026-11-12) | server unit: `callout.contribution.move.service.spec` (type rules, same-set rule, task boards) |
+| Response order inside a post (`updateContributionsSortOrder`, Sort contributions dialog) | **API covered 2026-11-12**: CS-1 admin reorder read back, CS-2 member refused, CS-3 foreign response id refused, in `server-api/…/callout/placement/callout-placement-authorization.it-spec.ts`. The drag-only dialog: none | — |
+| Phase-column order on Settings › Layout | Full | `sidebar-widgets/subspace-us1-customize.spec.ts` S-07…S-13 |
+
+**Search again with:** `rg -n -i "moveContributionToCallout|updateCalloutsSortOrder|updateContributionsSortOrder|readContribution|Move to Top|Move Up|Post location|Post actions|'Move to'|classification" client-web/src server-api/src lib/src --glob '!**/generated/**'` and `rg -n 'updateInnovationFlowState\(' server-api/src --glob '*.it-spec.ts'` (renames: check whether callouts exist BEFORE the rename).
+
+## Task boards and community guidelines (W2 extras, test-suites#722)
+
+_Searched 2026-11-12, branch `qa/w2-extras-read-back` off test-suites `origin/develop` @ `ef405cc0`; product read at client-web `develop` @ `25ded1467`, server `develop` @ `e120d25a1`. Plans: `client-web/src/functional-e2e/task-boards/task-boards-test-plan.md`, `client-web/src/functional-e2e/community-guidelines/community-guidelines-test-plan.md`._
+
+| Behaviour | Coverage | Where |
+| --- | --- | --- |
+| Create a Tasks board (UI) | **None, proven absent** (now covered: `task-boards/us1-create-board-add-task` TB-1) | server-api `orphan-free-deletion/callout-delete-owned-records` CD-2 creates one over the API only to delete it |
+| Add a task to a column; move it across columns; reorder in a column (`moveTaskToColumn`, `updateContributionsSortOrder` on a board) | **None, proven absent** (now covered: TB-2, `us2-move-task` TB-3, TB-4) | — |
+| Who may move a task (MOVE_TASK) | **None, proven absent** (now covered: TB-5, UI + server refusal) | — |
+| Column administration (create/rename/delete/reorder columns) | **None** — still a gap | — |
+| Edit a Space's community guidelines by hand (title, body, links) | **None, proven absent** (now covered: `community-guidelines/us1-edit-guidelines` CG-1, CG-2) | applying a template: `templates-CRD/.../community-guidelines-template.spec.ts` 1.4/1.5 |
+| `removeCommunityGuidelinesContent` | **None**; no UI calls it | — |
+
+**Search again with:** `rg -n -i "task ?board|TaskColumn|moveTask|taskColumn|MOVE_TASK|communityGuidelines|community guidelines" client-web/src server-api/src lib/src --glob '!**/generated/**'`.
+
 ## How to search this area again
 
 `rg -n 'innovationFlow|minimumNumberOfStates|maximumNumberOfStates|L0_FIXED_INNOVATION|L0_MIN_INNOVATION' server-api/src/functional-api` — the conversion/callout-transfer/templates directories are the load-bearing ones; also check the server repo's own `*.spec.ts` unit suites before proposing a new system-level case, several risk-relevant assertions live there only.
@@ -273,7 +316,7 @@ verdict depends on it.
 | Space sidebar contents, E2E                                                                                                                 | **Covered for L0 tabs.** Every default tab plus an added tab renders its FR-009 list in DOM order for a plain member. Action widgets are gated (admin sees, member does not). The Layout editor shows the vocabulary and selection and persists remove/add/reorder/empty; the member view reflects it on the next page load. Fetch parity holds for Events. Subspace settings and the hidden-section round-trip are **not** covered. _Was "Blind" on 2026-09-03; corrected 2026-10-01._ **Correction 2026-10-26:** US2-AS3 has been red nightly since client-web#10444 deployed (2026-10-20). Because the file is serial, AS4, AS5 and AS7 have not run since, so remove/add/reorder/empty is not currently re-proven (086 plan U-1)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       | `sidebar-widgets/us1-default-rendering.spec.ts`, `sidebar-widgets/us2-admin-config.spec.ts`                                                                                                                                                                            | 2026-10-01 · test-suites#615                                           |
 | Search UI, E2E                                                                                                                              | **None.** Every `search` hit under `functional-e2e` is incidental (`research`, `searchVisibility`, member/user pickers)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      | —                                                                                                                                                                                                                                                                      | 2026-09-03 · same                                                      |
 | Banners / visuals / aspect ratios, any level                                                                                                | **None** before 10178; a first floor added by that plan                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      | `client-web/src/functional-e2e/space-banner/`, `server-api/…/visual/`                                                                                                                                                                                                  | 2026-09-02 · 10178                                                     |
-| Innovation-flow state transitions, callout transfer between states                                                                          | Covered                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      | `server-api/…/callout/transfer/*.it-spec.ts`, `…/journey/conversion/`                                                                                                                                                                                                  | 2026-09-03 · same                                                      |
+| Innovation-flow state transitions, callout transfer between states | Covered **for cross-space transfer and the flow's current state only**. _Corrected 2026-11-09 (W2 J6 design):_ no test changes an existing post's phase in place, or renames a phase that holds posts; see § Callout placement | `server-api/…/callout/transfer/*.it-spec.ts`, `…/journey/conversion/` | 2026-09-03 · same |
 | Migrations — any behavioural claim about pre-existing rows                                                                                  | **None anywhere, structurally.** Owning-repo migration specs are static analysis of the SQL _string_                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         | see `deferred.md`                                                                                                                                                                                                                                                      | 2026-09-03 · same                                                      |
 
 ### Owning-repo unit coverage worth knowing about
@@ -298,6 +341,71 @@ are load-bearing:
 | A migration spec under `src/migrations/__tests__/`                                                                                                                                   | Asserts the text of its own SQL                                                                                                                                                                                               | 2026-09-02 · 10178, reconfirmed 055                               |
 | client-web `messaging-notifications/us2-group-message-notifications.spec.ts` › US2-AS4, and server-api `notifications/messaging/conversation-messages-negative.it-spec.ts` › US2-AS4 | They prove that a removed member stops being **notified**, not that their **access** is revoked. The client spec says so in its own scope warning                                                                             | 2026-10-15 · server#6329                                          |
 
+## Search — global overlay and Space sidebar search (W2 journey 8)
+
+_Searched 2026-11-12, test-suites `origin/develop` @ `ef405cc0` with #700 rebased on it, against client-web `origin/develop` @ `25ded1467` and server `origin/develop` @ `e120d25a1`. Plan: `client-web/src/functional-e2e/search/search-test-plan.md`._
+
+| Behaviour | Before | After (uncommitted, `qa/w2-journey-8`) |
+|---|---|---|
+| Global search overlay (header Search): own Spaces found, another run's not | none | GS-1 (`@local-stack`) |
+| Global search, Posts category | none | GS-2 (`@local-stack`) |
+| Global search scoped to the current Space, widened to the platform | API only (`search.it-spec.ts`, `searchInSpaceFilter`) | GS-3 (`@local-stack`) |
+| Sidebar search: this tab's post only, count, clear | presence of the box only (`sidebar-widgets/us1`, `space-settings-write/us3`) | SB-1, SB-2 (`@local-stack`) |
+| `searchInFlowStateFilter` (API) | none | SB-1, SB-2 read-back via lib `searchCallouts` |
+
+**Search again with:** `git grep -n -E "search\(|searchInFlowStateFilter|FlowStateSearch|Platform Search|Search posts" <ref> -- server-api/src client-web/src lib/src ':!lib/src/core/generated'`.
+
+## Profile editing — Space About, own profile, organisation create/edit (W2 journey 7)
+
+_Searched 2026-11-09, branch `qa/w2-journey-7` off `origin/develop` @ `afbefaf2`, against client-web `develop` @ `907103f5f` and server `develop` @ `51eb90878`. Plan: `client-web/src/functional-e2e/profile-editing/profile-editing-test-plan.md` (Approved with provisional rulings; 10 cases, 8 live: H1-3 skipped on a reproduced server defect, H1-2b on a reproduced client defect, R-7)._
+
+| Behaviour | Coverage | Where |
+| --- | --- | --- |
+| Space About write through the UI (name, tagline, What, Why, Tags) | **None** before J7. `space-settings-about-limit` types into the editors but never saves a valid value; `classifications/*` seeds Space Tags through the lib and only reads them | `profile-editing/us1-space-about.spec.ts` › C2-1, C2-2 |
+| Space About Location / References writes | **None** (UI or API) | gap |
+| A member cannot edit a Space About | UI only, in **unregistered** `memberships/access-space-settings-as-space-member`; **no API it-spec found** for `updateSpace` About by a member | gap |
+| User Display Name + Tagline, seen by another user | Full (UI + API) | `contributors-crud/user-crud.spec.ts` › 1.2 |
+| User First/Last Name | Partial: `user-profile/update-basic-information` renames the **shared admin**, with no read-back | `profile-editing/us2-own-profile.spec.ts` › G2-1 (moved from `user-profile/update-basic-information`) |
+| User bio, location, skills, keywords through the UI | **None**. At API level: phone/location (`contributor-management/user/update-user`); tagsets only as seed data (`callout/contributors-collection/contributor-cards*`) | `profile-editing/us2-own-profile.spec.ts` › G2-2, G2-3 |
+| User social links / references through the UI | **None** | gap |
+| Organisation created by the platform admin in Administration; deleted there | Full (UI + API) | `contributors-crud/organization-crud.spec.ts` › 2.1 |
+| Who may create an organisation (`CREATE_ORGANIZATION` = Platform Support + Feature Organization Creator) | Full at API level, **not nightly** (platform-roles projects) | server-api `platform-roles/roles/feature-organization-creator.it-spec.ts` (A6); UI `profile-editing/us3-organisation-create-edit.spec.ts` › H1-1 |
+| Organisation created from User Settings › Organisations (non-admin dialog) | **None** | `us3-organisation-create-edit.spec.ts` › H1-2 (name ID, name, tagline, website, Admin + Associate). The description typed at create: H1-2b, built and skipped (client defect R-7); references: H1-3, built and skipped (server defect) |
+| Organisation name, tagline, website edit, seen anonymously | Full (UI + API) | `organization-crud.spec.ts` › 2.2 |
+| Organisation description, location, keywords, capabilities edit | Partial: API `contributor-management/organization/organization.it-spec` › "should update" (description, location; no tagsets) | `us3-organisation-create-edit.spec.ts` › H2-1 |
+
+**Search again with:** `git grep -n -E "settings/about|settings/profile|updateSpace\(|updateUser\(|updateOrganization\(|createOrganization|readSpaceAbout|getUserData|readOrganization|tagsets|Create Organisation" <ref> -- client-web/src server-api/src/functional-api lib/src/scenario ':!lib/src/core/generated'`.
+
+## Contact leads — message an organisation or a Space's leads; organisation notification setting (W2 journey 10)
+
+_Searched 2026-11-12, branch `qa/w2-journey-10` off `origin/develop` @ `ef405cc0`, against client-web `develop` and server `develop` @ `e120d25a1`. Plan: `client-web/src/functional-e2e/contact-leads/contact-leads-test-plan.md` (6 cases, 5 live; M1-2 skipped on reproduced server defect J10-D1; C3-1/C3-2 `@local-stack`)._
+
+| Behaviour | Coverage | Where |
+| --- | --- | --- |
+| Message an organisation from its page; one mail per admin, none to an associate, one sender copy | Toast only (`contributors-callout/us3-card-menu` US3-AS3); API with all-inbox counts (`notifications/organization/user-to-organization.it-spec.ts`) | `contact-leads/us1-message-organisation.spec.ts` › M1-1 |
+| An admin who is not an associate gets the organisation message | **None**; reproduced defect J10-D1 | `us1-message-organisation.spec.ts` › M1-2 (skipped) |
+| "Receive direct messages to my organisation" email toggled in the UI persists across reload, reads back, is honoured, toggles back | **None** (US2-AS6 in `organization-space-invitations` covers a different row on a shared persona) | `contact-leads/us2-organisation-message-setting.spec.ts` › N1-1..N1-3 |
+| Space "Contact Leads" → one 1:1 chat per lead, none to a non-lead | **None** end to end (client and server unit tests only) | `contact-leads/us3-contact-space-leads.spec.ts` › C3-1 (`@local-stack`) |
+| Direct-message digest mail per lead after Contact Leads | **None** | `us3-contact-space-leads.spec.ts` › C3-2 (`@local-stack`) |
+| Legacy lead email (`sendMessageToCommunityLeads`) | API only; **no UI caller left** | server-api `notifications/space/communication/user-to-community-leads-*.it-spec.ts` |
+
+**Search again with:** `git grep -n -E "sendMessageToOrganization|sendMessageToCommunityLeads|sendDirectMessageToUsers|Contact Leads|adminMessageReceived|sent a message to your" <ref> -- client-web/src server-api/src/functional-api lib/src/scenario ':!lib/src/core/generated'`.
+
+## File uploads — reference file, media gallery, message attachment (W2 journey 11)
+
+_Searched 2026-11-12, branch `qa/w2-journey-11` off `origin/develop` @ `ef405cc0`, against client-web `develop` @ `25ded1467` and server `develop` @ `e120d25a1`. Plan: `client-web/src/functional-e2e/file-uploads/file-uploads-test-plan.md` (Draft; 6 cases, MA-1/2 `@local-stack`)._
+
+| Behaviour | Coverage | Where |
+| --- | --- | --- |
+| Upload a file as a post reference through the UI, read back from storage | **None** before J11; API-only uploads in `server-api/…/storage/uploads.it-spec.ts` | `file-uploads/us1-reference-file.spec.ts` › RF-1 |
+| A refused file type on a reference | **None** in the UI | `us1-reference-file.spec.ts` › RF-2 |
+| Add an image to a media gallery, read back from storage | **None** at any level (`addVisualToMediaGallery` unreached, catalogue CT-9) | `file-uploads/us2-media-gallery.spec.ts` › MG-1, MG-2 |
+| Chat (conversation) attachment stored in the conversation bucket and served to members only | **None**. Comment images (`client-web/tests/comment-images-*`) send through the same media route, with no storage read-back | `file-uploads/us3-message-attachment.spec.ts` › MA-1, MA-2 (`@local-stack`) |
+| Download refused to a signed-in outsider | API matrix in `server-api/…/storage/auth/*`; UI-driven uploads: J11 | RF-1, MG-1, MA-1 |
+| Size limits, relocation on create, deletion of stored files | **None** in the UI | gap (plan § Not covered) |
+
+**Search again with:** `git grep -n -E "uploadFileOnStorageBucket|uploadImageOnVisual|addVisualToMediaGallery|messaging/media/upload|rest/storage/document|readCalloutStoredFiles|downloadStoredFile" <ref> -- client-web/src client-web/tests server-api/src lib/src/scenario ':!lib/src/core/generated'`.
+
 ## Orphan-free deletion: owned records and policies after a delete (server#6614 / #6637)
 
 _Searched 2026-10-16, test-suites `develop` @ `b451c329`, server `origin/develop` @ `1691e98e9` (contains the #6637 merge `08f088eaa`). Plan: `server-api/src/functional-api/orphan-free-deletion/orphan-free-deletion-test-plan.md` (Approved), plus the server#6614 addendum (Approved 2026-10-16; CV-1 built) in `journey/conversion/conversion-test-plan.md`._
@@ -318,3 +426,41 @@ _Searched 2026-10-16, test-suites `develop` @ `b451c329`, server `origin/develop
 | Group-A own-policy leaks (13 delete paths), user-application cascade, failed creates         | **Product defect, unfixed on develop**: deferred, no tests                              | server#6614 fix areas 1 and 3                                                                                                                                                            |
 
 **Search again with:** `git grep -n -E "authorizationPolicy\(|lookup \{ (license|storageBucket|profile|document)\(|taskBoard|space\.profile|orphan-free-deletion" <ref> -- server-api/src client-web/src lib/src ':!lib/src/core/generated'`.
+
+## Whiteboard collaboration — undo, convergence, damaged documents (excalidraw-yjs#13)
+
+_Searched 2026-11-03, branch `qa/excalidraw-yjs-13-undo-plan` off `origin/develop` @ `be50109a` (test-suites); excalidraw-yjs `pr-13` @ `2f856b9b`; client-web `origin/develop` @ `a47c8b36d`. Plan: `client-web/src/functional-e2e/whiteboard-collaboration/whiteboard-collaboration-test-plan.md`._
+
+| Area | Status | Evidence |
+| --- | --- | --- |
+| Two-user (collaborative) whiteboard editing, convergence, presence, in test-suites | **Partial (2026-11-04); skip gate lifted 2026-11-12** | `whiteboard-collaboration/undo-races-peer-edit.spec.ts` › WC-01 (two browsers + Node peer, convergence E7, presence as the ordering gate) and `damaged-board-loads.spec.ts` › WC-02. Both are `test.skip` until the environment client-web resolves `@excalidraw-yjs/excalidraw` >= 0.5.6; `WHITEBOARD_COLLAB_FIXED=1` lifts it. General two-user editing beyond these two incidents: none; manual: release checklist §3.2 |
+| Undo/redo in the whiteboard editor, any layer of test-suites | **Partial (2026-11-04), skip-gated** | WC-01: one undo of a drag racing a lower-id peer, the repaired values, no extra undo step, redo enabled (E6). Plain single-user undo/redo: none in test-suites (package level only) |
+| Whiteboard content read-back or raw write from the harness | **Full (2026-11-04)** through the Node Yjs peer, not GraphQL (`Whiteboard` still has no `content` field and no input takes content) | `lib/src/collab/whiteboard-peer.ts` › `connectWhiteboardPeer` (`rawElement`, `liveElements`, `write`, hold/release inbound); self-test `server-api/src/contract/whiteboard-peer.it-spec.ts` › T-1a–T-1h (contract project, on demand) |
+| Undo racing a concurrent same-key peer edit (lower peer id) | Full at **package** level only | excalidraw-yjs `packages/element/src/__tests__/Scene.undoConcurrentKeyLoss.test.ts` › test 1 (presence only; values unpinned) |
+| Damaged doc (arrow missing `points`/`height`) materialises | Full at **package** level only | same file › test 2. A text element missing keys: **none** |
+| Single-user undo/redo semantics, origin-scoped undo, causally later remote value | Full at package level | `Scene.native-yjs-history.test.ts`, `Scene.native-yjs-collab.test.ts`, `packages/excalidraw/tests/{history,multiplayerOutcomes,historyLockstep}.test.tsx` |
+| Required-key presence under fuzzed multiplayer undo/redo | **Partial — blind**: compares derived elements | `Scene.multiplayerHistory.property.test.ts` |
+| client-web's own two-user merge walk | Prior art only (`window.h`, which client-web never installs; fixed waits, not run by test-suites) | client-web `e2e/specs/multiUserCollab.e2e.spec.ts` row 4 |
+
+**Search again with:** `git grep -n -i -E "undo|redo|Control\+z|excalidraw|Drawing canvas|isMultiUser|collab/" <ref> -- client-web/src server-api/src lib/src ':!lib/src/core/generated'`, and in excalidraw-yjs `git grep -n -E "undoElements|redoElements|isRequiredElementKey" -- packages`.
+
+## Content editing — whiteboard, memo, Collabora document persistence (W2 journey 5)
+
+_Searched 2026-11-09, branch `qa/w2-journey-5` off `origin/develop` @ `afbefaf2` (test-suites). Product source read: client-web `f33325b2b`, server `0d276e485`, collaboration-service `v0.0.4`/`HEAD`, wopi-service `HEAD`. Plan: `client-web/src/functional-e2e/content-editing/content-editing-test-plan.md` (approved for build 2026-11-09; the table below is the state BEFORE the build, the plan's mapping is the state after)._
+
+| Area | Status | Evidence |
+| --- | --- | --- |
+| A browser-drawn whiteboard element is **durable**, or survives a reopen or a second session | **None** (proven absent). WC-01/02 draw and read the raw doc for the undo incident only, and are skip-gated | `whiteboard-collaboration/*.spec.ts`; planned J5 E8-1/E8-2 |
+| Whiteboard cold load from storage after the room is released | **None** merged. Wire level with raw Node writes in open PR #545 (cold rehydrate after a 35 s idle wait). Planned J5 E8-4 `@local-stack` | PR #545 `server-api/src/functional-api/collaboration/` |
+| Whiteboard card preview (`profile.visual(CARD).uri`) updated after editing | **None** | planned J5 E8-3 |
+| Whiteboard non-member is read-only | Partial (render plus no edit buttons, no content) | `public-space/non-member-whiteboard-access.spec.ts` › 3.3 |
+| `Memo.markdown` ("last saved content") read back after a UI edit | **None** (proven absent: `rg` over `server-api/src` and `lib/src/scenario/graphql` finds `markdown` only as a create input) | planned J5 E10-1 |
+| Memo live relay of typing to a second open editor | **Full** (concurrent only) | `memo-pdf-download/us1-download-memo-pdf.spec.ts` › US1-AS4 |
+| Memo reopened after the author left, and a member's write | **None** | planned J5 E10-2 |
+| Memo Sign action gate (entitlement, Cleverbase identity) | **Full** | `authz-admin-guard/memo-sign-action-gate.spec.ts` › 13.1, 14.1; server-api `entitlements/memo-signing-entitlement.it-spec.ts` |
+| Memo actually signed | **None**: deferred (no Cleverbase test identity) | deferred.md |
+| Collabora editor opened and typed into in a browser, and the saved file read back | **None** (proven absent). DT-2 only asserts that "Open Document" is visible; the isolation suite uses `replaceCollaboraDocument`, "not a live Collabora save" (its README) | `templates-CRD/template-types/document-template-content.spec.ts` › DT-2; planned J5 E9-1/E9-2 |
+| Collabora editor URL, authorization, import, replace, template byte isolation | **Full (API)** | server-api `collabora/collabora-editor-url.it-spec.ts`, `collabora-template-isolation.it-spec.ts` |
+| Create a Collabora document callout through the UI | **None** (audit E1, not journey 5) | `callouts/0.5callout-creation.spec.ts` does not create one |
+
+**Search again with:** `rg -n -i 'memo-sign|prepareMemoSigning|signatures|markdown' <dirs>`, `rg -n -i 'collabora([^t]|$)|wopi|Open Document|Document Editor|frameLocator' <dirs>`, `rg -n -i 'whiteboard|connectWhiteboardPeer|isMultiUser|updatedDate' <dirs>`, where `<dirs>` is `client-web/src server-api/src lib/src --glob '!**/generated/**'`. (`collabora` alone matches `collaboration`; keep the `[^t]`.)

@@ -1,6 +1,8 @@
 query search($searchData: SearchInput!) {
   search(searchData: $searchData) {
     spaceResults {
+      total
+      cursor
       results {
         type
         ...SearchResultSpace

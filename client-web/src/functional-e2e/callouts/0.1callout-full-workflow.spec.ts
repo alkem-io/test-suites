@@ -5,10 +5,12 @@ import { TestUser } from '@alkemio/tests-lib/common/enums/test.user';
 import { TestScenarioConfig } from '@alkemio/tests-lib/scenario/config/test-scenario-config';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import { TestScenarioFactory } from '@alkemio/tests-lib/scenario/TestScenarioFactory';
-import { TestUserManager } from '@alkemio/tests-lib';
+import { CalloutVisibility, TestUserManager } from '@alkemio/tests-lib';
 import { expect, test } from '@playwright/test';
 import { createAuthenticatedSessionFixture } from '../fixtures/authenticated-session.fixture';
 import { CollaborationPage } from './pages';
+import { sessionActor } from '../helpers/lib-actor.helper';
+import { expectStoredCalloutVisibility } from '../helpers/callout-visibility.helper';
 
 const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 
@@ -90,6 +92,24 @@ test.describe.serial('Callout Full Workflow', () => {
           const isVisible =
             await collaborationPage.isCalloutVisible(sharedCalloutName);
           expect(isVisible).toBe(true);
+
+          // Stored as a DRAFT, and not listed for the member yet — the
+          // "before" of Step 2's publish.
+          const calloutsSetId = baseScenario.space.collaboration.calloutsSetId;
+          await expectStoredCalloutVisibility(
+            calloutsSetId,
+            sharedCalloutName,
+            await sessionActor(page),
+            CalloutVisibility.Draft,
+            'the new callout is stored as a draft'
+          );
+          await expectStoredCalloutVisibility(
+            calloutsSetId,
+            sharedCalloutName,
+            TestUser.SPACE_MEMBER,
+            undefined,
+            'the server does not list the draft for the member'
+          );
         }
       );
 
@@ -105,10 +125,22 @@ test.describe.serial('Callout Full Workflow', () => {
           await collaborationPage.openContextualMenu();
           await collaborationPage.publishCallout();
 
+          // The menu is open again (Edit is shown) before Publish is read as
+          // gone, so the absence is not just a menu that never opened.
           await collaborationPage.openContextualMenu();
+          await expect(collaborationPage.editButton).toBeVisible();
           await expect(collaborationPage.publishMenuItem).not.toBeVisible({
             timeout: 5000,
           });
+
+          // The publish reached the server.
+          await expectStoredCalloutVisibility(
+            baseScenario.space.collaboration.calloutsSetId,
+            sharedCalloutName,
+            await sessionActor(page),
+            CalloutVisibility.Published,
+            'the publish reached the server'
+          );
         }
       );
     }
@@ -137,6 +169,19 @@ test.describe.serial('Callout Full Workflow', () => {
         const postContent = 'This is a contribution from a space member';
 
         await collaborationPage.navigateToSpace(baseScenario.space.nameId);
+
+        // The member sees the published callout — in the feed, and listed
+        // for their session by the server as PUBLISHED.
+        await expect(
+          collaborationPage.feedCalloutHeading(sharedCalloutName)
+        ).toBeVisible();
+        await expectStoredCalloutVisibility(
+          baseScenario.space.collaboration.calloutsSetId,
+          sharedCalloutName,
+          await sessionActor(page),
+          CalloutVisibility.Published,
+          'the server lists the published callout for the member'
+        );
 
         await collaborationPage.clickCallout(sharedCalloutName);
 

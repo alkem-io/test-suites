@@ -15,8 +15,12 @@ import {
   SpacePrivacyMode,
 } from '@alkemio/client-lib';
 import { loginViaCrd } from '../helpers/login.helper';
-import { enableApplicationNotifications } from '../helpers/notification-settings.helper';
-import { applyFromSubspaceAboutDialog } from './applications.helpers';
+import { ensureApplicationNotifications } from '../helpers/notification-settings.helper';
+import {
+  expectApplicantNotified,
+  withUniqueSubspaceName,
+  applyFromSubspaceAboutDialog,
+} from './applications.helpers';
 
 const password = process.env.AUTH_TEST_HARNESS_PASSWORD || 'change_me';
 const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
@@ -62,18 +66,18 @@ test.describe('Level 1 Subspace - Applications (Public Parent Space)', () => {
   let baseScenario: OrganizationWithSpaceModel;
   let nonSpaceMemberPage: Page;
   let subspaceAdminPage: Page;
-  let restoreNotificationSettings: () => Promise<void>;
 
   test.beforeAll(async ({ browser }) => {
-    globalBaseScenario =
-      await TestScenarioFactory.createBaseScenario(scenarioConfig);
+    globalBaseScenario = await TestScenarioFactory.createBaseScenario(
+      withUniqueSubspaceName(scenarioConfig)
+    );
     baseScenario = globalBaseScenario;
 
     // The bell-dialog assertions below need the in-app channel ON for the
     // applicant (joined / declined) and the admin (application received).
-    // Other suites leave these personas with in-app off, so set it here and
-    // put the previous values back in afterAll.
-    restoreNotificationSettings = await enableApplicationNotifications([
+    // Other suites leave these personas with in-app off, so set it here. It is
+    // left on: see ensureApplicationNotifications.
+    await ensureApplicationNotifications([
       TestUser.NON_SPACE_MEMBER,
       TestUser.SUBSPACE_ADMIN,
     ]);
@@ -97,7 +101,6 @@ test.describe('Level 1 Subspace - Applications (Public Parent Space)', () => {
   });
 
   test.afterAll(async () => {
-    await restoreNotificationSettings?.();
     await TestScenarioFactory.cleanUpBaseScenario(globalBaseScenario);
     await nonSpaceMemberPage.close();
     await subspaceAdminPage.close();
@@ -235,8 +238,9 @@ test.describe('Level 1 Subspace - Applications (Public Parent Space)', () => {
 
   test.describe('Subspace Application Management (Public Parent)', () => {
     test.beforeEach(async () => {
-      baseScenario =
-        await TestScenarioFactory.createBaseScenario(scenarioConfig);
+      baseScenario = await TestScenarioFactory.createBaseScenario(
+        withUniqueSubspaceName(scenarioConfig)
+      );
       const spaceNameId = baseScenario.space.nameId;
       const subspaceNameId = baseScenario.subspace.nameId;
 
@@ -323,21 +327,8 @@ test.describe('Level 1 Subspace - Applications (Public Parent Space)', () => {
         applicationRow.filter({ hasText: 'Application approved' })
       ).toBeVisible();
 
-      // Verify notification is received by the applicant
-      const applicantPage = nonSpaceMemberPage;
-      await applicantPage.goto(`${baseUrl}/home`);
-
-      const notificationsBellIcon = applicantPage.getByRole('button', {
-        name: 'Notifications',
-      });
-      await expect(notificationsBellIcon).toBeVisible();
-      await notificationsBellIcon.click();
-
-      const notificationsPanel = applicantPage.getByRole('dialog');
-      await expect(notificationsPanel).toBeVisible();
-      await expect(notificationsPanel).toContainText(
-        /Welcome to the community/i
-      );
+      // The applicant's bell shows this Space's entry (opened again until it has arrived).
+      await expectApplicantNotified(nonSpaceMemberPage, 'approved', baseScenario.subspace.about.profile.displayName);
     });
 
     test('2.2 Reject non-parent-member application to L1 Subspace', async () => {
@@ -353,6 +344,8 @@ test.describe('Level 1 Subspace - Applications (Public Parent Space)', () => {
       // Reject the application
       const rejectButton = applicationRow.getByRole('button', {
         name: 'Reject',
+        // Exact: the row also carries "Reject and remove application" (client-web#10499).
+        exact: true,
       });
       await expect(rejectButton).toBeVisible();
       await rejectButton.click();
@@ -368,19 +361,8 @@ test.describe('Level 1 Subspace - Applications (Public Parent Space)', () => {
       // Verify the application is removed from the pending list
       await expect(applicationRow).not.toBeVisible();
 
-      // Verify notification is received by the applicant
-      const applicantPage = nonSpaceMemberPage;
-      await applicantPage.goto(`${baseUrl}/home`);
-
-      const notificationsBellIcon = applicantPage.getByRole('button', {
-        name: 'Notifications',
-      });
-      await expect(notificationsBellIcon).toBeVisible();
-      await notificationsBellIcon.click();
-
-      const notificationsPanel = applicantPage.getByRole('dialog');
-      await expect(notificationsPanel).toBeVisible();
-      await expect(notificationsPanel).toContainText(/declined/i);
+      // The applicant's bell shows this Space's entry (opened again until it has arrived).
+      await expectApplicantNotified(nonSpaceMemberPage, 'declined', baseScenario.subspace.about.profile.displayName);
     });
   });
 });

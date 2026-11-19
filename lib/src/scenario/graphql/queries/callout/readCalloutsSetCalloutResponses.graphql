@@ -1,0 +1,23 @@
+query ReadCalloutsSetCalloutResponses($calloutsSetId: UUID!) {
+  lookup {
+    calloutsSet(ID: $calloutsSetId) {
+      id
+      callouts {
+        id
+        framing {
+          id
+          profile { id displayName }
+        }
+        settings { framing { commentsEnabled } }
+        contributions {
+          id
+          post {
+            id
+            profile { id displayName }
+            createdBy { id }
+          }
+        }
+      }
+    }
+  }
+}

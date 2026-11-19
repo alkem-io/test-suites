@@ -1,0 +1,10 @@
+# One stored file as the storage read-back sees it: where it is served from,
+# what the server recorded about it, and whether it reached its end location.
+fragment StoredDocument on Document {
+  id
+  displayName
+  mimeType
+  size
+  url
+  temporaryLocation
+}

@@ -1,0 +1,3 @@
+# Prettier 2 cannot parse `import type … with { "resolution-mode": "import" }`
+# (the ESM-first yjs / y-protocols / lib0 types in this CommonJS lib).
+src/collab/whiteboard-peer.ts

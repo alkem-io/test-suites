@@ -106,8 +106,8 @@ test.describe(
 
     /**
      * Text + a pasted image at `url` post one row with the text above the
-     * picture, leave no chip or filename line, and the picture opens full size
-     * in a new tab.
+     * picture, leave no chip or filename line, and the picture opens in the
+     * media viewer, which shows the stored PNG.
      */
     async function sendCaptionedAndOpen(
       url: string,
@@ -126,14 +126,23 @@ test.describe(
       await expect(c.stagedList).toHaveCount(0);
       await expect(c.dlg.getByText(name, { exact: true })).toHaveCount(0);
 
-      const [tab] = await Promise.all([
-        m.context().waitForEvent('page'),
-        picture.click(),
-      ]);
-      await tab.waitForLoadState('load');
-      expect(tab.url()).toContain('/storage/file/by-reference');
-      expect(await tab.evaluate(() => document.contentType)).toBe('image/png');
-      await tab.close();
+      // Since client-web#10510 a picture opens in a viewer over the thread,
+      // not in a new tab.
+      await picture.click();
+      const viewer = m.getByRole('dialog', { name: 'Attachments' });
+      const opened = inlineImage(viewer, name);
+      await expect(opened).toBeVisible();
+      await expect
+        .poll(() =>
+          opened.evaluate(img => (img as HTMLImageElement).naturalWidth)
+        )
+        .toBeGreaterThan(0);
+      const src = (await opened.getAttribute('src')) ?? '';
+      expect(src).toContain('/storage/file/by-reference');
+      const stored = await m.request.get(new URL(src, m.url()).href);
+      expect(stored.headers()['content-type']).toContain('image/png');
+      await viewer.getByRole('button', { name: 'Close' }).click();
+      await expect(viewer).toHaveCount(0);
     }
 
     test('US1-AS1: pasting an image stages a removable chip; nothing is uploaded; Send is enabled', async () => {
@@ -161,7 +170,7 @@ test.describe(
       expect(uploads, 'staging must not upload').toHaveLength(0);
     });
 
-    test('US1-AS2: text + staged image → one comment with the text and the inline picture beneath it; click opens full size in a new tab', async () => {
+    test('US1-AS2: text + staged image → one comment with the text and the inline picture beneath it; click opens it in the media viewer', async () => {
       await sendCaptionedAndOpen(seed.calloutUrl, 'as2');
     });
 

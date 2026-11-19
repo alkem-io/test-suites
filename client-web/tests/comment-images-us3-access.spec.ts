@@ -5,7 +5,9 @@
  * its acceptance scenario in comment-images-test-plan.md.
  */
 
-import { writeFileSync } from 'node:fs';
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { expect, test, type Browser, type Page, type Route } from '@playwright/test';
 import {
   ADMIN_EMAIL,
@@ -173,12 +175,20 @@ test.describe('Comment images — US3 P1 access and validation walk', { tag: ['@
     test('US3-AS5: an image above the size limit is refused with the limit in MB', async () => {
       const { dlg, stagedList, fileInput } = await openComposer(page, seed.calloutUrl);
       // Handed over as a file path: Playwright refuses an in-memory buffer above
-      // 50 MB, and the limit is whatever the bucket reports.
-      const bigPng = test.info().outputPath('big.png');
-      writeFileSync(bigPng, oversizedPng(maxFileSize));
-      await fileInput.setInputFiles(bigPng);
-      await expect(dlg.getByRole('alert')).toHaveText(`big.png is larger than ${limitInMb(maxFileSize)} MB.`);
-      await expect(stagedList).toHaveCount(0);
+      // 50 MB, and the limit is whatever the bucket reports. The path is in the
+      // system temp folder, not the test's output folder: that one carries the
+      // project name, and under "Comment images — serial" the browser read
+      // nothing from it, so the composer showed neither the file nor a refusal.
+      const folder = mkdtempSync(join(tmpdir(), 'comment-images-'));
+      try {
+        const bigPng = join(folder, 'big.png');
+        writeFileSync(bigPng, oversizedPng(maxFileSize));
+        await fileInput.setInputFiles(bigPng);
+        await expect(dlg.getByRole('alert')).toHaveText(`big.png is larger than ${limitInMb(maxFileSize)} MB.`);
+        await expect(stagedList).toHaveCount(0);
+      } finally {
+        rmSync(folder, { recursive: true, force: true });
+      }
     });
 
     test('US3-AS7: plain text and Office rich text with a bitmap paste as text; nothing is staged', async () => {

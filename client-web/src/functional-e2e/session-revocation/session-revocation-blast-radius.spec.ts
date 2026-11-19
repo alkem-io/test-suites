@@ -1,12 +1,16 @@
-// plan: docs/qa/6315-session-revocation-test-plan.md (Stream B — SRB-E3,
-//       SRB-E4, SRB-N2)
+// plan: client-web/src/functional-e2e/session-revocation/session-revocation-test-plan.md
+//       (SRB-E3, SRB-E4, SRB-N2)
 // feature: alkem-io/server#6324 — story server#6315
 //
-// The three scenarios that are about what revocation must NOT do: it must not
-// touch anyone else's session, it must not turn an already-ended session into
-// an error, and it must not turn the cookie boundary into an existence oracle.
+// What revocation must NOT do: touch anyone else's session, turn an
+// already-ended session into an error, or make the session boundary an
+// existence oracle.
+//
+// W2 Tier 0 item 2: GraphQL outcomes through the lib plus what the browser
+// shows. The session cookie's name is derived from a real sign-in (SRB-N2),
+// never hard-coded, and no anonymous-actor id is asserted.
 
-import { BrowserContext, expect, test } from '@playwright/test';
+import { expect, test } from '@playwright/test';
 import {
   logoutMenuItem,
   userMenuAvatar,
@@ -14,202 +18,174 @@ import {
 import {
   baseUrl,
   closeSessions,
-  DisposableUser,
+  credentialOf,
   deleteUserAsGlobalAdmin,
-  deleteUserQuietly,
+  deleteUserIfPresent,
+  DisposableUser,
+  expectNotTheUser,
+  expectRefused,
+  expectResolvesTo,
   LoggedInSession,
+  logInHeaderLink,
+  notificationsButton,
   openLoggedInSession,
-  probeIdTokenHint,
-  probePrivateGraphql,
-  probePrivateGraphqlMyUser,
   provisionDisposableUser,
-  sessionCookieName,
+  sessionCookies,
+  whoAmI,
 } from './session-revocation.helpers';
 
 test.describe('Session revocation — blast radius and boundaries (server#6315)', () => {
-  // Serial: each scenario provisions and deletes its own disposable subject,
-  // and concurrent Kratos registration flows for separate identities still
-  // contend on the shared MailSlurper inbox used for email verification.
+  // One fixture for the file; E3 and E4 each delete their own subject.
   test.describe.configure({ mode: 'serial' });
 
-  test('SRB-E3 — blast radius: a second, unrelated user is untouched', async ({
-    browser,
-  }) => {
-    // Two Kratos registrations + two full SPA logins.
+  let victim: DisposableUser | undefined;
+  let bystander: DisposableUser | undefined;
+  let signedOut: DisposableUser | undefined;
+  let victimSession: LoggedInSession | undefined;
+  let bystanderSession: LoggedInSession | undefined;
+  let signedOutSession: LoggedInSession | undefined;
+
+  test.beforeAll(async ({ browser }) => {
+    // Three registrations (verification mail each) + three SPA sign-ins.
     test.setTimeout(300_000);
-
-    let victimSession: LoggedInSession | undefined;
-    let bystanderSession: LoggedInSession | undefined;
-    let victim: DisposableUser | undefined;
-    let bystander: DisposableUser | undefined;
-
-    try {
-      victim = await provisionDisposableUser('victim');
-      bystander = await provisionDisposableUser('bystander');
-
-      victimSession = await openLoggedInSession(browser, victim.email);
-      bystanderSession = await openLoggedInSession(browser, bystander.email);
-
-      // Both sessions are real before the deletion.
-      expect((await probeIdTokenHint(victimSession.context)).status).toBe(200);
-      expect((await probeIdTokenHint(bystanderSession.context)).status).toBe(
-        200
-      );
-
-      const deletion = await deleteUserAsGlobalAdmin(victim.userId, {
-        deleteIdentity: false,
-      });
-      expect(deletion.body?.data?.deleteUser?.id).toBe(victim.userId);
-
-      // The victim is gone. The FIRST request the revoked session makes is
-      // refused with 401 — and, by design, the interceptor clears the session
-      // cookie on that very response (otherwise the browser is locked out of
-      // `/login`; see auth.interceptor.ts). Every later request from the same
-      // context therefore carries no cookie and is served as ANONYMOUS, not
-      // 401. Assert the first probe strictly, and the second as "not the
-      // victim": either 401 or an anonymous actor with no user attached.
-      expect((await probeIdTokenHint(victimSession.context)).status).toBe(401);
-      const victimMe = await probePrivateGraphqlMyUser(victimSession.context);
-      expect([200, 401]).toContain(victimMe.status);
-      if (victimMe.status === 200) {
-        expect(victimMe.json?.data?.me?.id).toBe('me-');
-        expect(victimMe.json?.data?.me?.user).toBeNull();
-      }
-
-      // …and the bystander is not disturbed in any way. FR-005/SC-007: the
-      // blast radius is exactly one account. The index is read per-subject, so
-      // a keyspace-wide sweep would show up right here.
-      const bystanderHint = await probeIdTokenHint(bystanderSession.context);
-      expect(bystanderHint.status).toBe(200);
-      expect(bystanderHint.json?.id_token).toBeTruthy();
-
-      const bystanderMe = await probePrivateGraphqlMyUser(
-        bystanderSession.context
-      );
-      expect(bystanderMe.status).toBe(200);
-      expect(bystanderMe.json?.errors).toBeUndefined();
-      expect(bystanderMe.json?.data?.me?.user?.id).toBe(bystander.userId);
-    } finally {
-      await closeSessions(victimSession, bystanderSession);
-      await deleteUserQuietly(victim?.userId);
-      await deleteUserQuietly(bystander?.userId);
-    }
+    victim = await provisionDisposableUser('victim');
+    bystander = await provisionDisposableUser('bystander');
+    signedOut = await provisionDisposableUser('signedout');
+    victimSession = await openLoggedInSession(browser, victim.email);
+    bystanderSession = await openLoggedInSession(browser, bystander.email);
+    signedOutSession = await openLoggedInSession(browser, signedOut.email);
   });
 
-  test('SRB-E4 — an already-signed-out session: deletion is still a clean no-op', async ({
-    browser,
-  }) => {
-    test.setTimeout(300_000);
-
-    let session: LoggedInSession | undefined;
-    let user: DisposableUser | undefined;
-
-    try {
-      user = await provisionDisposableUser('signedout');
-      session = await openLoggedInSession(browser, user.email);
-      expect((await probeIdTokenHint(session.context)).status).toBe(200);
-
-      await signOutThroughTheApp(session);
-
-      // Precondition for the scenario: the sid really is gone (destroy()'d and
-      // pruned from the per-subject index), so the deletion below is walking
-      // an index entry that no longer resolves — the `already_absent` branch.
-      expect((await probeIdTokenHint(session.context)).status).toBe(401);
-
-      const deletion = await deleteUserAsGlobalAdmin(user.userId, {
-        deleteIdentity: false,
-      });
-      expect(deletion.status).toBe(200);
-      expect(deletion.body?.errors).toBeUndefined();
-      expect(deletion.body?.data?.deleteUser?.id).toBe(user.userId);
-
-      // Still refused, and — the point of FR-015 — no new failure mode
-      // surfaced from the revocation path on a session that had already ended.
-      expect((await probeIdTokenHint(session.context)).status).toBe(401);
-
-      // On the GraphQL path both outcomes are legitimate here and the
-      // distinction is not under this scenario's control: a fully destroy()'d
-      // session leaves no Redis key at all (state (a) → anonymous 200), while
-      // a lingering tombstone yields 401. What must never happen is the
-      // revocation path turning an idempotent no-op into a server error.
-      const me = await probePrivateGraphql(session.context);
-      expect(me.status).toBeLessThan(500);
-      expect([200, 401]).toContain(me.status);
-    } finally {
-      await closeSessions(session);
-      await deleteUserQuietly(user?.userId);
-    }
+  test.afterAll(async () => {
+    await closeSessions(victimSession, bystanderSession, signedOutSession);
+    // No-ops for the two subjects the walks deleted; fails loudly otherwise.
+    await deleteUserIfPresent(victim?.userId);
+    await deleteUserIfPresent(bystander?.userId);
+    await deleteUserIfPresent(signedOut?.userId);
   });
 
-  test('SRB-N2 — no existence oracle at the cookie boundary', async ({
+  test('SRB-E3 — blast radius: a second, unrelated user is untouched', async () => {
+    const victimCredential = await credentialOf(victimSession!.context);
+    const bystanderCredential = await credentialOf(bystanderSession!.context);
+
+    // Both sessions are real before the deletion.
+    expectResolvesTo(
+      await whoAmI(victimCredential),
+      victim!.userId,
+      'victim before'
+    );
+    expectResolvesTo(
+      await whoAmI(bystanderCredential),
+      bystander!.userId,
+      'bystander before'
+    );
+
+    const deletion = await deleteUserAsGlobalAdmin(victim!.userId, {
+      deleteIdentity: true,
+    });
+    expect(deletion.body?.errors).toBeUndefined();
+    expect(deletion.body?.data?.deleteUser?.id).toBe(victim!.userId);
+
+    // The victim's session is refused…
+    expectRefused(await whoAmI(victimCredential), 'victim after');
+
+    // …and the bystander's is exactly as it was: the blast radius is one
+    // account. Over the API, and in the bystander's own browser after a
+    // reload.
+    expectResolvesTo(
+      await whoAmI(bystanderCredential),
+      bystander!.userId,
+      'bystander after'
+    );
+    await bystanderSession!.page.reload();
+    await expect(notificationsButton(bystanderSession!.page)).toBeVisible();
+    await expect(logInHeaderLink(bystanderSession!.page)).toHaveCount(0);
+  });
+
+  test('SRB-E4 — deleting an already-signed-out user is a clean no-op for that session', async () => {
+    const { page, context } = signedOutSession!;
+    const liveCredential = await credentialOf(context);
+    expectResolvesTo(
+      await whoAmI(liveCredential),
+      signedOut!.userId,
+      'before sign-out'
+    );
+
+    // Sign out the way a person does (A3). No fallback: if the menu cannot be
+    // driven, the case is red for that reason, not quietly set up another way.
+    await page.goto(`${baseUrl}/home`);
+    await userMenuAvatar(page).click();
+    await logoutMenuItem(page).click();
+    await expect(logInHeaderLink(page)).toBeVisible();
+    await expect(notificationsButton(page)).toHaveCount(0);
+
+    // The ended session no longer resolves to the user — replayed from before
+    // the sign-out, and as the browser holds it now.
+    expectNotTheUser(
+      await whoAmI(liveCredential),
+      signedOut!.userId,
+      'ended session'
+    );
+    expectNotTheUser(
+      await whoAmI(await credentialOf(context)),
+      signedOut!.userId,
+      'browser after sign-out'
+    );
+
+    const deletion = await deleteUserAsGlobalAdmin(signedOut!.userId, {
+      deleteIdentity: true,
+    });
+    expect(deletion.status).toBe(200);
+    expect(deletion.body?.errors).toBeUndefined();
+    expect(deletion.body?.data?.deleteUser?.id).toBe(signedOut!.userId);
+
+    // Revoking an index entry that no longer resolves surfaces no new failure
+    // mode: still not the user, and no server error.
+    expectNotTheUser(
+      await whoAmI(liveCredential),
+      signedOut!.userId,
+      'ended session after the deletion'
+    );
+  });
+
+  test('SRB-N2 — no existence oracle at the session boundary', async ({
     browser,
   }) => {
-    let noCookieContext: BrowserContext | undefined;
-    let fabricatedCookieContext: BrowserContext | undefined;
+    // The cookies that carry a signed-in session, as the server under test
+    // names them. Positive control: exactly these cookies ARE the bystander's
+    // session, so forging them is meaningful.
+    const cookies = await sessionCookies(bystanderSession!.context);
+    expect(
+      cookies.length,
+      'the signed-in context holds session cookies'
+    ).toBeGreaterThan(0);
+    const genuine = cookies.map(c => `${c.name}=${c.value}`).join('; ');
+    expectResolvesTo(
+      await whoAmI({ cookieHeader: genuine }),
+      bystander!.userId,
+      'the genuine session cookies'
+    );
 
+    // The same cookies with never-issued values, and no cookies at all.
+    const forged = cookies
+      .map(({ name }) => `${name}=forged-${crypto.randomUUID()}`)
+      .join('; ');
+    const context = await browser.newContext();
     try {
-      noCookieContext = await browser.newContext();
-      fabricatedCookieContext = await browser.newContext();
-
-      // A plausible but never-issued sid. express-session cannot verify it, so
-      // the strategy resolves no payload — `cookie-session.strategy.ts:95`
-      // (`if (!payload) return null`) deliberately falls through to anonymous
-      // rather than 401.
-      await fabricatedCookieContext.addCookies([
-        {
-          name: sessionCookieName,
-          value: 's%3A00000000-0000-4000-8000-00000000dead.notavalidsignature',
-          url: baseUrl,
-        },
-      ]);
-
-      const withoutCookie = await probePrivateGraphql(noCookieContext);
-      const withFabricatedCookie = await probePrivateGraphql(
-        fabricatedCookieContext
-      );
+      const withoutCookie = await whoAmI(await credentialOf(context));
+      const withForgedCookie = await whoAmI({ cookieHeader: forged });
 
       expect(withoutCookie.status).toBe(200);
-      expect(withoutCookie.json?.errors).toBeUndefined();
-      expect(withoutCookie.json?.data?.me?.id).toBe('me-');
+      expect(withoutCookie.errors).toEqual([]);
+      expect(withoutCookie.userId).toBeNull();
 
-      // Byte-identical: nothing in the response lets a caller learn whether a
-      // given sid ever existed.
-      expect(withFabricatedCookie.status).toBe(withoutCookie.status);
-      expect(withFabricatedCookie.text).toBe(withoutCookie.text);
-
-      // Read this against SRB-G1's 401. The pair IS the security property:
-      // ENDED sessions are loudly refused, UNKNOWN sessions are silently
-      // anonymous. Assert both or you have asserted neither.
+      // Byte-identical: nothing tells a caller whether a session id ever
+      // existed. Read against SRB-G1: ENDED sessions are loudly refused,
+      // UNKNOWN ones are silently anonymous. Assert both or neither.
+      expect(withForgedCookie.status).toBe(withoutCookie.status);
+      expect(withForgedCookie.raw).toBe(withoutCookie.raw);
     } finally {
-      await noCookieContext?.close().catch(() => {});
-      await fabricatedCookieContext?.close().catch(() => {});
+      await context.close();
     }
   });
 });
-
-/**
- * Sign out through the SPA, falling back to the BFF logout route.
- *
- * The UI affordance is the honest path — it is what a person does — but it
- * depends on the CRD header's avatar menu staying drivable. `GET
- * /api/auth/oidc/logout` (oidc.controller.ts:635) reaches the same idempotent
- * teardown, so a markup change degrades this scenario's setup rather than
- * failing it for an unrelated reason.
- */
-const signOutThroughTheApp = async (
-  session: LoggedInSession
-): Promise<void> => {
-  const { page, context } = session;
-  try {
-    await page.goto(`${baseUrl}/home`);
-    await userMenuAvatar(page).click({ timeout: 15_000 });
-    await logoutMenuItem(page).click({ timeout: 15_000 });
-    await expect(
-      page.getByRole('link', { name: 'Log in', exact: true })
-    ).toBeVisible({ timeout: 15_000 });
-  } catch {
-    await context.request.get(`${baseUrl}/api/auth/oidc/logout`, {
-      failOnStatusCode: false,
-    });
-  }
-};

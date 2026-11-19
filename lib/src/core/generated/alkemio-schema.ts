@@ -39,14 +39,23 @@ export type Scalars = {
   Boolean: { input: boolean; output: boolean };
   Int: { input: number; output: number };
   Float: { input: number; output: number };
+  /** A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format. */
   DateTime: { input: Date; output: Date };
+  /** An Emoji. */
   Emoji: { input: any; output: any };
+  /** A representation of a Lifecycle Definition, based on XState. It is serialized JSON. */
   LifecycleDefinition: { input: any; output: any };
+  /** A markdown string. */
   Markdown: { input: any; output: any };
+  /** An identifier that originates from the underlying messaging platform. */
   MessageID: { input: any; output: any };
+  /** A human readable identifier, 3 <= length <= 28. Used for URL paths in clients. Characters allowed: a-z,A-Z,0-9. */
   NameID: { input: string; output: string };
+  /** Cursor used for paginating search results. */
   SearchCursor: { input: any; output: any };
+  /** A uuid identifier. Length 36 characters. */
   UUID: { input: string; output: string };
+  /** The `Upload` scalar type represents a file upload. */
   Upload: {
     input: import("graphql-upload").FileUpload;
     output: import("graphql-upload").FileUpload;
@@ -772,11 +781,32 @@ export type AdminTemplateMissingFileReference = {
   templateName: Scalars["String"]["output"];
 };
 
+export type AdminUpdateInnovationPackPromoteInput = {
+  /** The InnovationPack whose promote flag is to be set. */
+  innovationPackID: Scalars["UUID"]["input"];
+  /** True to list this InnovationPack first in the Innovation Library. */
+  promote: Scalars["Boolean"]["input"];
+};
+
+export type AdminUpdateSpacePromoteInput = {
+  /** True to list this Space first on Explore Spaces. */
+  promote: Scalars["Boolean"]["input"];
+  /** The Space (any level) whose promote flag is to be set. */
+  spaceID: Scalars["UUID"]["input"];
+};
+
 export type AdminUpdateSpaceVisibilityInput = {
   /** The Space whose visibility is to be updated. */
   spaceID: Scalars["UUID"]["input"];
   /** Visibility of the Space, only on L0 spaces. */
   visibility: SpaceVisibility;
+};
+
+export type AdminUpdateVirtualContributorPromoteInput = {
+  /** True to list this VirtualContributor first on the platform-wide listings. */
+  promote: Scalars["Boolean"]["input"];
+  /** The VirtualContributor whose promote flag is to be set. */
+  virtualContributorID: Scalars["UUID"]["input"];
 };
 
 export type AdminUserEmailChangeDriftResolveInput = {
@@ -976,6 +1006,7 @@ export type AuthenticationProviderConfig = {
 export type AuthenticationProviderConfigUnion = OryConfig;
 
 export enum AuthenticationType {
+  Apple = "APPLE",
   Cleverbase = "CLEVERBASE",
   Email = "EMAIL",
   Github = "GITHUB",
@@ -1156,6 +1187,7 @@ export enum AuthorizationPrivilege {
   PlatformForumManage = "PLATFORM_FORUM_MANAGE",
   PlatformLicensingListsRead = "PLATFORM_LICENSING_LISTS_READ",
   PlatformOperationsAdmin = "PLATFORM_OPERATIONS_ADMIN",
+  PlatformPromoteManage = "PLATFORM_PROMOTE_MANAGE",
   PlatformRolesAssign = "PLATFORM_ROLES_ASSIGN",
   PlatformRoleHoldersRead = "PLATFORM_ROLE_HOLDERS_READ",
   PlatformSettingsAdmin = "PLATFORM_SETTINGS_ADMIN",
@@ -3796,7 +3828,7 @@ export type ISearchCategoryResult = {
   cursor?: Maybe<Scalars["SearchCursor"]["output"]>;
   /** The ranked search results for this category, sorted by relevance */
   results: Array<SearchResult>;
-  /** The total number of search results. Not implemented yet. */
+  /** The total number of results the requester may see in this category. Only computed for spaceResults when the SPACES filter sets `countTotal` and the search is not scoped to a Space; -1 otherwise, or when the count failed. Only the 1000 best ranked Space / Subspace matches are counted (and reachable by the cursor), so the total never exceeds 1000. */
   total: Scalars["Float"]["output"];
 };
 
@@ -4229,6 +4261,8 @@ export type InnovationPack = {
   nameID: Scalars["NameID"]["output"];
   /** The Profile for this InnovationPack. */
   profile: Profile;
+  /** Whether this InnovationPack is platform-promoted (listed first). Null unless the caller may manage promotion (Platform Content Full Access or Platform License Manager). */
+  promote?: Maybe<Scalars["Boolean"]["output"]>;
   /** The InnovationPack provider. */
   provider: Actor;
   /** Visibility of the InnovationPack in searches. */
@@ -5599,8 +5633,14 @@ export type Mutation = {
   adminUpdateContributorAvatars: Profile;
   /** Updates the GeoLocation data where required on the platform. */
   adminUpdateGeoLocationData: Scalars["Boolean"]["output"];
+  /** Sets the platform-promote flag of an InnovationPack. Platform Content Full Access or Platform License Manager only. */
+  adminUpdateInnovationPackPromote: InnovationPack;
+  /** Sets the platform-promote flag of a Space (any level). Platform Content Full Access or Platform License Manager only. */
+  adminUpdateSpacePromote: Space;
   /** Update the visibility of the specified Space. */
   adminUpdateSpaceVisibility: Space;
+  /** Sets the platform-promote flag of a VirtualContributor. Platform Content Full Access or Platform License Manager only. */
+  adminUpdateVirtualContributorPromote: VirtualContributor;
   /** Remove the Kratos account associated with the specified User. Note: the Users profile on the platform is not deleted. */
   adminUserAccountDelete: User;
   /** Change a user's login email synchronously, acting as a platform administrator. The admin is responsible for verifying the subject user's identity out-of-band — the platform does NOT send a confirmation message to the new mailbox and does NOT require the new mailbox to prove ownership. Validates uniqueness, commits Kratos → Alkemio with bounded retry, invalidates the subject's existing sessions, and sends a security-signal notification to the old address. Requires PLATFORM_USERS_ADMIN. */
@@ -5875,6 +5915,8 @@ export type Mutation = {
   resetConversationVc: Conversation;
   /** Reset all license plans on Accounts */
   resetLicenseOnAccounts: Scalars["Boolean"]["output"];
+  /** Reset the current user’s app icon badge counter to zero. Called by the iOS app when it is opened. */
+  resetPushBadgeCount: Scalars["Boolean"]["output"];
   /** Revoke a credential from an Actor. */
   revokeCredentialFromActor: Scalars["Boolean"]["output"];
   /** Revokes the specified LicensePlan on an Account. */
@@ -6121,8 +6163,20 @@ export type MutationAdminUpdateContributorAvatarsArgs = {
   profileID: Scalars["UUID"]["input"];
 };
 
+export type MutationAdminUpdateInnovationPackPromoteArgs = {
+  promoteData: AdminUpdateInnovationPackPromoteInput;
+};
+
+export type MutationAdminUpdateSpacePromoteArgs = {
+  promoteData: AdminUpdateSpacePromoteInput;
+};
+
 export type MutationAdminUpdateSpaceVisibilityArgs = {
   updateData: AdminUpdateSpaceVisibilityInput;
+};
+
+export type MutationAdminUpdateVirtualContributorPromoteArgs = {
+  promoteData: AdminUpdateVirtualContributorPromoteInput;
 };
 
 export type MutationAdminUserAccountDeleteArgs = {
@@ -8365,6 +8419,8 @@ export type RelayPaginatedSpace = ActorFull & {
   platformAccess: PlatformRolesAccess;
   /** The profile for this Actor. */
   profile?: Maybe<Profile>;
+  /** Whether this Space is platform-promoted (listed first). Null unless the caller may manage promotion (Platform Content Full Access or Platform License Manager). */
+  promote?: Maybe<Scalars["Boolean"]["output"]>;
   /** The settings for this Space. */
   settings: SpaceSettings;
   /** The sort mode for subspaces of this Space: Alphabetical or Custom. Accessible without READ privilege. */
@@ -8959,6 +9015,8 @@ export enum SearchCategory {
 export type SearchFilterInput = {
   /** Include this category in the search results. */
   category: SearchCategory;
+  /** Count the Space and Subspace results the requester may see among the 1000 best ranked matches, and paginate over them exactly (see `total`); lower ranked matches are neither counted nor reachable. Only honoured for the SPACES category in a search that is not scoped to a Space. Costs a scan of up to 1000 matches, so only ask for it when the total is shown. */
+  countTotal?: InputMaybe<Scalars["Boolean"]["input"]>;
   /** The cursor after which we want results (offset) - pass this from your previous search to request additional results. Useful for paginating results. */
   cursor?: InputMaybe<Scalars["SearchCursor"]["input"]>;
   /** How many results per category to return. Useful for paginating results. */
@@ -8987,7 +9045,7 @@ export type SearchResult = {
   id: Scalars["UUID"]["output"];
   /** The score for this search result; more matches means a higher score. */
   score: Scalars["Float"]["output"];
-  /** The terms that were matched for this result */
+  /** The terms that were matched for this result. Empty when they could not be determined, e.g. when highlighting the matches failed. */
   terms: Array<Scalars["String"]["output"]>;
   /** The type of returned result for this search. */
   type: SearchResultType;
@@ -9002,7 +9060,7 @@ export type SearchResultCallout = SearchResult & {
   score: Scalars["Float"]["output"];
   /** The parent Space of the Callout. */
   space: Space;
-  /** The terms that were matched for this result */
+  /** The terms that were matched for this result. Empty when they could not be determined, e.g. when highlighting the matches failed. */
   terms: Array<Scalars["String"]["output"]>;
   /** The type of returned result for this search. */
   type: SearchResultType;
@@ -9021,7 +9079,7 @@ export type SearchResultCollaboraDocument = SearchResult & {
   score: Scalars["Float"]["output"];
   /** The Space of the Collabora document. */
   space: Space;
-  /** The terms that were matched for this result */
+  /** The terms that were matched for this result. Empty when they could not be determined, e.g. when highlighting the matches failed. */
   terms: Array<Scalars["String"]["output"]>;
   /** The type of returned result for this search. */
   type: SearchResultType;
@@ -9040,7 +9098,7 @@ export type SearchResultMemo = SearchResult & {
   score: Scalars["Float"]["output"];
   /** The Space of the Memo. */
   space: Space;
-  /** The terms that were matched for this result */
+  /** The terms that were matched for this result. Empty when they could not be determined, e.g. when highlighting the matches failed. */
   terms: Array<Scalars["String"]["output"]>;
   /** The type of returned result for this search. */
   type: SearchResultType;
@@ -9053,7 +9111,7 @@ export type SearchResultOrganization = SearchResult & {
   organization: Organization;
   /** The score for this search result; more matches means a higher score. */
   score: Scalars["Float"]["output"];
-  /** The terms that were matched for this result */
+  /** The terms that were matched for this result. Empty when they could not be determined, e.g. when highlighting the matches failed. */
   terms: Array<Scalars["String"]["output"]>;
   /** The type of returned result for this search. */
   type: SearchResultType;
@@ -9070,7 +9128,7 @@ export type SearchResultPost = SearchResult & {
   score: Scalars["Float"]["output"];
   /** The Space of the Post. */
   space: Space;
-  /** The terms that were matched for this result */
+  /** The terms that were matched for this result. Empty when they could not be determined, e.g. when highlighting the matches failed. */
   terms: Array<Scalars["String"]["output"]>;
   /** The type of returned result for this search. */
   type: SearchResultType;
@@ -9085,7 +9143,7 @@ export type SearchResultSpace = SearchResult & {
   score: Scalars["Float"]["output"];
   /** The Space that was found. */
   space: Space;
-  /** The terms that were matched for this result */
+  /** The terms that were matched for this result. Empty when they could not be determined, e.g. when highlighting the matches failed. */
   terms: Array<Scalars["String"]["output"]>;
   /** The type of returned result for this search. */
   type: SearchResultType;
@@ -9109,7 +9167,7 @@ export type SearchResultUser = SearchResult & {
   id: Scalars["UUID"]["output"];
   /** The score for this search result; more matches means a higher score. */
   score: Scalars["Float"]["output"];
-  /** The terms that were matched for this result */
+  /** The terms that were matched for this result. Empty when they could not be determined, e.g. when highlighting the matches failed. */
   terms: Array<Scalars["String"]["output"]>;
   /** The type of returned result for this search. */
   type: SearchResultType;
@@ -9128,7 +9186,7 @@ export type SearchResultWhiteboard = SearchResult & {
   score: Scalars["Float"]["output"];
   /** The Space of the Whiteboard. */
   space: Space;
-  /** The terms that were matched for this result */
+  /** The terms that were matched for this result. Empty when they could not be determined, e.g. when highlighting the matches failed. */
   terms: Array<Scalars["String"]["output"]>;
   /** The type of returned result for this search. */
   type: SearchResultType;
@@ -9250,6 +9308,8 @@ export type Space = ActorFull & {
   platformAccess: PlatformRolesAccess;
   /** The profile for this Actor. */
   profile?: Maybe<Profile>;
+  /** Whether this Space is platform-promoted (listed first). Null unless the caller may manage promotion (Platform Content Full Access or Platform License Manager). */
+  promote?: Maybe<Scalars["Boolean"]["output"]>;
   /** The settings for this Space. */
   settings: SpaceSettings;
   /** The sort mode for subspaces of this Space: Alphabetical or Custom. Accessible without READ privilege. */
@@ -11114,7 +11174,7 @@ export type UserAuthenticationResult = {
   authenticatedAt?: Maybe<Scalars["DateTime"]["output"]>;
   /** When the Kratos Account for the user was created */
   createdAt?: Maybe<Scalars["DateTime"]["output"]>;
-  /** The Authentication Methods used for this User. One of email, linkedin, microsoft, github or unknown */
+  /** The Authentication Methods used for this User. One of apple, cleverbase, email, github, linkedin, microsoft, passkey or unknown */
   methods: Array<AuthenticationType>;
 };
 
@@ -11509,6 +11569,8 @@ export type VirtualContributor = ActorFull & {
   platformSettings: VirtualContributorPlatformSettings;
   /** The profile for this Actor. */
   profile?: Maybe<Profile>;
+  /** Whether this VirtualContributor is platform-promoted (listed first). Null unless the caller may manage promotion (Platform Content Full Access or Platform License Manager). */
+  promote?: Maybe<Scalars["Boolean"]["output"]>;
   /** Prompt graph definition for this Virtual Contributor. */
   promptGraphDefinition?: Maybe<PromptGraphDefinition>;
   /** The Virtual Contributor provider. */
@@ -12434,7 +12496,10 @@ export type ResolversTypes = {
   AdminTemplateFileRepairResult: ResolverTypeWrapper<AdminTemplateFileRepairResult>;
   AdminTemplateForeignFileReference: ResolverTypeWrapper<AdminTemplateForeignFileReference>;
   AdminTemplateMissingFileReference: ResolverTypeWrapper<AdminTemplateMissingFileReference>;
+  AdminUpdateInnovationPackPromoteInput: AdminUpdateInnovationPackPromoteInput;
+  AdminUpdateSpacePromoteInput: AdminUpdateSpacePromoteInput;
   AdminUpdateSpaceVisibilityInput: AdminUpdateSpaceVisibilityInput;
+  AdminUpdateVirtualContributorPromoteInput: AdminUpdateVirtualContributorPromoteInput;
   AdminUserEmailChangeDriftResolveInput: AdminUserEmailChangeDriftResolveInput;
   AdminUserEmailChangeInput: AdminUserEmailChangeInput;
   AiPersona: ResolverTypeWrapper<AiPersona>;
@@ -14196,7 +14261,10 @@ export type ResolversParentTypes = {
   AdminTemplateFileRepairResult: AdminTemplateFileRepairResult;
   AdminTemplateForeignFileReference: AdminTemplateForeignFileReference;
   AdminTemplateMissingFileReference: AdminTemplateMissingFileReference;
+  AdminUpdateInnovationPackPromoteInput: AdminUpdateInnovationPackPromoteInput;
+  AdminUpdateSpacePromoteInput: AdminUpdateSpacePromoteInput;
   AdminUpdateSpaceVisibilityInput: AdminUpdateSpaceVisibilityInput;
+  AdminUpdateVirtualContributorPromoteInput: AdminUpdateVirtualContributorPromoteInput;
   AdminUserEmailChangeDriftResolveInput: AdminUserEmailChangeDriftResolveInput;
   AdminUserEmailChangeInput: AdminUserEmailChangeInput;
   AiPersona: AiPersona;
@@ -19526,6 +19594,7 @@ export type InnovationPackResolvers<
   listedInStore?: Resolver<ResolversTypes["Boolean"], ParentType, ContextType>;
   nameID?: Resolver<ResolversTypes["NameID"], ParentType, ContextType>;
   profile?: Resolver<ResolversTypes["Profile"], ParentType, ContextType>;
+  promote?: Resolver<Maybe<ResolversTypes["Boolean"]>, ParentType, ContextType>;
   provider?: Resolver<ResolversTypes["Actor"], ParentType, ContextType>;
   searchVisibility?: Resolver<
     ResolversTypes["SearchVisibility"],
@@ -21079,11 +21148,32 @@ export type MutationResolvers<
     ParentType,
     ContextType
   >;
+  adminUpdateInnovationPackPromote?: Resolver<
+    ResolversTypes["InnovationPack"],
+    ParentType,
+    ContextType,
+    RequireFields<MutationAdminUpdateInnovationPackPromoteArgs, "promoteData">
+  >;
+  adminUpdateSpacePromote?: Resolver<
+    ResolversTypes["Space"],
+    ParentType,
+    ContextType,
+    RequireFields<MutationAdminUpdateSpacePromoteArgs, "promoteData">
+  >;
   adminUpdateSpaceVisibility?: Resolver<
     ResolversTypes["Space"],
     ParentType,
     ContextType,
     RequireFields<MutationAdminUpdateSpaceVisibilityArgs, "updateData">
+  >;
+  adminUpdateVirtualContributorPromote?: Resolver<
+    ResolversTypes["VirtualContributor"],
+    ParentType,
+    ContextType,
+    RequireFields<
+      MutationAdminUpdateVirtualContributorPromoteArgs,
+      "promoteData"
+    >
   >;
   adminUserAccountDelete?: Resolver<
     ResolversTypes["User"],
@@ -21926,6 +22016,11 @@ export type MutationResolvers<
     RequireFields<MutationResetConversationVcArgs, "input">
   >;
   resetLicenseOnAccounts?: Resolver<
+    ResolversTypes["Boolean"],
+    ParentType,
+    ContextType
+  >;
+  resetPushBadgeCount?: Resolver<
     ResolversTypes["Boolean"],
     ParentType,
     ContextType
@@ -24061,6 +24156,7 @@ export type RelayPaginatedSpaceResolvers<
     ContextType
   >;
   profile?: Resolver<Maybe<ResolversTypes["Profile"]>, ParentType, ContextType>;
+  promote?: Resolver<Maybe<ResolversTypes["Boolean"]>, ParentType, ContextType>;
   settings?: Resolver<ResolversTypes["SpaceSettings"], ParentType, ContextType>;
   sortMode?: Resolver<ResolversTypes["SpaceSortMode"], ParentType, ContextType>;
   sortOrder?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
@@ -24761,6 +24857,7 @@ export type SpaceResolvers<
     ContextType
   >;
   profile?: Resolver<Maybe<ResolversTypes["Profile"]>, ParentType, ContextType>;
+  promote?: Resolver<Maybe<ResolversTypes["Boolean"]>, ParentType, ContextType>;
   settings?: Resolver<ResolversTypes["SpaceSettings"], ParentType, ContextType>;
   sortMode?: Resolver<ResolversTypes["SpaceSortMode"], ParentType, ContextType>;
   sortOrder?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
@@ -26579,6 +26676,7 @@ export type VirtualContributorResolvers<
     ContextType
   >;
   profile?: Resolver<Maybe<ResolversTypes["Profile"]>, ParentType, ContextType>;
+  promote?: Resolver<Maybe<ResolversTypes["Boolean"]>, ParentType, ContextType>;
   promptGraphDefinition?: Resolver<
     Maybe<ResolversTypes["PromptGraphDefinition"]>,
     ParentType,
@@ -50529,6 +50627,14 @@ export type UpdateCalloutVisibilityMutation = {
   };
 };
 
+export type UpdateCalloutsSortOrderMutationVariables = Exact<{
+  sortOrderData: UpdateCalloutsSortOrderInput;
+}>;
+
+export type UpdateCalloutsSortOrderMutation = {
+  updateCalloutsSortOrder: Array<{ id: string; sortOrder: number }>;
+};
+
 export type CreateContributionOnCalloutMutationVariables = Exact<{
   contributionData: CreateContributionOnCalloutInput;
 }>;
@@ -50764,6 +50870,14 @@ export type CreateContributionOnCalloutMutation = {
   };
 };
 
+export type UpdateContributionsSortOrderMutationVariables = Exact<{
+  sortOrderData: UpdateContributionCalloutsSortOrderInput;
+}>;
+
+export type UpdateContributionsSortOrderMutation = {
+  updateContributionsSortOrder: Array<{ id: string; sortOrder: number }>;
+};
+
 export type CreateCalloutWithDataMutationVariables = Exact<{
   calloutData: CreateCalloutOnCalloutsSetInput;
 }>;
@@ -50956,6 +51070,25 @@ export type UpdatePollStatusMutationVariables = Exact<{
 
 export type UpdatePollStatusMutation = {
   updatePollStatus: { id: string; status: PollStatus };
+};
+
+export type MoveTaskToColumnMutationVariables = Exact<{
+  moveData: MoveTaskToColumnInput;
+}>;
+
+export type MoveTaskToColumnMutation = {
+  moveTaskToColumn: {
+    id: string;
+    sortOrder: number;
+    classification?:
+      | {
+          id: string;
+          tagsets?:
+            | Array<{ id: string; name: string; tags: Array<string> }>
+            | undefined;
+        }
+      | undefined;
+  };
 };
 
 export type TransferCalloutMutationVariables = Exact<{
@@ -87214,6 +87347,31 @@ export type ReadAccountResourcesQuery = {
   };
 };
 
+export type ReadInnovationPackQueryVariables = Exact<{
+  innovationPackId: Scalars["UUID"]["input"];
+}>;
+
+export type ReadInnovationPackQuery = {
+  lookup: {
+    innovationPack?:
+      | {
+          id: string;
+          nameID: string;
+          listedInStore: boolean;
+          searchVisibility: SearchVisibility;
+          provider: { id: string };
+          profile: {
+            id: string;
+            displayName: string;
+            description?: any | undefined;
+            url: string;
+            tagset?: { id: string; tags: Array<string> } | undefined;
+          };
+        }
+      | undefined;
+  };
+};
+
 export type ReadInnovationPackTemplatesSetQueryVariables = Exact<{
   innovationPackId: Scalars["UUID"]["input"];
 }>;
@@ -89449,6 +89607,38 @@ export type GetCalloutReactionsSummaryQuery = {
   };
 };
 
+export type ReadCalloutCollaboraDocumentQueryVariables = Exact<{
+  calloutId: Scalars["UUID"]["input"];
+}>;
+
+export type ReadCalloutCollaboraDocumentQuery = {
+  lookup: {
+    callout?:
+      | {
+          id: string;
+          framing: {
+            id: string;
+            collaboraDocument?:
+              | {
+                  id: string;
+                  documentType: CollaboraDocumentType;
+                  previewUrl?: string | undefined;
+                  updatedDate: Date;
+                  authorization?:
+                    | {
+                        myPrivileges?:
+                          | Array<AuthorizationPrivilege>
+                          | undefined;
+                      }
+                    | undefined;
+                }
+              | undefined;
+          };
+        }
+      | undefined;
+  };
+};
+
 export type ReadCalloutContributionsQueryVariables = Exact<{
   calloutId: Scalars["UUID"]["input"];
 }>;
@@ -89471,6 +89661,18 @@ export type ReadCalloutContributionsQuery = {
             collaboraDocument: number;
           };
         }
+      | undefined;
+  };
+};
+
+export type ReadCalloutContributionsOrderQueryVariables = Exact<{
+  calloutId: Scalars["UUID"]["input"];
+}>;
+
+export type ReadCalloutContributionsOrderQuery = {
+  lookup: {
+    callout?:
+      | { id: string; contributions: Array<{ id: string; sortOrder: number }> }
       | undefined;
   };
 };
@@ -89599,6 +89801,26 @@ export type ReadCalloutFramingSettingsQuery = {
   };
 };
 
+export type ReadCalloutFramingWhiteboardQueryVariables = Exact<{
+  calloutId: Scalars["UUID"]["input"];
+}>;
+
+export type ReadCalloutFramingWhiteboardQuery = {
+  lookup: {
+    callout?:
+      | {
+          id: string;
+          framing: {
+            id: string;
+            whiteboard?:
+              | { id: string; nameID: string; isMultiUser: boolean }
+              | undefined;
+          };
+        }
+      | undefined;
+  };
+};
+
 export type ReadCalloutSubspaceIdsQueryVariables = Exact<{
   calloutId: Scalars["UUID"]["input"];
 }>;
@@ -89644,6 +89866,94 @@ export type ReadCalloutSubspacesQuery = {
   };
 };
 
+export type ReadCalloutsSetCalloutResponsesQueryVariables = Exact<{
+  calloutsSetId: Scalars["UUID"]["input"];
+}>;
+
+export type ReadCalloutsSetCalloutResponsesQuery = {
+  lookup: {
+    calloutsSet?:
+      | {
+          id: string;
+          callouts: Array<{
+            id: string;
+            framing: {
+              id: string;
+              profile: { id: string; displayName: string };
+            };
+            settings: { framing: { commentsEnabled: boolean } };
+            contributions: Array<{
+              id: string;
+              post?:
+                | {
+                    id: string;
+                    profile: { id: string; displayName: string };
+                    createdBy?: { id: string } | undefined;
+                  }
+                | undefined;
+            }>;
+          }>;
+        }
+      | undefined;
+  };
+};
+
+export type ReadCalloutsSetCalloutTypesQueryVariables = Exact<{
+  calloutsSetId: Scalars["UUID"]["input"];
+}>;
+
+export type ReadCalloutsSetCalloutTypesQuery = {
+  lookup: {
+    calloutsSet?:
+      | {
+          id: string;
+          callouts: Array<{
+            id: string;
+            framing: {
+              id: string;
+              type: CalloutFramingType;
+              profile: { id: string; displayName: string };
+              whiteboard?: { id: string } | undefined;
+              memo?: { id: string } | undefined;
+              link?:
+                | {
+                    id: string;
+                    uri: string;
+                    profile: { id: string; displayName: string };
+                  }
+                | undefined;
+            };
+            settings: {
+              contribution: { allowedTypes: Array<CalloutContributionType> };
+            };
+          }>;
+        }
+      | undefined;
+  };
+};
+
+export type ReadCalloutsSetCalloutVisibilityQueryVariables = Exact<{
+  calloutsSetId: Scalars["UUID"]["input"];
+}>;
+
+export type ReadCalloutsSetCalloutVisibilityQuery = {
+  lookup: {
+    calloutsSet?:
+      | {
+          id: string;
+          callouts: Array<{
+            id: string;
+            framing: {
+              id: string;
+              profile: { id: string; displayName: string };
+            };
+            settings: { visibility: CalloutVisibility };
+          }>;
+        }
+      | undefined;
+  };
+};
+
 export type ReadCalloutsSetCalloutsQueryVariables = Exact<{
   calloutsSetId: Scalars["UUID"]["input"];
 }>;
@@ -89682,6 +89992,30 @@ export type ReadCalloutsSetCalloutsQuery = {
   };
 };
 
+export type ReadContributionQueryVariables = Exact<{
+  contributionId: Scalars["UUID"]["input"];
+}>;
+
+export type ReadContributionQuery = {
+  lookup: {
+    contribution?:
+      | {
+          id: string;
+          authorization?:
+            | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
+            | undefined;
+          post?:
+            | {
+                id: string;
+                nameID: string;
+                profile: { displayName: string; url: string };
+              }
+            | undefined;
+        }
+      | undefined;
+  };
+};
+
 export type ReadMemoDocumentsQueryVariables = Exact<{
   memoId: Scalars["UUID"]["input"];
 }>;
@@ -89693,6 +90027,112 @@ export type ReadMemoDocumentsQuery = {
           id: string;
           signatures: Array<{ id: string }>;
           profile: { storageBucket: { documents: Array<{ id: string }> } };
+        }
+      | undefined;
+  };
+};
+
+export type ReadTaskBoardQueryVariables = Exact<{
+  calloutId: Scalars["UUID"]["input"];
+}>;
+
+export type ReadTaskBoardQuery = {
+  lookup: {
+    callout?:
+      | {
+          id: string;
+          authorization?:
+            | {
+                id: string;
+                myPrivileges?: Array<AuthorizationPrivilege> | undefined;
+              }
+            | undefined;
+          framing: { id: string; profile: { id: string; displayName: string } };
+          settings: {
+            contribution: { allowedTypes: Array<CalloutContributionType> };
+          };
+          classification?:
+            | {
+                id: string;
+                tagsets?:
+                  | Array<{
+                      id: string;
+                      name: string;
+                      allowedValues: Array<string>;
+                      tags: Array<string>;
+                    }>
+                  | undefined;
+              }
+            | undefined;
+          taskColumnCounts?:
+            | Array<{ column: string; count: number }>
+            | undefined;
+          contributions: Array<{
+            id: string;
+            sortOrder: number;
+            classification?:
+              | {
+                  id: string;
+                  tagsets?:
+                    | Array<{ id: string; name: string; tags: Array<string> }>
+                    | undefined;
+                }
+              | undefined;
+            post?:
+              | {
+                  id: string;
+                  profile: {
+                    id: string;
+                    displayName: string;
+                    description?: any | undefined;
+                  };
+                  createdBy?: { id: string } | undefined;
+                }
+              | undefined;
+          }>;
+        }
+      | undefined;
+  };
+};
+
+export type ReadWhiteboardGuestAccessQueryVariables = Exact<{
+  whiteboardId: Scalars["UUID"]["input"];
+}>;
+
+export type ReadWhiteboardGuestAccessQuery = {
+  lookup: {
+    whiteboard?:
+      | {
+          id: string;
+          guestContributionsAllowed: boolean;
+          authorization?:
+            | {
+                id: string;
+                myPrivileges?: Array<AuthorizationPrivilege> | undefined;
+              }
+            | undefined;
+        }
+      | undefined;
+  };
+};
+
+export type ReadWhiteboardStateQueryVariables = Exact<{
+  whiteboardId: Scalars["UUID"]["input"];
+}>;
+
+export type ReadWhiteboardStateQuery = {
+  lookup: {
+    whiteboard?:
+      | {
+          id: string;
+          updatedDate: Date;
+          isMultiUser: boolean;
+          previewSettings: { mode: WhiteboardPreviewMode };
+          profile: {
+            id: string;
+            visual?: { id: string; uri: string } | undefined;
+            preview?: { id: string; uri: string } | undefined;
+          };
         }
       | undefined;
   };
@@ -94486,6 +94926,14 @@ export type ReadMyNotificationsQuery = {
           | {
               __typename: "InAppNotificationPayloadPlatformUserMessageRoom";
               type: NotificationEventPayload;
+              user: { id: string };
+              messageDetails?:
+                | {
+                    message: string;
+                    room: { id: string };
+                    parent: { id: string; url: string };
+                  }
+                | undefined;
             }
           | {
               __typename: "InAppNotificationPayloadPlatformUserProfileRemoved";
@@ -94612,6 +95060,8 @@ export type ReadMyUserQuery = {
       | {
           id: string;
           nameID: string;
+          firstName: string;
+          lastName: string;
           profile?:
             | { id: string; displayName: string; url: string }
             | undefined;
@@ -94925,6 +95375,27 @@ export type GetCalloutFramingMemoQuery = {
                 }
               | undefined;
           };
+        }
+      | undefined;
+  };
+};
+
+export type ReadMemoContentQueryVariables = Exact<{
+  memoId: Scalars["UUID"]["input"];
+}>;
+
+export type ReadMemoContentQuery = {
+  lookup: {
+    memo?:
+      | {
+          id: string;
+          markdown?: any | undefined;
+          updatedDate: Date;
+          isMultiUser: boolean;
+          contentUpdatePolicy: ContentUpdatePolicy;
+          authorization?:
+            | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
+            | undefined;
         }
       | undefined;
   };
@@ -96673,6 +97144,8 @@ export type SearchQueryVariables = Exact<{
 export type SearchQuery = {
   search: {
     spaceResults: {
+      total: number;
+      cursor?: any | undefined;
       results: Array<
         | { type: SearchResultType }
         | { type: SearchResultType }
@@ -110903,6 +111376,26 @@ export type ReadSpaceAccountSpacesQuery = {
   };
 };
 
+export type ReadSpaceByNameIdQueryVariables = Exact<{
+  nameID: Scalars["NameID"]["input"];
+}>;
+
+export type ReadSpaceByNameIdQuery = {
+  lookupByName: {
+    space?:
+      | {
+          id: string;
+          nameID: string;
+          level: SpaceLevel;
+          account: { id: string };
+          about: {
+            profile: { displayName: string; tagline?: string | undefined };
+          };
+        }
+      | undefined;
+  };
+};
+
 export type ReadSpaceCalloutNamesQueryVariables = Exact<{
   spaceId: Scalars["UUID"]["input"];
 }>;
@@ -110945,6 +111438,39 @@ export type ReadSpaceClassificationsQuery = {
               selectedValueIDs: Array<string>;
               values: Array<{ id: string; label: string }>;
             }>;
+          };
+        }
+      | undefined;
+  };
+};
+
+export type ReadSpaceCommunityGuidelinesQueryVariables = Exact<{
+  spaceId: Scalars["UUID"]["input"];
+}>;
+
+export type ReadSpaceCommunityGuidelinesQuery = {
+  lookup: {
+    space?:
+      | {
+          id: string;
+          about: {
+            id: string;
+            guidelines: {
+              id: string;
+              profile: {
+                id: string;
+                displayName: string;
+                description?: any | undefined;
+                references?:
+                  | Array<{
+                      id: string;
+                      name: string;
+                      uri: string;
+                      description?: string | undefined;
+                    }>
+                  | undefined;
+              };
+            };
           };
         }
       | undefined;
@@ -111071,6 +111597,28 @@ export type ReadSpaceSettingsQuery = {
   };
 };
 
+export type ReadSpaceSubspaceTreeQueryVariables = Exact<{
+  spaceId: Scalars["UUID"]["input"];
+}>;
+
+export type ReadSpaceSubspaceTreeQuery = {
+  lookup: {
+    space?:
+      | {
+          id: string;
+          nameID: string;
+          level: SpaceLevel;
+          subspaces: Array<{
+            id: string;
+            nameID: string;
+            level: SpaceLevel;
+            subspaces: Array<{ id: string; nameID: string; level: SpaceLevel }>;
+          }>;
+        }
+      | undefined;
+  };
+};
+
 export type ReadSpaceTemplatesManagerQueryVariables = Exact<{
   spaceId: Scalars["UUID"]["input"];
 }>;
@@ -111084,6 +111632,29 @@ export type ReadSpaceTemplatesManagerQuery = {
             | { templatesSet?: { id: string } | undefined }
             | undefined;
           about: { profile: { tagset?: { id: string } | undefined } };
+        }
+      | undefined;
+  };
+};
+
+export type ReadSubspaceByNameIdQueryVariables = Exact<{
+  parentSpaceId: Scalars["UUID"]["input"];
+  nameID: Scalars["NameID"]["input"];
+}>;
+
+export type ReadSubspaceByNameIdQuery = {
+  lookup: {
+    space?:
+      | {
+          id: string;
+          level: SpaceLevel;
+          subspaceByNameID: {
+            id: string;
+            nameID: string;
+            level: SpaceLevel;
+            about: { profile: { displayName: string; url: string } };
+            community: { roleSet: { id: string } };
+          };
         }
       | undefined;
   };
@@ -111103,6 +111674,144 @@ export type GetUserRolesQuery = {
       subspaces: Array<{ nameID: string; id: string; roles: Array<string> }>;
     }>;
     organizations: Array<{ nameID: string; id: string; roles: Array<string> }>;
+  };
+};
+
+export type ReadCalloutStoredFilesQueryVariables = Exact<{
+  calloutId: Scalars["UUID"]["input"];
+}>;
+
+export type ReadCalloutStoredFilesQuery = {
+  lookup: {
+    callout?:
+      | {
+          id: string;
+          framing: {
+            id: string;
+            type: CalloutFramingType;
+            profile: {
+              id: string;
+              url: string;
+              references?:
+                | Array<{
+                    id: string;
+                    name: string;
+                    uri: string;
+                    description?: string | undefined;
+                  }>
+                | undefined;
+              storageBucket: {
+                id: string;
+                allowedMimeTypes: Array<string>;
+                maxFileSize: number;
+                documents: Array<{
+                  id: string;
+                  displayName: string;
+                  mimeType: MimeType;
+                  size: number;
+                  url: string;
+                  temporaryLocation: boolean;
+                }>;
+              };
+            };
+            mediaGallery?:
+              | {
+                  id: string;
+                  visuals: Array<{
+                    id: string;
+                    name: VisualType;
+                    uri: string;
+                    alternativeText?: string | undefined;
+                    sortOrder?: number | undefined;
+                  }>;
+                }
+              | undefined;
+          };
+        }
+      | undefined;
+  };
+};
+
+export type ReadConversationStoredFilesQueryVariables = Exact<{
+  conversationId: Scalars["UUID"]["input"];
+}>;
+
+export type ReadConversationStoredFilesQuery = {
+  lookup: {
+    conversation?:
+      | {
+          id: string;
+          room: {
+            id: string;
+            messages: Array<{
+              id: any;
+              message: any;
+              attachments: Array<{
+                displayName: string;
+                mimeType?: string | undefined;
+                size?: number | undefined;
+              }>;
+            }>;
+          };
+          storageBucket?:
+            | {
+                id: string;
+                allowedMimeTypes: Array<string>;
+                maxFileSize: number;
+                documents: Array<{
+                  id: string;
+                  displayName: string;
+                  mimeType: MimeType;
+                  size: number;
+                  url: string;
+                  temporaryLocation: boolean;
+                }>;
+              }
+            | undefined;
+        }
+      | undefined;
+  };
+};
+
+export type ReadStoredDocumentQueryVariables = Exact<{
+  documentId: Scalars["UUID"]["input"];
+}>;
+
+export type ReadStoredDocumentQuery = {
+  lookup: {
+    document?:
+      | {
+          id: string;
+          displayName: string;
+          mimeType: MimeType;
+          size: number;
+          url: string;
+          temporaryLocation: boolean;
+        }
+      | undefined;
+  };
+};
+
+export type StoredDocumentFragment = {
+  id: string;
+  displayName: string;
+  mimeType: MimeType;
+  size: number;
+  url: string;
+  temporaryLocation: boolean;
+};
+
+export type ReadTaskQueryVariables = Exact<{
+  id: Scalars["UUID"]["input"];
+}>;
+
+export type ReadTaskQuery = {
+  task: {
+    id: string;
+    status: TaskStatus;
+    errors?: Array<string> | undefined;
+    itemsCount?: number | undefined;
+    itemsDone?: number | undefined;
   };
 };
 
@@ -111289,6 +111998,30 @@ export type ReadTemplatesSetTemplatesQuery = {
                 }
               | undefined;
           }>;
+        }
+      | undefined;
+  };
+};
+
+export type ResolveContributionUrlQueryVariables = Exact<{
+  url: Scalars["String"]["input"];
+}>;
+
+export type ResolveContributionUrlQuery = {
+  urlResolver: {
+    state: UrlResolverResultState;
+    type: UrlType;
+    space?:
+      | {
+          id: string;
+          collaboration: {
+            calloutsSet: {
+              id: string;
+              calloutId?: string | undefined;
+              contributionId?: string | undefined;
+              postId?: string | undefined;
+            };
+          };
         }
       | undefined;
   };

@@ -17,6 +17,7 @@
  */
 
 import {
+  ensureSpaceMembers,
   TestScenarioConfig,
   TestScenarioFactory,
   TestUser,
@@ -26,14 +27,13 @@ import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/O
 import { RoleName } from '@alkemio/tests-lib/core/generated/alkemio-schema';
 import {
   assignRoleToOrganization,
-  assignRoleToUser,
   assignRoleToVirtualContributor,
   createOrganization,
   deleteOrganization,
 } from '@alkemio/tests-lib/scenario/baseFunctions';
 
 import {
-  createUserDataOrFail,
+  registerVerifiedUser,
   deleteUser,
 } from '../../contributor-management/user/user.request.params';
 import { getTokenForTestUser } from '../../graphql-guard/me-degradation.request.params';
@@ -111,19 +111,13 @@ beforeAll(async () => {
   ).toBeUndefined();
   calloutID = calloutRes.body.data.createCalloutOnCalloutsSet.id;
 
-  memberUserId = (
-    await createUserDataOrFail({
-      nameID: `ccv-member-${uniqueId}`,
-      email: `ccv-member-${uniqueId}@alkem.io`,
-      profileData: { displayName: `CCV Member ${uniqueId}` },
-    })
-  ).id;
-  const assigned = await assignRoleToUser(
-    memberUserId,
-    roleSetId,
-    RoleName.Member
+  // Slice B: the member joins as themselves, so they need a login of their own.
+  memberUserId = await registerVerifiedUser(
+    `ccv-member-${uniqueId}@alkem.io`,
+    'CCV Member',
+    uniqueId
   );
-  expect(assigned.error, JSON.stringify(assigned.error)).toBeUndefined();
+  await ensureSpaceMembers(roleSetId, [memberUserId]);
   await setUserProfileOrFail(memberUserId, {
     tagline: USER_TAGLINE,
     tags: { skills: ['Facilitation'] },

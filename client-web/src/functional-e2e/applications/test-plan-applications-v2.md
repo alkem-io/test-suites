@@ -53,7 +53,8 @@ The Alkemio platform provides a multi-level space hierarchy (Space → Subspace 
 - For improved performance, sign in users once in `test.beforeAll()` or `test.beforeEach()` hooks and reuse the authenticated browser page/context across multiple tests within the same describe block, rather than signing in separately for each test.
 - Tests should create the base scenario using `TestScenarioFactory.createBaseScenario()` in `test.beforeAll()` and use the returned `baseScenario` object to access dynamic space properties (e.g., `baseScenario.space.about.profile.displayName`, `baseScenario.space.nameId`) instead of hardcoded values.
 - Remember to clean up the scenario in `test.afterAll()` using `TestScenarioFactory.cleanUpBaseScenario(baseScenario)`.
-- The 2.x cases assert an in-app notification in the bell dialog. The fixed personas are shared with the server-api suite, whose notification specs leave email + in-app switched OFF, and the nightly runs server-api before Playwright on the same database. Each spec therefore turns the two settings it depends on back ON in `test.beforeAll()` (`space.admin.communityApplicationReceived` for the admin, `user.membership.spaceCommunityJoined` for the applicant) via `enableApplicationNotifications()` from `helpers/notification-settings.helper.ts`, and restores the previous values in `test.afterAll()`. Do not rely on the server defaults.
+- The 2.x cases assert an in-app notification in the bell dialog. The fixed personas are shared with the server-api suite, whose notification specs leave email + in-app switched OFF, and the nightly runs server-api before Playwright on the same database. Each spec therefore makes sure the two settings it depends on are ON in `test.beforeAll()` (`space.admin.communityApplicationReceived` for the admin, `user.membership.spaceCommunityJoined` for the applicant) via `ensureApplicationNotifications()` from `helpers/notification-settings.helper.ts`. ON is the server default and the settings are left ON: there is nothing to restore in `test.afterAll()`, and restoring would switch them off under another Applications file still running (conventions §8 › Suite parallelism, rule 2). Do not skip the call and rely on the server defaults.
+- The bell is read through `expectApplicantNotified` / `adminApplicationNotification` (`applications.helpers.ts`), which load the home page and open the bell again until THIS Space's entry is there, for up to 60 s. The suite runs on the `long` tier so that wait fits in the test's budget.
 
 ---
 
@@ -221,10 +222,11 @@ The Alkemio platform provides a multi-level space hierarchy (Space → Subspace 
    - Click the "Community" tab under `data-testid="space-settings"`
    - Locate the pending application from the non-space member in "Pending applications & invitations"
    - Click on the application to view details or locate the archive/delete action
-   - Click the "Delete" button/action for the application (archives the application)
+   - Click the row's "Reject and remove application" action (named "Delete" before client-web#10499; on a `new` application it sends REJECT then ARCHIVE)
    - Verify archive confirmation (dialog/notification)
    - Confirm the archive action
    - Verify the application is removed from the pending list
+   - Verify on the server that the application is now `archived` (it was `new` before the action; a plain Reject, 2.1, leaves it `rejected`)
 
 3. **Verify Notification as Non-Space Member:**
    - Navigate to home page
@@ -239,6 +241,7 @@ The Alkemio platform provides a multi-level space hierarchy (Space → Subspace 
 - Delete/Archive action/button is visible and accessible for the application
 - Archive confirmation dialog appears when deleting
 - After confirmation, the application is removed from pending list
+- The application's server state is `archived`
 - Application no longer appears in the pending applications list
 - Non-space member receives a notification about the declined application
 - Notification bell icon is accessible and clickable
@@ -408,6 +411,54 @@ The Alkemio platform provides a multi-level space hierarchy (Space → Subspace 
 - Notification panel displays with the welcome message for the applicant
 - Non-space member becomes a member of the space
 - Space card/page reflects the user's new membership status
+
+---
+
+#### 2.6 The approved applicant can then open the Space (W2 Tier 1 item 13, 2026-11-09)
+
+**Spec:** `space-applications-level-0.spec.ts › 2.6 The approved applicant can then open the Space and read its member-only content`. Journey D2 → D8 positive (client-net audit): no case proved the approval GRANTS anything.
+
+**Setup:** the shared `beforeEach` (fresh private L0, policy Applications, one published post callout — `addPostCallout: true` — applied for in the UI by `non.space`).
+
+**Steps / oracles:**
+
+1. Positive control before the decision: `non.space` is not in the Space's MEMBER role set (`userIdsInRole`, lib `readRoleSetUsersInRole`); opening `/<space>` lands on `/<space>/about` with the About dialog and no content feed.
+2. The admin clicks Approve on the row; the row moves to "Application approved".
+3. Server: `non.space` appears in the MEMBER role set (polled).
+4. UI, same persona: `/<space>` now opens the Space itself — exact h1, the member-only post callout heading in the content feed, URL without `/about`, no About dialog.
+
+**Regression it catches:** approval that flips the application state without granting membership, or membership that does not grant READ on the content.
+
+### Applicant bell assertions scoped to the Space (W2 Tier 1 item 13, 2026-11-09)
+
+The applicant (`non.space`) is a shared persona whose bell holds entries from earlier cases and earlier nights, so the unscoped `toContainText(/declined/i)` / `/Welcome to the community/i` passed on history (client-net audit § 2, B5). Each was followed by a scoped one (`applications.helpers.ts › applicantNotificationEntry`), and since test-suites#749 the scoped one alone remains (it implies the unscoped text): a notification button whose text is the full subject carrying THIS run's space name —
+
+- approved: `<space> - Welcome to the community!` (USER_SPACE_COMMUNITY_JOINED)
+- declined: `… declined your application to join <space>` (USER_SPACE_COMMUNITY_APPLICATION_DECLINED)
+
+L0 2.1–2.5 use the L0 name; L1 2.1–2.5 and L1-public-parent 2.1/2.2 use the subspace name. The L0 name is run-unique from the scenario factory; the subspace name is not (the factory names it `l1-<scenario name>`, the same in every case and every night), so both L1 files create their scenarios through `withUniqueSubspaceName` (CodeRabbit on #716). Without it, a declined entry left by L1 2.1 satisfied the scoped check in 2.2 and 2.4. 2.2 ("Archive") now asserts a declined notification for THIS space: since client-web#10499 the row action on a new application is "Reject and remove application" (it rejects first), so the declined entry is the expected product behaviour, not an artefact.
+
+**Locator repairs in the same change (client-web#10499).** The row now carries "Reject" and "Reject and remove application"; the non-exact `name: 'Reject'` hit both (strict-mode red in 2.1/2.4 at every level on the local stack's develop client), and the row's "Delete" action is now "Reject and remove application". Both locators are now exact. Nothing was relaxed.
+
+**No new shared-persona mutation.** The new case changes only `non.space`'s membership of this run's own Space, which is deleted with it; the snapshot → enable → restore of in-app channels that existed at the time (`enableApplicationNotifications`) was untouched and nothing was added to it. test-suites#749 later replaced it with `ensureApplicationNotifications`, which leaves the channels on (see Test Optimization Notes).
+
+**Red-proofs (local stack, 2026-11-09):**
+
+| Mutation (temporary) | Case | Red at |
+|---|---|---|
+| scoped declined entry for `<space name>x` (another space) right after the old unscoped `/declined/i`, which passed on the same panel | L0 2.1 | `button` with `declined your application to join l0-seed-space-applica-…x` not found |
+| the Approve click removed | L0 2.6 | the MEMBER role-set read-back never contains the applicant (`expect.poll … toContain`) |
+
+**2.2 "Archive" pinned on the server (QA challenge on #716, 2026-11-10).** After the locator repair, 2.2 asserted exactly what 2.1 asserts: the row leaves the "Application received" list, and the applicant gets a declined entry for this space. Both are also true of a plain Reject, so the case's own behaviour, the archive, was unpinned. L0 and L1 2.2 now read the role set's applications (`applications.helpers.ts › applicationStates`, lib `readRoleSetApplications`, platform admin):
+
+- before the action, `['new']`;
+- after the confirm, `['archived']`, polled.
+
+"Reject and remove application" sends REJECT then ARCHIVE (client-web `useCommunityTabData › pendingDelete`). Red-proof, local stack: with the plain "Reject" clicked in L0 2.2 instead, the poll went red, expected `["archived"]`, received `["rejected"]`.
+
+**Server constants now asserted:** the application lifecycle state names `new` / `archived` (2.2, rebaseline candidates). The two subjects are client i18n strings (`crd/i18n/common` `components.inAppNotifications.type.*`), interpolated with server data (space display name).
+
+**Pre-existing reds, not touched:** `10419 IO-2` and `IO-3` fail on the local stack (develop client) at `navigation "Innovation flow phases"` not found on the subspace page — red on the unmodified baseline too; out of scope here. On test-alkem.io (2026-11-09, two runs of the three application files) both are green, so the red belongs to the local client build, not to the specs.
 
 ---
 
@@ -630,7 +681,7 @@ pnpm exec playwright test src/functional-e2e/applications/space-applications-lev
 pnpm run test:nightly --project=Applications
 ```
 
-Run the file serially, one worker. The Applications suite is not yet parallel-safe (conventions §8).
+The suite is in the parallel lane (conventions §8 › Suite parallelism): the three files can run side by side, `PW_LANE=parallel PW_WORKERS=3 pnpm run test:nightly --project=Applications`.
 
 ## Risk
 

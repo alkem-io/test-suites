@@ -1,6 +1,12 @@
 import { expect, type Locator, type Page, type Request } from '@playwright/test';
-import { updateSpaceSettings } from '@alkemio/tests-lib';
+import {
+  readRoleSetApplications,
+  type TestScenarioConfig,
+  UniqueIDGenerator,
+  updateSpaceSettings,
+} from '@alkemio/tests-lib';
 import { CommunityMembershipPolicy, SpacePrivacyMode } from '@alkemio/client-lib';
+import { must } from '../helpers/lib-actor.helper';
 
 /**
  * Shared helpers for the Applications area (client-web#10419 invitation-only
@@ -219,3 +225,150 @@ export const expectNoApplyControl = async (scope: Locator | Page): Promise<void>
     ).toHaveCount(0);
   }
 };
+
+const BASE_URL = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
+
+/** How long a walk waits for an in-app notification to reach the bell. */
+const NOTIFICATION_WAIT_MS = 60_000;
+
+/**
+ * Opens the bell on the home page and returns its panel once `entry` is in
+ * it. The panel lists what had arrived when it was opened, and a notification
+ * is delivered a moment after the action that causes it, later still while
+ * other files run. So the page is loaded and the bell opened again until the
+ * entry is there, instead of opening it once and hoping.
+ *
+ * The suite runs on the `long` tier so this wait fits inside the test's
+ * budget after seeding, applying and deciding; on a shorter tier the test
+ * timeout would end the case before the wait could name the missing entry.
+ * The click is bounded so a stuck attempt is retried.
+ */
+const openBellShowing = async (
+  page: Page,
+  entry: (panel: Locator) => Locator,
+  what: string
+): Promise<Locator> => {
+  const panel = page.getByRole('dialog');
+  await expect(async () => {
+    await page.goto(`${BASE_URL}/home`);
+    await page
+      .getByRole('button', { name: 'Notifications' })
+      .click({ timeout: 10_000 });
+    await expect(panel).toBeVisible();
+    await expect(entry(panel), what).toBeVisible({ timeout: 5_000 });
+  }).toPass({ timeout: NOTIFICATION_WAIT_MS });
+  return panel;
+};
+
+const escapeRegExp = (text: string): string =>
+  text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+/**
+ * `scenarioConfig` with a run-unique display name for its Level 1 subspace.
+ * The scenario factory names a subspace `l1-<scenario name>` (fixed per file)
+ * and puts the unique id only in its nameID, while the applicant's bell
+ * entries carry the display name: without this, an entry left by an earlier
+ * case or night would satisfy {@link applicantNotificationEntry}.
+ */
+export const withUniqueSubspaceName = (
+  scenarioConfig: TestScenarioConfig
+): TestScenarioConfig => {
+  const space = scenarioConfig.space ?? {};
+  const subspace = space.subspace ?? {};
+  return {
+    ...scenarioConfig,
+    space: {
+      ...space,
+      subspace: {
+        ...subspace,
+        about: {
+          ...subspace.about,
+          profile: {
+            ...subspace.about?.profile,
+            displayName: `l1-${scenarioConfig.name}-${UniqueIDGenerator.getID()}`,
+          },
+        },
+      },
+    },
+  };
+};
+
+/**
+ * The applicant's in-app notification about THIS space's application, inside
+ * an open bell panel. The applicant is a shared persona with notification
+ * history from earlier cases and earlier nights, so an unscoped `/declined/i`
+ * or `/Welcome to the community/i` on the panel proves nothing; the entry is
+ * matched by its full subject, which carries the run-unique space name
+ * (crd `components.inAppNotifications.type.*.subject`):
+ *
+ *   approved  `<space> - Welcome to the community!`   (USER_SPACE_COMMUNITY_JOINED)
+ *   declined  `<admin> declined your application to join <space>`
+ *             (USER_SPACE_COMMUNITY_APPLICATION_DECLINED)
+ */
+export const applicantNotificationEntry = (
+  panel: Locator,
+  outcome: 'approved' | 'declined',
+  spaceDisplayName: string
+): Locator => {
+  const space = escapeRegExp(spaceDisplayName);
+  const subject =
+    outcome === 'approved'
+      ? new RegExp(`${space} - Welcome to the community!`)
+      : new RegExp(`declined your application to join ${space}(?![\\w-])`);
+  return panel.getByRole('button').filter({ hasText: subject });
+};
+
+/** Opens the applicant's bell and waits for THIS space's entry in it. */
+export const expectApplicantNotified = async (
+  page: Page,
+  outcome: 'approved' | 'declined',
+  spaceDisplayName: string
+): Promise<void> => {
+  await openBellShowing(
+    page,
+    panel => applicantNotificationEntry(panel, outcome, spaceDisplayName),
+    `the applicant's "${outcome}" notification for ${spaceDisplayName}`
+  );
+};
+
+/**
+ * Opens the admin's bell and returns the "applied to join" entry of THIS
+ * space, matched by its run-unique name: the admin persona is shared, so the
+ * newest "applied to join" entry may belong to another file's Space.
+ */
+export const adminApplicationNotification = async (
+  page: Page,
+  spaceDisplayName: string
+): Promise<Locator> => {
+  const entry = (panel: Locator) =>
+    panel
+      .getByRole('button')
+      .filter({
+        // Case-insensitive, and nothing asserted about what follows the name:
+        // the entry's text runs straight on into its timestamp.
+        hasText: new RegExp(
+          `applied to join ${escapeRegExp(spaceDisplayName)}`,
+          'i'
+        ),
+      })
+      .first();
+  const panel = await openBellShowing(
+    page,
+    entry,
+    `the admin's "applied to join" notification for ${spaceDisplayName}`
+  );
+  return entry(panel);
+};
+
+/**
+ * The lifecycle state of every application on a role set, as the server holds
+ * it (read by the platform admin). Each Application Management case seeds a
+ * fresh space that one persona applies to, so the list is that application.
+ */
+export const applicationStates = async (roleSetId: string): Promise<string[]> =>
+  (
+    must(
+      await readRoleSetApplications(roleSetId),
+      `readRoleSetApplications(${roleSetId})`
+    ).lookup.roleSet?.applications ?? []
+  ).map(application => application.state ?? '');

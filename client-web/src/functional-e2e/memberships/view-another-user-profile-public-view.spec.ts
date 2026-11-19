@@ -1,26 +1,24 @@
 // spec: client-web/src/functional-e2e/plans/memberships-test-plan.md
-// seed: client-web/src/functional-e2e/seed-memberships.spec.ts
 
 import { expect } from '@playwright/test';
 import {
-  TestUser,
-  TestScenarioFactory,
-  TestUserManager,
-} from '@alkemio/tests-lib';
-import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
-import { TestScenarioConfig } from '@alkemio/tests-lib/scenario/config/test-scenario-config';
-import {
   CommunityMembershipPolicy,
   SpacePrivacyMode,
-} from '@alkemio/client-lib';
+  TestScenarioFactory,
+  TestUser,
+  TestUserManager,
+  type TestScenarioConfig,
+} from '@alkemio/tests-lib';
+import type { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import { createAuthenticatedSessionFixture } from '../fixtures/authenticated-session.fixture';
+import { baseUrl, teardownScenario } from '../helpers/space-access.helper';
+import { uniqueName } from './memberships.helpers';
 
 const { test, setupAuthentication, teardownAuthentication } =
   createAuthenticatedSessionFixture({
     storageStateName: 'view-another-user-profile-public.json',
     cleanupAfterTests: process.env.cleanupAfterTests === 'true',
   });
-const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 
 let baseScenario: OrganizationWithSpaceModel;
 
@@ -29,7 +27,7 @@ const scenarioConfig: TestScenarioConfig = {
   space: {
     about: {
       profile: {
-        displayName: 'Membership Test Space',
+        displayName: uniqueName('Membership Test Space'),
         tagline: 'Testing space memberships',
       },
     },
@@ -53,80 +51,68 @@ const scenarioConfig: TestScenarioConfig = {
   },
 };
 
-test.describe('User Profile Membership Display', () => {
-  test.beforeAll(async ({ browser }) => {
-    test.setTimeout(60_000);
-    baseScenario = await TestScenarioFactory.createBaseScenario(scenarioConfig);
-    await setupAuthentication(
-      browser,
-      TestUserManager.users.subspaceMember.email
-    );
-  });
+test.beforeAll(async ({ browser }) => {
+  test.setTimeout(60_000);
+  baseScenario = await TestScenarioFactory.createBaseScenario(scenarioConfig);
+  await setupAuthentication(
+    browser,
+    TestUserManager.users.subspaceMember.email
+  );
+});
 
-  test.afterAll(async () => {
-    test.setTimeout(45_000);
+// File level, so it also runs when a failure retires the worker mid-file.
+test.afterAll(async () => {
+  try {
     await teardownAuthentication();
-    await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
-  });
+  } finally {
+    await teardownScenario(baseScenario);
+  }
+});
 
-  // SKIP: another user's space memberships are not surfaced on their public profile to other viewers — pending product decision (privacy-by-design vs bug).
-  test.skip(
+test.describe('User Profile Membership Display', () => {
+  // Un-skipped 2026-11-12 (W2 Tier 0 item 1). The skip read "memberships are
+  // not surfaced to other viewers — pending product decision"; on develop
+  // they are: rolesUser needs only the platform READ_USERS every registered
+  // user holds, and the profile page splits the result by role
+  // (useFilteredMemberships: LEAD/ADMIN → "Leading", the rest → "Member Of").
+  // SPACE_ADMIN is ADMIN of the seeded space, so it is under "Leading"; the
+  // case used to open "Member Of" and found nothing — a test-side gap.
+  test(
     'View Another User Profile - Public View',
     {
-      tag: ['@bug', '@regression'],
+      tag: ['@regression'],
     },
     async ({ page }) => {
-      // Navigate to another user's profile (SPACE_ADMIN)
-      await page.goto(
-        `${baseUrl}/user/${TestUserManager.users.spaceAdmin.nameId}`
-      );
+      const other = TestUserManager.users.spaceAdmin;
 
-      // Verify user profile page loads successfully
-      await expect(page).toHaveURL(
-        new RegExp(`/user/${TestUserManager.users.spaceAdmin.nameId}`)
-      );
-
-      // Verify public profile of SPACE_ADMIN is displayed - name heading
-      const userNameHeading = page.getByRole('heading', {
-        level: 1,
-        name: new RegExp(TestUserManager.users.spaceAdmin.displayName, 'i'),
-      });
-      await expect(userNameHeading).toBeVisible({ timeout: 3000 });
-
-      // Verify Bio section is visible (public information)
-      // CRD: the public "Bio" section is the sidebar "About" block.
+      // 1. Another user's public profile renders with their name.
+      await page.goto(`${baseUrl}/user/${other.nameId}`);
+      await expect(page).toHaveURL(new RegExp(`/user/${other.nameId}$`));
       await expect(
-        page.getByRole('heading', { name: /About/i }).first()
+        page.getByRole('heading', {
+          level: 1,
+          name: new RegExp(other.displayName, 'i'),
+        })
       ).toBeVisible();
 
-      // Verify the spaces (Member Of) section is reachable
-      // CRD: spaces are organised under resource tabs; the membership space
-      // lives under the "Member Of" tab.
-      const memberOfTab = page.getByRole('tab', { name: /Member Of/i });
-      await expect(memberOfTab).toBeVisible();
-      await memberOfTab.click();
-
-      // Verify the space this user belongs to is displayed
+      // 2. The space they administer is listed under "Leading" (unique name;
+      //    `.first()` only because a card may repeat its own name).
+      const leadingTab = page.getByRole('tab', {
+        name: 'Leading',
+        exact: true,
+      });
+      await expect(leadingTab).toBeVisible();
+      await leadingTab.click();
       await expect(
         page.getByText(baseScenario.space.about.profile.displayName).first()
-      ).toBeVisible({ timeout: 5000 });
+      ).toBeVisible();
 
-      // Verify cannot access settings: no settings entry point on another
-      // user's profile (CRD icon link with accessible name).
-      const settingsLink = page.getByRole('link', {
-        name: /Open user settings/i,
-      });
-      await expect(settingsLink).not.toBeVisible();
-
-      // [BUG]
-      // make sure navigating to settings URL is not allowed (but, it's accessible)
-      // await page.goto(
-      //   `${baseUrl}/user/${TestUserManager.users.spaceAdmin.nameId}/settings`
-      // );
-
-      // await expect(accessRestrictedHeading(page)).toBeVisible({
-      //   timeout: 5000,
-      // });
+      // 3. No settings entry point on someone else's profile — read after the
+      //    profile and its tabs rendered above. (Opening the settings URL
+      //    directly is cannot-access-other-user-*-settings.spec.ts.)
+      await expect(
+        page.getByRole('link', { name: /Open user settings/i })
+      ).toHaveCount(0);
     }
   );
 });
