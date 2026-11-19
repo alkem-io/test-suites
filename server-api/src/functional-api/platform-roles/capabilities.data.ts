@@ -692,7 +692,7 @@ export const CAPABILITIES: readonly Capability[] = [
     requirement: { basis: 'named' },
     verifies: {
       kind: 'effect',
-      oracle: 're-reading the disposable user returns not-found',
+      oracle: 're-reading the disposable user returns no entity and the generic code (the same read returned it before the delete)',
     },
     positive: { status: 'automated' },
     negative: { status: 'automated' },
@@ -940,7 +940,7 @@ export const CAPABILITIES: readonly Capability[] = [
     requirement: { basis: 'named' },
     verifies: {
       kind: 'effect',
-      oracle: 're-reading the deleted entity returns not-found',
+      oracle: 're-reading the deleted entity returns no entity and the generic code (the same read returned it before the delete)',
     },
     positive: { status: 'automated' },
     negative: { status: 'automated' },
@@ -955,7 +955,7 @@ export const CAPABILITIES: readonly Capability[] = [
     requirement: { basis: 'named' },
     verifies: {
       kind: 'effect',
-      oracle: 're-reading the deleted entity returns not-found',
+      oracle: 're-reading the deleted entity returns no entity and the generic code (the same read returned it before the delete)',
     },
     positive: { status: 'automated' },
     negative: { status: 'automated' },
@@ -970,7 +970,7 @@ export const CAPABILITIES: readonly Capability[] = [
     requirement: { basis: 'named' },
     verifies: {
       kind: 'effect',
-      oracle: 're-reading the deleted entity returns not-found',
+      oracle: 're-reading the deleted entity returns no entity and the generic code (the same read returned it before the delete)',
     },
     positive: { status: 'automated' },
     negative: { status: 'automated' },
@@ -985,7 +985,7 @@ export const CAPABILITIES: readonly Capability[] = [
     requirement: { basis: 'named' },
     verifies: {
       kind: 'effect',
-      oracle: 're-reading the deleted entity returns not-found',
+      oracle: 're-reading the deleted entity returns no entity and the generic code (the same read returned it before the delete)',
     },
     positive: { status: 'automated' },
     negative: { status: 'automated' },
@@ -1000,7 +1000,7 @@ export const CAPABILITIES: readonly Capability[] = [
     requirement: { basis: 'named' },
     verifies: {
       kind: 'effect',
-      oracle: 're-reading the deleted entity returns not-found',
+      oracle: 're-reading the deleted entity returns no entity and the generic code (the same read returned it before the delete)',
     },
     positive: { status: 'automated' },
     negative: { status: 'automated' },
@@ -2421,7 +2421,7 @@ export const CAPABILITIES: readonly Capability[] = [
     },
     verifies: {
       kind: 'effect',
-      oracle: 'the invitation no longer resolves (entity not found)',
+      oracle: 'the invitation no longer resolves (the role read it before the delete; after it, no invitation and the generic code)',
     },
     positive: { status: 'automated' },
     negative: { status: 'automated' },
@@ -2440,7 +2440,7 @@ export const CAPABILITIES: readonly Capability[] = [
     },
     verifies: {
       kind: 'effect',
-      oracle: 'the email invitation no longer resolves (entity not found)',
+      oracle: 'the email invitation no longer resolves (the role read it before the delete; after it, no invitation and the generic code)',
     },
     positive: { status: 'automated' },
     negative: { status: 'automated' },

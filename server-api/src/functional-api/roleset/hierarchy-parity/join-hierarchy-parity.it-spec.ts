@@ -36,8 +36,8 @@ import {
   comboLabel,
   expectCombinedAncestryGrant,
   HIERARCHY_TEST_TIMEOUT_MS,
+  isJoinCombinedFlowRejection,
   isUserMemberOfRoleSet,
-  JOIN_COMBINED_FLOW_REJECTION,
   PRIVACY_COMBOS,
   PrivacyCombo,
 } from './hierarchy-parity.fixture';
@@ -103,9 +103,10 @@ describe('Join hierarchy parity — direct-join combined flow (US4 / SC-015)', (
               // US4 AS-4: a private ancestor the joiner would be granted into ->
               // the combined direct-join entry point is not offered; the
               // non-parent-member's join attempt is rejected and grants nothing.
-              expect(joinResult?.error?.errors?.[0]?.message).toMatch(
-                JOIN_COMBINED_FLOW_REJECTION
-              );
+              expect(
+                isJoinCombinedFlowRejection(joinResult?.error?.errors?.[0]),
+                'the join is rejected by the combined flow'
+              ).toBe(true);
               expect(joinResult?.data?.joinRoleSet?.id).toBeFalsy();
 
               expect(
@@ -143,9 +144,10 @@ describe('Join hierarchy parity — direct-join combined flow (US4 / SC-015)', (
             JOINER
           );
 
-          expect(joinResult?.error?.errors?.[0]?.message).toMatch(
-            JOIN_COMBINED_FLOW_REJECTION
-          );
+          expect(
+            isJoinCombinedFlowRejection(joinResult?.error?.errors?.[0]),
+            'the join is rejected by the combined flow'
+          ).toBe(true);
           expect(joinResult?.data?.joinRoleSet?.id).toBeFalsy();
 
           expect(
@@ -299,9 +301,10 @@ describe('Join hierarchy parity — direct-join combined flow (US4 / SC-015)', (
             scenario.subsubspace.community.roleSetId,
             JOINER
           );
-          expect(joinResult?.error?.errors?.[0]?.message).toMatch(
-            JOIN_COMBINED_FLOW_REJECTION
-          );
+          expect(
+            isJoinCombinedFlowRejection(joinResult?.error?.errors?.[0]),
+            'the join is rejected by the combined flow'
+          ).toBe(true);
           expect(joinResult?.data?.joinRoleSet?.id).toBeFalsy();
 
           expect(

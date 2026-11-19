@@ -26,6 +26,10 @@ import { TestScenarioConfig, TestScenarioFactory } from '@alkemio/tests-lib';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import { assignRoleToUser } from '@functional-api/roleset/roles-request.params';
 import { getRoleSetUsersInMemberRole } from '@functional-api/roleset/roleset.request.params';
+import {
+  NEUTRAL_ERROR_CODE,
+  NEUTRAL_ERROR_MESSAGE,
+} from '@functional-api/error-response/error-response.constants';
 
 /**
  * Per-test budget. Each cell builds an org + 3 spaces via the real API, so it
@@ -35,33 +39,45 @@ import { getRoleSetUsersInMemberRole } from '@functional-api/roleset/roleset.req
  */
 export const HIERARCHY_TEST_TIMEOUT_MS = 1_800_000; // 30 minutes, = global testTimeout
 
+type FirstError = Record<string, unknown> | undefined;
+
+/** The generic refusal: FORBIDDEN_POLICY with the generic sentence. */
+const isGenericRefusal = (error: FirstError): boolean =>
+  error?.code === NEUTRAL_ERROR_CODE &&
+  error?.message === NEUTRAL_ERROR_MESSAGE;
+
 /**
- * The combined application flow's rejection for a non-eligible
- * non-parent-member applicant. Two legitimate rejection layers exist —
- * negative cells assert one of THESE (not merely that some error occurred,
- * so a scenario-setup failure or an unrelated 500 cannot green-light a cell):
+ * Whether the first error is the combined application flow's rejection for a
+ * non-eligible non-parent-member applicant. Two legitimate rejection layers
+ * exist — negative cells assert one of THESE (not merely that some error
+ * occurred, so a scenario-setup failure or an unrelated 500 cannot
+ * green-light a cell):
  * - authorization: the APPLY privilege is not exposed on the subspace
  *   role-set (the privilege is the client's single trusted signal, so
- *   ineligible applicants are stopped here first);
+ *   ineligible applicants are stopped here first). It reaches the caller as
+ *   the generic refusal, which names no privilege;
  * - precondition: today's "join the parent first" rule inside the mutation
  *   (defence in depth, e.g. authorisation revoked between exposure and call).
  */
-export const COMBINED_FLOW_REJECTION =
-  /not a member of the parent Community|Authorization: unable to grant 'roleset-entry-role-apply'/i;
+export const isCombinedFlowRejection = (error: FirstError): boolean =>
+  isGenericRefusal(error) ||
+  /not a member of the parent Community/i.test(String(error?.message ?? ''));
 
 /**
- * The combined DIRECT-JOIN flow's rejection for a non-eligible
- * non-parent-member joiner (workspace#017 round 2 — the `OPEN` membership
- * policy). As with the application flow there are two legitimate rejection
- * layers; a negative cell asserts one of THESE:
+ * Whether the first error is the combined DIRECT-JOIN flow's rejection for a
+ * non-eligible non-parent-member joiner (workspace#017 round 2 — the `OPEN`
+ * membership policy). As with the application flow there are two legitimate
+ * rejection layers; a negative cell asserts one of THESE:
  * - authorization: the JOIN privilege is not exposed on the subspace role-set
  *   (the privilege is the client's single trusted signal, so ineligible
- *   joiners are stopped here first);
+ *   joiners are stopped here first). It reaches the caller as the generic
+ *   refusal;
  * - precondition: `assignActorToRole`'s parent-membership check inside the
  *   join mutation (defence in depth).
  */
-export const JOIN_COMBINED_FLOW_REJECTION =
-  /member of the parent|Authorization: unable to grant 'roleset-entry-role-join'/i;
+export const isJoinCombinedFlowRejection = (error: FirstError): boolean =>
+  isGenericRefusal(error) ||
+  /member of the parent/i.test(String(error?.message ?? ''));
 
 /**
  * Tear down a scenario without masking an in-flight test failure: a throw

@@ -26,6 +26,10 @@ import {
   assignLicensePlanToSpace,
   getLicensePlanByName,
 } from '../license/license.params.request';
+import {
+  NEUTRAL_ERROR_CODE,
+  NEUTRAL_ERROR_MESSAGE,
+} from '@functional-api/error-response/error-response.constants';
 
 /**
  * Document post templates — template/post isolation (workspace#085).
@@ -144,8 +148,7 @@ beforeAll(async () => {
   // Fail HERE, not three cases later. createCollaboraCalloutTemplate returns the
   // GraphQL response and does not throw on `errors`; without this every later
   // case runs with empty ids and reports a misleading cause — and AC6's
-  // `toContain(templateDocumentId)` against '' passes vacuously, which is the
-  // one outcome a persistence assertion must never have.
+  // apply against an empty document id would be refused for the wrong reason.
   if (templateResponse.errors) {
     throw new Error(
       `template setup failed, aborting before the cases run: ${JSON.stringify(
@@ -321,8 +324,11 @@ describe('document post templates - template and post content are independent', 
     // The READ denial itself. A malformed id (BAD_USER_INPUT) or an unreachable
     // server also returns no template, and must not satisfy the precondition.
     const foreignReadError = foreignRead.error?.errors[0];
-    expect(foreignReadError?.code).toEqual('FORBIDDEN_POLICY');
-    expect(String(foreignReadError?.message)).toContain(templateId);
+    expect(foreignReadError?.code).toEqual(NEUTRAL_ERROR_CODE);
+    expect(
+      foreignReadError?.message === NEUTRAL_ERROR_MESSAGE,
+      'the template read is refused with the generic sentence'
+    ).toBe(true);
 
     const beforeRead = await getCalloutsData(
       spaceB.space.collaboration.calloutsSetId,
@@ -347,20 +353,19 @@ describe('document post templates - template and post content are independent', 
 
     const errors: { message: string; extensions?: { code?: string } }[] =
       refused.body?.errors ?? [];
-    const messages = errors.map(error => error.message).join(' | ');
     const codes = errors.map(error => error.extensions?.code);
     expect(refused.body?.data?.createCalloutOnCalloutsSet).toBeFalsy();
-    // The refusal is the source READ denial — by code and by privilege, since
-    // a not-found that echoes the id would satisfy the id check on its own.
-    expect(codes).toEqual(['FORBIDDEN_POLICY']);
-    expect(messages).toMatch(/unable to grant 'read' privilege/);
-    // It names the source document, not the destination and not the licence:
-    // B is entitled and its admin holds CREATE_CALLOUT on B.
-    expect(messages).toContain(templateDocumentId);
-    // The licence refusal is identified by its code; its message ("Office Docs
-    // is not enabled for this Collaboration.") never contains that string.
+    // One refusal with the generic code and sentence, which names neither the
+    // privilege nor the entity. It is not the licence refusal, which keeps its
+    // own code: B is entitled. Nor the destination's: B's admin holds
+    // CREATE_CALLOUT on B. What is left is the source, which the precondition
+    // above shows this caller cannot read.
+    expect(codes).toEqual([NEUTRAL_ERROR_CODE]);
+    expect(
+      errors[0]?.message === NEUTRAL_ERROR_MESSAGE,
+      'the apply is refused with the generic sentence'
+    ).toBe(true);
     expect(codes).not.toContain('LICENSE_ENTITLEMENT_NOT_AVAILABLE');
-    expect(messages).not.toContain(spaceB.space.collaboration.calloutsSetId);
 
     const afterRead = await getCalloutsData(
       spaceB.space.collaboration.calloutsSetId,

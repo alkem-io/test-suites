@@ -20,6 +20,10 @@ import {
 } from '@functional-api/platform/authorization-platform-mutation';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import {
+  NEUTRAL_ERROR_CODE,
+  NEUTRAL_ERROR_MESSAGE,
+} from '@functional-api/error-response/error-response.constants';
+import {
   CommunityMembershipPolicy,
   RoleName,
   SpacePrivacyMode,
@@ -204,10 +208,11 @@ describe('Direct user add to an L0 space is gone at Slice B', () => {
       TestUser.SPACE_ADMIN
     );
 
-    expect(getErrorCode(res)).toBe('FORBIDDEN_POLICY');
-    expect(String(res.error?.errors?.[0]?.message)).toContain(
-      'roleset-entry-role-assign'
-    );
+    expect(getErrorCode(res)).toBe(NEUTRAL_ERROR_CODE);
+    expect(
+      res.error?.errors?.[0]?.message === NEUTRAL_ERROR_MESSAGE,
+      'refusal carries the generic sentence'
+    ).toBe(true);
     const members = await getRoleSetMembersList(
       baseScenario.space.community.roleSetId
     );

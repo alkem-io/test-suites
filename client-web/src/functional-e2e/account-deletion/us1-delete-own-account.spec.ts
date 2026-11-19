@@ -11,7 +11,8 @@
 // credentials never sign in again). Serial: AS3 is a one-way door.
 //
 // W2 Tier 0 item 3: the outcome is read back over GraphQL (`lookup.user` as
-// the platform admin answers ENTITY_NOT_FOUND), not from Postgres. Two cases
+// the platform admin resolves the user before and answers nothing after, and
+// the admin's user search no longer lists it), not from Postgres. Two cases
 // stay `@local-stack` because the cluster cannot serve them:
 //  - US1-AS5 (exactly one PII-free `account_deleted` audit row): the audit
 //    trail has no GraphQL read surface; it needs loopback Postgres.
@@ -49,6 +50,7 @@ import {
   runTeardown,
   typedNameField,
   userExists,
+  userListed,
 } from './delete-account.helpers';
 
 let cleanSubject: DisposableSubject | undefined;
@@ -144,7 +146,9 @@ test.describe(
       await expect(logInHeaderLink(cleanPage)).toBeVisible();
       await expect(notificationsButton(cleanPage)).toHaveCount(0);
 
-      // And the platform no longer holds the user.
+      // And the platform no longer holds the user: the admin read it above,
+      // its user search no longer lists it, and the same read finds nothing.
+      expect(await userListed(cleanSubject!)).toBe(false);
       expect(await userExists(cleanSubject!.userId)).toBe(false);
 
       // The other device is signed out too. This page went through /logout,
@@ -235,6 +239,9 @@ test.describe(
         [externalSubscriptionId, subSubject!.accountId]
       );
 
+      // Positive control for the read-backs below.
+      expect(await userExists(subSubject!.userId)).toBe(true);
+
       subContext = await browser.newContext();
       const page = await subContext.newPage();
       await loginAsSubject(page, subSubject!.email);
@@ -255,6 +262,7 @@ test.describe(
       await confirmButton.click();
 
       await expect(logInHeaderLink(page)).toBeVisible();
+      expect(await userListed(subSubject!)).toBe(false);
       expect(await userExists(subSubject!.userId)).toBe(false);
 
       const rows = await getAuditRowsFor(subSubject!.userId);

@@ -60,14 +60,24 @@ import {
 } from '../roleset.request.params';
 import { getLanguageConfig } from '@functional-api/language/language.request.params';
 import { assignRoleToUser } from '../roles-request.params';
+import {
+  NEUTRAL_ERROR_CODE,
+  NEUTRAL_ERROR_MESSAGE,
+} from '@functional-api/error-response/error-response.constants';
 
 const uniqueId = UniqueIDGenerator.getID();
 const message = `Join our organization ${uniqueId}`;
-/** The admin-only refusal every gated call answers with. */
-const NOT_AUTHORIZED = /Authorization: unable to grant/;
-/** The refusal of a revoke: DELETE on the platform invitation record. */
-const NOT_AUTHORIZED_DELETE =
-  /Authorization: unable to grant 'delete' privilege/;
+/** The generic refusal every gated call answers with. */
+const expectRefused = (
+  res: { error?: { errors: Array<Record<string, unknown>> } } | undefined,
+  persona: string
+) => {
+  expect(res?.error?.errors?.[0]?.code, persona).toBe(NEUTRAL_ERROR_CODE);
+  expect(
+    res?.error?.errors?.[0]?.message === NEUTRAL_ERROR_MESSAGE,
+    `${persona}: refusal carries the generic sentence`
+  ).toBe(true);
+};
 
 const addr = (label: string) => `${label}-${uniqueId}@alkemio.test`;
 
@@ -425,30 +435,21 @@ describe('Invite an unregistered address to an organization (US1)', () => {
         [RoleName.Admin],
         persona
       );
-      expect(inviteRes?.error?.errors?.[0]?.message, persona).toMatch(
-        NOT_AUTHORIZED
-      );
+      expectRefused(inviteRes, persona);
       expect(inviteRes?.data?.inviteForEntryRoleOnRoleSet).toBeUndefined();
 
       const listRes = await getRoleSetPendingPlatformInvitations(
         roleSetId,
         persona
       );
-      expect(listRes?.error?.errors?.[0]?.message, persona).toMatch(
-        NOT_AUTHORIZED
-      );
+      expectRefused(listRes, persona);
 
       const revokeRes = await deleteExternalInvitation(seededId, persona);
       expect(revokeRes?.error, persona).toBeDefined();
-      // Revoke is gated on DELETE of the record: the refusal must be that one.
-      expect(revokeRes?.error?.errors?.[0]?.message, persona).toMatch(
-        NOT_AUTHORIZED_DELETE
-      );
+      expectRefused(revokeRes, persona);
 
       const resendRes = await resendPlatformInvitation(seededId, persona);
-      expect(resendRes?.error?.errors?.[0]?.message, persona).toMatch(
-        NOT_AUTHORIZED
-      );
+      expectRefused(resendRes, persona);
       expect(resendRes?.data?.resendPlatformInvitation).toBeUndefined();
 
       // The refused invite created nothing.

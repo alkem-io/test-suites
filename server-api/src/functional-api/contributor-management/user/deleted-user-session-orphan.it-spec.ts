@@ -29,6 +29,10 @@ import {
   RawGraphqlResponse,
 } from '@functional-api/graphql-guard/me-degradation.request.params';
 import { createUserOrFail, deleteUser } from './user.request.params';
+import {
+  NEUTRAL_ERROR_CODE,
+  NEUTRAL_ERROR_MESSAGE,
+} from '@functional-api/error-response/error-response.constants';
 
 const scenarioConfig: TestScenarioNoPreCreationConfig = {
   name: 'deleted-user-orphan',
@@ -130,7 +134,7 @@ describe('deleted user - orphaned bearer', () => {
     expect(response?.data?.deleteUser.id).toEqual(userId);
   });
 
-  test('SRA-E2 - repeated deletion is an ordinary not-found, never a revocation error', async () => {
+  test('SRA-E2 - repeated deletion is answered with the generic code, never a revocation error', async () => {
     const disposable = await createDisposableVerifiedUser('repeat-delete');
     disposableUserIds.push(disposable.userId);
 
@@ -139,15 +143,13 @@ describe('deleted user - orphaned bearer', () => {
       deleteIdentity: true,
     });
 
-    const message = String(response.error?.errors[0].message);
-    expect(message).toContain(
-      `Unable to find user with given ID: ${disposable.userId}`
-    );
-    // The new code path must not leak a new failure mode into an idempotent retry.
-    const lowered = message.toLowerCase();
-    for (const term of ['revocation', 'revoke', 'redis', 'session', 'token']) {
-      expect(lowered).not.toContain(term);
-    }
+    // An idempotent retry gets the plain "not available" answer: the generic
+    // code and sentence, so no new failure mode of the revocation path shows.
+    expect(response.error?.errors[0]?.code).toBe(NEUTRAL_ERROR_CODE);
+    expect(
+      response.error?.errors[0]?.message === NEUTRAL_ERROR_MESSAGE,
+      'the answer carries the generic sentence'
+    ).toBe(true);
   });
 
   test('SRA-E3 - deletion with deleteIdentity false still succeeds', async () => {

@@ -20,6 +20,21 @@ import {
   TestScenarioNoPreCreationConfig,
   UniqueIDGenerator,
 } from '@alkemio/tests-lib';
+import {
+  NEUTRAL_ERROR_CODE,
+  NEUTRAL_ERROR_MESSAGE,
+} from '@functional-api/error-response/error-response.constants';
+
+/** A user that is not there is answered with the generic code and sentence. */
+const expectUnavailable = (res: {
+  error?: { errors: Array<Record<string, unknown>> };
+}) => {
+  expect(res.error?.errors[0]?.code).toBe(NEUTRAL_ERROR_CODE);
+  expect(
+    res.error?.errors[0]?.message === NEUTRAL_ERROR_MESSAGE,
+    'the answer carries the generic sentence'
+  ).toBe(true);
+};
 
 let userName = '';
 let userId: string;
@@ -65,9 +80,7 @@ describe('Delete user', () => {
     const res = await deleteUser(userId);
 
     // Assert
-    expect(res.error?.errors[0].message).toContain(
-      `Unable to find user with given ID: ${userId}`
-    );
+    expectUnavailable(res);
   });
 
   test('should receive a message for deleting unexisting user', async () => {
@@ -75,21 +88,30 @@ describe('Delete user', () => {
     const res = await deleteUser('180f55ab-2286-415d-952c-c588c5b6f533');
 
     // Assert
-    expect(res.error?.errors[0].message).toContain(
-      'Unable to find user with given ID: 180f55ab-2286-415d-952c-c588c5b6f533'
-    );
+    expectUnavailable(res);
   });
 
   test('should not get result for quering deleted user', async () => {
     // Arrange
+    // The global admin reads the user before the delete; the same read
+    // afterwards returns no user and only the generic code. The earlier read
+    // shows this token may read the user, so that answer means it is gone.
+    const before = await getUserData(userId);
+    expect(
+      before.error === undefined && before.data?.user?.id === userId,
+      'the user is readable before the delete'
+    ).toBe(true);
     await deleteUser(userId);
 
     // Act
     userData = await getUserData(userId);
 
     // Assert
-    expect(userData.error?.errors[0].message).toContain(
-      `Unable to find user with given ID: ${userId}`
-    );
+    expect(userData.data?.user == null, 'no user is returned').toBe(true);
+    expect(
+      (userData.error?.errors ?? [])
+        .map(e => e.code)
+        .filter(code => code !== NEUTRAL_ERROR_CODE)
+    ).toEqual([]);
   });
 });

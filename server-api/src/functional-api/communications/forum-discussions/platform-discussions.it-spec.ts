@@ -33,6 +33,10 @@ import {
   harnessPostgresConfigured,
   queryHarnessDb,
 } from '@alkemio/tests-lib';
+import {
+  NEUTRAL_ERROR_CODE,
+  NEUTRAL_ERROR_MESSAGE,
+} from '@functional-api/error-response/error-response.constants';
 
 /** Narrow a raw GraphQL error's `extensions.code` without an `unknown`
  * member-access error — `postGraphqlRaw`'s `errors` are typed as
@@ -79,14 +83,17 @@ let messageId = '';
 // gated on PLATFORM_FORUM_MANAGE, not on ordinary UPDATE/DELETE. The privilege
 // has to be its own non-CRUD one, otherwise the root content cascade would let
 // `platform-content-full-access` reach the forum — a role the spec explicitly
-// denies it to. The DENIAL these cases assert is unchanged; only the privilege
-// named in the message moved.
-const errorAuthDiscussionUpdate =
-  "Authorization: unable to grant 'platform-forum-manage' privilege: Update discussion: ";
-const errorAuthDiscussionDelete =
-  "Authorization: unable to grant 'platform-forum-manage' privilege: delete discussion: ";
-const errorAuthDiscussionMessageDelete =
-  "Authorization: unable to grant 'delete' privilege: room remove message: ";
+// denies it to. Every denial reaches the caller as the generic refusal, which
+// names no privilege.
+const expectRefused = (
+  res: { error?: { errors: Array<Record<string, unknown>> } } | undefined
+) => {
+  expect(res?.error?.errors?.[0]?.code).toBe(NEUTRAL_ERROR_CODE);
+  expect(
+    res?.error?.errors?.[0]?.message === NEUTRAL_ERROR_MESSAGE,
+    'refusal carries the generic sentence'
+  ).toBe(true);
+};
 
 // The two categories below are not yet in the checked-in generated SDK enum
 // (it predates this delivery's server change), but GraphQL enums travel by
@@ -322,12 +329,12 @@ describe('Authorization - Discussion / Messages', () => {
       );
 
       test.each`
-        userRoleCreate           | userRoleUpdate      | messageUpdate
-        ${TestUser.QA_USER}      | ${TestUser.QA_USER} | ${errorAuthDiscussionUpdate}
-        ${TestUser.GLOBAL_ADMIN} | ${TestUser.QA_USER} | ${errorAuthDiscussionUpdate}
+        userRoleCreate           | userRoleUpdate
+        ${TestUser.QA_USER}      | ${TestUser.QA_USER}
+        ${TestUser.GLOBAL_ADMIN} | ${TestUser.QA_USER}
       `(
-        'User: "$userRoleUpdate" get ERROR message: "$messageUpdate", who intend to update discussion created from "$userRoleCreate',
-        async ({ userRoleCreate, userRoleUpdate, messageUpdate }) => {
+        'User: "$userRoleUpdate" is refused, who intend to update discussion created from "$userRoleCreate',
+        async ({ userRoleCreate, userRoleUpdate }) => {
           // Act
           const res = await createDiscussion(
             platformDiscussionId,
@@ -344,7 +351,7 @@ describe('Authorization - Discussion / Messages', () => {
           });
 
           // Assert
-          expect(update.error?.errors[0].message).toContain(messageUpdate);
+          expectRefused(update);
         }
       );
     });
@@ -379,12 +386,12 @@ describe('Authorization - Discussion / Messages', () => {
       );
 
       test.each`
-        userRoleCreate           | userRoleDelete      | messageDelete
-        ${TestUser.QA_USER}      | ${TestUser.QA_USER} | ${errorAuthDiscussionDelete}
-        ${TestUser.GLOBAL_ADMIN} | ${TestUser.QA_USER} | ${errorAuthDiscussionDelete}
+        userRoleCreate           | userRoleDelete
+        ${TestUser.QA_USER}      | ${TestUser.QA_USER}
+        ${TestUser.GLOBAL_ADMIN} | ${TestUser.QA_USER}
       `(
-        'User: "$userRoleUpdate" get message: "$messageDelete", who intend to delete discussion created from "$userRoleCreate',
-        async ({ userRoleCreate, userRoleDelete, messageDelete }) => {
+        'User: "$userRoleDelete" is refused, who intend to delete discussion created from "$userRoleCreate',
+        async ({ userRoleCreate, userRoleDelete }) => {
           // Act
           const res = await createDiscussion(
             platformDiscussionId,
@@ -398,7 +405,7 @@ describe('Authorization - Discussion / Messages', () => {
           const del = await deleteDiscussion(discussionId, userRoleDelete);
 
           // Assert
-          expect(del.error?.errors[0].message).toContain(messageDelete);
+          expectRefused(del);
         }
       );
     });
@@ -451,11 +458,11 @@ describe('Authorization - Discussion / Messages', () => {
       );
 
       test.each`
-        userRoleCreate           | userRoleDelete      | messageDelete
-        ${TestUser.GLOBAL_ADMIN} | ${TestUser.QA_USER} | ${errorAuthDiscussionMessageDelete}
+        userRoleCreate           | userRoleDelete
+        ${TestUser.GLOBAL_ADMIN} | ${TestUser.QA_USER}
       `(
-        'User: "$userRoleDelete" get ERROR message: "$messageDelete", who intend to delete message created from "$userRoleCreate',
-        async ({ userRoleCreate, userRoleDelete, messageDelete }) => {
+        'User: "$userRoleDelete" is refused, who intend to delete message created from "$userRoleCreate',
+        async ({ userRoleCreate, userRoleDelete }) => {
           // Act
           const res = await createDiscussion(
             platformDiscussionId,
@@ -485,7 +492,7 @@ describe('Authorization - Discussion / Messages', () => {
           );
 
           // Assert
-          expect(delMessage.error?.errors[0].message).toContain(messageDelete);
+          expectRefused(delMessage);
         }
       );
     });
@@ -536,11 +543,11 @@ describe('Authorization - Discussion / Messages', () => {
       );
 
       test.each`
-        userRoleCreate           | userRoleDelete      | messageDelete
-        ${TestUser.GLOBAL_ADMIN} | ${TestUser.QA_USER} | ${errorAuthDiscussionMessageDelete}
+        userRoleCreate           | userRoleDelete
+        ${TestUser.GLOBAL_ADMIN} | ${TestUser.QA_USER}
       `(
-        'User: "$userRoleDelete" get ERROR message: "$messageDelete", who intend to delete message created from "$userRoleCreate',
-        async ({ userRoleCreate, userRoleDelete, messageDelete }) => {
+        'User: "$userRoleDelete" is refused, who intend to delete message created from "$userRoleCreate',
+        async ({ userRoleCreate, userRoleDelete }) => {
           // Act
           const res = await createDiscussion(
             platformDiscussionId,
@@ -569,7 +576,7 @@ describe('Authorization - Discussion / Messages', () => {
           );
 
           // Assert
-          expect(delMessage.error?.errors[0].message).toContain(messageDelete);
+          expectRefused(delMessage);
         }
       );
     });
@@ -738,9 +745,7 @@ describe('Forum category reorganisation - recategorise an existing post', () => 
     });
 
     // Assert
-    expect(updated?.error?.errors[0].message).toContain(
-      errorAuthDiscussionUpdate
-    );
+    expectRefused(updated);
   });
 
   test('Platform Support (holder of PLATFORM_FORUM_MANAGE) moves a post into Newsletter', async () => {

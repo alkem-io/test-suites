@@ -70,7 +70,7 @@ Techniques: **UC** use-case walk with the postcondition read back, **ST** state 
 | 3.7 | › 3.7 the host sets a VC to Hidden on its Settings tab | ST | `searchVisibility` HIDDEN in the API; Hidden radio after reload | green |
 | 3.7b | › 3.7b the "Hide knowledge-base content from non-members" switch reads ON exactly when the content is hidden | EG, ST | switch checked ⇔ `knowledgeBaseContentVisible` false, before and after a toggle | **skipped** — switch inverted (QA-PF-02, issue pending; red when unskipped) |
 | 3.8 | › 3.8 a signed-in user visits the Body of Knowledge from the VC profile | UC | Visit → KB page, no Add for a visitor; seeded post title and body listed; Back returns to the profile | **skipped** — client-web#10125 (red when unskipped) |
-| 3.9 | › 3.9 the host deletes a VC from the Account tab | UC, NC | confirm names the VC; card gone, other VC still listed; API lookup ENTITY_NOT_FOUND (present before) | green |
+| 3.9 | › 3.9 the host deletes a VC from the Account tab | UC, NC | confirm names the VC; card gone, other VC still listed; gone by three API reads: the admin's lookup returns it before, the account's VC list no longer holds it, the same lookup then answers nothing (null, or exactly one `FORBIDDEN_POLICY`) | green |
 
 ## Covered elsewhere (not duplicated here)
 

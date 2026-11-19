@@ -1,3 +1,4 @@
+import { NEUTRAL_ERROR_CODE } from '@functional-api/error-response/error-response.constants';
 import { rawRequest } from '../raw-request';
 import { registerUser } from '../users';
 
@@ -20,7 +21,11 @@ export const registerDisposableUser = async (
 
 const USER_EXISTS = 'query($id: UUID!) { lookup { user(ID: $id) { id } } }';
 
-/** `false` only on the server's own not-found; any other error is thrown. */
+/**
+ * `false` on the generic FORBIDDEN_POLICY answer; any other error is thrown.
+ * That answer is the same for a missing user and a refused read, so `false`
+ * means "gone" only for a token that read the same user successfully before.
+ */
 export const userExists = async (
   token: string,
   id: string
@@ -29,7 +34,7 @@ export const userExists = async (
     lookup: { user: { id: string } | null };
   }>(token, USER_EXISTS, { id });
   if (errors.length === 0) return data?.lookup?.user?.id === id;
-  if (errors.every(e => e.extensions?.code === 'ENTITY_NOT_FOUND'))
+  if (errors.every(e => e.extensions?.code === NEUTRAL_ERROR_CODE))
     return false;
   throw new Error(`could not read user ${id}: ${errors[0].message}`);
 };

@@ -48,11 +48,13 @@ genuinely need a database or a session store stay behind `@local-stack`
   recipient, `registerVerifiedUser`) and reads id, account and display name with `readMyUser`. No
   SQL.
 - **Oracles.** "Deleted" / "nothing deleted" is the platform admin's `lookup.user`
-  (`readUserAccount`: resolves, or `ENTITY_NOT_FOUND`), with a positive control before every
-  deletion; US2 adds the subject's own pre-flight (`readMyAccountDeletionCanDelete` over its
+  (`readUserAccount`: resolves, or answers nothing — null, or only `FORBIDDEN_POLICY`), with a
+  positive control before every deletion; since the server answers a missing user and one the
+  reader may not see alike, "deleted" also needs the admin's user search by email
+  (`findUsersPaginated`) to stop listing the subject; US2 adds the subject's own pre-flight (`readMyAccountDeletionCanDelete` over its
   browser session) and keeps the `ACCOUNT_DELETION_BLOCKED` code of the raw bypass (the
   client-actionable contract). The vacuous "no error text right after the click" checks are gone.
-- **Teardown** is file-level and strict: already-deleted (`ENTITY_NOT_FOUND`) is the only tolerated
+- **Teardown** is file-level and strict: already-deleted (`FORBIDDEN_POLICY`) is the only tolerated
   failure, every seeded Space is deleted before its owner, and a failure fails the hook.
 - **Run-unique names** for every seeded Space (`UniqueIDGenerator`).
 

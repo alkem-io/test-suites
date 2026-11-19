@@ -440,7 +440,7 @@ describe('S-03 — Support can never add anyone directly (P1, equivalence partit
         nonMember.id,
         RoleName.Associate
       );
-      expectForbidden(a, 'roleset-entry-role-assign');
+      expectForbidden(a);
       // (b) the entry role, generic actor mutation
       const b = await assignActor(
         sup().token,
@@ -448,7 +448,7 @@ describe('S-03 — Support can never add anyone directly (P1, equivalence partit
         nonMember.id,
         RoleName.Associate
       );
-      expectForbidden(b, 'roleset-entry-role-assign');
+      expectForbidden(b);
       // (c) a higher role for someone not yet in the entry role is no side door
       const c = await assignUser(
         sup().token,
@@ -456,7 +456,7 @@ describe('S-03 — Support can never add anyone directly (P1, equivalence partit
         nonMember.id,
         RoleName.Admin
       );
-      expectForbidden(c, 'roleset-entry-role-assign');
+      expectForbidden(c);
       // (d)
       const d = await assignUser(
         sup().token,
@@ -464,7 +464,7 @@ describe('S-03 — Support can never add anyone directly (P1, equivalence partit
         nonMember.id,
         RoleName.Owner
       );
-      expectForbidden(d, 'roleset-entry-role-assign');
+      expectForbidden(d);
     }, []);
 
     const roles = await membersOf(sup().token, roleSetId);
@@ -560,7 +560,7 @@ describe('S-04 — surfaces outside the Community tab stay closed to Support (P1
     const form = await rawRequest(sup().token, UPDATE_FORM, {
       d: formInput(description),
     });
-    expectForbidden(form, 'update');
+    expectForbidden(form);
     expect((await readForm()).description).toEqual(before.description);
 
     // 2. the organisation profile
@@ -585,7 +585,7 @@ describe('S-04 — surfaces outside the Community tab stay closed to Support (P1
         },
       }
     );
-    expectForbidden(profile, 'update');
+    expectForbidden(profile);
     expect(await displayName()).toEqual(nameBefore);
 
     // 3. the organisation settings
@@ -611,7 +611,7 @@ describe('S-04 — surfaces outside the Community tab stay closed to Support (P1
         },
       }
     );
-    expectForbidden(settings, 'update');
+    expectForbidden(settings);
     expect(await applicationsOpen()).toEqual(open);
 
     // Positive control: the organisation admin DOES change the form, so the
@@ -631,13 +631,13 @@ describe('S-04 — surfaces outside the Community tab stay closed to Support (P1
 
   test('S-04 — Support cannot drive the invitation lifecycle (REJECT on a pending, ARCHIVE on a rejected one): refused on UPDATE, state unchanged; revoking by delete is the allowed route', async () => {
     const reject = await eventOnInvitation(sup().token, pending.id, 'REJECT');
-    expectForbidden(reject, 'update');
+    expectForbidden(reject);
     expect(await invitationState(orgAdmin().token, pending.id)).toEqual(
       'invited'
     );
 
     const archive = await eventOnInvitation(sup().token, rejected.id, 'ARCHIVE');
-    expectForbidden(archive, 'update');
+    expectForbidden(archive);
     expect(await invitationState(orgAdmin().token, rejected.id)).toEqual(
       'rejected'
     );
@@ -704,25 +704,16 @@ describe('S-05 — Content Full Access keeps exactly today\'s reach, no more (P1
     const roleSetId = org.roleSetId;
 
     // Refused: no Support privilege, no GRANT, no invite.
+    expectForbidden(await invite(cfa, roleSetId, { users: [spare.id] }));
     expectForbidden(
-      await invite(cfa, roleSetId, { users: [spare.id] }),
-      'roleset-entry-role-invite'
+      await invite(cfa, roleSetId, { emails: [`s05x-${uid}@alkemio.test`] })
+    );
+    expectForbidden(await resendEmailInvitation(cfa, emailInvitationId));
+    expectForbidden(
+      await assignUser(cfa, roleSetId, member.id, RoleName.Admin)
     );
     expectForbidden(
-      await invite(cfa, roleSetId, { emails: [`s05x-${uid}@alkemio.test`] }),
-      'roleset-entry-role-invite'
-    );
-    expectForbidden(
-      await resendEmailInvitation(cfa, emailInvitationId),
-      'roleset-entry-role-invite'
-    );
-    expectForbidden(
-      await assignUser(cfa, roleSetId, member.id, RoleName.Admin),
-      'grant'
-    );
-    expectForbidden(
-      await removeUser(cfa, roleSetId, member.id, RoleName.Associate),
-      'grant'
+      await removeUser(cfa, roleSetId, member.id, RoleName.Associate)
     );
     // The applications list is refused, not served empty.
     const list = await rawRequest<{
@@ -732,7 +723,7 @@ describe('S-05 — Content Full Access keeps exactly today\'s reach, no more (P1
       'query($id: UUID!) { lookup { roleSet(ID: $id) { applications { id } } } }',
       { id: roleSetId }
     );
-    expectForbidden(list, 'grant');
+    expectForbidden(list);
     expect(list.data?.lookup?.roleSet?.applications ?? null).toBeNull();
 
     // APPROVE: either an error, or a silent no-op. The oracle is the state and
@@ -749,6 +740,12 @@ describe('S-05 — Content Full Access keeps exactly today\'s reach, no more (P1
     ).not.toContain(applicantA.id);
 
     // Today's reach (root CRUD): revoke an invitation, reject an application.
+    // The organisation admin reads the invitation before the revoke and gets
+    // nothing but the generic answer after it: the earlier read shows that
+    // token may read it, so the later one means it is gone, not refused.
+    expect(await invitationState(orgAdmin().token, invitationId)).toEqual(
+      'invited'
+    );
     await audit.noRow(invited.id, async () => {
       expectOk(await deleteUserInvitation(cfa, invitationId), 'CFA revokes');
     });
@@ -952,9 +949,9 @@ describe('S-07 — an organisation not yet reset grants nothing until it is (P2,
       , []);
       expect(before.privileges).not.toContain(SUPPORT_MEMBERSHIP);
       expect(before.privileges).not.toContain('ROLESET_ENTRY_ROLE_INVITE');
-      expectForbidden(before.invite, 'roleset-entry-role-invite');
-      expectForbidden(before.revoke, 'delete');
-      expectForbidden(before.applications, 'grant');
+      expectForbidden(before.invite);
+      expectForbidden(before.revoke);
+      expectForbidden(before.applications);
       // The refused revoke left the invitation in place.
       expect(await invitationState(orgAdmin().token, invitationId)).toEqual(
         'invited'

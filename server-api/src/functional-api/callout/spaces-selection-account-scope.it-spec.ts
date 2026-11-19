@@ -62,6 +62,10 @@ import {
   SpaceLevel,
 } from '@alkemio/tests-lib/core/generated/alkemio-schema';
 import { SpacePrivacyMode } from '@alkemio/client-lib';
+import {
+  NEUTRAL_ERROR_CODE,
+  NEUTRAL_ERROR_MESSAGE,
+} from '@functional-api/error-response/error-response.constants';
 
 import {
   createCalloutOnCalloutsSet,
@@ -787,8 +791,11 @@ describe('Spaces-collection CUSTOM selection — the account boundary', () => {
       TestUser.SPACE_MEMBER
     );
     const denial = byMember.error?.errors[0] as GqlError | undefined;
-    expect(denial?.extensions?.code).toBe('FORBIDDEN_POLICY');
-    expect(denial?.message).toContain('SPACES callout framing (admin-only)');
+    expect(denial?.extensions?.code).toBe(NEUTRAL_ERROR_CODE);
+    expect(
+      denial?.message === NEUTRAL_ERROR_MESSAGE,
+      'refusal carries the generic sentence'
+    ).toBe(true);
 
     const reread = await getCalloutSpacesSettings(calloutId);
     expect(reread.error).toBeUndefined();

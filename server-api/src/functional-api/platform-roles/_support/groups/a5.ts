@@ -79,8 +79,15 @@ export const A5_GROUP: GroupModule<A5> = {
       )
     ).data.mintMcpApiKey.key.id;
 
+    // `A5.deleteUser` proves the delete by this read coming back empty; made
+    // now with the same token, it must return the user.
+    const deleteTarget = await registerDisposableUser(ctx.runId, 'a5delete');
+    if (!(await userExists(usersAdmin, deleteTarget.id))) {
+      throw new Error('A5 build: Platform Users Admin cannot read a new user');
+    }
+
     return {
-      deleteTarget: await registerDisposableUser(ctx.runId, 'a5delete'),
+      deleteTarget,
       accountDeleteTarget: await registerDisposableUser(ctx.runId, 'a5account'),
       identityTarget: {
         ...identityTarget,
@@ -139,6 +146,8 @@ export const A5_GROUP: GroupModule<A5> = {
         ),
       verify: async ({ ctx, fx, data }) => {
         expect(data).toEqual({ deleteUser: { id: fx.deleteTarget.id } });
+        // `build` read this user with the same token and got it, so the
+        // generic answer now means the user is gone rather than refused.
         expect(
           await userExists(ctx.tokens.PLATFORM_USERS_ADMIN, fx.deleteTarget.id)
         ).toBe(false);

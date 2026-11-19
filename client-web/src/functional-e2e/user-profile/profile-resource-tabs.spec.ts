@@ -248,8 +248,10 @@ const accountResources = async (
 const spaceStillResolves = async (spaceId: string): Promise<boolean> => {
   const result = await readSpaceLevelAndVisibility(spaceId, TestUser.GLOBAL_ADMIN);
   if (result.error) {
-    // Only "not found" means the Space is gone; any other failure is unknown.
-    if (JSON.stringify(result.error.errors).includes('ENTITY_NOT_FOUND')) {
+    // Only the server's answer for a missing Space (FORBIDDEN_POLICY) means it
+    // is gone: the platform admin listed it on the account and its deleteSpace
+    // just succeeded. Any other failure is unknown.
+    if (JSON.stringify(result.error.errors).includes('FORBIDDEN_POLICY')) {
       return false;
     }
     throw new Error(

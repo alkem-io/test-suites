@@ -38,9 +38,24 @@ import {
   deleteOrganization,
   updateOrganizationSettings,
 } from '../../contributor-management/organization/organization.request.params';
+import {
+  NEUTRAL_ERROR_CODE,
+  NEUTRAL_ERROR_MESSAGE,
+} from '@functional-api/error-response/error-response.constants';
 
 const uniqueId = UniqueIDGenerator.getID();
 const message = `You are cordially invited! ${uniqueId}`;
+
+/** The caller is refused with the generic code and sentence. */
+const expectRefused = (
+  res: { error?: { errors: Array<Record<string, unknown>> } } | undefined
+) => {
+  expect(res?.error?.errors?.[0]?.code).toBe(NEUTRAL_ERROR_CODE);
+  expect(
+    res?.error?.errors?.[0]?.message === NEUTRAL_ERROR_MESSAGE,
+    'refusal carries the generic sentence'
+  ).toBe(true);
+};
 
 // Space admin (TestUser.SPACE_ADMIN) invites; the organization-side personas
 // below are assigned directly onto baseScenario.organization's role set
@@ -290,9 +305,7 @@ describe('Organization Space invitations — GATE 0 core roleset flow', () => {
       TestUser.SUBSPACE_MEMBER
     );
 
-    expect(accept?.error?.errors?.[0]?.message).toContain(
-      "Authorization: unable to grant 'update' privilege: event on invitation"
-    );
+    expectRefused(accept);
   });
 
   test('a global admin cannot ACCEPT on the organization behalf, but can revoke the invitation', async () => {
@@ -971,7 +984,7 @@ describe('Organization Space invitations — the Space admin can manage the orga
       RoleName.Member,
       TestUser.SPACE_ADMIN
     );
-    expect(directAdd?.error?.errors?.[0]?.message).toContain('Authorization');
+    expectRefused(directAdd);
     expect(await spaceRolesForOrg(orgB.id)).toBeUndefined();
 
     await deleteOrganization(orgB.id).catch(() => undefined);
@@ -986,7 +999,7 @@ describe('Organization Space invitations — the Space admin can manage the orga
       RoleName.Lead,
       TestUser.SPACE_MEMBER
     );
-    expect(promote?.error?.errors?.[0]?.message).toContain('Authorization');
+    expectRefused(promote);
 
     const removal = await removeRoleFromOrganization(
       baseScenario.organization.id,
@@ -994,7 +1007,7 @@ describe('Organization Space invitations — the Space admin can manage the orga
       RoleName.Member,
       TestUser.SPACE_MEMBER
     );
-    expect(removal?.error?.errors?.[0]?.message).toContain('Authorization');
+    expectRefused(removal);
     expect((await spaceRolesForOrg(baseScenario.organization.id))?.roles).toContain(
       'member'
     );

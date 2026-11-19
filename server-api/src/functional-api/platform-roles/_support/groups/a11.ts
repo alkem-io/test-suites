@@ -191,8 +191,10 @@ export const A11_GROUP: GroupModule<A11> = {
       call: (sdk, headers) => sdk.cleanupCollections({}, headers),
       verify: async ({ data }) =>
         expect(data).toEqual({ cleanupCollections: { success: true } }),
-      // No vector store on this stack: the Chroma client cannot connect.
-      acceptFailure: /^UNSPECIFIED: fetch failed$/,
+      // No vector store on this stack: the Chroma client cannot connect. That
+      // error has no Alkemio code, so it reaches the caller as UNSPECIFIED with
+      // the server's generic internal-error sentence.
+      acceptFailure: /^UNSPECIFIED: Internal Server Error$/,
     },
     'A11.updateAssistantActorCapabilities': {
       gate: ['updateAssistantActorCapabilities'],

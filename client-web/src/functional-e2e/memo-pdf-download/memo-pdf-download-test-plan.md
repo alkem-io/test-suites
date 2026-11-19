@@ -28,9 +28,9 @@ pnpm --filter @alkemio/test-suite-client-web run test:nightly --project="Memo PD
 | US1-AS4 | The content is read live: a paragraph that another collaborator has just typed is in the PDF | `us1-…` › US1-AS4 |
 | US1-AS5 | A non-Latin title and a punctuation-only title fall back to `memo-<date>.pdf`. A 120-character title is cut to an 80-character slug | `us1-…` › US1-AS5 |
 | US1-AS6 | The download works with and without the signing entitlement. The test first asserts that the entitlement is off (server#6686: no `SPACE_FLAG_MEMO_SIGNING` check) | `us1-…` › US1-AS6 |
-| US2-AS1 | A signed-in non-member of a private Space gets 403, and is shown no memo and no button (story AC5) | `us2-download-access.spec.ts` › AS1 |
+| US2-AS1 | A signed-in non-member of a private Space gets the same answer as for an unknown memo: 404 with a JSON body whose `code` is `FORBIDDEN_POLICY`, whose `message` is the generic "This is not available…" sentence and whose `errorId` is a UUID. They are shown no memo and no button (story AC5) | `us2-download-access.spec.ts` › AS1 |
 | US2-AS2 | An anonymous visitor reads a public memo but sees no button, and gets 401 for both a public and a private memo | `us2-…` › AS2 |
-| US2-AS3 | An unknown memo id answers 404, and a malformed id answers 400 | `us2-…` › AS3 |
+| US2-AS3 | An unknown memo id answers 404 with the body AS1's refused non-member gets (equal once `errorId` and `timestamp` are removed), and a malformed id answers 400 | `us2-…` › AS3 |
 | US2-AS4 | An image from another memo's bucket answers 422 `{ message: 'Memo PDF image does not belong to the memo bucket' }`. The "too large / cannot be exported" toast is shown, the memo stays open, and nothing is downloaded | `us2-…` › AS4 |
 | US2-AS5 | READ, not membership, is the gate (story AC1). The non-member refused in AS1 downloads a **public** memo: the button is shown and the file is named by the server. The response is 200 with `Content-Type: application/pdf`, `Content-Disposition: attachment; filename="<slug>-<date>.pdf"`, `Cache-Control: private, no-store` and `X-Content-Type-Options: nosniff` | `us2-…` › AS5 |
 | US2-AS6 | A download stores nothing and signs nothing (story AC3). The memo's bucket documents are unchanged, and the memo has no signed copy | `us2-…` › AS6 |

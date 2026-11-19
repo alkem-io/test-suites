@@ -45,6 +45,7 @@ import {
 } from '@alkemio/tests-lib/core/generated/alkemio-schema';
 import { graphqlErrorWrapper } from '@alkemio/tests-lib/utils/graphql.wrapper';
 import { graphqlRequestAuth } from '@alkemio/tests-lib/utils/graphql.request';
+import { NEUTRAL_ERROR_CODE } from '@functional-api/error-response/error-response.constants';
 import type { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import {
   deleteUser,
@@ -161,8 +162,10 @@ const organizationStillResolves = async (id: string): Promise<boolean> => {
     }>('query($id: UUID!){ lookup { organization(ID: $id) { id } } }', { id });
     return !!data.lookup.organization;
   } catch (error) {
-    // Only "not found" means the organisation is gone; any other failure is unknown.
-    if (error instanceof Error && error.message.includes('ENTITY_NOT_FOUND')) {
+    // Only the generic refusal can mean the organisation is gone; any other
+    // failure is unknown. The global admin, which created the organisation and
+    // read it throughout the run, is answered that way only for a missing one.
+    if (error instanceof Error && error.message.includes(NEUTRAL_ERROR_CODE)) {
       return false;
     }
     throw error;

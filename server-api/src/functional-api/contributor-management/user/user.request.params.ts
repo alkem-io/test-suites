@@ -9,6 +9,7 @@ import {
 } from '@alkemio/tests-lib';
 import { UpdateUserSettingsEntityInput } from '@alkemio/tests-lib/core/generated/alkemio-schema';
 import { graphqlErrorWrapper } from '@alkemio/tests-lib/utils/graphql.wrapper';
+import { NEUTRAL_ERROR_CODE } from '@functional-api/error-response/error-response.constants';
 
 const uniqueId = UniqueIDGenerator.getID();
 
@@ -105,8 +106,9 @@ export const createUser = async (
  * A preflight lookup establishes provenance: a nameID that already exists
  * BEFORE we create is a genuine duplicate and is rejected up front, so the
  * recovery only ever returns a user this call committed. `lookupByName.user`
- * resolves through `getUserByNameIdOrFail`, so ENTITY_NOT_FOUND is the normal
- * "free" answer; any OTHER preflight error fails closed.
+ * resolves through `getUserByNameIdOrFail`, so the generic FORBIDDEN_POLICY
+ * (which a missing user reaches the caller as) is the normal "free" answer;
+ * any OTHER preflight error fails closed.
  *
  * The recovery then POLLS `getUserData` until the user reads fully built —
  * the cut first request is still running server-side when the retry reports
@@ -119,7 +121,7 @@ const isOnlyNotFound = (errors: unknown): boolean =>
   errors.every(
     e =>
       (e as { extensions?: { code?: string } })?.extensions?.code ===
-      'ENTITY_NOT_FOUND'
+      NEUTRAL_ERROR_CODE
   );
 const USER_RECOVERY_LOOKUP_ATTEMPTS = 5;
 const USER_RECOVERY_LOOKUP_DELAY_MS = 2000;

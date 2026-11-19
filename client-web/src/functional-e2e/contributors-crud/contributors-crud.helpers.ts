@@ -15,7 +15,7 @@ import {
   type TestScenarioConfig,
 } from '@alkemio/tests-lib';
 import type { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
-import { must } from '../helpers/lib-actor.helper';
+import { answeredNothing, must } from '../helpers/lib-actor.helper';
 import {
   baseUrl,
   expectMutationAnswered,
@@ -117,12 +117,17 @@ export const usersInOrgRole = async (
     ).lookup.roleSet?.usersInRole ?? []
   ).map(u => u.id);
 
-/** The id behind an organisation nameID, or null once it no longer exists. */
+/**
+ * The id behind an organisation nameID, read by the platform admin, or null
+ * when the read finds nothing (`answeredNothing`: as a proof of deletion it
+ * needs a non-null read before and a list that no longer holds it).
+ */
 export const organizationIdByNameId = async (
   nameId: string
 ): Promise<string | null> => {
   const result = await getOrganizationIdByNameId(nameId);
-  if (result.error?.errors?.[0]?.code === 'ENTITY_NOT_FOUND') return null;
+  if (answeredNothing(result, data => data.lookupByName.organization))
+    return null;
   return (
     must(result, `lookupByName(${nameId})`).lookupByName.organization ?? null
   );
@@ -142,7 +147,8 @@ export const deleteVcIfPresent = async (id: string | undefined) => {
   if (!id) return;
   const result = await deleteVirtualContributor(id);
   const code = result.error?.errors?.[0]?.code;
-  if (result.error && code !== 'ENTITY_NOT_FOUND') {
+  // FORBIDDEN_POLICY is how the server answers a VC that is already gone.
+  if (result.error && code !== 'FORBIDDEN_POLICY') {
     throw new Error(
       `deleteVirtualContributor(${id}): ${JSON.stringify(result.error.errors)}`
     );

@@ -154,7 +154,8 @@ export class FormFixtureLedger {
           async () => {
             const result = await deleteUser(id, TestUser.GLOBAL_ADMIN, true);
             const code = result.error?.errors?.[0]?.code;
-            if (result.error && code !== 'ENTITY_NOT_FOUND') {
+            // FORBIDDEN_POLICY: the user is already gone.
+            if (result.error && code !== 'FORBIDDEN_POLICY') {
               throw new Error(JSON.stringify(result.error.errors));
             }
           },

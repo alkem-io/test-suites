@@ -23,6 +23,7 @@ import axios from 'axios';
 import { TestUser, testConfiguration } from '@alkemio/tests-lib';
 import { TestUserManager } from '@alkemio/tests-lib/scenario/TestUserManager';
 import { graphqlRequestAuth } from '@alkemio/tests-lib/utils/graphql.request';
+import { NEUTRAL_ERROR_CODE } from '@functional-api/error-response/error-response.constants';
 
 type McpApiKeyMintResponse = {
   body: {
@@ -75,13 +76,19 @@ const ADMIN_REVOKE_MUTATION = `
  * a live MCP credential was left behind in a shared environment.
  */
 const assertCleanupSucceeded = (
-  response: { body?: { errors?: { message?: string }[] } },
+  response: {
+    body?: {
+      errors?: { message?: string; extensions?: { code?: string } }[];
+    };
+  },
   keyId: string
 ) => {
   const errors = response?.body?.errors;
   if (!errors?.length) return;
   const message = String(errors[0]?.message ?? '');
-  if (/not found/i.test(message)) return; // already revoked — fine
+  // Already revoked — fine. A missing key and a refused revoke carry the same
+  // generic code, so a refusal of the owner's own revoke would also pass here.
+  if (errors[0]?.extensions?.code === NEUTRAL_ERROR_CODE) return;
   throw new Error(
     `Cleanup failed to revoke MCP key ${keyId}; a live credential may remain: ${message}`
   );
@@ -369,7 +376,7 @@ describe('MCP API key containment (US3, workspace#038-mcp-api-key-management)', 
     );
     expect(revokeResponse.body.data?.adminRevokeMcpApiKey).toBeFalsy();
     expect(revokeResponse.body.errors?.[0]?.extensions?.code).toBe(
-      'ENTITY_NOT_FOUND'
+      NEUTRAL_ERROR_CODE
     );
   });
 
@@ -404,7 +411,7 @@ describe('MCP API key containment (US3, workspace#038-mcp-api-key-management)', 
       );
       expect(revokeResponse.body.data?.revokeMcpApiKey).toBeFalsy();
       expect(revokeResponse.body.errors?.[0]?.extensions?.code).toBe(
-        'ENTITY_NOT_FOUND'
+        NEUTRAL_ERROR_CODE
       );
 
       // The target key must remain untouched by the refused attempt.

@@ -18,6 +18,7 @@ import {
   TestUserManager,
 } from '@alkemio/tests-lib';
 import type { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
+import { answeredNothing } from '../helpers/lib-actor.helper';
 import {
   accountPackIds,
   accountSection,
@@ -206,6 +207,14 @@ test('L6-1 the platform admin finds the pack in Administration with its stored s
       row.getByText(scenario!.organization.profile.displayName, { exact: true })
     ).toBeVisible();
 
+    // Gone, by three reads: the platform admin reads the pack now, its
+    // account no longer lists it after the delete, and the same read then
+    // finds nothing.
+    expect(
+      (await serverPack(packId)).id === packId,
+      'the pack reads back before the delete'
+    ).toBe(true);
+
     await row.getByRole('button', { name: 'Delete', exact: true }).click();
     const confirm = page.getByRole('alertdialog', {
       name: `Delete ${NEW_NAME}?`,
@@ -216,11 +225,12 @@ test('L6-1 the platform admin finds the pack in Administration with its stored s
     await expect(confirm).toBeHidden();
     await expect(row).toHaveCount(0);
 
-    const gone = await readInnovationPack(packId);
-    expect(gone.error?.errors?.[0]?.code, 'the pack no longer exists').toBe(
-      'ENTITY_NOT_FOUND'
-    );
     expect(await accountPackIds(scenario!.organization.accountId)).toEqual([]);
+    const gone = await readInnovationPack(packId);
+    expect(
+      answeredNothing(gone, data => data.lookup.innovationPack),
+      'the pack no longer reads back'
+    ).toBe(true);
   } finally {
     await admin.close();
   }

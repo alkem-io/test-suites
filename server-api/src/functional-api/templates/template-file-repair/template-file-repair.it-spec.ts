@@ -30,6 +30,10 @@ import {
 } from '../post/post-template.request.params';
 import { deleteTemplate, GetTemplateById } from '../template.request.params';
 import { adminRepairTemplateFiles } from './template-file-repair.request.params';
+import {
+  NEUTRAL_ERROR_CODE,
+  NEUTRAL_ERROR_MESSAGE,
+} from '@functional-api/error-response/error-response.constants';
 
 const uniqueId = UniqueIDGenerator.getID();
 const templateName = `File repair fixture ${uniqueId}`;
@@ -129,10 +133,11 @@ describe('TF-1 — non-operations callers are refused', () => {
         caller
       );
 
-      expect(error?.extensions?.code).toBe('FORBIDDEN_POLICY');
-      expect(error?.message).toContain(
-        "unable to grant 'platform-operations-admin' privilege: adminRepairTemplateFiles"
-      );
+      expect(error?.extensions?.code).toBe(NEUTRAL_ERROR_CODE);
+      expect(
+        error?.message === NEUTRAL_ERROR_MESSAGE,
+        'refusal carries the generic sentence'
+      ).toBe(true);
       expect(data?.adminRepairTemplateFiles ?? null).toBeNull();
     }
   );

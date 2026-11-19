@@ -14,6 +14,10 @@ import {
   removeMessageOnRoom,
 } from '../communication.params';
 import { UniqueIDGenerator } from '@alkemio/tests-lib';
+import {
+  NEUTRAL_ERROR_CODE,
+  NEUTRAL_ERROR_MESSAGE,
+} from '@functional-api/error-response/error-response.constants';
 
 const uniqueId = UniqueIDGenerator.getID();
 
@@ -146,9 +150,11 @@ describe('Reply - Discussion messages', () => {
     );
 
     // Assert
-    expect(resDelete.error?.errors[0].message).toContain(
-      `Authorization: unable to grant 'delete' privilege: room remove message: ${discussionCommentsId}`
-    );
+    expect(resDelete.error?.errors[0]?.code).toBe(NEUTRAL_ERROR_CODE);
+    expect(
+      resDelete.error?.errors[0]?.message === NEUTRAL_ERROR_MESSAGE,
+      'refusal carries the generic sentence'
+    ).toBe(true);
   });
 
   test('User replaying to other user message fail to delete the other user message', async () => {
@@ -175,9 +181,11 @@ describe('Reply - Discussion messages', () => {
     );
 
     // Assert
-    expect(resDelete.error?.errors[0].message).toContain(
-      `Authorization: unable to grant 'delete' privilege: room remove message: ${discussionCommentsId}`
-    );
+    expect(resDelete.error?.errors[0]?.code).toBe(NEUTRAL_ERROR_CODE);
+    expect(
+      resDelete.error?.errors[0]?.message === NEUTRAL_ERROR_MESSAGE,
+      'refusal carries the generic sentence'
+    ).toBe(true);
   });
 
   test('Replies should not be deleted, when main message is removed', async () => {

@@ -377,6 +377,20 @@ adminTest.describe(
       'US1-AS7: Revoke (confirmed) removes the row and the record; re-inviting creates a fresh row and sends a new email',
       async ({ page }) => {
         adminTest.setTimeout(180_000);
+        // Before the revoke, this token reads the invitation.
+        const present = await lookupEmailInvitationRaw(
+          chainInvitationId,
+          globalAdminToken
+        );
+        expect(
+          present.errors.length,
+          'the invitation reads back before the revoke'
+        ).toBe(0);
+        expect(
+          present.data?.lookup.platformInvitation?.id === chainInvitationId,
+          'the read before the revoke returns the invitation'
+        ).toBe(true);
+
         await page.goto(
           `${baseUrl}/organization/${org.nameID}/settings/community`
         );
@@ -405,10 +419,22 @@ adminTest.describe(
           chainInvitationId,
           globalAdminToken
         );
-        // Gone means entity-not-found (or null data); any other error, such as an authorization refusal, is not proof.
-        if (gone.errors.length > 0)
-          expect(errorCodeOf(gone), gone.raw).toEqual('ENTITY_NOT_FOUND');
-        else expect(gone.data?.lookup.platformInvitation).toBeFalsy();
+        // The server answers a missing invitation and one the caller may not
+        // read alike (FORBIDDEN_POLICY), so that answer alone proves nothing.
+        // Together the three reads do: the same token read the invitation
+        // just before the revoke, so it may read it; the organisation admin's
+        // list no longer holds the address; and now the lookup returns no
+        // invitation — null data, or exactly one FORBIDDEN_POLICY error. Any
+        // other error fails.
+        if (gone.errors.length > 0) {
+          expect(gone.errors.length, 'one error after the revoke').toBe(1);
+          expect(errorCodeOf(gone)).toBe('FORBIDDEN_POLICY');
+        } else {
+          expect(
+            gone.data?.lookup.platformInvitation == null,
+            'no invitation after the revoke'
+          ).toBe(true);
+        }
         // "A later sign-up finds nothing" is asserted in organization-associate-invitation-external.it-spec.ts (US1-AS7).
 
         // Re-inviting creates a fresh invitation and a fresh email.
@@ -578,8 +604,6 @@ baseTest.describe(
 baseTest.describe(
   'US1-AS8 — who may invite by email, list, revoke and resend',
   () => {
-    const forbidden = /FORBIDDEN_POLICY|unable to grant/i;
-
     baseTest(
       'a plain associate and a registered non-admin are refused the invite; an OWNER and platform support can invite, list, revoke and resend (workspace#090 re-allowed Support)',
       async () => {
@@ -601,7 +625,7 @@ baseTest.describe(
             invite.errors.length,
             `${persona.email} invite`
           ).toBeGreaterThan(0);
-          expect(invite.raw).toMatch(forbidden);
+          expect(errorCodeOf(invite)).toBe('FORBIDDEN_POLICY');
 
           const list = await listOpenEmailInvitations(
             org.roleSetId,
@@ -610,7 +634,7 @@ baseTest.describe(
           expect(list.errors.length, `${persona.email} list`).toBeGreaterThan(
             0
           );
-          expect(list.raw).toMatch(forbidden);
+          expect(errorCodeOf(list)).toBe('FORBIDDEN_POLICY');
 
           const revoke = await deleteEmailInvitationRaw(
             seededId,
@@ -620,8 +644,9 @@ baseTest.describe(
             revoke.errors.length,
             `${persona.email} revoke`
           ).toBeGreaterThan(0);
-          // Revoke is gated on DELETE of the record: the refusal must be that one.
-          expect(revoke.raw).toMatch(/unable to grant 'delete' privilege/);
+          // A refusal, not another failure; that it changed nothing is read
+          // back below (the seeded row is still listed).
+          expect(errorCodeOf(revoke)).toBe('FORBIDDEN_POLICY');
 
           const resend = await resendEmailInvitationRaw(
             seededId,
@@ -631,7 +656,7 @@ baseTest.describe(
             resend.errors.length,
             `${persona.email} resend`
           ).toBeGreaterThan(0);
-          expect(resend.raw).toMatch(forbidden);
+          expect(errorCodeOf(resend)).toBe('FORBIDDEN_POLICY');
 
           expect(
             await openEmailAddresses(org.roleSetId, admin.token)

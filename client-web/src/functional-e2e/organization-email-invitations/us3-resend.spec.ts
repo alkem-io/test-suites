@@ -376,7 +376,6 @@ baseTest.describe('US3-AS5 — only someone who may invite may resend', () => {
   baseTest(
     'a plain associate and a registered non-admin are refused on the organization, a plain member on the Space; nothing is sent',
     async () => {
-      const forbidden = /FORBIDDEN_POLICY|unable to grant/i;
       const orgBefore = (await mailsTo(orgEmail2)).length;
       const spaceBefore = (await mailsTo(spaceEmail)).length;
 
@@ -389,14 +388,14 @@ baseTest.describe('US3-AS5 — only someone who may invite may resend', () => {
           persona.authToken
         );
         expect(res.errors.length, persona.email).toBeGreaterThan(0);
-        expect(res.raw).toMatch(forbidden);
+        expect(errorCodeOf(res)).toBe('FORBIDDEN_POLICY');
       }
       const member = await resendEmailInvitationRaw(
         spaceInvitationId,
         TestUserManager.users.spaceMember.authToken
       );
       expect(member.errors.length).toBeGreaterThan(0);
-      expect(member.raw).toMatch(forbidden);
+      expect(errorCodeOf(member)).toBe('FORBIDDEN_POLICY');
 
       expect(await settledMailsTo(orgEmail2, orgBefore)).toHaveLength(
         orgBefore

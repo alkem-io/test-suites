@@ -16,7 +16,6 @@ import {
   removeMessageOnRoom,
   sendMessageToRoom,
 } from '@functional-api/communications/communication.params';
-import { errorAuthUpdatePost } from '../../templates/post/post-template-testdata';
 import {
   createReferenceOnProfile,
   deleteReferenceOnProfile,
@@ -24,8 +23,51 @@ import {
 import { UniqueIDGenerator } from '@alkemio/tests-lib';
 import { delay } from '@alkemio/tests-lib';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
+import {
+  NEUTRAL_ERROR_CODE,
+  NEUTRAL_ERROR_MESSAGE,
+} from '@functional-api/error-response/error-response.constants';
 
 const uniqueId = UniqueIDGenerator.getID();
+
+type ErrorResult = { error?: { errors: Array<Record<string, unknown>> } };
+
+/** The caller is refused with the generic code and sentence. */
+const expectRefused = (res: ErrorResult) => {
+  expect(res.error?.errors[0]?.code).toBe(NEUTRAL_ERROR_CODE);
+  expect(
+    res.error?.errors[0]?.message === NEUTRAL_ERROR_MESSAGE,
+    'refusal carries the generic sentence'
+  ).toBe(true);
+};
+
+/** The global admin's read returns the post, with no error. */
+const expectPostReadable = async (postId: string) => {
+  const before = await getPostData(postId);
+  expect(
+    before.error === undefined && before.data?.lookup?.post?.id === postId,
+    'the post is readable before the delete'
+  ).toBe(true);
+};
+
+/**
+ * The same global-admin read that returned the post before the delete now
+ * returns no post, and any error it carries has the generic code. That read
+ * succeeding beforehand shows this token may read the post, so the generic
+ * answer afterwards means the post is gone rather than refused.
+ */
+const expectPostGone = async (postId: string) => {
+  const after = await getPostData(postId);
+  expect(
+    after.data?.lookup?.post == null,
+    'no post is returned after the delete'
+  ).toBe(true);
+  expect(
+    (after.error?.errors ?? [])
+      .map(e => e.code)
+      .filter(code => code !== NEUTRAL_ERROR_CODE)
+  ).toEqual([]);
+};
 
 let spacePostId = '';
 let subspacePostId = '';
@@ -35,7 +77,6 @@ let postDisplayName = '';
 let roomIdSpace = '';
 let roomIdSubspace = '';
 //let msessageId = '';
-const spaceCalloutId = '';
 
 let baseScenario: OrganizationWithSpaceModel;
 
@@ -154,9 +195,7 @@ describe('Posts - Create', () => {
     );
 
     // Assert
-    expect(JSON.stringify(resPostonSpace)).toContain(
-      `Authorization: unable to grant 'contribute' privilege: create contribution on callout: ${spaceCalloutId}`
-    );
+    expectRefused(resPostonSpace);
   });
 
   test('ChA should create post on subspace callout', async () => {
@@ -224,7 +263,7 @@ describe('Posts - Update', () => {
     );
 
     // Assert
-    expect(JSON.stringify(resPostonSpace)).toContain(errorAuthUpdatePost);
+    expectRefused(resPostonSpace);
   });
 
   test('NON-HM should NOT update post created on space callout from GA', async () => {
@@ -237,7 +276,7 @@ describe('Posts - Update', () => {
     );
 
     // Act
-    expect(JSON.stringify(resPostonSpace)).toContain(errorAuthUpdatePost);
+    expectRefused(resPostonSpace);
   });
 
   test('HA should update post created on space callout from GA', async () => {
@@ -351,9 +390,7 @@ describe('Posts - Delete', () => {
     );
 
     // Assert
-    expect(responseRemove.error?.errors[0].message).toContain(
-      `Authorization: unable to grant 'delete' privilege: delete post: ${spacePostId}`
-    );
+    expectRefused(responseRemove);
     expect(postsData).toHaveLength(1);
     await deletePost(spacePostId);
   });
@@ -439,15 +476,13 @@ describe('Posts - Delete', () => {
     );
     subspacePostId =
       resPostonSubspace.data?.createContributionOnCallout.post?.id ?? '';
+    await expectPostReadable(subspacePostId);
 
     // Act
     await deletePost(subspacePostId, TestUser.SUBSPACE_ADMIN);
-    const data = await getPostData(subspacePostId);
 
     // Assert
-    expect(data.error?.errors[0].message).toEqual(
-      `Not able to locate post with the specified ID: ${subspacePostId}`
-    );
+    await expectPostGone(subspacePostId);
   });
 
   test('HA should delete post created on subspace callout from ChA', async () => {
@@ -461,15 +496,13 @@ describe('Posts - Delete', () => {
 
     subspacePostId =
       resPostonSubspace.data?.createContributionOnCallout.post?.id ?? '';
+    await expectPostReadable(subspacePostId);
 
     // Act
     await deletePost(subspacePostId, TestUser.SPACE_ADMIN);
-    const data = await getPostData(subspacePostId);
 
     // Assert
-    expect(data.error?.errors[0].message).toEqual(
-      `Not able to locate post with the specified ID: ${subspacePostId}`
-    );
+    await expectPostGone(subspacePostId);
   });
 
   test('ChA should delete post created on subsubspace callout from OM', async () => {
@@ -482,15 +515,13 @@ describe('Posts - Delete', () => {
     );
     subsubspacePostId =
       resPostonSubsubspace.data?.createContributionOnCallout.post?.id ?? '';
+    await expectPostReadable(subsubspacePostId);
 
     // Act
     await deletePost(subsubspacePostId, TestUser.SUBSPACE_ADMIN);
-    const data = await getPostData(subsubspacePostId);
 
     // Assert
-    expect(data.error?.errors[0].message).toEqual(
-      `Not able to locate post with the specified ID: ${subsubspacePostId}`
-    );
+    await expectPostGone(subsubspacePostId);
   });
 
   test('ChM should not delete post created on subspace callout from ChA', async () => {
@@ -514,9 +545,7 @@ describe('Posts - Delete', () => {
     const dataPost = await getPostData(subspacePostId);
 
     // // Assert
-    expect(responseRemove?.error?.errors[0].message).toContain(
-      `Authorization: unable to grant 'delete' privilege: delete post: ${dataPost?.data?.lookup?.post?.id}`
-    );
+    expectRefused(responseRemove);
     expect(dataPost?.data?.lookup?.post?.id).toEqual(subspacePostId);
     await deletePost(subspacePostId);
   });
@@ -531,15 +560,13 @@ describe('Posts - Delete', () => {
     );
     subsubspacePostId =
       resPostonSubsubspace.data?.createContributionOnCallout.post?.id ?? '';
+    await expectPostReadable(subsubspacePostId);
 
     // Act
     await deletePost(subsubspacePostId, TestUser.SUBSUBSPACE_MEMBER);
-    const data = await getPostData(subsubspacePostId);
 
     // Assert
-    expect(data.error?.errors[0].message).toEqual(
-      `Not able to locate post with the specified ID: ${subsubspacePostId}`
-    );
+    await expectPostGone(subsubspacePostId);
   });
 
   test('GA should delete own post on subsubspace callout', async () => {
@@ -552,15 +579,13 @@ describe('Posts - Delete', () => {
     );
     subsubspacePostId =
       resPostonSubsubspace.data?.createContributionOnCallout.post?.id ?? '';
+    await expectPostReadable(subsubspacePostId);
 
     // Act
     await deletePost(subsubspacePostId, TestUser.GLOBAL_ADMIN);
-    const data = await getPostData(subsubspacePostId);
 
     // Assert
-    expect(data.error?.errors[0].message).toEqual(
-      `Not able to locate post with the specified ID: ${subsubspacePostId}`
-    );
+    await expectPostGone(subsubspacePostId);
   });
 });
 
@@ -667,9 +692,7 @@ describe('Posts - Messages', () => {
         TestUser.NON_SPACE_MEMBER
       );
       // Assert
-      expect(messageRes.error?.errors[0].message).toContain(
-        `Authorization: unable to grant 'create-message' privilege: room message operation: ${roomIdSpace}`
-      );
+      expectRefused(messageRes);
     });
 
     describe('Messages - GA Send/Remove flow', () => {
@@ -750,9 +773,7 @@ describe('Posts - Messages', () => {
       );
 
       // Assert
-      expect(removeMessageRes.error?.errors[0].message).toContain(
-        `Authorization: unable to grant 'delete' privilege: room remove message: ${roomIdSpace}`
-      );
+      expectRefused(removeMessageRes);
     });
 
     test('NON-HM should NOT delete comment sent from GA', async () => {
@@ -764,9 +785,7 @@ describe('Posts - Messages', () => {
       );
 
       // Assert
-      expect(removeMessageRes.error?.errors[0].message).toContain(
-        `Authorization: unable to grant 'delete' privilege: room remove message: ${roomIdSpace}`
-      );
+      expectRefused(removeMessageRes);
     });
 
     test('GA should remove comment sent from GA', async () => {
@@ -829,9 +848,7 @@ describe('Posts - References', () => {
     );
 
     // Act
-    expect(createRef.error?.errors[0].message).toContain(
-      `Authorization: unable to grant 'create' privilege: profile: ${postProfileId}`
-    );
+    expectRefused(createRef);
   });
 
   test('NON-HM should NOT add reference to post created on space callout from GA', async () => {
@@ -843,9 +860,7 @@ describe('Posts - References', () => {
     );
 
     // Act
-    expect(createRef.error?.errors[0].message).toContain(
-      `Authorization: unable to grant 'create' privilege: profile: ${postProfileId}`
-    );
+    expectRefused(createRef);
   });
 
   describe('References - EA Create/Remove flow', () => {

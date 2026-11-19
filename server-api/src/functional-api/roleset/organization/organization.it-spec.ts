@@ -17,6 +17,10 @@ import {
 } from '../roles-request.params';
 import { getRoleSetMembersList } from '../roleset.request.params';
 import { RoleName } from '@alkemio/tests-lib/core/generated/alkemio-schema';
+import {
+  NEUTRAL_ERROR_CODE,
+  NEUTRAL_ERROR_MESSAGE,
+} from '@functional-api/error-response/error-response.constants';
 
 const uniqueId = UniqueIDGenerator.getID();
 let baseScenario: OrganizationWithSpaceModel;
@@ -385,9 +389,11 @@ describe('Direct organisation add is gone at Slice B', () => {
           ),
         TestUser.GLOBAL_ADMIN
       );
-      expect(String(res.error?.errors?.[0]?.message)).toContain(
-        'roleset-entry-role-assign-organization'
-      );
+      expect(res.error?.errors?.[0]?.code).toBe(NEUTRAL_ERROR_CODE);
+      expect(
+        res.error?.errors?.[0]?.message === NEUTRAL_ERROR_MESSAGE,
+        'refusal carries the generic sentence'
+      ).toBe(true);
       const members = await getRoleSetMembersList(
         baseScenario.space.community.roleSetId
       );

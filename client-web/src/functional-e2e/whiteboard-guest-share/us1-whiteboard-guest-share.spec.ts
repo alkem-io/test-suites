@@ -67,7 +67,7 @@ const GUEST_NAME = `Guest ${uid}`;
 const MARKER = `GUEST ${uid}`;
 /**
  * A refusal by the board's policy: exactly one error, `FORBIDDEN_POLICY` (server `lookup.whiteboard` →
- * `grantAccessOrFail(READ)`; contract LB-2). A transport failure, `ENTITY_NOT_FOUND` or an internal error is not it.
+ * `grantAccessOrFail(READ)`; contract LB-2). A transport failure or an internal error is not it.
  */
 const FORBIDDEN_POLICY_REFUSAL = {
   refused: true,
@@ -192,10 +192,11 @@ test.describe('W2 journey 5b — a whiteboard shared with guests', () => {
     );
   });
 
-  // KD-1: a board that is not shared is refused by the server as FORBIDDEN_POLICY ("Authorization: unable to grant
-  // 'read' privilege ..."); the public page matches only "404 / not found / 403 / forbidden / not available" in the
-  // error message, so it shows the generic "Something Went Wrong" with "Try Again" instead of the intended
-  // "Whiteboard Not Found" (spec 005 FR-013, edge case "guest access is now disabled"). Drop the skip when fixed.
+  // KD-1: a board that is not shared is refused by the server as FORBIDDEN_POLICY. The public page branches on the
+  // error message, not the code: it shows "Whiteboard Not Found" only when the message holds "404 / not found / 403 /
+  // forbidden / not available", and otherwise the generic "Something Went Wrong" with "Try Again" (spec 005 FR-013,
+  // edge case "guest access is now disabled"). The server's refusal message now reads "This is not available…", so
+  // this may pass; drop the skip once a run shows it does.
   test.skip('G-1a the public route\'s refusal of a board that is not shared reads "Whiteboard Not Found" (test-suites#724)', async ({
     browser,
   }) => {

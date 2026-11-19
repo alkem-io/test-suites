@@ -35,6 +35,7 @@ import {
   getUserLanguageSettings,
   inviteWithSuggestedLanguage,
 } from './language.request.params';
+import { NEUTRAL_ERROR_CODE } from '@functional-api/error-response/error-response.constants';
 
 const uniqueId = UniqueIDGenerator.getID();
 
@@ -159,12 +160,14 @@ afterAll(async () => {
     return r?.body?.errors ?? r?.error?.errors ?? [];
   };
 
+  // A missing invitation is answered with the generic refusal code; the
+  // global admin deleting it is otherwise allowed, so that code means gone.
   const isNotFound = (errors: Array<Record<string, unknown>>) =>
-    errors.every(e => {
-      const message = String(e.message ?? '');
-      const code = String((e.extensions as { code?: string } | undefined)?.code ?? '');
-      return /unable to find|not found|does not exist/i.test(message) || code === 'ENTITY_NOT_FOUND';
-    });
+    errors.every(
+      e =>
+        (e.extensions as { code?: string } | undefined)?.code ===
+        NEUTRAL_ERROR_CODE
+    );
 
   const remove = async (
     what: string,

@@ -15,6 +15,7 @@ import { rawRead, rawRequest } from '../raw-request';
 import { bearer } from '../types';
 import type { GroupModule, PerRole } from '../types';
 import { undoOnFailure } from '../undo-on-failure';
+import { NEUTRAL_ERROR_CODE } from '@functional-api/error-response/error-response.constants';
 
 /**
  * A15 — support inside a flag-enabled space; manage the forum.
@@ -124,6 +125,13 @@ export const A15_GROUP: GroupModule<A15> = {
       for (const role of allowedRoles(DELETE)) {
         discussionsToDelete[role] = await open(`delete ${role.slice(-7)}`);
       }
+      // The read the delete's `verify` repeats, made now with the same token:
+      // the build fails unless it returns each discussion with no error.
+      for (const id of Object.values(discussionsToDelete)) {
+        const before = await discussion(ctx.tokens.PLATFORM_SUPPORT, id);
+        if (before.errors.length > 0 || !before.data?.platform.forum.discussion)
+          throw new Error('A15 build: Platform Support cannot read a discussion');
+      }
 
       return {
         host,
@@ -198,15 +206,22 @@ export const A15_GROUP: GroupModule<A15> = {
           { deleteData: { ID: deleteTargetFor(fx, role) } },
           headers
         ),
-      verify: async ({ ctx, fx, role }) =>
+      // `build` read this discussion with the same token and got it with no
+      // error, so this token may read it: no discussion and the generic code
+      // now mean it is gone rather than refused.
+      verify: async ({ ctx, fx, role }) => {
+        const after = await discussion(
+          ctx.tokens.PLATFORM_SUPPORT,
+          deleteTargetFor(fx, role)
+        );
         expect(
-          (
-            await discussion(
-              ctx.tokens.PLATFORM_SUPPORT,
-              deleteTargetFor(fx, role)
-            )
-          ).errors[0]?.extensions?.code
-        ).toBe('ENTITY_NOT_FOUND'),
+          !after.data?.platform.forum.discussion,
+          'no discussion is returned after the delete'
+        ).toBe(true);
+        expect(after.errors.map(e => e.extensions?.code)).toEqual([
+          NEUTRAL_ERROR_CODE,
+        ]);
+      },
     },
     'A15.adminForumRemoveDiscussionCategory': {
       gate: ['adminForumRemoveDiscussionCategory'],

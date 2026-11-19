@@ -8,10 +8,15 @@
  *  - `ok`      the call returned without any GraphQL error
  *  - `denied`  an AUTHORIZATION error located AT THE GATE: its `path` is the
  *              capability's gate path, or a prefix of it (refused higher up)
- *  - `failed`  anything else — validation, not-found, transport, or an
- *              authorization error on a field BELOW the gate (the action itself
- *              ran; only part of the response was withheld). Fails a positive
- *              AND a negative, loudly.
+ *  - `failed`  anything else — validation, transport, or an authorization
+ *              error on a field BELOW the gate (the action itself ran; only
+ *              part of the response was withheld). Fails a positive AND a
+ *              negative, loudly.
+ *
+ * A missing entity reaches the caller with the same FORBIDDEN_POLICY code and
+ * sentence as a refusal, so at the gate it reads as `denied`. A negative is
+ * therefore only as good as its fixture: the positive control beside it, which
+ * names the same entity, is what shows the entity exists.
  */
 
 export type GqlError = {
@@ -31,10 +36,9 @@ export type Outcome<T = unknown> =
  * denial and re-raises it under this code, by design. `MCP_ACCESS_DENIED` is
  * how `mcp-client.ts` reports an MCP tool's "Access denied" result — MCP
  * refuses through a tool result, not a GraphQL error, and the client names it
- * explicitly rather than pretending it was FORBIDDEN.
+ * explicitly rather than pretending it was FORBIDDEN_POLICY.
  */
 const AUTHORIZATION_CODES: ReadonlySet<string> = new Set([
-  'FORBIDDEN',
   'FORBIDDEN_POLICY',
   'EMAIL_CHANGE_UNAUTHORIZED',
   'MCP_ACCESS_DENIED',

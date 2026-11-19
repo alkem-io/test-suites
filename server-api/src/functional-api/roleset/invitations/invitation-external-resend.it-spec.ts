@@ -35,6 +35,10 @@ import {
   settledMailsTo,
   THROTTLED_CODE,
 } from './platform-invitation.helpers';
+import {
+  NEUTRAL_ERROR_CODE,
+  NEUTRAL_ERROR_MESSAGE,
+} from '@functional-api/error-response/error-response.constants';
 
 const uniqueId = UniqueIDGenerator.getID();
 const message = 'Hello, feel free to join our community!';
@@ -178,9 +182,11 @@ describe('Resend a Space email invitation', () => {
           platformInvitationId,
           TestUser.SPACE_MEMBER
         );
-        expect(res?.error?.errors?.[0]?.message).toMatch(
-          /Authorization: unable to grant/
-        );
+        expect(res?.error?.errors?.[0]?.code).toBe(NEUTRAL_ERROR_CODE);
+        expect(
+          res?.error?.errors?.[0]?.message === NEUTRAL_ERROR_MESSAGE,
+          'refusal carries the generic sentence'
+        ).toBe(true);
         expect(res?.data?.resendPlatformInvitation).toBeUndefined();
       },
       email,
@@ -292,9 +298,11 @@ describe('Resend a Space email invitation', () => {
           platformInvitationId,
           TestUser.SUBSPACE_ADMIN
         );
-        expect(res?.error?.errors?.[0]?.message).toMatch(
-          /Authorization: unable to grant/
-        );
+        expect(res?.error?.errors?.[0]?.code).toBe(NEUTRAL_ERROR_CODE);
+        expect(
+          res?.error?.errors?.[0]?.message === NEUTRAL_ERROR_MESSAGE,
+          'refusal carries the generic sentence'
+        ).toBe(true);
         expect(res?.data?.resendPlatformInvitation).toBeUndefined();
       },
       email,

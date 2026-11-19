@@ -11,6 +11,7 @@ import {
   TestScenarioFactory,
   UniqueIDGenerator,
 } from '@alkemio/tests-lib';
+import { NEUTRAL_ERROR_CODE } from '@functional-api/error-response/error-response.constants';
 
 const uniqueId = UniqueIDGenerator.getID();
 
@@ -129,6 +130,12 @@ describe('Opportunities', () => {
       subsubspaceNameId,
       baseScenario.subspace.id
     );
+    const before = await getSubspaceData(subsubspaceId);
+    expect(
+      before.error === undefined &&
+        before.data?.lookup?.space?.id === subsubspaceId,
+      'the subsubspace is readable before the delete'
+    ).toBe(true);
 
     // Act
     // Remove subsubspace
@@ -138,12 +145,21 @@ describe('Opportunities', () => {
     const requestQuerySubsubspace = await getSubspaceData(subsubspaceId);
 
     // Assert
+    // The same global-admin read returned the subsubspace before the delete,
+    // so this token may read it; the read now returning no space, with only
+    // the generic code, therefore means it is gone rather than refused.
     expect(removeSubsubspaceResponse?.data?.deleteSpace.id ?? '').toEqual(
       subsubspaceId
     );
-    expect(requestQuerySubsubspace?.error?.errors[0].message).toEqual(
-      "Unable to find Space using options 'undefined'"
-    );
+    expect(
+      requestQuerySubsubspace?.data?.lookup?.space == null,
+      'no subsubspace is returned after the delete'
+    ).toBe(true);
+    expect(
+      (requestQuerySubsubspace?.error?.errors ?? [])
+        .map(e => e.code)
+        .filter(code => code !== NEUTRAL_ERROR_CODE)
+    ).toEqual([]);
   });
 
   test('should throw an error for creating subsubspace with same name/NameId on different subspaces', async () => {

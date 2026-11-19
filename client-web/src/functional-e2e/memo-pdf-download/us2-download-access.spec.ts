@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto';
+import { isDeepStrictEqual } from 'node:util';
 import {
   expect,
   type Browser,
@@ -27,19 +28,20 @@ import {
   type GraphqlActor,
 } from '@alkemio/tests-lib';
 import { grantCookieConsent } from '../helpers/cookies.helper';
-import { must } from '../helpers/lib-actor.helper';
+import { must, NOT_AVAILABLE_MESSAGE } from '../helpers/lib-actor.helper';
 import { loginViaCrd } from '../helpers/login.helper';
 
 /**
  * workspace#087-memo-pdf-download — User Story 2 (P1):
  * "Access is enforced exactly like reading the memo".
  *
- * AS1  a signed-in user who is not a member of the private Space gets 403 from
- *      the download URL (and, in the UI, no Download PDF button).
+ * AS1  a signed-in user who is not a member of the private Space gets the
+ *      same answer as for an unknown memo from the download URL: 404 with the
+ *      generic FORBIDDEN_POLICY body (and, in the UI, no Download PDF button).
  * AS2  an anonymous visitor on a public Space's memo sees no Download PDF
  *      button, and the direct call answers 401.
- * AS3  a signed-in reader gets 404 for an unknown memo id and 400 for a
- *      malformed one.
+ * AS3  a signed-in reader gets 404 for an unknown memo id, with the body AS1
+ *      gets, and 400 for a malformed one.
  * AS4  a memo the reader may read that embeds an image from another memo's
  *      bucket is refused as not exportable: 422 with the neutral message, the
  *      "too large / cannot be exported" toast, the memo stays open and
@@ -216,6 +218,29 @@ async function getPdf(page: Page, memoId: string) {
     expect(status, 'download is not capacity-limited').not.toBe(429);
   }).toPass({ intervals: [500, 1_000, 2_000], timeout: 30_000 });
   return { status, contentType, body, headers, bytes };
+}
+
+const UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/** A refusal's JSON body, or null when the answer is not JSON. */
+function refusalBody(res: { contentType: string; bytes: Buffer }) {
+  if (!res.contentType.includes('application/json')) return null;
+  try {
+    return JSON.parse(res.bytes.toString('utf8')) as Record<string, unknown>;
+  } catch {
+    // A parse error quotes the text it read; the caller sees null instead.
+    return null;
+  }
+}
+
+/** The body without the two fields that differ on every answer. */
+function withoutPerAnswerFields(body: Record<string, unknown> | null) {
+  if (!body) return null;
+  const rest = { ...body };
+  delete rest.errorId;
+  delete rest.timestamp;
+  return rest;
 }
 
 type MemoFixture = {
@@ -594,14 +619,24 @@ test.describe(
       );
     });
 
-    test('AS1 — a signed-in non-member is refused with 403', async ({
-      browser,
-    }) => {
+    test('AS1 — a signed-in non-member is refused', async ({ browser }) => {
       const outsider = await signIn(browser, personaEmail.outsider);
 
+      // Refused exactly like an unknown memo (AS3): 404 and the generic answer.
       const res = await getPdf(outsider, fixture.privateMemo.memoId);
-      expect(res.status).toBe(403);
+      expect(res.status).toBe(404);
       expect(res.contentType).not.toContain('application/pdf');
+      const body = refusalBody(res);
+      expect(body !== null, 'the refusal is a JSON body').toBe(true);
+      expect(body?.code).toBe('FORBIDDEN_POLICY');
+      expect(
+        body?.message === NOT_AVAILABLE_MESSAGE,
+        'the refusal carries the generic sentence'
+      ).toBe(true);
+      expect(
+        typeof body?.errorId === 'string' && UUID_RE.test(body.errorId),
+        'the refusal carries a reference number'
+      ).toBe(true);
 
       // The private memo's page offers the outsider no Download PDF either.
       await outsider.goto(fixture.privateMemo.calloutUrl);
@@ -659,6 +694,19 @@ test.describe(
         '00000000-0000-4000-8000-000000000000'
       );
       expect(unknown.status).toBe(404);
+      // The same answer AS1's refused non-member gets, apart from the two
+      // fields that differ on every answer.
+      const outsider = await signIn(browser, personaEmail.outsider);
+      const refused = await getPdf(outsider, fixture.privateMemo.memoId);
+      const unknownBody = withoutPerAnswerFields(refusalBody(unknown));
+      expect(
+        unknownBody !== null &&
+          isDeepStrictEqual(
+            unknownBody,
+            withoutPerAnswerFields(refusalBody(refused))
+          ),
+        'an unknown memo and a refused one get the same answer'
+      ).toBe(true);
 
       const malformed = await getPdf(reader, 'not-a-uuid');
       expect(malformed.status).toBe(400);
@@ -669,7 +717,7 @@ test.describe(
     }) => {
       const reader = await signIn(browser, personaEmail.reader);
 
-      // REST: not 403 (the memo itself is readable), a neutral 422 message.
+      // REST: not refused (the memo itself is readable), a neutral 422 message.
       const direct = await getPdf(reader, fixture.privateMemo.memoId);
       expect(direct.status).toBe(422);
       expect(direct.contentType).toContain('application/json');

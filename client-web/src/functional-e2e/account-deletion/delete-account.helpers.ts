@@ -16,6 +16,7 @@
 import { expect, type Page } from '@playwright/test';
 import {
   deleteUser,
+  findUsersPaginated,
   getUserToken,
   queryHarnessDb,
   readMyUser,
@@ -25,7 +26,7 @@ import {
 } from '@alkemio/tests-lib';
 import { testConfiguration } from '@src/config/test.configuration';
 import { userMenuAvatar } from '../authentication/common-authentication-page-elements';
-import { must } from '../helpers/lib-actor.helper';
+import { answeredNothing, must } from '../helpers/lib-actor.helper';
 import { openSettingsSection } from '../helpers/settings-section.helper';
 import { signIn } from './account-deletion.helpers';
 
@@ -128,16 +129,18 @@ export const getAdminToken = (): Promise<string> => {
 
 /**
  * Whether the platform still holds this user, read by the platform admin:
- * `lookup.user` resolves it (true) or answers ENTITY_NOT_FOUND (false). Any
- * other answer is an error, never a silent "gone".
+ * `lookup.user` resolves it (true) or answers nothing (false: null, or only
+ * `FORBIDDEN_POLICY`). Any other answer is an error, never a silent "gone".
+ * The server answers a missing user and one the reader may not see alike, so
+ * `false` proves a deletion only after a `true` from this same read and
+ * beside `userListed` turning false.
  */
 export const userExists = async (userId: string): Promise<boolean> => {
   const result = await readUserAccount(userId, {
     bearerToken: await getAdminToken(),
   });
   if (result.data?.lookup?.user?.id === userId) return true;
-  const codes = (result.error?.errors ?? []).map(e => e.code);
-  if (codes.length > 0 && codes.every(code => code === 'ENTITY_NOT_FOUND')) {
+  if (result.error && answeredNothing(result, data => data.lookup?.user)) {
     return false;
   }
   throw new Error(
@@ -145,9 +148,20 @@ export const userExists = async (userId: string): Promise<boolean> => {
   );
 };
 
+/** Whether the platform admin's user search by email still lists the subject. */
+export const userListed = async (
+  subject: Pick<DisposableSubject, 'email' | 'userId'>
+): Promise<boolean> =>
+  must(
+    await findUsersPaginated({ email: subject.email }, 10, {
+      bearerToken: await getAdminToken(),
+    }),
+    'search users by email'
+  ).usersPaginated.users.some(user => user.id === subject.userId);
+
 /**
  * Teardown: delete the subject with its sign-in identity unless the walk
- * already did. ENTITY_NOT_FOUND (deleted by the walk) is the expected outcome
+ * already did. FORBIDDEN_POLICY (deleted by the walk) is the expected outcome
  * after a green run; anything else fails the hook — a leaked user is a leaked
  * fixture on a shared environment.
  */
@@ -161,7 +175,7 @@ export const deleteSubjectIfPresent = async (
     true
   );
   if (!result.error) return;
-  if (result.error.errors.every(e => e.code === 'ENTITY_NOT_FOUND')) return;
+  if (result.error.errors.every(e => e.code === 'FORBIDDEN_POLICY')) return;
   throw new Error(
     `teardown: deleting subject ${userId} failed: ${JSON.stringify(result.error.errors)}`
   );

@@ -142,9 +142,12 @@ describe('Functional tests - Space', () => {
       expect(
         response?.data?.me.user?.account?.license?.availableEntitlements?.sort()
       ).toEqual(withoutCreateSpace);
-      expect(createSpace?.error?.errors?.[0].message).toEqual(
-        `Unable to create account-space-free on account: ${TestUserManager.users.nonSpaceMember.accountId}. Entitlement limit of 3 of type account-space-free reached`
-      );
+      expect(
+        String(createSpace?.error?.errors?.[0]?.message).includes(
+          'Entitlement limit of 3 of type account-space-free reached'
+        ),
+        'the create is refused for the space entitlement limit'
+      ).toBe(true);
     });
 
     // Test is dependant on the above test

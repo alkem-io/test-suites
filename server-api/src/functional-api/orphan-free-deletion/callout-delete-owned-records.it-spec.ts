@@ -12,8 +12,8 @@
  *   `try`.
  *
  * Oracle: `_support/owned-records.ts` (authorization-policy lookups as the
- * Platform Operations Admin, positive control before the delete, exact
- * ENTITY_NOT_FOUND after it).
+ * Platform Operations Admin, positive control before the delete, only the
+ * generic FORBIDDEN_POLICY code after it).
  *
  * Not assertable, by design: the classification itself and the Tasks-board
  * column template (`tagset_template`) have no GraphQL lookup, and the template

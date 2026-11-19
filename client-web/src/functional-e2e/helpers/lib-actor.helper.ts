@@ -21,6 +21,32 @@ export function must<T>(result: GraphqlReturnWithError<T>, what: string): T {
 }
 
 /**
+ * The one message the server answers with, under `FORBIDDEN_POLICY`, for
+ * something that does not exist or that the caller may not reach.
+ */
+export const NOT_AVAILABLE_MESSAGE =
+  'This is not available. It may not exist, or you may not have access to it.';
+
+/**
+ * Whether a read answered "nothing here": no error and nothing returned
+ * (`found` picks the entity out of the data), or exactly one error and that
+ * error `FORBIDDEN_POLICY`. The server answers a missing entity and one the
+ * caller may not read alike, so this proves a deletion only beside a read by
+ * the same actor that returned the entity before, and a list that no longer
+ * holds it.
+ */
+export function answeredNothing<T>(
+  result: GraphqlReturnWithError<T>,
+  found: (data: T) => unknown
+): boolean {
+  if (!result.error) return result.data == null || found(result.data) == null;
+  return (
+    result.error.errors.length === 1 &&
+    result.error.errors[0].code === 'FORBIDDEN_POLICY'
+  );
+}
+
+/**
  * The signed-in browser session as a lib actor: the context's cookies for
  * the app origin, sent as one `Cookie` header to the session GraphQL
  * endpoint. A lib function called with it reads and writes exactly what a

@@ -1,4 +1,9 @@
+import { expect } from 'vitest';
 import { getGraphqlClient } from '@alkemio/tests-lib';
+import {
+  NEUTRAL_ERROR_CODE,
+  NEUTRAL_ERROR_MESSAGE,
+} from '@functional-api/error-response/error-response.constants';
 import { RoleName } from '@alkemio/tests-lib/core/generated/alkemio-schema';
 import type { PlatformRole } from '../capabilities.data';
 import { classify, describeOutcome } from './outcome';
@@ -62,21 +67,22 @@ export const orThrow = async (
   if (o.kind !== 'ok') throw new Error(`${step}: ${describeOutcome(o)}`);
 };
 
-/** What a refused call said: the first error's text, code and rule id. */
-export type Rejection = { message: string; code?: string; ruleId?: string };
-
-export const rejectionOf = (o: Outcome): Rejection => {
+/**
+ * A rule's refusal reaches the caller as the generic refusal: FORBIDDEN_POLICY
+ * and the generic sentence, naming neither the rule nor the role. Which rule
+ * refused is read from the rejection audit record (`rejectedGrant`), where a
+ * case needs it.
+ */
+export const expectGenericRefusal = (o: Outcome): void => {
   if (o.kind === 'ok' || o.errors.length === 0) {
-    throw new Error(`expected a GraphQL error, got: ${describeOutcome(o)}`);
+    throw new Error(`expected a GraphQL error, got: ${o.kind}`);
   }
-  const first = o.errors[0] as GqlError & {
-    extensions?: { details?: { ruleId?: string } };
-  };
-  return {
-    message: first.message,
-    code: first.extensions?.code,
-    ruleId: first.extensions?.details?.ruleId,
-  };
+  const first: GqlError = o.errors[0];
+  expect(first.extensions?.code).toBe(NEUTRAL_ERROR_CODE);
+  expect(
+    first.message === NEUTRAL_ERROR_MESSAGE,
+    'refusal carries the generic sentence'
+  ).toBe(true);
 };
 
 /** The service-profile marker, through the minimal serviceProfile-only document. */

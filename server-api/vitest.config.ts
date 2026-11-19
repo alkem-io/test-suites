@@ -74,6 +74,9 @@ export default defineConfig({
       project('entitlements', [
         'src/functional-api/entitlements/**/*.it-spec.ts',
       ]),
+      project('error-response', [
+        'src/functional-api/error-response/**/*.it-spec.ts',
+      ]),
       project('innovation-hub', [
         'src/functional-api/innovation-hub/**/*.it-spec.ts',
       ]),
@@ -285,6 +288,7 @@ export default defineConfig({
           'src/functional-api/journey/**/*.it-spec.ts',
           'src/functional-api/storage/**/*.it-spec.ts',
           'src/functional-api/entitlements/**/*.it-spec.ts',
+          'src/functional-api/error-response/**/*.it-spec.ts',
           'src/functional-api/templates/**/*.it-spec.ts',
           'src/functional-api/visual/**/*.it-spec.ts',
           'src/functional-api/calendar/**/*.it-spec.ts',

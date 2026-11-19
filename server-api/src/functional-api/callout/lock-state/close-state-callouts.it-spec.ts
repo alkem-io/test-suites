@@ -22,8 +22,23 @@ import {
   CalloutFramingType,
   CalloutVisibility,
 } from '@alkemio/tests-lib/core/generated/alkemio-schema';
+import {
+  NEUTRAL_ERROR_CODE,
+  NEUTRAL_ERROR_MESSAGE,
+} from '@functional-api/error-response/error-response.constants';
 
 const uniqueId = UniqueIDGenerator.getID();
+
+/** The caller is refused with the generic code and sentence. */
+const expectRefused = (res: {
+  error?: { errors: Array<Record<string, unknown>> };
+}) => {
+  expect(res.error?.errors[0]?.code).toBe(NEUTRAL_ERROR_CODE);
+  expect(
+    res.error?.errors[0]?.message === NEUTRAL_ERROR_MESSAGE,
+    'refusal carries the generic sentence'
+  ).toBe(true);
+};
 
 let calloutId = '';
 let postNameID = '';
@@ -282,13 +297,13 @@ describe('Callout - Close State - User Privileges Posts', () => {
       );
 
       test.each`
-        userRole                     | message                                                                                 | entity
-        ${TestUser.NON_SPACE_MEMBER} | ${"Authorization: unable to grant 'create-message' privilege: room message operation:"} | ${'space'}
-        ${TestUser.NON_SPACE_MEMBER} | ${"Authorization: unable to grant 'create-message' privilege: room message operation:"} | ${'subspace'}
-        ${TestUser.NON_SPACE_MEMBER} | ${"Authorization: unable to grant 'create-message' privilege: room message operation:"} | ${'subsubspace'}
+        userRole                     | entity
+        ${TestUser.NON_SPACE_MEMBER} | ${'space'}
+        ${TestUser.NON_SPACE_MEMBER} | ${'subspace'}
+        ${TestUser.NON_SPACE_MEMBER} | ${'subsubspace'}
       `(
         'User: "$userRole" cannot send message to closed "$entity" callout post',
-        async ({ userRole, message, entity }) => {
+        async ({ userRole, entity }) => {
           const id = getIdentifier(
             entity,
             postCommentsIdSpace,
@@ -303,9 +318,7 @@ describe('Callout - Close State - User Privileges Posts', () => {
           );
 
           // Assert
-          expect(JSON.stringify(messageRes.error?.errors[0].message)).toContain(
-            message
-          );
+          expectRefused(messageRes);
         }
       );
     });
@@ -314,17 +327,18 @@ describe('Callout - Close State - User Privileges Posts', () => {
   describe('Create Post - Callout Close State ', () => {
     describe('DDT Users create post to closed callout', () => {
       // Arrange
+      // A null message marks a refusal: the generic code and sentence.
       test.each`
-        userRole                       | message                                                                                    | entity
-        ${TestUser.SPACE_ADMIN}        | ${'"data":{"createContributionOnCallout"'}                                                 | ${'space'}
-        ${TestUser.SPACE_MEMBER}       | ${'Only admins are allowed to contribute to this Callout'}                                 | ${'space'}
-        ${TestUser.NON_SPACE_MEMBER}   | ${"Authorization: unable to grant 'contribute' privilege: create contribution on callout"} | ${'space'}
-        ${TestUser.SUBSPACE_ADMIN}     | ${'"data":{"createContributionOnCallout"'}                                                 | ${'subspace'}
-        ${TestUser.SUBSPACE_MEMBER}    | ${'Only admins are allowed to contribute to this Callout'}                                 | ${'subspace'}
-        ${TestUser.NON_SPACE_MEMBER}   | ${"Authorization: unable to grant 'contribute' privilege: create contribution on callout"} | ${'subspace'}
-        ${TestUser.SUBSUBSPACE_ADMIN}  | ${'"data":{"createContributionOnCallout"'}                                                 | ${'subsubspace'}
-        ${TestUser.SUBSUBSPACE_MEMBER} | ${'Only admins are allowed to contribute to this Callout'}                                 | ${'subsubspace'}
-        ${TestUser.NON_SPACE_MEMBER}   | ${"Authorization: unable to grant 'contribute' privilege: create contribution on callout"} | ${'subsubspace'}
+        userRole                       | message                                                    | entity
+        ${TestUser.SPACE_ADMIN}        | ${'"data":{"createContributionOnCallout"'}                 | ${'space'}
+        ${TestUser.SPACE_MEMBER}       | ${'Only admins are allowed to contribute to this Callout'} | ${'space'}
+        ${TestUser.NON_SPACE_MEMBER}   | ${null}                                                    | ${'space'}
+        ${TestUser.SUBSPACE_ADMIN}     | ${'"data":{"createContributionOnCallout"'}                 | ${'subspace'}
+        ${TestUser.SUBSPACE_MEMBER}    | ${'Only admins are allowed to contribute to this Callout'} | ${'subspace'}
+        ${TestUser.NON_SPACE_MEMBER}   | ${null}                                                    | ${'subspace'}
+        ${TestUser.SUBSUBSPACE_ADMIN}  | ${'"data":{"createContributionOnCallout"'}                 | ${'subsubspace'}
+        ${TestUser.SUBSUBSPACE_MEMBER} | ${'Only admins are allowed to contribute to this Callout'} | ${'subsubspace'}
+        ${TestUser.NON_SPACE_MEMBER}   | ${null}                                                    | ${'subsubspace'}
       `(
         'User: "$userRole" get error when create post to closed "$entity" callout',
         async ({ userRole, message, entity }) => {
@@ -345,7 +359,14 @@ describe('Callout - Close State - User Privileges Posts', () => {
           );
 
           // Assert
-          expect(JSON.stringify(res)).toContain(message);
+          if (message === null) {
+            expectRefused(res);
+          } else {
+            expect(
+              JSON.stringify(res).includes(message),
+              'the answer is the expected outcome for this role'
+            ).toBe(true);
+          }
         }
       );
     });

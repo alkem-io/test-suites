@@ -5,6 +5,7 @@ import {
   rawRequest,
   type RawResult,
 } from '@functional-api/platform-roles/_support/raw-request';
+import { NEUTRAL_ERROR_CODE } from '@functional-api/error-response/error-response.constants';
 
 /**
  * server#6614 / #6637 — the "record is gone" oracle, over GraphQL, no DB.
@@ -16,22 +17,19 @@ import {
  *   1. before the delete, capture the owned records' ids,
  *   2. prove with the SAME token that they resolve (`expectPoliciesPresent`),
  *   3. delete the owner,
- *   4. assert the same lookups answer `ENTITY_NOT_FOUND` exactly
- *      (`expectPoliciesGone` / `expectLookupGone`).
+ *   4. assert the same lookups return no record and only the generic
+ *      FORBIDDEN_POLICY code (`expectPoliciesGone` / `expectLookupGone`).
  *
- * Why the token is the Platform Operations Admin and why step 2 is mandatory:
- * `lookup.authorizationPolicy` loads the row BEFORE it checks
- * PLATFORM_OPERATIONS_ADMIN, so a token without that privilege gets
- * ENTITY_NOT_FOUND for a missing id and FORBIDDEN for an existing one. A
- * "gone" assertion made with the wrong token would pass vacuously.
+ * Why step 2 is mandatory: a missing record and a refused read reach the
+ * caller with the same FORBIDDEN_POLICY code and sentence, so that answer
+ * alone proves nothing. Step 2 shows the same token reads the record while it
+ * exists; the generic answer to the same lookup after the delete then means it
+ * is gone, not refused. The token is the Platform Operations Admin because
+ * `lookup.authorizationPolicy` requires PLATFORM_OPERATIONS_ADMIN.
  *
- * The code is asserted EXACTLY: `lookup.profile` / `storageBucket` /
- * `document` load before their READ check too, so on a server without the fix
- * an orphan can answer FORBIDDEN instead of data. "Has an error" would let it
- * pass.
+ * The code is asserted EXACTLY: any other code, or a lookup that still
+ * returns the record, is a survivor. "Has an error" would let it pass.
  */
-
-export const ENTITY_NOT_FOUND = 'ENTITY_NOT_FOUND';
 
 /** label -> id, as captured before the delete. The label names the leak in a red. */
 export type OwnedIds = Record<string, string>;
@@ -101,6 +99,12 @@ const outcomeOf = (r: RawResult<LookupData>): string =>
     ? `error ${r.errors[0].extensions?.code ?? '(no code)'}: ${r.errors[0].message}`
     : `resolved ${JSON.stringify(r.data?.lookup)}`;
 
+/** What a "gone" check may print: the error codes, or that the lookup resolved. */
+const codesOf = (r: RawResult<LookupData>): string =>
+  r.errors.length > 0
+    ? r.errors.map(e => e.extensions?.code ?? '(no code)').join(', ')
+    : 'resolved';
+
 const resolves = (
   r: RawResult<LookupData>,
   field: LookupField,
@@ -108,32 +112,13 @@ const resolves = (
 ): boolean => r.errors.length === 0 && r.data?.lookup?.[field]?.id === id;
 
 /**
- * What "this id does not exist" looks like per lookup. Everything answers
- * ENTITY_NOT_FOUND. `lookup.storageBucket` used to let TypeORM's own
- * `EntityNotFoundError` through with code UNSPECIFIED (established 2026-10-16;
- * the answer for a random UUID too, so the shape of a missing bucket, not of
- * a leak); server#6678 aligned it to ENTITY_NOT_FOUND. Both shapes stay
- * accepted for that one field so SD-1/SD-2 are green on either side of the
- * fix; "any error" is never accepted.
+ * No record, and at least one error, every one with the generic
+ * FORBIDDEN_POLICY code. Any other code fails; "any error" is never accepted.
  */
-const isNotFoundAnswer = (
-  r: RawResult<LookupData>,
-  field: LookupField
-): boolean => {
-  const error = r.errors[0];
-  if (!error) return false;
-  if (error.extensions?.code === ENTITY_NOT_FOUND) return true;
-  return (
-    field === 'storageBucket' &&
-    error.extensions?.code === 'UNSPECIFIED' &&
-    error.message.startsWith(
-      'Could not find any entity of type "StorageBucket"'
-    )
-  );
-};
-
 const isGone = (r: RawResult<LookupData>, field: LookupField): boolean =>
-  !r.data?.lookup?.[field] && isNotFoundAnswer(r, field);
+  !r.data?.lookup?.[field] &&
+  r.errors.length > 0 &&
+  r.errors.every(e => e.extensions?.code === NEUTRAL_ERROR_CODE);
 
 /**
  * Positive control: every captured policy resolves with the SAME token the
@@ -154,9 +139,9 @@ export const expectPoliciesPresent = async (token: string, owned: OwnedIds) => {
 };
 
 /**
- * Every captured policy answers ENTITY_NOT_FOUND. Collects all survivors into
- * one assertion so a single red names the whole leak.
- * `context` goes into the failure message so a red says which owner leaked.
+ * Every captured policy is gone (`isGone`). Collects all survivors, by label
+ * and code, into one assertion so a single red names every survivor.
+ * `context` goes into the failure message so a red says which owner it was.
  */
 export const expectPoliciesGone = async (
   token: string,
@@ -167,7 +152,7 @@ export const expectPoliciesGone = async (
   for (const [label, id] of Object.entries(owned)) {
     const r = await policyLookup(token, id);
     if (!isGone(r, 'authorizationPolicy')) {
-      survivors.push(`${label} (${id}): ${outcomeOf(r)}`);
+      survivors.push(`${label}: ${codesOf(r)}`);
     }
   }
   expect(
@@ -176,7 +161,7 @@ export const expectPoliciesGone = async (
   ).toEqual([]);
 };
 
-/** `lookup.<field>(ID)` answers ENTITY_NOT_FOUND. */
+/** `lookup.<field>(ID)` is gone (`isGone`). */
 export const expectLookupGone = async (
   token: string,
   field: Exclude<LookupField, 'authorizationPolicy'>,
@@ -185,14 +170,13 @@ export const expectLookupGone = async (
   const r = await lookup(token, field, id);
   expect(
     isGone(r, field),
-    `lookup.${field}(${id}) should answer ${ENTITY_NOT_FOUND} after the delete, got: ${outcomeOf(r)}`
+    `lookup.${field} should answer only ${NEUTRAL_ERROR_CODE} after the delete, got: ${codesOf(r)}`
   ).toBe(true);
 };
 
 /**
- * Self-check that a missing id answers the not-found shape this oracle
- * accepts, on the stack under test, for every lookup a case relies on. It
- * proves the shape belongs to "no such record" and not to a leak.
+ * Self-check that a missing id answers the shape this oracle accepts as gone,
+ * on the stack under test, for every lookup a case relies on.
  */
 export const expectRandomIdIsNotFound = async (
   token: string,
@@ -202,7 +186,7 @@ export const expectRandomIdIsNotFound = async (
     const r = await lookup(token, field, randomUUID());
     expect(
       isGone(r, field),
-      `the oracle assumes a missing id answers not-found on lookup.${field}, got: ${outcomeOf(r)}`
+      `the oracle assumes a missing id answers ${NEUTRAL_ERROR_CODE} on lookup.${field}, got: ${codesOf(r)}`
     ).toBe(true);
   }
 };

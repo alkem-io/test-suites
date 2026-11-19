@@ -3,9 +3,9 @@ import { describeOutcome } from '../_support/outcome';
 import {
   accessOf,
   assignRole,
+  expectGenericRefusal,
   holdersOf,
   orThrow,
-  rejectionOf,
   removeRole,
 } from '../_support/role-set';
 import { createSubject, deleteSubjects } from '../_support/subjects';
@@ -93,10 +93,7 @@ describe('R5.last-roles-admin', () => {
     const refused = await removeRole(ctx.bootstrapToken, ROLE, last.id);
 
     expect(refused.kind, describeOutcome(refused)).toBe('denied');
-    expect(rejectionOf(refused)).toMatchObject({
-      ruleId: 'last-roles-admin',
-      message: 'Rejected: cannot remove the last platform-roles-admin',
-    });
+    expectGenericRefusal(refused);
     expect(await holdersOf(last.token, ROLE)).toEqual([last.id]);
   });
 

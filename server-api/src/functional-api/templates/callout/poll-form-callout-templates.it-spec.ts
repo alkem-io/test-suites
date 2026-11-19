@@ -20,7 +20,6 @@ import {
   answersFor,
   createFormCallout,
   defaultFormQuestions,
-  errorClass,
   errorCode,
   FormQuestion,
   isForbiddenByPolicy,
@@ -39,6 +38,7 @@ import {
   pollShape,
   uniqueTemplateName,
 } from '../poll-form-template.request.params';
+import { NEUTRAL_ERROR_CODE } from '@functional-api/error-response/error-response.constants';
 
 /**
  * workspace#080, ruling R25 (server#6435) — US5-AS1/AS2/AS5/AS6, FR-025–FR-027b.
@@ -330,8 +330,13 @@ describe('R25 — a Form callout template is removed like any template (server#6
       'form-delete',
       TestUser.SPACE_ADMIN
     );
-    // Control: before the delete it reads back with its Form.
+    // Control: before the delete the same read, with the same token, returns
+    // the template with its Form and no error.
     const before = await getTemplateCalloutFraming(templateId);
+    expect(
+      before.error === undefined,
+      'the template is readable before the delete'
+    ).toBe(true);
     expect(before.data?.lookup.template?.callout?.framing.form?.id).toBe(
       form.id
     );
@@ -341,8 +346,19 @@ describe('R25 — a Form callout template is removed like any template (server#6
     expect(deleted.data?.deleteTemplate.id).toBe(templateId);
     templateIds.splice(templateIds.indexOf(templateId), 1);
 
+    // A missing template and a refused one answer alike, so the code alone
+    // proves nothing. The control read shows this token may read the
+    // template; the same read now returning no template, with only the
+    // generic code, therefore means it is gone.
     const after = await getTemplateCalloutFraming(templateId);
-    expect(errorClass(after)).toBe('ENTITY_NOT_FOUND');
-    expect(after.data?.lookup.template?.callout).toBeUndefined();
+    expect(
+      after.data?.lookup?.template == null,
+      'no template is returned after the delete'
+    ).toBe(true);
+    expect(
+      (after.error?.errors ?? [])
+        .map(e => e.code)
+        .filter(code => code !== NEUTRAL_ERROR_CODE)
+    ).toEqual([]);
   });
 });

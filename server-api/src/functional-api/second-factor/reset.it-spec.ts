@@ -33,6 +33,10 @@ import {
   type ThrowawayUser,
 } from '@alkemio/tests-lib';
 import { roleTokens, secondFactorCases, userIdOf } from './_support/cases';
+import {
+  NEUTRAL_ERROR_CODE,
+  NEUTRAL_ERROR_MESSAGE,
+} from '@functional-api/error-response/error-response.constants';
 
 const throwawayUser = secondFactorCases();
 const SECOND_FACTOR_TYPES = ['lookup_secret', 'totp', 'webauthn'];
@@ -203,14 +207,14 @@ describe('Second factor — support reset', () => {
       { invalidatePassword: false }
     );
     expect(self.body.data?.adminResetUserSecondFactor).toBeFalsy();
-    // The self-target guard, not the privilege check (the role case above
-    // proves the support role holds the privilege).
-    expect(errorCodes(self)).toEqual(['FORBIDDEN']);
+    // The self-target guard, not the privilege check: the role case above
+    // proves the support role holds the privilege. The guard's refusal is the
+    // generic one.
+    expect(errorCodes(self)).toEqual([NEUTRAL_ERROR_CODE]);
     expect(
-      (self.body.errors?.[0]?.extensions as { details?: { reason?: string } })
-        ?.details?.reason,
-      self.raw
-    ).toBe('self_target');
+      self.body.errors?.[0]?.message === NEUTRAL_ERROR_MESSAGE,
+      'refusal carries the generic sentence'
+    ).toBe(true);
     expect((await resetRows(supportId)).length).toBe(selfRowsBefore);
 
     // Created through the API, never signed in: no Kratos identity linked.
@@ -234,7 +238,7 @@ describe('Second factor — support reset', () => {
         { invalidatePassword: false }
       );
       expect(answer.body.data?.adminResetUserSecondFactor).toBeFalsy();
-      expect(errorCodes(answer)).toEqual(['ENTITY_NOT_FOUND']);
+      expect(errorCodes(answer)).toEqual([NEUTRAL_ERROR_CODE]);
       expect(await resetRows(unlinkedId!)).toEqual([]);
     } finally {
       deleted = await deleteUser(unlinkedId!, asGlobalAdmin);

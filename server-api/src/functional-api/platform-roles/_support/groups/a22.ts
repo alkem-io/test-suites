@@ -15,6 +15,7 @@ import {
   organizationAdminOf,
   removeOwnedOrganization,
 } from './organization-content';
+import { NEUTRAL_ERROR_CODE } from '@functional-api/error-response/error-response.constants';
 
 /**
  * A22 — direct add without consent (027 Session 2026-10-08, operator ruling on
@@ -231,7 +232,7 @@ const removeVirtualContributor = async (
     DELETE_VC,
     { id }
   );
-  const real = errors.filter(e => e.extensions?.code !== 'ENTITY_NOT_FOUND');
+  const real = errors.filter(e => e.extensions?.code !== NEUTRAL_ERROR_CODE);
   if (real.length > 0) {
     throw new Error(`A22 VC ${id}: ${real[0].message}`);
   }

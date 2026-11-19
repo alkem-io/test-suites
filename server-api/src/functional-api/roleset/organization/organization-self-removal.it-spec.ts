@@ -53,8 +53,21 @@ import {
   createOrganization,
   deleteOrganization,
 } from '@functional-api/contributor-management/organization/organization.request.params';
+import {
+  NEUTRAL_ERROR_CODE,
+  NEUTRAL_ERROR_MESSAGE,
+} from '@functional-api/error-response/error-response.constants';
 
-const NOT_AUTHORIZED = /Authorization: unable to grant/;
+/** The caller is refused with the generic code and sentence. */
+const expectRefused = (res: {
+  error?: { errors: Array<Record<string, unknown>> };
+}) => {
+  expect(res.error?.errors[0]?.code).toBe(NEUTRAL_ERROR_CODE);
+  expect(
+    res.error?.errors[0]?.message === NEUTRAL_ERROR_MESSAGE,
+    'refusal carries the generic sentence'
+  ).toBe(true);
+};
 const uniqueId = UniqueIDGenerator.getID();
 
 let baseScenario: OrganizationWithSpaceModel;
@@ -296,7 +309,7 @@ describe('@forge-acceptance Organization self-removal from a Space community', (
     );
 
     // Assert
-    expect(res.error?.errors[0].message).toMatch(NOT_AUTHORIZED);
+    expectRefused(res);
     expect(await isOrgAMember(spaceRoleSetId)).toBe(true);
   });
 
@@ -310,7 +323,7 @@ describe('@forge-acceptance Organization self-removal from a Space community', (
     );
 
     // Assert
-    expect(res.error?.errors[0].message).toMatch(NOT_AUTHORIZED);
+    expectRefused(res);
     expect(await isOrgAMember(spaceRoleSetId)).toBe(true);
   });
 
@@ -324,7 +337,7 @@ describe('@forge-acceptance Organization self-removal from a Space community', (
     );
 
     // Assert
-    expect(res.error?.errors[0].message).toMatch(NOT_AUTHORIZED);
+    expectRefused(res);
     expect(await isOrgAMember(spaceRoleSetId)).toBe(true);
   });
 
@@ -383,7 +396,7 @@ describe('@forge-acceptance Organization self-removal from a Space community', (
     );
 
     // Assert
-    expect(denied.error?.errors[0].message).toMatch(NOT_AUTHORIZED);
+    expectRefused(denied);
     expect(await isOrgAMember(spaceRoleSetId)).toBe(true);
 
     // Act — admin of A through the generic operation
@@ -409,7 +422,7 @@ describe('@forge-acceptance Organization self-removal from a Space community', (
     );
 
     // Assert
-    expect(res.error?.errors[0].message).toMatch(NOT_AUTHORIZED);
+    expectRefused(res);
     expect(await isOrgAMember(spaceRoleSetId)).toBe(true);
   });
 
@@ -423,7 +436,7 @@ describe('@forge-acceptance Organization self-removal from a Space community', (
     );
 
     // Assert
-    expect(res.error?.errors[0].message).toMatch(NOT_AUTHORIZED);
+    expectRefused(res);
     expect(await isOrgAMember(spaceRoleSetId)).toBe(true);
   });
 
@@ -440,7 +453,7 @@ describe('@forge-acceptance Organization self-removal from a Space community', (
     );
 
     // Assert
-    expect(res.error?.errors[0].message).toMatch(NOT_AUTHORIZED);
+    expectRefused(res);
     expect(await isOrgBMember(spaceRoleSetId)).toBe(true);
   });
 
@@ -495,10 +508,9 @@ describe('@forge-acceptance Organization self-removal from a Space community', (
       TestUser.ORGANIZATION_ADMIN
     );
 
-    // Assert — denied on GRANT itself, not on the entry-role privilege.
-    expect(res.error?.errors[0].message).toMatch(
-      /Authorization: unable to grant 'grant' privilege/
-    );
+    // Assert — refused (GRANT is the gate; the generic refusal names no
+    // privilege).
+    expectRefused(res);
     expect(await isOrgALead(spaceRoleSetId)).toBe(false);
     expect(await isOrgAMember(spaceRoleSetId)).toBe(true);
   });
@@ -512,16 +524,14 @@ describe('@forge-acceptance Organization self-removal from a Space community', (
     await ensureOrgARole(spaceRoleSetId, RoleName.Lead);
     expect(await isOrgALead(spaceRoleSetId)).toBe(true);
 
-    // Act 1 — direct Lead removal by A's admin is denied on GRANT.
+    // Act 1 — direct Lead removal by A's admin is refused (GRANT is the gate).
     const dropLead = await removeRoleFromOrganization(
       orgAId,
       spaceRoleSetId,
       RoleName.Lead,
       TestUser.ORGANIZATION_ADMIN
     );
-    expect(dropLead.error?.errors[0].message).toMatch(
-      /Authorization: unable to grant 'grant' privilege/
-    );
+    expectRefused(dropLead);
     expect(await isOrgALead(spaceRoleSetId)).toBe(true);
     expect(await isOrgAMember(spaceRoleSetId)).toBe(true);
 

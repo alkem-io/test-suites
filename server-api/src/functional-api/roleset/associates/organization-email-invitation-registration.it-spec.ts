@@ -137,12 +137,16 @@ const inviteEmail = async (
   return id;
 };
 
-/** The invitation is erased: the lookup answers entity-not-found (any other
- * error does not count), and where the harness reaches Postgres no row is left. */
+/** The invitation is erased: the global admin's lookup, which returned it
+ * before, now returns nothing and only the generic FORBIDDEN_POLICY (any other
+ * error does not count), and where the harness reaches Postgres no row is left.
+ * The earlier successful read shows this token may read the invitation, so the
+ * generic answer afterwards means it is gone, not refused. */
 const expectInvitationErased = async (id: string) => {
-  expect(isPlatformInvitationGone(await lookupPlatformInvitation(id)), id).toBe(
-    true
-  );
+  expect(
+    isPlatformInvitationGone(await lookupPlatformInvitation(id)),
+    'the invitation no longer resolves'
+  ).toBe(true);
   expect(await platformInvitationRowExists(id), id).not.toEqual(true);
 };
 
@@ -488,9 +492,12 @@ describe('Deleting an organization removes its open email invitations (US4-AS6)'
       [],
       TestUser.GLOBAL_ADMIN
     );
+    const before = await lookupPlatformInvitation(invitationId);
     expect(
-      isPlatformInvitationGone(await lookupPlatformInvitation(invitationId))
-    ).toBe(false);
+      before?.error === undefined &&
+        before?.data?.lookup?.platformInvitation?.id === invitationId,
+      'the invitation is readable before the delete'
+    ).toBe(true);
 
     const deleted = await deleteOrganization(organization!.id);
     expect(deleted?.error).toBeUndefined();

@@ -8,6 +8,7 @@ import {
 } from '@alkemio/tests-lib';
 import { RoleName } from '@alkemio/tests-lib/core/generated/alkemio-schema';
 import { graphqlErrorWrapper } from '@alkemio/tests-lib/utils/graphql.wrapper';
+import { NEUTRAL_ERROR_CODE } from '@functional-api/error-response/error-response.constants';
 
 export const getRoleName = async (
   organizationID: string,
@@ -40,10 +41,20 @@ export const assignRoleToUser = (
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => libAssignRoleToUser(userID, roleSetID, role, userRole);
 
-const ENTRY_ASSIGN_GAP = [
-  'roleset-entry-role-assign',
-  'not a member of parent roleSet',
-];
+/**
+ * The harness admin's entry-role assign refusal: the generic FORBIDDEN_POLICY
+ * (its message names no privilege), or a member missing from the parent role
+ * set, which keeps its own message.
+ */
+const isEntryAssignGap = (result: {
+  error?: { errors: Array<Record<string, unknown>> };
+}): boolean => {
+  const first = result?.error?.errors?.[0];
+  return (
+    first?.code === NEUTRAL_ERROR_CODE ||
+    String(first?.message ?? '').includes('not a member of parent roleSet')
+  );
+};
 
 const assignRoleToUserExtendedDataDirect = async (
   userID: string,
@@ -81,11 +92,10 @@ export const assignRoleToUserExtendedData = async (
     role,
     userRole
   );
-  const message = String(result?.error?.errors?.[0]?.message ?? '');
   if (
     userRole !== TestUser.GLOBAL_ADMIN ||
     !result?.error ||
-    !ENTRY_ASSIGN_GAP.some(gap => message.includes(gap))
+    !isEntryAssignGap(result)
   ) {
     return result;
   }
@@ -152,13 +162,14 @@ const assignRoleToOrganizationRaw = async (
 
 /**
  * Same result shape as before (`{ data, error }`, never throws) so refusal
- * assertions keep reading `error.errors[0].message`.
+ * assertions keep reading `error.errors[0]`.
  *
  * workspace#027 Slice B removed `ROLESET_ENTRY_ROLE_ASSIGN_ORGANIZATION`
  * from every actor, so the harness admin can no longer seed an organization
- * into a Space directly. For GLOBAL_ADMIN only, that one refusal falls back to
- * the product path (invite the organization, accept as its admin) via the lib;
- * every other actor's refusal is returned as-is — those are the assertions.
+ * into a Space directly. For GLOBAL_ADMIN only, that refusal (the generic
+ * FORBIDDEN_POLICY) falls back to the product path (invite the organization,
+ * accept as its admin) via the lib; every other actor's refusal is returned
+ * as-is — those are the assertions.
  */
 export const assignRoleToOrganization = async (
   organizationID: string,
@@ -172,11 +183,10 @@ export const assignRoleToOrganization = async (
     role,
     userRole
   );
-  const message = String(result?.error?.errors?.[0]?.message ?? '');
   if (
     !result?.error ||
     userRole !== TestUser.GLOBAL_ADMIN ||
-    !message.includes('roleset-entry-role-assign-organization')
+    result.error.errors[0]?.code !== NEUTRAL_ERROR_CODE
   ) {
     return result;
   }
