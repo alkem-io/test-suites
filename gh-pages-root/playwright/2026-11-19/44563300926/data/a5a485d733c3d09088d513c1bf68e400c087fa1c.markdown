@@ -1,0 +1,511 @@
+# Page snapshot
+
+```yaml
+- generic:
+  - generic:
+    - generic:
+      - generic:
+        - generic:
+          - link:
+            - /url: "#crd-main-content"
+            - text: Skip to content
+          - banner:
+            - generic:
+              - generic:
+                - generic:
+                  - generic:
+                    - link:
+                      - /url: /home
+                      - generic:
+                        - img
+                    - generic:
+                      - navigation:
+                        - list:
+                          - listitem:
+                            - img
+                            - link:
+                              - /url: https://test-alkem.io/user/admin-alkemio
+                              - text: admin alkemio
+                          - listitem:
+                            - img
+                          - listitem:
+                            - link:
+                              - /url: https://test-alkem.io/user/admin-alkemio/settings
+                              - text: Settings
+                          - listitem:
+                            - img
+                          - listitem:
+                            - generic: Security
+                  - navigation:
+                    - button:
+                      - img
+                    - button:
+                      - img
+                    - button:
+                      - img
+                    - button:
+                      - img
+                    - button:
+                      - generic:
+                        - generic:
+                          - img
+          - main:
+            - generic:
+              - generic:
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic:
+                        - generic:
+                          - heading [level=1]: admin alkemio
+                      - tablist:
+                        - tab:
+                          - img
+                          - generic: Profile
+                        - tab:
+                          - img
+                          - generic: Account
+                        - tab:
+                          - img
+                          - generic: Membership
+                        - tab:
+                          - img
+                          - generic: Organisations
+                        - tab:
+                          - img
+                          - generic: Notifications
+                        - tab:
+                          - img
+                          - generic: Settings
+                        - tab [selected]:
+                          - img
+                          - generic: Security
+              - generic:
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic:
+                        - heading [level=3]:
+                          - button [expanded]:
+                            - generic:
+                              - img
+                            - generic:
+                              - generic:
+                                - generic: Connected Accounts
+                              - generic: Every way you can currently sign in to this account.
+                            - img
+                        - generic:
+                          - generic:
+                            - generic:
+                              - list:
+                                - listitem:
+                                  - generic:
+                                    - img
+                                    - generic:
+                                      - paragraph: Microsoft
+                                      - paragraph: Not connected
+                                  - generic:
+                                    - button: Connect
+                                - listitem:
+                                  - generic:
+                                    - img
+                                    - generic:
+                                      - paragraph: LinkedIn
+                                      - paragraph: Not connected
+                                  - generic:
+                                    - button: Connect
+                                - listitem:
+                                  - generic:
+                                    - img
+                                    - generic:
+                                      - paragraph: Cleverbase
+                                      - paragraph: Not connected
+                                  - generic:
+                                    - button: Connect
+                                - listitem:
+                                  - generic:
+                                    - img
+                                    - generic:
+                                      - paragraph: Password
+                                      - paragraph: Set
+                                  - link:
+                                    - /url: "#password"
+                                    - text: Change password
+                                - listitem:
+                                  - generic:
+                                    - img
+                                    - generic:
+                                      - paragraph: Passkey
+                                      - paragraph: Not set
+                                      - paragraph: Signs you in without a password. It is not a second step.
+                                  - link:
+                                    - /url: "#passkeys"
+                                    - text: Manage passkeys
+                      - generic:
+                        - generic:
+                          - heading [level=3]:
+                            - button [expanded]:
+                              - generic:
+                                - img
+                              - generic:
+                                - generic:
+                                  - generic: Change password
+                                - generic: Update the password used to sign in to your account.
+                              - img
+                          - generic:
+                            - generic:
+                              - generic:
+                                - generic:
+                                  - generic:
+                                    - generic:
+                                      - textbox:
+                                        - /placeholder: " "
+                                      - generic: Password *
+                                      - button:
+                                        - img
+                                  - generic:
+                                    - generic:
+                                      - textbox:
+                                        - /placeholder: " "
+                                      - generic: Confirm new password *
+                                      - button:
+                                        - img
+                                  - button [disabled]: Save
+                      - generic:
+                        - generic:
+                          - heading [level=3]:
+                            - button [expanded]:
+                              - generic:
+                                - img
+                              - generic:
+                                - generic:
+                                  - generic: Security
+                                - generic: Manage passkeys and WebAuthn credentials for your account.
+                              - img
+                          - generic:
+                            - generic:
+                              - generic:
+                                - generic:
+                                  - generic:
+                                    - button:
+                                      - img
+                      - generic:
+                        - heading [level=3]:
+                          - button [expanded]:
+                            - generic:
+                              - img
+                            - generic:
+                              - generic:
+                                - generic: Two-step verification
+                            - img
+                        - generic:
+                          - generic:
+                            - generic:
+                              - paragraph: "Add a second step to signing in: after your password, you also confirm with your phone or a security key."
+                              - generic:
+                                - img
+                                - paragraph: A code is never read out or sent to anyone, and Alkemio will never ask you for one. Do not share your codes.
+                              - generic:
+                                - heading [level=3]:
+                                  - img
+                                  - text: Authenticator app
+                                - paragraph: An app on your phone, such as Google Authenticator, Microsoft Authenticator or 1Password, shows a new six-digit code every 30 seconds.
+                                - generic:
+                                  - paragraph: "Set up an authenticator app: scan the QR code with the app, or enter the key by hand, then type the code it shows."
+                                  - img
+                                  - paragraph: "Key: GQP3I6RIAMZZOYQTGVRESSQA2CJFFQD4"
+                                  - generic:
+                                    - generic: Code from the app
+                                    - textbox
+                                  - button: Confirm
+                              - generic:
+                                - heading [level=3]:
+                                  - img
+                                  - text: Passkeys and security keys
+                                - paragraph: Use a passkey saved in your password manager or on this device (Face ID, Touch ID, Windows Hello), or a physical key such as a YubiKey. Your browser asks which one to use.
+                                - paragraph: No security keys added yet.
+                                - generic:
+                                  - generic:
+                                    - generic: Name of the key
+                                    - textbox
+                                  - button:
+                                    - img
+                                    - text: Add a security key
+                              - generic:
+                                - heading [level=3]:
+                                  - img
+                                  - text: Recovery codes
+                                - paragraph: One-time codes for when you cannot use your app or key. Each code works once.
+                                - paragraph: Set up an authenticator app or a security key first.
+                                - button [disabled]: Generate recovery codes
+                      - generic:
+                        - heading [level=3]:
+                          - button [expanded]:
+                            - generic:
+                              - img
+                            - generic:
+                              - generic:
+                                - generic: MCP API Keys
+                              - generic: Create keys so external MCP clients (like Claude Desktop or Claude Code) can connect to Alkemio on your behalf.
+                            - img
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic:
+                                - button:
+                                  - img
+                                  - text: Create API key
+                              - list:
+                                - listitem:
+                                  - generic:
+                                    - generic:
+                                      - generic:
+                                        - paragraph: US2-NoRemoval-Key-1795080673957-qtrfw0
+                                        - generic:
+                                          - generic: Revoked
+                                          - generic: Read
+                                    - generic:
+                                      - generic:
+                                        - term: Created
+                                        - definition: Nov 19, 2026
+                                      - generic:
+                                        - term: Expires
+                                        - definition: Never expires
+                                      - generic:
+                                        - term: Last used
+                                        - definition: Never used
+                                - listitem:
+                                  - generic:
+                                    - generic:
+                                      - generic:
+                                        - paragraph: US2-Session-Key-1795080666592-9itya6
+                                        - generic:
+                                          - generic: Revoked
+                                          - generic: Read
+                                    - generic:
+                                      - generic:
+                                        - term: Created
+                                        - definition: Nov 19, 2026
+                                      - generic:
+                                        - term: Expires
+                                        - definition: Never expires
+                                      - generic:
+                                        - term: Last used
+                                        - definition: Nov 19, 2026, 9:31 AM from 51.158.172.220
+                                - listitem:
+                                  - generic:
+                                    - generic:
+                                      - generic:
+                                        - paragraph: US2-Refused-Key-1795080659971-yj47y6
+                                        - generic:
+                                          - generic: Revoked
+                                          - generic: Read
+                                    - generic:
+                                      - generic:
+                                        - term: Created
+                                        - definition: Nov 19, 2026
+                                      - generic:
+                                        - term: Expires
+                                        - definition: Never expires
+                                      - generic:
+                                        - term: Last used
+                                        - definition: Never used
+                                - listitem:
+                                  - generic:
+                                    - generic:
+                                      - generic:
+                                        - paragraph: US2-Revoke-Key-1795080650668-fvdz04
+                                        - generic:
+                                          - generic: Revoked
+                                          - generic: Read
+                                    - generic:
+                                      - generic:
+                                        - term: Created
+                                        - definition: Nov 19, 2026
+                                      - generic:
+                                        - term: Expires
+                                        - definition: Never expires
+                                      - generic:
+                                        - term: Last used
+                                        - definition: Nov 19, 2026, 9:30 AM from 51.158.172.220
+                                - listitem:
+                                  - generic:
+                                    - generic:
+                                      - generic:
+                                        - paragraph: US2-NoLeak-Key-1795080643679-q9r5ej
+                                        - generic:
+                                          - generic: Revoked
+                                          - generic: Read
+                                    - generic:
+                                      - generic:
+                                        - term: Created
+                                        - definition: Nov 19, 2026
+                                      - generic:
+                                        - term: Expires
+                                        - definition: Never expires
+                                      - generic:
+                                        - term: Last used
+                                        - definition: Never used
+                                - listitem:
+                                  - generic:
+                                    - generic:
+                                      - generic:
+                                        - paragraph: US2-List-Key-1795080636770-7ych4v
+                                        - generic:
+                                          - generic: Revoked
+                                          - generic: Read
+                                    - generic:
+                                      - generic:
+                                        - term: Created
+                                        - definition: Nov 19, 2026
+                                      - generic:
+                                        - term: Expires
+                                        - definition: Never expires
+                                      - generic:
+                                        - term: Last used
+                                        - definition: Never used
+                                - listitem:
+                                  - generic:
+                                    - generic:
+                                      - generic:
+                                        - paragraph: Expiry Key-1795080618940-70on59
+                                        - generic:
+                                          - generic: Revoked
+                                          - generic: Read
+                                    - generic:
+                                      - generic:
+                                        - term: Created
+                                        - definition: Nov 19, 2026
+                                      - generic:
+                                        - term: Expires
+                                        - definition: Nov 24, 2026
+                                      - generic:
+                                        - term: Last used
+                                        - definition: Never used
+                                - listitem:
+                                  - generic:
+                                    - generic:
+                                      - generic:
+                                        - paragraph: Ephemeral Reveal-1795080611242-mhz3gu
+                                        - generic:
+                                          - generic: Revoked
+                                          - generic: Read
+                                    - generic:
+                                      - generic:
+                                        - term: Created
+                                        - definition: Nov 19, 2026
+                                      - generic:
+                                        - term: Expires
+                                        - definition: Never expires
+                                      - generic:
+                                        - term: Last used
+                                        - definition: Never used
+                                - listitem:
+                                  - generic:
+                                    - generic:
+                                      - generic:
+                                        - paragraph: A11y Key-1795080604366-d1qzal
+                                        - generic:
+                                          - generic: Revoked
+                                          - generic: Read
+                                    - generic:
+                                      - generic:
+                                        - term: Created
+                                        - definition: Nov 19, 2026
+                                      - generic:
+                                        - term: Expires
+                                        - definition: Never expires
+                                      - generic:
+                                        - term: Last used
+                                        - definition: Never used
+                                - listitem:
+                                  - generic:
+                                    - generic:
+                                      - generic:
+                                        - paragraph: Claude Desktop-1795080597471-9pd598
+                                        - generic:
+                                          - generic: Revoked
+                                          - generic: Read
+                                    - generic:
+                                      - generic:
+                                        - term: Created
+                                        - definition: Nov 19, 2026
+                                      - generic:
+                                        - term: Expires
+                                        - definition: Never expires
+                                      - generic:
+                                        - term: Last used
+                                        - definition: Never used
+            - region:
+              - generic:
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic: "0"
+                      - paragraph: 0 unsaved changes
+                    - generic:
+                      - button: Discard
+                      - button [disabled]: Save changes
+          - contentinfo:
+            - generic:
+              - generic:
+                - generic:
+                  - img
+                - generic: © 2026 Alkemio B.V.
+              - navigation:
+                - link:
+                  - /url: https://welcome.alkem.io/legal/terms/
+                  - text: Terms
+                - link:
+                  - /url: https://welcome.alkem.io/legal/privacy
+                  - text: Privacy
+                - link:
+                  - /url: https://welcome.alkem.io/legal/security
+                  - text: Security
+                - button: Support
+                - link:
+                  - /url: https://welcome.alkem.io
+                  - text: About
+              - generic:
+                - button:
+                  - img
+                  - generic: English
+    - generic [ref=e2]:
+      - paragraph [ref=e3]: By clicking "Accept All Cookies", you agree to the storing of cookies on your device to enhance site navigation and analyse site usage.
+      - generic [ref=e4]:
+        - button [ref=e5] [cursor=pointer]: settings
+        - button [ref=e6] [cursor=pointer]: Accept All Cookies
+    - region "Notifications alt+T"
+    - button:
+      - img
+  - dialog "Create MCP API key" [ref=e8]:
+    - generic [ref=e9]:
+      - generic [ref=e10]:
+        - heading "Create MCP API key" [level=2] [ref=e11]
+        - paragraph [ref=e12]: Choose a name, the operations it can perform, and an optional expiry.
+      - generic [ref=e13]:
+        - generic [ref=e14]:
+          - generic [ref=e15]: Name
+          - textbox "Name" [active] [ref=e16]:
+            - /placeholder: e.g. Claude Desktop
+        - group "Operations" [ref=e17]:
+          - generic [ref=e18]: Operations
+          - generic [ref=e19]:
+            - checkbox "Read" [ref=e20]
+            - checkbox
+            - generic [ref=e21]: Read
+          - generic [ref=e22]:
+            - checkbox "Tools" [ref=e23]
+            - checkbox
+            - generic [ref=e24]: Tools
+        - generic [ref=e25]:
+          - generic [ref=e26]: Expiry (optional)
+          - button "Expiry (optional)" [ref=e27] [cursor=pointer]:
+            - img
+            - text: Never expires
+      - generic [ref=e28]:
+        - button "Cancel" [ref=e29] [cursor=pointer]
+        - button "Create key" [ref=e30] [cursor=pointer]
+    - button [ref=e31] [cursor=pointer]:
+      - img
+```
