@@ -2,7 +2,7 @@
 
 _What the platform does today for push notifications: the push switch on every notification setting, browser subscriptions, the per-person limit, delivery, and push to the phone app: what it does, why, who may, and what is still to answer. Which kinds of notification exist and who receives them is in `notifications.md`. The layout is the one piloted in `communications.md`: **1. Rules**, **2. Rights**, **3. Open questions**, with the evidence in an **Appendix**._
 
-_Open questions per owner: Product Lead 5 · Technical Lead 5 · Quality Lead 5 · Security Lead 2 · Service Operations Lead 2. By state: 19 open · 0 with a suggested answer. Proof of the 19 rules: 8 proven by a test · 11 untested (Appendix A)._
+_Open questions per owner: Product Lead 4 · Technical Lead 5 · Quality Lead 6 · Security Lead 2 · Service Operations Lead 2. By state: 19 open · 0 with a suggested answer. Proof of the 19 rules: 8 proven by a test · 11 untested (Appendix A)._
 
 **How to read it**
 
@@ -78,7 +78,7 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 ### Product Lead
 
-[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 5 to answer
+[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 4 to answer
 
 **To answer**
 
@@ -87,7 +87,6 @@ _One section per role, so each owner reads only their own part. **To answer** li
 | F3 | Subscriptions | decision | Should a person's list show the subscriptions they switched off? The server shows them; a skipped test expects them hidden. | Product Lead (Quality Lead then un-skips or rewrites the case) | — | open |
 | F5 | Channel | decision | On push only, the acting admin is not told about the sign-up or the Space they caused. This is decided with finding F3 of `notifications.md`. | Product Lead | — | open |
 | F6 | Channel | decision | Eight older kinds of push open the home page instead of a target (user message, organisation message, mention and sender copy, role changed, user registered, user removed, welcome). Give each a target, or accept it for kinds with no natural target? | Product Lead (Technical Lead makes the change) | — | open |
-| Q-PSH-19 | Operations | decision | Why does this rule exist? It records how push is tested and signed on acceptance, not something a user sees. Is it a rule the new core must keep, or only a note for testers? | Product Lead | — | open |
 | CONST | All | decision | 18 constants have no answer yet in "product must rule?" (Appendix E). Which must product rule on? "Rules on it" proposes a role per row. | Product Lead (Technical Lead and Security Lead rule on their own rows) | — | open |
 
 ### Technical Lead
@@ -115,7 +114,7 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 ### Quality Lead
 
-[Quality Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Quality%20Lead.md) · Delivery (Evgeni), with the QA Engineer as the doer · 5 to answer, 1 also involved
+[Quality Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Quality%20Lead.md) · Delivery (Evgeni), with the QA Engineer as the doer · 6 to answer, 1 also involved
 
 **To answer**
 
@@ -126,6 +125,7 @@ _One section per role, so each owner reads only their own part. **To answer** li
 | OQ2 | Subscriptions | check | Do two subscriptions with the same push address exist in the acceptance or production data? The rule that kept them unique was dropped. | Quality Lead | — | open |
 | W6 | Channel | check | May a Platform Users Admin change the push switch of another user? The former who-may table says "PUSA, PCFA (anyone's)"; `contributor-management.md` CM-19 names only the user and Platform Content Full Access. | Quality Lead | — | open |
 | GAPS | All | test | 9 rules and parts of 4 more have no test, and 10 behaviours were never pinned down (Appendix D). Which get a case before the acceptance checklist is drawn from this file? | Quality Lead | — | open |
+| Q-PSH-19 | Operations | decision | Why does this rule exist? It records how push is tested and signed on acceptance, not something a user sees. Is it a rule the new core must keep, or only a note for testers? | Quality Lead | — | open |
 
 **Also involved**
 
