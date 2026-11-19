@@ -3,6 +3,7 @@ import { testConfiguration } from "../../config/test.configuration";
 import { LogManager } from "../LogManager";
 import { TestUserManager } from "../TestUserManager";
 import { getUserToken } from "../registration/get-user-token";
+import { delay } from "../../utils/delay";
 
 /**
  * workspace#027 Slice B — organisations enter a space by INVITATION only.
@@ -76,16 +77,30 @@ const tokenFor = async (email: string): Promise<string | undefined> => {
   }
 };
 
-/** Accept the invitation as one of the organisation's admins or owners. */
-const acceptAsOrganizationAdmin = async (
+/**
+ * How long the accept is tried again while the server refuses it for lack of
+ * a privilege, and how often. The server caches an actor's credentials for
+ * `identity.authentication.cache_ttl` (60 s): it drops the entry when a
+ * credential is granted and fills it again on the actor's next request. A
+ * request of the same actor that read the credentials just before the grant
+ * can fill the cache just after it, with the list from before. The harness
+ * admin makes requests from every worker at once, so with several files
+ * running it sometimes does not hold a credential it was granted seconds ago,
+ * here the organisation's ADMIN, until that entry expires.
+ */
+const ACCEPT_WAIT_MS = 75_000;
+const ACCEPT_RETRY_MS = 3_000;
+
+/** One round: the harness admin, then the organisation's other admins and owners. */
+const tryAccept = async (
   organizationId: string,
   invitationId: string,
-): Promise<void> => {
+): Promise<string[] | undefined> => {
   const admin = await adminToken();
   // The harness admin created most fixture organisations and is their OWNER
   // and ADMIN — try it first, without a lookup.
   const own = await raw(admin, ACCEPT, { id: invitationId });
-  if (!own.errors) return;
+  if (!own.errors) return undefined;
   const who = await raw<{
     lookup: {
       organization: {
@@ -100,17 +115,50 @@ const acceptAsOrganizationAdmin = async (
     ...(who.data?.lookup?.organization?.roleSet?.admins ?? []),
     ...(who.data?.lookup?.organization?.roleSet?.owners ?? []),
   ].filter((u) => u.email !== "admin@alkem.io");
-  const tried: string[] = [own.errors[0].message.slice(0, 120)];
+  const refusals: string[] = [own.errors[0].message.slice(0, 120)];
   for (const candidate of candidates) {
     const token = await tokenFor(candidate.email);
     if (!token) continue;
     const r = await raw(token, ACCEPT, { id: invitationId });
-    if (!r.errors) return;
-    tried.push(`${candidate.email}: ${r.errors[0].message.slice(0, 120)}`);
+    if (!r.errors) return undefined;
+    refusals.push(`${candidate.email}: ${r.errors[0].message.slice(0, 120)}`);
   }
-  throw new Error(
-    `organisation membership: nobody could accept invitation ${invitationId} for organisation ${organizationId} — ${tried.join("; ")}`,
-  );
+  return refusals;
+};
+
+/** True when the server refused for lack of a privilege, the one answer worth waiting out. */
+const isPrivilegeRefusal = (message: string): boolean =>
+  message.includes("unable to grant");
+
+/**
+ * Accept the invitation as one of the organisation's admins or owners. A
+ * refusal for lack of a privilege is tried again until the server's credential
+ * cache has caught up (see ACCEPT_WAIT_MS); any other refusal fails at once.
+ */
+const acceptAsOrganizationAdmin = async (
+  organizationId: string,
+  invitationId: string,
+): Promise<void> => {
+  const deadline = Date.now() + ACCEPT_WAIT_MS;
+  let rounds = 0;
+  for (;;) {
+    rounds++;
+    const refusals = await tryAccept(organizationId, invitationId);
+    if (!refusals) {
+      if (rounds > 1) {
+        LogManager.getLogger().warn(
+          `[organisation membership] invitation ${invitationId} was accepted on round ${rounds}: the server had not caught up with a freshly granted credential`,
+        );
+      }
+      return;
+    }
+    if (!refusals.every(isPrivilegeRefusal) || Date.now() >= deadline) {
+      throw new Error(
+        `organisation membership: nobody could accept invitation ${invitationId} for organisation ${organizationId} after ${rounds} round(s) — ${refusals.join("; ")}`,
+      );
+    }
+    await delay(ACCEPT_RETRY_MS);
+  }
 };
 
 /**
