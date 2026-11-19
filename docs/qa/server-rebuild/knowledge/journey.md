@@ -201,7 +201,7 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 ### Technical Lead
 
-[Technical Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Technical%20Lead.md) · Delivery (Anton) · 4 to answer, 6 also involved
+[Technical Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Technical%20Lead.md) · Delivery (Anton) · 5 to answer, 6 also involved
 
 **To answer**
 
@@ -210,6 +210,7 @@ _One section per role, so each owner reads only their own part. **To answer** li
 | F3 | Levels | defect | The three conversions and plain Subspace creation do not check levels: a top-level Space can be given to a conversion, a fourth level can be created, and a Subspace with children can be pushed down a level. The moves check all of this. | Technical Lead | File as a defect: hard checks on all six operations, and refuse creation below the third level. | suggested |
 | F5 | Moves | decision | The two Subspace moves are not done in one step, although spec 083 FR-010 says they must be. Accept the risk formally and amend spec 083, or schedule the fix? | Technical Lead | — | open |
 | F7 | Identity | defect | Two Spaces created at the same moment can get the same URL name: the check is not backed by the database (server#6730, open). When is it fixed: now, or with the rebuild? | Technical Lead | — | open |
+| F13 | Settings | defect | On a public Sub-subspace with "inherit membership rights" on, a member of a Space above the parent may create a post but has no file upload on the Space storage, where the web client puts the image of a new post: the upload is refused. The contribute rule names every Space above; the upload and create-subspace rules (JRN-25) name the direct parent only. Align both to the answer of `callout.md` F19. ([server#6787](https://github.com/alkem-io/server/issues/6787)) | Technical Lead; Product Lead decides the group (callout F19) | — | open |
 | Q-JRN-10 | Creation | decision | Why does this rule exist? Profile references sent when a Space is created are dropped: is that a rule or a defect? | Technical Lead | — | open |
 
 **Also involved**
@@ -381,6 +382,7 @@ _The original text of every finding (F) and open question (OQ), with its evidenc
 - **F10 — `Space.subspaces` has no read gate (JRN-63).** Every other content field is READ-guarded; the subspace list resolves for anyone who may read the About (any visitor on a private L0), exposing ids, nameIDs and levels. Not verified live. Ruling: verify; if confirmed, defect.
 - **F11 — Mis-targeted skipped case.** `move-L1-to-L2-authorization › cannot target L1 in same L0` is skipped and its body passes a target in a *different* L0; the same-L0 refusal of the L1→L2 move is therefore proven only by code. Test defect; fix when the suite is touched.
 - **F12 — Support flag inert on subspaces (JRN-27; crosscheck F8).** The UI offers `allowPlatformSupportAsAdmin` per subspace; the server reads it on L0 only. Already a matrix finding; recorded here because the settings rule depends on it.
+- **F13 — Member file upload reaches one level, contribute reaches all (JRN-25).** `space.service.authorization.ts` `getStorageMemberFileUploadRules` and the create-subspace rule take `getActorCriteria`: the members plus, on a public space with inherit on, the first entry of the member definition's parent list (`getDirectParentCredentialForRole`). The contribute rule (`collaboration.service.authorization.ts`) takes every entry. Live on a local server (v0.173.0, 2026-11-19), plain top-level member who is not in the subspace: CREATE_CALLOUT held on 6 of 6 sub-subspaces; `uploadFileOnStorageBucket` on `space.profile.storageBucket` with `temporaryLocation` refused 6 of 6 (FORBIDDEN_POLICY, file-upload). Not tried through the web client. Depends on `callout.md` F19. Tracked as [server#6787](https://github.com/alkem-io/server/issues/6787). Data note: on acceptance the first entry was the top-level space on 94 sub-subspaces (written by the migration of 2025-06-21), which moved both rights to top-level members there.
 
 Known-defect cross-check: server#6592 → F-8; #6648 → F-6; #6730 → F-7; #6710 (organisation invited to an L1 becomes a member of its L2; leaving L2 removes L1) touches no lifecycle rule here — it belongs to `roleset` and is noted under JRN-13's role chain only.
 
