@@ -36,6 +36,8 @@ _One place for everything QA does for the move to the rebuilt server. Status is 
 
 ### W1 progress by area
 
+_Layout: since 2026-11-19 all 34 area tables are in the three-section layout (1. Rules with three whys and "decided by", 2. Rights, 3. Open questions per owning role, evidence in an appendix); `communications.md` is the template and the only one product has reviewed (test-suites#717). The counts in the State column are those of the drafting date: the *disputed* and *unknown-why* statuses no longer exist, such rows are now *proven* or *untested* in the appendix and carry an open question in section 3._
+
 | Area | Files | Cases | Document | State |
 |---|---|---|---|---|
 | entitlements | 7 | 39 | `knowledge/entitlements.md` | **redone 2026-11-06 as the three-source pilot** (code + schema, tests, specs): 44 rules — 17 proven, 11 untested, 6 disputed, 10 unknown-why; who-may block 13 actions × 7 roles; 30 constants; 13 findings (free tier never issued, trial expiry never evaluated, any visitor reads any account licence, subspace plan assignment inert, enterprise plan grants nothing). The test-only draft had 6 of 16 entitlement types, 2 of 11 plans, 2 of 4 feature roles. Needs lead review per `knowledge/REVIEW-GUIDE.md` |
@@ -174,7 +176,7 @@ What is pending, in the order it blocks the rest. Decisions are in the table abo
 |---|---|---|---|
 | 1 | Review and merge PR test-suites#695 (access matrix); rule on finding F1 | QA lead · CTO | rebased onto `develop`, signed, awaiting review |
 | 2 | Build journeys 1–4 against the test cluster, register in the nightly | QA (separate session, brief ready) | not started |
-| 3 | Lead review of the 34 three-source tables under `knowledge/` (sign the why column, decide the findings, tick the constants, answer the open questions — per `REVIEW-GUIDE.md`); then one product/CTO pass over all findings and ticked constants in one call; then the rebaseline register (W1 output a) from the ticked rows | QA lead · product · CTO | all 34 drafted 2026-11-06; review capacity is gap 8 |
+| 3 | Review of the 34 three-source tables under `knowledge/` per `REVIEW-GUIDE.md`: product fills the business why and the user story and confirms the rights; each role owner answers their part of section 3; the QA lead closes the test questions and the gaps; then the rebaseline register (W1 output a) from the ticked constants | QA lead · product · role owners | all 34 drafted 2026-11-06 and in the three-section layout since 2026-11-19; `communications.md` reviewed by product (test-suites#717); review capacity is gap 8 |
 | 4 | Rulings on decisions 1–4 (environment, mail, markers, exclusivity), 8, 10–12 (loss list, dataset, quarantine, backups), 14 (go/no-go) | leadership meeting | open |
 | 5 | File loss on acceptance: cause and recovery (server#6726), then measure production | file-service owner · ops | filed, unowned |
 | 6 | Register repairs before any dry run: C1 broken tree, C2 duplicate handles (server#6730), A2 data repair (54 spaces), A1 escalation draft | backend · lead | unfiled except C2 |

@@ -1,42 +1,61 @@
-# Reviewing a behaviour-knowledge table
+# Reviewing a behaviour-knowledge file
 
-_For the QA lead. One table per area lives in this folder; `entitlements.md` is the template. An agent drafts each table from three sources — the server code and GraphQL schema (the universe of behaviours), the legacy test suite (what is proven), and the specs and issues (the why) — and a person signs it. This page is the whole of what the signing person has to do._
+_One file per area lives in this folder. An agent drafts each file from three sources: the server code and GraphQL schema (the full list of behaviours), the legacy test suite (what is proven), and the specs and issues (the why). People then review it. `communications.md` is the template and the first file product reviewed (alkem-io/test-suites#717). This page says what each reader does._
 
-## What a rule is
+## How a file is built
 
-One sentence a non-engineer could check against any server. Example, ENT-02 in `entitlements.md`: "Innovation packs per account are capped at 3; the fourth creation is refused with a message naming the limit." Next to it is a **why**: "limits are enforced server-side, not only hidden in the UI."
-
-Every rule carries a **status**:
-
-| Status | Meaning | What it asks of you |
+| Section | What it holds | Who reads it |
 |---|---|---|
-| proven | a green legacy case asserts it | sign the why |
-| untested | the code or a spec states it, no case does | sign the why; the row is already in the gaps list |
-| disputed | code, test and spec disagree; a numbered finding explains | decide the finding (below) |
-| unknown-why | the rule stands but no source says why | fill the why, or write `unknown, ask product` |
+| **1. Rules** | One row per rule: the rule in one or two plain sentences, three whys (business, product, technical) and who decided it. | Product, and anyone who wants to know what the platform does. |
+| **2. Rights** | Who may do what: one row per action, one column per role, conditions as footnotes. | Product. |
+| **3. Open questions** | Everything still to answer, grouped per role. Each role has a "To answer" table and, where it has a part in another role's question, an "Also involved" table. | Each role owner reads their own part. |
+| **Appendix** | The evidence: exact behaviour and sources per rule, the findings in full, test gaps, constants, and how the file was made. | Engineers and QA, when they need the detail. |
 
-## Your job on a table is to sign the why column
+A rule is written as the server behaves today, also when that is not what we want in the end. A bold marker at the end of a rule points at section 3:
 
-You are the only person who knows whether the reason written there is the real business reason or the drafting agent's reading of a spec. For each row:
+| Marker | Meaning |
+|---|---|
+| **(open: F7)** | A question on this rule is still open. |
+| **(defect: F2)** | Today's behaviour is a fault and must not be copied as intended. |
+| **(defect in part: F3)** | Part of today's behaviour is a fault. |
+| no marker | The rule stands as written. |
 
-1. **Read the rule.** If it is wrong, or not something the platform guarantees, strike it.
-2. **Read the why.** If you agree, leave it. If you know the real reason, replace it. If nobody knows, write `unknown, ask product` in that cell. Rows whose why cites a spec or issue need only a glance.
-3. **Read the who-may block.** It says which roles can and cannot exercise the feature's actions. Flag any cell that surprises you; the evidence line under the table says where it came from.
-4. **Look at the constants table** underneath. Each value is a candidate for the new server to change. Tick the ones product must rule on in the "product must rule?" column.
-5. **Decide each finding.** A finding is a place where code, test and spec disagree, or where the code looks like a defect. One decision per finding: file it as a bug, record it as a rule, or drop it. Write the decision at the end of the finding.
-6. **Look at the gaps** at the bottom. Untested rules land there by themselves; add any behaviour you know the area has that neither the code reading nor the tests pinned down, or leave it.
-7. **Answer or route each open question.** The section before Sources lists what the three sources could not settle (a live check, a harness fact, a stale annotation). Answer it if you know, or write who will.
+Whether a test proves a rule is a separate fact. It sits in Appendix A as **proven** or **untested**.
 
-That is the entire review. Every table opens with a one-line **review load** (findings, unknown-why rows, untested rows, constants, open questions) so you see the whole manual load before you start; those five places are the only ones that carry your signature. For entitlements it is under an hour. Edit the file in your editor and hand it back; the drafting agent commits it and moves the area to *signed* in the tracker's W1 table.
+Hard rules are not marked yet. Some rules are choices that a new feature may challenge, and some can never change. A later version marks the second kind with "(hard rule)" after the why that makes it so. Until then, no marker does not mean a rule is open to change.
 
-## Then it repeats
+## Product review
 
-The drafting agent produces the next area (journey, then callout, in the slice order given in `../plan.md` § W1) the same way. You spend twenty to sixty minutes per table doing steps 1 to 7. Twenty-five tables in total over the coming weeks. The tracker's "N of 25" counts tables that went through your signature.
+1. **Read each rule.** If it is wrong, or not something the platform should promise, say so in a question row.
+2. **Fill the whys.** "Why: business" is what Alkemio needs. "Why: product" is the user story: "As a ‹role›, I want …, so that …". A "—" means no source states one. Leave "Why: technical" to engineering.
+3. **Set "Decided by"** where you confirm a rule that had no decision behind it: your role and the date.
+4. **Check the rights tables.** Flag any cell that surprises you.
+5. **Answer your questions in section 3.** Write the answer in "Proposed answer" and set the state.
+6. **Tick the constants** in Appendix E that product must rule on before the rebuild.
+
+The Product Owner's decisions stand on behalf of the Product Lead.
+
+## Role owners
+
+Open section 3, find the heading with your role, and answer the rows under "To answer". Rows under "Also involved" belong to another role; the Owner cell says what your part is. The full text of a finding, with code lines and data, is in Appendix C under the same id.
+
+## QA lead
+
+1. **Answer the Quality Lead questions** in section 3: tests that prove nothing, missing cases, harness facts.
+2. **Decide the gaps** in Appendix D: which untested rules get a case before the acceptance checklist is drawn from the file.
+3. **Check the routing.** If a question sits with the wrong role, move the row.
+
+## What happens to an answer
+
+| State | Meaning |
+|---|---|
+| open | Nobody has answered yet. |
+| suggested | An answer is proposed; the owner confirms it. |
+| change decided | Decided, and it differs from what the server does today. The row stays in section 3 with an issue link until the change ships. |
+| decided | The row leaves the role's table and is listed under "Decided"; the rule carries the decision in "Decided by". |
+
+Edit the file in a branch and open a pull request, or hand your answers to the QA lead. The drafting agent applies them and keeps the counts at the top of the file right.
 
 ## The access matrix is different
 
-You do not review the 2,631 mapped cells of `access-matrix.md`. You read the eleven findings in `access-matrix-crosscheck.md` and decide one thing per finding: file it as a bug, record it as a rule, or drop it. F1 is the only one that needs a ruling from above you. The who-may blocks in the area tables are drawn from the matrix, so a matrix decision carries into them.
-
-## What you do not have to do
-
-You do not read the test code or the server code, you do not write rules, and you do not decide where the rules live or who reviews them on the product side. Those are ask 7 on the readiness brief; the drafting agent writes that request when you want it.
+Nobody reviews the 2,631 mapped cells of `access-matrix.md`. Read the eleven findings in `access-matrix-crosscheck.md` and decide one thing per finding: file it as a bug, record it as a rule, or drop it. The rights tables in the area files are drawn from the matrix, so a matrix decision carries into them.
