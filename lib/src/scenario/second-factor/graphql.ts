@@ -14,6 +14,7 @@ export type SecondFactorRequirement = {
   covered: boolean;
   deadline: string | null;
   satisfied: boolean;
+  secondWayNeeded: boolean;
 };
 
 export type PlatformSecurity = {
@@ -46,7 +47,7 @@ export const readServedUser = (actor: GraphqlActor) =>
 export const readSecondFactorRequirement = (actor: GraphqlActor) =>
   postGraphqlRawAs<{ me: { secondFactorRequirement: SecondFactorRequirement } }>(
     actor,
-    'query { me { secondFactorRequirement { covered deadline satisfied } } }'
+    'query { me { secondFactorRequirement { covered deadline satisfied secondWayNeeded } } }'
   );
 
 export const readPlatformSecurity = (actor: GraphqlActor) =>

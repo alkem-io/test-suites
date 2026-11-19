@@ -2,7 +2,10 @@
 //
 // The authenticator app, end to end in the browser: enrolled from Security,
 // asked for at the second sign-in step, reflected in the session the server
-// holds, and removed again.
+// holds, and removed again. The member is covered by no rule. Under D55 a
+// one-way sign-in no longer reads `satisfied: true`, so the one-way session is
+// read where the server keeps it, and `satisfied` is read again once
+// recovery codes are a second way.
 import {
   expect,
   test,
@@ -35,6 +38,7 @@ import {
   enrolAuthenticatorOnPage,
   expectSignedIn,
   freshPage,
+  generateRecoveryCodesOnPage,
   getQuietly,
   nameIdOf,
   openSecurityTab,
@@ -42,6 +46,7 @@ import {
   roleTokens,
   secondStepCodeField,
   secondStepHeading,
+  storedSignIn,
   submitPassword,
   submitSecondStep,
 } from './second-factor.helpers';
@@ -96,6 +101,10 @@ test.describe('US1 — the authenticator app in Security', () => {
       await expect(
         authenticator.getByRole('button', { name: COPY.remove, exact: true })
       ).toBeVisible();
+      // D55: the first factor confirmed, the section suggests a second way.
+      await expect(
+        page.getByText(COPY.secondWaySuggested, { exact: true })
+      ).toBeVisible();
       // The second angle: the identity provider holds the credential.
       expect(await credentialTypes(user!.identityId)).toContain('totp');
     } finally {
@@ -105,6 +114,7 @@ test.describe('US1 — the authenticator app in Security', () => {
 
   test('US1-AS4/AS7 the next sign-in asks for a code: a wrong one is refused, the right one lands on the page asked for, and the session is second-factor', async ({
     browser,
+    browserName,
   }) => {
     const { context, page } = await freshPage(browser);
     try {
@@ -149,8 +159,23 @@ test.describe('US1 — the authenticator app in Security', () => {
       // page they asked for, signed in.
       await expect(goToHomeButton(page)).toBeVisible();
 
-      // The server's session carries the second factor.
-      expect(await requirementOf(page)).toMatchObject({ satisfied: true });
+      // The server's session carries the second factor, and counted the one
+      // way the member holds (D55). With one way the requirement does not
+      // read satisfied, and asks nothing of a member no rule covers.
+      expect(await storedSignIn(page)).toEqual({ acr: 'aal2', ways: 1 });
+      expect(await requirementOf(page)).toMatchObject({
+        covered: false,
+        satisfied: false,
+        secondWayNeeded: false,
+      });
+
+      // A second way, added by this session after its sign-in was counted:
+      // a refresh must keep the count it took then, not count again.
+      await openSecurityTab(page, nameId);
+      await generateRecoveryCodesOnPage(page, context, browserName);
+      expect(await credentialTypes(user!.identityId)).toEqual(
+        expect.arrayContaining(['totp', 'lookup_secret'])
+      );
 
       // A refresh of the session keeps it. The stored token is made due
       // first, so the route has to go to the identity provider instead of
@@ -177,9 +202,35 @@ test.describe('US1 — the authenticator app in Security', () => {
           after.access_token !== before!.access_token,
         'the refresh swapped the stored access token'
       ).toBe(true);
-      expect(await requirementOf(context)).toMatchObject({ satisfied: true });
+      // The refresh kept the second factor and the count it took at sign-in,
+      // though the member now holds two ways.
+      expect({ acr: after?.acr, ways: after?.second_factor_ways }).toEqual({
+        acr: 'aal2',
+        ways: 1,
+      });
     } finally {
       await context.close();
+    }
+
+    // A sign-in that counts the second way: the session reads satisfied
+    // through the signed-in browser.
+    const again = await freshPage(browser);
+    try {
+      await submitPassword(again.page, user!.email);
+      await expect(secondStepHeading(again.page)).toBeVisible();
+      await submitSecondStep(
+        again.page,
+        secondStepCodeField(again.page),
+        totpCode(secret)
+      );
+      await expectSignedIn(again.page);
+      expect(await requirementOf(again.page)).toMatchObject({
+        satisfied: true,
+        secondWayNeeded: false,
+      });
+      expect(await storedSignIn(again.page)).toEqual({ acr: 'aal2', ways: 2 });
+    } finally {
+      await again.context.close();
     }
   });
 
@@ -198,6 +249,24 @@ test.describe('US1 — the authenticator app in Security', () => {
       await expectSignedIn(signedIn.page);
 
       await openSecurityTab(signedIn.page, nameId);
+      // US1-AS4/AS7 left recovery codes as a second way. They go first, so
+      // the app is the last factor removed and the password is left alone.
+      const recovery = block(signedIn.page, COPY.recoveryTitle);
+      await recovery
+        .getByRole('button', { name: COPY.removeRecovery, exact: true })
+        .click();
+      const codesDialog = signedIn.page.getByRole('alertdialog', {
+        name: COPY.removeRecoveryTitle,
+      });
+      await expect(codesDialog).toBeVisible();
+      await codesDialog
+        .getByRole('button', { name: COPY.removeRecovery, exact: true })
+        .click();
+      await expect(codesDialog).toBeHidden();
+      await expect
+        .poll(() => credentialTypes(user!.identityId))
+        .not.toContain('lookup_secret');
+
       const authenticator = block(signedIn.page, COPY.authenticatorTitle);
       await authenticator
         .getByRole('button', { name: COPY.remove, exact: true })
@@ -225,6 +294,9 @@ test.describe('US1 — the authenticator app in Security', () => {
       await expectSignedIn(page);
       await expect(secondStepHeading(page)).toHaveCount(0);
       expect(await requirementOf(page)).toMatchObject({ satisfied: false });
+      // Since D55 `satisfied: false` is also what a one-way second-factor
+      // sign-in reads; the stored `acr` tells the password alone apart.
+      expect((await storedSignIn(page)).acr).not.toBe('aal2');
     } finally {
       await context.close();
     }

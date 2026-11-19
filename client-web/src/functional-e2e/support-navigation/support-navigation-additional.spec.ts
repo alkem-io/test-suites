@@ -44,8 +44,10 @@ test.describe('Support Navigation Additional Tests', () => {
       // Ensure we are on the dashboard
       await page.goto(baseUrl);
 
-      // 1. From dashboard, click "Support" in footer
-      await page.getByText('Support').click();
+      // 1. From dashboard, click "Support" in footer. By role and exact name:
+      // an error toast on the page carries a "Contact Support" link, which a
+      // loose text match picks up as well.
+      await page.getByRole('button', { name: 'Support', exact: true }).click();
 
       // 2. Verify support dialog opens
       await expect(

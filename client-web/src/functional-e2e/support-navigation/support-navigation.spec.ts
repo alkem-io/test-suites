@@ -51,8 +51,10 @@ test.describe('Support Navigation Flow', () => {
     test.setTimeout(90_000);
     await page.goto(`${baseUrl}/home`);
 
-    // 1. From dashboard, click "Support" link in footer to open support dialog
-    await page.getByText('Support').click();
+    // 1. From dashboard, click "Support" link in footer to open support dialog.
+    // By role and exact name: an error toast on the page carries a "Contact
+    // Support" link, which a loose text match picks up as well.
+    await page.getByRole('button', { name: 'Support', exact: true }).click();
 
     // 2. Verify support dialog opens with "Looking for help?" heading
     await expect(

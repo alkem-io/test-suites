@@ -34,6 +34,7 @@ import {
   roleTokens,
   secondStepCodeField,
   secondStepHeading,
+  storedSignIn,
   submitPassword,
   submitSecondStep,
 } from './second-factor.helpers';
@@ -58,10 +59,21 @@ const observedKeyRows = async (user: ThrowawayUser): Promise<number> =>
     row => (row.details as { method?: string } | null)?.method === 'webauthn'
   ).length;
 
-/** The server's session carries the second factor, not only a sign-in. */
-const expectSecondFactorSession = async (page: Page) => {
+/**
+ * The server's session carries the second factor, not only a sign-in, and
+ * counted the one way to pass the second step the member holds (D55). The
+ * member is covered by no rule, so the requirement asks nothing of them, and
+ * with one way it no longer reads `satisfied: true`: the stored session is
+ * what tells this sign-in from a password one.
+ */
+const expectOneWaySecondFactorSession = async (page: Page) => {
+  expect(await storedSignIn(page)).toEqual({ acr: 'aal2', ways: 1 });
   const status = await readSecondFactorRequirement(await sessionActor(page));
-  expect(status.body.data?.me.secondFactorRequirement.satisfied).toBe(true);
+  expect(status.body.data?.me.secondFactorRequirement).toMatchObject({
+    covered: false,
+    satisfied: false,
+    secondWayNeeded: false,
+  });
 };
 
 /** Bounded as the API track's totp and lookup_secret rows are. */
@@ -133,7 +145,8 @@ test.describe('US3 — security keys', () => {
       );
       await useKey.click();
       await expectSignedIn(page);
-      await expectSecondFactorSession(page);
+      // A security key is one way to pass the second step.
+      await expectOneWaySecondFactorSession(page);
 
       // Remove the key again. The enrolment's count is held for the whole
       // bound first, so a late duplicate of its row cannot stand in for the
@@ -242,6 +255,11 @@ test.describe('US3 — security keys', () => {
           { exact: true }
         )
       ).toBeVisible();
+      // The passkey is no second factor, so the app is the first one: the
+      // section suggests a second way (D55).
+      await expect(
+        page.getByText(COPY.secondWaySuggested, { exact: true })
+      ).toBeVisible();
 
       // The passkey is the first step only: the code is asked after it.
       await logOut(page);
@@ -250,7 +268,8 @@ test.describe('US3 — security keys', () => {
       await expect(secondStepHeading(page)).toBeVisible();
       await submitSecondStep(page, secondStepCodeField(page), totpCode(secret));
       await expectSignedIn(page);
-      await expectSecondFactorSession(page);
+      // The passkey that began this sign-in is not counted: one way, the app.
+      await expectOneWaySecondFactorSession(page);
     } finally {
       await context.close();
     }
