@@ -2,7 +2,7 @@
 
 _What the platform does today for the calendar every space carries and its events: creating, reading, updating and deleting them, whole-day and timed dates, the Google, Outlook and ICS exports, subspace events showing on the parent calendar, and the notifications and activity an event produces. It says what the server does, why, who may, and what is still to answer. The file has three sections, **1. Rules**, **2. Rights** and **3. Open questions**, with the evidence in an **Appendix**._
 
-_Open questions per owner: Product Lead 2 · Technical Lead 5 · Quality Lead 4 · Architecture Lead 1. By state: 7 open · 1 change decided · 4 with a suggested answer · 5 decided. Proof of the 25 rules: 12 proven by a test · 13 untested (Appendix A)._
+_Open questions per owner: Product Lead 2 · Technical Lead 5 · Quality Lead 4 · Architecture Lead 1. By state: 6 open · 1 change decided · 5 with a suggested answer · 5 decided. Proof of the 25 rules: 12 proven by a test · 13 untested (Appendix A)._
 
 _Whys of the 25 rules: 12 rest on a source · 11 carry a draft for product to decide · 2 have none, and each already carries an open question (EVT-24, EVT-25)._
 
@@ -121,7 +121,7 @@ _One section per role, so each owner reads only their own part. **To answer** li
 | ID | Area | Type | Question | Owner | Proposed answer | State |
 |---|---|---|---|---|---|---|
 | F7 | Lifecycle | decision | A creator who has left the community can still update and delete the events they created. Is that intended? | Product Lead | Product, 2026-11-20: rights end on leaving. A former member can no longer update or delete the events they created; space admins keep theirs. Issue: to file. | change decided |
-| CONST | All | decision | 22 of the 27 constants are still blank in "product must rule?" (Appendix E). Which of them must product rule on? | Product Lead (Technical Lead and Security Lead for the rows pre-filled with their name) | — | open |
+| CONST | All | decision | 22 of the 27 constants are still blank in "product must rule?" (Appendix E). Which of them must product rule on? | Product Lead (Technical Lead and Security Lead for the rows pre-filled with their name) | Product, 2026-11-20: of the seven Product Lead rows, event types and notification events must be ruled on; the two description cuts carry over; roll-up, ICS redirects and creator rights follow F3, F1 and F7. The Technical and Security Lead rows are theirs to tick. | suggested |
 
 ### Technical Lead
 
@@ -141,7 +141,7 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 | ID | Area | Type | Question | Owner | Proposed answer | State |
 |---|---|---|---|---|---|---|
-| CONST | All | decision | 22 of the 27 constants are still blank in "product must rule?" (Appendix E). Which of them must product rule on? | Product Lead (Technical Lead and Security Lead for the rows pre-filled with their name) | — | open |
+| CONST | All | decision | 22 of the 27 constants are still blank in "product must rule?" (Appendix E). Which of them must product rule on? | Product Lead (Technical Lead and Security Lead for the rows pre-filled with their name) | Product, 2026-11-20: of the seven Product Lead rows, event types and notification events must be ruled on; the two description cuts carry over; roll-up, ICS redirects and creator rights follow F3, F1 and F7. The Technical and Security Lead rows are theirs to tick. | suggested |
 
 ### Quality Lead
 
@@ -164,7 +164,7 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 | ID | Area | Type | Question | Owner | Proposed answer | State |
 |---|---|---|---|---|---|---|
-| CONST | All | decision | 22 of the 27 constants are still blank in "product must rule?" (Appendix E). Which of them must product rule on? | Product Lead (Technical Lead and Security Lead for the rows pre-filled with their name) | — | open |
+| CONST | All | decision | 22 of the 27 constants are still blank in "product must rule?" (Appendix E). Which of them must product rule on? | Product Lead (Technical Lead and Security Lead for the rows pre-filled with their name) | Product, 2026-11-20: of the seven Product Lead rows, event types and notification events must be ruled on; the two description cuts carry over; roll-up, ICS redirects and creator rights follow F3, F1 and F7. The Technical and Security Lead rows are theirs to tick. | suggested |
 
 ### Service Operations Lead
 
@@ -284,28 +284,28 @@ _"Rules on it" is pre-filled with the role whose domain covers the value: Produc
 
 | Constant | Value today | Source | product must rule? | Rules on it |
 |---|---|---|---|---|
-| Event types (6) | `event`, `deadline`, `meeting`, `milestone`, `training`, `other` | `src/common/enums/calendar.event.type.ts:3-10` | | Product Lead |
+| Event types (6) | `event`, `deadline`, `meeting`, `milestone`, `training`, `other` | `src/common/enums/calendar.event.type.ts:3-10` | yes (Product, 2026-11-20) | Product Lead |
 | Required fields on create | type, startDate, wholeDay, multipleDays, durationMinutes, visibleOnParentCalendar (+ profile displayName); optional durationDays, tags, nameID | `event.dto.create.ts` | | Technical Lead |
 | Required fields on every update | startDate, wholeDay, multipleDays, durationMinutes (type, durationDays, visibleOnParentCalendar optional) — a title-only edit is not expressible | `event.dto.update.ts:14-54` | F-6 | Technical Lead |
 | Whole-day wire convention | start = UTC-midnight `YYYY-MM-DDT00:00:00.000Z`; durationMinutes = (end − start) in minutes, 0 for one day; export end = last covered day + 1 (exclusive) | ADR 0001; `calendar.event.calendar-links.ts:67-91`; `event.dto.create.ts:36-39` | | Technical Lead |
 | Timed end | start + durationMinutes; `durationDays` is never added on top | `calendar.event.calendar-links.ts:235-242` | | Technical Lead |
 | Date-range rule | refuse when start > end, or start == end on a timed event; evaluated on read only | `calendar.event.calendar-links.ts:307-336` | F-4 | Technical Lead |
 | Accepted date format | ISO-8601 `YYYY-MM-DDTHH:mm:ss(.sss)Z` | `calendar.event.calendar-links.ts:304-305` | | Technical Lead |
-| Subspace roll-up | setting `collaboration.allowEventsFromSubspaces`, default `true` in all 4 platform templates; depth = direct L1 children of an L0 only; per-event flag `visibleOnParentCalendar` | templates; `calendar.service.ts:95-126` | F-3 | Product Lead |
+| Subspace roll-up | setting `collaboration.allowEventsFromSubspaces`, default `true` in all 4 platform templates; depth = direct L1 children of an L0 only; per-event flag `visibleOnParentCalendar` | templates; `calendar.service.ts:95-126` | decided (F3) (Product, 2026-11-20) | Product Lead |
 | Google link | `https://calendar.google.com/calendar/render?action=TEMPLATE&text=&dates=&details=&location=` (`dates=YYYYMMDD/YYYYMMDD` whole-day, `…THHMMSSZ/…` timed) | `calendar.event.calendar-links.ts:46` | | Technical Lead |
 | Outlook link | `https://outlook.office.com/calendar/deeplink/compose?subject=&startdt=&enddt=&body=&location=` + `&allday=true` for whole-day (`YYYY-MM-DD` dates) | `calendar.event.calendar-links.ts:47` | | Technical Lead |
-| Description cut in links | 1,000 characters of plain text (markdown stripped) | `calendar.event.calendar-links.ts:7, 31-33` | | Product Lead |
-| Description cut in ICS | 8,000 characters | `calendar.event.calendar-links.ts:8, 111-113` | | Product Lead |
+| Description cut in links | 1,000 characters of plain text (markdown stripped) | `calendar.event.calendar-links.ts:7, 31-33` | no (Product, 2026-11-20) | Product Lead |
+| Description cut in ICS | 8,000 characters | `calendar.event.calendar-links.ts:8, 111-113` | no (Product, 2026-11-20) | Product Lead |
 | ICS path | `<cluster><path_api_private_rest>/calendar/event/<id>/ics`; route `rest/calendar/event/:id/ics` | `url.generator.service.ts:1291-1296`; `rest.endpoint.ts:6` | | Technical Lead |
 | ICS headers | `Content-Type: text/calendar; charset=utf-8`; `Content-Disposition: attachment; filename="<nameID>.ics"`; `Cache-Control: no-store` | `calendar-event-ics.controller.ts:43-47` | | Technical Lead |
 | ICS body | `VERSION:2.0`, `PRODID:-//Alkemio//Calendar Event//EN`, `X-WR-TIMEZONE:Europe/Amsterdam`, `UID:<id>@alkem.io`, `DTSTAMP`, DTSTART/DTEND (`;VALUE=DATE` for whole-day), SUMMARY, DESCRIPTION (if any), LOCATION (if any), URL; CRLF; fold at 75 octets | `calendar.event.calendar-links.ts:106-178` | | Technical Lead |
 | ICS escaping | `\` → `\\`, newline → `\n`, `;` → `\;`, `,` → `\,` | `calendar.event.calendar-links.ts:138-144` | | Technical Lead |
 | ICS auth strategies | cookie session, non-interactive login (non-prod), Hydra bearer | `rest.guard.ts` | | Security Lead |
-| ICS redirects | no actor → `302 /login?returnUrl=<request url>`; no READ → `302 /restricted?returnUrl=<event page path>` | `calendar-event-ics.controller.ts:34-38`; `calendar-event-ics.redirect.filter.ts:29-43` | F-1 | Product Lead |
+| ICS redirects | no actor → `302 /login?returnUrl=<request url>`; no READ → `302 /restricted?returnUrl=<event page path>` | `calendar-event-ics.controller.ts:34-38`; `calendar-event-ics.redirect.filter.ts:29-43` | decided (F1) (Product, 2026-11-20) | Product Lead |
 | Location format | `addressLine1, addressLine2, city, stateOrProvince, postalCode, country` (blank parts dropped) | `calendar.event.calendar-links.ts:338-353` | | Technical Lead |
 | Comments room | type `calendar-event`, name `calendarEvent-comments-<nameID>` (renamed on title change) | `event.service.ts:64-67, 187-191` | | Technical Lead |
-| Creator rule | `credentialRule-calendarEventCreatedBy`: CREATE, READ, UPDATE, DELETE for `user-self-management:<createdBy>` on the event only | `event.service.authorization.ts:100-115`; `credential.rule.constants.ts:84-85` | F-7 | Product Lead |
-| Notification events | `SPACE_COMMUNITY_CALENDAR_EVENT_CREATED` (space audience with RECEIVE_NOTIFICATIONS, creator excluded; in-app category SPACE_MEMBER), `SPACE_COMMUNITY_CALENDAR_EVENT_COMMENT` (creator only); both under setting `space.communityCalendarEvents` | `notification.space.adapter.ts:365-440, 458-520`; `notification.recipients.service.ts:542-544, 718-731` | | Product Lead |
+| Creator rule | `credentialRule-calendarEventCreatedBy`: CREATE, READ, UPDATE, DELETE for `user-self-management:<createdBy>` on the event only | `event.service.authorization.ts:100-115`; `credential.rule.constants.ts:84-85` | change decided (F7) (Product, 2026-11-20) | Product Lead |
+| Notification events | `SPACE_COMMUNITY_CALENDAR_EVENT_CREATED` (space audience with RECEIVE_NOTIFICATIONS, creator excluded; in-app category SPACE_MEMBER), `SPACE_COMMUNITY_CALENDAR_EVENT_COMMENT` (creator only); both under setting `space.communityCalendarEvents` | `notification.space.adapter.ts:365-440, 458-520`; `notification.recipients.service.ts:542-544, 718-731` | yes (Product, 2026-11-20) | Product Lead |
 | Activity | `CALENDAR_EVENT_CREATED`, description `[<title>] - <description chars 1..100>`, parent = calendar | `activity.adapter.ts:195-215` | | Technical Lead |
 | Error text — nameID taken | `Unable to create CalendarEvent: the provided nameID is already taken: <nameID>` | `calendar.service.ts:145-147` | | Technical Lead |
 | Error texts — dates | `Invalid calendar event date format`, `Invalid calendar event date`, `Invalid calendar event date range` (details carry field/eventId/dates) | `calendar.event.calendar-links.ts:248-335` | | Technical Lead |
