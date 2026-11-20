@@ -6,7 +6,8 @@ _Every decision taken while reviewing the knowledge files that changes what the 
 |---|---|---|---|---|---|
 | CH-EVT-02 | `calendar.md` | EVT-02 | Members should be able to create calendar events, not only space admins. | Product, 2026-11-20 | [alkem-io/alkemio#2205](https://github.com/alkem-io/alkemio/issues/2205) (criterion "Should let members create calendar events") |
 | F7 | `calendar.md` | EVT-24 | A creator's rights on an event end when they leave the community; space admins keep theirs. | Product, 2026-11-20 | To file |
-| F2 | `callout.md` | CAL-24 | Turning comments off on a callout must stop new comments on the server; the 866 collection callouts on acceptance get comments switched off. | Product, 2026-11-20 | To file |
-| F15 | `callout.md` | CAL-11 | A callout created without settings starts as a draft, as in the web client, not published. | Product, 2026-11-20 | To file |
-| F19 | `callout.md` | CAL-35 | The author of a post manages the links on their own post, not only space admins. | Product, 2026-11-20 | To file |
-| OQ3 | `task-boards.md` | TSK-03 | A Tasks board cannot be created in a virtual contributor's knowledge base. | Product, 2026-11-20 | To file |
+| F2 | `callout.md` | CAL-24 | Wish; the rule stays as today: turning comments off on a callout must stop new comments on the server; the 866 collection callouts on acceptance get comments switched off. | Product, 2026-11-20 | To file |
+| F15 | `callout.md` | CAL-11 | Wish; the rule stays as today: a callout created without settings starts as a draft, as in the web client, not published. | Product, 2026-11-20 | To file |
+| F19 | `callout.md` | CAL-35 | Wish; the rule stays as today: the author of a post manages the links on their own post, not only space admins. | Product, 2026-11-20 | To file |
+| OQ3 | `task-boards.md` | TSK-03 | Wish; the rule stays as today: a Tasks board cannot be created in a virtual contributor's knowledge base. | Product, 2026-11-20 | To file |
+| Q-WBD-09 | `whiteboards.md` | WBD-09 | Wish; the rule stays as today: a creator's rights on a whiteboard end when they leave the space, as decided for calendar events (calendar.md F7). | Product, 2026-11-20 | To file |
