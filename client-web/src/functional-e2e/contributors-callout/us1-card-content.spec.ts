@@ -579,8 +579,12 @@ test.describe.serial('US1 — Recognise a contributor from the card', () => {
     await pin.click();
     const popup = page.getByRole('dialog', { name: P.long, exact: true });
     await expect(popup).toBeVisible();
+    // The card links to the contributor twice, from the avatar and from the
+    // name, both under the contributor's name: the name link is the one read.
     await expect(
-      popup.getByRole('link', { name: P.long, exact: true })
+      popup
+        .getByRole('link', { name: P.long, exact: true })
+        .filter({ hasText: P.long })
     ).toBeVisible();
     await expect(popup).toContainText(feed.tagline);
     await expect(popup).toContainText(feed.firstTag!);
