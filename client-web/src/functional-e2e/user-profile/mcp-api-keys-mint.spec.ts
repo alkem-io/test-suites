@@ -28,6 +28,14 @@ const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 const adminEmail = process.env.AUTH_ADMIN_EMAIL || 'admin@alkem.io';
 const adminPassword = process.env.AUTH_TEST_HARNESS_PASSWORD || 'change_me';
 
+/**
+ * The "Create MCP API key" dialog. Its fields are looked up inside it: the
+ * Security page also has a "Name" field for a security key (two-step
+ * verification), so a page-wide lookup is ambiguous wherever that is on.
+ */
+const createDialog = (page: import('@playwright/test').Page) =>
+  page.getByRole('dialog', { name: 'Create MCP API key' });
+
 const uniqueName = (label: string) =>
   `${label}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
@@ -102,9 +110,9 @@ test.describe(
       const keyName = uniqueName('Claude Desktop');
 
       await page.getByRole('button', { name: 'Create API key' }).click();
-      await page.getByLabel('Name').fill(keyName);
-      await page.locator('label:has-text("Read")').first().click();
-      await page.getByRole('button', { name: 'Create key' }).click();
+      await createDialog(page).getByLabel('Name', { exact: true }).fill(keyName);
+      await createDialog(page).locator('label:has-text("Read")').first().click();
+      await createDialog(page).getByRole('button', { name: 'Create key' }).click();
 
       // US1-AS1 — the plaintext, the will-not-see-it-again warning, and a
       // copy control.
@@ -145,9 +153,9 @@ test.describe(
       const keyName = uniqueName('A11y Key');
 
       await page.getByRole('button', { name: 'Create API key' }).click();
-      await page.getByLabel('Name').fill(keyName);
-      await page.locator('label:has-text("Read")').first().click();
-      await page.getByRole('button', { name: 'Create key' }).click();
+      await createDialog(page).getByLabel('Name', { exact: true }).fill(keyName);
+      await createDialog(page).locator('label:has-text("Read")').first().click();
+      await createDialog(page).getByRole('button', { name: 'Create key' }).click();
 
       const keyInput = page.locator('#mcp-api-key-reveal-value');
       await expect(keyInput).toBeVisible();
@@ -175,9 +183,9 @@ test.describe(
       const keyName = uniqueName('Ephemeral Reveal');
 
       await page.getByRole('button', { name: 'Create API key' }).click();
-      await page.getByLabel('Name').fill(keyName);
-      await page.locator('label:has-text("Read")').first().click();
-      await page.getByRole('button', { name: 'Create key' }).click();
+      await createDialog(page).getByLabel('Name', { exact: true }).fill(keyName);
+      await createDialog(page).locator('label:has-text("Read")').first().click();
+      await createDialog(page).getByRole('button', { name: 'Create key' }).click();
 
       const revealedValue = await page
         .locator('#mcp-api-key-reveal-value')
@@ -208,8 +216,8 @@ test.describe(
       const keyName = uniqueName('Expiry Key');
 
       await page.getByRole('button', { name: 'Create API key' }).click();
-      await page.getByLabel('Name').fill(keyName);
-      await page.locator('label:has-text("Read")').first().click();
+      await createDialog(page).getByLabel('Name', { exact: true }).fill(keyName);
+      await createDialog(page).locator('label:has-text("Read")').first().click();
 
       await page.getByRole('button', { name: /expiry/i }).click();
       // `.first()` can land on "today", which the create mutation refuses
@@ -234,7 +242,7 @@ test.describe(
       ).trim();
       expect(selectedExpiry).not.toMatch(/never expires/i);
 
-      await page.getByRole('button', { name: 'Create key' }).click();
+      await createDialog(page).getByRole('button', { name: 'Create key' }).click();
       await page.getByRole('button', { name: 'Done', exact: true }).last().click();
 
       const row = page
@@ -283,9 +291,9 @@ test.describe(
       });
 
       await page.getByRole('button', { name: 'Create API key' }).click();
-      await page.getByLabel('Name').fill(keyName);
+      await createDialog(page).getByLabel('Name', { exact: true }).fill(keyName);
       // Deliberately leave both operation checkboxes unchecked.
-      await page.getByRole('button', { name: 'Create key' }).click();
+      await createDialog(page).getByRole('button', { name: 'Create key' }).click();
 
       await expect(
         page.getByText(/choose at least one operation/i)
