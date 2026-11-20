@@ -2,9 +2,9 @@
 
 _What the platform does today at its root: the service versions, the latest release post, the platform settings, the well-known virtual contributors, the platform authorization reset, the forum root, and the containment of a leaked MCP API key: what it does, why, who may, and what is still to answer. The file follows the three-section layout of `communications.md`: **1. Rules**, **2. Rights**, **3. Open questions**, with the evidence in an **Appendix**. The forum's own rules are in `communications.md`, the public configuration in `configuration.md`, and licensing in `entitlements.md`. The full life cycle of MCP API keys is not covered here, only the seven containment cases._
 
-_Open questions per owner: Product Lead 2 · Technical Lead 11 · Quality Lead 5 · Security Lead 2 · Service Operations Lead 2. By state: 18 open · 4 with a suggested answer. Proof of the 22 rules: 5 proven by a test · 17 untested (Appendix A)._
+_Open questions per owner: Product Lead 0 · Technical Lead 11 · Quality Lead 5 · Security Lead 2 · Service Operations Lead 2. By state: 14 open · 6 with a suggested answer · 2 decided. Proof of the 22 rules: 5 proven by a test · 17 untested (Appendix A)._
 
-_Whys of the 22 rules: 17 rest on a source · 4 carry a draft for product to decide · 1 has none, and it points to a question in section 3 (PLT-05)._
+_Whys of the 22 rules: 20 rest on a source or a product decision · 2 still carry a QA draft (PLT-01, PLT-12)._
 
 **How to read it**
 
@@ -22,12 +22,12 @@ _Whys of the 22 rules: 17 rest on a source · 4 carry a draft for product to dec
 | ID | Rule | Why: business | Why: product | Why: technical | Decided by |
 |---|---|---|---|---|---|
 | PLT-01 | The platform's root information answers every caller, signed in or not. Only the list of well-known virtual contributors is refused to a visitor. The configuration, service versions, latest release post, settings (with the notification e-mail blacklist), innovation hub and assistant access go to anyone. **(open: F1, F2)** | — | — | The root is the entry point for the public document (CFG-01) and the forum; nothing in the sources says the settings were meant to be public (F-1). _(draft)_ | Not decided: exists in the code |
-| PLT-02 | The platform lists its running services with their versions. Today that is one entry: the server and its version. **(open: Q-PLT-02)** | Support and users can see which server version is running, for example when reporting a problem. _(draft)_ | — | — | Not decided: exists in the code |
+| PLT-02 | The platform lists its running services with their versions. Today that is one entry: the server and its version. **(open: Q-PLT-02)** | Support and users can see which server version is running, for example when reporting a problem. | — | — | Not decided: exists in the code |
 | PLT-03 | The platform names the newest forum post in the Releases category, or nothing when there is none. It does not check whether the caller may read that post. **(open: F8)** | The client links the latest release notes from the forum (PR #3744; the `forumreleases` location points at the same place). | — | — | Server PR #3744 |
 | PLT-04 | The platform tells the web app whether the user may use the AI assistant: yes only for holders of the Feature Virtual Assistant role, no for everyone else, never an error. The app can then hide the assistant from everyone else. | Access to the web AI assistant is a privilege, separate from the token budget (004 FR-027). | — | The sole holder is the feature role after 027 closed the legacy credentials (T076/T077). | Spec 004 FR-027; spec 027 T076/T077 |
-| PLT-05 | The list of well-known virtual contributors (which virtual contributor plays a named role, such as chat guidance) can be read by every signed-in user and is refused to a visitor. **(open: Q-PLT-05)** | — | — | — (the read is gated by the interactive-guidance privilege, which every registered user holds; no source says why anonymous is excluded). | Not decided: exists in the code |
+| PLT-05 | The list of well-known virtual contributors (which virtual contributor plays a named role, such as chat guidance) can be read by every signed-in user and is refused to a visitor. | The well-known virtual contributors, such as chat guidance, serve signed-in users; a visitor has no use for the list. | — | — (the read is gated by the interactive-guidance privilege, which every registered user holds; no source says why anonymous is excluded). | Product, 2026-11-20 (Q-PLT-05) |
 | PLT-06 | Only the Platform Settings Admin sets which virtual contributor plays a well-known role. Any id is accepted without checking that such a virtual contributor exists, and the change is audited. **(open: F4, OQ4)** | Definition-type setting owned by the settings-admin family (027 A10/T045). | — | The in-memory pin keeps content-full-access's root CRUD out of it (sec-server-23; crosscheck F6). | Spec 027 A10/T045 |
-| PLT-07 | On an innovation hub's own web address the platform answers that hub; on the main address it answers none. A hub asked for by name or id is looked up, and the request fails if it does not exist. **(open: Q-PLT-07, OQ6)** | — | As an innovation hub owner, I want my hub's own web address to open my hub, so that my community lands on its own entry point. _(draft)_ | — | Not decided: exists in the code |
+| PLT-07 | On an innovation hub's own web address the platform answers that hub; on the main address it answers none. A hub asked for by name or id is looked up, and the request fails if it does not exist. **(open: Q-PLT-07, OQ6)** | — | As an innovation hub owner, I want my hub's own web address to open my hub, so that my community lands on its own entry point. | — | Not decided: exists in the code |
 | PLT-08 | The platform publishes the list of names a space may never take: its own page addresses and reserved words. Anyone can read it. | — | — | Existing client routes and reserved paths must not be shadowed by a space URL (`restricted.space.names.ts` comments). | Code comment (no spec) |
 
 ### Platform settings
@@ -117,18 +117,13 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 ### Product Lead
 
-[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 2 to answer
+[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 0 to answer
 
-**To answer**
-
-| ID | Area | Type | Question | Owner | Proposed answer | State |
-|---|---|---|---|---|---|---|
-| CONST | All | decision | 17 of the 21 constants are still blank in "product must rule?" (Appendix E). Which of them must product rule on before the rebuild? | Product Lead (Technical Lead and Security Lead for the rows pre-filled with their role) | — | open |
-| Q-PLT-05 | Root | decision | Why does this rule exist? No source states the reason. Every signed-in user may read the list of well-known virtual contributors; a visitor is refused. | Product Lead | — | open |
+Nothing to answer: every Product Lead question is decided (see Decided).
 
 ### Technical Lead
 
-[Technical Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Technical%20Lead.md) · Delivery (Anton) · 11 to answer, 2 also involved
+[Technical Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Technical%20Lead.md) · Delivery (Anton) · 11 to answer, 1 also involved
 
 **To answer**
 
@@ -141,8 +136,8 @@ _One section per role, so each owner reads only their own part. **To answer** li
 | F8 | Root | decision | The latest release post is named to anyone without checking who may read it. Nothing leaks today because the forum is public. Accept it, or make it follow the post's access rules so a future private forum does not surprise? | Technical Lead | — | open |
 | F9 | Forum | tidy-up | The forum's access rules set a cascade flag on the wrong rule. The discussion tests are green, so nothing seems to depend on it. | Technical Lead | Route to `communications.md`, which owns the forum (its F14 is the same point). | suggested |
 | OQ2 | Settings | check | Does the notifications service read the blacklist? It is outside the server; spec 019 assumes it. (Same check as F3.) | Technical Lead | — | open |
-| Q-PLT-02 | Root | decision | Why does this rule exist? No source states the reason. The platform publishes its service versions to anyone. | Technical Lead | — | open |
-| Q-PLT-07 | Root | decision | Why does this rule exist? No source states the reason. The platform picks the innovation hub from the web address the request came in on. | Technical Lead | — | open |
+| Q-PLT-02 | Root | decision | Why does this rule exist? No source states the reason. The platform publishes its service versions to anyone. | Technical Lead | Product, 2026-11-20: the business why is confirmed (support and users see the running version); nothing further from product. | suggested |
+| Q-PLT-07 | Root | decision | Why does this rule exist? No source states the reason. The platform picks the innovation hub from the web address the request came in on. | Technical Lead | Product, 2026-11-20: the product why is confirmed (a hub's own address opens the hub); nothing further from product. | suggested |
 | Q-PLT-12 | Settings | decision | Why does this rule exist? No source states the reason. Adding a listed embed address and removing an unlisted one both succeed without change (the e-mail blacklist refuses both). | Technical Lead | — | open |
 | Q-PLT-14 | Settings | decision | Why does this rule exist? No source states the reason. The server keeps two lists it never uses itself; the spec only assumes that other services read them. | Technical Lead | — | open |
 
@@ -150,7 +145,6 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 | ID | Area | Type | Question | Owner | Proposed answer | State |
 |---|---|---|---|---|---|---|
-| CONST | All | decision | 17 of the 21 constants are still blank in "product must rule?" (Appendix E). Which of them must product rule on before the rebuild? | Product Lead (Technical Lead and Security Lead for the rows pre-filled with their role) | — | open |
 | F1 | Settings | risk | Anyone, also a visitor, can read the platform settings, including the notification e-mail blacklist: a list of real e-mail addresses. Restrict it to the Platform Settings Admin (or at least to signed-in users), or confirm it is public by design? | Security Lead (DPO Lead consulted; Technical Lead adds the check) | — | open |
 
 ### Quality Lead
@@ -175,7 +169,7 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 ### Security Lead
 
-[Security Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Security%20Lead.md) · Delivery (Valentin) · 2 to answer, 2 also involved
+[Security Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Security%20Lead.md) · Delivery (Valentin) · 2 to answer, 1 also involved
 
 **To answer**
 
@@ -188,7 +182,6 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 | ID | Area | Type | Question | Owner | Proposed answer | State |
 |---|---|---|---|---|---|---|
-| CONST | All | decision | 17 of the 21 constants are still blank in "product must rule?" (Appendix E). Which of them must product rule on before the rebuild? | Product Lead (Technical Lead and Security Lead for the rows pre-filled with their role) | — | open |
 | F5 | Settings | defect | The four blacklist refusals are plain errors: the web app gets an unspecified error and, outside production, a stack trace. Spec 019 asks for a clear validation error. | Technical Lead (Security Lead owns server#6663) | Make them validation errors. The stack trace part belongs to server#6663, never a new issue. | suggested |
 
 ### Service Operations Lead
@@ -201,6 +194,13 @@ _One section per role, so each owner reads only their own part. **To answer** li
 |---|---|---|---|---|---|---|
 | OQ5 | Root | check | Is a chat-guidance well-known virtual contributor set up on every environment? The acceptance result was not re-read. | Service Operations Lead | — | open |
 | OQ6 | Root | check | How are innovation hubs routed in deployment: the header name, the whitelisted subdomains and the hub subdomains on acceptance and production? PLT-07 is a code reading only. | Service Operations Lead | — | open |
+
+### Decided
+
+| Was | Decision | Decided by | Now |
+|---|---|---|---|
+| Q-PLT-05 | Every signed-in user may read the list of well-known virtual contributors and a visitor is refused, as today: the list serves signed-in users. | Product, 2026-11-20 | PLT-05 |
+| CONST | Product rules on the release-post source, the well-known virtual contributor keys, the blacklist cap, the forum categories and the restricted space names, ticked "yes" in Appendix E. Error texts, rights and wire shapes go to the Technical Lead or the Security Lead. | Product, 2026-11-20 | Appendix E |
 
 ## Appendix
 
@@ -289,31 +289,31 @@ Behaviours the area has that neither reading nor tests pinned down:
 
 ### E. Constants the rules depend on
 
-_"Rules on it" is pre-filled with the role whose domain covers the value: Product Lead for business values, plan constants and user-facing copy; Technical Lead for engineering limits and wire shapes; Security Lead for security limits and access rules. The "product must rule?" column is unchanged and still to be ticked (the CONST row in section 3)._
+_"Rules on it" is pre-filled with the role whose domain covers the value: Product Lead for business values, plan constants and user-facing copy; Technical Lead for engineering limits and wire shapes; Security Lead for security limits and access rules. The "product must rule?" column was ticked by Product, 2026-11-20 (CONST): "yes" rows wait for a product ruling before the rebuild._
 
 | Constant | Value today | Source | product must rule? | Rules on it |
 |---|---|---|---|---|
-| Service metadata | `services = [{ name: 'alkemio-server', version: <npm_package_version or ''> }]` | `metadata.service.ts:18-33` | | Technical Lead |
-| Release discussion source | newest `Discussion` with category `releases`, by `createdDate DESC`; `{id, nameID}`; null when none | `platform.service.ts:272-288` | | Product Lead |
-| Well-known VC keys (2) | `CHAT_GUIDANCE`, `STEWARD_OWNERSHIP_EXPERT` | `src/common/enums/virtual.contributor.well.known.ts` | | Product Lead |
-| Well-known read privilege / holders | `ACCESS_INTERACTIVE_GUIDANCE` ← `GLOBAL_REGISTERED` | `platform.service.authorization.ts:218-233` | | Security Lead |
-| Well-known set gate | resolver-local `IN_MEMORY` policy, `PLATFORM_SETTINGS_ADMIN` ← `platform-settings-admin`; rule name `GLOBAL_POLICY_PLATFORM_WELL_KNOWN_VC_SET` | `…resolver.mutations.ts:125-137` | | Security Lead |
-| Assistant access | `ACCESS_VIRTUAL_ASSISTANT` ← `FEATURE_VIRTUAL_ASSISTANT` only | `platform.service.authorization.ts:243-262` | | Security Lead |
-| Settings surface | `PlatformSettings.integration.{iframeAllowedUrls, notificationEmailBlacklist}`; mutations `updatePlatformSettings`, `addIframeAllowedURL`, `removeIframeAllowedURL`, `addNotificationEmailToBlacklist`, `removeNotificationEmailFromBlacklist` | `schema.graphql:5888-5895, 5991-6001`; `platform.resolver.mutations.ts` | | Technical Lead |
-| Settings privilege / holders | `PLATFORM_SETTINGS_ADMIN` ← `platform-settings-admin` (stored platform policy) | `platform.service.authorization.ts:301-308` | | Security Lead |
-| Blacklist cap | 250 entries | `platform.settings.service.ts:101-106`; 019 clarification | | Product Lead |
-| Blacklist canonical form | lower-case; duplicates compared case-insensitively; `@IsEmail` on input | `platform.settings.service.ts:93-97`; `dto/notification-email-blacklist.input.ts` | | Technical Lead |
-| Error text — wildcard | `Wildcard characters are not allowed in email addresses` | `platform.settings.service.ts:89-91` | F-5 | Technical Lead |
-| Error text — duplicate | `Email <email> is already in the blacklist` | `:97-98` | F-5 | Technical Lead |
-| Error text — cap | `Blacklist limit of 250 entries reached. Remove entries before adding new ones.` | `:101-105` | F-5 | Technical Lead |
-| Error text — not listed | `Email <email> not found in blacklist` | `:129-131` | F-5 | Technical Lead |
-| Audit setting names | `platformSettings`, `iframeAllowedUrls`, `notificationEmailBlacklist`, `wellKnownVirtualContributor:<key>`; intended owner `[PLATFORM_SETTINGS_ADMIN]`; operations audit action `authorizationPolicyResetOnPlatform` | `platform.resolver.mutations.ts:64-66, 141-151, 179-187, 215-223, 252-260, 289-297`; `…vc resolver.mutations.ts:166-174` | | Security Lead |
-| Reset privilege / holders | `AUTHORIZATION_RESET` ← `platform-operations-admin` | `platform.service.authorization.ts:427-434` | | Security Lead |
-| Root policy rule | `PLATFORM_CONTENT_FULL_ACCESS` ← CREATE, READ, UPDATE, DELETE, PLATFORM_CONTENT_FULL_ACCESS (cascading); no GRANT at the root | `platform.authorization.policy.service.ts:110-122` | | Security Lead |
-| Forum categories (8, canonical order) | `releases`, `newsletter`, `tips-and-tricks`, `help` (label "Q&A"), `platform-functionalities`, `community-building`, `challenge-centric`, `other`; admin-only: `releases`, `newsletter` | `forum.discussion.category.ts`; `forum.category.allowed.ts:17-21` | | Product Lead |
-| Forum privileges | `READ` ← anonymous + registered (cascading); `CREATE_DISCUSSION`, `CONTRIBUTE` ← registered; `PLATFORM_FORUM_MANAGE` ← `platform-support` (cascading from the platform) | `forum.service.authorization.ts:52-82`; `platform.service.authorization.ts:360-367` | | Security Lead |
-| Restricted space names (30) | `home, user, admin, vc, organization, documentation, innovation-library, innovation-packs, innovation-hubs, forum, spaces, contributors, about, profile, restricted, docs, contact, create-space, landing, identity, flows, root, root-admin, root-user, dashboard, start, login, logout, register, settings` | `src/common/enums/restricted.space.names.ts` | | Product Lead |
-| MCP containment surface | `me.mcpApiKeys`, `mintMcpApiKey`, `revokeMcpApiKey`, `platformAdmin.mcpApiKeys(userID)`, `adminRevokeMcpApiKey`; key statuses `ACTIVE`, `REVOKED`; admin gate `PLATFORM_USERS_ADMIN`; legacy `/rest/mcp/api-keys` → 404; MCP key on GraphQL → 401 | `admin.mcp.api.key.resolver.*`; test file; 038 | | Security Lead |
+| Service metadata | `services = [{ name: 'alkemio-server', version: <npm_package_version or ''> }]` | `metadata.service.ts:18-33` | no | Technical Lead |
+| Release discussion source | newest `Discussion` with category `releases`, by `createdDate DESC`; `{id, nameID}`; null when none | `platform.service.ts:272-288` | yes | Product Lead |
+| Well-known VC keys (2) | `CHAT_GUIDANCE`, `STEWARD_OWNERSHIP_EXPERT` | `src/common/enums/virtual.contributor.well.known.ts` | yes | Product Lead |
+| Well-known read privilege / holders | `ACCESS_INTERACTIVE_GUIDANCE` ← `GLOBAL_REGISTERED` | `platform.service.authorization.ts:218-233` | no | Security Lead |
+| Well-known set gate | resolver-local `IN_MEMORY` policy, `PLATFORM_SETTINGS_ADMIN` ← `platform-settings-admin`; rule name `GLOBAL_POLICY_PLATFORM_WELL_KNOWN_VC_SET` | `…resolver.mutations.ts:125-137` | no | Security Lead |
+| Assistant access | `ACCESS_VIRTUAL_ASSISTANT` ← `FEATURE_VIRTUAL_ASSISTANT` only | `platform.service.authorization.ts:243-262` | no | Security Lead |
+| Settings surface | `PlatformSettings.integration.{iframeAllowedUrls, notificationEmailBlacklist}`; mutations `updatePlatformSettings`, `addIframeAllowedURL`, `removeIframeAllowedURL`, `addNotificationEmailToBlacklist`, `removeNotificationEmailFromBlacklist` | `schema.graphql:5888-5895, 5991-6001`; `platform.resolver.mutations.ts` | no | Technical Lead |
+| Settings privilege / holders | `PLATFORM_SETTINGS_ADMIN` ← `platform-settings-admin` (stored platform policy) | `platform.service.authorization.ts:301-308` | no | Security Lead |
+| Blacklist cap | 250 entries | `platform.settings.service.ts:101-106`; 019 clarification | yes | Product Lead |
+| Blacklist canonical form | lower-case; duplicates compared case-insensitively; `@IsEmail` on input | `platform.settings.service.ts:93-97`; `dto/notification-email-blacklist.input.ts` | no | Technical Lead |
+| Error text — wildcard | `Wildcard characters are not allowed in email addresses` | `platform.settings.service.ts:89-91` | no (F-5) | Technical Lead |
+| Error text — duplicate | `Email <email> is already in the blacklist` | `:97-98` | no (F-5) | Technical Lead |
+| Error text — cap | `Blacklist limit of 250 entries reached. Remove entries before adding new ones.` | `:101-105` | no (F-5) | Technical Lead |
+| Error text — not listed | `Email <email> not found in blacklist` | `:129-131` | no (F-5) | Technical Lead |
+| Audit setting names | `platformSettings`, `iframeAllowedUrls`, `notificationEmailBlacklist`, `wellKnownVirtualContributor:<key>`; intended owner `[PLATFORM_SETTINGS_ADMIN]`; operations audit action `authorizationPolicyResetOnPlatform` | `platform.resolver.mutations.ts:64-66, 141-151, 179-187, 215-223, 252-260, 289-297`; `…vc resolver.mutations.ts:166-174` | no | Security Lead |
+| Reset privilege / holders | `AUTHORIZATION_RESET` ← `platform-operations-admin` | `platform.service.authorization.ts:427-434` | no | Security Lead |
+| Root policy rule | `PLATFORM_CONTENT_FULL_ACCESS` ← CREATE, READ, UPDATE, DELETE, PLATFORM_CONTENT_FULL_ACCESS (cascading); no GRANT at the root | `platform.authorization.policy.service.ts:110-122` | no | Security Lead |
+| Forum categories (8, canonical order) | `releases`, `newsletter`, `tips-and-tricks`, `help` (label "Q&A"), `platform-functionalities`, `community-building`, `challenge-centric`, `other`; admin-only: `releases`, `newsletter` | `forum.discussion.category.ts`; `forum.category.allowed.ts:17-21` | yes | Product Lead |
+| Forum privileges | `READ` ← anonymous + registered (cascading); `CREATE_DISCUSSION`, `CONTRIBUTE` ← registered; `PLATFORM_FORUM_MANAGE` ← `platform-support` (cascading from the platform) | `forum.service.authorization.ts:52-82`; `platform.service.authorization.ts:360-367` | no | Security Lead |
+| Restricted space names (30) | `home, user, admin, vc, organization, documentation, innovation-library, innovation-packs, innovation-hubs, forum, spaces, contributors, about, profile, restricted, docs, contact, create-space, landing, identity, flows, root, root-admin, root-user, dashboard, start, login, logout, register, settings` | `src/common/enums/restricted.space.names.ts` | yes | Product Lead |
+| MCP containment surface | `me.mcpApiKeys`, `mintMcpApiKey`, `revokeMcpApiKey`, `platformAdmin.mcpApiKeys(userID)`, `adminRevokeMcpApiKey`; key statuses `ACTIVE`, `REVOKED`; admin gate `PLATFORM_USERS_ADMIN`; legacy `/rest/mcp/api-keys` → 404; MCP key on GraphQL → 401 | `admin.mcp.api.key.resolver.*`; test file; 038 | no | Security Lead |
 
 ### F. Where this lands in the new core
 
@@ -323,7 +323,7 @@ The platform singleton dissolves into the briefing's ops namespace and the `view
 
 Extracted 2026-11-06 from three sources: server develop @ `eeecf9ddb` (Release/79) code + `schema.graphql`; the legacy server-api suite (`server-api/src/functional-api/platform/`, 1 file, 7 cases — all MCP API-key containment, workspace#038 US3); the specs, issues and docs listed in § Sources. WHAT and WHY only — no mutations, fixtures or request params. Evidence paths are relative to the server repo unless prefixed `test ›` or `spec ›`. Licensing reads are cross-referenced to entitlements ENT-46/48/49, the role grants to the access matrix `platform` section and crosscheck F6, the forum's own rules to `communications.md`, the configuration child to `configuration.md`; the MCP key lifecycle (038) is out of scope beyond the seven containment cases that live in this folder.
 
-2026-11-19 converted to the three-section layout. The single why of each rule was sorted into business and technical without rewording, each rule got a short plain version (the exact text is in Appendix A), and every finding, open question and gap was routed to an organisation role. Product has not reviewed this file yet.
+2026-11-19 converted to the three-section layout. The single why of each rule was sorted into business and technical without rewording, each rule got a short plain version (the exact text is in Appendix A), and every finding, open question and gap was routed to an organisation role. Product reviewed section 3 on 2026-11-20.
 
 2026-11-20 whys pass: every rule has at least one why, sourced where a spec, issue, pull request or code comment states it and marked _(draft)_ where QA wrote it. Restating whys with no source were dropped where a sourced one remains. PLT-05 had no why and no question, so Q-PLT-05 is new.
 

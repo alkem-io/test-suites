@@ -2,9 +2,9 @@
 
 _What the platform does today for accounts: the account every user and organisation has, who administers it, what it hosts (spaces, virtual contributors, innovation packs, innovation hubs), how those are shown on a profile, transfers between accounts, and the account's part in deletion: what it does, why, who may, and what is still to answer. The file follows the three-section layout of `communications.md`: **1. Rules**, **2. Rights**, **3. Open questions**, with the evidence in an **Appendix**. Plans, limits and subscriptions are in `entitlements.md` and are only referred to here as `ENT-nn`._
 
-_Open questions per owner: Product Lead 5 · Technical Lead 6 · Quality Lead 3 · Security Lead 1 · Service Operations Lead 1. By state: 15 open · 1 with a suggested answer. Proof of the 19 rules: 11 proven by a test · 8 untested (Appendix A)._
+_Open questions per owner: Product Lead 0 · Technical Lead 6 · Quality Lead 3 · Security Lead 1 · Service Operations Lead 1. By state: 10 open · 1 with a suggested answer · 5 decided. Proof of the 19 rules: 11 proven by a test · 8 untested (Appendix A)._
 
-_Whys of the 19 rules: 13 rest on a source · 2 carry a draft for product to decide · 3 have none, and each points to a question or defect in section 3 (ACC-02, ACC-12, ACC-15) · 1 only points to another file (ACC-16)._
+_Whys of the 19 rules: 15 rest on a source or a product decision · 0 carry a draft · 3 have none, and each points to a question or defect in section 3 (ACC-02, ACC-12, ACC-15) · 1 only points to another file (ACC-16)._
 
 **How to read it**
 
@@ -21,7 +21,7 @@ _Whys of the 19 rules: 13 rest on a source · 2 carry a draft for product to dec
 
 | ID | Rule | Why: business | Why: product | Why: technical | Decided by |
 |---|---|---|---|---|---|
-| ACC-01 | Every user and every organisation gets exactly one account, created together with them. It starts with a generated name, its own storage, and a licence with all seven account allowances at zero. | The account is the unit that hosts and pays for resources (ENT-15). _(draft)_ | — | One transaction "to prevent orphans" (code comment). | Code comment (no spec) |
+| ACC-01 | Every user and every organisation gets exactly one account, created together with them. It starts with a generated name, its own storage, and a licence with all seven account allowances at zero. | The account is the unit that hosts and pays for resources (ENT-15). | — | One transaction "to prevent orphans" (code comment). | Code comment (no spec); Product, 2026-11-20 (business why) |
 | ACC-02 | An account's host is the one user or organisation it belongs to. An account with no host shows no host instead of failing. **(open: Q-ACC-02)** | — | — | — | Not decided: exists in the code |
 | ACC-03 | The account admin is the user for a user account. For an organisation account it is every admin and owner of the organisation; a person stops being account admin only when they hold neither role any more. | "Allow hosts (users = self mgmt, org = org admin) to manage resources in their account" (code comment). | — | — | Code comment (no spec) |
 
@@ -37,17 +37,17 @@ _Whys of the 19 rules: 13 rest on a source · 2 carry a draft for product to dec
 | ID | Rule | Why: business | Why: product | Why: technical | Decided by |
 |---|---|---|---|---|---|
 | ACC-06 | An account can be read by anyone, signed in or not. Looked up directly or reached through a space, virtual contributor or innovation hub, it shows its full lists of spaces, virtual contributors, packs and hubs. **(open: F1)** | — | — | "By default it is world visible. TODO: work through the logic on this" (code comment); 089 records the reach-through as a known gap for a separate ticket (KG-1, linked to #6129). | Not decided: exists in the code (spec 089 KG-1 records it as a known gap) |
-| ACC-07 | A profile gives out its account only to a few. For a user: the user, those who may read the user's personal data, and the Platform License Manager and Resource Admin. For an organisation: its admins and owners and the same two platform roles. Everyone else gets nothing, without an error. **(open: F1, F6)** | — | — | The profile's account field is the only place the licence and transfer consoles learn the account id; plain READ is deliberately not used because accounts grant it to everyone (code comment; 089 R3 "no regression"). | Spec 089 R3 |
-| ACC-08 | A signed-in viewer of a profile sees what its account hosts, filtered by visibility: public items for everyone; account-level ones for the user or the organisation's own people; hidden ones for the user or the organisation's admins and owners. Hubs are always listed. A signed-out viewer gets nothing. **(open: F6)** | A public profile shows what its host chose to publish; the account tier exists for an organisation's own people; hidden is owner-side only (089 FR-001…006, operator rulings R1/R3). | — | "the only place that decides this visibility" so the client never re-filters (089 FR-002). | Spec 089 FR-001…006, operator rulings R1/R3 |
+| ACC-07 | A profile gives out its account only to a few. For a user: the user, those who may read the user's personal data, and the Platform License Manager and Resource Admin. For an organisation: its admins and owners and the same two platform roles. Everyone else gets nothing, without an error. **(open: F1)** | — | — | The profile's account field is the only place the licence and transfer consoles learn the account id; plain READ is deliberately not used because accounts grant it to everyone (code comment; 089 R3 "no regression"). | Spec 089 R3; Product, 2026-11-20 (F6): stays as today, narrowing the full view is a wish |
+| ACC-08 | A signed-in viewer of a profile sees what its account hosts, filtered by visibility: public items for everyone; account-level ones for the user or the organisation's own people; hidden ones for the user or the organisation's admins and owners. Hubs are always listed. A signed-out viewer gets nothing. | A public profile shows what its host chose to publish; the account tier exists for an organisation's own people; hidden is owner-side only (089 FR-001…006, operator rulings R1/R3). | — | "the only place that decides this visibility" so the client never re-filters (089 FR-002). | Spec 089 FR-001…006, operator rulings R1/R3; Product, 2026-11-20 (F6): stays as today, narrowing the full view is a wish |
 | ACC-09 | A hosted virtual contributor or hub is shown as a closed card: name, picture and link. The card shows for anyone allowed to see it, even without access to the item itself, and gives no way back to the account or to anything else about the item. | The card must render for anyone entitled to see it (089 FR-007), while exposing nothing beyond the public profile (FR-013) and no route to the account's unfiltered lists (code invariant comments). | — | — | Spec 089 FR-007, FR-013 |
-| ACC-10 | A new virtual contributor, innovation pack or innovation hub starts with visibility "account" and listed in the library. The host can change both afterwards. **(open: Q-ACC-10)** | — | As an account host, I want a new virtual contributor, pack or hub to be visible only to my own people at first, so that I can prepare it before I make it public. _(draft)_ | — | Not decided: exists in the code |
+| ACC-10 | A new virtual contributor, innovation pack or innovation hub starts with visibility "account" and listed in the library. The host can change both afterwards. | — | As an account host, I want a new virtual contributor, pack or hub to be visible only to my own people at first, so that I can prepare it before I make it public. | — | Product, 2026-11-20 (Q-ACC-10) |
 
 ### Transfers between accounts
 
 | ID | Rule | Why: business | Why: product | Why: technical | Decided by |
 |---|---|---|---|---|---|
 | ACC-11 | A space, virtual contributor, pack or hub moves to another account only when the person may offer it on the current account and accept it on the target: the Platform Resource Admin for any two accounts, or someone who is admin of both. Anyone else is refused and the resource stays where it was. | A transfer is two-sided consent — the giver's and the receiver's ("Double authorization check", code comment); moves of resources are the resource admin's family (027 A9). | — | — | Spec 027 A9 |
-| ACC-12 | After a transfer the resource belongs to the target account and its access rules are recomputed from it. The target's licence limits are not checked, so a resource can land on an account that could not have created it. **(open: F4, F7)** | — | — | — | Not decided: exists in the code |
+| ACC-12 | After a transfer the resource belongs to the target account and its access rules are recomputed from it. The target's licence limits are not checked, so a resource can land on an account that could not have created it. | — | — | — | Product, 2026-11-20 (F7): a transferred space does not get the new host organisation as member and lead, as today; seating it is a wish on the product issues list; Product, 2026-11-20 (F4): no licence check on a transfer, as today; checking it is a wish on the product issues list |
 | ACC-13 | Only a top-level space is meant to change account; subspaces follow their top-level space. The server does not check this today and accepts a subspace too. **(defect in part: F2, OQ2)** | "Top-level spaces are transferred between accounts, not moved" (030 spec:157, 222); one account pays for the whole tree (083 FR-021b). | — | — | Spec 030; spec 083 FR-021b |
 | ACC-14 | A transfer made by the Platform Resource Admin is recorded in the audit trail ("moved", with the target account). A transfer by an ordinary account admin is not recorded. | — | — | Every account admin holds offer/accept on their own account, so the audit branch is decided from the actor's own platform credential, not from the shared privilege (corr-server-8). | Spec 027 review item corr-server-8 |
 | ACC-15 | The transfer of a virtual contributor is declared to return an innovation pack. **(defect: F3)** | — | — | — | Not decided: a defect |
@@ -107,27 +107,14 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 ### Product Lead
 
-[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 5 to answer, 1 also involved
+[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 0 to answer
 
-**To answer**
+Nothing to answer: every Product Lead question is decided (see Decided).
 
-| ID | Area | Type | Question | Owner | Proposed answer | State |
-|---|---|---|---|---|---|---|
-| F4 | Transfers | decision | A transfer does not check the target account's licence limits, while creating does. Is a transfer a way around the allowance? And what happens to an account that ends up over its limit: read-only, archived, or only unable to create? | Product Lead | — | open |
-| F6 | Visibility | decision | The right to read a user's personal data decides who sees the full hosted list, so admins of a space the user is in and admins of their organisation see hidden items. Spec 089 calls it "the wrong concept, kept for no-regression". Keep it, or narrow the full view to the user and platform roles when hosted spaces (#6695) land? | Product Lead (DPO Lead consulted) | — | open |
-| F7 | Transfers | decision | A space created on an organisation's account gets the organisation as member and lead. A space transferred to an organisation's account does not. Should it, and should the previous host organisation lose its seat? | Product Lead | — | open |
-| Q-ACC-10 | Visibility | decision | Why does this rule exist? No source states the reason. New virtual contributors, packs and hubs start with visibility "account" and listed in the library. | Product Lead | — | open |
-| CONST | All | decision | 16 of the 18 constants are still blank in "product must rule?" (Appendix E). Which of them must product rule on before the rebuild? | Product Lead (Technical Lead and Security Lead for the rows pre-filled with their role) | — | open |
-
-**Also involved**
-
-| ID | Area | Type | Question | Owner | Proposed answer | State |
-|---|---|---|---|---|---|---|
-| F1 | Visibility | risk | Any visitor can read another host's account: its id, spaces, virtual contributors, packs, hubs, plan and usage. The profile hides the account, but every other route gives it out. Is that intended? One decision closes this and F5 in `entitlements.md`. | Security Lead (Product Lead decides what a visitor may see) | — | open |
 
 ### Technical Lead
 
-[Technical Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Technical%20Lead.md) · Delivery (Anton) · 6 to answer, 1 also involved
+[Technical Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Technical%20Lead.md) · Delivery (Anton) · 6 to answer
 
 **To answer**
 
@@ -140,11 +127,6 @@ _One section per role, so each owner reads only their own part. **To answer** li
 | OQ4 | Transfers | check | Does any screen in the web app let an account admin transfer a resource, or only the Platform Resource Admin? It decides whether customers can reach F4. | Technical Lead | — | open |
 | Q-ACC-02 | Host | decision | Why does this rule exist? No source states the reason. An account with no host shows no host and logs a warning instead of failing. | Technical Lead | — | open |
 
-**Also involved**
-
-| ID | Area | Type | Question | Owner | Proposed answer | State |
-|---|---|---|---|---|---|---|
-| CONST | All | decision | 16 of the 18 constants are still blank in "product must rule?" (Appendix E). Which of them must product rule on before the rebuild? | Product Lead (Technical Lead and Security Lead for the rows pre-filled with their role) | — | open |
 
 ### Quality Lead
 
@@ -160,19 +142,18 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 ### Security Lead
 
-[Security Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Security%20Lead.md) · Delivery (Valentin) · 1 to answer, 2 also involved
+[Security Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Security%20Lead.md) · Delivery (Valentin) · 1 to answer, 1 also involved
 
 **To answer**
 
 | ID | Area | Type | Question | Owner | Proposed answer | State |
 |---|---|---|---|---|---|---|
-| F1 | Visibility | risk | Any visitor can read another host's account: its id, spaces, virtual contributors, packs, hubs, plan and usage. The profile hides the account, but every other route gives it out. Is that intended? One decision closes this and F5 in `entitlements.md`. | Security Lead (Product Lead decides what a visitor may see) | — | open |
+| F1 | Visibility | risk | Any visitor can read another host's account: its id, spaces, virtual contributors, packs, hubs, plan and usage. The profile hides the account, but every other route gives it out. Is that intended? One decision closes this and F5 in `entitlements.md`. | Security Lead (Product Lead decides what a visitor may see) | Product, 2026-11-20: stays as today; the Security Lead weighs the risk, together with F5 in entitlements.md. | open |
 
 **Also involved**
 
 | ID | Area | Type | Question | Owner | Proposed answer | State |
 |---|---|---|---|---|---|---|
-| CONST | All | decision | 16 of the 18 constants are still blank in "product must rule?" (Appendix E). Which of them must product rule on before the rebuild? | Product Lead (Technical Lead and Security Lead for the rows pre-filled with their role) | — | open |
 | F5 | Reset | defect | An account reset skips broken items and leaves their old access rules in place. On acceptance 1,018 files, 872 storage buckets and 2,000 tagsets still name retired credentials. Accept it (harmless while nobody holds those credentials), or make the reset report what it skipped so operators can repair it? | Technical Lead (Security Lead accepts the risk if it stays) | — | open |
 
 ### Service Operations Lead
@@ -184,6 +165,16 @@ _One section per role, so each owner reads only their own part. **To answer** li
 | ID | Area | Type | Question | Owner | Proposed answer | State |
 |---|---|---|---|---|---|---|
 | OQ3 | Licence and billing | check | Who writes the billing link on an account, and is it ever set on acceptance? The caller is outside the files read here (the billing adapter). | Service Operations Lead | — | open |
+
+### Decided
+
+| Was | Decision | Decided by | Now |
+|---|---|---|---|
+| F7 | Stays as today: a space transferred to an organisation's account does not get that organisation as member and lead, and the previous host keeps its seat. Seating the new host is a wish on the product issues list. | Product, 2026-11-20 | ACC-12; PRODUCT-ISSUES F7 |
+| Q-ACC-10 | The draft story stands: a new virtual contributor, pack or hub starts visible to the host's own people, so the host can prepare it before making it public. | Product, 2026-11-20 | ACC-10 |
+| CONST | Product rules on the new-account licence, the three visibility levels, the visibility defaults at creation and the hosted-resources tiers, ticked "yes" in Appendix E. Error texts, shapes, credentials and the GraphQL surface go to the Technical Lead or the Security Lead. | Product, 2026-11-20 | Appendix E |
+| F4 | Stays as today: a transfer does not check the target account's licence limits. Checking them, as create does, is a wish on the product issues list. | Product, 2026-11-20 | ACC-12; PRODUCT-ISSUES F4 |
+| F6 | Stays as today: the right to read a user's personal data decides who sees the full hosted list (spec 089 KG-3). Limiting it to the user and platform roles is a wish on the product issues list (DPO Lead consulted). | Product, 2026-11-20 | ACC-07, ACC-08; PRODUCT-ISSUES F6 |
 
 ## Appendix
 
@@ -229,13 +220,13 @@ _The original text of every finding (F) and open question (OQ), with its evidenc
 
 #### Findings
 
-- **F1 — The account is world-readable while the profile pretends it is closed (ACC-06 vs ACC-07).** Code: the account policy grants READ to anonymous and registered (twice), and `Space.account`, `VirtualContributor.account`, `InnovationHub.account` and `lookup.account` return the account with unfiltered lists to anyone who can read the parent. Test: `the full account stays closed to an unrelated registered user` proves only that `Organization.account` is null. Spec: 089 KG-1 calls the null "obscurity, not enforcement" and leaves it to a separate ticket (#6129); entitlements F-5 is the same defect seen from the licence side. Ruling: is another host's account (its id, spaces, VCs, packs, hubs, plan, usage) meant to be visible to any visitor? One decision closes F-1 here and F-5 there.
+- **F1 — The account is world-readable while the profile pretends it is closed (ACC-06 vs ACC-07).** Code: the account policy grants READ to anonymous and registered (twice), and `Space.account`, `VirtualContributor.account`, `InnovationHub.account` and `lookup.account` return the account with unfiltered lists to anyone who can read the parent. Test: `the full account stays closed to an unrelated registered user` proves only that `Organization.account` is null. Spec: 089 KG-1 calls the null "obscurity, not enforcement" and leaves it to a separate ticket (#6129); entitlements F-5 is the same defect seen from the licence side. Ruling: is another host's account (its id, spaces, VCs, packs, hubs, plan, usage) meant to be visible to any visitor? One decision closes F-1 here and F-5 there. **Product, 2026-11-20:** for the product part, stays as today; the Security Lead weighs the risk.
 - **F2 — A subspace can be transferred to another account (ACC-13).** Code: `transferSpaceToAccount` accepts any space id, sets `space.account` on it and re-applies its policy; subspaces otherwise derive their account from the top-level space (JRN-15) and `Space.account` is a nullable, SET-NULL relation set only on L0 at creation. Test: none. Spec 030: top-level spaces are transferred, subspaces are moved. Ruling: refuse non-L0 targets server-side (as the moves do, JRN-14), or document the client panel as the only gate.
 - **F3 — The VC transfer is declared to return an innovation pack (ACC-15).** Code: `@Mutation(() => IInnovationPack)` on `transferVirtualContributorToAccount`; schema `transferVirtualContributorToAccount(...): InnovationPack!`; the method returns a VC. Test: the A9 group calls it through the generated SDK and reads only `id`. Ruling: schema contract fix (breaking for anyone selecting pack fields; nobody can today).
-- **F4 — Transfers ignore the target's licence (ACC-12).** Code: no entitlement check and no licence recompute on any of the four transfers, while creation refuses over the limit (ENT-02/03/04). Test: the positive case is titled "without valid entitlements" and asserts success, enshrining it. Spec: none. Ruling: is a transfer a way around the allowance (and is the resulting over-limit account meant to be read-only, archived or merely unable to create — the same open behaviour as entitlements gap 1)?
+- **F4 — Transfers ignore the target's licence (ACC-12).** Code: no entitlement check and no licence recompute on any of the four transfers, while creation refuses over the limit (ENT-02/03/04). Test: the positive case is titled "without valid entitlements" and asserts success, enshrining it. Spec: none. Ruling: is a transfer a way around the allowance (and is the resulting over-limit account meant to be read-only, archived or merely unable to create — the same open behaviour as entitlements gap 1)? **Product, 2026-11-20:** stays as today; a transfer checking the target's licence limits is a wish on the product issues list. What an over-limit account may do stays with entitlements gap 1.
 - **F5 — Reset skips broken children and leaves their stale rules (ACC-18).** Code: `resilientCascade` logs and returns `[]` for a child that throws a relationship/not-found error, so that subtree keeps whatever rules it had. Data: crosscheck F2 — 1,018 files, 872 buckets, 2,000 tagsets … on ACC still name retired credentials under fresh parents. Test: none. Ruling: accept (inert while nobody holds the retired credentials) or add a "skipped subtree" report to the reset so operators can repair.
-- **F6 — Personal-data read decides who sees the full hosted list (ACC-07/08).** Code: the full view keys on `READ_USER_PII`, which space admins of a member and organisation admins of an associate hold. Spec 089 KG-3 records it as "the wrong concept, kept for no-regression". Test: only the platform-role holders are exercised. Ruling: keep for parity, or narrow the full view to self + platform roles when hosted spaces (#6695) land.
-- **F7 — Transfer-in of a space does not seat the organisation host (ACC-12 vs JRN-07).** Code: creation on an organisation account adds the organisation as member and lead of the space; a transfer sets the account and re-applies policy only. Test/spec: none. Ruling: should a space transferred to an organisation account acquire the organisation as member/lead (and lose the previous host organisation)?
+- **F6 — Personal-data read decides who sees the full hosted list (ACC-07/08).** Code: the full view keys on `READ_USER_PII`, which space admins of a member and organisation admins of an associate hold. Spec 089 KG-3 records it as "the wrong concept, kept for no-regression". Test: only the platform-role holders are exercised. Ruling: keep for parity, or narrow the full view to self + platform roles when hosted spaces (#6695) land. **Product, 2026-11-20:** stays as today; limiting the full view to the user and platform roles is a wish on the product issues list (DPO Lead consulted).
+- **F7 — Transfer-in of a space does not seat the organisation host (ACC-12 vs JRN-07).** Code: creation on an organisation account adds the organisation as member and lead of the space; a transfer sets the account and re-applies policy only. Test/spec: none. Ruling: should a space transferred to an organisation account acquire the organisation as member/lead (and lose the previous host organisation)? **Product, 2026-11-20:** stays as today; seating the new host organisation is a wish on the product issues list.
 - **F8 — Copy-paste error text on the account reset.** `authorizationPolicyResetOnAccount` refuses with "reset authorization definition on Space". Cosmetic; rebaseline row, not a behaviour.
 
 #### Open questions
@@ -264,28 +255,28 @@ Behaviours the area has that neither reading nor tests pinned down:
 
 ### E. Constants the rules depend on
 
-_"Rules on it" is pre-filled with the role whose domain covers the value: Product Lead for business values, plan constants and user-facing copy; Technical Lead for engineering limits and wire shapes; Security Lead for security limits and access rules. The "product must rule?" column is unchanged and still to be ticked (the CONST row in section 3)._
+_"Rules on it" is pre-filled with the role whose domain covers the value: Product Lead for business values, plan constants and user-facing copy; Technical Lead for engineering limits and wire shapes; Security Lead for security limits and access rules. The "product must rule?" column was ticked by Product, 2026-11-20 (CONST): "yes" rows wait for a product ruling before the rebuild._
 
 | Constant | Value today | Source | product must rule? | Rules on it |
 |---|---|---|---|---|
-| Account types (2) | `USER='user'`, `ORGANIZATION='organization'` | `src/common/enums/account.type.ts:3-6`; `schema.graphql:43-46` | | Technical Lead |
-| Account roles (1) | `HOST='host'` (enum exists; no role assignment uses it) | `src/common/enums/account.role.ts:3-5` | | Technical Lead |
-| Account nameID shape | `account-` + first 8 characters of a UUID; profile displayName = the nameID | `account.host.service.ts:50, 63-67` | | Technical Lead |
-| New-account licence | 7 entitlements (`ACCOUNT_SPACE_FREE/PLUS/PREMIUM`, `ACCOUNT_VIRTUAL_CONTRIBUTOR`, `ACCOUNT_INNOVATION_HUB`, `ACCOUNT_INNOVATION_PACK`, `ACCOUNT_AI_ASSISTANT_TOKENS_MONTH`) at limit 0 / disabled; baseline plan all zeros | `account.host.service.ts:69-118`; `constants.ts:3-10` (ENT-15) | | Product Lead |
-| Resource visibility (3) | `HIDDEN='hidden'` (direct access only), `ACCOUNT='account'`, `PUBLIC='public'` | `src/common/enums/search.visibility.ts:3-7`; `schema.graphql:961-965` | | Product Lead |
-| Visibility defaults at creation | VC, pack, hub: `searchVisibility = ACCOUNT`, `listedInStore = true` | `innovation.pack.service.ts:91-92`; `virtual.contributor.service.ts:106-107`; `innovation.hub.service.ts:99-100` | | Product Lead |
-| Hosted-resources tiers | REGISTERED → PUBLIC; ORGANIZATION_ASSOCIATE → PUBLIC + ACCOUNT; FULL → all; hubs → always; anonymous → null | `account.lookup.service.ts:138-155`; 089 R1/R3 | | Product Lead |
-| Full-view gate | self · `READ_USER_PII` on the user · organisation `UPDATE` · `ACCOUNT_LICENSE_MANAGE` or `TRANSFER_RESOURCE_ACCEPT` on the account | `user.resolver.fields.ts:217-266`; `organization.resolver.fields.ts:300-357` | F-6 | Security Lead |
-| Closed card shapes | `AccountHostedVirtualContributor {id, profile}`; `AccountHostedInnovationHub {id, nameID, profile}` | `schema.graphql:1355-1380` | | Technical Lead |
-| Account-admin credential | `account-admin` scoped to the account id; users at registration; organisation ADMIN and OWNER implicitly | `user.service.authorization.ts:167-170`; `role.set.service.ts:831-847` | | Security Lead |
-| Privileges on the account policy | `CREATE_SPACE`, `CREATE_VIRTUAL`, `CREATE_INNOVATION_PACK`, `CREATE_INNOVATION_HUB`, `TRANSFER_RESOURCE_OFFER`, `TRANSFER_RESOURCE_ACCEPT`, `ACCOUNT_LICENSE_MANAGE`, `AUTHORIZATION_RESET`, `LICENSE_RESET`, `PLATFORM_SUPPORT_ORG_RESOURCES`, `CREATE/READ/UPDATE/DELETE` (+ `GRANT` on child packs/hubs) | `account.service.authorization.ts:324-540` | | Security Lead |
-| Transfer audit owner | `A9_TRANSFER_INTENDED_OWNERS = [platform-resource-admin]`; resource kinds `space`, `innovation-hub`, `innovation-pack`, `virtual-contributor`; outcome `moved` | `account.resolver.mutations.ts:53-55, 431-446` | | Security Lead |
-| Error text — transfer refused (source) | `Authorization: unable to grant 'transfer-resource-offer' privilege: transfer <Resource> to another Account: <actorID>` | `account.resolver.mutations.ts:660-665` | | Technical Lead |
-| Error text — transfer refused (target) | `… 'transfer-resource-accept' privilege: transfer <Resource> to target Account: <actorID>` | `account.resolver.mutations.ts:666-671` | | Technical Lead |
-| Resource names in transfer texts | `InnovationHub`, `Space`, `Innovation Pack`, `VirtualContributor` | `account.resolver.mutations.ts:412, 474, 531, 594` | | Technical Lead |
-| Error text — account not found | `Unable to find Account with ID: <id>` / `Unable to find Account on Host with ID: <id>` / `Unable to find Host for account with ID: <id>` | `account.service.ts:376-378`; `account.lookup.service.ts:50-53, 79-82` | | Technical Lead |
-| Error text — hub subdomain | `Unable to create Innovation Hub: the provided subdomain is already taken: <subdomain>` | `innovation.hub.service.ts` (createInnovationHub) | | Technical Lead |
-| GraphQL surface | `Account{…}` (`schema.graphql:1276-1330`), `User.account`, `User.hostedResources` (`:7785`), `Organization.account`, `Organization.hostedResources` (`:5542`), `AccountHostedResources` (`:1365-1373`), `Account.innovationHubs/innovationPacks(searchVisibility)`, mutations `transferInnovationHubToAccount`, `transferInnovationPackToAccount`, `transferSpaceToAccount`, `transferVirtualContributorToAccount` (`:5314-5320`; the last typed `InnovationPack!`), `createSpace/createInnovationHub/createVirtualContributor/createInnovationPack`, `authorizationPolicyResetOnAccount`, `licenseResetOnAccount`, `updateBaselineLicensePlanOnAccount` | `schema.graphql` | F-3 | Technical Lead |
+| Account types (2) | `USER='user'`, `ORGANIZATION='organization'` | `src/common/enums/account.type.ts:3-6`; `schema.graphql:43-46` | no | Technical Lead |
+| Account roles (1) | `HOST='host'` (enum exists; no role assignment uses it) | `src/common/enums/account.role.ts:3-5` | no | Technical Lead |
+| Account nameID shape | `account-` + first 8 characters of a UUID; profile displayName = the nameID | `account.host.service.ts:50, 63-67` | no | Technical Lead |
+| New-account licence | 7 entitlements (`ACCOUNT_SPACE_FREE/PLUS/PREMIUM`, `ACCOUNT_VIRTUAL_CONTRIBUTOR`, `ACCOUNT_INNOVATION_HUB`, `ACCOUNT_INNOVATION_PACK`, `ACCOUNT_AI_ASSISTANT_TOKENS_MONTH`) at limit 0 / disabled; baseline plan all zeros | `account.host.service.ts:69-118`; `constants.ts:3-10` (ENT-15) | yes | Product Lead |
+| Resource visibility (3) | `HIDDEN='hidden'` (direct access only), `ACCOUNT='account'`, `PUBLIC='public'` | `src/common/enums/search.visibility.ts:3-7`; `schema.graphql:961-965` | yes | Product Lead |
+| Visibility defaults at creation | VC, pack, hub: `searchVisibility = ACCOUNT`, `listedInStore = true` | `innovation.pack.service.ts:91-92`; `virtual.contributor.service.ts:106-107`; `innovation.hub.service.ts:99-100` | yes | Product Lead |
+| Hosted-resources tiers | REGISTERED → PUBLIC; ORGANIZATION_ASSOCIATE → PUBLIC + ACCOUNT; FULL → all; hubs → always; anonymous → null | `account.lookup.service.ts:138-155`; 089 R1/R3 | yes | Product Lead |
+| Full-view gate | self · `READ_USER_PII` on the user · organisation `UPDATE` · `ACCOUNT_LICENSE_MANAGE` or `TRANSFER_RESOURCE_ACCEPT` on the account | `user.resolver.fields.ts:217-266`; `organization.resolver.fields.ts:300-357` | no (F-6) | Security Lead |
+| Closed card shapes | `AccountHostedVirtualContributor {id, profile}`; `AccountHostedInnovationHub {id, nameID, profile}` | `schema.graphql:1355-1380` | no | Technical Lead |
+| Account-admin credential | `account-admin` scoped to the account id; users at registration; organisation ADMIN and OWNER implicitly | `user.service.authorization.ts:167-170`; `role.set.service.ts:831-847` | no | Security Lead |
+| Privileges on the account policy | `CREATE_SPACE`, `CREATE_VIRTUAL`, `CREATE_INNOVATION_PACK`, `CREATE_INNOVATION_HUB`, `TRANSFER_RESOURCE_OFFER`, `TRANSFER_RESOURCE_ACCEPT`, `ACCOUNT_LICENSE_MANAGE`, `AUTHORIZATION_RESET`, `LICENSE_RESET`, `PLATFORM_SUPPORT_ORG_RESOURCES`, `CREATE/READ/UPDATE/DELETE` (+ `GRANT` on child packs/hubs) | `account.service.authorization.ts:324-540` | no | Security Lead |
+| Transfer audit owner | `A9_TRANSFER_INTENDED_OWNERS = [platform-resource-admin]`; resource kinds `space`, `innovation-hub`, `innovation-pack`, `virtual-contributor`; outcome `moved` | `account.resolver.mutations.ts:53-55, 431-446` | no | Security Lead |
+| Error text — transfer refused (source) | `Authorization: unable to grant 'transfer-resource-offer' privilege: transfer <Resource> to another Account: <actorID>` | `account.resolver.mutations.ts:660-665` | no | Technical Lead |
+| Error text — transfer refused (target) | `… 'transfer-resource-accept' privilege: transfer <Resource> to target Account: <actorID>` | `account.resolver.mutations.ts:666-671` | no | Technical Lead |
+| Resource names in transfer texts | `InnovationHub`, `Space`, `Innovation Pack`, `VirtualContributor` | `account.resolver.mutations.ts:412, 474, 531, 594` | no | Technical Lead |
+| Error text — account not found | `Unable to find Account with ID: <id>` / `Unable to find Account on Host with ID: <id>` / `Unable to find Host for account with ID: <id>` | `account.service.ts:376-378`; `account.lookup.service.ts:50-53, 79-82` | no | Technical Lead |
+| Error text — hub subdomain | `Unable to create Innovation Hub: the provided subdomain is already taken: <subdomain>` | `innovation.hub.service.ts` (createInnovationHub) | no | Technical Lead |
+| GraphQL surface | `Account{…}` (`schema.graphql:1276-1330`), `User.account`, `User.hostedResources` (`:7785`), `Organization.account`, `Organization.hostedResources` (`:5542`), `AccountHostedResources` (`:1365-1373`), `Account.innovationHubs/innovationPacks(searchVisibility)`, mutations `transferInnovationHubToAccount`, `transferInnovationPackToAccount`, `transferSpaceToAccount`, `transferVirtualContributorToAccount` (`:5314-5320`; the last typed `InnovationPack!`), `createSpace/createInnovationHub/createVirtualContributor/createInnovationPack`, `authorizationPolicyResetOnAccount`, `licenseResetOnAccount`, `updateBaselineLicensePlanOnAccount` | `schema.graphql` | no (F-3) | Technical Lead |
 
 ### F. Where this lands in the new core
 
@@ -295,7 +286,7 @@ The account becomes the owning `actor` row's host record: `account(id, host_acto
 
 Extracted 2026-11-06 from three sources: server develop @ `eeecf9ddb` (Release/79) code + `schema.graphql`; the legacy server-api suite (`server-api/src/functional-api/account/`, 2 files, 20 cases); the specs, issues and docs listed in § Sources. Scope: the account as the host of resources — user and organisation accounts, who administers them, what they host (spaces, virtual contributors, innovation packs, innovation hubs), how those resources are shown on a profile, transfers between accounts, and the account's part in deletion. Licence rules (plans, limits, baseline plan, subscriptions) are the entitlements area and are cross-referenced as `ENT-nn`, never redone. WHAT and WHY only — no mutations, fixtures or request params. Evidence paths are relative to the server repo unless prefixed `test ›` or `spec ›`.
 
-2026-11-19 converted to the three-section layout. The single why of each rule was sorted into business and technical without rewording, each rule got a short plain version (the exact text is in Appendix A), and every finding, open question and gap was routed to an organisation role. Product has not reviewed this file yet.
+2026-11-19 converted to the three-section layout. The single why of each rule was sorted into business and technical without rewording, each rule got a short plain version (the exact text is in Appendix A), and every finding, open question and gap was routed to an organisation role. Product reviewed section 3 on 2026-11-20.
 
 2026-11-20 whys pass: every rule has at least one why, sourced where a spec, issue, pull request or code comment states it and marked _(draft)_ where QA wrote it. Restating whys with no source were dropped where a sourced one remains. No source was found for ACC-02, ACC-10 or ACC-12; ACC-16 only points to `entitlements.md`.
 

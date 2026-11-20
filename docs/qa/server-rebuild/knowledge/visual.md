@@ -2,9 +2,9 @@
 
 _What the platform does today for images on profiles: the image slots every profile carries (avatar, banner, card, wide banner, whiteboard preview, media-gallery image and video), their allowed formats and sizes, what an upload does to the image, the adjustable banner shape, and default and copied-in avatars: what it does, why, who may, and what is still to answer. The file follows the three-section layout of `communications.md`: **1. Rules**, **2. Rights**, **3. Open questions**, with the evidence in an **Appendix**._
 
-_Open questions per owner: Product Lead 2 · Technical Lead 6 · Quality Lead 6 · Security Lead 2 · Service Operations Lead 1. By state: 12 open · 5 with a suggested answer. Proof of the 18 rules: 8 proven by a test · 10 untested (Appendix A)._
+_Open questions per owner: Product Lead 0 · Technical Lead 6 · Quality Lead 6 · Security Lead 2 · Service Operations Lead 1. By state: 10 open · 5 with a suggested answer · 2 decided. Proof of the 18 rules: 8 proven by a test · 10 untested (Appendix A)._
 
-_Whys of the 18 rules: 13 rest on a source · 4 carry a draft for product to decide · 1 has none, and it already carries an open question (VIS-17)._
+_Whys of the 18 rules: 16 rest on a source or a product decision · 1 still carries a QA draft (VIS-18) · 1 has none, and it carries an open question, a defect marker or a product decision (VIS-17)._
 
 **How to read it**
 
@@ -21,7 +21,7 @@ _Whys of the 18 rules: 13 rest on a source · 4 carry a draft for product to dec
 
 | ID | Rule | Why: business | Why: product | Why: technical | Decided by |
 |---|---|---|---|---|---|
-| VIS-01 | There are seven kinds of image slot, and every profile is created with a fixed set of empty slots: a space gets avatar, banner and card; a user, an organisation and a virtual contributor get an avatar. Slots are never added or removed later, except in a media gallery. **(open: Q-VIS-01)** | — | As a space admin, I want my space to have an avatar, a banner and a card image, so that it is recognisable wherever it shows. _(draft)_ | — (each surface renders a fixed set of image slots; no spec states the set) | Not decided: exists in the code |
+| VIS-01 | There are seven kinds of image slot, and every profile is created with a fixed set of empty slots: a space gets avatar, banner and card; a user, an organisation and a virtual contributor get an avatar. Slots are never added or removed later, except in a media gallery. | — | As a space admin, I want my space to have an avatar, a banner and a card image, so that it is recognisable wherever it shows. | — (each surface renders a fixed set of image slots; no spec states the set) | Product, 2026-11-20 (Q-VIS-01) |
 | VIS-02 | Each slot keeps its own copy of the size limits from the day it was created, so a changed size limit reaches old slots only through a data migration. The allowed shape range and the accepted formats are always the current platform ones. | — | — | Bounds are denormalised for speed; the three banner migrations exist precisely because the upload validator reads the row (migration comments); formats and ratio were deliberately made row-independent so HEIC and the 6–10 range applied without a migration (code comments). | Not decided: exists in the code (migration and code comments) |
 | VIS-03 | The platform publishes default limits per kind: avatar 190–410 px square, banner 1200–3840 × 120–640 px, card 307–410 × 192–256 px. Only the banner's shape can be adjusted (ratio 6 to 10, default 10); every other kind has one fixed shape. **(open: F1)** | Banners must be stored large enough for wide and HiDPI screens (server#6269). | — | The client's crop dialog clamps against these numbers and mirrors 6/10 locally (client plan TC-03, client-web#10178). | client-web#10178; server#6269 |
 
@@ -49,13 +49,13 @@ _Whys of the 18 rules: 13 rest on a source · 4 carry a draft for product to dec
 |---|---|---|---|---|---|
 | VIS-12 | Every new user, organisation and virtual contributor gets an avatar: the one supplied, else the sign-in provider's picture, else a generated one with their initials. It is copied into Alkemio's storage; if that fails, the contributor is still created and keeps the outside link. **(open: F5)** | Every contributor needs a picture; serving it from Alkemio avoids hot-linking a third party; an avatar problem must never block sign-up (code comments; #6396 — LinkedIn's CDN rejected the default user agent). | — | — | Server PR #6396; code comments |
 | VIS-13 | At creation, an image address is copied into the profile's storage only when it already points at an Alkemio file. Any other address is ignored, except an avatar from one of six trusted hosts, which is accepted and copied in. | — | — | Narrowing the external hosts limits SSRF exposure through user-controlled profile input (code comment, PR #5976); "needs to be a url inside Alkemio already uploaded to a StorageBucket" (schema). | Server PR #5976 |
-| VIS-14 | A space created from a template takes the template's avatar, card and banner images, unless the creator supplies their own for that slot. | A template carries a look, and the creator's own choice wins. _(draft)_ | — | — | Not decided: exists in the code |
+| VIS-14 | A space created from a template takes the template's avatar, card and banner images, unless the creator supplies their own for that slot. | A template carries a look, and the creator's own choice wins. | — | — | Product, 2026-11-20 |
 
 ### Reading, galleries and lifecycle
 
 | ID | Rule | Why: business | Why: product | Why: technical | Decided by |
 |---|---|---|---|---|---|
-| VIS-15 | Anyone who may read a profile may read its slots: address, shape, limits, formats and alternative text. Who may fetch the image file itself is a storage rule. | An image is part of the profile it illustrates, so it is as readable as the profile. _(draft)_ | — | — | Not decided: exists in the code |
+| VIS-15 | Anyone who may read a profile may read its slots: address, shape, limits, formats and alternative text. Who may fetch the image file itself is a storage rule. | An image is part of the profile it illustrates, so it is as readable as the profile. | — | — | Product, 2026-11-20 |
 | VIS-16 | A media gallery's images and videos are slots too, added or removed by whoever may update the gallery. An image may be any size from 1 to 8000 px; a video must be mp4, webm, ogg or quicktime. **(defect in part: F4)** | — | — | Media galleries are the one surface with a variable number of visuals (server spec 039 — CAL-40). | Server spec 039 |
 | VIS-17 | A slot cannot be deleted on its own; it goes with its profile, or when it is removed from a media gallery. Its image address is at most 2048 characters and its alternative text at most 120. **(open: Q-VIS-17)** | — | — | — | Not decided: exists in the code |
 | VIS-18 | A Platform Operations Admin may force a contributor's avatar to be stored on Alkemio. The action is audited. | — | — | Operational repair of avatars that were never re-hosted (admin tool). _(draft)_ | Not decided: exists in the code |
@@ -102,24 +102,13 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 ### Product Lead
 
-[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 2 to answer, 1 also involved
+[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 0 to answer
 
-**To answer**
-
-| ID | Area | Type | Question | Owner | Proposed answer | State |
-|---|---|---|---|---|---|---|
-| Q-VIS-01 | Kinds | decision | Why does this rule exist? No source states the reason. No spec states which image slots each kind of profile gets. | Product Lead | — | open |
-| CONST | All | decision | 20 constants are still blank in "product must rule?" (Appendix E). Which of them must product rule on? | Product Lead (Technical Lead and Security Lead rule on the rows pre-filled with their role) | — | open |
-
-**Also involved**
-
-| ID | Area | Type | Question | Owner | Proposed answer | State |
-|---|---|---|---|---|---|---|
-| OQ5 | Shape | spec | There is no workspace spec for the adjustable banner; its whys come from two issues and migration comments. Is a retrospective spec wanted before the new core rebuilds it? | Technical Lead (Product Lead confirms the banner behaviour) | — | open |
+Nothing to answer: every Product Lead question is decided (see Decided).
 
 ### Technical Lead
 
-[Technical Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Technical%20Lead.md) · Delivery (Anton) · 6 to answer, 2 also involved
+[Technical Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Technical%20Lead.md) · Delivery (Anton) · 6 to answer, 1 also involved
 
 **To answer**
 
@@ -129,7 +118,7 @@ _One section per role, so each owner reads only their own part. **To answer** li
 | F4 | Galleries | defect | The stored ratio only holds values below 99.9, but a media-gallery image may have a ratio up to 100 and an upload can compute far more (8000 × 1 px). Clamp the value, or widen the column? | Technical Lead (Quality Lead probes it live, OQ4) | — | open |
 | F5 | Avatars | tidy-up | Copied-in avatars are always declared PNG and stored without a file extension, whatever they are. | Technical Lead | Harmless today; tidy when the file container owns typing. | suggested |
 | F6 | Upload | tidy-up | Two error texts embed the uploaded values, against the repo rule, and two legacy cases pin parts of them. | Technical Lead (Quality Lead rebaselines the two cases) | Not a behaviour change: rebaseline those assertions when the messages are cleaned. | suggested |
-| OQ5 | Shape | spec | There is no workspace spec for the adjustable banner; its whys come from two issues and migration comments. Is a retrospective spec wanted before the new core rebuilds it? | Technical Lead (Product Lead confirms the banner behaviour) | — | open |
+| OQ5 | Shape | spec | There is no workspace spec for the adjustable banner; its whys come from two issues and migration comments. Is a retrospective spec wanted before the new core rebuilds it? | Technical Lead (Product Lead confirms the banner behaviour) | Product, 2026-11-20: the adjustable banner behaves as intended today (default ratio 10, range 6–10); product needs no retrospective spec. Whether engineering wants one stays with the Technical Lead. | open |
 | Q-VIS-17 | Galleries | decision | Why does this rule exist? No source states the reason. A slot cannot be deleted on its own, its address is at most 2048 characters and its alternative text at most 120. | Technical Lead | — | open |
 
 **Also involved**
@@ -137,7 +126,6 @@ _One section per role, so each owner reads only their own part. **To answer** li
 | ID | Area | Type | Question | Owner | Proposed answer | State |
 |---|---|---|---|---|---|---|
 | F7 | Shape | risk | Changing a slot accepts any image address with no check, so whoever may update a slot can point it at an outside image or at nothing. Addresses are checked at creation but not on update. Validate them, or keep this as intended for import tooling? | Security Lead, then Technical Lead | — | open |
-| CONST | All | decision | 20 constants are still blank in "product must rule?" (Appendix E). Which of them must product rule on? | Product Lead (Technical Lead and Security Lead rule on the rows pre-filled with their role) | — | open |
 
 ### Quality Lead
 
@@ -164,7 +152,7 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 ### Security Lead
 
-[Security Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Security%20Lead.md) · Delivery (Valentin) · 2 to answer, 2 also involved
+[Security Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Security%20Lead.md) · Delivery (Valentin) · 2 to answer, 1 also involved
 
 **To answer**
 
@@ -178,7 +166,6 @@ _One section per role, so each owner reads only their own part. **To answer** li
 | ID | Area | Type | Question | Owner | Proposed answer | State |
 |---|---|---|---|---|---|---|
 | F3 | Upload | defect | The server checks only the type the client declares. A PDF declared as PNG is stored first, then refused with a misleading message and deleted. Refuse it before it is stored? | Technical Lead (Security Lead consulted) | Pass the image format list to the file service, as the Collabora path does, so the content is refused before it is stored. | suggested |
-| CONST | All | decision | 20 constants are still blank in "product must rule?" (Appendix E). Which of them must product rule on? | Product Lead (Technical Lead and Security Lead rule on the rows pre-filled with their role) | — | open |
 
 ### Service Operations Lead
 
@@ -189,6 +176,13 @@ _One section per role, so each owner reads only their own part. **To answer** li
 | ID | Area | Type | Question | Owner | Proposed answer | State |
 |---|---|---|---|---|---|---|
 | OQ1 | Upload | check | Which file-service version runs with Release 79? VIS-07 was read from the develop clone and no case exercises it. Confirm the deployed tag, then verify one HEIC upload live. | Service Operations Lead (Quality Lead verifies the upload) | — | open |
+
+### Decided
+
+| Was | Decision | Decided by | Now |
+|---|---|---|---|
+| Q-VIS-01 | A space gets an avatar, a banner and a card, and a user, organisation or virtual contributor an avatar, as today, so that each is recognisable wherever it shows. | Product, 2026-11-20 | VIS-01 |
+| CONST | Product rules on the slots per owner, the size limits of every slot kind, the accepted image formats, the maximum file size, the default avatar and the avatar precedence, ticked "yes" in Appendix E. Error texts, storage, processing and rights go to the Technical Lead or the Security Lead. | Product, 2026-11-20 | Appendix E |
 
 ## Appendix
 
@@ -248,7 +242,7 @@ _The original text of every finding (F) and open question (OQ), with its evidenc
 - **OQ2 — Who-may outside the space.** The access matrix's `visual` section covers space-about slots only; the user, organisation and VC avatar cells above are derived from the self-management and organisation-admin rules in code. Route to contributor-management, or extend the matrix generator to `user/profile/visual` and `organization/profile/visual`.
 - **OQ3 — Is `configuration/banner-visual-constraints › TC-03` red on the nightly?** It pins the pre-#6452 default (6). Expected red since Release 74; check the last report before rebaselining.
 - **OQ4 — Finding 4 live probe.** Whether an extreme-ratio media-gallery image fails at the database or is clamped somewhere unread.
-- **OQ5 — No workspace spec for the banner work.** The client plan is explicit ("No workspace spec exists"); the whys for VIS-09/10/11 come from client-web#10178, server#6269 and migration comments. Decide whether a retrospec (`speckit-retrospec`) is wanted before the new core reimplements the adjustable banner.
+- **OQ5 — No workspace spec for the banner work.** The client plan is explicit ("No workspace spec exists"); the whys for VIS-09/10/11 come from client-web#10178, server#6269 and migration comments. Decide whether a retrospec (`speckit-retrospec`) is wanted before the new core reimplements the adjustable banner. **Product, 2026-11-20:** the banner behaves as intended today; product needs no retrospective spec.
 
 ### D. Test gaps
 
@@ -270,37 +264,37 @@ Behaviours the area has that neither reading nor tests pinned down:
 
 ### E. Constants the rules depend on
 
-_"Rules on it" is pre-filled with the role whose domain covers the value: Product Lead for business values and user-facing copy, Technical Lead for engineering limits and wire shapes, Security Lead for security limits. The "product must rule?" column is unchanged: the reviewer ticks the rows product must rule on. "F-4" in the tick column is finding F4._
+_"Rules on it" is pre-filled with the role whose domain covers the value: Product Lead for business values and user-facing copy, Technical Lead for engineering limits and wire shapes, Security Lead for security limits. The "product must rule?" column was ticked by Product, 2026-11-20 (CONST): "yes" rows wait for a product ruling before the rebuild._
 
 | Constant | Value today | Source | product must rule? | Rules on it |
 |---|---|---|---|---|
-| Visual kinds (7) | `avatar`, `banner`, `card`, `bannerWide`, `whiteboardPreview`, `mediaGalleryImage`, `mediaGalleryVideo` (enum `VisualType`) | `visual.type.ts:24-32`; `schema.graphql:1193` | | Technical Lead |
-| Slots per owner | space about: avatar+banner+card; user / organisation / VC: avatar; callout framing, post: banner+card; whiteboard: card+preview; memo, template, flow state, guidelines: card; innovation hub: wide banner; innovation pack: avatar+card | callers listed under VIS-01 | | Product Lead |
-| AVATAR limits | 190–410 × 190–410 px, ratio 1 fixed | `visual.constraints.ts:39-48` | | Product Lead |
-| BANNER limits | 1200–3840 × 120–640 px, default ratio 10, range 6–10 (history: 384–1536 × 64–256 ratio 6 → #6346 1536–3840 × 154–640 → #6439 1200/120 → #6452 default 10) | `visual.constraints.ts:49-58`; migrations `1785283200000`, `1787600000000`, `1788300000000` | | Product Lead |
-| CARD limits | 307–410 × 192–256 px, ratio 1.6 fixed | `visual.constraints.ts:69-78` | | Product Lead |
-| BANNER_WIDE limits (innovation hubs) | 640–2560 × 64–256 px, ratio 10 fixed — never touched by the banner migrations | `visual.constraints.ts:79-88` | | Product Lead |
-| WHITEBOARD_PREVIEW limits | 500–1800 × 200–720 px, ratio 2.5 fixed | `visual.constraints.ts:59-68` | | Product Lead |
-| MEDIA_GALLERY_IMAGE / _VIDEO limits | 1–8000 × 1–8000 px, default ratio 1, range 0.01–100; video formats mp4, webm, ogg, quicktime | `visual.constraints.ts:16-21, 89-108` | F-4 | Product Lead |
-| Accepted image formats (9) | `image/png`, `image/jpeg`, `image/jpg`, `image/svg+xml`, `image/webp`, `image/gif`, `image/avif`, `image/heic`, `image/heif` (`VISUAL_ALLOWED_TYPES`; `MimeTypeVisual` additionally lists `image/bmp`, `image/x-png` for buckets) | `visual.constraints.ts:4-14`; `mime.file.type.visual.ts:3-15` | F-8 (SVG) | Product Lead (formats) · Security Lead (SVG, F8) |
-| Bucket allowlist the sniffed type is checked against | `DEFAULT_ALLOWED_MIME_TYPES` = all document + all visual MIMEs (conversation buckets: minus SVG) | `mime.file.type.ts:17-39` | F-3 | Security Lead |
-| Maximum file size | 15,728,640 bytes (bucket default; upload middleware; 001 FR-014 for HEIC) | `storage.bucket.service.ts:60`; `alkemio.yml:353-358` | | Product Lead |
-| Upload stream timeout | 60,000 ms | `alkemio.yml:360`; `visual.service.ts:123-127` | | Technical Lead |
-| Image processing (file service) | HEIC/HEIF → JPEG; JPEG/WebP → JPEG quality 82; longest side ≤ 4096 px; EXIF/IPTC/XMP stripped, orientation applied; PNG/BMP/AVIF re-encoded only to rotate; SVG/GIF untouched; primary frame only for multi-frame HEIC | spec 001 FR-003..FR-018; file-service `processor.go:33-85, 188-231` | | Technical Lead |
-| Display ratio storage | decimal(3,1) — one decimal, below 99.9; upload writes `round1(width / height)` | `visual.entity.ts:184-185`; `visual.resolver.mutations.ts:158-168` | F-4 | Technical Lead |
-| Alternative text / address length | 120 / 2048 characters | `entity.field.length.constants.ts:3, 40` | | Technical Lead |
-| Image address shape | `/api/private/rest/storage/document/<document id>` | `document.service.ts:247-250`; test TC-02 | | Technical Lead |
-| Default avatar | `https://eu.ui-avatars.com/api/?name=<first>+<last>&background=<random hex>&color=ffffff&size=200`; names reduced to `[a-z0-9-]` | `avatar.creator.service.ts:8, 45-68` | | Product Lead |
-| Avatar precedence at creation | supplied http(s) URI → identity-provider `avatarURL` → generated | `profile.avatar.service.ts:59-83` | | Product Lead |
-| Trusted external avatar hosts (6) | `eu.ui-avatars.com`, `ui-avatars.com`, `media.licdn.com`, `media.licdn-ei.com`, `avatars.githubusercontent.com`, `graph.microsoft.com` (https only) | `profile.service.ts:463-477, 740-747` | | Security Lead |
-| Outbound image fetch | `User-Agent: Alkemio-Server (+https://alkem.io)`, `Accept: image/*`; static error `Error fetching or processing the image`; re-hosted file named `avatar`, declared `image/png` | `avatar.creator.service.ts:18-29, 70-132`; `storage.bucket.service.ts:884-896` | F-5 | Technical Lead |
-| Error text — declared type | `Image upload type not in allowed mime types` (details: mimeType, allowedTypes), wrapped in `Upload on visual failed!` | `visual.service.ts:287-295, 208-217` | | Technical Lead |
-| Error text — dimensions | `Upload image has a width resolution of '<w>' which is not in the allowed range of <min> - <max> pixels!` / `… height resolution …`; `Image dimensions missing from upload response — cannot validate against visual constraints` | `visual.service.ts:256-311` | F-6 | Technical Lead |
-| Error text — ratio | `Aspect ratio '<x>' is not in the allowed range of <min> - <max>!` | `visual.service.ts:330-334` | F-6 | Technical Lead |
-| Error text — kind | `Invalid VisualType: <name>`; `Visual type (name) must be provided when creating a visual.` | `visual.type.ts:42-45`; `visual.service.ts:50-53` | | Technical Lead |
-| Log signatures | `AVATAR_NOT_STORED_LOCALLY` (profileID, avatarHost, httpStatus, errorCode); `Visual with URL '<uri>' ignored when creating profile <id>` | `profile.avatar.service.ts:141-153`; `profile.service.ts:537-541` | | Technical Lead |
-| Authorization rules | privilege rule `POLICY_RULE_VISUAL_UPDATE` (`update` ← `contribute`); gates: `updateVisual` UPDATE, `uploadImageOnVisual` UPDATE + bucket `FILE_UPLOAD` (fallback UPDATE on gallery/profile/visual when the bucket has no rules); gallery add/remove UPDATE on the gallery; admin re-host `PLATFORM_OPERATIONS_ADMIN` | `visual.service.authorization.ts:200-216`; `visual.resolver.mutations.ts`; `media.gallery.resolver.mutations.ts`; `admin.avatarresolver.mutations.ts` | | Security Lead |
-| GraphQL surface | `Visual{allowedTypes, alternativeText, aspectRatio, authorization, id, maxHeight, maxWidth, minHeight, minWidth, name, sortOrder, uri}`, `VisualConstraints{… minAspectRatio, maxAspectRatio}`, `Config.defaultVisualTypeConstraints(type)`, `Profile.visual(type)`, `Profile.visuals`, `MediaGallery.visuals`, `CreateVisualOnProfileInput{name, uri}`, mutations `updateVisual{visualID, uri!, alternativeText?, aspectRatio?}`, `uploadImageOnVisual(file){visualID, alternativeText?}`, `addVisualToMediaGallery`, `deleteVisualFromMediaGallery`, `adminUpdateContributorAvatars(profileID)`; enum `MimeTypeVisual` | `schema.graphql:1193, 2828, 4590-4591, 5474, 5492, 6186-6188, 8316-8360, 9320-9321, 9547-9554` | | Technical Lead |
+| Visual kinds (7) | `avatar`, `banner`, `card`, `bannerWide`, `whiteboardPreview`, `mediaGalleryImage`, `mediaGalleryVideo` (enum `VisualType`) | `visual.type.ts:24-32`; `schema.graphql:1193` | no | Technical Lead |
+| Slots per owner | space about: avatar+banner+card; user / organisation / VC: avatar; callout framing, post: banner+card; whiteboard: card+preview; memo, template, flow state, guidelines: card; innovation hub: wide banner; innovation pack: avatar+card | callers listed under VIS-01 | yes | Product Lead |
+| AVATAR limits | 190–410 × 190–410 px, ratio 1 fixed | `visual.constraints.ts:39-48` | yes | Product Lead |
+| BANNER limits | 1200–3840 × 120–640 px, default ratio 10, range 6–10 (history: 384–1536 × 64–256 ratio 6 → #6346 1536–3840 × 154–640 → #6439 1200/120 → #6452 default 10) | `visual.constraints.ts:49-58`; migrations `1785283200000`, `1787600000000`, `1788300000000` | yes | Product Lead |
+| CARD limits | 307–410 × 192–256 px, ratio 1.6 fixed | `visual.constraints.ts:69-78` | yes | Product Lead |
+| BANNER_WIDE limits (innovation hubs) | 640–2560 × 64–256 px, ratio 10 fixed — never touched by the banner migrations | `visual.constraints.ts:79-88` | yes | Product Lead |
+| WHITEBOARD_PREVIEW limits | 500–1800 × 200–720 px, ratio 2.5 fixed | `visual.constraints.ts:59-68` | yes | Product Lead |
+| MEDIA_GALLERY_IMAGE / _VIDEO limits | 1–8000 × 1–8000 px, default ratio 1, range 0.01–100; video formats mp4, webm, ogg, quicktime | `visual.constraints.ts:16-21, 89-108` | yes (F-4) | Product Lead |
+| Accepted image formats (9) | `image/png`, `image/jpeg`, `image/jpg`, `image/svg+xml`, `image/webp`, `image/gif`, `image/avif`, `image/heic`, `image/heif` (`VISUAL_ALLOWED_TYPES`; `MimeTypeVisual` additionally lists `image/bmp`, `image/x-png` for buckets) | `visual.constraints.ts:4-14`; `mime.file.type.visual.ts:3-15` | yes (F-8 (SVG)) | Product Lead (formats) · Security Lead (SVG, F8) |
+| Bucket allowlist the sniffed type is checked against | `DEFAULT_ALLOWED_MIME_TYPES` = all document + all visual MIMEs (conversation buckets: minus SVG) | `mime.file.type.ts:17-39` | no (F-3) | Security Lead |
+| Maximum file size | 15,728,640 bytes (bucket default; upload middleware; 001 FR-014 for HEIC) | `storage.bucket.service.ts:60`; `alkemio.yml:353-358` | yes | Product Lead |
+| Upload stream timeout | 60,000 ms | `alkemio.yml:360`; `visual.service.ts:123-127` | no | Technical Lead |
+| Image processing (file service) | HEIC/HEIF → JPEG; JPEG/WebP → JPEG quality 82; longest side ≤ 4096 px; EXIF/IPTC/XMP stripped, orientation applied; PNG/BMP/AVIF re-encoded only to rotate; SVG/GIF untouched; primary frame only for multi-frame HEIC | spec 001 FR-003..FR-018; file-service `processor.go:33-85, 188-231` | no | Technical Lead |
+| Display ratio storage | decimal(3,1) — one decimal, below 99.9; upload writes `round1(width / height)` | `visual.entity.ts:184-185`; `visual.resolver.mutations.ts:158-168` | no (F-4) | Technical Lead |
+| Alternative text / address length | 120 / 2048 characters | `entity.field.length.constants.ts:3, 40` | no | Technical Lead |
+| Image address shape | `/api/private/rest/storage/document/<document id>` | `document.service.ts:247-250`; test TC-02 | no | Technical Lead |
+| Default avatar | `https://eu.ui-avatars.com/api/?name=<first>+<last>&background=<random hex>&color=ffffff&size=200`; names reduced to `[a-z0-9-]` | `avatar.creator.service.ts:8, 45-68` | yes | Product Lead |
+| Avatar precedence at creation | supplied http(s) URI → identity-provider `avatarURL` → generated | `profile.avatar.service.ts:59-83` | yes | Product Lead |
+| Trusted external avatar hosts (6) | `eu.ui-avatars.com`, `ui-avatars.com`, `media.licdn.com`, `media.licdn-ei.com`, `avatars.githubusercontent.com`, `graph.microsoft.com` (https only) | `profile.service.ts:463-477, 740-747` | no | Security Lead |
+| Outbound image fetch | `User-Agent: Alkemio-Server (+https://alkem.io)`, `Accept: image/*`; static error `Error fetching or processing the image`; re-hosted file named `avatar`, declared `image/png` | `avatar.creator.service.ts:18-29, 70-132`; `storage.bucket.service.ts:884-896` | no (F-5) | Technical Lead |
+| Error text — declared type | `Image upload type not in allowed mime types` (details: mimeType, allowedTypes), wrapped in `Upload on visual failed!` | `visual.service.ts:287-295, 208-217` | no | Technical Lead |
+| Error text — dimensions | `Upload image has a width resolution of '<w>' which is not in the allowed range of <min> - <max> pixels!` / `… height resolution …`; `Image dimensions missing from upload response — cannot validate against visual constraints` | `visual.service.ts:256-311` | no (F-6) | Technical Lead |
+| Error text — ratio | `Aspect ratio '<x>' is not in the allowed range of <min> - <max>!` | `visual.service.ts:330-334` | no (F-6) | Technical Lead |
+| Error text — kind | `Invalid VisualType: <name>`; `Visual type (name) must be provided when creating a visual.` | `visual.type.ts:42-45`; `visual.service.ts:50-53` | no | Technical Lead |
+| Log signatures | `AVATAR_NOT_STORED_LOCALLY` (profileID, avatarHost, httpStatus, errorCode); `Visual with URL '<uri>' ignored when creating profile <id>` | `profile.avatar.service.ts:141-153`; `profile.service.ts:537-541` | no | Technical Lead |
+| Authorization rules | privilege rule `POLICY_RULE_VISUAL_UPDATE` (`update` ← `contribute`); gates: `updateVisual` UPDATE, `uploadImageOnVisual` UPDATE + bucket `FILE_UPLOAD` (fallback UPDATE on gallery/profile/visual when the bucket has no rules); gallery add/remove UPDATE on the gallery; admin re-host `PLATFORM_OPERATIONS_ADMIN` | `visual.service.authorization.ts:200-216`; `visual.resolver.mutations.ts`; `media.gallery.resolver.mutations.ts`; `admin.avatarresolver.mutations.ts` | no | Security Lead |
+| GraphQL surface | `Visual{allowedTypes, alternativeText, aspectRatio, authorization, id, maxHeight, maxWidth, minHeight, minWidth, name, sortOrder, uri}`, `VisualConstraints{… minAspectRatio, maxAspectRatio}`, `Config.defaultVisualTypeConstraints(type)`, `Profile.visual(type)`, `Profile.visuals`, `MediaGallery.visuals`, `CreateVisualOnProfileInput{name, uri}`, mutations `updateVisual{visualID, uri!, alternativeText?, aspectRatio?}`, `uploadImageOnVisual(file){visualID, alternativeText?}`, `addVisualToMediaGallery`, `deleteVisualFromMediaGallery`, `adminUpdateContributorAvatars(profileID)`; enum `MimeTypeVisual` | `schema.graphql:1193, 2828, 4590-4591, 5474, 5492, 6186-6188, 8316-8360, 9320-9321, 9547-9554` | no | Technical Lead |
 
 ### F. Where this lands in the new core
 
