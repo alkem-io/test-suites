@@ -4,7 +4,7 @@ _What the platform does today for callouts: creating and framing them, their set
 
 _Open questions per owner: Product Lead 0 · Technical Lead 8 · Quality Lead 8 · Security Lead 1 · Architecture Lead 4. By state: 10 open · 11 with a suggested answer · 10 decided. Proof of the 77 rules: 45 proven by a test · 32 untested (Appendix A)._
 
-_Whys of the 77 rules: 66 rest on a source · 8 carry a draft for product to decide · 3 have none, and each already carries an open question (CAL-11, CAL-27, CAL-39)._
+_Whys of the 77 rules: 76 rest on a source or a product decision · 1 carry a technical draft for the Technical Lead (CAL-03) · 0 have none (—)._
 
 **How to read it**
 
@@ -65,7 +65,7 @@ _Whys of the 77 rules: 66 rest on a source · 8 carry a draft for product to dec
 |---|---|---|---|---|---|
 | CAL-26 | A contribution is accepted only if its type is one the callout allows, and only with the content that belongs to that type. | — | — | Only allowed contribution types can be created in a collection (016 FR-007). | Server spec 016 FR-007 |
 | CAL-27 | Every type of contribution needs the same single right to contribute. The separate rights shown per type are never checked, and memo has none. | Whoever may contribute to a callout may add any type it allows; the callout's allowed types decide what can be added (Product, 2026-11-20). | — | — (016 FR-010 asks for memo authorization "consistent with post/whiteboard"; crosscheck F10) | Not decided: exists in the code; Product, 2026-11-20 (was F1): behaviour stays, tracked |
-| CAL-28 | The members of a callout's own Space can contribute. So can members of the parent Space when the Subspace inherits membership rights, and Platform Support only where the Space allows it. Non-members and visitors never can. | Contributions are member content; inheritance is a subspace setting (collaboration contributor rule). _(draft)_ | — | — | Not decided: exists in the code |
+| CAL-28 | The members of a callout's own Space can contribute. So can members of the parent Space when the Subspace inherits membership rights, and Platform Support only where the Space allows it. Non-members and visitors never can. | Contributions are member content; inheritance is a subspace setting (collaboration contributor rule). | — | — | Product, 2026-11-20 |
 | CAL-29 | Whoever adds a contribution owns it and can read, change and delete it. The Space's admins can do the same and can also move it. Platform Resource Admin can move any contribution. | Members curate their own input; admins moderate (contribution/post/link creator rules; 027 A9 for the move family). | — | — | Spec 027 A9 (moving); the owner rules exist in the code only |
 | CAL-30 | On a published callout in a Space, every new contribution adds an activity entry and sends one notification, unless the contributor switched the notification off. On a draft or knowledge-base callout nothing is written or sent. **(open: F16)** | Members are told about input they can see; a silent switch is an author's choice that never overrides a recipient's opt-in, and the activity entry is written first so a notification failure cannot lose it (070 FR-003/007/013). | — | — | Spec 070 FR-003/007/013 |
 | CAL-31 | A whiteboard contribution created empty starts from the callout's default whiteboard. Copying from another whiteboard needs the right to read that one. | Contribution defaults give members a starting template; cloning must not leak unreadable boards (resolver comment). | — | — | Not decided: exists in the code |
@@ -77,7 +77,7 @@ _Whys of the 77 rules: 66 rest on a source · 8 carry a draft for product to dec
 | ID | Rule | Why: business | Why: product | Why: technical | Decided by |
 |---|---|---|---|---|---|
 | CAL-34 | Every post has its own comment thread: members and admins of the Space comment, reply and react; non-members cannot. A comment is removed only by its sender or an admin; the post's author cannot remove other people's comments. | — | — | The room inherits the post's policy before the author rule is added so the author gets no moderation over others' comments (code comment). | Not decided: exists in the code |
-| CAL-35 | A post is changed or deleted by its author or an admin. Other members and non-members are refused. The links on a post are managed by admins only. | Members curate their own posts; admins moderate. _(draft)_ | — | — | Not decided: exists in the code |
+| CAL-35 | A post is changed or deleted by its author or an admin. Other members and non-members are refused. The links on a post are managed by admins only. | Members curate their own posts; admins moderate. | — | — | Product, 2026-11-20 |
 | CAL-36 | A flow phase can have a default post template: a member's new post in that phase starts with the template's text. Deleting the template never blocks anything and only clears the link. | Consistent structure for members' posts without blocking template deletion (server spec 029). | — | — | Server spec 029 |
 
 ### Whiteboards and memos
@@ -163,7 +163,7 @@ _Whys of the 77 rules: 66 rest on a source · 8 carry a draft for product to dec
 | ID | Rule | Why: business | Why: product | Why: technical | Decided by |
 |---|---|---|---|---|---|
 | CAL-75 | A list of callouts holds only those the viewer may read. It can be filtered by contribution type, tags or flow phase, and ordered by activity, at random or by the stored order. | Only tags and callouts the requester may read ever appear (017 FR-007). | — | — | Server spec 017 FR-007 |
-| CAL-76 | A callout's contributions come back in their stored order and are counted per type. Reading them needs the right to read the callout. | — | As a space member, I want a callout's contributions in the order its admins set, with a count per type, so that I see at a glance what it holds. _(draft)_ | — | Not decided: exists in the code |
+| CAL-76 | A callout's contributions come back in their stored order and are counted per type. Reading them needs the right to read the callout. | — | As a space member, I want a callout's contributions in the order its admins set, with a count per type, so that I see at a glance what it holds. | — | Product, 2026-11-20 |
 | CAL-77 | A published callout can be read by everyone on a public Space, by members only on a private Space, and by nobody on an archived Space. The callouts of a private Subspace are hidden from people who are not its members. | — | — | Callouts inherit the space's read rule through collaboration → callouts set → callout (server `docs/authorization-forest.md`). | Server docs/authorization-forest.md |
 
 ## 2. Rights
@@ -547,6 +547,8 @@ Extracted 2026-11-06 from three sources: server develop @ `eeecf9ddb` (Release/7
 History: 2026-11-19 converted to the three-section layout: the single why was split in three, the who-may table became section 2, and every finding, open question and unexplained rule became a question row routed to an organisation role. Nothing in this file has been reviewed by product yet.
 
 2026-11-20 whys pass: every rule has at least one why, sourced where a spec, issue or code line states it and marked _(draft)_ where QA wrote it. Restating whys with no source were dropped where a sourced one remains. Q-CAL-06 gets a suggested answer in part from the web-address code; CAL-41's error rule is traced to spec 080.
+
+2026-11-20 product review by the Product Owner, on behalf of the Product Lead: F1, F2, F15 decided with today's behaviour kept and the wanted change tracked in `PRODUCT-ISSUES.md`; F3, F9, F11, F13, Q-CAL-25, Q-CAL-33, Q-CAL-39 decided; the product and business drafts confirmed; Appendix E ticked for the fifteen Product Lead constants.
 
 #### Sources
 
