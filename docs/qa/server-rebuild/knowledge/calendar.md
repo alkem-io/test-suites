@@ -2,7 +2,7 @@
 
 _What the platform does today for the calendar every space carries and its events: creating, reading, updating and deleting them, whole-day and timed dates, the Google, Outlook and ICS exports, subspace events showing on the parent calendar, and the notifications and activity an event produces. It says what the server does, why, who may, and what is still to answer. The file has three sections, **1. Rules**, **2. Rights** and **3. Open questions**, with the evidence in an **Appendix**._
 
-_Open questions per owner: Product Lead 4 · Technical Lead 5 · Quality Lead 4 · Architecture Lead 1. By state: 9 open · 1 change decided · 4 with a suggested answer · 3 decided. Proof of the 25 rules: 12 proven by a test · 13 untested (Appendix A)._
+_Open questions per owner: Product Lead 3 · Technical Lead 5 · Quality Lead 4 · Architecture Lead 1. By state: 8 open · 1 change decided · 4 with a suggested answer · 4 decided. Proof of the 25 rules: 12 proven by a test · 13 untested (Appendix A)._
 
 _Whys of the 25 rules: 12 rest on a source · 11 carry a draft for product to decide · 2 have none, and each already carries an open question (EVT-24, EVT-25)._
 
@@ -58,7 +58,7 @@ _Whys of the 25 rules: 12 rest on a source · 11 carry a draft for product to de
 | ID | Rule | Why: business | Why: product | Why: technical | Decided by |
 |---|---|---|---|---|---|
 | EVT-17 | A whole-day event is a plain calendar date that never shifts with anyone's time zone. Every export (ICS file, Google link, Outlook link) carries that date, and stays exact across year ends and clock changes. | An exported event on the wrong day is actively misleading (023 US1). | — | RFC 5545 exclusive end; UTC arithmetic has no DST (023 FR-001/003/005/006, ADR 0001; closes server#6267). | Spec 023 FR-001/003/005/006; ADR 0001 |
-| EVT-18 | A timed event is exported as an exact moment in time, with a hint that the time zone is Europe/Amsterdam. **(open: OQ3)** | — | — | Timed events were already correct; importers localise an instant (023 FR-007, SC-005). | Spec 023 FR-007, SC-005 |
+| EVT-18 | A timed event is exported as an exact moment in time, with a hint that the time zone is Europe/Amsterdam. | — | — | Timed events were already correct; importers localise an instant (023 FR-007, SC-005). | Spec 023 FR-007, SC-005; Product, 2026-11-20 (was OQ3): Europe/Amsterdam is the hint for every customer |
 | EVT-19 | An event's dates are checked only when its calendar links or its ICS file are read, not when it is created or updated. A timed event must end after it starts; a whole-day event may start and end on the same day. An event with bad dates is saved, and then fails every time its links are read. **(open: F4, OQ4)** | — | — | 023 edge case: "Server date-range validation MUST accept start === end for whole-day events … only timed events require end strictly after start"; validating at write is not stated anywhere. | Spec 023 edge case (what to accept); checking only on read is not decided |
 
 ### Exporting
@@ -114,14 +114,13 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 ### Product Lead
 
-[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 4 to answer
+[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 3 to answer
 
 **To answer**
 
 | ID | Area | Type | Question | Owner | Proposed answer | State |
 |---|---|---|---|---|---|---|
 | F7 | Lifecycle | decision | A creator who has left the community can still update and delete the events they created. Is that intended? | Product Lead | Product, 2026-11-20: rights end on leaving. A former member can no longer update or delete the events they created; space admins keep theirs. Issue: to file. | change decided |
-| OQ3 | Dates | decision | Is Europe/Amsterdam the intended time-zone hint in the ICS file for every customer? It is fixed in the code and no spec states it. | Product Lead (Service Operations Lead for the per-environment side) | — | open |
 | Q-EVT-25 | Lifecycle | decision | Why does this rule exist? When the creator's account is gone the event still shows and nobody inherits the creator's rights; no source states the reason. (F8 asks what to do with the left-over id.) | Product Lead | — | open |
 | CONST | All | decision | 22 of the 27 constants are still blank in "product must rule?" (Appendix E). Which of them must product rule on? | Product Lead (Technical Lead and Security Lead for the rows pre-filled with their name) | — | open |
 
@@ -172,11 +171,7 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 [Service Operations Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Sub-circles/Operational%20Services/Roles/Service%20Operations%20Lead.md) · Delivery › Operational Services (Valentin) · 1 also involved
 
-**Also involved**
-
-| ID | Area | Type | Question | Owner | Proposed answer | State |
-|---|---|---|---|---|---|---|
-| OQ3 | Dates | decision | Is Europe/Amsterdam the intended time-zone hint in the ICS file for every customer? It is fixed in the code and no spec states it. | Product Lead (Service Operations Lead for the per-environment side) | — | open |
+Nothing left: OQ3, where this role was involved, was decided on 2026-11-20 (see Decided).
 
 ### Architecture Lead
 
@@ -194,6 +189,7 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 | Was | Decision | Decided by | Now |
 |---|---|---|---|
+| OQ3 | Europe/Amsterdam is the intended ICS time-zone hint for every customer. | Product, 2026-11-20 | EVT-18 |
 | F1 | Downloading the ICS file keeps requiring sign-in; client-web spec 004 US3 scenario 4 (download from the email without signing in) is not adopted. | Product, 2026-11-20 | EVT-22 |
 | Q-EVT-11 | An event shown on a parent calendar names its subspace, as asked in client-web#6876. | Product, 2026-11-20 | EVT-11 |
 | F3 | A top-level space's calendar shows the events of its direct subspaces only; one level up is the product rule (as chosen in client-web#6876). | Product, 2026-11-20 | EVT-10 |
