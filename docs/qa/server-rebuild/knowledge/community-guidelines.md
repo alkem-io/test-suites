@@ -4,13 +4,13 @@ _What the platform does today for a Space's community guidelines: one record per
 
 _Open questions per owner: Product Lead 5 · Technical Lead 3 · Quality Lead 2 · Service Operations Lead 1. By state: 9 open · 2 with a suggested answer. Proof of the 13 rules: 5 proven by a test · 8 untested (Appendix A)._
 
-_Whys of the 13 rules: 12 rest on a source · none carries a draft · 1 has none, and it already carries an open question (CGL-12: Q-CGL-12)._
+_Whys of the 13 rules: 11 rest on a source · 1 carries a draft for product to decide · 1 has none, and it already carries an open question (CGL-12: Q-CGL-12)._
 
 **How to read it**
 
 - **Rule** is one or two plain sentences. The exact behaviour, with error messages and limits, is in Appendix A under the same id. The new core is checked against the exact text.
 - **Why: business** is what Alkemio needs. **Why: product** is the user story. **Why: technical** is the engineering reason. A rule needs at least one why, and gets a second or third only where it adds something for the decision or the code. "—" means none is given.
-- A why that names a spec, issue, pull request, code comment or code line rests on that source. A why ending in _(draft)_ was written by QA and no source states it: product keeps, rewrites or deletes it, and sets **Decided by**. A rule with no why at all carries an open question in section 3.
+- A why that names a spec, issue, pull request, code comment or code line rests on that source. A why, or the part of a why, ending in _(draft)_ was written by QA and no source states it: product keeps, rewrites or deletes it, and sets **Decided by**. A user story always ends in its "so that"; where no source gives one, QA wrote it. A rule with no why at all carries an open question in section 3.
 - **Decided by** names the source of the decision: a spec, a commit, a pull request or an issue. "Not decided: exists in the code" means the behaviour is in the code and nobody chose it in a source we could find.
 - A marker in bold at the end of a rule points at section 3: **(open: F3)** means a question on this rule is still open, **(defect: F2)** means today's behaviour is a fault and must not be copied as intended, **(defect in part: F5)** means part of it is. A rule with no marker stands as written. Every rule is logged as the server behaves today, also when that is not the intended end state. Whether a test proves the rule sits in Appendix A as **proven** or **untested**.
 - Hard rules are not marked yet. Some rules are choices that a new feature may challenge, and some can never change; a later version will mark the second kind with "(hard rule)" after the why that makes it so. Until then, no marker does not mean a rule is open to change.
@@ -22,7 +22,7 @@ _Whys of the 13 rules: 12 rest on a source · none carries a draft · 1 has none
 
 | ID | Rule | Why: business | Why: product | Why: technical | Decided by |
 |---|---|---|---|---|---|
-| CGL-01 | Every Space and Subspace has exactly one set of community guidelines, created with it: a copy of its template's guidelines, or empty when the template has none. It cannot be deleted on its own, only with the Space. **(open: F2)** | — | As a space admin, I want all members to know the agreements on how we work together in this Space (server#3674). | "We cannot really delete the entity" — the record is a fixed part of the space's About (resolver comment); the empty default is a placeholder pending a defaults service (service TODO). | server#3674 (one record per community); the copy from the template is not decided (F2) |
+| CGL-01 | Every Space and Subspace has exactly one set of community guidelines, created with it: a copy of its template's guidelines, or empty when the template has none. It cannot be deleted on its own, only with the Space. **(open: F2)** | — | As a space admin, I want all members to know the agreements on how we work together in this Space (server#3674), so that everyone collaborates on the same terms. _(draft)_ | "We cannot really delete the entity" — the record is a fixed part of the space's About (resolver comment); the empty default is a placeholder pending a defaults service (service TODO). | server#3674 (one record per community); the copy from the template is not decided (F2) |
 | CGL-02 | Guidelines have a title, a text, a list of links, a card image and tags. Files linked from the text or the links are copied into the guidelines' own storage when they are created; if that fails, nothing is created. | — | — | Two-phase creation after #6004/#6005 so no half-built record survives. | Server #6004, #6005; server PR #6014 |
 
 ### Editing and emptying
@@ -30,7 +30,7 @@ _Whys of the 13 rules: 12 rest on a source · none carries a draft · 1 has none
 | ID | Rule | Why: business | Why: product | Why: technical | Decided by |
 |---|---|---|---|---|---|
 | CGL-03 | A Space's admins can change the title, text and links, and members see the change. The title must be 3 to 128 characters; the text can be up to 65,568 characters. | — | — | Profile validation is shared with every other profile (DTO); the 3-character floor is what makes a separate "empty" action necessary (CGL-04). | Not decided: exists in the code |
-| CGL-04 | Emptying the guidelines is a separate action: it clears the title and the text and deletes every link, while the image and tags stay. It needs the same right as editing. | — | As a space admin, I want to remove guidelines I no longer want by clearing their title and text (client-web#7011). | "Update mutation doesn't allow empty values. And we cannot really delete the entity, but this will leave it empty." (resolver comment, PR #4740). | client-web#7011; server PR #4740 |
+| CGL-04 | Emptying the guidelines is a separate action: it clears the title and the text and deletes every link, while the image and tags stay. It needs the same right as editing. | — | As a space admin, I want to remove guidelines I no longer want by clearing their title and text, so that they stop showing on the community tab (client-web#7011). | "Update mutation doesn't allow empty values. And we cannot really delete the entity, but this will leave it empty." (resolver comment, PR #4740). | client-web#7011; server PR #4740 |
 
 ### Who sees them
 
