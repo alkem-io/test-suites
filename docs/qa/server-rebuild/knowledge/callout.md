@@ -2,7 +2,7 @@
 
 _What the platform does today for callouts: creating and framing them, their settings, publishing and closing, contributions, posts and comments, Forms, polls, reactions, the Contributors and Subspaces collections, transfer, deletion and reading: what it does, why, who may, and what is still to answer. The layout is the three-section one of `communications.md`: **1. Rules**, **2. Rights**, **3. Open questions**, with the evidence in an **Appendix**._
 
-_Open questions per owner: Product Lead 0 · Technical Lead 8 · Quality Lead 8 · Security Lead 1 · Architecture Lead 4. By state: 11 open · 10 with a suggested answer · 10 decided. Proof of the 77 rules: 45 proven by a test · 32 untested (Appendix A)._
+_Open questions per owner: Product Lead 0 · Technical Lead 8 · Quality Lead 8 · Security Lead 1 · Architecture Lead 4. By state: 10 open · 11 with a suggested answer · 10 decided. Proof of the 77 rules: 45 proven by a test · 32 untested (Appendix A)._
 
 _Whys of the 77 rules: 66 rest on a source · 8 carry a draft for product to decide · 3 have none, and each already carries an open question (CAL-11, CAL-27, CAL-39)._
 
@@ -243,7 +243,7 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 | ID | Area | Type | Question | Owner | Proposed answer | State |
 |---|---|---|---|---|---|---|
-| CONST | All | decision | 35 constants are blank in "product must rule?" (Appendix E). Which of them must product rule on? | Product Lead (Technical Lead and Security Lead rule on the engineering and access values) | — | open |
+| CONST | All | decision | 35 constants are blank in "product must rule?" (Appendix E). Which of them must product rule on? | Product Lead (Technical Lead and Security Lead rule on the engineering and access values) | Product, 2026-11-20: all fifteen Product Lead rows must be ruled on; server defaults and poll limits follow F15 and F13. The Technical and Security Lead rows are theirs to tick. | suggested |
 
 **Also involved**
 
@@ -271,7 +271,7 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 | ID | Area | Type | Question | Owner | Proposed answer | State |
 |---|---|---|---|---|---|---|
-| CONST | All | decision | 35 constants are blank in "product must rule?" (Appendix E). Which of them must product rule on? | Product Lead (Technical Lead and Security Lead rule on the engineering and access values) | — | open |
+| CONST | All | decision | 35 constants are blank in "product must rule?" (Appendix E). Which of them must product rule on? | Product Lead (Technical Lead and Security Lead rule on the engineering and access values) | Product, 2026-11-20: all fifteen Product Lead rows must be ruled on; server defaults and poll limits follow F15 and F13. The Technical and Security Lead rows are theirs to tick. | suggested |
 
 ### Quality Lead
 
@@ -306,7 +306,7 @@ _One section per role, so each owner reads only their own part. **To answer** li
 |---|---|---|---|---|---|---|
 | F4 | Transfer | defect | The API description of a transfer says the person who runs it becomes the creator. The code keeps the original creator, who keeps full rights on the callout in its new Space. Is the description wrong, or the code? | Technical Lead (Security Lead: the original creator keeps rights in the new Space) | — | open |
 | F6 | Forms | defect | After a Subspace moves under another top-level Space, the new parent's admins can delete Form responses but cannot read them, and the old parent's admins still can read them (server#6592; 4 test cells skipped). | Technical Lead (Security Lead: the old parent's admins still read responses) | A defect, filed as server#6592. | suggested |
-| CONST | All | decision | 35 constants are blank in "product must rule?" (Appendix E). Which of them must product rule on? | Product Lead (Technical Lead and Security Lead rule on the engineering and access values) | — | open |
+| CONST | All | decision | 35 constants are blank in "product must rule?" (Appendix E). Which of them must product rule on? | Product Lead (Technical Lead and Security Lead rule on the engineering and access values) | Product, 2026-11-20: all fifteen Product Lead rows must be ruled on; server defaults and poll limits follow F15 and F13. The Technical and Security Lead rows are theirs to tick. | suggested |
 
 ### Architecture Lead
 
@@ -494,29 +494,29 @@ _"Rules on it" is pre-filled with the role whose domain covers the value: Produc
 
 | Constant | Value today | Source | product must rule? | Rules on it |
 |---|---|---|---|---|
-| Framing kinds (10) | `NONE`, `WHITEBOARD`, `LINK`, `MEMO`, `MEDIA_GALLERY`, `POLL`, `COLLABORA_DOCUMENT`, `CONTRIBUTORS`, `SPACES`, `FORM` | `schema.graphql:335-346` |  | Product Lead |
-| Contribution types (5) | `POST`, `WHITEBOARD`, `LINK`, `MEMO`, `COLLABORA_DOCUMENT` | `schema.graphql:294-300` |  | Product Lead |
+| Framing kinds (10) | `NONE`, `WHITEBOARD`, `LINK`, `MEMO`, `MEDIA_GALLERY`, `POLL`, `COLLABORA_DOCUMENT`, `CONTRIBUTORS`, `SPACES`, `FORM` | `schema.graphql:335-346` | yes (Product, 2026-11-20) | Product Lead |
+| Contribution types (5) | `POST`, `WHITEBOARD`, `LINK`, `MEMO`, `COLLABORA_DOCUMENT` | `schema.graphql:294-300` | yes (Product, 2026-11-20) | Product Lead |
 | Admin-only, collaboration-only framings | `CONTRIBUTORS`, `SPACES`, `FORM` | `callout.restricted.framing.guard.ts` |  | Security Lead |
 | Fixed-kind framings | `SPACES` (no change out), `FORM` (no change in or out); templates may only change to `NONE` | `callout.framing.service.ts:583-616` |  | Technical Lead |
 | Visibility / contributor group / selection mode / callouts-set type | `DRAFT`, `PUBLISHED` / `MEMBERS`, `ADMINS`, `NONE` / `AUTO`, `CUSTOM` / `COLLABORATION`, `KNOWLEDGE_BASE` | `schema.graphql:288-292, 351-364` |  | Technical Lead |
-| Server defaults for a new callout | visibility `PUBLISHED`; framing comments on; contributions off, `MEMBERS`, no types, contribution comments on | `callout.settings.default.ts:4-15` | F15 (client always starts DRAFT) | Product Lead |
+| Server defaults for a new callout | visibility `PUBLISHED`; framing comments on; contributions off, `MEMBERS`, no types, contribution comments on | `callout.settings.default.ts:4-15` | decided (F15) (Product, 2026-11-20) | Product Lead |
 | Per-type privilege rules from allowed types | LINK → `contribute`; POST → `create-post`; WHITEBOARD → `create-whiteboard`; COLLABORA_DOCUMENT → `contribute`; MEMO → none; mutation gate always `contribute` | `callout.service.authorization.ts:383-406`; `callout.resolver.mutations.ts:565` | F1 | Security Lead |
 | Draft readers | space `ADMIN` credentials with parents + creator + (empty) platform list | `callout.service.authorization.ts:206-229`; `callout.platform.read.credentials.ts:16` | F3 | Security Lead |
 | Publisher-rewrite roles | `PLATFORM_CONTENT_FULL_ACCESS`, `PLATFORM_RESOURCE_ADMIN` | `callout.platform.read.credentials.ts:30-36` |  | Security Lead |
 | Transfer roles | `PLATFORM_RESOURCE_ADMIN` (offer + accept) | `callouts.set.service.authorization.ts:69-97` |  | Security Lead |
 | Sort order of a new callout / contribution | `min(existing, 0) − 1` / `min(existing) − 1` or 1 | `callouts.set.service.ts:329-334`; `callout.service.ts:1188-1198` |  | Technical Lead |
-| Selection cap / dedupe | 500 ids, first occurrence kept | `callout.settings.selection.dto.create.ts:31`; `callout.framing.service.ts:1141-1146` |  | Product Lead |
-| Contributor types allowed in a Contributors callout | `USER`, `ORGANIZATION`, `VIRTUAL_CONTRIBUTOR` (≥1) | `callout.framing.service.ts:919-940` |  | Product Lead |
+| Selection cap / dedupe | 500 ids, first occurrence kept | `callout.settings.selection.dto.create.ts:31`; `callout.framing.service.ts:1141-1146` | yes (Product, 2026-11-20) | Product Lead |
+| Contributor types allowed in a Contributors callout | `USER`, `ORGANIZATION`, `VIRTUAL_CONTRIBUTOR` (≥1) | `callout.framing.service.ts:919-940` | yes (Product, 2026-11-20) | Product Lead |
 | Map view bounds | lon [−180, 180], lat [−90, 90], zoom [0, 22], finite | `callout.framing.service.ts:997-998` |  | Technical Lead |
-| Card variants | `COMPACT` (default), `EXPANDED` | `callout.framing.service.ts:1192` |  | Product Lead |
-| Role label / rank on contributor cards | LEAD → `lead` rank 2; ADMIN, MEMBER → `member` rank 1 | `contributor.collection.service.ts` (`getRankedIdsForType`) |  | Product Lead |
-| Tag merge order | USER: skills → keywords; ORGANIZATION, VIRTUAL_CONTRIBUTOR: keywords → capabilities; never `default`/`flow-state`/`task` | `contributor.card.enrichment.ts` |  | Product Lead |
-| Reaction allow-list (7) | `heart`, `hugging-face`, `clapping-hands`, `light-bulb`, `bullseye`, `check-mark`, `rocket`; who-reacted cap 100 | `reaction.constants.ts`; `reaction.service.ts:160` |  | Product Lead |
-| Form limits | questions 1–50; options 2–20; prompt/label/title ≤ 512; explanation/description ≤ 2048; short answer ≤ 512, long ≤ 2048 UTF-16 units; responses page 50 | `entity.field.length.constants.ts:20-24`; `callout.form.service.ts`; `callout.form.response.service.ts` |  | Product Lead |
-| Form defaults | visibility `ADMINS`; mode `SINGLE`; state `OPEN`; `defaultCollapsed` false; audience width ADMINS 0 < MEMBERS 1 | `callout.form.service.ts:76-83`; `callout.form.settings.interface.ts:36-37` |  | Product Lead |
-| Form question types | `SHORT_TEXT`, `LONG_TEXT`, `SINGLE_CHOICE`, `MULTIPLE_CHOICE` | `schema.graphql:308-314` |  | Product Lead |
+| Card variants | `COMPACT` (default), `EXPANDED` | `callout.framing.service.ts:1192` | yes (Product, 2026-11-20) | Product Lead |
+| Role label / rank on contributor cards | LEAD → `lead` rank 2; ADMIN, MEMBER → `member` rank 1 | `contributor.collection.service.ts` (`getRankedIdsForType`) | yes (Product, 2026-11-20) | Product Lead |
+| Tag merge order | USER: skills → keywords; ORGANIZATION, VIRTUAL_CONTRIBUTOR: keywords → capabilities; never `default`/`flow-state`/`task` | `contributor.card.enrichment.ts` | yes (Product, 2026-11-20) | Product Lead |
+| Reaction allow-list (7) | `heart`, `hugging-face`, `clapping-hands`, `light-bulb`, `bullseye`, `check-mark`, `rocket`; who-reacted cap 100 | `reaction.constants.ts`; `reaction.service.ts:160` | yes (Product, 2026-11-20) | Product Lead |
+| Form limits | questions 1–50; options 2–20; prompt/label/title ≤ 512; explanation/description ≤ 2048; short answer ≤ 512, long ≤ 2048 UTF-16 units; responses page 50 | `entity.field.length.constants.ts:20-24`; `callout.form.service.ts`; `callout.form.response.service.ts` | yes (Product, 2026-11-20) | Product Lead |
+| Form defaults | visibility `ADMINS`; mode `SINGLE`; state `OPEN`; `defaultCollapsed` false; audience width ADMINS 0 < MEMBERS 1 | `callout.form.service.ts:76-83`; `callout.form.settings.interface.ts:36-37` | yes (Product, 2026-11-20) | Product Lead |
+| Form question types | `SHORT_TEXT`, `LONG_TEXT`, `SINGLE_CHOICE`, `MULTIPLE_CHOICE` | `schema.graphql:308-314` | yes (Product, 2026-11-20) | Product Lead |
 | Form reason codes (19) | `CALLOUT_NOT_PUBLISHED`, `FORM_CLOSED`, `FORM_VISIBILITY_CHANGED`, `FORM_RESPONSE_ALREADY_EXISTS`, `FORM_ANSWER_REQUIRED`, `FORM_ANSWER_TOO_LONG`, `FORM_ANSWER_UNKNOWN_QUESTION`, `FORM_ANSWER_DUPLICATE_QUESTION`, `FORM_ANSWER_TYPE_MISMATCH`, `FORM_ANSWER_INVALID_OPTION`, `FORM_ANSWER_SELECTION_COUNT`, `FORM_TEMPLATE_NOT_RESPONDABLE`, `FORM_QUESTIONS_COUNT`, `FORM_OPTIONS_COUNT`, `FORM_OPTIONS_DUPLICATE`, `FORM_UNKNOWN_QUESTION_ID`, `FORM_UNKNOWN_OPTION_ID`, `FORM_FRAMING_NOT_ALLOWED`, `FORM_FRAMING_FIXED_KIND`, `FORM_TRANSFER_NOT_ALLOWED` (carried in `extensions.details.code`) | `callout.form.error.codes.ts` | F14 | Technical Lead |
-| Poll limits / defaults | options ≥ 2, ≤ 10; `minResponses` ≥ 1 (default 1); `maxResponses` ≥ 0, 0 = unlimited (default 1), ≥ min; `resultsVisibility` `VISIBLE`; `resultsDetail` `FULL`; `allowContributorsAddOptions` false; settings immutable | `poll.service.ts:65-135`; `entity.field.length.constants.ts:18` | F13 | Product Lead |
+| Poll limits / defaults | options ≥ 2, ≤ 10; `minResponses` ≥ 1 (default 1); `maxResponses` ≥ 0, 0 = unlimited (default 1), ≥ min; `resultsVisibility` `VISIBLE`; `resultsDetail` `FULL`; `allowContributorsAddOptions` false; settings immutable | `poll.service.ts:65-135`; `entity.field.length.constants.ts:18` | decided (F13) (Product, 2026-11-20) | Product Lead |
 | Lock error | `CalloutClosedException`, status `CALLOUT_CLOSED` (13109, "This callout is closed.") | `alkemio.error.status.ts:61`; `docs/error-codes.md:119` |  | Technical Lead |
 | Error text — closed | `New contributions to this Callout are not allowed` / `Only admins are allowed to contribute to this Callout` | `callout.resolver.mutations.ts:578, 596` |  | Technical Lead |
 | Error text — type not allowed | `Attempted to create a contribution of type '<type>', which is not in the allowed types: <list>` | `callout.contribution.service.ts:327-329` |  | Technical Lead |
@@ -531,8 +531,8 @@ _"Rules on it" is pre-filled with the role whose domain covers the value: Produc
 | Error text — forms (messages beside the codes) | `A Form needs between 1 and 50 questions` / `A choice question needs between 2 and 20 options` / `Only choice questions can have options` / `Option labels must be unique within a question` / `The Form can only be answered once its Post is published` / `The Form is closed` / `The response visibility changed after the notice was shown` / `This Form accepts a single response per member` / `A Form in a template does not accept responses` / `Authorization: unable to delete Form response` | `callout.form.service.ts`; `callout.form.response.service.ts:249-271`; `callout.form.resolver.mutations.ts:108, 176` |  | Technical Lead |
 | Error text — authorization refusals pinned by tests | `Authorization: unable to grant 'contribute' privilege: create contribution on callout: <id>` / `… 'create-message' privilege: room message operation: <roomId>` / `… 'update' privilege: update post: <id>` / `… 'delete' privilege: delete post: <id>` / `… 'delete' privilege: room remove message: <roomId>` / `… 'create' privilege: profile: <profileId>` / `Not able to locate post with the specified ID: <id>` / `User does not have access to callout: <id>` | resolvers; `callouts.set.service.ts:638-640` |  | Technical Lead |
 | Audit resource kinds | `callout` (deleted, moved), `callout-publisher` (visibility_changed), `callout-contribution` (moved, deleted), `callout-form-response` (deleted) — platform branches only | resolvers |  | Security Lead |
-| Notification / activity kinds | `CALLOUT_PUBLISHED`, `CALLOUT_POST_CREATED`, `CALLOUT_LINK_CREATED`, `CALLOUT_WHITEBOARD_CREATED`, `CALLOUT_MEMO_CREATED`, document created; notifications: callout published, contribution created (member + admin), callout comment, post comment, form response (admin) + receipt, reaction (publisher), poll vote / modified | `callout.resolver.mutations.ts:690-760, 1162`; `docs/Notifications.md:90-112` |  | Product Lead |
-| `sendNotification` semantics | publish: required boolean; contribution: only explicit `false` suppresses; create-callout: truthy | `callout.dto.update.visibility.ts:25-27`; `callout.resolver.mutations.ts:763-768`; `callouts.set.resolver.mutations.ts:358` | F16 | Product Lead |
+| Notification / activity kinds | `CALLOUT_PUBLISHED`, `CALLOUT_POST_CREATED`, `CALLOUT_LINK_CREATED`, `CALLOUT_WHITEBOARD_CREATED`, `CALLOUT_MEMO_CREATED`, document created; notifications: callout published, contribution created (member + admin), callout comment, post comment, form response (admin) + receipt, reaction (publisher), poll vote / modified | `callout.resolver.mutations.ts:690-760, 1162`; `docs/Notifications.md:90-112` | yes (Product, 2026-11-20) | Product Lead |
+| `sendNotification` semantics | publish: required boolean; contribution: only explicit `false` suppresses; create-callout: truthy | `callout.dto.update.visibility.ts:25-27`; `callout.resolver.mutations.ts:763-768`; `callouts.set.resolver.mutations.ts:358` | yes (Product, 2026-11-20) | Product Lead |
 | Room naming | `callout-comments-<nameID>` (type CALLOUT), `post-comments-<nameID>` (type POST) | `callout.service.ts:244-248`; `post.service.ts:55-57` |  | Technical Lead |
 | GraphQL surface | types `Callout`, `CalloutFraming`, `CalloutContribution`, `CalloutContributionDefaults`, `CalloutContributionsCountOutput`, `CalloutSettings{contribution, framing{contributors, selection, spaces}, visibility}`, `CalloutForm`, `CalloutFormResponses`, `CalloutReactionsSummary`, `CalloutReaction`, `Poll`, `PollSettings`, `CalloutsSet.callouts(...)`; mutations listed in the dossier § 1.1; lookups `lookup.callout`, `lookup.calloutFormResponses`, `lookup.calloutsSet`; subscription `calloutPostCreated` | `schema.graphql:2062-2500, 4433-4439, 4846-5480, 6008-6136, 7427` |  | Technical Lead |
 
