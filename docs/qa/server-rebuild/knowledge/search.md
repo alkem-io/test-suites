@@ -1,10 +1,10 @@
 # Search: behaviour rules
 
-_What the platform does today for search: what is in the index, how terms match, the categories and kinds of results, sizes and paging, searching inside one space or flow state, who sees which results, and how the index is rebuilt. "Explore spaces" is not search; its constants are recorded in Appendix E for the journey area (JRN-64). The layout is that of `communications.md`: **1. Rules**, **2. Rights**, **3. Open questions**, with the evidence in an **Appendix**. Product has not reviewed this file yet._
+_What the platform does today for search: what is in the index, how terms match, the categories and kinds of results, sizes and paging, searching inside one space or flow state, who sees which results, and how the index is rebuilt. "Explore spaces" is not search; its constants are recorded in Appendix E for the journey area (JRN-64). The layout is that of `communications.md`: **1. Rules**, **2. Rights**, **3. Open questions**, with the evidence in an **Appendix**. Product reviewed section 3 on 2026-11-20._
 
-_Open questions per owner: Product Lead 10 · Technical Lead 4 · Quality Lead 2 · Service Operations Lead 1 · Architecture Lead 1. By state: 14 open · 4 with a suggested answer. Proof of the 18 rules: 7 proven by a test · 11 untested (Appendix A)._
+_Open questions per owner: Product Lead 0 · Technical Lead 4 · Quality Lead 2 · Service Operations Lead 1 · Architecture Lead 1. By state: 5 open · 3 with a suggested answer · 11 decided. Proof of the 18 rules: 7 proven by a test · 11 untested (Appendix A)._
 
-_Whys of the 18 rules: 15 rest on a source · 2 carry a draft for product to decide · 1 have none, and each already carries an open question (SRCH-16)._
+_Whys of the 18 rules: 17 rest on a source or a product decision · none carries a draft · 1 has none, and it carries an open question (SRCH-16)._
 
 **How to read it**
 
@@ -22,37 +22,37 @@ _Whys of the 18 rules: 15 rest on a source · 2 carry a draft for product to dec
 | ID | Rule | Why: business | Why: product | Why: technical | Decided by |
 |---|---|---|---|---|---|
 | SRCH-01 | Search runs on a separate search index (Elasticsearch), never on the database. On a server where that index is not set up, every search fails with a clear error. | — | — | One engine for all kinds, scored per category (`docs/search/Search.md`); 102 FR-003: when the backend is unavailable return a clear error, never hang. | `docs/search/Search.md`; server spec 102 FR-003 |
-| SRCH-02 | A search takes at most 10 terms and at most 2 tag-set names. It can be limited to one existing space and to one flow state. The number of results asked per category cannot be negative, and all together cannot be more than 40. **(open: F8, F9, F10)** | — | — | Bound the cost of a query (`docs/search/Search.md` "max result amount … sum of all sizes … cannot exceed that threshold"). | `docs/search/Search.md` |
+| SRCH-02 | A search takes at most 10 terms and at most 2 tag-set names. It can be limited to one existing space and to one flow state. The number of results asked per category cannot be negative, and all together cannot be more than 40. **(open: F9, F10)** | — | — | Bound the cost of a query (`docs/search/Search.md` "max result amount … sum of all sizes … cannot exceed that threshold"). | `docs/search/Search.md`; Product, 2026-11-20 (F8): no minimum term length, as today |
 | SRCH-03 | Results come in five categories: spaces (space, subspace), contributors (user, organisation), collaboration tools (callout), framings (memo, whiteboard, office document) and contributions (post, whiteboard, memo, office document). A filter picks a category and, if wanted, kinds inside it. | — | — | Similar kinds are scored together so small entities are not drowned by large ones (`docs/search/Search.md` Solution). | `docs/search/Search.md` |
 | SRCH-04 | Without filters, every category returns 4 results. With filters, each category returns at most the number asked for. Inside a category the best match comes first. **(open: F10)** | — | — | Over-fetch "as an attempt to ensure the requested size after authorization" (code); 4 per category is the documented default. | `docs/search/Search.md` (the default of 4); the rest exists in the code only |
 | SRCH-05 | The search terms are matched against every indexed text. A match in the title counts three times and a match in a tag twice. Body text also matches with small typing errors and ranks higher when the terms stand close together. Every result says which terms matched. **(open: OQ3)** | — | — | Title stays a strong signal on long documents; fuzziness only on content keeps queries fast; tag ≈ content parity accepted (M-05 code comment); matched terms per server#3702. | Server#3702 (matched terms); the rest exists in the code (comment M-05) |
-| SRCH-06 | The index holds, for active spaces at every level, their about texts and profile (title, tagline, description, city, country, tags); for users and organisations the same profile fields; and for callouts, posts, whiteboards, memos and office documents in active spaces, their profile and their text. **(open: F6)** | Knowledge that lives only in post bodies and office documents must be findable, not just titles (009 US1; 007 US1). | — | content search added by 009. | Spec 009 FR-001…FR-003, FR-016 |
-| SRCH-07 | The index is rebuilt as a whole, never updated piece by piece. A rebuild is started by a Platform Operations Admin (audited), by an internal job, or every hour on acceptance and production. Content that was created, changed or deleted shows in search only after the next rebuild. **(open: F7, OQ1)** | — | — | Synchronisation is lazy by decision (009 FR-010/FR-011: "reindex sweep"); the mutation is an operations action (027 A11). | Spec 009 FR-010/FR-011; spec 027 A11 |
+| SRCH-06 | The index holds, for active spaces at every level, their about texts and profile (title, tagline, description, city, country, tags); for users and organisations the same profile fields; and for callouts, posts, whiteboards, memos and office documents in active spaces, their profile and their text. | Knowledge that lives only in post bodies and office documents must be findable, not just titles (009 US1; 007 US1). | — | content search added by 009. | Spec 009 FR-001…FR-003, FR-016; Product, 2026-11-20 (F6): only active spaces are searchable, as today |
+| SRCH-07 | The index is rebuilt as a whole, never updated piece by piece. A rebuild is started by a Platform Operations Admin (audited), by an internal job, or every hour on acceptance and production. Content that was created, changed or deleted shows in search only after the next rebuild. **(open: OQ1)** | — | — | Synchronisation is lazy by decision (009 FR-010/FR-011: "reindex sweep"); the mutation is an operations action (027 A11). | Spec 009 FR-010/FR-011; spec 027 A11; Product, 2026-11-20 (F7): up to one hour of delay is the rule |
 
 ### Who sees what
 
 | ID | Rule | Why: business | Why: product | Why: technical | Decided by |
 |---|---|---|---|---|---|
 | SRCH-08 | Every result except top-level spaces and users is checked against what the searcher can read; what they cannot read is left out. A member of a public space with a private subspace finds the space only. Members and admins of the subspaces find all levels. | — | — | Reuse the platform's authorization per entity (`docs/search/Search.md` step 7; 007 FR-009; 009 FR-009). | `docs/search/Search.md`; spec 007 FR-009; spec 009 FR-009 |
-| SRCH-09 | A top-level space is shown to every searcher, member or not, even when the space is private. Users are shown without a check. **(open: F2)** | — | — | "no authorization check — all spaces must be visible; context, profile and others are readable by all" (code comment); users are only reachable by signed-in searchers. | Not decided: exists in the code (a code comment) |
-| SRCH-10 | A visitor who is not signed in searches only spaces, framings and contributions, and finds only what a visitor can read. A visitor never finds users, organisations or callouts. **(open: F5)** | Hide contributor data from the unauthenticated (server PR #4712). | — | — | Server PR #4712 |
-| SRCH-11 | A post in a callout that is still a draft never shows in search, whatever the searcher's rights. | Drafts are not published content (callout area). _(draft)_ | — | — | Not decided: exists in the code |
-| SRCH-12 | A search inside one space returns only content of that space, only users and organisations that are members or admins of it, and, under spaces, the space itself. A space with no matching content returns nothing. **(open: F4, OQ2)** | — | — | Search inside one space (`docs/search/Search.md` filter API). | `docs/search/Search.md` |
+| SRCH-09 | A top-level space is shown to every searcher, member or not, even when the space is private. Users are shown without a check. | Product, 2026-11-20 (F2): that a private top-level Space exists is visible to everyone, because its About is readable by all (same ruling as pagination F7). | — | "no authorization check — all spaces must be visible; context, profile and others are readable by all" (code comment); users are only reachable by signed-in searchers. | Product, 2026-11-20 (F2): the rule, as today |
+| SRCH-10 | A visitor who is not signed in searches only spaces, framings and contributions, and finds only what a visitor can read. A visitor never finds users, organisations or callouts. | Hide contributor data from the unauthenticated (server PR #4712). | — | — | Server PR #4712; Product, 2026-11-20 (F5): stays as today; visitors finding public callouts is a wish on the product issues list |
+| SRCH-11 | A post in a callout that is still a draft never shows in search, whatever the searcher's rights. | Drafts are not published content (callout area). | — | — | Product, 2026-11-20 |
+| SRCH-12 | A search inside one space returns only content of that space, only users and organisations that are members or admins of it, and, under spaces, the space itself. A space with no matching content returns nothing. **(open: OQ2)** | — | — | Search inside one space (`docs/search/Search.md` filter API). | `docs/search/Search.md`; Product, 2026-11-20 (F4): stays as today; returning the space's subspaces is a wish on the product issues list |
 | SRCH-13 | In a search inside one flow state, or when asked to fold results, a matching post, whiteboard, memo or office document counts as a match of its callout. The callout is shown once, best match first and then newest first. | — | — | The unit of a scoped search is the callout (007 FR-017); recency tiebreak (FR-019); office-doc matches fold the same way (009 FR-006/007). | Spec 007 FR-017, FR-019; spec 009 FR-006/007 |
 
 ### Paging and the shape of the answer
 
 | ID | Rule | Why: business | Why: product | Why: technical | Decided by |
 |---|---|---|---|---|---|
-| SRCH-14 | Each category returns a marker for its last result; sending the marker back continues after it. A broken marker is refused. The total number of results per category is not given: it is always −1. **(open: F3, OQ4)** | — | — | Keyset paging per category over the index (`docs/search/Search.md`); total "Not implemented yet" (server#3700). | `docs/search/Search.md`; server#3700 |
+| SRCH-14 | Each category returns a marker for its last result; sending the marker back continues after it. A broken marker is refused. The total number of results per category is not given: it is always −1. **(open: OQ4)** | — | — | Keyset paging per category over the index (`docs/search/Search.md`); total "Not implemented yet" (server#3700). | `docs/search/Search.md`; server#3700; Product, 2026-11-20 (F3): the total stays −1 and the field stays, as today; counts are a wish (server#3700) |
 | SRCH-15 | The answer has five groups: people and organisations, spaces, callouts, framings and contributions. Every result carries its score, the terms that matched, its kind and what it belongs to, for example a post with its space and callout. | — | — | Results are enriched so the client can render and link them (`docs/search/Search.md` step 6; 009 FR-008). | `docs/search/Search.md`; spec 009 FR-008 |
 
 ### Archiving and data
 
 | ID | Rule | Why: business | Why: product | Why: technical | Decided by |
 |---|---|---|---|---|---|
-| SRCH-16 | Archiving a space does not take it or its content out of search until the next rebuild. Until then the archived top-level space is still shown to everyone, and its subspaces to whoever can still read them. **(open: F1a, F1b)** | — | — | — | Not decided: exists in the code |
-| SRCH-17 | Service accounts are never put in the index, and a user's email address and phone number are never written to it. **(open: Q-SRCH-17)** | Contact details are personal data and stay behind the platform's own access control; service accounts are not people anyone looks for. _(draft)_ | — | — | Not decided: exists in the code |
+| SRCH-16 | Archiving a space does not take it or its content out of search until the next rebuild. Until then the archived top-level space is still shown to everyone, and its subspaces to whoever can still read them. **(open: F1b)** | — | — | — | Product, 2026-11-20 (F1a): stays as today, an archived space leaves search at the next hourly rebuild |
+| SRCH-17 | Service accounts are never put in the index, and a user's email address and phone number are never written to it. | Contact details are personal data and stay behind the platform's own access control; service accounts are not people anyone looks for. | — | — | Product, 2026-11-20 (Q-SRCH-17) |
 | SRCH-18 | A client that connects through MCP searches with the same engine and sees what its user is allowed to see. | — | — | 102 FR-001/FR-002. | Server spec 102 FR-001/FR-002 |
 
 ## 2. Rights
@@ -88,26 +88,14 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 ### Product Lead
 
-[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 10 to answer
+[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 0 to answer
 
-**To answer**
+Nothing to answer: every Product Lead question is decided (see Decided).
 
-| ID | Area | Type | Question | Owner | Proposed answer | State |
-|---|---|---|---|---|---|---|
-| F1a | Archiving | decision | An archived space and its content stay in search until the next rebuild; the archived top-level space is shown to everyone. Is that acceptable? | Product Lead | — | open |
-| F2 | Who sees what | decision | Private top-level spaces are shown in search to everyone. Record that as a rule (that a private space exists is public), or check top-level spaces like subspaces? | Product Lead (Security Lead rates the exposure) | — | open |
-| F3 | Paging | decision | The total number of results per category is always −1, so no client can show counts. Build it, or drop the field from the API? | Product Lead, then Architecture Lead | — | open |
-| F4 | Who sees what | decision | A search inside one space returns that space itself under spaces, not its subspaces, and the 8 cases on it are skipped with a reference to #5114. What should a search inside a space return? | Product Lead (Technical Lead answers OQ2 first) | — | open |
-| F5 | Who sees what | decision | A visitor never finds callouts, while posts under public callouts are found. Intended, or forgotten when callouts became searchable? | Product Lead | — | open |
-| F6 | Engine | decision | Only active spaces are indexed. Demo, inactive and archived spaces and their content are found by nobody, while a code comment suggests demo spaces were meant to be hidden from visitors only. Which space states are searchable, and for whom? | Product Lead | — | open |
-| F7 | Engine | decision | Nothing updates the index when content is created, changed or deleted; acceptance and production rebuild every hour, at 25 past. Is up to one hour of delay the rule? | Product Lead | Accept up to one hour of staleness as the rule, and name it in the client. | suggested |
-| F8 | Engine | decision | An empty or blank list of terms now runs and returns results up to the limit; a skipped case expected terms that are too short to be skipped. Is there a minimum term length? | Product Lead | — | open |
-| Q-SRCH-17 | Archiving | decision | Why does this rule exist? No source says why service accounts, email addresses and phone numbers are kept out of the index. | Product Lead (DPO Lead consulted) | — | open |
-| CONST | All | decision | 22 of the 27 constants are blank in "product must rule?" (Appendix E). Which of them must product rule on? | Product Lead (Technical Lead and Security Lead rule on the rest) | — | open |
 
 ### Technical Lead
 
-[Technical Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Technical%20Lead.md) · Delivery (Anton) · 4 to answer, 2 also involved
+[Technical Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Technical%20Lead.md) · Delivery (Anton) · 4 to answer
 
 **To answer**
 
@@ -118,12 +106,6 @@ _One section per role, so each owner reads only their own part. **To answer** li
 | OQ2 | Who sees what | check | Is issue #5114 still open, and what does it say a search inside a space should return? The 8 skipped scope cases cite it. (Feeds F4.) | Technical Lead | server#5114 is open (bug, reproduced). It expects a search inside a space to return only the subspace, not the space itself. | suggested |
 | OQ3 | Engine | check | The field settings of the index live in `reporting-orchestration` and were not read. Do they match what the match weights in SRCH-05 assume? | Technical Lead | — | open |
 
-**Also involved**
-
-| ID | Area | Type | Question | Owner | Proposed answer | State |
-|---|---|---|---|---|---|---|
-| F4 | Who sees what | decision | A search inside one space returns that space itself under spaces, not its subspaces, and the 8 cases on it are skipped with a reference to #5114. What should a search inside a space return? | Product Lead (Technical Lead answers OQ2 first) | — | open |
-| CONST | All | decision | 22 of the 27 constants are blank in "product must rule?" (Appendix E). Which of them must product rule on? | Product Lead (Technical Lead and Security Lead rule on the rest) | — | open |
 
 ### Quality Lead
 
@@ -133,19 +115,18 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 | ID | Area | Type | Question | Owner | Proposed answer | State |
 |---|---|---|---|---|---|---|
-| F1b | Archiving | test | The three archived-space cases pass whether or not the space is returned. Rewrite them so they assert by id that the space is absent? (What they must assert follows from F1a.) | Quality Lead | — | open |
+| F1b | Archiving | test | The three archived-space cases pass whether or not the space is returned. Rewrite them so they assert by id that the space is absent? (What they must assert follows from F1a.) | Quality Lead | Product, 2026-11-20 (F1a): an archived space stays in search until the next rebuild, so the cases assert that it is still returned before a rebuild and absent after one. | open |
 | GAPS | All | test | 11 rules have no test that proves them and 10 behaviours were never pinned down (Appendix D). Which get a case before the acceptance checklist is drawn from this file? | Quality Lead | — | open |
 
 ### Security Lead
 
-[Security Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Security%20Lead.md) · Delivery (Valentin) · 2 also involved
+[Security Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Security%20Lead.md) · Delivery (Valentin) · 1 also involved
 
 **Also involved**
 
 | ID | Area | Type | Question | Owner | Proposed answer | State |
 |---|---|---|---|---|---|---|
-| F2 | Who sees what | decision | Private top-level spaces are shown in search to everyone. Record that as a rule (that a private space exists is public), or check top-level spaces like subspaces? | Product Lead (Security Lead rates the exposure) | — | open |
-| CONST | All | decision | 22 of the 27 constants are blank in "product must rule?" (Appendix E). Which of them must product rule on? | Product Lead (Technical Lead and Security Lead rule on the rest) | — | open |
+| F2 | Who sees what | decision | Private top-level spaces are shown in search to everyone. Record that as a rule (that a private space exists is public), or check top-level spaces like subspaces? | Product Lead (Security Lead rates the exposure) | Product, 2026-11-20: the rule, as today: that a private top-level Space exists is visible to everyone (its About is readable by all; same ruling as pagination F7). The Security Lead rates the exposure. | open |
 
 ### Service Operations Lead
 
@@ -171,13 +152,24 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 | ID | Area | Type | Question | Owner | Proposed answer | State |
 |---|---|---|---|---|---|---|
-| F3 | Paging | decision | The total number of results per category is always −1, so no client can show counts. Build it, or drop the field from the API? | Product Lead, then Architecture Lead | — | open |
+| F3 | Paging | decision | The total number of results per category is always −1, so no client can show counts. Build it, or drop the field from the API? | Product Lead, then Architecture Lead | Product, 2026-11-20: the field stays and reads −1, as today; per-category counts are a wish (server#3700). The Architecture Lead decides how the new core carries the field. | open |
 
 ### Decided
 
 | Was | Decision | Decided by | Now |
 |---|---|---|---|
 | OQ5 | Nothing is left to determine: the Explore spaces constants are recorded, so the journey table can cite them. | Extraction, 2026-11-06 | Appendix E, "Explore spaces" |
+| F1a | Stays as today: an archived space and its content stay in search until the next rebuild (at most an hour on acceptance and production); the archived top-level space is shown to everyone until then. | Product, 2026-11-20 | SRCH-16 |
+| F3 | Stays as today: the total per category is −1 and the field stays in the API. Per-category counts are a wish (server#3700). | Product, 2026-11-20 | SRCH-14; PRODUCT-ISSUES F3 |
+| F4 | Stays as today: a search inside one space returns that space under spaces, not its subspaces. Returning its subspaces is a wish on the product issues list (the skipped cases cite #5114). | Product, 2026-11-20 | SRCH-12; PRODUCT-ISSUES F4 |
+| F5 | Stays as today: a visitor never finds callouts, while posts under public callouts are found. Visitors finding public callouts is a wish on the product issues list. | Product, 2026-11-20 | SRCH-10; PRODUCT-ISSUES F5 |
+| F7 | Up to one hour of delay between a change and search is the rule (hourly rebuild at 25 past on acceptance and production). | Product, 2026-11-20 | SRCH-07 |
+| F8 | There is no minimum term length, as today: an empty or blank list of terms runs and returns results up to the limit. | Product, 2026-11-20 | SRCH-02 |
+| Q-SRCH-17 | The draft why stands: contact details are personal data and stay behind the platform's own access control; service accounts are not people anyone looks for. | Product, 2026-11-20 | SRCH-17 |
+| CONST | Product rules on the categories and their kinds, the visitor categories, the default size, the indexed fields and ingest filters, the total, the space-scope contributor rule, the Explore spaces values and the flow-state page size, ticked "yes" in Appendix E. The rest goes to the Technical Lead or the Security Lead. | Product, 2026-11-20 | Appendix E |
+| F2 | The rule, as today: a private top-level Space is shown in search to everyone, because that it exists is visible to all and its About is readable by all. Same ruling as pagination F7; no wish. | Product, 2026-11-20 | SRCH-09 |
+| F6 | Stays as today: only active spaces and their content are indexed; demo, inactive and archived spaces are found by nobody. No wish. | Product, 2026-11-20 | SRCH-06 |
+
 
 ## Appendix
 
@@ -222,14 +214,14 @@ _The original text of every finding (F) and open question (OQ), with its evidenc
 
 #### Findings
 
-- **F1 — Archived-space cases prove nothing (SRCH-16).** Code: ingest filters ACTIVE only at rebuild time; archiving does not touch the index; a top-level space hit has no read check. Test: the three role rows assert `not.toContainObject({… visibility: 'ACTIVE'})` after the space became ARCHIVED, which passes whether or not the space is returned; the admin row expects 3 hits — the archived tree is still returned. Spec: none. Ruling: is an archived space searchable until the next rebuild acceptable, and should the three rows be rewritten to assert absence by id?
-- **F2 — Private top-level spaces are returned to everyone (SRCH-09).** Code comment: "all spaces must be visible". Test: `non.space` gets 1 hit on a private L0. Journey: private-space abouts are world-readable (cross-ref). Ruling: record as a rule (existence of private spaces is public) or gate L0 hits like subspaces.
-- **F3 — `total` is −1 (SRCH-14).** Code todo server#3700; schema says "Not implemented yet". Clients cannot show counts. Ruling: implement, or drop the field from the API.
-- **F4 — Space scope returns the scoped space, not its subspaces (SRCH-12).** Code: with a scope the spaces bucket is `[the filter space]` from the first hit; subspace hits are resolved but the scope clause keys on `spaceID` as indexed. Test: `filtered space` and the 7 "IN … Subspace" rows are skipped citing #5114 (not read — cited only in tests). Ruling: define what a scoped space search returns.
-- **F5 — Anonymous never sees callouts (SRCH-10).** Code: the public index store omits `callouts` (and users, organisations); posts under public callouts are searchable. PR #4712 says "demo spaces" in its title. Ruling: intended, or an omission when callouts became searchable?
-- **F6 — DEMO spaces are never indexed (SRCH-06).** Ingest keeps `ACTIVE` only; DEMO, INACTIVE and ARCHIVED spaces and their content are absent for every searcher, while the public-store comment suggests demo spaces were meant to be hidden only from visitors. Ruling: which visibilities are searchable, and for whom?
-- **F7 — Index freshness (SRCH-07).** Nothing re-indexes on create/update/delete; acceptance and production rebuild hourly at :25; the test cluster relies on the suite's own trigger; dev has no Elasticsearch (env fact — the ES-backed cases cannot run there). 009 FR-010 calls this "lazy" by decision. Ruling: accept up to one hour of staleness as the rule, and name it in the client.
-- **F8 — Empty-term behaviour changed silently (SRCH-02).** The skipped case expected "Search: Skipping term below minimum length"; today an empty or blank term list runs and "returns results up to the limit". No spec. Ruling: minimum term length?
+- **F1 — Archived-space cases prove nothing (SRCH-16).** Code: ingest filters ACTIVE only at rebuild time; archiving does not touch the index; a top-level space hit has no read check. Test: the three role rows assert `not.toContainObject({… visibility: 'ACTIVE'})` after the space became ARCHIVED, which passes whether or not the space is returned; the admin row expects 3 hits — the archived tree is still returned. Spec: none. Ruling: is an archived space searchable until the next rebuild acceptable, and should the three rows be rewritten to assert absence by id? **Product, 2026-11-20:** F1a (archived spaces in search): stays as today, until the next rebuild.
+- **F2 — Private top-level spaces are returned to everyone (SRCH-09).** Code comment: "all spaces must be visible". Test: `non.space` gets 1 hit on a private L0. Journey: private-space abouts are world-readable (cross-ref). Ruling: record as a rule (existence of private spaces is public) or gate L0 hits like subspaces. **Product, 2026-11-20:** record as the rule: a private top-level Space's existence is visible to everyone (its About is readable by all); same as pagination F7.
+- **F3 — `total` is −1 (SRCH-14).** Code todo server#3700; schema says "Not implemented yet". Clients cannot show counts. Ruling: implement, or drop the field from the API. **Product, 2026-11-20:** stays as today; counts are a wish (server#3700).
+- **F4 — Space scope returns the scoped space, not its subspaces (SRCH-12).** Code: with a scope the spaces bucket is `[the filter space]` from the first hit; subspace hits are resolved but the scope clause keys on `spaceID` as indexed. Test: `filtered space` and the 7 "IN … Subspace" rows are skipped citing #5114 (not read — cited only in tests). Ruling: define what a scoped space search returns. **Product, 2026-11-20:** stays as today; returning the subspaces is a wish.
+- **F5 — Anonymous never sees callouts (SRCH-10).** Code: the public index store omits `callouts` (and users, organisations); posts under public callouts are searchable. PR #4712 says "demo spaces" in its title. Ruling: intended, or an omission when callouts became searchable? **Product, 2026-11-20:** stays as today; visitors finding public callouts is a wish.
+- **F6 — DEMO spaces are never indexed (SRCH-06).** Ingest keeps `ACTIVE` only; DEMO, INACTIVE and ARCHIVED spaces and their content are absent for every searcher, while the public-store comment suggests demo spaces were meant to be hidden only from visitors. Ruling: which visibilities are searchable, and for whom? **Product, 2026-11-20:** stays as today: only active spaces are searchable; no wish.
+- **F7 — Index freshness (SRCH-07).** Nothing re-indexes on create/update/delete; acceptance and production rebuild hourly at :25; the test cluster relies on the suite's own trigger; dev has no Elasticsearch (env fact — the ES-backed cases cannot run there). 009 FR-010 calls this "lazy" by decision. Ruling: accept up to one hour of staleness as the rule, and name it in the client. **Product, 2026-11-20:** accepted: up to one hour of staleness is the rule.
+- **F8 — Empty-term behaviour changed silently (SRCH-02).** The skipped case expected "Search: Skipping term below minimum length"; today an empty or blank term list runs and "returns results up to the limit". No spec. Ruling: minimum term length? **Product, 2026-11-20:** no minimum term length, as today.
 - **F9 — Schema says 5 terms, code allows 10 (SRCH-02).** Stale description on `SearchInput.terms`. Ruling: fix the description (rebaseline).
 - **F10 — Size 0 and non-integer sizes are accepted (SRCH-02/04).** Only negatives are refused; a size of 0 still issues an index query. Ruling: define the bounds (1..max).
 
@@ -261,37 +253,37 @@ Behaviours the area has that neither reading nor tests pinned down:
 
 ### E. Constants the rules depend on
 
-_"Rules on it" is pre-filled with the role whose domain covers the value: Product Lead for business values, plan constants and user-facing copy; Technical Lead for engineering limits and wire shapes; Security Lead for security limits. The "product must rule?" column is unchanged: product ticks the rows it must rule on (the CONST row in section 3)._
+_"Rules on it" is pre-filled with the role whose domain covers the value: Product Lead for business values, plan constants and user-facing copy; Technical Lead for engineering limits and wire shapes; Security Lead for security limits. The "product must rule?" column was ticked by Product, 2026-11-20 (CONST): "yes" rows wait for a product ruling before the rebuild._
 
 | Constant | Value today | Source | product must rule? | Rules on it |
 |---|---|---|---|---|
-| Categories (5) | `spaces`, `collaboration-tools`, `framings`, `contributions`, `contributors` | `search.category.ts:3-9` | | Product Lead |
-| Result kinds (9) | `user`, `organization`, `space`, `subspace`, `post`, `callout`, `whiteboard`, `memo`, `collabora_document` | `search.result.type.ts:18-28` | | Technical Lead |
-| Kinds per category | spaces{space, subspace}; contributors{user, organization}; collaboration-tools{callout}; framings{memo, whiteboard, collabora_document}; contributions{post, whiteboard, memo, collabora_document} | `search.extract.service.ts:150-168` | | Product Lead |
-| Public (anonymous) categories | spaces, framings, contributions | `search.extract.service.ts:94-148` | F-5 | Product Lead |
-| Default size per category | 4 | `search.service.ts:17`; `search.filter.input.ts` | | Product Lead |
-| Maximum total results | 40 (`SEARCH_MAX_RESULTS`), split evenly across the categories queried when no size is given | `alkemio.yml:89`; `search.extract.service.ts:399-413` | | Technical Lead |
-| Over-fetch multiplier | 2 | `search.extract.service.ts:170` | | Technical Lead |
-| Term limit | 10 (schema description still says "Max 5") | `validate.search.parameters.ts:5`; `search.dto.input.ts` | F-9 | Technical Lead |
-| Tagset-name limit | 2 | `validate.search.parameters.ts:6` | | Technical Lead |
-| Index pattern | `alkemio-data-` (`ELASTIC_SEARCH_INDEX_PATTERN`); aliases `spaces`, `subspaces`, `organizations`, `users`, `posts`, `callouts`, `whiteboards`, `memos`, `office-document` | `extract/search.index.ts`; `ingest/search.ingest.service.ts:139-151` | | Technical Lead |
-| Indexed profile fields | displayName, tagline, description, location.city, location.country, tags; spaces + about.why, about.who, level, visibility | `search.ingest.service.ts:42-78` | | Product Lead |
-| Ingest filters | spaces `visibility = ACTIVE` (all levels); content only under ACTIVE spaces; users `serviceProfile = false`, email/phone stripped; organisations all | `search.ingest.service.ts:790-1990` | F-6 | Product Lead · Security Lead (email and phone stripped) |
-| Ingest batch sizes | spaces/subspaces/orgs/users 100; callouts 30; posts/whiteboards/memos 50; office documents 15 | `search.ingest.service.ts:505-565` | | Technical Lead |
-| Content cap | `CONTENT_FIELD_SIZE_LIMIT` 1,000,000 characters; office-document source cap 15 MiB | `extract/collabora.text.extract.service.ts:73`; `alkemio.yml:93-99` | | Technical Lead |
-| Query boosts | `profile.displayName.text^3`, `profile.tags^2`, `content^0` in the all-fields matcher; content fuzziness `AUTO`, `prefix_length 2`, `max_expansions 50`; phrase `slop 2`, `boost 2` | `extract/build.search.query.ts:37-89` | | Technical Lead |
-| Highlight | fields `*`, `fragment_size 100`, `number_of_fragments 3`, `max_analyzed_offset 999,999` | `build.multi.search.request.items.ts:61-70` | | Technical Lead |
-| Index sort | `_score desc, id desc` | `build.multi.search.request.items.ts:74` | | Technical Lead |
-| Cursor format | `<score>::<entity uuid>` | `util/calculate.search.cursor.ts` | | Technical Lead |
-| `total` | always −1 ("Not implemented yet", server#3700) | `search.result.service.ts:1598-1599`; `schema.graphql:4056-4057` | F-3 | Product Lead |
-| Scope filters | `spaceID`, `flowStateID`: "field absent OR equals" | `build.search.query.ts:107-161` | | Technical Lead |
-| Space-scope contributor rule | users/orgs ∩ (SPACE_MEMBER ∪ SPACE_ADMIN credential holders of the space) | `search.result.service.ts:1554-1580` | | Product Lead |
-| Rebuild triggers | GraphQL `adminSearchIngestFromScratch` (POA, audited, returns task id); REST `POST /rest/internal/admin/search-ingest` (202, in-cluster); CronJob `25 */1 * * *` acceptance + production | resolver; controller; infra-ops overlays | F-7 | Technical Lead |
-| Error texts | `Maximum number of search terms is 10; supplied: <n>`; `Maximum number of tagset names is 2; supplied: <n>`; `Size cannot be a negative number`; `The requested <n> results cannot exceed the maximum allowed 40 over all categories.`; `Space with the given identifier not found`; `Elasticsearch client not initialized`; `Invalid search cursor` / `Invalid first part of cursor` / `Invalid second part of cursor` | `validate.search.parameters.ts`; `search.service.ts:53-57`; `search.extract.service.ts:202`; `try.parse.search.cursor.ts` | | Technical Lead |
-| ES client prerequisites | host + api_key (else no client); TLS per `tls.ca_cert_path` | `elasticsearch.client.factory.ts:10-55` | | Technical Lead |
-| Explore spaces (DB, journey JRN-64) | `EXPLORE_SPACES_LIMIT` 30; `EXPLORE_SPACES_ACTIVITY_DAYS_OLD` 30; `EXPLORE_SPACES_OVERFETCH_FACTOR` 3; excluded activity `CALLOUT_WHITEBOARD_CONTENT_MODIFIED` | `src/domain/space/space/space.service.ts:113-124` | | Product Lead |
-| Flow-state search page (client) | 10 per page | spec 007 FR-006 | | Product Lead |
-| GraphQL surface | `search(searchData: SearchInput!)`; `SearchInput{terms, tagsetNames, searchInSpaceFilter, searchInFlowStateFilter, filters[{category, cursor, size, types}], foldCalloutResources}`; `ISearchResults{actorResults, spaceResults, calloutResults, framingResults, contributionResults}`; `ISearchCategoryResult{results, cursor, total}`; `SearchResult{id, score, terms, type}` + per-kind types; mutation `adminSearchIngestFromScratch: String` | `schema.graphql:1263-1274, 4049-4075, 6384` | | Technical Lead |
+| Categories (5) | `spaces`, `collaboration-tools`, `framings`, `contributions`, `contributors` | `search.category.ts:3-9` | yes | Product Lead |
+| Result kinds (9) | `user`, `organization`, `space`, `subspace`, `post`, `callout`, `whiteboard`, `memo`, `collabora_document` | `search.result.type.ts:18-28` | no | Technical Lead |
+| Kinds per category | spaces{space, subspace}; contributors{user, organization}; collaboration-tools{callout}; framings{memo, whiteboard, collabora_document}; contributions{post, whiteboard, memo, collabora_document} | `search.extract.service.ts:150-168` | yes | Product Lead |
+| Public (anonymous) categories | spaces, framings, contributions | `search.extract.service.ts:94-148` | yes (F-5) | Product Lead |
+| Default size per category | 4 | `search.service.ts:17`; `search.filter.input.ts` | yes | Product Lead |
+| Maximum total results | 40 (`SEARCH_MAX_RESULTS`), split evenly across the categories queried when no size is given | `alkemio.yml:89`; `search.extract.service.ts:399-413` | no | Technical Lead |
+| Over-fetch multiplier | 2 | `search.extract.service.ts:170` | no | Technical Lead |
+| Term limit | 10 (schema description still says "Max 5") | `validate.search.parameters.ts:5`; `search.dto.input.ts` | no (F-9) | Technical Lead |
+| Tagset-name limit | 2 | `validate.search.parameters.ts:6` | no | Technical Lead |
+| Index pattern | `alkemio-data-` (`ELASTIC_SEARCH_INDEX_PATTERN`); aliases `spaces`, `subspaces`, `organizations`, `users`, `posts`, `callouts`, `whiteboards`, `memos`, `office-document` | `extract/search.index.ts`; `ingest/search.ingest.service.ts:139-151` | no | Technical Lead |
+| Indexed profile fields | displayName, tagline, description, location.city, location.country, tags; spaces + about.why, about.who, level, visibility | `search.ingest.service.ts:42-78` | yes | Product Lead |
+| Ingest filters | spaces `visibility = ACTIVE` (all levels); content only under ACTIVE spaces; users `serviceProfile = false`, email/phone stripped; organisations all | `search.ingest.service.ts:790-1990` | yes (F-6) | Product Lead · Security Lead (email and phone stripped) |
+| Ingest batch sizes | spaces/subspaces/orgs/users 100; callouts 30; posts/whiteboards/memos 50; office documents 15 | `search.ingest.service.ts:505-565` | no | Technical Lead |
+| Content cap | `CONTENT_FIELD_SIZE_LIMIT` 1,000,000 characters; office-document source cap 15 MiB | `extract/collabora.text.extract.service.ts:73`; `alkemio.yml:93-99` | no | Technical Lead |
+| Query boosts | `profile.displayName.text^3`, `profile.tags^2`, `content^0` in the all-fields matcher; content fuzziness `AUTO`, `prefix_length 2`, `max_expansions 50`; phrase `slop 2`, `boost 2` | `extract/build.search.query.ts:37-89` | no | Technical Lead |
+| Highlight | fields `*`, `fragment_size 100`, `number_of_fragments 3`, `max_analyzed_offset 999,999` | `build.multi.search.request.items.ts:61-70` | no | Technical Lead |
+| Index sort | `_score desc, id desc` | `build.multi.search.request.items.ts:74` | no | Technical Lead |
+| Cursor format | `<score>::<entity uuid>` | `util/calculate.search.cursor.ts` | no | Technical Lead |
+| `total` | always −1 ("Not implemented yet", server#3700) | `search.result.service.ts:1598-1599`; `schema.graphql:4056-4057` | yes (F-3) | Product Lead |
+| Scope filters | `spaceID`, `flowStateID`: "field absent OR equals" | `build.search.query.ts:107-161` | no | Technical Lead |
+| Space-scope contributor rule | users/orgs ∩ (SPACE_MEMBER ∪ SPACE_ADMIN credential holders of the space) | `search.result.service.ts:1554-1580` | yes | Product Lead |
+| Rebuild triggers | GraphQL `adminSearchIngestFromScratch` (POA, audited, returns task id); REST `POST /rest/internal/admin/search-ingest` (202, in-cluster); CronJob `25 */1 * * *` acceptance + production | resolver; controller; infra-ops overlays | no (F-7) | Technical Lead |
+| Error texts | `Maximum number of search terms is 10; supplied: <n>`; `Maximum number of tagset names is 2; supplied: <n>`; `Size cannot be a negative number`; `The requested <n> results cannot exceed the maximum allowed 40 over all categories.`; `Space with the given identifier not found`; `Elasticsearch client not initialized`; `Invalid search cursor` / `Invalid first part of cursor` / `Invalid second part of cursor` | `validate.search.parameters.ts`; `search.service.ts:53-57`; `search.extract.service.ts:202`; `try.parse.search.cursor.ts` | no | Technical Lead |
+| ES client prerequisites | host + api_key (else no client); TLS per `tls.ca_cert_path` | `elasticsearch.client.factory.ts:10-55` | no | Technical Lead |
+| Explore spaces (DB, journey JRN-64) | `EXPLORE_SPACES_LIMIT` 30; `EXPLORE_SPACES_ACTIVITY_DAYS_OLD` 30; `EXPLORE_SPACES_OVERFETCH_FACTOR` 3; excluded activity `CALLOUT_WHITEBOARD_CONTENT_MODIFIED` | `src/domain/space/space/space.service.ts:113-124` | yes | Product Lead |
+| Flow-state search page (client) | 10 per page | spec 007 FR-006 | yes | Product Lead |
+| GraphQL surface | `search(searchData: SearchInput!)`; `SearchInput{terms, tagsetNames, searchInSpaceFilter, searchInFlowStateFilter, filters[{category, cursor, size, types}], foldCalloutResources}`; `ISearchResults{actorResults, spaceResults, calloutResults, framingResults, contributionResults}`; `ISearchCategoryResult{results, cursor, total}`; `SearchResult{id, score, terms, type}` + per-kind types; mutation `adminSearchIngestFromScratch: String` | `schema.graphql:1263-1274, 4049-4075, 6384` | no | Technical Lead |
 
 ### F. Where this lands in the new core
 

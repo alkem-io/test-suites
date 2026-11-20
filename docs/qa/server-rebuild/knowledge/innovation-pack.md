@@ -1,10 +1,10 @@
 # Innovation packs: behaviour rules
 
-_What the platform does today for an innovation pack in the library: how it is created and owned, who sees it, how it is listed, moved and deleted, and what is still to answer. The templates inside a pack are in `templates.md`; the pack allowance is in `entitlements.md`. The layout is that of `communications.md`: **1. Rules**, **2. Rights**, **3. Open questions**, with the evidence in an **Appendix**. Product has not reviewed this file yet._
+_What the platform does today for an innovation pack in the library: how it is created and owned, who sees it, how it is listed, moved and deleted, and what is still to answer. The templates inside a pack are in `templates.md`; the pack allowance is in `entitlements.md`. The layout is that of `communications.md`: **1. Rules**, **2. Rights**, **3. Open questions**, with the evidence in an **Appendix**. Product reviewed section 3 on 2026-11-20._
 
-_Open questions per owner: Product Lead 7 · Technical Lead 3 · Quality Lead 6 · Security Lead 1. By state: 14 open · 3 with a suggested answer. Proof of the 15 rules: 5 proven by a test · 10 untested (Appendix A)._
+_Open questions per owner: Product Lead 0 · Technical Lead 3 · Quality Lead 6 · Security Lead 1. By state: 7 open · 3 with a suggested answer · 7 decided. Proof of the 15 rules: 5 proven by a test · 10 untested (Appendix A)._
 
-_Whys of the 15 rules: 11 rest on a source · 3 carry a draft for product to decide (IPK-04, IPK-08, IPK-14) · 1 has none, and it already carries an open question (IPK-03: Q-IPK-03, F3)._
+_Whys of the 15 rules: 14 rest on a source or a product decision · 1 still carries a QA draft (IPK-14)._
 
 **How to read it**
 
@@ -22,21 +22,21 @@ _Whys of the 15 rules: 11 rest on a source · 3 carry a draft for product to dec
 | ID | Rule | Why: business | Why: product | Why: technical | Decided by |
 |---|---|---|---|---|---|
 | IPK-01 | A pack belongs to exactly one account. The account's admins create it (a user on their own account, an organisation admin on the organisation's), within the account's pack allowance: 3 on the Plus plan. Platform Content Full Access can create one on any account. **(open: F1)** | Packs are account-hosted resources like spaces and VCs, so one entitlement model covers all (027 rows 2/8; ENT-01/16). | — | — | Spec 027 rows 2/8; `entitlements.md` ENT-01/16 |
-| IPK-02 | A pack's name id (the short name in its link) is unique among all packs on the platform and is stored in lower case. A name id that is taken is refused. When none is given, one is made from the pack's name. **(open: Q-IPK-02, OQ3)** | — | — | The name id is the whole path of the pack's web address (`/innovation-packs/<nameID>`, `url.generator.service.ts:481`, `:1239`); with no parent in the path it has to be unique on the whole platform. No source states why it is lower case. | Not decided: exists in the code |
-| IPK-03 | A new pack always starts listed in the store and visible inside its account only; the creator cannot choose this when creating it. It starts with no templates, a profile with avatar and card images, and a default tag set. **(open: Q-IPK-03, F3)** | — | — | — (the bootstrap comment records the consequence: the seeded pack must be re-saved public after every create) | Not decided: exists in the code |
-| IPK-04 | A pack's provider is the host of its account, a user or an organisation. When the pack moves to another account, the provider changes with it. | The library shows who stands behind a pack; the account, not the creator, is the owner. _(draft)_ | — | — | Not decided: exists in the code |
+| IPK-02 | A pack's name id (the short name in its link) is unique among all packs on the platform and is stored in lower case. A name id that is taken is refused. When none is given, one is made from the pack's name. **(open: Q-IPK-02)** | — | — | The name id is the whole path of the pack's web address (`/innovation-packs/<nameID>`, `url.generator.service.ts:481`, `:1239`); with no parent in the path it has to be unique on the whole platform. No source states why it is lower case. | Product, 2026-11-20 (OQ3): unique on the whole platform, as today, because the name id is the whole path of the pack's address |
+| IPK-03 | A new pack always starts listed in the store and visible inside its account only; the creator cannot choose this when creating it. It starts with no templates, a profile with avatar and card images, and a default tag set. | — | As an account admin, I want a new pack to stay inside my account until I make it public, so that I can fill it before others see it. | — (the bootstrap comment records the consequence: the seeded pack must be re-saved public after every create) | Product, 2026-11-20 (Q-IPK-03, F3): the two steps stay the rule |
+| IPK-04 | A pack's provider is the host of its account, a user or an organisation. When the pack moves to another account, the provider changes with it. | The library shows who stands behind a pack; the account, not the creator, is the owner. | — | — | Product, 2026-11-20 (business why) |
 | IPK-05 | The account's admins can update a pack: its profile, name id, store listing and visibility. Platform Support can update a pack owned by an organisation, never one owned by a user. Platform Content Full Access can update any pack. | Support assists organisations with their own resources only (027 A7, FR-008(b)); user-hosted accounts are out of scope (spec-server-14 fix). | — | — | Spec 027 A7, FR-008(b) |
 | IPK-06 | Deleting a pack deletes its templates and its profile with it. The account's admins and Platform Content Full Access can delete a pack; Platform Support cannot. Only a deletion by a platform role is written to the audit trail. **(open: F6)** | Pack deletion stays out of support's reach (027 A8); audit on the platform branch only (027 T058 / FR-018a). | — | — | Spec 027 A8, FR-018a (T058) |
-| IPK-07 | Only the Platform Resource Admin can move a pack to another account; its owner and Platform Support cannot. The target account's pack allowance is not checked. Access to the pack and its templates is worked out again under the new account, and the move is audited. **(open: F5, F6)** | Resource transfer is its own platform family (027 A9); the audit covers the platform path only. | — | — | Spec 027 A9 |
-| IPK-08 | A user cannot delete their own account while it still hosts a pack. The pack must be deleted or moved first. | Owned records are never dropped silently (orphan-free deletion). _(draft)_ | — | — | Not decided: exists in the code |
+| IPK-07 | Only the Platform Resource Admin can move a pack to another account; its owner and Platform Support cannot. The target account's pack allowance is not checked. Access to the pack and its templates is worked out again under the new account, and the move is audited. **(open: F6)** | Resource transfer is its own platform family (027 A9); the audit covers the platform path only. | — | — | Spec 027 A9; Product, 2026-11-20 (F5): the target allowance is not checked, as today, no wish |
+| IPK-08 | A user cannot delete their own account while it still hosts a pack. The pack must be deleted or moved first. | Owned records are never dropped silently (orphan-free deletion). | — | — | Product, 2026-11-20 (business why) |
 
 ### Visibility and listing
 
 | ID | Rule | Why: business | Why: product | Why: technical | Decided by |
 |---|---|---|---|---|---|
-| IPK-09 | Visibility decides where a pack is listed, not who can read it: hidden packs show only when opened directly, account packs only inside their account, public packs everywhere. Which packs a viewer sees on a profile depends on who the viewer is (section 2, W6). **(open: F2)** | A profile shows what the viewer is entitled to see (017 "existing platform visibility rules") | — | the enum comments define the three scopes. | Spec 017 ("existing platform visibility rules") |
-| IPK-10 | Anyone, signed in or not, can read any pack directly. The list of an account's packs returns all of them, hidden ones included. **(open: F2, OQ2)** | — | — | "By default it is world visible. TODO: work through the logic on this" (account policy comment). | Not decided: exists in the code (the code comment says "TODO") |
-| IPK-11 | The Innovation Library shows only packs that are listed in the store and public, most templates first. Its paged lists show the newest first, at most 100 per page, with a text search on title, description and tags. Everyone can read it, visitors included. **(defect in part: F4)** **(open: F7, OQ4)** | Pagination for a library that outgrew one page (101 FR-001–FR-015) | — | search without the provider join because it would slow every page (101 FR-022); the library has always been world-visible (authorization comment). | Server spec 101 FR-001–FR-015, FR-022 |
+| IPK-09 | Visibility decides where a pack is listed, not who can read it: hidden packs show only when opened directly, account packs only inside their account, public packs everywhere. Which packs a viewer sees on a profile depends on who the viewer is (section 2, W6). | A profile shows what the viewer is entitled to see (017 "existing platform visibility rules") | — | the enum comments define the three scopes. | Spec 017 ("existing platform visibility rules"); Product, 2026-11-20 (F2): stays as today, visibility is about listing |
+| IPK-10 | Anyone, signed in or not, can read any pack directly. The list of an account's packs returns all of them, hidden ones included. **(open: OQ2)** | — | — | "By default it is world visible. TODO: work through the logic on this" (account policy comment). | Product, 2026-11-20 (F2): stays as today; hidden packs unreadable to outsiders is a wish on the product issues list |
+| IPK-11 | The Innovation Library shows only packs that are listed in the store and public, most templates first. Its paged lists show the newest first, at most 100 per page, with a text search on title, description and tags. Everyone can read it, visitors included. **(defect in part: F4)** **(open: F7)** | Pagination for a library that outgrew one page (101 FR-001–FR-015) | — | search without the provider join because it would slow every page (101 FR-022); the library has always been world-visible (authorization comment). | Server spec 101 FR-001–FR-015, FR-022; Product, 2026-11-20 (OQ4): both orders stay as today |
 | IPK-12 | The platform keeps one pack of its own, "Classifications", on the host organisation's account. At every start it is set to listed and public, so the classification picker always finds its vocabulary. | — | — | The seed targets one dedicated platform pack; the picker reads every publicly listed pack (024 FR-005a/b, ruling D3). | Spec 024 FR-005a/b, ruling D3 |
 
 ### Templates in a pack
@@ -81,23 +81,13 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 ### Product Lead
 
-[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 7 to answer
+[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 0 to answer
 
-**To answer**
-
-| ID | Area | Type | Question | Owner | Proposed answer | State |
-|---|---|---|---|---|---|---|
-| F2 | Visibility | decision | A hidden or account-only pack is kept out of lists, but anyone who holds its id can read it, visitors included, and the list of an account's packs returns hidden packs to anyone. Is visibility only a help for discovery, or must such a pack be unreadable to outsiders? In the second case this is a defect, like finding 5 in `entitlements.md`. | Product Lead (Security Lead rates the exposure) | — | open |
-| F3 | Ownership | decision | A pack cannot be created with the visibility its creator wants: it always starts listed and account-only and is changed in a second step. Accept the store listing and the visibility at creation, or keep the two steps as the rule? | Product Lead | — | open |
-| F5 | Ownership | decision | Moving a pack ignores the target account's pack allowance, and a test enshrines that. Intended, because a move is not a creation, or a gap in the limit? | Product Lead | — | open |
-| OQ3 | Ownership | decision | Is it intended that a pack's name id is unique across the whole platform? Spaces and templates keep theirs unique within a smaller scope. Which does the new alias rule follow? | Product Lead (Architecture Lead writes the alias rule) | — | open |
-| OQ4 | Visibility | decision | Does the web client rely on the library's default order, most templates first? The paged lists use the order of creation instead. Which does the new core keep? | Product Lead (Technical Lead checks what the client uses) | — | open |
-| Q-IPK-03 | Ownership | decision | Why does this rule exist? No source says why a new pack always starts listed in the store and visible to its account only. (F3 asks whether to change it.) | Product Lead | — | open |
-| CONST | All | decision | 9 of the 15 constants are blank in "product must rule?" (Appendix E). Which of them must product rule on? | Product Lead (Technical Lead and Security Lead rule on the rest) | — | open |
+Nothing to answer: every Product Lead question is decided (see Decided).
 
 ### Technical Lead
 
-[Technical Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Technical%20Lead.md) · Delivery (Anton) · 3 to answer, 2 also involved
+[Technical Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Technical%20Lead.md) · Delivery (Anton) · 3 to answer, 1 also involved
 
 **To answer**
 
@@ -111,8 +101,7 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 | ID | Area | Type | Question | Owner | Proposed answer | State |
 |---|---|---|---|---|---|---|
-| OQ4 | Visibility | decision | Does the web client rely on the library's default order, most templates first? The paged lists use the order of creation instead. Which does the new core keep? | Product Lead (Technical Lead checks what the client uses) | — | open |
-| CONST | All | decision | 9 of the 15 constants are blank in "product must rule?" (Appendix E). Which of them must product rule on? | Product Lead (Technical Lead and Security Lead rule on the rest) | — | open |
+| OQ4 | Visibility | decision | Does the web client rely on the library's default order, most templates first? The paged lists use the order of creation instead. Which does the new core keep? | Product Lead (Technical Lead checks what the client uses) | Product, 2026-11-20: both orders stay as today (most templates first by default, newest first on the paged lists). The Technical Lead checks what the client uses. | open |
 
 ### Quality Lead
 
@@ -131,7 +120,7 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 ### Security Lead
 
-[Security Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Security%20Lead.md) · Delivery (Valentin) · 1 to answer, 2 also involved
+[Security Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Security%20Lead.md) · Delivery (Valentin) · 1 to answer, 1 also involved
 
 **To answer**
 
@@ -143,8 +132,7 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 | ID | Area | Type | Question | Owner | Proposed answer | State |
 |---|---|---|---|---|---|---|
-| F2 | Visibility | decision | A hidden or account-only pack is kept out of lists, but anyone who holds its id can read it, visitors included, and the list of an account's packs returns hidden packs to anyone. Is visibility only a help for discovery, or must such a pack be unreadable to outsiders? In the second case this is a defect, like finding 5 in `entitlements.md`. | Product Lead (Security Lead rates the exposure) | — | open |
-| CONST | All | decision | 9 of the 15 constants are blank in "product must rule?" (Appendix E). Which of them must product rule on? | Product Lead (Technical Lead and Security Lead rule on the rest) | — | open |
+| F2 | Visibility | decision | A hidden or account-only pack is kept out of lists, but anyone who holds its id can read it, visitors included, and the list of an account's packs returns hidden packs to anyone. Is visibility only a help for discovery, or must such a pack be unreadable to outsiders? In the second case this is a defect, like finding 5 in `entitlements.md`. | Product Lead (Security Lead rates the exposure) | Product, 2026-11-20: stays as today; that hidden packs are not readable by outsiders is a wish on the product issues list. The Security Lead assesses the exposure. | open |
 
 ### Architecture Lead
 
@@ -154,7 +142,19 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 | ID | Area | Type | Question | Owner | Proposed answer | State |
 |---|---|---|---|---|---|---|
-| OQ3 | Ownership | decision | Is it intended that a pack's name id is unique across the whole platform? Spaces and templates keep theirs unique within a smaller scope. Which does the new alias rule follow? | Product Lead (Architecture Lead writes the alias rule) | — | open |
+| OQ3 | Ownership | decision | Is it intended that a pack's name id is unique across the whole platform? Spaces and templates keep theirs unique within a smaller scope. Which does the new alias rule follow? | Product Lead (Architecture Lead writes the alias rule) | Product, 2026-11-20: a pack's name id stays unique on the whole platform, as today; the alias rule follows that. | suggested |
+
+### Decided
+
+| Was | Decision | Decided by | Now |
+|---|---|---|---|
+| F3 | Stays as today: a pack is created listed and account-only, and its visibility is changed in a second step. The two steps are the rule; no wish. | Product, 2026-11-20 | IPK-03 |
+| OQ3 | Stays as today: a pack's name id is unique on the whole platform, because it is the whole path of the pack's address. The Architecture Lead writes the alias rule on that basis. | Product, 2026-11-20 | IPK-02 |
+| OQ4 | Stays as today: the library shows most templates first by default, and the paged lists newest first. The Technical Lead checks which one the web client relies on. | Product, 2026-11-20 | IPK-11 |
+| Q-IPK-03 | A new pack stays inside its account until its admin makes it public, so it can be filled before others see it. | Product, 2026-11-20 | IPK-03 |
+| CONST | Product rules on the visibilities, the library orderings, eligibility and search fields, the new-pack defaults, the hosted-resources scopes, the name-id rules, the pack cap and the seeded pack, ticked "yes" in Appendix E. Error texts, counting, rights and the GraphQL surface go to the Technical Lead or the Security Lead. | Product, 2026-11-20 | Appendix E |
+| F2 | Stays as today: visibility decides where a pack is listed, and anyone with its id can read it. That hidden packs are not readable by outsiders is a wish on the product issues list; the Security Lead assesses the exposure. | Product, 2026-11-20 | IPK-09, IPK-10; PRODUCT-ISSUES F2 |
+| F5 | Stays as today: a move by the Platform Resource Admin is not a creation, so the target account's pack allowance is not checked. No wish. | Product, 2026-11-20 | IPK-07 |
 
 ## Appendix
 
@@ -197,10 +197,10 @@ _The original text of every finding (F) and open question (OQ), with its evidenc
 #### Findings
 
 - **F1 — The area's only legacy case asserts nothing and does not run (IPK-01, IPK-13).** Test: `innovation-pack.it-spec.ts` creates an organisation, a pack and six whiteboard templates and ends with `expect(200).toBe(200)`; its `afterAll` delete is commented out, so every run leaks an organisation and a pack; it passes the **organisation id** as the pack's `accountID`, which the server would refuse; and the `innovation` vitest project is not in the nightly glob. Ruling: retire the case and let the entitlements, account and platform-roles suites carry the proof — or rewrite it as a real create/read-back/delete case on the organisation's account.
-- **F2 — "Hidden" hides a pack from lists, not from readers (IPK-09, IPK-10).** Code: the pack policy inherits the account's, which grants READ to anonymous and registered (`account.service.authorization.ts:306-310`, "TODO: work through the logic"); `hostedResources` filters by viewer scope but says "authorization policies are deliberately not consulted"; `Account.innovationPacks` on the world-readable `lookup.account` returns hidden packs to anyone; `lookup.innovationPack(ID)` answers for anyone. Test: `hosted-resources` proves the filtered list only. Spec: the enum says hidden "only shows up when directly accessed e.g. by provider" — the "e.g. by provider" implies the provider, not the world. Ruling: is a hidden or account-scoped pack meant to be unreadable to outsiders who hold its id (then this is a defect, kin to entitlements finding 5), or is visibility purely a discovery hint?
-- **F3 — A pack cannot be created with its intended visibility (IPK-03).** Code: `createInnovationPack` hard-codes listed + account-scoped and the input carries no visibility fields; the bootstrap comment records that the seed must re-save the pack public after creating it (`bootstrap.service.ts:751-755`). Test: none. Spec: none. Ruling: accept `listedInStore` / `searchVisibility` on create, or keep the two-step as the rule.
+- **F2 — "Hidden" hides a pack from lists, not from readers (IPK-09, IPK-10).** Code: the pack policy inherits the account's, which grants READ to anonymous and registered (`account.service.authorization.ts:306-310`, "TODO: work through the logic"); `hostedResources` filters by viewer scope but says "authorization policies are deliberately not consulted"; `Account.innovationPacks` on the world-readable `lookup.account` returns hidden packs to anyone; `lookup.innovationPack(ID)` answers for anyone. Test: `hosted-resources` proves the filtered list only. Spec: the enum says hidden "only shows up when directly accessed e.g. by provider" — the "e.g. by provider" implies the provider, not the world. Ruling: is a hidden or account-scoped pack meant to be unreadable to outsiders who hold its id (then this is a defect, kin to entitlements finding 5), or is visibility purely a discovery hint? **Product, 2026-11-20:** stays as today; unreadable hidden packs are a wish on the product issues list; the Security Lead assesses the exposure.
+- **F3 — A pack cannot be created with its intended visibility (IPK-03).** Code: `createInnovationPack` hard-codes listed + account-scoped and the input carries no visibility fields; the bootstrap comment records that the seed must re-save the pack public after creating it (`bootstrap.service.ts:751-755`). Test: none. Spec: none. Ruling: accept `listedInStore` / `searchVisibility` on create, or keep the two-step as the rule. **Product, 2026-11-20:** stays as today; the two steps are the rule.
 - **F4 — The library's "number of templates" and the pack count exclude classification templates (IPK-11).** Code: `getTemplatesCount` sums five kinds (`templates.set.service.ts:238-276`); a pack holding only classification templates (the seeded one) sorts last with 0. Shared with `templates.md` finding 1. Ruling: count all six kinds.
-- **F5 — A transfer ignores the target account's pack allowance (IPK-07).** Code: `validateTransferOfAccountResource` checks offer/accept only; `validateSoftLicenseLimitOrFail` is not called. Test: `transfer-innovation-pack-to-account` › the first case is titled "…without valid entitlements" and passes — the suite enshrines it. Spec 027 A9: silent on limits. Ruling: intended (a move is not a creation), or a gap in the cap?
+- **F5 — A transfer ignores the target account's pack allowance (IPK-07).** Code: `validateTransferOfAccountResource` checks offer/accept only; `validateSoftLicenseLimitOrFail` is not called. Test: `transfer-innovation-pack-to-account` › the first case is titled "…without valid entitlements" and passes — the suite enshrines it. Spec 027 A9: silent on limits. Ruling: intended (a move is not a creation), or a gap in the cap? **Product, 2026-11-20:** stays as today, no wish.
 - **F6 — Owner deletes and moves leave no audit trail (IPK-06, IPK-07).** Code: the platform branch audits (027 T058 / FR-018a "audit ONLY on the PLATFORM branch"); an account admin deleting their own pack writes nothing; a deleted pack's templates vanish with it. Ruling: by design today — record, or extend the audit to owners before the cutover's activity model.
 - **F7 — A stale log says the library ignores its query options (IPK-11).** Code: `library.resolver.fields.ts:37-40` logs "Ignoring query data … for now; to be added back in later" and then passes `limit` and `orderBy` to the service, which honours them. Cosmetic; ruling: delete the log so operators do not read the wrong contract.
 
@@ -210,8 +210,8 @@ Read-only extraction against the code, the tests and the specs; nothing below co
 
 - **OQ1 — Which credentials the harness admin holds.** The transfer suite and the smoke case run as `GLOBAL_ADMIN`; whether the persona is PRA / PCFA by fixture decides what those green rows prove (same question as every other table).
 - **OQ2 — Live read of a hidden pack by an outsider.** Finding 2 is a policy reading (`access-matrix.md:949-985` agrees: anonymous READ). Confirm on a stack: `lookup.innovationPack(ID)` of a `hidden` pack as anonymous, and `lookup.account(ID).innovationPacks` as an unrelated user.
-- **OQ3 — Is global pack name-id uniqueness intended?** Spaces and templates scope their name ids; packs do not (IPK-02). No spec states either; product should say which the new alias rule follows.
-- **OQ4 — Does the client rely on the library's default ordering?** IPK-11's "most templates first" is a code default; the paginated fields use insertion order instead (101 FR-015). Decide which the new core keeps.
+- **OQ3 — Is global pack name-id uniqueness intended?** Spaces and templates scope their name ids; packs do not (IPK-02). No spec states either; product should say which the new alias rule follows. **Product, 2026-11-20:** global uniqueness stays, as today.
+- **OQ4 — Does the client rely on the library's default ordering?** IPK-11's "most templates first" is a code default; the paginated fields use insertion order instead (101 FR-015). Decide which the new core keeps. **Product, 2026-11-20:** both orders stay as today; the Technical Lead checks the client.
 - **OQ5 — Has the smoke case ever been green?** It passes an organisation id where an account id is required (finding 1); either the harness's `createOrganization` once returned an account-shaped id, or the case has been red/unrun since the account model landed. Check the last `innovation` project run.
 
 ### D. Test gaps
@@ -231,25 +231,25 @@ Behaviours the area has that neither reading nor tests pinned down:
 
 ### E. Constants the rules depend on
 
-_"Rules on it" is pre-filled with the role whose domain covers the value: Product Lead for business values, plan constants and user-facing copy; Technical Lead for engineering limits and wire shapes; Security Lead for security limits. The "product must rule?" column is unchanged: product ticks the rows it must rule on (the CONST row in section 3)._
+_"Rules on it" is pre-filled with the role whose domain covers the value: Product Lead for business values, plan constants and user-facing copy; Technical Lead for engineering limits and wire shapes; Security Lead for security limits. The "product must rule?" column was ticked by Product, 2026-11-20 (CONST): "yes" rows wait for a product ruling before the rebuild._
 
 | Constant | Value today | Source | product must rule? | Rules on it |
 |---|---|---|---|---|
-| Search visibilities (3) | `hidden`, `account`, `public` | `search.visibility.ts:3-7`; `schema.graphql:961` | | Product Lead |
-| Library orderings (3) | `random`, `innovationPacks.numberOfTemplates_ASC`, `_DESC` (default DESC) | `innovation.packs.orderBy.ts:3-7`; `library.service.ts:84, 106` | | Product Lead |
-| New-pack defaults | `listedInStore = true`, `searchVisibility = account`; not settable at create | `innovation.pack.service.ts:91-92`; `dto/innovation.pack.dto.create.ts` | finding 3 | Product Lead |
-| Library eligibility | `listedInStore && searchVisibility = public` (packs and their templates alike) | `library.service.ts:86-90, 135-139, 199-202, 227-230, 266-271` | | Product Lead |
-| Library page cap | 100 (`first`/`last` clamped) | `library.service.ts:35, 337-349` | | Technical Lead |
-| Library search fields | profile `displayName`, `description`, tags (ILIKE substring); provider excluded | `library.service.ts:308-334` | | Product Lead |
-| "Number of templates" | post + whiteboard + space + callout + community-guidelines (classification excluded) | `innovation.pack.service.ts:295-312` → `templates.set.service.ts:238-276` | finding 4 | Technical Lead |
-| Hosted-resources scopes | `FULL` → all; `ORGANIZATION_ASSOCIATE` → public + account; `REGISTERED` → public; anonymous → null | `account.lookup.service.ts:139-146`; `user.resolver.fields.ts:187-235` | finding 2 | Product Lead |
-| Name-id rules | global uniqueness across packs; lower-cased; derived from display name when omitted | `innovation.pack.service.ts:51-76, 133-147` | open question 3 | Product Lead |
-| Pack cap | account entitlement `account-innovation-pack` (3 under `ACCOUNT_LICENSE_PLUS`; 0 on a plain account) — cross-reference `entitlements.md` | `entitlements.md` ENT-02, ENT-15, ENT-16 | | Product Lead |
-| Transfer privileges | `TRANSFER_RESOURCE_OFFER` on the source account, `TRANSFER_RESOURCE_ACCEPT` on the target; no entitlement check | `account.resolver.mutations.ts:645-672` | finding 5 | Security Lead |
-| Audit entries | kind `innovation-pack`, outcome `deleted` (PCFA delete) / `moved` (platform transfer); owner actions unaudited | `innovation.pack.resolver.mutations.ts:101-111`; `account.resolver.mutations.ts:549-561` | finding 6 | Security Lead |
-| Seeded pack | `platform-classifications` / "Classifications" / "Platform default Classification Templates." on the host organisation's account; forced listed + public every start | `bootstrap.service.ts:739-831` | | Product Lead |
-| Error texts | `InnovationPack: the provided nameID is already taken: <id>`; `Unable to update InnovationPack nameID: the provided nameID is already taken: <id>`; `Unable to find InnovationPack with ID: <id>`; `Unable to find InnovationPack using NameID: <n>`; `Unable to create account-innovation-pack on account: <accountId>. Entitlement limit of <n> of type account-innovation-pack reached` (ENT-02, finding 7 there) | `innovation.pack.service.ts:57, 141, 226, 243`; `account.resolver.mutations.ts:721` | | Technical Lead |
-| GraphQL surface | `InnovationPack{listedInStore, nameID, profile, provider, searchVisibility, templatesSet}`, `Account.innovationPacks(searchVisibility)`, `Library{innovationPacks(queryData), innovationPacksPaginated, templates(filter), templatesPaginated}`, `TemplateResult{template, innovationPack}`, `hostedResources.innovationPacks`; mutations `createInnovationPack`, `updateInnovationPack`, `deleteInnovationPack`, `transferInnovationPackToAccount`; lookups `innovationPack(ID)`, by-name `innovationPack(NAMEID)` | `schema.graphql:3970-3993, 4123-4160, 4341, 4457, 5012, 5082, 5316, 5402, 5744, 7617-7622, 9203, 10866` | | Technical Lead |
+| Search visibilities (3) | `hidden`, `account`, `public` | `search.visibility.ts:3-7`; `schema.graphql:961` | yes | Product Lead |
+| Library orderings (3) | `random`, `innovationPacks.numberOfTemplates_ASC`, `_DESC` (default DESC) | `innovation.packs.orderBy.ts:3-7`; `library.service.ts:84, 106` | yes | Product Lead |
+| New-pack defaults | `listedInStore = true`, `searchVisibility = account`; not settable at create | `innovation.pack.service.ts:91-92`; `dto/innovation.pack.dto.create.ts` | yes (finding 3) | Product Lead |
+| Library eligibility | `listedInStore && searchVisibility = public` (packs and their templates alike) | `library.service.ts:86-90, 135-139, 199-202, 227-230, 266-271` | yes | Product Lead |
+| Library page cap | 100 (`first`/`last` clamped) | `library.service.ts:35, 337-349` | no | Technical Lead |
+| Library search fields | profile `displayName`, `description`, tags (ILIKE substring); provider excluded | `library.service.ts:308-334` | yes | Product Lead |
+| "Number of templates" | post + whiteboard + space + callout + community-guidelines (classification excluded) | `innovation.pack.service.ts:295-312` → `templates.set.service.ts:238-276` | no (finding 4) | Technical Lead |
+| Hosted-resources scopes | `FULL` → all; `ORGANIZATION_ASSOCIATE` → public + account; `REGISTERED` → public; anonymous → null | `account.lookup.service.ts:139-146`; `user.resolver.fields.ts:187-235` | yes (finding 2) | Product Lead |
+| Name-id rules | global uniqueness across packs; lower-cased; derived from display name when omitted | `innovation.pack.service.ts:51-76, 133-147` | yes (open question 3) | Product Lead |
+| Pack cap | account entitlement `account-innovation-pack` (3 under `ACCOUNT_LICENSE_PLUS`; 0 on a plain account) — cross-reference `entitlements.md` | `entitlements.md` ENT-02, ENT-15, ENT-16 | yes | Product Lead |
+| Transfer privileges | `TRANSFER_RESOURCE_OFFER` on the source account, `TRANSFER_RESOURCE_ACCEPT` on the target; no entitlement check | `account.resolver.mutations.ts:645-672` | no (finding 5) | Security Lead |
+| Audit entries | kind `innovation-pack`, outcome `deleted` (PCFA delete) / `moved` (platform transfer); owner actions unaudited | `innovation.pack.resolver.mutations.ts:101-111`; `account.resolver.mutations.ts:549-561` | no (finding 6) | Security Lead |
+| Seeded pack | `platform-classifications` / "Classifications" / "Platform default Classification Templates." on the host organisation's account; forced listed + public every start | `bootstrap.service.ts:739-831` | yes | Product Lead |
+| Error texts | `InnovationPack: the provided nameID is already taken: <id>`; `Unable to update InnovationPack nameID: the provided nameID is already taken: <id>`; `Unable to find InnovationPack with ID: <id>`; `Unable to find InnovationPack using NameID: <n>`; `Unable to create account-innovation-pack on account: <accountId>. Entitlement limit of <n> of type account-innovation-pack reached` (ENT-02, finding 7 there) | `innovation.pack.service.ts:57, 141, 226, 243`; `account.resolver.mutations.ts:721` | no | Technical Lead |
+| GraphQL surface | `InnovationPack{listedInStore, nameID, profile, provider, searchVisibility, templatesSet}`, `Account.innovationPacks(searchVisibility)`, `Library{innovationPacks(queryData), innovationPacksPaginated, templates(filter), templatesPaginated}`, `TemplateResult{template, innovationPack}`, `hostedResources.innovationPacks`; mutations `createInnovationPack`, `updateInnovationPack`, `deleteInnovationPack`, `transferInnovationPackToAccount`; lookups `innovationPack(ID)`, by-name `innovationPack(NAMEID)` | `schema.graphql:3970-3993, 4123-4160, 4341, 4457, 5012, 5082, 5316, 5402, 5744, 7617-7622, 9203, 10866` | no | Technical Lead |
 
 ### F. Where this lands in the new core
 

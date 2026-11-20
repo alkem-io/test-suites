@@ -2,16 +2,16 @@
 
 _What the platform does today for live updates pushed to the browser (GraphQL subscriptions): how the connection is signed in, how updates reach every copy of the server, and for each of the 11 kinds of update who may follow it and what reaches whom. This area is recorded, then retired: the rebuild drops GraphQL subscriptions (catalogue OP-3), so the rules are written down to make the retirement explicit. Chat events, room message rules and notification content are in their own files and are only referred to. The file follows the three-section layout: **1. Rules**, **2. Rights**, **3. Open questions**, with the evidence in an **Appendix**._
 
-_Open questions per owner: Product Lead 2 · Technical Lead 9 · Quality Lead 4 · Security Lead 2 · Architecture Lead 1. By state: 15 open · 3 with a suggested answer. Proof of the 22 rules: 4 proven by a test · 18 untested (Appendix A)._
+_Open questions per owner: Product Lead 0 · Technical Lead 9 · Quality Lead 4 · Security Lead 2 · Architecture Lead 1. By state: 14 open · 2 with a suggested answer · 2 decided. Proof of the 22 rules: 4 proven by a test · 18 untested (Appendix A)._
 
-_Whys of the 22 rules: 13 rest on a source · 4 carry a draft for product to decide (SUB-05, SUB-12, SUB-16, SUB-20) · 5 have none, and each already carries an open question (SUB-04, SUB-15, SUB-19, SUB-21, SUB-22; SUB-15 and SUB-21 keep a note on the code)._
+_Whys of the 22 rules: 15 rest on a source or a product decision · 2 technical whys are still QA drafts, for the Technical Lead (SUB-05, SUB-20) · 5 have none, and each already carries an open question (SUB-04, SUB-15, SUB-19, SUB-21, SUB-22; SUB-15 and SUB-21 keep a note on the code)._
 
 **How to read it**
 
 - **Rule** is one or two plain sentences. The exact behaviour, with error messages and limits, is in Appendix A under the same id. The new core is checked against the exact text.
 - **Why: business** is what Alkemio needs. **Why: product** is the user story. **Why: technical** is the engineering reason. A rule needs at least one why, and gets a second or third only where it adds something for the decision or the code. "—" means none is given.
 - A why that names a spec, issue, pull request, code comment or code line rests on that source. A why, or the part of a why, ending in _(draft)_ was written by QA and no source states it: product keeps, rewrites or deletes it, and sets **Decided by**. A user story always ends in its "so that"; where no source gives one, QA wrote it. A rule with no why at all carries an open question in section 3.
-- **Decided by** names the source of the decision: a spec, a commit or pull request, or an issue. "Not decided: exists in the code" means the behaviour exists in the code and nobody chose it. "Not decided: a defect" means today's behaviour is a fault. Product has not reviewed this file yet.
+- **Decided by** names the source of the decision: a spec, a commit or pull request, or an issue. "Not decided: exists in the code" means the behaviour exists in the code and nobody chose it. "Not decided: a defect" means today's behaviour is a fault. Product reviewed section 3 on 2026-11-20.
 - A marker in bold at the end of a rule points at section 3: **(open: F3)** means a question on this rule is still open, **(defect: F…)** means today's behaviour is a fault and must not be copied as intended, **(defect in part: F…)** means part of it is. A rule with no marker stands as written. Every rule is logged as the server behaves today, also when that is not the intended end state. Whether a test proves the rule sits in Appendix A as **proven** or **untested**.
 - Hard rules are not marked yet. Some rules are choices that a new feature may challenge, and some can never change; a later version will mark the second kind with "(hard rule)" after the why that makes it so. Until then, no marker does not mean a rule is open to change.
 - "Follow" means subscribe: the client opens a connection and the server pushes updates over it.
@@ -36,13 +36,13 @@ _Whys of the 22 rules: 13 rest on a source · 4 carry a draft for product to dec
 
 | ID | Rule | Why: business | Why: product | Why: technical | Decided by |
 |---|---|---|---|---|---|
-| SUB-10 | A reader following a Space's activity gets every new activity entry there and, on request, from the Subspaces they may read, limited to the kinds asked for. An entry that is hidden later is not announced. **(open: F2, F6, OQ3)** | Live timeline on the space dashboard (`48093883e`, #2741 child activities). | — | — | Commit 48093883e; server #2741 |
+| SUB-10 | A reader following a Space's activity gets every new activity entry there and, on request, from the Subspaces they may read, limited to the kinds asked for. An entry that is hidden later is not announced. **(open: F2, OQ3)** | Live timeline on the space dashboard (`48093883e`, #2741 child activities). | — | — | Commit 48093883e; server #2741; Product, 2026-11-20 (F6): a hidden entry not being announced is accepted until retirement |
 | SUB-11 | A reader following a Space gets every Subspace created directly under it, whoever created it. **(open: F1, OQ2)** | Clients refresh subspace lists live (journey table JRN-12). | — | — | Not decided: exists in the code |
-| SUB-12 | A reader following a callout gets every post added to it, also on a draft callout. Links, whiteboards, memos and documents are not announced. Following a callout that does not accept posts is refused. **(open: F3)** | Live post collection on the callout page. _(draft)_ | — | The Form callout must never travel a contribution subscription (callout table CAL-49). | The Form clause: `callout.md` CAL-49. The rest is not decided: exists in the code |
+| SUB-12 | A reader following a callout gets every post added to it, also on a draft callout. Links, whiteboards, memos and documents are not announced. Following a callout that does not accept posts is refused. | New posts appear live on the callout page. | — | The Form callout must never travel a contribution subscription (callout table CAL-49). | The Form clause: `callout.md` CAL-49. The rest is not decided: exists in the code; Product, 2026-11-20 (F3): the rest stays as today, a draft's posts reach only those who may read the draft |
 | SUB-13 | A reader following a room gets every new, edited and deleted message, every reaction added or removed, and read receipts, in order. Everyone who may read the room gets every update, whoever sent it. | — | — | Matrix is the source of truth for messages (communications table COM-11). | `communications.md` COM-11 |
 | SUB-14 | A signed-in user gets the updates of the chats they are a member of at that moment, and nothing for chats they left. | Live chat over subscriptions (040 FR-006/007/019). | — | — | Spec 040 FR-006/007/019 |
 | SUB-15 | A signed-in reader following the forum is told when a discussion is created. Edits, deletions and comments are not announced. **(open: F4)** | — | — | — (the publish exists only on create) | Not decided: exists in the code |
-| SUB-16 | A reader following a virtual contributor is told when its engine status changes. | The client shows the VC's engine status live. _(draft)_ | — | — | Not decided: exists in the code |
+| SUB-16 | A reader following a virtual contributor is told when its engine status changes. | The client shows the VC's engine status live. | — | — | Product, 2026-11-20 |
 | SUB-17 | A signed-in user gets their own new notifications as they arrive, and their unread count after every change. Nobody gets another user's. | The tab badge always counts unread in-app notifications: "a user who wants quiet still wants to see what is waiting for them" (agents-hq spec 020, clarification). | — | — | Not decided: exists in the code; the client consumer: agents-hq spec 020 |
 | SUB-18 | A reader following a poll gets the poll again on every vote, status change and option change. While results are hidden, a reader who has not voted gets no vote updates. | Live polls close the feedback loop; hidden results must not leak through the push (038 US7 AC1–AC10, FR-030). | — | — | Spec 038 US7, FR-030 |
 
@@ -52,7 +52,7 @@ _Whys of the 22 rules: 13 rest on a source · 4 carry a draft for product to dec
 |---|---|---|---|---|---|
 | SUB-19 | Update ids are random numbers from 0 to 1000 and can repeat. They are used for logging only. **(open: F9, Q-SUB-19)** | — | — | — | Not decided: exists in the code |
 | SUB-20 | One kind of update and two queues exist by name, but nothing uses them. **(open: F5)** | — | — | Leftovers (SSI and the removed Excalidraw backend). _(draft)_ | Not decided: exists in the code |
-| SUB-21 | When a comment is deleted, followers of the activity feed are not told: the feed keeps showing the comment until it is reloaded. **(open: F6)** | — | — | — ("todo: trigger a subscription to update other clients?") | Not decided: exists in the code |
+| SUB-21 | When a comment is deleted, followers of the activity feed are not told: the feed keeps showing the comment until it is reloaded. | — | — | — ("todo: trigger a subscription to update other clients?") | Not decided: exists in the code; Product, 2026-11-20 (F6): accepted as today until subscriptions are retired |
 | SUB-22 | A visitor who is not signed in may follow rooms, new Subspaces, new posts and activity on anything public. **(open: F8, OQ3)** | — | — | — | Not decided: exists in the code |
 
 ## 2. Rights
@@ -81,20 +81,9 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 ### Product Lead
 
-[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 2 to answer, 1 also involved
+[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 0 to answer
 
-**To answer**
-
-| ID | Area | Type | Question | Owner | Proposed answer | State |
-|---|---|---|---|---|---|---|
-| F3 | Reach | decision | Posts on a draft callout are sent to its followers. Today only people who may read the draft get them: admins and the creator. Should a draft's posts be sent at all? | Product Lead | — | open |
-| F6 | Housekeeping | decision | A deleted comment stays in a live activity feed until reload. Accept until retirement? | Product Lead (Quality Lead: the polling check must see hidden entries disappear on the next poll) | Accept until retirement; note it for the polling check. | suggested |
-
-**Also involved**
-
-| ID | Area | Type | Question | Owner | Proposed answer | State |
-|---|---|---|---|---|---|---|
-| F8 | Housekeeping | risk | Visitors who are not signed in can open live streams on public content. Is that by design (public is public)? The polling check in the new core must know. | Security Lead, with Product Lead | — | open |
+Nothing to answer: every Product Lead question is decided (see Decided).
 
 ### Technical Lead
 
@@ -122,7 +111,7 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 ### Quality Lead
 
-[Quality Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Quality%20Lead.md) · Delivery (Evgeni), with the QA Engineer as the doer · 4 to answer, 1 also involved
+[Quality Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Quality%20Lead.md) · Delivery (Evgeni), with the QA Engineer as the doer · 4 to answer
 
 **To answer**
 
@@ -133,12 +122,6 @@ _One section per role, so each owner reads only their own part. **To answer** li
 | OQ3 | Reach | check | F2 and F8 were only read in the code. Check live: a visitor following a public Space's activity and a public room. | Quality Lead | — | open |
 | GAPS | All | test | 18 rules have no test and 8 behaviours were never pinned down (Appendix D). The area is to be retired: which, if any, still get a case? | Quality Lead | — | open |
 
-**Also involved**
-
-| ID | Area | Type | Question | Owner | Proposed answer | State |
-|---|---|---|---|---|---|---|
-| F6 | Housekeeping | decision | A deleted comment stays in a live activity feed until reload. Accept until retirement? | Product Lead (Quality Lead: the polling check must see hidden entries disappear on the next poll) | Accept until retirement; note it for the polling check. | suggested |
-
 ### Security Lead
 
 [Security Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Security%20Lead.md) · Delivery (Valentin) · 2 to answer, 1 also involved
@@ -148,7 +131,7 @@ _One section per role, so each owner reads only their own part. **To answer** li
 | ID | Area | Type | Question | Owner | Proposed answer | State |
 |---|---|---|---|---|---|---|
 | F2 | Reach | risk | A visitor can follow a public Space's activity live, with people's names, but cannot query the same activity. Align the two, or accept it until live updates are retired? | Security Lead (Technical Lead aligns if not accepted) | — | open |
-| F8 | Housekeeping | risk | Visitors who are not signed in can open live streams on public content. Is that by design (public is public)? The polling check in the new core must know. | Security Lead, with Product Lead | — | open |
+| F8 | Housekeeping | risk | Visitors who are not signed in can open live streams on public content. Is that by design (public is public)? The polling check in the new core must know. | Security Lead, with Product Lead | Product, 2026-11-20: by design, public is public: a visitor may follow what they may read. The Security Lead confirms. | open |
 
 **Also involved**
 
@@ -165,6 +148,13 @@ _One section per role, so each owner reads only their own part. **To answer** li
 | ID | Area | Type | Question | Owner | Proposed answer | State |
 |---|---|---|---|---|---|---|
 | OQ5 | All | contract | For each feature that moves from live updates to polling, how stale may the screen be? Needed before the W2 walks assert that something "appears". | Architecture Lead | — | open |
+
+### Decided
+
+| Was | Decision | Decided by | Now |
+|---|---|---|---|
+| F3 | Stays as today: posts on a draft callout reach only the followers who may read the draft (admins and the creator). No wish. | Product, 2026-11-20 | SUB-12 |
+| F6 | Accepted as today until subscriptions are retired: a deleted comment stays in a live feed until reload. The Quality Lead notes it for the polling check (hidden entries must disappear on the next poll). | Product, 2026-11-20 | SUB-21 |
 
 ## Appendix
 
@@ -215,12 +205,12 @@ _The original text of every finding (F) and open question (OQ), with its evidenc
 
 - **F1 — The two subspace-created legacy operations cannot validate against the Release/79 schema (SUB-11).** Code/schema: `scalar UUID` only; `subspaceCreated(spaceID: UUID!)`. Test: `subscription-queries.ts:1` declares `$spaceID: UUID_NAMEID!`, `:11` calls `subspaceCreated(subspaceID: …)`. The project is off the nightly, so the inventory's "0 skip" is collection, not execution. Ruling: treat SUB-11 as unproven; fix or retire the two files with the area.
 - **F2 — The activity subscription has a weaker gate than the activity query (SUB-10).** Code: `activityCreated` checks read on the collaboration only; `activityLogOnCollaboration` first requires the platform's "read users" privilege (signed-in). Test/spec: none. Ruling: an anonymous visitor can stream a public space's activity (with actor names) it cannot query — align, or accept until retirement.
-- **F3 — Posts on draft callouts are pushed (SUB-12).** Code: the post-created event is published before the PUBLISHED check that governs the activity entry and the notification. Test: the Form control only. Spec: CAL-30's "on a published collaboration callout" wording covers activity, not the push. Ruling: whether a draft's posts may reach subscribers (today only those with read on the draft — admins and the creator).
+- **F3 — Posts on draft callouts are pushed (SUB-12).** Code: the post-created event is published before the PUBLISHED check that governs the activity entry and the notification. Test: the Form control only. Spec: CAL-30's "on a published collaboration callout" wording covers activity, not the push. Ruling: whether a draft's posts may reach subscribers (today only those with read on the draft — admins and the creator). **Product, 2026-11-20:** stays as today; only those who may read the draft get its posts.
 - **F4 — "Discussion updated" fires only on creation (SUB-15).** Code: one publish, in `createDiscussion`. Test/spec: none. Ruling: rename/document, or accept with retirement.
 - **F5 — Dead topic and queue constants (SUB-20).** Code: `PROFILE_VERIFIED_CREDENTIAL`, `SUBSCRIPTION_WHITEBOARD_CONTENT`, `SUBSCRIPTION_WHITEBOARD_SAVED` bound to nothing. Ruling: expected-loss list.
-- **F6 — Comment removal is never pushed to live activity subscribers (SUB-21, ACT-13).** Code: `messageRemoved` hides the row and leaves the publish commented out ("todo"). Ruling: accept until retirement; note for the polling oracle (hidden rows must disappear on the next poll).
+- **F6 — Comment removal is never pushed to live activity subscribers (SUB-21, ACT-13).** Code: `messageRemoved` hides the row and leaves the publish commented out ("todo"). Ruling: accept until retirement; note for the polling oracle (hidden rows must disappear on the next poll). **Product, 2026-11-20:** accepted until retirement; noted for the polling check.
 - **F7 — The legacy WebSocket protocol is still served (SUB-04).** Code: `subscriptions-transport-ws` next to `graphql-ws`, both authenticated from the upgrade. Test/spec: none. Ruling: is any client still on the legacy protocol? Retire with the area.
-- **F8 — Anonymous visitors may open live streams on public resources (SUB-22).** Code: the gates are the resources' read rules; the matrix grants read on public rooms, collaborations, callouts and spaces to anonymous. Test: no anonymous subscription is attempted. Spec: none. Ruling: by design (public is public) or not — the polling-aware oracle in the new core must know.
+- **F8 — Anonymous visitors may open live streams on public resources (SUB-22).** Code: the gates are the resources' read rules; the matrix grants read on public rooms, collaborations, callouts and spaces to anonymous. Test: no anonymous subscription is attempted. Spec: none. Ruling: by design (public is public) or not — the polling-aware oracle in the new core must know. **Product, 2026-11-20:** product view: by design, public is public; the Security Lead confirms.
 - **F9 — Event ids are not unique (SUB-19).** Code: random 0..1000. Harmless (logging only) but a client de-duplicating on `eventID` would drop events. Ruling: note for retirement; no client reads it.
 
 #### Open questions

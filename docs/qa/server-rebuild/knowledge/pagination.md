@@ -2,9 +2,9 @@
 
 _What the platform does today when a long list is served in pages: the one paging contract every such list shares (page size, markers, order, page info, refusals) and the facts per list: users, organisations, spaces, the platform-admin lists, in-app notifications, role-set candidates, the Innovation Library, the activity feed and form responses. What a list contains belongs to the file of that resource; only the paging is here. The file follows the three-section layout accepted in the product review of `communications.md` (alkem-io/test-suites#717): **1. Rules**, **2. Rights**, **3. Open questions**, with the evidence in an **Appendix**._
 
-_Open questions per owner: Product Lead 2 · Technical Lead 7 · Quality Lead 5 · Architecture Lead 1. By state: 8 open · 7 with a suggested answer. Proof of the 19 rules: 7 proven by a test · 12 untested (Appendix A)._
+_Open questions per owner: Product Lead 0 · Technical Lead 7 · Quality Lead 5 · Architecture Lead 1. By state: 6 open · 7 with a suggested answer · 2 decided. Proof of the 19 rules: 7 proven by a test · 12 untested (Appendix A)._
 
-_Whys of the 19 rules: 11 rest on a source · 6 carry a draft for product to decide · 2 have none, and both carry a defect marker (PAG-06, PAG-07)._
+_Whys of the 19 rules: 15 rest on a source or a product decision · 2 rest only on a technical QA draft, for the Technical Lead (PAG-02, PAG-19) · none carries a product draft · 2 have none, and both carry a defect marker (PAG-06, PAG-07)._
 
 **How to read it**
 
@@ -31,7 +31,7 @@ _Whys of the 19 rules: 11 rest on a source · 6 carry a draft for product to dec
 | PAG-06 | Asking for the last N items without a marker returns the first N items of the list, not the last ones. **(defect: F1)** | — | — | — the no-cursor branch leaves the query untouched (`enforceCursor` returns early); Relay says the last N. | Not decided: a defect |
 | PAG-07 | Paging backward from a marker can return fewer items than asked when a filter is on or items were deleted. **(defect: F2)** | — | — | — | Not decided: a defect |
 | PAG-08 | Each page says whether items exist before and after it, gives the markers of its first and last item, and gives the total of the whole filtered list. **(open: F4, F6)** | — | — | The pagination function "look[s] around if data is available before or after the paged section", so a client knows whether to fetch more without a second query (`docs/Pagination.md` Technical design). | docs/Pagination.md (Technical design) |
-| PAG-09 | A filter keeps every item that contains the typed text in one of its fields, ignoring capitals. An empty text keeps everything. Users are filtered on first name, last name, display name and email; organisations on display name, name id, contact email, domain and website. **(open: F9)** | A single search box over several fields. _(draft)_ | — | — | Not decided: exists in the code |
+| PAG-09 | A filter keeps every item that contains the typed text in one of its fields, ignoring capitals. An empty text keeps everything. Users are filtered on first name, last name, display name and email; organisations on display name, name id, contact email, domain and website. **(open: F9)** | A single search box over several fields. | — | — | Product, 2026-11-20 |
 | PAG-19 | An item on a page is the same object as the one returned when it is asked for on its own. | — | — | One object per item, so the client cache keeps one copy of each item whether it came from a page or on its own. _(draft)_ | Not decided: exists in the code |
 
 ### The lists
@@ -39,13 +39,13 @@ _Whys of the 19 rules: 11 rest on a source · 6 carry a draft for product to dec
 | ID | Rule | Why: business | Why: product | Why: technical | Decided by |
 |---|---|---|---|---|---|
 | PAG-10 | Every signed-in user can page through the platform user list; visitors are refused. Service accounts are included, unlike in the unpaged user list, which hides them. **(defect in part: F3, OQ2)** | — | — | "Allow all registered users to query non-protected user information" (code comment); personal fields keep their own per-field gate. | Not decided: exists in the code (code comment) |
-| PAG-11 | Anyone, signed in or not, can page through the organisation list, optionally narrowed to one verification status. **(open: Q-PAG-01, F7)** | Organisation profiles are public, so their list is public too. _(draft)_ | — | — | Not decided: exists in the code |
-| PAG-12 | Anyone can page through the list of top-level spaces. It shows active spaces unless other visibilities are asked for, and it does not check whether the reader may see each space. **(open: F7)** | The default hides archived, demo and inactive spaces. _(draft)_ | — | Space abouts are world-readable (journey area). _(draft)_ | Not decided: exists in the code |
+| PAG-11 | Anyone, signed in or not, can page through the organisation list, optionally narrowed to one verification status. **(open: Q-PAG-01)** | Organisation profiles are public, so their list is public too. | — | — | Product, 2026-11-20 (F7): the rule, as today |
+| PAG-12 | Anyone can page through the list of top-level spaces. It shows active spaces unless other visibilities are asked for, and it does not check whether the reader may see each space. | The default hides archived, demo and inactive spaces. | — | Space abouts are world-readable (journey area). _(draft)_ | Product, 2026-11-20 (F7): the rule, as today; a private top-level Space's existence is visible to everyone (same ruling as search F2) |
 | PAG-13 | The platform-admin lists of users and organisations are the same pages behind admin gates: users for the Platform Users Admin and the Platform License Manager; organisations for Platform Content Full Access, Platform Support and the Platform License Manager. | Support and the licence manager need the lists their actions target (027 R-F.2/R-F.3 code comments). | — | — | Spec 027 R-F.2/R-F.3 (code comments) |
 | PAG-14 | A user's own in-app notifications come newest first, leave out archived ones and can be narrowed by type. A visitor gets an empty page. A page can be shorter than asked, because notifications from spaces the reader cannot see are dropped after the page is cut. **(defect in part: F8)** | — | — | Ordering by when the event happened, not when it was saved (code comment); anonymous `me` degrades to empty values (107/6315). | Code comment; 107/6315 as cited in the extraction |
 | PAG-15 | A role set's candidate lists are paged: users and virtual contributors who are not yet members (only the parent community's members, unless the caller may invite into the parent), and members who do not yet hold a higher role. | — | — | Inviting a non-member into a subspace also pulls them into the parent, so the pool widens only for those allowed to do that (code comment). | Not decided: exists in the code (code comment); see RS-11 in `roleset.md` |
 | PAG-16 | The Innovation Library pages its listed, publicly visible innovation packs and their templates newest first, up to 100 per page, narrowed by text and, for templates, by type. | — | — | Library grew past one request (spec 101 Context; FR-005/006/012/015/019). | Server spec 101 FR-005/006/012/015/019 |
-| PAG-17 | The activity feed pages the caller's own activity in the order the caller asks for. It is for signed-in users only. | — | As a signed-in user, I want to page back through my own activity, so that I can find what I did earlier. _(draft)_ | — | Not decided: exists in the code |
+| PAG-17 | The activity feed pages the caller's own activity in the order the caller asks for. It is for signed-in users only. | — | As a signed-in user, I want to page back through my own activity, so that I can find what I did earlier. | — | Product, 2026-11-20 |
 | PAG-18 | Form responses page forward only, 1 to 50 per page (25 by default), over the responses the viewer may read: all, only their own, or none. | — | — | Relay paging keyed on `rowId`, `first` clamped to 50, total scoped to the viewer (080 D-15); the cap of 50 is one of the form's count caps (080 D-16). | Spec 080 D-15, D-16 |
 
 Numbering note: PAG-19 sits in the shared-contract block; ids are stable, not ordered.
@@ -77,24 +77,14 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 ### Product Lead
 
-[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 2 to answer, 1 also involved
+[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 0 to answer
 
-**To answer**
+Nothing to answer: every Product Lead question is decided (see Decided).
 
-| ID | Area | Type | Question | Owner | Proposed answer | State |
-|---|---|---|---|---|---|---|
-| F7 | Lists | decision | Organisations and active top-level spaces can be listed by anyone, with no check per item, so a private top-level space still appears in the list. Is it intended that the existence of private spaces is visible? | Product Lead (Security Lead owns the risk if it stays) | — | open |
-| CONST | All | decision | 13 of the 16 constants are still blank in "product must rule?" (Appendix E). Which must product rule on? | Product Lead (Technical Lead for engineering limits and wire shapes) | — | open |
-
-**Also involved**
-
-| ID | Area | Type | Question | Owner | Proposed answer | State |
-|---|---|---|---|---|---|---|
-| F3 | Lists | defect | Service accounts show in the paged user list but are hidden in the unpaged one (PAG-10). Should the two lists agree? | Technical Lead (Product Lead confirms that service accounts stay hidden) | Align the two queries. | suggested |
 
 ### Technical Lead
 
-[Technical Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Technical%20Lead.md) · Delivery (Anton) · 7 to answer, 3 also involved
+[Technical Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Technical%20Lead.md) · Delivery (Anton) · 7 to answer, 2 also involved
 
 **To answer**
 
@@ -102,7 +92,7 @@ _One section per role, so each owner reads only their own part. **To answer** li
 |---|---|---|---|---|---|---|
 | F1 | Contract | defect | Asking for the last N items without a marker returns the first N (PAG-06). Fix it in the new core? | Technical Lead (Quality Lead adds the backward case) | A defect to fix in the new core; add a backward case to the test net. | suggested |
 | F2 | Contract | defect | Backward paging counts on row numbers without holes, so with a filter or deleted rows a page holds fewer items than asked (PAG-07). Fix it with F1? | Technical Lead | A defect; same fix as F1. | suggested |
-| F3 | Lists | defect | Service accounts show in the paged user list but are hidden in the unpaged one (PAG-10). Should the two lists agree? | Technical Lead (Product Lead confirms that service accounts stay hidden) | Align the two queries. | suggested |
+| F3 | Lists | defect | Service accounts show in the paged user list but are hidden in the unpaged one (PAG-10). Should the two lists agree? | Technical Lead (Product Lead confirms that service accounts stay hidden) | Align the two queries. Product, 2026-11-20: service accounts are not people anyone looks for, so they stay hidden from people lists (as search SRCH-17); the paged list showing them is the defect. | suggested |
 | F5 | Contract | tidy-up | The message says that mixing forward and backward paging is "discouraged", but the request is refused. Is the wording to be corrected? | Technical Lead | Rebaseline the text when it changes; not a change in behaviour. | suggested |
 | OQ1 | Contract | check | Is server#3571 still open, and do the 11 skipped marker cases still apply to today's engine? (Feeds F1, F2 and F4.) | Technical Lead | — | open |
 | OQ3 | Contract | tidy-up | The type `RelayStylePaginatedSpace` is defined, but nothing that returns it was found. A dead type, or a consumer that was not read? | Technical Lead | — | open |
@@ -114,7 +104,6 @@ _One section per role, so each owner reads only their own part. **To answer** li
 |---|---|---|---|---|---|---|
 | F4 | Contract | test | The marker and page-info contract has no green test: 11 cases are skipped with "bug #3571". Run them again against today's engine or rewrite them, and decide whether #3571 is still real. | Quality Lead (Technical Lead answers OQ1 first) | — | open |
 | F6 | Contract | check | What does the page info say for an empty page: nothing more to fetch, or an error? It was not verified. | Quality Lead (Technical Lead defines the answer) | Verify live; define "has next page" as false for an empty page. | suggested |
-| CONST | All | decision | 13 of the 16 constants are still blank in "product must rule?" (Appendix E). Which must product rule on? | Product Lead (Technical Lead for engineering limits and wire shapes) | — | open |
 
 ### Quality Lead
 
@@ -144,7 +133,7 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 | ID | Area | Type | Question | Owner | Proposed answer | State |
 |---|---|---|---|---|---|---|
-| F7 | Lists | decision | Organisations and active top-level spaces can be listed by anyone, with no check per item, so a private top-level space still appears in the list. Is it intended that the existence of private spaces is visible? | Product Lead (Security Lead owns the risk if it stays) | — | open |
+| F7 | Lists | decision | Organisations and active top-level spaces can be listed by anyone, with no check per item, so a private top-level space still appears in the list. Is it intended that the existence of private spaces is visible? | Product Lead (Security Lead owns the risk if it stays) | Product, 2026-11-20: the rule, as today: that a private top-level Space exists is visible to everyone (same ruling as search F2). The Security Lead owns the risk. | open |
 
 ### Architecture Lead
 
@@ -155,6 +144,14 @@ _One section per role, so each owner reads only their own part. **To answer** li
 | ID | Area | Type | Question | Owner | Proposed answer | State |
 |---|---|---|---|---|---|---|
 | F8 | Lists | defect | A notifications page can be short while the total still counts the dropped items, because hidden items are removed after the page is cut (PAG-14). How must the new core do it? | Architecture Lead | Filter before paging in the new core. | suggested |
+
+### Decided
+
+| Was | Decision | Decided by | Now |
+|---|---|---|---|
+| CONST | Product rules on the default page size, the page caps, the user and organisation filter fields and the space filter, ticked "yes" in Appendix E. The rest goes to the Technical Lead or the Security Lead. | Product, 2026-11-20 | Appendix E |
+| F7 | The rule, as today: organisations and active top-level spaces can be listed by anyone with no check per item, so a private top-level Space appears in the list; that it exists is visible to everyone and its About is readable by all. Same ruling as search F2; no wish. | Product, 2026-11-20 | PAG-11, PAG-12 |
+
 
 ## Appendix
 
@@ -202,11 +199,11 @@ _The original text of every finding (F) and open question (OQ), with its evidenc
 
 - **F1 — `last` without `before` returns the first N (PAG-06).** Code: with no cursor the query is left as-is, ordered ascending, `take(last)`. Relay spec (cited in the code) and `docs/Pagination.md` ("Amount of items before the 'before' cursor"): the last N. Test: the only `last`-only rows ask for 17 of 6/12 items, so they cannot tell. Ruling: defect to fix in the new core; add a backward case to the net.
 - **F2 — Backward window is row-id arithmetic (PAG-07).** `[cursorRow − last, cursorRow)` assumes contiguous row ids in the filtered set; with a filter or deleted rows a page holds fewer than `last`. Test/spec: none. Ruling: defect (same fix as 1).
-- **F3 — Service-profile users leak into `usersPaginated` (PAG-10).** Code: `users` filters `serviceProfile: false`; `getPaginatedUsers` does not. Test: the user file's oracles count 12 including `notifications@alkem.io`; whether that account is a service profile on the test cluster was not checked. Spec: none. Ruling: align the two queries.
+- **F3 — Service-profile users leak into `usersPaginated` (PAG-10).** Code: `users` filters `serviceProfile: false`; `getPaginatedUsers` does not. Test: the user file's oracles count 12 including `notifications@alkem.io`; whether that account is a service profile on the test cluster was not checked. Spec: none. Ruling: align the two queries. **Product, 2026-11-20:** service accounts stay hidden from people lists; the paged list showing them is the defect.
 - **F4 — The cursor and pageInfo contract is unproven (PAG-05/08).** 11 cases are skipped with "bug #3571" (issue not read — cited only in tests). Nothing green asserts `startCursor`, `endCursor`, `hasNextPage`, `hasPreviousPage` or `total`. Ruling: un-skip against the current engine or rewrite; decide whether #3571 is still real.
 - **F5 — "Discouraged" is a refusal (PAG-02).** The message says discouraged; the request is rejected. Ruling: rebaseline the text when it changes; not a behaviour change.
 - **F6 — Empty page info (PAG-08).** With no items `startCursorRowId` is undefined and the counts run `rowId < undefined` / `> undefined`; the outcome (0 or an error) was not verified. Ruling: verify live; define `hasNextPage=false` for an empty page.
-- **F7 — Unauthenticated full listings (PAG-11/12).** Organisations and active L0 spaces page with no gate and no per-row read check, while `spaces`/`exploreSpaces` apply an authoritative READ (journey JRN-64). Consistent with public abouts today; a private L0 still appears in `spacesPaginated`. Ruling: confirm that listing private spaces' existence is intended (cross-ref journey).
+- **F7 — Unauthenticated full listings (PAG-11/12).** Organisations and active L0 spaces page with no gate and no per-row read check, while `spaces`/`exploreSpaces` apply an authoritative READ (journey JRN-64). Consistent with public abouts today; a private L0 still appears in `spacesPaginated`. Ruling: confirm that listing private spaces' existence is intended (cross-ref journey). **Product, 2026-11-20:** record as the rule: a private top-level Space's existence is visible to everyone; same as search F2.
 - **F8 — `me.notifications` pages are cut before the visibility drop (PAG-14).** Rows of unreadable spaces are removed after `take`, so a page can be short while `total` counts them; backward `hasPreviousPage` is `!!after || !!before`, not a count. Ruling: filter before paging in the new core.
 - **F9 — Legacy oracles are containment-only (PAG-01/04/09).** Every green row asserts "contains X and Y, length N"; order is never pinned, and `email 'admin@alkem.io' → 2` passes only because of substring matching. The net must pin order and exact sets.
 
@@ -235,26 +232,26 @@ Behaviours the area has that neither reading nor tests pinned down:
 
 ### E. Constants the rules depend on
 
-_"Rules on it" is pre-filled with the role whose domain covers the value: Product Lead for business values, plan constants and user-facing copy; Technical Lead for engineering limits and wire shapes; Security Lead for security limits. The "product must rule?" column is as extracted: a finding id where a finding covers the value, blank where nobody has ticked it yet (row CONST in section 3)._
+_"Rules on it" is pre-filled with the role whose domain covers the value: Product Lead for business values, plan constants and user-facing copy; Technical Lead for engineering limits and wire shapes; Security Lead for security limits. The "product must rule?" column was ticked by Product, 2026-11-20 (CONST): "yes" rows wait for a product ruling before the rebuild._
 
 | Constant | Value today | Source | product must rule? | Rules on it |
 |---|---|---|---|---|
-| Default page size | 25 (`DEFAULT_PAGE_ITEMS`); form responses `DEFAULT_PAGE_SIZE` 25 | `relay.style.pagination.fn.ts:24`; `callout.form.response.service.ts:33` | | Product Lead (Technical Lead for the engine default) |
-| Page caps | Innovation Library 100 (`MAX_LIBRARY_PAGE_SIZE`); form responses 50 (`FORM_RESPONSES_PAGE_MAX`); every other list uncapped | `library.service.ts:35`; `entity.field.length.constants.ts:24` | | Product Lead (Technical Lead for the engine default) |
-| Cursor | the item's `id` (UUID); sort/cursor key `rowId` (sequential, per table) | `relay.style.pagination.fn.ts:25-26` | | Technical Lead |
-| Default order | `rowId ASC`; library `DESC`; in-app notifications `triggeredAt DESC, id DESC` | `relay.style.pagination.fn.ts:70, 97-102`; `library.service.ts:206`; `in.app.notification.service.ts:171-177` | | Technical Lead |
-| Backward window | `[cursorRow − last, cursorRow)` | `relay.style.pagination.fn.ts:172-185` | F-2 | Technical Lead |
-| No-cursor `last` | first `last` rows | `relay.style.pagination.fn.ts:158-160` | F-1 | Technical Lead |
-| Validation texts | `Using both "first" and "last" parameters is discouraged.`; `Cursor "after" requires having "first" parameter.`; `Cursor "before" requires having "last" parameter.`; `Parameter "first" needs to be positive.`; `Parameter "last" needs to be positive.` | `validate.pagination.args.ts:12-44` | F-5 | Technical Lead |
-| Validation codes | `PAGINATION_PARAM_NOT_FOUND`, `PAGINATION_INPUT_OUT_OF_BOUND` | `src/common/exceptions/pagination/*.ts:6` | | Technical Lead |
-| Cursor-not-found text | `Unable to find entity with ID: <cursor>` (entity-not-found) | `relay.style.pagination.fn.ts:141-146` | | Technical Lead |
-| Filter semantics | `ILIKE '%value%'` per field, OR across fields; `''` matches all; displayName via profile join | `filter.fn.where.expression.ts:25-31`; `filters/*.ts` | | Technical Lead |
-| User filter fields | `firstName`, `lastName`, `displayName`, `email` | `input-types/user.filter.input.ts` | | Product Lead |
-| Organisation filter fields | `displayName`, `nameID`, `contactEmail`, `domain`, `website`; plus `status: OrganizationVerificationEnum` | `input-types/organization.filter.input.ts`; `organization.resolver.queries.ts:43-48` | | Product Lead |
-| Space filter | `visibilities: [ACTIVE \| ARCHIVED \| DEMO \| INACTIVE]`, default `[ACTIVE]`, L0 only | `space.filter.dto.input.ts`; `space.filter.service.ts:16-18`; `space.visibility.ts` | | Product Lead |
-| Page field names | `users`, `organization`, `spaces`, `inAppNotifications`, `virtualContributors`, `innovationPacks`, `templates` (+ `total`, `pageInfo`) | `src/core/pagination/paginated.*.ts`; library types | | Technical Lead |
-| Platform-admin list gates | users: `PLATFORM_USERS_ADMIN` ∨ `PLATFORM_LICENSING_LISTS_READ`; organisations: `PLATFORM_CONTENT_FULL_ACCESS` ∨ `PLATFORM_SUPPORT_LISTS_READ` ∨ `PLATFORM_LICENSING_LISTS_READ` | `platform.admin.resolver.fields.ts:184-192, 221-237` | | Security Lead |
-| GraphQL surface | `usersPaginated(after, before, filter, first, last, withTags)`, `organizationsPaginated(…, status)`, `spacesPaginated(…, filter)`, `platformAdmin.users/organizations`, `me.notifications`, `RoleSet.availableUsersForEntryRole/availableVirtualContributorsForEntryRole/availableUsersForElevatedRole`, `Library.innovationPacksPaginated/templatesPaginated`, `activityFeed`, `PageInfo{startCursor, endCursor, hasNextPage, hasPreviousPage}` | `schema.graphql:5662-5669, 6354-6366, 6397-6407, 6430-6442` | | Technical Lead |
+| Default page size | 25 (`DEFAULT_PAGE_ITEMS`); form responses `DEFAULT_PAGE_SIZE` 25 | `relay.style.pagination.fn.ts:24`; `callout.form.response.service.ts:33` | yes | Product Lead (Technical Lead for the engine default) |
+| Page caps | Innovation Library 100 (`MAX_LIBRARY_PAGE_SIZE`); form responses 50 (`FORM_RESPONSES_PAGE_MAX`); every other list uncapped | `library.service.ts:35`; `entity.field.length.constants.ts:24` | yes | Product Lead (Technical Lead for the engine default) |
+| Cursor | the item's `id` (UUID); sort/cursor key `rowId` (sequential, per table) | `relay.style.pagination.fn.ts:25-26` | no | Technical Lead |
+| Default order | `rowId ASC`; library `DESC`; in-app notifications `triggeredAt DESC, id DESC` | `relay.style.pagination.fn.ts:70, 97-102`; `library.service.ts:206`; `in.app.notification.service.ts:171-177` | no | Technical Lead |
+| Backward window | `[cursorRow − last, cursorRow)` | `relay.style.pagination.fn.ts:172-185` | no (F-2) | Technical Lead |
+| No-cursor `last` | first `last` rows | `relay.style.pagination.fn.ts:158-160` | no (F-1) | Technical Lead |
+| Validation texts | `Using both "first" and "last" parameters is discouraged.`; `Cursor "after" requires having "first" parameter.`; `Cursor "before" requires having "last" parameter.`; `Parameter "first" needs to be positive.`; `Parameter "last" needs to be positive.` | `validate.pagination.args.ts:12-44` | no (F-5) | Technical Lead |
+| Validation codes | `PAGINATION_PARAM_NOT_FOUND`, `PAGINATION_INPUT_OUT_OF_BOUND` | `src/common/exceptions/pagination/*.ts:6` | no | Technical Lead |
+| Cursor-not-found text | `Unable to find entity with ID: <cursor>` (entity-not-found) | `relay.style.pagination.fn.ts:141-146` | no | Technical Lead |
+| Filter semantics | `ILIKE '%value%'` per field, OR across fields; `''` matches all; displayName via profile join | `filter.fn.where.expression.ts:25-31`; `filters/*.ts` | no | Technical Lead |
+| User filter fields | `firstName`, `lastName`, `displayName`, `email` | `input-types/user.filter.input.ts` | yes | Product Lead |
+| Organisation filter fields | `displayName`, `nameID`, `contactEmail`, `domain`, `website`; plus `status: OrganizationVerificationEnum` | `input-types/organization.filter.input.ts`; `organization.resolver.queries.ts:43-48` | yes | Product Lead |
+| Space filter | `visibilities: [ACTIVE \| ARCHIVED \| DEMO \| INACTIVE]`, default `[ACTIVE]`, L0 only | `space.filter.dto.input.ts`; `space.filter.service.ts:16-18`; `space.visibility.ts` | yes | Product Lead |
+| Page field names | `users`, `organization`, `spaces`, `inAppNotifications`, `virtualContributors`, `innovationPacks`, `templates` (+ `total`, `pageInfo`) | `src/core/pagination/paginated.*.ts`; library types | no | Technical Lead |
+| Platform-admin list gates | users: `PLATFORM_USERS_ADMIN` ∨ `PLATFORM_LICENSING_LISTS_READ`; organisations: `PLATFORM_CONTENT_FULL_ACCESS` ∨ `PLATFORM_SUPPORT_LISTS_READ` ∨ `PLATFORM_LICENSING_LISTS_READ` | `platform.admin.resolver.fields.ts:184-192, 221-237` | no | Security Lead |
+| GraphQL surface | `usersPaginated(after, before, filter, first, last, withTags)`, `organizationsPaginated(…, status)`, `spacesPaginated(…, filter)`, `platformAdmin.users/organizations`, `me.notifications`, `RoleSet.availableUsersForEntryRole/availableVirtualContributorsForEntryRole/availableUsersForElevatedRole`, `Library.innovationPacksPaginated/templatesPaginated`, `activityFeed`, `PageInfo{startCursor, endCursor, hasNextPage, hasPreviousPage}` | `schema.graphql:5662-5669, 6354-6366, 6397-6407, 6430-6442` | no | Technical Lead |
 
 ### F. Where this lands in the new core
 

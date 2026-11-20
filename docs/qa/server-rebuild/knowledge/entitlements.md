@@ -2,16 +2,16 @@
 
 _What the platform does today for entitlements and licences: how allowances are worked out, account plans, space plans, space features, feature roles, limits, and who reads and manages licences: what it does, why, who may, and what is still to answer. The layout is that of `communications.md`: **1. Rules**, **2. Rights**, **3. Open questions**, with the evidence in an **Appendix**._
 
-_Open questions per owner: Product Lead 13 · Technical Lead 6 · Quality Lead 5 · Security Lead 1 · Architecture Lead 3. By state: 20 open · 8 with a suggested answer. Proof of the 44 rules: 18 proven by a test · 26 untested (Appendix A)._
+_Open questions per owner: Product Lead 0 · Technical Lead 6 · Quality Lead 5 · Security Lead 1 · Architecture Lead 3. By state: 8 open · 7 with a suggested answer · 14 decided. Proof of the 44 rules: 18 proven by a test · 26 untested (Appendix A)._
 
-_Whys of the 44 rules: 26 rest on a source · 12 carry a draft for product to decide · 6 have none, and each carries an open question (ENT-23, ENT-24, ENT-33, ENT-34, ENT-44, ENT-45)._
+_Whys of the 44 rules: 39 rest on a source or a product decision · 5 rest only on a technical QA draft for the Technical Lead (ENT-02, ENT-03, ENT-04, ENT-07, ENT-18)._
 
 **How to read it**
 
 - **Rule** is one or two plain sentences. The exact behaviour, with error messages and limits, is in Appendix A under the same id. The new core is checked against the exact text.
 - **Why: business** is what Alkemio needs. **Why: product** is the user story. **Why: technical** is the engineering reason. A rule needs at least one why, and gets a second or third only where it adds something for the decision or the code. "—" means none is given.
 - A why that names a spec, issue, pull request, code comment or code line rests on that source. A why, or the part of a why, ending in _(draft)_ was written by QA and no source states it: product keeps, rewrites or deletes it, and sets **Decided by**. A user story always ends in its "so that"; where no source gives one, QA wrote it. A rule with no why at all carries an open question or a defect marker in section 3.
-- **Decided by** names the source of the decision: a spec, a commit or pull request, an issue or a document. "Not decided" means the behaviour exists in the code and nobody chose it. Product has not reviewed this file yet.
+- **Decided by** names the source of the decision: a spec, a commit or pull request, an issue or a document. "Not decided" means the behaviour exists in the code and nobody chose it. Product reviewed section 3 on 2026-11-20.
 - A marker in bold at the end of a rule points at section 3: **(open: F5)** means a question on this rule is still open. A marker **(defect: …)** would mean today's behaviour is a fault and must not be copied as intended; no rule in this file carries one yet. A rule with no marker stands as written. Every rule is logged as the server behaves today, also when that is not the intended end state. Whether a test proves the rule sits in Appendix A as **proven** or **untested**.
 - Hard rules are not marked yet. Some rules are choices that a new feature may challenge, and some can never change; a later version will mark the second kind with "(hard rule)" after the why that makes it so. Until then, no marker does not mean a rule is open to change.
 - A decided question leaves section 3 and moves onto its rule. Nothing is decided in this file yet.
@@ -25,19 +25,19 @@ _Whys of the 44 rules: 26 rest on a source · 12 carry a draft for product to de
 | ENT-09 | Every licence is worked out from zero: everything starts switched off, the account's baseline plan is applied, then every plan held adds its allowance. A feature is on when its limit is above 0. | — | — | Credential-based licensing: a plan is a credential, so revoking the credential removes the grant without bookkeeping (server#4593 origin). | Server #4593 |
 | ENT-10 | A counted allowance is available while current use is below its limit. A feature is available when it is switched on. The "available" list shows only those. | — | — | An entitlement reports both its current usage and whether it is available (server#4593 design); limits are enforced server-side on real counts, not on a one-time grant. | Server #4593 (design) |
 | ENT-11 | Use is the account's current number of spaces, virtual contributors, innovation hubs and innovation packs. Deleting one frees its place at once. | — | — | Allowance is a live count: an entitlement carries its current usage (server#4593 design). | Server #4593 (design) |
-| ENT-12 | A space counts against one account tier only: the highest it has (premium, then plus, then free). **(open: Q-ENT-12)** | A space has one tier, so counting it against several tiers would charge it twice. _(draft)_ | — | — | Not decided: exists in the code |
-| ENT-13 | The AI assistant allowance is a monthly token budget on the account (10,000,000 under the plus plan). The server always reports its use as 0; the count is kept in the assistant service. **(open: F1)** | Tiers signed off 2026-06-17: free 1M, plus 10M, premium 50M. | — | Budget (how much) is a licence entitlement, access (who) is a privilege — two orthogonal gates (004 FR-027). | Spec 004 FR-027; tiers signed off 2026-06-17 |
+| ENT-12 | A space counts against one account tier only: the highest it has (premium, then plus, then free). | A space has one tier, so counting it against several tiers would charge it twice. | — | — | Product, 2026-11-20 (Q-ENT-12) |
+| ENT-13 | The AI assistant allowance is a monthly token budget on the account (10,000,000 under the plus plan). The server always reports its use as 0; the count is kept in the assistant service. | Tiers signed off 2026-06-17: free 1M, plus 10M, premium 50M. | — | Budget (how much) is a licence entitlement, access (who) is a privilege — two orthogonal gates (004 FR-027). | Spec 004 FR-027; tiers signed off 2026-06-17; Product, 2026-11-20 (F1): stays as today, giving every account the approved free tier is a wish on the product issues list |
 | ENT-14 | A licence is a stored result. It changes only when a plan is given or taken away, a baseline plan is updated, a feature role is granted or removed, a space is created, or an operations admin runs a licence reset. It never changes on a timer. **(open: Q-ENT-14)** | — | — | Licences are a separate tree of services built like the authorization tree, with an admin mutation to reset them all (server#4593 design: "authorization is per user, entitlements are per entity"). | Server #4593 (design) |
 
 ### Account plans
 
 | ID | Rule | Why: business | Why: product | Why: technical | Decided by |
 |---|---|---|---|---|---|
-| ENT-15 | A new account, of a user or of an organisation, starts with every allowance at 0 and no plan, so it can create nothing. **(open: F1)** | Nothing is given away by default: an account creates only what a plan or a feature role grants it. _(draft)_ | — | — | Not decided: exists in the code |
-| ENT-16 | The account plus plan gives an account 3 free spaces, 3 virtual contributors, 1 innovation hub, 3 innovation packs and 10,000,000 AI tokens a month. **(open: F6)** | The beta/trial allowance of the feature roles (027 rows 11/14); hub limit 1 because hubs are the commercial, platform-curated offering (027 QA ruling C1-12). | — | — | Spec 027 rows 11/14; 027 QA ruling C1-12 |
+| ENT-15 | A new account, of a user or of an organisation, starts with every allowance at 0 and no plan, so it can create nothing. | Nothing is given away by default: an account creates only what a plan or a feature role grants it. | — | — | Not decided: exists in the code; Product, 2026-11-20 (F1): stays as today, giving every account the approved free tier is a wish on the product issues list |
+| ENT-16 | The account plus plan gives an account 3 free spaces, 3 virtual contributors, 1 innovation hub, 3 innovation packs and 10,000,000 AI tokens a month. | The beta/trial allowance of the feature roles (027 rows 11/14); hub limit 1 because hubs are the commercial, platform-curated offering (027 QA ruling C1-12). | — | — | Spec 027 rows 11/14; 027 QA ruling C1-12; Product, 2026-11-20 (F6): accepted, hubs stay platform-curated |
 | ENT-17 | Each account has a baseline plan of six counters that sets the minimum for its counted allowances; plans add on top of it. Only the Platform License Manager can change it. | — | — | "Additional entitlements may be added via other means" (schema description of `baselineLicensePlan`). | Not decided: exists in the code (the schema description gives the reason) |
 | ENT-18 | A plan is accepted only on its own kind: account plans on accounts, space plans and space features on spaces. A mismatch is refused. **(open: Q-ENT-18)** | — | — | Account plans and space plans switch on different entitlements, so a plan on the wrong kind of target would grant nothing. _(draft)_ | Not decided: exists in the code |
-| ENT-19 | An account's subscriptions are the plans it holds, each with its end date (none when permanent). | The holder (and the licence manager console) can see which plans are active. _(draft)_ | — | — | Not decided: exists in the code |
+| ENT-19 | An account's subscriptions are the plans it holds, each with its end date (none when permanent). | The holder (and the licence manager console) can see which plans are active. | — | — | Product, 2026-11-20 |
 | ENT-07 | An organisation's account works like a user's. An organisation admin sees its allowances and, with the plus plan, can create a space, a virtual contributor and an innovation pack under it. | — | — | Organisation and user accounts share one entitlement model. _(draft)_ | Not decided: exists in the code |
 
 ### Space plans
@@ -46,9 +46,9 @@ _Whys of the 44 rules: 26 rest on a source · 12 carry a draft for product to de
 |---|---|---|---|---|---|
 | ENT-21 | Every new top-level space automatically gets the free space plan, virtual contributor access and save-as-template. Plus, premium and multi-user whiteboards are off. | — | — | These three plans are marked "assign to new user/organisation accounts". | Plan definitions (`license-plans.json`) |
 | ENT-05 | Giving a top-level space the plus plan switches on the plus tier and multi-user whiteboards. Taking it away returns the space to the free set at once. The account holder sees the space's licence in their own account view. | The plus plan bundles multi-user whiteboards and templates (seed rule). | — | — | Plan definitions (seed rule) |
-| ENT-23 | The premium space plan switches on the premium tier, multi-user whiteboards and save-as-template: the same features as plus, with the premium marker. **(open: Q-ENT-23)** | — | — | — | Not decided: exists in the code |
-| ENT-24 | An enterprise space plan exists (contact support, no price) but gives nothing. **(open: F4)** | — | — | — | Not decided: exists in the code |
-| ENT-25 | A plan with a trial (today only the plus space plan) gets an end date one month out. The date is shown but never checked: the plan keeps working after it. **(open: F2, OQ4)** | Trial month per plan definition. | — | — | Plan definition (`license-plans.json`) |
+| ENT-23 | The premium space plan switches on the premium tier, multi-user whiteboards and save-as-template: the same features as plus, with the premium marker. | Premium is a commercial marker for spaces on the premium price; today it gives the same features as plus. | — | — | Product, 2026-11-20 (Q-ENT-23) |
+| ENT-24 | An enterprise space plan exists (contact support, no price) but gives nothing. | Enterprise is sold through support; the plan is listed so people can ask for it, not to switch anything on. | — | — | Product, 2026-11-20 (F4): stays as today, a contact-support entry in the plan list that gives nothing |
+| ENT-25 | A plan with a trial (today only the plus space plan) gets an end date one month out. The date is shown but never checked: the plan keeps working after it. **(open: OQ4)** | Trial month per plan definition. | — | — | Plan definition (`license-plans.json`); Product, 2026-11-20 (F2): stays as today, a person ends a trial by taking the plan away; checking the end date is a wish on the product issues list |
 | ENT-26 | A space's features always come from its top-level space. A plan given to a subspace is accepted and listed there but has no effect. **(open: F3)** | — | — | 083: plans are assigned to L0 only; the License Issuer UI restricts the target. | Server spec 083 |
 | ENT-27 | Giving or taking away a plan on a top-level space updates the whole tree at once: the space, its community roles, its collaboration tools and every subspace. | — | 083 US1: "immediately afterwards … the contained Collaboration and every descendant" reports the new state. | — | Server spec 083 US1 |
 
@@ -59,11 +59,11 @@ _Whys of the 44 rules: 26 rest on a source · 12 carry a draft for product to de
 | ENT-28 | Six free feature plans each switch on one feature on a top-level space: virtual contributors, multi-user whiteboards, multi-user memos, save-as-template, office documents, memo signing. All are arranged through support; none is paid. | Per-space feature control "by assigning or revoking a license plan — no code changes, no feature flags, no deploys" (083). | — | — | Server spec 083 |
 | ENT-29 | A subspace has the same features as its top-level space. | — | — | One licence per Space hierarchy; subspace inheritance reused rather than a new mechanism (server#6478, 083 FR-003a). | Server #6478; server spec 083 FR-003a |
 | ENT-06 | Memo signing is off on a new space and its subspaces. Giving the top-level space the memo-signing feature switches it on for both; taking it away closes it. While it is closed, preparing a memo for signing is refused. Reading, downloading and checking signed copies stay available. | Signing is a paid, space-scoped feature enforced before Prepare and Continue side effects; the two refusals are distinct so the client can route the user (buy vs link) (server#6478, alkemio#2025). | — | — | Server PR #6478; alkemio#2025 |
-| ENT-30 | A virtual contributor can be given a role in a space, or invited to it, only while the space has virtual contributor access. Otherwise it is refused. **(open: Q-ENT-30)** | Virtual contributors are a space feature (virtual contributor access is one of the six feature plans, ENT-28), so a space without it cannot take one in. _(draft)_ | — | — | Not decided: exists in the code |
-| ENT-31 | Multi-user whiteboards and multi-user memos are switched on per space by their features. Template and standalone whiteboards and memos are never multi-user. **(open: Q-ENT-31)** | Multi-user editing is a space feature; a template or a standalone whiteboard or memo belongs to no space that could hold it. _(draft)_ | — | — | Not decided: exists in the code |
+| ENT-30 | A virtual contributor can be given a role in a space, or invited to it, only while the space has virtual contributor access. Otherwise it is refused. | Virtual contributors are a space feature (virtual contributor access is one of the six feature plans, ENT-28), so a space without it cannot take one in. | — | — | Product, 2026-11-20 (Q-ENT-30) |
+| ENT-31 | Multi-user whiteboards and multi-user memos are switched on per space by their features. Template and standalone whiteboards and memos are never multi-user. | Multi-user editing is a space feature; a template or a standalone whiteboard or memo belongs to no space that could hold it. | — | — | Product, 2026-11-20 (Q-ENT-31) |
 | ENT-32 | Adding an office document (Collabora) to a space whose office-documents feature is off is refused, for every role, platform admins included. Existing documents stay. | Subscription boundary for office docs (002). | — | One message so callers cannot tell "no licence" from "licence unreadable"; the gate holds for every role, administrators included (002 FR-007, FR-009). | Server spec 002 FR-007, FR-009 |
-| ENT-33 | The save-as-template feature is calculated for every space, but nothing on the server refuses an action when it is off. **(open: F8)** | — | — | — | Not decided: exists in the code |
-| ENT-34 | Organisations never have virtual contributor access, so a virtual contributor cannot be given a role in an organisation. The platform itself always has it. **(open: F13)** | — | — | "Hard coded org entitlements for now" — no product statement. | Not decided: exists in the code |
+| ENT-33 | The save-as-template feature is calculated for every space, but nothing on the server refuses an action when it is off. | Saving a space as a template is open to every space today; the flag is kept without a gate. | — | — | Product, 2026-11-20 (F8): stays as today, the flag is computed but gates nothing |
+| ENT-34 | Organisations never have virtual contributor access, so a virtual contributor cannot be given a role in an organisation. The platform itself always has it. | — | — | "Hard coded org entitlements for now" — no product statement. | Product, 2026-11-20 (F13): stays as today, virtual contributors are not members of organisations |
 
 ### Feature roles
 
@@ -81,7 +81,7 @@ _Whys of the 44 rules: 26 rest on a source · 12 carry a draft for product to de
 | ENT-02 | Innovation packs per account are limited (3 under plus). The fourth is refused with a message that names the limit, and packs leave the "available" list while the limit is reached. **(open: F7)** | — | — | Limits are enforced server-side; the message is what the client shows. _(draft)_ | Not decided: exists in the code |
 | ENT-03 | Free spaces per account are limited (3 under plus); the fourth is refused. Deleting a space makes room again. **(open: F7)** | — | — | Same mechanism; allowance is a live count. _(draft)_ | Not decided: exists in the code |
 | ENT-04 | Virtual contributors per account are limited (3 under plus); the fourth is refused. **(open: F7)** | — | — | Same mechanism for agents. _(draft)_ | Not decided: exists in the code |
-| ENT-39 | Innovation hubs per account are limited (1 under plus), but an account admin can never create one. Only the Platform License Manager or Platform Content Full Access may, on any account. **(open: F6)** | Hubs are the commercial offering, kept platform-curated (027 QA ruling C1-12 (a)). | — | — | Spec 027 QA ruling C1-12 (a) |
+| ENT-39 | Innovation hubs per account are limited (1 under plus), but an account admin can never create one. Only the Platform License Manager or Platform Content Full Access may, on any account. | Hubs are the commercial offering, kept platform-curated (027 QA ruling C1-12 (a)). | — | — | Spec 027 QA ruling C1-12 (a); Product, 2026-11-20 (F6): accepted, hubs stay platform-curated |
 | ENT-40 | The right to create is checked before the limit: someone without it is refused for lack of rights, not for the limit. The limit applies to whoever creates on the account, Platform Content Full Access included. **(open: Q-ENT-40)** | — | — | Authorization (who may act) and entitlement (what the entity has) are separate and "simply overlay each other but have to be independent" (server#4593 design), so the limit belongs to the account whoever acts. | Server #4593 (design) |
 | ENT-41 | The Platform License Manager may go over any account limit when creating on an account. Nobody else can. | The bypass is a licensing decision, so it belongs to the licence manager, not to support or content roles (027 T074). | — | — | Spec 027 T074 |
 
@@ -89,10 +89,10 @@ _Whys of the 44 rules: 26 rest on a source · 12 carry a draft for product to de
 
 | ID | Rule | Why: business | Why: product | Why: technical | Decided by |
 |---|---|---|---|---|---|
-| ENT-43 | A user reads their own account's licence: each allowance with its limit, use and availability, the plans held, and the licence of each space. | The account page is the holder's source of truth for what it may create. _(draft)_ | — | — | Not decided: exists in the code |
-| ENT-44 | Any account's licence, limits, use and plans can be read by anyone who can read the account. Today that is every visitor, signed in or not. **(open: F5)** | — | — | "By default it is world visible. TODO: work through the logic on this" (code comment). | Not decided: exists in the code (a code comment marks it "TODO") |
-| ENT-45 | A space's licence can be read by anyone who may read the space (members, and everyone for a public space), by the account admin, and by the platform roles the space gives access to. **(open: Q-ENT-45)** | — | — | — | Not decided: exists in the code |
-| ENT-46 | The list of plans, and what each plan gives, can be read by every registered user. **(open: Q-ENT-46)** | — | — | "For now allow all registered users to see the license plans + policy" (code comment); the client needs the catalogue to render plan pages. _(draft)_ | Not decided: exists in the code (a code comment says "for now") |
+| ENT-43 | A user reads their own account's licence: each allowance with its limit, use and availability, the plans held, and the licence of each space. | The account page is the holder's source of truth for what it may create. | — | — | Product, 2026-11-20 |
+| ENT-44 | Any account's licence, limits, use and plans can be read by anyone who can read the account. Today that is every visitor, signed in or not. | — | — | "By default it is world visible. TODO: work through the logic on this" (code comment). | Not decided: exists in the code (a code comment marks it "TODO"); Product, 2026-11-20 (F5): stays as today; restricting who reads it is a priority security/privacy wish on the product issues list |
+| ENT-45 | A space's licence can be read by anyone who may read the space (members, and everyone for a public space), by the account admin, and by the platform roles the space gives access to. | A space's licence says which features the space offers, so whoever may read the space may read it. | — | — | Product, 2026-11-20 (Q-ENT-45) |
+| ENT-46 | The list of plans, and what each plan gives, can be read by every registered user. | — | As a registered user, I want to see the plans and what each one gives, so that I can choose the plan that fits. | "For now allow all registered users to see the license plans + policy" (code comment); the client needs the catalogue to render plan pages. _(draft)_ | Product, 2026-11-20 (Q-ENT-46); the "for now" in the code comment stays as today |
 | ENT-47 | Giving or taking away a plan on a space or an account, and changing an account's baseline plan, is for the Platform License Manager only. Every such action is audited. **(open: OQ1)** | Licensing *usage* is one role's family (027 row 8 / A12), separated from support and from plan definition. | — | — | Spec 027 row 8, A12 |
 | ENT-48 | Defining plans and what they give (creating, changing, deleting) is for the Platform Settings Admin only. Every such action is audited. | Definition (settings) and usage (licence manager) are disjoint families. | — | The in-memory gate exists because the stored licensing policy inherits the root rule and would otherwise admit content-full-access (027 A13, corr-server-7/10). | Spec 027 A13 |
 | ENT-49 | Recalculating licences, for one account or for all, is for the Platform Operations Admin only. | Licence-entitlement reset belongs to the operational/maintenance family (032 FR-002). | — | — | Spec 032 FR-002 |
@@ -143,35 +143,13 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 ### Product Lead
 
-[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 13 to answer, 1 also involved
+[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 0 to answer
 
-**To answer**
-
-| ID | Area | Type | Question | Owner | Proposed answer | State |
-|---|---|---|---|---|---|---|
-| F1 | Account plans | decision | A free tier is defined (1 free space, 1,000,000 AI tokens) but never given, so an account without a plan has nothing. Is such an account meant to create nothing, and where does the free AI budget come from? | Product Lead | — | open |
-| F2 | Space plans | decision | The end date of a trial is never checked: an expired plus trial keeps working. Is that a defect to fix, or does a person end a trial by taking the plan away? | Product Lead, then Technical Lead | — | open |
-| F4 | Space plans | decision | The enterprise space plan gives nothing. Remove it, or define what it gives? | Product Lead | — | open |
-| F6 | Limits | decision | The plus plan gives an account one innovation hub, but the account admin can never create one: hubs are kept platform-curated. | Product Lead | Accepted. The web app should not offer "create hub" on the strength of the available list. | suggested |
-| F8 | Space features | decision | The save-as-template feature is never checked by the server. Is it a dead flag, or is a check missing? | Product Lead, then Technical Lead | — | open |
-| F13 | Space features | decision | Virtual contributor access for organisations is switched off in the code "for now". Are virtual contributors ever members of an organisation? | Product Lead | — | open |
-| CONST | All | decision | The "product must rule?" column is blank for 22 of the 27 constants (Appendix E). Which must product rule on before the rebuild? | Product Lead (Technical Lead and Security Lead for the rows pre-filled with their role) | — | open |
-| Q-ENT-12 | How allowances work | decision | Why does this rule exist? No source states a reason. Why does a space count against its highest tier only? | Product Lead | — | open |
-| Q-ENT-23 | Space plans | decision | Why does this rule exist? No source states a reason. What should premium give beyond plus? | Product Lead | — | open |
-| Q-ENT-30 | Space features | decision | Why does this rule exist? No source states a reason. Why is giving a virtual contributor a role tied to a space feature? | Product Lead | — | open |
-| Q-ENT-31 | Space features | decision | Why does this rule exist? No source states a reason. Why are template and standalone whiteboards and memos never multi-user? | Product Lead | — | open |
-| Q-ENT-45 | Reading | decision | Why does this rule exist? No source states a reason. Who should be able to read a space's licence? | Product Lead | — | open |
-| Q-ENT-46 | Reading | decision | Why does this rule exist? No source states a reason. A code comment says "for now". Should every registered user see the plans and what they give? | Product Lead | — | open |
-
-**Also involved**
-
-| ID | Area | Type | Question | Owner | Proposed answer | State |
-|---|---|---|---|---|---|---|
-| F5 | Reading | risk | Any visitor, signed in or not, can read any account's licence, limits, use and plans. Should another account's plan and use be visible? | Security Lead (Product Lead rules on what is shown; DPO Lead consulted) | — | open |
+Nothing to answer: every Product Lead question is decided (see Decided).
 
 ### Technical Lead
 
-[Technical Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Technical%20Lead.md) · Delivery (Anton) · 6 to answer, 3 also involved
+[Technical Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Technical%20Lead.md) · Delivery (Anton) · 6 to answer
 
 **To answer**
 
@@ -184,13 +162,6 @@ _One section per role, so each owner reads only their own part. **To answer** li
 | Q-ENT-18 | Account plans | decision | Why does this rule exist? No source states a reason. Why is a plan refused on the other kind of target? | Technical Lead | — | open |
 | Q-ENT-40 | Limits | decision | Why does this rule exist? No source states a reason. Why does the limit also apply to Platform Content Full Access? | Technical Lead | server#4593: authorization and entitlement logic are "fully separate", "they simply overlay each other but have to be independent" — the limit belongs to the account, whoever creates. The why is on ENT-40. | suggested |
 
-**Also involved**
-
-| ID | Area | Type | Question | Owner | Proposed answer | State |
-|---|---|---|---|---|---|---|
-| F2 | Space plans | decision | The end date of a trial is never checked: an expired plus trial keeps working. Is that a defect to fix, or does a person end a trial by taking the plan away? | Product Lead, then Technical Lead | — | open |
-| F8 | Space features | decision | The save-as-template feature is never checked by the server. Is it a dead flag, or is a check missing? | Product Lead, then Technical Lead | — | open |
-| CONST | All | decision | The "product must rule?" column is blank for 22 of the 27 constants (Appendix E). Which must product rule on before the rebuild? | Product Lead (Technical Lead and Security Lead for the rows pre-filled with their role) | — | open |
 
 ### Quality Lead
 
@@ -214,19 +185,14 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 ### Security Lead
 
-[Security Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Security%20Lead.md) · Delivery (Valentin) · 1 to answer, 1 also involved
+[Security Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Security%20Lead.md) · Delivery (Valentin) · 1 to answer
 
 **To answer**
 
 | ID | Area | Type | Question | Owner | Proposed answer | State |
 |---|---|---|---|---|---|---|
-| F5 | Reading | risk | Any visitor, signed in or not, can read any account's licence, limits, use and plans. Should another account's plan and use be visible? | Security Lead (Product Lead rules on what is shown; DPO Lead consulted) | — | open |
+| F5 | Reading | risk | Any visitor, signed in or not, can read any account's licence, limits, use and plans. Should another account's plan and use be visible? | Security Lead (Product Lead rules on what is shown; DPO Lead consulted) | Product, 2026-11-20: stays as today; restricting it is listed as a priority (security/privacy) wish on the product issues list: only the account's own admins and the licence managers read an account's licence, limits, usage and plans. The Security Lead and the DPO Lead are to assess it. | open |
 
-**Also involved**
-
-| ID | Area | Type | Question | Owner | Proposed answer | State |
-|---|---|---|---|---|---|---|
-| CONST | All | decision | The "product must rule?" column is blank for 22 of the 27 constants (Appendix E). Which must product rule on before the rebuild? | Product Lead (Technical Lead and Security Lead for the rows pre-filled with their role) | — | open |
 
 ### Architecture Lead
 
@@ -239,6 +205,25 @@ _One section per role, so each owner reads only their own part. **To answer** li
 | F9 | How allowances work | contract | A new space and its collaboration tools start with different default values for three features. It is harmless today because the licence is recalculated at once. | Architecture Lead | One default in the new core. | suggested |
 | F10 | How allowances work | contract | Feature rules ignore their limit, account rules add limits up, and only the first matching rule counts. It does not matter until a second account plan exists. What does "limit" mean in the new core? | Architecture Lead | — | open |
 | OQ3 | Reading | contract | Is the order of the "available" list something clients may rely on? The tests sort before comparing; the code promises no order. | Architecture Lead | — | open |
+
+### Decided
+
+| Was | Decision | Decided by | Now |
+|---|---|---|---|
+| F2 | Stays as today: the trial end date is shown but never checked; a person ends a trial by taking the plan away. Checking the end date is a wish on the product issues list. | Product, 2026-11-20 | ENT-25; PRODUCT-ISSUES F2 (entitlements) |
+| F4 | Stays as today: the enterprise space plan is a contact-support entry that gives nothing. No wish is listed. | Product, 2026-11-20 | ENT-24 |
+| F6 | Accepted: the plus plan counts one innovation hub, but hubs stay platform-curated; the web app should not offer "create hub" on the strength of the available list. | Product, 2026-11-20 | ENT-16, ENT-39 |
+| F8 | Stays as today: the save-as-template flag is computed but gates nothing. No wish is listed; the Technical Lead may record it as unused. | Product, 2026-11-20 | ENT-33 |
+| F13 | Stays as today: virtual contributors are not members of organisations. | Product, 2026-11-20 | ENT-34 |
+| Q-ENT-12 | The draft why stands: a space has one tier, so counting it against several would charge it twice. | Product, 2026-11-20 | ENT-12 |
+| Q-ENT-23 | Premium is a commercial marker; today it gives the same features as plus. No wish is listed. | Product, 2026-11-20 | ENT-23 |
+| Q-ENT-30 | The draft why stands: virtual contributors are a space feature, so a space without it cannot take one in. | Product, 2026-11-20 | ENT-30 |
+| Q-ENT-31 | The draft why stands: a template or standalone whiteboard or memo belongs to no space that could hold the feature (as WBD-16). | Product, 2026-11-20 | ENT-31 |
+| Q-ENT-45 | Whoever may read a space may read its licence, because the licence says which features the space offers. | Product, 2026-11-20 | ENT-45 |
+| Q-ENT-46 | Every registered user sees the plans and what they give, so they can choose one; it stays as today. | Product, 2026-11-20 | ENT-46 |
+| CONST | Product rules on the plan names, prices, defaults, trial length, limits, grants, tier priority, baseline, organisation VC access and feature roles (the rows pre-filled for the Product Lead), ticked "yes" in Appendix E. Error texts and wire values go to the Technical Lead. | Product, 2026-11-20 | Appendix E |
+| F1 | Stays as today: an account without a plan creates nothing and gets no AI budget. That every account actually gets the approved free tier (1 free space, 1,000,000 AI tokens; spec 004 FR-027) is a wish on the product issues list; web-assistant F4b is the same decision. | Product, 2026-11-20 | ENT-13, ENT-15; PRODUCT-ISSUES F1 (entitlements) |
+| F5 | Stays as today: every visitor, signed in or not, can read any account's licence, limits, usage and plans. Restricting this to the account's own admins and the licence managers is a priority (security/privacy) wish; the Security Lead and the DPO Lead assess it. | Product, 2026-11-20 | ENT-44; PRODUCT-ISSUES F5 (entitlements) |
 
 ## Appendix
 
@@ -309,19 +294,19 @@ _The original text of every finding (F) and open question (OQ), with its evidenc
 
 #### Findings
 
-- **F1 — Free tier never issued (ENT-13/15).** Code: the policy carries an `account-license-free` rule (1 free space, 1,000,000 AI tokens) but no plan issues that credential and the credential enum omits it — a plain account has zero of everything. Test: `No licenses assigned` cases pin `availableEntitlements: []`, enshrining it. Spec: 004 FR-027 expects a free-tier budget "or the configured platform default"; the AI migration records a signed-off 1M free allowance. Ruling: is a plan-less account meant to be able to create nothing, and where does the free AI budget come from?
-- **F2 — Trial expiry is decorative (ENT-25).** Code: `SPACE_LICENSE_PLUS` is issued with `expires = +1 month`, but the engine matches credential types only and nothing prunes or filters expired credentials. Test: none. Spec: none. Ruling: defect to fix, or trial expiry is handled by a human revoke?
+- **F1 — Free tier never issued (ENT-13/15).** Code: the policy carries an `account-license-free` rule (1 free space, 1,000,000 AI tokens) but no plan issues that credential and the credential enum omits it — a plain account has zero of everything. Test: `No licenses assigned` cases pin `availableEntitlements: []`, enshrining it. Spec: 004 FR-027 expects a free-tier budget "or the configured platform default"; the AI migration records a signed-off 1M free allowance. Ruling: is a plan-less account meant to be able to create nothing, and where does the free AI budget come from? **Product, 2026-11-20:** stays as today; the free tier for every account is a wish (same decision as web-assistant F4b).
+- **F2 — Trial expiry is decorative (ENT-25).** Code: `SPACE_LICENSE_PLUS` is issued with `expires = +1 month`, but the engine matches credential types only and nothing prunes or filters expired credentials. Test: none. Spec: none. Ruling: defect to fix, or trial expiry is handled by a human revoke? **Product, 2026-11-20:** stays as today; checking the end date is a wish on the product issues list.
 - **F3 — Subspace plan assignment silently inert (ENT-26).** Code: no L0 check on `assignLicensePlanToSpace`; entitlements are computed from the L0 agent. Test: none. Spec 083: L0-only, enforced by the client's License Issuer. Ruling: server must refuse non-L0 targets, or document the client as the gate.
-- **F4 — `SPACE_LICENSE_ENTERPRISE` grants nothing (ENT-24).** Code: plan exists, no rule, enum comment "todo: remove". Test/spec: none. Ruling: remove or define.
-- **F5 — Any visitor can read any account's licence, limits, usage and subscriptions (ENT-44).** Code: account policy grants READ to anonymous + registered with a TODO. Test: only own-account reads. Spec: none. Ruling: privacy — should another account's plan and usage be visible?
-- **F6 — Hub entitlement available but unusable by its holder (ENT-16/39).** Code: plus grants 1 hub; the account admin never holds `CREATE_INNOVATION_HUB`. Test: asserts the hub type is in the available list; never creates one. Spec 027 QA C1-12: hubs platform-curated. Old ENT-01 implied the user could create a hub. Ruling: accepted; the knowledge row now says so — but the client should not offer a "create hub" button on the strength of `availableEntitlements`.
+- **F4 — `SPACE_LICENSE_ENTERPRISE` grants nothing (ENT-24).** Code: plan exists, no rule, enum comment "todo: remove". Test/spec: none. Ruling: remove or define. **Product, 2026-11-20:** stays as today; no wish.
+- **F5 — Any visitor can read any account's licence, limits, usage and subscriptions (ENT-44).** Code: account policy grants READ to anonymous + registered with a TODO. Test: only own-account reads. Spec: none. Ruling: privacy — should another account's plan and usage be visible? **Product, 2026-11-20:** stays as today; restricting it is a priority security/privacy wish, for the Security Lead and the DPO Lead to assess.
+- **F6 — Hub entitlement available but unusable by its holder (ENT-16/39).** Code: plus grants 1 hub; the account admin never holds `CREATE_INNOVATION_HUB`. Test: asserts the hub type is in the available list; never creates one. Spec 027 QA C1-12: hubs platform-curated. Old ENT-01 implied the user could create a hub. Ruling: accepted; the knowledge row now says so — but the client should not offer a "create hub" button on the strength of `availableEntitlements`. **Product, 2026-11-20:** accepted; hubs stay platform-curated.
 - **F7 — Limit error text embeds the account id (ENT-02/03/04).** Code: `account.resolver.mutations.ts:721` contradicts the repo rule against dynamic data in exception messages. Test: three cases pin the exact string with the id. Ruling: when the message is cleaned, rebaseline the three cases; do not treat the red as a behaviour change.
-- **F8 — Save-as-template flag is never enforced (ENT-33).** Code: computed on space + collaboration, no reader. Test/spec: none. Ruling: dead flag or missing gate?
+- **F8 — Save-as-template flag is never enforced (ENT-33).** Code: computed on space + collaboration, no reader. Test/spec: none. Ruling: dead flag or missing gate? **Product, 2026-11-20:** stays as today: the flag gates nothing; no wish.
 - **F9 — Create-time defaults differ between space and collaboration (three flags `enabled:true/limit:0` on the space, `false` on the collaboration).** Harmless today because `createSpace` recomputes at once; spec 083 documents gating on `limit`. Ruling: single default in the new core.
 - **F10 — FLAG rules ignore their `limit`; account rules sum it; only the first matching rule counts.** Code: `space.service.license.ts:120-123` vs `account.service.license.ts:112`; `licensing.credential.based.service.ts:86-99`. Latent until a second account plan exists. Ruling: define `limit` semantics for the new core.
 - **F11 — Stale comment vs signed-off numbers.** `license.entitlement.type.ts:19-23` says the AI-token values are placeholders; the migration says signed off 2026-06-17. Ruling: trust the migration; fix the comment.
 - **F12 — Invitation path for VC Campaign unverified (ENT-37).** Code read only covers the direct `assignPlatformRoleToUser` sync; whether accepting a platform invitation carrying `feature-vc-campaign` also issues the plus credential was not confirmed. Ruling: verify live, then mark ENT-01 for the invitation path.
-- **F13 — Organisation VC access hard-off "for now" (ENT-34).** No product statement. Ruling: are VCs ever organisation members?
+- **F13 — Organisation VC access hard-off "for now" (ENT-34).** No product statement. Ruling: are VCs ever organisation members? **Product, 2026-11-20:** stays as today: virtual contributors are not organisation members.
 
 #### Open questions
 
@@ -352,37 +337,37 @@ Behaviours the area has that neither reading nor tests pinned down:
 
 ### E. Constants the rules depend on
 
-_"Rules on it" is pre-filled with the role whose domain covers the value: Product Lead for business values, plan constants and user-facing copy; Technical Lead for engineering limits and wire shapes; Security Lead for security limits and access rules. The "product must rule?" column is as it was: the reviewer ticks the rows product must rule on (row CONST in section 3)._
+_"Rules on it" is pre-filled with the role whose domain covers the value: Product Lead for business values, plan constants and user-facing copy; Technical Lead for engineering limits and wire shapes; Security Lead for security limits and access rules. The "product must rule?" column was ticked by Product, 2026-11-20 (CONST): "yes" rows wait for a product ruling before the rebuild._
 
 | Constant | Value today | Source | product must rule? | Rules on it |
 |---|---|---|---|---|
-| Entitlement types (16) | `ACCOUNT_SPACE_FREE`, `ACCOUNT_SPACE_PLUS`, `ACCOUNT_SPACE_PREMIUM`, `ACCOUNT_VIRTUAL_CONTRIBUTOR`, `ACCOUNT_INNOVATION_PACK`, `ACCOUNT_INNOVATION_HUB`, `ACCOUNT_AI_ASSISTANT_TOKENS_MONTH` (LIMIT, account); `SPACE_FREE`, `SPACE_PLUS`, `SPACE_PREMIUM`, `SPACE_FLAG_SAVE_AS_TEMPLATE`, `SPACE_FLAG_VIRTUAL_CONTRIBUTOR_ACCESS`, `SPACE_FLAG_WHITEBOARD_MULTI_USER`, `SPACE_FLAG_MEMO_MULTI_USER`, `SPACE_FLAG_OFFICE_DOCUMENTS`, `SPACE_FLAG_MEMO_SIGNING` (FLAG, space / collaboration / role-set) | `license.entitlement.type.ts:3-25`; `schema.graphql:520-537` | | Technical Lead |
-| Wire values | lower-kebab of the names, e.g. `account-space-free`, `space-flag-memo-signing` (used in error texts) | `license.entitlement.type.ts` | | Technical Lead |
-| Data types | `LIMIT`, `FLAG` | `license.entitlement.data.type.ts:3-6` | | Technical Lead |
-| Licence types | `ACCOUNT`, `COLLABORATION`, `ROLESET`, `SPACE`, `TEMPLATE_CONTENT_SPACE`, `WHITEBOARD` | `schema.graphql:539-546` | | Technical Lead |
-| Plan types | `ACCOUNT_FEATURE_FLAG` (no plan), `ACCOUNT_PLAN`, `SPACE_PLAN`, `SPACE_FEATURE_FLAG` | `licensing.credential.based.plan.type.ts:3-8` | | Technical Lead |
-| Plan names (11) | `SPACE_LICENSE_FREE`, `SPACE_LICENSE_PLUS`, `SPACE_LICENSE_PREMIUM`, `SPACE_LICENSE_ENTERPRISE`, `ACCOUNT_LICENSE_PLUS`, `SPACE_FEATURE_WHITEBOARD_MULTI_USER`, `SPACE_FEATURE_MEMO_MULTI_USER`, `SPACE_FEATURE_VIRTUAL_CONTRIBUTORS`, `SPACE_FEATURE_SAVE_AS_TEMPLATE`, `SPACE_FEATURE_OFFICE_DOCUMENTS`, `SPACE_FEATURE_MEMO_SIGNING` | `license-plans.json` | | Product Lead |
-| Plan credentials (11 in enum) | `space-license-free`, `space-license-plus`, `space-license-premium`, `space-license-enterprise`, `space-feature-save-as-template`, `space-feature-virtual-contributors`, `space-feature-whiteboard-multi-user`, `space-feature-memo-multi-user`, `space-feature-office-documents`, `space-feature-memo-signing`, `account-license-plus` (+ `account-license-free`, `account-license-premium` present only in policy rules / migration) | `licensing.credential.based.credential.type.ts:4-16`; seed `:493-577` | F-1 | Technical Lead |
-| Plan prices / flags | FREE 0.00 free; PLUS 249.00 trial; PREMIUM 749.00 contact support; ENTERPRISE null contact support; ACCOUNT_PLUS 0.00 contact support; all six feature plans 0.00, isFree, contact support | `license-plans.json` | | Product Lead |
-| Auto-assigned to new L0 spaces | `SPACE_LICENSE_FREE`, `SPACE_FEATURE_VIRTUAL_CONTRIBUTORS`, `SPACE_FEATURE_SAVE_AS_TEMPLATE` (user and organisation accounts alike) | `license-plans.json:13-14, 111-112, 125-126`; `account.host.service.ts:145-160` | | Product Lead |
-| Trial length | 1 month (calendar) from assignment, only when `trialEnabled` | `license.issuer.service.ts:24-36` | F-2 | Product Lead |
-| `ACCOUNT_LICENSE_PLUS` limits | free spaces 3, VCs 3, hubs 1, packs 3, AI tokens 10,000,000 | seed `:570-577`; AI migration `:50-51` | | Product Lead |
-| `account-license-free` rule (orphan) | free spaces 1, AI tokens 1,000,000 | seed; AI migration `:45, 50` | F-1 | Product Lead |
-| `account-license-premium` | AI tokens 50,000,000 recorded, tier not created | AI migration `:44-53` | | Product Lead |
-| Space-plan grants | FREE → SPACE_FREE; PLUS → SPACE_PLUS + WHITEBOARD_MULTI_USER + SAVE_AS_TEMPLATE; PREMIUM → SPACE_PREMIUM + same two; ENTERPRISE → none | seed `:536-569` | F-4 | Product Lead |
-| Feature-flag plan grants | one flag each, limit 1 | seed `:494-535`; migrations | | Product Lead |
-| Space tier priority for usage | premium > plus > free | `license.entitlement.usage.service.ts:18-22` | | Product Lead |
-| Default baseline plan | all six counters 0 | `constants.ts:3-10` | | Product Lead |
-| Organisation role-set VC access | hard-coded off; platform role-set hard-coded on, limit 999 | `organization.service.license.ts:54-66`; `platform.service.license.ts:38-52` | | Product Lead |
-| Feature roles | `feature-beta-tester`, `feature-virtual-assistant`, `feature-organization-creator`, `feature-vc-campaign`; plus-granting pair = beta-tester + vc-campaign; invitation-carriable = vc-campaign | `platform.roles.access.service.ts:58-63`; `platform.role.resolver.mutations.ts:73-75`; `platform.invitation.service.ts:38` | | Product Lead |
-| Licensing roles | `platform-license-manager` (usage, bypass, hubs, console lists), `platform-settings-admin` (definition), `platform-operations-admin` (reset), `platform-content-full-access` (create on any account) | `account.service.authorization.ts`; `licensing.framework.service.authorization.ts`; `license.definition.policy.ts` | | Security Lead |
-| Error text — limit reached | `Unable to create <wire-type> on account: <accountId>. Entitlement limit of <limit> of type <wire-type> reached` | `account.resolver.mutations.ts:721` | F-7 | Technical Lead |
-| Error text — flag off | `Entitlement <wire-type> is not available for License: <licenseId>` | `license.service.ts:202` | | Technical Lead |
-| Error text — memo identity | `Link a Cleverbase identity before signing this memo` | `memo.signing.service.ts:475` | | Technical Lead |
-| Error text — office docs | `Office Docs is not enabled for this Collaboration.` | `collaboration.service.license.ts:20-21` | | Technical Lead |
-| Error text — wrong plan family | `License Plan is not for Spaces: <type>` / `License Plan is not for Accounts: <type>` | `admin.licensing.service.ts:46-49, 122-125` | | Technical Lead |
-| Error text — invitation role | `Unable to create invitation for platform role: <role>, not in allowed invitation roles: feature-vc-campaign` | `platform.invitation.service.ts:55-58` | | Technical Lead |
-| GraphQL surface | `Account.license`, `Account.baselineLicensePlan`, `Account.subscriptions`, `Space.license`, `Collaboration.license`, `RoleSet.license`, `Platform.licensingFramework{plans, policy}`, `License{entitlements, availableEntitlements}`, `LicenseEntitlement{dataType, enabled, limit, usage, isAvailable}`, `LicensePlan{…}`, `LicensePolicy.credentialRules`, mutations `assignLicensePlanToAccount/ToSpace`, `revokeLicensePlanFromAccount/FromSpace`, `updateBaselineLicensePlanOnAccount`, `licenseResetOnAccount`, `resetLicenseOnAccounts`, `createLicensePlan`, `updateLicensePlan`, `deleteLicensePlan`, `adminLicensePolicy{Create,Update,Delete}CredentialRule` | `schema.graphql:1276-1395, 2614-2628, 4179-4293, 4883-4888, 4933-4936, 5013-5014, 5085-5086, 5272-5278, 5340, 5403-5404, 5745-5746, 6697-6698, 7128-7129` | | Technical Lead |
+| Entitlement types (16) | `ACCOUNT_SPACE_FREE`, `ACCOUNT_SPACE_PLUS`, `ACCOUNT_SPACE_PREMIUM`, `ACCOUNT_VIRTUAL_CONTRIBUTOR`, `ACCOUNT_INNOVATION_PACK`, `ACCOUNT_INNOVATION_HUB`, `ACCOUNT_AI_ASSISTANT_TOKENS_MONTH` (LIMIT, account); `SPACE_FREE`, `SPACE_PLUS`, `SPACE_PREMIUM`, `SPACE_FLAG_SAVE_AS_TEMPLATE`, `SPACE_FLAG_VIRTUAL_CONTRIBUTOR_ACCESS`, `SPACE_FLAG_WHITEBOARD_MULTI_USER`, `SPACE_FLAG_MEMO_MULTI_USER`, `SPACE_FLAG_OFFICE_DOCUMENTS`, `SPACE_FLAG_MEMO_SIGNING` (FLAG, space / collaboration / role-set) | `license.entitlement.type.ts:3-25`; `schema.graphql:520-537` | no | Technical Lead |
+| Wire values | lower-kebab of the names, e.g. `account-space-free`, `space-flag-memo-signing` (used in error texts) | `license.entitlement.type.ts` | no | Technical Lead |
+| Data types | `LIMIT`, `FLAG` | `license.entitlement.data.type.ts:3-6` | no | Technical Lead |
+| Licence types | `ACCOUNT`, `COLLABORATION`, `ROLESET`, `SPACE`, `TEMPLATE_CONTENT_SPACE`, `WHITEBOARD` | `schema.graphql:539-546` | no | Technical Lead |
+| Plan types | `ACCOUNT_FEATURE_FLAG` (no plan), `ACCOUNT_PLAN`, `SPACE_PLAN`, `SPACE_FEATURE_FLAG` | `licensing.credential.based.plan.type.ts:3-8` | no | Technical Lead |
+| Plan names (11) | `SPACE_LICENSE_FREE`, `SPACE_LICENSE_PLUS`, `SPACE_LICENSE_PREMIUM`, `SPACE_LICENSE_ENTERPRISE`, `ACCOUNT_LICENSE_PLUS`, `SPACE_FEATURE_WHITEBOARD_MULTI_USER`, `SPACE_FEATURE_MEMO_MULTI_USER`, `SPACE_FEATURE_VIRTUAL_CONTRIBUTORS`, `SPACE_FEATURE_SAVE_AS_TEMPLATE`, `SPACE_FEATURE_OFFICE_DOCUMENTS`, `SPACE_FEATURE_MEMO_SIGNING` | `license-plans.json` | yes | Product Lead |
+| Plan credentials (11 in enum) | `space-license-free`, `space-license-plus`, `space-license-premium`, `space-license-enterprise`, `space-feature-save-as-template`, `space-feature-virtual-contributors`, `space-feature-whiteboard-multi-user`, `space-feature-memo-multi-user`, `space-feature-office-documents`, `space-feature-memo-signing`, `account-license-plus` (+ `account-license-free`, `account-license-premium` present only in policy rules / migration) | `licensing.credential.based.credential.type.ts:4-16`; seed `:493-577` | no (F-1) | Technical Lead |
+| Plan prices / flags | FREE 0.00 free; PLUS 249.00 trial; PREMIUM 749.00 contact support; ENTERPRISE null contact support; ACCOUNT_PLUS 0.00 contact support; all six feature plans 0.00, isFree, contact support | `license-plans.json` | yes | Product Lead |
+| Auto-assigned to new L0 spaces | `SPACE_LICENSE_FREE`, `SPACE_FEATURE_VIRTUAL_CONTRIBUTORS`, `SPACE_FEATURE_SAVE_AS_TEMPLATE` (user and organisation accounts alike) | `license-plans.json:13-14, 111-112, 125-126`; `account.host.service.ts:145-160` | yes | Product Lead |
+| Trial length | 1 month (calendar) from assignment, only when `trialEnabled` | `license.issuer.service.ts:24-36` | yes (F-2) | Product Lead |
+| `ACCOUNT_LICENSE_PLUS` limits | free spaces 3, VCs 3, hubs 1, packs 3, AI tokens 10,000,000 | seed `:570-577`; AI migration `:50-51` | yes | Product Lead |
+| `account-license-free` rule (orphan) | free spaces 1, AI tokens 1,000,000 | seed; AI migration `:45, 50` | yes (F-1) | Product Lead |
+| `account-license-premium` | AI tokens 50,000,000 recorded, tier not created | AI migration `:44-53` | yes | Product Lead |
+| Space-plan grants | FREE → SPACE_FREE; PLUS → SPACE_PLUS + WHITEBOARD_MULTI_USER + SAVE_AS_TEMPLATE; PREMIUM → SPACE_PREMIUM + same two; ENTERPRISE → none | seed `:536-569` | yes (F-4) | Product Lead |
+| Feature-flag plan grants | one flag each, limit 1 | seed `:494-535`; migrations | yes | Product Lead |
+| Space tier priority for usage | premium > plus > free | `license.entitlement.usage.service.ts:18-22` | yes | Product Lead |
+| Default baseline plan | all six counters 0 | `constants.ts:3-10` | yes | Product Lead |
+| Organisation role-set VC access | hard-coded off; platform role-set hard-coded on, limit 999 | `organization.service.license.ts:54-66`; `platform.service.license.ts:38-52` | yes | Product Lead |
+| Feature roles | `feature-beta-tester`, `feature-virtual-assistant`, `feature-organization-creator`, `feature-vc-campaign`; plus-granting pair = beta-tester + vc-campaign; invitation-carriable = vc-campaign | `platform.roles.access.service.ts:58-63`; `platform.role.resolver.mutations.ts:73-75`; `platform.invitation.service.ts:38` | yes | Product Lead |
+| Licensing roles | `platform-license-manager` (usage, bypass, hubs, console lists), `platform-settings-admin` (definition), `platform-operations-admin` (reset), `platform-content-full-access` (create on any account) | `account.service.authorization.ts`; `licensing.framework.service.authorization.ts`; `license.definition.policy.ts` | no | Security Lead |
+| Error text — limit reached | `Unable to create <wire-type> on account: <accountId>. Entitlement limit of <limit> of type <wire-type> reached` | `account.resolver.mutations.ts:721` | no (F-7) | Technical Lead |
+| Error text — flag off | `Entitlement <wire-type> is not available for License: <licenseId>` | `license.service.ts:202` | no | Technical Lead |
+| Error text — memo identity | `Link a Cleverbase identity before signing this memo` | `memo.signing.service.ts:475` | no | Technical Lead |
+| Error text — office docs | `Office Docs is not enabled for this Collaboration.` | `collaboration.service.license.ts:20-21` | no | Technical Lead |
+| Error text — wrong plan family | `License Plan is not for Spaces: <type>` / `License Plan is not for Accounts: <type>` | `admin.licensing.service.ts:46-49, 122-125` | no | Technical Lead |
+| Error text — invitation role | `Unable to create invitation for platform role: <role>, not in allowed invitation roles: feature-vc-campaign` | `platform.invitation.service.ts:55-58` | no | Technical Lead |
+| GraphQL surface | `Account.license`, `Account.baselineLicensePlan`, `Account.subscriptions`, `Space.license`, `Collaboration.license`, `RoleSet.license`, `Platform.licensingFramework{plans, policy}`, `License{entitlements, availableEntitlements}`, `LicenseEntitlement{dataType, enabled, limit, usage, isAvailable}`, `LicensePlan{…}`, `LicensePolicy.credentialRules`, mutations `assignLicensePlanToAccount/ToSpace`, `revokeLicensePlanFromAccount/FromSpace`, `updateBaselineLicensePlanOnAccount`, `licenseResetOnAccount`, `resetLicenseOnAccounts`, `createLicensePlan`, `updateLicensePlan`, `deleteLicensePlan`, `adminLicensePolicy{Create,Update,Delete}CredentialRule` | `schema.graphql:1276-1395, 2614-2628, 4179-4293, 4883-4888, 4933-4936, 5013-5014, 5085-5086, 5272-5278, 5340, 5403-5404, 5745-5746, 6697-6698, 7128-7129` | no | Technical Lead |
 
 ### F. Where this lands in the new core
 

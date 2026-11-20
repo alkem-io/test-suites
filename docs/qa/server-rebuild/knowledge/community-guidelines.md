@@ -2,9 +2,9 @@
 
 _What the platform does today for a Space's community guidelines: one record per Space with a title, a text, links and an image; who edits it, who sees it, how it is emptied, how templates feed it, and what happens to it with the Space: what it does, why, who may, and what is still to answer. Guidelines templates as templates are in `templates.md`. The layout is the three-section one of `communications.md`: **1. Rules**, **2. Rights**, **3. Open questions**, with the evidence in an **Appendix**._
 
-_Open questions per owner: Product Lead 5 · Technical Lead 3 · Quality Lead 2 · Service Operations Lead 1. By state: 9 open · 2 with a suggested answer. Proof of the 13 rules: 5 proven by a test · 8 untested (Appendix A)._
+_Open questions per owner: Product Lead 0 · Technical Lead 3 · Quality Lead 2 · Service Operations Lead 1. By state: 5 open · 1 with a suggested answer · 5 decided. Proof of the 13 rules: 5 proven by a test · 8 untested (Appendix A)._
 
-_Whys of the 13 rules: 11 rest on a source · 1 carries a draft for product to decide · 1 has none, and it already carries an open question (CGL-12: Q-CGL-12)._
+_Whys of the 13 rules: 12 rest on a source or a product decision · 0 carry a draft · 1 has none, and it already carries an open question (CGL-12: Q-CGL-12)._
 
 **How to read it**
 
@@ -22,7 +22,7 @@ _Whys of the 13 rules: 11 rest on a source · 1 carries a draft for product to d
 
 | ID | Rule | Why: business | Why: product | Why: technical | Decided by |
 |---|---|---|---|---|---|
-| CGL-01 | Every Space and Subspace has exactly one set of community guidelines, created with it: a copy of its template's guidelines, or empty when the template has none. It cannot be deleted on its own, only with the Space. **(open: F2)** | — | As a space admin, I want all members to know the agreements on how we work together in this Space (server#3674), so that everyone collaborates on the same terms. _(draft)_ | "We cannot really delete the entity" — the record is a fixed part of the space's About (resolver comment); the empty default is a placeholder pending a defaults service (service TODO). | server#3674 (one record per community); the copy from the template is not decided (F2) |
+| CGL-01 | Every Space and Subspace has exactly one set of community guidelines, created with it: a copy of its template's guidelines, or empty when the template has none. It cannot be deleted on its own, only with the Space. | — | As a space admin, I want all members to know the agreements on how we work together in this Space (server#3674), so that everyone collaborates on the same terms. | "We cannot really delete the entity" — the record is a fixed part of the space's About (resolver comment); the empty default is a placeholder pending a defaults service (service TODO). | server#3674 (one record per community); Product, 2026-11-20 (F2): a new Subspace takes the guidelines of its parent's subspace template, as today |
 | CGL-02 | Guidelines have a title, a text, a list of links, a card image and tags. Files linked from the text or the links are copied into the guidelines' own storage when they are created; if that fails, nothing is created. | — | — | Two-phase creation after #6004/#6005 so no half-built record survives. | Server #6004, #6005; server PR #6014 |
 
 ### Editing and emptying
@@ -36,7 +36,7 @@ _Whys of the 13 rules: 11 rest on a source · 1 carries a draft for product to d
 
 | ID | Rule | Why: business | Why: product | Why: technical | Decided by |
 |---|---|---|---|---|---|
-| CGL-05 | The guidelines of any Space, a private one included, can be read by everyone, signed in or not. Only a guest viewer of a private Space cannot. **(open: F1, OQ3)** | — | — | "All content on community guidelines is public" (code comment). No product statement found. | Not decided: exists in the code |
+| CGL-05 | The guidelines of any Space, a private one included, can be read by everyone, signed in or not. Only a guest viewer of a private Space cannot. | — | — | "All content on community guidelines is public" (code comment). No product statement found. | Not decided: exists in the code; Product, 2026-11-20 (F1): stays as today, a narrower audience is a wish |
 | CGL-06 | Someone with a pending invitation to a Space, or a pending application for it, sees its guidelines together with its About before deciding. | "The set of information that a user that is invited / had an application for a Space needs to see to be able to make a decision" (DTO comment). | — | — | server#3674 ("shown to users when they join a community"); DTO comment |
 | CGL-07 | On a top-level Space the guidelines show in the sidebar of the Community tab by default. A Subspace shows them only if an admin adds them to its sidebar. | — | — | Per-tab sidebar defaults reproduce the pre-feature tabs (040 FR-009); the subspace default list has no guidelines widget (086 FR-008). | server#3674 ("visible on the community page"); spec 040 FR-009; spec 086 FR-008 |
 
@@ -54,7 +54,7 @@ _Whys of the 13 rules: 11 rest on a source · 1 carries a draft for product to d
 | CGL-10 | Deleting a Space deletes its guidelines completely. **(open: F3)** | — | — | Policies are never cascade-removed, so every owned record is deleted explicitly (server#6614, DEL-15). | Server #6614 |
 | CGL-11 | The link to a Space's guidelines leads to that Space's community page; a template's guidelines lead to the template's page. After a move or conversion the link follows the Space. **(open: Q-CGL-11)** | — | — | Guidelines have no page of their own: they are shown on the community page (server#3674, "visible on the community page"). | Not decided: exists in the code |
 | CGL-12 | Anyone who may read guidelines can look them up directly, and a user can see which rights they hold on them. **(open: Q-CGL-12)** | — | — | — | Not decided: exists in the code |
-| CGL-13 | Editing and emptying are ordinary Space-admin actions, never platform-admin ones. Platform Support may do them only where the Space allows support to act as admin. **(open: Q-CGL-13)** | Space-content administration stays with the space; support's reach is bounded by the space setting (027 A7). | — | — | Spec 027 A7 (covers the family of actions, not guidelines by name) |
+| CGL-13 | Editing and emptying are ordinary Space-admin actions, never platform-admin ones. Platform Support may do them only where the Space allows support to act as admin. | Space-content administration stays with the space; support's reach is bounded by the space setting (027 A7). | — | — | Spec 027 A7; Product, 2026-11-20 (Q-CGL-13): its reason applies to guidelines |
 
 Numbering note: ids are contiguous; none folded.
 
@@ -89,21 +89,14 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 ### Product Lead
 
-[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 5 to answer
+[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 0 to answer
 
-**To answer**
+Nothing to answer: every Product Lead question is decided (see Decided).
 
-| ID | Area | Type | Question | Owner | Proposed answer | State |
-|---|---|---|---|---|---|---|
-| F1 | Who sees them | decision | The guidelines of a private Space can be read by everyone, also by people who are not signed in. Is that intended, or should only the people who can read the Space, plus those with a pending invitation or application, see them? | Product Lead (Security Lead accepts the risk if they stay public) | — | open |
-| F2 | One record | decision | A new Subspace does not always start with empty guidelines: when the parent Space's template for Subspaces carries guidelines, every new Subspace gets a copy. Is that intended? | Product Lead | — | open |
-| OQ3 | Who sees them | check | Is there a product source that says guidelines are public? No spec, issue or decision record states it; server PR #3716 was not read and may carry the reason. | Product Lead (Technical Lead reads server PR #3716) | PR #3716 gives no reason. Its story, server#3674, says guidelines are "shown to users when they join a community" and "visible on the community page": a reason for people who are not members yet to read them, not for anyone to read those of a private Space. Decide F1 on that basis. | suggested |
-| Q-CGL-13 | Editing | decision | Why does this rule exist? Spec 027 covers the family of Space-admin actions, not guidelines by name. Does its reason apply here? | Product Lead | — | open |
-| CONST | All | decision | 11 constants are blank in "product must rule?" (Appendix E). Which of them must product rule on? | Product Lead (Technical Lead and Security Lead rule on the engineering and access values) | — | open |
 
 ### Technical Lead
 
-[Technical Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Technical%20Lead.md) · Delivery (Anton) · 3 to answer, 3 also involved
+[Technical Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Technical%20Lead.md) · Delivery (Anton) · 3 to answer, 1 also involved
 
 **To answer**
 
@@ -118,8 +111,6 @@ _One section per role, so each owner reads only their own part. **To answer** li
 | ID | Area | Type | Question | Owner | Proposed answer | State |
 |---|---|---|---|---|---|---|
 | F3 | Lifecycle | test | The deletion case proves that the guidelines' own access policy is removed, but it cannot see the policy of their profile (reported on server#6614). Is that limit accepted, or does the server make it observable? | Quality Lead (Technical Lead owns server#6614) | — | open |
-| OQ3 | Who sees them | check | Is there a product source that says guidelines are public? No spec, issue or decision record states it; server PR #3716 was not read and may carry the reason. | Product Lead (Technical Lead reads server PR #3716) | PR #3716 gives no reason. Its story, server#3674, says guidelines are "shown to users when they join a community" and "visible on the community page": a reason for people who are not members yet to read them, not for anyone to read those of a private Space. Decide F1 on that basis. | suggested |
-| CONST | All | decision | 11 constants are blank in "product must rule?" (Appendix E). Which of them must product rule on? | Product Lead (Technical Lead and Security Lead rule on the engineering and access values) | — | open |
 
 ### Quality Lead
 
@@ -134,14 +125,13 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 ### Security Lead
 
-[Security Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Security%20Lead.md) · Delivery (Valentin) · 2 also involved
+[Security Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Security%20Lead.md) · Delivery (Valentin) · 1 also involved
 
 **Also involved**
 
 | ID | Area | Type | Question | Owner | Proposed answer | State |
 |---|---|---|---|---|---|---|
-| F1 | Who sees them | decision | The guidelines of a private Space can be read by everyone, also by people who are not signed in. Is that intended, or should only the people who can read the Space, plus those with a pending invitation or application, see them? | Product Lead (Security Lead accepts the risk if they stay public) | — | open |
-| CONST | All | decision | 11 constants are blank in "product must rule?" (Appendix E). Which of them must product rule on? | Product Lead (Technical Lead and Security Lead rule on the engineering and access values) | — | open |
+| F1 | Who sees them | decision | The guidelines of a private Space can be read by everyone, also by people who are not signed in. Is that intended, or should only the people who can read the Space, plus those with a pending invitation or application, see them? | Product Lead (Security Lead accepts the risk if they stay public) | Product, 2026-11-20: stays as today; narrowing it is a wish on the product issues list. The Security Lead still owns the risk. | open |
 
 ### Service Operations Lead
 
@@ -152,6 +142,16 @@ _One section per role, so each owner reads only their own part. **To answer** li
 | ID | Area | Type | Question | Owner | Proposed answer | State |
 |---|---|---|---|---|---|---|
 | OQ2 | One record | check | On acceptance, do the templates that Spaces use for new Subspaces carry guidelines text? This decides whether F2 happens in practice. | Service Operations Lead | — | open |
+
+### Decided
+
+| Was | Decision | Decided by | Now |
+|---|---|---|---|
+| F2 | Stays as today: a new Subspace takes the guidelines of its parent's subspace template, so a Space can hand its standards down. | Product, 2026-11-20 | CGL-01 |
+| OQ3 | No product source says guidelines are public; PR #3716 gives no reason and its story (server#3674) only asks that people joining can read them. F1 is decided on that basis. | Product, 2026-11-20 | CGL-05 |
+| Q-CGL-13 | The reason of spec 027 A7 applies to guidelines: editing them is a Space-admin action, and support acts only where the Space allows it. | Product, 2026-11-20 | CGL-13 |
+| CONST | Product rules on the default content, the title and text lengths and the sidebar widget, ticked "yes" in Appendix E. Shapes, rights, error texts and the GraphQL surface go to the Technical Lead or the Security Lead. | Product, 2026-11-20 | Appendix E |
+| F1 | Stays as today: the guidelines of every Space, a private one included, are readable by everyone. Limiting them to those who may read the Space plus open invitees and applicants is a wish on the product issues list; the Security Lead owns the risk. | Product, 2026-11-20 | CGL-05; PRODUCT-ISSUES F1 |
 
 ## Appendix
 
@@ -191,8 +191,8 @@ _The original text of every finding (F) and open question (OQ), with its evidenc
 
 #### Findings
 
-- **F1 — Private-space guidelines are world-readable (CGL-05).** Code: `appendCredentialRuleAnonymousRegisteredAccess(READ)` on every guidelines record, parent-independent; the matrix shows anonymous and registered read under `priv-applications` (only guest loses it). Test: none (no private-space guidelines read exists in any suite). Spec: none; the only statement is the code comment "All content on community guidelines is public". The invitee/applicant need (CGL-06) is a narrower audience than "everyone". Compare crosscheck F11 (About documents of a private L0 are world-readable "by design"). Ruling: by design (record it) or restrict to the space's readers plus pending members.
-- **F2 — "Starts empty" is a fallback, not a guarantee (CGL-01).** Code: the request's guidelines, else the template's, else empty; the platform default templates seed none, but a top-level space's own subspace-default template may carry text, so a new subspace can start with its parent's guidelines. Test: none. Spec: none. Ruling: is copying a parent's template guidelines into every new subspace intended?
+- **F1 — Private-space guidelines are world-readable (CGL-05).** Code: `appendCredentialRuleAnonymousRegisteredAccess(READ)` on every guidelines record, parent-independent; the matrix shows anonymous and registered read under `priv-applications` (only guest loses it). Test: none (no private-space guidelines read exists in any suite). Spec: none; the only statement is the code comment "All content on community guidelines is public". The invitee/applicant need (CGL-06) is a narrower audience than "everyone". Compare crosscheck F11 (About documents of a private L0 are world-readable "by design"). Ruling: by design (record it) or restrict to the space's readers plus pending members. **Product, 2026-11-20:** stays as today; readable only by the Space's readers plus open invitees and applicants is a wish on the product issues list. The Security Lead owns the risk.
+- **F2 — "Starts empty" is a fallback, not a guarantee (CGL-01).** Code: the request's guidelines, else the template's, else empty; the platform default templates seed none, but a top-level space's own subspace-default template may carry text, so a new subspace can start with its parent's guidelines. Test: none. Spec: none. Ruling: is copying a parent's template guidelines into every new subspace intended? **Product, 2026-11-20:** stays as today: a new Subspace takes its parent's subspace-template guidelines.
 - **F3 — The guidelines profile policy cannot be observed (CGL-10).** `CommunityGuidelines.profile.authorization` resolves null, so GA-4 proves the guidelines policy is deleted but not the profile's (`orphan-free-deletion.md` finding 7, reported on server#6614). Not re-filed; listed so the proven status of CGL-10 is read with that limit.
 
 #### Open questions
@@ -201,7 +201,7 @@ Read-only extraction against the code, the tests and the specs; nothing below co
 
 - **OQ1 — Which operation the client's "Use a template" runs.** The templates-CRD walk says "the picker runs the select-template mutation"; the server has no guidelines-specific apply, so it must be the ordinary edit fed from `inputCreator.communityGuidelines` — confirm in client-web before W2 writes a lib function for it.
 - **OQ2 — ACC data: do subspace-default templates carry guidelines text?** Decides whether finding 2 is theoretical.
-- **OQ3 — Product source for CGL-05.** No spec, issue or ADR states that guidelines are public; PR #3716 (entity) was not read — it may carry the reason.
+- **OQ3 — Product source for CGL-05.** No spec, issue or ADR states that guidelines are public; PR #3716 (entity) was not read — it may carry the reason. **Product, 2026-11-20:** no product source; decide F1 on server#3674.
 
 ### D. Test gaps
 
@@ -220,22 +220,22 @@ Behaviours the area has that neither reading nor tests pinned down:
 
 ### E. Constants the rules depend on
 
-_"Rules on it" is pre-filled with the role whose domain covers the value: Product Lead for business values, limits a user notices and user-facing copy; Technical Lead for engineering limits and wire shapes; Security Lead for access and security values. The "product must rule?" column is unchanged: the reviewer ticks the rows product must rule on._
+_"Rules on it" is pre-filled with the role whose domain covers the value: Product Lead for business values, limits a user notices and user-facing copy; Technical Lead for engineering limits and wire shapes; Security Lead for access and security values. The "product must rule?" column was ticked by Product, 2026-11-20 (CONST): "yes" rows wait for a product ruling before the rebuild._
 
 | Constant | Value today | Source | product must rule? | Rules on it |
 |---|---|---|---|---|
-| Profile type / policy type / template type | `community-guidelines` (all three) | `profile.type.ts:20`; `authorization.policy.type.ts:34`; `template.type.ts:7` |  | Technical Lead |
-| Default content on creation | title `''`, text `''`, no links; a `default` free-form tagset; one `CARD` visual slot | `space.about.service.ts:80-86`; `community.guidelines.service.ts:50-59, 93-99` |  | Product Lead |
-| Title length | 3..128 characters on update (no floor on create) | `profile.dto.update.ts:16-20`; `entity.field.length.constants.ts:4` |  | Product Lead |
-| Text length | ≤ 65,568 (`HUGE_TEXT_LENGTH`) | `profile.dto.update.ts:30-33`; `entity.field.length.constants.ts:9` |  | Product Lead |
-| Read posture | anonymous + registered READ appended on every guidelines record (cascades to the profile) | `community.guidelines.service.authorization.ts:30-35` | F-1 | Security Lead |
-| Write privilege | `update` on the guidelines (edit and empty) | `community.guidelines.resolver.mutations.ts:36, 62` |  | Security Lead |
-| Admin-surface class | `NON_ADMIN` for both mutations | `non.admin.surfaces.ts:160, 198` |  | Security Lead |
-| Sidebar widget | `guidelines` (`SidebarWidget.GUIDELINES`), default on L0 tab 2 (last), absent from subspace defaults | `sidebar.widget.ts:135`; `innovation.flow.state.sidebar.defaults.ts:68-79, 109-122` |  | Product Lead |
-| Address | the owning space's community page; a template's guidelines → the template page; null when orphaned | `url.generator.service.ts:582-640` |  | Technical Lead |
-| Error text — not found | `Unable to find CommunityGuidelines with ID: <id>` | `community.guidelines.service.ts:175-177` |  | Technical Lead |
-| Error text — template kind | `Community Guidelines Template requires guidelines input` | `template.service.ts:150-154` |  | Technical Lead |
-| GraphQL surface | `SpaceAbout.guidelines: CommunityGuidelines!`, `CommunityGuidelines{profile}`, `lookup.communityGuidelines(ID)`, `lookupMyPrivileges.communityGuidelines(ID)`, `inputCreator.communityGuidelines(ID)`, `SpacePendingMembershipInfo.communityGuidelines`, `Template.communityGuidelines`, `TemplatesSet.communityGuidelinesTemplates(+Count)`, `CreateSpaceAboutInput.guidelines`, `CreateTemplateInput.communityGuidelinesData`; mutations `updateCommunityGuidelines`, `removeCommunityGuidelinesContent` | `schema.graphql:2764-2775, 3253-3255, 4001, 4372, 4445, 5209-5210, 5377-5378, 7187, 7240, 7556, 7650-7653, 9094, 9338-9339, 9497, 10079-10081, 10710-10714` |  | Technical Lead |
+| Profile type / policy type / template type | `community-guidelines` (all three) | `profile.type.ts:20`; `authorization.policy.type.ts:34`; `template.type.ts:7` | no | Technical Lead |
+| Default content on creation | title `''`, text `''`, no links; a `default` free-form tagset; one `CARD` visual slot | `space.about.service.ts:80-86`; `community.guidelines.service.ts:50-59, 93-99` | yes | Product Lead |
+| Title length | 3..128 characters on update (no floor on create) | `profile.dto.update.ts:16-20`; `entity.field.length.constants.ts:4` | yes | Product Lead |
+| Text length | ≤ 65,568 (`HUGE_TEXT_LENGTH`) | `profile.dto.update.ts:30-33`; `entity.field.length.constants.ts:9` | yes | Product Lead |
+| Read posture | anonymous + registered READ appended on every guidelines record (cascades to the profile) | `community.guidelines.service.authorization.ts:30-35` | no (F-1) | Security Lead |
+| Write privilege | `update` on the guidelines (edit and empty) | `community.guidelines.resolver.mutations.ts:36, 62` | no | Security Lead |
+| Admin-surface class | `NON_ADMIN` for both mutations | `non.admin.surfaces.ts:160, 198` | no | Security Lead |
+| Sidebar widget | `guidelines` (`SidebarWidget.GUIDELINES`), default on L0 tab 2 (last), absent from subspace defaults | `sidebar.widget.ts:135`; `innovation.flow.state.sidebar.defaults.ts:68-79, 109-122` | yes | Product Lead |
+| Address | the owning space's community page; a template's guidelines → the template page; null when orphaned | `url.generator.service.ts:582-640` | no | Technical Lead |
+| Error text — not found | `Unable to find CommunityGuidelines with ID: <id>` | `community.guidelines.service.ts:175-177` | no | Technical Lead |
+| Error text — template kind | `Community Guidelines Template requires guidelines input` | `template.service.ts:150-154` | no | Technical Lead |
+| GraphQL surface | `SpaceAbout.guidelines: CommunityGuidelines!`, `CommunityGuidelines{profile}`, `lookup.communityGuidelines(ID)`, `lookupMyPrivileges.communityGuidelines(ID)`, `inputCreator.communityGuidelines(ID)`, `SpacePendingMembershipInfo.communityGuidelines`, `Template.communityGuidelines`, `TemplatesSet.communityGuidelinesTemplates(+Count)`, `CreateSpaceAboutInput.guidelines`, `CreateTemplateInput.communityGuidelinesData`; mutations `updateCommunityGuidelines`, `removeCommunityGuidelinesContent` | `schema.graphql:2764-2775, 3253-3255, 4001, 4372, 4445, 5209-5210, 5377-5378, 7187, 7240, 7556, 7650-7653, 9094, 9338-9339, 9497, 10079-10081, 10710-10714` | no | Technical Lead |
 
 ### F. Where this lands in the new core
 

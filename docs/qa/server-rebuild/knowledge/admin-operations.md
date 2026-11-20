@@ -1,10 +1,10 @@
 # Admin operations: behaviour rules
 
-_What the platform does today for the work of its operators: resetting stored access rules, the tasks that track long jobs, the operational actions of the Platform Operations Admin, the scheduled background jobs, the audit trail and who reads it, and the lists of the admin console: what it does, why, who may, and what is still to answer. It follows the three-section layout accepted in the product review of `communications.md` (alkem-io/test-suites#717): **1. Rules**, **2. Rights**, **3. Open questions**, with the evidence in an **Appendix**. Product has not reviewed this file yet._
+_What the platform does today for the work of its operators: resetting stored access rules, the tasks that track long jobs, the operational actions of the Platform Operations Admin, the scheduled background jobs, the audit trail and who reads it, and the lists of the admin console: what it does, why, who may, and what is still to answer. It follows the three-section layout accepted in the product review of `communications.md` (alkem-io/test-suites#717): **1. Rules**, **2. Rights**, **3. Open questions**, with the evidence in an **Appendix**. Product reviewed section 3 on 2026-11-20._
 
-_Open questions per owner: Product Lead 3 · Technical Lead 12 · Quality Lead 3 · Security Lead 4 · Service Operations Lead 2. By state: 19 open · 5 with a suggested answer. Proof of the 45 rules: 11 proven by a test · 34 untested (Appendix A)._
+_Open questions per owner: Product Lead 0 · Technical Lead 11 · Quality Lead 3 · Security Lead 4 · Service Operations Lead 2. By state: 15 open · 5 with a suggested answer · 4 decided. Proof of the 45 rules: 11 proven by a test · 34 untested (Appendix A)._
 
-_Whys of the 45 rules: 29 rest on a source · 8 carry a draft for product to decide · 8 have none, and each carries an open question or a defect marker (OPS-12, OPS-18, OPS-28, OPS-29, OPS-35, OPS-36, OPS-46, OPS-48)._
+_Whys of the 45 rules: 33 rest on a source or a product decision · 6 carry a technical why that is still a QA draft, for the Technical Lead (OPS-04, OPS-07, OPS-08, OPS-17, OPS-26, OPS-32) · 6 have none, and each carries an open question or a defect marker (OPS-12, OPS-18, OPS-28, OPS-35, OPS-36, OPS-48)._
 
 **How to read it**
 
@@ -58,19 +58,19 @@ _Whys of the 45 rules: 29 rest on a source · 8 carry a draft for product to dec
 | OPS-21 | A search re-index rebuilds the whole search index in the background: new indices are built and filled, search is switched to them, and only then are the old ones deleted. The caller gets a task id at once; a failure is recorded on the task. **(open: OQ1)** | — | — | One operation serves as both ingest and re-index (032 FR-003); alias swap keeps search available during the rebuild. | Spec 032 FR-003 |
 | OPS-22 | Inside the cluster, three jobs can also be called with no sign-in: notification clean-up, search re-index and task status. They are protected only by having no public route, and they write no audit row. Scheduled jobs use this path: clean-up daily at 03:00, re-index every hour. **(open: F8, OQ2, OQ3)** | — | — | Cron jobs need no user; "internal by construction" (spec 006-internal-admin-jobs-api FR-003/FR-009 via PR #6169 — spec not in the repo, open question 3). | Server PR #6169 (spec 006-internal-admin-jobs-api, not found) |
 | OPS-23 | Cleaning up in-app notifications deletes every notification older than 90 days, read or unread, then trims each user's inbox to the newest 100. If either setting is missing or invalid, nothing is deleted and the call fails. **(open: OQ1)** | — | — | Bound the inbox table and each user's inbox (#5397); a bad config must not become a wipe. | Server #5397 |
-| OPS-24 | Migrating a profile's avatar copies a picture hosted elsewhere into the profile's own storage and points the profile at the copy. If the picture cannot be fetched, the profile keeps its old address and the call still succeeds. | Avatars hosted elsewhere (OAuth providers) break or leak. _(draft)_ | — | Storing them locally is a data migration the ops seat may run (032 FR-005) | Spec 032 FR-005 |
+| OPS-24 | Migrating a profile's avatar copies a picture hosted elsewhere into the profile's own storage and points the profile at the copy. If the picture cannot be fetched, the profile keeps its old address and the call still succeeds. | Avatars hosted elsewhere (OAuth providers) break or leak. | — | Storing them locally is a data migration the ops seat may run (032 FR-005) | Spec 032 FR-005 |
 | OPS-25 | A geolocation refresh looks up coordinates for every location that has a country but no valid coordinates. With the lookup service switched off it does nothing. The first lookup failure stops the run and keeps what was already saved. **(open: OQ1)** | Store latitude/longitude for maps (#5190) | — | The ops seat may trigger it (032 FR-008) | Server #5190; spec 032 FR-008 |
 | OPS-26 | Refreshing all bodies of knowledge re-reads the knowledge of every virtual contributor. **(open: OQ1)** | — | — | A virtual contributor answers from what it last read; a refresh brings every one up to date after content has changed. _(draft)_ The ops seat may run it (032 FR-004). | Spec 032 FR-004 |
 | OPS-27 | The AI clean-up deletes every stored knowledge collection that is still named after an old name-based id rather than a UUID. | — | — | Embeddings cleanup after the move from name-ids to UUIDs (032 FR-004). | Spec 032 FR-004 |
 | OPS-28 | A search re-index asked for by someone without the right is refused, but a task (marked failed) and an audit failure row are still created first. **(open: F7)** | — | — | — | Not decided: exists in the code |
-| OPS-29 | Every operational action is API-only. The admin console gives the Platform Operations Admin no section and no button for any of these jobs; they are run through the API by hand. **(open: Q-OPS-29, OQ7)** | — | — | — | Not decided: exists in the code |
+| OPS-29 | Every operational action is API-only. The admin console gives the Platform Operations Admin no section and no button for any of these jobs; they are run through the API by hand. | Operational jobs are rare maintenance with a platform-wide effect, run by a technical operator through the API. | — | — | Product, 2026-11-20 (Q-OPS-29, OQ7): acceptable for release as today |
 
 ### Scheduled background work
 
 | ID | Rule | Why: business | Why: product | Why: technical | Decided by |
 |---|---|---|---|---|---|
 | OPS-30 | A whiteboard draft that is not used within 7 days expires. An hourly clean-up removes up to 25 expired drafts per run and retries a failed one later. | — | — | Server-owned drafts (058, #6405) must not accumulate. | Spec 058; server #6405 |
-| OPS-31 | A memo signing attempt that passes its deadline is marked expired by an hourly clean-up (25 per run), and the files it held are released. | A signing attempt that can no longer complete must not hold its files for ever. _(draft)_ | — | — | Not decided: exists in the code |
+| OPS-31 | A memo signing attempt that passes its deadline is marked expired by an hourly clean-up (25 per run), and the files it held are released. | A signing attempt that can no longer complete must not hold its files for ever. | — | — | Product, 2026-11-20 |
 | OPS-32 | Every day at midnight, web-push subscriptions not active for 30 days, and those already marked expired, are deleted. Device push tokens are never cleaned up; they are limited per user when registered. **(open: OQ5)** | — | — | Dead endpoints would otherwise receive one message per notification forever. _(draft)_ | Not decided: exists in the code |
 | OPS-33 | The chat digest job runs on every copy of the API every 10 seconds, takes up to 200 due digests per run so that no two copies send the same one, and does not run at all when messaging notifications are switched off. **(open: OQ8)** | — | — | FR-021/D-25 of 034: no leader election, atomic claim; the kill switch disables arrival and flush alike (FR-016). | Spec 034 FR-021, D-25, FR-016 |
 | OPS-34 | Scheduled jobs run only in the API, never on a reset worker. | — | — | The worker "runs reset work ONLY. Do not add it back" (`auth-reset.worker.module.ts:54-57`); a required scheduler dependency would crash-loop the worker (108 US2 AS3). | Code comment; server spec 108 US2 |
@@ -92,7 +92,7 @@ _Whys of the 45 rules: 29 rest on a source · 8 carry a draft for product to dec
 | ID | Rule | Why: business | Why: product | Why: technical | Decided by |
 |---|---|---|---|---|---|
 | OPS-45 | Only the Platform Audit Reader can read the audit trail: a user's email-change history (addresses in full) and an MCP tool (addresses masked to their domain). Every other role is refused, administrative roles included, and a refused read leaves no audit row. | 027 FR-028: a dedicated read-only role so no role that performs audited actions reviews its own trail | — | A19 re-anchored off the retired catch-all onto an audit-read privilege held by no other role | Spec 027 FR-028, A19 |
-| OPS-46 | Only email-change rows can be read through the normal API. Everything else is reachable only through the MCP tool, which searches by user, so rows about an organisation cannot be read by a reviewer at all. The Audit Reader has no screen in the admin console. **(open: F11a, F11b, OQ7)** | — | — | — | Not decided: exists in the code |
+| OPS-46 | Only email-change rows can be read through the normal API. Everything else is reachable only through the MCP tool, which searches by user, so rows about an organisation cannot be read by a reviewer at all. The Audit Reader has no screen in the admin console. **(open: F11a)** | — | — | — | Product, 2026-11-20 (F11b, OQ7): acceptable for release as today; an audit screen in the admin console is a wish on the product issues list |
 | OPS-47 | An admin acting on themselves (resetting their own user, changing their own email) is allowed, and can be found afterwards as the rows where the actor and the subject are the same person. A platform-wide action names no subject, so it never counts as acting on oneself. | 027 FR-030/SC-015: detection over prevention for the remaining self-affecting actions | — | Derived, not stored (one table change budget) | Spec 027 FR-030, SC-015 |
 | OPS-48 | The avatar migration writes its audit row with no subject user, although it acts on one profile, so it cannot be found as an action on a person. **(defect: F9)** | — | — | — | Not decided: a defect |
 
@@ -158,25 +158,13 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 ### Product Lead
 
-[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 3 to answer, 1 also involved
+[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 0 to answer
 
-**To answer**
-
-| ID | Area | Type | Question | Owner | Proposed answer | State |
-|---|---|---|---|---|---|---|
-| F11b | Audit | decision | The Audit Reader has no screen. Is that acceptable for release? (Same decision as OQ7.) | Product Lead | — | open |
-| OQ7 | Console | decision | The Operations Admin has no section in the admin console and the Audit Reader has no audit screen (open since 2026-09-21). Is that the intended shape for release? | Product Lead | — | open |
-| Q-OPS-29 | Operations | decision | Why does this rule exist: every operational action is API-only, with no section or button in the admin console? No source states the reason. | Product Lead | — | open |
-
-**Also involved**
-
-| ID | Area | Type | Question | Owner | Proposed answer | State |
-|---|---|---|---|---|---|---|
-| CONST | All | decision | 27 constants are still blank in "product must rule?" (Appendix E): engineering limits, schedules, wire shapes and audit settings. | Technical Lead, Security Lead (Product Lead for the retention values) | — | open |
+Nothing to answer: every Product Lead question is decided (see Decided).
 
 ### Technical Lead
 
-[Technical Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Technical%20Lead.md) · Delivery (Anton) · 12 to answer, 3 also involved
+[Technical Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Technical%20Lead.md) · Delivery (Anton) · 11 to answer, 3 also involved
 
 **To answer**
 
@@ -192,7 +180,6 @@ _One section per role, so each owner reads only their own part. **To answer** li
 | OQ4 | Scheduled | check | Are links to entities cached for one second or for 1,000 seconds? The code says `1000` and the two library versions disagree on the unit. | Technical Lead | — | open |
 | OQ5 | Scheduled | check | What refreshes the "last active" date of a push subscription? It decides whether the 30-day clean-up can delete a subscription that is still in use (belongs with CM-5). | Technical Lead | — | open |
 | OQ6 | Reset | check | Does the all-accounts licence reset finish inside one request on acceptance-size data? It has no task and no batching. | Technical Lead (Service Operations Lead can measure it on acceptance) | — | open |
-| CONST | All | decision | 27 constants are still blank in "product must rule?" (Appendix E): engineering limits, schedules, wire shapes and audit settings. | Technical Lead, Security Lead (Product Lead for the retention values) | — | open |
 | Q-OPS-35 | Scheduled | decision | Why does this rule exist: links to entities come from a short-lived cache? No source states the reason. | Technical Lead | — | open |
 
 **Also involved**
@@ -224,7 +211,7 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 ### Security Lead
 
-[Security Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Security%20Lead.md) · Delivery (Valentin) · 4 to answer, 1 also involved
+[Security Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Security%20Lead.md) · Delivery (Valentin) · 4 to answer
 
 **To answer**
 
@@ -234,12 +221,6 @@ _One section per role, so each owner reads only their own part. **To answer** li
 | F5 | Tasks | risk | Task status can be read by anyone, visitors included, and the result lines carry ids of accounts, organisations and users. | Security Lead (Technical Lead fixes) | Allow it only to holders of the operational right (or to the task's creator), and remove the ids from the result lines. | suggested |
 | F8 | Operations | risk | The scheduled jobs call the server with no sign-in and leave no audit row, against spec 032 FR-016 ("every operational action"). Give the scheduled jobs a service identity (so a row can be written and the route protected), or record the exception in FR-016? | Security Lead (Service Operations Lead runs the scheduled jobs) | — | open |
 | F11a | Audit | decision | Audit rows about an organisation cannot be read by a reviewer through any API, because the MCP tool searches by user only. | Security Lead (Technical Lead adds the filter) | Add a filter on the subject organisation (one field). | suggested |
-
-**Also involved**
-
-| ID | Area | Type | Question | Owner | Proposed answer | State |
-|---|---|---|---|---|---|---|
-| CONST | All | decision | 27 constants are still blank in "product must rule?" (Appendix E): engineering limits, schedules, wire shapes and audit settings. | Technical Lead, Security Lead (Product Lead for the retention values) | — | open |
 
 ### Incident Lead
 
@@ -269,6 +250,15 @@ _One section per role, so each owner reads only their own part. **To answer** li
 | F1 | Reset | defect | Nothing checks that the reset worker and the server are the same build; on 2026-09-21 a worker from an older build rewrote every policy with old rules. Add a guard (the worker refuses or warns on a mismatch, or each message carries the expected version), or make the deployment keep the two together? | Technical Lead (Service Operations Lead owns the two image pins) | Until it is fixed, record it as an operations rule. | open |
 | F8 | Operations | risk | The scheduled jobs call the server with no sign-in and leave no audit row, against spec 032 FR-016 ("every operational action"). Give the scheduled jobs a service identity (so a row can be written and the route protected), or record the exception in FR-016? | Security Lead (Service Operations Lead runs the scheduled jobs) | — | open |
 | OQ6 | Reset | check | Does the all-accounts licence reset finish inside one request on acceptance-size data? It has no task and no batching. | Technical Lead (Service Operations Lead can measure it on acceptance) | — | open |
+
+### Decided
+
+| Was | Decision | Decided by | Now |
+|---|---|---|---|
+| Q-OPS-29 | Operational jobs are rare maintenance with a platform-wide effect, run by a technical operator through the API; whether that shape is right for release is OQ7. | Product, 2026-11-20 | OPS-29 |
+| CONST | Product rules on the retention values: the in-app notification prune, the whiteboard draft lifetime, the push clean-up and the audit retention, ticked "yes" in Appendix E. Engineering limits, schedules, wire shapes, error texts and the other audit settings go to the Technical Lead or the Security Lead. | Product, 2026-11-20 | Appendix E |
+| OQ7 | Acceptable for release as today: the Operations Admin works through the API, the Audit Reader through the API and the MCP tool. An audit screen in the admin console, where a reviewer can also read the rows about an organisation, is a wish on the product issues list. | Product, 2026-11-20 | OPS-29, OPS-46; PRODUCT-ISSUES OQ7 |
+| F11b | The same decision as OQ7. | Product, 2026-11-20 | OPS-46 |
 
 ## Appendix
 
@@ -350,7 +340,7 @@ _The original text of every finding (F) and open question (OQ), with its evidenc
 - **F8 — Scheduled jobs are unauthenticated and unaudited (OPS-22).** Code: the REST routes have no guard and write no audit row (no actor). Spec: 032 FR-016 "every operational action … regardless of which role authorized it"; the REST spec (006) is missing locally. Infra: prune daily, ingest hourly use this path on acceptance and production. Ruling: give the cron a service identity (so a `system`/`service` row can be written and the route can be gated), or record the exception in FR-016.
 - **F9 — Avatar migration row has no subject (OPS-48).** Code: `targetUserId` omitted although the writer's own comment names the avatar migration as the per-user example. Test: `A11.adminUpdateContributorAvatars` asserts the returned profile only. Ruling: pass the profile's owner as the subject (a profile may belong to an organisation — then `subjectOrganizationId`).
 - **F10 — No green case asserts an operations audit row.** The only case that does (`audit-platform-wide-action`) was never executed; the exclusive positives run on demand; `forum-audit` N-9 covers the writer only on a local Postgres. Ruling: run the exclusive project once on a dedicated stack and record the result, or add an MCP-read assertion to one nightly-safe A11 positive (e.g. the avatar migration).
-- **F11 — Audit read surface is partial (OPS-46).** Code: GraphQL exposes email-change rows only; the MCP tool filters by subject user; no screen exists for the audit reader. Test: AR1's organisation half "not automated — needs a server change"; `support-org-community` falls back to SQL. Spec: 027 row 10 says the Audit Reader reads "the platform audit trail". Ruling: add a subject-organisation filter (one field) and decide whether an audit reader without a screen is acceptable for release (checklist `:93`).
+- **F11 — Audit read surface is partial (OPS-46).** Code: GraphQL exposes email-change rows only; the MCP tool filters by subject user; no screen exists for the audit reader. Test: AR1's organisation half "not automated — needs a server change"; `support-org-community` falls back to SQL. Spec: 027 row 10 says the Audit Reader reads "the platform audit trail". Ruling: add a subject-organisation filter (one field) and decide whether an audit reader without a screen is acceptable for release (checklist `:93`). **Product, 2026-11-20:** the Audit Reader without a screen is acceptable for release; an audit screen is a wish on the product issues list. The subject-organisation filter stays with F11a.
 
 #### Open questions
 
@@ -362,7 +352,7 @@ Read-only extraction against the code, the tests and the specs; nothing below co
 - **OQ4 — Unit of the URL cache `ttl: 1000`.** 108 research R4 documents that the runtime cache-manager (v5, milliseconds) and the compile-time types (v4, seconds) disagree; whether entity URLs are cached for one second or 1,000 s was not determined.
 - **OQ5 — What refreshes a push subscription's `lastActiveDate`?** Decides whether the 30-day cleanup (OPS-32) can ever delete a subscription that is still in use — route to CM-5.
 - **OQ6 — Is `resetLicenseOnAccounts` bounded on acceptance data?** One synchronous request over every account, no task, no batching; the exclusive positive asserts `true` only. A duration or timeout on ACC-size data is unknown.
-- **OQ7 — Product intent for the API-only seats.** Operations Admin has no admin section and Audit Reader no audit screen (checklist `:90`, `:93`, open since 2026-09-21). Is that the intended release shape, and who answers?
+- **OQ7 — Product intent for the API-only seats.** Operations Admin has no admin section and Audit Reader no audit screen (checklist `:90`, `:93`, open since 2026-09-21). Is that the intended release shape, and who answers? **Product, 2026-11-20:** acceptable as today; an audit screen in the admin console is a wish.
 - **OQ8 — Multi-replica digest sweep.** OPS-33's "no two replicas flush the same digest" is a code reading of the atomic claim; no environment fact says how many API replicas run the sweep, and no case exercises two.
 
 ### D. Test gaps
@@ -388,45 +378,45 @@ Behaviours the area has that neither reading nor tests pinned down:
 
 ### E. Constants the rules depend on
 
-_"Rules on it" is pre-filled with the role whose domain covers the value: Product Lead for business values, plan constants and user-facing copy; Technical Lead for engineering limits and wire shapes; Security Lead for security limits. The "product must rule?" column is unchanged: the reviewer ticks the rows product must rule on._
+_"Rules on it" is pre-filled with the role whose domain covers the value: Product Lead for business values, plan constants and user-facing copy; Technical Lead for engineering limits and wire shapes; Security Lead for security limits. The "product must rule?" column was ticked by Product, 2026-11-20 (CONST): "yes" rows wait for a product ruling before the rebuild._
 
 | Constant | Value today | Source | product must rule? | Rules on it |
 |---|---|---|---|---|
-| Reset event types (8) | `auth-reset-account`, `auth-reset-user`, `auth-reset-organization`, `auth-reset-platform`, `auth-reset-ai-server`, `license-reset-account`, `license-reset-organization`, `license-reset-platform` | `src/services/auth-reset/reset.event.type.ts:1-10` | | Technical Lead |
-| Reset queue name | `alkemio-auth-reset` (`RABBITMQ_AUTH_RESET_QUEUE`); publisher and worker must agree | `alkemio.yml:455-459` | | Technical Lead |
-| Task item count for reset-all | accounts×2 + organisations×2 + users (platform / AI-server events untracked) | `auth-reset.service.ts:62-68` | | Technical Lead |
-| Worker retry policy | 5 retries, header `x-retry-count`, persistent re-publish; then reject without requeue | `auth-reset.controller.ts:33-34, 124-143` | | Technical Lead |
-| Worker prefetch | 1 message per pod; manual ack | `main.worker.ts:58-70` | | Technical Lead |
-| Worker drain | `AUTH_RESET_DRAIN_TIMEOUT_SECONDS` default 55 s; close reserve min(5 s, budget/5); pod grace 60 s | `main.worker.ts:103-114`; infra `40-auth-reset-worker-deployment.yml:37, 65-66` | | Technical Lead |
-| Worker scaling | replicas 0 ↔ 10 by a cron scaler on queue depth (infra clone 2026-08-11) | infra `40-…:21`, `41-auth-reset-worker-autoscaler.yml:57, 101` | | Technical Lead |
-| Worker image pin | `alkemio/server:v0.161.0` in base, separate file from the server pin, "keep in sync" comment | infra `40-…:51`, `11-server-deployment.yml:33` | F-1 | Technical Lead |
-| Data-anomaly skip | `RelationshipNotFoundException`, `EntityNotFoundException` only | `account.service.authorization.ts:277-281`; `space.service.authorization.ts:283-287` | F-2 | Technical Lead |
-| Admin-only policy shape | two rules: `AUTHORIZATION_RESET` → `platform-operations-admin`; `READ`,`UPDATE`,`DELETE` → `platform-content-full-access`; both `cascade: false` | `admin.authorization.service.ts:225-256` | F-6 | Security Lead |
-| Task TTL | 3600 s (Redis), refreshed on every counter write | `task.service.ts:17` | | Technical Lead |
-| Task statuses | `IN_PROGRESS`, `COMPLETED`, `ERRORED`; `tasks` defaults to in-progress | `task.status.enum.ts:3-7`; `task.service.ts:297` | | Technical Lead |
-| Error text — reset publish | `Reset publishing failed before all events were emitted`; `Error while initializing authorization reset` (code `AUTHORIZATION_RESET`) | `auth-reset.service.ts:103-106, 122-127` | | Technical Lead |
-| Error text — reset result lines | `Finished resetting <subject>.` / `Resetting <subject> failed! Max retries reached. Rejecting message.` (subject embeds the entity id) | `auth-reset.controller.ts:114, 125, 192` | F-5 | Security Lead |
-| Operational privilege + rule type ids | `PLATFORM_OPERATIONS_ADMIN` (`credentialRuleTypes-platformPlatformOperationsAdmin`), `AUTHORIZATION_RESET` (`credentialRuleTypes-platformPlatformAuthReset`), `LICENSE_RESET` (`credentialRule-licenseReset`), `PLATFORM_AUDIT_READ` (`credentialRuleTypes-platformAuditRead`) | `credential.rule.types.constants.ts:86-89, 143-144`; `platform.service.authorization.ts:278-284, 311-320, 421-434` | | Security Lead |
-| A3 surfaces (10) / A11 surfaces (15) | the census lists in `a.row.surfaces.ts` | `a.row.surfaces.ts:305-380, 1084-1180` | | Security Lead |
-| In-app prune | retention 90 days (`IN_APP_MAX_RETENTION_PERIOD_DAYS`), cap 100 per user (`IN_APP_MAX_NOTIFICATIONS_PER_USER`); by `triggeredAt`, read state ignored | `alkemio.yml:553-554`; `in.app.notification.admin.service.ts:22-61` | | Product Lead |
-| Error text — prune config | `Invalid notifications.in_app.max_retention_period_days` / `…max_notifications_per_user` | `in.app.notification.admin.service.ts:36-47` | | Technical Lead |
-| Prune schedule | daily `0 3 * * *` via REST (infra clone 2026-08-11) | infra `02-inapp-notifications-prune-cron-job.yml:8, 30-36` | | Technical Lead |
-| Search ingest schedule | hourly `25 */1 * * *` on acceptance and production via REST | infra `overlays/*/third-party/search/01-search-ingest-cron-job.yml:9` | | Technical Lead |
-| Internal REST routes | `POST /rest/internal/admin/in-app-notifications/prune`, `POST …/search-ingest` (202), `GET …/tasks/:id` (404 `Task not found`); no auth | `internal-admin.controller.ts:33-101` | F-8 | Security Lead |
-| Error text — geolocation | `Failed to update GeoLocation data`; disabled provider → `false` | `admin.geolocation.resolver.mutations.ts:48-58, 97-100` | | Technical Lead |
-| Collection cleanup pattern | `/(.*)-(knowledge\|context)/`, UUID-shaped identifiers kept | `ai.server.resolver.mutations.ts:100-110` | | Technical Lead |
-| Whiteboard draft TTL / sweep | 7 days; hourly; 25 per run | `whiteboard.draft.service.ts:21`; `whiteboard.draft.sweep.service.ts:7, 17` | | Product Lead |
-| Memo signing sweep | hourly; 25 per run; 60 s gateway margin | `memo.signing.sweep.service.ts:6, 15`; `signing.attempt.service.ts:14` | | Technical Lead |
-| Push cleanup | daily at midnight; `PUSH_CLEANUP_STALE_DAYS` 30; `PUSH_MAX_SUBSCRIPTIONS_PER_USER` 10 | `push.subscription.service.ts:187`; `alkemio.yml:545, 551` | | Product Lead |
-| Digest sweep | every `MESSAGING_DIGEST_SWEEP_INTERVAL_SECONDS` (10); batch 200; concurrency 10; off with `notifications.messaging.enabled=false` | `conversation.digest.sweep.service.ts:18-26, 80-83`; `alkemio.yml:606` | | Technical Lead |
-| URL cache ttl | `1000` (unit undetermined — open question 4) | `url.generator.service.cache.ts:11-13` | | Technical Lead |
-| Audit categories (11) | `email_change`, `password_change`, `platform_operations`, `platform_role_assignment`, `platform_user_record`, `platform_configuration`, `platform_resource`, `mcp_api_key`, `account_deletion`, `organization_administration`, `matrix_session` | `platform.audit.category.ts:9-53` | | Security Lead |
-| Audit outcomes (36) / initiator roles (14) | `operation_succeeded`, `operation_failed`, `role_granted`, `role_revoked`, `role_grant_rejected`, `configuration_changed`, `resource_*`, `license_*`, `identity_deleted`, `account_reset`, `key_*`, `account_deleted`, … ; `self`, `platform_admin`, `system`, `service` + the ten platform roles | `platform.audit.outcome.ts:69-120`; `platform.audit.initiator.role.ts:133-161` | F-4 | Security Lead |
-| Audit retention | indefinite; append-only; no FK to users; no sweep | `platform.audit.entry.interface.ts:300-303`; migration `1779195577000:13-16` | (ISO 27001 retention policy — product/security must rule) | Security Lead |
-| Audit error detail cap | 500 characters, `<name>: <message>`, no stack | `platform.operations.audit.service.ts:43, 118-124` | | Security Lead |
-| Error text — fail-closed audit | `Unable to record role-assignment audit entry; the operation was NOT applied: <description>` | `platform.role.assignment.audit.service.ts:222-224` | | Security Lead |
-| MCP audit tool | name `analyze_audit_log`; actions `summary`, `user_history`; filter `subjectUserId`; emails masked to domain | `audit-log-analyze.tool.ts:16-23, 70-80, 340` | F-11 | Security Lead |
-| GraphQL surface | mutations `authorizationPolicyResetAll`, `authorizationPlatformRolesAccessReset`, `authorizationPolicyResetToGlobalAdminsAccess`, `authorizationPolicyResetOnPlatform/OnUser/OnOrganization/OnAccount`, `aiServerAuthorizationPolicyReset`, `licenseResetOnAccount`, `resetLicenseOnAccounts`, `adminSearchIngestFromScratch`, `adminUpdateContributorAvatars`, `adminUpdateGeoLocationData`, `adminInAppNotificationsPrune`, `cleanupCollections`, `refreshAllBodiesOfKnowledge`, `adminRepairTemplateFiles`, `migrateLegacyMemoContent`, `migrateLegacyWhiteboardContent`, `updateAssistantActorCapabilities`, `adminCommunication*` (6); queries `task`, `tasks`, `platformAdmin{accounts, innovationHubs, innovationPacks, spaces, users, organizations, virtualContributors, virtualAssistant, communication{…}, identity{…}, latestUserEmailChangeAuditEntry, userEmailChangeAuditEntries}`; types `Task`, `TaskStatus`, `PruneInAppNotificationAdminResult`, `MigrateEmbeddings` | `schema.graphql:4856-4972, 5152, 5200, 5272, 5779-5781, 6370, 6409-6411, 7514-7534` | | Technical Lead |
+| Reset event types (8) | `auth-reset-account`, `auth-reset-user`, `auth-reset-organization`, `auth-reset-platform`, `auth-reset-ai-server`, `license-reset-account`, `license-reset-organization`, `license-reset-platform` | `src/services/auth-reset/reset.event.type.ts:1-10` | no | Technical Lead |
+| Reset queue name | `alkemio-auth-reset` (`RABBITMQ_AUTH_RESET_QUEUE`); publisher and worker must agree | `alkemio.yml:455-459` | no | Technical Lead |
+| Task item count for reset-all | accounts×2 + organisations×2 + users (platform / AI-server events untracked) | `auth-reset.service.ts:62-68` | no | Technical Lead |
+| Worker retry policy | 5 retries, header `x-retry-count`, persistent re-publish; then reject without requeue | `auth-reset.controller.ts:33-34, 124-143` | no | Technical Lead |
+| Worker prefetch | 1 message per pod; manual ack | `main.worker.ts:58-70` | no | Technical Lead |
+| Worker drain | `AUTH_RESET_DRAIN_TIMEOUT_SECONDS` default 55 s; close reserve min(5 s, budget/5); pod grace 60 s | `main.worker.ts:103-114`; infra `40-auth-reset-worker-deployment.yml:37, 65-66` | no | Technical Lead |
+| Worker scaling | replicas 0 ↔ 10 by a cron scaler on queue depth (infra clone 2026-08-11) | infra `40-…:21`, `41-auth-reset-worker-autoscaler.yml:57, 101` | no | Technical Lead |
+| Worker image pin | `alkemio/server:v0.161.0` in base, separate file from the server pin, "keep in sync" comment | infra `40-…:51`, `11-server-deployment.yml:33` | no (F-1) | Technical Lead |
+| Data-anomaly skip | `RelationshipNotFoundException`, `EntityNotFoundException` only | `account.service.authorization.ts:277-281`; `space.service.authorization.ts:283-287` | no (F-2) | Technical Lead |
+| Admin-only policy shape | two rules: `AUTHORIZATION_RESET` → `platform-operations-admin`; `READ`,`UPDATE`,`DELETE` → `platform-content-full-access`; both `cascade: false` | `admin.authorization.service.ts:225-256` | no (F-6) | Security Lead |
+| Task TTL | 3600 s (Redis), refreshed on every counter write | `task.service.ts:17` | no | Technical Lead |
+| Task statuses | `IN_PROGRESS`, `COMPLETED`, `ERRORED`; `tasks` defaults to in-progress | `task.status.enum.ts:3-7`; `task.service.ts:297` | no | Technical Lead |
+| Error text — reset publish | `Reset publishing failed before all events were emitted`; `Error while initializing authorization reset` (code `AUTHORIZATION_RESET`) | `auth-reset.service.ts:103-106, 122-127` | no | Technical Lead |
+| Error text — reset result lines | `Finished resetting <subject>.` / `Resetting <subject> failed! Max retries reached. Rejecting message.` (subject embeds the entity id) | `auth-reset.controller.ts:114, 125, 192` | no (F-5) | Security Lead |
+| Operational privilege + rule type ids | `PLATFORM_OPERATIONS_ADMIN` (`credentialRuleTypes-platformPlatformOperationsAdmin`), `AUTHORIZATION_RESET` (`credentialRuleTypes-platformPlatformAuthReset`), `LICENSE_RESET` (`credentialRule-licenseReset`), `PLATFORM_AUDIT_READ` (`credentialRuleTypes-platformAuditRead`) | `credential.rule.types.constants.ts:86-89, 143-144`; `platform.service.authorization.ts:278-284, 311-320, 421-434` | no | Security Lead |
+| A3 surfaces (10) / A11 surfaces (15) | the census lists in `a.row.surfaces.ts` | `a.row.surfaces.ts:305-380, 1084-1180` | no | Security Lead |
+| In-app prune | retention 90 days (`IN_APP_MAX_RETENTION_PERIOD_DAYS`), cap 100 per user (`IN_APP_MAX_NOTIFICATIONS_PER_USER`); by `triggeredAt`, read state ignored | `alkemio.yml:553-554`; `in.app.notification.admin.service.ts:22-61` | yes | Product Lead |
+| Error text — prune config | `Invalid notifications.in_app.max_retention_period_days` / `…max_notifications_per_user` | `in.app.notification.admin.service.ts:36-47` | no | Technical Lead |
+| Prune schedule | daily `0 3 * * *` via REST (infra clone 2026-08-11) | infra `02-inapp-notifications-prune-cron-job.yml:8, 30-36` | no | Technical Lead |
+| Search ingest schedule | hourly `25 */1 * * *` on acceptance and production via REST | infra `overlays/*/third-party/search/01-search-ingest-cron-job.yml:9` | no | Technical Lead |
+| Internal REST routes | `POST /rest/internal/admin/in-app-notifications/prune`, `POST …/search-ingest` (202), `GET …/tasks/:id` (404 `Task not found`); no auth | `internal-admin.controller.ts:33-101` | no (F-8) | Security Lead |
+| Error text — geolocation | `Failed to update GeoLocation data`; disabled provider → `false` | `admin.geolocation.resolver.mutations.ts:48-58, 97-100` | no | Technical Lead |
+| Collection cleanup pattern | `/(.*)-(knowledge\|context)/`, UUID-shaped identifiers kept | `ai.server.resolver.mutations.ts:100-110` | no | Technical Lead |
+| Whiteboard draft TTL / sweep | 7 days; hourly; 25 per run | `whiteboard.draft.service.ts:21`; `whiteboard.draft.sweep.service.ts:7, 17` | yes | Product Lead |
+| Memo signing sweep | hourly; 25 per run; 60 s gateway margin | `memo.signing.sweep.service.ts:6, 15`; `signing.attempt.service.ts:14` | no | Technical Lead |
+| Push cleanup | daily at midnight; `PUSH_CLEANUP_STALE_DAYS` 30; `PUSH_MAX_SUBSCRIPTIONS_PER_USER` 10 | `push.subscription.service.ts:187`; `alkemio.yml:545, 551` | yes | Product Lead |
+| Digest sweep | every `MESSAGING_DIGEST_SWEEP_INTERVAL_SECONDS` (10); batch 200; concurrency 10; off with `notifications.messaging.enabled=false` | `conversation.digest.sweep.service.ts:18-26, 80-83`; `alkemio.yml:606` | no | Technical Lead |
+| URL cache ttl | `1000` (unit undetermined — open question 4) | `url.generator.service.cache.ts:11-13` | no | Technical Lead |
+| Audit categories (11) | `email_change`, `password_change`, `platform_operations`, `platform_role_assignment`, `platform_user_record`, `platform_configuration`, `platform_resource`, `mcp_api_key`, `account_deletion`, `organization_administration`, `matrix_session` | `platform.audit.category.ts:9-53` | no | Security Lead |
+| Audit outcomes (36) / initiator roles (14) | `operation_succeeded`, `operation_failed`, `role_granted`, `role_revoked`, `role_grant_rejected`, `configuration_changed`, `resource_*`, `license_*`, `identity_deleted`, `account_reset`, `key_*`, `account_deleted`, … ; `self`, `platform_admin`, `system`, `service` + the ten platform roles | `platform.audit.outcome.ts:69-120`; `platform.audit.initiator.role.ts:133-161` | no (F-4) | Security Lead |
+| Audit retention | indefinite; append-only; no FK to users; no sweep | `platform.audit.entry.interface.ts:300-303`; migration `1779195577000:13-16` | yes (ISO 27001 retention policy — product/security must rule) | Security Lead |
+| Audit error detail cap | 500 characters, `<name>: <message>`, no stack | `platform.operations.audit.service.ts:43, 118-124` | no | Security Lead |
+| Error text — fail-closed audit | `Unable to record role-assignment audit entry; the operation was NOT applied: <description>` | `platform.role.assignment.audit.service.ts:222-224` | no | Security Lead |
+| MCP audit tool | name `analyze_audit_log`; actions `summary`, `user_history`; filter `subjectUserId`; emails masked to domain | `audit-log-analyze.tool.ts:16-23, 70-80, 340` | no (F-11) | Security Lead |
+| GraphQL surface | mutations `authorizationPolicyResetAll`, `authorizationPlatformRolesAccessReset`, `authorizationPolicyResetToGlobalAdminsAccess`, `authorizationPolicyResetOnPlatform/OnUser/OnOrganization/OnAccount`, `aiServerAuthorizationPolicyReset`, `licenseResetOnAccount`, `resetLicenseOnAccounts`, `adminSearchIngestFromScratch`, `adminUpdateContributorAvatars`, `adminUpdateGeoLocationData`, `adminInAppNotificationsPrune`, `cleanupCollections`, `refreshAllBodiesOfKnowledge`, `adminRepairTemplateFiles`, `migrateLegacyMemoContent`, `migrateLegacyWhiteboardContent`, `updateAssistantActorCapabilities`, `adminCommunication*` (6); queries `task`, `tasks`, `platformAdmin{accounts, innovationHubs, innovationPacks, spaces, users, organizations, virtualContributors, virtualAssistant, communication{…}, identity{…}, latestUserEmailChangeAuditEntry, userEmailChangeAuditEntries}`; types `Task`, `TaskStatus`, `PruneInAppNotificationAdminResult`, `MigrateEmbeddings` | `schema.graphql:4856-4972, 5152, 5200, 5272, 5779-5781, 6370, 6409-6411, 7514-7534` | no | Technical Lead |
 
 ### F. Where this lands in the new core
 
