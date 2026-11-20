@@ -2,12 +2,15 @@
 
 _What the platform does today at its root: the service versions, the latest release post, the platform settings, the well-known virtual contributors, the platform authorization reset, the forum root, and the containment of a leaked MCP API key: what it does, why, who may, and what is still to answer. The file follows the three-section layout of `communications.md`: **1. Rules**, **2. Rights**, **3. Open questions**, with the evidence in an **Appendix**. The forum's own rules are in `communications.md`, the public configuration in `configuration.md`, and licensing in `entitlements.md`. The full life cycle of MCP API keys is not covered here, only the seven containment cases._
 
-_Open questions per owner: Product Lead 1 · Technical Lead 11 · Quality Lead 5 · Security Lead 2 · Service Operations Lead 2. By state: 17 open · 4 with a suggested answer. Proof of the 22 rules: 5 proven by a test · 17 untested (Appendix A)._
+_Open questions per owner: Product Lead 2 · Technical Lead 11 · Quality Lead 5 · Security Lead 2 · Service Operations Lead 2. By state: 18 open · 4 with a suggested answer. Proof of the 22 rules: 5 proven by a test · 17 untested (Appendix A)._
+
+_Whys of the 22 rules: 17 rest on a source · 4 carry a draft for product to decide · 1 has none, and it points to a question in section 3 (PLT-05)._
 
 **How to read it**
 
 - **Rule** is one or two plain sentences. The exact behaviour, with error messages and limits, is in Appendix A under the same id. The new core is checked against the exact text.
-- **Why: business** is what Alkemio needs. **Why: product** is the user story. **Why: technical** is the engineering reason, when there is one. "—" means no source states one. The whys are the reasons found in the code, the tests and the specs, sorted into the three columns without rewording. Product has not reviewed this file yet and fills in the user stories later.
+- **Why: business** is what Alkemio needs. **Why: product** is the user story. **Why: technical** is the engineering reason. A rule needs at least one why, and gets a second or third only where it adds something for the decision or the code. "—" means none is given.
+- A why that names a spec, issue, pull request, code comment or code line rests on that source. A why ending in _(draft)_ was written by QA and no source states it: product keeps, rewrites or deletes it, and sets **Decided by**. A rule with no why at all carries an open question in section 3.
 - **Decided by** names the source of the decision: a spec, a commit or pull request, an issue or a document. "Code comment (no spec)" means only a comment in the code gives the reason. "Not decided" means the behaviour exists in the code and nobody chose it.
 - A marker in bold at the end of a rule points at section 3: **(open: F8)** means a question on this rule is still open, **(defect: F5)** means today's behaviour is a fault and must not be copied as intended, **(defect in part: F5)** means part of it is. A rule with no marker stands as written. Every rule is logged as the server behaves today, also when that is not the intended end state. Whether a test proves the rule sits in Appendix A as **proven** or **untested**.
 - Hard rules are not marked yet. Some rules are choices that a new feature may challenge, and some can never change; a later version will mark the second kind with "(hard rule)" after the why that makes it so. Until then, no marker does not mean a rule is open to change.
@@ -18,13 +21,13 @@ _Open questions per owner: Product Lead 1 · Technical Lead 11 · Quality Lead 5
 
 | ID | Rule | Why: business | Why: product | Why: technical | Decided by |
 |---|---|---|---|---|---|
-| PLT-01 | The platform's root information answers every caller, signed in or not. Only the list of well-known virtual contributors is refused to a visitor. The configuration, service versions, latest release post, settings (with the notification e-mail blacklist), innovation hub and assistant access go to anyone. **(open: F1, F2)** | — | — | The root is the entry point for the public document (CFG-01) and the forum; nothing in the sources says the settings were meant to be public (F-1). | Not decided: exists in the code |
-| PLT-02 | The platform lists its running services with their versions. Today that is one entry: the server and its version. **(open: Q-PLT-02)** | — | — | — | Not decided: exists in the code |
+| PLT-01 | The platform's root information answers every caller, signed in or not. Only the list of well-known virtual contributors is refused to a visitor. The configuration, service versions, latest release post, settings (with the notification e-mail blacklist), innovation hub and assistant access go to anyone. **(open: F1, F2)** | — | — | The root is the entry point for the public document (CFG-01) and the forum; nothing in the sources says the settings were meant to be public (F-1). _(draft)_ | Not decided: exists in the code |
+| PLT-02 | The platform lists its running services with their versions. Today that is one entry: the server and its version. **(open: Q-PLT-02)** | Support and users can see which server version is running, for example when reporting a problem. _(draft)_ | — | — | Not decided: exists in the code |
 | PLT-03 | The platform names the newest forum post in the Releases category, or nothing when there is none. It does not check whether the caller may read that post. **(open: F8)** | The client links the latest release notes from the forum (PR #3744; the `forumreleases` location points at the same place). | — | — | Server PR #3744 |
 | PLT-04 | The platform tells the web app whether the user may use the AI assistant: yes only for holders of the Feature Virtual Assistant role, no for everyone else, never an error. The app can then hide the assistant from everyone else. | Access to the web AI assistant is a privilege, separate from the token budget (004 FR-027). | — | The sole holder is the feature role after 027 closed the legacy credentials (T076/T077). | Spec 004 FR-027; spec 027 T076/T077 |
-| PLT-05 | The list of well-known virtual contributors (which virtual contributor plays a named role, such as chat guidance) can be read by every signed-in user and is refused to a visitor. | — | — | — (the read is gated by the interactive-guidance privilege, which every registered user holds; no source says why anonymous is excluded). | Not decided: exists in the code |
+| PLT-05 | The list of well-known virtual contributors (which virtual contributor plays a named role, such as chat guidance) can be read by every signed-in user and is refused to a visitor. **(open: Q-PLT-05)** | — | — | — (the read is gated by the interactive-guidance privilege, which every registered user holds; no source says why anonymous is excluded). | Not decided: exists in the code |
 | PLT-06 | Only the Platform Settings Admin sets which virtual contributor plays a well-known role. Any id is accepted without checking that such a virtual contributor exists, and the change is audited. **(open: F4, OQ4)** | Definition-type setting owned by the settings-admin family (027 A10/T045). | — | The in-memory pin keeps content-full-access's root CRUD out of it (sec-server-23; crosscheck F6). | Spec 027 A10/T045 |
-| PLT-07 | On an innovation hub's own web address the platform answers that hub; on the main address it answers none. A hub asked for by name or id is looked up, and the request fails if it does not exist. **(open: Q-PLT-07, OQ6)** | — | — | — | Not decided: exists in the code |
+| PLT-07 | On an innovation hub's own web address the platform answers that hub; on the main address it answers none. A hub asked for by name or id is looked up, and the request fails if it does not exist. **(open: Q-PLT-07, OQ6)** | — | As an innovation hub owner, I want my hub's own web address to open my hub, so that my community lands on its own entry point. _(draft)_ | — | Not decided: exists in the code |
 | PLT-08 | The platform publishes the list of names a space may never take: its own page addresses and reserved words. Anyone can read it. | — | — | Existing client routes and reserved paths must not be shadowed by a space URL (`restricted.space.names.ts` comments). | Code comment (no spec) |
 
 ### Platform settings
@@ -33,7 +36,7 @@ _Open questions per owner: Product Lead 1 · Technical Lead 11 · Quality Lead 5
 |---|---|---|---|---|---|
 | PLT-10 | The platform has one settings object with two lists: the web addresses allowed in embedded frames, and the notification e-mail blacklist. Both always exist; a missing blacklist reads as empty. **(open: F1)** | — | — | 019 FR-001/FR-005: the blacklist follows the structural conventions of the allow-list and is published so downstream services can fetch it. | Server spec 019 FR-001/FR-005 |
 | PLT-11 | Only the Platform Settings Admin may change the settings. Every successful change is recorded in the audit trail with the setting and the value added or removed. **(open: OQ4)** | One owning family for platform settings (027 A10, T045 consolidated five surfaces onto one privilege; T058 single-path audit). | — | — | Spec 027 A10, T045, T058 |
-| PLT-12 | Adding an embed address that is already listed changes nothing, and removing one that is not listed succeeds without change. A bulk update replaces the list it carries and leaves the other one as it was. **(open: Q-PLT-12)** | — | — | — | Not decided: exists in the code |
+| PLT-12 | Adding an embed address that is already listed changes nothing, and removing one that is not listed succeeds without change. A bulk update replaces the list it carries and leaves the other one as it was. **(open: Q-PLT-12)** | — | — | Adding and removing succeed without change, so a client can repeat a request without getting an error. _(draft)_ | Not decided: exists in the code |
 | PLT-13 | A blacklist entry must be a complete e-mail address. Wildcards and duplicates are refused, the address is stored in lower case, the list holds at most 250 entries, and removing an address that is not listed is refused. **(defect in part: F5)** | 019 FR-003/FR-004/FR-006 and the clarifications (canonical lower-case, 250 to cover large deployments while staying reviewable). | — | — | Server spec 019 FR-003/FR-004/FR-006 |
 | PLT-14 | The server itself never uses either list. The blacklist is published for the notifications service to filter recipients, and the embed list for the web app to follow. **(open: F3, OQ2, Q-PLT-14)** | — | — | 019 assumption: "Downstream notification microservices pull the blacklist before filtering recipients; this feature does not implement the suppression itself." | Server spec 019 (an assumption, not a requirement) |
 
@@ -114,13 +117,14 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 ### Product Lead
 
-[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 1 to answer
+[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 2 to answer
 
 **To answer**
 
 | ID | Area | Type | Question | Owner | Proposed answer | State |
 |---|---|---|---|---|---|---|
 | CONST | All | decision | 17 of the 21 constants are still blank in "product must rule?" (Appendix E). Which of them must product rule on before the rebuild? | Product Lead (Technical Lead and Security Lead for the rows pre-filled with their role) | — | open |
+| Q-PLT-05 | Root | decision | Why does this rule exist? No source states the reason. Every signed-in user may read the list of well-known virtual contributors; a visitor is refused. | Product Lead | — | open |
 
 ### Technical Lead
 
@@ -320,6 +324,8 @@ The platform singleton dissolves into the briefing's ops namespace and the `view
 Extracted 2026-11-06 from three sources: server develop @ `eeecf9ddb` (Release/79) code + `schema.graphql`; the legacy server-api suite (`server-api/src/functional-api/platform/`, 1 file, 7 cases — all MCP API-key containment, workspace#038 US3); the specs, issues and docs listed in § Sources. WHAT and WHY only — no mutations, fixtures or request params. Evidence paths are relative to the server repo unless prefixed `test ›` or `spec ›`. Licensing reads are cross-referenced to entitlements ENT-46/48/49, the role grants to the access matrix `platform` section and crosscheck F6, the forum's own rules to `communications.md`, the configuration child to `configuration.md`; the MCP key lifecycle (038) is out of scope beyond the seven containment cases that live in this folder.
 
 2026-11-19 converted to the three-section layout. The single why of each rule was sorted into business and technical without rewording, each rule got a short plain version (the exact text is in Appendix A), and every finding, open question and gap was routed to an organisation role. Product has not reviewed this file yet.
+
+2026-11-20 whys pass: every rule has at least one why, sourced where a spec, issue, pull request or code comment states it and marked _(draft)_ where QA wrote it. Restating whys with no source were dropped where a sourced one remains. PLT-05 had no why and no question, so Q-PLT-05 is new.
 
 #### Sources
 
