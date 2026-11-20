@@ -1,13 +1,16 @@
 # Web AI assistant: behaviour rules
 
-_What the server does today for the web AI assistant: who may use it, the monthly budget it reports, the assistant actor and what it may do, how the assistant acts for a user, and how its key is set up: what it does, why, who may, and what is still to answer. The conversation itself (history, confirmation, reply language, metering) lives in the private assistant service and is not covered here; see OQ1. It follows the three-section layout accepted in the product review of `communications.md` (alkem-io/test-suites#717): **1. Rules**, **2. Rights**, **3. Open questions**, with the evidence in an **Appendix**. Product has not reviewed this file yet._
+_What the server does today for the web AI assistant: who may use it, the monthly budget it reports, the assistant actor and what it may do, how the assistant acts for a user, and how its key is set up: what it does, why, who may, and what is still to answer. The conversation itself (history, confirmation, reply language, metering) lives in the private assistant service and is not covered here; see OQ1. It follows the three-section layout accepted in the product review of `communications.md` (alkem-io/test-suites#717): **1. Rules**, **2. Rights**, **3. Open questions**, with the evidence in an **Appendix**. Product reviewed section 3 on 2026-11-20._
 
-_Open questions per owner: Product Lead 2 · Technical Lead 6 · Quality Lead 3 · Security Lead 2 · Service Operations Lead 4 · Architecture Lead 1. By state: 15 open · 3 with a suggested answer. Proof of the 18 rules: 4 proven by a test · 14 untested (Appendix A)._
+_Open questions per owner: Product Lead 0 · Technical Lead 6 · Quality Lead 3 · Security Lead 2 · Service Operations Lead 4 · Architecture Lead 1. By state: 13 open · 3 with a suggested answer · 2 decided. Proof of the 18 rules: 4 proven by a test · 14 untested (Appendix A)._
+
+_Whys of the 18 rules: 16 rest on a source · 1 rests only on a technical QA draft, for the Technical Lead (AST-18) · 1 has none and already carries an open question (AST-17)._
 
 **How to read it**
 
 - **Rule** is one or two plain sentences. The exact behaviour, with error messages and limits, is in Appendix A under the same id. The new core is checked against the exact text.
-- **Why: business** is what Alkemio needs. **Why: product** is the user story. **Why: technical** is the engineering reason, when there is one. "—" means no source states one. The user stories are still to be written by product.
+- **Why: business** is what Alkemio needs. **Why: product** is the user story. **Why: technical** is the engineering reason. A rule needs at least one why, and gets a second or third only where it adds something for the decision or the code. "—" means none is given.
+- A why that names a spec, issue, pull request, code comment or code line rests on that source. A why, or the part of a why, ending in _(draft)_ was written by QA and no source states it: product keeps, rewrites or deletes it, and sets **Decided by**. A user story always ends in its "so that"; where no source gives one, QA wrote it. A rule with no why at all carries an open question in section 3.
 - **Decided by** names the source of the decision: a spec, a commit, a pull request, an issue or a document. "Not decided: exists in the code" means the behaviour is in the code and nobody chose it. "Not decided: a defect" means today's behaviour is a fault.
 - A marker in bold at the end of a rule points at section 3: **(open: F3)** means a question on this rule is still open, **(defect: F2)** means today's behaviour is a fault and must not be copied as intended, **(defect in part: F5)** means part of it is. A rule with no marker stands as written. Every rule is logged as the server behaves today, also when that is not the intended end state. Whether a test proves the rule sits in Appendix A as **proven** or **untested**.
 - Hard rules are not marked yet. Some rules are choices that a new feature may challenge, and some can never change; a later version will mark the second kind with "(hard rule)" after the why that makes it so. Until then, no marker does not mean a rule is open to change.
@@ -27,8 +30,8 @@ _Open questions per owner: Product Lead 2 · Technical Lead 6 · Quality Lead 3 
 
 | ID | Rule | Why: business | Why: product | Why: technical | Decided by |
 |---|---|---|---|---|---|
-| AST-05 | The assistant can read, for the user it acts for, whether that user has access and their monthly token allowance. The allowance is the limit of the account's AI-token entitlement; with none, the assistant applies its own default. A read that is not made for a user gets no access and no allowance. **(open: F4a, F4b)** | Tiers signed off: free 1M, plus 10M, premium 50M (ENT-13) | — | Budget is a licence entitlement on the account, resolved for the on-behalf-of user only so one user can never read another's (004 FR-027(b); contract §3) | Spec 004 FR-027(b); contract assistant-access-and-budget §3 |
-| AST-06 | The server does not count or refuse assistant usage: it reports usage as 0 and keeps no record of turns or tokens. Counting and enforcing the monthly budget is left to the assistant backend. **(open: F4a, F4b)** | — | — | FR-027(b)/FR-028 enforcement and metering are "go-live requirements — not yet implemented" on the assistant side (spec); the server's part is the resource of AST-05. | Spec 004 FR-027(b), FR-028 ("not yet implemented") |
+| AST-05 | The assistant can read, for the user it acts for, whether that user has access and their monthly token allowance. The allowance is the limit of the account's AI-token entitlement; with none, the assistant applies its own default. A read that is not made for a user gets no access and no allowance. **(open: F4a)** | Tiers signed off: free 1M, plus 10M, premium 50M (ENT-13) | — | Budget is a licence entitlement on the account, resolved for the on-behalf-of user only so one user can never read another's (004 FR-027(b); contract §3) | Spec 004 FR-027(b); contract assistant-access-and-budget §3; Product, 2026-11-20 (F4b): a plan-less user gets the assistant service's default, as today; issuing the 1M free tier is a wish (same decision as entitlements F1) |
+| AST-06 | The server does not count or refuse assistant usage: it reports usage as 0 and keeps no record of turns or tokens. Counting and enforcing the monthly budget is left to the assistant backend. **(open: F4a)** | — | — | FR-027(b)/FR-028 enforcement and metering are "go-live requirements — not yet implemented" on the assistant side (spec); the server's part is the resource of AST-05. | Spec 004 FR-027(b), FR-028 ("not yet implemented") |
 
 ### The assistant actor
 
@@ -60,7 +63,7 @@ _Open questions per owner: Product Lead 2 · Technical Lead 6 · Quality Lead 3 
 
 | ID | Rule | Why: business | Why: product | Why: technical | Decided by |
 |---|---|---|---|---|---|
-| AST-18 | Anyone who can read community guidelines, an innovation flow, a callout, a whiteboard or a collaboration can ask the server for a ready-made copy to create a new one from. This has nothing to do with the assistant; it is only filed here. **(open: F5)** | — | — | Input creation from existing entities (template / duplication helper); catalogue AI-3 files `inputCreator` under the assistant for lack of a better home. | Not decided: exists in the code |
+| AST-18 | Anyone who can read community guidelines, an innovation flow, a callout, a whiteboard or a collaboration can ask the server for a ready-made copy to create a new one from. This has nothing to do with the assistant; it is only filed here. **(open: F5)** | — | — | Input creation from existing entities (template / duplication helper); catalogue AI-3 files `inputCreator` under the assistant for lack of a better home. _(draft)_ | Not decided: exists in the code |
 
 Numbering note: ids are contiguous; none folded.
 
@@ -90,14 +93,10 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 ### Product Lead
 
-[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 2 to answer
+[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 0 to answer
 
-**To answer**
+Nothing to answer: every Product Lead question is decided (see Decided).
 
-| ID | Area | Type | Question | Owner | Proposed answer | State |
-|---|---|---|---|---|---|---|
-| F4b | Budget | decision | The free tier is never issued, so a user without a plan gets the assistant service's own default instead of the signed-off 1M free allowance. Is that meant? | Product Lead | — | open |
-| OQ4b | Access | decision | Is the Feature Virtual Assistant role meant to stay granted by an admin, or to become an offer like VC Campaign? | Product Lead | — | open |
 
 ### Technical Lead
 
@@ -178,6 +177,14 @@ _One section per role, so each owner reads only their own part. **To answer** li
 |---|---|---|---|---|---|---|
 | F4a | Budget | contract | The server keeps no usage counter. Where does the monthly counter live in the rebuild, so that it survives a cache loss (FR-028)? | Architecture Lead | — | open |
 
+### Decided
+
+| Was | Decision | Decided by | Now |
+|---|---|---|---|
+| OQ4b | The Feature Virtual Assistant role stays granted by an admin, as today; turning it into an offer like VC Campaign is not wished now. | Product, 2026-11-20 | Appendix C, OQ4 |
+| F4b | Stays as today: the free tier is never issued, so a user without a plan gets the assistant service's own default. Issuing the signed-off free tier of 1M tokens a month is a wish on the product issues list; it is the same decision as entitlements F1. | Product, 2026-11-20 | AST-05; PRODUCT-ISSUES F4b |
+
+
 ## Appendix
 
 _The record behind sections 1 to 3. Decisions live in sections 1 and 3; nothing here overrides them._
@@ -224,7 +231,7 @@ _The original text of every finding (F) and open question (OQ), with its evidenc
 - **F1 — Spec and migration describe a retired access design (AST-04).** Spec 004 FR-027(a): `GLOBAL_ADMIN` baseline + `PLATFORM_ASSISTANT_ACCESS` role → `assistant-access` credential. Code: the rule names `feature-virtual-assistant` only (027 T076/T077); migration `1780600000000` still inserts the dead role on already-bootstrapped databases, and the doc comment at `platform.service.authorization.ts:235-242` still describes the old design. Test: the client walk proves the feature-role behaviour. Ruling: amend 004 FR-027(a), drop or neutralise the migration's role row, fix the comment.
 - **F2 — The seeded actor grant names a tool that does not exist (AST-08).** Migration: `update_whiteboard_content` off, `import_whiteboard_scene` absent. Registry: `import_whiteboard_scene` exists, `update_whiteboard_content` does not. Harmless at the gate (absent ⇒ off) but the a11 read-back pins the stale row and an admin UI would show a phantom toggle. Ruling: migrate the grant to the live names.
 - **F3 — Classification map vs contract (AST-11).** Contract `assistant-authority.md:42-57`: `update_whiteboard_content` WRITE_DESTRUCTIVE, every other tool READ, "each side ships a parity test asserting its local classification equals this table". Code: `import_whiteboard_scene` WRITE_ADDITIVE, no `update_whiteboard_content`, no WRITE_DESTRUCTIVE entry at all. Ruling: update the contract (and assistant-service's copy) to the code map, or vice versa; confirm the parity test exists on both sides.
-- **F4 — Budget is resolved but never enforced on the server (AST-05/06).** Code: the resource returns the limit; usage is hard-coded 0 (ENT-13); no turn or token record exists. Spec: FR-027(b)/FR-028 enforcement and persistence "not yet implemented"; ENT F-1: the free tier is never issued, so `tokensPerMonth` is `null` for every non-plus user and the assistant applies its own default. Ruling: where the monthly counter lives in the rebuild, and whether a plan-less user is meant to get the assistant-service default rather than the signed-off 1M free tier.
+- **F4 — Budget is resolved but never enforced on the server (AST-05/06).** Code: the resource returns the limit; usage is hard-coded 0 (ENT-13); no turn or token record exists. Spec: FR-027(b)/FR-028 enforcement and persistence "not yet implemented"; ENT F-1: the free tier is never issued, so `tokensPerMonth` is `null` for every non-plus user and the assistant applies its own default. Ruling: where the monthly counter lives in the rebuild, and whether a plan-less user is meant to get the assistant-service default rather than the signed-off 1M free tier. **Product, 2026-11-20:** F4b: stays as today; issuing the 1M free tier is a wish (same decision as entitlements F1). F4a stays with the Architecture Lead.
 - **F5 — `inputCreator` is not an assistant capability (AST-18).** Catalogue AI-3 lists it as one of the feature's two root fields; the code is a template/duplication helper with no assistant involvement. Ruling: re-file it (templates area) so the AI-3 verdict is computed on the real surface.
 - **F6 — The capability surface is readable by anonymous callers (AST-11).** Code: `platformCapabilities` has no guard, so the MCP tool list (names, descriptions, kinds) is public while the assistant is restricted to a feature role (FR-005 "only to authenticated users"). Ruling: accept (the surface is documentation) or gate on registered.
 
@@ -233,7 +240,7 @@ _The original text of every finding (F) and open question (OQ), with its evidenc
 - **OQ1 — assistant-service rules are unreadable here.** Conversation ownership and retention (FR-011), the proposal TTL (FR-014a), confirmation and consolidated confirmation (FR-003/FR-015), reply language (FR-020), link rule (FR-021), per-minute limits (FR-009) and metering (FR-028) live in the private `assistant-service` repo, which is not cloned locally. Someone with access must say whether its own tests cover them (catalogue: "owned by assistant-service tests; confirm").
 - **OQ2 — Is the assistant offered anywhere?** The client gates the button on the build flag `VITE_APP_ASSISTANT_ENABLED`; the walk skips the button check when it is off. Which environments build with it on?
 - **OQ3 — Does the stale `platform-assistant-access` role row exist on acceptance/production**, and does anyone still hold the `assistant-access` credential (a credential row with no rule)?
-- **OQ4 — Who holds Feature Virtual Assistant today** on acceptance/production (the access list), and is the role meant to stay admin-granted or become an offer like VC Campaign?
+- **OQ4 — Who holds Feature Virtual Assistant today** on acceptance/production (the access list), and is the role meant to stay admin-granted or become an offer like VC Campaign? **Product, 2026-11-20:** OQ4b: the role stays admin-granted, as today.
 - **OQ5 — Does the edge strip `X-Alkemio-On-Behalf-Of` on every environment** (008 US2, infra-ops) — the server trusts the header once the actor-bound key validates; the stripping is the other half of the control and is not in this repo.
 - **OQ6 — Is the classification parity test present on the assistant-service side** (contract §1 requires one on each side); the server side has `assistant.capability.classification.spec.ts` but what it asserts against was not checked.
 
@@ -291,6 +298,8 @@ The catalogue lands AI-3 at "agent (kind assistant); assistant-service unchanged
 Extracted 2026-11-06 from three sources: server develop @ `eeecf9ddb` (Release/79) code + `schema.graphql`; the legacy suite — this feature (catalogue AI-3, verdict absent) has **no server-api folder of its own**, so the proof is one `platform-roles` capability row (A11 `updateAssistantActorCapabilities`, 14 roles) and two client-web walks (`platform-roles/feature-roles-offers.spec.ts`, `authz-admin-guard/platform-global-roles.spec.ts`); the specs, contracts and docs listed in § Sources. Scope: what the **server** guarantees for the web AI assistant — the access privilege, the budget resource, the `virtual-assistant` actor and its admin grant, the per-user grant, the capability classification and gate, delegated MCP calls, the bootstrap of the assistant's MCP key, and the `inputCreator` query the catalogue files here. The conversation itself (history, confirmation, proposal TTL, reply language, metering) lives in the private `assistant-service`, which is not available locally — those are open questions, not rules. WHAT and WHY only — no mutations, fixtures or request params. Evidence paths are relative to the server repo unless prefixed `test ›` or `spec ›`.
 
 2026-11-19 converted to the three-section layout: the single why was split in three, every finding, open question and unexplained rule was routed to an organisation role, and the status legend and review-load line were dropped (the counts line at the top replaces them). Old finding ids written "F-3" are now "F3".
+
+2026-11-20 whys pass: every rule has at least one why, sourced where a spec, issue or code line states it and marked _(draft)_ where QA wrote it. Sixteen rules already rested on specs 004, 008, 027 and 105; only AST-18 needed a draft marker, and no source answers Q-AST-17.
 
 #### Sources
 

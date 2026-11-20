@@ -2,12 +2,15 @@
 
 _What the platform does today at the door of its API: how it works out who the caller is, how each field is protected, what "me" returns to a caller without an account, the endpoints and their limits, and the shape of errors. Which role holds which right is in the access matrix and the platform-roles table, and is only cross-referenced here. What it does, why, who may, and what is still to answer. The file has three sections: **1. Rules**, **2. Rights**, **3. Open questions**, with the evidence in an **Appendix**._
 
-_Open questions per owner: Product Lead 2 · Technical Lead 7 · Quality Lead 4 · Security Lead 4 · Service Operations Lead 3 · Architecture Lead 2. By state: 17 open · 5 with a suggested answer. Proof of the 32 rules: 16 proven by a test · 16 untested (Appendix A)._
+_Open questions per owner: Product Lead 0 · Technical Lead 7 · Quality Lead 4 · Security Lead 4 · Service Operations Lead 3 · Architecture Lead 2. By state: 15 open · 5 with a suggested answer · 2 decided. Proof of the 32 rules: 16 proven by a test · 16 untested (Appendix A)._
+
+_Whys of the 32 rules: 31 rest on a source or a product decision · 1 technical why is still a QA draft, for the Technical Lead (GQL-15)._
 
 **How to read it**
 
 - **Rule** is one or two plain sentences. The exact behaviour, with error messages and limits, is in Appendix A under the same id. The new core is checked against the exact text.
-- **Why: business** is what Alkemio needs. **Why: product** is the user story. **Why: technical** is the engineering reason, when there is one. "—" means no source states one. Product has not reviewed this file yet and fills the missing user stories later.
+- **Why: business** is what Alkemio needs. **Why: product** is the user story. **Why: technical** is the engineering reason. A rule needs at least one why, and gets a second or third only where it adds something for the decision or the code. "—" means none is given.
+- A why that names a spec, issue, pull request, code comment or code line rests on that source. A why, or the part of a why, ending in _(draft)_ was written by QA and no source states it: product keeps, rewrites or deletes it, and sets **Decided by**. A user story always ends in its "so that"; where no source gives one, QA wrote it. A rule with no why at all carries an open question in section 3.
 - **Decided by** names the source of the decision: a spec, a commit or pull request, an issue or a document. "Not decided: exists in the code" means the behaviour is in the code and nobody chose it. "Not decided: a defect" means the behaviour is a fault.
 - A marker in bold at the end of a rule points at section 3: **(open: F3)** means a question on this rule is still open, **(defect: F2)** means today's behaviour is a fault and must not be copied as intended, **(defect in part: F5)** means part of it is. A rule with no marker stands as written. Every rule is logged as the server behaves today, also when that is not the intended end state. Whether a test proves the rule sits in Appendix A as **proven** or **untested**.
 - Hard rules are not marked yet. Some rules are choices that a new feature may challenge, and some can never change; a later version will mark the second kind with "(hard rule)" after the why that makes it so. Until then, no marker does not mean a rule is open to change.
@@ -34,11 +37,11 @@ _Open questions per owner: Product Lead 2 · Technical Lead 7 · Quality Lead 4 
 |---|---|---|---|---|---|
 | GQL-10 | Access is decided per field. A field that needs a right is served only when the caller holds that right on the item it belongs to; a field that needs none is not checked. | — | — | Credential-based authorization evaluated at the resolver boundary; the guard was made synchronous so DataLoader batching keeps working (PR #5848). | Server PR #5848; docs/credential-based-authorization.md |
 | GQL-11 | The caller is identified once per request and every part of the request is checked against that same caller. Requests running at the same time never see each other's rights. | — | — | PR #5848: authentication moved to a single global interceptor, the guard reads `req.user`; the nested-query tests are the regression fence for the rewrite. | Server PR #5848 |
-| GQL-12 | Every item can list the rights the caller holds on it, so a refusal can be predicted before a call is made. **(open: Q-GQL-12)** | — | — | — | Not decided: exists in the code |
+| GQL-12 | Every item can list the rights the caller holds on it, so a refusal can be predicted before a call is made. **(open: Q-GQL-12)** | — | As a user, I want the app to offer only the actions I may take, so that I do not run into refusals. | — | Product, 2026-11-20 (product why); the technical why waits for Q-GQL-12 |
 | GQL-13 | A refused field returns one structured "forbidden" error, and the rest of the request is still answered. **(open: F2)** | — | — | Refusals are data, not transport failures, so the client can render the parts it may see (032 error-code system; FR-024b wire semantics for authn only — see F-10). | Spec 032 |
 | GQL-14 | Asking for something that does not exist returns one "not found" error, never a crash or an empty success. **(open: F2, F3)** | 032: a not-found is a 10xxx error the support desk can triage from the code. | — | — | Spec 032 |
-| GQL-15 | An item whose access rules are missing or empty cannot be served at all: the gate fails closed. **(open: Q-GQL-15)** | — | — | — | Not decided: exists in the code |
-| GQL-16 | On a private top-level Space, non-members and visitors can read the About card and nothing else; on a public one they can read the Space. A private Subspace is refused to non-members; a member of the parent sees its About card only. **(open: F3, F7, F9)** | Private spaces content is only visible to members (rule text in `space.service.authorization.ts:659`); READ_ABOUT exists so the About card and the application door stay reachable. | — | — | Space rules and the access matrix (cross-referenced, not owned here) |
+| GQL-15 | An item whose access rules are missing or empty cannot be served at all: the gate fails closed. **(open: Q-GQL-15)** | — | — | Failing closed means a missing or broken policy can never expose data; the cost is a refusal, not a leak. _(draft)_ | Not decided: exists in the code |
+| GQL-16 | On a private top-level Space, non-members and visitors can read the About card and nothing else; on a public one they can read the Space. A private Subspace is refused to non-members; a member of the parent sees its About card only. **(open: F3, F7)** | Private spaces content is only visible to members (rule text in `space.service.authorization.ts:659`); READ_ABOUT exists so the About card and the application door stay reachable. | — | — | Space rules and the access matrix (cross-referenced, not owned here); Product, 2026-11-20 (F9): by design, the cross-reference to the Space rules is enough |
 | GQL-17 | Switching a Space between public and private takes effect on the very next request for non-members. Members see no difference. | — | — | The policy is recomputed and stored on the settings write; the guard reads the stored policy per request, so there is no cache to wait for (PR #5848 test rationale). | Server PR #5848 |
 | GQL-18 | The few REST routes that need a caller (calendar feed, content signing, memo PDF) accept the same three credentials. Bad credentials are refused as "not signed in", any other failure as "forbidden". | — | — | FR-025: REST and GraphQL share one credential model after the Oathkeeper chain was retired (`rest.guard.ts` header). | OIDC design FR-025 |
 | GQL-19 | An MCP API key is not a credential for the GraphQL API. A request that carries only such a key is refused and changes nothing. | 038 FR-015: contain a leaked key — it must not mint, list or revoke keys through any surface. | — | — | Spec 038 FR-015 |
@@ -101,24 +104,13 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 ### Product Lead
 
-[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 2 to answer, 1 also involved
+[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 0 to answer
 
-**To answer**
-
-| ID | Area | Type | Question | Owner | Proposed answer | State |
-|---|---|---|---|---|---|---|
-| F9 | Field gate | check | Visitors and non-members can read the About card of a private top-level Space. This is by design and owned by the Space rules; it is listed so nobody reads the test title as a failed refusal. Is the cross-reference enough? | Product Lead | No ruling needed here: cross-reference to the Space (journey) rules. | suggested |
-| CONST | All | decision | 27 constants are blank in "product must rule?" (Appendix E). Which of them must product rule on? Most are engineering and security limits. | Product Lead (Technical Lead and Security Lead for engineering and security limits) | — | open |
-
-**Also involved**
-
-| ID | Area | Type | Question | Owner | Proposed answer | State |
-|---|---|---|---|---|---|---|
-| F5 | Endpoints | decision | The API description, the query page and the playground are open in every environment, production included. Should production expose them? (The schema is public in the repository anyway, so the exposure is the playground.) | Security Lead, with Product Lead | — | open |
+Nothing to answer: every Product Lead question is decided (see Decided).
 
 ### Technical Lead
 
-[Technical Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Technical%20Lead.md) · Delivery (Anton) · 7 to answer, 4 also involved
+[Technical Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Technical%20Lead.md) · Delivery (Anton) · 7 to answer, 3 also involved
 
 **To answer**
 
@@ -128,7 +120,7 @@ _One section per role, so each owner reads only their own part. **To answer** li
 | F8 | Caller | tidy-up | docs/Guest-Users.md describes a query and a sign-in strategy that no longer exist. Fix the document? | Technical Lead | Fix the doc; the behaviour stands. | suggested |
 | OQ5 | Caller | spec | Where is the OIDC sign-in spec? The code cites FR-023, FR-024b, FR-025 and T042b from server PR #6143, but the spec is not in the server repo. Until it is found, the why of GQL-01, 02, 03, 08 and 43 rests on code comments. | Technical Lead | — | open |
 | OQ6 | me | check | Does the web client depend on the "me" id being exactly "me-" for a caller without an account? Confirm before the new core changes it. | Technical Lead | — | open |
-| Q-GQL-12 | Field gate | decision | Why can every caller list their own rights on every item? No source states a reason. | Technical Lead | — | open |
+| Q-GQL-12 | Field gate | decision | Why can every caller list their own rights on every item? No source states a reason. | Technical Lead | Product, 2026-11-20: the product why on GQL-12 is confirmed (the app offers only the actions a user may take). A technical why is still welcome. | suggested |
 | Q-GQL-15 | Field gate | decision | Why is an item with missing or empty access rules refused outright? No source states a reason. | Technical Lead | — | open |
 | Q-GQL-30 | Endpoints | decision | Why are there three addresses for one endpoint? No source states a reason; the split dates from a sign-in chain that was retired. (F4 asks what to do with them.) | Technical Lead | — | open |
 
@@ -139,7 +131,6 @@ _One section per role, so each owner reads only their own part. **To answer** li
 | F1 | Errors | defect | Outside production mode, error answers include stack traces and internal paths (seen on acceptance on 2026-10-14, server#6663). Should errors be reduced to message, code and error id everywhere? | Security Lead (Technical Lead fixes it on server#6663; Service Operations Lead answers OQ3) | Track it on server#6663, never a new issue. | suggested |
 | F3 | Field gate | decision | A visitor can tell that an id belongs to a real private Subspace, because a missing Space answers "not found" and a private one answers "forbidden". Is the existence of a private Space confidential? If yes, both should answer "not found". | Security Lead (Technical Lead changes the lookup if yes) | — | open |
 | F10 | Errors | decision | A refused field arrives inside a normal 200 answer, while a code comment says refusals should be a 403. The web client relies on the 200. Which is intended? | Architecture Lead (Technical Lead finds the spec, OQ5) | — | open |
-| CONST | All | decision | 27 constants are blank in "product must rule?" (Appendix E). Which of them must product rule on? Most are engineering and security limits. | Product Lead (Technical Lead and Security Lead for engineering and security limits) | — | open |
 
 ### Quality Lead
 
@@ -162,7 +153,7 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 ### Security Lead
 
-[Security Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Security%20Lead.md) · Delivery (Valentin) · 4 to answer, 1 also involved
+[Security Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Security%20Lead.md) · Delivery (Valentin) · 4 to answer
 
 **To answer**
 
@@ -170,14 +161,9 @@ _One section per role, so each owner reads only their own part. **To answer** li
 |---|---|---|---|---|---|---|
 | F1 | Errors | defect | Outside production mode, error answers include stack traces and internal paths (seen on acceptance on 2026-10-14, server#6663). Should errors be reduced to message, code and error id everywhere? | Security Lead (Technical Lead fixes it on server#6663; Service Operations Lead answers OQ3) | Track it on server#6663, never a new issue. | suggested |
 | F3 | Field gate | decision | A visitor can tell that an id belongs to a real private Subspace, because a missing Space answers "not found" and a private one answers "forbidden". Is the existence of a private Space confidential? If yes, both should answer "not found". | Security Lead (Technical Lead changes the lookup if yes) | — | open |
-| F5 | Endpoints | decision | The API description, the query page and the playground are open in every environment, production included. Should production expose them? (The schema is public in the repository anyway, so the exposure is the playground.) | Security Lead, with Product Lead | — | open |
+| F5 | Endpoints | decision | The API description, the query page and the playground are open in every environment, production included. Should production expose them? (The schema is public in the repository anyway, so the exposure is the playground.) | Security Lead, with Product Lead | Product, 2026-11-20: product has no need for the playground in production, but it stays as today; the Security Lead decides whether closing it goes on the product issues list. | open |
 | F6 | Endpoints | risk | The API has no depth, complexity or rate limit of its own, and the MCP rate setting is not enforced. Does a rate cap exist at the edge on acceptance and production (OQ2), and does the new core's gateway own depth and complexity limits? | Security Lead (Service Operations Lead answers OQ2; Architecture Lead decides for the new gateway) | — | open |
 
-**Also involved**
-
-| ID | Area | Type | Question | Owner | Proposed answer | State |
-|---|---|---|---|---|---|---|
-| CONST | All | decision | 27 constants are blank in "product must rule?" (Appendix E). Which of them must product rule on? Most are engineering and security limits. | Product Lead (Technical Lead and Security Lead for engineering and security limits) | — | open |
 
 ### Service Operations Lead
 
@@ -214,6 +200,13 @@ _One section per role, so each owner reads only their own part. **To answer** li
 | ID | Area | Type | Question | Owner | Proposed answer | State |
 |---|---|---|---|---|---|---|
 | F6 | Endpoints | risk | The API has no depth, complexity or rate limit of its own, and the MCP rate setting is not enforced. Does a rate cap exist at the edge on acceptance and production (OQ2), and does the new core's gateway own depth and complexity limits? | Security Lead (Service Operations Lead answers OQ2; Architecture Lead decides for the new gateway) | — | open |
+
+### Decided
+
+| Was | Decision | Decided by | Now |
+|---|---|---|---|
+| F9 | By design: visitors and non-members read the About card of a private top-level Space. The cross-reference to the Space rules is enough; no ruling is needed here. | Product, 2026-11-20 | GQL-16 |
+| CONST | No constant here needs a product ruling: all are engineering or security values, ticked "no" in Appendix E. | Product, 2026-11-20 | Appendix E |
 
 ## Appendix
 
@@ -280,7 +273,7 @@ _The original text of every finding (F) and open question (OQ), with its evidenc
 - **F6 — No depth, complexity or rate limit at the application layer (GQL-32).** Code: `plugins: [ApmApolloPlugin]` only; no throttler; `mcp.rate_limit` configured but unenforced. Spec: 008 relies on "a per-source-IP rate cap at the edge" as a stopgap (#1956). Test: none. Ruling: confirm the edge cap exists on acc/prod (ops, outside the three sources — open question 2) and decide whether the new core's gateway owns depth/complexity limits.
 - **F7 — Guard test titles and oracles mislead (GQL-16).** Code/test: "Anonymous user cannot access private space data" and "Non-member cannot access private subspace" — the first asserts that the About *is* readable (`READ_ABOUT`), the second asserts only that *an* error exists (no code). Spec: none. Ruling: rebaseline the titles to the rule ("about only" / "refused with FORBIDDEN_POLICY") and tighten the second assertion to the code; no product decision.
 - **F8 — `docs/Guest-Users.md` is stale (GQL-05).** It documents a `whoAmI` query and an `OryStrategy` that no longer exist (`schema.graphql` has no `whoAmI`; the guest resolution lives in `auth.interceptor.ts:296-302`). Ruling: fix the doc; the behaviour stands.
-- **F9 — Space `READ_ABOUT` for anonymous on a private L0 is a design, not a leak (GQL-16).** Code: anonymous and registered non-members receive `READ_ABOUT` on a private L0 and nothing on a private L1/L2. Test: pinned in both files. Spec: the space table owns this; recorded here because a reviewer of this area will otherwise read the test title as a failed denial. Ruling: none here — cross-reference to the journey table.
+- **F9 — Space `READ_ABOUT` for anonymous on a private L0 is a design, not a leak (GQL-16).** Code: anonymous and registered non-members receive `READ_ABOUT` on a private L0 and nothing on a private L1/L2. Test: pinned in both files. Spec: the space table owns this; recorded here because a reviewer of this area will otherwise read the test title as a failed denial. Ruling: none here — cross-reference to the journey table. **Product, 2026-11-20:** by design; the cross-reference is enough.
 - **F10 — Authorization refusals are HTTP 200, authentication refusals 401 (GQL-43).** Code: only `AuthenticationException` sets `extensions.http.status`; the comment in that file says FR-024b wants "authn (401), authz (403) and system (500)" distinguishable on the wire, yet `ForbiddenAuthorizationPolicyException` sets no status, so a FORBIDDEN_POLICY ships as 200 + envelope. Test: the guard test does not assert the status; SRA-N2 asserts 401 for authn only. Spec: the FR-024b spec is not in the local tree (open question 5). Ruling: is 200-with-envelope the intended authz answer (the client relies on it) or should authz be 403 as the comment claims?
 
 #### Open questions
@@ -317,45 +310,45 @@ Behaviours the area has that neither reading nor tests pinned down:
 
 ### E. Constants the rules depend on
 
-_"Rules on it" is pre-filled with the role whose domain covers the value: Product Lead for business values, plan constants and user-facing copy; Technical Lead for engineering limits and wire shapes; Security Lead for security limits. The "product must rule?" column is unchanged._
+_"Rules on it" is pre-filled with the role whose domain covers the value: Product Lead for business values, plan constants and user-facing copy; Technical Lead for engineering limits and wire shapes; Security Lead for security limits. The "product must rule?" column was ticked by Product, 2026-11-20 (CONST): "yes" rows wait for a product ruling before the rebuild._
 
 | Constant | Value today | Source | product must rule? | Rules on it |
 |---|---|---|---|---|
-| GraphQL endpoint on the server | `/graphql` (single Apollo module) | `app.module.ts:158`; `main.server.ts:209` | | Technical Lead |
-| Edge aliases | `/api/public/graphql`, `/api/private/graphql`, `/api/private/non-interactive/graphql`, all stripped to `/graphql`; `/graphiql` | `dev-orchestration/…/server/34,35,36,32-*.yml`; `22-strip-prefix-middleware.yml` | F-4 | Technical Lead |
-| Harness endpoint | `ALKEMIO_SERVER` → `/api/private/non-interactive/graphql`; `session` → `/api/private/graphql`; `public` → `/api/public/graphql` | `lib/src/config/create-config-using-envvars.ts:14-17`; `lib/src/utils/graphql.actor.ts:33-43` | | Technical Lead |
-| Credential strategy order | `cookie-session`, `non-interactive-login`, `hydra-bearer` | `auth.interceptor.ts:357-362`; `rest.guard.ts:87-91` | | Security Lead |
-| Session cookie | name `alkemio_session`; idle 1,209,600 s (14 d, sliding); absolute 2,592,000 s (30 d) | `alkemio.yml:217-222`; `main.server.ts:94-163` | | Security Lead |
-| Bearer audience allow-list | `alkemio-web,synapse-client,element-client,ecosystem-analytics` (empty list refuses to boot) | `alkemio.yml:212`; `bearer-aud-allow-list.ts` | | Security Lead |
-| Bearer clock tolerance | 30 s | `hydra-bearer.validator.ts:78` | | Security Lead |
-| Required bearer claim | `alkemio_actor_id` (non-empty) | `hydra-bearer.validator.ts:86-103` | | Security Lead |
-| Bearer failure `error_code`s | `malformed_bearer_header`, `invalid_audience`, `invalid_<claim>`, `claim_validation_failed`, `missing_alkemio_actor_id`, … | `hydra-bearer.validator.ts:62-103, 118-140` | | Security Lead |
-| Cookie failure `error_code`s | tombstone reason, `subject_revoked`, `absolute_ttl_exceeded` | `cookie-session.strategy.ts:118-193` | | Technical Lead |
-| Non-interactive login | enabled only when `enabled && NODE_ENV!=='production' && key ≥ 32 bytes`; token TTL 14,400 s; issuer `alkemio-non-interactive-login`; HS256 | `non-interactive-login.config.ts:25-51`; `alkemio.yml:223-226` | | Security Lead |
-| Non-interactive login responses | 201 `{api_token, expires_at, token_type: "Bearer"}`; 404 disabled; 400 `invalid_request`; 401 `invalid_credentials`; 422 `actor_id_missing`; 429 `rate_limited`; 503 `kratos_unavailable` | `non-interactive-login.controller.ts:34-100` | | Security Lead |
-| Auth entry points let through on a rejected session | `/api/auth/oidc/login`, `/callback`, `/logout`, `/app-handoff` (exact paths) | `auth.interceptor.ts:88-100` | | Security Lead |
-| Guest header | `x-guest-name` (base64/UTF-8 first, raw ASCII fallback) | `src/core/authentication/constants.ts`; `guest-name.resolver.ts` | | Technical Lead |
-| Anonymous actor | `actorID = ''`, credential `GLOBAL_ANONYMOUS`; guest → `GLOBAL_GUEST` | `actor.context.service.ts:26-47` | | Technical Lead |
-| `me.id` for no account | `me-` | `me.resolver.fields.ts:112`; 107 contract | | Technical Lead |
-| Degraded `me` values | counts 0, lists `[]`, `user` null, notifications `{total 0, items [], hasNextPage false, hasPreviousPage false, cursors null}` | `me.resolver.fields.ts`; 107 FR-029a | | Technical Lead |
-| Field-gate marker | `@AuthorizationActorHasPrivilege(<privilege>)` + `@UseGuards(GraphqlGuard)`; 96 fields in 30 resolvers | grep | | Technical Lead |
-| Refusal text | `Authorization: unable to grant '<privilege>' privilege: <Parent>.<field> user: <actorID> on authorization <policyId> of type '<type>'` | `authorization.service.ts:44` | F-2 | Technical Lead |
-| Not-found text (space) | `Unable to find Space using options 'undefined'` | `space.service.ts:858`; test pins it | F-2 | Technical Lead |
-| Authentication refusal | message `unauthenticated`, code `UNAUTHENTICATED`, HTTP 401, `data: null`, `extensions.error_code` | `auth.interceptor.ts:237-242`; `authentication.exception.ts` | | Technical Lead |
-| Store-outage refusal | HTTP 503 + `Retry-After`, code `SESSION_STORE_UNAVAILABLE` (14119) | `auth.interceptor.ts:265-277`; 109 FR-017/018 | | Technical Lead |
-| Error codes used here | `UNAUTHENTICATED` 11101 · `FORBIDDEN` 11103 · `FORBIDDEN_POLICY` 11104 · `AUTHORIZATION_INVALID_POLICY` 11106 · `API_RESTRICTED_ACCESS` 11110 · `ENTITY_NOT_FOUND` 10101 · `BAD_USER_INPUT` 12101 · `SESSION_STORE_UNAVAILABLE` 14119 · `UNSPECIFIED` 99999 | `error.status.metadata.ts`; `docs/error-codes.md` | | Technical Lead |
-| Error categories | 10 not-found · 11 authorization · 12 validation · 13 operations · 14 system · 99 fallback | `src/common/enums/error.category.ts` | | Technical Lead |
-| Error extensions | `code`, `numericCode`, `userMessage`, `errorId`, `details` (+ `http.status`, `error_code` on authentication) | `base.exception.ts:22-30`; `authentication.exception.ts` | | Technical Lead |
-| Production redaction | `NODE_ENV === 'production'` → `{message, errorId, code}` (+ form reason code); otherwise full exception | `graphql.exception.filter.ts:57-72` | F-1 | Security Lead |
-| Coercion sanitiser | message `Invalid value supplied for a GraphQL variable`; kept keys `code, numericCode, userMessage, errorId` | `graphql.error.sanitizer.ts:77-114` | | Security Lead |
-| Unhandled error | `UNSPECIFIED` 99999 + `errorId`; REST 500 JSON | `unhandled.exception.filter.ts` | | Technical Lead |
-| Introspection / playground / persisted queries | `introspection: true`; playground tabs Me, Spaces (private) · Configuration, Server Metadata (public); `persistedQueries: false`; `cors: false` (edge) | `app.module.ts:167-203` | F-5 | Security Lead |
-| Depth / complexity / rate limit | none at the application layer | `app.module.ts:200`; grep | F-6 | Security Lead |
-| JSON body limit | `hosting.max_json_payload_size` = `64mb`; `/rest/mcp` 256 kB | `alkemio.yml:53`; `json-body-parser.middleware.ts` | | Technical Lead |
-| Upload limit | `storage.file.max_file_size` = 15,728,640 (15 MB) | `alkemio.yml:354-358`; `main.server.ts:193-199` | CFG F-1 | Technical Lead |
-| Subscription close | `CloseCode.Unauthorized`, reason `Session expired`, on `absoluteExpiry < now` | `app.module.ts:250-263` | | Technical Lead |
-| Guarded REST routes | `rest/calendar`, `rest/content-signing`, `rest/memo` (RestGuard); `/rest/mcp` (McpAuthGuard); `/rest/internal*`, `health`, `api/auth*` unguarded by a caller guard | grep `@Controller(`, `RestGuard` | | Security Lead |
-| House rule | no dynamic data (IDs, e-mails) in exception messages | `CLAUDE.md:164-174` | F-2 | Security Lead |
+| GraphQL endpoint on the server | `/graphql` (single Apollo module) | `app.module.ts:158`; `main.server.ts:209` | no | Technical Lead |
+| Edge aliases | `/api/public/graphql`, `/api/private/graphql`, `/api/private/non-interactive/graphql`, all stripped to `/graphql`; `/graphiql` | `dev-orchestration/…/server/34,35,36,32-*.yml`; `22-strip-prefix-middleware.yml` | no (F-4) | Technical Lead |
+| Harness endpoint | `ALKEMIO_SERVER` → `/api/private/non-interactive/graphql`; `session` → `/api/private/graphql`; `public` → `/api/public/graphql` | `lib/src/config/create-config-using-envvars.ts:14-17`; `lib/src/utils/graphql.actor.ts:33-43` | no | Technical Lead |
+| Credential strategy order | `cookie-session`, `non-interactive-login`, `hydra-bearer` | `auth.interceptor.ts:357-362`; `rest.guard.ts:87-91` | no | Security Lead |
+| Session cookie | name `alkemio_session`; idle 1,209,600 s (14 d, sliding); absolute 2,592,000 s (30 d) | `alkemio.yml:217-222`; `main.server.ts:94-163` | no | Security Lead |
+| Bearer audience allow-list | `alkemio-web,synapse-client,element-client,ecosystem-analytics` (empty list refuses to boot) | `alkemio.yml:212`; `bearer-aud-allow-list.ts` | no | Security Lead |
+| Bearer clock tolerance | 30 s | `hydra-bearer.validator.ts:78` | no | Security Lead |
+| Required bearer claim | `alkemio_actor_id` (non-empty) | `hydra-bearer.validator.ts:86-103` | no | Security Lead |
+| Bearer failure `error_code`s | `malformed_bearer_header`, `invalid_audience`, `invalid_<claim>`, `claim_validation_failed`, `missing_alkemio_actor_id`, … | `hydra-bearer.validator.ts:62-103, 118-140` | no | Security Lead |
+| Cookie failure `error_code`s | tombstone reason, `subject_revoked`, `absolute_ttl_exceeded` | `cookie-session.strategy.ts:118-193` | no | Technical Lead |
+| Non-interactive login | enabled only when `enabled && NODE_ENV!=='production' && key ≥ 32 bytes`; token TTL 14,400 s; issuer `alkemio-non-interactive-login`; HS256 | `non-interactive-login.config.ts:25-51`; `alkemio.yml:223-226` | no | Security Lead |
+| Non-interactive login responses | 201 `{api_token, expires_at, token_type: "Bearer"}`; 404 disabled; 400 `invalid_request`; 401 `invalid_credentials`; 422 `actor_id_missing`; 429 `rate_limited`; 503 `kratos_unavailable` | `non-interactive-login.controller.ts:34-100` | no | Security Lead |
+| Auth entry points let through on a rejected session | `/api/auth/oidc/login`, `/callback`, `/logout`, `/app-handoff` (exact paths) | `auth.interceptor.ts:88-100` | no | Security Lead |
+| Guest header | `x-guest-name` (base64/UTF-8 first, raw ASCII fallback) | `src/core/authentication/constants.ts`; `guest-name.resolver.ts` | no | Technical Lead |
+| Anonymous actor | `actorID = ''`, credential `GLOBAL_ANONYMOUS`; guest → `GLOBAL_GUEST` | `actor.context.service.ts:26-47` | no | Technical Lead |
+| `me.id` for no account | `me-` | `me.resolver.fields.ts:112`; 107 contract | no | Technical Lead |
+| Degraded `me` values | counts 0, lists `[]`, `user` null, notifications `{total 0, items [], hasNextPage false, hasPreviousPage false, cursors null}` | `me.resolver.fields.ts`; 107 FR-029a | no | Technical Lead |
+| Field-gate marker | `@AuthorizationActorHasPrivilege(<privilege>)` + `@UseGuards(GraphqlGuard)`; 96 fields in 30 resolvers | grep | no | Technical Lead |
+| Refusal text | `Authorization: unable to grant '<privilege>' privilege: <Parent>.<field> user: <actorID> on authorization <policyId> of type '<type>'` | `authorization.service.ts:44` | no (F-2) | Technical Lead |
+| Not-found text (space) | `Unable to find Space using options 'undefined'` | `space.service.ts:858`; test pins it | no (F-2) | Technical Lead |
+| Authentication refusal | message `unauthenticated`, code `UNAUTHENTICATED`, HTTP 401, `data: null`, `extensions.error_code` | `auth.interceptor.ts:237-242`; `authentication.exception.ts` | no | Technical Lead |
+| Store-outage refusal | HTTP 503 + `Retry-After`, code `SESSION_STORE_UNAVAILABLE` (14119) | `auth.interceptor.ts:265-277`; 109 FR-017/018 | no | Technical Lead |
+| Error codes used here | `UNAUTHENTICATED` 11101 · `FORBIDDEN` 11103 · `FORBIDDEN_POLICY` 11104 · `AUTHORIZATION_INVALID_POLICY` 11106 · `API_RESTRICTED_ACCESS` 11110 · `ENTITY_NOT_FOUND` 10101 · `BAD_USER_INPUT` 12101 · `SESSION_STORE_UNAVAILABLE` 14119 · `UNSPECIFIED` 99999 | `error.status.metadata.ts`; `docs/error-codes.md` | no | Technical Lead |
+| Error categories | 10 not-found · 11 authorization · 12 validation · 13 operations · 14 system · 99 fallback | `src/common/enums/error.category.ts` | no | Technical Lead |
+| Error extensions | `code`, `numericCode`, `userMessage`, `errorId`, `details` (+ `http.status`, `error_code` on authentication) | `base.exception.ts:22-30`; `authentication.exception.ts` | no | Technical Lead |
+| Production redaction | `NODE_ENV === 'production'` → `{message, errorId, code}` (+ form reason code); otherwise full exception | `graphql.exception.filter.ts:57-72` | no (F-1) | Security Lead |
+| Coercion sanitiser | message `Invalid value supplied for a GraphQL variable`; kept keys `code, numericCode, userMessage, errorId` | `graphql.error.sanitizer.ts:77-114` | no | Security Lead |
+| Unhandled error | `UNSPECIFIED` 99999 + `errorId`; REST 500 JSON | `unhandled.exception.filter.ts` | no | Technical Lead |
+| Introspection / playground / persisted queries | `introspection: true`; playground tabs Me, Spaces (private) · Configuration, Server Metadata (public); `persistedQueries: false`; `cors: false` (edge) | `app.module.ts:167-203` | no (F-5) | Security Lead |
+| Depth / complexity / rate limit | none at the application layer | `app.module.ts:200`; grep | no (F-6) | Security Lead |
+| JSON body limit | `hosting.max_json_payload_size` = `64mb`; `/rest/mcp` 256 kB | `alkemio.yml:53`; `json-body-parser.middleware.ts` | no | Technical Lead |
+| Upload limit | `storage.file.max_file_size` = 15,728,640 (15 MB) | `alkemio.yml:354-358`; `main.server.ts:193-199` | no (CFG F-1) | Technical Lead |
+| Subscription close | `CloseCode.Unauthorized`, reason `Session expired`, on `absoluteExpiry < now` | `app.module.ts:250-263` | no | Technical Lead |
+| Guarded REST routes | `rest/calendar`, `rest/content-signing`, `rest/memo` (RestGuard); `/rest/mcp` (McpAuthGuard); `/rest/internal*`, `health`, `api/auth*` unguarded by a caller guard | grep `@Controller(`, `RestGuard` | no | Security Lead |
+| House rule | no dynamic data (IDs, e-mails) in exception messages | `CLAUDE.md:164-174` | no (F-2) | Security Lead |
 
 ### F. Where this lands in the new core
 
@@ -366,6 +359,8 @@ The rebuild keeps one GraphQL contract (`schema.graphql`, 002/012) and resolves 
 Extracted 2026-11-06 from three sources: server develop @ `eeecf9ddb` (Release/79) code + `schema.graphql`; the legacy server-api suite (`server-api/src/functional-api/graphql-guard/`, 4 files, 45 cases); the specs, issues and docs listed in § Sources. WHAT and WHY only — no mutations, fixtures or request params. Evidence paths are relative to the server repo unless prefixed `test ›` or `spec ›`. The area covers who the caller is, the field-level gate, the `me` degradation, the endpoints and limits, and the error shape; the privilege sets per role belong to the access matrix and the platform-roles table and are only cross-referenced here.
 
 2026-11-19 converted to the three-section layout. The status legend of the old layout was dropped: proof is now in Appendix A, and open points are markers on the rules.
+
+2026-11-20 whys pass: every rule has at least one why, sourced where a spec, issue, pull request or code comment states it and marked _(draft)_ where QA wrote it. Restating whys with no source were dropped where a sourced one remains.
 
 #### Sources
 

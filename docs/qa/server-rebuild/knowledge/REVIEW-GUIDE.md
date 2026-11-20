@@ -51,7 +51,7 @@ Open section 3, find the heading with your role, and answer the rows under "To a
 |---|---|
 | open | Nobody has answered yet. |
 | suggested | An answer is proposed; the owner confirms it. |
-| change decided | Decided, and it differs from what the server does today. The row stays in section 3 with an issue link until the change ships. |
+| change decided | Not used (product, 2026-11-20). The file keeps today's behaviour as the rule so the new core's tests stay green; the wanted change is decided as "behaviour stays" and tracked in `PRODUCT-ISSUES.md`. |
 | decided | The row leaves the role's table and is listed under "Decided"; the rule carries the decision in "Decided by". |
 
 Edit the file in a branch and open a pull request, or hand your answers to the QA lead. The drafting agent applies them and keeps the counts at the top of the file right.

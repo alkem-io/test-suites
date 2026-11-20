@@ -2,12 +2,15 @@
 
 _What the platform does today for push notifications: the push switch on every notification setting, browser subscriptions, the per-person limit, delivery, and push to the phone app: what it does, why, who may, and what is still to answer. Which kinds of notification exist and who receives them is in `notifications.md`. The layout is the one piloted in `communications.md`: **1. Rules**, **2. Rights**, **3. Open questions**, with the evidence in an **Appendix**._
 
-_Open questions per owner: Product Lead 4 · Technical Lead 5 · Quality Lead 6 · Security Lead 2 · Service Operations Lead 2. By state: 19 open · 0 with a suggested answer. Proof of the 19 rules: 8 proven by a test · 11 untested (Appendix A)._
+_Open questions per owner: Product Lead 0 · Technical Lead 5 · Quality Lead 6 · Security Lead 2 · Service Operations Lead 2. By state: 15 open · 0 with a suggested answer · 4 decided. Proof of the 19 rules: 8 proven by a test · 11 untested (Appendix A)._
+
+_Whys of the 19 rules: 17 rest on a source · 2 technical whys are still QA drafts, for the Technical Lead (PSH-07, PSH-09) · 0 have none._
 
 **How to read it**
 
 - **Rule** is one or two plain sentences. The exact behaviour, with error messages and limits, is in Appendix A under the same id. The new core is checked against the exact text.
-- **Why: business** is what Alkemio needs. **Why: product** is the user story. **Why: technical** is the engineering reason, when there is one. "—" means no source states one. The product review has not been through this file yet; it fills the business why and the user story where they are missing.
+- **Why: business** is what Alkemio needs. **Why: product** is the user story. **Why: technical** is the engineering reason. A rule needs at least one why, and gets a second or third only where it adds something for the decision or the code. "—" means none is given.
+- A why that names a spec, issue, pull request, code comment or code line rests on that source. A why, or the part of a why, ending in _(draft)_ was written by QA and no source states it: product keeps, rewrites or deletes it, and sets **Decided by**. A user story always ends in its "so that"; where no source gives one, QA wrote it. A rule with no why at all carries an open question in section 3.
 - **Decided by** names the source of the decision: a spec with its requirement, a server pull request or commit, an issue or a document. "Not decided: exists in the code" means the behaviour is there and nobody chose it. "Not decided: a defect" means today's behaviour is a fault.
 - A marker in bold at the end of a rule points at section 3: **(open: F3)** means a question on this rule is still open, **(defect: F1)** means today's behaviour is a fault and must not be copied as intended, **(defect in part: F6)** means part of it is. A rule with no marker stands as written. Every rule is logged as the server behaves today, also when that is not the intended end state. Whether a test proves the rule sits in Appendix A as **proven** or **untested**.
 - Hard rules are not marked yet. Some rules are choices that a new feature may challenge, and some can never change; a later version will mark the second kind with "(hard rule)" after the why that makes it so. Until then, no marker does not mean a rule is open to change.
@@ -19,25 +22,25 @@ _Open questions per owner: Product Lead 4 · Technical Lead 5 · Quality Lead 6 
 | ID | Rule | Why: business | Why: product | Why: technical | Decided by |
 |---|---|---|---|---|---|
 | PSH-01 | Push is a third channel, next to email and in-app, on each of the 41 notification settings. The push switch of a setting is stored and changed on its own; push only, or push off, is a valid choice. **(open: F7)** | Full parity with in-app kinds (038 FR-002/FR-007); per-channel control. | — | — | Spec 038 FR-002, FR-007 |
-| PSH-02 | A person gets a push only when they would also receive that notification by email and their push switch for it is on. Whoever is left out of a notification, such as its sender, is left out of the push too. **(open: F5)** | — | — | One recipient pipeline (notifications NTF-10/15). | Notifications rules NTF-10 and NTF-15 (`notifications.md`) |
+| PSH-02 | A person gets a push only when they would also receive that notification by email and their push switch for it is on. Whoever is left out of a notification, such as its sender, is left out of the push too. | — | — | One recipient pipeline (notifications NTF-10/15). | Notifications rules NTF-10 and NTF-15 (`notifications.md`); Product, 2026-11-20 (F5): the acting admin left out on push only stays as today |
 | PSH-03 | Each active browser and each phone of a person gets its own copy of a push. Someone with push on but no browser or phone registered is skipped silently, and one failed send never stops the others. | Each device receives its own copy; no subscription = nothing to deliver (034 edge case; 086 D-22). | — | — | Spec 034 (edge case); spec 086 D-22 |
-| PSH-04 | A push carries a title and a text written by the server, a link, the kind of notification, a time and sometimes a grouping tag. It never carries the text of a chat message. The link is never just the home page when the notification has a target. **(defect in part: F6)** | message text must not reach the OS (034 FR-008/FR-010/FR-024; 086 FR-007 amended 2026-10-20). | — | Clients render verbatim | Spec 034 FR-008, FR-010, FR-024; spec 086 FR-007 |
+| PSH-04 | A push carries a title and a text written by the server, a link, the kind of notification, a time and sometimes a grouping tag. It never carries the text of a chat message. The link is never just the home page when the notification has a target. | message text must not reach the OS (034 FR-008/FR-010/FR-024; 086 FR-007 amended 2026-10-20). | — | — | Spec 034 FR-008, FR-010, FR-024; spec 086 FR-007; Product, 2026-11-20 (F6): the bare home link on eight older kinds stays as today, a target for four of them is a wish |
 | PSH-05 | Pushes other than chat are limited to 10 per minute per person; more in the same minute are dropped silently. If the counter cannot be reached, the push is sent. Chat pushes do not count towards the limit, so chat cannot crowd out other notifications. | — | — | 038 FR-010 (throttle); 034 FR-012 / D-7 / D-21 (independence, fail open, the TTL defect fixed). | Spec 038 FR-010; spec 034 FR-012, D-7, D-21 |
-| PSH-06 | A newer push about reactions on the same callout, or about the same chat, replaces the earlier unread one on the device instead of piling up. Other kinds pile up. | — | — | — | Spec 034 FR-024; spec 041 FR-012. |
-| PSH-07 | When push is switched off for the whole platform, nothing is sent and browsers get no key to subscribe with. **(open: Q-PSH-07)** | — | — | Kill switch for environments without push credentials. | Not decided: exists in the code |
+| PSH-06 | A newer push about reactions on the same callout, or about the same chat, replaces the earlier unread one on the device instead of piling up. Other kinds pile up. | A newer push replaces the previous unattended one on the device rather than stacking a notification per send (034 FR-024; 041 FR-012). | — | — | Spec 034 FR-024; spec 041 FR-012. |
+| PSH-07 | When push is switched off for the whole platform, nothing is sent and browsers get no key to subscribe with. **(open: Q-PSH-07)** | — | — | Kill switch for environments without push credentials. _(draft)_ | Not decided: exists in the code |
 
 ### Browser subscriptions
 
 | ID | Rule | Why: business | Why: product | Why: technical | Decided by |
 |---|---|---|---|---|---|
 | PSH-08 | Anyone, signed in or not, can read the platform's public push key. It is the same key for everyone, and the private key is never shown. | — | — | Clients need the key to subscribe (038 US1). | Spec 038 US1 |
-| PSH-09 | Subscribing needs a signed-in user and stores the browser as an active subscription. Subscribing again from the same browser updates that record, also when it was held by another user, who then loses it. **(open: F2a, OQ2)** | — | — | Browsers re-subscribe with the same endpoint; an endpoint belongs to one device. | Not decided: exists in the code |
-| PSH-10 | A person has at most 10 active browser subscriptions. One more removes the oldest to make room. | — | — | — | Spec 038 FR-008. |
+| PSH-09 | Subscribing needs a signed-in user and stores the browser as an active subscription. Subscribing again from the same browser updates that record, also when it was held by another user, who then loses it. **(open: F2a, OQ2)** | — | — | Browsers re-subscribe with the same endpoint; an endpoint belongs to one device. _(draft)_ | Not decided: exists in the code |
+| PSH-10 | A person has at most 10 active browser subscriptions. One more removes the oldest to make room. | — | A user who uses Alkemio on several devices receives pushes on all of them and manages them per device (038 US5). | — | Spec 038 FR-008. |
 | PSH-11 | Unsubscribing switches a subscription off but keeps it, and only its owner can do that. Someone else's subscription and one that does not exist give the same "not found" answer. Only a switched-off subscription can be switched on again. | 038 FR-005; no enumeration of other users' ids. | — | — | Spec 038 FR-005 |
-| PSH-12 | A person lists only their own subscriptions: the active and the switched-off ones, never the expired ones, and never the technical address or keys. **(open: F3)** | Subscription management UI; keys are secrets (038 US5). | — | — | Spec 038 US5 |
+| PSH-12 | A person lists only their own subscriptions: the active and the switched-off ones, never the expired ones, and never the technical address or keys. | Subscription management UI; keys are secrets (038 US5). | — | — | Spec 038 US5; Product, 2026-11-20 (F3): switched-off subscriptions stay listed, as today |
 | PSH-13 | When the push service answers that a subscription is gone, it is marked expired and not tried again. Any other failed send is logged and dropped: no second attempt, and the subscription stays. A successful send records the date. **(open: F4)** | — | — | RFC 8030 §7.3; a transient error must never kill a live subscription (086 FR-009, X-4); no DLX, so no requeue (038 NFR-003). | RFC 8030 §7.3; spec 086 FR-009; spec 038 NFR-003 |
 | PSH-14 | Every day at midnight, active subscriptions with no successful send for 30 days and all expired subscriptions are deleted. **(open: Q-PSH-14, OQ4)** | — | — | Keep the table to live devices (038 SC-007). | Spec 038 SC-007; the 30-day value is not decided |
-| PSH-15 | Deleting a user deletes all their browser subscriptions and phone registrations. | — | — | — | Spec 038 FR-014. |
+| PSH-15 | Deleting a user deletes all their browser subscriptions and phone registrations. | No subscription data is left behind when an account is deleted (038 FR-014). | — | — | Spec 038 FR-014. |
 | PSH-16 | The subscribe request is not checked: an empty or oversized key and any address, including non-secure and internal ones, are stored. **(defect: F1, OQ1)** | — | — | the DTO declares validators, but the input is not on the validation allowlist — 086 BF-6 | Not decided: a defect |
 
 ### Phones (the native app)
@@ -45,7 +48,7 @@ _Open questions per owner: Product Lead 4 · Technical Lead 5 · Quality Lead 6 
 | ID | Rule | Why: business | Why: product | Why: technical | Decided by |
 |---|---|---|---|---|---|
 | PSH-17 | A signed-in app user registers their phone for push. A phone that was registered to another user moves to the new user. A person has at most 10 phones registered. Removing a registration only works on one's own. | One row per device so a shared phone never leaks the previous user's notifications (086 FR-001..003, D-1/D-14, SEC-086-01). | — | — | Spec 086 FR-001 to FR-003, D-1, D-14, SEC-086-01 |
-| PSH-18 | Phone pushes use the same queue and content as browser pushes. A phone registration is deleted only when Apple reports the phone's token as gone or invalid; every other failure, and every Android failure, is logged and dropped. A phone failure never expires a browser subscription. | — | — | — | Spec 086 FR-005..FR-008, D-4/D-17/D-23. |
+| PSH-18 | Phone pushes use the same queue and content as browser pushes. A phone registration is deleted only when Apple reports the phone's token as gone or invalid; every other failure, and every Android failure, is logged and dropped. A phone failure never expires a browser subscription. | — | — | A failed send must not throw away a phone that still works: only the two permanent APNs answers delete a registration, no FCM answer does (086 FR-008, D-6d). | Spec 086 FR-005..FR-008, D-4/D-17/D-23. |
 
 ### Operations
 
@@ -78,20 +81,13 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 ### Product Lead
 
-[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 4 to answer
+[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 0 to answer
 
-**To answer**
-
-| ID | Area | Type | Question | Owner | Proposed answer | State |
-|---|---|---|---|---|---|---|
-| F3 | Subscriptions | decision | Should a person's list show the subscriptions they switched off? The server shows them; a skipped test expects them hidden. | Product Lead (Quality Lead then un-skips or rewrites the case) | — | open |
-| F5 | Channel | decision | On push only, the acting admin is not told about the sign-up or the Space they caused. This is decided with finding F3 of `notifications.md`. | Product Lead | — | open |
-| F6 | Channel | decision | Eight older kinds of push open the home page instead of a target (user message, organisation message, mention and sender copy, role changed, user registered, user removed, welcome). Give each a target, or accept it for kinds with no natural target? | Product Lead (Technical Lead makes the change) | — | open |
-| CONST | All | decision | 18 constants have no answer yet in "product must rule?" (Appendix E). Which must product rule on? "Rules on it" proposes a role per row. | Product Lead (Technical Lead and Security Lead rule on their own rows) | — | open |
+Nothing to answer: every Product Lead question is decided (see Decided).
 
 ### Technical Lead
 
-[Technical Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Technical%20Lead.md) · Delivery (Anton) · 5 to answer, 4 also involved
+[Technical Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Technical%20Lead.md) · Delivery (Anton) · 5 to answer, 3 also involved
 
 **To answer**
 
@@ -109,12 +105,11 @@ _One section per role, so each owner reads only their own part. **To answer** li
 |---|---|---|---|---|---|---|
 | F1 | Subscriptions | defect | The subscribe request is not checked, so any address is stored and the server later sends to it, internal addresses included. Add the check and a policy on allowed addresses, or accept the risk and record it? | Security Lead, then Technical Lead | — | open |
 | F2a | Subscriptions | risk | Anyone who learns the push address of a browser can take that subscription over. Keep the hand-over (a device changes hands) but ask for proof of ownership, or refuse it? | Security Lead, then Technical Lead | — | open |
-| F6 | Channel | decision | Eight older kinds of push open the home page instead of a target (user message, organisation message, mention and sender copy, role changed, user registered, user removed, welcome). Give each a target, or accept it for kinds with no natural target? | Product Lead (Technical Lead makes the change) | — | open |
-| CONST | All | decision | 18 constants have no answer yet in "product must rule?" (Appendix E). Which must product rule on? "Rules on it" proposes a role per row. | Product Lead (Technical Lead and Security Lead rule on their own rows) | — | open |
+| F6 | Channel | decision | Eight older kinds of push open the home page instead of a target (user message, organisation message, mention and sender copy, role changed, user registered, user removed, welcome). Give each a target, or accept it for kinds with no natural target? | Product Lead (Technical Lead makes the change) | Product, 2026-11-20: stays as today. A wish covers only user message, organisation message, mention and sender copy (to the conversation or organisation); the other four keep home. No change now. | open |
 
 ### Quality Lead
 
-[Quality Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Quality%20Lead.md) · Delivery (Evgeni), with the QA Engineer as the doer · 6 to answer, 1 also involved
+[Quality Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Quality%20Lead.md) · Delivery (Evgeni), with the QA Engineer as the doer · 6 to answer
 
 **To answer**
 
@@ -127,15 +122,9 @@ _One section per role, so each owner reads only their own part. **To answer** li
 | GAPS | All | test | 9 rules and parts of 4 more have no test, and 10 behaviours were never pinned down (Appendix D). Which get a case before the acceptance checklist is drawn from this file? | Quality Lead | — | open |
 | Q-PSH-19 | Operations | decision | Why does this rule exist? It records how push is tested and signed on acceptance, not something a user sees. Is it a rule the new core must keep, or only a note for testers? | Quality Lead | — | open |
 
-**Also involved**
-
-| ID | Area | Type | Question | Owner | Proposed answer | State |
-|---|---|---|---|---|---|---|
-| F3 | Subscriptions | decision | Should a person's list show the subscriptions they switched off? The server shows them; a skipped test expects them hidden. | Product Lead (Quality Lead then un-skips or rewrites the case) | — | open |
-
 ### Security Lead
 
-[Security Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Security%20Lead.md) · Delivery (Valentin) · 2 to answer, 2 also involved
+[Security Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Security%20Lead.md) · Delivery (Valentin) · 2 to answer, 1 also involved
 
 **To answer**
 
@@ -149,7 +138,6 @@ _One section per role, so each owner reads only their own part. **To answer** li
 | ID | Area | Type | Question | Owner | Proposed answer | State |
 |---|---|---|---|---|---|---|
 | OQ3 | Operations | check | Does production sign pushes with its own key pair, or with the default pair that sits in the code repository, as acceptance does? | Service Operations Lead (Security Lead rules on it if the default pair is in use) | — | open |
-| CONST | All | decision | 18 constants have no answer yet in "product must rule?" (Appendix E). Which must product rule on? "Rules on it" proposes a role per row. | Product Lead (Technical Lead and Security Lead rule on their own rows) | — | open |
 
 ### Service Operations Lead
 
@@ -161,6 +149,15 @@ _One section per role, so each owner reads only their own part. **To answer** li
 |---|---|---|---|---|---|---|
 | OQ3 | Operations | check | Does production sign pushes with its own key pair, or with the default pair that sits in the code repository, as acceptance does? | Service Operations Lead (Security Lead rules on it if the default pair is in use) | — | open |
 | OQ4 | Operations | check | Does the nightly clean-up run safely when several copies of the server run at the same time? | Service Operations Lead | — | open |
+
+### Decided
+
+| Was | Decision | Decided by | Now |
+|---|---|---|---|
+| F3 | Stays as today: a person's list shows their switched-off subscriptions too, as the schema says. The Quality Lead rewrites the skipped case to expect them. | Product, 2026-11-20 | PSH-12 |
+| F5 | Stays as today: on push only, the acting admin is not told about the sign-up or Space they caused. No wish; the Technical Lead settles notifications F3 (remove the filters or amend 065 FR-012). | Product, 2026-11-20 | PSH-02; notifications.md F3 |
+| CONST | Product rules on the subscription cap, the throttle, the stale clean-up, the bare-home kinds and the settings rows with push on by default, ticked "yes" in Appendix E. Error texts go to the Technical Lead. | Product, 2026-11-20 | Appendix E |
+| F6 | Stays as today: eight older kinds open the home page. Giving user message, organisation message, mention and sender copy a target (the conversation or the organisation) is a wish on the product issues list; role changed, registered, removed and welcome keep home. | Product, 2026-11-20 | PSH-04; PRODUCT-ISSUES F6 |
 
 ## Appendix
 
@@ -208,10 +205,10 @@ _The original text of every finding (F) and open question (OQ), with its evidenc
 
 - **F1 — Subscribe input is not validated (PSH-16).** Code: `SubscribeToPushNotificationsInput` carries `@IsUrl`, `@IsNotEmpty`, `@MaxLength`, but the input is not in the validation handler allowlist, so empty or oversized keys and any endpoint string (http, localhost, cloud metadata, `file:`) are stored and later POSTed to by `web-push` from the server pod (SSRF surface). Test: nine cases that would prove validation are `skip`; 086 recorded the missing entry as baseline finding BF-6 and deliberately did not add it (SIMP-402). Spec: 038 says nothing about endpoint validation. Ruling: add the allowlist entry + an endpoint host policy, or accept and record.
 - **F2 — An endpoint can be re-bound to another user (PSH-09).** Code: `subscribe` finds by endpoint and overwrites `userId` with the caller (`push.subscription.service.ts:39-65`), so anyone who learns a device's endpoint can take it over; there is no unique index on endpoint either (dropped as drift). Test: `should not allow user A to hijack user B endpoint…` accepts both outcomes (branches on `resB.body.errors`), so it pins nothing. Spec: none. Ruling: keep (device changed hands) with ownership proof, or refuse.
-- **F3 — DISABLED subscriptions are listed (PSH-12).** Code: `getUserSubscriptions` returns ACTIVE + DISABLED; the schema description says so. Test: `should not list unsubscribed subscriptions` is `skip` and expects exclusion; the live case `should return no ACTIVE subscriptions…` filters DISABLED out before asserting. Ruling: which is the contract — then un-skip or rewrite the case.
+- **F3 — DISABLED subscriptions are listed (PSH-12).** Code: `getUserSubscriptions` returns ACTIVE + DISABLED; the schema description says so. Test: `should not list unsubscribed subscriptions` is `skip` and expects exclusion; the live case `should return no ACTIVE subscriptions…` filters DISABLED out before asserting. Ruling: which is the contract — then un-skip or rewrite the case. **Product, 2026-11-20:** switched-off subscriptions stay listed; rewrite the skipped case.
 - **F4 — Retry configuration is dead (PSH-13).** Code: `retryCount` is published as 0 and never incremented; the `max_attempts` check can never trigger; every failure is dropped on first attempt, matching 038 NFR-003 ("no automatic retry") but contradicting the `PUSH_RETRY_MAX_ATTEMPTS` knob. Ruling: delete the knob or implement retry.
-- **F5 — Awareness platform-admin kinds drop the actor from push only.** See notifications F-3 (`notification.platform.adapter.ts:414-416, 478-480`): push is the one channel on which the acting admin is not told about the sign-up / space they caused. Ruling there.
-- **F6 — Eight legacy kinds push `url: '/'`.** Code: user message, org message / mention / sender copy, role changed, user registered / removed, welcome (see Constants). 034 FR-010 and the url generator's own comment call the bare home link an anti-pattern; 086 D-13 proved the invitation kind carries a real url. Ruling: rebaseline each to a target, or accept for kinds with no natural target.
+- **F5 — Awareness platform-admin kinds drop the actor from push only.** See notifications F-3 (`notification.platform.adapter.ts:414-416, 478-480`): push is the one channel on which the acting admin is not told about the sign-up / space they caused. Ruling there. **Product, 2026-11-20:** stays as today, no wish; settled with notifications F3.
+- **F6 — Eight legacy kinds push `url: '/'`.** Code: user message, org message / mention / sender copy, role changed, user registered / removed, welcome (see Constants). 034 FR-010 and the url generator's own comment call the bare home link an anti-pattern; 086 D-13 proved the invitation kind carries a real url. Ruling: rebaseline each to a target, or accept for kinds with no natural target. **Product, 2026-11-20:** stays as today; a target for the four kinds with a natural one is a wish.
 - **F7 — "All 28 events" is stale.** Test: the settings suite enumerates 28 rows; the server has 41 (13 added by 034, 041, 061, 062, 080, 097). Not a product disagreement — a coverage hole on the push leaf of the 13 newer rows.
 
 #### Open questions
@@ -242,31 +239,31 @@ Behaviours the area has that neither reading nor tests pinned down:
 
 ### E. Constants the rules depend on
 
-_"Rules on it" is pre-filled with the role whose domain covers the value: Product Lead for business values, plan constants and user-facing copy; Technical Lead for engineering limits and wire shapes; Security Lead for security limits. The "product must rule?" column is unchanged: tick the rows product must rule on (question CONST in section 3)._
+_"Rules on it" is pre-filled with the role whose domain covers the value: Product Lead for business values, plan constants and user-facing copy; Technical Lead for engineering limits and wire shapes; Security Lead for security limits. The "product must rule?" column was ticked by Product, 2026-11-20 (CONST): "yes" rows wait for a product ruling before the rebuild._
 
 | Constant | Value today | Source | product must rule? | Rules on it |
 |---|---|---|---|---|
-| Queue | `alkemio-push-notifications`, durable, created if missing; direct exchange `''` | `notification.push.adapter.ts:188-192`; `push.delivery.service.ts:46-50` | | Technical Lead |
-| Push enabled | `notifications.push.enabled` (`PUSH_NOTIFICATIONS_ENABLED`) default true | `alkemio.yml:510` | | Technical Lead |
-| VAPID | public / private keys and subject `mailto:notifications@alkem.io` with committed defaults (`VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`) | `alkemio.yml:511-514` | | Security Lead |
-| Max subscriptions per user | 10 (`PUSH_MAX_SUBSCRIPTIONS_PER_USER`), also the device-token cap | `alkemio.yml:545`; `device.push.token.service.ts:18-20` | | Product Lead |
-| Throttle | 10 per minute per user (`PUSH_THROTTLE_MAX_PER_MINUTE`), key `push:throttle:<userId>:<epochMinute>`, TTL 60 s, fail open | `alkemio.yml:546-547`; `push.throttle.service.ts:57-103` | | Product Lead |
-| Retry | `max_attempts` 5 (`PUSH_RETRY_MAX_ATTEMPTS`) — `retryCount` is always 0 and never incremented | `alkemio.yml:548-549`; `notification.push.adapter.ts:142`; `push.delivery.service.ts:83-93` | F-4 | Technical Lead |
-| Stale cleanup | 30 days (`PUSH_CLEANUP_STALE_DAYS`), cron `EVERY_DAY_AT_MIDNIGHT` | `alkemio.yml:550-551`; `push.subscription.service.ts:187-194` | | Product Lead |
-| Subscription status | `ACTIVE`, `DISABLED`, `EXPIRED` | `push.subscription.interface.ts:4-8` | | Technical Lead |
-| Expiring status codes | 410, 404 → EXPIRED; everything else dropped, not expired | `push.delivery.service.ts:120-156` | | Technical Lead |
-| Native platforms | `ios`, `android`; APNs environment `sandbox` (default) / `production`, closed enum | `alkemio.yml:526-544`; 086 FR-002 | | Technical Lead |
-| Native permanent failures | APNs 410, APNs 400 `BadDeviceToken` → token deleted; no FCM outcome deletes | `device.push.token.service.ts:91-100`; 086 FR-008 | | Technical Lead |
-| Payload shape | `{subscriptionId, userId, endpoint, keys{p256dh, auth}, payload{title, body, url, eventType, timestamp, tag?}, retryCount}`; native `{userId, platform, token, payload}` | `push.notification.message.ts` | | Technical Lead |
-| Collapse tags | reaction `SPACE_COLLABORATION_CALLOUT_REACTION:<calloutId>`; chat `messaging-digest-direct` / `-group`; none elsewhere | `notification.space.adapter.ts:1860`; `conversation.digest.track.ts:130-131` | | Technical Lead |
-| Legacy bare-home urls | user message, org message / mention / sender copy, platform role changed, user registered, user removed, sign-up welcome push `url: '/'` | `notification.user.adapter.ts:130, 567`; `notification.organization.adapter.ts:123, 191, 247`; `notification.platform.adapter.ts:152, 488, 545` | F-6 | Product Lead |
-| Column limits | endpoint `LONG_TEXT_LENGTH`, keys and user agent `MID_TEXT_LENGTH`; endpoint has no unique index (dropped as drift — 086 D-14 note) | `push.subscription.entity.ts:13-26`; `src/migrations/1777000000000-CreateCollaboraDocument.ts:9` | F-2 | Technical Lead |
-| Error texts | `Authentication required to subscribe to push notifications` / `… unsubscribe …` / `… enable …` / `… view push subscriptions` / `… register a device push token` / `… unregister …`; `Push subscription not found`; `Push subscription not found or not eligible for re-enabling` | resolvers and service cited | | Product Lead |
-| Delivery log markers | `Push notifications queued`, `Push notification delivered`, `Push subscription expired (410 Gone)`, `Push notification delivery failed, dropping message`, `Push notification throttled for user`, `Stale push subscription cleanup completed` | `notification.push.adapter.ts:166-175`; `push.delivery.service.ts`; `push.throttle.service.ts:81-84` | | Technical Lead |
-| GraphQL surface | `vapidPublicKey`, `myPushSubscriptions`, `subscribeToPushNotifications`, `unsubscribeFromPushNotifications`, `enablePushSubscription`, `registerDevicePushToken`, `unregisterDevicePushToken`, `PushSubscription{id, createdDate, status, userAgent, lastActiveDate}`, `PushSubscriptionStatus`, `UserSettingsNotificationChannels.push` | `schema.graphql:5126, 5208, 5308, 5324-5328, 6274-6288` | | Technical Lead |
-| Settings rows with push on by default | all rows except: five platform-admin rows, `forumDiscussionCreated`, `space.admin.userEmailChanged`, the four poll rows (see notifications § Constants) | `user.service.ts:337-498` | | Product Lead |
-| Test-harness push observation | RabbitMQ management API `message_stats.publish` on the queue; synthetic subscriptions `https://fcm.googleapis.com/fcm/send/<unique>` | `notification.helpers.ts:178-259`; `push-notifications.request.params.ts:167-176` | | Technical Lead |
-| Client contract (not server) | service worker `notificationclick` resolves relative `url` against the origin; app mode never creates a web subscription (086 D-9) | 034 contract C-4; 086 FR-019 | | Technical Lead |
+| Queue | `alkemio-push-notifications`, durable, created if missing; direct exchange `''` | `notification.push.adapter.ts:188-192`; `push.delivery.service.ts:46-50` | no | Technical Lead |
+| Push enabled | `notifications.push.enabled` (`PUSH_NOTIFICATIONS_ENABLED`) default true | `alkemio.yml:510` | no | Technical Lead |
+| VAPID | public / private keys and subject `mailto:notifications@alkem.io` with committed defaults (`VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`) | `alkemio.yml:511-514` | no | Security Lead |
+| Max subscriptions per user | 10 (`PUSH_MAX_SUBSCRIPTIONS_PER_USER`), also the device-token cap | `alkemio.yml:545`; `device.push.token.service.ts:18-20` | yes | Product Lead |
+| Throttle | 10 per minute per user (`PUSH_THROTTLE_MAX_PER_MINUTE`), key `push:throttle:<userId>:<epochMinute>`, TTL 60 s, fail open | `alkemio.yml:546-547`; `push.throttle.service.ts:57-103` | yes | Product Lead |
+| Retry | `max_attempts` 5 (`PUSH_RETRY_MAX_ATTEMPTS`) — `retryCount` is always 0 and never incremented | `alkemio.yml:548-549`; `notification.push.adapter.ts:142`; `push.delivery.service.ts:83-93` | no (F-4) | Technical Lead |
+| Stale cleanup | 30 days (`PUSH_CLEANUP_STALE_DAYS`), cron `EVERY_DAY_AT_MIDNIGHT` | `alkemio.yml:550-551`; `push.subscription.service.ts:187-194` | yes | Product Lead |
+| Subscription status | `ACTIVE`, `DISABLED`, `EXPIRED` | `push.subscription.interface.ts:4-8` | no | Technical Lead |
+| Expiring status codes | 410, 404 → EXPIRED; everything else dropped, not expired | `push.delivery.service.ts:120-156` | no | Technical Lead |
+| Native platforms | `ios`, `android`; APNs environment `sandbox` (default) / `production`, closed enum | `alkemio.yml:526-544`; 086 FR-002 | no | Technical Lead |
+| Native permanent failures | APNs 410, APNs 400 `BadDeviceToken` → token deleted; no FCM outcome deletes | `device.push.token.service.ts:91-100`; 086 FR-008 | no | Technical Lead |
+| Payload shape | `{subscriptionId, userId, endpoint, keys{p256dh, auth}, payload{title, body, url, eventType, timestamp, tag?}, retryCount}`; native `{userId, platform, token, payload}` | `push.notification.message.ts` | no | Technical Lead |
+| Collapse tags | reaction `SPACE_COLLABORATION_CALLOUT_REACTION:<calloutId>`; chat `messaging-digest-direct` / `-group`; none elsewhere | `notification.space.adapter.ts:1860`; `conversation.digest.track.ts:130-131` | no | Technical Lead |
+| Legacy bare-home urls | user message, org message / mention / sender copy, platform role changed, user registered, user removed, sign-up welcome push `url: '/'` | `notification.user.adapter.ts:130, 567`; `notification.organization.adapter.ts:123, 191, 247`; `notification.platform.adapter.ts:152, 488, 545` | yes (F-6) | Product Lead |
+| Column limits | endpoint `LONG_TEXT_LENGTH`, keys and user agent `MID_TEXT_LENGTH`; endpoint has no unique index (dropped as drift — 086 D-14 note) | `push.subscription.entity.ts:13-26`; `src/migrations/1777000000000-CreateCollaboraDocument.ts:9` | no (F-2) | Technical Lead |
+| Error texts | `Authentication required to subscribe to push notifications` / `… unsubscribe …` / `… enable …` / `… view push subscriptions` / `… register a device push token` / `… unregister …`; `Push subscription not found`; `Push subscription not found or not eligible for re-enabling` | resolvers and service cited | no | Technical Lead |
+| Delivery log markers | `Push notifications queued`, `Push notification delivered`, `Push subscription expired (410 Gone)`, `Push notification delivery failed, dropping message`, `Push notification throttled for user`, `Stale push subscription cleanup completed` | `notification.push.adapter.ts:166-175`; `push.delivery.service.ts`; `push.throttle.service.ts:81-84` | no | Technical Lead |
+| GraphQL surface | `vapidPublicKey`, `myPushSubscriptions`, `subscribeToPushNotifications`, `unsubscribeFromPushNotifications`, `enablePushSubscription`, `registerDevicePushToken`, `unregisterDevicePushToken`, `PushSubscription{id, createdDate, status, userAgent, lastActiveDate}`, `PushSubscriptionStatus`, `UserSettingsNotificationChannels.push` | `schema.graphql:5126, 5208, 5308, 5324-5328, 6274-6288` | no | Technical Lead |
+| Settings rows with push on by default | all rows except: five platform-admin rows, `forumDiscussionCreated`, `space.admin.userEmailChanged`, the four poll rows (see notifications § Constants) | `user.service.ts:337-498` | yes | Product Lead |
+| Test-harness push observation | RabbitMQ management API `message_stats.publish` on the queue; synthetic subscriptions `https://fcm.googleapis.com/fcm/send/<unique>` | `notification.helpers.ts:178-259`; `push-notifications.request.params.ts:167-176` | no | Technical Lead |
+| Client contract (not server) | service worker `notificationclick` resolves relative `url` against the origin; app mode never creates a web subscription (086 D-9) | 034 contract C-4; 086 FR-019 | no | Technical Lead |
 
 ### F. Where this lands in the new core
 
@@ -277,6 +274,8 @@ Push is a transport, not a kind: in the rebuild it sits beside email as a delive
 Extracted 2026-11-06 from three sources: server develop @ `eeecf9ddb` (Release/79) code + `schema.graphql`; the legacy server-api suite (`server-api/src/functional-api/push-notifications/`, 3 files, 65 cases — 14 skip); the specs, issues and docs listed in § Sources. WHAT and WHY only — no mutations, fixtures or request params. Covers the web-push channel: subscriptions, the `alkemio-push-notifications` queue, the shared throttle, delivery, the native device-token bridge (086) and the push leaf on every settings row. Which kinds exist and who their recipients are is in `notifications.md`. Evidence paths are relative to the server repo unless prefixed `test ›` or `spec ›`.
 
 2026-11-19 converted to the three-section layout: the single why was split in three, each rule got a plain-words sentence (the exact text moved to Appendix A), the who-may table became section 2, and every finding, open question and rule without a stated reason was routed to an organisation role in section 3.
+
+2026-11-20 whys pass: every rule has at least one why, sourced where a spec, issue or code line states it and marked _(draft)_ where QA wrote it. Restating whys with no source were dropped where a sourced one remains (PSH-04). Specs 038 (US5, FR-014), 034 FR-024, 041 FR-012 and 086 FR-008 now carry the whys of PSH-06, PSH-10, PSH-15 and PSH-18.
 
 #### Sources
 

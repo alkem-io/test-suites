@@ -2,13 +2,16 @@
 
 _What the platform does today when a user, an organisation, a space, an account or one of their owned records is deleted: what is removed with it (profile, files, access policies, roles, rooms, sign-in identity, sessions), what is kept, what is refused, what is audited, and where left-overs ("orphans") are known to stay behind. It says what the server does, why, who may, and what is still to answer. The file has three sections, **1. Rules**, **2. Rights** and **3. Open questions**, with the evidence in an **Appendix**._
 
-_Open questions per owner: Product Lead 4 · Technical Lead 7 · Quality Lead 3 · Security Lead 1 · Incident Lead 2 · Service Operations Lead 1. By state: 14 open · 4 with a suggested answer. Proof of the 21 rules: 13 proven by a test · 8 untested (Appendix A)._
+_Open questions per owner: Product Lead 0 · Technical Lead 7 · Quality Lead 3 · Security Lead 1 · Incident Lead 2 · Service Operations Lead 1. By state: 10 open · 4 with a suggested answer · 4 decided. Proof of the 21 rules: 13 proven by a test · 8 untested (Appendix A)._
+
+_Whys of the 21 rules: 20 rest on a source or a product decision · 1 technical why is still a QA draft, for the Technical Lead (DEL-10) · 0 have none._
 
 **How to read it**
 
 - **Rule** is one or two plain sentences. The exact behaviour, with error messages and limits, is in Appendix A under the same id. The new core is checked against the exact text.
-- **Why: business** is what Alkemio needs. **Why: product** is the user story; it is filled only where a cited spec states one, and product fills the rest later. **Why: technical** is the engineering reason, when there is one. "—" means no source states one.
-- **Decided by** names the source of the decision: a spec, a commit or pull request, an issue or a document. "Not decided" means the behaviour exists in the code and nobody chose it. Product has not reviewed this file yet.
+- **Why: business** is what Alkemio needs. **Why: product** is the user story. **Why: technical** is the engineering reason. A rule needs at least one why, and gets a second or third only where it adds something for the decision or the code. "—" means none is given.
+- A why that names a spec, issue, pull request, code comment or code line rests on that source. A why, or the part of a why, ending in _(draft)_ was written by QA and no source states it: product keeps, rewrites or deletes it, and sets **Decided by**. A user story always ends in its "so that"; where no source gives one, QA wrote it. A rule with no why at all carries an open question in section 3.
+- **Decided by** names the source of the decision: a spec, a commit or pull request, an issue or a document. "Not decided" means the behaviour exists in the code and nobody chose it. Product reviewed section 3 on 2026-11-20.
 - A marker in bold at the end of a rule points at section 3: **(open: F3)** means a question on this rule is still open, **(defect: …)** means today's behaviour is a fault and must not be copied as intended, **(defect in part: …)** means part of it is. A rule with no marker stands as written. Every rule is logged as the server behaves today, also when that is not the intended end state. Whether a test proves the rule sits in Appendix A as **proven** or **untested**.
 - Hard rules are not marked yet. Some rules are choices that a new feature may challenge, and some can never change; a later version will mark the second kind with "(hard rule)" after the why that makes it so. Until then, no marker does not mean a rule is open to change.
 
@@ -20,25 +23,25 @@ _Open questions per owner: Product Lead 4 · Technical Lead 7 · Quality Lead 3 
 |---|---|---|---|---|---|
 | DEL-01 | A user is deleted only by themself or by a platform users admin. No other role can delete a user, Platform Content Full Access included. | Self-service deletion is a user right (054 FR-001/015) | — | Administrative deletion is the users-admin family's alone (027 A5), so no second admin path may hand it to a role that must not hold it (code comment). | Spec 054 FR-001/015; spec 027 A5 |
 | DEL-02 | A user cannot be deleted while their account still hosts a space, a virtual contributor, an innovation pack or an innovation hub, and users cannot delete themselves while they are the only owner of an organisation. They are shown what blocks them (up to 25 items). Content they wrote never blocks. **(open: OQ1)** | Resources must be transferred or deleted first, so nothing is deleted that was not asked for; an organisation must always have an owner, and only the admin path (support's route) can delete a sole owner on their behalf (054 FR-004…007, US4; code comment in the blocker service). | — | — | Spec 054 FR-004…007, US4 |
-| DEL-03 | Users can delete their own account only from a session started in the last 15 minutes; otherwise they are asked to sign in again. An admin who deletes a user has no such limit. **(open: OQ1)** | A stolen idle session must not be enough to erase an account | — | A session-AGE gate (not re-authentication — 054 FR-013 amendment, server#6417); matches the identity provider's privileged window (FR-009…FR-014). | Spec 054 FR-009…FR-014; server#6417 |
+| DEL-03 | Users can delete their own account only from a session started in the last 15 minutes; otherwise they are asked to sign in again. An admin who deletes a user has no such limit. **(open: OQ1)** | Deletion is irreversible; a typed name defends against mis-clicks, not against a hijacked or long-idle session (054 US3). | — | A session-AGE gate (not re-authentication — 054 FR-013 amendment, server#6417); matches the identity provider's privileged window (FR-009…FR-014). | Spec 054 FR-009…FR-014; server#6417 |
 | DEL-04 | Deleting a user removes, all at once, their profile, settings, pending invitations and applications, every role they held and their account. Afterwards their sessions are ended and their sign-in identity and files are removed; these later steps are recorded and cannot make the deletion fail. **(open: OQ5)** | Invitations to the address are personal data that must not outlive the account (code comment); sessions die with the account (server#6315). | — | Erasure must be atomic in the primary store (interrupted = fully intact) while slow external systems run afterwards and can never fail the user-visible operation (054 FR-018/019); credentials cascade with the actor (026 FR-009) | Spec 054 FR-018/019; spec 026 FR-009; server#6315 |
 | DEL-05 | When users delete themselves, their sign-in identity is always deleted too. An admin can choose to keep it; the default is to delete it. | A surviving identity would mint a fresh, empty account at the departed user's next sign-in (054 FR-016, decision D-1). | — | — | Spec 054 FR-016, decision D-1 |
-| DEL-06 | Nothing a user wrote is deleted with them: posts, comments, whiteboards and reactions stay. Where activity names the departed user, it shows "Former member". | Contributions belong to the space, not the person | — | Feeds must keep rendering without a lookup storm or a crash (054 FR-004/FR-022; the sentinel string is a recorded, untranslated v1 limitation). | Spec 054 FR-004, FR-022 |
+| DEL-06 | Nothing a user wrote is deleted with them: posts, comments, whiteboards and reactions stay. Where activity names the departed user, it shows "Former member". | Contributions belong to the space, not the person. | — | Feeds must keep rendering without a lookup storm or a crash (054 FR-004/FR-022; the sentinel string is a recorded, untranslated v1 limitation). | Spec 054 FR-004, FR-022; Product, 2026-11-20 (business why) |
 | DEL-07 | Every user deletion is recorded in the audit log, with who started it and what was checked, but never a name or an e-mail. Each later clean-up step adds its own record. The operators are told that a profile was removed, without personal data. **(open: OQ1)** | Erasure must be provable afterwards and reconcilable by finance, without re-storing the data that was erased (054 FR-020/021, FR-008; T063/FR-018a: self-service is not an administrative action). | — | — | Spec 054 FR-008, FR-018a, FR-020/021 |
-| DEL-08 | A deleted user's chat identity stays: their Matrix account is not closed, they stay in their rooms, and their name and messages remain. **(open: F1, OQ2)** | Deliberately out of v1 scope — sibling story (054 decision D-5/D-6, Out of Scope); the register files it as a live personal-data residue (W4 P4, server#6728). | — | — | Spec 054 decisions D-5/D-6 (out of scope for v1) |
+| DEL-08 | A deleted user's chat identity stays: their Matrix account is not closed, they stay in their rooms, and their name and messages remain. | Deliberately out of v1 scope — sibling story (054 decision D-5/D-6, Out of Scope); the register files it as a live personal-data residue (W4 P4, server#6728). | — | — | Spec 054 decisions D-5/D-6 (out of scope for v1); Product, 2026-11-20 (F1, OQ2): stays as today, the help page keeps saying it (054 FR-024); closing the chat account is a wish (server#6728) |
 
 ### Deleting an organisation
 
 | ID | Rule | Why: business | Why: product | Why: technical | Decided by |
 |---|---|---|---|---|---|
-| DEL-09 | An organisation is deleted by one of its owners or by Platform Support, and only when its account hosts no space, virtual contributor, pack or hub. Its profile, files, groups, verification, roles and account go with it, and invitations addressed to it are removed. **(open: F3, F9)** | An organisation's resources are deleted or moved first, like a user's. | — | Owner keeps ordinary DELETE; support reaches the same action through its own privilege (027 A6, FR-007(e)) | Spec 027 A6, FR-007(e) |
-| DEL-10 | The last owner of an organisation cannot be removed through role management, but an admin can delete that owner's account. That is why users cannot delete themselves while they are the only owner, and why the admin route is the way to unblock them. | An admin acting for support must still be able to remove a sole owner (054 US4; blocker-service comment). | — | The role set's "minimum one owner" guard is bypassed by the credential cascade, so the blocker is what enforces the invariant on deletion | Spec 054 US4 |
+| DEL-09 | An organisation is deleted by one of its owners or by Platform Support, and only when its account hosts no space, virtual contributor, pack or hub. Its profile, files, groups, verification, roles and account go with it, and invitations addressed to it are removed. **(open: F3, F9)** | — | — | Owner keeps ordinary DELETE; support reaches the same action through its own privilege (027 A6, FR-007(e)) | Spec 027 A6, FR-007(e) |
+| DEL-10 | The last owner of an organisation cannot be removed through role management, but an admin can delete that owner's account. That is why users cannot delete themselves while they are the only owner, and why the admin route is the way to unblock them. | An admin acting for support must still be able to remove a sole owner (054 US4; blocker-service comment). | — | The role set's "minimum one owner" guard is bypassed by the credential cascade, so the blocker is what enforces the invariant on deletion. _(draft)_ | Spec 054 US4 |
 
 ### Deleting a space and an account
 
 | ID | Rule | Why: business | Why: product | Why: technical | Decided by |
 |---|---|---|---|---|---|
-| DEL-11 | A space that has subspaces cannot be deleted; its subspaces are deleted first. **(open: Q-DEL-11, F9)** | — | — | — | Not decided: exists in the code |
+| DEL-11 | A space that has subspaces cannot be deleted; its subspaces are deleted first. **(open: F9)** | — | As a space admin, I want deleting a space that still has subspaces to be refused, so that I cannot wipe subspaces other people lead by accident. | — | Product, 2026-11-20 (Q-DEL-11) |
 | DEL-12 | Deleting a space removes everything it owns, step by step: its profile and files first, then its Matrix space, its content and callouts, its community with all roles, applications and invitations, and its licence. If the first step is refused, the space stays whole and the delete can be tried again. **(open: F3)** | — | — | The actor profile is not reached by the row cascade (`actor.profileId` is SET NULL), so it is deleted explicitly and first (server#6614 fix); Matrix mirrors the hierarchy and must never block Alkemio (082 US5, FR-004/FR-008). | Spec 082 US5, FR-004, FR-008; server#6614 |
 | DEL-13 | A space whose creation stopped half-way cannot be deleted at all, so it stays for ever. **(defect: F4)** | — | — | Creation is not atomic (JRN-11); the delete loads every child and throws when one is missing — known defect server#6648 (14 live half-created spaces on acceptance). | Not decided: a defect (server#6648) |
 | DEL-14 | An account is deleted only together with the user or organisation that holds it, and only when it holds no space, virtual contributor, pack or hub. Its files, licence and profile go with it. | — | — | Every caller already refused deletion for a non-empty account, so a non-empty one here means the invariant broke upstream — the saga refuses loudly rather than deleting resources it was never asked to delete (code comment). | Not decided: exists in the code |
@@ -51,7 +54,7 @@ _Open questions per owner: Product Lead 4 · Technical Lead 7 · Quality Lead 3 
 | DEL-16 | Deleting a room removes it in Alkemio first and then asks the chat server to delete it. When the chat server refuses or is down, the Matrix room stays alive. **(defect: F2)** | — | — | The adapter must never block the primary operation (082 FR-008) — but the result is ignored, leaving orphan rooms (W4 P1: 427 on acceptance; server#6727). | Not decided: a defect (server#6727). Spec 082 FR-008 only says Matrix must not block |
 | DEL-17 | A file is deleted in the file store first, then its records in Alkemio. A file held by a signing attempt cannot be deleted, and neither can the profile, space, user or account above it, until the attempt ends. | A document mid-signing must stay until the attempt resolves (server#6468). | — | The file bytes live in file-service, which is an HTTP call outside any database transaction (085 migration; code comments) | Spec 085 (migration); server#6468 |
 | DEL-18 | Deleting a virtual contributor removes its profile, pending invitations, AI persona, roles and knowledge base in one go. The spaces that had invited it are updated afterwards. **(open: F3)** | — | — | A VC is an actor like a user: credentials cascade (026 FR-009); invitations are cleaned so the inviting space's access is recomputed. | Spec 026 FR-009 |
-| DEL-19 | Deleting an innovation pack removes its templates and its profile; deleting an innovation hub removes its profile. **(open: Q-DEL-19)** | — | — | — | Not decided: exists in the code |
+| DEL-19 | Deleting an innovation pack removes its templates and its profile; deleting an innovation hub removes its profile. **(open: Q-DEL-19)** | — | — | Same as DEL-15: an owner holds the key to its children, so only service code removes them, or they are left behind (server#6614). | Not decided: exists in the code |
 | DEL-20 | Internal files (collaboration snapshots, document previews, signing previews) have no access policy, by design. They do not count as left-overs. | — | — | By design (W4 G3: 3,129 on acceptance, 2,901 in one month); the "every row owns a policy" oracle does not apply to them. | Not decided: exists in the code (the data-integrity register records it as by design, G3) |
 | DEL-21 | An authorization reset never removes left-over policies. When it meets a broken record it skips that part and carries on. Existing left-overs stay until a separate clean-up runs. **(open: F5, OQ3)** | — | — | One broken child used to abort a whole account reset and leave unrelated entities with empty rules (server#6094); the orphan sweep is a separate migration (#6655, deferred). | Server #6094; the clean-up is deferred (#6655) |
 
@@ -99,20 +102,14 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 ### Product Lead
 
-[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 4 to answer
+[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 0 to answer
 
-**To answer**
+Nothing to answer: every Product Lead question is decided (see Decided).
 
-| ID | Area | Type | Question | Owner | Proposed answer | State |
-|---|---|---|---|---|---|---|
-| F1 | Users | decision | A deleted user keeps their chat identity: 84 left-over Matrix accounts on acceptance, 65 still in rooms, 1,780 messages by deleted senders (server#6728). Spec 054 left this out of version 1 on purpose. Is the follow-up scheduled, and is this accepted until it ships? | Product Lead (DPO Lead consulted) | Until it ships, the help page keeps saying that the chat identity persists (054 FR-024). | suggested |
-| OQ2 | Users | check | Is the follow-up story for removing a deleted user's chat identity on the board, or is server#6728 only the defect? (Feeds F1.) | Product Lead | — | open |
-| Q-DEL-11 | Spaces | decision | Why does this rule exist? A space with subspaces cannot be deleted until each subspace is deleted; no source states the reason. | Product Lead | — | open |
-| CONST | All | decision | All 21 constants are still blank in "product must rule?" (Appendix E). Which of them must product rule on? | Product Lead (Technical Lead and Security Lead for the rows pre-filled with their name) | — | open |
 
 ### Technical Lead
 
-[Technical Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Technical%20Lead.md) · Delivery (Anton) · 7 to answer, 3 also involved
+[Technical Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Technical%20Lead.md) · Delivery (Anton) · 7 to answer, 2 also involved
 
 **To answer**
 
@@ -124,7 +121,7 @@ _One section per role, so each owner reads only their own part. **To answer** li
 | F9 | Spaces | tidy-up | The refusal text for deleting a space contains the space id, against the repository rule, and the organisation refusal has a grammar slip ("account contain"). | Technical Lead | Treat them as rebaseline rows when cleaned; they are not behaviour changes. | suggested |
 | OQ1 | Users | check | Is the old way of deleting a user (before the current all-at-once deletion) still reachable? The old service method still exists and no caller was found, but the search was not exhaustive. If something calls it, DEL-02, DEL-03 and DEL-07 do not hold on that path. | Technical Lead | — | open |
 | OQ5 | Users | check | What removes a deleted user's chats, notifications and MCP API keys? A code comment says they go "via cascade"; the database schema was not read. | Technical Lead | — | open |
-| Q-DEL-19 | Owned records | decision | Why does this rule exist? Deleting an innovation pack or hub removes what it owns; no source states the reason. | Technical Lead | — | open |
+| Q-DEL-19 | Owned records | decision | Why does this rule exist? Deleting an innovation pack or hub removes what it owns; no source states the reason. | Technical Lead | The same reason as DEL-15, which already lists "an innovation pack its templates": the database never cascades to an owned child, so service code must remove it (server#6614). The why is on DEL-19. | suggested |
 
 **Also involved**
 
@@ -132,7 +129,6 @@ _One section per role, so each owner reads only their own part. **To answer** li
 |---|---|---|---|---|---|---|
 | F2 | Owned records | defect | A room is removed in Alkemio before the chat server confirms, and a failed Matrix deletion is ignored: 427 left-over Matrix rooms on acceptance, and the cause is still live (server#6727). Incident or backlog defect? Then: record the failed deletion so an operator can finish it, or accept the leak. (The same defect is F2a in `communications.md`.) | Incident Lead, then Technical Lead | — | open |
 | F4 | Spaces | defect | A space whose creation stopped half-way cannot be deleted: 14 such spaces live on acceptance, and creation can still stop half-way (server#6648). Incident or backlog defect? Then: a delete that tolerates broken spaces, or a repair path for operators only. | Incident Lead, then Technical Lead | — | open |
-| CONST | All | decision | All 21 constants are still blank in "product must rule?" (Appendix E). Which of them must product rule on? | Product Lead (Technical Lead and Security Lead for the rows pre-filled with their name) | — | open |
 
 ### Quality Lead
 
@@ -155,7 +151,7 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 ### Security Lead
 
-[Security Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Security%20Lead.md) · Delivery (Valentin) · 1 to answer, 1 also involved
+[Security Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Security%20Lead.md) · Delivery (Valentin) · 1 to answer
 
 **To answer**
 
@@ -163,11 +159,6 @@ _One section per role, so each owner reads only their own part. **To answer** li
 |---|---|---|---|---|---|---|
 | F6 | Owned records | risk | The policy lookup tells any caller whether an id exists (a different refusal for a real id and a missing one), and the licence lookup has no access check at all. | Security Lead | Route as a security finding: attach it to the server#6663 family (leaks through the shape of an error) rather than a new issue. | suggested |
 
-**Also involved**
-
-| ID | Area | Type | Question | Owner | Proposed answer | State |
-|---|---|---|---|---|---|---|
-| CONST | All | decision | All 21 constants are still blank in "product must rule?" (Appendix E). Which of them must product rule on? | Product Lead (Technical Lead and Security Lead for the rows pre-filled with their name) | — | open |
 
 ### Incident Lead
 
@@ -199,6 +190,15 @@ _One section per role, so each owner reads only their own part. **To answer** li
 | ID | Area | Type | Question | Owner | Proposed answer | State |
 |---|---|---|---|---|---|---|
 | F3 | Spaces | decision | Deleting an organisation, a space or a virtual contributor is not all-or-nothing: a failure half-way leaves part of it deleted. Only the user deletion was made safe. Accept partial deletes that can be retried, or give these three the same treatment? | Technical Lead (Architecture Lead for the new core) | — | open |
+
+### Decided
+
+| Was | Decision | Decided by | Now |
+|---|---|---|---|
+| Q-DEL-11 | The draft story stands: deleting a space with subspaces is refused, so nobody wipes subspaces other people lead by accident. | Product, 2026-11-20 | DEL-11 |
+| CONST | Product rules on the deletion blocker kinds, the blocker list cap and the deleted-user sentinel, ticked "yes" in Appendix E. Error texts go to the Technical Lead. | Product, 2026-11-20 | Appendix E |
+| F1 | Stays as today: a deleted user's chat (Matrix) account, room memberships and messages stay, and the help page keeps saying so (054 FR-024). Closing the chat account is a wish on the product issues list, linked to server#6728. | Product, 2026-11-20 | DEL-08; PRODUCT-ISSUES F1 |
+| OQ2 | server#6728 is the record that tracks the follow-up; the wish on the product issues list links to it. | Product, 2026-11-20 | DEL-08 |
 
 ## Appendix
 
@@ -246,7 +246,7 @@ _The original text of every finding (F) and open question (OQ), with its evidenc
 
 #### Findings
 
-- **F1 — Deleting an actor leaves its chat identity (DEL-08).** Code: no Matrix call on the user, organisation or VC deletion path; room membership is only dropped on explicit role removal. Spec 054: out of scope for v1, "sibling story filed immediately after v1". Data: W4 P4 — 84 orphan Matrix accounts, 65 still joined, 1,780 messages by deleted senders; filed server#6728. Ruling: confirm the sibling story exists and is scheduled; until then the help page must keep saying the chat identity persists (054 FR-024).
+- **F1 — Deleting an actor leaves its chat identity (DEL-08).** Code: no Matrix call on the user, organisation or VC deletion path; room membership is only dropped on explicit role removal. Spec 054: out of scope for v1, "sibling story filed immediately after v1". Data: W4 P4 — 84 orphan Matrix accounts, 65 still joined, 1,780 messages by deleted senders; filed server#6728. Ruling: confirm the sibling story exists and is scheduled; until then the help page must keep saying the chat identity persists (054 FR-024). **Product, 2026-11-20:** stays as today and the help page keeps saying the chat identity persists (054 FR-024); closing a deleted user's chat account is a wish on the product issues list, linked to server#6728.
 - **F2 — A room row is deleted before the chat server confirms (DEL-16).** Code: `deleteRoom` removes the row, then calls the adapter, which returns `false` on failure, which nobody reads. Spec 082 FR-008: adapter failures log, never block. Data: W4 P1 — 427 orphan Matrix rooms; filed server#6727. Ruling: record the failed Matrix delete (outbox/audit) so an operator can finish it, or accept the leak.
 - **F3 — Organisation, space and VC deletions are not atomic (DEL-09/12/18).** Code: the organisation path runs with no transaction; `deleteSpaceOrFail` runs step by step; the VC and organisation-account wrappers open a transaction whose manager the steps ignore — 054 "Assumptions" says the same of the old user path ("the wrapper propagates nothing and is not actually transactional"), which the saga fixed for users only. Test: none forces a mid-way failure outside the user saga. Ruling: accept retryable partial deletes (the space path is designed to be retryable) or extend the saga pattern.
 - **F4 — Half-created spaces cannot be deleted (DEL-13).** Code: the delete loads collaboration/community/about/storage/licence and throws `RelationshipNotFoundException` when any is missing — the same anomaly the reset learned to skip (DEL-21). Issue server#6648 (14 live on ACC). Test: none. Ruling: a tolerant delete for broken spaces, or an ops-only repair path.
@@ -259,7 +259,7 @@ _The original text of every finding (F) and open question (OQ), with its evidenc
 #### Open questions
 
 - **OQ1 — Is the legacy non-saga `deleteUser` still reachable.** `UserService.deleteUser` (boolean refusal, plain transaction wrapper) still exists beside the saga; no resolver calling it was found, but the search was not exhaustive. If anything calls it, DEL-02/03/07 do not hold on that path.
-- **OQ2 — Whether the sibling Matrix-deprovisioning story (054 Fork 3) exists on the board.** The register links server#6728; whether that is the story or only the defect is a board check.
+- **OQ2 — Whether the sibling Matrix-deprovisioning story (054 Fork 3) exists on the board.** The register links server#6728; whether that is the story or only the defect is a board check. **Product, 2026-11-20:** server#6728 is the record the wish links to.
 - **OQ3 — Live state of #6655 / #6657.** Whether the orphan-cleanup migration has shipped or the counts in G1 are still current on acceptance needs a DB run (standing constraint: no DB access from test-suites).
 - **OQ4 — The `me-degradation-anonymous` case for `accountDeletion`.** The file references the field; the case title was not read, so it is not counted as proof for the anonymous row of the who-may table.
 - **OQ5 — What cascades delete for a deleted user's conversations, notifications and MCP keys.** The code comment claims a cascade; the schema was not read. A W4 probe ("MCP keys → actors", "in-app notification refs") covers the data side, not the behaviour.
@@ -283,31 +283,31 @@ Behaviours the area has that neither reading nor tests pinned down:
 
 ### E. Constants the rules depend on
 
-_"Rules on it" is pre-filled with the role whose domain covers the value: Product Lead for business values, plan constants and user-facing copy; Technical Lead for engineering limits and wire shapes; Security Lead for security limits. The "product must rule?" column is unchanged: the reviewer ticks the rows product must rule on. An entry such as F-3 in that column is finding F3._
+_"Rules on it" is pre-filled with the role whose domain covers the value: Product Lead for business values, plan constants and user-facing copy; Technical Lead for engineering limits and wire shapes; Security Lead for security limits. The "product must rule?" column was ticked by Product, 2026-11-20 (CONST): "yes" rows wait for a product ruling before the rebuild._
 
 | Constant | Value today | Source | product must rule? | Rules on it |
 |---|---|---|---|---|
-| Deletion blocker kinds (5) | `ACCOUNT_SPACE`, `ACCOUNT_VIRTUAL_CONTRIBUTOR`, `ACCOUNT_INNOVATION_PACK`, `ACCOUNT_INNOVATION_HUB` (self-resolvable), `SOLE_ORGANIZATION_OWNER` (self branch only, not self-resolvable) | `src/common/enums/account.deletion.blocker.kind.ts:10-16`; `account.deletion.blocker.service.ts:32-37, 80-105` | | Product Lead |
-| Blocker list cap | 25 items; `totals` exact per kind; `truncated` flag | `account.deletion.blocker.service.ts:9`; `schema.graphql:4552-4568` | | Product Lead |
-| Privileged session window | 15 minutes (`PRIVILEGED_SESSION_WINDOW_MS = 15 * 60 * 1000`); fail closed on missing/zero/negative | `src/common/constants/session.constants.ts:11`; `registration.resolver.mutations.ts:148-172` | | Security Lead |
-| Initiator branches | `self` (actor == target) / `admin`; audit initiator roles `SELF` / `PLATFORM_ADMIN` | `account.deletion.blocker.service.ts:30`; `registration.service.ts:400-403` | | Technical Lead |
-| `deleteIdentity` default | `true`; forced `true` on the self branch | `schema.graphql:9710-9713`; `registration.resolver.mutations.ts:204-209` | | Security Lead |
-| Deleted-user sentinel | id `00000000-0000-0000-0000-000000000000`, display name `Former member` (English only), always-deny policy, empty bucket | `deleted.user.sentinel.ts:12-46` | | Product Lead |
-| Audit outcomes (account deletion) | `ACCOUNT_DELETED` (primary), `SESSION_REVOCATION_COMPLETED` / `SESSION_INVALIDATION_FAILED`, `IDENTITY_DELETION_COMPLETED` / `IDENTITY_DELETION_FAILED`, `FILE_BYTES_CLEANUP_COMPLETED` / `FILE_BYTES_CLEANUP_FAILED` (+ `fileExternalIDs`, error ≤ 250 chars) | `registration.service.ts:497-566`; `account.deletion.audit.service.ts` | | Security Lead |
-| Audit detail allowlist | `accountID`, `blockerCheck`, `externalSubscriptionID`, `documentCount`, `error`, `fileExternalIDs` — never name or e-mail | `account.deletion.audit.service.ts:19-33` | | Security Lead |
-| Error text — self blocked | `Unable to delete User: account is blocked from deletion` + code `ACCOUNT_DELETION_BLOCKED` with `blockers: [kinds]` | `user.service.ts:707-713`; `src/common/exceptions/error.status.metadata.ts` | | Product Lead |
-| Error text — admin blocked | `Unable to delete User: account contains one or more resources` | `user.service.ts:714-717, 657-662` | | Product Lead |
-| Error text — stale session | `Deleting your own account requires a recently established session` (SessionRefreshRequired) | `registration.resolver.mutations.ts:166-171` | | Product Lead |
-| Error text — organisation blocked | `Unable to delete Organization: account contain one or more resources` (sic) | `organization.service.ts` (deleteOrganization) | | Product Lead |
-| Error text — space has subspaces | `Unable to remove Space (<id>), with level <n>, as it contains <k> subspaces` | `space.service.ts` (deleteSpaceOrFail) | | Product Lead |
-| Error text — signing hold | `Storage contains a document retained by a signing attempt` | `storage.bucket.service.ts:201-205` | | Product Lead |
-| Error text — account not empty | `Account still holds resources at deletion time` | `account.service.ts:262-273` | | Technical Lead |
-| Error text — identity reset | `Failed to delete user account` (adminUserAccountDelete) | `admin.users.resolver.mutations.ts` | | Technical Lead |
-| Not-found shapes | `ENTITY_NOT_FOUND` for policy / profile / document / space / callout / room / template / user; `storageBucket` answered `UNSPECIFIED` "Could not find any entity of type StorageBucket" before #6678 | `_support/owned-records.ts:96-118` | | Technical Lead |
-| Database cascades | `credential.actorID → actor.id ON DELETE CASCADE`; `user/organization/space/account/virtual_contributor.id → actor.id CASCADE`; `actor.profileId` SET NULL; `space.account` SET NULL; everything else explicit | `user.service.ts:742-744`; `space.service.ts` (profile comment); `space.entity.ts:52-62` | | Technical Lead |
-| Group-A delete sites (13) | innovation-flow state, room, user settings, community guidelines, innovation flow, communication, template, template default, poll, discussion, innovation pack, forum, license policy | `orphan-free-deletion-test-plan.md`; server#6678 | | Technical Lead |
-| Exceptions a reset swallows | `RelationshipNotFoundException`, `EntityNotFoundException` (skip subtree + error log); all others propagate | `space.service.authorization.ts:258-283`; `account.service.authorization.ts:270-292` | | Technical Lead |
-| GraphQL surface | `deleteUser(DeleteUserInput{ID, deleteIdentity})`, `deleteOrganization`, `deleteSpace`, `deleteVirtualContributor`, `deleteInnovationPack`, `deleteInnovationHub`, `adminUserAccountDelete(userID)`, `me.accountDeletion: MeAccountDeletionStatus{canDelete, sessionFresh, blockers[], totals[], truncated, externalSubscriptionLinked}`, `AccountDeletionBlocker{kind, resourceID, displayName, selfResolvable, url}`, `lookup.authorizationPolicy(ID)` | `schema.graphql:35-41, 1334-1353, 4548-4568, 4647, 5092, 5110, 9710-9713` | | Technical Lead |
+| Deletion blocker kinds (5) | `ACCOUNT_SPACE`, `ACCOUNT_VIRTUAL_CONTRIBUTOR`, `ACCOUNT_INNOVATION_PACK`, `ACCOUNT_INNOVATION_HUB` (self-resolvable), `SOLE_ORGANIZATION_OWNER` (self branch only, not self-resolvable) | `src/common/enums/account.deletion.blocker.kind.ts:10-16`; `account.deletion.blocker.service.ts:32-37, 80-105` | yes | Product Lead |
+| Blocker list cap | 25 items; `totals` exact per kind; `truncated` flag | `account.deletion.blocker.service.ts:9`; `schema.graphql:4552-4568` | yes | Product Lead |
+| Privileged session window | 15 minutes (`PRIVILEGED_SESSION_WINDOW_MS = 15 * 60 * 1000`); fail closed on missing/zero/negative | `src/common/constants/session.constants.ts:11`; `registration.resolver.mutations.ts:148-172` | no | Security Lead |
+| Initiator branches | `self` (actor == target) / `admin`; audit initiator roles `SELF` / `PLATFORM_ADMIN` | `account.deletion.blocker.service.ts:30`; `registration.service.ts:400-403` | no | Technical Lead |
+| `deleteIdentity` default | `true`; forced `true` on the self branch | `schema.graphql:9710-9713`; `registration.resolver.mutations.ts:204-209` | no | Security Lead |
+| Deleted-user sentinel | id `00000000-0000-0000-0000-000000000000`, display name `Former member` (English only), always-deny policy, empty bucket | `deleted.user.sentinel.ts:12-46` | yes | Product Lead |
+| Audit outcomes (account deletion) | `ACCOUNT_DELETED` (primary), `SESSION_REVOCATION_COMPLETED` / `SESSION_INVALIDATION_FAILED`, `IDENTITY_DELETION_COMPLETED` / `IDENTITY_DELETION_FAILED`, `FILE_BYTES_CLEANUP_COMPLETED` / `FILE_BYTES_CLEANUP_FAILED` (+ `fileExternalIDs`, error ≤ 250 chars) | `registration.service.ts:497-566`; `account.deletion.audit.service.ts` | no | Security Lead |
+| Audit detail allowlist | `accountID`, `blockerCheck`, `externalSubscriptionID`, `documentCount`, `error`, `fileExternalIDs` — never name or e-mail | `account.deletion.audit.service.ts:19-33` | no | Security Lead |
+| Error text — self blocked | `Unable to delete User: account is blocked from deletion` + code `ACCOUNT_DELETION_BLOCKED` with `blockers: [kinds]` | `user.service.ts:707-713`; `src/common/exceptions/error.status.metadata.ts` | no | Technical Lead |
+| Error text — admin blocked | `Unable to delete User: account contains one or more resources` | `user.service.ts:714-717, 657-662` | no | Technical Lead |
+| Error text — stale session | `Deleting your own account requires a recently established session` (SessionRefreshRequired) | `registration.resolver.mutations.ts:166-171` | no | Technical Lead |
+| Error text — organisation blocked | `Unable to delete Organization: account contain one or more resources` (sic) | `organization.service.ts` (deleteOrganization) | no | Technical Lead |
+| Error text — space has subspaces | `Unable to remove Space (<id>), with level <n>, as it contains <k> subspaces` | `space.service.ts` (deleteSpaceOrFail) | no | Technical Lead |
+| Error text — signing hold | `Storage contains a document retained by a signing attempt` | `storage.bucket.service.ts:201-205` | no | Technical Lead |
+| Error text — account not empty | `Account still holds resources at deletion time` | `account.service.ts:262-273` | no | Technical Lead |
+| Error text — identity reset | `Failed to delete user account` (adminUserAccountDelete) | `admin.users.resolver.mutations.ts` | no | Technical Lead |
+| Not-found shapes | `ENTITY_NOT_FOUND` for policy / profile / document / space / callout / room / template / user; `storageBucket` answered `UNSPECIFIED` "Could not find any entity of type StorageBucket" before #6678 | `_support/owned-records.ts:96-118` | no | Technical Lead |
+| Database cascades | `credential.actorID → actor.id ON DELETE CASCADE`; `user/organization/space/account/virtual_contributor.id → actor.id CASCADE`; `actor.profileId` SET NULL; `space.account` SET NULL; everything else explicit | `user.service.ts:742-744`; `space.service.ts` (profile comment); `space.entity.ts:52-62` | no | Technical Lead |
+| Group-A delete sites (13) | innovation-flow state, room, user settings, community guidelines, innovation flow, communication, template, template default, poll, discussion, innovation pack, forum, license policy | `orphan-free-deletion-test-plan.md`; server#6678 | no | Technical Lead |
+| Exceptions a reset swallows | `RelationshipNotFoundException`, `EntityNotFoundException` (skip subtree + error log); all others propagate | `space.service.authorization.ts:258-283`; `account.service.authorization.ts:270-292` | no | Technical Lead |
+| GraphQL surface | `deleteUser(DeleteUserInput{ID, deleteIdentity})`, `deleteOrganization`, `deleteSpace`, `deleteVirtualContributor`, `deleteInnovationPack`, `deleteInnovationHub`, `adminUserAccountDelete(userID)`, `me.accountDeletion: MeAccountDeletionStatus{canDelete, sessionFresh, blockers[], totals[], truncated, externalSubscriptionLinked}`, `AccountDeletionBlocker{kind, resourceID, displayName, selfResolvable, url}`, `lookup.authorizationPolicy(ID)` | `schema.graphql:35-41, 1334-1353, 4548-4568, 4647, 5092, 5110, 9710-9713` | no | Technical Lead |
 
 ### F. Where this lands in the new core
 
@@ -318,6 +318,8 @@ The new core stores no authorization policies, no derived credentials and no per
 Extracted 2026-11-06 from three sources: server develop @ `eeecf9ddb` (Release/79) code + `schema.graphql`; the legacy server-api suite (`server-api/src/functional-api/orphan-free-deletion/`, 3 files, 12 cases, plus `_support/owned-records.ts`); the specs, issues and docs listed in § Sources. Scope: what deleting a user, an organisation, a space, an account or one of their owned records removes, reassigns or refuses — profile, storage, authorization policies, roles and credentials, rooms, sign-in identity, sessions, audit — and where orphans are known to be left. Who may delete a space, callout or template is the journey / callout / templates area; who may delete a user or organisation is stated here because the two paths carry their own gates. WHAT and WHY only — no mutations, fixtures or request params. Evidence paths are relative to the server repo unless prefixed `test ›` or `spec ›`.
 
 2026-11-19 converted to the three-section layout.
+
+2026-11-20 whys pass: every rule has at least one why, sourced where a spec, issue or code line states it and marked _(draft)_ where QA wrote it. DEL-03 now cites 054 US3; DEL-09's restating why was dropped; Q-DEL-19 has a suggested answer from DEL-15.
 
 #### Sources
 

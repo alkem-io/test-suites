@@ -2,12 +2,15 @@
 
 _What the platform does today around the AI engines behind virtual contributors: the one AI server record and who may touch it, the persona of each virtual contributor and its secrets, the engines and how a question reaches them, the history sent along, the answer coming back, reading knowledge in, maintenance and limits: what it does, why, who may, and what is still to answer. The engine itself is out of scope. The layout is the one piloted in `communications.md`: **1. Rules**, **2. Rights**, **3. Open questions**, with the evidence in an **Appendix**._
 
-_Open questions per owner: Product Lead 3 · Technical Lead 12 · Quality Lead 2 · Security Lead 3 · Incident Lead 1 · Service Operations Lead 3. By state: 20 open · 4 with a suggested answer. Proof of the 20 rules: 4 proven by a test · 16 untested (Appendix A)._
+_Open questions per owner: Product Lead 0 · Technical Lead 12 · Quality Lead 2 · Security Lead 3 · Incident Lead 1 · Service Operations Lead 3. By state: 15 open · 6 with a suggested answer · 3 decided. Proof of the 20 rules: 4 proven by a test · 16 untested (Appendix A)._
+
+_Whys of the 20 rules: 12 rest on a source or a product decision · 6 rest only on a technical QA draft, for the Technical Lead (AIP-01, AIP-09, AIP-15, AIP-16, AIP-17, AIP-20; AIP-05 also carries one) · 2 have none, and each carries a defect (AIP-04, AIP-10)._
 
 **How to read it**
 
 - **Rule** is one or two plain sentences. The exact behaviour, with error messages and limits, is in Appendix A under the same id. The new core is checked against the exact text.
-- **Why: business** is what Alkemio needs. **Why: product** is the user story. **Why: technical** is the engineering reason, when there is one. "—" means no source states one. The product review has not been through this file yet; it fills the business why and the user story where they are missing.
+- **Why: business** is what Alkemio needs. **Why: product** is the user story. **Why: technical** is the engineering reason. A rule needs at least one why, and gets a second or third only where it adds something for the decision or the code. "—" means none is given.
+- A why that names a spec, issue, pull request, code comment or code line rests on that source. A why, or the part of a why, ending in _(draft)_ was written by QA and no source states it: product keeps, rewrites or deletes it, and sets **Decided by**. A user story always ends in its "so that"; where no source gives one, QA wrote it. A rule with no why at all carries an open question in section 3.
 - **Decided by** names the source of the decision: a spec with its requirement, a server pull request or commit, an issue or a document. "Not decided: exists in the code" means the behaviour is there and nobody chose it. "Not decided: a defect" means today's behaviour is a fault.
 - A marker in bold at the end of a rule points at section 3: **(open: F6)** means a question on this rule is still open, **(defect: F1)** means today's behaviour is a fault and must not be copied as intended, **(defect in part: F4)** means part of it is. A rule with no marker stands as written. Every rule is logged as the server behaves today, also when that is not the intended end state. Whether a test proves the rule sits in Appendix A as **proven** or **untested**.
 - Hard rules are not marked yet. Some rules are choices that a new feature may challenge, and some can never change; a later version will mark the second kind with "(hard rule)" after the why that makes it so. Until then, no marker does not mean a rule is open to change.
@@ -19,7 +22,7 @@ _Open questions per owner: Product Lead 3 · Technical Lead 12 · Quality Lead 2
 
 | ID | Rule | Why: business | Why: product | Why: technical | Decided by |
 |---|---|---|---|---|---|
-| AIP-01 | There is exactly one AI server record. Anyone, signed in or not, can fetch it, but reading its personas, its access rules or its default persona needs the right to read it. **(open: Q-AIP-01, F5)** | — | — | — | Not decided: exists in the code |
+| AIP-01 | There is exactly one AI server record. Anyone, signed in or not, can fetch it, but reading its personas, its access rules or its default persona needs the right to read it. **(open: Q-AIP-01, F5)** | — | — | The platform runs one set of AI engines, so one record holds their shared configuration. _(draft)_ | Not decided: exists in the code |
 | AIP-02 | Platform Content Full Access may create, read, change and delete on the AI server and on every persona. The Platform Operations Admin may only reset its access rules and create a persona. No other role may do anything on it. | Personas and engine configuration are platform content (027 row 2, T076) | — | the reset belongs to the operational family alone and content-full-access holds no GRANT (server#6619, fixed by #6626). | Spec 027 row 2, T076; server#6619, fixed by #6626 |
 | AIP-03 | Resetting the AI server's access rules works them out again for the server and for every persona. The reset is recorded in the operations audit log, whether it succeeds or fails. | Operational maintenance is audited (032 FR-002). | — | — | Spec 032 FR-002 |
 | AIP-04 | The AI server's "default persona" is never set, so asking for it always fails. **(defect: F1, OQ4)** | — | — | — | Not decided: a defect |
@@ -28,11 +31,11 @@ _Open questions per owner: Product Lead 3 · Technical Lead 12 · Quality Lead 2
 
 | ID | Rule | Why: business | Why: product | Why: technical | Decided by |
 |---|---|---|---|---|---|
-| AIP-05 | Every virtual contributor gets its own persona, created together with it. The persona holds an engine ("expert" unless another is chosen), up to ten prompt lines and, optionally, the settings of an external AI service. | — | — | A persona is the VC's engine binding; one persona per VC. | Not decided: exists in the code |
+| AIP-05 | Every virtual contributor gets its own persona, created together with it. The persona holds an engine ("expert" unless another is chosen), up to ten prompt lines and, optionally, the settings of an external AI service. | — | As a virtual contributor owner, I want to choose its engine and prompt, so that it answers the way my community needs. | A persona is the VC's engine binding; one persona per VC. _(draft)_ | Product, 2026-11-20 (product why); the technical why is still a QA draft |
 | AIP-06 | A persona has no access rules of its own. It follows its virtual contributor: whoever may change, delete or read the virtual contributor may do the same to its persona. A persona created directly on the AI server follows the AI server's rules. **(open: Q-AIP-06)** | — | — | "Hack to deal with the fact that the AI Persona has an authorization policy that uses the VC's account" (code comment); no product statement. | Not decided: exists in the code |
 | AIP-07 | A persona can also be created on its own on the AI server, by Platform Content Full Access or the Platform Operations Admin. It belongs to no virtual contributor, and the creation is audited. | — | — | Operational family keeps persona creation on the existing create grant (032 FR-015). | Spec 032 FR-015 |
-| AIP-08 | Changing a persona replaces its prompt and engine when they are given and merges the other settings into the stored ones. The knowledge is not read in again after a change. **(open: Q-AIP-08, F6)** | — | — | "TBD: trigger a re-ingest?", code comment | Not decided: exists in the code |
-| AIP-09 | The key and the assistant id of an external AI service are stored encrypted. A reader sees the key only as its first 7 and last 4 characters, and the model name in full. But the assistant id is returned in its encrypted form to every reader of the persona. **(defect in part: F4, OQ3)** | — | — | — | Not decided: exists in the code |
+| AIP-08 | Changing a persona replaces its prompt and engine when they are given and merges the other settings into the stored ones. The knowledge is not read in again after a change. **(open: Q-AIP-08)** | — | — | "TBD: trigger a re-ingest?", code comment | Product, 2026-11-20 (F6): stays as today, re-reading the knowledge when the engine changes is a wish on the product issues list |
+| AIP-09 | The key and the assistant id of an external AI service are stored encrypted. A reader sees the key only as its first 7 and last 4 characters, and the model name in full. But the assistant id is returned in its encrypted form to every reader of the persona. **(defect in part: F4, OQ3)** | — | — | The key of a customer's own AI service is a secret: stored encrypted and shown only as a mask, it cannot leak through a read. _(draft)_ | Not decided: exists in the code |
 | AIP-10 | Deleting a persona leaves its virtual contributor pointing at nothing, and every later question to it fails. Deleting a virtual contributor removes its persona only if that step succeeds, so a persona can be left without a virtual contributor. **(defect: F2, F8)** | — | — | — | Not decided: a defect |
 
 ### Engines and routing
@@ -40,20 +43,20 @@ _Open questions per owner: Product Lead 3 · Technical Lead 12 · Quality Lead 2
 | ID | Rule | Why: business | Why: product | Why: technical | Decided by |
 |---|---|---|---|---|---|
 | AIP-11 | A persona's engine is one of six names. A question is sent to the queue of its engine, and queues exist for five of them. A question to a "community-manager" persona goes nowhere and gives no error. **(defect in part: F3, OQ1)** | — | — | Each engine is a separate worker (sibling `virtual-contributor` README); community-manager was decommissioned 2026-08-04 but the enum value survives. | Not decided: exists in the code |
-| AIP-12 | For four engines a question is sent with the last 30 messages of its thread, or of the whole room when there is no thread, oldest first. Two of them also get the description of the callout or post the question was asked under, which takes one of the 30 places. The other two engines get no history. **(open: Q-AIP-12)** | — | — | — | Not decided: exists in the code |
+| AIP-12 | For four engines a question is sent with the last 30 messages of its thread, or of the whole room when there is no thread, oldest first. Two of them also get the description of the callout or post the question was asked under, which takes one of the 30 places. The other two engines get no history. **(open: Q-AIP-12)** | — | As a member asking a virtual contributor, I want it to know the conversation so far, so that I don't have to repeat the context. | — | Product, 2026-11-20 (product why); the technical why waits for Q-AIP-12 |
 | AIP-13 | In that history, a message counts as the virtual contributor's own when the chat id of its sender starts with `@virtualcontributor`. **(open: Q-AIP-13, F7)** | — | — | VC chat identities are minted with that prefix (communication adapter convention). | Not decided: exists in the code |
-| AIP-14 | An "expert" persona with no prompt graph of its own runs on the platform's built-in one. Reading a persona's prompt graph gives the stored one, else the built-in one for "expert" and "libra-flow" personas, else nothing. **(open: Q-AIP-14)** | — | — | — | Not decided: exists in the code |
-| AIP-15 | With each question the engine receives the persona's prompt and settings, who asked, the message, which knowledge to use, the history, the virtual contributor's name and description, what to do with the answer, and the language. **(open: OQ2)** | — | — | The engine answers as the VC with the VC's own configuration; the server keeps the secrets and the room context. | Not decided: exists in the code |
-| AIP-16 | The engine's answer comes back with its text, its sources, the languages it detected and a thread id. The server does only what the question asked for: post a reply, post a message, or nothing. A reply is posted only when the question named a room and a thread. **(open: Q-AIP-16)** | — | — | — | Not decided: exists in the code |
-| AIP-17 | A request to read knowledge in names what to read and for which persona; a request to read a Space in as context names the Space and no persona. The persona's "last read in" date follows the result, and it is the only thing the engine writes back to the server. | — | — | The engine owns the vectors; the server keeps only readiness. | Not decided: exists in the code |
+| AIP-14 | An "expert" persona with no prompt graph of its own runs on the platform's built-in one. Reading a persona's prompt graph gives the stored one, else the built-in one for "expert" and "libra-flow" personas, else nothing. **(open: Q-AIP-14)** | — | As a virtual contributor owner, I want an expert VC to work without designing a prompt graph, so that I can set one up quickly. | — | Product, 2026-11-20 (product why); the technical why waits for Q-AIP-14 |
+| AIP-15 | With each question the engine receives the persona's prompt and settings, who asked, the message, which knowledge to use, the history, the virtual contributor's name and description, what to do with the answer, and the language. **(open: OQ2)** | — | — | The engine answers as the VC with the VC's own configuration; the server keeps the secrets and the room context. _(draft)_ | Not decided: exists in the code |
+| AIP-16 | The engine's answer comes back with its text, its sources, the languages it detected and a thread id. The server does only what the question asked for: post a reply, post a message, or nothing. A reply is posted only when the question named a room and a thread. **(open: Q-AIP-16)** | — | — | A reply belongs in a thread, so the server only posts one when the question named both the room and the thread. _(draft)_ | Not decided: exists in the code |
+| AIP-17 | A request to read knowledge in names what to read and for which persona; a request to read a Space in as context names the Space and no persona. The persona's "last read in" date follows the result, and it is the only thing the engine writes back to the server. | — | — | The engine owns the vectors; the server keeps only readiness. _(draft)_ | Not decided: exists in the code |
 
 ### Maintenance and limits
 
 | ID | Rule | Why: business | Why: product | Why: technical | Decided by |
 |---|---|---|---|---|---|
 | AIP-18 | A Platform Operations Admin can clean the AI knowledge store: a collection named after a Space's URL name is deleted when a twin named after the Space's id exists; all other collections are kept. The action is audited. | — | — | Legacy collections were keyed by nameID; the ids are the keys now (operational family, 032 "embeddings cleanup"). | Spec 032 ("embeddings cleanup") |
-| AIP-19 | The server sets no limit on tokens, requests or cost for questions to a virtual contributor. The length of the history is the only bound. The only AI-token allowance on the platform belongs to the web assistant. **(open: Q-AIP-19, OQ5)** | — | — | — | Not decided: exists in the code |
-| AIP-20 | A persona can only be read through the AI server (Platform Content Full Access) or through its virtual contributor. | — | — | — | Not decided: exists in the code |
+| AIP-19 | The server sets no limit on tokens, requests or cost for questions to a virtual contributor. The length of the history is the only bound. The only AI-token allowance on the platform belongs to the web assistant. **(open: OQ5)** | Virtual contributor use is not metered today; a usage limit is a wish on the product issues list because the cost is unbounded. | — | — | Product, 2026-11-20 (Q-AIP-19): stays as today |
+| AIP-20 | A persona can only be read through the AI server (Platform Content Full Access) or through its virtual contributor. | — | — | A persona holds a virtual contributor's prompts and secrets, so it is reachable only through the AI server or the VC that owns it. _(draft)_ | Not decided: exists in the code |
 
 Numbering note: ids are contiguous; none folded.
 
@@ -89,25 +92,13 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 ### Product Lead
 
-[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 3 to answer, 1 also involved
+[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 0 to answer
 
-**To answer**
-
-| ID | Area | Type | Question | Owner | Proposed answer | State |
-|---|---|---|---|---|---|---|
-| F6 | Personas | decision | After a change of engine or prompt the virtual contributor keeps its old knowledge. When must the knowledge be read in again? | Product Lead (Technical Lead builds it) | — | open |
-| Q-AIP-19 | Limits | decision | Why does this rule exist? No source states the reason. Is it intended that questions to a virtual contributor have no token, request or cost limit? (OQ5 checks for limits elsewhere.) | Product Lead | — | open |
-| CONST | All | decision | 17 constants have no answer yet in "product must rule?" (Appendix E). Which must product rule on? "Rules on it" proposes a role per row. | Product Lead (Technical Lead and Security Lead rule on their own rows) | — | open |
-
-**Also involved**
-
-| ID | Area | Type | Question | Owner | Proposed answer | State |
-|---|---|---|---|---|---|---|
-| OQ5 | Limits | check | Is there any limit on virtual contributor usage outside the server (in the engine, at the AI provider)? The server has none, and product may believe there is one. | Technical Lead (Product Lead decides whether a limit is needed) | — | open |
+Nothing to answer: every Product Lead question is decided (see Decided).
 
 ### Technical Lead
 
-[Technical Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Technical%20Lead.md) · Delivery (Anton) · 12 to answer, 6 also involved
+[Technical Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Technical%20Lead.md) · Delivery (Anton) · 12 to answer, 4 also involved
 
 **To answer**
 
@@ -117,13 +108,13 @@ _One section per role, so each owner reads only their own part. **To answer** li
 | F3 | Engines | defect | The engine list holds a name that cannot be reached: a question to a "community-manager" persona goes nowhere and gives no error. Another, "openai-assistant", belongs to an archived repository. Limit the list to live engines? | Technical Lead (Service Operations Lead answers OQ1 first) | Shrink the list to live engines and refuse creating or changing a persona on a retired one. | suggested |
 | F7 | Engines | decision | A message counts as "the assistant's" when its sender id starts with `@virtualcontributor`: that is any virtual contributor, not only the one asked, and it depends on a naming habit. Accept it as a convention, or mark messages by the kind of sender? | Technical Lead | — | open |
 | OQ2 | Engines | check | Does the engine use everything the server sends: the language, the context, the interaction id, the request to read knowledge in, the prompt-graph override? The engine code was not read. | Technical Lead | — | open |
-| OQ5 | Limits | check | Is there any limit on virtual contributor usage outside the server (in the engine, at the AI provider)? The server has none, and product may believe there is one. | Technical Lead (Product Lead decides whether a limit is needed) | — | open |
+| OQ5 | Limits | check | Is there any limit on virtual contributor usage outside the server (in the engine, at the AI provider)? The server has none, and product may believe there is one. | Technical Lead (Product Lead decides whether a limit is needed) | Product, 2026-11-20: a limit is wanted. It stays as today; a usage limit per virtual contributor or per account is a wish on the product issues list. The check whether the engine or the AI provider already limits use remains. | open |
 | Q-AIP-01 | AI server | decision | Why does this rule exist? No source states the reason. Why is there one AI server record that anyone can fetch? | Technical Lead | — | open |
 | Q-AIP-06 | Personas | decision | Why does this rule exist? No source states the reason. The code calls it a workaround. Should a persona simply follow its virtual contributor? | Technical Lead | — | open |
 | Q-AIP-08 | Personas | decision | Why does this rule exist? No source states the reason. Why are the settings merged and the prompt replaced? (Reading the knowledge in again is F6.) | Technical Lead | — | open |
-| Q-AIP-12 | Engines | decision | Why does this rule exist? No source states the reason. Why 30 messages, and why do only some engines get the history and the callout or post description? | Technical Lead | — | open |
+| Q-AIP-12 | Engines | decision | Why does this rule exist? No source states the reason. Why 30 messages, and why do only some engines get the history and the callout or post description? | Technical Lead | Product, 2026-11-20: the product why on AIP-12 is confirmed. A technical why is still welcome. | suggested |
 | Q-AIP-13 | Engines | decision | Why does this rule exist? No source states the reason. The only reason found is a naming habit of the chat adapter (see F7). | Technical Lead | — | open |
-| Q-AIP-14 | Engines | decision | Why does this rule exist? No source states the reason. Why do "expert" personas fall back on a built-in prompt graph, and why does a read also show it for "libra-flow"? | Technical Lead | — | open |
+| Q-AIP-14 | Engines | decision | Why does this rule exist? No source states the reason. Why do "expert" personas fall back on a built-in prompt graph, and why does a read also show it for "libra-flow"? | Technical Lead | Product, 2026-11-20: the product why on AIP-14 is confirmed. A technical why is still welcome. | suggested |
 | Q-AIP-16 | Engines | decision | Why does this rule exist? No source states the reason. Why does the server act on the answer only as the question instructed? | Technical Lead | — | open |
 
 **Also involved**
@@ -132,10 +123,8 @@ _One section per role, so each owner reads only their own part. **To answer** li
 |---|---|---|---|---|---|---|
 | F2 | Personas | defect | A persona and its virtual contributor can lose each other: 159 personas have no virtual contributor on acceptance, and the cause is still live. Is that an incident or a backlog defect? Then: how are the two tied together in the new model, and are the 159 repaired? | Incident Lead, then Technical Lead | A firm link with automatic deletion in the new model; a repair for the 159. | suggested |
 | F4 | Personas | defect | The settings of an external AI service are shown to everyone who can read the persona; for a public virtual contributor that is every visitor. The assistant id comes back in its encrypted form and the model name in full. Restrict this? | Security Lead, then Technical Lead | Show the external settings only to the account admin and the platform content roles, and never return the encrypted assistant id. | suggested |
-| F6 | Personas | decision | After a change of engine or prompt the virtual contributor keeps its old knowledge. When must the knowledge be read in again? | Product Lead (Technical Lead builds it) | — | open |
 | F8 | Personas | defect | Changing and deleting a persona is logged under organisation labels and writes no platform audit entry, although Platform Content Full Access can do both. | Security Lead, then Technical Lead | Add the audit entry and correct the labels. | suggested |
 | OQ1 | Engines | check | Which engines run on acceptance and on production, and which names in the list should be refused? | Service Operations Lead (Technical Lead decides which to refuse) | — | open |
-| CONST | All | decision | 17 constants have no answer yet in "product must rule?" (Appendix E). Which must product rule on? "Rules on it" proposes a role per row. | Product Lead (Technical Lead and Security Lead rule on their own rows) | — | open |
 
 ### Quality Lead
 
@@ -156,7 +145,7 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 ### Security Lead
 
-[Security Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Security%20Lead.md) · Delivery (Valentin) · 3 to answer, 1 also involved
+[Security Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Security%20Lead.md) · Delivery (Valentin) · 3 to answer
 
 **To answer**
 
@@ -166,11 +155,6 @@ _One section per role, so each owner reads only their own part. **To answer** li
 | F5 | AI server | risk | Anyone, without signing in, can fetch the AI server record; only its id is shown. Close it or accept it? | Security Lead | — | open |
 | F8 | Personas | defect | Changing and deleting a persona is logged under organisation labels and writes no platform audit entry, although Platform Content Full Access can do both. | Security Lead, then Technical Lead | Add the audit entry and correct the labels. | suggested |
 
-**Also involved**
-
-| ID | Area | Type | Question | Owner | Proposed answer | State |
-|---|---|---|---|---|---|---|
-| CONST | All | decision | 17 constants have no answer yet in "product must rule?" (Appendix E). Which must product rule on? "Rules on it" proposes a role per row. | Product Lead (Technical Lead and Security Lead rule on their own rows) | — | open |
 
 ### Incident Lead
 
@@ -199,6 +183,14 @@ _One section per role, so each owner reads only their own part. **To answer** li
 | ID | Area | Type | Question | Owner | Proposed answer | State |
 |---|---|---|---|---|---|---|
 | F3 | Engines | defect | The engine list holds a name that cannot be reached: a question to a "community-manager" persona goes nowhere and gives no error. Another, "openai-assistant", belongs to an archived repository. Limit the list to live engines? | Technical Lead (Service Operations Lead answers OQ1 first) | Shrink the list to live engines and refuse creating or changing a persona on a retired one. | suggested |
+
+### Decided
+
+| Was | Decision | Decided by | Now |
+|---|---|---|---|
+| CONST | Product rules on the persona defaults and limits, the OpenAI model list and default, and the history length, ticked "yes" in Appendix E. Error texts, engines, routing, storage and security values go to the Technical Lead and the Security Lead. | Product, 2026-11-20 | Appendix E |
+| F6 | Stays as today: a change of engine or prompt does not read the knowledge in again. Re-reading it when a virtual contributor's engine changes is a wish on the product issues list. | Product, 2026-11-20 | AIP-08; PRODUCT-ISSUES F6 (ai-personas) |
+| Q-AIP-19 | Stays as today: questions to a virtual contributor have no token, request or cost limit. A usage limit per virtual contributor or per account is a wish, because the cost is unbounded today. | Product, 2026-11-20 | AIP-19; PRODUCT-ISSUES Q-AIP-19 |
 
 ## Appendix
 
@@ -250,7 +242,7 @@ _The original text of every finding (F) and open question (OQ), with its evidenc
 - **F3 — An engine value with no queue (AIP-11).** Code: the enum has `community-manager` and `openai-assistant`; queues exist for `openai-assistant` but not `community-manager` (decommissioned 2026-08-04), so a persona on that engine publishes into the void with no error. `openai-assistant` is excluded from the externally-configurable list and its repo is archived (2026-05-28). Ruling: shrink the enum to live engines and refuse creation/updates on retired ones.
 - **F4 — External configuration leaks to persona readers (AIP-09).** Code: `externalConfig` is returned for generic-openai/libra-flow personas to anyone with READ on the persona, which the persona inherits from the VC — for a public VC that is every visitor; `apiKey` is masked by a field resolver but `assistantId` has none and resolves to the stored ciphertext, and `model` is in clear. Test/spec: none (004 FR-007 covers the assistant only). Ruling: restrict `externalConfig` to the VC's account admin and platform content roles, and never return `assistantId` ciphertext.
 - **F5 — `aiServer` root query is ungated (AIP-01).** Code: returns the singleton (id, dates) to anonymous callers; every field is READ-gated so only the id leaks. Mirrors CM finding 7 / VCK F-7. Ruling: gate or accept.
-- **F6 — Updating a persona never re-ingests (AIP-08).** Code: "TBD: trigger a re-ingest?" — a changed engine or prompt keeps the old vectors. Ruling: define when ingest must re-run.
+- **F6 — Updating a persona never re-ingests (AIP-08).** Code: "TBD: trigger a re-ingest?" — a changed engine or prompt keeps the old vectors. Ruling: define when ingest must re-run. **Product, 2026-11-20:** stays as today; re-reading on an engine change is a wish on the product issues list.
 - **F7 — History role detection by chat-id prefix (AIP-13).** Code: a message is "the assistant's" iff the sender id starts with `@virtualcontributor` — any VC, not the asked one, and dependent on the adapter's naming convention. Ruling: accept as convention or mark messages by actor type.
 - **F8 — Persona mutations log as organisation actions (AIP-10).** Code: `aiServerUpdateAiPersona` / `aiServerDeleteAiPersona` label their authorization check `orgUpdate` / `deleteOrg`; neither writes a platform audit row although content-full-access reaches them. Ruling: audit + relabel.
 
@@ -260,7 +252,7 @@ _The original text of every finding (F) and open question (OQ), with its evidenc
 - **OQ2 — Does the engine honour what the server sends** — `language`, `contextID`, `interactionID`, `operation: ingest`, the prompt-graph override? Engine code not read.
 - **OQ3 — Live confirmation of F-4** (ciphertext `assistantId` to an anonymous reader of a public generic-openai VC).
 - **OQ4 — Was `defaultAiPersona` ever populated** on any environment (a DB read of `ai_server.defaultAiPersonaId`)?
-- **OQ5 — Is there any budget for VC usage** outside the server (per-engine rate limits in the worker, provider quotas)? The server has none (AIP-19); product may believe there is one.
+- **OQ5 — Is there any budget for VC usage** outside the server (per-engine rate limits in the worker, provider quotas)? The server has none (AIP-19); product may believe there is one. **Product, 2026-11-20:** a limit is wanted: a usage limit per virtual contributor or per account is a wish; the check for limits elsewhere remains.
 
 ### D. Test gaps
 
@@ -280,29 +272,29 @@ Behaviours the area has that neither reading nor tests pinned down:
 
 ### E. Constants the rules depend on
 
-_"Rules on it" is pre-filled with the role whose domain covers the value: Product Lead for business values, plan constants and user-facing copy; Technical Lead for engineering limits and wire shapes; Security Lead for security limits. The "product must rule?" column is unchanged: tick the rows product must rule on (question CONST in section 3)._
+_"Rules on it" is pre-filled with the role whose domain covers the value: Product Lead for business values, plan constants and user-facing copy; Technical Lead for engineering limits and wire shapes; Security Lead for security limits. The "product must rule?" column was ticked by Product, 2026-11-20 (CONST): "yes" rows wait for a product ruling before the rebuild._
 
 | Constant | Value today | Source | product must rule? | Rules on it |
 |---|---|---|---|---|
-| Engines (6) | `guidance`, `expert`, `libra-flow`, `generic-openai`, `openai-assistant`, `community-manager` | `src/common/enums/ai.persona.engine.ts`; `schema.graphql:81` | | Technical Lead |
-| Engines with a configured queue (5) | expert, libra-flow, guidance, generic (generic-openai), openai-assistant — `virtual-contributor-engine-<name>` (env-overridable) | `alkemio.yml:469-473` | F-3 | Technical Lead |
-| Routing | exchange `event-bus`; routing key = engine name for questions, event class name otherwise | `publisher.ts:14-23` | | Technical Lead |
-| History-enabled engines | expert, guidance, generic-openai, libra-flow | `ai.server.service.ts:343-348` | | Technical Lead |
-| Entity-content engines | libra-flow, expert (callout framing / post description prepended) | `ai.server.service.ts:367-370, 439-451` | | Technical Lead |
-| Externally-configurable engines | generic-openai, libra-flow | `ai.persona.resolver.fields.ts:409-412` | | Technical Lead |
-| Built-in graph engines | expert (used at invocation), expert + libra-flow (returned on read) | `ai.persona.service.ts:195-216`; `ai.persona.resolver.fields.ts:445-449` | | Technical Lead |
-| Persona create defaults / limits | engine `expert`; prompt `[]`, max 10 lines, each ≤ `LONG_TEXT_LENGTH`; external config optional | `dto/ai.persona.dto.create.ts:15-35` | | Product Lead |
-| OpenAI models (18) + default | gpt-5.5, gpt-5.5-pro, gpt-5.4, gpt-5.4-mini, gpt-5.4-nano, gpt-5.4-pro, gpt-5.2, gpt-5.2-pro, gpt-5.1, gpt-5.1-mini, gpt-5, gpt-5-mini, gpt-5-nano, gpt-5-pro, o4-mini, o3-pro, o3, o3-mini; default `gpt-5.4-nano` | `dto/external.config.ts:63-107`; `schema.graphql:747` | | Product Lead |
-| Encrypted fields / masking | `apiKey`, `assistantId` encrypted at rest; `apiKey` read as `<first 7>...<last 4>` | `ai.persona.service.ts:226-264` | F-4 | Security Lead |
-| History length | `platform.virtual_contributors.history_length` = `VC_HISTORY_LENGTH` default 30 | `alkemio.yml:791` | | Product Lead |
-| VC sender prefix | `@virtualcontributor` | `ai.server.service.ts:408` | | Technical Lead |
-| Invocation operations / result actions | `query` (default), `ingest` / `postReply`, `postMessage`, `none` | `ai.server.adapter.dto.invocation.ts:83-92` | | Technical Lead |
-| Ingestion purposes | `knowledge`, `context` | `ingest.body.of.knowledge.command.ts:5-8` | | Technical Lead |
-| Result payload | `message, result, humanLanguage, resultLanguage, knowledgeLanguage, originalResult, sources[{chunkIndex?, documentId, embeddingType, source, title, type, score, uri}], threadId?` | `invoke.engine.result.ts:29-58` | | Technical Lead |
-| Vector store | `platform.vector_db` host `VECTOR_DB_HOST` (localhost), port `VECTOR_DB_PORT` (8765), credentials; collection names `<space nameID\|id>-(knowledge\|context)` | `alkemio.yml:785-787`; `ai.server.resolver.mutations.ts:225-259` | | Technical Lead |
-| Error texts | `No AiServer found!`; `No AI Persona Services found!`; `No default Virtual Personas found!`; `Unable to find AI Persona with ID: <id>`; `Unable to find all fields on AI Persona with ID: <id>` | `ai.server.service.ts:524-528, 546-551, 565-570`; `ai.persona.service.ts:126-130, 156-161` | | Product Lead |
-| Roles / audit | PCFA (CRUD), POA (reset, create, cleanup); operations audit actions `aiServerAuthorizationPolicyReset`, `aiServerCreateAiPersona` (target: persona id + engine), `cleanupCollections` | `ai.server.service.authorization.ts`; `ai.server.resolver.mutations.ts:193-206, 284-297, 334-349` | | Security Lead |
-| GraphQL surface | `AiServer{aiPersona(ID), aiPersonas, authorization, defaultAiPersona}`, `AiPersona{engine, prompt, externalConfig, bodyOfKnowledgeLastUpdated, promptGraph, authorization}`, `ExternalConfig{apiKey, assistantId, model}`, `PromptGraph`, `VirtualContributor.{aiPersona, engine, modelCard}`; query `aiServer`; mutations `aiServerCreateAiPersona`, `aiServerUpdateAiPersona`, `aiServerDeleteAiPersona`, `aiServerAuthorizationPolicyReset`, `cleanupCollections` (→ `MigrateEmbeddings{success}`) | `schema.graphql:81, 747, 1854-1900, 3506, 4794, 4920-4926, 4972, 6191, 6315, 9759` | | Technical Lead |
+| Engines (6) | `guidance`, `expert`, `libra-flow`, `generic-openai`, `openai-assistant`, `community-manager` | `src/common/enums/ai.persona.engine.ts`; `schema.graphql:81` | no | Technical Lead |
+| Engines with a configured queue (5) | expert, libra-flow, guidance, generic (generic-openai), openai-assistant — `virtual-contributor-engine-<name>` (env-overridable) | `alkemio.yml:469-473` | no (F-3) | Technical Lead |
+| Routing | exchange `event-bus`; routing key = engine name for questions, event class name otherwise | `publisher.ts:14-23` | no | Technical Lead |
+| History-enabled engines | expert, guidance, generic-openai, libra-flow | `ai.server.service.ts:343-348` | no | Technical Lead |
+| Entity-content engines | libra-flow, expert (callout framing / post description prepended) | `ai.server.service.ts:367-370, 439-451` | no | Technical Lead |
+| Externally-configurable engines | generic-openai, libra-flow | `ai.persona.resolver.fields.ts:409-412` | no | Technical Lead |
+| Built-in graph engines | expert (used at invocation), expert + libra-flow (returned on read) | `ai.persona.service.ts:195-216`; `ai.persona.resolver.fields.ts:445-449` | no | Technical Lead |
+| Persona create defaults / limits | engine `expert`; prompt `[]`, max 10 lines, each ≤ `LONG_TEXT_LENGTH`; external config optional | `dto/ai.persona.dto.create.ts:15-35` | yes | Product Lead |
+| OpenAI models (18) + default | gpt-5.5, gpt-5.5-pro, gpt-5.4, gpt-5.4-mini, gpt-5.4-nano, gpt-5.4-pro, gpt-5.2, gpt-5.2-pro, gpt-5.1, gpt-5.1-mini, gpt-5, gpt-5-mini, gpt-5-nano, gpt-5-pro, o4-mini, o3-pro, o3, o3-mini; default `gpt-5.4-nano` | `dto/external.config.ts:63-107`; `schema.graphql:747` | yes | Product Lead |
+| Encrypted fields / masking | `apiKey`, `assistantId` encrypted at rest; `apiKey` read as `<first 7>...<last 4>` | `ai.persona.service.ts:226-264` | no (F-4) | Security Lead |
+| History length | `platform.virtual_contributors.history_length` = `VC_HISTORY_LENGTH` default 30 | `alkemio.yml:791` | yes | Product Lead |
+| VC sender prefix | `@virtualcontributor` | `ai.server.service.ts:408` | no | Technical Lead |
+| Invocation operations / result actions | `query` (default), `ingest` / `postReply`, `postMessage`, `none` | `ai.server.adapter.dto.invocation.ts:83-92` | no | Technical Lead |
+| Ingestion purposes | `knowledge`, `context` | `ingest.body.of.knowledge.command.ts:5-8` | no | Technical Lead |
+| Result payload | `message, result, humanLanguage, resultLanguage, knowledgeLanguage, originalResult, sources[{chunkIndex?, documentId, embeddingType, source, title, type, score, uri}], threadId?` | `invoke.engine.result.ts:29-58` | no | Technical Lead |
+| Vector store | `platform.vector_db` host `VECTOR_DB_HOST` (localhost), port `VECTOR_DB_PORT` (8765), credentials; collection names `<space nameID\|id>-(knowledge\|context)` | `alkemio.yml:785-787`; `ai.server.resolver.mutations.ts:225-259` | no | Technical Lead |
+| Error texts | `No AiServer found!`; `No AI Persona Services found!`; `No default Virtual Personas found!`; `Unable to find AI Persona with ID: <id>`; `Unable to find all fields on AI Persona with ID: <id>` | `ai.server.service.ts:524-528, 546-551, 565-570`; `ai.persona.service.ts:126-130, 156-161` | no | Technical Lead |
+| Roles / audit | PCFA (CRUD), POA (reset, create, cleanup); operations audit actions `aiServerAuthorizationPolicyReset`, `aiServerCreateAiPersona` (target: persona id + engine), `cleanupCollections` | `ai.server.service.authorization.ts`; `ai.server.resolver.mutations.ts:193-206, 284-297, 334-349` | no | Security Lead |
+| GraphQL surface | `AiServer{aiPersona(ID), aiPersonas, authorization, defaultAiPersona}`, `AiPersona{engine, prompt, externalConfig, bodyOfKnowledgeLastUpdated, promptGraph, authorization}`, `ExternalConfig{apiKey, assistantId, model}`, `PromptGraph`, `VirtualContributor.{aiPersona, engine, modelCard}`; query `aiServer`; mutations `aiServerCreateAiPersona`, `aiServerUpdateAiPersona`, `aiServerDeleteAiPersona`, `aiServerAuthorizationPolicyReset`, `cleanupCollections` (→ `MigrateEmbeddings{success}`) | `schema.graphql:81, 747, 1854-1900, 3506, 4794, 4920-4926, 4972, 6191, 6315, 9759` | no | Technical Lead |
 
 ### F. Where this lands in the new core
 
@@ -313,6 +305,8 @@ The catalogue lands AI-2 in the "ai_engine registry" (slices 10–12, verdict ab
 Extracted 2026-11-06 from three sources: server develop @ `eeecf9ddb` (Release/79) code + `schema.graphql`; the legacy server-api suite — this feature (catalogue AI-2, verdict absent) has **no folder of its own**, so the proof is two `platform-roles` capability rows (A3 `aiServerAuthorizationPolicyReset`, A11 `cleanupCollections`, 14 roles each) and the three `contributor-management/virtual-contributor/model-card/engine-types` cases; the specs, issues and docs listed in § Sources. Scope: what the server guarantees around the engine — the AI server singleton and its policy, persona definitions and secrets, engines and queue routing, invocation input, history and results, ingest commands, maintenance, budgets. The engine itself (the `virtual-contributor` sibling) is out of scope; the model card sheet is CM-52 and the ready stamp is VCK-11 (cross-referenced). WHAT and WHY only — no mutations, fixtures or request params. Evidence paths are relative to the server repo unless prefixed `test ›` or `spec ›`.
 
 2026-11-19 converted to the three-section layout: the single why was split in three, each rule got a plain-words sentence (the exact text moved to Appendix A), the who-may table became section 2, and every finding, open question and rule without a stated reason was routed to an organisation role in section 3.
+
+2026-11-20 whys pass: every rule has at least one why, sourced where a spec, issue or code line states it and marked _(draft)_ where QA wrote it. No new source was found for this area in the server or agents-hq specs, so the nine unsourced rules carry drafts.
 
 #### Sources
 

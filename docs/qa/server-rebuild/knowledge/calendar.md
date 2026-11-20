@@ -2,12 +2,15 @@
 
 _What the platform does today for the calendar every space carries and its events: creating, reading, updating and deleting them, whole-day and timed dates, the Google, Outlook and ICS exports, subspace events showing on the parent calendar, and the notifications and activity an event produces. It says what the server does, why, who may, and what is still to answer. The file has three sections, **1. Rules**, **2. Rights** and **3. Open questions**, with the evidence in an **Appendix**._
 
-_Open questions per owner: Product Lead 7 · Technical Lead 5 · Quality Lead 4 · Architecture Lead 1. By state: 15 open · 2 with a suggested answer. Proof of the 25 rules: 12 proven by a test · 13 untested (Appendix A)._
+_Open questions per owner: Product Lead 1 · Technical Lead 5 · Quality Lead 4 · Architecture Lead 1. By state: 6 open · 5 with a suggested answer · 7 decided. Proof of the 25 rules: 12 proven by a test · 13 untested (Appendix A)._
+
+_Whys of the 25 rules: 21 rest on a source or a product decision · 4 carry a technical draft for the Technical Lead (EVT-01, EVT-02, EVT-09, EVT-16) · 0 have none (—)._
 
 **How to read it**
 
 - **Rule** is one or two plain sentences. The exact behaviour, with error messages and limits, is in Appendix A under the same id. The new core is checked against the exact text.
-- **Why: business** is what Alkemio needs. **Why: product** is the user story; it is filled only where a cited spec states one, and product fills the rest later. **Why: technical** is the engineering reason, when there is one. "—" means no source states one.
+- **Why: business** is what Alkemio needs. **Why: product** is the user story. **Why: technical** is the engineering reason. A rule needs at least one why, and gets a second or third only where it adds something for the decision or the code. "—" means none is given.
+- A why that names a spec, issue, pull request, code comment or code line rests on that source. A why, or the part of a why, ending in _(draft)_ was written by QA and no source states it: product keeps, rewrites or deletes it, and sets **Decided by**. A user story always ends in its "so that"; where no source gives one, QA wrote it. A rule with no why at all carries an open question in section 3.
 - **Decided by** names the source of the decision: a spec, a commit or pull request, an issue or a document. "Not decided" means the behaviour exists in the code and nobody chose it. Product has not reviewed this file yet.
 - A marker in bold at the end of a rule points at section 3: **(open: F3)** means a question on this rule is still open, **(defect: …)** means today's behaviour is a fault and must not be copied as intended, **(defect in part: …)** means part of it is. A rule with no marker stands as written. Every rule is logged as the server behaves today, also when that is not the intended end state. Whether a test proves the rule sits in Appendix A as **proven** or **untested**.
 - Hard rules are not marked yet. Some rules are choices that a new feature may challenge, and some can never change; a later version will mark the second kind with "(hard rule)" after the why that makes it so. Until then, no marker does not mean a rule is open to change.
@@ -18,61 +21,61 @@ _Open questions per owner: Product Lead 7 · Technical Lead 5 · Quality Lead 4 
 
 | ID | Rule | Why: business | Why: product | Why: technical | Decided by |
 |---|---|---|---|---|---|
-| EVT-01 | Every space, at every level, has exactly one calendar, created with the space. Anyone who can read the space can read its calendar. Templates carry no calendar. | — | — | One calendar per space is the container the events hang on; templates do not carry dated content. | Not decided: exists in the code |
+| EVT-01 | Every space, at every level, has exactly one calendar, created with the space. Anyone who can read the space can read its calendar. Templates carry no calendar. | — | — | One calendar per space is the container the events hang on; templates do not carry dated content. _(draft)_ | Not decided: exists in the code |
 
 ### Creating events
 
 | ID | Rule | Why: business | Why: product | Why: technical | Decided by |
 |---|---|---|---|---|---|
-| EVT-02 | Only space admins create events on a space's calendar. Members and leads can comment on events but cannot create them; outsiders are refused. | Events are curated by the space's admins; contribution is a comment, not an event | — | Collaboration contributors rule grants CONTRIBUTE only | Not decided: exists in the code |
-| EVT-03 | An event has a title, an optional description, location and tags, one of six types (event, deadline, meeting, milestone, training, other), a start, a whole-day flag, a multi-day flag, a duration, and a flag that says whether it shows on the parent calendar. **(open: F6)** | — | — | — the event vocabulary is the calendar's own; no spec states why these six. | Not decided: exists in the code |
-| EVT-04 | An event's name identifier is unique within its calendar. One that is already taken is refused; when none is given, one is made from the title. **(open: Q-EVT-04)** | — | — | — | Not decided: exists in the code |
+| EVT-02 | Only space admins create events on a space's calendar. Members and leads can comment on events but cannot create them; outsiders are refused. | Events are curated by the space's admins; taking part is a comment, not an event (Product, 2026-11-20). Members creating events is wanted and tracked in alkem-io/alkemio#2205. | — | The collaboration's contributor rule grants contribute only, not create. _(draft)_ | Product, 2026-11-20 (was CH-EVT-02): behaviour stays, tracked |
+| EVT-03 | An event has a title, an optional description, location and tags, one of six types (event, deadline, meeting, milestone, training, other), a start, a whole-day flag, a multi-day flag, a duration, and a flag that says whether it shows on the parent calendar. **(open: F6)** | — | As a space admin, I want to say what kind of event it is, where, and when (one day, several days or a time slot), so that members can plan for it. For the parent-calendar flag: as a subspace admin, I want to promote some events on the space level as well (client-web#6876), so that the whole community sees the events that matter beyond my subspace. | — the event vocabulary is the calendar's own; no spec states why these six. | Product, 2026-11-20 |
+| EVT-04 | An event's name identifier is unique within its calendar. One that is already taken is refused; when none is given, one is made from the title. **(open: Q-EVT-04)** | — | — | The name id is the last part of the event's web address (`<space>/calendar/<nameID>`, `url.generator.service.ts:1357`), so two events in one calendar cannot share it. | Not decided: exists in the code |
 | EVT-05 | Every event has its own comments room. If the event cannot be saved the room is removed again, and deleting the event deletes the room. | — | — | The Matrix room is created outside the database transaction, so an orphan must be removed explicitly (code comment). | Not decided: exists in the code |
-| EVT-06 | The creator of an event can read, update and delete it whatever their role, but cannot delete other people's comments on it. | Creator ownership of the event, not of the conversation under it | — | "so that the creating user does not have rights to delete comments" | Not decided: exists in the code |
-| EVT-07 | Creating an event is recorded as activity and notifies the space community, except the creator, by email, in the app and by push. One notification setting covers it. | Members should learn about new events without the creator being told about their own | — | — | Server PR #5860 "Add to my calendar notifications" |
+| EVT-06 | The creator of an event can read, update and delete it whatever their role, but cannot delete other people's comments on it. | — | — | Comment rights are inherited before the creator's extra rights are added, "so that the creating user does not have rights to delete comments" (code comment, `event.service.authorization.ts:59-60`). | Not decided: exists in the code |
+| EVT-07 | Creating an event is recorded as activity and notifies the space community, except the creator, by email, in the app and by push. One notification setting covers it. | — | As a member, I want to know what events are happening, so that I can take part in them. As a creator, I don't want notifications for my own events, so that I am only told about what is new to me. (Product, 2026-11-20) | — | Server PR #5860; Product, 2026-11-20 |
 | EVT-08 | A comment on an event notifies the event's creator only, and never the person who wrote the comment. | Keep event creators engaged with discussion on their events; no self-notification (spec 015 US1/US2, FR-003/FR-004). | As an event creator, I want to be notified when someone else comments on my event, so that I stay engaged with the discussion on it (015 US1/US2). | — | Spec 015 US1/US2, FR-003/FR-004 |
 
 ### Reading events
 
 | ID | Rule | Why: business | Why: product | Why: technical | Decided by |
 |---|---|---|---|---|---|
-| EVT-09 | Anyone who can read a calendar sees its list of events, each with its title, dates and flags. | Events are visible to whoever can see the space | — | Calendar inherits the collaboration policy | Not decided: exists in the code |
-| EVT-10 | When the space setting "allow events from subspaces" is on (the default), the calendar of a top-level space also shows the events of its direct subspaces that are flagged to show on the parent. Events of sub-subspaces never show on a calendar above them. **(open: F3)** | Subspace events shown on the parent calendar | — | The one-level depth is a code decision with a comment, not a product statement. | Server PR #4687 "Show subspace events in Space"; the one-level depth is not decided |
-| EVT-11 | An event shown on a parent calendar says which subspace it belongs to. An event on a top-level space's own calendar names none. **(open: Q-EVT-11)** | — | — | — (schema: "Only applicable if the Space has this option enabled") | Not decided: exists in the code |
-| EVT-12 | Anyone who can read an event can open it by its id. A deleted event can no longer be found. **(open: F5)** | — | — | — standard lookup guard | Not decided: exists in the code |
+| EVT-09 | Anyone who can read a calendar sees its list of events, each with its title, dates and flags. | An event is part of the space's content, so it is exactly as visible as the space. | — | The calendar inherits the collaboration's policy. _(draft)_ | Product, 2026-11-20 |
+| EVT-10 | When the space setting "allow events from subspaces" is on (the default), the calendar of a top-level space also shows the events of its direct subspaces that are flagged to show on the parent. Events of sub-subspaces never show on a calendar above them. | — | As a subspace admin, I want to promote some events on the space level as well, so that the whole community sees the events that matter beyond my subspace. As a space admin, I want to be able to prevent subspace events from being promoted on the space dashboard, so that my space's calendar does not fill up with events that are not for everyone. (client-web#6876) | One level up only, "for simplicity for now" (client-web#6876); the code comment says how to widen it. | client-web#6876; server PR #4687; Product, 2026-11-20 (was F3): one level up is the rule |
+| EVT-11 | An event shown on a parent calendar says which subspace it belongs to. An event on a top-level space's own calendar names none. | — | As a space member, I want an event promoted from a subspace to show which subspace it comes from (client-web#6876, acceptance criteria), so that I know who organises it and where to find out more. | — (schema: "Only applicable if the Space has this option enabled") | client-web#6876; Product, 2026-11-20 (was Q-EVT-11) |
+| EVT-12 | Anyone who can read an event can open it by its id. A deleted event can no longer be found. **(open: F5)** | — | As a space member, I want to open an event from a link someone shared, so that I land straight on it. | — | Product, 2026-11-20 |
 
 ### Updating and deleting
 
 | ID | Rule | Why: business | Why: product | Why: technical | Decided by |
 |---|---|---|---|---|---|
 | EVT-13 | Space admins and the creator can update an event. The dates and durations are always replaced by what is sent, so shortening a multi-day event to one day sticks. Changing the title also renames the comments room. **(open: F6)** | — | — | A truthy guard dropped a legitimate 0 and silently kept the old span (023 US5, FR-012; server#6279). | Spec 023 US5, FR-012; server#6279 |
-| EVT-14 | Space admins and the creator can delete an event. Its profile and its comments room go with it. | — | — | — | Not decided: exists in the code |
-| EVT-15 | Deleting a space deletes its calendar and every event, with their comments rooms. | Events are owned content of the space. | — | — | Not decided: exists in the code |
-| EVT-16 | Rights on events always follow the space: the calendar takes its rights from the space, each event from the calendar plus its creator, and each comments room from its event. | — | — | One authorization forest; events are children of the collaboration. | Not decided: exists in the code |
+| EVT-14 | Space admins and the creator can delete an event. Its profile and its comments room go with it. | — | As a space admin or event creator, I want to delete an event that no longer takes place, so that members are not misled. | — | Product, 2026-11-20 |
+| EVT-15 | Deleting a space deletes its calendar and every event, with their comments rooms. | Events are owned content of the space. | — | — | Product, 2026-11-20 |
+| EVT-16 | Rights on events always follow the space: the calendar takes its rights from the space, each event from the calendar plus its creator, and each comments room from its event. | — | — | One authorization forest; events are children of the collaboration. _(draft)_ | Not decided: exists in the code |
 
 ### Whole-day and timed dates
 
 | ID | Rule | Why: business | Why: product | Why: technical | Decided by |
 |---|---|---|---|---|---|
-| EVT-17 | A whole-day event is a plain calendar date that never shifts with anyone's time zone. Every export (ICS file, Google link, Outlook link) carries that date, and stays exact across year ends and clock changes. | A date must not shift with anyone's timezone | — | RFC 5545 exclusive end; UTC arithmetic has no DST (023 FR-001/003/005/006, ADR 0001; closes server#6267). | Spec 023 FR-001/003/005/006; ADR 0001 |
-| EVT-18 | A timed event is exported as an exact moment in time, with a hint that the time zone is Europe/Amsterdam. **(open: OQ3)** | — | — | Timed events were already correct; importers localise an instant (023 FR-007, SC-005). | Spec 023 FR-007, SC-005 |
+| EVT-17 | A whole-day event is a plain calendar date that never shifts with anyone's time zone. Every export (ICS file, Google link, Outlook link) carries that date, and stays exact across year ends and clock changes. | An exported event on the wrong day is actively misleading (023 US1). | — | RFC 5545 exclusive end; UTC arithmetic has no DST (023 FR-001/003/005/006, ADR 0001; closes server#6267). | Spec 023 FR-001/003/005/006; ADR 0001 |
+| EVT-18 | A timed event is exported as an exact moment in time, with a hint that the time zone is Europe/Amsterdam. | — | — | Timed events were already correct; importers localise an instant (023 FR-007, SC-005). | Spec 023 FR-007, SC-005; Product, 2026-11-20 (was OQ3): Europe/Amsterdam is the hint for every customer |
 | EVT-19 | An event's dates are checked only when its calendar links or its ICS file are read, not when it is created or updated. A timed event must end after it starts; a whole-day event may start and end on the same day. An event with bad dates is saved, and then fails every time its links are read. **(open: F4, OQ4)** | — | — | 023 edge case: "Server date-range validation MUST accept start === end for whole-day events … only timed events require end strictly after start"; validating at write is not stated anywhere. | Spec 023 edge case (what to accept); checking only on read is not decided |
 
 ### Exporting
 
 | ID | Rule | Why: business | Why: product | Why: technical | Decided by |
 |---|---|---|---|---|---|
-| EVT-20 | Every event offers a Google Calendar link and an Outlook link with its title, its description as plain text (cut at 1,000 characters) and its location. | "Add to my calendar" from the event | — | — | Server PR #5860 |
-| EVT-21 | The ICS download is a standard calendar file named after the event, with its title, plain-text description (cut at 8,000 characters), location and a link to the event page. **(open: F2, OQ1)** | — | — | RFC 5545 compliance (legacy todo cites "FR-005 — .ics files must be RFC 5545 compliant"). | A spec that is in neither repository (its FR-005, see OQ1) |
-| EVT-22 | Downloading the ICS file needs a signed-in user who can read the event. A visitor is sent to the login page; a signed-in user without access is sent to a "restricted" page. **(open: F1, F2, OQ1)** | — | — | Export is an authenticated read of the event (code); the legacy todo says the originating spec's User Story 3 wanted anonymous download. | Not decided: the code and the originating spec disagree (F1) |
+| EVT-20 | Every event offers a Google Calendar link and an Outlook link with its title, its description as plain text (cut at 1,000 characters) and its location. | — | As a platform user, I want to export a calendar event to my personal calendar application (Teams, Outlook, Google Calendar), so that I can manage all my events in one place without manually recreating them (client-web spec 004 US1; client-web#9330). | — | client-web#9330; client-web spec 004 FR-001–FR-003; server PR #5860 |
+| EVT-21 | The ICS download is a standard calendar file named after the event, with its title, plain-text description (cut at 8,000 characters), location and a link to the event page. **(open: F2, OQ1)** | — | — | RFC 5545 compliance (client-web spec 004 FR-005); the link back to the event is FR-006. | client-web spec 004 FR-005, FR-006 (branch `4-add-to-calendar`) |
+| EVT-22 | Downloading the ICS file needs a signed-in user who can read the event. A visitor is sent to the login page; a signed-in user without access is sent to a "restricted" page. **(open: F2, OQ1)** | — | — | Export is an authenticated read of the event (code). Client-web spec 004 US3 scenario 4 wants the ICS opened from the notification email without signing in. | Product, 2026-11-20 (was F1): sign-in stays required; client-web spec 004 US3 scenario 4 is not adopted |
 
 ### Lifecycle with the space
 
 | ID | Rule | Why: business | Why: product | Why: technical | Decided by |
 |---|---|---|---|---|---|
 | EVT-23 | Events stay with their space when it is converted or moved. | Content travels with the space (journey area, 083/084). | — | — | Specs 083, 084 |
-| EVT-24 | A creator who has left the community can still update and delete the events they created. **(open: F7)** | — | — | — the creator rule is keyed on the user, not on membership. | Not decided: exists in the code |
-| EVT-25 | When the creator's account no longer exists, the event still shows, without a creator, and nobody inherits the creator's rights. **(open: Q-EVT-25, F8)** | — | — | — | Not decided: exists in the code |
+| EVT-24 | A creator who has left the community can still update and delete the events they created. | Kept as it is for now: no capacity to change it (Product, 2026-11-20). Wanted, tracked: a creator's rights end when they leave the community (F7). | — | The creator rule is keyed on the user, not on membership. | Product, 2026-11-20 (was F7): behaviour stays, tracked |
+| EVT-25 | When the creator's account no longer exists, the event still shows, without a creator, and nobody inherits the creator's rights. **(open: F8)** | An event is content of the space, not of its creator, so it outlives the account; space admins keep managing it. Product, 2026-11-20. | — | — | Product, 2026-11-20 (was Q-EVT-25) |
 
 Numbering note: ids are contiguous; none folded.
 
@@ -111,19 +114,13 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 ### Product Lead
 
-[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 7 to answer
+[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 1 to answer
 
 **To answer**
 
 | ID | Area | Type | Question | Owner | Proposed answer | State |
 |---|---|---|---|---|---|---|
-| F1 | Exporting | decision | Should anyone be able to download the ICS file of an event in a public space without signing in? Today a visitor is sent to the login page, while two parked test cases cite a spec that wants download without an account. (The spec has to be found first, OQ1.) | Product Lead | — | open |
-| F3 | Reading | decision | Subspace events show on the parent calendar one level up only: a top-level space shows the events of its direct subspaces, and nothing from deeper levels. Is one level the product rule? | Product Lead | — | open |
-| F7 | Lifecycle | decision | A creator who has left the community can still update and delete the events they created. Is that intended? | Product Lead | — | open |
-| OQ3 | Dates | decision | Is Europe/Amsterdam the intended time-zone hint in the ICS file for every customer? It is fixed in the code and no spec states it. | Product Lead (Service Operations Lead for the per-environment side) | — | open |
-| Q-EVT-11 | Reading | decision | Why does this rule exist? An event reports the subspace it belongs to; no source states the reason beyond a schema note. | Product Lead | — | open |
-| Q-EVT-25 | Lifecycle | decision | Why does this rule exist? When the creator's account is gone the event still shows and nobody inherits the creator's rights; no source states the reason. (F8 asks what to do with the left-over id.) | Product Lead | — | open |
-| CONST | All | decision | 22 of the 27 constants are still blank in "product must rule?" (Appendix E). Which of them must product rule on? | Product Lead (Technical Lead and Security Lead for the rows pre-filled with their name) | — | open |
+| CONST | All | decision | 22 of the 27 constants are still blank in "product must rule?" (Appendix E). Which of them must product rule on? | Product Lead (Technical Lead and Security Lead for the rows pre-filled with their name) | Product, 2026-11-20: of the seven Product Lead rows, event types and notification events must be ruled on; the two description cuts carry over; roll-up, ICS redirects and creator rights follow F3, F1 and F7. The Technical and Security Lead rows are theirs to tick. | suggested |
 
 ### Technical Lead
 
@@ -137,13 +134,13 @@ _One section per role, so each owner reads only their own part. **To answer** li
 | F5 | Reading | tidy-up | One way of reading a single event through its calendar checks only the right to read the calendar, not the event. Harmless today, but inconsistent with the other two ways. Align it or drop the field? | Technical Lead | — | open |
 | F8 | Lifecycle | decision | When a creator's account is deleted, the event keeps the id of the deleted user and the creator rule that goes with it (server#4529). Leave it as cosmetic, or clear it when the user is deleted? | Technical Lead | — | open |
 | OQ4 | Dates | check | Does the notification for a new event use the same date check as the links and the ICS file? If so, F4 applies there too. The file was not found during the extraction. | Technical Lead | — | open |
-| Q-EVT-04 | Creating | decision | Why does this rule exist? An event's name identifier is unique within its calendar; no source states the reason. | Technical Lead | — | open |
+| Q-EVT-04 | Creating | decision | Why does this rule exist? An event's name identifier is unique within its calendar; no source states the reason. | Technical Lead | The name id is the last part of the event's web address (`url.generator.service.ts:1357`). The why is on EVT-04. | suggested |
 
 **Also involved**
 
 | ID | Area | Type | Question | Owner | Proposed answer | State |
 |---|---|---|---|---|---|---|
-| CONST | All | decision | 22 of the 27 constants are still blank in "product must rule?" (Appendix E). Which of them must product rule on? | Product Lead (Technical Lead and Security Lead for the rows pre-filled with their name) | — | open |
+| CONST | All | decision | 22 of the 27 constants are still blank in "product must rule?" (Appendix E). Which of them must product rule on? | Product Lead (Technical Lead and Security Lead for the rows pre-filled with their name) | Product, 2026-11-20: of the seven Product Lead rows, event types and notification events must be ruled on; the two description cuts carry over; roll-up, ICS redirects and creator rights follow F3, F1 and F7. The Technical and Security Lead rows are theirs to tick. | suggested |
 
 ### Quality Lead
 
@@ -154,7 +151,7 @@ _One section per role, so each owner reads only their own part. **To answer** li
 | ID | Area | Type | Question | Owner | Proposed answer | State |
 |---|---|---|---|---|---|---|
 | F2 | Exporting | test | Seven ICS cases are parked as todo, and one is skipped, on a note that a bearer token is refused. That note is stale: another suite downloads with a bearer token and gets the file. Un-park them? | Quality Lead | Yes: un-park the 7 ICS todos (content type, structure, location, markdown strip, VALUE=DATE, datetime). They are runnable today. | suggested |
-| OQ1 | Exporting | check | Which spec do the parked ICS cases cite ("User Story 3", "FR-005")? It is in neither the server nor the agents-hq specs. Find it (pull request #5860 or Zenhub) before F1 is answered. | Quality Lead | — | open |
+| OQ1 | Exporting | check | Which spec do the parked ICS cases cite ("User Story 3", "FR-005")? It is in neither the server nor the agents-hq specs. Find it (pull request #5860 or Zenhub) before F1 is answered. | Quality Lead | Found: client-web `specs/004-add-to-calendar/spec.md` on branch `4-add-to-calendar`, linked from client-web#9330. US3 is export from the notification email; FR-005 is RFC 5545. | suggested |
 | OQ2 | Calendar | check | On acceptance 247 timeline and calendar rows have an empty rights list. Are they left-overs, or live calendars that refuse everyone? Needs a look at the data, not at the code. | Quality Lead | — | open |
 | GAPS | All | test | 13 of the 25 rules have no test, several proven rules have untested parts, and 10 behaviours were never pinned down (Appendix D). Which get a case before the acceptance checklist is drawn from this file? | Quality Lead | — | open |
 
@@ -166,17 +163,13 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 | ID | Area | Type | Question | Owner | Proposed answer | State |
 |---|---|---|---|---|---|---|
-| CONST | All | decision | 22 of the 27 constants are still blank in "product must rule?" (Appendix E). Which of them must product rule on? | Product Lead (Technical Lead and Security Lead for the rows pre-filled with their name) | — | open |
+| CONST | All | decision | 22 of the 27 constants are still blank in "product must rule?" (Appendix E). Which of them must product rule on? | Product Lead (Technical Lead and Security Lead for the rows pre-filled with their name) | Product, 2026-11-20: of the seven Product Lead rows, event types and notification events must be ruled on; the two description cuts carry over; roll-up, ICS redirects and creator rights follow F3, F1 and F7. The Technical and Security Lead rows are theirs to tick. | suggested |
 
 ### Service Operations Lead
 
 [Service Operations Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Sub-circles/Operational%20Services/Roles/Service%20Operations%20Lead.md) · Delivery › Operational Services (Valentin) · 1 also involved
 
-**Also involved**
-
-| ID | Area | Type | Question | Owner | Proposed answer | State |
-|---|---|---|---|---|---|---|
-| OQ3 | Dates | decision | Is Europe/Amsterdam the intended time-zone hint in the ICS file for every customer? It is fixed in the code and no spec states it. | Product Lead (Service Operations Lead for the per-environment side) | — | open |
+Nothing left: OQ3, where this role was involved, was decided on 2026-11-20 (see Decided).
 
 ### Architecture Lead
 
@@ -187,6 +180,20 @@ _One section per role, so each owner reads only their own part. **To answer** li
 | ID | Area | Type | Question | Owner | Proposed answer | State |
 |---|---|---|---|---|---|---|
 | F6 | Creating | contract | The server stores an event's three duration values (minutes, days, multi-day flag) as the client sends them and never checks that they agree. Keep trusting the client, or work them out on the server in the new core? | Architecture Lead | — | open |
+
+### Decided
+
+**Decided and moved to Rules**
+
+| Was | Decision | Decided by | Now |
+|---|---|---|---|
+| CH-EVT-02 | Behaviour stays: only space admins create events. Wanted, tracked in alkem-io/alkemio#2205: members create events too. | Product, 2026-11-20 | EVT-02 |
+| F7 | Behaviour stays: a creator keeps their rights after leaving the community. Wanted, tracked: rights end on leaving. | Product, 2026-11-20 | EVT-24 |
+| Q-EVT-25 | The event stays when its creator's account is gone, and nobody inherits the creator's rights; space admins keep managing it. | Product, 2026-11-20 | EVT-25 |
+| OQ3 | Europe/Amsterdam is the intended ICS time-zone hint for every customer. | Product, 2026-11-20 | EVT-18 |
+| F1 | Downloading the ICS file keeps requiring sign-in; client-web spec 004 US3 scenario 4 (download from the email without signing in) is not adopted. | Product, 2026-11-20 | EVT-22 |
+| Q-EVT-11 | An event shown on a parent calendar names its subspace, as asked in client-web#6876. | Product, 2026-11-20 | EVT-11 |
+| F3 | A top-level space's calendar shows the events of its direct subspaces only; one level up is the product rule (as chosen in client-web#6876). | Product, 2026-11-20 | EVT-10 |
 
 ## Appendix
 
@@ -278,28 +285,28 @@ _"Rules on it" is pre-filled with the role whose domain covers the value: Produc
 
 | Constant | Value today | Source | product must rule? | Rules on it |
 |---|---|---|---|---|
-| Event types (6) | `event`, `deadline`, `meeting`, `milestone`, `training`, `other` | `src/common/enums/calendar.event.type.ts:3-10` | | Product Lead |
+| Event types (6) | `event`, `deadline`, `meeting`, `milestone`, `training`, `other` | `src/common/enums/calendar.event.type.ts:3-10` | yes (Product, 2026-11-20) | Product Lead |
 | Required fields on create | type, startDate, wholeDay, multipleDays, durationMinutes, visibleOnParentCalendar (+ profile displayName); optional durationDays, tags, nameID | `event.dto.create.ts` | | Technical Lead |
 | Required fields on every update | startDate, wholeDay, multipleDays, durationMinutes (type, durationDays, visibleOnParentCalendar optional) — a title-only edit is not expressible | `event.dto.update.ts:14-54` | F-6 | Technical Lead |
 | Whole-day wire convention | start = UTC-midnight `YYYY-MM-DDT00:00:00.000Z`; durationMinutes = (end − start) in minutes, 0 for one day; export end = last covered day + 1 (exclusive) | ADR 0001; `calendar.event.calendar-links.ts:67-91`; `event.dto.create.ts:36-39` | | Technical Lead |
 | Timed end | start + durationMinutes; `durationDays` is never added on top | `calendar.event.calendar-links.ts:235-242` | | Technical Lead |
 | Date-range rule | refuse when start > end, or start == end on a timed event; evaluated on read only | `calendar.event.calendar-links.ts:307-336` | F-4 | Technical Lead |
 | Accepted date format | ISO-8601 `YYYY-MM-DDTHH:mm:ss(.sss)Z` | `calendar.event.calendar-links.ts:304-305` | | Technical Lead |
-| Subspace roll-up | setting `collaboration.allowEventsFromSubspaces`, default `true` in all 4 platform templates; depth = direct L1 children of an L0 only; per-event flag `visibleOnParentCalendar` | templates; `calendar.service.ts:95-126` | F-3 | Product Lead |
+| Subspace roll-up | setting `collaboration.allowEventsFromSubspaces`, default `true` in all 4 platform templates; depth = direct L1 children of an L0 only; per-event flag `visibleOnParentCalendar` | templates; `calendar.service.ts:95-126` | decided (F3) (Product, 2026-11-20) | Product Lead |
 | Google link | `https://calendar.google.com/calendar/render?action=TEMPLATE&text=&dates=&details=&location=` (`dates=YYYYMMDD/YYYYMMDD` whole-day, `…THHMMSSZ/…` timed) | `calendar.event.calendar-links.ts:46` | | Technical Lead |
 | Outlook link | `https://outlook.office.com/calendar/deeplink/compose?subject=&startdt=&enddt=&body=&location=` + `&allday=true` for whole-day (`YYYY-MM-DD` dates) | `calendar.event.calendar-links.ts:47` | | Technical Lead |
-| Description cut in links | 1,000 characters of plain text (markdown stripped) | `calendar.event.calendar-links.ts:7, 31-33` | | Product Lead |
-| Description cut in ICS | 8,000 characters | `calendar.event.calendar-links.ts:8, 111-113` | | Product Lead |
+| Description cut in links | 1,000 characters of plain text (markdown stripped) | `calendar.event.calendar-links.ts:7, 31-33` | no (Product, 2026-11-20) | Product Lead |
+| Description cut in ICS | 8,000 characters | `calendar.event.calendar-links.ts:8, 111-113` | no (Product, 2026-11-20) | Product Lead |
 | ICS path | `<cluster><path_api_private_rest>/calendar/event/<id>/ics`; route `rest/calendar/event/:id/ics` | `url.generator.service.ts:1291-1296`; `rest.endpoint.ts:6` | | Technical Lead |
 | ICS headers | `Content-Type: text/calendar; charset=utf-8`; `Content-Disposition: attachment; filename="<nameID>.ics"`; `Cache-Control: no-store` | `calendar-event-ics.controller.ts:43-47` | | Technical Lead |
 | ICS body | `VERSION:2.0`, `PRODID:-//Alkemio//Calendar Event//EN`, `X-WR-TIMEZONE:Europe/Amsterdam`, `UID:<id>@alkem.io`, `DTSTAMP`, DTSTART/DTEND (`;VALUE=DATE` for whole-day), SUMMARY, DESCRIPTION (if any), LOCATION (if any), URL; CRLF; fold at 75 octets | `calendar.event.calendar-links.ts:106-178` | | Technical Lead |
 | ICS escaping | `\` → `\\`, newline → `\n`, `;` → `\;`, `,` → `\,` | `calendar.event.calendar-links.ts:138-144` | | Technical Lead |
 | ICS auth strategies | cookie session, non-interactive login (non-prod), Hydra bearer | `rest.guard.ts` | | Security Lead |
-| ICS redirects | no actor → `302 /login?returnUrl=<request url>`; no READ → `302 /restricted?returnUrl=<event page path>` | `calendar-event-ics.controller.ts:34-38`; `calendar-event-ics.redirect.filter.ts:29-43` | F-1 | Product Lead |
+| ICS redirects | no actor → `302 /login?returnUrl=<request url>`; no READ → `302 /restricted?returnUrl=<event page path>` | `calendar-event-ics.controller.ts:34-38`; `calendar-event-ics.redirect.filter.ts:29-43` | decided (F1) (Product, 2026-11-20) | Product Lead |
 | Location format | `addressLine1, addressLine2, city, stateOrProvince, postalCode, country` (blank parts dropped) | `calendar.event.calendar-links.ts:338-353` | | Technical Lead |
 | Comments room | type `calendar-event`, name `calendarEvent-comments-<nameID>` (renamed on title change) | `event.service.ts:64-67, 187-191` | | Technical Lead |
-| Creator rule | `credentialRule-calendarEventCreatedBy`: CREATE, READ, UPDATE, DELETE for `user-self-management:<createdBy>` on the event only | `event.service.authorization.ts:100-115`; `credential.rule.constants.ts:84-85` | F-7 | Product Lead |
-| Notification events | `SPACE_COMMUNITY_CALENDAR_EVENT_CREATED` (space audience with RECEIVE_NOTIFICATIONS, creator excluded; in-app category SPACE_MEMBER), `SPACE_COMMUNITY_CALENDAR_EVENT_COMMENT` (creator only); both under setting `space.communityCalendarEvents` | `notification.space.adapter.ts:365-440, 458-520`; `notification.recipients.service.ts:542-544, 718-731` | | Product Lead |
+| Creator rule | `credentialRule-calendarEventCreatedBy`: CREATE, READ, UPDATE, DELETE for `user-self-management:<createdBy>` on the event only | `event.service.authorization.ts:100-115`; `credential.rule.constants.ts:84-85` | decided (F7), tracked (Product, 2026-11-20) | Product Lead |
+| Notification events | `SPACE_COMMUNITY_CALENDAR_EVENT_CREATED` (space audience with RECEIVE_NOTIFICATIONS, creator excluded; in-app category SPACE_MEMBER), `SPACE_COMMUNITY_CALENDAR_EVENT_COMMENT` (creator only); both under setting `space.communityCalendarEvents` | `notification.space.adapter.ts:365-440, 458-520`; `notification.recipients.service.ts:542-544, 718-731` | yes (Product, 2026-11-20) | Product Lead |
 | Activity | `CALENDAR_EVENT_CREATED`, description `[<title>] - <description chars 1..100>`, parent = calendar | `activity.adapter.ts:195-215` | | Technical Lead |
 | Error text — nameID taken | `Unable to create CalendarEvent: the provided nameID is already taken: <nameID>` | `calendar.service.ts:145-147` | | Technical Lead |
 | Error texts — dates | `Invalid calendar event date format`, `Invalid calendar event date`, `Invalid calendar event date range` (details carry field/eventId/dates) | `calendar.event.calendar-links.ts:248-335` | | Technical Lead |
@@ -315,6 +322,10 @@ Per the rebuild briefing (`plan.md` § 1, catalogue), the calendar is a child of
 Extracted 2026-11-06 from three sources: server develop @ `eeecf9ddb` (Release/79) code + `schema.graphql`; the legacy server-api suite (`server-api/src/functional-api/calendar/`, 2 files, 43 cases — 33 run, 1 skipped, 9 todo); the specs, issues and docs listed in § Sources. Scope: the timeline/calendar every space carries, its events (create, read, update, delete), whole-day and timed date rules, the Google/Outlook/ICS exports, subspace events rolling up, who may act, and the notifications and activity an event produces. Membership, rooms (beyond the event's own comments) and notification delivery mechanics are their own areas. WHAT and WHY only — no mutations, fixtures or request params. Evidence paths are relative to the server repo unless prefixed `test ›` or `spec ›`. The fact base with every file:line is `calendar-dossier.md` beside this file.
 
 2026-11-19 converted to the three-section layout.
+
+2026-11-19 whys pass: every rule has at least one why, sourced where a spec, issue or code line states it and marked _(draft)_ where QA wrote it. Restating whys with no source were dropped where a sourced one remains. The two client-web issues behind PRs #4687 and #5860 (client-web#6876, #9330) and the client-web spec they link were added as sources; they answer OQ1, Q-EVT-04 and Q-EVT-11 and suggest an answer for F3.
+
+2026-11-20 product review by the Product Owner, on behalf of the Product Lead: F1, F3, OQ3, Q-EVT-11 and Q-EVT-25 decided; F7 and CH-EVT-02 decided as "behaviour stays", the wanted change tracked in `PRODUCT-ISSUES.md`; the product and business drafts confirmed; Appendix E ticked for the seven Product Lead constants. The four technical drafts are left for the Technical Lead.
 
 #### Sources
 
@@ -340,3 +351,4 @@ Specs / issues:
 - `agents-hq/specs/023-wholeday-calendar-timezone/spec.md`; `agents-hq/docs/decisions/0001-wholeday-calendar-utc-midnight-contract.md`
 - server `specs/015-timeline-comment-notification/spec.md`; `specs/061-ut-domain-timeline/spec.md` (unit-test scope only)
 - server#6267 (bug), #6271, #6279 (whole-day); #4529 (createdBy TODO); PRs #4687, #5860, #5946, #6284
+- client-web#6876 (subspace events on the parent calendar, behind PR #4687); client-web#9330 (add to personal calendar, behind PR #5860); client-web `specs/004-add-to-calendar/spec.md` on branch `4-add-to-calendar`
