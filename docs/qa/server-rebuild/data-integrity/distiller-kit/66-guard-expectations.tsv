@@ -1,0 +1,616 @@
+# 66-guard-expectations.tsv: what every guard must read. Read by 66-guard-summary.py.
+#
+# One row per guard heading, tab separated:
+#   slot <TAB> guard key <TAB> source <TAB> distilled <TAB> reason
+#
+# slot       the number of the output file (30-38, 41, 42, ...); for script 39 the number
+#            and the side database (39-synapse, 39-kratos, ...).
+# guard key  the heading text before its first ": ", " (" or " = ". Run
+#            66-guard-summary.py <label> --propose to print the key of every heading
+#            that has no row yet, with a first guess.
+# source     what the guard must read on a source backup, before reject and repair.
+# distilled  what it must read on the new database, after reject and repair.
+#
+# kinds:
+#   zero              every number in the block is 0 (a block with no rows passes)
+#   zero-but:<text>   the same, rows whose first cell holds <text> are left out
+#   empty             the block has no rows at all
+#   cells:a=0,b=t     every row reads these values in the named columns
+#   row:<text>:a=0    the rows whose first cell holds <text> read this value in column a
+#   equals:<n>        the block is one cell and it reads <n>
+#   head:<n>          the heading itself carries the value after " = " (script 41)
+#   match:<regex>     one line of the block matches
+#   a ; b             several checks, all must pass (space, semicolon, space)
+#   baseline          no fixed value: compared with the stored baseline of the label,
+#                     reported SAME or MOVED, never FAIL
+#   as-source         distilled only: the reading equals the reading of the same guard on the
+#                     source backup (--source <label>). For guards the copy and the repairs
+#                     must not move. FAIL when it differs
+#   agreed            distilled only: the reading equals the agreed reading stored for this
+#                     dataset (66-baselines/<label>.distilled.tsv). For guards that the copy or
+#                     a repair moves to a value that depends on the data. FAIL when it differs,
+#                     NO BASELINE on a new dataset until a person has read it and saved it
+#   open:<text>       a known open item: reported OPEN, never PASS. <text> names the work
+#   undecided         nobody has ruled what it must read. Reported UNDECIDED
+#   info | section    reported only; the heading must still be present
+#   note              the heading is a comment line of the guard before it
+#
+# A heading in the output with no row here is a FAIL line. So is a row here whose
+# heading is not in the output. A new guard therefore needs a new row.
+#
+# @slot lines: required = the run fails without the file; the other words say why a
+# missing file is only reported as NOT RUN.
+@slot	30-38	required
+@slot	39-synapse	needs the side database
+@slot	39-kratos	needs the side database
+@slot	39-hydra	needs the side database
+@slot	39-assistant	needs the side database
+@slot	39-filebackup	needs the side database
+@slot	39-wopi	needs the side database
+@slot	41	required
+@slot	42	needs the filebackup side database
+@slot	43	needs BLOB_DIR
+@slot	44	needs the synapse side database
+@slot	49	run by hand
+@slot	50	run by hand
+@slot	51	run by hand, needs the kratos side database
+@slot	53	run by hand, needs the synapse side database
+@slot	56	run by hand, needs the filebackup side database
+@slot	67	run by hand
+@slot	68	run by hand, needs a listing of the file volume
+
+# ---- slot 30-38
+30-38	=== 1 direct orphan rules	baseline	empty	section that holds row counts of the classifier steps | new database, ruled 2026-11-17: reads nothing after the copy
+30-38	=== A1 guards	section	section	section marker, must be present
+30-38	A1 G1	cells:rows_holding_an_old_agent_id=0	cells:rows_holding_an_old_agent_id=0	heading: no live column may hold an old agent id, so the second listing has no row. The first number is the size of the backup table
+30-38	A1 G2	baseline	zero	no expectation in the heading | new database, ruled 2026-11-17: every number 0 after the repairs
+30-38	A2 guard 1	zero	zero	heading expects zero, holds on acceptance
+30-38	A2 guard 2	zero	zero	heading expects zero, holds on acceptance
+30-38	A2 guard 3	baseline	zero	heading expects zero; acceptance reads a known non-zero, so the source run compares with the baseline. Confirm for the new database
+30-38	A2 guard 4	zero	zero	heading expects zero, holds on acceptance
+30-38	direct rule counts	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the copy and the repairs to a value that depends on the data
+30-38	=== 2 fixpoint propagation	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the copy to a value that depends on the data
+30-38	=== 3 per-table classification	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the copy and the repairs to a value that depends on the data
+30-38	finding totals	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the copy and the repairs to a value that depends on the data
+30-38	=== A3 guards	section	section	section marker, must be present
+30-38	A3 G1	baseline	as-source	no expectation in the heading | new database, ruled 2026-11-17: not moved by the copy or the repairs
+30-38	A3 G2	baseline	as-source	no expectation in the heading | new database, ruled 2026-11-17: not moved by the copy or the repairs
+30-38	A3 G3	baseline	empty	no expectation in the heading | new database, ruled 2026-11-17: reads nothing after the copy
+30-38	A3 G4	baseline	zero	no expectation in the heading | new database, ruled 2026-11-17: every number 0 after the copy
+30-38	A3 G5	row:user_group:count=0	row:user_group:count=0	heading: the user group row expects 0, the credential row is information
+30-38	A3 G6	baseline	as-source	heading states a partial expectation, not encoded yet | new database, ruled 2026-11-17: not moved by the copy or the repairs
+30-38	A3 G7	zero	zero	heading expects zero, holds on acceptance
+30-38	=== A4 guards	section	section	section marker, must be present
+30-38	A4 G1	zero	zero	heading expects zero, holds on acceptance
+30-38	A4 G2	baseline	empty	no expectation in the heading | new database, ruled 2026-11-17: reads nothing after the copy
+30-38	A4 G3	zero	zero	heading expects zero, holds on acceptance
+30-38	A4 G4	zero-but:info	zero-but:info	stated in the heading
+30-38	A4 G5	baseline	as-source	no expectation in the heading | new database, ruled 2026-11-17: not moved by the copy or the repairs
+30-38	A4 G6	cells:used_by_another_row=0,policy_row_missing=0	cells:used_by_another_row=0,policy_row_missing=0	stated in the heading
+30-38	A4 G7	cells:also_on_a_profile=0,used_by_a_file=0	cells:also_on_a_profile=0,used_by_a_file=0	stated in the heading
+30-38	A4 G8	cells:missing=0,shared=0	cells:missing=0,shared=0	stated in the heading
+30-38	=== A5 guards	section	section	section marker, must be present
+30-38	A5 G1	zero	zero	heading expects zero, holds on acceptance
+30-38	A5 G2	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the copy to a value that depends on the data
+30-38	A5 G2b	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the copy to a value that depends on the data
+30-38	A5 G3	zero	zero	heading expects zero, holds on acceptance
+30-38	A5 G4	zero-but:info	zero-but:info	stated in the heading
+30-38	=== A6 guards	section	section	section marker, must be present
+30-38	A6 G1	zero	zero	heading expects zero, holds on acceptance
+30-38	A6 G1b	baseline	as-source	no expectation in the heading | new database, ruled 2026-11-17: not moved by the copy or the repairs
+30-38	A6 G2a	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the copy to a value that depends on the data
+30-38	A6 G2b	baseline	zero	no expectation in the heading | new database, ruled 2026-11-17: every number 0 after the copy
+30-38	A6 G3	zero	zero	heading expects zero, holds on acceptance
+30-38	A6 G4	baseline	zero	no expectation in the heading | new database, ruled 2026-11-17: every number 0 after the repairs
+30-38	A6 G4b	baseline	empty	no expectation in the heading | new database, ruled 2026-11-17: reads nothing after the copy
+30-38	A6 G5	baseline	empty	no expectation in the heading | new database, ruled 2026-11-17: reads nothing after the copy
+30-38	A6 G6	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the copy and the repairs to a value that depends on the data
+30-38	A6 G7	baseline	empty	no expectation in the heading | new database, ruled 2026-11-17: reads nothing after the copy
+30-38	A6 G8	cells:present=t,policy_kept=t,under_platform=t,rejected_rows=0	cells:present=t,policy_kept=t,under_platform=t,rejected_rows=0	stated in the heading
+30-38	A6 G9	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the copy to a value that depends on the data
+30-38	=== A7 guards	section	section	section marker, must be present
+30-38	A7 G1	baseline	as-source	no expectation in the heading | new database, ruled 2026-11-17: not moved by the copy or the repairs
+30-38	A7 G2	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the copy to a value that depends on the data
+30-38	A7 G3	zero	zero	heading expects zero, holds on acceptance
+30-38	A7 G4	baseline	zero	no expectation in the heading | new database, ruled 2026-11-17: every number 0 after the copy
+30-38	A7 G5	baseline	as-source	no expectation in the heading | new database, ruled 2026-11-17: not moved by the copy or the repairs
+30-38	A7 G6	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the copy to a value that depends on the data
+30-38	A7 G7	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the copy to a value that depends on the data
+30-38	A7 G8	baseline	as-source	no expectation in the heading | new database, ruled 2026-11-17: not moved by the copy or the repairs
+30-38	A7 G9	zero	zero	heading expects zero, holds on acceptance
+30-38	A7 G10	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the copy to a value that depends on the data
+30-38	A7 G10b	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the copy to a value that depends on the data
+30-38	A7 G11	baseline	as-source	no expectation in the heading | new database, ruled 2026-11-17: not moved by the copy or the repairs
+30-38	A7 G12	baseline	as-source	no expectation in the heading | new database, ruled 2026-11-17: not moved by the copy or the repairs
+30-38	A7 G13	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the copy to a value that depends on the data
+30-38	A7 G14	baseline	as-source	no expectation in the heading | new database, ruled 2026-11-17: not moved by the copy or the repairs
+30-38	A7 G15	baseline	agreed	heading states a partial expectation, not encoded yet | new database, ruled 2026-11-17: moved by the copy to a value that depends on the data
+30-38	=== A8 guards	baseline	empty	section that holds row counts of the classifier steps | new database, ruled 2026-11-17: reads nothing after the copy and the repairs
+30-38	A8 G1	baseline	empty	no expectation in the heading | new database, ruled 2026-11-17: reads nothing after the copy
+30-38	A8 G2	baseline	agreed	heading states a partial expectation, not encoded yet | new database, ruled 2026-11-17: moved by the copy to a value that depends on the data
+30-38	A8 G3	baseline	empty	no expectation in the heading | new database, ruled 2026-11-17: reads nothing after the copy
+30-38	A8 G4	zero	zero	heading expects zero, holds on acceptance
+30-38	A8 G5	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the copy to a value that depends on the data
+30-38	A8 G6	baseline	empty	no expectation in the heading | new database, ruled 2026-11-17: reads nothing after the copy
+30-38	A8 G7	cells:reader_is_someone_else=0	cells:reader_is_someone_else=0	stated in the heading
+30-38	A8 G8	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the copy to a value that depends on the data
+30-38	A8 G9	cells:as_parent=0,as_top_level=0	cells:as_parent=0,as_top_level=0	stated in the heading
+30-38	A8 G10	baseline	empty	no expectation in the heading | new database, ruled 2026-11-17: reads nothing after the copy
+30-38	A8 G11	baseline	as-source	no expectation in the heading | new database, ruled 2026-11-17: not moved by the copy or the repairs
+30-38	A8 G12	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the repairs to a value that depends on the data
+30-38	=== A9 guards	baseline	empty	section that holds row counts of the classifier steps | new database, ruled 2026-11-17: reads nothing after the copy
+30-38	A9 G1	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the copy and the repairs to a value that depends on the data
+30-38	A9 G2	zero	zero	heading expects zero, holds on acceptance
+30-38	A9 G3	empty	empty	heading: only the two known columns are expected, so no row
+30-38	A9 G4	baseline	as-source	heading expects 0 but file rows that are a whiteboard or memo body have no policy by design (A9 G4b); what the new database must read is not ruled | new database, ruled 2026-11-17: not moved by the copy or the repairs
+30-38	A9 G4b	baseline	agreed	heading states a partial expectation, not encoded yet | new database, ruled 2026-11-17: moved by the copy to a value that depends on the data
+30-38	A9 G4c soundness	cells:without_pointer=0	cells:without_pointer=0	heading: 0 without a body file. The equal-counts half is not encoded
+30-38	A9 G4d soundness	cells:owner_is_live=0	cells:owner_is_live=0	stated in the heading
+30-38	A9 G5	zero	zero	heading expects zero, holds on acceptance
+30-38	A9 G6	baseline	agreed	heading states a partial expectation, not encoded yet | new database, ruled 2026-11-17: moved by the copy to a value that depends on the data
+30-38	A9 G7	baseline	as-source	no expectation in the heading | new database, ruled 2026-11-17: not moved by the copy or the repairs
+30-38	A9 G7b soundness	zero	zero	heading expects zero, holds on acceptance
+30-38	A9 G8	baseline	as-source	heading states a partial expectation, not encoded yet | new database, ruled 2026-11-17: not moved by the copy or the repairs
+30-38	A9 G9	baseline	empty	heading states a partial expectation, not encoded yet | new database, ruled 2026-11-17: reads nothing after the copy and the repairs
+30-38	A9 G9b	baseline	empty	no expectation in the heading | new database, ruled 2026-11-17: reads nothing after the copy
+30-38	A9 G9c	cells:with_retired_name=0,with_empty_rule=0	cells:with_retired_name=0,with_empty_rule=0	stated in the heading
+30-38	A9 G10	baseline	empty	no expectation in the heading | new database, ruled 2026-11-17: reads nothing after the copy
+30-38	A9 G10b	baseline	empty	no expectation in the heading | new database, ruled 2026-11-17: reads nothing after the copy
+30-38	A9 G11	baseline	as-source	no expectation in the heading | new database, ruled 2026-11-17: not moved by the copy or the repairs
+30-38	A9 G12	baseline	zero	no expectation in the heading | new database, ruled 2026-11-17: every number 0 after the copy
+30-38	A9 G13	baseline	empty	heading states a partial expectation, not encoded yet | new database, ruled 2026-11-17: reads nothing after the copy
+30-38	A9 G14	baseline	as-source	heading states a partial expectation, not encoded yet | new database, ruled 2026-11-17: not moved by the copy or the repairs
+30-38	A9 G15	baseline	as-source	no expectation in the heading | new database, ruled 2026-11-17: not moved by the copy or the repairs
+30-38	A9 G15b	baseline	as-source	no expectation in the heading | new database, ruled 2026-11-17: not moved by the copy or the repairs
+30-38	A9 G15c	baseline	as-source	no expectation in the heading | new database, ruled 2026-11-17: not moved by the copy or the repairs
+30-38	A9 G16	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the copy to a value that depends on the data
+30-38	A9 G17	baseline	zero	no expectation in the heading | new database, ruled 2026-11-17: every number 0 after the copy
+30-38	A9 G18	baseline	as-source	no expectation in the heading | new database, ruled 2026-11-17: not moved by the copy or the repairs
+30-38	A9 G19	baseline	empty	no expectation in the heading | new database, ruled 2026-11-17: reads nothing after the copy
+30-38	A3 G8	baseline	empty	no expectation in the heading | new database, ruled 2026-11-17: reads nothing after the copy
+30-38	=== A10 guards	section	section	section marker, must be present
+30-38	A10 G1	baseline	empty	no expectation in the heading | new database, ruled 2026-11-17: reads nothing after the copy
+30-38	A10 G2	baseline	empty	heading expects 0, acceptance lists 3 known entries that are re-pointed, not deleted; no repair file exists for them yet | new database, ruled 2026-11-17: reads nothing after the copy
+30-38	A10 G3	baseline	empty	no expectation in the heading | new database, ruled 2026-11-17: reads nothing after the copy
+30-38	A10 G4	zero	zero	heading expects zero, holds on acceptance
+30-38	A10 G5	zero	zero	heading expects zero, holds on acceptance
+30-38	A10 G6	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the copy to a value that depends on the data
+30-38	A10 G7	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the copy to a value that depends on the data
+30-38	A10 G8	baseline	empty	no expectation in the heading | new database, ruled 2026-11-17: reads nothing after the copy
+30-38	A10 G9	baseline	empty	no expectation in the heading | new database, ruled 2026-11-17: reads nothing after the copy
+30-38	A10 G10	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the copy to a value that depends on the data
+30-38	=== A11 guards	section	section	section marker, must be present
+30-38	A11 G1	baseline	empty	no expectation in the heading | new database, ruled 2026-11-17: reads nothing after the copy
+30-38	A11 G2	zero	zero	heading expects zero, holds on acceptance
+30-38	A11 G3	baseline	empty	heading expects no verification that names a live organization; the listing form cannot be checked by a number | new database, ruled 2026-11-17: reads nothing after the copy
+30-38	A11 G4	zero	zero	heading expects zero, holds on acceptance
+30-38	A11 G5	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the copy to a value that depends on the data
+30-38	A11 G6	cells:kept_with_rejected_principal=0,rejected_with_live_principal=0	cells:kept_with_rejected_principal=0,rejected_with_live_principal=0	stated in the heading
+30-38	A11 G7	baseline	empty	no expectation in the heading | new database, ruled 2026-11-17: reads nothing after the copy
+30-38	A11 G8	cells:kept_answers_without_application=0	cells:kept_answers_without_application=0	stated in the heading
+30-38	A11 G9	baseline	as-source	heading states a partial expectation, not encoded yet | new database, ruled 2026-11-17: not moved by the copy or the repairs
+30-38	=== 4 bug heritage	baseline	empty	section that holds row counts of the classifier steps | new database, ruled 2026-11-17: reads nothing after the copy and the repairs
+30-38	bug-heritage rule counts	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the repairs to a value that depends on the data
+30-38	=== B1 guards	section	section	section marker, must be present
+30-38	B1 G1 duplicate callout names	baseline	as-source	no expectation in the heading | new database, ruled 2026-11-17: not moved by the copy or the repairs
+30-38	B1 G2 callout with an empty name	baseline	empty	no expectation in the heading | new database, ruled 2026-11-17: reads nothing after the repairs
+30-38	B1 G3 duplicate innovation packs, templates and whiteboards	baseline	as-source	no expectation in the heading | new database, ruled 2026-11-17: not moved by the copy or the repairs
+30-38	B1 G4 duplicate direct conversations	baseline	as-source	no expectation in the heading | new database, ruled 2026-11-17: not moved by the copy or the repairs
+30-38	B1 G5 duplicate tag sets on one profile	baseline	as-source	no expectation in the heading | new database, ruled 2026-11-17: not moved by the copy or the repairs
+30-38	B1 G6 phase tags matching no phase	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the repairs to a value that depends on the data
+30-38	B1 G7	cells:also_in_reject_set=0	cells:also_in_reject_set=0	stated in the heading
+30-38	B1 G8	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the copy and the repairs to a value that depends on the data
+30-38	B1 G9	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the copy to a value that depends on the data
+30-38	B1 G10	baseline	as-source	no expectation in the heading | new database, ruled 2026-11-17: not moved by the copy or the repairs
+30-38	B1 G11	baseline	as-source	no expectation in the heading | new database, ruled 2026-11-17: not moved by the copy or the repairs
+30-38	B1 G12	baseline	as-source	no expectation in the heading | new database, ruled 2026-11-17: not moved by the copy or the repairs
+30-38	B1 G13	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the copy and the repairs to a value that depends on the data
+30-38	=== B2 guards	section	section	section marker, must be present
+30-38	B2 G1 the spaces with a hierarchy fault	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the repairs to a value that depends on the data
+30-38	B2 G2 the spaces to rename	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the repairs to a value that depends on the data
+30-38	B2 G3 soundness	baseline	zero	heading states a partial expectation, not encoded yet | new database, ruled 2026-11-17: every number 0 after the repairs
+30-38	B2 G4 rule totals and distinct spaces	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the repairs to a value that depends on the data
+30-38	B2 G5 overlap	zero	zero	heading expects zero, holds on acceptance
+30-38	B2 G6 duplicate handles, every twin	baseline	empty	no expectation in the heading | new database, ruled 2026-11-17: reads nothing after the repairs
+30-38	B2 G7 restricted handles by level	baseline	as-source	no expectation in the heading | new database, ruled 2026-11-17: not moved by the copy or the repairs
+30-38	B2 G8 hierarchy faults, per space	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the repairs to a value that depends on the data
+30-38	B2 G9 simulation	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the repairs to a value that depends on the data
+30-38	B2 G10 tree-wide soundness	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the repairs to a value that depends on the data
+30-38	B2 G11 tree-wide	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the repairs to a value that depends on the data
+30-38	B2 G12 handle format by level	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the repairs to a value that depends on the data
+30-38	B2 G13 top-level space handle that another kind of actor also uses; informational, the add	baseline	as-source	no expectation in the heading | new database, ruled 2026-11-17: not moved by the copy or the repairs
+30-38	B2 G14 origin of the hierarchy faults	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the repairs to a value that depends on the data
+30-38	=== B3 guards	section	section	section marker, must be present
+30-38	B3 G1 callouts whose declared type has no content	baseline	empty	no expectation in the heading | new database, ruled 2026-11-17: reads nothing after the repairs
+30-38	B3 G1b the same callouts by creation month	baseline	empty	no expectation in the heading | new database, ruled 2026-11-17: reads nothing after the repairs
+30-38	B3 G2 callouts declared without a type that carry content	baseline	as-source	no expectation in the heading | new database, ruled 2026-11-17: not moved by the copy or the repairs
+30-38	B3 G3 responses whose declared type has no content	baseline	empty	no expectation in the heading | new database, ruled 2026-11-17: reads nothing after the repairs
+30-38	B3 G4 office document with no file, and the invitation to a parent that does not exist	baseline	zero	no expectation in the heading | new database, ruled 2026-11-17: every number 0 after the repairs
+30-38	B3 G5 whiteboard callouts with no whiteboard	baseline	empty	no expectation in the heading | new database, ruled 2026-11-17: reads nothing after the repairs
+30-38	B3 G5b the same callouts	baseline	zero	no expectation in the heading | new database, ruled 2026-11-17: every number 0 after the repairs
+30-38	B3 G6 the same callouts	baseline	zero	no expectation in the heading | new database, ruled 2026-11-17: every number 0 after the repairs
+30-38	B3 G6b the same callouts by the day of their last write	baseline	empty	no expectation in the heading | new database, ruled 2026-11-17: reads nothing after the repairs
+30-38	B3 G6c origin	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the repairs to a value that depends on the data
+30-38	B3 G6d origin	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the copy to a value that depends on the data
+30-38	B3 G6e origin, dating method 1	baseline	empty	no expectation in the heading | new database, ruled 2026-11-17: reads nothing after the copy
+30-38	B3 G6f origin	cells:unowned_policies_with_the_whiteboard_creator_rule=0,unowned_policies_of_type_whiteboard=0,whiteboard_profiles_with_no_whiteboard=0	cells:unowned_policies_with_the_whiteboard_creator_rule=0,unowned_policies_of_type_whiteboard=0,whiteboard_profiles_with_no_whiteboard=0	stated in the heading
+30-38	B3 G6g origin, dating method 2	baseline	empty	no expectation in the heading | new database, ruled 2026-11-17: reads nothing after the repairs
+30-38	B3 G6h origin, dating method 2	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the repairs to a value that depends on the data
+30-38	B3 G6i origin	baseline	empty	no expectation in the heading | new database, ruled 2026-11-17: reads nothing after the copy and the repairs
+30-38	B3 G6i2 origin	baseline	empty	no expectation in the heading | new database, ruled 2026-11-17: reads nothing after the repairs
+30-38	B3 G6j origin	baseline	empty	no expectation in the heading | new database, ruled 2026-11-17: reads nothing after the copy
+30-38	B3 G6k origin	baseline	empty	no expectation in the heading | new database, ruled 2026-11-17: reads nothing after the copy
+30-38	B3 G7 can a lost whiteboard be linked back	cells:pairs_by_name_and_time=0	cells:pairs_by_name_and_time=0	stated in the heading
+30-38	B3 G8 the population the repaired callouts would join	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the copy and the repairs to a value that depends on the data
+30-38	B3 G8b whiteboard callouts with no whiteboard that do not fit the shape seen on acceptance	zero	zero	heading expects zero, holds on acceptance
+30-38	B3 G8c the callouts that do not fit, one line each	zero	zero	heading expects zero, holds on acceptance
+30-38	B3 G9 typeless callouts that carry a whiteboard, one line each	baseline	as-source	no expectation in the heading | new database, ruled 2026-11-17: not moved by the copy or the repairs
+30-38	B3 G9b comparison	baseline	as-source	no expectation in the heading | new database, ruled 2026-11-17: not moved by the copy or the repairs
+30-38	B3 G9c rows that hang under those whiteboards	baseline	as-source	no expectation in the heading | new database, ruled 2026-11-17: not moved by the copy or the repairs
+30-38	B3 G10 empty responses per callout	baseline	empty	no expectation in the heading | new database, ruled 2026-11-17: reads nothing after the repairs
+30-38	B3 G10b what a user sees on each callout that holds an empty response	baseline	empty	no expectation in the heading | new database, ruled 2026-11-17: reads nothing after the repairs
+30-38	B3 G10c where those callouts sit	baseline	empty	no expectation in the heading | new database, ruled 2026-11-17: reads nothing after the repairs
+30-38	B3 G11 proof that the missing content once existed	baseline	empty	no expectation in the heading | new database, ruled 2026-11-17: reads nothing after the repairs
+30-38	B3 G11b comparison	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the copy to a value that depends on the data
+30-38	B3 G12 activity rows that name an empty response itself	zero	zero	heading expects zero, holds on acceptance
+30-38	B3 G12b any other row that names an empty response	match:columns with a hit: 0$	match:(columns with a hit: 0$|no empty responses, scan skipped)	stated in the heading | new database: after the B3 repair there is no empty response left, the guard then prints "scan skipped" (ruled 2026-11-17)
+30-38	B3 G13 office document with no file, one line each	baseline	as-source	no expectation in the heading | new database, ruled 2026-11-17: not moved by the copy or the repairs
+30-38	B3 G14 invitations with the add-to-parent option, by whether the space has a parent and by	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the repairs to a value that depends on the data
+30-38	B3 G14b the defect invitations, one line each	baseline	empty	no expectation in the heading | new database, ruled 2026-11-17: reads nothing after the repairs
+30-38	B3 G14c top-level spaces that an activity row shows were created as a subspace, and their 	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the repairs to a value that depends on the data
+30-38	B3 G14d invitations of people not yet on the platform with the same option	cells:with_the_option_and_no_parent=0	cells:with_the_option_and_no_parent=0	stated in the heading
+30-38	B3 G15 B3 rows that the reject set already takes	zero	zero	heading expects zero, holds on acceptance
+30-38	B3 G15b B3 callouts whose callout row is rejected	zero	zero	heading expects zero, holds on acceptance
+30-38	=== B4 guards	section	section	section marker, must be present
+30-38	B4 G1 policies with a type outside the vocabulary	baseline	empty	no expectation in the heading | new database, ruled 2026-11-17: reads nothing after the repairs
+30-38	B4 G2 licences with a type outside the vocabulary	baseline	empty	no expectation in the heading | new database, ruled 2026-11-17: reads nothing after the repairs
+30-38	B4 G3 storage aggregators with no type	baseline	empty	no expectation in the heading | new database, ruled 2026-11-17: reads nothing after the repairs
+30-38	B4 G4 rooms with an empty type	baseline	empty	no expectation in the heading | new database, ruled 2026-11-17: reads nothing after the repairs
+30-38	B4 G5 platform invitations naming a role outside the vocabulary	baseline	empty	no expectation in the heading | new database, ruled 2026-11-17: reads nothing after the repairs
+30-38	B4 G6 phase names with a comma	baseline	as-source	no expectation in the heading | new database, ruled 2026-11-17: not moved by the copy or the repairs
+30-38	B4 second pass	info	info	title line of a group of guards, no reading
+30-38	B4 G7 every policy whose type is outside the list	baseline	empty	no expectation in the heading | new database, ruled 2026-11-17: reads nothing after the copy and the repairs
+30-38	B4 G8 policy type per owner table, every owner row	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the copy and the repairs to a value that depends on the data
+30-38	B4 G8b a row that two owners point at cannot be mapped by its owner	zero	zero	stated in the heading
+30-38	B4 G9 licences of role sets	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the copy and the repairs to a value that depends on the data
+30-38	B4 G9b every licence whose type is outside the list	baseline	empty	no expectation in the heading | new database, ruled 2026-11-17: reads nothing after the copy and the repairs
+30-38	B4 G10 storage aggregators of accounts	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the copy and the repairs to a value that depends on the data
+30-38	B4 G10b every aggregator whose type is outside the list	baseline	empty	no expectation in the heading | new database, ruled 2026-11-17: reads nothing after the copy and the repairs
+30-38	B4 G11 comment rooms of calendar events	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the repairs to a value that depends on the data
+30-38	B4 G11b every room whose type is outside the list	baseline	empty	no expectation in the heading | new database, ruled 2026-11-17: reads nothing after the repairs
+30-38	B4 G12 platform invitations that name a role outside the list, one line each	baseline	empty	no expectation in the heading | new database, ruled 2026-11-17: reads nothing after the repairs
+30-38	B4 G12b all platform invitations by role set kind	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the repairs to a value that depends on the data
+30-38	B4 G13 the same wrong role values in the two other places the server keeps role names	zero	zero	heading expects zero, holds on acceptance
+30-38	B4 G13b seen in passing, not one of the six B4 rules	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the copy to a value that depends on the data
+30-38	B4 G14 did the migration that retires the old platform roles run on this dataset, and did 	baseline	as-source	no expectation in the heading | new database, ruled 2026-11-17: not moved by the copy or the repairs
+30-38	B4 G15 phase names with a comma, one line each	baseline	as-source	no expectation in the heading | new database, ruled 2026-11-17: not moved by the copy or the repairs
+30-38	B4 G16 seen in passing, not part of B4	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the repairs to a value that depends on the data
+30-38	=== B5 guards	baseline	as-source	section that holds row counts of the classifier steps | new database, ruled 2026-11-17: not moved by the copy or the repairs
+30-38	B5 G1 the files outside their bucket limits	baseline	as-source	no expectation in the heading | new database, ruled 2026-11-17: not moved by the copy or the repairs
+30-38	B5 G1b rule count in heritage against the count evaluated here	baseline	as-source	heading states a partial expectation, not encoded yet | new database, ruled 2026-11-17: not moved by the copy or the repairs
+30-38	B5 G2 bucket limit shapes	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the copy to a value that depends on the data
+30-38	B5 G3 buckets with no limit, size limit 0 or empty type list	baseline	as-source	heading states a partial expectation, not encoded yet | new database, ruled 2026-11-17: not moved by the copy or the repairs
+30-38	B5 G4 the files over the size limit	baseline	as-source	no expectation in the heading | new database, ruled 2026-11-17: not moved by the copy or the repairs
+30-38	B5 G4b every file larger than 15 MB, by year	baseline	as-source	no expectation in the heading | new database, ruled 2026-11-17: not moved by the copy or the repairs
+30-38	B5 G5 the files whose type the bucket does not list	baseline	as-source	no expectation in the heading | new database, ruled 2026-11-17: not moved by the copy or the repairs
+30-38	B5 G6 every empty file, size 0	baseline	as-source	heading states a partial expectation, not encoded yet | new database, ruled 2026-11-17: not moved by the copy or the repairs
+30-38	B5 G7 all office documents	baseline	agreed	heading states a partial expectation, not encoded yet | new database, ruled 2026-11-17: moved by the copy to a value that depends on the data
+30-38	B5 G8 office documents per month and how many are still empty	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the copy to a value that depends on the data
+30-38	=== C1 organizations without an owner	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the copy to a value that depends on the data
+30-38	=== C2 users without a login binding	baseline	as-source	no expectation in the heading | new database, ruled 2026-11-17: not moved by the copy or the repairs
+30-38	=== C3 VC bindings in comment rooms	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the repairs to a value that depends on the data
+30-38	C3 resolution	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the copy and the repairs to a value that depends on the data
+30-38	=== C4 credential hygiene	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the copy and the repairs to a value that depends on the data
+30-38	=== C5 creator / author attribution	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the copy and the repairs to a value that depends on the data
+30-38	=== C6 file contents missing from storage — NOT answerable from the DB alone	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the copy to a value that depends on the data
+30-38	=== C7 URL handles	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the repairs to a value that depends on the data
+30-38	=== C8 role definitions scoped to the wrong space	baseline	zero	no expectation in the heading | new database, ruled 2026-11-17: every number 0 after the repairs
+30-38	=== C9 other visible inconsistencies	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the copy and the repairs to a value that depends on the data
+30-38	=== C guards	section	section	section marker, must be present
+30-38	C1 G1 organizations without an owner	baseline	as-source	heading states a partial expectation, not encoded yet | new database, ruled 2026-11-17: not moved by the copy or the repairs
+30-38	C1 G2 soundness of account control, both directions, holders only	zero	zero	stated in the heading
+30-38	C1 G3 organization role and account credentials with no holder	baseline	empty	no expectation in the heading | new database, ruled 2026-11-17: reads nothing after the copy
+30-38	C1 G4 the comparison shape, organizations WITH an owner	cells:no_account_admin=0	cells:no_account_admin=0	stated in the heading
+30-38	C1 G5 is an owner the normal shape	baseline	as-source	no expectation in the heading | new database, ruled 2026-11-17: not moved by the copy or the repairs
+30-38	C1 G6 bulk batches that bend the picture	baseline	as-source	no expectation in the heading | new database, ruled 2026-11-17: not moved by the copy or the repairs
+30-38	C1 G7 when the owner came, organizations with an owner	baseline	as-source	no expectation in the heading | new database, ruled 2026-11-17: not moved by the copy or the repairs
+30-38	C1 G8 role limits stored on organization role sets	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the copy to a value that depends on the data
+30-38	C1 G9 organizations above the stored limits	baseline	as-source	no expectation in the heading | new database, ruled 2026-11-17: not moved by the copy or the repairs
+30-38	C1 G10 top-level spaces of organizations nobody can act for	baseline	as-source	no expectation in the heading | new database, ruled 2026-11-17: not moved by the copy or the repairs
+30-38	C1 G11 organization role sets with no organization	baseline	zero	heading states a partial expectation, not encoded yet | new database, ruled 2026-11-17: every number 0 after the copy
+30-38	C2 G1 users without a login binding	baseline	agreed	moved by the repair 100-a6-associate-repair.sql since 2026-11-19: 5 users without a binding hold owner or admin of an organization and get associate
+30-38	C2 G2 soundness	zero	zero	stated in the heading
+30-38	C2 G3 users by year made, with and without a login binding. The binding column exists sinc	baseline	as-source	no expectation in the heading | new database, ruled 2026-11-17: not moved by the copy or the repairs
+30-38	C2 G4 stored e-mail that is not all lower case or has spaces around it, by binding. At log	baseline	as-source	no expectation in the heading | new database, ruled 2026-11-17: not moved by the copy or the repairs
+30-38	C2 G5 what the users without a binding hold	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the repairs to a value that depends on the data
+30-38	C2 G6 organizations and spaces where a user without a binding is in charge, and how many o	baseline	as-source	no expectation in the heading | new database, ruled 2026-11-17: not moved by the copy or the repairs
+30-38	C2 G7 users without a binding	baseline	as-source	no expectation in the heading | new database, ruled 2026-11-17: not moved by the copy or the repairs
+30-38	C3 G1 rooms holding a binding to a virtual contributor that is gone	baseline	empty	no expectation in the heading | new database, ruled 2026-11-17: reads nothing after the repairs
+30-38	C3 G2 every binding by what its id names and by the state of the externalThreadId key	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the repairs to a value that depends on the data
+30-38	C3 G3 can the old ids be rewritten safely	baseline	as-source	no expectation in the heading | new database, ruled 2026-11-17: not moved by the copy or the repairs
+30-38	C3 G4 shape of the binding data	cells:rooms_without_the_map=0,other_top_keys=0,binding_not_an_object=0,unknown_binding_keys=0,vc_id_missing_or_not_a_uuid=0,thread_not_a_chat_message_id=0,binding_in_another_kind_of_room=0,rooms_with_bindings_nothing_owns=0	cells:rooms_without_the_map=0,other_top_keys=0,binding_not_an_object=0,unknown_binding_keys=0,vc_id_missing_or_not_a_uuid=0,thread_not_a_chat_message_id=0,binding_in_another_kind_of_room=0,rooms_with_bindings_nothing_owns=0	heading: 0 on every column but the first two
+30-38	C3 G5 bindings against the reject set	cells:bindings_whose_vc_is_in_the_reject_set=0,bindings_in_a_rejected_room=0	cells:bindings_whose_vc_is_in_the_reject_set=0,bindings_in_a_rejected_room=0	stated in the heading
+30-38	C3 G6 virtual contributors of organizations without an owner, counted two ways. The archit	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the copy to a value that depends on the data
+30-38	C4 G1 repeated credentials	baseline	zero	no expectation in the heading | new database, ruled 2026-11-17: every number 0 after the copy and the repairs
+30-38	C4 G2 credentials with an empty target whose type is NOT global by design	zero	zero	heading expects zero, holds on acceptance
+30-38	C4 G3 top-level spaces holding only lapsed plus credentials	baseline	as-source	no expectation in the heading | new database, ruled 2026-11-17: not moved by the copy or the repairs
+30-38	C4 G4 repeated credentials	baseline	zero	no expectation in the heading | new database, ruled 2026-11-17: every number 0 after the copy and the repairs
+30-38	C4 G5 the copies inside a repeated group that has a holder	baseline	empty	no expectation in the heading | new database, ruled 2026-11-17: reads nothing after the repairs
+30-38	C4 G6 when the later copy of a repeated group was made, by type and month. One moment for 	baseline	empty	no expectation in the heading | new database, ruled 2026-11-17: reads nothing after the repairs
+30-38	C4 G7 the live generator	baseline	as-source	heading states a partial expectation, not encoded yet | new database, ruled 2026-11-17: not moved by the copy or the repairs
+30-38	C4 G8 the live generator in the data	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the repairs to a value that depends on the data
+30-38	C4 G9 what a repeat changes today. The server counts members and leads as credential rows	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the copy and the repairs to a value that depends on the data
+30-38	C4 G10 soundness of a merge	baseline	as-source	no expectation in the heading | new database, ruled 2026-11-17: not moved by the copy or the repairs
+30-38	C4 G11 credentials with an empty target, by type and kind of holder, crossed with the reje	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the copy to a value that depends on the data
+30-38	C4 G12 soundness of the empty target	zero	zero	stated in the heading
+30-38	C4 G13 the three credentials every user gets when the user is made	baseline	as-source	no expectation in the heading | new database, ruled 2026-11-17: not moved by the copy or the repairs
+30-38	C4 G14 credentials with an expiry date, by type. The lapse is measured twice	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the copy and the repairs to a value that depends on the data
+30-38	C4 G15 the plan of a top-level space, read two ways	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: not moved by the copy or the repairs | 2026-11-20: moved by 125-space-free-plan-repair.sql when the run has FREE_PLAN_RULED=yes (the line none/none goes, free grows by the same number): compare with the agreed reading, not the source
+30-38	C4 G16 is the lapse enforced? The stored licence of the spaces whose plus credentials have	baseline	as-source	no expectation in the heading | new database, ruled 2026-11-17: not moved by the copy or the repairs
+30-38	C4 G17 soundness of G16	baseline	as-source	no expectation in the heading | new database, ruled 2026-11-17: not moved by the copy or the repairs
+30-38	C4 G18 licence credentials by type	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the copy and the repairs to a value that depends on the data
+30-38	C4 G19 the subspace admin credential that stays behind	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the copy and the repairs to a value that depends on the data
+30-38	C4 G20 the subspace admin credentials by the level of the space they sit on. A level 2 sub	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the copy and the repairs to a value that depends on the data
+30-38	C5 G1 creator gone	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the copy to a value that depends on the data
+30-38	C5 G2 soundness	empty	empty	stated in the heading
+30-38	C5 G3 soundness	zero	zero	heading expects zero, holds on acceptance
+30-38	C5 G4 every column that names a person	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the copy and the repairs to a value that depends on the data
+30-38	C5 G5 the same columns against the reject set of the reconstruction	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the copy and the repairs to a value that depends on the data
+30-38	C5 G6 who the gone ids were	cells:is_an_old_agent_id=0	cells:is_an_old_agent_id=0	stated in the heading
+30-38	C5 G6b gone ids by the year of their first row and of their last row in any of the columns	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the copy to a value that depends on the data
+30-38	C5 G7 rows that store a system id of the legacy server as the person, in any column, and a	cells:actor_rows_with_a_system_id=0	cells:actor_rows_with_a_system_id=0	stated in the heading
+30-38	C5 G8 columns that do not allow an empty value and hold a gone person	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the copy to a value that depends on the data
+30-38	C5 G9 audit entries by category	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the repairs to a value that depends on the data
+30-38	C5 G10 in-app notifications	cells:payload_names_a_gone_actor=0	cells:payload_names_a_gone_actor=0	stated in the heading
+30-38	C5 G11 where the empty creators come from. Callouts	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the copy to a value that depends on the data
+30-38	C5 G12 activity	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the copy to a value that depends on the data
+30-38	C5 G13 stored creator rights	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the copy and the repairs to a value that depends on the data
+30-38	C5 G13b creator rules with an empty person, by policy type, and how many user-self credent	cells:credentials_that_could_match=0	cells:credentials_that_could_match=0	stated in the heading
+30-38	C6 G1 how many file rows share one stored blob	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the copy to a value that depends on the data
+30-38	C6 G2 office documents	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the copy to a value that depends on the data
+30-38	C6 G3 file rows by what the backup queue holds for their blob. A blob is the stored conten	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the copy to a value that depends on the data
+30-38	C6 G4 the file rows with content on a skipped blob, by the month the row was made. first_r	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the copy to a value that depends on the data
+30-38	C6 G5 every place that points at a file row, by the state of that row. Lines file row does	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the copy to a value that depends on the data
+30-38	C6 G6 soundness of G5	zero	zero	heading expects zero, holds on acceptance
+30-38	C6 G7 file rows with content that none of the places of G5 points at, by queue status. Not	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the copy to a value that depends on the data
+30-38	C6 G8 blobs shared between kept and rejected file rows. The bytes of such a blob must stay	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the copy to a value that depends on the data
+30-38	C6 G9 file rows whose key is not a content hash of 64 lowercase hex characters. The one-ti	baseline	as-source	no expectation in the heading | new database, ruled 2026-11-17: not moved by the copy or the repairs
+30-38	C6 G10 the backup queue itself	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the copy and the repairs to a value that depends on the data
+30-38	C6 G11 where the storage of each top-level space hangs. Storage forms a tree	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the repairs to a value that depends on the data
+30-38	C6 G12 the links of G5 whose file row does not exist, by the kind of host the link names. 	baseline	as-source	no expectation in the heading | new database, ruled 2026-11-17: not moved by the copy or the repairs
+30-38	C7 G1 stored text that holds platform URLs	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the copy to a value that depends on the data
+30-38	C7 G2 handles the current server would itself refuse	baseline	as-source	no expectation in the heading | new database, ruled 2026-11-17: not moved by the copy or the repairs
+30-38	C7 G3 handles that fail the new rule	cells:rejected=0,other_shape=0	cells:rejected=0,other_shape=0	stated in the heading
+30-38	C7 G4 the same handles by the year they were made	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the repairs to a value that depends on the data
+30-38	C7 G5 handles on a restricted word, per kind	cells:on_server_route_word=0,on_client_route_word=0	cells:on_server_route_word=0,on_client_route_word=0	stated in the heading
+30-38	C7 G6 the word lists themselves, read from the code	baseline	as-source	no expectation in the heading | new database, ruled 2026-11-17: not moved by the copy or the repairs
+30-38	C7 G7 two rows of one kind on one handle, in the scope where the current server looks a ha	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the repairs to a value that depends on the data
+30-38	C7 G8 one handle held by rows of two kinds	baseline	as-source	no expectation in the heading | new database, ruled 2026-11-17: not moved by the copy or the repairs
+30-38	C7 G9 a subspace whose handle is also the handle of a callout in its parent space	baseline	as-source	no expectation in the heading | new database, ruled 2026-11-17: not moved by the copy or the repairs
+30-38	C7 G10 rows that share one full address in the current scheme	baseline	agreed	heading states a partial expectation, not encoded yet | new database, ruled 2026-11-17: moved by the repairs to a value that depends on the data
+30-38	C7 G11 the other parent groups of C7 G10 by where the twin space sits	baseline	empty	no expectation in the heading | new database, ruled 2026-11-17: reads nothing after the repairs
+30-38	C7 G12 rows with no handle at all	baseline	cells:no_handle=0	heading: 0 rows after repair 57. Acceptance before the repair reads 1
+30-38	C7 G13 stored platform addresses that name one of the failing handles of C7 G3 as a whole 	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the copy to a value that depends on the data
+30-38	C8 G1 role definitions scoped to another space	baseline	empty	no expectation in the heading | new database, ruled 2026-11-17: reads nothing after the repairs
+30-38	C8 G2 soundness	baseline	zero	heading expects zero; acceptance reads a known non-zero, so the source run compares with the baseline. Confirm for the new database
+30-38	C8 G3	baseline	zero	no expectation in the heading | new database, ruled 2026-11-17: every number 0 after the repairs
+30-38	C8 G4 the wrong-scope spaces against the reject set	cells:spaces_in_reject_set=0,role_sets_in_reject_set=0,definitions_in_reject_set=0	cells:spaces_in_reject_set=0,role_sets_in_reject_set=0,definitions_in_reject_set=0	stated in the heading
+30-38	C8 G5 origin	cells:wrong_scope_among_them=0	cells:wrong_scope_among_them=0	stated in the heading
+30-38	C8 G6 credentials that sit on a named id, by type	baseline	zero	no expectation in the heading | new database, ruled 2026-11-17: every number 0 after the repairs
+30-38	C8 G7 people per wrong-scope space as the server reads it today	baseline	empty	no expectation in the heading | new database, ruled 2026-11-17: reads nothing after the repairs
+30-38	C8 G8 evidence that the people read as role holders of a wrong-scope space were put in tha	baseline	zero	no expectation in the heading | new database, ruled 2026-11-17: every number 0 after the repairs
+30-38	C8 G9 the named spaces that are sound themselves	baseline	zero	no expectation in the heading | new database, ruled 2026-11-17: every number 0 after the repairs
+30-38	C8 G10 the cases a repair cannot treat like the rest	baseline	zero	no expectation in the heading | new database, ruled 2026-11-17: every number 0 after the copy and the repairs
+30-38	C8 G11 the two credentials the server derives from the admin definition and so also puts o	baseline	empty	no expectation in the heading | new database, ruled 2026-11-17: reads nothing after the repairs
+30-38	for comparison, the same rule on spaces this finding does not touch	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the repairs to a value that depends on the data
+30-38	C8 G12 parent credentials	baseline	agreed	heading states a partial expectation, not encoded yet | new database, ruled 2026-11-17: moved by the repairs to a value that depends on the data
+30-38	for context, a second neighbour in the same lists	baseline	zero	no expectation in the heading | new database, ruled 2026-11-17: not moved by the copy or the repairs | 2026-11-20: 0 after 105-member-lead-list-repair.sql, which writes every lead list as the chain (source: 56)
+30-38	C8 G13 a neighbour of this finding, counted here and not repaired by it	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the repairs to a value that depends on the data
+30-38	C8 G14 another neighbour, QA register A1, separate from this finding	baseline	zero	no expectation in the heading | new database, ruled 2026-11-19: every number 0 after the repair 94-a1-repair.sql
+30-38	C8 G15 soundness of space roles, to run on any data set and again after a repair. Expect 0	baseline	cells:definitions_naming_another_id=0,definitions_with_another_credential_type=0,spaces_without_exactly_one_member_lead_and_admin_definition=0	heading: 0 on the first three columns after repair 58. Acceptance before the repair reads 162, 0, 0
+30-38	for context, one more neighbour	baseline	zero	no expectation in the heading | new database, ruled 2026-11-17: every number 0 after the copy
+30-38	C9 G1 empty display names by profile type	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the copy to a value that depends on the data
+30-38	C9 G2 organizations matching a test-data pattern	baseline	as-source	no expectation in the heading | new database, ruled 2026-11-17: not moved by the copy or the repairs
+30-38	C9 G3 link responses with an empty URL	baseline	as-source	no expectation in the heading | new database, ruled 2026-11-17: not moved by the copy or the repairs
+30-38	C9 G4 the two profiles of a space	cells:in_reject_set=0	cells:in_reject_set=0	heading: in_reject_set expects 0. The equal-counts half is not encoded
+30-38	C9 G5 profiles holding two tag sets with the same name when case is ignored, by profile ty	cells:with_tags_in_either=0	cells:with_tags_in_either=0	stated in the heading
+30-38	C9 G6 phases with a blank name, by where the flow sits	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the copy to a value that depends on the data
+30-38	C9 G7 flows that hold the same phase name twice	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the copy to a value that depends on the data
+30-38	C9 G8 flows holding more phases than their stored maximum, by where the flow sits. Ruling	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the copy to a value that depends on the data
+30-38	C9 G9 titles outside the limits the server applies to typed input today	baseline	as-source	no expectation in the heading | new database, ruled 2026-11-17: not moved by the copy or the repairs
+30-38	C9 G10 empty display names against all profiles of the type	cells:nameless_space_abouts=0	cells:nameless_space_abouts=0	stated in the heading
+30-38	C9 G11 link responses with an empty address	cells:in_reject_set=0	cells:in_reject_set=0	stated in the heading
+30-38	C9 G12 virtual contributor display names carried by more than one contributor	baseline	as-source	heading states a partial expectation, not encoded yet | new database, ruled 2026-11-17: not moved by the copy or the repairs
+30-38	C9 G13 organizations sharing a value	baseline	as-source	no expectation in the heading | new database, ruled 2026-11-17: not moved by the copy or the repairs
+30-38	C9 G14 placeholder organization data, found from the data itself	baseline	as-source	no expectation in the heading | new database, ruled 2026-11-17: not moved by the copy or the repairs
+30-38	C9 G15 what a delete by that pattern would take	baseline	as-source	no expectation in the heading | new database, ruled 2026-11-17: not moved by the copy or the repairs
+30-38	=== done	section	section	section marker, must be present
+30-38	=== owner split	section	section	section marker, must be present
+30-38	owner split 1	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the copy and the repairs to a value that depends on the data
+30-38	owner split 2	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the copy to a value that depends on the data
+30-38	owner split VERDICT: links on which a rejected row has a kept row at the other end	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the copy to a value that depends on the data
+30-38	=== owner split done	section	section	section marker, must be present
+30-38	=== closure scan	baseline	empty	section that holds row counts of the classifier steps | new database, ruled 2026-11-17: reads nothing after the copy and the repairs
+30-38	closure scan: ids in the reject set, by table	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the copy and the repairs to a value that depends on the data
+30-38	closure scan VERDICT	baseline	agreed	heading expects zero; acceptance reads a known non-zero, so the source run compares with the baseline (references from kept rows, each with a ruling, and from the migration backup tables). Confirm for the new database | new database, ruled 2026-11-17: not zero by ruling. The unmodified classifier still marks the virtual contributors kept under T1, so kept activity rows that name them are counted here. They name rows that exist. Read the lines of the guard below it: only T1 rows may appear
+30-38	closure scan: kept rows that name a rejected row	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the copy to a value that depends on the data
+30-38	closure scan: references held only by rejected rows	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the copy to a value that depends on the data
+30-38	=== closure scan done	section	section	section marker, must be present
+
+# ---- slot 39-assistant
+39-assistant	closure scan VERDICT for this database	cells:columns_with_refs=0,refs=0	cells:columns_with_refs=0,refs=0	stated in the heading
+
+# ---- slot 39-filebackup
+39-filebackup	closure scan VERDICT for this database	cells:columns_with_refs=0,refs=0	cells:columns_with_refs=0,refs=0	stated in the heading
+
+# ---- slot 39-hydra
+39-hydra	closure scan VERDICT for this database	cells:columns_with_refs=0,refs=0	cells:columns_with_refs=0,refs=0	stated in the heading
+
+# ---- slot 39-kratos
+39-kratos	closure scan VERDICT for this database	cells:columns_with_refs=0,refs=0	cells:columns_with_refs=0,refs=0	stated in the heading
+
+# ---- slot 39-synapse
+39-synapse	closure scan VERDICT for this database	baseline	open:the chat server still holds rows of rejected rooms and actors; the copy does not touch it. Needs a chat-server step (A10)	heading expects zero; acceptance reads a known non-zero, so the source run compares with the baseline (chat server rows of rejected rooms and actors, A10). Confirm for the new database
+39-synapse	Matrix accounts of rejected actors, by kind	baseline	as-source	heading states a partial expectation, not encoded yet | new database, ruled 2026-11-17: not moved by the copy or the repairs
+39-synapse	Matrix accounts of rejected actors	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the copy to a value that depends on the data
+39-synapse	A10 S1	baseline	empty	heading states a partial expectation, not encoded yet | new database, ruled 2026-11-17: reads nothing after the copy
+
+# ---- slot 39-wopi
+39-wopi	closure scan VERDICT for this database	cells:columns_with_refs=0,refs=0	cells:columns_with_refs=0,refs=0	stated in the heading
+
+# ---- slot 41
+41	=== inline body scan	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the copy and the repairs to a value that depends on the data
+41	rejected ids named in a live body, by kind	baseline	empty	heading expects zero; acceptance reads a known non-zero, so the source run compares with the baseline. Confirm for the new database
+41	inline body scan VERDICT	baseline	head:0	heading expects zero; acceptance reads a known non-zero, so the source run compares with the baseline. Confirm for the new database
+
+# ---- slot 42
+42	=== blob ledger check	section	section	section marker, must be present
+42	off-site ledger: objects, bytes, stored, not stored, first and last verification	baseline	as-source	no expectation in the heading | new database, ruled 2026-11-17: not moved by the copy or the repairs
+42	blobs per class of file row	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the copy to a value that depends on the data
+42	blobs with no stored record, by the month their first file row was created	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the copy to a value that depends on the data
+42	ledger objects that no file row names	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the copy to a value that depends on the data
+42	size differs between file row and ledger	zero	zero	heading expects zero, holds on acceptance
+42	blob ledger VERDICT: live body blobs with no off-site record	baseline	as-source	heading expects 0 | 0 | 0, but office documents with no off-site copy are kept and tracked (T20); what the new database must read is not ruled | new database, ruled 2026-11-17: not moved by the copy or the repairs
+
+# ---- slot 44
+44	A10 S2	baseline	empty	no expectation in the heading | new database, ruled 2026-11-17: reads nothing after the copy
+44	A10 S3	baseline	empty	no expectation in the heading | new database, ruled 2026-11-17: reads nothing after the copy
+
+# ---- slot 49
+49	=== 49 links that carry an id	section	section	section marker, must be present
+49	L1	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the copy to a value that depends on the data
+49	L2	baseline	as-source	no expectation in the heading | new database, ruled 2026-11-17: not moved by the copy or the repairs
+49	L3	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the copy to a value that depends on the data
+49	L4	baseline	as-source	no expectation in the heading | new database, ruled 2026-11-17: not moved by the copy or the repairs
+49	=== 49 done	section	section	section marker, must be present
+
+# ---- slot 50
+50	=== 50 the phase list of a flow against its phases	baseline	empty	section that holds row counts of the classifier steps | new database, ruled 2026-11-17: reads nothing after the copy
+50	F1	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the copy to a value that depends on the data
+50	F2	baseline	as-source	no expectation in the heading | new database, ruled 2026-11-17: not moved by the copy or the repairs
+50	F3	baseline	as-source	no expectation in the heading | new database, ruled 2026-11-17: not moved by the copy or the repairs
+50	F4	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the repairs to a value that depends on the data
+50	F5	baseline	empty	no expectation in the heading | new database, ruled 2026-11-17: reads nothing after the repairs
+50	=== 50 done	section	section	section marker, must be present
+
+# ---- slot 51
+51	=== 51 login binding	section	section	section marker, must be present
+51	K1 totals. identities_without_email and emails_shared_by_identities	baseline	as-source	heading states a partial expectation, not encoded yet | new database, ruled 2026-11-17: not moved by the copy or the repairs
+51	K2 users with a binding	cells:identity_missing=0,email_differs=0,identity_not_active=0	cells:identity_missing=0,email_differs=0,identity_not_active=0	stated in the heading
+51	K3 users without a binding, by what the code read predicts for the next login of that pers	baseline	as-source	no expectation in the heading | new database, ruled 2026-11-17: not moved by the copy or the repairs
+51	K4 users without a binding that have an identity	baseline	as-source	no expectation in the heading | new database, ruled 2026-11-17: not moved by the copy or the repairs
+51	K5 identities that no user is bound to, by whether a user has the same e-mail	baseline	as-source	no expectation in the heading | new database, ruled 2026-11-17: not moved by the copy or the repairs
+51	K6 identities whose e-mail has upper-case letters, by whether a user is bound to them. Onl	baseline	as-source	no expectation in the heading | new database, ruled 2026-11-17: not moved by the copy or the repairs
+51	K7 day the identity was made against the day the user was made, bound users. An identity m	baseline	as-source	no expectation in the heading | new database, ruled 2026-11-17: not moved by the copy or the repairs
+51	=== 51 done	section	section	section marker, must be present
+
+# ---- slot 53
+53	=== 53 VC thread bindings against the chat server	section	section	section marker, must be present
+53	X1 every binding	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the repairs to a value that depends on the data
+53	X2 the bindings whose thread is gone	cells:id_in_stored_message_bodies=0,id_is_a_reply_target=0,id_was_a_removed_message=0	cells:id_in_stored_message_bodies=0,id_is_a_reply_target=0,id_was_a_removed_message=0	stated in the heading
+53	X3 the bindings whose thread exists	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the repairs to a value that depends on the data
+53	X4 what happened in the threads that exist	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the repairs to a value that depends on the data
+53	=== 53 done	section	section	section marker, must be present
+
+# ---- slot 56
+56	=== 56 file bytes	section	section	section marker, must be present
+56	X0 the two sources. The ledger	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the copy and the repairs to a value that depends on the data
+56	X1 file rows by strength of evidence. Class 1 is evidence that the bytes are gone. Classes	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the copy and the repairs to a value that depends on the data
+56	X2 soundness	cells:of_these_with_content=0,rows_size_differs_from_ledger=0	cells:of_these_with_content=0,rows_size_differs_from_ledger=0	heading: the empty file is expected here, content and size difference expect 0
+56	X3 classes 1 to 4 by the month the blob was first uploaded. The backup service started on 	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the copy and the repairs to a value that depends on the data
+56	X3b is it still happening	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the copy and the repairs to a value that depends on the data
+56	X4 the busiest upload days of classes 1 and 2	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the copy to a value that depends on the data
+56	X5 every place that points at a file row, for the file rows of classes 1 to 4 and for file	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the copy and the repairs to a value that depends on the data
+56	X6 office documents	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the copy to a value that depends on the data
+56	X7 file rows that none of the places of X5 points at, by evidence class. Not a defect by i	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the copy and the repairs to a value that depends on the data
+56	X8 kind of file per evidence class, classes 1 to 4	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the copy and the repairs to a value that depends on the data
+56	X9 file rows whose key is not a content hash of 64 lowercase hex characters, with their ev	baseline	as-source	no expectation in the heading | new database, ruled 2026-11-17: not moved by the copy or the repairs
+56	X10 off-site records by the year a blob was first uploaded	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the copy and the repairs to a value that depends on the data
+56	X11 pictures of classes 1 and 2	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the copy and the repairs to a value that depends on the data
+56	=== 56 done	section	section	section marker, must be present
+
+# ---- slot 67
+67	X1 flows per problem and where the flow sits	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the copy to a value that depends on the data
+67	X2 flows by the mix of problems they hold, and the posts in them	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the copy to a value that depends on the data
+67	X3 the admin role of the spaces that are asked	cells:no_admin_role_row=0	cells:no_admin_role_row=0	stated in the heading
+67	X4 spaces asked, by how their people are reached. no_own_admin	baseline	as-source	no expectation in the heading | new database, ruled 2026-11-17: not moved by the copy or the repairs
+67	X5 flows by where they sit	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the copy to a value that depends on the data
+67	X6 rows of the listing by the closest way a person is reached and by the kind of holder	baseline	as-source	no expectation in the heading | new database, ruled 2026-11-17: not moved by the copy or the repairs
+67	X7 the people	baseline	as-source	no expectation in the heading | new database, ruled 2026-11-17: not moved by the copy or the repairs
+67	X8 people on the list whose user row is in a state worth a look before a message goes out	baseline	as-source	no expectation in the heading | new database, ruled 2026-11-17: not moved by the copy or the repairs
+
+# ---- slot 68
+68	=== V0 the listing	baseline	as-source	no expectation in the heading | new database, ruled 2026-11-17: not moved by the copy or the repairs
+68	=== V1 per evidence class of file 56	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the copy and the repairs to a value that depends on the data
+68	=== V2 missing blobs by month of first upload	baseline	agreed	heading states a partial expectation, not encoded yet | new database, ruled 2026-11-17: moved by the copy and the repairs to a value that depends on the data
+68	=== V3 blobs on the volume	baseline	agreed	heading states a partial expectation, not encoded yet | new database, ruled 2026-11-17: moved by the copy to a value that depends on the data
+68	=== V4 time gap	baseline	as-source	no expectation in the heading | new database, ruled 2026-11-17: not moved by the copy or the repairs
+68	=== V5 files on the volume that no file row names	baseline	agreed	heading states a partial expectation, not encoded yet | new database, ruled 2026-11-17: moved by the copy to a value that depends on the data
+68	=== V6 the inference of file 56 against the listing	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the copy and the repairs to a value that depends on the data
+68	=== V7 blobs missing on the volume that the off-site ledger holds as stored	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the copy and the repairs to a value that depends on the data
+30-38	B1 G14	baseline	empty	heading states a partial expectation, not encoded yet | new database, ruled 2026-11-17: reads nothing after the repairs
+30-38	B1 G15	baseline	zero	no expectation in the heading | new database, ruled 2026-11-17: every number 0 after the repairs
+30-38	B1 G16	baseline	agreed	heading states a partial expectation, not encoded yet | new database, ruled 2026-11-17: moved by the copy and the repairs to a value that depends on the data
+30-38	B1 G17	baseline	agreed	heading states a partial expectation, not encoded yet | new database, ruled 2026-11-17: moved by the copy to a value that depends on the data
+30-38	B1 G18	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the copy and the repairs to a value that depends on the data
+30-38	B2 G15 top-level spaces that still point at a parent	baseline	empty	no expectation in the heading | new database, ruled 2026-11-17: reads nothing after the repairs
+30-38	B2 G16 what the server does through a leftover parent pointer	baseline	zero	no expectation in the heading | new database, ruled 2026-11-17: every number 0 after the repairs
+30-38	B2 G17 sub-subspaces under a sub-subspace, per space	baseline	as-source	no expectation in the heading | new database, ruled 2026-11-17: not moved by the copy or the repairs
+30-38	B2 G18 every subspace against what the server writes for a subspace	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the repairs to a value that depends on the data
+30-38	B2 G19 the rename plan, per twin that would get a new handle	baseline	empty	no expectation in the heading | new database, ruled 2026-11-17: reads nothing after the repairs
+30-38	B2 G20 space handles that end in a hyphen and a number, the form the server gives a taken 	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the repairs to a value that depends on the data
+63	=== 63 X1 spaces of the platform and their chat space	baseline	as-source	no expectation in the heading | new database, ruled 2026-11-17: not moved by the copy or the repairs
+63	=== 63 X2 the parent link on the chat side against the parent pointer of the platform, by kind	section	section	section marker, must be present
+63	=== (acceptance: the top-level space with a leftover pointer has NO chat parent, so the chat s	section	section	section marker, must be present
+63	=== of the 2 deep spaces 1 hangs under its sub-subspace parent on the chat side as well and 1 	baseline	agreed	no expectation in the heading | new database, ruled 2026-11-17: moved by the repairs to a value that depends on the data
+63	=== 63 X3 for a sub-subspace under a sub-subspace	baseline	as-source	no expectation in the heading | new database, ruled 2026-11-17: not moved by the copy or the repairs
+63	=== 63 done	section	section	section marker, must be present
+95	A1 P1 admin definitions of spaces listing a member credential	baseline	zero	QA register A1, ruled 2026-11-19: every number 0 after the repair 94-a1-repair.sql
+95	A1 P2 stored policies where a member credential grants grant or delete	baseline	zero	QA register A1, ruled 2026-11-19: every number 0 after the repair AND the authorization reset
+97	R97 G0 the rule in two numbers, subspaces that are not archived	baseline	zero	QA lead ruling 2026-11-19 (admin goes down): 0 after the repair 98-admin-list-repair.sql AND the authorization reset
+97	R97 G1 the admin of a space above against every subspace below it	info	info	breakdown of G0 with the archived subspaces, which give nobody a right by design
+97	R97 G2 the other direction, for a person to read	info	zero	QA lead 2026-11-19: entries naming a space not above are removed by 98-admin-list-repair.sql R3; 0 after it. The live cause is server#6592
+97	R97 G3 ruling 2, users only	baseline	zero	QA lead ruling 2026-11-19: 0 after the repair 99-a4-membership-repair.sql
+97	R97 G4 ruling 3	baseline	zero	QA lead ruling 2026-11-19: 0 after the repair 100-a6-associate-repair.sql
+101	M1 every subspace by the sign of a move	info	info	context for M2: how many subspaces can be judged
+101	M2 the role holdings of users that break ruling 2	baseline	zero	QA lead 2026-11-19, IMPORTANT ON PRODUCTION: 0 after the repair 99. A number that stays is a holding the repair KEPT on a subspace that may have been moved: a person reads it
+101	M3 the same, by rule and role, with users and subspaces	baseline	empty	the breakdown of M2: reads nothing after the repair 99; any line is for a person
+101	M4 admin list entries that name a space which is not above the subspace	info	empty	QA lead 2026-11-19: removed by 98-admin-list-repair.sql R3, reads nothing after it; any line is a new leftover of a move (server#6592)
+101	M5 members of a subspace that was created elsewhere, by whether they are member of its pre	info	info	context: what a move by older code would leave
+106	L106 G1 lists of subspaces that miss a space above or name anything else, per role	baseline	zero	QA lead 2026-11-19: 0 after the repairs 98-admin-list-repair.sql and 105-member-lead-list-repair.sql. Live causes server#6785 and #6592
+106	L106 G2 the same, by what is wrong	info	empty	the breakdown of G1: reads nothing after the repairs; any line is for a person
+106	L106 G3 every list by its length, per level and role	info	info	context
+106	L106 G4 is it still being made	info	info	context for server#6785 and #6592: a month with a wrong list after the repair means the generator ran again
+106	L106 G5 member lists that hold every space above but NOT the parent first	baseline	zero	QA lead 2026-11-19 after walk 107: parent first; 0 after 105-member-lead-list-repair.sql
+106	L106 G6 the same for lead and admin lists	info	info	context: the server reads no order there
+111	L111 G1 invitee rights with no open invitation	baseline	zero	QA lead 2026-11-19: 0 after 110-invitee-right-repair.sql. Live cause server#6731: can read above 0 again on new data
+111	L111 G2 of them	baseline	zero	users on a public subspace of a private top-level space who read its content with no invitation (walk 113): 0 after repair 110
+111	L111 G3 is it still being made	info	empty	leftovers by the month the right was given: reads nothing after repair 110; a line means server#6731 made a new one
+111	L111 G4 for a person	info	info	invitations stuck in accepting whose right is kept (acceptance: 5, made in 2025)
+111	L111 G5 open invitations of users that have NO invitee right	info	info	context: open row 3
+111	L111 G6 for a person	info	info	open invitations that give the full read of a public subspace in a private top-level space; invitations do not expire (test-suites knowledge roleset F16)
+111	L111 G7 open invitations with no invitee right that were made since 2025-03-01, when the s	baseline	zero	QA lead 2026-11-19, row 3: old ones are left; a newer one means the right was lost or sits on a wrong id (repair 58): for a person
+111	L111 G8 open invitations with no invitee right made before 2025-03-01, by what the invitee	info	info	row 3, left as they are: older than the right itself
+118	L118 G1 open requests of an actor who is already a member of that space	baseline	zero	QA lead 2026-11-20, row 4: 0 and 0 after 117-open-request-of-member-repair.sql. The server closes no open request when membership comes another way: can read above 0 again on new data
+118	L118 G2 is it still being made	info	empty	the breakdown of G1 by month of membership: reads nothing after repair 117; a line means the server made a new one
+118	L118 G3 for a person	info	info	invitations stuck in accepting whose actor is a member; repair 117 does not touch them
+118	L118 G4 members of those requests who still hold the invitee right on that space	baseline	zero	0 after the repairs 110 and 117
+121	L121 G1 leads who are not member of that space, users and organizations and others	baseline	zero	QA lead 2026-11-20, row 5: 0 after the repairs 99-a4-membership-repair.sql and 120-lead-without-member-repair.sql. Users: leaving as member keeps lead (server#6710 family), can read above 0 again on new data
+121	L121 G2 is it still being made	info	empty	the breakdown of G1 by the year the lead role was given: reads nothing after the repairs; a line means a new one
+121	L121 G3 admins who are not member of that space, by holder and level	info	info	context: admin only, not in row 5
+123	L123 G1 subspaces whose visibility differs from their top-level space	baseline	zero	QA lead 2026-11-20, row 6: 0 after 122-subspace-visibility-repair.sql. Live cause: a new subspace always starts active (steps 124): can read above 0 again on new data
+123	L123 G2 the same, by what the subspace and the top-level space are	info	empty	the breakdown of G1: reads nothing after repair 122; a line with archived is for a person
+123	L123 G3 is it still being made	info	empty	G1 by the month the subspace was made: reads nothing after repair 122
+123	L123 G4 subspaces per visibility of the top-level space	info	info	context
+126	L126 G1 top-level spaces that hold no plan	baseline	zero	QA lead 2026-11-20, row 7: 0 after 125-space-free-plan-repair.sql, which runs only with FREE_PLAN_RULED=yes. PRODUCTION: a number means ask product before any plan is given
+126	L126 G2 the same, by the month the space was made	info	empty	the breakdown of G1: reads nothing after repair 125
+126	L126 G3 top-level spaces where the free plan credential and the space-free entitlement dis	baseline	zero	the credential and the entitlement are written together
+126	L126 G4 top-level spaces by the plans they hold	info	info	context
+127	L127 G1 top-level spaces with no user as admin or lead, and of them with no account admin 	info	info	QA lead 2026-11-20: a consequence of two rulings, nothing repaired; on production the list (127-unmanaged-spaces-list.sh) goes to product
+127	L127 G2 the same when only an admin or lead who can sign in counts	info	info	the strict reading: an admin or lead with no login does not count
+127	L127 G3 the spaces nobody but platform staff can manage, by visibility and kind of account	info	info	context for product
+128	L128 T1 template content rows that no template reaches, and child rows with no parent that	baseline	zero	a template content row no template reaches is rejected by the distiller: 0 on the new database
+128	L128 T2 template content rows in all, named by a template, children below one, and saved f	info	info	context: rows no template names directly are the children of a saved space, not a finding
+128	L128 C1 chats with fewer than 2 members, by who is left and the kind of chat	info	info	context: the other side was deleted or left; kept
+128	L128 P1 platform invitations of a registered person that were NOT marked as used	baseline	zero	a used platform invitation must be marked used, or it still shows as pending
+128	L128 P2 platform invitations in all, used, still pending, and used ones whose e-mail match	info	info	context; used rows whose e-mail matches no user are for a person

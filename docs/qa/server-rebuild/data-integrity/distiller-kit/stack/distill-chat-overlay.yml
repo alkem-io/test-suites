@@ -1,0 +1,16 @@
+# distill-chat-overlay.yml (2026-11-16, QA copy experiment, optional second step)
+# Runs the local chat server on a working copy of the acceptance chat database (distill_synapse),
+# under the acceptance server name, with its own configuration folder and a new signing key.
+# Use together with distill-overlay.yml. The normal local chat data (database synapse) is not touched.
+services:
+  synapse:
+    environment:
+      - SYNAPSE_HOMESERVER_NAME=matrix-acc.alkem.io
+    volumes:
+      - type: bind
+        source: ${DISTILL_SYNAPSE_DIR:?set DISTILL_SYNAPSE_DIR to a local chat server configuration folder, kept outside the repository}
+        target: /data
+  matrix-adapter:
+    environment:
+      - SYNAPSE_HOMESERVER_NAME=matrix-acc.alkem.io
+      - SYNAPSE_SERVER_NAME=matrix-acc.alkem.io

@@ -1,0 +1,13 @@
+# the kit image carries scripts and agreed counts only: never data
+dumps
+runs
+**/*.bak*
+**/*.csv
+**/*.dump
+**/*.pgdump
+**/*.png
+out
+outs
+stack
+cluster/*.yml
+node_modules

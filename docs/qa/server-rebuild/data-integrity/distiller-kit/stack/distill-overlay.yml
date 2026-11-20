@@ -1,0 +1,39 @@
+# distill-overlay.yml (2026-11-16, QA copy experiment)
+# Points the local stack at the copy experiment:
+#   platform database  -> $DISTILL_DB (default distill_acc_repaired)
+#   login database     -> $DISTILL_KRATOS (default distill_kratos), a working copy of the acceptance login database
+# Everything else (chat, tokens, office documents, off-site ledger, file store) stays local.
+# Used by distill-stack-on.sh. Nothing in the server repository is changed by it.
+services:
+  kratos-migrate:
+    environment:
+      - DSN=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${DISTILL_KRATOS:-distill_kratos}?sslmode=disable&max_conns=20&max_idle_conns=4
+  kratos:
+    environment:
+      - DSN=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${DISTILL_KRATOS:-distill_kratos}?sslmode=disable&max_conns=20&max_idle_conns=4
+  oidc-service:
+    environment:
+      - DATABASE_NAME=${DISTILL_DB:-distill_acc_repaired}
+  matrix-adapter:
+    environment:
+      - DATABASE_NAME=${DISTILL_DB:-distill_acc_repaired}
+  file-service:
+    environment:
+      - ALKEMIO_DATABASE_NAME=${DISTILL_DB:-distill_acc_repaired}
+  file-backup-service:
+    environment:
+      - FBS_ALKEMIODB_DBNAME=${DISTILL_DB:-distill_acc_repaired}
+  authorization-evaluation:
+    environment:
+      - DATABASE_URL=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${DISTILL_DB:-distill_acc_repaired}?sslmode=disable
+  wopi-service:
+    environment:
+      - ALKEMIO_DATABASE_NAME=${DISTILL_DB:-distill_acc_repaired}
+    # fixed host port, so WOPI_SERVICE_URL in the server .env stays valid when the service is recreated
+    ports:
+      - '32800:8080'
+  # Only started by hand (profile auth-reset). The scaler is stopped while the experiment runs, because the
+  # worker it starts reads .env.docker and would run a reset on the alkemio database, the acceptance copy.
+  auth-reset-worker:
+    environment:
+      - DATABASE_NAME=${DISTILL_DB:-distill_acc_repaired}
