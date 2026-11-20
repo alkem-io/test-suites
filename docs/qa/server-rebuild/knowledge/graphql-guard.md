@@ -4,10 +4,13 @@ _What the platform does today at the door of its API: how it works out who the c
 
 _Open questions per owner: Product Lead 2 · Technical Lead 7 · Quality Lead 4 · Security Lead 4 · Service Operations Lead 3 · Architecture Lead 2. By state: 17 open · 5 with a suggested answer. Proof of the 32 rules: 16 proven by a test · 16 untested (Appendix A)._
 
+_Whys of the 32 rules: 30 rest on a source · 2 carry a draft for product to decide._
+
 **How to read it**
 
 - **Rule** is one or two plain sentences. The exact behaviour, with error messages and limits, is in Appendix A under the same id. The new core is checked against the exact text.
-- **Why: business** is what Alkemio needs. **Why: product** is the user story. **Why: technical** is the engineering reason, when there is one. "—" means no source states one. Product has not reviewed this file yet and fills the missing user stories later.
+- **Why: business** is what Alkemio needs. **Why: product** is the user story. **Why: technical** is the engineering reason. A rule needs at least one why, and gets a second or third only where it adds something for the decision or the code. "—" means none is given.
+- A why that names a spec, issue, pull request, code comment or code line rests on that source. A why ending in _(draft)_ was written by QA and no source states it: product keeps, rewrites or deletes it, and sets **Decided by**. A rule with no why at all carries an open question in section 3.
 - **Decided by** names the source of the decision: a spec, a commit or pull request, an issue or a document. "Not decided: exists in the code" means the behaviour is in the code and nobody chose it. "Not decided: a defect" means the behaviour is a fault.
 - A marker in bold at the end of a rule points at section 3: **(open: F3)** means a question on this rule is still open, **(defect: F2)** means today's behaviour is a fault and must not be copied as intended, **(defect in part: F5)** means part of it is. A rule with no marker stands as written. Every rule is logged as the server behaves today, also when that is not the intended end state. Whether a test proves the rule sits in Appendix A as **proven** or **untested**.
 - Hard rules are not marked yet. Some rules are choices that a new feature may challenge, and some can never change; a later version will mark the second kind with "(hard rule)" after the why that makes it so. Until then, no marker does not mean a rule is open to change.
@@ -34,10 +37,10 @@ _Open questions per owner: Product Lead 2 · Technical Lead 7 · Quality Lead 4 
 |---|---|---|---|---|---|
 | GQL-10 | Access is decided per field. A field that needs a right is served only when the caller holds that right on the item it belongs to; a field that needs none is not checked. | — | — | Credential-based authorization evaluated at the resolver boundary; the guard was made synchronous so DataLoader batching keeps working (PR #5848). | Server PR #5848; docs/credential-based-authorization.md |
 | GQL-11 | The caller is identified once per request and every part of the request is checked against that same caller. Requests running at the same time never see each other's rights. | — | — | PR #5848: authentication moved to a single global interceptor, the guard reads `req.user`; the nested-query tests are the regression fence for the rewrite. | Server PR #5848 |
-| GQL-12 | Every item can list the rights the caller holds on it, so a refusal can be predicted before a call is made. **(open: Q-GQL-12)** | — | — | — | Not decided: exists in the code |
+| GQL-12 | Every item can list the rights the caller holds on it, so a refusal can be predicted before a call is made. **(open: Q-GQL-12)** | — | As a user, I want the app to offer only the actions I may take, so that I do not run into refusals. _(draft)_ | — | Not decided: exists in the code |
 | GQL-13 | A refused field returns one structured "forbidden" error, and the rest of the request is still answered. **(open: F2)** | — | — | Refusals are data, not transport failures, so the client can render the parts it may see (032 error-code system; FR-024b wire semantics for authn only — see F-10). | Spec 032 |
 | GQL-14 | Asking for something that does not exist returns one "not found" error, never a crash or an empty success. **(open: F2, F3)** | 032: a not-found is a 10xxx error the support desk can triage from the code. | — | — | Spec 032 |
-| GQL-15 | An item whose access rules are missing or empty cannot be served at all: the gate fails closed. **(open: Q-GQL-15)** | — | — | — | Not decided: exists in the code |
+| GQL-15 | An item whose access rules are missing or empty cannot be served at all: the gate fails closed. **(open: Q-GQL-15)** | — | — | Failing closed means a missing or broken policy can never expose data; the cost is a refusal, not a leak. _(draft)_ | Not decided: exists in the code |
 | GQL-16 | On a private top-level Space, non-members and visitors can read the About card and nothing else; on a public one they can read the Space. A private Subspace is refused to non-members; a member of the parent sees its About card only. **(open: F3, F7, F9)** | Private spaces content is only visible to members (rule text in `space.service.authorization.ts:659`); READ_ABOUT exists so the About card and the application door stay reachable. | — | — | Space rules and the access matrix (cross-referenced, not owned here) |
 | GQL-17 | Switching a Space between public and private takes effect on the very next request for non-members. Members see no difference. | — | — | The policy is recomputed and stored on the settings write; the guard reads the stored policy per request, so there is no cache to wait for (PR #5848 test rationale). | Server PR #5848 |
 | GQL-18 | The few REST routes that need a caller (calendar feed, content signing, memo PDF) accept the same three credentials. Bad credentials are refused as "not signed in", any other failure as "forbidden". | — | — | FR-025: REST and GraphQL share one credential model after the Oathkeeper chain was retired (`rest.guard.ts` header). | OIDC design FR-025 |
@@ -366,6 +369,8 @@ The rebuild keeps one GraphQL contract (`schema.graphql`, 002/012) and resolves 
 Extracted 2026-11-06 from three sources: server develop @ `eeecf9ddb` (Release/79) code + `schema.graphql`; the legacy server-api suite (`server-api/src/functional-api/graphql-guard/`, 4 files, 45 cases); the specs, issues and docs listed in § Sources. WHAT and WHY only — no mutations, fixtures or request params. Evidence paths are relative to the server repo unless prefixed `test ›` or `spec ›`. The area covers who the caller is, the field-level gate, the `me` degradation, the endpoints and limits, and the error shape; the privilege sets per role belong to the access matrix and the platform-roles table and are only cross-referenced here.
 
 2026-11-19 converted to the three-section layout. The status legend of the old layout was dropped: proof is now in Appendix A, and open points are markers on the rules.
+
+2026-11-20 whys pass: every rule has at least one why, sourced where a spec, issue, pull request or code comment states it and marked _(draft)_ where QA wrote it. Restating whys with no source were dropped where a sourced one remains.
 
 #### Sources
 
