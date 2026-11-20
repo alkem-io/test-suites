@@ -2,7 +2,7 @@
 
 _What the platform does today for the calendar every space carries and its events: creating, reading, updating and deleting them, whole-day and timed dates, the Google, Outlook and ICS exports, subspace events showing on the parent calendar, and the notifications and activity an event produces. It says what the server does, why, who may, and what is still to answer. The file has three sections, **1. Rules**, **2. Rights** and **3. Open questions**, with the evidence in an **Appendix**._
 
-_Open questions per owner: Product Lead 2 · Technical Lead 5 · Quality Lead 4 · Architecture Lead 1. By state: 6 open · 1 change decided · 5 with a suggested answer · 5 decided. Proof of the 25 rules: 12 proven by a test · 13 untested (Appendix A)._
+_Open questions per owner: Product Lead 3 · Technical Lead 5 · Quality Lead 4 · Architecture Lead 1. By state: 6 open · 2 change decided · 5 with a suggested answer · 5 decided. Proof of the 25 rules: 12 proven by a test · 13 untested (Appendix A)._
 
 _Whys of the 25 rules: 12 rest on a source · 11 carry a draft for product to decide · 2 have none, and each already carries an open question (EVT-24, EVT-25)._
 
@@ -27,7 +27,7 @@ _Whys of the 25 rules: 12 rest on a source · 11 carry a draft for product to de
 
 | ID | Rule | Why: business | Why: product | Why: technical | Decided by |
 |---|---|---|---|---|---|
-| EVT-02 | Only space admins create events on a space's calendar. Members and leads can comment on events but cannot create them; outsiders are refused. | Events are curated by the space's admins; contribution is a comment, not an event. _(draft)_ | — | The collaboration's contributor rule grants contribute only, not create. _(draft)_ | Not decided: exists in the code |
+| EVT-02 | Only space admins create events on a space's calendar. Members and leads can comment on events but cannot create them; outsiders are refused. **(defect: CH-EVT-02)** | Today: events are curated by the space's admins; taking part is a comment, not an event. Product, 2026-11-20: members should be able to create events too (change decided, CH-EVT-02). | — | The collaboration's contributor rule grants contribute only, not create. _(draft)_ | Product, 2026-11-20 (CH-EVT-02, change decided): members should also create events |
 | EVT-03 | An event has a title, an optional description, location and tags, one of six types (event, deadline, meeting, milestone, training, other), a start, a whole-day flag, a multi-day flag, a duration, and a flag that says whether it shows on the parent calendar. **(open: F6)** | — | As a space admin, I want to say what kind of event it is, where, and when (one day, several days or a time slot), so that members can plan for it. _(draft)_ For the parent-calendar flag: as a subspace admin, I want to promote some events on the space level as well (client-web#6876). | — the event vocabulary is the calendar's own; no spec states why these six. | Not decided: exists in the code; the parent-calendar flag: client-web#6876 |
 | EVT-04 | An event's name identifier is unique within its calendar. One that is already taken is refused; when none is given, one is made from the title. **(open: Q-EVT-04)** | — | — | The name id is the last part of the event's web address (`<space>/calendar/<nameID>`, `url.generator.service.ts:1357`), so two events in one calendar cannot share it. | Not decided: exists in the code |
 | EVT-05 | Every event has its own comments room. If the event cannot be saved the room is removed again, and deleting the event deletes the room. | — | — | The Matrix room is created outside the database transaction, so an orphan must be removed explicitly (code comment). | Not decided: exists in the code |
@@ -114,13 +114,14 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 ### Product Lead
 
-[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 2 to answer
+[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 3 to answer
 
 **To answer**
 
 | ID | Area | Type | Question | Owner | Proposed answer | State |
 |---|---|---|---|---|---|---|
 | F7 | Lifecycle | decision | A creator who has left the community can still update and delete the events they created. Is that intended? | Product Lead | Product, 2026-11-20: rights end on leaving. A former member can no longer update or delete the events they created; space admins keep theirs. Issue: to file. | change decided |
+| CH-EVT-02 | Creating | decision | Only space admins create events today; members and leads can only comment. Should members be able to create events? | Product Lead | Product, 2026-11-20: yes, members should be able to create events too. Issue: to file. | change decided |
 | CONST | All | decision | 22 of the 27 constants are still blank in "product must rule?" (Appendix E). Which of them must product rule on? | Product Lead (Technical Lead and Security Lead for the rows pre-filled with their name) | Product, 2026-11-20: of the seven Product Lead rows, event types and notification events must be ruled on; the two description cuts carry over; roll-up, ICS redirects and creator rights follow F3, F1 and F7. The Technical and Security Lead rows are theirs to tick. | suggested |
 
 ### Technical Lead
