@@ -11,3 +11,6 @@ _Every decision taken while reviewing the knowledge files that changes what the 
 | F19 | `callout.md` | CAL-35 | Wish; the rule stays as today: the author of a post manages the links on their own post, not only space admins. | Product, 2026-11-20 | To file |
 | OQ3 | `task-boards.md` | TSK-03 | Wish; the rule stays as today: a Tasks board cannot be created in a virtual contributor's knowledge base. | Product, 2026-11-20 | To file |
 | Q-WBD-09 | `whiteboards.md` | WBD-09 | Wish; the rule stays as today: a creator's rights on a whiteboard end when they leave the space, as decided for calendar events (calendar.md F7). | Product, 2026-11-20 | To file |
+| F4 | `media-gallery.md` | MED-21, MED-23 | Wish; the rule stays as today: a reference name is unique per profile on every path, and the existing duplicates are cleaned up. | Product, 2026-11-20 | To file |
+| F5 | `media-gallery.md` | MED-05 | Wish; the rule stays as today: removing a gallery item also deletes its file (DPO Lead to be consulted). | Product, 2026-11-20 | To file |
+| F8 | `media-gallery.md` | MED-06 | Wish; the rule stays as today: gallery items can be moved on the server instead of removed and re-added. | Product, 2026-11-20 | [alkem-io/client-web#10371](https://github.com/alkem-io/client-web/issues/10371) |
