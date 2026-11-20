@@ -2,7 +2,7 @@
 
 _What the platform does today for the role sets of spaces, organisations and the platform: the roles and their limits, the entry role and the rule that a subspace member is a member of the parent, adding and removing people directly, applications, invitations to existing users, organisations and virtual contributors, email invitations, organisation associates, joining through a matching email domain, the combined application or join for a subspace, Platform Support's audited work on organisations, and the lists of pending requests. The file follows the three-section layout accepted in the product review of `communications.md` (alkem-io/test-suites#717): **1. Rules**, **2. Rights**, **3. Open questions**, with the evidence in an **Appendix**._
 
-_Open questions per owner: Product Lead 6 · Technical Lead 4 · Quality Lead 8 · Security Lead 1 · Incident Lead 2. By state: 14 open · 7 with a suggested answer · 8 decided. Proof of the 79 rules: 60 proven by a test · 19 untested (Appendix A)._
+_Open questions per owner: Product Lead 5 · Technical Lead 4 · Quality Lead 8 · Security Lead 1 · Incident Lead 2. By state: 13 open · 7 with a suggested answer · 9 decided. Proof of the 79 rules: 60 proven by a test · 19 untested (Appendix A)._
 
 _Whys of the 79 rules: 55 rest on a source · 17 carry a draft for product to decide · 7 have none, and each already carries an open question or a defect (RS-04: F1; RS-06: F2; RS-27: Q-RS-02; RS-36: F4; RS-54: F11; RS-77: F7; RS-79: F13)._
 
@@ -146,7 +146,7 @@ _Whys of the 79 rules: 55 rest on a source · 17 carry a draft for product to de
 | RS-76 | The admins of a space also administer its subspaces. On acceptance 147 old subspace admin roles are linked to the members of the space above instead, which makes every member up there an admin of those subspaces. **(defect in part: F6)** | — | — | Admin authority flows down the hierarchy (code); the member-as-parent rows are a 2022-23 legacy copied by the 2024-09 migration (register A1, crosscheck F7). | Not decided: exists in the code. The 147 rows are a defect |
 | RS-77 | The stored role limits are what the server enforces, and on acceptance they differ from the code. For example, some top-level spaces allow 9 lead organisations where the code says 2. | The code's limits (RS-02) are the rule (Product, 2026-11-20); repairing the stored rows on acceptance is tracked (F7). | — | — (crosscheck F4; the caps are rebaseline constants). | Product, 2026-11-20 (was F7): behaviour stays, tracked |
 | RS-78 | The "allow Platform Support as admin" switch of a subspace does nothing. Platform Support's rights in a subspace follow the switch of the top-level space. | Support's reach is bounded per space tree by the L0 (027 row 7). | — | The subspace switch is exposed but inert (crosscheck F8). | Spec 027 row 7. The switch that does nothing is not decided; Product, 2026-11-20 (was F12): behaviour stays, tracked |
-| RS-79 | An organisation's admins and owners can add associates, admins and owners directly through the API. The web interface no longer offers this. **(open: F13)** | — | — | — (server#6608 open: keep as self-management or require invitation). | Not decided: exists in the code (server#6608 is open) |
+| RS-79 | An organisation's admins and owners can add associates, admins and owners directly through the API. The web interface no longer offers this. | Possible for a transition period only (Product, 2026-11-20): organisations move to invitation-only like spaces, tracked in server#6608 (F13). | — | — (server#6608 open: keep as self-management or require invitation). | Not decided: exists in the code (server#6608 is open); Product, 2026-11-20 (was F13): behaviour stays, tracked |
 
 ## 2. Rights
 
@@ -206,13 +206,12 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 ### Product Lead
 
-[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 6 to answer
+[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 5 to answer
 
 **To answer**
 
 | ID | Area | Type | Question | Owner | Proposed answer | State |
 |---|---|---|---|---|---|---|
-| F13 | Lifecycle | decision | An organisation's admins and owners can still add associates directly through the API (server#6608), while the interface no longer offers it. Keep it as self-management, or make organisations invitation-only like spaces? | Product Lead | — | open |
 | F14 | Invitations | decision | Owners who are not admins can accept for their organisation but are never notified, and the "no administrators" notice ignores owners. Notify owners too, or document it? | Product Lead | — | open |
 | Q-RS-01 | Direct | decision | Why does this rule exist? No source states why a role change refreshes the user's own access rules (RS-20). | Product Lead | The reading of the extraction: member profiles are visible to fellow members only. | suggested |
 | Q-RS-02 | Applications | decision | Why does this rule exist? No source states who should be able to delete an application, and why (RS-27). | Product Lead | — | open |
@@ -318,6 +317,7 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 | Was | Decision | Decided by | Now |
 |---|---|---|---|
+| F13 | Behaviour stays: organisation admins and owners can add associates, admins and owners directly through the API, for a transition period. Wanted, tracked: make organisations invitation-only like spaces (server#6608). | Product, 2026-11-20 | RS-79 |
 | F12 | Behaviour stays: the subspace 'allow Platform Support as admin' switch is shown but does nothing; Support follows the top-level switch. Wanted, tracked: hide the switch below the top level. | Product, 2026-11-20 | RS-78 |
 | F7 | Behaviour stays: the server enforces the stored limits. The code's limits (RS-02) are the rule; repairing the stored rows is tracked. | Product, 2026-11-20 | RS-77 |
 | F1 | Behaviour stays: the entry role is declared but not enforced. Wanted, tracked: enforce it and repair the data. | Product, 2026-11-20 | RS-04 |
