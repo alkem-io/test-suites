@@ -4,10 +4,13 @@ _What the platform does today for push notifications: the push switch on every n
 
 _Open questions per owner: Product Lead 4 · Technical Lead 5 · Quality Lead 6 · Security Lead 2 · Service Operations Lead 2. By state: 19 open · 0 with a suggested answer. Proof of the 19 rules: 8 proven by a test · 11 untested (Appendix A)._
 
+_Whys of the 19 rules: 17 rest on a source · 2 carry a draft for product to decide (PSH-07, PSH-09) · 0 have none._
+
 **How to read it**
 
 - **Rule** is one or two plain sentences. The exact behaviour, with error messages and limits, is in Appendix A under the same id. The new core is checked against the exact text.
-- **Why: business** is what Alkemio needs. **Why: product** is the user story. **Why: technical** is the engineering reason, when there is one. "—" means no source states one. The product review has not been through this file yet; it fills the business why and the user story where they are missing.
+- **Why: business** is what Alkemio needs. **Why: product** is the user story. **Why: technical** is the engineering reason. A rule needs at least one why, and gets a second or third only where it adds something for the decision or the code. "—" means none is given.
+- A why that names a spec, issue, pull request, code comment or code line rests on that source. A why ending in _(draft)_ was written by QA and no source states it: product keeps, rewrites or deletes it, and sets **Decided by**. A rule with no why at all carries an open question in section 3.
 - **Decided by** names the source of the decision: a spec with its requirement, a server pull request or commit, an issue or a document. "Not decided: exists in the code" means the behaviour is there and nobody chose it. "Not decided: a defect" means today's behaviour is a fault.
 - A marker in bold at the end of a rule points at section 3: **(open: F3)** means a question on this rule is still open, **(defect: F1)** means today's behaviour is a fault and must not be copied as intended, **(defect in part: F6)** means part of it is. A rule with no marker stands as written. Every rule is logged as the server behaves today, also when that is not the intended end state. Whether a test proves the rule sits in Appendix A as **proven** or **untested**.
 - Hard rules are not marked yet. Some rules are choices that a new feature may challenge, and some can never change; a later version will mark the second kind with "(hard rule)" after the why that makes it so. Until then, no marker does not mean a rule is open to change.
@@ -21,23 +24,23 @@ _Open questions per owner: Product Lead 4 · Technical Lead 5 · Quality Lead 6 
 | PSH-01 | Push is a third channel, next to email and in-app, on each of the 41 notification settings. The push switch of a setting is stored and changed on its own; push only, or push off, is a valid choice. **(open: F7)** | Full parity with in-app kinds (038 FR-002/FR-007); per-channel control. | — | — | Spec 038 FR-002, FR-007 |
 | PSH-02 | A person gets a push only when they would also receive that notification by email and their push switch for it is on. Whoever is left out of a notification, such as its sender, is left out of the push too. **(open: F5)** | — | — | One recipient pipeline (notifications NTF-10/15). | Notifications rules NTF-10 and NTF-15 (`notifications.md`) |
 | PSH-03 | Each active browser and each phone of a person gets its own copy of a push. Someone with push on but no browser or phone registered is skipped silently, and one failed send never stops the others. | Each device receives its own copy; no subscription = nothing to deliver (034 edge case; 086 D-22). | — | — | Spec 034 (edge case); spec 086 D-22 |
-| PSH-04 | A push carries a title and a text written by the server, a link, the kind of notification, a time and sometimes a grouping tag. It never carries the text of a chat message. The link is never just the home page when the notification has a target. **(defect in part: F6)** | message text must not reach the OS (034 FR-008/FR-010/FR-024; 086 FR-007 amended 2026-10-20). | — | Clients render verbatim | Spec 034 FR-008, FR-010, FR-024; spec 086 FR-007 |
+| PSH-04 | A push carries a title and a text written by the server, a link, the kind of notification, a time and sometimes a grouping tag. It never carries the text of a chat message. The link is never just the home page when the notification has a target. **(defect in part: F6)** | message text must not reach the OS (034 FR-008/FR-010/FR-024; 086 FR-007 amended 2026-10-20). | — | — | Spec 034 FR-008, FR-010, FR-024; spec 086 FR-007 |
 | PSH-05 | Pushes other than chat are limited to 10 per minute per person; more in the same minute are dropped silently. If the counter cannot be reached, the push is sent. Chat pushes do not count towards the limit, so chat cannot crowd out other notifications. | — | — | 038 FR-010 (throttle); 034 FR-012 / D-7 / D-21 (independence, fail open, the TTL defect fixed). | Spec 038 FR-010; spec 034 FR-012, D-7, D-21 |
-| PSH-06 | A newer push about reactions on the same callout, or about the same chat, replaces the earlier unread one on the device instead of piling up. Other kinds pile up. | — | — | — | Spec 034 FR-024; spec 041 FR-012. |
-| PSH-07 | When push is switched off for the whole platform, nothing is sent and browsers get no key to subscribe with. **(open: Q-PSH-07)** | — | — | Kill switch for environments without push credentials. | Not decided: exists in the code |
+| PSH-06 | A newer push about reactions on the same callout, or about the same chat, replaces the earlier unread one on the device instead of piling up. Other kinds pile up. | A newer push replaces the previous unattended one on the device rather than stacking a notification per send (034 FR-024; 041 FR-012). | — | — | Spec 034 FR-024; spec 041 FR-012. |
+| PSH-07 | When push is switched off for the whole platform, nothing is sent and browsers get no key to subscribe with. **(open: Q-PSH-07)** | — | — | Kill switch for environments without push credentials. _(draft)_ | Not decided: exists in the code |
 
 ### Browser subscriptions
 
 | ID | Rule | Why: business | Why: product | Why: technical | Decided by |
 |---|---|---|---|---|---|
 | PSH-08 | Anyone, signed in or not, can read the platform's public push key. It is the same key for everyone, and the private key is never shown. | — | — | Clients need the key to subscribe (038 US1). | Spec 038 US1 |
-| PSH-09 | Subscribing needs a signed-in user and stores the browser as an active subscription. Subscribing again from the same browser updates that record, also when it was held by another user, who then loses it. **(open: F2a, OQ2)** | — | — | Browsers re-subscribe with the same endpoint; an endpoint belongs to one device. | Not decided: exists in the code |
-| PSH-10 | A person has at most 10 active browser subscriptions. One more removes the oldest to make room. | — | — | — | Spec 038 FR-008. |
+| PSH-09 | Subscribing needs a signed-in user and stores the browser as an active subscription. Subscribing again from the same browser updates that record, also when it was held by another user, who then loses it. **(open: F2a, OQ2)** | — | — | Browsers re-subscribe with the same endpoint; an endpoint belongs to one device. _(draft)_ | Not decided: exists in the code |
+| PSH-10 | A person has at most 10 active browser subscriptions. One more removes the oldest to make room. | — | A user who uses Alkemio on several devices receives pushes on all of them and manages them per device (038 US5). | — | Spec 038 FR-008. |
 | PSH-11 | Unsubscribing switches a subscription off but keeps it, and only its owner can do that. Someone else's subscription and one that does not exist give the same "not found" answer. Only a switched-off subscription can be switched on again. | 038 FR-005; no enumeration of other users' ids. | — | — | Spec 038 FR-005 |
 | PSH-12 | A person lists only their own subscriptions: the active and the switched-off ones, never the expired ones, and never the technical address or keys. **(open: F3)** | Subscription management UI; keys are secrets (038 US5). | — | — | Spec 038 US5 |
 | PSH-13 | When the push service answers that a subscription is gone, it is marked expired and not tried again. Any other failed send is logged and dropped: no second attempt, and the subscription stays. A successful send records the date. **(open: F4)** | — | — | RFC 8030 §7.3; a transient error must never kill a live subscription (086 FR-009, X-4); no DLX, so no requeue (038 NFR-003). | RFC 8030 §7.3; spec 086 FR-009; spec 038 NFR-003 |
 | PSH-14 | Every day at midnight, active subscriptions with no successful send for 30 days and all expired subscriptions are deleted. **(open: Q-PSH-14, OQ4)** | — | — | Keep the table to live devices (038 SC-007). | Spec 038 SC-007; the 30-day value is not decided |
-| PSH-15 | Deleting a user deletes all their browser subscriptions and phone registrations. | — | — | — | Spec 038 FR-014. |
+| PSH-15 | Deleting a user deletes all their browser subscriptions and phone registrations. | No subscription data is left behind when an account is deleted (038 FR-014). | — | — | Spec 038 FR-014. |
 | PSH-16 | The subscribe request is not checked: an empty or oversized key and any address, including non-secure and internal ones, are stored. **(defect: F1, OQ1)** | — | — | the DTO declares validators, but the input is not on the validation allowlist — 086 BF-6 | Not decided: a defect |
 
 ### Phones (the native app)
@@ -45,7 +48,7 @@ _Open questions per owner: Product Lead 4 · Technical Lead 5 · Quality Lead 6 
 | ID | Rule | Why: business | Why: product | Why: technical | Decided by |
 |---|---|---|---|---|---|
 | PSH-17 | A signed-in app user registers their phone for push. A phone that was registered to another user moves to the new user. A person has at most 10 phones registered. Removing a registration only works on one's own. | One row per device so a shared phone never leaks the previous user's notifications (086 FR-001..003, D-1/D-14, SEC-086-01). | — | — | Spec 086 FR-001 to FR-003, D-1, D-14, SEC-086-01 |
-| PSH-18 | Phone pushes use the same queue and content as browser pushes. A phone registration is deleted only when Apple reports the phone's token as gone or invalid; every other failure, and every Android failure, is logged and dropped. A phone failure never expires a browser subscription. | — | — | — | Spec 086 FR-005..FR-008, D-4/D-17/D-23. |
+| PSH-18 | Phone pushes use the same queue and content as browser pushes. A phone registration is deleted only when Apple reports the phone's token as gone or invalid; every other failure, and every Android failure, is logged and dropped. A phone failure never expires a browser subscription. | — | — | A failed send must not throw away a phone that still works: only the two permanent APNs answers delete a registration, no FCM answer does (086 FR-008, D-6d). | Spec 086 FR-005..FR-008, D-4/D-17/D-23. |
 
 ### Operations
 
@@ -277,6 +280,8 @@ Push is a transport, not a kind: in the rebuild it sits beside email as a delive
 Extracted 2026-11-06 from three sources: server develop @ `eeecf9ddb` (Release/79) code + `schema.graphql`; the legacy server-api suite (`server-api/src/functional-api/push-notifications/`, 3 files, 65 cases — 14 skip); the specs, issues and docs listed in § Sources. WHAT and WHY only — no mutations, fixtures or request params. Covers the web-push channel: subscriptions, the `alkemio-push-notifications` queue, the shared throttle, delivery, the native device-token bridge (086) and the push leaf on every settings row. Which kinds exist and who their recipients are is in `notifications.md`. Evidence paths are relative to the server repo unless prefixed `test ›` or `spec ›`.
 
 2026-11-19 converted to the three-section layout: the single why was split in three, each rule got a plain-words sentence (the exact text moved to Appendix A), the who-may table became section 2, and every finding, open question and rule without a stated reason was routed to an organisation role in section 3.
+
+2026-11-20 whys pass: every rule has at least one why, sourced where a spec, issue or code line states it and marked _(draft)_ where QA wrote it. Restating whys with no source were dropped where a sourced one remains (PSH-04). Specs 038 (US5, FR-014), 034 FR-024, 041 FR-012 and 086 FR-008 now carry the whys of PSH-06, PSH-10, PSH-15 and PSH-18.
 
 #### Sources
 
