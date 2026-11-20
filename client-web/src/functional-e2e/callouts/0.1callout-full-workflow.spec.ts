@@ -129,9 +129,7 @@ test.describe.serial('Callout Full Workflow', () => {
           // gone, so the absence is not just a menu that never opened.
           await collaborationPage.openContextualMenu();
           await expect(collaborationPage.editButton).toBeVisible();
-          await expect(collaborationPage.publishMenuItem).not.toBeVisible({
-            timeout: 5000,
-          });
+          await expect(collaborationPage.publishMenuItem).not.toBeVisible();
 
           // The publish reached the server.
           await expectStoredCalloutVisibility(

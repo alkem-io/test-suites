@@ -84,9 +84,7 @@ adminFixture.test.describe.serial('Callout Comments', () => {
         baseScenario!.space.collaboration.calloutPostDisplayName
       );
 
-      await expect(collaborationPage.commentInput).toBeVisible({
-        timeout: 5000,
-      });
+      await expect(collaborationPage.commentInput).toBeVisible();
 
       await collaborationPage.addComment(adminComment);
 
@@ -134,14 +132,12 @@ memberFixture.test.describe.serial('Callout Comments - Member', () => {
           name: baseScenario!.space.collaboration.calloutPostDisplayName,
           exact: true,
         })
-      ).toBeVisible({ timeout: 5000 });
+      ).toBeVisible();
       await collaborationPage.clickCallout(
         baseScenario!.space.collaboration.calloutPostDisplayName
       );
 
-      await expect(collaborationPage.commentInput).toBeVisible({
-        timeout: 5000,
-      });
+      await expect(collaborationPage.commentInput).toBeVisible();
 
       await collaborationPage.addComment(commentText);
 
@@ -162,7 +158,7 @@ memberFixture.test.describe.serial('Callout Comments - Member', () => {
       baseScenario!.space.collaboration.calloutPostDisplayName
     );
 
-    await expect(collaborationPage.commentInput).toBeVisible({ timeout: 5000 });
+    await expect(collaborationPage.commentInput).toBeVisible();
 
     const commentCount = await collaborationPage.getCommentCount();
     expect(commentCount).toBeGreaterThanOrEqual(1);

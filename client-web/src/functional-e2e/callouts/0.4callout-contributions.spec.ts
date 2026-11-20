@@ -161,9 +161,7 @@ memberFixture.test.describe.serial('Callout Contributions - Member', () => {
       await page.getByRole('button', { name: /^(save|update|post)$/i }).click();
 
       // Verify edited content is visible
-      await expect(page.getByText(editedTitle).first()).toBeVisible({
-        timeout: 5000,
-      });
+      await expect(page.getByText(editedTitle).first()).toBeVisible();
     }
   );
 });
