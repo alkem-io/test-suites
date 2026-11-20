@@ -2,12 +2,15 @@
 
 _What the platform does today for whiteboards: creating them, editing and who may edit, guest access, drafts, previews, deletion, and whiteboards in templates and collections: what it does, why, who may, and what is still to answer. Licensing rules are in `entitlements.md` (ENT-06, ENT-31) and callout-level rules in `callout.md`. The layout is that of `communications.md`: **1. Rules**, **2. Rights**, **3. Open questions**, with the evidence in an **Appendix**._
 
-_Open questions per owner: Product Lead 7 · Technical Lead 10 · Quality Lead 5 · Security Lead 1 · Architecture Lead 1. By state: 21 open · 3 with a suggested answer. Proof of the 36 rules: 6 proven by a test · 30 untested (Appendix A)._
+_Open questions per owner: Product Lead 7 · Technical Lead 10 · Quality Lead 5 · Security Lead 1 · Architecture Lead 1. By state: 20 open · 4 with a suggested answer. Proof of the 36 rules: 6 proven by a test · 30 untested (Appendix A)._
+
+_Whys of the 36 rules: 29 rest on a source · 3 carry a draft for product to decide · 4 have none, and each already carries an open question (WBD-10, WBD-12, WBD-31, WBD-33)._
 
 **How to read it**
 
 - **Rule** is one or two plain sentences. The exact behaviour, with error messages and limits, is in Appendix A under the same id. The new core is checked against the exact text.
-- **Why: business** is what Alkemio needs. **Why: product** is the user story. **Why: technical** is the engineering reason, when there is one. "—" means no source states one. Most product whys are still empty: product fills them in its review.
+- **Why: business** is what Alkemio needs. **Why: product** is the user story. **Why: technical** is the engineering reason. A rule needs at least one why, and gets a second or third only where it adds something for the decision or the code. "—" means none is given.
+- A why that names a spec, issue, pull request, code comment or code line rests on that source. A why ending in _(draft)_ was written by QA and no source states it: product keeps, rewrites or deletes it, and sets **Decided by**. A rule with no why at all carries an open question in section 3.
 - **Decided by** names the source of the decision: a spec, a commit or pull request, an issue or a document. "Not decided" means the behaviour exists in the code and nobody chose it. Product has not reviewed this file yet.
 - A marker in bold at the end of a rule points at section 3: **(open: F4)** means a question on this rule is still open, **(defect: F6)** means today's behaviour is a fault and must not be copied as intended, **(defect in part: F5)** means part of it is. A rule with no marker stands as written. Every rule is logged as the server behaves today, also when that is not the intended end state. Whether a test proves the rule sits in Appendix A as **proven** or **untested**.
 - Hard rules are not marked yet. Some rules are choices that a new feature may challenge, and some can never change; a later version will mark the second kind with "(hard rule)" after the why that makes it so. Until then, no marker does not mean a rule is open to change.
@@ -20,8 +23,8 @@ _Open questions per owner: Product Lead 7 · Technical Lead 10 · Quality Lead 5
 | ID | Rule | Why: business | Why: product | Why: technical | Decided by |
 |---|---|---|---|---|---|
 | WBD-01 | A new whiteboard gets its own name (default "Whiteboard"), a tag set, a readable identifier taken from its name, and its creator recorded as owner. | — | — | The owner field is what drafts and the owner-only edit policy key on (058 FR-003); a board without the default tagset cannot be opened in the editor (065 US1-AS4). | Spec 058 FR-003; spec 065 US1-AS4 |
-| WBD-02 | Every new whiteboard can be edited by contributors and has an automatic preview. Neither can be chosen when it is created. **(open: Q-WBD-02)** | — | — | — | Not decided: exists in the code |
-| WBD-03 | A whiteboard's identifier is unique within its callout. A taken identifier is refused; a missing one is taken from the title. **(open: Q-WBD-03)** | — | — | — | Not decided: exists in the code |
+| WBD-02 | Every new whiteboard can be edited by contributors and has an automatic preview. Neither can be chosen when it is created. **(open: Q-WBD-02)** | — | As a space member, I want a new whiteboard to be open to the other contributors and to show a preview straight away, so that we can start drawing together without setting anything up. _(draft)_ | — | Not decided: exists in the code |
+| WBD-03 | A whiteboard's identifier is unique within its callout. A taken identifier is refused; a missing one is taken from the title. **(open: Q-WBD-03)** | — | — | The identifier is the last part of the whiteboard's web address (`url.generator.service.ts`, `getWhiteboardUrlPath`, see WBD-33), so two whiteboards in one callout cannot share it. | Not decided: exists in the code |
 | WBD-04 | A whiteboard's drawing is never sent through the API. It is kept as a snapshot in the whiteboard's own storage and is read and written only through the live editing session. | — | — | Content unification: one CRDT representation, media locators safe, the room is the single writer of the snapshot (server spec `006-collab-content-unification`, cited by the code comments; not in this checkout). | Server spec 006-collab-content-unification (cited by code comments) |
 | WBD-05 | Creating a whiteboard works fully or not at all. An empty one is stored as an empty board; if anything cannot be stored, the whiteboard is removed again. | — | — | A new board must open empty and editable without a first save (006-collab-content-unification FR-010, per code comment); never a half-created board. | Server spec 006-collab-content-unification FR-010 (per code comment) |
 | WBD-06 | A whiteboard can be started from another one only by someone who may read that one. The drawing, its images and its preview are copied, so the copy stands on its own. Giving both a source and content is refused. | Cloning must not leak boards the actor cannot read (resolver comment; 058 FR-006/FR-007); the copy is independently owned. | — | — | Spec 058 FR-006, FR-007 |
@@ -32,7 +35,7 @@ _Open questions per owner: Product Lead 7 · Technical Lead 10 · Quality Lead 5
 
 | ID | Rule | Why: business | Why: product | Why: technical | Decided by |
 |---|---|---|---|---|---|
-| WBD-09 | Who may change the drawing follows the whiteboard's edit setting: only the creator, the space admins, or the space members. The creator can always edit and delete their own whiteboard, even after leaving the space. **(open: Q-WBD-09)** | — | — | — | Not decided: exists in the code |
+| WBD-09 | Who may change the drawing follows the whiteboard's edit setting: only the creator, the space admins, or the space members. The creator can always edit and delete their own whiteboard, even after leaving the space. **(open: Q-WBD-09)** | — | As a whiteboard creator, I want to choose whether only I, the admins or all members can change the drawing, so that I stay in control of my work. _(draft)_ | — | Not decided: exists in the code |
 | WBD-10 | Changing the edit setting takes effect at once for a whiteboard in a callout. A template or draft whiteboard keeps its old rights until its parent is next recalculated. **(open: Q-WBD-10)** | — | — | — | Not decided: exists in the code |
 | WBD-11 | Changing a whiteboard's title, description, tags, edit setting or preview settings needs the update right on it. The drawing cannot be changed this way. | — | — | Boards are edited through the collaboration service only (DTO comment). | Not decided: exists in the code (a code comment gives the reason) |
 | WBD-12 | A new identifier sent with a whiteboard update is accepted but ignored: the link does not change. **(defect: F6)** | — | — | — | Not decided: a defect |
@@ -40,7 +43,7 @@ _Open questions per owner: Product Lead 7 · Technical Lead 10 · Quality Lead 5
 | WBD-14 | When the server itself changes a whiteboard (replacing its drawing from another one, or an MCP edit), it does so through the live session in the name of the person who asked, so people editing see it at once. Replacing needs the edit right on the target and the read right on the source. **(open: F3)** | — | — | An external write must appear live and never be clobbered by a stale autosave (workspace spec 006; code comment). | Workspace spec 006 FR-001/002/005 |
 | WBD-15 | A template's whiteboard content can be written directly. For a whiteboard that frames a live callout, content sent with a callout update is ignored; only its preview settings are applied. | — | — | A direct write would be clobbered by the room's next save (code comment); templates have no live room. | Not decided: exists in the code (a code comment gives the reason) |
 | WBD-16 | Several people can edit a whiteboard at once only when its space has the multi-user whiteboard feature. A template or draft whiteboard is never multi-user (see ENT-31, ENT-06). | Multi-user editing is a paid space feature (server spec 083; `entitlements.md`). | — | — | Server spec 083 |
-| WBD-17 | Each time a whiteboard is saved, the people who contributed are reported to analytics. A failure there never affects editing. **(open: Q-WBD-17)** | — | — | — | Not decided: exists in the code |
+| WBD-17 | Each time a whiteboard is saved, the people who contributed are reported to analytics. A failure there never affects editing. **(open: Q-WBD-17)** | Alkemio measures who contributes to whiteboards to understand engagement; the report must never get in the way of editing. _(draft)_ | — | — | Not decided: exists in the code |
 | WBD-18 | An MCP client may edit a whiteboard only with the edit right. An import adds elements and never replaces or repairs. When MCP editing is switched off the answer is "unavailable", not "forbidden". A request above 262,144 bytes is not accepted. | — | — | Documented contract for external editors (`docs/McpWhiteboards.md`). | docs/McpWhiteboards.md; spec 066 |
 
 ### Guest access
@@ -48,7 +51,7 @@ _Open questions per owner: Product Lead 7 · Technical Lead 10 · Quality Lead 5
 | ID | Rule | Why: business | Why: product | Why: technical | Decided by |
 |---|---|---|---|---|---|
 | WBD-19 | Guest access on a whiteboard can be switched only by someone with the share right on it, and switched on only while its space allows guest contributions. Switching it off is always allowed. | Governance: never expose a board by accident (server spec 021 FR-001, FR-006). | — | — | Server spec 021 FR-001, FR-006 |
-| WBD-20 | With guest access on, a visitor who gave a name and any signed-in user may read and edit that whiteboard, also when its space is private. Switching it on twice changes nothing. **(open: F4)** | Guests collaborate without accounts. | — | Clients compose the link themselves, the server issues no tokens (021 FR-002, FR-005, FR-007). | Server spec 021 FR-002, FR-005, FR-007 |
+| WBD-20 | With guest access on, a visitor who gave a name and any signed-in user may read and edit that whiteboard, also when its space is private. Switching it on twice changes nothing. **(open: F4)** | — | A member holding the share right wants to enable guest collaboration so external participants can contribute without accounts (021 US1). | Clients compose the link themselves, the server issues no tokens (021 FR-002, FR-005, FR-007). | Server spec 021 FR-002, FR-005, FR-007 |
 | WBD-21 | Switching guest access off takes effect at once: a guest's next request is refused. **(open: F2)** | Revocation must be instant (021 FR-003, FR-008, SC-004). | — | — | Server spec 021 FR-003, FR-008 |
 | WBD-22 | While a space allows guest contributions, a whiteboard's creator, the space admins and, where the space lets it act as admin, Platform Support may share its whiteboards with guests. After the space setting is switched off, those rights and any guest access go when the whiteboard's rights are next recalculated. **(open: F1, F2)** | Space admins and owners control sharing; secure by default (server specs 022 FR-001..005, 023 FR-001..008, FR-014; 2025-11-21 GRANT→PUBLIC_SHARE note). | — | — | Server specs 022 FR-001..005 and 023 FR-001..008, FR-014 |
 | WBD-23 | A guest is a visitor without an account who gives a display name. A visitor who gives no name is anonymous. | Ephemeral guests need no account or token (`docs/Guest-Users.md`). | — | — | docs/Guest-Users.md |
@@ -168,7 +171,7 @@ _One section per role, so each owner reads only their own part. **To answer** li
 | OQ1 | Guest access | check | Does changing a space's guest setting recalculate the rights of every whiteboard in it? (Feeds F2.) | Technical Lead | — | open |
 | OQ3 | Editing | check | Is the old live-sync queue of spec 006 still declared or consumed anywhere? (Feeds F3.) | Technical Lead (Service Operations Lead checks the environments) | — | open |
 | OQ6 | Editing | check | Is there a size limit on a whiteboard? The server has none; if one exists it is in the collaboration service. Acceptance data has 2 whiteboards above 1 MB and 173 empty ones. | Technical Lead (Product Lead rules on the value if a limit is wanted) | — | open |
-| Q-WBD-03 | Creation | decision | Why does this rule exist? No source states a reason. Why must the identifier be unique within the callout? | Technical Lead | — | open |
+| Q-WBD-03 | Creation | decision | Why does this rule exist? No source states a reason. Why must the identifier be unique within the callout? | Technical Lead | The identifier is the last part of the whiteboard's web address (`url.generator.service.ts`, `getWhiteboardUrlPath`). The why is on WBD-03. | suggested |
 | Q-WBD-10 | Editing | decision | Why does this rule exist? No source states a reason. Why does a template or draft whiteboard keep its old rights until later? | Technical Lead | — | open |
 | Q-WBD-33 | Reading | decision | Why does this rule exist? No source states a reason. Why these two link shapes? | Technical Lead | — | open |
 
@@ -377,6 +380,8 @@ Extracted 2026-11-06 from three sources: server develop @ `eeecf9ddb` (Release/7
 
 2026-11-19 converted to the three-section layout. The status legend and the review-load line of the old header were dropped; the counts line at the top replaces them.
 
+2026-11-20 whys pass: every rule has at least one why, sourced where a spec, issue or code line states it and marked _(draft)_ where QA wrote it. Restating whys with no source were dropped where a sourced one remains. Q-WBD-03 gets a suggested answer from the web-address code; the WBD-20 user story comes from server spec 021 US1.
+
 #### Sources
 
 Server code (worktree `w1-access-matrix/server` @ `eeecf9ddb`):
@@ -401,3 +406,4 @@ Specs / issues:
 - `agents-hq origin/main:specs/058-draft-whiteboard-flow/spec.md`, `065-whiteboard-correctness/spec.md` (read with `git show`; not on the local branch), `055-restore-whiteboard-tools`, `066-mcp-whiteboard-executor` (listed)
 - server `specs/021-toggle-whiteboard-guest/spec.md`, `022-guest-contributions-policy/spec.md`, `023-guest-contributions-privileges/spec.md`, `078-ut-services-whiteboard/spec.md` (unit-test scope only), `083-collab-entitlement/spec.md` (via `entitlements.md`)
 - Issues cited (not re-derived): client-web#10283, client-web#10206, client-web#10326, server#6523, server#6464, alkemio#2129, whiteboard-collaboration-service#238
+- 2026-11-20 whys pass: server `specs/021-toggle-whiteboard-guest/spec.md` US1; `src/services/infrastructure/url-generator/url.generator.service.ts` (`getWhiteboardUrlPath`)
