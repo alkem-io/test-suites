@@ -2,7 +2,7 @@
 
 _What the platform does today for callouts: creating and framing them, their settings, publishing and closing, contributions, posts and comments, Forms, polls, reactions, the Contributors and Subspaces collections, transfer, deletion and reading: what it does, why, who may, and what is still to answer. The layout is the three-section one of `communications.md`: **1. Rules**, **2. Rights**, **3. Open questions**, with the evidence in an **Appendix**._
 
-_Open questions per owner: Product Lead 1 · Technical Lead 8 · Quality Lead 8 · Security Lead 1 · Architecture Lead 4. By state: 12 open · 10 with a suggested answer · 9 decided. Proof of the 77 rules: 45 proven by a test · 32 untested (Appendix A)._
+_Open questions per owner: Product Lead 0 · Technical Lead 8 · Quality Lead 8 · Security Lead 1 · Architecture Lead 4. By state: 11 open · 10 with a suggested answer · 10 decided. Proof of the 77 rules: 45 proven by a test · 32 untested (Appendix A)._
 
 _Whys of the 77 rules: 66 rest on a source · 8 carry a draft for product to decide · 3 have none, and each already carries an open question (CAL-11, CAL-27, CAL-39)._
 
@@ -64,7 +64,7 @@ _Whys of the 77 rules: 66 rest on a source · 8 carry a draft for product to dec
 | ID | Rule | Why: business | Why: product | Why: technical | Decided by |
 |---|---|---|---|---|---|
 | CAL-26 | A contribution is accepted only if its type is one the callout allows, and only with the content that belongs to that type. | — | — | Only allowed contribution types can be created in a collection (016 FR-007). | Server spec 016 FR-007 |
-| CAL-27 | Every type of contribution needs the same single right to contribute. The separate rights shown per type are never checked, and memo has none. **(open: F1)** | — | — | — (016 FR-010 asks for memo authorization "consistent with post/whiteboard"; crosscheck F10) | Not decided: exists in the code |
+| CAL-27 | Every type of contribution needs the same single right to contribute. The separate rights shown per type are never checked, and memo has none. | Whoever may contribute to a callout may add any type it allows; the callout's allowed types decide what can be added (Product, 2026-11-20). | — | — (016 FR-010 asks for memo authorization "consistent with post/whiteboard"; crosscheck F10) | Not decided: exists in the code; Product, 2026-11-20 (was F1): behaviour stays, tracked |
 | CAL-28 | The members of a callout's own Space can contribute. So can members of the parent Space when the Subspace inherits membership rights, and Platform Support only where the Space allows it. Non-members and visitors never can. | Contributions are member content; inheritance is a subspace setting (collaboration contributor rule). _(draft)_ | — | — | Not decided: exists in the code |
 | CAL-29 | Whoever adds a contribution owns it and can read, change and delete it. The Space's admins can do the same and can also move it. Platform Resource Admin can move any contribution. | Members curate their own input; admins moderate (contribution/post/link creator rules; 027 A9 for the move family). | — | — | Spec 027 A9 (moving); the owner rules exist in the code only |
 | CAL-30 | On a published callout in a Space, every new contribution adds an activity entry and sends one notification, unless the contributor switched the notification off. On a draft or knowledge-base callout nothing is written or sent. **(open: F16)** | Members are told about input they can see; a silent switch is an author's choice that never overrides a recipient's opt-in, and the activity entry is written first so a notification failure cannot lose it (070 FR-003/007/013). | — | — | Spec 070 FR-003/007/013 |
@@ -84,7 +84,7 @@ _Whys of the 77 rules: 66 rest on a source · 8 carry a draft for product to dec
 
 | ID | Rule | Why: business | Why: product | Why: technical | Decided by |
 |---|---|---|---|---|---|
-| CAL-37 | A memo is a full contribution type: it can be allowed on a callout, is counted and ordered like other contributions, and is removed completely on deletion. **(open: F1)** | — | — | Memos as collection contributions (server spec 016); see F1 for the missing per-type right. | Server spec 016 |
+| CAL-37 | A memo is a full contribution type: it can be allowed on a callout, is counted and ordered like other contributions, and is removed completely on deletion. | — | — | Memos as collection contributions (server spec 016); see F1 for the missing per-type right. | Server spec 016; Product, 2026-11-20 (was F1): behaviour stays, tracked |
 | CAL-38 | A whiteboard in a callout follows the callout's access rules, and members can edit it. Guests can use it only when the Space allows guest contributions and guest access is switched on for that whiteboard. | Guest access is an explicit, per-board, secure-by-default choice (server specs 021/022/023). | — | — | Server specs 021, 022, 023 |
 
 ### Links and media
@@ -237,7 +237,7 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 ### Product Lead
 
-[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 1 to answer, 1 also involved
+[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 0 to answer, 1 also involved
 
 **To answer**
 
@@ -249,7 +249,6 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 | ID | Area | Type | Question | Owner | Proposed answer | State |
 |---|---|---|---|---|---|---|
-| F1 | Contributions | decision | A callout publishes a separate right per contribution type (post, whiteboard), but the server never checks them, and memo has none. One right for every type, or real rights per type? | Architecture Lead (Product Lead says whether types need their own rights) | — | open |
 
 ### Technical Lead
 
@@ -317,7 +316,6 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 | ID | Area | Type | Question | Owner | Proposed answer | State |
 |---|---|---|---|---|---|---|
-| F1 | Contributions | decision | A callout publishes a separate right per contribution type (post, whiteboard), but the server never checks them, and memo has none. One right for every type, or real rights per type? | Architecture Lead (Product Lead says whether types need their own rights) | — | open |
 | F10 | Publishing | contract | A callout can be closed in two ways that give the same refusal: contributions switched off, or the contributor group set to "nobody". The second is never used in a test. | Architecture Lead | Keep one lock in the new core. | suggested |
 | F14 | Forms | contract | One Form rule answers with two different error codes (on create and on update), and the refusal to convert a virtual contributor reuses the transfer code. Which codes does the new core use? | Architecture Lead | — | open |
 | F16 | Publishing | contract | The "send notification" switch means three different things: required on publishing, only an explicit "no" counts on a contribution, any "yes" counts on creating a callout. | Architecture Lead | One convention in the new core. | suggested |
@@ -326,6 +324,7 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 | Was | Decision | Decided by | Now |
 |---|---|---|---|
+| F1 | Behaviour stays: every contribution type needs the same single right to contribute; the per-type rights shown are never checked. Wanted, tracked: remove the unchecked per-type rights (post, whiteboard) so only the one right remains. | Product, 2026-11-20 | CAL-27 |
 | Q-CAL-39 | A link belongs to whoever added it; admins remove what does not belong; files need the storage right. | Product, 2026-11-20 | CAL-39 |
 | Q-CAL-33 | A contribution moves to the callout where it belongs within the same Space, so that the Space stays organised. | Product, 2026-11-20 | CAL-33 |
 | Q-CAL-25 | The activity number shows how much is going on in a callout: contributions where it takes them, comments otherwise. | Product, 2026-11-20 | CAL-25 |
