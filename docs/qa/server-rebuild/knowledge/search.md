@@ -2,12 +2,15 @@
 
 _What the platform does today for search: what is in the index, how terms match, the categories and kinds of results, sizes and paging, searching inside one space or flow state, who sees which results, and how the index is rebuilt. "Explore spaces" is not search; its constants are recorded in Appendix E for the journey area (JRN-64). The layout is that of `communications.md`: **1. Rules**, **2. Rights**, **3. Open questions**, with the evidence in an **Appendix**. Product has not reviewed this file yet._
 
-_Open questions per owner: Product Lead 10 · Technical Lead 4 · Quality Lead 2 · Service Operations Lead 1 · Architecture Lead 1. By state: 15 open · 3 with a suggested answer. Proof of the 18 rules: 7 proven by a test · 11 untested (Appendix A)._
+_Open questions per owner: Product Lead 10 · Technical Lead 4 · Quality Lead 2 · Service Operations Lead 1 · Architecture Lead 1. By state: 14 open · 4 with a suggested answer. Proof of the 18 rules: 7 proven by a test · 11 untested (Appendix A)._
+
+_Whys of the 18 rules: 15 rest on a source · 2 carry a draft for product to decide · 1 have none, and each already carries an open question (SRCH-16)._
 
 **How to read it**
 
 - **Rule** is one or two plain sentences. The exact behaviour, with error messages and limits, is in Appendix A under the same id. The new core is checked against the exact text.
-- **Why: business** is what Alkemio needs. **Why: product** is the user story; product fills it in its review. **Why: technical** is the engineering reason, when there is one. "—" means no source states one.
+- **Why: business** is what Alkemio needs. **Why: product** is the user story. **Why: technical** is the engineering reason. A rule needs at least one why, and gets a second or third only where it adds something for the decision or the code. "—" means none is given.
+- A why that names a spec, issue, pull request, code comment or code line rests on that source. A why ending in _(draft)_ was written by QA and no source states it: product keeps, rewrites or deletes it, and sets **Decided by**. A rule with no why at all carries an open question in section 3.
 - **Decided by** names the source of the decision: a spec, a commit, a pull request or an issue. "Not decided: exists in the code" means the behaviour is in the code and no source shows that anybody chose it.
 - A marker in bold at the end of a rule points at section 3: **(open: F2)** means a question on this rule is still open, **(defect: F2)** means today's behaviour is a fault and must not be copied as intended, **(defect in part: F2)** means part of it is. A rule with no marker stands as written. Every rule is logged as the server behaves today, also when that is not the intended end state. Whether a test proves the rule sits in Appendix A as **proven** or **untested**.
 - Hard rules are not marked yet. Some rules are choices that a new feature may challenge, and some can never change; a later version will mark the second kind with "(hard rule)" after the why that makes it so. Until then, no marker does not mean a rule is open to change.
@@ -23,7 +26,7 @@ _Open questions per owner: Product Lead 10 · Technical Lead 4 · Quality Lead 2
 | SRCH-03 | Results come in five categories: spaces (space, subspace), contributors (user, organisation), collaboration tools (callout), framings (memo, whiteboard, office document) and contributions (post, whiteboard, memo, office document). A filter picks a category and, if wanted, kinds inside it. | — | — | Similar kinds are scored together so small entities are not drowned by large ones (`docs/search/Search.md` Solution). | `docs/search/Search.md` |
 | SRCH-04 | Without filters, every category returns 4 results. With filters, each category returns at most the number asked for. Inside a category the best match comes first. **(open: F10)** | — | — | Over-fetch "as an attempt to ensure the requested size after authorization" (code); 4 per category is the documented default. | `docs/search/Search.md` (the default of 4); the rest exists in the code only |
 | SRCH-05 | The search terms are matched against every indexed text. A match in the title counts three times and a match in a tag twice. Body text also matches with small typing errors and ranks higher when the terms stand close together. Every result says which terms matched. **(open: OQ3)** | — | — | Title stays a strong signal on long documents; fuzziness only on content keeps queries fast; tag ≈ content parity accepted (M-05 code comment); matched terms per server#3702. | Server#3702 (matched terms); the rest exists in the code (comment M-05) |
-| SRCH-06 | The index holds, for active spaces at every level, their about texts and profile (title, tagline, description, city, country, tags); for users and organisations the same profile fields; and for callouts, posts, whiteboards, memos and office documents in active spaces, their profile and their text. **(open: F6)** | What a person types is a name, a description, a place or a tag | — | content search added by 009. | Spec 009 FR-001…FR-003, FR-016 |
+| SRCH-06 | The index holds, for active spaces at every level, their about texts and profile (title, tagline, description, city, country, tags); for users and organisations the same profile fields; and for callouts, posts, whiteboards, memos and office documents in active spaces, their profile and their text. **(open: F6)** | Knowledge that lives only in post bodies and office documents must be findable, not just titles (009 US1; 007 US1). | — | content search added by 009. | Spec 009 FR-001…FR-003, FR-016 |
 | SRCH-07 | The index is rebuilt as a whole, never updated piece by piece. A rebuild is started by a Platform Operations Admin (audited), by an internal job, or every hour on acceptance and production. Content that was created, changed or deleted shows in search only after the next rebuild. **(open: F7, OQ1)** | — | — | Synchronisation is lazy by decision (009 FR-010/FR-011: "reindex sweep"); the mutation is an operations action (027 A11). | Spec 009 FR-010/FR-011; spec 027 A11 |
 
 ### Who sees what
@@ -33,7 +36,7 @@ _Open questions per owner: Product Lead 10 · Technical Lead 4 · Quality Lead 2
 | SRCH-08 | Every result except top-level spaces and users is checked against what the searcher can read; what they cannot read is left out. A member of a public space with a private subspace finds the space only. Members and admins of the subspaces find all levels. | — | — | Reuse the platform's authorization per entity (`docs/search/Search.md` step 7; 007 FR-009; 009 FR-009). | `docs/search/Search.md`; spec 007 FR-009; spec 009 FR-009 |
 | SRCH-09 | A top-level space is shown to every searcher, member or not, even when the space is private. Users are shown without a check. **(open: F2)** | — | — | "no authorization check — all spaces must be visible; context, profile and others are readable by all" (code comment); users are only reachable by signed-in searchers. | Not decided: exists in the code (a code comment) |
 | SRCH-10 | A visitor who is not signed in searches only spaces, framings and contributions, and finds only what a visitor can read. A visitor never finds users, organisations or callouts. **(open: F5)** | Hide contributor data from the unauthenticated (server PR #4712). | — | — | Server PR #4712 |
-| SRCH-11 | A post in a callout that is still a draft never shows in search, whatever the searcher's rights. | Drafts are not published content (callout area). | — | — | Not decided: exists in the code |
+| SRCH-11 | A post in a callout that is still a draft never shows in search, whatever the searcher's rights. | Drafts are not published content (callout area). _(draft)_ | — | — | Not decided: exists in the code |
 | SRCH-12 | A search inside one space returns only content of that space, only users and organisations that are members or admins of it, and, under spaces, the space itself. A space with no matching content returns nothing. **(open: F4, OQ2)** | — | — | Search inside one space (`docs/search/Search.md` filter API). | `docs/search/Search.md` |
 | SRCH-13 | In a search inside one flow state, or when asked to fold results, a matching post, whiteboard, memo or office document counts as a match of its callout. The callout is shown once, best match first and then newest first. | — | — | The unit of a scoped search is the callout (007 FR-017); recency tiebreak (FR-019); office-doc matches fold the same way (009 FR-006/007). | Spec 007 FR-017, FR-019; spec 009 FR-006/007 |
 
@@ -49,7 +52,7 @@ _Open questions per owner: Product Lead 10 · Technical Lead 4 · Quality Lead 2
 | ID | Rule | Why: business | Why: product | Why: technical | Decided by |
 |---|---|---|---|---|---|
 | SRCH-16 | Archiving a space does not take it or its content out of search until the next rebuild. Until then the archived top-level space is still shown to everyone, and its subspaces to whoever can still read them. **(open: F1a, F1b)** | — | — | — | Not decided: exists in the code |
-| SRCH-17 | Service accounts are never put in the index, and a user's email address and phone number are never written to it. **(open: Q-SRCH-17)** | — | — | — | Not decided: exists in the code |
+| SRCH-17 | Service accounts are never put in the index, and a user's email address and phone number are never written to it. **(open: Q-SRCH-17)** | Contact details are personal data and stay behind the platform's own access control; service accounts are not people anyone looks for. _(draft)_ | — | — | Not decided: exists in the code |
 | SRCH-18 | A client that connects through MCP searches with the same engine and sees what its user is allowed to see. | — | — | 102 FR-001/FR-002. | Server spec 102 FR-001/FR-002 |
 
 ## 2. Rights
@@ -112,7 +115,7 @@ _One section per role, so each owner reads only their own part. **To answer** li
 |---|---|---|---|---|---|---|
 | F9 | Engine | tidy-up | The schema description says at most 5 terms; the code allows 10. Fix the description? | Technical Lead | Fix the description. | suggested |
 | F10 | Engine | defect | A size of 0 and sizes that are not whole numbers are accepted; only negative sizes are refused. What are the bounds? | Technical Lead | Bounds of 1 to the maximum. | suggested |
-| OQ2 | Who sees what | check | Is issue #5114 still open, and what does it say a search inside a space should return? The 8 skipped scope cases cite it. (Feeds F4.) | Technical Lead | — | open |
+| OQ2 | Who sees what | check | Is issue #5114 still open, and what does it say a search inside a space should return? The 8 skipped scope cases cite it. (Feeds F4.) | Technical Lead | server#5114 is open (bug, reproduced). It expects a search inside a space to return only the subspace, not the space itself. | suggested |
 | OQ3 | Engine | check | The field settings of the index live in `reporting-orchestration` and were not read. Do they match what the match weights in SRCH-05 assume? | Technical Lead | — | open |
 
 **Also involved**
@@ -300,6 +303,8 @@ Extracted 2026-11-06 from three sources: server develop @ `eeecf9ddb` (Release/7
 
 2026-11-19 converted to the three-section layout: the single why was split in three, the who-may table was rebuilt with footnotes, and every finding, open question and rule without a stated reason was routed to an organisation role. The old status legend was dropped; proof is in Appendix A.
 
+2026-11-20 whys pass: every rule has at least one why, sourced where a spec, issue or code line states it and marked _(draft)_ where QA wrote it (SRCH-11, SRCH-17). Server#5114 was read: it answers OQ2 (suggested).
+
 #### Sources
 
 Server code (worktree `w1-access-matrix/server` @ `eeecf9ddb`):
@@ -321,3 +326,4 @@ Specs / issues:
 - `agents-hq/specs/007-knowledge-base-search/spec.md`; `agents-hq/specs/009-office-doc-search/spec.md`
 - server `specs/102-mcp-content-search-hardening/spec.md`; server `specs/035-optimize-explore-spaces/spec.md` (via journey JRN-64)
 - server#3700 (total), #3702 (matched terms), #5114 (scope, cited by tests only), PRs #3714, #4712
+- server#5114 read 2026-11-20 (open; expects only the subspace when searching inside a space)
