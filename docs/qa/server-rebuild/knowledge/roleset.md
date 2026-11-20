@@ -2,7 +2,7 @@
 
 _What the platform does today for the role sets of spaces, organisations and the platform: the roles and their limits, the entry role and the rule that a subspace member is a member of the parent, adding and removing people directly, applications, invitations to existing users, organisations and virtual contributors, email invitations, organisation associates, joining through a matching email domain, the combined application or join for a subspace, Platform Support's audited work on organisations, and the lists of pending requests. The file follows the three-section layout accepted in the product review of `communications.md` (alkem-io/test-suites#717): **1. Rules**, **2. Rights**, **3. Open questions**, with the evidence in an **Appendix**._
 
-_Open questions per owner: Product Lead 3 · Technical Lead 4 · Quality Lead 8 · Security Lead 1 · Incident Lead 2. By state: 12 open · 6 with a suggested answer · 11 decided. Proof of the 79 rules: 60 proven by a test · 19 untested (Appendix A)._
+_Open questions per owner: Product Lead 2 · Technical Lead 4 · Quality Lead 8 · Security Lead 1 · Incident Lead 2. By state: 11 open · 6 with a suggested answer · 12 decided. Proof of the 79 rules: 60 proven by a test · 19 untested (Appendix A)._
 
 _Whys of the 79 rules: 55 rest on a source · 17 carry a draft for product to decide · 7 have none, and each already carries an open question or a defect (RS-04: F1; RS-06: F2; RS-27: Q-RS-02; RS-36: F4; RS-54: F11; RS-77: F7; RS-79: F13)._
 
@@ -59,7 +59,7 @@ _Whys of the 79 rules: 55 rest on a source · 17 carry a draft for product to de
 | RS-24 | An applicant can read, withdraw and update their own application, but never approve it. | Self-targeted Support actions are blocked (090 FR-008). | — | GRANT is never granted to the applicant (policy comment). | Spec 090 FR-008; policy comment |
 | RS-25 | Approval gives the entry role. For a combined subspace application the applicant is added to the subspace and to every missing space above it in one step, or to none. If the spaces above are no longer public and opted in at that moment, approval is refused and the application waits for an admin to reject it. **(open: OQ3, OQ4)** | — | As a first-time community member arriving by a shared link, I want approval of my subspace application to make me a member of the spaces above it too, in one step, so that I never have to sign up to the parent separately (017 US1). | — | Spec 017 FR-006, FR-007, FR-015, FR-020 |
 | RS-26 | On a space a rejected application still counts as open until an admin archives it, so the person cannot apply again before that. On an organisation a rejected applicant can apply again at once. | Space: archive-then-re-invite is the documented route (061 R4); organisation: "an applicant the organization turned down may apply again later" (code comment, 062). | — | — | Spec 061 R4; spec 062 (code comment); Product, 2026-11-20 (was F8): both behaviours stay |
-| RS-27 | An application can be deleted by the applicant or by whoever may delete on the role set. It then leaves the pending list and the applicant's own list. **(open: Q-RS-02, OQ4)** | — | — | — | Not decided: exists in the code |
+| RS-27 | An application can be deleted by the applicant or by whoever may delete on the role set. It then leaves the pending list and the applicant's own list. **(open: OQ4)** | An applicant can withdraw their own request, and admins can clean up requests they will not handle. | As an applicant, I want to withdraw my application, so that I am no longer waiting on a space I changed my mind about. As a space admin, I want to remove applications I will not handle, so that my pending list only shows what still needs a decision. | — | Product, 2026-11-20 (was Q-RS-02) |
 | RS-28 | Deleting a user removes their pending applications and invitations, for spaces and organisations alike. | Pending rows are personal data of the deleted person. _(draft)_ | — | — | Not decided: exists in the code |
 | RS-29 | The pending applications of a community can be read only by those who decide them: space admins, organisation admins and owners, and Platform Support on organisations. Everyone else, the applicant included, gets an error, never an empty list. | Applications carry the applicant's answers (PII); being allowed to invite does not make one a decider (062 R3/R47, FR-024; 090 FR-011). | — | — | Spec 062 FR-024, R3/R47; spec 090 FR-011 |
 | RS-30 | A person's own pending requests are split into two exact lists: those for spaces and those for organisations. | — | — | The top-bar query 500'd on the first organisation row before the partition (062 FR-023, D-8). | Spec 062 FR-023, D-8 |
@@ -206,13 +206,12 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 ### Product Lead
 
-[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 3 to answer
+[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 2 to answer
 
 **To answer**
 
 | ID | Area | Type | Question | Owner | Proposed answer | State |
 |---|---|---|---|---|---|---|
-| Q-RS-02 | Applications | decision | Why does this rule exist? No source states who should be able to delete an application, and why (RS-27). | Product Lead | — | open |
 | Q-RS-03 | Lifecycle | decision | Why does this rule exist? No source states why the creator and the hosting organisation get these roles (RS-75). | Product Lead | The reading of the extraction: the host and the creator run the space from day one. | suggested |
 | CONST | All | decision | 27 of the 37 constants are still blank in "product must rule?" (Appendix E). Which must product rule on? | Product Lead (Technical Lead for engineering limits and wire shapes, Security Lead for security limits) | — | open |
 
@@ -315,6 +314,7 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 | Was | Decision | Decided by | Now |
 |---|---|---|---|
+| Q-RS-02 | The applicant or the space admins may delete an application: withdrawing your own request, cleaning up the pending list. | Product, 2026-11-20 | RS-27 |
 | Q-RS-01 | Member profiles are visible to fellow members only. | Product, 2026-11-20 | RS-20 |
 | F14 | Behaviour stays: only an invited organisation's admins are notified, and the 'no administrators' notice ignores owners. Wanted, tracked: notify owners too, and count them for the 'no administrators' notice. | Product, 2026-11-20 | RS-51 |
 | F13 | Behaviour stays: organisation admins and owners can add associates, admins and owners directly through the API, for a transition period. Wanted, tracked: make organisations invitation-only like spaces (server#6608). | Product, 2026-11-20 | RS-79 |
