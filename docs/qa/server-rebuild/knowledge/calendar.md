@@ -2,7 +2,7 @@
 
 _What the platform does today for the calendar every space carries and its events: creating, reading, updating and deleting them, whole-day and timed dates, the Google, Outlook and ICS exports, subspace events showing on the parent calendar, and the notifications and activity an event produces. It says what the server does, why, who may, and what is still to answer. The file has three sections, **1. Rules**, **2. Rights** and **3. Open questions**, with the evidence in an **Appendix**._
 
-_Open questions per owner: Product Lead 6 · Technical Lead 5 · Quality Lead 4 · Architecture Lead 1. By state: 11 open · 5 with a suggested answer · 1 decided. Proof of the 25 rules: 12 proven by a test · 13 untested (Appendix A)._
+_Open questions per owner: Product Lead 5 · Technical Lead 5 · Quality Lead 4 · Architecture Lead 1. By state: 11 open · 4 with a suggested answer · 2 decided. Proof of the 25 rules: 12 proven by a test · 13 untested (Appendix A)._
 
 _Whys of the 25 rules: 14 rest on a source · 9 carry a draft for product to decide · 2 have none, and each already carries an open question (EVT-24, EVT-25)._
 
@@ -41,7 +41,7 @@ _Whys of the 25 rules: 14 rest on a source · 9 carry a draft for product to dec
 |---|---|---|---|---|---|
 | EVT-09 | Anyone who can read a calendar sees its list of events, each with its title, dates and flags. | An event is part of the space's content, so it is exactly as visible as the space. _(draft)_ | — | The calendar inherits the collaboration's policy. _(draft)_ | Not decided: exists in the code |
 | EVT-10 | When the space setting "allow events from subspaces" is on (the default), the calendar of a top-level space also shows the events of its direct subspaces that are flagged to show on the parent. Events of sub-subspaces never show on a calendar above them. | — | As a subspace admin, I want to promote some events on the space level as well. As a space admin, I want to be able to prevent subspace events from being promoted on the space dashboard (client-web#6876). | One level up only, "for simplicity for now" (client-web#6876); the code comment says how to widen it. | client-web#6876; server PR #4687; Product, 2026-11-20 (was F3): one level up is the rule |
-| EVT-11 | An event shown on a parent calendar says which subspace it belongs to. An event on a top-level space's own calendar names none. **(open: Q-EVT-11)** | — | As a space member, I want an event promoted from a subspace to show which subspace it comes from (client-web#6876, acceptance criteria). | — (schema: "Only applicable if the Space has this option enabled") | client-web#6876 |
+| EVT-11 | An event shown on a parent calendar says which subspace it belongs to. An event on a top-level space's own calendar names none. | — | As a space member, I want an event promoted from a subspace to show which subspace it comes from (client-web#6876, acceptance criteria). | — (schema: "Only applicable if the Space has this option enabled") | client-web#6876; Product, 2026-11-20 (was Q-EVT-11) |
 | EVT-12 | Anyone who can read an event can open it by its id. A deleted event can no longer be found. **(open: F5)** | — | As a space member, I want to open an event from a link someone shared, so that I land straight on it. _(draft)_ | — | Not decided: exists in the code |
 
 ### Updating and deleting
@@ -114,7 +114,7 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 ### Product Lead
 
-[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 6 to answer
+[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 5 to answer
 
 **To answer**
 
@@ -123,7 +123,6 @@ _One section per role, so each owner reads only their own part. **To answer** li
 | F1 | Exporting | decision | Should anyone be able to download the ICS file of an event in a public space without signing in? Today a visitor is sent to the login page, while two parked test cases cite a spec that wants download without an account. (The spec has to be found first, OQ1.) | Product Lead | The spec is client-web `specs/004-add-to-calendar/spec.md` (branch `4-add-to-calendar`). Its US3 scenario 4: "I do not need to be logged into the platform to download the .ics file or open the calendar link" from the notification email; its edge cases still ask "can guests export events?". The spec is a draft, so the decision stays open. | open |
 | F7 | Lifecycle | decision | A creator who has left the community can still update and delete the events they created. Is that intended? | Product Lead | — | open |
 | OQ3 | Dates | decision | Is Europe/Amsterdam the intended time-zone hint in the ICS file for every customer? It is fixed in the code and no spec states it. | Product Lead (Service Operations Lead for the per-environment side) | — | open |
-| Q-EVT-11 | Reading | decision | Why does this rule exist? An event reports the subspace it belongs to; no source states the reason beyond a schema note. | Product Lead | client-web#6876 asks for it: "show Space/Subspace title of the event in the header of the event". The why is on EVT-11. | suggested |
 | Q-EVT-25 | Lifecycle | decision | Why does this rule exist? When the creator's account is gone the event still shows and nobody inherits the creator's rights; no source states the reason. (F8 asks what to do with the left-over id.) | Product Lead | — | open |
 | CONST | All | decision | 22 of the 27 constants are still blank in "product must rule?" (Appendix E). Which of them must product rule on? | Product Lead (Technical Lead and Security Lead for the rows pre-filled with their name) | — | open |
 
@@ -196,6 +195,7 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 | Was | Decision | Decided by | Now |
 |---|---|---|---|
+| Q-EVT-11 | An event shown on a parent calendar names its subspace, as asked in client-web#6876. | Product, 2026-11-20 | EVT-11 |
 | F3 | A top-level space's calendar shows the events of its direct subspaces only; one level up is the product rule (as chosen in client-web#6876). | Product, 2026-11-20 | EVT-10 |
 
 ## Appendix
