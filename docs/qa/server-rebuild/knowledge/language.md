@@ -4,10 +4,13 @@ _What the platform does today for interface languages: the languages it supports
 
 _Open questions per owner: Product Lead 5 · Technical Lead 2 · Quality Lead 4 · Architecture Lead 1. By state: 9 open · 3 with a suggested answer. Proof of the 16 rules: 14 proven by a test · 2 untested (Appendix A)._
 
+_Whys of the 16 rules: 16 rest on a source · none carries a draft · none is without a why. Spec 029 states the reason for almost every rule; LNG-13 rests on the comment in its legacy test._
+
 **How to read it**
 
 - **Rule** is one or two plain sentences. The exact behaviour, with error messages and limits, is in Appendix A under the same id. The new core is checked against the exact text.
-- **Why: business** is what Alkemio needs. **Why: product** is the user story. **Why: technical** is the engineering reason, when there is one. "—" means no source states one. Product has not reviewed this file yet, so most business whys and all user stories are still to be filled in.
+- **Why: business** is what Alkemio needs. **Why: product** is the user story. **Why: technical** is the engineering reason. A rule needs at least one why, and gets a second or third only where it adds something for the decision or the code. "—" means none is given.
+- A why that names a spec, issue, pull request, code comment or code line rests on that source. A why ending in _(draft)_ was written by QA and no source states it: product keeps, rewrites or deletes it, and sets **Decided by**. A rule with no why at all carries an open question in section 3.
 - **Decided by** names the source of the decision: a spec with its requirement, a pull request or commit, an issue or a document. "Not decided: exists in the code" means the behaviour exists in the code and nobody chose it. "Not decided: a defect" means today's behaviour is a fault.
 - A marker in bold at the end of a rule points at section 3: **(open: F2)** means a question on this rule is still open, **(defect: F1)** means today's behaviour is a fault and must not be copied as intended, **(defect in part: F3)** means part of it is. A rule with no marker stands as written. Every rule is logged as the server behaves today, also when that is not the intended end state. Whether a test proves the rule sits in Appendix A as **proven** or **untested**.
 - Hard rules are not marked yet. Some rules are choices that a new feature may challenge, and some can never change; a later version will mark the second kind with "(hard rule)" after the why that makes it so. Until then, no marker does not mean a rule is open to change.
@@ -21,7 +24,7 @@ _Open questions per owner: Product Lead 5 · Technical Lead 2 · Quality Lead 4 
 | ID | Rule | Why: business | Why: product | Why: technical | Decided by |
 |---|---|---|---|---|---|
 | LNG-01 | The platform supports six interface languages: English, Dutch, Spanish, Bulgarian, German and French. A user may store any of them as their preference; any other language is refused. **(open: F4)** | The supported set is what the interface is translated into; a user's own choice is never limited to the proactively offered subset (029 FR-008, FR-017; 054 "six product languages"). | — | — | Spec 029 FR-008, FR-017; spec 054 Assumptions |
-| LNG-02 | The platform publishes, to everyone including visitors, the languages it proactively offers (today Dutch only) and a default language (English) shown when no preference is known. An empty offer list switches every proactive offer off. **(open: F3)** | The default is the fallback for everyone who never chose. | — | Which languages are offered is configuration, not code, so a second language is a config change plus translations (029 FR-002, FR-006, SC-009). | Spec 029 FR-002, FR-006, SC-009 |
+| LNG-02 | The platform publishes, to everyone including visitors, the languages it proactively offers (today Dutch only) and a default language (English) shown when no preference is known. An empty offer list switches every proactive offer off. **(open: F3)** | — | — | Which languages are offered is configuration, not code, so a second language is a config change plus translations (029 FR-002, FR-006, SC-009). | Spec 029 FR-002, FR-006, SC-009 |
 
 ### The user's language setting
 
@@ -30,7 +33,7 @@ _Open questions per owner: Product Lead 5 · Technical Lead 2 · Quality Lead 4 
 | LNG-03 | A new account starts with no language and an unanswered offer. "Never chose" is kept apart from "chose the default". | The one-time offer to existing users depends on telling the two apart (029 Key Entities; DL-4: the migration never writes a concrete language, FR-012). | — | — | Spec 029 Key Entities, DL-4, FR-012 |
 | LNG-04 | Storing a language also records that the offer was answered, so the user is never offered again on any device. | — | — | The answered flag is global, held against the account (029 FR-005/005a, FR-022). | Spec 029 FR-005/005a, FR-022 |
 | LNG-05 | Declining is recorded without choosing a language: the offer counts as answered, the language stays empty and the user keeps the platform default. | A decline is a real, recorded choice; an ignored banner counts as a decline (029 FR-005, FR-020a, Assumptions). | — | — | Spec 029 FR-005, FR-020a |
-| LNG-06 | Once the offer is answered it cannot be set back to unanswered, not even by an admin. **(open: F2)** | Nobody sees the offer twice (029 FR-022). | — | Un-answering is not a valid state. | Spec 029 FR-022 |
+| LNG-06 | Once the offer is answered it cannot be set back to unanswered, not even by an admin. **(open: F2)** | Nobody sees the offer twice (029 FR-022). | — | — | Spec 029 FR-022 |
 | LNG-07 | Sending an empty language leaves the stored one untouched. A choice is never cleared, only replaced. | — | — | Explicit null behaves as "field omitted", the convention of every settings write (code comment); no product statement on clearing a choice. | Not decided: exists in the code (code comment) |
 | LNG-08 | A user's stored language is read with their settings: by the user, by the Platform Users Admin, and by anyone who may update the user. | Settings are the user's; the users-admin reads them for support (027 A4/A5). | — | — | Spec 027 A4/A5 |
 | LNG-09 | Only someone who may update a user can set their language: the user, and Platform Content Full Access through an inherited right. Any other registered user is refused and nothing changes. **(open: F1, F5, OQ4)** | The preference is personal (029 FR-008/011). | — | The content role's reach is the stored-policy root cascade, not a language decision (see F-1). | Spec 029 FR-008/011 for the user's own write. The admin write is not decided: it exists in the code |
@@ -39,10 +42,10 @@ _Open questions per owner: Product Lead 5 · Technical Lead 2 · Quality Lead 4 
 
 | ID | Rule | Why: business | Why: product | Why: technical | Decided by |
 |---|---|---|---|---|---|
-| LNG-10 | An inviter may attach one suggested language to a whole batch of invitations. It is optional and is recorded on every invitation the batch creates, for existing users and for new email addresses alike. | One control per batch keeps composing simple. | — | Recording per invitation keeps per-invitee granularity a UI change, not a migration (029 FR-014/014a/014b/015). | Spec 029 FR-014/014a/014b/015 |
+| LNG-10 | An inviter may attach one suggested language to a whole batch of invitations. It is optional and is recorded on every invitation the batch creates, for existing users and for new email addresses alike. | — | — | Recording per invitation keeps per-invitee granularity a UI change, not a migration (029 FR-014/014a/014b/015). | Spec 029 FR-014/014a/014b/015 |
 | LNG-11 | A suggested language that the platform does not currently offer is refused when the invitation is composed, and nothing is created. With an empty offer list every suggestion is refused. | — | — | The UI only offers eligible values, so a refusal only hits crafted requests; the kill switch must hold on the API too (029 SC-008, DL-8). | Spec 029 SC-008, DL-8 |
 | LNG-12 | When an invited person registers, the new account takes the language of the latest pending email invitation whose suggestion is still offered. Their first screen is in that language and no offer follows. An account that already has a language or an answer is left alone. **(open: OQ1, OQ3)** | The inviter's deliberate suggestion outranks the invitee's browser (029 FR-016, FR-019, DL-6). | — | Seeding runs synchronously inside registration (DL-12); stale suggestions fall back, never error (FR-018, DL-8); latest-created wins for determinism (DL-7). | Spec 029 FR-016, FR-018, FR-019, DL-6, DL-7, DL-8, DL-12 |
-| LNG-13 | Inviting an already invited email address again returns the existing invitation with its suggested language intact. A later invite without a language cannot remove it. **(open: Q-LNG-01)** | — | — | — (test rationale: a well-meant re-invite must not quietly remove what the invitee was given; the roleset area owns the "already invited" outcome). | Not decided: exists in the code |
+| LNG-13 | Inviting an already invited email address again returns the existing invitation with its suggested language intact. A later invite without a language cannot remove it. **(open: Q-LNG-01)** | A well-meant re-invite must not quietly remove what the invitee was given (legacy test comment, `server-api/src/functional-api/language/invitation-language-seeding.it-spec.ts:272`). | — | — | Not decided: exists in the code |
 | LNG-14 | Invitation emails are sent in the platform default language. The suggested language only affects what the invitee sees after signing up. | E-mail localisation is a tracked follow-up (029 FR-016a, DL-12). | — | The e-mail is built inside the notifications service, out of scope this release. | Spec 029 FR-016a, DL-12 |
 
 ### Where the language is used
@@ -243,6 +246,8 @@ Extracted 2026-11-06 from three sources: server develop @ `eeecf9ddb` (Release/7
 
 2026-11-19 converted to the three-section layout. The status legend of the extraction was replaced by the Proof column of Appendix A and the markers in section 1; the single why was split in three without rewording; every finding, open question and gap was routed to an organisation role.
 
+2026-11-20 whys pass: every rule has at least one why, sourced where a spec, issue or code line states it. Three restating whys with no source were dropped where a sourced one remains (LNG-02, LNG-06, LNG-10); LNG-13 takes its why from the legacy test comment. No draft was needed.
+
 #### Sources
 
 Server code (worktree `w1-access-matrix/server` @ `eeecf9ddb`):
@@ -264,3 +269,4 @@ Specs / issues:
 - `agents-hq/specs/029-detect-signup-language/spec.md` (FR-001…FR-023, SC-001…SC-010, Key Entities, decision log DL-3…DL-12); origin alkem-io/alkemio#2017
 - `agents-hq origin/main:specs/054-delete-own-account/spec.md` Assumptions (six product languages)
 - 027 platform-role redesign via code comments (A4/A5 users-admin settings read)
+- test › `server-api/src/functional-api/language/invitation-language-seeding.it-spec.ts:272` (the reason behind LNG-13)
