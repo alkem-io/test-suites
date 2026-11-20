@@ -4,10 +4,13 @@ _What the platform does today when a long list is served in pages: the one pagin
 
 _Open questions per owner: Product Lead 2 · Technical Lead 7 · Quality Lead 5 · Architecture Lead 1. By state: 8 open · 7 with a suggested answer. Proof of the 19 rules: 7 proven by a test · 12 untested (Appendix A)._
 
+_Whys of the 19 rules: 11 rest on a source · 6 carry a draft for product to decide · 2 have none, and both carry a defect marker (PAG-06, PAG-07)._
+
 **How to read it**
 
 - **Rule** is one or two plain sentences. The exact behaviour, with error messages and limits, is in Appendix A under the same id. The new core is checked against the exact text.
-- **Why: business** is what Alkemio needs. **Why: product** is the user story. **Why: technical** is the engineering reason, when there is one. "—" means no source states one. Product has not reviewed this file yet, so most business whys and all user stories are still to be filled in.
+- **Why: business** is what Alkemio needs. **Why: product** is the user story. **Why: technical** is the engineering reason. A rule needs at least one why, and gets a second or third only where it adds something for the decision or the code. "—" means none is given.
+- A why that names a spec, issue, pull request, code comment or code line rests on that source. A why ending in _(draft)_ was written by QA and no source states it: product keeps, rewrites or deletes it, and sets **Decided by**. A rule with no why at all carries an open question or a defect marker in section 3.
 - **Decided by** names the source of the decision: a spec with its requirement, a pull request or commit, an issue or a document. "Not decided: exists in the code" means the behaviour exists in the code and nobody chose it. "Not decided: a defect" means today's behaviour is a fault.
 - A marker in bold at the end of a rule points at section 3: **(open: F4)** means a question on this rule is still open, **(defect: F1)** means today's behaviour is a fault and must not be copied as intended, **(defect in part: F3)** means part of it is. A rule with no marker stands as written. Every rule is logged as the server behaves today, also when that is not the intended end state. Whether a test proves the rule sits in Appendix A as **proven** or **untested**.
 - Hard rules are not marked yet. Some rules are choices that a new feature may challenge, and some can never change; a later version will mark the second kind with "(hard rule)" after the why that makes it so. Until then, no marker does not mean a rule is open to change.
@@ -21,29 +24,29 @@ _Open questions per owner: Product Lead 2 · Technical Lead 7 · Quality Lead 5 
 | ID | Rule | Why: business | Why: product | Why: technical | Decided by |
 |---|---|---|---|---|---|
 | PAG-01 | Every long list is served in pages. A caller asks for a page size, going forward or backward from a marker, and gets the page, the total number of matching items, and whether more items exist before or after it. **(open: F9)** | — | — | A list can be unbounded; cursor paging keeps responses small and stable (`docs/Pagination.md` Motivation). | docs/Pagination.md |
-| PAG-02 | A request that mixes forward and backward paging, gives a marker without a page size, or asks for a page of zero or fewer items is refused before any data is read. **(open: F5)** | — | — | Relay-style direction is one-way per request; ambiguous requests are rejected rather than guessed. | Not decided: exists in the code |
+| PAG-02 | A request that mixes forward and backward paging, gives a marker without a page size, or asks for a page of zero or fewer items is refused before any data is read. **(open: F5)** | — | — | Relay-style direction is one-way per request; ambiguous requests are rejected rather than guessed. _(draft)_ | Not decided: exists in the code |
 | PAG-03 | A page holds 25 items when no size is asked. The Innovation Library gives at most 100 per page and form responses at most 50. | — | — | A default page instead of the whole collection; caps bound the per-request cost (spec 101 FR-005/FR-006). | Server spec 101 FR-005, FR-006 |
 | PAG-04 | Items come in the order they were created, unless the list sets its own order. The Innovation Library and in-app notifications show the newest first. **(open: F9)** | — | — | Sorting on UUIDs was slow on large tables, so a sequential `rowId` column is the sort and cursor key (`docs/Pagination.md` Decisions; 101 FR-015/FR-016). | docs/Pagination.md; server spec 101 FR-015/FR-016 |
 | PAG-05 | Paging forward from a marker starts right after that item. The marker must be an item of the same filtered list; otherwise the request is refused. **(open: F4, OQ1)** | — | — | Cursor = pointer to a record ("linked list", `docs/Pagination.md`). | docs/Pagination.md |
 | PAG-06 | Asking for the last N items without a marker returns the first N items of the list, not the last ones. **(defect: F1)** | — | — | — the no-cursor branch leaves the query untouched (`enforceCursor` returns early); Relay says the last N. | Not decided: a defect |
 | PAG-07 | Paging backward from a marker can return fewer items than asked when a filter is on or items were deleted. **(defect: F2)** | — | — | — | Not decided: a defect |
-| PAG-08 | Each page says whether items exist before and after it, gives the markers of its first and last item, and gives the total of the whole filtered list. **(open: F4, F6)** | — | — | Clients need to know whether to fetch more without a second query. | Not decided: exists in the code |
-| PAG-09 | A filter keeps every item that contains the typed text in one of its fields, ignoring capitals. An empty text keeps everything. Users are filtered on first name, last name, display name and email; organisations on display name, name id, contact email, domain and website. **(open: F9)** | A single search box over several fields. | — | — | Not decided: exists in the code |
-| PAG-19 | An item on a page is the same object as the one returned when it is asked for on its own. | — | — | One entity representation. | Not decided: exists in the code |
+| PAG-08 | Each page says whether items exist before and after it, gives the markers of its first and last item, and gives the total of the whole filtered list. **(open: F4, F6)** | — | — | The pagination function "look[s] around if data is available before or after the paged section", so a client knows whether to fetch more without a second query (`docs/Pagination.md` Technical design). | docs/Pagination.md (Technical design) |
+| PAG-09 | A filter keeps every item that contains the typed text in one of its fields, ignoring capitals. An empty text keeps everything. Users are filtered on first name, last name, display name and email; organisations on display name, name id, contact email, domain and website. **(open: F9)** | A single search box over several fields. _(draft)_ | — | — | Not decided: exists in the code |
+| PAG-19 | An item on a page is the same object as the one returned when it is asked for on its own. | — | — | One object per item, so the client cache keeps one copy of each item whether it came from a page or on its own. _(draft)_ | Not decided: exists in the code |
 
 ### The lists
 
 | ID | Rule | Why: business | Why: product | Why: technical | Decided by |
 |---|---|---|---|---|---|
 | PAG-10 | Every signed-in user can page through the platform user list; visitors are refused. Service accounts are included, unlike in the unpaged user list, which hides them. **(defect in part: F3, OQ2)** | — | — | "Allow all registered users to query non-protected user information" (code comment); personal fields keep their own per-field gate. | Not decided: exists in the code (code comment) |
-| PAG-11 | Anyone, signed in or not, can page through the organisation list, optionally narrowed to one verification status. **(open: Q-PAG-01, F7)** | — | — | — organisation profiles are public. | Not decided: exists in the code |
-| PAG-12 | Anyone can page through the list of top-level spaces. It shows active spaces unless other visibilities are asked for, and it does not check whether the reader may see each space. **(open: F7)** | The default hides archived/demo/inactive spaces. | — | Space abouts are world-readable (journey area). | Not decided: exists in the code |
+| PAG-11 | Anyone, signed in or not, can page through the organisation list, optionally narrowed to one verification status. **(open: Q-PAG-01, F7)** | Organisation profiles are public, so their list is public too. _(draft)_ | — | — | Not decided: exists in the code |
+| PAG-12 | Anyone can page through the list of top-level spaces. It shows active spaces unless other visibilities are asked for, and it does not check whether the reader may see each space. **(open: F7)** | The default hides archived, demo and inactive spaces. _(draft)_ | — | Space abouts are world-readable (journey area). _(draft)_ | Not decided: exists in the code |
 | PAG-13 | The platform-admin lists of users and organisations are the same pages behind admin gates: users for the Platform Users Admin and the Platform License Manager; organisations for Platform Content Full Access, Platform Support and the Platform License Manager. | Support and the licence manager need the lists their actions target (027 R-F.2/R-F.3 code comments). | — | — | Spec 027 R-F.2/R-F.3 (code comments) |
 | PAG-14 | A user's own in-app notifications come newest first, leave out archived ones and can be narrowed by type. A visitor gets an empty page. A page can be shorter than asked, because notifications from spaces the reader cannot see are dropped after the page is cut. **(defect in part: F8)** | — | — | Ordering by when the event happened, not when it was saved (code comment); anonymous `me` degrades to empty values (107/6315). | Code comment; 107/6315 as cited in the extraction |
 | PAG-15 | A role set's candidate lists are paged: users and virtual contributors who are not yet members (only the parent community's members, unless the caller may invite into the parent), and members who do not yet hold a higher role. | — | — | Inviting a non-member into a subspace also pulls them into the parent, so the pool widens only for those allowed to do that (code comment). | Not decided: exists in the code (code comment); see RS-11 in `roleset.md` |
 | PAG-16 | The Innovation Library pages its listed, publicly visible innovation packs and their templates newest first, up to 100 per page, narrowed by text and, for templates, by type. | — | — | Library grew past one request (spec 101 Context; FR-005/006/012/015/019). | Server spec 101 FR-005/006/012/015/019 |
-| PAG-17 | The activity feed pages the caller's own activity in the order the caller asks for. It is for signed-in users only. | — | — | — | Not decided: exists in the code |
-| PAG-18 | Form responses page forward only, 1 to 50 per page (25 by default), over the responses the viewer may read: all, only their own, or none. | Response visibility is a form setting. | — | The cap bounds the page. | Not decided: exists in the code |
+| PAG-17 | The activity feed pages the caller's own activity in the order the caller asks for. It is for signed-in users only. | — | As a signed-in user, I want to page back through my own activity, so that I can find what I did earlier. _(draft)_ | — | Not decided: exists in the code |
+| PAG-18 | Form responses page forward only, 1 to 50 per page (25 by default), over the responses the viewer may read: all, only their own, or none. | — | — | Relay paging keyed on `rowId`, `first` clamped to 50, total scoped to the viewer (080 D-15); the cap of 50 is one of the form's count caps (080 D-16). | Spec 080 D-15, D-16 |
 
 Numbering note: PAG-19 sits in the shared-contract block; ids are stable, not ordered.
 
@@ -263,6 +266,8 @@ Extracted 2026-11-06 from three sources: server develop @ `eeecf9ddb` (Release/7
 
 2026-11-19 converted to the three-section layout. The status legend of the extraction was replaced by the Proof column of Appendix A and the markers in section 1; the single why was split in three without rewording; every finding, open question and gap was routed to an organisation role.
 
+2026-11-20 whys pass: every rule has at least one why, sourced where a spec, issue or code line states it and marked _(draft)_ where QA wrote it. Restating whys with no source were dropped where a sourced one remains on the row. PAG-08 now cites the technical design in `docs/Pagination.md`; PAG-18 cites the form callout spec 080 (D-15, D-16), which decided its paging and its cap.
+
 #### Sources
 
 Server code (worktree `w1-access-matrix/server` @ `eeecf9ddb`):
@@ -280,3 +285,4 @@ Tests (worktree `w1-access-matrix/test-suites`):
 Specs / issues:
 - server `specs/101-innovation-library-pagination/spec.md`
 - server#3571 (cited by the skipped cases; not read), server#5918 (PR)
+- 2026-11-20 whys pass: `agents-hq/specs/080-form-callout-framing/spec.md` (D-15, D-16); `docs/Pagination.md` § Technical design
