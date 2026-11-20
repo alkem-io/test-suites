@@ -718,19 +718,19 @@ export async function expectVisuallyHidden(locator: Locator): Promise<void> {
   expect((box as { height: number }).height).toBeLessThanOrEqual(1);
 }
 
-/** Adds the first emoji from the picker as a reaction to `column`'s message. */
+/** Adds the first emoji of the quick bar as a reaction to `column`'s message. */
 export async function addReaction(page: Page, column: Locator): Promise<void> {
   await column.hover();
   await column.getByRole('button', { name: 'Add reaction' }).click();
-  // The picker is portaled to the body, outside the chat panel.
-  const picker = page.locator('.epr-main');
-  await expect(picker).toBeVisible({ timeout: 15000 });
-  // emojiStyle=NATIVE renders text emoji in `button.epr-emoji` — there is no
-  // `.epr-emoji-img` in this configuration.
-  const emoji = picker.locator('button.epr-emoji').first();
-  await expect(emoji).toBeVisible({ timeout: 15000 });
-  await emoji.click();
-  await expect(picker).toHaveCount(0, { timeout: 15000 });
+  // Reacting opens a short bar of emoji ending in a "More emojis" button
+  // (client-web#10624); the full picker only mounts behind that button. The
+  // bar is portaled to the body, outside the chat panel.
+  const quickBar = page
+    .locator('[data-slot="popover-content"]')
+    .filter({ has: page.getByRole('button', { name: 'More emojis' }) });
+  await expect(quickBar).toBeVisible({ timeout: 15000 });
+  await quickBar.getByRole('button').first().click();
+  await expect(quickBar).toHaveCount(0, { timeout: 15000 });
 }
 
 // ───────────────────── conversation-identity avatars ─────────────────────
