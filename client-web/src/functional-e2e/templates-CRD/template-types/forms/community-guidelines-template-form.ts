@@ -1,6 +1,7 @@
 import { Page } from '@playwright/test';
 import { CommunityGuidelinesTemplateForm } from './template-form.models';
 import { fillTemplateForm } from './template-form';
+import { fillRichTextEditor } from './rich-text';
 
 export const fillCommunityGuidelinesForm = async (
   page: Page,
@@ -15,9 +16,12 @@ export const fillCommunityGuidelinesForm = async (
     .fill(templateData.guidelines.displayName);
 
   // Guidelines content (rich-text editor)
-  await page
-    .getByRole('textbox', { name: 'Write the guidelines for this community…' })
-    .fill(templateData.guidelines.description);
+  await fillRichTextEditor(
+    page.getByRole('textbox', {
+      name: 'Write the guidelines for this community…',
+    }),
+    templateData.guidelines.description
+  );
 
   // References - each row has Title / URL / Description textboxes and a
   // "Remove reference" button. Add as many rows as needed, then fill them.
