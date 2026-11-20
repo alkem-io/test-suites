@@ -4,10 +4,13 @@ _What the platform does today for a space's innovation flow: its states (the pha
 
 _Open questions per owner: Product Lead 2 · Technical Lead 9 · Quality Lead 6 · Incident Lead 1. By state: 12 open · 6 with a suggested answer. Proof of the 27 rules: 16 proven by a test · 11 untested (Appendix A)._
 
+_Whys of the 27 rules: 22 rest on a source · 1 carry a draft for product to decide · 4 have none, and each already carries an open question or defect marker (FLW-04, FLW-07, FLW-16, FLW-27)._
+
 **How to read it**
 
 - **Rule** is one or two plain sentences. The exact behaviour, with error messages and limits, is in Appendix A under the same id. The new core is checked against the exact text.
-- **Why: business** is what Alkemio needs. **Why: product** is the user story; it is filled only where a cited spec states one, and product fills the rest later. **Why: technical** is the engineering reason, when there is one. "—" means no source states one.
+- **Why: business** is what Alkemio needs. **Why: product** is the user story. **Why: technical** is the engineering reason. A rule needs at least one why, and gets a second or third only where it adds something for the decision or the code. "—" means none is given.
+- A why that names a spec, issue, pull request, code comment or code line rests on that source. A why ending in _(draft)_ was written by QA and no source states it: product keeps, rewrites or deletes it, and sets **Decided by**. A rule with no why at all carries an open question in section 3.
 - **Decided by** names the source of the decision: a spec, a commit or pull request, an issue or a document. "Not decided" means the behaviour exists in the code and nobody chose it. Product has not reviewed this file yet.
 - A marker in bold at the end of a rule points at section 3: **(open: F5)** means a question on this rule is still open, **(defect: …)** means today's behaviour is a fault and must not be copied as intended, **(defect in part: …)** means part of it is. A rule with no marker stands as written. Every rule is logged as the server behaves today, also when that is not the intended end state. Whether a test proves the rule sits in Appendix A as **proven** or **untested**.
 - Hard rules are not marked yet. Some rules are choices that a new feature may challenge, and some can never change; a later version will mark the second kind with "(hard rule)" after the why that makes it so. Until then, no marker does not mean a rule is open to change.
@@ -61,7 +64,7 @@ _Open questions per owner: Product Lead 2 · Technical Lead 9 · Quality Lead 6 
 
 | ID | Rule | Why: business | Why: product | Why: technical | Decided by |
 |---|---|---|---|---|---|
-| FLW-19 | A flow has its own name, description and image, which a space admin can edit. Its address sits under the space and follows the space when it is promoted, demoted or moved. | — | — | — | Not decided: exists in the code |
+| FLW-19 | A flow has its own name, description and image, which a space admin can edit. Its address sits under the space and follows the space when it is promoted, demoted or moved. | — | As a space admin, I want to name, describe and illustrate my space's flow, so that members understand how the space is organised. _(draft)_ | — | Not decided: exists in the code |
 | FLW-20 | Saving a space as a template captures its flow: state names, descriptions, order and every setting, but never the default post template. Applying a space template replaces the whole flow at every level; a template that would give more than 8 states is refused before anything changes. **(open: OQ5)** | — | — | Operator ruling 3 of 040 (FR-015); L0 fixed phases removed (server#6418, R-22); 104 FR-009 atomic refusal; 030 FR-004. | Spec 040 FR-015 (operator ruling 3); spec 104 FR-009; spec 030 FR-004; server#6418 |
 | FLW-21 | Promoting or demoting a space keeps its flow exactly: names, descriptions, order, the current state and every sidebar. After a move to another space, each callout is matched again against the states of its own space. | Custom phases must survive promotion (server#6418, 086 U-2); 083 FR-018. | — | — | Server#6418; spec 086 U-2; spec 083 FR-018 |
 
@@ -317,6 +320,8 @@ Catalogue SP-8 lands as a **stage vocabulary on the space, with `post.stage_id`*
 Extracted 2026-11-06 from three sources: server develop @ `eeecf9ddb` (Release/79) code + `schema.graphql`; the legacy test suites (no `server-api/src/functional-api/innovation-flow/` cases exist — only a helper file; catalogue SP-8 is **partial**; the proof below is drawn from 7 journey, 3 callout-transfer, 1 templates and 2 orphan-free-deletion files, 20 cases, plus 3 client-web walks); the specs, issues and docs listed in § Sources. Scope: a space's innovation flow — its states (phases, tabs), how they are added, renamed, deleted, ordered and selected as current, their per-state settings (visibility, post presentation, sidebar), the classification of callouts by state, the default post template per state, and how flows travel through templates and conversions. The space lifecycle (`journey.md` JRN-09/20/21/22/36), callout behaviour (`callout.md` CAL-36/71/72/75) and templates (`templates.md` TPL-17/18/25/26) are cross-referenced where they already carry a rule. WHAT and WHY only — no mutations, fixtures or request params. Evidence paths are relative to the server repo unless prefixed `test ›` or `spec ›`. The extraction notes with every file:line are in `innovation-flow-dossier.md`.
 
 2026-11-19 converted to the three-section layout.
+
+2026-11-20 whys pass: every rule has at least one why, sourced where a spec, issue or code line states it and marked _(draft)_ where QA wrote it (FLW-19). The rules with no why (FLW-04, 07, 16, 27) each carry an open question or a defect marker.
 
 #### Sources
 
