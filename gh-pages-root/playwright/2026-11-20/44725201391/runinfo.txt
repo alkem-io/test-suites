@@ -1,0 +1,5 @@
+Run ID: 44725201391
+Date: 2026-11-20
+Branch: refs/heads/develop
+Commit: 2d68c5ebbcf52f97a68e18f729d13f701150250f
+Playwright outcome: failure

@@ -1,0 +1,310 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e2]:
+  - generic [ref=e5]:
+    - link "Skip to content" [ref=e6] [cursor=pointer]:
+      - /url: "#crd-main-content"
+    - banner [ref=e7]:
+      - generic [ref=e10]:
+        - generic [ref=e11]:
+          - link "Home" [ref=e12] [cursor=pointer]:
+            - /url: /home
+            - img "Alkemio" [ref=e14]
+          - navigation "breadcrumb" [ref=e22]:
+            - list [ref=e23]:
+              - listitem [ref=e24]:
+                - generic [ref=e25]: L
+                - generic [ref=e26]: l0-us1-cards-34976-677f7
+        - navigation "Menu" [ref=e27]:
+          - button "Search" [ref=e28] [cursor=pointer]:
+            - img
+          - button "Platform navigation" [ref=e29] [cursor=pointer]:
+            - img
+          - link "Log in" [ref=e31] [cursor=pointer]:
+            - /url: /login?returnUrl=https://test-alkem.io/us1-cards-34976-677f7
+    - main [ref=e32]:
+      - generic [ref=e33]:
+        - generic [ref=e34]:
+          - img "Space banner for l0-us1-cards-34976-677f7" [ref=e38]
+          - generic [ref=e41]:
+            - heading "l0-us1-cards-34976-677f7" [level=1] [ref=e43]
+            - paragraph [ref=e45]: A home to go from here to there, together!
+        - generic [ref=e47]:
+          - navigation "Space navigation tabs" [ref=e49]:
+            - generic [ref=e50]:
+              - tablist [ref=e52]:
+                - tab "Home" [selected] [ref=e53] [cursor=pointer]
+                - tab "Community" [ref=e54] [cursor=pointer]
+                - tab "Subspaces" [ref=e55] [cursor=pointer]
+                - tab "Knowledge" [ref=e56] [cursor=pointer]
+              - generic [ref=e58]:
+                - button "About this Space" [ref=e59] [cursor=pointer]:
+                  - img
+                - button "Activity" [ref=e60] [cursor=pointer]:
+                  - img
+                - button "Expand to full width" [ref=e61] [cursor=pointer]:
+                  - img
+                - link "Video Call" [ref=e62] [cursor=pointer]:
+                  - /url: https://meet.jit.si/us1-cards-34976-677f7-d27206a3-f99f-450f-a5be-412be33c55d3
+                  - img
+                - button "Share" [ref=e63] [cursor=pointer]:
+                  - img
+          - navigation "Space sidebar" [ref=e66]:
+            - generic [ref=e68]:
+              - paragraph [ref=e69]: Space Leads
+              - list [ref=e70]:
+                - listitem [ref=e71]:
+                  - link "admin alkemio admin alkemio" [ref=e72] [cursor=pointer]:
+                    - /url: https://test-alkem.io/user/admin-alkemio
+                    - generic [ref=e73]:
+                      - img "admin alkemio" [ref=e75]
+                      - paragraph [ref=e77]: admin alkemio
+                - listitem [ref=e78]:
+                  - link "us1-cards-34976-423e3 us1-cards-34976-423e3" [ref=e79] [cursor=pointer]:
+                    - /url: https://test-alkem.io/organization/us1-cards-34976-423e3
+                    - generic [ref=e80]:
+                      - img "us1-cards-34976-423e3" [ref=e82]
+                      - paragraph [ref=e84]: us1-cards-34976-423e3
+            - button "About this Space" [ref=e85] [cursor=pointer]:
+              - img
+              - generic [ref=e86]: About this Space
+            - generic [ref=e88]:
+              - img
+              - searchbox "Search posts" [ref=e89]
+            - generic [ref=e90]:
+              - button "Sign in to apply" [ref=e91] [cursor=pointer]
+              - paragraph [ref=e92]: You'll be redirected to sign in to Alkemio first.
+            - generic [ref=e93]:
+              - generic [ref=e95]:
+                - heading "Events" [level=3] [ref=e96]
+                - img [ref=e97]
+              - paragraph [ref=e99]: No upcoming events
+              - button "Show calendar" [ref=e100] [cursor=pointer]
+          - generic [ref=e102]:
+            - paragraph [ref=e109]: 🔍 A journey of discovery! Gather insights through research and observation.
+            - region "Space content feed" [ref=e110]:
+              - generic [ref=e113]:
+                - generic [ref=e114]:
+                  - link "Open US1 Cards 34976" [ref=e115] [cursor=pointer]:
+                    - /url: "#"
+                    - generic [ref=e116]: Open US1 Cards 34976
+                  - generic [ref=e117]:
+                    - link "admin alkemio" [ref=e118] [cursor=pointer]:
+                      - /url: https://test-alkem.io/user/admin-alkemio
+                      - img "admin alkemio" [ref=e120]
+                    - generic [ref=e122]:
+                      - link "admin alkemio" [ref=e123] [cursor=pointer]:
+                        - /url: https://test-alkem.io/user/admin-alkemio
+                      - generic [ref=e124]: • Today
+                  - button "Settings" [ref=e126] [cursor=pointer]:
+                    - img
+                - heading "US1 Cards 34976" [level=3] [ref=e128]:
+                  - link "US1 Cards 34976" [ref=e129] [cursor=pointer]:
+                    - /url: "#"
+                - region "Contributors" [ref=e131]:
+                  - generic [ref=e132]:
+                    - tablist [ref=e134]:
+                      - tab "People 5" [selected] [ref=e135] [cursor=pointer]:
+                        - generic [ref=e136]: People
+                        - generic [ref=e137]: "5"
+                      - tab "Organizations 5" [ref=e138] [cursor=pointer]:
+                        - generic [ref=e139]: Organizations
+                        - generic [ref=e140]: "5"
+                      - tab "Virtual Contributors 2" [ref=e141] [cursor=pointer]:
+                        - generic [ref=e142]: Virtual Contributors
+                        - generic [ref=e143]: "2"
+                    - tablist [ref=e145]:
+                      - tab "All 5" [selected] [ref=e146] [cursor=pointer]:
+                        - generic [ref=e147]: All
+                        - generic [ref=e148]: "5"
+                      - tab "Lead 1" [ref=e149] [cursor=pointer]:
+                        - generic [ref=e150]: Lead
+                        - generic [ref=e151]: "1"
+                      - tab "Member 4" [ref=e152] [cursor=pointer]:
+                        - generic [ref=e153]: Member
+                        - generic [ref=e154]: "4"
+                  - generic [ref=e155]:
+                    - generic [ref=e156]:
+                      - img [ref=e157]
+                      - textbox "Search by name…" [ref=e160]
+                    - generic [ref=e161]:
+                      - button "List" [ref=e162] [cursor=pointer]:
+                        - img [ref=e163]
+                        - generic [ref=e164]: List
+                      - button "Map" [pressed] [ref=e165] [cursor=pointer]:
+                        - img [ref=e166]
+                        - generic [ref=e168]: Map
+                  - generic [ref=e169]:
+                    - generic [ref=e170]:
+                      - region "Map" [ref=e171]:
+                        - generic [ref=e172]:
+                          - generic:
+                            - region "Map" [ref=e173]
+                            - button "Map marker" [ref=e174] [cursor=pointer]:
+                              - button "US1 Ada Long 34976" [ref=e175]
+                          - group [ref=e177]:
+                            - generic "Toggle attribution" [ref=e178] [cursor=pointer]
+                          - dialog "US1 Ada Long 34976" [ref=e182]:
+                            - button "Close" [active] [ref=e184] [cursor=pointer]:
+                              - img [ref=e185]
+                            - generic [ref=e189]:
+                              - generic [ref=e190]:
+                                - link "US1 Ada Long 34976" [ref=e191] [cursor=pointer]:
+                                  - /url: https://test-alkem.io/user/us1-adalong34976
+                                  - img "US1 Ada Long 34976" [ref=e193]
+                                - generic [ref=e194]:
+                                  - link "US1 Ada Long 34976" [ref=e195] [cursor=pointer]:
+                                    - /url: https://test-alkem.io/user/us1-adalong34976
+                                  - generic [ref=e196]:
+                                    - img [ref=e197]
+                                    - text: Member
+                                - button "Actions for US1 Ada Long 34976" [ref=e201] [cursor=pointer]:
+                                  - img
+                              - generic [ref=e202]:
+                                - paragraph [ref=e204]: A long tagline that has to stop at two lines on the card, cut with a mark. A long tagline that has to stop at two lines on the c
+                                - list [ref=e206]:
+                                  - listitem [ref=e207]:
+                                    - generic [ref=e208]: Supercalifragilisticexpialidocious-interdisciplinary-transformation-x
+                                  - listitem [ref=e209]:
+                                    - button "Show 5 more" [ref=e210] [cursor=pointer]: "+5"
+                                - generic [ref=e211]:
+                                  - img [ref=e212]
+                                  - generic [ref=e215]: Barcelona, ES
+                                - generic [ref=e216]: Joined this space Nov 2026
+                      - button "Expand map" [ref=e217] [cursor=pointer]:
+                        - img
+                    - generic [ref=e218]:
+                      - heading "No location data" [level=3] [ref=e219]
+                      - paragraph [ref=e220]: These contributors have no location data set.
+                      - list [ref=e221]:
+                        - listitem [ref=e222]:
+                          - generic [ref=e224]:
+                            - generic [ref=e225]:
+                              - link "admin alkemio" [ref=e226] [cursor=pointer]:
+                                - /url: https://test-alkem.io/user/admin-alkemio
+                                - img "admin alkemio" [ref=e228]
+                              - generic [ref=e229]:
+                                - link "admin alkemio" [ref=e230] [cursor=pointer]:
+                                  - /url: https://test-alkem.io/user/admin-alkemio
+                                - generic [ref=e231]:
+                                  - img [ref=e232]
+                                  - text: Lead
+                              - button "Actions for admin alkemio" [ref=e236] [cursor=pointer]:
+                                - img
+                            - generic [ref=e237]:
+                              - paragraph [ref=e239]: User has not filled in their tagline.
+                              - generic [ref=e240]: Joined this space Nov 2026
+                        - listitem [ref=e241]:
+                          - generic [ref=e243]:
+                            - generic [ref=e244]:
+                              - link "US1 Ben Merged 34976" [ref=e245] [cursor=pointer]:
+                                - /url: https://test-alkem.io/user/us1-benmerged34976
+                                - img "US1 Ben Merged 34976" [ref=e247]
+                              - generic [ref=e248]:
+                                - link "US1 Ben Merged 34976" [ref=e249] [cursor=pointer]:
+                                  - /url: https://test-alkem.io/user/us1-benmerged34976
+                                - generic [ref=e250]:
+                                  - img [ref=e251]
+                                  - text: Member
+                              - button "Actions for US1 Ben Merged 34976" [ref=e255] [cursor=pointer]:
+                                - img
+                            - generic [ref=e256]:
+                              - paragraph [ref=e258]: Urban planner.
+                              - list [ref=e260]:
+                                - listitem [ref=e261]:
+                                  - generic [ref=e262]: Urban Planning
+                                - listitem [ref=e263]:
+                                  - generic [ref=e264]: Sustainability
+                                - listitem [ref=e265]:
+                                  - generic [ref=e266]: Mobility
+                                - listitem [ref=e267]:
+                                  - button "Show 2 more" [ref=e268] [cursor=pointer]: "+2"
+                              - generic [ref=e269]: Joined this space Nov 2026
+                        - listitem [ref=e270]:
+                          - generic [ref=e272]:
+                            - generic [ref=e273]:
+                              - link "US1 Cleo Keywords 34976" [ref=e274] [cursor=pointer]:
+                                - /url: https://test-alkem.io/user/us1-cleokeywords34976
+                                - img "US1 Cleo Keywords 34976" [ref=e276]
+                              - generic [ref=e277]:
+                                - link "US1 Cleo Keywords 34976" [ref=e278] [cursor=pointer]:
+                                  - /url: https://test-alkem.io/user/us1-cleokeywords34976
+                                - generic [ref=e279]:
+                                  - img [ref=e280]
+                                  - text: Member
+                              - button "Actions for US1 Cleo Keywords 34976" [ref=e284] [cursor=pointer]:
+                                - img
+                            - generic [ref=e285]:
+                              - paragraph [ref=e287]: User has not filled in their tagline.
+                              - list [ref=e289]:
+                                - listitem [ref=e290]:
+                                  - generic [ref=e291]: Policy
+                                - listitem [ref=e292]:
+                                  - generic [ref=e293]: Energy
+                              - generic [ref=e294]: Joined this space Nov 2026
+                        - listitem [ref=e295]:
+                          - generic [ref=e297]:
+                            - generic [ref=e298]:
+                              - link "US1 Cy Empty 34976" [ref=e299] [cursor=pointer]:
+                                - /url: https://test-alkem.io/user/us1-cyempty34976
+                                - img "US1 Cy Empty 34976" [ref=e301]
+                              - generic [ref=e302]:
+                                - link "US1 Cy Empty 34976" [ref=e303] [cursor=pointer]:
+                                  - /url: https://test-alkem.io/user/us1-cyempty34976
+                                - generic [ref=e304]:
+                                  - img [ref=e305]
+                                  - text: Member
+                              - button "Actions for US1 Cy Empty 34976" [ref=e309] [cursor=pointer]:
+                                - img
+                            - generic [ref=e310]:
+                              - paragraph [ref=e312]: User has not filled in their tagline.
+                              - generic [ref=e313]: Joined this space Nov 2026
+                - button "Expand comments" [ref=e317] [cursor=pointer]:
+                  - img [ref=e318]
+                  - img [ref=e320]
+                  - generic [ref=e322]: 0 Comments
+              - generic [ref=e325]:
+                - generic [ref=e326]:
+                  - link "Open 👋 Welcome to your space!" [ref=e327] [cursor=pointer]:
+                    - /url: "#"
+                    - generic [ref=e328]: Open 👋 Welcome to your space!
+                  - generic [ref=e329]:
+                    - link "admin alkemio" [ref=e330] [cursor=pointer]:
+                      - /url: https://test-alkem.io/user/admin-alkemio
+                      - img "admin alkemio" [ref=e332]
+                    - generic [ref=e334]:
+                      - link "admin alkemio" [ref=e335] [cursor=pointer]:
+                        - /url: https://test-alkem.io/user/admin-alkemio
+                      - generic [ref=e336]: • Today
+                  - button "Settings" [ref=e338] [cursor=pointer]:
+                    - img
+                - generic [ref=e339]:
+                  - heading "👋 Welcome to your space!" [level=3] [ref=e340]:
+                    - link "👋 Welcome to your space!" [ref=e341] [cursor=pointer]:
+                      - /url: "#"
+                  - paragraph [ref=e346]: An empty space for you to configure!.
+                - button "Expand comments" [ref=e350] [cursor=pointer]:
+                  - img [ref=e351]
+                  - img [ref=e353]
+                  - generic [ref=e355]: 0 Comments
+    - contentinfo [ref=e356]:
+      - generic [ref=e357]:
+        - generic [ref=e358]:
+          - img "Alkemio" [ref=e360]
+          - generic [ref=e366]: © 2026 Alkemio B.V.
+        - navigation "Footer" [ref=e367]:
+          - link "Terms" [ref=e368] [cursor=pointer]:
+            - /url: https://welcome.alkem.io/legal/terms/
+          - link "Privacy" [ref=e369] [cursor=pointer]:
+            - /url: https://welcome.alkem.io/legal/privacy
+          - link "Security" [ref=e370] [cursor=pointer]:
+            - /url: https://welcome.alkem.io/legal/security
+          - button "Support" [ref=e371] [cursor=pointer]
+          - link "About" [ref=e372] [cursor=pointer]:
+            - /url: https://welcome.alkem.io
+        - button "English" [ref=e374] [cursor=pointer]:
+          - img [ref=e375]
+          - generic [ref=e378]: English
+  - region "Notifications alt+T"
+```
