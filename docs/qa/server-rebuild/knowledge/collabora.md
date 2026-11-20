@@ -2,12 +2,15 @@
 
 _What the platform does today for office documents edited with Collabora, as the main content of a callout or as a contribution: the kinds, the three ways a document is created, opening it in the editor, who may edit, rename, replace and delete it, its preview, and the records it writes. The office-documents licence (ENT-32) and the callout rules are in `entitlements.md` and `callout.md` and are only cross-referenced here. What it does, why, who may, and what is still to answer. The file has three sections: **1. Rules**, **2. Rights**, **3. Open questions**, with the evidence in an **Appendix**._
 
-_Open questions per owner: Product Lead 6 · Technical Lead 6 · Quality Lead 6 · Service Operations Lead 1. By state: 15 open · 4 with a suggested answer. Proof of the 23 rules: 14 proven by a test · 9 untested (Appendix A)._
+_Open questions per owner: Product Lead 6 · Technical Lead 6 · Quality Lead 6 · Service Operations Lead 1. By state: 14 open · 5 with a suggested answer. Proof of the 23 rules: 14 proven by a test · 9 untested (Appendix A)._
+
+_Whys of the 23 rules: 23 rest on a source · 0 carry a draft for product to decide · 0 have none._
 
 **How to read it**
 
 - **Rule** is one or two plain sentences. The exact behaviour, with error messages and limits, is in Appendix A under the same id. The new core is checked against the exact text.
-- **Why: business** is what Alkemio needs. **Why: product** is the user story. **Why: technical** is the engineering reason, when there is one. "—" means no source states one. Product has not reviewed this file yet and fills the missing user stories later.
+- **Why: business** is what Alkemio needs. **Why: product** is the user story. **Why: technical** is the engineering reason. A rule needs at least one why, and gets a second or third only where it adds something for the decision or the code. "—" means none is given.
+- A why that names a spec, issue, pull request, code comment or code line rests on that source. A why ending in _(draft)_ was written by QA and no source states it: product keeps, rewrites or deletes it, and sets **Decided by**. A rule with no why at all carries an open question in section 3.
 - **Decided by** names the source of the decision: a spec, a commit or pull request, an issue or a document. "Not decided: exists in the code" means the behaviour is in the code and nobody chose it. "Not decided: a defect" means the behaviour is a fault.
 - A marker in bold at the end of a rule points at section 3: **(open: F3)** means a question on this rule is still open, **(defect: F2)** means today's behaviour is a fault and must not be copied as intended, **(defect in part: F5)** means part of it is. A rule with no marker stands as written. Every rule is logged as the server behaves today, also when that is not the intended end state. Whether a test proves the rule sits in Appendix A as **proven** or **untested**.
 - Hard rules are not marked yet. Some rules are choices that a new feature may challenge, and some can never change; a later version will mark the second kind with "(hard rule)" after the why that makes it so. Until then, no marker does not mean a rule is open to change.
@@ -34,7 +37,7 @@ _Open questions per owner: Product Lead 6 · Technical Lead 6 · Quality Lead 6 
 |---|---|---|---|---|---|
 | OFD-10 | Opening a document in the editor needs the right to read it: visitors and users without access to a private Space are refused, members are allowed. The editor shows the user's display name (never an email) and uses the user's language. | — | — | Space-level authorization for every document operation (086 FR-006); token minting through the WOPI service (086 FR-003/008); users were shown as "UnknownUser" before the name was forwarded (server#6170); a mixed-language editor without an explicit language (#6343). | Spec 086 FR-003/006/008; server#6170; #6343 |
 | OFD-11 | Opening never waits for analytics. A document that cannot be linked to a Space (knowledge base, template) still opens normally, and an open stays well under 5 seconds. | — | — | A best-effort side effect must never delay or fail the user's open — the 8-second stall of Release 71 (server#6360, spec 110 FR-001/003/007; SC-001 p95 < 1 s in production). | Spec 110 FR-001/003/007; server#6360 |
-| OFD-12 | Every open gets its own editor access. Two people opening the same document at the same time each succeed on their own. **(open: Q-OFD-12)** | — | — | — | Not decided: exists in the code |
+| OFD-12 | Every open gets its own editor access. Two people opening the same document at the same time each succeed on their own. **(open: Q-OFD-12)** | — | As a space member, I want to edit a document at the same time as others and see their changes, so that we write it together (server spec 086 US2 scenario 2, SC-002). | — | Server spec 086 US2, SC-002 (concurrent editing); one access per open is not decided |
 | OFD-13 | A reader of a document can ask whether saving is available. The answer is a plain yes or no and leaves no trace. | — | — | Lets the editor tell a real save-path outage from a cosmetic "unsaved" flag (015 FR-017; server PR #6264). | Spec 015 FR-017; server PR #6264 |
 
 ### Editing, renaming, replacing, deleting
@@ -124,7 +127,7 @@ _One section per role, so each owner reads only their own part. **To answer** li
 | F5 | Editing | decision | The rules for a document name (not blank, at least 3 characters, a maximum length) are checked only in the web client; the server saves any name. Add the check on the server, or accept the client as the only gate? | Technical Lead | — | open |
 | F8 | Editing | risk | When the save service does not offer the "is someone editing?" check at all, replace goes ahead without it. A wrongly routed save service then silently switches the guard off. Accept this as a deployment condition, or refuse in that case too? | Technical Lead (Service Operations Lead if it is accepted as a deployment condition) | — | open |
 | OQ1 | Records | check | The save service (wopi-service) code was not read. Someone with the repository should confirm OFD-19 and OFD-21 against it: preview access checks, session windows, and leaving out guests. | Technical Lead | — | open |
-| Q-OFD-12 | Opening | decision | Why does every open get its own editor access, with nothing shared between two opens? No source states a reason. | Technical Lead | — | open |
+| Q-OFD-12 | Opening | decision | Why does every open get its own editor access, with nothing shared between two opens? No source states a reason. | Technical Lead | Server spec 086 US2 scenario 2 and SC-002 want two members editing the same document at once, with Collabora handling the real-time part. The product why is on OFD-12; whether one access per open is the way to get there is still yours. | suggested |
 
 **Also involved**
 
@@ -305,6 +308,8 @@ Extracted 2026-11-06 from three sources: server develop @ `eeecf9ddb` (Release/7
 
 2026-11-19 converted to the three-section layout. The status legend of the old layout was dropped: proof is now in Appendix A, and open points are markers on the rules.
 
+2026-11-20 whys pass: every rule has at least one why. 22 rules already rested on a source; OFD-12 gets its product why from server spec 086 (US2 scenario 2, SC-002), which also gives Q-OFD-12 a suggested answer. No drafts were needed.
+
 #### Sources
 
 Server code (worktree `w1-access-matrix/server` @ `eeecf9ddb`):
@@ -328,3 +333,4 @@ Specs / issues:
 - `agents-hq/specs/003-collabora-doc-contributions/spec.md` (FR-001..FR-014), `012-collabora-actor-type/spec.md` (FR-001..FR-009), `014-officedocs-replace-file/spec.md` (FR-001..FR-015), `015-officedocs-disconnect-recovery/spec.md` (FR-016/017), `016-officedocs-rename-ux/spec.md` (FR-001..FR-015), `009-office-doc-search/spec.md` (listed only)
 - `agents-hq@origin/main:specs/036-collabora-pdf-support/spec.md` (FR-001..FR-009), `059-collabora-preview-streaming/spec.md` (FR-003..FR-021), `085-document-post-templates/spec.md` (§0.2/0.5, FR-001..FR-011, AC1-AC3/AC6)
 - alkem-io/server#6360 (editor-URL latency proper fix, PR #6350), #6170 (users shown as UnknownUser); alkem-io/client-web#10423 (documents in post templates), #10125 (VC knowledge-base UI route); test-suites memory `test-env-nightly-db-reset-orphans-services` (environment fact)
+- server `specs/086-collabora-integration/spec.md` US2 scenario 2 and SC-002 (concurrent editing, for OFD-12)
