@@ -552,10 +552,22 @@ test.describe.serial('US1 — Recognise a contributor from the card', () => {
     expect(await cardRowSignature(inDeepLink, P.long)).toEqual(feed);
   });
 
-  test("FR-015 — map pins and their popups are unchanged: a located contributor's popup shows its name, none of the card rows", async ({
+  // Since client-web#10608 a pin opens the contributor's full card, the one the
+  // list renders, in a dialog named after the contributor. Before it the popup
+  // held the name alone, so each row below is absent on the older client.
+  test("FR-015 — a located contributor's map pin opens the same card rows as the list", async ({
     page,
   }) => {
     const col = await openCollection(page);
+    const feed = await cardRowSignature(col, P.long);
+    for (const row of [
+      'tagline',
+      'firstTag',
+      'location',
+      'bottomLine',
+    ] as const) {
+      expect(feed[row], `the list card has no ${row} to compare`).toBeTruthy();
+    }
     await col.viewToggle('Map').click();
     await expect(col.mapRegion()).toBeVisible({ timeout: 15_000 });
     // Precondition: the stack geocodes "Barcelona, ES" into a pin. Without a
@@ -565,11 +577,15 @@ test.describe.serial('US1 — Recognise a contributor from the card', () => {
       timeout: 15_000,
     });
     await pin.click();
-    const popup = page.locator('.maplibregl-popup');
-    await expect(popup).toContainText(P.long);
-    await expect(popup).not.toContainText(TAGLINE_128.slice(0, 30));
-    await expect(popup).not.toContainText(LONG_TAG);
-    await expect(popup).not.toContainText('Joined this space');
+    const popup = page.getByRole('dialog', { name: P.long, exact: true });
+    await expect(popup).toBeVisible();
+    await expect(
+      popup.getByRole('link', { name: P.long, exact: true })
+    ).toBeVisible();
+    await expect(popup).toContainText(feed.tagline);
+    await expect(popup).toContainText(feed.firstTag!);
+    await expect(popup).toContainText(feed.location);
+    await expect(popup).toContainText(feed.bottomLine);
   });
 
   // Product finding QA-PF-03 — https://github.com/alkem-io/client-web/issues/10370
