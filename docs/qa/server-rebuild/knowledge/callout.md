@@ -45,7 +45,7 @@ _Whys of the 77 rules: 66 rest on a source · 8 carry a draft for product to dec
 | CAL-15 | A collection callout selects automatically by default. A custom list holds at most 500 entries, duplicates are dropped, and switching back to automatic keeps the list. | Automatic is the self-updating default; the stored list survives a toggle so an admin can switch back without re-curating (025 FR-002/004/018/019). | — | — | Spec 025 FR-002/004/018/019 |
 | CAL-16 | A Subspaces callout shows compact cards unless it is set to expanded. Only the Space's admins can change this; members can see which one is set. | — | — | A named choice so further variants can be added; compact is the pre-feature look (076 FR-001/002/009). | Spec 076 FR-001/002/009 |
 | CAL-17 | Changing a callout's framing kind removes the settings that do not belong to the new kind. | — | — | Without the strip a stale block would make every later edit of the callout fail (service comment). | Not decided: exists in the code |
-| CAL-18 | Callouts in a Space, and contributions in a callout, are put in order by sending the list in the wanted order. An item that does not belong there is refused. **(open: Q-CAL-18)** | — | As a space admin, I want to put callouts and contributions in the order I choose, so that the most important come first. _(draft)_ | — | Not decided: exists in the code |
+| CAL-18 | Callouts in a Space, and contributions in a callout, are put in order by sending the list in the wanted order. An item that does not belong there is refused. **(open: Q-CAL-18)** | — | As a space admin, I want to put callouts and contributions in the order I choose, so that the most important come first. | — | Product, 2026-11-20 |
 
 ### Visibility, publishing and lock
 
