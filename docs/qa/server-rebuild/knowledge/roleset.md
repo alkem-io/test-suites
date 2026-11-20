@@ -2,7 +2,7 @@
 
 _What the platform does today for the role sets of spaces, organisations and the platform: the roles and their limits, the entry role and the rule that a subspace member is a member of the parent, adding and removing people directly, applications, invitations to existing users, organisations and virtual contributors, email invitations, organisation associates, joining through a matching email domain, the combined application or join for a subspace, Platform Support's audited work on organisations, and the lists of pending requests. The file follows the three-section layout accepted in the product review of `communications.md` (alkem-io/test-suites#717): **1. Rules**, **2. Rights**, **3. Open questions**, with the evidence in an **Appendix**._
 
-_Open questions per owner: Product Lead 12 · Technical Lead 4 · Quality Lead 8 · Security Lead 1 · Incident Lead 2. By state: 17 open · 2 change decided · 8 with a suggested answer · 2 decided. Proof of the 79 rules: 60 proven by a test · 19 untested (Appendix A)._
+_Open questions per owner: Product Lead 11 · Technical Lead 4 · Quality Lead 8 · Security Lead 1 · Incident Lead 2. By state: 16 open · 2 change decided · 8 with a suggested answer · 3 decided. Proof of the 79 rules: 60 proven by a test · 19 untested (Appendix A)._
 
 _Whys of the 79 rules: 55 rest on a source · 17 carry a draft for product to decide · 7 have none, and each already carries an open question or a defect (RS-04: F1; RS-06: F2; RS-27: Q-RS-02; RS-36: F4; RS-54: F11; RS-77: F7; RS-79: F13)._
 
@@ -63,7 +63,7 @@ _Whys of the 79 rules: 55 rest on a source · 17 carry a draft for product to de
 | RS-28 | Deleting a user removes their pending applications and invitations, for spaces and organisations alike. | Pending rows are personal data of the deleted person. _(draft)_ | — | — | Not decided: exists in the code |
 | RS-29 | The pending applications of a community can be read only by those who decide them: space admins, organisation admins and owners, and Platform Support on organisations. Everyone else, the applicant included, gets an error, never an empty list. | Applications carry the applicant's answers (PII); being allowed to invite does not make one a decider (062 R3/R47, FR-024; 090 FR-011). | — | — | Spec 062 FR-024, R3/R47; spec 090 FR-011 |
 | RS-30 | A person's own pending requests are split into two exact lists: those for spaces and those for organisations. | — | — | The top-bar query 500'd on the first organisation row before the partition (062 FR-023, D-8). | Spec 062 FR-023, D-8 |
-| RS-31 | An application notifies the admins of the space or organisation (the platform support address when there are none). A rejection notifies the applicant. An approved applicant shows to the admins as an ordinary "a new member joined". **(open: F9)** | — | — | 061/062 notification rows; server#6476 tracks the missing approved event (R40). | Specs 061 and 062 (notification rows); server#6476 |
+| RS-31 | An application notifies the admins of the space or organisation (the platform support address when there are none). A rejection notifies the applicant. An approved applicant shows to the admins as an ordinary "a new member joined". | — | — | 061/062 notification rows; server#6476 tracks the missing approved event (R40). | Specs 061 and 062 (notification rows); server#6476; Product, 2026-11-20 (was F9): the generic join notification stays |
 
 ### Invitations to existing actors
 
@@ -206,7 +206,7 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 ### Product Lead
 
-[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 12 to answer
+[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 11 to answer
 
 **To answer**
 
@@ -214,7 +214,6 @@ _One section per role, so each owner reads only their own part. **To answer** li
 |---|---|---|---|---|---|---|
 | F1 | Role model | decision | Lead, admin and owner are declared to need the entry role, but nothing enforces it; on acceptance 67 space roles and 757 organisation roles are held without it. Enforce it and repair the data, or drop the declaration and state that an admin need not be a member? | Product Lead (Technical Lead repairs the data or removes the flag) | Product, 2026-11-20: A lead, admin or owner must also hold the entry role (member or associate); enforce it on assignment and repair the existing data (67 space and 757 organisation credentials on acceptance). Issue: To file. | change decided |
 | F7 | Role model | decision | The stored role limits differ from the code: virtual contributor limits, and 9 lead organisations on some top-level spaces where the code says 2. What is the one limit per role, kind of actor and level, and may organisations lead a top-level space at all? | Product Lead (Technical Lead aligns the stored rows) | Product, 2026-11-20: The code's limits (RS-02) are the one set of limits; the stored role definitions on acceptance are repaired to match them (VC caps, top-level spaces allowing 9 lead organisations). Issue: To file. | change decided |
-| F9 | Applications | decision | An approved application shows as the ordinary "a new member joined"; there is no "application approved" event (server#6476). Add one, or keep it as it is? | Product Lead | — | open |
 | F10 | Invitations | decision | When a lead slot fills before acceptance, a space silently accepts the invitee as a plain member, while an organisation reports the role that was held back. One behaviour for the new core? | Product Lead | One behaviour: report it on both. | suggested |
 | F11 | Associates | decision | The creator of an organisation is not made owner, and "at least one owner" is only checked on removal; on acceptance 126 organisations have no owner. Make the creator owner, or drop the minimum? | Product Lead (Technical Lead repairs the data) | — | open |
 | F12 | Lifecycle | decision | The "allow Platform Support as admin" switch is shown on subspaces but does nothing there. Hide it below the top level, or make it work? | Product Lead | — | open |
@@ -327,6 +326,7 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 | Was | Decision | Decided by | Now |
 |---|---|---|---|
+| F9 | An approved application keeps the generic 'new member joined' notification, on spaces and organisations alike; no dedicated 'application approved' event (server#6476 can be parked). | Product, 2026-11-20 | RS-31 |
 | F8 | Spaces and organisations keep their own behaviour: on a space a rejected or declined request blocks until archived, on an organisation a new one can follow at once. The new core keeps both. | Product, 2026-11-20 | RS-26 |
 | OQ7 | The limit for lead organisations on a top-level space is 2, as the code and spec 061 say; live spaces above it are repaired under F7. | Product, 2026-11-20 | RS-02 |
 
