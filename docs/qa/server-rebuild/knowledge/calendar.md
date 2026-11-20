@@ -49,7 +49,7 @@ _Whys of the 25 rules: 12 rest on a source · 11 carry a draft for product to de
 | ID | Rule | Why: business | Why: product | Why: technical | Decided by |
 |---|---|---|---|---|---|
 | EVT-13 | Space admins and the creator can update an event. The dates and durations are always replaced by what is sent, so shortening a multi-day event to one day sticks. Changing the title also renames the comments room. **(open: F6)** | — | — | A truthy guard dropped a legitimate 0 and silently kept the old span (023 US5, FR-012; server#6279). | Spec 023 US5, FR-012; server#6279 |
-| EVT-14 | Space admins and the creator can delete an event. Its profile and its comments room go with it. | — | As a space admin or event creator, I want to delete an event that no longer takes place, so that members are not misled. _(draft)_ | — | Not decided: exists in the code |
+| EVT-14 | Space admins and the creator can delete an event. Its profile and its comments room go with it. | — | As a space admin or event creator, I want to delete an event that no longer takes place, so that members are not misled. | — | Product, 2026-11-20 |
 | EVT-15 | Deleting a space deletes its calendar and every event, with their comments rooms. | Events are owned content of the space. _(draft)_ | — | — | Not decided: exists in the code |
 | EVT-16 | Rights on events always follow the space: the calendar takes its rights from the space, each event from the calendar plus its creator, and each comments room from its event. | — | — | One authorization forest; events are children of the collaboration. _(draft)_ | Not decided: exists in the code |
 
