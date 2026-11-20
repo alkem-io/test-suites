@@ -4,10 +4,13 @@ _What the platform does today for live updates pushed to the browser (GraphQL su
 
 _Open questions per owner: Product Lead 2 · Technical Lead 9 · Quality Lead 4 · Security Lead 2 · Architecture Lead 1. By state: 15 open · 3 with a suggested answer. Proof of the 22 rules: 4 proven by a test · 18 untested (Appendix A)._
 
+_Whys of the 22 rules: 13 rest on a source · 4 carry a draft for product to decide (SUB-05, SUB-12, SUB-16, SUB-20) · 5 have none, and each already carries an open question (SUB-04, SUB-15, SUB-19, SUB-21, SUB-22; SUB-15 and SUB-21 keep a note on the code)._
+
 **How to read it**
 
 - **Rule** is one or two plain sentences. The exact behaviour, with error messages and limits, is in Appendix A under the same id. The new core is checked against the exact text.
-- **Why: business** is what Alkemio needs. **Why: product** is the user story; it is "—" until product fills it. **Why: technical** is the engineering reason, when there is one. "—" means no source states one.
+- **Why: business** is what Alkemio needs. **Why: product** is the user story. **Why: technical** is the engineering reason. A rule needs at least one why, and gets a second or third only where it adds something for the decision or the code. "—" means none is given.
+- A why that names a spec, issue, pull request, code comment or code line rests on that source. A why ending in _(draft)_ was written by QA and no source states it: product keeps, rewrites or deletes it, and sets **Decided by**. A rule with no why at all carries an open question in section 3.
 - **Decided by** names the source of the decision: a spec, a commit or pull request, or an issue. "Not decided: exists in the code" means the behaviour exists in the code and nobody chose it. "Not decided: a defect" means today's behaviour is a fault. Product has not reviewed this file yet.
 - A marker in bold at the end of a rule points at section 3: **(open: F3)** means a question on this rule is still open, **(defect: F…)** means today's behaviour is a fault and must not be copied as intended, **(defect in part: F…)** means part of it is. A rule with no marker stands as written. Every rule is logged as the server behaves today, also when that is not the intended end state. Whether a test proves the rule sits in Appendix A as **proven** or **untested**.
 - Hard rules are not marked yet. Some rules are choices that a new feature may challenge, and some can never change; a later version will mark the second kind with "(hard rule)" after the why that makes it so. Until then, no marker does not mean a rule is open to change.
@@ -21,9 +24,9 @@ _Open questions per owner: Product Lead 2 · Technical Lead 9 · Quality Lead 4 
 |---|---|---|---|---|---|
 | SUB-01 | A live-update connection is signed in once, when it opens, with the session cookie or a token sent at that moment. Credentials sent later on the same connection are ignored. **(open: OQ1)** | — | — | A client could otherwise present a token after the upgrade had completed unauthenticated — a side channel past the Passport check ("FR-023 (WS addendum)", `9b6a81eeb` #6143). | Server PR #6143 (FR-023, WS addendum) |
 | SUB-02 | A connection that opens without valid credentials is not refused: it runs as a visitor. What a visitor may then follow is decided per kind of update (SUB-05). | — | — | Fail open to anonymous, like an HTTP request without a cookie (109 edge case). | Spec 109 (edge case) |
-| SUB-03 | A connection that stays open is closed with "Session expired" once the session's maximum lifetime has passed, at the next update it would have delivered. Token refresh and idle time-outs do not close it. | A subscription must not outlive the session it was opened with. | — | The sliding windows self-renew, the absolute ceiling does not (`458adb4cd` #6289). | Server PR #6289 |
+| SUB-03 | A connection that stays open is closed with "Session expired" once the session's maximum lifetime has passed, at the next update it would have delivered. Token refresh and idle time-outs do not close it. | Sockets authenticate once at connect, so subscriptions outlived their session; the guard closes them at the absolute session ceiling (server PR #6289). | — | The sliding windows self-renew, the absolute ceiling does not (`458adb4cd` #6289). | Server PR #6289 |
 | SUB-04 | Two connection protocols are served side by side: the current one and an older one. **(open: F7, Q-SUB-04)** | — | — | — | Not decided: exists in the code |
-| SUB-05 | The right to follow something is checked once, when the client starts following. Following a Space, callout, room, poll or virtual contributor needs the right to read it; chat, notifications and the forum need a signed-in user. A refusal comes back as an error and no update follows. | — | — | The subscribe-time check is the only gate — events are filtered by id/type, never re-authorized (except activity children, SUB-10). | Not decided: exists in the code |
+| SUB-05 | The right to follow something is checked once, when the client starts following. Following a Space, callout, room, poll or virtual contributor needs the right to read it; chat, notifications and the forum need a signed-in user. A refusal comes back as an error and no update follows. | — | — | The subscribe-time check is the only gate — events are filtered by id/type, never re-authorized (except activity children, SUB-10). _(draft)_ | Not decided: exists in the code |
 | SUB-06 | A new follower gets only what happens after they started following, never a catch-up of earlier updates. | Consistent across the platform (038 US7 AC10). | — | — | Spec 038 US7 AC10 |
 | SUB-07 | An update published on any copy of the server reaches the followers connected to every copy. | — | — | Multi-replica deployments must not split subscribers by pod ("different queues … for different replicas", `subscription.factory.provider.ts:143-144`). | Not decided: exists in the code |
 | SUB-08 | When the broker connection behind one kind of update drops, the server keeps running, but that kind of update stays silent until the server restarts. | — | — | A midnight broker blip used to take the whole server down; containment was chosen over reconnect as a documented tradeoff (007 FR-001, `e9319947f`). | Spec 007 FR-001; commit e9319947f |
@@ -35,12 +38,12 @@ _Open questions per owner: Product Lead 2 · Technical Lead 9 · Quality Lead 4 
 |---|---|---|---|---|---|
 | SUB-10 | A reader following a Space's activity gets every new activity entry there and, on request, from the Subspaces they may read, limited to the kinds asked for. An entry that is hidden later is not announced. **(open: F2, F6, OQ3)** | Live timeline on the space dashboard (`48093883e`, #2741 child activities). | — | — | Commit 48093883e; server #2741 |
 | SUB-11 | A reader following a Space gets every Subspace created directly under it, whoever created it. **(open: F1, OQ2)** | Clients refresh subspace lists live (journey table JRN-12). | — | — | Not decided: exists in the code |
-| SUB-12 | A reader following a callout gets every post added to it, also on a draft callout. Links, whiteboards, memos and documents are not announced. Following a callout that does not accept posts is refused. **(open: F3)** | Live post collection on the callout page. | — | The Form callout must never travel a contribution subscription (callout table CAL-49). | The Form clause: `callout.md` CAL-49. The rest is not decided: exists in the code |
+| SUB-12 | A reader following a callout gets every post added to it, also on a draft callout. Links, whiteboards, memos and documents are not announced. Following a callout that does not accept posts is refused. **(open: F3)** | Live post collection on the callout page. _(draft)_ | — | The Form callout must never travel a contribution subscription (callout table CAL-49). | The Form clause: `callout.md` CAL-49. The rest is not decided: exists in the code |
 | SUB-13 | A reader following a room gets every new, edited and deleted message, every reaction added or removed, and read receipts, in order. Everyone who may read the room gets every update, whoever sent it. | — | — | Matrix is the source of truth for messages (communications table COM-11). | `communications.md` COM-11 |
 | SUB-14 | A signed-in user gets the updates of the chats they are a member of at that moment, and nothing for chats they left. | Live chat over subscriptions (040 FR-006/007/019). | — | — | Spec 040 FR-006/007/019 |
 | SUB-15 | A signed-in reader following the forum is told when a discussion is created. Edits, deletions and comments are not announced. **(open: F4)** | — | — | — (the publish exists only on create) | Not decided: exists in the code |
-| SUB-16 | A reader following a virtual contributor is told when its engine status changes. | The client shows the VC's engine status live. | — | — | Not decided: exists in the code |
-| SUB-17 | A signed-in user gets their own new notifications as they arrive, and their unread count after every change. Nobody gets another user's. | The bell badge updates live (notifications area). | — | — | Not decided: exists in the code |
+| SUB-16 | A reader following a virtual contributor is told when its engine status changes. | The client shows the VC's engine status live. _(draft)_ | — | — | Not decided: exists in the code |
+| SUB-17 | A signed-in user gets their own new notifications as they arrive, and their unread count after every change. Nobody gets another user's. | The tab badge always counts unread in-app notifications: "a user who wants quiet still wants to see what is waiting for them" (agents-hq spec 020, clarification). | — | — | Not decided: exists in the code; the client consumer: agents-hq spec 020 |
 | SUB-18 | A reader following a poll gets the poll again on every vote, status change and option change. While results are hidden, a reader who has not voted gets no vote updates. | Live polls close the feedback loop; hidden results must not leak through the push (038 US7 AC1–AC10, FR-030). | — | — | Spec 038 US7, FR-030 |
 
 ### Housekeeping
@@ -48,7 +51,7 @@ _Open questions per owner: Product Lead 2 · Technical Lead 9 · Quality Lead 4 
 | ID | Rule | Why: business | Why: product | Why: technical | Decided by |
 |---|---|---|---|---|---|
 | SUB-19 | Update ids are random numbers from 0 to 1000 and can repeat. They are used for logging only. **(open: F9, Q-SUB-19)** | — | — | — | Not decided: exists in the code |
-| SUB-20 | One kind of update and two queues exist by name, but nothing uses them. **(open: F5)** | — | — | Leftovers (SSI and the removed Excalidraw backend). | Not decided: exists in the code |
+| SUB-20 | One kind of update and two queues exist by name, but nothing uses them. **(open: F5)** | — | — | Leftovers (SSI and the removed Excalidraw backend). _(draft)_ | Not decided: exists in the code |
 | SUB-21 | When a comment is deleted, followers of the activity feed are not told: the feed keeps showing the comment until it is reloaded. **(open: F6)** | — | — | — ("todo: trigger a subscription to update other clients?") | Not decided: exists in the code |
 | SUB-22 | A visitor who is not signed in may follow rooms, new Subspaces, new posts and activity on anything public. **(open: F8, OQ3)** | — | — | — | Not decided: exists in the code |
 
@@ -281,6 +284,8 @@ Extracted 2026-11-06 from three sources: server develop @ `eeecf9ddb` (Release/7
 
 2026-11-19 converted to the three-section layout. The single why of every rule was split over business and technical without rewording; the product why is left for product. The status legend and the review-load line of the old layout were dropped: the counts at the top replace them.
 
+2026-11-20 whys pass: every rule has at least one why, sourced where a spec, issue or code line states it and marked _(draft)_ where QA wrote it. The body of server PR #6289 now carries the why of SUB-03 and agents-hq spec 020 the why of SUB-17.
+
 #### Sources
 
 Server code (worktree `w1-access-matrix/server` @ `eeecf9ddb`):
@@ -304,3 +309,4 @@ Specs / issues:
 - `agents-hq/specs/007-connection-resilience/spec.md` (FR-001; broker guard tradeoff); `agents-hq/specs/020-notifications-sounds/spec.md:39` (client consumer); `agents-hq/specs/024-non-activity-home/spec.md` (feeds polled, no push)
 - server `specs/109-redis-session-store-resilience/spec.md:206-209`; `specs/038-community-polls/spec.md` (US7, FR-030); `specs/040-group-conversations/spec.md` (FR-006/007/019)
 - server PR #6143 (OIDC IdP, FR-023 WS addendum — spec not local), PR #6289
+- server PR #6289 body (sockets outliving their session); `agents-hq/specs/020-notifications-sounds/spec.md` clarification on the tab badge
