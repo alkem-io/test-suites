@@ -2,7 +2,7 @@
 
 _What the platform does today for the role sets of spaces, organisations and the platform: the roles and their limits, the entry role and the rule that a subspace member is a member of the parent, adding and removing people directly, applications, invitations to existing users, organisations and virtual contributors, email invitations, organisation associates, joining through a matching email domain, the combined application or join for a subspace, Platform Support's audited work on organisations, and the lists of pending requests. The file follows the three-section layout accepted in the product review of `communications.md` (alkem-io/test-suites#717): **1. Rules**, **2. Rights**, **3. Open questions**, with the evidence in an **Appendix**._
 
-_Open questions per owner: Product Lead 5 · Technical Lead 4 · Quality Lead 8 · Security Lead 1 · Incident Lead 2. By state: 13 open · 7 with a suggested answer · 9 decided. Proof of the 79 rules: 60 proven by a test · 19 untested (Appendix A)._
+_Open questions per owner: Product Lead 4 · Technical Lead 4 · Quality Lead 8 · Security Lead 1 · Incident Lead 2. By state: 12 open · 7 with a suggested answer · 10 decided. Proof of the 79 rules: 60 proven by a test · 19 untested (Appendix A)._
 
 _Whys of the 79 rules: 55 rest on a source · 17 carry a draft for product to decide · 7 have none, and each already carries an open question or a defect (RS-04: F1; RS-06: F2; RS-27: Q-RS-02; RS-36: F4; RS-54: F11; RS-77: F7; RS-79: F13)._
 
@@ -83,7 +83,7 @@ _Whys of the 79 rules: 55 rest on a source · 17 carry a draft for product to de
 | RS-43 | Deleting a user removes the invitations addressed to them. | — | — | Cascade on the invited actor. _(draft)_ | Not decided: exists in the code |
 | RS-44 | A pending invitation is revoked by deleting it. Space admins, organisation admins and owners, and Platform Support on organisations may do so. It then leaves every list. | Revoke is the space side's action; revoke ≠ decline (061 R8, FR-010). | — | — | Spec 061 R8, FR-010 |
 | RS-45 | While an invitation is pending, the person cannot apply and cannot join directly. | They should answer the invitation (017 edge case "Invitation pending"). | — | — | Spec 017 edge cases |
-| RS-46 | Invitations to a space notify the invited user, the account host of an invited virtual contributor, or every admin of an invited organisation (owners who are not admins are not told; with no admins the platform support address is). When the invitation is answered, every admin of the space is told. **(open: F14)** | — | As an admin of an invited organisation, I want an email, in-app and push notification that names the inviter, the space, the offered role and the message, so that my organisation can give its consent, which it cannot if the request never reaches us (061 US2). As an admin of the inviting space, I want to be told when the invitation is accepted or declined, in place of the generic "a new member joined", so that I know the outcome of my request (061 US4). | — | Spec 061 FR-017…FR-020b |
+| RS-46 | Invitations to a space notify the invited user, the account host of an invited virtual contributor, or every admin of an invited organisation (owners who are not admins are not told; with no admins the platform support address is). When the invitation is answered, every admin of the space is told. | — | As an admin of an invited organisation, I want an email, in-app and push notification that names the inviter, the space, the offered role and the message, so that my organisation can give its consent, which it cannot if the request never reaches us (061 US2). As an admin of the inviting space, I want to be told when the invitation is accepted or declined, in place of the generic "a new member joined", so that I know the outcome of my request (061 US4). | — | Spec 061 FR-017…FR-020b; Product, 2026-11-20 (was F14): behaviour stays, tracked |
 | RS-47 | One invite call takes at most 100 picked people, 100 email addresses and 10 extra roles, a welcome message of at most 8,192 characters, and an optional suggested language that the platform must currently offer. | Language suggestion seeds the newcomer's interface (029). | — | Bounded batches. _(draft)_ | Spec 029 for the language. The limits are not decided: they exist in the code |
 
 ### Organisations invited to spaces
@@ -93,7 +93,7 @@ _Whys of the 79 rules: 55 rest on a source · 17 carry a draft for product to de
 | RS-48 | A space admin invites an organisation as member, optionally also as lead. The organisation's admins or owners accept or decline for it. | Organisations join communities by their own consent, not by a space admin's add (061 FR-001, FR-010, R7). | — | — | Spec 061 FR-001, FR-010, R7 |
 | RS-49 | An organisation that switched off "allow spaces to invite this organisation" cannot be invited. Switching it off later leaves pending invitations in place and acceptable. The switch is on by default and is set by the organisation's admins and owners. | Opt-out protects organisations from unsolicited invitations without revoking what they already received (061 FR-004, FR-015, FR-016, R2). | — | — | Spec 061 FR-004, FR-015, FR-016, R2 |
 | RS-50 | Offering lead to an organisation is refused when the lead organisations plus the pending lead offers already fill the slots (2 on a top-level space, 9 on a subspace). If the slots fill before acceptance, the organisation is accepted as member only, without notice. | — | — | Advisory check at invite time; acceptance keeps today's silent downgrade (061 FR-005, R5, D-3). | Spec 061 FR-005, R5, D-3; Product, 2026-11-20 (was F10): behaviour stays, tracked |
-| RS-51 | Inviting an organisation that has no admins still creates the invitation, and the inviter is told the organisation has no administrators. Owners do not count. **(open: F14)** | Nobody would be notified; the inviter is told and support is escalated (061 FR-006, FR-019, R3, R17b). | — | — | Spec 061 FR-006, FR-019, R3, R17b |
+| RS-51 | Inviting an organisation that has no admins still creates the invitation, and the inviter is told the organisation has no administrators. Owners do not count. | Nobody would be notified; the inviter is told and support is escalated (061 FR-006, FR-019, R3, R17b). | — | — | Spec 061 FR-006, FR-019, R3, R17b; Product, 2026-11-20 (was F14): behaviour stays, tracked |
 | RS-52 | An organisation invited into a subspace becomes a member of that subspace and of every space above it that it is not in yet, never of a sibling or a deeper subspace. **(open: F3, OQ2)** | — | — | An organisation in a subspace must be in every space above it: the membership invariant of RS-03 (017 contract §1; 061 FR-013, R7). | Spec 061 FR-013, R7 |
 
 ### Organisation associates
@@ -206,13 +206,12 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 ### Product Lead
 
-[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 5 to answer
+[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 4 to answer
 
 **To answer**
 
 | ID | Area | Type | Question | Owner | Proposed answer | State |
 |---|---|---|---|---|---|---|
-| F14 | Invitations | decision | Owners who are not admins can accept for their organisation but are never notified, and the "no administrators" notice ignores owners. Notify owners too, or document it? | Product Lead | — | open |
 | Q-RS-01 | Direct | decision | Why does this rule exist? No source states why a role change refreshes the user's own access rules (RS-20). | Product Lead | The reading of the extraction: member profiles are visible to fellow members only. | suggested |
 | Q-RS-02 | Applications | decision | Why does this rule exist? No source states who should be able to delete an application, and why (RS-27). | Product Lead | — | open |
 | Q-RS-03 | Lifecycle | decision | Why does this rule exist? No source states why the creator and the hosting organisation get these roles (RS-75). | Product Lead | The reading of the extraction: the host and the creator run the space from day one. | suggested |
@@ -317,6 +316,7 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 | Was | Decision | Decided by | Now |
 |---|---|---|---|
+| F14 | Behaviour stays: only an invited organisation's admins are notified, and the 'no administrators' notice ignores owners. Wanted, tracked: notify owners too, and count them for the 'no administrators' notice. | Product, 2026-11-20 | RS-51 |
 | F13 | Behaviour stays: organisation admins and owners can add associates, admins and owners directly through the API, for a transition period. Wanted, tracked: make organisations invitation-only like spaces (server#6608). | Product, 2026-11-20 | RS-79 |
 | F12 | Behaviour stays: the subspace 'allow Platform Support as admin' switch is shown but does nothing; Support follows the top-level switch. Wanted, tracked: hide the switch below the top level. | Product, 2026-11-20 | RS-78 |
 | F7 | Behaviour stays: the server enforces the stored limits. The code's limits (RS-02) are the rule; repairing the stored rows is tracked. | Product, 2026-11-20 | RS-77 |
