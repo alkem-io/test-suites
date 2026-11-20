@@ -106,9 +106,7 @@ adminFixture.test.describe.serial('Callout Editing', () => {
 
       await collaborationPage.saveCallout();
 
-      await expect(page.getByText(updatedName).first()).toBeVisible({
-        timeout: 5000,
-      });
+      await expect(page.getByText(updatedName).first()).toBeVisible();
       await expect(page.getByText(updatedDescription).first()).toBeVisible({
         timeout: 3000,
       });
@@ -319,7 +317,7 @@ memberFixture.test.describe.serial('Callout Editing - Member', () => {
           name: `${baseScenario!.space.collaboration.calloutPostCollectionDisplayName}`,
           exact: true,
         })
-      ).toBeVisible({ timeout: 5000 });
+      ).toBeVisible();
       await page
         .getByRole('heading', {
           name: `${baseScenario!.space.collaboration.calloutPostCollectionDisplayName}`,

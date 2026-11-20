@@ -22,6 +22,7 @@ import { fillTemplateForm } from '../template-form';
 import { CalloutTemplateForm } from './callout-template-form.models';
 import { selectAndFillCalloutTemplateFraming } from './callout-template-framing';
 import { selectAndFillCalloutCollection } from './collection';
+import { fillRichTextEditor } from '../rich-text';
 
 /** Returns the create/edit collaboration-tool template dialog. */
 export const getCalloutTemplateDialog = (page: Page): Locator =>
@@ -51,9 +52,10 @@ const fillCalloutBaseFields = async (
 
   // Callout description (rich-text editor)
   if (templateData.calloutDescription) {
-    await dialog
-      .getByRole('textbox', { name: 'Write something...' })
-      .fill(templateData.calloutDescription);
+    await fillRichTextEditor(
+      dialog.getByRole('textbox', { name: 'Write something...' }),
+      templateData.calloutDescription
+    );
   }
 
   // Callout tags - one chip per Enter. Both the template and callout tag

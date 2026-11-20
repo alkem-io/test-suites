@@ -160,7 +160,26 @@ const setDescription = async (
   collaboration: CollaborationPage,
   text: string
 ): Promise<void> => {
-  await collaboration.descriptionInput.first().fill(text);
+  // Filled again until the editor's own document holds the text: with other
+  // files running, an editor that has only just mounted sometimes shows a
+  // filled text it has not taken in, and the counter then never appears.
+  const editor = collaboration.descriptionInput.first();
+  await expect(async () => {
+    await editor.fill(text);
+    await expect
+      .poll(
+        () =>
+          editor.evaluate(root => {
+            const instance = (
+              root as unknown as { editor?: { getText(): string } }
+            ).editor;
+            return (instance ? instance.getText() : (root.textContent ?? ''))
+              .length;
+          }),
+        { timeout: 3_000 }
+      )
+      .toBeGreaterThanOrEqual(text.replace(/\n/g, '').length);
+  }).toPass({ timeout: 45_000 });
 };
 
 test.describe('Create Callout — description over the limit (client-web#9972)', () => {

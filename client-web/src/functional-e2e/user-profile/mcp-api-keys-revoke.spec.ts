@@ -43,6 +43,14 @@ const mcpUrl =
 const adminEmail = process.env.AUTH_ADMIN_EMAIL || 'admin@alkem.io';
 const adminPassword = process.env.AUTH_TEST_HARNESS_PASSWORD || 'change_me';
 
+/**
+ * The "Create MCP API key" dialog. Its fields are looked up inside it: the
+ * Security page also has a "Name" field for a security key (two-step
+ * verification), so a page-wide lookup is ambiguous wherever that is on.
+ */
+const createDialog = (page: import('@playwright/test').Page) =>
+  page.getByRole('dialog', { name: 'Create MCP API key' });
+
 const uniqueName = (label: string) =>
   `${label}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
@@ -96,9 +104,9 @@ const mintKey = async (
   keyName: string
 ) => {
   await page.getByRole('button', { name: 'Create API key' }).click();
-  await page.getByLabel('Name').fill(keyName);
-  await page.locator('label:has-text("Read")').first().click();
-  await page.getByRole('button', { name: 'Create key' }).click();
+  await createDialog(page).getByLabel('Name', { exact: true }).fill(keyName);
+  await createDialog(page).locator('label:has-text("Read")').first().click();
+  await createDialog(page).getByRole('button', { name: 'Create key' }).click();
   const revealedValue = await page
     .locator('#mcp-api-key-reveal-value')
     .inputValue();
