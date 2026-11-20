@@ -2,12 +2,15 @@
 
 _What the platform does today for an innovation pack in the library: how it is created and owned, who sees it, how it is listed, moved and deleted, and what is still to answer. The templates inside a pack are in `templates.md`; the pack allowance is in `entitlements.md`. The layout is that of `communications.md`: **1. Rules**, **2. Rights**, **3. Open questions**, with the evidence in an **Appendix**. Product has not reviewed this file yet._
 
-_Open questions per owner: Product Lead 7 · Technical Lead 3 · Quality Lead 6 · Security Lead 1. By state: 15 open · 2 with a suggested answer. Proof of the 15 rules: 5 proven by a test · 10 untested (Appendix A)._
+_Open questions per owner: Product Lead 7 · Technical Lead 3 · Quality Lead 6 · Security Lead 1. By state: 14 open · 3 with a suggested answer. Proof of the 15 rules: 5 proven by a test · 10 untested (Appendix A)._
+
+_Whys of the 15 rules: 11 rest on a source · 3 carry a draft for product to decide (IPK-04, IPK-08, IPK-14) · 1 has none, and it already carries an open question (IPK-03: Q-IPK-03, F3)._
 
 **How to read it**
 
 - **Rule** is one or two plain sentences. The exact behaviour, with error messages and limits, is in Appendix A under the same id. The new core is checked against the exact text.
-- **Why: business** is what Alkemio needs. **Why: product** is the user story; product fills it in its review. **Why: technical** is the engineering reason, when there is one. "—" means no source states one.
+- **Why: business** is what Alkemio needs. **Why: product** is the user story. **Why: technical** is the engineering reason. A rule needs at least one why, and gets a second or third only where it adds something for the decision or the code. "—" means none is given.
+- A why that names a spec, issue, pull request, code comment or code line rests on that source. A why ending in _(draft)_ was written by QA and no source states it: product keeps, rewrites or deletes it, and sets **Decided by**. A rule with no why at all carries an open question in section 3.
 - **Decided by** names the source of the decision: a spec, a commit, a pull request or an issue. "Not decided: exists in the code" means the behaviour is in the code and no source shows that anybody chose it.
 - A marker in bold at the end of a rule points at section 3: **(open: F2)** means a question on this rule is still open, **(defect: F2)** means today's behaviour is a fault and must not be copied as intended, **(defect in part: F2)** means part of it is. A rule with no marker stands as written. Every rule is logged as the server behaves today, also when that is not the intended end state. Whether a test proves the rule sits in Appendix A as **proven** or **untested**.
 - Hard rules are not marked yet. Some rules are choices that a new feature may challenge, and some can never change; a later version will mark the second kind with "(hard rule)" after the why that makes it so. Until then, no marker does not mean a rule is open to change.
@@ -19,13 +22,13 @@ _Open questions per owner: Product Lead 7 · Technical Lead 3 · Quality Lead 6 
 | ID | Rule | Why: business | Why: product | Why: technical | Decided by |
 |---|---|---|---|---|---|
 | IPK-01 | A pack belongs to exactly one account. The account's admins create it (a user on their own account, an organisation admin on the organisation's), within the account's pack allowance: 3 on the Plus plan. Platform Content Full Access can create one on any account. **(open: F1)** | Packs are account-hosted resources like spaces and VCs, so one entitlement model covers all (027 rows 2/8; ENT-01/16). | — | — | Spec 027 rows 2/8; `entitlements.md` ENT-01/16 |
-| IPK-02 | A pack's name id (the short name in its link) is unique among all packs on the platform and is stored in lower case. A name id that is taken is refused. When none is given, one is made from the pack's name. **(open: Q-IPK-02, OQ3)** | — | — | — | Not decided: exists in the code |
+| IPK-02 | A pack's name id (the short name in its link) is unique among all packs on the platform and is stored in lower case. A name id that is taken is refused. When none is given, one is made from the pack's name. **(open: Q-IPK-02, OQ3)** | — | — | The name id is the whole path of the pack's web address (`/innovation-packs/<nameID>`, `url.generator.service.ts:481`, `:1239`); with no parent in the path it has to be unique on the whole platform. No source states why it is lower case. | Not decided: exists in the code |
 | IPK-03 | A new pack always starts listed in the store and visible inside its account only; the creator cannot choose this when creating it. It starts with no templates, a profile with avatar and card images, and a default tag set. **(open: Q-IPK-03, F3)** | — | — | — (the bootstrap comment records the consequence: the seeded pack must be re-saved public after every create) | Not decided: exists in the code |
-| IPK-04 | A pack's provider is the host of its account, a user or an organisation. When the pack moves to another account, the provider changes with it. | The library shows who stands behind a pack; the account, not the creator, is the owner. | — | — | Not decided: exists in the code |
+| IPK-04 | A pack's provider is the host of its account, a user or an organisation. When the pack moves to another account, the provider changes with it. | The library shows who stands behind a pack; the account, not the creator, is the owner. _(draft)_ | — | — | Not decided: exists in the code |
 | IPK-05 | The account's admins can update a pack: its profile, name id, store listing and visibility. Platform Support can update a pack owned by an organisation, never one owned by a user. Platform Content Full Access can update any pack. | Support assists organisations with their own resources only (027 A7, FR-008(b)); user-hosted accounts are out of scope (spec-server-14 fix). | — | — | Spec 027 A7, FR-008(b) |
 | IPK-06 | Deleting a pack deletes its templates and its profile with it. The account's admins and Platform Content Full Access can delete a pack; Platform Support cannot. Only a deletion by a platform role is written to the audit trail. **(open: F6)** | Pack deletion stays out of support's reach (027 A8); audit on the platform branch only (027 T058 / FR-018a). | — | — | Spec 027 A8, FR-018a (T058) |
 | IPK-07 | Only the Platform Resource Admin can move a pack to another account; its owner and Platform Support cannot. The target account's pack allowance is not checked. Access to the pack and its templates is worked out again under the new account, and the move is audited. **(open: F5, F6)** | Resource transfer is its own platform family (027 A9); the audit covers the platform path only. | — | — | Spec 027 A9 |
-| IPK-08 | A user cannot delete their own account while it still hosts a pack. The pack must be deleted or moved first. | Owned records are never dropped silently (orphan-free deletion). | — | — | Not decided: exists in the code |
+| IPK-08 | A user cannot delete their own account while it still hosts a pack. The pack must be deleted or moved first. | Owned records are never dropped silently (orphan-free deletion). _(draft)_ | — | — | Not decided: exists in the code |
 
 ### Visibility and listing
 
@@ -41,7 +44,7 @@ _Open questions per owner: Product Lead 7 · Technical Lead 3 · Quality Lead 6 
 | ID | Rule | Why: business | Why: product | Why: technical | Decided by |
 |---|---|---|---|---|---|
 | IPK-13 | A pack holds templates of every kind. The account's admins create, update and delete them; so can Platform Support on an organisation's pack, and Platform Content Full Access on any pack. Everyone can read the templates of a pack. **(open: F1, W9)** | A pack is a publishing vehicle: its templates are meant to be found and used from any space (DT-4 "toolbox route", 085). | — | — | Spec 085 (DT-4); client-web#8804 |
-| IPK-14 | A pack has no access rules of its own: it copies those of its account. They are worked out again when the account is reset and when the pack moves. Packs count towards the account's usage. | — | — | One policy source per account tree (account cascade); the pack adds nothing. | Not decided: exists in the code |
+| IPK-14 | A pack has no access rules of its own: it copies those of its account. They are worked out again when the account is reset and when the pack moves. Packs count towards the account's usage. | — | — | One policy source per account tree (account cascade); the pack adds nothing. _(draft)_ | Not decided: exists in the code |
 | IPK-15 | An innovation hub can show a hand-picked list of packs on its start page. The list starts empty, and a visitor sees in it only what they could already see in the library. | Hubs showcase; they never widen visibility (017 clarifications). | — | — | Spec 017 clarifications |
 
 ## 2. Rights
@@ -102,7 +105,7 @@ _One section per role, so each owner reads only their own part. **To answer** li
 |---|---|---|---|---|---|---|
 | F4 | Visibility | defect | The library's "number of templates" leaves out classification templates, so a pack that holds only those (the platform's own pack) sorts last with 0. Count all six kinds? | Technical Lead | Count all six kinds. | suggested |
 | F7 | Visibility | tidy-up | A stale log line says the library ignores its query options, while it honours them. Delete the line? | Technical Lead | Delete the log, so operators do not read the wrong contract. | suggested |
-| Q-IPK-02 | Ownership | decision | Why does this rule exist? No source says why a pack's name id must be unique across all packs and lower case. (OQ3 asks whether it is intended.) | Technical Lead | — | open |
+| Q-IPK-02 | Ownership | decision | Why does this rule exist? No source says why a pack's name id must be unique across all packs and lower case. (OQ3 asks whether it is intended.) | Technical Lead | The name id is the whole path of the pack's web address (`/innovation-packs/<nameID>`, `url.generator.service.ts:481`), so it is unique on the platform. Lower case is still unexplained. The why is on IPK-02. | suggested |
 
 **Also involved**
 
@@ -258,6 +261,8 @@ Extracted 2026-11-06 from three sources: server develop @ `eeecf9ddb` (Release/7
 
 2026-11-19 converted to the three-section layout: the single why was split in three, the who-may table was rebuilt with footnotes, and every finding, open question and rule without a stated reason was routed to an organisation role. The old status legend was dropped; proof is in Appendix A.
 
+2026-11-20 whys pass: every rule has at least one why, sourced where a spec, issue or code line states it and marked _(draft)_ where QA wrote it. IPK-02 takes its why from the pack's web address (suggested answer to Q-IPK-02). IPK-03 keeps no why; Q-IPK-03 asks for one.
+
 #### Sources
 
 Server code (worktree `w1-access-matrix/server` @ `eeecf9ddb`):
@@ -280,3 +285,4 @@ Specs / issues:
 - server `specs/101-innovation-library-pagination/spec.md`; `specs/062-ut-library` (unit scope)
 - `agents-hq/specs/017-innovation-hub-resources/spec.md`; `agents-hq@origin/main:specs/024-classifications/spec.md` (FR-005a/b, D3); `agents-hq/worktrees/qa-pr-challenge/specs/027-platform-role-redesign/spec.md` A7/A8/A9 (through the crosscheck and code comments)
 - alkem-io/client-web#8804 (pack templates readable); alkem-io/server#6380 (seeded pack)
+- server `src/services/infrastructure/url-generator/url.generator.service.ts:481`, `:1239` (pack web address, IPK-02)
