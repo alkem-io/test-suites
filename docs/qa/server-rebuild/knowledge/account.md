@@ -4,10 +4,13 @@ _What the platform does today for accounts: the account every user and organisat
 
 _Open questions per owner: Product Lead 5 · Technical Lead 6 · Quality Lead 3 · Security Lead 1 · Service Operations Lead 1. By state: 15 open · 1 with a suggested answer. Proof of the 19 rules: 11 proven by a test · 8 untested (Appendix A)._
 
+_Whys of the 19 rules: 13 rest on a source · 2 carry a draft for product to decide · 3 have none, and each points to a question or defect in section 3 (ACC-02, ACC-12, ACC-15) · 1 only points to another file (ACC-16)._
+
 **How to read it**
 
 - **Rule** is one or two plain sentences. The exact behaviour, with error messages and limits, is in Appendix A under the same id. The new core is checked against the exact text.
-- **Why: business** is what Alkemio needs. **Why: product** is the user story. **Why: technical** is the engineering reason, when there is one. "—" means no source states one. The whys are the reasons found in the code, the tests and the specs, sorted into the three columns without rewording. Product has not reviewed this file yet and fills in the user stories later.
+- **Why: business** is what Alkemio needs. **Why: product** is the user story. **Why: technical** is the engineering reason. A rule needs at least one why, and gets a second or third only where it adds something for the decision or the code. "—" means none is given.
+- A why that names a spec, issue, pull request, code comment or code line rests on that source. A why ending in _(draft)_ was written by QA and no source states it: product keeps, rewrites or deletes it, and sets **Decided by**. A rule with no why at all carries an open question in section 3.
 - **Decided by** names the source of the decision: a spec, a commit or pull request, an issue or a document. "Code comment (no spec)" means only a comment in the code gives the reason. "Not decided" means the behaviour exists in the code and nobody chose it.
 - A marker in bold at the end of a rule points at section 3: **(open: F4)** means a question on this rule is still open, **(defect: F3)** means today's behaviour is a fault and must not be copied as intended, **(defect in part: F5)** means part of it is. A rule with no marker stands as written. Every rule is logged as the server behaves today, also when that is not the intended end state. Whether a test proves the rule sits in Appendix A as **proven** or **untested**.
 - Hard rules are not marked yet. Some rules are choices that a new feature may challenge, and some can never change; a later version will mark the second kind with "(hard rule)" after the why that makes it so. Until then, no marker does not mean a rule is open to change.
@@ -18,7 +21,7 @@ _Open questions per owner: Product Lead 5 · Technical Lead 6 · Quality Lead 3 
 
 | ID | Rule | Why: business | Why: product | Why: technical | Decided by |
 |---|---|---|---|---|---|
-| ACC-01 | Every user and every organisation gets exactly one account, created together with them. It starts with a generated name, its own storage, and a licence with all seven account allowances at zero. | The account is the unit that hosts and pays for resources (ENT-15). | — | One transaction "to prevent orphans" (code comment). | Code comment (no spec) |
+| ACC-01 | Every user and every organisation gets exactly one account, created together with them. It starts with a generated name, its own storage, and a licence with all seven account allowances at zero. | The account is the unit that hosts and pays for resources (ENT-15). _(draft)_ | — | One transaction "to prevent orphans" (code comment). | Code comment (no spec) |
 | ACC-02 | An account's host is the one user or organisation it belongs to. An account with no host shows no host instead of failing. **(open: Q-ACC-02)** | — | — | — | Not decided: exists in the code |
 | ACC-03 | The account admin is the user for a user account. For an organisation account it is every admin and owner of the organisation; a person stops being account admin only when they hold neither role any more. | "Allow hosts (users = self mgmt, org = org admin) to manage resources in their account" (code comment). | — | — | Code comment (no spec) |
 
@@ -37,7 +40,7 @@ _Open questions per owner: Product Lead 5 · Technical Lead 6 · Quality Lead 3 
 | ACC-07 | A profile gives out its account only to a few. For a user: the user, those who may read the user's personal data, and the Platform License Manager and Resource Admin. For an organisation: its admins and owners and the same two platform roles. Everyone else gets nothing, without an error. **(open: F1, F6)** | — | — | The profile's account field is the only place the licence and transfer consoles learn the account id; plain READ is deliberately not used because accounts grant it to everyone (code comment; 089 R3 "no regression"). | Spec 089 R3 |
 | ACC-08 | A signed-in viewer of a profile sees what its account hosts, filtered by visibility: public items for everyone; account-level ones for the user or the organisation's own people; hidden ones for the user or the organisation's admins and owners. Hubs are always listed. A signed-out viewer gets nothing. **(open: F6)** | A public profile shows what its host chose to publish; the account tier exists for an organisation's own people; hidden is owner-side only (089 FR-001…006, operator rulings R1/R3). | — | "the only place that decides this visibility" so the client never re-filters (089 FR-002). | Spec 089 FR-001…006, operator rulings R1/R3 |
 | ACC-09 | A hosted virtual contributor or hub is shown as a closed card: name, picture and link. The card shows for anyone allowed to see it, even without access to the item itself, and gives no way back to the account or to anything else about the item. | The card must render for anyone entitled to see it (089 FR-007), while exposing nothing beyond the public profile (FR-013) and no route to the account's unfiltered lists (code invariant comments). | — | — | Spec 089 FR-007, FR-013 |
-| ACC-10 | A new virtual contributor, innovation pack or innovation hub starts with visibility "account" and listed in the library. The host can change both afterwards. **(open: Q-ACC-10)** | — | — | — | Not decided: exists in the code |
+| ACC-10 | A new virtual contributor, innovation pack or innovation hub starts with visibility "account" and listed in the library. The host can change both afterwards. **(open: Q-ACC-10)** | — | As an account host, I want a new virtual contributor, pack or hub to be visible only to my own people at first, so that I can prepare it before I make it public. _(draft)_ | — | Not decided: exists in the code |
 
 ### Transfers between accounts
 
@@ -293,6 +296,8 @@ The account becomes the owning `actor` row's host record: `account(id, host_acto
 Extracted 2026-11-06 from three sources: server develop @ `eeecf9ddb` (Release/79) code + `schema.graphql`; the legacy server-api suite (`server-api/src/functional-api/account/`, 2 files, 20 cases); the specs, issues and docs listed in § Sources. Scope: the account as the host of resources — user and organisation accounts, who administers them, what they host (spaces, virtual contributors, innovation packs, innovation hubs), how those resources are shown on a profile, transfers between accounts, and the account's part in deletion. Licence rules (plans, limits, baseline plan, subscriptions) are the entitlements area and are cross-referenced as `ENT-nn`, never redone. WHAT and WHY only — no mutations, fixtures or request params. Evidence paths are relative to the server repo unless prefixed `test ›` or `spec ›`.
 
 2026-11-19 converted to the three-section layout. The single why of each rule was sorted into business and technical without rewording, each rule got a short plain version (the exact text is in Appendix A), and every finding, open question and gap was routed to an organisation role. Product has not reviewed this file yet.
+
+2026-11-20 whys pass: every rule has at least one why, sourced where a spec, issue, pull request or code comment states it and marked _(draft)_ where QA wrote it. Restating whys with no source were dropped where a sourced one remains. No source was found for ACC-02, ACC-10 or ACC-12; ACC-16 only points to `entitlements.md`.
 
 #### Sources
 
