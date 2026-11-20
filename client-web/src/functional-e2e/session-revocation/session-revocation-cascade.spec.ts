@@ -178,8 +178,16 @@ test.describe('Session revocation cascade (server#6315)', () => {
     await page.goto(baseUrl);
     await acceptCookiesIfVisible(page);
     await platformAnswer;
+    // Wait for a body that could be read, not just for the first answer: the
+    // body of an answer can be gone by the time it is read (the page moves on
+    // while it boots), and the reload makes more API calls after the first.
+    await expect
+      .poll(() => spaBodies, {
+        message: 'the SPA reload answered at least once',
+        timeout: 30_000,
+      })
+      .toBeGreaterThan(0);
     await Promise.all(reads);
-    expect(spaBodies, 'the SPA reload answered at least once').toBeGreaterThan(0);
 
     // And the browser's own credential, as it is after the reload, is not
     // the deleted user.
