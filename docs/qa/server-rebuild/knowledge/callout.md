@@ -2,7 +2,7 @@
 
 _What the platform does today for callouts: creating and framing them, their settings, publishing and closing, contributions, posts and comments, Forms, polls, reactions, the Contributors and Subspaces collections, transfer, deletion and reading: what it does, why, who may, and what is still to answer. The layout is the three-section one of `communications.md`: **1. Rules**, **2. Rights**, **3. Open questions**, with the evidence in an **Appendix**._
 
-_Open questions per owner: Product Lead 2 · Technical Lead 8 · Quality Lead 8 · Security Lead 1 · Architecture Lead 4. By state: 13 open · 10 with a suggested answer · 8 decided. Proof of the 77 rules: 45 proven by a test · 32 untested (Appendix A)._
+_Open questions per owner: Product Lead 1 · Technical Lead 8 · Quality Lead 8 · Security Lead 1 · Architecture Lead 4. By state: 12 open · 10 with a suggested answer · 9 decided. Proof of the 77 rules: 45 proven by a test · 32 untested (Appendix A)._
 
 _Whys of the 77 rules: 66 rest on a source · 8 carry a draft for product to decide · 3 have none, and each already carries an open question (CAL-11, CAL-27, CAL-39)._
 
@@ -91,7 +91,7 @@ _Whys of the 77 rules: 66 rest on a source · 8 carry a draft for product to dec
 
 | ID | Rule | Why: business | Why: product | Why: technical | Decided by |
 |---|---|---|---|---|---|
-| CAL-39 | A link contribution is changed by those who may edit it and deleted by its creator or an admin. Attaching a file to it needs the edit right plus the right to upload to its storage. **(open: Q-CAL-39)** | — | — | — | Not decided: exists in the code |
+| CAL-39 | A link contribution is changed by those who may edit it and deleted by its creator or an admin. Attaching a file to it needs the edit right plus the right to upload to its storage. | A link belongs to whoever added it; admins can remove what does not belong in their Space, and a file needs the storage right so nobody uploads where they may not. | — | — | Product, 2026-11-20 (was Q-CAL-39) |
 | CAL-40 | A media gallery gets its images when it is created; an image that fails is skipped. Each later upload counts as a contribution. An uploaded file can become an office document only on a callout of that kind. | — | — | Analytics must never block an upload (server spec 039); a file sent with the wrong framing would be silently discarded (resolver comment). | Server spec 039 |
 
 ### Forms and responses
@@ -237,13 +237,12 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 ### Product Lead
 
-[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 2 to answer, 1 also involved
+[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 1 to answer, 1 also involved
 
 **To answer**
 
 | ID | Area | Type | Question | Owner | Proposed answer | State |
 |---|---|---|---|---|---|---|
-| Q-CAL-39 | Links | decision | Why does this rule exist? No source gives the reason a link has these edit, delete and file rights. | Product Lead | — | open |
 | CONST | All | decision | 35 constants are blank in "product must rule?" (Appendix E). Which of them must product rule on? | Product Lead (Technical Lead and Security Lead rule on the engineering and access values) | — | open |
 
 **Also involved**
@@ -327,6 +326,7 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 | Was | Decision | Decided by | Now |
 |---|---|---|---|
+| Q-CAL-39 | A link belongs to whoever added it; admins remove what does not belong; files need the storage right. | Product, 2026-11-20 | CAL-39 |
 | Q-CAL-33 | A contribution moves to the callout where it belongs within the same Space, so that the Space stays organised. | Product, 2026-11-20 | CAL-33 |
 | Q-CAL-25 | The activity number shows how much is going on in a callout: contributions where it takes them, comments otherwise. | Product, 2026-11-20 | CAL-25 |
 | F15 | Behaviour stays: a callout created without settings is published; the web client always sends its own settings and starts in draft. Wanted, tracked: the server default becomes draft, as in the web client. | Product, 2026-11-20 | CAL-11 |
