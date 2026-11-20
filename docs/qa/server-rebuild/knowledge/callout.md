@@ -2,7 +2,7 @@
 
 _What the platform does today for callouts: creating and framing them, their settings, publishing and closing, contributions, posts and comments, Forms, polls, reactions, the Contributors and Subspaces collections, transfer, deletion and reading: what it does, why, who may, and what is still to answer. The layout is the three-section one of `communications.md`: **1. Rules**, **2. Rights**, **3. Open questions**, with the evidence in an **Appendix**._
 
-_Open questions per owner: Product Lead 4 · Technical Lead 8 · Quality Lead 8 · Security Lead 1 · Architecture Lead 4. By state: 15 open · 10 with a suggested answer · 6 decided. Proof of the 77 rules: 45 proven by a test · 32 untested (Appendix A)._
+_Open questions per owner: Product Lead 3 · Technical Lead 8 · Quality Lead 8 · Security Lead 1 · Architecture Lead 4. By state: 14 open · 10 with a suggested answer · 7 decided. Proof of the 77 rules: 45 proven by a test · 32 untested (Appendix A)._
 
 _Whys of the 77 rules: 66 rest on a source · 8 carry a draft for product to decide · 3 have none, and each already carries an open question (CAL-11, CAL-27, CAL-39)._
 
@@ -57,7 +57,7 @@ _Whys of the 77 rules: 66 rest on a source · 8 carry a draft for product to dec
 | CAL-22 | Only Platform Content Full Access and Platform Resource Admin can change who published a callout and when. Every such change is audited. | Platform roles keep a narrow, audited content capability (027 A8, T038). | — | — | Spec 027 A8 |
 | CAL-23 | A closed callout refuses every new contribution. When contributing is set to "admins only", only people who may edit the callout can contribute. **(open: F10)** | Admins close a callout to stop further input while keeping what was received (error-codes: "This callout is closed"). | — | Allowed types stay fixed, `enabled` is the temporary switch (schema description). | Not decided: exists in the code; Product, 2026-11-20 (was F9): behaviour stays |
 | CAL-24 | A callout gets its own comment thread only when comments are on and it is not a template. Members can post, reply and react there. Turning comments off later does not stop posting on the server. | Comments are a per-callout switch (client plan :724-726 hides the input). | — | Server enforcement never existed — F2; 866 migrated collection callouts carry the flag with no room (audit F1). | Not decided: exists in the code; Product, 2026-11-20 (was F2): behaviour stays, tracked |
-| CAL-25 | A callout's activity number is its number of contributions when it accepts contributions, and otherwise its number of comments. **(open: Q-CAL-25)** | — | As a space member, I want to see how much is going on in a callout, so that I can tell where the activity is. _(draft)_ | — | Not decided: exists in the code |
+| CAL-25 | A callout's activity number is its number of contributions when it accepts contributions, and otherwise its number of comments. | — | As a space member, I want to see how much is going on in a callout, so that I can tell where the activity is. | — | Product, 2026-11-20 (was Q-CAL-25) |
 
 ### Contribution types and gates
 
@@ -237,13 +237,12 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 ### Product Lead
 
-[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 4 to answer, 1 also involved
+[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 3 to answer, 1 also involved
 
 **To answer**
 
 | ID | Area | Type | Question | Owner | Proposed answer | State |
 |---|---|---|---|---|---|---|
-| Q-CAL-25 | Publishing | decision | Why does this rule exist? No source gives the reason the activity number counts contributions on one callout and comments on another. | Product Lead | — | open |
 | Q-CAL-33 | Contributions | decision | Why does this rule exist? No source gives the reason a contribution can be moved only within the same Space and lands in the first column of a tasks board. | Product Lead | — | open |
 | Q-CAL-39 | Links | decision | Why does this rule exist? No source gives the reason a link has these edit, delete and file rights. | Product Lead | — | open |
 | CONST | All | decision | 35 constants are blank in "product must rule?" (Appendix E). Which of them must product rule on? | Product Lead (Technical Lead and Security Lead rule on the engineering and access values) | — | open |
@@ -329,6 +328,7 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 | Was | Decision | Decided by | Now |
 |---|---|---|---|
+| Q-CAL-25 | The activity number shows how much is going on in a callout: contributions where it takes them, comments otherwise. | Product, 2026-11-20 | CAL-25 |
 | F15 | Behaviour stays: a callout created without settings is published; the web client always sends its own settings and starts in draft. Wanted, tracked: the server default becomes draft, as in the web client. | Product, 2026-11-20 | CAL-11 |
 | F13 | Behaviour stays: a poll has at most 10 options and a vote is bounded by the poll's own maximum (0 = all options); since a poll has at most 10 options, a vote never holds more than 10 selections, which covers spec 038 FR-009. | Product, 2026-11-20 | CAL-51 |
 | F11 | Behaviour stays: a phase's 'visible' and 'allow new callouts' switches are client hints; the server enforces neither. | Product, 2026-11-20 | CAL-72 |
