@@ -2,7 +2,7 @@
 
 _What the platform does today for callouts: creating and framing them, their settings, publishing and closing, contributions, posts and comments, Forms, polls, reactions, the Contributors and Subspaces collections, transfer, deletion and reading: what it does, why, who may, and what is still to answer. The layout is the three-section one of `communications.md`: **1. Rules**, **2. Rights**, **3. Open questions**, with the evidence in an **Appendix**._
 
-_Open questions per owner: Product Lead 6 · Technical Lead 8 · Quality Lead 8 · Security Lead 1 · Architecture Lead 4. By state: 17 open · 10 with a suggested answer · 4 decided. Proof of the 77 rules: 45 proven by a test · 32 untested (Appendix A)._
+_Open questions per owner: Product Lead 5 · Technical Lead 8 · Quality Lead 8 · Security Lead 1 · Architecture Lead 4. By state: 16 open · 10 with a suggested answer · 5 decided. Proof of the 77 rules: 45 proven by a test · 32 untested (Appendix A)._
 
 _Whys of the 77 rules: 66 rest on a source · 8 carry a draft for product to decide · 3 have none, and each already carries an open question (CAL-11, CAL-27, CAL-39)._
 
@@ -113,8 +113,8 @@ _Whys of the 77 rules: 66 rest on a source · 8 carry a draft for product to dec
 
 | ID | Rule | Why: business | Why: product | Why: technical | Decided by |
 |---|---|---|---|---|---|
-| CAL-51 | A poll has 2 to 10 options. By default each person picks one option, results are visible in full, and members cannot add options. It opens at once and its settings never change afterwards. **(open: F13)** | Simple community polls with immutable rules once votes can exist (server spec 038 FR-001-003/025). | — | — | Server spec 038 FR-001–003, FR-025 |
-| CAL-52 | A member votes on an open poll by picking between the minimum and the maximum number of options. Voting again replaces the earlier vote. A vote can be removed only while the poll is open. **(open: F13)** | One deliberate selection per member, replaceable, never half-edited (038 FR-008-012a). | — | — | Server spec 038 FR-008–012a |
+| CAL-51 | A poll has 2 to 10 options. By default each person picks one option, results are visible in full, and members cannot add options. It opens at once and its settings never change afterwards. | Simple community polls with immutable rules once votes can exist (server spec 038 FR-001-003/025). | — | — | Server spec 038 FR-001–003, FR-025; Product, 2026-11-20 (was F13): behaviour stays |
+| CAL-52 | A member votes on an open poll by picking between the minimum and the maximum number of options. Voting again replaces the earlier vote. A vote can be removed only while the poll is open. | One deliberate selection per member, replaceable, never half-edited (038 FR-008-012a). | — | — | Server spec 038 FR-008–012a; Product, 2026-11-20 (was F13): behaviour stays |
 | CAL-53 | Whoever may edit the callout can add, rename, remove and reorder options (never fewer than two) and open or close the poll. Renaming or removing an option deletes the votes that held it and tells those voters. A closed poll refuses every change. | A selection set is a deliberate combination that must not be silently altered; closing freezes the record (038 FR-004-007, FR-032/033, :339). | — | — | Server spec 038 FR-004–007, FR-032/033 |
 | CAL-54 | Poll results are shown as the poll is set: always, only after the viewer voted, or only the total until the viewer voted. A vote notifies the poll's creator and earlier voters. | Social proof without biasing the vote (038 FR-014/016, :340; FR-020a-d). | — | — | Server spec 038 FR-014/016, FR-020a–d |
 
@@ -237,13 +237,12 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 ### Product Lead
 
-[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 6 to answer, 1 also involved
+[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 5 to answer, 1 also involved
 
 **To answer**
 
 | ID | Area | Type | Question | Owner | Proposed answer | State |
 |---|---|---|---|---|---|---|
-| F13 | Polls | spec | Server spec 038 FR-009 says a vote holds at most 10 selections. The code limits a poll to 10 options and a vote only by the poll's own maximum, where 0 means no limit. Which is intended? | Product Lead (Technical Lead then amends the spec or the code) | — | open |
 | F15 | Settings | decision | A callout created without settings is published by the server, while the web client always starts in draft. Anything other than the web client therefore creates published callouts. Which default is right? | Product Lead | — | open |
 | Q-CAL-25 | Publishing | decision | Why does this rule exist? No source gives the reason the activity number counts contributions on one callout and comments on another. | Product Lead | — | open |
 | Q-CAL-33 | Contributions | decision | Why does this rule exist? No source gives the reason a contribution can be moved only within the same Space and lands in the first column of a tasks board. | Product Lead | — | open |
@@ -277,7 +276,6 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 | ID | Area | Type | Question | Owner | Proposed answer | State |
 |---|---|---|---|---|---|---|
-| F13 | Polls | spec | Server spec 038 FR-009 says a vote holds at most 10 selections. The code limits a poll to 10 options and a vote only by the poll's own maximum, where 0 means no limit. Which is intended? | Product Lead (Technical Lead then amends the spec or the code) | — | open |
 | CONST | All | decision | 35 constants are blank in "product must rule?" (Appendix E). Which of them must product rule on? | Product Lead (Technical Lead and Security Lead rule on the engineering and access values) | — | open |
 
 ### Quality Lead
@@ -332,6 +330,7 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 | Was | Decision | Decided by | Now |
 |---|---|---|---|
+| F13 | Behaviour stays: a poll has at most 10 options and a vote is bounded by the poll's own maximum (0 = all options); since a poll has at most 10 options, a vote never holds more than 10 selections, which covers spec 038 FR-009. | Product, 2026-11-20 | CAL-51 |
 | F11 | Behaviour stays: a phase's 'visible' and 'allow new callouts' switches are client hints; the server enforces neither. | Product, 2026-11-20 | CAL-72 |
 | F9 | Behaviour stays: 'admins only' means everyone who may edit the callout, so the creator of the callout counts as an admin for it. | Product, 2026-11-20 | CAL-23 |
 | F3 | Behaviour stays: drafts are readable by admins, the creator and platform content roles only; leads do not see them. The client plan's 'admins/leads' is to be corrected. | Product, 2026-11-20 | CAL-19 |
