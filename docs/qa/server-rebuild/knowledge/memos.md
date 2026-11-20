@@ -4,10 +4,13 @@ _What the platform does today for memos: creating them, editing and who may edit
 
 _Open questions per owner: Product Lead 6 · Technical Lead 7 · Quality Lead 3 · Security Lead 1 · Architecture Lead 1. By state: 12 open · 6 with a suggested answer. Proof of the 35 rules: 14 proven by a test · 21 untested (Appendix A)._
 
+_Whys of the 35 rules: 31 rest on a source · 0 carry a draft for product to decide · 4 have none, and each carries an open question (MEM-02, MEM-05, MEM-06, MEM-11)._
+
 **How to read it**
 
 - **Rule** is one or two plain sentences. The exact behaviour, with error messages and limits, is in Appendix A under the same id. The new core is checked against the exact text.
-- **Why: business** is what Alkemio needs. **Why: product** is the user story. **Why: technical** is the engineering reason, when there is one. "—" means no source states one. Most product whys are still empty: product fills them in its review.
+- **Why: business** is what Alkemio needs. **Why: product** is the user story. **Why: technical** is the engineering reason. A rule needs at least one why, and gets a second or third only where it adds something for the decision or the code. "—" means none is given.
+- A why that names a spec, issue, pull request, code comment or code line rests on that source. A why ending in _(draft)_ was written by QA and no source states it: product keeps, rewrites or deletes it, and sets **Decided by**. A rule with no why at all carries an open question in section 3.
 - **Decided by** names the source of the decision: a spec, a commit or pull request, an issue or a document. "Not decided" means the behaviour exists in the code and nobody chose it. Product has not reviewed this file yet.
 - A marker in bold at the end of a rule points at section 3: **(open: F2)** means a question on this rule is still open, **(defect in part: F1)** means part of today's behaviour is a fault and must not be copied as intended. A rule with no marker stands as written. Every rule is logged as the server behaves today, also when that is not the intended end state. Whether a test proves the rule sits in Appendix A as **proven** or **untested**.
 - Hard rules are not marked yet. Some rules are choices that a new feature may challenge, and some can never change; a later version will mark the second kind with "(hard rule)" after the why that makes it so. Until then, no marker does not mean a rule is open to change.
@@ -45,19 +48,19 @@ _Open questions per owner: Product Lead 6 · Technical Lead 7 · Quality Lead 3 
 | MEM-14 | Deleting a memo needs the delete right. The live editing session is closed first; then its signing attempts, its files (signed copies and previews included), its rights and the memo itself are removed. When a platform role deletes or edits a memo directly, no audit record is written. **(defect in part: F5)** | Platform-role actions must be audited (server CLAUDE.md). | — | Deletion must not leave a live room editing a vanished memo (code comment). | Server CLAUDE.md (audit rule); the deletion order is not decided: it exists in the code |
 | MEM-15 | A memo goes with its parent: deleting its callout or contribution, or changing the callout to another kind, deletes the memo (see CAL-73, CAL-32). | — | — | Framing content is owned by the callout; no orphans (016 FR-014). | Server spec 016 FR-014 |
 | MEM-16 | Only a Platform Operations Admin may run the migration of old memo content. It can be run again safely and is audited. | Operations-only, audited platform actions (027). | — | — | Spec 027 |
-| MEM-17 | When a user is deleted, their memos stay and the creator shows as empty. A copy they signed shows a "deleted user" placeholder. **(open: Q-MEM-17)** | — | — | — (W4 register M5 ruling pending) | Not decided: exists in the code |
+| MEM-17 | When a user is deleted, their memos stay and the creator shows as empty. A copy they signed shows a "deleted user" placeholder. **(open: Q-MEM-17)** | A signed copy stays attributed to the account that signed it, shown with the deleted-user placeholder once that account is gone (spec 031 US3, FR-008). | — | — (W4 register M5 ruling pending) | Not decided: exists in the code; the signed-copy attribution: spec 031 (agents-hq branch `031-cleverbase-memo-signing`) US3, FR-008 |
 
 ### Signing (Cleverbase)
 
 | ID | Rule | Why: business | Why: product | Why: technical | Decided by |
 |---|---|---|---|---|---|
-| MEM-18 | Preparing a memo for signing needs, in this order: the contribute right on the memo, the memo-signing feature on its space, and a linked Cleverbase identity. A memo outside a space can never be signed. The web app offers Sign only when all three hold. **(open: OQ1)** | Signing is a paid space feature and a qualified identity is required (server PR #6478, alkemio#2025; `entitlements.md` ENT-06). | — | — | Server PR #6478; alkemio#2025 |
+| MEM-18 | Preparing a memo for signing needs, in this order: the contribute right on the memo, the memo-signing feature on its space, and a linked Cleverbase identity. A memo outside a space can never be signed. The web app offers Sign only when all three hold. **(open: OQ1)** | Signing is a paid space feature and a qualified identity is required (server PR #6478, alkemio#2025; `entitlements.md` ENT-06). | — | — | Server PR #6478; alkemio#2025; spec 031 (agents-hq branch `031-cleverbase-memo-signing`) FR-011 |
 | MEM-19 | Preparing makes an exact PDF of the memo's current text, stores it as a private preview, and opens a signing attempt tied to that preview. | What is signed is exactly what was previewed (087 FR-016, D-1; signing feature #6468). | — | — | Spec 087 FR-016; server PR #6468 |
-| MEM-20 | The signing preview can be viewed only by the person who prepared it, while they still have the contribute right, and only once it is ready. | A signing copy is personal to its signer. | — | — | Not decided: exists in the code |
-| MEM-21 | Signing can be started only on your own attempt, within 60 minutes of preparing, while the conditions of MEM-18 still hold and the preview is unchanged. An attempt is started once: after a second start or a failure, a fresh preparation is needed. | — | — | One-shot, tamper-evident start (unique client state and correlation per attempt). | Not decided: exists in the code |
-| MEM-22 | On return from the signing service the user must be signed in and the return must match their own attempt. A declined signature is recorded as cancelled, an expired session as expired, another failure as failed. A completed signature stores the signed PDF with the memo, deletes the preview and sends the user back to the memo. | The signed copy is immutable evidence. | — | Outcome is decided from the gateway, never from the browser. | Not decided: exists in the code |
-| MEM-23 | Anyone who may read a memo sees its signed copies, newest first, each with its signer and its PDF. Any reader can have a signed copy checked: verified, invalid, or unavailable when the signing service cannot be reached. | Readers of a memo may see and check what was signed (CT-5 "signing = attribute rows"). | — | — | Catalogue CT-5 |
-| MEM-24 | A signing attempt expires 60 minutes after preparation if signing never started, or one minute after the signing service's own expiry. Every hour, 25 at a time, expired attempts are marked and their previews deleted. Signed copies are kept. | Previews are personal, short-lived files; signed copies are permanent. | — | — | Not decided: exists in the code |
+| MEM-20 | The signing preview can be viewed only by the person who prepared it, while they still have the contribute right, and only once it is ready. | — | — | Every step of a signing attempt checks the attempt's own actor and the current memo right (spec 031 FR-004). | spec 031 (agents-hq branch `031-cleverbase-memo-signing`) FR-004 |
+| MEM-21 | Signing can be started only on your own attempt, within 60 minutes of preparing, while the conditions of MEM-18 still hold and the preview is unchanged. An attempt is started once: after a second start or a failure, a fresh preparation is needed. | — | — | One attempt per deliberate signing action: a double start is prevented, a returned attempt is consumed once, and nothing is restarted (spec 031 FR-001, US3, edge cases). | spec 031 (agents-hq branch `031-cleverbase-memo-signing`) FR-001, US3 |
+| MEM-22 | On return from the signing service the user must be signed in and the return must match their own attempt. A declined signature is recorded as cancelled, an expired session as expired, another failure as failed. A completed signature stores the signed PDF with the memo, deletes the preview and sends the user back to the memo. | Signed PDFs attach to the content item, "so it is always unambiguous which memo a signature attests to" (alkemio#2025). | — | The terminal status is fetched server to server and never trusted from the browser return (spec 031 FR-006, US2). | spec 031 (agents-hq branch `031-cleverbase-memo-signing`) FR-006, US2; alkemio#2025 |
+| MEM-23 | Anyone who may read a memo sees its signed copies, newest first, each with its signer and its PDF. Any reader can have a signed copy checked: verified, invalid, or unavailable when the signing service cannot be reached. | Readers of a memo may see and check what was signed (CT-5 "signing = attribute rows"). | — | — | Catalogue CT-5; spec 031 (agents-hq branch `031-cleverbase-memo-signing`) FR-005, FR-010 |
+| MEM-24 | A signing attempt expires 60 minutes after preparation if signing never started, or one minute after the signing service's own expiry. Every hour, 25 at a time, expired attempts are marked and their previews deleted. Signed copies are kept. | — | — | A prepared attempt expires at the shared preparation deadline, a started one at the gateway's expiry plus a margin; neither is restarted, and a signed copy is never deleted (spec 031 edge cases, FR-005). | spec 031 (agents-hq branch `031-cleverbase-memo-signing`) edge cases, FR-005; the hourly batch of 25 is not decided: exists in the code |
 
 ### PDF download
 
@@ -133,7 +136,7 @@ _One section per role, so each owner reads only their own part. **To answer** li
 | CONST | All | decision | The "product must rule?" column is blank for 24 of the 27 constants (Appendix E). Which must product rule on before the rebuild? | Product Lead (Technical Lead and Security Lead for the rows pre-filled with their role) | — | open |
 | Q-MEM-02 | Creation | decision | Why does this rule exist? No source states a reason. Why does every new memo start open to contributors, with no choice at creation? | Product Lead | — | open |
 | Q-MEM-11 | Editing | decision | Why does this rule exist? No source states a reason. Who uses the report of memo contributors? | Product Lead | — | open |
-| Q-MEM-17 | Deletion | decision | Why does this rule exist? No source states a reason. A ruling on what the creator field should show for a deleted user is pending (31 memos on acceptance). | Product Lead | — | open |
+| Q-MEM-17 | Deletion | decision | Why does this rule exist? No source states a reason. A ruling on what the creator field should show for a deleted user is pending (31 memos on acceptance). | Product Lead | In part: spec 031 (US3, FR-008) keeps a signed copy attributed to its signer with the deleted-user placeholder. No source says why the memos themselves stay with an empty creator. | open |
 
 ### Technical Lead
 
@@ -340,6 +343,9 @@ Extracted 2026-11-06 from three sources: server develop @ `eeecf9ddb` (Release/7
 
 2026-11-19 converted to the three-section layout. The status legend and the review-load line of the old header were dropped; the counts line at the top replaces them.
 
+
+2026-11-20 whys pass: every rule has at least one why, sourced where a spec, issue or code line states it and marked _(draft)_ where QA wrote it. Restating whys with no source were dropped where a sourced one remains (MEM-20, MEM-24). The memo-signing spec 031 (agents-hq branch `031-cleverbase-memo-signing`, linked from alkemio#2025) was added as a source; it replaces the unsourced whys of the signing rules and answers Q-MEM-17 in part.
+
 #### Sources
 
 Server code (worktree `w1-access-matrix/server` @ `eeecf9ddb`):
@@ -361,3 +367,4 @@ Specs / issues:
 - `agents-hq origin/main:specs/087-memo-pdf-download/spec.md` (read with `git show`; not on the local branch)
 - server `specs/016-memo-collection-contribution/spec.md`; `specs/083-collab-entitlement/spec.md` (via `entitlements.md`)
 - alkem-io/server#6660 (story), #6682 (template memo owner), #6686 (PR), #6478 (PR), #6468 (PR), #6510; alkem-io/alkemio#1721, #2025, #2117 (R-5); alkem-io/client-web#10445 (PR), #10455, #10457
+- `agents-hq/specs/031-cleverbase-memo-signing/spec.md` on branch `031-cleverbase-memo-signing` (FR-001…FR-011, US1–US3, edge cases); alkemio#2025 (memo signing story)
