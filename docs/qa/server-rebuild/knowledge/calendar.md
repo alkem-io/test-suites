@@ -4,7 +4,7 @@ _What the platform does today for the calendar every space carries and its event
 
 _Open questions per owner: Product Lead 3 · Technical Lead 5 · Quality Lead 4 · Architecture Lead 1. By state: 6 open · 2 change decided · 5 with a suggested answer · 5 decided. Proof of the 25 rules: 12 proven by a test · 13 untested (Appendix A)._
 
-_Whys of the 25 rules: 12 rest on a source · 11 carry a draft for product to decide · 2 have none, and each already carries an open question (EVT-24, EVT-25)._
+_Whys of the 25 rules: 21 rest on a source or a product decision · 4 carry a technical draft for the Technical Lead (EVT-01, EVT-02, EVT-09, EVT-16) · 0 have none (—)._
 
 **How to read it**
 
@@ -32,7 +32,7 @@ _Whys of the 25 rules: 12 rest on a source · 11 carry a draft for product to de
 | EVT-04 | An event's name identifier is unique within its calendar. One that is already taken is refused; when none is given, one is made from the title. **(open: Q-EVT-04)** | — | — | The name id is the last part of the event's web address (`<space>/calendar/<nameID>`, `url.generator.service.ts:1357`), so two events in one calendar cannot share it. | Not decided: exists in the code |
 | EVT-05 | Every event has its own comments room. If the event cannot be saved the room is removed again, and deleting the event deletes the room. | — | — | The Matrix room is created outside the database transaction, so an orphan must be removed explicitly (code comment). | Not decided: exists in the code |
 | EVT-06 | The creator of an event can read, update and delete it whatever their role, but cannot delete other people's comments on it. | — | — | Comment rights are inherited before the creator's extra rights are added, "so that the creating user does not have rights to delete comments" (code comment, `event.service.authorization.ts:59-60`). | Not decided: exists in the code |
-| EVT-07 | Creating an event is recorded as activity and notifies the space community, except the creator, by email, in the app and by push. One notification setting covers it. | — | As a member, I want to know what events are happening, so that I can take part in them. As a creator, I don't want notifications for my own events, so that I am only told about what is new to me. (Product, 2026-11-20; the two so-thats are QA's wording) _(draft)_ | — | Server PR #5860; Product, 2026-11-20 |
+| EVT-07 | Creating an event is recorded as activity and notifies the space community, except the creator, by email, in the app and by push. One notification setting covers it. | — | As a member, I want to know what events are happening, so that I can take part in them. As a creator, I don't want notifications for my own events, so that I am only told about what is new to me. (Product, 2026-11-20) | — | Server PR #5860; Product, 2026-11-20 |
 | EVT-08 | A comment on an event notifies the event's creator only, and never the person who wrote the comment. | Keep event creators engaged with discussion on their events; no self-notification (spec 015 US1/US2, FR-003/FR-004). | As an event creator, I want to be notified when someone else comments on my event, so that I stay engaged with the discussion on it (015 US1/US2). | — | Spec 015 US1/US2, FR-003/FR-004 |
 
 ### Reading events
@@ -50,7 +50,7 @@ _Whys of the 25 rules: 12 rest on a source · 11 carry a draft for product to de
 |---|---|---|---|---|---|
 | EVT-13 | Space admins and the creator can update an event. The dates and durations are always replaced by what is sent, so shortening a multi-day event to one day sticks. Changing the title also renames the comments room. **(open: F6)** | — | — | A truthy guard dropped a legitimate 0 and silently kept the old span (023 US5, FR-012; server#6279). | Spec 023 US5, FR-012; server#6279 |
 | EVT-14 | Space admins and the creator can delete an event. Its profile and its comments room go with it. | — | As a space admin or event creator, I want to delete an event that no longer takes place, so that members are not misled. | — | Product, 2026-11-20 |
-| EVT-15 | Deleting a space deletes its calendar and every event, with their comments rooms. | Events are owned content of the space. _(draft)_ | — | — | Not decided: exists in the code |
+| EVT-15 | Deleting a space deletes its calendar and every event, with their comments rooms. | Events are owned content of the space. | — | — | Product, 2026-11-20 |
 | EVT-16 | Rights on events always follow the space: the calendar takes its rights from the space, each event from the calendar plus its creator, and each comments room from its event. | — | — | One authorization forest; events are children of the collaboration. _(draft)_ | Not decided: exists in the code |
 
 ### Whole-day and timed dates
@@ -324,6 +324,8 @@ Extracted 2026-11-06 from three sources: server develop @ `eeecf9ddb` (Release/7
 2026-11-19 converted to the three-section layout.
 
 2026-11-19 whys pass: every rule has at least one why, sourced where a spec, issue or code line states it and marked _(draft)_ where QA wrote it. Restating whys with no source were dropped where a sourced one remains. The two client-web issues behind PRs #4687 and #5860 (client-web#6876, #9330) and the client-web spec they link were added as sources; they answer OQ1, Q-EVT-04 and Q-EVT-11 and suggest an answer for F3.
+
+2026-11-20 product review by the Product Owner, on behalf of the Product Lead: F1, F3, OQ3, Q-EVT-11 and Q-EVT-25 decided; F7 and CH-EVT-02 change decided (see `PRODUCT-ISSUES.md`); the product and business drafts confirmed; Appendix E ticked for the seven Product Lead constants. The four technical drafts are left for the Technical Lead.
 
 #### Sources
 
