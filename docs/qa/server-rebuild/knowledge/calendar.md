@@ -2,7 +2,7 @@
 
 _What the platform does today for the calendar every space carries and its events: creating, reading, updating and deleting them, whole-day and timed dates, the Google, Outlook and ICS exports, subspace events showing on the parent calendar, and the notifications and activity an event produces. It says what the server does, why, who may, and what is still to answer. The file has three sections, **1. Rules**, **2. Rights** and **3. Open questions**, with the evidence in an **Appendix**._
 
-_Open questions per owner: Product Lead 3 · Technical Lead 5 · Quality Lead 4 · Architecture Lead 1. By state: 8 open · 1 change decided · 4 with a suggested answer · 4 decided. Proof of the 25 rules: 12 proven by a test · 13 untested (Appendix A)._
+_Open questions per owner: Product Lead 2 · Technical Lead 5 · Quality Lead 4 · Architecture Lead 1. By state: 7 open · 1 change decided · 4 with a suggested answer · 5 decided. Proof of the 25 rules: 12 proven by a test · 13 untested (Appendix A)._
 
 _Whys of the 25 rules: 12 rest on a source · 11 carry a draft for product to decide · 2 have none, and each already carries an open question (EVT-24, EVT-25)._
 
@@ -75,7 +75,7 @@ _Whys of the 25 rules: 12 rest on a source · 11 carry a draft for product to de
 |---|---|---|---|---|---|
 | EVT-23 | Events stay with their space when it is converted or moved. | Content travels with the space (journey area, 083/084). | — | — | Specs 083, 084 |
 | EVT-24 | A creator who has left the community can still update and delete the events they created. **(defect: F7)** | Product, 2026-11-20: a creator's rights on an event end when they leave the community; space admins keep theirs. | — | The creator rule is keyed on the user, not on membership. | Product, 2026-11-20 (F7, change decided): today's behaviour is not the rule |
-| EVT-25 | When the creator's account no longer exists, the event still shows, without a creator, and nobody inherits the creator's rights. **(open: Q-EVT-25, F8)** | — | — | — | Not decided: exists in the code |
+| EVT-25 | When the creator's account no longer exists, the event still shows, without a creator, and nobody inherits the creator's rights. **(open: F8)** | An event is content of the space, not of its creator, so it outlives the account; space admins keep managing it. Product, 2026-11-20. | — | — | Product, 2026-11-20 (was Q-EVT-25) |
 
 Numbering note: ids are contiguous; none folded.
 
@@ -114,14 +114,13 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 ### Product Lead
 
-[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 3 to answer
+[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 2 to answer
 
 **To answer**
 
 | ID | Area | Type | Question | Owner | Proposed answer | State |
 |---|---|---|---|---|---|---|
 | F7 | Lifecycle | decision | A creator who has left the community can still update and delete the events they created. Is that intended? | Product Lead | Product, 2026-11-20: rights end on leaving. A former member can no longer update or delete the events they created; space admins keep theirs. Issue: to file. | change decided |
-| Q-EVT-25 | Lifecycle | decision | Why does this rule exist? When the creator's account is gone the event still shows and nobody inherits the creator's rights; no source states the reason. (F8 asks what to do with the left-over id.) | Product Lead | — | open |
 | CONST | All | decision | 22 of the 27 constants are still blank in "product must rule?" (Appendix E). Which of them must product rule on? | Product Lead (Technical Lead and Security Lead for the rows pre-filled with their name) | — | open |
 
 ### Technical Lead
@@ -189,6 +188,7 @@ Nothing left: OQ3, where this role was involved, was decided on 2026-11-20 (see 
 
 | Was | Decision | Decided by | Now |
 |---|---|---|---|
+| Q-EVT-25 | The event stays when its creator's account is gone, and nobody inherits the creator's rights; space admins keep managing it. | Product, 2026-11-20 | EVT-25 |
 | OQ3 | Europe/Amsterdam is the intended ICS time-zone hint for every customer. | Product, 2026-11-20 | EVT-18 |
 | F1 | Downloading the ICS file keeps requiring sign-in; client-web spec 004 US3 scenario 4 (download from the email without signing in) is not adopted. | Product, 2026-11-20 | EVT-22 |
 | Q-EVT-11 | An event shown on a parent calendar names its subspace, as asked in client-web#6876. | Product, 2026-11-20 | EVT-11 |
