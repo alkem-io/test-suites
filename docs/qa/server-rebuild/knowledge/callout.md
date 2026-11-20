@@ -2,7 +2,7 @@
 
 _What the platform does today for callouts: creating and framing them, their settings, publishing and closing, contributions, posts and comments, Forms, polls, reactions, the Contributors and Subspaces collections, transfer, deletion and reading: what it does, why, who may, and what is still to answer. The layout is the three-section one of `communications.md`: **1. Rules**, **2. Rights**, **3. Open questions**, with the evidence in an **Appendix**._
 
-_Open questions per owner: Product Lead 3 · Technical Lead 8 · Quality Lead 8 · Security Lead 1 · Architecture Lead 4. By state: 14 open · 10 with a suggested answer · 7 decided. Proof of the 77 rules: 45 proven by a test · 32 untested (Appendix A)._
+_Open questions per owner: Product Lead 2 · Technical Lead 8 · Quality Lead 8 · Security Lead 1 · Architecture Lead 4. By state: 13 open · 10 with a suggested answer · 8 decided. Proof of the 77 rules: 45 proven by a test · 32 untested (Appendix A)._
 
 _Whys of the 77 rules: 66 rest on a source · 8 carry a draft for product to decide · 3 have none, and each already carries an open question (CAL-11, CAL-27, CAL-39)._
 
@@ -70,7 +70,7 @@ _Whys of the 77 rules: 66 rest on a source · 8 carry a draft for product to dec
 | CAL-30 | On a published callout in a Space, every new contribution adds an activity entry and sends one notification, unless the contributor switched the notification off. On a draft or knowledge-base callout nothing is written or sent. **(open: F16)** | Members are told about input they can see; a silent switch is an author's choice that never overrides a recipient's opt-in, and the activity entry is written first so a notification failure cannot lose it (070 FR-003/007/013). | — | — | Spec 070 FR-003/007/013 |
 | CAL-31 | A whiteboard contribution created empty starts from the callout's default whiteboard. Copying from another whiteboard needs the right to read that one. | Contribution defaults give members a starting template; cloning must not leak unreadable boards (resolver comment). | — | — | Not decided: exists in the code |
 | CAL-32 | A contribution is deleted by its author, by the Space's admins, or by Platform Content Full Access, whose deletions are audited. Its content and its comments go with it. | Content deletions by platform roles are recorded (027 FR-018a). | — | — | Spec 027 FR-018a |
-| CAL-33 | A contribution can be moved only to another callout of the same Space that allows its type. On a tasks board it lands in the first column. The move is audited. **(open: Q-CAL-33)** | — | As a space admin, I want to move a contribution to the callout where it belongs, so that the Space stays organised. _(draft)_ | — | Not decided: exists in the code |
+| CAL-33 | A contribution can be moved only to another callout of the same Space that allows its type. On a tasks board it lands in the first column. The move is audited. | — | As a space admin, I want to move a contribution to the callout where it belongs, so that the Space stays organised. | — | Product, 2026-11-20 (was Q-CAL-33) |
 
 ### Posts and comments
 
@@ -237,13 +237,12 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 ### Product Lead
 
-[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 3 to answer, 1 also involved
+[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 2 to answer, 1 also involved
 
 **To answer**
 
 | ID | Area | Type | Question | Owner | Proposed answer | State |
 |---|---|---|---|---|---|---|
-| Q-CAL-33 | Contributions | decision | Why does this rule exist? No source gives the reason a contribution can be moved only within the same Space and lands in the first column of a tasks board. | Product Lead | — | open |
 | Q-CAL-39 | Links | decision | Why does this rule exist? No source gives the reason a link has these edit, delete and file rights. | Product Lead | — | open |
 | CONST | All | decision | 35 constants are blank in "product must rule?" (Appendix E). Which of them must product rule on? | Product Lead (Technical Lead and Security Lead rule on the engineering and access values) | — | open |
 
@@ -328,6 +327,7 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 | Was | Decision | Decided by | Now |
 |---|---|---|---|
+| Q-CAL-33 | A contribution moves to the callout where it belongs within the same Space, so that the Space stays organised. | Product, 2026-11-20 | CAL-33 |
 | Q-CAL-25 | The activity number shows how much is going on in a callout: contributions where it takes them, comments otherwise. | Product, 2026-11-20 | CAL-25 |
 | F15 | Behaviour stays: a callout created without settings is published; the web client always sends its own settings and starts in draft. Wanted, tracked: the server default becomes draft, as in the web client. | Product, 2026-11-20 | CAL-11 |
 | F13 | Behaviour stays: a poll has at most 10 options and a vote is bounded by the poll's own maximum (0 = all options); since a poll has at most 10 options, a vote never holds more than 10 selections, which covers spec 038 FR-009. | Product, 2026-11-20 | CAL-51 |
