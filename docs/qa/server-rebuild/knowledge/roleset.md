@@ -2,7 +2,7 @@
 
 _What the platform does today for the role sets of spaces, organisations and the platform: the roles and their limits, the entry role and the rule that a subspace member is a member of the parent, adding and removing people directly, applications, invitations to existing users, organisations and virtual contributors, email invitations, organisation associates, joining through a matching email domain, the combined application or join for a subspace, Platform Support's audited work on organisations, and the lists of pending requests. The file follows the three-section layout accepted in the product review of `communications.md` (alkem-io/test-suites#717): **1. Rules**, **2. Rights**, **3. Open questions**, with the evidence in an **Appendix**._
 
-_Open questions per owner: Product Lead 4 · Technical Lead 4 · Quality Lead 8 · Security Lead 1 · Incident Lead 2. By state: 12 open · 7 with a suggested answer · 10 decided. Proof of the 79 rules: 60 proven by a test · 19 untested (Appendix A)._
+_Open questions per owner: Product Lead 3 · Technical Lead 4 · Quality Lead 8 · Security Lead 1 · Incident Lead 2. By state: 12 open · 6 with a suggested answer · 11 decided. Proof of the 79 rules: 60 proven by a test · 19 untested (Appendix A)._
 
 _Whys of the 79 rules: 55 rest on a source · 17 carry a draft for product to decide · 7 have none, and each already carries an open question or a defect (RS-04: F1; RS-06: F2; RS-27: Q-RS-02; RS-36: F4; RS-54: F11; RS-77: F7; RS-79: F13)._
 
@@ -47,7 +47,7 @@ _Whys of the 79 rules: 55 rest on a source · 17 carry a draft for product to de
 | RS-17 | A role is removed by someone who may grant roles on the role set. In addition a user may always remove themself as member or associate, an organisation's admins or owners may take their organisation out of a space, and the account admin of a virtual contributor may remove it. | Leaving must always be possible; organisations could join but never leave until server#6560 (083 FR-007); the lead decision stays the space admins' (server#6649 ruling, supersedes 083 D-2). | — | — | Spec 083 FR-007/FR-008; server#6560; server#6649 ruling |
 | RS-18 | Removing someone as member also removes every role they hold in the subspaces below, takes them out of the community rooms and deletes their in-app notifications for that space tree. They can apply again afterwards. An organisation that leaves as member loses its lead role too. **(open: F3, OQ2)** | Leaving a space leaves its descendants (membership flows up on grant, down on revoke — server#6710 wording); all-or-nothing leave for organisations (server#6649 ruling). | — | — | Spec 083 FR-006, A2; server#6649 ruling |
 | RS-19 | When a user loses a role in an organisation, their in-app notifications for that organisation are deleted only once they hold no role in it at all. | An admin need not be an associate; removing associate while admin stays must keep their feed (062 FR-025). | — | — | Spec 062 FR-025 |
-| RS-20 | Giving or removing a space role refreshes the user's own access rules, so their profile becomes visible to the community, or stops being visible. **(open: Q-RS-01)** | Member profiles are visible to fellow members only. _(draft)_ | — | — | Not decided: exists in the code |
+| RS-20 | Giving or removing a space role refreshes the user's own access rules, so their profile becomes visible to the community, or stops being visible. | Member profiles are visible to fellow members only. | As a space member, I want to see the profiles of my fellow members, so that I know who I am working with. _(draft)_ | — | Product, 2026-11-20; Product, 2026-11-20 (was Q-RS-01) |
 
 ### Applications
 
@@ -206,13 +206,12 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 ### Product Lead
 
-[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 4 to answer
+[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 3 to answer
 
 **To answer**
 
 | ID | Area | Type | Question | Owner | Proposed answer | State |
 |---|---|---|---|---|---|---|
-| Q-RS-01 | Direct | decision | Why does this rule exist? No source states why a role change refreshes the user's own access rules (RS-20). | Product Lead | The reading of the extraction: member profiles are visible to fellow members only. | suggested |
 | Q-RS-02 | Applications | decision | Why does this rule exist? No source states who should be able to delete an application, and why (RS-27). | Product Lead | — | open |
 | Q-RS-03 | Lifecycle | decision | Why does this rule exist? No source states why the creator and the hosting organisation get these roles (RS-75). | Product Lead | The reading of the extraction: the host and the creator run the space from day one. | suggested |
 | CONST | All | decision | 27 of the 37 constants are still blank in "product must rule?" (Appendix E). Which must product rule on? | Product Lead (Technical Lead for engineering limits and wire shapes, Security Lead for security limits) | — | open |
@@ -316,6 +315,7 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 | Was | Decision | Decided by | Now |
 |---|---|---|---|
+| Q-RS-01 | Member profiles are visible to fellow members only. | Product, 2026-11-20 | RS-20 |
 | F14 | Behaviour stays: only an invited organisation's admins are notified, and the 'no administrators' notice ignores owners. Wanted, tracked: notify owners too, and count them for the 'no administrators' notice. | Product, 2026-11-20 | RS-51 |
 | F13 | Behaviour stays: organisation admins and owners can add associates, admins and owners directly through the API, for a transition period. Wanted, tracked: make organisations invitation-only like spaces (server#6608). | Product, 2026-11-20 | RS-79 |
 | F12 | Behaviour stays: the subspace 'allow Platform Support as admin' switch is shown but does nothing; Support follows the top-level switch. Wanted, tracked: hide the switch below the top level. | Product, 2026-11-20 | RS-78 |
