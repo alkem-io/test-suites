@@ -2,7 +2,7 @@
 
 _What the platform does today for callouts: creating and framing them, their settings, publishing and closing, contributions, posts and comments, Forms, polls, reactions, the Contributors and Subspaces collections, transfer, deletion and reading: what it does, why, who may, and what is still to answer. The layout is the three-section one of `communications.md`: **1. Rules**, **2. Rights**, **3. Open questions**, with the evidence in an **Appendix**._
 
-_Open questions per owner: Product Lead 7 · Technical Lead 8 · Quality Lead 8 · Security Lead 1 · Architecture Lead 4. By state: 18 open · 10 with a suggested answer · 3 decided. Proof of the 77 rules: 45 proven by a test · 32 untested (Appendix A)._
+_Open questions per owner: Product Lead 6 · Technical Lead 8 · Quality Lead 8 · Security Lead 1 · Architecture Lead 4. By state: 17 open · 10 with a suggested answer · 4 decided. Proof of the 77 rules: 45 proven by a test · 32 untested (Appendix A)._
 
 _Whys of the 77 rules: 66 rest on a source · 8 carry a draft for product to decide · 3 have none, and each already carries an open question (CAL-11, CAL-27, CAL-39)._
 
@@ -149,7 +149,7 @@ _Whys of the 77 rules: 66 rest on a source · 8 carry a draft for product to dec
 |---|---|---|---|---|---|
 | CAL-70 | Only a Platform Resource Admin can transfer a callout to another Space. Template and Form callouts are refused. Files, tags, flow phase and activity follow the callout, and the transfer is audited. **(open: F4)** | Built as a support tool for converting a virtual contributor's type (PR #4914); platform resource admin owns the move family (027 A9/T066). | — | — | Server PR #4914; spec 027 A9 |
 | CAL-71 | A transferred callout keeps its flow phase when the destination has a phase of the same name; otherwise it lands on the destination's first phase. **(defect in part: F5)** | — | — | Classification is re-synced against the target's own tagset templates, valid values preserved (083 FR-018). | Server spec 083 FR-018 |
-| CAL-72 | A callout always sits in a valid flow phase. A phase's "visible" and "allow new callouts" switches are hints for the client; the server does not enforce them. **(open: F11)** | — | — | Phase visibility never gates access (103 FR-007); consuming "allow new callouts" was explicitly left out of scope (#6138). | Server spec 103 FR-007; server #6138 |
+| CAL-72 | A callout always sits in a valid flow phase. A phase's "visible" and "allow new callouts" switches are hints for the client; the server does not enforce them. | — | — | Phase visibility never gates access (103 FR-007); consuming "allow new callouts" was explicitly left out of scope (#6138). | Server spec 103 FR-007; server #6138; Product, 2026-11-20 (was F11): behaviour stays |
 
 ### Deletion
 
@@ -237,13 +237,12 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 ### Product Lead
 
-[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 7 to answer, 1 also involved
+[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 6 to answer, 1 also involved
 
 **To answer**
 
 | ID | Area | Type | Question | Owner | Proposed answer | State |
 |---|---|---|---|---|---|---|
-| F11 | Transfer | decision | A flow phase's "allow new callouts" switch is stored and shown, but the server never enforces it. Enforce it, or record it as a hint for the client, like "visible"? | Product Lead, then Technical Lead | — | open |
 | F13 | Polls | spec | Server spec 038 FR-009 says a vote holds at most 10 selections. The code limits a poll to 10 options and a vote only by the poll's own maximum, where 0 means no limit. Which is intended? | Product Lead (Technical Lead then amends the spec or the code) | — | open |
 | F15 | Settings | decision | A callout created without settings is published by the server, while the web client always starts in draft. Anything other than the web client therefore creates published callouts. Which default is right? | Product Lead | — | open |
 | Q-CAL-25 | Publishing | decision | Why does this rule exist? No source gives the reason the activity number counts contributions on one callout and comments on another. | Product Lead | — | open |
@@ -278,7 +277,6 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 | ID | Area | Type | Question | Owner | Proposed answer | State |
 |---|---|---|---|---|---|---|
-| F11 | Transfer | decision | A flow phase's "allow new callouts" switch is stored and shown, but the server never enforces it. Enforce it, or record it as a hint for the client, like "visible"? | Product Lead, then Technical Lead | — | open |
 | F13 | Polls | spec | Server spec 038 FR-009 says a vote holds at most 10 selections. The code limits a poll to 10 options and a vote only by the poll's own maximum, where 0 means no limit. Which is intended? | Product Lead (Technical Lead then amends the spec or the code) | — | open |
 | CONST | All | decision | 35 constants are blank in "product must rule?" (Appendix E). Which of them must product rule on? | Product Lead (Technical Lead and Security Lead rule on the engineering and access values) | — | open |
 
@@ -334,6 +332,7 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 | Was | Decision | Decided by | Now |
 |---|---|---|---|
+| F11 | Behaviour stays: a phase's 'visible' and 'allow new callouts' switches are client hints; the server enforces neither. | Product, 2026-11-20 | CAL-72 |
 | F9 | Behaviour stays: 'admins only' means everyone who may edit the callout, so the creator of the callout counts as an admin for it. | Product, 2026-11-20 | CAL-23 |
 | F3 | Behaviour stays: drafts are readable by admins, the creator and platform content roles only; leads do not see them. The client plan's 'admins/leads' is to be corrected. | Product, 2026-11-20 | CAL-19 |
 | F2 | Behaviour stays: turning comments off only hides the input; the server still accepts messages, and 866 collection callouts on acceptance have comments on without a thread. Wanted, tracked: the server refuses messages when comments are off; decide for the 866 collection callouts whether they get a thread or the switch goes off. | Product, 2026-11-20 | CAL-24 |
