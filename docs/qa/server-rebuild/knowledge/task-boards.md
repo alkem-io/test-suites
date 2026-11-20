@@ -4,10 +4,13 @@ _What the platform does today for the Tasks board, a kind of posts callout: its 
 
 _Open questions per owner: Product Lead 4 · Technical Lead 2 · Quality Lead 5 · Architecture Lead 1. By state: 11 open · 1 with a suggested answer. Proof of the 21 rules: 3 proven by a test · 18 untested (Appendix A)._
 
+_Whys of the 21 rules: 20 rest on a source · 1 carries a draft for product to decide (TSK-17) · 0 have none._
+
 **How to read it**
 
 - **Rule** is one or two plain sentences. The exact behaviour, with error messages and limits, is in Appendix A under the same id. The new core is checked against the exact text.
-- **Why: business** is what Alkemio needs. **Why: product** is the user story; it is "—" until product fills it. **Why: technical** is the engineering reason, when there is one. "—" means no source states one.
+- **Why: business** is what Alkemio needs. **Why: product** is the user story. **Why: technical** is the engineering reason. A rule needs at least one why, and gets a second or third only where it adds something for the decision or the code. "—" means none is given.
+- A why that names a spec, issue, pull request, code comment or code line rests on that source. A why ending in _(draft)_ was written by QA and no source states it: product keeps, rewrites or deletes it, and sets **Decided by**. A rule with no why at all carries an open question or a defect marker in section 3.
 - **Decided by** names the source of the decision: a spec, a commit or pull request, or an issue. "Not decided: exists in the code" means the behaviour exists in the code and nobody chose it. "Not decided: a defect" means today's behaviour is a fault. Product has not reviewed this file yet.
 - A marker in bold at the end of a rule points at section 3: **(open: F1)** means a question on this rule is still open, **(defect: F…)** means today's behaviour is a fault and must not be copied as intended, **(defect in part: F…)** means part of it is. A rule with no marker stands as written. Every rule is logged as the server behaves today, also when that is not the intended end state. Whether a test proves the rule sits in Appendix A as **proven** or **untested**.
 - Hard rules are not marked yet. Some rules are choices that a new feature may challenge, and some can never change; a later version will mark the second kind with "(hard rule)" after the why that makes it so. Until then, no marker does not mean a rule is open to change.
@@ -28,7 +31,7 @@ _Open questions per owner: Product Lead 4 · Technical Lead 2 · Quality Lead 5 
 | TSK-03 | A board can only be created as a callout that accepts posts and nothing else. Whether a callout is a board is decided when it is created, also from a template, and never changes afterwards. | Tasks are posts; converting an existing callout to or from a board is out of scope (042 FR-006/007). | — | — | Spec 042 FR-006/007 |
 | TSK-04 | A board created without columns starts with To Do, In Progress and Done, in that order. A board always has at least one column. | The leanest useful set — `Backlog` was dropped because most teams renamed or deleted it at once (042 FR-005 as refined 2026-08-24, refinements §1). | — | — | Spec 042 FR-005; refinements §1 |
 | TSK-05 | A board can only be made through the board option at creation. A board marker slipped in any other way is removed and makes no board. **(open: F2, OQ1)** | — | — | One entry point to board mode so a template round-trip or a hand-crafted create cannot produce a half-configured board (042 FR-024, D-08). | Spec 042 FR-024, D-08 |
-| TSK-06 | Every task gets exactly one column when it is created: the column asked for, or else the first column. Asking for a column the board does not have is refused and nothing is created. | A task must always belong to a column. | — | An invalid column must not orphan a post (042 FR-009/010; service comment). | Spec 042 FR-009/010 |
+| TSK-06 | Every task gets exactly one column when it is created: the column asked for, or else the first column. Asking for a column the board does not have is refused and nothing is created. | — | — | An invalid column must not orphan a post (042 FR-009/010; service comment). | Spec 042 FR-009/010 |
 
 ### Moving tasks
 
@@ -36,7 +39,7 @@ _Open questions per owner: Product Lead 4 · Technical Lead 2 · Quality Lead 5 
 |---|---|---|---|---|---|
 | TSK-07 | Moving a task changes only its column. Moving it to the column it is already in changes nothing. A move to a column the board does not have, or of something that is not a task on a board, is refused. | — | — | A dedicated operation, not the cross-callout move: it must never widen that move's right nor downgrade the classification right (042 FR-011/014). | Spec 042 FR-011, FR-014 |
 | TSK-08 | A move and a column change made at the same moment never mix: a task always ends up in exactly one existing column. When two people move the same task, the last move wins. | — | — | A task validated against a stale column list must never land in a deleted column (042 FR-015, US2-AS7/AS8, US4-AS8). | Spec 042 FR-015 |
-| TSK-09 | Anyone who may contribute to a board may move any task on it, also tasks created by others. This right only moves tasks: it does not allow editing another member's task or moving a post to another callout. **(open: F3)** | Member-executable move is the feature's one load-bearing new capability. | — | Every reuse path was admin-only (042 US2, FR-012/013, D-02 operator ruling; dissent DIS-3 recorded). | Spec 042 US2, FR-012/013, D-02 |
+| TSK-09 | Anyone who may contribute to a board may move any task on it, also tasks created by others. This right only moves tasks: it does not allow editing another member's task or moving a post to another callout. **(open: F3)** | Member-executable move is "the single load-bearing new capability"; on today's platform every reuse path for this write is admin-only (042 US2, why this priority). | — | Every reuse path was admin-only (042 US2, FR-012/013, D-02 operator ruling; dissent DIS-3 recorded). | Spec 042 US2, FR-012/013, D-02 |
 | TSK-10 | Reordering the tasks on a board needs the same right as moving a task, so any board member may reorder. On a callout that is not a board, reordering stays an admin edit. **(open: OQ4)** | — | — | Within-column drag ordering was delivered in iteration; members got a denial on in-column reorder while cross-column moves silently dropped the position write (042 refinements §2, superseding D-09). | Spec 042 refinements §2 (supersedes D-09) |
 
 ### Column administration
@@ -59,7 +62,7 @@ _Open questions per owner: Product Lead 4 · Technical Lead 2 · Quality Lead 5 
 
 | ID | Rule | Why: business | Why: product | Why: technical | Decided by |
 |---|---|---|---|---|---|
-| TSK-17 | A post moved into a board becomes a task in its first column. A task moved to an ordinary callout loses its column. A task moved to another board lands in that board's first column. **(open: Q-TSK-17)** | — | — | — (service comment only: "only POST contributions can be tasks") | Not decided: exists in the code |
+| TSK-17 | A post moved into a board becomes a task in its first column. A task moved to an ordinary callout loses its column. A task moved to another board lands in that board's first column. **(open: Q-TSK-17)** | A moved post must still be a valid task on its new board, so it takes the default first column (TSK-06); off a board a column means nothing. _(draft)_ | — | — (service comment only: "only POST contributions can be tasks") | Not decided: exists in the code |
 | TSK-18 | Deleting a board deletes its tasks, as for any posts callout, and leaves nothing behind. | — | — | Deleting a board used to fail on a foreign-key violation from the marker tagset; the column definition is a standalone row owned by the board alone (042 FR-033, refinements §7; server#6614). | Spec 042 FR-033; server#6614 |
 | TSK-19 | A board saved as a callout template keeps that it is a board and its columns in order. A callout created from that template is a board with those columns and no tasks. | Parity with posts-response callout templates (042 FR-023, D-08). | — | — | Spec 042 FR-023, D-08 |
 
@@ -271,6 +274,8 @@ Extracted 2026-11-06 from three sources: server develop @ `eeecf9ddb` (Release/7
 
 2026-11-19 converted to the three-section layout. The single why of every rule was split over business and technical without rewording; the product why is left for product. The status legend and the review-load line of the old layout were dropped: the counts at the top replace them.
 
+2026-11-20 whys pass: every rule has at least one why, sourced where a spec, issue or code line states it and marked _(draft)_ where QA wrote it. Restating whys with no source were dropped where a sourced one remains on the row. Almost every why already rested on spec 042; the business why of TSK-09 now cites 042 US2 and the restating business why of TSK-06 was dropped.
+
 #### Sources
 
 Server code (worktree `w1-access-matrix/server` @ `eeecf9ddb`):
@@ -295,3 +300,4 @@ Specs / issues:
 - `agents-hq/specs/062-task-board-analytics/spec.md` (origin/main)
 - alkem-io/server PR #6391 (body read); story server#6390, client-web#10169, epic alkemio#2007 (cited, not read)
 - server `specs/059-ut-domain-task`, `076-ut-services-task`: checked, about background tasks, not boards
+- 2026-11-20 whys pass: `agents-hq/specs/042-kanban-task-board/spec.md` US2 ("why this priority"); no new source found for TSK-17
