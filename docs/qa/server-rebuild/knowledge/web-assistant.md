@@ -4,10 +4,13 @@ _What the server does today for the web AI assistant: who may use it, the monthl
 
 _Open questions per owner: Product Lead 2 · Technical Lead 6 · Quality Lead 3 · Security Lead 2 · Service Operations Lead 4 · Architecture Lead 1. By state: 15 open · 3 with a suggested answer. Proof of the 18 rules: 4 proven by a test · 14 untested (Appendix A)._
 
+_Whys of the 18 rules: 16 rest on a source · 1 carries a draft for product to decide (AST-18) · 1 has none and already carries an open question (AST-17)._
+
 **How to read it**
 
 - **Rule** is one or two plain sentences. The exact behaviour, with error messages and limits, is in Appendix A under the same id. The new core is checked against the exact text.
-- **Why: business** is what Alkemio needs. **Why: product** is the user story. **Why: technical** is the engineering reason, when there is one. "—" means no source states one. The user stories are still to be written by product.
+- **Why: business** is what Alkemio needs. **Why: product** is the user story. **Why: technical** is the engineering reason. A rule needs at least one why, and gets a second or third only where it adds something for the decision or the code. "—" means none is given.
+- A why that names a spec, issue, pull request, code comment or code line rests on that source. A why ending in _(draft)_ was written by QA and no source states it: product keeps, rewrites or deletes it, and sets **Decided by**. A rule with no why at all carries an open question in section 3.
 - **Decided by** names the source of the decision: a spec, a commit, a pull request, an issue or a document. "Not decided: exists in the code" means the behaviour is in the code and nobody chose it. "Not decided: a defect" means today's behaviour is a fault.
 - A marker in bold at the end of a rule points at section 3: **(open: F3)** means a question on this rule is still open, **(defect: F2)** means today's behaviour is a fault and must not be copied as intended, **(defect in part: F5)** means part of it is. A rule with no marker stands as written. Every rule is logged as the server behaves today, also when that is not the intended end state. Whether a test proves the rule sits in Appendix A as **proven** or **untested**.
 - Hard rules are not marked yet. Some rules are choices that a new feature may challenge, and some can never change; a later version will mark the second kind with "(hard rule)" after the why that makes it so. Until then, no marker does not mean a rule is open to change.
@@ -60,7 +63,7 @@ _Open questions per owner: Product Lead 2 · Technical Lead 6 · Quality Lead 3 
 
 | ID | Rule | Why: business | Why: product | Why: technical | Decided by |
 |---|---|---|---|---|---|
-| AST-18 | Anyone who can read community guidelines, an innovation flow, a callout, a whiteboard or a collaboration can ask the server for a ready-made copy to create a new one from. This has nothing to do with the assistant; it is only filed here. **(open: F5)** | — | — | Input creation from existing entities (template / duplication helper); catalogue AI-3 files `inputCreator` under the assistant for lack of a better home. | Not decided: exists in the code |
+| AST-18 | Anyone who can read community guidelines, an innovation flow, a callout, a whiteboard or a collaboration can ask the server for a ready-made copy to create a new one from. This has nothing to do with the assistant; it is only filed here. **(open: F5)** | — | — | Input creation from existing entities (template / duplication helper); catalogue AI-3 files `inputCreator` under the assistant for lack of a better home. _(draft)_ | Not decided: exists in the code |
 
 Numbering note: ids are contiguous; none folded.
 
@@ -291,6 +294,8 @@ The catalogue lands AI-3 at "agent (kind assistant); assistant-service unchanged
 Extracted 2026-11-06 from three sources: server develop @ `eeecf9ddb` (Release/79) code + `schema.graphql`; the legacy suite — this feature (catalogue AI-3, verdict absent) has **no server-api folder of its own**, so the proof is one `platform-roles` capability row (A11 `updateAssistantActorCapabilities`, 14 roles) and two client-web walks (`platform-roles/feature-roles-offers.spec.ts`, `authz-admin-guard/platform-global-roles.spec.ts`); the specs, contracts and docs listed in § Sources. Scope: what the **server** guarantees for the web AI assistant — the access privilege, the budget resource, the `virtual-assistant` actor and its admin grant, the per-user grant, the capability classification and gate, delegated MCP calls, the bootstrap of the assistant's MCP key, and the `inputCreator` query the catalogue files here. The conversation itself (history, confirmation, proposal TTL, reply language, metering) lives in the private `assistant-service`, which is not available locally — those are open questions, not rules. WHAT and WHY only — no mutations, fixtures or request params. Evidence paths are relative to the server repo unless prefixed `test ›` or `spec ›`.
 
 2026-11-19 converted to the three-section layout: the single why was split in three, every finding, open question and unexplained rule was routed to an organisation role, and the status legend and review-load line were dropped (the counts line at the top replaces them). Old finding ids written "F-3" are now "F3".
+
+2026-11-20 whys pass: every rule has at least one why, sourced where a spec, issue or code line states it and marked _(draft)_ where QA wrote it. Sixteen rules already rested on specs 004, 008, 027 and 105; only AST-18 needed a draft marker, and no source answers Q-AST-17.
 
 #### Sources
 
