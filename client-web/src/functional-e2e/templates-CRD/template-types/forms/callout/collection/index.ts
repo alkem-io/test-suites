@@ -15,6 +15,7 @@ import {
   getWhiteboardEditorDialog,
   writeTextInWhiteboardDialog,
 } from '../../whiteboards/whiteboard-dialog';
+import { fillRichTextEditor } from '../../rich-text';
 
 const setSwitch = async (sw: Locator, desired: boolean): Promise<void> => {
   if ((await sw.isChecked()) !== desired) {
@@ -95,11 +96,12 @@ export const selectAndFillCalloutCollection = async (
       await defaultsDialog
         .getByRole('textbox', { name: 'Default title' })
         .fill(collection.defaultTitle);
-      await defaultsDialog
-        .getByRole('textbox', {
+      await fillRichTextEditor(
+        defaultsDialog.getByRole('textbox', {
           name: 'Guidance shown when a member starts a new contribution',
-        })
-        .fill(collection.defaultDescription);
+        }),
+        collection.defaultDescription
+      );
       await defaultsDialog.getByRole('button', { name: 'Save' }).click();
       await expect(defaultsDialog).not.toBeVisible();
       return;
@@ -114,11 +116,12 @@ export const selectAndFillCalloutCollection = async (
         .fill(collection.defaultTitle);
       // Memos defaults dialog reuses the same rich-text editor as Posts -
       // confirmed against the live CRD UI (May 2026).
-      await defaultsDialog
-        .getByRole('textbox', {
+      await fillRichTextEditor(
+        defaultsDialog.getByRole('textbox', {
           name: 'Guidance shown when a member starts a new contribution',
-        })
-        .fill(collection.defaultDescription);
+        }),
+        collection.defaultDescription
+      );
       await defaultsDialog.getByRole('button', { name: 'Save' }).click();
       await expect(defaultsDialog).not.toBeVisible();
       return;
