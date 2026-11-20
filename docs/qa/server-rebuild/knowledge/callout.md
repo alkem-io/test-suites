@@ -2,7 +2,7 @@
 
 _What the platform does today for callouts: creating and framing them, their settings, publishing and closing, contributions, posts and comments, Forms, polls, reactions, the Contributors and Subspaces collections, transfer, deletion and reading: what it does, why, who may, and what is still to answer. The layout is the three-section one of `communications.md`: **1. Rules**, **2. Rights**, **3. Open questions**, with the evidence in an **Appendix**._
 
-_Open questions per owner: Product Lead 8 · Technical Lead 8 · Quality Lead 8 · Security Lead 1 · Architecture Lead 4. By state: 19 open · 10 with a suggested answer · 2 decided. Proof of the 77 rules: 45 proven by a test · 32 untested (Appendix A)._
+_Open questions per owner: Product Lead 7 · Technical Lead 8 · Quality Lead 8 · Security Lead 1 · Architecture Lead 4. By state: 18 open · 10 with a suggested answer · 3 decided. Proof of the 77 rules: 45 proven by a test · 32 untested (Appendix A)._
 
 _Whys of the 77 rules: 66 rest on a source · 8 carry a draft for product to decide · 3 have none, and each already carries an open question (CAL-11, CAL-27, CAL-39)._
 
@@ -55,7 +55,7 @@ _Whys of the 77 rules: 66 rest on a source · 8 carry a draft for product to dec
 | CAL-20 | Publishing records who published and when, adds an activity entry and, if the publisher asks for it, notifies members. Contributors and Subspaces callouts never notify. A knowledge-base callout creates neither activity nor notification. **(open: F16)** | Publishing is the moment members are told; collection widgets are passive displays (008 FR-004e, 013 FR-004c); migrated collection callouts were published silently (008 FR-028). | — | — | Spec 008 FR-004e, FR-028; spec 013 FR-004c |
 | CAL-21 | Unpublishing only hides the callout: contributions, comments and reactions stay. Publishing again records the publisher and date anew and can notify again. | Unpublish hides, it does not purge (client plan :582-585). | — | — | Client callouts test plan |
 | CAL-22 | Only Platform Content Full Access and Platform Resource Admin can change who published a callout and when. Every such change is audited. | Platform roles keep a narrow, audited content capability (027 A8, T038). | — | — | Spec 027 A8 |
-| CAL-23 | A closed callout refuses every new contribution. When contributing is set to "admins only", only people who may edit the callout can contribute. **(open: F9, F10)** | Admins close a callout to stop further input while keeping what was received (error-codes: "This callout is closed"). | — | Allowed types stay fixed, `enabled` is the temporary switch (schema description). | Not decided: exists in the code |
+| CAL-23 | A closed callout refuses every new contribution. When contributing is set to "admins only", only people who may edit the callout can contribute. **(open: F10)** | Admins close a callout to stop further input while keeping what was received (error-codes: "This callout is closed"). | — | Allowed types stay fixed, `enabled` is the temporary switch (schema description). | Not decided: exists in the code; Product, 2026-11-20 (was F9): behaviour stays |
 | CAL-24 | A callout gets its own comment thread only when comments are on and it is not a template. Members can post, reply and react there. Turning comments off later does not stop posting on the server. | Comments are a per-callout switch (client plan :724-726 hides the input). | — | Server enforcement never existed — F2; 866 migrated collection callouts carry the flag with no room (audit F1). | Not decided: exists in the code; Product, 2026-11-20 (was F2): behaviour stays, tracked |
 | CAL-25 | A callout's activity number is its number of contributions when it accepts contributions, and otherwise its number of comments. **(open: Q-CAL-25)** | — | As a space member, I want to see how much is going on in a callout, so that I can tell where the activity is. _(draft)_ | — | Not decided: exists in the code |
 
@@ -237,13 +237,12 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 ### Product Lead
 
-[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 8 to answer, 1 also involved
+[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 7 to answer, 1 also involved
 
 **To answer**
 
 | ID | Area | Type | Question | Owner | Proposed answer | State |
 |---|---|---|---|---|---|---|
-| F9 | Publishing | decision | "Admins only" really means "whoever may edit the callout", so a member who created the callout can still contribute. Does the creator count as an admin here? | Product Lead | — | open |
 | F11 | Transfer | decision | A flow phase's "allow new callouts" switch is stored and shown, but the server never enforces it. Enforce it, or record it as a hint for the client, like "visible"? | Product Lead, then Technical Lead | — | open |
 | F13 | Polls | spec | Server spec 038 FR-009 says a vote holds at most 10 selections. The code limits a poll to 10 options and a vote only by the poll's own maximum, where 0 means no limit. Which is intended? | Product Lead (Technical Lead then amends the spec or the code) | — | open |
 | F15 | Settings | decision | A callout created without settings is published by the server, while the web client always starts in draft. Anything other than the web client therefore creates published callouts. Which default is right? | Product Lead | — | open |
@@ -335,6 +334,7 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 | Was | Decision | Decided by | Now |
 |---|---|---|---|
+| F9 | Behaviour stays: 'admins only' means everyone who may edit the callout, so the creator of the callout counts as an admin for it. | Product, 2026-11-20 | CAL-23 |
 | F3 | Behaviour stays: drafts are readable by admins, the creator and platform content roles only; leads do not see them. The client plan's 'admins/leads' is to be corrected. | Product, 2026-11-20 | CAL-19 |
 | F2 | Behaviour stays: turning comments off only hides the input; the server still accepts messages, and 866 collection callouts on acceptance have comments on without a thread. Wanted, tracked: the server refuses messages when comments are off; decide for the 866 collection callouts whether they get a thread or the switch goes off. | Product, 2026-11-20 | CAL-24 |
 | OQ1 | A template made from a collection callout does drop the selection, the fixed map view and the member-information setting: the code that does it was found. | QA, templates extraction, 2026-11-06 | CAL-69 (still untested: no case) |
