@@ -2,7 +2,7 @@
 
 _What the platform does today for the calendar every space carries and its events: creating, reading, updating and deleting them, whole-day and timed dates, the Google, Outlook and ICS exports, subspace events showing on the parent calendar, and the notifications and activity an event produces. It says what the server does, why, who may, and what is still to answer. The file has three sections, **1. Rules**, **2. Rights** and **3. Open questions**, with the evidence in an **Appendix**._
 
-_Open questions per owner: Product Lead 4 · Technical Lead 5 · Quality Lead 4 · Architecture Lead 1. By state: 10 open · 4 with a suggested answer · 3 decided. Proof of the 25 rules: 12 proven by a test · 13 untested (Appendix A)._
+_Open questions per owner: Product Lead 4 · Technical Lead 5 · Quality Lead 4 · Architecture Lead 1. By state: 9 open · 1 change decided · 4 with a suggested answer · 3 decided. Proof of the 25 rules: 12 proven by a test · 13 untested (Appendix A)._
 
 _Whys of the 25 rules: 12 rest on a source · 11 carry a draft for product to decide · 2 have none, and each already carries an open question (EVT-24, EVT-25)._
 
@@ -74,7 +74,7 @@ _Whys of the 25 rules: 12 rest on a source · 11 carry a draft for product to de
 | ID | Rule | Why: business | Why: product | Why: technical | Decided by |
 |---|---|---|---|---|---|
 | EVT-23 | Events stay with their space when it is converted or moved. | Content travels with the space (journey area, 083/084). | — | — | Specs 083, 084 |
-| EVT-24 | A creator who has left the community can still update and delete the events they created. **(open: F7)** | — | — | — the creator rule is keyed on the user, not on membership. | Not decided: exists in the code |
+| EVT-24 | A creator who has left the community can still update and delete the events they created. **(defect: F7)** | Product, 2026-11-20: a creator's rights on an event end when they leave the community; space admins keep theirs. | — | The creator rule is keyed on the user, not on membership. | Product, 2026-11-20 (F7, change decided): today's behaviour is not the rule |
 | EVT-25 | When the creator's account no longer exists, the event still shows, without a creator, and nobody inherits the creator's rights. **(open: Q-EVT-25, F8)** | — | — | — | Not decided: exists in the code |
 
 Numbering note: ids are contiguous; none folded.
@@ -120,7 +120,7 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 | ID | Area | Type | Question | Owner | Proposed answer | State |
 |---|---|---|---|---|---|---|
-| F7 | Lifecycle | decision | A creator who has left the community can still update and delete the events they created. Is that intended? | Product Lead | — | open |
+| F7 | Lifecycle | decision | A creator who has left the community can still update and delete the events they created. Is that intended? | Product Lead | Product, 2026-11-20: rights end on leaving. A former member can no longer update or delete the events they created; space admins keep theirs. Issue: to file. | change decided |
 | OQ3 | Dates | decision | Is Europe/Amsterdam the intended time-zone hint in the ICS file for every customer? It is fixed in the code and no spec states it. | Product Lead (Service Operations Lead for the per-environment side) | — | open |
 | Q-EVT-25 | Lifecycle | decision | Why does this rule exist? When the creator's account is gone the event still shows and nobody inherits the creator's rights; no source states the reason. (F8 asks what to do with the left-over id.) | Product Lead | — | open |
 | CONST | All | decision | 22 of the 27 constants are still blank in "product must rule?" (Appendix E). Which of them must product rule on? | Product Lead (Technical Lead and Security Lead for the rows pre-filled with their name) | — | open |
