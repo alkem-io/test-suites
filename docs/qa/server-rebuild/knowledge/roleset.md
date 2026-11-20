@@ -2,7 +2,7 @@
 
 _What the platform does today for the role sets of spaces, organisations and the platform: the roles and their limits, the entry role and the rule that a subspace member is a member of the parent, adding and removing people directly, applications, invitations to existing users, organisations and virtual contributors, email invitations, organisation associates, joining through a matching email domain, the combined application or join for a subspace, Platform Support's audited work on organisations, and the lists of pending requests. The file follows the three-section layout accepted in the product review of `communications.md` (alkem-io/test-suites#717): **1. Rules**, **2. Rights**, **3. Open questions**, with the evidence in an **Appendix**._
 
-_Open questions per owner: Product Lead 1 · Technical Lead 4 · Quality Lead 8 · Security Lead 1 · Incident Lead 2. By state: 11 open · 5 with a suggested answer · 13 decided. Proof of the 79 rules: 60 proven by a test · 19 untested (Appendix A)._
+_Open questions per owner: Product Lead 1 · Technical Lead 4 · Quality Lead 8 · Security Lead 1 · Incident Lead 2. By state: 10 open · 6 with a suggested answer · 13 decided. Proof of the 79 rules: 60 proven by a test · 19 untested (Appendix A)._
 
 _Whys of the 79 rules: 55 rest on a source · 17 carry a draft for product to decide · 7 have none, and each already carries an open question or a defect (RS-04: F1; RS-06: F2; RS-27: Q-RS-02; RS-36: F4; RS-54: F11; RS-77: F7; RS-79: F13)._
 
@@ -212,7 +212,7 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 | ID | Area | Type | Question | Owner | Proposed answer | State |
 |---|---|---|---|---|---|---|
-| CONST | All | decision | 27 of the 37 constants are still blank in "product must rule?" (Appendix E). Which must product rule on? | Product Lead (Technical Lead for engineering limits and wire shapes, Security Lead for security limits) | — | open |
+| CONST | All | decision | 27 of the 37 constants are still blank in "product must rule?" (Appendix E). Which must product rule on? | Product Lead (Technical Lead for engineering limits and wire shapes, Security Lead for security limits) | Product, 2026-11-20: all ten Product Lead rows must be ruled on: four follow F1, F7, F11 and F12; membership policy, domain-join gate, organisation defaults, invite limits, eligibility order and platform-invitation roles are yes. The Technical and Security Lead rows are theirs to tick. | suggested |
 
 ### Technical Lead
 
@@ -235,7 +235,7 @@ _One section per role, so each owner reads only their own part. **To answer** li
 | F5 | Lifecycle | defect | After a move, the roles of the moved space still point at the old top-level space (server#6592; spec 030 FR-005 says they must be consistent). Incident or backlog defect? | Incident Lead, then Technical Lead (Architecture Lead for the migration) | Fix it; the data migration must not turn the stored links into access. | suggested |
 | F6 | Lifecycle | defect | 147 old subspace admin roles make every member of the space above an admin of those subspaces (RS-76). When is the data repaired? | Security Lead (Technical Lead repairs the data) | Repair the data on acceptance and production before the cutover. | suggested |
 | OQ6 | Invitations | test | Some invitation cases also pass when the refusal does not happen, so a change that lets the Platform License Manager or a space member invite would go unnoticed. Which outcome is the contract? | Quality Lead (Technical Lead confirms the contract) | — | open |
-| CONST | All | decision | 27 of the 37 constants are still blank in "product must rule?" (Appendix E). Which must product rule on? | Product Lead (Technical Lead for engineering limits and wire shapes, Security Lead for security limits) | — | open |
+| CONST | All | decision | 27 of the 37 constants are still blank in "product must rule?" (Appendix E). Which must product rule on? | Product Lead (Technical Lead for engineering limits and wire shapes, Security Lead for security limits) | Product, 2026-11-20: all ten Product Lead rows must be ruled on: four follow F1, F7, F11 and F12; membership policy, domain-join gate, organisation defaults, invite limits, eligibility order and platform-invitation roles are yes. The Technical and Security Lead rows are theirs to tick. | suggested |
 
 ### Quality Lead
 
@@ -274,7 +274,7 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 | ID | Area | Type | Question | Owner | Proposed answer | State |
 |---|---|---|---|---|---|---|
-| CONST | All | decision | 27 of the 37 constants are still blank in "product must rule?" (Appendix E). Which must product rule on? | Product Lead (Technical Lead for engineering limits and wire shapes, Security Lead for security limits) | — | open |
+| CONST | All | decision | 27 of the 37 constants are still blank in "product must rule?" (Appendix E). Which must product rule on? | Product Lead (Technical Lead for engineering limits and wire shapes, Security Lead for security limits) | Product, 2026-11-20: all ten Product Lead rows must be ruled on: four follow F1, F7, F11 and F12; membership policy, domain-join gate, organisation defaults, invite limits, eligibility order and platform-invitation roles are yes. The Technical and Security Lead rows are theirs to tick. | suggested |
 
 ### Incident Lead
 
@@ -487,23 +487,23 @@ _"Rules on it" is pre-filled with the role whose domain covers the value: Produc
 |---|---|---|---|---|
 | Role-set types | `space`, `organization`, `platform` | `role.set.type.ts` | | Technical Lead |
 | Role names in use | space: `member` (entry), `lead`, `admin`; organisation: `associate` (entry), `admin`, `owner`; platform: 10 `platform-*`, 4 `feature-*`, `registered`, `guest`, `anonymous` | `role.name.ts`; definitions files | | Technical Lead |
-| Space role caps (user / organisation / VC) | member −1/−1/−1; lead 2/2 (L0) · 2/9 (L1, L2)/1; admin −1/0/0; minimums all 0 | `space.community.roles.ts`, `subspace.community.roles.ts` | F-7 | Product Lead |
-| Organisation role caps (user) | associate −1; admin max 6; owner min 1 / max 3; organisations and VCs 0 on every role | `organization.role.definitions.ts` | F-11 | Product Lead |
-| `requiresEntryRole` | lead, admin, owner `true`; member, associate `false` | definitions files | F-1 | Product Lead |
+| Space role caps (user / organisation / VC) | member −1/−1/−1; lead 2/2 (L0) · 2/9 (L1, L2)/1; admin −1/0/0; minimums all 0 | `space.community.roles.ts`, `subspace.community.roles.ts` | decided (F7) (Product, 2026-11-20) | Product Lead |
+| Organisation role caps (user) | associate −1; admin max 6; owner min 1 / max 3; organisations and VCs 0 on every role | `organization.role.definitions.ts` | decided (F11) (Product, 2026-11-20) | Product Lead |
+| `requiresEntryRole` | lead, admin, owner `true`; member, associate `false` | definitions files | decided (F1) (Product, 2026-11-20) | Product Lead |
 | `requiresSameRoleInParentRoleSet` | L1/L2 member `true`; everything else `false` (never read) | definitions files | F-7 | Technical Lead |
 | Role credentials | `space-member`, `space-lead`, `space-admin`, `space-subspace-admin` (derived), `space-invitee`, `organization-associate`, `organization-admin`, `organization-owner`, `account-admin` (derived) | `authorization.credential.ts:32-44` | | Technical Lead |
 | Implicit roles | `subspace-admin`, `account-admin` | `role.set.role.implicit.ts` | | Technical Lead |
 | Application lifecycle | states `new`, `approving`, `approved` (final), `rejected`, `archived` (final); events `APPROVE` (GRANT), `APPROVED` (GRANT), `REJECT`, `REOPEN`, `ARCHIVE` (UPDATE) | `application.service.lifecycle.ts` | F-8 | Technical Lead |
 | Invitation lifecycle | states `invited`, `accepting`, `accepted` (final), `rejected`, `archived` (final); events `ACCEPT` / `ACCEPTED` (invite-accept privilege), `REJECT` (UPDATE + invite-accept at the resolver), `ARCHIVE` (UPDATE); no `REINVITE` | `invitation.service.lifecycle.ts`; `membership.ts:447-454` | F-8 | Technical Lead |
 | Membership status | `member`, `not-member`, `application-pending`, `invitation-pending` | `community.membership.status.ts` | | Technical Lead |
-| Membership policy | `open`, `invitations`, `applications` | `community.membership.policy.ts` | | Product Lead |
+| Membership policy | `open`, `invitations`, `applications` | `community.membership.policy.ts` | yes (Product, 2026-11-20) | Product Lead |
 | Membership origin | `DIRECT`, `INVITATION` (no `APPLICATION`) | `community.membership.origin.ts` | F-9 | Technical Lead |
 | Invitation result types (10) | `invited-to-role-set`, `invited-to-platform-and-role-set`, `already-invited-to-role-set`, `already-invited-to-platform-and-role-set`, `invitation-to-parent-not-authorized`, `already-has-open-application`, `already-member-of-role-set`, `organization-not-accepting-invitations`, `organization-lead-role-limit-reached`, `extra-role-limit-reached` | `role.set.invitation.result.type.ts` | | Technical Lead |
 | Invitation result notice | `organization-has-no-administrators` (counted on `organization-admin` only) | `role.set.invitation.result.notice.ts`; `organization.manager.credentials.ts:20-21` | F-14 | Technical Lead |
-| Associate eligibility reasons (8) and precedence | `NOT_AUTHENTICATED` → `ALREADY_ASSOCIATE` → `INVITATION_PENDING` → `APPLICATION_PENDING` → `ELIGIBLE_TO_JOIN` → `APPLICATIONS_NOT_ACCEPTED` → `APPLY_NOT_GRANTED` → `ELIGIBLE_TO_APPLY` | `organization.associate.eligibility.reason.ts`; `organization.resolver.fields.ts:68-163` | | Product Lead |
-| Domain-join gate | domain equal (case-insensitive) → `allowUsersMatchingDomainToJoin` → verification `verified-manual-attestation` | `organization.domain.join.policy.ts` | | Product Lead |
-| Organisation settings defaults | `allowUsersMatchingDomainToJoin: false`, `allowSpaceInvitations: true`, `allowApplications: true` (missing keys read as true) | `organization.service.ts:252-254`; `organization.entity.ts:99-100` | | Product Lead |
-| Space settings read by the rules | `membership.policy`, `membership.trustedOrganizations`, `membership.allowSubspaceAdminsToInviteMembers`, `privacy.mode`, `privacy.allowPlatformSupportAsAdmin` (L0 only effective) | `community.service.authorization.ts`; `space.service.platform.roles.access.ts` | F-12 | Product Lead |
+| Associate eligibility reasons (8) and precedence | `NOT_AUTHENTICATED` → `ALREADY_ASSOCIATE` → `INVITATION_PENDING` → `APPLICATION_PENDING` → `ELIGIBLE_TO_JOIN` → `APPLICATIONS_NOT_ACCEPTED` → `APPLY_NOT_GRANTED` → `ELIGIBLE_TO_APPLY` | `organization.associate.eligibility.reason.ts`; `organization.resolver.fields.ts:68-163` | yes (Product, 2026-11-20) | Product Lead |
+| Domain-join gate | domain equal (case-insensitive) → `allowUsersMatchingDomainToJoin` → verification `verified-manual-attestation` | `organization.domain.join.policy.ts` | yes (Product, 2026-11-20) | Product Lead |
+| Organisation settings defaults | `allowUsersMatchingDomainToJoin: false`, `allowSpaceInvitations: true`, `allowApplications: true` (missing keys read as true) | `organization.service.ts:252-254`; `organization.entity.ts:99-100` | yes (Product, 2026-11-20) | Product Lead |
+| Space settings read by the rules | `membership.policy`, `membership.trustedOrganizations`, `membership.allowSubspaceAdminsToInviteMembers`, `privacy.mode`, `privacy.allowPlatformSupportAsAdmin` (L0 only effective) | `community.service.authorization.ts`; `space.service.platform.roles.access.ts` | decided (F12) (Product, 2026-11-20) | Product Lead |
 | Withheld-role reasons | `role_limits`, `standing_lost`, `self_offer`, `offerer_deleted` | `platform.audit.entry.interface.ts:240-244` | | Technical Lead |
 | Audit actions (15) | `invite_user`, `invite_email`, `resend_email_invitation`, `revoke_user_invitation`, `revoke_email_invitation`, `approve_application`, `reject_application`, `archive_application`, `reopen_application`, `mark_application_approved`, `assign_role`, `remove_role`, `remove_member`, `extra_role_honoured`, `extra_role_withheld`; category `organization_administration`; initiator role `platform_support`; outcomes `role_granted`, `role_revoked`, `operation_succeeded` | `platform.audit.entry.interface.ts:222-237`; `membership.ts:114-122` | | Security Lead |
 | Error codes | `ROLESET_POLICY_ROLE_LIMITS_VIOLATED`, `ROLESET_ROLE`, `ROLESET_OPEN_APPLICATION_EXISTS`, `ROLESET_OPEN_INVITATION_EXISTS`, `ROLESET_ALREADY_MEMBER`, `ROLESET_INVITATION`, `ROLESET_INVITATION_RESEND_THROTTLED`, `ROLESET_INVITATION_EMAIL_BUDGET_EXCEEDED`, `ROLESET_APPLICATIONS_NOT_ACCEPTED`, `ROLESET_JOIN_NOT_ELIGIBLE`, `PLATFORM_SUPPORT_SELF_TARGET`, `FORBIDDEN_POLICY` | `alkemio.error.status.ts` | | Technical Lead |
@@ -516,8 +516,8 @@ _"Rules on it" is pre-filled with the role whose domain covers the value: Produc
 | Error text — Support self-target | `self-targeted platform-support action is not allowed` | `org.community.gate.service.ts:317-318` | | Security Lead |
 | Resend cooldown | 300 s default (`notifications.platform_invitations.resend_cooldown_seconds`), key = role set + SHA-256(lower-cased address), fail-open | `platform.invitation.resend.throttle.service.ts:301, 357-386` | | Security Lead |
 | Email budget | 200 per actor per hour, 300 per role set per hour, fixed epoch-hour buckets, fail-open; config keys `email_budget_per_actor_per_hour` / `email_budget_per_role_set_per_hour` | `platform.invitation.email.budget.service.ts:399-401` | | Security Lead |
-| Invite batch limits | ≤ 100 actors, ≤ 100 addresses (each ≤ 512 chars, valid email), ≤ 10 extra roles, welcome message ≤ 8,192 chars; stored address ≤ 128 chars | `role.set.dto.entry.role.invite.ts`; `entity.field.length.constants.ts:4-7, 30-33`; `platform.invitation.entity.ts:106` | | Product Lead (Security Lead for the abuse bound) |
-| Platform-invitation roles | `feature-vc-campaign` only | `platform.invitation.service.ts:38` | | Product Lead |
+| Invite batch limits | ≤ 100 actors, ≤ 100 addresses (each ≤ 512 chars, valid email), ≤ 10 extra roles, welcome message ≤ 8,192 chars; stored address ≤ 128 chars | `role.set.dto.entry.role.invite.ts`; `entity.field.length.constants.ts:4-7, 30-33`; `platform.invitation.entity.ts:106` | yes (Product, 2026-11-20) | Product Lead (Security Lead for the abuse bound) |
+| Platform-invitation roles | `feature-vc-campaign` only | `platform.invitation.service.ts:38` | yes (Product, 2026-11-20) | Product Lead |
 | Platform assignment rules (order) | self-assignment → assigner capability → holder kind → spaces-reader service account → audit-reader exclusion → last roles-admin | `platform.role.assignment.rules.service.ts` | | Security Lead |
 | Credential rule names (roleset) | `credentialRule-roleSetApply`, `-roleSetInvitation`, `-roleSetSelfRemoval`, `-roleSetVirtualRemoval`, `-roleSetAssign`, `-organizationSelfRemoval`, `credentialRuleTypes-roleSetEntryRoleInvite`, `-organizationRoleSetApply`, `-organizationRoleSetPlatformSupportMembership`, `-organizationRoleSetPlatformSupportInvite`, subspace apply/join rules; privilege rules `policyRule-communityInvite`, `policyRule-communityAddVC` | `credential.rule.constants.ts:58-73`; `policy.rule.constants.ts:34-37` | | Technical Lead |
 | Caches | membership status / open application / open invitation / actor roles per (actor, role set); actor-context TTL 60 s invalidated on organisation role changes | `role.set.service.cache.ts`; `service.ts:844-849` | | Technical Lead |
